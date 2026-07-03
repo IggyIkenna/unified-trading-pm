@@ -2,13 +2,16 @@
 doc_type: epic
 title: Deployment And User Management Master
 summary:
+  L3 epic owning deployment-api + deployment-ui + user-management (deploy/launch consoles, data-status
+  honest-coverage surface, promote endpoints, auth flow); every UI-touching todo gated by the
+  playwright pw:L2 verification contract before tick.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-api, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
+tags: [ui, infrastructure, data-status, verification, observability]
 related: [../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md]
 created: 2026-05-21
 name: deployment_and_user_management_master

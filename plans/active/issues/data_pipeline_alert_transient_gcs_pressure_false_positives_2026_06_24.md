@@ -8,8 +8,12 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [monitoring, observability, slack, data-pipeline, self-healing, backfill]
+related:
+  [
+    data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md,
+    deadman_monitor_log_event_crash_2026_06_23.md,
+  ]
 created: 2026-06-24
 parent_epic: observability_master
 priority: P2

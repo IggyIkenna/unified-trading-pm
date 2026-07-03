@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Data-status drilldown — single SSOT for `/api/data-status/*`
 summary:
-status: stable
+  Single SSOT for the /api/data-status/* surface — the per-shard ShardDetailModal endpoint (shard_class
+  grouped/per_symbol/reference/fixtures, schema + signed-URL payload, write-time strict schema validation) and
+  the hierarchical drilldown endpoint, plus Deploy-Missing preview/auto-launch modes with IAM/rate-limit/audit
+  gating.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui, features-service, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [data-status, ui, manifest, mtds, instruments, defi]
+related: [availability-manifest-and-data-status.md, data-status-drilldown-hierarchy.md, honest-absence-downstream-handling.md, pipeline-mode-partition.md]
 created: 2026-04-25
-authoritative_for:
+authoritative_for: [data-status drilldown API contract (/api/data-status/* endpoints)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-08

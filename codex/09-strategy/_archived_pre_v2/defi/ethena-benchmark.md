@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: DeFi Ethena sUSDe Benchmark
-summary:
-status:
+summary: "Pre-v2: passive Ethena sUSDe buy-and-hold benchmark (~9.8% APY) that deploys 100% on candle 1 and never rebalances — the risk-adjusted baseline every active DeFi yield strategy must beat."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, benchmark, strategy, yield, ethena]
+related: [../../architecture-v2/archetypes/carry-staked-basis.md, basis-trade.md]
 created: 2026-03-30
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

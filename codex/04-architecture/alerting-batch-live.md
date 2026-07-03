@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: 'Alerting Service: Batch/Live Alignment'
 summary:
-status:
+  Alerting-service batch/live alignment — same route_event() rules/dedup/cooldown in both modes; live delivers
+  PagerDuty+Telegram, batch suppresses delivery + writes batch_audit records; tick-staleness + connectivity-gap
+  taxonomy with 30s coalesce, DeFi operational AlertCodes, 3-tier stream-lag circuit-breaker actions.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, features-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [alerting, batch-live, monitoring, defi, escalation, data-quality]
+related: [batch-live-architecture.md, autonomous-recovery-matrix.md, kill-switch-circuit-breaker.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [alerting-service batch/live alignment]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

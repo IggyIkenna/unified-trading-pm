@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Deprecated Services (2026)
 summary:
-status:
+  Registry of removed/consolidated post-trade services — reconciliation-service folded into
+  position-balance-monitor, risk+exposure merged into risk-and-exposure-service, plus the pre-May-23 5→2
+  strategy/ML repo consolidation (soft-freeze + BLOCKED-CUTOVER auto-flip).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, ml-service, strategy-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [deprecation, consolidation, refactor, migration, strategy, ml]
+related: [../04-architecture/strategy-service-architecture.md, ../04-architecture/ml-service-architecture.md, ../11-project-management/service-registry.yaml, ../../plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md]
 created: '2026-03-27'
-authoritative_for:
+authoritative_for: [deprecated/consolidated post-trade service migration status]
 referenced_by:
 owner:
 last_reviewed:

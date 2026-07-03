@@ -2,16 +2,24 @@
 doc_type: codex-ssot
 title: Agent Orchestrator — Backlog ↔ State DB Alignment Architecture
 summary:
-status:
+  Backlog↔state.db alignment — PlanRegenLoop regenerates backlog.yaml from plans/active/*.md `- [ ]` todos every
+  30 min (dedup by brief + slug-NNN id); prune_stale deletes orphan yaml + queued-undispatched state.db zombie
+  rows, never done/dispatched rows.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, plan-hygiene, self-healing, backlog, infrastructure]
+related:
+  [
+    agent-orchestrator-overview.md,
+    agent-orchestrator-autospawn.md,
+    agent-orchestrator-host-offline-failover.md,
+  ]
 created: 2026-05-30
-authoritative_for:
+authoritative_for: [agent-orchestrator backlog-to-state.db alignment and regen]
 referenced_by:
 owner:
 last_reviewed: 2026-05-30

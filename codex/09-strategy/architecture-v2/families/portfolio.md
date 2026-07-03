@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: 'Family: Portfolio'
 summary:
-status:
+  The Portfolio strategy family — 4 meta-allocation archetypes (multi-strategy, risk-parity, factor-allocation,
+  tactical-overlay) that emit AllocationDirective events to re-weight child strategies rather than TRADE
+  instructions; strategy instances (not the Portfolio Allocator service), run through the same risk/kill-switch gates.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, portfolio, allocation, risk-parity, meta-allocation]
+related:
+  [
+    ../cross-cutting/portfolio-allocator.md,
+    ../../../04-architecture/capital-flow-model.md,
+    ../cross-cutting/risk-gates.md,
+    ../archetypes/portfolio-multi-strategy.md,
+  ]
 created: 2026-05-18
-authoritative_for:
+authoritative_for: [Portfolio strategy family spec (4 meta-allocation archetypes)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-18

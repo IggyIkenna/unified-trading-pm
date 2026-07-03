@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: E2E Pipeline Manifest Wiring — IS → MTDS → MDPS → features → strategy → execution
 summary:
-status:
+  Verify+document map of the IS→MTDS→MDPS→features→strategy→execution chain across three layers — manifest emission,
+  readiness dependency graph (PIPELINE_DEPENDENCIES), and the data-status surface — naming gaps G-TRACE/G-UI.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui, execution-service, features-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, pipeline, data-status, mtds, mdps, features, verification]
+related: [../02-data/availability-manifest-and-data-status.md, ../02-data/data-status-drilldown.md, features-service-architecture.md]
 created: 2026-06-02
-authoritative_for:
+authoritative_for: [E2E pipeline manifest-wiring three-layer verification]
 referenced_by:
 owner:
 last_reviewed: 2026-06-02

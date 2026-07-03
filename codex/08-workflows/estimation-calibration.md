@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Estimation Calibration — Per-Class Multipliers + Retrospective Ledger
-summary:
-status:
+summary: >-
+  SSOT for time-estimate calibration: the per-class multipliers (refactor 0.4× · design 0.6× · infra 0.8× · brand-new
+  1.0× · research 1.2×) applied to a training-intuition baseline, plus the AI-day vs wall-clock parallelism model and
+  the frontmatter convention.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [estimation-calibration, plan-hygiene, performance, refactor, cost]
+related: [./estimation-retrospective-ledger.md, ../../plans/epics/README.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [estimation-calibration per-class multipliers + AI-day-vs-wall-clock parallelism model]
 referenced_by:
 owner:
 last_reviewed:

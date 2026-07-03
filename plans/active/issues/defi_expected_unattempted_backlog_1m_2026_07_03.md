@@ -8,8 +8,8 @@ summary:
   expected universe have NO manifest row at all — the Phase-3.D backward-fill apply-write was evidently never run (or
   never completed) for defi. Until seeded, defi coverage denominators (data-status honest-coverage) silently exclude
   these cells. The enumerator's own halt message gates the fix on operator review of the write volume."
-status: active
-nature: issue
+status: open
+nature: record
 asset_group: [defi]
 stage: [data]
 repos: [instruments-service]
@@ -18,6 +18,7 @@ tags: [manifest, expected-unattempted, enumerator, honest-coverage, defi, backlo
 related: [plans/active/instruments_catalogue_incremental_rollup_2026_06_29.md]
 created: 2026-07-03
 parent_epic: instruments_master
+source: [defi expected_unattempted manifest backlog finding 2026-07-03 — 1.38M rows, operator decision pending]
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
@@ -30,6 +31,7 @@ depends_on: []
 last_updated: 2026-07-03
 locked_by: live-defi-rollout
 locked_since: 2026-07-03
+resolved_by:
 ---
 
 # DeFi expected_unattempted backlog ≥1M — enumerator halt-safety (found 2026-07-03)

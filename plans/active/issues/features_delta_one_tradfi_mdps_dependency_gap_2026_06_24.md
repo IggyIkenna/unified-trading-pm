@@ -2,14 +2,22 @@
 doc_type: issue
 title: 'features-delta-one-tradfi: MDPS processed-candle dependency gap + architectural pipeline mismatch'
 summary:
+  "features-delta-one-tradfi + features-volatility-tradfi VM runs all fail because the MDPS
+  processed-candle layer never existed for tradfi ES: TradFi captures ohlcv_1s/1m from Databento
+  (no `trades` data_type), and a 4-way format mismatch (output data_type, per-contract filename,
+  ES-absent-from-Databento-ohlcv_1m, build-continuous vs features `_build_blob_path`) means the
+  MDPS→build-continuous→features pipeline has never worked for ES. Plus root-cause 2: the MTDS
+  tradfi manifest stores `instrument_id=''` (blank) for CME futures so
+  dependency_checker always reports 0/2964 candles. RESOLVED 2026-06-29 via a direct raw-MTDS
+  read path (Option A) — mdps@cc63d1b + features-service@34a5d4ff + mdps@7d630a3."
 status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [tradfi, features, mdps, mtds, manifest, data-correctness, backfill, ml]
+related: [plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md]
 created: 2026-06-24
 parent_epic: features_and_ml_master
 priority: P0

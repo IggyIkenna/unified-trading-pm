@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Manual Trade Booking Architecture
 summary:
-status:
+  "Operator-initiated trade booking across all instrument types via two UI surfaces (Book Trade page + in-context
+  ManualTradingPanel) and two ManualExecutionMode paths — EXECUTE routes to venue (same path as automated), RECORD_ONLY
+  records a CanonicalFill directly (OTC). One ManualInstructionAuditLog row per action (trade + ML training-control),
+  GCS/S3 immutable audit persistence."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, defi, ui, audit, kill-switch, uac, ssot]
+related: [kill-switch-circuit-breaker.md, kill-switch-event-bus.md, operational-modes.md]
 created: 2026-03-27
 authoritative_for:
+  [
+    manual trade booking architecture,
+    ManualInstruction schema,
+    manual-instruction audit-log persistence,
+    RECORD_ONLY vs EXECUTE manual execution modes,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

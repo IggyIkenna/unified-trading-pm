@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Briefings Hub — Post-First-Call Research Landing
 summary:
-status:
+  pb2 post-first-call briefings hub — the single light-auth landing page presenting three default-collapsible briefing
+  cards (IM, DART, Reg Umbrella) that route to the matching briefing and book the 45-minute second call; a discovery
+  surface, not a qualification gate.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [sales, prospect]
-tags: []
-related: []
+tags: [briefings, prospect, sales, dart, investment-management, regulatory, ui]
+related:
+  [
+    im-decision-journey.md,
+    dart-briefing.md,
+    regulatory-umbrella-briefing.md,
+    ../playbooks/02-research-and-documentation.md,
+    ../authentication/light-auth-briefings.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [pb2 post-first-call briefings hub experience]
 referenced_by:
 owner:
 last_reviewed:

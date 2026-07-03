@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Client Lifecycle State Machine
-summary:
-status:
+summary: Client onboarding state machine (DRAFT→KYC_SUBMITTED→KYC_APPROVED→DEPOSITED→SUBSCRIBED→LIVE, SUSPENDED terminal) with per-transition evidence + idempotency; UTL ClientOnboardingStateMachine persisted to GCS; May-23 MVP is manual single-client with no production KYC provider.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [client-lifecycle, onboarding, kyc, state-machine, mvp, gcs]
+related: [client-lifecycle-event-bus.md, client-funds-isolation.md]
 created: 2026-05-13
-authoritative_for:
+authoritative_for: [client onboarding state machine and lifecycle states]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

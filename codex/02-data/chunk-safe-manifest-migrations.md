@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Chunk-Safe Manifest Migrations
 summary:
-status: canonical
+  Chunked-shard + coordinator pattern (UTL ManifestMigrator / RescanScanner / chunked_date_ranges) for running
+  long manifest migrations across N VMs without racing the single _index parquet — workers write disjoint
+  _index/partial/<run-id>/<chunk>.parquet and one singleton-locked coordinator merges then deletes them.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, migration, backfill, single-walk, spot-vm, infrastructure]
+related: [availability-manifest-and-data-status.md, cross-asset-rescan-protocol.md, ../05-infrastructure/vm-tarball-deployment.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [chunk-safe parallel manifest migration pattern (worker/coordinator/partial-shard)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

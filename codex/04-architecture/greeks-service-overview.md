@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Greeks-Service Overview
 summary:
-status: active
+  Dedicated derivation service computing option greeks (delta/gamma/theta/vega/rho) + carry-family rates and writing
+  MARK_UPDATE rows to the PricingLedger SSOT — live (Pub/Sub) and batch modes share one Black-Scholes/carry kernel.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, greeks-service, instruments-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [greeks, strategy, mtds, instruments, reconciliation]
+related: [global-ledger-architecture.md, ../02-data/ledger-event-taxonomy.md, instruments-service-as-ssot-for-mtds.md, ../02-data/availability-manifest-and-data-status.md]
 created: 2026-05-23
-authoritative_for:
+authoritative_for: [greeks-service greek + carry-rate PricingLedger derivation]
 referenced_by:
 owner:
 last_reviewed: 2026-05-23

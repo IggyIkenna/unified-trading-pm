@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Rule 03 — The same-system principle
 summary:
-status:
+  "The same-system principle — DART/IM/Reg Umbrella are partitioned views of one operating stack; research
+  infra ≡ live infra, DART is a live/batch toggle, catalogue rows carry phase tags, paper==live UI — with the
+  orthogonal phase-vs-maturity model (every strategy component takes a phase prop)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, sales, strategy, reconciliation, ui]
+related: [04-dart-commercial-axes.md, 06-show-dont-show-discipline.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [same-system principle (one system, partitioned views; phase vs maturity)]
 referenced_by:
 owner:
 last_reviewed:

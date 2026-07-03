@@ -2,18 +2,21 @@
 doc_type: codex-runbook
 title: ORDER_REJECTION_SPIKE Runbook
 summary:
-status: active
+  Operator runbook for a venue order-reject spike — per-minute rejects above order_rejection_spike_per_min (default
+  10/min over 5min). WARN / Telegram-only, no kill-switch; triage by reject reason (rate-limit / risk-throttle /
+  post-only / balance) then reduce request rate, wait for venue recovery, or pause the archetype on that venue.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
+tags: [runbook, escalation, live-trading, execution, monitoring, cefi]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/circuit_breaker_open.md, codex/15-runbooks/alerting/preflight_failed.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 authoritative_for: Operator response when venue order-reject rate spikes above threshold. Indicates venue health degradation before the circuit breaker has tripped.

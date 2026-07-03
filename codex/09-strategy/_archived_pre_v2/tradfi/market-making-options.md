@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: TradFi Options Market Making
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] TradFi/CeFi options market-making — delta-neutral multi-strike bid/ask quoting on
+  Deribit/CME/IBKR via Black-Scholes, skew-adjusted wing spreads, per-strike gamma/vega caps, auto
+  delta-hedge on the underlying perp (BTC 20bps / ETH 25bps base spread); most latency-sensitive strategy.
+  Replaced by architecture-v2 vol-market-making.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, tradfi, cefi, market-making, options, volatility, deribit, delta-hedge]
+related: [options-ml.md, ../../architecture-v2/archetypes/vol-market-making.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

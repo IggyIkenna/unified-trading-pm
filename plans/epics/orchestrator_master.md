@@ -2,13 +2,17 @@
 doc_type: epic
 title: Orchestrator Master (L5)
 summary:
+  L5 epic owning the agent-orchestrator multi-VM runtime — central 'planning' VM + human-planning VM +
+  slot workers (human/central split 2026-06-12), dashboard aggregation, long-lived setup-token auth
+  failover, per-spawn account isolation, cross-VM observability, and self-healing safety (stuck-agent
+  respawn, dirty-commit, git-staleness alerts); strict per-plan assigned_vm matching now owned by WS-G.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [orchestrator, role-registry, self-healing, observability, infrastructure, escalation, slack]
 related: [../archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md, ../archive/2026_05/agent_orchestrator_dual_deployment_2026_05_19.md, ../archive/2026_05/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md, ../archive/agent_orchestrator_slack_notifications_2026_05_19.md, ../active/agent_orchestrator_workers_on_vms_2026_05_19.md, ../archive/2026_05/agent_reliability_mitigations_2026_05_20.md, ../archive/2026_05/d0_orchestrator_migration_2026_05_20.md, ../active/issues/human_led_audit_pool_2026_05_21.md]
 created: 2026-05-21
 name: orchestrator_master

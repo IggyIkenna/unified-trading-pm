@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: CARRY_RECURSIVE_BORROW_PERP_HEDGED — RENAMED to `CARRY_BASIS_PERP_INV` (2026-05-18)
-summary:
-status:
+summary: >-
+  Historical doc for CARRY_RECURSIVE_BORROW_PERP_HEDGED — RENAMED to CARRY_BASIS_PERP_INV on 2026-05-18
+  (kept for reference only). Family 2 recursive ETH-LST supply-borrow loop + USDC-margined perp short
+  (Hyperliquid / Bybit) sized to E_actual for delta neutrality; canonical spec now lives in
+  carry-basis-perp-inv.md.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, carry, defi, cefi, archetype, migration]
+related:
+  [
+    carry-basis-perp-inv.md,
+    carry-recursive-staked.md,
+    carry-recursive-borrow-lending-only.md,
+    ../../../04-architecture/cefi-perp-leg-bybit.md,
+    ../../../04-architecture/flash-loan-receiver.md,
+  ]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

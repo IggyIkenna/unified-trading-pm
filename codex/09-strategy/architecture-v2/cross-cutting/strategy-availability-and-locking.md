@@ -2,16 +2,23 @@
 doc_type: codex-ssot
 title: Strategy Availability and Locking (Cross-Cutting)
 summary:
-status:
+  'One combinatoric strategy universe powers both the SaaS (DIY client) and Investment-Management (fund) businesses via a
+  per-slot `availability_state` (PUBLIC / INVESTMENT_MANAGEMENT_RESERVED / CLIENT_EXCLUSIVE / RETIRED) — the split is
+  visibility + RBAC + lock state, not code-path duplication; allocation is authorised at `AllocationDirective` reception.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, availability, registry, uac, ui, rbac]
+related:
+  [../category-instrument-coverage.md, ../uac-registry-gaps.md, capital-client-isolation.md, portfolio-allocator.md,
+  ../../../14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md]
 created: 2026-04-20
 authoritative_for:
+  [strategy availability lock-state model (4-state PUBLIC/IM_RESERVED/CLIENT_EXCLUSIVE/RETIRED + RBAC allocation
+  authorisation across one SaaS/IM universe)]
 referenced_by:
 owner:
 last_reviewed:

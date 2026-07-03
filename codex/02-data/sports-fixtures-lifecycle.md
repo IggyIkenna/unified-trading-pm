@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Sports fixtures lifecycle
 summary:
-status: living
+  8-state sports fixture lifecycle (SCHEDULED→SETTLED) with per-source status-code mappings, per-state available_at
+  formulas, the cross-source status verifier design, and the postponed-fixture same-fixture_id identity model.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-ui, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, instruments, data-correctness, reconciliation, data-status, validation]
+related: [codex/02-data/sports-data-types-catalog.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/match-end-time-cascade.md, codex/02-data/honest-absence-downstream-handling.md]
 created: 2026-05-13
-authoritative_for:
+authoritative_for: [sports fixture lifecycle state machine, cross-source fixture status verifier, postponed-fixture identity model]
 referenced_by:
 owner: sports-domain
 last_reviewed: 2026-05-17

@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Capability Wizard — walkthrough question bank
-summary:
-status:
+summary: The capability-wizard question bank — every wizard question (Stages A–J plus isolation-mode starter set) pinned to the registry/enum code anchor that powers its answer set, tagged registry/partial/gap; a question with no anchor and no gap entry is itself a finding.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service, greeks-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, capability-wizard, registry, uac, escalation, docspec]
+related: [capability-wizard.md]
 created: 2026-06-11
-authoritative_for:
+authoritative_for: [capability-wizard question bank (per-question code anchors)]
 referenced_by:
 owner:
 last_reviewed: 2026-06-11

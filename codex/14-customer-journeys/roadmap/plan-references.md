@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Plan references
 summary:
-status:
+  Reference map pointing each next-waves.md follow-up wave item to where its current context already lives (existing
+  plans, codex SSOTs, UI repo files) — avoids re-discovering context per new plan.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [roadmap, plan-hygiene, catalogue, dart, ui, registry]
+related: [next-waves.md, ../../../plans/PLAN_FORMAT.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [customer-journey follow-up wave reference map]
 referenced_by:
 owner:
 last_reviewed:

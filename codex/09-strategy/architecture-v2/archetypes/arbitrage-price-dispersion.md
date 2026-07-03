@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `ARBITRAGE_PRICE_DISPERSION`'
-summary:
-status: code-shipped
+summary: >-
+  Archetype ARBITRAGE_PRICE_DISPERSION: paired same-instrument cross-venue spread capture
+  (cross-CEX/DEX spot-perp, sports cross-book, prediction, cross-venue vol, funding-rate dispersion) via
+  ATOMIC or LEADER_HEDGE. SHIPPED: Variant A price_dispersion.py (requires >=2 candidate_venues) +
+  Variant B funding-rate dispersion over 6 CeFi perps with dynamic-best-long-short pair selection.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, arbitrage, defi, cefi, execution, archetype, binance]
+related:
+  [
+    ../families/arbitrage-structural.md,
+    liquidation-capture.md,
+    ../cross-cutting/execution-policies.md,
+    ../../../02-venues/unity-integration.md,
+    ../cross-cutting/mev-protection.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [ARBITRAGE_PRICE_DISPERSION archetype specification]
 referenced_by:
 owner:
 last_reviewed:

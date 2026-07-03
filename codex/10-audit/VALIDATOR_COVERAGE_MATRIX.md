@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Validator Coverage Matrix - 2026-02-21
 summary:
-status:
+  2026-02-21 matrix mapping 114 baseline validators (BASE / COD / DAT / OBS / INF / SEC / HARDENING /
+  ARC) to service types (pipeline / platform / UI) with priority and applicability, plus per-type
+  validator counts (52 pipeline, 34 universal). Service/UI lists use retired repo names and are stale.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, features-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, validation, quality-gates, data-quality, ssot-audit]
+related: [codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md, codex/10-audit/ssot-reference-mapping.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [baseline validator-to-service-type applicability matrix (2026-02-21 snapshot)]
 referenced_by:
 owner:
 last_reviewed:

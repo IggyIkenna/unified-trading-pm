@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, e2e-testing, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer, admin]
-tags: []
+tags: [infrastructure, orchestrator, self-healing, quality-gates, performance, monitoring]
 related: []
 created: 2026-06-29
 parent_epic: infrastructure_master

@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Dual-cloud image builds — SSOT
 summary:
-status:
+  SSOT for the dual-cloud Docker image build flow — a qg-passed dispatch fanning out to parallel GCP (Cloud Build →
+  Artifact Registry) + AWS (CodeBuild → ECR) routers, per-repo buildspec.aws.yaml, the staging→main promote gate (both
+  clouds must pass, soft-pass when a project is not-configured), the cross-cloud parity QG, and deployed_versions
+  provenance in the workspace manifest.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, unified-trading-library, unified-trading-pm]
 scope: [admin, engineer]
-tags: []
-related: []
+tags: [ci-cd, migration, aws-migration, infrastructure]
+related: [codex/08-workflows/ci-cd-flow.md, codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md]
 created: 2026-06-27
-authoritative_for:
+authoritative_for: [dual-cloud image build flow (GCP Cloud Build + AWS CodeBuild routers, buildspec, promote gate, provenance)]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Admin permissions — the gating model
 summary:
-status:
+  role === admin is NOT sufficient for destructive ops — a 10-permission admin_permissions Firebase custom-claim gates
+  grant_role / rotate_secret / offboard_user / lock_strategy / ...; bootstrap seed admins fall back to legacy
+  full-admin, scoped admins are deny-by-default via hasAdminPermission().
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [admin, permissions, authentication, ui, security, entitlements]
+related: [visibility-slicing.md, fund-org-hierarchy.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [UI admin-permissions gating model (admin_permissions custom claim)]
 referenced_by:
 owner:
 last_reviewed:

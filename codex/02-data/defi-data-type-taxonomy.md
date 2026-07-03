@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: DeFi Data-Type Taxonomy
-summary:
-status:
+summary: >-
+  Canonical per-(venue, data_type) ↔ adapter ↔ handler ↔ cluster-validation matrix for DeFi — data-type
+  families (lending/DEX/aggregator/LST/vault/restaking+LRT/perp/native-staking/governance/bridge/MEV), per-family
+  shard keys and schema fields, the bundled cluster-validation registry map, and per-protocol capture status
+  (✅/◐/✗); wins over the catalogue + venue docs on disagreement.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, data-quality, manifest, features, catalogue, cefi, data-pipeline]
+related: [defi-venue-protocol-catalogue.md, defi-data-types-catalog.md, availability-manifest-and-data-status.md, honest-absence-downstream-handling.md]
 created: 2026-05-10
-authoritative_for:
+authoritative_for: [DeFi per-(venue, data_type) capture matrix, DeFi bundled cluster-validation registry map]
 referenced_by:
 owner:
 last_reviewed: 2026-05-15

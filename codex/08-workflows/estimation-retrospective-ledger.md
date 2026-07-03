@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Estimation Retrospective Ledger
-summary:
-status:
+summary: >-
+  Companion ledger to estimation-calibration: per-plan calibrated-vs-actual ratio rows (seed n=8) plus workspace-wide
+  delivered-throughput observations, feeding multiplier recalibration when 8+ rows for a class drift >±20% from 1.0.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [estimation-calibration, plan-hygiene, performance, cost, monitoring]
+related: [./estimation-calibration.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [estimation retrospective ledger (per-plan calibrated-vs-actual ratios + workspace throughput observations)]
 referenced_by:
 owner:
 last_reviewed:

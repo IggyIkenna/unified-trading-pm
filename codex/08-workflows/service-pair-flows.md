@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Service Pair Flows
-summary:
-status:
+summary: >-
+  Canonical service-to-service interaction flows (data pipeline / execution / results / deployment), the three transport
+  modes (batch-GCS / live-PubSub / co-located-in-memory), and the no-Python-imports + persist-to-GCS rules.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, instruments-service, market-data-processing-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [pipeline, mdps, execution, mtds, instruments]
+related: [../04-architecture/runtime-deployment-topology.md, ../04-architecture/tier-and-import-architecture.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [canonical service-pair interaction flows + transport-mode/persistence rules]
 referenced_by:
 owner:
 last_reviewed:

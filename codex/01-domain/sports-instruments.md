@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: 'Sports Instruments: Format, Matching, Normalization'
 summary:
-status:
+  Canonical sports instrument-key format SPORT:VENUE:MARKET_TYPE:LEAGUE:SEASON:HOME-AWAY::SELECTION plus
+  cross-provider fixture matching (api-football canonical ID), team/league normalization, YYYY-YYYY seasons, and
+  handicap encoding; active venues ODDS_API/PINNACLE/BETFAIR only (scrapers deferred-indefinitely).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [sports, instruments, footystats, odds, uac, canonicalisation]
+related: [../02-data/sports-gcs-path-ssot.md, ../02-data/sports-data-source-coverage-matrix.md, ../02-data/sports-data-types-catalog.md, ../../plans/epics/sports_master.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [sports canonical instrument-key format + fixture/team/league normalization]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

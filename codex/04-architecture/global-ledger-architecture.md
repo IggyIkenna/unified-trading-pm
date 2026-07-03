@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Global Ledger Architecture
 summary:
-status: active
+  Canonical event-sourced accounting layer — 4 SSOT append-only ledgers (Instruction/Passive/Treasury/Pricing) + 4
+  derived views (Position/Exposure/PnL/PnLAttribution) + RiskView, across 5 writer services with cross-client isolation.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, execution, reconciliation, mtds, instruments, data-correctness]
+related: [client-funds-isolation.md, ../02-data/ledger-event-taxonomy.md, greeks-service-overview.md, per-client-isolation-architecture.md, client-reporting-architecture.md]
 created: 2026-05-21
-authoritative_for:
+authoritative_for: [global ledger four-SSOT and four-derived ledger architecture]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

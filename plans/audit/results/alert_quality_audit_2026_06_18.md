@@ -2,20 +2,35 @@
 doc_type: audit-result
 title: Alert Quality Audit — Slack
 summary:
-status: in-progress
+  Audit of Slack alert quality (#ci-failures + agent-orchestrator alerts) —
+  root-causes the operator's 60-80%-repeat complaint to per-process in-memory
+  dedup state that resets on VM restart plus zero read-back dedup in the shared
+  notify-slack.yml carrier; proposes an error-pointer message standard and a
+  prioritized remediation (P0 read-back dedup in the carrier, collapse
+  triple-detected stuck-PR alerts) → wrapper plan alert_quality_overhaul.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, deployment-ui]
+repos: [agent-orchestrator, deployment-ui, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, slack, observability, monitoring, orchestrator, escalation, ci-cd, alerting]
+related:
+  [
+    ../../active/monitoring_control_plane_master_2026_06_10.md,
+    ../instructions/infrastructure_master_audit_instructions.md,
+    ../../../codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-06-18
 audited_scope:
+  24 agent-orchestrator server-side notify_* alerts + all callers, 50 PM
+  workflows + 10 AO workflows, ci_failure_watcher.py + promotion_lag_monitor.py,
+  and the notify-slack.yml shared carrier (dedup/ledger). NOT covered — runtime
+  alert-volume measurement.
 date: 2026-06-18
 auditor: ikennaigboaka
 parent_epic: observability_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

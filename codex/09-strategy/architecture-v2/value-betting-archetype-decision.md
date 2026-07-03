@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: Value-Betting Archetype Decision (2026-04-21)
-summary:
-status:
+summary: >-
+  Decision (2026-04-21): value-betting is NOT a separate archetype — it is the
+  EdgeMethod.VALUE_PROB_VS_IMPLIED axis value on ML_DIRECTIONAL_EVENT_SETTLED when that archetype runs
+  on sports / prediction event markets. Resolves the Wave-5 GAP for the v1 UI rows
+  SPORTS_NFL_VALUE_BET_EVT_GAME + SPORTS_MLB_VALUE_BET_EVT_GAME with no new archetype and no code change.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, sports, prediction, ml, odds, archetype, ssot-audit]
+related:
+  [
+    strategy-registry-v2.md,
+    naming-convention.md,
+    legacy-family-migration.md,
+    archetypes/ml-directional-event-settled.md,
+  ]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [value-betting archetype decision (VALUE_PROB_VS_IMPLIED edge-method, not a separate archetype)]
 referenced_by:
 owner:
 last_reviewed:

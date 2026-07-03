@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Rule 07 — Data licensing boundaries
 summary:
-status:
+  "Data-licensing boundary — Odum sells enriched services, never raw-data resale — with the enriched-vs-raw
+  test, internal-vs-external framing, the client-own-data carve-out, and the audit + compliance-escalation
+  enforcement for raw-data framing leaks."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, sales, data-licensing, cost, compliance]
+related: [05-building-block-dimensions.md, 06-show-dont-show-discipline.md, 08-pricing-principles.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [data-licensing boundary (enriched-services-not-raw-resale)]
 referenced_by:
 owner:
 last_reviewed:

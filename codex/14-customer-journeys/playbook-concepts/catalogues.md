@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: The four catalogues — umbrella doc
 summary:
-status:
+  Umbrella doc for Odum's four catalogues (Data, Strategy, ML Model, Execution Algo) — each an SSOT across service
+  code, UAC registry, and /services/<catalogue>/* UI, sharing lock-state, maturity ladder, and visibility slicing, and
+  forming a Data -> ML -> Strategy <- Execution DAG.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [catalogue, ssot, uac, ui, strategy, visibility]
+related: [catalogue-data.md, catalogue-strategy.md, catalogue-ml-model.md, catalogue-execution-algo.md, visibility-slicing.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [four-catalogue umbrella pattern (service/UAC/UI three-layer model)]
 referenced_by:
 owner:
 last_reviewed:

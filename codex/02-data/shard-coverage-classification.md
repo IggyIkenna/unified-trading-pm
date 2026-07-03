@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: Shard-Coverage Classification — windowed RUNNABLE / INSUFFICIENT-HISTORY / HONEST-EMPTY
-summary:
-status:
+summary: >-
+  Windowed shard-coverage classifier SSOT — the total trichotomy RUNNABLE / INSUFFICIENT_HISTORY /
+  HONEST_EMPTY per (asset_group, venue, data_type, instrument, required_window) that the
+  honest-coverage smoke harness reads; the per-day bucketing (C/WE/OOW/UK/F/U + missing-row M), the
+  decision-table verdict (any hole -> INSUFFICIENT_HISTORY), product-shaped required-windows, and
+  single-walk discipline.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing, features-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [honest-coverage, manifest, smoke-test, single-walk, data-correctness, golden-window]
+related:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/honest-absence-downstream-handling.md,
+    codex/02-data/honest-coverage-model.md,
+    codex/02-data/data-pipeline-correctness-hard-rule.md,
+  ]
 created: 2026-06-29
-authoritative_for:
+authoritative_for: [windowed shard-coverage RUNNABLE/INSUFFICIENT-HISTORY/HONEST-EMPTY classification]
 referenced_by:
 owner:
 last_reviewed: 2026-06-29

@@ -2,18 +2,29 @@
 doc_type: codex-runbook
 title: Backfill completion playbook — instruments-service + market-tick-data + market-data-processing
 summary:
-status: active
+  Operational recipe to drive every asset_group to 100% honest coverage (captured/empty_confirmed with the parquet
+  actually present) — per-asset_group cutoffs + shard atoms, the worst-covered-first priority order, single-bundled-file
+  + write-time-schema-governance invariants, TradFi/VIX special provenance, and the known silent-failure gotchas. Batch
+  only; run phantom recon after each backfill.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [backfill, runbook, manifest, honest-coverage, sports, tradfi, data-correctness, vm-tarball]
+related:
+  [
+    ../02-data/availability-manifest-and-data-status.md,
+    ../02-data/schema-governance.md,
+    ../05-infrastructure/vm-tarball-deployment.md,
+    ../04-architecture/backfill-and-live-startup.md,
+    ../02-data/sports-data-source-coverage-matrix.md,
+  ]
 created: 2026-05-01
-owner:
-cadence:
-verifier:
+owner: operator (triggered by cycle-close backfill dispatch or ad-hoc coverage gap)
+cadence: per-backfill-batch (event-driven, not scheduled)
+verifier: manifest spot-check — capture_status in {captured, empty_confirmed} for target date range; QG green
 last_executed:
 code_refs:
 audience: dev / operator

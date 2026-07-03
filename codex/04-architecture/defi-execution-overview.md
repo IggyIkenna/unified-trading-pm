@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: DeFi Execution Overview
 summary:
-status:
+  "SSOT for DeFi execution: strategy→execution manifest handoff (3-state emission), operation routing
+  (TRADE/LEND/BORROW/SWAP/STAKE/FLASH_* + Phase-4 LST/restaking/yield/Solana connectors), credential fetch,
+  DefiErrorCode (35 codes), cost models (gas/slippage/flash), wrap preprocessor, and the DeFi-long+CeFi-short
+  hybrid model."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, connectors, cost, mev, aave, uniswap]
+related: [mev-protection.md, interface-credential-convention.md, custody-providers.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [DeFi execution overview and strategy-to-execution operation routing]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

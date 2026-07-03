@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: UAC `internal/*.py` Module Docstring Rule (G-15 codification)
-summary:
-status: stable
+summary: >-
+  G-15 rule: every public `unified_api_contracts/internal/*.py` module consumed by a cross-cutting service surface must
+  cite its consumer(s), cross-reference the canonical codex SSOT for that surface, and cite the introducing plan/issue in
+  its module docstring (`manual_audit_paths.py` is the reference impl).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui, unified-api-contracts, unified-trading-library]
 scope: [engineer]
-tags: []
-related: []
+tags: [uac, docspec, ssot-audit, refactor]
+related: [../02-data/contracts-scope-and-layout.md, ../13-codex-governance/SSOT-BOUNDARY.md]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: [UAC internal module docstring rule (G-15 consumer-citation)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-12

@@ -2,18 +2,26 @@
 doc_type: audit-instruction
 title: Canonical-Form Cross-Service Audit Checklist (SSOT)
 summary:
-status:
+  Everlasting cross-service SSOT enumerating every canonical data+manifest invariant (CF-1…CF-14) of the 2026-06-01
+  canonicalisation programme and mapping each to the per-service audit that owns the concrete check — a canonical-form
+  item with no owning audit is a review-blocking coverage gap; codifies audit-scope-is-a-prior-not-a-ceiling (fix fully
+  and autonomously).
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, execution-service, features-service, instruments-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, canonicalisation, manifest, data-correctness, ssot-audit, pipeline-mode, data-status]
+related:
+  [
+    ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    batch_live_symmetry_master_audit_instructions.md,
+  ]
 created: 2026-06-01
-tier:
+tier: L0
 parent_epic: infrastructure_master
-cadence:
+cadence: on-demand
 verifier:
 lifespan:
 ---

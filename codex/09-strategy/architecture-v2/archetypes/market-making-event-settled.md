@@ -1,17 +1,26 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `MARKET_MAKING_EVENT_SETTLED`'
-summary:
-status: design
+summary: >-
+  `MARKET_MAKING_EVENT_SETTLED` archetype — posts back + lay quotes on sports exchanges (Betfair / Smarkets / Matchbook
+  / Betdaq) and Polymarket, earning the spread on matched bets with inventory skew; cancels quotes
+  `pre_event_cancel_minutes` before event start; positions settle discretely on event resolution.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [market-making, sports, prediction, odds, event-driven]
+related:
+  [
+    ../families/market-making.md,
+    market-making-continuous.md,
+    ../../../02-venues/unity-integration.md,
+    ../category-instrument-coverage.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [MARKET_MAKING_EVENT_SETTLED archetype specification]
 referenced_by:
 owner:
 last_reviewed:

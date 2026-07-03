@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: features-service architecture
 summary:
-status: stable
+  Eight features-*-service repos consolidated into one features-service (one image/pyproject/Health-API/CLI dispatcher
+  keyed by --feature-family), with canonical UTL ModeHandler + BaseFeatureCalculator contracts and live=batch topology.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [features, consolidation, refactor, mtds, mdps, infrastructure]
+related: [../06-coding-standards/feature-service-pattern.md, ../06-coding-standards/cli-convention.md, ../02-data/data-status-drilldown.md, batch-live-architecture.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [features-service 8-family consolidation architecture, features-service ModeHandler and BaseFeatureCalculator canonical contracts]
 referenced_by:
 owner:
 last_reviewed: 2026-05-18

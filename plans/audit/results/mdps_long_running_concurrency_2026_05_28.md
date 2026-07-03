@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: MDPS Long-Running Concurrency + Execution-Unit Cost Model
-summary:
-status: complete
+summary: >-
+  Cost-model audit of the 4 candidate MDPS execution shapes (subprocess-per-date 2480s, subprocess-per-shard 5120s,
+  in-process 2400s, process-pool 4668s for a 16-day backfill) with startup/memory/isolation/observability per shape.
+  Verdict: inner ThreadPoolExecutor per-instrument fan-out is CORRECT (Polars/PyArrow release the GIL); the decision is
+  the OUTER loop. Current in-process shape empirically unreliable beyond ~1-2 days on 32 GB (15.7 GB post-day-1
+  residue); backpressure is reactive at 85% and can deadlock. Feeds architectural Phase 1.1.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, mdps, performance, backfill, spot-vm, cost]
+related:
+  - plans/audit/results/mdps_long_running_state_inventory_2026_05_28.md
+  - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
+  - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: '2026-05-28'
-audited_scope:
+audited_scope: MDPS long-running concurrency + execution-unit cost model — the 4 candidate execution shapes, inner ThreadPoolExecutor choice, backpressure-layer blind spots, observability gaps
 date: '2026-05-28'
 auditor: claude opus 4.7 (slot main subagent)
 parent_epic: mtds_mdps_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

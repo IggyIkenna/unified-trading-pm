@@ -1,21 +1,30 @@
 ---
 doc_type: audit-result
 title: Infrastructure Master — CI/CD Pipeline Contract Audit (2026-06-01)
-summary:
-status: complete
+summary: >-
+  First run of the CI/CD pipeline-contract checklist (groups h–l) across all 23 active repos: quickmerge sentinel
+  gate, branch protection, SIT-at-staging, main-triggers-builds, dirty-tree reconciliation. Tally 9 GREEN / 7 AMBER /
+  4 RED.
+  RED: quality-gates-v2 missing on main for 7 repos + staging for many; enforce_admins on only 6/23 (gate
+  admin-bypassable elsewhere); promotion not gated on full-workspace SIT. Ruleset ground-truth supersedes the classic
+  branch-protection lens.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, quickmerge, quality-gates, ci-cd, ssot-audit, branch-protection, infrastructure]
+related:
+  - plans/active/issues/full_cicd_sit_target_state_2026_05_24.md
+  - plans/active/cicd_contract_hardening_2026_06_01.md
+  - plans/audit/instructions/infrastructure_master_audit_instructions.md
 created: 2026-06-01
-audited_scope:
+audited_scope: CI/CD pipeline contract (checklist h–l — quickmerge/branch-protection/SIT/build-triggers/dirty-tree; VM/GCS items a–g not run this pass) across all 23 active repos
 date: 2026-06-01
 auditor: ikenna (slot 1 main, Opus 4.8 1M)
 parent_epic: infrastructure_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

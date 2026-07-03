@@ -2,13 +2,16 @@
 doc_type: epic
 title: Manifest evolution master — single owner for schema + writer code + GCS data layout (3-axis batch invariant)
 summary:
+  SUPERSEDED (2026-05-21) manifest-evolution epic — the 3-axis batch invariant (schema + writer code +
+  GCS data layout co-evolve at one gate) plus honest-absence taxonomy and IS↔MTDS contract enforcement
+  consolidated into manifest_master.md; archaeology only, no new work here.
 status: superseded
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [manifest, honest-coverage, data-correctness, consolidation, pipeline-mode, migration]
 related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/02-data/manifest-migration-coordination.md]
 created: 2026-05-08
 name:

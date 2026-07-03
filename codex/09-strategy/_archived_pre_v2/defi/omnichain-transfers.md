@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Omnichain Transfers Strategy
 summary:
-status:
+  Pre-v2 DeFi cross-chain transfer infrastructure (not a yield strategy) — routes TRANSFER instructions via
+  Socket / LayerZero / Across bridges and tracks PENDING_BRIDGE in-flight capital with a 30-min timeout; consumed by
+  the multi-chain lending, cross-chain yield-arb, and L2 basis strategies. Superseded by architecture-v2.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, cross-chain, bridge, infrastructure]
+related: [multi-chain-lending-yield.md, cross-chain-yield-arb.md, l2-basis-trade.md, cross-chain-sor-rebalancing.md]
 created: 2026-03-30
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

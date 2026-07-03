@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Post-Plan Reality — Pointer for Fresh Agents (2026-05-06)
-summary:
-status: ACTIVE — read before making any code or doc change in the affected scopes
+summary: Fresh-agent override pointer for the 2026-05-06 writegate-honest-coverage work-package — lists the 10 cross-cutting
+  principles (honest coverage, single-SSOT, live=batch, A/B/C empty-output tree, mandatory cluster validation, per-VM
+  shard isolation) and enumerates every stale codex + per-service doc carrying a banner back to it.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [honest-coverage, data-correctness, ssot-audit, manifest, cluster-validation, single-walk, live-trading, migration]
+related: [02-data/availability-manifest-and-data-status.md, 06-coding-standards/validation-and-errors.md]
 created: 2026-05-06
-authoritative_for:
+authoritative_for: [2026-05-06 writegate post-plan reality (10 cross-cutting principles + stale-doc banner registry)]
 referenced_by:
 owner:
 last_reviewed:

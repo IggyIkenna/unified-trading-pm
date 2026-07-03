@@ -1,21 +1,21 @@
 ---
 doc_type: audit-result
 title: Mega-audit Phase A — human-readable issues + sampling transparency + delegation SSOT
-summary:
-status:
+summary: Human-readable roll-up + delegation SSOT for mega-audit Phase A (A1-A6) — consolidates A1 code-shape (2593 violations), A2 oracle gaps, A3 divergence (214k MISSING_EXPECTED), A4 v8 (0% compliant / 1.34M NULL rows), A5 dependency-fail, A6 batch-live parity; per-finding R-item remediation table is the canonical split-slot delegation SSOT, with per-audit sampling-transparency coverage.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, ssot-audit, manifest, data-correctness, honest-coverage, quality-gates, orchestrator, data-pipeline]
+related: [codified_shape_compliance_2026_05_20_summary.md, expected_coverage_dump_2026_05_20_summary.md, manifest_divergence_2026_05_20_summary.md, manifest_v8_compliance_2026_05_20.md, batch_live_adapter_parity_2026_05_20_summary.md]
 created: 2026-05-20
-audited_scope:
-date:
-auditor:
+audited_scope: All 6 mega-audit Phase A sub-audits (A1 code-shape, A2 expected_coverage oracle+dump, A3 manifest divergence, A4 v8 compliance, A5 dependency-fail propagation, A6 batch-live adapter parity) with per-audit sampling-vs-comprehensive matrix + delegation/remediation table + operator Q&A rounds 2-4
+date: 2026-05-20
+auditor: semver
 parent_epic: infrastructure_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

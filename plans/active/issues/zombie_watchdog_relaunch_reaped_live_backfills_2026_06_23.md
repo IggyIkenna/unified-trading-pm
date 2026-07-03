@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, spot-vm, backfill, self-healing, monitoring, observability, cefi, sports]
+related: [plans/active/data_completion_to_100_all_ag_2026_06_21.md]
 created: 2026-06-23
 parent_epic: infrastructure_master
 priority: P2

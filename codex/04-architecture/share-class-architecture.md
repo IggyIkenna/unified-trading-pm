@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Share Class Architecture
 summary:
-status:
+  Share class = the base currency (USDT/ETH/BTC) a client portfolio is denominated in; defines per-class
+  delta-neutral targets, margin-currency-mismatch + base-currency-drift risk checks, and FX-component PnL decomposition.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, defi, cefi, execution, reconciliation]
+related: [strategy-execution-protocol.md, capital-flow-model.md]
 created: 2026-04-03
-authoritative_for:
+authoritative_for: [share-class base-currency architecture (USDT/ETH/BTC denomination + per-class delta-neutral targets)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

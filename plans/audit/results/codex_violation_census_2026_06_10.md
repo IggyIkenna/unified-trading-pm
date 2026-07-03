@@ -2,20 +2,31 @@
 doc_type: audit-result
 title: Codex violation census — 2026-06-10 (Phase 0 of codex_violations_ratchet_to_five_2026_06_10)
 summary:
-status: complete
+  Phase-0 remediation matrix for the codex-violations ratchet-to-≤5 plan —
+  per-repo codex violation counts vs budget from QG_SLICE=lint-codex across every
+  service/library/PM repo, converting each opaque budget number into concrete
+  failing check-classes + representative file/line offenders; 5 repos over the
+  ≤5 ceiling (deployment-api 24, execution-service 22, MTDS 15, strategy 10, MDPS
+  7) plus hidden file-size debt (registry.py 18k L, orchestrator.py 8k L).
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, execution-service, features-service, fund-administration-service, greeks-service, ibkr-gateway-infra, instruments-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service, system-integration-tests, trading-agent-service, unified-api-contracts, unified-trading-api, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, quality-gates, ssot-audit, refactor, verification, uac]
+related:
+  [../../active/codex_violations_ratchet_to_five_2026_06_10.md]
 created: 2026-06-10
 audited_scope:
+  per-repo codex quality-gate violation counts vs budget across every
+  service/library/PM repo (via QG_SLICE=lint-codex --no-fix), with failing
+  check-classes + representative offenders. NOT covered — UI repos and e2e-testing
+  (slot env/tooling gaps, not a codex count).
 date: '2026-06-10'
 auditor: claude + operator
 parent_epic: infrastructure_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

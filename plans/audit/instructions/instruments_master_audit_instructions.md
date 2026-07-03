@@ -2,18 +2,26 @@
 doc_type: audit-instruction
 title: instruments_master_audit_instructions
 summary:
-status:
+  Weekly audit of instruments-service as the reference-data SSOT — venue URL ownership, instrument-universe management,
+  InstrumentRecord schema, and the IS→MTDS contract (QG STEP 5.70 three scripts) so MTDS derives all venue URLs +
+  universes from IS, never hardcoded; also validates the instruments-store v9 migration + CF-14 could-exist ROOT
+  denominator.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, instruments, catalogue, mtds, uac, canonicalisation, registry]
+related:
+  [
+    canonical_form_cross_service_audit_checklist.md,
+    ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+  ]
 created: 2026-05-22
 tier: L1
 parent_epic: instruments_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

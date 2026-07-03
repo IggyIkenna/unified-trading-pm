@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `ARBITRAGE_CROSS_DOMAIN_EVENT`'
-summary:
-status: design
+summary: >-
+  Archetype ARBITRAGE_CROSS_DOMAIN_EVENT: riskless cross-domain event arb spanning sports books,
+  prediction CLOBs, and CME binaries priced on the same real-world outcome. ATOMIC fan-out across all
+  legs (abort/unwind on partial fill), USD* share class, entry gated on net_edge > min_arb_edge_usd AND
+  return > min_arb_return_pct with aligned expiries.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, arbitrage, prediction, sports, odds, execution, archetype]
+related:
+  [
+    ../families/arbitrage-structural.md,
+    arbitrage-price-dispersion.md,
+    market-making-prediction.md,
+    market-making-event-settled.md,
+  ]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [ARBITRAGE_CROSS_DOMAIN_EVENT archetype specification]
 referenced_by:
 owner:
 last_reviewed:

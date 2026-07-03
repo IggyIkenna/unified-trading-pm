@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_OVERLAY_PROTECTIVE_PUT`'
 summary:
-status: design
+  'Archetype spec for `VOL_OVERLAY_PROTECTIVE_PUT` — buys 15-30 delta OTM puts as tail insurance on a delta-1 long
+  (optionally financed as a collar via a covered call); a cost-centre bounding drawdown to strike + premium; Deribit/OKX.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, protective-put, overlay, hedging]
+related: [vol-overlay-covered-calls.md, vol-straddle.md, vol-carry.md, carry-basis-perp.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_OVERLAY_PROTECTIVE_PUT archetype spec']
 referenced_by:
 owner:
 last_reviewed:

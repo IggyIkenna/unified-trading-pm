@@ -2,20 +2,28 @@
 doc_type: audit-result
 title: Source-mode capability matrix (M2 ratification input) — {batch/live/replay × transport} per data_source
 summary:
-status: complete
+  Per-source {batch/live/replay × transport} capability matrix (28 canonical sources) — the ratified M2 input that
+  unblocks the M1 {mode}_{source}[_{transport}] enum; batch=always-YES floor, live/replay/transport determined from
+  vendor docs + code. Operator-ratified 2026-06-07 — Tardis replay=NO (academic licence blocks it → CeFi replay comes
+  from exchanges, batch source=tardis), massive real-time=pay, odds_api replay=have-it, sports={batch,replay}; replay-
+  capability is a per-(source,data_type) fact feeding M4 live→replay→batch read precedence, NOT an operator gate.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [pipeline-mode, data-pipeline, reconciliation, tradfi, cefi, defi, ssot-audit, audit]
+related: [plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md, plans/active/data_source_provenance_all_asset_groups_2026_06_01.md, codex/02-data/pipeline-mode-partition.md]
 created: 2026-06-07
-audited_scope:
+audited_scope: >-
+  {batch/live/replay × transport} capability per data_source (28 canonical sources across all asset groups) from
+  vendor docs + code — the M2 ratification input for the pipeline_mode standardisation plan; replay-capability fact
+  table + operator-ratified residuals R1-R3
 date: '2026-06-07'
 auditor: ikenna (slot-2, research)
 parent_epic: infrastructure_master
-severity:
+severity: P3
 resulting_plan:
 lib_version:
 doc_versions_checked:

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Execution Algo Catalogue
 summary:
-status:
+  Execution Algo Catalogue playbook-concept — SSOT in execution-service algo_library (VWAP/TWAP/POV/Adaptive) +
+  matching_engine; 7 orphan /services/execution/* pages, UAC capability exposure audit pending, /services/execution/tca
+  broken; lists the parity gaps to build.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [catalogue, execution, ui, uac, page-triage, audit]
+related: [catalogues.md, ../page-triage/broken-links.md, visibility-slicing.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [execution-algo catalogue UI-surface parity gap]
 referenced_by:
 owner:
 last_reviewed:

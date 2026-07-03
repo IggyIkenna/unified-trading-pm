@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Axis: Expression'
 summary:
-status:
+  Expression axis catalog — how a strategy view is translated into traded instruments (independent of signal source and
+  edge method). Covers cash-equivalent (SPOT/PERP/DATED_FUTURE/MARGIN), options structures, DeFi (DEX_SWAP/LP/LEND/
+  STAKE/loops), sports/prediction bets, synthetics; selection drivers, expression×family compatibility, and multi-leg
+  ATOMIC/LEADER_HEDGE execution-mode declaration.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, expression, options, defi, execution, sports]
+related:
+  [venue-eligibility.md, staking-methods.md, signal-sources.md, ../cross-cutting/execution-policies.md, ../cross-cutting/trade-expression.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [expression axis (view-to-instrument translation catalog)]
 referenced_by:
 owner:
 last_reviewed:

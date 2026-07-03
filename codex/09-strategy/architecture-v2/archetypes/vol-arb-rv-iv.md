@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_ARB_RV_IV`'
 summary:
-status: design
+  'Archetype spec for `VOL_ARB_RV_IV` — trades mean-reversion in the IV−RV spread (buy vol when IV is below RV, sell when
+  above), delta-hedged; entry at |IV−RV| ≥ ~4 vol points with z-score confirm; Deribit/OKX/CBOE.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, iv-rv, mean-reversion, delta-hedge]
+related: [vol-carry.md, vol-spread-structures.md, vol-straddle.md, vol-ml-lean.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_ARB_RV_IV archetype spec']
 referenced_by:
 owner:
 last_reviewed:

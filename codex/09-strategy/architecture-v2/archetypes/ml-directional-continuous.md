@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `ML_DIRECTIONAL_CONTINUOUS`'
-summary:
-status: design
+summary: >-
+  `ML_DIRECTIONAL_CONTINUOUS` archetype — consumes ML P(up)/P(down) predictions, calibrates, computes edge =
+  calibrated_P − implied_P, gates on `confidence_threshold` and `min_edge_threshold`, sizes via fractional Kelly, and
+  emits target-state TRADEs across spot/perp/future/options expressions; `HOLD_UNTIL_FLIP` default.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ml, strategy, kelly, live-trading, execution]
+related:
+  [
+    ../families/ml-directional.md,
+    ml-directional-event-settled.md,
+    ../axes/expression.md,
+    ../axes/hold-policy.md,
+    ../cross-cutting/benchmark-fills.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [ML_DIRECTIONAL_CONTINUOUS archetype specification]
 referenced_by:
 owner:
 last_reviewed:

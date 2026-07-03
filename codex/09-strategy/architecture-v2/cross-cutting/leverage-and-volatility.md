@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: 'Cross-cutting: Volatility-derived leverage caps'
 summary:
-status:
+  'Instrument-side leverage cap: `max_safe_leverage = (1 - safety_buffer) / max_move_pct` via
+  `derive_max_safe_leverage()` + `INSTRUMENT_VOLATILITY_REGISTRY`; the LeveragedLegController clamps
+  `min(venue.max_leverage, instrument.max_safe_leverage)` and emits `LEVERAGE_CAP_TRIPPED`.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [leverage, defi, execution, risk, strategy, uac]
+related: [risk-gates.md, restaking-reward-economics.md, instrument-type-leverage-matrix.md]
 created: 2026-05-01
-authoritative_for:
+authoritative_for: [instrument-side volatility-derived leverage cap (derive_max_safe_leverage + INSTRUMENT_VOLATILITY_REGISTRY)]
 referenced_by:
 owner:
 last_reviewed:

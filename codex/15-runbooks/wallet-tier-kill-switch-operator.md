@@ -2,18 +2,27 @@
 doc_type: codex-runbook
 title: Wallet-Tier Kill-Switch — Operator Runbook
 summary:
-status: active
+  Operator procedure for arming a sub-KILL_ALL_LIVE kill switch — the KILL_PER_WALLET / KILL_PER_ARCHETYPE /
+  KILL_PER_VENUE decision tree + scope table, DART UI + arm.sh CLI arm/disarm steps, the structured audit-log signature
+  to verify, and how in-flight PENDING/SUBMITTED/FILLED instructions are handled at arm time. Reach for KILL_ALL_LIVE
+  first on a global outage, then narrow.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [runbook, kill-switch, defi, execution, escalation, custody]
+related:
+  [
+    codex/04-architecture/kill-switch-event-bus.md,
+    codex/04-architecture/custody-providers.md,
+    codex/15-runbooks/smoke-testing-playbook.md,
+  ]
 created: 2026-05-14
-owner:
-cadence:
-verifier:
+owner: on-call operator (Ikenna / Harsh by rotation)
+cadence: on-demand (incident response) + quarterly DR drill
+verifier: slot-1 orchestrator reviews audit log within 24h of any arm event
 last_executed:
 code_refs:
 type: runbook

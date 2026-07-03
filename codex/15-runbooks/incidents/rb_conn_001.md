@@ -2,13 +2,15 @@
 doc_type: codex-runbook
 title: RB-CONN-001 — Exchange WebSocket Degradation
 summary:
-status:
+  Operator runbook for CONNECTIVITY_GAP_DETECTED / TICK_STALENESS on a venue — decide wait vs failover_feed vs
+  disable_venue+cancel_open_orders against the dependency_health_policy thresholds; both feeds down → SEV0 DUAL_FAILURE.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, connectivity, websocket, failover, escalation]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

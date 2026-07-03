@@ -1,21 +1,31 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `MARKET_MAKING_CONTINUOUS`'
-summary:
-status: live
+summary: >-
+  `MARKET_MAKING_CONTINUOUS` archetype — two-sided liquidity provision spanning CLOB MM (Binance / OKX / Bybit /
+  Hyperliquid / Deribit) and AMM concentrated/passive LP (Uniswap V3/V4, Orca, Curve, Balancer); earns spread/swap
+  fees, manages inventory and impermanent loss via quote skew, range rebalancing, and optional CEX delta hedge.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [market-making, clob, amm, lp, impermanent-loss, defi]
+related:
+  [
+    ../families/market-making.md,
+    market-making-event-settled.md,
+    market-making-inventory-skew.md,
+    ../category-instrument-coverage.md,
+    ../../../04-architecture/capital-efficiency-patterns.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [MARKET_MAKING_CONTINUOUS archetype specification]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [strategy-service/strategy_service/engine/strategies/v2/market_making/continuous.py]
 archetype: MARKET_MAKING_CONTINUOUS
 family: MARKET_MAKING
 venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT, UNISWAP_V3, UNISWAP_V4, ORCA, AERODROME, RAYDIUM, CURVE, BALANCER]

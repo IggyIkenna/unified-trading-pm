@@ -2,18 +2,21 @@
 doc_type: codex-runbook
 title: Alerting Operator Playbook
 summary:
-status: planned
+  Canonical per-AlertCode operator playbook — the doc on-call opens when paged; it gives what the code means, the
+  immediate action (5-min-to-first-action), escalation tiers (primary → secondary → strategy lead → custody), which
+  kill-switch to pull, and known false-positives. STUB (planned 2026-05-07) — per-code entries fill as Phase 1/2 ship.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service]
 scope: [engineer, admin]
-tags: []
+tags: [runbook, escalation, live-trading, monitoring, ui]
 related: [codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/threshold-tuning.md, codex/14-customer-journeys/dart/]
 created: 2026-05-07
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 authoritative_for: Per-AlertCode operator response — ack / escalate / kill-switch / runbook-link. The doc the on-call operator opens when their phone rings; tells them what to do for every code.

@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: DeFi Instrument Pipeline
-summary:
-status: canonical
+summary: >-
+  End-to-end DeFi instrument pipeline from instruments-service reference-data adapters (49 DeFi adapters:
+  lending/DEX/LST/vault/restaking/native-staking) through MTDS raw_tick_data → MDPS processed_candles →
+  features-onchain → strategy → execution; documents the canonical instrument_key registry, the PATH_REGISTRY GCS
+  path templates, the step-by-step add-an-instrument recipe, and the factory.py subgraph-prefix adapter
+  auto-registration mechanism.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, instruments, pipeline, mtds, mdps, features, execution]
+related: [defi-venue-protocol-catalogue.md, defi-data-pipeline.md, hive-schema-compatibility.md, partitioning.md, ../09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md]
 created: 2026-04-03
-authoritative_for:
+authoritative_for: [DeFi instrument pipeline stages (instruments-service adapters through execution), instruments-service factory.py subgraph-prefix adapter auto-registration]
 referenced_by:
 owner:
 last_reviewed: 2026-05-15

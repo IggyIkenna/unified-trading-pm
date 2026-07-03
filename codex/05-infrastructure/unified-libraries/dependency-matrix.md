@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Dependency Matrix
-summary:
-status:
+summary: 'Redirect stub — the library dependency matrix lives in `LIBRARY-DEPENDENCY-MATRIX.md`.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, refactor]
+related: [LIBRARY-DEPENDENCY-MATRIX.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [redirect stub — canonical view is LIBRARY-DEPENDENCY-MATRIX.md]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

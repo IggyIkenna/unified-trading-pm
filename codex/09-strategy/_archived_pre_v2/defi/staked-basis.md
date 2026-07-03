@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: DeFi Staked Basis
 summary:
-status:
+  Pre-v2 DeFi staked basis (ETH) — swap USDT->weETH (EtherFi LST) + short ETH perp on Hyperliquid; delta-neutral,
+  collects ~3.5% weETH staking + funding + EIGEN/ETHFI rewards, EtherFi/Lido configurable via staking_protocol;
+  targets 12-20% APY, $10M. SUPERSEDED banner — see architecture-v2.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, basis-trade, staking, etherfi, hedging, rewards]
+related: [basis-trade.md, recursive-staked-basis.md, sol-staked-basis.md, reward-lifecycle.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

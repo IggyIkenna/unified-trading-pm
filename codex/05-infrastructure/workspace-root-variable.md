@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Workspace Root Variable Pattern
-summary:
-status:
+summary: >-
+  The `UNIFIED_TRADING_WORKSPACE_ROOT` env-var pattern — each developer sets it once in their shell profile so
+  workspace-level scripts and IDE configs reference absolute paths portably, without hardcoding or git-tracking
+  per-developer paths; per-repo scripts use repo-relative paths instead.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, scripts, setup]
+related: [new-repo-setup.md, workspace-setup.md, ci-cd.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [UNIFIED_TRADING_WORKSPACE_ROOT variable pattern]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

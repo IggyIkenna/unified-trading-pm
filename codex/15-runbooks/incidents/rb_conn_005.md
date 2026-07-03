@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: RB-CONN-005 — Alert Provider Failure
 summary:
-status:
+  Operator runbook for ALERTING_PROVIDER_DEGRADED (PagerDuty / Telegram probe failed) — confirm router fallback_mode
+  and Twilio voice reachability; fallback auto-resets after 3 consecutive successful probes, billing issues page
+  operator immediately.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, connectivity, alerting, fallback, escalation]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: '2026-05-23'
 owner: ikenna@odum-research.com

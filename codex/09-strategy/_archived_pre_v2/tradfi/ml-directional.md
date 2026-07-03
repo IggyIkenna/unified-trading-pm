@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: TradFi ML Directional
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] TradFi ML directional strategy — converts ml-inference prediction_score[−1,1] +
+  confidence into sized long/short/flat trades on equities/ETFs/FX + commodity futures via IBKR/CME/NYMEX;
+  never touches raw market data; two impls (score-based standalone + swing SCE/HUF). Replaced by
+  architecture-v2 ml-directional-continuous.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, tradfi, ml, futures, features, execution]
+related: [tradfi-momentum.md, ../../architecture-v2/archetypes/ml-directional-continuous.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

@@ -2,20 +2,37 @@
 doc_type: audit-result
 title: DeFi C0 data-state audit — per-bucket layout + schema + grain truth (pre-migration)
 summary:
-status: complete
+  Pre-migration DeFi C0 data-state audit — walked all 6 dedicated DeFi buckets'
+  object trees + consolidated _index parquets to establish ground truth for the
+  v9 single-walk — every source bucket holds THREE overlapping (not complementary)
+  layouts (L1 date=/L2 day=/category=defi/L3 raw_tick_data asset_group=defi
+  missing pipeline_mode=), 0% v9 confirmed, per-bucket L1 path/grain differs
+  (lst-rates + oracle-prices need row-split by protocol/source), and records the
+  binding operator decisions (superset-union lossless schema + derive perp funding
+  for L1 cells).
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, defi, manifest, canonicalisation, data-correctness, pipeline-mode, single-walk, data-quality]
+related:
+  [
+    ../../active/defi_manifest_canonicalisation_2026_06_01.md,
+    ../../../codex/02-data/defi-canonical-naming-ssot.md,
+  ]
 created: 2026-06-01
 audited_scope:
+  the 6 dedicated DeFi buckets (dex-pools/dex-swaps/lst-rates/lending-indices/
+  oracle-prices/perp-funding) — top-level trees enumerated exhaustively, leaf path
+  + parquet column schema SAMPLED (1-2 objects per layout), manifest grain read
+  exhaustively from each _index. NOT covered — the heavy content walk +
+  oracle/lst row-mapping validation (deferred to an in-region VM).
 date: '2026-06-01'
 auditor: ikenna
 parent_epic: defi_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

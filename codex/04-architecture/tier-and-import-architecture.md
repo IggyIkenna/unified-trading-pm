@@ -2,16 +2,33 @@
 doc_type: codex-ssot
 title: Tier + Import Architecture — 5-Tier Dependency Model + Cross-Tier Protocol Injection
 summary:
-status:
+  The 5-tier (T0–T4) integer-tagged dependency model plus the cross-tier protocol-injection contract — higher tiers
+  import same/lower only, no service-to-service imports, services declare WHAT + MODE while topology injects HOW via the
+  UCI factory, enforced by QG STEP 5.10/5.11 and check-no-service-deps.py.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, deployment-service, execution-service, ibkr-gateway-infra, instruments-service, market-tick-data-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    execution-service,
+    ibkr-gateway-infra,
+    instruments-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [tier, refactor, uac, ssot, quality-gates, protocol-injection, imports, architecture]
+related:
+  [
+    runtime-deployment-topology.md,
+    commercial-service-families.md,
+    ../06-coding-standards/integration-testing-layers.md,
+    cloud-agnostic-migration.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [5-tier dependency model + cross-tier protocol-injection contract]
 referenced_by:
 owner:
 last_reviewed: 2026-06-25
@@ -253,8 +270,8 @@ peer service. The concrete layers:
 - **Exits 1** on any cross-service Python import in source or tests (blocking merge).
 - Classifies repo types as `service` / `api-service` / `batch-service` / `api` to scope its checks correctly.
 
-Any remaining live violations are tracked in
-`plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` § "Service-dependency violations".
+Any remaining live violations are tracked in `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` §
+"Service-dependency violations".
 
 ## Known Tier Violations
 

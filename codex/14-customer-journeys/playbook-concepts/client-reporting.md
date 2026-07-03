@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Client Reporting — the shared surface
 summary:
-status:
+  The /services/reports/* tree (12 pages) is the ONE shared client-reporting surface for both the IM (pb3b) and Reg
+  Umbrella (pb3a) demos and real clients — same code, only the narrative framing differs; Pooled vs SMA changes the
+  report shape via a fund-context switcher, not the surface.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [client-reporting, ui, reporting, fund, sma, page-triage]
+related: [../playbooks/03a-demo-reg-umbrella.md, ../playbooks/03b-demo-im.md, sma-vs-pooled.md, fund-org-hierarchy.md, visibility-slicing.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [client-reporting UI surface (/services/reports/* shared IM+Reg)]
 referenced_by:
 owner:
 last_reviewed:

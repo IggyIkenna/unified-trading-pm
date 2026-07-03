@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Staging Demo Journey — Warm-Prospect Hub
 summary:
-status:
+  pb3 warm-prospect demo hub — the staging landing page confirming demo context (firm, resolved path, demo mode) and
+  presenting three restriction-profile-gated flavour blocks routing to pb3a/pb3b/pb3c; scope-adjacent surfaces stay
+  LOCKED-VISIBLE, sales admin controls hidden from the prospect.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [sales, prospect]
-tags: []
-related: []
+tags: [demo, staging, prospect, sales, warm-prospect, ui, restriction-profiles]
+related:
+  [
+    regulatory-demo.md,
+    investment-management-demo.md,
+    dart-demo.md,
+    ../demo-ops/demo-restriction-profiles.md,
+    ../environments/staging-odum-research-co-uk.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [pb3 warm-prospect demo hub experience]
 referenced_by:
 owner:
 last_reviewed:

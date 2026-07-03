@@ -1,15 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Execution Modes — SCE vs HUF vs EVT
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] The three strategy execution modes — HUF (Hold Until Flip, signal-driven), SCE
+  (Same Candle Exit, ML TP/SL within one candle), EVT (Event Driven, market-making / options / live
+  sports) — with per-category allowed-mode restrictions (DeFi + Sports never SCE) enforced via UTL
+  `id_conventions.py` and UAC `StrategyRegistry.allowed_modes`. Replaced by the architecture-v2 hold-policy
+  axis.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, execution, cefi, tradfi, defi, uac]
+related: [strategy-registry.md, ../architecture-v2/README.md]
 created: 2026-04-16
 authoritative_for:
 referenced_by:

@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Agent Orchestrator — Host-Offline Failover Architecture
 summary:
-status:
+  FailoverLoop (vm-orchestrator only) — re-routes soft-pinned queued-undispatched tasks off a host silent >600s
+  to the best fleet VM by 4-tier affinity; hard-pinned (failover_allowed:false) tasks never moved; unclaimed
+  tasks roll back to origin on host return.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, self-healing, failover, role-registry, infrastructure]
+related:
+  [
+    agent-orchestrator-overview.md,
+    agent-orchestrator-autospawn.md,
+    agent-orchestrator-worker-liveness.md,
+    agent-orchestrator-backlog-state-alignment.md,
+  ]
 created: 2026-05-30
-authoritative_for:
+authoritative_for: [agent-orchestrator host-offline task failover]
 referenced_by:
 owner:
 last_reviewed: 2026-05-30

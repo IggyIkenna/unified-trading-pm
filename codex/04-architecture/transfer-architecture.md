@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Transfer Architecture
 summary:
-status:
+  Five transfer types (ON_CHAIN / CEX_WITHDRAWAL / CEX_INTERNAL / CUSTODY_TRANSFER / BRIDGE) each with a distinct
+  execution path, confirmation mechanism, and events — plus per-venue wallet capabilities (which venues need a
+  funding-to-trading internal move after deposit) and the DeFi treasury reserve-ratio (20/10/30) capital flow.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [transfers, execution, defi, cefi, treasury, custody, bridge]
+related:
+  [
+    transfer-coordinator.md,
+    treasury-custody-flow.md,
+    wallet-hierarchy-and-capital-flow.md,
+    custody-providers.md,
+    kill-switch-circuit-breaker.md,
+  ]
 created: 2026-04-16
-authoritative_for:
+authoritative_for: [five-transfer-type taxonomy + per-venue wallet capabilities]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

@@ -1,17 +1,26 @@
 ---
 doc_type: codex-ssot
 title: Stage 3E — Refactor plan (supersedes roadmap/next-waves.md)
-summary:
-status:
+summary: >-
+  Authoritative 31-item post-Stage-3 refactor backlog (G1 now ×14 / G2 next ×11 / G3 later ×6) with per-item current →
+  target state, blast radius, blockers, dependency graph, and proposed follow-up plan filename; supersedes
+  roadmap/next-waves.md. DELTA 2026-05-22: G1 is post-May-23-cutover scope, none shipped yet.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, execution-service, features-service, instruments-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [refactor, ui, uac, strategy, migration, docspec]
+related:
+  [
+    codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    codex/09-strategy/architecture-v2/uac-registry-gaps.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [Stage 3E post-Stage-3 refactor backlog (G1/G2/G3 items + dependency graph, supersedes roadmap/next-waves.md)]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Exclusivity and Non-Compete — What It Means, Who Gets It
 summary:
-status:
+  Defines the block-12 exclusivity / non-compete premium (Tier-B-only) — the three scope axes it binds,
+  the four IP-power tier anchors (20-30% commodity → 120-200% uniquely-differentiated uplift on Tier B
+  monthly), revenue-forgone × margin quote method, legal framing, and leadership/legal escalation triggers.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, admin]
-tags: []
-related: []
+tags: [commercial-model, exclusivity, pricing, dart, tier-b, ip-power]
+related:
+  [
+    pricing-building-blocks.md,
+    fixed-vs-variable-commercials.md,
+    dart-entry-points.md,
+    im-profit-share-structures.md,
+    ../shared-core/dart-pricing-axes.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [exclusivity / non-compete commercial premium (block 12) negotiation framing]
 referenced_by:
 owner:
 last_reviewed:

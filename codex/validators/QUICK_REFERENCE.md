@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Validators Quick Reference
 summary:
-status:
+  One-line pointer index for validators — redirects to 06-coding-standards/quality-gates.md and
+  10-audit/VALIDATOR_COVERAGE_MATRIX.md (the actual SSOTs); holds no validator content of its own.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer]
-tags: []
-related: []
+tags: [quality-gates, validation, audit]
+related: [../06-coding-standards/quality-gates.md, ../10-audit/VALIDATOR_COVERAGE_MATRIX.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [validator quick-reference card (matrix owns applicability)]
 referenced_by:
 owner:
 last_reviewed:

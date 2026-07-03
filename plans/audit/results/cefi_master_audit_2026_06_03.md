@@ -2,20 +2,36 @@
 doc_type: audit-result
 title: CeFi Master — Audit Result 2026-06-03 (acquisition-mechanics pass)
 summary:
-status: complete
+  Code-verified CeFi acquisition-mechanics + batch/live wiring + downstream
+  propagation audit — IS instrument acquisition GREEN, MTDS tick AMBER (non-HL
+  live is trades-only, book/derivative_ticker live is Hyperliquid-only), MDPS
+  candles GREEN, features-delta-one AMBER/RED (funding_oi placeholder), strategy
+  perp archetypes RED (funding-feature name/unit mismatch — carry_basis_perp
+  expects funding_rate_annualised_bps but FundingOI emits funding_rate_annualized
+  fraction). Data-state corpus coverage NOT covered.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [features-service, instruments-service, market-tick-data-service]
+repos: [features-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, cefi, tardis, batch-live, features, source-provenance, data-correctness, acquisition]
+related:
+  [
+    defi_master_audit_2026_06_03.md,
+    ../instructions/cefi_master_audit_instructions.md,
+    data_source_provenance_audit_2026_06_01.md,
+  ]
 created: 2026-06-03
 audited_scope:
+  acquisition-mechanics + batch/live wiring + downstream propagation
+  (CODE-VERIFIED) across IS → MTDS-tick → MDPS-candles → features-delta-one →
+  perp archetypes. NOT covered — data-state corpus coverage (CF-1…12 data-state,
+  per-venue captured%).
 date: 2026-06-03
 auditor: harsh + claude (opus-4-8, 1M)
 parent_epic: cefi_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

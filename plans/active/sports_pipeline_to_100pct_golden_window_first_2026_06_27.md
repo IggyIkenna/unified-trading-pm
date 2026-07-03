@@ -2,14 +2,25 @@
 doc_type: plan
 title: Sports pipeline to 100% — golden-window-first (sports automation coordinator)
 summary:
+  Read-only coordinator (execution_scope local-only, not ingested) for the 10-child sports-to-100% DAG --
+  drive the 2025-09-01..11-30 golden window to 100% across all 8 sources x data_types over the 94-league
+  universe first (R1 zero expected-missing, R2 ML-ready features, R5 alerts-zero), prove the honest-coverage
+  recipe, then expand to 2015->present + daily-forward (R3) + catalogue daily rollup (R4).
 status: active
 nature: process
 asset_group: [sports]
 stage: [meta]
 repos: [agent-orchestrator, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, golden-window, honest-coverage, orchestrator, backfill, features, catalogue, data-correctness]
+related:
+  [
+    plans/active/sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md,
+    plans/active/sports_p1_golden_window_apifootball_2026_06_27.md,
+    plans/active/sports_reference_backfill_oom_2026_06_22.md,
+    plans/active/instruments_foundation_completeness_2026_06_24.md,
+    codex/02-data/honest-absence-downstream-handling.md,
+  ]
 created: 2026-06-27
 parent_epic: sports_master
 assigned_vm: planning

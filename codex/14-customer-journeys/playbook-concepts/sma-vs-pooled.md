@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: SMA vs Pooled
 summary:
-status:
+  'Fund-level structural choice: Pooled (one fund, clients as share classes, allocation-engine NAV) vs SMA
+  (one fund per client, own API keys, NAV=actual P&L); surfaces in pb3a/pb3b demos, catalogue-agnostic,
+  irreversible without redemption + new-fund creation.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, fund-structure, sma-pooled, reporting, demo, share-class]
+related:
+  [
+    fund-org-hierarchy.md,
+    client-reporting.md,
+    ../playbooks/03a-demo-reg-umbrella.md,
+    ../../04-architecture/share-class-architecture.md,
+    ../../04-architecture/capital-flow-model.md,
+  ]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [SMA vs Pooled fund-structure decision (customer-journey framing)]
 referenced_by:
 owner:
 last_reviewed:

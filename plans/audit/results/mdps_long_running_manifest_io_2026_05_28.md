@@ -1,21 +1,30 @@
 ---
 doc_type: audit-result
 title: MDPS Manifest + Reference-Data Read/Write Patterns — Efficiency Audit
-summary:
-status: complete
+summary: >-
+  Audits MDPS's two big per-shard reads — the 4128-instrument reference DataFrame (re-loaded every date) and the
+  526 MB availability_index.parquet (2–5 GB decompressed). Anti-pattern: check_shard_freshness runs TWICE per shard
+  (primary + per-timeframe re-check) with no live cache between → 64–160 GB allocate-then-free churn per 16-day
+  backfill for an
+  unchanged manifest. Immediate fix (~30 min): return the index DataFrame from the first check and filter it in-memory
+  for the second → 50% manifest-read reduction; architectural = read-once + incremental check (or DuckDB streaming).
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-data-processing-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, mdps, manifest, performance, backfill, data-status]
+related:
+  - plans/audit/results/mdps_long_running_concurrency_2026_05_28.md
+  - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
+  - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope:
+audited_scope: MDPS manifest + reference-data read/write patterns — the two big per-shard reads (instruments DataFrame + 526 MB availability_index), the double-freshness-check anti-pattern, per-shard write cost, alternative shapes
 date: '2026-05-28'
 auditor: claude haiku 4.5 (read-only audit subagent)
 parent_epic: mtds_mdps_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Cross-Cutting: Risk Gates (4-Layer Model)'
 summary:
-status:
+  'The 4-layer risk enforcement model between a strategy instruction and the venue order: L1 strategy self-check → L2
+  risk-and-exposure-service portfolio pre-flight → L3 execution-service venue-account pre-trade → L4 venue-side. Instance
+  kill-switches live in L2; layers traverse in order and are idempotent by `instruction_id`.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [risk, strategy, execution, self-healing, monitoring]
+related:
+  [venue-account-coordination.md, ../../../04-architecture/kill-switch-circuit-breaker.md,
+  ../../../04-architecture/autonomous-recovery-matrix.md, ../../../04-architecture/strategy-risk-config-schema.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [4-layer risk-gate model (strategy self-check / risk-exposure preflight / execution pre-trade / venue-side)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-25

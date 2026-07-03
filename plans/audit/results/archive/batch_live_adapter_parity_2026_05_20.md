@@ -1,21 +1,21 @@
 ---
 doc_type: audit-result
 title: Batch-Live Adapter Parity Audit — 2026-05-20
-summary:
-status:
+summary: Manual batch-vs-live adapter parity audit across MTDS (27 batch handlers, 18 live WSFeedConnectors) + IS reference-data adapters — ~66 P0 batch-only cells with no live equivalent, 8 BLOCKED-CREDENTIALS, 17 GREEN, 4 PARTIAL scaffolds; corrects the automated A6 script's GREEN undercount from compound-venue tokenization.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, mtds, instruments, reconciliation, defi, cefi, tradfi, live-trading]
+related: [batch_live_adapter_parity_2026_05_20_summary.md]
 created: 2026-05-20
-audited_scope:
-date:
-auditor:
+audited_scope: MTDS batch handlers (27 files) + live connectors (18 WSFeedConnector modules) + defi_live adapters + UAC EXPECTED_COVERAGE_BY_ASSET_GROUP + instruments-service batch/live adapters, across cefi/defi/tradfi/sports/prediction; adapter existence + data_type coverage (not field-level schema parity)
+date: 2026-05-20
+auditor: slot-3 sub-agent (Sonnet 4.6)
 parent_epic: batch_live_symmetry_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

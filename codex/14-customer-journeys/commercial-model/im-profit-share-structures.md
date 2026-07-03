@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: IM Profit-Share Structures
 summary:
-status:
+  All Investment-Management commercial mechanics — no management fee, 30-35% performance-share band with
+  platform-fee client-choice (Option A +5% perf / Option B $500/mo), CME asymmetric 70/10 co-invest with
+  $50k skin, India Options $100k onboarding, mean-rev migration path, and the BTC FoF external wrapper.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, sales]
-tags: []
-related: []
+tags: [commercial-model, im, profit-share, pricing, cme, india-options]
+related:
+  [
+    im-vs-reg-reporting-logic.md,
+    pricing-building-blocks.md,
+    signal-leasing.md,
+    cash-deployment-plan.md,
+  ]
 created: 2026-04-20
 authoritative_for:
+  [IM profit-share commercial structures (perf-share / platform-fee-choice / CME co-invest / India Options)]
 referenced_by:
 owner:
 last_reviewed:

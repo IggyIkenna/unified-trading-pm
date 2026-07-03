@@ -2,16 +2,31 @@
 doc_type: codex-ssot
 title: operational-modes
 summary:
-status: canonical (extracted from master plan 2026-05-10)
+  "The workspace SSOT for the operating-mode taxonomy — ONE OperationalMode enum {LIVE, MANUAL, BACKTEST, PAPER} plus
+  additive (ExecutionTarget, ExecutionTrigger) axes via a pure decompose() helper; composes orthogonally with
+  RuntimeMode. Deletes the anti-patterns paper_trade:bool, _PAPER_VENUE_KEYS, and the parallel TestingStage.LIVE_TESTNET."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, pipeline-mode, uac, live-trading, ssot]
+related:
+  [
+    batch-live-architecture.md,
+    paper-vs-live-execution-seam.md,
+    matching-engine-mode-dispatch.md,
+    ../05-infrastructure/per-venue-paper-policy.md,
+  ]
 created: 2026-05-09
 authoritative_for:
+  [
+    operational-mode taxonomy,
+    OperationalMode enum SSOT,
+    ExecutionTarget and ExecutionTrigger axes,
+    operational-mode decompose helper,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-10

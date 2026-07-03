@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Contracts Scope and Layout — SSOT
 summary:
-status:
+  SSOT for UAC scope + layout — the external/canonical surface is a T0 leaf that must not import internal
+  (internal→canonical is the only permitted direction), the Citadel facade package structure,
+  canonical-vs-internal type ownership, deleted-directory bans, the universal v9 source column, and canonical
+  data_type naming.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, execution-service, features-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [uac, canonicalisation, refactor, data-pipeline, ssot-audit, tradfi]
+related: [canonical-schema-groups.md, vcr-cassette-ownership.md, ../04-architecture/tier-and-import-architecture.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [UAC external/canonical/internal scope + import-direction rules]
 referenced_by:
 owner:
 last_reviewed: 2026-06-25

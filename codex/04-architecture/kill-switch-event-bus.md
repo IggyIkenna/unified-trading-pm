@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Kill-Switch Event Bus — UTL `KillSwitchBus` + Audit-Log Persistence
 summary:
-status: active
+  "The UTL KillSwitchBus arm/disarm event lifecycle: 3 event shapes (KillSwitchArmRequest / ArmedEvent / DisarmEvent)
+  keyed by the 12-member KillSwitchId, 4-set KillSwitchProvenance gating, and append-only GCS audit-log persistence — an
+  arm that can't be audited aborts with no fan-out."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [kill-switch, execution, defi, uac, self-healing, audit, ssot]
 related: [plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md]
 created: 2026-05-11
 authoritative_for:
+  [KillSwitchBus arm/disarm lifecycle, kill-switch audit-log persistence, KillSwitchId registry, KillSwitchProvenance taxonomy]
 referenced_by:
 owner: ikenna
 last_reviewed: 2026-05-17

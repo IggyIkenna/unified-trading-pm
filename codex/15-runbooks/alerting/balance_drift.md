@@ -2,18 +2,22 @@
 doc_type: codex-runbook
 title: BALANCE_DRIFT Runbook
 summary:
-status: active
+  Operator response to BALANCE_DRIFT (WARN, Telegram) — PBM expected wallet balance vs venue/chain reported differs >
+  balance_drift_usd (default 1000), sustained >=5min. Diagnose the delta source (funding/fees/liquidation/transfer),
+  reconcile via PBMS API, or manual ledger override as last resort; escalate on negative-direction drift, >10x
+  threshold, or multi-wallet drift.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [alerting, runbook, defi, cefi, reconciliation, escalation, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/preflight_failed.md, codex/15-runbooks/alerting/margin_threshold_breach.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) + on-call rotation (operator response)
+cadence: continuous (custody-ping loop emits `BALANCE_DRIFT` per 5min; threshold review quarterly per `threshold-tuning.md`)
+verifier: alert routes to Telegram + HIGH severity → PagerDuty; resolved via PBMS reconciliation API; WARN noise-floor `balance_drift_usd=1000`
 last_executed:
 code_refs:
 authoritative_for: Operator response when wallet balance drifts from expected ledger state by more than the threshold. Indicates a missed event (fee, withdrawal, deposit) or PBM ledger bug.

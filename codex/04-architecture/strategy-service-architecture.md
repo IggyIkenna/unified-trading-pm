@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: strategy-service architecture
 summary:
-status: stable
+  Four repos (strategy-service + risk-and-exposure + position-balance-monitor + pnl-attribution) subtree-merged into ONE
+  strategy-service — one Docker image, one pyproject, one Health-API aggregator, and one --operation CLI dispatcher
+  (risk-monitor / position-recon / pnl-attribution / strategy-batch / strategy-live / backtest).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, refactor, consolidation, execution, cli-convention, service-architecture]
+related:
+  [
+    promote-workflow-architecture.md,
+    flash-loan-receiver.md,
+    ../05-infrastructure/launcher-script-ssot.md,
+    ../05-infrastructure/vm-tarball-deployment.md,
+    ../09-strategy/operational/cli-promote-paths.md,
+  ]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [strategy-service 4-repo consolidation + sub-package layout]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

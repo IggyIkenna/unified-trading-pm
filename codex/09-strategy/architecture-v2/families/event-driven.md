@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: 'Family: Event-Driven'
 summary:
-status:
+  The Event-Driven strategy family — 1 archetype (EVENT_DRIVEN) trading scheduled macro/earnings announcements
+  (FOMC, CPI, NFP, OPEC, earnings); edge is surprise-magnitude vs consensus × model-predicted direction within a
+  time-bounded post-event window, flattened on time-box exit.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, event-driven, tradfi, cefi, ml, execution]
+related:
+  [
+    ml-directional.md,
+    rules-directional.md,
+    ../archetypes/event-driven.md,
+    ../cross-cutting/execution-policies.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [Event-Driven strategy family spec (alpha thesis + EVENT_DRIVEN archetype)]
 referenced_by:
 owner:
 last_reviewed:

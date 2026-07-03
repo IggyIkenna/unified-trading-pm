@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: VM Log Archival — Canonical Paths, Backup Contract, and Retention
-summary:
-status: living
+summary: >-
+  Canonical VM log paths (hot `vm-logs/` 14-day stream + durable `log-archive/` snapshot/rolling/serial-rolling that
+  persist indefinitely), the mandatory pre-kill `backup-vm-logs.sh` contract wired into every VM-delete path, the daily
+  `vm_log_archival_cron.py`, and the per-service log-destination convention (VM `vm-logs/` vs Cloud Run → Cloud Logging).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, runbook, observability, backfill, scripts]
+related: [vm-tarball-deployment.md, vm-launcher-runbook.md]
 created: 2026-05-30
-authoritative_for:
+authoritative_for: [VM log archival paths and retention]
 referenced_by:
 owner:
 last_reviewed: 2026-05-30

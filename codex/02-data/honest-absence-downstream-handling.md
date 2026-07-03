@@ -1,17 +1,23 @@
 ---
 doc_type: codex-ssot
 title: Honest Absence — Downstream Handling SSOT
-summary:
-status:
+summary: >-
+  Read/consume-side SSOT for honest absence (companion to the write-side availability-manifest-and-data-status) —
+  how downstream services (features, ML, strategy, execution, reconciliation) act when a (shard_key, day) manifest
+  row is empty_confirmed vs attempted_failed: NaN-handle honest empties, never fabricate placeholder rows /
+  sentinels, fail loud on unexpected gaps; carries the closed capture_status × error_reason taxonomy, the
+  per-source available_at stamping helpers, the §6A silent-drop violation classes, the 401≠honest-absence rule
+  and the DERIBIT-COMBO unbackfillability fact.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, honest-coverage, data-correctness, data-status, features, reconciliation, deribit]
+related: [availability-manifest-and-data-status.md, honest-coverage-model.md, expected-absence-backfill-runbook.md, data-pipeline-correctness-hard-rule.md, ../05-infrastructure/data-pipeline-alerts.md]
 created: 2026-05-06
-authoritative_for:
+authoritative_for: [honest-absence downstream read/consume handling, per-source available_at stamping helpers, DERIBIT-COMBO historical unbackfillability]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

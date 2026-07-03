@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Audit Logging
-summary:
-status:
+summary: >-
+  SSOT for security + trade/strategy audit logging: mandatory `AUTH_FAILURE`/`SECRET_ACCESSED`/`CONFIG_CHANGED` events,
+  execution audit (7-year cold retention) + strategy audit (3-year) GCS paths + required fields, and append-only
+  bucket-level immutability rules.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, execution, compliance, observability, data-status]
+related: [compliance.md, secrets-management.md, ../03-observability/lifecycle-events.md]
 created: 2026-03-27
 authoritative_for:
+  [security audit events (AUTH_FAILURE/SECRET_ACCESSED/CONFIG_CHANGED), trade and strategy audit retention]
 referenced_by:
 owner:
 last_reviewed:

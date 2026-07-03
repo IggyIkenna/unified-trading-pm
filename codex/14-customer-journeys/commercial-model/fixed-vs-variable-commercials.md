@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Fixed vs Variable Commercials — Tier A vs Tier B Decision Tree
 summary:
-status:
+  Tier A (cost-plus variable, no upfront, no exclusivity) vs Tier B (fixed upfront + monthly, unlocks
+  block-12/13 premiums) decision tree — five per-block questions, per-block default-tier table, and the
+  per-block mixability rule; both carry a twelve-month minimum commitment.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [sales, admin]
-tags: []
-related: []
+tags: [commercial-model, pricing, dart, tier-a-tier-b, building-blocks]
+related:
+  [
+    pricing-building-blocks.md,
+    building-block-packaging.md,
+    exclusivity-and-noncompete.md,
+    dart-entry-points.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [Tier A vs Tier B commercial-tier decision tree]
 referenced_by:
 owner:
 last_reviewed:

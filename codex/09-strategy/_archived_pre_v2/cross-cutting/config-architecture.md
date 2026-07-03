@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Strategy Config Architecture — Cross-Cutting Concern
-summary:
-status:
+summary: "Pre-v2: strategy-config hard rule — strategies consume only features/ML-signals/positions/risk-monitor outputs, never raw tick or candle services."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-data-processing-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, features, config, cross-cutting, execution]
+related:
+  [
+    ../../architecture-v2/cross-cutting/operational-modes-matrix.md,
+    strategy-instruction-bus.md,
+    cost-modeling.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

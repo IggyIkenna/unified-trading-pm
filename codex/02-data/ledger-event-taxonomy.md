@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Ledger Event Taxonomy
-summary:
-status: active
+summary: >-
+  The closed UAC enum taxonomy for the global ledger — EventOrigin (INSTRUCTION vs PASSIVE), 37 EventTypes
+  (19 instruction + 18 passive), 17 AssetClasses, Direction and OptionRight — with the ledger-routing table
+  (Instruction / Passive / Pricing / Treasury ledgers + writers), the cross-client-transfer invariant, and the
+  PricingLedger dividend_yield (TTM-sum) + rebase_rate carry-rate column formulas.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ledger, pnl, execution, uac, strategy, defi, cefi]
+related: [../04-architecture/global-ledger-architecture.md, ../04-architecture/client-funds-isolation.md, ../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md]
 created: 2026-05-21
-authoritative_for:
+authoritative_for: [ledger event taxonomy (EventOrigin/EventType/AssetClass/Direction closed enums), PricingLedger dividend_yield + rebase_rate carry-rate formulas]
 referenced_by:
 owner:
 last_reviewed: 2026-05-23

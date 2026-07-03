@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_CROSS_ASSET_SPREAD`'
 summary:
-status: design
+  'Archetype spec for `VOL_CROSS_ASSET_SPREAD` — trades the vega-matched IV spread between correlated assets (e.g. BTC/ETH
+  30d) at matched expiry, entering at |spread_z| > 2 and exiting on reversion to the rolling mean; Deribit/OKX.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, cross-asset, spread, mean-reversion]
+related: [vol-dispersion.md, vol-ratio-spread.md, vol-term-structure-arb.md, vol-carry.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_CROSS_ASSET_SPREAD archetype spec']
 referenced_by:
 owner:
 last_reviewed:

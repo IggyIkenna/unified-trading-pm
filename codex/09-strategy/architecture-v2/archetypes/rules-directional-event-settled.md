@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `RULES_DIRECTIONAL_EVENT_SETTLED`'
-summary:
-status: design
+summary: >-
+  `RULES_DIRECTIONAL_EVENT_SETTLED` archetype — evaluates explicit sports/prediction rule registries (behavioural /
+  statistical patterns, e.g. scored-first-home → back HT draw) on features-service sports family, firing one-shot
+  stakes at rule `stake_fraction_of_equity` on the best-odds venue via Unity; per-rule hit-rate attribution.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [rules, sports, odds, prediction, registry]
+related:
+  [
+    ../families/rules-directional.md,
+    rules-directional-continuous.md,
+    ../../../04-architecture/artifact-versioning.md,
+    ../../../02-venues/unity-integration.md,
+    ml-directional-event-settled.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [RULES_DIRECTIONAL_EVENT_SETTLED archetype specification]
 referenced_by:
 owner:
 last_reviewed:

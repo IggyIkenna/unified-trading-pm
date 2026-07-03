@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Library Setup Checklist
 summary:
-status:
+  "End-to-end checklist for scaffolding a new library repo: tier architecture (0/1/2 with allowed-deps rules), GitHub
+  repo + team access, directory/pyproject/gitignore, thin quality-gates.sh config stub sourcing
+  quality-gates-base/base-library.sh, quickmerge, docs, CI + publish workflows, branch protection, workspace-manifest
+  registration, and the dependency-chain cascade to update dependent repos."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, scripts, quality-gates, registry, runbook]
+related: [service-setup-checklist.md, new-repo-setup.md, ui-setup-checklist.md, ../06-coding-standards/dependency-management.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [library repo setup checklist]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

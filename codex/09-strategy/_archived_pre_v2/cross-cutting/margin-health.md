@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Margin & Health Factor Monitoring — Cross-Cutting Concern
-summary:
-status:
+summary: "Pre-v2: continuous margin/health-factor monitoring via PBMS with a universal health_factor = collateral/required_margin metric and tiered deleverage thresholds; strategies never touch venue margin APIs."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [margin, risk, strategy, defi, cefi, monitoring]
+related:
+  [
+    ../../architecture-v2/cross-cutting/risk-gates.md,
+    ../../architecture-v2/cross-cutting/leverage-and-volatility.md,
+    venue-collateral-and-wrapping.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

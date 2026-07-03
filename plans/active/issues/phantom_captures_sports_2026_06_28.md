@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, sports, phantom-captures, data-correctness, odds, footystats, instruments]
+related: [sports_is_odds_capture_code_incomplete_reversal_2026_06_27]
 created: 2026-06-28
 parent_epic: observability_master
 priority: P2

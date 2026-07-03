@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Library Dependency Matrix
-summary:
-status:
+summary: >-
+  Library-layer (T0–T3) dependency quick-reference — per-tier library exports, the tier import rules, the full
+  service×library dependency matrix, and library usage counts; explicitly NOT the tier SSOT (that is
+  `tier-and-import-architecture.md`) and NOT the machine-readable SSOT (`workspace-manifest.json`).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, refactor, uac]
+related: [INTERNAL_DEPENDENCY_GRAPH.md, dependency-matrix.md, ../../04-architecture/tier-and-import-architecture.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [library dependency matrix (per-library table view)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

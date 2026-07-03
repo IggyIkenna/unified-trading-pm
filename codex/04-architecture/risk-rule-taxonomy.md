@@ -2,16 +2,27 @@
 doc_type: codex-ssot
 title: Risk Rule Taxonomy
 summary:
-status:
+  The closed-set UAC vocabulary for every Layer-2 pre-flight risk decision — RiskRule = RiskRuleId (28 members) ×
+  RiskRuleScope (7 axes) × RiskRuleTrigger (13 typed subtypes) × RiskRuleConsequence (BLOCK / SCALE_DOWN / MONITOR /
+  TEST_ONLY); rules live in a UAC registry (never inline in service code), consumed via risk_preflight(); includes
+  the RiskRuleConsequence × 5-canonical-SSOT event-emission cross-product (§7 seam diagram).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [risk, execution, strategy, uac, kill-switch]
+related:
+  [
+    risk-preflight-flow.md,
+    risk-breaker-seam.md,
+    kill-switch-circuit-breaker.md,
+    autonomous-recovery-matrix.md,
+  ]
 created: 2026-05-11
 authoritative_for:
+  [RiskRule taxonomy (RiskRuleId/Scope/Trigger/Consequence closed enums)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

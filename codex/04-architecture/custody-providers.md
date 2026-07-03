@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Custody Providers — single SSOT
 summary:
-status:
+  "Single SSOT for custody integration: the pluggable CustodyProvider protocol + all implementations
+  (mock/local_key/cloud_kms/copper/ceffu/fireblocks), factory + SigningSurface mapping, per-(asset_group,venue)
+  coverage matrix, mode matrix, and the §10A custody-ping health-check contract. May-23 default is
+  CLOUD_KMS_ENCRYPTED."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [custody, copper, ceffu, cloud-kms, execution, health-check]
+related: [wallet-hierarchy-and-capital-flow.md, interface-credential-convention.md, circuit-breaker-rule-taxonomy.md, ../05-infrastructure/custody-onboarding-checklist.md]
 created: 2026-03-30
-authoritative_for:
+authoritative_for: [custody provider protocol and implementations, custody-ping health-check contract]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

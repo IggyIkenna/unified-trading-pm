@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Dashboard Services Grid — 5-Tile Product-Axis Model
-summary:
-status:
+summary: 5-tile product-axis SSOT for /dashboard (DART, Odum Signals, Reports, Investor Relations, Admin & Ops) — tile keys, entitlement gates, sub-route chips, the per-persona tile × sub-route visibility matrix, and the product-axis-vs-lifecycle-axis distinction (Strategy Catalogue is a shared primitive, not a 6th tile).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [strategy, dart, ui, catalogue]
+related: [dart-tab-structure.md, restriction-policy.md, strategy-catalogue-3tier.md, dart-exclusive-research-fork.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [dashboard 5-tile product-axis model]
 referenced_by:
 owner:
 last_reviewed:

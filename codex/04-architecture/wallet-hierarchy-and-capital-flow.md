@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Wallet Hierarchy & Capital Flow Architecture
 summary:
-status:
+  Two-tier wallet hierarchy (per-share-class treasury wallet to per-strategy hot wallets, custodian-managed) and the
+  automated capital-flow model — reserve-ratio rebalancing, deposit/withdrawal instruction flows, strategy-initiated
+  cross-chain bridging, and the WalletMappingConfig UAC schema keyed by share class (not chain).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [wallet, treasury, capital-flow, defi, cefi, custody, uac, strategy]
+related:
+  [transfer-architecture.md, treasury-custody-flow.md, custody-providers.md, per-client-isolation-architecture.md]
 created: 2026-03-30
-authoritative_for:
+authoritative_for: [two-tier wallet hierarchy + share-class treasury capital-flow model + WalletMappingConfig]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

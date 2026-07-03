@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: instruments-service as SSOT for MTDS — Architecture Contract
 summary:
-status:
+  "The IS→MTDS reference-data contract: MTDS handlers derive venue URLs / universe / coverage windows from the
+  instruments-service catalogue at runtime (never hardcode) and emit exactly one manifest call per shard; QG STEP 5.70
+  enforces via no_hardcoded_venue_urls / no_hardcoded_venue_universe / no_silent_absence_handlers."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [instruments, mtds, ssot, manifest, defi, data-correctness, honest-coverage]
+related:
+  [
+    instrument-universe-registry-consolidation.md,
+    drift-v2-data-sources.md,
+    ../02-data/honest-absence-downstream-handling.md,
+    ../02-data/availability-manifest-and-data-status.md,
+  ]
 created: 2026-05-20
 authoritative_for:
+  [IS→MTDS reference-data contract, MTDS no-hardcoded-venue-url rule, MTDS per-shard manifest emission requirement]
 referenced_by:
 owner:
 last_reviewed:

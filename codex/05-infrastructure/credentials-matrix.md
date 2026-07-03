@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Credentials matrix — workspace SSOT
 summary:
-status:
+  Workspace SSOT for every credential across paper/batch/live modes + cloud / venue / custody / data / aux surfaces —
+  credential classes with storage + rotation cadence, the live pre-cutover inventory (10 Cloud-HSM CMKs, wallet
+  entries, Tenderly/RPC keys), per-mode + per-archetype credential subsets, and GCP-to-AWS Secret Manager parity.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, cefi, custody, credentials, verification]
+related: [codex/05-infrastructure/custody-onboarding-checklist.md, codex/05-infrastructure/secret-manager-naming.md, codex/04-architecture/custody-providers.md, codex/04-architecture/interface-credential-convention.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [workspace credential matrix — credential classes + storage + rotation cadence, per-mode and per-archetype credential subsets]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

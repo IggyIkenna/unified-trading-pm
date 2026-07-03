@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Circuit-Breaker Rule Taxonomy — Closed-Set Layer-3 Vocabulary
 summary:
-status: active
+  "Canonical SSOT for the Layer-3 circuit-breaker vocabulary: CircuitBreakerId (20), BreakerScope (5),
+  BreakerTrigger, BreakerAction (4), BreakerRecoveryMode (2) + BREAKER_RECOVERY_DEFAULTS; two 10-breaker
+  per-archetype registry seeds."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [circuit-breaker, kill-switch, risk, execution, defi, taxonomy, recovery]
 related: [plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md, plans/active/alerting_service_live_rules_2026_05_07.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [Layer-3 circuit-breaker rule taxonomy, CircuitBreakerId/BreakerScope/BreakerAction/BreakerRecoveryMode closed sets]
 referenced_by:
 owner: ikenna
 last_reviewed: 2026-05-17

@@ -2,16 +2,23 @@
 doc_type: codex-ssot
 title: P&L Attribution — Cross-Cutting Concern
 summary:
-status:
+  'Canonical P&L attribution: closed-set `PnLFactor` × `PnLLayer` (STRATEGY/EXECUTION) dual axis, DeFi carry from
+  on-chain index growth (never APY), wrapped-vs-rebasing LST split, T+1 batch is the official P&L, and HWM never raw
+  equity (three-method TWR / Notional / PnL-recovery). RESIDUAL must be < 1% or escalate.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, execution-service, features-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [pnl-attribution, strategy, defi, features, reconciliation, uac, execution]
+related:
+  [restaking-reward-economics.md, reward-lifecycle.md, ../../../04-architecture/global-ledger-architecture.md,
+  ../../../04-architecture/batch-live-architecture.md]
 created: 2026-03-27
 authoritative_for:
+  [canonical P&L attribution factor×layer taxonomy (PnLFactor/PnLLayer closed sets),
+  high-water-mark three-method definition (TWR / Notional / PnL-recovery)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-18

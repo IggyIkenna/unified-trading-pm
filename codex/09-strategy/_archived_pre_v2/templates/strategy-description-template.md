@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: '{STRATEGY_NAME}'
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] Blank strategy-description template — the section skeleton (Overview / Token-Flow /
+  Instruments / Features / PnL-Attribution / Risk / Latency / Execution / Risk-Subscriptions / Margin /
+  Onboarding / UI / Testing-Stages) every pre-v2 strategy doc followed. Replaced by the architecture-v2 doc
+  structure.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, template, docspec, execution]
+related: [../../architecture-v2/README.md, ../../architecture-v2/naming-convention.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

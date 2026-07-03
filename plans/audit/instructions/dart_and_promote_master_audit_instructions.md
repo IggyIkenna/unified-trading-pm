@@ -2,18 +2,22 @@
 doc_type: audit-instruction
 title: dart_and_promote_master_audit_instructions
 summary:
-status:
+  Weekly audit of DART + the promote workflow — verifies the pre-May-23 promote endpoint only accepts paper_1d→live_early
+  (live_full rejected 422), MinimalCandidateManifest stays minimal, ManualTradeGateDialog fires for the first 3 trading
+  days, Firebase execution-full enforced at UI-only, the promote state machine covers all transitions, and codex↔code
+  alignment.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer, admin]
-tags: []
+tags: [audit, ui, execution, strategy, verification]
 related: []
 created: '2026-05-22'
 tier: L3
 parent_epic: strategy_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

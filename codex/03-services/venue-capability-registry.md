@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: venue-capability-registry
 summary:
-status:
+  "The authoritative source of what each venue supports (operations, instruments, collateral/LTV, margin spec,
+  commission structure, liquidation, rate limits, regional restrictions) — declared in UAC
+  registry/capability_declarations/_{category}.py, queried via a typed facade by strategy/execution/risk/allocator;
+  static at deploy time (consumers pin UAC major), no mid-run hot-reload except commission-tier values."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer]
-tags: []
-related: []
+tags: [venue-capability, registry, uac, execution, strategy, cefi, defi]
+related:
+  [
+    ../02-venues/venue-registry-reference.md,
+    portfolio-allocator.md,
+    ../04-architecture/capital-efficiency-patterns.md,
+    ../02-data/contracts-scope-and-layout.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [venue capability registry, venue capability declaration schema]
 referenced_by:
 owner:
 last_reviewed:

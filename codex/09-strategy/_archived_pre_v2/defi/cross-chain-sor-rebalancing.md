@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Cross-Chain Smart Order Routing Rebalancing
-summary:
-status:
+summary: "Pre-v2: cross-chain SOR rebalancing meta-strategy — monitors lending/LP/basis yields across 19 EVM chains + Solana, emits TRANSFER instructions when net APY gain beats bridge + gas + transit cost."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, cross-chain, strategy, yield, migration]
+related:
+  [
+    ../../architecture-v2/cross-cutting/transfer-rebalance.md,
+    cross-chain-yield-arb.md,
+  ]
 created: 2026-03-28
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Deprecated UIs Notice
-summary:
-status:
+summary: Round-1 (2026-02-21) UI-consolidation history (strategy-onboarding-ui / settlement-ui / config-ui → onboarding-ui);
+  staleness-lifted 2026-05-12 — current active UI surface is unified-trading-system-ui + deployment-ui, see
+  05-infrastructure/ui-functionality-requirements.md.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, consolidation, migration, ssot-audit]
+related: [05-infrastructure/ui-functionality-requirements.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

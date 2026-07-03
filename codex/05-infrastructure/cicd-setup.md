@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: CI/CD Setup
 summary:
-status:
+  Quick-reference pointer to the CI/CD SSOT (codex/08-workflows/ci-cd-flow.md) — a table of where to fix a quality-gate
+  check, a CI workflow step, add a dependency, or regenerate a repo's quality-gates-v2 workflow via
+  rollout-workflow-templates.sh.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [quality-gates, quickmerge, infrastructure, ci-cd]
+related: [codex/08-workflows/ci-cd-flow.md, codex/05-infrastructure/new-repo-setup.md, codex/05-infrastructure/dual-cloud-image-builds.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [redirect stub — CI/CD flow SSOT is codex/08-workflows/ci-cd-flow.md]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

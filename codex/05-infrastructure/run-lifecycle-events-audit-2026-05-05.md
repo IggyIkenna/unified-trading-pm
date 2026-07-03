@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Run-Lifecycle Events Audit — 2026-05-05
 summary:
-status:
+  Point-in-time (2026-05-05) audit classifying every long-running Python entry-point on UTL-events + run-lifecycle
+  adoption — 49 call setup_events, 17 C-class rollout targets emit no run-level events, and the Phase-3 rollout order for
+  the run_lifecycle helper refactor.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, deployment-service, e2e-testing, features-service, instruments-service, market-data-processing-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [audit, run-lifecycle, observability, mtds, mdps, scripts]
+related: [vm-event-emission-audit.md, ../04-architecture/service-emission-policy.md]
 created: 2026-05-05
-authoritative_for:
+authoritative_for: [run_lifecycle entry-point rollout classification (2026-05-05 audit)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

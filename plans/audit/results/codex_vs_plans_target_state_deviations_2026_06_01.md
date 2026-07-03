@@ -2,20 +2,31 @@
 doc_type: audit-result
 title: Codex-vs-active-plans target-state deviation audit
 summary:
-status: in-progress
+  Deviation audit where an active plan's target end-state conflicts with or is
+  missing from the codex doc it cites as SSOT (codex = eventual SSOT; fix codex
+  ahead of archival so archival is mechanical) — one headline operator-conflict
+  (agent-orchestrator integration branch main vs live-defi-rollout) needing
+  resolution, plus ~25 high-confidence codex-stale themes (v8→v9, source column
+  now universal, HS256→ES256 orchestrator auth, EmptyConfirmedReason 31→33, fleet
+  10→11 VMs).
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, features-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, ssot-audit, plan-hygiene, verification, orchestrator, manifest, data-correctness]
+related:
+  [
+    ../../../codex/02-data/availability-manifest-and-data-status.md,
+    ../../../codex/04-architecture/agent-orchestrator-overview.md,
+  ]
 created: 2026-06-01
 audited_scope: 'Where an active plan''s TARGET END-STATE conflicts with / is missing from the codex doc it claims as SSOT. Goal: update codex AHEAD of archival so archival is mechanical.'
 date: '2026-06-01'
 auditor: ikenna + claude (opus-1m, 6-worker fan-out split by codex dir)
 parent_epic: infrastructure_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Sports Arbitrage
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] Sports cross-book + back-lay arbitrage — bets all outcomes when sum of implied probs
+  < 1.0 (net of probability-weighted exchange commission), rule-based confidence=1.0, same-operator legs
+  rejected via VENUE_OPERATOR_GROUPS, per-day adaptive venue allocation. Replaced by architecture-v2
+  arbitrage archetypes.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing, execution-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, sports, arbitrage, odds, book-microstructure, execution]
+related: [value-betting.md, ../../architecture-v2/archetypes/arbitrage-price-dispersion.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

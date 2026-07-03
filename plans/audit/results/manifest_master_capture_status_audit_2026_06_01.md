@@ -1,21 +1,28 @@
 ---
 doc_type: audit-result
 title: manifest_master — per-service capture_status write-path audit — 2026-06-01
-summary:
-status: in-progress
+summary: >-
+  Read-only audit of every manifest-emission callsite (~230) in the 4 producer services (IS/MTDS/MDPS/features) against
+  the capture_status decision rule (empty_confirmed = last resort; error ≠ empty; no silent no-row skips), run before
+  further backfill so the corpus fills rule-correct. Net 18 real violations after adversarial refutation (5
+  false-positives): P0×3 all in features-service (silent no-row skips + dependency-gap goes silent), P1×9, P2×6.
+  Dominant patterns: silent no-row skip + error/missing-config→empty_confirmed + blank-reason crash risk.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, manifest, capture-status, data-correctness, data-status, ssot-audit, features, mtds]
+related:
+  - plans/audit/instructions/manifest_master_audit_instructions.md
+  - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
 created: 2026-06-01
-audited_scope:
+audited_scope: per-service capture_status write-path calibration across instruments-service / MTDS / MDPS / features-service (~230 emission callsites, read-only)
 date: '2026-06-01'
 auditor: harsh-claude-opus (4 parallel sonnet sub-agents)
 parent_epic: manifest_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

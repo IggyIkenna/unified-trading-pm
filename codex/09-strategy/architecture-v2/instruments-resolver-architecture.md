@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Strategy → Instruments Resolver Architecture
-summary:
-status:
+summary: SSOT for joining the strategy catalogue (capability declaration) to instruments-service concrete records — stub vs real (--with-real-instruments) resolver modes, the catalogue-venue→parquet-venue mapping, per-slot instrument resolution, and universal persona instrument hydration via assigned_strategies.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [strategy, instruments, catalogue, uac, ui, single-walk]
+related: [strategy-catalogue-3tier.md, ../../02-data/questionnaire-axes.md, ../../05-infrastructure/bucket-isolation-model.md]
 created: 2026-04-25
-authoritative_for:
+authoritative_for: [strategy-catalogue to instruments-service resolver join]
 referenced_by:
 owner:
 last_reviewed:

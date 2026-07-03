@@ -2,18 +2,28 @@
 doc_type: audit-instruction
 title: strategy_master_audit_instructions
 summary:
-status:
+  Weekly audit checklist for strategy-service post-consolidation — 8 checks (53
+  archetypes registered, portfolio_allocator determinism, zero stale
+  strategy-and-dart-service refs, batch=live signal identity, shard-level
+  no-raise) plus CF-1/2/5/8/9/12 canonical-form checks on the strategy-output
+  _index and batch→paper→live e2e goal posts.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, strategy, reconciliation, data-correctness, ssot-audit, quality-gates]
+related:
+  [
+    canonical_form_cross_service_audit_checklist.md,
+    ../../../codex/04-architecture/shard-level-failure-isolation.md,
+    ../../../codex/09-strategy/architecture-v2/archetypes/,
+  ]
 created: 2026-05-22
 tier: L2
 parent_epic: strategy_master
-cadence:
+cadence: Weekly
 verifier:
 lifespan:
 type: audit-instructions

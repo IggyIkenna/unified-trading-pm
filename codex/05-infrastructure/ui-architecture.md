@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: UI Architecture — Unified Trading System
 summary:
-status: canonical
+  SSOT entry point for UI architecture — the two active UIs (unified-trading-system-ui:5173, deployment-ui:5183), the
+  archived split-UI inventory, the where-to-find-what index, and the architectural principles (two-UIs-only,
+  API-routes-SSOT-in-service-repos, ports in ui-api-mapping.json).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-ui, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, infrastructure, consolidation, deployment]
+related: [ui-functionality-requirements.md, ui-dependency-matrix.md, deployment-ui-architecture.md, runtime-tiers-and-deployment.md]
 created: 2026-05-13
-authoritative_for:
+authoritative_for: [UI architecture SSOT entry point (active UI surface)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-13

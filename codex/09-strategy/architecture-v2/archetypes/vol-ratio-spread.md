@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_RATIO_SPREAD`'
 summary:
-status: design
+  'Archetype spec for `VOL_RATIO_SPREAD` — sells excess OTM options against a long strike (e.g. 1x2 call ratio) for net
+  credit to harvest rich OTM skew; breach-proximity trigger + hard USD stop cap the naked-wing tail; Deribit/CBOE.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, ratio-spread, skew, credit]
+related: [vol-carry.md, vol-variance-swap.md, vol-cross-asset-spread.md, arbitrage-price-dispersion.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_RATIO_SPREAD archetype spec']
 referenced_by:
 owner:
 last_reviewed:

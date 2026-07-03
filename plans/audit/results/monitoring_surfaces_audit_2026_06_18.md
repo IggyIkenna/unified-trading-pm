@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: Monitoring Surfaces Audit — agent-orchestrator dashboard + deployment-ui monitoring pane
-summary:
-status: in-progress
+summary: >-
+  Class-2 audit of the two monitoring surfaces under the standing division-of-surfaces contract (AO dashboard = agents
+  + orchestrator; deployment-ui pane = CI/CD + repos + fleet + images). AO findings: P0 stop hard-deleting finished
+  agents (past escalate/plan-health runs have no durable record), new AgentTypesPanel, activity-feed denoise rollup +
+  cursor pagination. deployment-ui: CI/CD+images ≈90% built; REAL gaps are fleet-RUNTIME state + alert-ledger
+  unification; cheapest high-value unblock = mint ORCHESTRATOR_API_TOKEN to light up the built Fleet-Git page.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, monitoring, ui, orchestrator, observability, ci-cd, escalation]
+related:
+  - plans/active/monitoring_control_plane_master_2026_06_10.md
+  - plans/active/monitoring_surfaces_overhaul_2026_06_18.md
+  - plans/audit/instructions/infrastructure_master_audit_instructions.md
 created: 2026-06-18
-audited_scope:
+audited_scope: agent-orchestrator dashboard + deployment-ui monitoring pane (agents/activity-feed/conditions/messaging + CI-CD/repo-health/fleet/images surfaces, read-only)
 date: 2026-06-18
 auditor: ikennaigboaka
 parent_epic: infrastructure_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

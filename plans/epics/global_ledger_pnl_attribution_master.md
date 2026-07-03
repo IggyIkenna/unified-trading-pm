@@ -2,13 +2,17 @@
 doc_type: epic
 title: Global Ledger + PnL Attribution Master
 summary:
+  L2 epic owning the canonical ledger architecture — 4 SSOT ledgers (Instruction/Passive/Treasury/
+  Pricing) + 4 derived views (Position/Exposure/PnL/PnLAttribution) + one RiskView; UAC LedgerRow +
+  EventType(37)/AssetClass(17) enums + CrossClientTransferForbiddenError validator shipped, migration
+  gated on operator [ack] of discovery Phase 3/4/5.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, execution-service, greeks-service, instruments-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [strategy, execution, uac, reconciliation, data-correctness, client-isolation]
 related: [plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md, plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md]
 created: 2026-05-21
 name: global_ledger_pnl_attribution_master

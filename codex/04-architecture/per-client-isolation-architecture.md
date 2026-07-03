@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Per-Client Isolation Architecture (Strategy-Service)
 summary:
-status:
+  Strategy-service runs one StrategySupervisor per (archetype × shard) VM that spawns one spawn-context ClientWorker
+  subprocess per client — hard crash isolation (segfault/OOM in one client never affects another), a shared-memory
+  MarkPriceAggregator (one MTM compute per symbol per tick), hybrid push/pull credential hot-reload, and a 4-step
+  CLIENT_READY preflight; designed for the May-23 2-client launch and scaling to N clients per VM.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [per-client-isolation, strategy, cefi, defi, execution, client-funds, reconciliation]
+related:
+  [
+    client-funds-isolation.md,
+    ../05-infrastructure/strategy-shard-vm-topology.md,
+    execution-service-per-client-isolation.md,
+  ]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [strategy-service StrategySupervisor + ClientWorker per-client isolation model]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

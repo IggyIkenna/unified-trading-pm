@@ -1,14 +1,17 @@
 ---
 doc_type: codex-runbook
 title: RB-RECON-003 — Balance/Collateral Mismatch
-summary:
-status:
+summary: >-
+  Operator runbook for VENUE_INTERNAL_BALANCE_MISMATCH / MATERIAL_BALANCE_MOVEMENT_UNEXPLAINED (immediate SEV0):
+  compute venue-minus-internal delta, attribute each movement, kill-switch the scope if unexplained >$1k; success =
+  abs(venue - internal) < $100 per (account, asset).
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, reconciliation, escalation, defi, kill-switch, data-correctness]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

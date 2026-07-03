@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Per-archetype wallet isolation (N × M multi-wallet model)
 summary:
-status:
+  "N archetypes × M chains = N×M wallet topology (May-23: 2 archetypes × 5 chains = 10 HOT_TRADING + 5 shared
+  GAS_RESERVE). Per-archetype-per-chain isolation gives a capital firewall, granular KILL_PER_ARCHETYPE/KILL_PER_WALLET
+  kill-switch, and per-wallet PnL attribution. Covers WalletProvisioningConfig schema mapping, per-WalletKind
+  SpendingCaps hierarchy, per-wallet nonce queues; cross-archetype rebalancing is post-cutover."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, wallet, custody, execution, strategy, infrastructure]
+related: [../04-architecture/custody-providers.md, hsm-wallet-signing.md, secret-manager-naming.md, credentials-matrix.md, ../04-architecture/wallet-hierarchy-and-capital-flow.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [per-archetype per-chain wallet isolation topology]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

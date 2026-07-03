@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: LST Seasonal Rewards — Production Smoke Runbook
 summary:
-status:
+  Production smoke runbook (Phase 6 leveraged-leg-controller) for the daily LST seasonal-rewards collector — Secret
+  Manager key checklist per chain, ad-hoc Cloud Run Job run, parquet round-trip via ParquetDustLoader, SIT full-chain
+  dry-run, then cron enable + 24h first-fire monitoring + rollback.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, strategy-service, system-integration-tests, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [runbook, defi, features, smoke-test, backfill, strategy]
+related: [../../09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md, ../../../plans/archive/leveraged_leg_controller_2026_05_01.plan.md]
 created: 2026-05-01
-authoritative_for:
+authoritative_for: [LST seasonal-rewards production smoke-test procedure]
 referenced_by:
 owner:
 last_reviewed:

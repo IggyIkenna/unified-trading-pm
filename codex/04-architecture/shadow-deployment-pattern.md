@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Shadow Deployment Pattern — Archetype Upgrades
 summary:
-status:
+  How a new archetype-engine build promotes from shadow to prod — per-archetype observation window, policy
+  gates (dispersion/correlation/drawdown), PROMOTE/EXTEND/REJECT/ROLLBACK evaluator, and the two persistence
+  sinks (ArchetypeBuildRegistry + PromotionDecisionLedger).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, execution, verification, reconciliation, monitoring]
+related: [artifact-versioning.md, schema-versioning.md, ../06-coding-standards/strategy-identity-versioning.md]
 created: 2026-04-18
-authoritative_for:
+authoritative_for: [shadow deployment pattern for archetype-engine build promotion, ArchetypeBuildRegistry + PromotionDecisionLedger persistence]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

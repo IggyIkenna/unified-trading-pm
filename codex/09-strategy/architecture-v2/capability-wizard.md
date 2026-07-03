@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Capability Wizard — manifest, prospectus, walkthrough
-summary:
-status:
+summary: Concept SSOT for the capability wizard — three artifacts (machine-generated capability manifest, strategy prospectus generator, walkthrough wizard UI) over one typed-edge data model; four use cases plus the schema-first / no-silent-omission / script→test→agent escalation rules.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui, e2e-testing, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, capability-wizard, uac, ui, escalation, verification]
+related: [capability-wizard-question-bank.md, strategy-catalogue-3tier.md]
 created: 2026-06-11
-authoritative_for:
+authoritative_for: [capability wizard manifest/prospectus/walkthrough model]
 referenced_by:
 owner:
 last_reviewed: 2026-06-11

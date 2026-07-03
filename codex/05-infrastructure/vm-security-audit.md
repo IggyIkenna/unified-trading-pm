@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: VM Launcher Security Audit
-summary:
-status: living
+summary: >-
+  2026-05-15 shellcheck (`-S warning`) security audit of all 83 `launch-*.sh` VM launchers — 0 P0 (no hardcoded creds /
+  curl-pipe-bash), 3 P1 SC2046 word-splitting fixes (flag-array pattern), 9 SC2034 unused-var removals, 2 accepted
+  SC2211 false positives; launchers are shellcheck-clean at warning+ severity.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, audit, scripts, verification]
+related: [vm-launcher-runbook.md, launcher-script-ssot.md, vm-tarball-deployment.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [VM launcher shellcheck security audit]
 referenced_by:
 owner: deployment-platform
 last_reviewed: 2026-05-17

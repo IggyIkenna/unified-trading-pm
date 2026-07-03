@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Feature Branch Workflow
 summary:
-status:
+  Feature-branch development workflow — branch=snapshot versioning, conventional-commit bump rules (pre-1.0.0 BREAKING
+  stays minor; 1.0.0 = first CI-validated main merge), quickmerge dependency-cascade + --dep-branch (never reset
+  --hard), the gate-then-open model (full QG stamps a green sentinel, quickmerge --agent opens the PR), and the
+  require-quality-gates ruleset set with zero-human-approval (required_approving_review_count=0) autonomous auto-merge.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [quickmerge, ci-cd, feature-branch, quality-gates, conventional-commits, refactor]
+related: [../08-workflows/ci-cd-flow.md, integration-testing-layers.md, quality-gates.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [feature-branch conventional-commit versioning workflow, require-quality-gates ruleset + zero-human-approval gate policy]
 referenced_by:
 owner:
 last_reviewed:

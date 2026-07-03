@@ -8,8 +8,8 @@ asset_group: [sports]
 stage: [meta]
 repos: [e2e-testing, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, manifest, data-correctness, backfill, instruments, honest-coverage, verification]
+related: [plans/active/issues/verify_p1_prereq_dag_2026_06_29.md]
 created: 2026-06-29
 parent_epic: sports_master
 priority: P2

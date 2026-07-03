@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: 'SSOT Boundary: Codex vs PM'
 summary:
-status:
+  "Canonical rule for where content belongs — codex (evergreen standards/specs/ADRs) vs PM
+  (plans/tracking/runbooks/automation) — via a 9-question decision tree, content categories, cross-reference
+  formats, governance rules, and the Renames-in-Flight field-deprecation table."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [codex, governance, ssot-audit, plan-hygiene, docspec]
+related: [SECTION-REGISTRY.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [codex-vs-PM content-placement boundary (decision tree + renames-in-flight table)]
 referenced_by:
 owner:
 last_reviewed:

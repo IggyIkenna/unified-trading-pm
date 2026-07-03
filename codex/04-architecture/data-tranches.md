@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Three-Tranche Data Wiring
 summary:
-status:
+  "Three-tranche model for client credential + data routing: A manual/fund-of-fund (CSV in GCS), B managed
+  (Secret Manager exec-{client}-{venue}-{account_type} live API), C pooled (internal PBS+PnL APIs); canonical
+  TrancheRouter in execution-service."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, execution-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [tranche, credentials, routing, reporting, execution, secret-manager]
+related: [../07-security/secret-naming-convention.md, client-reporting-architecture.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [three-tranche client credential and data routing]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

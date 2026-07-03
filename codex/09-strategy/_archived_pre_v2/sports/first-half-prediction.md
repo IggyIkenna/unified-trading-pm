@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Sports First Half Prediction
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] Sports first-half ML strategy (SPORTS_FIRST_HALF_ML) — trains on 1H outcomes
+  directly, places pre-game 1H bets that settle at the HT whistle to free capital for halftime-ml
+  (two-phase capital efficiency); reduced max_stake (3% vs 5%) reserves Phase-2 capital. Replaced by
+  architecture-v2 ml-directional-event-settled.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, sports, ml, odds, prediction, features]
+related: [halftime-ml.md, pre-game-ml.md, ../../architecture-v2/archetypes/ml-directional-event-settled.md]
 created: 2026-04-16
 authoritative_for:
 referenced_by:

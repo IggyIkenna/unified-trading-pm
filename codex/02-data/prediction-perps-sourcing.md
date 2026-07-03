@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: Prediction Crypto-Perps Sourcing (Kalshi-Perp / Polymarket-Perp)
-summary:
-status: canonical
+summary: >-
+  Prediction crypto-perps sourcing SSOT — Kalshi-Perp / Polymarket-Perp are cefi PERPETUAL
+  instruments (CFTC-regulated crypto perps launched 2026), NOT prediction YES/NO markets; covers the
+  UAC venue tokens KALSHI-PERP/POLYMARKET-PERP, the Kalshi perps API surface (public-read
+  markets/trades/funding_rates/orderbook), the IS -> MTDS pipeline, and the trades/funding_rate/depth
+  data_types feeding funding-rate-arb.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [prediction, cefi, mtds, instruments, execution, sourcing]
+related:
+  [
+    codex/02-data/prediction-data-types-catalog.md,
+    codex/02-data/prediction-schema-paths.md,
+    codex/02-data/mtds-data-source-coverage-matrix.md,
+  ]
 created: 2026-06-21
-authoritative_for:
+authoritative_for: [Kalshi-Perp/Polymarket-Perp crypto-perp sourcing]
 referenced_by:
 owner:
 last_reviewed: 2026-06-21

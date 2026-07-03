@@ -2,14 +2,20 @@
 doc_type: issue
 title: Batch-Live Reconciliation Service (BLRS) — Repo Audit, Codex↔Code Drift, Cross-Repo Responsibility Map
 summary: BLRS is a **T+1 nightly batch-vs-live reconciliation orchestrator**. It runs a sequential multi-stage DAG that, for the prior trading day, compares the _batch replay_ of the pipeline against what a...
-status: AUDIT COMPLETE (pass 2) — D1 ✅ DECIDED=A (codex corrected); D2/D3/D4/G12 → routed to ikenna-main 2026-05-27; G2/G4/G5 self-completing
+status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, execution-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [reconciliation, ssot-audit, strategy, execution, audit, escalation]
+related:
+  [
+    codex/04-architecture/reconciliation-resolution.md,
+    codex/04-architecture/reconciliation-age-tracking.md,
+    codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    codex/04-architecture/paper-vs-live-execution-seam.md,
+  ]
 created: 2026-05-27
 parent_epic: batch_live_symmetry_master
 priority: P2

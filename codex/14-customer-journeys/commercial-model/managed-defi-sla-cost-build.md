@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Managed DeFi-allocator SLA — reusable cost-build template
 summary:
-status:
+  Reusable codex-private cost-build template for any DeFi-allocator managed-SLA — the per-tenant cost
+  atoms, the retainer landing formula (max of 0.85× sole-client cost and 1.2×1.4× steady-state marginal),
+  IP-power performance-share tiering (A 10% → C 25%/10% tranche), and one-time expansion charges.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, sales]
-tags: []
-related: []
+tags: [commercial-model, sla, defi, cost, pricing, profit-share]
+related:
+  [
+    elysium-managed-sla-2026-05-14.md,
+    elysium-account-trajectory-2026-05-14.md,
+    pricing-building-blocks.md,
+    im-profit-share-structures.md,
+  ]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [managed DeFi-allocator SLA reusable cost-build template]
 referenced_by:
 owner:
 last_reviewed:

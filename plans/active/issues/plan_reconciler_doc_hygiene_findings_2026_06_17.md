@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
+tags: [plan-hygiene, ssot-audit, orchestrator, docspec, verification]
 related: []
 created: 2026-06-17
 parent_epic: plan_hygiene_master

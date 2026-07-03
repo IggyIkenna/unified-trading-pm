@@ -2,20 +2,36 @@
 doc_type: audit-result
 title: Data-source provenance audit — all asset groups (2026-06-01)
 summary:
-status: complete
+  Code write-path audit of the row-level `source`-column provenance capability
+  across all five asset groups — provenance is UNIVERSAL (every captured cell
+  stamps source now, even single-source, for swap-resilience). tradfi AMBER
+  (gate live, backfill unblocked), defi RED (the only live silent-collapse —
+  ManifestWriter.add() doesn't persist source so Pyth-vs-Chainlink oracle_prices
+  collapse last-write-wins), cefi/sports/prediction RED (source blank / lives in
+  path not column); gate should raise MissingSourceError for all asset groups.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, data-provenance, source-provenance, manifest, data-correctness, defi, tradfi, cefi]
+related:
+  [
+    ../../active/data_source_provenance_all_asset_groups_2026_06_01.md,
+    cefi_master_audit_2026_06_03.md,
+  ]
 created: 2026-06-01
 audited_scope:
+  data-source provenance capability (row-level `source` column + per-source
+  manifest row + downstream SOURCE_PRIORITY resolution) across all 5 asset groups
+  — a code write-path audit against live-defi-rollout (source_priority.py,
+  manifest_writer.py, _defi_manifest.py). NOT covered — prod data-state source
+  distribution reads (deferred to plan Phase 7).
 date: 2026-06-01
 auditor: slot-1 (ikenna, interactive)
 parent_epic: infrastructure_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

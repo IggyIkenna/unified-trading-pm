@@ -2,13 +2,15 @@
 doc_type: codex-runbook
 title: RB-ALERT-003 — Satellite / No-Signal Fallback
 summary:
-status:
+  Operator runbook for satellite / no-signal SEV0 fallback (Garmin inReach Mini 2 over Iridium, webhook to
+  alerting-service) plus backup-human rota when travelling; end-to-end test required before departure.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service]
 scope: [admin, engineer]
-tags: []
+tags: [runbook, alerting, incident, on-call, escalation, satellite]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

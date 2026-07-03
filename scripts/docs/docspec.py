@@ -239,7 +239,7 @@ def _as_list(v: object) -> list:
 
 # Files whitelisted as data — they carry no frontmatter (§9 of the schema SSOT).
 EXEMPT_BASENAMES = frozenset(
-    {"README.md", "INDEX.md", "ROADMAP.md", "roadmap.md", "PLAN_FORMAT.md", "RULES.md"}
+    {"README.md", "INDEX.md", "ROADMAP.md", "roadmap.md", "PLAN_FORMAT.md", "RULES.md", "task_template.md"}
 )  # RULES.md = shared agent boot-rules meta (the agents/ analogue of CLAUDE.md), not a role charter
 
 
@@ -287,6 +287,21 @@ def parse_frontmatter(text: str) -> tuple[dict | None, str]:
     if not isinstance(fm, dict):
         fm = {}
     return fm, parts[2]
+
+
+# Schema-sanctioned valid-empties (doc-frontmatter-schema.md §2/§6): `repos`/`related` are "[] if
+# none"; a non-current codex doc (superseded/stale/draft) rightly claims no `authoritative_for`; a
+# superseded epic's registry-identity fields are retired identity, not missing content.
+_NON_CURRENT_STATUSES = frozenset({"superseded", "stale", "draft"})
+_SUPERSEDED_EPIC_EXEMPT = frozenset({"name", "tier", "priority", "parent"})
+
+
+def _valid_empty(name: str, v: object, fm: dict, doc_type: str) -> bool:
+    if name in ("repos", "related") and isinstance(v, list):
+        return True
+    if name == "authoritative_for" and fm.get("status") in _NON_CURRENT_STATUSES:
+        return True
+    return doc_type == "epic" and fm.get("status") == "superseded" and name in _SUPERSEDED_EPIC_EXEMPT
 
 
 # ----------------------------------------------------------------------------- value validation
@@ -351,7 +366,7 @@ def validate_frontmatter(doc_type: str | None, fm: dict, reg: Registries) -> lis
         if _is_empty(v):
             if spec.name == "assigned_vm" and req == Req.R:
                 out.append(Violation(spec.name, Sev.HARD, "empty — set a vm-id or NA"))
-            elif req == Req.R:
+            elif req == Req.R and not _valid_empty(spec.name, v, fm, doc_type):
                 out.append(Violation(spec.name, Sev.SOFT, "required but empty — needs content"))
             # an empty OPTIONAL field (incl. an optional assigned_vm on an issue) is fine
             continue

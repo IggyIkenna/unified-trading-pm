@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, manifest, data-correctness, expected-unattempted, instruments, reconciliation, backfill, honest-coverage]
+related: [plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md, plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md]
 created: 2026-06-29
 parent_epic: sports_master
 priority: P0

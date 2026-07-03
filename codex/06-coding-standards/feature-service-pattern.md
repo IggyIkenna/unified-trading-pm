@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Feature Service Pattern
 summary:
-status:
+  BaseFeatureServiceV2 pattern — the mandatory UTL base class for each features-service sub-package family; auto-wires
+  UnifiedCloudConfig singleton, GCSEventSink + STARTED/STOPPED lifecycle, FeatureServiceMetrics, the health/readiness
+  router factory, and the correlation_id ContextVar, so services implement only compute_features(). Includes the
+  UAC-schema-first 'add a new feature_family' recipe and the prohibited-pattern list.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, instruments-service, unified-trading-library, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [features, feature-service, observability, prometheus-metrics, correlation-id, uac]
+related: [../04-architecture/features-service-architecture.md, prometheus-metrics.md, correlation-id.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [BaseFeatureServiceV2 features sub-package base-class pattern]
 referenced_by:
 owner:
 last_reviewed:

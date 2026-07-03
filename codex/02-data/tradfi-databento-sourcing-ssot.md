@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: TradFi Databento Sourcing — Subscription Universe + Billing-Safety SSOT
 summary:
-status: canonical
+  Databento sourcing SSOT — exactly 3 subscribed datasets (GLBX.MDP3/DBEQ.BASIC/XCBF.PITCH), a fail-closed schema+lookback
+  allowlist so metered PAYG never fires silently, databento-first SOURCE_PRIORITY, and write-stamped source provenance.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [tradfi, databento, cost, data-correctness, pipeline-mode, ssot-audit]
+related: [codex/02-data/tradfi-data-types-catalog.md, codex/04-architecture/tradfi-batch-live.md, codex/02-data/availability-manifest-and-data-status.md, codex/02-data/pipeline-mode-partition.md]
 created: 2026-06-18
-authoritative_for:
+authoritative_for: [Databento 3-dataset subscription universe and billing-safety allowlist, TradFi Databento source provenance write-stamping]
 referenced_by:
 owner:
 last_reviewed: 2026-06-25

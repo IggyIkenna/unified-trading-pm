@@ -1,21 +1,28 @@
 ---
 doc_type: audit-result
 title: MDPS engine benchmark — Polars vs Pandas+PyArrow on the real workload
-summary:
-status: complete
+summary: >-
+  Benchmark of the MDPS Layer-0 data-engine choice on real prod parquets (9 BINANCE-FUTURES perp trades files, ~127 MB,
+  7 timeframes). Decision: pure Polars scan_parquet LazyFrame + projection pushdown. Path A (pure polars lazy) beats the
+  current Polars→Pandas→Polars round-trip on every metric — 3× faster wall, 5× lower peak, 7.8× less RSS retention;
+  pandas+pyarrow lost on every axis. Both engines need Layer-3 subprocess-per-date to bound documented arena leaks.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, mdps, polars, performance, benchmark, data-engine, backfill]
+related:
+  - plans/audit/results/mdps_long_running_engine_mixing_2026_05_28.md
+  - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
+  - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope:
+audited_scope: MDPS Layer-0 data-engine benchmark — pure-Polars-lazy vs pandas+pyarrow vs current-round-trip vs polars-eager on real prod trades parquets (wall-clock + per-instrument RSS trajectory)
 date: '2026-05-28'
 auditor: claude opus 4.7 (slot main)
 parent_epic: mtds_mdps_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

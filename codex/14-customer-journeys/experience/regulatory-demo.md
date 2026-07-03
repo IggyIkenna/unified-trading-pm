@@ -2,20 +2,30 @@
 doc_type: codex-ssot
 title: Regulatory Umbrella — Warm-Prospect Demo
 summary:
-status:
+  pb3a warm-prospect Regulatory Umbrella demo on staging — walks the regulated-activity reporting landing, transaction
+  reporting with best-execution evidence, the supervisory-artifact index, and the shared reporting walkthrough; demo
+  surface is identical across mandate Shapes 1/2/3, entitlement-sliced.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [sales, prospect]
-tags: []
-related: []
+tags: [regulatory, demo, prospect, sales, compliance, reporting, ui]
+related:
+  [
+    regulatory-umbrella-briefing.md,
+    staging-demo-journey.md,
+    ../shared-core/client-reporting-demo-walkthrough.md,
+    ../demo-ops/demo-restriction-profiles.md,
+    ../commercial-model/im-vs-reg-reporting-logic.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [pb3a Regulatory Umbrella warm-prospect demo experience]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts]
 ---
 
 # Regulatory Umbrella — Warm-Prospect Demo

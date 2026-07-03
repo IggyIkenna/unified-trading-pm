@@ -1,14 +1,19 @@
 ---
 doc_type: plan
 title: Features-service end-to-end pipeline test (read → calculate → write → read-back) on real GCS data
-summary:
+summary: >-
+  Stands up a repeatable real-data end-to-end test of the full features-service pipeline per family
+  (discover v8 manifest → read GCS inputs → calculate → write parquet + manifest row → read-back & assert).
+  Fixes the WRITE blocker (write_daily_partition string-index-out-of-range writing 0 rows), backfills a
+  lookback-sized input window so calculators can be exercised across instruments, and validates each family
+  against real GCS — writing to -test buckets so prod feature output is untouched.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-data-processing-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [features, manifest, verification, smoke-test, backfill, mdps, data-pipeline]
 related: [plans/active/features_input_manifest_migration_2026_05_25.md, plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md]
 created: 2026-05-25
 parent_epic: features_and_ml_master

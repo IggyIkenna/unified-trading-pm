@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Synthetic-Data Pipeline Benchmarking
 summary:
-status:
+  SSOT for the synthetic-data benchmark harness — the 5 UAC contract axes
+  (SyntheticGeneratorId/Domain/RealismAxis/ShardLayout/Params), the UTL generator + per-stage profiler + BenchmarkHarness
+  DAG, the benchmark CLI/launcher, and the (still-unpopulated) VM-shape recommendation matrix.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [synthetic-data, performance, benchmark, infrastructure, spot-vm]
+related: [runtime-tiers-and-deployment.md, ../06-coding-standards/performance-targets.md, ../02-data/availability-manifest-and-data-status.md]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: [synthetic-data pipeline benchmark harness]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

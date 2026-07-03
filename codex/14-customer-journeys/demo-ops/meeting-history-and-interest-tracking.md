@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Meeting History and Interest Tracking
 summary:
-status:
+  Per-session log-back to the account-intelligence record (7 fields — session_id/type, flavour, mode,
+  surfaces_covered with per-surface time, interest_signals, reservations_raised verbatim, next_commitment_named) so each
+  call is cumulative; interest-signal taxonomy, verbatim-reservation discipline, and 30-min post-session capture window.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [sales, engineer, admin]
-tags: []
-related: []
+tags: [demo-ops, sales, crm, session-tracking, interest-signals, follow-up]
+related: [account-intelligence-record.md, pre-demo-discovery-framework.md, post-demo-followup-orchestration.md, demo-decision-matrix.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [demo meeting history and interest tracking]
 referenced_by:
 owner:
 last_reviewed:

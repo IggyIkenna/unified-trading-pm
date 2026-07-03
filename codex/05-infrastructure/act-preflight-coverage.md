@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: act-preflight workflow coverage
 summary:
-status: living
+  Coverage matrix for which .github/workflows entries are fully exercisable under act-preflight.sh (a nektos/act
+  wrapper) vs REMOTE-ONLY — 6 FULL / 6 PARTIAL / 28 REMOTE-ONLY / 5 N-A of 45 workspace workflows; service-repo
+  quality-gates.yml should always be FULL, and a workflow with no row here is review-blocking.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ci, quality-gates, workflows, act, verification, runbook, infrastructure]
+related: [deployment-and-qg-strategy.md, cicd-setup.md, ../08-workflows/ci-cd-flow.md]
 created: 2026-05-17
-authoritative_for:
+authoritative_for: [act-preflight workflow local-coverage matrix]
 referenced_by:
 owner: workspace-platform
 last_reviewed: 2026-05-17

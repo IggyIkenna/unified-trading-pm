@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: 'Family: Rules Directional'
 summary:
-status:
+  The Rules Directional strategy family — 2 archetypes (continuous vs event-settled) firing hard-coded if-else rules
+  on features (TA, statistical thresholds, sports-timing) via a versioned YAML rule registry + evaluator; edge is
+  threshold-crossed with per-rule hit-rate monitoring that auto-retires stale rules.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, rules, features, odds, execution, cefi, tradfi]
+related:
+  [
+    ml-directional.md,
+    event-driven.md,
+    ../archetypes/rules-directional-continuous.md,
+    ../axes/signal-sources.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [Rules Directional strategy family spec (alpha thesis + 2 archetypes)]
 referenced_by:
 owner:
 last_reviewed:

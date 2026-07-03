@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [manifest, data-correctness, defi, phantom-captures, data-pipeline, monitoring, audit]
 related: [data_pipeline_hardening_self_monitoring_2026_06_22]
 created: 2026-06-27
 parent_epic: observability_master

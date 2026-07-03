@@ -1,21 +1,29 @@
 ---
 doc_type: codex-ssot
 title: Operation Capability Registry
-summary:
-status:
+summary: >-
+  Operation Capability Registry — the UAC per-(source, operation, environment) validation layer
+  (SourceCapability / operation_details / EndpointSpec); validate_operation / resolve_venue_context /
+  compose_validation resolve signing_scheme + required_credential + execution_pattern; 77 sources
+  registered, 53 with populated operation_details.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [uac, execution, registry, validation, cefi]
+related: [codex/02-data/per-source-colocation.md, codex/02-data/schema-governance.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [operation capability registry per-(source operation env) validation]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
 code_refs:
+  [
+    unified-api-contracts/unified_api_contracts/registry/capability.py,
+    unified-api-contracts/unified_api_contracts/registry/venue_context.py,
+  ]
 ---
 
 # Operation Capability Registry

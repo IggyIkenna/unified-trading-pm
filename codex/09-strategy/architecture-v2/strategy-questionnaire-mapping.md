@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Strategy Questionnaire — Catalogue Filter Derivation
-summary:
-status:
+summary: SSOT for deriving a StrategyCatalogueFilter from the 11-axis prospect questionnaire — the categories→venueCategories and strategy_style→families 1-to-1 maps, the market_neutral rules-based family expansion (carry+neutral also surfaces structural arb), risk_profile→coverageStatuses, and leverage_preference option exclusion.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, sales, admin]
-tags: []
-related: []
+tags: [strategy, catalogue, questionnaire, uac, ui, mvp]
+related: [strategy-catalogue-3tier.md, ../../02-data/questionnaire-axes.md, restriction-policy.md]
 created: 2026-04-24
-authoritative_for:
+authoritative_for: [questionnaire-to-catalogue-filter derivation (11-axis mapping)]
 referenced_by:
 owner:
 last_reviewed:

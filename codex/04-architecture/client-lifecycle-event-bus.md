@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Client Lifecycle Event Bus
-summary:
-status:
+summary: Runtime client lifecycle event bus (REGISTER/DEREGISTER/QUARANTINE/UNQUARANTINE/CREDENTIAL_ROTATED) pushing operator→StrategySupervisor topology changes; ClientReady/ClientQuarantined/ShardCapacity events + the push-vs-pull hot-reload contract. Distinct from the onboarding state machine.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [client-isolation, lifecycle, event-bus, strategy, orchestrator, credentials]
+related: [per-client-isolation-architecture.md, client-lifecycle-state-machine.md, kill-switch-event-bus.md, ../05-infrastructure/strategy-shard-vm-topology.md]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [client lifecycle event bus, ClientLifecycleEvent runtime topology events]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Drift V2 Data Sources — Velocity Data API as Canonical Historical + Live Path
 summary:
-status: living
+  Velocity Data API (data.api.drift.trade) as the canonical Drift V2 perp-DEX historical + live ingestion path —
+  per-market funding/trades endpoints, UAC schema mapping, replacing the Helius sig-walker.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, drift, mtds, solana, backfill, pipeline-mode]
+related: [instruments-service-as-ssot-for-mtds.md, solana-defi-coverage.md, ../02-data/defi-data-types-catalog.md, ../02-data/honest-absence-downstream-handling.md]
 created: 2026-06-01
-authoritative_for:
+authoritative_for: [Drift V2 Velocity Data API ingestion path]
 referenced_by:
 owner: defi-adapters
 last_reviewed: 2026-06-01

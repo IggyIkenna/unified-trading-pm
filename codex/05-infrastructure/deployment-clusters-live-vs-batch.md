@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: 'Deployment Clusters: Live vs Batch (SSOT)'
 summary:
-status:
+  Canonical taxonomy of deployment clusters — a live cluster (many different services co-running) vs a batch cluster
+  (the same service ×N shards in parallel); per-tier shard atoms (data / decision / ML / execution), daily shards as
+  the universal replay axis, tarball vs Cloud Build mechanisms, and the per-VM shard-isolation + write-gate concurrency
+  invariants.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [deployment, backfill, manifest, mtds, live-trading]
+related: [codex/02-data/availability-manifest-and-data-status.md, codex/04-architecture/shard-level-failure-isolation.md, codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/deployment-ui-architecture.md]
 created: 2026-05-06
-authoritative_for:
+authoritative_for: [live vs batch deployment cluster taxonomy, per-cluster-type sizing + deployment mechanism (tarball vs Cloud Build)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

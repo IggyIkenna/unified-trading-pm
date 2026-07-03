@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `CARRY_RECURSIVE_STAKED`'
-summary:
-status: design
+summary: >-
+  Archetype CARRY_RECURSIVE_STAKED (Family 0): recursive leverage of a liquid-staking position
+  (stake -> pledge -> borrow -> restake, ~2.5-4x effective) capturing leveraged LST yield including the
+  three restaking layers (CARRY_BASE + AVS-continuous + issuer-seasonal, dust-converted). Cascading
+  liquidation/depeg risk amplified by leverage; tight max_stETH_depeg_bps + HF kill-switches.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, carry, defi, execution, archetype, features]
+related:
+  [
+    ../families/carry-and-yield.md,
+    carry-staked-basis.md,
+    carry-recursive-borrow-lending-only.md,
+    carry-recursive-borrow-perp-hedged.md,
+    ../cross-cutting/restaking-reward-economics.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [CARRY_RECURSIVE_STAKED archetype specification (Family 0 recursive staked carry)]
 referenced_by:
 owner:
 last_reviewed:

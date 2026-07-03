@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Script Homes — where executables live (repo `scripts/` vs deployment-service vs e2e-testing)
-summary:
-status:
+summary: >-
+  Canonical placement rule for every workspace executable — production verb → service
+  CLI subcommand; provision/launch/schedule → deployment-service; cross-repo/smoke/e2e →
+  e2e-testing; one-off single-repo op → repo scripts/ (TEMPORARY); plus the QG-enforced
+  3-line lifecycle marker (Epic / Lifecycle / Delete-when) on every scripts/ file.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, e2e-testing, features-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [scripts, script-homes, lifecycle-marker, deployment, refactor, quality-gates]
+related: [cli-convention.md, quality-gates.md]
 created: 2026-06-10
-authoritative_for:
+authoritative_for: [script-homes placement decision tree, repo scripts/ lifecycle markers (Epic/Lifecycle/Delete-when)]
 referenced_by:
 owner:
 last_reviewed:

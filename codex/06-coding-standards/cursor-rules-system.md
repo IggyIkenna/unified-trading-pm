@@ -2,16 +2,16 @@
 doc_type: codex-ssot
 title: Cursor Rules System
 summary: How cursor rules work — directory layout, priority tiers, glob triggers, and how to add a rule
-status: living
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [cursor-rules, meta]
-related: []
+related: [documentation-standards.md]
 created: '2026-03-27'
-authoritative_for:
+authoritative_for: [cursor .mdc rules-system layout and loading]
 referenced_by:
 owner: pm-orchestrator
 last_reviewed: '2026-06-25'

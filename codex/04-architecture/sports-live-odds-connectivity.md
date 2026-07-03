@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Sports Live Odds Connectivity
 summary:
-status:
+  The three live-odds connectivity paths for sports bookmakers — The Odds API (REST poll, no login),
+  exchange APIs (Betfair/Smarkets, keys only), and login+scrape workers; latency/auth/maintenance trade-offs, MDPS as producer.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, odds, mdps, live-trading, footystats]
+related: [sports-integration-plan.md, sports-batch-live.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [sports live-odds connectivity paths (aggregator/exchange/scraper)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

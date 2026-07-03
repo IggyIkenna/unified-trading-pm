@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Secrets Management
-summary:
-status:
+summary: >-
+  Secrets management SSOT: runtime access via `get_secret_client()` (GCP/AWS by `CLOUD_PROVIDER`, no env-var fallback),
+  the `.env.example` + config-class pattern, the full Secret Manager inventory (vendor/exchange/execution/service-auth
+  keys with VCR status), IAM bindings, and Docker/hardcoding prevention.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, execution-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [secrets, cefi, defi, tradfi, sports, data-vendor]
+related: [secret-naming-convention.md, client-credentials.md, ../02-data/vcr-cassette-ownership.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [get_secret_client secret access pattern, Secret Manager key inventory]
 referenced_by:
 owner:
 last_reviewed:

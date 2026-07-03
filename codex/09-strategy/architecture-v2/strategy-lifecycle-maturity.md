@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Strategy Lifecycle & Maturity Model
-summary:
-status:
+summary: SSOT for the 5-dimension strategy-instance model — the 9-phase forward-only StrategyMaturityPhase staircase, ProductRouting, venue-set-variant upsell ladders, ShareClass, and odum-paper/odum-live client-zero; the UAC-catalogue vs Firestore-runtime-state split and admin lifecycle-editor flow. Instance explosion ~200-300 rows.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, catalogue, uac, promote, reconciliation]
+related: [strategy-registry-v2.md, strategy-catalogue-3tier.md, performance-overlay.md, dashboard-services-grid.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [strategy 9-phase maturity model + 5-dim instance registry + venue-set variants]
 referenced_by:
 owner:
 last_reviewed:

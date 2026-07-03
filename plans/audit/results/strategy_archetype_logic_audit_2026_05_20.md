@@ -2,20 +2,25 @@
 doc_type: audit-result
 title: Strategy archetype logic audit — separate from data-sanity mega audit + strategy MAP
 summary:
-status: ENRICHED 2026-05-21 — added §0 MAP (operator-requested full overview synthesised from 7 parallel research sub-agents) + §15-20 new dimensions + active plans inventory + master-strategy-plan deliverable. ACKED — operator authorised 2026-05-20 round 5 to run TONIGHT in parallel with strategy/ml consolidation tail. Requires **Opus 4.7 (1M context)** — cross-archetype + cross-codebase scope demands the full graph in one session per `codex/06-coding-standards/model-tier-selection.md` opus-required tier.
+  Strategy-logic audit (distinct from the data-sanity mega audit) + full strategy MAP (§0, 7-subagent synthesis) —
+  53 closed-set archetypes, axes/hard-rule tables, data flow, decision logic, treasury/execution, batch=paper=live.
+  Verdict fail — 5 P0 silent-failure risks — CARRY_STAKED_BASIS always returns [] (empty VENUE_COLLATERAL_MATRIX),
+  funding-rate-dispersion uncaught raise ValueError breaks shard isolation, two silent-stub archetypes, ARCHETYPE
+  enum collision, PnL stream emits zeros; plus missing VENUE_JURISDICTION_RESTRICTIONS (P0 pre-live) + thin risk-rule coverage (2/53).
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-service, e2e-testing, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [strategy, defi, execution, escalation, ssot-audit, data-correctness, audit]
 related: [mega_audit_and_plan_beefup_progression_2026_05_20.md, trading_agent_service_architecture_unlock_2026_05_22.md, strategy_and_dart_master_SUPERSEDED_2026_05_21.md, mtds_mdps_master.md, per_client_isolation_and_venue_fanout_topology_2026_05_20.md, strategy_execution_contract_remediation_2026_05_20.md, phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md, api_keys_wallets_accounts_readiness_2026_05_10.md, cross_client_funds_isolation_retroactive_audit_2026_05_20.md, promote_workflow_may23_cli_path_2026_05_10.md, promote_workflow_post_cutover_ui_pipeline_2026_05_10.md, defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md, defi_recursive_borrow_archetypes_2026_05_10.md, strategy_repo_consolidation_2026_05_19.md]
 created: 2026-05-20
-audited_scope:
+audited_scope: strategy-service archetype logic across all 53 closed-set archetypes + 10 axes (venue/share-class/leverage/instrument-type/collateral/jurisdiction/credential/treasury/risk) + data flow (MTDS→MDPS→features→ML→strategy) + treasury/execution handoff + batch=paper=live mode parity + mock-data surface
 date: '2026-05-20'
 auditor: claude + operator
 parent_epic: strategy_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

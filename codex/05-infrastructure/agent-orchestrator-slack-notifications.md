@@ -2,16 +2,24 @@
 doc_type: codex-ssot
 title: Agent-Orchestrator Slack Notifications
 summary:
-status:
+  Outbound Slack webhook notifications from agent-orchestrator to the agent-orchestrator-alerts channel — Block Kit
+  payloads with retry (3 attempts on 5xx, suppressed on failure), a 13-function Slack / 9-function Telegram inventory
+  (the two modules intentionally diverge), and the secret inventory (V1 webhook mounted; signing-secret/OAuth are V2).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, slack, notifications, monitoring, observability, self-healing]
+related:
+  [
+    ../12-agent-workflow/orchestrator-safety-mechanisms.md,
+    ../04-architecture/agent-orchestrator-overview.md,
+    agent-orchestrator-api-host.md,
+  ]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [agent-orchestrator Slack notification functions + payload/retry contract]
 referenced_by:
 owner:
 last_reviewed:

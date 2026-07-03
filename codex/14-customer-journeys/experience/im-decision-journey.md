@@ -2,20 +2,30 @@
 doc_type: codex-ssot
 title: Investment Management — Decision Journey
 summary:
-status:
+  pb2a IM decision-journey briefing (canonical reference playbook) — walks strategy surface, SMA/Pooled structure
+  (POD-administered custody), same-system reporting partition, FCA/MLRO cover, and the platform-fee client choice (+5%
+  perf uplift or $500/mo access); 12-month minimum, feeds pb3b demo.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [sales, prospect]
-tags: []
-related: []
+tags: [investment-management, briefing, prospect, sales, reporting, sma-pooled, ui]
+related:
+  [
+    investment-management-demo.md,
+    briefings-hub.md,
+    ../shared-core/same-system-principle.md,
+    ../commercial-model/im-vs-reg-reporting-logic.md,
+    ../commercial-model/im-profit-share-structures.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [pb2a IM decision-journey briefing experience]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts]
 ---
 
 # Investment Management — Decision Journey

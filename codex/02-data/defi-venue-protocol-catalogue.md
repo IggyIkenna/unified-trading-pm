@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: DeFi Venue + Protocol Catalogue
-summary:
-status:
+summary: >-
+  Cross-chain × cross-protocol DeFi catalogue mapping every protocol (lending/DEX/LST/restaking+LRT/vault/perp)
+  to its UAC entry, instruments-service adapter, MTDS capture adapter and execution connector, plus the
+  per-protocol shard-atom matrix (bundled-per-(chain,protocol,data_type,day) vs per-instrument) and per-chain
+  RPC/MEV/gas coverage; status legend ✅/🟢/◐/✗/🔍 splits code-shipped from data-flowing.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, catalogue, instruments, mtds, execution, manifest, ssot-audit]
+related: [defi-data-type-taxonomy.md, defi-data-types-catalog.md, per-asset-group-bucket-layouts.md, ../05-infrastructure/chain-rpc-mev-tenderly.md, ../04-architecture/shard-level-failure-isolation.md]
 created: 2026-05-10
-authoritative_for:
+authoritative_for: [DeFi venue + protocol catalogue, DeFi per-protocol shard-atom bundling decision]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: TransferCoordinator
 summary:
-status:
+  TransferCoordinator is the single entry point for all execution-service fund movements — routes by
+  TransferIntent.transfer_type, enforces same-client_id on every transfer (raises CrossClientTransferForbiddenError),
+  validates the destination against the client wallet registry, and is idempotent on idempotency_key.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [transfers, execution, client-funds-isolation, uac, idempotency, defi]
+related:
+  [
+    transfer-architecture.md,
+    client-funds-isolation.md,
+    per-client-isolation-architecture.md,
+    oms-protocol-and-state-machine.md,
+  ]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [TransferCoordinator single-entry fund-movement facade + routing table]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

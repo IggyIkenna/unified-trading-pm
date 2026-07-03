@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: AWS IAM matrix — per-service role + policy SSOT
 summary:
-status:
+  Target per-service AWS IAM role/policy matrix (uts-{service}-{env} naming; S3 / Secrets Manager / KMS / SNS-SQS /
+  EventBridge / EC2 / ECS access per service) plus closed-set policy attachments and cross-cloud WIF — SHAPE-ONLY STUB,
+  IAM resources not yet provisioned (Plan Phase 1.B open; execution-service alone gets kms:Decrypt on the trading CMKs).
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, unified-trading-system-ui]
 scope: [admin, engineer]
-tags: []
-related: []
+tags: [aws, iam, infrastructure, security, execution, kms, secrets]
+related:
+  [credentials-matrix.md, secret-manager-naming.md, rotation-runbook.md, aws-cloudtrail-cost-optimization-2026-06-20.md]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: [AWS per-service IAM role naming + policy matrix (target shape)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

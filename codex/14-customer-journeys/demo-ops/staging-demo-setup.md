@@ -2,20 +2,24 @@
 doc_type: codex-ssot
 title: Staging Demo Setup — Operator Checklist
 summary:
-status:
+  Operator checklist to onboard a new demo client to staging — add persona(s) to personas.ts, register a TIER_BUNDLES
+  entry (tier-override pattern writing localStorage tier-override-v1), add QUESTIONNAIRE_PRESEEDS, commit a
+  profiles/{id}.yaml, send the invite email, run vitest; UAT runs the demo auth provider (Firebase odum-staging is
+  aspirational-only).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [admin, sales, engineer]
-tags: []
-related: []
+tags: [demo-ops, sales, staging, personas, tier-override, onboarding, ui]
+related: [demo-restriction-profiles.md, dart-demo-modes.md, ../dart/dart-terminal-vs-research.md, ../../08-workflows/client-onboarding.md]
 created: 2026-04-24
-authoritative_for:
+authoritative_for: [staging demo persona onboarding checklist]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-trading-system-ui/lib/auth/personas.ts, unified-trading-system-ui/lib/auth/demo-provider.ts, unified-trading-system-ui/lib/auth/tier-override.ts, unified-trading-system-ui/components/demo/DemoPlanToggle.tsx]
 ---
 
 # Staging Demo Setup — Operator Checklist

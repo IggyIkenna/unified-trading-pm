@@ -2,20 +2,36 @@
 doc_type: audit-result
 title: Consolidated CF-1…CF-12 data-state audit results — slot-3 surfaces (cefi/tradfi/sports/prediction + instruments + downstream)
 summary:
-status: complete
+  CF-1…CF-12 data-state audit of slot-3 surfaces (cefi/tradfi/sports/prediction +
+  instruments-store) read against actual prod _index rows — systemic finding is
+  the v9 canonicalisation was a constant-bump only, never applied to data (CF-1
+  100% still v8, CF-3/CF-4/CF-8 columns absent everywhere, sports 584,177 empties
+  blanket-mislabeled SOURCE_RETURNED_ZERO); documents the per-AG bespoke
+  layout-dispatching migrator + ManifestWriter v9 rebuild recipe and the
+  irreversible delete-at-end gates before legacy is dropped.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service]
+repos: [deployment-service, market-tick-data-service, market-data-processing-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, honest-coverage, manifest, canonicalisation, data-correctness, pipeline-mode, cefi, tradfi, sports, prediction]
+related:
+  [
+    ../instructions/canonical_form_cross_service_audit_checklist.md,
+    ../../active/defi_manifest_canonicalisation_2026_06_01.md,
+  ]
 created: 2026-06-01
 audited_scope:
+  CF-1…CF-12 data-state on the canonical MTDS _index + instruments-store _index
+  for cefi/tradfi/sports/prediction (defi = slot-2, not covered here); read via
+  cf_manifest_audit_2026_06_01.py against actual prod rows, plus a Phase-0
+  all-layouts enumeration per AG. NOT covered — whole-corpus content rewrite
+  execution (dry-run/apply is a separate VM run).
 date: '2026-06-01'
 auditor: ikenna (slot-3)
 parent_epic: infrastructure_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

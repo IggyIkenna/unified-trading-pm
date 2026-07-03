@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Replay Subsystem
 summary:
-status:
+  Replay subsystem that gap-fills live-pipeline data loss by re-driving historical sources through the same Redis
+  Streams; covers ReplayRunner/ReplayPublisher, the per-shard replay_watermark KV handoff, REPLAY_BACKSTOP_REACHED, and
+  scenario-overlay composition.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [replay, live-trading, pipeline-mode, mtds, backfill, data-quality]
+related:
+  [
+    runtime-tiers-and-deployment.md,
+    ../02-data/pipeline-mode-partition.md,
+    ../04-architecture/scenario-injection-architecture.md,
+    ../04-architecture/autonomous-recovery-matrix.md,
+  ]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [replay subsystem gap-fill watermark-KV handoff, REPLAY_BACKSTOP_REACHED multi-hour-outage backstop]
 referenced_by:
 owner:
 last_reviewed: 2026-06-11

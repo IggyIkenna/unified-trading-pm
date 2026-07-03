@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Live Deployment Manifest — SSOT
 summary:
-status: living
+  "The candidate manifest — an immutable MinimalCandidateManifest (UAC) frozen at promote time (batch→paper /
+  paper→live), persisted to Firestore `strategy_candidate_manifests` via UTL CandidateManifestStore, emitting
+  STRATEGY_PROMOTED_TO_CANDIDATE; it gates paper/live VM auto-launch and is the audit record per promote decision."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, promote, mvp, uac, live-trading, ssot]
+related: [promote-workflow-architecture.md, cross-service-promote-handlers.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [candidate manifest schema, MinimalCandidateManifest promote record]
 referenced_by:
 owner: deployment-platform
 last_reviewed: 2026-05-17

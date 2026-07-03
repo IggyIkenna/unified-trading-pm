@@ -2,16 +2,24 @@
 doc_type: codex-ssot
 title: CLI Promote Paths — May-23 SSOT
 summary:
-status:
+  The May-23 dual-track promote SSOT — PRIMARY CLI track (run-paper.sh → colocated_engine.py → run-live.sh, Tenderly
+  fork paper then KMS-custody live) vs SECONDARY UI track; documents each script, its pre-flight gates, required env,
+  and the strategy-paper-/strategy-live- VM launchers.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, e2e-testing, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [promote, live-trading, defi, execution, deployment, spot-vm]
+related:
+  [
+    paper-batch-live-reconciliation.md,
+    batch-live-reconciliation-threshold-calibration.md,
+    ../../04-architecture/kill-switch-circuit-breaker.md,
+  ]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [May-23 CLI promote paths (run-paper.sh / colocated_engine.py / run-live.sh dual-track)]
 referenced_by:
 owner:
 last_reviewed:

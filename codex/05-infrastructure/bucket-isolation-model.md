@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Bucket Isolation Model — Four-Tier Architecture
 summary:
-status:
+  Four-tier GCS/S3 bucket isolation (mock / dev / stg / prd / test) resolved by UTL resolve_bucket_name(); Group A raw
+  data (env-tiered) vs Group B derived data naming, mock-tier scenario/grid routing, prod-tier IAM write-protection,
+  and GCS lifecycle expiry rules.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, bucket, canonicalisation, storage]
+related: [codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/02-data/per-asset-group-bucket-layouts.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [four-tier bucket isolation model (mock/dev/stg/prd/test), Group A vs Group B bucket classification, mock-tier scenario/grid prefix routing]
 referenced_by:
 owner:
 last_reviewed: 2026-06-29

@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: VCR Cassette Ownership and SSOT
 summary:
-status:
+  VCR cassette ownership — UAC holds schemas + static examples + mocks/; active service repos (that hold API keys) record
+  and validate cassettes and contribute them to UAC via PR; IBKR/TWS uses MagicMock(spec=IB), never VCR.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, ibkr-gateway-infra, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [uac, testing, vcr, ibkr, quality-gates, validation]
+related: [codex/02-data/unified-api-contracts-chain.md, codex/02-data/schema-governance.md, codex/06-coding-standards/testing.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [VCR cassette ownership and contribute-to-UAC-via-PR flow, IBKR/TWS ib_insync test-mocking pattern]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

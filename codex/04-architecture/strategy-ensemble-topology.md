@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Strategy Ensemble VM Topology
 summary:
-status:
+  Strategy VM topology for the 2026-05-23 cutover — ONE ensemble VM per asset_group (no cross-group state),
+  per-VM 4-process layout (strategy/PBMS/risk/execution) over loopback Redis, launcher registry + colocation bootstrap.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, infrastructure, execution, spot-vm, live-trading]
+related: [runtime-deployment-topology.md, batch-live-architecture.md, defi-execution-overview.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [strategy ensemble VM topology (one-VM-per-asset-group + per-VM process layout)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

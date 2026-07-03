@@ -1,21 +1,30 @@
 ---
 doc_type: codex-ssot
 title: MTDS Download API — CanonicalParquetReader
-summary:
-status:
+summary: >-
+  CanonicalParquetReader — the canonical GCS reader for MTDS parquet shards; validates against the
+  availability manifest (raises ShardNotFoundError before any GCS read), supports full-bundle vs
+  per-instrument pyarrow predicate-pushdown reads (162M-row Deribit options_chain: per-instrument
+  peak RSS 1.3GB vs >7GB bundle) plus column projection and list_instruments.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [mtds, manifest, parquet, data-pipeline, features]
+related:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/per-asset-group-bucket-layouts.md,
+    codex/02-data/mtds-data-source-coverage-matrix.md,
+  ]
 created: 2026-04-24
-authoritative_for:
+authoritative_for: [CanonicalParquetReader MTDS shard read API]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
-code_refs:
+code_refs: [market-tick-data-service/market_tick_data_service/reader.py]
 ---
 
 # MTDS Download API — CanonicalParquetReader

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Light auth — Deep Dive briefings gate
 summary:
-status:
+  Tier-1 light-auth gate for Deep Dive briefings (/briefings, /docs, /our-story, /faq) — questionnaire
+  submission or access-code entry, localStorage session, seven NEXT_PUBLIC_BRIEFING_ACCESS_CODE env
+  vars (six per-path + one global); deliberately not Firebase to keep prospect friction low.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [auth, ui, briefings, access-code, prospect, onboarding]
+related: [firebase-staging.md, firebase-production.md, ../../08-workflows/client-onboarding.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [Deep Dive briefings light-auth code gate, per-path briefing access-code env-var scheme]
 referenced_by:
 owner:
 last_reviewed:

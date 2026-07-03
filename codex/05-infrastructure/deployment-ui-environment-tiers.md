@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Deployment-UI environment tiers — dev / staging / prod
 summary:
-status: stable
+  The deployment-UI + backing deployment-api run in three env tiers (dev / staging / prod) mirroring
+  firebase-split-topology — tier resolved from CLOUD_DEPLOYMENT_ENV (backend) + window.location.hostname (frontend),
+  never an in-UI toggle; each tier has its own Cloud Run instance / GCS buckets / Cloud Scheduler / service account so
+  cross-env data leakage is impossible.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [ui, deployment, infrastructure]
+related: [codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/firebase-split-topology.md, codex/05-infrastructure/bucket-isolation-model.md, codex/05-infrastructure/runtime-tiers-and-deployment.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [deployment-UI dev/staging/prod environment-tier topology + env resolution + per-tier isolation]
 referenced_by:
 owner: harsh
 last_reviewed: 2026-05-18

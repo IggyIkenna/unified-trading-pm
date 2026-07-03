@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Stage 3C — Derivation engine (one registry, four derivations)
 summary:
-status:
+  Spec for the side-effect-free derivation engine that reads the Stage 3B combo registry and produces four pure functions
+  — combo(), cost(tier×integration_depth), demo_universe(persona×flavour), prod_restrictions(), access_control(phase) —
+  from one read with no drift; recommends shipping into strategy-service/availability/ (not a new micro-service).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [uac, strategy, execution, ui, registry, docspec]
+related:
+  [
+    codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [Stage 3C one-registry-four-derivations engine spec (combo / cost / demo_universe / prod_restrictions / access_control)]
 referenced_by:
 owner:
 last_reviewed:

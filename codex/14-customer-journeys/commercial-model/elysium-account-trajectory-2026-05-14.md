@@ -2,20 +2,30 @@
 doc_type: codex-ssot
 title: Elysium / POD — Account trajectory + upsell roadmap
 summary:
-status:
+  Internal 24-month Elysium/POD ARR trajectory and upsell roadmap — phased retainer ($3k→$9k+/mo),
+  Carry & Yield archetype subscription waterfall, venue-expansion menu ($2.5k/venue, CME $15-25k),
+  cross-sell of non-C&Y families, AUM capital-scaling tiers, and the sales-conversation calendar.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-api-contracts]
 scope: [admin, sales]
-tags: []
-related: []
+tags: [commercial-model, elysium, defi, upsell, exclusivity, revenue, sla]
+related:
+  [
+    elysium-managed-sla-2026-05-14.md,
+    managed-defi-sla-cost-build.md,
+    exclusivity-and-noncompete.md,
+    signal-leasing.md,
+    pricing-building-blocks.md,
+  ]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [Elysium/POD account trajectory and upsell roadmap]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-api-contracts/unified_api_contracts/registry/venue_collateral.py]
 ---
 
 # Elysium / POD — Account trajectory + upsell roadmap

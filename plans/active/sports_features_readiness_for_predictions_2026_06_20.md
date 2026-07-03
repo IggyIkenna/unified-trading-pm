@@ -2,13 +2,17 @@
 doc_type: plan
 title: Sports FSS feature-readiness on bucketed odds dataset (sports half of predictions e2e gate)
 summary:
+  Sports half of the predictions e2e gate -- run features-sports-service over the bucketed ODDS_API dataset
+  (odds_horizon_bucket, T-24h..T-0) and prove the feature matrix is ML-ready (one row per fixture x bucket,
+  NaN only on honest-absence, >=95% non-NULL at the predictions-target buckets), clearing the Group-E ML gate
+  owned by predictions_master.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service]
 scope: [engineer, admin]
-tags: []
+tags: [sports, features, prediction, odds, ml, data-quality, footystats]
 related: [../epics/sports_master.md, ../epics/predictions_master.md]
 created: '2026-06-12'
 parent_epic: sports_master

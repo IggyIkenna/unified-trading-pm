@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Data Catalogue
 summary:
-status:
+  Data Catalogue playbook-concept — SSOT lives in the MTDS availability manifest + instruments-service registry + UAC
+  capability declarations, but the 13 /services/data/* UI pages are not yet unified into a catalogue surface; lists the
+  parity gaps to build (coverage matrix, per-entry detail, lock state, blocked).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [catalogue, data, manifest, instruments, ui, uac]
+related: [catalogues.md, ../../02-data/availability-manifest-and-data-status.md, ../../02-data/contracts-scope-and-layout.md, visibility-slicing.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [data catalogue UI-surface parity gap]
 referenced_by:
 owner:
 last_reviewed:

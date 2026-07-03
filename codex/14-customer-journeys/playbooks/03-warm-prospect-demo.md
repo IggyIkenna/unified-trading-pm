@@ -2,16 +2,27 @@
 doc_type: codex-ssot
 title: Playbook 3 — Warm-prospect demo on staging
 summary:
-status:
+  'pb3 implementation — dedicated staging demo account in three flavours (pb3a Reg Umbrella + pb3b IM share
+  one reports-only walkthrough; pb3c DART exposes the full 4-catalogue + research/trading/observe surface);
+  visibility-slicing table + 8-step admin provisioning flow.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, playbook, demo, visibility-slicing, entitlements, staging, personas]
+related:
+  [
+    01-marketing-pre-first-call.md,
+    02-research-and-documentation.md,
+    03a-demo-reg-umbrella.md,
+    03b-demo-im.md,
+    03c-demo-dart.md,
+    ../playbook-concepts/visibility-slicing.md,
+  ]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [pb3 warm-prospect staging demo playbook implementation (flavour split + slicing table)]
 referenced_by:
 owner:
 last_reviewed:

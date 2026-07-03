@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Fund administration and custody — Odum-never-custodies rule + POD affiliate
 summary:
-status:
+  Hard invariant — Odum Research Ltd (the investment manager) never custodies client capital in any structure. Per-path
+  custody model — Pooled uses a qualified 3rd-party custodian (Copper crypto / TradFi bank) + asset-class-specific fund
+  admin (POD crypto-only, internal-only on public copy); SMA/DART/Reg-Umbrella use client-owned venue accounts + scoped
+  execute+read keys.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, fund-administration-service]
 scope: [admin, sales]
-tags: []
-related: []
+tags: [custody, cefi, tradfi, defi, sales, execution]
+related:
+  [
+    treasury-and-subaccount-model.md,
+    org-fund-client-entity-model.md,
+    ../experience/im-decision-journey.md,
+    ../../06-coding-standards/config-reloader-pattern.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [Odum-never-custodies invariant + per-commercial-path fund-admin/custody model]
 referenced_by:
 owner:
 last_reviewed:

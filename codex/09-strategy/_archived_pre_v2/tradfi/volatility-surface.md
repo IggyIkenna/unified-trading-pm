@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Volatility Surface
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] TradFi/CeFi volatility-surface strategy (QUANT_VOL_SURFACE_BTC) — trades ATM IV
+  percentile vs its 252-day range: long ATM straddle when IV cheap (<20th pct), short OTM strangle when rich
+  (>80th pct), via normalized delta/expiry strike coordinates on Deribit BTC options. Replaced by
+  architecture-v2 vol-arb-rv-iv.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, tradfi, cefi, volatility, options, deribit]
+related: [options-ml.md, relative-volatility.md, ../../architecture-v2/archetypes/vol-arb-rv-iv.md]
 created: 2026-06-16
 authoritative_for:
 referenced_by:

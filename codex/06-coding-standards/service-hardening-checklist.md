@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Service Hardening Checklist
-summary:
-status:
+summary: >-
+  Forwarder stub — the D1→D5 service-hardening progression, per-gate checklists, QG
+  structure verification, and tier-promotion criteria moved 2026-05-08 (codex_refactor
+  Phase D.7) to README.md § Production Readiness Checklist; retained read-only because
+  cursor-rules + PM plans reference it directly.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [service-hardening, quality-gates, refactor]
+related: [README.md, integration-testing-layers.md, validation-and-errors.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

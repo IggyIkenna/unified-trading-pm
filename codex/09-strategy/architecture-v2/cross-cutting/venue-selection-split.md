@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Cross-Cutting: Venue Selection (Slow-Path Eligibility + Fast-Path SOR)'
 summary:
-status:
+  'Venue routing split: slow-moving eligibility (strategy config `eligible_venues` + constraints) vs fast-moving per-order
+  SOR in execution-service; three routing modes SOR_AT_EXECUTION / STRATEGY_PICKED / META_BROKER; SOR algos
+  (BEST_QUOTE_NET, BEST_FUNDING_NET, MEV_PROTECTED_ROUTE, …) are artifact-versioned.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, strategy, venue-selection, cefi, defi, mev]
+related:
+  [../axes/venue-eligibility.md, execution-policies.md, ../../../04-architecture/slow-fast-routing-split.md,
+  venue-account-coordination.md, mev-protection.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [venue-selection routing-mode catalog (SOR_AT_EXECUTION / STRATEGY_PICKED / META_BROKER + per-order SOR algo table)]
 referenced_by:
 owner:
 last_reviewed:

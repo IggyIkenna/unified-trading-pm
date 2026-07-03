@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Demo Decision Matrix
 summary:
-status:
+  Deterministic prospect-profile to demo-path recommendation — maps resolved commercial_path + decision-maker structure
+  + readiness to demo flavour (pb3a/b/c or combined), demo mode, default restriction profile, and expected next
+  commitment; a starting point sales confirms, with deviations documented in the account-intelligence record.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
-tags: []
-related: []
+tags: [demo-ops, sales, dart, decision-matrix, restriction-profile, curation]
+related: [demo-restriction-profiles.md, dart-demo-modes.md, pre-demo-discovery-framework.md, account-intelligence-record.md, pre-demo-curation-rules.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [demo decision matrix (prospect profile to demo path)]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: DeFi Risk Monitoring
 summary:
-status:
+  DeFi risk-type taxonomy + alert thresholds — health-factor, oracle-depeg, borrow/staking spread,
+  stablecoin depeg, withdrawal-delay, base-currency drift, margin-currency mismatch — plus per-check monitoring cadence.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, risk, monitoring, health-factor, oracle, alerting]
+related: [defi-phase3-infrastructure.md, ../09-strategy/architecture-v2/axes/share-class.md, alerting-batch-live.md]
 created: 2026-04-03
-authoritative_for:
+authoritative_for: [DeFi risk-type taxonomy and alert thresholds]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

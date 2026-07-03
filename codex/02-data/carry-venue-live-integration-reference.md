@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Carry-strategy venue integration reference
 summary:
-status: active
+  Integration SSOT for the carry_staked_basis live/paper path — per-venue perp-funding endpoints and quirks (13
+  venues), LST staking APR sources, collateral-acceptance and capital-efficiency, Aave lending legs, and the
+  conservative-default + filed-TODO discipline; batch==live reuses the FundingPoint machinery.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing, execution-service, features-service, ibkr-gateway-infra]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [carry, cefi, defi, funding, staking, execution, live-trading]
+related: [../../plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md, ../04-architecture/defi-execution-overview.md, cefi-capture-universe.md]
 created: 2026-06-17
-authoritative_for:
+authoritative_for: [carry-strategy live venue integration reference (funding/staking/lending sourcing)]
 referenced_by:
 owner:
 last_reviewed: 2026-06-17

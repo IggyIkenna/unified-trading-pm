@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Category × Instrument Coverage Matrix (SSOT)
-summary:
-status:
+summary: The SSOT coverage matrix — for every v2 archetype each (category, instrument_type) cell is declared SUPPORTED/PARTIAL/BLOCKED/NA with representative venues, signal variant, gap reason, lock_state, and fully-spelled slot_label examples; also the dated-future rolling-continuous representative-future roll spec.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, catalogue, cefi, defi, tradfi, execution, data-quality]
+related: [block-list.md, restriction-policy.md, README.md, strategy-registry-v2.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [architecture-v2 archetype coverage-status matrix (SUPPORTED/PARTIAL/BLOCKED/NA per cell)]
 referenced_by:
 owner:
 last_reviewed:

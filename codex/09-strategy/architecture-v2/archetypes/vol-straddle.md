@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_STRADDLE`'
 summary:
-status: design
+  'Archetype spec for `VOL_STRADDLE` — long ATM straddle ahead of binary catalysts (gamma-scalped, exit post IV-crush) or
+  short straddle in IV-elevated calm; a directionless pure-vol view; Deribit/OKX/CBOE.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, straddle, event-driven, gamma-scalping]
+related: [vol-0dte-gamma-scalping.md, vol-arb-rv-iv.md, vol-carry.md, vol-spread-structures.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_STRADDLE archetype spec']
 referenced_by:
 owner:
 last_reviewed:

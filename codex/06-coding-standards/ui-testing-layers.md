@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: UI Testing Layers
-summary:
-status:
+summary: >-
+  The 8-layer UI testing strategy (L0 contract-alignment → L5 performance) across UI repos: what each layer tests, where
+  it lives, credentials, triggers, gate-enforcement-by-branch, and the `pw:L2 ✓` + regression-spec plan-tick evidence
+  rule.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-ui, e2e-testing, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [ui, quality-gates, validation, frontend]
+related: [integration-testing-layers.md, ../02-data/vcr-cassette-ownership.md, ../14-customer-journeys/testing/README.md]
 created: 2026-04-24
-authoritative_for:
+authoritative_for: [8-layer UI testing strategy]
 referenced_by:
 owner:
 last_reviewed:

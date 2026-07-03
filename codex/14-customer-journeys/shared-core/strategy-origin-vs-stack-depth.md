@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Strategy Origin × Stack Depth — The DART Commercial Matrix
 summary:
-status:
+  Implementation reference for rule 04's 2×3 matrix (strategy-origin Odum/client × stack-depth reporting-only/downstream/
+  full-pipeline) — per-cell commercial resolution, the five actual 2026 engagements (CME S&P, India Options, Elysium,
+  Desmond, BTC FoF) mapped to cells, and each cell's default demo-restriction profile.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [dart, strategy, sales, defi, tradfi, cost]
+related:
+  [
+    ../_ssot-rules/04-dart-commercial-axes.md,
+    dart-pricing-axes.md,
+    instruction-schema-fit-and-package-boundaries.md,
+    strategy-allocation-lock-matrix.md,
+    ../commercial-model/dart-entry-points.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [DART commercial-matrix cell worked examples + demo-restriction-profile mapping]
 referenced_by:
 owner:
 last_reviewed:

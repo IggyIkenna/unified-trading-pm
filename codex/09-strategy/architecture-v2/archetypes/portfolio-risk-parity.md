@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `PORTFOLIO_RISK_PARITY`'
-summary:
-status: design
+summary: >-
+  `PORTFOLIO_RISK_PARITY` archetype — inverse-volatility sleeve: weights children by 1/σᵢ (rolling P&L std over
+  `vol_lookback_days`), clips to `[min_child_weight, max_child_weight]` and renormalizes, emits `AllocationDirective`
+  only; zero-vol and short-history guards; DAILY plus drift-triggered rebalance (diagonal, no cross-correlation term).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [portfolio, risk-parity, allocation, strategy, volatility]
+related:
+  [
+    ../families/portfolio.md,
+    portfolio-multi-strategy.md,
+    portfolio-factor-allocation.md,
+    portfolio-tactical-overlay.md,
+    ../cross-cutting/portfolio-allocator.md,
+  ]
 created: 2026-05-18
-authoritative_for:
+authoritative_for: [PORTFOLIO_RISK_PARITY archetype specification]
 referenced_by:
 owner:
 last_reviewed: 2026-05-18

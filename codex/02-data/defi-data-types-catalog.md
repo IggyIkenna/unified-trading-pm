@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: DeFi Data Types Catalog
-summary:
-status: canonical
+summary: >-
+  Per-data_type capture catalog for the ~24 MTDS DeFi data_types (dex_swaps, dex_pool_state, lending_indices,
+  perp_funding, lst_rates, oracle_prices, gas_fees, +Solana basis MVP types) — CLI operation, sources, shard
+  key, instrument_type, schema fields, GCS path convention and per-protocol coverage matrix; carries a partial
+  staleness banner deferring current-state to defi-data-pipeline + defi-canonical-naming.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, instruments-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [defi, mtds, catalogue, data-pipeline, features]
+related: [defi-data-pipeline.md, defi-data-type-taxonomy.md, defi-venue-protocol-catalogue.md, instrument-pipeline-defi.md, mtds-data-source-coverage-matrix.md]
 created: 2026-04-24
-authoritative_for:
+authoritative_for: [DeFi MTDS per-data_type definitions catalog, DeFi data_type to CLI-operation and source mapping]
 referenced_by:
 owner:
 last_reviewed: 2026-05-13

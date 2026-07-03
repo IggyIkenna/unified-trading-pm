@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: DART Manual-Trade Lane — Per-Archetype Scope Specification
 summary:
-status:
+  Per-archetype DART manual-trade lane scope spec — which of the 14 InstructionActionV2 actions (TRADE/SWAP/LEND/BORROW/
+  STAKE/UNSTAKE/QUOTE/TRANSFER/BRIDGE/ATOMIC/CANCEL/…) each May-23 critical-path archetype must replicate manually
+  through the SAME execution path as automation, the 5 UI BUILD enrichments of existing surfaces, strategy_id attribution
+  (FAMILY.ARCHETYPE.slot_id) at /manual/instruction, and CapitalAllocation-respect validation. Phase C shipped 2026-05-13.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, execution-service, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, dart, ui, execution, defi, verification]
+related:
+  [../../../04-architecture/manual-trade-booking.md, operational-modes-matrix.md, ../archetypes/carry-staked-basis.md, ../archetypes/carry-basis-perp.md, ../README.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [DART manual-trade per-archetype scope + action-type replication matrix]
 referenced_by:
 owner:
 last_reviewed:

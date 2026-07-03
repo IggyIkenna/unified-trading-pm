@@ -1,21 +1,30 @@
 ---
 doc_type: codex-ssot
 title: Canonical MVP Scope — the SSOT for "what MVP means" per asset_group × venue × data_type
-summary:
-status:
+summary: >-
+  Canonical MVP-scope SSOT — the strict rules-derived subset of the could-exist universe per
+  (asset_group, venue, instrument_type, data_type): CeFi perp-gate + options_chain-only + Coinbase
+  trades-only, TradFi CME ohlcv_1m-only, DeFi tag-all, Sports 94-league football, Prediction
+  Polymarket+Kalshi arb-overlap; code SSOT MVP_SCOPE at config version 11.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mvp, cefi, defi, tradfi, sports, prediction, uac]
+related:
+  [
+    codex/02-data/cefi-capture-universe.md,
+    codex/02-data/mtds-data-source-coverage-matrix.md,
+    codex/02-data/per-asset-group-bucket-layouts.md,
+  ]
 created: 2026-06-27
-authoritative_for:
+authoritative_for: [canonical MVP scope definition per asset_group]
 referenced_by:
 owner:
 last_reviewed: 2026-06-27
-code_refs:
+code_refs: [unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py]
 codified: 2026-06-27
 ---
 

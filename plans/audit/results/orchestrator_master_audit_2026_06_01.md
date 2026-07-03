@@ -2,20 +2,24 @@
 doc_type: audit-result
 title: Orchestrator Master Audit — 2026-06-01
 summary:
-status: complete
+  agent-orchestrator audit — first run after the § M closed-loop-autonomy extension; static/plan-state checks GREEN
+  (central /health 200 v0.6.0, autospawn/watchdog/failover loops wired) but no P0 fleet break; open — P1 deploy-currency
+  unverified (running binary may lack autonomy commits), P1 S3-side state-snapshot gap (AWS fleet state lost on restart),
+  P1 watchdog fleet rollout UNRECORDED (self-heal half dormant), P2 notify-inventory doc drift (13/9 vs 10/8).
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, self-healing, infrastructure, monitoring, role-registry, audit]
+related: [plans/audit/instructions/orchestrator_master_audit_instructions.md, plans/audit/results/orchestrator_master_audit_2026_05_28.md, codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/runtime-deployment-topology.md]
 created: 2026-06-01
-audited_scope:
+audited_scope: agent-orchestrator (static/plan-state) — fleet topology, setup-token auth, backlog regen, safety mechanisms, notifications, state persistence, dashboard, provisioning, codex alignment, hygiene, plan workflow, § M closed-loop autonomy (autospawn/watchdog/failover/backlog-honesty); live-fleet checks LIVE-DEFERRED
 date: '2026-06-01'
 auditor: claude + operator
 parent_epic: orchestrator_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

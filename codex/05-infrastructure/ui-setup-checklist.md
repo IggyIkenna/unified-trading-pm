@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: UI Setup Checklist
 summary:
-status:
+  Bootstrap checklist for a UI repo (Next.js/React/TS) from clean clone to dev-serving — Node/Java/gcloud prereqs, npm
+  install + generate:types, the .env.local shapes per UI, dev-tiers.sh startup, the mandatory vitest pool:forks rule, and
+  type-regen after API changes.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, runbook, infrastructure, quality-gates, onboarding]
+related: [runtime-tiers-and-deployment.md, ../08-workflows/local-dev.md, ui-architecture.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [UI repo setup/bootstrap checklist]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

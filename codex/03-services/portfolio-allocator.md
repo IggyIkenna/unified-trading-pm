@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: portfolio-allocator-service
 summary:
-status:
+  "portfolio-allocator-service: one instance per client owning strategy-scope capital allocation, runs one of 8
+  allocator archetypes (FIXED/PNL_WEIGHTED/SHARPE_WEIGHTED/RISK_PARITY/KELLY/MIN_CVAR/REGIME_AWARE/MANUAL) and emits
+  versioned AllocationDirective events per cadence; reads PBMS NAVs + risk kill-switches; guard rails, shadow mode,
+  cross-share-class NAV conversion; does NOT move venue capital or rebalance positions."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [portfolio-allocator, strategy, execution, reconciliation]
+related:
+  [
+    venue-capability-registry.md,
+    ../09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md,
+    ../04-architecture/capital-flow-model.md,
+    ../04-architecture/capital-structure-and-regulatory.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [portfolio-allocator-service, 8 allocator archetypes]
 referenced_by:
 owner:
 last_reviewed:

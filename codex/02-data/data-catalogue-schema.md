@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Data Catalogue Schema
 summary:
-status: canonical
+  Canonical schema for the per-service data-catalogue.*.yaml inventory/freshness ledger (dataset_id, asset_group,
+  bucket_lookup, partition_keys, mvp_tier, status) and its Parquet ManifestWriter/ManifestReader — a distinct
+  artifact from the per-shard availability manifest despite the shared ManifestWriter name.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [catalogue, data-status, manifest, instruments, data-pipeline]
+related: [availability-manifest-and-data-status.md, canonical-schema-groups.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [data-catalogue YAML manifest schema (data-catalogue.*.yaml)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-13

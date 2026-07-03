@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: CeFi Capture Universe — Two-Layer Architecture
 summary:
-status:
+  Two-layer CeFi capture model — instruments-service enumerates the FULL catalogue while MTDS downloads only the
+  ~540-base CEFI_BASE_ASSET_UNIVERSE gated by the per-day venue perp-gate (spot captured only if the venue lists
+  a perp), with staking-spot/TradFi-perp exceptions and inverse/linear margin rules; one
+  is_in_mvp_capture_universe predicate is the honest-coverage denominator.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [cefi, instruments, mtds, honest-coverage, mvp, uac, backfill]
+related: [availability-manifest-and-data-status.md, ../04-architecture/instruments-service-as-ssot-for-mtds.md, ../../plans/active/issues/cefi_universe_capture_rule_2026_06_23.md]
 created: 2026-06-24
-authoritative_for:
+authoritative_for: [CeFi capture universe two-layer model + perp-gate]
 referenced_by:
 owner:
 last_reviewed:

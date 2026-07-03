@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: DeFi Unhedged Recursive Strategy
 summary:
-status:
+  Pre-v2 DeFi unhedged recursive strategy — directional variant of recursive staked basis, using flash-loan leveraged
+  weETH plus Aave WETH borrow with NO perp hedge (full leveraged ETH long); net yield ~13% plus dominant directional
+  ETH P&L, Sharpe 0.8-1.5, max DD 30%, 3x cap. Superseded by architecture-v2.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, leverage, flash-loan, staking, directional]
+related: [recursive-staked-basis.md, staked-basis.md, reward-lifecycle.md]
 created: 2026-06-16
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

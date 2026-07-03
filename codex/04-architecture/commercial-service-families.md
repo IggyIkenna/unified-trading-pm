@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Commercial Service Families — DART Full vs Signals-In (+ IM, Reg Umbrella)
 summary:
-status:
+  "Commercial/UX service-family SSOT: the four shapes (IM, Reg Umbrella, DART Signals-In, DART Full), the
+  DART Full vs Signals-In feature matrix, locked-section UI design, and the demo plan toggle. NOT the
+  architecture-tier doc."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [commercial, dart, service-families, ui, entitlements, demo, sales]
+related: [tier-and-import-architecture.md, runtime-deployment-topology.md, ../06-coding-standards/strategy-display-conventions.md, ../09-strategy/architecture-v2/strategy-catalogue-3tier.md]
 created: 2026-04-24
-authoritative_for:
+authoritative_for: [commercial service families (DART Full vs Signals-In feature matrix, IM, Reg Umbrella)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

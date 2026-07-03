@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Relative Volatility
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] Cross-asset relative-volatility mean-reversion (QUANT_REL_VOL_BTC_ETH) — trades the
+  realized-vol ratio z-score between two perps (long the cheap leg / short the rich leg at |z| > 2.0, exit
+  at |z| < 0.5) on Binance Futures; statistical arbitrage on mean-reverting cross-instrument vol. Replaced
+  by architecture-v2 vol-cross-asset-spread.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, cefi, tradfi, volatility, binance, features]
+related: [volatility-surface.md, ../../architecture-v2/archetypes/vol-cross-asset-spread.md]
 created: 2026-06-16
 authoritative_for:
 referenced_by:

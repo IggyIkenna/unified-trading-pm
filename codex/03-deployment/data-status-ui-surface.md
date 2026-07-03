@@ -2,20 +2,29 @@
 doc_type: codex-ssot
 title: Data-Status UI Surface — Honest Coverage
 summary:
-status:
+  "Codex SSOT for the deployment-ui data-status HonestCoverageCard: per-asset-group honest-coverage % surface driven by
+  a daily-written GCS coverage.json (StatusCounts per capture_status bucket — captured/empty_confirmed/attempted_failed/
+  expected_unattempted; coverage_pct = captured/total) served via deployment-api GET /api/data-status/honest-coverage."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [honest-coverage, ui, data-status, manifest, deployment, data-quality]
+related: [../02-data/availability-manifest-and-data-status.md, ../02-data/honest-coverage-model.md]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: [data-status honest-coverage UI surface, HonestCoverageCard component contract]
 referenced_by:
 owner:
 last_reviewed:
 code_refs:
+  [
+    instruments-service/scripts/measure_honest_coverage.py,
+    deployment-ui/src/components/HonestCoverageCard.tsx,
+    deployment-ui/src/api/client.ts,
+    deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh,
+  ]
 ---
 
 # Data-Status UI Surface — Honest Coverage

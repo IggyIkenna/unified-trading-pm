@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: VM Launcher Runbook
-summary:
-status: living
+summary: >-
+  Per-launcher usage runbook for the ~83 `deployment-service/scripts/vm/launch-*.sh` VM launchers — when-to-use,
+  required args, expected duration, and common failures for each, grouped by category (infra/cron, MTDS backfill,
+  forward-poll, features, strategy, validation, instruments, sports, ML, admin/migration).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, runbook, spot-vm, backfill, mtds, scripts]
+related: [vm-tarball-deployment.md, vm-log-archival.md, spot-vms-for-backfill.md, launcher-script-ssot.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [VM launcher per-script usage runbook]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

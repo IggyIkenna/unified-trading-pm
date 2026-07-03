@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Contracts Integration Guide
 summary:
-status:
+  Guide for using unified-api-contracts (external venue schemas + normalizers + VCR mocks) and its internal subpackage
+  (features / ML / events / messaging contracts) inside services — the normalization flow (raw → UAC-validate →
+  normalizer → canonical), cassette ownership, contract versioning, and QG version-alignment.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [uac, contracts, validation, mtds, ml]
+related: [codex/02-data/contracts-scope-and-layout.md, codex/02-data/vcr-cassette-ownership.md, codex/06-coding-standards/integration-testing-layers.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [using unified-api-contracts external schemas + internal contracts in services (integration guide), UAC-vs-UEI contract-vs-protocol event split]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Integration Testing Layers
 summary:
-status:
+  The 5-layer integration-testing strategy — Layer 0 contract-alignment (AC↔UIC) → 1 schema-robustness → 1.5
+  per-component mocked-deps → 2 infra-verify → 3a/3b smoke+E2E, plus Layer 4 cross-repo SIT invariants (negative-control
+  proven); which layers run in quickmerge vs post-deploy, the emulator-vs-mock decision matrix, and the credential-free
+  hermetic (--block-network) gate.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, execution-service, instruments-service, market-tick-data-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [integration-testing, quality-gates, ci-cd, uac, verification, smoke-test]
+related: [../04-architecture/tier-and-import-architecture.md, ../02-data/vcr-cassette-ownership.md, feature-branch-workflow.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [five-layer integration-testing strategy (Layers 0-4)]
 referenced_by:
 owner:
 last_reviewed:

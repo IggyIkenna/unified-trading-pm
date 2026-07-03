@@ -8,8 +8,8 @@ asset_group: [tradfi]
 stage: [meta]
 repos: [deployment-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [tradfi, backfill, spot-vm, infrastructure, databento, monitoring, performance, data-pipeline]
+related: [plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md]
 created: 2026-06-24
 parent_epic: tradfi_master
 priority: P0

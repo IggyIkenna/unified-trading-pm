@@ -2,20 +2,24 @@
 doc_type: epic
 title: Plan hygiene — continuous format + integrity + alignment enforcement
 summary:
+  L5 epic owning continuous plan-corpus hygiene — the check scripts (todo-regression, frontmatter,
+  line-caps, codex-refs, archive-candidates, estimate-sanity, superseded-in-active), run_hygiene_sweep.sh
+  + active-plan-inventory regen, the 05:00 UTC Cloud Run cron, pre-push hooks, and the codex-alignment
+  audit that catches semantic plan↔codex drift.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [plan-hygiene, frontmatter, scripts, quality-gates, ssot-audit, runbook]
+related: [agent_operating_framework_master.md, README.md]
 created: 2026-05-21
 name: plan_hygiene_master
 tier: L5
 priority: P1
 assigned_vm: planning
-parent:
+parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:

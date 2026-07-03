@@ -2,20 +2,28 @@
 doc_type: audit-result
 title: Verdict pack — CEFI (G4 pre-apply, R7/R3 2026-06-11)
 summary:
-status:
+  CEFI G4 pre-apply verdict (06-11) — projected v9 index 3,886,859 rows, CF-11 staleness bug fixed; adjudicated diff
+  removed=733 garbage venues (0 GCS objects), captured_regressions=943 spot-verified phantoms (honest downgrade), 3,853
+  empty→failed by-design CF-11 reclassify; G4 --apply awaiting operator.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, honest-coverage, data-status, cefi, migration, verification, data-correctness, canonicalisation]
+related:
+  - verdict_defi.md
+  - verdict_tradfi.md
+  - ../r3_verdict_packs_2026_06_17/verdict_cefi.md
 created: 2026-06-11
 audited_scope:
-date:
-auditor:
+  CEFI projected-v9 index vs live _index (G4 dry-run), manifest diff adjudication
+  (removed/regressions/status-transitions) + orphan sweep
+date: 2026-06-11
+auditor: ikennaigboaka
 parent_epic: cefi_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

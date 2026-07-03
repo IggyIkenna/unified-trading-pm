@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Stale-Blocker Reaper
 summary:
-status:
+  SSOT for the stale-blocker reaper — surfaces tasks queued >3 days with an unmet prereq (blocking is
+  implicit; there is no blocked status), classifying each as DEADLOCK / ORPHAN (exit 1, Slack alert) or
+  PHANTOM_DONE (info, self-resolves); runs via systemd timer at 04:00 UTC, one hour before the hygiene
+  sweep, with a per-category operator response guide.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, plan-hygiene, scripts, runbook, escalation]
+related:
+  [codex/12-agent-workflow/plan-hygiene.md, codex/12-agent-workflow/canonical-plan-flow.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md]
 created: 2026-05-30
-authoritative_for:
+authoritative_for: [stale-blocker reaper (DEADLOCK / ORPHAN / PHANTOM_DONE categories)]
 referenced_by:
 owner:
 last_reviewed:

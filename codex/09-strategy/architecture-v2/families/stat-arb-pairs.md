@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: 'Family: Stat Arb / Pairs'
 summary:
-status:
+  The Stat Arb / Pairs strategy family — 2 archetypes (fixed cointegration-tested basket vs dynamic cross-sectional
+  ranking) trading a mean-reverting statistical spread; edge is spread z-score reversion with cointegration-p-value
+  kill switches. Has spread risk (unlike risk-free price-dispersion arb).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, stat-arb, pairs, ml, execution, tradfi]
+related:
+  [
+    arbitrage-structural.md,
+    ml-directional.md,
+    vol-trading.md,
+    ../archetypes/stat-arb-pairs-fixed.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [Stat Arb / Pairs strategy family spec (alpha thesis + 2 archetypes)]
 referenced_by:
 owner:
 last_reviewed:

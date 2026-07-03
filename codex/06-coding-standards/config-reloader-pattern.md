@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Config Reloader Pattern
-summary:
-status:
+summary: >-
+  Config-reloader SSOT — when to use `ConfigReloader` / `DomainConfigReloader`, the `replay_at()` batch pattern, the
+  `ApiKeyReloader` key hot-reload (incl. per-wallet custody rebuild on `signing_surface` flip), `StrategyDirectiveReloader`,
+  and the QG-enforced STEP 5.61 `ServiceBootstrap` / 5.62 `make_health_router` / UAC schema-provenance requirements.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, trading-agent-service, unified-api-contracts]
 scope: [engineer]
-tags: []
-related: []
+tags: [config-injection, quality-gates, execution, defi, self-healing]
+related: [config-dynamic-injection.md, ../05-infrastructure/rotation-runbook.md, ../04-architecture/trading-agent-service-directive-pipeline.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [config reloader classes and ApiKeyReloader hot-reload pattern, QG STEP 5.61/5.62 service-infra presence checks]
 referenced_by:
 owner:
 last_reviewed: 2026-06-25

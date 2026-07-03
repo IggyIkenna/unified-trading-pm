@@ -2,18 +2,26 @@
 doc_type: audit-instruction
 title: manifest_master_audit_instructions
 summary:
-status:
+  Weekly audit of the v9 availability manifest — MANIFEST_SCHEMA_VERSION=9, the 4-state capture_status
+  (captured/empty_confirmed/attempted_failed/expected_unattempted), honest-absence EmptyConfirmedReason closed set (read
+  the enum, never trust the count), cluster validation at record_captured(), available_at semantics, single-walk
+  discipline, and the Cloud Run + Cloud Scheduler manifest consolidator.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, manifest, honest-coverage, data-status, single-walk, data-correctness, canonicalisation]
+related:
+  [
+    canonical_form_cross_service_audit_checklist.md,
+    ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+  ]
 created: 2026-05-22
 tier: L1
 parent_epic: manifest_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

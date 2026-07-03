@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: agent-orchestrator — deploy + infra reference (central API VM; fleet VMs in worker-topology SSOT)
 summary:
-status: active
+  Deploy + infra reference for the agent-orchestrator central API VM (EC2 13.113.200.22) — SSH access, the systemd-unit
+  install script with the KillMode/PrivateTmp/ReadWritePaths flags that must stay, TLS+DNS+CORS setup, and the
+  HISTORICAL Cloud Run shape kept only for cloud-agnostic optionality (AWS EC2 is the live target).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, infrastructure, aws, ec2, deployment, cloud-run, dns]
+related:
+  [
+    ../04-architecture/agent-orchestrator-overview.md,
+    agent-orchestrator-api-host.md,
+    agent-orchestrator-worker-topology.md,
+    launcher-script-ssot.md,
+  ]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [agent-orchestrator central API VM deploy + infra reference]
 referenced_by:
 owner:
 last_reviewed:

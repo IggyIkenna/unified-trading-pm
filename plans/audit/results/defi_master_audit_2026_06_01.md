@@ -2,20 +2,32 @@
 doc_type: audit-result
 title: DeFi Master — Strategy Data-Coverage Audit Result (2026-06-01)
 summary:
-status: AMBER
+  DeFi strategy data-coverage audit (staked-basis / funding-arb / basis carry +
+  Solana MVP) — corrects a first-pass 0%-captured false alarm (it had read only
+  the market-data-tick-defi phantom grid) — raw data EXISTS at 79-96% in the
+  dedicated per-data_type buckets, so the problems are data-in-wrong-form
+  (hyphen/underscore + staking_yields/lst_rates aliases, v4-v8 spread 0% v9) not
+  absence, PLUS the big L3 finding that features-onchain/delta-one/volatility-defi
+  are near-empty so the strategies cannot run, and the coverage-summary
+  denominator is self-referential.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, features-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, defi, honest-coverage, manifest, features, data-correctness, data-status, canonicalisation]
+related:
+  [
+    ../instructions/defi_master_audit_instructions.md,
+    defi_c0_datastate_audit_2026_06_01.md,
+  ]
 created: 2026-06-01
 audited_scope: Strategy Data-Coverage Audit (items o-v) — staked basis carry / funding rate arb / basis carry + Solana MVP
 date: 2026-06-01
 auditor: ikenna (interactive slot 1)
 parent_epic: defi_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

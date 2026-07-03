@@ -2,18 +2,22 @@
 doc_type: audit-instruction
 title: orchestrator_master_audit_instructions
 summary:
-status:
+  Weekly L5-epic audit of the agent-orchestrator stack (FastAPI + Vite/React dashboard), the AWS fleet + central-API-proxy
+  connectivity, the long-lived setup-token auth model, plan-driven backlog regeneration, safety/auto-respawn machinery,
+  per-VM state persistence, Slack/Telegram surfaces, and operator-laptop slot-host symmetry crons — drift here ripples to
+  every other epic.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [audit, orchestrator, role-registry, self-healing, infrastructure, slack, observability]
 related: []
 created: 2026-05-22
 tier: L5
 parent_epic: orchestrator_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

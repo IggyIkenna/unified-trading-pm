@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Cross-Asset Rescan Protocol
 summary:
-status:
+  Operational SSOT for the cross-asset manifest rescan (instruments-service/scripts/cross_asset_rescan.py) —
+  walks the canonical manifest per asset_group, detects 5 drift classes, auto-fixes class-A flips (--apply /
+  VM_APPLY_FLIPS) and routes class-C ambiguous rows to a triage JSONL; per-VM shard isolation + singleton-lock +
+  RESCAN_* events.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, migration, cross-asset, spot-vm, data-correctness, single-walk]
+related: [../../plans/archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md, chunk-safe-manifest-migrations.md, availability-manifest-and-data-status.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [cross-asset manifest rescan drift-detection protocol]
 referenced_by:
 owner:
 last_reviewed: 2026-05-19

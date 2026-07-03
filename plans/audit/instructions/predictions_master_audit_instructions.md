@@ -2,18 +2,26 @@
 doc_type: audit-instruction
 title: predictions_master_audit_instructions
 summary:
-status:
+  Weekly audit of prediction-market adapters (Polymarket, Kalshi), binary-outcome archetype definitions, and the
+  Polymarket-vs-Kalshi spread strategy — key invariant is binary resolution events handled correctly with no hardcoded
+  market IDs; audits per-cqg-grain could-exist + source=polymarket_clob/polymarket_gamma_api against the source-aware
+  CF-1…CF-14 SSOT.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, prediction, manifest, canonicalisation, strategy, data-correctness]
+related:
+  [
+    canonical_form_cross_service_audit_checklist.md,
+    ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+  ]
 created: 2026-05-22
 tier: L0
 parent_epic: predictions_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

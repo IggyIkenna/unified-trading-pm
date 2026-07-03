@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Dynamic Config Injection
-summary:
-status:
+summary: >-
+  Dynamic config injection: runtime config changes (instruments / strategies / clients / venues) propagate to live
+  services in <10s via cloud-agnostic pub/sub + versioned YAML in the config-store bucket, consumed through the UTL
+  DomainConfigReloader; writes go only through deployment-api with full version history + rollback.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-ui, execution-service, instruments-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [config-injection, pipeline, uac, self-healing, execution]
+related: [../06-coding-standards/config-reloader-pattern.md, ./service-pair-flows.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [dynamic config injection (domain config hot-reload via DomainConfigReloader + config-store versioning/rollback)]
 referenced_by:
 owner:
 last_reviewed:

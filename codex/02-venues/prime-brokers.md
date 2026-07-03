@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Prime Brokers (Meta-Broker Venue Model)
 summary:
-status:
+  "The META_BROKER venue pattern (one endpoint + one wallet, internal SOR routes to child books): two live meta-brokers
+  — Unity (sports, 10 child books) and IBKR (TradFi smart router); covers the required adapter shape, fill attribution
+  to child books for PBMS, credential model, and meta-level kill switches."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [meta-broker, execution, venue, strategy, tradfi, unity]
+related:
+  [
+    unity-integration.md,
+    venue-registry-reference.md,
+    ../03-services/venue-capability-registry.md,
+    ../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [meta-broker venue pattern, prime-broker adapter shape]
 referenced_by:
 owner:
 last_reviewed:

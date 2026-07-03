@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: GCS Lifecycle Policies — Cost + List-Latency Controls
 summary:
-status:
+  "SSOT for delete-after-N-days GCS bucket lifecycle rules: deployment-scripts vm-logs/ purged at 14 days,
+  central-element-323112-deployment-events quality_gates_snapshot/ at 30 days, central-element-323112-events events/
+  at 90 days. Bounds storage cost + list-latency (vm_zombie_watchdog walks vm-logs/). Honest-coverage + strategy/
+  execution/manifest buckets intentionally NOT lifecycle'd. Includes apply/re-apply + drift-detection commands."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service]
 scope: [admin, engineer]
-tags: []
-related: []
+tags: [infrastructure, cost, gcs, monitoring, deployment-service, runbook]
+related: [gcs-object-operations.md, manifest-consolidator-ssot.md, live-deployment-monitoring.md]
 created: 2026-05-16
-authoritative_for:
+authoritative_for: [gcs bucket delete-after-N-days lifecycle rules]
 referenced_by:
 owner:
 last_reviewed: 2026-05-16

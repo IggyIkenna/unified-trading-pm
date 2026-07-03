@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Org / Fund / Client Entity Model
 summary:
-status:
+  The four-level entity hierarchy (organisation → fund [Pooled/SMA] → client [share class] → API-key set) that powers IM
+  allocator reporting, Reg Umbrella registration, and DART provisioning. Block entitlements (rule 05) attach at the
+  API-key-set level; external-wrapper mandates (BTC FoF) attach at client level without entering the strategy catalogue.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [playbooks, sales, strategy, registry, ui]
+related:
+  [
+    ../playbook-concepts/fund-org-hierarchy.md,
+    ../playbook-concepts/sma-vs-pooled.md,
+    strategy-allocation-lock-matrix.md,
+    shared-reporting-core.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [org/fund/client/api-key-set entity model for experience surfaces]
 referenced_by:
 owner:
 last_reviewed:

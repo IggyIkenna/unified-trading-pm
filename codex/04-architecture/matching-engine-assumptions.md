@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Matching Engine Assumptions
 summary:
-status:
+  "The per-matcher assumption surface for batch backtest fidelity — slippage / commission / latency / venue-liquidity
+  proxy defaults for the 5 matcher classes (L0 / L1 / L2 / AMM / Benchmark) plus MatchingEngineConfig defaults; every
+  InstructionActionV2 must map to a non-default BenchmarkFillMode before it can dispatch in batch."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, strategy, defi, cefi, sports, ssot]
+related: [matching-engine-mode-dispatch.md, amm-slippage-simulation.md, strategy-ensemble-topology.md, batch-live-architecture.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [matching-engine per-matcher assumption surface, MatchingEngineConfig defaults]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

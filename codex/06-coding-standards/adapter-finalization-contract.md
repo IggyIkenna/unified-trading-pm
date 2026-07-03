@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Adapter Finalization Contract — every MDPS candle adapter routes through `_finalize_session_grid`
-summary:
-status:
+summary: >-
+  SSOT: every MDPS candle adapter MUST return via `BaseCandleAdapter._finalize_session_grid(...)` — the per-adapter
+  density contract (close-driven vs `state_col`) that bans leading-NaN / NaN-OHLC / NaN-volume shapes, applies prior-day
+  seed carry (PIT-safe), and preserves zero-row honest absence when there is no observation and no seed.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, market-data-processing-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mdps, data-quality, data-correctness, features, cefi, defi, tradfi]
+related: [../02-data/honest-absence-downstream-handling.md, service-orchestration-patterns.md, ../../plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md]
 created: 2026-06-02
-authoritative_for:
+authoritative_for: [MDPS candle adapter finalization contract]
 referenced_by:
 owner:
 last_reviewed:

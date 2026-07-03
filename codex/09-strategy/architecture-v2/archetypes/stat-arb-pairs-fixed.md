@@ -1,17 +1,26 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `STAT_ARB_PAIRS_FIXED`'
-summary:
-status: design
+summary: >-
+  `STAT_ARB_PAIRS_FIXED` archetype — fixed cointegration-tested pair: enters long-underperformer / short-outperformer
+  when `|z_score|` > `entry_z_score` (2.0) and cointegration pvalue < 0.05, exits on reversion, pvalue decay,
+  `stop_loss_z_score`, or `max_hold_days`; Kalman/OLS hedge ratio, ATOMIC or LEADER_HEDGE legs.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [stat-arb, pairs-trading, cointegration, strategy, execution]
+related:
+  [
+    ../families/stat-arb-pairs.md,
+    stat-arb-cross-sectional.md,
+    ../cross-cutting/execution-policies.md,
+    ../category-instrument-coverage.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [STAT_ARB_PAIRS_FIXED archetype specification]
 referenced_by:
 owner:
 last_reviewed:

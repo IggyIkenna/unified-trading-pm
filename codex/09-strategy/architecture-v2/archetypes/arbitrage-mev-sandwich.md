@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `ARBITRAGE_MEV_SANDWICH` — theoretical-only (no live engine)'
-summary:
-status: theoretical-only
+summary: >-
+  Archetype ARBITRAGE_MEV_SANDWICH — TRACER ONLY, no live engine (workspace has no mempool feed since
+  Bloxroute removal). Walks confirmed blocks and computes the upper-bound theoretical sandwich profit
+  (wedge minus fee_drag) to drive the mempool build-vs-buy decision; a load-bearing test pins that no
+  live engine is factory-registered, gated on the paused mempool-feed-integration plan.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, arbitrage, defi, mev, execution, archetype]
+related:
+  [
+    ../families/arbitrage-structural.md,
+    arbitrage-mev-backrun.md,
+    arbitrage-mev-jit-liquidity.md,
+    arbitrage-mev-liquidation-bundle.md,
+    arbitrage-price-dispersion.md,
+  ]
 created: 2026-05-01
-authoritative_for:
+authoritative_for: [ARBITRAGE_MEV_SANDWICH archetype (theoretical tracer, no-live-engine policy)]
 referenced_by:
 owner:
 last_reviewed:

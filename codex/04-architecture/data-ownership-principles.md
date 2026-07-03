@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Data Ownership Principles
-summary:
-status:
+summary: The five-layer data-ownership model (external schema / normalize fn / registry-static / config / domain-data) with owners, plus interface-vs-service role boundaries and the config-vs-registry-vs-schema-vs-data decision table.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [data-ownership, uac, schema, registry, config, normalization]
+related: [asset-class-ownership.md, data-flow-map.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [data-ownership five-layer model and interface-vs-service role boundaries]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

@@ -2,18 +2,21 @@
 doc_type: codex-runbook
 title: MARGIN_THRESHOLD_BREACH Runbook
 summary:
-status: active
+  Operator runbook for a CeFi venue margin ratio entering the pre-emptive warning band — within the
+  margin_threshold_breach_bps buffer (default 200bps / 2%) of the initial-margin-call line. HIGH / P2, no kill-switch;
+  operator waits, tops up margin, or partially unwinds before the venue risk engine fires a margin-call.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [runbook, escalation, live-trading, cefi, monitoring, execution]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/balance_drift.md, codex/15-runbooks/alerting/kill_switch_portfolio_drawdown.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 authoritative_for: Operator response when CeFi margin buffer crosses the pre-emptive threshold (default 200bps from initial-margin-call line). Pre-emptive notify; positions are not yet at risk but margin-call is approaching.

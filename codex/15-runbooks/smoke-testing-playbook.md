@@ -2,18 +2,28 @@
 doc_type: codex-runbook
 title: Smoke Testing Playbook
 summary:
-status: active
+  Operational SSOT distinguishing the two smoke tools — the authoritative SIT gate (system-integration-tests/tests/smoke,
+  HTTP-only, blocks staging->main via sit-lock) vs the dev-local per-service scripts/smoke_matrix.py (not a gate). Both
+  enforce the same 3-step assertion (trigger clean, GCS parquet written, manifest row capture_status in
+  captured/empty_confirmed); there is deliberately NO nightly cron.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, system-integration-tests]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [runbook, smoke-test, integration-testing, manifest, quality-gates, data-status]
+related:
+  [
+    ../06-coding-standards/integration-testing-layers.md,
+    ../02-data/per-asset-group-bucket-layouts.md,
+    ../02-data/availability-manifest-and-data-status.md,
+    ../02-data/sports-adapter-dependency-order.md,
+  ]
 created: 2026-04-20
-owner:
-cadence:
-verifier:
+owner: on-call engineer (slot-1 main)
+cadence: on-demand (triggered by staging→main promotion gate)
+verifier: slot-1 orchestrator reviews SIT smoke results in CI
 last_executed:
 code_refs:
 type: runbook

@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: 'Playbook 3a — Demo: Regulatory Umbrella flavour'
 summary:
-status:
+  'pb3a implementation — Reg Umbrella demo walkthrough; reporting-only entitlements (all other services
+  padlocked-visible, not hidden), Pooled/SMA picker → fund → per-client API-key creation → 12 report tabs;
+  UI-identical to pb3b, differs only in sales narrative.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, playbook, demo, reg-umbrella, reporting, entitlements]
+related:
+  [
+    03-warm-prospect-demo.md,
+    03b-demo-im.md,
+    03c-demo-dart.md,
+    02c-research-regulatory.md,
+    ../playbook-concepts/client-reporting.md,
+  ]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [pb3a Regulatory Umbrella demo playbook implementation]
 referenced_by:
 owner:
 last_reviewed:

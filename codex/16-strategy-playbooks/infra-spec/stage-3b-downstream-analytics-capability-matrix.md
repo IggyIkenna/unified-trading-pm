@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Stage 3B — Downstream Analytics Capability Matrix
 summary:
-status:
+  Authoritative 26-capability × 3-integration-mode (signals_only / client_strategy_and_downstream / full_pipeline)
+  support matrix keyed off instruction_schema_fit — analytics needing upstream lineage (regime/model/feature-drift) are
+  structurally not_available to signals-only; consumed by the Stage 3C cost() line-item filter, sales fit-check, and
+  visibility slicing.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, execution, uac, verification, docspec, reconciliation]
+related:
+  [
+    codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [downstream analytics capability × integration-mode support matrix (signals-only vs full-pipeline)]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Custody onboarding operator-action checklist
 summary:
-status:
+  Operator-runnable checklist for every custody-onboarding human action (Copper / CEFFU / Fireblocks / Cloud-KMS) —
+  portal logins, KYB document uploads, GCP + AWS HSM CMK provisioning, wallet envelope-encryption, and per-wallet
+  kill-switch + spending-cap wiring. May-23 = operator-self Cloud-KMS only; provider onboarding is June-1+.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, unified-api-contracts, unified-trading-pm]
 scope: [admin, engineer]
-tags: []
-related: []
+tags: [custody, defi, credentials, runbook]
+related: [codex/04-architecture/custody-providers.md, codex/04-architecture/wallet-hierarchy-and-capital-flow.md, codex/05-infrastructure/credentials-matrix.md, codex/04-architecture/kill-switch-circuit-breaker.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [custody onboarding operator-action checklist (Copper/CEFFU/Fireblocks KYB + Cloud-KMS CMK provisioning steps)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Per-slot reference-clones — 3-tier isolation for parallel-agent flow
 summary:
-status: active
+  "Path-B per-slot reference-clones (live since 2026-06-08; tab/<op>/N tab-branch model RETIRED): each slot is a
+  `git clone --reference` with its OWN .git checked out on live-defi-rollout, objects shared via --reference. The one
+  invariant — HEAD ancestor-or-equal of origin/live-defi-rollout. Covers bootstrap/setup recipe, FF-pull starvation
+  watchdog, per-clone commit identity (slot+host in author NAME), merged-combination reconciliation on LDR push-reject,
+  and liveness-gated dirty-WIP resolution."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, unified-trading-pm]
 scope: [engineer]
-tags: []
+tags: [infrastructure, quickmerge, scripts, orchestrator, reconciliation, self-healing]
 related: [plans/active/worktree_ldr_unification_2026_06_08.md, plans/archive/per_agent_worktrees_2026_05_10.md]
 created: 2026-05-10
-authoritative_for:
+authoritative_for: [per-slot reference-clone worktree model]
 referenced_by:
 owner: workspace-platform
 last_reviewed: 2026-06-25

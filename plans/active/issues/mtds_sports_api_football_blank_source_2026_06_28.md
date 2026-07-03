@@ -21,7 +21,7 @@ related: []
 created: 2026-06-28
 parent_epic: mtds_mdps_master
 priority: P2
-source:
+source: [E8 audit re-run 2026-06-28 slot-3]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout

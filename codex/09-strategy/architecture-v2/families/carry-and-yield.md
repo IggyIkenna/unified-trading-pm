@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: 'Family: Carry & Yield'
 summary:
-status:
+  The Carry & Yield strategy family — 10 archetypes capturing a paid rate/yield differential (perp funding, dated
+  basis, staked basis, recursive borrow, lending-APY rotation, simple staking); edge is rate-differential sustained
+  above a cost threshold, rebalanced periodically.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, carry, basis, staking, yield, funding, defi]
+related:
+  [
+    arbitrage-structural.md,
+    market-making.md,
+    ../archetypes/carry-basis-perp.md,
+    ../archetypes/yield-rotation-lending.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [Carry & Yield strategy family spec (alpha thesis + 10 archetypes)]
 referenced_by:
 owner:
 last_reviewed:

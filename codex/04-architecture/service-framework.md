@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Unified Service Framework
 summary:
-status:
+  Unified service framework (unified-trading-library/service_framework) — ServiceBootstrap one-call entry,
+  UnifiedServiceHandler process() sharing batch/live logic, build_event_sink, create_service_app FastAPI factory.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, ssot, service-framework, batch-live]
+related: [service-control-surface.md, tier-and-import-architecture.md, shard-level-failure-isolation.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [unified service framework (ServiceBootstrap/UnifiedServiceHandler/build_event_sink boilerplate elimination)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

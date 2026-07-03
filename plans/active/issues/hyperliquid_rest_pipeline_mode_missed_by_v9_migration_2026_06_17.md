@@ -8,14 +8,23 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, market-tick-data-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [hyperliquid, pipeline-mode, migration, cefi, defi, manifest, canonicalisation]
+related:
+  [
+    plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md,
+    codex/02-data/pipeline-mode-partition.md,
+    plans/active/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md,
+  ]
 created: 2026-06-17
 parent_epic: mtds_mdps_master
 priority: P2
 source: [2026-06-17 carry_staked_basis harness work — verifying HL funding read path surfaced the stranded pipeline_mode]
 assigned_vm:
-resolved_by:
+resolved_by: >-
+  mtds/scripts/migrate_hyperliquid_rest_pipeline_mode_2026_06_17.py (2026-06-17;
+  19,361 cefi objs batch_hyperliquid_rest to batch_hyperliquid, 0 remaining / 0
+  loss); manifest re-key N/A by construction; SSOT
+  plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code

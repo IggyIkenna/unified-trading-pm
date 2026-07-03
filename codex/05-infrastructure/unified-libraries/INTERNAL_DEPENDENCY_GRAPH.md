@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Internal Dependency Graph — Unified Libraries
-summary:
-status:
+summary: >-
+  Mermaid graphs + tabular matrix of every internal `unified-*` dependency (library→library and service→library) across
+  the T0–T3 tier architecture, plus known tier violations (UMI→UDC T2→T3) and pyproject reality-check gaps; the
+  machine-readable SSOT is `workspace-manifest.json`.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, refactor, uac]
+related: [LIBRARY-DEPENDENCY-MATRIX.md, ../../04-architecture/tier-and-import-architecture.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [internal library dependency graph (mermaid view)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

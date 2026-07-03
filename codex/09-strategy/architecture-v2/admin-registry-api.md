@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Admin Registry API — SSOT
-summary:
-status:
+summary: SSOT for the three admin-only registry HTTP endpoints (GET /api/v1/registry/{ml-models,archetypes,features}) — owning services, response shapes, the X-Admin-Token hmac auth gate (503 when unconfigured), and the UI CatalogueTruthinessAdapter live/mock fallback contract.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, registry, uac, ui, features, verification]
+related: [dart-tab-structure.md, strategy-catalogue-3tier.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [admin registry API endpoints (ml-models/archetypes/features reconciliation)]
 referenced_by:
 owner:
 last_reviewed:

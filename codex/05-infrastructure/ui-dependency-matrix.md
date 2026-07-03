@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: UI Dependency Matrix
 summary:
+  SUPERSEDED by ui-architecture.md; retained for UI→API wiring detail — the active deployment-ui↔deployment-api
+  dependency, the archived split-UI/API reference tables, the OAuth-gated deployment-trigger flow, and local-dev port
+  assignments.
 status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, system-integration-tests, unified-trading-api]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, infrastructure, deployment, superseded, api]
+related: [ui-architecture.md, ui-functionality-requirements.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed: 2026-05-13

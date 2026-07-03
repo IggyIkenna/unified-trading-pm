@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [manifest, data-quality, data-correctness, honest-coverage, defi, audit, data-status]
 related: [data_pipeline_hardening_self_monitoring_2026_06_22]
 created: 2026-06-22
 parent_epic: infrastructure_master

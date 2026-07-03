@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Strategy Registry (v2)
-summary:
-status:
+summary: Post-v1-delete SSOT for the v2 StrategyRegistry that resolves strategy_id→(name, family, category, archetype), derived from the archetype capability manifest; documents the to_dict() shape change, the Category vs VenueCategoryV2 seam, and slot-label-grammar fallback resolution. Concrete counts are the 2026-04-21 baseline (UAC enums are canonical).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-api, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, registry, uac, refactor, canonicalisation]
+related: [naming-convention.md, category-instrument-coverage.md, strategy-lifecycle-maturity.md, legacy-family-migration.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [v2 strategy registry derivation (strategy_id resolution)]
 referenced_by:
 owner:
 last_reviewed:

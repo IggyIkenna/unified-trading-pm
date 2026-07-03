@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Seamless cloud switch
 summary:
-status:
+  Drain-snapshot-switch-warm-up protocol for migrating a live workload GCP-to-AWS (or back) without losing
+  in-flight state; names the preserved-state matrix (positions/orders/config/manifest/credentials) and the no-split-brain rule.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, migration, execution, reconciliation, live-trading]
+related: [cloud-agnostic-migration.md, ../05-infrastructure/cloud-agnostic-build-lineage.md, ../05-infrastructure/live-deployment-monitoring.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [seamless dual-cloud switch protocol (drain/snapshot/switch/warm-up), cross-cloud preserved-state matrix]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

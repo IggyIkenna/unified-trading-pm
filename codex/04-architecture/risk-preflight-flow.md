@@ -2,16 +2,31 @@
 doc_type: codex-ssot
 title: Risk Pre-Flight Flow
 summary:
-status:
+  The Layer-2 order-submission path — the UTL risk_preflight(order, context) helper every order goes through (called by
+  both strategy-service before sizing AND execution-service before venue submit, no caching), its aggregation semantics
+  (any-BLOCK-wins, min-of-scale_factors, MONITOR/TEST_ONLY passthrough), plus the DeFi-only Layer-2.5 wallet-tier stack
+  (5 checks — kill-switch → wallet caps → archetype allocation → position-health → venue eligibility; short-circuit).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [risk, execution, strategy, defi, kill-switch]
+related:
+  [
+    risk-rule-taxonomy.md,
+    risk-breaker-seam.md,
+    kill-switch-circuit-breaker.md,
+    ../09-strategy/architecture-v2/cross-cutting/risk-gates.md,
+  ]
 created: 2026-05-11
 authoritative_for:
+  [
+    risk pre-flight order-submission flow,
+    risk_preflight aggregation semantics,
+    Layer-2.5 wallet-tier pre-flight stack,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

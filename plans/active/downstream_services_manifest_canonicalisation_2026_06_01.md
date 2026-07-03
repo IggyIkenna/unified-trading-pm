@@ -1,14 +1,19 @@
 ---
 doc_type: plan
 title: Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution) — audit-first, low-data single-walk
-summary:
+summary: >-
+  Per-service (not per-AG) manifest canonicalisation for the downstream data-pipeline services (MDPS,
+  features, strategy, execution) not covered by the per-AG walks: audit-first, low-data single-walk. Drives
+  the CF-1…CF-12 cross-service canonical-form checklist to QG-green BEFORE the migration run (CF-11 empty-vs-
+  failed write-path, E5 3-way manifest-rebuild decision tree, v9 re-emit). Coordinated under the
+  defi_manifest_canonicalisation MASTER.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
 scope: [engineer, admin]
-tags: []
+tags: [canonicalisation, manifest, single-walk, mdps, features, execution, audit, data-correctness]
 related: [plans/epics/features_and_ml_master.md, plans/epics/strategy_master.md, plans/epics/execution_master.md]
 created: 2026-06-01
 parent_epic: mtds_mdps_master

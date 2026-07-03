@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Data-status drill-down hierarchy = codex shard atom
 summary:
-status: stable
+  The data-status drilldown tree = the codex per-asset_group shard-axis matrix (UAC SHARD_AXIS_MATRIX) —
+  per-service drill paths top→leaf, feature_family as the features-service outer axis, pipeline_mode as the
+  outermost stratifier, the /api/data-status/drilldown backend + HierarchicalShardDrilldown UI, and per-leaf
+  row_key download/Deploy-Missing.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui, features-service, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer]
-tags: []
-related: []
+tags: [data-status, ui, manifest, mtds, features, honest-coverage]
+related: [availability-manifest-and-data-status.md, data-status-drilldown.md, honest-absence-downstream-handling.md, pipeline-mode-partition.md]
 created: 2026-05-07
-authoritative_for:
+authoritative_for: [data-status drilldown shard-axis tree hierarchy]
 referenced_by:
 owner:
 last_reviewed: 2026-05-07

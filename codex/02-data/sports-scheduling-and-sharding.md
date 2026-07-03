@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Sports Scheduling & Sharding
 summary:
-status: canonical
+  Sports scheduling + sharding SSOT — shard atom (asset_group,source,data_type,league_id,day) with fixture_id row-level,
+  per-provider fetch cadence + publish windows, historical-backfill lookahead-bias rules, and per-fixture denormalisation.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [sports, manifest, backfill, data-correctness, mtds, orchestrator]
+related: [codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-adapter-dependency-order.md, codex/02-data/availability-manifest-and-data-status.md, codex/05-infrastructure/vm-tarball-deployment.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [sports fetch scheduling cadence and shard-atom contract, sports historical-backfill lookahead-bias rules]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

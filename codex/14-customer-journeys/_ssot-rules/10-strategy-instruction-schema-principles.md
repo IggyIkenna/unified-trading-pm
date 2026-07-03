@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Rule 10 — Strategy instruction schema principles
 summary:
-status:
+  "The (Client, downstream) signals-only fit-check — the eight required instruction-schema fields Odum
+  execution needs, what Odum explicitly does NOT need (client IP stays upstream), the signals-only package
+  boundary (no research/promote by default), and schema-depth as a block-5 pricing dimension."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, sales, dart, strategy, execution]
+related:
+  [
+    04-dart-commercial-axes.md,
+    05-building-block-dimensions.md,
+    08-pricing-principles.md,
+    06-show-dont-show-discipline.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [signals-only instruction-schema principles ((Client,downstream) fit-check)]
 referenced_by:
 owner:
 last_reviewed:

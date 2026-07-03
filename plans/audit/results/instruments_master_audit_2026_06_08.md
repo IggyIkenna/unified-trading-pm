@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: instruments-service audit — full chain (download → manifest versions) — 2026-06-08
-summary:
-status: complete
+summary: >-
+  Broad "anything suspicious" sweep of instruments-service download→adapters→manifest→schema-versions (4 parallel
+  read-only sub-agents + first-hand verification). Verdict: production runtime mostly sound; canonical-form core clean.
+  Actionable set = ONE reachable CF-11 swallow (kalshi excludes venue from expected denominator), delete dead-registered
+  polygon.py (removed provider), downgraded orchestrator except:pass sites, plus an 8,192-line god-module + manifest
+  repair-script sprawl hygiene tail. No live trading-data-corruption.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, instruments, ssot-audit, manifest, canonicalisation, data-correctness, plan-hygiene]
+related:
+  - plans/active/issues/instruments_service_audit_findings_2026_06_08.md
+  - plans/audit/instructions/instruments_master_audit_instructions.md
+  - plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md
 created: 2026-06-08
-audited_scope:
+audited_scope: instruments-service full chain — adapters/download, manifest+schema versions, catalogue/universe/IS→MTDS contract, standards/hygiene/bucket-naming (code-state; data-state reads deferred)
 date: 2026-06-08
 auditor: harsh (interactive, hk laptop)
 parent_epic: instruments_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Trading-Agent Service — Directive Pipeline Architecture
 summary:
-status:
+  trading-agent-service directive pipeline — subscribes to StrategyPnlStreamEvent + performance features and emits
+  ArchetypeAllocationDirective consumed by strategy-service StrategyDirectiveReloader; OFF-by-default for May-23 (no-op
+  unless DIRECTIVE_EMISSION_ENABLED=true), with lookahead-safe backtest-replay infra (inference cache + directive log).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service, trading-agent-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [trading-agent, strategy, orchestrator, uac, features, allocation, mvp]
+related:
+  [
+    strategy-service-architecture.md,
+    promote-workflow-architecture.md,
+    features-service-architecture.md,
+    ../09-strategy/operational/paper-batch-live-reconciliation.md,
+  ]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [trading-agent-service directive pipeline (PnL stream to ArchetypeAllocationDirective)]
 referenced_by:
 owner:
 last_reviewed:

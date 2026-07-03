@@ -2,20 +2,24 @@
 doc_type: audit-result
 title: pipeline_mode backfill verification — pre-backfill state (2026-05-28)
 summary:
-status: complete
+  Pre-backfill pipeline_mode column verification across 19+ prod buckets (49.4M rows) — verdict FAIL — 8.07M NULL/empty
+  rows (16.3%) across 11 -prd- buckets (all 100% NULL, created after the Phase-1B legacy rollout); 8 legacy buckets
+  already PASS, instruments-store-pred-prd has NO_COLUMN (pre-v8). Fixed the backfill-script bucket-name bug
+  (raw-tick-data-* → market-data-tick-*); backfill --apply NOT yet run + per-VM shards under _index/per_vm/ unchecked.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [pipeline-mode, manifest, migration, backfill, data-correctness, single-walk, audit]
+related: [plans/archive/2026_06/pipeline_mode_implementation_2026_05_28.md, codex/02-data/pipeline-mode-partition.md, codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-05-28
-audited_scope:
+audited_scope: pipeline_mode column presence across prod market-data-tick + instruments-store + features-delta-one buckets (49.4M rows, PASS/NEEDS_BACKFILL/NO_INDEX/NO_COLUMN classification) — pre-backfill state, _index only
 date: '2026-05-28'
 auditor: claude + operator
 parent_epic: infrastructure_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

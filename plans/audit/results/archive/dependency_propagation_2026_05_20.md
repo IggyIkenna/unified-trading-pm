@@ -1,21 +1,21 @@
 ---
 doc_type: audit-result
 title: Dependency Fail-Propagation Audit — 2026-05-20
-summary:
-status:
+summary: Read-only dependency fail-propagation audit (MTDS/features/strategy/execution/ml) — overall pipeline RED; two P0 wiring gaps (execution-service assert_market_data_fresh + strategy-service assert_feature_fresh defined but zero engine call-sites) let live orders route on stale/failed upstream data; StaleUpstreamError not defined anywhere.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, ml-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, data-correctness, execution, strategy, mtds, features, live-trading, data-pipeline]
+related: [dependency_propagation_2026_05_20_summary.md]
 created: 2026-05-20
-audited_scope:
-date:
-auditor:
+audited_scope: Read-only source inspection (excl .venv/tests) of MTDS, features-service, strategy-service, execution-service, ml-service dependency-check paths (batch pre-flight + live staleness gate), plus UAC/UTL DependencyError/DataStalenessError definitions
+date: 2026-05-20
+auditor: Slot 3 sub-agent
 parent_epic: infrastructure_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

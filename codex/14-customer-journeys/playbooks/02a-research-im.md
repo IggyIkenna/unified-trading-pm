@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: 'Playbook 2a — Deep Dive: Investment Management'
 summary:
-status:
+  'pb2a implementation — /briefings/investment-management IM deep-briefing covering the IM proposition,
+  four catalogues, Pooled vs SMA, allocator client reporting, FCA 975797 framework and track record;
+  promotes the prospect to the pb3b IM demo.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, playbook, briefings, investment-management, reporting, prospect]
+related:
+  [
+    02-research-and-documentation.md,
+    02b-research-dart.md,
+    02c-research-regulatory.md,
+    03b-demo-im.md,
+    ../experience/im-decision-journey.md,
+  ]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [pb2a IM Deep Dive briefing playbook implementation]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Data Catalogue Schema Standard
 summary:
-status:
+  Data-catalogue.*.yaml schema standard enforced by the instruments-service catalogue_updater — the required-field set
+  (dataset_id, category, service_owner, schema_ref, gcp_path/aws_path, partition_keys, format, retention_days,
+  last_updated, row_count_last_batch, status), the category + status enums, and the auto-update contract for
+  last_updated/row_count. (Overlaps codex/02-data/data-catalogue-schema.md, which owns the SSOT claim.)
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [data-catalogue, catalogue, data-pipeline, instruments, manifest, data-status, uac]
+related: [../02-data/data-catalogue-schema.md, ../02-data/availability-manifest-and-data-status.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [duplicate view — canonical is codex/02-data/data-catalogue-schema.md (consolidation pending)]
 referenced_by:
 owner:
 last_reviewed:

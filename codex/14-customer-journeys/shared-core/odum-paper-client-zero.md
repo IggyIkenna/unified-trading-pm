@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: '`odum-paper` Client Zero — Representative Paper Account'
 summary:
-status:
+  The odum-paper/odum-live representative-account model — every strategy instance is auto-subscribed by internal client
+  odum-paper (fills at requested price = pure strategy alpha), giving every instance a continuous backtest→paper→live P&L
+  series. Non-special-casing rule (no `client_id == "odum-paper"` branch anywhere), $100-$1000 seed, unbounded retention.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, reconciliation, data-correctness, ml, monitoring, uac]
+related:
+  [
+    ../../09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    ../../09-strategy/architecture-v2/performance-overlay.md,
+    ../../04-architecture/shard-level-failure-isolation.md,
+    strategy-version-governance.md,
+  ]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [odum-paper/odum-live representative paper-account model]
 referenced_by:
 owner:
 last_reviewed:

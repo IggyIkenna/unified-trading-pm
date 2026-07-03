@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Semantic Versioning Standards
-summary:
-status:
+summary: >-
+  Semantic-versioning standards — CI (semver-agent.yml) owns every version bump on merge
+  to staging; the commit-prefix→bump mapping (fix/feat/feat!/chore), the pre-1.0.0
+  override (feat! bumps MINOR not MAJOR), and the human-approval gate (GitHub Issue) for
+  any MAJOR bump including the 0.x→1.0.0 graduation.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service, system-integration-tests, unified-trading-library, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [semver, versioning, ci, quickmerge, escalation]
+related: [strategy-identity-versioning.md, ../04-architecture/schema-versioning.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [repo semantic-versioning standards (commit-prefix bump mapping + MAJOR-bump approval gate)]
 referenced_by:
 owner:
 last_reviewed:

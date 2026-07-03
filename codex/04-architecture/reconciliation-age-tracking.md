@@ -2,14 +2,23 @@
 doc_type: codex-ssot
 title: Reconciliation Age Tracking, 12 Dimensions, and Escalation Ladder
 summary:
-status:
+  SSOT for live reconciliation staleness — the 12 ReconciliationDimensions, ReconciliationAgeFields (all ages written
+  at row-write-time, never query-time), the 3-band escalation ladder (warn 5min / investigate 15min / critical 30min)
+  plus 7 immediate-SEV0 overrides, and HUMAN-ONLY unfreeze. Live recon is distributed across strategy-service/position
+  + execution-service + alerting-service (NOT BLRS, which is T+1 batch-only); RECON_FREEZE_ARMED is still unwired.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [reconciliation, escalation, monitoring, execution, data-correctness, kill-switch]
+related:
+  [
+    reconciliation-resolution.md,
+    incident-gateway-state-machine.md,
+    autonomous-recovery-matrix.md,
+  ]
 created: 2026-05-25
 authoritative_for: [reconciliation-age, recon-dimensions, recon-escalation, recon-freeze]
 referenced_by: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/incident-gateway-state-machine.md, plans/active/reconciliation_age_tracking_and_escalation_2026_05_23.md]

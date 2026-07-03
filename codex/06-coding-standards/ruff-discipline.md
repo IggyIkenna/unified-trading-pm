@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Ruff discipline — workspace-safe lint fix workflow
-summary:
-status: canonical
+summary: >-
+  Workspace-safe ruff lint-fix workflow — NEVER `ruff check .` / `format .` whole-repo
+  (clobbers parallel agents' uncommitted WIP); scope ruff to your own changed files by
+  explicit path; covers common codes (E501 / I001 / RUF003), noqa guidance, and the
+  per-tab-worktree PATH fallbacks.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ruff, lint, quality-gates, ci]
+related: [quality-gates.md]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: [ruff discipline (workspace-safe scoped lint-fix workflow)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-12

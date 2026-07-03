@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: DeFi Market Making (AMM Liquidity Provision)
 summary:
-status:
+  Pre-v2 DeFi AMM market-making via concentrated liquidity (Uniswap V3/V4, Curve, Balancer) — uses real V3 concentrated
+  IL math (not the V2 approximation) and exact feeGrowthInside fee accounting, volatility-adjusted range width;
+  targets 10-25% APY, ~$5M per pool. SUPERSEDED banner — see architecture-v2.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, market-making, liquidity-provision, impermanent-loss, uniswap]
+related: [sol-concentrated-lp.md, active-defi-mm.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

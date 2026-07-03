@@ -2,20 +2,30 @@
 doc_type: codex-runbook
 title: ML Alerting Rules — Live ML Inference + Signal Lifecycle
 summary:
-status:
+  Design contract for the 4 live-ML alerting rules (ML_SIGNAL_STALE, ML_MODEL_DRIFT_DETECTED, ML_PNL_DEVIATION,
+  ML_INFERENCE_LATENCY_SLO) layered on the live-pipeline tier-up + KillSwitchBus taxonomy. Codes are NOT yet in
+  alerting/codes.py (2026-05-12 LIFT); drift_monitor.py ships accuracy-drop / MODEL_RETUNE_REQUESTED instead of PSI/KL.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [runbook, ml, escalation, monitoring, live-trading, model-tier, reconciliation]
+related:
+  [
+    codex/15-runbooks/alerting/alert-code-taxonomy.md,
+    codex/15-runbooks/alerting/operator-playbook.md,
+    codex/05-infrastructure/live-pipeline-architecture.md,
+    codex/16-strategy-playbooks/ml/cefi-ml-live-serving.md,
+  ]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
+authoritative_for: [live-ML alerting rule design contract (ML_SIGNAL_STALE / ML_MODEL_DRIFT_DETECTED / ML_PNL_DEVIATION / ML_INFERENCE_LATENCY_SLO)]
 ---
 
 # ML Alerting Rules — Live ML Inference + Signal Lifecycle

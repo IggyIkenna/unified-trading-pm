@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Building-Block Packaging — Which Blocks Cluster into Which Packages
 summary:
-status:
+  Block × package matrix — how the thirteen rule-05 building blocks compose into six standard commercial
+  packages (IM reporting-only, Reg Umbrella starter, Signals-only DART, Full DART, Full+Odum strategy,
+  Combined), with sub-scoping (venue/chain/instrument/analytics packs) priced per unit.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, admin]
-tags: []
-related: []
+tags: [commercial-model, pricing, dart, building-blocks, packaging, im, reg-umbrella]
+related:
+  [
+    pricing-building-blocks.md,
+    dart-entry-points.md,
+    fixed-vs-variable-commercials.md,
+    exclusivity-and-noncompete.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [building-block to commercial-package composition matrix]
 referenced_by:
 owner:
 last_reviewed:

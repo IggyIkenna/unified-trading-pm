@@ -1,17 +1,18 @@
 ---
 doc_type: codex-ssot
 title: P&L Attribution — Cross-Cutting Concern
-summary:
-status:
+summary: "Pre-v2: P&L attribution using canonical factors only, identical live/batch PnLCalculator code path, and mandatory T+1 reconciliation where batch P&L overrides indicative live P&L."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [pnl, reconciliation, strategy, execution, data-correctness]
+related:
+  [../../architecture-v2/cross-cutting/pnl-attribution.md, cost-modeling.md]
 created: 2026-06-16
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

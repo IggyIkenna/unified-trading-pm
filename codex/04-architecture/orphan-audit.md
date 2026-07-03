@@ -2,16 +2,23 @@
 doc_type: codex-ssot
 title: Orphan-Route Audit Policy
 summary:
-status:
+  Policy for the UI orphan-route scanner (routes with no nav-surface reachability) — 3-phase advisory→fix-all→blocking
+  rollout, 6-source reachability union, and the 3 acceptable whitelist reason prefixes (MACHINE-ONLY / API-HANDLER /
+  UNAUTHENTICATED-FUNNEL); wired into quickmerge + orphan-audit.yml for both Next.js and React-Router UIs.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-ui, unified-trading-system-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [ui, audit, orphan-route, reachability, quality-gates, refactor]
+related:
+  [
+    ../09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    ../09-strategy/architecture-v2/dashboard-services-grid.md,
+  ]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [UI orphan-route audit policy, orphan-audit whitelist reason prefixes]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Data Pipeline Correctness Is The Heartbeat — Hard Rule SSOT
 summary:
-status:
+  The "data-pipeline correctness is the heartbeat" HARD RULE SSOT (codified after the 2026-05-20 mega-audit —
+  96.34% MISSING_EXPECTED, 0% v8 of 7.4M rows) — 5 invariants (universal scope, closed-set BLOCKED-* deferral,
+  coverage-matrix transparency, layer-N+1 freeze on RED, code+data audits compose), the slot-freeze protocol, and
+  the banned deferral phrases.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [data-correctness, data-pipeline, audit, escalation, plan-hygiene, data-quality]
+related: [../11-project-management/foundation-completion-gate-discipline.md, ../06-coding-standards/quality-gates.md, honest-absence-downstream-handling.md, ../../plans/epics/mtds_mdps_master.md]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [data-pipeline-correctness heartbeat hard rule]
 referenced_by:
 owner:
 last_reviewed: 2026-06-25

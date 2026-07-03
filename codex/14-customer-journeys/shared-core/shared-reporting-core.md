@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Shared Reporting Core
 summary:
-status:
+  The one client-reporting surface (/services/reports/overview) that IM allocators, Reg Umbrella firms, and DART clients
+  all render from the same component tree — entitlement-filtered per audience via API-key-set scope. Block 1 = generic
+  panels; block 2 adds Reg panels; block 3 adds IM panels; no forked per-audience reporting products.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [same-system, ui, reporting, playbooks, sales]
+related:
+  [
+    ../_ssot-rules/03-same-system-principle.md,
+    ../playbook-concepts/client-reporting.md,
+    org-fund-client-entity-model.md,
+    same-system-principle.md,
+    client-reporting-demo-walkthrough.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [shared client-reporting core surface (one component tree, entitlement-filtered)]
 referenced_by:
 owner:
 last_reviewed:

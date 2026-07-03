@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: SOL Staked Basis Trade (Marinade mSOL + Drift)
 summary:
-status:
+  Pre-v2 DeFi Solana staked basis — stake SOL->mSOL via Marinade (~7% APY) + short SOL-PERP on Drift; delta-neutral
+  with a staking floor, rebalances perp as the mSOL/SOL rate appreciates and exits on >3% mSOL depeg; targets 22-37%
+  combined APY, $5M. SUPERSEDED banner — see architecture-v2.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, basis-trade, solana, drift, staking, marinade]
+related: [sol-basis-trade.md, staked-basis.md, sol-lending-yield.md, sol-concentrated-lp.md]
 created: 2026-03-28
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

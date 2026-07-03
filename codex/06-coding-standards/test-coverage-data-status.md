@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Test coverage — data-status surface
-summary:
-status:
+summary: >-
+  Test-coverage matrix the data-status surface (deployment-api routes + deployment-ui
+  components + manifest reads) MUST satisfy before merge — per-surface backend/frontend/
+  playwright tests for drilldown depth, typed error_reason, failure pillars, schema modal,
+  deploy-missing, and honest-absence; tied to the drilldown-depth-audit WORKING ratchet.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [test-coverage, data-status, ui, manifest, honest-coverage, playwright]
+related: [../02-data/deployment-ui-drilldown-depth-audit.md, ../02-data/data-status-drilldown.md, ../02-data/availability-manifest-and-data-status.md, quality-gates.md, ui-testing-layers.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [data-status surface test-coverage matrix (deployment-api + deployment-ui)]
 referenced_by:
 owner:
 last_reviewed:

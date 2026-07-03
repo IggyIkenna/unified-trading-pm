@@ -2,13 +2,17 @@
 doc_type: epic
 title: Manifest Master (L1)
 summary:
+  L1 epic owning manifest schema (v9 current, MANIFEST_SCHEMA_VERSION=9, adds source column) +
+  evolution discipline + honest-absence taxonomy + backfill execution (Stages 0-4) + GCS layout +
+  IS↔MTDS contract; enforces the 3-axis batch invariant (schema + writer code + on-disk GCS layout land
+  together) over the SOURCE-AWARE {mode}_{source}[_{transport}] partition.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, ml-service]
 scope: [engineer, admin]
-tags: []
+tags: [manifest, data-status, honest-coverage, backfill, pipeline-mode, single-walk, canonicalisation, data-correctness]
 related: [../archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md, ../archive/2026_05/d3_manifest_v8_finish_2026_05_20.md, ../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md, ../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md, ../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md, ../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md, ../archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md, ../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md, ../archive/2026_05/manifest_schema_final_gate_2026_05_09.md]
 created: 2026-05-21
 name: manifest_master

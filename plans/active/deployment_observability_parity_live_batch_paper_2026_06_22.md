@@ -1,14 +1,18 @@
 ---
 doc_type: plan
 title: Deployment Observability Parity — live/batch/paper × GCP/AWS at /repos grade
-summary:
+summary: >-
+  Brings deployment observability for every compute unit (VM or Cloud Run job) to /repos-CI grade across the
+  batch/live/paper umbrellas × GCP/AWS, reusing existing surfaces (deployment-ui VM-deployments/Monitor/VM-
+  events/alerts, VM_PREFIX_TO_BUCKET lifecycle_class classification, durable GCS-tee logs) rather than
+  rebuilding. Each unit classifies to exactly one umbrella × cloud × service × asset_group.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
+tags: [observability, monitoring, ui, infrastructure, spot-vm, live-trading, self-healing]
 related: [deployment_ui_monitoring_pane_2026_06_19.md, vm_launcher_durable_log_observability_2026_06_19.md, ci_dashboard_deployment_ui_2026_06_10.md, monitoring_control_plane_master_2026_06_10.md, data_pipeline_hardening_self_monitoring_2026_06_22.md, data_feed_sla_registry_and_active_self_healing_2026_06_19.md]
 created: 2026-06-22
 parent_epic: observability_master

@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Signup / Signin workflow — prospect → client
-summary:
-status:
+summary: >-
+  Target-state prospect→client funnel: the 9 ordered stages (questionnaire → deep-dives → call → strategy-eval → review →
+  walkthrough → commercial-tailoring → signup → signin), the per-service-path signup fields, and current-vs-target state.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [admin, sales]
-tags: []
-related: []
+tags: [onboarding, questionnaire, ui, mvp, validation]
+related: [./prospect-questionnaire-flow.md, ./platform-walkthrough-and-demo-context.md, ./client-onboarding.md]
 created: 2026-04-22
-authoritative_for:
+authoritative_for: [prospect→client signup/signin funnel (9-stage journey + per-service-path signup fields)]
 referenced_by:
 owner:
 last_reviewed:

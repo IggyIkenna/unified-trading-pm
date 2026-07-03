@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Branch-and-Version Reference Model — two layers, two references (SSOT)
-summary:
-status:
+summary: >-
+  The two-reference model: `live-defi-rollout` is the code-integration reference (branch-behind), while `staging→main`
+  plus the semver `versions`/`staging_versions` maps are the dependency-safety reference (version-behind); maps each to
+  the quickmerge STAGE 0.4 / 1 / 1.6 gate that enforces it.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [system-integration-tests]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ci-cd, quickmerge, dependency-management, quality-gates, ssot-audit]
+related: [./ci-cd-flow.md, ./deployment-flow.md]
 created: 2026-06-02
-authoritative_for:
+authoritative_for: [branch-vs-version two-reference model (code-integration LDR ref vs dependency-safety staging/main+semver ref)]
 referenced_by:
 owner:
 last_reviewed:

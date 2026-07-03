@@ -2,18 +2,21 @@
 doc_type: codex-runbook
 title: PREFLIGHT_FAILED Runbook
 summary:
-status: active
+  Operator runbook for an order rejected by execution-service preflight before venue submission (margin / risk /
+  position / instrument-state guard). WARN / Telegram-only, no kill-switch, no monetary loss; operator triages the
+  rejection reason to tell an expected guard from a strategy/signal bug or a wallet/margin issue.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [runbook, escalation, live-trading, execution, strategy, monitoring]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/order_rejection_spike.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 authoritative_for: Operator response when execution-service preflight check rejects an order before submission. Indicates a risk / position / margin / instrument-state guard caught a malformed or unsafe order.

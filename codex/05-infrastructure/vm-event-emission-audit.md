@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: VM Event Emission Compliance Audit
 summary:
-status: living
+  2026-05-15 audit of every VM launcher's event emission — ~83 launchers get STARTED/COMPLETED/FAILED via
+  _launch_with_tee(), the fixed backtest bare-nohup gap (launch-strategy-test-vm.sh exited before heartbeat setup), full
+  VM_TASK branch coverage, and the unit-test suite.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, observability, deployment, infrastructure, scripts]
+related: [vm-deployment-events-audit.md, launcher-script-ssot.md, run-lifecycle-events-audit-2026-05-05.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [VM launcher event-emission compliance audit]
 referenced_by:
 owner: deployment-platform
 last_reviewed: 2026-05-17

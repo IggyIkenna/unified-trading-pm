@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Bloomberg-style aesthetic
 summary:
-status:
+  Bloomberg-terminal UX principles for every post-login surface — dense scannable tables, knowledgeable-user initial
+  state, 90%-invisible-by-default, 2-3-click-to-detail, keyboard-first — plus anti-patterns and colour/typography
+  rules; the public marketing homepage is intentionally exempt.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [ui, aesthetic, ux, design, navigation, testing]
+related: [../information-architecture.md, visibility-slicing.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [Bloomberg-style post-login UI aesthetic principles]
 referenced_by:
 owner:
 last_reviewed:

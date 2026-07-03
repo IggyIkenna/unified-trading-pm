@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Resolving a dep-update → staging conflict (worker playbook)
-summary:
-status: active
+summary: >-
+  Worker playbook for a conflicting `dep-update/<dep>-<version>` → staging PR: rebase the throwaway topic branch on
+  staging, keep this branch's higher dep floor + take staging elsewhere, regenerate uv.lock, force-with-lease; escalate
+  any genuine source conflict to the operator instead of force-merging.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ci-cd, dependency-management, quickmerge, reconciliation, escalation, orchestrator]
+related: [./ci-cd-flow.md, ./dependency-cascade.md]
 created: 2026-06-17
-authoritative_for:
+authoritative_for: [dep-update/* → staging PR conflict-resolution worker playbook]
 referenced_by:
 owner:
 last_reviewed:

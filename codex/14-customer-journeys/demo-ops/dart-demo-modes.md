@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: DART Demo Modes — Broader Platform vs Turbo vs Deep-Dive
 summary:
-status:
+  Three demo-walk modes orthogonal to the restriction profile — broader-platform (~60min, scope-before-depth, pb3c
+  default), turbo (~45min, one sharp capability question, pb3b default), deep-dive (one surface end-to-end, pb3a
+  default); mode-by-path matrix, how mode is chosen, and the sales-side staging toggle it drives.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
-tags: []
-related: []
+tags: [demo-ops, sales, dart, demo-modes, staging, curation]
+related: [demo-restriction-profiles.md, pre-demo-curation-rules.md, pre-demo-discovery-framework.md, upsell-overlays.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [DART demo modes (broader-platform / turbo / deep-dive)]
 referenced_by:
 owner:
 last_reviewed:

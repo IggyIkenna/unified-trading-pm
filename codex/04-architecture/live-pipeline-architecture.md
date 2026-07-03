@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Live Pipeline Architecture
 summary:
-status: stub
+  "STUB — the live pipeline is the same code path as batch (instruments-service → MTDS → features → strategy →
+  execution) with identical schemas / data_types; only execution fills replace simulated fills. Defers to the 'Live =
+  batch' SSOT; tracks the phase-5 features-streaming MVP delta."
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [features, defi, pipeline-mode, live-trading, mtds, instruments]
+related: [batch-live-architecture.md, live-deployment-manifest.md, ../02-data/availability-manifest-and-data-status.md]
 created: 2026-05-21
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: CeFi ML Live-Serving Architecture
 summary:
-status:
+  Live ML inference contract for the May-23 CeFi archetype — runs in the standalone ml-inference-service (NOT
+  features-service; SUPERSEDED note), cache-busts on MODEL_PROMOTED via ML_MODEL_COORDINATION_TOPIC, stamps
+  model_version + model_artefact_uri on every downstream event for per-trade traceability, and defines the ML
+  data_freshness callback (max of inference/promotion/feature-lag).
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ml, cefi, live-trading, features, execution, model-tier, data-freshness]
+related:
+  [
+    ../../04-architecture/batch-live-architecture.md,
+    ../../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md,
+    ../../05-infrastructure/live-pipeline-architecture.md,
+    ../../15-runbooks/alerting/ml-alerting-rules.md,
+  ]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

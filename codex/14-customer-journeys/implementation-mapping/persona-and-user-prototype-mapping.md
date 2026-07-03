@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Persona and User-Prototype Mapping
 summary:
-status:
+  Maps each experience audience to a named persona fixture in lib/auth/personas.ts (admin, internal-trader, client-*,
+  prospect-im/reg/dart, investor, advisor) with its restriction profile, entitlement blocks, and experience-playbook
+  binding.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [persona, entitlements, staging, playbook, ui, authentication]
+related: [../demo-ops/demo-restriction-profiles.md, ../demo-ops/demo-decision-matrix.md, route-mapping.md, demo-email-and-provisioning-flow.md, playbook-to-qa-coverage.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [persona-fixture mapping (personas.ts -> experience playbook + entitlement blocks)]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Post-Demo Follow-Up Orchestration
 summary:
-status:
+  Post-demo follow-up orchestration — 7-day stall trigger (Day0 record update, Day1-6 silent, Day7 one specific
+  present-tense message + one asset + one calendar offer), asset-selection-by-signal table, next-stage qualification
+  criteria, and Day14/21/quarterly decay; pricing never goes in a follow-up (rule 08).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
-tags: []
-related: []
+tags: [demo-ops, sales, follow-up, orchestration, qualification, crm]
+related: [account-intelligence-record.md, meeting-history-and-interest-tracking.md, demo-decision-matrix.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [post-demo follow-up orchestration]
 referenced_by:
 owner:
 last_reviewed:

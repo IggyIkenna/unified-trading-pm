@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: RB-INFRA-003 — Secret/Config Failure
 summary:
-status:
+  Operator runbook for Secret Manager access / config-registry 5xx failure — wait if transient, re-sync rotated
+  credentials, fix SA permissions; enter_readonly_recon_mode on affected services, trading creds unreachable escalates
+  to SEV0 kill-switch.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, infrastructure, secrets, config, kill-switch]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

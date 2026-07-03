@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Master Readiness — Live DeFi Trading by 2026-05-23
 summary:
-status:
+  Codex companion SSOT to the live-DeFi master plan — owns the durable 7-group / 23-item per-service
+  readiness model (code health, data correctness, runtime parity, coverage, operability, trading
+  prereqs, operator UX), the doc-touchpoint map, and the plan↔doc↔code drift-audit pattern for the
+  2026-05-23 live-DeFi cutover.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, live-trading, mvp, data-correctness, readiness, cefi]
+related:
+  [plans/active/master_to_live_defi_2026_05_23.md, codex/10-audit/REPO_READINESS_CHECKLIST.yaml, codex/POST_PLAN_REALITY_2026_05_06.md]
 created: 2026-05-23
-authoritative_for:
+authoritative_for: [live-defi May-23 per-service readiness model (7-group 23-item)]
 referenced_by:
 owner:
 last_reviewed:

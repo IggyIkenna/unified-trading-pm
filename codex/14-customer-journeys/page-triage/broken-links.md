@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Broken outbound hrefs
 summary:
-status:
+  Inventory of broken outbound hrefs in unified-trading-system-ui — 4 confirmed targets to build or fix
+  (/services/execution/tca, /markets/pnl, /presentation, /executive) and 5 probable hrefs pruned in Refactor G1.5;
+  quality-gates must fail on any new broken link.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, broken-links, page-triage, refactor, audit, navigation]
+related: [triage-matrix.md, ../information-architecture.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [UI broken outbound-href inventory]
 referenced_by:
 owner:
 last_reviewed:

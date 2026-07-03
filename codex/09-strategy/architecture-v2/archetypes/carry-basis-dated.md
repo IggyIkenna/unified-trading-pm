@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `CARRY_BASIS_DATED`'
-summary:
-status: design
+summary: >-
+  Archetype CARRY_BASIS_DATED: long spot + short dated future capturing contango/backwardation basis
+  convergence to zero at expiry. Enter when |basis_spread| > min_entry_threshold; delta-neutral, ATOMIC
+  or LEADER_HEDGE legs, roll before expiry. Covers TradFi commodities/equity-index + crypto dated
+  (Deribit quarterly).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, carry, tradfi, defi, archetype, deribit]
+related:
+  [
+    carry-basis-perp.md,
+    carry-basis-dated-inv.md,
+    ../category-instrument-coverage.md,
+    ../families/carry-and-yield.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [CARRY_BASIS_DATED archetype specification]
 referenced_by:
 owner:
 last_reviewed:

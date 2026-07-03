@@ -2,13 +2,16 @@
 doc_type: codex-ssot
 title: Cloud-Agnostic Script Pattern
 summary:
-status: active
+  The mandatory cloud-agnostic pattern every workspace script/service must follow — a --cloud {gcp,aws} flag defaulting
+  from CLOUD_PROVIDER, the UCI factory for SDK construction, resolve_bucket_name for bucket names, the 4 cloud tiers,
+  the Tier-4 dual-write hard-fail rule, and the QG lint that enforces it.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
+tags: [migration, aws-migration, infrastructure, canonicalisation, bucket]
 related: [codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md, codex/04-architecture/unified-cloud-interface.md]
 created: 2026-05-07
 authoritative_for: The mandatory pattern every workspace script that touches cloud resources must follow — `--cloud {gcp,aws}` flag default from `CLOUD_PROVIDER` env, no direct gcloud/gsutil/google.cloud.storage without an AWS branch, UCI factory pattern for SDK construction.

@@ -2,14 +2,20 @@
 doc_type: codex-ssot
 title: Next waves
 summary:
-status:
+  Superseded follow-up-wave backlog (8 waves, ~6-7 new plans) for pb3 demo enablement — catalogue parity, fund/org/client
+  scaffolding, DART rebrand, nav cleanup. Superseded 2026-04-20 by stage-3e-refactor-plan.md; kept for history only.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, instruments-service, unified-trading-system-ui]
+repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [roadmap, catalogue, dart, ui, playbooks, plan-hygiene]
+related:
+  [
+    plan-references.md,
+    ../../16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+  ]
 created: 2026-04-19
 authoritative_for:
 referenced_by:

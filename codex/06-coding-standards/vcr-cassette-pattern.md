@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: VCR Cassette Pattern
 summary:
-status:
+  The in-test VCR pattern (`@vcr.use_cassette` decorator usage + replay shape) for replaying venue HTTP/WS/SDK responses
+  in the owning interface repo; cassette ownership/recording SSOT is `02-data/vcr-cassette-ownership.md`, which wins on
+  divergence.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer]
-tags: []
-related: []
+tags: [vcr, cefi, mtds, instruments, quality-gates]
+related: [../02-data/vcr-cassette-ownership.md, ../07-security/testing-with-api-keys.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [VCR cassette in-test decorator and replay pattern]
 referenced_by:
 owner:
 last_reviewed:

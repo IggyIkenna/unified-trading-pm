@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Duplicate clusters
 summary:
-status:
+  Ten overlap clusters where multiple unified-trading-system-ui routes serve one concept (strategy-catalogue legacy,
+  data gaps/completeness/missing, reports-vs-observe reconciliation, IR site-navigation, ...) each with a
+  merge-into / keep-separate / defer decision.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, duplicate, page-triage, refactor, consolidation, navigation]
+related: [triage-matrix.md, partial-archive.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [UI duplicate-route cluster merge decisions]
 referenced_by:
 owner:
 last_reviewed:

@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: VM Tarball Deployment — SSOT
-summary:
-status:
+summary: >-
+  SSOT for GCE tarball-based VM deployment — the two startup patterns (A canonical `setup-data-pipeline-vm.sh` /
+  B inline daemon), mandatory `lifecycle_class` invariants, the CORE+opt-in tarball fleet and refresh cycle, singleton
+  locks, per-shard cleanup discipline, observability + T+10min post-launch verification, and the failed-VM debug recipe.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, execution-service, features-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, spot-vm, backfill, observability, scripts]
+related: [vm-launcher-runbook.md, vm-log-archival.md, spot-vms-for-backfill.md, manifest-consolidator-ssot.md, runtime-tiers-and-deployment.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [VM tarball deployment startup patterns A and B]
 referenced_by:
 owner: deployment-platform
 last_reviewed: 2026-05-17

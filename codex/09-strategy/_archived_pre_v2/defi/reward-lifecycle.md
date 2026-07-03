@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: DeFi Reward Lifecycle
 summary:
-status:
+  Pre-v2 DeFi reward-lifecycle spec — EIGEN (weekly) + ETHFI (quarterly) claim->sell->attribute flow via
+  CLAIM_REWARD / SELL_REWARD instructions, REWARD_SCHEDULES UAC registry as SSOT, M2M of unclaimed tokens via
+  eigen_price_usdt / ethfi_price_usdt; Lido has no restaking rewards. Live version at architecture-v2/cross-cutting.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, rewards, staking, eigenlayer, etherfi, pnl-attribution]
+related: [staked-basis.md, recursive-staked-basis.md, unhedged-recursive.md]
 created: 2026-04-03
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

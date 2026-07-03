@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: agent-orchestrator — architecture overview
 summary:
-status: active
+  agent-orchestrator service architecture — FastAPI + Vite dashboard coordinating parallel Claude Code workers
+  (SQLite state, ES256 internal / HS256 dashboard auth, central API proxy over private VPC to 10 epic VMs);
+  explicitly NOT a trading service (no asset_group / kill-switch / event-bus).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, client-reporting-api, deployment-api, deployment-service, deployment-ui, features-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [orchestrator, infrastructure, self-healing, role-registry, model-tier, observability]
+related:
+  [
+    agent-orchestrator-autospawn.md,
+    agent-orchestrator-host-offline-failover.md,
+    agent-orchestrator-worker-liveness.md,
+    agent-orchestrator-backlog-state-alignment.md,
+    runtime-deployment-topology.md,
+  ]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [agent-orchestrator service architecture overview]
 referenced_by:
 owner:
 last_reviewed: 2026-06-27

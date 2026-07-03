@@ -2,13 +2,22 @@
 doc_type: issue
 title: Live pipeline — decouple persistence from production hot path (overwrite race + GCS-on-hot-path)
 summary:
+  "The live pipeline flushes each closed window's ticks to a GCS path keyed by day+instrument with
+  NO window key, so window N+1 overwrites N in-place (a live CORRECTNESS RACE if MDPS lags, plus
+  the raw bucket is not a replayable archive — breaks paper(W)==batch-rerun(W)); and MDPS reads the
+  just-flushed tick parquet back FROM GCS on the production hot path. Decided direction (operator
+  2026-06-25): Option 2 log-spine — HOT Pub/Sub-with-retention + COLD batched hive GCS parquet +
+  BigQuery analytics, off ONE windowing via a UAC envelope + UTL transport facade. Hot-path
+  decoupling shipped (LiveEventFacadeSink default at websocket_runner.py:242); status blocked
+  because the durable warm-tier (Pub/Sub→Cloud-Storage→GCS parts→daily aggregate) is NOT yet built —
+  tracked in mtds_plan_reconciliation_2026_06_29 § Section F M-C7."
 status: blocked
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
+tags: [live-trading, reconciliation, mtds, mdps, data-correctness, pipeline-mode, uac]
 related: [mtds_plan_reconciliation_2026_06_29]
 created: 2026-06-24
 parent_epic: batch_live_symmetry_master

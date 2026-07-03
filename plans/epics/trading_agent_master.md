@@ -1,14 +1,18 @@
 ---
 doc_type: epic
 title: Trading Agent Master
-summary:
+summary: >-
+  L2 everlasting epic owning trading-agent-service: the closed-loop allocator, AllocationDirective pipeline,
+  and StrategyPnlStreamEvent consumer. Architecture-unlock (directive pipeline + event contracts + UAC
+  schema + codex SSOT) shipped 2026-05-23; P3 backlog covers real allocator logic, ML/LLM subscribers, and
+  performance_features passthrough.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [trading-agent-service]
 scope: [engineer, admin]
-tags: []
+tags: [trading-agent, strategy, execution, orchestrator, reconciliation, ml]
 related: [../active/trading_agent_service_architecture_unlock_2026_05_22.md]
 created: 2026-05-21
 name: trading_agent_master

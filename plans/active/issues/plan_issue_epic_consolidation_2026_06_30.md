@@ -10,9 +10,9 @@ summary:
   fanned out to background agents in waves (PILOT first, then ≤6 parallel); agents propose dispositions which I write
   INTO this doc's ledger so the operator decides per-doc without blocking; synthesis + execution stay with the main
   loop. OPERATOR AGREED 2026-06-30 (pilot-first · ≤6 parallel · dispositions-in-doc · issues→plans · IS+MTDS-only)."
-status: active
-nature: audit
-asset_group: cross-asset
+status: open
+nature: record
+asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [admin]
@@ -29,11 +29,13 @@ last_updated: 2026-06-30
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
+parent_epic: plan_hygiene_master
 source: [operator request 2026-06-30]
 drift_direction: advance-code
 depends_on: []
-locked_by: NA
+locked_by:
 locked_since: 2026-06-30
+resolved_by:
 ---
 
 # Plan / Issue / Epic Consolidation (2026-06-30)

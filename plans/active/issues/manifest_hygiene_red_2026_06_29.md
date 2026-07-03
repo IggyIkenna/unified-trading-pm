@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [manifest, data-correctness, cefi, phantom-captures, data-pipeline, monitoring, audit]
 related: [mvp_backfill_cefi_tick_v10_2026_06_27]
 created: 2026-06-29
 parent_epic: observability_master

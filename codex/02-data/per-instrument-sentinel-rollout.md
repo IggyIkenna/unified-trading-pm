@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: 'MTDS per-instrument sentinel rollout (3-tier: MVP → Expanded → Full)'
-summary:
-status:
+summary: >-
+  MTDS Tier-3 per-instrument sentinel rollout SSOT (Phase 8E) — the --per-instrument-sentinel-cap
+  thresholds (MVP=50 / Expanded=200 / Full=10000), the MVP -> Expanded -> Full promotion criteria,
+  the per-tier observability gates, and the rollback paths (incl. cap=0 emergency Tier-3 disable);
+  the cap bounds manifest fan-out and stays identical writer<->reader via
+  get_expected_instruments_for_venue.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mtds, manifest, honest-coverage, backfill, observability]
+related: [codex/02-data/mtds-data-source-coverage-matrix.md, codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [MTDS per-instrument sentinel cap thresholds, sentinel tier-promotion gates]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

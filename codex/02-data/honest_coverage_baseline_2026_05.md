@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Honest-Coverage Baseline (2026-05)
-summary:
+summary: >-
+  The May-2026 dated honest-coverage baseline table + methodology — per-(asset_group, data_type) coverage % with
+  exact expected_universe / captured / empty_confirmed_with_reason formulas — that feeds the QG ratchet blocking
+  coverage-regression PRs beyond ±0.5pp on live-defi-rollout; numbers TBD (DRAFT, populated by the operator-run
+  measurement script).
 status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [honest-coverage, manifest, quality-gates, data-status, data-correctness, verification]
 related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/02-data/expected-absence-backfill-runbook.md]
 created: 2026-05-07
-authoritative_for: The May-2026 honest-coverage baseline — per-(asset_group, data_type) target coverage % + ratchet schedule. Feeds the workspace QG gate that prevents coverage-regression PRs from landing on `live-defi-rollout`.
+authoritative_for: [May-2026 honest-coverage baseline table + QG coverage-regression ratchet]
 referenced_by: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
 owner:
 last_reviewed: 2026-05-17

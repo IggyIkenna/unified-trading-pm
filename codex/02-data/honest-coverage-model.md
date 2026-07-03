@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Honest Coverage v2 — Two Layers, Two Views, Instrument Gates Download
-summary:
-status:
+summary: >-
+  SSOT for the Honest Coverage v2 model — two layers (Layer-1 instrument-denominator audit GATES Layer-2 download
+  coverage), two views (day-by-day + venue×instrument_type×data_type), the reachable-vs-all-shards coverage formula
+  (empty_confirmed excluded from the reachable denominator), the additive coverage.json v2 schema, the
+  empty-denominator-fails-CLOSED guard, and the UAC-vs-writer vocabulary/grain alignment rule; CK3-certified
+  2026-06-29 (instruments-service@051e5a8).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [honest-coverage, manifest, data-correctness, data-status, uac, instruments, verification]
+related: [availability-manifest-and-data-status.md, honest-absence-downstream-handling.md, honest_coverage_baseline_2026_05.md, pipeline-mode-partition.md, ../04-architecture/instruments-service-as-ssot-for-mtds.md]
 created: 2026-06-28
-authoritative_for:
+authoritative_for: [Honest Coverage v2 model (two-layer / two-view / instrument-gates-download), coverage.json v2 schema, Layer-1 enumeration-completeness matrix]
 referenced_by:
 owner:
 last_reviewed: 2026-06-29

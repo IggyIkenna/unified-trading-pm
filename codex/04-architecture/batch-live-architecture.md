@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Batch / Live Architecture — single SSOT
 summary:
-status:
+  Single SSOT for batch=live — same code path, only the execution-fill source differs; 4 seams
+  (data/feature/ML/output), Redis-Stream inner-loop + PubSub cross-service (no synchronous RPC), anti-drift
+  guards, service audit matrix, matching-engine matchers, and 4-state live/batch capture parity.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-ui, e2e-testing, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [batch-live, pipeline, execution, features, mdps, data-correctness]
+related:
+  [
+    cefi-batch-live.md,
+    alerting-batch-live.md,
+    ../02-data/pipeline-mode-partition.md,
+    ../05-infrastructure/live-pipeline-architecture.md,
+  ]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [cross-asset batch=live architecture invariant]
 referenced_by:
 owner:
 last_reviewed: 2026-06-11

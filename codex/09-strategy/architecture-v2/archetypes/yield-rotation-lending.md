@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: 'Archetype: `YIELD_ROTATION_LENDING`'
 summary:
-status: design
+  'Archetype spec for `YIELD_ROTATION_LENDING` — single-sided (no leverage) supply of stablecoins/assets rotated across
+  chains and protocols by APY differential, gas-aware, via WITHDRAW→BRIDGE→LEND legs; Aave/Compound/Euler/Morpho/Kamino.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, defi, yield, lending, aave, rotation, carry]
+related:
+  [
+    ../families/carry-and-yield.md,
+    yield-staking-simple.md,
+    carry-staked-basis.md,
+    arbitrage-price-dispersion.md,
+    ../../../02-venues/venue-registry-reference.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: ['YIELD_ROTATION_LENDING archetype spec']
 referenced_by:
 owner:
 last_reviewed:

@@ -1,14 +1,17 @@
 ---
 doc_type: codex-runbook
 title: RB-RISK-002 — Liquidation Event
-summary:
-status:
+summary: >-
+  Operator runbook for LIQUIDATION_EVENT_DETECTED (SEV1 minimum): read the 16-field LiquidationInvestigationReport, test
+  the 7 SEV0-escalation predicates, ENTER_SAFE_MODE via Safety Ops on the affected strategy+venue, and file a 48h retro;
+  liquidation is irreversible — recovery/prevention only.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, risk, escalation, defi, kill-switch, monitoring]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

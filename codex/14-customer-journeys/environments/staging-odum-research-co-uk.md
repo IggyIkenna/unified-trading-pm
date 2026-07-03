@@ -2,20 +2,23 @@
 doc_type: codex-ssot
 title: Staging — odum-research.co.uk
 summary:
-status:
+  Staging environment SSOT for odum-research.co.uk — the pb3 prospect-demo and internal-QA surface, synthetic data only,
+  deployed on merge to the staging branch and fully isolated from prod (staging-prefixed Pub/Sub, staging_<domain>
+  BigQuery, odum-staging-<name> GCS); 30-day demo lifecycle.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [staging, demo, ui, environments, deployment, prospect]
+related: [production-odum-research-com.md, ../authentication/firebase-staging.md, ../playbooks/03-warm-prospect-demo.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [odum-research.co.uk staging demo/QA environment]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-trading-system-ui/scripts/deploy-cloud-run.sh]
 ---
 
 # Staging — odum-research.co.uk

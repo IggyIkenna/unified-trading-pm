@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Revenue Projection 2026 — Monthly Build
 summary:
-status:
+  Codex-private month-by-month 2026 revenue build (~£636k total) across baseline, Elysium, BTC ML,
+  sports ML, CME, India Options, Desmond, and signal leasing — with the ~£34k/mo cost decomposition,
+  full P&L (+£92k net), and cumulative cash from £240k opening to £413k year-end above the £150k floor.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin]
-tags: []
-related: []
+tags: [commercial-model, revenue, cash-flow, finance, cost, forecast]
+related:
+  [
+    cash-deployment-plan.md,
+    pricing-building-blocks.md,
+    im-profit-share-structures.md,
+    signal-leasing.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [2026 monthly revenue projection and cashflow model]
 referenced_by:
 owner:
 last_reviewed:

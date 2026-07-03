@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: MDPS long-running efficiency audit — synthesis
-summary:
-status: complete
+summary: >-
+  Operator-readable rollup of the 7 MDPS long-running efficiency findings docs (2026-05-28): engine-mixing (likely
+  majority owner of the 15.7 GB floor), CLI canonical-id silent-zero-blobs, double 526 MB manifest read per shard,
+  execution-shape cost model, observability gaps, axes E/G/H, state inventory. Empirical anchor: Phase-3.2 canary
+  15.7 GB post-day-1 residue (cleanup pulls only ~9 GB); the rest lives in Polars/PyArrow arenas Python GC cannot reach.
+  Recommends pure-Polars + subprocess-per-date for Phase 1.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, mdps, polars, performance, backfill, observability]
+related:
+  - plans/audit/results/mdps_long_running_engine_mixing_2026_05_28.md
+  - plans/audit/results/mdps_long_running_cli_granularity_2026_05_28.md
+  - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope:
+audited_scope: synthesis of the 7 MDPS long-running efficiency findings docs (state-inventory / engine-mixing / cli-granularity / manifest-io / concurrency / observability / axes-e-g-h)
 date: '2026-05-28'
 auditor: claude opus 4.7 (slot main)
 parent_epic: mtds_mdps_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Playbook 2 — Deep Dive (formerly "Research & Documentation")
 summary:
-status:
+  'pb2 Deep Dive implementation — questionnaire-as-access-path light-auth gate to the /briefings hub (six
+  pillar tiles) + sibling /docs //our-story //faq under one session; section renamed "Deep Dive"
+  2026-04-25; Strategy Evaluation DDQ gates the Tier-2 Sandbox demo.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, playbook, briefings, light-auth, ui, onboarding, prospect]
+related:
+  [
+    01-marketing-pre-first-call.md,
+    03-warm-prospect-demo.md,
+    02a-research-im.md,
+    ../authentication/light-auth-briefings.md,
+    ../experience/briefings-hub.md,
+  ]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [pb2 Deep Dive briefings playbook implementation (access gate + hub click path)]
 referenced_by:
 owner:
 last_reviewed:

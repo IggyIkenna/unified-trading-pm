@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Signal Leasing
 summary:
-status:
+  Signal-leasing commercial path (fourth path beyond DART/IM/Reg Umbrella) — Odum sells strategy signal
+  output to counterparties who self-execute; four candidate pricing models (recommended hybrid — £10-20k/mo
+  floor + per-signal uplift + optional 5% P&L share), only non-IM_RESERVED cells, £4k/mo Sept-2026 anchor.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [admin, sales]
-tags: []
-related: []
+tags: [commercial-model, signal-leasing, pricing, dart, strategy, revenue]
+related:
+  [
+    pricing-building-blocks.md,
+    im-profit-share-structures.md,
+    revenue-projection-2026-monthly.md,
+    ../shared-core/signal-broadcast-architecture.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [signal-leasing commercial path (fourth path, pricing models)]
 referenced_by:
 owner:
 last_reviewed:

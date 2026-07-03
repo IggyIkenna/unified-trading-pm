@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: UI / Service Separation
-summary:
-status:
+summary: >-
+  Rule: UI code never lives inside a service repo — every UI is its own git repo consuming services over HTTP/SSE with
+  TypeScript-only quality gates; includes the UI→API repo/dev-port mapping and known violations to extract.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [ui, frontend, refactor, service-separation]
+related: [ui-branding.md, ui-testing-layers.md, ../05-infrastructure/ui-dependency-matrix.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [UI/service repo separation rule]
 referenced_by:
 owner:
 last_reviewed:

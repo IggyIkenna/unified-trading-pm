@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: ml-service architecture
 summary:
-status: stable
+  "ml-training-service + ml-inference-service consolidated into ONE ml-service repo (sub-packages training/ +
+  inference/), ONE flat-deps Docker image, ONE Health-API aggregator, ONE CLI dispatcher on --operation; both
+  predecessor repos archived. Flat-deps chosen over an inference-only split (operator pick 2026-05-19, Option 2)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, ml-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ml, refactor, consolidation, infrastructure, model-tier, ssot]
+related: [features-service-architecture.md, ml-lifecycle.md, promote-workflow-architecture.md, ../05-infrastructure/vm-tarball-deployment.md]
 created: 2026-05-19
 authoritative_for:
+  [
+    ml-service repo consolidation,
+    ml-service sub-package layout,
+    ml-service CLI --operation dispatch,
+    ml-service single-image deployment topology,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

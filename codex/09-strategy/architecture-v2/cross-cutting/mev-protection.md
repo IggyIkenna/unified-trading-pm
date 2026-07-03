@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: 'Cross-Cutting: MEV Protection (strategy-side)'
 summary:
-status:
+  'Strategy-side MEV policy: per-chain / per-notional / per-action submission-mode rules (FLASHBOTS_PROTECT vs
+  PUBLIC_MEMPOOL; JITO_BUNDLE for Solana) mirroring UAC `MevSubmissionMode`. Canonical mechanism + provider table live in
+  `04-architecture/mev-protection.md`; Bloxroute is removed, do not re-introduce.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mev, defi, execution, strategy, venue-selection, uac]
+related: [../../../04-architecture/mev-protection.md, execution-policies.md, venue-selection-split.md, benchmark-fills.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [strategy-side MEV policy mapping (per-strategy MEV policy YAML + per-chain/per-action submission-mode rules)]
 referenced_by:
 owner:
 last_reviewed:

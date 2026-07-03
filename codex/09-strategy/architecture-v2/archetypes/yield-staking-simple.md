@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Archetype: `YIELD_STAKING_SIMPLE`'
 summary:
-status: design
+  'YIELD_STAKING_SIMPLE archetype (family CARRY_AND_YIELD): pure liquid staking — deposit a native PoS asset (ETH/SOL)
+  into an LST protocol (Lido/Rocket Pool/Jito/Marinade) to earn validator yield, no basis leg / leverage / directional
+  view. HOLD_UNTIL_FLIP; realises restaking layers (CARRY_BASE/AVS_CONTINUOUS/ISSUER_SEASONAL) via dust conversion;
+  100 bps LST-depeg auto-unwind kill-switch. Code backport DEFERRED.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, staking, lst, yield, carry-yield]
+related:
+  [../families/carry-and-yield.md, carry-staked-basis.md, carry-recursive-staked.md, ../cross-cutting/restaking-reward-economics.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: ['YIELD_STAKING_SIMPLE archetype spec']
 referenced_by:
 owner:
 last_reviewed:

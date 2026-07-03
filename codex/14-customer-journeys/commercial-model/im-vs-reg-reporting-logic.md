@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: IM vs Reg Umbrella Reporting — Same UI, Two Commercial Framings
 summary:
-status:
+  SSOT for the IM-allocator vs Reg-Umbrella distinction — same /services/reports UI surface (rule-03
+  same-system), differing by which panels mount per entitlement and how data is scoped; maps the
+  divergent block composition (block 3 IM-only vs block 2 Reg-only) and per-audience Tier A/B pricing.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [sales, admin]
-tags: []
-related: []
+tags: [commercial-model, im, reg-umbrella, reporting, pricing, ui]
+related:
+  [
+    im-profit-share-structures.md,
+    building-block-packaging.md,
+    pricing-building-blocks.md,
+    ../shared-core/shared-reporting-core.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [IM vs Reg Umbrella reporting commercial-framing distinction]
 referenced_by:
 owner:
 last_reviewed:

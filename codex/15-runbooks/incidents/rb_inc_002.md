@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: RB-INC-002 — SEV1 Investigation Handling
 summary:
-status:
+  Operator runbook for SEV1 IncidentEnvelope handling (material trading event / unresolved degradation, system in
+  protected mode) — read the agent investigation report, decide continue/pause/disable-venue/close-all via DART Safety
+  Ops with typed-confirm.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, sev1, escalation, investigation, live-trading]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

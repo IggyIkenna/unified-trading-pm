@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_CARRY`'
 summary:
-status: design
+  'Archetype spec for `VOL_CARRY` — harvests the structural IV-over-RV premium by selling 7-21 DTE
+  straddles/strangles/iron-condors for theta, delta-hedged; core carry_pnl=(IV²−RV²)×vega/2; Deribit/OKX/CBOE.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, carry, theta, delta-hedge]
+related: [vol-arb-rv-iv.md, vol-term-structure-arb.md, vol-trading-options.md, vol-0dte-pin-risk.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_CARRY archetype spec']
 referenced_by:
 owner:
 last_reviewed:

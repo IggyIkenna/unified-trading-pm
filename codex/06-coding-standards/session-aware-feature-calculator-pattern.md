@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Session-aware feature calculator pattern
-summary:
-status:
+summary: >-
+  TradFi session-aware feature-calculator pattern — calculators classify each bar via UAC
+  market_session.classify_session() (never hand-roll from clock time), adjust
+  rolling-window denominators to the in-session bar count, and honour session-typed
+  manifest reasons (EXPECTED_WEEKEND / HOLIDAY / OUTSIDE_TRADING_HOURS); half-day + holiday
+  calendars are DEFERRED.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [features-service, unified-api-contracts]
 scope: [engineer]
-tags: []
-related: []
+tags: [features, tradfi, honest-coverage, session, uac, data-quality]
+related: [../02-data/honest-absence-downstream-handling.md, feature-service-pattern.md, ../02-data/per-asset-group-bucket-layouts.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [session-aware feature calculator pattern (TradFi market-session classification + session-adjusted rolling windows)]
 referenced_by:
 owner:
 last_reviewed:

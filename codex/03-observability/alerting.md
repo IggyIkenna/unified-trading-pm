@@ -2,16 +2,27 @@
 doc_type: codex-ssot
 title: Alerting
 summary:
-status:
+  "Alerting SSOT: every autonomous recovery action must alert (nothing silent) — delivery via Telegram (primary) /
+  PagerDuty (critical) / Twilio voice+SMS (permanent Layer-3 fallback); Slack deprecated. Full autonomous-recovery
+  alert-tier matrix (T1 CRITICAL–T4 INFO) + Incident Gateway routing; routing rules are UAC-driven (~56 AlertRule
+  entries), first-match-wins with a * fallback."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [alerting, escalation, monitoring, self-healing, observability, live-trading]
+related:
+  [
+    data-feed-sla-registry.md,
+    lifecycle-events.md,
+    coordination-events.md,
+    ../04-architecture/autonomous-recovery-matrix.md,
+    ../04-architecture/incident-gateway-state-machine.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [autonomous-recovery alert matrix, alert delivery channels]
 referenced_by:
 owner:
 last_reviewed:

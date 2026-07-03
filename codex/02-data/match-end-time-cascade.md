@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Match end-time resolution cascade
-summary:
-status: living
+summary: >-
+  SSOT for sports fixture match_end_time derivation — the first-match-wins priority cascade (api_football native →
+  SFI progressive-stats freeze-detect → FootyStats post-match → Understat post-match → kickoff+120min fallback)
+  behind UTL resolve_match_end_time(), the defensible UTC match-conclusion timestamp used for post-match
+  available_at stamping, odds settlement and live=batch latency; plus the UAC schema columns it lands in.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, footystats, data-quality, validation, instruments]
+related: [availability-manifest-and-data-status.md, honest-absence-downstream-handling.md, ../04-architecture/batch-live-architecture.md, ../../plans/epics/sports_master.md]
 created: 2026-05-13
-authoritative_for:
+authoritative_for: [sports fixture match_end_time resolution cascade]
 referenced_by:
 owner: sports-domain
 last_reviewed: 2026-05-17

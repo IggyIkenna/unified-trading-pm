@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `STAT_ARB_CROSS_SECTIONAL`'
-summary:
-status: design
+summary: >-
+  `STAT_ARB_CROSS_SECTIONAL` archetype — cross-sectional ranking: scores a universe (Russell 1000 / S&P 500 / crypto
+  top-50) via an ML or factor model, longs top-M and shorts bottom-M, rebalancing when ≥ `rebalance_threshold_pct` of
+  the basket changes; dollar-neutral with `max_single_name_pct` cap, emitting a multi-instrument TRADE set.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [stat-arb, cross-sectional, factor, strategy, ml]
+related:
+  [
+    ../families/stat-arb-pairs.md,
+    stat-arb-pairs-fixed.md,
+    ../cross-cutting/portfolio-allocator.md,
+    ../category-instrument-coverage.md,
+    ml-directional-continuous.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [STAT_ARB_CROSS_SECTIONAL archetype specification]
 referenced_by:
 owner:
 last_reviewed:

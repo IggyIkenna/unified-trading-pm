@@ -2,18 +2,22 @@
 doc_type: audit-instruction
 title: mtds_mdps_master_audit_instructions
 summary:
-status:
+  The single canonical audit for the MTDS + MDPS surface, in two modes — Correctness (adapter parity across 23 batch +
+  18 live adapters, manifest schema, honest absence, batch=live) and Efficiency (memory pathology, engine choice, CLI
+  granularity, per-shard state, observability); both write findings to plans/audit/results/ and audit against the
+  source-aware/Era-B CF-1…CF-14 SSOT.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
+tags: [audit, mtds, mdps, manifest, batch-live, performance, canonicalisation]
 related: [active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md, active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md]
 created: '2026-05-22'
 tier: L1
 parent_epic: mtds_mdps_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

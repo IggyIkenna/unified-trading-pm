@@ -2,16 +2,27 @@
 doc_type: codex-ssot
 title: Tenderly Execution Provider
 summary:
-status:
+  Pluggable ExecutionProvider protocol for on-chain execution — TenderlyExecutionProvider spins a Tenderly VNet fork per
+  batch/paper run so those modes exercise the exact same contract code paths as live (only the RPC URL differs);
+  BenchmarkFillProvider is the no-op oracle-price fallback; the factory routes on mode and falls back if creds are
+  absent.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, tenderly, batch-live, simulation, fork, provider]
+related:
+  [
+    execution-modes-and-chain-resolution.md,
+    defi-execution-overview.md,
+    interface-credential-convention.md,
+    custody-providers.md,
+    amm-slippage-simulation.md,
+  ]
 created: 2026-03-30
-authoritative_for:
+authoritative_for: [Tenderly VNet execution provider + BenchmarkFillProvider]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

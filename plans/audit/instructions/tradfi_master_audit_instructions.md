@@ -2,18 +2,29 @@
 doc_type: audit-instruction
 title: tradfi_master_audit_instructions
 summary:
-status:
+  Weekly audit checklist for TradFi adapters (Databento + MASSIVE dual-source;
+  Polygon.io removed) — scaffold checks (a-g), row-level `source`-column
+  provenance (h-o + CF-26 fetching-adapter stamps, not SOURCE_PRIORITY[0]),
+  SOURCE_PRIORITY read-time reconciliation, Era-B chains, VIX 15m Barchart+Yahoo,
+  and CF-1…CF-14 canonical-form on the market-data-tick-tradfi-prd _index.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, tradfi, databento, pipeline-mode, data-correctness, data-provenance, manifest, canonicalisation]
+related:
+  [
+    canonical_form_cross_service_audit_checklist.md,
+    ../results/tradfi_massive_migration_audit_2026_06_08.md,
+    ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    ../../../codex/02-data/tradfi-databento-sourcing-ssot.md,
+  ]
 created: 2026-05-22
 tier: L0
 parent_epic: tradfi_master
-cadence:
+cadence: Weekly
 verifier:
 lifespan:
 type: audit-instructions

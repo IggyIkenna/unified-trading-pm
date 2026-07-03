@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Service-Contract Audit — Reusable Template
 summary:
-status: stable
+  Reusable 7-pattern upstream-to-downstream service-contract audit template (SSOT reference flow, manifest
+  emission, schema-version, honest-absence reasons, expected_coverage, error classification, bucket-SSOT)
+  with grep recipes, a 4-dimensional matrix, and a QG-ratchet phase.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [audit, manifest, ssot, data-correctness, quality-gates, instruments]
+related: [../02-data/availability-manifest-and-data-status.md, ../02-data/honest-absence-downstream-handling.md, shard-level-failure-isolation.md]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [service-contract audit reusable template (7-pattern upstream-downstream matrix)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

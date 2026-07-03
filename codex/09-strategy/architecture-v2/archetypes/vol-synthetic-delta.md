@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_SYNTHETIC_DELTA`'
 summary:
-status: design
+  'Archetype spec for `VOL_SYNTHETIC_DELTA` — replicates delta-1 exposure via a same-strike call/put synthetic (long
+  call + short put, or reverse) to avoid perp funding and define max loss; used when funding > synthetic cost; Deribit/OKX/CBOE.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, synthetic-delta, carry, delta-hedge]
+related: [carry-basis-perp.md, vol-straddle.md, vol-overlay-covered-calls.md, vol-carry.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_SYNTHETIC_DELTA archetype spec']
 referenced_by:
 owner:
 last_reviewed:

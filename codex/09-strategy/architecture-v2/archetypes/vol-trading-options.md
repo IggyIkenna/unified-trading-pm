@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_TRADING_OPTIONS`'
 summary:
-status: design
+  'Archetype spec for `VOL_TRADING_OPTIONS` (legacy general vol-view engine) — delta-hedged options expressing IV/RV,
+  skew, term, or soft-surface-residual dislocations via straddle/strangle/butterfly/calendar/risk-reversal; the granular
+  VOL_* archetypes carve out its specific expressions.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, iv-rv, skew, delta-hedge]
+related: [arbitrage-price-dispersion.md, stat-arb-pairs-fixed.md, vol-carry.md, vol-arb-rv-iv.md, ../families/vol-trading.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: ['VOL_TRADING_OPTIONS archetype spec']
 referenced_by:
 owner:
 last_reviewed:

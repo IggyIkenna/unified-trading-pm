@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_TERM_STRUCTURE_ARB`'
 summary:
-status: design
+  'Archetype spec for `VOL_TERM_STRUCTURE_ARB` — a discrete dual-expiry calendar spread that buys the underpriced tenor
+  and sells the overpriced one on term-slope z-score (|z| > 2), vega-neutral and delta-hedged; Deribit/CBOE.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, term-structure, calendar-spread, mean-reversion]
+related: [vol-term-structure-slope.md, vol-carry.md, vol-cross-asset-spread.md, vol-leaps-convexity.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_TERM_STRUCTURE_ARB archetype spec']
 referenced_by:
 owner:
 last_reviewed:

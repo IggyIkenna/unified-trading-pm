@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Sports GCS Path SSOT
 summary:
-status:
+  Canonical GCS path resolver for sports parquet (UAC candidate_parquet_paths / SPORTS_DATA_TYPE_TO_FOLDER); three
+  layouts (PER_LEAGUE/BARE/FLAT) plus non-obvious entity= folder names — never hardcode paths (phantom-row trap).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-api-contracts]
 scope: [engineer]
-tags: []
-related: []
+tags: [sports, uac, single-walk, data-correctness, audit, canonicalisation]
+related: [codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-adapter-dependency-order.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [sports GCS parquet path resolver and entity-folder naming, sports path-layout taxonomy (PER_LEAGUE/BARE/FLAT)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

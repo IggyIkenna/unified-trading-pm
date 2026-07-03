@@ -2,20 +2,30 @@
 doc_type: codex-ssot
 title: Investment Management — Warm-Prospect Demo
 summary:
-status:
+  pb3b warm-prospect IM demo on staging — walks 4 allocator surfaces (catalogue filtered to offered slots, positions+P&L
+  attribution, NAV+fee accrual+investor statements, reconciliation+audit) with entitlement-scoped data; overlays the
+  shared client-reporting-demo-walkthrough click-path.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [sales, prospect]
-tags: []
-related: []
+tags: [investment-management, demo, prospect, sales, reporting, warm-prospect, ui]
+related:
+  [
+    im-decision-journey.md,
+    staging-demo-journey.md,
+    ../shared-core/client-reporting-demo-walkthrough.md,
+    ../shared-core/org-fund-client-entity-model.md,
+    ../commercial-model/im-vs-reg-reporting-logic.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [pb3b IM warm-prospect demo experience]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts]
 ---
 
 # Investment Management — Warm-Prospect Demo

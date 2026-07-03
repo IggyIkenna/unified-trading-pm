@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Chain Environment Resolution
-summary:
-status:
+summary: Resolves canonical chain names (ETHEREUM/ARBITRUM) to chain IDs + RPC URLs via CHAIN_ENV (mainnet/testnet/fork); resolve_chain_id/resolve_rpc_url in the UAC registry; 19 EVM chains + Solana + Bitcoin.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [chain-resolution, defi, uac, execution, rpc, configuration]
+related: [execution-modes-and-chain-resolution.md, wallet-hierarchy-and-capital-flow.md, defi-execution-overview.md]
 created: 2026-03-30
-authoritative_for:
+authoritative_for: [canonical chain-name to chain-id and RPC-URL resolution]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

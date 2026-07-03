@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Platform Walkthrough & Controlled Demo / UAT Context
-summary:
-status:
+summary: >-
+  Target-state playbook for the controlled demo/UAT access context: the accessContext enum, demo-session magic-link
+  entitlement issuance, persona-scoped `/services/*` surfaces, and the demo→production shared-component-stack continuity
+  rules.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [unified-trading-system-ui]
 scope: [admin, sales, engineer]
-tags: []
-related: []
+tags: [ui, onboarding, mvp, questionnaire, validation]
+related: [./signup-signin-workflow.md, ./prospect-questionnaire-flow.md]
 created: 2026-04-26
-authoritative_for:
+authoritative_for: [controlled demo/UAT access context (accessContext enum + demo-session entitlement issuance + persona-scoped surfaces)]
 referenced_by:
 owner:
 last_reviewed:

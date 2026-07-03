@@ -1,21 +1,30 @@
 ---
 doc_type: audit-result
 title: MDPS Long-Running Axes E, G, H — Three Adjacent Findings
-summary:
-status: complete
+summary: >-
+  Three adjacent MDPS long-running findings. Axis E: pre-count loop (venues-only) diverges from the processing scanner
+  (venues+instrument_ids) → misleading "Listed 18 vs 4" operator logs; 2-line fix passes instrument_ids= to
+  pre-count.
+  Axis G: _iter_chain_symbol_dfs (Polars predicate-pushdown per-symbol streaming) is the architecturally-correct
+  reference for high-volume bundles (peak = one symbol, not the 165 MB bundle). Axis H: all 21 registered adapters are
+  stateless — adapter caches are NOT the 25 GB floor owner (closes that hypothesis).
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, mdps, polars, performance, backfill, single-walk]
+related:
+  - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
+  - plans/audit/results/mdps_long_running_state_inventory_2026_05_28.md
+  - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope:
+audited_scope: MDPS long-running axes E (pre-count vs processing-scanner divergence), G (chain-bundle streaming reference pattern), H (adapter-registry dispatch state-retention)
 date: '2026-05-28'
 auditor: claude opus 4.7 (slot main subagent)
 parent_epic: mtds_mdps_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

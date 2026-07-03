@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Cross-Chain Yield Arbitrage
-summary:
-status:
+summary: "Pre-v2: cross-chain yield arbitrage (DEFI_CROSSCHAIN_YIELD_ARB_1H) — capture same-asset APY spreads across chains (e.g. Aave USDC 8% Arbitrum vs 3% Ethereum) by bridging when spread > bridge+gas costs."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, cross-chain, strategy, yield, arbitrage]
+related:
+  [
+    ../../architecture-v2/archetypes/yield-rotation-lending.md,
+    cross-chain-sor-rebalancing.md,
+  ]
 created: 2026-03-28
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

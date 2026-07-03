@@ -1,14 +1,17 @@
 ---
 doc_type: codex-runbook
 title: RB-RISK-003 — Liquidation Risk / Margin Danger
-summary:
-status:
+summary: >-
+  Operator runbook for LIQUIDATION_RISK_IMMINENT (any of 6 pre-detection triggers): pull margin ratio + HF + collateral,
+  then reduce / close-all / transfer-collateral / manual-flatten per response_policy; success = margin above threshold
+  and HF > 1.5, else escalate to SEV0.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, risk, defi, escalation, monitoring, kill-switch]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

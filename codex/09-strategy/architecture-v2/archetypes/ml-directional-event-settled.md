@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `ML_DIRECTIONAL_EVENT_SETTLED`'
-summary:
-status: design
+summary: >-
+  `ML_DIRECTIONAL_EVENT_SETTLED` archetype — event-settled ML value betting: model P(outcome) vs vig-free implied odds,
+  gates on `model_confidence_threshold` / `max_odds` / `min_edge_threshold`, stakes fractional Kelly (capped at
+  `max_stake_fraction`), routes to best odds via Unity; covers 1X2 / O-U / BTTS / 1H / HT-FT + binary prediction.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ml, sports, odds, prediction, kelly]
+related:
+  [
+    ../families/ml-directional.md,
+    ml-directional-continuous.md,
+    ../../../02-venues/unity-integration.md,
+    ../axes/staking-methods.md,
+    rules-directional-event-settled.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [ML_DIRECTIONAL_EVENT_SETTLED archetype specification]
 referenced_by:
 owner:
 last_reviewed:

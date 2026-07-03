@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Sports Halftime ML
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] Sports halftime ML strategy (SPORTS_ML_HALFTIME) — re-prices 2H outcomes at the HT
+  whistle using live HT state (score/xG/possession/cards) in a halftime-trained model; per-sport configs
+  (soccer/NFL/NBA), fractional-Kelly sizing tuned for thinner HT markets. Replaced by architecture-v2
+  ml-directional-event-settled.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, sports, ml, odds, prediction, features]
+related: [pre-game-ml.md, first-half-prediction.md, ../../architecture-v2/archetypes/ml-directional-event-settled.md]
 created: 2026-04-15
 authoritative_for:
 referenced_by:

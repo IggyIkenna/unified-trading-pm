@@ -2,13 +2,16 @@
 doc_type: codex-ssot
 title: Cloud-Agnostic Build Lineage
 summary:
-status: stub-post-cutover
+  STUB (post-cutover) — planned SSOT for dual-cloud artifact parity — one git SHA producing digest-equal Docker images +
+  tarballs on GCP Artifact Registry + AWS ECR/S3, with lineage metadata, parity verification, and rollback. Not yet
+  implemented; VM tarball deployment is the live path.
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
+tags: [migration, aws-migration, infrastructure, ci-cd]
 related: [codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/launcher-script-ssot.md, codex/05-infrastructure/cloud-agnostic-script-pattern.md]
 created: 2026-05-07
 authoritative_for: How Docker images, VM tarballs, and code tarballs are built, tagged, and tracked across BOTH GCP Artifact Registry and AWS ECR so that a single git SHA produces parity-verified artifacts on both clouds.

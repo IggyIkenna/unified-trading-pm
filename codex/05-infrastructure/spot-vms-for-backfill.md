@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Spot VMs for Backfill — the provisioning standard
 summary:
-status: living
+  HARD-RULE provisioning standard — every backfill/idempotent VM launcher defaults to GCP Spot
+  (--provisioning-model=SPOT --instance-termination-action=DELETE --no-restart-on-failure; ~60-91% cheaper), with
+  --on-demand/ON_DEMAND=true the only opt-out and live/forward/cron/paper launchers staying on-demand.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [spot-vm, backfill, cost, infrastructure, deployment, runbook]
+related:
+  [
+    vm-launcher-runbook.md,
+    vm-tarball-deployment.md,
+    deployment-observability.md,
+    aws-migration-cost-snapshot-2026-05-07.md,
+  ]
 created: 2026-06-27
-authoritative_for:
+authoritative_for: [Spot-VM provisioning standard for backfill launchers]
 referenced_by:
 owner:
 last_reviewed: 2026-06-27

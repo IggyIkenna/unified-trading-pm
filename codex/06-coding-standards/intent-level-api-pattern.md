@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Intent-Level API Pattern (Service Protocol Abstraction)
 summary:
-status:
+  Intent-level cloud API pattern — services declare WHAT+MODE via UCI factories (get_data_sink / get_data_source /
+  get_event_bus / get_service_mode) and OWN their partition structure; libraries decide HOW, deployment injects WHERE.
+  Service source MUST NOT name gcs/s3/bigquery/pubsub/bucket/dataset; routing_key + PROTOCOL_DATA_SINK_BACKEND select
+  the concrete backend, enforced by QG STEP 5.11/5.12.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [intent-level-api, uac, quality-gates, pipeline-mode, infrastructure]
+related: [../02-data/pipeline-mode-partition.md, quality-gates.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [intent-level cloud API pattern (get_data_sink/get_data_source/get_event_bus), routing_key backend selection]
 referenced_by:
 owner:
 last_reviewed:

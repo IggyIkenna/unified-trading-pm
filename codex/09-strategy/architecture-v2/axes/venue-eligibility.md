@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Axis: Venue Eligibility'
 summary:
-status:
+  Venue-eligibility axis — the slow-moving set of venues a strategy MAY execute on plus per-venue constraints (max
+  notional, min liquidity, fee tier, Unity child-book preferences, chain eligibility), vs the fast-moving execution-time
+  SOR pick. Eligibility auto-gated on credentials + adapter action support + capability registry; declares
+  venue_routing_mode (SOR_AT_EXECUTION / STRATEGY_PICKED / META_BROKER) and pre-funding vs SOR.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, venue-eligibility, execution, defi, cefi, sports]
+related:
+  [../../../04-architecture/slow-fast-routing-split.md, ../../../02-venues/venue-registry-reference.md, ../cross-cutting/transfer-rebalance.md, ../cross-cutting/mev-protection.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [venue-eligibility axis (strategy-config venue set + per-venue constraints)]
 referenced_by:
 owner:
 last_reviewed:

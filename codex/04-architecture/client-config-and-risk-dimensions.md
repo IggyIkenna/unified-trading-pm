@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Client Configuration and Risk Dimensions
-summary:
-status:
+summary: Client config schema (ClientConfig/DefiClientConfig in UAC internal.client_config) plus the five per-client risk dimensions (market/liquidity/counterparty/funding/reward) and how strategy/risk/PBM/execution services consume them.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [client-config, risk, defi, cefi, health-factor, entitlements, features]
+related: [share-class-architecture.md, defi-risk-monitoring.md, ../09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md]
 created: 2026-04-03
-authoritative_for:
+authoritative_for: [per-client configuration schema and the five risk dimensions]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

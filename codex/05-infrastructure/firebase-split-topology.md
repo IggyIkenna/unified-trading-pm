@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Firebase project split — compute on prod, Firebase on staging
 summary:
-status: reference
+  "UAT (uat.odum-research.com) runs Cloud Run compute on the PROD project (central-element-323112) but Firebase
+  (Auth/Firestore/Storage) on the odum-staging project — a deliberate split needing three cross-project IAM bindings
+  (datastore.user + storage.admin + firebaseauth.admin) on odum-staging for the prod compute SA. Server-side API
+  routes MUST use firebase-admin, never the client SDK (which silently no-ops on API routes, returning 200 + empty
+  submissionId)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [ui, firebase, infrastructure, staging, auth, gcp]
+related: [auth-setup.md, ../08-workflows/environment-mode-philosophy.md]
 created: 2026-05-07
-authoritative_for:
+authoritative_for: [firebase project split topology]
 referenced_by:
 owner: ikenna
 last_reviewed: 2026-06-25

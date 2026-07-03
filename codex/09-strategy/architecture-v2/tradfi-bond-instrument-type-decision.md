@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: TradFi Bond Instrument-Type Decision (2026-04-21)
-summary:
-status:
+summary: Decision record — no bond instrument-type is added; treasury ETFs (TLT/IEF) on IBKR are spot equities covered by the existing STAT_ARB_PAIRS_FIXED×TRADFI×spot cell, resolving the Wave-5 audit TradFi·bond GAP without an enum change (actual Treasury futures stay dated_future).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, tradfi, catalogue, ssot-audit, instruments]
+related: [strategy-registry-v2.md, category-instrument-coverage.md, legacy-family-migration.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [TradFi treasury-ETF bond instrument-type decision]
 referenced_by:
 owner:
 last_reviewed:

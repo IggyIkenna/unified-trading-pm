@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Service Orchestration Patterns
-summary:
-status:
+summary: >-
+  14 service orchestration patterns from the instruments-service + MTDS refactors
+  (34,765L→850L) — import contract, handler-orchestrator split, ServiceBootstrap entry,
+  flat config, single adapter, error-by-category, preflight, async-gather, plus the HARD
+  per-shard try/finally cleanup rule; instruments-service is the reference impl.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [service-structure, instruments, mtds, refactor, execution, uac]
+related: [service-structure-standards.md, ../04-architecture/shard-level-failure-isolation.md, cli-convention.md, ../05-infrastructure/vm-tarball-deployment.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [service orchestration patterns (handler-orchestrator split + library role boundaries), batch-service per-shard cleanup try/finally rule]
 referenced_by:
 owner:
 last_reviewed:

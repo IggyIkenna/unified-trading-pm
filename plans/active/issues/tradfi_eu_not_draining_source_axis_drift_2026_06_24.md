@@ -8,7 +8,7 @@ asset_group: [tradfi]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
+tags: [tradfi, manifest, expected-unattempted, pipeline-mode, databento, data-correctness, single-walk, backfill]
 related: [instruments_catalogue_incremental_rollup_2026_06_29]
 created: 2026-06-24
 parent_epic: tradfi_master

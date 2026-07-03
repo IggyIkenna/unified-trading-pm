@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Triage matrix — master table
 summary:
-status:
+  Master triage table classifying all 158 unified-trading-system-ui + 19 user-management-ui routes as
+  HUB/LINKED/ORPHAN/DYNAMIC/BROKEN_LINK_TARGET with a promote/refactor/merge-into/partial-archive/defer action and
+  confidence; deprecate count is intentionally 0.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, page-triage, audit, navigation, refactor, consolidation]
+related: [broken-links.md, duplicate-clusters.md, partial-archive.md, ../roadmap/next-waves.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [UI page-triage classification matrix (route -> action)]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Test matrix — playbook × persona × environment
 summary:
-status:
+  The Playwright test-spec inventory — maps each playbook (pb1..pb3c + visibility-slicing) to its spec file, primary +
+  other personas, and environments (local/static/staging-smoke), plus the expected assertions per spec and the
+  parametrised 10-persona visibility-slicing matrix. Staging specs deferred until staging Firebase is provisioned.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, testing, playwright, personas, customer-journeys, visibility-slicing]
+related: [example-playbook-test.md, README.md, ../authentication/README.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [Playwright test-spec matrix (spec x persona x environment)]
 referenced_by:
 owner:
 last_reviewed:

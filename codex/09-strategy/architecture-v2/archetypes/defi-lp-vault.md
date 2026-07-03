@@ -1,21 +1,31 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `DEFI_LP_VAULT`'
-summary:
-status: code-shipped
+summary: >-
+  `DEFI_LP_VAULT` archetype — deposit into an ERC-4626 vault (Yearn V3 / Morpho / Aave Vaults / Sommelier) and hold
+  while `vault_share_price_apy_bps` >= `min_apy_bps` (default 100 = 1%); exit on APY-below-floor or `max_drawdown_bps`
+  (default 500 = 5%) breach; single-leg ATOMIC deposit/redeem resolved via LegController.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, market-making, erc-4626, vault, yield, strategy]
+related:
+  [
+    ../families/market-making.md,
+    defi-lp-concentrated.md,
+    defi-lp-pool.md,
+    yield-rotation-lending.md,
+    yield-staking-simple.md,
+  ]
 created: 2026-05-01
-authoritative_for:
+authoritative_for: [DEFI_LP_VAULT archetype specification]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [strategy-service/strategy_service/engine/strategies/v2/defi_lp/vault.py]
 archetype: DEFI_LP_VAULT
 family: MARKET_MAKING
 venue_universe: [YEARN_V3, MORPHO, AAVE_VAULT, SOMMELIER]

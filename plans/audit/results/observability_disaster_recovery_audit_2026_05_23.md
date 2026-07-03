@@ -2,20 +2,25 @@
 doc_type: audit-result
 title: Observability — Disaster-Recovery Target-Model Gap Audit (2026-05-23)
 summary:
-status: RED
+  Gap audit of current observability/DR surface vs the disaster_recovery.md target model (§1-22) for the May-23
+  cutover — Layer-0 deterministic safety (kill-switch, circuit breakers, 76 AlertCodes, 56 LIVE_ALERT_RULES) is
+  strong but the layer above is missing — verdict RED, 11 P0 gaps (Incident Gateway, Agent Recovery Controller,
+  LLM recovery-audit agent, recon age tracking, drawdown/liquidation policy, Twilio+physical fallback, 22 runbooks,
+  Safety Ops tab) → 11 P0 plans spawned totalling ~86 calibrated AI-days.
+status: fail
 nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, features-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [observability, escalation, monitoring, execution, defi, runbook, slack, audit]
+related: [plans/audit/instructions/observability_master_audit_instructions.md, plans/epics/escalation_and_disaster_recovery_master.md, codex/04-architecture/recovery-defence-in-depth-layers.md, codex/04-architecture/autonomous-recovery-matrix.md]
 created: 2026-05-23
-audited_scope:
+audited_scope: observability + disaster-recovery surface (alerting/execution/strategy/batch-live-reconciliation services + codex + 17 day-1 scratch scenarios) vs disaster_recovery.md target model §1-22
 date: '2026-05-23'
 auditor: claude + operator
 parent_epic: observability_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

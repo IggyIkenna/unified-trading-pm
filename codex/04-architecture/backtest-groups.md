@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Backtest Groups (A / B / C)
 summary:
-status:
+  Three backtest groups — A ml-training (versioned model artifacts) · B strategy (alpha via benchmark fills,
+  zero exec-alpha) · C execution (exec-alpha via matching engine vs the same benchmark); scenario-overlay is a
+  4th axis on B/C, not a group.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [backtest, strategy, ml, execution, features, verification]
+related: [batch-live-architecture.md, artifact-versioning.md, ../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [backtest groups A/B/C split]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

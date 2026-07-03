@@ -2,20 +2,30 @@
 doc_type: codex-runbook
 title: PagerDuty escalation policy
 summary:
-status:
+  Operational escalation chain + on-call rotation for live-trading alerts — P0/P1 ack targets (5min/15min), the
+  0→5→10→20→30-min re-page ladder, and the 2-operator 12-hour Ikenna/Harsh split (May-23 cutover). Owns timing +
+  rotation + ack protocol; the severity-enum ↔ P-tier ↔ routing mapping lives in the README severity glossary.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [runbook, escalation, live-trading, slack, monitoring, observability]
+related:
+  [
+    codex/15-runbooks/alerting/README.md,
+    codex/15-runbooks/alerting/alert-code-taxonomy.md,
+    codex/15-runbooks/alerting/threshold-tuning.md,
+    codex/15-runbooks/alerting/operator-playbook.md,
+  ]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
+authoritative_for: [operational PagerDuty escalation chain + live-trading on-call rotation]
 ---
 
 # PagerDuty escalation policy

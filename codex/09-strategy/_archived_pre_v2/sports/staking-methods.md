@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Sports Staking Methods
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] Cross-cutting sports staking reference — six sizing methods across two code paths:
+  kelly.py live (fractional / portfolio / simultaneous / venue-constrained Kelly) and betting_strategies.py
+  backtest (FixedDollar / FixedPercentage / AdaptiveDaily / FractionalKelly V2), all sharing the Kelly
+  formula. Replaced by architecture-v2 axes/staking-methods.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, sports, staking, odds]
+related: [kelly.md, value-betting.md, ../../architecture-v2/axes/staking-methods.md]
 created: 2026-04-16
 authoritative_for:
 referenced_by:

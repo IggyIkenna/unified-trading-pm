@@ -2,20 +2,29 @@
 doc_type: audit-result
 title: Verdict pack — CEFI (G4 ⑬–⑲ pre-apply, R3/R7 on HEAD 2026-06-17)
 summary:
-status:
+  CEFI G4 verdict regenerated on HEAD (06-17) — 🟢 GREEN dry-run; projection 3,886,859 rows nearly DOUBLES captured
+  coverage (+1,158,515 → 64.1%, +15.2pp) via CF-11 honest-absence re-emit + processed pass-through; gate-RED is
+  by-design (733 garbage removed, 375 spot-verified phantom downgrades, 3,981 CF-11 reclassify). Awaiting operator
+  apply.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, honest-coverage, data-status, cefi, migration, canonicalisation, pipeline-mode, data-correctness]
+related:
+  - verdict_defi.md
+  - verdict_tradfi.md
+  - ../r3_beta_renders_2026_06_11/verdict_cefi.md
 created: 2026-06-17
 audited_scope:
-date:
-auditor:
+  CEFI projected-v9 index (mtds@03fbc9b) vs current _index on HEAD, manifest_diff_cefi.json adjudication (garbage
+  removals, phantom downgrades, CF-11 status-transitions) + orphan sweep
+date: 2026-06-17
+auditor: ikennaigboaka
 parent_epic: cefi_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

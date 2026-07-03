@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Allocator Pipeline Contract
 summary:
-status:
+  'WIP contract (DELTA 2026-05-22) for the strategy-service allocator pipeline sitting between archetype signal
+  generation and StrategyInstruction emission: risk-gate application order (leverage cap → drawdown gate → exposure cap →
+  per-instrument limit), sizing formula (signal_size_pct × portfolio_nav × leverage_multiplier via guard_rails), and
+  ArchetypeAllocationDirective.weight override semantics. Full contract to be specified per strategy_master.'
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, trading-agent-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [strategy, allocator, execution, risk, reconciliation]
+related:
+  [instrument-type-leverage-matrix.md, strategy-execution-runtime.md, archetype-param-schema-inventory.md, ../../../04-architecture/trading-agent-service-directive-pipeline.md]
 created: 2026-05-22
-authoritative_for:
+authoritative_for: [archetype-signal-to-allocator-to-execution instruction pipeline contract]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

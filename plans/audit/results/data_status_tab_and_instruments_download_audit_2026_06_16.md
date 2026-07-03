@@ -2,20 +2,36 @@
 doc_type: audit-result
 title: Data-status tab + instruments download audit — deployment-api / deployment-ui / instruments universe
 summary:
-status: complete
+  Read-only root-caused audit of the data-status tab + instruments CSV download
+  path (deployment-api/deployment-ui/instruments universe) — two operator-flagged
+  blockers, namely DeFi CSV download 502 (finding A, downloader drops chain and
+  rebuilds the split venue path while the writer stores the combined venue token)
+  and instruments-store to-100% migration NOT applied (finding H, still legacy v8
+  flat shape). Plus IS drilldown "out of scope" (reference-data types in no coverage
+  registry), curated CeFi universe missing EIGEN+16 coins, Deribit spot wrongly
+  dropped, and non-canonical TradFi contract-code naming.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, data-status, instruments, ui, defi, cefi, tradfi, canonicalisation, honest-coverage]
+related:
+  [
+    ../../active/data_status_tab_and_downloads_remediation_2026_06_16.md,
+    ../../active/defi_manifest_canonicalisation_2026_06_01.md,
+  ]
 created: 2026-06-16
 audited_scope:
+  data-status tab (deployment-ui frontend + deployment-api backend) + instruments
+  CSV download route + instruments-service/UAC could-exist universe — findings A-K
+  each root-caused with file:line. NOT covered — remediation execution (todos live
+  in the paired remediation plan).
 date: 2026-06-16
 auditor: ikennaigboaka
 parent_epic: instruments_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

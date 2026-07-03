@@ -2,18 +2,22 @@
 doc_type: codex-runbook
 title: DEFI_HEALTH_FACTOR_CRITICAL Runbook
 summary:
-status: active
+  Operator response to DEFI_HEALTH_FACTOR_CRITICAL (CRITICAL, PagerDuty+Telegram) — an Aave position HF is in the warning
+  band (default threshold 1.05, above the HF<1.02 kill-switch trigger). Verify HF on-chain, identify collateral-price vs
+  debt-accrual driver, then wait/monitor, pre-emptively deleverage to HF>=1.30 via the DART wizard (preferred), or allow
+  KILL_SWITCH_DEFI_LIQUIDATION_RISK to fire.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, features-service]
 scope: [engineer, admin]
-tags: []
+tags: [alerting, runbook, defi, features, kill-switch, escalation, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md, codex/15-runbooks/alerting/defi_weeth_depeg.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: on-call operator (Ikenna / Harsh by rotation)
+cadence: on-demand (incident response)
+verifier: health factor recovers above threshold; no kill-switch fired; position audit passes
 last_executed:
 code_refs:
 authoritative_for: Operator response when an Aave (or other money-market) position's health factor crosses the critical threshold but has NOT yet triggered the kill-switch. Pre-emptive deleverage candidate.

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Glossary
 summary:
-status:
+  "Single-definition-per-term glossary for the customer-journeys domain — Odum services (DART, IM, Reg
+  Umbrella), client structure (org/fund/client, Pooled vs SMA), the four catalogues, visibility/access tiers,
+  playbook families (pb1/pb2/pb3), and environments."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library]
 scope: [sales, prospect, investor]
-tags: []
-related: []
+tags: [glossary, customer-journey, dart, sales, prospect, catalogue]
+related: [audiences-and-journeys.md, information-architecture.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [customer-journeys glossary terms (org/fund/client, four catalogues, playbook families)]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_TERM_STRUCTURE_SLOPE`'
 summary:
-status: design
+  'Archetype spec for `VOL_TERM_STRUCTURE_SLOPE` — trades term-structure shape via a daily Heston/SVI parametric slope
+  fit, entering front-vs-back straddle legs on slope z-score extremes with continuous roll; Deribit/CBOE.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, term-structure, slope, mean-reversion]
+related: [vol-term-structure-arb.md, vol-carry.md, vol-leaps-convexity.md, vol-cross-asset-spread.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_TERM_STRUCTURE_SLOPE archetype spec']
 referenced_by:
 owner:
 last_reviewed:

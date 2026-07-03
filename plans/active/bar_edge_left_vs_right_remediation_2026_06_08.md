@@ -1,14 +1,18 @@
 ---
 doc_type: plan
 title: Bar-edge (open/left vs close/right) systemic remediation — close the gate blind-spot, fix latent pre-agg ingestion, recompute the left-edge features corpus
-summary:
+summary: >-
+  Systemic remediation to enforce one canonical candle edge (RIGHT = t_close) everywhere: closes the
+  assert_bar_boundary_contract blind-spot with a new check_bar_edge_open_ingestion.py AST gate (STEP 5.92),
+  fixes the two features-service left-edge re-resamplers (candle_resampler/flow_interaction, fixed
+  @7a4fafd9), hardens latent pre-agg fetchers, and recomputes the pre-fix left-edge features corpus.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
+tags: [book-microstructure, features, data-correctness, quality-gates, mdps, backfill, verification]
 related: []
 created: 2026-06-08
 parent_epic: mtds_mdps_master

@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Scenario Overlay Semantics
-summary:
-status:
+summary: >-
+  Scenario overlay data-contract SSOT — the 3 scenario-provenance parquet columns (scenario_id /
+  run_id / synthetic=True), per-row scenario_id propagation through
+  MTDS->MDPS->features->strategy->ScenarioReport, the available_at discipline under stale-hold
+  mutations (lookahead downgraded via SCENARIO_OVERLAY_LOOKAHEAD_DOWNGRADE, never suppressed), the
+  deferred MANIFEST-tap scenario_id column, and per-consumer scenario-row handling.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service]
 scope: [engineer, admin]
-tags: []
+tags: [scenario, manifest, data-correctness, validation, monitoring]
 related: [plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md Phase 8.C]
 created: 2026-05-18
-authoritative_for:
+authoritative_for: [scenario overlay parquet provenance columns, scenario_id propagation contract]
 referenced_by:
 owner:
 last_reviewed:

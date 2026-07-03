@@ -2,16 +2,28 @@
 doc_type: codex-ssot
 title: Prediction Batch/Live Architecture
 summary:
-status:
+  Prediction (asset_group=prediction) batch/live shape — venue≠source rule (Polymarket/Kalshi are VENUES, not merged
+  sources), the prediction_canonical_question_group shard atom (market_id is a parquet column not a shard axis),
+  IS-owned MARKET_LIFECYCLE could-exist bounds, the CLOB matching-engine seam, and source-aware pipeline_mode
+  (batch_polymarket_clob / replay_polymarket_clob).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [prediction, batch-live, pipeline-mode, manifest, mtds, instruments, data-correctness]
+related:
+  [
+    batch-live-architecture.md,
+    ../02-data/pipeline-mode-partition.md,
+    cefi-batch-live.md,
+    tradfi-batch-live.md,
+    sports-batch-live.md,
+  ]
 created: 2026-05-16
 authoritative_for:
+  [prediction asset-group batch/live architecture, prediction canonical-question-group shard atom]
 referenced_by:
 owner:
 last_reviewed: 2026-06-11

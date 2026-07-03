@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Deployment-Service Event Sink Chain
 summary:
-status: living
+  "Deployment-service runs two concurrent event chains: Chain A orchestrator/CLI null-sink (sink=None, local log
+  only), Chain B VM heartbeat PubSubEventSink → `deployment-events` topic (7-day Pub/Sub TTL; monitor.py pulls →
+  deployment-status GCS registry), Chain C vm-exec-gcs-tee (run.log + EXIT_STATUS, permanent). Known gap: no GCS
+  export sub for permanent VM-event archival. Includes the canonical sink decision tree for new emitters."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [deployment-service, observability, monitoring, infrastructure, pubsub, event-log]
+related: [vm-deployment-events-audit.md, vm-event-emission-audit.md, live-deployment-monitoring.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [deployment-service event sink chain]
 referenced_by:
 owner: deployment-platform
 last_reviewed: 2026-05-17

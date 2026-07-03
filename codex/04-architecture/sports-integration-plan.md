@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Sports Integration Plan
 summary:
-status:
+  Sports (football betting) as an asset class, not a separate system — service-augmentation map, canonical
+  fixture-ID matching, 19 feature categories x horizon (T-24h/T-60m/T-0/HT), and the 2026-03-01 consolidation
+  of the 4 standalone sports services into the shared pipeline.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, instruments-service, market-data-processing-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, features, ml, execution, odds]
+related: [sports-batch-live.md, sports-live-odds-connectivity.md, ../02-data/per-asset-group-bucket-layouts.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [sports asset-class integration strategy (service-augmentation vs standalone consolidation)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

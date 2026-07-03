@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `CARRY_STAKED_BASIS`'
-summary:
-status: code-shipped
+summary: >-
+  Archetype CARRY_STAKED_BASIS: USDC-share-class market-neutral basis — SWAP -> STAKE -> TRANSFER LST as
+  perp cross-margin -> SHORT perp, earning staking yield + funding at delta 0. LST_AS_MARGIN is the ONLY
+  allowed structure (SPLIT_STAKE + COLLATERAL_BORROW deleted); eligibility DERIVED from
+  VENUE_COLLATERAL_MATRIX (4 live slots 2026-05-20); staking APY from on-chain lst_rates, not vendor.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, carry, defi, cefi, execution, archetype, uac]
+related:
+  [
+    carry-recursive-staked.md,
+    carry-staked-basis-dated.md,
+    ../families/carry-and-yield.md,
+    ../cross-cutting/pnl-attribution.md,
+    ../cross-cutting/restaking-reward-economics.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [CARRY_STAKED_BASIS archetype specification (LST_AS_MARGIN staked basis)]
 referenced_by:
 owner:
 last_reviewed:

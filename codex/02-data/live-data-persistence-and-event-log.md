@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Live data persistence and central event log
-summary:
-status:
+summary: >-
+  SSOT for the live=batch event-log persistence spine — MTDS/MDPS/features/strategy/ml/execution all publish/read
+  via the UTL EventTransport facade (InMemoryTransport for paper, Pub/Sub for live), three automatic persistence
+  tiers (hot/warm/cold) classified by SINK_MATRIX (52 shards) + RetentionClass, giving paper(W)==batch-rerun(W)
+  trade-for-trade determinism (epsilon=0); 52 Pub/Sub topics + warm-GCS subscriptions + daily compaction
+  provisioned in Terraform.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, e2e-testing]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [live-trading, event-log, pipeline-mode, reconciliation, data-pipeline, mtds, mdps]
+related: [pipeline-mode-partition.md, ../09-strategy/operational/paper-batch-live-reconciliation.md, ../04-architecture/batch-live-architecture.md]
 created: 2026-06-26
-authoritative_for:
+authoritative_for: [live=batch event-log persistence spine (hot/warm/cold tiers + SINK_MATRIX + EventTransport facade), paper==batch-rerun determinism proof]
 referenced_by:
 owner:
 last_reviewed: 2026-06-26

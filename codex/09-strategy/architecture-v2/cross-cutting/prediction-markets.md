@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Prediction Markets — Cross-Cutting Concern
 summary:
-status:
+  'Prediction markets (Polymarket/Kalshi) as a three-role surface — feature source, execution venue, arb surface — plus
+  a three-tier classification (use-case × domain × equivalent-instrument), the `canonical_question_group` recurring-market
+  SSOT, and per-market lifecycle timestamps. Kalshi API host is now `api.elections.kalshi.com`.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [prediction, strategy, features, execution, arbitrage, instruments, uac]
+related:
+  [../../operational/prediction-markets-codification-gaps.md, ../../../02-data/prediction-schema-paths.md,
+  ../../../04-architecture/instruments-live-architecture.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [prediction-markets three-role model (feature/execution/arb) + three-tier market classification framework]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

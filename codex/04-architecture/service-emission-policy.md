@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Service emission policy (Architecture View)
 summary:
-status:
+  Architecture seam of the service emission policy — how UAC policy-declaration, UTL publish_with_policy,
+  the UAC next_state resolver, and the 3 v8 manifest columns compose one-direction-per-arrow with no circular imports.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, uac, data-status, honest-coverage, observability]
+related: [../02-data/service-output-emission-semantics.md, ../02-data/availability-manifest-and-data-status.md, ../02-data/honest-absence-downstream-handling.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [service emission policy four-piece architecture seam (UAC-declaration/UTL-publisher/UAC-resolver/v8-manifest-column composition)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

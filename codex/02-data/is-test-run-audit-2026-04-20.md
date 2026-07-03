@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: IS_TEST_RUN Audit — Per-Service Status (2026-04-20)
-summary:
-status:
+summary: >-
+  Per-service inventory (2026-04-20) of how IS_TEST_RUN=true routes writes to the -test-{pid} sibling bucket —
+  which services carry the is_test_run config field, how each routes writes (UTL get_write_bucket_name auto-honours
+  it; services that build bucket names manually must swap the suffix themselves), and the MDPS dep-checker
+  IS_TEST_RUN auto-trigger; Phase-1 deliverable of the institutional smoke matrix plan.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [smoke-test, bucket-name, infrastructure, audit, verification]
+related: [per-asset-group-bucket-layouts.md, bucket-naming-and-config.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [IS_TEST_RUN test-bucket write routing per-service audit (2026-04-20)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

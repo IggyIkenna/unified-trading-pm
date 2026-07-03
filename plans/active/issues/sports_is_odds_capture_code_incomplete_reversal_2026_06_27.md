@@ -13,7 +13,7 @@ related: []
 created: 2026-06-27
 parent_epic: sports_master
 priority: P0
-source:
+source: ['phantom audit follow-up to #6 ODDS reversal 2026-06-27']
 assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout

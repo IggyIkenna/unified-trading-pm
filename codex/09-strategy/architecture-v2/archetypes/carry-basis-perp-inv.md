@@ -1,17 +1,29 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `CARRY_BASIS_PERP_INV`'
-summary:
-status: design
+summary: >-
+  Archetype CARRY_BASIS_PERP_INV (renamed 2026-05-18 from CARRY_RECURSIVE_BORROW_PERP_HEDGED): recursive
+  ETH-LST supply-borrow loop on Aave/Morpho + a USDC-margined CeFi perp short sized to E_actual for delta
+  neutrality. Yield = R_lend + R_fund + R_usdc - gas - slippage; perp venue Hyperliquid PRIMARY / Bybit
+  <=50% SECONDARY; recursion amplifies the spread, not the delta.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, carry, defi, cefi, execution, archetype, bybit]
+related:
+  [
+    carry-recursive-borrow-perp-hedged.md,
+    carry-recursive-staked.md,
+    carry-recursive-borrow-lending-only.md,
+    carry-basis-perp.md,
+    carry-staked-basis-dated.md,
+    ../families/carry-and-yield.md,
+  ]
 created: 2026-05-18
-authoritative_for:
+authoritative_for: [CARRY_BASIS_PERP_INV archetype specification (recursive borrow + perp-hedged carry)]
 referenced_by:
 owner:
 last_reviewed:

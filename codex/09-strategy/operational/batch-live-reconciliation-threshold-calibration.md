@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Batch-Live Reconciliation — Threshold Calibration Analysis
 summary:
-status:
+  The smoke-reconciler pass/fail criteria + 7-day-soak calibration procedure for the F21 batch-live reconciliation
+  service. Defines the three green gates (bps_delta_max, drawdown_pct, fill_rate_min) sourced from UAC
+  RECON_GREEN_THRESHOLDS (carry_staked_basis 50bps/2%/0.95, leveraged_funding_arb 75bps/3%/0.92).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [reconciliation, live-trading, thresholds, calibration, alerting, execution]
+related:
+  [
+    paper-batch-live-reconciliation.md,
+    cli-promote-paths.md,
+    ../../04-architecture/kill-switch-circuit-breaker.md,
+  ]
 created: 2026-05-22
 authoritative_for:
+  [batch-live reconciliation green-threshold calibration (RECON_GREEN_THRESHOLDS gates + 7-day-soak procedure)]
 referenced_by:
 owner:
 last_reviewed:

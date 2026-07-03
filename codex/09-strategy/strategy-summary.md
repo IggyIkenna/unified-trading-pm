@@ -1,21 +1,27 @@
 ---
 doc_type: codex-ssot
 title: Strategy Architecture v2 — Summary
-summary:
-status:
+summary: >-
+  Human-readable summary of Strategy Architecture v2 (2026-04-17 clean-start) — 9 families, 57 archetypes
+  (the UAC `StrategyArchetype` enum is the canonical SSOT; this doc reflects it), 7 axes of composition,
+  10 cross-cutting concerns, and a 5-layer strategy identity (family → archetype → instance → config →
+  derived categories). Execution talks via a polymorphic `StrategyInstruction` with 14 action types;
+  batch=live is guaranteed by the benchmark-fills contract; target ceiling ~240-300 instances without
+  code explosion. Supersedes the per-category (cefi/defi/sports/tradfi/prediction) structure.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [strategy, archetype, strategy-family, execution, uac, ml]
+related: [architecture-v2/README.md, architecture-v2/cross-cutting/pnl-attribution.md, architecture-v2/MIGRATION.md]
 created: 2026-04-24
-authoritative_for:
+authoritative_for: [strategy architecture v2 narrative summary (9 families / 57 archetypes / 7 axes / 10 cross-cutting overview)]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py]
 ---
 
 # Strategy Architecture v2 — Summary

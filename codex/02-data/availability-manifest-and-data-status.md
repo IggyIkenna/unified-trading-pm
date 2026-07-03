@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Availability Manifest & Data Status — SSOT
 summary:
-status:
+  SSOT for the GCS availability manifest — the 4-state capture_status ledger (captured / empty_confirmed /
+  attempted_failed / expected_unattempted), schema-v9 AvailabilityRecord + universal source column, per-service
+  shard atoms, the honest-coverage % denominator, the proof-of-honest-absence gate, and the DeFi multi-bucket
+  read rule.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, data-status, capture-status, honest-coverage, single-walk, data-correctness, defi]
+related: [honest-absence-downstream-handling.md, pipeline-mode-partition.md, chart-candle-delivery-flow.md, data-status-drilldown.md, ../05-infrastructure/manifest-consolidator-ssot.md]
 created: 2026-04-13
-authoritative_for:
+authoritative_for: [availability manifest schema + capture_status 4-state ledger]
 referenced_by:
 owner:
 last_reviewed: 2026-06-25

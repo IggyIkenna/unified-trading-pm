@@ -1,14 +1,19 @@
 ---
 doc_type: plan
 title: Capability wizard + manifest — strategy/venue/instrument/execution/risk capability SSOT, strategy prospectus generator, walkthrough wizard UI
-summary:
+summary: >-
+  Builds a machine-generated capability manifest (SSOT of every edge the system supports), a per-strategy
+  prospectus generator (mechanics/decision-logic/exposures/fund-flow/risk/backtest), and a progressive
+  walkthrough wizard UI where each dropdown IS the availability answer. Four use cases: visibility,
+  end-to-end parameterization, two-sided code audit (logical vs unbuilt dead-ends), client-lite configurator.
+  Manifest exporter is a new PM openapi-family generator; static capability stays separate from runtime data-status.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]
-tags: []
+tags: [strategy, ui, catalogue, registry, ssot-audit, execution, docspec, verification]
 related: [plans/epics/strategy_master.md, plans/epics/deployment_and_user_management_master.md, plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md, plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md]
 created: 2026-06-11
 parent_epic: strategy_master

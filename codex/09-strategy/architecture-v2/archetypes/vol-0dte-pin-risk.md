@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_0DTE_PIN_RISK`'
 summary:
-status: design
+  'Archetype spec for `VOL_0DTE_PIN_RISK` — manages extreme near-expiry gamma when spot pins a high-OI strike, detecting
+  pin proximity then carrying, flattening, or rolling the short-gamma book; Deribit + CBOE SPX, 50ms premium SLA.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, pin-risk, delta-hedge, 0dte]
+related: [vol-0dte-gamma-scalping.md, vol-carry.md, vol-straddle.md, vol-term-structure-arb.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_0DTE_PIN_RISK archetype spec']
 referenced_by:
 owner:
 last_reviewed:

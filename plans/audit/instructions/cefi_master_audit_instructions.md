@@ -2,18 +2,25 @@
 doc_type: audit-instruction
 title: cefi_master_audit_instructions
 summary:
-status:
+  Weekly CeFi-adapter audit (Binance/Bybit/OKX/Deribit/Hyperliquid/Aster/Kraken 7+ venues, CCXT layer, CEFFU custody,
+  perp funding + spot readers) — verifies classify_venue_error wiring, ADAPTER_FETCH_FAILED emission, no hardcoded venue
+  universe/URLs, IS→MTDS contract, batch/live parity, and canonical-form drift against the CF-1…CF-14 / ①–⑫ SSOT.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, cefi, binance, bybit, deribit, manifest, instruments, canonicalisation]
+related:
+  [
+    canonical_form_cross_service_audit_checklist.md,
+    ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+  ]
 created: 2026-05-22
 tier: L0
 parent_epic: cefi_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

@@ -1,15 +1,20 @@
 ---
 doc_type: plan
 title: carry_staked_basis funding-carry scan — exploratory analysis harness + journal
-summary:
+summary: >-
+  Exploratory analysis harness + journal for the CeFi funding leg of carry_staked_basis: scans ~30 perp
+  coins across venues, ranks each day by net carry (annualised short-perp funding + staking APY where the
+  short venue accepts the LST as collateral), holds the best and rotates as carry decays. Harness is
+  e2e-testing/scripts/defi/staked_basis_funding_scan.py (analysis-only; production path is strategy-service
+  CarryStakedBasisRankAllocator, batch==live).
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, features-service, ibkr-gateway-infra]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, defi, cefi, features, research, smoke-test]
+related: [../epics/strategy_master.md]
 created: 2026-06-16
 parent_epic: strategy_master
 assigned_vm: NA

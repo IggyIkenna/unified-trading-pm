@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: GCS Object Operations — Canonical Pattern
 summary:
-status:
+  "SSOT for per-object GCS copy/delete/describe: use UTL gcs_copy_object / gcs_delete_object / gcs_describe_object
+  (google-cloud-storage REST, ~50-200ms, GIL-released) instead of gcloud/gsutil subprocesses (~500ms/call) — measured
+  250x throughput (~8500 vs ~34 parquets/min at 32 workers). Also codifies the HARD whole-corpus migration contract:
+  parallel + observable + date-shardable + uniform v9 schema + legacy-deletion (one canonical SSOT remains)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [unified-trading-library, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, gcs, migration, performance, single-walk, data-correctness]
+related: [gcs-lifecycle-policies.md, manifest-consolidator-ssot.md, ../02-data/availability-manifest-and-data-status.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [gcs object-operation helpers, whole-corpus migration performance contract]
 referenced_by:
 owner:
 last_reviewed:

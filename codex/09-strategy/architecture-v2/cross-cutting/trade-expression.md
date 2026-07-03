@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Cross-Cutting: Trade Expression'
 summary:
-status:
+  'Runtime machinery that composes/decomposes a view into instrument legs: ATOMIC bundle, LEADER_HEDGE, continuous
+  delta-hedge attachment, paced basket, on-chain protocol composite, and synthetic decomposition — shared handlers across
+  every strategy family. Partial atomic fills are never permitted; decomposition lives in execution `expression_library`.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, execution, expression, defi, options]
+related: [../axes/expression.md, execution-policies.md, venue-account-coordination.md, ../archetypes/carry-recursive-staked.md]
 created: 2026-04-17
 authoritative_for:
+  [runtime trade-expression composition machinery (ATOMIC/LEADER_HEDGE/delta-hedge/basket/protocol-composite + synthetic
+  decomposition)]
 referenced_by:
 owner:
 last_reviewed:

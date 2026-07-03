@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [quickmerge, quality-gates, scripts, infrastructure, verification]
 related: []
 created: 2026-06-23
 parent_epic: infrastructure_master

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Investor Relations
 summary:
-status:
+  The /investor-relations/* section serves Odum's investors, advisors and board (NOT client prospects) — a distinct
+  audience from the pb1/pb2/pb3 playbooks; personas investor/advisor/admin, per-deck entitlements, and partial-archive
+  rules promoting redacted slides into pb2 briefings.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [investor-relations, ui, persona, entitlements, briefings, page-triage]
+related: [../authentication/README.md, ../playbooks/02-research-and-documentation.md, ../page-triage/triage-matrix.md, ../page-triage/partial-archive.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [investor-relations UI section (audience separation from playbooks)]
 referenced_by:
 owner:
 last_reviewed:

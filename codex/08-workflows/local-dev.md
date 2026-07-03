@@ -1,17 +1,25 @@
 ---
 doc_type: codex-ssot
 title: Local Development Guide — backend orchestration SSOT
-summary:
-status: BACKEND-ORCHESTRATION-SSOT (frontend sections trimmed 2026-05-12 per UI-1/UI-14)
+summary: >-
+  Backend-orchestration local-dev SSOT: dev-start.sh / dev-stop.sh / dev-status.sh, the 3 mode axes (CLOUD_MOCK_MODE /
+  DISABLE_AUTH / MOCK_STATE_MODE), the API port registry (8004-8026), MockStateStore, GCP/AWS emulators, and Tenderly
+  DeFi fork testing.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, client-reporting-api, deployment-api, deployment-ui, execution-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [scripts, defi, verification, infrastructure, smoke-test]
+related:
+  [
+    ../05-infrastructure/runtime-tiers-and-deployment.md,
+    ../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
+    ../06-coding-standards/quality-gates.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [local backend-orchestration dev workflow (dev-start.sh mode axes + API port registry + MockStateStore)]
 referenced_by:
 owner:
 last_reviewed: 2026-06-25

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Archetype Strategy Parameters
 summary:
-status: stub
+  STUB pointer for per-archetype parameter schema (target LTV, rebalance threshold, hedge ratio, entry/exit signals)
+  validated by StrategyConfig in strategy-service; the concrete source-cited realisation is
+  archetype-param-schema-inventory.md, full per-archetype specs under architecture-v2/archetypes/.
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, archetypes, params, defi]
+related: [archetype-param-schema-inventory.md, allocator-pipeline-contract.md]
 created: 2026-05-21
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

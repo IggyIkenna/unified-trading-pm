@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Quickmerge Architecture
 summary:
-status:
+  The quickmerge commit pipeline — 6 stages (dep-validation → pre-flight audit → local QG → act simulation → auto-fix →
+  push/PR) plus the .qg_last_passed_sha two-pass sentinel that lets --agent skip Pass-2 QG re-runs when the sentinel ==
+  HEAD.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [quickmerge, quality-gates, ci, workflows, infrastructure]
+related: [../06-coding-standards/quality-gates.md, ../08-workflows/ci-cd-flow.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [quickmerge pipeline stages, quickmerge --agent .qg_last_passed_sha sentinel gate]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

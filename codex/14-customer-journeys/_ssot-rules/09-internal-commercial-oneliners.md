@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Rule 09 — Internal commercial one-liners
 summary:
-status:
+  "The three canonical internal one-liner definitions of DART / IM / Reg Umbrella (verbatim, internal-only),
+  their external three-sentence expansion pattern (position → differentiator → proof), and the per-path internal
+  competitive-frame table."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, sales, dart, tone, branding]
+related: [02-tone-and-posture.md, 03-same-system-principle.md, 04-dart-commercial-axes.md, ../glossary.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [internal commercial one-liners (DART/IM/Reg-Umbrella positioning + expansion pattern)]
 referenced_by:
 owner:
 last_reviewed:

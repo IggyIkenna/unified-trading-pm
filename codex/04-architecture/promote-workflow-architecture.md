@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Promote Workflow Architecture — May-23 SSOT
 summary:
-status: living
+  May-23 promote-workflow SSOT — dual-track (CLI primary via run-paper.sh/run-live.sh + preflight-cutover.sh; UI
+  secondary via POST /api/promote with 5 pre-flight gates), the StrategyMaturityPhase state machine (only
+  CANDIDATE→PAPER_1D and PAPER_1D→LIVE_EARLY valid pre-cutover), MinimalCandidateManifest, and promote-at-strategy-grain
+  (per-client isolation happens at the VM layer, not the promote layer).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [promote, strategy, mvp, execution, defi, cefi]
+related:
+  [
+    per-client-isolation-architecture.md,
+    ../05-infrastructure/strategy-shard-vm-topology.md,
+    ../05-infrastructure/strategy-vm-launcher-shape.md,
+  ]
 created: 2026-05-15
 authoritative_for:
+  [May-23 promote workflow (dual-track CLI/UI), StrategyMaturityPhase promote state machine]
 referenced_by:
 owner: strategy-platform
 last_reviewed: 2026-05-17

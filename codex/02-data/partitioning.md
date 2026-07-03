@@ -1,17 +1,26 @@
 ---
 doc_type: codex-ssot
 title: Data Partitioning Conventions
-summary:
-status:
+summary: >-
+  Data partitioning conventions SSOT — the universal by_date/day={date} hive axis, bucket naming
+  {domain}-{asset_group}-{project_id} (canonical asset_group= vs legacy category=), per-service extra
+  dims (data_type/instrument_type/timeframe/feature_group), the BigQuery external-table hive
+  requirement, and live/ vs by_date/ micro-batch routing with end-of-day GCS compose.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [partitioning, manifest, data-pipeline, mtds, mdps, features]
+related: [codex/02-data/per-asset-group-bucket-layouts.md, codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-03-27
 authoritative_for:
+  [
+    GCS hive-partitioning conventions,
+    BigQuery external-table partition requirement,
+    live-vs-batch GCS path routing,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

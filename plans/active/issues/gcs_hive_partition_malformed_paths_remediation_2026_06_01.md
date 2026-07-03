@@ -8,8 +8,13 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mtds, manifest, canonicalisation, tradfi, cefi, data-correctness, single-walk]
+related:
+  [
+    codex/02-data/pipeline-mode-partition.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+    plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
+  ]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 priority: P2

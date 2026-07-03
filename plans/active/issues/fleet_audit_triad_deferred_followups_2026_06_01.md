@@ -8,8 +8,13 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, backfill, tradfi, defi, ui, runbook, plan-hygiene]
+related:
+  [
+    codex/05-infrastructure/vm-log-archival.md,
+    plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
+    plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
+  ]
 created: 2026-06-01
 parent_epic: infrastructure_master
 priority: P2

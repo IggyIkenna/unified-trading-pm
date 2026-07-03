@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_MARKET_MAKING`'
 summary:
-status: design
+  'Archetype spec for `VOL_MARKET_MAKING` — posts two-sided vol quotes around an SVI/SSVI fair-value surface with
+  inventory skew, earning the bid-ask spread and delta-hedging accumulated option inventory; Deribit/OKX, 50ms premium SLA.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, market-making, delta-hedge, book-microstructure]
+related: [vol-carry.md, vol-0dte-gamma-scalping.md, market-making-continuous.md, vol-arb-rv-iv.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_MARKET_MAKING archetype spec']
 referenced_by:
 owner:
 last_reviewed:

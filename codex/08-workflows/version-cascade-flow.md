@@ -1,15 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Version Cascade Flow — see ci-cd-flow.md (redirect)
-summary:
-status:
+summary: >-
+  Superseded redirect stub (2026-06-18): the version-cascade content now lives in ci-cd-flow.md § "Dependency promotion",
+  dependency-cascade.md, and version-graduation.md; kept only so existing index/rule references resolve.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ci-cd, dependency-management, refactor]
+related: [./ci-cd-flow.md, ./dependency-cascade.md, ./version-graduation.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

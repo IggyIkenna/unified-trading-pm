@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Sports Value Betting
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] Sports value betting (SPORTS_VALUE_BETTING) — signals when model_probability −
+  implied_probability > min_value_edge (3% default) across best bookmaker odds, edge-proportional sizing
+  (edge×2 clamped to 5% of bankroll), optional Kelly integration; CLV is the profitability predictor.
+  Replaced by architecture-v2 ml-directional-event-settled.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, sports, ml, odds, value-betting, features]
+related: [pre-game-ml.md, kelly.md, ../../architecture-v2/archetypes/ml-directional-event-settled.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Sports Market Making
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] Sports exchange market-making — two-way back+lay quoting around a
+  vig-free/sharp/model theo on Betfair/Smarkets/Betdaq, earns the spread, halts on market suspension
+  (goal/red-card/VAR) via marketVersion protection, with normal/elevated/critical inventory-skew
+  rebalancing. Replaced by architecture-v2 market-making-event-settled.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, sports, market-making, odds, book-microstructure, execution]
+related: [../../architecture-v2/archetypes/market-making-event-settled.md, ../../architecture-v2/archetypes/market-making-continuous.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

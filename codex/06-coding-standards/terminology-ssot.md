@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Terminology SSOT
-summary:
-status:
+summary: >-
+  UI terminology SSOT — every user-facing strategy-system label MUST come from the TERMS.*
+  constants in lib/architecture-v2/terminology.ts, never inline literals; locks "asset
+  group" (not "asset class"), CeFi/DeFi casing, catalogue-level names, and access-badge
+  labels; includes the rename/add-term procedures.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [terminology, ui, strategy, defi, cefi]
+related: [strategy-display-conventions.md, ../04-architecture/commercial-service-families.md]
 created: 2026-04-25
-authoritative_for:
+authoritative_for: [UI terminology constants SSOT (TERMS.* user-facing labels)]
 referenced_by:
 owner:
 last_reviewed:

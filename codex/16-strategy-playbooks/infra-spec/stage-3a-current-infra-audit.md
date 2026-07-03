@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: Stage 3A — Current-infra audit
-summary:
-status:
+summary: >-
+  Point-in-time (2026-04-20) audit of the shipped 177-route UI vs SSOT-grade integrity — 4 debt axes (11/12 UAC gaps
+  unshipped, 4 asymmetric catalogue services, flat-string entitlements, single-env demo provisioning) plus the
+  13-building-block Exists/Gap/Blocker table; baseline for Stage 3B/3C/3D/3E. DELTA 2026-05-22: re-run the §2.3/§3 greps
+  before treating as current-state.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, execution-service, features-service, strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, ui, uac, ssot-audit, docspec, refactor]
+related:
+  [
+    codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+    codex/09-strategy/architecture-v2/uac-registry-gaps.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [Stage 3A current-infra audit snapshot (2026-04-20 UI + UAC-gap + entitlement + demo-provisioning baseline)]
 referenced_by:
 owner:
 last_reviewed:

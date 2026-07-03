@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Sports Adapter Dependency Order — SSOT
 summary:
-status:
+  api-football is T0 (canonical fixtures/leagues/teams) for every sports date; T1 enrichment adapters
+  (footystats/understat/transfermarkt/SFI/open-meteo/betfair) read its GCS parquet, gated by a factory-preflight DependencyError.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, instruments, backfill, footystats, data-correctness, orchestrator]
+related: [codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/per-asset-group-bucket-layouts.md, codex/04-architecture/shard-level-failure-isolation.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [sports adapter T0/T1 run-order dependency, api-football pre-flight DependencyError gate]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

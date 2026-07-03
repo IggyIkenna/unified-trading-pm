@@ -2,18 +2,27 @@
 doc_type: codex-runbook
 title: Position Reconciliation Deploy Gate
 summary:
-status: active
+  Operator contract for scripts/deploy/position-reconciliation-check.sh — the pre/post-deploy gate wired into
+  cloud-build-router.yml that snapshots /positions before a deploy and compares after, failing the rollout on lost
+  positions, disappeared position-ids, or quantity drift beyond tolerance. Currently non-blocking when /positions is
+  absent; flips to a hard gate once the endpoint ships.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [batch-live-reconciliation-service, execution-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [runbook, reconciliation, deploy-gate, execution, position, quality-gates]
+related:
+  [
+    ../04-architecture/reconciliation-resolution.md,
+    ../04-architecture/separation-of-concerns.md,
+    ../../plans/active/master_to_live_defi_2026_05_23.md,
+  ]
 created: 2026-05-12
-owner:
-cadence:
-verifier:
+owner: deployment-service maintainer (cloud-build-router invocation) + execution-service / position-balance-monitor-service maintainers (/positions endpoint contract)
+cadence: per-deploy (every pre-deploy + post-deploy invocation of `cloud-build-router.yml` on trading-critical services)
+verifier: pre-deploy `snapshot` produces JSON file in $RUNNER_TEMP; post-deploy `compare` diffs against snapshot; exit 0 on match; exit nonzero on quantity-delta-out-of-tolerance / position-id-disappeared.
 last_executed:
 code_refs:
 author: slot 8 sub-agent (Position-balance audit PB-9 PRE_CUTOVER)

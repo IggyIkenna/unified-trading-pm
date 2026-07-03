@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Capital Structure, Custody, and Regulatory Context
 summary:
-status:
+  Custody + regulatory context per venue category — DeFi (Copper/Fireblocks client wallet), Sports (firm Unity
+  pool), CeFi (client SMA, no-withdrawal API keys), TradFi (IBKR sub-account tunnel); we always face ONE client
+  (fund mechanics abstracted); per-mode credential, onboarding, and P&L-attribution.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [capital, execution, cefi, defi, sports, tradfi]
+related: [capital-flow-model.md, capital-efficiency-patterns.md, ../02-venues/venue-registry-reference.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [per-category custody, regulatory posture, and onboarding structure]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

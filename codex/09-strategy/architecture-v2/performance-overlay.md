@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: '`<PerformanceOverlay>` — Continuous Backtest / Paper / Live Timeline'
-summary:
-status:
+summary: SSOT for the <PerformanceOverlay> component + GET /api/v1/strategy-instances/{id}/performance — continuous backtest/paper/live P&L timeline in overlay/stitched/split modes, four allocator query patterns, the canonical three-colour palette, and the guarantee that the live series is always odum-live (never a real client run).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, unified-trading-api, unified-trading-system-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [strategy, ui, performance, reconciliation, monitoring]
+related: [strategy-lifecycle-maturity.md, strategy-catalogue-3tier.md, dashboard-services-grid.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [PerformanceOverlay backtest/paper/live timeline component + performance API]
 referenced_by:
 owner:
 last_reviewed:

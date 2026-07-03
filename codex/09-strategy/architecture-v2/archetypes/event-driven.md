@@ -1,17 +1,26 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `EVENT_DRIVEN`'
-summary:
-status: design
+summary: >-
+  `EVENT_DRIVEN` archetype — schedules positioning around known scheduled events (FOMC / CPI / NFP / OPEC / EIA /
+  earnings); computes surprise = (realized − consensus) / σ, emits directional TRADEs when `|surprise|` >
+  `min_surprise_sigma` (default 1.5) and flattens at `exit_after_minutes`; per-event notional cap + post-event vol-exit.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [event-driven, strategy, macro, tradfi, ml]
+related:
+  [
+    ../families/event-driven.md,
+    ../category-instrument-coverage.md,
+    ../cross-cutting/execution-policies.md,
+    ml-directional-event-settled.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [EVENT_DRIVEN archetype specification]
 referenced_by:
 owner:
 last_reviewed:

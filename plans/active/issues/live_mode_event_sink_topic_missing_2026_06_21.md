@@ -8,8 +8,13 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [live-trading, observability, mtds, mdps, self-healing, infrastructure]
+related:
+  [
+    plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
+    plans/active/issues/fleet_data_acquisition_health_2026_06_21.md,
+    codex/02-data/live-data-persistence-and-event-log.md,
+  ]
 created: 2026-06-21
 parent_epic: observability_master
 priority: P2

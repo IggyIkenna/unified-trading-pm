@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Config Dynamic Injection Standard
-summary:
-status:
+summary: >-
+  Coding standard for dynamic config injection — the config-vs-code split (config hot-reloads via
+  `DomainConfigReloader`, code changes redeploy), `UnifiedCloudConfig`-only sourcing with `@lru_cache(maxsize=1)`
+  singletons, the `get_config_store()` factory, and the `os.getenv()` ban (QG STEP 5.12); architecture in
+  `08-workflows/config-injection.md`.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [config-injection, quality-gates, uac, self-healing]
+related: [../08-workflows/config-injection.md, config-reloader-pattern.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [os.getenv ban and UnifiedCloudConfig-only config sourcing standard]
 referenced_by:
 owner:
 last_reviewed:

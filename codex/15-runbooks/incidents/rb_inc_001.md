@@ -2,13 +2,15 @@
 doc_type: codex-runbook
 title: RB-INC-001 — SEV0 Incident Handling
 summary:
-status:
+  Operator runbook for SEV0 IncidentEnvelope handling (capital at risk, recovery unproven) — ack PagerDuty within the
+  CRITICAL SLA, read risk_state/capital_at_risk + AgentActionEvent rows, drive to HUMAN_AUDIT_ACKED → RESOLVED → CLOSED.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, sev0, escalation, kill-switch, live-trading]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

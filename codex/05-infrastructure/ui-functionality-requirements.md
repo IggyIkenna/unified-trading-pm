@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: UI Functionality Requirements — Unified Trading System
 summary:
+  SUPERSEDED by ui-architecture.md; retained for UI screens/features/user-roles detail — active deployment-ui
+  functionality plus the archived split-UI domain reference (onboarding/strategy/settlement/live-health/etc.) and v0
+  consolidation guidance.
 status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-ui, execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, infrastructure, superseded, consolidation]
+related: [ui-architecture.md, ui-dependency-matrix.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed: 2026-05-13

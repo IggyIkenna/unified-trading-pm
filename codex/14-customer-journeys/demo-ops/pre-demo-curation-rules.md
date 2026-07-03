@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Pre-Demo Curation Rules
 summary:
-status:
+  Show/skim/skip curation of unlocked surfaces per prospect cell — sits between the mechanical restriction profile and
+  the narrative session; per-cell curation tables (IM pb3b, Reg Umbrella pb3a, signals-only/full DART pb3c), curation
+  principles (max 3 surfaces in a turbo demo, skip is not hidden), and the session-prep checklist.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
-tags: []
-related: []
+tags: [demo-ops, sales, dart, curation, restriction-profile, session-prep]
+related: [demo-restriction-profiles.md, dart-demo-modes.md, upsell-overlays.md, account-intelligence-record.md, pre-demo-discovery-framework.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [pre-demo curation rules (show/skim/skip)]
 referenced_by:
 owner:
 last_reviewed:

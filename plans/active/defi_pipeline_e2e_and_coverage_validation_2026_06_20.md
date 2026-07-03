@@ -1,14 +1,19 @@
 ---
 doc_type: plan
 title: DeFi pipeline E2E + coverage validation (full-batch / per-handler / Phase-D historical carry tracer / backfill final-state)
-summary:
+summary: >-
+  End-to-end validation of the DeFi pipeline (features-onchain → strategy → execution) before the live
+  cutover gate: run the full batch, verify each of the 11 registered DEFI handlers produces real (non-NaN)
+  GCS coverage, confirm the Stage-4 historical carry tracer emits honest non-NaN output across all 7
+  archetypes over 2022→today, and confirm the Lighter/Pacifica historical-replay backfill VMs reach their
+  final captured state. Includes SolidlyCL CL-pool matcher golden-swap ground-truth.
 status: active
 nature: process
 asset_group: [cefi, defi]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [defi, pipeline, features, strategy, execution, verification, honest-coverage, backfill]
 related: [../epics/defi_master.md, ./defi_manifest_canonicalisation_2026_06_01.md, ./master_to_live_defi_2026_05_23.md]
 created: '2026-06-12'
 parent_epic: defi_master

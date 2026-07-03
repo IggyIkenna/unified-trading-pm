@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: SIT (System Integration Tests) Runbook
 summary:
-status:
+  SIT (System Integration Tests) operational runbook — staging force-unlock via the sit-unlock dispatch, manual SIT
+  trigger, the starvation detector (30-min poll / 2h lock threshold), the common-failure-mode table, and the SIT
+  staging-lock lifecycle.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [system-integration-tests, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sit, runbook, ci, staging, quality-gates, escalation]
+related: [../08-workflows/ci-cd-flow.md, ../06-coding-standards/integration-testing-layers.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [SIT staging force-unlock procedure, SIT staging-lock lifecycle + starvation detector]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

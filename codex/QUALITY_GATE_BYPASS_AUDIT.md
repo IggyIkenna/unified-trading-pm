@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Quality Gate Bypass Audit
-summary:
-status:
+summary: Registry of every sanctioned codex-repo QG exception — file-size (none), ruff (none), basedpyright (only the
+  docs-only test_event_logging.py template, 17 cascade errors), and pip-audit CVEs (gunicorn/pip) owned by service repos
+  not codex.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [quality-gates, ssot-audit, cve, docspec]
+related: [10-audit/QUALITY_GATE_BYPASS_AUDIT.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [codex-repo-local quality-gate exception list (this docs-only repo's own bypasses)]
 referenced_by:
 owner:
 last_reviewed:

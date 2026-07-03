@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Account Intelligence Record
 summary:
-status:
+  The per-prospect structured CRM record (12 fields + freeform) — commercial_path, service_interests, market_scope,
+  dart_schema_fit, objections_raised, inferred_gaps, next_commitment, deviations_logged; created on pb1 booking, filled
+  progressively across intro/pb2/demo/follow-up; feeds pre-demo curation and post-demo follow-up orchestration.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
-tags: []
-related: []
+tags: [demo-ops, sales, crm, prospect, account-record, curation, follow-up]
+related: [pre-demo-curation-rules.md, post-demo-followup-orchestration.md, meeting-history-and-interest-tracking.md, pre-demo-discovery-framework.md, demo-decision-matrix.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [account-intelligence record schema]
 referenced_by:
 owner:
 last_reviewed:

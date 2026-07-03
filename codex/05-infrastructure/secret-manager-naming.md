@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Secret Manager naming convention — SSOT
 summary:
-status:
+  Secret Manager naming-convention SSOT — the <class>-<surface>-<env>-<role>-<version> pattern plus per-class templates
+  (custody, per-venue per-scope, Cloud-KMS CMK, wrapped wallet PK, data/aux), the testnet-vs-live venue split, and the
+  AWS Secrets Manager 1:1 name mirror.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [secret-manager, security, canonicalisation, credentials, defi]
+related: [rotation-runbook.md, credentials-matrix.md, ../04-architecture/custody-providers.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [Secret Manager secret naming convention]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

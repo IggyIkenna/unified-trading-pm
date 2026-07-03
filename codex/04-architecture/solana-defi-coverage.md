@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Solana DeFi Coverage — Perp DEX + AMM/CLOB/Oracle Adapters
 summary:
-status: living
+  Solana DeFi reference-data adapter coverage in instruments-service — perp-DEX (Drift/Mango/Zeta/Flash),
+  spot AMM/CLOB (Meteora/Phoenix/Jupiter/Lifinity), Pyth oracle, Jito restaking; venue registry + program
+  IDs + deploy-date floors (MTDS market-data wiring tracked separately).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, instruments, mtds, backfill, catalogue]
+related: [drift-v2-data-sources.md, defi-execution-overview.md, ../02-data/defi-canonical-naming-ssot.md]
 created: 2026-05-13
-authoritative_for:
+authoritative_for: [Solana DeFi adapter coverage (perp-DEX/AMM/CLOB/oracle/restaking venue registry + program IDs + deploy-date floors)]
 referenced_by:
 owner: defi-adapters
 last_reviewed: 2026-05-17

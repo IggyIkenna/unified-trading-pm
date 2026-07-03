@@ -2,20 +2,30 @@
 doc_type: codex-ssot
 title: Regulatory Umbrella — Post-First-Call Briefing
 summary:
-status:
+  pb2c Regulatory Umbrella post-first-call briefing — firms run regulated activity under Odum's FCA permissions (Odum as
+  regulated counterparty) across 5 onboarding workstreams (legal, compliance, MLRO, venue, reporting); enumerates
+  in/out-of-scope activities, 12-month floor, no direct-FCA-application advice.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [sales, prospect]
-tags: []
-related: []
+tags: [regulatory, briefing, prospect, sales, compliance, onboarding, ui]
+related:
+  [
+    regulatory-demo.md,
+    briefings-hub.md,
+    ../commercial-model/im-vs-reg-reporting-logic.md,
+    ../../07-security/compliance.md,
+    ../shared-core/shared-reporting-core.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [pb2c Regulatory Umbrella post-first-call briefing experience]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts]
 ---
 
 # Regulatory Umbrella — Post-First-Call Briefing

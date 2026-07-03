@@ -8,8 +8,12 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, features-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, features, strategy, uac, data-correctness, cefi, e2e]
+related:
+  [
+    plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md,
+    plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
+  ]
 created: 2026-06-17
 parent_epic: defi_master
 priority: P2
