@@ -2,18 +2,26 @@
 doc_type: audit-instruction
 title: sports_master_audit_instructions
 summary:
-status:
+  Weekly audit of sports adapters (Sportradar, Footystats, The-Odds-API), the GBP settlement path, sports archetypes
+  (odds dispersion), and UAC GCS path utilities — key invariants are GCS paths always from candidate_parquet_paths() and
+  date coverage always clipped via clip_dates_to_source_coverage() + is_in_known_gap(); audits league-grain could-exist
+  against the source-aware CF-1…CF-14 SSOT.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, sports, footystats, odds, manifest, honest-coverage, canonicalisation]
+related:
+  [
+    canonical_form_cross_service_audit_checklist.md,
+    ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+  ]
 created: '2026-05-22'
 tier: L0
 parent_epic: sports_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

@@ -2,18 +2,22 @@
 doc_type: audit-instruction
 title: infrastructure_master_audit_instructions
 summary:
-status:
+  Weekly infra audit — VM lifecycle (lifecycle_class, zombie watchdog, asia-northeast1-c zone policy, no cross-region
+  fallback), tarballs, per-tab worktrees, GCS object ops via UTL only (no subprocess gsutil/gcloud), bucket SSOT
+  resolve_bucket_name() — and (2026-06-01) owns the end-to-end code-promotion CI/CD contract (quickmerge → QG sentinel →
+  staging auto-PR → SIT → main → image builds) that previously had no single owning audit.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, system-integration-tests, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [audit, infrastructure, spot-vm, quickmerge, quality-gates, single-walk, canonicalisation]
 related: []
 created: 2026-05-22
 tier: L4
 parent_epic: infrastructure_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

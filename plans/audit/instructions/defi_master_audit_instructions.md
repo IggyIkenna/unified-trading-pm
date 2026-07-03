@@ -2,18 +2,26 @@
 doc_type: audit-instruction
 title: defi_master_audit_instructions
 summary:
-status:
+  Weekly DeFi audit with two dimensions — code↔codex correctness (adapter parity, DefiErrorCode, RPC templates,
+  data_type/venue naming SSOT) and per-MVP strategy honest-coverage (funding-arb / staked-basis / basis-carry /
+  price-dispersion, spanning both defi on-chain legs and cefi perp hedge legs), on the Solana basis MVP critical path
+  (Orca/Raydium spot + Drift-V2 perp via Velocity API).
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, defi, honest-coverage, manifest, execution, canonicalisation, data-correctness]
+related:
+  [
+    canonical_form_cross_service_audit_checklist.md,
+    ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+  ]
 created: 2026-05-22
 tier: L0
 parent_epic: defi_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

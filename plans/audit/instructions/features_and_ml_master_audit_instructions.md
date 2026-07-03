@@ -2,18 +2,22 @@
 doc_type: audit-instruction
 title: features_and_ml_master_audit_instructions
 summary:
-status:
+  Weekly audit of features-service (8 feature families), ml-service (inference + training), the IS→features contract, and
+  greeks-service as a data-pipeline derivation peer (NOT ml) — enforcing all feature schemas live in UAC (no local
+  defs), calculator math-drift, registry SSOT, feature_writer stamp/versioning, and feature-formula-versioning
+  doc↔code alignment.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, features-service, greeks-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
+tags: [audit, features, ml, uac, manifest, data-correctness, verification]
 related: []
 created: '2026-05-22'
 tier: L1
 parent_epic: features_and_ml_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

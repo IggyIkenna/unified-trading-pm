@@ -2,18 +2,21 @@
 doc_type: audit-instruction
 title: deployment_and_user_management_master_audit_instructions
 summary:
-status:
+  Weekly audit of the deployment stack (deployment-api, consolidated deployment-ui, GCS shard-detail API, health
+  endpoints) — verifies ServiceBootstrap (QG 5.61), make_health_router with data_freshness (QG 5.62), API-key
+  hot-reload, and ratchets the GCS-locked-code baseline from 27 → 0 cloud-locked references (Phase B post-cutover).
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
+tags: [audit, ui, infrastructure, quality-gates, observability]
 related: []
 created: 2026-05-22
 tier: L3
 parent_epic: infrastructure_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

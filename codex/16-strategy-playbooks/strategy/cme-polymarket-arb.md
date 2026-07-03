@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: CME × Polymarket Cross-Venue Event-Contract Arb — Playbook
 summary:
-status:
+  "Playbook for the ARBITRAGE_CROSS_DOMAIN_EVENT archetype: detect basis between a CME event-contract implied
+  probability and the equivalent Polymarket canonical-question-group across 9 CME roots (ECES/ECNQ/ECBTC/…), fire paired
+  YES legs when abs(basis_bps_annualised) >= max_basis_threshold (~50bps), with notional/expiry/strike/settlement
+  matching and PAIR_COMPLETION_FAILED / RESOLUTION_DIVERGENCE kill-switches. Paper-soak + DART-gated, out of scope for
+  May-23."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, strategy-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [strategy, prediction, tradfi, defi, cefi, execution, instruments]
+related:
+  [
+    ../../09-strategy/architecture-v2/category-instrument-coverage.md,
+    ../../../plans/archive/2026_05/cme_polymarket_arb_2026_05_08.md,
+  ]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [CME x Polymarket cross-venue event-contract arb playbook]
 referenced_by:
 owner:
 last_reviewed:

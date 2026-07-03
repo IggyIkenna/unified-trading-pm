@@ -2,18 +2,26 @@
 doc_type: audit-instruction
 title: batch_live_symmetry_master_audit_instructions
 summary:
-status:
+  Continuous-verification audit that batch and live are operational modes of the SAME pipeline — identical canonical-v9
+  schema/data_types/fields, source-aware pipeline_mode={mode}_{source}[_{transport}], Era-B chains, no live-only
+  data_types, no read-time available_at; keystone ⑪ of the per-AG pre-apply audit (CF-12 batch=live, CF-13
+  source-aware).
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, batch-live, reconciliation, pipeline-mode, manifest, data-correctness, canonicalisation]
+related:
+  [
+    canonical_form_cross_service_audit_checklist.md,
+    ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+  ]
 created: '2026-05-22'
 tier: L4
 parent_epic: batch_live_symmetry_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

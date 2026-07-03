@@ -2,18 +2,22 @@
 doc_type: audit-instruction
 title: client_isolation_and_governance_master_audit_instructions
 summary:
-status:
+  Weekly audit of per-client isolation + funds governance — one multiprocessing.Process per client under
+  StrategySupervisor, CrossClientTransferForbiddenError at all 3 enforcement layers, assert_client_allowed() at every
+  fund-movement boundary, UAC no-Any schema governance, jurisdiction (Odum UK vs Cayman) checks, and closure of the 6
+  BLOCKING gaps from the 2026-05-20 retroactive audit.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, client-isolation, execution, governance, uac, data-correctness]
+related: [../../archive/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md]
 created: 2026-05-22
 tier: L4
 parent_epic: client_isolation_and_governance_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

@@ -2,18 +2,21 @@
 doc_type: audit-instruction
 title: execution_master_audit_instructions
 summary:
-status:
+  Weekly execution-service audit — venue handlers (all CeFi + DeFi venues), transfer coordinator, treasury,
+  CLOUD_KMS_ENCRYPTED custody (Copper + CEFFU post-June-1), flash-loan receiver, matching engine — enforcing the HARD
+  RULE that cross-client funds movement is forbidden at all 3 CrossClientTransferForbiddenError enforcement layers.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [audit, execution, client-isolation, defi, cefi, verification]
 related: []
 created: 2026-05-22
 tier: L2
 parent_epic: execution_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions

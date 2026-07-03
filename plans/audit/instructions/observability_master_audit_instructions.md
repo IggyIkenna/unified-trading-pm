@@ -2,18 +2,22 @@
 doc_type: audit-instruction
 title: observability_master_audit_instructions
 summary:
-status:
+  Weekly observability audit — alerting-service, incident gateway (13-state lifecycle + audit-ack queue), the 5-layer
+  recovery defence-in-depth (L0 deterministic Python → L1 LLM signoff → L2 PagerDuty → L3 Twilio voice → L4 pager → L5
+  human ack), kill-switch/circuit-breaker, reconciliation-age tracking, alert-provider fallback, and runbook governance
+  (owner/cadence/verifier/last_executed required); every service must emit STARTED/STOPPED/FAILED via ServiceBootstrap.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, deployment-ui, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [audit, observability, monitoring, self-healing, escalation, runbook, slack]
 related: []
 created: 2026-05-22
 tier: L4
 parent_epic: observability_master
-cadence:
+cadence: weekly (minimum)
 verifier:
 lifespan:
 type: audit-instructions
