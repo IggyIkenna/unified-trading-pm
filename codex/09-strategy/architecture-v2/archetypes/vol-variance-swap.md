@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_VARIANCE_SWAP`'
 summary:
-status: design
+  'Archetype spec for `VOL_VARIANCE_SWAP` — replicates a variance swap via a 1/K² static option strip plus daily
+  delta-hedging, trading the var_strike vs realised-variance gap; payoff (RV²−K²)×vega/2; Deribit BTC/ETH only.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, variance-swap, replication, delta-hedge]
+related: [vol-dispersion.md, vol-carry.md, vol-ratio-spread.md, vol-term-structure-arb.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_VARIANCE_SWAP archetype spec']
 referenced_by:
 owner:
 last_reviewed:

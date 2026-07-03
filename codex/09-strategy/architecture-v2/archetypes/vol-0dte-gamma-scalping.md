@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_0DTE_GAMMA_SCALPING`'
 summary:
-status: design
+  'Archetype spec for `VOL_0DTE_GAMMA_SCALPING` — buys cheap 0DTE ATM straddles at session open and captures realized
+  gamma via frequent delta-hedge scalps, hard-closing before daily expiry; Deribit BTC/ETH, 100ms premium SLA.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, gamma-scalping, 0dte, delta-hedge]
+related: [vol-0dte-pin-risk.md, vol-straddle.md, vol-market-making.md, vol-carry.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_0DTE_GAMMA_SCALPING archetype spec']
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_LEAPS_CONVEXITY`'
 summary:
-status: design
+  'Archetype spec for `VOL_LEAPS_CONVEXITY` — buys cheap 90-180d+ options for high vega/theta convexity and holds through
+  vol cycles for asymmetric spike payoff under a daily theta budget; Deribit quarterlies + CBOE SPX LEAPS.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, leaps, convexity, long-vol]
+related: [vol-carry.md, vol-term-structure-slope.md, vol-variance-swap.md, vol-0dte-gamma-scalping.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_LEAPS_CONVEXITY archetype spec']
 referenced_by:
 owner:
 last_reviewed:

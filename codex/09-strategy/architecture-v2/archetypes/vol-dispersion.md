@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_DISPERSION`'
 summary:
-status: design
+  'Archetype spec for `VOL_DISPERSION` — sells index vol and buys a weighted basket of component vols to harvest the
+  implied-over-realised correlation premium (BTC index vs ETH/SOL/BNB); entry at dispersion_premium > ~3 vp; Deribit/OKX.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, dispersion, correlation, spread]
+related: [vol-variance-swap.md, vol-cross-asset-spread.md, vol-carry.md, arbitrage-price-dispersion.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_DISPERSION archetype spec']
 referenced_by:
 owner:
 last_reviewed:

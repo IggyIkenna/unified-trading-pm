@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_SPREAD_STRUCTURES`'
 summary:
-status: design
+  'Archetype spec for `VOL_SPREAD_STRUCTURES` — trades vol-surface shape (not level) via vega-neutral calendar and
+  butterfly spreads on term-structure slope and 25d smile signals, delta-hedged; Deribit/OKX/CBOE.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, calendar-spread, butterfly, term-structure]
+related: [vol-arb-rv-iv.md, vol-carry.md, vol-straddle.md, vol-term-structure-arb.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_SPREAD_STRUCTURES archetype spec']
 referenced_by:
 owner:
 last_reviewed:

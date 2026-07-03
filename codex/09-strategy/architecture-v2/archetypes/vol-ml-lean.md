@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Archetype: `VOL_ML_LEAN`'
 summary:
-status: design
+  'Archetype spec for `VOL_ML_LEAN` — a rolling random forest forecasts 5d realized vol and the predicted-RV vs IV gap
+  directs and sizes delta-hedged straddle/strangle positions, with rolling retrain and an OOS-accuracy guard; Deribit/OKX/CBOE.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, vol-trading, options, deribit, ml, features, delta-hedge]
+related: [vol-arb-rv-iv.md, vol-carry.md, ml-directional-continuous.md, vol-straddle.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: ['VOL_ML_LEAN archetype spec']
 referenced_by:
 owner:
 last_reviewed:
