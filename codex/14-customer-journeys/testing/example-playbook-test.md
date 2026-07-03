@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Example playbook test — pb1 Marketing
 summary:
-status:
+  Reference Playwright spec (tests/playbooks/marketing-pre-first-call.spec.ts) that every playbook spec must copy — the
+  canonical shape demonstrating test.describe-per-playbook, role-based selectors, auto-retry visibility asserts (no
+  waitForTimeout), 200-status route checks, and negative auth-gate assertions; tier-0 mock, <30s per spec.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, testing, playwright, docspec, customer-journeys, personas]
+related: [test-matrix.md, README.md, ../playbooks/01-marketing-pre-first-call.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [reference Playwright playbook spec exemplar]
 referenced_by:
 owner:
 last_reviewed:

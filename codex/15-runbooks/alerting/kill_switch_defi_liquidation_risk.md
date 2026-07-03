@@ -2,13 +2,17 @@
 doc_type: codex-runbook
 title: KILL_SWITCH_DEFI_LIQUIDATION_RISK Runbook
 summary:
-status: active
+  Operator response to the highest-impact DeFi alert (CRITICAL, PagerDuty P1, triggers_kill_switch=TRUE) — HF crossed the
+  critical threshold (default 1.05) so the switch halts strategy/execution DeFi surfaces and stages a flash-loan
+  auto-deleverage. Verify HF on-chain + whether auto-deleverage fired, then confirm it (Path 1), manually deleverage to
+  HF>=1.30 (Path 2), or full platform halt (Path 3); operator must run resume-from-halt before re-arm.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [alerting, runbook, defi, kill-switch, execution, escalation, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/defi_health_factor_critical.md, codex/15-runbooks/alerting/circuit_breaker_open.md, codex/04-architecture/flash-loan-receiver.md]
 created: 2026-05-08
 owner:

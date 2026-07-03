@@ -2,13 +2,17 @@
 doc_type: codex-runbook
 title: DEFI_FUNDING_RATE_FLIP Runbook
 summary:
-status: active
+  Operator response to DEFI_FUNDING_RATE_FLIP (WARN, Telegram) — a perp funding rate flipped sign with >100bps APR
+  magnitude in 5min (defi_funding_rate_flip_bps_5m), a regime-change signal that invalidates the leveraged_funding_arb
+  carry-direction. Cross-check funding via venue API, then let it mean-revert, re-pole the position if the flip is
+  sustained + profitable to the opposite pole, or pause the archetype.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [alerting, runbook, defi, features, strategy, escalation, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/defi_aave_utilization_spike.md]
 created: 2026-05-08
 owner:

@@ -2,13 +2,17 @@
 doc_type: codex-runbook
 title: Alert Code Taxonomy
 summary:
-status: active
+  SSOT for the UAC AlertCode StrEnum closed set (~69 members) — the categories (kill-switch/circuit-breaker/DeFi/margin/
+  position/order/ML/service-health), severity->channel tiers (CRITICAL/HIGH/WARN/INFO), the add-a-code checklist,
+  event-name-vs-AlertCode routing seam, KillSwitchScope mapping, synthetic-data filter, and the STALE_OPEN_ALERT
+  lifecycle audit contract. Re-derive the exact count from codes.py, not the prose.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [alerting, uac, runbook, defi, ml, kill-switch, escalation, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/threshold-tuning.md, codex/05-infrastructure/live-deployment-monitoring.md]
 created: 2026-05-07
 owner:

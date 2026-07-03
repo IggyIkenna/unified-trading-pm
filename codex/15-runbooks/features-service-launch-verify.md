@@ -2,14 +2,25 @@
 doc_type: codex-runbook
 title: features-service VM launch + verification runbook
 summary:
-status: active
+  Operator recipe to launch a features-service VM via the consolidated launch-features-vm.sh (--feature-family x
+  --asset-group viability matrix) and the mandatory non-fire-and-forget verification cycle — T+90s STARTED event, T+10-15min
+  per-instrument progress with row_count>0, T+exit STOPPED/FAILED, plus manifest + parquet-sample sanity to catch the
+  silent-zero / empty-placeholder failure modes.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, features-service, instruments-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [runbook, features, spot-vm, verification, manifest, data-correctness, vm-tarball, observability]
+related:
+  [
+    ../04-architecture/features-service-architecture.md,
+    ../05-infrastructure/vm-tarball-deployment.md,
+    ../02-data/availability-manifest-and-data-status.md,
+    ../02-data/honest-absence-downstream-handling.md,
+    ../../plans/archive/features_repo_consolidation_2026_05_08.plan.md,
+  ]
 created: 2026-05-08
 owner:
 cadence:

@@ -2,13 +2,17 @@
 doc_type: codex-runbook
 title: DEFI_WEETH_DEPEG Runbook
 summary:
-status: active
+  Operator response to DEFI_WEETH_DEPEG (CRITICAL, PagerDuty+Telegram) — weETH (or sister LST) AMM mid deviated from its
+  redemption-rate peg beyond tolerance (defi_weeth_depeg_bps, default 50bps), compressing HF on carry_staked_basis
+  collateral. Cross-check on-chain AMM vs redemption rate + whether it is sector-wide, then monitor if transient, reduce
+  LST exposure if widening, or full LST sector exit.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, features-service]
 scope: [engineer, admin]
-tags: []
+tags: [alerting, runbook, defi, features, kill-switch, escalation, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/defi_health_factor_critical.md, codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md]
 created: 2026-05-08
 owner:

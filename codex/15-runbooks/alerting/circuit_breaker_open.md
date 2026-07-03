@@ -2,13 +2,17 @@
 doc_type: codex-runbook
 title: CIRCUIT_BREAKER_OPEN Runbook
 summary:
-status: active
+  Operator response to CIRCUIT_BREAKER_OPEN (CRITICAL, PagerDuty+Telegram) — a per-(service, venue) breaker tripped after
+  N failures in the window; it is operating as designed and auto-recovers on half-open retry. Operator acts only if it
+  stays OPEN >5min (KILL_SWITCH_VENUE_DISCONNECT cascades) or flaps: diagnose last_error_message, fix key/cert/DNS, or
+  manual reset as last resort.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, features-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
+tags: [alerting, runbook, execution, escalation, kill-switch, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/kill_switch_venue_disconnect.md, codex/15-runbooks/alerting/order_rejection_spike.md]
 created: 2026-05-08
 owner:

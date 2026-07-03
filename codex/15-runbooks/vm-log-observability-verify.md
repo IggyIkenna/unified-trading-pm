@@ -2,13 +2,17 @@
 doc_type: codex-runbook
 title: VM log + lifecycle observability — verify durable shipping to GCS/S3 (no SSH, no lost logs)
 summary:
-status: active
+  T+10min per-VM check that a launch is durably shipping its run log + heartbeat + terminal EXIT_STATUS to
+  deployment-scripts-<pid> (GCP) / unified-trading-deployment-scripts-<account> (AWS) — the canonical prefixes,
+  the two observability tiers (canonical tarball vs inline-bespoke), the done-definition, and failure-mode fixes so a
+  dead VM's full log survives without SSH. Enforces the No fire-and-forget HARD RULE.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
+tags: [runbook, observability, vm-tarball, infrastructure, monitoring, verification]
 related: [codex/05-infrastructure/vm-tarball-deployment.md, deployment-service/scripts/vm/lib/launcher_common.sh, deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh, deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh]
 created: 2026-06-19
 owner:

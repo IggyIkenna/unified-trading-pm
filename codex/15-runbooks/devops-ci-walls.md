@@ -2,7 +2,7 @@
 doc_type: codex-runbook
 title: DevOps CI walls — recovery recipes for the common deploy/CI walls (cicd role)
 summary: The DevOps (cicd) role's per-wall recovery runbook — v2-never-reported deadlock, behind-remote rebase, stuck LDR→main promotion, SIT/QG wall. Triage entry point is the /ci-status skill; every recipe cross-links its ci-cd-flow.md SSOT section instead of duplicating it.
-status: active
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]

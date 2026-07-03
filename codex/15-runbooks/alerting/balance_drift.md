@@ -2,13 +2,17 @@
 doc_type: codex-runbook
 title: BALANCE_DRIFT Runbook
 summary:
-status: active
+  Operator response to BALANCE_DRIFT (WARN, Telegram) — PBM expected wallet balance vs venue/chain reported differs >
+  balance_drift_usd (default 1000), sustained >=5min. Diagnose the delta source (funding/fees/liquidation/transfer),
+  reconcile via PBMS API, or manual ledger override as last resort; escalate on negative-direction drift, >10x
+  threshold, or multi-wallet drift.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [alerting, runbook, defi, cefi, reconciliation, escalation, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/preflight_failed.md, codex/15-runbooks/alerting/margin_threshold_breach.md]
 created: 2026-05-08
 owner:

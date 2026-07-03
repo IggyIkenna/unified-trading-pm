@@ -2,14 +2,23 @@
 doc_type: codex-runbook
 title: Position Reconciliation Deploy Gate
 summary:
-status: active
+  Operator contract for scripts/deploy/position-reconciliation-check.sh — the pre/post-deploy gate wired into
+  cloud-build-router.yml that snapshots /positions before a deploy and compares after, failing the rollout on lost
+  positions, disappeared position-ids, or quantity drift beyond tolerance. Currently non-blocking when /positions is
+  absent; flips to a hard gate once the endpoint ships.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [batch-live-reconciliation-service, execution-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [runbook, reconciliation, deploy-gate, execution, position, quality-gates]
+related:
+  [
+    ../04-architecture/reconciliation-resolution.md,
+    ../04-architecture/separation-of-concerns.md,
+    ../../plans/active/master_to_live_defi_2026_05_23.md,
+  ]
 created: 2026-05-12
 owner:
 cadence:
