@@ -81,13 +81,16 @@ instead of opening the doc — most valuable right before the codex↔code drift
       `locked_by`/`locked_since`/`depends_on` (29). **Gate**: docspec SOFT `created` + literal-NA counts → 0. —
       ✅ unified-trading-pm@8d9167827 (825 files, frontmatter-only one-liners). Evidence: docspec re-sweep post-apply:
       created/locked_by/locked_since/depends_on SOFT = 0/0/0/0; corpus total SOFT 5,887 → 5,053.
-- [ ] [AGENT] P3.1 **Pilot folder — `codex/11-project-management` (14 docs), operator eyeball gate.** One Sonnet
+- [x] [AGENT] P3.1 **Pilot folder — `codex/11-project-management` (14 docs), operator eyeball gate.** One Sonnet
       (medium) sub-agent fills, per doc in ONE read: `summary`, `tags` (prefer the harvested lexicon),
       `authoritative_for` (codex-ssot; unique across the folder — keep a topic→doc ledger), `related` (sibling
       cross-links), `status` (normalize to the per-type enum; codex current/stale is a judgment from the read),
       `repos` (manifest-validated), + `code_refs` ONLY where the body already cites a path AND the path exists.
       NEVER guess operator fields (`owner`/`verifier`/`supersedes`/`resolved_by`/`source`/estimates) — emit them on a
-      worklist instead. **Gate**: operator reviews the pilot diff before any fan-out.
+      worklist instead. **Gate**: operator reviews the pilot diff before any fan-out. —
+      ✅ unified-trading-pm@091318d21 (14 docs, frontmatter-only). Evidence: docspec HARD=0 all 14; content-SOFT → 0
+      except valid-empty `repos`/`related` `[]`; authoritative_for corpus-collision-checked. **Fan-out still gated on
+      the operator eyeball of this diff.**
 - [ ] [AGENT] P3.2 **Fan-out — remaining trees with the pilot prompt.** Per-folder Sonnet agents (≤10 parallel), codex
       → plans/audit (+ audit-result fields `severity`/`audited_scope`/`auditor`/`date` from the body) → plans/epics →
       plans/active last. **Gate**: docspec content-SOFT count (5,887 baseline) → ~0 on targeted trees, measured per
@@ -135,3 +138,18 @@ instead of opening the doc — most valuable right before the codex↔code drift
   reached for issue-ish values `issue`/`audit`/`data-correctness` the closed vocab lacks; recurring instinct → consider
   an enum addition at gate-consolidation time). Non-blocking (warn-only gate working as designed); not this plan's
   scope to fix the 3 docs.
+- 2026-07-03 — **P3.0 shipped** (pm@8d9167827): 804 `created` + 29 NA normalized, 825 files; SOFT 5,887 → 5,053.
+- 2026-07-03 — **P3.1 pilot shipped** (pm@091318d21): 14 docs in `codex/11-project-management`, all six content fields;
+  docspec HARD=0, content-SOFT → 0 (bar valid-empty `[]`). **Discoveries:** (1) validator↔schema tension — schema §6
+  says empty `repos: []`/`related: []` is legal, but the FieldSpec flags it SOFT "required but empty"; MUST be resolved
+  (validator accepts empty-list, or the blocking gate enforces a subset) BEFORE the gate-consolidation todo flips
+  blocking, else valid docs red the gate. (2) Pilot surfaced codex-content rot for the codex-audit process (NOT fixed —
+  body edits out of scope): `architecture-constraints.md` filename↔title mismatch; `codex-delta-canonical-brief.md`
+  internally inconsistent dates + orphaned targets (marked `stale`); `plan-hygiene.md` says hygiene-sweep Terraform
+  "not yet shipped" but `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` exists on disk (CODEX-STALE);
+  `secrets-migration-tracking.md` cites non-existent `unified-config-interface/` (renamed → unified-cloud-interface) +
+  a pre-refactor UTL path; ADR-2026-04-25 cites a pre-refactor deployment-api symbol path. (3) Legacy
+  `cadence`/`verifier`/`last_executed`/`type` blocks on 2 docs (plan-hygiene, active-plan-inventory-tracker) — operator
+  to decide codex-runbook re-typing vs dropping legacy fields. (4) `owner` empty on 12/14 docs +
+  `secrets-migration-tracking.md` has a legacy PROSE `authoritative_for` (pre-existing) — both → P3.4 operator
+  worklist.
