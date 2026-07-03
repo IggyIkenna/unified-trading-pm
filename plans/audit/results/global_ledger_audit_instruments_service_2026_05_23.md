@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: Global Ledger Audit — instruments-service
-summary:
-status: complete
+summary: >-
+  Maps what instruments-service provides (22-field InstrumentRecord + futures_contracts parquet) vs what the
+  PassiveLedger synthesiser needs. Verdict: IS is NECESSARY but NOT SUFFICIENT — carry rates flow from MTDS, not IS.
+  Three fields structurally absent from InstrumentRecord (exercise_style, settlement_style, dividend_schedule) block
+  American-exercise and dividend passive events; 7 gaps incl rocket_pool missing source_archive_url_template + Sanctum
+  not wired.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, instruments, ssot-audit, reconciliation, defi, tradfi, mtds, data-correctness]
+related:
+  - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
+  - plans/active/issues/defi_coverage_capability_alignment_2026_05_22.md
+  - plans/audit/results/global_ledger_audit_mtds_2026_05_23.md
 created: 2026-05-23
-audited_scope:
+audited_scope: instruments-service InstrumentRecord + carry-rate metadata vs PassiveLedger synthesiser requirements (static code read, no GCS sampling)
 date: '2026-05-23'
 auditor: slot-7 (ikenna-side)
 parent_epic: strategy_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

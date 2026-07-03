@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: Global Ledger Architecture Audit — strategy-service
-summary:
-status: in-progress
+summary: >-
+  Read-only walk of strategy-service position/pnl/risk/portfolio-allocator modules vs the derived ledger targets
+  (Position/PnL/PnLAttribution/Risk ledgers). HIGH gaps: unrealized_pnl always 0 (MarkPriceAggregator not bridged to
+  PositionTracker); fees stored in FillDB but not deducted from realized_pnl (PnL is gross); PnLReconciliationEngine
+  _get_components() returns {} so all exchange PnL is "unexplained"; pnl-series endpoint always 404. v2 DualProjection +
+  FillAttributor not yet wired to production fill pipeline.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, strategy, ssot-audit, reconciliation, pnl-attribution, risk, data-correctness]
+related:
+  - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
+  - plans/audit/results/global_ledger_audit_execution_service_2026_05_23.md
+  - plans/audit/results/global_ledger_audit_mtds_2026_05_23.md
 created: 2026-05-23
-audited_scope: Phase 1 audit — derived ledger state in strategy-service
+audited_scope: Phase 1 audit — derived ledger state in strategy-service (position/pnl/risk/portfolio-allocator)
 date: '2026-05-23'
 auditor: slot-7 (ikenna)
 parent_epic: strategy_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

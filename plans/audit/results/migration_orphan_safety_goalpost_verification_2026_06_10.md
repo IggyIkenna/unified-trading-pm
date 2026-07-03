@@ -1,21 +1,30 @@
 ---
 doc_type: audit-result
 title: AUDIT — migration orphan-safety, beta-manifest goalpost preview, verified-delete gate, data sizing & schema-attribute completeness (the 'migrate once, never need a v10' verification harness) + MVP-tag / config-versioning reconciliation
-summary:
-status: for-operator-review
+summary: >-
+  "Migrate once, never need a v10" verification-harness audit: maps the operator's 12 asks against the mature ①–⑫
+  pre-apply audit and identifies the 5 uncovered verification concerns → new points ⑬–⑰ + a G4.5 cleanup gate.
+  Core gaps: no GCS→manifest orphan sweep (class-E = real data with no manifest row = the v10 trigger), no
+  schema-ATTRIBUTE completeness freeze (only cell completeness gated), no v9-projected beta-manifest preview, no
+  byte-sizing rollup, no consolidated possible-manifest registry. Plus MVP-tag reconciliation + config-versioning
+  (config_version distinct from code semver). ⑬–⑱ ALL HARD-BLOCK G4 --apply.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, execution-service, instruments-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, migration, manifest, canonicalisation, mvp, single-walk, data-correctness, verification]
+related:
+  - plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
+  - plans/active/mvp_scope_catalogue_tagging_2026_06_08.md
+  - plans/audit/instructions/canonical_form_cross_service_audit_checklist.md
 created: 2026-06-10
-audited_scope:
+audited_scope: migration orphan-safety + beta-manifest goalpost preview + verified-delete gate + data-sizing + schema-attribute completeness + MVP-tag/config-versioning reconciliation (the "migrate once, no v10" verification harness)
 date: '2026-06-10'
 auditor: ikennaigboaka [slot-3·laptop]
 parent_epic: infrastructure_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: Instruments ↔ MTDS subset + instruments internal-consistency audit (v9 migrated manifests)
-summary:
-status: active
+summary: >-
+  Manifest+file-level audit of two operator questions: (1) is MTDS a proper subset of instruments (no market data where
+  no instrument/chain/fixture/league exists)? (2) are instruments internally consistent? Subset verdict: cefi ❌
+  (Kraken/Lighter/Pacifica MTDS history with ~no instruments backing, F1), defi ❌ (temporally-impossible
+  vault_share_price captured phantoms, N5), tradfi/pred ✅. Findings F1–F7 + N1–N8 (P0 sports-league-drop N3, cefi
+  attempted_failed reframe, phantom empty_confirmed shadows); remediation shipped in the Progress Log.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, manifest, instruments, mtds, subset, canonicalisation, data-correctness, single-walk]
+related:
+  - plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md
+  - plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
+  - plans/audit/results/instruments_master_audit_2026_06_08.md
 created: 2026-06-17
-audited_scope:
+audited_scope: instruments↔MTDS entity/(entity,date) subset + instruments internal-consistency across all 5 asset_groups using v9 projected indexes (full-index walk) + Phase-2 per-AG GCS parquet sampling
 date: 2026-06-17
 auditor: ikennaigboaka
 parent_epic: instruments_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

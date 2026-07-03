@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: MDPS Long-Running Engine Mixing Audit — 2026-05-28
-summary:
-status: complete
+summary: >-
+  Audits every parquet read/write + engine-conversion callsite in MDPS against the new codex data-engine-selection rule
+  (pick one engine end-to-end; Polars→Pandas→Polars banned). Headline: _read_tick_data (live_workers.py:449-479)
+  allocates 4 independent buffers per instrument via the Polars→Pandas→Polars chain; neither the Polars Rust arena nor
+  PyArrow jemalloc is reclaimed by gc.collect() (0 calls to release_unused() codebase-wide) — the likely majority owner
+  of the 15.7 GB per-day RSS floor. Fix = pure-Polars _read_tick_data prototype (3-line scope).
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, features-service, instruments-service, market-data-processing-service, ml-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, mdps, polars, performance, backfill, data-engine]
+related:
+  - plans/audit/results/mdps_engine_benchmark_findings_2026_05_28.md
+  - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
+  - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope:
+audited_scope: MDPS engine-mixing — every parquet read/write + engine-conversion callsite (core + adapters + IO) vs codex data-engine-selection; per-engine arena-retention behaviour + pure-Polars remediation prototype
 date: '2026-05-28'
 auditor: claude opus 4.7 (slot main subagent)
 parent_epic: mtds_mdps_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

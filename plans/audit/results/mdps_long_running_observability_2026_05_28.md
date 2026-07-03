@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: MDPS Long-Running Observability — Audit Findings
-summary:
-status: complete
+summary: >-
+  Audits MDPS long-running memory telemetry: current signals are reactive (MEMORY_BACKPRESSURE_ENGAGED at 85% =
+  already-in-trouble) and log-only, with no per-shard structure — the Phase-3.2 day-2 OOM was invisible until it
+  happened. Proposes 6 structured events (SHARD_STARTED/COMPLETED with peak-RSS + retention, MANIFEST_LOAD_BYTES,
+  INSTRUMENTS_LOAD_ROWS, DATE_BOUNDARY_GC, BACKPRESSURE_DEADLOCK_RISK) that would have predicted OOM at T+5min, plus
+  SLOs, a 6-panel dashboard, and a per-shard-RSS QG regression test. ~1h for the three enabling events.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, market-data-processing-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, mdps, observability, monitoring, backfill, performance]
+related:
+  - plans/audit/results/mdps_long_running_concurrency_2026_05_28.md
+  - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
+  - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope:
+audited_scope: MDPS long-running observability — existing memory/backpressure telemetry vs what was needed to predict the Phase-3.2 OOM; 6 structured-event + SLO + dashboard + QG-regression proposals
 date: '2026-05-28'
 auditor: claude opus 4.7 (slot main subagent)
 parent_epic: mtds_mdps_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

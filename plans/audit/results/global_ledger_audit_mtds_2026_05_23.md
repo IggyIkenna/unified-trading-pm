@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: MTDS Global Ledger PricingLedger Audit
-summary:
-status: complete
+summary: >-
+  Read-only audit of MTDS as the PricingLedger writer — 15 pricing data_types, carry-family rates, greeks, and
+  emission-semantics compliance vs PricingLedger target fields. Findings: greeks present in schema but not normalized
+  (Tardis mark_iv not mapped to implied_volatility); rho entirely absent from the stack; dividend_rate completely
+  missing (no data_type/handler/vendor); mid requires consumer derivation; 8+ DeFi handlers use
+  QG-allow:emission-policy-not-applicable bypassing the emission-policy gate.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, mtds, ssot-audit, reconciliation, defi, deribit, tradfi, data-correctness]
+related:
+  - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
+  - plans/audit/results/global_ledger_audit_instruments_service_2026_05_23.md
+  - plans/audit/results/global_ledger_audit_execution_service_2026_05_23.md
 created: 2026-05-23
-audited_scope:
+audited_scope: market-tick-data-service pricing data_types + carry-family rates + greeks + emission semantics vs PricingLedger target fields (schema-level, no GCS parquet sampling)
 date: '2026-05-23'
 auditor: slot-7-agent
 parent_epic: strategy_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

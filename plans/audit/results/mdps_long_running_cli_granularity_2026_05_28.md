@@ -1,21 +1,30 @@
 ---
 doc_type: audit-result
 title: MDPS Long-Running Efficiency Audit — CLI Granularity + Canonical Instrument_ID Parser
-summary:
-status: complete
+summary: >-
+  Audits MDPS's --instrument-ids parser against the codex cli-convention canonical-form contract
+  (VENUE:INSTRUMENT_TYPE:SYMBOL). Finding: the scanner does substring matching against blob paths, so the canonical form
+  returns ZERO blobs (paths use = not : as separator) — a SILENT failure that forced the operator to pass redundant
+  --venues + --asset-group and drove the 2026-05-28 70 GB memory incident. Fix = 2-line parser replacement at
+  orchestration_scanner.py:459 (split 3 colon fields, check hive segments with lowercasing) + auto-derive asset_group
+  via UAC VENUES_BY_ASSET_GROUP.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, mdps, mtds, backfill, data-correctness, uac]
+related:
+  - plans/audit/instructions/mdps_long_running_efficiency_audit_instructions.md
+  - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
+  - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope:
+audited_scope: MDPS CLI granularity (Concern B) — --instrument-ids canonical-form parser vs codex cli-convention contract; scanner match logic, derivability, atomic shard semantics, cross-service surface
 date: '2026-05-28'
 auditor: claude opus 4.7 (slot main subagent)
 parent_epic: mtds_mdps_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

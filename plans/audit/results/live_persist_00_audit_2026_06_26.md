@@ -1,21 +1,28 @@
 ---
 doc_type: audit-result
 title: Live-persist 00 — pre-audit live transport/persistence + SINK_MATRIX seed
-summary:
-status: complete
+summary: >-
+  Pre-audit end-to-end map of the live transport/persistence stack (Redis Streams for MTDS→MDPS→features, Pub/Sub
+  for ml/strategy; per-window GCS overwrite + hot-path GCS read race) plus the full SINK_MATRIX seed classifying all 52
+  shards (R=reproducible / SO=stream_only, hot/warm/table, cold_lifecycle). D3 firehose opt-out list is EMPTY (MTDS is
+  all windowed aggregates). Finding: execution fills/positions/PnL do NOT land on the UAC global ledger (0 hits) — the
+  cutover must wire them through the UTL publish() facade.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, features-service, ml-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, live-trading, reconciliation, mtds, mdps, features, execution, observability]
+related:
+  - plans/active/live_persist_00_audit_sink_matrix_2026_06_26.md
+  - plans/audit/results/global_ledger_audit_execution_service_2026_05_23.md
 created: 2026-06-26
 audited_scope: 8 repos — MTDS / UAC / UTL / MDPS / features-service / strategy-service / ml-service / execution-service (read-only)
 date: '2026-06-26'
 auditor: slot-0 [human-planning]
 parent_epic: infrastructure_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:
