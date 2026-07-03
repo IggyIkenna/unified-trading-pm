@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: 'Family: Arbitrage / Structural Edge'
 summary:
-status:
+  The Arbitrage / Structural Edge strategy family — 7 archetypes (price-dispersion, liquidation-capture, 4 MEV
+  variants, cross-domain-event) capturing near-risk-free spread or protocol-paid structural bonus; edge is
+  spread/bonus > cost, executed ATOMIC or leg-and-hedge, NOT directional.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, arbitrage, mev, liquidation, defi, execution, funding]
+related:
+  [
+    carry-and-yield.md,
+    stat-arb-pairs.md,
+    market-making.md,
+    ../archetypes/arbitrage-price-dispersion.md,
+    ../cross-cutting/mev-protection.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [Arbitrage / Structural Edge strategy family spec (alpha thesis + 7 archetypes)]
 referenced_by:
 owner:
 last_reviewed:

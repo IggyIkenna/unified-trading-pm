@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine
 summary:
-status:
+  The determinism-spine SSOT for trade-by-trade paper↔batch↔live reconciliation — paper(W) MUST equal batch-rerun(W)
+  (ε=0 PROOF, any diff is a bug), live↔paper delta IS execution alpha; specifies the four as-if-filled ledgers, the
+  two-fill-realities model, the RunManifest as-of snapshot, reconcile_day, and the G1-G5 gap list.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, e2e-testing, execution-service, features-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [reconciliation, determinism, ledger, live-trading, backfill, execution, defi]
+related:
+  [
+    batch-live-reconciliation-threshold-calibration.md,
+    cli-promote-paths.md,
+    ../../04-architecture/global-ledger-architecture.md,
+    ../architecture-v2/cross-cutting/pnl-attribution.md,
+  ]
 created: 2026-06-19
 authoritative_for:
+  [paper↔batch↔live determinism spine (trade-by-trade reconciliation + four as-if-filled ledgers + two-fill-realities model)]
 referenced_by:
 owner:
 last_reviewed: 2026-06-22

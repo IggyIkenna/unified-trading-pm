@@ -2,16 +2,23 @@
 doc_type: codex-ssot
 title: Instrument Filtering — DeFi Pool & Market Discovery
 summary:
-status:
+  The DeFi instrument-filtering pipeline keyed on the ~65-symbol DEFI_MAJOR_ASSET_SYMBOLS whitelist (UAC
+  defi_major_assets.py) — per-adapter rules (both-sides-major for DEX pools, base-asset-major for lending, TVL
+  minimums for Solana), address maps for subgraph/RPC filtering, and strategy-level underlying families.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [instruments, defi, catalogue, uac, registry, data-quality]
+related:
+  [
+    ../../04-architecture/instruments-service-as-ssot-for-mtds.md,
+    client-strategy-config.md,
+  ]
 created: 2026-03-30
-authoritative_for:
+authoritative_for: [DeFi instrument filtering rules + DEFI_MAJOR_ASSET_SYMBOLS major-asset whitelist]
 referenced_by:
 owner:
 last_reviewed:

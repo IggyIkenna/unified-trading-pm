@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Onboarding Checklist — Cross-Cutting Concern
 summary:
-status:
+  The full 8-phase operational checklist for onboarding a (strategy_id, client_id, config) instance — credential/venue
+  setup, strategy+execution+risk+alert config YAMLs, data-pipeline wiring, sharding, batch jobs, staged live rollout,
+  and docs — plus the shorter new-client-vs-new-strategy quick references.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [onboarding, runbook, client-config, strategy, deployment, execution]
+related:
+  [
+    client-onboarding.md,
+    client-strategy-config.md,
+    ../architecture-v2/strategy-catalogue-3tier.md,
+    ../architecture-v2/strategy-registry-v2.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [8-phase strategy/client onboarding operational checklist]
 referenced_by:
 owner:
 last_reviewed:

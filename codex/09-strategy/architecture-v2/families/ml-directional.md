@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: 'Family: ML Directional'
 summary:
-status:
+  The ML Directional strategy family — 2 archetypes (continuous vs event-settled) betting when calibrated model
+  probability exceeds market-implied by a min-edge threshold; fractional-Kelly sized. The general-purpose directional
+  family across crypto, equities, sports, options, and prediction markets.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, ml, prediction, odds, features, execution]
+related:
+  [
+    rules-directional.md,
+    stat-arb-pairs.md,
+    vol-trading.md,
+    ../archetypes/ml-directional-continuous.md,
+    ../axes/signal-sources.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [ML Directional strategy family spec (alpha thesis + 2 archetypes)]
 referenced_by:
 owner:
 last_reviewed:
