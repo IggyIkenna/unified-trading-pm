@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Partial archive
 summary:
-status:
+  Rules for splitting the four Investor-Relations presentations into investor-only slide blocks (AUM, cap table,
+  projections) versus briefing-promotable blocks extracted into lib/briefings content fixtures for the pb2a/b/c
+  briefings.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, page-triage, investor-relations, briefings, partial-archive, refactor]
+related: [triage-matrix.md, ../playbook-concepts/investor-relations.md, ../playbooks/02-research-and-documentation.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [IR-presentation partial-archive decisions]
 referenced_by:
 owner:
 last_reviewed:

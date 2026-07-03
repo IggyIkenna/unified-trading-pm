@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Route Mapping — Experience Section → UI Route
 summary:
-status:
+  Index binding each experience-playbook walkthrough section to concrete unified-trading-system-ui routes (pb1 public
+  5-path, pb2 briefings, pb3 demo) plus cross-playbook shared routes and the rule-03 audience/phase-prefixed routes
+  that must NOT exist.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [route, ui, playbook, navigation, refactor, testing]
+related: [playbook-to-qa-coverage.md, persona-and-user-prototype-mapping.md, ../shared-core/same-system-principle.md, ../shared-core/shared-reporting-core.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [experience-section -> UI-route mapping]
 referenced_by:
 owner:
 last_reviewed:

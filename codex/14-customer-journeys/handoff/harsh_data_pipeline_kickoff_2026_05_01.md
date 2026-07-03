@@ -2,14 +2,17 @@
 doc_type: codex-ssot
 title: Harsh — data-pipeline-completion kickoff
 summary:
-status: active
+  Onboarding handoff for the instruments-service + market-tick-data + market-data-processing completion epic — read
+  order, MVP C5 target (CeFi / TradFi / Prediction / Sports, batch only), schema + bundling invariants, and Secret
+  Manager credential policy.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [handoff, data-pipeline, backfill, manifest, mvp, instruments, mtds]
+related: [../../15-runbooks/backfill-completion-playbook.md, ../../02-data/availability-manifest-and-data-status.md, ../../05-infrastructure/vm-tarball-deployment.md, ../../02-data/schema-governance.md]
 created: 2026-05-01
 authoritative_for:
 referenced_by:

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Demo Email and Provisioning Flow
 summary:
-status:
+  Semi-automated sales demo-to-provisioning flow — booking confirmation, persona selection via the decision matrix,
+  user-management-ui demo-user creation, welcome email, and pre-session verify; enumerates the manual steps Stage 3E
+  automates.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [demo, provisioning, sales, persona, onboarding, staging, automation]
+related: [../demo-ops/account-intelligence-record.md, ../demo-ops/demo-decision-matrix.md, persona-and-user-prototype-mapping.md, route-mapping.md, ../demo-ops/demo-restriction-profiles.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [demo booking-to-provisioning flow (sales -> demo user -> welcome email)]
 referenced_by:
 owner:
 last_reviewed:

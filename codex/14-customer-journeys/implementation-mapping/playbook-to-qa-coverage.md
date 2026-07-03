@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Playbook-to-QA Coverage
 summary:
-status:
+  Coverage matrix binding every experience playbook (pb1-pb3c) to its Playwright spec under tests/e2e/playbooks/; each
+  spec asserts the walkthrough routes, persona restriction profile, catalogue filters, the desired next step, and no
+  entitlement leak.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [playbook, testing, playwright, ui, coverage, persona]
+related: [route-mapping.md, persona-and-user-prototype-mapping.md, demo-email-and-provisioning-flow.md, ../demo-ops/demo-restriction-profiles.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [experience-playbook -> Playwright-spec coverage matrix]
 referenced_by:
 owner:
 last_reviewed:

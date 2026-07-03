@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Fund / Org / Client Hierarchy
 summary:
-status:
+  Org -> Fund (Pooled or SMA) -> Client -> per-client API keys — the structural hierarchy shaping user-management-ui
+  provisioning, Firebase entitlements, and /services/reports/*; every client's venue keys are isolated in Secret
+  Manager, never shared across clients.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [fund, org, provisioning, entitlements, sma, client-isolation]
+related: [sma-vs-pooled.md, ../../04-architecture/share-class-architecture.md, ../../04-architecture/client-isolation-sla-and-runtime-profiles.md, ../../07-security/secrets-management.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [org/fund/client provisioning hierarchy (UI + entitlements view)]
 referenced_by:
 owner:
 last_reviewed:

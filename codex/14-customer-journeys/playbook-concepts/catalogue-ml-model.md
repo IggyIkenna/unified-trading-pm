@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: ML Model Catalogue
 summary:
-status: canonical
+  ML Model Catalogue playbook-concept — the UAC<->UTL boundary was resolved 2026-05-13 (UAC owns ModelMetadata /
+  TrainingRun / ModelFamily schemas; UTL owns the runtime ModelRegistry + model loading); the 10 /services/research/ml/*
+  pages still need elevation to catalogue parity.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [catalogue, ml, uac, ui, strategy, registry]
+related: [catalogues.md, catalogue-strategy.md, visibility-slicing.md, ../roadmap/next-waves.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [ML-model catalogue UI-surface parity gap]
 referenced_by:
 owner:
 last_reviewed: 2026-05-13
