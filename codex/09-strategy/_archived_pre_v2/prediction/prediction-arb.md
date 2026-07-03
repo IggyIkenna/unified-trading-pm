@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Prediction Market Arbitrage
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] Cross-venue arbitrage for binary prediction markets (Polymarket/Kalshi/Betfair) —
+  buys YES on venue A + NO on venue B when combined cost < 1.0 - min_edge (2% default), normalising via
+  CanonicalPredictionMarket; near-riskless, USDC-funded, atomic 2-leg execution. Replaced by architecture-v2
+  arbitrage archetypes.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, prediction, arbitrage, defi, cefi, execution]
+related: [../sports/arbitrage.md, ../../architecture-v2/archetypes/arbitrage-price-dispersion.md]
 created: 2026-06-16
 authoritative_for:
 referenced_by:
