@@ -2,16 +2,24 @@
 doc_type: codex-ssot
 title: POD / Elysium DeFi-allocator client — onboarding model
 summary:
-status:
+  "Onboarding model for POD (DeFi allocator, sub-entity of Elysium AIFM Ireland; BVI fund) — entity stack, the
+  POD-vs-UTS custody/venue ownership split, and the pre-cutover Trust-Wallet test-wallet credential model vs the
+  June-1 Copper/CEFFU cutover (Fireblocks OUT OF SCOPE)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [admin, engineer]
-tags: []
-related: []
+tags: [defi, cefi, onboarding, custody, wallets, credentials, client]
+related:
+  [
+    ../04-architecture/custody-providers.md,
+    ../05-infrastructure/custody-onboarding-checklist.md,
+    ../05-infrastructure/pre-cutover-test-wallets-runbook.md,
+  ]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: [POD/Elysium DeFi-allocator client onboarding model]
 referenced_by:
 owner:
 last_reviewed:

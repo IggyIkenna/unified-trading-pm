@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Rule 05 — Building-block dimensions
 summary:
-status:
+  "The thirteen pricing/entitlement building blocks (11 standalone: reporting core, reg + IM reporting,
+  strategy-service entry, instructions integration, research/promote, execution, venue/chain/instrument-type/
+  analytics packs + 2 Tier-B premium modifiers) — the atomic unit all pricing, demos, and entitlements compose
+  from."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, sales, cost, dart, registry]
+related: [04-dart-commercial-axes.md, 08-pricing-principles.md, 10-strategy-instruction-schema-principles.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [thirteen commercial building-block dimensions]
 referenced_by:
 owner:
 last_reviewed:

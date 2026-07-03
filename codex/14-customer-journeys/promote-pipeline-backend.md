@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Promote Pipeline Backend — `/promote` API SSOT
 summary:
-status:
+  "SSOT for the May-23 promote backend API — the POST /api/promote/{strategy_id}/{candidate_manifest_id}
+  contract (request/response/error codes), the 5 minimal pre-flight gates, event emission
+  (STRATEGY_PROMOTED_TO_PAPER/LIVE), source locations, and Phase-9 post-cutover extensions."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [promote, execution, live-trading, mvp, verification]
+related: [../04-architecture/promote-workflow-architecture.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [promote backend API (/api/promote endpoint + May-23 pre-flight gates)]
 referenced_by:
 owner:
 last_reviewed:

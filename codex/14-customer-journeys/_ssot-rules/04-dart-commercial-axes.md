@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Rule 04 — DART commercial axes
 summary:
-status:
+  "DART commercial resolution — two axes (strategy origin: Odum/client × stack depth:
+  reporting-only/downstream/full) collapse to three practical paths, plus the fourth outbound Odum-Signals path;
+  the resolved cell drives pricing, demo scope, and prod restrictions."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-api-contracts]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, sales, dart, cost, strategy]
+related:
+  [
+    05-building-block-dimensions.md,
+    08-pricing-principles.md,
+    10-strategy-instruction-schema-principles.md,
+    12-service-family-scope-rules.md,
+  ]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [DART commercial axes (strategy-origin × stack-depth resolution)]
 referenced_by:
 owner:
 last_reviewed:

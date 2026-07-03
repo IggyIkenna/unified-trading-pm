@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Audiences and Journeys
 summary:
-status:
+  "The full persona × playbook (pb1 marketing / pb2 deep-dive / pb3 demo / real-client / admin) × environment
+  matrix — every UI route must map to at least one cell — plus the canonical anonymous-visitor → cold/warm
+  prospect → demo → real-client journey sequence."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [ui, customer-journey, personas, playbooks, sales, prospect]
+related: [information-architecture.md, glossary.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [persona × playbook × environment matrix (customer-journey audiences)]
 referenced_by:
 owner:
 last_reviewed:

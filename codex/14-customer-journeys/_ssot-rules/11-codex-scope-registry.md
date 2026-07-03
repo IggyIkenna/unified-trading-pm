@@ -2,20 +2,33 @@
 doc_type: codex-ssot
 title: Rule 11 — Codex scope registry (per-audience documentation surface)
 summary:
-status:
+  "Rule 11 — the machine-readable per-audience scope frontmatter tag (scope ∈ {sales, engineer, admin,
+  prospect, investor}) on every codex doc; default [engineer, admin], a per-directory default mapping, and
+  build-manifest + CI-gate consumption. One source, filtered views at read time."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, codex, governance, docspec, sales]
+related:
+  [
+    03-same-system-principle.md,
+    06-show-dont-show-discipline.md,
+    07-data-licensing-boundaries.md,
+    09-internal-commercial-oneliners.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [codex per-audience scope registry (scope frontmatter tag + per-directory defaults)]
 referenced_by:
 owner:
 last_reviewed:
 code_refs:
+  [
+    codex/14-customer-journeys/_tools/build-scope-manifest.sh,
+    codex/14-customer-journeys/_tools/check-scope-coverage.sh,
+  ]
 ---
 
 # Rule 11 — Codex scope registry (per-audience documentation surface)

@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Rule 06 — Show / don't-show discipline
 summary:
-status:
+  "Show/don't-show demo discipline — every experience playbook carries a populated what-not-to-show list;
+  three orthogonal axes (demo mode / commercial path / prod restriction), default per-path exclusions, and the
+  LOCKED-VISIBLE vs HIDDEN-ENTIRELY choice per item."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, sales, ui, dart, docspec]
+related:
+  [01-grammar.md, 03-same-system-principle.md, 07-data-licensing-boundaries.md, 11-codex-scope-registry.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [show/don't-show demo disclosure discipline (LOCKED-VISIBLE vs HIDDEN-ENTIRELY)]
 referenced_by:
 owner:
 last_reviewed:

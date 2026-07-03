@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Rule 08 — Pricing principles
 summary:
-status:
+  "Pricing principles — two external tiers (A cost-plus variable / B fixed upfront+monthly), per-block mixable,
+  twelve-month minimum, internal-cost column codex-private, exclusivity + custom premiums Tier-B-only; actual
+  numbers live only in commercial-model/pricing-building-blocks.md."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, sales, cost, dart, registry]
+related: [05-building-block-dimensions.md, 04-dart-commercial-axes.md, 07-data-licensing-boundaries.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [pricing principles (two-tier building-block model)]
 referenced_by:
 owner:
 last_reviewed:

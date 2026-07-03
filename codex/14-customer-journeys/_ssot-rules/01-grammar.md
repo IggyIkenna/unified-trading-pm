@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Rule 01 — Experience playbook grammar
 summary:
-status:
+  "The fixed nine-section grammar (Audience → Moment in journey → What Odum must prove → Experience goal →
+  Walkthrough → Key messages → What not to show → Desired next step → Internal handoff) every experience
+  playbook under experience/ must carry, in order, with no omissions."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, playbooks, sales, grammar, docspec]
+related: [02-tone-and-posture.md, 06-show-dont-show-discipline.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [experience playbook grammar (nine mandatory sections)]
 referenced_by:
 owner:
 last_reviewed:

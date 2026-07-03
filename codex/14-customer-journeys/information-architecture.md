@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Information Architecture
 summary:
-status:
+  "Top-down canonical IA tree for the Odum platform (PUBLIC / DEEP DIVE / PLATFORM / OPS route groups) — every
+  page must fit — naming the nav SSOTs (spaces-nav-sections.tsx, site-header.tsx, service-tabs.tsx) and the four
+  parallel catalogue surfaces."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [ui, customer-journey, information-architecture, catalogue, navigation]
+related: [audiences-and-journeys.md, glossary.md]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [platform information architecture (route-group tree + nav SSOTs)]
 referenced_by:
 owner:
 last_reviewed:

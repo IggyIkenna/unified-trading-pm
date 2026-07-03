@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Rule 02 — Tone and posture
 summary:
-status:
+  "Odum's external-voice standard — calm, specific, credible, present-tense, lightly guided; institutional not
+  crypto-native — with the banned AI-marketing patterns/postures list and the read-aloud / delete-adverbs /
+  banned-vocab-grep enforcement pass."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, sales, tone, branding, docspec]
+related: [01-grammar.md, 06-show-dont-show-discipline.md, 09-internal-commercial-oneliners.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [Odum external voice and tone standard]
 referenced_by:
 owner:
 last_reviewed:
