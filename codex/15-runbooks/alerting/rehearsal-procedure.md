@@ -15,7 +15,7 @@ tags: [runbook, escalation, live-trading, verification, monitoring, smoke-test]
 related: [codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/threshold-tuning.md]
 created: 2026-05-07
 owner:
-cadence:
+cadence: quarterly (first Monday of each quarter; full AlertCode subset covered every 4 quarters)
 verifier:
 last_executed:
 code_refs:
