@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Stage 3E G2 — Env-split design (dev / staging / prod) for pricing, contracts, metering, claims, compliance
 summary:
-status:
+  mock/staging/prod sink placement for the 5 G2.x state items — pricing numbers (codex markdown, no split), client
+  contracts (Firestore per project), usage metering (GCS parquet + BigQuery), capability claims (Firebase custom claims),
+  compliance events (UTL → Pub/Sub) — with Firestore rules, the odum-staging setup walkthrough, and the staging→prod
+  promotion diff.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, uac, execution, cost, migration, docspec]
+related:
+  [
+    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+    codex/05-infrastructure/bucket-isolation-model.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [Stage 3E G2 dev/staging/prod env-split placement for pricing / contracts / usage-metering / capability-claims / compliance-events]
 referenced_by:
 owner:
 last_reviewed:

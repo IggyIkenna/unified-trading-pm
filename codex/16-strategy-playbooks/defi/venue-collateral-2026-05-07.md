@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: ETH-LST + stablecoin-LST collateral acceptance — 2026-05-07 reverification
 summary:
-status:
+  Evidence trail for the 2026-05-07 reverification that flipped stale accepted=False LST/stablecoin-LST rows in UAC
+  venue_collateral.py to accepted=True with cited haircuts (Deribit stETH 7.5%, Bybit stETH/wstETH 10% + USDe 5% / sUSDe
+  7%, OKX wstETH 10%); unlocks the carry_staked_basis capital-efficient cross-collateral perp short. Live-API haircut
+  probe pending.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer]
-tags: []
+tags: [defi, cefi, execution, uac, deribit, bybit, strategy, verification]
 related: [plans/active/defi_master.md (Fork 1 carry_staked_basis), plans/active/master_to_live_defi_2026_05_23.md Group F]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [2026-05-07 CEX perp-venue LST + stablecoin-LST collateral-acceptance reverification evidence]
 referenced_by:
 owner:
 last_reviewed:

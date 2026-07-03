@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Stage 3B — UAC Combo Rules (Dimensions + Blocker Predicates)
 summary:
-status:
+  Declarative spec for the UAC combo registry — 15 orthogonal dimensions (strategy-identity / market-surface /
+  phase-maturity / commercial-visibility) plus 22 blocker predicates (BL-1..BL-22, code-cited) and the valid_strategies
+  resolution formula (~21,600 candidates → ~130 slots); the schema the Stage 3C derivation engine reads.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [uac, strategy, execution, registry, docspec, defi]
+related:
+  [
+    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
+    codex/09-strategy/architecture-v2/uac-registry-gaps.md,
+    codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [Stage 3B combo-registry dimension model + BL-1..BL-22 blocker predicates + valid-combo resolution formula]
 referenced_by:
 owner:
 last_reviewed:

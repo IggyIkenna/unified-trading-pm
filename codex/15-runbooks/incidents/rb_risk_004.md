@@ -1,14 +1,17 @@
 ---
 doc_type: codex-runbook
 title: RB-RISK-004 — Strategy Safe Mode
-summary:
-status:
+summary: >-
+  Operator runbook for a strategy entering safe mode via Layer-0 enter_safe_mode or an LLM DISPUTE: verify orders paused
+  and positions still tracked, wait for the trigger condition to clear, then EXIT_SAFE_MODE via Safety Ops only after
+  manual verification (require_human_for_resume blocks auto-resume).
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, risk, strategy, escalation, kill-switch, defi]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

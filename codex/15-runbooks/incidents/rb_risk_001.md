@@ -1,14 +1,17 @@
 ---
 doc_type: codex-runbook
 title: RB-RISK-001 — Strategy Drawdown Investigation
-summary:
-status:
+summary: >-
+  Operator runbook for a PnL drawdown-threshold breach: read the 17-field DrawdownInvestigationReport, classify
+  in-distribution vs out-of-distribution vs signal-bug, and drive the response_policy state (monitor / pause / reduce /
+  close-all / resume); auto_close_all threshold pages the founder.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [admin, engineer]
-tags: []
+tags: [runbook, strategy, escalation, monitoring, kill-switch, pnl]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com
