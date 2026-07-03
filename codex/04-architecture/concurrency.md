@@ -2,14 +2,16 @@
 doc_type: codex-ssot
 title: Concurrency
 summary:
-status:
+  "Pointer doc: the concurrency model lives in 04-architecture/README.md and the batch-live architecture
+  doc — no standalone content here."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [concurrency, architecture, batch-live]
+related: [README.md, batch-live-architecture.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

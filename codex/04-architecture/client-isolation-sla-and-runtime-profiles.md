@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Client Isolation, SLA Tiers, and Runtime Profiles — SSOT
 summary:
-status:
+  "SSOT for runtime-topology v7: per-service isolation (shared/isolated as a choice), SLA tiers
+  (basic/standard/premium), runtime profiles (backtest/paper/mock-live/staging/prod replacing 5 mode env
+  vars), and the 8-point chaos-injection contract."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [client-isolation, sla-tiers, runtime-profiles, chaos, topology, deployment]
+related: [runtime-deployment-topology.md, ../05-infrastructure/runtime-tiers-and-deployment.md, ../09-strategy/architecture-v2/README.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [per-service client isolation policy, client SLA tiers, runtime profiles, chaos-injection contract]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

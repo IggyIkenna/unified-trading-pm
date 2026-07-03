@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Client Funds Isolation — HARD RULE
 summary:
-status:
+  "HARD RULE: funds NEVER move between clients — every TransferIntent carries one client_id; enforced by
+  UAC structural guarantee + execution-service consume-time raise + strategy-service
+  IntraClientRebalanceCoordinator emit-time raise (CrossClientTransferForbiddenError)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [client-isolation, funds, transfers, rebalancing, execution, hard-rule]
+related: [execution-service-per-client-isolation.md, per-client-isolation-architecture.md, transfer-coordinator.md, custody-providers.md]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [client funds isolation HARD RULE, cross-client transfer prohibition]
 referenced_by:
 owner:
 last_reviewed:

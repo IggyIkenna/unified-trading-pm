@@ -2,14 +2,16 @@
 doc_type: codex-ssot
 title: Cross-Service Promote Handlers
 summary:
-status: stub
+  "STUB (see promote-workflow-architecture.md): per-service PromoteHandler that validates preconditions
+  (manifest freshness, schema version, credential ping) when a strategy promotes paper→live."
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [promote, handlers, strategy, stub, paper-live]
+related: [promote-workflow-architecture.md]
 created: 2026-05-21
 authoritative_for:
 referenced_by:

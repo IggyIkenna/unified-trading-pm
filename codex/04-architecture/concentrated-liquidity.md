@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Concentrated liquidity — tick math + per-implementation addendum
 summary:
-status:
+  "Shared concentrated-liquidity (CL) tick-math SSOT for all CL AMMs (Uniswap V3/V4, Velodrome/Aerodrome
+  Slipstream, Solana CLMM): sqrtPriceX96 representation, tick↔sqrtPrice, active-liquidity xy=L², position +
+  single-step swap math, tick traversal, and per-implementation addenda."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [concentrated-liquidity, amm, defi, execution, uniswap, solana, tick-math, slippage]
+related: [amm-slippage-simulation.md, batch-live-architecture.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [concentrated-liquidity tick-math invariants shared across CL AMM implementations]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

@@ -2,14 +2,16 @@
 doc_type: codex-ssot
 title: Custody Architecture
 summary:
-status: stub
+  "STUB (see custody-providers.md): May-23 cutover ships CLOUD_KMS_ENCRYPTED custody only; Copper
+  (institutional) + CEFFU (Binance sub-account MPC) are June-1 scope."
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [custody, defi, cloud-kms, copper, ceffu, stub]
+related: [custody-providers.md]
 created: 2026-05-21
 authoritative_for:
 referenced_by:

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Cross-Venue Prediction Arb Detection (Kalshi ↔ Polymarket) — live paper-mode detector + GCS arb store
 summary:
-status:
+  "Design SSOT for the live paper-mode Kalshi↔Polymarket cross-venue arb detector: normalize both venues to
+  YES probability, flag PURE_ARB/QUOTABLE_ARB/ONE_SIDED, persist opportunities to a dated GCS arb store;
+  reuses the shipped matcher/dispersion-feature/arb-engine; P0 producer trades-mislabel fix."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [prediction, arbitrage, cross-venue, features, mtds, data-correctness]
+related: [../02-data/availability-manifest-and-data-status.md, ../05-infrastructure/vm-tarball-deployment.md, ../05-infrastructure/deployment-observability.md, ../12-agent-workflow/async-wait-and-poll-discipline.md]
 created: 2026-06-24
-authoritative_for:
+authoritative_for: [cross-venue prediction arb detection (Kalshi-Polymarket) and the GCS arb-opportunity store]
 referenced_by:
 owner:
 last_reviewed: 2026-06-24

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Client Reporting Architecture
 summary:
-status:
+  "Single-entry SSOT for the per-client NAV/PnL/attribution pipeline: PBMS+execution lineage → UTL
+  pnl_attribution joiner/emitter → attribution.parquet (PnLAttributionRow) → client-reporting-api →
+  deployment-ui; decomposition invariants; factor×layer model lives in pnl-attribution.md."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, deployment-service, deployment-ui, execution-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [client-reporting, pnl, attribution, nav, reconciliation, defi]
+related: [../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md, batch-live-architecture.md, backtest-groups.md]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: [per-client reporting pipeline (NAV/PnL/attribution parquet + decomposition invariants)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
