@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: RB-DATA-001 — Data-Pipeline Cascade (consolidator → MTDS → features)
 summary:
-status:
+  "On-call runbook for the #data-pipeline-alerts DP_* capture-cascade failures (instruments-service → MTDS → MDPS →
+  features); RTO<30min / RPO<5min; most heal via auto_recover/file_issue tiers — only page_operator cases
+  (DP_MISSING_CREDENTIAL, DP_RUN_MOSTLY_EMPTY, DP_VM_GONE_NO_CAPTURE, etc.) need a human."
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service]
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, data-pipeline, manifest, self-healing, disaster-recovery, monitoring]
 related: [codex/15-runbooks/incidents/README.md, codex/05-infrastructure/data-pipeline-alerts.registry.yaml]
 created: 2026-06-22
 owner: ikenna@odum-research.com

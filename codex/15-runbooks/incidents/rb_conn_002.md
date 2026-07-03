@@ -2,13 +2,15 @@
 doc_type: codex-runbook
 title: RB-CONN-002 — Exchange REST API Failure
 summary:
-status:
+  Operator runbook for exchange REST API failure — triage place vs cancel vs auth/rate-limit; cancel unconfirmable
+  fires KILL_SWITCH_CANNOT_CONFIRM_CANCEL → SEV0 + venue support ticket.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, connectivity, rest-api, kill-switch, escalation]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

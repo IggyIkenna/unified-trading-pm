@@ -2,13 +2,15 @@
 doc_type: codex-runbook
 title: RB-INFRA-002 — Machine/Node Failure
 summary:
-status:
+  Operator runbook for GCE node unresponsive / VM disk full / cluster node NotReady — cordon+drain, relaunch from
+  tarball, verify workloads + position reconcile; multiple failing nodes escalate to SEV0.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, infrastructure, vm, node-failure, escalation]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

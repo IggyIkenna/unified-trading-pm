@@ -2,13 +2,15 @@
 doc_type: codex-runbook
 title: RB-ALERT-002 — Physical Siren/GSM Alarm Setup
 summary:
-status:
+  Operator runbook for the physical siren / GSM alarm (Eshion / DAYTECH M5, third carrier SIM) wired via Twilio SMS
+  through the alerting-service notifier; last-resort audible SEV0-no-ack fallback with 5-15s expected trigger time.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service]
 scope: [admin, engineer]
-tags: []
+tags: [runbook, alerting, incident, on-call, escalation, gsm-siren]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

@@ -2,13 +2,15 @@
 doc_type: codex-runbook
 title: RB-ALERT-001 — Dedicated On-Call Phone Setup
 summary:
-status:
+  Operator runbook for setting up the dedicated on-call phone (Nokia 2660 Flip, separate carrier) with PagerDuty +
+  Telegram + Twilio DND-bypass so SEV0 pages are always audible; fires on new on-call operator or device replacement.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, alerting, incident, on-call, escalation, slack]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

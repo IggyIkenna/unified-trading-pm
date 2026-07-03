@@ -2,13 +2,15 @@
 doc_type: codex-runbook
 title: RB-CONN-003 — Internal Messaging Lag
 summary:
-status:
+  Operator runbook for internal messaging lag (Pub/Sub / Kafka / Redis) exceeding the dependency_health_policy
+  threshold — scale consumers / replay DLQ / fail over; live-trading topics blocked escalates SEV1 → SEV0.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, connectivity, messaging, pub-sub, escalation]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

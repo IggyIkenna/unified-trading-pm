@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: RB-INC-003 — Audit Acknowledgement Handling
 summary:
-status:
+  Operator runbook for the audit-ack queue — review the IncidentEvidence bundle + AgentActionEvent rows + LLM
+  RecoveryAuditSignoff verdict, then Audit Ack (transitions HUMAN_AUDIT_ACKED → RESOLVED → CLOSED),
+  request-more-evidence, or dispute; queue target ≤5 pending.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, audit, escalation, verification, live-trading]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

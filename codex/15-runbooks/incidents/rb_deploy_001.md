@@ -2,13 +2,15 @@
 doc_type: codex-runbook
 title: RB-DEPLOY-001 — Production Rollback
 summary:
-status:
+  Operator runbook for production rollback of a service to a known-good Cloud Run revision via DART Safety Ops
+  REDEPLOY (typed-confirm); health-check failure after rollback escalates to SEV0.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, deployment, rollback, execution, escalation]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

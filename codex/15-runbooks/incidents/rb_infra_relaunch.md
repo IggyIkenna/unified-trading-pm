@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: RB-INFRA-RELAUNCH — Registry-driven VM relaunch (escalate-to-orchestrator)
 summary:
-status:
+  Runbook for a planning-VM worker spawned by an escalate-to-orchestrator repository_dispatch (action=relaunch_vm) to
+  relaunch a failed/stalled/OOM'd data VM — read DeploymentsRegistry + resolve_launcher_for_vm, re-run the launcher,
+  verify STARTED@T+60s / PROGRESS@T+10min; bounded ≤2 relaunches/(vm-prefix,day) then page.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service]
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, infrastructure, vm, data-pipeline, orchestrator, self-healing]
 related: [codex/15-runbooks/incidents/rb_data_001.md, codex/05-infrastructure/data-pipeline-alerts.registry.yaml]
 created: 2026-06-23
 owner: ikenna@odum-research.com

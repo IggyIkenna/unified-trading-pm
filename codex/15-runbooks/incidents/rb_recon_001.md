@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: RB-RECON-001 — Position Reconciliation Lag
 summary:
-status:
+  Operator runbook for position reconciliation lag (>15min SEV1, >30min / immediate-override SEV0) — pull venue REST
+  snapshot vs internal ledger, apply the 7 ImmediateSev0Overrides, cancel/flatten via Safety Ops; unfreeze RECON_FREEZE
+  only after operator verifies internal == venue.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service]
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, reconciliation, position, escalation, live-trading]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com

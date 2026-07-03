@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: RB-INFRA-001 — OOM Recovery
 summary:
-status:
+  Operator runbook for service OOM — confirm whether Layer-0 already resize+restarted, distinguish single OOM (SEV2 +
+  ack) from a repeated loop, redeploy-to-known-good if a deploy caused it; repeated OOM with uncertain order/position
+  state escalates to SEV0.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [admin, engineer]
-tags: []
+tags: [runbook, incident, infrastructure, oom, self-healing, escalation]
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com
