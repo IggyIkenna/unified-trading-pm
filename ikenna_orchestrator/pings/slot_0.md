@@ -55,3 +55,11 @@ empty). The check is non-required so promotes still merge — but the gate valid
 for GitHub-OIDC CodeBuild triggering in account `427895769566` (trust policy must cover the fleet repos' OIDC subs for
 `pull_request` refs), then set `AWS_BUILD_ROLE_ARN` as an Actions secret on every repo that calls the PM-hosted
 `image-build-validate.yml`. Verify one promote-PR image-build-gate run goes green end-to-end.
+
+**UPDATE 2026-07-03 (later same day) — NO LONGER URGENT, deferred (DEFERRED-OPERATOR-DECISION)**: Harsh ruled AWS image
+builds were a TEST — GCP Cloud Build is the production path and AWS should not spend money for now. All 3 AWS build
+surfaces are DISABLED: `build-aws` job + `cloud-build-router-aws.yml` `if:false` (PM@`f22fde880`), and the native GitHub
+webhooks on all 18 CodeBuild projects deleted (`aws codebuild delete-webhook`, verified 0 remain — these built on every
+push and were the actual spend). The gate now passes GCP-only, so promote PRs stop redding. **This ask is only needed
+when we WANT AWS builds again** — then: provision the role/secret as above, revert the two `if:false` guards in PM, and
+`aws codebuild create-webhook` per project.
