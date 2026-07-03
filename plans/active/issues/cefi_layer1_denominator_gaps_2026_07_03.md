@@ -95,6 +95,28 @@ enough). The % is neither an upper nor lower bound of the real value.
 - [ ] [SCRIPT] P2. After the gate fixes: re-measure and re-certify the cefi Layer-1 row of the CK3 table (expect the
       denominator to GROW substantially and the % to drop — that is the honest direction).
 
+## ASTER live-forward mode split (C1 RESOLVED — Ikenna 2026-07-03; sequencing is load-bearing)
+
+Decision (recorded in `instruments_service_plan_reconciliation_2026_06_29.md` § C1): ASTER batch+live =
+`trades`/`derivative_ticker`/`perp_funding`; **live-only-forward** = `book_snapshot_5` + `liquidations` (prediction-AG
+pattern — live capture accumulates the history batch cannot provide; pre-wire history stays typed honest absence).
+Capability check found the connectors already built (`aster_book_liq_ws.py`) but unwired, and ONE structural gap:
+nothing date-gates seeding at the (venue, data_type) grain. Execute IN ORDER:
+
+- [ ] [CODE] P1. **Enumerator honours per-(venue,dt) `start_date`** — `_row_data_types`/the cefi date loop must read
+      `get_venue_data_type_start_date(venue, dt)` and seed `expected_unattempted` only from that date (earlier days →
+      typed `EXPECTED_*` absence or out-of-universe). PREREQ for the capability flip — flipping first re-creates the
+      17,282-row over-seed purged 2026-07-03.
+- [ ] [CONFIG] P1. **UAC capability flip** — add `book_snapshot_5` + `liquidations` to
+      `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` with `start_date` = the live-wire date; resolves the standing UAC
+      self-contradiction with `EXPECTED_COVERAGE._CEFI["ASTER"]` (which already lists both).
+- [ ] [INFRA] P1. **Register + launch the live connector** — `aster_book_liq_ws.py` into `live/connector_registry.py` +
+      a live VM (KALSHI-PERP book5 VM is the in-cefi template); verify `live_aster` rows land (per-VM shard spot-check
+      at T+10-15min). Connector SSOT: `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #4.
+- [ ] [SCRIPT] P2. Re-measure post-wire; ASTER book5/liquidations become expected-from-wire-date; the same model then
+      applies to LIGHTER/EXTENDED/PACIFICA when their denominator gaps are worked (they share the live-WS/no-REST
+      profile).
+
 ## Related fragility (observed live 2026-07-03)
 
 - **Freshest-bucket PRIMARY selection is fragile to manifest surgery.** `measure_honest_coverage._read_manifest` picks
