@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: 'Playbook 3b — Demo: Investment Management flavour'
 summary:
-status:
+  'pb3b implementation — IM demo; UI-identical to pb3a (same reporting entitlements + click path), differs
+  only in sales narrative framing (allocator lens vs regulatory lens); includes the per-topic narrative
+  difference table and shares the pb3a Playwright helper.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, playbook, demo, investment-management, reporting, entitlements]
+related:
+  [
+    03-warm-prospect-demo.md,
+    03a-demo-reg-umbrella.md,
+    03c-demo-dart.md,
+    02a-research-im.md,
+    ../playbook-concepts/client-reporting.md,
+  ]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [pb3b IM demo playbook implementation]
 referenced_by:
 owner:
 last_reviewed:

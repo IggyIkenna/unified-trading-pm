@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Target-experience presentation — post-refactor view
 summary:
-status: derivative
+  'Non-SSOT 23-slide presentation deck (v2, 2026-04-20) of the post-Stage-3E-refactor target experience;
+  regenerated from _ssot-rules / experience / commercial-model / infra-spec sources; covers the 14 G1
+  items, the 1-registry-4-derivations engine, per-persona restriction profiles and dev↔staging parity.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin, investor]
-tags: []
-related: []
+tags: [customer-journey, presentation, refactor, derivation-engine, personas, visibility-slicing, ui]
+related:
+  [
+    ../../16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+    ../demo-ops/upsell-overlays.md,
+    ../roadmap/next-waves.md,
+    ../playbook-concepts/visibility-slicing.md,
+    ../playbook-concepts/bloomberg-style-aesthetic.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

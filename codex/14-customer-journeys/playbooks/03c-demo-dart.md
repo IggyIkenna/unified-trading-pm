@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: 'Playbook 3c — Demo: DART flavour'
 summary:
-status:
+  'pb3c implementation — DART demo with most services unlocked; sequential walkthrough of all four
+  catalogues + research → promote → trading → observe; data-pro/strategy/ml/execution entitlements;
+  structurally unlike pb3a/pb3b (no reports-only lock, no Pooled/SMA picker).'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, playbook, demo, dart, catalogues, entitlements]
+related:
+  [
+    03-warm-prospect-demo.md,
+    03a-demo-reg-umbrella.md,
+    03b-demo-im.md,
+    02b-research-dart.md,
+    ../playbook-concepts/catalogues.md,
+  ]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [pb3c DART demo playbook implementation]
 referenced_by:
 owner:
 last_reviewed:

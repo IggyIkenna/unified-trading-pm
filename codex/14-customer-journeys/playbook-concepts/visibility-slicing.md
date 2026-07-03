@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Visibility slicing — the core model
 summary:
-status:
+  'SSOT for the visible(user, item) filter unifying role × entitlements × catalogue lock_state × maturity
+  × org_scope into one rule applied across every UI surface; four slicing dimensions + per-role/persona
+  visible-set examples + dashboard tile/chip slicing.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [customer-journey, visibility-slicing, entitlements, ui, personas, catalogues, dashboard]
+related:
+  [
+    catalogue-strategy.md,
+    catalogues.md,
+    fund-org-hierarchy.md,
+    ../../09-strategy/architecture-v2/dashboard-services-grid.md,
+    ../roadmap/next-waves.md,
+  ]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [visibility-slicing model (visible(user,item) filter across UI surfaces)]
 referenced_by:
 owner:
 last_reviewed:
