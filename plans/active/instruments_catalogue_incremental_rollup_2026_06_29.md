@@ -178,12 +178,14 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
 
 ### Phase 0 — preconditions
 
-- [ ] [VERIFY] P0. Confirm the 4 DeFi dual-form tests in
+- [x] [VERIFY] P0. ✅ Confirm the 4 DeFi dual-form tests in
       `is_build_catalogue_defi_pool_dual_form_test_failures_2026_06_24.md` are GREEN on LDR before touching the defi
       path. Gate: `cd instruments-service && bash scripts/quality-gates.sh --no-fix` green on
       `test_build_instrument_catalogue.py`. _(2026-07-03 note: the issue doc was RESOLVED 2026-06-30 and archived to
       `plans/archive/issues/` — IS v2 green on LDR @ c6354a9b, dual-form tests passing, not skipped. This item is a
-      re-verify + flip, not open work.)_
+      re-verify + flip, not open work.)_ — **VERIFIED instruments-service@dce8e85a (slot-2, 2026-07-03)**: full
+      `quality-gates.sh --no-fix` exit 0 (unit suite green incl.
+      `tests/unit/scripts/test_build_instrument_catalogue.py`, zero-test guard passed, `.qg_last_passed_sha` == HEAD).
 - [ ] [INFRA] P1. (Interim band-aid, optional / operator-gated) bump `lifecycle_catalogue_scheduler.tf`
       `timeout_seconds` 3600→10800 for tradfi ONLY so the daily catalogue stays fresh until the incremental path ships.
       Gate: `terraform plan` shows only the timeout delta. (Operator declined the band-aid 2026-06-29 — keep unchecked
