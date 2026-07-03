@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Sports P2c — derived features history to ML-ready (2015→present)
-summary: Compute derived sports features over full history (2015→present) to ML-ready after upstream history reaches zero-missing.
+summary:
+  Compute derived sports features over full history (2015→present) to ML-ready after upstream history reaches
+  zero-missing.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -9,7 +11,11 @@ stage: [features]
 repos: [e2e-testing, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [sports, features, history, ml-ready, feature-engineering, 2015-present]
-related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, plans/active/sports_features_readiness_for_predictions_2026_06_20.md]
+related:
+  [
+    plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
+    plans/active/sports_features_readiness_for_predictions_2026_06_20.md,
+  ]
 created: 2026-06-27
 parent_epic: sports_master
 assigned_vm: planning
@@ -23,7 +29,12 @@ locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
 superseded_by:
-depends_on: [sports_p0_spot_vm_launchers_2026_06_27, sports_p2_history_apifootball_2015_to_present_2026_06_27, sports_p2_history_reference_and_odds_2015_to_present_2026_06_27]
+depends_on:
+  [
+    sports_p0_spot_vm_launchers_2026_06_27,
+    sports_p2_history_apifootball_2015_to_present_2026_06_27,
+    sports_p2_history_reference_and_odds_2015_to_present_2026_06_27,
+  ]
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
@@ -470,3 +481,53 @@ GCS script updated and 5 SPOT VMs re-launched at 09:54–09:57 UTC 2026-06-29.
 
 Coverage: 2025-09-01..2025-11-30 (P1 golden window, 91 dates across 5 VMs). Expected completion ~10:50–11:00 UTC. P2c
 Todo 1 (full 2015→present) remains blocked on Understat ETA ~2026-07-01 02:00 UTC. Checkbox NOT flipped.
+
+### 2026-07-03 — slot 2 (16th dispatch — WriteGateRejectedError semantic fix shipped, BLOCKED-PREREQ)
+
+**Code fix shipped (3-repo): WriteGateRejectedError semantic mapping**
+
+Root cause identified for 130 `attempted_failed(ValueError)` entries in the features availability index:
+
+- P1 golden window SPOT VMs (fss-backfill-vm-{1..5}, relaunched 2026-06-29) ran with code state AFTER commit `192d74ce`
+  (`fix(sports/write-gate): add acceleration/delta_prob/exchange_price/move columns to odds_features sparse_columns`).
+  However, the PRIOR compute (2025-09-01..2025-11-30) ran BEFORE that commit — `acceleration_*`, `exchange_price_*`,
+  `delta_prob_*`, `move_direction_agreement_*`, `move_sign_consistency_*`, `odds_movement_*` were NOT exempt from NaN
+  threshold. WriteGate correctly rejected those DataFrames; `ValueError` propagated to batch_handler's generic
+  `except (ValueError, ...)` → `manifest.record_failed(error="ValueError")`. Semantic mismatch: the DataFrame was
+  computed correctly; it was legitimately too sparse. Should be `empty_confirmed`, not `attempted_failed`.
+
+Fix shipped across 3 repos (all QG green):
+
+1. **UAC** @ `d71f32282e0a96229a1f2f119f5cde55de704eba` — Added
+   `EmptyConfirmedReason.EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED` to `honest_coverage.py`. EXPECTED\_ prefix → exempt
+   from FetchEvidence requirement. QG: 552s green.
+
+2. **UTL** @ `6db402e5103511c98dfa9bedb5d4be3c34a02633` — Added `WriteGateRejectedError(ValueError)` exception class to
+   `write_gate.py`, exported from `feature_service_base/__init__.py` and top-level `__init__.py`. QG: green (86
+   pre-existing infra failures, exit 0).
+
+3. **features-service** @ `59728b474380f9c5d94977cf364f2d590f0fe783` — `write_sports_table()` now raises
+   `WriteGateRejectedError` instead of bare `ValueError` on gate rejection; batch_handler catches
+   `WriteGateRejectedError` BEFORE generic `except (ValueError, ...)` in both `_run_reference_tables()` and
+   `_run_feature_group()` → `record_empty(EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED)` (no FetchEvidence needed).
+   Regression tests added to `test_writer.py` and `test_batch_handler_capture_status.py`. QG: green.
+
+**Todo 3 (features manifest clean — 0 blank-reason, 0 un-evidenced failed) — BLOCKED-PREREQ (16th dispatch)**
+
+The `attempted_failed(ValueError)` entries will be corrected on the NEXT features compute run (when VMs re-run those
+dates with the fixed code). The retro-fix requires a re-run, not a backfill of the manifest directly. Manifest
+cleanliness target is unmet until P2c compute completes.
+
+State verified:
+
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: unchanged — P2c compute NOT
+  started (P2b Understat VM was preempted at 2019-08-09, not confirmed re-launched; enrichment coordinator status
+  unknown since ~2026-06-29).
+- P2a: 8/9 todos complete (enrichment data_type cleanliness verify pending).
+- P2b: Understat VM `us-backfill-20260628-070120` was at 2018-08-12 at 2026-06-29 08:04 UTC with ETA ~2026-07-01 02:00
+  UTC. Current state unverified (no GCS access from session).
+- P2c Todo 1 gate: NOT met. Checkbox NOT flipped.
+
+BLK raised: enrichment coordinator appears dead; Footystats M+P VM never launched; ODDS EU regressed (92,390 vs
+expected); Understat VM status unconfirmed since preemption. Recommend: (A) verify Understat VM status + re-launch if
+preempted; (B) launch Footystats M+P VM; (C) restart enrichment coordinator.
