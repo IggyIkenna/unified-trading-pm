@@ -141,8 +141,15 @@ Phase 1:
       FAILING ci_status → orchestrator T0 abort + dead-man-switch. Latent since 2026-06-01; masked by the content
       sentinel until the 2026-06-27 staging-retirement promotions changed main. main was NEVER code-broken (SIT
       auto-revalidated same morning). Fix both sides: dep list de-selfed UTL@`9ad8f98d5` (LDR) + fleet-wide self-skip
-      guard in the callee loop PM #767 (auto-merge → main). Only UTL had a self-referencing dep list (fleet-scanned);
-      the template generator already excludes self, agent-audit.yml was hand-written.
+      guard in the callee loop PM #767 (MERGED main@07:09Z). Only UTL had a self-referencing dep list (fleet-scanned);
+      the template generator already excludes self, agent-audit.yml was hand-written. **Runtime-verified same morning
+      ("run it, don't read it")**: manual dispatch on UTL main run `28644627760` proved the guard ("Skipping self-clone
+      of unified-trading-library") AND exposed bug #2 in the same hand list — it OMITTED `unified-api-contracts` (UTL's
+      only real editable path dep) → `uv` "Distribution not found …/unified-api-contracts" (masked for weeks by the same
+      content sentinel). Dep list corrected to the real closure `"unified-api-contracts"` (matching the templated QG
+      caller) UTL@`c6718de5` (LDR). **VERIFIED GREEN end-to-end**: dispatch run `28644929850` (LDR workflow + PM@main
+      callee) — all 3 QG slices + aggregate success. UTL LDR→main promote drain triggered (fleet run `28645228144`) so
+      tonight's ~01:30Z Overnight T0 runs the corrected file from main.
 - [ ] [CICD] P1. **BLOCKED-CREDENTIALS — provision `AWS_BUILD_ROLE_ARN` for image-build-gate** (root-caused 2026-07-03;
       ask filed: `ikenna_orchestrator/pings/slot_0.md` § CREDENTIAL APPROVAL REQUEST — `AWS_BUILD_ROLE_ARN`):
       `image-build-gate.yml` (rolled out fleet-wide 2026-06-27) has NEVER passed — every run fails at "Authenticate to
