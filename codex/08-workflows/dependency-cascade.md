@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Dependency Cascade
-summary:
-status:
+summary: >-
+  The breaking-change dependency cascade: cascade-qg-ordering runs topological fail-fast QG level-by-level, invalidates
+  downstream ci_status on failure, and fires the downstream-fix-agent (auto-PR + /approve gate) — with content-based
+  is_breaking, dependency caps, and reverse schema-changed sync.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ci-cd, dependency-management, quality-gates, self-healing, reconciliation]
+related: [./ci-cd-flow.md, ./version-cascade-flow.md, ./deployment-flow.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [breaking-change dependency cascade (cascade-qg-ordering topological fail-fast + downstream-fix-agent auto-fix)]
 referenced_by:
 owner:
 last_reviewed:

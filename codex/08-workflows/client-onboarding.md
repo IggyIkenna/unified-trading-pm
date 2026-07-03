@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Client Onboarding — 7-step canonical sequence
-summary:
-status:
+summary: >-
+  The 7-step canonical prospect-to-client onboarding sequence (contact → deep-dive → questionnaire → strategy-universe →
+  strategy-evaluation → call → production), naming the Ikenna / client / system action required at every step.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-api, unified-trading-system-ui]
 scope: [sales, engineer, admin]
-tags: []
-related: []
+tags: [onboarding, questionnaire, ui, mvp, escalation]
+related: [./prospect-questionnaire-flow.md, ./signup-signin-workflow.md, ../04-architecture/commercial-service-families.md]
 created: 2026-04-24
-authoritative_for:
+authoritative_for: [7-step canonical client-onboarding sequence (per-step Ikenna/client/system actor playbook)]
 referenced_by:
 owner:
 last_reviewed:

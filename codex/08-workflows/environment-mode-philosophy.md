@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Environment × Auth × Data Mode Philosophy
-summary:
-status:
+summary: >-
+  SSOT for UI environment decisions: the three independent axes — deployment env (hostname-derived), Firebase auth DB
+  (UAT shares the prod project), and data mode (mock vs real) — plus which runtime badges/banners show on which surface.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-api, unified-trading-system-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [ui, mvp, validation, verification]
+related: [./local-dev.md, ./signup-signin-workflow.md]
 created: 2026-04-23
-authoritative_for:
+authoritative_for: [UI environment × auth × data-mode three-axis model (deployment-env / Firebase-auth-db / mock-vs-real)]
 referenced_by:
 owner:
 last_reviewed:

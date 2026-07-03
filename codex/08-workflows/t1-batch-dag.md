@@ -1,17 +1,24 @@
 ---
 doc_type: codex-ssot
 title: T+1 Batch Pipeline DAG
-summary:
-status:
+summary: >-
+  SSOT for the T+1 nightly batch reconciliation pipeline: the Cloud Scheduler stage DAG (00:30-06:00 UTC), the isolated
+  `t1-recon/` GCS namespace, per-stage deviation metrics/thresholds, and the batch-vs-thermal run-tag distinction.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [reconciliation, pipeline, backfill, data-quality, monitoring, execution]
+related:
+  [
+    ../04-architecture/reconciliation-resolution.md,
+    ../04-architecture/runtime-deployment-topology.md,
+    ../09-strategy/operational/paper-batch-live-reconciliation.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [T+1 batch reconciliation pipeline schedule (Cloud Scheduler stage DAG + t1-recon/ GCS namespace isolation)]
 referenced_by:
 owner:
 last_reviewed:

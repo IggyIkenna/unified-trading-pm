@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Cutover-window critical-path checkpoint timeline (2026-05-13 → 2026-05-23)
-summary:
-status:
+summary: >-
+  Cutover-window (2026-05-13 → 05-23) checkpoint timeline: the serial data-pipeline track vs the 13 parallel code/tests
+  workstreams, per-archetype ML/backtest sizing (~19.5 cal-AI-days), and per-day slot-scheduling guidance for slot-1.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [cutover, golden-window, orchestrator, backfill, ml, mvp]
+related: [../09-strategy/mvp-universe-per-asset-group.md, ./deployment-flow.md]
 created: 2026-05-13
-authoritative_for:
+authoritative_for: [cutover-window (2026-05-13→05-23) serial-vs-parallel track sequencing timeline]
 referenced_by:
 owner:
 last_reviewed:

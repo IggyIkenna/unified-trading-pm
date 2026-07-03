@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Per-cone parallel staging locks — design
-summary:
-status:
+summary: >-
+  Design doc (no implementation) to replace the global `staging_status.locked` boolean with per-dependency-cone locks,
+  so independent T3+ cones can run SIT concurrently while a T0/T1-base breaking change still serialises the whole fleet.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [ci-cd, quality-gates, refactor, dependency-management, orchestrator]
+related: [./ci-cd-flow.md, ./dependency-cascade.md, ../04-architecture/tier-and-import-architecture.md]
 created: 2026-06-27
-authoritative_for:
+authoritative_for: [per-cone parallel staging-lock design (cone_locks map + T0-base-exclusive SIT parallelism rules)]
 referenced_by:
 owner:
 last_reviewed:

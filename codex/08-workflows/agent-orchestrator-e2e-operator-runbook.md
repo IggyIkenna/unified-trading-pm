@@ -1,17 +1,24 @@
 ---
 doc_type: codex-ssot
 title: agent-orchestrator — e2e operator runbook
-summary:
-status: active
+summary: >-
+  Workspace operator runbook for the agent-orchestrator (EC2 VM + Firebase dashboard): URL registry, JWT login, worker
+  spawn (Path A backend-automated / Path B manual), stale-slot recovery primitives, phase-gate flips, and escalation.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, runbook, escalation, self-healing, observability]
+related:
+  [
+    ../04-architecture/agent-orchestrator-overview.md,
+    ../05-infrastructure/agent-orchestrator-deploy.md,
+    ../12-agent-workflow/orchestrator-multi-vm-topology.md,
+  ]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [agent-orchestrator e2e operator runbook (workspace URL registry + spawn/stale-recovery/escalation procedures)]
 referenced_by:
 owner:
 last_reviewed:

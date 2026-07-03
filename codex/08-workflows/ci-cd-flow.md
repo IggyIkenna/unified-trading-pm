@@ -1,8 +1,10 @@
 ---
 doc_type: codex-ssot
 title: CI/CD Flow
-summary:
-status:
+summary: >-
+  SSOT for the workspace CI/CD pipeline: the LDR-trunk → staging → main branch model, the quickmerge two-pass ship, the
+  Tier-C drain promotions, the content-based breaking-change SIT gate, and the Firestore-SSOT `ci_status` lifecycle.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
@@ -16,10 +18,21 @@ repos:
     system-integration-tests,
   ]
 scope: [engineer]
-tags: []
-related: []
+tags: [ci-cd, quickmerge, quality-gates, ssot-audit, orchestrator, verification, observability]
+related:
+  [
+    ./deployment-flow.md,
+    ./dependency-cascade.md,
+    ./branch-and-version-reference-model.md,
+    ../05-infrastructure/quickmerge-architecture.md,
+  ]
 created: 2026-05-15
 authoritative_for:
+  [
+    LDR-trunk → staging → main branch-and-promotion model,
+    content-based breaking-change SIT gate (detect_breaking_change.py),
+    ci_status Firestore-SSOT lifecycle,
+  ]
 referenced_by:
 owner:
 last_reviewed:

@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Prospect Questionnaire & Onboarding-Docs Flow
-summary:
-status:
+summary: >-
+  SSOT for the prospect questionnaire (UAC QuestionnaireResponse — 6 base + 7 Reg-Umbrella axes), its briefings-gate
+  access path, the admin playback loop, and the onboarding-docs DocStore (local vs GCS backend) upload/download/delete
+  flow.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-ui, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, sales]
-tags: []
-related: []
+tags: [questionnaire, onboarding, uac, ui, mvp]
+related: [./signup-signin-workflow.md, ./client-onboarding.md, ../14-customer-journeys/authentication/light-auth-briefings.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [prospect questionnaire schema (13-axis QuestionnaireResponse) + onboarding-docs DocStore upload/delete flow]
 referenced_by:
 owner:
 last_reviewed:

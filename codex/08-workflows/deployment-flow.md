@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Deployment Flow — Operator Perspective
-summary:
-status:
+summary: >-
+  Operator-perspective deployment path: the 3 gates (local quality-gates.sh Pass-1 → quickmerge Pass-2 → main promotion +
+  semver bump) through to Cloud Build, the paper→live strategy-promotion CLI/UI paths, emergency procedures, and the
+  human-only hard-stop list.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ci-cd, quickmerge, quality-gates, verification, observability]
+related: [./ci-cd-flow.md, ./version-graduation.md, ../04-architecture/promote-workflow-architecture.md, ./dependency-cascade.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [deployment-flow operator gate-walkthrough (3-gate local→staging→main promotion + emergency procedures)]
 referenced_by:
 owner:
 last_reviewed:
