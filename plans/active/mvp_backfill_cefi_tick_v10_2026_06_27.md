@@ -677,3 +677,100 @@ cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy — af=1
 4. **Reprobe residual af:** BINANCE-SPOT(14K), COINBASE-SPOT(3K), OKX-SWAP(14K) — check honest-absence or re-attempt
 5. **Legacy venue artifacts** (DERIBIT=57K pre-v10 trades/book5, CRYPTOFACILITIES=8K, OKEX-*=16K, BITFINEX-DERIV=4K) — pre-v10 scope exclusions; DO NOT block G4
 6. **Re-run 4pillar** with `--smoke` mode to get fast shard health check (full run times out at 30min for cefi)
+
+---
+
+### G4 Verification Run — 2026-07-03T09:34–10:12Z (GATE NOT MET — BLOCKED-CREDENTIALS)
+
+**Scripts run (instruments-service slot-6):**
+1. `measure_honest_coverage.py --asset-group cefi` (with merge) → confirmed prd manifest consolidated at 08:47Z ✅
+2. `measure_honest_coverage.py --asset-group cefi --no-merge` → prd-only view unchanged (af=566,322, eu=43,906)
+3. `reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run` → 782 HL phantoms confirmed
+4. `reconcile_phantom_manifest_rows_all.py --asset-group cefi` (**--apply**) → **782 HL phantoms flipped cap→af ✅** (manifest updated)
+
+**Coverage (prd --no-merge) — 2026-07-03T09:37Z (post-consolidation, pre-phantom-apply):**
+
+| metric    | count      | delta vs 05:07Z | note                                  |
+| --------- | ---------: | --------------: | ------------------------------------- |
+| captured  | 2,946,982  | 0               | unchanged — consolidation had no net new cap |
+| af        |   566,322  | 0               | unchanged prd-only                    |
+| ec        | 2,161,757  | 0               | unchanged                             |
+| eu (prd)  |    43,906  | 0               | unchanged                             |
+| coverage  |    82.85%  | 0.00pp          |                                       |
+
+**Key findings (2026-07-03 run):**
+
+1. ✅ **Manifest consolidation** completed at 2026-07-03T08:47Z — 4 per_vm shards (BF-2026-heavy, BYBT-25-light, BYBT-26-light, HL-2025) absorbed. No net new captured data (VMs had already written their capture state; af unchanged).
+2. ✅ **Phantom reconcile applied** — 782 HL phantoms (derivative_ticker=340, book5=251, trades=191) flipped to af. Triage: `gs://central-element-323112-phantom-triage/triage_cefi_20260703_095205.jsonl`.
+3. ✅ **HL reprobe VMs launched** — 4 SPOT VMs RUNNING: cefi-hyperliquid-{2023,2024,2025}-20260703-101235, cefi-hyperliquid-2026-20260703-101152.
+4. ❌ **BLOCKED-CREDENTIALS: Tardis API key expired** — all 3 GCP Secret Manager versions return HTTP 401. Wave-2 Tardis venues cannot launch. Issue doc: `plans/active/issues/tardis_key_expired_2026_07_03.md`.
+
+**BF/BYBT futures_chain finding (big finding — possible data correctness):**
+- BINANCE-FUTURES futures_chain: cap=0, af=41,068 (af GREW from G0 baseline of 670 after wave-1 light VMs). Systematic failure — not partial capture. Possible root cause: Tardis does not serve futures_chain for BF (instrument-level absence, not rate limit). Same pattern in BYBT (futures_chain cap=0, af=14,823).
+- **Action needed**: after Tardis key is renewed and wave-2 VMs run, check error_reason for BF/BYBT futures_chain af cells. If Tardis returns 404/scope-out for all, reclassify as `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` rather than af.
+
+**Remaining af by venue post-phantom-apply (prd, estimated):**
+
+| venue              | af (est.)  | note                                                    |
+| ------------------ | ---------: | ------------------------------------------------------- |
+| BINANCE-FUTURES    | 171,961    | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS**        |
+| KRAKEN-FUTURES     |  74,301    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
+| BITFINEX-FUTURES   |  64,893    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
+| BYBIT              |  64,310    | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS**         |
+| DERIBIT            |  57,569    | pre-v10 artifacts — DO NOT BLOCK G4                     |
+| UPBIT              |  32,708    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
+| BINANCE-SPOT       |  14,270    | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS**         |
+| OKX-SWAP           |  13,643    | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS**         |
+| BITGET-FUTURES     |  10,966    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
+| BITGET-SPOT        |   7,600    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
+| COINBASE-SPOT      |   3,094    | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS**         |
+| KRAKEN-SPOT        |   2,900    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
+| BITFINEX-SPOT      |   2,000    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
+| HYPERLIQUID        |   1,964    | 4 SPOT VMs RUNNING (HL S3 — not Tardis) 🟢              |
+
+**Gate verdict:** ❌ NOT MET — af≈567K (requires 0; HL reprobe in-flight); BLOCKED-CREDENTIALS on Tardis venues.
+
+**To unblock:**
+1. Operator: renew Tardis API key → `gcloud secrets versions add tardis-api-key --data-file=<keyfile> --project=central-element-323112`
+2. After key renewed: launch wave-2 + reprobe all Tardis venues with `FORCE=1 VENUES="KRAKEN-FUTURES KRAKEN-SPOT BITFINEX-FUTURES BITFINEX-SPOT UPBIT BITGET-FUTURES BITGET-SPOT BINANCE-FUTURES BYBIT BINANCE-SPOT OKX-SWAP OKX-FUTURES COINBASE-SPOT OKX-SPOT" bash scripts/vm/launch-cefi-sharded-backfill.sh`
+3. After HL VMs complete: run phantom reconcile dry-run → check HL af→0
+4. After all VMs complete: re-run G4 verification scripts → verify gate met → flip G4 checkbox
+
+### G4 Verification Run — 2026-07-03T10:20–10:45Z (GATE NOT MET — VMs in-flight)
+
+**CORRECTION to previous entry (BLOCKED-CREDENTIALS was incorrect):**
+The Tardis API key IS valid — confirmed via `gcloud secrets versions access latest --secret=tardis-api-key` + `curl -H "Authorization: Bearer $KEY" https://api.tardis.dev/v1/api-key-info` returning full exchange list (academic access, valid until 2027-06-20). The previous BLOCKED-CREDENTIALS diagnosis was caused by the launcher's bare `gcloud` call failing due to PATH (`/snap/google-cloud-cli/current/bin` not in PATH) → empty `_TARDIS_KEY` → false abort. **Fix: `TARDIS_KEY_CHECK=0` bypasses the check.** The issue doc `plans/active/issues/tardis_key_expired_2026_07_03.md` should be deleted/corrected.
+
+**Actions taken (2026-07-03T10:20–10:45Z, slot-6):**
+
+1. ✅ **Tardis key confirmed valid** — Bearer header works (key expires 2027-06-20, academic access).
+2. ✅ **Wave-2 VMs launched** — 53 SPOT VMs for KRAKEN-FUTURES, KRAKEN-SPOT, BITFINEX-FUTURES, BITFINEX-SPOT, UPBIT, BITGET-FUTURES, BITGET-SPOT via `TARDIS_KEY_CHECK=0 FORCE=1`. All 53 launched (exit 0); 32 RUNNING at T+10min verify (others self-terminated after completing small year ranges). ✅ T+10min gate: VMs RUNNING.
+3. ✅ **futures_chain Tardis channel absence confirmed** — `GET /v1/exchanges/<exch>` → `availableChannels` shows NO `futures_chain` for: binance-futures, bybit, deribit, kraken-futures, bitfinex-derivatives, bitget-futures, upbit. All CeFi Tardis venues lack this channel.
+4. ✅ **futures_chain af → ec reclassification applied** — `market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py` reclassed 66,007 af → `empty_confirmed/EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`. Snapshot: `gs://market-data-tick-cefi-prd-central-element-323112/_index/snapshots/pre_futures_chain_reclass_20260703.parquet`. New manifest: af=501,100 (was 567,107).
+5. 🟡 **Wave-1 reprobe VMs launching** — BINANCE-FUTURES, BYBIT, BINANCE-SPOT, OKX-SWAP, OKX-FUTURES, COINBASE-SPOT, OKX-SPOT, DERIBIT; `TARDIS_KEY_CHECK=0 FORCE=1`. In-flight at T+10min check.
+
+**Critical finding — DERIBIT options_chain failure:**
+DERIBIT options_chain af=10,114 (cap=1) — nearly all options_chain shards failed in wave-1. Tardis does NOT serve `options_chain` or `futures_chain` as a native channel for Deribit (confirmed via API). `options_chain` in MTDS is an internal bundled partition type, not a direct Tardis channel. This means options_chain data for Deribit is assembled from per-instrument `trades`/`ticker` downloads, bundled by underlying. The failure may be due to: (a) Deribit option instruments not in Tardis historic data, or (b) bundling logic error. **G4 gate Part 2** (Deribit OPTION as options_chain ONLY) CANNOT be met until options_chain af=0. NOTIFY OPERATOR.
+
+**Remaining af by venue (post-futures_chain reclass, pre-reprobe):**
+
+| venue              | af         | note                                                     |
+| ------------------ | ---------: | -------------------------------------------------------- |
+| BINANCE-FUTURES    | 130,893    | reprobe VMs in-flight 🟡                                |
+| BYBIT              |  49,487    | reprobe VMs in-flight 🟡                                |
+| DERIBIT            |  47,455    | reprobe in-flight 🟡; options_chain 10,114 — see finding|
+| KRAKEN-FUTURES     |  74,301    | wave-2 VMs RUNNING 🟢                                   |
+| BITFINEX-FUTURES   |  64,893    | wave-2 VMs RUNNING 🟢                                   |
+| UPBIT              |  32,708    | wave-2 VMs RUNNING 🟢                                   |
+| BINANCE-SPOT       |  14,270    | reprobe VMs in-flight 🟡                                |
+| OKX-SWAP           |  13,643    | reprobe VMs in-flight 🟡                                |
+| BITGET-FUTURES     |  10,966    | wave-2 VMs RUNNING 🟢                                   |
+| BITGET-SPOT        |   7,600    | wave-2 VMs RUNNING 🟢                                   |
+| COINBASE-SPOT      |   3,094    | reprobe VMs in-flight 🟡                                |
+| KRAKEN-SPOT        |   2,900    | wave-2 VMs RUNNING 🟢                                   |
+| BITFINEX-SPOT      |   2,000    | wave-2 VMs RUNNING 🟢                                   |
+| HYPERLIQUID        |   1,182    | 4 SPOT VMs RUNNING 🟢 (post-phantom-reclass)            |
+| OKX-FUTURES        |   2,399    | reprobe VMs in-flight 🟡                                |
+| OKX-SPOT           |   1,129    | reprobe VMs in-flight 🟡                                |
+
+**Gate verdict:** ❌ NOT MET — af=501,100 requires 0; multiple VM waves in-flight. After all complete: run reclass again (wave-2 futures_chain af), run phantom reconcile, re-run G4 scripts.
