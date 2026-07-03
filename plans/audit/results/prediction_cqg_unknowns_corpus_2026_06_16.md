@@ -2,20 +2,24 @@
 doc_type: audit-result
 title: Prediction cqg classifier — "unknown" (OTHER) corpus for theme-building (decision 338)
 summary:
-status: complete
+  READ-ONLY corpus of Polymarket markets the canonical_question_group (cqg) classifier routes to OTHER (decision 338) —
+  classifier v2026-05-23.3 (hash 5ec47468e6935431) has only 29 named groups + OTHER (BTC/ETH up-down daily + a few
+  CME-linked); ~79.6% of shards / ~94.5% of distinct markets fall to OTHER because SOL/XRP price, all sports, politics,
+  weather, tech, geo, culture have no cqg target; ships 15 suggested theme candidates for the operator to hand-build.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [prediction, uac, catalogue, instruments, data-quality, audit]
+related: [unified-api-contracts, instruments-service, plans/audit/results/mvp_instrument_universe_gap_audit_2026_06_17.md]
 created: 2026-06-16
-audited_scope:
+audited_scope: Polymarket cqg-classifier OTHER/unknown corpus — classifier code path (UAC taxonomy + classifiers.py group maps) + full GCS raw_tick_data walk (47,767 trades parquets, 2025-03-14→2025-10-14) + 3,382-market title harvest for theme-building
 date: 2026-06-16
 auditor: ikennaigboaka
 parent_epic: predictions_master
-severity:
+severity: P3
 resulting_plan:
 lib_version:
 doc_versions_checked:

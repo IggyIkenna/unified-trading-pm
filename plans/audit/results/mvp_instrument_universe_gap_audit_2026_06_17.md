@@ -2,20 +2,24 @@
 doc_type: audit-result
 title: MVP Instrument Universe Gap Audit — Expected vs Actual (manifest-based)
 summary:
-status: active
+  Manifest/catalogue-based MVP instrument-universe gap audit (EXPECTED from UAC SSOTs vs ACTUAL instruments-store
+  catalogue + market-data _index) — Finding-1 (18/44 CeFi bases had zero catalogue defs) + Finding-2 (KRAKEN
+  reference-vs-market split, 2 IS parser bugs) RESOLVED 2026-06-17; open — rETH/LST thin (P1), VIX/VX=0 on CME (P2),
+  1.29M attempted_failed + 95% schema_version v8 (P2); no DeFi/Sports per-token expected SSOT exists.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mvp, instruments, catalogue, manifest, honest-coverage, cefi, defi, tradfi, audit]
+related: [unified-api-contracts, codex/04-architecture/instruments-service-as-ssot-for-mtds.md, codex/04-architecture/instrument-universe-registry-consolidation.md, plans/audit/results/prediction_cqg_unknowns_corpus_2026_06_16.md]
 created: 2026-06-17
-audited_scope:
+audited_scope: MVP instrument universe — CeFi/DeFi/TradFi/Prediction/Sports EXPECTED (UAC SSOTs) vs ACTUAL (instruments-store catalogue day=2026-06-11 + market-data-tick _index)
 date: 2026-06-17
 auditor: audit-agent (deployment-api slot)
 parent_epic: instruments_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

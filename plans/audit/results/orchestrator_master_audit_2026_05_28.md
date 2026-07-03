@@ -2,20 +2,24 @@
 doc_type: audit-result
 title: orchestrator_master audit — 2026-05-28
 summary:
-status: complete
+  agent-orchestrator fleet audit (Sections A-L) against refreshed instructions — most checks GREEN (setup-tokens-only
+  auth, plan-driven backlog regen, safety daemons, notifications, dashboard) but 2 P0 incidents surfaced — central
+  API VM i-0c9b283b31d6b5ca7 impaired/unreachable + fleet VMs unreachable on the public path with no operator
+  backdoor; P1s — missing uts-prod-orphan-ping-audit cron, undispatched audit pool, slot-host symmetry fail.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, deployment-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, self-healing, infrastructure, monitoring, role-registry, audit]
+related: [plans/audit/instructions/orchestrator_master_audit_instructions.md, plans/audit/results/orchestrator_master_audit_2026_06_01.md, codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/runtime-deployment-topology.md]
 created: 2026-05-28
-audited_scope:
+audited_scope: agent-orchestrator fleet — topology/connectivity, auth model, backlog regen, safety mechanisms, notifications, state persistence, dashboard, VM provisioning, EIP/DNS, codex alignment, operational hygiene, plan workflow/audit pool
 date: '2026-05-28'
 auditor: harsh-claude-opus
 parent_epic: orchestrator_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

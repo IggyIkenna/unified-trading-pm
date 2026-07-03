@@ -2,20 +2,24 @@
 doc_type: audit-result
 title: QG per-phase wall+RAM profile — fleet sweep results + scopability classification
 summary:
-status: complete
+  QG per-phase wall+RAM profile (fleet sweep, 25 repos) — tests dominate (59.5% wall, 5.5GB RAM), codex is the real #2
+  (21.7%, ~2× typecheck) not basedpyright; total serial wall ~6,145s. 2026-06-17 re-profile after per-step optimizations
+  (codex --fast, size-checks batching, caches) + operator decision to keep tests+typecheck always-FULL → verdict STOP
+  building the change-scoped fast tier — only ~1.1% of wall remains scopable; the real lever is CI-side test caching.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [quality-gates, performance, benchmark, monitoring, infrastructure, audit]
+related: [codex/06-coding-standards/quality-gates.md, plans/audit/results/qg_config_ssot_matrix_2026_06_09.md]
 created: 2026-06-09
-audited_scope:
+audited_scope: per-phase QG wall-time + RAM profile (tests/codex/typecheck/pip-audit/size-checks/bandit/removed-symbols/ruff) across the fleet, single-core pinned; + phase scopability classification for the fast-tier design; re-profiled 2026-06-17 post-optimization
 date: '2026-06-11'
 auditor: slot (interactive)
 parent_epic: infrastructure_master
-severity:
+severity: P3
 resulting_plan:
 lib_version:
 doc_versions_checked:

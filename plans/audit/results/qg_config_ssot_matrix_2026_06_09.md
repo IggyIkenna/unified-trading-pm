@@ -2,20 +2,24 @@
 doc_type: audit-result
 title: QG config dual-SSOT matrix — TIER-A vs TIER-B knob classification + bandit -c verdict
 summary:
-status: complete
+  QG-config dual-SSOT classification (Phase 0) — 13 TIER-A knobs with a native [tool.*] toml home the bash flag shadows,
+  27 TIER-B bash-orchestration-only knobs → the planned [tool.quality-gates] table; verdicts — [tool.bandit] is DEAD
+  fleet-wide (bases run bandit without -c; empirically verified) and adding -c pyproject.toml is SAFE (2 repos' skips
+  are moot in-tree); 5 repos carry live coverage stub-vs-toml drift (alerting 76/78, mdps 70/77, mtds 28/71, SIT 2/0, uta 77/70).
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [quality-gates, ssot-audit, consolidation, infrastructure, audit]
+related: [codex/06-coding-standards/quality-gates.md, plans/audit/results/qg_step_profile_2026_06_09.md]
 created: '2026-06-10'
-audited_scope:
+audited_scope: QG bash-base config knobs (base-service.sh + base-library.sh — ruff/pytest/coverage/basedpyright/bandit/pip-audit/vulture) TIER-A/TIER-B classification vs pyproject.toml native homes, per-repo coverage-drift sweep, bandit -c behaviour, per-repo [tool.bandit] skips audit
 date: '2026-06-10'
 auditor: slot-1 (claude)
 parent_epic: infrastructure_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

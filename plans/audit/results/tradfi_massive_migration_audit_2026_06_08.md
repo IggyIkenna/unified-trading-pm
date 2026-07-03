@@ -2,20 +2,25 @@
 doc_type: audit-result
 title: TradFi Databento → Massive migration — multi-axis audit (2026-06-08)
 summary:
-status: complete
+  5-axis audit of the TradFi Databento→Massive migration (shape parity · source flagging · batch/live mode · canonical
+  zero-drift · pre-subscription readiness) — verdict fail — the operator's "use old+new parquet without checking source"
+  goal is NOT met — 2 blocking code gaps (P0 Massive connector never routed through tradfi_shared canonical writer →
+  shape drift; P0 consolidator dedup key omits source → co-mingled second-source rows silently dropped), both fixable
+  before paying; source-flagging + batch_massive mode GREEN; live probe confirms shape is achievable + only equity/ETF ticks are entitlement-gated (not MVP).
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: [plans/active/data_source_provenance_all_asset_groups_2026_06_01.md, plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md]
+tags: [tradfi, migration, pipeline-mode, data-correctness, manifest, consolidation, book-microstructure, audit]
+related: [plans/active/data_source_provenance_all_asset_groups_2026_06_01.md, plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md, plans/active/tradfi_massive_dual_source_2026_05_28.md, codex/02-data/tradfi-databento-sourcing-ssot.md]
 created: 2026-06-08
-audited_scope:
+audited_scope: TradFi Databento→Massive migration across 5 axes (shape parity, source flagging tradfi+all-AGs, batch/live mode recording, canonical zero-drift for consumers, pre-subscription code readiness) — 4-repo code-state audit + write-path verification + live Massive endpoint feasibility probe + cross-cutting bar-edge convention sweep
 date: 2026-06-08
 auditor: harsh (interactive, hk laptop)
 parent_epic: tradfi_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:
