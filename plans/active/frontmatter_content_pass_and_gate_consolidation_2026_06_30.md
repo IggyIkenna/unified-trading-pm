@@ -138,7 +138,16 @@ instead of opening the doc — most valuable right before the codex↔code drift
   reached for issue-ish values `issue`/`audit`/`data-correctness` the closed vocab lacks; recurring instinct → consider
   an enum addition at gate-consolidation time). Non-blocking (warn-only gate working as designed); not this plan's
   scope to fix the 3 docs.
-- 2026-07-03 — **P3.0 shipped** (pm@8d9167827): 804 `created` + 29 NA normalized, 825 files; SOFT 5,887 → 5,053.
+- 2026-07-03 — **P3.2 fan-out RUNNING (operator-dispatched /autonomous).** Operator decisions: Opus sub-agents (usage
+  window resets 18:59Z, 40% used — switch to Sonnet only if seven_day utilization >90%, checked per wave via the OAuth
+  usage endpoint); **local commits only, NO push until the final full `quality-gates.sh`** then ONE push (explicit
+  operator override of per-unit push); all trees incl. plans, not just codex; bonus if usage/time remain:
+  plans/archive + other archived docs (currently outside DOC_TREES). Mechanics: 1,006 remaining docs split into 55
+  lanes (~20 docs each, folder-coherent, priority codex → plans/audit → plans/epics → plans/active), lane manifests at
+  `/tmp/claude-1000/-active-unified-trading-system-repos/b234abe8-7a31-44b9-82b0-84cb4f324543/scratchpad/lane_NN.txt`
+  (+ `lanes.json`); waves of 6 parallel agents; per wave: docspec-verify lane files → `git add` by lane list → local
+  commit → usage check → next wave. Wave 1 = lanes 00–05 (113 docs) LAUNCHED. Progress metric: lanes committed /55.
+  Final phase: authoritative_for collision sweep + full docspec sweep + `quality-gates.sh` + single push + flip P3.2.
 - 2026-07-03 — **P3.1 pilot shipped** (pm@091318d21): 14 docs in `codex/11-project-management`, all six content fields;
   docspec HARD=0, content-SOFT → 0 (bar valid-empty `[]`). **Discoveries:** (1) validator↔schema tension — schema §6
   says empty `repos: []`/`related: []` is legal, but the FieldSpec flags it SOFT "required but empty"; MUST be resolved
