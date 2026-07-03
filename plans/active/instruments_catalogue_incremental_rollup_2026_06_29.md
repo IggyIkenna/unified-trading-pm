@@ -274,9 +274,22 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
 
 ### Phase 4 — downstream verification
 
-- [ ] [VERIFY] P1. Re-verify each consumer in the blast-radius table reads the incremental catalogue identically (run
+- [x] [VERIFY] P1. ✅ Re-verify each consumer in the blast-radius table reads the incremental catalogue identically (run
       `enumerate_expected_universe`, the legacy reason classifier, tardis resolution, the data-status unique-count)
-      against the incremental output vs the last full-rebuild output. Gate: outputs identical.
+      against the incremental output vs the last full-rebuild output. Gate: outputs identical. — 2026-07-03, against the
+      four freshly-promoted incremental artifacts: **(1) data-status unique-count** — deployment-api
+      `manifest_source.read_unique_instrument_count` returns tradfi 1,091,661 / cefi 365,002 / defi 7,254 / prediction
+      1,243,069 (tradfi == the shadow-parity merged count; content identity vs the last full rebuild proven by the Phase
+      2 shadow diff: 0 dropped keys, 0 available_to changes). **(2) legacy-reason-classifier + tardis substrate** — UTL
+      `read_instruments_catalog_bounds` resolves lifecycle windows off the new artifacts (CME `ESZ6` →
+      2021-09-17→2026-12-18 expiry; BINANCE-FUTURES `btcusdt` → 2019-11-17→active). **(3) schema** — all 4 artifacts
+      carry exactly `CATALOG_COLUMNS` (same set; `mvp` last, the position the old full rebuild also wrote — consumers
+      are name-addressed). **(4) `enumerate_expected_universe` (defi scan-only)** — mechanically consumes the new
+      catalogue (11.77M-row manifest + present-set + cross-join all ran), then trips its halt-safety at would-write
+      1,000,001 > 1M — **PRE-EXISTING backlog, NOT this plan**: the identical count reproduces with
+      `--end-date 2026-06-29` (the old catalogue's exact coverage). Filed
+      `plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` (operator-gated apply per the
+      enumerator's own halt message).
 - [x] [VERIFY] P2. ✅ Annotate (do not duplicate) the overlapping open todos: the catalogue-monotonicity-check
       `[VERIFY] P1` in `path_to_100pct_backfill_mtds_is_2026_06_17.md:217` (this plan answers it); and the
       catalogue-regen-fast-fail / terraform-apply `[INFRA] P1` items in
@@ -362,3 +375,24 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
   ceiling is 24h); weekly `lifecycle-catalogue-full-{cefi,defi,tradfi,prediction}` jobs get `timeout_seconds=21600` (6h,
   ~2.6× the 2h17m measured full walk), staggered Sat 03:00–06:00 UTC. Next: deployment-service terraform ship +
   `gcloud builds submit` image + terraform apply + operational proof.
+- 2026-07-03 (slot-2, /autonomous) — **FINAL REPORT: plan COMPLETE (every checkbox flipped with evidence).**
+  **Shipped**: instruments-service@b0596d0c (engine: `--mode` default incremental, self-widening window, windowed
+  iterators, 4-branch `_merge_incremental`, cold-start fallback, prediction variant; 16 new tests incl. 4 parity
+  suites) + instruments-service@5d31994a (coverage-horizon `CATALOGUE_STALE_BY_DATE` + UTL base-image pin 0.55.0) +
+  deployment-service@c1d2e3e6 (weekly `lifecycle-catalogue-full-*` jobs, 21600s, Sat-staggered; terraform apply "12
+  added, 0 changed, 0 destroyed") + image cloudbuild=78e5e3a7-48ca-4f2d-8d51-579c9d8f4812 SUCCESS
+  (`:5d31994`+`:latest`). **Operational outcome**: all 4 by_date-walking AGs ran the incremental path green — tradfi
+  4m08s (was 137min/timeout-dead), cefi 2m04s, defi 2m01s, prediction 2m39s; the 3 catalogues frozen since 06-29 are
+  fresh (artifact mtimes 2026-07-03T15:19–15:21Z); tradfi merged rows 1,091,661 == the read-only shadow-parity
+  prediction (0 dropped keys / 0 available_to changes vs prev). **Forced tradeoffs / decisions made autonomously**: (1)
+  UTL base-image digest pin bumped in-repo (the dependency-update fan-out hadn't PR'd it; first build fce15fb2 failed
+  the operability probe on the stale pin's baked UAC); (2) tradfi daily-job memory NOT downsized (weekly full job shares
+  the per-AG resources); (3) `data-catalogue-schema.md` left unchanged in the Phase 5 codex audit (verified it covers
+  the data-catalogue YAML manifest, not the lifecycle catalog.parquet — the plan's SSOT list misattributed it).
+  **Discoveries**: the newly-delisted merge branch requires a venue-presence guard (venue-level window absence = capture
+  outage → stay active; instrument-level absence → close) — encoded in code+tests+codex; and a PRE-EXISTING ≥1M-cell
+  defi expected_unattempted backlog surfaced by Phase 4 (proven pre-existing via `--end-date 2026-06-29`; filed
+  `plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`, operator-gated by the enumerator's
+  halt-safety design — the ONLY open thread, and it is outside this plan's scope). **What to watch**: the 01:00 UTC
+  daily runs (first scheduled incremental 2026-07-04) and the first Saturday self-heal (2026-07-05 03:00–06:00 UTC).
+  Rollback remains `--mode full` on the job args.
