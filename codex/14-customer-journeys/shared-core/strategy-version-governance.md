@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Strategy Version Governance — Operator Playbook
 summary:
-status:
+  Day-to-day operator playbook for DART forked strategy versions — who approves (internal-trader/admin), SLA targets, the
+  hard backtest_1yr approval floor (412 on lower maturity, no exception path), reject/backtest-failure escalation, rollout
+  + hot-revert + feature-flag rollback, and the quarterly auditor checklist.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, runbook, audit, escalation, uac, verification]
+related:
+  [
+    ../../09-strategy/architecture-v2/dart-exclusive-research-fork.md,
+    ../../09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    odum-paper-client-zero.md,
+    ../../09-strategy/architecture-v2/performance-overlay.md,
+  ]
 created: 2026-04-22
-authoritative_for:
+authoritative_for: [DART strategy-version approval/rollout operator playbook (backtest_1yr floor, SLAs)]
 referenced_by:
 owner:
 last_reviewed:

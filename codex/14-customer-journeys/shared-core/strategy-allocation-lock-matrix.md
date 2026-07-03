@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Strategy Allocation Lock Matrix — Current Snapshot
 summary:
-status:
+  Dated (2026-04-20) snapshot of which strategy cells are INVESTMENT_MANAGEMENT_RESERVED (hidden from DART prospects) vs
+  PUBLIC — only STAT_ARB_PAIRS_FIXED crypto pairs + BTC-FoF wrapper are PUBLIC; every other archetype×instrument×venue is
+  IM_RESERVED by default. Per-client override (Elysium/Desmond) grants access without locking out others.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [strategy, defi, cefi, tradfi, sports, ui, registry]
+related:
+  [
+    ../_ssot-rules/06-show-dont-show-discipline.md,
+    strategy-origin-vs-stack-depth.md,
+    ../../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md,
+    ../../09-strategy/architecture-v2/category-instrument-coverage.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [strategy allocation lock-state snapshot (IM_RESERVED vs PUBLIC cells)]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,24 @@
 doc_type: codex-ssot
 title: Client Reporting Demo Walkthrough — Shared
 summary:
-status:
+  The single five-stop reporting click-path (landing → positions/P&L → reconciliation → audience panel → audit trail)
+  shared by pb3a (Reg Umbrella) and pb3b (IM) demos, with per-audience narrative overlays over one component tree.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [playbooks, ui, reconciliation, reporting, same-system, demo]
+related:
+  [
+    shared-reporting-core.md,
+    same-system-principle.md,
+    ../experience/regulatory-demo.md,
+    ../experience/investment-management-demo.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [shared client-reporting demo click-path (pb3a/pb3b)]
 referenced_by:
 owner:
 last_reviewed:

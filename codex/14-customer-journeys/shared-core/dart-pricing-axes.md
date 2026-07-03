@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: DART Pricing Axes — Signals-Only vs Full DART
 summary:
-status:
+  Pricing dimensional model splitting signals-only DART (scope-fixed Tier-B block pricing) from full DART (adds
+  usage-metered research consumption + IP-power exclusivity uplift tiers + venue/server cost pass-through), with worked
+  examples per commercial cell.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [cost, dart, defi, strategy, sales, features]
+related:
+  [
+    ../_ssot-rules/04-dart-commercial-axes.md,
+    ../_ssot-rules/08-pricing-principles.md,
+    strategy-origin-vs-stack-depth.md,
+    instruction-schema-fit-and-package-boundaries.md,
+    ../commercial-model/pricing-building-blocks.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [DART pricing dimensional model (signals-only vs full-DART metering axes)]
 referenced_by:
 owner:
 last_reviewed:

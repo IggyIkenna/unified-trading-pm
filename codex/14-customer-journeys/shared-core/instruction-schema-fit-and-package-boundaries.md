@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Instruction Schema Fit + Package Boundaries
 summary:
-status:
+  Rule-10 implementation map — the eight required signals-only instruction fields, three schema depths (minimal/standard/
+  rich as block-5 pricing axis), venue×instrument×mode compatibility matrix, lifecycle semantics, and the load-bearing
+  package boundary — what signals-only enables downstream vs what requires upgrading to full DART (block 6).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, instruments-service]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [dart, execution, instruments, strategy, cost, sales]
+related:
+  [
+    ../_ssot-rules/10-strategy-instruction-schema-principles.md,
+    strategy-origin-vs-stack-depth.md,
+    dart-pricing-axes.md,
+    ../../16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [signals-only 8-field instruction-schema fit + package boundary/upgrade path]
 referenced_by:
 owner:
 last_reviewed:

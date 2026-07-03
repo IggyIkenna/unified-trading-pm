@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Venue × Chain × Instrument-Type Scope
 summary:
-status:
+  Commercial-scope view of the three sub-scoping axes on rule-05 blocks 8/9/10 (venue / chain / instrument-type packs) —
+  the 2026 live venue set (Binance/Coinbase/Bybit/Hyperliquid + CME/NSE go-live, Ethereum/Arbitrum/Base/Solana chains,
+  Betfair/Polymarket), how they compose into demo restriction profiles, per-unit pricing, and catalogue-filter visibility.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [cefi, defi, tradfi, sports, prediction, cost, instruments]
+related:
+  [
+    ../_ssot-rules/05-building-block-dimensions.md,
+    ../../02-venues/venue-registry-reference.md,
+    ../../09-strategy/architecture-v2/category-instrument-coverage.md,
+    strategy-origin-vs-stack-depth.md,
+    strategy-allocation-lock-matrix.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [venue/chain/instrument-type block sub-scoping axes (blocks 8/9/10)]
 referenced_by:
 owner:
 last_reviewed:

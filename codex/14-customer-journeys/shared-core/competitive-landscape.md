@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Competitive landscape — Market Deep Dive (internal)
 summary:
-status:
+  Internal-only competitive SSOT — six-layer fragmentation frame, Tier A/B/C comp-tier taxonomy, canonical "unified layer
+  vs fragmented stack" language, five sales-objection responses, and traction/strategy-family/moat reference tables. No
+  competitor names on public pages (rule 02 line 74).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, admin]
-tags: []
-related: []
+tags: [sales, escalation, strategy, defi, tradfi, prediction, sports]
+related:
+  [
+    ../_ssot-rules/02-tone-and-posture.md,
+    same-system-principle.md,
+    data-licensing-boundaries.md,
+    ../_ssot-rules/09-internal-commercial-oneliners.md,
+  ]
 created: 2026-04-22
-authoritative_for:
+authoritative_for: [internal competitive landscape and comp-tier taxonomy]
 referenced_by:
 owner:
 last_reviewed:

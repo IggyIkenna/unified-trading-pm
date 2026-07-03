@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Same-System Principle — Implementation Map
 summary:
-status:
+  Implementation map pinning rule-03's five sub-claims (partitioned views, research≡live infra, terminal as live/batch
+  toggle, catalogue phase tags, paper==live look) to concrete UI routes, services, and catalogue data — plus the
+  anti-pattern grep signals (audience-prefixed routes, duplicate metric modules) that surface drift.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [same-system, ui, strategy, execution, catalogue, verification]
+related:
+  [
+    ../_ssot-rules/03-same-system-principle.md,
+    ../_ssot-rules/06-show-dont-show-discipline.md,
+    shared-reporting-core.md,
+    client-reporting-demo-walkthrough.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [same-system-principle implementation map (UI routes/services/anti-pattern greps)]
 referenced_by:
 owner:
 last_reviewed:

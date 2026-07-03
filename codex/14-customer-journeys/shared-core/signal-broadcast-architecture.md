@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Signal Broadcast Architecture — Outbound Signal Leasing
 summary:
-status:
+  Implementation map for Signal Leasing (fourth commercial path) — outbound-only strategy-signal emission from
+  strategy-service to counterparty endpoints, no capital/execution observation. Per-repo role map + D1-D10 decisions
+  (strategy-service sub-package, webhook+REST-pull, per-counterparty HMAC, at-least-once idempotency, shard isolation).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin, sales]
-tags: []
-related: []
+tags: [strategy, execution, uac, observability, ui, escalation]
+related:
+  [
+    ../_ssot-rules/04-dart-commercial-axes.md,
+    ../commercial-model/signal-leasing.md,
+    ../../04-architecture/shard-level-failure-isolation.md,
+    ../../06-coding-standards/config-reloader-pattern.md,
+    instruction-schema-fit-and-package-boundaries.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [signal leasing/broadcast outbound emission architecture (D1-D10)]
 referenced_by:
 owner:
 last_reviewed:
