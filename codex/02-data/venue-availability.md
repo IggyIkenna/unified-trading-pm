@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Venue Availability SSOT
 summary:
-status:
+  Venue availability SSOT — the 4 per-asset_group venue registries (VENUES_BY_ASSET_GROUP / ALL_DEFI_VENUES /
+  venue_launch_dates / coverage_starts), the UPPERCASE-vs-lowercase case-folding contract, the venue-class taxonomy,
+  and as_of_date / available_from_datetime instrument filtering.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [instruments, defi, backfill, data-correctness, registry, cefi]
+related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/instrument-pipeline-defi.md, codex/04-architecture/batch-live-architecture.md]
 created: 2026-04-03
-authoritative_for:
+authoritative_for: [per-asset_group venue-availability registries and venue-class taxonomy, venue identifier case-folding contract, InstrumentRecord available_from_datetime as-of filtering]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

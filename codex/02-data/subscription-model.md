@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Data Subscription Model
 summary:
-status:
+  Data subscription model — services read/write via unified-domain-client domain clients (not raw GCS paths), declare
+  upstream deps in dependencies.yaml, and use the BaseClient/adapter plugin pattern plus a per-service messaging topology.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [data-pipeline, subscription, uac, features, execution, mtds]
+related: [codex/02-data/unified-api-contracts-chain.md, codex/02-data/availability-manifest-and-data-status.md, plans/epics/batch_live_symmetry_master.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [data subscription model (domain-client data access), external-provider BaseClient/adapter plugin pattern, per-service messaging topology]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

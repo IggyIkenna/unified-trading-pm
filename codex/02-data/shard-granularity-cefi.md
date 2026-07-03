@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: CeFi shard granularity — instrument_type × quote_asset × margin_type (v6) + cluster validation
 summary:
-status:
+  CeFi manifest v6 shard key adds quote_asset/margin_type/combo_type/leg_weights, splitting DERIBIT inverse (USD)
+  vs linear (USDC/USDT) options into separate chain-bundle paths; cluster coverage is the 4th write-gate pillar.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [cefi, manifest, shard-granularity, deribit, quality-gates, data-correctness]
+related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/partitioning.md, codex/04-architecture/shard-level-failure-isolation.md, codex/06-coding-standards/validation-and-errors.md]
 created: 2026-04-23
-authoritative_for:
+authoritative_for: [CeFi options/futures chain shard key v6 (quote_asset/margin_type/combo_type/leg_weights), CeFi bundle cluster-validation write-gate pillar]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

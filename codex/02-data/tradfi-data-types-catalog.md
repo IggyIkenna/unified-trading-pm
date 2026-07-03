@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: TradFi Data Types Catalog
 summary:
-status: canonical
+  Catalog of the 9 MTDS TradFi data types (ohlcv_1s/1m/15m/24h; tbbo/trades/mbp_10 DEFERRED; corporate_action_confirmed,
+  earnings_result, macro_result) — sources, per-venue genesis floors, shard keys, and coverage axes.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [tradfi, mtds, databento, mvp, data-status, catalogue]
+related: [codex/02-data/tradfi-databento-sourcing-ssot.md, codex/02-data/mtds-data-source-coverage-matrix.md, codex/02-data/per-asset-group-bucket-layouts.md, codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-05-24
-authoritative_for:
+authoritative_for: [MTDS TradFi data_type catalog, TradFi deferred tick-data suppression (tbbo/trades/mbp_10)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-24

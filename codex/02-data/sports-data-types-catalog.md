@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Sports Data Types Catalog
 summary:
-status: canonical
+  Catalog of the 8 MTDS/MDPS sports data types (odds, odds_snapshot, odds_movement, arbitrage_opportunity,
+  odds_horizon_bucket, markets, outcomes, settlements) — sources, shard keys, NEEDS_CANDLE, and bookmaker coverage.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, instruments-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, mtds, mdps, odds, data-status, catalogue]
+related: [codex/02-data/sports-gcs-path-ssot.md, codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/sports-fixtures-lifecycle.md]
 created: 2026-05-24
-authoritative_for:
+authoritative_for: [MTDS/MDPS sports data_type catalog (odds and derived types), sports bookmaker coverage matrix]
 referenced_by:
 owner:
 last_reviewed: 2026-05-24

@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Sports Data Source — Coverage Matrix SSOT
 summary:
-status:
+  Per-sports-data_type coverage matrix — responsible source, expected-league denominators (api_football 95, footystats 46,
+  understat 5, …), coverage axis, and record_empty expectations feeding the v5 honest-coverage aggregator.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui, execution-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, honest-coverage, data-status, footystats, odds, audit]
+related: [codex/02-data/sports-adapter-dependency-order.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/sports-gcs-path-ssot.md, codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [sports data_type source-to-coverage-axis matrix, per-source expected-league denominators]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22
