@@ -736,3 +736,30 @@ Dispatched after main-agent answered "A: Wait for full coordinator completion" t
 INJURIES EU went UP by 10,124 (+10,107 — consolidator merged new per-VM shards adding EU rows for upcoming dates). Coordinator PID 3036674 is actively running (INJURIES chunk processing). However EU is not decreasing meaningfully — rate-limited 54s/fixture sleep + TEAMS alone has 191K EU rows. Gate far from passing.
 
 Gate: FAILS — 387,337 total EU across 7 enrichment types. Checkbox NOT flipped. Coordinator must complete (ETA: days).
+
+### 2026-07-03 — slot 3 (session 15 — Todo 9: coordinator dead + re-launched)
+
+**IS index queried (2026-07-03 ~04:59 UTC, index 4,993,763 rows)**:
+
+| Data Type | Coverage Start | captured | EC | AF | EU (pending) | Gate |
+|---|---|---|---|---|---|---|
+| FIXTURE_EVENTS | 2020-06-06 | 11,587 | 154,745 | 11 | 48,731 | ❌ |
+| FIXTURE_LINEUPS | 2020-06-06 | 13,321 | 150,103 | 31 | 51,438 | ❌ |
+| FIXTURE_STATS | 2020-06-06 | 8,405 | 154,195 | 80 | 51,569 | ❌ |
+| PLAYER_STATS | 2020-06-06 | 12,293 | 163,586 | 74 | 39,602 | ❌ |
+| INJURIES | 2021-01-01 | 8,835 | 169,960 | 1,884 | 12,912 | ❌ |
+| STANDINGS | 2018-01-01 | 90,169 | 198,791 | 0 | 8,751 | ❌ |
+| TEAMS | 2018-01-01 | 103,606 | 0 | 19 | 193,992 | ❌ |
+
+**Total EU: 406,995** (up from 387,337 in session 14 — live scheduler adds EU rows faster than coordinator cleared them)
+
+**Coordinator diagnosis**: No per_vm shards in GCS since 2026-06-28 19:39 UTC (only `_legacy_seed.parquet`). Coordinator PID 3036674 (launched session 12, 2026-06-29 05:30 UTC) died ~1 hour after launch without writing any per_vm shards. EU count increasing over 4-day gap confirms dead coordinator.
+
+**Coordinator re-launched** (PID 991495, 2026-07-03 04:59 UTC, slot 3 human-planning VM):
+- GCP ADC available (authorized_user, confirmed api-football-api-key accessible in Secret Manager)
+- Log: `/tmp/sports_p2a_enrichment_core_20260703_resume.log`
+- Chunk logs: `/tmp/sports-p2a-injuries-20260703-045903/`, `/tmp/sports-chunked-api_football_injuries/`
+- INJURIES chunk 1 (2021-01-01 → 2021-01-30) confirmed running at 04:59 UTC
+
+**BLOCKED-PREREQ**: Gate cannot pass until coordinator completes all 7 entities. ETA: many days.
+Checkbox NOT flipped.
