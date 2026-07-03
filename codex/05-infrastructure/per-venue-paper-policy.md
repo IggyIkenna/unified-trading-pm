@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: per-venue-paper-policy
 summary:
-status: active
+  "Simulate-first per-venue paper-mode policy: the matching engine is the universal paper floor for every venue,
+  testnet is an additive upgrade where a venue exposes one. Codifies PAPER_EXECUTION_TARGETS (UAC) mapping chains/
+  venues to ExecutionTarget FORK/TESTNET/SIMULATION. DeFi EVM → Tenderly fork; Solana → devnet; CeFi perps → testnet
+  (Hyperliquid wired, Binance/Bybit/OKX/Aster pending adapter); sports/prediction/TradFi → matching-engine simulation."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, cefi, defi, tradfi, sports, prediction, infrastructure]
+related: [../04-architecture/operational-modes.md, ../04-architecture/paper-vs-live-execution-seam.md, ../04-architecture/chain-environment-resolution.md]
 created: 2026-05-09
-authoritative_for:
+authoritative_for: [per-venue paper execution policy]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

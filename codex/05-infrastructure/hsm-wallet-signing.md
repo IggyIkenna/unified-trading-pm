@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: HSM-grade wallet signing — tier discipline
 summary:
-status:
+  "5-tier SigningSurface security ladder (UAC StrEnum), loosest→strictest: MOCK (test) · LOCAL_KEY (dev/testnet
+  only) · CLOUD_KMS_ENCRYPTED (May-23 cutover default, HSM-backed CMK envelope) · COPPER_MPC (June-1, 2-of-3 shards) ·
+  FIREBLOCKS_MPC (June-1, MPC + TAP rules). Per-tier threats/mitigations, per-wallet tier selection, latency budget,
+  and pre-cutover acceptance criteria."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, custody, wallet, hsm, execution, infrastructure]
+related: [../04-architecture/custody-providers.md, custody-onboarding-checklist.md, fireblocks-integration-spec.md, per-archetype-wallet-isolation.md, secret-manager-naming.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [wallet signing surface tier ladder]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

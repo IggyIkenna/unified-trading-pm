@@ -2,14 +2,19 @@
 doc_type: codex-ssot
 title: Physical Pager Layer (Layer-4)
 summary:
-status:
+  "SSOT for the Layer-4 physical alert device — a dedicated wake-up channel on a DIFFERENT network from the operator's
+  primary phone, firing only on 5 closed trigger conditions (SEV0 unacked, alert-provider down, liquidation risk,
+  kill-switch failed, reconciliation breach). Vendor-agnostic PhysicalPagerNotifier interface (device swap = SM
+  credential swap). Recommended combo: dedicated SIM phone + GSM siren box on different carriers; Twilio voice bridges
+  until configured."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service]
 scope: [admin, engineer]
-tags: []
-related: []
+tags: [alerting, monitoring, escalation, infrastructure, runbook, observability]
+related: [../04-architecture/recovery-defence-in-depth-layers.md]
 created: 2026-05-23
 authoritative_for: [physical-pager-comparison, webhook-prototype, twilio-bridge]
 referenced_by: [codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/physical_pager_research_and_webhook_prototype_2026_05_23.md, plans/active/independent_fallback_twilio_voice_2026_05_23.md]

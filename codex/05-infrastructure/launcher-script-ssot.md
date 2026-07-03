@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: VM launcher script SSOT — `deployment-service/scripts/vm/`
 summary:
-status: stable
+  "Every script running `gcloud compute instances create` (or AWS equivalent) MUST live under
+  deployment-service/scripts/vm/ so the Deploy-Missing UI + zombie-watchdog can render/track it. Codifies the 4
+  code-delivery modes (tarball default), VM-prefix registration in VM_PREFIX_TO_BUCKET, launcher_common.sh DRY lib,
+  hardcoded-name vs prefix-{ts} singleton patterns, Cloud Scheduler→Cloud Run Job→GCE VM cron pattern, and the
+  warning-with-baseline QG-check policy for new launcher-governance gates."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, features-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [infrastructure, spot-vm, deployment-service, scripts, monitoring, runbook]
+related: [vm-tarball-deployment.md, strategy-vm-launcher-shape.md, live-deployment-monitoring.md, ../04-architecture/features-service-architecture.md]
 created: 2026-05-07
-authoritative_for:
+authoritative_for: [vm launcher script conventions]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

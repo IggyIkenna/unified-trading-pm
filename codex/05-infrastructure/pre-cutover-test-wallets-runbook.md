@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Pre-cutover test-wallet operator runbook
 summary:
-status:
+  "Operator runbook for provisioning pre-cutover test wallets (now → May-23 → June-1 window, using OUR wallets not
+  the client's). Trust Wallet is canonical across all 5 EVM testnets (same secp256k1 PK) + Solana (separate Ed25519
+  keypair, export required); MetaMask is address-only secondary. Covers EVM network add + faucets, envelope-encrypt via
+  staging CMK, WalletProvisioningConfig entries, Solana devnet setup, and the pre-cutover sign-and-broadcast smoke gate."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-api-contracts]
 scope: [admin, engineer]
-tags: []
-related: []
+tags: [defi, wallet, custody, runbook, infrastructure, execution]
+related: [custody-onboarding-checklist.md, hsm-wallet-signing.md, per-archetype-wallet-isolation.md, ../14-customer-journeys/pod-elysium-client-onboarding.md]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: [pre-cutover test wallet provisioning]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

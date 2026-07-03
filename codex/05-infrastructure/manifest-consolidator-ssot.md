@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Manifest Consolidator — SSOT
 summary:
-status:
+  "Canonical reference for the manifest consolidator: GCP Cloud Run Job + Cloud Scheduler (AWS Batch Fargate +
+  EventBridge), one per (service_kind, asset_group), `python -m unified_trading_library.manifest_consolidator
+  --bucket X --once`. Memory-bounded DuckDB merge (not pandas) with canonical-order projection + blank-capture_status
+  drop; content-write-marker incremental cutoff (idle-bucket trap fix); loud-fails on stale canonical; dated-instrument
+  seeding must clip to the listing window (CeFi OOM lesson)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, consolidation, infrastructure, data-correctness, single-walk, instruments]
+related: [../02-data/availability-manifest-and-data-status.md, ../02-data/data-pipeline-correctness-hard-rule.md, ../03-observability/data-feed-sla-registry.md, per-tab-worktrees.md]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [manifest consolidator runtime]
 referenced_by:
 owner:
 last_reviewed:

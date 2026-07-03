@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: New Repo Setup — Complete Workflow
 summary:
-status:
+  "Standard 13-step workflow for creating a new workspace repo (service / library / UI): GitHub create + team access,
+  repo-type + tier decision tree, scaffold, thin quality-gates.sh config stub, dependency init, workspace-manifest
+  registration, workspace-venv install, dependency-chain cascade, branch protection, and rolling out the canonical
+  quality-gates-v2.yml workflow template (never hand-write it)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, scripts, quality-gates, registry, runbook]
+related: [library-setup-checklist.md, service-setup-checklist.md, ui-setup-checklist.md, ../06-coding-standards/dependency-management.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [new repo setup workflow]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

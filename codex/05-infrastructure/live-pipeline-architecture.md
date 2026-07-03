@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Live Pipeline Architecture — MTDS / MDPS / features-service
 summary:
-status:
+  "Entry-point doc for the live (websocket-streaming) pipeline: three-tier MTDS → MDPS → features-service on the SAME
+  code path as batch (only the trigger swaps Cloud Scheduler → Redis Stream events). UTC-midnight alignment makes
+  reconciliation a GROUP BY pipeline_mode. Covers topology, trigger cascade, 4-category live gap semantics
+  (stale-not-missing), StreamingHealthSnapshot alerting tiers + circuit breakers, and shipped UTL streaming
+  primitives."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [live-trading, mtds, mdps, features, pipeline-mode, reconciliation, infrastructure]
+related: [replay-subsystem.md, live-deployment-monitoring.md, ../02-data/pipeline-mode-partition.md, ../04-architecture/batch-live-architecture.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [live streaming pipeline topology]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

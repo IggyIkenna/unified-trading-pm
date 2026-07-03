@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Fireblocks integration spec — June-1 paste-ready implementation
 summary:
-status:
+  "Paste-ready engineering spec for the FireblocksCustodyProvider adapter (execution-service custody/fireblocks.py):
+  mirrors the Copper adapter, swaps to RS256-JWT auth + Fireblocks REST endpoints, adds HD derivation + per-tx TAP
+  co-signer policy. Per-wallet config-only flip CLOUD_KMS_ENCRYPTED → FIREBLOCKS_MPC. Implementation gated on client
+  June-1 credential delivery; no code shipped yet."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-service, deployment-ui, execution-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, custody, wallet, hsm, infrastructure]
+related: [../04-architecture/custody-providers.md, custody-onboarding-checklist.md, hsm-wallet-signing.md, per-archetype-wallet-isolation.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [fireblocks custody provider spec]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
