@@ -1,13 +1,19 @@
 ---
+doc_type: issue
 title: GitHub API rate-budget reduction + low-budget alerting/visibility (shared-PAT exhaustion)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-ui, features-service, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-10
-source:
-  - 'chat/2026-06-10 operator: "how can we use less gh rates without hurting functionality" + "slack alert when
-    approaching rate limits" + "tracker inside the /repos page in the deployment UIs"'
-  - "live probe 2026-06-10: gh core REST remaining=0/5000 (fleet-exhausted) → CIReconcile 403-blinded"
+source: ['chat/2026-06-10 operator: "how can we use less gh rates without hurting functionality" + "slack alert when approaching rate limits" + "tracker inside the /repos page in the deployment UIs"', 'live probe 2026-06-10: gh core REST remaining=0/5000 (fleet-exhausted) → CIReconcile 403-blinded']
 locked_by: live-defi-rollout
 priority: P1
-status: archived
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans

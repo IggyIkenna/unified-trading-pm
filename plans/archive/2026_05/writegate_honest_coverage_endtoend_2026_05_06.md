@@ -1,28 +1,31 @@
 ---
-name: writegate_honest_coverage_endtoend_2026_05_06
-title: "Write-Gate + Honest-Coverage End-to-End — Plan (UMBRELLA)"
+doc_type: plan
+title: Write-Gate + Honest-Coverage End-to-End — Plan (UMBRELLA)
+summary:
+status: drafted
+nature: record
+asset_group: [sports]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service]
+scope: [engineer, admin]
+tags: []
+related: [predictions_master.md, infrastructure_master.md]
+created: 2026-05-06
 role: umbrella
-status: archived
 archived: 2026-05-23
 last_updated: 2026-05-23
-created: 2026-05-06
 parent: manifest_evolution_SUPERSEDED_2026_05_21
 companion_handover: plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-related:
-  - predictions_master.md # folds in predictions_canonical_question_group_polymarket_migration
-  - infrastructure_master.md # folds in shard_granularity + data_status_multi_axis + deployment_service_build_infra
-supersedes_phases:
-  - plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 1 #1 (MDPS 1440-NaN, paused — now scoped here)
-  - plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 2 raw-tables (sports available_at,
-    paused — now scoped here)
-manifest_migration_coordinator: manifest_migration_SUPERSEDED_2026_05_21.md # Stage 2.A/2.B/2.C + Stage 3.A/3.B/3.C scoped here; coordinator owns cross-plan sequencing + VM impact + operator pause-resume gates
-status: drafted
+supersedes_phases: [plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 1, 'plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 2 raw-tables (sports available_at, paused — now scoped here)']
+manifest_migration_coordinator: manifest_migration_SUPERSEDED_2026_05_21.md
 estimate_class: design
 estimate_baseline_ai_days: 40
 estimate_calibrated_ai_days: 24.0
-estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+
+  '
 parent_epic: sports_master
 assigned_vm: vm-sports
 priority: P0

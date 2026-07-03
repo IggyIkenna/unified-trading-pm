@@ -1,16 +1,18 @@
 ---
-title: "MTDS Phase 4.MTDS pipeline_mode sweep — operator-decision-required ambiguities"
+doc_type: issue
+title: MTDS Phase 4.MTDS pipeline_mode sweep — operator-decision-required ambiguities
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna-v8-mw-mtds-sweep
-source:
-  - market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py
-  - market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py
-  - market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py
-  - market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py
-  - market-tick-data-service/market_tick_data_service/engine/orchestrator.py
-  - market-tick-data-service/scripts/mtds_reconcile_partial_bundles.py
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py
+source: [market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py, market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py, market-tick-data-service/market_tick_data_service/engine/orchestrator.py, market-tick-data-service/scripts/mtds_reconcile_partial_bundles.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

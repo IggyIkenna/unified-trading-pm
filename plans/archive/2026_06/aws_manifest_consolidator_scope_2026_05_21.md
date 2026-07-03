@@ -1,15 +1,24 @@
 ---
+doc_type: plan
 title: AWS manifest consolidator — Batch + EventBridge (10 buckets + 16 extension)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-21
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 estimate_class: infra
 estimate_baseline_ai_days: 3.1
 estimate_calibrated_ai_days: 2.5
-created: 2026-05-21
 ---
 
 Gate cleared: `aws_migration_defi_first_2026_05_07` archived 2026-05-26 (Phase 5+6 complete).

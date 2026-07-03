@@ -1,8 +1,17 @@
 ---
+doc_type: plan
 title: Harsh-side Day-4 continuation prompts — paste-ready spawn prompts for 10-slot fan-out
-type: coordination-doc
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, e2e-testing, execution-service, features-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
+type: coordination-doc
 companion_to: plans/active/work_split_2026_05_13_harsh.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-13

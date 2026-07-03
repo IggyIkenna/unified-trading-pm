@@ -1,14 +1,19 @@
 ---
-title:
-  Fleet promotion pipeline — staging mechanics RESTORED; 7 repos blocked at quality-gates-v2 on real QG debt +
-  dependency-ordering
+doc_type: issue
+title: Fleet promotion pipeline — staging mechanics RESTORED; 7 repos blocked at quality-gates-v2 on real QG debt + dependency-ordering
+summary:
+status: RESOLVED
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, execution-service, features-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-05
-source:
-  - UI registry-drift fix → discovered staging 192-behind → fleet-wide promotion-pipeline breakage
-  - per-repo staging↔main↔LDR topology audit 2026-06-05
+source: [UI registry-drift fix → discovered staging 192-behind → fleet-wide promotion-pipeline breakage, per-repo staging↔main↔LDR topology audit 2026-06-05]
 resolved: 2026-06-07
 priority: P2
-status: RESOLVED
 ---
 
 > ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-PLAN, superseded by full fleet convergence)

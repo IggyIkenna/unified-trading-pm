@@ -1,12 +1,18 @@
 ---
-title: "DeFi launcher audit — answers to the 3 operator-blocking Qs from defi_master 2026-05-07"
+doc_type: issue
+title: DeFi launcher audit — answers to the 3 operator-blocking Qs from defi_master 2026-05-07
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-07
 author: harsh
-source:
-  - plans/active/defi_master_2026_05_07.md (commit b8edd01 PLANNING-CRITICAL block)
-  - market-tick-data-service/market_tick_data_service/cli/handlers/{lending_indices,vault_share_price,lst_rates,gas_fee}_handler.py
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py
-  - deployment-service/scripts/vm/launch-mtds-*-backfill-vm.sh
+source: [plans/active/defi_master_2026_05_07.md (commit b8edd01 PLANNING-CRITICAL block), 'market-tick-data-service/market_tick_data_service/cli/handlers/{lending_indices,vault_share_price,lst_rates,gas_fee}_handler.py', unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py, deployment-service/scripts/vm/launch-mtds-*-backfill-vm.sh]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---

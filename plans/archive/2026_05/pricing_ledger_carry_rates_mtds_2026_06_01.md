@@ -1,29 +1,26 @@
 ---
-title: "PricingLedger carry-rate computation in MTDS — dividend_yield + rebase_rate + greeks-service handshake"
+doc_type: plan
+title: PricingLedger carry-rate computation in MTDS — dividend_yield + rebase_rate + greeks-service handshake
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, deployment-service, features-service, fund-administration-service, greeks-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md (ARCHIVED — Phase 6.5/7-9 items folded into this plan), plans/epics/mtds_mdps_master.md, plans/epics/instruments_master.md, plans/epics/global_ledger_pnl_attribution_master.md]
+created: '2026-05-23'
 parent_epic: mtds_mdps_master
 priority: P0
-status: active
 estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3
 assigned_vm: vm-ml
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-predecessor:
-  plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md (ARCHIVED in 2026-05-23 PM consolidation;
-  Phase 5 operator-ACK captured below in "Operator decisions" section)
-related_plans:
-  - plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md (ARCHIVED — Phase 6.5/7-9 items folded
-    into this plan)
-  - plans/epics/mtds_mdps_master.md
-  - plans/epics/instruments_master.md
-  - plans/epics/global_ledger_pnl_attribution_master.md
-shipped_commits:
-  - uac@709e9aff — LedgerRow greek (option_delta/gamma/theta/vega/rho) + carry
-    (funding/lending/borrow/staking/dividend/rebase) columns
-  - deployment-service@460bb6e — greeks-compute-live-/greeks-compute-batch- VM prefixes
-  - greeks-service@b9dbade — repo skeleton (15 files); worktree model wired (main clone + 11 tab worktrees)
-  - pm@f7ca196a1 — workspace-manifest topologicalOrder level 4
+predecessor: plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md (ARCHIVED in 2026-05-23 PM consolidation; Phase 5 operator-ACK captured below in "Operator decisions" section)
+shipped_commits: [uac@709e9aff — LedgerRow greek (option_delta/gamma/theta/vega/rho) + carry (funding/lending/borrow/staking/dividend/rebase) columns, deployment-service@460bb6e — greeks-compute-live-/greeks-compute-batch- VM prefixes, greeks-service@b9dbade — repo skeleton (15 files); worktree model wired (main clone + 11 tab worktrees), pm@f7ca196a1 — workspace-manifest topologicalOrder level 4]
 ---
 
 # PricingLedger carry-rate computation in MTDS — dividend_yield + rebase_rate + greeks-service handshake

@@ -1,25 +1,34 @@
 ---
-title: "Connectivity + Dependency Buffer Policy (5-class taxonomy + expected_time+buffer)"
+doc_type: plan
+title: Connectivity + Dependency Buffer Policy (5-class taxonomy + expected_time+buffer)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [independent_fallback_twilio_voice_2026_05_23.md]
+created: '2026-05-23'
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: active
 estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
-estimate_calibration_note: |
-  Design class — closed-set 5-class taxonomy + per-dependency YAML policy + expected_time+buffer escalation rule.
+estimate_calibration_note: 'Design class — closed-set 5-class taxonomy + per-dependency YAML policy + expected_time+buffer escalation rule.
+
   Baseline 8 × 0.6 design = 4.8 cal-days. Implementation is straightforward; the design judgement is on per-dep
+
   values (operator-tuned).
+
+  '
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-depends_on:
-  - incident_gateway_and_state_machine_2026_05_23
-gates:
-  - master_to_live_defi_2026_05_23:Group-F
-related_plans:
-  - independent_fallback_twilio_voice_2026_05_23.md
+depends_on: [incident_gateway_and_state_machine_2026_05_23]
+gates: ['master_to_live_defi_2026_05_23:Group-F']
 ---
 
 # Connectivity + Dependency Buffer Policy

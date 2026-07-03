@@ -1,18 +1,21 @@
 ---
-title:
-  "Session handoff — fleet VM sync + disk/tmpfs guards + AMI + slot reconciliation + quickmerge gates + prettier-churn
-  fix + pre-commit config rollout (slot-1, 2026-06-02). Self-audited commit locations: LDR / main / local-only / dirty /
-  stash."
+doc_type: issue
+title: 'Session handoff — fleet VM sync + disk/tmpfs guards + AMI + slot reconciliation + quickmerge gates + prettier-churn fix + pre-commit config rollout (slot-1, 2026-06-02). Self-audited commit locations: LDR / main / local-only / dirty / stash.'
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-02
-source:
-  - git fetch + rev-list audit across touched repos 2026-06-02 (slot vs origin/live-defi-rollout vs origin/main)
-  - git stash list across touched repos 2026-06-02
-  - aws ec2 / ssm fleet state 2026-06-02
+source: [git fetch + rev-list audit across touched repos 2026-06-02 (slot vs origin/live-defi-rollout vs origin/main), git stash list across touched repos 2026-06-02, aws ec2 / ssm fleet state 2026-06-02]
 parent_epic: plans/epics/orchestrator_master.md
 estimate_calibrated_ai_days: 0.2
 estimate_class: infra
 priority: P2
-status: archived
 ---
 
 > **✅ RESOLVED + ARCHIVED 2026-06-07 [unlock-plan].** All 4 remaining items closed (0 open): **#1** terminated the

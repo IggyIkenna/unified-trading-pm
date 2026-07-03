@@ -2,7 +2,7 @@
 doc_type: plan
 title: MVP backfill — TradFi ohlcv_1m for the v10 MVP universe (SPOT-only, reconcile-then-fill)
 summary: Backfill TradFi ohlcv_1m ONLY for the canonical v10 MVP universe (CME futures + new CME options + equity twins), reconciling what is already captured vs what is missing on SPOT VMs.
-status: done
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]

@@ -1,224 +1,120 @@
 ---
-name: registry-completeness-implementation-detail
-overview:
-  Execute the UAC registry completeness refactor — instrument types, sports BTTS end-to-end, BetSide/CommissionModel,
-  consumer adoption across repos. Domain enums live in UAC; consumers use `from unified_api_contracts import …`; UCI
-  must not re-export UAC (uci-no-domain-schemas). USRI may expose UAC sports symbols at the sports-reference boundary.
-  Phase 0-1 additive; Phase 2-4 consolidation and consumer adoption.
+doc_type: plan
+title: registry-completeness-implementation-detail
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service, system-integration-tests, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-15'
+overview: Execute the UAC registry completeness refactor — instrument types, sports BTTS end-to-end, BetSide/CommissionModel, consumer adoption across repos. Domain enums live in UAC; consumers use `from unified_api_contracts import …`; UCI must not re-export UAC (uci-no-domain-schemas). USRI may expose UAC sports symbols at the sports-reference boundary. Phase 0-1 additive; Phase 2-4 consolidation and consumer adoption.
 type: code
 epic: epic-code-completion
-status: active
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C4
-    deployment: none
-    business: none
-    readiness_note: "Registry SSOT; strict alignment tests in SIT."
-  - repo: unified-config-interface
-    code: C3
-    deployment: none
-    business: none
-    readiness_note: "Remove any deprecated local domain enum usage; no UAC re-export."
-  - repo: unified-market-interface
-    code: C4
-    deployment: none
-    business: none
-  - repo: unified-trade-execution-interface
-    code: C4
-    deployment: none
-    business: none
-  - repo: unified-reference-data-interface
-    code: C4
-    deployment: none
-    business: none
-  - repo: unified-sports-reference-interface
-    code: C4
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C3
-    deployment: none
-    business: none
-  - repo: system-integration-tests
-    code: C3
-    deployment: none
-    business: none
-    readiness_note: "test_registry_alignment and related guards stay strict."
-
+- {repo: unified-api-contracts, code: C4, deployment: none, business: none, readiness_note: Registry SSOT; strict alignment tests in SIT.}
+- {repo: unified-config-interface, code: C3, deployment: none, business: none, readiness_note: Remove any deprecated local domain enum usage; no UAC re-export.}
+- {repo: unified-market-interface, code: C4, deployment: none, business: none}
+- {repo: unified-trade-execution-interface, code: C4, deployment: none, business: none}
+- {repo: unified-reference-data-interface, code: C4, deployment: none, business: none}
+- {repo: unified-sports-reference-interface, code: C4, deployment: none, business: none}
+- {repo: instruments-service, code: C3, deployment: none, business: none}
+- {repo: system-integration-tests, code: C3, deployment: none, business: none, readiness_note: test_registry_alignment and related guards stay strict.}
 todos:
-  - id: p0-add-instrument-types
-    content: |
-      - [x] [AGENT] P0. Add BOND, EQUITY, ETF, COMMODITY, CURRENCY, CDS, SPOT_ASSET, YIELD_BEARING, DEBT_TOKEN, POOL, LENDING, STAKING to UAC InstrumentType in canonical/domain/reference/__init__.py. Update INSTRUMENT_TYPES_BY_VENUE, INSTRUCTION_VALID_INSTRUMENT_TYPES, INSTRUMENT_TYPE_FOLDER_MAP in venue_constants.py.
-    status: done
-    completion_note:
-      All 12 InstrumentType values already existed. INSTRUMENT_TYPE_FOLDER_MAP updated for 7 missing types.
-      INSTRUCTION_VALID_INSTRUMENT_TYPES updated.
-  - id: p0-fix-databento-normalizer
-    content: |
-      - [x] [AGENT] P0. Fix _instrument_class_to_type in external/databento/normalize.py: add B->BOND, E->EQUITY, N->ETF, X->INDEX, C->COMMODITY. Current mapping only has F/O/S.
-    status: done
-    completion_note: Already had all correct mappings.
-  - id: p0-fix-ibkr-normalizer
-    content: |
-      - [x] [AGENT] P0. Fix _ibkr_instrument_type in external/ibkr/normalize.py (lines 111-125): STK->EQUITY, CASH->CURRENCY, IND->INDEX, FUND->ETF, CMDTY->COMMODITY, BOND->BOND. Also fix type_map in normalize_ibkr_market_state (line 353).
-    status: done
-    completion_note: Already correct; fixed FUND->ETF in normalize_ibkr_market_state type_map.
-  - id: p0-add-odds-types
-    content: |
-      - [x] [AGENT] P1. Add 8 new OddsType values to canonical/domain/sports/odds.py: HALF_TIME_RESULT, FIRST_HALF_OVER_UNDER, CORNERS, CARDS, PLAYER_PROPS, DRAW_NO_BET, DOUBLE_CHANCE, GOAL_SCORER. Remove duplicate OddsType class from sports/__init__.py (line 347).
-    status: done
-    completion_note: All 8 already existed. No duplicate class found.
-  - id: p0-create-betside-enum
-    content: |
-      - [x] [AGENT] P1. Create BetSide StrEnum (BACK, LAY) and CommissionModel StrEnum (NET_WINNINGS_PCT, BUILT_INTO_ODDS, NOTIONAL_PCT, FLAT_FEE) in betting.py. Export from sports/__init__.py and sports.py facade.
-    status: done
-    completion_note: BetSide + CommissionModel already existed in betting.py.
-  - id: p0-type-commission-model
-    content: |
-      - [x] [AGENT] P1. Change VenueExecutionProfile.commission_model from str|None to CommissionModel|None in venue_execution.py (line 163). Verify all venue_execution_registry.py entries auto-coerce.
-    status: done
-    completion_note: Already used CommissionModel type.
-  - id: p0-extend-odds-api-markets
-    content: |
-      - [x] [AGENT] P1. Create external/odds_api/_market_keys.py with OddsType-to-market-key mapping. Extend UMI adapter get_markets (line 116) and get_prices (line 167) to request btts,draw_no_bet,double_chance alongside existing markets.
-    status: done
-    completion_note: _market_keys.py already existed.
-  - id: p0-btts-normalization
-    content: |
-      - [x] [AGENT] P1. Add _MARKET_KEY_MAP dict in external/odds_api/normalize.py mapping "btts"->BOTH_TEAMS_SCORE, "draw_no_bet"->DRAW_NO_BET, etc. Handle Yes/No outcome mapping for BTTS.
-    status: done
-    completion_note: Added _BTTS_OUTCOME_MAP + normalize_btts_outcomes(). Cassette fixed.
-  - id: p0-sports-venues-instrument-types
-    content: |
-      - [x] [AGENT] P1. Add sports venues to INSTRUMENT_TYPES_BY_VENUE: SPORTS_EXCHANGE_VENUES->EXCHANGE_ODDS, PREDICTION_MARKET_VENUES->PREDICTION_MARKET, BOOKMAKER_API_VENUES->FIXED_ODDS, BOOKMAKER_WEB_VENUES->FIXED_ODDS, DFS_VENUES->PROP.
-    status: done
-    completion_note: Already mapped in venue_constants.py.
-  - id: p0-supported-market-types
-    content: |
-      - [x] [AGENT] P2. Add SUPPORTED_MARKET_TYPES dict in venue_constants.py mapping each sports venue to its supported frozenset[OddsType]. Betfair/Pinnacle: full set incl BTTS. Smarkets/Betdaq: H2H/OU/AH/CS only. Matchbook: H2H/OU/AH only.
-    status: done
-    completion_note: Added SUPPORTED_MARKET_TYPES covering all 78 venues.
-  - id: p0-add-missing-venues-manifest
-    content: |
-      - [x] [AGENT] P2. Add VenueContract entries in registry/venue_manifest/betting_sports.py for: smarkets, matchbook, betdaq, manifold, onexbet, novig, betopenly, prophetx.
-    status: done
-    completion_note: Added 16 VenueContract entries for scraper+aggregator venues.
-  - id: p0-update-fixture-example
-    content: |
-      - [x] [AGENT] P2. Add BTTS market example to external/odds_api/examples/fixture_example.json. Add draw_no_bet and double_chance examples too.
-    status: done
-    completion_note: Cassette updated with camelCase keys.
-  - id: p0-odds-api-v3-v4-registry
-    content: |
-      - [x] [AGENT] P1. Update odds_api EndpointSpec in _endpoint_registry_data.py: single v4 endpoint with available_from_date=2018-01-01 and data fidelity warning (pre-2023 = v3 era: h2h/spreads/totals only, ~10min intervals; post-2023 = v4 era: full market coverage, ~5min intervals). Update provider_api_versions.yaml with v3_era_cutoff, per-era markets and intervals.
-    status: done
-  - id: p1-vcr-cassettes
-    content: |
-      - [x] [AGENT] P1. Record 4 pending VCR cassettes (polymarket gamma_events, gamma_tags, prices_history; coinbase products). Update cassette_status from PENDING to RECORDED.
-    status: done
-    completion_note: Coinbase Exchange cassette created; Polymarket cassettes pre-existing and RECORDED.
-  - id: p1-btts-cassette
-    content: |
-      - [x] [AGENT] P2. Add BTTS mock cassette for odds_api: external/odds_api/mocks/btts_soccer_epl_cassette.json with realistic Yes/No outcomes.
-    status: done
-    completion_note: Cassette exists and updated.
-  - id: p1-registry-consumer-tests
-    content: |
-      - [x] [AGENT] P1. Create unified-api-contracts/tests/integration/test_registry_consumer_contracts.py. Tests: CLOB/DEX/ZERO_ALPHA covered in INSTRUMENT_TYPES_BY_VENUE; SPORTS_VENUES covered; BETTING_SPORTS_VENUES have constants.
-    status: done
-    completion_note: test_registry_completeness.py + test_registry_completeness_p1.py created (55+ tests).
-  - id: p1-btts-field-mapping
-    content: |
-      - [x] [AGENT] P2. Add dedicated BTTS field mapping in market-tick-data-service (replace H2H fallback). Add btts_yes_odds, btts_no_odds fields.
-    status: done
-    completion_note:
-      odds_compat bridge for BTTS added in unified-sports-execution-interface; market-tick-data-service already had
-      _BTTS_FIELDS.
-  - id: p2-enum-consolidation-uac
-    content: |
-      - [x] [AGENT] P0. Ensure UAC InstrumentType is superset of UCI InstrumentType (instrument.py lines 67-94). Add PERP as deprecated alias. Add alignment CI test.
-    status: done
-    completion_note: UAC already superset. PERP alias exists.
-  - id: p2-uci-reexport
-    content: |
-      - [x] [AGENT] P0. Replace UCI InstrumentType class (instrument.py lines 67-94) with re-export from UAC. Verify unified-api-contracts is in UCI pyproject.toml. Search for InstrumentType.PERP usage first.
-    status: done
-    completion_note: UCI InstrumentType replaced with re-export from UAC.
-  - id: p2-uic-tardis-consolidation
-    content: |
-      - [x] [AGENT] P1. Replace hardcoded _VENUE_TO_TARDIS in UIC instrument_key.py (lines 17-26) with inverted UCI VenueMapping.tardis_to_venue.
-    status: done
-    completion_note: _VENUE_TO_TARDIS replaced with computed version from VenueMapping.
-  - id: p2-alignment-tests
-    content: |
-      - [x] [AGENT] P1. Create system-integration-tests/tests/test_registry_alignment.py. Tests: UCI.InstrumentType subset of UAC; UIC._VENUE_TO_TARDIS keys subset of UCI.Venue; exec-service venue sets subset of UAC.
-    status: done
-    completion_note: test_registry_alignment.py created in SIT (4 tests).
-  - id: p3-exec-service-adopt
-    content: |
-      - [x] [AGENT] P0. Replace execution-service local CLOB_VENUES/DEX_VENUES/ZERO_ALPHA_VENUES (instruction_type.py lines 47-108) with UAC imports + local alias unions. Keep exec-specific aliases (BINANCE, WALLET, etc.) as union sets.
-    status: done
-    completion_note: Local CLOB/DEX/ZERO_ALPHA venues replaced with UAC imports.
-  - id: p3-instruments-service-adopt
-    content: |
-      - [x] [AGENT] P1. instruments-service adopts INSTRUMENT_TYPES_BY_VENUE from UAC for venue-to-instrument-type logic.
-    status: done
-    completion_note: Already adopted INSTRUMENT_TYPES_BY_VENUE from UAC.
-  - id: p3-market-data-api-adopt
-    content: |
-      - [x] [AGENT] P2. Add unified-api-contracts to market-data-api pyproject.toml. Add venue name validation in API routes against VENUE_CATEGORY_MAP.
-    status: done
-    completion_note:
-      UAC already in pyproject.toml. orderbook.py imports VENUE_CATEGORY_MAP, validates venue names via
-      is_known_venue(). /venues and /venues/{venue}/validate endpoints added. Unit + integration tests exist.
-  - id: p3-umi-adopt-registry
-    content: |
-      - [x] [AGENT] P1. UMI sports/registry.py: keep _ADAPTER_PATHS but validate keys against UAC BETTING_SPORTS_VENUES at import time.
-    status: done
-    completion_note: Upgraded validation from warning to ValueError.
-  - id: p3-utei-venue-validation
-    content: |
-      - [x] [AGENT] P2. UTEI: add venue validation in adapter factory using CLOB_VENUES|DEX_VENUES from UAC.
-    status: done
-    completion_note: Added venue validation in factory using UAC imports.
-  - id: p3-fix-hardcoded-back
-    content: |
-      - [x] [AGENT] P1. Fix normalize_sports_order in normalize_utils/sports.py (line 59): replace side="back" with BetSide enum. Derive side from venue type (EXCHANGE->configurable, BOOKMAKER->always BACK).
-    status: done
-    completion_note: normalize_sports_order already uses BetSide enum.
-  - id: p4-usri-scope
-    content: |
-      - [x] [AGENT] P2. Clarify USRI scope: add UAC sports type re-exports in USRI __init__.py.
-    status: done
-    completion_note:
-      USRI __init__.py already re-exports 35 UAC sports types including OddsType, BetSide, CommissionModel,
-      BetExecution, BetOrder, BettingSignal, CanonicalBookmakerMarket, CLVRecord, LiveMatchState, LiveOddsUpdate, etc.
-      Unit tests verify importability; integration tests verify identity with UAC originals.
-  - id: p4-provider-versions-cleanup
-    content: |
-      - [x] [AGENT] P2. Audit 53 yellow providers in provider_api_versions.yaml. If schemas+cassettes exist -> green. If schemas but no cassette -> pending_cassette. If no schemas -> dormant.
-    status: done
-    completion_note:
-      28 yellow providers remain (others already promoted to green by earlier work). All 28 have schemas.py but no VCR
-      cassettes -- correctly classified as yellow with cassette_status=pending. 3 dormant providers (macro, onchain,
-      sentiment) have no schemas.py -- correctly dormant. No providers qualify for promotion to green (none have
-      recorded cassettes). Test suite in test_registry_completeness_p2.py validates YAML structure, status values, and
-      consistency rules.
-  - id: p4-sports-aggregator-classification
-    content: |
-      - [x] [AGENT] P2. Add SportsAggregatorType StrEnum and VENUE_AGGREGATOR_TYPE mapping in venue_constants.py: DIRECT_EXECUTION, ODDS_AGGREGATOR, EXECUTION_AGGREGATOR, POSITION_AGGREGATOR.
-    status: done
-    completion_note:
-      SportsAggregatorType StrEnum exists in _sports_venue_constants.py with all 4 members. VENUE_AGGREGATOR_TYPE maps
-      odds aggregators (odds_api, opticodds, oddsjam, sharpapi, metabet, odds_engine) and direct execution venues
-      (exchanges, bookmaker APIs, prediction markets). Exported from registry/__init__.py. Tests in
-      test_registry_completeness_p2.py verify enum membership, values, and mapping coverage.
+- {id: p0-add-instrument-types, content: '- [x] [AGENT] P0. Add BOND, EQUITY, ETF, COMMODITY, CURRENCY, CDS, SPOT_ASSET, YIELD_BEARING, DEBT_TOKEN, POOL, LENDING, STAKING to UAC InstrumentType in canonical/domain/reference/__init__.py. Update INSTRUMENT_TYPES_BY_VENUE, INSTRUCTION_VALID_INSTRUMENT_TYPES, INSTRUMENT_TYPE_FOLDER_MAP in venue_constants.py.
+
+    ', status: done, completion_note: All 12 InstrumentType values already existed. INSTRUMENT_TYPE_FOLDER_MAP updated for 7 missing types. INSTRUCTION_VALID_INSTRUMENT_TYPES updated.}
+- {id: p0-fix-databento-normalizer, content: '- [x] [AGENT] P0. Fix _instrument_class_to_type in external/databento/normalize.py: add B->BOND, E->EQUITY, N->ETF, X->INDEX, C->COMMODITY. Current mapping only has F/O/S.
+
+    ', status: done, completion_note: Already had all correct mappings.}
+- {id: p0-fix-ibkr-normalizer, content: '- [x] [AGENT] P0. Fix _ibkr_instrument_type in external/ibkr/normalize.py (lines 111-125): STK->EQUITY, CASH->CURRENCY, IND->INDEX, FUND->ETF, CMDTY->COMMODITY, BOND->BOND. Also fix type_map in normalize_ibkr_market_state (line 353).
+
+    ', status: done, completion_note: Already correct; fixed FUND->ETF in normalize_ibkr_market_state type_map.}
+- {id: p0-add-odds-types, content: '- [x] [AGENT] P1. Add 8 new OddsType values to canonical/domain/sports/odds.py: HALF_TIME_RESULT, FIRST_HALF_OVER_UNDER, CORNERS, CARDS, PLAYER_PROPS, DRAW_NO_BET, DOUBLE_CHANCE, GOAL_SCORER. Remove duplicate OddsType class from sports/__init__.py (line 347).
+
+    ', status: done, completion_note: All 8 already existed. No duplicate class found.}
+- {id: p0-create-betside-enum, content: '- [x] [AGENT] P1. Create BetSide StrEnum (BACK, LAY) and CommissionModel StrEnum (NET_WINNINGS_PCT, BUILT_INTO_ODDS, NOTIONAL_PCT, FLAT_FEE) in betting.py. Export from sports/__init__.py and sports.py facade.
+
+    ', status: done, completion_note: BetSide + CommissionModel already existed in betting.py.}
+- {id: p0-type-commission-model, content: '- [x] [AGENT] P1. Change VenueExecutionProfile.commission_model from str|None to CommissionModel|None in venue_execution.py (line 163). Verify all venue_execution_registry.py entries auto-coerce.
+
+    ', status: done, completion_note: Already used CommissionModel type.}
+- {id: p0-extend-odds-api-markets, content: '- [x] [AGENT] P1. Create external/odds_api/_market_keys.py with OddsType-to-market-key mapping. Extend UMI adapter get_markets (line 116) and get_prices (line 167) to request btts,draw_no_bet,double_chance alongside existing markets.
+
+    ', status: done, completion_note: _market_keys.py already existed.}
+- {id: p0-btts-normalization, content: '- [x] [AGENT] P1. Add _MARKET_KEY_MAP dict in external/odds_api/normalize.py mapping "btts"->BOTH_TEAMS_SCORE, "draw_no_bet"->DRAW_NO_BET, etc. Handle Yes/No outcome mapping for BTTS.
+
+    ', status: done, completion_note: Added _BTTS_OUTCOME_MAP + normalize_btts_outcomes(). Cassette fixed.}
+- {id: p0-sports-venues-instrument-types, content: '- [x] [AGENT] P1. Add sports venues to INSTRUMENT_TYPES_BY_VENUE: SPORTS_EXCHANGE_VENUES->EXCHANGE_ODDS, PREDICTION_MARKET_VENUES->PREDICTION_MARKET, BOOKMAKER_API_VENUES->FIXED_ODDS, BOOKMAKER_WEB_VENUES->FIXED_ODDS, DFS_VENUES->PROP.
+
+    ', status: done, completion_note: Already mapped in venue_constants.py.}
+- {id: p0-supported-market-types, content: '- [x] [AGENT] P2. Add SUPPORTED_MARKET_TYPES dict in venue_constants.py mapping each sports venue to its supported frozenset[OddsType]. Betfair/Pinnacle: full set incl BTTS. Smarkets/Betdaq: H2H/OU/AH/CS only. Matchbook: H2H/OU/AH only.
+
+    ', status: done, completion_note: Added SUPPORTED_MARKET_TYPES covering all 78 venues.}
+- {id: p0-add-missing-venues-manifest, content: '- [x] [AGENT] P2. Add VenueContract entries in registry/venue_manifest/betting_sports.py for: smarkets, matchbook, betdaq, manifold, onexbet, novig, betopenly, prophetx.
+
+    ', status: done, completion_note: Added 16 VenueContract entries for scraper+aggregator venues.}
+- {id: p0-update-fixture-example, content: '- [x] [AGENT] P2. Add BTTS market example to external/odds_api/examples/fixture_example.json. Add draw_no_bet and double_chance examples too.
+
+    ', status: done, completion_note: Cassette updated with camelCase keys.}
+- {id: p0-odds-api-v3-v4-registry, content: '- [x] [AGENT] P1. Update odds_api EndpointSpec in _endpoint_registry_data.py: single v4 endpoint with available_from_date=2018-01-01 and data fidelity warning (pre-2023 = v3 era: h2h/spreads/totals only, ~10min intervals; post-2023 = v4 era: full market coverage, ~5min intervals). Update provider_api_versions.yaml with v3_era_cutoff, per-era markets and intervals.
+
+    ', status: done}
+- {id: p1-vcr-cassettes, content: '- [x] [AGENT] P1. Record 4 pending VCR cassettes (polymarket gamma_events, gamma_tags, prices_history; coinbase products). Update cassette_status from PENDING to RECORDED.
+
+    ', status: done, completion_note: Coinbase Exchange cassette created; Polymarket cassettes pre-existing and RECORDED.}
+- {id: p1-btts-cassette, content: '- [x] [AGENT] P2. Add BTTS mock cassette for odds_api: external/odds_api/mocks/btts_soccer_epl_cassette.json with realistic Yes/No outcomes.
+
+    ', status: done, completion_note: Cassette exists and updated.}
+- {id: p1-registry-consumer-tests, content: '- [x] [AGENT] P1. Create unified-api-contracts/tests/integration/test_registry_consumer_contracts.py. Tests: CLOB/DEX/ZERO_ALPHA covered in INSTRUMENT_TYPES_BY_VENUE; SPORTS_VENUES covered; BETTING_SPORTS_VENUES have constants.
+
+    ', status: done, completion_note: test_registry_completeness.py + test_registry_completeness_p1.py created (55+ tests).}
+- {id: p1-btts-field-mapping, content: '- [x] [AGENT] P2. Add dedicated BTTS field mapping in market-tick-data-service (replace H2H fallback). Add btts_yes_odds, btts_no_odds fields.
+
+    ', status: done, completion_note: odds_compat bridge for BTTS added in unified-sports-execution-interface; market-tick-data-service already had _BTTS_FIELDS.}
+- {id: p2-enum-consolidation-uac, content: '- [x] [AGENT] P0. Ensure UAC InstrumentType is superset of UCI InstrumentType (instrument.py lines 67-94). Add PERP as deprecated alias. Add alignment CI test.
+
+    ', status: done, completion_note: UAC already superset. PERP alias exists.}
+- {id: p2-uci-reexport, content: '- [x] [AGENT] P0. Replace UCI InstrumentType class (instrument.py lines 67-94) with re-export from UAC. Verify unified-api-contracts is in UCI pyproject.toml. Search for InstrumentType.PERP usage first.
+
+    ', status: done, completion_note: UCI InstrumentType replaced with re-export from UAC.}
+- {id: p2-uic-tardis-consolidation, content: '- [x] [AGENT] P1. Replace hardcoded _VENUE_TO_TARDIS in UIC instrument_key.py (lines 17-26) with inverted UCI VenueMapping.tardis_to_venue.
+
+    ', status: done, completion_note: _VENUE_TO_TARDIS replaced with computed version from VenueMapping.}
+- {id: p2-alignment-tests, content: '- [x] [AGENT] P1. Create system-integration-tests/tests/test_registry_alignment.py. Tests: UCI.InstrumentType subset of UAC; UIC._VENUE_TO_TARDIS keys subset of UCI.Venue; exec-service venue sets subset of UAC.
+
+    ', status: done, completion_note: test_registry_alignment.py created in SIT (4 tests).}
+- {id: p3-exec-service-adopt, content: '- [x] [AGENT] P0. Replace execution-service local CLOB_VENUES/DEX_VENUES/ZERO_ALPHA_VENUES (instruction_type.py lines 47-108) with UAC imports + local alias unions. Keep exec-specific aliases (BINANCE, WALLET, etc.) as union sets.
+
+    ', status: done, completion_note: Local CLOB/DEX/ZERO_ALPHA venues replaced with UAC imports.}
+- {id: p3-instruments-service-adopt, content: '- [x] [AGENT] P1. instruments-service adopts INSTRUMENT_TYPES_BY_VENUE from UAC for venue-to-instrument-type logic.
+
+    ', status: done, completion_note: Already adopted INSTRUMENT_TYPES_BY_VENUE from UAC.}
+- {id: p3-market-data-api-adopt, content: '- [x] [AGENT] P2. Add unified-api-contracts to market-data-api pyproject.toml. Add venue name validation in API routes against VENUE_CATEGORY_MAP.
+
+    ', status: done, completion_note: 'UAC already in pyproject.toml. orderbook.py imports VENUE_CATEGORY_MAP, validates venue names via is_known_venue(). /venues and /venues/{venue}/validate endpoints added. Unit + integration tests exist.'}
+- {id: p3-umi-adopt-registry, content: '- [x] [AGENT] P1. UMI sports/registry.py: keep _ADAPTER_PATHS but validate keys against UAC BETTING_SPORTS_VENUES at import time.
+
+    ', status: done, completion_note: Upgraded validation from warning to ValueError.}
+- {id: p3-utei-venue-validation, content: '- [x] [AGENT] P2. UTEI: add venue validation in adapter factory using CLOB_VENUES|DEX_VENUES from UAC.
+
+    ', status: done, completion_note: Added venue validation in factory using UAC imports.}
+- {id: p3-fix-hardcoded-back, content: '- [x] [AGENT] P1. Fix normalize_sports_order in normalize_utils/sports.py (line 59): replace side="back" with BetSide enum. Derive side from venue type (EXCHANGE->configurable, BOOKMAKER->always BACK).
+
+    ', status: done, completion_note: normalize_sports_order already uses BetSide enum.}
+- {id: p4-usri-scope, content: '- [x] [AGENT] P2. Clarify USRI scope: add UAC sports type re-exports in USRI __init__.py.
+
+    ', status: done, completion_note: 'USRI __init__.py already re-exports 35 UAC sports types including OddsType, BetSide, CommissionModel, BetExecution, BetOrder, BettingSignal, CanonicalBookmakerMarket, CLVRecord, LiveMatchState, LiveOddsUpdate, etc. Unit tests verify importability; integration tests verify identity with UAC originals.'}
+- {id: p4-provider-versions-cleanup, content: '- [x] [AGENT] P2. Audit 53 yellow providers in provider_api_versions.yaml. If schemas+cassettes exist -> green. If schemas but no cassette -> pending_cassette. If no schemas -> dormant.
+
+    ', status: done, completion_note: '28 yellow providers remain (others already promoted to green by earlier work). All 28 have schemas.py but no VCR cassettes -- correctly classified as yellow with cassette_status=pending. 3 dormant providers (macro, onchain, sentiment) have no schemas.py -- correctly dormant. No providers qualify for promotion to green (none have recorded cassettes). Test suite in test_registry_completeness_p2.py validates YAML structure, status values, and consistency rules.'}
+- {id: p4-sports-aggregator-classification, content: '- [x] [AGENT] P2. Add SportsAggregatorType StrEnum and VENUE_AGGREGATOR_TYPE mapping in venue_constants.py: DIRECT_EXECUTION, ODDS_AGGREGATOR, EXECUTION_AGGREGATOR, POSITION_AGGREGATOR.
+
+    ', status: done, completion_note: 'SportsAggregatorType StrEnum exists in _sports_venue_constants.py with all 4 members. VENUE_AGGREGATOR_TYPE maps odds aggregators (odds_api, opticodds, oddsjam, sharpapi, metabet, odds_engine) and direct execution venues (exchanges, bookmaker APIs, prediction markets). Exported from registry/__init__.py. Tests in test_registry_completeness_p2.py verify enum membership, values, and mapping coverage.'}
 isProject: false
 ---
 

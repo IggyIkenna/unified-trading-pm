@@ -1,21 +1,25 @@
 ---
+doc_type: plan
 title: CI/CD contract hardening — workspace-wide gate enforcement + build provenance
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/issues/full_cicd_sit_target_state_2026_05_24.md, plans/active/workspace_repo_branch_protection_gaps_2026_05_29.md, plans/archive/2026_05/ci_canonical_v2_migration_2026_05_29.md]
+created: 2026-06-01
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-created: 2026-06-01
 locked_by: live-defi-rollout
-related_plans:
-  - plans/active/issues/full_cicd_sit_target_state_2026_05_24.md
-  - plans/active/workspace_repo_branch_protection_gaps_2026_05_29.md
-  - plans/archive/2026_05/ci_canonical_v2_migration_2026_05_29.md
-source:
-  - plans/audit/results/infrastructure_master_audit_2026_06_01.md
+source: [plans/audit/results/infrastructure_master_audit_2026_06_01.md]
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans

@@ -1,9 +1,18 @@
 ---
-id: institutional_hardening_2026_03_10
+doc_type: plan
 title: Institutional Hardening — Stress Market Resilience, Research Integrity, Maintainability
+summary:
 status: DONE
-priority: P0
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, market-data-processing-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-10
+id: institutional_hardening_2026_03_10
+priority: P0
 completed: 2026-03-11
 owner: agent
 ---

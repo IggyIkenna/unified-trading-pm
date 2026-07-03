@@ -1,14 +1,19 @@
 ---
-title:
-  Frontmatter SCHEMA gate bypassed by docs-only commits → non-compliant plan/issue docs land on LDR and block fleet-wide
-  full QG
+doc_type: issue
+title: Frontmatter SCHEMA gate bypassed by docs-only commits → non-compliant plan/issue docs land on LDR and block fleet-wide full QG
+summary:
 status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-16
 resolved: 2026-06-18
 priority: P2
-created: 2026-06-16
-source:
-  - slot-3 setup-tab-worktrees ship 2026-06-16 — full QG blocked twice by a foreign issue doc missing status/priority
-  - plans/active/issues/deployment_ui_test_env_esm_breakage_2026_06_16.md (the doc that demonstrated the bypass)
+source: [slot-3 setup-tab-worktrees ship 2026-06-16 — full QG blocked twice by a foreign issue doc missing status/priority, plans/active/issues/deployment_ui_test_env_esm_breakage_2026_06_16.md (the doc that demonstrated the bypass)]
 ---
 
 # Frontmatter schema gate bypassed by docs-only commits

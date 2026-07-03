@@ -1,23 +1,23 @@
 ---
-title: "✅ RESOLVED 2026-05-08 — paper-trade smoke harness migrated (was: P0 BLOCKER stale import)"
+doc_type: issue
+title: '✅ RESOLVED 2026-05-08 — paper-trade smoke harness migrated (was: P0 BLOCKER stale import)'
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 resolved: 2026-05-08
 author: ikenna-tab1-main
-status: resolved
 resolution_commit: e2e-testing@dfb7abe6
-source:
-  - e2e-testing/scripts/defi/run-paper.sh (existing canonical paper-trade harness)
-  - e2e-testing/scripts/defi/colocated_engine.py:306 (broken import — FIXED)
-  - strategy-service/strategy_service/cli/handlers/batch_utils.py (refactored 2026-05-01, V1-RETIRE Phase 2)
-  - plans/active/issues/paper_trade_smoke_carry_staked_basis_runbook_2026_05_08.md (Tab 1 runbook)
-  - plans/active/defi_master_2026_05_07.md
+source: [e2e-testing/scripts/defi/run-paper.sh (existing canonical paper-trade harness), 'e2e-testing/scripts/defi/colocated_engine.py:306 (broken import — FIXED)', 'strategy-service/strategy_service/cli/handlers/batch_utils.py (refactored 2026-05-01, V1-RETIRE Phase 2)', plans/active/issues/paper_trade_smoke_carry_staked_basis_runbook_2026_05_08.md (Tab 1 runbook), plans/active/defi_master_2026_05_07.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-execution:
-  owner: strategy-service maintainer + Tab 1 next session
-  cadence: one-shot ~1-2 AI-days
-  verifier: bash e2e-testing/scripts/defi/run-paper.sh exits 0 + writes fills to GCS
-  last_executed: "2026-05-08 (fix shipped; full smoke run pending operator)"
+execution: {owner: strategy-service maintainer + Tab 1 next session, cadence: one-shot ~1-2 AI-days, verifier: bash e2e-testing/scripts/defi/run-paper.sh exits 0 + writes fills to GCS, last_executed: 2026-05-08 (fix shipped; full smoke run pending operator)}
 ---
 
 ## ✅ RESOLUTION 2026-05-08

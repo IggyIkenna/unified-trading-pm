@@ -1,23 +1,29 @@
 ---
-name: alerting_service_live_rules_2026_05_07
-title: "Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging"
+doc_type: plan
+title: Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, deployment-service, execution-service, features-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-07'
 priority: P0
 parent: master_to_live_defi_2026_05_23
 depends_on: []
-extends:
-  - live_pipeline_mtds_mdps_features_2026_05_08 # Phase 9 alerting tier-up consumes ServiceEmissionPolicy + StreamingHealthSnapshot from live-pipeline plan; codified per audit 2026-05-08
-gates:
-  - master_to_live_defi_2026_05_23:work-stream-E
-  - master_to_live_defi_2026_05_23:Group-F
-  - master_to_live_defi_2026_05_23:Group-G
-status: archived
+extends: [live_pipeline_mtds_mdps_features_2026_05_08]
+gates: ['master_to_live_defi_2026_05_23:work-stream-E', 'master_to_live_defi_2026_05_23:Group-F', 'master_to_live_defi_2026_05_23:Group-G']
 archived: 2026-05-23
 last_updated: 2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 13.2
-estimate_calibration_note: |
-  Backfilled 2026-05-13: 60 todos, 38 done; ~22 remaining (rule thresholds, paging, circuit-breaker wiring, 48h staging dry-run, live rehearsal). Design class (operator-judgment thresholds + closed-set rules). Baseline 22 (~1 AI-day per remaining substantive todo); × 0.6 = 13.2.
+estimate_calibration_note: 'Backfilled 2026-05-13: 60 todos, 38 done; ~22 remaining (rule thresholds, paging, circuit-breaker wiring, 48h staging dry-run, live rehearsal). Design class (operator-judgment thresholds + closed-set rules). Baseline 22 (~1 AI-day per remaining substantive todo); × 0.6 = 13.2.
+
+  '
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 ---

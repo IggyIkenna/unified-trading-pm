@@ -1,15 +1,19 @@
 ---
-title:
-  "MTDS DeFi manifest: 28,634 UNISWAP_V3-ETHEREUM swaps_ohlcv attempted_failed rows — all SCHEMA_VALIDATION_FAILED, fix
-  already shipped (chain propagation + amount_usd column), needs retry pass not new code"
+doc_type: issue
+title: 'MTDS DeFi manifest: 28,634 UNISWAP_V3-ETHEREUM swaps_ohlcv attempted_failed rows — all SCHEMA_VALIDATION_FAILED, fix already shipped (chain propagation + amount_usd column), needs retry pass not new code'
+summary:
+status: ARCHIVED 2026-06-02 — acked + migrated (no new code; stale rows pending reprocess)
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-28
-source:
-  - gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet
-  - market-data-processing-service@7f1a5b5 (2026-05-23 22:49 BST — chain propagation fix)
-  - market-data-processing-service@3799c8d (2026-05-24 16:45 BST — amount_usd column support)
+source: ['gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet', 'market-data-processing-service@7f1a5b5 (2026-05-23 22:49 BST — chain propagation fix)', 'market-data-processing-service@3799c8d (2026-05-24 16:45 BST — amount_usd column support)']
 locked_by: live-defi-rollout
 parent_epic: plans/epics/infrastructure_master.md
-status: ARCHIVED 2026-06-02 — acked + migrated (no new code; stale rows pending reprocess)
 priority: P2
 ---
 

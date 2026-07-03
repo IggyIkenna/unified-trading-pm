@@ -1,31 +1,19 @@
 ---
-title: "Codex audit — Instruments area (Phase 1.G)"
+doc_type: issue
+title: Codex audit — Instruments area (Phase 1.G)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-codex-audit-instruments-tab (slot 8 sub-agent)
-source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.G
-  - plans/active/issues/catalogue_audit_cefi_2026_05_12.md
-  - plans/active/issues/catalogue_audit_defi_2026_05_12.md
-  - plans/active/issues/catalogue_audit_tradfi_2026_05_12.md
-  - plans/active/issues/catalogue_audit_sports_2026_05_12.md
-  - plans/active/issues/catalogue_audit_prediction_2026_05_12.md
-  - plans/active/issues/codex_audit_data_2026_05_12.md (sibling — manifest schema / honest-absence taxonomy generic
-    findings; this doc does NOT re-derive those)
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/02-data/defi-venue-protocol-catalogue.md
-  - codex/02-data/defi-data-types-catalog.md
-  - codex/02-data/defi-data-type-taxonomy.md
-  - codex/02-data/instrument-pipeline-defi.md
-  - codex/02-data/venue-availability.md
-  - codex/02-data/data-catalogue-schema.md
-  - codex/02-data/per-instrument-sentinel-rollout.md
-  - codex/02-data/operation-capability-registry.md
-  - codex/02-data/contracts-scope-and-layout.md
-  - codex/02-data/honest-absence-downstream-handling.md
-  - instruments-service/scripts/reconcile_phantom_manifest_rows_all.py
-  - instruments-service/instruments_service/reference_data/factory.py + adapters/{cefi,defi,tradfi,sports,prediction}/
-  - unified-api-contracts/unified_api_contracts/registry/{defi_venues.py,defi_venue_capabilities.py,venue_mapping.py,market_data_categories.py}
-  - unified-trading-library/unified_trading_library/manifest_writer.py
+source: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.G, plans/active/issues/catalogue_audit_cefi_2026_05_12.md, plans/active/issues/catalogue_audit_defi_2026_05_12.md, plans/active/issues/catalogue_audit_tradfi_2026_05_12.md, plans/active/issues/catalogue_audit_sports_2026_05_12.md, plans/active/issues/catalogue_audit_prediction_2026_05_12.md, plans/active/issues/codex_audit_data_2026_05_12.md (sibling — manifest schema / honest-absence taxonomy generic findings; this doc does NOT re-derive those), codex/02-data/availability-manifest-and-data-status.md, codex/02-data/defi-venue-protocol-catalogue.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/defi-data-type-taxonomy.md, codex/02-data/instrument-pipeline-defi.md, codex/02-data/venue-availability.md, codex/02-data/data-catalogue-schema.md, codex/02-data/per-instrument-sentinel-rollout.md, codex/02-data/operation-capability-registry.md, codex/02-data/contracts-scope-and-layout.md, codex/02-data/honest-absence-downstream-handling.md,
+  instruments-service/scripts/reconcile_phantom_manifest_rows_all.py, 'instruments-service/instruments_service/reference_data/factory.py + adapters/{cefi,defi,tradfi,sports,prediction}/', 'unified-api-contracts/unified_api_contracts/registry/{defi_venues.py,defi_venue_capabilities.py,venue_mapping.py,market_data_categories.py}', unified-trading-library/unified_trading_library/manifest_writer.py]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

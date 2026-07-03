@@ -1,25 +1,23 @@
 ---
-name: Sports Migration Gap Fix
-overview:
-  Fix remaining gaps from sports-betting-services-previous migration. Part A (batch) COMPLETE. Part B (live mode) —
-  scraper adapters, API contracts, live features, paper trading, deployment config.
+doc_type: plan
+title: Sports Migration Gap Fix
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-02'
+overview: Fix remaining gaps from sports-betting-services-previous migration. Part A (batch) COMPLETE. Part B (live mode) — scraper adapters, API contracts, live features, paper trading, deployment config.
 todos:
-  - id: b1-scraper-adapters
-    content:
-      B1 — Scraper adapters in USEI; validate CSS selectors; website version fingerprinting; Playwright in base image
-    status: in_progress
-  - id: b2-api-contracts
-    content: B2 — API contracts and schemas for live (CanonicalOdds, progressive stats, OddsType)
-    status: completed
-  - id: b3-live-features
-    content: B3 — Live feature subset; feature cache; strategy-service sports arb; execution-service USEI routing
-    status: completed
-  - id: b4-paper-trading
-    content: B4 — PaperBettingAdapter; operation mode routing for sports paper/live
-    status: completed
-  - id: b5-b6-deployment
-    content: B5–B6 — Odds API validation; sports sharding; Playwright in base image; instruments sports namespace
-    status: in_progress
+- {id: b1-scraper-adapters, content: B1 — Scraper adapters in USEI; validate CSS selectors; website version fingerprinting; Playwright in base image, status: in_progress}
+- {id: b2-api-contracts, content: 'B2 — API contracts and schemas for live (CanonicalOdds, progressive stats, OddsType)', status: completed}
+- {id: b3-live-features, content: B3 — Live feature subset; feature cache; strategy-service sports arb; execution-service USEI routing, status: completed}
+- {id: b4-paper-trading, content: B4 — PaperBettingAdapter; operation mode routing for sports paper/live, status: completed}
+- {id: b5-b6-deployment, content: B5–B6 — Odds API validation; sports sharding; Playwright in base image; instruments sports namespace, status: in_progress}
 isProject: false
 ---
 

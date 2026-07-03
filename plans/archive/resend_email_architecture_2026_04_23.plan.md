@@ -1,11 +1,19 @@
 ---
+doc_type: plan
 title: Resend Email Architecture
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-23
 locked_by: live-defi-rollout
 locked_since: 2026-04-23
-target_repos:
-  - unified-trading-system-ui
+target_repos: [unified-trading-system-ui]
 readiness: C1
 ---
 

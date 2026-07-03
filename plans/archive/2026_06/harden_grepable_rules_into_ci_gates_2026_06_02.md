@@ -1,17 +1,22 @@
 ---
+doc_type: plan
 title: Harden grep-able CLAUDE.md rules into CI gates (UTC datetimes · cloud-SDK direct-import ban · fallback-imports)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/agent_context_and_memory_hygiene_2026_06_02.md, plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md, plans/epics/plan_hygiene_master.md]
+created: 2026-06-02
 parent_epic: plan_hygiene_master
 priority: P2
-status: active
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
-created: 2026-06-02
-related_plans:
-  - plans/active/agent_context_and_memory_hygiene_2026_06_02.md
-  - plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md
-  - plans/epics/plan_hygiene_master.md
 ---
 
 > **✅ ARCHIVED 2026-06-10 — complete.** All 3 grep-able rules are CI-enforced ratchets: STEP 5.94

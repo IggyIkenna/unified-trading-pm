@@ -1,9 +1,20 @@
 ---
+doc_type: plan
+title: Shard-Granularity SSOT Propagation — Plan
+summary:
+status: phase-1-tier-1-partial-shipped
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-06'
 type: plan
 companion_handover: shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-status: phase-1-tier-1-partial-shipped
 owner: harsh
 auditor: claude
 ---

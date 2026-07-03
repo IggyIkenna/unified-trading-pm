@@ -2,7 +2,7 @@
 doc_type: plan
 title: Honest Coverage v2 — Opus checkpoints (cross-repo schema design + Layer-1 matrix + final certification)
 summary: 'The few opus-required checkpoints of Honest-Coverage-v2: design the coverage.json v2 schema + two-layer/gate semantics (cross-repo UAC + IS + UTL manifest + deployment simultaneously), design the Layer-1 enumeration-completeness matrix (catalogue × UAC expected-data-types), and the final integrated certification that the honest-100% semantics hold. Everything else is the sonnet-doable companion plan.'
-status: done
+status: complete
 nature: design
 asset_group: [cross-cutting]
 stage: [data, meta]

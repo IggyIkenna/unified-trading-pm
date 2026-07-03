@@ -1,8 +1,17 @@
 ---
+doc_type: plan
 title: Coverage Ratchet Policy + Mid/High Tier Uplift
-owner: iggy
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-19
-status: active
+owner: iggy
 priority: P1
 ---
 

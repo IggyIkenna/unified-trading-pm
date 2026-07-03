@@ -1,12 +1,18 @@
 ---
-title: "URDI phantom references in active surface — cleanup sweep"
+doc_type: issue
+title: URDI phantom references in active surface — cleanup sweep
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna-slot8
-source:
-  - cursor-configs/CLAUDE.md line 479 (FIXED this session)
-  - codex/GLOSSARY.md:99-100 (correct — declares URDI ELIMINATED 2026-03-26)
-  - workspace-manifest.json (no URDI repo; sports-reference-data-service merged into instruments-service 2026-03-01)
-  - SP-5 / SP-10 / SP-12 sub-agent confusion (operator-flagged 2026-05-12)
+source: [cursor-configs/CLAUDE.md line 479 (FIXED this session), 'codex/GLOSSARY.md:99-100 (correct — declares URDI ELIMINATED 2026-03-26)', workspace-manifest.json (no URDI repo; sports-reference-data-service merged into instruments-service 2026-03-01), SP-5 / SP-10 / SP-12 sub-agent confusion (operator-flagged 2026-05-12)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

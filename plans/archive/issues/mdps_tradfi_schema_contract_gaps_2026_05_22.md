@@ -1,11 +1,18 @@
 ---
-title: "MDPS TradFi schema contract gaps — combo/UNKNOWN/futures_chain produce NaN bars"
+doc_type: issue
+title: MDPS TradFi schema contract gaps — combo/UNKNOWN/futures_chain produce NaN bars
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-22
-source:
-  - mdps_backfill_phase3_2026_05_22.md
-  - plans/epics/mtds_mdps_master.md
+source: [mdps_backfill_phase3_2026_05_22.md, plans/epics/mtds_mdps_master.md]
 priority: P2
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

@@ -1,20 +1,21 @@
 ---
-title:
-  "Manifest cleanup as MANDATORY acceptance criterion when adding/removing data_types or instrument_ids — workspace-wide
-  rule, not just periodic phantom audit"
+doc_type: issue
+title: Manifest cleanup as MANDATORY acceptance criterion when adding/removing data_types or instrument_ids — workspace-wide rule, not just periodic phantom audit
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
 source:
-  - instruments-service/scripts/reconcile_phantom_manifest_rows_all.py (cleanup tool — run reactively as periodic audit,
-    not as feature-add gate)
-  - CLAUDE.md "Reconciliation incidents:
-      2026-04-29 — 167k fake PLAYER_VALUES denorm rows + 15k legacy phantoms cleaned up; 2026-05-04 — 130,897
-      false-positive phantoms across CeFi"
-  - operator directive 2026-05-08:
-      "wherever you are removing an entity or adding one, we need to make sure that, in the issues that we reported, we
-      have removed them from the manifest as well. They don't appear in data status where they're not supposed to, or
-      they appear there if they're supposed to. Sometimes we just did one-off changes in sports or adding stuff in
-      features, but we didn't do the proper data manifest updates. Those need to be flagged too."
+- instruments-service/scripts/reconcile_phantom_manifest_rows_all.py (cleanup tool — run reactively as periodic audit, not as feature-add gate)
+- {CLAUDE.md "Reconciliation incidents: '2026-04-29 — 167k fake PLAYER_VALUES denorm rows + 15k legacy phantoms cleaned up; 2026-05-04 — 130,897 false-positive phantoms across CeFi"'}
+- {operator directive 2026-05-08: 'wherever you are removing an entity or adding one, we need to make sure that, in the issues that we reported, we have removed them from the manifest as well. They don''t appear in data status where they''re not supposed to, or they appear there if they''re supposed to. Sometimes we just did one-off changes in sports or adding stuff in features, but we didn''t do the proper data manifest updates. Those need to be flagged too.'}
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

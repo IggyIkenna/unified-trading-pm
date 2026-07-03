@@ -1,116 +1,37 @@
 ---
-name: website-domain-migration-2026-03-13
-overview: >-
-  Migrate odum-research-website from Yell hosting to self-managed odum-research.com. odum-research.co.uk becomes
-  password-protected staging (public sees redirect message). odum-group.io forwarding kept. Cancel Yell after cutover.
+doc_type: plan
+title: website-domain-migration-2026-03-13
+summary:
+status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-13'
+overview: Migrate odum-research-website from Yell hosting to self-managed odum-research.com. odum-research.co.uk becomes password-protected staging (public sees redirect message). odum-group.io forwarding kept. Cancel Yell after cutover.
 type: infra
 epic: epic-website
-status: superseded
 superseded_by: website_master_2026_03_13
 superseded_date: 2026-03-13
-
-completion_gates:
-  code: C5
-  deployment: D2
-  business: B1
-
+completion_gates: {code: C5, deployment: D2, business: B1}
 repo_gates:
-  - repo: odum-research-website
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR: production cutover to odum-research.com is the deployment gate. BR: user confirms Yell cancelled."
-
-depends_on:
-  - website-repo-integration-2026-03-13
-  - website-content-refresh-2026-03-13
-
+- {repo: odum-research-website, code: C0, deployment: none, business: none, readiness_note: 'DR: production cutover to odum-research.com is the deployment gate. BR: user confirms Yell cancelled.'}
+depends_on: [website-repo-integration-2026-03-13, website-content-refresh-2026-03-13]
 todos:
-  - id: audit-yell-setup
-    content: >-
-      Log into Yell account. Document DNS records for odum-research.co.uk and odum-research.com: A records, CNAME, MX,
-      TTL values. Note current nameservers. Identify Yell cancellation process and notice period. Save DNS snapshot to
-      odum-research-website/docs/dns-snapshot-pre-migration.md.
-    status: todo
-    note: "Human action: requires Yell account login."
-
-  - id: choose-hosting-target
-    content: >-
-      Select self-managed hosting based on stack audit from Plan 1. Vercel: recommended if static/Next.js (free tier
-      sufficient, auto-SSL, branch previews). Cloud Run: if SSR with backend. GCS + CDN: if purely static. Decision
-      logged in odum-research-website/docs/hosting-decision.md.
-    status: todo
-    note: ""
-
-  - id: setup-hosting-infra
-    content: >-
-      Configure chosen hosting. Connect eggyakana/odum-research-website repo. Set up build pipeline: auto-deploy on push
-      to main branch. Configure environment variables (if any). Set up preview deployments for PRs.
-    status: todo
-    note: ""
-
-  - id: setup-ssl
-    content: >-
-      Provision SSL certificate for odum-research.com (auto via Vercel/Let's Encrypt). Also provision for
-      www.odum-research.com. Verify SSL grade A on ssllabs.com after cutover.
-    status: todo
-    note: ""
-
-  - id: staging-deploy
-    content: >-
-      Deploy current odum-research.co.uk content to new hosting on a staging URL. QA all pages: homepage, about,
-      services, contact. Check mobile responsiveness. Verify no broken images or links.
-    status: todo
-    note: ""
-
-  - id: dns-cutover-com
-    content: >-
-      Update DNS A/CNAME records for odum-research.com to new hosting IP/CNAME. Update www.odum-research.com to redirect
-      to apex. Set TTL to 300 (5 min) before cutover, restore to 3600 after. Allow 24–48h for propagation. Verify with:
-      dig odum-research.com +short
-    status: todo
-    note: ""
-
-  - id: setup-co-uk-staging-gate
-    content: >-
-      Replace odum-research.co.uk public content with a password-protected staging page. Public visitors (no password)
-      see: "We've moved to odum-research.com — please visit us there." Include a link to odum-research.com. Team access:
-      HTTP Basic Auth or simple password page for staging site. Prevents public seeing in-progress work on staging.
-      Implementation: hosting provider password protection (Vercel: basic auth middleware or _redirects).
-    status: todo
-    note: ""
-
-  - id: verify-cutover
-    content: >-
-      Verify: (1) odum-research.com serves from new hosting with SSL valid. (2) www.odum-research.com redirects to apex.
-      (3) odum-research.co.uk shows public redirect message to unauthenticated visitors. (4) odum-research.co.uk
-      accessible with staging password. (5) odum-group.io still forwards to odum-research.com.
-    status: todo
-    note: ""
-
-  - id: cancel-yell
-    content: >-
-      Cancel Yell hosting subscription after confirming 2-week clean operation on new hosting. Document cancellation
-      date in odum-research-website/docs/infrastructure.md. Note: retain domain registrar access (we own both domains —
-      only cancel hosting, not domain registration).
-    status: todo
-    note: "Human action. Confirm with user before cancelling."
-
-  - id: verify-odum-group-io
-    content: >-
-      Confirm odum-group.io still forwards to odum-research.com after all DNS changes. Test in browser:
-      https://odum-group.io → should redirect to https://odum-research.com. Keep this forwarding permanently.
-    status: todo
-    note: "odum-group.io currently forwards to odum-research.com — preserve after migration."
-
-  - id: update-workspace-manifest
-    content: >-
-      Update odum-research-website entry in workspace-manifest.json: add deployment_url=https://odum-research.com,
-      hosting=vercel (or chosen provider).
-    status: todo
-    note: ""
-
+- {id: audit-yell-setup, content: 'Log into Yell account. Document DNS records for odum-research.co.uk and odum-research.com: A records, CNAME, MX, TTL values. Note current nameservers. Identify Yell cancellation process and notice period. Save DNS snapshot to odum-research-website/docs/dns-snapshot-pre-migration.md.', status: todo, note: 'Human action: requires Yell account login.'}
+- {id: choose-hosting-target, content: 'Select self-managed hosting based on stack audit from Plan 1. Vercel: recommended if static/Next.js (free tier sufficient, auto-SSL, branch previews). Cloud Run: if SSR with backend. GCS + CDN: if purely static. Decision logged in odum-research-website/docs/hosting-decision.md.', status: todo, note: ''}
+- {id: setup-hosting-infra, content: 'Configure chosen hosting. Connect eggyakana/odum-research-website repo. Set up build pipeline: auto-deploy on push to main branch. Configure environment variables (if any). Set up preview deployments for PRs.', status: todo, note: ''}
+- {id: setup-ssl, content: Provision SSL certificate for odum-research.com (auto via Vercel/Let's Encrypt). Also provision for www.odum-research.com. Verify SSL grade A on ssllabs.com after cutover., status: todo, note: ''}
+- {id: staging-deploy, content: 'Deploy current odum-research.co.uk content to new hosting on a staging URL. QA all pages: homepage, about, services, contact. Check mobile responsiveness. Verify no broken images or links.', status: todo, note: ''}
+- {id: dns-cutover-com, content: 'Update DNS A/CNAME records for odum-research.com to new hosting IP/CNAME. Update www.odum-research.com to redirect to apex. Set TTL to 300 (5 min) before cutover, restore to 3600 after. Allow 24–48h for propagation. Verify with: dig odum-research.com +short', status: todo, note: ''}
+- {id: setup-co-uk-staging-gate, content: 'Replace odum-research.co.uk public content with a password-protected staging page. Public visitors (no password) see: "We''ve moved to odum-research.com — please visit us there." Include a link to odum-research.com. Team access: HTTP Basic Auth or simple password page for staging site. Prevents public seeing in-progress work on staging. Implementation: hosting provider password protection (Vercel: basic auth middleware or _redirects).', status: todo, note: ''}
+- {id: verify-cutover, content: 'Verify: (1) odum-research.com serves from new hosting with SSL valid. (2) www.odum-research.com redirects to apex. (3) odum-research.co.uk shows public redirect message to unauthenticated visitors. (4) odum-research.co.uk accessible with staging password. (5) odum-group.io still forwards to odum-research.com.', status: todo, note: ''}
+- {id: cancel-yell, content: 'Cancel Yell hosting subscription after confirming 2-week clean operation on new hosting. Document cancellation date in odum-research-website/docs/infrastructure.md. Note: retain domain registrar access (we own both domains — only cancel hosting, not domain registration).', status: todo, note: Human action. Confirm with user before cancelling.}
+- {id: verify-odum-group-io, content: 'Confirm odum-group.io still forwards to odum-research.com after all DNS changes. Test in browser: https://odum-group.io → should redirect to https://odum-research.com. Keep this forwarding permanently.', status: todo, note: odum-group.io currently forwards to odum-research.com — preserve after migration.}
+- {id: update-workspace-manifest, content: 'Update odum-research-website entry in workspace-manifest.json: add deployment_url=https://odum-research.com, hosting=vercel (or chosen provider).', status: todo, note: ''}
 isProject: false
 ---
 

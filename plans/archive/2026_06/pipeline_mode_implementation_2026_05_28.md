@@ -1,27 +1,32 @@
 ---
-name: pipeline_mode_implementation
-title:
-  "pipeline_mode — implement properly (column-fill + backfill + reconciliation; partition deferred to next migration
-  window)"
+doc_type: plan
+title: pipeline_mode — implement properly (column-fill + backfill + reconciliation; partition deferred to next migration window)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service, deployment-api, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [issues/pipeline_mode_implementation_decision_2026_05_28.md, cefi_venue_backfill_coverage_remediation_2026_05_27.md, archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md]
+created: 2026-05-28
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
-created: 2026-05-28
 last_updated: 2026-05-28
 estimate_class: refactor
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
-estimate_calibration_note: |
-  Refactor (0.4×): bulk is propagating an existing arg through known callsites + a one-shot
+estimate_calibration_note: 'Refactor (0.4×): bulk is propagating an existing arg through known callsites + a one-shot
+
   derivation pass over the manifest. Net-new surface is small (one UTL helper + one StrEnum +
+
   one backfill script). Partition migration is explicitly deferred (Phase 5).
+
+  '
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
-related:
-  - issues/pipeline_mode_implementation_decision_2026_05_28.md
-  - cefi_venue_backfill_coverage_remediation_2026_05_27.md # §6I item 3 — this plan unblocks it
-  - archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md # original design intent
 ---
 
 # pipeline_mode — implement properly

@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: UI Visual Polish — Change Tracking Checklist
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-16'
+---
+
 # UI Visual Polish — Change Tracking Checklist
 
 **Approach:** Fix everything on `batch-audit-ui` first as the reference UI. Once the reference looks right, propagate

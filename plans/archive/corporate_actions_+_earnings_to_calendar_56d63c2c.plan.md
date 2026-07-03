@@ -1,75 +1,31 @@
 ---
-status: done
-name: Corporate Actions + Earnings to Calendar
-overview:
-  Migrate corporate actions from instruments-service to features-calendar-service, use Polygon.io (Equities Basic) for
-  confirmed dividends and splits, keep yfinance for earnings actuals (EPS), extend FRED to fetch macro actuals
-  (NFP/CPI/FOMC/GDP) on the same 15-minute schedule, and add a mock calendar feed to the trading terminal UI.
+doc_type: plan
+title: Corporate Actions + Earnings to Calendar
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, strategy-service, unified-api-contracts, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-24'
+overview: Migrate corporate actions from instruments-service to features-calendar-service, use Polygon.io (Equities Basic) for confirmed dividends and splits, keep yfinance for earnings actuals (EPS), extend FRED to fetch macro actuals (NFP/CPI/FOMC/GDP) on the same 15-minute schedule, and add a mock calendar feed to the trading terminal UI.
 todos:
-  - id: uac-polygon-schemas
-    content:
-      Add PolygonDividend, PolygonDividendsResponse, PolygonSplit, PolygonSplitsResponse to UAC polygon/schemas.py and
-      add polygon entry to provider_api_versions.yaml
-    status: completed
-  - id: uic-domain-models
-    content:
-      Move DividendRecord/StockSplitRecord/EarningsRecord from instruments-service to UIC
-      domain/corporate_actions/models.py; add EarningsResultRecord and MacroResultRecord
-    status: completed
-  - id: fcs-polygon-adapter
-    content:
-      Create features_calendar_service/adapters/polygon_corporate_actions_adapter.py (httpx, polygon-api-key,
-      /v3/reference/dividends + /v3/reference/splits)
-    status: completed
-  - id: fcs-yfinance-adapter
-    content:
-      Move CorporateActionsAdapter (yfinance earnings) from instruments-service to
-      features_calendar_service/adapters/yfinance_earnings_adapter.py
-    status: completed
-  - id: fcs-calculators
-    content:
-      Create corporate_actions_calculator.py (Polygon dividends+splits), earnings_results_calculator.py (yfinance EPS
-      actuals), and economic_results_calculator.py (FRED series actuals) in features_calendar_service/app/calculators/
-    status: completed
-  - id: fcs-cli-handler
-    content:
-      Create corporate_actions_handler.py and economic_results_handler.py CLI handlers with batch + backfill +
-      incremental + dry-run modes
-    status: completed
-  - id: fcs-tests
-    content:
-      Add unit tests (mock responses) and live integration tests that call Polygon/FRED/yfinance with real API keys and
-      assert on known data points (AAPL dividends, NFP PAYEMS values, AAPL EPS actuals)
-    status: completed
-  - id: runtime-topology
-    content:
-      Move features-calendar-service from scheduled_daily to time_throttled_medium (~15 min) in runtime-topology.yaml
-    status: completed
-  - id: instruments-delete
-    content:
-      Delete instruments_service/corporate_actions/ module and all 5 CLI handlers; remove operations from parser.py and
-      main.py
-    status: completed
-  - id: pm-configs
-    content:
-      Add Polygon venue + corporate_action_confirmed/earnings_result/macro_result data types to venue_data_types.yaml
-      and venues.yaml
-    status: completed
-  - id: uv-lock-and-manifest
-    content:
-      Run uv lock in changed repos; update workspace-manifest.json if unified-api-contracts (internal) is a new dep for
-      features-calendar-service
-    status: completed
-  - id: uta-calendar-router
-    content:
-      Add unified_trading_api/routes/calendar.py router (GET /calendar/economic-results, GET
-      /calendar/corporate-actions) with mock seed data in unified_trading_api/mock_data/seed_calendar.py
-    status: completed
-  - id: ui-terminal-component
-    content:
-      Add CalendarEventFeed component to the trading terminal page (/services/trading/terminal) calling
-      unified-trading-api /calendar endpoints
-    status: completed
+- {id: uac-polygon-schemas, content: 'Add PolygonDividend, PolygonDividendsResponse, PolygonSplit, PolygonSplitsResponse to UAC polygon/schemas.py and add polygon entry to provider_api_versions.yaml', status: completed}
+- {id: uic-domain-models, content: Move DividendRecord/StockSplitRecord/EarningsRecord from instruments-service to UIC domain/corporate_actions/models.py; add EarningsResultRecord and MacroResultRecord, status: completed}
+- {id: fcs-polygon-adapter, content: 'Create features_calendar_service/adapters/polygon_corporate_actions_adapter.py (httpx, polygon-api-key, /v3/reference/dividends + /v3/reference/splits)', status: completed}
+- {id: fcs-yfinance-adapter, content: Move CorporateActionsAdapter (yfinance earnings) from instruments-service to features_calendar_service/adapters/yfinance_earnings_adapter.py, status: completed}
+- {id: fcs-calculators, content: 'Create corporate_actions_calculator.py (Polygon dividends+splits), earnings_results_calculator.py (yfinance EPS actuals), and economic_results_calculator.py (FRED series actuals) in features_calendar_service/app/calculators/', status: completed}
+- {id: fcs-cli-handler, content: Create corporate_actions_handler.py and economic_results_handler.py CLI handlers with batch + backfill + incremental + dry-run modes, status: completed}
+- {id: fcs-tests, content: 'Add unit tests (mock responses) and live integration tests that call Polygon/FRED/yfinance with real API keys and assert on known data points (AAPL dividends, NFP PAYEMS values, AAPL EPS actuals)', status: completed}
+- {id: runtime-topology, content: Move features-calendar-service from scheduled_daily to time_throttled_medium (~15 min) in runtime-topology.yaml, status: completed}
+- {id: instruments-delete, content: Delete instruments_service/corporate_actions/ module and all 5 CLI handlers; remove operations from parser.py and main.py, status: completed}
+- {id: pm-configs, content: Add Polygon venue + corporate_action_confirmed/earnings_result/macro_result data types to venue_data_types.yaml and venues.yaml, status: completed}
+- {id: uv-lock-and-manifest, content: Run uv lock in changed repos; update workspace-manifest.json if unified-api-contracts (internal) is a new dep for features-calendar-service, status: completed}
+- {id: uta-calendar-router, content: 'Add unified_trading_api/routes/calendar.py router (GET /calendar/economic-results, GET /calendar/corporate-actions) with mock seed data in unified_trading_api/mock_data/seed_calendar.py', status: completed}
+- {id: ui-terminal-component, content: Add CalendarEventFeed component to the trading terminal page (/services/trading/terminal) calling unified-trading-api /calendar endpoints, status: completed}
 isProject: false
 ---
 

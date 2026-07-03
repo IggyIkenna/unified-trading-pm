@@ -1,21 +1,24 @@
 ---
-title: "market-tick-data-service to 100% honest coverage across all 5 asset groups"
-priority: P0
-status: active
-owner: harsh
+doc_type: plan
+title: market-tick-data-service to 100% honest coverage across all 5 asset groups
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-05
+priority: P0
+owner: harsh
 type: deployment
 epic: data-pipeline-completion
-completion_gates:
-  code: none
-  deployment: D2
-  business: none
+completion_gates: {code: none, deployment: D2, business: none}
 repo_gates:
-  - repo: market-tick-data-service
-    deployment: D2
-depends_on:
-  - instruments_to_100pct_eod_2026_05_04
-  - instruments_and_market_tick_data_completion_2026_05_01
+- {repo: market-tick-data-service, deployment: D2}
+depends_on: [instruments_to_100pct_eod_2026_05_04, instruments_and_market_tick_data_completion_2026_05_01]
 isProject: false
 ---
 

@@ -1,157 +1,79 @@
 ---
-name: ui-api-flow-validation-citadel-grade
-overview: >
-  Citadel-grade 3-layer testing framework: UI mock tests validate UX behavior, API mock-mode tests validate endpoint
-  contracts, real-flow tests validate end-to-end wiring. No critical UI interaction exists without executable test
-  evidence. Mock-only passes cannot represent production readiness.
+doc_type: plan
+title: ui-api-flow-validation-citadel-grade
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-14'
+overview: 'Citadel-grade 3-layer testing framework: UI mock tests validate UX behavior, API mock-mode tests validate endpoint contracts, real-flow tests validate end-to-end wiring. No critical UI interaction exists without executable test evidence. Mock-only passes cannot represent production readiness.
+
+  '
 type: mixed
 epic: epic-code-completion
-status: active
-
-completion_gates:
-  code: C4
-  deployment: D2
-  business: none
-
+completion_gates: {code: C4, deployment: D2, business: none}
 repo_gates:
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Checker script, manifest template, CI integration."
-  - repo: system-integration-tests
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Real-flow E2E tests for critical journeys."
-
-depends_on:
-  - ui-api-alerting-observability-2026-03-14
-
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none, readiness_note: 'Checker script, manifest template, CI integration.'}
+- {repo: system-integration-tests, code: C0, deployment: none, business: none, readiness_note: Real-flow E2E tests for critical journeys.}
+depends_on: [ui-api-alerting-observability-2026-03-14]
 supersedes: []
-
 todos:
-  # ── Phase 1: SPECIFICATION & MANIFESTS ─────────────────────────────────────
+- {id: ph1-manifest-template, content: '- [x] [AGENT] P0. Create ui-api-flow-test-manifest.yaml template in PM root. Columns: repo, journey_id, page_or_route, control_id, interaction_type, expected_request, expected_response_contract, expected_ui_update, required_layers, criticality. Pre-populate deployment-ui + logs-dashboard-ui.
 
-  - id: ph1-manifest-template
-    content: >
-      - [x] [AGENT] P0. Create ui-api-flow-test-manifest.yaml template in PM root. Columns: repo, journey_id,
-      page_or_route, control_id, interaction_type, expected_request, expected_response_contract, expected_ui_update,
-      required_layers, criticality. Pre-populate deployment-ui + logs-dashboard-ui.
-    status: done
+    ', status: done}
+- {id: ph1-critical-journey-mapping, content: '- [x] [AGENT] P0. Map critical journeys for all 12 UIs. Source from ui-api-mapping.json + Playwright test files. Manual override for criticality only. Output: populated manifest rows per UI repo.
 
-  - id: ph1-critical-journey-mapping
-    content: >
-      - [x] [AGENT] P0. Map critical journeys for all 12 UIs. Source from ui-api-mapping.json + Playwright test files.
-      Manual override for criticality only. Output: populated manifest rows per UI repo.
-    status: done
+    ', status: done}
+- {id: ph1-severity-taxonomy, content: '- [x] [AGENT] P1. Define severity taxonomy: critical (blocks trading/deploy), high (degrades UX, data staleness), medium (cosmetic, non-blocking). Tie to real-flow cadence: critical = every staging deploy, high = nightly, medium = weekly.
 
-  - id: ph1-severity-taxonomy
-    content: >
-      - [x] [AGENT] P1. Define severity taxonomy: critical (blocks trading/deploy), high (degrades UX, data staleness),
-      medium (cosmetic, non-blocking). Tie to real-flow cadence: critical = every staging deploy, high = nightly, medium
-      = weekly.
-    status: done
+    ', status: done}
+- {id: ph2-checker-script, content: '- [x] [AGENT] P0. Create check_ui_api_flow_coverage.py in PM scripts/checkers/. Reads manifest, scans repos for Playwright/vitest/pytest files, scores against COV-001 through COV-003, BEH-001 through BEH-004, SEP-001 through SEP-003. Outputs JSON + markdown report.
 
-  # ── Phase 2: CHECKER MVP ───────────────────────────────────────────────────
+    ', status: done}
+- {id: ph2-ci-warning, content: '- [x] [AGENT] P1. Wire checker into PM quality flow as WARNING (non-blocking). Run in SIT validation. Output scorecard to GCS artifacts.
 
-  - id: ph2-checker-script
-    content: >
-      - [x] [AGENT] P0. Create check_ui_api_flow_coverage.py in PM scripts/checkers/. Reads manifest, scans repos for
-      Playwright/vitest/pytest files, scores against COV-001 through COV-003, BEH-001 through BEH-004, SEP-001 through
-      SEP-003. Outputs JSON + markdown report.
-    status: done
+    ', status: done}
+- {id: ph2-auto-discovery, content: '- [x] [AGENT] P1. Auto-discovery mode: checker scans ui-api-mapping.json + Playwright test directories. No manual manifest entry required for discovered journeys. Manual override only for criticality escalation.
 
-  - id: ph2-ci-warning
-    content: >
-      - [x] [AGENT] P1. Wire checker into PM quality flow as WARNING (non-blocking). Run in SIT validation. Output
-      scorecard to GCS artifacts.
-    status: done
+    ', status: done}
+- {id: ph3-network-evidence, content: '- [x] [AGENT] P0. Network evidence parser: extract request/response pairs from Playwright HAR or page.route() intercepts. Validate against UAC/UIC contract models. Flag mock fixtures that drift from API mock-mode responses.
 
-  - id: ph2-auto-discovery
-    content: >
-      - [x] [AGENT] P1. Auto-discovery mode: checker scans ui-api-mapping.json + Playwright test directories. No manual
-      manifest entry required for discovered journeys. Manual override only for criticality escalation.
-    status: done
+    ', status: done}
+- {id: ph3-triad-assertions, content: '- [x] [AGENT] P0. Request/response/ui-update triad assertions. Every critical journey must prove: (1) correct request sent, (2) contract-valid response received, (3) UI state updated. No-op controls (click with no effect) flagged as BEH-004.
 
-  # ── Phase 3: BEHAVIOR-PROOF HARDENING ──────────────────────────────────────
+    ', status: done}
+- {id: ph3-fixture-drift, content: '- [x] [AGENT] P1. Fixture drift prevention: UI mock fixtures must be generated from API mock-mode responses (one source of truth). Build-time validation that mock fixture schemas match UIC/UAC contract models. Fail on schema mismatch.
 
-  - id: ph3-network-evidence
-    content: >
-      - [x] [AGENT] P0. Network evidence parser: extract request/response pairs from Playwright HAR or page.route()
-      intercepts. Validate against UAC/UIC contract models. Flag mock fixtures that drift from API mock-mode responses.
-    status: done
+    ', status: done}
+- {id: ph3-critical-gap-blocking, content: '- [x] [AGENT] P1. Critical-gap blocking: if a critical journey has zero real-flow tests, checker emits BLOCK (not just WARNING). Prevents promotion to staging.
 
-  - id: ph3-triad-assertions
-    content: >
-      - [x] [AGENT] P0. Request/response/ui-update triad assertions. Every critical journey must prove: (1) correct
-      request sent, (2) contract-valid response received, (3) UI state updated. No-op controls (click with no effect)
-      flagged as BEH-004.
-    status: done
+    ', status: done}
+- {id: ph4-blocking-gate, content: '- [ ] [AGENT] P0. Promote checker from WARNING to BLOCKING gate in PM quality flow. Score < 75 = FAIL (blocks merge). Score 75-89 = WARNING. Score >= 90 = PASS (citadel-grade).
 
-  - id: ph3-fixture-drift
-    content: >
-      - [x] [AGENT] P1. Fixture drift prevention: UI mock fixtures must be generated from API mock-mode responses (one
-      source of truth). Build-time validation that mock fixture schemas match UIC/UAC contract models. Fail on schema
-      mismatch.
-    status: done
+    ', status: todo}
+- {id: ph4-sit-linkage, content: '- [ ] [AGENT] P1. Wire real-flow tests into SIT suite. Critical journeys run on every staging deploy. High journeys in nightly SIT. Medium journeys in weekly SIT.
 
-  - id: ph3-critical-gap-blocking
-    content: >
-      - [x] [AGENT] P1. Critical-gap blocking: if a critical journey has zero real-flow tests, checker emits BLOCK (not
-      just WARNING). Prevents promotion to staging.
-    status: done
+    ', status: todo}
+- {id: ph4-scorecard-trends, content: '- [ ] [AGENT] P2. Scorecard trend tracking. Persist scores to GCS on each run. Show delta in PR comments. Block regression (score drop > 5 points).
 
-  # ── Phase 4: CITADEL-GRADE ENFORCEMENT ─────────────────────────────────────
+    ', status: todo}
+- {id: ph1-5-mock-state-store, content: '- [x] [AGENT] P0. MockStateStore in UTL: seed data + mutations + JSONL persistence. deterministic mode (CI, no persistence) vs interactive mode (UAT, persists to .local-dev-cache/). MOCK_STATE_MODE env var. Thread-safe. Reset on dev-stop --clean.
 
-  - id: ph4-blocking-gate
-    content: >
-      - [ ] [AGENT] P0. Promote checker from WARNING to BLOCKING gate in PM quality flow. Score < 75 = FAIL (blocks
-      merge). Score 75-89 = WARNING. Score >= 90 = PASS (citadel-grade).
-    status: todo
+    ', status: done}
+- {id: ph1-5-wire-apis, content: '- [ ] [AGENT] P0. Wire MockStateStore into all 9 APIs. POST/PUT/DELETE mutate state, GET returns seed + mutations. Per-UI stateful scenarios: deployment-api (deploy→status→logs), alerting (trigger→route→deliver), trading-analytics (trade→settle→report), execution-results (submit→fill→reconcile), batch-audit (event→log→summary), ml-training (train→evaluate→deploy model).
 
-  - id: ph4-sit-linkage
-    content: >
-      - [ ] [AGENT] P1. Wire real-flow tests into SIT suite. Critical journeys run on every staging deploy. High
-      journeys in nightly SIT. Medium journeys in weekly SIT.
-    status: todo
+    ', status: partial}
+- {id: ph1-5-mode-axis, content: '- [ ] [AGENT] P1. Add 5th mode axis (MOCK_STATE_MODE=deterministic|interactive) to dev-start.sh presets. CI preset uses deterministic. Mock preset uses interactive. Update dev-status.sh to show 5th axis. Update codex local-dev.md.
 
-  - id: ph4-scorecard-trends
-    content: >
-      - [ ] [AGENT] P2. Scorecard trend tracking. Persist scores to GCS on each run. Show delta in PR comments. Block
-      regression (score drop > 5 points).
-    status: todo
+    ', status: partial}
+- {id: ph1-5-gitignore, content: '- [x] [AGENT] P0. Add .local-dev-cache/ to workspace .gitignore and all repo .gitignores. Add --clean flag to dev-stop.sh. Add --reset flag to dev-start.sh.
 
-  # ── Phase 1.5: STATEFUL MOCK INFRASTRUCTURE ────────────────────────────────
-
-  - id: ph1-5-mock-state-store
-    content: >
-      - [x] [AGENT] P0. MockStateStore in UTL: seed data + mutations + JSONL persistence. deterministic mode (CI, no
-      persistence) vs interactive mode (UAT, persists to .local-dev-cache/). MOCK_STATE_MODE env var. Thread-safe. Reset
-      on dev-stop --clean.
-    status: done
-
-  - id: ph1-5-wire-apis
-    content: >
-      - [ ] [AGENT] P0. Wire MockStateStore into all 9 APIs. POST/PUT/DELETE mutate state, GET returns seed + mutations.
-      Per-UI stateful scenarios: deployment-api (deploy→status→logs), alerting (trigger→route→deliver),
-      trading-analytics (trade→settle→report), execution-results (submit→fill→reconcile), batch-audit
-      (event→log→summary), ml-training (train→evaluate→deploy model).
-    status: partial
-
-  - id: ph1-5-mode-axis
-    content: >
-      - [ ] [AGENT] P1. Add 5th mode axis (MOCK_STATE_MODE=deterministic|interactive) to dev-start.sh presets. CI preset
-      uses deterministic. Mock preset uses interactive. Update dev-status.sh to show 5th axis. Update codex
-      local-dev.md.
-    status: partial
-
-  - id: ph1-5-gitignore
-    content: >
-      - [x] [AGENT] P0. Add .local-dev-cache/ to workspace .gitignore and all repo .gitignores. Add --clean flag to
-      dev-stop.sh. Add --reset flag to dev-start.sh.
-    status: done
-
+    ', status: done}
 isProject: false
 ---
 

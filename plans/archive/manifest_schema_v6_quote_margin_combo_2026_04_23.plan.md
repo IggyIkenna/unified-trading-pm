@@ -1,6 +1,15 @@
 ---
-title: "Manifest schema v6 — quote_asset, margin_type, combo_type, leg_weights"
-status: active
+doc_type: plan
+title: Manifest schema v6 — quote_asset, margin_type, combo_type, leg_weights
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-23
 locked_by: live-defi-rollout
 locked_since: 2026-04-23

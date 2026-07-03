@@ -1,22 +1,25 @@
 ---
-title:
-  "API-Football Enrichment Historical Backfill — FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / PLAYER_STATS /
-  INJURIES"
-priority: P0
-status: active
-owner: agent
+doc_type: plan
+title: API-Football Enrichment Historical Backfill — FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / PLAYER_STATS / INJURIES
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-21
+priority: P0
+owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: deployment
 epic: none
-completion_gates:
-  code: none
-  deployment: D3
-  business: B3
+completion_gates: {code: none, deployment: D3, business: B3}
 repo_gates:
-  - repo: deployment-service
-    deployment: D0
+- {repo: deployment-service, deployment: D0}
 depends_on: []
 isProject: false
 ---

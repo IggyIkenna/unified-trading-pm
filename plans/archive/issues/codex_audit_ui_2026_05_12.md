@@ -1,22 +1,18 @@
 ---
-title: "Codex audit — UI area (Phase 1.K)"
+doc_type: issue
+title: Codex audit — UI area (Phase 1.K)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-api, deployment-ui, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-codex-audit-ui-tab (slot 8 sub-agent)
-source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.K
-  - codex/08-workflows/local-dev.md
-  - codex/05-infrastructure/runtime-tiers-and-deployment.md
-  - codex/14-customer-journeys/authentication/firebase-local.md
-  - codex/05-infrastructure/deployment-ui-architecture.md
-  - codex/05-infrastructure/ui-functionality-requirements.md
-  - codex/05-infrastructure/ui-dependency-matrix.md
-  - codex/05-infrastructure/ui-setup-checklist.md
-  - codex/02-data/data-status-drilldown.md
-  - codex/DEPRECATED_UIS_NOTICE.md
-  - unified-trading-pm/scripts/dev/ui-api-mapping.json + restart-deployment-stack.sh + dev-start.sh
-  - unified-trading-system-ui/scripts/dev-tiers.sh + vitest.config.ts + next.config.mjs
-  - unified-trading-pm/workspace-manifest.json
-  - cursor-configs/CLAUDE.md § "Local Development" / "System-First Architecture (13 UIs)"
+source: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.K, codex/08-workflows/local-dev.md, codex/05-infrastructure/runtime-tiers-and-deployment.md, codex/14-customer-journeys/authentication/firebase-local.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/ui-functionality-requirements.md, codex/05-infrastructure/ui-dependency-matrix.md, codex/05-infrastructure/ui-setup-checklist.md, codex/02-data/data-status-drilldown.md, codex/DEPRECATED_UIS_NOTICE.md, unified-trading-pm/scripts/dev/ui-api-mapping.json + restart-deployment-stack.sh + dev-start.sh, unified-trading-system-ui/scripts/dev-tiers.sh + vitest.config.ts + next.config.mjs, unified-trading-pm/workspace-manifest.json, cursor-configs/CLAUDE.md § "Local Development" / "System-First Architecture (13 UIs)"]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

@@ -1,16 +1,21 @@
 ---
-title:
-  "Backfill VMs silently stall — dead worker masked by independent heartbeat sidecar; missing per-shard wall-clock
-  watchdog + bounded HTTP/RPC timeouts"
+doc_type: plan
+title: Backfill VMs silently stall — dead worker masked by independent heartbeat sidecar; missing per-shard wall-clock watchdog + bounded HTTP/RPC timeouts
+summary:
+status: superseded
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-19
 parent_epic: infrastructure_master
-source:
-  - "vm-logs/sfi-backfill-chunk-2of4-20260619-161036/run.log (froze 3h25m after 1 date)"
-  - "vm-logs/mtds-gas-fees-20260619-151404/run.log (froze ~1h48m mid-POLYGON sampling)"
-  - "instruments-service@729fbdb (SFI ClientTimeout fix)"
+source: [vm-logs/sfi-backfill-chunk-2of4-20260619-161036/run.log (froze 3h25m after 1 date), vm-logs/mtds-gas-fees-20260619-151404/run.log (froze ~1h48m mid-POLYGON sampling), instruments-service@729fbdb (SFI ClientTimeout fix)]
 locked_by: live-defi-rollout
 priority: P2
-status: superseded---
+---
 
 ## What I found
 

@@ -1,18 +1,21 @@
 ---
+doc_type: plan
 title: Refactor G1.2 — Instruction-schema validation service
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.2
-  - codex/14-playbooks/infra-spec/stage-3b-instruction-schema-contract.md
-  - codex/14-playbooks/infra-spec/stage-3b-uac-combo-rules.md
-  - codex/14-playbooks/infra-spec/stage-3b-combo-rules-schema.yaml
-  - codex/14-playbooks/_ssot-rules/10-strategy-instruction-schema-principles.md
-  - refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md
-# Wave C — parallel with refactor_g1_6.
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.2, codex/14-playbooks/infra-spec/stage-3b-instruction-schema-contract.md, codex/14-playbooks/infra-spec/stage-3b-uac-combo-rules.md, codex/14-playbooks/infra-spec/stage-3b-combo-rules-schema.yaml, codex/14-playbooks/_ssot-rules/10-strategy-instruction-schema-principles.md, refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md]
 ---
 
 ## Deferred work — migrated to:

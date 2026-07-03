@@ -1,12 +1,20 @@
 ---
-plan_type: handoff
+doc_type: plan
+title: carry-tracer-pipeline-handoff-2026-05-05
+summary:
+status: complete
+nature: record
 asset_group: defi
-owner: ikenna
+stage: [meta]
+repos: [deployment-service, market-data-processing-service, market-tick-data-service, strategy-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-05
+plan_type: handoff
+owner: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-05
-name: carry-tracer-pipeline-handoff-2026-05-05
-status: active
 ---
 
 # NEXT-AGENT PROMPT — Carry tracer pipeline (Stages 1-4)

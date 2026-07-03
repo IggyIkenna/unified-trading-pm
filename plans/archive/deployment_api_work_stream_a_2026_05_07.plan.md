@@ -1,36 +1,30 @@
 ---
-name: deployment-api-work-stream-a
-overview:
-  deployment-api endpoints for programmatic VM backfill launch + GCS event tail (work-stream-A keystone unblock for the
-  2026-05-23 live-DeFi deadline)
+doc_type: plan
+title: deployment-api-work-stream-a
+summary:
+status: complete
+nature: record
+asset_group: cross-cutting
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-07'
+overview: deployment-api endpoints for programmatic VM backfill launch + GCS event tail (work-stream-A keystone unblock for the 2026-05-23 live-DeFi deadline)
 type: code
 epic: epic-code-completion
-status: active
-
-asset_group: cross-cutting
 priority: P0
 deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-gates: [master_to_live_defi:work-stream-A]
+gates: ['master_to_live_defi:work-stream-A']
 last_updated: 2026-05-07
-
-completion_gates:
-  code: C5
-  deployment: D3
-  business: none
-
+completion_gates: {code: C5, deployment: D3, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: deployment-api
-    code: C0
-    deployment: none
-    business: none
-
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: deployment-api, code: C0, deployment: none, business: none}
 depends_on: []
 isProject: false
 ---

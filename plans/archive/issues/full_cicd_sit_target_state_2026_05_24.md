@@ -1,12 +1,19 @@
 ---
-title: "Full CI/CD + SIT target state — close the gaps that let staging drift ~1 month undetected"
+doc_type: issue
+title: Full CI/CD + SIT target state — close the gaps that let staging drift ~1 month undetected
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-service, e2e-testing, market-tick-data-service, system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-24
-source:
-  - "staging staleness audit + UAC pilot PR #48 (2026-05-24)"
-  - "plans/active/issues/staging_resync_post_cutover_2026_05_24.md"
+source: ['staging staleness audit + UAC pilot PR #48 (2026-05-24)', plans/active/issues/staging_resync_post_cutover_2026_05_24.md]
 locked_by: live-defi-rollout
 priority: P2
-status: active
 ---
 
 > **ARCHIVED 2026-06-01 (slot 7).** COVERED by `plans/active/cicd_contract_hardening_2026_06_01.md`. The open SIT Tiers

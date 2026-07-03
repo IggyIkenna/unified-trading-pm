@@ -1,87 +1,34 @@
 ---
-name: website-repo-integration-2026-03-13
-overview: >-
-  Clone datadodo/odum_website to eggyakana/odum-research-website. Integrate into workspace manifest with quality gates,
-  CI/CD, workspace config files, and codex checklist.
+doc_type: plan
+title: website-repo-integration-2026-03-13
+summary:
+status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-13'
+overview: Clone datadodo/odum_website to eggyakana/odum-research-website. Integrate into workspace manifest with quality gates, CI/CD, workspace config files, and codex checklist.
 type: infra
 epic: epic-website
-status: superseded
 superseded_by: website_master_2026_03_13
 superseded_date: 2026-03-13
-
-completion_gates:
-  code: C5
-  deployment: D1
-  business: none
-
+completion_gates: {code: C5, deployment: D1, business: none}
 repo_gates:
-  - repo: odum-research-website
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "New repo — quality gates TBD after tech stack audit. DR N/A: hosting setup in website_domain_migration plan. BR
-      N/A: internal infra."
-
+- {repo: odum-research-website, code: C0, deployment: none, business: none, readiness_note: 'New repo — quality gates TBD after tech stack audit. DR N/A: hosting setup in website_domain_migration plan. BR N/A: internal infra.'}
 depends_on: []
-
 todos:
-  - id: audit-odum-website-stack
-    content: >-
-      Inspect datadodo/odum_website repo: detect tech stack (Next.js, static HTML, CMS, etc.), dependencies, build
-      system, existing CI. Document findings in odum-research-website/docs/stack.md.
-    status: todo
-    note: ""
-
-  - id: create-eggyakana-repo
-    content: >-
-      Create eggyakana/odum-research-website GitHub repo (private initially). Push clone of datadodo/odum_website
-      preserving git history as initial commit.
-    status: todo
-    note: ""
-
-  - id: add-to-workspace-manifest
-    content: >-
-      Add odum-research-website entry to workspace-manifest.json: type=ui, arch_tier=ui, cluster=website, org=eggyakana,
-      github_url=https://github.com/eggyakana/odum-research-website, status=active.
-    status: todo
-    note: ""
-
-  - id: setup-quality-gates
-    content: >-
-      Add scripts/quality-gates.sh appropriate for tech stack (eslint, prettier, vitest/jest if applicable). bash
-      scripts/quality-gates.sh must pass from repo root.
-    status: todo
-    note: ""
-
-  - id: setup-cicd
-    content: >-
-      Add .github/workflows/quality-gates.yml (PR check on push/PR to main). Add cloudbuild.yaml or buildspec.aws.yaml
-      per workspace template.
-    status: todo
-    note: ""
-
-  - id: add-to-workspace-configs
-    content: >-
-      Add odum-research-website to workspace-uis.code-workspace and workspace-complete.code-workspace under
-      unified-trading-pm/cursor-configs/.
-    status: todo
-    note: ""
-
-  - id: add-codex-checklist
-    content: >-
-      Create unified-trading-codex/10-audit/repos/odum-research-website.yaml with initial checklist (cr=C0, dr=none,
-      br=none).
-    status: todo
-    note: ""
-
-  - id: update-index
-    content: >-
-      Add all 5 website/access plans (85–89) to unified-trading-pm/plans/active/INDEX.md under a new Website & Access
-      section.
-    status: done
-    note: "Added in same session as plan creation."
-
+- {id: audit-odum-website-stack, content: 'Inspect datadodo/odum_website repo: detect tech stack (Next.js, static HTML, CMS, etc.), dependencies, build system, existing CI. Document findings in odum-research-website/docs/stack.md.', status: todo, note: ''}
+- {id: create-eggyakana-repo, content: Create eggyakana/odum-research-website GitHub repo (private initially). Push clone of datadodo/odum_website preserving git history as initial commit., status: todo, note: ''}
+- {id: add-to-workspace-manifest, content: 'Add odum-research-website entry to workspace-manifest.json: type=ui, arch_tier=ui, cluster=website, org=eggyakana, github_url=https://github.com/eggyakana/odum-research-website, status=active.', status: todo, note: ''}
+- {id: setup-quality-gates, content: 'Add scripts/quality-gates.sh appropriate for tech stack (eslint, prettier, vitest/jest if applicable). bash scripts/quality-gates.sh must pass from repo root.', status: todo, note: ''}
+- {id: setup-cicd, content: Add .github/workflows/quality-gates.yml (PR check on push/PR to main). Add cloudbuild.yaml or buildspec.aws.yaml per workspace template., status: todo, note: ''}
+- {id: add-to-workspace-configs, content: Add odum-research-website to workspace-uis.code-workspace and workspace-complete.code-workspace under unified-trading-pm/cursor-configs/., status: todo, note: ''}
+- {id: add-codex-checklist, content: 'Create unified-trading-codex/10-audit/repos/odum-research-website.yaml with initial checklist (cr=C0, dr=none, br=none).', status: todo, note: ''}
+- {id: update-index, content: Add all 5 website/access plans (85–89) to unified-trading-pm/plans/active/INDEX.md under a new Website & Access section., status: done, note: Added in same session as plan creation.}
 isProject: false
 ---
 

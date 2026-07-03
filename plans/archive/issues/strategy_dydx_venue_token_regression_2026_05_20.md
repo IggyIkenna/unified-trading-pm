@@ -1,16 +1,20 @@
 ---
+doc_type: issue
 title: strategy-service QG regression — dydx removed from UAC venue_tokens breaks test_target_universe.py
+summary:
+status: RESOLVED 2026-05-22
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
-source:
-  - QG-CLUSTER-C Phase -1 sweep
-  - UAC@df2c754 — "defunct UAC provider dirs Phase 3 cleanup - sharpapi + fear_greed + dydx"
-  - strategy-service tests/unit/engine/strategies/v2/test_target_universe.py
+source: [QG-CLUSTER-C Phase -1 sweep, UAC@df2c754 — "defunct UAC provider dirs Phase 3 cleanup - sharpapi + fear_greed + dydx", strategy-service tests/unit/engine/strategies/v2/test_target_universe.py]
 locked_by: live-defi-rollout
 priority: P2
-status: RESOLVED 2026-05-22
-resolved_via:
-  Option A — dydx re-added to UAC venue_tokens.py (confirmed line 128). Strategy catalog entries retained. 5 test
-  failures cleared.
+resolved_via: Option A — dydx re-added to UAC venue_tokens.py (confirmed line 128). Strategy catalog entries retained. 5 test failures cleared.
 ---
 
 ## What I found

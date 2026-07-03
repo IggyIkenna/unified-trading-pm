@@ -1,14 +1,22 @@
 ---
-name: instruments_backfill_phase3
-title: "Instruments-service catalogue forward-fill — Phase 3 per-asset-group"
+doc_type: plan
+title: Instruments-service catalogue forward-fill — Phase 3 per-asset-group
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-22
 parent_epic: instruments_master
 assigned_vm: vm-cefi
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.6
-status: archived
 priority: P0
-created: 2026-05-22
 last_updated: 2026-05-22
 archived: 2026-05-23
 gate: Phase 2 freeze lifted + instruments_master Phase A-E preflight GREEN

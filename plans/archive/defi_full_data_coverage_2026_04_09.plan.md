@@ -1,77 +1,58 @@
 ---
-name: defi-full-data-coverage
+doc_type: plan
+title: defi-full-data-coverage
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-14'
 remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
-overview:
-  Build all missing DeFi data handlers in MTDS — lending indices, DEX pools, LST rates, perp funding, liquidations,
-  bridge flows
+overview: Build all missing DeFi data handlers in MTDS — lending indices, DEX pools, LST rates, perp funding, liquidations, bridge flows
 type: code
 epic: epic-code-completion
-status: active
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B4
+completion_gates: {code: C5, deployment: D3, business: B4}
 repo_gates:
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: deployment-service
-    code: C0
-    deployment: none
-    business: none
-depends_on:
-  - defi-data-pipeline-e2e
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: deployment-service, code: C0, deployment: none, business: none}
+depends_on: [defi-data-pipeline-e2e]
 todos:
-  - id: phase1-lending-indices
-    content: |
-      - [x] [AGENT] P0. Build collect-lending-indices handler — Aave V3 reserveParamsHistoryItems (liquidityIndex, variableBorrowIndex, stableBorrowRate, variableBorrowRate, utilizationRate) per reserve per day. Compound V3 daily market snapshots. All chains from SUBGRAPH_IDS. GCS: lending-indices-{project}/lending_indices/{protocol}/{chain}/date={date}/
-    status: done
-  - id: phase1-dex-pools
-    content: |
-      - [x] [AGENT] P0. Build collect-dex-pools handler — Uniswap V3 poolDayData (volumeUSD, tvlUSD, feesUSD, txCount), Balancer poolSnapshots (swapVolume, totalLiquidity, swapFees), Curve poolDayData (dailyVolumeUSD, tvl). All chains from SUBGRAPH_IDS. GCS: dex-pools-{project}/dex_pools/{protocol}/{chain}/date={date}/
-    status: done
-  - id: phase1-lst-rates
-    content: |
-      - [x] [AGENT] P0. Build collect-lst-rates handler — On-chain oracle exchange rates via Alchemy RPC at historical block numbers. stETH (getPooledEthByShares), wstETH (stEthPerToken), rETH (getExchangeRate), cbETH (exchangeRate), sUSDe (convertToAssets), sDAI (convertToAssets). Daily rate snapshots for exact P&L attribution (APY = annualised growth in rate). GCS: lst-rates-{project}/lst_rates/date={date}/
-    status: done
-  - id: phase1-perp-funding
-    content: |
-      - [x] [AGENT] P1. Build collect-perp-funding handler — Hyperliquid S3 archive fundingRates (already have adapter), GMX subgraph fundingRateUpdated events. Daily funding rate, OI, volume per market. GCS: perp-funding-{project}/perp_funding/{protocol}/date={date}/
-    status: done
-  - id: phase1-liquidations
-    content: |
-      - [x] [AGENT] P1. Build collect-liquidations handler — Aave V3 LiquidationCall events from subgraph, Compound V3 AbsorbCollateral events. Per-chain per-day. GCS: liquidations-{project}/liquidations/{protocol}/{chain}/date={date}/
-    status: done
-  - id: phase1-rewrite-evm-defi
-    content: |
-      - [x] [AGENT] P0. Rewrite collect-evm-defi to fetch historical lending rate indices per day in batch mode (Aave liquidityIndex/variableBorrowIndex from subgraph time-travel queries with block number) instead of live APY snapshots. Keep live snapshot path for --mode live.
-    status: done
-  - id: phase2-cli-args
-    content: |
-      - [x] [AGENT] P0. Register all new operations in ServiceBootstrap. Add CLI args: --lending-protocols, --dex-protocols, --lst-tokens, --perp-protocols, --liquidation-protocols. All reading from SUBGRAPH_IDS in UAC.
-    status: done
-  - id: phase2-uac-schemas
-    content: |
-      - [x] [AGENT] P0. Add parquet schemas to UAC internal domain types: LendingIndexRecord, DexPoolDayRecord, LstRateRecord, PerpFundingRecord, LiquidationRecord. All in unified_api_contracts.internal.domain.defi.
-    status: done
-  - id: phase2-manifest-buckets
-    content: |
-      - [x] [AGENT] P1. Register new GCS buckets in deployment-service manifest_reader _EXTRA_BUCKETS and UTL get_bucket_name for: lending-indices, dex-pools, lst-rates, perp-funding, liquidations.
-    status: done
-  - id: phase3-vm-scripts
-    content: |
-      - [x] [AGENT] P1. Create VM launch scripts for each new handler in e2e-testing/scripts/defi/ — all using proper service CLI invocation (no MagicMock).
-    status: done
-  - id: phase4-validate
-    content: |
-      - [x] [HUMAN+AGENT] P0. Run each handler locally for 1 day, verify GCS output, check data manifest shows coverage.
-        *(archived 2026-04-22 — operational burn-in; run per handler when scheduling production backfills.)*
-    status: todo
+- {id: phase1-lending-indices, content: '- [x] [AGENT] P0. Build collect-lending-indices handler — Aave V3 reserveParamsHistoryItems (liquidityIndex, variableBorrowIndex, stableBorrowRate, variableBorrowRate, utilizationRate) per reserve per day. Compound V3 daily market snapshots. All chains from SUBGRAPH_IDS. GCS: lending-indices-{project}/lending_indices/{protocol}/{chain}/date={date}/
+
+    ', status: done}
+- {id: phase1-dex-pools, content: '- [x] [AGENT] P0. Build collect-dex-pools handler — Uniswap V3 poolDayData (volumeUSD, tvlUSD, feesUSD, txCount), Balancer poolSnapshots (swapVolume, totalLiquidity, swapFees), Curve poolDayData (dailyVolumeUSD, tvl). All chains from SUBGRAPH_IDS. GCS: dex-pools-{project}/dex_pools/{protocol}/{chain}/date={date}/
+
+    ', status: done}
+- {id: phase1-lst-rates, content: '- [x] [AGENT] P0. Build collect-lst-rates handler — On-chain oracle exchange rates via Alchemy RPC at historical block numbers. stETH (getPooledEthByShares), wstETH (stEthPerToken), rETH (getExchangeRate), cbETH (exchangeRate), sUSDe (convertToAssets), sDAI (convertToAssets). Daily rate snapshots for exact P&L attribution (APY = annualised growth in rate). GCS: lst-rates-{project}/lst_rates/date={date}/
+
+    ', status: done}
+- {id: phase1-perp-funding, content: '- [x] [AGENT] P1. Build collect-perp-funding handler — Hyperliquid S3 archive fundingRates (already have adapter), GMX subgraph fundingRateUpdated events. Daily funding rate, OI, volume per market. GCS: perp-funding-{project}/perp_funding/{protocol}/date={date}/
+
+    ', status: done}
+- {id: phase1-liquidations, content: '- [x] [AGENT] P1. Build collect-liquidations handler — Aave V3 LiquidationCall events from subgraph, Compound V3 AbsorbCollateral events. Per-chain per-day. GCS: liquidations-{project}/liquidations/{protocol}/{chain}/date={date}/
+
+    ', status: done}
+- {id: phase1-rewrite-evm-defi, content: '- [x] [AGENT] P0. Rewrite collect-evm-defi to fetch historical lending rate indices per day in batch mode (Aave liquidityIndex/variableBorrowIndex from subgraph time-travel queries with block number) instead of live APY snapshots. Keep live snapshot path for --mode live.
+
+    ', status: done}
+- {id: phase2-cli-args, content: '- [x] [AGENT] P0. Register all new operations in ServiceBootstrap. Add CLI args: --lending-protocols, --dex-protocols, --lst-tokens, --perp-protocols, --liquidation-protocols. All reading from SUBGRAPH_IDS in UAC.
+
+    ', status: done}
+- {id: phase2-uac-schemas, content: '- [x] [AGENT] P0. Add parquet schemas to UAC internal domain types: LendingIndexRecord, DexPoolDayRecord, LstRateRecord, PerpFundingRecord, LiquidationRecord. All in unified_api_contracts.internal.domain.defi.
+
+    ', status: done}
+- {id: phase2-manifest-buckets, content: '- [x] [AGENT] P1. Register new GCS buckets in deployment-service manifest_reader _EXTRA_BUCKETS and UTL get_bucket_name for: lending-indices, dex-pools, lst-rates, perp-funding, liquidations.
+
+    ', status: done}
+- {id: phase3-vm-scripts, content: '- [x] [AGENT] P1. Create VM launch scripts for each new handler in e2e-testing/scripts/defi/ — all using proper service CLI invocation (no MagicMock).
+
+    ', status: done}
+- {id: phase4-validate, content: "- [x] [HUMAN+AGENT] P0. Run each handler locally for 1 day, verify GCS output, check data manifest shows coverage.\n  *(archived 2026-04-22 — operational burn-in; run per handler when scheduling production backfills.)*\n", status: todo}
 isProject: false
 ---
 

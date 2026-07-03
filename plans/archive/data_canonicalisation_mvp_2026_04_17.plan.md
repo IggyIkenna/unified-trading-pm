@@ -1,18 +1,19 @@
 ---
-title: "Data Canonicalisation MVP — CeFi + TradFi + DeFi (schema, partitioning, migration)"
+doc_type: plan
+title: Data Canonicalisation MVP — CeFi + TradFi + DeFi (schema, partitioning, migration)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-library, instruments-service, market-tick-data-service, deployment-api, deployment-ui, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-17
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-04-17
 priority: P0
-repos:
-  - unified-api-contracts
-  - unified-trading-library
-  - instruments-service
-  - market-tick-data-service
-  - deployment-api
-  - deployment-ui
-  - unified-trading-pm
 code_readiness: C0
 deployment_readiness: D0
 business_readiness: B0

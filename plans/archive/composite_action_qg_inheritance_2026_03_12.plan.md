@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: 'Plan: Composite Action — Quality Gates Inheritance'
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-12'
+---
+
 # Plan: Composite Action — Quality Gates Inheritance
 
 **Status:** ACTIVE **Priority:** P2 **Created:** 2026-03-12 **Owner:** Platform

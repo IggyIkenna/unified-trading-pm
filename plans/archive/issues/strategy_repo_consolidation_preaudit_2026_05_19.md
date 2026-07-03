@@ -1,8 +1,17 @@
 ---
+doc_type: issue
 title: Strategy Repo Consolidation — Pre-Audit (2026-05-19)
+summary:
+status: ACKED-INTO-PLAN
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-19
 archived: 2026-05-22
-status: ACKED-INTO-PLAN
 parent_epic: strategy_master
 priority: P2
 locked_by: live-defi-rollout

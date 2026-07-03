@@ -1,15 +1,28 @@
 ---
+doc_type: plan
 title: Governance HARD RULE automation + QG ratchet gaps (post-cutover)
-type: plan
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, strategy-service, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md, plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md, plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md]
 created: 2026-05-12
+type: plan
 deadline: 2026-05-23
 prior_deadline: 2026-08-31
-deadline_change_reason: |
-  Operator direction 2026-05-13: pulled forward into May-23 scope. "QG is key to good trading hardened" —
+deadline_change_reason: 'Operator direction 2026-05-13: pulled forward into May-23 scope. "QG is key to good trading hardened" —
+
   fixing governance automation + ratchet gaps pre-cutover means live trading runs with full HARD RULE
+
   enforcement from day 1, not retrofitted after. Filename retains _post_cutover_ suffix from prior planning
+
   (not renamed to avoid cross-ref churn).
+
+  '
 priority: P1
 horizon: pre-May-23 cutover (pulled forward 2026-05-13)
 prior_horizon: 3-month post-cutover backlog
@@ -17,10 +30,6 @@ companion_to: codex_vs_citadel_infrastructure_audit_2026_05_10.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 migrated_from: codex_vs_citadel_infrastructure_audit_2026_05_10 (POST_CUTOVER Phase 5)
-related_plans:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
-  - plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md
-  - plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md
 estimate_class: design
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 3.0

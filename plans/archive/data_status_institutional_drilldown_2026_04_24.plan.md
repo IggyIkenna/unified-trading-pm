@@ -1,6 +1,15 @@
 ---
-title: "Data Status institutional-grade drilldown — schema backfill, write-time validation, unified shard-detail"
-status: active
+doc_type: plan
+title: Data Status institutional-grade drilldown — schema backfill, write-time validation, unified shard-detail
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-24
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25

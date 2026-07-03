@@ -1,34 +1,21 @@
 ---
 doc_type: issue
-title: "LDR→main promotion stall (2026-06-29) — TWO distinct causes: (A) a flaky QG dep-clone staled UTL's tier-0 ci_status (morning lag, drained); (B) the LIVE fleet promoter's SIT-rehome gate deadlocked every breaking-delta repo on a never-written sit_validated_tree, behind a chain of 6 stacked bugs. (A) and (B) are independent."
-created: 2026-06-29
-source:
-  - .github/workflows/ldr-to-main-promote-fleet.yml
-  - system-integration-tests/.github/workflows/full-workspace-sit.yml
-  - scripts/cicd/detect_breaking_change.py
-assigned_vm: NA
+title: 'LDR→main promotion stall (2026-06-29) — TWO distinct causes: (A) a flaky QG dep-clone staled UTL''s tier-0 ci_status (morning lag, drained); (B) the LIVE fleet promoter''s SIT-rehome gate deadlocked every breaking-delta repo on a never-written sit_validated_tree, behind a chain of 6 stacked bugs. (A) and (B) are independent.'
+summary: 'Two independent causes behind LDR→main not advancing. (A) MORNING LAG: a flaky QG dep-clone (phantom-version / stale-deps fallback) left unified-trading-library''s tier-0 ci_status stuck FAILING while green; the dep-order gate held its dependents → >60m lag alert; cleared by re-greening UTL. (B) PERSISTENT BREAKING-DELTA STALL (verified 2026-06-29, the instruments-service class): the LDR→main fleet promoter IS live and scheduled (NOT inactive — the earlier draft was wrong), and its WS-L SIT-rehome gate fail-closes any repo with a breaking/unknown AST delta until Firestore carries a sit_validated_tree fingerprint. That fingerprint was NEVER written, behind a chain of 6 stacked bugs (SIT-stamp producer stranded off SIT''s default branch → invalid YAML in that producer → differ counting private __all__ names as breaking → legacy promote/<repo> ref D/F-conflict → jammed squash-divergence backmerge). instruments-service fully resolved + promoted; features-service/deployment-ui/agent-orchestrator
+  were on the same class.'
 status: resolved
-superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
-priority: P1
-summary: "Two independent causes behind LDR→main not advancing. (A) MORNING LAG: a flaky QG dep-clone (phantom-version / stale-deps fallback) left unified-trading-library's tier-0 ci_status stuck FAILING while green; the dep-order gate held its dependents → >60m lag alert; cleared by re-greening UTL. (B) PERSISTENT BREAKING-DELTA STALL (verified 2026-06-29, the instruments-service class): the LDR→main fleet promoter IS live and scheduled (NOT inactive — the earlier draft was wrong), and its WS-L SIT-rehome gate fail-closes any repo with a breaking/unknown AST delta until Firestore carries a sit_validated_tree fingerprint. That fingerprint was NEVER written, behind a chain of 6 stacked bugs (SIT-stamp producer stranded off SIT's default branch → invalid YAML in that producer → differ counting private __all__ names as breaking → legacy promote/<repo> ref D/F-conflict → jammed squash-divergence backmerge). instruments-service fully resolved + promoted; features-service/deployment-ui/agent-orchestrator were on the same class."
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos:
-  - unified-trading-pm
-  - unified-trading-library
-  - system-integration-tests
-  - instruments-service
-  - market-tick-data-service
-  - market-data-processing-service
-  - deployment-api
-  - deployment-service
-  - deployment-ui
-  - features-service
-  - agent-orchestrator
+repos: [unified-trading-pm, unified-trading-library, system-integration-tests, instruments-service, market-tick-data-service, market-data-processing-service, deployment-api, deployment-service, deployment-ui, features-service, agent-orchestrator]
 scope: [engineer, admin]
 tags: [cicd, promotion, ldr-main, ci-status, flaky-qg, dep-clone, sit-rehome, sit-validated-tree, breaking-detection, promote-ref]
 related: []
+created: 2026-06-29
+source: [.github/workflows/ldr-to-main-promote-fleet.yml, system-integration-tests/.github/workflows/full-workspace-sit.yml, scripts/cicd/detect_breaking_change.py]
+assigned_vm: NA
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+priority: P1
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

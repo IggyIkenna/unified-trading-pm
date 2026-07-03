@@ -1,8 +1,17 @@
 ---
+doc_type: plan
 title: Ikenna's daily work-split — 2026-05-19 (Cycle 2 Day-4; full backlog sweep — all May-23 + no-deadline)
-type: coordination-doc
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-19
+type: coordination-doc
 deadline: 2026-05-23
 horizon: 4 calendar days (19 May → 23 May); Cycle 2 close + Cycle 3 paper-smoke
 companion_to: plans/active/work_split_2026_05_19_harsh.md
@@ -12,12 +21,17 @@ estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
 effective_concurrent_slots: 8
-estimate_calibration_note: |
-  Full-sweep day. All May-23-deadline + no-deadline backlog allocated across 8 implementer
-  slots. Ikenna owns ~231 cal AI-days (2× Harsh's 116). Carries every deferred item from
+estimate_calibration_note: 'Full-sweep day. All May-23-deadline + no-deadline backlog allocated across 8 implementer
+
+  slots. Ikenna owns ~231 cal AI-days (2× Harsh''s 116). Carries every deferred item from
+
   May-15 / May-16 / May-18 splits. Critical blocker: operator must trigger write-pause
+
   window FIRST (L3 + L5 flips gate on it). Inventory as of 2026-05-19 08:26 UTC:
+
   462 total / 236 May-23 critical-path / 97 no-deadline = 333 spreadable.
+
+  '
 ---
 
 # Ikenna's daily work-split — 2026-05-19 (full backlog sweep)

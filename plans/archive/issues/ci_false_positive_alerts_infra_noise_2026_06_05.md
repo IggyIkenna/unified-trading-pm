@@ -1,13 +1,19 @@
 ---
-title: CI false-positive alerts — infra/checkout noise pages #ci-failures indistinguishably from real reds (suppression catalogue seed)
+doc_type: issue
+title: CI false-positive alerts — infra/checkout noise pages
+summary:
+status: RESOLVED
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-05
-source:
-  - deployment-service quality-gates-v2 run 27008990509 (live-defi-rollout promote PR) — actual job-log read
-  - per-run "Notify #ci-failures" step conclusions verified via actions/runs/<id>/jobs API
-  - live red-board sweep 2026-06-05 across 26 workspace repos
+source: [deployment-service quality-gates-v2 run 27008990509 (live-defi-rollout promote PR) — actual job-log read, per-run "Notify, live red-board sweep 2026-06-05 across 26 workspace repos]
 resolved: 2026-06-07
 priority: P2
-status: RESOLVED
 ---
 
 > ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-CODE + ACKED-INTO-PLAN)

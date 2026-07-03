@@ -1,27 +1,36 @@
 ---
-name: cross_operator_auth_failover
-title: "Cross-operator account rotation + auth-fail trigger + Slack alert on rotation"
+doc_type: plan
+title: Cross-operator account rotation + auth-fail trigger + Slack alert on rotation
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: []
+related: [issues/cross_operator_auth_failover_2026_05_29.md, ../../codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md]
+created: 2026-05-29
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P1
-status: archived
-created: 2026-05-29
 last_updated: 2026-05-29
 archived: 2026-06-01
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-estimate_calibration_note: |
-  Refactor (0.4×): rotation logic exists (_pick_next_account); changes are removing
+estimate_calibration_note: 'Refactor (0.4×): rotation logic exists (_pick_next_account); changes are removing
+
   any operator-boundary filter, adding an auth-fail detection path (no-heartbeat-
+
   after-spawn → mark auth_failed → rotate), and threading a rotation-reason field
+
   through the existing Slack-alert path. No new infra; one StrEnum + one server
+
   branch + one alert template.
-related:
-  - issues/cross_operator_auth_failover_2026_05_29.md
-  - ../../codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md
-supersedes:
-  - harsh_account_pool_expansion_2026_05_29.md # original misframing (operator corrected 2026-05-29)
+
+  '
+supersedes: [harsh_account_pool_expansion_2026_05_29.md]
 ---
 
 ## ✅ ARCHIVED 2026-06-01

@@ -1,9 +1,19 @@
 ---
-name: defunct_uac_provider_dirs_cleanup_2026_05_20
+doc_type: plan
+title: defunct_uac_provider_dirs_cleanup_2026_05_20
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [uac_source_capability_metadata_promotion_2026_05_20.md, issues/uac_weekly_validation_wif_secrets_missing_2026_05_17.md]
+created: '2026-05-20'
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P3
-status: complete
 target_slot: ikenna-slot-1
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
@@ -11,11 +21,7 @@ estimate_calibrated_ai_days: 0.6
 deadline: 2026-05-23
 parent_plan: master_to_live_defi_2026_05_23.md
 parent_epic: data_correctness
-related_plans:
-  - uac_source_capability_metadata_promotion_2026_05_20.md
-  - issues/uac_weekly_validation_wif_secrets_missing_2026_05_17.md
-codex_ssots:
-  - codex/02-data/contracts-scope-and-layout.md
+codex_ssots: [codex/02-data/contracts-scope-and-layout.md]
 ---
 
 # Defunct UAC provider dirs cleanup — 2026-05-20

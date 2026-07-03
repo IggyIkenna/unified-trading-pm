@@ -1,14 +1,23 @@
 ---
+doc_type: plan
 title: TradFi Databento subscription-universe lockdown + billing-safety guards
+summary:
+status: complete
+nature: record
+asset_group: [tradfi]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-18
 parent_epic: tradfi_master
 assigned_vm: vm-tradfi
 priority: P1
-status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
+locked_by: NA
 locked_since: 2026-06-18
 ---
 

@@ -1,15 +1,20 @@
 ---
+doc_type: issue
 title: features-service QG test path mismatch — 350 per-family unit tests invisible to quality gates
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-4 (harsh)
 resolved: 2026-05-17
-resolution:
-  SHIPPED — features-service/scripts/quality-gates.sh now sets `PYTEST_UNIT_DIR="tests/"` (line 28) overriding the base
-  default `tests/unit/`. base-service.sh line 272 reads the override correctly. Both sides wired; coverage measurement
-  now includes all per-family unit tests (350+ files). Verified 2026-05-17 by slot-3.
-source:
-  - bash scripts/quality-gates.sh → coverage 3.16% (floor 70%)
-  - tests/unit/ (5 files, 46 tests) vs tests/<family>/unit/ (350 files)
+resolution: SHIPPED — features-service/scripts/quality-gates.sh now sets `PYTEST_UNIT_DIR="tests/"` (line 28) overriding the base default `tests/unit/`. base-service.sh line 272 reads the override correctly. Both sides wired; coverage measurement now includes all per-family unit tests (350+ files). Verified 2026-05-17 by slot-3.
+source: [bash scripts/quality-gates.sh → coverage 3.16% (floor 70%), 'tests/unit/ (5 files, 46 tests) vs tests/<family>/unit/ (350 files)']
 locked_by: live-defi-rollout
 ---
 

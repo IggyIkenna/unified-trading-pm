@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: 'Phase 2a: Acquire Lifecycle Tab — Deep Audit'
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-data-processing-service, market-tick-data-service, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-22'
+---
+
 # Phase 2a: Acquire Lifecycle Tab — Deep Audit
 
 **Created:** 2026-03-21 **Type:** audit | **Status:** complete (24/24) | **Scope:** Deep audit of all UI components,

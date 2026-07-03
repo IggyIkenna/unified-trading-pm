@@ -1,58 +1,30 @@
 ---
-name: codex-refactor-2026-05-08
-plan_type: meta
+doc_type: plan
+title: codex-refactor-2026-05-08
+summary:
+status: complete
+nature: record
 asset_group: cross-cutting
-type: doc-only
-status: archived
-archived: 2026-05-08
-archived_reason:
-  All 35 + 4 residual phases shipped; G.1 audit P0+P1 closed via Phase H; P2 nice-to-haves explicitly deferred per audit
-  § 5.
+stage: [meta]
+repos: [alerting-service, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
+plan_type: meta
+type: doc-only
+archived: 2026-05-08
+archived_reason: All 35 + 4 residual phases shipped; G.1 audit P0+P1 closed via Phase H; P2 nice-to-haves explicitly deferred per audit § 5.
 last_updated: 2026-05-08
 deadline: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 owner: ikenna
-
-overview: >-
-  Comprehensive codex SSOT refactor consolidating findings from 7 directory audits (Wave 1 + Wave 2 cross-directory
-  synthesis, 2026-05-08 session). The audits confirmed that ALL drift between codex docs and the active workspace plans
-  resolves in favour of the plans (per CLAUDE.md "If this doc disagrees with active plans, the plans win" + "doc → plan
-  → code"). This plan enumerates every codex file requiring changes, every cross-doc reference update needed when
-  consolidations happen, and structures phases for parallel-agent execution. P0 phases are silent-correctness drift
-  (must ship before May-23 cutover); P1 phases are consolidation that reduce drift surface; P2 phases are cosmetic /
-  structural moves that can ship after cutover.
-
-depends_on:
-  - writegate-honest-coverage-endtoend-2026-05-06
-  - manifest-v7-schema-migration-design-2026-05-08
-  - live-pipeline-mtds-mdps-features-2026-05-08
-  - features-repo-consolidation-2026-05-08
-  - alerting-service-live-rules-2026-05-07
-  - master-to-live-defi-2026-05-23
-
-# ─────────────────────────────────────────────────────────────────────────────
-# ✅ ALL 35 + 4 RESIDUAL PHASES SHIPPED + ARCHIVED 2026-05-08 — see companion
-# `plans/archive/codex_refactor_g1_audit_2026_05_08.plan.md` for the audit verification report.
-#
-# Headline: 35 planned + 4 residual phases shipped end-to-end. Layer A acceptance gates ✅. Layers B/C/D/E
-# physical refactor verified clean. The G.1 audit's P0 + P1 follow-ups (CLAUDE.md stale refs + 116-hit
-# `14-playbooks/` link sweep + D.3 multi-axis residuals + B.3 stale-repo residuals) all SHIPPED in Phase H.
-# P2 items (A.4 historical 18-archetype changelog refs / A.6 execution-service.yaml `historical_available`
-# field) explicitly left as nice-to-have non-blockers per audit § 5. Plan archived 2026-05-08.
-# ─────────────────────────────────────────────────────────────────────────────
-
+overview: Comprehensive codex SSOT refactor consolidating findings from 7 directory audits (Wave 1 + Wave 2 cross-directory synthesis, 2026-05-08 session). The audits confirmed that ALL drift between codex docs and the active workspace plans resolves in favour of the plans (per CLAUDE.md "If this doc disagrees with active plans, the plans win" + "doc → plan → code"). This plan enumerates every codex file requiring changes, every cross-doc reference update needed when consolidations happen, and structures phases for parallel-agent execution. P0 phases are silent-correctness drift (must ship before May-23 cutover); P1 phases are consolidation that reduce drift surface; P2 phases are cosmetic / structural moves that can ship after cutover.
+depends_on: [writegate-honest-coverage-endtoend-2026-05-06, manifest-v7-schema-migration-design-2026-05-08, live-pipeline-mtds-mdps-features-2026-05-08, features-repo-consolidation-2026-05-08, alerting-service-live-rules-2026-05-07, master-to-live-defi-2026-05-23]
 repo_gates:
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-
-completion_gates:
-  code: C0
-  deployment: none
-  business: none
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+completion_gates: {code: C0, deployment: none, business: none}
 ---
 
 # Codex SSOT Refactor — comprehensive worklist (2026-05-08)

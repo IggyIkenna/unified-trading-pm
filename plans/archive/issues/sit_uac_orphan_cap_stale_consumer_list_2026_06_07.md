@@ -1,13 +1,19 @@
 ---
+doc_type: issue
 title: SIT orphan-cap inflated by stale TERMINAL_CONSUMER_SERVICES list in check_uac_adoption.py
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, features-service, market-tick-data-service, ml-service, system-integration-tests, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-07
-source:
-  - system-integration-tests/.github/workflows/smoke-test-gate.yml (Code Tests job)
-  - system-integration-tests/tests/integration/test_uac_completeness.py
-  - unified-api-contracts/scripts/check_uac_adoption.py
+source: [system-integration-tests/.github/workflows/smoke-test-gate.yml (Code Tests job), system-integration-tests/tests/integration/test_uac_completeness.py, unified-api-contracts/scripts/check_uac_adoption.py]
 locked_by: live-defi-rollout
 priority: P2
-status: archived
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans

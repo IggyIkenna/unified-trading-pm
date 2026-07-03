@@ -1,194 +1,136 @@
 ---
-name: ui-sync-hardening-2026-03-23
+doc_type: plan
+title: ui-sync-hardening-2026-03-23
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-23'
 remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
-overview:
-  Unified Trading System UI — full sync, schema unification, doc alignment, mock data fix, and agent-readiness hardening
+overview: Unified Trading System UI — full sync, schema unification, doc alignment, mock data fix, and agent-readiness hardening
 type: code
 epic: epic-code-completion
-status: active
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: B6
-
+completion_gates: {code: C5, deployment: none, business: B6}
 repo_gates:
-  - repo: unified-trading-system-ui
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-
+- {repo: unified-trading-system-ui, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
 depends_on: []
-
 todos:
-  # Phase 1
-  - id: p1-fix-guided-tour
-    content: |
-      - [x] [AGENT] P0. Fix guided-tour.tsx TypeScript build error (line 66) — blocks all SSR
-    status: done
-  - id: p1-fix-var-nan
-    content: |
-      - [x] [AGENT] P0. Fix $NaN VaR rendering on Risk page — all four VaR metrics show NaN
-    status: done
-  - id: p1-fix-docs-service-prefix
-    content: |
-      - [x] [AGENT] P0. Global find/replace /service/ to /services/ in all docs: ROUTES.md, CODEBASE_STRUCTURE.md, docs/STRUCTURE_APP.md, SERVICE_COMPLETION_STATUS.md, START_HERE.md
-    status: done
-  # Phase 2
-  - id: p2-unify-taxonomy-archetypes
-    content: |
-      - [x] [AGENT] P0. Add MOMENTUM, MEAN_REVERSION, STATISTICAL_ARB to taxonomy.ts STRATEGY_ARCHETYPES + configs. Delete duplicate enums from strategy-platform-types.ts (STRATEGY_ARCHETYPES, asset_groupES, TESTING_STAGES). Make strategy-platform-types.ts import from taxonomy.ts.
-    status: done
-  - id: p2-unify-pnl-factors
-    content: |
-      - [x] [AGENT] P0. Expand taxonomy.ts PNL_FACTORS to include strategy-specific components: staking_yield, borrow_cost, impermanent_loss, interest_accrual, arb_pnl, spread_earned, liquidation_penalty, rewards, gas. Each with label/description/color/isExpense. Strategy registry components reference these factor IDs.
-    status: done
-  - id: p2-fix-mock-instruments
-    content: |
-      - [x] [AGENT] P0. Fix mock data instrument cross-contamination in mock-handler.ts: NBA Halftime ML must use sports market not ETH-PERP, NFL Value Betting must use sports market not BNB-USDT, Football Cross-Book Arb must use sports market not ADA-USDT, Prediction Market Arb must use binary contract not LINK-USDT, Morpho Lending must use Morpho pool not SOL-USDT, ETH Basis Trade must use ETH-PERP not BTC-PERP, Uniswap V3 LP must use LP token not SOL-USDT.
-    status: done
-  # Phase 3
-  - id: p3-add-sports-mm-strategy
-    content: |
-      - [x] [AGENT] P1. Add Sports Market Making strategy to strategy-registry.ts.
-    status: done
-  - id: p3-add-kelly-sizing
-    content: |
-      - [x] [AGENT] P1. Surface Kelly criterion / stake sizing — added kellySizing field to sports strategies.
-    status: done
-  - id: p3-add-staked-basis-strategy
-    content: |
-      - [x] [AGENT] P1. Added/verified Staked Basis (LST + short perp) strategy in strategy-registry.ts.
-    status: done
-  - id: p3-add-aave-lending-strategy
-    content: |
-      - [x] [AGENT] P1. Added/verified Aave V3 pure supply yield strategy in strategy-registry.ts.
-    status: done
-  # Phase 4
-  - id: p4-regenerate-manifest
-    content: |
-      - [x] [AGENT] P1. Regenerate UI_STRUCTURE_MANIFEST.json: scan all 93+ page files under app/, update states (STUB vs REAL based on line count > 30), fix investor-relations path, add all 44 untracked pages including (ops) services and commercial landing pages.
-    status: done
-  - id: p4-update-structure-docs
-    content: |
-      - [x] [AGENT] P1. Update docs/STRUCTURE_HOOKS.md to add use-chat.ts, use-manage.ts, use-news.ts. Update docs/STRUCTURE_COMPONENTS.md to add chat/, research/, reports/, risk/ folders. Update docs/STRUCTURE_CONTEXT.md to add context/codex/. PARALLEL with manifest.
-    status: done
-  - id: p4-resolve-redirect-conflict
-    content: |
-      - [x] [AGENT] P1. Resolve trading/markets vs trading/pnl redirect conflict in next.config.mjs — deleted both markets page files (redirect is canonical). Redirects preserved.
-    status: done
-  # Phase 5
-  - id: p5-populate-reports-mock
-    content: |
-      - [x] [AGENT] P1. Populated Reports overview with non-zero mock AUM/MTD/settlement data.
-    status: done
-  - id: p5-fix-ml-desync
-    content: |
-      - [x] [AGENT] P1. Fixed ML platform page — now returns 6 model families matching Research hub.
-    status: done
-  - id: p5-fix-pipeline-status
-    content: |
-      - [x] [AGENT] P1. Fixed Pipeline Status — services now show health % and freshness timestamps.
-    status: done
-  - id: p5-fix-stress-scenario
-    content: |
-      - [x] [AGENT] P1. Populated Stress Scenarios (4 historical), correlation matrix (5x5), and What-If data.
-    status: done
-  - id: p5-populate-tca
-    content: |
-      - [x] [AGENT] P1. Populated TCA Explorer with 20+ mock orders across algos/venues.
-    status: done
-  # Phase 6
-  - id: p6-fix-observe-redirect
-    content: |
-      - [x] [AGENT] P2. /services/observe redirect already existed in next.config.mjs. Verified.
-    status: done
-  - id: p6-fix-system-health
-    content: |
-      - [x] [AGENT] P2. System Health page wired to mock data with service list and dependency DAG.
-    status: done
-  - id: p6-add-research-routes
-    content: |
-      - [x] [AGENT] P2. Research routes (backtests, features, signals) implemented or verified.
-    status: done
-  - id: p6-update-pm-context
-    content: |
-      - [x] [AGENT] P2. Copy fresh workspace-manifest.json and data-flow-manifest.json from PM repo into context/pm/.
-    status: done
-  # Phase 7
-  - id: p7-entitlement-differentiation
-    content: |
-      - [x] [AGENT] P2. Differentiate Client (Full) vs Client (Premium) entitlement visibility — Full should have Data access, Premium should have Trading + Data. Currently both show nearly identical locked state.
-    status: done
-  - id: p7-strategy-detail-page
-    content: |
-      - [x] [AGENT] P2. Implement /strategies and /strategies/[id] routes — strategy list grid and detail page. Grid: filterable by asset class, sortable by Sharpe/returns/status. Detail: config, current state, PnL attribution, risk subscriptions, feature consumption, testing stage progression.
-    status: done
-  - id: p7-defi-per-strategy-hf
-    content: |
-      - [x] [AGENT] P2. Add per-strategy health factor / liquidation proximity display for recursive DeFi strategies. Show HF time series with threshold lines (1.5/1.2/1.0), collateral/debt breakdown, leverage.
-    status: done
-  # Phase 7B — Codex Extended Audit Items (PARALLEL with Phase 7)
-  - id: p7b-populate-exposure-risk-types
-    content: |
-      - [x] [AGENT] P1. Populate the Exposure tab's "0 of 23 Risk Types" with mock data. Each risk type needs: name, category (first_order/second_order/structural/operational/domain_specific), current_value, threshold, status, subscribed_strategies[]. Include: aave_liquidation, delta, funding, borrow_cost, bankroll_dd, adverse_selection, venue_protocol, regime, lst_depeg, suspension, flash_liquidity, model_confidence_decay, inventory_half_life. This is the single largest gap in the UI.
-    status: done
-  - id: p7b-fix-hf-chart-data
-    content: |
-      - [x] [AGENT] P1. Fix Health Factor chart on Risk Margin tab: (1) populate HF time series with 7 days of mock data points, (2) add HF 1.2 emergency exit threshold line alongside existing 1.0 and 1.5 lines, (3) populate Distance to Liquidation table with per-venue rows, (4) fix LTV vs HF conflation — display HF = 1/LTV correctly (0.72 LTV = ~1.39 HF).
-    status: done
-  - id: p7b-add-instrument-canonical-id
-    content: |
-      - [x] [AGENT] P2. Add a "Canonical ID" tooltip or secondary column to the positions table showing VENUE:TYPE:ASSET compound key (e.g. HYPERLIQUID:PERPETUAL:ETH-USD, AAVE_V3:A_TOKEN:WEETH). Derive from instrument + venue + strategy archetype. This allows operators to filter by instrument type without relying on strategy name.
-    status: done
-  - id: p7b-add-research-signals-route
-    content: |
-      - [x] [AGENT] P2. Implement /services/research/signals route (currently 404 despite being nav-linked). Show signal definitions, signal monitoring (last value, freshness vs SLA), and signal-to-strategy subscription linkage.
-    status: done
-  - id: p7b-add-kalshi-venue
-    content: |
-      - [x] [AGENT] P2. Add Kalshi to venue registry (Venue Health, taxonomy.ts VENUES, mock data). Add at least one Kalshi position in mock handler. Add Kalshi as a model family reference in Research Hub.
-    status: done
-  - id: p7b-add-latency-class-badge
-    content: |
-      - [x] [AGENT] P2. Add latency-class badge to strategy cards/detail: "Hourly" (basis, momentum), "Event-driven" (AMM LP, sports), "Sub-second" (CeFi MM, Options MM). Optionally add co-location indicator for sub-second strategies. Prevents operators from misinterpreting System Health SLA table.
-    status: done
-  # Phase 8 — CI Drift-Proofing
-  - id: p8-fix-sync-workflow-paths
-    content: |
-      - [x] [AGENT] P0. Fix uac-registry-sync.yml path bug: src/generated/ -> lib/registry/. Fix uic-openapi-sync.yml: src/generated/api-types.ts -> lib/types/api-generated.ts.
-    status: done
-  - id: p8-add-ci-drift-check
-    content: |
-      - [x] [AGENT] P0. Add a "registry-drift" job to unified-trading-system-ui/.github/workflows/ci.yml that: (1) checks out UAC/UIC/UCI sibling repos, (2) runs generate_ui_reference_data.py to /tmp/fresh.json, (3) diffs /tmp/fresh.json against lib/registry/ui-reference-data.json, (4) fails with actionable error message if diff is non-empty. This ensures any UAC change that isn't synced to the UI blocks the PR. Same pattern for openapi.json: regenerate via generate-unified-openapi.sh, diff against lib/registry/openapi.json, fail if stale.
-    status: done
-  - id: p8-update-ssot-doc
-    content: |
-      - [x] [AGENT] P1. Update unified-trading-pm/docs/ui-alignment-ssot.md: replaced "manual" CI note with documentation of corrected paths and sync workflow automation.
-    status: done
-  # Phase 9A — User Feedback Items
-  - id: p9a-health-all-services
-    content: |
-    status: todo
-  - id: p9a-admin-cloud-services
-    content: |
-      - [x] [AGENT] P1. Add cloud service/subscription management to admin page (/admin): show connected cloud services (GCP, AWS, Office365) with status, subscription tier, usage metrics, API key rotation status. Wire to mock data. Admin-only visibility (entitlement gate already exists).
-    status: done
-  - id: p9a-firebase-caching
-    content: |
-      - [x] [AGENT] P1. Verify Firebase caching is used for user management session state. The _reference/versa-onboarding pattern uses firebaseClient.ts + firebaseAdmin.ts. Ensure the unified UI auth flow (lib/stores/auth-store.ts, hooks/use-auth.ts) integrates with Firebase for session persistence. If not already using Firebase, add the integration.
-    status: done
-  # Phase 9B — Final QG
-  - id: p9b-qg-validation
-    content: |
-      - [x] [SCRIPT] P0. Run quality gates: CI=true npm test -- --run && VITE_MOCK_API=true npx vite build && npx playwright test --config=playwright.static.config.ts. All must pass. *(archived 2026-04-22:
-        `unified-trading-system-ui/scripts/quality-gates.sh` green; full `CI=true npm test` showed unrelated timeouts on
-        HEAD — Playwright static config not re-run in this session.)*
-    status: done
+- {id: p1-fix-guided-tour, content: '- [x] [AGENT] P0. Fix guided-tour.tsx TypeScript build error (line 66) — blocks all SSR
+
+    ', status: done}
+- {id: p1-fix-var-nan, content: '- [x] [AGENT] P0. Fix $NaN VaR rendering on Risk page — all four VaR metrics show NaN
+
+    ', status: done}
+- {id: p1-fix-docs-service-prefix, content: '- [x] [AGENT] P0. Global find/replace /service/ to /services/ in all docs: ROUTES.md, CODEBASE_STRUCTURE.md, docs/STRUCTURE_APP.md, SERVICE_COMPLETION_STATUS.md, START_HERE.md
+
+    ', status: done}
+- {id: p2-unify-taxonomy-archetypes, content: '- [x] [AGENT] P0. Add MOMENTUM, MEAN_REVERSION, STATISTICAL_ARB to taxonomy.ts STRATEGY_ARCHETYPES + configs. Delete duplicate enums from strategy-platform-types.ts (STRATEGY_ARCHETYPES, asset_groupES, TESTING_STAGES). Make strategy-platform-types.ts import from taxonomy.ts.
+
+    ', status: done}
+- {id: p2-unify-pnl-factors, content: '- [x] [AGENT] P0. Expand taxonomy.ts PNL_FACTORS to include strategy-specific components: staking_yield, borrow_cost, impermanent_loss, interest_accrual, arb_pnl, spread_earned, liquidation_penalty, rewards, gas. Each with label/description/color/isExpense. Strategy registry components reference these factor IDs.
+
+    ', status: done}
+- {id: p2-fix-mock-instruments, content: '- [x] [AGENT] P0. Fix mock data instrument cross-contamination in mock-handler.ts: NBA Halftime ML must use sports market not ETH-PERP, NFL Value Betting must use sports market not BNB-USDT, Football Cross-Book Arb must use sports market not ADA-USDT, Prediction Market Arb must use binary contract not LINK-USDT, Morpho Lending must use Morpho pool not SOL-USDT, ETH Basis Trade must use ETH-PERP not BTC-PERP, Uniswap V3 LP must use LP token not SOL-USDT.
+
+    ', status: done}
+- {id: p3-add-sports-mm-strategy, content: '- [x] [AGENT] P1. Add Sports Market Making strategy to strategy-registry.ts.
+
+    ', status: done}
+- {id: p3-add-kelly-sizing, content: '- [x] [AGENT] P1. Surface Kelly criterion / stake sizing — added kellySizing field to sports strategies.
+
+    ', status: done}
+- {id: p3-add-staked-basis-strategy, content: '- [x] [AGENT] P1. Added/verified Staked Basis (LST + short perp) strategy in strategy-registry.ts.
+
+    ', status: done}
+- {id: p3-add-aave-lending-strategy, content: '- [x] [AGENT] P1. Added/verified Aave V3 pure supply yield strategy in strategy-registry.ts.
+
+    ', status: done}
+- {id: p4-regenerate-manifest, content: '- [x] [AGENT] P1. Regenerate UI_STRUCTURE_MANIFEST.json: scan all 93+ page files under app/, update states (STUB vs REAL based on line count > 30), fix investor-relations path, add all 44 untracked pages including (ops) services and commercial landing pages.
+
+    ', status: done}
+- {id: p4-update-structure-docs, content: '- [x] [AGENT] P1. Update docs/STRUCTURE_HOOKS.md to add use-chat.ts, use-manage.ts, use-news.ts. Update docs/STRUCTURE_COMPONENTS.md to add chat/, research/, reports/, risk/ folders. Update docs/STRUCTURE_CONTEXT.md to add context/codex/. PARALLEL with manifest.
+
+    ', status: done}
+- {id: p4-resolve-redirect-conflict, content: '- [x] [AGENT] P1. Resolve trading/markets vs trading/pnl redirect conflict in next.config.mjs — deleted both markets page files (redirect is canonical). Redirects preserved.
+
+    ', status: done}
+- {id: p5-populate-reports-mock, content: '- [x] [AGENT] P1. Populated Reports overview with non-zero mock AUM/MTD/settlement data.
+
+    ', status: done}
+- {id: p5-fix-ml-desync, content: '- [x] [AGENT] P1. Fixed ML platform page — now returns 6 model families matching Research hub.
+
+    ', status: done}
+- {id: p5-fix-pipeline-status, content: '- [x] [AGENT] P1. Fixed Pipeline Status — services now show health % and freshness timestamps.
+
+    ', status: done}
+- {id: p5-fix-stress-scenario, content: '- [x] [AGENT] P1. Populated Stress Scenarios (4 historical), correlation matrix (5x5), and What-If data.
+
+    ', status: done}
+- {id: p5-populate-tca, content: '- [x] [AGENT] P1. Populated TCA Explorer with 20+ mock orders across algos/venues.
+
+    ', status: done}
+- {id: p6-fix-observe-redirect, content: '- [x] [AGENT] P2. /services/observe redirect already existed in next.config.mjs. Verified.
+
+    ', status: done}
+- {id: p6-fix-system-health, content: '- [x] [AGENT] P2. System Health page wired to mock data with service list and dependency DAG.
+
+    ', status: done}
+- {id: p6-add-research-routes, content: '- [x] [AGENT] P2. Research routes (backtests, features, signals) implemented or verified.
+
+    ', status: done}
+- {id: p6-update-pm-context, content: '- [x] [AGENT] P2. Copy fresh workspace-manifest.json and data-flow-manifest.json from PM repo into context/pm/.
+
+    ', status: done}
+- {id: p7-entitlement-differentiation, content: '- [x] [AGENT] P2. Differentiate Client (Full) vs Client (Premium) entitlement visibility — Full should have Data access, Premium should have Trading + Data. Currently both show nearly identical locked state.
+
+    ', status: done}
+- {id: p7-strategy-detail-page, content: '- [x] [AGENT] P2. Implement /strategies and /strategies/[id] routes — strategy list grid and detail page. Grid: filterable by asset class, sortable by Sharpe/returns/status. Detail: config, current state, PnL attribution, risk subscriptions, feature consumption, testing stage progression.
+
+    ', status: done}
+- {id: p7-defi-per-strategy-hf, content: '- [x] [AGENT] P2. Add per-strategy health factor / liquidation proximity display for recursive DeFi strategies. Show HF time series with threshold lines (1.5/1.2/1.0), collateral/debt breakdown, leverage.
+
+    ', status: done}
+- {id: p7b-populate-exposure-risk-types, content: '- [x] [AGENT] P1. Populate the Exposure tab''s "0 of 23 Risk Types" with mock data. Each risk type needs: name, category (first_order/second_order/structural/operational/domain_specific), current_value, threshold, status, subscribed_strategies[]. Include: aave_liquidation, delta, funding, borrow_cost, bankroll_dd, adverse_selection, venue_protocol, regime, lst_depeg, suspension, flash_liquidity, model_confidence_decay, inventory_half_life. This is the single largest gap in the UI.
+
+    ', status: done}
+- {id: p7b-fix-hf-chart-data, content: '- [x] [AGENT] P1. Fix Health Factor chart on Risk Margin tab: (1) populate HF time series with 7 days of mock data points, (2) add HF 1.2 emergency exit threshold line alongside existing 1.0 and 1.5 lines, (3) populate Distance to Liquidation table with per-venue rows, (4) fix LTV vs HF conflation — display HF = 1/LTV correctly (0.72 LTV = ~1.39 HF).
+
+    ', status: done}
+- {id: p7b-add-instrument-canonical-id, content: '- [x] [AGENT] P2. Add a "Canonical ID" tooltip or secondary column to the positions table showing VENUE:TYPE:ASSET compound key (e.g. HYPERLIQUID:PERPETUAL:ETH-USD, AAVE_V3:A_TOKEN:WEETH). Derive from instrument + venue + strategy archetype. This allows operators to filter by instrument type without relying on strategy name.
+
+    ', status: done}
+- {id: p7b-add-research-signals-route, content: '- [x] [AGENT] P2. Implement /services/research/signals route (currently 404 despite being nav-linked). Show signal definitions, signal monitoring (last value, freshness vs SLA), and signal-to-strategy subscription linkage.
+
+    ', status: done}
+- {id: p7b-add-kalshi-venue, content: '- [x] [AGENT] P2. Add Kalshi to venue registry (Venue Health, taxonomy.ts VENUES, mock data). Add at least one Kalshi position in mock handler. Add Kalshi as a model family reference in Research Hub.
+
+    ', status: done}
+- {id: p7b-add-latency-class-badge, content: '- [x] [AGENT] P2. Add latency-class badge to strategy cards/detail: "Hourly" (basis, momentum), "Event-driven" (AMM LP, sports), "Sub-second" (CeFi MM, Options MM). Optionally add co-location indicator for sub-second strategies. Prevents operators from misinterpreting System Health SLA table.
+
+    ', status: done}
+- {id: p8-fix-sync-workflow-paths, content: '- [x] [AGENT] P0. Fix uac-registry-sync.yml path bug: src/generated/ -> lib/registry/. Fix uic-openapi-sync.yml: src/generated/api-types.ts -> lib/types/api-generated.ts.
+
+    ', status: done}
+- {id: p8-add-ci-drift-check, content: '- [x] [AGENT] P0. Add a "registry-drift" job to unified-trading-system-ui/.github/workflows/ci.yml that: (1) checks out UAC/UIC/UCI sibling repos, (2) runs generate_ui_reference_data.py to /tmp/fresh.json, (3) diffs /tmp/fresh.json against lib/registry/ui-reference-data.json, (4) fails with actionable error message if diff is non-empty. This ensures any UAC change that isn''t synced to the UI blocks the PR. Same pattern for openapi.json: regenerate via generate-unified-openapi.sh, diff against lib/registry/openapi.json, fail if stale.
+
+    ', status: done}
+- {id: p8-update-ssot-doc, content: '- [x] [AGENT] P1. Update unified-trading-pm/docs/ui-alignment-ssot.md: replaced "manual" CI note with documentation of corrected paths and sync workflow automation.
+
+    ', status: done}
+- {id: p9a-health-all-services, content: '', status: todo}
+- {id: p9a-admin-cloud-services, content: '- [x] [AGENT] P1. Add cloud service/subscription management to admin page (/admin): show connected cloud services (GCP, AWS, Office365) with status, subscription tier, usage metrics, API key rotation status. Wire to mock data. Admin-only visibility (entitlement gate already exists).
+
+    ', status: done}
+- {id: p9a-firebase-caching, content: '- [x] [AGENT] P1. Verify Firebase caching is used for user management session state. The _reference/versa-onboarding pattern uses firebaseClient.ts + firebaseAdmin.ts. Ensure the unified UI auth flow (lib/stores/auth-store.ts, hooks/use-auth.ts) integrates with Firebase for session persistence. If not already using Firebase, add the integration.
+
+    ', status: done}
+- {id: p9b-qg-validation, content: "- [x] [SCRIPT] P0. Run quality gates: CI=true npm test -- --run && VITE_MOCK_API=true npx vite build && npx playwright test --config=playwright.static.config.ts. All must pass. *(archived 2026-04-22:\n  `unified-trading-system-ui/scripts/quality-gates.sh` green; full `CI=true npm test` showed unrelated timeouts on\n  HEAD — Playwright static config not re-run in this session.)*\n", status: done}
 ---
 
 # UI Sync Hardening Plan — 2026-03-23

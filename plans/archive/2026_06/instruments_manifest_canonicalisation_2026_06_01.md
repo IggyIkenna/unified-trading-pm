@@ -1,20 +1,25 @@
 ---
-title:
-  "Instruments-service manifest + data canonicalisation (audit-first single-walk) — L3 owner for the instruments I/O
-  surface"
+doc_type: plan
+title: Instruments-service manifest + data canonicalisation (audit-first single-walk) — L3 owner for the instruments I/O surface
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 parent_epic: instruments_master
 assigned_vm: vm-cross-cutting
-status: archived
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
+locked_by: NA
 locked_since: 2026-06-01
-source:
-  - defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — instruments was uncovered)
-  - canonical_form_cross_service_audit_checklist.md (CF-1…CF-12 — the invariants this walk lands)
+source: [defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — instruments was uncovered), canonical_form_cross_service_audit_checklist.md (CF-1…CF-12 — the invariants this walk lands)]
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
 

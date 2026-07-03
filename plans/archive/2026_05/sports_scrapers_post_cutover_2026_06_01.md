@@ -1,15 +1,23 @@
 ---
+doc_type: plan
 title: Sports book scrapers — post-cutover successor (14 UK/EU + 2 US adapters)
+summary:
+status: complete
+nature: record
+asset_group: [sports]
+stage: [meta]
+repos: [alerting-service, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: [master_to_live_defi_2026_05_23.md]
+created: '2026-05-21'
 parent_epic: sports_master
 priority: P2
-status: archived
 estimate_class: brand-new
 estimate_baseline_ai_days: 20.0
 estimate_calibrated_ai_days: 20.0
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
-related_plans:
-  - master_to_live_defi_2026_05_23.md
 ---
 
 > **ARCHIVED 2026-05-21** — Operator BLOCKED-OPERATOR-DECISION (2026-05-12): scraper path not in May-23 scope. All

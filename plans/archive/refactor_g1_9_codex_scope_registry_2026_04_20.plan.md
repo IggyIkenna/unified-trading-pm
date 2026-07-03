@@ -1,15 +1,21 @@
 ---
+doc_type: plan
 title: Refactor G1.9 — Codex scope registry (per-audience documentation surface)
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.9
-  - codex/14-playbooks/_ssot-rules/ (all 10 rules)
-  - codex/00-SSOT-INDEX.md
-# Sibling Wave A plans: refactor_g1_{1,3,5,12,14}
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.9, codex/14-playbooks/_ssot-rules/ (all 10 rules), codex/00-SSOT-INDEX.md]
 ---
 
 ## Deferred work — migrated to:

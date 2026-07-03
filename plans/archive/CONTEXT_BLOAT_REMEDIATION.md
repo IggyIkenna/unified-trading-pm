@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Context Bloat Remediation Plan
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, system-integration-tests, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-06'
+---
+
 # Context Bloat Remediation Plan
 
 ## Problem

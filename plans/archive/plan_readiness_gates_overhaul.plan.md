@@ -1,71 +1,35 @@
 ---
-name: plan-readiness-gates-overhaul
-overview:
-  Introduce 3-tier readiness gates (Code/Deployment/Business) into every plan; add ai/ vs active/ split; propagate rules
-  to all agent contexts
+doc_type: plan
+title: plan-readiness-gates-overhaul
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-11'
+overview: Introduce 3-tier readiness gates (Code/Deployment/Business) into every plan; add ai/ vs active/ split; propagate rules to all agent contexts
 type: infra
 epic: none
-status: active
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-trading-pm
-    code: C2
-    deployment: none
-    business: none
-
+- {repo: unified-trading-pm, code: C2, deployment: none, business: none}
 depends_on: []
-
 todos:
-  - id: phase-0-self-register
-    content: Create this plan file in active/
-    status: done
-    note: "Done 2026-03-11 — this file"
-  - id: phase-1a-plan-format-ssot
-    content: Create unified-trading-pm/plans/PLAN_FORMAT.md (canonical gate spec)
-    status: in_progress
-    note: ""
-  - id: phase-1b-ai-readme
-    content: Create unified-trading-pm/plans/ai/README.md (explain ai/ vs active/)
-    status: in_progress
-    note: ""
-  - id: phase-1c-cursor-rule
-    content: Create cursor-rules/core/plan-readiness-gates.mdc
-    status: in_progress
-    note: ""
-  - id: phase-1d-plan-placement
-    content: Update cursor-rules/core/plan-placement.mdc — add ai/ promotion workflow
-    status: in_progress
-    note: ""
-  - id: phase-1e-workflow-rule
-    content: Update cursor-rules/workflow/plans-to-deployable-workflow.mdc — reference 3-tier model
-    status: in_progress
-    note: ""
-  - id: phase-1f-sub-agent-rules
-    content: Update cursor-configs/SUB_AGENT_MANDATORY_RULES.md — add Plan Format Rules section
-    status: in_progress
-    note: ""
-  - id: phase-2-reformat-group-a
-    content: Add completion_gates + repo_gates YAML to Group A plans (CI/CD/QG/AI-agent)
-    status: todo
-    note: ""
-  - id: phase-2-reformat-group-b
-    content: Full 3-tier reformat for all remaining ~27 feature/business plans
-    status: todo
-    note: ""
-  - id: phase-3-index-update
-    content: Update INDEX.md — epic structure, gate legend, plan classification table
-    status: todo
-    note: ""
-  - id: phase-3-verify
-    content: Verify all active .md files have completion_gates + repo_gates
-    status: todo
-    note: ""
-
+- {id: phase-0-self-register, content: Create this plan file in active/, status: done, note: Done 2026-03-11 — this file}
+- {id: phase-1a-plan-format-ssot, content: Create unified-trading-pm/plans/PLAN_FORMAT.md (canonical gate spec), status: in_progress, note: ''}
+- {id: phase-1b-ai-readme, content: Create unified-trading-pm/plans/ai/README.md (explain ai/ vs active/), status: in_progress, note: ''}
+- {id: phase-1c-cursor-rule, content: Create cursor-rules/core/plan-readiness-gates.mdc, status: in_progress, note: ''}
+- {id: phase-1d-plan-placement, content: Update cursor-rules/core/plan-placement.mdc — add ai/ promotion workflow, status: in_progress, note: ''}
+- {id: phase-1e-workflow-rule, content: Update cursor-rules/workflow/plans-to-deployable-workflow.mdc — reference 3-tier model, status: in_progress, note: ''}
+- {id: phase-1f-sub-agent-rules, content: Update cursor-configs/SUB_AGENT_MANDATORY_RULES.md — add Plan Format Rules section, status: in_progress, note: ''}
+- {id: phase-2-reformat-group-a, content: Add completion_gates + repo_gates YAML to Group A plans (CI/CD/QG/AI-agent), status: todo, note: ''}
+- {id: phase-2-reformat-group-b, content: Full 3-tier reformat for all remaining ~27 feature/business plans, status: todo, note: ''}
+- {id: phase-3-index-update, content: 'Update INDEX.md — epic structure, gate legend, plan classification table', status: todo, note: ''}
+- {id: phase-3-verify, content: Verify all active .md files have completion_gates + repo_gates, status: todo, note: ''}
 isProject: true
 ---
 

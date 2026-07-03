@@ -1,12 +1,19 @@
 ---
-title: "Harsh host setup — align with the 2026-06-08/09 CI/CD reform + Path-B worktrees"
+doc_type: issue
+title: Harsh host setup — align with the 2026-06-08/09 CI/CD reform + Path-B worktrees
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-09
-source:
-  - plans/active/cicd_contract_hardening_2026_06_01.md (§ SESSION OUTCOME + ADDENDUM)
-  - plans/active/worktree_ldr_unification_2026_06_08.md
+source: [plans/active/cicd_contract_hardening_2026_06_01.md (§ SESSION OUTCOME + ADDENDUM), plans/active/worktree_ldr_unification_2026_06_08.md]
 locked_by: live-defi-rollout
 priority: P1
-status: resolved
 resolved: 2026-06-12
 ---
 

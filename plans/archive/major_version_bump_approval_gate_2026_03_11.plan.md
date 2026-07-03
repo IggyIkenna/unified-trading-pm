@@ -1,176 +1,54 @@
 ---
-name: major-version-bump-approval-gate-2026-03-11
-overview: |
-  Any MAJOR version bump — including the initial release to 1.0.0 — for ANY repo MUST go through
-  a human-approval gate: GitHub Issue created automatically, Telegram alert sent with the issue URL,
-  user comments /approve on the issue, GHA then bumps pyproject.toml on the staging branch and updates
-  workspace-manifest.json staging_versions in unified-trading-pm. Applies equally to:
-    - Autonomous semver-agent.yml detecting a post-1.0.0 MAJOR bump
-    - Any human or agent requesting the initial 0.x.x → 1.0.0 promotion
-  NO agent (GHA autonomous, overnight orchestrator, interactive Claude, Cursor) may directly set a
-  MAJOR version without this approval loop. This rule propagates to AGENTS.md, SUB_AGENT_MANDATORY_RULES,
-  cursor rules, overnight-orchestrator tier prompts, and GHA agent prompt injections.
+doc_type: plan
+title: major-version-bump-approval-gate-2026-03-11
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-11'
+overview: "Any MAJOR version bump — including the initial release to 1.0.0 — for ANY repo MUST go through\na human-approval gate: GitHub Issue created automatically, Telegram alert sent with the issue URL,\nuser comments /approve on the issue, GHA then bumps pyproject.toml on the staging branch and updates\nworkspace-manifest.json staging_versions in unified-trading-pm. Applies equally to:\n  - Autonomous semver-agent.yml detecting a post-1.0.0 MAJOR bump\n  - Any human or agent requesting the initial 0.x.x → 1.0.0 promotion\nNO agent (GHA autonomous, overnight orchestrator, interactive Claude, Cursor) may directly set a\nMAJOR version without this approval loop. This rule propagates to AGENTS.md, SUB_AGENT_MANDATORY_RULES,\ncursor rules, overnight-orchestrator tier prompts, and GHA agent prompt injections.\n"
 type: infra
 epic: epic-infra
-status: done
-
-completion_gates:
-  code: C5
-  deployment: D1
-  business: none
-
+completion_gates: {code: C5, deployment: D1, business: none}
 repo_gates:
-  - repo: unified-trading-pm
-    code: C5
-    deployment: D1
-    business: none
-    readiness_note: |
-      GHA templates updated/created, cursor rules written, AGENTS.md + SUB_AGENT_MANDATORY_RULES updated,
-      overnight-orchestrator and rules-alignment injected. Propagation script rolls templates to all repos.
-  - repo: unified-trading-codex
-    code: C5
-    deployment: none
-    business: none
-    readiness_note: "semver.md updated with MAJOR bump approval requirement."
+- {repo: unified-trading-pm, code: C5, deployment: D1, business: none, readiness_note: 'GHA templates updated/created, cursor rules written, AGENTS.md + SUB_AGENT_MANDATORY_RULES updated,
 
+    overnight-orchestrator and rules-alignment injected. Propagation script rolls templates to all repos.
+
+    '}
+- {repo: unified-trading-codex, code: C5, deployment: none, business: none, readiness_note: semver.md updated with MAJOR bump approval requirement.}
 todos:
-  # ─── STREAM 1: GHA WORKFLOW TEMPLATES ───
+- {id: s1a-update-semver-agent-telegram, content: "Update `unified-trading-pm/scripts/propagation/templates/semver-agent.yml`:\n1. When MAJOR bump detected (both pre-1.0.0 → 1.0.0 case AND post-1.0.0 MAJOR case):\n   - Create GitHub Issue using `gh issue create` with:\n     * Title: \"[MAJOR BUMP PENDING] {repo}: {current_version} → {proposed_version}\"\n     * Label: \"major-bump-pending\" (consistent — handler checks this label)\n     * Body must include a <!-- major-bump-metadata {...} --> HTML comment block with JSON:\n       { \"repo\": \"...\", \"proposed_version\": \"...\", \"current_version\": \"...\",\n         \"staging_branch\": \"staging\", \"staging_commit\": \"...\", \"reason\": \"...\" }\n       This is machine-parseable by major-bump-issue-handler.yml\n   - Send Telegram alert after issue creation:\n     MSG=\"\U0001F534 Major version bump requires approval\\nRepo: {repo}\\n{current} → {proposed}\\n{issue_url}\"\n     Use: curl to Telegram bot API with ${{ secrets.TELEGRAM_BOT_TOKEN\
+    \ }} and ${{ secrets.TELEGRAM_CHAT_ID }}\n     Use `|| true` to not fail if Telegram is unavailable\n2. The step for 0.x.x → 1.0.0 is currently the \"pre-1.0.0 override\" (feat!: → MINOR on 0.x.x).\n   Keep that override (autonomous agents cannot auto-cross to 1.0.0), BUT if the compute step\n   would produce 1.0.0 via MINOR overflow (0.9.x + MINOR = 1.0.0), special-case this: cap at\n   0.10.0 instead of 1.0.0. The 1.0.0 cross ALWAYS requires human approval via the issue flow.\n3. Current label used by semver-agent is \"major-bump-approval\" — change to \"major-bump-pending\"\n   for consistency with the new handler.\n", status: done, note: 'Done 2026-03-11 — commit b99a826. Label fixed to major-bump-pending, Telegram alert added,
 
-  - id: s1a-update-semver-agent-telegram
-    content: |
-      Update `unified-trading-pm/scripts/propagation/templates/semver-agent.yml`:
-      1. When MAJOR bump detected (both pre-1.0.0 → 1.0.0 case AND post-1.0.0 MAJOR case):
-         - Create GitHub Issue using `gh issue create` with:
-           * Title: "[MAJOR BUMP PENDING] {repo}: {current_version} → {proposed_version}"
-           * Label: "major-bump-pending" (consistent — handler checks this label)
-           * Body must include a <!-- major-bump-metadata {...} --> HTML comment block with JSON:
-             { "repo": "...", "proposed_version": "...", "current_version": "...",
-               "staging_branch": "staging", "staging_commit": "...", "reason": "..." }
-             This is machine-parseable by major-bump-issue-handler.yml
-         - Send Telegram alert after issue creation:
-           MSG="🔴 Major version bump requires approval\nRepo: {repo}\n{current} → {proposed}\n{issue_url}"
-           Use: curl to Telegram bot API with ${{ secrets.TELEGRAM_BOT_TOKEN }} and ${{ secrets.TELEGRAM_CHAT_ID }}
-           Use `|| true` to not fail if Telegram is unavailable
-      2. The step for 0.x.x → 1.0.0 is currently the "pre-1.0.0 override" (feat!: → MINOR on 0.x.x).
-         Keep that override (autonomous agents cannot auto-cross to 1.0.0), BUT if the compute step
-         would produce 1.0.0 via MINOR overflow (0.9.x + MINOR = 1.0.0), special-case this: cap at
-         0.10.0 instead of 1.0.0. The 1.0.0 cross ALWAYS requires human approval via the issue flow.
-      3. Current label used by semver-agent is "major-bump-approval" — change to "major-bump-pending"
-         for consistency with the new handler.
-    status: done
-    note: |
-      Done 2026-03-11 — commit b99a826. Label fixed to major-bump-pending, Telegram alert added,
-      metadata JSON block embedded in issue body. MINOR overflow cap comment added.
+    metadata JSON block embedded in issue body. MINOR overflow cap comment added.
 
-  - id: s1b-create-request-major-bump-workflow
-    content: |
-      Create `unified-trading-pm/scripts/propagation/templates/request-major-bump.yml`:
-      This is for HUMAN-INITIATED major bump requests (including the initial 0.x.x → 1.0.0 promotion).
+    '}
+- {id: s1b-create-request-major-bump-workflow, content: "Create `unified-trading-pm/scripts/propagation/templates/request-major-bump.yml`:\nThis is for HUMAN-INITIATED major bump requests (including the initial 0.x.x → 1.0.0 promotion).\n\nTRIGGER: workflow_dispatch with inputs:\n  - proposed_version: the new MAJOR version (e.g. \"1.0.0\" or \"2.0.0\")\n  - reason: human-readable reason (required)\n  - approver: GitHub handle of requester (defaults to GITHUB_ACTOR)\n\nLOGIC:\n1. Read current version from pyproject.toml\n2. Validate proposed_version is MAJOR bump (proposed_major >= 1, proposed > current)\n3. Create GitHub Issue with label \"major-bump-pending\" + metadata JSON block (same format as s1a)\n4. Send Telegram: \"\U0001F534 Major bump REQUESTED: {repo} {current} → {proposed}\\nApprove: {issue_url}\"\n5. Output issue URL to GitHub Step Summary\n6. EXIT 0 — the actual bump happens ONLY when user approves the issue via major-bump-issue-handler.yml\n\nThis replaces the existing major-bump-approval.yml's\
+    \ \"immediately dispatch\" pattern.\nThe old major-bump-approval.yml becomes a deprecated alias (add header: DEPRECATED — use request-major-bump.yml).\n", status: done, note: Done 2026-03-11 — commit b99a826. request-major-bump.yml created with workflow_dispatch + issue + Telegram.}
+- {id: s1c-create-major-bump-issue-handler, content: "Create `unified-trading-pm/scripts/propagation/templates/major-bump-issue-handler.yml`:\n\nTRIGGER: issue_comment with types: [created]\nCONDITION: github.event.issue.labels.*.name contains \"major-bump-pending\"\nPERMISSIONS: contents: write, issues: write\n\nON /approve comment (case-insensitive, trimmed):\n1. Verify commenter has write/maintain/admin access to the repo via GH API\n   (GET /repos/{org}/{repo}/collaborators/{commenter}/permission → permission must be write/maintain/admin)\n   If not: reply with error comment, do NOT bump\n2. Parse metadata from issue body: <!-- major-bump-metadata { ... } --> block\n   Extract: repo, proposed_version, current_version, staging_branch, staging_commit, reason\n3. Checkout target repo at staging branch (sparse clone is fine: depth=1)\n   Use: git clone --depth=1 --branch staging https://{GH_TOKEN}@github.com/{org}/{repo}.git /tmp/target\n4. Bump pyproject.toml version on staging:\n   - Use\
+    \ python3 re.sub to replace version = \"current_version\" → \"proposed_version\"\n   - git commit: \"chore: bump version to {proposed_version} [major-bump approved by {approver}]\"\n   - git push origin staging\n   CRITICAL: this ONLY happens on staging. Never touches main.\n5. Dispatch version-bump to unified-trading-pm:\n   POST /repos/IggyIkenna/unified-trading-pm/dispatches\n   event_type: version-bump\n   client_payload: { repo, version: proposed_version, branch: staging, commit_sha: \"major-bump-approved\", approved_by: approver }\n6. Send Telegram: \"✅ Major bump APPROVED: {repo} → v{proposed_version} on staging (by @{approver})\\n{issue_url}\"\n7. Add comment to issue: \"✅ APPROVED by @{approver} on {date}\\nVersion {proposed_version} bumped in pyproject.toml on staging.\"\n8. Remove label \"major-bump-pending\", add label \"major-bump-approved\"\n9. Close issue with state_reason: \"completed\"\n\nON /reject comment (case-insensitive, trimmed):\n1. Same write-access check\n2.\
+    \ Send Telegram: \"❌ Major bump REJECTED: {repo} → v{proposed_version} (by @{approver})\\n{issue_url}\"\n3. Add comment: \"❌ REJECTED by @{approver} on {date}. No version change.\"\n4. Remove label \"major-bump-pending\", add label \"major-bump-rejected\"\n5. Close issue with state_reason: \"not_planned\"\n\nIMPORTANT: Use `|| true` on Telegram curl so workflow never fails due to Telegram unavailability.\nIMPORTANT: The step that bumps pyproject.toml must run ONLY on /approve (not /reject or unrecognized).\n", status: done, blocked_by: s1a-update-semver-agent-telegram, note: Done 2026-03-11 — commit b99a826. major-bump-issue-handler.yml created with full /approve and /reject flows.}
+- {id: s1d-update-approve-major-bump-script, content: "Update `unified-trading-pm/scripts/approve-major-bump.sh`:\nChange from: triggers major-bump-approval.yml (workflow_dispatch → immediately bumps)\nChange to: triggers request-major-bump.yml (workflow_dispatch → creates issue + Telegram)\n\nUpdate the script header comment:\n  \"This script REQUESTS a major bump by triggering request-major-bump.yml.\n   The actual version bump ONLY happens when a human approves the GitHub Issue\n   that the workflow creates (by commenting /approve on the issue).\"\n\nUpdate the INPUTS_JSON to match request-major-bump.yml inputs (proposed_version, reason, approver).\nUpdate the workflow URL from major-bump-approval.yml to request-major-bump.yml.\n", status: done, blocked_by: s1b-create-request-major-bump-workflow, note: Done 2026-03-11 — commit b99a826. approve-major-bump.sh updated to use request-major-bump.yml.}
+- {id: s1e-propagate-issue-handler-to-all-repos, content: "Roll out major-bump-issue-handler.yml to all repos via the propagation script:\n1. Add \"major-bump-issue-handler.yml\" to the list of templates in:\n   `unified-trading-pm/scripts/propagation/rollout-gha-template.sh` (or equivalent)\n2. Run the rollout for all 65 repos in workspace-manifest.json\n   (or document the rollout command so CI can do it)\n3. Ensure \"major-bump-pending\" and \"major-bump-approved\" and \"major-bump-rejected\" labels\n   exist in each repo. Add a label-creation step to the propagation script if missing.\n4. Deprecate major-bump-approval.yml in each repo:\n   Add DEPRECATED header comment pointing to request-major-bump.yml.\n", status: done, blocked_by: s1c-create-major-bump-issue-handler, note: 'Done 2026-03-11. 63 repos processed (all manifest repos excl. pm + codex).
 
-      TRIGGER: workflow_dispatch with inputs:
-        - proposed_version: the new MAJOR version (e.g. "1.0.0" or "2.0.0")
-        - reason: human-readable reason (required)
-        - approver: GitHub handle of requester (defaults to GITHUB_ACTOR)
+    Workflow files copied + labels created in all 63. ~32 pushed to main directly;
 
-      LOGIC:
-      1. Read current version from pyproject.toml
-      2. Validate proposed_version is MAJOR bump (proposed_major >= 1, proposed > current)
-      3. Create GitHub Issue with label "major-bump-pending" + metadata JSON block (same format as s1a)
-      4. Send Telegram: "🔴 Major bump REQUESTED: {repo} {current} → {proposed}\nApprove: {issue_url}"
-      5. Output issue URL to GitHub Step Summary
-      6. EXIT 0 — the actual bump happens ONLY when user approves the issue via major-bump-issue-handler.yml
+    ~24 have open PRs on branch chore/major-bump-workflows-plan64.
 
-      This replaces the existing major-bump-approval.yml's "immediately dispatch" pattern.
-      The old major-bump-approval.yml becomes a deprecated alias (add header: DEPRECATED — use request-major-bump.yml).
-    status: done
-    note: "Done 2026-03-11 — commit b99a826. request-major-bump.yml created with workflow_dispatch + issue + Telegram."
+    Labels: major-bump-pending (D93F0B), major-bump-approved (0E8A16), major-bump-rejected (B60205).
 
-  - id: s1c-create-major-bump-issue-handler
-    content: |
-      Create `unified-trading-pm/scripts/propagation/templates/major-bump-issue-handler.yml`:
+    '}
+- {id: s2a-cursor-rule-major-bump-prohibition, content: 'Create `unified-trading-pm/cursor-rules/core/major-bump-approval-required.mdc`:
 
-      TRIGGER: issue_comment with types: [created]
-      CONDITION: github.event.issue.labels.*.name contains "major-bump-pending"
-      PERMISSIONS: contents: write, issues: write
+    '}
+---
 
-      ON /approve comment (case-insensitive, trimmed):
-      1. Verify commenter has write/maintain/admin access to the repo via GH API
-         (GET /repos/{org}/{repo}/collaborators/{commenter}/permission → permission must be write/maintain/admin)
-         If not: reply with error comment, do NOT bump
-      2. Parse metadata from issue body: <!-- major-bump-metadata { ... } --> block
-         Extract: repo, proposed_version, current_version, staging_branch, staging_commit, reason
-      3. Checkout target repo at staging branch (sparse clone is fine: depth=1)
-         Use: git clone --depth=1 --branch staging https://{GH_TOKEN}@github.com/{org}/{repo}.git /tmp/target
-      4. Bump pyproject.toml version on staging:
-         - Use python3 re.sub to replace version = "current_version" → "proposed_version"
-         - git commit: "chore: bump version to {proposed_version} [major-bump approved by {approver}]"
-         - git push origin staging
-         CRITICAL: this ONLY happens on staging. Never touches main.
-      5. Dispatch version-bump to unified-trading-pm:
-         POST /repos/IggyIkenna/unified-trading-pm/dispatches
-         event_type: version-bump
-         client_payload: { repo, version: proposed_version, branch: staging, commit_sha: "major-bump-approved", approved_by: approver }
-      6. Send Telegram: "✅ Major bump APPROVED: {repo} → v{proposed_version} on staging (by @{approver})\n{issue_url}"
-      7. Add comment to issue: "✅ APPROVED by @{approver} on {date}\nVersion {proposed_version} bumped in pyproject.toml on staging."
-      8. Remove label "major-bump-pending", add label "major-bump-approved"
-      9. Close issue with state_reason: "completed"
-
-      ON /reject comment (case-insensitive, trimmed):
-      1. Same write-access check
-      2. Send Telegram: "❌ Major bump REJECTED: {repo} → v{proposed_version} (by @{approver})\n{issue_url}"
-      3. Add comment: "❌ REJECTED by @{approver} on {date}. No version change."
-      4. Remove label "major-bump-pending", add label "major-bump-rejected"
-      5. Close issue with state_reason: "not_planned"
-
-      IMPORTANT: Use `|| true` on Telegram curl so workflow never fails due to Telegram unavailability.
-      IMPORTANT: The step that bumps pyproject.toml must run ONLY on /approve (not /reject or unrecognized).
-    status: done
-    blocked_by: s1a-update-semver-agent-telegram
-    note: "Done 2026-03-11 — commit b99a826. major-bump-issue-handler.yml created with full /approve and /reject flows."
-
-  - id: s1d-update-approve-major-bump-script
-    content: |
-      Update `unified-trading-pm/scripts/approve-major-bump.sh`:
-      Change from: triggers major-bump-approval.yml (workflow_dispatch → immediately bumps)
-      Change to: triggers request-major-bump.yml (workflow_dispatch → creates issue + Telegram)
-
-      Update the script header comment:
-        "This script REQUESTS a major bump by triggering request-major-bump.yml.
-         The actual version bump ONLY happens when a human approves the GitHub Issue
-         that the workflow creates (by commenting /approve on the issue)."
-
-      Update the INPUTS_JSON to match request-major-bump.yml inputs (proposed_version, reason, approver).
-      Update the workflow URL from major-bump-approval.yml to request-major-bump.yml.
-    status: done
-    blocked_by: s1b-create-request-major-bump-workflow
-    note: "Done 2026-03-11 — commit b99a826. approve-major-bump.sh updated to use request-major-bump.yml."
-
-  - id: s1e-propagate-issue-handler-to-all-repos
-    content: |
-      Roll out major-bump-issue-handler.yml to all repos via the propagation script:
-      1. Add "major-bump-issue-handler.yml" to the list of templates in:
-         `unified-trading-pm/scripts/propagation/rollout-gha-template.sh` (or equivalent)
-      2. Run the rollout for all 65 repos in workspace-manifest.json
-         (or document the rollout command so CI can do it)
-      3. Ensure "major-bump-pending" and "major-bump-approved" and "major-bump-rejected" labels
-         exist in each repo. Add a label-creation step to the propagation script if missing.
-      4. Deprecate major-bump-approval.yml in each repo:
-         Add DEPRECATED header comment pointing to request-major-bump.yml.
-    status: done
-    blocked_by: s1c-create-major-bump-issue-handler
-    note: |
-      Done 2026-03-11. 63 repos processed (all manifest repos excl. pm + codex).
-      Workflow files copied + labels created in all 63. ~32 pushed to main directly;
-      ~24 have open PRs on branch chore/major-bump-workflows-plan64.
-      Labels: major-bump-pending (D93F0B), major-bump-approved (0E8A16), major-bump-rejected (B60205).
-
-  # ─── STREAM 2: RULES PROPAGATION ───
-
-  - id: s2a-cursor-rule-major-bump-prohibition
-    content: |
-      Create `unified-trading-pm/cursor-rules/core/major-bump-approval-required.mdc`:
-
-      ---
       description: "ANY major version bump (including initial 0.x.x → 1.0.0) REQUIRES a human-approved GitHub Issue — no agent may set a MAJOR version autonomously"
       alwaysApply: true
       priority: 99

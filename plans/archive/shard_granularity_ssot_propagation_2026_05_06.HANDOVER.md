@@ -1,4 +1,16 @@
 ---
+doc_type: plan
+title: Shard-Granularity SSOT Propagation — Executor Handover
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-06'
 type: handover
 companion_plan: shard_granularity_ssot_propagation_2026_05_06.plan.md (TBD)
 locked_by: live-defi-rollout

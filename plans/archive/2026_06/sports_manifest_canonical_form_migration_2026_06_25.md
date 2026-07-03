@@ -1,5 +1,15 @@
 ---
-title: "Sports manifest + GCS canonical-form migration — single source of truth (IS + MTDS)"
+doc_type: plan
+title: Sports manifest + GCS canonical-form migration — single source of truth (IS + MTDS)
+summary:
+status: complete
+nature: record
+asset_group: [sports]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-25
 parent_epic: sports_master
 assigned_vm: NA
@@ -8,12 +18,7 @@ estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 4
 locked_by: live-defi-rollout
 priority: P0
-status: active
-source:
-  - operator directive 2026-06-25 ("should use canonical forms, so migrate"; "if there's any GCS data that's in the
-    wrong canonical form ... for instrument service or market(-tick)-data service, when it comes to schemas or paths or
-    whatever, it should be migrated so we don't have two sources of truth — manifest lines up with coverage + index +
-    data-status + deployment-UI; everything related to asset_group should be updated; document is such in plan")
+source: ['operator directive 2026-06-25 ("should use canonical forms, so migrate"; "if there''s any GCS data that''s in the wrong canonical form ... for instrument service or market(-tick)-data service, when it comes to schemas or paths or whatever, it should be migrated so we don''t have two sources of truth — manifest lines up with coverage + index + data-status + deployment-UI; everything related to asset_group should be updated; document is such in plan")']
 ---
 
 # Sports manifest + GCS canonical-form migration — one SSOT

@@ -1,10 +1,19 @@
 ---
+doc_type: plan
 title: codex_refactor Phase G.1 — final cross-directory consistency audit
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, execution-service, features-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-08
 type: audit-report
-status: archived
 archived: 2026-05-08
 archived_reason: Audit P0+P1 closed via Phase H follow-up sweep; P2 items deferred as nice-to-have non-blockers.
-created: 2026-05-08
 parent_plan: plans/archive/codex_refactor_2026_05_08.plan.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-08

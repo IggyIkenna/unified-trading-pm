@@ -1,16 +1,20 @@
 ---
-title: "SIT May-23 Critical Path Coverage Gaps"
+doc_type: issue
+title: SIT May-23 Critical Path Coverage Gaps
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service, system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-8
 resolved: 2026-05-16
-resolution:
-  SHIPPED — all 3 scenarios at `system-integration-tests@3872ce2` (slot 7 item 1). defi_carry_staked_basis_paper +
-  defi_apd_paper + defi_paper_to_live_early_gate + dedicated suite `tests/scenarios/test_may23_critical_paths.py`. 28
-  framework+may23 tests pass; basedpyright clean.
-source:
-  - system-integration-tests/tests/scenarios/defi_scenarios.py
-  - system-integration-tests/tests/overnight/test_archetype_cascade.py
-  - system-integration-tests/tests/
+resolution: SHIPPED — all 3 scenarios at `system-integration-tests@3872ce2` (slot 7 item 1). defi_carry_staked_basis_paper + defi_apd_paper + defi_paper_to_live_early_gate + dedicated suite `tests/scenarios/test_may23_critical_paths.py`. 28 framework+may23 tests pass; basedpyright clean.
+source: [system-integration-tests/tests/scenarios/defi_scenarios.py, system-integration-tests/tests/overnight/test_archetype_cascade.py, system-integration-tests/tests/]
 locked_by: live-defi-rollout
 ---
 

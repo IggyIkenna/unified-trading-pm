@@ -1,26 +1,26 @@
 ---
-title: "instruments-service CLI — Rolling Window Flags (--lookback-days / --lookahead-days / --force-window)"
-priority: P1
-status: active
-owner: agent
+doc_type: plan
+title: instruments-service CLI — Rolling Window Flags (--lookback-days / --lookahead-days / --force-window)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-21
+priority: P1
+owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: deployment-service
-    code: C0
-    deployment: none
-    business: none
+- {repo: instruments-service, code: C0, deployment: none, business: none}
+- {repo: deployment-service, code: C0, deployment: none, business: none}
 depends_on: []
 isProject: false
 ---

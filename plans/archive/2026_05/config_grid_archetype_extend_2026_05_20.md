@@ -1,6 +1,15 @@
 ---
+doc_type: plan
 title: Extend run_2yr_config_grid_backtest.py to all 6 Tier-A archetype families
-status: archived
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
 archived: 2026-05-23
 priority: P1

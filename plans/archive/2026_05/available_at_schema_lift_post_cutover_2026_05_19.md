@@ -1,15 +1,25 @@
 ---
+doc_type: plan
 title: available_at schema-level invariant lift + QG hardening (post-cutover architectural slice)
+summary: >-
+  Post-cutover architectural slice that lifted the available_at lookahead-bias invariant to the schema level in
+  features-service and added QG hardening so as-of stamping is enforced structurally rather than by convention.
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: [available-at, lookahead-bias, schema-invariant, features-service, quality-gates, batch-live-symmetry]
+related: [available_at_lookahead_bias_completion_2026_05_08.md]
+created: '2026-05-19'
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: archived
 archived: 2026-05-23
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
-related_plans:
-  - available_at_lookahead_bias_completion_2026_05_08.md
 ---
 
 # available_at Schema-Level Invariant Lift (Post-Cutover)

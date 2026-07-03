@@ -1,20 +1,25 @@
 ---
-title: "VM Observability + Self-Delete Codex Update"
-priority: P2
-status: active
-owner: agent
+doc_type: plan
+title: VM Observability + Self-Delete Codex Update
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-21
+priority: P2
+owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: business
 epic: none
-completion_gates:
-  code: none
-  deployment: none
-  business: B1
+completion_gates: {code: none, deployment: none, business: B1}
 repo_gates:
-  - repo: unified-trading-pm
-    business: B0
+- {repo: unified-trading-pm, business: B0}
 depends_on: []
 isProject: false
 ---

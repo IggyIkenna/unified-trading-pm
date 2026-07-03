@@ -1,12 +1,20 @@
 ---
-plan_type: handoff
+doc_type: plan
+title: carry-tracer-pipeline-handoff-2026-05-06
+summary:
+status: complete
+nature: record
 asset_group: defi
-owner: ikenna
+stage: [meta]
+repos: [deployment-service, market-tick-data-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-06
+plan_type: handoff
+owner: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-name: carry-tracer-pipeline-handoff-2026-05-06
-status: active
 supersedes: carry_tracer_pipeline_handoff_2026_05_05.md
 ---
 

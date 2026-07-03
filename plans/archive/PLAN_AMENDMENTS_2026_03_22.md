@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Plan Amendments — Gap-Closing for 90%+ Demo Alignment
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service, system-integration-tests, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-22'
+---
+
 ## Deferred work — migrated to:
 
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any

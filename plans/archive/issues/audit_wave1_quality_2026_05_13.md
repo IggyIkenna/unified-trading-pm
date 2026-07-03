@@ -1,20 +1,24 @@
 ---
-title: "Wave 1 quality audit — slots 2-9 execution review vs work-split done-defs"
+doc_type: issue
+title: Wave 1 quality audit — slots 2-9 execution review vs work-split done-defs
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 author: harsh-main (slot 1)
 resolved: 2026-05-17
-resolution: AUDIT-COMPLETE — 19 findings cataloged. P0 #2 addressed via sports_classifier_extension_followup (resolved 2026-05-14). P0 #3 SHA refresh applied (defi_simulation_realism plan has both 38b3e8a5 + c5dd45eb in provenance — cherry-pick chain documented). P0 #1 (Slot 9 Task 3 strategy-paper VM launch) is a slot-1-main slot-state assertion — verified in next-cycle planning. P1/P2/P3 recommendations are forward-only process improvements absorbable into Wave-2 + Day-5.
-source:
-  - work_split_2026_05_13_harsh.md (Wave 1 layout)
-  - harsh_orchestrator/pings/slot_{2..9}.md
-  - LDR commit log 2026-05-12 → 2026-05-13
+resolution: AUDIT-COMPLETE — 19 findings cataloged. P0
+source: [work_split_2026_05_13_harsh.md (Wave 1 layout), 'harsh_orchestrator/pings/slot_{2..9}.md', LDR commit log 2026-05-12 → 2026-05-13]
 severity: P0 (gap findings) + retrospective (process)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
-routing:
-  primary_owner: harsh-main (issue author; Harsh-side Wave 1 retrospective)
-  routed_2026_05_13: 18 findings already self-routed within issue body § "Files for follow-up"
-  ikenna_side_action: NONE — Harsh-side internal audit; Ikenna-main acked via PM coordination ledger 2026-05-13
+routing: {primary_owner: harsh-main (issue author; Harsh-side Wave 1 retrospective), routed_2026_05_13: 18 findings already self-routed within issue body § "Files for follow-up", ikenna_side_action: NONE — Harsh-side internal audit; Ikenna-main acked via PM coordination ledger 2026-05-13}
 ---
 
 > **🟢 ROUTING ACK (Ikenna-main, 2026-05-13)** — This Harsh-side internal Wave 1 retrospective lists 18 findings

@@ -1,12 +1,19 @@
 ---
+doc_type: issue
 title: QG firefight one-off fixes (2026-06-16) — deployment-api QG-allow, stale sports coverage tests, e2e [5.5a] escape
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, e2e-testing, features-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-16
 locked_by: live-defi-rollout
 priority: P3
-status: resolved
-source:
-  - QG-agent fork 2026-06-16 (fleet CVE/starlette propagation + e2e triage-queue firefight)
-  - operator request 2026-06-17 — give the tracker-only one-offs a plan-of-record home
+source: [QG-agent fork 2026-06-16 (fleet CVE/starlette propagation + e2e triage-queue firefight), operator request 2026-06-17 — give the tracker-only one-offs a plan-of-record home]
 ---
 
 # QG firefight one-off fixes (2026-06-16)

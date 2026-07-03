@@ -1,14 +1,20 @@
 ---
+doc_type: issue
 title: Databento adapter `to_df(count=N)` chunk-iteration fails with int(Timestamp) error
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-16
 author: slot-5-claude
 resolved: 2026-05-16
-resolution:
-  FIXED at `market-tick-data-service@f19ff5f` — `to_df(count=chunk_rows, pretty_ts=False)` workaround bypasses SDK 0.78
-  DataFrameIterator._format_map_symbols bug. ts_event/ts_recv kept as int64 nanoseconds.
-source:
-  - tradfi-bf-es-adhoc-adhoc-20260516-130240 VM log (post-temp-file-fix MTDS@741eb5d)
-  - market-tick-data-service/market_interface/adapters/tradfi/databento_adapter.py:650
+resolution: FIXED at `market-tick-data-service@f19ff5f` — `to_df(count=chunk_rows, pretty_ts=False)` workaround bypasses SDK 0.78 DataFrameIterator._format_map_symbols bug. ts_event/ts_recv kept as int64 nanoseconds.
+source: [tradfi-bf-es-adhoc-adhoc-20260516-130240 VM log (post-temp-file-fix MTDS@741eb5d), 'market-tick-data-service/market_interface/adapters/tradfi/databento_adapter.py:650']
 locked_by: live-defi-rollout
 ---
 

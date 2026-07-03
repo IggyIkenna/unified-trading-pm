@@ -1,12 +1,19 @@
 ---
+doc_type: issue
 title: mtds-backfill-defi-20260523 VM broken — resolve_bucket_name() unexpected 'env' kwarg on every chunk
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-23
-source:
-  - vm-logs/mtds-backfill-defi-20260523/run.log
-  - market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py
+source: [vm-logs/mtds-backfill-defi-20260523/run.log, market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py]
 locked_by: live-defi-rollout
 priority: P2
-status: active
 ---
 
 > **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — `tick_data_handler.py:94` `get_tick_data_bucket` fix

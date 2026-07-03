@@ -1,20 +1,23 @@
 ---
-title:
-  "Central orchestrator API host (i-0c9b283b31d6b5ca7) chronic StatusCheckFailed_Instance — intermittent impairment all
-  day 2026-05-29; reboot is workaround"
+doc_type: issue
+title: Central orchestrator API host (i-0c9b283b31d6b5ca7) chronic StatusCheckFailed_Instance — intermittent impairment all day 2026-05-29; reboot is workaround
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-29
 source:
-  - aws ec2 describe-instance-status i-0c9b283b31d6b5ca7 (impaired since 2026-05-29T00:09:00Z initially)
-  - aws cloudwatch get-metric-statistics StatusCheckFailed_Instance 2026-05-28T20:00Z → 2026-05-29T15:00Z (datapoints
-    `1.0` at 02:15Z, 03:25Z, 04:00Z, 05:10Z, 07:40Z, 08:50Z, 13:10Z, 14:55Z — multiple events through the day, not just
-    2)
-  - Operator session 2026-05-29:
-      API timed out twice from CLI; aws ec2 reboot-instances triggered both times (172s + 360s recovery)
-  - Internal SSM probe from i-007e8d99d12831578 also confirmed port 8026 unreachable on i-0c9b283b31d6b5ca7 (not just
-    from operator's IP)
+- aws ec2 describe-instance-status i-0c9b283b31d6b5ca7 (impaired since 2026-05-29T00:09:00Z initially)
+- aws cloudwatch get-metric-statistics StatusCheckFailed_Instance 2026-05-28T20:00Z → 2026-05-29T15:00Z (datapoints `1.0` at 02:15Z, 03:25Z, 04:00Z, 05:10Z, 07:40Z, 08:50Z, 13:10Z, 14:55Z — multiple events through the day, not just 2)
+- {Operator session 2026-05-29: API timed out twice from CLI; aws ec2 reboot-instances triggered both times (172s + 360s recovery)}
+- Internal SSM probe from i-007e8d99d12831578 also confirmed port 8026 unreachable on i-0c9b283b31d6b5ca7 (not just from operator's IP)
 locked_by: api_host_chronic_impairment_2026_05_29
 priority: P2
-status: archived
 parent_epic: orchestrator_master
 estimate_calibrated_ai_days: 0.8
 estimate_class: infra

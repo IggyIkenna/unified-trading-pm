@@ -1,8 +1,18 @@
 ---
+doc_type: plan
+title: DeFi Strategy E2E Testing Automation
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-02'
 orphan_candidate: true
-orphan_reason:
-  "Workflow/process guide (446 lines, 0 checkboxes, no frontmatter). Belongs in codex/14-playbooks/ or
-  codex/08-workflows/, not plans/active/."
+orphan_reason: Workflow/process guide (446 lines, 0 checkboxes, no frontmatter). Belongs in codex/14-playbooks/ or codex/08-workflows/, not plans/active/.
 reconciliation_date: 2026-04-25
 ---
 

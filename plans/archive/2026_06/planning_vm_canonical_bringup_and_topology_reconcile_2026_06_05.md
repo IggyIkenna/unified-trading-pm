@@ -1,18 +1,23 @@
 ---
+doc_type: plan
 title: Planning-VM canonical bring-up + multi-VM topology reconciliation
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md, plans/active/cicd_contract_hardening_2026_06_01.md]
+created: 2026-06-05
 parent_epic: orchestrator_master
 assigned_vm: planning
 priority: P1
-status: active
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-created: 2026-06-05
-source:
-  - operator session 2026-06-05 (slot tab/ikennaigboaka/1) — planning-VM spin-up + static-IP/topology clarification
-related_plans:
-  - plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md
-  - plans/active/cicd_contract_hardening_2026_06_01.md
+source: [operator session 2026-06-05 (slot tab/ikennaigboaka/1) — planning-VM spin-up + static-IP/topology clarification]
 ---
 
 > **✅ ARCHIVED 2026-06-10 — complete.** Central/planning VM canonically branded + provisioned: 5 `tab/planning/N` slots

@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: T1/T2 Migration Patterns for Remaining Services
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-data-processing-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-28'
+---
+
 # T1/T2 Migration Patterns for Remaining Services
 
 **Phase 6+7 completed**: position-balance-monitor-service, pnl-attribution-service, instruments-service validation.

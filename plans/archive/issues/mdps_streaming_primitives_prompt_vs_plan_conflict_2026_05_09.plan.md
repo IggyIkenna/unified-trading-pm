@@ -1,15 +1,18 @@
 ---
-title:
-  "MDPS streaming primitives — spawn prompt's open/close_candle_writer contract conflicts with plan-of-record (audit
-  issue #3 P0)"
+doc_type: issue
+title: 'MDPS streaming primitives — spawn prompt''s open/close_candle_writer contract conflicts with plan-of-record (audit issue #3 P0)'
+summary:
+status: resolved-utl-shipped-2026-05-09
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-09
 author: agent-mdps-streaming-spawn
-status: resolved-utl-shipped-2026-05-09
-source:
-  - plans/active/issues/audit_2026_05_08_substantial_unfixed_items.md § Item 3
-  - plans/active/mdps_streaming_and_backpressure_2026_05_07.md Phase 1.1
-  - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md Phase 4 + § "Coordination" (lines 425-449, 1107-1108)
-  - spawn prompt 2026-05-09 (this session)
+source: [plans/active/issues/audit_2026_05_08_substantial_unfixed_items.md § Item 3, plans/active/mdps_streaming_and_backpressure_2026_05_07.md Phase 1.1, 'plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md Phase 4 + § "Coordination" (lines 425-449, 1107-1108)', spawn prompt 2026-05-09 (this session)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 ---

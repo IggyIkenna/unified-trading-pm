@@ -1,8 +1,17 @@
 ---
+doc_type: plan
 title: Ikenna ↔ Harsh work split — 2026-05-07 → 2026-05-11 (5-day cycle to Week 2)
-type: coordination-doc
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-07
+type: coordination-doc
 deadline: 2026-05-23 (live DeFi)
 horizon: 5-day cycle (D1–D5); Week 2 plan re-derived at EOD D5
 companion_to: plans/active/_AUDIT_2026_05_07_dependency_graph.md

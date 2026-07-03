@@ -1,98 +1,34 @@
 ---
-name: recon-rebalancing-order-recovery-2026-03-10
-overview:
-  Automated position correction, order recovery on restart, portfolio drift rebalancing, and DeFi vault yield
-  rebalancing with full observability.
+doc_type: plan
+title: recon-rebalancing-order-recovery-2026-03-10
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service, strategy-service, system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-10'
+overview: Automated position correction, order recovery on restart, portfolio drift rebalancing, and DeFi vault yield rebalancing with full observability.
 type: code
 epic: epic-code-completion
-status: done
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: position-balance-monitor-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-events-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: system-integration-tests
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-
-depends_on:
-  - stub_completion_interfaces_and_infra
-  - error_normalisation_unknown_exchanges_2026_03_10
-  - api_keys_and_auth
-
+- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: execution-service, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: strategy-service, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-events-interface, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: system-integration-tests, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+depends_on: [stub_completion_interfaces_and_infra, error_normalisation_unknown_exchanges_2026_03_10, api_keys_and_auth]
 todos:
-  - id: stream-a-correction-dispatcher
-    content: Implement CorrectionDispatcher; wire into reconciliation_engine; add 2 UEI events
-    status: done
-    note:
-      "DONE — pbs/core/correction_dispatcher.py + startup_reconciler.py exist with real CorrectionDispatcher.
-      POSITION_CORRECTION_DISPATCHED/FAILED events confirmed in schemas.py"
-  - id: stream-b-order-recovery
-    content: Implement OrderRecoveryEngine; circuit breaker gate; wire into startup
-    status: done
-    note:
-      "DONE — execution-service/engine/startup/order_recovery.py with OrderRecoveryEngine.
-      ORDER_ORPHANED/ORDER_RECOVERY_COMPLETED/FAILED events confirmed in schemas.py"
-  - id: stream-c-portfolio-rebalancer
-    content: Implement PortfolioRebalancer; per-strategy config; wire into scheduler
-    status: done
-    note:
-      "DONE — strategy-service/engine/rebalancing/portfolio_rebalancer.py with PortfolioRebalancer.
-      PORTFOLIO_REBALANCE_TRIGGERED/COMPLETED events confirmed in schemas.py"
-  - id: stream-d-defi-vault-rebalancer
-    content: Implement DeFiVaultRebalancer; yield monitor; gas estimator
-    status: done
-    note:
-      "DONE — strategy-service/engine/rebalancing/defi_vault_rebalancer.py, defi_yield_monitor.py, gas_estimator.py all
-      present. DEFI_VAULT_REBALANCED confirmed in schemas.py"
-  - id: uei-events
-    content:
-      Add 8 new UEI events to unified-events-interface/schemas.py (coordinated via uei_pending_event_additions plan)
-    status: done
-    note:
-      "DONE — all 8 events confirmed in schemas.py: POSITION_CORRECTION_DISPATCHED/FAILED,
-      ORDER_ORPHANED/RECOVERY_COMPLETED/FAILED, PORTFOLIO_REBALANCE_TRIGGERED/COMPLETED, DEFI_VAULT_REBALANCED"
-  - id: integration-tests
-    content: Add test_recon_rebalancing.py integration tests in system-integration-tests
-    status: done
-    note:
-      "DONE — system-integration-tests/tests/integration/test_recon_rebalancing.py created; 10 integration tests
-      covering all 4 streams (correction dispatcher, order recovery, portfolio rebalancer, DeFi vault rebalancer).
-      Commit d29523a."
+- {id: stream-a-correction-dispatcher, content: Implement CorrectionDispatcher; wire into reconciliation_engine; add 2 UEI events, status: done, note: DONE — pbs/core/correction_dispatcher.py + startup_reconciler.py exist with real CorrectionDispatcher. POSITION_CORRECTION_DISPATCHED/FAILED events confirmed in schemas.py}
+- {id: stream-b-order-recovery, content: Implement OrderRecoveryEngine; circuit breaker gate; wire into startup, status: done, note: DONE — execution-service/engine/startup/order_recovery.py with OrderRecoveryEngine. ORDER_ORPHANED/ORDER_RECOVERY_COMPLETED/FAILED events confirmed in schemas.py}
+- {id: stream-c-portfolio-rebalancer, content: Implement PortfolioRebalancer; per-strategy config; wire into scheduler, status: done, note: DONE — strategy-service/engine/rebalancing/portfolio_rebalancer.py with PortfolioRebalancer. PORTFOLIO_REBALANCE_TRIGGERED/COMPLETED events confirmed in schemas.py}
+- {id: stream-d-defi-vault-rebalancer, content: Implement DeFiVaultRebalancer; yield monitor; gas estimator, status: done, note: 'DONE — strategy-service/engine/rebalancing/defi_vault_rebalancer.py, defi_yield_monitor.py, gas_estimator.py all present. DEFI_VAULT_REBALANCED confirmed in schemas.py'}
+- {id: uei-events, content: Add 8 new UEI events to unified-events-interface/schemas.py (coordinated via uei_pending_event_additions plan), status: done, note: 'DONE — all 8 events confirmed in schemas.py: POSITION_CORRECTION_DISPATCHED/FAILED, ORDER_ORPHANED/RECOVERY_COMPLETED/FAILED, PORTFOLIO_REBALANCE_TRIGGERED/COMPLETED, DEFI_VAULT_REBALANCED'}
+- {id: integration-tests, content: Add test_recon_rebalancing.py integration tests in system-integration-tests, status: done, note: 'DONE — system-integration-tests/tests/integration/test_recon_rebalancing.py created; 10 integration tests covering all 4 streams (correction dispatcher, order recovery, portfolio rebalancer, DeFi vault rebalancer). Commit d29523a.'}
 isProject: false
 ---
 

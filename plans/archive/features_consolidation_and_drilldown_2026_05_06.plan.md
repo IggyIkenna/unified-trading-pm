@@ -1,64 +1,34 @@
 ---
-name: features-consolidation-and-drilldown
-overview:
-  Two follow-on improvements after correctness + read-perf land. (1) Feature-store consolidation layer that pre-joins
-  all relevant feature_groups into a wide-table parquet per (asset_group, day) at write-time, giving ML training a
-  single GCS GET per day instead of N. (2) UTL FeatureBatchHandler base class lifting the
-  Delta-One/Onchain/Sports/Volatility BatchHandler boilerplate (~200 LOC each). (3) deployment-ui feature-group
-  drill-down route + per-feature-group parquet download endpoint. Sequenced after sibling plans
-  writegate_honest_coverage_endtoend, feature_dag_uac_ssot_and_features_coverage, and ml_training_feature_read_perf.
+doc_type: plan
+title: features-consolidation-and-drilldown
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-06
+overview: Two follow-on improvements after correctness + read-perf land. (1) Feature-store consolidation layer that pre-joins all relevant feature_groups into a wide-table parquet per (asset_group, day) at write-time, giving ML training a single GCS GET per day instead of N. (2) UTL FeatureBatchHandler base class lifting the Delta-One/Onchain/Sports/Volatility BatchHandler boilerplate (~200 LOC each). (3) deployment-ui feature-group drill-down route + per-feature-group parquet download endpoint. Sequenced after sibling plans writegate_honest_coverage_endtoend, feature_dag_uac_ssot_and_features_coverage, and ml_training_feature_read_perf.
 type: code
 epic: data-pipeline-completion
-status: active
 owner: Harsh
-created: 2026-05-06
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
+completion_gates: {code: C5, deployment: D3, business: B3}
 repo_gates:
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-delta-one-service
-    code: C0
-    deployment: D0
-    business: none
-  - repo: features-onchain-service
-    code: C0
-    deployment: D0
-    business: none
-  - repo: features-sports-service
-    code: C0
-    deployment: D0
-    business: none
-  - repo: features-volatility-service
-    code: C0
-    deployment: D0
-    business: none
-  - repo: features-multi-timeframe-service
-    code: C0
-    deployment: D0
-    business: none
-  - repo: ml-training-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: deployment-api
-    code: C0
-    deployment: D0
-    business: none
-  - repo: deployment-ui
-    code: C0
-    deployment: D0
-    business: none
-depends_on:
-  - writegate_honest_coverage_endtoend_2026_05_06
-  - feature_dag_uac_ssot_and_features_coverage_2026_05_06
-  - ml_training_feature_read_perf_2026_05_06
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: features-delta-one-service, code: C0, deployment: D0, business: none}
+- {repo: features-onchain-service, code: C0, deployment: D0, business: none}
+- {repo: features-sports-service, code: C0, deployment: D0, business: none}
+- {repo: features-volatility-service, code: C0, deployment: D0, business: none}
+- {repo: features-multi-timeframe-service, code: C0, deployment: D0, business: none}
+- {repo: ml-training-service, code: C0, deployment: D0, business: B0}
+- {repo: deployment-api, code: C0, deployment: D0, business: none}
+- {repo: deployment-ui, code: C0, deployment: D0, business: none}
+depends_on: [writegate_honest_coverage_endtoend_2026_05_06, feature_dag_uac_ssot_and_features_coverage_2026_05_06, ml_training_feature_read_perf_2026_05_06]
 isProject: false
 ---
 

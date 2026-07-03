@@ -1,10 +1,19 @@
 ---
+doc_type: issue
 title: VM image build caching gaps — deployment-service, execution-service, strategy-service
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-2
-source:
-  - codex audit item 12 (VM image build caching audit)
-locked_by: ""
+source: [codex audit item 12 (VM image build caching audit)]
+locked_by: ''
 ---
 
 ## What I found

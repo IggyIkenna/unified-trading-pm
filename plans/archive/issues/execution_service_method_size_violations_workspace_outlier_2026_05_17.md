@@ -1,17 +1,22 @@
 ---
-title: "execution-service has 377 method-size violations (workspace outlier; ~13× the next-worst repo)"
+doc_type: issue
+title: execution-service has 377 method-size violations (workspace outlier; ~13× the next-worst repo)
+summary:
+status: phase-b-in-progress (103/377 cleared = ~27%; milestone 100/377 crossed 2026-05-17)
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-service, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-17
 author: slot-7-ikenna
-source:
-  - execution-service@f871ffad7 (post-cutover snapshot)
-  - workspace-wide method-size sweep 2026-05-16 → 2026-05-17 (slot 7 autonomous loop)
+source: [execution-service@f871ffad7 (post-cutover snapshot), workspace-wide method-size sweep 2026-05-16 → 2026-05-17 (slot 7 autonomous loop)]
 severity: P2 (post-cutover hygiene; not blocking May-23)
-status: phase-b-in-progress (103/377 cleared = ~27%; milestone 100/377 crossed 2026-05-17)
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
-routing:
-  primary_owner: operator triage (size = per-area sprint, not single-owner)
-  composes_with: utl_qg_preexisting_failures_2026_05_14.md §3 (workspace pattern)
+routing: {primary_owner: 'operator triage (size = per-area sprint, not single-owner)', composes_with: utl_qg_preexisting_failures_2026_05_14.md §3 (workspace pattern)}
 ---
 
 > **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase D6 (strategy + execution plan beef-up)** per

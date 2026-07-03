@@ -1,9 +1,18 @@
 ---
-id: features_ml_enhancement_2026_03_10
+doc_type: plan
 title: Features ML Enhancement — R:R, Wedge Quality, Dynamic TF Pairs
+summary:
 status: DONE
-priority: P1
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-10
+id: features_ml_enhancement_2026_03_10
+priority: P1
 owner: agent
 ---
 

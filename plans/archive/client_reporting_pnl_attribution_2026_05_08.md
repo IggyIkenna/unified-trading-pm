@@ -1,24 +1,24 @@
 ---
-name: client-reporting-pnl-attribution
-overview:
-  Client reporting API + unified-trading-system UI surface — NAV / PnL / metrics per client, invoicing, PnL attribution.
-  Internal-strategy vs external-strategy (via client-supplied API keys). Is it solved end-to-end and could PnL
-  attribution be offered as a standalone service?
-type: question
+doc_type: plan
+title: client-reporting-pnl-attribution
+summary:
 status: plan-spawned
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, execution-service, market-tick-data-service, strategy-service, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/master_to_live_defi_2026_05_23.md, plans/questions/wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md, plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md, plans/active/issues/missing_question_docs_orphan_references_2026_05_10.md]
 created: 2026-05-08
+overview: Client reporting API + unified-trading-system UI surface — NAV / PnL / metrics per client, invoicing, PnL attribution. Internal-strategy vs external-strategy (via client-supplied API keys). Is it solved end-to-end and could PnL attribution be offered as a standalone service?
+type: question
 plan_spawned: 2026-05-10
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 spawned_plan: plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md
-related_codex:
-  - codex/04-architecture/separation-of-concerns.md
-related_plans:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/questions/wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md
-  - plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md
-  - plans/active/issues/missing_question_docs_orphan_references_2026_05_10.md
+related_codex: [codex/04-architecture/separation-of-concerns.md]
 ---
 
 # Client reporting + PnL attribution — end-to-end question

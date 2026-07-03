@@ -1,10 +1,19 @@
 ---
-title: "Signal Leasing — broadcast-capable external-counterparty architecture"
-status: active
+doc_type: plan
+title: Signal Leasing — broadcast-capable external-counterparty architecture
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
-depends_on:
-  - path_to_100m_finalization_2026_04_20
+depends_on: [path_to_100m_finalization_2026_04_20]
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25
 ---

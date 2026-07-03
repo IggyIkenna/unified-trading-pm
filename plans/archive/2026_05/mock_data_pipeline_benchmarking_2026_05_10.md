@@ -1,16 +1,23 @@
 ---
+doc_type: plan
 title: Mock-data pipeline benchmarking — synthetic-data harness for per-stage bottleneck profile
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [features-service, instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [compute_optimization_mock_data_2026_05_13.md, master_to_live_defi_2026_05_23.md]
+created: '2026-05-10'
 parent_epic: infrastructure_master
 priority: P1
-status: archived
 estimate_class: brand-new
 estimate_baseline_ai_days: 8.0
 estimate_calibrated_ai_days: 8.0
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-related_plans:
-  - compute_optimization_mock_data_2026_05_13.md
-  - master_to_live_defi_2026_05_23.md
 ---
 
 > **ARCHIVED 2026-05-21** — 100% complete (trivial-sweep cleared Phase 8 master-plan-row). Phases 0-7 complete;

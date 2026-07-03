@@ -1,15 +1,19 @@
 ---
-title:
-  Promotion-queue "conflict wall" pile-up — 18 stuck promote/dep-update PRs (PM hub FIXED; dep-update fan-out +
-  stale-mergeability + per-repo test failures remain), and they lack a stale-conflict alert
+doc_type: issue
+title: Promotion-queue "conflict wall" pile-up — 18 stuck promote/dep-update PRs (PM hub FIXED; dep-update fan-out + stale-mergeability + per-repo test failures remain), and they lack a stale-conflict alert
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-17
-source:
-  - "operator triage-queue screenshot 2026-06-17: 18 PRs 'Conflict wall', 3h–17h stuck, → staging / → main"
-  - scripts/cicd/reconcile_manifest_backmerge.py
-  - .github/workflows/{ldr-to-staging-promote,ldr-to-main-promote,main-backmerge-to-ldr}.yml
+source: ['operator triage-queue screenshot 2026-06-17: 18 PRs ''Conflict wall'', 3h–17h stuck, → staging / → main', scripts/cicd/reconcile_manifest_backmerge.py, '.github/workflows/{ldr-to-staging-promote,ldr-to-main-promote,main-backmerge-to-ldr}.yml']
 locked_by: live-defi-rollout
 priority: P1
-status: archived
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans

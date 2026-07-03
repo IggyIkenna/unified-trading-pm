@@ -1,13 +1,20 @@
 ---
-title: "Sports `entity=standings/` GCS directory — SFI vs api_football provenance ambiguity"
+doc_type: issue
+title: Sports `entity=standings/` GCS directory — SFI vs api_football provenance ambiguity
+summary:
+status: RESOLVED — entity=standings/ is api_football, NOT SFI; no GCS action needed
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 resolved: 2026-05-13
 author: slot-4-ikenna
-source:
-  - expected_unattempted_propagation_chain_2026_05_12
-  - manifest_migration_master_2026_05_07
+source: [expected_unattempted_propagation_chain_2026_05_12, manifest_migration_master_2026_05_07]
 severity: P2
-status: RESOLVED — entity=standings/ is api_football, NOT SFI; no GCS action needed
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 ---

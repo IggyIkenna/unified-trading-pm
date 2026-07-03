@@ -1,107 +1,87 @@
 ---
-name: mtds-massive-reorganisation
-overview:
-  Reorganise market-tick-data-service from 34,765L/139 files to 850L/13 files following instruments-service patterns
+doc_type: plan
+title: mtds-massive-reorganisation
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-24'
+overview: Reorganise market-tick-data-service from 34,765L/139 files to 850L/13 files following instruments-service patterns
 type: code
 epic: epic-code-completion
-status: done
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: market-tick-data-service
-    code: C4
-    deployment: none
-    business: none
-  - repo: unified-market-interface
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-api-contracts (internal)
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-trading-pm (codex/ subdir)
-    code: C5
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C5
-    deployment: none
-    business: none
+- {repo: market-tick-data-service, code: C4, deployment: none, business: none}
+- {repo: unified-market-interface, code: C2, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C2, deployment: none, business: none}
+- {repo: unified-api-contracts (internal), code: C2, deployment: none, business: none}
+- {repo: unified-trading-pm (codex/ subdir), code: C5, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C5, deployment: none, business: none}
 depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-03-24
 todos:
-  - id: phase-0-codex-doc
-    content: |
-      - [x] [AGENT] P0. Create service-orchestration-patterns.md in codex with 10 lessons
-    status: done
-  - id: phase-0-pre-audit
-    content: |
-      - [x] [AGENT] P0. Pre-audit: downstream consumers, import violations, UMI gaps, dedup analysis
-    status: done
-  - id: phase-0-pm-plan
-    content: |
-      - [x] [AGENT] P0. Create PM active plan file
-    status: done
-  - id: phase-1-uac
-    content: |
-      - [x] [AGENT] P0. UAC: schemas already existed; fixed __init__.py re-exports for Databento/Tardis/DeFi
-    status: done
-  - id: phase-1-umi
-    content: |
-      - [x] [AGENT] P0. UMI: created 5 new adapters (DatabentoCmeConverter, DatabentoOpraConverter, DatabentMBOAdapter, TardisIncrementalBookAdapter, L2BookState) + 36 tests
-    status: done
-  - id: phase-1-uic
-    content: |
-      - [x] [AGENT] P0. UIC: created 5 new files (tick_schemas.py, output_schemas.py, candle_schemas.py, validation.py, quality.py) in domain/market_tick_data/
-    status: done
-  - id: phase-2-dedup
-    content: |
-      - [x] [AGENT] P0. Dedup: app/core/ won all 10 pairs. Deleted engine/orchestrators/, engine/visualization/, engine/venues/, engine/uploaders/, 4 inferior duplicates
-    status: done
-  - id: phase-3-config
-    content: |
-      - [x] [AGENT] P0. Config: 10 files (4,400L) -> 1 file (75L) extending UnifiedCloudConfig. 6 fields only.
-    status: done
-  - id: phase-4-rewrite
-    content: |
-      - [x] [AGENT] P0. Core rewrite: CLI (52L), handler (126L), orchestrator (177L), adapter (68L) = 502L total
-    status: done
-  - id: phase-5-dead-code
-    content: |
-      - [x] [AGENT] P0. Deleted all dead code: 34,765L -> 850L (97.6% reduction). 139 files -> 13 files.
-    status: done
-  - id: phase-6-docs
-    content: |
-      - [x] [AGENT] P0. README rewritten (14.9KB -> 2.5KB). Deleted specs/, 3 audit files, legacy pytest.ini.
-    status: done
-  - id: phase-7-hygiene
-    content: |
-      - [x] [AGENT] P0. Fixed: deep import in seed_mock_data.py, deleted 4 orphaned root scripts, moved setup.sh to scripts/
-      - [x] [AGENT] P0. Fixed: brittle getattr(self.runtime,...) -> typed ServiceRuntime fields + extra_args
-      - [x] [AGENT] P0. Fixed: deleted node_modules/, htmlcov/, logs/, sample_data/ at root
-      - [x] [AGENT] P0. Slimmed pyproject.toml deps: 50 -> 20 (removed plotly, polars, numba, ccxt, tardis-client, databento, yfinance, etc.)
-      - [x] [AGENT] P0. Updated workspace manifest: 8 deps -> 3 direct deps (UTL, UAC, UIC)
-    status: done
-  - id: phase-7-tests
-    content: |
-      - [x] [AGENT] P0. Unit tests: 41 passing (config, orchestrator, adapter, handler, event_logging)
-      - [x] [AGENT] P0. Integration tests: library contract tests for UTL, UAC, UIC, UConfigI, UMI
-      - [x] [AGENT] P0. basedpyright: 0 errors, 0 warnings (fixed ServiceRuntime/VenueMapping/ManifestWriter APIs)
-      - [x] [AGENT] P0. quality-gates.sh: ALL PASSED (43s)
-    status: done
-    note: "41 tests, 0 basedpyright errors, QG green"
-  - id: phase-8-commit
-    content: |
-      - [x] [AGENT] P0. Commit changes across all 6 repos
-    status: done
+- {id: phase-0-codex-doc, content: '- [x] [AGENT] P0. Create service-orchestration-patterns.md in codex with 10 lessons
+
+    ', status: done}
+- {id: phase-0-pre-audit, content: '- [x] [AGENT] P0. Pre-audit: downstream consumers, import violations, UMI gaps, dedup analysis
+
+    ', status: done}
+- {id: phase-0-pm-plan, content: '- [x] [AGENT] P0. Create PM active plan file
+
+    ', status: done}
+- {id: phase-1-uac, content: '- [x] [AGENT] P0. UAC: schemas already existed; fixed __init__.py re-exports for Databento/Tardis/DeFi
+
+    ', status: done}
+- {id: phase-1-umi, content: '- [x] [AGENT] P0. UMI: created 5 new adapters (DatabentoCmeConverter, DatabentoOpraConverter, DatabentMBOAdapter, TardisIncrementalBookAdapter, L2BookState) + 36 tests
+
+    ', status: done}
+- {id: phase-1-uic, content: '- [x] [AGENT] P0. UIC: created 5 new files (tick_schemas.py, output_schemas.py, candle_schemas.py, validation.py, quality.py) in domain/market_tick_data/
+
+    ', status: done}
+- {id: phase-2-dedup, content: '- [x] [AGENT] P0. Dedup: app/core/ won all 10 pairs. Deleted engine/orchestrators/, engine/visualization/, engine/venues/, engine/uploaders/, 4 inferior duplicates
+
+    ', status: done}
+- {id: phase-3-config, content: '- [x] [AGENT] P0. Config: 10 files (4,400L) -> 1 file (75L) extending UnifiedCloudConfig. 6 fields only.
+
+    ', status: done}
+- {id: phase-4-rewrite, content: '- [x] [AGENT] P0. Core rewrite: CLI (52L), handler (126L), orchestrator (177L), adapter (68L) = 502L total
+
+    ', status: done}
+- {id: phase-5-dead-code, content: '- [x] [AGENT] P0. Deleted all dead code: 34,765L -> 850L (97.6% reduction). 139 files -> 13 files.
+
+    ', status: done}
+- {id: phase-6-docs, content: '- [x] [AGENT] P0. README rewritten (14.9KB -> 2.5KB). Deleted specs/, 3 audit files, legacy pytest.ini.
+
+    ', status: done}
+- {id: phase-7-hygiene, content: '- [x] [AGENT] P0. Fixed: deep import in seed_mock_data.py, deleted 4 orphaned root scripts, moved setup.sh to scripts/
+
+    - [x] [AGENT] P0. Fixed: brittle getattr(self.runtime,...) -> typed ServiceRuntime fields + extra_args
+
+    - [x] [AGENT] P0. Fixed: deleted node_modules/, htmlcov/, logs/, sample_data/ at root
+
+    - [x] [AGENT] P0. Slimmed pyproject.toml deps: 50 -> 20 (removed plotly, polars, numba, ccxt, tardis-client, databento, yfinance, etc.)
+
+    - [x] [AGENT] P0. Updated workspace manifest: 8 deps -> 3 direct deps (UTL, UAC, UIC)
+
+    ', status: done}
+- {id: phase-7-tests, content: '- [x] [AGENT] P0. Unit tests: 41 passing (config, orchestrator, adapter, handler, event_logging)
+
+    - [x] [AGENT] P0. Integration tests: library contract tests for UTL, UAC, UIC, UConfigI, UMI
+
+    - [x] [AGENT] P0. basedpyright: 0 errors, 0 warnings (fixed ServiceRuntime/VenueMapping/ManifestWriter APIs)
+
+    - [x] [AGENT] P0. quality-gates.sh: ALL PASSED (43s)
+
+    ', status: done, note: '41 tests, 0 basedpyright errors, QG green'}
+- {id: phase-8-commit, content: '- [x] [AGENT] P0. Commit changes across all 6 repos
+
+    ', status: done}
 isProject: false
 ---
 

@@ -1,14 +1,23 @@
 ---
-title: "DeFi instrument-availability → catalogue → MTDS per-pool capture (mirror CeFi)"
+doc_type: plan
+title: DeFi instrument-availability → catalogue → MTDS per-pool capture (mirror CeFi)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-23
 parent_epic: mtds_mdps_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: archived
 estimate_class: design
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 7
-locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
+locked_by: NA
 locked_since: 2026-06-23
 ---
 

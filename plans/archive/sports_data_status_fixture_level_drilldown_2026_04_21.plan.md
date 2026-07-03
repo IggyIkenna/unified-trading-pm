@@ -1,25 +1,27 @@
 ---
-title: "Data Status — Fixture-Level Drilldown + Per-Fixture CSV/JSON Download (Sports)"
-priority: P1
-status: active
-owner: agent
+doc_type: plan
+title: Data Status — Fixture-Level Drilldown + Per-Fixture CSV/JSON Download (Sports)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-21
+priority: P1
+owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: deployment-api
-    code: C3
-  - repo: deployment-ui
-    code: C3
-depends_on:
-  - sports_manifest_shard_migration_cleanup_2026_04_21
-  - instruments_service_orchestrator_reliability_fixes_2026_04_21
+- {repo: deployment-api, code: C3}
+- {repo: deployment-ui, code: C3}
+depends_on: [sports_manifest_shard_migration_cleanup_2026_04_21, instruments_service_orchestrator_reliability_fixes_2026_04_21]
 isProject: false
 ---
 

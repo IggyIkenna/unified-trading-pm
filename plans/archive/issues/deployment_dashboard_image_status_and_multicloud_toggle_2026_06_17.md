@@ -1,12 +1,19 @@
 ---
-title: "Deployed dashboard Image column blank + GCP/AWS toggle is a no-op in prod — IAM gap now, multi-cloud build-status architecture to decide"
+doc_type: issue
+title: Deployed dashboard Image column blank + GCP/AWS toggle is a no-op in prod — IAM gap now, multi-cloud build-status architecture to decide
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-ui, market-tick-data-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-17
-status: active
 priority: P2
 locked_by: live-defi-rollout
-source:
-  - 2026-06-17 operator report — deployed deployment-ui Repos-CI "Image" column shows "unknown" for all 25 repos while localhost populates it
-  - 2026-06-17 diagnosis (harsh-slot-3) — Cloud Run SA IAM gap + CloudProviderContext base-URL analysis + UTL secret-provider decoupling
+source: [2026-06-17 operator report — deployed deployment-ui Repos-CI "Image" column shows "unknown" for all 25 repos while localhost populates it, 2026-06-17 diagnosis (harsh-slot-3) — Cloud Run SA IAM gap + CloudProviderContext base-URL analysis + UTL secret-provider decoupling]
 parent_epic: deployment_and_user_management_master
 ---
 

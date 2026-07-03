@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: '07: Quality Gates Performance'
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-25'
+---
+
 # 07: Quality Gates Performance
 
 > **🛑 SUPERSEDED 2026-06-02 →

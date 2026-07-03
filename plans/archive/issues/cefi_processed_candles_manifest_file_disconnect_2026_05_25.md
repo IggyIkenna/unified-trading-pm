@@ -1,15 +1,18 @@
 ---
-title:
-  "CeFi processed_candles: manifest ↔ file disconnect (manifest claims captured for venues with no files; corpus
-  written without/with-stale manifest emission)"
+doc_type: issue
+title: 'CeFi processed_candles: manifest ↔ file disconnect (manifest claims captured for venues with no files; corpus written without/with-stale manifest emission)'
+summary:
+status: ABSORBED into cefi_manifest_canonicalisation_2026_06_01.md (slot-3, 2026-06-03) — archives when the master's CF-11 "MTDS processed_candles phantom-captured reconcile" todo is GREEN
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-25
-source:
-  - plans/active/features_input_manifest_migration_2026_05_25.md
-  - features-service@2965bbda (manifest-driven read migration that surfaced this)
+source: [plans/active/features_input_manifest_migration_2026_05_25.md, features-service@2965bbda (manifest-driven read migration that surfaced this)]
 locked_by: live-defi-rollout
-status:
-  ABSORBED into cefi_manifest_canonicalisation_2026_06_01.md (slot-3, 2026-06-03) — archives when the master's CF-11
-  "MTDS processed_candles phantom-captured reconcile" todo is GREEN
 priority: P2
 ---
 

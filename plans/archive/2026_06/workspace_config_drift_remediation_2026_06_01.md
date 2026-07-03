@@ -1,12 +1,18 @@
 ---
-title:
-  "Workspace .code-workspace repo-list drift remediation (canonical commit + generator path-style fix + regression
-  guard)"
-name: workspace_config_drift_remediation
+doc_type: plan
+title: Workspace .code-workspace repo-list drift remediation (canonical commit + generator path-style fix + regression guard)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, execution-service, features-service, fund-administration-service, greeks-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 parent_epic: epics/infrastructure_master.md
 assigned_vm: vm-cross-cutting
-status: active
 priority: P2
 model_tier: sonnet-doable
 thinking_tier: medium

@@ -1,11 +1,18 @@
 ---
-title: "Workspace `leveraged_funding_arb` rename sweep — Stream B gate close blocker"
-created: 2026-05-09
+doc_type: issue
+title: Workspace `leveraged_funding_arb` rename sweep — Stream B gate close blocker
+summary:
 status: mostly-resolved-2026-05-10
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-09
 author: agent-arb-fundrate-cde
-source:
-  - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md (Stream B Gate L191-193)
-  - plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md (Phase D)
+source: [plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md (Stream B Gate L191-193), plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md (Phase D)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 ---

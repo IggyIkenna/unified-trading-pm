@@ -1,14 +1,22 @@
 ---
-name: features_backfill_phase3
-title: "Features-service compute relaunch — Phase 3 per-asset-group"
+doc_type: plan
+title: Features-service compute relaunch — Phase 3 per-asset-group
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-22
 parent_epic: features_and_ml_master
 assigned_vm: vm-ml
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-status: active
 priority: P0
-created: 2026-05-22
 last_updated: 2026-05-22
 gate: mdps_backfill_phase3 per-ag verification GREEN (features reads from MDPS bars)
 locked_by: live-defi-rollout

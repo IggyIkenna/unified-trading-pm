@@ -1,79 +1,41 @@
 ---
-name: conflict-resolution-agent
-overview: >
-  Autonomous conflict resolution agent for the unified-trading-system CI pipeline. Triggered by merge-conflict-detected
-  repository_dispatch (from staging-to-main.yml or feature-branch-to-staging.yml template). Sets up workspace via
-  setup-workspace-from-manifest.sh, reads AGENTS.md + active PM plans + codex docs for context, uses Claude to propose a
-  conflict resolution (preserving both sides), runs quality gates on the resolved code, pushes an auto-resolve branch,
-  opens a resolution PR, and notifies via Telegram at start ("working") and end ("PR ready"). Humans review and approve;
-  agent never self-merges.
+doc_type: plan
+title: conflict-resolution-agent
+summary:
+status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-13'
+overview: 'Autonomous conflict resolution agent for the unified-trading-system CI pipeline. Triggered by merge-conflict-detected repository_dispatch (from staging-to-main.yml or feature-branch-to-staging.yml template). Sets up workspace via setup-workspace-from-manifest.sh, reads AGENTS.md + active PM plans + codex docs for context, uses Claude to propose a conflict resolution (preserving both sides), runs quality gates on the resolved code, pushes an auto-resolve branch, opens a resolution PR, and notifies via Telegram at start ("working") and end ("PR ready"). Humans review and approve; agent never self-merges.
+
+  '
 type: infra
 epic: epic-infra
-status: superseded
 superseded_by: cicd_code_rollout_master_2026_03_13
 superseded_date: 2026-03-13
-
-completion_gates:
-  code: C4
-  deployment: none
-  business: none
-
+completion_gates: {code: C4, deployment: none, business: none}
 repo_gates:
-  - repo: unified-trading-pm
-    code: C4
-    deployment: none
-    business: none
-    readiness_note: "DR N/A: GHA workflow — no cloud deployment. BR N/A: internal tooling."
-
-depends_on:
-  - full_autonomous_agent_ci
-
+- {repo: unified-trading-pm, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: GHA workflow — no cloud deployment. BR N/A: internal tooling.'}
+depends_on: [full_autonomous_agent_ci]
 todos:
-  - id: create-conflict-resolution-agent-workflow
-    content: >
-      Create unified-trading-pm/.github/workflows/conflict-resolution-agent.yml. Trigger: repository_dispatch
-      type=merge-conflict-detected + workflow_dispatch (inputs: repo_name, source_branch, target_branch,
-      original_pr_url). Steps: (1) Telegram "working" immediately; (2) clone repo (depth=50) + PM + codex siblings, run
-      scripts/setup-workspace-from-manifest.sh <repo_name> for manifest-driven dep checkout; (3) read AGENTS.md +
-      SUB_AGENT_MANDATORY_RULES.md + all active PM plans for context; (4) surface conflicts via git checkout target, git
-      merge --no-commit --no-ff origin/source || true, git diff --name-only --diff-filter=U, capture full conflict
-      content per file, git merge --abort; (5) claude --print --dangerously-skip-permissions with AGENTS.md + rules +
-      plans preamble + conflict dump (preserve both sides, output === filename === blocks); (6) parse claude output (awk
-      split on === filename === markers) + write resolved files to auto-resolve/<source>-to-<target>-<sha> branch + git
-      push; (7) bash scripts/quality-gates.sh, capture exit code (non-zero = advisory, PR still created); (8) gh pr
-      create resolution branch → target with body noting QG result + original PR URL; (9) Telegram "done" with
-      resolution PR URL + files resolved + QG result.
-    status: pending
+- {id: create-conflict-resolution-agent-workflow, content: 'Create unified-trading-pm/.github/workflows/conflict-resolution-agent.yml. Trigger: repository_dispatch type=merge-conflict-detected + workflow_dispatch (inputs: repo_name, source_branch, target_branch, original_pr_url). Steps: (1) Telegram "working" immediately; (2) clone repo (depth=50) + PM + codex siblings, run scripts/setup-workspace-from-manifest.sh <repo_name> for manifest-driven dep checkout; (3) read AGENTS.md + SUB_AGENT_MANDATORY_RULES.md + all active PM plans for context; (4) surface conflicts via git checkout target, git merge --no-commit --no-ff origin/source || true, git diff --name-only --diff-filter=U, capture full conflict content per file, git merge --abort; (5) claude --print --dangerously-skip-permissions with AGENTS.md + rules + plans preamble + conflict dump (preserve both sides, output === filename === blocks); (6) parse claude output (awk split on === filename === markers) + write resolved files to auto-resolve/<source>-to-<target>-<sha>
+    branch + git push; (7) bash scripts/quality-gates.sh, capture exit code (non-zero = advisory, PR still created); (8) gh pr create resolution branch → target with body noting QG result + original PR URL; (9) Telegram "done" with resolution PR URL + files resolved + QG result.
 
-  - id: wire-staging-to-main-conflict-dispatch
-    content: >
-      Modify unified-trading-pm/.github/workflows/staging-to-main.yml. In the per-repo loop, inside the else branch (PR
-      creation failed, ~line 202): add conflict detection via GitHub REST API — list open PRs for staging→main, get
-      mergeable_state (poll 3× with 5s sleep for GitHub's async computation), check if mergeable_state == "dirty"
-      (GitHub REST uses "dirty" for merge conflicts). If dirty: (1) send Telegram "⚠️ Merge Conflict: $REPO
-      staging→main, agent dispatched"; (2) dispatch repository_dispatch merge-conflict-detected to unified-trading-pm
-      with {repo_name, source_branch: staging, target_branch: main, original_pr_url}. Add TELEGRAM_BOT_TOKEN and
-      TELEGRAM_CHAT_ID to the step env block. Existing FAILED list accumulation stays unchanged.
-    status: pending
+    ', status: pending}
+- {id: wire-staging-to-main-conflict-dispatch, content: 'Modify unified-trading-pm/.github/workflows/staging-to-main.yml. In the per-repo loop, inside the else branch (PR creation failed, ~line 202): add conflict detection via GitHub REST API — list open PRs for staging→main, get mergeable_state (poll 3× with 5s sleep for GitHub''s async computation), check if mergeable_state == "dirty" (GitHub REST uses "dirty" for merge conflicts). If dirty: (1) send Telegram "⚠️ Merge Conflict: $REPO staging→main, agent dispatched"; (2) dispatch repository_dispatch merge-conflict-detected to unified-trading-pm with {repo_name, source_branch: staging, target_branch: main, original_pr_url}. Add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to the step env block. Existing FAILED list accumulation stays unchanged.
 
-  - id: wire-feature-to-staging-conflict-dispatch
-    content: >
-      Modify unified-trading-pm/scripts/propagation/templates/feature-branch-to-staging.yml. Add step "Detect merge
-      conflict and dispatch resolution agent" after the Telegram notify step (end of file). Step runs if: always() so it
-      fires even when auto-merge was skipped. Logic: poll gh pr view $PR_NUMBER --json mergeable -q .mergeable (3× with
-      5s sleep) until not null. If MERGEABLE == CONFLICTING: (1) Telegram "⚠️ Conflict on {{SERVICE_NAME}}
-      $FEATURE_BRANCH→staging, agent dispatched"; (2) dispatch merge-conflict-detected to unified-trading-pm with
-      {repo_name: {{SERVICE_NAME}}, source_branch: FEATURE_BRANCH, target_branch: staging, original_pr_url: PR_URL}.
-      Requires: GH_PAT (already available), TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID (already in template env from Telegram
-      notify step).
-    status: pending
+    ', status: pending}
+- {id: wire-feature-to-staging-conflict-dispatch, content: 'Modify unified-trading-pm/scripts/propagation/templates/feature-branch-to-staging.yml. Add step "Detect merge conflict and dispatch resolution agent" after the Telegram notify step (end of file). Step runs if: always() so it fires even when auto-merge was skipped. Logic: poll gh pr view $PR_NUMBER --json mergeable -q .mergeable (3× with 5s sleep) until not null. If MERGEABLE == CONFLICTING: (1) Telegram "⚠️ Conflict on {{SERVICE_NAME}} $FEATURE_BRANCH→staging, agent dispatched"; (2) dispatch merge-conflict-detected to unified-trading-pm with {repo_name: {{SERVICE_NAME}}, source_branch: FEATURE_BRANCH, target_branch: staging, original_pr_url: PR_URL}. Requires: GH_PAT (already available), TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID (already in template env from Telegram notify step).
 
-  - id: register-plan-in-ssot-index
-    content: >
-      Add plan row to unified-trading-codex/00-SSOT-INDEX.md (after the full_autonomous_agent_ci row, ~line 55) and add
-      row 68 to unified-trading-pm/plans/active/INDEX.md (after row 67, before the Supporting Plans section).
-    status: pending
+    ', status: pending}
+- {id: register-plan-in-ssot-index, content: 'Add plan row to unified-trading-codex/00-SSOT-INDEX.md (after the full_autonomous_agent_ci row, ~line 55) and add row 68 to unified-trading-pm/plans/active/INDEX.md (after row 67, before the Supporting Plans section).
 
+    ', status: pending}
 isProject: false
 ---
 

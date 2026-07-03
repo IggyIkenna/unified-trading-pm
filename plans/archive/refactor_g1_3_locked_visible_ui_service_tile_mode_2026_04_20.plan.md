@@ -1,17 +1,21 @@
 ---
+doc_type: plan
 title: Refactor G1.3 — LOCKED-VISIBLE UI service-tile mode
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.3
-  - codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md
-  - codex/14-customer-journeys/playbook-concepts/visibility-slicing.md
-  - codex/14-playbooks/demo-ops/demo-restriction-profiles.md
-# Sibling Wave A plans: refactor_g1_{1,5,9,12,14}
-# Downstream consumer (Wave D): refactor_g1_7_restriction_profile_engine (drives this tile's lockState)
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.3, codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/playbook-concepts/visibility-slicing.md, codex/14-playbooks/demo-ops/demo-restriction-profiles.md]
 ---
 
 ## Deferred work — migrated to:

@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Full Audit Plan
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+---
+
 # Full Audit Plan
 
 **Order:** 7 (see MASTER_PRE_DEPLOYMENT_PLAN_CHAIN.md) **SSOT:** trading-system-audit-prompt.md

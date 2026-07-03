@@ -1,112 +1,54 @@
 ---
-name: ui-cloud-mode-indicator
-overview: |
-  Add a dynamic cloud provider + mock/live indicator to every UI's top-right
-  header. Each UI fetches cloud_provider and mock_mode from its backing API's
+doc_type: plan
+title: ui-cloud-mode-indicator
+summary:
+status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-12'
+overview: 'Add a dynamic cloud provider + mock/live indicator to every UI''s top-right
+
+  header. Each UI fetches cloud_provider and mock_mode from its backing API''s
+
   /api/health endpoint and renders a badge. deployment-ui already has a
+
   hard-coded "GCP" badge — this plan makes it dynamic and extends the pattern
+
   to all 12 UI repos. Improves operator situational awareness: seeing "GCP •
+
   MOCK" vs "AWS • LIVE" instantly surfaces environment misconfiguration.
+
+  '
 type: feature
 epic: epic-observability
-status: superseded
 superseded_by: cicd_code_rollout_master_2026_03_13
 superseded_date: 2026-03-13
-
-completion_gates:
-  code: C0
-  deployment: none
-  business: none
-
+completion_gates: {code: C0, deployment: none, business: none}
 repo_gates:
-  - repo: deployment-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: Add cloud_provider + mock_mode to /api/health response
-  - repo: deployment-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: Make cloud badge dynamic; add MOCK/LIVE pill
-  - repo: market-data-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: Add cloud_provider + mock_mode to /health response
-  - repo: trading-analytics-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: Add cloud_provider + mock_mode to /health response
-
+- {repo: deployment-api, code: C0, deployment: none, business: none, readiness_note: Add cloud_provider + mock_mode to /api/health response}
+- {repo: deployment-ui, code: C0, deployment: none, business: none, readiness_note: Make cloud badge dynamic; add MOCK/LIVE pill}
+- {repo: market-data-api, code: C0, deployment: none, business: none, readiness_note: Add cloud_provider + mock_mode to /health response}
+- {repo: trading-analytics-api, code: C0, deployment: none, business: none, readiness_note: Add cloud_provider + mock_mode to /health response}
 depends_on: []
-  # NOTE (2026-03-13 audit): This plan modifies deployment-ui Header.tsx.
-  # cicd_audit_remediation_2026_03_13 modifies deployment-ui BuildSelector.tsx in the same repo.
-  # COORDINATION: If both plans execute concurrently on deployment-ui, merge conflicts are likely.
-  # Agent sequencing: complete cicd_audit_remediation deployment-ui changes FIRST (BuildSelector),
-  # then this plan's deployment-ui changes (Header). Or: one agent does both in a single commit.
-
 todos:
-  # ── PHASE 1: API changes (add cloud_provider + mock_mode to health) ─────────
-  - id: api-health-cloud-fields
-    content: |
-      In each service API, add cloud_provider (str) and mock_mode (bool) to the
-      /api/health (or /health) response. Read from UnifiedCloudConfig:
-        from unified_config_interface import UnifiedCloudConfig
-        cfg = UnifiedCloudConfig()
-        cloud_provider = cfg.cloud_provider   # "gcp" | "aws" | "local"
-        mock_mode = cfg.mock_mode             # True | False
-      APIs affected: deployment-api, market-data-api, trading-analytics-api,
-      client-reporting-api, batch-audit-api, ml-training-api, ml-inference-api,
-      and any other API backing a UI repo.
-    status: pending
+- {id: api-health-cloud-fields, content: "In each service API, add cloud_provider (str) and mock_mode (bool) to the\n/api/health (or /health) response. Read from UnifiedCloudConfig:\n  from unified_config_interface import UnifiedCloudConfig\n  cfg = UnifiedCloudConfig()\n  cloud_provider = cfg.cloud_provider   # \"gcp\" | \"aws\" | \"local\"\n  mock_mode = cfg.mock_mode             # True | False\nAPIs affected: deployment-api, market-data-api, trading-analytics-api,\nclient-reporting-api, batch-audit-api, ml-training-api, ml-inference-api,\nand any other API backing a UI repo.\n", status: pending}
+- {id: ui-type-update, content: "In each UI repo, extend the HealthResponse (or equivalent) TypeScript\ninterface to include:\n  cloud_provider?: \"gcp\" | \"aws\" | \"local\";\n  mock_mode?: boolean;\nFile: typically src/types/index.ts or src/api/health.ts\n", status: pending}
+- {id: deployment-ui-badge-pilot, content: "In deployment-ui/src/components/Header.tsx, replace the hard-coded\ncloud provider badge with a dynamic one using health.cloud_provider.\nAdd a MOCK/LIVE pill next to it:\n  - \"MOCK\" badge: yellow/amber, when health.mock_mode === true\n  - \"LIVE\" badge: green, when health.mock_mode === false\n  - Fallback: show \"?\" if cloud_provider undefined (API not yet updated)\nBadge format: \" [MOCK]\" or \"[AWS] [LIVE]\" in top-right header.\nCloud provider text: uppercase(\"gcp\" -> \"GCP\", \"aws\" -> \"AWS\",\n\"local\" -> \"LOCAL\"). Use existing Tailwind + Radix Tooltip for hover\ndetail (\"Cloud: Google Cloud Platform • Mode: Mock/Sandbox\").\n", status: pending}
+- {id: ui-badge-rollout, content: "Apply the same CloudModeBadge component pattern to all 12 UI repos:\n  batch-audit-ui, client-reporting-ui, deployment-ui, execution-analytics-ui,\n  live-health-monitor-ui, logs-dashboard-ui, ml-training-ui, onboarding-ui,\n  settlement-ui, strategy-ui, trading-analytics-ui, unified-admin-ui.\nEach UI may have a different header structure — adapt accordingly.\nExtract CloudModeBadge to a shared pattern or copy the component per repo\n(no cross-repo component import allowed — each repo is independent).\n", status: pending}
+- {id: e2e-badge-smoke, content: 'In deployment-ui Playwright smoke tests, assert the cloud badge text
 
-  # ── PHASE 2: UI HealthResponse type update ──────────────────────────────────
-  - id: ui-type-update
-    content: |
-      In each UI repo, extend the HealthResponse (or equivalent) TypeScript
-      interface to include:
-        cloud_provider?: "gcp" | "aws" | "local";
-        mock_mode?: boolean;
-      File: typically src/types/index.ts or src/api/health.ts
-    status: pending
+    matches the expected value from the mock health response.
 
-  # ── PHASE 3: deployment-ui header badge (pilot) ─────────────────────────────
-  - id: deployment-ui-badge-pilot
-    content: |
-      In deployment-ui/src/components/Header.tsx, replace the hard-coded
-      cloud provider badge with a dynamic one using health.cloud_provider.
-      Add a MOCK/LIVE pill next to it:
-        - "MOCK" badge: yellow/amber, when health.mock_mode === true
-        - "LIVE" badge: green, when health.mock_mode === false
-        - Fallback: show "?" if cloud_provider undefined (API not yet updated)
-      Badge format: " [MOCK]" or "[AWS] [LIVE]" in top-right header.
-      Cloud provider text: uppercase("gcp" -> "GCP", "aws" -> "AWS",
-      "local" -> "LOCAL"). Use existing Tailwind + Radix Tooltip for hover
-      detail ("Cloud: Google Cloud Platform • Mode: Mock/Sandbox").
-    status: pending
+    Example: mock /api/health to return {cloud_provider: "gcp", mock_mode: true}
 
-  # ── PHASE 4: Roll out badge to all other UI repos ──────────────────────────
-  - id: ui-badge-rollout
-    content: |
-      Apply the same CloudModeBadge component pattern to all 12 UI repos:
-        batch-audit-ui, client-reporting-ui, deployment-ui, execution-analytics-ui,
-        live-health-monitor-ui, logs-dashboard-ui, ml-training-ui, onboarding-ui,
-        settlement-ui, strategy-ui, trading-analytics-ui, unified-admin-ui.
-      Each UI may have a different header structure — adapt accordingly.
-      Extract CloudModeBadge to a shared pattern or copy the component per repo
-      (no cross-repo component import allowed — each repo is independent).
-    status: pending
+    and assert badge text includes "GCP" and "MOCK".
 
-  # ── PHASE 5: E2E smoke test ─────────────────────────────────────────────────
-  - id: e2e-badge-smoke
-    content: |
-      In deployment-ui Playwright smoke tests, assert the cloud badge text
-      matches the expected value from the mock health response.
-      Example: mock /api/health to return {cloud_provider: "gcp", mock_mode: true}
-      and assert badge text includes "GCP" and "MOCK".
-    status: pending
+    ', status: pending}
 ---
 
 ## Architecture

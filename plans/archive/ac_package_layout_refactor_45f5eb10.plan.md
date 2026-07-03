@@ -1,26 +1,22 @@
 ---
-name: AC refactor and SSOT consolidation
-overview:
-  "(1) Add codex as SSOT for AC vs UIC scope, dependency rule, and layout (with cursor rules routing to codex). (2)
-  Refactor unified-api-contracts so top-level packages live under shared, unified_api_contracts_external, or move to
-  UIC. Success: abidance by new rules/structure, AC quality gates pass, unit tests (schema validation, normalisation,
-  mapping) finish in under 2 minutes. Integration tests are NOT run in AC — interfaces invoke them (they have
-  connectivity and API keys)."
+doc_type: plan
+title: AC refactor and SSOT consolidation
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-03'
+overview: '(1) Add codex as SSOT for AC vs UIC scope, dependency rule, and layout (with cursor rules routing to codex). (2) Refactor unified-api-contracts so top-level packages live under shared, unified_api_contracts_external, or move to UIC. Success: abidance by new rules/structure, AC quality gates pass, unit tests (schema validation, normalisation, mapping) finish in under 2 minutes. Integration tests are NOT run in AC — interfaces invoke them (they have connectivity and API keys).'
 todos:
-  - id: phase0
-    content:
-      SSOT and cursor rules (codex doc, SSOT-INDEX, contracts-integration, vcr-cassette-ownership, AC ARCHITECTURE,
-      cursor rules)
-    status: completed
-  - id: phase1-8
-    content: Package layout refactor agents 1-8 (parallel)
-    status: in_progress
-  - id: phase9
-    content: Root and cross-refs, AC quality gates, test timeout
-    status: pending
-  - id: phase10
-    content: Workspace consumers import updates
-    status: pending
+- {id: phase0, content: 'SSOT and cursor rules (codex doc, SSOT-INDEX, contracts-integration, vcr-cassette-ownership, AC ARCHITECTURE, cursor rules)', status: completed}
+- {id: phase1-8, content: Package layout refactor agents 1-8 (parallel), status: in_progress}
+- {id: phase9, content: 'Root and cross-refs, AC quality gates, test timeout', status: pending}
+- {id: phase10, content: Workspace consumers import updates, status: pending}
 isProject: false
 ---
 

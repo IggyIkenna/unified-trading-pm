@@ -1,21 +1,32 @@
 ---
-name: e2e_test_plan_regen_pipeline
-title: "[TEST] E2E test plan — plan_hygiene Phase 6 pipeline verification"
+doc_type: plan
+title: '[TEST] E2E test plan — plan_hygiene Phase 6 pipeline verification'
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-29
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P3
-status: active
-created: 2026-05-29
 last_updated: 2026-05-29
 estimate_class: test
 estimate_baseline_ai_days: 0
 estimate_calibrated_ai_days: 0
 locked_by: live-defi-rollout
 locked_since: 2026-05-29
-estimate_calibration_note: |
-  Test-only plan. Priority P3 (priority 80) ensures tasks are never dispatched
+estimate_calibration_note: 'Test-only plan. Priority P3 (priority 80) ensures tasks are never dispatched
+
   to real workers during active sprint. Plan exists purely to verify the
+
   PM-pull → PlanRegenLoop → /api/backlog ingestion pipeline.
+
+  '
 ---
 
 # [TEST] E2E plan-regen pipeline verification

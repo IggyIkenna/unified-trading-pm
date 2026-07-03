@@ -1,19 +1,22 @@
 ---
-title:
-  "FIXTURES postponed/cancelled status lifecycle — api_football misflags + reference-source-itself-missing-data +
-  new-time fixture identity question"
+doc_type: issue
+title: FIXTURES postponed/cancelled status lifecycle — api_football misflags + reference-source-itself-missing-data + new-time fixture identity question
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
 source:
-  - instruments-service/instruments_service/engine/orchestrator.py (FIXTURES write path)
-  - unified-api-contracts/unified_api_contracts/external/api_football/normalize.py
-  - unified-api-contracts/unified_api_contracts/external/api_football/schemas.py:143-159
-  - operator-confirmed empirical observation (Harsh, 2026-05-08):
-      "I have seen in few matches where api football said cancelled and footystats gave me match data and then
-      cross-checked it. the match was postponed and not cancelled. api football misflaggeed it as cancelled instead of
-      postponed. and sometimes they dont have the data for a match that was played on original time (no cancel or
-      postponed) but they failed to capture, and thats the really tricky one. as api-football is the reference, and
-      reference is missing data"
+- instruments-service/instruments_service/engine/orchestrator.py (FIXTURES write path)
+- unified-api-contracts/unified_api_contracts/external/api_football/normalize.py
+- unified-api-contracts/unified_api_contracts/external/api_football/schemas.py:143-159
+- {'operator-confirmed empirical observation (Harsh, 2026-05-08)': 'I have seen in few matches where api football said cancelled and footystats gave me match data and then cross-checked it. the match was postponed and not cancelled. api football misflaggeed it as cancelled instead of postponed. and sometimes they dont have the data for a match that was played on original time (no cancel or postponed) but they failed to capture, and thats the really tricky one. as api-football is the reference, and reference is missing data'}
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

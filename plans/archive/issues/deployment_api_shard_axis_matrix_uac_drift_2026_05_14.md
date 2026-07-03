@@ -1,17 +1,24 @@
 ---
-title: "deployment-api: 13 test failures — SHARD_AXIS_MATRIX UAC alignment drift"
+doc_type: issue
+title: 'deployment-api: 13 test failures — SHARD_AXIS_MATRIX UAC alignment drift'
+summary:
+status: RESOLVED
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
 author: harsh-slot-5
 resolved: 2026-05-14
-resolution:
-  SHIPPED — slot-8 Ikenna fixed 13 SHARD_AXIS_MATRIX test failures per body § "RESOLVED 2026-05-14 (Ikenna Slot 8)".
-source:
-  - deployment-api Phase 0 C901 lint sweep (slot 5, 2026-05-14)
+resolution: SHIPPED — slot-8 Ikenna fixed 13 SHARD_AXIS_MATRIX test failures per body § "RESOLVED 2026-05-14 (Ikenna Slot 8)".
+source: ['deployment-api Phase 0 C901 lint sweep (slot 5, 2026-05-14)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
 severity: P1
 suggested_owner: UAC + deployment-api (cross-repo; needs UAC changes first)
-status: RESOLVED
 resolved_by: ikenna-slot-8 (2026-05-14)
 ---
 

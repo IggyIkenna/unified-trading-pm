@@ -1,20 +1,18 @@
 ---
-title: "Codex audit — Strategy area (Phase 1.B)"
+doc_type: issue
+title: Codex audit — Strategy area (Phase 1.B)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-codex-audit-strategy-tab (slot 8 sub-agent)
-source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.B
-  - codex/09-strategy/strategy-summary.md + README.md
-  - codex/09-strategy/architecture-v2/README.md + strategy-registry-v2.md + naming-convention.md + MIGRATION.md
-  - codex/09-strategy/architecture-v2/cross-cutting/{mev-protection,benchmark-fills,archetype-paper-readiness,dart-manual-trade-spec,pnl-attribution}.md
-  - codex/09-strategy/operational/{onboarding-checklist,prediction-markets-codification-gaps}.md
-  - codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md
-  - codex/16-strategy-playbooks/README.md (+ playbook docs)
-  - codex/07-security/mev-protection.md + codex/04-architecture/mev-protection.md (3-way overlap)
-  - codex/00-SSOT-INDEX.md
-  - unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py (StrategyFamily / StrategyArchetype /
-    InstructionActionV2)
-  - strategy-service/strategy_service/{engine,adapters,signal_broadcast,portfolio_allocator,cli}/
+source: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.B, codex/09-strategy/strategy-summary.md + README.md, codex/09-strategy/architecture-v2/README.md + strategy-registry-v2.md + naming-convention.md + MIGRATION.md, 'codex/09-strategy/architecture-v2/cross-cutting/{mev-protection,benchmark-fills,archetype-paper-readiness,dart-manual-trade-spec,pnl-attribution}.md', 'codex/09-strategy/operational/{onboarding-checklist,prediction-markets-codification-gaps}.md', codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md, codex/16-strategy-playbooks/README.md (+ playbook docs), codex/07-security/mev-protection.md + codex/04-architecture/mev-protection.md (3-way overlap), codex/00-SSOT-INDEX.md, unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py (StrategyFamily / StrategyArchetype / InstructionActionV2), 'strategy-service/strategy_service/{engine,adapters,signal_broadcast,portfolio_allocator,cli}/']
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

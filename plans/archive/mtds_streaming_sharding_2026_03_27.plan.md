@@ -1,14 +1,21 @@
 ---
-status: done
-title: "MTDS Streaming Sharding — venue×data_type batch downloads with memory management"
+doc_type: plan
+title: MTDS Streaming Sharding — venue×data_type batch downloads with memory management
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-27'
 owner: agent
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-03-27
-readiness:
-  code: C2
-  deployment: D0
-  business: B0
+readiness: {code: C2, deployment: D0, business: B0}
 ---
 
 # MTDS Streaming Sharding

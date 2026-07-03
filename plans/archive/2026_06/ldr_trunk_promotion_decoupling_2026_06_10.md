@@ -1,19 +1,25 @@
 ---
+doc_type: plan
 title: LDR-trunk promotion decoupling — quickmerge lands on LDR, tier-drain promotes, hotfix is the only break-glass
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/cicd_contract_hardening_2026_06_01.md]
+created: 2026-06-10
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: archived
 execution_scope: local-only
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
-created: 2026-06-10
 locked_by: live-defi-rollout
-related_plans:
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-source:
-  - plans/active/cicd_contract_hardening_2026_06_01.md
+source: [plans/active/cicd_contract_hardening_2026_06_01.md]
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans

@@ -1,13 +1,18 @@
 ---
-title: "base-library.sh does not write .qg_last_passed_sha → quickmerge --agent Stage-3 fails on every library"
+doc_type: issue
+title: base-library.sh does not write .qg_last_passed_sha → quickmerge --agent Stage-3 fails on every library
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-08
-source:
-  - plans/active/utl_full_quality_gates_green_2026_06_01.md
-  - scripts/quality-gates-base/base-library.sh
-  - scripts/quality-gates-base/base-service.sh
-  - scripts/quickmerge.sh
+source: [plans/active/utl_full_quality_gates_green_2026_06_01.md, scripts/quality-gates-base/base-library.sh, scripts/quality-gates-base/base-service.sh, scripts/quickmerge.sh]
 priority: P2
-status: active
 ---
 
 > **✅ RESOLVED 2026-06-10 — ARCHIVE CANDIDATE.** base-library.sh:1130 writes `.qg_last_passed_sha` on green (parity

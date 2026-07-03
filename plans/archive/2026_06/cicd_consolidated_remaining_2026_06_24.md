@@ -1,21 +1,12 @@
 ---
 doc_type: plan
 title: CI/CD — consolidated REMAINING work (single SSOT; supersedes the 7 prior cicd/dep-promotion/starvation plans)
-summary:
-  "Single SSOT consolidating all remaining CI/CD work: version-out-of-source (D13), promotion pipeline, quality gates,
-  release machinery, and staging-branch retirement."
+summary: 'Single SSOT consolidating all remaining CI/CD work: version-out-of-source (D13), promotion pipeline, quality gates, release machinery, and staging-branch retirement.'
 status: superseded
 nature: process
+asset_group: cross-asset
 stage: [meta]
-repos:
-  [
-    agent-orchestrator,
-    alerting-service,
-    batch-live-reconciliation-service,
-    client-reporting-api,
-    deployment-api,
-    deployment-service,
-  ]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]
 tags: [cicd, consolidation, version-out-of-source, promotion-pipeline, quality-gates, sit, ldr_main]
 related: []
@@ -30,33 +21,12 @@ estimate_calibrated_ai_days: 20.8
 last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
-supersedes:
-  [
-    cicd_promotion_pipeline_2026_06_18 (open items migrated here; done items + decision log preserved in source),
-    cicd_quality_gates_2026_06_18 (idem),
-    cicd_release_machinery_2026_06_18 (idem),
-    cicd_sit_and_fleet_2026_06_18 (idem),
-    cicd_docs_and_consolidation_2026_06_18 (fully DONE — pure supersede),
-    dependency_promotion_range_pins_and_major_bump_sit_2026_06_09 (remaining 7 items migrated here),
-    issues/staging_to_main_promotion_starvation_2026_06_19 (remaining items migrated here),
-    "issues/staging_main_version_line_divergence_2026_06_22 (the version-line conflict class — resolved at the ROOT by
-    D13 version-out-of-source / WS-L, 2026-06-25)",
-    issues/staging_main_version_line_dual_lineage_2026_06_22 (idem — D13 / WS-L),
-    issues/version_line_autoresolve_pr_orphan_cleanup_2026_06_24 (the version-line autoresolve band-aid is obsoleted by
-    D13 / WS-L),
-  ]
+supersedes: [cicd_promotion_pipeline_2026_06_18 (open items migrated here; done items + decision log preserved in source), cicd_quality_gates_2026_06_18 (idem), cicd_release_machinery_2026_06_18 (idem), cicd_sit_and_fleet_2026_06_18 (idem), cicd_docs_and_consolidation_2026_06_18 (fully DONE — pure supersede), dependency_promotion_range_pins_and_major_bump_sit_2026_06_09 (remaining 7 items migrated here), issues/staging_to_main_promotion_starvation_2026_06_19 (remaining items migrated here), 'issues/staging_main_version_line_divergence_2026_06_22 (the version-line conflict class — resolved at the ROOT by D13 version-out-of-source / WS-L, 2026-06-25)', issues/staging_main_version_line_dual_lineage_2026_06_22 (idem — D13 / WS-L), issues/version_line_autoresolve_pr_orphan_cleanup_2026_06_24 (the version-line autoresolve band-aid is obsoleted by D13 / WS-L)]
 superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on:
-source:
-  [
-    "the 7 plans above (second-level consolidation; the first-level 2026-06-18 fold collapsed ~13 plans + 11 issues into
-    5 themed plans, most of which are now done)",
-    parallel rationale-extraction sweep 2026-06-24 (slot-2) — open items + decision context harvested verbatim from each
-    source,
-  ]
+source: ['the 7 plans above (second-level consolidation; the first-level 2026-06-18 fold collapsed ~13 plans + 11 issues into 5 themed plans, most of which are now done)', parallel rationale-extraction sweep 2026-06-24 (slot-2) — open items + decision context harvested verbatim from each source]
 assigned_role: infra
 drift_direction: advance-code
-asset_group: cross-asset
 ---
 
 # CI/CD — Consolidated Remaining Work

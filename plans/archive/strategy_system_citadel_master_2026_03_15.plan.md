@@ -1,202 +1,80 @@
 ---
-name: strategy-system-citadel-master-2026-03-15
-overview: |
-  Citadel-grade master plan consolidating strategy universe expansion (mean reversion, options ML 3 types,
+doc_type: plan
+title: strategy-system-citadel-master-2026-03-15
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-ui, execution-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-15'
+overview: 'Citadel-grade master plan consolidating strategy universe expansion (mean reversion, options ML 3 types,
+
   sports market making, prediction market arb), instrument availability (Polymarket/Kalshi canonical mapping),
+
   strategy manifest with maturity tracking (code/deployment/business readiness), config system N10
+
   (audit trail, slice subscriptions, reloader expansion), events canonicalization (17 ad-hoc + CI/CD + agent events),
+
   UI/API completeness (6 orphaned mappings, strategy onboarding), comprehensive testing (scenario framework,
+
   strategy readiness QG), dependency chain tracking (reverse lookup, usage tags, interactive viz), and legacy cleanup.
+
   Stripped of already-completed items from March 13 audit. Built up with enhanced detail on options ML prediction types,
+
   canonical instrument ID mapping for prediction markets, and strategy-venue-instrument validation matrix.
+
+  '
 type: mixed
 epic: epic-code-completion
-
-status: active
-
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B4
-
+completion_gates: {code: C5, deployment: D3, business: B4}
 repo_gates:
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "8 new strategy classes + mean reversion + options ML + legacy cleanup"
-  - repo: unified-config-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Config audit trail, slice subscriptions, instrument enums"
-  - repo: unified-internal-contracts
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "LifecycleEventType expansion, CI/CD events, error hierarchy"
-  - repo: unified-events-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "17 ad-hoc events canonicalized, agent events, GHA emission helpers"
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "PREDICTION_MARKET InstrumentType, Sport StrEnum, prediction market canonical mapping"
-  - repo: unified-market-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Aster VENUE_REGISTRY, prediction market adapters"
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "DomainConfigReloader slice subscriptions, config diff"
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "VX futures, livestock, prediction market instrument defs"
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Options ML strike resolution, prediction market execution"
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "strategy-manifest.json, reverse dep lookup, QG strategy readiness tests"
-  - repo: system-integration-tests
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Scenario framework, strategy readiness validation"
-  - repo: live-health-monitor-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Interactive dependency visualization"
-  - repo: onboarding-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Strategy/venue/client onboarding flows"
-
-depends_on:
-  - cicd-code-rollout-master-2026-03-13
-
+- {repo: strategy-service, code: C0, deployment: none, business: none, readiness_note: 8 new strategy classes + mean reversion + options ML + legacy cleanup}
+- {repo: unified-config-interface, code: C0, deployment: none, business: none, readiness_note: 'Config audit trail, slice subscriptions, instrument enums'}
+- {repo: unified-internal-contracts, code: C0, deployment: none, business: none, readiness_note: 'LifecycleEventType expansion, CI/CD events, error hierarchy'}
+- {repo: unified-events-interface, code: C0, deployment: none, business: none, readiness_note: '17 ad-hoc events canonicalized, agent events, GHA emission helpers'}
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none, readiness_note: 'PREDICTION_MARKET InstrumentType, Sport StrEnum, prediction market canonical mapping'}
+- {repo: unified-market-interface, code: C0, deployment: none, business: none, readiness_note: 'Aster VENUE_REGISTRY, prediction market adapters'}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none, readiness_note: 'DomainConfigReloader slice subscriptions, config diff'}
+- {repo: instruments-service, code: C0, deployment: none, business: none, readiness_note: 'VX futures, livestock, prediction market instrument defs'}
+- {repo: execution-service, code: C0, deployment: none, business: none, readiness_note: 'Options ML strike resolution, prediction market execution'}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none, readiness_note: 'strategy-manifest.json, reverse dep lookup, QG strategy readiness tests'}
+- {repo: system-integration-tests, code: C0, deployment: none, business: none, readiness_note: 'Scenario framework, strategy readiness validation'}
+- {repo: live-health-monitor-ui, code: C0, deployment: none, business: none, readiness_note: Interactive dependency visualization}
+- {repo: onboarding-ui, code: C0, deployment: none, business: none, readiness_note: Strategy/venue/client onboarding flows}
+depends_on: [cicd-code-rollout-master-2026-03-13]
 todos:
-  # ============================================================
-  # PHASE 1: STRATEGY MANIFEST & MATURITY INFRASTRUCTURE (P0)
-  # Must exist before new strategies — provides tracking, validation, visualization
-  # ============================================================
+- {id: p1-strategy-manifest-schema, content: "- [x] [AGENT] P0. Create `unified-trading-pm/strategy-manifest.json` — SSOT for all strategies.\nSchema per strategy entry:\n```json\n{\n  \"strategy_id\": \"CEFI_MOMENTUM_BTC_1H\",\n  \"display_name\": \"CeFi BTC Momentum (1H)\",\n  \"category\": \"CEFI\",\n  \"subcategory\": \"MOMENTUM\",\n  \"domain\": \"cefi\",\n  \"asset_groupes\": [\"PERPETUAL\", \"SPOT_PAIR\"],\n  \"venues\": [\"BINANCE_FUTURES\", \"BYBIT\"],\n  \"instruments\": [\"BINANCE-FUTURES:PERPETUAL:BTCUSDT\"],\n  \"data_sources\": {\n    \"features\": [\"features-delta-one-service\"],\n    \"market_data_processed\": true,\n    \"market_data_tick\": false,\n    \"ml_model_id\": \"swing_breakout_btc_1h\",\n    \"ml_required\": true\n  },\n  \"config_file\": \"strategy-service/strategy_service/configs/cefi_momentum_btc.yaml\",\n  \"class_path\": \"strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy\",\n  \"factory_function\": \"create_btc_momentum_strategy\",\n\
+    \  \"maturity\": {\n    \"code\": { \"status\": \"C4\", \"class_exists\": true, \"unit_tests\": true, \"qg_pass\": true, \"merged\": false },\n    \"deployment\": { \"status\": \"D0\", \"batch_analytics\": false, \"mock_smoke\": false, \"batch_live_recon\": false },\n    \"business\": { \"status\": \"B0\", \"backtest_profitable\": false, \"live_1d_match\": false, \"live_1w_match\": false, \"strategy_deck\": false }\n  },\n  \"restrictions\": {\n    \"allowed_features\": [\"delta_one\", \"cross_instrument\"],\n    \"allowed_ml_targets\": [\"SWING_HIGH\", \"SWING_LOW\"],\n    \"min_timeframe\": \"1m\",\n    \"max_timeframe\": \"1d\"\n  },\n  \"api_served_by\": \"strategy-api\",\n  \"ui_rendered_in\": [\"strategy-ui\", \"trading-analytics-ui\"],\n  \"batch_capable\": true,\n  \"live_capable\": true,\n  \"testnet_capable\": false,\n  \"api_keys_required\": [\"BINANCE_API_KEY\", \"BINANCE_SECRET\"]\n}\n```\nPopulate for ALL 21 existing strategies (16 modern + 5 legacy).\nStrategy ID convention:\
+    \ `{DOMAIN}_{SUBCATEGORY}_{ASSET}_{TIMEFRAME}` — human-readable, uppercase, underscores.\nExamples: `CEFI_MOMENTUM_BTC_1H`, `DEFI_BASIS_ETH_USDT`, `SPORTS_ARB_FOOTBALL_EPL`, `TRADFI_MOMENTUM_SPY_1D`,\n`OPTIONS_VOL_ML_BTC_DERIBIT`, `PREDICTION_ARB_POLYMARKET_CROSS`.\nAcceptance: JSON validates, every existing strategy has an entry, `jq` parses cleanly.\n", status: done}
+- {id: p1-strategy-manifest-qg-tests, content: "- [x] [AGENT] P0. Add strategy manifest validation to `unified-trading-pm/scripts/quality-gates.sh`:\n1. Parse strategy-manifest.json — valid JSON, no duplicate strategy_ids\n2. For each entry where `maturity.code.class_exists=true`: verify class_path importable\n   (`python -c \"from {class_path} import {class_name}\"`)\n3. For each entry where `maturity.code.unit_tests=true`: verify test file exists\n4. For each entry: verify `config_file` path exists on disk\n5. For each entry: verify `venues[]` are all in UCI Venue enum\n6. For each entry: verify `asset_groupes[]` are all in UAC InstrumentType enum\n7. For each entry: verify `api_served_by` exists in workspace-manifest.json\n8. For each entry: verify `ui_rendered_in[]` exist in workspace-manifest.json\n9. Generate `STRATEGY_MANIFEST_DAG.svg` visualization (strategy → venue → instrument → features)\nTest: `cd unified-trading-pm && bash scripts/quality-gates.sh` passes with new checks.\n",
+  status: done, completion_note: 'validate-strategy-manifest.py created, wired into QG, 44 tests.'}
+- {id: p1-strategy-maturity-checklist, content: "- [x] [AGENT] P1. Create `unified-trading-pm/scripts/manifest/check-strategy-maturity.py`:\nReads strategy-manifest.json and for each strategy prints a maturity report card:\n```\nCEFI_MOMENTUM_BTC_1H:\n  Code:       C4 [x] class [x] tests [x] QG [ ] merged\n  Deployment: D0 [ ] batch_analytics [ ] mock_smoke [ ] batch_live_recon\n  Business:   B0 [ ] backtest_profitable [ ] live_1d [ ] live_1w [ ] deck\n  Data:       [x] features [ ] tick [x] ML model [ ] testnet [ ] API keys\n```\nExit 1 if any strategy with `maturity.code.status >= C2` has `unit_tests=false`.\nExit 1 if any strategy with `maturity.deployment.status >= D2` has `mock_smoke=false`.\nAcceptance: script runs, produces table for all strategies, exits 0 on current state.\n", status: done}
+- {id: p1-strategy-manifest-svg, content: '- [x] [AGENT] P1. Create `unified-trading-pm/scripts/manifest/generate_strategy_manifest_dag.py`:
 
-  - id: p1-strategy-manifest-schema
-    content: |
-      - [x] [AGENT] P0. Create `unified-trading-pm/strategy-manifest.json` — SSOT for all strategies.
-      Schema per strategy entry:
-      ```json
-      {
-        "strategy_id": "CEFI_MOMENTUM_BTC_1H",
-        "display_name": "CeFi BTC Momentum (1H)",
-        "category": "CEFI",
-        "subcategory": "MOMENTUM",
-        "domain": "cefi",
-        "asset_groupes": ["PERPETUAL", "SPOT_PAIR"],
-        "venues": ["BINANCE_FUTURES", "BYBIT"],
-        "instruments": ["BINANCE-FUTURES:PERPETUAL:BTCUSDT"],
-        "data_sources": {
-          "features": ["features-delta-one-service"],
-          "market_data_processed": true,
-          "market_data_tick": false,
-          "ml_model_id": "swing_breakout_btc_1h",
-          "ml_required": true
-        },
-        "config_file": "strategy-service/strategy_service/configs/cefi_momentum_btc.yaml",
-        "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
-        "factory_function": "create_btc_momentum_strategy",
-        "maturity": {
-          "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-          "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
-          "business": { "status": "B0", "backtest_profitable": false, "live_1d_match": false, "live_1w_match": false, "strategy_deck": false }
-        },
-        "restrictions": {
-          "allowed_features": ["delta_one", "cross_instrument"],
-          "allowed_ml_targets": ["SWING_HIGH", "SWING_LOW"],
-          "min_timeframe": "1m",
-          "max_timeframe": "1d"
-        },
-        "api_served_by": "strategy-api",
-        "ui_rendered_in": ["strategy-ui", "trading-analytics-ui"],
-        "batch_capable": true,
-        "live_capable": true,
-        "testnet_capable": false,
-        "api_keys_required": ["BINANCE_API_KEY", "BINANCE_SECRET"]
-      }
-      ```
-      Populate for ALL 21 existing strategies (16 modern + 5 legacy).
-      Strategy ID convention: `{DOMAIN}_{SUBCATEGORY}_{ASSET}_{TIMEFRAME}` — human-readable, uppercase, underscores.
-      Examples: `CEFI_MOMENTUM_BTC_1H`, `DEFI_BASIS_ETH_USDT`, `SPORTS_ARB_FOOTBALL_EPL`, `TRADFI_MOMENTUM_SPY_1D`,
-      `OPTIONS_VOL_ML_BTC_DERIBIT`, `PREDICTION_ARB_POLYMARKET_CROSS`.
-      Acceptance: JSON validates, every existing strategy has an entry, `jq` parses cleanly.
-    status: done
+    Reads strategy-manifest.json and generates STRATEGY_MANIFEST_DAG.svg showing:
 
-  - id: p1-strategy-manifest-qg-tests
-    content: |
-      - [x] [AGENT] P0. Add strategy manifest validation to `unified-trading-pm/scripts/quality-gates.sh`:
-      1. Parse strategy-manifest.json — valid JSON, no duplicate strategy_ids
-      2. For each entry where `maturity.code.class_exists=true`: verify class_path importable
-         (`python -c "from {class_path} import {class_name}"`)
-      3. For each entry where `maturity.code.unit_tests=true`: verify test file exists
-      4. For each entry: verify `config_file` path exists on disk
-      5. For each entry: verify `venues[]` are all in UCI Venue enum
-      6. For each entry: verify `asset_groupes[]` are all in UAC InstrumentType enum
-      7. For each entry: verify `api_served_by` exists in workspace-manifest.json
-      8. For each entry: verify `ui_rendered_in[]` exist in workspace-manifest.json
-      9. Generate `STRATEGY_MANIFEST_DAG.svg` visualization (strategy → venue → instrument → features)
-      Test: `cd unified-trading-pm && bash scripts/quality-gates.sh` passes with new checks.
-    status: done
-    completion_note: validate-strategy-manifest.py created, wired into QG, 44 tests.
+    - Strategies grouped by domain (CeFi/TradFi/DeFi/Sports/Options/Prediction)
 
-  - id: p1-strategy-maturity-checklist
-    content: |
-      - [x] [AGENT] P1. Create `unified-trading-pm/scripts/manifest/check-strategy-maturity.py`:
-      Reads strategy-manifest.json and for each strategy prints a maturity report card:
-      ```
-      CEFI_MOMENTUM_BTC_1H:
-        Code:       C4 [x] class [x] tests [x] QG [ ] merged
-        Deployment: D0 [ ] batch_analytics [ ] mock_smoke [ ] batch_live_recon
-        Business:   B0 [ ] backtest_profitable [ ] live_1d [ ] live_1w [ ] deck
-        Data:       [x] features [ ] tick [x] ML model [ ] testnet [ ] API keys
-      ```
-      Exit 1 if any strategy with `maturity.code.status >= C2` has `unit_tests=false`.
-      Exit 1 if any strategy with `maturity.deployment.status >= D2` has `mock_smoke=false`.
-      Acceptance: script runs, produces table for all strategies, exits 0 on current state.
-    status: done
+    - Color-coded by maturity.code.status (red=C0, yellow=C2, green=C4, blue=C5)
 
-  - id: p1-strategy-manifest-svg
-    content: |
-      - [x] [AGENT] P1. Create `unified-trading-pm/scripts/manifest/generate_strategy_manifest_dag.py`:
-      Reads strategy-manifest.json and generates STRATEGY_MANIFEST_DAG.svg showing:
-      - Strategies grouped by domain (CeFi/TradFi/DeFi/Sports/Options/Prediction)
-      - Color-coded by maturity.code.status (red=C0, yellow=C2, green=C4, blue=C5)
-      - Edges from strategy → venues, strategy → features services, strategy → ML models
-      - Legend with maturity stage meanings
-      Follow pattern from `generate_workspace_dag.py`.
-      Symlink output to `unified-trading-codex/04-architecture/STRATEGY_MANIFEST_DAG.svg`.
-      Acceptance: SVG renders, shows all strategies with correct colors and edges.
-    status: done
+    - Edges from strategy → venues, strategy → features services, strategy → ML models
 
-  # ============================================================
-  # PHASE 2: STRATEGY UNIVERSE EXPANSION (P0)
-  # New strategy classes, configs, and factory functions
-  # ============================================================
+    - Legend with maturity stage meanings
 
-  # --- Stream 2A: Mean Reversion (TradFi + CeFi) ---
+    Follow pattern from `generate_workspace_dag.py`.
+
+    Symlink output to `unified-trading-codex/04-architecture/STRATEGY_MANIFEST_DAG.svg`.
+
+    Acceptance: SVG renders, shows all strategies with correct colors and edges.
+
+    ', status: done}
+---
+
+ Stream 2A: Mean Reversion (TradFi + CeFi) ---
 
   - id: p2a-mean-reversion-base
     content: |

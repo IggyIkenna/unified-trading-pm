@@ -1,14 +1,21 @@
 ---
+doc_type: plan
 title: Refactor G1.14 — Presentation deck refresh (14-item G1 + 7 new slides + optional HTML stretch)
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.14
-  - codex/14-playbooks/presentations/target-experience-post-refactor.md
-# Markdown refresh: standalone (Wave A). HTML stretch: depends on refactor_g1_4 (Wave F) for new screenshots.
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.14, codex/14-playbooks/presentations/target-experience-post-refactor.md]
 ---
 
 ## Deferred work — migrated to:

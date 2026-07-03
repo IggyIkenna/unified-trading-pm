@@ -1,14 +1,17 @@
 ---
-title:
-  staging→main promote PRs recur as version-line (pyproject) conflicts — dual-path version divergence; the LDR→main
-  fallback drains them but they regenerate every cycle (structural cure = single-lineage version stamping)
+doc_type: plan
+title: staging→main promote PRs recur as version-line (pyproject) conflicts — dual-path version divergence; the LDR→main fallback drains them but they regenerate every cycle (structural cure = single-lineage version stamping)
+summary:
+status: superseded
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, client-reporting-api, deployment-api, e2e-testing, ibkr-gateway-infra, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-22
-source:
-  - 2026-06-22 triage-queue investigation (deployment-ui /repos "Stuck — triage queue")
-  - instruments-service git history (merge-base 9c0d29b / main tip "Merge PR #511 from live-defi-rollout")
-  - .github/workflows/staging-conflict-ldr-main-fallback.yml (the live Class-D mitigation)
-  - .github/workflows/conflict-resolution-agent.yml (dup-env outage, fixed 2026-06-22)
-  - .github/workflows/semver-agent.yml.tmpl (bump fires on push:[staging], not LDR)
+source: [2026-06-22 triage-queue investigation (deployment-ui /repos "Stuck — triage queue"), instruments-service git history (merge-base 9c0d29b / main tip "Merge PR, .github/workflows/staging-conflict-ldr-main-fallback.yml (the live Class-D mitigation), '.github/workflows/conflict-resolution-agent.yml (dup-env outage, fixed 2026-06-22)', '.github/workflows/semver-agent.yml.tmpl (bump fires on push:[staging], not LDR)']
 locked_by: live-defi-rollout
 parent_epic: infrastructure_master
 assigned_vm: harsh_pc
@@ -16,13 +19,8 @@ estimate_class: design
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.2
 priority: P1
-status: superseded
-superseded_by: cicd_consolidated_remaining_2026_06_24 # D13/WS-L version-out-of-source IS the single-lineage cure; operator approach-decision MADE 2026-06-25
-resolution:
-  REOPENED 2026-06-22 (slot-3) — operator OVERRODE the false-positive/no-action close ("fix this properly"). The
-  mechanism below is now VERIFIED first-hand (not relayed) and the acute multi-day JAM is confirmed RESOLVED, but the
-  structural cure to stop the conflicts RE-FORMING is pending an operator approach-decision (B vs A vs C). The prior
-  RESOLVED banner is retained but SUPERSEDED.
+superseded_by: cicd_consolidated_remaining_2026_06_24
+resolution: REOPENED 2026-06-22 (slot-3) — operator OVERRODE the false-positive/no-action close ("fix this properly"). The mechanism below is now VERIFIED first-hand (not relayed) and the acute multi-day JAM is confirmed RESOLVED, but the structural cure to stop the conflicts RE-FORMING is pending an operator approach-decision (B vs A vs C). The prior RESOLVED banner is retained but SUPERSEDED.
 ---
 
 > ## ⚠️ REOPENED 2026-06-22 (slot-3) — operator override; VERIFIED root cause + final cure (supersedes the FALSE-POSITIVE banner below)

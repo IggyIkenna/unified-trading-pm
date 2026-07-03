@@ -1,13 +1,18 @@
 ---
-title: "Live-pipeline pre-audit (Phase 0 of live_pipeline_mtds_mdps_features_2026_05_08)"
+doc_type: issue
+title: Live-pipeline pre-audit (Phase 0 of live_pipeline_mtds_mdps_features_2026_05_08)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: tab2-pre-audit
-source:
-  - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md (Phase 0)
-  - codex/05-infrastructure/live-pipeline-architecture.md
-  - codex/05-infrastructure/replay-subsystem.md
-  - codex/02-data/pipeline-mode-partition.md
-  - codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md
+source: [plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md (Phase 0), codex/05-infrastructure/live-pipeline-architecture.md, codex/05-infrastructure/replay-subsystem.md, codex/02-data/pipeline-mode-partition.md, codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

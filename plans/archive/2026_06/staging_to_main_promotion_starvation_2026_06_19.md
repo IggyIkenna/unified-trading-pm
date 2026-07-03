@@ -1,16 +1,17 @@
 ---
-title:
-  staging→main promotion starves 20/23 repos — two upstream failure modes (manifest version-bump desync + Tier-C
-  squash-fallback eating semver labels), not a missing promoter
+doc_type: plan
+title: staging→main promotion starves 20/23 repos — two upstream failure modes (manifest version-bump desync + Tier-C squash-fallback eating semver labels), not a missing promoter
+summary:
+status: superseded
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-19
-source:
-  - 2026-06-19 fleet audit (deployment-ui CI/CD Repos page; LDR→main delta column)
-  - unified-trading-pm/.github/workflows/staging-to-main.yml (pending-set derivation)
-  - unified-trading-pm/.github/workflows/ldr-to-staging-promote.yml (lines 306-315, rebase→squash fallback)
-  - unified-trading-pm/scripts/workflow-templates/semver-agent.yml.tmpl (bump computation)
-  - unified-trading-pm/workspace-manifest.json (staging_versions / staging_commits / versions)
-  - gh api compare main...staging + per-repo pyproject versions across the fleet
-  - unified-api-contracts PR #370 (stuck staging→main promote PR)
+source: [2026-06-19 fleet audit (deployment-ui CI/CD Repos page; LDR→main delta column), unified-trading-pm/.github/workflows/staging-to-main.yml (pending-set derivation), 'unified-trading-pm/.github/workflows/ldr-to-staging-promote.yml (lines 306-315, rebase→squash fallback)', unified-trading-pm/scripts/workflow-templates/semver-agent.yml.tmpl (bump computation), unified-trading-pm/workspace-manifest.json (staging_versions / staging_commits / versions), gh api compare main...staging + per-repo pyproject versions across the fleet, unified-api-contracts PR]
 locked_by: live-defi-rollout
 parent_epic: infrastructure_master
 assigned_vm: harsh_pc
@@ -18,7 +19,6 @@ estimate_class: refactor
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.0
 priority: P1
-status: superseded
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**

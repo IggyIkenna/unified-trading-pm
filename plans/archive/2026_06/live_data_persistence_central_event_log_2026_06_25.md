@@ -1,7 +1,15 @@
 ---
-title:
-  Live data persistence — central event-log spine (Pub/Sub) + pluggable consumers (service / table / GCS) + 2-tier
-  archive, batch==paper==live
+doc_type: plan
+title: Live data persistence — central event-log spine (Pub/Sub) + pluggable consumers (service / table / GCS) + 2-tier archive, batch==paper==live
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, e2e-testing, execution-service, features-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-25
 parent_epic: batch_live_symmetry_master
 assigned_vm: human-planning
@@ -9,7 +17,6 @@ estimate_class: brand-new
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 22
 priority: P1
-status: done
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

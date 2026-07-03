@@ -1,17 +1,21 @@
 ---
+doc_type: plan
 title: Refactor G1.12 — Public-site IA + briefings polish
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.12
-  - codex/14-playbooks/_ssot-rules/02-tone-and-posture.md
-  - codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md
-  - codex/14-playbooks/experience/marketing-journey.md
-  - codex/14-playbooks/experience/briefings-hub.md
-# Sibling Wave A plans: refactor_g1_{1,3,5,9,14}
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.12, codex/14-playbooks/_ssot-rules/02-tone-and-posture.md, codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md, codex/14-playbooks/experience/marketing-journey.md, codex/14-playbooks/experience/briefings-hub.md]
 ---
 
 ## Deferred work — migrated to:

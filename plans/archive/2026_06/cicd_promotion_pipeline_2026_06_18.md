@@ -1,10 +1,18 @@
 ---
+doc_type: plan
 title: CI/CD Promotion Pipeline (LDR → staging → SIT → main → image) + ci_status SSOT
-name: cicd_promotion_pipeline_2026_06_18
+summary:
+status: superseded
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
 parent_epic: infrastructure_master
 assigned_vm: harsh_pc
-created: 2026-06-18
-status: superseded
 locked_by: live-defi-rollout
 locked_since: 2026-06-18
 priority: P1
@@ -12,13 +20,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
 parent_consolidation: cicd_docs_and_consolidation_2026_06_18
-source:
-  - ldr_trunk_promotion_decoupling_2026_06_10 (consolidated)
-  - ci_status_firestore_side_store_2026_06_10 (consolidated)
-  - ldr_tarball_auto_refresh_2026_06_17 (consolidated)
-  - cloud_build_router_aws_parity_2026_06_10 (consolidated)
-  - promotion_queue_conflict_wall_pileup_2026_06_17 (consolidated)
-  - cicd_contract_hardening_2026_06_01 (promotion-flow subset)
+source: [ldr_trunk_promotion_decoupling_2026_06_10 (consolidated), ci_status_firestore_side_store_2026_06_10 (consolidated), ldr_tarball_auto_refresh_2026_06_17 (consolidated), cloud_build_router_aws_parity_2026_06_10 (consolidated), promotion_queue_conflict_wall_pileup_2026_06_17 (consolidated), cicd_contract_hardening_2026_06_01 (promotion-flow subset)]
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**

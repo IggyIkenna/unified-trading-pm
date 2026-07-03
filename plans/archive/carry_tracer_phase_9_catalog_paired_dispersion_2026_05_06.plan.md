@@ -1,39 +1,29 @@
 ---
-name: carry-tracer-phase-9-catalog-paired-dispersion-2026-05-06
-overview:
-  Catalog spec additions + paired_price_dispersion calculator + UAC LST_TOKEN_TO_PROTOCOL_ASSET SSOT — closes the Layer
-  1 follow-ups behind the Layer 2 tracer adapter shipped 2026-05-06.
-type: code
+doc_type: plan
+title: carry-tracer-phase-9-catalog-paired-dispersion-2026-05-06
+summary:
+status: complete
+nature: record
 asset_group: defi
-owner: ikenna
+stage: [meta]
+repos: [deployment-service, instruments-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-06
+overview: Catalog spec additions + paired_price_dispersion calculator + UAC LST_TOKEN_TO_PROTOCOL_ASSET SSOT — closes the Layer 1 follow-ups behind the Layer 2 tracer adapter shipped 2026-05-06.
+type: code
+owner: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-status: active
 epic: epic-code-completion
-completion_gates:
-  code: C5
-  deployment: none
-  business: B3
+completion_gates: {code: C5, deployment: none, business: B3}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-onchain-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-cross-instrument-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-depends_on:
-  - carry-tracer-pipeline-handoff-2026-05-06
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: features-onchain-service, code: C0, deployment: none, business: none}
+- {repo: features-cross-instrument-service, code: C0, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+depends_on: [carry-tracer-pipeline-handoff-2026-05-06]
 todos: []
 isProject: false
 ---

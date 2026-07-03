@@ -1,24 +1,15 @@
 ---
 doc_type: plan
 title: CI/CD Phase-2 foundation — version-registry write-path (item B) + dynamic-versioning canary + spike guards
-summary:
-  "Phase-2 (version-out-of-source, D13) FOUNDATION lane. Stands up the registry write-path BEFORE any reader repoints:
-  the event-driven tag→Firestore write-through (item B), the per-repo dynamic-versioning setup on ONE canary repo, and
-  the three sandbox-spike hygiene guards (clean-checkout-at-tag build, publish-only-plain-3-part, stale-editable audit).
-  Additive and reversible — breaks nothing live. This is registry-write-path step ① in the risk-ranked retarget order."
+summary: 'Phase-2 (version-out-of-source, D13) FOUNDATION lane. Stands up the registry write-path BEFORE any reader repoints: the event-driven tag→Firestore write-through (item B), the per-repo dynamic-versioning setup on ONE canary repo, and the three sandbox-spike hygiene guards (clean-checkout-at-tag build, publish-only-plain-3-part, stale-editable audit). Additive and reversible — breaks nothing live. This is registry-write-path step ① in the risk-ranked retarget order.'
 status: superseded
 nature: process
+asset_group: cross-asset
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cicd, phase-2, version-out-of-source, firestore, setuptools-scm, registry, D13, WS-L]
-related:
-  [
-    cicd_consolidated_remaining_2026_06_24.md,
-    cicd_phase2_semver_retarget_2026_06_27.md,
-    ../epics/infrastructure_master.md,
-    ../../codex/08-workflows/ci-cd-flow.md,
-  ]
+related: [cicd_consolidated_remaining_2026_06_24.md, cicd_phase2_semver_retarget_2026_06_27.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -36,7 +27,6 @@ depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 section, lines ~1163-1356)
 assigned_role: infra
 drift_direction: advance-code
-asset_group: cross-asset
 ---
 
 # CI/CD Phase-2 foundation — registry write-path + dynamic-versioning canary

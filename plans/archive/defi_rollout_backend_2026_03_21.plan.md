@@ -1,217 +1,88 @@
 ---
-name: defi-rollout-backend-2026-03-21
-overview: |
-  Consolidated backend remediation plan aggregating all open items from 25 active plans (2026-03-21 audit).
+doc_type: plan
+title: defi-rollout-backend-2026-03-21
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-api]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+overview: 'Consolidated backend remediation plan aggregating all open items from 25 active plans (2026-03-21 audit).
+
   Excludes frontend-only, presentation, and website plans. Excludes prod-only items (marked BLOCKED).
+
   Covers: library foundation (UTL ServiceRuntime, UCI schemas, UAC registries), service migrations (13 services
+
   to ServiceRuntime, 21 services hot-reload, 22 repos mock mode migration), ML pipeline (uniform training,
+
   sports migration, grid config refactor), API hardening (mock mode, health endpoints, consolidation),
+
   auth/entitlement, cross-cutting infra, and testing/validation sweeps.
+
   Organized by dependency tier: T0 libraries -> T1 interfaces -> T2 services -> T3 cross-cutting -> T4 testing.
+
   ~355 actionable items for dev/staging; ~15 blocked (prod/human-only).
+
+  '
 type: mixed
 epic: epic-code-completion
-status: active
-
-locked_by: null
-locked_since: null
-
-completion_gates:
-  code: C5
-  deployment: D2
-  business: none
-
+locked_by:
+locked_since:
+completion_gates: {code: C5, deployment: D2, business: none}
 repo_gates:
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, startup_validation, config source resolution, FreshnessMonitor"
-  - repo: unified-internal-contracts
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "TrainingPhase, TargetType, ModelType, EnsembleConfig, TargetTypeParams, FixedConfig, document schemas"
-  - repo: unified-config-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "5 domain config schemas, entitlement registry, MLTrainingConfig refactor, SportsMLConfig, slice subscriptions"
-  - repo: unified-cloud-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "GCSDataSink, S3DataSink, get_data_sink(), RUNTIME_MODE unification, ServiceCLI updates"
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "aave_plasma fix, 18 venue error maps, PredictionMarketMapping, data source separation, registry extractor"
-  - repo: unified-ml-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "config_schema updates, ModelVariantConfig refactor, sports metrics"
-  - repo: unified-sports-reference-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "competition_phase.py"
-  - repo: unified-feature-orchestration-library
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "anti_leakage.py"
-  - repo: matching-engine-library
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "SportsMatchingEngine"
-  - repo: unified-reference-data-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "KalshiReferenceDataAdapter"
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "ServiceRuntime, UAC imports, config generation, live mode, data source separation, PredictionMarketResolver"
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, hot-reload, config placement fixes"
-  - repo: market-data-processing-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, UAC imports, hot-reload"
-  - repo: features-sports-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Calculator parity, USRI/UFI wiring, anti_leakage, live mode, hot-reload"
-  - repo: features-onchain-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, hot-reload"
-  - repo: features-delta-one-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, UAC imports, hot-reload"
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, grid config, hot-reload"
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, strategy-agnostic, classify_venue_error, grid config, hot-reload"
-  - repo: ml-training-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, UniformTrainingPipeline, ModelTrainerFactory, grid config refactor, hot-reload"
-  - repo: ml-inference-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, ensemble inference, hot-reload"
-  - repo: risk-management-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, seed_mock_data, hot-reload"
-  - repo: alerting-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, seed_mock_data, hot-reload"
-  - repo: pnl-attribution-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, seed_mock_data, hot-reload"
-  - repo: position-balance-monitor-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "ServiceRuntime, seed_mock_data, hot-reload"
-  - repo: reconciliation-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "seed_mock_data, hot-reload"
-  - repo: trading-agent-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "seed_mock_data, hot-reload"
-  - repo: client-reporting-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "P&L, invoicing, compliance, document CRUD"
-  - repo: config-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "POST /config/publish, CLI command, --dry-run"
-  - repo: unified-trading-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "New consolidated API repo — 16 domains, 61 endpoints, WebSocket"
-  - repo: unified-sports-execution-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Resolve 50 browser adapter stubs"
-  - repo: unified-market-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Resolve 59 adapter stubs, 50+ line function refactoring, sports metrics"
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "service-access-matrix.yaml, readiness YAMLs, credential audit script"
-
+- {repo: unified-trading-library, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, startup_validation, config source resolution, FreshnessMonitor'}
+- {repo: unified-internal-contracts, code: C0, deployment: none, business: none, readiness_note: 'TrainingPhase, TargetType, ModelType, EnsembleConfig, TargetTypeParams, FixedConfig, document schemas'}
+- {repo: unified-config-interface, code: C0, deployment: none, business: none, readiness_note: '5 domain config schemas, entitlement registry, MLTrainingConfig refactor, SportsMLConfig, slice subscriptions'}
+- {repo: unified-cloud-interface, code: C0, deployment: none, business: none, readiness_note: 'GCSDataSink, S3DataSink, get_data_sink(), RUNTIME_MODE unification, ServiceCLI updates'}
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none, readiness_note: 'aave_plasma fix, 18 venue error maps, PredictionMarketMapping, data source separation, registry extractor'}
+- {repo: unified-ml-interface, code: C0, deployment: none, business: none, readiness_note: 'config_schema updates, ModelVariantConfig refactor, sports metrics'}
+- {repo: unified-sports-reference-interface, code: C0, deployment: none, business: none, readiness_note: competition_phase.py}
+- {repo: unified-feature-orchestration-library, code: C0, deployment: none, business: none, readiness_note: anti_leakage.py}
+- {repo: matching-engine-library, code: C0, deployment: none, business: none, readiness_note: SportsMatchingEngine}
+- {repo: unified-reference-data-interface, code: C0, deployment: none, business: none, readiness_note: KalshiReferenceDataAdapter}
+- {repo: instruments-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, UAC imports, config generation, live mode, data source separation, PredictionMarketResolver'}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, hot-reload, config placement fixes'}
+- {repo: market-data-processing-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, UAC imports, hot-reload'}
+- {repo: features-sports-service, code: C0, deployment: none, business: none, readiness_note: 'Calculator parity, USRI/UFI wiring, anti_leakage, live mode, hot-reload'}
+- {repo: features-onchain-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, hot-reload'}
+- {repo: features-delta-one-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, UAC imports, hot-reload'}
+- {repo: strategy-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, grid config, hot-reload'}
+- {repo: execution-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, strategy-agnostic, classify_venue_error, grid config, hot-reload'}
+- {repo: ml-training-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, UniformTrainingPipeline, ModelTrainerFactory, grid config refactor, hot-reload'}
+- {repo: ml-inference-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, ensemble inference, hot-reload'}
+- {repo: risk-management-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, seed_mock_data, hot-reload'}
+- {repo: alerting-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, seed_mock_data, hot-reload'}
+- {repo: pnl-attribution-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, seed_mock_data, hot-reload'}
+- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none, readiness_note: 'ServiceRuntime, seed_mock_data, hot-reload'}
+- {repo: reconciliation-service, code: C0, deployment: none, business: none, readiness_note: 'seed_mock_data, hot-reload'}
+- {repo: trading-agent-service, code: C0, deployment: none, business: none, readiness_note: 'seed_mock_data, hot-reload'}
+- {repo: client-reporting-api, code: C0, deployment: none, business: none, readiness_note: 'P&L, invoicing, compliance, document CRUD'}
+- {repo: config-api, code: C0, deployment: none, business: none, readiness_note: 'POST /config/publish, CLI command, --dry-run'}
+- {repo: unified-trading-api, code: C0, deployment: none, business: none, readiness_note: 'New consolidated API repo — 16 domains, 61 endpoints, WebSocket'}
+- {repo: unified-sports-execution-interface, code: C0, deployment: none, business: none, readiness_note: Resolve 50 browser adapter stubs}
+- {repo: unified-market-interface, code: C0, deployment: none, business: none, readiness_note: 'Resolve 59 adapter stubs, 50+ line function refactoring, sports metrics'}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none, readiness_note: 'service-access-matrix.yaml, readiness YAMLs, credential audit script'}
 depends_on: []
-
 isProject: true
-
 todos:
-  # ============================================================
-  # PHASE 0: COMMIT SWEEP (uncommitted defi work across ~15 repos)
-  # ============================================================
-  - id: p0-commit-sweep
-    content: |
-      - [ ] [AGENT] P0. QG sweep + commit uncommitted changes across ~15 repos with pending defi/pipeline work.
-      Source: defi_operation_capability_and_pipeline (item 96/96), live_batch_alignment_audit (item 27/27).
-      Repos: unified-api-contracts, unified-defi-execution-interface, unified-internal-contracts, execution-service,
-      plus ~11 others with uncommitted topology/alignment changes.
-      Run `bash scripts/quality-gates.sh` per repo, then `git add` + `git commit`.
-    status: todo
-    note: "IMMEDIATE — unblocks all downstream work. Do NOT quickmerge yet."
+- {id: p0-commit-sweep, content: '- [ ] [AGENT] P0. QG sweep + commit uncommitted changes across ~15 repos with pending defi/pipeline work.
 
-  # ============================================================
-  # PHASE 1: TIER 0 — Library Foundation (PARALLEL)
-  # All items in this phase are independent and can run in parallel.
-  # QG gate after: UTL, UIC, UCI, UAC must all pass quality-gates.sh.
-  # ============================================================
+    Source: defi_operation_capability_and_pipeline (item 96/96), live_batch_alignment_audit (item 27/27).
 
-  # --- UTL (unified-trading-library) ---
+    Repos: unified-api-contracts, unified-defi-execution-interface, unified-internal-contracts, execution-service,
+
+    plus ~11 others with uncommitted topology/alignment changes.
+
+    Run `bash scripts/quality-gates.sh` per repo, then `git add` + `git commit`.
+
+    ', status: todo, note: IMMEDIATE — unblocks all downstream work. Do NOT quickmerge yet.}
+---
+
+ UTL (unified-trading-library) ---
   - id: t0-utl-service-runtime
     content: |
       - [ ] [AGENT] P0. Build ServiceRuntime class in UTL.

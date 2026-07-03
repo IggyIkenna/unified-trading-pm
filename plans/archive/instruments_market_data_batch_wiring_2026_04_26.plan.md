@@ -1,21 +1,29 @@
 ---
-title: "Instruments + Market Data — GCS→API→Trading Terminal Wiring"
-id: instruments_market_data_batch_wiring_2026_04_26
+doc_type: plan
+title: Instruments + Market Data — GCS→API→Trading Terminal Wiring
+summary:
 status: in_progress
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, instruments-service, market-tick-data-service, unified-trading-api]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-26
+id: instruments_market_data_batch_wiring_2026_04_26
 updated: 2026-04-26
 feature_branch: live-defi-rollout
 locked_by: live-defi-rollout
 priority: P0
-repos_affected:
-  - unified-trading-api
-  - unified-trading-system-ui
-  - market-tick-data-service
-  - instruments-service
-scope_note: |
-  TRADING TERMINAL only — /services/trading/terminal watchlist + price chart.
+repos_affected: [unified-trading-api, unified-trading-system-ui, market-tick-data-service, instruments-service]
+scope_note: 'TRADING TERMINAL only — /services/trading/terminal watchlist + price chart.
+
   The /services/data/* pages (instruments browser, coverage, gaps, etc.) are served by
+
   deployment-ui and are OUT OF SCOPE for this plan.
+
+  '
 ---
 
 ## Deferred work — migrated to:

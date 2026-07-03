@@ -1,18 +1,23 @@
 ---
+doc_type: plan
 title: Per-client isolation + venue fanout topology (May-23 cutover gate)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [master_to_live_defi_2026_05_23.md, strategy_repo_consolidation_2026_05_19.md, promote_workflow_may23_cli_path_2026_05_10.md, api_keys_wallets_accounts_readiness_2026_05_10.md]
+created: '2026-05-20'
 parent_epic: client_isolation_and_governance_master
 priority: P0
-status: active
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-related_plans:
-  - master_to_live_defi_2026_05_23.md
-  - strategy_repo_consolidation_2026_05_19.md
-  - promote_workflow_may23_cli_path_2026_05_10.md
-  - api_keys_wallets_accounts_readiness_2026_05_10.md
 ---
 
 # Per-Client Isolation + Venue Fanout Topology

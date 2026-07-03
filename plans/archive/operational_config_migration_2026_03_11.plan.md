@@ -1,101 +1,38 @@
 ---
-name: operational-config-migration
-overview:
-  Migrate all operational configs from deployment-service/configs/ to unified-trading-pm/configs/ to eliminate
-  cross-service dependency in deployment-api
+doc_type: plan
+title: operational-config-migration
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-11'
+overview: Migrate all operational configs from deployment-service/configs/ to unified-trading-pm/configs/ to eliminate cross-service dependency in deployment-api
 type: infra
 epic: epic-infra
-status: done
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Receives migrated YAML config files"
-  - repo: deployment-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Replaces moved files with PM symlinks, deletes dead checklist templates"
-  - repo: deployment-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Switches from configs/ (→deployment-service) to pm-configs/ (→unified-trading-pm)"
-
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none, readiness_note: Receives migrated YAML config files}
+- {repo: deployment-service, code: C0, deployment: none, business: none, readiness_note: 'Replaces moved files with PM symlinks, deletes dead checklist templates'}
+- {repo: deployment-api, code: C0, deployment: none, business: none, readiness_note: Switches from configs/ (→deployment-service) to pm-configs/ (→unified-trading-pm)}
 depends_on: []
-
 todos:
-  - id: move-configs-to-pm
-    content: "Copy all operational YAML configs from deployment-service/configs/ to unified-trading-pm/configs/"
-    status: done
-    note: "DONE — All YAML files + services/ directory moved. Commit: TBD"
-  - id: deployment-service-symlinks
-    content:
-      "Replace moved files in deployment-service/configs/ with symlinks to ../../unified-trading-pm/configs/, delete
-      dead checklist.template.*.yaml"
-    status: done
-    note:
-      "DONE — All 51 symlinks subsequently REMOVED (backward compat approach rejected). deployment-service/configs/ is
-      now clean. Commit: af31e2e"
-  - id: deployment-api-symlink
-    content: "Create deployment-api/pm-configs symlink → ../unified-trading-pm/configs, remove old configs symlink"
-    status: done
-    note: "DONE — pm-configs symlink added, configs symlink removed"
-  - id: update-get-config-dir
-    content:
-      "Update get_config_dir() in service_utils.py and app_config.py to search pm-configs/ (bundled) then
-      ../unified-trading-pm/configs (sibling)"
-    status: done
-    note: "DONE — Both functions updated with two-phase search (bundled → sibling)"
-  - id: update-tests
-    content: "Update test_app_config.py to use pm-configs instead of configs"
-    status: done
-    note: "DONE — TestGetConfigDir uses pm-configs dir, error message updated"
-  - id: update-cloudbuild
-    content:
-      "Update deployment-api/cloudbuild.yaml fetch-readiness-data step to also copy pm-configs/ from unified-trading-pm
-      clone"
-    status: done
-    note: "DONE — pm-configs/ populated from /tmp/unified-trading-pm/configs/"
-  - id: update-dockerfile
-    content: "Add COPY pm-configs/ ./pm-configs/ to deployment-api Dockerfile (both api and api-dev stages via base)"
-    status: done
-    note: "DONE — COPY pm-configs/ added to api stage"
-  - id: quality-gates
-    content: "Run bash scripts/quality-gates.sh in deployment-api — all tests must pass"
-    status: done
-    note: "DONE — All tests pass, coverage maintained"
-  - id: remove-backward-compat-symlinks
-    content:
-      "Remove all 51 backward-compat symlinks from deployment-service/configs/ — clean migration, no transitional shims"
-    status: done
-    note: "DONE — git rm of all symlinks. Commit: af31e2e (deployment-service)"
-  - id: update-code-references
-    content:
-      "Update all deployment-service/configs/ path references in Python/YAML source files to unified-trading-pm/configs/"
-    status: done
-    note:
-      "DONE — instruments-service catalogue_updater.py + CI workflow (c12c35e, 824e723); strategy-service
-      cascade_subscriber.py (07e1044); system-integration-tests error string (3a41740); deployment-api docstrings
-      (3ba90bf)"
-  - id: clean-ssot-docs
-    content: "Remove all backward-compat symlink language from SSOT docs (00-SSOT-INDEX.md, 10-audit/README.md)"
-    status: done
-    note: "DONE — 4 backward-compat references removed from codex. Commit: 009e823 (unified-trading-codex)"
-  - id: update-gha-path-triggers
-    content:
-      "Update GHA workflow paths: triggers in sync-check.yml, epic-alignment-check.yml, weekly-sync.yml to point to
-      unified-trading-pm/configs/"
-    status: done
-    note: "DONE — All 3 workflow files updated. Commit: 20ca23e (unified-trading-codex)"
-
+- {id: move-configs-to-pm, content: Copy all operational YAML configs from deployment-service/configs/ to unified-trading-pm/configs/, status: done, note: 'DONE — All YAML files + services/ directory moved. Commit: TBD'}
+- {id: deployment-service-symlinks, content: 'Replace moved files in deployment-service/configs/ with symlinks to ../../unified-trading-pm/configs/, delete dead checklist.template.*.yaml', status: done, note: 'DONE — All 51 symlinks subsequently REMOVED (backward compat approach rejected). deployment-service/configs/ is now clean. Commit: af31e2e'}
+- {id: deployment-api-symlink, content: 'Create deployment-api/pm-configs symlink → ../unified-trading-pm/configs, remove old configs symlink', status: done, note: 'DONE — pm-configs symlink added, configs symlink removed'}
+- {id: update-get-config-dir, content: Update get_config_dir() in service_utils.py and app_config.py to search pm-configs/ (bundled) then ../unified-trading-pm/configs (sibling), status: done, note: DONE — Both functions updated with two-phase search (bundled → sibling)}
+- {id: update-tests, content: Update test_app_config.py to use pm-configs instead of configs, status: done, note: 'DONE — TestGetConfigDir uses pm-configs dir, error message updated'}
+- {id: update-cloudbuild, content: Update deployment-api/cloudbuild.yaml fetch-readiness-data step to also copy pm-configs/ from unified-trading-pm clone, status: done, note: DONE — pm-configs/ populated from /tmp/unified-trading-pm/configs/}
+- {id: update-dockerfile, content: Add COPY pm-configs/ ./pm-configs/ to deployment-api Dockerfile (both api and api-dev stages via base), status: done, note: DONE — COPY pm-configs/ added to api stage}
+- {id: quality-gates, content: Run bash scripts/quality-gates.sh in deployment-api — all tests must pass, status: done, note: 'DONE — All tests pass, coverage maintained'}
+- {id: remove-backward-compat-symlinks, content: 'Remove all 51 backward-compat symlinks from deployment-service/configs/ — clean migration, no transitional shims', status: done, note: 'DONE — git rm of all symlinks. Commit: af31e2e (deployment-service)'}
+- {id: update-code-references, content: Update all deployment-service/configs/ path references in Python/YAML source files to unified-trading-pm/configs/, status: done, note: 'DONE — instruments-service catalogue_updater.py + CI workflow (c12c35e, 824e723); strategy-service cascade_subscriber.py (07e1044); system-integration-tests error string (3a41740); deployment-api docstrings (3ba90bf)'}
+- {id: clean-ssot-docs, content: 'Remove all backward-compat symlink language from SSOT docs (00-SSOT-INDEX.md, 10-audit/README.md)', status: done, note: 'DONE — 4 backward-compat references removed from codex. Commit: 009e823 (unified-trading-codex)'}
+- {id: update-gha-path-triggers, content: 'Update GHA workflow paths: triggers in sync-check.yml, epic-alignment-check.yml, weekly-sync.yml to point to unified-trading-pm/configs/', status: done, note: 'DONE — All 3 workflow files updated. Commit: 20ca23e (unified-trading-codex)'}
 isProject: false
 ---
 

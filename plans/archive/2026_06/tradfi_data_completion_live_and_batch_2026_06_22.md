@@ -1,15 +1,24 @@
 ---
+doc_type: plan
 title: TradFi data completion — live + batch, all venues/data_types/instruments (cold-start runbook)
+summary:
+status: complete
+nature: record
+asset_group: [tradfi]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-22
 parent_epic: tradfi_master
 assigned_vm: NA
 priority: P2
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-06-22
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
-created: 2026-06-22
 ---
 
 # TradFi data completion — the SSOT runbook to drive ALL remaining tradfi live+batch work

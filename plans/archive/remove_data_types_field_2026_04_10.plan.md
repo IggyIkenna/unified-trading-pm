@@ -1,131 +1,82 @@
 ---
-name: remove-data-types-field
+doc_type: plan
+title: remove-data-types-field
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-10'
 remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_15
 superseded_by: [consolidated_operational_validation_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
-overview:
-  Remove deprecated data_types field from InstrumentDefinition and all consumers — PROTOCOL_CAPABILITIES in UAC is the
-  SSOT
+overview: Remove deprecated data_types field from InstrumentDefinition and all consumers — PROTOCOL_CAPABILITIES in UAC is the SSOT
 type: code
 epic: epic-code-completion
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-04-10
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-market-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-system-ui
-    code: C0
-    deployment: none
-    business: none
-
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: unified-market-interface, code: C0, deployment: none, business: none}
+- {repo: instruments-service, code: C0, deployment: none, business: none}
+- {repo: unified-trading-system-ui, code: C0, deployment: none, business: none}
 depends_on: []
-
 todos:
-  - id: p1-uac-remove-field
-    content: |
-      - [x] [AGENT] P0. Remove data_types from InstrumentDefinition + schemas in UAC
-    status: done
-    note: "Phase 1 — Removed field, validator, REQUIRED_BUSINESS_FIELDS entry"
-  - id: p1-uac-remove-canonical
-    content: |
-      - [x] [AGENT] P0. Remove data_types from canonical domain reference schema
-    status: done
-    note: "Phase 1 — Removed from canonical/domain/reference/__init__.py"
-  - id: p1-uac-remove-parquet
-    content: |
-      - [x] [AGENT] P0. Remove data_types from INSTRUMENTS_PARQUET_SCHEMA
-    status: done
-    note: "Phase 1 — Removed from EXTENDED_COLUMNS and INSTRUMENTS_PARQUET_SCHEMA"
-  - id: p1-uac-tests
-    content: |
-      - [x] [AGENT] P0. Update UAC tests — remove data_types assertions
-    status: done
-    note: "Phase 1 — Removed TestValidateDataTypes class, fixture data_types arg, assertion"
-  - id: p1-uac-qg
-    content: |
-      - [x] [SCRIPT] P0. Run UAC quality-gates.sh — must pass
-    status: done
-    note: "Phase 1 gate — Tests PASSED, Type check PASSED (pre-existing: file size, pip-audit)"
-  - id: p2-utl-remove-method
-    content: |
-      - [x] [AGENT] P0. Remove get_instruments_by_data_type() from UTL domain clients
-    status: done
-    note: "Phase 2 — Removed from both domain/instruments_client.py and domain_client/clients/instruments.py"
-  - id: p2-utl-remove-parsing
-    content: |
-      - [x] [AGENT] P0. Remove data_types field mapping in UTL instrument parsing
-    status: done
-    note: "Phase 2 — Removed data_types from get_trading_metadata(), _apply_filters(), _optional_coverage_stats()"
-  - id: p2-utl-tests
-    content: |
-      - [x] [AGENT] P0. Update UTL tests — remove data_types fixtures and test_get_instruments_by_data_type
-    status: done
-    note: "Phase 2 — Removed 3 test methods"
-  - id: p2-utl-qg
-    content: |
-      - [x] [SCRIPT] P0. Run UTL quality-gates.sh — must pass
-    status: done
-    note: "Phase 2 gate — Tests PASSED, Type check PASSED (pre-existing: function size, pip-audit)"
-  - id: p3-umi-stop-setting
-    content: |
-      - [x] [AGENT] P1. Stop setting data_types on instruments in UMI DeFi adapters
-    status: done
-    note: "Phase 3 — Removed from 14 adapter files (12 DeFi + 2 onchain_perps)"
-  - id: p3-umi-qg
-    content: |
-      - [x] [SCRIPT] P1. Run UMI quality-gates.sh — must pass
-    status: done
-    note: "Phase 3 gate — 1985 passed (3 pre-existing TheGraph shard test failures, unrelated)"
-  - id: p3-instruments-svc
-    content: |
-      - [x] [AGENT] P1. Remove data_types references in instruments-service if any remain
-    status: done
-    note: "Phase 3 — No data_types references found in instruments-service source. Already clean."
-  - id: p3-instruments-qg
-    content: |
-      - [x] [SCRIPT] P1. Run instruments-service quality-gates.sh — no changes, already passing
-    status: done
-    note: "Phase 3 gate — No code changes needed"
-  - id: p3-ui-schema
-    content: |
-      - [x] [AGENT] P1. Remove data_types from UI internal-contracts schema mirror
-    status: done
-    note:
-      "Phase 3 — No InstrumentDefinition.data_types in UI. Existing data_types refs are deployment/MTDS concepts (not in
-      scope)."
-  - id: p4-gcs-cleanup
-    content: |
-      - [ ] [HUMAN] P2. Run instruments-service backfill to regenerate parquet without data_types column
-    status: todo
-    note: "Phase 4 — after all code changes merged. Existing GCS parquet has the column; new writes won't."
-  - id: p4-workspace-qg
-    content: |
-      - [ ] [SCRIPT] P2. Run quality-gates.sh on all 5 affected repos — all must pass
-    status: todo
-    note: "Final validation"
+- {id: p1-uac-remove-field, content: '- [x] [AGENT] P0. Remove data_types from InstrumentDefinition + schemas in UAC
 
+    ', status: done, note: 'Phase 1 — Removed field, validator, REQUIRED_BUSINESS_FIELDS entry'}
+- {id: p1-uac-remove-canonical, content: '- [x] [AGENT] P0. Remove data_types from canonical domain reference schema
+
+    ', status: done, note: Phase 1 — Removed from canonical/domain/reference/__init__.py}
+- {id: p1-uac-remove-parquet, content: '- [x] [AGENT] P0. Remove data_types from INSTRUMENTS_PARQUET_SCHEMA
+
+    ', status: done, note: Phase 1 — Removed from EXTENDED_COLUMNS and INSTRUMENTS_PARQUET_SCHEMA}
+- {id: p1-uac-tests, content: '- [x] [AGENT] P0. Update UAC tests — remove data_types assertions
+
+    ', status: done, note: 'Phase 1 — Removed TestValidateDataTypes class, fixture data_types arg, assertion'}
+- {id: p1-uac-qg, content: '- [x] [SCRIPT] P0. Run UAC quality-gates.sh — must pass
+
+    ', status: done, note: 'Phase 1 gate — Tests PASSED, Type check PASSED (pre-existing: file size, pip-audit)'}
+- {id: p2-utl-remove-method, content: '- [x] [AGENT] P0. Remove get_instruments_by_data_type() from UTL domain clients
+
+    ', status: done, note: Phase 2 — Removed from both domain/instruments_client.py and domain_client/clients/instruments.py}
+- {id: p2-utl-remove-parsing, content: '- [x] [AGENT] P0. Remove data_types field mapping in UTL instrument parsing
+
+    ', status: done, note: 'Phase 2 — Removed data_types from get_trading_metadata(), _apply_filters(), _optional_coverage_stats()'}
+- {id: p2-utl-tests, content: '- [x] [AGENT] P0. Update UTL tests — remove data_types fixtures and test_get_instruments_by_data_type
+
+    ', status: done, note: Phase 2 — Removed 3 test methods}
+- {id: p2-utl-qg, content: '- [x] [SCRIPT] P0. Run UTL quality-gates.sh — must pass
+
+    ', status: done, note: 'Phase 2 gate — Tests PASSED, Type check PASSED (pre-existing: function size, pip-audit)'}
+- {id: p3-umi-stop-setting, content: '- [x] [AGENT] P1. Stop setting data_types on instruments in UMI DeFi adapters
+
+    ', status: done, note: Phase 3 — Removed from 14 adapter files (12 DeFi + 2 onchain_perps)}
+- {id: p3-umi-qg, content: '- [x] [SCRIPT] P1. Run UMI quality-gates.sh — must pass
+
+    ', status: done, note: 'Phase 3 gate — 1985 passed (3 pre-existing TheGraph shard test failures, unrelated)'}
+- {id: p3-instruments-svc, content: '- [x] [AGENT] P1. Remove data_types references in instruments-service if any remain
+
+    ', status: done, note: Phase 3 — No data_types references found in instruments-service source. Already clean.}
+- {id: p3-instruments-qg, content: '- [x] [SCRIPT] P1. Run instruments-service quality-gates.sh — no changes, already passing
+
+    ', status: done, note: Phase 3 gate — No code changes needed}
+- {id: p3-ui-schema, content: '- [x] [AGENT] P1. Remove data_types from UI internal-contracts schema mirror
+
+    ', status: done, note: Phase 3 — No InstrumentDefinition.data_types in UI. Existing data_types refs are deployment/MTDS concepts (not in scope).}
+- {id: p4-gcs-cleanup, content: '- [ ] [HUMAN] P2. Run instruments-service backfill to regenerate parquet without data_types column
+
+    ', status: todo, note: Phase 4 — after all code changes merged. Existing GCS parquet has the column; new writes won't.}
+- {id: p4-workspace-qg, content: '- [ ] [SCRIPT] P2. Run quality-gates.sh on all 5 affected repos — all must pass
+
+    ', status: todo, note: Final validation}
 isProject: false
 ---
 

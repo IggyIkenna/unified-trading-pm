@@ -1,14 +1,20 @@
 ---
+doc_type: issue
 title: GitHub PAT committed in instruments-service .env and .env.example (multiple commits)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-6 (Ikenna) — discovered via Phase 0.A gitleaks scan
 resolved: 2026-05-15
-resolution:
-  SECURITY-RESOLVED — leaked PAT returns HTTP 401 (already revoked). BFG history scrub demoted to P3-hygiene
-  (DEFERRED-MAINTENANCE-WINDOW; batched with companion gcp_sa_private_key issue).
-source:
-  - api_keys_wallets_accounts_readiness_2026_05_10.md Phase 0.A gitleaks scan
-  - instruments-service git history scan (/tmp/gitleaks-instruments.json)
+resolution: SECURITY-RESOLVED — leaked PAT returns HTTP 401 (already revoked). BFG history scrub demoted to P3-hygiene (DEFERRED-MAINTENANCE-WINDOW; batched with companion gcp_sa_private_key issue).
+source: [api_keys_wallets_accounts_readiness_2026_05_10.md Phase 0.A gitleaks scan, instruments-service git history scan (/tmp/gitleaks-instruments.json)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
 severity: P1 — revoke PAT; lower priority than GCP SA key (P0)

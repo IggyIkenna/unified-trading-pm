@@ -1,31 +1,25 @@
 ---
-doc_type: plan
-title: "STALE-IMAGE / not-latest-code: no alert when Cloud Run jobs run an outdated image"
+doc_type: issue
+title: 'STALE-IMAGE / not-latest-code: no alert when Cloud Run jobs run an outdated image'
+summary: 'There is **no alert** when a Cloud Run job (or long-lived service) is running an image that is older than the latest build on `live-defi-rollout` / `main`. The failure class is:'
+status: resolved
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: [deployment-service, alerting-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-26
 severity: P1
 priority: P1
-status: resolved
-resolved_by:
-  utl: unified-trading-library@d9d344a9
-  uac: unified-api-contracts@c6a2fede
-  deployment_service: deployment-service@fc3c4a7
+resolved_by: {utl: unified-trading-library@d9d344a9, uac: unified-api-contracts@c6a2fede, deployment_service: deployment-service@fc3c4a7}
 resolved_date: 2026-06-26
 class: STALE-IMAGE
-repos:
-  - deployment-service
-  - alerting-service
-  - unified-api-contracts
 assigned_vm: NA
 parent_epic: observability_master
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-summary: "There is **no alert** when a Cloud Run job (or long-lived service) is running an image that is older than the latest build on `live-defi-rollout` / `main`. The failure class is:"
-nature: process
-asset_group: cross-asset
-stage: [meta]
-scope: [engineer, admin]
-tags: []
-related: []
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

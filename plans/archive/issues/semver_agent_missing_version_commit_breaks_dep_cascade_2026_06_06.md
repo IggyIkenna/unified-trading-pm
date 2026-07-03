@@ -1,17 +1,19 @@
 ---
-title:
-  semver-agent never commits the version bump → dep-update cascade fans out constraint bumps to a non-existent version →
-  dependent v2 FAILING → staging→main dep-order gate jammed
+doc_type: issue
+title: semver-agent never commits the version bump → dep-update cascade fans out constraint bumps to a non-existent version → dependent v2 FAILING → staging→main dep-order gate jammed
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-06
-source:
-  - strategy-service quality-gates-v2 run 27065739655 (dep-update/unified-api-contracts-0.2.0)
-  - strategy-service quality-gates-v2 run 27065944720 (dep-update/market-tick-data-service-0.4.0)
-  - unified-api-contracts "Semver Agent" run 27065714312 (computed 0.1.20→0.2.0, dispatched)
-  - scripts/propagation/templates/semver-agent.yml (live SSOT, consumed by scripts/rollout-semver-agent.sh)
-  - scripts/propagation/templates/version-bump.yml (RETIRED — had the sed+commit step that was dropped)
+source: [strategy-service quality-gates-v2 run 27065739655 (dep-update/unified-api-contracts-0.2.0), strategy-service quality-gates-v2 run 27065944720 (dep-update/market-tick-data-service-0.4.0), 'unified-api-contracts "Semver Agent" run 27065714312 (computed 0.1.20→0.2.0, dispatched)', 'scripts/propagation/templates/semver-agent.yml (live SSOT, consumed by scripts/rollout-semver-agent.sh)', scripts/propagation/templates/version-bump.yml (RETIRED — had the sed+commit step that was dropped)]
 parent_epic: infrastructure_master
 priority: P2
-status: archived
 ---
 
 > **✅ RESOLVED + ARCHIVED 2026-06-07 [unlock-plan].** Cascade-critical core FIXED + landed: semver-agent re-added the

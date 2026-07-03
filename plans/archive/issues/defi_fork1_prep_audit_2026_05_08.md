@@ -1,26 +1,19 @@
 ---
-title:
-  "DeFi Fork 1 prep audit — 4-bug-class diagnostic before D4 launches (UAC SSOT date drifts on 13 (chain, protocol)
-  pairs)"
+doc_type: issue
+title: DeFi Fork 1 prep audit — 4-bug-class diagnostic before D4 launches (UAC SSOT date drifts on 13 (chain, protocol) pairs)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: defi-fork1-prep-audit-tab (Tab 14)
-source:
-  - plans/active/work_split_2026_05_07_harsh_5tab_layout.md § Tab 14 spawn prompt
-  - plans/active/defi_master_2026_05_07.md Fork 1 scope (carry_staked_basis + leveraged_funding_arb data sources)
-  - plans/active/issues/lending_indices_handler_bugs_2026_05_07.md (Tab 5 + Tab 9 bug-class precedents)
-  - plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md (Tab 6 actionable-rows breakdown)
-  - unified-api-contracts/unified_api_contracts/registry/chain_env.py (PROTOCOL_LAUNCH_DATES + CHAIN_GENESIS_DATES)
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py (SUBGRAPH_IDS)
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_lst.py (LST_TOKEN_GENESIS)
-  - market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py (cascade router)
-  - market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py (Chainlink + Pyth Hermes)
-  - market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py (Uniswap V3 + DEX cascade)
-  - instruments-service/instruments_service/reference_data/utils/evm_creation_resolver.py
-    (LENDING_PROTOCOL_DEPLOY_DATES)
-  - The Graph subgraph probes 2026-05-08 ~07:30-08:00 UTC (THEGRAPH_API_KEY via Secret Manager)
-  - Pyth Hermes coverage probes (https://hermes.pyth.network/v2/updates/price/{publish_time})
-  - gs://lending-indices-central-element-323112/_index/per_vm/mtds-lending-indices-20260508-114519.parquet (Tab 9
-    in-flight VM cross-reference)
+source: [plans/active/work_split_2026_05_07_harsh_5tab_layout.md § Tab 14 spawn prompt, plans/active/defi_master_2026_05_07.md Fork 1 scope (carry_staked_basis + leveraged_funding_arb data sources), plans/active/issues/lending_indices_handler_bugs_2026_05_07.md (Tab 5 + Tab 9 bug-class precedents), plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md (Tab 6 actionable-rows breakdown), unified-api-contracts/unified_api_contracts/registry/chain_env.py (PROTOCOL_LAUNCH_DATES + CHAIN_GENESIS_DATES), unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py (SUBGRAPH_IDS), unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_lst.py (LST_TOKEN_GENESIS), market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py (cascade router), market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py (Chainlink + Pyth Hermes), market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py
+    (Uniswap V3 + DEX cascade), instruments-service/instruments_service/reference_data/utils/evm_creation_resolver.py (LENDING_PROTOCOL_DEPLOY_DATES), 'The Graph subgraph probes 2026-05-08 ~07:30-08:00 UTC (THEGRAPH_API_KEY via Secret Manager)', 'Pyth Hermes coverage probes (https://hermes.pyth.network/v2/updates/price/{publish_time})', 'gs://lending-indices-central-element-323112/_index/per_vm/mtds-lending-indices-20260508-114519.parquet (Tab 9 in-flight VM cross-reference)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

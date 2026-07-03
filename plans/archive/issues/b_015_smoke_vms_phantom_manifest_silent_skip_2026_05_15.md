@@ -1,18 +1,20 @@
 ---
-title: "B-015 smoke VMs silent-skipped due to phantom manifest — features-onchain + MTDS lst_rates produced ZERO data"
+doc_type: issue
+title: B-015 smoke VMs silent-skipped due to phantom manifest — features-onchain + MTDS lst_rates produced ZERO data
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: ikenna-main (slot 1)
 resolved: 2026-05-17
-resolution:
-  SUPERSEDED — B-015 chain advanced past this. Original "phantom manifest" hypothesis incorrect (manifest was clean;
-  root cause was stale lock markers). Chain progressed through 8 VM attempts + 3 infra fixes (ml-training@876f0e5,
-  deployment-service@a6f746f, features-service@d687df7d) + lending-indices phantom flip. VM 8
-  (features-onchain-defi-20260517-025847) wrote 5 lst_yields parquets — B-015 gate UNBLOCKED 2026-05-17 02:08 UTC.
-source:
-  - "ikenna-main → harsh-slot-9 ping 2026-05-14 14:38 UTC (B-015 VMs LAUNCHED)"
-  - "GCS event stream:
-    gs://central-element-323112-events/events/market-tick-data-service/2026-05-14/mtds-lst-rates-20260514-143803/"
-  - "GCS output bucket: gs://market-data-tick-defi-central-element-323112/lst_rates/ (last partition = 2026-04-14)"
+resolution: SUPERSEDED — B-015 chain advanced past this. Original "phantom manifest" hypothesis incorrect (manifest was clean; root cause was stale lock markers). Chain progressed through 8 VM attempts + 3 infra fixes (ml-training@876f0e5, deployment-service@a6f746f, features-service@d687df7d) + lending-indices phantom flip. VM 8 (features-onchain-defi-20260517-025847) wrote 5 lst_yields parquets — B-015 gate UNBLOCKED 2026-05-17 02:08 UTC.
+source: ['ikenna-main → harsh-slot-9 ping 2026-05-14 14:38 UTC (B-015 VMs LAUNCHED)', 'GCS event stream: gs://central-element-323112-events/events/market-tick-data-service/2026-05-14/mtds-lst-rates-20260514-143803/', 'GCS output bucket: gs://market-data-tick-defi-central-element-323112/lst_rates/ (last partition = 2026-04-14)']
 severity: P0 (blocks B-015 paper-trade gate + Group B data-correctness)
 locked_by: live-defi-rollout
 locked_since: 2026-05-15

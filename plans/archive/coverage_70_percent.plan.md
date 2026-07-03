@@ -1,36 +1,22 @@
 ---
-name: Coverage 70% Plan
-overview:
-  Achieve MIN_COVERAGE=70% across all Python repos (libraries, services, api-services). T0 first, then
-  T1→T2→T3→services.
+doc_type: plan
+title: Coverage 70% Plan
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+overview: Achieve MIN_COVERAGE=70% across all Python repos (libraries, services, api-services). T0 first, then T1→T2→T3→services.
 todos:
-  - id: set-min-coverage
-    content: Set MIN_COVERAGE=70 in scripts/quality-gates.sh per repo
-    status: completed
-  - id: run-pytest-coverage
-    content:
-      "DONE (2026-03-08): All T0-T2 library repos verified at or above their fail_under threshold.
-      unified-events-interface=100% (was 89%, fail_under=99 — ComplianceEventPayload tests added).
-      unified-internal-contracts=100% (was 97%, fail_under=99 — features_commodity + features_sports domain tests
-      added). unified-api-contracts=80.35% (fail_under=80 — PASS). unified-trading-library=80.21% (fail_under=80 —
-      PASS). unified-cloud-interface=84.15% (fail_under=70 — PASS). unified-market-interface=74.09% (fail_under=70 —
-      PASS, was 40% blocked in prior session). unified-feature-calculator-library=94.99% (fail_under=93 — PASS). 14
-      UI/infra repos marked EXEMPT (N/A). features-delta-one-service=70.72% DONE (commit 4285483)."
-    status: completed
-  - id: add-tests
-    content:
-      "DONE (2026-03-08): T0 libs at 100%: unified-internal-contracts (features_commodity/__init__.py +
-      features_sports/__init__.py — test_coverage_gaps_features_domain.py, 26 tests) and unified-events-interface
-      (ComplianceEventPayload — 18 tests added to test_schemas.py). Earlier sessions: features-delta-one-service 70.72%
-      (8 new test files). All T0-T2 library repos now at or above their configured fail_under threshold."
-    status: completed
-  - id: t0-t1-first
-    content:
-      "DONE (2026-03-08): T0: unified-internal-contracts=100%, unified-events-interface=100%,
-      unified-api-contracts=80.35%. T1: unified-trading-library=80.21%, unified-cloud-interface=84.15%. T2:
-      unified-market-interface=74.09%, unified-feature-calculator-library=94.99%. Services:
-      features-delta-one-service=71% DONE. All T0-T2 library repos pass fail_under."
-    status: completed
+- {id: set-min-coverage, content: Set MIN_COVERAGE=70 in scripts/quality-gates.sh per repo, status: completed}
+- {id: run-pytest-coverage, content: 'DONE (2026-03-08): All T0-T2 library repos verified at or above their fail_under threshold. unified-events-interface=100% (was 89%, fail_under=99 — ComplianceEventPayload tests added). unified-internal-contracts=100% (was 97%, fail_under=99 — features_commodity + features_sports domain tests added). unified-api-contracts=80.35% (fail_under=80 — PASS). unified-trading-library=80.21% (fail_under=80 — PASS). unified-cloud-interface=84.15% (fail_under=70 — PASS). unified-market-interface=74.09% (fail_under=70 — PASS, was 40% blocked in prior session). unified-feature-calculator-library=94.99% (fail_under=93 — PASS). 14 UI/infra repos marked EXEMPT (N/A). features-delta-one-service=70.72% DONE (commit 4285483).', status: completed}
+- {id: add-tests, content: 'DONE (2026-03-08): T0 libs at 100%: unified-internal-contracts (features_commodity/__init__.py + features_sports/__init__.py — test_coverage_gaps_features_domain.py, 26 tests) and unified-events-interface (ComplianceEventPayload — 18 tests added to test_schemas.py). Earlier sessions: features-delta-one-service 70.72% (8 new test files). All T0-T2 library repos now at or above their configured fail_under threshold.', status: completed}
+- {id: t0-t1-first, content: 'DONE (2026-03-08): T0: unified-internal-contracts=100%, unified-events-interface=100%, unified-api-contracts=80.35%. T1: unified-trading-library=80.21%, unified-cloud-interface=84.15%. T2: unified-market-interface=74.09%, unified-feature-calculator-library=94.99%. Services: features-delta-one-service=71% DONE. All T0-T2 library repos pass fail_under.', status: completed}
 isProject: false
 ---
 

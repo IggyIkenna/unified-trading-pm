@@ -1,23 +1,26 @@
 ---
-name: cefi_venue_backfill_coverage_remediation
-title: "CeFi/venue backfill coverage remediation + fleet VM fixes — 2026-05-27"
+doc_type: plan
+title: CeFi/venue backfill coverage remediation + fleet VM fixes — 2026-05-27
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [issues/running_vm_fleet_status_2026_05_27.md]
+created: 2026-05-27
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
-status: done
 completed: 2026-06-01
-completed_note:
-  "Operator-marked done 2026-06-01 (harsh). All code/data-correctness fixes shipped. Tardis paid key is INTENTIONALLY
-  not activated (operator choice, NOT a blocker). GCS manifest migration / 22-day-gap reconcile is DEFERRED — to be run
-  when operator sees fit."
+completed_note: Operator-marked done 2026-06-01 (harsh). All code/data-correctness fixes shipped. Tardis paid key is INTENTIONALLY not activated (operator choice, NOT a blocker). GCS manifest migration / 22-day-gap reconcile is DEFERRED — to be run when operator sees fit.
 priority: P0
-created: 2026-05-27
 author: harsh (claude opus 4.7)
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
 locked_by: harsh-fleet-audit
-related:
-  - issues/running_vm_fleet_status_2026_05_27.md # full per-VM evidence + numbers
 ---
 
 # CeFi/venue backfill coverage remediation + fleet VM fixes

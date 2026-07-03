@@ -1,375 +1,99 @@
 ---
-name: code-readiness-master-plan
-overview: |
-  Per-repo Code Readiness (CR/DR/BR) stage tracker for all 65 manifest repos, grouped by tier.
+doc_type: plan
+title: code-readiness-master-plan
+summary:
+status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-ui, execution-service, strategy-service, system-integration-tests, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-12'
+overview: 'Per-repo Code Readiness (CR/DR/BR) stage tracker for all 65 manifest repos, grouped by tier.
+
   Defines the 5-stage CR progression (functionality → unit tests → integration tests → QG → quickmerge).
+
   Sub-plans own the implementation todos; this plan is the authoritative readiness state tracker.
+
+  '
 type: mixed
 epic: epic-code-completion
-status: superseded
 superseded_by: cicd_code_rollout_master_2026_03_13
 superseded_date: 2026-03-13
-
-completion_gates:
-  code: C5
-  deployment: D4
-  business: B8
-
+completion_gates: {code: C5, deployment: D4, business: B8}
 repo_gates:
-  # Tier 0 — zero-dep libraries (T0)
-  - repo: unified-api-contracts
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "CR4 reached (QG green locally). CR5 pending quickmerge. CR3 N/A (zero manifest deps). DR/BR pending."
-  - repo: unified-internal-contracts
-    code: C4
-    deployment: none
-    business: none
-    readiness_note: "CR4 reached. CR3 N/A (zero manifest deps). DR/BR pending."
-  - repo: unified-events-interface
-    code: C4
-    deployment: none
-    business: none
-    readiness_note: "CR4 reached (71/71 tests). CR3 N/A (zero manifest deps). DR/BR pending."
-  - repo: unified-cloud-interface
-    code: C4
-    deployment: none
-    business: none
-    readiness_note: "CR4 reached. CR3 integration: GCS/PubSub/BigQuery emulators required. DR/BR pending."
-  - repo: execution-algo-library
-    code: C4
-    deployment: none
-    business: none
-    readiness_note: "CR4 reached (94/94 tests). CR3 N/A (zero manifest deps). DR/BR N/A (library). BR2 N/A."
-  - repo: matching-engine-library
-    code: C4
-    deployment: none
-    business: none
-    readiness_note: "CR4 reached (83/83 tests). CR3 N/A (zero manifest deps). DR/BR N/A (library). BR2 N/A."
-
-  # Tier 1 — single-dep libraries (T1)
-  - repo: unified-trading-library
-    code: C4
-    deployment: none
-    business: none
-    readiness_note: "CR4 reached (1000+ tests, QG --quick pass). CR3: UTL→UEI dep integration pending. DR/BR pending."
-  - repo: unified-reference-data-interface
-    code: C4
-    deployment: none
-    business: none
-    readiness_note: "CR4 reached (227/227 tests). CR3: URDI→UCI dep integration pending. DR/BR pending."
-  - repo: unified-config-interface
-    code: C4
-    deployment: none
-    business: none
-    readiness_note: "CR4 reached (608/608 tests). CR3: UCI→UEI dep integration pending. DR/BR pending."
-  - repo: unified-sports-execution-interface
-    code: C1
-    deployment: none
-    business: none
-    readiness_note: "Scaffolded status. CR1 in progress. Phase 3 plan tracks this repo."
-
-  # Tier 2 — multi-dep libraries (T2)
-  - repo: unified-market-interface
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "CR2 reached (2160/2160 tests). CR3: 12 URDI stubs pending (vcr-urdi-parse-raw-umi-stubs). D3 basedpyright partial
-      (67 errors — extraPaths gap). CR4 blocked on basedpyright fix."
-  - repo: unified-trade-execution-interface
-    code: C2
-    deployment: none
-    business: none
-    readiness_note: "CR2 reached (203/203 tests). CR3 pending. CR4 blocked on basedpyright cleanup."
-  - repo: unified-ml-interface
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "CR2 reached (413/413 tests). CR3 pending. CR4 reached (0 basedpyright errors after extraPaths fix)."
-  - repo: unified-feature-calculator-library
-    code: C2
-    deployment: none
-    business: none
-    readiness_note: "CR2 reached (203/203 tests). CR3 pending. CR4 status unknown — audit required."
-  - repo: unified-defi-execution-interface
-    code: C2
-    deployment: none
-    business: none
-    readiness_note: "CR2 reached (94/94 tests). CR3 pending. CR4 blocked (78 basedpyright errors — pydantic/uniswap)."
-  # NOTE (2026-03-13 audit): DUPLICATE USEI entry removed. USEI appears once under T1 (line 66-70).
-  # Previously also listed here under T2 with conflicting tier assignment.
-  - repo: unified-position-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Future status — repo absent from workspace. Skip all stages."
-
-  # Tier 3 — domain client (T3)
-  - repo: unified-domain-client
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "CR2 reached (385/385 tests, 0 basedpyright errors). CR3: UDC deps are T0+T1+T2 — all integration tests pending.
-      CR4 blocked on lib-phase1-udc-tier2-compliance (UTS→UCLI migration)."
-
-  # Services (T4)
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3 service hardening — blocked on Phase 2 T0–T3 all CR5."
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on instruments-service CR5."
-  - repo: market-data-processing-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on market-tick-data-service CR5."
-  - repo: features-calendar-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on MDPS CR5."
-  - repo: features-delta-one-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on MDPS CR5."
-  - repo: features-volatility-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on MDPS CR5."
-  - repo: features-onchain-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on MDPS CR5."
-  - repo: features-sports-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Scaffolded. Phase 3. Blocked on MDPS CR5."
-  - repo: features-multi-timeframe-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on MDPS CR5."
-  - repo: features-cross-instrument-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on MDPS CR5."
-  - repo: features-commodity-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Scaffolded. Phase 3. Blocked on MDPS CR5."
-  - repo: ml-training-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on features services CR5."
-  - repo: ml-inference-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on ML training CR5."
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on ML inference CR5."
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on strategy-service CR5. QG script 59L (>50 stub threshold FAIL from audit)."
-  - repo: alerting-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on execution-service CR5."
-  - repo: pnl-attribution-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on execution-service CR5."
-  - repo: position-balance-monitor-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on execution-service CR5."
-  - repo: risk-and-exposure-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on execution-service CR5."
-  - repo: strategy-validation-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Scaffolded. Phase 3."
-  - repo: batch-live-reconciliation-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on execution-service + pnl-attribution CR5."
-  - repo: trading-agent-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Scaffolded. Phase 3."
-
-  # API Services (T5)
-  - repo: execution-results-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on execution-service CR5."
-  - repo: market-data-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on MDPS CR5."
-  - repo: client-reporting-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on pnl-attribution-service CR5."
-  - repo: ml-inference-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on ml-inference-service CR5."
-  - repo: ml-training-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on ml-training-service CR5."
-  - repo: trading-analytics-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on strategy-service + execution-service CR5."
-  - repo: batch-audit-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on batch-live-reconciliation-service CR5."
-
-  # UI Repos (T6)
-  - repo: strategy-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on T5 API CR5. BR2/BR5 N/A (UI). vitest required per audit."
-  - repo: deployment-ui
-    code: C1
-    deployment: none
-    business: none
-    readiness_note: "Scaffolded. Vitest tests missing (audit §16 FAIL). BR2/BR5 N/A."
-  - repo: unified-admin-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on API CR5."
-  - repo: batch-audit-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Vitest missing (audit §16 FAIL). BR2/BR5 N/A."
-  - repo: trading-analytics-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Vitest missing (audit §16 FAIL). BR2/BR5 N/A."
-  - repo: live-health-monitor-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. BR2/BR5 N/A."
-  - repo: client-reporting-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. BR2/BR5 N/A."
-  - repo: logs-dashboard-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. BR2/BR5 N/A."
-  - repo: onboarding-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. BR2/BR5 N/A."
-  - repo: settlement-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. BR2/BR5 N/A."
-  - repo: execution-analytics-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Vitest missing (audit §16 FAIL). BR2/BR5 N/A."
-  - repo: ml-training-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. BR2/BR5 N/A."
-  - repo: unified-trading-ui-auth
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Library-type UI component. BR2/BR5 N/A."
-
-  # Infrastructure / Devops
-  - repo: ibkr-gateway-infra
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Infrastructure repo. DR gates primary. BR N/A mostly."
-  - repo: deployment-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. QG 59L stub threshold (audit FAIL). DR gates primary."
-  - repo: deployment-api
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Phase 3. Blocked on deployment-service CR5."
-  - repo: system-integration-tests
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Scaffolded. SIT suite owns DR4 validation for all other repos."
-  - repo: unified-trading-codex
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Infrastructure. CR/DR/BR not applicable in same way — codex sync agent owns this."
-  - repo: unified-trading-pm
-    code: C5
-    deployment: none
-    business: none
-    readiness_note: "PM repo — this plan lives here. CR5 reached. DR/BR N/A."
-
-depends_on:
-  - plan-readiness-gates-overhaul
-
+- {repo: unified-api-contracts, code: C4, deployment: none, business: none, readiness_note: CR4 reached (QG green locally). CR5 pending quickmerge. CR3 N/A (zero manifest deps). DR/BR pending.}
+- {repo: unified-internal-contracts, code: C4, deployment: none, business: none, readiness_note: CR4 reached. CR3 N/A (zero manifest deps). DR/BR pending.}
+- {repo: unified-events-interface, code: C4, deployment: none, business: none, readiness_note: CR4 reached (71/71 tests). CR3 N/A (zero manifest deps). DR/BR pending.}
+- {repo: unified-cloud-interface, code: C4, deployment: none, business: none, readiness_note: 'CR4 reached. CR3 integration: GCS/PubSub/BigQuery emulators required. DR/BR pending.'}
+- {repo: execution-algo-library, code: C4, deployment: none, business: none, readiness_note: CR4 reached (94/94 tests). CR3 N/A (zero manifest deps). DR/BR N/A (library). BR2 N/A.}
+- {repo: matching-engine-library, code: C4, deployment: none, business: none, readiness_note: CR4 reached (83/83 tests). CR3 N/A (zero manifest deps). DR/BR N/A (library). BR2 N/A.}
+- {repo: unified-trading-library, code: C4, deployment: none, business: none, readiness_note: 'CR4 reached (1000+ tests, QG --quick pass). CR3: UTL→UEI dep integration pending. DR/BR pending.'}
+- {repo: unified-reference-data-interface, code: C4, deployment: none, business: none, readiness_note: 'CR4 reached (227/227 tests). CR3: URDI→UCI dep integration pending. DR/BR pending.'}
+- {repo: unified-config-interface, code: C4, deployment: none, business: none, readiness_note: 'CR4 reached (608/608 tests). CR3: UCI→UEI dep integration pending. DR/BR pending.'}
+- {repo: unified-sports-execution-interface, code: C1, deployment: none, business: none, readiness_note: Scaffolded status. CR1 in progress. Phase 3 plan tracks this repo.}
+- {repo: unified-market-interface, code: C2, deployment: none, business: none, readiness_note: 'CR2 reached (2160/2160 tests). CR3: 12 URDI stubs pending (vcr-urdi-parse-raw-umi-stubs). D3 basedpyright partial (67 errors — extraPaths gap). CR4 blocked on basedpyright fix.'}
+- {repo: unified-trade-execution-interface, code: C2, deployment: none, business: none, readiness_note: CR2 reached (203/203 tests). CR3 pending. CR4 blocked on basedpyright cleanup.}
+- {repo: unified-ml-interface, code: C2, deployment: none, business: none, readiness_note: CR2 reached (413/413 tests). CR3 pending. CR4 reached (0 basedpyright errors after extraPaths fix).}
+- {repo: unified-feature-calculator-library, code: C2, deployment: none, business: none, readiness_note: CR2 reached (203/203 tests). CR3 pending. CR4 status unknown — audit required.}
+- {repo: unified-defi-execution-interface, code: C2, deployment: none, business: none, readiness_note: CR2 reached (94/94 tests). CR3 pending. CR4 blocked (78 basedpyright errors — pydantic/uniswap).}
+- {repo: unified-position-interface, code: C0, deployment: none, business: none, readiness_note: Future status — repo absent from workspace. Skip all stages.}
+- {repo: unified-domain-client, code: C2, deployment: none, business: none, readiness_note: 'CR2 reached (385/385 tests, 0 basedpyright errors). CR3: UDC deps are T0+T1+T2 — all integration tests pending. CR4 blocked on lib-phase1-udc-tier2-compliance (UTS→UCLI migration).'}
+- {repo: instruments-service, code: C0, deployment: none, business: none, readiness_note: Phase 3 service hardening — blocked on Phase 2 T0–T3 all CR5.}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on instruments-service CR5.}
+- {repo: market-data-processing-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on market-tick-data-service CR5.}
+- {repo: features-calendar-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on MDPS CR5.}
+- {repo: features-delta-one-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on MDPS CR5.}
+- {repo: features-volatility-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on MDPS CR5.}
+- {repo: features-onchain-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on MDPS CR5.}
+- {repo: features-sports-service, code: C0, deployment: none, business: none, readiness_note: Scaffolded. Phase 3. Blocked on MDPS CR5.}
+- {repo: features-multi-timeframe-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on MDPS CR5.}
+- {repo: features-cross-instrument-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on MDPS CR5.}
+- {repo: features-commodity-service, code: C0, deployment: none, business: none, readiness_note: Scaffolded. Phase 3. Blocked on MDPS CR5.}
+- {repo: ml-training-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on features services CR5.}
+- {repo: ml-inference-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on ML training CR5.}
+- {repo: strategy-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on ML inference CR5.}
+- {repo: execution-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on strategy-service CR5. QG script 59L (>50 stub threshold FAIL from audit).}
+- {repo: alerting-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on execution-service CR5.}
+- {repo: pnl-attribution-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on execution-service CR5.}
+- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on execution-service CR5.}
+- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on execution-service CR5.}
+- {repo: strategy-validation-service, code: C0, deployment: none, business: none, readiness_note: Scaffolded. Phase 3.}
+- {repo: batch-live-reconciliation-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on execution-service + pnl-attribution CR5.}
+- {repo: trading-agent-service, code: C0, deployment: none, business: none, readiness_note: Scaffolded. Phase 3.}
+- {repo: execution-results-api, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on execution-service CR5.}
+- {repo: market-data-api, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on MDPS CR5.}
+- {repo: client-reporting-api, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on pnl-attribution-service CR5.}
+- {repo: ml-inference-api, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on ml-inference-service CR5.}
+- {repo: ml-training-api, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on ml-training-service CR5.}
+- {repo: trading-analytics-api, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on strategy-service + execution-service CR5.}
+- {repo: batch-audit-api, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on batch-live-reconciliation-service CR5.}
+- {repo: strategy-ui, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on T5 API CR5. BR2/BR5 N/A (UI). vitest required per audit.}
+- {repo: deployment-ui, code: C1, deployment: none, business: none, readiness_note: Scaffolded. Vitest tests missing (audit §16 FAIL). BR2/BR5 N/A.}
+- {repo: unified-admin-ui, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on API CR5.}
+- {repo: batch-audit-ui, code: C0, deployment: none, business: none, readiness_note: Vitest missing (audit §16 FAIL). BR2/BR5 N/A.}
+- {repo: trading-analytics-ui, code: C0, deployment: none, business: none, readiness_note: Vitest missing (audit §16 FAIL). BR2/BR5 N/A.}
+- {repo: live-health-monitor-ui, code: C0, deployment: none, business: none, readiness_note: Phase 3. BR2/BR5 N/A.}
+- {repo: client-reporting-ui, code: C0, deployment: none, business: none, readiness_note: Phase 3. BR2/BR5 N/A.}
+- {repo: logs-dashboard-ui, code: C0, deployment: none, business: none, readiness_note: Phase 3. BR2/BR5 N/A.}
+- {repo: onboarding-ui, code: C0, deployment: none, business: none, readiness_note: Phase 3. BR2/BR5 N/A.}
+- {repo: settlement-ui, code: C0, deployment: none, business: none, readiness_note: Phase 3. BR2/BR5 N/A.}
+- {repo: execution-analytics-ui, code: C0, deployment: none, business: none, readiness_note: Vitest missing (audit §16 FAIL). BR2/BR5 N/A.}
+- {repo: ml-training-ui, code: C0, deployment: none, business: none, readiness_note: Phase 3. BR2/BR5 N/A.}
+- {repo: unified-trading-ui-auth, code: C0, deployment: none, business: none, readiness_note: Library-type UI component. BR2/BR5 N/A.}
+- {repo: ibkr-gateway-infra, code: C0, deployment: none, business: none, readiness_note: Infrastructure repo. DR gates primary. BR N/A mostly.}
+- {repo: deployment-service, code: C0, deployment: none, business: none, readiness_note: Phase 3. QG 59L stub threshold (audit FAIL). DR gates primary.}
+- {repo: deployment-api, code: C0, deployment: none, business: none, readiness_note: Phase 3. Blocked on deployment-service CR5.}
+- {repo: system-integration-tests, code: C0, deployment: none, business: none, readiness_note: Scaffolded. SIT suite owns DR4 validation for all other repos.}
+- {repo: unified-trading-codex, code: C0, deployment: none, business: none, readiness_note: Infrastructure. CR/DR/BR not applicable in same way — codex sync agent owns this.}
+- {repo: unified-trading-pm, code: C5, deployment: none, business: none, readiness_note: PM repo — this plan lives here. CR5 reached. DR/BR N/A.}
+depends_on: [plan-readiness-gates-overhaul]
 todos:
-  # --- T0 Tier ---
+---
+
+ T0 Tier ---
   - id: cr-t0-cr5
     content:
       "T0 TIER: Push all 6 T0 repos (UEI, AC, UIC, UCI, EAL, MEL) to CR5 — quickmerge to feat/code-readiness-t0 branch

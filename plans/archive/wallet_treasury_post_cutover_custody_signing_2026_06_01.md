@@ -1,9 +1,18 @@
 ---
-title: "Wallet / Treasury — Phase 1+3 PULLED FORWARD pre-May-15; Phase 2 DESCOPED (Copper/CEFFU is client-side)"
+doc_type: plan
+title: Wallet / Treasury — Phase 1+3 PULLED FORWARD pre-May-15; Phase 2 DESCOPED (Copper/CEFFU is client-side)
+summary:
+status: phase-1-3-pulled-forward + phase-2-descoped-client-side
+nature: record
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 updated: 2026-05-13
 type: plan
-status: phase-1-3-pulled-forward + phase-2-descoped-client-side
 deadline: 2026-05-15 (Phase 1 + Phase 3 only)
 horizon: 2 days pre-freeze for Phase 1+3
 predecessor: wallet_treasury_client_flow_2026_05_10.md (deferred Q3 + Q5 from design decisions 2026-05-13)

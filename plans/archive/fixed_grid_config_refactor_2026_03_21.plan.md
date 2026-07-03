@@ -1,64 +1,37 @@
 ---
-name: fixed-grid-config-refactor-2026-03-21
-overview: >
-  Split ML training, strategy, and execution backtest configs into Fixed (lookup keys) vs Grid (combinatoric search)
-  tiers. Target-type-specific params move from top-level fields into per-type dicts. Enables unified mass backtesting
-  across TradFi/CeFi/DeFi/Sports without nonsensical cross-products.
+doc_type: plan
+title: fixed-grid-config-refactor-2026-03-21
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: [ml, strategy, execution, config, backtest, grid, architecture]
+related: []
+created: '2026-03-21'
+overview: 'Split ML training, strategy, and execution backtest configs into Fixed (lookup keys) vs Grid (combinatoric search) tiers. Target-type-specific params move from top-level fields into per-type dicts. Enables unified mass backtesting across TradFi/CeFi/DeFi/Sports without nonsensical cross-products.
+
+  '
 type: code
 epic: epic-code-completion
-status: active
 priority: P0
 owner: human
-locked_by: null
-locked_since: null
-tags: [ml, strategy, execution, config, backtest, grid, architecture]
-
-completion_gates:
-  code: C4
-  deployment: none
-  business: none
-
+locked_by:
+locked_since:
+completion_gates: {code: C4, deployment: none, business: none}
 repo_gates:
-  - repo: unified-internal-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-ml-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-config-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-training-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-domain-client
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-inference-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: none
-    deployment: none
-    business: none
-    readiness_note: "Plan + codex docs only."
-
-depends_on:
-  - uniform-ml-pipeline-sports-migration-2026-03-20
+- {repo: unified-internal-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-ml-interface, code: C0, deployment: none, business: none}
+- {repo: unified-config-interface, code: C0, deployment: none, business: none}
+- {repo: ml-training-service, code: C0, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: unified-domain-client, code: C0, deployment: none, business: none}
+- {repo: ml-inference-service, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: none, deployment: none, business: none, readiness_note: Plan + codex docs only.}
+depends_on: [uniform-ml-pipeline-sports-migration-2026-03-20]
 ---
 
 # Fixed vs Grid Config Refactor — Mass Backtesting Architecture

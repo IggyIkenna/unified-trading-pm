@@ -1,31 +1,34 @@
 ---
-title: "Deployment-UI Safety Ops Tab — Manual Override For Every Layer-0 + Layer-1 Action"
+doc_type: plan
+title: Deployment-UI Safety Ops Tab — Manual Override For Every Layer-0 + Layer-1 Action
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
+scope: [engineer, admin]
+tags: []
+related: [incident_gateway_and_state_machine_2026_05_23.md, agent_recovery_controller_layer0_deterministic_2026_05_23.md, ai_recovery_audit_signoff_agent_2026_05_23.md, audit_acknowledgement_sla_and_state_2026_05_23.md]
+created: '2026-05-23'
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: active
 estimate_class: brand-new
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8.0
-estimate_calibration_note: |
-  Brand-new class — new DART/deployment-ui tab + 10+ manual action buttons with typed-confirm-string + LLM verdict
+estimate_calibration_note: 'Brand-new class — new DART/deployment-ui tab + 10+ manual action buttons with typed-confirm-string + LLM verdict
+
   surface + ack-queue countdown + incident-state-history viewer. Baseline 8 = ~1 cal-day per major sub-component. No
+
   multiplier (1.0×).
+
+  '
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-depends_on:
-  - incident_gateway_and_state_machine_2026_05_23
-  - agent_recovery_controller_layer0_deterministic_2026_05_23
-  - ai_recovery_audit_signoff_agent_2026_05_23
-  - audit_acknowledgement_sla_and_state_2026_05_23
-gates:
-  - master_to_live_defi_2026_05_23:Group-G
-related_plans:
-  - incident_gateway_and_state_machine_2026_05_23.md
-  - agent_recovery_controller_layer0_deterministic_2026_05_23.md
-  - ai_recovery_audit_signoff_agent_2026_05_23.md
-  - audit_acknowledgement_sla_and_state_2026_05_23.md
+depends_on: [incident_gateway_and_state_machine_2026_05_23, agent_recovery_controller_layer0_deterministic_2026_05_23, ai_recovery_audit_signoff_agent_2026_05_23, audit_acknowledgement_sla_and_state_2026_05_23]
+gates: ['master_to_live_defi_2026_05_23:Group-G']
 ---
 
 # Deployment-UI Safety Ops Tab — Manual Override

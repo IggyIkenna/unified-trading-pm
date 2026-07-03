@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Tested and Deployable Gate Criteria
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, system-integration-tests, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+---
+
 ## Deferred work — migrated to:
 
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any

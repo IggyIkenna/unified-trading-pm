@@ -1,26 +1,26 @@
 ---
-name: mdps_pure_polars_migration
-title: "MDPS pure-Polars migration — staged engine cutover (2026-05-28)"
+doc_type: plan
+title: MDPS pure-Polars migration — staged engine cutover (2026-05-28)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [instruments-service, market-data-processing-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md, mdps_long_running_multi_shard_architecture_audit_2026_05_28.md]
+created: 2026-05-28
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
-status: active
 model_tier: opus-required
 thinking_tier: high
 priority: P1
-created: 2026-05-28
 estimate_class: refactor
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
-related:
-  - mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md # tactical fixes already shipped (E1-E3)
-  - mdps_long_running_multi_shard_architecture_audit_2026_05_28.md # architectural plan; this plan IS its Phase 2 implementation
-codex_ssots:
-  - codex/06-coding-standards/data-engine-selection.md # NOW LOCKED to pure-Polars for MDPS shape (2026-05-28)
-  - codex/06-coding-standards/service-orchestration-patterns.md # § 15 cleanup discipline
-audit_findings_grounding:
-  - plans/audit/results/mdps_engine_benchmark_findings_2026_05_28.md # benchmark evidence
-  - plans/audit/results/mdps_long_running_engine_mixing_2026_05_28.md # static-trace audit
-  - plans/audit/results/mdps_long_running_state_inventory_2026_05_28.md # state inventory
+codex_ssots: [codex/06-coding-standards/data-engine-selection.md, codex/06-coding-standards/service-orchestration-patterns.md]
+audit_findings_grounding: [plans/audit/results/mdps_engine_benchmark_findings_2026_05_28.md, plans/audit/results/mdps_long_running_engine_mixing_2026_05_28.md, plans/audit/results/mdps_long_running_state_inventory_2026_05_28.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
 ---

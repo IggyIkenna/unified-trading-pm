@@ -1,12 +1,20 @@
 ---
-title: "strategy-service: pre-existing RUF002 lint failures (ambiguous σ) in dynamic_hedge_ratio.py"
+doc_type: issue
+title: 'strategy-service: pre-existing RUF002 lint failures (ambiguous σ) in dynamic_hedge_ratio.py'
+summary:
+status: RESOLVED
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 resolved: 2026-05-13
 author: slot-4-harsh
 resolved_by: slot-4-harsh (strategy-service@88f77c0 + strategy-service@fe1e81d)
-source:
-  - arbitrage_price_dispersion_finalisation_2026_05_09
-status: RESOLVED
+source: [arbitrage_price_dispersion_finalisation_2026_05_09]
 severity: P2
 ---
 

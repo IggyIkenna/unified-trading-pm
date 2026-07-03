@@ -1,13 +1,20 @@
 ---
-title: "defi 604,951 rows in attempted_failed/LegacyBlankErrorReasonError — need proper reclassification"
+doc_type: issue
+title: defi 604,951 rows in attempted_failed/LegacyBlankErrorReasonError — need proper reclassification
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 author: slot-3-ikenna
 resolved: 2026-05-13
 resolution: SHIPPED 2026-05-13 ~16:25 BST — full fix shipped per body § "RESOLVED 2026-05-13 ~16:25 BST".
-source:
-  - bucket_name_ssot_canonicalisation_2026_05_10
-  - expected_unattempted_propagation_chain_2026_05_12
-  - classify_blank_reason_fixture_manifest_kwarg_2026_05_13
+source: [bucket_name_ssot_canonicalisation_2026_05_10, expected_unattempted_propagation_chain_2026_05_12, classify_blank_reason_fixture_manifest_kwarg_2026_05_13]
 severity: P1
 locked_by: live-defi-rollout
 locked_since: 2026-05-13

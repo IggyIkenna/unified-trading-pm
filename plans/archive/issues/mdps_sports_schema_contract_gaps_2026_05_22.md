@@ -1,11 +1,19 @@
 ---
-title: "MDPS Sports manifest MalformedRowKeyError + streaming read schema gaps"
+doc_type: issue
+title: MDPS Sports manifest MalformedRowKeyError + streaming read schema gaps
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-22
-source:
-  - plans/active/mdps_backfill_phase3_2026_05_22.md (MDPS-3.3.Sports-V)
+source: [plans/active/mdps_backfill_phase3_2026_05_22.md (MDPS-3.3.Sports-V)]
 locked_by: live-defi-rollout
 priority: P2
-status: active
 ---
 
 > **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — code root-causes fixed (MDPS@21700c5 + 65b6a54 + e53cc35); v8

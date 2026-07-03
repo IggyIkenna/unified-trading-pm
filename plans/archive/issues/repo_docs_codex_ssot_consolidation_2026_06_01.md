@@ -1,18 +1,24 @@
 ---
-name: repo_docs_codex_ssot_consolidation
-title: "Repo docs → codex SSOT consolidation (kill doc duplication / stale drift, all repos)"
+doc_type: issue
+title: Repo docs → codex SSOT consolidation (kill doc duplication / stale drift, all repos)
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-01
 parent_epic: plan_hygiene_master
 assigned_vm: vm-ml
-created: 2026-06-01
 author: harsh + claude (session 67c17024)
 estimate_class: refactor
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
-status: active
 locked_by: live-defi-rollout
-source:
-  - unified-trading-pm/codex/06-coding-standards/documentation-standards.md
-  - unified-trading-pm/codex/00-SSOT-INDEX.md
+source: [unified-trading-pm/codex/06-coding-standards/documentation-standards.md, unified-trading-pm/codex/00-SSOT-INDEX.md]
 ---
 
 # Repo docs → codex SSOT consolidation

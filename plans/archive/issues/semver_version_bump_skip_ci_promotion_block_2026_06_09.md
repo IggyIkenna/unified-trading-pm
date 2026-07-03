@@ -1,13 +1,18 @@
 ---
-title:
-  "semver-agent version-bump `[skip ci]` blocks staging→main promotion (+ re-bump loop) — root cause + recommended fix"
+doc_type: issue
+title: semver-agent version-bump `[skip ci]` blocks staging→main promotion (+ re-bump loop) — root cause + recommended fix
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-09
-source:
-  - plans/active/issues/ci_incident_findings_2026_06_09.md
-  - plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md
-  - codex/08-workflows/ci-cd-flow.md (§ "[skip ci] and required checks")
+source: [plans/active/issues/ci_incident_findings_2026_06_09.md, plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md, 'codex/08-workflows/ci-cd-flow.md (§ "[skip ci] and required checks")']
 locked_by: live-defi-rollout
-status: archived
 priority: P1
 ---
 

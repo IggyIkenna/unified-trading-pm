@@ -1,8 +1,17 @@
 ---
+doc_type: plan
 title: Solana DeFi venue naming reconciliation — canonicalize to PROTOCOL-SOLANA pattern
-type: plan
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
+type: plan
 deadline: 2026-05-23
 priority: P1
 spawned_from: plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md (Successor plan D)

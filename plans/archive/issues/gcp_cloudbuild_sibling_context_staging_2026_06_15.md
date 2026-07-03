@@ -1,13 +1,19 @@
 ---
-title:
-  "GCP Cloud Build image builds fail for sibling-COPY service repos — build context doesn't stage sibling repos (AWS
-  CodeBuild does)"
+doc_type: issue
+title: GCP Cloud Build image builds fail for sibling-COPY service repos — build context doesn't stage sibling repos (AWS CodeBuild does)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, execution-service, features-service, fund-administration-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-15
-source:
-  - "deploy-UI Image column showing red/stale images; fleet promotion unstall 2026-06-15"
+source: [deploy-UI Image column showing red/stale images; fleet promotion unstall 2026-06-15]
 locked_by: live-defi-rollout
 priority: P2
-status: archived
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans

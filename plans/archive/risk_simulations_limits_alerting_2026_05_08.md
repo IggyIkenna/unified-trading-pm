@@ -1,30 +1,24 @@
 ---
-name: risk-simulations-limits-alerting
-overview:
-  Risk monitor vs risk simulations vs risk alerts vs pre-flight risk checks — wire-up across the system, dimensions
-  (venue / account / strategy / client), per instrument-type + strategy-family / archetype, consequences of failure
-  (block vs monitor vs test). Owner of the canonical circuit-breaker rule taxonomy + the mock-data-as-stress-test
-  surface that downstream plans consume.
-type: question
+doc_type: plan
+title: risk-simulations-limits-alerting
+summary:
 status: plan-spawned
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service, strategy-service, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md, plans/questions/wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md, plans/questions/client_reporting_pnl_attribution_2026_05_08.md, plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md, plans/questions/defi_readiness_catalogue_2026_05_08.md, plans/active/issues/missing_question_docs_orphan_references_2026_05_10.md]
 created: 2026-05-08
+overview: Risk monitor vs risk simulations vs risk alerts vs pre-flight risk checks — wire-up across the system, dimensions (venue / account / strategy / client), per instrument-type + strategy-family / archetype, consequences of failure (block vs monitor vs test). Owner of the canonical circuit-breaker rule taxonomy + the mock-data-as-stress-test surface that downstream plans consume.
+type: question
 plan_spawned: 2026-05-10
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 spawned_plan: plans/active/risk_simulations_limits_alerting_2026_05_10.md
-related_codex:
-  - codex/04-architecture/kill-switch-circuit-breaker.md
-  - codex/04-architecture/separation-of-concerns.md
-related_plans:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-  - plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
-  - plans/questions/wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md
-  - plans/questions/client_reporting_pnl_attribution_2026_05_08.md
-  - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-  - plans/questions/defi_readiness_catalogue_2026_05_08.md
-  - plans/active/issues/missing_question_docs_orphan_references_2026_05_10.md
+related_codex: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/separation-of-concerns.md]
 ---
 
 # Risk monitor + risk simulations + risk alerts + pre-flight risk checks — end-to-end wire-up question

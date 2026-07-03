@@ -1,15 +1,19 @@
 ---
+doc_type: issue
 title: features-onchain suppresses LookaheadBiasError instead of raising loud
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-09
 author: ikenna
-source:
-  - features-onchain-service/features_onchain_service/app/core/feature_writer.py:125-131
-  - features-service/features_service/onchain/app/core/feature_writer.py:125-131
-  - plans/questions/topology_features_strategy_ml_execution_2026_05_08.md (Q3.2.d)
-  - plans/active/topology_qgroup_gap_closure_2026_05_09.md (Phase 5)
-related_rule:
-  - .claude/CLAUDE.md "LookaheadBiasError raised loud at every features-* compute"
-  - .claude/CLAUDE.md "available_at is per-row, write-time, equal to live-pipeline-arrival"
+source: ['features-onchain-service/features_onchain_service/app/core/feature_writer.py:125-131', 'features-service/features_service/onchain/app/core/feature_writer.py:125-131', plans/questions/topology_features_strategy_ml_execution_2026_05_08.md (Q3.2.d), plans/active/topology_qgroup_gap_closure_2026_05_09.md (Phase 5)]
+related_rule: [.claude/CLAUDE.md "LookaheadBiasError raised loud at every features-* compute", '.claude/CLAUDE.md "available_at is per-row, write-time, equal to live-pipeline-arrival"']
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 deadline: 2026-05-12

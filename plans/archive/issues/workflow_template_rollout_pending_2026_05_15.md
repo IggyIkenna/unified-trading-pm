@@ -1,16 +1,20 @@
 ---
+doc_type: issue
 title: workflow-template rollout pending — 22 repos, 3 templates, script bug fixed
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-8
 resolved: 2026-05-17
-resolution:
-  SHIPPED — all 3 templates (semver-agent.yml + major-bump-issue-handler.yml + workspace-qg.yml) rolled out across 21
-  Python repos. Verified 2026-05-17 by sampling 5 repos (mtds/features/execution/strategy/deployment) — all 3 workflows
-  present. UI-only templates (uac-registry-sync + uic-openapi-sync) remain UI-only (no rollout to non-UI repos by
-  design).
-source:
-  - scripts/workflow-templates/rollout-workflow-templates.sh
-  - scripts/workflow-templates/semver-agent.yml.tmpl
+resolution: SHIPPED — all 3 templates (semver-agent.yml + major-bump-issue-handler.yml + workspace-qg.yml) rolled out across 21 Python repos. Verified 2026-05-17 by sampling 5 repos (mtds/features/execution/strategy/deployment) — all 3 workflows present. UI-only templates (uac-registry-sync + uic-openapi-sync) remain UI-only (no rollout to non-UI repos by design).
+source: [scripts/workflow-templates/rollout-workflow-templates.sh, scripts/workflow-templates/semver-agent.yml.tmpl]
 locked_by: live-defi-rollout
 ---
 

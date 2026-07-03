@@ -1,15 +1,22 @@
 ---
-title: "UAC normalize_aster_ticker missing from tickers.py — blocks all emission policy tests in features-service"
-created: "2026-05-13"
-author: "slot-7 sub-agent (Phase 6.5 sports wiring)"
-source:
-  - "features-service/.venv run of tests/sports/unit/test_emission_policy.py"
-  - "unified-api-contracts/unified_api_contracts/normalize_utils/__init__.py:289-290"
-severity: P1
-suggested_owner: "UAC maintainer (Ikenna slot 1)"
+doc_type: issue
+title: UAC normalize_aster_ticker missing from tickers.py — blocks all emission policy tests in features-service
+summary:
 status: RESOLVED
-resolved_by: "slot-5 (UAC@f008af9 + regression-guard UAC@6110d05)"
-resolved_at: "2026-05-13"
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-13'
+author: slot-7 sub-agent (Phase 6.5 sports wiring)
+source: [features-service/.venv run of tests/sports/unit/test_emission_policy.py, 'unified-api-contracts/unified_api_contracts/normalize_utils/__init__.py:289-290']
+severity: P1
+suggested_owner: UAC maintainer (Ikenna slot 1)
+resolved_by: slot-5 (UAC@f008af9 + regression-guard UAC@6110d05)
+resolved_at: '2026-05-13'
 ---
 
 > **✅ RESOLVED 2026-05-13 by Ikenna slot 5**

@@ -1,7 +1,16 @@
 ---
-title: "Build-Operability Smoke — every repo image builds AND actually runs"
+doc_type: plan
+title: Build-Operability Smoke — every repo image builds AND actually runs
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-19
-status: active
 parent_epic: infrastructure_master
 assigned_vm: NA
 plan_of_record: plans/active/cicd_quality_gates_2026_06_18.md
@@ -9,11 +18,7 @@ locked_by: live-defi-rollout
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-source:
-  - 2026-06-19 operator request — test that we can create images for ALL repos, and that the images are OPERABLE (open
-    up + run), not just `docker build` exit 0 → needs a smoke test
-  - 2026-06-19 mdps build fix (build_operability proven end-to-end on market-data-processing-service)
-  - 2026-06-19 fleet Dockerfile/cloudbuild sweep (3 build-blocker classes catalogued below)
+source: ['2026-06-19 operator request — test that we can create images for ALL repos, and that the images are OPERABLE (open up + run), not just `docker build` exit 0 → needs a smoke test', 2026-06-19 mdps build fix (build_operability proven end-to-end on market-data-processing-service), 2026-06-19 fleet Dockerfile/cloudbuild sweep (3 build-blocker classes catalogued below)]
 priority: P1
 ---
 

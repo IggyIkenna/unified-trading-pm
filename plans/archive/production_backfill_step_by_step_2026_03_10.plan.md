@@ -1,33 +1,25 @@
 ---
-name: production-backfill-step-by-step-2026-03-10
-overview:
-  Define the exact 5-step sequenced backfill runbook (instruments → tick data → features → ML training → validation
-  backtest) with gate scripts at each step and recovery procedures, must complete before live trading week 2026-03-20.
+doc_type: plan
+title: production-backfill-step-by-step-2026-03-10
+summary:
+status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-data-processing-service, market-tick-data-service, system-integration-tests, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-10'
+overview: Define the exact 5-step sequenced backfill runbook (instruments → tick data → features → ML training → validation backtest) with gate scripts at each step and recovery procedures, must complete before live trading week 2026-03-20.
 type: infra
 epic: epic-infra
-status: superseded
 superseded_by: defi_keys_data_integration_2026_03_13
 superseded_date: 2026-03-13
-
-completion_gates:
-  code: C5
-  deployment: D3
-  business: none
-
+completion_gates: {code: C5, deployment: D3, business: none}
 repo_gates:
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "C0: not started. DR N/A: local runbook scripts and gate tooling only — cloud deployment readiness tracked at plan
-      completion_gates level (D3). BR N/A: infrastructure runbook plan, no commercial KPI."
-
-depends_on:
-  - cloud_infra_bucket_auth_2026_03_10
-  - api_keys_and_auth
-  - phase3_service_hardening_integration
-
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none, readiness_note: 'C0: not started. DR N/A: local runbook scripts and gate tooling only — cloud deployment readiness tracked at plan completion_gates level (D3). BR N/A: infrastructure runbook plan, no commercial KPI.'}
+depends_on: [cloud_infra_bucket_auth_2026_03_10, api_keys_and_auth, phase3_service_hardening_integration]
 isProject: false
 ---
 

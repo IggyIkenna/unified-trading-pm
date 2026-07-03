@@ -1,11 +1,18 @@
 ---
+doc_type: issue
 title: ML artefact path resolver consumer sweep — retrofit `resolve_bucket_name()` across 17 callsites
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna-self-answer-ml-pb-batch (slot 8 sub-agent, batch 2)
-source:
-  - plans/archive/issues/codex_audit_ml_2026_05_12.md ML-1
-  - codex/04-architecture/bucket-name-ssot.md (b+)
-  - CLAUDE.md § "Bucket-name SSOT (b+)" + QG STEP 5.69 ratchet
+source: [plans/archive/issues/codex_audit_ml_2026_05_12.md ML-1, codex/04-architecture/bucket-name-ssot.md (b+), CLAUDE.md § "Bucket-name SSOT (b+)" + QG STEP 5.69 ratchet]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 severity: P1

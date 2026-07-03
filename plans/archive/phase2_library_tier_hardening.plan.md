@@ -1,100 +1,35 @@
 ---
-name: phase2-library-tier-hardening
-overview:
-  Hardens all library tiers (T0→T1→T2→T3) to fully green quality gates in strict sequential order (T0→T1→T2→T3
-  invariant). Requires Phase 1 complete.
+doc_type: plan
+title: phase2-library-tier-hardening
+summary:
+status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-data-processing-service, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+overview: Hardens all library tiers (T0→T1→T2→T3) to fully green quality gates in strict sequential order (T0→T1→T2→T3 invariant). Requires Phase 1 complete.
 type: code
 epic: epic-code-completion
-status: superseded
 superseded_by: cicd_code_rollout_master_2026_03_13
 superseded_date: 2026-03-13
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-internal-contracts
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-events-interface
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-cloud-interface
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-reference-data-interface
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: execution-algo-library
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: matching-engine-library
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-trading-library
-    code: C3
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-config-interface
-    code: C1
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-market-interface
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-domain-client
-    code: C3
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-
+- {repo: unified-api-contracts, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-internal-contracts, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-events-interface, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-cloud-interface, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-reference-data-interface, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: execution-algo-library, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: matching-engine-library, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-trading-library, code: C3, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-config-interface, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-market-interface, code: C2, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-domain-client, code: C3, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
 depends_on: []
-
 isProject: true
 ---
 

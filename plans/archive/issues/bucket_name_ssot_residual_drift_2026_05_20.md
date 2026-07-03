@@ -1,8 +1,17 @@
 ---
+doc_type: issue
 title: bucket_name_ssot residual drift — 2026-05-20 audit
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [batch-live-reconciliation-service, deployment-api, deployment-service, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
 priority: P2
-status: active
 locked_by: live-defi-rollout
 blocked_on: bucket_name_ssot_phase2.6
 parent_epic: infrastructure_master

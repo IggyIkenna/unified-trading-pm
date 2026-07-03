@@ -1,11 +1,18 @@
 ---
+doc_type: plan
 title: DART UI — Strategy Dimension Filtering, Permission Tiers, Client Onboarding & Codex Integration
-branch: live-defi-rollout
-repos_affected:
-  - unified-trading-system-ui
-  - unified-api-contracts
-  - unified-trading-pm
+summary:
 status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-24'
+branch: live-defi-rollout
+repos_affected: [unified-trading-system-ui, unified-api-contracts, unified-trading-pm]
 superseded_by: marketing_site_three_route_consolidation_2026_04_26.md
 superseded_on: 2026-04-26
 current_readiness: C2

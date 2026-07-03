@@ -1,50 +1,31 @@
 ---
-name: UI Consolidation UX Hardening
-overview:
-  Consolidate 13 UIs into 7 institutional-grade surfaces with cross-linking, dimensional hierarchy (Fund > Client >
-  Strategy > Position), shared filters/search, and Citadel-grade UX. Reuse existing repo names; phase out 6 redundant
-  repos by merging their pages into the 7 kept repos.
+doc_type: plan
+title: UI Consolidation UX Hardening
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-api, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-17'
+overview: Consolidate 13 UIs into 7 institutional-grade surfaces with cross-linking, dimensional hierarchy (Fund > Client > Strategy > Position), shared filters/search, and Citadel-grade UX. Reuse existing repo names; phase out 6 redundant repos by merging their pages into the 7 kept repos.
 todos:
-  - id: phase-0-surface-registry
-    content: Add surface-registry.ts, CrossLink, EntityLink components to ui-kit
-    status: pending
-  - id: phase-0-global-nav
-    content: Add GlobalNavBar component to ui-kit with surface links and global search
-    status: pending
-  - id: phase-0-filter-bar
-    content: Add FilterBar component to ui-kit with URL-based state (client, strategy, date, instrument type)
-    status: pending
-  - id: phase-0-breadcrumb-sparkline
-    content: Add BreadcrumbNav and SparklineCell components to ui-kit
-    status: pending
-  - id: phase-0-visual-polish
-    content: "Update globals.css: rounder borders, transitions, hover elevation, PnL color tokens"
-    status: pending
-  - id: phase-1-remove-deployments
-    content: Remove /deployments route from 10 non-operations UIs
-    status: pending
-  - id: phase-1-add-global-nav
-    content: Add GlobalNavBar to all 7 kept UIs
-    status: pending
-  - id: phase-1-entity-links
-    content: Replace plain-text entity names with EntityLink in all table views
-    status: pending
-  - id: phase-2-merge-exec-into-strategy
-    content:
-      Move execution-analytics-ui pages into strategy-ui under strategy-scoped routes with strategy/execution tab split
-    status: pending
-  - id: phase-3-command-center
-    content: Build fund dashboard, dimensional PnL drill-down, absorb health/alerts into trading-analytics-ui
-    status: pending
-  - id: phase-4-merge-ops
-    content: Move batch-audit + logs-dashboard pages into deployment-ui with grouped sidebar sections
-    status: pending
-  - id: phase-5-settlement-onboarding
-    content: Move report generation to settlement-ui, trim onboarding-ui of non-config pages
-    status: pending
-  - id: phase-6-ux-hardening
-    content: Add FilterBar, BreadcrumbNav, SparklineCell across all surfaces; responsive and accessibility pass
-    status: pending
+- {id: phase-0-surface-registry, content: 'Add surface-registry.ts, CrossLink, EntityLink components to ui-kit', status: pending}
+- {id: phase-0-global-nav, content: Add GlobalNavBar component to ui-kit with surface links and global search, status: pending}
+- {id: phase-0-filter-bar, content: 'Add FilterBar component to ui-kit with URL-based state (client, strategy, date, instrument type)', status: pending}
+- {id: phase-0-breadcrumb-sparkline, content: Add BreadcrumbNav and SparklineCell components to ui-kit, status: pending}
+- {id: phase-0-visual-polish, content: 'Update globals.css: rounder borders, transitions, hover elevation, PnL color tokens', status: pending}
+- {id: phase-1-remove-deployments, content: Remove /deployments route from 10 non-operations UIs, status: pending}
+- {id: phase-1-add-global-nav, content: Add GlobalNavBar to all 7 kept UIs, status: pending}
+- {id: phase-1-entity-links, content: Replace plain-text entity names with EntityLink in all table views, status: pending}
+- {id: phase-2-merge-exec-into-strategy, content: Move execution-analytics-ui pages into strategy-ui under strategy-scoped routes with strategy/execution tab split, status: pending}
+- {id: phase-3-command-center, content: 'Build fund dashboard, dimensional PnL drill-down, absorb health/alerts into trading-analytics-ui', status: pending}
+- {id: phase-4-merge-ops, content: Move batch-audit + logs-dashboard pages into deployment-ui with grouped sidebar sections, status: pending}
+- {id: phase-5-settlement-onboarding, content: 'Move report generation to settlement-ui, trim onboarding-ui of non-config pages', status: pending}
+- {id: phase-6-ux-hardening, content: 'Add FilterBar, BreadcrumbNav, SparklineCell across all surfaces; responsive and accessibility pass', status: pending}
 isProject: false
 ---
 

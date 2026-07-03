@@ -1,77 +1,25 @@
 ---
-name: "Topology DAG — PM as SSOT + Protocol Injection Formalization"
-overview: |
-  TOPOLOGY-DAG.md belongs in unified-trading-pm, not in unified-trading-codex.
-  Everything in the system depends on the tier DAG — libraries use it to know
-  their protocol surface, UCI factory uses it to resolve live vs batch mode,
-  services declare intent (SERVICE_MODE=live|batch), and deployment injects
-  PROTOCOL_* env vars. The codex should carry a thin reference stub, not own
-  the diagram.
-
-  Three sequential outcomes:
-  1. Move TOPOLOGY-DAG.md to unified-trading-pm/ (PM is already SSOT for
-     workspace-manifest.json; the human DAG belongs alongside it).
-  2. Formalize the n-tier protocol injection contract in codex as
-     04-architecture/PROTOCOL-INJECTION.md — the authoritative doc for how
-     libraries know which protocol to use at runtime without ever reading
-     env vars directly.
-  3. Complete the UTL cloud symbol deletion (Category B violations) and the
-     canary CodeBuild run — the two remaining gaps blocking UCI plan closure.
-
+doc_type: plan
+title: Topology DAG — PM as SSOT + Protocol Injection Formalization
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-06'
+overview: "TOPOLOGY-DAG.md belongs in unified-trading-pm, not in unified-trading-codex.\nEverything in the system depends on the tier DAG — libraries use it to know\ntheir protocol surface, UCI factory uses it to resolve live vs batch mode,\nservices declare intent (SERVICE_MODE=live|batch), and deployment injects\nPROTOCOL_* env vars. The codex should carry a thin reference stub, not own\nthe diagram.\n\nThree sequential outcomes:\n1. Move TOPOLOGY-DAG.md to unified-trading-pm/ (PM is already SSOT for\n   workspace-manifest.json; the human DAG belongs alongside it).\n2. Formalize the n-tier protocol injection contract in codex as\n   04-architecture/PROTOCOL-INJECTION.md — the authoritative doc for how\n   libraries know which protocol to use at runtime without ever reading\n   env vars directly.\n3. Complete the UTL cloud symbol deletion (Category B violations) and the\n   canary CodeBuild run — the two remaining gaps blocking UCI plan closure.\n"
 todos:
-  - id: topology-dag-move
-    content: |
-      Move TOPOLOGY-DAG.md: copy unified-trading-codex/04-architecture/TOPOLOGY-DAG.md
-      to unified-trading-pm/TOPOLOGY-DAG.md. Replace codex original with a stub:
-        # System Topology DAG
-        > MOVED. Canonical location: unified-trading-pm/TOPOLOGY-DAG.md
-        > Codex owns architectural narrative (TIER-ARCHITECTURE.md, PROTOCOL-INJECTION.md);
-        > PM owns the living DAG because it is co-located with workspace-manifest.json,
-        > the machine-readable SSOT.
-      Update unified-trading-codex/00-SSOT-INDEX.md TOPOLOGY-DAG row to PM path.
-      Update all plans in plans/active/ that reference 04-architecture/TOPOLOGY-DAG.md
-      to reference unified-trading-pm/TOPOLOGY-DAG.md.
-    status: completed
+- {id: topology-dag-move, content: "Move TOPOLOGY-DAG.md: copy unified-trading-codex/04-architecture/TOPOLOGY-DAG.md\nto unified-trading-pm/TOPOLOGY-DAG.md. Replace codex original with a stub:\n  # System Topology DAG\n  > MOVED. Canonical location: unified-trading-pm/TOPOLOGY-DAG.md\n  > Codex owns architectural narrative (TIER-ARCHITECTURE.md, PROTOCOL-INJECTION.md);\n  > PM owns the living DAG because it is co-located with workspace-manifest.json,\n  > the machine-readable SSOT.\nUpdate unified-trading-codex/00-SSOT-INDEX.md TOPOLOGY-DAG row to PM path.\nUpdate all plans in plans/active/ that reference 04-architecture/TOPOLOGY-DAG.md\nto reference unified-trading-pm/TOPOLOGY-DAG.md.\n", status: completed}
+- {id: workspace-manifest-dag-link, content: "Add a cross-reference block to unified-trading-pm/TOPOLOGY-DAG.md header\n(after the move) that explicitly links the three machine-readable SSOTs:\n  - unified-trading-pm/workspace-manifest.json  (code DAG, version pins)\n  - unified-trading-pm/configs/runtime-topology.yaml  (runtime wiring: topics, storage, modes)\n  - unified-trading-pm/TOPOLOGY-DAG.md  (human-readable tier diagram — this file)\nThese three files form the complete system topology specification.\nNo other file is authoritative for tier membership or runtime wiring.\n", status: completed}
+- {id: protocol-injection-codex-doc, content: "Create unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md.\nThis is the canonical spec for the n-tier injection contract. Content must cover:\n\n1. The contract invariant:\n   - Libraries declare WHAT protocols they support (DataSink, DataSource, EventBus,\n     StorageClient, QueueClient, AnalyticsClient, CacheClient, ComputeClient).\n   - Services declare SERVICE_MODE=live|batch — nothing else about infrastructure.\n   - Deployment (runtime-topology.yaml + CI/CD) injects CLOUD_PROVIDER, PROTOCOL_*,\n     and ROUTING_KEY_* env vars per service instance.\n   - UCI factory resolves: CLOUD_PROVIDER selects gcp|aws|local;\n     SERVICE_MODE selects live (PubSub/SQS) vs batch (GCS/S3 bulk) transport;\n     PROTOCOL_DATA_SINK_BUCKET_{KEY_UPPER} provides bucket per routing key.\n\n2. The tier injection points:\n   T0 (UCI): Defines all client ABCs + factory functions. Reads CLOUD_PROVIDER via\n             UnifiedCloudConfig (zero os.getenv).\
+    \ No service-specific knowledge.\n   T1 (UTL): Service runtime helpers (BatchOrchestrator, StateStore). Uses UCI factory.\n             Never reads CLOUD_PROVIDER or PROTOCOL_* directly.\n   T2/T3 Interfaces: Use UCI DataSink/DataSource/EventBus — no routing knowledge.\n   Services: Call get_data_sink(routing_key=\"features\") and\n             get_event_bus(routing_key=\"orders\") — never instantiate providers.\n   Deployment: Sets all env vars. Services are blind to GCP vs AWS.\n\n3. Live vs batch wiring table (matches runtime-topology.yaml):\n   | SERVICE_MODE | DataSink transport      | EventBus transport          |\n   |"}
+---
 
-  - id: workspace-manifest-dag-link
-    content: |
-      Add a cross-reference block to unified-trading-pm/TOPOLOGY-DAG.md header
-      (after the move) that explicitly links the three machine-readable SSOTs:
-        - unified-trading-pm/workspace-manifest.json  (code DAG, version pins)
-        - unified-trading-pm/configs/runtime-topology.yaml  (runtime wiring: topics, storage, modes)
-        - unified-trading-pm/TOPOLOGY-DAG.md  (human-readable tier diagram — this file)
-      These three files form the complete system topology specification.
-      No other file is authoritative for tier membership or runtime wiring.
-    status: completed
-
-  - id: protocol-injection-codex-doc
-    content: |
-      Create unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md.
-      This is the canonical spec for the n-tier injection contract. Content must cover:
-
-      1. The contract invariant:
-         - Libraries declare WHAT protocols they support (DataSink, DataSource, EventBus,
-           StorageClient, QueueClient, AnalyticsClient, CacheClient, ComputeClient).
-         - Services declare SERVICE_MODE=live|batch — nothing else about infrastructure.
-         - Deployment (runtime-topology.yaml + CI/CD) injects CLOUD_PROVIDER, PROTOCOL_*,
-           and ROUTING_KEY_* env vars per service instance.
-         - UCI factory resolves: CLOUD_PROVIDER selects gcp|aws|local;
-           SERVICE_MODE selects live (PubSub/SQS) vs batch (GCS/S3 bulk) transport;
-           PROTOCOL_DATA_SINK_BUCKET_{KEY_UPPER} provides bucket per routing key.
-
-      2. The tier injection points:
-         T0 (UCI): Defines all client ABCs + factory functions. Reads CLOUD_PROVIDER via
-                   UnifiedCloudConfig (zero os.getenv). No service-specific knowledge.
-         T1 (UTL): Service runtime helpers (BatchOrchestrator, StateStore). Uses UCI factory.
-                   Never reads CLOUD_PROVIDER or PROTOCOL_* directly.
-         T2/T3 Interfaces: Use UCI DataSink/DataSource/EventBus — no routing knowledge.
-         Services: Call get_data_sink(routing_key="features") and
-                   get_event_bus(routing_key="orders") — never instantiate providers.
-         Deployment: Sets all env vars. Services are blind to GCP vs AWS.
-
-      3. Live vs batch wiring table (matches runtime-topology.yaml):
-         | SERVICE_MODE | DataSink transport      | EventBus transport          |
-         |---|---|---|
+|---|---|
          | live         | GCS/S3 streaming writes  | PubSub/SQS                  |
          | batch        | GCS/S3 bulk writes       | in-process (no queue)       |
 

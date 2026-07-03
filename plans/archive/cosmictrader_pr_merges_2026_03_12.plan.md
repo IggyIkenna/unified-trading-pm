@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Cosmictrader PR Merges — 2026-03-12
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-12'
+---
+
 # Cosmictrader PR Merges — 2026-03-12
 
 ## Status: FULLY COMPLETE (2026-03-12)

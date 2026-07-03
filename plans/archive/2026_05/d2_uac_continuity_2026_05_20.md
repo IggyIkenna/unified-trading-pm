@@ -1,21 +1,23 @@
 ---
-name: d2-uac-continuity-2026-05-20
+doc_type: plan
 title: D2 — UAC continuity + known-gap calendars + expected_coverage integration
+summary:
+status: complete
+nature: record
+asset_group: [sports]
+stage: [meta]
+repos: [execution-service, features-service, instruments-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [honest_coverage_formula_consolidation_2026_05_19.md, d3_manifest_v8_finish_2026_05_20.md, writegate_honest_coverage_endtoend_2026_05_06.md]
 created: 2026-05-20
-status: active
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-source_audits:
-  - plans/audit/results/expected_coverage_dump_2026_05_20.parquet # A2
-  - plans/audit/uac_consumer_contract_audit_2026_05_20.md # C9
-related_plans:
-  - honest_coverage_formula_consolidation_2026_05_19.md
-  - d3_manifest_v8_finish_2026_05_20.md
-  - writegate_honest_coverage_endtoend_2026_05_06.md
+source_audits: [plans/audit/results/expected_coverage_dump_2026_05_20.parquet, plans/audit/uac_consumer_contract_audit_2026_05_20.md]
 parent_epic: sports_master
 ---
 

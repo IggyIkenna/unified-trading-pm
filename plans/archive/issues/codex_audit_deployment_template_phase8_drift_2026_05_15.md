@@ -1,10 +1,18 @@
 ---
+doc_type: issue
 title: Codex drift — deployment-template + Phase 8 surfaces (post-2026-05-12 audit, slot-8 Harsh-side)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-8 (Harsh)
-source:
-  - plans/active/continuation_prompts_harsh_2026_05_15.md § Slot 8 item 3
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
+source: [plans/active/continuation_prompts_harsh_2026_05_15.md § Slot 8 item 3, plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md]
 locked_by: live-defi-rollout
 ---
 

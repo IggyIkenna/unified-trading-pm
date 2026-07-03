@@ -1,24 +1,20 @@
 ---
-doc_type: plan
-title: "GitHub Actions BILLING wall — fleet-wide CI outage (every v2 job insta-fails) + spend root-cause & burn-down"
-created: 2026-06-11
-source:
-  - live diagnosis 2026-06-11 ~16:10Z — every quality-gates-v2 job (PM + deployment-api + fleet) fails in ~7s, 0 steps
-  - "spend root-cause audit 2026-06-12 (harsh + 2 sub-agents) — 72h run-volume/duration audit + full dispatch-emitter
-    trace; operator quote — we have increased the github budget several times already this month and we are just 12 days
-    in"
-locked_by: live-defi-rollout
-priority: P1
+doc_type: issue
+title: GitHub Actions BILLING wall — fleet-wide CI outage (every v2 job insta-fails) + spend root-cause & burn-down
+summary: Compiled by harsh-main 03:30–07:00Z with 2 sub-agent audits (72h run-volume/duration + full dispatch-emitter trace), then DEEPENED 07:00–09:30Z with 2 more (storm attribution via log-sampling + hou...
 status: resolved
-superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
-summary: "Compiled by harsh-main 03:30–07:00Z with 2 sub-agent audits (72h run-volume/duration + full dispatch-emitter trace), then DEEPENED 07:00–09:30Z with 2 more (storm attribution via log-sampling + hou..."
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos: []
+repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-11
+source: ['live diagnosis 2026-06-11 ~16:10Z — every quality-gates-v2 job (PM + deployment-api + fleet) fails in ~7s, 0 steps', spend root-cause audit 2026-06-12 (harsh + 2 sub-agents) — 72h run-volume/duration audit + full dispatch-emitter trace; operator quote — we have increased the github budget several times already this month and we are just 12 days in]
+locked_by: live-defi-rollout
+priority: P1
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

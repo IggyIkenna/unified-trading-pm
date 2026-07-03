@@ -1,13 +1,20 @@
 ---
+doc_type: issue
 title: BATCH_EIA PipelineMode added without SOURCE_PRIORITY entries
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
-source:
-  - "unified-api-contracts@fb3751e8 — feat(uac): add BATCH_EIA to PipelineMode for commodity features manifest"
-  - "tests/unit/test_pipeline_mode.py::test_every_batch_pipeline_mode_maps_to_source_priority_source"
+source: ['unified-api-contracts@fb3751e8 — feat(uac): add BATCH_EIA to PipelineMode for commodity features manifest', 'tests/unit/test_pipeline_mode.py::test_every_batch_pipeline_mode_maps_to_source_priority_source']
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P1
-status: open
 ---
 
 > **[ACKED-INTO-PLAN]** Archived 2026-05-22. Gap tracked in

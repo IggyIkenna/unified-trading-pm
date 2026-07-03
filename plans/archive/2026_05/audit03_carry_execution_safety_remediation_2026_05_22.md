@@ -1,13 +1,21 @@
 ---
-name: audit03_carry_execution_safety_remediation
-title: "AUDIT-03 remediation — carry_staked_basis execution & risk safety (May-23 P0)"
+doc_type: plan
+title: AUDIT-03 remediation — carry_staked_basis execution & risk safety (May-23 P0)
+summary:
+status: complete
+nature: record
+asset_group: [defi]
+stage: [meta]
+repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-22
 parent_epic: defi_master
 estimate_class: brand-new
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-status: active
 priority: P0
-created: 2026-05-22
 last_updated: 2026-05-22
 source: audits/audit-files/audit_03_defi_archetypes_e2e.md (§6 + §6.1 re-verification ledger)
 gate: UAC scenario + token-wrapping foundation (Phase 1) GREEN before execution/strategy consumers (Phase 2-3)

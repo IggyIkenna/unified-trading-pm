@@ -1,65 +1,47 @@
 ---
-name: sports-predictions-e2e
-overview: |
-  Drive sports predictions running end-to-end on the live pipeline: feature-service-sports producing
+doc_type: plan
+title: sports-predictions-e2e
+summary:
+status: in_progress
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-05
+overview: 'Drive sports predictions running end-to-end on the live pipeline: feature-service-sports producing
+
   honest non-NULL features → ML training (Model 2A walk-forward) → strategy-service paper trade
+
   (ArbitrageStrategy + MLSportsStrategy) → upcoming-fixtures-ui showing predictions. Path uses
+
   existing 288M Odds-API rows: re-key via migrate_sports_canonical.py + MDPS 8-bucket horizon
+
   adapter (no API credits) → FSS → ML → strategy → UI. Gated on master roadmap Phase 6 deployment
+
   activation and the features_sports_honest_coverage plan.
+
+  '
 type: mixed
 epic: sports-predictions-e2e
-status: in_progress
 priority: P0
 owner: Iggy
-created: 2026-05-05
 locked_by: live-defi-rollout
 locked_since: 2026-05-05
 supersedes: [sports_e2e_validation_2026_03_27.plan.md]
-depends_on:
-  - sports_roadmap_master_execution_2026_04_21.plan.md
-  - utl_base_image_rebuild_and_workflow_unblock_2026_04_22.plan.md
-  - features_sports_honest_coverage_2026_05_05.plan.md
-  - sports_phantom_recon_and_failure_triage_2026_05_01.plan.md
-  - sports_manifest_shard_migration_cleanup_2026_04_21.plan.md
-  - canonical_team_mapping_propagation_2026_03_30.plan.md
-completion_gates:
-  code: C5
-  deployment: D5
-  business: B5
+depends_on: [sports_roadmap_master_execution_2026_04_21.plan.md, utl_base_image_rebuild_and_workflow_unblock_2026_04_22.plan.md, features_sports_honest_coverage_2026_05_05.plan.md, sports_phantom_recon_and_failure_triage_2026_05_01.plan.md, sports_manifest_shard_migration_cleanup_2026_04_21.plan.md, canonical_team_mapping_propagation_2026_03_30.plan.md]
+completion_gates: {code: C5, deployment: D5, business: B5}
 repo_gates:
-  - repo: feature-service-sports
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: ml-training
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: strategy-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: execution-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: market-data-processing-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: market-tick-data-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: deployment-api
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: deployment-ui
-    code: C0
-    deployment: D0
-    business: B0
+- {repo: feature-service-sports, code: C0, deployment: D0, business: B0}
+- {repo: ml-training, code: C0, deployment: D0, business: B0}
+- {repo: strategy-service, code: C0, deployment: D0, business: B0}
+- {repo: execution-service, code: C0, deployment: D0, business: B0}
+- {repo: market-data-processing-service, code: C0, deployment: D0, business: B0}
+- {repo: market-tick-data-service, code: C0, deployment: D0, business: B0}
+- {repo: deployment-api, code: C0, deployment: D0, business: B0}
+- {repo: deployment-ui, code: C0, deployment: D0, business: B0}
 ---
 
 # Sports Predictions End-to-End

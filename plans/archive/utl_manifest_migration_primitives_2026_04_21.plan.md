@@ -1,22 +1,26 @@
 ---
-title: "UTL — Manifest Migration Primitives (ManifestMigrator / RescanScanner / LegacyRowPurger)"
-priority: P0
-status: active
-owner: agent
+doc_type: plan
+title: UTL — Manifest Migration Primitives (ManifestMigrator / RescanScanner / LegacyRowPurger)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-21
+priority: P0
+owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-trading-library
-    code: C5
-  - repo: instruments-service
-    code: C5
+- {repo: unified-trading-library, code: C5}
+- {repo: instruments-service, code: C5}
 depends_on: []
 isProject: false
 ---

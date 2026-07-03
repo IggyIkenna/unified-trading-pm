@@ -1,15 +1,23 @@
 ---
-title: "execution-service: PoolStateResult ImportError in defi_execution/protocols/__init__.py"
+doc_type: issue
+title: 'execution-service: PoolStateResult ImportError in defi_execution/protocols/__init__.py'
+summary:
+status: RESOLVED
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 author: slot-3-wave3
-source:
-  - execution-service/execution_service/defi_execution/protocols/__init__.py
+source: [execution-service/execution_service/defi_execution/protocols/__init__.py]
 severity: P1
-status: RESOLVED
 resolved_at: 2026-05-14
 resolved_by: slot-2-wave2
 resolution_commit: execution-service@09198760
-suggested_owner: "operator triage"
+suggested_owner: operator triage
 ---
 
 ## ✅ RESOLVED 2026-05-14 (slot-2-wave2)

@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: 'Phase 3: Cross-Reference & Consistency Audit'
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-22'
+---
+
 # Phase 3: Cross-Reference & Consistency Audit
 
 **Created:** 2026-03-21 **Type:** audit | **Status:** active (0/20) | **Scope:** Cross-lifecycle validation of shared

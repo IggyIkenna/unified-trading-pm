@@ -1,44 +1,34 @@
 ---
-name: api_football_minimal_flattening_removal_2026_05_07
-overview:
-  Stop dropping nested API-Football payloads at write time. Today FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS /
-  INJURIES persist only `fixture_id + data_available_at` over what FIXTURES already has — every per-team / per-event /
-  per-player field in the payload is dropped during ingest. Flatten at the UAC normalizer level so the parquets carry
-  the actual signal (xG, shots, possession, cards, formations, lineup grids, injury reasons).
+doc_type: plan
+title: api_football_minimal_flattening_removal_2026_05_07
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, features-service, instruments-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [sports_uac_schema_contracts_registration_2026_04_24.plan.md (archived), data_status_drilldown_shard_atom_alignment_2026_05_07.md]
+created: '2026-05-07'
+overview: Stop dropping nested API-Football payloads at write time. Today FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES persist only `fixture_id + data_available_at` over what FIXTURES already has — every per-team / per-event / per-player field in the payload is dropped during ingest. Flatten at the UAC normalizer level so the parquets carry the actual signal (xG, shots, possession, cards, formations, lineup grids, injury reasons).
 type: code
 epic: epic-code-completion
-completion_gates:
-  code: C5
-  deployment: D3
-  business: none
+completion_gates: {code: C5, deployment: D3, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C2
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: features-service (sports family)
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C2
-    deployment: none
-    business: none
+- {repo: unified-api-contracts, code: C2, deployment: none, business: none}
+- {repo: instruments-service, code: C2, deployment: none, business: none}
+- {repo: features-service (sports family), code: C2, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C2, deployment: none, business: none}
 depends_on: []
 todos: []
 isProject: false
-related:
-  - sports_uac_schema_contracts_registration_2026_04_24.plan.md (archived)
-  - data_status_drilldown_shard_atom_alignment_2026_05_07.md
 estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
-estimate_calibration_note: |
-  Backfilled 2026-05-13: 16 todos, 13 done (near complete; 3 left). Reclassified design→refactor — mechanical UAC normalizer flatten + adapter writer updates + downstream feature consumers; per-payload-key column additions, not closed-set design calls. Baseline 8 (16 todos × ~0.5 mech), × 0.4 = 3.2. # operator-confirm class — borderline refactor/design.
+estimate_calibration_note: 'Backfilled 2026-05-13: 16 todos, 13 done (near complete; 3 left). Reclassified design→refactor — mechanical UAC normalizer flatten + adapter writer updates + downstream feature consumers; per-payload-key column additions, not closed-set design calls. Baseline 8 (16 todos × ~0.5 mech), × 0.4 = 3.2. # operator-confirm class — borderline refactor/design.
+
+  '
 ---
 
 > **ARCHIVED 2026-05-20** — 100% complete (all 16 items shipped + DEFERRED resolved 2026-05-20 slot-8); preserved for

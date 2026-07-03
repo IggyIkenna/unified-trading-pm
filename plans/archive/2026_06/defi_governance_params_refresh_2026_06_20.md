@@ -1,17 +1,24 @@
 ---
-title: "DeFi protocol governance-parameters refresh — event listener → time-versioned parquet → asof-read migration"
+doc_type: plan
+title: DeFi protocol governance-parameters refresh — event listener → time-versioned parquet → asof-read migration
+summary:
+status: complete
+nature: record
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-service, features-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [../epics/defi_master.md, ./defi_onchain_derivable_values_and_date_drift_2026_06_20.md]
+created: '2026-06-12'
 parent_epic: defi_master
 priority: P0
-status: active
 execution_scope: orchestrator-agent
 estimate_class: brand-new
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 9
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/defi_master.md
-  - ./defi_onchain_derivable_values_and_date_drift_2026_06_20.md
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `defi_master` epic body (§ "Governance parameters refresh",

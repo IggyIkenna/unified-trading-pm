@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Prediction Markets Schema Design Requirements
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-28'
+---
+
 # Prediction Markets Schema Design Requirements
 
 ## Kalshi + Polymarket — Full API Research (Feb 2026)

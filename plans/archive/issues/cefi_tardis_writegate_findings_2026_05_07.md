@@ -1,14 +1,18 @@
 ---
-title: "CeFi Tardis backfill — writegate Phase 2 findings (bundle shard shape + missing rows_captured)"
+doc_type: issue
+title: CeFi Tardis backfill — writegate Phase 2 findings (bundle shard shape + missing rows_captured)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-07
 author: harsh
-source:
-  - plans/active/cefi_master_2026_05_07.md (in-flight section + 3-findings annotation, PM@9b1f1d5)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md (Phase 2.A residual + Phase 2.E progress events)
-  - cursor-configs/CLAUDE.md § "Shard-granularity SSOT" + § "No fire-and-forget VM launches"
-  - gs://market-data-tick-cefi-central-element-323112/_index/per_vm/cefi-bitfinex-spot-2020-heavy-20260507-150340.parquet
-  - gs://market-data-tick-cefi-central-element-323112/_index/per_vm/cefi-kraken-spot-2020-heavy-20260507-151100.parquet
-  - gs://central-element-323112-events/events/market-tick-data-service/2026-05-07/cefi-bitfinex-spot-2020-heavy-20260507-150340/hour=14/*.jsonl
+source: ['plans/active/cefi_master_2026_05_07.md (in-flight section + 3-findings annotation, PM@9b1f1d5)', plans/active/writegate_honest_coverage_endtoend_2026_05_06.md (Phase 2.A residual + Phase 2.E progress events), cursor-configs/CLAUDE.md § "Shard-granularity SSOT" + § "No fire-and-forget VM launches", 'gs://market-data-tick-cefi-central-element-323112/_index/per_vm/cefi-bitfinex-spot-2020-heavy-20260507-150340.parquet', 'gs://market-data-tick-cefi-central-element-323112/_index/per_vm/cefi-kraken-spot-2020-heavy-20260507-151100.parquet', 'gs://central-element-323112-events/events/market-tick-data-service/2026-05-07/cefi-bitfinex-spot-2020-heavy-20260507-150340/hour=14/*.jsonl']
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---

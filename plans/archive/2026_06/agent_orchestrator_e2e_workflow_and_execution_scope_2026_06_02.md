@@ -1,22 +1,24 @@
 ---
+doc_type: plan
 title: Agent-orchestrator end-to-end workflow + execution-scope plan-routing field
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-service, deployment-ui, execution-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/harsh_day_master_2026_06_02.md, plans/active/agent_context_and_memory_hygiene_2026_06_02.md, plans/active/quality_gates_resource_contention_speedup_2026_06_02.md, plans/active/cicd_contract_hardening_2026_06_01.md, plans/epics/orchestrator_master.md, plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md]
+created: 2026-06-02
 parent_epic: orchestrator_master
 priority: P1
-status: archived
 execution_scope: local-only
 estimate_class: design
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.9
-created: 2026-06-02
 locked_by: live-defi-rollout
 locked_since: 2026-06-02
-related_plans:
-  - plans/active/harsh_day_master_2026_06_02.md
-  - plans/active/agent_context_and_memory_hygiene_2026_06_02.md
-  - plans/active/quality_gates_resource_contention_speedup_2026_06_02.md
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-  - plans/epics/orchestrator_master.md
-  - plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md
 ---
 
 > **✅ ARCHIVED 2026-06-07 [unlock-plan].** All todos complete (0 open). The one "deferred" item (near-instant-ack

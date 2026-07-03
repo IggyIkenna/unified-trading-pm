@@ -1,5 +1,15 @@
 ---
+doc_type: plan
 title: Data Type Canonicalization — Cross-Service Alignment
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-23
 last_updated: 2026-05-23
 parent_epic: mtds_mdps_master
@@ -7,7 +17,6 @@ assigned_vm: vm-cross-cutting
 estimate_class: refactor
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.2
-status: active
 priority: P2
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

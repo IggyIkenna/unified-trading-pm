@@ -1,11 +1,19 @@
 ---
-title: "Marketing site — 5-path restructure + light-auth research gate + schema click-throughs"
-status: active
+doc_type: plan
+title: Marketing site — 5-path restructure + light-auth research gate + schema click-throughs
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
-depends_on:
-  - path_to_100m_finalization_2026_04_20
-  - signal_leasing_broadcast_architecture_2026_04_20
+depends_on: [path_to_100m_finalization_2026_04_20, signal_leasing_broadcast_architecture_2026_04_20]
 ---
 
 ## Deferred work — migrated to:

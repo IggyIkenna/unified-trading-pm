@@ -1,33 +1,46 @@
 ---
+doc_type: plan
 title: DeFi recursive-borrow archetypes — post-cutover scope-expansion (NOT the May-23 implementation)
-name: defi_recursive_borrow_archetypes_post_cutover_2026_06_01
-status: archived
-archived: 2026-05-23
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md, plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md, plans/active/defi_master.md, plans/active/defi_catalogue_chain_primitives_2026_05_10.md]
 created: 2026-05-14
+archived: 2026-05-23
 last_updated: 2026-05-23
 descope_reversed: 2026-05-13
-descope_reversal_reason: |
-  Operator direction 2026-05-13 evening: recursive_borrow Phases 4-13 PULLED BACK into May-23 scope (parent plan
+descope_reversal_reason: 'Operator direction 2026-05-13 evening: recursive_borrow Phases 4-13 PULLED BACK into May-23 scope (parent plan
+
   defi_recursive_borrow_archetypes_2026_05_10.md status reverted from partial-shipped-descoped → active).
+
   This post-cutover plan no longer owns Phases 4-13 of the parent. It retains scope ONLY for post-cutover
+
   scope-expansion items beyond the original Phase 1-13 surface (multi-archetype-family expansion, additional
+
   venue support, perf optimization based on production observations). May-23 ships with Phases 4-13
+
   READY-TO-GO-LIVE (live trading toggle OFF, code + tests + backtests + paper-trade testnet smoke verified).
+
+  '
 target_deadline: 2026-06-15 (post-cutover scope-expansion only)
 migrated_from: plans/active/defi_recursive_borrow_archetypes_2026_05_10.md (REVERSED for Phases 4-13)
-related_plans:
-  - plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md
-  - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
-  - plans/active/defi_master.md
-  - plans/active/defi_catalogue_chain_primitives_2026_05_10.md
 estimate_class: brand-new
 estimate_baseline_ai_days: 24
 estimate_calibrated_ai_days: 24
-estimate_calibration_note: |
-  Sum of per-phase estimates from original plan: Phase 2-remaining ~1 + Phase 4 Solidity ~3 +
+estimate_calibration_note: 'Sum of per-phase estimates from original plan: Phase 2-remaining ~1 + Phase 4 Solidity ~3 +
+
   Phase 5 orchestrator ~4 + Phase 6 HL LIVE ~3 + Phase 7 PerpHedgeSizer ~2 + Phase 8 HealthFactor ~2 +
+
   Phase 9 cost-model ~3 + Phase 10 codex ~1 + Phase 11 UI/API ~2 + Phase 12 backtest ~2 + Phase 13 live ~1.
+
   Class=brand-new (1.0×) — novel Solidity + execution-service code implementing well-defined spec.
+
+  '
 parent_epic: strategy_master
 assigned_vm: vm-trading-core
 priority: P2

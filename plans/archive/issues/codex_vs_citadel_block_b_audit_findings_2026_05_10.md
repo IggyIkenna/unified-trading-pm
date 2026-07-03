@@ -1,13 +1,18 @@
 ---
-title: "Codex-vs-Citadel Block B (data + correctness model) — audit findings preserved from retired question doc"
+doc_type: issue
+title: Codex-vs-Citadel Block B (data + correctness model) — audit findings preserved from retired question doc
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-10
 author: ikenna + main agent
-source:
-  - PM@e381d016 (Block B audit fill landed in retired question doc)
-  - PM@5d2d74c1 (parallel agent retired plans/questions/codex_vs_citadel_infrastructure_specs_2026_05_08.md per
-    lifecycle Step 5 — plan-spawned graduates to active plan)
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md (spawned active plan; this issue doc seeds its
-    audit findings section ahead of the 12 sub-agent fan-out)
+source: [PM@e381d016 (Block B audit fill landed in retired question doc), PM@5d2d74c1 (parallel agent retired plans/questions/codex_vs_citadel_infrastructure_specs_2026_05_08.md per lifecycle Step 5 — plan-spawned graduates to active plan), plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md (spawned active plan; this issue doc seeds its audit findings section ahead of the 12 sub-agent fan-out)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 ---

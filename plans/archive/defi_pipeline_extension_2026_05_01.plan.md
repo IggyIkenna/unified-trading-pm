@@ -1,69 +1,37 @@
 ---
+doc_type: plan
+title: defi-pipeline-extension-2026-05-01
+summary:
+status: complete
+nature: record
+asset_group: ALL
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, system-integration-tests, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-01
 locked_by: live-defi-rollout
 locked_since: 2026-05-01
 plan_type: mixed
-asset_group: ALL
 owner: ikenna
-created: 2026-05-01
-name: defi-pipeline-extension-2026-05-01
-overview:
-  Volatility-derived max-leverage primitive + leveraged funding-arb + 5 derivable archetype engines (LP
-  concentrated/pool/vault, MEV liquidation-bundle/JIT/backrun) + sandwich theoretical, with venue/chain coverage
-  backfill and codex enhancement
+overview: Volatility-derived max-leverage primitive + leveraged funding-arb + 5 derivable archetype engines (LP concentrated/pool/vault, MEV liquidation-bundle/JIT/backrun) + sandwich theoretical, with venue/chain coverage backfill and codex enhancement
 type: mixed
 epic: epic-code-completion
-status: active
-completion_gates:
-  code: C5
-  deployment: D2
-  business: B3
+completion_gates: {code: C5, deployment: D2, business: B3}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-onchain-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: position-balance-monitor-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: risk-and-exposure-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: system-integration-tests
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-depends_on:
-  - leveraged_leg_controller_2026_05_01
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: features-onchain-service, code: C0, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: instruments-service, code: C0, deployment: none, business: none}
+- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
+- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
+- {repo: system-integration-tests, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+depends_on: [leveraged_leg_controller_2026_05_01]
 isProject: false
 ---
 

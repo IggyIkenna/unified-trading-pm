@@ -1,13 +1,19 @@
 ---
-title: "Orchestrator: workers halt on rate-limit instead of rotating to next account"
+doc_type: issue
+title: 'Orchestrator: workers halt on rate-limit instead of rotating to next account'
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-23
-source:
-  - plans/active/workspace_qg_sweep_2026_05_23.md
-  - agent-orchestrator/agents/worker.md
-  - agent-orchestrator/server/server.py
+source: [plans/active/workspace_qg_sweep_2026_05_23.md, agent-orchestrator/agents/worker.md, agent-orchestrator/server/server.py]
 parent_epic: orchestrator_master
 priority: P2
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

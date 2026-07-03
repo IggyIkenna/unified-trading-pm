@@ -1,7 +1,16 @@
 ---
-title: "Manifest consolidator — memory-bounded DuckDB rewrite (cefi flat OOM fix)"
+doc_type: plan
+title: Manifest consolidator — memory-bounded DuckDB rewrite (cefi flat OOM fix)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-26
-status: archived
 archived: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: vm-cross-cutting

@@ -1,46 +1,34 @@
 ---
-name: Dependency Governance
-overview: |
-  Verify and enforce workspace-wide external dependency governance. workspace-constraints.toml,
+doc_type: plan
+title: Dependency Governance
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, system-integration-tests, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+overview: 'Verify and enforce workspace-wide external dependency governance. workspace-constraints.toml,
+
   canonical-dependency-manifest.json, and propagate-canonical-versions.py all exist and are
+
   substantially implemented. This plan verifies alignment is complete, propagates canonical
+
   versions to all repos, removes any requirements.txt parallel sources, and confirms all
+
   uv.lock files are committed and current. Covers audit S4.1–S4.12.
+
+  '
 todos:
-  - id: dg-validate-conflicts
-    content:
-      Run unified-trading-pm/scripts/manifest/validate-dependency-conflicts.py — fix any version conflicts (same
-      package, different ranges across repos). Record all conflicts in QUALITY_GATE_BYPASS_AUDIT.md if a conflict cannot
-      be resolved.
-    status: completed
-  - id: dg-propagate-versions
-    content:
-      Run unified-trading-pm/scripts/propagation/propagate-canonical-versions.py across all repos — verify every
-      pyproject.toml aligns with workspace-constraints.toml canonical versions. Fix any divergence (manual edits that
-      drifted from canonical).
-    status: completed
-  - id: dg-uv-lock-check
-    content:
-      Verify all 42+ uv.lock files are committed and current. Run 'uv lock --check' in each Python repo. Re-run 'uv
-      lock' where stale. Add uv.lock to .gitignore exclusion list if any repo is missing it.
-    status: completed
-  - id: dg-canonical-manifest-refresh
-    content:
-      Re-run unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py — confirm
-      canonical-dependency-manifest.json matches workspace-constraints.toml after any fixes. Commit regenerated
-      manifest.
-    status: completed
-  - id: dg-unbounded-check
-    content:
-      "Scan all pyproject.toml files for unbounded version specs (bare package names with no version, or '>=' with no
-      upper bound on critical deps). Fix per workspace-constraints.toml pattern: >=X.Y.Z,<X+1.0.0. Check-script:
-      unified-trading-pm/scripts/manifest/check-dependency-alignment.py."
-    status: completed
-  - id: dg-requirements-txt-purge
-    content:
-      Verify no requirements.txt files exist as parallel dependency sources alongside pyproject.toml in any repo. Remove
-      any found. Dev deps must live in [project.optional-dependencies.dev] only.
-    status: completed
+- {id: dg-validate-conflicts, content: 'Run unified-trading-pm/scripts/manifest/validate-dependency-conflicts.py — fix any version conflicts (same package, different ranges across repos). Record all conflicts in QUALITY_GATE_BYPASS_AUDIT.md if a conflict cannot be resolved.', status: completed}
+- {id: dg-propagate-versions, content: Run unified-trading-pm/scripts/propagation/propagate-canonical-versions.py across all repos — verify every pyproject.toml aligns with workspace-constraints.toml canonical versions. Fix any divergence (manual edits that drifted from canonical)., status: completed}
+- {id: dg-uv-lock-check, content: Verify all 42+ uv.lock files are committed and current. Run 'uv lock --check' in each Python repo. Re-run 'uv lock' where stale. Add uv.lock to .gitignore exclusion list if any repo is missing it., status: completed}
+- {id: dg-canonical-manifest-refresh, content: Re-run unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py — confirm canonical-dependency-manifest.json matches workspace-constraints.toml after any fixes. Commit regenerated manifest., status: completed}
+- {id: dg-unbounded-check, content: 'Scan all pyproject.toml files for unbounded version specs (bare package names with no version, or ''>='' with no upper bound on critical deps). Fix per workspace-constraints.toml pattern: >=X.Y.Z,<X+1.0.0. Check-script: unified-trading-pm/scripts/manifest/check-dependency-alignment.py.', status: completed}
+- {id: dg-requirements-txt-purge, content: 'Verify no requirements.txt files exist as parallel dependency sources alongside pyproject.toml in any repo. Remove any found. Dev deps must live in [project.optional-dependencies.dev] only.', status: completed}
 isProject: false
 ---
 

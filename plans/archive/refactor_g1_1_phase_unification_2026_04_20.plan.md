@@ -1,21 +1,21 @@
 ---
+doc_type: plan
 title: Refactor G1.1 — Phase unification (no forked research / paper / live UIs)
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.1
-  - codex/14-playbooks/_ssot-rules/03-same-system-principle.md
-  - codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md
-# Sibling refactor plans (Wave A):
-#   refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md
-#   refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md
-#   refactor_g1_9_codex_scope_registry_2026_04_20.plan.md
-#   refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md
-#   refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md
-# Downstream consumer (Wave C): refactor_g1_6_derivation_engine... (consumes `phase` prop in access_control formula)
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.1, codex/14-playbooks/_ssot-rules/03-same-system-principle.md, codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md]
 ---
 
 ## Deferred work — migrated to:

@@ -1,18 +1,19 @@
 ---
-title:
-  uv.lock / --frozen model is half-applied + contradictory — collides with LDR↔staging tree convergence, makes the
-  "regen lock" fix restart the Tier-C promote runaways
+doc_type: issue
+title: uv.lock / --frozen model is half-applied + contradictory — collides with LDR↔staging tree convergence, makes the "regen lock" fix restart the Tier-C promote runaways
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing, features-service, fund-administration-service, greeks-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-15
-source:
-  - e2e-testing Tier-C runaway promote breaker (Slack #ci-failures 2026-06-15 10:06)
-  - features-service provenance-gate block + 28/6h promote runaway (Slack 2026-06-15 10:06)
-  - PM@5bde2d641 "codify CI uv sync --frozen + floor-bump-regen-lock rule; hand CI diff to Ikenna" (2026-06-12)
-  - PM@a89e234ee "relax uv lock --check to warn-only" (2026-06-09)
-  - origin/main python-quality-gates-v2.yml:459 (bare `uv sync`)
-  - e2e-testing `uv lock --check` exit 1 after floor bump (empirical 2026-06-15)
+source: [e2e-testing Tier-C runaway promote breaker (Slack, 'features-service provenance-gate block + 28/6h promote runaway (Slack 2026-06-15 10:06)', PM@5bde2d641 "codify CI uv sync --frozen + floor-bump-regen-lock rule; hand CI diff to Ikenna" (2026-06-12), PM@a89e234ee "relax uv lock --check to warn-only" (2026-06-09), 'origin/main python-quality-gates-v2.yml:459 (bare `uv sync`)', e2e-testing `uv lock --check` exit 1 after floor bump (empirical 2026-06-15)]
 locked_by: live-defi-rollout
 priority: P1
-status: archived
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans

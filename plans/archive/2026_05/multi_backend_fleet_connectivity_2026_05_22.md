@@ -1,24 +1,26 @@
 ---
-name: multi_backend_fleet_connectivity
-title: "Multi-backend fleet connectivity — centralized API router (one HTTPS backend proxies all VMs over private VPC)"
+doc_type: plan
+title: Multi-backend fleet connectivity — centralized API router (one HTTPS backend proxies all VMs over private VPC)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-api]
+scope: [engineer, admin]
+tags: []
+related: [plans/epics/orchestrator_master.md]
+created: 2026-05-22
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 estimate_class: infra
 estimate_baseline_ai_days: 3.5
 estimate_calibrated_ai_days: 2.8
-status: archived
 priority: P1
-created: 2026-05-22
 last_updated: 2026-05-23
 archived: 2026-05-23
-source:
-  design discussion with operator (Harsh) + Ikenna 2026-05-22 — agent-orchestrator dashboard 401 triage →
-  centralized-API decision (Ikenna, Slack 2026-05-22 17:1x)
-gate:
-  Phase 1 (private-VPC repoint) before workers drop public IPs; Phase 3 (UI single-baseUrl) deletes per-backend-token
-  code — align with the dashboard author first
-related_plans:
-  - plans/epics/orchestrator_master.md
+source: design discussion with operator (Harsh) + Ikenna 2026-05-22 — agent-orchestrator dashboard 401 triage → centralized-API decision (Ikenna, Slack 2026-05-22 17:1x)
+gate: Phase 1 (private-VPC repoint) before workers drop public IPs; Phase 3 (UI single-baseUrl) deletes per-backend-token code — align with the dashboard author first
 ---
 
 # Multi-backend fleet connectivity — centralized API router

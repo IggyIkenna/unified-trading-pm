@@ -1,22 +1,28 @@
 ---
-title:
-  "unified-trading-library: strict-ify the ~108 pre-existing pyright/type suppressions + drive CODEX_MAX_VIOLATIONS 6→0"
+doc_type: plan
+title: 'unified-trading-library: strict-ify the ~108 pre-existing pyright/type suppressions + drive CODEX_MAX_VIOLATIONS 6→0'
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-09
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
-created: 2026-06-09
-status: active
 priority: P2
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
-source:
-  - plans/active/issues/utl_strictify_preexisting_pyright_suppressions_2026_06_08.md
-  - plans/active/utl_full_quality_gates_green_2026_06_01.md (parent QG-green campaign)
+source: [plans/active/issues/utl_strictify_preexisting_pyright_suppressions_2026_06_08.md, plans/active/utl_full_quality_gates_green_2026_06_01.md (parent QG-green campaign)]
 Codex SSOTs:
-  - codex/06-coding-standards/quality-gates.md (Type Checking Standards; zero-baseline policy)
-  - codex/06-coding-standards/README.md (imports, no Any, no type: ignore)
+- codex/06-coding-standards/quality-gates.md (Type Checking Standards; zero-baseline policy)
+- {'codex/06-coding-standards/README.md (imports, no Any, no type': ignore)}
 ---
 
 > **Wrapper plan** closing `plans/active/issues/utl_strictify_preexisting_pyright_suppressions_2026_06_08.md`.

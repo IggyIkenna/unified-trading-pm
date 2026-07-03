@@ -1,21 +1,21 @@
 ---
-title: "VM launcher + Cloud Run consolidation audit — 30 ad-hoc launchers + 3 Cloud Run deploys to migrate"
+doc_type: issue
+title: VM launcher + Cloud Run consolidation audit — 30 ad-hoc launchers + 3 Cloud Run deploys to migrate
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, market-tick-data-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna-tab1-main
-source:
-  - cursor-configs/CLAUDE.md § "VM launcher script SSOT (codified 2026-05-07)"
-  - cursor-configs/CLAUDE.md § "VM Naming Convention"
-  - plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md (referenced in CLAUDE.md but pending
-    execution)
-  - workspace-wide grep for `gcloud compute instances create` + `gcloud run deploy` + `aws ec2 run-instances`
-    (2026-05-08 14:45 UTC, Tab 1 audit)
+source: [cursor-configs/CLAUDE.md § "VM launcher script SSOT (codified 2026-05-07)", cursor-configs/CLAUDE.md § "VM Naming Convention", plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md (referenced in CLAUDE.md but pending execution), 'workspace-wide grep for `gcloud compute instances create` + `gcloud run deploy` + `aws ec2 run-instances` (2026-05-08 14:45 UTC, Tab 1 audit)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-execution:
-  owner: Tab 1 main 2026-05-08 (this session) — Phases 0-5 ALL DONE
-  cadence: one-shot — COMPLETE
-  verifier: deployment-service@5cea036 + e2e-testing@e3a9cf2 + 12 companion commits
-  last_executed: "2026-05-08"
+execution: {owner: Tab 1 main 2026-05-08 (this session) — Phases 0-5 ALL DONE, cadence: one-shot — COMPLETE, verifier: deployment-service@5cea036 + e2e-testing@e3a9cf2 + 12 companion commits, last_executed: '2026-05-08'}
 ---
 
 # VM-launcher + Cloud Run consolidation audit

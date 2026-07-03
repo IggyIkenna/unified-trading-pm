@@ -1,6 +1,16 @@
 ---
-title: "Structured Error Handling + Event Propagation"
-status: active
+doc_type: plan
+title: Structured Error Handling + Event Propagation
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-22'
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-03-22

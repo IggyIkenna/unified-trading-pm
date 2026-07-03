@@ -1,15 +1,21 @@
 ---
-title: "TradFi forward-poll cron missing — continuous-verification gap"
-type: issue
+doc_type: issue
+title: TradFi forward-poll cron missing — continuous-verification gap
+summary:
 status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-17
+type: issue
 resolved: 2026-05-20
 author: slot-5
 priority: P1
-source:
-  - plans/active/master_to_live_defi_2026_05_23.md (Group B row 4)
-  - deployment-service/scripts/vm/launch-tradfi-forward-poll.sh
-  - Cloud Scheduler asia-northeast1
+source: [plans/active/master_to_live_defi_2026_05_23.md (Group B row 4), deployment-service/scripts/vm/launch-tradfi-forward-poll.sh, Cloud Scheduler asia-northeast1]
 locked_by: live-defi-rollout
 ---
 

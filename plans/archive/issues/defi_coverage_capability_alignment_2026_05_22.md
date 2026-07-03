@@ -1,14 +1,21 @@
 ---
+doc_type: issue
 title: DeFi expected_coverage VENUE-CHAIN phantom entries + handler naming inconsistency
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-api-contracts, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-22
-source:
-  - data-status UI audit 2026-05-22
-  - expected_coverage.py code review
+source: [data-status UI audit 2026-05-22, expected_coverage.py code review]
 locked_by: live-defi-rollout
 parent_epic: epics/infrastructure_master.md
 assigned_vm: planning-vm
 priority: P2
-status: active
 ---
 
 > **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — Bugs 1/2/3 shipped (Bug 2 incl. `liquidation_events_handler` casing

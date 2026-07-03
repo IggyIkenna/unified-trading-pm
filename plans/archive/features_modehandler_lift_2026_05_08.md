@@ -1,20 +1,29 @@
 ---
-title: "Features ModeHandler ABC lift — 4 families share local ModeHandler shape; lift to UTL canonical"
+doc_type: plan
+title: Features ModeHandler ABC lift — 4 families share local ModeHandler shape; lift to UTL canonical
+summary:
+status: complete
+nature: record
+asset_group: cross-cutting
+stage: [meta]
+repos: [features-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-08
 type: code
 epic: epic-code-completion
-status: complete
-asset_group: cross-cutting
 priority: P2
 deadline: post-2026-05-23
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-08
 shipped: 2026-05-08
 migrated_from: feature_batch_handler_abc_zero_consumers_2026_05_08.md (issue doc)
 estimate_class: design
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
-estimate_calibration_note: |
-  Backfilled 2026-05-13: status:complete (shipped UTL@abeb5bc3 + features-service@7335bbef 2026-05-08). Tiny residual baseline 0.5 × 0.6 = 0.3 for any final flips. **FLAG**: plan is complete; should move to plans/archive/ at next archival pass (no live work remaining).
+estimate_calibration_note: 'Backfilled 2026-05-13: status:complete (shipped UTL@abeb5bc3 + features-service@7335bbef 2026-05-08). Tiny residual baseline 0.5 × 0.6 = 0.3 for any final flips. **FLAG**: plan is complete; should move to plans/archive/ at next archival pass (no live work remaining).
+
+  '
 ---
 
 ## Deferred work — migrated to:

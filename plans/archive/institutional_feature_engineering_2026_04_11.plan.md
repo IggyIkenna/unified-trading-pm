@@ -1,230 +1,150 @@
 ---
-name: institutional-feature-engineering
-overview:
-  Implement 150+ institutional-grade features across sports, DeFi, CeFi, and volatility services with unified
-  validity/confidence engine
+doc_type: plan
+title: institutional-feature-engineering
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-14'
+overview: Implement 150+ institutional-grade features across sports, DeFi, CeFi, and volatility services with unified validity/confidence engine
 type: code
 epic: epic-code-completion
-status: done
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: B3
-
+completion_gates: {code: C5, deployment: none, business: B3}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C1
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C1
-    deployment: none
-    business: none
-  - repo: features-sports-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: features-onchain-service
-    code: C1
-    deployment: none
-    business: none
-  - repo: features-delta-one-service
-    code: C1
-    deployment: none
-    business: none
-  - repo: features-volatility-service
-    code: C1
-    deployment: none
-    business: none
-
+- {repo: unified-api-contracts, code: C1, deployment: none, business: none}
+- {repo: unified-trading-library, code: C1, deployment: none, business: none}
+- {repo: features-sports-service, code: C2, deployment: none, business: none}
+- {repo: features-onchain-service, code: C1, deployment: none, business: none}
+- {repo: features-delta-one-service, code: C1, deployment: none, business: none}
+- {repo: features-volatility-service, code: C1, deployment: none, business: none}
 depends_on: []
-
 todos:
-  # ── Phase 1: Foundation (PARALLEL) ──────────────────────────────────────
-  - id: p1-uac-validity-schemas
-    content: |
-      - [x] [AGENT] P0. Add FeatureBlockValidity + FeatureValiditySummary schemas to UAC internal
-      UAC `unified_api_contracts.internal`: add `FeatureBlockValidity` (block_name: str, valid: bool, confidence: float, scoring_dimensions: dict[str, float]) and `FeatureValiditySummary` (total_blocks: int, valid_blocks: int, validity_ratio: float, invalid_key_blocks: list[str]).
-    status: done
-    note: "PARALLEL with p1-utl-engine, p1-sports-relative, p1-sports-regime"
+- {id: p1-uac-validity-schemas, content: '- [x] [AGENT] P0. Add FeatureBlockValidity + FeatureValiditySummary schemas to UAC internal
 
-  - id: p1-utl-engine
-    content: |
-      - [x] [AGENT] P0. Build shared FeatureValidityEngine base in UTL feature_service_base/
-      Abstract base: takes list of FeatureBlockDefinition (block_name, valid_fn, confidence_fn, required_inputs). Computes all validity flags, confidence scores, aggregate feature_validity_count, feature_validity_ratio, invalid_key_feature_count. Each feature service subclasses with domain-specific blocks.
-    status: done
-    note: "PARALLEL with p1-uac-validity-schemas"
+    UAC `unified_api_contracts.internal`: add `FeatureBlockValidity` (block_name: str, valid: bool, confidence: float, scoring_dimensions: dict[str, float]) and `FeatureValiditySummary` (total_blocks: int, valid_blocks: int, validity_ratio: float, invalid_key_blocks: list[str]).
 
-  - id: p1-sports-relative
-    content: |
-      - [x] [AGENT] P0. Build relative_context_calculator.py in features-sports-service (60 columns)
-      12 metric families x 5 suffixes = 60 columns. Generator function: _diff, _ratio, _zdiff, _league_pct_home, _league_pct_away.
-    status: done
-    note: "PARALLEL with p1-sports-regime"
+    ', status: done, note: 'PARALLEL with p1-utl-engine, p1-sports-relative, p1-sports-regime'}
+- {id: p1-utl-engine, content: '- [x] [AGENT] P0. Build shared FeatureValidityEngine base in UTL feature_service_base/
 
-  - id: p1-sports-regime
-    content: |
-      - [x] [AGENT] P0. Build 36 regime/reset columns in season_context.py (14 new) + manager_calculator.py (20 new)
-      season_context.py: matches_played, season_start_flags, history_depth, prior_blend_weight.
-      manager_calculator.py: changed_last_7d/14d/30d, matches_since_change, reset_weight, style_shift, entropy_shift, rotation_shift.
-    status: done
-    note: "PARALLEL with p1-sports-relative"
+    Abstract base: takes list of FeatureBlockDefinition (block_name, valid_fn, confidence_fn, required_inputs). Computes all validity flags, confidence scores, aggregate feature_validity_count, feature_validity_ratio, invalid_key_feature_count. Each feature service subclasses with domain-specific blocks.
 
-  # ── Phase 1 QG Gate ─────────────────────────────────────────────────────
-  - id: p1-qg
-    content: |
-      - [x] [AGENT] P0. Run quality-gates.sh on UAC, UTL, features-sports-service — all pass
-    status: done
-    blocked_by: ""
-    note: "SEQUENTIAL — gate before Phase 2"
+    ', status: done, note: PARALLEL with p1-uac-validity-schemas}
+- {id: p1-sports-relative, content: '- [x] [AGENT] P0. Build relative_context_calculator.py in features-sports-service (60 columns)
 
-  # ── Phase 2: Sports Core (SEQUENTIAL after Phase 1) ────────────────────
-  - id: p2-odds-probability-space
-    content: |
-      - [x] [AGENT] P0. Upgrade odds_calculator.py to probability space (39 new columns, 153 total)
-      Vig-removed implied probs, sharp/soft gap, dispersion, entropy, velocity/accel in prob space, market coherence, reversal, chop, complexity.
-    status: done
-    note: "SEQUENTIAL after Phase 1 QG"
+    12 metric families x 5 suffixes = 60 columns. Generator function: _diff, _ratio, _zdiff, _league_pct_home, _league_pct_away.
 
-  - id: p2-xg-decomposition
-    content: |
-      - [x] [AGENT] P0. Build xg_decomposition_calculator.py (20 columns: 10 home + 10 away)
-      Volume/Quality/Conversion separation. Finishing overperformance, keeper prevention.
-    status: done
-    note: "PARALLEL with p2-transfer, p2-lineup within Phase 2"
+    ', status: done, note: PARALLEL with p1-sports-regime}
+- {id: p1-sports-regime, content: '- [x] [AGENT] P0. Build 36 regime/reset columns in season_context.py (14 new) + manager_calculator.py (20 new)
 
-  - id: p2-transfer
-    content: |
-      - [x] [AGENT] P0. Build transfer shock features in transfer_window_calculator.py (30 new, 38 total)
-      Window closed flags, minutes/value lost/added, turnover, new signing integration, post-window stability.
-    status: done
-    note: "PARALLEL with p2-xg-decomposition, p2-lineup"
+    season_context.py: matches_played, season_start_flags, history_depth, prior_blend_weight.
 
-  - id: p2-lineup
-    content: |
-      - [x] [AGENT] P1. Build lineup composition additions in player_lineup_calculator.py (22 new, 74 total)
-      Value shares, age std, new signing count, continuity, concentration risk (top1/top3 value/xg share).
-    status: done
-    note: "PARALLEL with p2-xg-decomposition, p2-transfer"
+    manager_calculator.py: changed_last_7d/14d/30d, matches_since_change, reset_weight, style_shift, entropy_shift, rotation_shift.
 
-  # ── Phase 2 QG Gate ─────────────────────────────────────────────────────
-  - id: p2-qg
-    content: |
-      - [x] [AGENT] P0. Run quality-gates.sh on features-sports-service — pass
-    status: done
-    note: "SEQUENTIAL — gate before Phase 3"
+    ', status: done, note: PARALLEL with p1-sports-relative}
+- {id: p1-qg, content: '- [x] [AGENT] P0. Run quality-gates.sh on UAC, UTL, features-sports-service — all pass
 
-  # ── Phase 3: Meta + Validity (SEQUENTIAL after Phase 2) ────────────────
-  - id: p3-meta-features
-    content: |
-      - [x] [AGENT] P0. Build meta_features_calculator.py (12 columns)
-      Auto-discovers _valid/_confidence columns, ensemble disagreement (pred_std, pred_range, pred_max_abs_gap).
-    status: done
-    note: "SEQUENTIAL after Phase 2 QG"
+    ', status: done, blocked_by: '', note: SEQUENTIAL — gate before Phase 2}
+- {id: p2-odds-probability-space, content: '- [x] [AGENT] P0. Upgrade odds_calculator.py to probability space (39 new columns, 153 total)
 
-  - id: p3-validity-engine
-    content: |
-      - [x] [AGENT] P0. Build sports_validity_engine.py (5 blocks, 10 validity columns)
-      Subclasses UTL FeatureValidityEngine: team_block (critical), lineup_block, transition_block, market_block (critical), synthetic_xg_block.
-    status: done
-    note: "PARALLEL with p3-meta-features, p3-bucketed"
+    Vig-removed implied probs, sharp/soft gap, dispersion, entropy, velocity/accel in prob space, market coherence, reversal, chop, complexity.
 
-  - id: p3-bucketed
-    content: |
-      - [x] [AGENT] P1. Build bucketed_features_calculator.py (16 columns)
-      8 bucket types x home/away: days_rest, history_depth, turnover, lineup_uncertainty, vig, book_dispersion, fatigue, manager_change.
-    status: done
-    note: "PARALLEL with p3-meta-features, p3-validity-engine"
+    ', status: done, note: SEQUENTIAL after Phase 1 QG}
+- {id: p2-xg-decomposition, content: '- [x] [AGENT] P0. Build xg_decomposition_calculator.py (20 columns: 10 home + 10 away)
 
-  - id: p3-bench-sub
-    content: |
-      - [x] [AGENT] P1. Build bench_sub_calculator.py (16 columns)
-      Bench depth, freshness, fatigue_delta, sub timing, proactive subs flag.
-    status: done
-    note: "PARALLEL with p3-bucketed"
+    Volume/Quality/Conversion separation. Finishing overperformance, keeper prevention.
 
-  - id: p3-replacement
-    content: |
-      - [x] [AGENT] P1. Build replacement_model_calculator.py (8 columns)
-      Context score, quality drop, tactical distortion, uncertainty — all placeholders for future player embedding model.
-    status: done
-    note: "PARALLEL with p3-bench-sub"
+    ', status: done, note: 'PARALLEL with p2-transfer, p2-lineup within Phase 2'}
+- {id: p2-transfer, content: '- [x] [AGENT] P0. Build transfer shock features in transfer_window_calculator.py (30 new, 38 total)
 
-  # ── Phase 3 QG Gate ─────────────────────────────────────────────────────
-  - id: p3-qg
-    content: |
-      - [x] [AGENT] P0. Run quality-gates.sh on all modified repos — pass
-    status: done
-    note: "SEQUENTIAL — gate before Phase 4"
+    Window closed flags, minutes/value lost/added, turnover, new signing integration, post-window stability.
 
-  # ── Phase 4: Cross-Domain Expansion (PARALLEL) ─────────────────────────
-  - id: p4-onchain-validity
-    content: |
-      - [x] [AGENT] P1. Add 9 validity blocks + 10 regime features to features-onchain-service
-      OnchainValidityEngine (9 blocks, 3 critical) + onchain_regime_calculator.py (10 regime columns).
-    status: done
-    note: "PARALLEL with p4-delta-one, p4-volatility"
+    ', status: done, note: 'PARALLEL with p2-xg-decomposition, p2-lineup'}
+- {id: p2-lineup, content: '- [x] [AGENT] P1. Build lineup composition additions in player_lineup_calculator.py (22 new, 74 total)
 
-  - id: p4-delta-one
-    content: |
-      - [x] [AGENT] P1. Add 6 validity blocks + 10 regime features to features-delta-one-service
-      DeltaOneValidityEngine (6 blocks, 2 critical) + DELTA_ONE_REGIME_COLUMNS (10 columns).
-    status: done
-    note: "PARALLEL with p4-onchain-validity, p4-volatility"
+    Value shares, age std, new signing count, continuity, concentration risk (top1/top3 value/xg share).
 
-  - id: p4-volatility
-    content: |
-      - [x] [AGENT] P1. Add 3 validity blocks to features-volatility-service
-      VolatilityValidityEngine (3 blocks: vol_surface, greeks, skew).
-    status: done
-    note: "PARALLEL with p4-onchain-validity, p4-delta-one"
+    ', status: done, note: 'PARALLEL with p2-xg-decomposition, p2-transfer'}
+- {id: p2-qg, content: '- [x] [AGENT] P0. Run quality-gates.sh on features-sports-service — pass
 
-  # ── Phase 4 QG Gate ─────────────────────────────────────────────────────
-  - id: p4-qg
-    content: |
-      - [x] [AGENT] P0. All Phase 4 imports verified — engines load correctly
-    status: done
-    note: "SEQUENTIAL — gate before Phase 5"
+    ', status: done, note: SEQUENTIAL — gate before Phase 3}
+- {id: p3-meta-features, content: '- [x] [AGENT] P0. Build meta_features_calculator.py (12 columns)
 
-  # ── Phase 5: Declarative Registry + Tests ──────────────────────────────
-  - id: p5-feature-definitions
-    content: |
-      - [x] [AGENT] P1. Create feature_definitions.yaml in features-sports-service
-      Declarative registry: 269 new columns across 11 categories (A1-A11). Each entry: calculator, formula, sources, deps, priority, models.
-    status: done
-    note: "SEQUENTIAL after Phase 4 QG"
+    Auto-discovers _valid/_confidence columns, ensemble disagreement (pred_std, pred_range, pred_max_abs_gap).
 
-  - id: p5-builder-registry
-    content: |
-      - [x] [AGENT] P1. Build feature_builder_registry.py with dependency DAG
-      30 groups, 905 columns, 3 execution phases. Kahn's algorithm topological sort. resolve_build_order() returns parallel phases.
-    status: done
-    note: "PARALLEL with p5-feature-definitions"
+    ', status: done, note: SEQUENTIAL after Phase 2 QG}
+- {id: p3-validity-engine, content: '- [x] [AGENT] P0. Build sports_validity_engine.py (5 blocks, 10 validity columns)
 
-  - id: p5-touchup-tests
-    content: |
-      - [x] [AGENT] P0. Build feature_touchup_tests.py — no-leakage, bucket correctness, regime flags
-      12 test classes, 40+ tests: season regime, manager flags, bucket boundaries, relative context, validity engine, meta-features, xG decomposition, builder DAG, transfer shock, bench/sub, replacement, catalog integrity.
-    status: done
-    note: "PARALLEL with p5-builder-registry"
+    Subclasses UTL FeatureValidityEngine: team_block (critical), lineup_block, transition_block, market_block (critical), synthetic_xg_block.
 
-  - id: p5-propagate-registry
-    content: |
-      - [x] [AGENT] P2. Propagate YAML registry pattern to features-onchain-service and features-delta-one-service
-      Created feature_definitions.yaml + feature_builder_registry.py for both services. On-chain: introspects FeatureCalculatorRegistry, 12 categories (~83 features), 9 validity blocks, regime calculator as Phase 2. Delta-one: introspects CALCULATOR_REGISTRY + FEATURE_GROUP_LOOKBACK, 34 groups, 10 regime columns, 6 validity blocks, Kahn's topo sort for 2-phase execution.
-    status: done
-    note: "DONE — both services have declarative YAML + builder DAG"
+    ', status: done, note: 'PARALLEL with p3-meta-features, p3-bucketed'}
+- {id: p3-bucketed, content: '- [x] [AGENT] P1. Build bucketed_features_calculator.py (16 columns)
 
-  # ── Phase 5 QG Gate + Final Validation ──────────────────────────────────
-  - id: p5-final-qg
-    content: |
-      - [x] [AGENT] P0. Final QG on all repos + feature_validity_ratio > 0.8 on mature fixtures
-      Run quality-gates.sh on: UAC, UTL, features-sports-service, features-onchain-service, features-delta-one-service, features-volatility-service.
-      Results: sports PASSED. Other 5 repos have pre-existing failures (pip-audit CVE, codex compliance, orchestration tests, CLI test, coverage). All new code (YAML registries, builder DAGs, validity engines, regime calculators) passes lint, typecheck, and tests cleanly. Fixed 3 SIM103 lint violations (volatility) and 3 deep UTL imports (all 3 feature services).
-    status: done
-    note: "DONE — all new code passes, pre-existing failures documented"
+    8 bucket types x home/away: days_rest, history_depth, turnover, lineup_uncertainty, vig, book_dispersion, fatigue, manager_change.
 
+    ', status: done, note: 'PARALLEL with p3-meta-features, p3-validity-engine'}
+- {id: p3-bench-sub, content: '- [x] [AGENT] P1. Build bench_sub_calculator.py (16 columns)
+
+    Bench depth, freshness, fatigue_delta, sub timing, proactive subs flag.
+
+    ', status: done, note: PARALLEL with p3-bucketed}
+- {id: p3-replacement, content: '- [x] [AGENT] P1. Build replacement_model_calculator.py (8 columns)
+
+    Context score, quality drop, tactical distortion, uncertainty — all placeholders for future player embedding model.
+
+    ', status: done, note: PARALLEL with p3-bench-sub}
+- {id: p3-qg, content: '- [x] [AGENT] P0. Run quality-gates.sh on all modified repos — pass
+
+    ', status: done, note: SEQUENTIAL — gate before Phase 4}
+- {id: p4-onchain-validity, content: '- [x] [AGENT] P1. Add 9 validity blocks + 10 regime features to features-onchain-service
+
+    OnchainValidityEngine (9 blocks, 3 critical) + onchain_regime_calculator.py (10 regime columns).
+
+    ', status: done, note: 'PARALLEL with p4-delta-one, p4-volatility'}
+- {id: p4-delta-one, content: '- [x] [AGENT] P1. Add 6 validity blocks + 10 regime features to features-delta-one-service
+
+    DeltaOneValidityEngine (6 blocks, 2 critical) + DELTA_ONE_REGIME_COLUMNS (10 columns).
+
+    ', status: done, note: 'PARALLEL with p4-onchain-validity, p4-volatility'}
+- {id: p4-volatility, content: '- [x] [AGENT] P1. Add 3 validity blocks to features-volatility-service
+
+    VolatilityValidityEngine (3 blocks: vol_surface, greeks, skew).
+
+    ', status: done, note: 'PARALLEL with p4-onchain-validity, p4-delta-one'}
+- {id: p4-qg, content: '- [x] [AGENT] P0. All Phase 4 imports verified — engines load correctly
+
+    ', status: done, note: SEQUENTIAL — gate before Phase 5}
+- {id: p5-feature-definitions, content: '- [x] [AGENT] P1. Create feature_definitions.yaml in features-sports-service
+
+    Declarative registry: 269 new columns across 11 categories (A1-A11). Each entry: calculator, formula, sources, deps, priority, models.
+
+    ', status: done, note: SEQUENTIAL after Phase 4 QG}
+- {id: p5-builder-registry, content: '- [x] [AGENT] P1. Build feature_builder_registry.py with dependency DAG
+
+    30 groups, 905 columns, 3 execution phases. Kahn''s algorithm topological sort. resolve_build_order() returns parallel phases.
+
+    ', status: done, note: PARALLEL with p5-feature-definitions}
+- {id: p5-touchup-tests, content: '- [x] [AGENT] P0. Build feature_touchup_tests.py — no-leakage, bucket correctness, regime flags
+
+    12 test classes, 40+ tests: season regime, manager flags, bucket boundaries, relative context, validity engine, meta-features, xG decomposition, builder DAG, transfer shock, bench/sub, replacement, catalog integrity.
+
+    ', status: done, note: PARALLEL with p5-builder-registry}
+- {id: p5-propagate-registry, content: '- [x] [AGENT] P2. Propagate YAML registry pattern to features-onchain-service and features-delta-one-service
+
+    Created feature_definitions.yaml + feature_builder_registry.py for both services. On-chain: introspects FeatureCalculatorRegistry, 12 categories (~83 features), 9 validity blocks, regime calculator as Phase 2. Delta-one: introspects CALCULATOR_REGISTRY + FEATURE_GROUP_LOOKBACK, 34 groups, 10 regime columns, 6 validity blocks, Kahn''s topo sort for 2-phase execution.
+
+    ', status: done, note: DONE — both services have declarative YAML + builder DAG}
+- {id: p5-final-qg, content: '- [x] [AGENT] P0. Final QG on all repos + feature_validity_ratio > 0.8 on mature fixtures
+
+    Run quality-gates.sh on: UAC, UTL, features-sports-service, features-onchain-service, features-delta-one-service, features-volatility-service.
+
+    Results: sports PASSED. Other 5 repos have pre-existing failures (pip-audit CVE, codex compliance, orchestration tests, CLI test, coverage). All new code (YAML registries, builder DAGs, validity engines, regime calculators) passes lint, typecheck, and tests cleanly. Fixed 3 SIM103 lint violations (volatility) and 3 deep UTL imports (all 3 feature services).
+
+    ', status: done, note: 'DONE — all new code passes, pre-existing failures documented'}
 isProject: false
 ---
 

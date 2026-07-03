@@ -1,18 +1,24 @@
 ---
-title:
-  "DeFi MTDS subgraph schema rewrites + adapter fixes (DEX-swaps / Compound V3 / Hyperliquid OHLCV / Extended-Starknet)"
+doc_type: plan
+title: DeFi MTDS subgraph schema rewrites + adapter fixes (DEX-swaps / Compound V3 / Hyperliquid OHLCV / Extended-Starknet)
+summary:
+status: complete
+nature: record
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-ui, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: [../epics/defi_master.md, ./defi_manifest_canonicalisation_2026_06_01.md]
+created: '2026-06-12'
 parent_epic: defi_master
 priority: P0
-status: archived
 execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
-locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
+locked_by: NA
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/defi_master.md
-  - ./defi_manifest_canonicalisation_2026_06_01.md
 ---
 
 > **✅ ARCHIVED 2026-06-26 — folded into path_to_100pct_backfill_mtds_is_2026_06_17 (survivor M-1). 3/5 done

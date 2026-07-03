@@ -1,10 +1,18 @@
 ---
+doc_type: plan
 title: CI/CD SIT + Fleet — system-integration-tests mechanics, fleet rulesets, UAC-orphan cap
-name: cicd_sit_and_fleet_2026_06_18
+summary:
+status: superseded
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [e2e-testing, greeks-service, system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
 parent_epic: infrastructure_master
 assigned_vm: harsh_pc
-created: 2026-06-18
-status: superseded
 locked_by: live-defi-rollout
 locked_since: 2026-06-18
 priority: P2
@@ -12,9 +20,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
 parent_consolidation: cicd_docs_and_consolidation_2026_06_18
-source:
-  - sit_uac_orphan_cap_stale_consumer_list_2026_06_07 (consolidated)
-  - cicd_contract_hardening_2026_06_01 (SIT + fleet subset)
+source: [sit_uac_orphan_cap_stale_consumer_list_2026_06_07 (consolidated), cicd_contract_hardening_2026_06_01 (SIT + fleet subset)]
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**

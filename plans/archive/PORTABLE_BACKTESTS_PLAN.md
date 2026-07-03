@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Portable Backtests Plan
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+---
+
 # Portable Backtests Plan
 
 **Deadline:** March 12, 2026 (with all plans complete) **Reference:** MASTER_PRE_DEPLOYMENT_PLAN_CHAIN.md,

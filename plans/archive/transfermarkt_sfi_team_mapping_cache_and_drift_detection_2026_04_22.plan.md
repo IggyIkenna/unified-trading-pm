@@ -1,39 +1,27 @@
 ---
-title:
-  "Transfermarkt + SFI team-mapping cache + league/team drift detection (reduce API calls; catch silent partial writes)"
-priority: P2
-status: active
-owner: agent
+doc_type: plan
+title: Transfermarkt + SFI team-mapping cache + league/team drift detection (reduce API calls; catch silent partial writes)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-22
+priority: P2
+owner: agent
 type: code
 epic: none
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-sports-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-depends_on:
-  [
-    features_sports_denormalisation_pipeline_2026_04_21,
-    features_sports_derived_data_crime_fixes_2026_04_21,
-    features_sports_upstream_coverage_gaps_2026_04_21,
-  ]
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: instruments-service, code: C0, deployment: none, business: none}
+- {repo: features-sports-service, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+depends_on: [features_sports_denormalisation_pipeline_2026_04_21, features_sports_derived_data_crime_fixes_2026_04_21, features_sports_upstream_coverage_gaps_2026_04_21]
 isProject: false
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25

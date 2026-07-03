@@ -1,18 +1,18 @@
 ---
-title:
-  "MDPS liquidity-baseline 3rd state (illiquidity vs data-bug) + live tick-staleness watchdog — both reuse same
-  per-(venue, instrument, period) baseline"
+doc_type: issue
+title: MDPS liquidity-baseline 3rd state (illiquidity vs data-bug) + live tick-staleness watchdog — both reuse same per-(venue, instrument, period) baseline
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-service, execution-service, market-data-processing-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
-source:
-  - market-data-processing-service/market_data_processing_service/output_writer_service.py:194 (1440 NaN OHLC writeback
-    — deprecated path)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md:2351-2430 (Wave 3.M zero-volume-bar adapter audit
-    pending)
-  - plans/active/alerting_service_live_rules_2026_05_07.md:52-203 (alert taxonomy — DEFI_FEATURE_STALE present but no
-    TICK_STALENESS)
-  - CLAUDE.md "Four-category empty-output decision" (categories A/B/C/D — D added 2026-05-07 evening)
-  - CLAUDE.md "Live = batch" workspace principle
+source: ['market-data-processing-service/market_data_processing_service/output_writer_service.py:194 (1440 NaN OHLC writeback — deprecated path)', 'plans/active/writegate_honest_coverage_endtoend_2026_05_06.md:2351-2430 (Wave 3.M zero-volume-bar adapter audit pending)', 'plans/active/alerting_service_live_rules_2026_05_07.md:52-203 (alert taxonomy — DEFI_FEATURE_STALE present but no TICK_STALENESS)', CLAUDE.md "Four-category empty-output decision" (categories A/B/C/D — D added 2026-05-07 evening), CLAUDE.md "Live = batch" workspace principle]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

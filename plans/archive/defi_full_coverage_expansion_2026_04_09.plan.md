@@ -1,14 +1,20 @@
 ---
-title: "DeFi Full Coverage Expansion — Missing DEXes, Lending, LSTs, Perps, Swap Rates"
-status: active
+doc_type: plan
+title: DeFi Full Coverage Expansion — Missing DEXes, Lending, LSTs, Perps, Swap Rates
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-04-09
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-04-09
-created: 2026-04-09
-affects:
-  - unified-api-contracts
-  - instruments-service
-  - market-tick-data-service
+affects: [unified-api-contracts, instruments-service, market-tick-data-service]
 ---
 
 # Context

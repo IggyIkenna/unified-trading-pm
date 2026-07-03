@@ -1,11 +1,21 @@
 ---
+doc_type: plan
+title: Predictions Canonical-Question-Group SSOT + Polymarket Migration + Lifecycle Timing — Plan
+summary:
+status: drafted
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-06
 type: plan
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-created: 2026-05-06
 parent_plan: writegate_honest_coverage_endtoend_2026_05_06.plan.md
 companion_handover: shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-status: drafted
 ---
 
 # Predictions Canonical-Question-Group SSOT + Polymarket Migration + Lifecycle Timing — Plan

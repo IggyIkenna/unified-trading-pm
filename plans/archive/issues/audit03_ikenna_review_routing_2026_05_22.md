@@ -1,11 +1,19 @@
 ---
-title: "AUDIT-03 — findings routed to Ikenna for decision / codex-intent"
+doc_type: issue
+title: AUDIT-03 — findings routed to Ikenna for decision / codex-intent
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-22
 priority: P1
-status: active
 locked_by: live-defi-rollout
-source:
-  - audits/audit-files/audit_03_defi_archetypes_e2e.md (§6 + §6.1 re-verification ledger)
+source: [audits/audit-files/audit_03_defi_archetypes_e2e.md (§6 + §6.1 re-verification ledger)]
 ---
 
 # AUDIT-03 — findings routed to Ikenna

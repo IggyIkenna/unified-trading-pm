@@ -1,28 +1,28 @@
 ---
-title: "Instruments-service + market-tick-data + market-data-processing — full functionality across all asset groups"
-priority: P0
-status: active
-owner: agent
+doc_type: plan
+title: Instruments-service + market-tick-data + market-data-processing — full functionality across all asset groups
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-01
+priority: P0
+owner: agent
 type: epic
 epic: data-pipeline-completion
-completion_gates:
-  code: C2
-  deployment: D2
-  business: B1
+completion_gates: {code: C2, deployment: D2, business: B1}
 repo_gates:
-  - repo: deployment-ui
-    deployment: D1
-  - repo: deployment-api
-    deployment: D1
-  - repo: instruments-service
-    deployment: D2
-  - repo: market-tick-data-service
-    deployment: D2
-  - repo: market-data-processing-service
-    deployment: D2
-  - repo: unified-api-contracts
-    deployment: D1
+- {repo: deployment-ui, deployment: D1}
+- {repo: deployment-api, deployment: D1}
+- {repo: instruments-service, deployment: D2}
+- {repo: market-tick-data-service, deployment: D2}
+- {repo: market-data-processing-service, deployment: D2}
+- {repo: unified-api-contracts, deployment: D1}
 depends_on: []
 isProject: true
 ---

@@ -1,19 +1,20 @@
 ---
+doc_type: plan
 title: Topology Q-group — features / strategy ensemble / ML / execution × batch / live / paper
-type: question-doc
-status: archived
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service, deployment-service, execution-service, features-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md, plans/active/features_repo_consolidation_2026_05_08.md, plans/epics/strategy_and_dart_master_2026_05_07.md, plans/epics/ml_and_features_master_2026_05_07.md, plans/epics/infrastructure_master_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md, plans/active/defi_master_2026_05_07.md]
 created: 2026-05-08
+type: question-doc
 status_changed: 2026-05-09
 deadline: 2026-05-23
 author: ikenna
-related:
-  - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
-  - plans/active/features_repo_consolidation_2026_05_08.md
-  - plans/epics/strategy_and_dart_master_2026_05_07.md
-  - plans/epics/ml_and_features_master_2026_05_07.md
-  - plans/epics/infrastructure_master_2026_05_07.md
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/defi_master_2026_05_07.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

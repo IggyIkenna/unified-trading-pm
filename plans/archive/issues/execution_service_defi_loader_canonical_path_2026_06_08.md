@@ -1,22 +1,26 @@
 ---
-title: "execution-service DeFi backtest loader — canonical path candidate missing (LDR v2 RED)"
+doc_type: issue
+title: execution-service DeFi backtest loader — canonical path candidate missing (LDR v2 RED)
+summary:
+status: resolved
+nature: record
+asset_group: [defi]
+stage: [meta]
+repos: [execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-08
 assigned_vm: planning
 parent_epic: master_to_live_defi_2026_05_23
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
-source:
-  - "execution-service quality-gates-v2 on live-defi-rollout run 27113589926 (sha c71484d6) — FAILED"
-  - "introduced by execution-service@c71484d6 (slot-2·laptop): fix(execution): DeFi backtest loader reads canonical
-    pipeline_mode-aware path first"
+source: [execution-service quality-gates-v2 on live-defi-rollout run 27113589926 (sha c71484d6) — FAILED, 'introduced by execution-service@c71484d6 (slot-2·laptop): fix(execution): DeFi backtest loader reads canonical pipeline_mode-aware path first']
 locked_by: live-defi-rollout
 priority: P2
-status: resolved
 resolved: 2026-06-09
-resolution:
-  ACKED-INTO-CODE — execution-service@abfadd803 (loaders/defi.py:70 adds chain= kwarg, fixes StopIteration); regression
-  tests tests/unit/test_loaders_defi_canonical_paths.py::test_{swaps,liquidity}_canonical_path_precedes_legacy
+resolution: ACKED-INTO-CODE — execution-service@abfadd803 (loaders/defi.py:70 adds chain= kwarg, fixes StopIteration); regression tests tests/unit/test_loaders_defi_canonical_paths.py::test_{swaps,liquidity}_canonical_path_precedes_legacy
 ---
 
 ## What I found

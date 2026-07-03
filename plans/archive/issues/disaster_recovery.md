@@ -1,8 +1,17 @@
 ---
-title: "Trading Incident Alerting, Auto-Recovery, Human Escalation + Audit Operating Model"
-parent_epic: observability_master
+doc_type: issue
+title: Trading Incident Alerting, Auto-Recovery, Human Escalation + Audit Operating Model
+summary:
 status: resolved-into-active-plans
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
+parent_epic: observability_master
 resolved: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout

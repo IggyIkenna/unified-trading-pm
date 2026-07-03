@@ -1,25 +1,30 @@
 ---
-title: "Expected-unattempted propagation chain — instruments → MTDS → MDPS → features → ML"
-name: expected-unattempted-propagation-chain-2026-05-12
-status: archived
-priority: P0
+doc_type: plan
+title: Expected-unattempted propagation chain — instruments → MTDS → MDPS → features → ML
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: [manifest_evolution_SUPERSEDED_2026_05_21, manifest_cross_asset_rescan_design_2026_05_08, writegate_honest_coverage_endtoend_2026_05_06, expected_universe_v2_design_2026_05_08]
 created: 2026-05-12
+priority: P0
 last_updated: 2026-05-12
 parent: manifest_evolution_SUPERSEDED_2026_05_21
-related_plans:
-  - manifest_evolution_SUPERSEDED_2026_05_21
-  - manifest_cross_asset_rescan_design_2026_05_08
-  - writegate_honest_coverage_endtoend_2026_05_06
-  - expected_universe_v2_design_2026_05_08
 migrated_from: plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 estimate_class: brand-new
 estimate_baseline_ai_days: 6.6
 estimate_calibrated_ai_days: 6.6
-estimate_calibration_note: |
-  +1.1 added 2026-05-12 for Phase 1.5 (sports fixture SSOT fix ~0.8) + Phase 2 extension (MDPS forward-fill contract ~0.3).
+estimate_calibration_note: '+1.1 added 2026-05-12 for Phase 1.5 (sports fixture SSOT fix ~0.8) + Phase 2 extension (MDPS forward-fill contract ~0.3).
+
   brand-new class, multiplier 1.0×.
+
+  '
 effective_concurrent_slots: 4
 model_tier: sonnet-doable
 thinking: high

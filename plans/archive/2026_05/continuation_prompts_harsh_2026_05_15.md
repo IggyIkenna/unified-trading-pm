@@ -1,8 +1,17 @@
 ---
+doc_type: plan
 title: Continuation prompts — Harsh side, 2026-05-15 Day-1
-type: orchestration-spec
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui, e2e-testing]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
+type: orchestration-spec
 adopted: 2026-05-15 04:00 UTC
 locked_by: live-defi-rollout
 locked_since: 2026-05-14

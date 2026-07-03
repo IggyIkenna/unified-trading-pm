@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: PM Codex Drift Zero vs Other Alignment Plan — Diff and Merge Guide
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-04'
+---
+
 # PM Codex Drift Zero vs Other Alignment Plan — Diff and Merge Guide
 
 **Purpose:** Compare pm_codex_drift_zero_architecture plan with other_alignment_plan.md for alignment, merge points, and

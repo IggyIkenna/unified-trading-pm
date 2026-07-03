@@ -1,6 +1,16 @@
 ---
-name: Strategy Architecture v2 — Family / Archetype / Axes / Cross-Cutting
-status: active
+doc_type: plan
+title: Strategy Architecture v2 — Family / Archetype / Axes / Cross-Cutting
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-17'
 owner: iggy
 started: 2026-04-17
 locked_by: live-defi-rollout

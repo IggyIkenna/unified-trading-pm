@@ -1,22 +1,26 @@
 ---
-title: "DeFi catalogue + chain primitives buildout (May-23 cutover)"
-name: defi-catalogue-chain-primitives
-status: active
+doc_type: plan
+title: DeFi catalogue + chain primitives buildout (May-23 cutover)
+summary:
+status: complete
+nature: record
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-service, execution-service, features-service, instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/defi_master.md, plans/active/master_to_live_defi_2026_05_23.md, plans/active/defi_simulation_realism_2026_05_10.md, plans/active/cross_asset_group_catalogue_audit_2026_05_10.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
 created: 2026-05-10
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-related_plans:
-  - plans/active/defi_master.md
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/defi_simulation_realism_2026_05_10.md
-  - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
 estimate_class: design
 estimate_baseline_ai_days: 342.5
 estimate_calibrated_ai_days: 205.5
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~30-45, ~30-45, ~25-40, + 4 more). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~30-45, ~30-45, ~25-40, + 4 more). Class inferred from filename (design, multiplier 0.6×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 parent_epic: defi_master
 priority: P0
 ---

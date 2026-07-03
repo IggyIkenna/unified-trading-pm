@@ -1,24 +1,27 @@
 ---
-title: "features-sports-service — Daily Compute Deployment (deploys Plan 3's denormalisation pipeline)"
-priority: P1
-status: active
-owner: agent
+doc_type: plan
+title: features-sports-service — Daily Compute Deployment (deploys Plan 3's denormalisation pipeline)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, market-tick-data-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-21
+priority: P1
+owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: deployment
 epic: none
-completion_gates:
-  code: none
-  deployment: D3
-  business: B3
+completion_gates: {code: none, deployment: D3, business: B3}
 repo_gates:
-  - repo: features-sports-service
-    deployment: D0
-  - repo: deployment-service
-    deployment: D0
-depends_on:
-  - features_sports_denormalisation_pipeline_2026_04_21
+- {repo: features-sports-service, deployment: D0}
+- {repo: deployment-service, deployment: D0}
+depends_on: [features_sports_denormalisation_pipeline_2026_04_21]
 isProject: false
 ---
 

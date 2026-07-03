@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Schema Contracts Full Audit
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-06'
+---
+
 # Schema Contracts Full Audit
 
 **Status:** Audit complete. Remediation in progress. **Date:** 2026-03-05 | **Last verified:** 2026-03-06 **Plan:**

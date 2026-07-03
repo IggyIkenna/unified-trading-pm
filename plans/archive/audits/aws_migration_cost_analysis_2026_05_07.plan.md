@@ -1,5 +1,16 @@
 ---
+doc_type: plan
+title: AWS Migration Cost Analysis — 2026-05-07
+summary:
+status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, strategy-service, unified-trading-library, unified-trading-pm]
 scope: [admin, engineer]
+tags: []
+related: []
+created: '2026-05-07'
 ---
 
 ## Status — superseded 2026-05-08 by codex_refactor Phase F.4

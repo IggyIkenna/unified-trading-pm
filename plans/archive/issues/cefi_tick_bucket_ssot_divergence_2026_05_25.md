@@ -1,14 +1,19 @@
 ---
-title: "honest-coverage cron reads -prd while CeFi tick data is in flat (Phase 2.6 not yet run)"
+doc_type: issue
+title: honest-coverage cron reads -prd while CeFi tick data is in flat (Phase 2.6 not yet run)
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-25
-source:
-  - audits/data_quality_backfill_status_audit_instructions.md (DQ-05)
-  - instruments-service/scripts/measure_honest_coverage.py
-  - plans/active/mtds_backfill_phase3_2026_05_22.md (Deferred work table)
-  - plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md (Phase 2.6)
+source: [audits/data_quality_backfill_status_audit_instructions.md (DQ-05), instruments-service/scripts/measure_honest_coverage.py, plans/active/mtds_backfill_phase3_2026_05_22.md (Deferred work table), plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md (Phase 2.6)]
 locked_by: live-defi-rollout
 parent_epic: epics/mtds_mdps_master.md
-status: active
 priority: P2
 ---
 

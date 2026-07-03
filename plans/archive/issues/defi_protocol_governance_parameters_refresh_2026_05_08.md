@@ -1,19 +1,22 @@
 ---
-title:
-  "DeFi protocol governance parameters frozen-at-discovery — Aave / Compound / Morpho rate-model + liquidation
-  thresholds + reserve factors not refreshed when governance changes them on-chain"
+doc_type: issue
+title: DeFi protocol governance parameters frozen-at-discovery — Aave / Compound / Morpho rate-model + liquidation thresholds + reserve factors not refreshed when governance changes them on-chain
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
 source:
-  - instruments-service/instruments_service/reference_data/adapters/defi/aave_v3_adapter.py (one-shot on-chain read at
-    discovery)
-  - unified-api-contracts/canonical/domain/instruments/__init__.py (Aave A_TOKEN schema with liquidation_threshold +
-    optimal_utilization_rate + reserve_factor as captured columns)
-  - tests/integration/test_instrument_alignment.py (validates non-null + 0<x<1 but does NOT verify on-chain match)
-  - operator directive 2026-05-08:
-      "the parameters used for Aave and lending protocols for how they adjust their rates for utilisation in balances,
-      is that information which changes over time but slowly? Is that recorded in instrument definitions, or did we just
-      hard code it? ... governance decisions do change that logic"
+- instruments-service/instruments_service/reference_data/adapters/defi/aave_v3_adapter.py (one-shot on-chain read at discovery)
+- unified-api-contracts/canonical/domain/instruments/__init__.py (Aave A_TOKEN schema with liquidation_threshold + optimal_utilization_rate + reserve_factor as captured columns)
+- tests/integration/test_instrument_alignment.py (validates non-null + 0<x<1 but does NOT verify on-chain match)
+- {operator directive 2026-05-08: 'the parameters used for Aave and lending protocols for how they adjust their rates for utilisation in balances, is that information which changes over time but slowly? Is that recorded in instrument definitions, or did we just hard code it? ... governance decisions do change that logic'}
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

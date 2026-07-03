@@ -1,13 +1,19 @@
 ---
-title:
-  "QG base-service.sh exit-code bug — a FAILED ratchet step (STEP 5.94 observed) falls through to overall exit 0 +
-  sentinel write"
+doc_type: issue
+title: QG base-service.sh exit-code bug — a FAILED ratchet step (STEP 5.94 observed) falls through to overall exit 0 + sentinel write
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, execution-service, instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-11
-source:
-  - mtds CF-11 swallow batch QG runs 2026-06-11 (mtds_honest_absence_swallow_remediation_2026_06_10.md)
+source: [mtds CF-11 swallow batch QG runs 2026-06-11 (mtds_honest_absence_swallow_remediation_2026_06_10.md)]
 locked_by: live-defi-rollout
 priority: P2
-status: resolved
 ---
 
 ## What I found

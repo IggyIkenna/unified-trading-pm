@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: 'PM–Codex–Code Alignment: Version Tracking Design'
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-data-processing-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-04'
+---
+
 # PM–Codex–Code Alignment: Version Tracking Design
 
 **Status:** Proposal — Under Team Review **Author:** Architecture discussion (Mar 2026) **Context:** 60-repo workspace,

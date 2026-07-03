@@ -1,22 +1,18 @@
 ---
-title:
-  "Databento TradFi candles session-agnostic — pre/post-market + auction periods indistinguishable from regular session,
-  contaminating every downstream feature"
+doc_type: issue
+title: Databento TradFi candles session-agnostic — pre/post-market + auction periods indistinguishable from regular session, contaminating every downstream feature
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
-source:
-  - unified-api-contracts/unified_api_contracts/registry/session_times.py:1-238 (SessionWindow SSOT — aggregate windows
-    only, no session-type taxonomy)
-  - market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_classifier.py:235-279
-    (DatabentoClassification dataclass — no session_type field)
-  - market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_adapter.py (no session
-    classification at write time)
-  - market-data-processing-service/market_data_processing_service/market_state_detector.py (MDPS-only session awareness;
-    not propagated upstream)
-  - features-volatility-service/features_volatility_service/core/volatility_orchestration.py:107-140 (mentions excluded
-    states in comments only — calculator code does NOT consume session_type)
-  - plans/active/tradfi_master_2026_05_07.md (no session-type todos)
-  - plans/active/mtds_databento_path_streaming_2026_05_07.md (no session-type todos)
+source: ['unified-api-contracts/unified_api_contracts/registry/session_times.py:1-238 (SessionWindow SSOT — aggregate windows only, no session-type taxonomy)', 'market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_classifier.py:235-279 (DatabentoClassification dataclass — no session_type field)', market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_adapter.py (no session classification at write time), market-data-processing-service/market_data_processing_service/market_state_detector.py (MDPS-only session awareness; not propagated upstream), 'features-volatility-service/features_volatility_service/core/volatility_orchestration.py:107-140 (mentions excluded states in comments only — calculator code does NOT consume session_type)', plans/active/tradfi_master_2026_05_07.md (no session-type todos), plans/active/mtds_databento_path_streaming_2026_05_07.md (no session-type todos)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

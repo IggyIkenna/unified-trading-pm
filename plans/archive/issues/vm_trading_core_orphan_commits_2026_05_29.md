@@ -1,9 +1,17 @@
 ---
+doc_type: issue
 title: vm-trading-core 2-commit local-only divergence — preserved on archive branch for review
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-29
-source:
-  - plans/active/api_host_chronic_impairment_2026_05_29.md (fleet host symmetry sweep)
-  - plans/active/plan_hygiene_silent_failure_capture_2026_05_29.md (autonomous-loop unblock)
+source: [plans/active/api_host_chronic_impairment_2026_05_29.md (fleet host symmetry sweep), plans/active/plan_hygiene_silent_failure_capture_2026_05_29.md (autonomous-loop unblock)]
 parent_epic: plans/epics/infrastructure_master.md
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
@@ -11,7 +19,6 @@ estimate_calibrated_ai_days: 0.2
 locked_by: live-defi-rollout
 locked_since: 2026-05-29
 priority: P2
-status: active
 ---
 
 > **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** FINAL. Assigned to **slot 7**: walk

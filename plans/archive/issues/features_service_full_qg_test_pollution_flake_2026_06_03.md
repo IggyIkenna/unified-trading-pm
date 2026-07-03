@@ -1,17 +1,22 @@
 ---
-title:
-  "features-service full QG red — cross-family test pollution (leaked cross_instrument global manifest writer w/
-  MagicMock get_settings poisons calendar capture_status test)"
+doc_type: issue
+title: features-service full QG red — cross-family test pollution (leaked cross_instrument global manifest writer w/ MagicMock get_settings poisons calendar capture_status test)
+summary:
+status: RESOLVED
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [features-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-03
-source:
-  - features-service tests/calendar/unit/test_calendar_orchestrator_capture_status.py
-  - features-service tests/cross_instrument/ (global/singleton manifest writer + get_settings mock)
+source: [features-service tests/calendar/unit/test_calendar_orchestrator_capture_status.py, features-service tests/cross_instrument/ (global/singleton manifest writer + get_settings mock)]
 resolved: 2026-06-07
 priority: P1
 parent_epic: infrastructure_master
 estimate_calibrated_ai_days: 0.4
 estimate_class: infra
-status: RESOLVED
 ---
 
 > ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-CODE)

@@ -1,7 +1,16 @@
 ---
-title: "Responsive Zoom Pass — 100%→200% Graceful Degradation"
+doc_type: plan
+title: Responsive Zoom Pass — 100%→200% Graceful Degradation
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-23
-status: done
 locked_by: live-defi-rollout
 locked_since: 2026-03-23
 priority: P1

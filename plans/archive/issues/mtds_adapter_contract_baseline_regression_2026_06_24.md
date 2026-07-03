@@ -1,13 +1,20 @@
 ---
+doc_type: issue
 title: MTDS defi lending/liquidations handlers below adapter-contract-call baseline
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-24
 author: ikennaigboaka [slot-1·planning]
-source:
-  - instruments-service quality-gates STEP 5.70 check_adapter_contract_regression (warn-only post-gate)
-  - market-tick-data-service@02e50cb2
+source: [instruments-service quality-gates STEP 5.70 check_adapter_contract_regression (warn-only post-gate), market-tick-data-service@02e50cb2]
 locked_by: live-defi-rollout
 priority: P2
-status: resolved
 ---
 
 ## RESOLVED 2026-06-24 (slot-3·laptop) — legit refactor, baseline regenerated

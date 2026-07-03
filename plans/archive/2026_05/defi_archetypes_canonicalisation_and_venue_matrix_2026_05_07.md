@@ -1,32 +1,26 @@
 ---
-title: "DeFi archetypes canonicalisation + venue-collateral matrix correction (multi-stream)"
+doc_type: plan
+title: DeFi archetypes canonicalisation + venue-collateral matrix correction (multi-stream)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, deployment-ui, instruments-service, strategy-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/trading_agent_service_architecture_unlock_2026_05_22.md]
 created: 2026-05-07
-source:
-  - plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md (Harsh audit + 2026-05-07 PM operator follow-up)
-  - unified-api-contracts/unified_api_contracts/registry/venue_collateral.py (stale SSOT)
-  - codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md
-  - codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md
-  - codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md
-  - plans/archive/leveraged_leg_controller_2026_05_01.plan.md
-  - plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/defi_master.md
-related_archetypes:
-  - CARRY_STAKED_BASIS
-  - ARBITRAGE_PRICE_DISPERSION
-  - CARRY_BASIS_PERP
-  - RECURSIVE_STAKED
-  - all archetypes touched by LeveragedLegController
+source: [plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md (Harsh audit + 2026-05-07 PM operator follow-up), unified-api-contracts/unified_api_contracts/registry/venue_collateral.py (stale SSOT), codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, plans/archive/leveraged_leg_controller_2026_05_01.plan.md, plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md, plans/active/master_to_live_defi_2026_05_23.md, plans/active/defi_master.md]
+related_archetypes: [CARRY_STAKED_BASIS, ARBITRAGE_PRICE_DISPERSION, CARRY_BASIS_PERP, RECURSIVE_STAKED, all archetypes touched by LeveragedLegController]
 estimate_class: design
 estimate_baseline_ai_days: 20
 estimate_calibrated_ai_days: 12
-estimate_calibration_note: |
-  Backfilled 2026-05-13: 40 todos, 17 done; multi-stream design+UAC matrix flip + archetype-doc rewrites + UAC enum audit + tracer + P&L attribution. Streams A-E parallel-shippable. Baseline 20 (~0.5 AI-day per substantive todo across remaining ~23); × 0.6 = 12.
-related_plans:
-  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
+estimate_calibration_note: 'Backfilled 2026-05-13: 40 todos, 17 done; multi-stream design+UAC matrix flip + archetype-doc rewrites + UAC enum audit + tracer + P&L attribution. Streams A-E parallel-shippable. Baseline 20 (~0.5 AI-day per substantive todo across remaining ~23); × 0.6 = 12.
+
+  '
 parent_epic: strategy_master
 priority: P1
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

@@ -1,26 +1,21 @@
 ---
-title:
-  "MDPS Option A migration to UTL lifecycle blocked by GCS-upload semantics gap — `close_candle_writer` finalizes
-  locally + `shutil.move`s, but `write_candle_parquet` consumers all upload to GCS"
+doc_type: issue
+title: MDPS Option A migration to UTL lifecycle blocked by GCS-upload semantics gap — `close_candle_writer` finalizes locally + `shutil.move`s, but `write_candle_parquet` consumers all upload to GCS
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-data-processing-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-10
 author: chain-agent-2026-05-10-evening
-source:
-  - plans/active/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md (Option A spec)
-  - market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py:476-485
-    (StreamingParquetWriter.close() → _upload_to_gcs)
-  - unified-trading-library/unified_trading_library/streaming/candle_writer.py:355-366 (close_candle_writer →
-    shutil.move LOCAL only)
-  - unified-trading-library/unified_trading_library/io/streaming_writer.py:341-377
-    (StreamingParquetWriter._upload_to_gcs)
+source: [plans/active/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md (Option A spec), 'market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py:476-485 (StreamingParquetWriter.close() → _upload_to_gcs)', 'unified-trading-library/unified_trading_library/streaming/candle_writer.py:355-366 (close_candle_writer → shutil.move LOCAL only)', 'unified-trading-library/unified_trading_library/io/streaming_writer.py:341-377 (StreamingParquetWriter._upload_to_gcs)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-execution:
-  owner: operator triage → next MDPS-dedicated tab in work-split
-  cadence: one-shot — resume Option A migration once architectural decision lands (R1 vs R2)
-  verifier:
-    write_candle_parquet flows through UTL lifecycle internally on a real CeFi backfill VM (writegate Phase 5 baseline +
-    plan Phase 4 end-to-end) AND uploads to GCS correctly
-  last_executed: "NEVER"
+execution: {owner: operator triage → next MDPS-dedicated tab in work-split, cadence: one-shot — resume Option A migration once architectural decision lands (R1 vs R2), verifier: write_candle_parquet flows through UTL lifecycle internally on a real CeFi backfill VM (writegate Phase 5 baseline + plan Phase 4 end-to-end) AND uploads to GCS correctly, last_executed: NEVER}
 ---
 
 # MDPS Option A blocked by GCS-upload semantics gap (extension to mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10)

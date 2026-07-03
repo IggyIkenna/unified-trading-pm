@@ -1,11 +1,18 @@
 ---
-title: "Workspace narrow-except audit — silent-bug pattern lifted from commodity Wave 3b finding"
+doc_type: issue
+title: Workspace narrow-except audit — silent-bug pattern lifted from commodity Wave 3b finding
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, features-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: wave-8-audit-agent
-source:
-  - plans/active/features_repo_consolidation_2026_05_08.md (line 1441 — narrow-except finding deferred)
-  - features-service/features_service/commodity/cli/handlers/batch_handler.py (canonical reference incident)
-  - unified-trading-library/unified_trading_library/manifest_writer.py:204 (MissingFeatureFamilyError class)
+source: [plans/active/features_repo_consolidation_2026_05_08.md (line 1441 — narrow-except finding deferred), features-service/features_service/commodity/cli/handlers/batch_handler.py (canonical reference incident), 'unified-trading-library/unified_trading_library/manifest_writer.py:204 (MissingFeatureFamilyError class)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

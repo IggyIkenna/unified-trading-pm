@@ -1,14 +1,22 @@
 ---
+doc_type: plan
 title: Live-persist 02 — UTL transport facade (publish/read; in-memory ↔ Pub/Sub; recency-routed read)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, market-data-processing-service, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-26
 parent_epic: batch_live_symmetry_master
 assigned_vm: human-planning
 estimate_class: design
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3
-
 priority: P1
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

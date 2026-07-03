@@ -1,14 +1,22 @@
 ---
-title:
-  "UTL FeatureBatchHandler ABC has zero production consumers; 8 features-* families run 4 distinct unrelated shapes"
+doc_type: issue
+title: UTL FeatureBatchHandler ABC has zero production consumers; 8 features-* families run 4 distinct unrelated shapes
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: tab-fbh-abc-adoption-investigation
 source:
-  - unified-trading-library@7aba113c feat(feature_service_base):
-      canonical FeatureBatchHandler ABC for per-family batch handlers
-  - unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md § Phase 5.7
-  - unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md § "deferred-work scoreboard" line 1429
-  - features-service/features_service/{commodity,cross_instrument,delta_one,onchain,sports,volatility,multi_timeframe,calendar}/cli/handlers/batch_handler.py
+- {unified-trading-library@7aba113c feat(feature_service_base): canonical FeatureBatchHandler ABC for per-family batch handlers}
+- unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md § Phase 5.7
+- unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md § "deferred-work scoreboard" line 1429
+- features-service/features_service/{commodity,cross_instrument,delta_one,onchain,sports,volatility,multi_timeframe,calendar}/cli/handlers/batch_handler.py
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

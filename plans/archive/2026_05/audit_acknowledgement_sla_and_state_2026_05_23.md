@@ -1,29 +1,34 @@
 ---
-title: "Audit-Acknowledgement SLA + State (6h default + per-severity override + secondary-human + founder fallback)"
+doc_type: plan
+title: Audit-Acknowledgement SLA + State (6h default + per-severity override + secondary-human + founder fallback)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [incident_gateway_and_state_machine_2026_05_23.md, ai_recovery_audit_signoff_agent_2026_05_23.md, deployment_ui_safety_ops_tab_2026_05_23.md]
+created: '2026-05-23'
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: active
 estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
-estimate_calibration_note: |
-  Design class — operator-judgment SLA values per severity + escalation ladder + operational-ack-vs-audit-ack
+estimate_calibration_note: 'Design class — operator-judgment SLA values per severity + escalation ladder + operational-ack-vs-audit-ack
+
   distinction. Implementation is small (cron-style timer on incident state machine + DART buttons). Baseline 8 × 0.6
+
   design = 4.8 cal-days.
+
+  '
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-depends_on:
-  - incident_gateway_and_state_machine_2026_05_23
-  - ai_recovery_audit_signoff_agent_2026_05_23
-gates:
-  - master_to_live_defi_2026_05_23:Group-F
-  - master_to_live_defi_2026_05_23:Group-G
-related_plans:
-  - incident_gateway_and_state_machine_2026_05_23.md
-  - ai_recovery_audit_signoff_agent_2026_05_23.md
-  - deployment_ui_safety_ops_tab_2026_05_23.md
+depends_on: [incident_gateway_and_state_machine_2026_05_23, ai_recovery_audit_signoff_agent_2026_05_23]
+gates: ['master_to_live_defi_2026_05_23:Group-F', 'master_to_live_defi_2026_05_23:Group-G']
 ---
 
 # Audit-Acknowledgement SLA + State

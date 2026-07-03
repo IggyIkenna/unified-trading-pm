@@ -1,119 +1,50 @@
 ---
-name: availability-manifest-v4-and-data-status
-overview:
-  Universal availability manifest schema v4 — proper shard columns, atomic writes, UAC SSOT registry, data status page
-  hierarchy, codex documentation
+doc_type: plan
+title: availability-manifest-v4-and-data-status
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-13'
+overview: Universal availability manifest schema v4 — proper shard columns, atomic writes, UAC SSOT registry, data status page hierarchy, codex documentation
 type: mixed
 epic: epic-code-completion
-status: active
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
+completion_gates: {code: C5, deployment: D3, business: B3}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-data-processing-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-delta-one-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-volatility-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-onchain-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-sports-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-calendar-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-multi-timeframe-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-cross-instrument-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-commodity-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-training-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-inference-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: risk-and-exposure-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: pnl-attribution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: alerting-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: deployment-api
-    code: C0
-    deployment: none
-    business: none
-  - repo: deployment-ui
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: instruments-service, code: C0, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
+- {repo: features-delta-one-service, code: C0, deployment: none, business: none}
+- {repo: features-volatility-service, code: C0, deployment: none, business: none}
+- {repo: features-onchain-service, code: C0, deployment: none, business: none}
+- {repo: features-sports-service, code: C0, deployment: none, business: none}
+- {repo: features-calendar-service, code: C0, deployment: none, business: none}
+- {repo: features-multi-timeframe-service, code: C0, deployment: none, business: none}
+- {repo: features-cross-instrument-service, code: C0, deployment: none, business: none}
+- {repo: features-commodity-service, code: C0, deployment: none, business: none}
+- {repo: ml-training-service, code: C0, deployment: none, business: none}
+- {repo: ml-inference-service, code: C0, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
+- {repo: pnl-attribution-service, code: C0, deployment: none, business: none}
+- {repo: alerting-service, code: C0, deployment: none, business: none}
+- {repo: deployment-api, code: C0, deployment: none, business: none}
+- {repo: deployment-ui, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
 depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-04-13
 todos: []
 isProject: false
-superseded_by:
-  [
-    manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md,
-    data_status_institutional_drilldown_2026_04_24.plan.md,
-    honest_coverage_metrics_2026_04_19.plan.md,
-  ]
+superseded_by: [manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md, data_status_institutional_drilldown_2026_04_24.plan.md, honest_coverage_metrics_2026_04_19.plan.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25
 ---

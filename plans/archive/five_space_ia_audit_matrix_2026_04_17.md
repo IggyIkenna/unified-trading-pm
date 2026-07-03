@@ -1,4 +1,16 @@
 ---
+doc_type: plan
+title: Five-space IA — Phase 0 audit matrix (dev | staging | prod)
+summary:
+status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 superseded_by: [five_space_ia_execution_child_plan_2026_04_17.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25

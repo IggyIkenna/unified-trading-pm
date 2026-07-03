@@ -1,17 +1,23 @@
 ---
-title: "Bug-D-prime — Drift backfill VM silent data loss + bucket-name SSOT drift for sig index [SUPERSEDED 2026-06-01]"
+doc_type: issue
+title: Bug-D-prime — Drift backfill VM silent data loss + bucket-name SSOT drift for sig index [SUPERSEDED 2026-06-01]
+summary:
+status: superseded
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-31
 superseded: 2026-06-01
-source:
-  - "vm-log: gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log"
-  - "mtds@7e09b2ab (fix)"
-  - "deployment-service@29f4bc4 (paired fix)"
+source: ['vm-log: gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log', mtds@7e09b2ab (fix), deployment-service@29f4bc4 (paired fix)]
 parent_epic: mtds_mdps_master
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 priority: P2
-status: superseded
 ---
 
 > **SUPERSEDED 2026-06-01.** The entire Helius sig-walking path this issue documents (sig-index VM loop, 28GB parquet,

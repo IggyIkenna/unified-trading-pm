@@ -1,18 +1,19 @@
 ---
-title:
-  client-reporting-api Cloud Build RED fleet-wide — UTL base image carries UAC 0.23.0 but pyproject floor is
-  unified-api-contracts>=0.24.0 (Dockerfile uv pip install cannot satisfy the floor)
+doc_type: issue
+title: client-reporting-api Cloud Build RED fleet-wide — UTL base image carries UAC 0.23.0 but pyproject floor is unified-api-contracts>=0.24.0 (Dockerfile uv pip install cannot satisfy the floor)
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [client-reporting-api, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-20
-source:
-  - client-reporting-api Cloud Build 38a9d442 (FAILURE, head d6b70e4) — Step build, uv pip install resolution
-  - client-reporting-api Cloud Build f4567a16 (FAILURE, head 1523a26 @ 10:11) — same step, same error
-  - last SUCCESS = a9e59d3d (golive-9968cb1 @ 2026-06-20 01:57); every build since is RED
-  - base image unified-trading-library:latest sha256:385c507… carries UAC 0.22.0;
-    digest-pinned base sha256:56bbd50… (client-reporting-api Dockerfile) carries UAC 0.23.0
-  - AR Python index (asia-northeast1-python.pkg.dev/.../unified-libraries) DOES carry UAC up to 0.27.0
+source: ['client-reporting-api Cloud Build 38a9d442 (FAILURE, head d6b70e4) — Step build, uv pip install resolution', 'client-reporting-api Cloud Build f4567a16 (FAILURE, head 1523a26 @ 10:11) — same step, same error', 'last SUCCESS = a9e59d3d (golive-9968cb1 @ 2026-06-20 01:57); every build since is RED', 'base image unified-trading-library:latest sha256:385c507… carries UAC 0.22.0; digest-pinned base sha256:56bbd50… (client-reporting-api Dockerfile) carries UAC 0.23.0', AR Python index (asia-northeast1-python.pkg.dev/.../unified-libraries) DOES carry UAC up to 0.27.0]
 locked_by: live-defi-rollout
 priority: P0
-status: resolved
 parent_epic: deployment_and_user_management_master
 ---
 

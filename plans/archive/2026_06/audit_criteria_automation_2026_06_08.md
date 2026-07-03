@@ -1,8 +1,6 @@
 ---
 doc_type: plan
-title:
-  Audit-criteria automation — convert recurring agentic audits into QG steps (code) + a scheduled data-state audit
-  (GCS), all asset groups
+title: Audit-criteria automation — convert recurring agentic audits into QG steps (code) + a scheduled data-state audit (GCS), all asset groups
 summary:
 status: complete
 nature: process
@@ -26,13 +24,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source:
-  [
-    'operator 2026-06-08 ("do all audit criteria have tests so QG catches issues vs constant agentic audits? — automate
-    it across all AGs")',
-    canonical_form_cross_service_audit_checklist.md (CF-1…CF-14),
-    master_data_canonicalisation_migration_catalogue_2026_06_07.md (the ①–⑫ pre-apply audit),
-  ]
+source: ['operator 2026-06-08 ("do all audit criteria have tests so QG catches issues vs constant agentic audits? — automate it across all AGs")', canonical_form_cross_service_audit_checklist.md (CF-1…CF-14), master_data_canonicalisation_migration_catalogue_2026_06_07.md (the ①–⑫ pre-apply audit)]
 drift_direction: advance-code
 ---
 

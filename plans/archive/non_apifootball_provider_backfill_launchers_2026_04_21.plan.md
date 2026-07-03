@@ -1,20 +1,25 @@
 ---
-title: "Non-API-Football Sports Provider Backfill Launchers (Transfermarkt / FootyStats / OpenMeteo / Understat)"
-priority: P1
-status: active
-owner: agent
+doc_type: plan
+title: Non-API-Football Sports Provider Backfill Launchers (Transfermarkt / FootyStats / OpenMeteo / Understat)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-21
+priority: P1
+owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: deployment-service
-    code: C0
+- {repo: deployment-service, code: C0}
 depends_on: []
 isProject: false
 ---

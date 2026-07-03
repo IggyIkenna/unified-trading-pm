@@ -1,9 +1,18 @@
 ---
-id: ui_api_event_telemetry_2026_03_10
+doc_type: plan
 title: UI & API Event Telemetry — Auth Events + Request Audit Trail
+summary:
 status: DONE
-priority: P1
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-api, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-10
+id: ui_api_event_telemetry_2026_03_10
+priority: P1
 completed: 2026-03-10
 owner: agent
 ---

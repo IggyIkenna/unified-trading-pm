@@ -1,26 +1,22 @@
 ---
-title: "Codex audit — Execution area (Phase 1.C)"
+doc_type: issue
+title: Codex audit — Execution area (Phase 1.C)
+summary: >-
+  Resolved pre-cutover codex audit of the Execution area (Phase 1.C) — cross-checked 12 arch docs against
+  execution-service / UAC / UTL for matching-engine, DeFi connector, flash-loan-receiver and credential-convention
+  drift; flash-loan receiver confirmed deployed on mainnet, testnet_contracts.py path + garbled CI block fixed.
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-codex-audit-execution-tab (slot 8 sub-agent)
-source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.C
-  - codex/04-architecture/flash-loan-receiver.md
-  - codex/04-architecture/interface-credential-convention.md
-  - codex/04-architecture/mev-protection.md
-  - codex/04-architecture/tenderly-execution-provider.md
-  - codex/04-architecture/batch-live-architecture.md
-  - codex/04-architecture/defi-execution-overview.md
-  - codex/04-architecture/execution-modes-and-chain-resolution.md
-  - codex/04-architecture/execution-policy.md
-  - codex/04-architecture/paper-vs-live-execution-seam.md
-  - codex/04-architecture/strategy-execution-protocol.md
-  - codex/04-architecture/defi-phase3-infrastructure.md
-  - codex/04-architecture/capital-efficiency-patterns.md
-  - codex/07-security/mev-protection.md (redirect stub)
-  - execution-service/execution_service/{matching_engine,defi_execution,v2,providers,trade_execution}/*.py
-  - unified-api-contracts/{config/testnet_contracts.yaml, unified_api_contracts/canonical/crosscutting/errors/defi.py,
-    unified_api_contracts/internal/execution.py}
-  - unified-trading-library/unified_trading_library/config_interface/testnet_contracts.py
+source: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.C, codex/04-architecture/flash-loan-receiver.md, codex/04-architecture/interface-credential-convention.md, codex/04-architecture/mev-protection.md, codex/04-architecture/tenderly-execution-provider.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/defi-execution-overview.md, codex/04-architecture/execution-modes-and-chain-resolution.md, codex/04-architecture/execution-policy.md, codex/04-architecture/paper-vs-live-execution-seam.md, codex/04-architecture/strategy-execution-protocol.md, codex/04-architecture/defi-phase3-infrastructure.md, codex/04-architecture/capital-efficiency-patterns.md, codex/07-security/mev-protection.md (redirect stub), 'execution-service/execution_service/{matching_engine,defi_execution,v2,providers,trade_execution}/*.py', 'unified-api-contracts/{config/testnet_contracts.yaml, unified_api_contracts/canonical/crosscutting/errors/defi.py, unified_api_contracts/internal/execution.py}',
+  unified-trading-library/unified_trading_library/config_interface/testnet_contracts.py]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

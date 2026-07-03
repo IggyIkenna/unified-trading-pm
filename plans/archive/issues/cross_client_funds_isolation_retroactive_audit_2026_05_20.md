@@ -1,14 +1,20 @@
 ---
+doc_type: issue
 title: Cross-Client Funds Isolation — Retroactive Audit (execution-service, 2026-05-20)
+summary:
+status: ACKED-INTO-CODE
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
 locked_by: live-defi-rollout
-source:
-  - codex/04-architecture/client-funds-isolation.md (HARD RULE SSOT)
-  - plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md (Group H plan)
-consumer:
-  - slot 7 Phase 6 — TransferCoordinator facade builder
+source: [codex/04-architecture/client-funds-isolation.md (HARD RULE SSOT), plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md (Group H plan)]
+consumer: [slot 7 Phase 6 — TransferCoordinator facade builder]
 priority: P2
-status: ACKED-INTO-CODE
 archived: 2026-05-22
 ---
 

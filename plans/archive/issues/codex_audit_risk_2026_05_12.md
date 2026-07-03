@@ -1,26 +1,19 @@
 ---
-title: "Codex audit — Risk area (Phase 1.D)"
+doc_type: issue
+title: Codex audit — Risk area (Phase 1.D)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna-codex-audit-risk-tab
-source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.D
-  - codex/04-architecture/kill-switch-circuit-breaker.md
-  - codex/04-architecture/circuit-breaker-rule-taxonomy.md
-  - codex/04-architecture/kill-switch-event-bus.md
-  - codex/04-architecture/risk-rule-taxonomy.md
-  - codex/04-architecture/risk-preflight-flow.md
-  - codex/04-architecture/risk-breaker-seam.md
-  - codex/04-architecture/autonomous-recovery-matrix.md
-  - codex/04-architecture/wallet-hierarchy-and-capital-flow.md
-  - codex/04-architecture/manual-trade-booking.md
-  - codex/04-architecture/instruments-preflight-chain.md
-  - unified_api_contracts/canonical/crosscutting/kill_switch.py (UAC@a7a99b5 + slot 4 2026-05-12)
-  - unified_api_contracts/canonical/crosscutting/circuit_breaker.py (UAC@a7a99b5)
-  - unified_api_contracts/canonical/crosscutting/risk_rule.py
-  - unified_api_contracts/canonical/crosscutting/alerting/codes.py (KillSwitchScope SSOT)
-  - unified_api_contracts/internal/domain/defi/wallet_config.py (slot 4 2026-05-12)
-  - unified_api_contracts/internal/execution.py (WalletSpendingPreCheckResult — slot 8 2026-05-12)
-  - unified_api_contracts/registry/circuit_breakers/{carry_staked_basis,arbitrage_price_dispersion}.py
+source: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.D, codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/kill-switch-event-bus.md, codex/04-architecture/risk-rule-taxonomy.md, codex/04-architecture/risk-preflight-flow.md, codex/04-architecture/risk-breaker-seam.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/wallet-hierarchy-and-capital-flow.md, codex/04-architecture/manual-trade-booking.md, codex/04-architecture/instruments-preflight-chain.md, unified_api_contracts/canonical/crosscutting/kill_switch.py (UAC@a7a99b5 + slot 4 2026-05-12), unified_api_contracts/canonical/crosscutting/circuit_breaker.py (UAC@a7a99b5), unified_api_contracts/canonical/crosscutting/risk_rule.py, unified_api_contracts/canonical/crosscutting/alerting/codes.py (KillSwitchScope SSOT), unified_api_contracts/internal/domain/defi/wallet_config.py (slot 4 2026-05-12), unified_api_contracts/internal/execution.py
+    (WalletSpendingPreCheckResult — slot 8 2026-05-12), 'unified_api_contracts/registry/circuit_breakers/{carry_staked_basis,arbitrage_price_dispersion}.py']
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

@@ -1,8 +1,18 @@
 ---
+doc_type: plan
 title: Streaming-finalize lift to UTL + CeFi VM downsize + DEX on-chain replay + KRAKEN-SPOT fix
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-06
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-created: 2026-05-06
 ---
 
 ## Deferred work — migrated to:

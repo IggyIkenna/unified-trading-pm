@@ -1,19 +1,24 @@
 ---
-title: "Dependency promotion — range pins absorb minor/patch, only MAJOR forces rebuild (full SIT in dep order)"
+doc_type: plan
+title: Dependency promotion — range pins absorb minor/patch, only MAJOR forces rebuild (full SIT in dep order)
+summary:
+status: superseded
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, e2e-testing]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-09
 parent_epic: infrastructure_master
 assigned_vm: harsh_pc
 priority: P1
-status: superseded
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 locked_by: live-defi-rollout
-created: 2026-06-09
-source:
-  - operator design direction 2026-06-09 ("why are we locking to minor versions… ranges >0.0.1<1… only major bumps force
-    uv lock changes… major bumps trigger full SIT in dep order else escalate to vm-planning")
-  - plans/active/cicd_contract_hardening_2026_06_01.md § "CORRECTION + ADDENDUM 2026-06-09" (UAC 0.1.20-vs-0.2.1 split
-    that surfaced this)
+source: [operator design direction 2026-06-09 ("why are we locking to minor versions… ranges >0.0.1<1… only major bumps force uv lock changes… major bumps trigger full SIT in dep order else escalate to vm-planning"), plans/active/cicd_contract_hardening_2026_06_01.md § "CORRECTION + ADDENDUM 2026-06-09" (UAC 0.1.20-vs-0.2.1 split that surfaced this)]
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**

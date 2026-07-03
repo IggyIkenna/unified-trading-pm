@@ -1,14 +1,18 @@
 ---
-title: "alerting-service KillSwitchBus publish-side hook + integration test deferred (Phase 2 closeout gap)"
+doc_type: issue
+title: alerting-service KillSwitchBus publish-side hook + integration test deferred (Phase 2 closeout gap)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
-source:
-  - plans/active/alerting_service_live_rules_2026_05_07.md (Phase 2)
-  - plans/active/work_split_2026_05_07_ikenna_5tab_layout.md (Agent 1 done definition item 2)
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/rules.py (AlertRule.triggers_kill_switch
-    field, UAC@d00326d)
-  - alerting-service/alerting_service/kill_switch_bus_subscriber.py (consumer-side only)
-  - alerting-service/alerting_service/notifiers/router.py (where the publish hook would land)
+source: [plans/active/alerting_service_live_rules_2026_05_07.md (Phase 2), plans/active/work_split_2026_05_07_ikenna_5tab_layout.md (Agent 1 done definition item 2), 'unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/rules.py (AlertRule.triggers_kill_switch field, UAC@d00326d)', alerting-service/alerting_service/kill_switch_bus_subscriber.py (consumer-side only), alerting-service/alerting_service/notifiers/router.py (where the publish hook would land)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

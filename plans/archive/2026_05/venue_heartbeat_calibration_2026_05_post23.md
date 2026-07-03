@@ -1,6 +1,16 @@
 ---
-title: "Per-Venue VENUE_HEARTBEAT_INTERVAL Empirical Calibration"
-status: archived
+doc_type: plan
+title: Per-Venue VENUE_HEARTBEAT_INTERVAL Empirical Calibration
+summary:
+status: complete
+nature: record
+asset_group: [cefi]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-19'
 archived: 2026-05-23
 estimate_class: research
 estimate_baseline_ai_days: 1.5

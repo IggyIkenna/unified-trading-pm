@@ -1,13 +1,19 @@
 ---
+doc_type: issue
 title: Solana DeFi pool-state + lending history is FAKE — one live REST snapshot back-dated across every date partition
-created: 2026-06-17
+summary:
 status: RESOLVED
+nature: record
+asset_group: [defi]
+stage: [meta]
+repos: [market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-17
 priority: P0
 resolved: 2026-06-17
-source:
-  - plans/audit/results/instrument_pool_universe_audit_2026_06_17/defi.md
-  - market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_amm.py
-  - market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py
+source: [plans/audit/results/instrument_pool_universe_audit_2026_06_17/defi.md, market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_amm.py, market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py]
 parent_epic: defi_manifest_canonicalisation
 locked_by: live-defi-rollout
 ---

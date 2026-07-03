@@ -1,12 +1,18 @@
 ---
-title:
-  "ARBITRAGE_PRICE_DISPERSION Phase B tracer cannot run-to-completion — upstream data + features gaps across 6 perp
-  venues"
+doc_type: issue
+title: ARBITRAGE_PRICE_DISPERSION Phase B tracer cannot run-to-completion — upstream data + features gaps across 6 perp venues
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-10
 author: agent-arb-fundrate-c2
-source:
-  - plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md (Phase B Full-execution criterion 2024-W1)
-  - probe of gs://market-data-tick-cefi-{pid}/ + gs://perp-funding-{pid}/ + gs://features-delta-one-cefi-{pid}/
+source: [plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md (Phase B Full-execution criterion 2024-W1), 'probe of gs://market-data-tick-cefi-{pid}/ + gs://perp-funding-{pid}/ + gs://features-delta-one-cefi-{pid}/']
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 ---

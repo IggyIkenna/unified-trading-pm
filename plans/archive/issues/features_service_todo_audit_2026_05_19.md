@@ -1,10 +1,19 @@
 ---
+doc_type: issue
 title: features-service TODO/FIXME audit — 9 items, 0 stale, 0 quick-fixes
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-19
 author: slot-4
-source:
-  - features-service rg scan (MECH5-TODO-FEATURES_SERVICE)
-locked_by: ""
+source: [features-service rg scan (MECH5-TODO-FEATURES_SERVICE)]
+locked_by: ''
 ---
 
 > **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase C4 (MTDS → features audit) + Phase C6 (features →

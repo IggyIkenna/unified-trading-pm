@@ -1,13 +1,19 @@
 ---
-title: "Orchestrator agent-lifecycle gaps — reaper skips stale records + central-VM VM_ID config drift"
-created: 2026-06-16
+doc_type: issue
+title: Orchestrator agent-lifecycle gaps — reaper skips stale records + central-VM VM_ID config drift
+summary:
 status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, features-service, fund-administration-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-16
 priority: P1
 locked_by: live-defi-rollout
-source:
-  - 2026-06-16 review-agent reliability work (restore-on-ping / stale-extension / tmux_session / hung-respawn chain)
-  - 2026-06-17 LIVE INCIDENT — account-pool headroom exhaustion starved all escalation spawns + froze the main agent
-    (Gap 6)
+source: [2026-06-16 review-agent reliability work (restore-on-ping / stale-extension / tmux_session / hung-respawn chain), 2026-06-17 LIVE INCIDENT — account-pool headroom exhaustion starved all escalation spawns + froze the main agent (Gap 6)]
 parent_epic: orchestrator_master
 ---
 

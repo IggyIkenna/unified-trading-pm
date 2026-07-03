@@ -1,16 +1,22 @@
 ---
-title: "Post-wave expanded roadmap — handoff for next-session Claude"
-priority: P0
-status: archived
-owner: human + agent
+doc_type: plan
+title: Post-wave expanded roadmap — handoff for next-session Claude
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-22
+priority: P0
+owner: human + agent
 archived: 2026-04-24
 type: mixed
 epic: none
-completion_gates:
-  code: none
-  deployment: none
-  business: none
+completion_gates: {code: none, deployment: none, business: none}
 repo_gates: []
 depends_on: []
 isProject: true

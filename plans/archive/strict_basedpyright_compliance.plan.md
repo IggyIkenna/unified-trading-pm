@@ -1,36 +1,23 @@
 ---
-name: Strict Basedpyright Compliance Plan
-overview:
-  Achieve typeCheckingMode strict and reportAny error across all Python repos. No dict[str, Any] in public API. Run
-  basedpyright on source_dir only (never .).
+doc_type: plan
+title: Strict Basedpyright Compliance Plan
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+overview: Achieve typeCheckingMode strict and reportAny error across all Python repos. No dict[str, Any] in public API. Run basedpyright on source_dir only (never .).
 todos:
-  - id: pyrightconfig-strict
-    content: Verify pyrightconfig.json — typeCheckingMode strict, reportAny error
-    status: done
-  - id: run-basedpyright
-    content: Run timeout 120 basedpyright <source_dir>/ (never basedpyright .)
-    status: done
-  - id: fix-type-ignores
-    content:
-      "Fix or document every # type: ignore in QUALITY_GATE_BYPASS_AUDIT.md. THRESHOLD: T0–T3 libraries: zero # type:
-      ignore allowed in production source (any bypass is an architectural violation — fix the root cause per
-      no-type-any-use-specific.mdc). Services: each # type: ignore must have a documented entry in
-      QUALITY_GATE_BYPASS_AUDIT.md with: file:line, reason, and owner. GATE: T0–T3 repos have rg '# type: ignore'
-      returning 0 matches in production source; services have QUALITY_GATE_BYPASS_AUDIT.md with entries for every #
-      type: ignore hit."
-    status: done
-  - id: remove-any
-    content:
-      "Remove Any; use typed alternatives (TypedDict, Protocol, dict[str, X]). GATE: rg ': Any$|-> Any$|\\[Any\\]'
-      --type py --glob '!.venv*' --glob '!tests' in public API files (top-level __init__.py and public interface
-      modules) returns 0 matches for all T0–T3 repos."
-    status: done
-  - id: tier-order
-    content:
-      "T0 first → T1 → T2 → T3 → services. GATE: each tier complete before next begins. Tier complete = basedpyright
-      exits 0 on source_dir + reportAny: error + zero # type: ignore in T0–T3 production source. Record completion date
-      per repo in workspace-manifest.json ci_status field."
-    status: done
+- {id: pyrightconfig-strict, content: 'Verify pyrightconfig.json — typeCheckingMode strict, reportAny error', status: done}
+- {id: run-basedpyright, content: Run timeout 120 basedpyright <source_dir>/ (never basedpyright .), status: done}
+- {id: fix-type-ignores, content: 'Fix or document every # type: ignore in QUALITY_GATE_BYPASS_AUDIT.md. THRESHOLD: T0–T3 libraries: zero # type: ignore allowed in production source (any bypass is an architectural violation — fix the root cause per no-type-any-use-specific.mdc). Services: each # type: ignore must have a documented entry in QUALITY_GATE_BYPASS_AUDIT.md with: file:line, reason, and owner. GATE: T0–T3 repos have rg ''# type: ignore'' returning 0 matches in production source; services have QUALITY_GATE_BYPASS_AUDIT.md with entries for every # type: ignore hit.', status: done}
+- {id: remove-any, content: 'Remove Any; use typed alternatives (TypedDict, Protocol, dict[str, X]). GATE: rg '': Any$|-> Any$|\[Any\]'' --type py --glob ''!.venv*'' --glob ''!tests'' in public API files (top-level __init__.py and public interface modules) returns 0 matches for all T0–T3 repos.', status: done}
+- {id: tier-order, content: 'T0 first → T1 → T2 → T3 → services. GATE: each tier complete before next begins. Tier complete = basedpyright exits 0 on source_dir + reportAny: error + zero # type: ignore in T0–T3 production source. Record completion date per repo in workspace-manifest.json ci_status field.', status: done}
 isProject: false
 ---
 

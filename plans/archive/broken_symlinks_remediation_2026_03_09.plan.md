@@ -1,9 +1,18 @@
 ---
-id: broken_symlinks_remediation_2026_03_09
+doc_type: plan
 title: Broken Symlinks Remediation — All Workspace Repos
+summary:
 status: DONE
-priority: P2
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-09
+id: broken_symlinks_remediation_2026_03_09
+priority: P2
 completed: 2026-03-10
 owner: agent
 ---

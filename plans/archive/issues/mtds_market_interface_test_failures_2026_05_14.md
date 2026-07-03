@@ -1,11 +1,20 @@
 ---
+doc_type: issue
 title: MTDS 53 market_interface unit test failures — mixed API drift + mock issues
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
 author: slot-3 (harsh)
 resolved: 2026-05-15
 resolver: slot-9 (harsh) — mtds@1515170
-source:
-  - market-tick-data-service/tests/market_interface/unit/
+source: [market-tick-data-service/tests/market_interface/unit/]
 severity: P1
 suggested_owner: operator triage
 locked_by: live-defi-rollout

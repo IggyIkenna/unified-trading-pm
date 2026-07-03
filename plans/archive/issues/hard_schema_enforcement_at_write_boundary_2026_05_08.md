@@ -1,23 +1,25 @@
 ---
-title:
-  "Hard schema enforcement at instruments-service write boundary — base/quote currency required for TradFi+DeFi+CeFi,
-  instrument_id required everywhere, full-column capture for sports (audit beyond api_football to
-  footystats/SFI/understat/transfermarkt/openmeteo/odds_api), per-row record_failed(SCHEMA_VALIDATION_FAILED) instead of
-  venue-wide shard fail-all"
+doc_type: issue
+title: Hard schema enforcement at instruments-service write boundary — base/quote currency required for TradFi+DeFi+CeFi, instrument_id required everywhere, full-column capture for sports (audit beyond api_football to footystats/SFI/understat/transfermarkt/openmeteo/odds_api), per-row record_failed(SCHEMA_VALIDATION_FAILED) instead of venue-wide shard fail-all
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
 source:
-  - unified-api-contracts/unified_api_contracts/canonical/domain/market/tradfi.py:10-47 (currency optional/missing)
-  - unified-api-contracts/unified_api_contracts/internal/__init__.py (InstrumentRecord)
-  - instruments-service/instruments_service/engine/orchestrator.py:1997-2045 (validate_instrument_records venue-shard
-    fail-all)
-  - unified-api-contracts/unified_api_contracts/external/api_football/normalize.py:372-395 (minimal flattening)
-  - plans/active/api_football_minimal_flattening_removal_2026_05_07.md (api_football only)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md:80-82,96,104-106 (4-pillar gate at record_captured)
-  - operator directive 2026-05-08:
-      "you wouldn't even drop instruments_service if it was to not have those columns. It would fail schema validation,
-      and that source of truth is held in unified API contracts ... we should be grabbing every column of the schema and
-      enforcing that we have every column when we save"
+- unified-api-contracts/unified_api_contracts/canonical/domain/market/tradfi.py:10-47 (currency optional/missing)
+- unified-api-contracts/unified_api_contracts/internal/__init__.py (InstrumentRecord)
+- instruments-service/instruments_service/engine/orchestrator.py:1997-2045 (validate_instrument_records venue-shard fail-all)
+- unified-api-contracts/unified_api_contracts/external/api_football/normalize.py:372-395 (minimal flattening)
+- plans/active/api_football_minimal_flattening_removal_2026_05_07.md (api_football only)
+- plans/active/writegate_honest_coverage_endtoend_2026_05_06.md:80-82,96,104-106 (4-pillar gate at record_captured)
+- {operator directive 2026-05-08: 'you wouldn''t even drop instruments_service if it was to not have those columns. It would fail schema validation, and that source of truth is held in unified API contracts ... we should be grabbing every column of the schema and enforcing that we have every column when we save'}
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

@@ -1,24 +1,20 @@
 ---
-doc_type: plan
-title:
-  UTL main quality-gates-v2 RED while LDR is GREEN — dep-resolution skew on testnet-contracts / UAC registry during
-  in-flight UAC promotion
-created: 2026-06-11
-source:
-  - unified-trading-library main quality-gates-v2 run 27357450067 (FAILURE, head e8622793)
-  - unified-trading-library LDR quality-gates-v2 runs 27357535116 + 27357977210 (SUCCESS, same content era)
-locked_by: live-defi-rollout
-priority: P1
+doc_type: issue
+title: UTL main quality-gates-v2 RED while LDR is GREEN — dep-resolution skew on testnet-contracts / UAC registry during in-flight UAC promotion
+summary: '`unified-trading-library` (T0 base library) `main` `quality-gates-v2` is **FAILING** (run 27357450067, head `e8622793`, the CURRENT main tip) while the SAME-era `live-defi-rollout` v2 is **GREEN** ...'
 status: resolved
-superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
-summary: "`unified-trading-library` (T0 base library) `main` `quality-gates-v2` is **FAILING** (run 27357450067, head `e8622793`, the CURRENT main tip) while the SAME-era `live-defi-rollout` v2 is **GREEN** ..."
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos: []
+repos: [features-service, fund-administration-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-11
+source: ['unified-trading-library main quality-gates-v2 run 27357450067 (FAILURE, head e8622793)', 'unified-trading-library LDR quality-gates-v2 runs 27357535116 + 27357977210 (SUCCESS, same content era)']
+locked_by: live-defi-rollout
+priority: P1
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

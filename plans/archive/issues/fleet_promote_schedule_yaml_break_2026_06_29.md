@@ -1,36 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Fleet LDR→main promote was dead ~7h — a YAML break silently killed the */15 schedule (+ UTL flaky stale-status)
-created: 2026-06-29
-source:
-  - .github/workflows/ldr-to-main-promote-fleet.yml (the broken workflow — fixed LDR@7ecd7aa9c + main@3c82b6ad5)
-  - scripts/cicd/ci_status_store.py (UTL ci_status clear)
-  - plans/active/cicd_retire_staging_branch_2026_06_27.md (2026-06-29 Progress Log)
-  - plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md (unknown-delta / coverage)
-priority: P1
+summary: 'Fleet-wide LDR→main promotion-lag >60m alert (8 service repos: instruments-service, market-tick-data-service, market-data-processing-service, deployment-api, deployment-service, +3) — NOT a display bug. Root cause: the fleet promoter ldr-to-main-promote-fleet.yml had a YAML parse error (an embedded python3 -c heredoc at column-0 inside a 10-space `run: |` block → ''could not find expected :'' at line 307). GitHub does NOT schedule a workflow whose file is unparseable on the default branch, so the */15 cron silently STOPPED at 2026-06-28 22:58 UTC → the fleet auto-drain was dead ~7h. CORRECTION to an earlier analysis: the promoter IS scheduled (cron 8,23,38,53) — it was not ''0 scheduled runs ever''; the schedule was YAML-killed. Compounded by UTL''s stale ci_status=FAILING (a flaky QG dep-clone failure) dep-order-holding deployment-api. Both fixed.'
 status: resolved
-superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
-cadence: on-incident
-verifier:
-  gh run list --repo IggyIkenna/unified-trading-pm --workflow ldr-to-main-promote-fleet.yml (event=schedule fires +
-  succeeds)
-last_executed: 2026-06-29
-summary:
-  "Fleet-wide LDR→main promotion-lag >60m alert (8 service repos: instruments-service, market-tick-data-service,
-  market-data-processing-service, deployment-api, deployment-service, +3) — NOT a display bug. Root cause: the fleet
-  promoter ldr-to-main-promote-fleet.yml had a YAML parse error (an embedded python3 -c heredoc at column-0 inside a
-  10-space `run: |` block → 'could not find expected :' at line 307). GitHub does NOT schedule a workflow whose file is
-  unparseable on the default branch, so the */15 cron silently STOPPED at 2026-06-28 22:58 UTC → the fleet auto-drain
-  was dead ~7h. CORRECTION to an earlier analysis: the promoter IS scheduled (cron 8,23,38,53) — it was not '0 scheduled
-  runs ever'; the schedule was YAML-killed. Compounded by UTL's stale ci_status=FAILING (a flaky QG dep-clone failure)
-  dep-order-holding deployment-api. Both fixed."
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos: []
+repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-29
+source: [.github/workflows/ldr-to-main-promote-fleet.yml (the broken workflow — fixed LDR@7ecd7aa9c + main@3c82b6ad5), scripts/cicd/ci_status_store.py (UTL ci_status clear), plans/active/cicd_retire_staging_branch_2026_06_27.md (2026-06-29 Progress Log), plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md (unknown-delta / coverage)]
+priority: P1
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+cadence: on-incident
+verifier: gh run list --repo IggyIkenna/unified-trading-pm --workflow ldr-to-main-promote-fleet.yml (event=schedule fires + succeeds)
+last_executed: 2026-06-29
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

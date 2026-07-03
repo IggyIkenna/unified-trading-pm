@@ -1,22 +1,35 @@
 ---
+doc_type: plan
 title: Harsh's daily work-split — 2026-05-13 (Day-4 cycle close; Harsh-side ONLY — Ikenna on flights all day)
-type: coordination-doc
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-service, e2e-testing, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
+type: coordination-doc
 deadline: 2026-05-15
 horizon: 1 calendar day (Day-4 of 4-day cycle to 2026-05-15 freeze gate)
-companion_to: null
+companion_to:
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 estimate_class: design
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.8
 effective_concurrent_slots: 10
-estimate_calibration_note: |
-  Work-split itself (design class). Scope it schedules = ~18-20 cal AI-days across 10 slots on 1 calendar day.
+estimate_calibration_note: 'Work-split itself (design class). Scope it schedules = ~18-20 cal AI-days across 10 slots on 1 calendar day.
+
   Ikenna-side at zero today (operator on 2 connecting flights, 12h+1h+2h sequence, signal sporadic). Harsh-side
+
   absorbs all open Ikenna slot scope per operator+Ikenna agreement (chat 22:42 IST 2026-05-12: "If I run out of
+
   time just tell your agents to take all my agents work").
+
+  '
 ---
 
 ## Deferred work — migrated to:

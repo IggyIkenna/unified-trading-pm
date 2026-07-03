@@ -1,10 +1,18 @@
 ---
+doc_type: plan
 title: CI/CD Quality Gates — quickmerge, quality-gates.sh, local↔CI parity, worktree ship discipline
-name: cicd_quality_gates_2026_06_18
+summary:
+status: superseded
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
 parent_epic: infrastructure_master
 assigned_vm: harsh_pc
-created: 2026-06-18
-status: superseded
 locked_by: live-defi-rollout
 locked_since: 2026-06-18
 priority: P1
@@ -12,11 +20,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
 parent_consolidation: cicd_docs_and_consolidation_2026_06_18
-source:
-  - qg_commit_quality_boundary_and_slot_ff_push_2026_06_03 (consolidated)
-  - ci_local_qg_parity_2026_06_08 (consolidated)
-  - worktree_ldr_unification_2026_06_08 (consolidated)
-  - cicd_contract_hardening_2026_06_01 (quality-gates subset)
+source: [qg_commit_quality_boundary_and_slot_ff_push_2026_06_03 (consolidated), ci_local_qg_parity_2026_06_08 (consolidated), worktree_ldr_unification_2026_06_08 (consolidated), cicd_contract_hardening_2026_06_01 (quality-gates subset)]
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**

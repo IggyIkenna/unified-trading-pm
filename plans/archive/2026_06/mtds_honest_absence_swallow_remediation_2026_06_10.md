@@ -2,8 +2,9 @@
 doc_type: plan
 title: MTDS honest-absence swallow remediation — re-verified P0/P1 fix batch (audit 2026-06-09/10)
 summary:
-status: archived
+status: complete
 nature: process
+asset_group: [infrastructure]
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
@@ -18,16 +19,12 @@ estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
 last_updated:
-locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
+locked_by: NA
 locked_since: 2026-06-10
 supersedes:
 superseded_by:
 depends_on:
-source:
-  [
-    plans/audit/results/mtds_mdps_master_audit_2026_06_09.md § Re-verification 2026-06-10 (adversarial caller-chain),
-    operator 2026-06-10 ("start working on them; check raw GCS data before changes where needed"),
-  ]
+source: [plans/audit/results/mtds_mdps_master_audit_2026_06_09.md § Re-verification 2026-06-10 (adversarial caller-chain), operator 2026-06-10 ("start working on them; check raw GCS data before changes where needed")]
 ---
 
 > **✅ ARCHIVED 2026-06-26 — folded into path_to_100pct_backfill_mtds_is_2026_06_17 (survivor M-1). 14/17 done (P0 CF-11

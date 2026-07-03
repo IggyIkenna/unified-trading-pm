@@ -1,27 +1,20 @@
 ---
-title:
-  "✅ RESOLVED 2026-05-09 — Option A migration shipped (was: parallel SSOTs in cross_cutting_may_23_deliverables Items
-  #1 + #2)"
+doc_type: issue
+title: '✅ RESOLVED 2026-05-09 — Option A migration shipped (was: parallel SSOTs in cross_cutting_may_23_deliverables Items #1 + #2)'
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 resolved: 2026-05-09
 author: uac-strategy-catalogue-ids-tab6a
-status: resolved
-source:
-  - plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (deliverables #1 + #2)
-  - plans/epics/cross_cutting_may_23_2026.epic.md (epic deliverables #1 + #2)
-  - unified-api-contracts/unified_api_contracts/strategy.py (existing 207-line root facade)
-  - unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py (StrategyFamily — 9 members,
-    StrategyArchetype — 46 members, ARCHETYPE_TO_FAMILY)
-  - unified-api-contracts/unified_api_contracts/internal/architecture_v2/strategy_naming.py (parse_strategy_id +
-    format_strategy_id, commit 5083d65)
-  - unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py
-    (ARCHETYPE_CAPABILITY_REGISTRY + ArchetypeCapability + ArchetypeCapabilityCell + ArchetypeInstrumentType +
-    CoverageStatus + RollMode)
-  - unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/registry.py (STRATEGY_REGISTRY +
-    StrategyDefinition + StrategyRegistry + Category + ExecutionMode)
-  - unified-api-contracts/unified_api_contracts/_instrument_enums.py (InstrumentType — 24 members)
-  - unified-api-contracts/unified_api_contracts/internal/architecture_v2/capital_allocation.py (NEW; CapitalAllocation
-    migrated)
+source: [plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (deliverables, plans/epics/cross_cutting_may_23_2026.epic.md (epic deliverables, unified-api-contracts/unified_api_contracts/strategy.py (existing 207-line root facade), 'unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py (StrategyFamily — 9 members, StrategyArchetype — 46 members, ARCHETYPE_TO_FAMILY)', 'unified-api-contracts/unified_api_contracts/internal/architecture_v2/strategy_naming.py (parse_strategy_id + format_strategy_id, commit 5083d65)', unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py (ARCHETYPE_CAPABILITY_REGISTRY + ArchetypeCapability + ArchetypeCapabilityCell + ArchetypeInstrumentType + CoverageStatus + RollMode), unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/registry.py (STRATEGY_REGISTRY + StrategyDefinition + StrategyRegistry + Category + ExecutionMode), unified-api-contracts/unified_api_contracts/_instrument_enums.py
+    (InstrumentType — 24 members), unified-api-contracts/unified_api_contracts/internal/architecture_v2/capital_allocation.py (NEW; CapitalAllocation migrated)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 operator_decision: option_a_extend_v2

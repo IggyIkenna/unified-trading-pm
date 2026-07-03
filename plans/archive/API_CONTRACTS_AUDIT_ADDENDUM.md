@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: 'api-contracts Audit Addendum: Clarifications and Answers'
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, strategy-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-28'
+---
+
 # api-contracts Audit Addendum: Clarifications and Answers
 
 This addendum addresses follow-up questions from the independent audit. It should be read alongside the main audit plan.

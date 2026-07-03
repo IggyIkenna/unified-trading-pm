@@ -1,14 +1,23 @@
 ---
-title: "UTL QG broken on live-defi-rollout post Tab 2 pipeline_mode + streaming commits"
+doc_type: issue
+title: UTL QG broken on live-defi-rollout post Tab 2 pipeline_mode + streaming commits
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: tab4-aws-migration
 source:
-  - unified-trading-library@52f123d6 feat(manifest-reader): pipeline_mode-aware reader with legacy fallback chain
-  - unified-trading-library@8c67df5d feat(utl): Phase 2B UTC-aligned timeframe scheduler + BoundaryTick
-  - unified-trading-library@87134364 feat(manifest-writer): pipeline_mode kwarg on record_* methods
-  - unified-trading-library@f24e651b feat(utl): Phase 2A+2C streaming — Redis Streams client + replay-cascade helpers
-  - unified-trading-library@68b3804a feat(manifest-writer):
-      EXPECTED_UNATTEMPTED capture_status + reject blank reason on record_empty
+- {unified-trading-library@52f123d6 feat(manifest-reader): pipeline_mode-aware reader with legacy fallback chain}
+- {unified-trading-library@8c67df5d feat(utl): Phase 2B UTC-aligned timeframe scheduler + BoundaryTick}
+- {unified-trading-library@87134364 feat(manifest-writer): pipeline_mode kwarg on record_* methods}
+- {unified-trading-library@f24e651b feat(utl): Phase 2A+2C streaming — Redis Streams client + replay-cascade helpers}
+- {unified-trading-library@68b3804a feat(manifest-writer): EXPECTED_UNATTEMPTED capture_status + reject blank reason on record_empty}
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

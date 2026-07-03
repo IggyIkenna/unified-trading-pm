@@ -1,7 +1,16 @@
 ---
-name: vm_launcher_startup_url_migration_2026_05_21
-title: "VM Launcher startup-script-url Migration (O-1 full consolidation)"
-status: archived
+doc_type: plan
+title: VM Launcher startup-script-url Migration (O-1 full consolidation)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-21'
 priority: P1
 assigned_vm: vm-cross-cutting
 parent_epic: infrastructure_master

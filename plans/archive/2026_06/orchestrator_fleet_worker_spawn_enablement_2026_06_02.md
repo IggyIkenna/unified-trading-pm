@@ -1,18 +1,24 @@
 ---
+doc_type: plan
 title: Orchestrator fleet worker-spawn enablement (FM7 operator-mismatch + autospawn + VM_ID + worktree hygiene)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md, plans/epics/orchestrator_master.md]
+created: 2026-06-02
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P0
-status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-created: 2026-06-02
 locked_by: live-defi-rollout
-related_plans:
-  - plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md
-  - plans/epics/orchestrator_master.md
 ---
 
 > **✅ ARCHIVED 2026-06-07 [unlock-plan].** All checkbox todos complete (0 open): F8/F9 self-heal+review-spawn done; F12

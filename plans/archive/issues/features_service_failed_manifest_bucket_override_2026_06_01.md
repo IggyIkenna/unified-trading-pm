@@ -1,12 +1,18 @@
 ---
+doc_type: issue
 title: features-service _failed_group_manifest bypasses PROTOCOL_DATA_SINK_BUCKET_* override
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 author: harsh
-source:
-  - features_service/delta_one/cli/handlers/_failed_group_manifest.py
-  - features_service/delta_one/config.py
-  - features_service/delta_one/app/core/feature_writer.py
-  - features_service/common/__init__.py
+source: [features_service/delta_one/cli/handlers/_failed_group_manifest.py, features_service/delta_one/config.py, features_service/delta_one/app/core/feature_writer.py, features_service/common/__init__.py]
 locked_by: live-defi-rollout
 ---
 

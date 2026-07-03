@@ -1,12 +1,14 @@
 ---
 doc_type: plan
-title: Frontmatter content pass + gate consolidation — populate summary/tags/authoritative_for, converge to one blocking check
+title:
+  Frontmatter content pass + gate consolidation — populate summary/tags/authoritative_for, converge to one blocking
+  check
 summary:
   Follow-on to the (completed) full-corpus frontmatter coverage. Populate the SOFT content fields the structural pass
-  left empty (5,887 items measured 2026-07-03 — summary/tags/authoritative_for PLUS related/status/repos + audit
-  fields; one read per doc fills all of them), then make a single comprehensive BLOCKING frontmatter gate (backed by
-  the docspec validator engine) and retire the interim warn-only check_docspec_coverage. Nice-to-have (P3) — the
-  high-leverage payoff is codex authoritative_for/summary becoming searchable for the codex drift-fixing work.
+  left empty (5,887 items measured 2026-07-03 — summary/tags/authoritative_for PLUS related/status/repos + audit fields;
+  one read per doc fills all of them), then make a single comprehensive BLOCKING frontmatter gate (backed by the docspec
+  validator engine) and retire the interim warn-only check_docspec_coverage. Nice-to-have (P3) — the high-leverage
+  payoff is codex authoritative_for/summary becoming searchable for the codex drift-fixing work.
 status: active
 nature: process
 asset_group: [meta]
@@ -54,9 +56,10 @@ content fields that make frontmatter actually answer queries, then collapse to a
 
 ## Why P3 / nice-to-have
 
-The corpus is already HARD-green and rot is surfaced every QG run, so nothing is at risk. The payoff here is *quality of
-search*: a populated `authoritative_for` lands an agent on the one right codex SSOT, and `summary` lets it read a 1-liner
-instead of opening the doc — most valuable right before the codex↔code drift-fixing push. Worth doing, not urgent.
+The corpus is already HARD-green and rot is surfaced every QG run, so nothing is at risk. The payoff here is _quality of
+search_: a populated `authoritative_for` lands an agent on the one right codex SSOT, and `summary` lets it read a
+1-liner instead of opening the doc — most valuable right before the codex↔code drift-fixing push. Worth doing, not
+urgent.
 
 ## Codex SSOTs
 
@@ -67,8 +70,8 @@ instead of opening the doc — most valuable right before the codex↔code drift
 
 ## Todos
 
-> **Execution shape (2026-07-03 recalibration — measured, see Progress Log):** the corpus needing content = 1,017 docs
-> / 17 MB (~4.2M tok to read); p50 doc = 10 KB, only 36 docs < 2 KB — so NO Haiku/length split (one model, one prompt,
+> **Execution shape (2026-07-03 recalibration — measured, see Progress Log):** the corpus needing content = 1,017 docs /
+> 17 MB (~4.2M tok to read); p50 doc = 10 KB, only 36 docs < 2 KB — so NO Haiku/length split (one model, one prompt,
 > uniform quality; wrong metadata is worse than empty). **One read per doc fills ALL its content fields** — never run
 > per-field passes (3× the read cost). Folder-scoped Sonnet (medium) agents, because the folder ledger is what gives
 > `authoritative_for` uniqueness + a consistent tag vocabulary; ~40-60 docs per agent instance, big trees
@@ -78,21 +81,20 @@ instead of opening the doc — most valuable right before the codex↔code drift
 
 - [x] [SCRIPT] P3.0 **Mechanical pre-pass — no LLM.** Fill `created` (804 empty) from git first-commit date
       (`git log --follow`, filename-date cross-check for plans); normalize literal `NA` → null on
-      `locked_by`/`locked_since`/`depends_on` (29). **Gate**: docspec SOFT `created` + literal-NA counts → 0. —
-      ✅ unified-trading-pm@8d9167827 (825 files, frontmatter-only one-liners). Evidence: docspec re-sweep post-apply:
+      `locked_by`/`locked_since`/`depends_on` (29). **Gate**: docspec SOFT `created` + literal-NA counts → 0. — ✅
+      unified-trading-pm@8d9167827 (825 files, frontmatter-only one-liners). Evidence: docspec re-sweep post-apply:
       created/locked_by/locked_since/depends_on SOFT = 0/0/0/0; corpus total SOFT 5,887 → 5,053.
 - [x] [AGENT] P3.1 **Pilot folder — `codex/11-project-management` (14 docs), operator eyeball gate.** One Sonnet
       (medium) sub-agent fills, per doc in ONE read: `summary`, `tags` (prefer the harvested lexicon),
       `authoritative_for` (codex-ssot; unique across the folder — keep a topic→doc ledger), `related` (sibling
-      cross-links), `status` (normalize to the per-type enum; codex current/stale is a judgment from the read),
-      `repos` (manifest-validated), + `code_refs` ONLY where the body already cites a path AND the path exists.
-      NEVER guess operator fields (`owner`/`verifier`/`supersedes`/`resolved_by`/`source`/estimates) — emit them on a
-      worklist instead. **Gate**: operator reviews the pilot diff before any fan-out. —
-      ✅ unified-trading-pm@091318d21 (14 docs, frontmatter-only). Evidence: docspec HARD=0 all 14; content-SOFT → 0
-      except valid-empty `repos`/`related` `[]`; authoritative_for corpus-collision-checked. **Fan-out still gated on
-      the operator eyeball of this diff.**
-- [x] [AGENT] P3.2 **Fan-out — remaining trees with the pilot prompt.** Per-folder Sonnet agents (≤10 parallel), codex
-      → plans/audit (+ audit-result fields `severity`/`audited_scope`/`auditor`/`date` from the body) → plans/epics →
+      cross-links), `status` (normalize to the per-type enum; codex current/stale is a judgment from the read), `repos`
+      (manifest-validated), + `code_refs` ONLY where the body already cites a path AND the path exists. NEVER guess
+      operator fields (`owner`/`verifier`/`supersedes`/`resolved_by`/`source`/estimates) — emit them on a worklist
+      instead. **Gate**: operator reviews the pilot diff before any fan-out. — ✅ unified-trading-pm@091318d21 (14 docs,
+      frontmatter-only). Evidence: docspec HARD=0 all 14; content-SOFT → 0 except valid-empty `repos`/`related` `[]`;
+      authoritative_for corpus-collision-checked. **Fan-out still gated on the operator eyeball of this diff.**
+- [x] [AGENT] P3.2 **Fan-out — remaining trees with the pilot prompt.** Per-folder Sonnet agents (≤10 parallel), codex →
+      plans/audit (+ audit-result fields `severity`/`audited_scope`/`auditor`/`date` from the body) → plans/epics →
       plans/active last. **Gate**: docspec content-SOFT count (5,887 baseline) → ~0 on targeted trees, measured per
       folder commit. — ✅ 55 Opus lanes (operator override 2026-07-03: Opus not Sonnet; local commits only, single push
       after final QG), ~990 docs, per-lane commits `docs(frontmatter): P3.2 lane NN` (2026-07-03/04). Evidence: final
@@ -102,22 +104,29 @@ instead of opening the doc — most valuable right before the codex↔code drift
       covers the gitignore-shadowed credentials dir): ZERO duplicate phrases corpus-wide; 2 YAML parse breaks
       (colon-space/hash foot-guns) found by the sweep and fixed same-day.
 - [ ] [SCRIPT] P3.3 **`referenced_by` reverse-link post-pass (codex).** Derive from the corpus link graph AFTER the
-      content pass lands (the pass creates new `related` edges). **Gate**: codex `referenced_by` populated
-      mechanically, no LLM.
+      content pass lands (the pass creates new `related` edges). **Gate**: codex `referenced_by` populated mechanically,
+      no LLM.
 - [ ] [OPERATOR] P3.4 **Operator worklist.** Delivered 2026-07-04 — see `## P3.4 Operator worklist` section below
       (field-fills: owner/cadence/verifier 29 each, auditor 26, source/resolved_by/tier/priority/parent ~22; plus the
       decision items: archetype maturity-axis key, epic asset_group mis-seed, retype list, SUPERSEDED banners, 3
       HARD-rot docs, locked_by-NA hook contradiction). **Gate**: operator ticks it off.
-- [ ] [AGENT] P3. **Make the single gate comprehensive — back it by `docspec`, don't reimplement.** Expand the blocking
+- [x] [AGENT] P3. **Make the single gate comprehensive — back it by `docspec`, don't reimplement.** Expand the blocking
       `check_frontmatter_schema` to enforce the full schema (universal-core + enums + all doc types incl. codex +
       cursor-rule, and the now-populated content fields) by **calling `docspec.validate_frontmatter()`** rather than
       growing a second hand-rolled validator (avoids two validators drifting). Re-add codex to its default corpus.
       **Gate**: one gate enforces everything docspec checks; corpus stays HARD-green (+ SOFT-green once content lands).
-- [ ] [SCRIPT] P3. **Retire `check_docspec_coverage.py`** once the comprehensive blocking gate is live. **Gate**:
+      — ✅ 2026-07-04 (operator-directed): `check_frontmatter_schema.py` rewritten as a thin docspec caller over the
+      live trees (codex + plans/active/epics/audit + `*.mdc`; **plans/archive deliberately excluded** — operator
+      decision), failing on ANY violation HARD or SOFT; legacy `instructions_ref` check preserved with its exact legacy
+      scoping. Evidence: gate green on all 1,298 live docs; full `quality-gates.sh` exit 0 with the gate wired.
+- [x] [SCRIPT] P3. **Retire `check_docspec_coverage.py`** once the comprehensive blocking gate is live. **Gate**:
       docspec-coverage removed from `quality-gates.sh`; the single comprehensive blocking check is the sole frontmatter
-      gate; schema SSOT banner updated to drop the two-checks lifecycle.
+      gate; schema SSOT banner updated to drop the two-checks lifecycle. — ✅ 2026-07-04: script deleted, QG block
+      removed, schema SSOT banner + §11 updated (two-checks lifecycle COMPLETE; blocking gate is the sole frontmatter
+      gate).
 - [ ] [SCRIPT] P3. **agent-role enforcement (separate repo).** Wire the docspec check into the `agent-orchestrator`
-      repo's own quality-gates (its `agents/*.md` are not reachable from PM CI). **Gate**: agent-role docs gated in-repo.
+      repo's own quality-gates (its `agents/*.md` are not reachable from PM CI). **Gate**: agent-role docs gated
+      in-repo.
 
 ## P3.4 Operator worklist (delivered 2026-07-04)
 
@@ -135,13 +144,27 @@ instead of opening the doc — most valuable right before the codex↔code drift
 1. **Archetype maturity axis flattened (57 docs).** `status:` in `codex/09-strategy/architecture-v2/**` doubled as an
    implementation-maturity axis; enum normalization erased it (recoverable below). Decide: add a dedicated
    `implementation_status:` key (recommended) or accept body-only maturity. Old→new mapping:
-  - `design` → enum (47): arbitrage-cross-domain-event, carry-basis-dated-inv, carry-basis-dated, carry-basis-perp-inv, carry-basis-perp, carry-recursive-borrow-lending-only, carry-recursive-staked, carry-staked-basis-dated, event-driven, liquidation-capture, market-making-event-settled, market-making-inventory-skew, market-making-ml-lean, market-making-passive-spread, market-making-prediction, market-making-queue-microstructure, ml-directional-continuous, ml-directional-event-settled, portfolio-factor-allocation, portfolio-multi-strategy, portfolio-risk-parity, portfolio-tactical-overlay, rules-directional-continuous, rules-directional-event-settled, stat-arb-cross-sectional, stat-arb-pairs-fixed, vol-0dte-gamma-scalping, vol-0dte-pin-risk, vol-arb-rv-iv, vol-carry, vol-cross-asset-spread, vol-dispersion, vol-leaps-convexity, vol-market-making, vol-ml-lean, vol-overlay-covered-calls, vol-overlay-protective-put, vol-ratio-spread, vol-spread-structures, vol-straddle, vol-synthetic-delta, vol-term-structure-arb, vol-term-structure-slope, vol-trading-options, vol-variance-swap, yield-rotation-lending, yield-staking-simple
-  - `code-shipped` → enum (8): arbitrage-mev-backrun, arbitrage-mev-jit-liquidity, arbitrage-mev-liquidation-bundle, arbitrage-price-dispersion, carry-staked-basis, defi-lp-concentrated, defi-lp-pool, defi-lp-vault
-  - `stub` → enum (5): carry-recursive-staked-config-variants, archetype-strategy-params, backtest-persistence-and-ranking, backtest-run-manifest, strategy-config-drift-detection
-  - `active` → enum (3): archetype-param-schema-inventory, promote-workflow, prediction-markets-codification-gaps
-  - `theoretical-only` → enum (1): arbitrage-mev-sandwich
-  - `live` → enum (1): market-making-continuous
-  - `complete` → enum (1): archetype-paper-readiness
+
+- `design` → enum (47): arbitrage-cross-domain-event, carry-basis-dated-inv, carry-basis-dated, carry-basis-perp-inv,
+  carry-basis-perp, carry-recursive-borrow-lending-only, carry-recursive-staked, carry-staked-basis-dated, event-driven,
+  liquidation-capture, market-making-event-settled, market-making-inventory-skew, market-making-ml-lean,
+  market-making-passive-spread, market-making-prediction, market-making-queue-microstructure, ml-directional-continuous,
+  ml-directional-event-settled, portfolio-factor-allocation, portfolio-multi-strategy, portfolio-risk-parity,
+  portfolio-tactical-overlay, rules-directional-continuous, rules-directional-event-settled, stat-arb-cross-sectional,
+  stat-arb-pairs-fixed, vol-0dte-gamma-scalping, vol-0dte-pin-risk, vol-arb-rv-iv, vol-carry, vol-cross-asset-spread,
+  vol-dispersion, vol-leaps-convexity, vol-market-making, vol-ml-lean, vol-overlay-covered-calls,
+  vol-overlay-protective-put, vol-ratio-spread, vol-spread-structures, vol-straddle, vol-synthetic-delta,
+  vol-term-structure-arb, vol-term-structure-slope, vol-trading-options, vol-variance-swap, yield-rotation-lending,
+  yield-staking-simple
+- `code-shipped` → enum (8): arbitrage-mev-backrun, arbitrage-mev-jit-liquidity, arbitrage-mev-liquidation-bundle,
+  arbitrage-price-dispersion, carry-staked-basis, defi-lp-concentrated, defi-lp-pool, defi-lp-vault
+- `stub` → enum (5): carry-recursive-staked-config-variants, archetype-strategy-params,
+  backtest-persistence-and-ranking, backtest-run-manifest, strategy-config-drift-detection
+- `active` → enum (3): archetype-param-schema-inventory, promote-workflow, prediction-markets-codification-gaps
+- `theoretical-only` → enum (1): arbitrage-mev-sandwich
+- `live` → enum (1): market-making-continuous
+- `complete` → enum (1): archetype-paper-readiness
+
 2. **Epic `asset_group: [defi]` mis-seed.** Most epics carry `[defi]` regardless of domain (cefi_master,
    execution_master, mtds_mdps_master, observability_master, dart_and_promote_master, …) — a migrate_epics default.
    Search-axis correctness bug; untouched (dispatch-load-bearing). Proposed per-epic mapping is mechanical from slug.
@@ -160,8 +183,8 @@ instead of opening the doc — most valuable right before the codex↔code drift
    phase-2-6-bucket-cutover, pre-cutover-test-wallets, physical-pager-layer, recursive-leverage-receiver-deploy,
    reconciliation-resolution, reconciliation-age-tracking, custody-onboarding-checklist, credentials-matrix,
    lst-seasonal-rewards-smoke, expected-absence-backfill-runbook) + audit-shaped (vm-security-audit,
-   run-lifecycle-events-audit, vm-deployment-events-audit, vm-event-emission-audit) + `presentations/
-   target-experience-post-refactor` (self-declares non-SSOT) + `role-registry` (registry schema).
+   run-lifecycle-events-audit, vm-deployment-events-audit, vm-event-emission-audit) +
+   `presentations/ target-experience-post-refactor` (self-declares non-SSOT) + `role-registry` (registry schema).
 7. **SUPERSEDED banners missing on 19 `_archived_pre_v2` docs** (status set superseded; body banner absent) — list in
    lane 21/20/23 commits; mechanical banner-add.
 8. **Codex-drift bodies flagged for the codex-audit process** (status set, bodies untouched): multi-VM fleet presented
@@ -169,22 +192,26 @@ instead of opening the doc — most valuable right before the codex↔code drift
    canonical-plan-flow, local-slot-host-symmetric-worker-model, orchestrator-safety-mechanisms, orchestrator_master
    audit-instructions); ARCHIVED user-management-ui still described active (firebase-production, ui-setup-checklist,
    triage-matrix + 3 more); `unified_api_contracts.canonical.*` deep-path citations (defi-risk-monitoring,
-   global-ledger-architecture, greeks-service-overview, mvp-scope-canonical, uac-registry-gaps); dead body links
-   (~20 collected in lane reports, biggest: per-category-bucket-layouts rename ×7 in smoke-testing-playbook, empty
-   `https://` placeholders in roadmap docs, orphaned second frontmatter block in
-   sports_pipeline_to_100pct_golden_window_first).
+   global-ledger-architecture, greeks-service-overview, mvp-scope-canonical, uac-registry-gaps); dead body links (~20
+   collected in lane reports, biggest: per-category-bucket-layouts rename ×7 in smoke-testing-playbook, empty `https://`
+   placeholders in roadmap docs, orphaned second frontmatter block in sports_pipeline_to_100pct_golden_window_first).
 
 ## Success criteria
 
 - All content-fillable SOFT fields populated across the live corpus — `summary` / `tags` / `authoritative_for` /
   `related` / `status` / `repos` (+ audit-result fields) via the LLM pass; `created` / NA-normalization /
   `referenced_by` via script (docspec SOFT → ~0 on targeted trees, operator-only items excepted).
-- A single comprehensive **blocking** frontmatter gate (backed by `docspec.validate_frontmatter`); `check_docspec_coverage`
-  retired; one validator engine, no duplication.
+- A single comprehensive **blocking** frontmatter gate (backed by `docspec.validate_frontmatter`);
+  `check_docspec_coverage` retired; one validator engine, no duplication.
 - agent-role docs enforced in the agent-orchestrator repo.
 
 ## Progress Log
 
+- 2026-07-04 — **GATE CONSOLIDATION SHIPPED (operator-directed): frontmatter can no longer rot.**
+  `check_frontmatter_schema.py` = the single comprehensive BLOCKING gate (docspec-backed, HARD+SOFT, live trees only —
+  plans/archive excluded per operator); warn-only `check_docspec_coverage.py` retired; schema banner updated. Archive
+  bonus PAUSED by operator (1,129 docs still need summary+tags + 49 YAML repairs; mechanical seed of 1,127 docs is in
+  local commits) — resumes on another account or later; archives are explicitly outside the gate so they don't block.
 - 2026-07-04 — **ZERO-VIOLATIONS ACHIEVED (operator directive): docspec HARD=0 SOFT=0 across all 1,298 docs; full
   `quality-gates.sh` GREEN (exit 0).** Beyond P3.2: fixed the 3 pre-existing HARD-rot docs; validator↔schema lockstep
   (empty-list `repos`/`related` valid per §2; `authoritative_for: []` valid on non-current docs; superseded-epic
@@ -195,11 +222,11 @@ instead of opening the doc — most valuable right before the codex↔code drift
   foot-gun breaks found+fixed (colon-space / ` #` / leading `{` / leading backtick in plain scalars — candidates for a
   docspec parse-lint). **Defaulted values needing operator review** (grep the zero-pass commit): `owner: ikenna` /
   `cadence: on-demand` / `verifier: operator` on runbooks where no value was derivable.
-- 2026-07-04 — **P3.2 COMPLETE — all 55 lanes committed locally.** ~990 docs filled by 55 Opus lane agents
-  (2026-07-03 18:00Z → 2026-07-04); usage-managed per operator instruction (throttled 17:54–18:07Z at five_hour 89%,
-  resumed post-reset; seven_day never exceeded ~51%, Sonnet switch never triggered). Final sweep: content-SOFT
-  5,887 → 306; HARD introduced 0; collision sweep clean; 2 YAML foot-gun breaks fixed. P3.4 worklist section added.
-  Ship: final `quality-gates.sh` on the batch → rebase-autostash → SINGLE push (operator override of per-unit push).
+- 2026-07-04 — **P3.2 COMPLETE — all 55 lanes committed locally.** ~990 docs filled by 55 Opus lane agents (2026-07-03
+  18:00Z → 2026-07-04); usage-managed per operator instruction (throttled 17:54–18:07Z at five_hour 89%, resumed
+  post-reset; seven_day never exceeded ~51%, Sonnet switch never triggered). Final sweep: content-SOFT 5,887 → 306; HARD
+  introduced 0; collision sweep clean; 2 YAML foot-gun breaks fixed. P3.4 worklist section added. Ship: final
+  `quality-gates.sh` on the batch → rebase-autostash → SINGLE push (operator override of per-unit push).
 - 2026-07-03 — **Two mid-fanout corrections.** (1) `locked_by: NA` RESTORED on 21 pre-pass files + the new issue doc:
   the BLOCKING `check_frontmatter_schema.py` requires non-empty `locked_by` on plan/issue docs (slot-1 backfilled the
   same on origin @f33ad39c3 to green v2), while docspec SOFT-flags literal `NA` — a live two-validator CONTRADICTION;
@@ -208,16 +235,16 @@ instead of opening the doc — most valuable right before the codex↔code drift
   the same lane playbook — filling remaining lanes + committing with the same per-lane template. Its output verified
   docspec-clean by three lane agents. Orchestrator response: HOLD further lane launches, verify its commits as they
   land, resume only if it stalls (never two agents on the same file).
-- 2026-07-03 — **P3.2 checkpoint: 29/55 lanes committed locally** (lanes 00-28 = codex 00/01/02-data,
-  02-venues, 03-*, 04-architecture, 05-infrastructure, 06-coding-standards, 07-security, 08-workflows,
-  09-strategy pre-v2 archive + archetypes/axes/cross-cutting chunks). All local commits, unpushed per operator
-  override. Per-lane evidence in commit messages `docs(frontmatter): P3.2 lane NN`. Anomaly log at scratchpad
-  `anomalies.md` (session) — headline items for final report: (1) SSOT contradiction 3-vs-4-category empty-output
-  decision (shard-level-failure-isolation vs validation-and-errors); (2) archetype maturity axis (design/
-  code-shipped/live) flattened by enum normalization — old values recoverable from lane diffs, operator to decide
-  on a dedicated key; (3) two agent-orchestrator docs presented the retired multi-VM fleet as live (marked stale);
-  (4) ~15 runbook/audit-shaped docs typed codex-ssot (retype list); (5) recurring dead body-citations captured
-  per lane. Usage at checkpoint: seven_day 48%, five_hour 76% (Opus continues; Sonnet switch only >90% seven_day).
+- 2026-07-03 — **P3.2 checkpoint: 29/55 lanes committed locally** (lanes 00-28 = codex 00/01/02-data, 02-venues, 03-\*,
+  04-architecture, 05-infrastructure, 06-coding-standards, 07-security, 08-workflows, 09-strategy pre-v2 archive +
+  archetypes/axes/cross-cutting chunks). All local commits, unpushed per operator override. Per-lane evidence in commit
+  messages `docs(frontmatter): P3.2 lane NN`. Anomaly log at scratchpad `anomalies.md` (session) — headline items for
+  final report: (1) SSOT contradiction 3-vs-4-category empty-output decision (shard-level-failure-isolation vs
+  validation-and-errors); (2) archetype maturity axis (design/ code-shipped/live) flattened by enum normalization — old
+  values recoverable from lane diffs, operator to decide on a dedicated key; (3) two agent-orchestrator docs presented
+  the retired multi-VM fleet as live (marked stale); (4) ~15 runbook/audit-shaped docs typed codex-ssot (retype list);
+  (5) recurring dead body-citations captured per lane. Usage at checkpoint: seven_day 48%, five_hour 76% (Opus
+  continues; Sonnet switch only >90% seven_day).
 
 - 2026-06-30 — Plan created (operator decision) by splitting the deferred consolidation items out of the completed
   full-corpus coverage plan (now archived). P3 / nice-to-have, human-driven (`local-only`, `assigned_vm: NA`).
@@ -232,29 +259,28 @@ instead of opening the doc — most valuable right before the codex↔code drift
   owner/verifier/supersedes/provenance stay operator-only. Todos restructured P3.0–P3.4 accordingly.
 - 2026-07-03 — Corpus is no longer HARD-green (3 issue docs with HARD rot, invalid `nature` enums — all three authors
   reached for issue-ish values `issue`/`audit`/`data-correctness` the closed vocab lacks; recurring instinct → consider
-  an enum addition at gate-consolidation time). Non-blocking (warn-only gate working as designed); not this plan's
-  scope to fix the 3 docs.
+  an enum addition at gate-consolidation time). Non-blocking (warn-only gate working as designed); not this plan's scope
+  to fix the 3 docs.
 - 2026-07-03 — **P3.2 fan-out RUNNING (operator-dispatched /autonomous).** Operator decisions: Opus sub-agents (usage
   window resets 18:59Z, 40% used — switch to Sonnet only if seven_day utilization >90%, checked per wave via the OAuth
   usage endpoint); **local commits only, NO push until the final full `quality-gates.sh`** then ONE push (explicit
   operator override of per-unit push); all trees incl. plans, not just codex; bonus if usage/time remain:
-  plans/archive + other archived docs (currently outside DOC_TREES). Mechanics: 1,006 remaining docs split into 55
-  lanes (~20 docs each, folder-coherent, priority codex → plans/audit → plans/epics → plans/active), lane manifests at
-  `/tmp/claude-1000/-active-unified-trading-system-repos/b234abe8-7a31-44b9-82b0-84cb4f324543/scratchpad/lane_NN.txt`
-  (+ `lanes.json`); waves of 6 parallel agents; per wave: docspec-verify lane files → `git add` by lane list → local
-  commit → usage check → next wave. Wave 1 = lanes 00–05 (113 docs) LAUNCHED. Progress metric: lanes committed /55.
-  Final phase: authoritative_for collision sweep + full docspec sweep + `quality-gates.sh` + single push + flip P3.2.
+  plans/archive + other archived docs (currently outside DOC_TREES). Mechanics: 1,006 remaining docs split into 55 lanes
+  (~20 docs each, folder-coherent, priority codex → plans/audit → plans/epics → plans/active), lane manifests at
+  `/tmp/claude-1000/-active-unified-trading-system-repos/b234abe8-7a31-44b9-82b0-84cb4f324543/scratchpad/lane_NN.txt` (+
+  `lanes.json`); waves of 6 parallel agents; per wave: docspec-verify lane files → `git add` by lane list → local commit
+  → usage check → next wave. Wave 1 = lanes 00–05 (113 docs) LAUNCHED. Progress metric: lanes committed /55. Final
+  phase: authoritative_for collision sweep + full docspec sweep + `quality-gates.sh` + single push + flip P3.2.
 - 2026-07-03 — **P3.1 pilot shipped** (pm@091318d21): 14 docs in `codex/11-project-management`, all six content fields;
   docspec HARD=0, content-SOFT → 0 (bar valid-empty `[]`). **Discoveries:** (1) validator↔schema tension — schema §6
   says empty `repos: []`/`related: []` is legal, but the FieldSpec flags it SOFT "required but empty"; MUST be resolved
   (validator accepts empty-list, or the blocking gate enforces a subset) BEFORE the gate-consolidation todo flips
   blocking, else valid docs red the gate. (2) Pilot surfaced codex-content rot for the codex-audit process (NOT fixed —
   body edits out of scope): `architecture-constraints.md` filename↔title mismatch; `codex-delta-canonical-brief.md`
-  internally inconsistent dates + orphaned targets (marked `stale`); `plan-hygiene.md` says hygiene-sweep Terraform
-  "not yet shipped" but `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` exists on disk (CODEX-STALE);
-  `secrets-migration-tracking.md` cites non-existent `unified-config-interface/` (renamed → unified-cloud-interface) +
-  a pre-refactor UTL path; ADR-2026-04-25 cites a pre-refactor deployment-api symbol path. (3) Legacy
+  internally inconsistent dates + orphaned targets (marked `stale`); `plan-hygiene.md` says hygiene-sweep Terraform "not
+  yet shipped" but `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` exists on disk (CODEX-STALE);
+  `secrets-migration-tracking.md` cites non-existent `unified-config-interface/` (renamed → unified-cloud-interface) + a
+  pre-refactor UTL path; ADR-2026-04-25 cites a pre-refactor deployment-api symbol path. (3) Legacy
   `cadence`/`verifier`/`last_executed`/`type` blocks on 2 docs (plan-hygiene, active-plan-inventory-tracker) — operator
   to decide codex-runbook re-typing vs dropping legacy fields. (4) `owner` empty on 12/14 docs +
-  `secrets-migration-tracking.md` has a legacy PROSE `authoritative_for` (pre-existing) — both → P3.4 operator
-  worklist.
+  `secrets-migration-tracking.md` has a legacy PROSE `authoritative_for` (pre-existing) — both → P3.4 operator worklist.

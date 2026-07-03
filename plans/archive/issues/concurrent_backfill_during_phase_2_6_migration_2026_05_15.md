@@ -1,13 +1,20 @@
 ---
-title: "Concurrent Backfill During Phase 2.6 Migration — Empirically Safe, Process Gap Documented"
+doc_type: issue
+title: Concurrent Backfill During Phase 2.6 Migration — Empirically Safe, Process Gap Documented
+summary:
+status: LESSONS-LEARNED
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: ikenna-main
-source:
-  - plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md
-  - plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
+source: [plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md, plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md]
 severity: LOW
 blocker: false
-status: LESSONS-LEARNED
 locked_by: live-defi-rollout
 resolved: 2026-05-15
 ---

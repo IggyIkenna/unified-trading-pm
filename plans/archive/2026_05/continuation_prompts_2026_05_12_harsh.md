@@ -1,8 +1,17 @@
 ---
-title: "Continuation prompts — 2026-05-12 — Harsh-side density-push cycle (3.5-4 AI-days/slot/day)"
-type: orchestration-doc
-status: active
+doc_type: plan
+title: Continuation prompts — 2026-05-12 — Harsh-side density-push cycle (3.5-4 AI-days/slot/day)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, features-service, instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
+type: orchestration-doc
 horizon: 4-day cycle through 2026-05-15 freeze gate
 companion_to: plans/active/work_split_2026_05_12_harsh.md + plans/active/continuation_prompts_2026_05_12.md (Ikenna)
 locked_by: live-defi-rollout

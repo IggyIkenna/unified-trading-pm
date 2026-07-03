@@ -1,24 +1,21 @@
 ---
-title:
-  defi classifier missing instruments-service catalog cross-reference — 604k spurious attempted_failed flips blocked by
-  100k cap
+doc_type: issue
+title: defi classifier missing instruments-service catalog cross-reference — 604k spurious attempted_failed flips blocked by 100k cap
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/expected_unattempted_propagation_chain_2026_05_12.md (Phase 5B apply-flips), plans/active/writegate_honest_coverage_endtoend_2026_05_06.md (Phase 3.D.5 Wave 3)]
 created: 2026-05-13
 author: ikenna-slot-8
 resolved: 2026-05-17
-resolution:
-  SHIPPED — Structural fix at `unified-trading-library@513d79fb` (Wave 3 per-instrument catalog cross-ref in
-  `_classify_defi`) + `instruments-service@3670534` (corrector script). Per `work_split_2026_05_15_ikenna` slot 2 Phase
-  B re-attempt (2026-05-15) — dry run 605,070 candidates / 599,486 corrections all `EXPECTED_PRE_VENUE_LAUNCH` / 5,584
-  legit re-fetch; apply-flips ran RECONCILER_COMPLETED on 599,486 rows. cefi half resolved 2026-05-13 via Wave 3 cefi.
+resolution: SHIPPED — Structural fix at `unified-trading-library@513d79fb` (Wave 3 per-instrument catalog cross-ref in `_classify_defi`) + `instruments-service@3670534` (corrector script). Per `work_split_2026_05_15_ikenna` slot 2 Phase B re-attempt (2026-05-15) — dry run 605,070 candidates / 599,486 corrections all `EXPECTED_PRE_VENUE_LAUNCH` / 5,584 legit re-fetch; apply-flips ran RECONCILER_COMPLETED on 599,486 rows. cefi half resolved 2026-05-13 via Wave 3 cefi.
 severity: P0
-source:
-  - unified-trading-library/unified_trading_library/legacy_reason_classifier.py:256-279 (_classify_defi)
-  - unified-trading-library/unified_trading_library/legacy_reason_classifier.py:514-524 (classify_blank_reason_row defi
-    branch)
-  - instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py (reconciler that consumed classifier output)
-related:
-  - plans/active/expected_unattempted_propagation_chain_2026_05_12.md (Phase 5B apply-flips)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md (Phase 3.D.5 Wave 3)
+source: ['unified-trading-library/unified_trading_library/legacy_reason_classifier.py:256-279 (_classify_defi)', 'unified-trading-library/unified_trading_library/legacy_reason_classifier.py:514-524 (classify_blank_reason_row defi branch)', instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py (reconciler that consumed classifier output)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 ---

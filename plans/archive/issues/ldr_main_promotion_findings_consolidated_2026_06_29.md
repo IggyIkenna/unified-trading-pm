@@ -1,50 +1,20 @@
 ---
 doc_type: issue
-title: "LDR→main promotion machinery — consolidated findings + doc contradictions (2026-06-29, for Ikenna escalation)"
-created: 2026-06-29
-source:
-  - .github/workflows/ldr-to-main-promote-fleet.yml
-  - system-integration-tests/.github/workflows/full-workspace-sit.yml
-  - scripts/cicd/detect_breaking_change.py
-  - plans/active/issues/ldr_main_label_check_false_block_promotion_stall_2026_06_29.md
-  - plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md
-  - plans/active/issues/fleet_promote_schedule_yaml_break_2026_06_29.md
-  - plans/active/cicd_sit_full_coverage_handoff_2026_06_27.md
-assigned_vm: NA
+title: LDR→main promotion machinery — consolidated findings + doc contradictions (2026-06-29, for Ikenna escalation)
+summary: Single consolidated record of every finding from the 2026-06-29 LDR→main promotion-stall investigation, classified by whether it is already tracked (and where) or NEW/untracked, with evidence and current status — plus the contradictions these findings create with current docs. The systemic root cause of the broad delay was a legacy `promote/<repo>` ref D/F-conflict freezing per-SHA ref creation on 15/21 repos (NEW, now fixed). Several related issues were already known from the 2026-06-27 SIT-rehome adversarial review, but that doc is now STALE (says the gate is 'reverted/inert' when it is in fact live + gating). For Ikenna to review when free.
 status: resolved
-superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
-priority: P1
-summary:
-  "Single consolidated record of every finding from the 2026-06-29 LDR→main promotion-stall investigation, classified by
-  whether it is already tracked (and where) or NEW/untracked, with evidence and current status — plus the contradictions
-  these findings create with current docs. The systemic root cause of the broad delay was a legacy `promote/<repo>` ref
-  D/F-conflict freezing per-SHA ref creation on 15/21 repos (NEW, now fixed). Several related issues were already known
-  from the 2026-06-27 SIT-rehome adversarial review, but that doc is now STALE (says the gate is 'reverted/inert' when it
-  is in fact live + gating). For Ikenna to review when free."
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos:
-  - unified-trading-pm
-  - system-integration-tests
-  - instruments-service
-  - features-service
-  - market-tick-data-service
-  - unified-api-contracts
-  - agent-orchestrator
-  - deployment-ui
-  - execution-service
-  - deployment-service
-  - unified-trading-library
+repos: [unified-trading-pm, system-integration-tests, instruments-service, features-service, market-tick-data-service, unified-api-contracts, agent-orchestrator, deployment-ui, execution-service, deployment-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [cicd, promotion, ldr-main, sit-rehome, breaking-detection, promote-ref, label-check, escalation, doc-contradiction]
-related:
-  - plans/active/issues/ldr_main_label_check_false_block_promotion_stall_2026_06_29.md
-  - plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md
-  - plans/active/issues/fleet_promote_schedule_yaml_break_2026_06_29.md
-  - plans/active/cicd_sit_full_coverage_handoff_2026_06_27.md
-  - plans/active/cicd_retire_staging_branch_2026_06_27.md
-  - plans/active/cicd_consolidated_remaining_2026_06_24.md
+related: [plans/active/issues/ldr_main_label_check_false_block_promotion_stall_2026_06_29.md, plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md, plans/active/issues/fleet_promote_schedule_yaml_break_2026_06_29.md, plans/active/cicd_sit_full_coverage_handoff_2026_06_27.md, plans/active/cicd_retire_staging_branch_2026_06_27.md, plans/active/cicd_consolidated_remaining_2026_06_24.md]
+created: 2026-06-29
+source: [.github/workflows/ldr-to-main-promote-fleet.yml, system-integration-tests/.github/workflows/full-workspace-sit.yml, scripts/cicd/detect_breaking_change.py, plans/active/issues/ldr_main_label_check_false_block_promotion_stall_2026_06_29.md, plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md, plans/active/issues/fleet_promote_schedule_yaml_break_2026_06_29.md, plans/active/cicd_sit_full_coverage_handoff_2026_06_27.md]
+assigned_vm: NA
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+priority: P1
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

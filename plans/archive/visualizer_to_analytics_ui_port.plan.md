@@ -1,46 +1,24 @@
 ---
-name: Visualizer to Analytics UI Port
-overview:
-  Port execution-analytics-ui functionality into execution-analytics-ui to achieve 100% audit grade, alignment with PM
-  plans and codex, and full integration with execution-results-api and execution-service domain data.
+doc_type: plan
+title: Visualizer to Analytics UI Port
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+overview: Port execution-analytics-ui functionality into execution-analytics-ui to achieve 100% audit grade, alignment with PM plans and codex, and full integration with execution-results-api and execution-service domain data.
 todos:
-  - id: infra-setup
-    content:
-      "Add infrastructure dependencies to execution-analytics-ui: axios, @tanstack/react-query, zustand, recharts,
-      tailwind css, postcss. Configure Vite proxy /api → http://localhost:8002. Add @/ path alias. Configure
-      authApiClient (axios + auth interceptor). Add api/types.ts aligned with execution-results-api schemas
-      (ResultSummary, ResultsResponse, ExecutionAlpha). Fix GridResult → ResultSummary schema mismatch."
-    status: completed
-  - id: p0-pages
-    content:
-      "Port P0 core analytics pages from execution-analytics-ui: (1) LoadResults — browse GCS/local results,
-      bucket/prefix selection; uses /results, /results/buckets, /results/prefixes endpoints; (2) Analysis — alpha
-      histogram, equity curve; uses /results, /results/execution_alpha; (3) DeepDive — per-result fills/orders/timeline
-      tabs; (4) AlgorithmComparison — compare algorithms with bar/radar charts. Port Zustand stores (resultsStore,
-      filterStore) and React Query hooks."
-    status: completed
-  - id: p1-run-backtest
-    content:
-      "Port P1 RunBacktest page: single/batch backtest execution, job status polling. Uses /backtest/run,
-      /backtest/batch, /backtest/status/{job_id}, /config/sources, /config/system/cores endpoints."
-    status: completed
-  - id: p2-domain-browsing
-    content:
-      "Port P2 domain data browsing pages: InstrumentDefinitions (/data/instruments), InstructionAvailability
-      (/data/strategies, /data/instructions), ConfigBrowser (/data/configs), ConfigGenerator (stub — returns 501, defer
-      or scaffold)."
-    status: completed
-  - id: p3-market-data
-    content:
-      "Port P3 MarketTickData page from execution-analytics-ui: browse and chart tick data via market-data-api
-      (/data/tick-data, /data/tick-data/instruments, /data/tick-data/ticks, port 8003)."
-    status: completed
-  - id: quality-gates
-    content:
-      "Ensure TypeScript quality gates pass: Vitest unit tests, ESLint, Prettier. Add Playwright smoke tests for
-      LoadResults, Analysis, DeepDive pages. Verify no Python in repo (ui-no-python-quality-gates.mdc). Auth: all API
-      calls pass Bearer token via axios interceptor using @unified-trading/ui-auth authContext."
-    status: completed
+- {id: infra-setup, content: 'Add infrastructure dependencies to execution-analytics-ui: axios, @tanstack/react-query, zustand, recharts, tailwind css, postcss. Configure Vite proxy /api → http://localhost:8002. Add @/ path alias. Configure authApiClient (axios + auth interceptor). Add api/types.ts aligned with execution-results-api schemas (ResultSummary, ResultsResponse, ExecutionAlpha). Fix GridResult → ResultSummary schema mismatch.', status: completed}
+- {id: p0-pages, content: 'Port P0 core analytics pages from execution-analytics-ui: (1) LoadResults — browse GCS/local results, bucket/prefix selection; uses /results, /results/buckets, /results/prefixes endpoints; (2) Analysis — alpha histogram, equity curve; uses /results, /results/execution_alpha; (3) DeepDive — per-result fills/orders/timeline tabs; (4) AlgorithmComparison — compare algorithms with bar/radar charts. Port Zustand stores (resultsStore, filterStore) and React Query hooks.', status: completed}
+- {id: p1-run-backtest, content: 'Port P1 RunBacktest page: single/batch backtest execution, job status polling. Uses /backtest/run, /backtest/batch, /backtest/status/{job_id}, /config/sources, /config/system/cores endpoints.', status: completed}
+- {id: p2-domain-browsing, content: 'Port P2 domain data browsing pages: InstrumentDefinitions (/data/instruments), InstructionAvailability (/data/strategies, /data/instructions), ConfigBrowser (/data/configs), ConfigGenerator (stub — returns 501, defer or scaffold).', status: completed}
+- {id: p3-market-data, content: 'Port P3 MarketTickData page from execution-analytics-ui: browse and chart tick data via market-data-api (/data/tick-data, /data/tick-data/instruments, /data/tick-data/ticks, port 8003).', status: completed}
+- {id: quality-gates, content: 'Ensure TypeScript quality gates pass: Vitest unit tests, ESLint, Prettier. Add Playwright smoke tests for LoadResults, Analysis, DeepDive pages. Verify no Python in repo (ui-no-python-quality-gates.mdc). Auth: all API calls pass Bearer token via axios interceptor using @unified-trading/ui-auth authContext.', status: completed}
 isProject: false
 ---
 

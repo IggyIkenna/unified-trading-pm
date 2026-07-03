@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Sports-Betting-Services-Previous — Full Migration Plan
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-02'
+---
+
 # Sports-Betting-Services-Previous — Full Migration Plan
 
 > Supersedes: SPORTS_INTEGRATION_PHASE1.md (done), SPORTS_MIGRATION_PHASE2_FULL.md (partially done) Date: 2026-03-02

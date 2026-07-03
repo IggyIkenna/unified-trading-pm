@@ -1,29 +1,32 @@
 ---
-title: "22 Incident Runbooks + Evidence Store + config_hash + code_version + runbook_version"
+doc_type: plan
+title: 22 Incident Runbooks + Evidence Store + config_hash + code_version + runbook_version
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, deployment-service, e2e-testing, execution-service]
+scope: [engineer, admin]
+tags: []
+related: [incident_gateway_and_state_machine_2026_05_23.md, agent_recovery_controller_layer0_deterministic_2026_05_23.md, reconciliation_age_tracking_and_escalation_2026_05_23.md, drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md, connectivity_dependency_buffer_policy_2026_05_23.md]
+created: '2026-05-23'
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: active
 estimate_class: design
 estimate_baseline_ai_days: 14
 estimate_calibrated_ai_days: 8.4
-estimate_calibration_note: |
-  Design class — 22 procedure-oriented runbooks + evidence store schema + cross-linking discipline. Baseline 14 = ~0.6
+estimate_calibration_note: 'Design class — 22 procedure-oriented runbooks + evidence store schema + cross-linking discipline. Baseline 14 = ~0.6
+
   cal-day per runbook × 22 + 1 cal-day store. × 0.6 design = 8.4 cal-days.
+
+  '
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-depends_on:
-  - incident_gateway_and_state_machine_2026_05_23
-  - agent_recovery_controller_layer0_deterministic_2026_05_23
-gates:
-  - master_to_live_defi_2026_05_23:Group-F
-related_plans:
-  - incident_gateway_and_state_machine_2026_05_23.md
-  - agent_recovery_controller_layer0_deterministic_2026_05_23.md
-  - reconciliation_age_tracking_and_escalation_2026_05_23.md
-  - drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md
-  - connectivity_dependency_buffer_policy_2026_05_23.md
+depends_on: [incident_gateway_and_state_machine_2026_05_23, agent_recovery_controller_layer0_deterministic_2026_05_23]
+gates: ['master_to_live_defi_2026_05_23:Group-F']
 ---
 
 # 22 Incident Runbooks + Evidence Store

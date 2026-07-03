@@ -1,34 +1,26 @@
 ---
-name: Strict Quality Gate Alignment
-overview:
-  Reconcile PM and Codex Quality Gate SSOT, establish repo-type-specific templates, harden the audit prompt to cover all
-  cursor rules and quickmerge behavior, and roll out setup.sh, quality-gates.sh, .cursorignore, and .gitignore to every
-  repo (no skips; covers frontend, backend, libraries, Python, bash, TypeScript).
+doc_type: plan
+title: Strict Quality Gate Alignment
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, ibkr-gateway-infra, system-integration-tests, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-04'
+overview: Reconcile PM and Codex Quality Gate SSOT, establish repo-type-specific templates, harden the audit prompt to cover all cursor rules and quickmerge behavior, and roll out setup.sh, quality-gates.sh, .cursorignore, and .gitignore to every repo (no skips; covers frontend, backend, libraries, Python, bash, TypeScript).
 todos:
-  - id: reconcile-ssot
-    content: "Reconcile PM and Codex SSOT: update Codex quality-gates.md, cursor rules (35%→70%), and templates"
-    status: completed
-  - id: repo-type-templates
-    content: "Define repo-type-specific templates: library, service, api, ui, infrastructure, test-harness"
-    status: completed
-  - id: harden-audit-prompt
-    content: "Harden audit prompt: add all 106 cursor rules, quickmerge stages, extra quality gates"
-    status: completed
-  - id: refactor-propagation
-    content: Refactor propagation scripts to use workspace-manifest.json
-    status: completed
-  - id: rollout-all-repos
-    content: Roll out setup.sh, quality-gates.sh, .cursorignore, .gitignore, QUALITY_GATE_BYPASS_AUDIT.md to every repo
-    status: completed
-  - id: quickmerge-strict
-    content: Add quickmerge strict check when quality-gates.sh missing
-    status: completed
-  - id: manifest-api-canonical
-    content: Add api-canonical doc_standard and ensure quality_gate_status for all repos
-    status: completed
-  - id: validate-all-repos
-    content: Validate all 60 repos with quickmerge --unit-only
-    status: completed
+- {id: reconcile-ssot, content: 'Reconcile PM and Codex SSOT: update Codex quality-gates.md, cursor rules (35%→70%), and templates', status: completed}
+- {id: repo-type-templates, content: 'Define repo-type-specific templates: library, service, api, ui, infrastructure, test-harness', status: completed}
+- {id: harden-audit-prompt, content: 'Harden audit prompt: add all 106 cursor rules, quickmerge stages, extra quality gates', status: completed}
+- {id: refactor-propagation, content: Refactor propagation scripts to use workspace-manifest.json, status: completed}
+- {id: rollout-all-repos, content: 'Roll out setup.sh, quality-gates.sh, .cursorignore, .gitignore, QUALITY_GATE_BYPASS_AUDIT.md to every repo', status: completed}
+- {id: quickmerge-strict, content: Add quickmerge strict check when quality-gates.sh missing, status: completed}
+- {id: manifest-api-canonical, content: Add api-canonical doc_standard and ensure quality_gate_status for all repos, status: completed}
+- {id: validate-all-repos, content: Validate all 60 repos with quickmerge --unit-only, status: completed}
 isProject: false
 ---
 

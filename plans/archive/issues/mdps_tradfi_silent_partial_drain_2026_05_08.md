@@ -1,14 +1,18 @@
 ---
-title: "MDPS-tradfi 4-VM silent partial drain (no STOPPED event, mid-processing exit)"
+doc_type: issue
+title: MDPS-tradfi 4-VM silent partial drain (no STOPPED event, mid-processing exit)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: vm-ops-tab (Tab 4)
-source:
-  - plans/active/work_split_2026_05_08_harsh.md § "TAB 4 — Per-asset_group VM ops" (TradFi MDPS post-drain ES.OPT
-    validation)
-  - plans/epics/tradfi_master_2026_05_07.md § "Tab 4 finding 2026-05-08" (annotation in plan body)
-  - GCE event stream
-    gs://central-element-323112-events/events/market-data-processing-service/2026-05-07/mdps-tradfi-{2021..2024}-20260506-125828/
-  - CLAUDE.md § "No fire-and-forget VM launches (CRITICAL — production observability)"
+source: [plans/active/work_split_2026_05_08_harsh.md § "TAB 4 — Per-asset_group VM ops" (TradFi MDPS post-drain ES.OPT validation), plans/epics/tradfi_master_2026_05_07.md § "Tab 4 finding 2026-05-08" (annotation in plan body), 'GCE event stream gs://central-element-323112-events/events/market-data-processing-service/2026-05-07/mdps-tradfi-{2021..2024}-20260506-125828/', CLAUDE.md § "No fire-and-forget VM launches (CRITICAL — production observability)"]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

@@ -1,22 +1,22 @@
 ---
-title:
-  SYSTEMIC bar-edge violation — pre-aggregated vendor-bar ingestion stamps the OPEN (left) edge while the canon + MDPS
-  grid are CLOSE (right) edge
-created: 2026-06-08
-source:
-  - plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md (§ Cross-cutting bar-edge convention audit)
-  - 3-repo read-only sweep 2026-06-08 (instruments-service / market-tick-data-service / market-data-processing-service +
-    features-service + scripts)
-locked_by: live-defi-rollout
-supersedes:
-  plans/active/issues/hyperliquid_ohlcv_left_edge_timestamp_2026_06_08.md (that bug is one instance of this class)
-priority: P2
+doc_type: issue
+title: SYSTEMIC bar-edge violation — pre-aggregated vendor-bar ingestion stamps the OPEN (left) edge while the canon + MDPS grid are CLOSE (right) edge
+summary:
 status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-08
+source: [plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md (§ Cross-cutting bar-edge convention audit), 3-repo read-only sweep 2026-06-08 (instruments-service / market-tick-data-service / market-data-processing-service + features-service + scripts)]
+locked_by: live-defi-rollout
+supersedes: plans/active/issues/hyperliquid_ohlcv_left_edge_timestamp_2026_06_08.md (that bug is one instance of this class)
+priority: P2
 resolved: 2026-06-09
-resolution:
-  ACKED-INTO-PLAN — open work (left-edge corpus recompute + latent pre-agg fetchers) owned by
-  plans/active/bar_edge_left_vs_right_remediation_2026_06_08.md (parent_epic mtds_mdps_master) as real - [ ] checkboxes;
-  realized bugs fixed+tested @7a4fafd9
+resolution: ACKED-INTO-PLAN — open work (left-edge corpus recompute + latent pre-agg fetchers) owned by plans/active/bar_edge_left_vs_right_remediation_2026_06_08.md (parent_epic mtds_mdps_master) as real - [ ] checkboxes; realized bugs fixed+tested @7a4fafd9
 ---
 
 # Systemic bar-edge (open vs close) violation across pre-aggregated OHLCV ingestion

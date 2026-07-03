@@ -1,16 +1,21 @@
 ---
+doc_type: plan
 title: trading-agent-service architecture unlock (May-23, off-by-default)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, strategy-service, trading-agent-service]
+scope: [engineer, admin]
+tags: []
+related: [master_to_live_defi_2026_05_23.md, promote_workflow_may23_cli_path_2026_05_10.md, phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md, strategy_repo_consolidation_2026_05_19.md]
+created: '2026-05-20'
 parent_epic: trading_agent_master
 priority: P0
-status: archived
 estimate_class: refactor
 estimate_baseline_ai_days: 8.0
 estimate_calibrated_ai_days: 3.2
-related_plans:
-  - master_to_live_defi_2026_05_23.md
-  - promote_workflow_may23_cli_path_2026_05_10.md
-  - phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md
-  - strategy_repo_consolidation_2026_05_19.md
 ---
 
 # Trading-Agent Service Architecture Unlock

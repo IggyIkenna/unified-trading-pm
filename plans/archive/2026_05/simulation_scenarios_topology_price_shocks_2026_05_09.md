@@ -1,26 +1,26 @@
 ---
+doc_type: plan
 title: Simulation scenarios — synthetic topology gaps + price shocks for backtest robustness
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [defi]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/defi_master.md, plans/epics/cross_cutting_2026_05_23.epic.md, plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md, plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/archive/risk_simulations_limits_alerting_2026_05_10.md, plans/questions/disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md, plans/questions/mock_data_pipeline_benchmarking_2026_05_08.md, plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md]
 created: 2026-05-09
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
-related_plans:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/defi_master.md # SSOT for "May-23 deliverable" — the live_defi_rollout_2026_05_23.epic was SUPERSEDED 2026-05-08 (3-layer → 2-layer collapse) and folded into defi_master § "May-23 deliverable" per operator direction
-  - plans/epics/cross_cutting_2026_05_23.epic.md
-  - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
-  - plans/archive/risk_simulations_limits_alerting_2026_05_10.md
-  - plans/questions/disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md
-  - plans/questions/mock_data_pipeline_benchmarking_2026_05_08.md
-  - plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md
 estimate_class: design
 estimate_baseline_ai_days: 33.5
 estimate_calibrated_ai_days: 20.1
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~1, ~1, ~1, + 14 more). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~1, ~1, ~1, + 14 more). Class inferred from filename (design, multiplier 0.6×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 parent_epic: defi_master
 priority: P2
 ---

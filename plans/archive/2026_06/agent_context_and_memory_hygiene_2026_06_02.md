@@ -1,18 +1,24 @@
 ---
+doc_type: plan
 title: Agent context + memory hygiene — de-bloat CLAUDE.md, kill stale/contradictory facts, prune user memory
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [ml-service, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/harsh_day_master_2026_06_02.md, plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md]
+created: 2026-06-02
 parent_epic: plan_hygiene_master
 priority: P1
-status: archived
 execution_scope: local-only
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
-created: 2026-06-02
 locked_by: live-defi-rollout
 locked_since: 2026-06-02
-related_plans:
-  - plans/active/harsh_day_master_2026_06_02.md
-  - plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md
 ---
 
 > **✅ ARCHIVED 2026-06-07 [unlock-plan].** All todos complete (0 open). The one "deferred" mention (a full

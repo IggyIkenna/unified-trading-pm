@@ -1,21 +1,22 @@
 ---
-title:
-  "Strategy archetype taxonomy — share-class-driven neutrality + recursive carry rename + cross-domain extensions + vol
-  surface infra + doc completion"
-status: archived
-priority: P0
+doc_type: plan
+title: Strategy archetype taxonomy — share-class-driven neutrality + recursive carry rename + cross-domain extensions + vol surface infra + doc completion
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
+priority: P0
 promoted_from_issue: 2026-05-12
 estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
-source:
-  - codex/09-strategy/strategy-summary.md
-  - codex/09-strategy/architecture-v2/archetypes/*
-  - unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py (StrategyArchetype enum +
-    ARCHETYPE_TO_FAMILY dict)
-  - plans/active/master_to_live_defi_2026_05_23.md:224
-  - plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
+source: [codex/09-strategy/strategy-summary.md, codex/09-strategy/architecture-v2/archetypes/*, unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py (StrategyArchetype enum + ARCHETYPE_TO_FAMILY dict), 'plans/active/master_to_live_defi_2026_05_23.md:224', plans/active/defi_recursive_borrow_archetypes_2026_05_10.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 parent_epic: strategy_master

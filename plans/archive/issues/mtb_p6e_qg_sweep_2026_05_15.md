@@ -1,15 +1,21 @@
 ---
+doc_type: issue
 title: mtb-p6e-final-qg-sweep — B-014 rollout 6-repo QG results
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, ibkr-gateway-infra, market-data-processing-service, system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-8
 resolved: 2026-05-15
-resolution:
-  SHIPPED — slot-2 close-out 2026-05-15. ml-training 14 failures fixed by `ml-training-service@7e18af8` (coverage ≥80%).
-  features-service failures cross-linked to companion issues. All 6 B-014 repos above 70% QG floor ✅.
-source:
-  - plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md
-  - harsh_orchestrator/pings/slot_8.md [2026-05-15 07:10 UTC]
-locked_by: ~
+resolution: SHIPPED — slot-2 close-out 2026-05-15. ml-training 14 failures fixed by `ml-training-service@7e18af8` (coverage ≥80%). features-service failures cross-linked to companion issues. All 6 B-014 repos above 70% QG floor ✅.
+source: [plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md, 'harsh_orchestrator/pings/slot_8.md [2026-05-15 07:10 UTC]']
+locked_by:
 ---
 
 ## What I found

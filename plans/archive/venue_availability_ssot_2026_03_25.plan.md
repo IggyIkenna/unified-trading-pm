@@ -1,7 +1,16 @@
 ---
-title: "Venue Availability SSOT + Historical Instrument Accuracy"
+doc_type: plan
+title: Venue Availability SSOT + Historical Instrument Accuracy
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-25
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-03-25
 priority: P0

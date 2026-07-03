@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: 'Plan: UIC Orphan Contracts Utilization'
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+---
+
 # Plan: UIC Orphan Contracts Utilization
 
 ## Status: Complete

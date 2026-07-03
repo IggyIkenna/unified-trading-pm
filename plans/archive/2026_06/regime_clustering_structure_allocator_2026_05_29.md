@@ -1,64 +1,38 @@
 ---
-name: regime_clustering_structure_allocator_2026_05_29
-title: "Regime Clustering + Proximity → Factor-Targeted Structure Allocator"
+doc_type: plan
+title: Regime Clustering + Proximity → Factor-Targeted Structure Allocator
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, features-service, greeks-service, ml-service, strategy-service, trading-agent-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/epics/features_and_ml_master.md, plans/epics/strategy_master.md, plans/epics/trading_agent_master.md, plans/epics/execution_master.md]
+created: '2026-05-29'
 parent_epic: features_and_ml_master
 priority: P1
-status: active
 model_tier: opus-required
 thinking_tier: max
 estimate_class: brand-new
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 18
 assigned_vm: vm-ml
-priority_history: "P2→P1 2026-05-30 (operator: feed dispatch)"
+priority_history: 'P2→P1 2026-05-30 (operator: feed dispatch)'
 locked_by: live-defi-rollout
 locked_since: 2026-05-29
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B4
+completion_gates: {code: C5, deployment: D3, business: B4}
 repo_gates:
-  - repo: features-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: trading-agent-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: greeks-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-data-processing-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-related_plans:
-  - plans/epics/features_and_ml_master.md
-  - plans/epics/strategy_master.md
-  - plans/epics/trading_agent_master.md
-  - plans/epics/execution_master.md
+- {repo: features-service, code: C0, deployment: none, business: none}
+- {repo: ml-service, code: C0, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: trading-agent-service, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: greeks-service, code: C0, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
 ---
 
 # Regime Clustering + Proximity → Factor-Targeted Structure Allocator

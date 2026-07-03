@@ -1,18 +1,21 @@
 ---
+doc_type: plan
 title: Refactor G1.11 — Service-family scope rules
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.11
-  - codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md
-  - codex/14-playbooks/shared-core/same-system-principle.md
-  - codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md
-  - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md
-# Wave D — parallel with refactor_g1_7. Downstream (Wave F): refactor_g1_4.
-# Also informs refactor_g1_14 (deck slide).
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.11, codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md, codex/14-playbooks/shared-core/same-system-principle.md, codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md, refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md]
 ---
 
 ## Deferred work — migrated to:

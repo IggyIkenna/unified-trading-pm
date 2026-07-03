@@ -1,20 +1,32 @@
 ---
-title: "Features-service input-read migration to v8 manifest (fix stale-path / stale-discovery read failures)"
+doc_type: plan
+title: Features-service input-read migration to v8 manifest (fix stale-path / stale-discovery read failures)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, features-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-25
 last_updated: 2026-05-25
 parent_epic: features_and_ml_master
 assigned_vm: vm-ml
-name: features-input-manifest-migration-2026-05-25
 estimate_class: refactor
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 3.6
-estimate_calibration_note: |
-  Refactor class (0.4×): propagates the EXISTING onchain manifest-read pattern
+estimate_calibration_note: 'Refactor class (0.4×): propagates the EXISTING onchain manifest-read pattern
+
   (`_read_manifest_rows` → `read_availability_index` → capture_status) to 3 more
+
   families + deletes drifted hardcoded path templates. Net-new surface is small
+
   (one shared UTL helper); the bulk is delete-and-rewire across known callsites.
+
+  '
 priority: P2
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

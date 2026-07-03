@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Epic Readiness Checklists — MVP Plan
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, execution-service, instruments-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-11'
+---
+
 # Epic Readiness Checklists — MVP Plan
 
 # Status: COMPLETE (2026-03-11)

@@ -1,19 +1,24 @@
 ---
-title: "MTDS: coverage → ≥75% + codex violations → 0 (MIN_COVERAGE=75, CODEX_MAX_VIOLATIONS=0)"
+doc_type: plan
+title: 'MTDS: coverage → ≥75% + codex violations → 0 (MIN_COVERAGE=75, CODEX_MAX_VIOLATIONS=0)'
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/codex_violations_ratchet_to_five_2026_06_10.md]
+created: 2026-06-11
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: archived
 estimate_class: refactor
 estimate_baseline_ai_days: 6.0
 estimate_calibrated_ai_days: 2.4
-created: 2026-06-11
-source:
-  - operator dispatch 2026-06-11 ("lets take it to 75% coverage and 0 codex violations … follow
-    AUTONOMOUS_AGENT_RULES.md, dont talk to me until its at 75%")
-related_plans:
-  - plans/active/codex_violations_ratchet_to_five_2026_06_10.md
-locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
+source: ['operator dispatch 2026-06-11 ("lets take it to 75% coverage and 0 codex violations … follow AUTONOMOUS_AGENT_RULES.md, dont talk to me until its at 75%")']
+locked_by: NA
 locked_since: 2026-06-11
 ---
 

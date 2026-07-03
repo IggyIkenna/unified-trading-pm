@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Handoff prompt — DeFi data + strategy code path (post-2026-05-07 sessions)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, execution-service, strategy-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-07'
+---
+
 ## Deferred work — migrated to:
 
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any

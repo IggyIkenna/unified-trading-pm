@@ -1,23 +1,25 @@
 ---
-title: "UAC SourceCapability metadata promotion — 2026-05-20"
-name: uac_source_capability_metadata_promotion_2026_05_20
+doc_type: plan
+title: UAC SourceCapability metadata promotion — 2026-05-20
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [mega_audit_and_plan_beefup_progression_2026_05_20.md, is_mtds_contract_audit_2026_05_20.md, issues/extended_starknet_historical_data_path_2026_05_20.md, issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md]
+created: '2026-05-20'
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P3
-status: archived
 target_slot: ikenna-slot-3
 estimate_class: refactor
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 1.6
 parent_epic: data_correctness
-related_plans:
-  - mega_audit_and_plan_beefup_progression_2026_05_20.md
-  - is_mtds_contract_audit_2026_05_20.md
-  - issues/extended_starknet_historical_data_path_2026_05_20.md
-  - issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md
-codex_ssots:
-  - codex/02-data/contracts-scope-and-layout.md
-  - codex/02-data/availability-manifest-and-data-status.md
+codex_ssots: [codex/02-data/contracts-scope-and-layout.md, codex/02-data/availability-manifest-and-data-status.md]
 ---
 
 > **ARCHIVED 2026-05-21** — Phases 1-5 core complete (schema + validators + QG STEP 5.85 + codex, uac@6e2f569 +

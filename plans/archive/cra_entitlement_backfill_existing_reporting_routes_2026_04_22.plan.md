@@ -1,29 +1,25 @@
 ---
-name: client-reporting-api — backfill entitlement enforcement on existing reporting routes
-overview:
-  The new allocator routes (`allocators.py`) enforce `_enforce_entitlement(auth, client_id)` — external callers must
-  match their AuthContext.org_id, internal callers bypass. The existing reporting routes (`settlements.py`, `trades.py`,
-  `reporting/*`) trust the `client_id` query param blindly. Backfill the check across the old surface so external
-  clients cannot read each other's data.
+doc_type: plan
+title: client-reporting-api — backfill entitlement enforcement on existing reporting routes
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-22'
+overview: The new allocator routes (`allocators.py`) enforce `_enforce_entitlement(auth, client_id)` — external callers must match their AuthContext.org_id, internal callers bypass. The existing reporting routes (`settlements.py`, `trades.py`, `reporting/*`) trust the `client_id` query param blindly. Backfill the check across the old surface so external clients cannot read each other's data.
 type: code
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-04-22
-
-completion_gates:
-  code: C5
-  deployment: D3
-
+completion_gates: {code: C5, deployment: D3}
 repo_gates:
-  - repo: client-reporting-api
-    code: C0
-    deployment: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-
-depends_on:
-  - fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md
+- {repo: client-reporting-api, code: C0, deployment: none}
+- {repo: unified-trading-pm, code: C0, deployment: none}
+depends_on: [fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md]
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25
 ---

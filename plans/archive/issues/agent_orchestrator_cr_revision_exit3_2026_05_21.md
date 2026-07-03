@@ -1,15 +1,21 @@
 ---
-title: "agent-orchestrator staging revision 00012 exits with code 3"
+doc_type: issue
+title: agent-orchestrator staging revision 00012 exits with code 3
+summary:
+status: BLOCKED-OPERATOR
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-21
 author: slot-8
-source:
-  - plans/active/agent_orchestrator_slack_notifications_2026_05_19.md
+source: [plans/active/agent_orchestrator_slack_notifications_2026_05_19.md]
 locked_by: live-defi-rollout
 priority: P2
-status: BLOCKED-OPERATOR
-blocked_reason:
-  "Operator or slot-1 must re-trigger staging deploy (deploy-agent-orchestrator.sh --env=uat --cloud) to determine if
-  exit(3) is transient or recurring"
+blocked_reason: Operator or slot-1 must re-trigger staging deploy (deploy-agent-orchestrator.sh --env=uat --cloud) to determine if exit(3) is transient or recurring
 ---
 
 > **[ACKED-INTO-CODE]** Archived 2026-05-22. Root cause: `data/config/backlog.yaml` is gitignored (runtime artifact), so

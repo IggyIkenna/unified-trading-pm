@@ -1,33 +1,23 @@
 ---
-name: Sports Migration Phase 2 Full
-overview:
-  Port all logic from sports-betting-services into UTS. All venues, features, arbitrage, ML practices. Strategy service
-  arb + ML; execution via USEI. Unit tests only; strict quality gates.
+doc_type: plan
+title: Sports Migration Phase 2 Full
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-02'
+overview: Port all logic from sports-betting-services into UTS. All venues, features, arbitrage, ML practices. Strategy service arb + ML; execution via USEI. Unit tests only; strict quality gates.
 todos:
-  - id: feature-calculators
-    content:
-      Feature calculators — season_context, goal_timing, venue_context, referee; team features (split team_form,
-      team_goals, etc.)
-    status: pending
-  - id: data-loader
-    content: Data loader — in-memory DataFrames; optional DB later
-    status: done
-  - id: remaining-features
-    content: Remaining features — h2h, league, odds, halftime, player_lineup, poisson_xg, multisource_xg, advanced_stats
-    status: done
-  - id: usei-adapters
-    content: USEI — Betfair, Pinnacle adapters (unit tests with mocks)
-    status: pending
-  - id: strategy-execution
-    content:
-      "Strategy/execution — arb vs ML strategy types; consumers of FSS + USEI. ACCEPTANCE: (1) ArbitrageStrategy class
-      reads vig + is_arbitrage from FSS output, emits TradeSignal with venue/odds/stake; unit tests mock FSS + USEI,
-      verify signal emitted when arb margin > threshold; (2) MLSportsStrategy consumes FSS feature vectors +
-      PredictionEvent (via unified-ml-interface), emits TradeSignal; unit tests mock FSS + UMI, verify signal at correct
-      confidence threshold; (3) execution_service places/cancels via USEI Betfair/Pinnacle mocks; verify correct order
-      type (back/lay) and stake calculation; (4) quality-gates.sh passes (ruff + basedpyright strict + MIN_COVERAGE=70);
-      zero os.getenv; zero Any in public API."
-    status: pending
+- {id: feature-calculators, content: 'Feature calculators — season_context, goal_timing, venue_context, referee; team features (split team_form, team_goals, etc.)', status: pending}
+- {id: data-loader, content: Data loader — in-memory DataFrames; optional DB later, status: done}
+- {id: remaining-features, content: 'Remaining features — h2h, league, odds, halftime, player_lineup, poisson_xg, multisource_xg, advanced_stats', status: done}
+- {id: usei-adapters, content: 'USEI — Betfair, Pinnacle adapters (unit tests with mocks)', status: pending}
+- {id: strategy-execution, content: 'Strategy/execution — arb vs ML strategy types; consumers of FSS + USEI. ACCEPTANCE: (1) ArbitrageStrategy class reads vig + is_arbitrage from FSS output, emits TradeSignal with venue/odds/stake; unit tests mock FSS + USEI, verify signal emitted when arb margin > threshold; (2) MLSportsStrategy consumes FSS feature vectors + PredictionEvent (via unified-ml-interface), emits TradeSignal; unit tests mock FSS + UMI, verify signal at correct confidence threshold; (3) execution_service places/cancels via USEI Betfair/Pinnacle mocks; verify correct order type (back/lay) and stake calculation; (4) quality-gates.sh passes (ruff + basedpyright strict + MIN_COVERAGE=70); zero os.getenv; zero Any in public API.', status: pending}
 isProject: false
 ---
 

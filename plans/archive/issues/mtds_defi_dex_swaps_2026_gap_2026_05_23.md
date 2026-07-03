@@ -1,14 +1,21 @@
 ---
+doc_type: issue
 title: MTDS DeFi DEX swap data stops after 2026-01-24 — no Ethereum DEX candles for 2026
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, market-data-processing-service, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-23
-source:
-  - GCS audit during MDPS DeFi backfill verification (2026-05-23)
-  - mdps_backfill_phase3_2026_05_22.md (now archived)
+source: [GCS audit during MDPS DeFi backfill verification (2026-05-23), mdps_backfill_phase3_2026_05_22.md (now archived)]
 locked_by: live-defi-rollout
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: planning-vm
 priority: P1
-status: active
 ---
 
 > **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — backfill completed (2024→2026-01-24); post-2026-01-24

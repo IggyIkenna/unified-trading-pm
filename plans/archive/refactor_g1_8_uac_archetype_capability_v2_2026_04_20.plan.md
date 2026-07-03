@@ -1,15 +1,21 @@
 ---
-title: Refactor G1.8 — UAC ArchetypeCapabilityV2 (gap #1)
-status: active
+doc_type: plan
+title: Refactor G1.8 — UAC ArchetypeCapabilityV2 (gap
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.8
-  - codex/09-strategy/architecture-v2/uac-registry-gaps.md (gap #1)
-# Wave B — single item; Wave A must merge first (1.1/1.3/1.5/1.9/1.12/1.14).
-# Downstream consumers (Wave C): refactor_g1_{2,6}; (Wave D): refactor_g1_11.
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.8, codex/09-strategy/architecture-v2/uac-registry-gaps.md (gap]
 ---
 
 ## Deferred work — migrated to:

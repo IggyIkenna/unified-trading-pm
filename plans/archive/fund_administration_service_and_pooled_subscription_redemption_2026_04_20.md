@@ -1,64 +1,40 @@
 ---
-name: fund-administration-service-and-pooled-subscription-redemption
-overview:
-  Build the subscription/redemption rail for IM Pooled clients — UAC fund_administration domain types, new
-  fund-administration-service with subscription/redemption state machine + capital-routing orchestrator, platform UI
-  pages under /services/im/funds/ — by extending existing primitives (TreasuryMonitor, TransferAdapter, CustodyProvider,
-  FundNAVSnapshot, FeeStructure) rather than re-inventing them. Treasury/buffer wallet split is already generic in
-  position-balance-monitor-service; this plan layers fund-admin semantics (share classes, NAV-strike unit issuance,
-  grace-period redemption settlement) on top.
+doc_type: plan
+title: fund-administration-service-and-pooled-subscription-redemption
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, execution-service, fund-administration-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
+overview: Build the subscription/redemption rail for IM Pooled clients — UAC fund_administration domain types, new fund-administration-service with subscription/redemption state machine + capital-routing orchestrator, platform UI pages under /services/im/funds/ — by extending existing primitives (TreasuryMonitor, TransferAdapter, CustodyProvider, FundNAVSnapshot, FeeStructure) rather than re-inventing them. Treasury/buffer wallet split is already generic in position-balance-monitor-service; this plan layers fund-admin semantics (share classes, NAV-strike unit issuance, grace-period redemption settlement) on top.
 type: mixed
 epic: epic-path-to-100m
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
-
+completion_gates: {code: C5, deployment: D3, business: B3}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: position-balance-monitor-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: fund-administration-service
-    code: C0
-    deployment: D3
-    business: B3
-  - repo: unified-trading-system-ui
-    code: C0
-    deployment: D2
-    business: none
-  - repo: client-reporting-api
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: fund-administration-service, code: C0, deployment: D3, business: B3}
+- {repo: unified-trading-system-ui, code: C0, deployment: D2, business: none}
+- {repo: client-reporting-api, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
 depends_on: []
 estimate_class: design
 estimate_baseline_ai_days: TBD
 estimate_calibrated_ai_days: TBD
-estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+
+  '
 ---
 
 ## Deferred work — migrated to:

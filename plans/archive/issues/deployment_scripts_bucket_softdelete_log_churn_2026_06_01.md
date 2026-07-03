@@ -1,24 +1,24 @@
 ---
+doc_type: issue
 title: deployment-scripts bucket — 57 TiB (99.9% soft-deleted) from VM run.log re-upload churn + 7-day soft-delete
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 parent_epic: infrastructure_master
-source:
-  - unified-trading-library/unified_trading_library/lifecycle/uploader.py
-  - deployment-service/deployment_service/vm/heartbeat_cli.py
-  - deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh
-  - deployment-service/scripts/vm/cleanup_old_tarballs.py
-  - deployment-service/cloud-build/refresh-tarballs.cloudbuild.yaml
-  - deployment-service/scripts/vm/create-code-tarballs.sh
+source: [unified-trading-library/unified_trading_library/lifecycle/uploader.py, deployment-service/deployment_service/vm/heartbeat_cli.py, deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh, deployment-service/scripts/vm/cleanup_old_tarballs.py, deployment-service/cloud-build/refresh-tarballs.cloudbuild.yaml, deployment-service/scripts/vm/create-code-tarballs.sh]
 locked_by: live-defi-rollout
 estimate_calibrated_ai_days: 0.2
 estimate_class: infra
 priority: P2
-status: resolved
 resolved: 2026-06-09
-resolution:
-  ACKED-INTO-CODE — utl@2bfb6a16 (lifecycle/uploader.py grow-threshold gate min_growth_bytes); test
-  tests/unit/lifecycle/test_uploader.py; soft-delete cleared + lifecycle rules + tarball reaper + TF codified (all boxes
-  flipped)
+resolution: ACKED-INTO-CODE — utl@2bfb6a16 (lifecycle/uploader.py grow-threshold gate min_growth_bytes); test tests/unit/lifecycle/test_uploader.py; soft-delete cleared + lifecycle rules + tarball reaper + TF codified (all boxes flipped)
 ---
 
 > **🟡 PROCESS NOTE (Ikenna 2026-06-02) — `deployment-service #15` is the wrong delivery vehicle for this work.** PR #15

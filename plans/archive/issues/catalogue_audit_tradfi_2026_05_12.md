@@ -1,29 +1,19 @@
 ---
-title: "Catalogue audit — tradfi (cross_asset_group plan)"
+doc_type: issue
+title: Catalogue audit — tradfi (cross_asset_group plan)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, ibkr-gateway-infra, instruments-service, market-tick-data-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-catalogue-audit-tab (slot 8 sub-agent)
-source:
-  - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md (pre-audit item E2 — TradFi ETF list not at single
-    SSOT; Phase 5 — tradfi_etfs.py / tradfi_roots.py)
-  - unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py
-  - unified-api-contracts/unified_api_contracts/registry/tradfi_ticker_universe.py
-  - unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py
-  - unified-api-contracts/unified_api_contracts/registry/venue_constants.py
-  - unified-api-contracts/unified_api_contracts/registry/market_data_categories.py (VENUES_BY_ASSET_GROUP)
-  - unified-api-contracts/unified_api_contracts/registry/venue_launch_dates.py
-  - unified-api-contracts/unified_api_contracts/registry/venue_trading_calendar.py
-  - unified-api-contracts/unified_api_contracts/registry/half_day_sessions.py
-  - unified-api-contracts/unified_api_contracts/registry/session_times.py
-  - unified-api-contracts/unified_api_contracts/registry/venue_session_hours.py
-  - unified-api-contracts/unified_api_contracts/registry/data_type_capability.py
-  - unified-api-contracts/unified_api_contracts/registry/data_source_continuity.py
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_tradfi.py
-  - unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py
-  - unified-api-contracts/unified_api_contracts/internal/reference/ticker_registry.py
-  - instruments-service/instruments_service/reference_data/adapters/tradfi/{databento,ibkr,polygon,tradfi_live}.py
-  - market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py
-  - market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/*.py
+source: [plans/active/cross_asset_group_catalogue_audit_2026_05_10.md (pre-audit item E2 — TradFi ETF list not at single SSOT; Phase 5 — tradfi_etfs.py / tradfi_roots.py), unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py, unified-api-contracts/unified_api_contracts/registry/tradfi_ticker_universe.py, unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py, unified-api-contracts/unified_api_contracts/registry/venue_constants.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py (VENUES_BY_ASSET_GROUP), unified-api-contracts/unified_api_contracts/registry/venue_launch_dates.py, unified-api-contracts/unified_api_contracts/registry/venue_trading_calendar.py, unified-api-contracts/unified_api_contracts/registry/half_day_sessions.py, unified-api-contracts/unified_api_contracts/registry/session_times.py, unified-api-contracts/unified_api_contracts/registry/venue_session_hours.py, unified-api-contracts/unified_api_contracts/registry/data_type_capability.py,
+  unified-api-contracts/unified_api_contracts/registry/data_source_continuity.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_tradfi.py, unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py, unified-api-contracts/unified_api_contracts/internal/reference/ticker_registry.py, 'instruments-service/instruments_service/reference_data/adapters/tradfi/{databento,ibkr,polygon,tradfi_live}.py', market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/*.py]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

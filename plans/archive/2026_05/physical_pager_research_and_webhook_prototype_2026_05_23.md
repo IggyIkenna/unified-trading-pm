@@ -1,26 +1,34 @@
 ---
-title: "Physical Pager Layer (Layer-4) — Research + Webhook Prototype + Twilio Bridge"
+doc_type: plan
+title: Physical Pager Layer (Layer-4) — Research + Webhook Prototype + Twilio Bridge
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [independent_fallback_twilio_voice_2026_05_23.md, incident_gateway_and_state_machine_2026_05_23.md]
+created: '2026-05-23'
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: active
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-estimate_calibration_note: |
-  Research class — operator buys the device; AI researches candidate devices, ships a webhook prototype that any
-  candidate's API can hit, hooks up Twilio voice as permanent bridge fallback. Baseline 4 × 1.2 research = 4.8 cal-
+estimate_calibration_note: 'Research class — operator buys the device; AI researches candidate devices, ships a webhook prototype that any
+
+  candidate''s API can hit, hooks up Twilio voice as permanent bridge fallback. Baseline 4 × 1.2 research = 4.8 cal-
+
   days. The "research" is genuine (comparing 4-6 vendor options with current pricing + reliability data).
+
+  '
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-depends_on:
-  - independent_fallback_twilio_voice_2026_05_23 # Twilio voice is the permanent bridge while device is selected
-gates:
-  - master_to_live_defi_2026_05_23:Group-F
-related_plans:
-  - independent_fallback_twilio_voice_2026_05_23.md
-  - incident_gateway_and_state_machine_2026_05_23.md
+depends_on: [independent_fallback_twilio_voice_2026_05_23]
+gates: ['master_to_live_defi_2026_05_23:Group-F']
 ---
 
 # Physical Pager Layer (Layer-4) — Research + Webhook Prototype + Twilio Bridge

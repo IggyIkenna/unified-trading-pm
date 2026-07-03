@@ -1,19 +1,24 @@
 ---
-name: mdps_filter_pushdown_memory_audit_and_fix
-title: "MDPS filter-pushdown + memory pathology — audit, fix, verify (2026-05-28)"
+doc_type: plan
+title: MDPS filter-pushdown + memory pathology — audit, fix, verify (2026-05-28)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, features-service, market-data-processing-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [features_calc_efficiency_and_correctness_2026_05_27.md, features_service_e2e_pipeline_test_2026_05_26.md]
+created: 2026-05-28
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
-status: active
 priority: P1
-created: 2026-05-28
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
-related:
-  - features_calc_efficiency_and_correctness_2026_05_27.md # the 4h/24h unblock waiting on MDPS sample data
-  - features_service_e2e_pipeline_test_2026_05_26.md # the original 4h/24h non-landing trail
 ---
 
 # MDPS filter-pushdown + memory pathology — audit, fix, verify

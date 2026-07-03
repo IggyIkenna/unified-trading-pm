@@ -1,46 +1,25 @@
 ---
-name: batch-live-design-symmetry
-overview:
-  Re-audit "batch = live, only fill source differs" SSOT — service code paths, UI surfaces, events, analytics, manifest
-  schema, per-asset-group narratives, static enforcement. Gap-list vs the goal of total design-path symmetry, even at
-  the cost of feeling like overkill.
-type: question
+doc_type: plan
+title: batch-live-design-symmetry
+summary:
 status: plan-spawned
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: [unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md, unified-trading-pm/plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md, unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md, unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md, unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md, unified-trading-pm/plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md, unified-trading-pm/plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md, unified-trading-pm/plans/questions/codex_vs_citadel_infrastructure_specs_2026_05_08.md]
 created: 2026-05-08
+overview: Re-audit "batch = live, only fill source differs" SSOT — service code paths, UI surfaces, events, analytics, manifest schema, per-asset-group narratives, static enforcement. Gap-list vs the goal of total design-path symmetry, even at the cost of feeling like overkill.
+type: question
 plan_spawned: 2026-05-10
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-spawned_plan:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
-  - plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
-related_codex:
-  - unified-trading-pm/codex/04-architecture/batch-live-architecture.md
-  - unified-trading-pm/codex/05-infrastructure/live-pipeline-architecture.md
-  - unified-trading-pm/codex/05-infrastructure/replay-subsystem.md
-  - unified-trading-pm/codex/02-data/pipeline-mode-partition.md
-  - unified-trading-pm/codex/04-architecture/execution-modes-and-chain-resolution.md
-  - unified-trading-pm/codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md
-  - unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md
-  - unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md
-  - unified-trading-pm/codex/04-architecture/research-service-and-dart-integration.md
-  - unified-trading-pm/codex/04-architecture/manual-trade-booking.md
-  - unified-trading-pm/codex/04-architecture/alerting-batch-live.md
-  - unified-trading-pm/codex/04-architecture/instruments-live-architecture.md
-  - unified-trading-pm/codex/04-architecture/instruments-preflight-chain.md
-  - unified-trading-pm/codex/04-architecture/features-service-architecture.md
-  - unified-trading-pm/codex/04-architecture/live-strategy-config-hot-reload.md
-related_plans:
-  - unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md
-  - unified-trading-pm/plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
-  - unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md
-  - unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md
-  - unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md
-  - unified-trading-pm/plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md
-  - unified-trading-pm/plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md
-  - unified-trading-pm/plans/questions/codex_vs_citadel_infrastructure_specs_2026_05_08.md
+spawned_plan: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md]
+related_codex: [unified-trading-pm/codex/04-architecture/batch-live-architecture.md, unified-trading-pm/codex/05-infrastructure/live-pipeline-architecture.md, unified-trading-pm/codex/05-infrastructure/replay-subsystem.md, unified-trading-pm/codex/02-data/pipeline-mode-partition.md, unified-trading-pm/codex/04-architecture/execution-modes-and-chain-resolution.md, unified-trading-pm/codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md, unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md, unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, unified-trading-pm/codex/04-architecture/research-service-and-dart-integration.md, unified-trading-pm/codex/04-architecture/manual-trade-booking.md, unified-trading-pm/codex/04-architecture/alerting-batch-live.md, unified-trading-pm/codex/04-architecture/instruments-live-architecture.md, unified-trading-pm/codex/04-architecture/instruments-preflight-chain.md, unified-trading-pm/codex/04-architecture/features-service-architecture.md,
+  unified-trading-pm/codex/04-architecture/live-strategy-config-hot-reload.md]
 ---
 
 # Batch = Live design symmetry — re-audit + gap list (overkill OK)

@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: E2E and Smoke Test Plan (Pre-Deployment)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+---
+
 # E2E and Smoke Test Plan (Pre-Deployment)
 
 **Reference:** [E2E_TESTING_GUIDE_2026-02-17.md](../archive/E2E_TESTING_GUIDE_2026-02-17.md) (archived) **SSOT:**

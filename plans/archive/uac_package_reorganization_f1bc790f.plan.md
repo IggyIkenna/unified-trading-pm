@@ -1,31 +1,25 @@
 ---
-name: UAC Package Reorganization
-overview:
-  Rename `unified_api_contracts_external` to `external` and move root-level modules into logical subdirectories, then
-  update all downstream consumers across ~25 repos. Coordination with mode_config_env and SIT plans is required.
+doc_type: plan
+title: UAC Package Reorganization
+summary:
 status: partially_complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, instruments-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-14'
+overview: Rename `unified_api_contracts_external` to `external` and move root-level modules into logical subdirectories, then update all downstream consumers across ~25 repos. Coordination with mode_config_env and SIT plans is required.
 todos:
-  - id: phase1-rename-move
-    content: Rename external, create config/registry, move files
-    status: completed
-  - id: phase1-modes
-    content: Add modes (live/historical) to provider_api_versions.yaml
-    status: completed
-  - id: phase1-all-fix
-    content: Fix __all__ non-importable symbols (37 removed)
-    status: completed
-  - id: phase1-external-refs
-    content: Fix unified_api_contracts_external references in 4 repos
-    status: completed
-  - id: phase1-provider-modes
-    content: Add provider_modes.py and generate_data_source_modes.py
-    status: completed
-  - id: phase1-sit-orphans
-    content: Add SIT orphan/exemption discipline test
-    status: completed
-  - id: phase2-downstream
-    content: Update domain_config imports (structure already in place)
-    status: completed
+- {id: phase1-rename-move, content: 'Rename external, create config/registry, move files', status: completed}
+- {id: phase1-modes, content: Add modes (live/historical) to provider_api_versions.yaml, status: completed}
+- {id: phase1-all-fix, content: Fix __all__ non-importable symbols (37 removed), status: completed}
+- {id: phase1-external-refs, content: Fix unified_api_contracts_external references in 4 repos, status: completed}
+- {id: phase1-provider-modes, content: Add provider_modes.py and generate_data_source_modes.py, status: completed}
+- {id: phase1-sit-orphans, content: Add SIT orphan/exemption discipline test, status: completed}
+- {id: phase2-downstream, content: Update domain_config imports (structure already in place), status: completed}
 isProject: false
 ---
 

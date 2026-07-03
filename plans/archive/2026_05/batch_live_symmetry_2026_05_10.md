@@ -1,22 +1,24 @@
 ---
-name: batch_live_symmetry_2026_05_10
+doc_type: plan
 title: Batch=Live design symmetry — 8-tab execution plan (May-23 cutover-blocking subset)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
+scope: [engineer, admin]
+tags: []
+related: [master_to_live_defi_2026_05_23.md, live_pipeline_mtds_mdps_features_2026_05_08.md, gcs_migration_bundle_pipeline_mode_2026_05_08.md, manifest_schema_final_gate_2026_05_09.md, available_at_lookahead_bias_completion_2026_05_08.md, alerting_service_live_rules_2026_05_07.md]
+created: '2026-05-10'
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: archived
 archived: 2026-05-23
 last_updated: 2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 50.0
 estimate_calibrated_ai_days: 30.0
-related_plans:
-  - master_to_live_defi_2026_05_23.md
-  - live_pipeline_mtds_mdps_features_2026_05_08.md
-  - gcs_migration_bundle_pipeline_mode_2026_05_08.md
-  - manifest_schema_final_gate_2026_05_09.md
-  - available_at_lookahead_bias_completion_2026_05_08.md
-  - alerting_service_live_rules_2026_05_07.md
 ---
 
 > **🔴 P0 ABSORBED 2026-05-20 — mega-audit A6 BATCH_ONLY findings**: 13 (venue, data_type) cells have a batch adapter

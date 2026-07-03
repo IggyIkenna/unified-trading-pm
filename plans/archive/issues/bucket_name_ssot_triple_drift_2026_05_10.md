@@ -1,11 +1,18 @@
 ---
-title: "Bucket-name SSOT triple-drift — yaml SSOT vs service config templates vs UTL bucket_naming resolver"
+doc_type: issue
+title: Bucket-name SSOT triple-drift — yaml SSOT vs service config templates vs UTL bucket_naming resolver
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, features-service, instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-10
 author: agent-arb-fundrate-c2
-source:
-  - deployment-service/configs/cloud-providers.yaml (workspace bucket SSOT)
-  - features-service/features_service/{family}/config.py (per-family bucket templates)
-  - unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py (UTL resolver)
+source: [deployment-service/configs/cloud-providers.yaml (workspace bucket SSOT), 'features-service/features_service/{family}/config.py (per-family bucket templates)', unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py (UTL resolver)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 ---

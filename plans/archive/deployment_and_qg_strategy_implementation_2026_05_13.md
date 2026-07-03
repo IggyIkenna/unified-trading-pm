@@ -1,33 +1,36 @@
 ---
+doc_type: plan
 title: Deployment + QG strategy implementation — env-locking, act pre-flight, retention, 99%-repo pipeline
-type: plan
-status: done
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/promote_workflow_may23_cli_path_2026_05_10.md, plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md, plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md, plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md]
 created: 2026-05-13
+type: plan
 deadline: 2026-05-23
 priority: P0
 parent_epic: cross_cutting_may_23_2026.epic.md
-spawned_from:
-  codex/05-infrastructure/deployment-and-qg-strategy.md (codified 2026-05-13 from Ikenna + Harsh design discussion
-  17:05-17:18 UTC)
-related_plans:
-  - plans/active/promote_workflow_may23_cli_path_2026_05_10.md
-  - plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md
-  - plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md
-  - plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md
-related_codex:
-  - codex/05-infrastructure/deployment-and-qg-strategy.md
-  - codex/05-infrastructure/vm-tarball-deployment.md
-  - codex/05-infrastructure/launcher-script-ssot.md
-  - codex/08-workflows/cutover-window-dependency-order.md
+spawned_from: codex/05-infrastructure/deployment-and-qg-strategy.md (codified 2026-05-13 from Ikenna + Harsh design discussion 17:05-17:18 UTC)
+related_codex: [codex/05-infrastructure/deployment-and-qg-strategy.md, codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/launcher-script-ssot.md, codex/08-workflows/cutover-window-dependency-order.md]
 estimate_class: infra
 estimate_baseline_ai_days: 25
 estimate_calibrated_ai_days: 20.0
-estimate_calibration_note: |
-  Infra class — original 7 work units (env-locking + act pre-flight + tarball pinning + 99%-repo + base-pin +
+estimate_calibration_note: 'Infra class — original 7 work units (env-locking + act pre-flight + tarball pinning + 99%-repo + base-pin +
+
   ratchet + coverage), PLUS Phase 0 clean-start QG sweep (+3.5 cal-days post-2026-05-13 QG sweep findings),
+
   PLUS Phase 8 targeted 95% coverage push on validation/startup/VM-scripts/deploy-script-deps surfaces
+
   (+7 cal-days per operator direction 2026-05-13). Baseline 25 × 0.8 (infra multiplier) = 20 calibrated.
+
   Phase 7 (lighter coverage raise) absorbed into Phase 8 (targeted surface coverage).
+
+  '
 ---
 
 > **ARCHIVED 2026-05-20** — 100% complete (all 90 items shipped); DEFERRED items tracked in successor plans listed

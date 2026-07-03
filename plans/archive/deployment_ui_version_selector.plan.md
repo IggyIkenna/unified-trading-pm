@@ -1,67 +1,31 @@
 ---
-name: deployment-ui-version-selector
-overview:
-  Build selector dropdown in deployment-ui — shows available builds as "{version} @ {branch}" parsed from Artifact
-  Registry tags. Manual deploy of any build to any environment. New API endpoints in deployment-api for AR tag listing
-  and forward deploys.
+doc_type: plan
+title: deployment-ui-version-selector
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-11'
+overview: Build selector dropdown in deployment-ui — shows available builds as "{version} @ {branch}" parsed from Artifact Registry tags. Manual deploy of any build to any environment. New API endpoints in deployment-api for AR tag listing and forward deploys.
 type: feature
 epic: epic-infra
-status: done
-
-completion_gates:
-  code: C3
-  deployment: none
-  business: none
-
+completion_gates: {code: C3, deployment: none, business: none}
 repo_gates:
-  - repo: deployment-api
-    code: C3
-    deployment: none
-    business: none
-    readiness_note: "DR N/A: internal tooling. BR N/A: internal tooling."
-  - repo: deployment-ui
-    code: C3
-    deployment: none
-    business: none
-    readiness_note: "DR N/A: internal tooling. BR N/A: internal tooling."
-
-depends_on:
-  - cicd-versioning-cloud-build-2026-03-11 # Phase 5 cloud-build-router produces AR tags
-
+- {repo: deployment-api, code: C3, deployment: none, business: none, readiness_note: 'DR N/A: internal tooling. BR N/A: internal tooling.'}
+- {repo: deployment-ui, code: C3, deployment: none, business: none, readiness_note: 'DR N/A: internal tooling. BR N/A: internal tooling.'}
+depends_on: [cicd-versioning-cloud-build-2026-03-11]
 todos:
-  - id: builds-api-endpoint
-    content:
-      "Add GET /api/builds/{service}?env=dev|staging|prod to deployment-api/deployment_api/routes/builds.py. Lists AR
-      tags, parses to display name '{version} @ {branch}', returns is_v1 flag."
-    status: done
-    note: "New route file: deployment-api/deployment_api/routes/builds.py"
-  - id: deploy-api-endpoint
-    content:
-      "Add POST /api/deployments/{service}/deploy to deployment-api/deployment_api/routes/builds.py. Body: {image_tag,
-      environment}. Deploys any tag (including pre-1.0.0) to any environment. No version gate on manual deploys — that's
-      the whole point."
-    status: done
-    note: "Same route file as builds API."
-  - id: register-builds-router
-    content: "Register builds router in deployment-api/deployment_api/main.py."
-    status: done
-    note: "Add import + include_router call."
-  - id: build-selector-ui
-    content:
-      "Create deployment-ui/src/components/BuildSelector.tsx — dropdown fetching from GET
-      /api/builds/{service}?env={env}. Shows '{version} @ {branch}' labels, v1/pre-v1 badges."
-    status: done
-    note: "New component."
-  - id: deploy-form-extend
-    content:
-      "Extend deployment-ui/src/components/DeployForm.tsx — add BuildSelector above the image_tag input field. Selecting
-      a build pre-fills image_tag."
-    status: done
-    note: "User can still type a tag manually."
-  - id: deploy-api-client
-    content: "Add fetchBuilds() and deployBuild() to deployment-ui/src/api/deploymentApi.ts."
-    status: done
-    note: "Type-safe API client functions."
+- {id: builds-api-endpoint, content: 'Add GET /api/builds/{service}?env=dev|staging|prod to deployment-api/deployment_api/routes/builds.py. Lists AR tags, parses to display name ''{version} @ {branch}'', returns is_v1 flag.', status: done, note: 'New route file: deployment-api/deployment_api/routes/builds.py'}
+- {id: deploy-api-endpoint, content: 'Add POST /api/deployments/{service}/deploy to deployment-api/deployment_api/routes/builds.py. Body: {image_tag, environment}. Deploys any tag (including pre-1.0.0) to any environment. No version gate on manual deploys — that''s the whole point.', status: done, note: Same route file as builds API.}
+- {id: register-builds-router, content: Register builds router in deployment-api/deployment_api/main.py., status: done, note: Add import + include_router call.}
+- {id: build-selector-ui, content: 'Create deployment-ui/src/components/BuildSelector.tsx — dropdown fetching from GET /api/builds/{service}?env={env}. Shows ''{version} @ {branch}'' labels, v1/pre-v1 badges.', status: done, note: New component.}
+- {id: deploy-form-extend, content: Extend deployment-ui/src/components/DeployForm.tsx — add BuildSelector above the image_tag input field. Selecting a build pre-fills image_tag., status: done, note: User can still type a tag manually.}
+- {id: deploy-api-client, content: Add fetchBuilds() and deployBuild() to deployment-ui/src/api/deploymentApi.ts., status: done, note: Type-safe API client functions.}
 isProject: false
 ---
 

@@ -1,18 +1,24 @@
 ---
+doc_type: plan
 title: uv.lock determinism — read-only QG verifier + pinned uv toolchain
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, trading-agent-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/cicd_contract_hardening_2026_06_01.md]
+created: 2026-06-02
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P2
-status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.6
-created: 2026-06-02
 locked_by: live-defi-rollout
-related_plans:
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-source:
-  - operator design discussion 2026-06-02 (slot tab/ikennaigboaka/4)
+source: [operator design discussion 2026-06-02 (slot tab/ikennaigboaka/4)]
 ---
 
 > **✅ ARCHIVED 2026-06-07 [unlock-plan].** Core DONE (Phases 1-5: uv pinned `0.10.8` at all sites + verifier

@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Unified Trading Platform — UI/UX Redesign Vision
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-api, deployment-ui, execution-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-17'
+---
+
 # Unified Trading Platform — UI/UX Redesign Vision
 
 **Plan:** ui-platform-redesign-2026-03-17 **Type:** Architecture + Design + Code **Status:** Draft (Design Phase)

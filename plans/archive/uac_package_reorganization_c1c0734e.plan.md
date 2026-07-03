@@ -1,31 +1,25 @@
 ---
-name: UAC Package Reorganization
-overview:
-  "Comprehensive UAC refactor: package layout (external rename, config/registry moves), domain taxonomy (market,
-  execution, reference, analytics, errors), reference data consolidation, SDK/alt-data placement, sports/DeFi nesting,
-  provider live/historical modes, and adoption/orphan discipline."
+doc_type: plan
+title: UAC Package Reorganization
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-14'
+overview: 'Comprehensive UAC refactor: package layout (external rename, config/registry moves), domain taxonomy (market, execution, reference, analytics, errors), reference data consolidation, SDK/alt-data placement, sports/DeFi nesting, provider live/historical modes, and adoption/orphan discipline.'
 todos:
-  - id: phase1-rename-external
-    content: Rename unified_api_contracts_external to external; create config/, registry/
-    status: pending
-  - id: phase1-move-files
-    content: Move domain_config, provider_api_versions, endpoints, venue_constants, mappings, vcr_endpoints
-    status: pending
-  - id: phase1-provider-modes
-    content: Add modes (live/historical) to provider_api_versions.yaml for data providers
-    status: pending
-  - id: phase1-init-fix
-    content: "Fix __all__: remove/fix 37 non-importable symbols; update imports from new paths"
-    status: pending
-  - id: phase2-sports-defi-nesting
-    content: Create canonical/market/sports, execution/sports, errors/sports, errors/defi; move types
-    status: pending
-  - id: phase3-downstream
-    content: Update external and domain_config imports in all downstream repos
-    status: pending
-  - id: phase4-sit-orphans
-    content: Add SIT test for orphan/exemption caps; document exemptions
-    status: pending
+- {id: phase1-rename-external, content: 'Rename unified_api_contracts_external to external; create config/, registry/', status: pending}
+- {id: phase1-move-files, content: 'Move domain_config, provider_api_versions, endpoints, venue_constants, mappings, vcr_endpoints', status: pending}
+- {id: phase1-provider-modes, content: Add modes (live/historical) to provider_api_versions.yaml for data providers, status: pending}
+- {id: phase1-init-fix, content: 'Fix __all__: remove/fix 37 non-importable symbols; update imports from new paths', status: pending}
+- {id: phase2-sports-defi-nesting, content: 'Create canonical/market/sports, execution/sports, errors/sports, errors/defi; move types', status: pending}
+- {id: phase3-downstream, content: Update external and domain_config imports in all downstream repos, status: pending}
+- {id: phase4-sit-orphans, content: Add SIT test for orphan/exemption caps; document exemptions, status: pending}
 isProject: false
 ---
 

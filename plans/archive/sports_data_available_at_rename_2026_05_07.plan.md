@@ -1,16 +1,22 @@
 ---
-name: sports-data-available-at-rename
+doc_type: plan
+title: sports-data-available-at-rename
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [writegate_honest_coverage_endtoend_2026_05_06, master_to_live_defi_2026_05_23, sports_fixtures_legacy_schema_migration_2026_04_28]
+created: '2026-05-07'
 slug: sports_data_available_at_rename_2026_05_07
 date: 2026-05-07
 owner: claude-code
-status: active
 priority: P1
 phase: pending_approval
 domain: data-pipeline
-related_plans:
-  - writegate_honest_coverage_endtoend_2026_05_06
-  - master_to_live_defi_2026_05_23
-  - sports_fixtures_legacy_schema_migration_2026_04_28
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---

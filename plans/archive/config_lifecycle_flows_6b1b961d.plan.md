@@ -1,38 +1,26 @@
 ---
-name: Config Lifecycle Flows
-overview:
-  "Implement the two config lifecycle flows: (1) generate grid configs and mass-deploy them as batch jobs, and (2)
-  review batch results, select the best configs, and promote them to live -- across Strategy UI, ML Training UI, and
-  deployment-ui."
+doc_type: plan
+title: Config Lifecycle Flows
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-17'
+overview: 'Implement the two config lifecycle flows: (1) generate grid configs and mass-deploy them as batch jobs, and (2) review batch results, select the best configs, and promote them to live -- across Strategy UI, ML Training UI, and deployment-ui.'
 todos:
-  - id: dimensional-grid-selection
-    content:
-      Build DimensionalGrid with checkbox row selection + selection toolbar (extends existing dimensional-grid-component
-      todo)
-    status: pending
-  - id: strategy-grid-results-wire
-    content:
-      Replace StrategyGridResults static table with DimensionalGrid, wire to backtest results API (mock-api first)
-    status: pending
-  - id: promote-toolbar-crosslink
-    content: "Add promote toolbar to strategy-ui grid results: environment picker + cross-link to deployment-ui"
-    status: pending
-  - id: deployment-ui-query-params
-    content: Update deployment-ui to accept ?service=&config_folders=&env=&mode= query params and pre-fill DeployForm
-    status: pending
-  - id: ml-training-deploy-wire
-    content:
-      Wire ML Training ExperimentDetailPage to real API, integrate DeployModal for 'Deploy to Inference' inline action
-    status: pending
-  - id: config-generator-wire-api
-    content: Wire StrategyConfigGenerator to /config/generate-all API (blocked on grid_generator 501 resolution)
-    status: pending
-  - id: mass-deploy-step
-    content: Add mass-deploy preview + deploy step after config generation in strategy-ui
-    status: pending
-  - id: mass-deploy-progress
-    content: "Add deployment progress tracking: poll /backtest/status, show shard progress bar"
-    status: pending
+- {id: dimensional-grid-selection, content: Build DimensionalGrid with checkbox row selection + selection toolbar (extends existing dimensional-grid-component todo), status: pending}
+- {id: strategy-grid-results-wire, content: 'Replace StrategyGridResults static table with DimensionalGrid, wire to backtest results API (mock-api first)', status: pending}
+- {id: promote-toolbar-crosslink, content: 'Add promote toolbar to strategy-ui grid results: environment picker + cross-link to deployment-ui', status: pending}
+- {id: deployment-ui-query-params, content: 'Update deployment-ui to accept ?service=&config_folders=&env=&mode= query params and pre-fill DeployForm', status: pending}
+- {id: ml-training-deploy-wire, content: 'Wire ML Training ExperimentDetailPage to real API, integrate DeployModal for ''Deploy to Inference'' inline action', status: pending}
+- {id: config-generator-wire-api, content: Wire StrategyConfigGenerator to /config/generate-all API (blocked on grid_generator 501 resolution), status: pending}
+- {id: mass-deploy-step, content: Add mass-deploy preview + deploy step after config generation in strategy-ui, status: pending}
+- {id: mass-deploy-progress, content: 'Add deployment progress tracking: poll /backtest/status, show shard progress bar', status: pending}
 isProject: false
 ---
 

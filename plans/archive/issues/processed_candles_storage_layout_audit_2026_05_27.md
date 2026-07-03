@@ -1,9 +1,18 @@
 ---
-title: "Processed-candles storage layout audit — read-amplification + consolidation candidates"
+doc_type: issue
+title: Processed-candles storage layout audit — read-amplification + consolidation candidates
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-27
 author: harsh-side phase-1 agent
-source:
-  - features_calc_efficiency_and_correctness_2026_05_27.md
+source: [features_calc_efficiency_and_correctness_2026_05_27.md]
 locked_by: live-defi-rollout
 ---
 

@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Repo Audit Checklist (Repo-by-Repo)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+---
+
 # Repo Audit Checklist (Repo-by-Repo)
 
 **Reference:** plans_to_deployable_unified_audit Phase 6 (run_validators.py --scope/--repo-type) **Deployment

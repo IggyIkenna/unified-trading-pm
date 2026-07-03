@@ -1,22 +1,35 @@
 ---
+doc_type: plan
 title: DART manual-trade UX refactor — Phase C remainder pull-forward into May-23 cutover
-type: active-plan
-status: done
-owner: ikenna
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
+type: active-plan
+owner: ikenna
 deadline: 2026-05-23
 prior_deadline: post-cutover (operator triage)
-deadline_change_reason: |
-  Operator direction 2026-05-13: pulled forward into May-23 cutover scope. Workspace has
+deadline_change_reason: 'Operator direction 2026-05-13: pulled forward into May-23 cutover scope. Workspace has
+
   throughput margin (~5-6x measured Day-1 2026-05-12); no descope; perfect cutover. The
+
   3 surfaces shipped at unified-trading-system-ui@`64660edd` (TradeMonitor +
+
   AutomationToggle + terminal landing) cover the 2 greenfield surfaces, but the Phase C
+
   remainder (Sheet → route refactor + dart-client.ts unification + full-flow e2e)
+
   closes the operator-UX gap for Group G Item 23.
+
+  '
 horizon: 2026-05-23
-companion_to:
-  - plans/active/master_to_live_defi_2026_05_23.md (Group G Item 23)
-  - plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (Phase 4 BUILD scope)
+companion_to: [plans/active/master_to_live_defi_2026_05_23.md (Group G Item 23), plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (Phase 4 BUILD scope)]
 migrated_from: plans/archive/issues/dart_manual_trade_ui_build_2026_05_10.md (Phase C remainder section)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
@@ -24,18 +37,8 @@ estimate_class: design
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 2.4
 effective_concurrent_slots: 1
-codex_refs:
-  - codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md
-  - codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md
-  - codex/14-customer-journeys/dart/mode-toggle.md
-execution:
-  owner: next daily work-split tab on Ikenna side (UI repo familiarity required)
-  cadence:
-    one-shot (build-out) + per-PR (regression smoke once shipped) + Playwright e2e against Tier-2 stack pre-cutover
-  verifier:
-    Playwright e2e `dart-manual-trade-flow.spec.ts` GREEN end-to-end + manual-trade-panel route surface renders with
-    persona ACL gating
-  last_executed: NEVER
+codex_refs: [codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md, codex/14-customer-journeys/dart/mode-toggle.md]
+execution: {owner: next daily work-split tab on Ikenna side (UI repo familiarity required), cadence: one-shot (build-out) + per-PR (regression smoke once shipped) + Playwright e2e against Tier-2 stack pre-cutover, verifier: Playwright e2e `dart-manual-trade-flow.spec.ts` GREEN end-to-end + manual-trade-panel route surface renders with persona ACL gating, last_executed: NEVER}
 ---
 
 ## Deferred work — migrated to:

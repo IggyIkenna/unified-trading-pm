@@ -1,6 +1,15 @@
 ---
-title: "Tardis iter_chunked HTTP streaming — P2.A"
+doc_type: plan
+title: Tardis iter_chunked HTTP streaming — P2.A
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-23
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25

@@ -1,13 +1,20 @@
 ---
+doc_type: plan
 title: strategy→execution contract remediation — manifest emission + bucket SSOT + preflight gate
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, market-tick-data-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
-source:
-  - plans/audit/strategy_execution_contract_audit_2026_05_20.md
-  - plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md (Phase D6)
+source: [plans/audit/strategy_execution_contract_audit_2026_05_20.md, plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md (Phase D6)]
 estimate_class: brand-new
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 3.0
-status: archived
 parent_epic: strategy_master
 assigned_vm: vm-trading-core
 priority: P2

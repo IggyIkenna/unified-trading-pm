@@ -1,20 +1,23 @@
 ---
-title:
-  Cure-B `auto-resolve/version-line-<sha>` PRs orphan and accumulate as DIRTY cruft — `auto_resolve_version_promote.sh`
-  closes the `staging→main` PR it supersedes but never closes the auto-resolve PRs IT creates, so each re-run leaves the
-  prior one open; main advances past them → they go DIRTY and sit in the triage queue until closed by hand.
-created: 2026-06-24
+doc_type: plan
+title: Cure-B `auto-resolve/version-line-<sha>` PRs orphan and accumulate as DIRTY cruft — `auto_resolve_version_promote.sh` closes the `staging→main` PR it supersedes but never closes the auto-resolve PRs IT creates, so each re-run leaves the prior one open; main advances past them → they go DIRTY and sit in the triage queue until closed by hand.
+summary:
 status: superseded
-superseded_by: cicd_consolidated_remaining_2026_06_24 # D13/WS-L retires Cure-B entirely (version out of git → no version line to auto-resolve → no orphan PRs); not worth a cleanup fix for a soon-retired mechanism (2026-06-25)
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, deployment-ui, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-24
+superseded_by: cicd_consolidated_remaining_2026_06_24
 priority: P2
 source:
-  - 2026-06-24 first-hand: manually closed 6 such orphan PRs across 5 repos (verified superseded via two-dot tip diff vs
-    main + LDR SSOT, NOT commit-count): mtds #370/#372/#374, deployment-ui #318, features-service #663
-  - scripts/cicd/auto_resolve_version_promote.sh (creates BR=auto-resolve/version-line-<sha> L47; closes ONLY the
-    triggering staging→main STALE_PR at L55; no cleanup of prior auto-resolve PRs)
-  - .github/workflows/staging-to-main.yml (invokes auto_resolve at the dirty branch; re-runs every */15 + on dispatch)
-  - plans/active/issues/staging_main_version_line_dual_lineage_2026_06_22.md (Cure B design — closes the staging→main PR
-    only; does not address its own auto-resolve PRs orphaning)
+- {2026-06-24 first-hand: manually closed 6 such orphan PRs across 5 repos (verified superseded via two-dot tip diff vs, 'main + LDR SSOT, NOT commit-count)': mtds}
+- scripts/cicd/auto_resolve_version_promote.sh (creates BR=auto-resolve/version-line-<sha> L47; closes ONLY the triggering staging→main STALE_PR at L55; no cleanup of prior auto-resolve PRs)
+- .github/workflows/staging-to-main.yml (invokes auto_resolve at the dirty branch; re-runs every */15 + on dispatch)
+- plans/active/issues/staging_main_version_line_dual_lineage_2026_06_22.md (Cure B design — closes the staging→main PR only; does not address its own auto-resolve PRs orphaning)
 locked_by: live-defi-rollout
 ---
 

@@ -1,14 +1,22 @@
 ---
-name: aws_cloud_toggle_and_backfill_parity
-title: "AWS cloud toggle + backfill script parity"
+doc_type: plan
+title: AWS cloud toggle + backfill script parity
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-22
 parent_epic: infrastructure_master
 assigned_vm: vm-cefi
 estimate_class: brand-new
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 3.0
-status: active
 priority: P0
-created: 2026-05-22
 last_updated: 2026-05-22
 smoke_gate: BLOCKED-GCP-BACKFILL-COMPLETE — full AWS backfill execution blocked until GCP 100%; 1-day smoke allowed
 locked_by: live-defi-rollout

@@ -1,14 +1,18 @@
 ---
-title:
-  "BaseFeatureCalculator validation flip — audit reveals 75 calcs across paradigm-split, not 12; needs successor plan"
+doc_type: issue
+title: BaseFeatureCalculator validation flip — audit reveals 75 calcs across paradigm-split, not 12; needs successor plan
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: wave-8-basefc-validationflip-sub-agent
-source:
-  - plans/active/features_repo_consolidation_2026_05_08.md (Phase 6 mandatory-validation flip)
-  - plans/active/work_split_2026_05_08_ikenna.md (Wave-8 BaseFC-ValidationFlip Tab)
-  - unified-trading-library/unified_trading_library/feature_calculator/registry.py (UTL@9936e7b6 Generic[DataFrameT]
-    base)
-  - features-service/features_service/{cross_instrument,delta_one,multi_timeframe,calendar,onchain,volatility,sports,commodity}/
+source: [plans/active/features_repo_consolidation_2026_05_08.md (Phase 6 mandatory-validation flip), plans/active/work_split_2026_05_08_ikenna.md (Wave-8 BaseFC-ValidationFlip Tab), 'unified-trading-library/unified_trading_library/feature_calculator/registry.py (UTL@9936e7b6 Generic[DataFrameT] base)', 'features-service/features_service/{cross_instrument,delta_one,multi_timeframe,calendar,onchain,volatility,sports,commodity}/']
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

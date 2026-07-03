@@ -1,11 +1,18 @@
 ---
-title: "Cross-Service E2E Readiness Audit"
+doc_type: issue
+title: Cross-Service E2E Readiness Audit
+summary:
+status: archived — load_dotenv override=False shipped across all listed services (verified 2026-05-07); residual items shipped or superseded by writegate / Group F / instruments+MTDS-completion umbrellas
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-21
 archived: 2026-05-07
 source: service_control_surface_issues_2026_03_21.md + instruments-service E2E testing
-status:
-  archived — load_dotenv override=False shipped across all listed services (verified 2026-05-07); residual items shipped
-  or superseded by writegate / Group F / instruments+MTDS-completion umbrellas
 ---
 
 # Cross-Service E2E Readiness Audit

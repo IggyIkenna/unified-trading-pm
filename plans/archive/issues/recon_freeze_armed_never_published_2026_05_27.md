@@ -1,16 +1,21 @@
 ---
+doc_type: issue
 title: RECON_FREEZE_ARMED is never published — reconciliation→order-block safety chain is dormant
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-27
-source:
-  - execution-service/execution_service/preflight/recon_freeze.py
-  - alerting-service/alerting_service/rules/reconciliation_rules.py
-  - unified-trading-pm/codex/04-architecture/reconciliation-age-tracking.md
-  - unified-trading-pm/plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md
+source: [execution-service/execution_service/preflight/recon_freeze.py, alerting-service/alerting_service/rules/reconciliation_rules.py, unified-trading-pm/codex/04-architecture/reconciliation-age-tracking.md, unified-trading-pm/plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md]
 locked_by: live-defi-rollout
 severity: P0-safety (live-trading critical path)
 routed_to: ikenna-main (cross-repo trading-safety decision)
 priority: P2
-status: active
 ---
 
 # RECON_FREEZE_ARMED never published — recon→order-block chain is dormant

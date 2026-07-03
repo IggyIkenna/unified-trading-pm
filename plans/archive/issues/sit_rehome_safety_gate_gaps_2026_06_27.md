@@ -1,35 +1,20 @@
 ---
-doc_type: plan
-title:
-  SIT-rehome cross-repo breaking-gate has 2 verified safety/liveness gaps + 3 design issues (adversarial-caught
-  pre-merge)
-created: 2026-06-27
-source:
-  - plans/active/cicd_retire_staging_branch_2026_06_27.md (the SIT-rehome 6-step spec, lines 118-209)
-  - scripts/cicd/ci_status_store.py (rank table + resolve_status)
-  - system-integration-tests/scripts/run_cross_repo_invariants.sh (REQUIRED_SIBLINGS)
-  - .github/workflows/ldr-to-main-promote-fleet.yml (the consumer/frozen-head — REVERTED, not shipped)
-locked_by: live-defi-rollout
-priority: P1
+doc_type: issue
+title: SIT-rehome cross-repo breaking-gate has 2 verified safety/liveness gaps + 3 design issues (adversarial-caught pre-merge)
+summary: 'Adversarial verification (3 sub-agents) of the SIT-rehome STEPS 1+4+5 BEFORE landing caught two CRITICAL gaps that make the change unsafe to ship as specced: (1) liveness — once a repo is MAIN_GREEN (rank 4) the no-downgrade resolve_status REJECTS every later SIT_VALIDATED (rank 3) write, so sit_validated_tree is never re-written → the gate would jam every ldr_main repo on its 2nd breaking change FOREVER; (2) safety — the cross-repo SIT suite validates only 5 REQUIRED_SIBLINGS but the producer stamps SIT_VALIDATED on all 21 ldr_main repos, so a breaking change in any of the other 16 would get a valid SIT_VALIDATED+tree and promote UNGATED. The consumer + frozen-head were REVERTED (backed up); the inert building blocks (producer/store/get-doc/token-swap) stay shipped. Needs an operator design decision on SIT coverage before the corrected gate lands.'
 status: resolved
-superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
-summary:
-  "Adversarial verification (3 sub-agents) of the SIT-rehome STEPS 1+4+5 BEFORE landing caught two CRITICAL gaps that
-  make the change unsafe to ship as specced: (1) liveness — once a repo is MAIN_GREEN (rank 4) the no-downgrade
-  resolve_status REJECTS every later SIT_VALIDATED (rank 3) write, so sit_validated_tree is never re-written → the gate
-  would jam every ldr_main repo on its 2nd breaking change FOREVER; (2) safety — the cross-repo SIT suite validates only
-  5 REQUIRED_SIBLINGS but the producer stamps SIT_VALIDATED on all 21 ldr_main repos, so a breaking change in any of the
-  other 16 would get a valid SIT_VALIDATED+tree and promote UNGATED. The consumer + frozen-head were REVERTED (backed
-  up); the inert building blocks (producer/store/get-doc/token-swap) stay shipped. Needs an operator design decision on
-  SIT coverage before the corrected gate lands."
 nature: process
 asset_group: cross-asset
 stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer, admin]
 tags: [cicd, WS-L, SIT-rehome, safety-gate, breaking-detection, ldr_main]
-related:
-  - plans/active/cicd_retire_staging_branch_2026_06_27.md
+related: [plans/active/cicd_retire_staging_branch_2026_06_27.md]
+created: 2026-06-27
+source: ['plans/active/cicd_retire_staging_branch_2026_06_27.md (the SIT-rehome 6-step spec, lines 118-209)', scripts/cicd/ci_status_store.py (rank table + resolve_status), system-integration-tests/scripts/run_cross_repo_invariants.sh (REQUIRED_SIBLINGS), '.github/workflows/ldr-to-main-promote-fleet.yml (the consumer/frozen-head — REVERTED, not shipped)']
+locked_by: live-defi-rollout
+priority: P1
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

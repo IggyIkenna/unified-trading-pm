@@ -1,32 +1,32 @@
 ---
+doc_type: plan
 title: Client reporting + PnL attribution MVP — per-client NAV / PnL / metrics surface for cutover
-type: plan
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-service, deployment-ui, execution-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/wallet_treasury_client_flow_2026_05_10.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md, plans/active/promote_workflow_may23_cli_path_2026_05_10.md]
 created: 2026-05-10
+type: plan
 deadline: 2026-05-23
 horizon: 13-day pre-cutover sprint
 companion_to: master_to_live_defi_2026_05_23.md (Group F item 22 P&L attribution, Group G item 23 operator UX)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 spawned_from: plans/questions/client_reporting_pnl_attribution_2026_05_08.md
-related_plans:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/wallet_treasury_client_flow_2026_05_10.md
-  - plans/active/risk_simulations_limits_alerting_2026_05_10.md
-  - plans/active/promote_workflow_may23_cli_path_2026_05_10.md
-related_codex:
-  - codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md
-  - codex/04-architecture/batch-live-architecture.md
-  - codex/04-architecture/backtest-groups.md
-  - codex/09-strategy/strategy-summary.md
-  - codex/04-architecture/capital-efficiency-patterns.md
-  - codex/02-data/honest-absence-downstream-handling.md
+related_codex: [codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/backtest-groups.md, codex/09-strategy/strategy-summary.md, codex/04-architecture/capital-efficiency-patterns.md, codex/02-data/honest-absence-downstream-handling.md]
 estimate_class: design
 estimate_baseline_ai_days: 10.8
 estimate_calibrated_ai_days: 6.5
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5, ~2, ~2, + 6 more). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5, ~2, ~2, + 6 more). Class inferred from filename (design, multiplier 0.6×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 ---
 
 ## Deferred work — migrated to:

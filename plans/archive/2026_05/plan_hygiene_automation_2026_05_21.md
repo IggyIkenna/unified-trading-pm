@@ -1,15 +1,23 @@
 ---
+doc_type: plan
 title: Plan hygiene automation — scripts + runbook + cron
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [master_to_live_defi_2026_05_23.md]
+created: '2026-05-21'
 parent_epic: plan_hygiene_master
 priority: P1
-status: active
 estimate_class: infra
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 3.2
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-related_plans:
-  - master_to_live_defi_2026_05_23.md
 ---
 
 # Plan Hygiene Automation

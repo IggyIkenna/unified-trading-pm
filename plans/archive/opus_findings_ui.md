@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: UI Information Architecture Audit & Redesign
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-api, deployment-ui, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-17'
+---
+
 # UI Information Architecture Audit & Redesign
 
 **Plan:** ui-ia-audit-redesign-2026-03-16 **Type:** Architecture + Code **Status:** Draft **Depends on:**

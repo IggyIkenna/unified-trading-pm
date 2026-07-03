@@ -1,11 +1,19 @@
 ---
-title: "Workspace unused-import audit — 2026-05-18"
+doc_type: issue
+title: Workspace unused-import audit — 2026-05-18
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-18
-source:
-  - work_split_2026_05_18_harsh.md § slot-4 item 15
+source: [work_split_2026_05_18_harsh.md § slot-4 item 15]
 locked_by: live-defi-rollout
 priority: P2
-status: active
 ---
 
 > **[ACKED-INTO-PLAN]** Archived 2026-05-22. 11 F401 violations tracked as P3 todos in

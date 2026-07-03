@@ -1,8 +1,17 @@
 ---
+doc_type: plan
 title: Harsh's daily work-split — 2026-05-14 (Day-3 of density push, pre-freeze-gate close-out)
-type: coordination-doc
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service, strategy-service, unified-trading-library, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
+type: coordination-doc
 deadline: 2026-05-23 (live DeFi cutover)
 horizon: 1 day (closeout for tomorrow's 2026-05-15 Phase 1 freeze gate)
 companion_to: plans/active/work_split_2026_05_12_ikenna.md (Ikenna's 4-day cycle plan; Day-3 of 4)

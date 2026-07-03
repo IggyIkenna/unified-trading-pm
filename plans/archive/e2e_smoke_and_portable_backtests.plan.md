@@ -1,90 +1,65 @@
 ---
-name: e2e-smoke-and-portable-backtests
-overview:
-  Layer 0–3 E2E smoke (contract alignment → schema robustness → infra verification → system smoke/full_e2e) plus
-  CEFI/TradFi/DeFi/Sports portable backtests with VCR/fixtures
+doc_type: plan
+title: e2e-smoke-and-portable-backtests
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, strategy-service, system-integration-tests, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+overview: Layer 0–3 E2E smoke (contract alignment → schema robustness → infra verification → system smoke/full_e2e) plus CEFI/TradFi/DeFi/Sports portable backtests with VCR/fixtures
 type: code
 epic: epic-code-completion
-status: done
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: system-integration-tests
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: strategy-service
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: execution-service
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-
+- {repo: system-integration-tests, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: strategy-service, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: execution-service, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
 depends_on: []
-
 todos:
-  - id: layer-0-1-smoke
-    content:
-      Layer 0–1 — unified-api-contracts, unified-internal-contracts, per-service test_schema_*.py (blocks quickmerge)
-    status: completed
-    notes: |
-      RESOLVED 2026-03-09: Layer 0 — UAC (157 pass), UIC (967 pass), UCI (362 pass). Layer 1 — execution-service
-      (34 pass), strategy-service (31 pass), market-data-processing-service (15 pass). All pre-existing.
-  - id: layer-2-3-smoke
-    content:
-      Layer 2–3 — deployment-service verify_infra.py; system-integration-tests smoke + full_e2e (blocks first
-      deployment)
-    status: done
-    notes: "DONE 2026-03-11: verify_infra.py, smoke + full_e2e wired in system-integration-tests"
-  - id: portable-backtests-cefi-tradfi-defi
-    content: Portable backtests — CEFI, TradFi, DeFi via run_parallel_backtests.sh and runners
-    status: completed
-    notes: |
-      RESOLVED 2026-03-09: CeFi/TradFi/DeFi scripts created in strategy-service/scripts/;
-      fixtures in tests/fixtures/{cefi,tradfi,defi}_market_data/; run_portable_backtests.sh
-      orchestrates all 4 in parallel; all exit 0. CeFi: 11 trades, pnl=36.5, win_rate=0.64.
-      DeFi: 20 trades, pnl=39.2, win_rate=1.0. TradFi updated 2026-03-09: switched to
-      z-score calendar spread arb (window=5, entry|z|>0.8, exit|z|<0.25); added nq_back
-      contract + spread variability to fixture — ES: 1 trade, NQ: 1 trade, pnl=218.75,
-      win_rate=1.0. docs/BACKTESTS.md added. Commits 47c7ed0 + 0c92753.
-  - id: portable-backtests-sports
-    content:
-      "Sports portable arb backtest — VCR cassettes for odds/line feeds. SCRIPT:
-      strategy-service/scripts/run_sports_arb_backtest.py (to be created). COMMAND: cd strategy-service && python
-      scripts/run_sports_arb_backtest.py --fixtures tests/fixtures/sports_odds/ --output
-      artifacts/sports_backtest_result.json. Loads VCR-recorded odds/line feeds from tests/fixtures/sports_odds/ (no
-      live API calls); runs arb detection via features_sports_service arb module; outputs
-      artifacts/sports_backtest_result.json with fields: n_opportunities, n_trades, pnl, win_rate, max_drawdown. GATE:
-      exits 0; artifact written with all required fields; no live API calls at runtime."
-    status: completed
-    notes: |
-      RESOLVED 2026-03-09: Script created at strategy-service/scripts/run_sports_arb_backtest.py; fixtures at
-      tests/fixtures/sports_odds/premier_league_arb_sample.yaml; exits 0; artifact written with all required fields
-      (n_opportunities:2, n_trades:2, pnl:6.22, win_rate:1.0, max_drawdown:0.0) — commit bede70c.
-  - id: portable-criteria
-    content: Ensure no live API calls in CI; deterministic; batch-live symmetry
-    status: completed
-    notes: |
-      RESOLVED 2026-03-09: All 4 backtest scripts verified: (a) no live API calls — all data
-      from YAML fixtures in tests/fixtures/; (b) deterministic — fixture data is static;
-      (c) fast — each script runs in <2s; (d) batch-live symmetry — same strategy logic
-      path as live (ArbitrageStrategy, MomentumStrategy, VWAPStrategy, DeFiLPStrategy);
-      run_portable_backtests.sh exits 0 when all pass.
+- {id: layer-0-1-smoke, content: 'Layer 0–1 — unified-api-contracts, unified-internal-contracts, per-service test_schema_*.py (blocks quickmerge)', status: completed, notes: 'RESOLVED 2026-03-09: Layer 0 — UAC (157 pass), UIC (967 pass), UCI (362 pass). Layer 1 — execution-service
+
+    (34 pass), strategy-service (31 pass), market-data-processing-service (15 pass). All pre-existing.
+
+    '}
+- {id: layer-2-3-smoke, content: Layer 2–3 — deployment-service verify_infra.py; system-integration-tests smoke + full_e2e (blocks first deployment), status: done, notes: 'DONE 2026-03-11: verify_infra.py, smoke + full_e2e wired in system-integration-tests'}
+- {id: portable-backtests-cefi-tradfi-defi, content: 'Portable backtests — CEFI, TradFi, DeFi via run_parallel_backtests.sh and runners', status: completed, notes: 'RESOLVED 2026-03-09: CeFi/TradFi/DeFi scripts created in strategy-service/scripts/;
+
+    fixtures in tests/fixtures/{cefi,tradfi,defi}_market_data/; run_portable_backtests.sh
+
+    orchestrates all 4 in parallel; all exit 0. CeFi: 11 trades, pnl=36.5, win_rate=0.64.
+
+    DeFi: 20 trades, pnl=39.2, win_rate=1.0. TradFi updated 2026-03-09: switched to
+
+    z-score calendar spread arb (window=5, entry|z|>0.8, exit|z|<0.25); added nq_back
+
+    contract + spread variability to fixture — ES: 1 trade, NQ: 1 trade, pnl=218.75,
+
+    win_rate=1.0. docs/BACKTESTS.md added. Commits 47c7ed0 + 0c92753.
+
+    '}
+- {id: portable-backtests-sports, content: 'Sports portable arb backtest — VCR cassettes for odds/line feeds. SCRIPT: strategy-service/scripts/run_sports_arb_backtest.py (to be created). COMMAND: cd strategy-service && python scripts/run_sports_arb_backtest.py --fixtures tests/fixtures/sports_odds/ --output artifacts/sports_backtest_result.json. Loads VCR-recorded odds/line feeds from tests/fixtures/sports_odds/ (no live API calls); runs arb detection via features_sports_service arb module; outputs artifacts/sports_backtest_result.json with fields: n_opportunities, n_trades, pnl, win_rate, max_drawdown. GATE: exits 0; artifact written with all required fields; no live API calls at runtime.', status: completed, notes: 'RESOLVED 2026-03-09: Script created at strategy-service/scripts/run_sports_arb_backtest.py; fixtures at
+
+    tests/fixtures/sports_odds/premier_league_arb_sample.yaml; exits 0; artifact written with all required fields
+
+    (n_opportunities:2, n_trades:2, pnl:6.22, win_rate:1.0, max_drawdown:0.0) — commit bede70c.
+
+    '}
+- {id: portable-criteria, content: Ensure no live API calls in CI; deterministic; batch-live symmetry, status: completed, notes: 'RESOLVED 2026-03-09: All 4 backtest scripts verified: (a) no live API calls — all data
+
+    from YAML fixtures in tests/fixtures/; (b) deterministic — fixture data is static;
+
+    (c) fast — each script runs in <2s; (d) batch-live symmetry — same strategy logic
+
+    path as live (ArbitrageStrategy, MomentumStrategy, VWAPStrategy, DeFiLPStrategy);
+
+    run_portable_backtests.sh exits 0 when all pass.
+
+    '}
 isProject: false
 ---
 

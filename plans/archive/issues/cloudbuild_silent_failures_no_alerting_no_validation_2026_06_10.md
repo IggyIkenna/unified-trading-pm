@@ -1,22 +1,20 @@
 ---
-doc_type: plan
-title: "Cloud Build: silent config rejection, zero failure alerting, zero pre-push validation (3 gaps, fleet-wide)"
-created: 2026-06-10
-source:
-  - "FROM-digest proof-build incident 2026-06-10 evening — two config pushes fired ZERO builds with no signal"
-  - "gcloud builds list 2026-06-10: 6+ FAILURE builds (16:25, 18:34, 18:47, 19:18, 19:48, 19:49) — zero pages"
-locked_by: live-defi-rollout
-priority: P2
+doc_type: issue
+title: 'Cloud Build: silent config rejection, zero failure alerting, zero pre-push validation (3 gaps, fleet-wide)'
+summary: '**Gap 1 — config rejection is SILENT.** A GitHub push whose `cloudbuild.yaml` fails Cloud Build''s substitution validation (e.g. an unescaped shell var — `$PIN` reads as a substitution key) produces...'
 status: resolved
-superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
-summary: "**Gap 1 — config rejection is SILENT.** A GitHub push whose `cloudbuild.yaml` fails Cloud Build's substitution validation (e.g. an unescaped shell var — `$PIN` reads as a substitution key) produces..."
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos: []
+repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-10
+source: [FROM-digest proof-build incident 2026-06-10 evening — two config pushes fired ZERO builds with no signal, 'gcloud builds list 2026-06-10: 6+ FAILURE builds (16:25, 18:34, 18:47, 19:18, 19:48, 19:49) — zero pages']
+locked_by: live-defi-rollout
+priority: P2
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

@@ -1,12 +1,18 @@
 ---
-title:
-  "QG sentinel is SHA-based → unwinnable race vs concurrent LDR writers; content-hash + slicing would restore fast-ship"
-created: 2026-06-10
-source:
-  - slot-3 live experience 2026-06-10 shipping deployment-api data-status STEP 5.90 fix + flaky-test fix
-  - deployment-api QG ran ~5× and lost the sentinel race each time to unrelated slot-2 commits
-priority: P2
+doc_type: issue
+title: QG sentinel is SHA-based → unwinnable race vs concurrent LDR writers; content-hash + slicing would restore fast-ship
+summary:
 status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-10
+source: [slot-3 live experience 2026-06-10 shipping deployment-api data-status STEP 5.90 fix + flaky-test fix, deployment-api QG ran ~5× and lost the sentinel race each time to unrelated slot-2 commits]
+priority: P2
 resolved: 2026-06-18
 ---
 

@@ -1,25 +1,25 @@
 ---
-title:
-  "DeFi chain coverage cross-service audit + Hyperliquid L1 chain identity phantom + CLOB-on-chain venue instrument
-  definitions (Hyperliquid / Lighter / Pacifica / Extended) — manifest rows + per-archetype chain constraints"
+doc_type: issue
+title: DeFi chain coverage cross-service audit + Hyperliquid L1 chain identity phantom + CLOB-on-chain venue instrument definitions (Hyperliquid / Lighter / Pacifica / Extended) — manifest rows + per-archetype chain constraints
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
 source:
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py:58-292
-    (CHAIN_CONFIGS canonical EVM + Solana)
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py:46 (HYPERLIQUID_API source
-    listed; chain identity unspecified)
-  - unified_api_contracts/internal/domain/strategy_service/venue_set_variants.py:1-10 (_BASE_VENUES_BY_ASSET_GROUP — no
-    per-archetype chain constraint)
-  - execution-service/execution_service/service_config.py (CHAIN_RPC_TEMPLATES consumer)
-  - plans/active/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md:137-150 (Lighter / Pacifica / Extended status;
-    Extended Starknet RPC missing)
-  - market-tick-data-service commits 10aa715 / 51fecd5 / d898985 / fc53a97 (Lighter + Pacifica adapters)
-  - operator directive 2026-05-08:
-      "Hyperliquid comes to mind, even though it's a central limit order book and the data types are more like century
-      or the book too. I believe it's still a physical chain that we have to move money around. If we're doing
-      omni-chain transfers, for example, and we don't know about the protocol dynamics... we need to know what chains
-      they are and that we need what ID is set up"
+- unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py:58-292 (CHAIN_CONFIGS canonical EVM + Solana)
+- unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py:46 (HYPERLIQUID_API source listed; chain identity unspecified)
+- unified_api_contracts/internal/domain/strategy_service/venue_set_variants.py:1-10 (_BASE_VENUES_BY_ASSET_GROUP — no per-archetype chain constraint)
+- execution-service/execution_service/service_config.py (CHAIN_RPC_TEMPLATES consumer)
+- plans/active/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md:137-150 (Lighter / Pacifica / Extended status; Extended Starknet RPC missing)
+- market-tick-data-service commits 10aa715 / 51fecd5 / d898985 / fc53a97 (Lighter + Pacifica adapters)
+- {operator directive 2026-05-08: 'Hyperliquid comes to mind, even though it''s a central limit order book and the data types are more like century or the book too. I believe it''s still a physical chain that we have to move money around. If we''re doing omni-chain transfers, for example, and we don''t know about the protocol dynamics... we need to know what chains they are and that we need what ID is set up'}
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

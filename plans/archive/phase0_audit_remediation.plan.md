@@ -1,50 +1,42 @@
 ---
-name: "Phase 0 — Audit Remediation"
-overview: |
-  Companion to phase0_standards_enforcement.md. Runs IN PARALLEL with enforcement during Phase 0.
+doc_type: plan
+title: Phase 0 — Audit Remediation
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+overview: 'Companion to phase0_standards_enforcement.md. Runs IN PARALLEL with enforcement during Phase 0.
+
   Converts every FAIL/WARN audit finding into a concrete, ordered task with file-level evidence.
+
   DOES NOT replace enforcement — enforcement scans and verifies; this plan fixes what enforcement finds.
 
+
   Sequencing: enforcement runs first (or concurrently) to establish the FAIL/WARN list.
-  Remediation fixes FAIL items in Stream order (Stream 1→2→3→4→5). enforcement's p0-gate-check
+
+  Remediation fixes FAIL items in Stream order (Stream 1→2→3→4→5). enforcement''s p0-gate-check
+
   verifies remediation is complete. Both must reach DONE before Phase 1 starts.
 
+
   BLOCKS: Phase 1 Stream A, B, C — same gate as enforcement.
+
+  '
 todos:
-  - id: stream1-secrets-uci-uci-config
-    content:
-      "Stream 1 (unblocks everything): trading-analytics-ui .env removal; UCI 30+ os.environ → UnifiedCloudConfig
-      bootstrap pattern; unified-config-interface 1 os.environ in loaders.py. (DONE 2026-03-06)"
-    status: done
-  - id: stream2-utl-fds
-    content:
-      "Stream 2 (after Stream 1 merges): unified-trading-library 50+ os.environ + try/except ImportError in
-      aws_clients.py; features-delta-one-service try/except ImportError in _openbb_types.py."
-    status: done
-  - id: stream3-instruments-strategy-mlt-deploy
-    content:
-      "Stream 3 (parallel after Stream 2): instruments-service PYTEST_CURRENT_TEST antipattern + 68 type:ignore;
-      strategy-service 3x try/except ImportError + create_presentation.py 1187L split; ml-training-service Dockerfile
-      pip→uv; deployment-service env_substitutor.py boundary + scripts; deployment-api time.sleep in async."
-    status: done
-  - id: stream4-exec-mtds-sports
-    content:
-      "Stream 4 (parallel after Stream 1): execution-service hardcoded project IDs + 5 oversized files + 139
-      type:ignore; market-tick-data-service hardcoded ID + os.environ scripts; features-sports-service
-      _registry_data_b.py 1570L split."
-    status: done
-  - id: stream5-warn-cleanup
-    content:
-      "Stream 5 (parallel, WARN cleanup): unified-market-interface 3 files >900L; execution-results-api 13 type:ignore;
-      market-data-processing-service Any type; strategy-ui + batch-audit-ui .env hygiene; 8 services datetime TZ
-      verification."
-    status: done
+- {id: stream1-secrets-uci-uci-config, content: 'Stream 1 (unblocks everything): trading-analytics-ui .env removal; UCI 30+ os.environ → UnifiedCloudConfig bootstrap pattern; unified-config-interface 1 os.environ in loaders.py. (DONE 2026-03-06)', status: done}
+- {id: stream2-utl-fds, content: 'Stream 2 (after Stream 1 merges): unified-trading-library 50+ os.environ + try/except ImportError in aws_clients.py; features-delta-one-service try/except ImportError in _openbb_types.py.', status: done}
+- {id: stream3-instruments-strategy-mlt-deploy, content: 'Stream 3 (parallel after Stream 2): instruments-service PYTEST_CURRENT_TEST antipattern + 68 type:ignore; strategy-service 3x try/except ImportError + create_presentation.py 1187L split; ml-training-service Dockerfile pip→uv; deployment-service env_substitutor.py boundary + scripts; deployment-api time.sleep in async.', status: done}
+- {id: stream4-exec-mtds-sports, content: 'Stream 4 (parallel after Stream 1): execution-service hardcoded project IDs + 5 oversized files + 139 type:ignore; market-tick-data-service hardcoded ID + os.environ scripts; features-sports-service _registry_data_b.py 1570L split.', status: done}
+- {id: stream5-warn-cleanup, content: 'Stream 5 (parallel, WARN cleanup): unified-market-interface 3 files >900L; execution-results-api 13 type:ignore; market-data-processing-service Any type; strategy-ui + batch-audit-ui .env hygiene; 8 services datetime TZ verification.', status: done}
 isProject: true
 blockedBy:
-  - plan: phase0_standards_enforcement.md
-    reason:
-      "Enforcement scan identifies the FAIL/WARN items that this plan fixes. Stream 1 can begin as soon as the initial
-      scan is complete — does not need full enforcement to be done."
+- {plan: phase0_standards_enforcement.md, reason: Enforcement scan identifies the FAIL/WARN items that this plan fixes. Stream 1 can begin as soon as the initial scan is complete — does not need full enforcement to be done.}
 ---
 
 ## Deferred work — migrated to:

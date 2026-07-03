@@ -1,15 +1,20 @@
 ---
-title: "cross_asset not in instruments-service scope — needs design call"
+doc_type: issue
+title: cross_asset not in instruments-service scope — needs design call
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, features-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
 author: harsh-slot-7
 resolved: 2026-05-20
-resolution:
-  ACKED-OUT-OF-SCOPE — features-service owns per-pair viability + pricing implicitly via existing derived-feature output
-  (basis_spread_bps, dispersion features, etc.). No separate synthetic-universe registry. Mega-audit C6
-  (features→strategy) scope augmented to enforce features-service emits per-pair viability + pricing for every active
-  archetype.
-source:
-  - plans/active/data_status_ui_phase_2f.md
+resolution: ACKED-OUT-OF-SCOPE — features-service owns per-pair viability + pricing implicitly via existing derived-feature output (basis_spread_bps, dispersion features, etc.). No separate synthetic-universe registry. Mega-audit C6 (features→strategy) scope augmented to enforce features-service emits per-pair viability + pricing for every active archetype.
+source: [plans/active/data_status_ui_phase_2f.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---

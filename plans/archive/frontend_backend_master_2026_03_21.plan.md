@@ -1,66 +1,51 @@
 ---
-name: frontend-backend-master
-overview: "Master plan for frontend-backend integration: backend Plans A-D+H, then UI Plans E-F"
+doc_type: plan
+title: frontend-backend-master
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, unified-trading-api]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-21'
+overview: 'Master plan for frontend-backend integration: backend Plans A-D+H, then UI Plans E-F'
 type: mixed
 epic: epic-code-completion
-status: active
-locked_by: null
-locked_since: null
-completion_gates:
-  code: C5
-  deployment: D3
-  business: none
+locked_by:
+locked_since:
+completion_gates: {code: C5, deployment: D3, business: none}
 depends_on: []
 todos:
-  # ── Backend Plans (A-D) ──
-  - id: master-plan-a
-    content: |
-      - [ ] [AGENT] P0. Complete Plan A: Registry & Schema Sync Pipeline (backend-only) — extract 9 missing registries, fix OpenAPI spec, build codegen pipeline, harden error codes, wire CI triggers
-    status: todo
-  - id: master-plan-b
-    content: |
-      - [ ] [AGENT] P0. Complete Plan B: Config Hot-Reload (backend-only) — domain config schemas, hot-reload callbacks in 20 services, config publish API, placement remediation
-    status: todo
-    blocked_by: plan-a-registry-schema-sync
-  - id: master-plan-c
-    content: |
-      - [ ] [AGENT] P0. Complete Plan C: Domain Data API Readiness (backend-only) — mock mode completeness, response schema consistency, health endpoints, OpenAPI parity across 12 APIs
-    status: todo
-    blocked_by: plan-a-registry-schema-sync
-  - id: master-plan-d
-    content: |
-      - [ ] [AGENT] P1. Complete Plan D: Testnet & Stress Testing (backend-only) — seed hardening, scenario infrastructure, error code stress tests, performance gates, load testing
-    status: todo
-    blocked_by: plan-c-domain-data-api
-  # ── API Consolidation Plan (H) — after A, PARALLEL with B-D ──
-  - id: master-plan-h
-    content: |
-      - [ ] [AGENT] P0. Complete Plan H: API Consolidation — scaffold unified-trading-api, absorb 9 domain data API repos into one, entitlement middleware, WebSocket multiplexing, unified OpenAPI spec, deprecate old API repos
-    status: todo
-    blocked_by: plan-a-registry-schema-sync
-  # ── Auth Plan (G) — PARALLEL with A-D ──
-  - id: master-plan-g
-    content: |
-      - [ ] [AGENT] P0. Complete Plan G: Auth & Entitlement Hardening — service access matrix, S2S auth enrollment (all 21 services), API auth standardization (9 API repos), backend entitlement enforcement (7 tiers server-side), org-level data filtering
-    status: todo
-  # ── Client Reporting Plan (I) — after G, PARALLEL with H ──
-  - id: master-plan-i
-    content: |
-      - [ ] [AGENT] P0. Complete Plan I: Client Reporting & Document Management — document infrastructure in UIC/UCI, P&L/settlement/compliance reporting, invoicing with fee calculation, DocuSign integration, document upload/download API, MiFID II regulatory reporting
-    status: todo
-    blocked_by: plan-g-auth-entitlement
-  # ── UI Plans (E-F) ──
-  - id: master-plan-e
-    content: |
-      - [ ] [AGENT] P0. Complete Plan E: UI Backend Integration — BFF scaffold + routes, hook rewire, inline mock deletion, WebSocket server/client, config CRUD, scenario panel, testnet deployment, page migration waves, document management components
-    status: todo
-    blocked_by:
-      plan-d-testnet-stress-testing, plan-g-auth-entitlement, plan-h-api-consolidation, plan-i-client-reporting-docs
-  - id: master-plan-f
-    content: |
-      - [ ] [AGENT] P1. Complete Plan F: UI Quality Gate Hardening — CI/CD pipeline, quality-gates.sh, TypeScript strict mode, 4-mode startup, auth integration, OpenAPI type consumption, Playwright tests
-    status: todo
-    blocked_by: plan-e-ui-backend-integration
+- {id: master-plan-a, content: '- [ ] [AGENT] P0. Complete Plan A: Registry & Schema Sync Pipeline (backend-only) — extract 9 missing registries, fix OpenAPI spec, build codegen pipeline, harden error codes, wire CI triggers
+
+    ', status: todo}
+- {id: master-plan-b, content: '- [ ] [AGENT] P0. Complete Plan B: Config Hot-Reload (backend-only) — domain config schemas, hot-reload callbacks in 20 services, config publish API, placement remediation
+
+    ', status: todo, blocked_by: plan-a-registry-schema-sync}
+- {id: master-plan-c, content: '- [ ] [AGENT] P0. Complete Plan C: Domain Data API Readiness (backend-only) — mock mode completeness, response schema consistency, health endpoints, OpenAPI parity across 12 APIs
+
+    ', status: todo, blocked_by: plan-a-registry-schema-sync}
+- {id: master-plan-d, content: '- [ ] [AGENT] P1. Complete Plan D: Testnet & Stress Testing (backend-only) — seed hardening, scenario infrastructure, error code stress tests, performance gates, load testing
+
+    ', status: todo, blocked_by: plan-c-domain-data-api}
+- {id: master-plan-h, content: '- [ ] [AGENT] P0. Complete Plan H: API Consolidation — scaffold unified-trading-api, absorb 9 domain data API repos into one, entitlement middleware, WebSocket multiplexing, unified OpenAPI spec, deprecate old API repos
+
+    ', status: todo, blocked_by: plan-a-registry-schema-sync}
+- {id: master-plan-g, content: '- [ ] [AGENT] P0. Complete Plan G: Auth & Entitlement Hardening — service access matrix, S2S auth enrollment (all 21 services), API auth standardization (9 API repos), backend entitlement enforcement (7 tiers server-side), org-level data filtering
+
+    ', status: todo}
+- {id: master-plan-i, content: '- [ ] [AGENT] P0. Complete Plan I: Client Reporting & Document Management — document infrastructure in UIC/UCI, P&L/settlement/compliance reporting, invoicing with fee calculation, DocuSign integration, document upload/download API, MiFID II regulatory reporting
+
+    ', status: todo, blocked_by: plan-g-auth-entitlement}
+- {id: master-plan-e, content: '- [ ] [AGENT] P0. Complete Plan E: UI Backend Integration — BFF scaffold + routes, hook rewire, inline mock deletion, WebSocket server/client, config CRUD, scenario panel, testnet deployment, page migration waves, document management components
+
+    ', status: todo, blocked_by: 'plan-d-testnet-stress-testing, plan-g-auth-entitlement, plan-h-api-consolidation, plan-i-client-reporting-docs'}
+- {id: master-plan-f, content: '- [ ] [AGENT] P1. Complete Plan F: UI Quality Gate Hardening — CI/CD pipeline, quality-gates.sh, TypeScript strict mode, 4-mode startup, auth integration, OpenAPI type consumption, Playwright tests
+
+    ', status: todo, blocked_by: plan-e-ui-backend-integration}
 isProject: false
 ---
 

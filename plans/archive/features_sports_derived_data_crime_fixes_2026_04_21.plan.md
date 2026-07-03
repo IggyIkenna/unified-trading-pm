@@ -1,23 +1,24 @@
 ---
-title:
-  "features-sports-service — Remove data-crime defaults in derived_features (squad-value zero-default + standings
-  lookahead)"
-priority: P0
-status: archived
-owner: agent
+doc_type: plan
+title: features-sports-service — Remove data-crime defaults in derived_features (squad-value zero-default + standings lookahead)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-21
+priority: P0
+owner: agent
 archived: 2026-04-22
 type: code
 epic: none
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: features-sports-service
-    code: C0
-    deployment: none
-    business: none
+- {repo: features-sports-service, code: C0, deployment: none, business: none}
 depends_on: [features_sports_denormalisation_pipeline_2026_04_21]
 isProject: false
 ---

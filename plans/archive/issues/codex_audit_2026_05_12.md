@@ -1,10 +1,18 @@
 ---
-title: "Codex SSOT currency audit — 2026-05-12 Day-3 refresh (freeze-gate item 9 status update)"
+doc_type: issue
+title: Codex SSOT currency audit — 2026-05-12 Day-3 refresh (freeze-gate item 9 status update)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna-codefreeze-audit-tab (slot 3)
-source:
-  - plans/active/issues/codex_audit_2026_05_11.md (slot 6 day-1 baseline)
-  - 3-cluster Explore sub-agent fan-out 2026-05-12 Day 3 (Phase 1.D + 1.E + 1.F clusters)
+source: [plans/active/issues/codex_audit_2026_05_11.md (slot 6 day-1 baseline), 3-cluster Explore sub-agent fan-out 2026-05-12 Day 3 (Phase 1.D + 1.E + 1.F clusters)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

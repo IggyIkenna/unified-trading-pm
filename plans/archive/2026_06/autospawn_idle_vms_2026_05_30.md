@@ -1,24 +1,26 @@
 ---
-name: autospawn_idle_vms_2026_05_30
-title: "autospawn idle VMs — orchestrator wakes a worker when (queue > 0 AND no workers AND account headroom > 50%)"
+doc_type: plan
+title: autospawn idle VMs — orchestrator wakes a worker when (queue > 0 AND no workers AND account headroom > 50%)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md, plans/active/harsh_pc_dispatch_failover_2026_05_30.md, plans/active/api_host_chronic_impairment_2026_05_29.md]
+created: 2026-05-30
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
 priority: P0
-status: active
 estimate_class: refactor
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 0.8
-created: 2026-05-30
 last_updated: 2026-05-30
 locked_by: live-defi-rollout
 locked_since: 2026-05-30
-codex_ssots:
-  - codex/04-architecture/agent-orchestrator-overview.md
-  - codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md
-related_plans:
-  - plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md
-  - plans/active/harsh_pc_dispatch_failover_2026_05_30.md
-  - plans/active/api_host_chronic_impairment_2026_05_29.md
+codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md]
 ---
 
 > **✅ COMPLETE — ARCHIVED 2026-06-01.** All 14 todos done; `AutoSpawnLoop` rolled fleet-wide to all 11 VMs

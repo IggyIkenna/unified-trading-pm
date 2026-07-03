@@ -1,18 +1,25 @@
 ---
-name: bfg_history_scrub_sequence_2026_05_20
+doc_type: issue
+title: bfg_history_scrub_sequence_2026_05_20
+summary:
+status: complete-all-5-repos-scrubbed
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md (parent issue), github_pat_in_instruments_service_env_2026_05_15.md (parent issue)]
+created: '2026-05-20'
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P3
-status: complete-all-5-repos-scrubbed
 resolved: 2026-05-20
 deadline: 2026-05-23
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 parent_plan: master_to_live_defi_2026_05_23.md
-related_plans:
-  - gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md (parent issue)
-  - github_pat_in_instruments_service_env_2026_05_15.md (parent issue)
 ---
 
 > **🟢 RESOLVED 2026-05-20** — BFG history scrub complete across ALL 5 affected repos.

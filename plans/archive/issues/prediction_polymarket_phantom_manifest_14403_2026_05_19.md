@@ -1,26 +1,21 @@
 ---
-title:
-  "🚨 P0 MIGRATION REGRESSION: Phase 3 GCS migration converted real captures to phantoms for tradfi (245,907) and
-  prediction (14,403) — systematic root cause under investigation; DO NOT run Phase 6 --apply"
+doc_type: issue
+title: '🚨 P0 MIGRATION REGRESSION: Phase 3 GCS migration converted real captures to phantoms for tradfi (245,907) and prediction (14,403) — systematic root cause under investigation; DO NOT run Phase 6 --apply'
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-19
-author:
-  ikenna-slot-3 (Phase 3.6 post-migration phantom audit; discovered 2026-05-19 ~16:14 UTC, severity upgraded ~16:35 UTC)
-source:
-  - "instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group prediction --dry-run (run
-    2026-05-19 16:13 UTC)"
-  - "instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run (run 2026-05-19
-    16:32 UTC)"
-  - "Gate 3 phantom audit (PM@bf47123f, 2026-05-17 14:32-14:42 UTC) — baseline showing all were real captures"
-  - "gs://central-element-323112-phantom-triage/triage_prediction_20260519_151357.jsonl (14403 records)"
-  - "gs://central-element-323112-phantom-triage/triage_tradfi_20260519_153300.jsonl (245907 records)"
-  - "gcs_migration_bundle_pipeline_mode_2026_05_08.md Phase 3.6 phantom gate"
+author: ikenna-slot-3 (Phase 3.6 post-migration phantom audit; discovered 2026-05-19 ~16:14 UTC, severity upgraded ~16:35 UTC)
+source: ['instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group prediction --dry-run (run 2026-05-19 16:13 UTC)', 'instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run (run 2026-05-19 16:32 UTC)', 'Gate 3 phantom audit (PM@bf47123f, 2026-05-17 14:32-14:42 UTC) — baseline showing all were real captures', 'gs://central-element-323112-phantom-triage/triage_prediction_20260519_151357.jsonl (14403 records)', 'gs://central-element-323112-phantom-triage/triage_tradfi_20260519_153300.jsonl (245907 records)', gcs_migration_bundle_pipeline_mode_2026_05_08.md Phase 3.6 phantom gate]
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
-severity:
-  P0 — data integrity. Phase 3 migration converted 14,403 prediction + 245,907 tradfi real captures into phantoms. Gate
-  3 (May 17) confirmed both were CLEAN before migration. Sports (559,961 real captures) survived migration intact. DeFi
-  + CeFi audits still in progress. Root cause under investigation — GCS path probes running to determine if parquets
-  were moved, lost, or have path-format mismatch. Phase 6 --apply is BLOCKED until root cause confirmed.
+severity: P0 — data integrity. Phase 3 migration converted 14,403 prediction + 245,907 tradfi real captures into phantoms. Gate 3 (May 17) confirmed both were CLEAN before migration. Sports (559,961 real captures) survived migration intact. DeFi + CeFi audits still in progress. Root cause under investigation — GCS path probes running to determine if parquets were moved, lost, or have path-format mismatch. Phase 6 --apply is BLOCKED until root cause confirmed.
 ---
 
 > **🟡 COVERED BY**

@@ -1,55 +1,36 @@
 ---
-name: Safety and Risk Controls
-overview: |
-  Verify and implement production-grade safety controls for live trading. risk-and-exposure-service
+doc_type: plan
+title: Safety and Risk Controls
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+overview: 'Verify and implement production-grade safety controls for live trading. risk-and-exposure-service
+
   has a PreTradeCheckEngine with position limit checks and risk_monitor. Gaps: no circuit breaker
+
   pattern, no kill switch mechanism, pre-trade wiring into execution-service not verified, preflight
+
   checks before live session start not confirmed. This plan wires PreTradeCheckEngine into the
+
   execution flow, adds circuit breakers and kill switch, verifies preflight checks, and achieves
+
   ≥70% test coverage on all risk modules. Covers audit S21.
+
+  '
 todos:
-  - id: risk-pretrade-wiring-verify
-    content:
-      "DONE 2026-03-08. Verified PreTradeCheckEngine wired via RiskChecker HTTP boundary in execution-service.
-      kill_switch check runs BEFORE any order is submitted (503 when active). RiskChecker.check_instruction() delegates
-      to check_pre_trade_risk() — the single HTTP boundary. Tests: tests/unit/engine/test_pretrade_wiring.py (10 tests):
-      kill switch blocking, approved/rejected/error paths, payload construction."
-    status: completed
-  - id: risk-position-limits-verify
-    content:
-      "DONE 2026-03-08. Position limit enforcement verified and tested: position size breach (qty>100 rejected),
-      position value breach (qty*price>max_position_value rejected), gross exposure breach, capital limit breach, VaR
-      limit breach (PRE_TRADE_VAR_BREACH emitted). Limits loaded from service config (not hardcoded). Tests:
-      tests/unit/test_position_limits_breach.py (11 tests, all assertions on checks dict keys)."
-    status: completed
-  - id: risk-circuit-breaker
-    content:
-      "DONE 2026-03-07. Implemented execution-service/execution_service/engine/circuit_breaker.py — 3-state machine
-      (CLOSED→OPEN→HALF_OPEN). Per-venue isolation via get_circuit_breaker(venue) singleton factory. 5 failures → OPEN;
-      300s cooldown → HALF_OPEN; 1 success → CLOSED. log_event on all transitions: CIRCUIT_BREAKER_OPEN,
-      CIRCUIT_BREAKER_HALF_OPEN, CIRCUIT_BREAKER_CLOSED. Tests: tests/unit/engine/test_circuit_breaker.py. NOTE:
-      alerting-service PubSub wiring owned by phase3_service_hardening_integration t4f-monitoring-pipeline."
-    status: completed
-  - id: risk-kill-switch
-    content:
-      "DONE 2026-03-07. Implemented execution-service/execution_service/engine/kill_switch.py — singleton Event,
-      activate/deactivate/is_active. app.py imports from kill_switch module; emits KILL_SWITCH_ACTIVATED/DEACTIVATED via
-      log_event(). manual_instruction_api.py gates all order submissions with kill_switch.is_active() → 503 if set.
-      Tests: tests/unit/engine/test_kill_switch.py (11 tests)."
-    status: completed
-  - id: risk-preflight-checks
-    content:
-      "DONE 2026-03-08. Implemented execution_service/engine/preflight.py: run_preflight_checks() with 5 checks: (1)
-      Secret Manager accessible, (2) venue API keys present in SM, (3) risk service health reachable, (4) position state
-      loadable (risk service /health), (5) risk limits config loaded. Emits PREFLIGHT_FAILED via log_event on any
-      failure; raises PreflightCheckError. Tests: tests/unit/engine/test_preflight.py (10 tests)."
-    status: completed
-  - id: risk-test-coverage
-    content:
-      "DONE 2026-03-08. Added 46 new unit tests across 4 new test files (test_pretrade_wiring.py, test_preflight.py,
-      test_position_limits_breach.py, test_var_api_endpoint.py). pre_trade_check_engine.py at 92% coverage,
-      var_calculator.py at 100% coverage — both exceed ≥70% gate. All tests unit-only with mocked externals."
-    status: completed
+- {id: risk-pretrade-wiring-verify, content: 'DONE 2026-03-08. Verified PreTradeCheckEngine wired via RiskChecker HTTP boundary in execution-service. kill_switch check runs BEFORE any order is submitted (503 when active). RiskChecker.check_instruction() delegates to check_pre_trade_risk() — the single HTTP boundary. Tests: tests/unit/engine/test_pretrade_wiring.py (10 tests): kill switch blocking, approved/rejected/error paths, payload construction.', status: completed}
+- {id: risk-position-limits-verify, content: 'DONE 2026-03-08. Position limit enforcement verified and tested: position size breach (qty>100 rejected), position value breach (qty*price>max_position_value rejected), gross exposure breach, capital limit breach, VaR limit breach (PRE_TRADE_VAR_BREACH emitted). Limits loaded from service config (not hardcoded). Tests: tests/unit/test_position_limits_breach.py (11 tests, all assertions on checks dict keys).', status: completed}
+- {id: risk-circuit-breaker, content: 'DONE 2026-03-07. Implemented execution-service/execution_service/engine/circuit_breaker.py — 3-state machine (CLOSED→OPEN→HALF_OPEN). Per-venue isolation via get_circuit_breaker(venue) singleton factory. 5 failures → OPEN; 300s cooldown → HALF_OPEN; 1 success → CLOSED. log_event on all transitions: CIRCUIT_BREAKER_OPEN, CIRCUIT_BREAKER_HALF_OPEN, CIRCUIT_BREAKER_CLOSED. Tests: tests/unit/engine/test_circuit_breaker.py. NOTE: alerting-service PubSub wiring owned by phase3_service_hardening_integration t4f-monitoring-pipeline.', status: completed}
+- {id: risk-kill-switch, content: 'DONE 2026-03-07. Implemented execution-service/execution_service/engine/kill_switch.py — singleton Event, activate/deactivate/is_active. app.py imports from kill_switch module; emits KILL_SWITCH_ACTIVATED/DEACTIVATED via log_event(). manual_instruction_api.py gates all order submissions with kill_switch.is_active() → 503 if set. Tests: tests/unit/engine/test_kill_switch.py (11 tests).', status: completed}
+- {id: risk-preflight-checks, content: 'DONE 2026-03-08. Implemented execution_service/engine/preflight.py: run_preflight_checks() with 5 checks: (1) Secret Manager accessible, (2) venue API keys present in SM, (3) risk service health reachable, (4) position state loadable (risk service /health), (5) risk limits config loaded. Emits PREFLIGHT_FAILED via log_event on any failure; raises PreflightCheckError. Tests: tests/unit/engine/test_preflight.py (10 tests).', status: completed}
+- {id: risk-test-coverage, content: 'DONE 2026-03-08. Added 46 new unit tests across 4 new test files (test_pretrade_wiring.py, test_preflight.py, test_position_limits_breach.py, test_var_api_endpoint.py). pre_trade_check_engine.py at 92% coverage, var_calculator.py at 100% coverage — both exceed ≥70% gate. All tests unit-only with mocked externals.', status: completed}
 isProject: false
 ---
 

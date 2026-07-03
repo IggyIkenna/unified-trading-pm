@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Workspace Rules Housekeeping — 2026-03-11
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-11'
+---
+
 ## Deferred work — migrated to:
 
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any

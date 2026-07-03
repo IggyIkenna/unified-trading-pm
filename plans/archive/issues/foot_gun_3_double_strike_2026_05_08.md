@@ -1,12 +1,22 @@
 ---
-title: "Foot-gun #3 double-strike — concurrent-agent commit hijack despite mandatory pre-commit check"
+doc_type: issue
+title: 'Foot-gun #3 double-strike — concurrent-agent commit hijack despite mandatory pre-commit check'
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: tab3-gcs-migration
 source:
-  - cursor-configs/CLAUDE.md § "Half 1 — The mandatory pre-commit check (catches accidental bundling)"
-  - PM@784f2bfe (misattribution: Phase 0 commit message → Tab 1 defi_master content)
-  - PM@12483f5b (bundle: Phase 0 plan flip + foreign live_pipeline_preaudit_2026_05_08.md)
-  - PM@0cc633c8 (re-commit: Phase 0 deliverable correctly landed)
+- cursor-configs/CLAUDE.md § "Half 1 — The mandatory pre-commit check (catches accidental bundling)"
+- {PM@784f2bfe (misattribution: Phase 0 commit message → Tab 1 defi_master content)}
+- {PM@12483f5b (bundle: Phase 0 plan flip + foreign live_pipeline_preaudit_2026_05_08.md)}
+- {PM@0cc633c8 (re-commit: Phase 0 deliverable correctly landed)}
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

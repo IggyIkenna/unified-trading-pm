@@ -1,38 +1,29 @@
 ---
-name: features-sports-honest-coverage
-overview:
-  Honest-coverage backfill for features-sports-service — distinguish NaN-expected (out-of-coverage) from
-  genuinely-missing upstreams; phased per-source then cross-source then enriched
+doc_type: plan
+title: features-sports-honest-coverage
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-05
+overview: Honest-coverage backfill for features-sports-service — distinguish NaN-expected (out-of-coverage) from genuinely-missing upstreams; phased per-source then cross-source then enriched
 type: mixed
 epic: data-pipeline-completion
-status: active
 owner: Iggy
-created: 2026-05-05
 locked_by: live-defi-rollout
 locked_since: 2026-05-05
-completion_gates:
-  code: C5
-  deployment: D2
-  business: B2
+completion_gates: {code: C5, deployment: D2, business: B2}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: features-sports-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: deployment-api
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: instruments-service
-    code: C0
-    deployment: D0
-    business: B0
-depends_on:
-  - instruments_and_market_tick_data_completion_2026_05_01
+- {repo: unified-api-contracts, code: C0, deployment: D0, business: B0}
+- {repo: features-sports-service, code: C0, deployment: D0, business: B0}
+- {repo: deployment-api, code: C0, deployment: D0, business: B0}
+- {repo: instruments-service, code: C0, deployment: D0, business: B0}
+depends_on: [instruments_and_market_tick_data_completion_2026_05_01]
 isProject: false
 ---
 

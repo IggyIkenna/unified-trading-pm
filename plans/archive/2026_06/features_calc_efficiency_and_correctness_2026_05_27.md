@@ -1,22 +1,32 @@
 ---
-title: "Features calculation pipeline — I/O efficiency + feature-function correctness verification"
+doc_type: plan
+title: Features calculation pipeline — I/O efficiency + feature-function correctness verification
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/features_service_e2e_pipeline_test_2026_05_26.md]
 created: 2026-05-27
 last_updated: 2026-05-27
 parent_epic: features_and_ml_master
 assigned_vm: vm-ml
-name: features-calc-efficiency-and-correctness-2026-05-27
 priority: P1
-status: active
 estimate_class: brand-new
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 10
-estimate_calibration_note: |
-  brand-new (1.0×): neither a read-once/resample I/O path nor a registry-driven
+estimate_calibration_note: 'brand-new (1.0×): neither a read-once/resample I/O path nor a registry-driven
+
   feature-correctness harness exists. Bulk is net-new: the candle-read refactor +
+
   the verification framework (ta-lib-equality + invariants + edge fixtures +
+
   lookahead + dimension/label/config audit) across ~thousands of features.
-related_plans:
-  - plans/active/features_service_e2e_pipeline_test_2026_05_26.md
+
+  '
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

@@ -1,13 +1,19 @@
 ---
-title: "Watchdog env-tier + bucket-SSOT integration (corrected scope)"
+doc_type: issue
+title: Watchdog env-tier + bucket-SSOT integration (corrected scope)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
 revised: 2026-05-12
 author: ikenna-slot8 (original) — claude-corrected 2026-05-12 after factual audit
-source:
-  - plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md Q7(c)
-  - deployment-service/scripts/vm/vm_zombie_watchdog.py
-  - CLAUDE.md "No fire-and-forget VM launches" rule (events bucket SSOT)
-  - CLAUDE.md "Bucket-name SSOT (b+)" rule (resolve_bucket_name discipline)
+source: [plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md Q7(c), deployment-service/scripts/vm/vm_zombie_watchdog.py, CLAUDE.md "No fire-and-forget VM launches" rule (events bucket SSOT), CLAUDE.md "Bucket-name SSOT (b+)" rule (resolve_bucket_name discipline)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 severity: P1

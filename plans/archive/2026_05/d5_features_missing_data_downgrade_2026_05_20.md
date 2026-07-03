@@ -1,23 +1,24 @@
 ---
-name: d5-features-missing-data-downgrade-2026-05-20
+doc_type: plan
 title: D5 — Features missing-data downgrade plan
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, features-service, ml-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [d4_mtds_adapters_preflight_2026_05_20.md, writegate_honest_coverage_endtoend_2026_05_06.md]
 created: 2026-05-20
-status: archived
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-source_audits:
-  - plans/audit/mtds_features_contract_audit_2026_05_20.md # C4
-  - plans/audit/features_strategy_contract_audit_2026_05_20.md # C6
-  - plans/audit/results/dependency_propagation_2026_05_20_summary.md # A5
-related_plans:
-  - d4_mtds_adapters_preflight_2026_05_20.md
-  - writegate_honest_coverage_endtoend_2026_05_06.md
-prerequisite_plans:
-  - d4_mtds_adapters_preflight_2026_05_20.md # preflight must be in place before downgrade gates can fire
+source_audits: [plans/audit/mtds_features_contract_audit_2026_05_20.md, plans/audit/features_strategy_contract_audit_2026_05_20.md, plans/audit/results/dependency_propagation_2026_05_20_summary.md]
+prerequisite_plans: [d4_mtds_adapters_preflight_2026_05_20.md]
 parent_epic: manifest_master
 ---
 

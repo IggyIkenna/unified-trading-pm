@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: ui_idea
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-17'
+---
+
 bash -lc mkdir -p /mnt/data/ui_redesign_slides && cd /mnt/data/ui_redesign_slides && cat > build_deck.js <<'NODE' const
 pptxgen = require('pptxgenjs'); const { warnIfSlideHasOverlaps, warnIfSlideElementsOutOfBounds, safeOuterShadow,
 calcTextBox, } = require('/home/oai/skills/slides/pptxgenjs_helpers');

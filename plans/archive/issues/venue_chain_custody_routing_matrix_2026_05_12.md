@@ -1,12 +1,18 @@
 ---
-title: "Venue × deposit-chain × custody-routing matrix — missing dimension blocking cutover funds-flow"
+doc_type: issue
+title: Venue × deposit-chain × custody-routing matrix — missing dimension blocking cutover funds-flow
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna-main-slot1
-source:
-  - unified-api-contracts/internal/domain/execution_service/transfer_types.py
-  - unified-api-contracts/registry/market_data_categories.py
-  - plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md Phase 3.B + 4.A
-  - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
+source: [unified-api-contracts/internal/domain/execution_service/transfer_types.py, unified-api-contracts/registry/market_data_categories.py, plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md Phase 3.B + 4.A, plans/active/cross_asset_group_catalogue_audit_2026_05_10.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

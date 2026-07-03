@@ -1,18 +1,24 @@
 ---
-title: "Sports phantom-recon diagnosis (SFI_STANDINGS / open-meteo) + coverage-window reconciliation"
+doc_type: plan
+title: Sports phantom-recon diagnosis (SFI_STANDINGS / open-meteo) + coverage-window reconciliation
+summary:
+status: complete
+nature: record
+asset_group: [sports]
+stage: [meta]
+repos: [instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [../epics/sports_master.md, ./sports_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/d2_uac_continuity_2026_05_20.md]
+created: '2026-06-12'
 parent_epic: sports_master
 priority: P0
-status: active
 execution_scope: orchestrator-agent
 estimate_class: research
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2.4
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/sports_master.md
-  - ./sports_manifest_canonicalisation_2026_06_01.md
-  - ../archive/2026_05/d2_uac_continuity_2026_05_20.md
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `sports_master` epic body during the asset-group-umbrella

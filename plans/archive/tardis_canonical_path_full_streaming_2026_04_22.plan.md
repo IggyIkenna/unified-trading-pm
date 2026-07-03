@@ -1,6 +1,15 @@
 ---
-title: "Tardis canonical path full streaming — P2.B"
-status: active
+doc_type: plan
+title: Tardis canonical path full streaming — P2.B
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-22
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25

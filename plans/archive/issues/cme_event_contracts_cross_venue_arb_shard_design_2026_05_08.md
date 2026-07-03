@@ -1,24 +1,24 @@
 ---
-title:
-  "CME event contracts (ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECBTC) — captured-as-OPTION but NOT linked to
-  canonical_question_group; cross-venue arb (CME ↔ Polymarket binary outcomes) blocked by asset_group / shard-atom
-  classification ambiguity + missing dedicated InstrumentType.EVENT_CONTRACT"
+doc_type: issue
+title: CME event contracts (ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECBTC) — captured-as-OPTION but NOT linked to canonical_question_group; cross-venue arb (CME ↔ Polymarket binary outcomes) blocked by asset_group / shard-atom classification ambiguity + missing dedicated InstrumentType.EVENT_CONTRACT
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
 source:
-  - unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:237-264 (_CME_EVENT_CONTRACTS — 9
-    roots, classified as OPTION, Databento coverage start 2025-09-28)
-  - unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:277 (TRADFI_DATABENTO_INSTRUMENTS
-    aggregate includes event contracts implicitly)
-  - market-tick-data-service/.../adapters/tradfi/databento_classifier.py (DatabentoClassification.instrument_type — no
-    EVENT_CONTRACT entry)
-  - unified-api-contracts/unified_api_contracts/canonical/domain/predictions/canonical_groups.py (CanonicalQuestionGroup
-    enum — Polymarket-side canonical for SPX_UP_DOWN_DAILY etc.)
-  - deployment-service/scripts/vm/vm_zombie_watchdog.py (comment "CME event-contract backfill (TradFi)" — anticipated
-    but no plan)
-  - operator directive 2026-05-08:
-      "do we have instrument definitions for the event markets for CME through Data Bento? the binary option stuff which
-      we could arb with polymarket even though its new and illiquid"
+- unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:237-264 (_CME_EVENT_CONTRACTS — 9 roots, classified as OPTION, Databento coverage start 2025-09-28)
+- unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:277 (TRADFI_DATABENTO_INSTRUMENTS aggregate includes event contracts implicitly)
+- market-tick-data-service/.../adapters/tradfi/databento_classifier.py (DatabentoClassification.instrument_type — no EVENT_CONTRACT entry)
+- unified-api-contracts/unified_api_contracts/canonical/domain/predictions/canonical_groups.py (CanonicalQuestionGroup enum — Polymarket-side canonical for SPX_UP_DOWN_DAILY etc.)
+- deployment-service/scripts/vm/vm_zombie_watchdog.py (comment "CME event-contract backfill (TradFi)" — anticipated but no plan)
+- {operator directive 2026-05-08: 'do we have instrument definitions for the event markets for CME through Data Bento? the binary option stuff which we could arb with polymarket even though its new and illiquid'}
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

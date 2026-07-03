@@ -1,19 +1,17 @@
 ---
-title:
-  staging→main promote PRs recur as pyproject `version =` conflicts — the version line has TWO writer lineages on
-  main (gated semver bump vs LDR→main drain); the --rebase promote conflicts whenever the drain lineage wrote last,
-  and the reactive drain that fixes it re-seeds the next conflict (treadmill). Structural cure = collapse to one
-  writer lineage.
+doc_type: plan
+title: staging→main promote PRs recur as pyproject `version =` conflicts — the version line has TWO writer lineages on main (gated semver bump vs LDR→main drain); the --rebase promote conflicts whenever the drain lineage wrote last, and the reactive drain that fixes it re-seeds the next conflict (treadmill). Structural cure = collapse to one writer lineage.
+summary:
+status: superseded
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-22
-source:
-  - 2026-06-22 first-hand verification (this doc's Appendix A — reproducible git/gh commands + outputs)
-  - instruments-service `git log -p pyproject.toml origin/main` (two interleaved version-line authors)
-  - agent-orchestrator `git log -p pyproject.toml` main+staging (14 bumps / 20 h; my sync + bumps both wrote the line)
-  - fleet version-triple scan main/staging/LDR (23/25 aligned → mechanism is transient, not steady-state)
-  - .github/workflows/staging-to-main.yml (promotes via `gh pr merge --rebase`; conflict→conflict-resolution-agent)
-  - .github/workflows/staging-conflict-ldr-main-fallback.yml (Class-D LDR→main reactive drain, hourly)
-  - .github/workflows/conflict-resolution-agent.yml (dup-`env:` silent outage; fixed PR #490)
-  - scripts/workflow-templates/semver-agent.yml.tmpl (bump fires on push:[staging], one commit per bump)
+source: [2026-06-22 first-hand verification (this doc's Appendix A — reproducible git/gh commands + outputs), instruments-service `git log -p pyproject.toml origin/main` (two interleaved version-line authors), agent-orchestrator `git log -p pyproject.toml` main+staging (14 bumps / 20 h; my sync + bumps both wrote the line), 'fleet version-triple scan main/staging/LDR (23/25 aligned → mechanism is transient, not steady-state)', .github/workflows/staging-to-main.yml (promotes via `gh pr merge --rebase`; conflict→conflict-resolution-agent), '.github/workflows/staging-conflict-ldr-main-fallback.yml (Class-D LDR→main reactive drain, hourly)', '.github/workflows/conflict-resolution-agent.yml (dup-`env:` silent outage; fixed PR', 'scripts/workflow-templates/semver-agent.yml.tmpl (bump fires on push:[staging], one commit per bump)']
 locked_by: live-defi-rollout
 parent_epic: infrastructure_master
 assigned_vm: harsh_pc
@@ -21,8 +19,7 @@ estimate_class: design
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.5
 priority: P1
-status: superseded
-superseded_by: cicd_consolidated_remaining_2026_06_24 # D13/WS-L version-out-of-source collapses to ZERO git writer-lineages — the structural cure this doc proposed (operator decision 2026-06-25)
+superseded_by: cicd_consolidated_remaining_2026_06_24
 supersedes: plans/active/issues/staging_main_version_line_divergence_2026_06_22.md (re-archive on approval — see § Consolidation)
 ---
 

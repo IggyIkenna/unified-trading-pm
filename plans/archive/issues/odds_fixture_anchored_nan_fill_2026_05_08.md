@@ -1,14 +1,18 @@
 ---
-title: "ODDS not FIXTURES-anchored — no NaN-fill for missing (fixture, bookmaker, market_type) triples"
+doc_type: issue
+title: ODDS not FIXTURES-anchored — no NaN-fill for missing (fixture, bookmaker, market_type) triples
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
-source:
-  - instruments-service/instruments_service/engine/orchestrator.py:4768 (_fetch_footystats_odds day-level call)
-  - unified-api-contracts/unified_api_contracts/canonical/domain/sports/_sports_prediction_contracts.py:198-287
-    (SPORTS_ODDS_SNAPSHOT contract)
-  - plans/active/sports_master_2026_05_07.md (sports_predictions_e2e folded in)
-  - CLAUDE.md "Four-category empty-output decision" category D — zero-activity bars precedent for "tradeable but
-    illiquid"
+source: ['instruments-service/instruments_service/engine/orchestrator.py:4768 (_fetch_footystats_odds day-level call)', 'unified-api-contracts/unified_api_contracts/canonical/domain/sports/_sports_prediction_contracts.py:198-287 (SPORTS_ODDS_SNAPSHOT contract)', plans/active/sports_master_2026_05_07.md (sports_predictions_e2e folded in), CLAUDE.md "Four-category empty-output decision" category D — zero-activity bars precedent for "tradeable but illiquid"]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

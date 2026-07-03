@@ -1,75 +1,50 @@
 ---
-name: granularity-per-category-config
-overview:
-  Declare base granularity per category/data_type in UAC; MDPS uses it for smart aggregation and timeframe validation
+doc_type: plan
+title: granularity-per-category-config
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-data-processing-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-14'
+overview: Declare base granularity per category/data_type in UAC; MDPS uses it for smart aggregation and timeframe validation
 type: code
 epic: epic-code-completion
-status: active
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C2
-    deployment: none
-    business: none
-  - repo: market-data-processing-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C2
-    deployment: none
-    business: none
-
+- {repo: unified-api-contracts, code: C2, deployment: none, business: none}
+- {repo: market-data-processing-service, code: C2, deployment: none, business: none}
+- {repo: unified-trading-library, code: C2, deployment: none, business: none}
 depends_on: []
-
 todos:
-  - id: uac-base-granularity-registry
-    content: |
-      - [x] [AGENT] P0. Add BASE_GRANULARITY_BY_DATA_TYPE dict to UAC registry/market_data_categories.py
-    status: done
-    note: "Added 22-entry dict + TIMEFRAME_SECONDS + get_valid_timeframes_for_data_type()"
-  - id: uac-valid-timeframes-per-category
-    content: |
-      - [x] [AGENT] P0. Add get_valid_timeframes_for_data_type() to UAC registry/market_data_categories.py
-    status: done
-    note: "Function filters TIMEFRAMES to only those >= base granularity"
-  - id: mdps-adapter-base-granularity
-    content: |
-      - [x] [AGENT] P1. Add base_granularity field to BaseCandleAdapter + get_base_granularity() + get_valid_output_timeframes()
-    status: done
-    note: "TradFi adapters set explicit base_granularity; others use UAC fallback via get_base_granularity()"
-  - id: mdps-smart-aggregation-use-registry
-    content: |
-      - [x] [AGENT] P1. Update _process_all_timeframes to filter via adapter.get_valid_output_timeframes()
-    status: done
-    note: "Skips timeframes finer than base granularity with log message"
-  - id: mdps-timeframe-validation
-    content: |
-      - [x] [AGENT] P1. Timeframe validation integrated into _process_all_timeframes
-    status: done
-    note: "Merged with smart-aggregation-use-registry — single call site"
-  - id: utl-manifest-timeframe-field
-    content: |
-      - [x] [AGENT] P2. Add timeframe field to AvailabilityRecord in UTL manifest_writer.py
-    status: done
-    note: "Added to AvailabilityRecord, add(), write(), and _merge_dataframes dedup key"
-  - id: mdps-incremental-timeframe-backfill
-    content: |
-      - [x] [AGENT] P2. Support incremental timeframe addition — detect missing timeframes in existing shards
-    status: done
-    note: "Manifest writes per data_type:timeframe records; freshness check compares against requested timeframes"
-  - id: qg-validation
-    content: |
-      - [x] [AGENT] P0. Run quality-gates.sh on all 3 affected repos
-    status: done
-    note:
-      "MDPS: 1003 tests pass, 2 pre-existing violations (os.getenv, pip-audit). UTL: 1 pre-existing codex violation.
-      UAC: pre-existing __all__ sort."
+- {id: uac-base-granularity-registry, content: '- [x] [AGENT] P0. Add BASE_GRANULARITY_BY_DATA_TYPE dict to UAC registry/market_data_categories.py
+
+    ', status: done, note: Added 22-entry dict + TIMEFRAME_SECONDS + get_valid_timeframes_for_data_type()}
+- {id: uac-valid-timeframes-per-category, content: '- [x] [AGENT] P0. Add get_valid_timeframes_for_data_type() to UAC registry/market_data_categories.py
+
+    ', status: done, note: Function filters TIMEFRAMES to only those >= base granularity}
+- {id: mdps-adapter-base-granularity, content: '- [x] [AGENT] P1. Add base_granularity field to BaseCandleAdapter + get_base_granularity() + get_valid_output_timeframes()
+
+    ', status: done, note: TradFi adapters set explicit base_granularity; others use UAC fallback via get_base_granularity()}
+- {id: mdps-smart-aggregation-use-registry, content: '- [x] [AGENT] P1. Update _process_all_timeframes to filter via adapter.get_valid_output_timeframes()
+
+    ', status: done, note: Skips timeframes finer than base granularity with log message}
+- {id: mdps-timeframe-validation, content: '- [x] [AGENT] P1. Timeframe validation integrated into _process_all_timeframes
+
+    ', status: done, note: Merged with smart-aggregation-use-registry — single call site}
+- {id: utl-manifest-timeframe-field, content: '- [x] [AGENT] P2. Add timeframe field to AvailabilityRecord in UTL manifest_writer.py
+
+    ', status: done, note: 'Added to AvailabilityRecord, add(), write(), and _merge_dataframes dedup key'}
+- {id: mdps-incremental-timeframe-backfill, content: '- [x] [AGENT] P2. Support incremental timeframe addition — detect missing timeframes in existing shards
+
+    ', status: done, note: 'Manifest writes per data_type:timeframe records; freshness check compares against requested timeframes'}
+- {id: qg-validation, content: '- [x] [AGENT] P0. Run quality-gates.sh on all 3 affected repos
+
+    ', status: done, note: 'MDPS: 1003 tests pass, 2 pre-existing violations (os.getenv, pip-audit). UTL: 1 pre-existing codex violation. UAC: pre-existing __all__ sort.'}
 isProject: false
 ---
 

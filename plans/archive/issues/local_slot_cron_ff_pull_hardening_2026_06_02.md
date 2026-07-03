@@ -1,12 +1,18 @@
 ---
+doc_type: issue
 title: Local slot-cron FF-pull hardening — stale top-level clones + ping-ledger FF-block
-created: 2026-06-02
-source:
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-  - codex/05-infrastructure/per-tab-worktrees.md
-  - "CLAUDE.md § Local slot host = VM slot host — symmetric worker model"
-resolved: 2026-06-07
+summary:
 status: RESOLVED — archived 2026-06-07
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, e2e-testing, features-service, system-integration-tests, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-02
+source: [plans/active/cicd_contract_hardening_2026_06_01.md, codex/05-infrastructure/per-tab-worktrees.md, CLAUDE.md § Local slot host = VM slot host — symmetric worker model]
+resolved: 2026-06-07
 parent_epic: infrastructure_master
 estimate_calibrated_ai_days: 0.4
 estimate_class: infra

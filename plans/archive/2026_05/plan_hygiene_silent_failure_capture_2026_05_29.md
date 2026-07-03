@@ -1,26 +1,32 @@
 ---
-name: plan_hygiene_silent_failure_capture
-title:
-  "Plan-hygiene cron — close the 3 remaining silent-failure gaps (parent_epic semantic, unpushed plan, stale-blocker
-  reaper)"
+doc_type: plan
+title: Plan-hygiene cron — close the 3 remaining silent-failure gaps (parent_epic semantic, unpushed plan, stale-blocker reaper)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, features-service, instruments-service, market-data-processing-service, market-tick-data-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: [scripts/plan-hygiene/check_todo_format.sh, scripts/dev/slot-git-status-report.sh, agent-orchestrator/server/regen_backlog_from_plan.py]
+created: 2026-05-29
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P1
-status: active
-created: 2026-05-29
 last_updated: 2026-05-29
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-estimate_calibration_note: |
-  Refactor (0.4×): three discrete additions, each with an existing analog in the
+estimate_calibration_note: 'Refactor (0.4×): three discrete additions, each with an existing analog in the
+
   workspace (check_todo_format pattern; git-status reporter; backlog DB cron).
+
   Net-new surface is small (one keyword-surface YAML + one extension to the
+
   git-status reporter + one reaper cron). No new infra.
-related:
-  - scripts/plan-hygiene/check_todo_format.sh # the #1 silent-failure capture, shipped 2026-05-29 — pattern to mirror for #2
-  - scripts/dev/slot-git-status-report.sh
-  - agent-orchestrator/server/regen_backlog_from_plan.py
+
+  '
 ---
 
 ## Deferred work — migrated to:

@@ -1,12 +1,20 @@
 ---
+doc_type: plan
 title: instruments-service Reorganisation
-status: done
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-27
 locked_by: live-defi-rollout
 locked_since: 2026-03-27
-repos_affected:
-  - instruments-service
-downstream_impact: none # internal restructure only; no public API, GCS, or event changes
+repos_affected: [instruments-service]
+downstream_impact: none
 ---
 
 # instruments-service Reorganisation

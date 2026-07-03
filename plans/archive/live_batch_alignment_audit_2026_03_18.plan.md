@@ -1,149 +1,67 @@
 ---
-name: live-batch-alignment-audit
-overview: |
-  Full live/batch alignment remediation. Services should think they're doing the same thing
+doc_type: plan
+title: live-batch-alignment-audit
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, execution-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-21'
+overview: 'Full live/batch alignment remediation. Services should think they''re doing the same thing
+
   regardless of mode — only infrastructure (transport, triggering, lifecycle) differs.
+
   Covers: matching-engine wiring, CanonicalFill convergence, L0 matcher for top-of-book,
+
   topology_reader move to UTL, feature service live readiness, event sink fixes,
+
   sharding SSOT docs, ServiceMode deletion.
+
+  '
 type: mixed
 epic: epic-code-completion
-status: active
-locked_by: null
-locked_since: null
-
-completion_gates:
-  code: C0
-  deployment: D2
-  business: none
-
+locked_by:
+locked_since:
+completion_gates: {code: C0, deployment: D2, business: none}
 repo_gates:
-  - repo: matching-engine-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-internal-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trade-execution-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-cloud-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-config-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-delta-one-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-volatility-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-onchain-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-cross-instrument-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-multi-timeframe-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-sports-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-calendar-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-data-processing-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-training-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-inference-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: position-balance-monitor-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: risk-and-exposure-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: pnl-attribution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: alerting-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-defi-execution-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: deployment-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-codex
-    code: C0
-    deployment: none
-    business: none
-
+- {repo: matching-engine-library, code: C0, deployment: none, business: none}
+- {repo: unified-internal-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trade-execution-interface, code: C0, deployment: none, business: none}
+- {repo: unified-cloud-interface, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: unified-config-interface, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: features-delta-one-service, code: C0, deployment: none, business: none}
+- {repo: features-volatility-service, code: C0, deployment: none, business: none}
+- {repo: features-onchain-service, code: C0, deployment: none, business: none}
+- {repo: features-cross-instrument-service, code: C0, deployment: none, business: none}
+- {repo: features-multi-timeframe-service, code: C0, deployment: none, business: none}
+- {repo: features-sports-service, code: C0, deployment: none, business: none}
+- {repo: features-calendar-service, code: C0, deployment: none, business: none}
+- {repo: instruments-service, code: C0, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
+- {repo: ml-training-service, code: C0, deployment: none, business: none}
+- {repo: ml-inference-service, code: C0, deployment: none, business: none}
+- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
+- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
+- {repo: pnl-attribution-service, code: C0, deployment: none, business: none}
+- {repo: alerting-service, code: C0, deployment: none, business: none}
+- {repo: unified-defi-execution-interface, code: C0, deployment: none, business: none}
+- {repo: deployment-service, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+- {repo: unified-trading-codex, code: C0, deployment: none, business: none}
 depends_on: []
-
 todos:
-  # =================================================================
-  # PHASE 0: LIBRARY FOUNDATIONS (T0/T1 — no service changes)
-  # All items PARALLEL within phase. QG gate before Phase 1.
-  # =================================================================
+---
 
-  # --- 0A: Matching Engine — L0 Matcher + Sports Routing ---
+ 0A: Matching Engine — L0 Matcher + Sports Routing ---
 
   - id: p0a-l0-matcher
     content: |

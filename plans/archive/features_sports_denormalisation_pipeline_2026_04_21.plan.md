@@ -1,26 +1,26 @@
 ---
-title: "features-sports-service — Per-Fixture Denormalisation Pipeline (Player Values / Standings / Weather Joins)"
-priority: P0
-status: active
-owner: agent
+doc_type: plan
+title: features-sports-service — Per-Fixture Denormalisation Pipeline (Player Values / Standings / Weather Joins)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, instruments-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-21
+priority: P0
+owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: features-sports-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
+- {repo: features-sports-service, code: C0, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
 depends_on: []
 isProject: false
 ---

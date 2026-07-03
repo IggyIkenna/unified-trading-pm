@@ -1,13 +1,18 @@
 ---
+doc_type: issue
 title: library-repo quickmerge --agent checks .qg_last_passed_sha but base-library.sh only writes .qg_content_sentinel
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-07
-source:
-  - unified-trading-pm/scripts/quality-gates-base/base-library.sh (writes .qg_content_sentinel only)
-  - unified-trading-pm/scripts/quality-gates-base/base-service.sh (writes .qg_last_passed_sha)
-  - unified-trading-pm/scripts/quickmerge.sh (STAGE 3 AGENT_MODE checks .qg_last_passed_sha)
-  - plans/active/cicd_contract_hardening_2026_06_01.md (live cicd track)
+source: [unified-trading-pm/scripts/quality-gates-base/base-library.sh (writes .qg_content_sentinel only), unified-trading-pm/scripts/quality-gates-base/base-service.sh (writes .qg_last_passed_sha), unified-trading-pm/scripts/quickmerge.sh (STAGE 3 AGENT_MODE checks .qg_last_passed_sha), plans/active/cicd_contract_hardening_2026_06_01.md (live cicd track)]
 priority: P2
-status: active
 ---
 
 > **✅ RESOLVED 2026-06-10 — ARCHIVE CANDIDATE (dup of base_library_qg_sha_sentinel_gap).** Fixed by

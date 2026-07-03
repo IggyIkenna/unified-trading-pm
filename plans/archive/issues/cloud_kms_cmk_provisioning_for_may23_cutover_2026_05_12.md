@@ -1,5 +1,15 @@
 ---
+doc_type: issue
 title: Cloud HSM CMK provisioning for May-23 cutover wallets
+summary:
+status: ✅ RESOLVED 2026-05-12 — agent-provisioned via ADC + smoke verified
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 resolved: 2026-05-12
 author: ikenna-keys-wallets-tab (slot 4)
@@ -7,7 +17,6 @@ source: [plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 severity: P0
-status: ✅ RESOLVED 2026-05-12 — agent-provisioned via ADC + smoke verified
 suggested_owner: ikennaigboaka (operator) — RESOLVED by slot 4 agent per operator authorization 2026-05-12
 ---
 

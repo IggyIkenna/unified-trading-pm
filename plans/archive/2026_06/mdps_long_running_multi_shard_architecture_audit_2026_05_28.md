@@ -1,18 +1,24 @@
 ---
-name: mdps_long_running_multi_shard_architecture_audit
-title: "MDPS architectural audit — long-running multi-shard execution (2026-05-28)"
+doc_type: plan
+title: MDPS architectural audit — long-running multi-shard execution (2026-05-28)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, market-data-processing-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md]
+created: 2026-05-28
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
-status: active
 model_tier: opus-required
 thinking_tier: max
 priority: P1
-created: 2026-05-28
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-related:
-  - mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
 ---

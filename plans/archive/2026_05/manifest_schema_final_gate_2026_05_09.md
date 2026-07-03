@@ -1,81 +1,43 @@
 ---
-title: "Manifest schema final gate — best v8 by 2026-05-23 (no partials, all items done)"
-name: manifest_schema_final_gate_2026_05_09
+doc_type: plan
+title: Manifest schema final gate — best v8 by 2026-05-23 (no partials, all items done)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/questions/backfill_manifest_schema_freeze_gate_2026_05_08.md, plans/active/master_to_live_defi_2026_05_23.md, plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md]
+created: 2026-05-09
 epic: epic-infra
-status: archived
 archived: 2026-05-23
 last_updated: 2026-05-23
 priority: P0
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-09
 parent_epic: manifest_master
-
-completion_gates:
-  code: C5
-  deployment: D3
-  business: F17+F18+G23
-
+completion_gates: {code: C5, deployment: D3, business: F17+F18+G23}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-data-processing-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: deployment-api
-    code: C0
-    deployment: none
-    business: none
-  - repo: deployment-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: e2e-testing
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-
-depends_on:
-  - manifest-v7-schema-migration-design-2026-05-08
-  - gcs-migration-bundle-pipeline-mode-2026-05-08
-  - manifest-cross-asset-rescan-design-2026-05-08
-  - writegate-honest-coverage-endtoend-2026-05-06
-  - live-pipeline-mtds-mdps-features-2026-05-08
-  - features-repo-consolidation-2026-05-08
-
-related_plans:
-  - plans/questions/backfill_manifest_schema_freeze_gate_2026_05_08.md
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
+- {repo: instruments-service, code: C0, deployment: none, business: none}
+- {repo: features-service, code: C0, deployment: none, business: none}
+- {repo: deployment-api, code: C0, deployment: none, business: none}
+- {repo: deployment-service, code: C0, deployment: none, business: none}
+- {repo: e2e-testing, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+depends_on: [manifest-v7-schema-migration-design-2026-05-08, gcs-migration-bundle-pipeline-mode-2026-05-08, manifest-cross-asset-rescan-design-2026-05-08, writegate-honest-coverage-endtoend-2026-05-06, live-pipeline-mtds-mdps-features-2026-05-08, features-repo-consolidation-2026-05-08]
 estimate_class: design
 estimate_baseline_ai_days: 3.5
 estimate_calibrated_ai_days: 2.1
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-4). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
-parent_epic: manifest_master
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-4). Class inferred from filename (design, multiplier 0.6×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 assigned_vm: vm-defi
 ---
 

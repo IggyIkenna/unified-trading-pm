@@ -1,6 +1,15 @@
 ---
-title: "DeFi data type completeness — 10 missing types + pool policy + data status"
-status: active
+doc_type: plan
+title: DeFi data type completeness — 10 missing types + pool policy + data status
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-24
 locked_by: live-defi-rollout
 locked_since: 2026-04-24

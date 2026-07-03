@@ -1,40 +1,30 @@
 ---
+doc_type: plan
+title: mempool-feed-integration-2026-06-01
+summary:
+status: paused
+nature: record
+asset_group: defi
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-01
 locked_by: live-defi-rollout
 locked_since: 2026-05-01
 plan_type: infra
-asset_group: defi
 owner: ikenna
-created: 2026-05-01
-name: mempool-feed-integration-2026-06-01
-overview:
-  Stub plan — wire a pending-mempool feed (Flashbots Protect / MEV-share / Alchemy private mempool) so live MEV sandwich
-  + advanced JIT can ship
+overview: Stub plan — wire a pending-mempool feed (Flashbots Protect / MEV-share / Alchemy private mempool) so live MEV sandwich + advanced JIT can ship
 type: infra
 epic: epic-infra
-status: paused
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B6
+completion_gates: {code: C5, deployment: D3, business: B6}
 repo_gates:
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-depends_on:
-  - defi_pipeline_extension_2026_05_01
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+depends_on: [defi_pipeline_extension_2026_05_01]
 isProject: false
 ---
 

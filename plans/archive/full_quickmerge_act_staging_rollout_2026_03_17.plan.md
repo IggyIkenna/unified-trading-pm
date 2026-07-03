@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Full Quickmerge + Act Staging Rollout — All Tiers (Excluding UI)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-18'
+---
+
 # Full Quickmerge + Act Staging Rollout — All Tiers (Excluding UI)
 
 **Created:** 2026-03-17 **Type:** infra | **Epic:** epic-infra **Scope:** Run full quickmerge (QG + act, no bypasses)

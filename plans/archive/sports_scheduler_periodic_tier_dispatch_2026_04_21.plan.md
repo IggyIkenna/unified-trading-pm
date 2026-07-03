@@ -1,22 +1,25 @@
 ---
-title: "Sports Scheduler — Periodic Tier Dispatch (Tier-1 Discovery + Tier-2 Reference)"
-priority: P0
-status: active
-owner: agent
+doc_type: plan
+title: Sports Scheduler — Periodic Tier Dispatch (Tier-1 Discovery + Tier-2 Reference)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-21
+priority: P0
+owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: deployment-service
-    code: C0
-    deployment: none
-    business: none
+- {repo: deployment-service, code: C0, deployment: none, business: none}
 depends_on: []
 isProject: false
 ---

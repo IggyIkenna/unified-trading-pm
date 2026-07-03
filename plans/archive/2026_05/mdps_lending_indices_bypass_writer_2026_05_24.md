@@ -1,12 +1,22 @@
 ---
-title: "MDPS DeFi Lending Indices Adapter"
+doc_type: plan
+title: MDPS DeFi Lending Indices Adapter
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [market-data-processing-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-24'
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 estimate_class: brand-new
 estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 0.8
 priority: P2
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

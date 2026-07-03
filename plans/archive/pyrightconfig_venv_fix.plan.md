@@ -1,28 +1,33 @@
 ---
-name: pyrightconfig.json — Workspace Venv Fix (All Repos)
-overview: |
-  All per-repo pyrightconfig.json files were missing `venvPath`/`venv`, causing
+doc_type: plan
+title: pyrightconfig.json — Workspace Venv Fix (All Repos)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, instruments-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-06'
+overview: 'All per-repo pyrightconfig.json files were missing `venvPath`/`venv`, causing
+
   cursorpyright/basedpyright in Cursor to fall back to system Python instead of
+
   .venv-workspace. This broke import resolution for all internal packages (red/yellow
+
   squiggles on `from unified_internal_contracts import ...` etc.).
+
   Fixed by adding venvPath + venv to all 39 configs that lacked them and cleaning up
+
   the workspace-root pyrightconfig.json which had a stale `include: [features_sports_service]`.
+
+  '
 todos:
-  - id: fix-sub-repos
-    content:
-      "Add venvPath: '../' and venv: '.venv-workspace' to all 39 sub-repo pyrightconfig.json files that were missing
-      them. Computed relative depth for archive/* repos (venvPath: '../../'). Preserved all existing settings."
-    status: done
-  - id: fix-workspace-root
-    content:
-      "Fix workspace-root pyrightconfig.json: remove stale include: [features_sports_service] and extraPaths: ['.'], set
-      venvPath: '.' and venv: '.venv-workspace'. Keep pythonVersion, reportAny, reportMissingTypeStubs."
-    status: done
-  - id: verify-cursor
-    content:
-      "In Cursor: Cmd+Shift+P → 'Pylance: Restart Language Server'. Confirm squiggles on unified_internal_contracts and
-      sibling imports are gone for all repos."
-    status: todo
+- {id: fix-sub-repos, content: 'Add venvPath: ''../'' and venv: ''.venv-workspace'' to all 39 sub-repo pyrightconfig.json files that were missing them. Computed relative depth for archive/* repos (venvPath: ''../../''). Preserved all existing settings.', status: done}
+- {id: fix-workspace-root, content: 'Fix workspace-root pyrightconfig.json: remove stale include: [features_sports_service] and extraPaths: [''.''], set venvPath: ''.'' and venv: ''.venv-workspace''. Keep pythonVersion, reportAny, reportMissingTypeStubs.', status: done}
+- {id: verify-cursor, content: 'In Cursor: Cmd+Shift+P → ''Pylance: Restart Language Server''. Confirm squiggles on unified_internal_contracts and sibling imports are gone for all repos.', status: todo}
 isProject: false
 ---
 

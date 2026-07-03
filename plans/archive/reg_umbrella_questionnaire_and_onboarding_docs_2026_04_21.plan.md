@@ -1,4 +1,19 @@
 ---
+doc_type: plan
+title: ────────────────────────────────────────────────────────────────────────────
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-21'
+---
+
+---
 
 name: reg-umbrella-questionnaire-and-onboarding-docs-2026-04-21 overview: Extend the existing `/questionnaire` with a
 Reg-Umbrella branch (7 new axes — licence region, 3mo/1yr/2yr targets, own-MLRO, entity geography, supported

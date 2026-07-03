@@ -1,11 +1,21 @@
 ---
-title: "DefiManifestRecorder.record_empty() rejected by writegate Phase 3.D.5 — blank reason on every DeFi VM"
+doc_type: issue
+title: DefiManifestRecorder.record_empty() rejected by writegate Phase 3.D.5 — blank reason on every DeFi VM
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-07
 author: agent-4-claude
 source:
-  - market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py:173-201
-  - VM run.log evidence: gs://deployment-scripts-central-element-323112/vm-logs/mtds-{vault-share-price,lst-rates,gas-fees}-20260507-19{47,47,47}/run.log
-  - plans/active/work_split_2026_05_07_ikenna_5tab_layout.md (Agent 4 Item 2)
+- market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py:173-201
+- {VM run.log evidence: 'gs://deployment-scripts-central-element-323112/vm-logs/mtds-{vault-share-price,lst-rates,gas-fees}-20260507-19{47,47,47}/run.log'}
+- plans/active/work_split_2026_05_07_ikenna_5tab_layout.md (Agent 4 Item 2)
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---

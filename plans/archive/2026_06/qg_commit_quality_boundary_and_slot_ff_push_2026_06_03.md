@@ -1,23 +1,24 @@
 ---
-title:
-  QG commit-quality-boundary + slot FF-push to LDR (aggregation of uv-determinism + governor-macOS-fix + commit-gate
-  design)
+doc_type: plan
+title: QG commit-quality-boundary + slot FF-push to LDR (aggregation of uv-determinism + governor-macOS-fix + commit-gate design)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/uv_lockfile_determinism_2026_06_02.md, plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md]
+created: 2026-06-03
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-created: 2026-06-03
 locked_by: live-defi-rollout
-related_plans:
-  - plans/active/uv_lockfile_determinism_2026_06_02.md
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-  - plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md
-source:
-  - operator design discussion 2026-06-02/03 (slot tab/ikennaigboaka/4)
-  - plans/active/uv_lockfile_determinism_2026_06_02.md (parent effort, shipped)
+source: [operator design discussion 2026-06-02/03 (slot tab/ikennaigboaka/4), 'plans/active/uv_lockfile_determinism_2026_06_02.md (parent effort, shipped)']
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans

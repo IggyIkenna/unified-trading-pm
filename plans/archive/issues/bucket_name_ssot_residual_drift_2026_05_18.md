@@ -1,12 +1,19 @@
 ---
-title: "bucket_name_ssot residual drift after 2026-05-18 workspace-wide grep audit (slot 10)"
+doc_type: issue
+title: bucket_name_ssot residual drift after 2026-05-18 workspace-wide grep audit (slot 10)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service, deployment-api, execution-service, instruments-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-18
 author: harsh-slot-10 (R-006 backlog item)
-source:
-  - plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md (Done-def #6, line ~527; "2026-05-18 (slot 10) — workspace-wide grep audit" section)
-  - unified-trading-pm/scripts/quality_gates/check_inline_bucket_uri.py (QG STEP 5.69)
-  - unified-trading-pm/scripts/quality_gates/inline_bucket_uri_baseline.yaml
-severity: P1 (Done-def #6 gate; not freeze-blocking)
+source: [plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md (Done-def, unified-trading-pm/scripts/quality_gates/check_inline_bucket_uri.py (QG STEP 5.69), unified-trading-pm/scripts/quality_gates/inline_bucket_uri_baseline.yaml]
+severity: P1 (Done-def
 locked_by: live-defi-rollout
 locked_since: 2026-05-18
 ---

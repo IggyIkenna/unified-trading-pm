@@ -1,21 +1,19 @@
 ---
-title: "Cross-bucket DeFi canonical-manifest data_type vocabulary drift — SYSTEMIC (6 of 7 manifests affected)"
+doc_type: issue
+title: Cross-bucket DeFi canonical-manifest data_type vocabulary drift — SYSTEMIC (6 of 7 manifests affected)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-16
 author: ikenna-slot-2
-source:
-  - gs://lending-indices-central-element-323112/_index/availability_index.parquet
-  - gs://oracle-prices-central-element-323112/_index/availability_index.parquet
-  - gs://lst-rates-central-element-323112/_index/availability_index.parquet
-  - gs://perp-funding-central-element-323112/_index/availability_index.parquet
-  - gs://dex-swaps-central-element-323112/_index/availability_index.parquet
-  - gs://dex-pools-central-element-323112/_index/availability_index.parquet
-  - gs://gas-fees-central-element-323112/_index/availability_index.parquet (CLEAN — gas_fees snake-only)
-  - gs://liquidations-central-element-323112/_index/availability_index.parquet (CLEAN — liquidations base-form)
-  - market-tick-data-service/market_tick_data_service/cli/handlers/*_handler.py (per-handler canonical constants)
-  - codex/02-data/availability-manifest-and-data-status.md (3K update — canonical type names)
-severity:
-  P1 — affects 6 DeFi asset_group manifests' queryability; any downstream filter on one form silently misses ~30-60% of
-  rows
+source: ['gs://lending-indices-central-element-323112/_index/availability_index.parquet', 'gs://oracle-prices-central-element-323112/_index/availability_index.parquet', 'gs://lst-rates-central-element-323112/_index/availability_index.parquet', 'gs://perp-funding-central-element-323112/_index/availability_index.parquet', 'gs://dex-swaps-central-element-323112/_index/availability_index.parquet', 'gs://dex-pools-central-element-323112/_index/availability_index.parquet', 'gs://gas-fees-central-element-323112/_index/availability_index.parquet (CLEAN — gas_fees snake-only)', 'gs://liquidations-central-element-323112/_index/availability_index.parquet (CLEAN — liquidations base-form)', market-tick-data-service/market_tick_data_service/cli/handlers/*_handler.py (per-handler canonical constants), codex/02-data/availability-manifest-and-data-status.md (3K update — canonical type names)]
+severity: P1 — affects 6 DeFi asset_group manifests' queryability; any downstream filter on one form silently misses ~30-60% of rows
 locked_by: live-defi-rollout
 locked_since: 2026-05-16
 ---

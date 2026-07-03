@@ -1,7 +1,16 @@
 ---
-title: "Manifest consolidator liveness + health contract (heartbeat watchdog, loud-fail-default, preflight gate)"
+doc_type: plan
+title: Manifest consolidator liveness + health contract (heartbeat watchdog, loud-fail-default, preflight gate)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
-status: archived
 archived: 2026-06-01
 parent_epic: manifest_master
 assigned_vm: vm-cross-cutting

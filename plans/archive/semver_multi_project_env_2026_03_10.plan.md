@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Semver Version Tagging + Multi-Project per Environment
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-10'
+---
+
 # Semver Version Tagging + Multi-Project per Environment
 
 **Status:** Superseded — see `cicd_versioning_cloud_build_2026_03_11.md` (extends + replaces all items here)

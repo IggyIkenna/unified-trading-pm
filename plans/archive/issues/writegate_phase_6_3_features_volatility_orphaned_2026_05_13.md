@@ -1,13 +1,20 @@
 ---
-title: "Phase 6.3 features-volatility: Orphaned ownership decision — ✅ AUTO-RESOLVED"
+doc_type: issue
+title: 'Phase 6.3 features-volatility: Orphaned ownership decision — ✅ AUTO-RESOLVED'
+summary:
+status: RESOLVED
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 resolved: 2026-05-13
 author: ikenna-main
 resolved_by: Rollout Agent (features-service@d7514a08)
-status: RESOLVED
-source:
-  - "work_split_2026_05_12_ikenna.md"
-  - "harsh_orchestrator/pings/slot_6.md"
+source: [work_split_2026_05_12_ikenna.md, harsh_orchestrator/pings/slot_6.md]
 ---
 
 ## ✅ AUTO-RESOLVED 2026-05-13 14:16 UTC

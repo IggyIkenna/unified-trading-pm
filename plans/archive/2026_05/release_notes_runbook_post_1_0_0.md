@@ -1,14 +1,23 @@
 ---
+doc_type: plan
 title: Release-notes runbook — post-1.0.0 graduation
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-21'
 parent_epic: infrastructure_master
 priority: P3
-status: archived
 estimate_class: design
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.6
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
-related_plans: []
 ---
 
 > **ARCHIVED 2026-05-21** — Stub plan; all 4 P3 items DEFERRED-POST-1.0.0. Activates when any repo reaches 1.0.0

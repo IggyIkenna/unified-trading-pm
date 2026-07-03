@@ -1,12 +1,18 @@
 ---
-title: "Wave3x Track D — zero-activity-bar adapter audit findings (MTDS / MDPS / features-service)"
+doc_type: issue
+title: Wave3x Track D — zero-activity-bar adapter audit findings (MTDS / MDPS / features-service)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
 author: harsh-wave3x-tab (slot 3)
-source:
-  - plans/active/wave3x_residual_ssots_2026_05_08.md (Track D)
-  - plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md (anti-sequencing audit row for this plan)
-  - 6 read-only audit sub-agents spawned 2026-05-11 (MTDS core / MTDS DeFi / MTDS tradfi-prediction-sports / MDPS /
-    features-service ×2)
+source: [plans/active/wave3x_residual_ssots_2026_05_08.md (Track D), plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md (anti-sequencing audit row for this plan), 6 read-only audit sub-agents spawned 2026-05-11 (MTDS core / MTDS DeFi / MTDS tradfi-prediction-sports / MDPS / features-service ×2)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 ---

@@ -1,19 +1,24 @@
 ---
+doc_type: plan
 title: MDPS quality-gates coverage → 85% (logic tests + branch coverage + entry-point omit)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [market-data-processing-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/uac_coverage_90pct_2026_06_10.md, plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md, plans/active/cicd_contract_hardening_2026_06_01.md]
+created: 2026-06-10
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 priority: P1
-status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 0.6
-created: 2026-06-10
-related_plans:
-  - plans/active/uac_coverage_90pct_2026_06_10.md
-  - plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
+locked_by: NA
 locked_since: 2026-06-10
 ---
 

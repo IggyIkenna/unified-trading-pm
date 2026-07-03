@@ -1,32 +1,25 @@
 ---
-name: board-presentations-update-2026-03-10
-overview:
-  Update all 10 existing HTML presentations and create 3 new ones for the board meeting on 2026-03-31, including
-  rehearsals on March 13 and March 18.
+doc_type: plan
+title: board-presentations-update-2026-03-10
+summary:
+status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-10'
+overview: Update all 10 existing HTML presentations and create 3 new ones for the board meeting on 2026-03-31, including rehearsals on March 13 and March 18.
 type: business
 epic: epic-business
-status: superseded
 superseded_by: presentations_2026_03_13
 superseded_date: 2026-03-13
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: B6
-
+completion_gates: {code: C5, deployment: none, business: B6}
 repo_gates:
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "C0: not started. DR N/A: presentation/documentation — no infrastructure deployment required. BR N/A: business
-      completion tracked at plan level (B6), not per repo."
-
-depends_on:
-  - elysium-defi-presentation-2026-03-10
-  - e2e-smoke-and-portable-backtests
-
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none, readiness_note: 'C0: not started. DR N/A: presentation/documentation — no infrastructure deployment required. BR N/A: business completion tracked at plan level (B6), not per repo.'}
+depends_on: [elysium-defi-presentation-2026-03-10, e2e-smoke-and-portable-backtests]
 isProject: false
 ---
 

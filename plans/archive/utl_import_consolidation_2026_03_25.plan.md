@@ -1,7 +1,16 @@
 ---
-title: "UTL Import Consolidation — Services Import from UTL, Not Split Libraries"
+doc_type: plan
+title: UTL Import Consolidation — Services Import from UTL, Not Split Libraries
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-25
-status: done
 locked_by: live-defi-rollout
 locked_since: 2026-03-25
 priority: P0

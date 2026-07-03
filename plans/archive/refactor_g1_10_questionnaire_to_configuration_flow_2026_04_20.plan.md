@@ -1,17 +1,21 @@
 ---
+doc_type: plan
 title: Refactor G1.10 — Questionnaire-to-configuration flow
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, strategy-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.10
-  - refactor_g1_7_restriction_profile_engine_2026_04_20.md
-  - refactor_g1_11_service_family_scope_rules_2026_04_20.md
-  - plans/active/user_management_merge_2026_03_23.md
-  - plans/active/five_space_ia_execution_child_plan_2026_04_17.md (ticket #12 staging Firebase)
-# Wave E — single item. Downstream (Wave F): refactor_g1_4, refactor_g1_13.
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.10, refactor_g1_7_restriction_profile_engine_2026_04_20.md, refactor_g1_11_service_family_scope_rules_2026_04_20.md, plans/active/user_management_merge_2026_03_23.md, plans/active/five_space_ia_execution_child_plan_2026_04_17.md (ticket]
 ---
 
 ## Deferred work — migrated to:

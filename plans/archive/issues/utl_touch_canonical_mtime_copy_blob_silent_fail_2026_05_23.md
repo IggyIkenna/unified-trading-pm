@@ -1,11 +1,18 @@
 ---
-title: "UTL _touch_canonical_mtime: copy_blob-to-self silently fails in newer GCS SDK"
-created: 2026-05-23
-source:
-  - plans/active/mdps_backfill_phase3_2026_05_22.md
-  - unified-trading-library/unified_trading_library/manifest_consolidator.py
-priority: P2
+doc_type: issue
+title: 'UTL _touch_canonical_mtime: copy_blob-to-self silently fails in newer GCS SDK'
+summary:
 status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-23
+source: [plans/active/mdps_backfill_phase3_2026_05_22.md, unified-trading-library/unified_trading_library/manifest_consolidator.py]
+priority: P2
 resolved_at: 2026-05-23
 resolved_by: unified-trading-library@0ea6989c
 locked_by: live-defi-rollout

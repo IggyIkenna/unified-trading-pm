@@ -1,18 +1,23 @@
 ---
+doc_type: plan
 title: available_at + lookahead-bias master — SINGLE OWNER for all stamping work
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [writegate_honest_coverage_endtoend_2026_05_06.md, gcs_migration_bundle_pipeline_mode_2026_05_08.md, live_pipeline_mtds_mdps_features_2026_05_08.md, available_at_schema_lift_post_cutover_2026_05_19.md]
+created: '2026-05-08'
 parent_epic: batch_live_symmetry_master
 priority: P0
-status: archived
 estimate_class: design
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.5
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-related_plans:
-  - writegate_honest_coverage_endtoend_2026_05_06.md
-  - gcs_migration_bundle_pipeline_mode_2026_05_08.md
-  - live_pipeline_mtds_mdps_features_2026_05_08.md
-  - available_at_schema_lift_post_cutover_2026_05_19.md
 ---
 
 # `available_at` + Lookahead-Bias Completion

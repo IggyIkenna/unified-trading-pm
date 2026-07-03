@@ -1,31 +1,25 @@
 ---
-name: session_2026_05_07_data_status_audit_findings
-overview:
-  Thin wrapper-tracker for the 2026-05-07 deployment-ui data-status audit. Closes when all referenced line-items in the
-  asset_group / manifest_migration master plans complete. Does NOT define new work — every finding folds into an
-  existing master plan; this file just gives the operator a single deployment-UI surface to check progress against.
+doc_type: plan
+title: session_2026_05_07_data_status_audit_findings
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [data_status_drilldown_shard_atom_alignment_2026_05_07.md, api_football_minimal_flattening_removal_2026_05_07.md]
+created: '2026-05-07'
+overview: Thin wrapper-tracker for the 2026-05-07 deployment-ui data-status audit. Closes when all referenced line-items in the asset_group / manifest_migration master plans complete. Does NOT define new work — every finding folds into an existing master plan; this file just gives the operator a single deployment-UI surface to check progress against.
 type: wrapper
 epic: epic-code-completion
-completion_gates:
-  code: C5
-  deployment: D3
-  business: none
+completion_gates: {code: C5, deployment: D3, business: none}
 repo_gates:
-  - repo: unified-trading-pm
-    code: C2
-    deployment: none
-    business: none
-depends_on:
-  - sports_master_2026_05_07
-  - predictions_master_2026_05_07
-  - defi_master_2026_05_07
-  - manifest_migration_master_2026_05_07
-  - infrastructure_master_2026_05_07
+- {repo: unified-trading-pm, code: C2, deployment: none, business: none}
+depends_on: [sports_master_2026_05_07, predictions_master_2026_05_07, defi_master_2026_05_07, manifest_migration_master_2026_05_07, infrastructure_master_2026_05_07]
 todos: []
 isProject: false
-related:
-  - data_status_drilldown_shard_atom_alignment_2026_05_07.md
-  - api_football_minimal_flattening_removal_2026_05_07.md
 ---
 
 ## Deferred work — migrated to:

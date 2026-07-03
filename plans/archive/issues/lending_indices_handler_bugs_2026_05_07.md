@@ -1,16 +1,18 @@
 ---
-title:
-  "Lending-indices handler bugs (AAVE-V3 ETH silent zero, Compound-V3 schema error, instruments-store metadata gap)"
+doc_type: issue
+title: Lending-indices handler bugs (AAVE-V3 ETH silent zero, Compound-V3 schema error, instruments-store metadata gap)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-07
 author: harsh
-source:
-  - plans/active/defi_master_2026_05_07.md § "Lending-indices VM run-quality bugs (discovered 2026-05-07 mid-run, VM
-    stopped after diagnosis)"
-  - VM `mtds-lending-indices-20260507-140418` (stopped 2026-05-07 ~15:30 IST after diagnosis)
-  - gs://lending-indices-central-element-323112/_index/per_vm/mtds-lending-indices-20260507-140418.parquet
-  - gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260507-140418/run.log
-  - market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py (subgraph routing)
-  - instruments-service (DeFi instrument-discovery launch-date floor handling)
+source: ['plans/active/defi_master_2026_05_07.md § "Lending-indices VM run-quality bugs (discovered 2026-05-07 mid-run, VM stopped after diagnosis)"', 'VM `mtds-lending-indices-20260507-140418` (stopped 2026-05-07 ~15:30 IST after diagnosis)', 'gs://lending-indices-central-element-323112/_index/per_vm/mtds-lending-indices-20260507-140418.parquet', 'gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260507-140418/run.log', market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py (subgraph routing), instruments-service (DeFi instrument-discovery launch-date floor handling)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---

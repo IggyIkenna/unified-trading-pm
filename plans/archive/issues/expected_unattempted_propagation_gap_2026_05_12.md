@@ -1,16 +1,22 @@
 ---
-title: "expected_unattempted not propagated through instruments→MTDS→MDPS→features→ML chain"
+doc_type: issue
+title: expected_unattempted not propagated through instruments→MTDS→MDPS→features→ML chain
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, instruments-service, market-data-processing-service, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna
 resolved: 2026-05-17
-resolution:
-  SHIPPED — successor plan `expected_unattempted_propagation_chain_2026_05_12.md` Gate 1 🟢 FIRED 2026-05-13. Phase 1
-  `uac@0457b0e` (MTDS pre-flight) + Phase 2 `mdps@3f70cf6` (MDPS dep-skip emission) + Phase 3.1/3.4 ✅ (Phase
-  3.2/3.3/3.6 NO-OP) + Phase 4 ✅ NO-OP + PART C `mdps@3f70cf6 + @f50db4e` (writegate 2.A MDPS 4-state). 2 P2 follow-ups
-  have named successors at successor plan lines 775-780.
+resolution: SHIPPED — successor plan `expected_unattempted_propagation_chain_2026_05_12.md` Gate 1 🟢 FIRED 2026-05-13. Phase 1 `uac@0457b0e` (MTDS pre-flight) + Phase 2 `mdps@3f70cf6` (MDPS dep-skip emission) + Phase 3.1/3.4 ✅ (Phase 3.2/3.3/3.6 NO-OP) + Phase 4 ✅ NO-OP + PART C `mdps@3f70cf6 + @f50db4e` (writegate 2.A MDPS 4-state). 2 P2 follow-ups have named successors at successor plan lines 775-780.
 source:
-  - operator direction 2026-05-12 (pre-flight dependency chain audit)
-  - explore agent audit: MTDS/MDPS/features/UTL
+- operator direction 2026-05-12 (pre-flight dependency chain audit)
+- {explore agent audit: MTDS/MDPS/features/UTL}
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 severity: P1

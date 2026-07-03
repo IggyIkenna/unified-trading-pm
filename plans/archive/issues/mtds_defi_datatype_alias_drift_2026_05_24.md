@@ -1,12 +1,19 @@
 ---
-title: "MTDS DeFi data_type alias drift — venue_data_types.yaml + graph adapters still on banned legacy names"
+doc_type: issue
+title: MTDS DeFi data_type alias drift — venue_data_types.yaml + graph adapters still on banned legacy names
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-24
-source:
-  - "Tier B full-workspace SIT validation (full_cicd_sit_target_state_2026_05_24.md)"
-  - "UAC tests/test_data_type_canonicalization.py[market-tick-data-service] FAIL in full workspace"
+source: [Tier B full-workspace SIT validation (full_cicd_sit_target_state_2026_05_24.md), 'UAC tests/test_data_type_canonicalization.py[market-tick-data-service] FAIL in full workspace']
 locked_by: live-defi-rollout
 priority: P2
-status: active
 ---
 
 > **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — config drift fixed (`venue_data_types.yaml` canonical

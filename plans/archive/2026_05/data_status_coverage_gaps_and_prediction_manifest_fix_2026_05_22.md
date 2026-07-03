@@ -1,5 +1,15 @@
 ---
-title: "Data-Status Coverage Gaps + Prediction IS Manifest Structural Fix"
+doc_type: plan
+title: Data-Status Coverage Gaps + Prediction IS Manifest Structural Fix
+summary:
+status: complete
+nature: record
+asset_group: [prediction]
+stage: [meta]
+repos: [deployment-api, deployment-ui, instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-22
 parent_epic: predictions_master
 assigned_vm: vm-prediction
@@ -7,7 +17,6 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 priority: P2
-status: archived
 archived: 2026-05-23
 ---
 

@@ -1,15 +1,21 @@
 ---
+doc_type: plan
 title: Refactor G1.5 — ML Catalogue broken-hrefs cleanup (5 probable)
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.5
-  - codex/14-playbooks/page-triage/broken-links.md
-# Sibling Wave A plans: refactor_g1_{1,3,9,12,14}
-# Upstream alignment (future): G2.4 ML Catalogue refactor — build-or-prune decisions here should align with that direction
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.5, codex/14-playbooks/page-triage/broken-links.md]
 ---
 
 ## Deferred work — migrated to:

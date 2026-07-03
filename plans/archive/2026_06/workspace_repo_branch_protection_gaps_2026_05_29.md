@@ -1,32 +1,31 @@
 ---
+doc_type: plan
 title: Workspace repos lacking branch protection — UI + 3 others
+summary:
+status: complete
+nature: record
+asset_group: cross-cutting
+stage: [meta]
+repos: [batch-live-reconciliation-service, deployment-ui, features-service, unified-trading-api, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/ci_canonical_v2_migration_2026_05_29.md, plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md]
+created: 2026-05-29
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
 type: infra
 estimate_class: infra
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1
-created: 2026-05-29
 owner: ikenna
-asset_group: cross-cutting
-completion_gates:
-  code: C5
+completion_gates: {code: C5}
 repo_gates:
-  - repo: unified-trading-system-ui
-    code: C0
-  - repo: user-management-ui
-    code: C0
-  - repo: features-service
-    code: C0
-  - repo: batch-live-reconciliation-service
-    code: C0
-  - repo: unified-trading-api
-    code: C0
-related_plans:
-  - plans/active/ci_canonical_v2_migration_2026_05_29.md
-  - plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md
+- {repo: unified-trading-system-ui, code: C0}
+- {repo: user-management-ui, code: C0}
+- {repo: features-service, code: C0}
+- {repo: batch-live-reconciliation-service, code: C0}
+- {repo: unified-trading-api, code: C0}
 ---
 
 # Workspace repos lacking branch protection — UI + 3 others

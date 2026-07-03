@@ -1,13 +1,21 @@
 ---
+doc_type: issue
 title: workspace-qg CI startup_failure — GitHub BuildFailed ghost + cached validation failures
+summary:
+status: resolved
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-26
-source:
-  - workspace_qg_sweep_2026_05_23.md (archived)
+source: [workspace_qg_sweep_2026_05_23.md (archived)]
 last_updated: 2026-05-29
 remediation_plan: plans/active/ci_canonical_v2_migration_2026_05_29.md
 parent_epic: infrastructure_master
 priority: P2
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

@@ -1,91 +1,58 @@
 ---
-name: position-reconciliation-and-cost-preview
-overview:
-  Target vs actual position reconciliation (Observe tab), cost-aware close/reduce previews (Trading Terminal), and
-  client reporting close-all
+doc_type: plan
+title: position-reconciliation-and-cost-preview
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, execution-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-16'
+overview: Target vs actual position reconciliation (Observe tab), cost-aware close/reduce previews (Trading Terminal), and client reporting close-all
 type: mixed
 epic: epic-code-completion
-status: active
-
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
-
+completion_gates: {code: C5, deployment: D3, business: B3}
 repo_gates:
-  - repo: unified-trading-system-ui
-    code: C1
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C1
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: position-balance-monitor-service
-    code: C1
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C1
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C1
-    deployment: none
-    business: none
-  - repo: client-reporting-api
-    code: C1
-    deployment: none
-    business: none
-
+- {repo: unified-trading-system-ui, code: C1, deployment: none, business: none}
+- {repo: execution-service, code: C1, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: position-balance-monitor-service, code: C1, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C1, deployment: none, business: none}
+- {repo: unified-trading-library, code: C1, deployment: none, business: none}
+- {repo: client-reporting-api, code: C1, deployment: none, business: none}
 depends_on: []
-
 todos:
-  - id: uac-schemas
-    content: |
-      - [x] [AGENT] P0. UAC schemas for position reconciliation, cost preview, and close-all
-    status: done
-  - id: uei-event
-    content: |
-      - [x] [AGENT] P0. UEI event — POSITION_DRIFT_DETECTED + POSITION_DRIFT_EVENT_TYPES
-    status: done
-  - id: backend-position-state
-    content: |
-      - [x] [AGENT] P0. Backend: target vs actual position state API (PBMS drift monitor + routes)
-    status: done
-  - id: backend-cost-preview
-    content: |
-      - [x] [AGENT] P0. Backend: cost-aware unwind preview endpoint (execution-service /preview/unwind)
-    status: done
-  - id: backend-background-reconciler
-    content: |
-      - [x] [AGENT] P1. Backend: background position reconciliation process + alerting (PositionDriftMonitor)
-    status: done
-  - id: ui-observe-reconciliation
-    content: |
-      - [x] [AGENT] P1. UI: Observe tab — position reconciliation page with KPI strip, bar chart, delta table, drift chart
-    status: done
-  - id: ui-trading-cost-preview
-    content: |
-      - [x] [AGENT] P1. UI: Trading Terminal — CostPreviewCard in intervention controls + kill switch panel
-    status: done
-  - id: ui-observe-close-all
-    content: |
-      - [x] [AGENT] P2. UI: Observe tab — close-all button with drift context (built into reconciliation page)
-    status: done
-  - id: client-reporting-close-all
-    content: |
-      - [x] [AGENT] P2. Client reporting: POST /api/v1/emergency/close-all/{client_id} with trading key guard
-    status: done
-  - id: qg-all-repos
-    content: |
-      - [x] [AGENT] P0. Quality gates pass on all affected repos *(archived 2026-04-22 — run `scripts/quality-gates.sh`
-        per repo before the next reconciliation release train; not re-swept in this session.)*
-    status: done
+- {id: uac-schemas, content: '- [x] [AGENT] P0. UAC schemas for position reconciliation, cost preview, and close-all
+
+    ', status: done}
+- {id: uei-event, content: '- [x] [AGENT] P0. UEI event — POSITION_DRIFT_DETECTED + POSITION_DRIFT_EVENT_TYPES
+
+    ', status: done}
+- {id: backend-position-state, content: '- [x] [AGENT] P0. Backend: target vs actual position state API (PBMS drift monitor + routes)
+
+    ', status: done}
+- {id: backend-cost-preview, content: '- [x] [AGENT] P0. Backend: cost-aware unwind preview endpoint (execution-service /preview/unwind)
+
+    ', status: done}
+- {id: backend-background-reconciler, content: '- [x] [AGENT] P1. Backend: background position reconciliation process + alerting (PositionDriftMonitor)
+
+    ', status: done}
+- {id: ui-observe-reconciliation, content: '- [x] [AGENT] P1. UI: Observe tab — position reconciliation page with KPI strip, bar chart, delta table, drift chart
+
+    ', status: done}
+- {id: ui-trading-cost-preview, content: '- [x] [AGENT] P1. UI: Trading Terminal — CostPreviewCard in intervention controls + kill switch panel
+
+    ', status: done}
+- {id: ui-observe-close-all, content: '- [x] [AGENT] P2. UI: Observe tab — close-all button with drift context (built into reconciliation page)
+
+    ', status: done}
+- {id: client-reporting-close-all, content: '- [x] [AGENT] P2. Client reporting: POST /api/v1/emergency/close-all/{client_id} with trading key guard
+
+    ', status: done}
+- {id: qg-all-repos, content: "- [x] [AGENT] P0. Quality gates pass on all affected repos *(archived 2026-04-22 — run `scripts/quality-gates.sh`\n  per repo before the next reconciliation release train; not re-swept in this session.)*\n", status: done}
 isProject: false
 ---
 

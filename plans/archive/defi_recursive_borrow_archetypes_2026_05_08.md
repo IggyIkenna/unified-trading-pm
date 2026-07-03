@@ -1,26 +1,23 @@
 ---
+doc_type: plan
 title: DeFi recursive-borrow archetypes — leveraged lending arb + long-funding-perp recursive-borrow flavor
-type: question-doc
+summary:
 status: closed-spawned-plan
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/defi_recursive_borrow_archetypes_2026_05_10.md, plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md, plans/active/defi_master_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md, plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md]
 created: 2026-05-08
+type: question-doc
 closed: 2026-05-10
 author: ikenna
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-related_plans:
-  - plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
-  - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
-  - plans/active/defi_master_2026_05_07.md
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md
-related_codex:
-  - codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md
-  - codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md
-  - codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md
-  - codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md
-  - codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md
-  - codex/09-strategy/strategy-summary.md
+related_codex: [codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md, codex/09-strategy/strategy-summary.md]
 spawned_plan: plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
 ---
 

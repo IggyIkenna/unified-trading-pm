@@ -1,18 +1,18 @@
 ---
-title: "Codex audit — Ops area (Phase 1.I)"
+doc_type: issue
+title: Codex audit — Ops area (Phase 1.I)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna-codex-audit-ops-tab (slot 8 sub-agent)
-source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.I
-  - codex/05-infrastructure/vm-tarball-deployment.md
-  - codex/05-infrastructure/launcher-script-ssot.md
-  - codex/05-infrastructure/per-tab-worktrees.md
-  - codex/05-infrastructure/plan-aware-merge-resolution.md
-  - codex/05-infrastructure/runtime-tiers-and-deployment.md
-  - codex/05-infrastructure/README.md + ucs-docker-image-issues.md + disaster-recovery.md +
-    live-deployment-monitoring.md
-  - deployment-service/scripts/vm/*.sh (76 launchers) + vm_zombie_watchdog.py
-  - unified-trading-pm/scripts/dev/setup-tab-worktrees.sh + slot-master-rebase.sh
+source: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.I, codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/launcher-script-ssot.md, codex/05-infrastructure/per-tab-worktrees.md, codex/05-infrastructure/plan-aware-merge-resolution.md, codex/05-infrastructure/runtime-tiers-and-deployment.md, codex/05-infrastructure/README.md + ucs-docker-image-issues.md + disaster-recovery.md + live-deployment-monitoring.md, deployment-service/scripts/vm/*.sh (76 launchers) + vm_zombie_watchdog.py, unified-trading-pm/scripts/dev/setup-tab-worktrees.sh + slot-master-rebase.sh]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

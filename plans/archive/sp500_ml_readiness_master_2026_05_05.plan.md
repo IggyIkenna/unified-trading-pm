@@ -1,14 +1,20 @@
 ---
+doc_type: plan
 title: S&P 500 Technical-Indicator ML Readiness — Master Plan
-status: active
-owner: ikenna
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-05
+owner: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-05
-depends_on:
-  - cefi_tradfi_tick_data_backfill_2026_04_10
-  - cme_sp_ml_signal_preaudit_2026_04_20
-  - data_pipeline_completion_2026_04_18
+depends_on: [cefi_tradfi_tick_data_backfill_2026_04_10, cme_sp_ml_signal_preaudit_2026_04_20, data_pipeline_completion_2026_04_18]
 ---
 
 # S&P 500 Technical-Indicator ML Readiness — Master Plan

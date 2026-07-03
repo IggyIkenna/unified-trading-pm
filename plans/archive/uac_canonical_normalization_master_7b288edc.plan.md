@@ -1,70 +1,36 @@
 ---
-name: UAC Canonical Normalization Master
-overview:
-  "Single consolidated plan for UAC canonical normalization: (1) minimal-split layout by data type (options, futures,
-  perpetuals, cefi spot, tradfi, defi, sports); (2) common cross-domain (OHLCV, instruments, rate limits); (3)
-  infrastructure canonical layer (CloudStorage, OLAPTable — cloud-agnostic names mapped to GCP/AWS raw); (4) features
-  interface and UFCL/UTL consolidation; (5) provider manifest expansion. Supersedes the three separate plans."
+doc_type: plan
+title: UAC Canonical Normalization Master
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-14'
+overview: 'Single consolidated plan for UAC canonical normalization: (1) minimal-split layout by data type (options, futures, perpetuals, cefi spot, tradfi, defi, sports); (2) common cross-domain (OHLCV, instruments, rate limits); (3) infrastructure canonical layer (CloudStorage, OLAPTable — cloud-agnostic names mapped to GCP/AWS raw); (4) features interface and UFCL/UTL consolidation; (5) provider manifest expansion. Supersedes the three separate plans.'
 todos:
-  - id: nesting-sports-market
-    content: Move sports market data (odds, live, bookmaker, arbitrage) to canonical/market/sports/
-    status: pending
-  - id: nesting-sports-reference
-    content:
-      Move sports reference data (mappings, fixture, events, injury, lineup, player_stats) to
-      canonical/reference/sports/
-    status: pending
-  - id: nesting-sports-execution
-    content: Move BetOrder, BetExecution to canonical/execution/sports/
-    status: pending
-  - id: nesting-sports-errors
-    content: Move sports errors to canonical/errors/sports/; _venue_errors_defi to canonical/errors/defi/
-    status: pending
-  - id: nesting-tradfi
-    content: Create canonical/market/tradfi/ (bonds, fx, commodities, stocks — one bucket); canonical/reference/tradfi/
-    status: pending
-  - id: nesting-options
-    content: Create canonical/market/options/ (CeFi + TradFi options); move options normalizers
-    status: pending
-  - id: nesting-futures
-    content: Create canonical/market/futures/ (CeFi + TradFi futures); move derivative_tickers futures subset
-    status: pending
-  - id: nesting-perpetuals
-    content: Create canonical/market/perpetuals/ (CeFi only); move derivative_tickers perps, funding, liquidations
-    status: pending
-  - id: nesting-defi
-    content: Create canonical/market/defi/, reference/defi/, derived/defi/; move Pyth, DeFiLlama, Glassnode, Arkham
-    status: pending
-  - id: nesting-common
-    content: Create canonical/common/ (ohlcv, instruments, rate_limits) — cross-domain types
-    status: pending
-  - id: nesting-derived-sports
-    content:
-      Create canonical/derived/sports/ (Footystats, Understat, _features_*); canonical/derived/derivatives/ (VolSurface)
-    status: pending
-  - id: infra-canonical
-    content:
-      Create canonical/infrastructure/ with CloudStorage, OLAPTable, SecretStore, MessageQueue, ContainerRegistry,
-      mappings.py
-    status: pending
-  - id: infra-uci-alignment
-    content: Align UCI StorageClient/SecretClient protocols with UAC canonical infrastructure names
-    status: pending
-  - id: nesting-downstream
-    content: Update downstream imports across all affected services
-    status: pending
-  - id: features-interface
-    content: Create unified-features-interface or extend UMI; consolidate DATA_SOURCE; route features-onchain through it
-    status: pending
-  - id: ufcl-utl-consolidation
-    content: Single source for BaseFeatureCalculator/Registry; eliminate UTL/UFCL duplication
-    status: pending
-  - id: manifest-secrets-alignment
-    content: Align DATA_SOURCE_TO_SECRET with provider manifest; add glassnode, arkham, defillama
-    status: pending
-  - id: credentials-remove-coinglass-hyblock
-    content: Remove coinglass-api-key and hyblock-api-key from credentials-registry and cursor rules
-    status: pending
+- {id: nesting-sports-market, content: 'Move sports market data (odds, live, bookmaker, arbitrage) to canonical/market/sports/', status: pending}
+- {id: nesting-sports-reference, content: 'Move sports reference data (mappings, fixture, events, injury, lineup, player_stats) to canonical/reference/sports/', status: pending}
+- {id: nesting-sports-execution, content: 'Move BetOrder, BetExecution to canonical/execution/sports/', status: pending}
+- {id: nesting-sports-errors, content: Move sports errors to canonical/errors/sports/; _venue_errors_defi to canonical/errors/defi/, status: pending}
+- {id: nesting-tradfi, content: 'Create canonical/market/tradfi/ (bonds, fx, commodities, stocks — one bucket); canonical/reference/tradfi/', status: pending}
+- {id: nesting-options, content: Create canonical/market/options/ (CeFi + TradFi options); move options normalizers, status: pending}
+- {id: nesting-futures, content: Create canonical/market/futures/ (CeFi + TradFi futures); move derivative_tickers futures subset, status: pending}
+- {id: nesting-perpetuals, content: 'Create canonical/market/perpetuals/ (CeFi only); move derivative_tickers perps, funding, liquidations', status: pending}
+- {id: nesting-defi, content: 'Create canonical/market/defi/, reference/defi/, derived/defi/; move Pyth, DeFiLlama, Glassnode, Arkham', status: pending}
+- {id: nesting-common, content: 'Create canonical/common/ (ohlcv, instruments, rate_limits) — cross-domain types', status: pending}
+- {id: nesting-derived-sports, content: 'Create canonical/derived/sports/ (Footystats, Understat, _features_*); canonical/derived/derivatives/ (VolSurface)', status: pending}
+- {id: infra-canonical, content: 'Create canonical/infrastructure/ with CloudStorage, OLAPTable, SecretStore, MessageQueue, ContainerRegistry, mappings.py', status: pending}
+- {id: infra-uci-alignment, content: Align UCI StorageClient/SecretClient protocols with UAC canonical infrastructure names, status: pending}
+- {id: nesting-downstream, content: Update downstream imports across all affected services, status: pending}
+- {id: features-interface, content: Create unified-features-interface or extend UMI; consolidate DATA_SOURCE; route features-onchain through it, status: pending}
+- {id: ufcl-utl-consolidation, content: Single source for BaseFeatureCalculator/Registry; eliminate UTL/UFCL duplication, status: pending}
+- {id: manifest-secrets-alignment, content: 'Align DATA_SOURCE_TO_SECRET with provider manifest; add glassnode, arkham, defillama', status: pending}
+- {id: credentials-remove-coinglass-hyblock, content: Remove coinglass-api-key and hyblock-api-key from credentials-registry and cursor rules, status: pending}
 isProject: false
 ---
 

@@ -1,30 +1,19 @@
 ---
-id: dependency_cleanup_optional_extras_2026_03_12
-status: done
+doc_type: plan
+title: Dependency Cleanup — Optional Extras & Fresh-Machine Setup Fix (2026-03-12)
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-cloud-interface, unified-trading-library, unified-config-interface, unified-ml-interface, execution-service, strategy-service, ibkr-gateway-infra, market-tick-data-service, unified-api-contracts, unified-internal-contracts, ml-inference-api, ml-training-api, features-multi-timeframe-service, client-reporting-api, unified-domain-client, batch-audit-api, unified-market-interface, unified-reference-data-interface, unified-trading-pm]
+scope: [engineer, admin]
+tags: [dependencies, setup, cleanup, optional-extras, egg-info]
+related: []
 created: 2026-03-12
+id: dependency_cleanup_optional_extras_2026_03_12
 completed: 2026-03-12
 priority: P1
-repos:
-  - unified-cloud-interface
-  - unified-trading-library
-  - unified-config-interface
-  - unified-ml-interface
-  - execution-service
-  - strategy-service
-  - ibkr-gateway-infra
-  - market-tick-data-service
-  - unified-api-contracts
-  - unified-internal-contracts
-  - ml-inference-api
-  - ml-training-api
-  - features-multi-timeframe-service
-  - client-reporting-api
-  - unified-domain-client
-  - batch-audit-api
-  - unified-market-interface
-  - unified-reference-data-interface
-  - unified-trading-pm
-tags: [dependencies, setup, cleanup, optional-extras, egg-info]
 ---
 
 # Dependency Cleanup — Optional Extras & Fresh-Machine Setup Fix (2026-03-12)

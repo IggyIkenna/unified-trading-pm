@@ -1,22 +1,19 @@
 ---
-title: "Codex SSOT audit pass — 2026-05-11 (freeze-gate item 9 readiness)"
+doc_type: issue
+title: Codex SSOT audit pass — 2026-05-11 (freeze-gate item 9 readiness)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
 author: harsh-workspace-qg-tab (slot 6)
-source:
-  - plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — Phase 1 freeze gate item 9 ("Codex SSOTs
-    updated per CLAUDE.md 'Post-Plan-Phase Codex Audit' HARD RULE — every doc that the Phase 1 plans should have touched
-    is current")
-  - plans/active/work_split_2026_05_11_harsh.md § "Slot 6" — freeze-gate items 8 + 9
-  - the 25 Phase 1 plans enumerated in code_freeze § "Phase 1 — Code-complete inventory" (Phase 1.A-1.F)
-execution:
-  owner:
-    slot 6 (harsh-workspace-qg-tab) — runs all 4 days of the 2026-05-11→05-15 cycle; days 2-4 deepen the per-doc
-    currency spot-checks; per-plan codex docs are owned by each Phase 1 plan's own codex phase
-  cadence: daily refresh until the 2026-05-15 Phase 1 freeze gate fires
-  verifier:
-    code_freeze freeze-gate item 9 flippable ⟺ every row in the "pending codex work" table below resolved OR explicitly
-    deferred post-cutover
-  last_executed: "2026-05-11"
+source: [plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — Phase 1 freeze gate item 9 ("Codex SSOTs updated per CLAUDE.md 'Post-Plan-Phase Codex Audit' HARD RULE — every doc that the Phase 1 plans should have touched is current"), plans/active/work_split_2026_05_11_harsh.md § "Slot 6" — freeze-gate items 8 + 9, the 25 Phase 1 plans enumerated in code_freeze § "Phase 1 — Code-complete inventory" (Phase 1.A-1.F)]
+execution: {owner: slot 6 (harsh-workspace-qg-tab) — runs all 4 days of the 2026-05-11→05-15 cycle; days 2-4 deepen the per-doc currency spot-checks; per-plan codex docs are owned by each Phase 1 plan's own codex phase, cadence: daily refresh until the 2026-05-15 Phase 1 freeze gate fires, verifier: code_freeze freeze-gate item 9 flippable ⟺ every row in the "pending codex work" table below resolved OR explicitly deferred post-cutover, last_executed: '2026-05-11'}
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 ---

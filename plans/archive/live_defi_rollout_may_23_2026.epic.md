@@ -1,14 +1,22 @@
 ---
-plan_type: epic
+doc_type: plan
+title: live-defi-rollout-may-23-2026
+summary:
+status: complete
+nature: record
 asset_group: defi
-owner: ikenna
+stage: [meta]
+repos: [alerting-service, deployment-api, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
+plan_type: epic
+owner: ikenna
 last_updated: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-name: live-defi-rollout-may-23-2026
 parent: master_to_live_defi_2026_05_23
-status: active
 deadline: 2026-05-23
 ---
 

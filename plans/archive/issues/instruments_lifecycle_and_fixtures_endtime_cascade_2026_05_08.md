@@ -1,22 +1,25 @@
 ---
-title:
-  "Instruments lifecycle (futures expiry / options expiry hard-required) + fixtures end_time cascade + half-time /
-  extra-time / penalty timing as captured fields and ML features"
+doc_type: issue
+title: Instruments lifecycle (futures expiry / options expiry hard-required) + fixtures end_time cascade + half-time / extra-time / penalty timing as captured fields and ML features
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
 source:
-  - unified-api-contracts/unified_api_contracts/canonical/domain/market/tradfi.py (no CanonicalFuturesContract)
-  - unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/__init__.py:77-96
-    (CanonicalOptionsChainEntry — expiration nullable)
-  - unified-api-contracts/unified_api_contracts/canonical/domain/predictions/lifecycle.py:43-79 (MarketLifecycle — fully
-    required, the gold standard)
-  - unified-api-contracts/unified_api_contracts/canonical/domain/sports/__init__.py:466-515 (CanonicalFixture — halftime
-    scores only, no timestamps)
-  - unified-trading-library/unified_trading_library/availability_stamping.py:161-206 (stamp_available_at_post_match —
-    hardcoded kickoff+120min fallback, NO source cascade)
-  - CLAUDE.md "fixture_stats / fixture_player_stats → match_end_time (detected via cascade:
-      api_football native → SFI progressive freeze → footystats / understat → low-confidence kickoff + 120min fallback)"
-  - CLAUDE.md "Prediction market lifecycle timing"
+- unified-api-contracts/unified_api_contracts/canonical/domain/market/tradfi.py (no CanonicalFuturesContract)
+- unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/__init__.py:77-96 (CanonicalOptionsChainEntry — expiration nullable)
+- unified-api-contracts/unified_api_contracts/canonical/domain/predictions/lifecycle.py:43-79 (MarketLifecycle — fully required, the gold standard)
+- unified-api-contracts/unified_api_contracts/canonical/domain/sports/__init__.py:466-515 (CanonicalFixture — halftime scores only, no timestamps)
+- unified-trading-library/unified_trading_library/availability_stamping.py:161-206 (stamp_available_at_post_match — hardcoded kickoff+120min fallback, NO source cascade)
+- {CLAUDE.md "fixture_stats / fixture_player_stats → match_end_time (detected via cascade: api_football native → SFI progressive freeze → footystats / understat → low-confidence kickoff + 120min fallback)"}
+- CLAUDE.md "Prediction market lifecycle timing"
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

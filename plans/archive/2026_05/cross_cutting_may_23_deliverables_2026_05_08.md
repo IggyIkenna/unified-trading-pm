@@ -1,24 +1,28 @@
 ---
-title: "Cross-cutting May-23 deliverables — catalogue / IDs / clients / DART (2026-05-08)"
+doc_type: plan
+title: Cross-cutting May-23 deliverables — catalogue / IDs / clients / DART (2026-05-08)
+summary:
+status: complete
+nature: record
+asset_group: [defi]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service]
+scope: [engineer, admin]
+tags: []
+related: [master_to_live_defi_2026_05_23, cross_cutting_may_23_SUPERSEDED_2026_05_21, strategy_and_dart_master_SUPERSEDED_2026_05_21, defi_master, cefi_master]
 created: 2026-05-08
 last_updated: 2026-05-08
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-name: cross-cutting-may-23-deliverables-2026-05-08
 parent: cross_cutting_may_23_SUPERSEDED_2026_05_21
-related_plans:
-  - master_to_live_defi_2026_05_23
-  - cross_cutting_may_23_SUPERSEDED_2026_05_21
-  - strategy_and_dart_master_SUPERSEDED_2026_05_21
-  - defi_master
-  - cefi_master
 estimate_class: design
 estimate_baseline_ai_days: 51.5
 estimate_calibrated_ai_days: 30.9
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~10, ~12, ~22, ~1-2, + 4 more). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~10, ~12, ~22, ~1-2, + 4 more). Class inferred from filename (design, multiplier 0.6×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 parent_epic: defi_master
 priority: P2
 ---

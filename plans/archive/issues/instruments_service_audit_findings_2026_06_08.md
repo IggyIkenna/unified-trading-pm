@@ -1,12 +1,19 @@
 ---
-title:
-  instruments-service audit findings (download→manifest) — CF-11 swallows, removed-provider still wired, silent excepts
+doc_type: issue
+title: instruments-service audit findings (download→manifest) — CF-11 swallows, removed-provider still wired, silent excepts
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-08
-source:
-  - plans/audit/results/instruments_master_audit_2026_06_08.md
-locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
+source: [plans/audit/results/instruments_master_audit_2026_06_08.md]
+locked_by: NA
 priority: P2
-status: archived
 ---
 
 > **✅ ARCHIVED 2026-06-26 — folded into instruments_mtds_subset_consistency_remediation_2026_06_17 (survivor I-2). The

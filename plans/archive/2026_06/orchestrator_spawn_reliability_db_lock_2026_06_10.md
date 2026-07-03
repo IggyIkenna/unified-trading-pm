@@ -1,18 +1,27 @@
 ---
+doc_type: plan
 title: Orchestrator spawn reliability — zombie-session wedge, boot-paste race, SQLite write-lock cascade
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, deployment-ui, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-10
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P0
-status: active
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-created: 2026-06-10
 locked_by: live-defi-rollout
 source:
-  - chat/2026-06-10 operator: two HEADROOM EXHAUSTED escalation alerts (execution-service#250, deployment-service#46)
-  - vm-0 live diagnosis 2026-06-10 (SSM)
+- {chat/2026-06-10 operator: 'two HEADROOM EXHAUSTED escalation alerts (execution-service#250, deployment-service#46)'}
+- vm-0 live diagnosis 2026-06-10 (SSM)
 ---
 
 # Orchestrator spawn reliability — the HEADROOM-EXHAUSTED wedge

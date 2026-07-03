@@ -1,15 +1,21 @@
 ---
+doc_type: issue
 title: instruments-service hyperliquid OHLCV reads LEFT (open) bar edge — violates canonical right-edge t_close
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-08
-source:
-  - plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md (§ Cross-cutting bar-edge convention audit)
+source: [plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md (§ Cross-cutting bar-edge convention audit)]
 locked_by: live-defi-rollout
 priority: P2
-status: resolved
 resolved: 2026-06-09
-resolution:
-  ACKED-INTO-CODE — instruments-service@c6969f76 (cefi/hyperliquid.py:257 stamps close/right edge); regression test
-  tests/unit/test_hyperliquid_adapter.py::test_parse_hl_candle_uses_close_edge_close_field
+resolution: ACKED-INTO-CODE — instruments-service@c6969f76 (cefi/hyperliquid.py:257 stamps close/right edge); regression test tests/unit/test_hyperliquid_adapter.py::test_parse_hl_candle_uses_close_edge_close_field
 ---
 
 # hyperliquid OHLCV reads the LEFT/open bar edge (should be right-edge t_close)

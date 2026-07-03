@@ -1,13 +1,18 @@
 ---
-title: "aave-lending-rate-val VM ran validation in 3 min but stayed alive 7+ hours (no STOPPED event; no shutdown)"
+doc_type: issue
+title: aave-lending-rate-val VM ran validation in 3 min but stayed alive 7+ hours (no STOPPED event; no shutdown)
+summary:
+status: RESOLVED — root-cause fix shipped at deployment-service@472f9ca (2026-05-16 slot-8)
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-16
 author: ikenna-main (orchestrator cycle audit during continuous /loop)
-status: RESOLVED — root-cause fix shipped at deployment-service@472f9ca (2026-05-16 slot-8)
-source:
-  - "ikenna-main launched VM 2026-05-16 12:15:30 UTC per operator request"
-  - "results.json written at 2026-05-16T11:18:49Z (~3 min after VM launch)"
-  - "VM serial console shows only systemd housekeeping (cert refresh + sysstat) — no python process active"
-  - "VM still RUNNING 7+ hours later (deleted manually 2026-05-16 18:42 UTC)"
+source: ['ikenna-main launched VM 2026-05-16 12:15:30 UTC per operator request', 'results.json written at 2026-05-16T11:18:49Z (~3 min after VM launch)', VM serial console shows only systemd housekeeping (cert refresh + sysstat) — no python process active, 'VM still RUNNING 7+ hours later (deleted manually 2026-05-16 18:42 UTC)']
 severity: P1 (compute waste + no-fire-and-forget HARD RULE violation)
 locked_by: live-defi-rollout
 locked_since: 2026-05-16

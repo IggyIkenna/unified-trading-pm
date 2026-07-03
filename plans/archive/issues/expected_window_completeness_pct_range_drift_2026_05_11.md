@@ -1,17 +1,21 @@
 ---
-title: "expected_window_completeness_pct range drift — UAC says 0-1 fraction, codex says 0-100 percentage"
+doc_type: issue
+title: expected_window_completeness_pct range drift — UAC says 0-1 fraction, codex says 0-100 percentage
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
 resolved: 2026-05-11
 author: ikenna-slot-6
-status: resolved
 resolution: option-a-rename-to-fraction
-resolution_commits:
-  - unified-api-contracts@76f950a
-source:
-  - unified_api_contracts/canonical/crosscutting/manifest_schema.py:EXPECTED_WINDOW_COMPLETENESS_PCT_COLUMN docstring
-    (UAC@174f401)
-  - codex/02-data/availability-manifest-and-data-status.md:253
-  - codex/02-data/availability-manifest-and-data-status.md:344
+resolution_commits: [unified-api-contracts@76f950a]
+source: ['unified_api_contracts/canonical/crosscutting/manifest_schema.py:EXPECTED_WINDOW_COMPLETENESS_PCT_COLUMN docstring (UAC@174f401)', 'codex/02-data/availability-manifest-and-data-status.md:253', 'codex/02-data/availability-manifest-and-data-status.md:344']
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 ---

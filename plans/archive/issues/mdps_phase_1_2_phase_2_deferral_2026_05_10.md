@@ -1,22 +1,21 @@
 ---
-title:
-  "MDPS Phase 1.2 + Phase 2 deferral 2026-05-10 — semantic dual-SSOT collision blocks safe migration; needs plan refresh"
+doc_type: issue
+title: MDPS Phase 1.2 + Phase 2 deferral 2026-05-10 — semantic dual-SSOT collision blocks safe migration; needs plan refresh
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-10
 author: chain-agent-2026-05-10
-source:
-  - plans/active/mdps_streaming_and_backpressure_2026_05_07.md (Phase 1.2 + Phase 2)
-  - plans/active/issues/audit_2026_05_08_substantial_unfixed_items.md Item #3 § "Still open"
-  - plans/archive/issues/mdps_streaming_primitives_prompt_vs_plan_conflict_2026_05_09.plan.md (resolution archived)
-  - market-data-processing-service/market_data_processing_service/app/core/live_workers.py:1142-1188
-  - market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py:168-347
-  - unified-trading-library/unified_trading_library/streaming/candle_writer.py (UTL@ac6e3244)
+source: [plans/active/mdps_streaming_and_backpressure_2026_05_07.md (Phase 1.2 + Phase 2), plans/active/issues/audit_2026_05_08_substantial_unfixed_items.md Item, plans/archive/issues/mdps_streaming_primitives_prompt_vs_plan_conflict_2026_05_09.plan.md (resolution archived), 'market-data-processing-service/market_data_processing_service/app/core/live_workers.py:1142-1188', 'market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py:168-347', unified-trading-library/unified_trading_library/streaming/candle_writer.py (UTL@ac6e3244)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-execution:
-  owner: operator triage → MDPS-dedicated tab in next work-split
-  cadence: one-shot — resume Phase 1.2 + Phase 2 once preconditions met
-  verifier: Phase 4 end-to-end VM run (mdps_streaming_and_backpressure plan §Phase 4)
-  last_executed: "NEVER"
+execution: {owner: operator triage → MDPS-dedicated tab in next work-split, cadence: one-shot — resume Phase 1.2 + Phase 2 once preconditions met, verifier: Phase 4 end-to-end VM run (mdps_streaming_and_backpressure plan §Phase 4), last_executed: NEVER}
 ---
 
 # MDPS Phase 1.2 + Phase 2 deferral — second-pass attempt 2026-05-10

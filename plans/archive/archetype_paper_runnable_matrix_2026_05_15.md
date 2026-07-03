@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Archetype paper-runnable matrix — 2026-05-15 snapshot
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-15'
+---
+
 > **ARCHIVED 2026-05-19** — 100% complete (5/5 items); preserved for archaeology.
 
 ---

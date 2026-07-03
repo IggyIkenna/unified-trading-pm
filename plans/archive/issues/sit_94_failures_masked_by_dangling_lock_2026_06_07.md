@@ -1,17 +1,21 @@
 ---
-title: "SIT 94 failures — accumulated regression masked by the dangling staging lock"
+doc_type: issue
+title: SIT 94 failures — accumulated regression masked by the dangling staging lock
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, instruments-service, market-tick-data-service, system-integration-tests, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-07
-source:
-  - "cicd_contract_hardening_2026_06_01.md (staging-lock deadlock root-cause)"
-  - "system-integration-tests SIT run 27101141832 (94 failed, 4527 passed)"
+source: [cicd_contract_hardening_2026_06_01.md (staging-lock deadlock root-cause), 'system-integration-tests SIT run 27101141832 (94 failed, 4527 passed)']
 locked_by: live-defi-rollout
 priority: P2
-status: resolved
 resolved: 2026-06-09
-resolution:
-  ACKED-INTO-CODE — dangling-lock auto-clear in sit-debounce-trigger.yml @02b20d320 + SIT regression fixes
-  system-integration-tests@f4a257e/@6cca121 + uac@48589278; guarded by content-based detect_breaking_change.py; SIT
-  4614/0 green
+resolution: ACKED-INTO-CODE — dangling-lock auto-clear in sit-debounce-trigger.yml @02b20d320 + SIT regression fixes system-integration-tests@f4a257e/@6cca121 + uac@48589278; guarded by content-based detect_breaking_change.py; SIT 4614/0 green
 ---
 
 ## What I found

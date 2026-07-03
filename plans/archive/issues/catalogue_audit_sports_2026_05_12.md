@@ -1,38 +1,21 @@
 ---
-title: "Catalogue audit — sports (cross_asset_group plan)"
+doc_type: issue
+title: Catalogue audit — sports (cross_asset_group plan)
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing, execution-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-catalogue-audit-tab (slot 8 sub-agent)
 re_audited: 2026-05-12 (ikenna-sports-re-audit-sp-5-10-12 slot 8 sub-agent)
-source:
-  - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_sports.py
-  - unified-api-contracts/unified_api_contracts/registry/_sports_venue_constants.py
-  - unified-api-contracts/unified_api_contracts/registry/venue_constants.py
-  - unified-api-contracts/unified_api_contracts/registry/market_data_categories.py
-  - unified-api-contracts/unified_api_contracts/registry/venue_launch_dates.py
-  - unified-api-contracts/unified_api_contracts/registry/venue_manifest/betting_sports.py
-  - unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py
-  - unified-api-contracts/unified_api_contracts/canonical/domain/sports/season_dates.py
-  - unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py
-  - unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py
-  - instruments-service/instruments_service/reference_data/adapters/sports/factory.py
-  - instruments-service/instruments_service/reference_data/factory.py
-  - instruments-service/instruments_service/reference_data/router.py
-  - instruments-service/instruments_service/reference_data/adapters/sports/adapters/base.py
-  - instruments-service/instruments_service/reference_data/adapters/sports/adapters/api_football.py
-  - instruments-service/instruments_service/reference_data/adapters/sports/adapters/betfair.py
-  - instruments-service/instruments_service/reference_data/adapters/sports/adapters/footystats.py
-  - instruments-service/instruments_service/reference_data/adapters/sports/adapters/soccerfootball_info.py
-  - execution-service/execution_service/sports_execution/adapters/exchanges/betfair.py
-  - execution-service/execution_service/sports_execution/adapters/bookmaker_api/api_football.py
-  - execution-service/execution_service/sports_execution/adapters/scrapers/bet365.py
-  - execution-service/execution_service/sports_execution/routing.py
-  - market-tick-data-service/market_tick_data_service/market_interface/sports/registry.py
-  - market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/
-  - market-tick-data-service/market_tick_data_service/engine/orchestrator.py
-  - plans/epics/sports_master_2026_05_07.md
-  - plans/active/issues/urdi_phantom_active_surface_cleanup_2026_05_12.md
+source: [plans/active/cross_asset_group_catalogue_audit_2026_05_10.md, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_sports.py, unified-api-contracts/unified_api_contracts/registry/_sports_venue_constants.py, unified-api-contracts/unified_api_contracts/registry/venue_constants.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, unified-api-contracts/unified_api_contracts/registry/venue_launch_dates.py, unified-api-contracts/unified_api_contracts/registry/venue_manifest/betting_sports.py, unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py, unified-api-contracts/unified_api_contracts/canonical/domain/sports/season_dates.py, unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py, unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py, instruments-service/instruments_service/reference_data/adapters/sports/factory.py,
+  instruments-service/instruments_service/reference_data/factory.py, instruments-service/instruments_service/reference_data/router.py, instruments-service/instruments_service/reference_data/adapters/sports/adapters/base.py, instruments-service/instruments_service/reference_data/adapters/sports/adapters/api_football.py, instruments-service/instruments_service/reference_data/adapters/sports/adapters/betfair.py, instruments-service/instruments_service/reference_data/adapters/sports/adapters/footystats.py, instruments-service/instruments_service/reference_data/adapters/sports/adapters/soccerfootball_info.py, execution-service/execution_service/sports_execution/adapters/exchanges/betfair.py, execution-service/execution_service/sports_execution/adapters/bookmaker_api/api_football.py, execution-service/execution_service/sports_execution/adapters/scrapers/bet365.py, execution-service/execution_service/sports_execution/routing.py, market-tick-data-service/market_tick_data_service/market_interface/sports/registry.py,
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/, market-tick-data-service/market_tick_data_service/engine/orchestrator.py, plans/epics/sports_master_2026_05_07.md, plans/active/issues/urdi_phantom_active_surface_cleanup_2026_05_12.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

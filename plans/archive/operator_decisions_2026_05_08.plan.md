@@ -1,8 +1,17 @@
 ---
+doc_type: plan
 title: Operator decisions resolved — 2026-05-08
-type: operator-decisions-doc
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
+type: operator-decisions-doc
 author: ikenna (via Claude Code main orchestrator)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08

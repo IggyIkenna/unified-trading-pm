@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: Library Production Hardening Prompt Template
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-25'
+---
+
 # Library Production Hardening Prompt Template
 
 **Purpose:** Comprehensive audit and hardening prompt for central shared libraries in the unified trading system.

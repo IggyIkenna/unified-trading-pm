@@ -1,11 +1,19 @@
 ---
-title: "DeFi market-data collection appears stalled ~1 month — all DEX/lending/LST buckets latest ≈ April"
+doc_type: issue
+title: DeFi market-data collection appears stalled ~1 month — all DEX/lending/LST buckets latest ≈ April
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-24
-source:
-  - "GCS data-state audit while diagnosing mtds_defi_datatype_alias_drift_2026_05_24.md"
+source: [GCS data-state audit while diagnosing mtds_defi_datatype_alias_drift_2026_05_24.md]
 locked_by: live-defi-rollout
 priority: P2
-status: active
 ---
 
 > **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — Root cause FIXED — recurring DeFi collection schedule deployed

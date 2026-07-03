@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: 8 Agent Prompts for Citadel-Grade System Refactor
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-ui, unified-api-contracts, unified-trading-api, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-22'
+---
+
 # 8 Agent Prompts for Citadel-Grade System Refactor
 
 Each prompt below is self-contained. Copy-paste one prompt per agent session. Every agent gets the full vision context +

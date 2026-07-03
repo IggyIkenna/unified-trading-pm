@@ -1,77 +1,47 @@
 ---
-name: umi-mtds-merger
+doc_type: plan
+title: umi-mtds-merger
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing, execution-service, instruments-service, market-tick-data-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-14'
 overview: Merge unified-market-interface into market-tick-data-service as market_interface sub-package
 type: code
 epic: epic-code-completion
-status: complete
 locked_by: live-defi-rollout
 locked_since: 2026-04-11
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: market-tick-data-service
-    code: C4
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C4
-    deployment: none
-    business: none
-  - repo: features-sports-service
-    code: C4
-    deployment: none
-    business: none
-  - repo: position-balance-monitor-service
-    code: C4
-    deployment: none
-    business: none
-  - repo: e2e-testing
-    code: C4
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C4
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C4
-    deployment: none
-    business: none
+- {repo: market-tick-data-service, code: C4, deployment: none, business: none}
+- {repo: execution-service, code: C4, deployment: none, business: none}
+- {repo: features-sports-service, code: C4, deployment: none, business: none}
+- {repo: position-balance-monitor-service, code: C4, deployment: none, business: none}
+- {repo: e2e-testing, code: C4, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C4, deployment: none, business: none}
+- {repo: unified-trading-library, code: C4, deployment: none, business: none}
 depends_on: []
 todos:
-  - id: phase1-copy
-    content: |
-      - [x] [AGENT] P0. Copy UMI source into MTDS market_interface sub-package, delete alt_data adapters (stubs superseded by URDI), fix intra-package imports, update MTDS internal imports, update pyproject.toml with UMI external deps
-    status: done
-    note:
-      "89 adapters + 12 clients copied. adapters/alt_data/ deleted. 13 external deps added. Ruff/basedpyright excludes
-      for market_interface."
-  - id: phase2-downstream
-    content: |
-      - [x] [AGENT] P0. Update all downstream consumers: execution-service (pyproject.toml + 4 test files), features-sports-service (pyproject.toml + 1 source + 2 tests), position-balance-monitor-service (1 test), e2e-testing (2 scripts), unified-trading-pm (5 scripts), unified-trading-library (comments)
-    status: done
-    note: "Zero unified_market_interface imports remaining across workspace. All pyproject.toml deps updated."
-  - id: phase3-tests
-    content: |
-      - [x] [AGENT] P0. Move UMI tests into MTDS tests/market_interface/, update all test imports, delete alt_data tests
-    status: done
-    note: "UMI test tree copied. Alt-data tests deleted. Imports updated."
-  - id: phase4-validation
-    content: |
-      - [x] [AGENT] P0. Final workspace-wide validation — zero stale references, all QGs green on affected repos
-    status: done
-    note:
-      "80+ files fixed across 12 repos. workspace-manifest.json, workspace-constraints.toml, 9 code-workspace files, 23
-      e2e VM scripts, 22 PM configs/scripts, CLAUDE.md files, pyrightconfig.json files, deployment-service,
-      system-integration-tests. Glassnode+MEV dead stubs deleted. Zero functional UMI references remain outside
-      archive/."
-  - id: phase5-archive
-    content: |
-      - [x] [HUMAN] P1. Archive unified-market-interface GitHub repo, remove from workspace manifest and .code-workspace
-    status: done
-    note: "User moved to archive/ locally 2026-04-11. GitHub repo archival pending (user action)."
+- {id: phase1-copy, content: '- [x] [AGENT] P0. Copy UMI source into MTDS market_interface sub-package, delete alt_data adapters (stubs superseded by URDI), fix intra-package imports, update MTDS internal imports, update pyproject.toml with UMI external deps
+
+    ', status: done, note: 89 adapters + 12 clients copied. adapters/alt_data/ deleted. 13 external deps added. Ruff/basedpyright excludes for market_interface.}
+- {id: phase2-downstream, content: '- [x] [AGENT] P0. Update all downstream consumers: execution-service (pyproject.toml + 4 test files), features-sports-service (pyproject.toml + 1 source + 2 tests), position-balance-monitor-service (1 test), e2e-testing (2 scripts), unified-trading-pm (5 scripts), unified-trading-library (comments)
+
+    ', status: done, note: Zero unified_market_interface imports remaining across workspace. All pyproject.toml deps updated.}
+- {id: phase3-tests, content: '- [x] [AGENT] P0. Move UMI tests into MTDS tests/market_interface/, update all test imports, delete alt_data tests
+
+    ', status: done, note: UMI test tree copied. Alt-data tests deleted. Imports updated.}
+- {id: phase4-validation, content: '- [x] [AGENT] P0. Final workspace-wide validation — zero stale references, all QGs green on affected repos
+
+    ', status: done, note: '80+ files fixed across 12 repos. workspace-manifest.json, workspace-constraints.toml, 9 code-workspace files, 23 e2e VM scripts, 22 PM configs/scripts, CLAUDE.md files, pyrightconfig.json files, deployment-service, system-integration-tests. Glassnode+MEV dead stubs deleted. Zero functional UMI references remain outside archive/.'}
+- {id: phase5-archive, content: '- [x] [HUMAN] P1. Archive unified-market-interface GitHub repo, remove from workspace manifest and .code-workspace
+
+    ', status: done, note: User moved to archive/ locally 2026-04-11. GitHub repo archival pending (user action).}
 isProject: false
 ---
 

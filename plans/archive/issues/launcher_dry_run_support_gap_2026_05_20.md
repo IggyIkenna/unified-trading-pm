@@ -1,16 +1,21 @@
 ---
+doc_type: issue
 title: VM launchers missing --dry-run support — real-money risk during verification
+summary:
+status: RESOLVED — see "Fix shipped" below
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
 author: slot-1 main ikenna (delegated)
-source:
-  - deployment-service/scripts/vm/launch-tradfi-forward-poll.sh
-  - 2026-05-20 bash-3.2 verification incident — `launch-tradfi-forward-poll.sh --dry-run` silently launched real VM
-    `tradfi-fwd-20260523-184709` (deleted within 60s via gcloud, no harm done, but the gap is workspace-wide)
-  - deployment-service@7232a5b — fix shipped same-cycle
+source: [deployment-service/scripts/vm/launch-tradfi-forward-poll.sh, '2026-05-20 bash-3.2 verification incident — `launch-tradfi-forward-poll.sh --dry-run` silently launched real VM `tradfi-fwd-20260523-184709` (deleted within 60s via gcloud, no harm done, but the gap is workspace-wide)', deployment-service@7232a5b — fix shipped same-cycle]
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 severity: P2 — real-money / real-VM risk during any future verification or agent dispatch
-status: RESOLVED — see "Fix shipped" below
 ---
 
 > **ARCHIVED 2026-05-23 — ACKED-INTO-CODE.** Filed + closed in the same commit per Issue-Doc Lifecycle Discipline

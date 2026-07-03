@@ -1,11 +1,19 @@
 ---
+doc_type: issue
 title: kalshi + polymarket_clob adapters missing classify_venue_error()
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-18
 resolved: 2026-05-20
 author: ikenna-main (surfaced by harsh slot 5 audit)
-source:
-  - execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py
-  - execution-service/execution_service/sports_execution/adapters/exchanges/polymarket_clob.py
+source: [execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py, execution-service/execution_service/sports_execution/adapters/exchanges/polymarket_clob.py]
 locked_by: live-defi-rollout
 ---
 

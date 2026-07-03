@@ -1,3 +1,18 @@
+---
+doc_type: plan
+title: UMI Quality Gate Remediation Plan — No Exclusions, Proper Fixes
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-13'
+---
+
 # UMI Quality Gate Remediation Plan — No Exclusions, Proper Fixes
 
 **Status:** AI-generated draft — awaiting user review and promotion to `plans/active/` **Date:** 2026-03-13 **Scope:**

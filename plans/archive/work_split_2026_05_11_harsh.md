@@ -1,8 +1,17 @@
 ---
+doc_type: plan
 title: Harsh's daily work-split — 2026-05-11 (Phase 1 code-freeze push to 2026-05-15 freeze gate)
-type: coordination-doc
-status: active
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
+type: coordination-doc
 deadline: 2026-05-15
 horizon: 4-day cycle
 companion_to: plans/active/work_split_2026_05_11_ikenna.md

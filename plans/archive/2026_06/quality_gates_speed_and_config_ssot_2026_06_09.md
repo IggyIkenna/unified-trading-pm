@@ -1,23 +1,27 @@
 ---
+doc_type: plan
 title: Quality-gates speed (change-scoped, single-core) + config SSOT centralisation (toml as single home)
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-api, deployment-ui, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md, plans/active/ci_local_qg_parity_2026_06_08.md, plans/active/cicd_contract_hardening_2026_06_01.md, plans/archive/2026_06/quality_gates_resource_contention_speedup_2026_06_02.md]
+created: 2026-06-09
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: archived
 archived: 2026-06-17
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 3.2
-created: 2026-06-09
-related_plans:
-  - plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md
-  - plans/active/ci_local_qg_parity_2026_06_08.md
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-  - plans/archive/2026_06/quality_gates_resource_contention_speedup_2026_06_02.md
 source:
-  - operator design discussion 2026-06-09 (Harsh) — single-core wall-time + change-scoped gate + config-SSOT drift
-  - discovery: MTDS MIN_COVERAGE=28 (stub) vs fail_under=71 (pyproject) — toml silently shadowed by --cov-fail-under
+- operator design discussion 2026-06-09 (Harsh) — single-core wall-time + change-scoped gate + config-SSOT drift
+- {discovery: MTDS MIN_COVERAGE=28 (stub) vs fail_under=71 (pyproject) — toml silently shadowed by --cov-fail-under}
 ---
 
 # Quality-gates: faster (change-scoped, single-core) + one config home (toml)

@@ -1,16 +1,19 @@
 ---
-title: "AWS Phase 1 smoke blockers — bucket-name SSOT triple-drift + secrets fanout"
+doc_type: issue
+title: AWS Phase 1 smoke blockers — bucket-name SSOT triple-drift + secrets fanout
+summary:
+status: resolved
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 resolved: 2026-05-10
 author: tab4-aws-migration
-source:
-  - unified-trading-pm/plans/active/aws_migration_defi_first_2026_05_07.md (Phase 1, Phase 1.5.A, Phase 2)
-  - deployment-service/scripts/aws/setup-defi-buckets.sh:62-72
-  - unified-trading-library/unified_trading_library/cloud_interface/constants.py:191-218
-  - unified-trading-library/unified_trading_library/config_interface/cloud_config.py:394
-  - unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py (UTL@780a9575 — new resolver,
-    partial mitigation)
-  - unified-trading-library/tests/cloud_interface/unit/test_bucket_naming.py (UTL@24f9b2cb — option c regression pin)
+source: ['unified-trading-pm/plans/active/aws_migration_defi_first_2026_05_07.md (Phase 1, Phase 1.5.A, Phase 2)', 'deployment-service/scripts/aws/setup-defi-buckets.sh:62-72', 'unified-trading-library/unified_trading_library/cloud_interface/constants.py:191-218', 'unified-trading-library/unified_trading_library/config_interface/cloud_config.py:394', 'unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py (UTL@780a9575 — new resolver, partial mitigation)', unified-trading-library/tests/cloud_interface/unit/test_bucket_naming.py (UTL@24f9b2cb — option c regression pin)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
