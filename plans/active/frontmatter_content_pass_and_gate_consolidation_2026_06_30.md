@@ -123,6 +123,14 @@ instead of opening the doc — most valuable right before the codex↔code drift
 
 ## Progress Log
 
+- 2026-07-03 — **Two mid-fanout corrections.** (1) `locked_by: NA` RESTORED on 21 pre-pass files + the new issue doc:
+  the BLOCKING `check_frontmatter_schema.py` requires non-empty `locked_by` on plan/issue docs (slot-1 backfilled the
+  same on origin @f33ad39c3 to green v2), while docspec SOFT-flags literal `NA` — a live two-validator CONTRADICTION;
+  the gate-consolidation todo MUST reconcile it (decide: widen docspec's NA allowance for locked_by, or change the
+  blocking gate + fleet to null-means-unlocked). (2) A CONCURRENT EDITOR (operator-side session, same slot) is running
+  the same lane playbook — filling remaining lanes + committing with the same per-lane template. Its output verified
+  docspec-clean by three lane agents. Orchestrator response: HOLD further lane launches, verify its commits as they
+  land, resume only if it stalls (never two agents on the same file).
 - 2026-07-03 — **P3.2 checkpoint: 29/55 lanes committed locally** (lanes 00-28 = codex 00/01/02-data,
   02-venues, 03-*, 04-architecture, 05-infrastructure, 06-coding-standards, 07-security, 08-workflows,
   09-strategy pre-v2 archive + archetypes/axes/cross-cutting chunks). All local commits, unpushed per operator

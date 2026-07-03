@@ -23,7 +23,7 @@ parent_epic: agent_operating_framework_master
 priority: P2
 assigned_vm: NA
 resolved_by:
-locked_by:
+locked_by: NA
 source:
   [
     P3.2 frontmatter content-pass lane 18 (Opus lane agent) surfaced the contradiction while writing
