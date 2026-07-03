@@ -20,7 +20,7 @@ audited_scope:
   3 synthetic BINANCE-FUTURES perp trades parquets (0.3–1.4 MB), 4 read paths post Stage-1 _read_tick_data change;
   relative retention ordering vs real-data baseline
 date: 2026-05-28
-auditor:
+auditor: Ubuntu
 parent_epic: infrastructure_master
 severity: P3
 resulting_plan:

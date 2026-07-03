@@ -11,7 +11,7 @@ scope: [engineer]
 tags: [quality-gates, scripts]
 related: [README.md]
 created: 2026-03-27
-authoritative_for: []
+authoritative_for: [redirect stub — contribution workflow lives in the 06-coding-standards README]
 referenced_by:
 owner:
 last_reviewed:

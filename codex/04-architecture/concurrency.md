@@ -13,7 +13,7 @@ scope: [engineer, admin]
 tags: [concurrency, architecture, batch-live]
 related: [README.md, batch-live-architecture.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [redirect stub — concurrency model lives in 04-architecture README + batch-live-architecture.md]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

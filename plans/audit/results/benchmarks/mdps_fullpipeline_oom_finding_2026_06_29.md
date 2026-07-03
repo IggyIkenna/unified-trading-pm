@@ -20,7 +20,7 @@ audited_scope:
   BTCUSDT perpetual (BINANCE-FUTURES) full-pipeline batch, trades + book_snapshot_5 + derivative_ticker, single day
   2026-05-22 on 64 GB VM
 date: 2026-06-29
-auditor:
+auditor: ikennaigboaka
 parent_epic: mtds_mdps_master
 severity: P1
 resulting_plan:

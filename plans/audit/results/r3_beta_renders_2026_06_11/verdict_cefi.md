@@ -21,7 +21,7 @@ audited_scope:
   CEFI projected-v9 index vs live _index (G4 dry-run), manifest diff adjudication
   (removed/regressions/status-transitions) + orphan sweep
 date: 2026-06-11
-auditor:
+auditor: ikennaigboaka
 parent_epic: cefi_master
 severity: P2
 resulting_plan:

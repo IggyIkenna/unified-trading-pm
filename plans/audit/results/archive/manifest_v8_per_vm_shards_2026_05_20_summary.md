@@ -13,7 +13,7 @@ related: [manifest_v8_compliance_2026_05_20.md, manifest_v8_compliance_2026_05_2
 created: '2026-05-20'
 audited_scope: 3895 per-VM _index/per_vm/*.parquet shards across 10 MTDS+IS buckets — per-shard schema_version distribution (v8/v<8/NULL), compared against A4 v1 master-index aggregates
 date: 2026-05-20
-auditor:
+auditor: semver
 parent_epic: manifest_master
 severity: P0
 resulting_plan:

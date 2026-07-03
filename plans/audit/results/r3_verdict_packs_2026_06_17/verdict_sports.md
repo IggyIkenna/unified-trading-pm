@@ -21,7 +21,7 @@ audited_scope:
   SPORTS odds + reference buckets projected-v9 index (mtds@77f1a61) vs current _index, manifest_diff_sports.json + R8
   sports-specific orphan sweep + v1_archive row-coverage proof
 date: 2026-06-17
-auditor:
+auditor: ikennaigboaka
 parent_epic: sports_master
 severity: P2
 resulting_plan:

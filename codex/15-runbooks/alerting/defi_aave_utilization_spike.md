@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [alerting, runbook, defi, features, strategy, escalation, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/defi_health_factor_critical.md, codex/15-runbooks/alerting/defi_funding_rate_flip.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 authoritative_for: Operator response when an Aave pool utilization crosses the kink point. Above the kink, borrow APR rises sharply + carry-strategy assumptions break.

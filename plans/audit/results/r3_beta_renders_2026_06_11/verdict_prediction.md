@@ -20,7 +20,7 @@ audited_scope:
   PREDICTION projected-v9 index vs live _index (G4 dry-run), cqg-bundle atom migration diff + cqg-classifier coverage
   assessment
 date: 2026-06-11
-auditor:
+auditor: ikennaigboaka
 parent_epic: predictions_master
 severity: P1
 resulting_plan:

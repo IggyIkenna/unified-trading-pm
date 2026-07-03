@@ -23,10 +23,11 @@ source:
     surfaced by frontmatter canonicalization in frontmatter_full_corpus_coverage_2026_06_30 (codex@0b019a8b4),
   ]
 assigned_vm: NA
-locked_by: NA
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+resolved_by:
 ---
 
 ## What I found

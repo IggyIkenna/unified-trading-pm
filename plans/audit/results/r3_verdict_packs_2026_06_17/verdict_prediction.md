@@ -21,7 +21,7 @@ audited_scope:
   PREDICTION projected-v9 index (mtds@df69ada vs HEAD UAC expanded cqg registry) vs current _index,
   manifest_diff_prediction.json + R8 migrator dry-plan (pred_migrator_dryplan.txt)
 date: 2026-06-17
-auditor:
+auditor: ikennaigboaka
 parent_epic: predictions_master
 severity: P2
 resulting_plan:

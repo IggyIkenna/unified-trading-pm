@@ -13,7 +13,7 @@ scope: [engineer]
 tags: [quality-gates, validation, audit]
 related: [../06-coding-standards/quality-gates.md, ../10-audit/VALIDATOR_COVERAGE_MATRIX.md]
 created: 2026-03-27
-authoritative_for: []
+authoritative_for: [validator quick-reference card (matrix owns applicability)]
 referenced_by:
 owner:
 last_reviewed:

@@ -20,7 +20,11 @@ parent_epic: mtds_mdps_master
 priority: P2
 source: [2026-06-17 carry_staked_basis harness work — verifying HL funding read path surfaced the stranded pipeline_mode]
 assigned_vm:
-resolved_by:
+resolved_by: >-
+  mtds/scripts/migrate_hyperliquid_rest_pipeline_mode_2026_06_17.py (2026-06-17;
+  19,361 cefi objs batch_hyperliquid_rest to batch_hyperliquid, 0 remaining / 0
+  loss); manifest re-key N/A by construction; SSOT
+  plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code

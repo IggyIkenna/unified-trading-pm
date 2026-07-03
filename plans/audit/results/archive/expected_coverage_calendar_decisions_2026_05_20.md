@@ -13,7 +13,7 @@ related: [expected_coverage_dump_2026_05_20_summary.md, manifest_divergence_2026
 created: 2026-05-20
 audited_scope: The calendar/trading-judgment inputs to the UAC expected_coverage() oracle — calendars currently encoded, known unencoded gaps (per asset_group), and operator-acked scope decisions (tradfi tbbo/trades cost reduction)
 date: 2026-05-20
-auditor:
+auditor: semver
 parent_epic: infrastructure_master
 severity: P2
 resulting_plan:

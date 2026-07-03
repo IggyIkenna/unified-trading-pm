@@ -14,9 +14,9 @@ scope: [engineer, admin]
 tags: [runbook, escalation, live-trading, cefi, monitoring, execution]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/balance_drift.md, codex/15-runbooks/alerting/kill_switch_portfolio_drawdown.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 authoritative_for: Operator response when CeFi margin buffer crosses the pre-emptive threshold (default 200bps from initial-margin-call line). Pre-emptive notify; positions are not yet at risk but margin-call is approaching.

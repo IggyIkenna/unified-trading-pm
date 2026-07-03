@@ -22,9 +22,9 @@ related:
     ../02-data/sports-data-source-coverage-matrix.md,
   ]
 created: 2026-05-01
-owner:
-cadence:
-verifier:
+owner: operator (triggered by cycle-close backfill dispatch or ad-hoc coverage gap)
+cadence: per-backfill-batch (event-driven, not scheduled)
+verifier: manifest spot-check — capture_status in {captured, empty_confirmed} for target date range; QG green
 last_executed:
 code_refs:
 audience: dev / operator

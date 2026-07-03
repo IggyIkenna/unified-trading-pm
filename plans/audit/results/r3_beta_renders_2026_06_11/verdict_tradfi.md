@@ -20,7 +20,7 @@ audited_scope:
   TRADFI projected-v9 index vs live _index (G4 dry-run), grain-aware manifest diff adjudication (garbage-venue drops,
   phantom closed-market over-claims, legacy respelling, CME weekend cells)
 date: 2026-06-11
-auditor:
+auditor: ikennaigboaka
 parent_epic: tradfi_master
 severity: P2
 resulting_plan:

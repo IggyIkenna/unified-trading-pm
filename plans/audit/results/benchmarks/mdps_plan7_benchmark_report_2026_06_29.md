@@ -20,7 +20,7 @@ audited_scope:
   BTCUSDT BINANCE-FUTURES perpetual — Plan 8 candle-aggregation micro-benchmark (9 instruments × April 2026,
   trades-only) + per-shard cost model + B3 KPI checkpoint; full-pipeline OOM documented
 date: 2026-06-29
-auditor:
+auditor: ikennaigboaka
 parent_epic: mtds_mdps_master
 severity: P2
 resulting_plan:

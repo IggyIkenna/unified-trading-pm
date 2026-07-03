@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [alerting, runbook, defi, features, strategy, escalation, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/defi_aave_utilization_spike.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 authoritative_for: Operator response when a perp funding rate flips sign within a short window. Regime change signal for leveraged_funding_arb archetype; may invalidate carry assumptions.

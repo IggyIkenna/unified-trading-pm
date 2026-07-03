@@ -20,9 +20,9 @@ related:
     codex/15-runbooks/smoke-testing-playbook.md,
   ]
 created: 2026-05-14
-owner:
-cadence:
-verifier:
+owner: on-call operator (Ikenna / Harsh by rotation)
+cadence: on-demand (incident response) + quarterly DR drill
+verifier: slot-1 orchestrator reviews audit log within 24h of any arm event
 last_executed:
 code_refs:
 type: runbook

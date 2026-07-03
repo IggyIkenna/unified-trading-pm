@@ -21,7 +21,7 @@ related:
     ../playbook-concepts/bloomberg-style-aesthetic.md,
   ]
 created: 2026-04-20
-authoritative_for: []
+authoritative_for: [presentation deck — declares ssot_for none, not a SSOT]
 referenced_by:
 owner:
 last_reviewed:

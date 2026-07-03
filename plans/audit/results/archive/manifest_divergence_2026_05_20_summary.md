@@ -13,7 +13,7 @@ related: [expected_coverage_dump_2026_05_20_summary.md, manifest_divergence_all_
 created: 2026-05-20
 audited_scope: Full join of expected_coverage() oracle vs the 5 MTDS prod _index/availability_index.parquet manifests (cefi/defi/tradfi/sports/pred), 2020-01-01→2026-05-20; per-cell classification + top divergent (venue, data_type) per asset_group (single-walk, one index each)
 date: 2026-05-20
-auditor:
+auditor: semver
 parent_epic: manifest_master
 severity: P0
 resulting_plan:

@@ -13,7 +13,7 @@ related: [capability_wizard_analysis_findings_2026_06_11.md, ../capability_wizar
 created: 2026-06-11
 parent_epic: strategy_master
 priority: P2
-source:
+source: [gaps surfaced by capability wizard/manifest work 2026-06-11]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout

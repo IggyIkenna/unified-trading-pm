@@ -22,7 +22,7 @@ audited_scope:
   CEFI projected-v9 index (mtds@03fbc9b) vs current _index on HEAD, manifest_diff_cefi.json adjudication (garbage
   removals, phantom downgrades, CF-11 status-transitions) + orphan sweep
 date: 2026-06-17
-auditor:
+auditor: ikennaigboaka
 parent_epic: cefi_master
 severity: P2
 resulting_plan:

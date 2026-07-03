@@ -13,7 +13,7 @@ related: [manifest_divergence_2026_05_20_summary.md, manifest_v8_compliance_2026
 created: 2026-05-20
 audited_scope: 27 GCS + 7 AWS buckets across 6 service kinds (MTDS, instruments, features-*, strategy, execution, ml) — manifest index presence, row/schema_version distribution, capture_status breakdown, v8 compliance %
 date: 2026-05-20
-auditor:
+auditor: semver
 parent_epic: manifest_master
 severity: P0
 resulting_plan:

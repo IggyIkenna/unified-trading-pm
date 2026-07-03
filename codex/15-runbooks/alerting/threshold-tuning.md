@@ -14,9 +14,9 @@ scope: [engineer, admin]
 tags: [runbook, uac, monitoring, live-trading, defi, threshold-tuning, escalation]
 related: [codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/rehearsal-procedure.md]
 created: 2026-05-07
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs: [unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/thresholds.py, alerting-service/alerting_service/rules/defi_rules.py]
 updated: 2026-05-07

@@ -13,7 +13,7 @@ related: [dependency_propagation_2026_05_20.md]
 created: 2026-05-20
 audited_scope: 4757 files across 9 consumer services scanned per service×mode for DependencyError/StaleUpstreamError raises, silent catches, blank/freeform reason literals, warn-but-proceed patterns
 date: 2026-05-20
-auditor:
+auditor: semver
 parent_epic: infrastructure_master
 severity: P0
 resulting_plan:

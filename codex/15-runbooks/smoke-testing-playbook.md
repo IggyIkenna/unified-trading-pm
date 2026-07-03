@@ -21,9 +21,9 @@ related:
     ../02-data/sports-adapter-dependency-order.md,
   ]
 created: 2026-04-20
-owner:
-cadence:
-verifier:
+owner: on-call engineer (slot-1 main)
+cadence: on-demand (triggered by staging→main promotion gate)
+verifier: slot-1 orchestrator reviews SIT smoke results in CI
 last_executed:
 code_refs:
 type: runbook

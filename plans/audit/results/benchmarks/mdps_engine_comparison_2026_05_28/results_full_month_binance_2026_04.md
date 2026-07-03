@@ -21,7 +21,7 @@ audited_scope:
   April 2026 (30 days) × 9 BINANCE-FUTURES perpetual trades, Path A (pure_polars_lazy) vs Path C (current_mdps_mixed),
   per-day + month-aggregate wall/RSS/retention
 date: 2026-06-29
-auditor:
+auditor: ikennaigboaka
 parent_epic: cefi_master
 severity: P3
 resulting_plan:

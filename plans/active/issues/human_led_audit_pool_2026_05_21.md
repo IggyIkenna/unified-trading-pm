@@ -13,7 +13,7 @@ related: [master_to_live_defi_2026_05_23.md, mega_audit_and_plan_beefup_progress
 created: 2026-05-21
 parent_epic: plan_hygiene_master
 priority: P0
-source:
+source: [operator note to Harsh ahead of meet 2026-05-21]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout

@@ -20,7 +20,7 @@ audited_scope:
   SPORTS odds bucket projected-v9 index vs live _index (G4 dry-run), gate diff + open pre-apply P1 characterization
   (instruments-store blanks, CF-5 relabel, coverage window)
 date: 2026-06-11
-auditor:
+auditor: ikennaigboaka
 parent_epic: sports_master
 severity: P1
 resulting_plan:

@@ -11,7 +11,7 @@ scope: [engineer, admin]
 tags: [infrastructure, refactor]
 related: [LIBRARY-DEPENDENCY-MATRIX.md]
 created: 2026-03-27
-authoritative_for: []
+authoritative_for: [redirect stub — canonical view is LIBRARY-DEPENDENCY-MATRIX.md]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

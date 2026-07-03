@@ -13,7 +13,7 @@ related: [manifest_v8_compliance_2026_05_20.md, manifest_v8_per_vm_shards_2026_0
 created: 2026-05-20
 audited_scope: 10 MTDS+IS master _index/availability_index.parquet schema_version distributions + 235 manifest-consumer code files (hardcoded v<8 constants, v8 indicators, legacy-fallback patterns)
 date: 2026-05-20
-auditor:
+auditor: semver
 parent_epic: manifest_master
 severity: P0
 resulting_plan:

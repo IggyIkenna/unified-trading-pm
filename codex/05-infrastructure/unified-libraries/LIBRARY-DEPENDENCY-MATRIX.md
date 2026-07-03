@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [infrastructure, refactor, uac]
 related: [INTERNAL_DEPENDENCY_GRAPH.md, dependency-matrix.md, ../../04-architecture/tier-and-import-architecture.md]
 created: 2026-03-27
-authoritative_for: []
+authoritative_for: [library dependency matrix (per-library table view)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

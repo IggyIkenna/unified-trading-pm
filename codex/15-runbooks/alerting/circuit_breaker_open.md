@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [alerting, runbook, execution, escalation, kill-switch, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/kill_switch_venue_disconnect.md, codex/15-runbooks/alerting/order_rejection_spike.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: on-call operator (Ikenna / Harsh by rotation)
+cadence: on-demand (incident response only; fires when CIRCUIT_BREAKER_OPEN alert pages)
+verifier: circuit breaker transitions CLOSED within SLO window; orders resume on affected venue
 last_executed:
 code_refs:
 authoritative_for: Operator response when an execution-service per-(service, venue) circuit breaker transitions to OPEN. Service degrades; new orders blocked on that venue + service path. Auto-recovers via half-open retry; manual override only when auto-recovery flaps.

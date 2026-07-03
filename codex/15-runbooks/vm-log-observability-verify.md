@@ -15,9 +15,10 @@ scope: [engineer, admin]
 tags: [runbook, observability, vm-tarball, infrastructure, monitoring, verification]
 related: [codex/05-infrastructure/vm-tarball-deployment.md, deployment-service/scripts/vm/lib/launcher_common.sh, deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh, deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh]
 created: 2026-06-19
-owner:
-cadence:
-verifier:
+owner: operator (or the agent that launched the VM, at T+10min post-launch)
+cadence: per-VM-launch (event-driven — verify each launched VM is shipping logs+events; plus a weekly fleet spot-check)
+verifier: >-
+  `gsutil ls gs://deployment-scripts-<pid>/vm-logs/<vm>/run.log` returns a growing object within ~2 min of boot AND a `vm-heartbeat/<vm>.txt` blob exists; on exit a `vm-logs/<vm>/EXIT_STATUS` marker is present
 last_executed:
 code_refs:
 audience: dev / operator

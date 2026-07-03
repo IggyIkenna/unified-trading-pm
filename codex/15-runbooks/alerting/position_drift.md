@@ -14,9 +14,9 @@ scope: [engineer, admin]
 tags: [runbook, escalation, live-trading, strategy, execution, monitoring]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/balance_drift.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) + on-call rotation (operator response)
+cadence: continuous (PBMS reconciliation loop emits `POSITION_DRIFT` per `position_drift_bps` threshold)
+verifier: alert routes to Telegram + CRITICAL severity → PagerDuty + auto STOP_NEW_ONLY per `autonomous-recovery-matrix.md` G4; WARN noise-floor `position_drift_bps=100`
 last_executed:
 code_refs:
 authoritative_for: Operator response when position drifts from target weight by more than the threshold. Rebalance trigger; common industry standard ~1% from target.

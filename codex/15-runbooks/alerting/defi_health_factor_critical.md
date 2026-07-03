@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [alerting, runbook, defi, features, kill-switch, escalation, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md, codex/15-runbooks/alerting/defi_weeth_depeg.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: on-call operator (Ikenna / Harsh by rotation)
+cadence: on-demand (incident response)
+verifier: health factor recovers above threshold; no kill-switch fired; position audit passes
 last_executed:
 code_refs:
 authoritative_for: Operator response when an Aave (or other money-market) position's health factor crosses the critical threshold but has NOT yet triggered the kill-switch. Pre-emptive deleverage candidate.

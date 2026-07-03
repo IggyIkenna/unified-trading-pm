@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [alerting, runbook, defi, kill-switch, execution, escalation, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/defi_health_factor_critical.md, codex/15-runbooks/alerting/circuit_breaker_open.md, codex/04-architecture/flash-loan-receiver.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: on-call operator (Ikenna / Harsh by rotation)
+cadence: on-demand (incident response) + quarterly DR drill
+verifier: DeFi connectors halted; collateral deleverage tx confirmed on-chain; health-factor >1.3 before re-arm
 last_executed:
 code_refs:
 authoritative_for: Operator response when the DeFi liquidation-risk kill-switch fires. Halts execution-service DeFi connectors + paper- trade strategies + auto-deleverages collateral when health-factor approaches 1.0. Highest-impact alert in the live- DeFi pipeline; tier-1 page + circuit-breaker propagation.

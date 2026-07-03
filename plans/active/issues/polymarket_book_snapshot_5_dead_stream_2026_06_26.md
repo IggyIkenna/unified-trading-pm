@@ -2,7 +2,7 @@
 doc_type: issue
 title: Polymarket book_snapshot_5 live stream dead since 2026-06-23 18:09 UTC
 summary: The `prediction-live-polymarket-book-snapshot-5-20260623-130258` VM has been running since 2026-06-23 13:06 UTC but has captured NO `book_snapshot_5` data since 2026-06-23 18:09 UTC (2+ days of gap...
-status: RESOLVED
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -13,9 +13,12 @@ related: [prediction_venue_perps_and_live_clob_depth_2026_06_20]
 created: 2026-06-26
 parent_epic: predictions_master
 priority: P1
-source:
+source: [live prediction-VM data-gap monitoring finding 2026-06-26]
 assigned_vm:
-resolved_by:
+resolved_by: >-
+  deployment-service live_stream_watcher.py check_live_stream_stale()
+  DP-LIVE-001 monitoring (2026-06-26, LDR CI green) + all 5 prediction live VMs
+  relaunched on fresh MTDS tarball 05e84bc5
 locked_by: live-defi-rollout
 severity: P1
 execution_scope: orchestrator-agent

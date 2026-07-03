@@ -20,9 +20,9 @@ related:
     codex/16-strategy-playbooks/ml/cefi-ml-live-serving.md,
   ]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 authoritative_for: [live-ML alerting rule design contract (ML_SIGNAL_STALE / ML_MODEL_DRIFT_DETECTED / ML_PNL_DEVIATION / ML_INFERENCE_LATENCY_SLO)]

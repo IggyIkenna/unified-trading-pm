@@ -20,7 +20,7 @@ audited_scope:
   DEFI projected-v9 index vs live _index (G4 dry-run), CF-11 honest-absence re-emit + respelling-supersession
   adjudication + orphan sweep
 date: 2026-06-11
-auditor:
+auditor: ikennaigboaka
 parent_epic: defi_master
 severity: P2
 resulting_plan:

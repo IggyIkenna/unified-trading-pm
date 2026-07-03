@@ -13,7 +13,7 @@ related: [mega_audit_phase_a_issues_human_readable_2026_05_20.md]
 created: 2026-05-20
 audited_scope: 8142 Python files across 25 service repos, 10 codified-shape checks (has_log_upload_trap, manifest_v8, record_emission, typed_empty_reason, classify_venue_error, resolve_bucket_name, lifecycle_class, no_hardcoded_venue_urls/universe, uac_import_surface); regex-heuristic, no AST
 date: 2026-05-20
-auditor:
+auditor: semver
 parent_epic: infrastructure_master
 severity: P0
 resulting_plan:

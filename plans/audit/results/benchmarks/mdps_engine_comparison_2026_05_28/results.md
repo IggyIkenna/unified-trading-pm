@@ -20,7 +20,7 @@ audited_scope:
   9 BINANCE-FUTURES perpetual trades parquets for 2026-04-15, 4 read paths
   (pure_polars_lazy/pandas_pyarrow/current_mdps_mixed/polars_eager), subprocess-isolated
 date: 2026-05-28
-auditor:
+auditor: ComsicTrader
 parent_epic: infrastructure_master
 severity: P3
 resulting_plan:

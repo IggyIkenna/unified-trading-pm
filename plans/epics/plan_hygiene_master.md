@@ -19,7 +19,7 @@ name: plan_hygiene_master
 tier: L5
 priority: P1
 assigned_vm: planning
-parent:
+parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:

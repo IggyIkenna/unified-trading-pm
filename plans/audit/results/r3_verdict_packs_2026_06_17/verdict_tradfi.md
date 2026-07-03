@@ -21,7 +21,7 @@ audited_scope:
   TRADFI projected-v9 index (mtds@c21bc91) vs current _index, manifest_diff_tradfi.json adjudication (phantom
   closed-market downgrades spot-verified on HEAD, legacy pre-hive respelling, class-E options_chain preserve)
 date: 2026-06-17
-auditor:
+auditor: ikennaigboaka
 parent_epic: tradfi_master
 severity: P2
 resulting_plan:

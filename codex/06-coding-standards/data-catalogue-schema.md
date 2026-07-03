@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [data-catalogue, catalogue, data-pipeline, instruments, manifest, data-status, uac]
 related: [../02-data/data-catalogue-schema.md, ../02-data/availability-manifest-and-data-status.md]
 created: 2026-03-27
-authoritative_for: []
+authoritative_for: [duplicate view — canonical is codex/02-data/data-catalogue-schema.md (consolidation pending)]
 referenced_by:
 owner:
 last_reviewed:

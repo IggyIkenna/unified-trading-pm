@@ -22,9 +22,9 @@ related:
     ../../plans/archive/features_repo_consolidation_2026_05_08.plan.md,
   ]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: operator (ad-hoc per backfill / per-asset_group cutover)
+cadence: per-deploy
+verifier: event-stream STARTED + per-instrument progress + STOPPED + manifest spot-check
 last_executed:
 code_refs:
 audience: operator / dev

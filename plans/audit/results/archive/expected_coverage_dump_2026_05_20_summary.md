@@ -13,7 +13,7 @@ related: [expected_coverage_calendar_decisions_2026_05_20.md, manifest_divergenc
 created: 2026-05-20
 audited_scope: Full materialization of the UAC expected_coverage() oracle for every in-scope (asset_group, source, data_type, date) cell over 2020-01-01→2026-05-20 — state + reason + per-asset-group breakdown
 date: 2026-05-20
-auditor:
+auditor: semver
 parent_epic: infrastructure_master
 severity: P2
 resulting_plan:

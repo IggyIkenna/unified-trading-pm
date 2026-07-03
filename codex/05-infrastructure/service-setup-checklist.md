@@ -13,7 +13,7 @@ scope: [engineer, admin]
 tags: [infrastructure, service-setup, stub]
 related: [new-repo-setup.md, README.md]
 created: 2026-03-27
-authoritative_for: []
+authoritative_for: [redirect stub — see README.md + new-repo-setup.md]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

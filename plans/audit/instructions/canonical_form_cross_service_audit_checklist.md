@@ -19,9 +19,9 @@ related:
     batch_live_symmetry_master_audit_instructions.md,
   ]
 created: 2026-06-01
-tier:
+tier: L0
 parent_epic: infrastructure_master
-cadence:
+cadence: on-demand
 verifier:
 lifespan:
 ---

@@ -14,9 +14,9 @@ scope: [engineer, admin]
 tags: [runbook, kill-switch, escalation, live-trading, execution, deribit, bybit, binance]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/circuit_breaker_open.md, codex/15-runbooks/alerting/kill_switch_portfolio_drawdown.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 authoritative_for: Operator response when one of the 6 perp hedge venues (Bybit, Deribit, Binance, OKX, Hyperliquid, Aster) loses connectivity for sustained period. Halts the affected archetype's signal generation; positions become unhedged risk.

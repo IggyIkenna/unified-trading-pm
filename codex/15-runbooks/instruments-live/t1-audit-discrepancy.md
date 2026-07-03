@@ -21,9 +21,9 @@ related:
     codex/05-infrastructure/live-deployment-monitoring.md,
   ]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 ---

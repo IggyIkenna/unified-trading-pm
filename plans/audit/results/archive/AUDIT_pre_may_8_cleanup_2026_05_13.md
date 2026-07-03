@@ -13,7 +13,7 @@ related: []
 created: 2026-05-13
 audited_scope: All 26 plans dated ≤2026-05-08 (post fresh rebase from origin/live-defi-rollout) — TODO counts, blockers, deadline criticality, ownership; grouped critical-path / near-critical / blocked / false-positive / post-cutover
 date: 2026-05-13
-auditor:
+auditor: semver
 parent_epic: infrastructure_master
 severity: P1
 resulting_plan:

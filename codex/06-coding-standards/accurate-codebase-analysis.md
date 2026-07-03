@@ -11,7 +11,7 @@ scope: [engineer]
 tags: [quality-gates, verification]
 related: [README.md]
 created: 2026-03-27
-authoritative_for: []
+authoritative_for: [redirect stub — codebase-analysis discipline lives in the 06-coding-standards README]
 referenced_by:
 owner:
 last_reviewed:

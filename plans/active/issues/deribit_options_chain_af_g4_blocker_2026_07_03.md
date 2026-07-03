@@ -6,15 +6,15 @@ summary: Deribit options_chain nearly completely failed in wave-1 backfill. Tard
   there. Failure was likely transient (preemption/OOM in wave-1). Wave-1 reprobe VMs launched
   2026-07-03 include DERIBIT light group (options_chain). G4 gate Part 2 blocked until af=0.
 status: open
-nature: data-correctness
+nature: record
 asset_group: [cefi]
-stage: [backfill]
+stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [g4-gate, deribit, options_chain]
 related: [plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md]
 created: 2026-07-03
-parent_epic: mvp_backfill_cefi_tick_v10
+parent_epic: cefi_master
 priority: P0
 source: [plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md]
 assigned_vm: NA
@@ -24,6 +24,7 @@ depends_on: []
 last_updated: 2026-07-03
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+resolved_by:
 ---
 
 # DERIBIT `options_chain` af=10,114 (cap=1) — G4 gate blocker

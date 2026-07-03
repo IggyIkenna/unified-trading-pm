@@ -13,7 +13,7 @@ related: [codified_shape_compliance_2026_05_20_summary.md, expected_coverage_dum
 created: 2026-05-20
 audited_scope: All 6 mega-audit Phase A sub-audits (A1 code-shape, A2 expected_coverage oracle+dump, A3 manifest divergence, A4 v8 compliance, A5 dependency-fail propagation, A6 batch-live adapter parity) with per-audit sampling-vs-comprehensive matrix + delegation/remediation table + operator Q&A rounds 2-4
 date: 2026-05-20
-auditor:
+auditor: semver
 parent_epic: infrastructure_master
 severity: P0
 resulting_plan:

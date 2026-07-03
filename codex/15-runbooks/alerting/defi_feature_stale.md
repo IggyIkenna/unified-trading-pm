@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [alerting, runbook, defi, features, data-quality, live-trading]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/circuit_breaker_open.md]
 created: 2026-05-08
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 authoritative_for: Operator response when a DeFi feature (LST yield, gas-fee read, on-chain rate) hasn't refreshed within the SLA window. Stale features compound lookahead-bias risk + may drive bad signals.

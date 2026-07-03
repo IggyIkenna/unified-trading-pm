@@ -14,9 +14,9 @@ scope: [engineer, admin]
 tags: [runbook, escalation, live-trading, verification, monitoring, smoke-test]
 related: [codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/threshold-tuning.md]
 created: 2026-05-07
-owner:
+owner: ikenna
 cadence: quarterly (first Monday of each quarter; full AlertCode subset covered every 4 quarters)
-verifier:
+verifier: operator
 last_executed:
 code_refs:
 authoritative_for: Quarterly alert-rehearsal procedure to verify paging works end-to-end. Synthetic events injected through the alerting-service must produce a real PagerDuty/phone page within SLA, and the on-call must follow the operator-playbook entry to the documented action.

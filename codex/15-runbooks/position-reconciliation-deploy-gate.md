@@ -20,9 +20,9 @@ related:
     ../../plans/active/master_to_live_defi_2026_05_23.md,
   ]
 created: 2026-05-12
-owner:
-cadence:
-verifier:
+owner: deployment-service maintainer (cloud-build-router invocation) + execution-service / position-balance-monitor-service maintainers (/positions endpoint contract)
+cadence: per-deploy (every pre-deploy + post-deploy invocation of `cloud-build-router.yml` on trading-critical services)
+verifier: pre-deploy `snapshot` produces JSON file in $RUNNER_TEMP; post-deploy `compare` diffs against snapshot; exit 0 on match; exit nonzero on quantity-delta-out-of-tolerance / position-id-disappeared.
 last_executed:
 code_refs:
 author: slot 8 sub-agent (Position-balance audit PB-9 PRE_CUTOVER)

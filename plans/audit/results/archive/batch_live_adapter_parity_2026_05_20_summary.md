@@ -13,7 +13,7 @@ related: [batch_live_adapter_parity_2026_05_20.md]
 created: 2026-05-20
 audited_scope: 573 adapter files across MTDS + MDPS + IS; 160 (asset_group, venue_token, data_type) tuples classified GREEN/BATCH_ONLY/LIVE_ONLY/MISSING_BOTH via path + first-4000-char regex
 date: 2026-05-20
-auditor:
+auditor: semver
 parent_epic: batch_live_symmetry_master
 severity: P0
 resulting_plan:

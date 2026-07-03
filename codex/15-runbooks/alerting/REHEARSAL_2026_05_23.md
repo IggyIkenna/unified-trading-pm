@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [runbook, alerting, rehearsal, kill-switch, defi, verification, live-trading]
 related: [codex/15-runbooks/alerting/rehearsal-procedure.md, codex/15-runbooks/alerting/alert-code-taxonomy.md]
 created: 2026-05-23
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 operator: TBD

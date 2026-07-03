@@ -1,21 +1,28 @@
 ---
 doc_type: audit-result
 title: MDPS Long-Running State Inventory Audit
-summary:
-status: complete
+summary: >-
+  State inventory clean at Python attribute scope and cleanup hook fires on every
+  per-date exit path, but the 15.7 GB post-day-1 residue is unexplained (most
+  likely unreclaimed Polars/PyArrow arena memory); live_workers.py:468-470
+  flagged as a data-engine-selection.md anti-pattern violation.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
+tags: [mdps, memory-leak, orchestration, state-inventory, polars-arena, data-engine]
 related: []
 created: 2026-05-28
-audited_scope:
+audited_scope: >-
+  MDPS CandleOrchestrationService long-running state: orchestrator MRO/attribute
+  lifetimes, per-shard cleanup-hook (_cleanup_after_day) exit-path coverage, and
+  the 15.7 GB post-day-1 RSS residue source.
 date: '2026-05-28'
 auditor: claude haiku 4.5 (audit sub-agent)
 parent_epic: mtds_mdps_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

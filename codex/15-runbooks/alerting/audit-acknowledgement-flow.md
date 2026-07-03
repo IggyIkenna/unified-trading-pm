@@ -20,9 +20,9 @@ related:
     codex/15-runbooks/alerting/pagerduty-escalation-policy.md,
   ]
 created: 2026-05-23
-owner:
-cadence:
-verifier:
+owner: ikenna
+cadence: on-demand
+verifier: operator
 last_executed:
 code_refs:
 last_reviewed: 2026-05-23

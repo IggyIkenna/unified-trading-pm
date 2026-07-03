@@ -21,7 +21,7 @@ audited_scope:
   DEFI projected-v9 index (mtds@df69ada, regenerated on HEAD) vs current _index, manifest_diff_defi.json adjudication +
   M-COORD-7 batch=live reconciliation (STEP 5.85 check)
 date: 2026-06-17
-auditor:
+auditor: ikennaigboaka
 parent_epic: defi_master
 severity: P2
 resulting_plan:
