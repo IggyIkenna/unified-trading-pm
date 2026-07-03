@@ -89,10 +89,12 @@ ML-ready = one row per `(fixture × bucket)`; NaN ONLY where honest-absence (the
       2026-06-29 (BLK-809b664b answer-B): `check_pipeline_completeness.py` shows 0/91 dates on golden window (VMs ran
       before WriteGate fix). Full history backfill `sports_p2_features_history_to_ml_ready-001` covers
       2025-09-01..2025-11-30; VM launches are operator-greenlit. Verify after that backfill completes.
-- [ ] [DATA] P1. **Feature manifest clean on the window** — 0 blank-reason empties, 0 un-evidenced `attempted_failed` in
-      the features manifest slice. **Gate**: window query on the features manifest mirrors the IS/MTDS cleanliness. ⏸
-      PARKED 2026-06-29 (same root cause as item 3 / BLK-809b664b answer-B): features manifest shows 0/91 dates on
-      golden window — manifest verification deferred to post-`sports_p2_features_history_to_ml_ready-001` backfill.
+- [x] [DATA] P1. **Feature manifest clean on the window** — 0 blank-reason empties, 0 un-evidenced `attempted_failed` in
+      the features manifest slice. **Gate**: window query on the features manifest mirrors the IS/MTDS cleanliness. ✅
+      4. features-service@192d74ce (2026-07-03): WriteGate sparse_columns fix for odds_features (acceleration_/delta_prob_/
+      exchange_price_/move_direction_agreement_/move_sign_consistency_/odds_movement_); 12 failed dates re-run → all
+      captured; derived_features 91/91, fixture_features 91/91, odds_features 91/91; 0 blank-reason + 0 un-evidenced
+      attempted_failed; mirrors MTDS odds cleanliness (82 captured dates in MTDS → 91 captured in FSS after fix).
 
 **Full-execution criterion**:
 
@@ -453,3 +455,32 @@ coverage verdict. Does not block P1 Todo 3 (ML-ready verify). Will note as known
 06-11, 5 dates × ~4 min). **VM3 completion ETA**: ~12:15-12:30 UTC (Oct 19-24, 5 dates × ~5-15 min). **VM1 completion
 ETA**: ~12:10-12:20 UTC (Sep 14 + Sep 15-18, Sep 15 may be heavy). **VM2 completion ETA**: ~13:30-14:00 UTC (Sep 25 to
 Oct 06, 11 dates including heavy weekends).
+
+### 2026-07-03 — slot 5: Todo 4 (feature manifest clean) ✅ COMPLETE
+
+**Root cause diagnosed and fixed (features-service@192d74ce)**:
+
+The 12 remaining `odds_features` failures (Sep 2-13, Sep 18, Oct 7/14/21/23, Nov 11/13) were WriteGate rejections for
+structurally-sparse columns not in the `sparse_columns` exemption list:
+
+- `acceleration_*`: second derivative of velocity — absent when only 2 snapshots exist
+- `delta_prob_*` (1h/6h/24h variants): implied prob change over horizon — absent when no snapshot at that time
+- `exchange_price_*`: betting-exchange prices — sparse for low-liquidity leagues
+- `move_direction_agreement_*` / `move_sign_consistency_*`: bookmaker consensus movement — absent when few bookmakers
+- `odds_movement_*`: movement metric requiring multiple snapshots
+
+**Fix**: added all 6 column prefixes to `WRITE_GATE_CONFIG.sparse_columns["odds_features"]`. QG passed (244s). All 12
+dates re-run locally → `Processing completed successfully` for all. Oct 21 passed in the prior run (different root cause
+already fixed).
+
+**Manifest state after fix** (`_index/availability_index.parquet`, prd bucket):
+
+| feature_group    | captured_dates | attempted_failed | blank-reason |
+| ---------------- | -------------- | ---------------- | ------------ |
+| derived_features | 91/91          | 14 (evidenced)   | 0            |
+| fixture_features | 91/91          | 13 (evidenced)   | 0            |
+| odds_features    | 91/91          | 0 (cleared)      | 0            |
+
+All 27 remaining `attempted_failed` entries are OLD (pre-fix VM runs 2026-06-27/28) superseded by later `captured`
+entries; all have non-null `error_reason`. Gates met: **0 blank-reason empties, 0 un-evidenced `attempted_failed`**.
+Mirrors MTDS cleanliness (MTDS odds: 82 captured dates → FSS odds: 91 captured dates with WriteGate fix).
