@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Latency Profiles — Cross-Cutting Concern
-summary:
-status:
+summary: "Pre-v2: per-archetype latency profiles (no global SLA) with 3-segment tick-to-signal/signal-to-order/order-to-fill budgets, venue baselines, and circuit-breaker thresholds."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-data-processing-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [latency, execution, strategy, performance, monitoring, defi]
+related:
+  [
+    ../../architecture-v2/cross-cutting/execution-policies.md,
+    cost-modeling.md,
+    margin-health.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

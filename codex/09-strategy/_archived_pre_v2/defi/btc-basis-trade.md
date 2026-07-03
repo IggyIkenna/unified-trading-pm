@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: DeFi BTC Basis Trade
-summary:
-status:
+summary: "Pre-v2: DeFi BTC delta-neutral basis (long WBTC/cbBTC + short BTC-PERP on Hyperliquid) capturing ~5-15% APY funding, with optional Aave WBTC lending yield stacked on top."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, basis, strategy, funding, btc]
+related: [../../architecture-v2/archetypes/carry-basis-perp.md, basis-trade.md]
 created: 2026-03-28
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

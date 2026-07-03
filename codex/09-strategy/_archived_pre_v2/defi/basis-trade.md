@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: DeFi Basis Trade
-summary:
-status:
+summary: "Pre-v2: DeFi delta-neutral basis trade (long spot ETH + short ETH perp on Hyperliquid) capturing funding; multi-coin DEFI_MULTI_BASIS_HUF_1H_V1 supersedes single-coin for production."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, basis, strategy, funding, hyperliquid]
+related:
+  [
+    ../../architecture-v2/archetypes/carry-basis-perp.md,
+    btc-basis-trade.md,
+    l2-basis-trade.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

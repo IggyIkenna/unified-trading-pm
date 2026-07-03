@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Transaction Cost Modeling — Cross-Cutting Concern
-summary:
-status:
+summary: "Pre-v2: per-strategy cost budgets (max_total_cost_bps) with asset-class cost models — CeFi fees, DeFi gas, TradFi commission, sports vig, prediction spread."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [cost, strategy, execution, defi, tradfi, sports, prediction]
+related:
+  [
+    ../../architecture-v2/cross-cutting/pnl-attribution.md,
+    ../../architecture-v2/cross-cutting/execution-policies.md,
+    latency-profiles.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

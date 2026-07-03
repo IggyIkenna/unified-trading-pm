@@ -1,17 +1,18 @@
 ---
 doc_type: codex-ssot
 title: DeFi AAVE Lending
-summary:
-status:
+summary: "Pre-v2: simplest DeFi yield strategy (DEFI_USDT_LENDING_SCE_1H) — supply USDT to Aave V3, receive aUSDT, P&L accrues from liquidity-index growth; no hedge/stake/leverage."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, aave, yield, lending]
+related:
+  [../../architecture-v2/archetypes/yield-rotation-lending.md, btc-lending-yield.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

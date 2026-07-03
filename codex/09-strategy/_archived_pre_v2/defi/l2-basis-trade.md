@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: L2 Basis Trade (Reduced Gas Costs)
-summary:
-status:
+summary: "Pre-v2: ETH basis trade run entirely on L2 (Arbitrum/Base) — long spot ETH + short ETH-PERP on Hyperliquid; gas ~$0.10 vs ~$15 mainnet makes $500 positions and frequent rebalancing viable."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, basis, strategy, funding, l2]
+related: [../../architecture-v2/archetypes/carry-basis-perp.md, basis-trade.md]
 created: 2026-03-28
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

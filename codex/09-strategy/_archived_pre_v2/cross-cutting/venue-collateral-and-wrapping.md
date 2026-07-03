@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Venue Collateral & Token Wrapping -- Cross-Cutting Concern
-summary:
-status:
+summary: "Pre-v2: per-venue collateral matrix and token-wrapping rules (WETH/wstETH/weETH), CollateralValidationMixin pre-processing, and Aave V3 per-asset LTV/haircut/max-leverage table."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, collateral, execution, strategy, cefi]
+related:
+  [
+    ../../architecture-v2/cross-cutting/venue-account-coordination.md,
+    ../../architecture-v2/cross-cutting/instrument-type-leverage-matrix.md,
+    margin-health.md,
+  ]
 created: 2026-04-03
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Active DeFi Market Making (ML-Driven Concentrated LP)
-summary:
-status:
+summary: "Pre-v2: active DeFi market making via ML-driven concentrated-LP rebalancing (Uniswap V3/Raydium/Orca) — ML confidence + IL-savings-vs-gas gate emits widen/narrow/shift/exit range actions."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [ml-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, market-making, ml, strategy, features]
+related:
+  [
+    ../../architecture-v2/archetypes/defi-lp-concentrated.md,
+    ../../architecture-v2/families/market-making.md,
+  ]
 created: 2026-06-16
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

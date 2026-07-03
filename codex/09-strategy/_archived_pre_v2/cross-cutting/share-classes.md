@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Share Classes -- Cross-Cutting Concern
-summary:
-status:
+summary: "Pre-v2: share_class config (USDT/ETH/BTC) setting base-currency denomination and per-class target delta (0 for USDT, total_equity for coin classes), driving P&L currency, treasury, and rebalancing."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [share-classes, strategy, defi, cefi, pnl]
+related:
+  [
+    ../../architecture-v2/cross-cutting/capital-client-isolation.md,
+    ../../architecture-v2/cross-cutting/pnl-attribution.md,
+  ]
 created: 2026-04-03
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

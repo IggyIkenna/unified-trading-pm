@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: ML Pipeline — Cross-Cutting Concern
-summary:
-status:
+summary: "Pre-v2: ML pipeline rules — models emit signals not decisions, training and inference are separate services, and no model goes live without human approval; 7 feature services feed it."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ml, features, strategy, pipeline, execution]
+related:
+  [
+    ../../architecture-v2/families/ml-directional.md,
+    ../../architecture-v2/archetypes/ml-directional-continuous.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

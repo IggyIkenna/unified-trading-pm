@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Event-Driven Macro Strategy
-summary:
-status:
+summary: "Pre-v2: cross-domain macro strategy using economic-calendar events (FOMC/CPI/NFP/ECB/earnings) as the primary trigger, with ML-predicted impact and pre/post-event position sizing."
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, event-driven, ml, tradfi, cefi, features]
+related:
+  [
+    ../../architecture-v2/archetypes/event-driven.md,
+    ../../architecture-v2/families/event-driven.md,
+  ]
 created: 2026-06-16
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:
