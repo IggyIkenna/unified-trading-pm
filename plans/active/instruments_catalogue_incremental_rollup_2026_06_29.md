@@ -251,17 +251,26 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
       instruments-service@b0596d0c; `since=` on `_iter_prediction_by_date_snapshots`, shared `_merge_incremental`
       (multi-grain rows key venue::itype::cid::data_type), `test_incremental_matches_full_rebuild_prediction` green
       (settlement-date convention preserved); sports pinned to the manifest single-read path (mode=incremental no-op).
-- [ ] [INFRA] P1. Deploy: image rebuild + `terraform apply` of `lifecycle_catalogue_scheduler.tf` (no infra shape change
-      if mode defaults to incremental; optionally lower tradfi memory 16Gi→4Gi since the window is small). Add the
-      weekly `--mode full` self-heal job — **OPEN DECISION (2026-07-03 audit)**: the weekly full job needs
-      `timeout_seconds` ≥ ~3h TODAY (2h17m measured, grows with history forever), so it CANNOT reuse the daily job's
-      3600s. The Problem section's "3600 = the Cloud-Run-Jobs ceiling" claim contradicts Phase 0's 3600→10800 proposal —
-      verify the actual Cloud Run Jobs task-timeout ceiling (believed 24h) and give the weekly job its own generous
-      timeout, or route it to Batch/VM if the ceiling is real. Gate: `Evidence: cloudbuild=<id>` SUCCESS + a green
-      incremental run on each AG + the weekly full job's timeout decision documented here.
-- [ ] [VERIFY] P0. Operational proof: a real scheduled incremental run for tradfi/cefi/defi/prediction completes < 10
+- [x] [INFRA] P1. ✅ Deploy: image rebuild + `terraform apply` of `lifecycle_catalogue_scheduler.tf` (no infra shape
+      change if mode defaults to incremental; optionally lower tradfi memory 16Gi→4Gi since the window is small). Add
+      the weekly `--mode full` self-heal job — **DECISION RESOLVED (2026-07-03)**: the "3600 = Cloud-Run-Jobs ceiling"
+      claim was WRONG (the Jobs task-timeout ceiling is 24h — the apply validated `timeout_seconds=21600` without
+      complaint); weekly `lifecycle-catalogue-full-{cefi,defi,tradfi,prediction}` jobs own `21600s` (6h ≈ 2.6× the 2h17m
+      measured full walk), staggered Sat 03:00/04:00/05:00/06:00 UTC. tradfi memory kept at 16Gi (NOT downsized — the
+      weekly full job reuses the per-AG resources and needs the headroom; the daily incremental is indifferent).
+      **Evidence: cloudbuild=78e5e3a7-48ca-4f2d-8d51-579c9d8f4812** (`gcloud builds describe` = SUCCESS; image
+      `instruments-service:5d31994` + `:latest`; a first build fce15fb2 FAILED on the stale digest-pinned UTL base whose
+      baked UAC lacked `NO_ADAPTER_YET` → pin bumped to 0.55.0 in instruments-service@5d31994a). Terraform:
+      deployment-service@c1d2e3e6, targeted apply → **"Apply complete! 12 added, 0 changed, 0 destroyed"** (4 jobs + 4
+      run.invoker grants + 4 weekly schedulers; prod state prefix).
+- [x] [VERIFY] P0. ✅ Operational proof: a real scheduled incremental run for tradfi/cefi/defi/prediction completes < 10
       min and writes a fresh `catalog.parquet`; `DP_CATALOG_NOT_RUNNING` clears. Gate: cite execution id + duration +
-      new artifact mtime.
+      new artifact mtime. — 2026-07-03 manual `:run` of all 4 daily jobs on the new image (all succeeded=1): **tradfi
+      `…-regen-tradfi-9vvkr` 15:17:13→15:21:21 = 4m08s** (was 137min+timeout-kill), artifact `prod/catalog.parquet`
+      mtime **2026-07-03T15:21:16Z**, rows 1,091,661 ≥ prev 1,090,672 (monotonic, == the shadow-parity prediction);
+      **cefi `…-zvhdg` 2m04s**, artifact 15:19:13Z (was frozen since 06-29T10:47Z); **defi `…-s9mdj` 2m01s**, artifact
+      15:19:08Z (frozen since 06-29T01:18Z); **prediction `…-hzdpn` 2m39s**, artifact 15:19:46Z. All 3 stale catalogues
+      cleared; DP_CATALOG staleness input (artifact mtime) now fresh.
 
 ### Phase 4 — downstream verification
 
