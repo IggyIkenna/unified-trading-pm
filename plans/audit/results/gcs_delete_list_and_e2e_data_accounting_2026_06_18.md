@@ -2,20 +2,36 @@
 doc_type: audit-result
 title: Legacy-shape GCS duplicate delete-list + 48h e2e research-data accounting
 summary:
-status: complete
+  Read-only full-walk audit deriving the legacy-shape GCS duplicate delete-list
+  across all 5 market-data-tick raw_tick_data namespaces — only cefi has a
+  substantial byte-verified safe-delete list (1,077,672 legacy objects / ~9.98 TB,
+  each with a byte-identical canonical pipeline_mode=batch_* twin);
+  defi/tradfi/sports/pred are essentially NOT migrated so their legacy objects
+  have no canonical twin and are MIGRATE-FIRST (deleting now would lose data); the
+  48h e2e research data is fully accounted-for and none is irreplaceable.
+status: partial
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [e2e-testing, market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, manifest, canonicalisation, pipeline-mode, cost, single-walk, data-correctness, cefi]
+related:
+  [
+    ../instructions/infrastructure_master_audit_instructions.md,
+    defi_c0_datastate_audit_2026_06_01.md,
+  ]
 created: 2026-06-18
 audited_scope:
+  read-only full walk (no sampling) of all 5 market-data-tick
+  raw_tick_data/by_date/ namespaces (cefi/defi/tradfi/sports/pred) — legacy→
+  canonical twin derivation + safe-delete vs migrate-first classification, plus a
+  48h e2e research-data accounting cross-check. NOT covered — any actual delete
+  (read-only; only per-AG audit parquets written).
 date: 2026-06-18
 auditor: ikennaigboaka [autonomous gcs-delete-list audit]
 parent_epic: infrastructure_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

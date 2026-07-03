@@ -2,20 +2,32 @@
 doc_type: audit-result
 title: Codex ↔ Plan Differential Scan — 2026-05-22
 summary:
-status: complete
+  Differential scan of all 717 codex docs × 44 active plans × 26 epics for
+  broken codex refs, dead SUPERSEDED forward-links, and stale time-markers —
+  found 5 real BROKEN-REF codex paths + 12 P0 post-May-23 markers (May-23 =
+  audit day); Phase-4 after-counts show all resolved inline (broken-ref 0, 6
+  codex stubs written, 12/12 post-May-23 markers fixed, archetype count
+  53→57 corrected).
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [trading-agent-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, plan-hygiene, ssot-audit, verification, refactor]
+related:
+  [README.md, strategy_archetype_logic_audit_2026_05_20.md]
 created: 2026-05-22
 audited_scope:
+  all codex docs (717) referenced across 44 active plans + 26 epics — broken
+  codex refs, SUPERSEDED forward-link health, and stale time-markers
+  (post-May-23 / post-cutover / future / TODO / not-yet-implemented). NOT
+  covered — a per-item actionability filter on plan open-item counts (mechanical
+  checkbox tallies only).
 date: '2026-05-22'
 auditor: slot-1 (ikenna interactive)
 parent_epic: plan_hygiene_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:

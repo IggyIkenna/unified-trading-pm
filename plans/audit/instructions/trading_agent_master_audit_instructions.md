@@ -2,18 +2,24 @@
 doc_type: audit-instruction
 title: trading_agent_master_audit_instructions
 summary:
-status:
+  Weekly audit checklist for trading-agent-service (closed-loop allocator
+  strategy→execution) — 6 checks covering GH_PAT valid (no silent clone fail),
+  workspace QG exits 0, allocator integration test, per-client
+  multiprocessing.Process isolation, ServiceBootstrap (STEP 5.61), and
+  make_health_router (STEP 5.62), plus batch→paper→live e2e goal posts.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [trading-agent-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, trading-agent, quality-gates, per-client-isolation, execution, reconciliation]
+related:
+  [../../../codex/04-architecture/per-client-isolation-architecture.md]
 created: 2026-05-22
 tier: L2
 parent_epic: infrastructure_master
-cadence:
+cadence: Weekly
 verifier:
 lifespan:
 type: audit-instructions

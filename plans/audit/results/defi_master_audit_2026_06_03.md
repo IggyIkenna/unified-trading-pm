@@ -2,20 +2,36 @@
 doc_type: audit-result
 title: DeFi Master — Audit Result 2026-06-03 (acquisition-mechanics pass)
 summary:
-status: complete
+  Code-verified DeFi acquisition-mechanics + batch/live + downstream-wiring audit
+  (instruments-service → MTDS → MDPS → features-onchain → strategy) — IS
+  acquisition GREEN-ish, MTDS tick AMBER (dex_swaps silently truncates at
+  5k swaps/day/pool, orca/raydium have no live WS, 3 hardcoded venue hosts), MDPS
+  AMBER, strategy GREEN (no batch=live signal branch). Adversarial pass narrowed
+  the gap list to survivors (dex_swaps truncation + orca/raydium live-WS
+  confirmed; funding_rate_apy_bps 0-producer REFUTED).
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, defi, acquisition, batch-live, mtds, data-correctness, features]
+related:
+  [
+    ../instructions/defi_master_audit_instructions.md,
+    cefi_master_audit_2026_06_03.md,
+  ]
 created: 2026-06-03
 audited_scope:
+  acquisition-mechanics + batch/live wiring + downstream propagation
+  (CODE-VERIFIED) across instruments-service → MTDS → MDPS → features-onchain →
+  strategy on live-defi-rollout. NOT covered — data-state corpus coverage (defi
+  items o–z / CF-1…12, needs prod GCS/manifest reads) and an exhaustive swallow
+  audit across all 52 IS adapters.
 date: 2026-06-03
 auditor: harsh + claude (opus-4-8, 1M)
 parent_epic: defi_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

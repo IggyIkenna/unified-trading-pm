@@ -2,20 +2,36 @@
 doc_type: audit-result
 title: Features + ML Master — Audit Result 2026-05-29
 summary:
-status: complete-with-blockers
+  Features+ML master audit — 14 GREEN (registry covers all 34 CALCULATOR_REGISTRY
+  groups, formula_version stamped on the parquet write path, drift gate STEP 5.91
+  operational, 8409 tests pass), 3 DRIFT (instructions list 8 asset-group families
+  vs the 10 computation-type code subdirs, 2 stale plan refs), and 3 BLOCKED
+  (l/live-versioning/batch-live) because ZERO features-delta-one parquets exist in
+  any of the 7 candidate buckets so the Phase-3 path-partition design is unproven
+  against a real write. No Phase-1-5 regression.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, ml-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, features, ml, ssot-audit, feature-formula-versioning, batch-live, quality-gates]
+related:
+  [
+    ../instructions/features_and_ml_master_audit_instructions.md,
+    ../../active/issues/features_service_defi_data_loading_blockers_2026_05_29.md,
+  ]
 created: 2026-05-29
 audited_scope:
+  features-service registry SSOT + formula versioning + path-partition + drift
+  gate + batch/live parity (items a-t + batch-live/live-versioning). NOT covered
+  (NOT-RUN) — ml-service inference/training e2e (items c/d, deferred to an
+  ml-service-focused pass); BLOCKED items need a real features-delta-one parquet
+  write to verify.
 date: 2026-05-29
 auditor: harsh (claude opus 4.7)
 parent_epic: features_and_ml_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

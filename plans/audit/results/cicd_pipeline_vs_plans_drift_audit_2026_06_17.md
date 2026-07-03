@@ -2,20 +2,36 @@
 doc_type: audit-result
 title: CI/CD Pipeline ↔ Plans Drift Audit
 summary:
-status: active
+  Triage audit of the live CI/CD pipeline (quickmerge + quality-gates +
+  scripts/cicd/*.py + ~51 PM GitHub-Actions workflows) against documented intent
+  (ci-cd-flow.md, CLAUDE.md, ~27 active CI/CD plans) — 25 drift findings, 0 live
+  pipeline regressions; the drift is almost entirely docs/plan-layer lagging a
+  fast-moving pipeline. Top items D1/D10 (uv --frozen model self-contradictory,
+  DECIDED 2026-06-17) and D5 (ci-cd-flow.md still teaches the retired per-unit
+  staging-PR model); 21/25 resolved as of 2026-06-18.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, ci-cd, quickmerge, quality-gates, plan-hygiene, ssot-audit, verification, refactor]
+related:
+  [
+    ../instructions/infrastructure_master_audit_instructions.md,
+    ../../../codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-06-17
 audited_scope:
+  live CI/CD pipeline — quickmerge.sh (1617 lines) + base-service.sh + 16
+  scripts/cicd/*.py + 51 PM workflows (all triggers/concurrency read) vs
+  ci-cd-flow.md (1020 lines) + CLAUDE.md + 14 active plans + 12 issue docs. NOT
+  fully walked — the image-build path (cloudbuild.yaml/buildspec) was only
+  spot-checked.
 date: 2026-06-17
 auditor: ikennaigboaka
 parent_epic: infrastructure_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

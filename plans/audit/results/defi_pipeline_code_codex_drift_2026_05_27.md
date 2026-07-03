@@ -2,20 +2,32 @@
 doc_type: audit-result
 title: DeFi pipeline — Code ↔ Codex drift audit (2026-05-27)
 summary:
-status: complete
+  Code↔codex drift audit of the DeFi pipeline (IS → MTDS → MDPS →
+  features-onchain) — codex is directionally correct but drifts on stale
+  catalog/venue docs (data_type names, ~22 code types vs 14 documented, venue
+  list) which were reconciled this session, plus 3 code issues (D3 dead MDPS
+  lending adapter, D7 banned bloxroute MEV relays still present, D10 RADIANT +
+  ~6 venues live with no PROTOCOL_CAPABILITIES/SUBGRAPH_IDS backing) and
+  for-decision items (infura Starknet template, governance parallel handlers)
+  deferred until the backfill completes.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [features-service]
+repos: [features-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, defi, ssot-audit, mtds, mdps, canonicalisation, data-correctness]
+related:
+  [
+    ../instructions/defi_master_audit_instructions.md,
+    ../../active/issues/defi_code_codex_drift_2026_05_27.md,
+  ]
 created: '2026-05-27'
 audited_scope: DeFi data pipeline (instruments-service → MTDS → MDPS → features-onchain) — code ↔ codex drift only
 date: 2026-05-27
 auditor: harsh
 parent_epic: defi_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:
