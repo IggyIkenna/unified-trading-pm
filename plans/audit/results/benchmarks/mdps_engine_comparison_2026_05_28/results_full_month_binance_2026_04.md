@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: MDPS engine benchmark — full month April 2026 — Path A vs Path C
-summary:
-status:
+summary: >-
+  Full-month (April 2026, 30 days × 9 BINANCE-FUTURES perp) MDPS engine benchmark Path A (pure_polars_lazy) vs Path C
+  (current_mdps_mixed) — confirms audited targets hold at scale: 10.35× wall (target 3×), 6.11× peak RSS (target 5×),
+  8.88× retention (target 7.8×); all three PASS above floor.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mdps, performance, polars, benchmark, data-pipeline, cefi, binance, verification]
+related:
+  - results.md
+  - results_synthetic_stage1_2026_05_28.md
+  - ../mdps_plan7_benchmark_report_2026_06_29.md
 created: 2026-06-29
 audited_scope:
-date:
+  April 2026 (30 days) × 9 BINANCE-FUTURES perpetual trades, Path A (pure_polars_lazy) vs Path C (current_mdps_mixed),
+  per-day + month-aggregate wall/RSS/retention
+date: 2026-06-29
 auditor:
 parent_epic: cefi_master
-severity:
+severity: P3
 resulting_plan:
 lib_version:
 doc_versions_checked:

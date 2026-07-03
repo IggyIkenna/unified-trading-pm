@@ -2,20 +2,27 @@
 doc_type: audit-result
 title: MDPS engine benchmark — results
 summary:
-status:
+  Baseline MDPS engine benchmark (9 BINANCE-FUTURES perp trades, 2026-04-15) comparing 4 read paths — pure_polars_lazy
+  (A), pandas_pyarrow (B), current_mdps_mixed (C), polars_eager (D); A vs C = 0.34× wall and −2153 MB retention delta,
+  retention ordering D < A < B < C.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mdps, performance, polars, benchmark, data-pipeline, cefi, binance]
+related:
+  - results_full_month_binance_2026_04.md
+  - results_synthetic_stage1_2026_05_28.md
 created: 2026-05-28
 audited_scope:
-date:
+  9 BINANCE-FUTURES perpetual trades parquets for 2026-04-15, 4 read paths
+  (pure_polars_lazy/pandas_pyarrow/current_mdps_mixed/polars_eager), subprocess-isolated
+date: 2026-05-28
 auditor:
 parent_epic: infrastructure_master
-severity:
+severity: P3
 resulting_plan:
 lib_version:
 doc_versions_checked:

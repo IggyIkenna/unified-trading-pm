@@ -2,20 +2,28 @@
 doc_type: audit-result
 title: Verdict pack — DEFI (G4 ⑬–⑲ pre-apply, R3/R7 regenerated on HEAD 2026-06-17)
 summary:
-status:
+  DEFI G4 verdict regenerated on HEAD (06-17) — 🟢 GREEN dry-run; projection 1,910,046 rows net-additive (+331,124,
+  captured +92,006, zero net loss); removed=39,867 all legacy dex_swaps/venue-spelling superseded by canonical
+  swaps_ohlcv_<tf>. M-COORD-7 batch=live keystone RECONCILED GREEN (0 coarse pipeline_mode literals). Awaiting operator
+  apply.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, honest-coverage, data-status, defi, migration, canonicalisation, pipeline-mode, data-correctness]
+related:
+  - verdict_cefi.md
+  - ../r3_beta_renders_2026_06_11/verdict_defi.md
 created: 2026-06-17
 audited_scope:
-date:
+  DEFI projected-v9 index (mtds@df69ada, regenerated on HEAD) vs current _index, manifest_diff_defi.json adjudication +
+  M-COORD-7 batch=live reconciliation (STEP 5.85 check)
+date: 2026-06-17
 auditor:
 parent_epic: defi_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

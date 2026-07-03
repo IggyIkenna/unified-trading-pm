@@ -2,20 +2,27 @@
 doc_type: audit-result
 title: MDPS Full-Pipeline OOM Finding — BTCUSDT Perpetual on 64 GB VM
 summary:
-status:
+  Records that the full MDPS pipeline (process --mode batch) for BTCUSDT perpetual + all 3 MVP data types OOM-kills
+  (exit 137, ~55 GB RSS subprocess-per-date child) on a 64 GB VM during trades load alone; watchdog gap = it monitors
+  parent RSS not the child. Operator accepted Plan 8 micro-benchmark as [VERIFY].
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mdps, performance, polars, benchmark, oom, data-pipeline, cefi, binance]
+related:
+  - mdps_plan7_benchmark_report_2026_06_29.md
+  - mdps_engine_comparison_2026_05_28/results_full_month_binance_2026_04.md
 created: 2026-06-29
 audited_scope:
-date:
+  BTCUSDT perpetual (BINANCE-FUTURES) full-pipeline batch, trades + book_snapshot_5 + derivative_ticker, single day
+  2026-05-22 on 64 GB VM
+date: 2026-06-29
 auditor:
 parent_epic: mtds_mdps_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

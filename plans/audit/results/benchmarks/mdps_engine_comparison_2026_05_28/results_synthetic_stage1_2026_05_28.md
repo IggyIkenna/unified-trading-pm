@@ -2,20 +2,27 @@
 doc_type: audit-result
 title: MDPS engine benchmark — Stage 1 re-run with synthetic data (2026-05-28)
 summary:
-status:
+  Stage-1 MDPS benchmark re-run on 3 synthetic BINANCE-FUTURES parquets (prod parquets unavailable on worker VM) after
+  the Stage-1 change dropping .to_pandas() from _read_tick_data; retention ordering D < A < B < C stays consistent with
+  the real-data baseline, confirming the Path D pattern target holds.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mdps, performance, polars, benchmark, data-pipeline, cefi, smoke-test]
+related:
+  - results.md
+  - results_full_month_binance_2026_04.md
 created: 2026-05-28
 audited_scope:
-date:
+  3 synthetic BINANCE-FUTURES perp trades parquets (0.3–1.4 MB), 4 read paths post Stage-1 _read_tick_data change;
+  relative retention ordering vs real-data baseline
+date: 2026-05-28
 auditor:
 parent_epic: infrastructure_master
-severity:
+severity: P3
 resulting_plan:
 lib_version:
 doc_versions_checked:

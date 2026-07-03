@@ -2,20 +2,28 @@
 doc_type: audit-result
 title: Verdict pack — PREDICTION (G4 ⑬–⑲ pre-apply, R3/R7 + R8 regenerated on HEAD 2026-06-17)
 summary:
-status:
+  PREDICTION G4 verdict on HEAD (06-17) — 🟢 GREEN; the 06-11 cqg-classifier block was a STALE-PROJECTION artifact —
+  re-projecting against the HEAD UAC registry (decision 338, 3 commits) moved coverage 0.2%→75.3% and 542,170
+  ClassifierConfidenceLow failures→1; removed=3,588 legacy raw grain superseded by cqg-bundle atom. R8 migrator dry-plan
+  GREEN.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, honest-coverage, data-status, prediction, migration, canonicalisation, uac, data-correctness]
+related:
+  - ../r3_beta_renders_2026_06_11/verdict_prediction.md
+  - verdict_cefi.md
 created: 2026-06-17
 audited_scope:
-date:
+  PREDICTION projected-v9 index (mtds@df69ada vs HEAD UAC expanded cqg registry) vs current _index,
+  manifest_diff_prediction.json + R8 migrator dry-plan (pred_migrator_dryplan.txt)
+date: 2026-06-17
 auditor:
 parent_epic: predictions_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

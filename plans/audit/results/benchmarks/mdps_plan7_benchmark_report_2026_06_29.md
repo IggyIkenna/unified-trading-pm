@@ -2,20 +2,27 @@
 doc_type: audit-result
 title: MDPS Plan 7 — Full-Month Benchmark Report (BTCUSDT BINANCE-FUTURES)
 summary:
-status:
+  Plan 7 benchmark + per-shard cost model for BTCUSDT BINANCE-FUTURES — pure-Polars beats current engine 10.35× wall /
+  6.2× peak RSS / 8.7× retained RSS (all above audited targets); Path A passes the B3 KPI (≤$0.001/shard-month, ≤500 MB
+  RSS), Path C fails on RSS. Egress ~$3.10/mo dominates; full pipeline OOM-blocked.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mdps, performance, polars, benchmark, cost, cefi, binance, data-pipeline]
+related:
+  - mdps_fullpipeline_oom_finding_2026_06_29.md
+  - mdps_engine_comparison_2026_05_28/results_full_month_binance_2026_04.md
 created: 2026-06-29
 audited_scope:
-date:
+  BTCUSDT BINANCE-FUTURES perpetual — Plan 8 candle-aggregation micro-benchmark (9 instruments × April 2026,
+  trades-only) + per-shard cost model + B3 KPI checkpoint; full-pipeline OOM documented
+date: 2026-06-29
 auditor:
 parent_epic: mtds_mdps_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

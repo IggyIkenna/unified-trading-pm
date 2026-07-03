@@ -1,21 +1,29 @@
 ---
 doc_type: audit-result
 title: Verdict pack — TRADFI (G4 ⑬–⑲ pre-apply, R3/R7 on HEAD 2026-06-17)
-summary:
-status:
+summary: >-
+  TRADFI G4 verdict on HEAD (06-17) — 🟢 GREEN dry-run; projection 946,360 rows = 6.4× the captured corpus (+802,091,
+  coverage 69.8%→95.4%) as the legacy pre-hive parser manifests 183,943 objects; gate-RED is 2,902 spot-verified phantom
+  closed-market-day downgrades + 4,374 legacy respelled keys. Residual non-blocking P1: CME Massive route
+  BLOCKED-UPSTREAM (404).
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, honest-coverage, data-status, tradfi, migration, canonicalisation, databento, data-correctness]
+related:
+  - verdict_cefi.md
+  - ../r3_beta_renders_2026_06_11/verdict_tradfi.md
 created: 2026-06-17
 audited_scope:
-date:
+  TRADFI projected-v9 index (mtds@c21bc91) vs current _index, manifest_diff_tradfi.json adjudication (phantom
+  closed-market downgrades spot-verified on HEAD, legacy pre-hive respelling, class-E options_chain preserve)
+date: 2026-06-17
 auditor:
 parent_epic: tradfi_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

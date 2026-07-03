@@ -2,20 +2,27 @@
 doc_type: audit-result
 title: Verdict pack — TRADFI (G4 pre-apply, R7/R3 2026-06-11)
 summary:
-status:
+  TRADFI G4 pre-apply verdict (06-11) — projected v9 946,360 rows (902,878 captured / 37,477 empty / 6,005 failed),
+  unparseable residue 106/902,984 (0.012%); grain-aware diff removed=4,374 + changed=2,916 (273 captured→failed, 2,629
+  captured→empty, 14 empty→captured upgrades), ~79% removed are garbage-venue v9 drops; awaiting operator.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-tick-data-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, honest-coverage, data-status, tradfi, migration, canonicalisation, data-correctness, verification]
+related:
+  - verdict_cefi.md
+  - ../r3_verdict_packs_2026_06_17/verdict_tradfi.md
 created: 2026-06-11
 audited_scope:
-date:
+  TRADFI projected-v9 index vs live _index (G4 dry-run), grain-aware manifest diff adjudication (garbage-venue drops,
+  phantom closed-market over-claims, legacy respelling, CME weekend cells)
+date: 2026-06-11
 auditor:
 parent_epic: tradfi_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

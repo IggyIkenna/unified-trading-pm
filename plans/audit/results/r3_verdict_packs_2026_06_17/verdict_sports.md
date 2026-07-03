@@ -2,20 +2,28 @@
 doc_type: audit-result
 title: Verdict pack — SPORTS (G4 ⑬–⑲ pre-apply, R3/R7 + R8 on HEAD 2026-06-17)
 summary:
-status:
+  SPORTS G4 verdict on HEAD (06-17) — 🟢 GREEN, cleanest AG; gate removed=0/regressions=0/changed=0, cell coverage
+  byte-identical projected-vs-current; only delta is 17,288 blank-status ODDS_API probe artifacts excluded. R8 orphan
+  sweeps drove E=0 on both buckets; v1_archive 72,522/72,522 rows proven before drop. CF-5 relabel residual is
+  reason-level only.
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-tick-data-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, honest-coverage, data-status, sports, migration, odds, single-walk, data-correctness]
+related:
+  - ../r3_beta_renders_2026_06_11/verdict_sports.md
+  - verdict_tradfi.md
 created: 2026-06-17
 audited_scope:
-date:
+  SPORTS odds + reference buckets projected-v9 index (mtds@77f1a61) vs current _index, manifest_diff_sports.json + R8
+  sports-specific orphan sweep + v1_archive row-coverage proof
+date: 2026-06-17
 auditor:
 parent_epic: sports_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

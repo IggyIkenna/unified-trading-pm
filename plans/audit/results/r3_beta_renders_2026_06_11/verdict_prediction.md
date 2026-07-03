@@ -2,20 +2,27 @@
 doc_type: audit-result
 title: Verdict pack — PREDICTION (G4 pre-apply, R7/R3 2026-06-11)
 summary:
-status:
+  PREDICTION G4 pre-apply verdict (06-11) — projected v9 545,855 rows; legacy category=/data_source= parser added
+  (573,536 of 578,162 now parse); removed=3,588 legacy raw-grain superseded by cqg bundle atom. OPEN P1 BLOCKER — cqg
+  classifier covers only 1,355/573,536 objects (94.5% ClassifierConfidenceLow), UAC registry decision needed.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, honest-coverage, data-status, prediction, migration, canonicalisation, uac, escalation]
+related:
+  - verdict_cefi.md
+  - ../r3_verdict_packs_2026_06_17/verdict_prediction.md
 created: 2026-06-11
 audited_scope:
-date:
+  PREDICTION projected-v9 index vs live _index (G4 dry-run), cqg-bundle atom migration diff + cqg-classifier coverage
+  assessment
+date: 2026-06-11
 auditor:
 parent_epic: predictions_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:
