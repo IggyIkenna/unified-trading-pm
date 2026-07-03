@@ -51,7 +51,7 @@ unified-trading-pm, 2026-07-03; IggyIkenna is a user account → no org-level se
 empty). The check is non-required so promotes still merge — but the gate validates nothing and reds every promote PR
 (recurring ci-failures noise since 2026-06-27).
 
-**Operator action**: create/identify the AWS IAM role for GitHub-OIDC CodeBuild triggering in account `427895769566`
-(trust policy must cover the fleet repos' OIDC subs for `pull_request` refs), then set `AWS_BUILD_ROLE_ARN` as an
-Actions secret on every repo that calls the PM-hosted `image-build-validate.yml`. Verify one promote-PR image-build-gate
-run goes green end-to-end.
+**Operator action (IKENNA — AWS admin; Harsh confirmed 2026-07-03 he cannot do this)**: create/identify the AWS IAM role
+for GitHub-OIDC CodeBuild triggering in account `427895769566` (trust policy must cover the fleet repos' OIDC subs for
+`pull_request` refs), then set `AWS_BUILD_ROLE_ARN` as an Actions secret on every repo that calls the PM-hosted
+`image-build-validate.yml`. Verify one promote-PR image-build-gate run goes green end-to-end.

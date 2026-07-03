@@ -156,9 +156,9 @@ Phase 1:
       AWS via OIDC" with "Could not load credentials from any providers" because `secrets.AWS_BUILD_ROLE_ARN` is not
       defined in ANY repo (verified `gh secret list` on UAC + PM; IggyIkenna is a user account → no org secrets, so
       `secrets: inherit` resolves empty). Non-required check → promotes still merge, but the dual-cloud image gate
-      validates nothing and reds every promote PR (recurring ci-failures noise). Operator: create the AWS IAM role
-      (trust policy must cover the fleet repos' OIDC subs) + set the secret per-repo; then verify one promote-PR run
-      goes green end-to-end.
+      validates nothing and reds every promote PR (recurring ci-failures noise). **Assigned: IKENNA** (AWS admin — Harsh
+      confirmed 2026-07-03 he cannot provision this): create the AWS IAM role (trust policy must cover the fleet repos'
+      OIDC subs) + set the secret per-repo; then verify one promote-PR run goes green end-to-end.
 - [ ] [CICD] P1. **Cron reliability — LEFT AS-IS per operator (2026-06-30).** GHA `schedule` fires ~1/1.5–2h
       (best-effort, drops ticks). Ikenna to decide when faster draining is needed. Options: (A) self-hosted VM heartbeat
       dispatching the promoter every 15 min via `gh workflow run` [recommended — deterministic]; (B) event-driven
