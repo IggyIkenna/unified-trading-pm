@@ -66,6 +66,6 @@ into Tardis rate limits or machine sizing for Deribit bundling.
 
 ## Open actions
 
-- [ ] Verify DERIBIT options_chain af after wave-1 reprobe VMs complete (ETA: 1-3 hours)
-- [ ] If af > 0 after reprobe: check DERIBIT light VM logs for OOM/preemption evidence
-- [ ] Close issue when DERIBIT options_chain af=0 in prd manifest
+- [ ] [VERIFY] P0. Verify DERIBIT options_chain af after wave-1 reprobe VMs complete (ETA: 1-3 hours)
+- [ ] [MONITOR] P1. If af > 0 after reprobe: check DERIBIT light VM logs for OOM/preemption evidence
+- [ ] [OPS] P1. Close issue when DERIBIT options_chain af=0 in prd manifest
