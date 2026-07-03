@@ -197,37 +197,60 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
 
 ### Phase 1 — incremental engine (tradfi/cefi/defi)
 
-- [ ] [SCRIPT] P1. Add `--mode {incremental,full}` to `build_instrument_catalogue.py` (`run_rollup`), default
+- [x] [SCRIPT] P1. ✅ Add `--mode {incremental,full}` to `build_instrument_catalogue.py` (`run_rollup`), default
       `incremental`; `full` = today's behaviour (cold-start + periodic). Gate: unit test both modes select the right
-      path.
-- [ ] [SCRIPT] P1. Implement trailing-window read: `_iter_by_date_snapshots(..., since=cutoff)` listing only
+      path. — instruments-service@b0596d0c; `test_parse_args_mode_defaults_incremental` +
+      `test_incremental_cold_start_falls_back_to_full` green.
+- [x] [SCRIPT] P1. ✅ Implement trailing-window read: `_iter_by_date_snapshots(..., since=cutoff)` listing only
       `day=>=cutoff` prefixes (no full-corpus walk — single-walk rule). Window is **SELF-WIDENING**:
       `window_days = max(WINDOW_DAYS_MIN=21, days_since_prev_catalogue_mtime + 7)` (operator decision 2026-07-03 — see
       §The fix, step 2). Gate: a test asserts only window days are listed + a test asserts a stale prev catalogue (mtime
-      N>21 days old) widens the window to cover the full gap.
-- [ ] [SCRIPT] P1. Implement the merge (`_merge_incremental(prev_cat_df, window_df)`): update-known (carry
+      N>21 days old) widens the window to cover the full gap. — instruments-service@b0596d0c;
+      `test_iter_by_date_since_lists_only_window_days` (per-day `day=` prefixes only) +
+      `test_compute_window_start_fresh_and_stale` (21d fresh / 42d at 35d-stale / 21d unknown-mtime) green.
+- [x] [SCRIPT] P1. ✅ Implement the merge (`_merge_incremental(prev_cat_df, window_df)`): update-known (carry
       `available_from`), append-new, close newly-delisted (active-in-prev ∧ absent-all-window), freeze the tail. Reuse
       `_aggregate_key`/`_defi_pool_dual_form` for pool identity. Gate: new unit tests for each of the 4 merge branches.
-- [ ] [SCRIPT] P1. Cold-start + dry-run wiring: no prev catalogue → `--mode full`; keep `--max-blobs` diagnostic. Gate:
-      `test_incremental_cold_start_falls_back_to_full`.
+      — instruments-service@b0596d0c; branch tests `test_merge_updated_row_carries_available_from_and_refreshes`,
+      `test_merge_new_listing_appended`, `test_merge_newly_delisted_closed_at_window_start_minus_one`,
+      `test_merge_venue_absent_from_window_preserves_active`, + `test_merge_defi_pool_keys_on_dual_form_identity`
+      (pool::CHAIN::addr) + `test_merge_empty_window_preserves_catalogue`. **Implementation finding (2026-07-03)**: the
+      newly-delisted branch REQUIRES a venue-presence guard — a venue absent from the whole window is a capture
+      outage/stopped venue, and the full rebuild's per-venue frontier keeps its instruments ACTIVE (§7.3); closing them
+      would break parity. Branch 3 fires only for instrument-level absence with the venue still capturing.
+- [x] [SCRIPT] P1. ✅ Cold-start + dry-run wiring: no prev catalogue → `--mode full`; keep `--max-blobs` diagnostic.
+      Gate: `test_incremental_cold_start_falls_back_to_full`. — instruments-service@b0596d0c; green.
 
 ### Phase 2 — equivalence proof (the correctness gate)
 
-- [ ] [VERIFY] P0. **Parity test**: on a fixture corpus, assert `incremental(prev, window)` == `full_rebuild(all)`
+- [x] [VERIFY] P0. ✅ **Parity test**: on a fixture corpus, assert `incremental(prev, window)` == `full_rebuild(all)`
       row-for-row for tradfi/cefi/defi (instrument set, `available_from`, `available_to`, `mvp`, dual-form ids). This is
-      the ship gate. Gate: `test_incremental_matches_full_rebuild_*` green for all 3 AGs.
-- [ ] [VERIFY] P0. **Live shadow parity**: run `--mode incremental --dry-run` against prod tradfi + diff the produced
+      the ship gate. Gate: `test_incremental_matches_full_rebuild_*` green for all 3 AGs. —
+      instruments-service@b0596d0c; `_cefi` (incl. `_add_mvp_column` equality — perp-gate over the merged frame),
+      `_tradfi` (expiry venue-truth), `_defi` (dual-form pools) all green on 40-day fixtures with old-delisted /
+      mid-window-delist / new-listing rows.
+- [x] [VERIFY] P0. ✅ **Live shadow parity**: run `--mode incremental --dry-run` against prod tradfi + diff the produced
       frame vs the current `catalog.parquet` content (not just row count — per-instrument `available_to`). Gate: diff
-      empty except expected window updates; cite the run. (Builds on `scratchpad/incremental_prototype.py`.)
-- [ ] [VERIFY] P1. Newly-delisted edge case: synthetic fixture where an active perp stops appearing mid-window → assert
-      `available_to` closes to the correct boundary (not a thin-day blip). Gate: dedicated test.
+      empty except expected window updates; cite the run. — READ-ONLY run 2026-07-03 (slot-2,
+      `scratchpad/shadow_parity_tradfi.py` vs `instruments-store-tradfi-prd`): prev=1,090,672 rows (mtime
+      2026-06-29T18:25Z) → window day>=2026-06-12 (278 blobs, self-widening) → merged=1,091,661; **wall-clock 85.6s vs
+      137min full (~96×)**; guard monotonic_ok; diff: **0 dropped keys, 0 available_to changes, 989 new listings** (4
+      stale days of genuine catch-up), 4 `available_from` refinements (min-rule absorbing newly-declared CME listing
+      dates — the same value a full rebuild computes). All diffs = expected window updates.
+- [x] [VERIFY] P1. ✅ Newly-delisted edge case: synthetic fixture where an active perp stops appearing mid-window →
+      assert `available_to` closes to the correct boundary (not a thin-day blip). Gate: dedicated test. —
+      instruments-service@b0596d0c; `test_incremental_newly_delisted_mid_window_closes_to_true_boundary` green (closes
+      at the true last-seen day, identical to full rebuild).
 
 ### Phase 3 — prediction variant + deploy
 
-- [ ] [SCRIPT] P1. Apply the same trailing-window + frozen-tail merge to `build_prediction_catalogue_dataframe`
+- [x] [SCRIPT] P1. ✅ Apply the same trailing-window + frozen-tail merge to `build_prediction_catalogue_dataframe`
       (multi-grain cqg/conditionId; simpler `last_day>=latest_day` liveness, but `available_from`/settlement still need
       the prev catalogue). Gate: prediction parity test. **Sports needs NO change** —
-      `build_sports_catalogue_from_manifest` already reads only the manifest `_index` (single read, no by_date walk).
+      `build_sports_catalogue_from_manifest` already reads only the manifest `_index` (single read, no by_date walk). —
+      instruments-service@b0596d0c; `since=` on `_iter_prediction_by_date_snapshots`, shared `_merge_incremental`
+      (multi-grain rows key venue::itype::cid::data_type), `test_incremental_matches_full_rebuild_prediction` green
+      (settlement-date convention preserved); sports pinned to the manifest single-read path (mode=incremental no-op).
 - [ ] [INFRA] P1. Deploy: image rebuild + `terraform apply` of `lifecycle_catalogue_scheduler.tf` (no infra shape change
       if mode defaults to incremental; optionally lower tradfi memory 16Gi→4Gi since the window is small). Add the
       weekly `--mode full` self-heal job — **OPEN DECISION (2026-07-03 audit)**: the weekly full job needs
@@ -304,3 +327,15 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
   the incremental default already targets tradfi/cefi/defi — but the freshness impact is wider than the plan's Problem
   section (written when only tradfi had breached), and the Phase 3 "green incremental run on each AG" operational proof
   now clears staleness on three AGs, not one.
+- 2026-07-03 (slot-2, /autonomous): **Phases 0–2 + Phase 3 code SHIPPED** — instruments-service@b0596d0c via quickmerge
+  (QG green, 75 tests incl. 16 new incremental tests). Engine: `--mode {incremental,full}` (default incremental; sports
+  pinned full/manifest-read), self-widening window (`compute_window_start`), per-day `day=` prefix listings (`since=` on
+  both generic + prediction iterators), `_merge_incremental` 4-branch upsert keyed on dual-form pool identity,
+  cold-start fallback, prediction variant sharing the same merge. **Implementation finding**: branch 3 (newly-delisted)
+  needs a venue-presence guard — venue-level window absence = capture outage, instruments stay active (full-rebuild §7.3
+  parity); only instrument-level absence closes. **Live shadow parity (prod tradfi, read-only)**: 85.6s vs 137min
+  (~96×), 0 dropped keys, 0 available_to changes, 989 new listings, 4 af min-rule refinements — all expected window
+  updates. Weekly-full timeout decision RESOLVED in terraform: the "3600 = Cloud-Run-Jobs ceiling" claim was wrong (Jobs
+  ceiling is 24h); weekly `lifecycle-catalogue-full-{cefi,defi,tradfi,prediction}` jobs get `timeout_seconds=21600` (6h,
+  ~2.6× the 2h17m measured full walk), staggered Sat 03:00–06:00 UTC. Next: deployment-service terraform ship +
+  `gcloud builds submit` image + terraform apply + operational proof.
