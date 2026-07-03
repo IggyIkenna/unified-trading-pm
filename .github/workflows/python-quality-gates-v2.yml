@@ -457,6 +457,14 @@ jobs:
             esac
           }
           for repo in $DEP_REPOS; do
+            # A dep_repos entry naming the calling repo itself would target ../<self> —
+            # which IS $GITHUB_WORKSPACE. The clone fails on the non-empty dir and the
+            # retry's `rm -rf` deletes the job's own checkout (fatal: unable to get
+            # current working directory). The checkout already placed self — skip it.
+            if [ "$repo" = "${GITHUB_REPOSITORY#*/}" ]; then
+              echo "Skipping self-clone of $repo (already checked out as the workspace)"
+              continue
+            fi
             clone_repo "$repo"
             assert_dep_in_range "$repo"
           done
