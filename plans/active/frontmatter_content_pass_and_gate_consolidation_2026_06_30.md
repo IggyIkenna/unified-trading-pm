@@ -103,7 +103,7 @@ urgent.
       HARD = only the 3 pre-existing rot docs (0 introduced); `authoritative_for` collision sweep (`rg --no-ignore`,
       covers the gitignore-shadowed credentials dir): ZERO duplicate phrases corpus-wide; 2 YAML parse breaks
       (colon-space/hash foot-guns) found by the sweep and fixed same-day.
-- [ ] [SCRIPT] P3.3 **`referenced_by` reverse-link post-pass (codex).** Derive from the corpus link graph AFTER the
+- [x] [SCRIPT] P3.3 **`referenced_by` reverse-link post-pass (codex).** Derive from the corpus link graph AFTER the
       content pass lands (the pass creates new `related` edges). **Gate**: codex `referenced_by` populated mechanically,
       no LLM.
 - [ ] [OPERATOR] P3.4 **Operator worklist.** Delivered 2026-07-04 — see `## P3.4 Operator worklist` section below
