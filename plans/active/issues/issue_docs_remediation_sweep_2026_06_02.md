@@ -2,14 +2,20 @@
 doc_type: issue
 title: Issue-docs remediation sweep — code-fixable items across the 2026-05/06 issue-doc backlog
 summary: 'A 2026-06-02 (slot 7) code-audit of every `plans/active/issues/*.md` doc verified each open claim against current code (with git-log dates, since docs predate today). Outcome: a large fraction of "...'
-status: IN-FLIGHT — slot 7 executing; items flip + source issue docs archive as each is verified complete
+status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [plan-hygiene, audit, refactor, data-correctness, defi, observability, reconciliation]
+related:
+  [
+    plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md,
+    plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
+    plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
+  ]
 created: 2026-06-02
 parent_epic: plan_hygiene_master
 priority: P1

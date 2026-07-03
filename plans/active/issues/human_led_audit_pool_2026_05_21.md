@@ -2,13 +2,13 @@
 doc_type: issue
 title: Human-led audit pool — issue catalogue for background-agent remediation
 summary: 'Verbatim from operator note to Harsh ahead of meet, 2026-05-21:'
-status: SEEDED — initial 14-row catalogue. Rows graduate to ACKED + wrapper-plan as humans pick them up.
+status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, execution-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
+tags: [audit, plan-hygiene, orchestrator, strategy, ml, execution, reconciliation]
 related: [master_to_live_defi_2026_05_23.md, mega_audit_and_plan_beefup_progression_2026_05_20.md, strategy_archetype_logic_audit_2026_05_20.md, mtds_mdps_master.md]
 created: 2026-05-21
 parent_epic: plan_hygiene_master

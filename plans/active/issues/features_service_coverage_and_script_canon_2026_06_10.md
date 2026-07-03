@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, e2e-testing, features-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [features, scripts, quality-gates, refactor, data-quality, testing]
+related: [codex/06-coding-standards/script-homes.md]
 created: 2026-06-10
 parent_epic: infrastructure_master
 priority: P2

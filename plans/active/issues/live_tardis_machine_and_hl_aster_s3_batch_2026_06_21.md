@@ -8,8 +8,14 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mtds, live-trading, cefi, hyperliquid, backfill, pipeline-mode, uac]
+related:
+  [
+    plans/active/issues/fleet_data_acquisition_health_2026_06_21.md,
+    plans/active/issues/hyperliquid_rest_pipeline_mode_missed_by_v9_migration_2026_06_17.md,
+    plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
+    codex/02-data/pipeline-mode-partition.md,
+  ]
 created: 2026-06-21
 parent_epic: mtds_mdps_master
 priority: P2

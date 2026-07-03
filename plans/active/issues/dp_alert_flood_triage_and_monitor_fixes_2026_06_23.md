@@ -8,8 +8,14 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [monitoring, alerting, data-pipeline, observability, self-healing, tradfi, spot-vm]
+related:
+  [
+    codex/05-infrastructure/deployment-observability.md,
+    codex/02-data/tradfi-databento-sourcing-ssot.md,
+    plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
+    plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
+  ]
 created: 2026-06-23
 parent_epic: mtds_mdps_master
 priority: P1

@@ -8,8 +8,14 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, ml-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, features, mdps, manifest, data-correctness, uac, canonicalisation]
+related:
+  [
+    plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
+    plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    codex/02-data/feature-formula-versioning.md,
+    codex/02-data/defi-canonical-naming-ssot.md,
+  ]
 created: 2026-05-29
 parent_epic: features_and_ml_master
 priority: P2

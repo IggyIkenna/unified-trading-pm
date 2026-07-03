@@ -8,8 +8,13 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, market-tick-data-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [hyperliquid, pipeline-mode, migration, cefi, defi, manifest, canonicalisation]
+related:
+  [
+    plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md,
+    codex/02-data/pipeline-mode-partition.md,
+    plans/active/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md,
+  ]
 created: 2026-06-17
 parent_epic: mtds_mdps_master
 priority: P2

@@ -8,8 +8,12 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, testing, refactor, cve, dependencies, quality-gates]
+related:
+  [
+    plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md,
+    plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
+  ]
 created: 2026-06-23
 parent_epic: execution_master
 priority: P2

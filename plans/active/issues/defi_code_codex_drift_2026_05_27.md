@@ -8,8 +8,15 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, data-correctness, ssot-audit, mdps, mtds, uac, canonicalisation, catalogue]
+related:
+  [
+    plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27.md,
+    codex/02-data/defi-data-pipeline.md,
+    codex/02-data/defi-data-types-catalog.md,
+    codex/02-data/defi-canonical-naming-ssot.md,
+    plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
+  ]
 created: 2026-05-27
 parent_epic: defi_master
 priority: P2
