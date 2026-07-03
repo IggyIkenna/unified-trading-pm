@@ -26,6 +26,10 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.8
 assigned_role: data-pipeline-engineer
 drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # DeFi expected_unattempted backlog ≥1M — enumerator halt-safety (found 2026-07-03)
