@@ -1,15 +1,18 @@
 ---
 doc_type: codex-ssot
 title: CeFi Momentum
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] CeFi momentum strategy — swing_high/swing_low ML predictions (0.65 confidence gate)
+  with MACD/RSI context drive directional perp positions on Binance Futures (BTC/ETH/SOL); SCE or HUF exit
+  modes. Replaced by architecture-v2 `ML_DIRECTIONAL_CONTINUOUS`.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, cefi, ml, binance, features]
+related: [ml-directional.md, ../../architecture-v2/archetypes/ml-directional-continuous.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

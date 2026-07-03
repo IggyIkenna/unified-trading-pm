@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: CeFi Cross-Exchange Spread
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] CeFi cross-exchange spread strategy — ML-predicted reversion of the fee-adjusted
+  spread between two venues (Binance vs Kraken default), z-score-gated entry (1.5σ) / exit (0.3σ) with a
+  120-bar max-hold safety, both legs market-executed atomically. Consumes `fee_adjusted_spread_bps` /
+  `_zscore` from features-cross-instrument. Replaced by architecture-v2 `ARBITRAGE_PRICE_DISPERSION`.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, cefi, binance, arbitrage, features]
+related: [stat-arb.md, ../../architecture-v2/archetypes/arbitrage-price-dispersion.md]
 created: 2026-06-16
 authoritative_for:
 referenced_by:

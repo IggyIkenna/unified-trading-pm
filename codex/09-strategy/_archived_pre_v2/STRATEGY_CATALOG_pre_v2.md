@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: 09 — Strategy Documentation
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] The category-organised strategy catalogue — 65+ strategy configurations across 6
+  asset classes (DeFi EVM/Solana/BTC/multi-chain, CeFi, TradFi, Sports, Prediction) with per-domain index
+  tables, plus the shared infrastructure (7 feature services / 150+ calculators, 13+ execution algorithms,
+  5 matching-engine types) and 9 hard rules. Replaced by architecture-v2 (category → family/archetype).
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, catalogue, defi, cefi, tradfi, execution, features]
+related: [STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md, ../architecture-v2/README.md, ../architecture-v2/MIGRATION.md]
 created: 2026-05-27
 authoritative_for:
 referenced_by:

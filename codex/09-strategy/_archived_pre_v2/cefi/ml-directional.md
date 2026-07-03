@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: CeFi ML Directional
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] CeFi ML directional strategy — swing_high/swing_low ML predictions map to
+  LONG/SHORT behind a 0.65 confidence gate, enriched with crypto microstructure (funding, open interest,
+  orderbook imbalance, volume profile); SCE or HUF exit; trades Binance Futures + Hyperliquid perps
+  (BTC/ETH/SOL). Replaced by architecture-v2 `ML_DIRECTIONAL_CONTINUOUS`.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, cefi, ml, binance, features]
+related: [momentum.md, ../../architecture-v2/archetypes/ml-directional-continuous.md]
 created: 2026-06-16
 authoritative_for:
 referenced_by:

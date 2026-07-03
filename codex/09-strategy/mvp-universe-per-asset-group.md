@@ -1,21 +1,27 @@
 ---
 doc_type: codex-ssot
 title: MVP universe per asset_group — May-23 cutover SSOT
-summary:
-status:
+summary: >-
+  May-23 cutover SSOT for the narrow per-asset_group MVP universe that feeds backtest / features / ML /
+  config-grid — a two-layer model (broad "capture all markets" data layer vs narrow backtest scope). Sets
+  backtest windows (DeFi + Prediction 2yr, CeFi + TradFi 5yr, Sports 5yr+), config-grid worker sizing
+  (~2.6M Tier A worker-runs; funding-rate arb is the heaviest), ~11.7M ML training rows, and Tier A
+  (backtest-by-May-23) vs Tier B (code-ready only) archetype scope. References the cell-level canonical
+  SSOTs (UAC enums, category-instrument-coverage, per-asset master plans) rather than duplicating them.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mvp, backtest, features, ml, strategy, cutover]
+related: [architecture-v2/category-instrument-coverage.md, ../02-data/mvp-scope-canonical.md, ../../plans/active/compute_optimization_mock_data_2026_05_13.md]
 created: 2026-05-13
-authoritative_for:
+authoritative_for: [may-23 cutover backtest-universe sizing per asset_group (backtest-window + config-grid worker-count math)]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py]
 ---
 
 # MVP universe per asset_group — May-23 cutover SSOT

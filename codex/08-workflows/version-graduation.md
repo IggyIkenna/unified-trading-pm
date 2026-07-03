@@ -1,21 +1,25 @@
 ---
 doc_type: codex-ssot
 title: Version Graduation (0.x.x → 1.0.0)
-summary:
-status:
+summary: >-
+  How repos graduate 0.x.x → 1.0.0 — pre-1.0.0 `feat!` is a MINOR bump (semver-agent override, never
+  auto-crossing to MAJOR); 1.0.0 is a deliberate human decision requested via `request-major-bump.yml`
+  (or `approve-major-bump.sh`) and executed by `/approve` on a `major-bump-pending` GitHub issue;
+  post-1.0.0 `feat!` = MAJOR behind an approval issue. SIT runs for all repos at 0.1.0+.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [version-graduation, semver, major-bump, quality-gates, sit]
+related: [ci-cd-flow.md, ../06-coding-standards/quality-gates.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [version graduation 0.x.x→1.0.0 (pre-1.0.0 feat! MINOR override + 1.0.0 human-approval flow)]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-trading-pm/scripts/approve-major-bump.sh]
 ---
 
 # Version Graduation (0.x.x → 1.0.0)

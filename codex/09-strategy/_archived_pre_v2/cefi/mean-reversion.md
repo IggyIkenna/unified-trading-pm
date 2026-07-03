@@ -1,15 +1,19 @@
 ---
 doc_type: codex-ssot
 title: CeFi Mean Reversion
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] CeFi/TradFi z-score mean-reversion strategy — enter when price deviates > entry-z
+  (2.0σ) from a rolling (or ML-predicted) mean, exit on reversion (0.5σ); spans CRYPTO (Binance perps),
+  EQUITY (SPY), FX (6E), COMMODITY (CL). Single-leg, 1x, 20-bar lookback (Oil 10-bar). Replaced by
+  architecture-v2.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, cefi, tradfi, ml, features]
+related: [stat-arb.md, ../../architecture-v2/archetypes/rules-directional-continuous.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

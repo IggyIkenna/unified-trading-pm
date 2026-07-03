@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Tier 0 UI demo — strategy parity and documentation map
-summary:
-status:
+summary: >-
+  Aligns the three "layers of truth" for the Tier 0 UI demo — Codex strategy prose, UI mock fixtures
+  (`lib/strategy-registry.ts` / `*-mock-data.ts`), and backend/OpenAPI (T1+) — so field names and enums
+  stay consistent; specifies cross-strategy UX expectations (shared facet filters, multi-venue first-class
+  view model) and the Tier 0-vs-T1+ no-feature-creep rule. Points to the UI playbook
+  `END_TO_END_STATIC_TIER_ZERO_TESTING.md` for the P0 journeys + institutional demo bar.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, ui, tier-zero, mock-data, uac, parity]
+related: [strategy-summary.md, architecture-v2/README.md, _archived_pre_v2/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [tier 0 UI demo strategy parity (codex↔UI-mock↔OpenAPI truth-layer alignment)]
 referenced_by:
 owner:
 last_reviewed:

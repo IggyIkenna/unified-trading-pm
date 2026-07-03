@@ -1,15 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Strategy Registry — SSOT in UAC
-summary:
-status:
+summary: >-
+  [SUPERSEDED, pre-v2] Notes that the strategy registry SSOT lives in UAC
+  (`internal/domain/strategy_service/registry.py`, facade `unified_api_contracts.strategy.STRATEGY_REGISTRY`)
+  — 57 strategy definitions, 18 families, 13 archetypes, per-category mode-validation — and documents the
+  UAC → `generate_ui_reference_data.py` → `ui-reference-data.json` → `generated.ts` → UI sync path.
+  Replaced by architecture-v2.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, registry, uac, ui, catalogue]
+related: [execution-modes.md, STRATEGY_CATALOG_pre_v2.md, ../architecture-v2/README.md]
 created: 2026-04-16
 authoritative_for:
 referenced_by:
