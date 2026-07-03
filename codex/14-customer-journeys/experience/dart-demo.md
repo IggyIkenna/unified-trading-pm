@@ -2,20 +2,30 @@
 doc_type: codex-ssot
 title: DART — Warm-Prospect Demo
 summary:
-status:
+  pb3c warm-prospect DART demo on staging — signals-only walks 4 surfaces (catalogue, strategy-service,
+  execution+reconciliation, reporting); full-pipeline adds research/promote/paper; research surfaces stay LOCKED-VISIBLE
+  for signals-only; IM_RESERVED and CLIENT_EXCLUSIVE slots HIDDEN-ENTIRELY.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service, unified-trading-system-ui]
 scope: [sales, prospect]
-tags: []
-related: []
+tags: [dart, demo, prospect, sales, strategy, warm-prospect, ui]
+related:
+  [
+    dart-briefing.md,
+    staging-demo-journey.md,
+    ../demo-ops/demo-restriction-profiles.md,
+    ../shared-core/same-system-principle.md,
+    ../shared-core/strategy-allocation-lock-matrix.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [pb3c DART warm-prospect demo experience]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts]
 ---
 
 # DART — Warm-Prospect Demo

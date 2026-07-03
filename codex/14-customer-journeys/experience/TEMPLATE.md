@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
-title: '[Playbook title — audience-facing, not internal shorthand]'
+title: "[Playbook title — audience-facing, not internal shorthand]"
 summary:
-status:
+  Canonical skeleton for experience-playbook docs (rule 01) — the fixed section set (Audience, Moment in journey, What
+  Odum must prove, Experience goal, Walkthrough, Key messages, What not to show, Desired next step, Internal handoff)
+  every pb1/pb2/pb3 playbook under this dir fills in.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, prospect]
-tags: []
-related: []
+tags: [template, experience-playbook, playbook, sales, prospect]
+related:
+  [../_ssot-rules/01-grammar.md, ../_ssot-rules/02-tone-and-posture.md, ../_ssot-rules/06-show-dont-show-discipline.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [experience playbook skeleton template file]
 referenced_by:
 owner:
 last_reviewed:

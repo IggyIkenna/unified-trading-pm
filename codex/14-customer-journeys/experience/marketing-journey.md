@@ -2,20 +2,34 @@
 doc_type: codex-ssot
 title: Marketing Journey — Anonymous Visitor to First Call
 summary:
-status:
+  pb1 anonymous-visitor-to-first-call marketing journey — the 5-path public nav (DART umbrella with signals-in/full,
+  Odum Signals, Investment Management, Regulatory, Firm) with no email wall, plus the inline 6-axis light-auth
+  questionnaire gate (since 2026-04-25) that is now the briefings access path.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [sales, prospect]
-tags: []
-related: []
+tags: [marketing, prospect, sales, ui, briefings, pricing]
+related:
+  [
+    briefings-hub.md,
+    ../authentication/light-auth-briefings.md,
+    ../commercial-model/dart-entry-points.md,
+    ../shared-core/competitive-landscape.md,
+    ../implementation-mapping/route-mapping.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [pb1 pre-first-call marketing journey experience]
 referenced_by:
 owner:
 last_reviewed:
 code_refs:
+  [
+    unified-trading-system-ui/tests/e2e/playbooks/marketing-pre-first-call.spec.ts,
+    unified-trading-system-ui/tests/e2e/playbooks/marketing-site-restructure.spec.ts,
+  ]
 ---
 
 # Marketing Journey — Anonymous Visitor to First Call

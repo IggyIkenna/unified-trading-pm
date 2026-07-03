@@ -2,20 +2,31 @@
 doc_type: codex-ssot
 title: Production — odum-research.com
 summary:
-status:
+  Production environment SSOT for odum-research.com (Firebase central-element-323112) — real client capital, Cloud Run
+  deploy via deploy-cloud-run.sh gated behind merge-to-main manual approval, no-prefix Pub/Sub, odum-<name> GCS buckets,
+  and code-enforced safeguards (firebase auth mandatory, MOCK_API off, DISABLE_AUTH no-op, MiFID-II lifecycle audit).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [production, deployment, ui, environments, compliance, cloud-run]
+related:
+  [
+    staging-odum-research-co-uk.md,
+    ../authentication/firebase-production.md,
+    ../../04-architecture/client-isolation-sla-and-runtime-profiles.md,
+    ../../07-security/compliance.md,
+    ../../07-security/secrets-management.md,
+  ]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [odum-research.com production web environment]
 referenced_by:
 owner:
 last_reviewed:
 code_refs:
+  [unified-trading-system-ui/scripts/deploy-cloud-run.sh, unified-trading-system-ui/config/docker-build.env.production]
 ---
 
 # Production — odum-research.com

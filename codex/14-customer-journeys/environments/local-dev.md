@@ -2,20 +2,29 @@
 doc_type: codex-ssot
 title: Local dev
 summary:
-status:
+  Per-playbook local-dev tier/port guide — pb1/pb2 marketing+briefings on Tier 0 static (port 3100), pb3 demo on Tier 1
+  (3000, MockStateStore), full fleet on Tier 2 — driven by dev-tiers.sh, plus the localStorage persona-seed devtools
+  shortcut; defers to runtime-tiers-and-deployment.md as SSOT.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, unified-trading-api, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [local-dev, ui, dev-tiers, playbook, demo, environments]
+related:
+  [
+    ../../05-infrastructure/runtime-tiers-and-deployment.md,
+    ../../08-workflows/local-dev.md,
+    ../authentication/README.md,
+    ../testing/README.md,
+  ]
 created: 2026-04-19
-authoritative_for:
+authoritative_for: [per-playbook local-dev tier and port selection]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-trading-system-ui/scripts/dev-tiers.sh, unified-trading-system-ui/lib/auth/personas.ts]
 ---
 
 # Local dev
