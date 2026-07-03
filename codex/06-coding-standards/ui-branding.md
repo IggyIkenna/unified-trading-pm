@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: UI Branding Standardization
 summary:
-status:
+  Standardizes every UI on React 18.3 + Tailwind v4 (`@tailwindcss/vite`) + Radix + the `@unified-trading/ui-kit` shared
+  component library; deployment-ui is the reference design; tracks per-repo React-version + ui-kit adoption status.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [ui, ui-kit, frontend, refactor]
+related: [ui-service-separation.md, ui-testing-layers.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [UI branding and ui-kit shared-component standardization]
 referenced_by:
 owner:
 last_reviewed:

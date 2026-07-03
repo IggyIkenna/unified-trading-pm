@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Testing with Live API Keys
 summary:
-status:
+  SSOT for the `INTEGRATION_TEST_MODE` convention (live records cassettes / vcr replays / unset skips) + the GCP-auth
+  integration-test pattern; the embedded VCR cassette matrix is historical pre-collapse — live cassette SSOT is
+  `02-data/vcr-cassette-ownership.md`.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [vcr, quality-gates, validation, uac]
+related: [../02-data/vcr-cassette-ownership.md, secrets-management.md, ../06-coding-standards/vcr-cassette-pattern.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [INTEGRATION_TEST_MODE convention]
 referenced_by:
 owner:
 last_reviewed:

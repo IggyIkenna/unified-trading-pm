@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Service-to-Service Authentication
-summary:
-status:
+summary: >-
+  S2S auth SSOT: Phase-0 static `X-Service-Token` validated by the UTL factory `create_s2s_auth_dependency` (mock-bypass,
+  403-on-mismatch + `S2S_AUTH_FAILURE`, restart-to-rotate), the retiring hand-rolled `verify_service_token`
+  anti-pattern + enrolled-services table, and the Phase-1 GCP SA OAuth target.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, features-service, ml-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [security, execution, strategy, refactor, ssot-audit]
+related: [secret-naming-convention.md, transport-security.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [service-to-service authentication (X-Service-Token + create_s2s_auth_dependency factory)]
 referenced_by:
 owner:
 last_reviewed:

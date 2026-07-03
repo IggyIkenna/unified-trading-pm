@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Per-Client Exchange Credentials
 summary:
-status:
+  Per-client exchange credentials stored in Secret Manager as `{client}-{venue}-{credential-type}` (`-api-key` /
+  `-api-secret` / `-passphrase`), accessed at runtime via `get_secret_client()`; consumed by execution-service.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [secrets, execution, cefi, credentials]
+related: [secrets-management.md, secret-naming-convention.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [per-client exchange credential secrets]
 referenced_by:
 owner:
 last_reviewed:

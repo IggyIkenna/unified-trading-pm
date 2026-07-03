@@ -1,17 +1,19 @@
 ---
 doc_type: codex-ssot
 title: Dependency Scanning
-summary:
-status:
+summary: >-
+  Dependency + supply-chain scanning: pinned pyproject deps, pip-audit (OSV) as a blocking QG, Trivy Docker CRITICAL/HIGH
+  image scan, the internal-advisories.yaml checker, SBOM store to GCS, and ruff flake8-bandit security lint rules.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [dependency-scanning, quality-gates, security, scripts]
+related: [secrets-management.md, ../08-workflows/ci-cd-flow.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [dependency and container vulnerability scanning]
 referenced_by:
 owner:
 last_reviewed:

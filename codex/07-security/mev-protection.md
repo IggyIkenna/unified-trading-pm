@@ -2,14 +2,17 @@
 doc_type: codex-ssot
 title: MEV Protection (redirect)
 summary:
-status:
+  Redirect stub — MEV-protection SSOT moved 2026-05-10 to `04-architecture/mev-protection.md` (mechanism +
+  implementation) and `09-strategy/architecture-v2/cross-cutting/mev-protection.md` (strategy policy); kept only for
+  backwards-compat links, add no new content here.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, mev, execution, migration, ssot-audit]
+related: [../04-architecture/mev-protection.md, ../09-strategy/architecture-v2/cross-cutting/mev-protection.md]
 created: 2026-04-03
 authoritative_for:
 referenced_by:

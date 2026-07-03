@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: 'GHA Credential Hygiene: WIF + GitHub App Migration'
 summary:
-status:
+  Migrates GHA long-lived credentials off `GCP_SA_KEY` → GCP Workload Identity Federation (OIDC) and off `GH_PAT` →
+  GitHub App installation tokens (1h TTL), adds gitleaks pre-commit + CI scanning, with operator provisioning steps +
+  affected-workflow audit (BLOCKED-OPERATOR).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [security, migration, secrets, ci-cd, escalation]
+related: [secret-rotation.md, ../05-infrastructure/credentials-matrix.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [GHA WIF and GitHub App credential migration]
 referenced_by:
 owner:
 last_reviewed:

@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Secret Rotation Policy
-summary:
-status:
+summary: >-
+  Secret rotation policy: the rotation schedule per secret (`GH_PAT`/`GCP_SA_KEY`/`ANTHROPIC_API_KEY_SYSHEALTH`/
+  `TELEGRAM_BOT_TOKEN`), weekly `secret-health-check.yml` expiry monitoring + Telegram/Issue alert chain, per-secret
+  rotation procedures, and leak/expiry recovery runbooks.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [secrets, runbook, monitoring, ci-cd]
+related: [secrets-management.md, gha-wif-migration.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [secret rotation policy and schedule]
 referenced_by:
 owner:
 last_reviewed:

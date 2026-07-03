@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: Validation and Errors
-summary:
-status:
+summary: >-
+  SSOT for write-side validation + per-shard error handling: the 4-category empty-output decision (A honest-absence / B
+  upstream-timestamp-bias / C malformed-fields / D zero-activity-bar), the write-gate quartet at `record_captured`,
+  per-row Pydantic validation, `available_at`/LookaheadBias, InstrumentsWriteGate, and InstrumentRecord hard-required
+  fields.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, strategy-service, unified-trading-library]
 scope: [engineer]
-tags: []
-related: []
+tags: [data-correctness, validation, manifest, honest-coverage, data-pipeline]
+related:
+  [
+    ../02-data/availability-manifest-and-data-status.md,
+    ../02-data/honest-absence-downstream-handling.md,
+    ../04-architecture/shard-level-failure-isolation.md,
+  ]
 created: 2026-05-08
 authoritative_for:
+  [write-gate quartet at record_captured, four-category empty-output decision, InstrumentsWriteGate raw-data alignment]
 referenced_by:
 owner:
 last_reviewed:

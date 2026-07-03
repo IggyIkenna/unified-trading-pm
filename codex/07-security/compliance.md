@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: MiFID II / FCA Compliance Event Logging
-summary:
-status:
+summary: >-
+  MiFID II / FCA compliance event logging: the `TRADE_REPORTED_MIFID` / `ORDER_SUBMITTED_MIFID` /
+  `BEST_EXECUTION_CHECKED` / `POSITION_LIMIT_CHECKED` / `TRANSACTION_REPORTED_FCA` events, when each fires, and the
+  execution/strategy reporter wiring; ARM/EMIR/7-year-retention submission is post-cutover (no active plan).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [compliance, execution, strategy, audit, live-trading]
+related: [audit-logging.md, ../06-coding-standards/correlation-id.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [MiFID II and FCA compliance event logging]
 referenced_by:
 owner:
 last_reviewed:
