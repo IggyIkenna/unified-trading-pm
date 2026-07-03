@@ -1,21 +1,21 @@
 ---
 doc_type: audit-result
 title: Harsh-side Day-4 (2026-05-15) completion audit — slot-by-slot, SHA-verified
-summary:
-status: active
+summary: Harsh-side Day-4 completion audit — ~146 items across 8 slots SHA-verified on origin/live-defi-rollout (100% resolve, no phantom claims); real gaps are 1 unassigned features-service volatility 48-failure issue + 3 operator decisions (B-015 re-launch, Cloud Scheduler IAM, volatility routing).
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
-tags: []
+tags: [audit, verification, orchestrator, quickmerge, plan-hygiene, escalation]
 related: []
 created: 2026-05-15
-audited_scope:
-date:
-auditor:
+audited_scope: 8 harsh-side slots (2-9) Day-4 close — every claimed <repo>@<sha> for ✅ DONE pings across 17 repos, plus 20 issue docs filed that day; SHA-verified against origin/live-defi-rollout
+date: 2026-05-15
+auditor: harsh-claude
 parent_epic: infrastructure_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

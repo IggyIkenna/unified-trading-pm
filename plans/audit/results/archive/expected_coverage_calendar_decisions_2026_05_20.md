@@ -1,21 +1,21 @@
 ---
 doc_type: audit-result
 title: A2 — expected_coverage() calendar-decision sidecar
-summary:
-status:
+summary: A2 operator calendar-decision sidecar for the expected_coverage() availability oracle — records which calendars UAC encodes (US holidays/half-days, venue launch, chain genesis) vs 5 gaps it defaults to SHOULD_HAVE_DATA (sports off-season, DeFi protocol pauses, per-instrument listed_at, coverage_start, pre-Tardis windows) + the tradfi tbbo/trades 2-month cost-scoped BLOCKED-OPERATOR-DECISION.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, honest-coverage, uac, tradfi, sports, defi, golden-window, cost]
+related: [expected_coverage_dump_2026_05_20_summary.md, manifest_divergence_2026_05_20_summary.md]
 created: 2026-05-20
-audited_scope:
-date:
+audited_scope: The calendar/trading-judgment inputs to the UAC expected_coverage() oracle — calendars currently encoded, known unencoded gaps (per asset_group), and operator-acked scope decisions (tradfi tbbo/trades cost reduction)
+date: 2026-05-20
 auditor:
 parent_epic: infrastructure_master
-severity:
+severity: P2
 resulting_plan:
 lib_version:
 doc_versions_checked:

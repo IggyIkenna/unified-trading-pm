@@ -1,21 +1,21 @@
 ---
 doc_type: audit-result
 title: Codex 04-architecture phantom + retired provider ref audit — 2026-05-20
-summary:
-status:
+summary: "PASS — 0 violations: rg for URDI|Elysium|Arkham|Bloxroute|Infura across codex/04-architecture/ found 6 hits, all correctly classified (Bloxroute/Infura documented as REMOVED; Elysium = active POD client sub-entity, unrelated to the banned MEV route). No fixes required."
+status: pass
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
+tags: [audit, ssot-audit, defi, verification]
 related: []
 created: 2026-05-20
-audited_scope:
-date:
-auditor:
+audited_scope: All .md files in codex/04-architecture/ for phantom/retired-provider references (URDI, Elysium, Arkham, Bloxroute, Infura)
+date: 2026-05-20
+auditor: slot-10 (ikenna-vm)
 parent_epic: infrastructure_master
-severity:
+severity: P3
 resulting_plan:
 lib_version:
 doc_versions_checked:

@@ -1,21 +1,21 @@
 ---
 doc_type: audit-result
 title: AWS↔GCP Bucket-Name Symmetry Audit — Phase 1 Summary
-summary:
-status:
+summary: AWS↔GCP bucket-name symmetry audit of cloud-providers.yaml — 64 kind×asset_group rows, 24 kinds with prefix_drift + 10 with infix_missing need drop_prefix/add_store_infix/add_tick_infix YAML fixes; 0 of 63-char cap violations; 2 spawning-script drift fixes applied.
+status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, canonicalisation, migration, infrastructure, defi, ssot-audit]
+related: [batch_live_adapter_parity_2026_05_20_summary.md, mega_audit_phase_a_issues_human_readable_2026_05_20.md]
 created: 2026-05-20
-audited_scope:
-date:
-auditor:
+audited_scope: All aws.storage bucket kinds in deployment-service/configs/cloud-providers.yaml vs GCP counterparts (per-asset-group dicts one row each) + every deployment-service/scripts/ script that provisions/references buckets on either cloud
+date: 2026-05-20
+auditor: ikenna-slot-10
 parent_epic: batch_live_symmetry_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

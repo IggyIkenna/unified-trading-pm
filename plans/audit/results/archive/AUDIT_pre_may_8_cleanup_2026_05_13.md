@@ -1,21 +1,21 @@
 ---
 doc_type: audit-result
 title: Pre-May-8 Plans Cleanup & Completion Audit
-summary:
-status: active
+summary: Completion audit of all 26 plans dated ≤2026-05-08 — every one has 1+ open TODO (none archivable); grouped by blocker type/deadline, with one critical false-positive (deployment_ui_lifecycle_tabs A.2 marked done but vm_zombie_watchdog dict registration never shipped).
+status: partial
 nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-service, deployment-ui]
 scope: [engineer, admin]
-tags: []
+tags: [audit, plan-hygiene, verification, defi, golden-window, escalation]
 related: []
 created: 2026-05-13
-audited_scope:
-date:
+audited_scope: All 26 plans dated ≤2026-05-08 (post fresh rebase from origin/live-defi-rollout) — TODO counts, blockers, deadline criticality, ownership; grouped critical-path / near-critical / blocked / false-positive / post-cutover
+date: 2026-05-13
 auditor:
 parent_epic: infrastructure_master
-severity:
+severity: P1
 resulting_plan:
 lib_version:
 doc_versions_checked:

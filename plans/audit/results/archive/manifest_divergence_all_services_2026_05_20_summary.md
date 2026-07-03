@@ -1,21 +1,21 @@
 ---
 doc_type: audit-result
 title: A3 v2 — Manifest divergence across ALL services (GCP + AWS)
-summary:
-status:
+summary: A3 v2 manifest-index presence + v8 compliance across 27 GCS + 7 AWS buckets (MTDS/IS/features/strategy/execution/ml) — 0% v8 rows in every bucket with data; 9 GCS service buckets ERROR (no consolidated index); AWS side 2 exist-with-index vs 5 missing, prompting R21 operator decision on AWS S3 index maintenance.
+status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, manifest, single-walk, data-correctness, migration, data-status]
+related: [manifest_divergence_2026_05_20_summary.md, manifest_v8_compliance_2026_05_20_summary.md, mega_audit_phase_a_issues_human_readable_2026_05_20.md]
 created: 2026-05-20
-audited_scope:
-date:
+audited_scope: 27 GCS + 7 AWS buckets across 6 service kinds (MTDS, instruments, features-*, strategy, execution, ml) — manifest index presence, row/schema_version distribution, capture_status breakdown, v8 compliance %
+date: 2026-05-20
 auditor:
 parent_epic: manifest_master
-severity:
+severity: P0
 resulting_plan:
 lib_version:
 doc_versions_checked:
