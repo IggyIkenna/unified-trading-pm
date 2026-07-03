@@ -29,7 +29,7 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [5-tier dependency model + cross-tier protocol-injection contract]
-referenced_by:
+referenced_by: [codex/02-data/contracts-scope-and-layout.md, codex/04-architecture/TOPOLOGY-DAG.md, codex/04-architecture/cloud-agnostic-migration.md, codex/04-architecture/commercial-service-families.md, codex/04-architecture/instrument-universe-registry-consolidation.md, codex/04-architecture/runtime-deployment-topology.md, codex/04-architecture/service-control-surface.md, codex/04-architecture/service-framework.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:

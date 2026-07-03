@@ -17,7 +17,7 @@ tags: [honest-coverage, manifest, data-correctness, data-status, uac, instrument
 related: [availability-manifest-and-data-status.md, honest-absence-downstream-handling.md, honest_coverage_baseline_2026_05.md, pipeline-mode-partition.md, ../04-architecture/instruments-service-as-ssot-for-mtds.md]
 created: 2026-06-28
 authoritative_for: [Honest Coverage v2 model (two-layer / two-view / instrument-gates-download), coverage.json v2 schema, Layer-1 enumeration-completeness matrix]
-referenced_by:
+referenced_by: [codex/02-data/honest-absence-downstream-handling.md, codex/02-data/instruments-foundation-and-catalogue-completeness.md, codex/02-data/shard-coverage-classification.md, codex/03-deployment/data-status-ui-surface.md, codex/04-architecture/instrument-universe-registry-consolidation.md, codex/06-coding-standards/data-status-endpoint-contract.md, plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md, plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md]
 owner:
 last_reviewed: 2026-06-29
 code_refs:

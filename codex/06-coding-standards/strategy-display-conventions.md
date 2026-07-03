@@ -16,7 +16,7 @@ tags: [strategy, ui, terminology, defi, cefi, tradfi]
 related: [strategy-identity-versioning.md, ../09-strategy/architecture-v2/README.md, ../04-architecture/commercial-service-families.md]
 created: 2026-04-24
 authoritative_for: [strategy display conventions (client-facing strategy-identifier formatting rules)]
-referenced_by:
+referenced_by: [codex/04-architecture/commercial-service-families.md, codex/06-coding-standards/strategy-identity-versioning.md, codex/06-coding-standards/terminology-ssot.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md]
 owner:
 last_reviewed:
 code_refs:

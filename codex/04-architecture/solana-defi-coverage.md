@@ -15,7 +15,7 @@ tags: [defi, instruments, mtds, backfill, catalogue]
 related: [drift-v2-data-sources.md, defi-execution-overview.md, ../02-data/defi-canonical-naming-ssot.md]
 created: 2026-05-13
 authoritative_for: [Solana DeFi adapter coverage (perp-DEX/AMM/CLOB/oracle/restaking venue registry + program IDs + deploy-date floors)]
-referenced_by:
+referenced_by: [codex/04-architecture/drift-v2-data-sources.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md]
 owner: defi-adapters
 last_reviewed: 2026-05-17
 code_refs:

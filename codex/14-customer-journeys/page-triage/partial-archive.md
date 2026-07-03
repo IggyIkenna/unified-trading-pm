@@ -15,7 +15,7 @@ tags: [ui, page-triage, investor-relations, briefings, partial-archive, refactor
 related: [triage-matrix.md, ../playbook-concepts/investor-relations.md, ../playbooks/02-research-and-documentation.md]
 created: 2026-04-19
 authoritative_for: [IR-presentation partial-archive decisions]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/page-triage/README.md, codex/14-customer-journeys/page-triage/duplicate-clusters.md, codex/14-customer-journeys/page-triage/triage-matrix.md, codex/14-customer-journeys/playbook-concepts/investor-relations.md, codex/14-customer-journeys/roadmap/next-waves.md, codex/14-customer-journeys/roadmap/plan-references.md, codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md]
 owner:
 last_reviewed:
 code_refs:

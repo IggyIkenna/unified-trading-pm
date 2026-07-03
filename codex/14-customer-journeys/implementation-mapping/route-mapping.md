@@ -15,7 +15,7 @@ tags: [route, ui, playbook, navigation, refactor, testing]
 related: [playbook-to-qa-coverage.md, persona-and-user-prototype-mapping.md, ../shared-core/same-system-principle.md, ../shared-core/shared-reporting-core.md]
 created: 2026-04-20
 authoritative_for: [experience-section -> UI-route mapping]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/authentication/light-auth-briefings.md, codex/14-customer-journeys/demo-ops/upsell-overlays.md, codex/14-customer-journeys/experience/marketing-journey.md, codex/14-customer-journeys/implementation-mapping/README.md, codex/14-customer-journeys/implementation-mapping/demo-email-and-provisioning-flow.md, codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md, codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md]
 owner:
 last_reviewed:
 code_refs:

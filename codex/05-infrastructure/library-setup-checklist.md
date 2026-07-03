@@ -16,7 +16,7 @@ tags: [infrastructure, scripts, quality-gates, registry, runbook]
 related: [service-setup-checklist.md, new-repo-setup.md, ui-setup-checklist.md, ../06-coding-standards/dependency-management.md]
 created: 2026-03-27
 authoritative_for: [library repo setup checklist]
-referenced_by:
+referenced_by: [codex/05-infrastructure/new-repo-setup.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

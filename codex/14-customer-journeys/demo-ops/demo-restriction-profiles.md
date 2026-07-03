@@ -16,7 +16,7 @@ tags: [demo-ops, sales, dart, restriction-profile, entitlements, catalogue, im-r
 related: [dart-demo-modes.md, upsell-overlays.md, pre-demo-curation-rules.md, demo-decision-matrix.md, ../commercial-model/building-block-packaging.md]
 created: 2026-04-20
 authoritative_for: [demo restriction profiles]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/dart/dart-terminal-vs-research.md, codex/14-customer-journeys/demo-ops/README.md, codex/14-customer-journeys/demo-ops/dart-demo-modes.md, codex/14-customer-journeys/demo-ops/demo-decision-matrix.md, codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md, codex/14-customer-journeys/demo-ops/staging-demo-setup.md]
 owner:
 last_reviewed:
 code_refs: [unified-trading-system-ui/lib/auth/personas.ts, unified-trading-system-ui/lib/architecture-v2/availability.ts]

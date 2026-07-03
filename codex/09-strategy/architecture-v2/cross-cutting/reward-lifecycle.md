@@ -15,7 +15,7 @@ tags: [defi, strategy, execution, features, pnl-attribution]
 related: [restaking-reward-economics.md, pnl-attribution.md]
 created: 2026-04-03
 authoritative_for: [staking-reward lifecycle (accrue/claim/sell/attribute) + CLAIM_REWARD/SELL_REWARD operation types]
-referenced_by:
+referenced_by: [codex/02-data/instrument-pipeline-defi.md, codex/04-architecture/client-config-and-risk-dimensions.md, codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/defi/staked-basis.md, codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md, codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md]
 owner:
 last_reviewed:
 code_refs:

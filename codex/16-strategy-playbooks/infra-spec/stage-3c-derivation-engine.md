@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [Stage 3C one-registry-four-derivations engine spec (combo / cost / demo_universe / prod_restrictions / access_control)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/commercial-model/pricing-building-blocks.md, codex/14-customer-journeys/demo-ops/README.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/implementation-mapping/route-mapping.md, codex/14-customer-journeys/presentations/target-experience-post-refactor.md, codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md, codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md, codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md]
 owner:
 last_reviewed:
 code_refs:

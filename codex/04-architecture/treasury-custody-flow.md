@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-05-13
 authoritative_for: [TreasurySource taxonomy + withdrawal lifecycle N-of-M quorum + reconciliation invariant]
-referenced_by:
+referenced_by: [codex/04-architecture/interface-credential-convention.md, codex/04-architecture/transfer-architecture.md, codex/04-architecture/wallet-hierarchy-and-capital-flow.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [2026 monthly revenue projection and cashflow model]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/commercial-model/cash-deployment-plan.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md, codex/14-customer-journeys/commercial-model/signal-leasing.md]
 owner:
 last_reviewed:
 code_refs:

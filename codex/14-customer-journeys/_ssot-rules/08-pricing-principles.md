@@ -15,7 +15,7 @@ tags: [customer-journey, sales, cost, dart, registry]
 related: [05-building-block-dimensions.md, 04-dart-commercial-axes.md, 07-data-licensing-boundaries.md]
 created: 2026-04-19
 authoritative_for: [pricing principles (two-tier building-block model)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md, codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md, codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md, codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md, codex/14-customer-journeys/_ssot-rules/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/cash-deployment-plan.md]
 owner:
 last_reviewed:
 code_refs:

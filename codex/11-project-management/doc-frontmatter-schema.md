@@ -20,7 +20,7 @@ related:
 created: 2026-06-24
 authoritative_for:
   [doc frontmatter schema, doc_type vocabulary, per-type field requirements, frontmatter closed-vocab enums]
-referenced_by:
+referenced_by: [codex/11-project-management/plan-hygiene.md, plans/active/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md, plans/active/issues/plan_issue_epic_consolidation_2026_06_30.md]
 owner: harsh
 last_reviewed:
 code_refs: []

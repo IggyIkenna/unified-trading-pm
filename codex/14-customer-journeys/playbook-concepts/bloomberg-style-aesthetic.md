@@ -15,7 +15,7 @@ tags: [ui, aesthetic, ux, design, navigation, testing]
 related: [../information-architecture.md, visibility-slicing.md]
 created: 2026-04-19
 authoritative_for: [Bloomberg-style post-login UI aesthetic principles]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/information-architecture.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md, codex/14-customer-journeys/presentations/target-experience-post-refactor.md]
 owner:
 last_reviewed:
 code_refs:

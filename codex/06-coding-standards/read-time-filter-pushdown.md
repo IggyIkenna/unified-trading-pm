@@ -17,7 +17,7 @@ tags: [memory, backfill, mdps, polars, data-pipeline, performance]
 related: [../04-architecture/shard-level-failure-isolation.md, ../02-data/availability-manifest-and-data-status.md]
 created: 2026-05-28
 authoritative_for: [read-time filter pushdown (list-before-load scope filtering for batch services)]
-referenced_by:
+referenced_by: [codex/06-coding-standards/data-engine-selection.md, plans/active/bigquery_feature_ml_compute_engine_option_2026_06_08.md]
 owner:
 last_reviewed:
 code_refs:

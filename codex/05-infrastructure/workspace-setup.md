@@ -15,7 +15,7 @@ tags: [infrastructure, setup, quality-gates, scripts]
 related: [workspace-root-variable.md, ../08-workflows/ci-cd-flow.md, ../06-coding-standards/quality-gates.md]
 created: 2026-03-27
 authoritative_for: [workspace bootstrap and two-venv setup]
-referenced_by:
+referenced_by: [codex/05-infrastructure/workspace-root-variable.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:

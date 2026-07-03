@@ -18,7 +18,7 @@ related:
   [../category-instrument-coverage.md, ../uac-registry-gaps.md, ../../../04-architecture/strategy-execution-protocol.md, ../archetypes/carry-basis-dated.md, execution-policies.md]
 created: 2026-04-20
 authoritative_for: [dated-future roll service spec (representative-future-service + FUTURES_ROLL/CALENDAR_ROLL combo resolution)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/uac-registry-gaps.md]
 owner:
 last_reviewed:
 code_refs:

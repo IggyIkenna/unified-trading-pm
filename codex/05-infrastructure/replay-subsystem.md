@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-08
 authoritative_for: [replay subsystem gap-fill watermark-KV handoff, REPLAY_BACKSTOP_REACHED multi-hour-outage backstop]
-referenced_by:
+referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/pipeline-mode-partition.md, codex/03-observability/coordination-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/cefi-batch-live.md, codex/04-architecture/scenario-injection-architecture.md, codex/04-architecture/tradfi-batch-live.md, codex/05-infrastructure/live-pipeline-architecture.md]
 owner:
 last_reviewed: 2026-06-11
 code_refs:

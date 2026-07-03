@@ -16,7 +16,7 @@ tags: [quickmerge, reconciliation, orchestrator, plan-hygiene, infrastructure]
 related: [plans/active/per_agent_worktrees_2026_05_10.md]
 created: 2026-05-10
 authoritative_for: [plan-aware merge conflict resolution]
-referenced_by:
+referenced_by: [codex/05-infrastructure/per-tab-worktrees.md]
 owner: ikenna
 last_reviewed: 2026-05-17
 code_refs:

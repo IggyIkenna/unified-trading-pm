@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [codex per-audience scope registry (scope frontmatter tag + per-directory defaults)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md]
 owner:
 last_reviewed:
 code_refs:

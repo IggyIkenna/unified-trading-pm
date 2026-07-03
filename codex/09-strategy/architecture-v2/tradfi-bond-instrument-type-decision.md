@@ -12,7 +12,7 @@ tags: [strategy, tradfi, catalogue, ssot-audit, instruments]
 related: [strategy-registry-v2.md, category-instrument-coverage.md, legacy-family-migration.md]
 created: 2026-04-21
 authoritative_for: [TradFi treasury-ETF bond instrument-type decision]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/legacy-family-migration.md]
 owner:
 last_reviewed:
 code_refs:

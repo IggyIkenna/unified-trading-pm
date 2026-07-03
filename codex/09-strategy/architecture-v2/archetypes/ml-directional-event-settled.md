@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [ML_DIRECTIONAL_EVENT_SETTLED archetype specification]
-referenced_by:
+referenced_by: [codex/02-venues/unity-integration.md, codex/09-strategy/_archived_pre_v2/sports/first-half-prediction.md, codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md, codex/09-strategy/_archived_pre_v2/sports/odds-drift.md, codex/09-strategy/_archived_pre_v2/sports/pre-game-ml.md, codex/09-strategy/_archived_pre_v2/sports/value-betting.md, codex/09-strategy/architecture-v2/archetypes/event-driven.md, codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md]
 owner:
 last_reviewed:
 code_refs:

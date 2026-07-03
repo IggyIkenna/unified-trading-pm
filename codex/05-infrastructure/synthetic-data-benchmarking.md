@@ -15,7 +15,7 @@ tags: [synthetic-data, performance, benchmark, infrastructure, spot-vm]
 related: [runtime-tiers-and-deployment.md, ../06-coding-standards/performance-targets.md, ../02-data/availability-manifest-and-data-status.md]
 created: 2026-05-12
 authoritative_for: [synthetic-data pipeline benchmark harness]
-referenced_by:
+referenced_by: [codex/05-infrastructure/runtime-tiers-and-deployment.md, codex/06-coding-standards/performance-targets.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

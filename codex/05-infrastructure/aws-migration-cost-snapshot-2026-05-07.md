@@ -15,7 +15,7 @@ tags: [cost, migration, infrastructure, aws-migration, storage]
 related: [codex/04-architecture/cloud-agnostic-migration.md, plans/active/aws_migration_defi_first_2026_05_07.md, codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md]
 created: 2026-05-08
 authoritative_for: [AWS-vs-GCP per-resource cost snapshot (compute/storage/BigQuery/Pub-Sub run-rate + one-time migration + 12-month TCO, 2026-Q1 list pricing)]
-referenced_by:
+referenced_by: [codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md, codex/05-infrastructure/spot-vms-for-backfill.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

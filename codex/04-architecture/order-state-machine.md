@@ -23,7 +23,7 @@ related:
 created: 2026-05-12
 authoritative_for:
   [per-order state machine, order lifecycle states and transitions, per-transition order event emission]
-referenced_by:
+referenced_by: [codex/04-architecture/oms-protocol-and-state-machine.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

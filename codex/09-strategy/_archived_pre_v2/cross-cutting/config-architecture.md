@@ -17,7 +17,7 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md, codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/cefi/market-making.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md, codex/09-strategy/_archived_pre_v2/defi/market-making-lp.md, codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md, codex/09-strategy/_archived_pre_v2/sports/market-making.md, codex/09-strategy/_archived_pre_v2/tradfi/market-making-options.md]
 owner:
 last_reviewed:
 code_refs:

@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [7-tier deployment topology (static/T0-T6), UI/dev-stack startup decision table]
-referenced_by:
+referenced_by: [codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/client-isolation-sla-and-runtime-profiles.md, codex/04-architecture/instruments-live-architecture.md, codex/05-infrastructure/aws-iam-matrix.md, codex/05-infrastructure/deployment-and-qg-strategy.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/deployment-ui-environment-tiers.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

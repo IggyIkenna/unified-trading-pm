@@ -12,7 +12,7 @@ tags: [strategy, catalogue, uac, promote, reconciliation]
 related: [strategy-registry-v2.md, strategy-catalogue-3tier.md, performance-overlay.md, dashboard-services-grid.md]
 created: 2026-04-21
 authoritative_for: [strategy 9-phase maturity model + 5-dim instance registry + venue-set variants]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/performance-overlay.md, codex/09-strategy/architecture-v2/promote-workflow.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md, codex/09-strategy/architecture-v2/strategy-registry-v2.md, codex/14-customer-journeys/shared-core/odum-paper-client-zero.md, codex/14-customer-journeys/shared-core/strategy-version-governance.md]
 owner:
 last_reviewed:
 code_refs:

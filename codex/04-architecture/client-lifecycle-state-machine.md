@@ -12,7 +12,7 @@ tags: [client-lifecycle, onboarding, kyc, state-machine, mvp, gcs]
 related: [client-lifecycle-event-bus.md, client-funds-isolation.md]
 created: 2026-05-13
 authoritative_for: [client onboarding state machine and lifecycle states]
-referenced_by:
+referenced_by: [codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/client-lifecycle-event-bus.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

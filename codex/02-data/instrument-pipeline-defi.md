@@ -17,7 +17,7 @@ tags: [defi, instruments, pipeline, mtds, mdps, features, execution]
 related: [defi-venue-protocol-catalogue.md, defi-data-pipeline.md, hive-schema-compatibility.md, partitioning.md, ../09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md]
 created: 2026-04-03
 authoritative_for: [DeFi instrument pipeline stages (instruments-service adapters through execution), instruments-service factory.py subgraph-prefix adapter auto-registration]
-referenced_by:
+referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/defi-data-pipeline.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/venue-availability.md, plans/epics/defi_master.md]
 owner:
 last_reviewed: 2026-05-15
 code_refs:

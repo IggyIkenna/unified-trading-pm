@@ -16,7 +16,7 @@ tags: [infrastructure, gcs, migration, performance, single-walk, data-correctnes
 related: [gcs-lifecycle-policies.md, manifest-consolidator-ssot.md, ../02-data/availability-manifest-and-data-status.md]
 created: 2026-05-19
 authoritative_for: [gcs object-operation helpers, whole-corpus migration performance contract]
-referenced_by:
+referenced_by: [codex/02-data/bucket-naming-and-config.md, codex/05-infrastructure/gcs-lifecycle-policies.md, codex/05-infrastructure/path-registry.md, codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md, plans/audit/results/perf_benchmark_d8_2026_05_20.md]
 owner:
 last_reviewed:
 code_refs:

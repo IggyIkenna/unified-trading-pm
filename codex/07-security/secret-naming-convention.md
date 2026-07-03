@@ -15,7 +15,7 @@ tags: [secrets, execution, cefi, ssot-audit]
 related: [secrets-management.md, client-credentials.md]
 created: 2026-03-27
 authoritative_for: [Secret Manager naming convention]
-referenced_by:
+referenced_by: [codex/04-architecture/data-tranches.md, codex/07-security/client-credentials.md, codex/07-security/secrets-management.md, codex/07-security/service-to-service-auth.md]
 owner:
 last_reviewed:
 code_refs:

@@ -15,7 +15,7 @@ tags: [manifest, migration, backfill, single-walk, spot-vm, infrastructure]
 related: [availability-manifest-and-data-status.md, cross-asset-rescan-protocol.md, ../05-infrastructure/vm-tarball-deployment.md]
 created: 2026-04-21
 authoritative_for: [chunk-safe parallel manifest migration pattern (worker/coordinator/partial-shard)]
-referenced_by:
+referenced_by: [codex/02-data/cross-asset-rescan-protocol.md, codex/02-data/sports-scheduling-and-sharding.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

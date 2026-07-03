@@ -16,7 +16,7 @@ tags: [defi, data-quality, manifest, features, catalogue, cefi, data-pipeline]
 related: [defi-venue-protocol-catalogue.md, defi-data-types-catalog.md, availability-manifest-and-data-status.md, honest-absence-downstream-handling.md]
 created: 2026-05-10
 authoritative_for: [DeFi per-(venue, data_type) capture matrix, DeFi bundled cluster-validation registry map]
-referenced_by:
+referenced_by: [codex/02-data/README.md, codex/02-data/defi-canonical-naming-ssot.md, codex/02-data/defi-data-pipeline.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/defi-venue-protocol-catalogue.md, codex/04-architecture/amm-slippage-simulation.md, codex/05-infrastructure/chain-rpc-mev-tenderly.md]
 owner:
 last_reviewed: 2026-05-15
 code_refs:

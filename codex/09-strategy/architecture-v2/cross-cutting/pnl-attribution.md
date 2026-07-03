@@ -19,7 +19,7 @@ created: 2026-03-27
 authoritative_for:
   [canonical P&L attribution factor×layer taxonomy (PnLFactor/PnLLayer closed sets),
   high-water-mark three-method definition (TWR / Notional / PnL-recovery)]
-referenced_by:
+referenced_by: [codex/02-data/ledger-event-taxonomy.md, codex/04-architecture/backtest-groups.md, codex/04-architecture/client-reporting-architecture.md, codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md, codex/09-strategy/_archived_pre_v2/cross-cutting/pnl-attribution.md, codex/09-strategy/_archived_pre_v2/cross-cutting/share-classes.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md]
 owner:
 last_reviewed: 2026-05-18
 code_refs:

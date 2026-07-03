@@ -15,7 +15,7 @@ tags: [defi, strategy, execution, leverage, flash-loan, staking, directional]
 related: [recursive-staked-basis.md, staked-basis.md, reward-lifecycle.md]
 created: 2026-06-16
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md, codex/09-strategy/_archived_pre_v2/defi/reward-lifecycle.md]
 owner:
 last_reviewed:
 code_refs:

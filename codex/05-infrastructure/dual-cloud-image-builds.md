@@ -16,7 +16,7 @@ tags: [ci-cd, migration, aws-migration, infrastructure]
 related: [codex/08-workflows/ci-cd-flow.md, codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md]
 created: 2026-06-27
 authoritative_for: [dual-cloud image build flow (GCP Cloud Build + AWS CodeBuild routers, buildspec, promote gate, provenance)]
-referenced_by:
+referenced_by: [codex/05-infrastructure/cicd-setup.md]
 owner:
 last_reviewed:
 code_refs:

@@ -14,7 +14,7 @@ tags: [defi, execution, strategy, tenderly, mvp, live-trading]
 related: [batch-live-architecture.md, chain-environment-resolution.md, tenderly-execution-provider.md, custody-providers.md, wallet-hierarchy-and-capital-flow.md]
 created: 2026-03-30
 authoritative_for: [three execution modes (batch/paper/live) matrix, strategy-vs-execution decision boundary]
-referenced_by:
+referenced_by: [codex/04-architecture/chain-environment-resolution.md, codex/04-architecture/flash-loan-receiver.md, codex/04-architecture/mev-protection.md, codex/04-architecture/tenderly-execution-provider.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

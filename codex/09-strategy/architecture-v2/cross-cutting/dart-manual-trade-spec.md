@@ -17,7 +17,7 @@ related:
   [../../../04-architecture/manual-trade-booking.md, operational-modes-matrix.md, ../archetypes/carry-staked-basis.md, ../archetypes/carry-basis-perp.md, ../README.md]
 created: 2026-05-08
 authoritative_for: [DART manual-trade per-archetype scope + action-type replication matrix]
-referenced_by:
+referenced_by: [codex/04-architecture/research-service-and-dart-integration.md, codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md]
 owner:
 last_reviewed:
 code_refs:

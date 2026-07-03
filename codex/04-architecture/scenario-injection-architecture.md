@@ -28,7 +28,7 @@ authoritative_for:
     scenario pipeline-tap layers,
     scenario matrix runner,
   ]
-referenced_by:
+referenced_by: [codex/02-data/honest-absence-downstream-handling.md, codex/02-data/scenario-overlay-semantics.md, codex/04-architecture/scenario-outcome-assertions.md, codex/05-infrastructure/live-pipeline-architecture.md, codex/05-infrastructure/replay-subsystem.md]
 owner: simulation-platform
 last_reviewed: 2026-05-17
 code_refs:

@@ -15,7 +15,7 @@ tags: [aws, cost, cloudtrail, infrastructure, monitoring, audit]
 related: [aws-iam-matrix.md, custody-onboarding-checklist.md]
 created: 2026-06-20
 authoritative_for: [AWS CloudTrail single-org-trail rule + duplicate-trail removal (2026-06-20)]
-referenced_by:
+referenced_by: [codex/05-infrastructure/aws-iam-matrix.md]
 owner:
 last_reviewed: 2026-06-20
 code_refs:

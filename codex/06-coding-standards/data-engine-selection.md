@@ -16,7 +16,7 @@ tags: [polars, performance, data-pipeline, mdps, refactor, features, quality-gat
 related: [read-time-filter-pushdown.md, service-orchestration-patterns.md, ../05-infrastructure/vm-tarball-deployment.md, dependency-management.md]
 created: 2026-05-28
 authoritative_for: [per-service data-engine selection (Polars/Pandas+PyArrow/PyArrow/BigQuery), single-engine mid-pipeline discipline]
-referenced_by:
+referenced_by: [plans/active/bigquery_feature_ml_compute_engine_option_2026_06_08.md]
 owner:
 last_reviewed:
 code_refs:

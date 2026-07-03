@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [MARKET_MAKING_CONTINUOUS archetype specification]
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/cefi/market-making.md, codex/09-strategy/_archived_pre_v2/sports/market-making.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md, codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md, codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md, codex/09-strategy/architecture-v2/archetypes/vol-market-making.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/families/market-making.md]
 owner:
 last_reviewed:
 code_refs: [strategy-service/strategy_service/engine/strategies/v2/market_making/continuous.py]

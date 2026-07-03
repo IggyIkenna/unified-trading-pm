@@ -15,7 +15,7 @@ tags: [documentation-standards, ssot-audit, plan-hygiene, quality-gates, docspec
 related: [../02-data/schema-governance.md, ../02-data/canonical-schema-groups.md]
 created: 2026-03-27
 authoritative_for: [per-repo required-docs set (S5), repo-docs-defer-to-codex rule]
-referenced_by:
+referenced_by: [codex/06-coding-standards/cursor-rules-system.md]
 owner:
 last_reviewed:
 code_refs:

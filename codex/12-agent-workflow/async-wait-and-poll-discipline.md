@@ -16,7 +16,7 @@ tags: [orchestrator, monitoring, self-healing, observability, runbook, verificat
 related: [codex/05-infrastructure/vm-tarball-deployment.md, codex/12-agent-workflow/canonical-plan-flow.md, codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-03
 authoritative_for: [agent async-wait and poll cadence discipline, background-task watcher coverage]
-referenced_by:
+referenced_by: [codex/04-architecture/cross-venue-prediction-arb-detection.md, codex/06-coding-standards/sub-agent-workflow.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:

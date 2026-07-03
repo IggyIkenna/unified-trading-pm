@@ -17,7 +17,7 @@ tags: [features, tradfi, honest-coverage, session, uac, data-quality]
 related: [../02-data/honest-absence-downstream-handling.md, feature-service-pattern.md, ../02-data/per-asset-group-bucket-layouts.md]
 created: 2026-05-08
 authoritative_for: [session-aware feature calculator pattern (TradFi market-session classification + session-adjusted rolling windows)]
-referenced_by:
+referenced_by: [codex/02-data/honest-absence-downstream-handling.md]
 owner:
 last_reviewed:
 code_refs:

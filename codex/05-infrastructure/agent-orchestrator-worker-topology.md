@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-21
 authoritative_for: [agent-orchestrator historical multi-VM epic-fleet topology]
-referenced_by:
+referenced_by: [codex/04-architecture/agent-orchestrator-overview.md, codex/05-infrastructure/agent-orchestrator-api-host.md, codex/05-infrastructure/agent-orchestrator-deploy.md, codex/05-infrastructure/agent-orchestrator-dns-cutover.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
 owner: ikenna
 last_reviewed: 2026-05-28
 code_refs:

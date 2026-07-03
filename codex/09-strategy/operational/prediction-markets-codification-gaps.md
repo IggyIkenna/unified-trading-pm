@@ -19,7 +19,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [prediction-market codification gaps register (G1..GN)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md]
 owner:
 last_reviewed:
 code_refs:

@@ -17,7 +17,7 @@ tags: [mtds, manifest, honest-coverage, backfill, observability]
 related: [codex/02-data/mtds-data-source-coverage-matrix.md, codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-04-21
 authoritative_for: [MTDS per-instrument sentinel cap thresholds, sentinel tier-promotion gates]
-referenced_by:
+referenced_by: [codex/02-data/mtds-data-source-coverage-matrix.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

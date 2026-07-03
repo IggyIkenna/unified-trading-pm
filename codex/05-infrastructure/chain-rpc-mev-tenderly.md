@@ -15,7 +15,7 @@ tags: [defi, execution, mev, tenderly, gas-oracle, mtds]
 related: [codex/04-architecture/mev-protection.md, codex/04-architecture/tenderly-execution-provider.md, codex/02-data/defi-venue-protocol-catalogue.md, codex/02-data/defi-data-type-taxonomy.md]
 created: 2026-05-10
 authoritative_for: [per-chain RPC provider redundancy + MEV-protection endpoint registry + gas-oracle sources + Tenderly bundle-simulation gating policy]
-referenced_by:
+referenced_by: [codex/02-data/defi-venue-protocol-catalogue.md, codex/04-architecture/mev-protection.md, codex/07-security/mev-protection.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

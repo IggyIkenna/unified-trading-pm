@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [8-phase strategy/client onboarding operational checklist]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/operational/client-onboarding.md, codex/09-strategy/operational/client-strategy-config.md, plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md]
 owner:
 last_reviewed:
 code_refs:

@@ -15,7 +15,7 @@ tags: [client-reporting, ui, reporting, fund, sma, page-triage]
 related: [../playbooks/03a-demo-reg-umbrella.md, ../playbooks/03b-demo-im.md, sma-vs-pooled.md, fund-org-hierarchy.md, visibility-slicing.md]
 created: 2026-04-19
 authoritative_for: [client-reporting UI surface (/services/reports/* shared IM+Reg)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/information-architecture.md, codex/14-customer-journeys/page-triage/triage-matrix.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md, codex/14-customer-journeys/playbooks/02a-research-im.md, codex/14-customer-journeys/playbooks/02c-research-regulatory.md]
 owner:
 last_reviewed:
 code_refs:

@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [CARRY_BASIS_PERP archetype specification]
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/defi/basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/btc-basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/l2-basis-trade.md, codex/09-strategy/architecture-v2/MIGRATION.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md, codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md]
 owner:
 last_reviewed:
 code_refs:

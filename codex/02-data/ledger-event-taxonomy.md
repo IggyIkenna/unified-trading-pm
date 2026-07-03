@@ -16,7 +16,7 @@ tags: [ledger, pnl, execution, uac, strategy, defi, cefi]
 related: [../04-architecture/global-ledger-architecture.md, ../04-architecture/client-funds-isolation.md, ../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md]
 created: 2026-05-21
 authoritative_for: [ledger event taxonomy (EventOrigin/EventType/AssetClass/Direction closed enums), PricingLedger dividend_yield + rebase_rate carry-rate formulas]
-referenced_by:
+referenced_by: [codex/04-architecture/global-ledger-architecture.md, codex/04-architecture/greeks-service-overview.md]
 owner:
 last_reviewed: 2026-05-23
 code_refs:

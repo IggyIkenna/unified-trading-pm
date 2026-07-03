@@ -22,7 +22,7 @@ related:
 created: 2026-05-26
 authoritative_for:
   [Safety Ops manual-override tab (Layer-M), Layer-0 typed-confirm action buttons]
-referenced_by:
+referenced_by: [codex/04-architecture/recovery-defence-in-depth-layers.md]
 owner:
 last_reviewed: 2026-05-29
 code_refs:

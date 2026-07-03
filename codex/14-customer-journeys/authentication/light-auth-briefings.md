@@ -15,7 +15,7 @@ tags: [auth, ui, briefings, access-code, prospect, onboarding]
 related: [firebase-staging.md, firebase-production.md, ../../08-workflows/client-onboarding.md]
 created: 2026-04-19
 authoritative_for: [Deep Dive briefings light-auth code gate, per-path briefing access-code env-var scheme]
-referenced_by:
+referenced_by: [codex/08-workflows/client-onboarding.md, codex/08-workflows/prospect-questionnaire-flow.md, codex/08-workflows/signup-signin-workflow.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-local.md, codex/14-customer-journeys/authentication/firebase-production.md, codex/14-customer-journeys/authentication/firebase-staging.md, codex/14-customer-journeys/experience/briefings-hub.md]
 owner:
 last_reviewed:
 code_refs:

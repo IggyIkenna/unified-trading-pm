@@ -17,7 +17,7 @@ tags: [infrastructure, spot-vm, deployment-service, scripts, monitoring, runbook
 related: [vm-tarball-deployment.md, strategy-vm-launcher-shape.md, live-deployment-monitoring.md, ../04-architecture/features-service-architecture.md]
 created: 2026-05-07
 authoritative_for: [vm launcher script conventions]
-referenced_by:
+referenced_by: [codex/04-architecture/features-service-architecture.md, codex/04-architecture/ml-service-architecture.md, codex/04-architecture/strategy-service-architecture.md, codex/05-infrastructure/agent-orchestrator-deploy.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md, codex/05-infrastructure/deployment-and-qg-strategy.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/live-deployment-monitoring.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

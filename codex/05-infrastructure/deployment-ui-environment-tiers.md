@@ -16,7 +16,7 @@ tags: [ui, deployment, infrastructure]
 related: [codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/firebase-split-topology.md, codex/05-infrastructure/bucket-isolation-model.md, codex/05-infrastructure/runtime-tiers-and-deployment.md]
 created: 2026-05-08
 authoritative_for: [deployment-UI dev/staging/prod environment-tier topology + env resolution + per-tier isolation]
-referenced_by:
+referenced_by: [codex/05-infrastructure/deployment-ui-architecture.md]
 owner: harsh
 last_reviewed: 2026-05-18
 code_refs:

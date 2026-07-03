@@ -15,7 +15,7 @@ tags: [infrastructure, bucket, canonicalisation, storage]
 related: [codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/02-data/per-asset-group-bucket-layouts.md]
 created: 2026-03-27
 authoritative_for: [four-tier bucket isolation model (mock/dev/stg/prd/test), Group A vs Group B bucket classification, mock-tier scenario/grid prefix routing]
-referenced_by:
+referenced_by: [codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/deployment-ui-environment-tiers.md, codex/09-strategy/architecture-v2/instruments-resolver-architecture.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md, plans/active/bucket_env_split_rollout_2026_06.md, plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md]
 owner:
 last_reviewed: 2026-06-29
 code_refs:

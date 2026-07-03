@@ -17,7 +17,7 @@ tags: [strategy, versioning, uac, quality-gates, execution]
 related: [../09-strategy/architecture-v2/README.md, strategy-display-conventions.md, artifact-naming.md, ../04-architecture/artifact-versioning.md]
 created: 2026-04-17
 authoritative_for: [strategy identity + versioning (5-layer identity, archetype-ID rules, slot-label grammar)]
-referenced_by:
+referenced_by: [codex/02-data/feature-formula-versioning.md, codex/04-architecture/artifact-versioning.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/data-flow-map.md, codex/04-architecture/schema-versioning.md, codex/04-architecture/shadow-deployment-pattern.md, codex/06-coding-standards/README.md, codex/06-coding-standards/artifact-naming.md]
 owner:
 last_reviewed:
 code_refs:

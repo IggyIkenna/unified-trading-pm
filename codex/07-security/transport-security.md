@@ -14,7 +14,7 @@ tags: [security, infrastructure, execution, ssot-audit]
 related: [secrets-management.md, audit-logging.md, service-to-service-auth.md]
 created: 2026-03-27
 authoritative_for: [transport security and no-service-mesh decision]
-referenced_by:
+referenced_by: [codex/07-security/service-to-service-auth.md]
 owner:
 last_reviewed:
 code_refs:

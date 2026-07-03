@@ -14,7 +14,7 @@ tags: [defi, drift, mtds, solana, backfill, pipeline-mode]
 related: [instruments-service-as-ssot-for-mtds.md, solana-defi-coverage.md, ../02-data/defi-data-types-catalog.md, ../02-data/honest-absence-downstream-handling.md]
 created: 2026-06-01
 authoritative_for: [Drift V2 Velocity Data API ingestion path]
-referenced_by:
+referenced_by: [codex/04-architecture/instruments-service-as-ssot-for-mtds.md, codex/04-architecture/solana-defi-coverage.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md]
 owner: defi-adapters
 last_reviewed: 2026-06-01
 code_refs:

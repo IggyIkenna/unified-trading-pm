@@ -15,7 +15,7 @@ tags: [artifact-naming, ml, features, execution, registry, strategy]
 related: [../04-architecture/artifact-versioning.md, strategy-identity-versioning.md, ../04-architecture/schema-versioning.md]
 created: 2026-04-17
 authoritative_for: [versioned artifact naming conventions]
-referenced_by:
+referenced_by: [codex/04-architecture/artifact-versioning.md, codex/06-coding-standards/strategy-identity-versioning.md]
 owner:
 last_reviewed:
 code_refs:

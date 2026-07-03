@@ -15,7 +15,7 @@ tags: [firebase, auth, ui, production, onboarding, entitlements]
 related: [firebase-staging.md, firebase-local.md, light-auth-briefings.md, ../playbook-concepts/fund-org-hierarchy.md]
 created: 2026-04-19
 authoritative_for: [Firebase production auth environment (central-element-323112)]
-referenced_by:
+referenced_by: [codex/08-workflows/signup-signin-workflow.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-local.md, codex/14-customer-journeys/authentication/firebase-staging.md, codex/14-customer-journeys/authentication/light-auth-briefings.md, codex/14-customer-journeys/environments/production-odum-research-com.md, codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md, codex/14-customer-journeys/roadmap/plan-references.md]
 owner:
 last_reviewed:
 code_refs:

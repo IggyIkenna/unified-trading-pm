@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [exclusivity / non-compete commercial premium (block 12) negotiation framing]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md]
 owner:
 last_reviewed:
 code_refs:

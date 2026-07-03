@@ -15,7 +15,7 @@ tags: [infrastructure, runbook, observability, backfill, scripts]
 related: [vm-tarball-deployment.md, vm-launcher-runbook.md]
 created: 2026-05-30
 authoritative_for: [VM log archival paths and retention]
-referenced_by:
+referenced_by: [codex/05-infrastructure/vm-launcher-runbook.md, codex/05-infrastructure/vm-tarball-deployment.md, plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md]
 owner:
 last_reviewed: 2026-05-30
 code_refs:

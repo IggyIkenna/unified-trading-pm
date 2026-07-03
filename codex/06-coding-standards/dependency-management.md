@@ -16,7 +16,7 @@ tags: [dependency-management, uv, quality-gates, quickmerge, canonicalisation, i
 related: [dockerfile-standards.md, feature-branch-workflow.md, quality-gates.md]
 created: 2026-03-27
 authoritative_for: [flat-deps pyproject dependency-management convention, uv.lock three-role determinism]
-referenced_by:
+referenced_by: [codex/05-infrastructure/library-setup-checklist.md, codex/05-infrastructure/new-repo-setup.md, codex/05-infrastructure/ucs-docker-image-issues.md, codex/06-coding-standards/README.md, codex/06-coding-standards/data-engine-selection.md, codex/06-coding-standards/dockerfile-standards.md]
 owner:
 last_reviewed:
 code_refs:

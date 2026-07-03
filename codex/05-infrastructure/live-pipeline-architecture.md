@@ -17,7 +17,7 @@ tags: [live-trading, mtds, mdps, features, pipeline-mode, reconciliation, infras
 related: [replay-subsystem.md, live-deployment-monitoring.md, ../02-data/pipeline-mode-partition.md, ../04-architecture/batch-live-architecture.md]
 created: 2026-05-08
 authoritative_for: [live streaming pipeline topology]
-referenced_by:
+referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/pipeline-mode-partition.md, codex/03-observability/coordination-events.md, codex/03-observability/lifecycle-events.md, codex/04-architecture/README.md, codex/04-architecture/alerting-batch-live.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/cefi-batch-live.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

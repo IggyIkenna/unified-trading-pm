@@ -16,7 +16,7 @@ tags: [quality-gates, audit, ssot-audit, ssot]
 related: [codex/06-coding-standards/quality-gates.md, codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md]
 created: 2026-03-27
 authoritative_for: [quality-gate bypass audit methodology (cross-repo aggregate)]
-referenced_by:
+referenced_by: [codex/06-coding-standards/audit-remediation-guide.md, codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md, codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md, codex/QUALITY_GATE_BYPASS_AUDIT.md]
 owner:
 last_reviewed:
 code_refs:

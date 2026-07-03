@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-04-03
 authoritative_for: [ClientStrategyOverride per-client config-override schema + venue-restriction mechanism]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/operational/client-onboarding.md, codex/09-strategy/operational/instrument-filtering.md, codex/09-strategy/operational/onboarding-checklist.md]
 owner:
 last_reviewed:
 code_refs:

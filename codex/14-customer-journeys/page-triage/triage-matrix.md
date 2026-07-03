@@ -15,7 +15,7 @@ tags: [ui, page-triage, audit, navigation, refactor, consolidation]
 related: [broken-links.md, duplicate-clusters.md, partial-archive.md, ../roadmap/next-waves.md]
 created: 2026-04-19
 authoritative_for: [UI page-triage classification matrix (route -> action)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/information-architecture.md, codex/14-customer-journeys/page-triage/README.md, codex/14-customer-journeys/page-triage/broken-links.md, codex/14-customer-journeys/page-triage/duplicate-clusters.md, codex/14-customer-journeys/page-triage/partial-archive.md, codex/14-customer-journeys/playbook-concepts/investor-relations.md, codex/14-customer-journeys/playbooks/02a-research-im.md]
 owner:
 last_reviewed:
 code_refs:

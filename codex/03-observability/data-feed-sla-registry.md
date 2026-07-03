@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-06-20
 authoritative_for: [data-feed SLA registry, feed freshness contracts + refetch_action binding]
-referenced_by:
+referenced_by: [codex/03-observability/alerting.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/dependency-health-policy.md, codex/05-infrastructure/manifest-consolidator-ssot.md]
 owner:
 last_reviewed: 2026-06-20
 code_refs:

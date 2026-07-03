@@ -15,7 +15,7 @@ tags: [ci-cd, quickmerge, quality-gates, verification, observability]
 related: [./ci-cd-flow.md, ./version-graduation.md, ../04-architecture/promote-workflow-architecture.md, ./dependency-cascade.md]
 created: 2026-05-15
 authoritative_for: [deployment-flow operator gate-walkthrough (3-gate local→staging→main promotion + emergency procedures)]
-referenced_by:
+referenced_by: [codex/08-workflows/branch-and-version-reference-model.md, codex/08-workflows/ci-cd-flow.md, codex/08-workflows/cutover-window-dependency-order.md, codex/08-workflows/dependency-cascade.md]
 owner:
 last_reviewed:
 code_refs:

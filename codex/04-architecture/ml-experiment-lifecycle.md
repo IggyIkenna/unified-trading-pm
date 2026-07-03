@@ -27,7 +27,7 @@ authoritative_for:
     ML-manifest vs data-manifest job_id distinction,
     ML model lifecycle states,
   ]
-referenced_by:
+referenced_by: [codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/features-service-architecture.md, codex/04-architecture/ml-lifecycle.md]
 owner:
 last_reviewed: 2026-05-23
 code_refs:

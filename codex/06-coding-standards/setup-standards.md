@@ -16,7 +16,7 @@ tags: [setup, scripts, quality-gates, quickmerge, infrastructure]
 related: [quality-gates.md, semver.md]
 created: 2026-03-27
 authoritative_for: [per-repo setup.sh dev-environment bootstrap standard (12-step idempotent flow + flags)]
-referenced_by:
+referenced_by: [codex/06-coding-standards/quality-gates.md]
 owner:
 last_reviewed:
 code_refs:

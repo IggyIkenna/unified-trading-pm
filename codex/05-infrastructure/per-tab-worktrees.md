@@ -17,7 +17,7 @@ tags: [infrastructure, quickmerge, scripts, orchestrator, reconciliation, self-h
 related: [plans/active/worktree_ldr_unification_2026_06_08.md, plans/archive/per_agent_worktrees_2026_05_10.md]
 created: 2026-05-10
 authoritative_for: [per-slot reference-clone worktree model]
-referenced_by:
+referenced_by: [codex/05-infrastructure/claude-code-settings-symlink.md, codex/05-infrastructure/manifest-consolidator-ssot.md, codex/05-infrastructure/plan-aware-merge-resolution.md, codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, codex/12-agent-workflow/orchestrator-safety-mechanisms.md]
 owner: workspace-platform
 last_reviewed: 2026-06-25
 code_refs:

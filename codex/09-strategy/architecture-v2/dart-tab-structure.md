@@ -12,7 +12,7 @@ tags: [strategy, dart, ui, catalogue]
 related: [dashboard-services-grid.md, restriction-policy.md, dart-exclusive-research-fork.md]
 created: 2026-04-21
 authoritative_for: [DART per-persona tab structure and sub-tab visibility]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/admin-registry-api.md, codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/dashboard-services-grid.md]
 owner:
 last_reviewed:
 code_refs:

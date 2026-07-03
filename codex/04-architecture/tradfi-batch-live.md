@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-05-16
 authoritative_for: [TradFi (asset_group=tradfi) batch/live per-AG architecture]
-referenced_by:
+referenced_by: [codex/02-data/tradfi-databento-sourcing-ssot.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/prediction-batch-live.md, codex/04-architecture/sports-batch-live.md]
 owner:
 last_reviewed: 2026-06-11
 code_refs:

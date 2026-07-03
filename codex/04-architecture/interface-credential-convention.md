@@ -27,7 +27,7 @@ authoritative_for:
     custody endpoint credential-id references,
     live DeFi wallet-key per-request lifetime,
   ]
-referenced_by:
+referenced_by: [codex/04-architecture/cefi-perp-leg-bybit.md, codex/04-architecture/custody-providers.md, codex/04-architecture/defi-execution-overview.md, codex/04-architecture/mev-protection.md, codex/04-architecture/research-service-and-dart-integration.md, codex/04-architecture/tenderly-execution-provider.md, codex/04-architecture/treasury-custody-flow.md, codex/05-infrastructure/credentials-matrix.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

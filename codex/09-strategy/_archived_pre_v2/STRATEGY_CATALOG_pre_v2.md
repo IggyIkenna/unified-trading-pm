@@ -16,7 +16,7 @@ tags: [strategy, catalogue, defi, cefi, tradfi, execution, features]
 related: [STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md, ../architecture-v2/README.md, ../architecture-v2/MIGRATION.md]
 created: 2026-05-27
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md, codex/09-strategy/_archived_pre_v2/strategy-registry.md]
 owner:
 last_reviewed:
 code_refs:

@@ -27,7 +27,7 @@ authoritative_for:
     batch-live reconciliation resolution workflow (accept/reject/investigate + book-correction),
     batch-vs-live recon stage-DAG comparison contract,
   ]
-referenced_by:
+referenced_by: [codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/paper-vs-live-execution-seam.md, codex/04-architecture/reconciliation-age-tracking.md, codex/04-architecture/separation-of-concerns.md, codex/08-workflows/t1-batch-dag.md, codex/15-runbooks/position-reconciliation-deploy-gate.md, plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

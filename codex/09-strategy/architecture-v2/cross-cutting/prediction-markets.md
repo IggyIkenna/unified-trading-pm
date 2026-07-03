@@ -17,7 +17,7 @@ related:
   ../../../04-architecture/instruments-live-architecture.md]
 created: 2026-03-27
 authoritative_for: [prediction-markets three-role model (feature/execution/arb) + three-tier market classification framework]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/operational/prediction-markets-codification-gaps.md, plans/epics/predictions_master.md]
 owner:
 last_reviewed: 2026-05-22
 code_refs:

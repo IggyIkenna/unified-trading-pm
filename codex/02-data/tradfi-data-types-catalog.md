@@ -14,7 +14,7 @@ tags: [tradfi, mtds, databento, mvp, data-status, catalogue]
 related: [codex/02-data/tradfi-databento-sourcing-ssot.md, codex/02-data/mtds-data-source-coverage-matrix.md, codex/02-data/per-asset-group-bucket-layouts.md, codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-05-24
 authoritative_for: [MTDS TradFi data_type catalog, TradFi deferred tick-data suppression (tbbo/trades/mbp_10)]
-referenced_by:
+referenced_by: [codex/02-data/README.md, codex/02-data/tradfi-databento-sourcing-ssot.md]
 owner:
 last_reviewed: 2026-05-24
 code_refs:

@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-05-12
 authoritative_for: [POD/Elysium DeFi-allocator client onboarding model]
-referenced_by:
+referenced_by: [codex/04-architecture/custody-providers.md, codex/05-infrastructure/credentials-matrix.md, codex/05-infrastructure/pre-cutover-test-wallets-runbook.md, codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md]
 owner:
 last_reviewed:
 code_refs:

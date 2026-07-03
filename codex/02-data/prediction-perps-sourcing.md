@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-06-21
 authoritative_for: [Kalshi-Perp/Polymarket-Perp crypto-perp sourcing]
-referenced_by:
+referenced_by: [codex/02-data/prediction-data-types-catalog.md]
 owner:
 last_reviewed: 2026-06-21
 code_refs:

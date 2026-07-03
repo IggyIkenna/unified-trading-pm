@@ -15,7 +15,7 @@ tags: [defi, strategy, execution, basis-trade, flash-loan, leverage, staking, he
 related: [unhedged-recursive.md, staked-basis.md, sol-staked-basis.md, reward-lifecycle.md]
 created: 2026-03-27
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/lending-protocol-arb.md, codex/09-strategy/_archived_pre_v2/defi/reward-lifecycle.md, codex/09-strategy/_archived_pre_v2/defi/staked-basis.md, codex/09-strategy/_archived_pre_v2/defi/unhedged-recursive.md]
 owner:
 last_reviewed:
 code_refs:

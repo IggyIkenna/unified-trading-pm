@@ -16,7 +16,7 @@ tags: [testing, quality-gates, conventions, refactor]
 related: [integration-testing-layers.md, README.md, quality-gates.md, ui-testing-layers.md]
 created: 2026-03-27
 authoritative_for: [test-file conventions (no-_extended rule + singleton-conftest-fixture rule)]
-referenced_by:
+referenced_by: [codex/02-data/vcr-cassette-ownership.md, codex/06-coding-standards/README.md, codex/06-coding-standards/quality-gates.md]
 owner:
 last_reviewed:
 code_refs:

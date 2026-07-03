@@ -16,7 +16,7 @@ related:
   [01-grammar.md, 03-same-system-principle.md, 07-data-licensing-boundaries.md, 11-codex-scope-registry.md]
 created: 2026-04-20
 authoritative_for: [show/don't-show demo disclosure discipline (LOCKED-VISIBLE vs HIDDEN-ENTIRELY)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/_ssot-rules/01-grammar.md, codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md, codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md, codex/14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md, codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md, codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md, codex/14-customer-journeys/_ssot-rules/README.md, codex/14-customer-journeys/demo-ops/account-intelligence-record.md]
 owner:
 last_reviewed:
 code_refs:

@@ -27,7 +27,7 @@ authoritative_for:
     risk_preflight aggregation semantics,
     Layer-2.5 wallet-tier pre-flight stack,
   ]
-referenced_by:
+referenced_by: [codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/risk-breaker-seam.md, codex/04-architecture/risk-rule-taxonomy.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:

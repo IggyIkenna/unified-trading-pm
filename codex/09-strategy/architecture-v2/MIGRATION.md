@@ -12,7 +12,7 @@ tags: [strategy, migration, refactor, ssot-audit, cefi, defi, sports]
 related: [README.md, strategy-registry-v2.md, category-instrument-coverage.md, legacy-family-migration.md]
 created: 2026-04-17
 authoritative_for: [legacy strategy doc-and-code to architecture-v2 mapping audit]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/README.md, codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/legacy-family-migration.md, codex/09-strategy/architecture-v2/promote-workflow.md, codex/09-strategy/strategy-summary.md]
 owner:
 last_reviewed:
 code_refs:

@@ -16,7 +16,7 @@ tags: [slo, monitoring, observability, execution, performance, alerting]
 related: [alerting.md, lifecycle-events.md]
 created: 2026-03-27
 authoritative_for: [service level objectives + error budgets, SLO burn-rate alerting]
-referenced_by:
+referenced_by: [codex/06-coding-standards/prometheus-metrics.md]
 owner:
 last_reviewed:
 code_refs:

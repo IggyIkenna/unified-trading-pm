@@ -17,7 +17,7 @@ related:
   [execution-policies.md, ../../../04-architecture/backtest-groups.md, ../../../04-architecture/strategy-execution-protocol.md, ../axes/edge-methods.md]
 created: 2026-04-17
 authoritative_for: [benchmark-fills contract (batch=live seam + execution-alpha measurement)]
-referenced_by:
+referenced_by: [codex/04-architecture/backtest-groups.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/execution-policy.md, codex/04-architecture/strategy-execution-protocol.md, codex/09-strategy/README.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md, codex/09-strategy/architecture-v2/axes/edge-methods.md]
 owner:
 last_reviewed: 2026-05-18
 code_refs:

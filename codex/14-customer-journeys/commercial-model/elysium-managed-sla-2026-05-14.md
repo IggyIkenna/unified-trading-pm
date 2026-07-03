@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-20
 authoritative_for: [Elysium/POD managed-SLA commercial structure and contract-vs-SLA audit]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/managed-defi-sla-cost-build.md]
 owner:
 last_reviewed:
 code_refs: [unified-api-contracts/unified_api_contracts/registry/venue_collateral.py]

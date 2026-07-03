@@ -12,7 +12,7 @@ tags: [strategy, dart, ui, catalogue]
 related: [dart-tab-structure.md, restriction-policy.md, strategy-catalogue-3tier.md, dart-exclusive-research-fork.md]
 created: 2026-04-21
 authoritative_for: [dashboard 5-tile product-axis model]
-referenced_by:
+referenced_by: [codex/04-architecture/orphan-audit.md, codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/dart-tab-structure.md, codex/09-strategy/architecture-v2/performance-overlay.md, codex/09-strategy/architecture-v2/restriction-policy.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md, codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md, codex/14-customer-journeys/playbook-concepts/visibility-slicing.md]
 owner:
 last_reviewed:
 code_refs:

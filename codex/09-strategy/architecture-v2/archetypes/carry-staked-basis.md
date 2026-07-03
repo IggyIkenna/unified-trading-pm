@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [CARRY_STAKED_BASIS archetype specification (LST_AS_MARGIN staked basis)]
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/defi/ethena-benchmark.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md, codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md, codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md]
 owner:
 last_reviewed:
 code_refs:

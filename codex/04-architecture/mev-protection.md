@@ -28,7 +28,7 @@ authoritative_for:
     MevSubmissionMode policy registry,
     MEV-driven breaker trigger,
   ]
-referenced_by:
+referenced_by: [codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/defi-execution-overview.md, codex/05-infrastructure/chain-rpc-mev-tenderly.md, codex/07-security/mev-protection.md, codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

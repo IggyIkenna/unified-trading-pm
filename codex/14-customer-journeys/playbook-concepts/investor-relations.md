@@ -15,7 +15,7 @@ tags: [investor-relations, ui, persona, entitlements, briefings, page-triage]
 related: [../authentication/README.md, ../playbooks/02-research-and-documentation.md, ../page-triage/triage-matrix.md, ../page-triage/partial-archive.md]
 created: 2026-04-19
 authoritative_for: [investor-relations UI section (audience separation from playbooks)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/glossary.md, codex/14-customer-journeys/information-architecture.md, codex/14-customer-journeys/page-triage/partial-archive.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/shared-core/shared-reporting-core.md]
 owner:
 last_reviewed:
 code_refs:

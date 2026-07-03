@@ -14,7 +14,7 @@ tags: [execution, strategy, mtds, ssot]
 related: [../09-strategy/architecture-v2/cross-cutting/venue-selection-split.md, execution-policy.md, ../02-venues/venue-registry-reference.md]
 created: 2026-04-17
 authoritative_for: [slow-fast venue-routing split architecture (strategy eligibility vs execution SOR)]
-referenced_by:
+referenced_by: [codex/02-venues/prime-brokers.md, codex/03-services/venue-capability-registry.md, codex/04-architecture/strategy-execution-protocol.md, codex/09-strategy/architecture-v2/axes/venue-eligibility.md, codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

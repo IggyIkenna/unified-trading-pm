@@ -16,7 +16,7 @@ tags: [quickmerge, ci-cd, feature-branch, quality-gates, conventional-commits, r
 related: [../08-workflows/ci-cd-flow.md, integration-testing-layers.md, quality-gates.md]
 created: 2026-03-27
 authoritative_for: [feature-branch conventional-commit versioning workflow, require-quality-gates ruleset + zero-human-approval gate policy]
-referenced_by:
+referenced_by: [codex/06-coding-standards/dependency-management.md, codex/06-coding-standards/integration-testing-layers.md]
 owner:
 last_reviewed:
 code_refs:

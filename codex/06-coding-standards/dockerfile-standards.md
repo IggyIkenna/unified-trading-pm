@@ -16,7 +16,7 @@ tags: [dockerfile, infrastructure, ci-cd, quality-gates, ui]
 related: [dependency-management.md, quality-gates.md]
 created: 2026-03-27
 authoritative_for: [Dockerfile base-image and build standards]
-referenced_by:
+referenced_by: [codex/06-coding-standards/dependency-management.md]
 owner:
 last_reviewed:
 code_refs:

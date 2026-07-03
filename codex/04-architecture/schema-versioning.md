@@ -14,7 +14,7 @@ tags: [uac, schema, versioning, contracts, migration, semver]
 related: [artifact-versioning.md, schema-placement.md, ../02-data/contracts-scope-and-layout.md]
 created: 2026-04-17
 authoritative_for: [UAC schema semver rules (patch/minor/major), UAC schema deprecation window + consumer major-version pinning]
-referenced_by:
+referenced_by: [codex/03-services/venue-capability-registry.md, codex/04-architecture/artifact-versioning.md, codex/04-architecture/schema-placement.md, codex/04-architecture/shadow-deployment-pattern.md, codex/04-architecture/strategy-execution-protocol.md, codex/06-coding-standards/artifact-naming.md, codex/06-coding-standards/semver.md, codex/06-coding-standards/strategy-identity-versioning.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

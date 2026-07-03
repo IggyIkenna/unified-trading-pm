@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [odum-research.com production web environment]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/environments/README.md, codex/14-customer-journeys/environments/staging-odum-research-co-uk.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
 owner:
 last_reviewed:
 code_refs:

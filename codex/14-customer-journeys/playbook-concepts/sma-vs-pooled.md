@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [SMA vs Pooled fund-structure decision (customer-journey framing)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md, codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/experience/investment-management-demo.md, codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/client-reporting.md, codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md]
 owner:
 last_reviewed:
 code_refs:

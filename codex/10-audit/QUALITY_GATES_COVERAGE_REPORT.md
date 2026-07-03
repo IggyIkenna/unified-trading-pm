@@ -15,7 +15,7 @@ tags: [quality-gates, coverage, audit, ssot-audit]
 related: [codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md, codex/10-audit/QUALITY_GATE_BYPASS_AUDIT.md]
 created: 2026-03-27
 authoritative_for: [2026-03-04 workspace coverage and quality-gate snapshot]
-referenced_by:
+referenced_by: [codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md, codex/10-audit/QUALITY_GATE_BYPASS_AUDIT.md]
 owner:
 last_reviewed:
 code_refs:

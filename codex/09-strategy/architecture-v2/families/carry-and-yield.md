@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [Carry & Yield strategy family spec (alpha thesis + 10 archetypes)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md]
 owner:
 last_reviewed:
 code_refs:

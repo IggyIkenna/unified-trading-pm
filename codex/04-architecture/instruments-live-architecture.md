@@ -14,7 +14,7 @@ tags: [instruments, sports, cefi, tradfi, prediction, live-trading]
 related: [batch-live-architecture.md, instruments-preflight-chain.md, ../05-infrastructure/deployment-clusters-live-vs-batch.md, alerting-batch-live.md]
 created: 2026-05-08
 authoritative_for: [instruments-service live-mode reference-data refresh architecture]
-referenced_by:
+referenced_by: [codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md, codex/04-architecture/instruments-preflight-chain.md, codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md, codex/15-runbooks/instruments-live/t1-audit-discrepancy.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

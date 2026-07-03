@@ -16,7 +16,7 @@ tags: [deployment, backfill, manifest, mtds, live-trading]
 related: [codex/02-data/availability-manifest-and-data-status.md, codex/04-architecture/shard-level-failure-isolation.md, codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/deployment-ui-architecture.md]
 created: 2026-05-06
 authoritative_for: [live vs batch deployment cluster taxonomy, per-cluster-type sizing + deployment mechanism (tarball vs Cloud Build)]
-referenced_by:
+referenced_by: [codex/02-data/prediction-schema-paths.md, codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/features-service-architecture.md, codex/04-architecture/instruments-live-architecture.md, codex/04-architecture/shard-level-failure-isolation.md, codex/05-infrastructure/deployment-observability.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/06-coding-standards/feature-service-pattern.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

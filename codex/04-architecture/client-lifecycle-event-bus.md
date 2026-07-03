@@ -12,7 +12,7 @@ tags: [client-isolation, lifecycle, event-bus, strategy, orchestrator, credentia
 related: [per-client-isolation-architecture.md, client-lifecycle-state-machine.md, kill-switch-event-bus.md, ../05-infrastructure/strategy-shard-vm-topology.md]
 created: 2026-05-20
 authoritative_for: [client lifecycle event bus, ClientLifecycleEvent runtime topology events]
-referenced_by:
+referenced_by: [codex/04-architecture/client-lifecycle-state-machine.md, codex/05-infrastructure/strategy-shard-vm-topology.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:

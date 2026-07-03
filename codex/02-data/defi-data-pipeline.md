@@ -16,7 +16,7 @@ tags: [defi, pipeline, data-pipeline, mtds, mdps, features, reconciliation, ssot
 related: [defi-data-types-catalog.md, defi-data-type-taxonomy.md, defi-venue-protocol-catalogue.md, instrument-pipeline-defi.md, defi-canonical-naming-ssot.md]
 created: 2026-05-27
 authoritative_for: [DeFi data pipeline code-grounded current-state walkthrough, DeFi code-vs-codex drift register]
-referenced_by:
+referenced_by: [codex/02-data/defi-canonical-naming-ssot.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/instrument-pipeline-defi.md, plans/active/issues/defi_code_codex_drift_2026_05_27.md, plans/audit/instructions/defi_master_audit_instructions.md]
 owner:
 last_reviewed: 2026-05-27
 code_refs:

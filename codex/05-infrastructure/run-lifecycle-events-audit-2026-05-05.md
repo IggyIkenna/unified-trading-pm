@@ -15,7 +15,7 @@ tags: [audit, run-lifecycle, observability, mtds, mdps, scripts]
 related: [vm-event-emission-audit.md, ../04-architecture/service-emission-policy.md]
 created: 2026-05-05
 authoritative_for: [run_lifecycle entry-point rollout classification (2026-05-05 audit)]
-referenced_by:
+referenced_by: [codex/05-infrastructure/vm-event-emission-audit.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

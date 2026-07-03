@@ -15,7 +15,7 @@ tags: [artifact, versioning, ml, features, execution, strategy]
 related: [backtest-groups.md, ../06-coding-standards/artifact-naming.md, ../02-data/feature-formula-versioning.md]
 created: 2026-04-17
 authoritative_for: [three-axis code/artifact/schema versioning model]
-referenced_by:
+referenced_by: [codex/02-data/feature-formula-versioning.md, codex/04-architecture/backtest-groups.md, codex/04-architecture/execution-policy.md, codex/04-architecture/schema-versioning.md, codex/04-architecture/shadow-deployment-pattern.md, codex/04-architecture/strategy-execution-protocol.md, codex/06-coding-standards/artifact-naming.md, codex/06-coding-standards/strategy-identity-versioning.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

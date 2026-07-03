@@ -17,7 +17,7 @@ related:
   [codex/12-agent-workflow/stale-blocker-reaper.md, codex/12-agent-workflow/canonical-plan-flow.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, plans/PLAN_FORMAT.md]
 created: 2026-05-30
 authoritative_for: [plan-hygiene 4 silent-failure modes, hygiene-sweep severity ladder]
-referenced_by:
+referenced_by: [codex/12-agent-workflow/canonical-plan-flow.md, codex/12-agent-workflow/stale-blocker-reaper.md]
 owner:
 last_reviewed:
 code_refs:

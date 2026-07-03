@@ -21,7 +21,7 @@ related:
 created: 2026-05-22
 authoritative_for:
   [batch-live reconciliation green-threshold calibration (RECON_GREEN_THRESHOLDS gates + 7-day-soak procedure)]
-referenced_by:
+referenced_by: [codex/09-strategy/operational/cli-promote-paths.md, codex/09-strategy/operational/paper-batch-live-reconciliation.md, plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md]
 owner:
 last_reviewed:
 code_refs:

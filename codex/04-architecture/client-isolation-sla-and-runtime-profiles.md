@@ -15,7 +15,7 @@ tags: [client-isolation, sla-tiers, runtime-profiles, chaos, topology, deploymen
 related: [runtime-deployment-topology.md, ../05-infrastructure/runtime-tiers-and-deployment.md, ../09-strategy/architecture-v2/README.md]
 created: 2026-04-17
 authoritative_for: [per-service client isolation policy, client SLA tiers, runtime profiles, chaos-injection contract]
-referenced_by:
+referenced_by: [codex/04-architecture/runtime-deployment-topology.md, codex/05-infrastructure/runtime-tiers-and-deployment.md, codex/09-strategy/architecture-v2/README.md, codex/14-customer-journeys/environments/README.md, codex/14-customer-journeys/environments/production-odum-research-com.md, codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

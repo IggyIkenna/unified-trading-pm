@@ -15,7 +15,7 @@ tags: [config-injection, quality-gates, execution, defi, self-healing]
 related: [config-dynamic-injection.md, ../05-infrastructure/rotation-runbook.md, ../04-architecture/trading-agent-service-directive-pipeline.md]
 created: 2026-03-27
 authoritative_for: [config reloader classes and ApiKeyReloader hot-reload pattern, QG STEP 5.61/5.62 service-infra presence checks]
-referenced_by:
+referenced_by: [codex/04-architecture/custody-providers.md, codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md, codex/04-architecture/live-strategy-config-hot-reload.md, codex/04-architecture/multi-venue-concurrent-routing.md, codex/06-coding-standards/config-dynamic-injection.md, codex/06-coding-standards/service-structure-standards.md, codex/08-workflows/config-injection.md, codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:

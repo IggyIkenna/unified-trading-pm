@@ -27,7 +27,7 @@ authoritative_for:
     ExecutionTarget and ExecutionTrigger axes,
     operational-mode decompose helper,
   ]
-referenced_by:
+referenced_by: [codex/04-architecture/manual-trade-booking.md, codex/04-architecture/matching-engine-mode-dispatch.md, codex/04-architecture/multi-mode-wallet-isolation.md, codex/04-architecture/paper-vs-live-execution-seam.md, codex/05-infrastructure/per-venue-paper-policy.md, codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md, codex/14-customer-journeys/dart/mode-toggle.md]
 owner:
 last_reviewed: 2026-05-10
 code_refs:

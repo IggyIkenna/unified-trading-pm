@@ -13,7 +13,7 @@ related:
   [../../architecture-v2/cross-cutting/pnl-attribution.md, cost-modeling.md]
 created: 2026-06-16
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
 owner:
 last_reviewed:
 code_refs:

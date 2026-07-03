@@ -12,7 +12,7 @@ tags: [chain-resolution, defi, uac, execution, rpc, configuration]
 related: [execution-modes-and-chain-resolution.md, wallet-hierarchy-and-capital-flow.md, defi-execution-overview.md]
 created: 2026-03-30
 authoritative_for: [canonical chain-name to chain-id and RPC-URL resolution]
-referenced_by:
+referenced_by: [codex/04-architecture/defi-phase3-infrastructure.md, codex/04-architecture/execution-modes-and-chain-resolution.md, codex/05-infrastructure/per-venue-paper-policy.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

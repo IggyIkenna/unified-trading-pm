@@ -16,7 +16,7 @@ related:
   ]
 created: 2026-06-16
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/cross-cutting/strategy-instruction-bus.md]
 owner:
 last_reviewed:
 code_refs:

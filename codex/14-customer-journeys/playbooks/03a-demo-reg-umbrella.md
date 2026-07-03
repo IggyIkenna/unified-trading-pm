@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [pb3a Regulatory Umbrella demo playbook implementation]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/experience/regulatory-demo.md, codex/14-customer-journeys/playbook-concepts/client-reporting.md, codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md, codex/14-customer-journeys/playbooks/02c-research-regulatory.md, codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md, codex/14-customer-journeys/playbooks/03b-demo-im.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md, codex/14-customer-journeys/playbooks/README.md]
 owner:
 last_reviewed:
 code_refs:

@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-20
 authoritative_for: [strategy-service StrategySupervisor + ClientWorker per-client isolation model]
-referenced_by:
+referenced_by: [codex/04-architecture/client-funds-isolation.md, codex/04-architecture/client-lifecycle-event-bus.md, codex/04-architecture/execution-service-per-client-isolation.md, codex/04-architecture/global-ledger-architecture.md, codex/04-architecture/identity-model.md, codex/04-architecture/promote-workflow-architecture.md, codex/04-architecture/transfer-coordinator.md, codex/04-architecture/wallet-hierarchy-and-capital-flow.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:

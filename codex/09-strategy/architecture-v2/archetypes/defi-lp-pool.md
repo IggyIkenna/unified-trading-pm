@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-05-01
 authoritative_for: [DEFI_LP_POOL archetype specification]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md, codex/09-strategy/architecture-v2/families/market-making.md]
 owner:
 last_reviewed:
 code_refs:

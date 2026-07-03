@@ -14,7 +14,7 @@ tags: [infrastructure, artifact-registry, gcp, auth, stub]
 related: [auth-setup.md]
 created: 2026-03-27
 authoritative_for:
-referenced_by:
+referenced_by: [codex/05-infrastructure/README.md, codex/05-infrastructure/auth-setup.md, codex/05-infrastructure/contracts-integration.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

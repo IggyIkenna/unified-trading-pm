@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [DART 13-block pricing anchor table (Tier A/B ranges + codex-private internal-cost column)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/cash-deployment-plan.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md]
 owner:
 last_reviewed:
 code_refs: [unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation_cost.py]

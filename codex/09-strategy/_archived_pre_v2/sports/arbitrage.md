@@ -16,7 +16,7 @@ tags: [strategy, sports, arbitrage, odds, book-microstructure, execution]
 related: [value-betting.md, ../../architecture-v2/archetypes/arbitrage-price-dispersion.md]
 created: 2026-03-27
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/prediction/prediction-arb.md]
 owner:
 last_reviewed:
 code_refs:

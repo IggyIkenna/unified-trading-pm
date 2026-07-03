@@ -14,7 +14,7 @@ tags: [defi, execution, migration, verification]
 related: [execution-modes-and-chain-resolution.md, recursive-leverage-receiver-deploy-runbook.md, defi-phase3-infrastructure.md]
 created: 2026-03-27
 authoritative_for: [FlashLoanReceiver and RecursiveLeverageReceiver contract architecture]
-referenced_by:
+referenced_by: [codex/02-data/defi-venue-protocol-catalogue.md, codex/04-architecture/cefi-perp-leg-bybit.md, codex/04-architecture/custody-providers.md, codex/04-architecture/defi-phase3-infrastructure.md, codex/04-architecture/mev-protection.md, codex/04-architecture/recursive-leverage-receiver-deploy-runbook.md, codex/04-architecture/strategy-service-architecture.md, codex/04-architecture/tenderly-execution-provider.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

@@ -14,7 +14,7 @@ tags: [estimation-calibration, plan-hygiene, performance, cost, monitoring]
 related: [./estimation-calibration.md]
 created: 2026-05-11
 authoritative_for: [estimation retrospective ledger (per-plan calibrated-vs-actual ratios + workspace throughput observations)]
-referenced_by:
+referenced_by: [codex/08-workflows/estimation-calibration.md, codex/11-project-management/active-plan-inventory-tracker.md, plans/active/master_to_live_defi_2026_05_23.md]
 owner:
 last_reviewed:
 code_refs:

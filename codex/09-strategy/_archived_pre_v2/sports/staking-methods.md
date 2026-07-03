@@ -16,7 +16,7 @@ tags: [strategy, sports, staking, odds]
 related: [kelly.md, value-betting.md, ../../architecture-v2/axes/staking-methods.md]
 created: 2026-04-16
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/sports/kelly.md]
 owner:
 last_reviewed:
 code_refs:

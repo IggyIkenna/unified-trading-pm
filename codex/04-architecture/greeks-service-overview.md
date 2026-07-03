@@ -14,7 +14,7 @@ tags: [greeks, strategy, mtds, instruments, reconciliation]
 related: [global-ledger-architecture.md, ../02-data/ledger-event-taxonomy.md, instruments-service-as-ssot-for-mtds.md, ../02-data/availability-manifest-and-data-status.md]
 created: 2026-05-23
 authoritative_for: [greeks-service greek + carry-rate PricingLedger derivation]
-referenced_by:
+referenced_by: [codex/04-architecture/global-ledger-architecture.md]
 owner:
 last_reviewed: 2026-05-23
 code_refs:

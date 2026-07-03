@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-05-01
 authoritative_for: [DEFI_LP_CONCENTRATED archetype specification]
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/defi/active-defi-mm.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md, codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md, codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md, codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md, codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md]
 owner:
 last_reviewed:
 code_refs:

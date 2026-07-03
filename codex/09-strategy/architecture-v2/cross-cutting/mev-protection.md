@@ -15,7 +15,7 @@ tags: [mev, defi, execution, strategy, venue-selection, uac]
 related: [../../../04-architecture/mev-protection.md, execution-policies.md, venue-selection-split.md, benchmark-fills.md]
 created: 2026-04-17
 authoritative_for: [strategy-side MEV policy mapping (per-strategy MEV policy YAML + per-chain/per-action submission-mode rules)]
-referenced_by:
+referenced_by: [codex/04-architecture/execution-policy.md, codex/04-architecture/mev-protection.md, codex/07-security/mev-protection.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md, codex/09-strategy/architecture-v2/archetypes/liquidation-capture.md, codex/09-strategy/architecture-v2/axes/venue-eligibility.md, codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md]
 owner:
 last_reviewed:
 code_refs:

@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [portfolio-allocator-service, 8 allocator archetypes]
-referenced_by:
+referenced_by: [codex/03-services/venue-capability-registry.md, codex/04-architecture/capital-flow-model.md, codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md]
 owner:
 last_reviewed:
 code_refs:

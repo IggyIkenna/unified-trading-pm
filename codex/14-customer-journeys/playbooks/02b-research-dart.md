@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [pb2b DART Deep Dive briefing playbook implementation]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/experience/dart-briefing.md, codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md, codex/14-customer-journeys/playbooks/02-research-and-documentation.md, codex/14-customer-journeys/playbooks/02a-research-im.md, codex/14-customer-journeys/playbooks/02c-research-regulatory.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md, codex/14-customer-journeys/playbooks/README.md]
 owner:
 last_reviewed:
 code_refs:

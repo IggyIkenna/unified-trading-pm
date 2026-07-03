@@ -14,7 +14,7 @@ tags: [pubsub, event-bus, infrastructure, migration, audit]
 related: [live-deployment-monitoring.md, vm-event-emission-audit.md, ../02-data/live-data-persistence-and-event-log.md]
 created: 2026-05-26
 authoritative_for: [GCP Pub/Sub topic inventory, AWS SNS event-bus mirroring decision]
-referenced_by:
+referenced_by: [codex/05-infrastructure/vm-deployment-events-audit.md]
 owner:
 last_reviewed: 2026-05-29
 code_refs:

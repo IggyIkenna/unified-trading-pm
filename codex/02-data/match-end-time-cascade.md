@@ -16,7 +16,7 @@ tags: [sports, footystats, data-quality, validation, instruments]
 related: [availability-manifest-and-data-status.md, honest-absence-downstream-handling.md, ../04-architecture/batch-live-architecture.md, ../../plans/epics/sports_master.md]
 created: 2026-05-13
 authoritative_for: [sports fixture match_end_time resolution cascade]
-referenced_by:
+referenced_by: [codex/02-data/sports-fixtures-lifecycle.md]
 owner: sports-domain
 last_reviewed: 2026-05-17
 code_refs:

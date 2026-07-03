@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-05-19
 authoritative_for: [agent-orchestrator service architecture overview]
-referenced_by:
+referenced_by: [codex/00-getting-started/E2E_WORKFLOW_UNIFIED.md, codex/04-architecture/agent-orchestrator-autospawn.md, codex/04-architecture/agent-orchestrator-backlog-state-alignment.md, codex/04-architecture/agent-orchestrator-host-offline-failover.md, codex/04-architecture/agent-orchestrator-worker-liveness.md, codex/04-architecture/role-registry.md, codex/05-infrastructure/agent-orchestrator-api-host.md, codex/05-infrastructure/agent-orchestrator-deploy.md]
 owner:
 last_reviewed: 2026-06-27
 code_refs:

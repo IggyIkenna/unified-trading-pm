@@ -17,7 +17,7 @@ tags: [strategy, ui, tier-zero, mock-data, uac, parity]
 related: [strategy-summary.md, architecture-v2/README.md, _archived_pre_v2/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md]
 created: 2026-03-27
 authoritative_for: [tier 0 UI demo strategy parity (codex↔UI-mock↔OpenAPI truth-layer alignment)]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md, codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md, codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md, codex/14-customer-journeys/shared-core/same-system-principle.md]
 owner:
 last_reviewed:
 code_refs:

@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [pb2c Regulatory Umbrella post-first-call briefing experience]
-referenced_by:
+referenced_by: [codex/04-architecture/commercial-service-families.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/experience/README.md, codex/14-customer-journeys/experience/briefings-hub.md, codex/14-customer-journeys/experience/regulatory-demo.md, codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md, codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md]
 owner:
 last_reviewed:
 code_refs: [unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts]

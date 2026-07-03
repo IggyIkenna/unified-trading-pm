@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [venue/chain/instrument-type block sub-scoping axes (blocks 8/9/10)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/shared-core/README.md, codex/14-customer-journeys/shared-core/data-licensing-boundaries.md]
 owner:
 last_reviewed:
 code_refs:

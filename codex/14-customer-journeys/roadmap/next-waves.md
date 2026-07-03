@@ -18,7 +18,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for:
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/authentication/firebase-production.md, codex/14-customer-journeys/authentication/firebase-staging.md, codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md, codex/14-customer-journeys/page-triage/broken-links.md, codex/14-customer-journeys/page-triage/triage-matrix.md, codex/14-customer-journeys/playbook-concepts/catalogue-data.md, codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md]
 owner:
 last_reviewed:
 code_refs:

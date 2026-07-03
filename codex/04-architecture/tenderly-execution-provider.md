@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-03-30
 authoritative_for: [Tenderly VNet execution provider + BenchmarkFillProvider]
-referenced_by:
+referenced_by: [codex/04-architecture/amm-slippage-simulation.md, codex/04-architecture/custody-providers.md, codex/04-architecture/defi-phase3-infrastructure.md, codex/04-architecture/execution-modes-and-chain-resolution.md, codex/04-architecture/mev-protection.md, codex/05-infrastructure/chain-rpc-mev-tenderly.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

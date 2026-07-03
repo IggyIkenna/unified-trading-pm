@@ -17,7 +17,7 @@ related:
   ../../../04-architecture/autonomous-recovery-matrix.md, ../../../04-architecture/strategy-risk-config-schema.md]
 created: 2026-04-17
 authoritative_for: [4-layer risk-gate model (strategy self-check / risk-exposure preflight / execution pre-trade / venue-side)]
-referenced_by:
+referenced_by: [codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/risk-breaker-seam.md, codex/04-architecture/risk-preflight-flow.md, codex/04-architecture/risk-rule-taxonomy.md, codex/04-architecture/strategy-execution-protocol.md, codex/04-architecture/strategy-risk-config-schema.md, codex/09-strategy/_archived_pre_v2/cross-cutting/margin-health.md, codex/09-strategy/architecture-v2/README.md]
 owner:
 last_reviewed: 2026-05-25
 code_refs:

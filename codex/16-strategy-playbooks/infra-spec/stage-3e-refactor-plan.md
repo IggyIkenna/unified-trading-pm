@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [Stage 3E post-Stage-3 refactor backlog (G1/G2/G3 items + dependency graph, supersedes roadmap/next-waves.md)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md, codex/14-customer-journeys/presentations/target-experience-post-refactor.md, codex/14-customer-journeys/roadmap/next-waves.md, codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md, codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
 owner:
 last_reviewed:
 code_refs:

@@ -22,7 +22,7 @@ authoritative_for:
     manual-instruction audit-log persistence,
     RECORD_ONLY vs EXECUTE manual execution modes,
   ]
-referenced_by:
+referenced_by: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/risk-preflight-flow.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

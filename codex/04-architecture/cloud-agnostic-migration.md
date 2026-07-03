@@ -12,7 +12,7 @@ tags: [cloud-agnostic, uci, storage, secrets, migration, gcp, aws]
 related: [tier-and-import-architecture.md, ../07-security/secrets-management.md, ../06-coding-standards/pre-sprint-baseline.md]
 created: 2026-03-27
 authoritative_for: [cloud-agnostic application-code migration to UCI factories]
-referenced_by:
+referenced_by: [codex/04-architecture/seamless-cloud-switch.md, codex/04-architecture/tier-and-import-architecture.md, codex/05-infrastructure/README.md, codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md, plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

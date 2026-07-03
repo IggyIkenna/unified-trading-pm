@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [ARBITRAGE_PRICE_DISPERSION archetype specification]
-referenced_by:
+referenced_by: [codex/02-venues/unity-integration.md, codex/09-strategy/_archived_pre_v2/cefi/cross-exchange.md, codex/09-strategy/_archived_pre_v2/prediction/prediction-arb.md, codex/09-strategy/_archived_pre_v2/sports/arbitrage.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-backrun.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md]
 owner:
 last_reviewed:
 code_refs:

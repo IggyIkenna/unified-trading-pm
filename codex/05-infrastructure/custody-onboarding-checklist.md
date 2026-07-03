@@ -15,7 +15,7 @@ tags: [custody, defi, credentials, runbook]
 related: [codex/04-architecture/custody-providers.md, codex/04-architecture/wallet-hierarchy-and-capital-flow.md, codex/05-infrastructure/credentials-matrix.md, codex/04-architecture/kill-switch-circuit-breaker.md]
 created: 2026-05-11
 authoritative_for: [custody onboarding operator-action checklist (Copper/CEFFU/Fireblocks KYB + Cloud-KMS CMK provisioning steps)]
-referenced_by:
+referenced_by: [codex/04-architecture/custody-providers.md, codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md, codex/05-infrastructure/credentials-matrix.md, codex/05-infrastructure/fireblocks-integration-spec.md, codex/05-infrastructure/hsm-wallet-signing.md, codex/05-infrastructure/pre-cutover-test-wallets-runbook.md, codex/05-infrastructure/rotation-runbook.md, codex/05-infrastructure/secret-manager-naming.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

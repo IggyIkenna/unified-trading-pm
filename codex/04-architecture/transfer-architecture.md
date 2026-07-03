@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-16
 authoritative_for: [five-transfer-type taxonomy + per-venue wallet capabilities]
-referenced_by:
+referenced_by: [codex/04-architecture/transfer-coordinator.md, codex/04-architecture/treasury-custody-flow.md, codex/04-architecture/wallet-hierarchy-and-capital-flow.md, codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

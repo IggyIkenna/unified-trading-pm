@@ -16,7 +16,7 @@ tags: [strategy, hold-policy, reconciliation, defi, execution, backtest]
 related: [staking-methods.md, signal-sources.md, ../cross-cutting/execution-policies.md, ../cross-cutting/benchmark-fills.md]
 created: 2026-04-17
 authoritative_for: [hold-policy axis (position lifetime + exit-trigger catalog)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md, codex/09-strategy/architecture-v2/axes/edge-methods.md]
 owner:
 last_reviewed:
 code_refs:

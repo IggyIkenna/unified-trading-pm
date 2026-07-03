@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [per-asset-group GCS bucket templates, per-asset-group path-layout divergences]
-referenced_by:
+referenced_by: [codex/02-data/chart-candle-delivery-flow.md, codex/02-data/data-status-drilldown.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/defi-venue-protocol-catalogue.md, codex/02-data/hive-schema-compatibility.md, codex/02-data/is-test-run-audit-2026-04-20.md, codex/02-data/mtds-data-source-coverage-matrix.md, codex/02-data/mtds-download-api.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

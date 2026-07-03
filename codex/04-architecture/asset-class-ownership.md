@@ -15,7 +15,7 @@ tags: [instruments, uac, mtds, cefi, tradfi, defi, sports, ssot-audit]
 related: [instruments-service-as-ssot-for-mtds.md, instrument-universe-registry-consolidation.md]
 created: 2026-03-27
 authoritative_for: [cross-asset-class data ownership map]
-referenced_by:
+referenced_by: [codex/04-architecture/data-ownership-principles.md, codex/04-architecture/instrument-universe-registry-consolidation.md, codex/04-architecture/instruments-live-architecture.md, plans/epics/cefi_master.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

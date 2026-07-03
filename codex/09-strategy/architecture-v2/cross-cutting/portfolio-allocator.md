@@ -17,7 +17,7 @@ related:
   ../../../04-architecture/capital-flow-model.md]
 created: 2026-04-17
 authoritative_for: [strategy-scope capital-allocation primitive (AllocationDirective reconciliation across strategies-within-one-client)]
-referenced_by:
+referenced_by: [codex/03-services/portfolio-allocator.md, codex/04-architecture/capital-flow-model.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/shadow-deployment-pattern.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/portfolio-factor-allocation.md, codex/09-strategy/architecture-v2/archetypes/portfolio-multi-strategy.md, codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md]
 owner:
 last_reviewed:
 code_refs:

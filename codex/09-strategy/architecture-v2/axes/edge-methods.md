@@ -16,7 +16,7 @@ tags: [strategy, edge-methods, signal-sources, arbitrage, market-making, stat-ar
 related: [signal-sources.md, staking-methods.md, expression.md, hold-policy.md, ../cross-cutting/benchmark-fills.md]
 created: 2026-04-17
 authoritative_for: [edge-method axis (signal-to-bet-decision rule catalog)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/signal-sources.md, codex/09-strategy/architecture-v2/axes/staking-methods.md, codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
 owner:
 last_reviewed:
 code_refs:

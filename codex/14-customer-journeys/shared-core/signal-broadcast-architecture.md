@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [signal leasing/broadcast outbound emission architecture (D1-D10)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md, codex/09-strategy/strategy-summary.md, codex/14-customer-journeys/commercial-model/signal-leasing.md]
 owner:
 last_reviewed:
 code_refs:

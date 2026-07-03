@@ -14,7 +14,7 @@ tags: [strategy, execution, ssot, reconciliation, defi]
 related: [account-instructions.md, slow-fast-routing-split.md, ../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
 created: 2026-04-17
 authoritative_for: [strategy-execution runtime protocol (five rules + 11 polymorphic actions), StrategyInstruction target-state instruction semantics]
-referenced_by:
+referenced_by: [codex/04-architecture/account-instructions.md, codex/04-architecture/artifact-versioning.md, codex/04-architecture/backtest-groups.md, codex/04-architecture/capital-flow-model.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/oms-protocol-and-state-machine.md, codex/04-architecture/order-state-machine.md, codex/04-architecture/share-class-architecture.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

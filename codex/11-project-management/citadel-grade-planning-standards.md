@@ -15,7 +15,7 @@ tags: [citadel, planning-standards, plan-review, foundation-gate, pre-audit, ant
 related: [foundation-completion-gate-discipline.md, issue-doc-lifecycle.md, active-plan-inventory-tracker.md, ../../plans/PLAN_FORMAT.md]
 created: 2026-05-23
 authoritative_for: [citadel-grade planning standards, the nine plan requirements, plan review checklist]
-referenced_by:
+referenced_by: [codex/11-project-management/foundation-completion-gate-discipline.md, codex/11-project-management/issue-doc-lifecycle.md]
 owner:
 last_reviewed:
 code_refs:

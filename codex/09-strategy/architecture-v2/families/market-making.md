@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [Market Making strategy family spec (alpha thesis + 10 archetypes incl. DeFi LP)]
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/defi/active-defi-mm.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md, codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md, codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md, codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md]
 owner:
 last_reviewed:
 code_refs:

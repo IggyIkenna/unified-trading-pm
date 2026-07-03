@@ -16,7 +16,7 @@ tags: [orchestrator, infrastructure, migration, quickmerge, self-healing]
 related: [codex/04-architecture/agent-orchestrator-overview.md, codex/05-infrastructure/per-tab-worktrees.md, codex/12-agent-workflow/README.md, agent-orchestrator/agents/main.md, agent-orchestrator/agents/worker.md]
 created: 2026-05-20
 authoritative_for: [harsh laptop worker-host migration setup]
-referenced_by:
+referenced_by: [codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
 owner: ikenna
 last_reviewed:
 code_refs:

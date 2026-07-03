@@ -15,7 +15,7 @@ tags: [backtest, strategy, ml, execution, features, verification]
 related: [batch-live-architecture.md, artifact-versioning.md, ../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
 created: 2026-04-17
 authoritative_for: [backtest groups A/B/C split]
-referenced_by:
+referenced_by: [codex/04-architecture/amm-slippage-simulation.md, codex/04-architecture/artifact-versioning.md, codex/04-architecture/backfill-and-live-startup.md, codex/04-architecture/client-reporting-architecture.md, codex/04-architecture/fixed-grid-config.md, codex/04-architecture/scenario-injection-architecture.md, codex/04-architecture/scenario-outcome-assertions.md, codex/09-strategy/README.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

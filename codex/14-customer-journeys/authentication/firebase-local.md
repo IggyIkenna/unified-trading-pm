@@ -15,7 +15,7 @@ tags: [firebase, auth, ui, local-dev, emulator, onboarding]
 related: [firebase-staging.md, firebase-production.md, light-auth-briefings.md]
 created: 2026-04-25
 authoritative_for: [Firebase Emulator Suite local-dev auth environment]
-referenced_by:
+referenced_by: [codex/08-workflows/local-dev.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-production.md, codex/14-customer-journeys/authentication/firebase-staging.md]
 owner:
 last_reviewed:
 code_refs:

@@ -15,7 +15,7 @@ tags: [defi, strategy, execution, market-making, liquidity-provision, solana, ra
 related: [market-making-lp.md, sol-basis-trade.md, sol-staked-basis.md]
 created: 2026-03-28
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/market-making-lp.md, codex/09-strategy/_archived_pre_v2/defi/sol-basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md]
 owner:
 last_reviewed:
 code_refs:

@@ -16,7 +16,7 @@ tags: [data-pipeline, monitoring, observability, self-healing, slack, escalation
 related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/05-infrastructure/deployment-observability.md]
 created: 2026-06-22
 authoritative_for: [data-pipeline failure-mode registry (DP-* alert IDs) + emit-route-escalate model + self-heal actuator layer]
-referenced_by:
+referenced_by: [codex/02-data/honest-absence-downstream-handling.md, codex/05-infrastructure/deployment-observability.md, plans/active/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md]
 owner:
 last_reviewed: 2026-06-22
 code_refs:

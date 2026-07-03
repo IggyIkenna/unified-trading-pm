@@ -16,7 +16,7 @@ tags: [service-structure, instruments, mtds, refactor, execution, uac]
 related: [service-structure-standards.md, ../04-architecture/shard-level-failure-isolation.md, cli-convention.md, ../05-infrastructure/vm-tarball-deployment.md]
 created: 2026-03-27
 authoritative_for: [service orchestration patterns (handler-orchestrator split + library role boundaries), batch-service per-shard cleanup try/finally rule]
-referenced_by:
+referenced_by: [codex/05-infrastructure/vm-tarball-deployment.md, codex/06-coding-standards/README.md, codex/06-coding-standards/adapter-finalization-contract.md, codex/06-coding-standards/cli-convention.md, codex/06-coding-standards/data-engine-selection.md, codex/06-coding-standards/service-structure-standards.md]
 owner:
 last_reviewed:
 code_refs:

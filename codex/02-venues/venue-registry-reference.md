@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [venue registry human-readable reference, permanently-removed venues list]
-referenced_by:
+referenced_by: [codex/02-venues/prime-brokers.md, codex/02-venues/unity-integration.md, codex/03-services/venue-capability-registry.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/slow-fast-routing-split.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md]
 owner:
 last_reviewed:
 code_refs:

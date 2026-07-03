@@ -16,7 +16,7 @@ tags: [defi, custody, wallet, hsm, execution, infrastructure]
 related: [../04-architecture/custody-providers.md, custody-onboarding-checklist.md, fireblocks-integration-spec.md, per-archetype-wallet-isolation.md, secret-manager-naming.md]
 created: 2026-05-11
 authoritative_for: [wallet signing surface tier ladder]
-referenced_by:
+referenced_by: [codex/05-infrastructure/aws-iam-matrix.md, codex/05-infrastructure/credentials-matrix.md, codex/05-infrastructure/fireblocks-integration-spec.md, codex/05-infrastructure/per-archetype-wallet-isolation.md, codex/05-infrastructure/pre-cutover-test-wallets-runbook.md, codex/05-infrastructure/rotation-runbook.md, codex/05-infrastructure/runtime-tiers-and-deployment.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

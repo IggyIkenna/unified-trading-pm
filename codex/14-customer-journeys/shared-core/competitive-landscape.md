@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-22
 authoritative_for: [internal competitive landscape and comp-tier taxonomy]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md, codex/14-customer-journeys/experience/marketing-journey.md, codex/14-customer-journeys/shared-core/README.md]
 owner:
 last_reviewed:
 code_refs:

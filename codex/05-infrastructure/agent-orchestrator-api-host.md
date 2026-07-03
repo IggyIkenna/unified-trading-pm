@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator central API host (systemd limits + watchdog + auto-reboot)]
-referenced_by:
+referenced_by: [codex/05-infrastructure/agent-orchestrator-deploy.md, codex/05-infrastructure/agent-orchestrator-slack-notifications.md, codex/05-infrastructure/agent-orchestrator-worker-topology.md]
 owner:
 last_reviewed: 2026-05-30
 code_refs:

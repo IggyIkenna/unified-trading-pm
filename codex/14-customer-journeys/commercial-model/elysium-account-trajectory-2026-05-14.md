@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-05-20
 authoritative_for: [Elysium/POD account trajectory and upsell roadmap]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md, codex/14-customer-journeys/commercial-model/managed-defi-sla-cost-build.md]
 owner:
 last_reviewed:
 code_refs: [unified-api-contracts/unified_api_contracts/registry/venue_collateral.py]

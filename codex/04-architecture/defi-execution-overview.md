@@ -16,7 +16,7 @@ tags: [defi, execution, connectors, cost, mev, aave, uniswap]
 related: [mev-protection.md, interface-credential-convention.md, custody-providers.md]
 created: 2026-03-27
 authoritative_for: [DeFi execution overview and strategy-to-execution operation routing]
-referenced_by:
+referenced_by: [codex/02-data/carry-venue-live-integration-reference.md, codex/02-data/defi-data-pipeline.md, codex/04-architecture/chain-environment-resolution.md, codex/04-architecture/interface-credential-convention.md, codex/04-architecture/mev-protection.md, codex/04-architecture/research-service-and-dart-integration.md, codex/04-architecture/solana-defi-coverage.md, codex/04-architecture/strategy-ensemble-topology.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

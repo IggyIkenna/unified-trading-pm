@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-05-01
 authoritative_for: [ARBITRAGE_MEV_SANDWICH archetype (theoretical tracer, no-live-engine policy)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-backrun.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md]
 owner:
 last_reviewed:
 code_refs:

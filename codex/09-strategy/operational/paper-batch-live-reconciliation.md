@@ -22,7 +22,7 @@ related:
 created: 2026-06-19
 authoritative_for:
   [paper↔batch↔live determinism spine (trade-by-trade reconciliation + four as-if-filled ledgers + two-fill-realities model)]
-referenced_by:
+referenced_by: [codex/02-data/live-data-persistence-and-event-log.md, codex/04-architecture/multi-mode-wallet-isolation.md, codex/04-architecture/trading-agent-service-directive-pipeline.md, codex/08-workflows/t1-batch-dag.md, codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md, codex/09-strategy/operational/cli-promote-paths.md]
 owner:
 last_reviewed: 2026-06-22
 code_refs:

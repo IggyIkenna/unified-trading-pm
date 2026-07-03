@@ -16,7 +16,7 @@ tags: [ruff, lint, quality-gates, ci]
 related: [quality-gates.md]
 created: 2026-05-12
 authoritative_for: [ruff discipline (workspace-safe scoped lint-fix workflow)]
-referenced_by:
+referenced_by: [codex/06-coding-standards/quality-gates.md]
 owner:
 last_reviewed: 2026-05-12
 code_refs:

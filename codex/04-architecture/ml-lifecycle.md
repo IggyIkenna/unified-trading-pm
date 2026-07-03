@@ -21,7 +21,7 @@ authoritative_for:
     live ML hot-reload cadence,
     per-bar batch inference replay rule,
   ]
-referenced_by:
+referenced_by: [codex/04-architecture/ml-experiment-lifecycle.md, codex/04-architecture/ml-service-architecture.md]
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 2
 last_reviewed: 2026-05-17
 code_refs:

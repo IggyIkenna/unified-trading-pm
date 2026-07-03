@@ -14,7 +14,7 @@ tags: [execution, strategy, registry, canonicalisation, verification]
 related: [../09-strategy/architecture-v2/cross-cutting/execution-policies.md, artifact-versioning.md, ../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
 created: 2026-04-17
 authoritative_for: [execution-policy artifact registry and rule-evaluation engine]
-referenced_by:
+referenced_by: [codex/04-architecture/artifact-versioning.md, codex/04-architecture/backtest-groups.md, codex/04-architecture/slow-fast-routing-split.md, codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

@@ -15,7 +15,7 @@ tags: [capital, execution, cefi, defi, sports, tradfi]
 related: [capital-flow-model.md, capital-efficiency-patterns.md, ../02-venues/venue-registry-reference.md]
 created: 2026-04-17
 authoritative_for: [per-category custody, regulatory posture, and onboarding structure]
-referenced_by:
+referenced_by: [codex/02-venues/unity-integration.md, codex/03-services/portfolio-allocator.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/capital-flow-model.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/share-class.md, codex/09-strategy/architecture-v2/axes/venue-eligibility.md, codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

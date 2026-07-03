@@ -15,7 +15,7 @@ tags: [capital, execution, strategy, reconciliation, defi, cefi]
 related: [capital-efficiency-patterns.md, capital-structure-and-regulatory.md, autonomous-recovery-matrix.md]
 created: 2026-04-17
 authoritative_for: [three-scope capital-flow reconciliation model]
-referenced_by:
+referenced_by: [codex/03-services/portfolio-allocator.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/share-class-architecture.md, codex/04-architecture/strategy-execution-protocol.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md, codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md]
 owner:
 last_reviewed: 2026-05-13
 code_refs:

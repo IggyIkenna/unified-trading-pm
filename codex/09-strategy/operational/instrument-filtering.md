@@ -19,7 +19,7 @@ related:
   ]
 created: 2026-03-30
 authoritative_for: [DeFi instrument filtering rules + DEFI_MAJOR_ASSET_SYMBOLS major-asset whitelist]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/defi/aave-lending.md, codex/09-strategy/_archived_pre_v2/defi/basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/btc-basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md, codex/09-strategy/_archived_pre_v2/defi/ethena-benchmark.md]
 owner:
 last_reviewed:
 code_refs:

@@ -17,7 +17,7 @@ related:
   strategy-execution-runtime.md]
 created: 2026-05-22
 authoritative_for: [strategy universe-enumeration contract (InstrumentRecord query rules + no-hardcoded-lists + cache/refresh)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/strategy-execution-runtime.md, codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md]
 owner:
 last_reviewed: 2026-05-22
 code_refs:

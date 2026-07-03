@@ -15,7 +15,7 @@ tags: [customer-journey, sales, uac, ui, registry]
 related: [04-dart-commercial-axes.md, 03-same-system-principle.md, 11-codex-scope-registry.md]
 created: 2026-04-20
 authoritative_for: [service-family scope rules (six-family route-allowlist enforcement)]
-referenced_by:
+referenced_by: [codex/02-data/questionnaire-axes.md, codex/04-architecture/commercial-service-families.md, codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
 owner:
 last_reviewed:
 code_refs:

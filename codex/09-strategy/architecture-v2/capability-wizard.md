@@ -12,7 +12,7 @@ tags: [strategy, capability-wizard, uac, ui, escalation, verification]
 related: [capability-wizard-question-bank.md, strategy-catalogue-3tier.md]
 created: 2026-06-11
 authoritative_for: [capability wizard manifest/prospectus/walkthrough model]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/capability-wizard-question-bank.md, plans/active/capability_wizard_and_manifest_2026_06_11.md]
 owner:
 last_reviewed: 2026-06-11
 code_refs:

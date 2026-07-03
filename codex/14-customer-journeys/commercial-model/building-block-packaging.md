@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [building-block to commercial-package composition matrix]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md]
 owner:
 last_reviewed:
 code_refs:

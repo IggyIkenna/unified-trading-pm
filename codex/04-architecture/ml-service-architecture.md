@@ -21,7 +21,7 @@ authoritative_for:
     ml-service CLI --operation dispatch,
     ml-service single-image deployment topology,
   ]
-referenced_by:
+referenced_by: [codex/00-getting-started/DEPRECATED_SERVICES.md, codex/04-architecture/ml-lifecycle.md, codex/06-coding-standards/cli-convention.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:

@@ -15,7 +15,7 @@ tags: [playbook, testing, playwright, ui, coverage, persona]
 related: [route-mapping.md, persona-and-user-prototype-mapping.md, demo-email-and-provisioning-flow.md, ../demo-ops/demo-restriction-profiles.md]
 created: 2026-04-20
 authoritative_for: [experience-playbook -> Playwright-spec coverage matrix]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/implementation-mapping/README.md, codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md, codex/14-customer-journeys/implementation-mapping/route-mapping.md, codex/14-customer-journeys/shared-core/client-reporting-demo-walkthrough.md]
 owner:
 last_reviewed:
 code_refs:

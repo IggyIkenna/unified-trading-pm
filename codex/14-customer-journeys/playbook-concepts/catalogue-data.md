@@ -15,7 +15,7 @@ tags: [catalogue, data, manifest, instruments, ui, uac]
 related: [catalogues.md, ../../02-data/availability-manifest-and-data-status.md, ../../02-data/contracts-scope-and-layout.md, visibility-slicing.md]
 created: 2026-04-19
 authoritative_for: [data catalogue UI-surface parity gap]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/catalogues.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md]
 owner:
 last_reviewed:
 code_refs:

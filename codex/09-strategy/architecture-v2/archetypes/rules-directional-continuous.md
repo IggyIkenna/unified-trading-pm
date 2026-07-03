@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [RULES_DIRECTIONAL_CONTINUOUS archetype specification]
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/cefi/mean-reversion.md, codex/09-strategy/_archived_pre_v2/tradfi/commodity-regime.md, codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/families/rules-directional.md]
 owner:
 last_reviewed:
 code_refs:

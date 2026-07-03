@@ -14,7 +14,7 @@ tags: [uac, testing, vcr, ibkr, quality-gates, validation]
 related: [codex/02-data/unified-api-contracts-chain.md, codex/02-data/schema-governance.md, codex/06-coding-standards/testing.md]
 created: 2026-03-27
 authoritative_for: [VCR cassette ownership and contribute-to-UAC-via-PR flow, IBKR/TWS ib_insync test-mocking pattern]
-referenced_by:
+referenced_by: [codex/02-data/contracts-scope-and-layout.md, codex/02-data/per-source-colocation.md, codex/02-data/unified-api-contracts-chain.md, codex/05-infrastructure/contracts-integration.md, codex/06-coding-standards/integration-testing-layers.md, codex/06-coding-standards/testing.md, codex/06-coding-standards/ui-testing-layers.md, codex/06-coding-standards/vcr-cassette-pattern.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

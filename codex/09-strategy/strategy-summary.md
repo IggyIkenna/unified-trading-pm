@@ -18,7 +18,7 @@ tags: [strategy, archetype, strategy-family, execution, uac, ml]
 related: [architecture-v2/README.md, architecture-v2/cross-cutting/pnl-attribution.md, architecture-v2/MIGRATION.md]
 created: 2026-04-24
 authoritative_for: [strategy architecture v2 narrative summary (9 families / 57 archetypes / 7 axes / 10 cross-cutting overview)]
-referenced_by:
+referenced_by: [codex/01-domain/market-making-strategy.md, codex/04-architecture/live-strategy-config-hot-reload.md, codex/04-architecture/ml-experiment-lifecycle.md, codex/04-architecture/research-service-and-dart-integration.md, codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md]
 owner:
 last_reviewed:
 code_refs: [unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py]

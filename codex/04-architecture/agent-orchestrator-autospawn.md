@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator AutoSpawn worker-spawn architecture]
-referenced_by:
+referenced_by: [codex/04-architecture/agent-orchestrator-backlog-state-alignment.md, codex/04-architecture/agent-orchestrator-host-offline-failover.md, codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/agent-orchestrator-worker-liveness.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
 owner:
 last_reviewed: 2026-06-29
 code_refs:

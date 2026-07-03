@@ -14,7 +14,7 @@ tags: [strategy, infrastructure, execution, spot-vm, live-trading]
 related: [runtime-deployment-topology.md, batch-live-architecture.md, defi-execution-overview.md]
 created: 2026-05-15
 authoritative_for: [strategy ensemble VM topology (one-VM-per-asset-group + per-VM process layout)]
-referenced_by:
+referenced_by: [codex/04-architecture/matching-engine-assumptions.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [UAC external/ per-source co-location directory layout]
-referenced_by:
+referenced_by: [codex/02-data/operation-capability-registry.md, codex/02-data/schema-governance.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

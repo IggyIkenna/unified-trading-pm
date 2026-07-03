@@ -15,7 +15,7 @@ tags: [secret-manager, security, canonicalisation, credentials, defi]
 related: [rotation-runbook.md, credentials-matrix.md, ../04-architecture/custody-providers.md]
 created: 2026-05-11
 authoritative_for: [Secret Manager secret naming convention]
-referenced_by:
+referenced_by: [codex/05-infrastructure/aws-iam-matrix.md, codex/05-infrastructure/credentials-matrix.md, codex/05-infrastructure/hsm-wallet-signing.md, codex/05-infrastructure/per-archetype-wallet-isolation.md, codex/05-infrastructure/rotation-runbook.md, codex/14-customer-journeys/authentication/firebase-local.md, codex/14-customer-journeys/credentials/rotation-runbook.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

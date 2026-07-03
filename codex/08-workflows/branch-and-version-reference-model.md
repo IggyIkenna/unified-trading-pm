@@ -15,7 +15,7 @@ tags: [ci-cd, quickmerge, dependency-management, quality-gates, ssot-audit]
 related: [./ci-cd-flow.md, ./deployment-flow.md]
 created: 2026-06-02
 authoritative_for: [branch-vs-version two-reference model (code-integration LDR ref vs dependency-safety staging/main+semver ref)]
-referenced_by:
+referenced_by: [codex/08-workflows/ci-cd-flow.md]
 owner:
 last_reviewed:
 code_refs:

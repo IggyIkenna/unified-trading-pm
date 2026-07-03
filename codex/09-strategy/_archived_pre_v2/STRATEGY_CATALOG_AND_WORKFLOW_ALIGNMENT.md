@@ -16,7 +16,7 @@ tags: [strategy, ssot-audit, reconciliation, catalogue, refactor]
 related: [STRATEGY_CATALOG_pre_v2.md, ../architecture-v2/README.md, ../TIER_ZERO_UI_DEMO_AND_PARITY.md]
 created: 2026-03-27
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md, codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
 owner:
 last_reviewed:
 code_refs:

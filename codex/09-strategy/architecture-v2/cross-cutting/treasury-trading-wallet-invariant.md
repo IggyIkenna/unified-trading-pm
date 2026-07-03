@@ -17,7 +17,7 @@ related:
   universe-enumeration-contract.md, capital-client-isolation.md]
 created: 2026-05-22
 authoritative_for: [treasury-vs-trading wallet purpose-separation invariant]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/strategy-execution-runtime.md]
 owner:
 last_reviewed: 2026-05-22
 code_refs:

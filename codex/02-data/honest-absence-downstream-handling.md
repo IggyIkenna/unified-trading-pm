@@ -18,7 +18,7 @@ tags: [manifest, honest-coverage, data-correctness, data-status, features, recon
 related: [availability-manifest-and-data-status.md, honest-coverage-model.md, expected-absence-backfill-runbook.md, data-pipeline-correctness-hard-rule.md, ../05-infrastructure/data-pipeline-alerts.md]
 created: 2026-05-06
 authoritative_for: [honest-absence downstream read/consume handling, per-source available_at stamping helpers, DERIBIT-COMBO historical unbackfillability]
-referenced_by:
+referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/contract-failure-handling.md, codex/02-data/data-pipeline-correctness-hard-rule.md, codex/02-data/data-status-drilldown-hierarchy.md, codex/02-data/data-status-drilldown.md, codex/02-data/defi-data-type-taxonomy.md, codex/02-data/expected-absence-backfill-runbook.md, codex/02-data/external-data-always-available-rule.md]
 owner:
 last_reviewed: 2026-05-22
 code_refs:

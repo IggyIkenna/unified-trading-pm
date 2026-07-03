@@ -15,7 +15,7 @@ tags: [security, execution, strategy, refactor, ssot-audit]
 related: [secret-naming-convention.md, transport-security.md]
 created: 2026-03-27
 authoritative_for: [service-to-service authentication (X-Service-Token + create_s2s_auth_dependency factory)]
-referenced_by:
+referenced_by: [codex/07-security/transport-security.md, codex/14-customer-journeys/authentication/firebase-production.md]
 owner:
 last_reviewed:
 code_refs:

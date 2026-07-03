@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-28
 authoritative_for: [agent-orchestrator per-VM DNS/EIP cutover recipe (historical epic-VM fleet)]
-referenced_by:
+referenced_by: [codex/05-infrastructure/agent-orchestrator-worker-topology.md, codex/12-agent-workflow/orchestrator-multi-vm-topology.md, plans/audit/instructions/orchestrator_master_audit_instructions.md, plans/epics/orchestrator_master.md]
 owner: ikenna
 last_reviewed: 2026-05-28
 code_refs:

@@ -12,7 +12,7 @@ tags: [defi, basis, strategy, funding, l2]
 related: [../../architecture-v2/archetypes/carry-basis-perp.md, basis-trade.md]
 created: 2026-03-28
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md]
 owner:
 last_reviewed:
 code_refs:

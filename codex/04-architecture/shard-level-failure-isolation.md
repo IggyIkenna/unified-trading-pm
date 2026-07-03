@@ -15,7 +15,7 @@ tags: [manifest, data-correctness, backfill, data-status, ssot]
 related: [../02-data/availability-manifest-and-data-status.md, ../05-infrastructure/deployment-clusters-live-vs-batch.md, ../06-coding-standards/validation-and-errors.md]
 created: 2026-03-27
 authoritative_for: [shard-level failure isolation rule (no-raise per-shard loop + record_failed continuation), three-category empty-output decision tree]
-referenced_by:
+referenced_by: [codex/02-data/defi-venue-protocol-catalogue.md, codex/02-data/prediction-schema-paths.md, codex/02-data/shard-granularity-cefi.md, codex/02-data/sports-adapter-dependency-order.md, codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/service-contract-audit-template.md, codex/04-architecture/service-framework.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

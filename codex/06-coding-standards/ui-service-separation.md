@@ -14,7 +14,7 @@ tags: [ui, frontend, refactor, service-separation]
 related: [ui-branding.md, ui-testing-layers.md, ../05-infrastructure/ui-dependency-matrix.md]
 created: 2026-03-27
 authoritative_for: [UI/service repo separation rule]
-referenced_by:
+referenced_by: [codex/06-coding-standards/ui-branding.md]
 owner:
 last_reviewed:
 code_refs:

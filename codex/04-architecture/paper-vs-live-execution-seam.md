@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-09
 authoritative_for: [paper-vs-live-vs-batch execution seam, mode-divergence-only-at-execution-layer principle]
-referenced_by:
+referenced_by: [codex/04-architecture/multi-mode-wallet-isolation.md, codex/04-architecture/operational-modes.md, codex/04-architecture/order-state-machine.md, codex/04-architecture/reconciliation-resolution.md, codex/04-architecture/separation-of-concerns.md, codex/05-infrastructure/per-venue-paper-policy.md, codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md, codex/14-customer-journeys/dart/mode-toggle.md]
 owner:
 last_reviewed: 2026-05-10
 code_refs:

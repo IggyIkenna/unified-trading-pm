@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [UAC registry gap additions for the architecture-v2 category-instrument coverage matrix]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/block-list.md, codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md, codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md, codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md, codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md, codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md]
 owner:
 last_reviewed:
 code_refs:

@@ -16,7 +16,7 @@ tags: [strategy, cefi, ml, binance, features]
 related: [momentum.md, ../../architecture-v2/archetypes/ml-directional-continuous.md]
 created: 2026-06-16
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/cefi/momentum.md]
 owner:
 last_reviewed:
 code_refs:

@@ -15,7 +15,7 @@ tags: [defi, features, strategy, execution, risk, monitoring]
 related: [pnl-attribution.md, restaking-reward-economics.md]
 created: 2026-03-30
 authoritative_for: [lending/borrowing rate-impact model (Aave V3 kinked-curve pre-trade rate-impact simulation)]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md]
 owner:
 last_reviewed:
 code_refs:

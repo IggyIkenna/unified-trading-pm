@@ -16,7 +16,7 @@ tags: [infrastructure, migration, gcs, canonicalisation, runbook, cutover]
 related: [gcs-object-operations.md, path-registry.md, manifest-consolidator-ssot.md]
 created: 2026-05-16
 authoritative_for: [bucket-name env-tier cutover runbook]
-referenced_by:
+referenced_by: [codex/05-infrastructure/path-registry.md]
 owner:
 last_reviewed: 2026-05-16
 code_refs:

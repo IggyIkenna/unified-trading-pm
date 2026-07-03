@@ -14,7 +14,7 @@ tags: [instruments, sports, cefi, pipeline-mode, data-correctness]
 related: [instruments-live-architecture.md, ../02-data/honest-absence-downstream-handling.md, alerting-batch-live.md]
 created: 2026-05-08
 authoritative_for: [instruments preflight-DAG chain (live=batch)]
-referenced_by:
+referenced_by: [codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/instruments-live-architecture.md, codex/15-runbooks/instruments-live/t1-audit-discrepancy.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

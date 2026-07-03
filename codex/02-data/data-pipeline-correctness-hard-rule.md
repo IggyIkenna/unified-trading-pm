@@ -16,7 +16,7 @@ tags: [data-correctness, data-pipeline, audit, escalation, plan-hygiene, data-qu
 related: [../11-project-management/foundation-completion-gate-discipline.md, ../06-coding-standards/quality-gates.md, honest-absence-downstream-handling.md, ../../plans/epics/mtds_mdps_master.md]
 created: 2026-05-20
 authoritative_for: [data-pipeline-correctness heartbeat hard rule]
-referenced_by:
+referenced_by: [codex/02-data/external-data-always-available-rule.md, codex/02-data/honest-absence-downstream-handling.md, codex/02-data/shard-coverage-classification.md, codex/05-infrastructure/manifest-consolidator-ssot.md, plans/active/honest_coverage_v2_instrument_denominator_2026_06_28.md, plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md, plans/epics/mtds_mdps_master.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:

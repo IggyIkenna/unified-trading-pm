@@ -15,7 +15,7 @@ tags: [cefi, batch-live, execution, manifest, honest-coverage, mtds]
 related: [batch-live-architecture.md, amm-slippage-simulation.md, ../02-data/honest-absence-downstream-handling.md]
 created: 2026-05-14
 authoritative_for: [CeFi asset-group batch/live architecture]
-referenced_by:
+referenced_by: [codex/04-architecture/amm-slippage-simulation.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/prediction-batch-live.md, codex/04-architecture/sports-batch-live.md, codex/04-architecture/tradfi-batch-live.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

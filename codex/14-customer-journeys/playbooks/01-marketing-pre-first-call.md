@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [pb1 marketing pre-first-call playbook implementation (routes + nav + Playwright)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/experience/marketing-journey.md, codex/14-customer-journeys/playbooks/02-research-and-documentation.md, codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md, codex/14-customer-journeys/playbooks/README.md, codex/14-customer-journeys/testing/example-playbook-test.md]
 owner:
 last_reviewed:
 code_refs:

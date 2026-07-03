@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [signals-only instruction-schema engineering contract (8 required fields + lifecycle + rejection codes + venue/instrument/mode compat matrix)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/shared-core/instruction-schema-fit-and-package-boundaries.md, codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md, codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md, codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md, codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md]
 owner:
 last_reviewed:
 code_refs:

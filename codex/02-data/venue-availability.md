@@ -15,7 +15,7 @@ tags: [instruments, defi, backfill, data-correctness, registry, cefi]
 related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/instrument-pipeline-defi.md, codex/04-architecture/batch-live-architecture.md]
 created: 2026-04-03
 authoritative_for: [per-asset_group venue-availability registries and venue-class taxonomy, venue identifier case-folding contract, InstrumentRecord available_from_datetime as-of filtering]
-referenced_by:
+referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-venues/venue-registry-reference.md, codex/03-services/venue-capability-registry.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

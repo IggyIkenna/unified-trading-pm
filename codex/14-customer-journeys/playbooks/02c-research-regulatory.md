@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [pb2c Regulatory Umbrella Deep Dive briefing playbook implementation]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md, codex/14-customer-journeys/playbooks/02-research-and-documentation.md, codex/14-customer-journeys/playbooks/02a-research-im.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md, codex/14-customer-journeys/playbooks/README.md]
 owner:
 last_reviewed:
 code_refs:

@@ -15,7 +15,7 @@ tags: [rotation, runbook, secret-manager, credentials, security, defi]
 related: [secret-manager-naming.md, credentials-matrix.md, hsm-wallet-signing.md, ../04-architecture/custody-providers.md]
 created: 2026-05-11
 authoritative_for: [credential rotation cadence and execution-owner per class]
-referenced_by:
+referenced_by: [codex/04-architecture/custody-providers.md, codex/05-infrastructure/aws-iam-matrix.md, codex/05-infrastructure/secret-manager-naming.md, codex/06-coding-standards/config-reloader-pattern.md, codex/14-customer-journeys/authentication/firebase-local.md, codex/14-customer-journeys/credentials/rotation-runbook.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

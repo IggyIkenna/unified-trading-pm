@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-04-24
 authoritative_for: [QuestionnaireResponse axis catalogue schema]
-referenced_by:
+referenced_by: [codex/08-workflows/client-onboarding.md, codex/09-strategy/architecture-v2/instruments-resolver-architecture.md, codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md, codex/14-customer-journeys/demo-ops/staging-demo-setup.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

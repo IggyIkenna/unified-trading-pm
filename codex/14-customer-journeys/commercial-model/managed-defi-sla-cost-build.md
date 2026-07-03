@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-20
 authoritative_for: [managed DeFi-allocator SLA reusable cost-build template]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md]
 owner:
 last_reviewed:
 code_refs:

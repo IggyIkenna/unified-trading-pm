@@ -16,7 +16,7 @@ tags: [strategy, sports, ml, odds, prediction, features]
 related: [pre-game-ml.md, first-half-prediction.md, ../../architecture-v2/archetypes/ml-directional-event-settled.md]
 created: 2026-04-15
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/sports/first-half-prediction.md, codex/09-strategy/_archived_pre_v2/sports/pre-game-ml.md]
 owner:
 last_reviewed:
 code_refs:

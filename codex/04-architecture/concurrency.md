@@ -14,7 +14,7 @@ tags: [concurrency, architecture, batch-live]
 related: [README.md, batch-live-architecture.md]
 created: 2026-03-27
 authoritative_for: [redirect stub — concurrency model lives in 04-architecture README + batch-live-architecture.md]
-referenced_by:
+referenced_by: [codex/04-architecture/README.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

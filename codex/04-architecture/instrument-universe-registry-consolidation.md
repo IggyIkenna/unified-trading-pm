@@ -14,7 +14,7 @@ tags: [instruments, uac, canonicalisation, honest-coverage, registry, refactor]
 related: [instruments-service-as-ssot-for-mtds.md, tier-and-import-architecture.md, ../02-data/honest-coverage-model.md, asset-class-ownership.md]
 created: 2026-06-29
 authoritative_for: [UAC VENUE_TO_ADAPTER_KEY and venue-enumeration consolidation]
-referenced_by:
+referenced_by: [codex/04-architecture/asset-class-ownership.md, codex/04-architecture/instruments-service-as-ssot-for-mtds.md, plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md, plans/audit/results/mvp_instrument_universe_gap_audit_2026_06_17.md]
 owner:
 last_reviewed: 2026-06-29
 code_refs:

@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-08
 authoritative_for: [cross-asset batch=live architecture invariant]
-referenced_by:
+referenced_by: [codex/02-data/live-data-persistence-and-event-log.md, codex/02-data/match-end-time-cascade.md, codex/02-data/venue-availability.md, codex/04-architecture/alerting-batch-live.md, codex/04-architecture/amm-slippage-simulation.md, codex/04-architecture/backfill-and-live-startup.md, codex/04-architecture/backtest-groups.md, codex/04-architecture/cefi-batch-live.md]
 owner:
 last_reviewed: 2026-06-11
 code_refs:

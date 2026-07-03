@@ -17,7 +17,7 @@ tags: [strategy, cefi, binance, book-microstructure, execution]
 related: [momentum.md, ../../architecture-v2/archetypes/market-making-continuous.md]
 created: 2026-03-27
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
 owner:
 last_reviewed:
 code_refs:

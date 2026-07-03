@@ -18,7 +18,7 @@ tags: [instruments, catalogue, honest-coverage, data-correctness, manifest, trad
 related: [availability-manifest-and-data-status.md, honest-coverage-model.md, defi-canonical-naming-ssot.md, ../04-architecture/instruments-service-as-ssot-for-mtds.md, ../05-infrastructure/deployment-observability.md]
 created: 2026-06-24
 authoritative_for: [instruments-foundation completeness standard (G1–G5 gated process, all asset_groups), day_coverage/depth_coverage two-layer coverage + expected-universe oracle]
-referenced_by:
+referenced_by: [codex/02-data/prediction-settlement-availability-convention.md, codex/04-architecture/instruments-service-as-ssot-for-mtds.md, codex/05-infrastructure/manifest-consolidator-ssot.md, plans/active/instruments_foundation_completeness_2026_06_24.md]
 owner:
 last_reviewed: 2026-06-24
 code_refs:

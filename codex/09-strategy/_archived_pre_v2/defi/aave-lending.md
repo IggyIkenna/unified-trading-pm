@@ -13,7 +13,7 @@ related:
   [../../architecture-v2/archetypes/yield-rotation-lending.md, btc-lending-yield.md]
 created: 2026-03-27
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/lending-protocol-arb.md, codex/09-strategy/_archived_pre_v2/defi/liquidation-cascade-capture.md, codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md]
 owner:
 last_reviewed:
 code_refs:

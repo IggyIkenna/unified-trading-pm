@@ -16,7 +16,7 @@ tags: [strategy, sports, ml, odds, value-betting, features]
 related: [pre-game-ml.md, kelly.md, ../../architecture-v2/archetypes/ml-directional-event-settled.md]
 created: 2026-03-27
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/sports/arbitrage.md, codex/09-strategy/_archived_pre_v2/sports/kelly.md, codex/09-strategy/_archived_pre_v2/sports/odds-drift.md, codex/09-strategy/_archived_pre_v2/sports/pre-game-ml.md, codex/09-strategy/_archived_pre_v2/sports/staking-methods.md]
 owner:
 last_reviewed:
 code_refs:

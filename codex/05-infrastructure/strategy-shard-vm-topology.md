@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-20
 authoritative_for: [strategy-service per-client shard VM topology (archetype×shard naming + auto-spawn)]
-referenced_by:
+referenced_by: [codex/04-architecture/client-lifecycle-event-bus.md, codex/04-architecture/per-client-isolation-architecture.md, codex/04-architecture/promote-workflow-architecture.md, codex/05-infrastructure/strategy-vm-launcher-shape.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:

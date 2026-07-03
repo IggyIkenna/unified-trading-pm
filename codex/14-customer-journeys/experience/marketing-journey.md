@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [pb1 pre-first-call marketing journey experience]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/authentication/light-auth-briefings.md, codex/14-customer-journeys/demo-ops/account-intelligence-record.md, codex/14-customer-journeys/experience/README.md, codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md, codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md, codex/14-customer-journeys/implementation-mapping/route-mapping.md, codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md, codex/14-customer-journeys/presentations/target-experience-post-refactor.md]
 owner:
 last_reviewed:
 code_refs:

@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [Unity prime-broker integration, Unity child-book registry + commercial terms]
-referenced_by:
+referenced_by: [codex/02-venues/prime-brokers.md, codex/02-venues/venue-registry-reference.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md, codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md]
 owner:
 last_reviewed:
 code_refs:

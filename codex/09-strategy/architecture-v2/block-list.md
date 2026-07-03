@@ -12,7 +12,7 @@ tags: [strategy, catalogue, defi, execution, uac, data-quality]
 related: [category-instrument-coverage.md, restriction-policy.md, README.md]
 created: 2026-04-20
 authoritative_for: [architecture-v2 coverage BLOCKED-cell remediation registry (BL-N entries)]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/restriction-policy.md]
 owner:
 last_reviewed:
 code_refs:

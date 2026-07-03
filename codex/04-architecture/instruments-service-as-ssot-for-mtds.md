@@ -22,7 +22,7 @@ related:
 created: 2026-05-20
 authoritative_for:
   [IS→MTDS reference-data contract, MTDS no-hardcoded-venue-url rule, MTDS per-shard manifest emission requirement]
-referenced_by:
+referenced_by: [codex/02-data/cefi-capture-universe.md, codex/02-data/honest-coverage-model.md, codex/02-data/instruments-foundation-and-catalogue-completeness.md, codex/04-architecture/asset-class-ownership.md, codex/04-architecture/drift-v2-data-sources.md, codex/04-architecture/greeks-service-overview.md, codex/04-architecture/instrument-universe-registry-consolidation.md, codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md]
 owner:
 last_reviewed:
 code_refs:

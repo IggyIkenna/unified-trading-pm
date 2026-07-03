@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [lifecycle-event taxonomy, mandatory lifecycle event sequence]
-referenced_by:
+referenced_by: [codex/03-observability/alerting.md, codex/03-observability/coordination-events.md, codex/03-observability/slos.md, codex/04-architecture/opentelemetry.md, codex/04-architecture/runtime-deployment-topology.md, codex/06-coding-standards/correlation-id.md, codex/07-security/audit-logging.md]
 owner:
 last_reviewed:
 code_refs:

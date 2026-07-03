@@ -18,7 +18,7 @@ tags: [mvp, backtest, features, ml, strategy, cutover]
 related: [architecture-v2/category-instrument-coverage.md, ../02-data/mvp-scope-canonical.md, ../../plans/active/compute_optimization_mock_data_2026_05_13.md]
 created: 2026-05-13
 authoritative_for: [may-23 cutover backtest-universe sizing per asset_group (backtest-window + config-grid worker-count math)]
-referenced_by:
+referenced_by: [codex/01-domain/market-making-strategy.md, codex/05-infrastructure/deployment-and-qg-strategy.md, codex/08-workflows/cutover-window-dependency-order.md, plans/active/_agent_pings.md, plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md, plans/active/master_to_live_defi_2026_05_23.md, plans/epics/cefi_master.md, plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md]
 owner:
 last_reviewed:
 code_refs: [strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py]

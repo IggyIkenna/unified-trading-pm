@@ -15,7 +15,7 @@ tags: [ui, duplicate, page-triage, refactor, consolidation, navigation]
 related: [triage-matrix.md, partial-archive.md]
 created: 2026-04-19
 authoritative_for: [UI duplicate-route cluster merge decisions]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/page-triage/README.md, codex/14-customer-journeys/page-triage/triage-matrix.md, codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md, codex/14-customer-journeys/roadmap/plan-references.md, codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md, codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md]
 owner:
 last_reviewed:
 code_refs:

@@ -16,7 +16,7 @@ tags: [uac, canonicalisation, refactor, data-pipeline, ssot-audit, tradfi]
 related: [canonical-schema-groups.md, vcr-cassette-ownership.md, ../04-architecture/tier-and-import-architecture.md]
 created: 2026-03-27
 authoritative_for: [UAC external/canonical/internal scope + import-direction rules]
-referenced_by:
+referenced_by: [codex/02-data/README.md, codex/02-data/canonical-schema-groups.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/02-data/per-source-colocation.md, codex/02-data/pipeline-mode-and-batch-live-reconciliation.md, codex/02-data/prediction-data-types-catalog.md, codex/02-data/schema-governance.md, codex/02-data/vcr-cassette-ownership.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:

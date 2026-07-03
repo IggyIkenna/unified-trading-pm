@@ -14,7 +14,7 @@ tags: [strategy, vol-trading, options, deribit, protective-put, overlay, hedging
 related: [vol-overlay-covered-calls.md, vol-straddle.md, vol-carry.md, carry-basis-perp.md, ../families/vol-trading.md]
 created: 2026-05-19
 authoritative_for: ['VOL_OVERLAY_PROTECTIVE_PUT archetype spec']
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-overlay-covered-calls.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
 owner:
 last_reviewed:
 code_refs:
