@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Performance Targets
 summary:
-status:
+  Performance-target SSOT — latency (p50/p95/p99/max per path), throughput, and per-Cloud-Run resource ceilings, the
+  machine-readable YAML block, memory-leak soak tolerance (+10%/30min, +15%/peak), and the benchmark-backed per-stage
+  bottleneck classification + top-3 optimization priorities (features_compute/mtds_read/mdps_compute) for the cutover
+  pipeline, with spot-instance viability + checkpoint-restart grains.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [performance, monitoring, cost, backfill, spot-vm, data-pipeline]
+related: [../05-infrastructure/synthetic-data-benchmarking.md, ../08-workflows/cutover-window-dependency-order.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [performance latency/throughput/resource targets, per-stage benchmark bottleneck classification]
 referenced_by:
 owner:
 last_reviewed:

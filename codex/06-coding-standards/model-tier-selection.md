@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Model Tier Selection — Sonnet 4.6 vs Opus 4.8
 summary:
-status:
+  Model-tier + thinking-effort selection SSOT — default Sonnet 4.6/medium; Opus 4.8 only for the main orchestrator /
+  cross-repo architecture / provably >200k context; thinking:max requires Opus (medium on Opus is always wrong). Covers
+  the mandatory task-start self-check (model + thinking mismatch → STOP/FLAG), always-set sub-agent model=, and the
+  orchestrator's frontmatter-driven autospawn tier enforcement.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [model-tier, orchestrator, role-registry, escalation, model-tier-selection]
+related: [../04-architecture/role-registry.md, ../12-agent-workflow/local-slot-host-symmetric-worker-model.md]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: [model-tier selection (Sonnet vs Opus), thinking-effort tier selection]
 referenced_by:
 owner:
 last_reviewed:

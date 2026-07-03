@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Pre-Sprint Baseline (Phase 0)
 summary:
-status:
+  Phase-0 pre-sprint baseline audit protocol — the 6 read-only per-repo checks (python-version, quality-gates.sh
+  --no-fix, basedpyright strict + reportAny, os.getenv/os.environ scan, Any-in-public-API scan, cloud-SDK-import scan)
+  run in tier order before ANY hardening sprint, with the failure protocol, gate criteria, and QUALITY_GATE_BYPASS_AUDIT
+  format.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer]
-tags: []
-related: []
+tags: [pre-sprint-baseline, quality-gates, audit, ssot-audit, refactor]
+related: [quality-gates.md, integration-testing-layers.md, ../04-architecture/tier-and-import-architecture.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [Phase-0 pre-sprint baseline audit protocol]
 referenced_by:
 owner:
 last_reviewed:

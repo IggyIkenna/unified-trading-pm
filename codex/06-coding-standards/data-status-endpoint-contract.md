@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Data-Status Endpoint Contract
 summary:
-status:
+  Contract requiring every service /api/data-status coverage endpoint to call UTL compute_coverage_for_bucket() or UAC
+  compute_honest_coverage() — never inline the manifest read or the 5-field coverage formula; QG STEP 5.90 enforces it,
+  and the inline QG-allow data-status-no-coverage marker is the only sanctioned exemption for non-coverage routes.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [data-status, honest-coverage, quality-gates, uac, data-pipeline, verification]
+related: [../02-data/honest-coverage-model.md, ../02-data/availability-manifest-and-data-status.md, ../02-data/data-status-drilldown.md]
 created: 2026-05-22
-authoritative_for:
+authoritative_for: [data-status coverage-helper endpoint contract (compute_coverage_for_bucket / STEP 5.90)]
 referenced_by:
 owner:
 last_reviewed:

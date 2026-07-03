@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Documentation Standards
 summary:
-status:
+  Per-repo required-docs standard (S5) — service repos need 8 canonical docs, libraries 5, UIs 4 (WARN-only); a stub
+  (≤3 lines or only TODO) counts as missing; no hardcoded project-IDs/buckets in docs; and the S5.11 HARD RULE that
+  repo docs link the codex SSOT rather than duplicating canonical content (stale repo-doc vs codex is review-blocking).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui, unified-trading-library, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [documentation-standards, ssot-audit, plan-hygiene, quality-gates, docspec]
+related: [../02-data/schema-governance.md, ../02-data/canonical-schema-groups.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [per-repo required-docs set (S5), repo-docs-defer-to-codex rule]
 referenced_by:
 owner:
 last_reviewed:

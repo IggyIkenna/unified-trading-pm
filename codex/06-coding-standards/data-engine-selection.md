@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Data Engine Selection — Polars vs Pandas vs PyArrow
 summary:
-status:
+  Per-service data-engine selection rule — pick ONE engine (Polars vs Pandas+PyArrow vs pure PyArrow vs BigQuery) and
+  stay in it end-to-end; mixing mid-pipeline is banned (C-extension arena retention compounds shard-over-shard). The
+  MDPS 2026-05-28 benchmark locks the read→aggregate→write shape to pure Polars; BigQuery is a corpus-scale third tier
+  over the hive layout, an alternate EXECUTOR of the same formula_version (not a second SSOT).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, market-data-processing-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [polars, performance, data-pipeline, mdps, refactor, features, quality-gates]
+related: [read-time-filter-pushdown.md, service-orchestration-patterns.md, ../05-infrastructure/vm-tarball-deployment.md, dependency-management.md]
 created: 2026-05-28
-authoritative_for:
+authoritative_for: [per-service data-engine selection (Polars/Pandas+PyArrow/PyArrow/BigQuery), single-engine mid-pipeline discipline]
 referenced_by:
 owner:
 last_reviewed:

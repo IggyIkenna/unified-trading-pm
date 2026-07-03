@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Correlation ID Propagation
 summary:
-status:
+  End-to-end correlation_id (UUIDv4, lowercase-hyphenated) propagation contract — generated ONCE at API ingress,
+  carried unbroken via X-Correlation-ID header / PubSub attributes / x-goog-meta-correlation-id / BQ column, and logged
+  on every INFO+ statement in a request path; never regenerated mid-pipeline.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer]
-tags: []
-related: []
+tags: [correlation-id, observability, tracing, pubsub, gcs, logging, audit]
+related: [../03-observability/lifecycle-events.md, ../07-security/audit-logging.md, ../07-security/compliance.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [correlation_id end-to-end propagation contract]
 referenced_by:
 owner:
 last_reviewed:

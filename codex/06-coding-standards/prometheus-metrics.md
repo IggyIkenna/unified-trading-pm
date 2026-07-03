@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Prometheus Metrics
 summary:
-status:
+  Prometheus metrics standard — {service}_{type}_{unit} naming (counters end _total, latency histograms _seconds), the
+  required per-service counters/histograms/gauges with the fixed [0.001,0.01,0.1,1.0,10.0] latency buckets, module-level
+  registration, unauthenticated /metrics exposition, standard alert thresholds, and the no-high-cardinality-labels rule.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [prometheus-metrics, observability, monitoring, alerting]
+related: [../03-observability/slos.md, ../03-observability/alerting.md, feature-service-pattern.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [Prometheus metric naming convention and required-metric set]
 referenced_by:
 owner:
 last_reviewed:

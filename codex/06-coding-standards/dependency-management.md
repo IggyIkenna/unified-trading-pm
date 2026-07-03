@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Dependency Management
 summary:
-status:
+  Workspace dependency-management SSOT — flat-deps-only pyproject (one [project.dependencies] block, no dev extras),
+  committed uv.lock with three separated roles (quickmerge writes / QG verifies read-only via uv lock --check / pinned
+  uv 0.10.8 for determinism), ruff exact-pinned identically across four locations, and the canonical-version
+  resolve→propagate→aggregate flow with the PM push-gate alignment check.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, system-integration-tests, unified-trading-library]
 scope: [engineer]
-tags: []
-related: []
+tags: [dependency-management, uv, quality-gates, quickmerge, canonicalisation, infrastructure]
+related: [dockerfile-standards.md, feature-branch-workflow.md, quality-gates.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [flat-deps pyproject dependency-management convention, uv.lock three-role determinism]
 referenced_by:
 owner:
 last_reviewed:

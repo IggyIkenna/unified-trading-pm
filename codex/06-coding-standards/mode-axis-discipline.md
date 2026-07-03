@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Mode-Axis Discipline
 summary:
-status:
+  SSOT for the four independent mode-axis enums (RuntimeMode, OperationalMode, BatchExecutionMode,
+  StrategyMaturityPhase), their cartesian valid-combination table, the seam rule (mode branches ONLY at the 4 batch/live
+  seams — never inside business logic), the AP-1..AP-6 anti-patterns, and QG STEPs L1-L7 enforcement.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mode-axis, batch-live, uac, quality-gates, strategy, execution]
+related: [../04-architecture/batch-live-architecture.md, ../02-data/pipeline-mode-partition.md, quality-gates.md]
 created: 2026-05-14
-authoritative_for:
+authoritative_for: [four mode-axis enum taxonomy (RuntimeMode/OperationalMode/BatchExecutionMode/StrategyMaturityPhase), mode-conditional seam discipline]
 referenced_by:
 owner:
 last_reviewed:

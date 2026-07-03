@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Manifest Skip Semantics
 summary:
-status: stub
+  Stub — documents when a service may skip a shard vs when it must emit empty_confirmed with a typed reason (no silent
+  skips — every expected shard has a manifest row or a typed reason). The full SSOT is
+  availability-manifest-and-data-status.md.
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, data-status, data-pipeline, honest-coverage, single-walk]
+related: [../02-data/availability-manifest-and-data-status.md]
 created: 2026-05-21
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

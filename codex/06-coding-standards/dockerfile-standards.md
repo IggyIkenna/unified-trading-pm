@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Dockerfile Standards
 summary:
-status:
+  Docker image standards — Python services MUST FROM the shared Artifact Registry unified-trading-library base (uv/rg/
+  gcloud/gcsfuse pre-installed; the heavier unified-trading-services base only when justified), UI repos use multi-stage
+  node+nginx; plus layer-caching order, non-root appuser, HEALTHCHECK, approved-registry-only, and no-secrets-in-image
+  rules.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer]
-tags: []
-related: []
+tags: [dockerfile, infrastructure, ci-cd, quality-gates, ui]
+related: [dependency-management.md, quality-gates.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [Dockerfile base-image and build standards]
 referenced_by:
 owner:
 last_reviewed:

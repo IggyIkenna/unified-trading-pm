@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Method Size Rule
 summary:
-status: reference
+  Method-size rule — every public method MUST be ≤50 lines (private helpers SHOULD be ≤50); enforced via each service's
+  FUNCTION_SIZE_EXTRA_EXCLUDES allowlist, which is tracked tech-debt that must shrink monotonically. Includes the
+  Batch-32 phase-extraction remediation pattern and hard-case techniques.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-trading-api]
 scope: [engineer]
-tags: []
-related: []
+tags: [method-size, quality-gates, refactor, file-splitting]
+related: [quality-gates.md, file-splitting-guide.md]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [method-size 50-line rule and FUNCTION_SIZE_EXTRA_EXCLUDES allowlist discipline]
 referenced_by:
 owner: ikenna
 last_reviewed:
