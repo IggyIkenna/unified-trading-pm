@@ -85,8 +85,8 @@ with a raised timeout completed in **2h17m** (it is not hung — just too slow f
 
 **Root cause is architectural, not the 2026-06-27 commits** (those are correct §7.3 fixes and must be kept): the rollup
 was never built incrementally. The originating plan (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md`) chose
-full-rebuild deliberately ("build it FROM by_date and it is correct + self-refreshing") and only ever optimised the
-_download_ (`_bounded_parallel_load`, 16 workers). The intended incremental design (prev catalogue + latest day) was
+full-rebuild deliberately ("build it FROM by*date and it is correct + self-refreshing") and only ever optimised the
+\_download* (`_bounded_parallel_load`, 16 workers). The intended incremental design (prev catalogue + latest day) was
 **never implemented**. Raising the timeout or reverting 2026-06-27 only defers the next breach as history grows.
 
 ## The fix — trailing-window + frozen-tail incremental merge
@@ -294,3 +294,11 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
   Phase 3: the weekly `--mode full` job's timeout (needs ≥3h, contradicts the "3600 ceiling" claim — verify the real
   Cloud Run Jobs ceiling or route to Batch). §7.3 delist-detection semantics reviewed with operator and confirmed kept
   as-is (venue truth `delisted_at` > `expiry` > per-venue-last-full-day presence with thin-day guard).
+- 2026-07-03 (later): **the timeout breach is now 3-of-5 asset groups, not tradfi-only.** cefi and defi daily runs are
+  ALSO killed at the 3600s timeout ("The configured timeout was reached" — executions
+  `lifecycle-catalogue-regen-cefi-vmlmq` + `…-defi-4tdg6`, 2026-07-03, both completing ~02:00 = start+1h): cefi
+  `catalog.parquet` stale since 2026-06-29T10:47Z, defi since 2026-06-29T01:18Z. Only sports (manifest single-read,
+  seconds) and prediction (~10 min) still complete daily (fresh artifacts 2026-07-03T01:01Z / 01:10Z). No scope change —
+  the incremental default already targets tradfi/cefi/defi — but the freshness impact is wider than the plan's Problem
+  section (written when only tradfi had breached), and the Phase 3 "green incremental run on each AG" operational proof
+  now clears staleness on three AGs, not one.
