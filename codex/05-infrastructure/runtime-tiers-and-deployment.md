@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Runtime Tiers & Deployment Orchestration
 summary:
-status:
+  The 7-tier deployment topology (static/T0-T6) + the UI dev-stack startup decision table, deployment clusters, the
+  live-pipeline VM topology, the 4 operational modes, and the deployed prod/uat environment topology; the runtime-profile
+  v7 axis is owned by client-isolation-sla-and-runtime-profiles.md.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, deployment, ui, tiers, orchestrator]
+related:
+  [
+    ui-architecture.md,
+    replay-subsystem.md,
+    vm-tarball-deployment.md,
+    synthetic-data-benchmarking.md,
+    ../04-architecture/client-isolation-sla-and-runtime-profiles.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [7-tier deployment topology (static/T0-T6), UI/dev-stack startup decision table]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

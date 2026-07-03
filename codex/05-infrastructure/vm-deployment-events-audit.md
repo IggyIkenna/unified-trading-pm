@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: VM Deployment Events — GCS / PubSub Forwarding Audit
 summary:
-status: living
+  2026-05-15 audit of the VM deployment-event sink chain (heartbeat_cli.py → PubSubEventSink → deployment-events topic) —
+  STARTED/COMPLETED/FAILED confirmed via smoke VM, but no PubSub→GCS export exists so events expire at the 7-day TTL; P2
+  fix = switch heartbeat_cli.py to GCSEventSink.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [audit, pubsub, observability, deployment, infrastructure]
+related: [vm-event-emission-audit.md, pubsub-topic-inventory.md, ../02-data/live-data-persistence-and-event-log.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [VM deployment-event GCS/PubSub forwarding gap audit]
 referenced_by:
 owner: deployment-platform
 last_reviewed: 2026-05-17

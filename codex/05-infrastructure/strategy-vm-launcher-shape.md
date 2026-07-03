@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Strategy VM launcher shape — paper + live
 summary:
-status: stable
+  Entry-point SSOT for the two strategy VM launchers — launch-strategy-paper-vm.sh (Tenderly fork, no capital) and
+  launch-strategy-live-vm.sh (Copper MPC, real capital, --dry-run-live-cutover-passed safety gate); shared
+  VM-name/boot/tarball/singleton-lock shape and event verification.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer]
-tags: []
-related: []
+tags: [strategy, deployment, defi, execution, infrastructure]
+related: [strategy-shard-vm-topology.md, launcher-script-ssot.md, vm-tarball-deployment.md]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: [strategy VM launcher entry-points (paper + live)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-12

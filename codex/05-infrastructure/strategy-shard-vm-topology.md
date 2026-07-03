@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Strategy-Service Shard VM Topology
 summary:
-status:
+  Strategy-service shard VM topology — one StrategySupervisor per (archetype × shard) VM, the
+  strategy-{mode}-{archetype}-shard{N}-{ts} naming + singleton-lock triplet, the capacity thresholds (mem≥70 / cpu≥80 /
+  occupancy), and manual (May-23) vs automated (E.2) shard auto-spawn.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, infrastructure, deployment, defi, orchestrator]
+related:
+  [
+    strategy-vm-launcher-shape.md,
+    vm-tarball-deployment.md,
+    ../04-architecture/per-client-isolation-architecture.md,
+    ../04-architecture/client-lifecycle-event-bus.md,
+  ]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [strategy-service per-client shard VM topology (archetype×shard naming + auto-spawn)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

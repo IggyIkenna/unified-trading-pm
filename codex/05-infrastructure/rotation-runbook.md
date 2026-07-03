@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Credential rotation runbook — per-class cadence + execution-owner
 summary:
-status:
+  Credential rotation runbook — per-class cadence (venue trade-scope 30d, custody MPC 60d, data/aux 90d, wallet PK
+  never/cold-laptop, Cloud-HSM CMK 90d auto), the execution-owner per class, the CMK re-wrap procedure, and the
+  pre-cutover one-shot rotation gate.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [admin, engineer]
-tags: []
-related: []
+tags: [rotation, runbook, secret-manager, credentials, security, defi]
+related: [secret-manager-naming.md, credentials-matrix.md, hsm-wallet-signing.md, ../04-architecture/custody-providers.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [credential rotation cadence and execution-owner per class]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
