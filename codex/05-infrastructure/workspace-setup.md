@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Workspace Setup
-summary:
-status:
+summary: >-
+  Workspace bootstrap SSOT — `workspace-bootstrap.sh` phases, the two-venv model (`.venv-workspace` IDE vs per-repo
+  `.venv` CI-faithful), manifest↔pyproject dependency alignment, `setup.sh`/`quality-gates.sh` rollout, mock-emulator
+  setup for credential-free CI, and the 3-layer version-alignment gate.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [system-integration-tests, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, setup, quality-gates, scripts]
+related: [workspace-root-variable.md, ../08-workflows/ci-cd-flow.md, ../06-coding-standards/quality-gates.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [workspace bootstrap and two-venv setup]
 referenced_by:
 owner:
 last_reviewed: 2026-06-25

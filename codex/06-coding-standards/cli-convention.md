@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Service CLI Convention
-summary:
-status:
+summary: >-
+  Service CLI SSOT — the four orthogonal axes (`--operation` what / `--mode` batch|live / `--asset-group` /
+  `--log-level`), canonical `VENUE:INSTRUMENT_TYPE:SYMBOL` instrument-id parsing (split on first two colons), the
+  6-tuple atomic shard, the pipe-delimited `--shard-key` form, and `--feature-family` / ml `--operation` dispatch.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-ui, execution-service, features-service, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [cli-convention, mtds, features, ml, instruments, mdps]
+related: [../02-data/data-status-drilldown.md, service-orchestration-patterns.md, ../04-architecture/features-service-architecture.md, ../04-architecture/ml-service-architecture.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [service CLI convention and canonical instrument_id CLI parsing, shard-key CLI format]
 referenced_by:
 owner:
 last_reviewed:

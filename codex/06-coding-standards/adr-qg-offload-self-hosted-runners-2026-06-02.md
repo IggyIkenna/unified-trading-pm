@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: 'ADR: Where the heavy QG runs — keep it local on governed 16 GB workers (Option A)'
-summary:
-status:
+summary: >-
+  ADR (accepted 2026-06-02, Option A): keep the full `quality-gates.sh` LOCAL on 16 GB `m7i.xlarge` workers, made viable
+  by the host concurrency governor (K=floor(vCPU/4)=1 so a single ~5.3 GB peak run fits) — no fleet right-sizing;
+  rejects Option B (central self-hosted-runner pool) because it breaks the local pass/fail feedback loop.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [quality-gates, infrastructure, performance, cost]
+related: [../../plans/active/quality_gates_resource_contention_speedup_2026_06_02.md, ../../plans/epics/infrastructure_master.md, quality-gates.md]
 created: 2026-06-02
-authoritative_for:
+authoritative_for: [QG execution-location decision (local governed workers vs central runners)]
 referenced_by:
 owner:
 last_reviewed:

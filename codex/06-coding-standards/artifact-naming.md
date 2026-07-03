@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Coding Standard — Artifact Naming
-summary:
-status:
+summary: >-
+  Naming conventions for all versioned artifacts (feature groups, ML models, execution/cost/risk/MEV/bridge policies,
+  allocators, conformance suites) — stable lowercase kebab-case families with explicit `@v{N}` pins, monotonic
+  per-family integer versions, immutable content per version, and no implicit "latest" resolution anywhere.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [artifact-naming, ml, features, execution, registry, strategy]
+related: [../04-architecture/artifact-versioning.md, strategy-identity-versioning.md, ../04-architecture/schema-versioning.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [versioned artifact naming conventions]
 referenced_by:
 owner:
 last_reviewed:
