@@ -1,21 +1,33 @@
 ---
 doc_type: issue
 title: Honest-Coverage Layer-1 — UAC↔writer expected-matrix reconciliation (strays + carve-out contradiction)
-summary: 'Surfaced by the Honest-Coverage-v2 CK3 certification (2026-06-29): the Layer-1 enumeration-completeness check found high stray counts (writer captures (venue,instrument_type,data_type) combos UAC''s per-itype validity matrix does not sanction) plus one writer↔UAC carve-out contradiction. These make Layer-1 completeness % an UPPER bound for the affected nodes. Resolve via owner-verified UAC matrix expansion + writer canonicalisation so EXPECTED and ENUMERATED agree on the could-exist universe.'
-status: open
+summary:
+  "Surfaced by the Honest-Coverage-v2 CK3 certification (2026-06-29): the Layer-1 enumeration-completeness check found
+  high stray counts (writer captures (venue,instrument_type,data_type) combos UAC's per-itype validity matrix does not
+  sanction) plus one writer↔UAC carve-out contradiction. These make Layer-1 completeness % an UPPER bound for the
+  affected nodes. Resolve via owner-verified UAC matrix expansion + writer canonicalisation so EXPECTED and ENUMERATED
+  agree on the could-exist universe."
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [data, meta]
 repos: [unified-api-contracts, market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [honest-coverage, denominator-audit, uac, writer, data-correctness, ssot-contradiction]
-related: [../honest_coverage_v2_opus_checkpoints_2026_06_28.md, ../honest_coverage_v2_instrument_denominator_2026_06_28.md, ../../../codex/02-data/honest-coverage-model.md]
+related:
+  [
+    ../honest_coverage_v2_opus_checkpoints_2026_06_28.md,
+    ../honest_coverage_v2_instrument_denominator_2026_06_28.md,
+    ../../../codex/02-data/honest-coverage-model.md,
+  ]
 created: 2026-06-29
 parent_epic: infrastructure_master
 priority: P1
 source: honest_coverage_v2_opus_checkpoints_2026_06_28.md
 assigned_vm: NA
 resolved_by:
+  harsh session 2026-07-03 — unified-api-contracts@59de09d6 + instruments-service@3bb7acd + ASTER manifest purge +
+  re-measure (cefi L1 65.91→79.55)
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
@@ -23,7 +35,7 @@ thinking_tier: medium
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-last_updated: 2026-06-29
+last_updated: 2026-07-03
 supersedes:
 superseded_by:
 depends_on:
@@ -98,21 +110,35 @@ roll-up.
 - [x] [INVESTIGATE] P1. Triage every stray class against billing/MVP/owner rules. ✅ DONE 2026-06-29 — verdict per class
       in the "OPERATOR DECISIONS — RESOLVED" table above (billing cutoff / out-of-MVP / over-seed carve-out / grain
       roll-up). Net: zero UAC additions warranted.
-- [ ] [CODE] P1. **NO UAC additions — the a_token strays are a GRAIN mismatch, not missing data (re-verified +
-      operator-confirmed 2026-06-29).** Earlier "add a*token protocol-state" was OVERTURNED on inspection of
-      `capability_declarations/_defi.py`: `risk_params` + `lending_indices` are ALREADY declared in
-      `_LENDING_DATA=[lending_indices,liquidations,risk_params]`; `rate_indices` = `lending_indices` (non-canonical
-      name); `utilization` is a COLUMN of lending_indices, not a data_type (code comment l.335); AAVE's
-      `mtds_operations` do NOT collect `oracle_prices` (over-seed). Root cause: writer emits fine
-      `a_token`/`debt_token`/`liquidation` grains; UAC models lending at the coarser `lending` instrument_type. **FIX
-      (operator: "Roll a_token/debt_token → lending"):** normalise the fine grains to UAC's canonical `lending`
-      instrument_type in the enumerator/writer (same home as the ASTER carve-out — `enumerate_expected_universe.py` /
-      the consolidated producer); NO UAC change. The lending data_types are already declared. **Operator REJECTED all
-      other adds:** CME `mbp_10` (Databento L2 30d-free billing cutoff — not in CME `expected_coverage`), CME
-      `ohlcv_24h` (not a Databento schema — VIX/Barchart), KALSHI `book_snapshot_5`, defi `pool
+- [x] [CODE] P1. **NO UAC additions — the a_token strays are a GRAIN mismatch, not missing data (re-verified +
+      operator-confirmed 2026-06-29).** ✅ DONE 2026-07-03 — `instruments-service@3bb7acd` (see Progress Log): the
+      Layer-1 canon (`check_enumeration_completeness.py`) folds defi `a_token`/`debt_token`/`liquidation` → `lending`
+      and defi `rate_indices` → `lending_indices`; real-data-at-wrong-grain strays now MATCH their expected lending
+      cells (defi strays 133→128); the residual a_token-displayed strays are the adjudicated over-seed/column artifacts
+      (`oracle_prices`, `utilization`) — correctly visible warnings, per this todo NO UAC change. Earlier "add a*token
+      protocol-state" was OVERTURNED on inspection of `capability_declarations/_defi.py`: `risk_params` +
+      `lending_indices` are ALREADY declared in `_LENDING_DATA=[lending_indices,liquidations,risk_params]`;
+      `rate_indices` = `lending_indices` (non-canonical name); `utilization` is a COLUMN of lending_indices, not a
+      data_type (code comment l.335); AAVE's `mtds_operations` do NOT collect `oracle_prices` (over-seed). Root cause:
+      writer emits fine `a_token`/`debt_token`/`liquidation` grains; UAC models lending at the coarser `lending`
+      instrument_type. **FIX (operator: "Roll a_token/debt_token → lending"):** normalise the fine grains to UAC's
+      canonical `lending` instrument_type in the enumerator/writer (same home as the ASTER carve-out —
+      `enumerate_expected_universe.py` / the consolidated producer); NO UAC change. The lending data_types are already
+      declared. **Operator REJECTED all other adds:** CME `mbp_10` (Databento L2 30d-free billing cutoff — not in CME
+      `expected_coverage`), CME `ohlcv_24h` (not a Databento schema — VIX/Barchart), KALSHI `book_snapshot_5`, defi
+      `pool
       swaps_ohlcv*\*`. Net: **zero UAC expected-matrix additions**; every stray resolves via     billing/MVP cutoff, enumerator over-seed carve-out, or grain roll-up. Billing SSOT:     `codex/02-data/tradfi-databento-sourcing-ssot.md`
       § schema-allowlist.
-- [ ] [CODE] P1. Resolve the class-2 ASTER carve-out contradiction. **DIAGNOSED 2026-06-29 (Opus, from
+- [x] [CODE] P1. Resolve the class-2 ASTER carve-out contradiction. ✅ DONE 2026-07-03 — (a) enumerator fix
+      `instruments-service@3bb7acd`: `_row_data_types` applies the `VENUE_DATA_TYPE_CAPABILITIES` carve-out at seeding
+      (CEFI ONLY — tradfi deliberately ungated: its capability entries are the OHLCV-window MVP declaration, and the
+      operator-ratified T-OLD-2b test pins protect chain-trades/earnings seeding; Decision-1 keeps tradfi strays as
+      deliberate cutoffs); regression tests in `test_enumerate_expected_universe.py`. (b) live manifest purge
+      `scripts/delete_aster_overseeded_capability_rows.py --apply` 2026-07-03 08:33–09:09 UTC: **17,282 rows deleted**
+      (legacy canonical 13,223 = eu 6,954 + ec[EXPECTED_NO_SOURCE_DATA] 6,243 + af[VENUE_FETCH_FAILED] 26; prd
+      enum-universe per-VM shard 4,056; legacy seed shard 3), backup-then-write (`.20260703-083335.bak.parquet`).
+      Verified: ASTER book5/liquidations strays GONE from the 08:52 re-measure. The sequencing constraint (registry plan
+      same-file) had cleared — that plan archived complete earlier today. **DIAGNOSED 2026-06-29 (Opus, from
       `coverage_v3.json`): UAC is CORRECT; the ENUMERATOR over-seeds.** ASTER PERPETUAL `book_snapshot_5` +
       `liquidations` are 100% `expected_unattempted` (3477 rows each; captured=0, empty_confirmed=0,
       attempted_failed=0), while ASTER `trades`/`derivative_ticker` show real captures (captured=180/899,
@@ -125,15 +151,47 @@ roll-up.
       `enumerate_expected_universe.py`, under active concurrent edit by the
       `instrument_universe_registry_consolidation_2026_06_29.md` plan (slot-4, last commit `a510db1` 2026-06-29) — land
       it WITHIN that plan's enumerator work to avoid a same-file collision, not as a separate parallel agent.
-- [ ] [CODE] P2. Promote the replicated `_VENUE_INSTRUMENT_TYPE` venue→itype map into UAC; delete the
-      instruments-service replica.
-- [ ] [CODE] P2. Decide + implement the cefi venue-suffix policy (writer emits canonical venue, or the check folds
-      suffixes); re-measure so cefi real-holes exclude captured-under-suffix false holes.
-- [ ] [SCRIPT] P2. Re-run `measure_honest_coverage.py --asset-group all` after the above; the certified Layer-1 numbers
-      in `codex/02-data/honest-coverage-model.md` CK3 table will tighten — update them.
+- [x] [CODE] P2. Promote the replicated `_VENUE_INSTRUMENT_TYPE` venue→itype map into UAC; delete the
+      instruments-service replica. ✅ DONE 2026-07-03 — UAC `TRADFI_VENUE_INSTRUMENT_TYPES` added to
+      `registry/market_data_categories.py` (`unified-api-contracts@59de09d6`, docstring cites the MTDS writer-side
+      counterpart `symbol_rules._VENUE_INSTRUMENT_TYPE` + the itype-column overrides); IS replica `_TRADFI_VENUE_ITYPES`
+      DELETED from the checker, which now imports the UAC symbol (`instruments-service@3bb7acd`).
+- [x] [CODE] P2. Decide + implement the cefi venue-suffix policy (writer emits canonical venue, or the check folds
+      suffixes); re-measure so cefi real-holes exclude captured-under-suffix false holes. ✅ DONE 2026-07-03 —
+      implemented as **the check folds suffixes** (`_CEFI_VENUE_FOLD` in the Layer-1 canon: OKX-SPOT/-SWAP/-FUTURES→OKX,
+      COINBASE-SPOT→COINBASE, BYBIT-FUTURES→BYBIT, legacy OKEX\*/CRYPTOFACILITIES/BITFINEX-DERIVATIVES/
+      COINBASE-INTERNATIONAL → canonical; UAC-canonical suffixed venues like BYBIT-SPOT/KRAKEN-FUTURES deliberately NOT
+      folded). Decision-6's "EXPECTED consumes the consolidated producer" was implemented via this todo's sanctioned
+      fold alternative: re-keying the EXPECTED axis to split-grain venues would require re-homing the
+      capability/MVP/bundle authorities (all keyed bare in UAC) — a denominator redesign, not a dialect fix. Ground
+      truth confirmed no writer-side change needed: the legacy dialect venues carry only blank-itype rows (already
+      outside Layer-1). Effect: 6 of cefi's 15 holes were captured-under-suffix false holes → GONE.
+- [x] [SCRIPT] P2. Re-run `measure_honest_coverage.py --asset-group all` after the above; the certified Layer-1 numbers
+      in `codex/02-data/honest-coverage-model.md` CK3 table will tighten — update them. ✅ DONE 2026-07-03 08:52 UTC —
+      **cefi Layer-1 65.91% → 79.55%** (35/44, missing 15→9 — all 9 remaining are REAL defects: BITFINEX/KRAKEN-FUTURES
+      `future` grain, BYBIT spot writer mis-stamp, OKX options_chain never enumerated); defi strays 133→128 (grain
+      folds); ASTER strays gone; tradfi/sports/prediction unchanged (their strays are adjudicated cutoffs/out-of-MVP).
+      CK3 table updated in the codex SSOT. NOTE: an intermediate measure flagged a harness fragility (freshest-bucket
+      primary selection flips after manifest surgery — mitigated by a prd metadata bump; hardening todo filed in
+      `cefi_layer1_denominator_gaps_2026_07_03.md`).
 
 ## Progress Log
 
 - **2026-06-29** — Filed from CK3 certification. The Honest-Coverage-v2 MODEL + MEASUREMENT are certified honest; this
   issue is the follow-up reconciliation that tightens the per-node completeness % (currently upper bounds where UAC
-  under-specifies). Not blocking the CK3 sign-off — the model correctly + visibly surfaces these as strays. </content>
+  under-specifies). Not blocking the CK3 sign-off — the model correctly + visibly surfaces these as strays.
+- **2026-07-03 — ALL 5 TODOS DONE, issue RESOLVED (Harsh session).** Ships: `unified-api-contracts@59de09d6`
+  (TRADFI_VENUE_INSTRUMENT_TYPES promotion), `instruments-service@3bb7acd` (Layer-1 canon: `_CEFI_VENUE_FOLD`
+  suffix/dialect fold, defi lending grain roll-up + `rate_indices` fold, UAC tradfi-map import; enumerator
+  `_row_data_types` venue-capability carve-out CEFI-ONLY; `delete_aster_overseeded_capability_rows.py` one-off + pinning
+  tests). Live surgery: 17,282 ASTER book5/liquidations rows purged from both cefi manifest buckets (backups
+  `.20260703-083335.bak.parquet`). Re-measure 08:52 UTC: **cefi Layer-1 65.91% → 79.55%** (missing 15→9, all real);
+  ASTER strays gone; defi strays 133→128; codex CK3 table updated. Scope judgments recorded for review: (1) Decision-6
+  implemented as the todo's check-folds-suffixes option (re-keying EXPECTED to split-grain venues would re-home the
+  bare-keyed capability/MVP/bundle authorities — denominator redesign); (2) the enumerator carve-out is CEFI-ONLY —
+  blanket tradfi gating broke the operator-ratified T-OLD-2b pins (tradfi capability entries are the OHLCV-window
+  declaration, not full capability; Decision-1 keeps those strays deliberate). Two NEW findings filed in
+  `cefi_layer1_denominator_gaps_2026_07_03.md` (NOTIFY-OPERATOR): cefi expected-matrix omits whole gate-blind venues
+  (Tardis-map + capability-table gaps; the 44-tuple denominator under-counts the real universe), and the measure's
+  freshest-bucket primary selection is fragile to manifest surgery (observed live; mitigated with a prd metadata bump).
+  </content>

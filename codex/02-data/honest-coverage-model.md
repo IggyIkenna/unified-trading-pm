@@ -447,22 +447,34 @@ unit tests); live measure `coverage_v3.json` 2026-06-29 06:00 UTC.
    to one canonical grain before intersection (the bug that had produced artifact 0%s for defi/sports). Post-alignment
    numbers measure REAL holes.
 
-**Certified Layer-1 (instrument-denominator) per AG — `coverage_v3.json` 2026-06-29 06:00 UTC:**
+**Certified Layer-1 (instrument-denominator) per AG — re-measured 2026-07-03 08:52 UTC after the UAC↔writer matrix
+reconciliation landed** (`honest_coverage_uac_writer_matrix_reconciliation_2026_06_29`: cefi venue-suffix fold, defi
+lending grain roll-up, `rate_indices` dialect fold, ASTER over-seed carve-out + 17,282-row manifest purge):
 
 | AG         | Layer-1 completeness | present/expected | real holes | strays | Layer-2 (lower bound, gated) |
 | ---------- | -------------------- | ---------------- | ---------- | ------ | ---------------------------- |
-| cefi       | 65.91%               | 29/44            | 15         | 118    | 37.86%                       |
-| defi       | 69.44%               | 75/108           | 33         | 131    | 57.55%                       |
-| tradfi     | 51.43%               | 18/35            | 17         | 52     | 88.81%                       |
+| cefi       | 79.55% (was 65.91%)  | 35/44            | 9          | 104    | 37.90%                       |
+| defi       | 94.81% (was 69.44%)  | 73/77            | 4          | 128    | 58.02%                       |
+| tradfi     | 51.43%               | 18/35            | 17         | 52     | 95.15%                       |
 | sports     | 30.77%               | 8/26             | 18         | 24     | 100.00%                      |
-| prediction | 66.67%               | 4/6              | 2          | 17     | 20.56%                       |
+| prediction | 66.67%               | 4/6              | 2          | 17     | 22.73%                       |
 
-(Pre-alignment artifacts now retired: defi 0%/EXPECTED=3,581, sports 0%, cefi 14.9% were dialect-mismatch artifacts.)
+(Historical: the 2026-06-29 06:00 UTC certification measured cefi 65.91% / defi 69.44%; defi rose to 94.81% via the
+protocol enumeration work landed 06-29→06-30, cefi to 79.55% via the reconciliation dialect folds — 6 of cefi's 15
+"holes" were captured-under-suffix false holes (OKX-SPOT/-SWAP/-FUTURES rows vs bare-OKX expectation). Pre-alignment
+artifacts remain retired: defi 0%/EXPECTED=3,581, sports 0%, cefi 14.9% were dialect-mismatch artifacts.)
 
-**Real Layer-1 holes (honest backfill backlog, correctly surfaced — NOT silent):** cefi BITFINEX-FUTURES `future`, BYBIT
-`spot_pair` book5; defi absent protocols (ACROSS/BEEFY/BENQI/CONVEX/EIGENLAYER/EULER_V2); tradfi CBOE `index` ohlcv +
-ICE `combo`/`options_chain` ohlcv_1m; sports BETFAIR bookmaker snapshot types (markets/odds_snapshot/
-odds_movement/outcomes/settlements); prediction KALSHI/POLYMARKET `market_lifecycle`.
+**Real Layer-1 holes (honest backfill backlog, correctly surfaced — NOT silent):** cefi BITFINEX-FUTURES +
+KRAKEN-FUTURES `future` grain (writer stamps PERPETUAL — dated-futures capture gap), BYBIT `spot_pair` (writer
+mis-stamps BYBIT-SPOT rows as PERPETUAL — see `plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md`), OKX
+`options_chain` (never enumerated); defi EIGENLAYER-ETHEREUM `spot_asset` ×4; tradfi CBOE `index` ohlcv + ICE
+`combo`/`options_chain` ohlcv_1m + YAHOO_FINANCE grains; sports BETFAIR/ODDS_API/PINNACLE bookmaker snapshot types;
+prediction KALSHI/POLYMARKET `market_lifecycle`.
+
+> **Known cefi denominator caveat (2026-07-03):** the 44-tuple cefi expected matrix omits whole venues the (venue,itype)
+> gate + capability table are blind to (Tier-3 BITFINEX-SPOT/BITGET-\*/KRAKEN-SPOT, non-Tardis HYPERLIQUID/ASTER/
+> EXTENDED, capability-absent BYBIT-SPOT/COINBASE-FUTURES/BINANCE-DELIVERY/KALSHI-PERP/…) — the cefi % is measured over
+> a fraction of the real universe. SSOT: `plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md`.
 
 **CERTIFICATION CAVEAT — completeness % is an UPPER bound where UAC under-specifies.** The high stray counts surfaced a
 **UAC↔writer contract gap** (a newly-discovered cross-repo finding, NOT a measurement bug): the writer captures real
