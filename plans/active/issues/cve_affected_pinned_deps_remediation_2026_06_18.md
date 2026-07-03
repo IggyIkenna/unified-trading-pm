@@ -8,8 +8,12 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [cve, quality-gates, infrastructure, verification, consolidation]
+related:
+  [
+    aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md,
+    execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md,
+  ]
 created: 2026-06-18
 parent_epic: infrastructure_master
 priority: P2

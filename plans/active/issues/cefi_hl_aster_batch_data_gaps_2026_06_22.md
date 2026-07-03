@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, features-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
-tags: []
-related: [mvp_backfill_cefi_tick_v10_2026_06_27]
+tags: [cefi, backfill, manifest, data-correctness, mtds, honest-coverage, data-status, catalogue]
+related: [mvp_backfill_cefi_tick_v10_2026_06_27, cefi_universe_capture_rule_2026_06_23.md]
 created: 2026-06-22
 parent_epic: mtds_mdps_master
 priority: P2

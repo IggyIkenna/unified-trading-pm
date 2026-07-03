@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
+tags: [ci-cd, quickmerge, infrastructure, observability, escalation]
 related: []
 created: 2026-06-25
 parent_epic: infrastructure_master

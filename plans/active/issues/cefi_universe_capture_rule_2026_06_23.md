@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: [mvp_backfill_cefi_tick_v10_2026_06_27]
+tags: [cefi, mvp, catalogue, honest-coverage, data-correctness, mtds, instruments, uac]
+related: [mvp_backfill_cefi_tick_v10_2026_06_27, cefi_hl_aster_batch_data_gaps_2026_06_22.md]
 created: 2026-06-23
 parent_epic: mtds_mdps_master
 priority: P2

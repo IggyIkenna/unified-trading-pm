@@ -2,6 +2,11 @@
 doc_type: plan
 title: Instruments ↔ MTDS subset + consistency remediation
 summary:
+  Remediates the F1-F7/N1-N9 findings from the 2026-06-17 subset+consistency audit -- fixes the rebuild
+  scripts (CF-11 dedup, sports league_id, defi venue/itype canon, phantom-reconcile), migrates every legacy
+  GCS object to the canonical pipeline_mode=/asset_group= twin (migrate-first before delete), populates the
+  IS + MTDS _index v9 columns, then AG-by-AG --apply (pred->tradfi->cefi->sports->defi) so no captured cell
+  false-flips to attempted_failed. Legacy delete is operator-gated.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -9,8 +14,29 @@ stage: [meta]
 repos:
   [deployment-api, deployment-service, e2e-testing, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags:
+  [
+    instruments,
+    mtds,
+    manifest,
+    canonicalisation,
+    data-correctness,
+    audit,
+    backfill,
+    pipeline-mode,
+    reconciliation,
+    single-walk,
+    sports,
+    defi,
+  ]
+related:
+  [
+    plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md,
+    plans/active/instruments_foundation_completeness_2026_06_24.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/pipeline-mode-partition.md,
+    codex/05-infrastructure/manifest-consolidator-ssot.md,
+  ]
 created: 2026-06-17
 parent_epic: instruments_master
 assigned_vm: NA

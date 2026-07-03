@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, e2e-testing, execution-service, features-service, fund-administration-service, greeks-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, registry, ssot-audit, execution, ml, ui, uac]
+related: [capability_wizard_analysis_findings_2026_06_11.md, ../capability_wizard_and_manifest_2026_06_11.md]
 created: 2026-06-11
 parent_epic: strategy_master
 priority: P2

@@ -8,8 +8,13 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [monitoring, slack, observability, self-healing, backfill, spot-vm, data-pipeline, escalation]
+related:
+  [
+    ../data_completion_to_100_all_ag_2026_06_21.md,
+    ../epics/infrastructure_master.md,
+    deadman_monitor_log_event_crash_2026_06_23.md,
+  ]
 created: '2026-06-23'
 parent_epic: infrastructure_master
 priority: P2

@@ -2,14 +2,22 @@
 doc_type: plan
 title: Sports reference backfill OOM (TM/SFI/FootyStats per-league skip-check)
 summary:
+  Fix the exit_code=137 OOM in the TM/SFI/FootyStats sports reference backfills -- the per-league skip-check
+  (_should_skip_date_for_per_league) re-read the 6.5 GB pandas availability index once per expected league
+  (55-93x/date) under the 60s cache TTL; refactor to a single index read + in-memory per-league status map,
+  plus a column-pruned slim read in UTL to cut peak decode memory.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, backfill, manifest, performance, data-correctness, instruments, refactor]
+related:
+  [
+    plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
+    plans/active/instruments_foundation_completeness_2026_06_24.md,
+  ]
 created: 2026-06-22
 parent_epic: sports_master
 assigned_vm: planning

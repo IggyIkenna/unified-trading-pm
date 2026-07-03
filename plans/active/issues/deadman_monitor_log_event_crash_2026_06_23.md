@@ -8,8 +8,12 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [monitoring, observability, self-healing, data-pipeline, runbook, slack]
+related:
+  [
+    data_pipeline_alert_transient_gcs_pressure_false_positives_2026_06_24.md,
+    backfill_vm_slack_alert_e2e_verification_2026_06_23.md,
+  ]
 created: 2026-06-23
 parent_epic: mtds_mdps_master
 priority: P2

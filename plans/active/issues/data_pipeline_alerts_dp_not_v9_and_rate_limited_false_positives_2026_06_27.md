@@ -8,8 +8,13 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, e2e-testing, instruments-service, market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: [data_pipeline_hardening_self_monitoring_2026_06_22]
+tags: [monitoring, observability, slack, data-pipeline, data-correctness, manifest, self-healing]
+related:
+  [
+    data_pipeline_hardening_self_monitoring_2026_06_22,
+    data_pipeline_alert_transient_gcs_pressure_false_positives_2026_06_24.md,
+    codex/05-infrastructure/data-pipeline-alerts.md,
+  ]
 created: 2026-06-27
 parent_epic: observability_master
 priority: P2

@@ -2,6 +2,10 @@
 doc_type: plan
 title: UAT / QA role charter — the review agent as PR gate
 summary:
+  Formalize the existing `review` agent as the UAT/QA registry row that gates every PR -- write its charter
+  (model sonnet / thinking high / lifecycle persistent), name its /pr-check skill, document the two-tier
+  light (impl-vs-plan done_definition) / heavy (enhanced tests + opus escalation on a major bump) decision,
+  and land a regression spec proving the gate fires. Additive -- no change to the live PR-review flow.
 status: active
 nature: design
 asset_group: [cross-cutting]

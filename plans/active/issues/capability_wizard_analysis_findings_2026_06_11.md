@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, ssot-audit, registry, execution, ui, uac, data-correctness]
+related: [capability_wizard_gap_discovery_2026_06_11.md, ../capability_wizard_and_manifest_2026_06_11.md]
 created: 2026-06-11
 parent_epic: strategy_master
 priority: P2

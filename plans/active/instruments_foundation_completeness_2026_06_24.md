@@ -2,6 +2,10 @@
 doc_type: plan
 title: Instruments Foundation & Catalogue Completeness — gated rebuild, every asset group
 summary:
+  Gated (G0->G5, operator sign-off each gate) rebuild of the instruments foundation cefi-first then
+  defi/tradfi/sports -- honest 4-state capture, expected_unattempted seeded by the IS writer, catalogue
+  available_to from venue-truth (not last-seen) to kill mass false-delisting, Honest-Coverage v2 two-layer
+  coverage via compute_honest_coverage, every backfill a registered observable BATCH deployment.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -16,8 +20,28 @@ repos:
     unified-api-contracts,
   ]
 scope: [engineer, admin]
-tags: []
-related: []
+tags:
+  [
+    instruments,
+    catalogue,
+    honest-coverage,
+    data-correctness,
+    backfill,
+    cefi,
+    defi,
+    tradfi,
+    sports,
+    manifest,
+    foundation,
+  ]
+related:
+  [
+    codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md,
+    plans/active/sports_fixture_completeness_oracle_2026_06_24.md,
+    plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
+    plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
+  ]
 created: 2026-06-24
 parent_epic: instruments_master
 assigned_vm: NA

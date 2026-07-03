@@ -8,8 +8,12 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-service, execution-service, features-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [quality-gates, infrastructure, cve, verification, refactor]
+related:
+  [
+    plans/active/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md,
+    plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
+  ]
 created: 2026-06-03
 parent_epic: infrastructure_master
 priority: P2
