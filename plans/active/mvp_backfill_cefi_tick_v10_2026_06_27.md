@@ -858,3 +858,64 @@ OPERATOR.
 
 **Gate verdict:** ❌ NOT MET — af=501,100 requires 0; multiple VM waves in-flight. After all complete: run reclass again
 (wave-2 futures_chain af), run phantom reconcile, re-run G4 scripts.
+
+---
+
+### G4 Verification Run — 2026-07-03T12:33–12:42Z (GATE NOT MET — 80 VMs RUNNING)
+
+**Scripts run (instruments-service slot-6):**
+1. `measure_honest_coverage.py --asset-group cefi --no-merge` → JSON `gs://central-element-323112-honest-coverage/2026-07-03/coverage.json`
+2. `reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`
+
+**VM check (12:33Z):** 80 cefi VMs RUNNING — wave-1 reprobe (suffix 105623, 2020–2026) + wave-2 (suffix 102102).
+
+**Coverage (prd --no-merge) — 2026-07-03T12:33Z:**
+
+| metric   |    count | note                                             |
+| -------- | -------: | ------------------------------------------------ |
+| captured | 2,947,441|                                                  |
+| af       |   540,607| VMs actively recording new attempts              |
+| ec       | 2,220,003| legitimate empties                               |
+| eu (prd) |    43,877| unchanged                                        |
+| coverage |   83.45% |                                                  |
+
+**Top residual af by venue (prd, --no-merge):**
+
+| venue              | af       | eu     | status                                                    |
+| ------------------ | -------: | -----: | --------------------------------------------------------- |
+| BINANCE-FUTURES    | 131,112  |    991 | reprobe VMs RUNNING (2020–2026 heavy+light)              |
+| DERIBIT            |  80,387  |    435 | reprobe VMs RUNNING; options_chain=16,422 — see below    |
+| KRAKEN-FUTURES     |  73,395  |     80 | wave-2 VMs RUNNING                                       |
+| BITFINEX-FUTURES   |  64,893  |     28 | wave-2 VMs RUNNING                                       |
+| BYBIT              |  49,487  |    490 | reprobe VMs RUNNING (2021–2026 heavy+light)              |
+| UPBIT              |  32,708  |      1 | wave-2 VMs RUNNING                                       |
+| BITGET-FUTURES     |  16,632  |      4 | wave-2 VMs RUNNING                                       |
+| BINANCE-SPOT       |  14,270  |      0 | reprobe VMs RUNNING (2022–2024 heavy)                    |
+| OKX-SWAP           |  13,577  |     29 | reprobe VMs RUNNING (2021–2026 heavy+light)              |
+| CRYPTOFACILITIES   |   9,126  | 31,914 | legacy — pre-v10; DO NOT BLOCK G4                        |
+| OKEX-SWAP          |   8,439  |  1,472 | legacy — pre-v10; DO NOT BLOCK G4                        |
+| OKEX-FUTURES       |   7,631  |  1,614 | legacy — pre-v10; DO NOT BLOCK G4                        |
+| BITGET-SPOT        |   7,600  |      0 | wave-2 VMs RUNNING                                       |
+| OKEX/BITFINEX-D/.. |  ~11,000 |  ~5,500| legacy venue names — pre-v10; DO NOT BLOCK G4            |
+| COINBASE-SPOT      |   3,094  |      0 | reprobe VMs RUNNING                                      |
+| KRAKEN-SPOT        |   2,900  |      0 | wave-2 VMs RUNNING                                       |
+| OKX-FUTURES        |   2,399  |      0 | reprobe VMs RUNNING                                      |
+| BITFINEX-SPOT      |   2,000  |      0 | wave-2 VMs RUNNING                                       |
+| HYPERLIQUID        |   1,964  |    232 | 4 SPOT VMs RUNNING (HL S3, launched 10:12Z)              |
+| OKX-SPOT           |   1,129  |      0 | reprobe VMs RUNNING (2024 heavy)                         |
+
+**Phantom reconcile dry-run (12:42Z):** 0 phantoms ✅ (prior `--apply` at 10:20Z still holds; manifest clean)
+
+**DERIBIT options_chain:** af=16,422 (grew from 10,114 at 10:45Z — reprobe VMs recording new failure attempts). Issue doc `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` states Tardis confirms 426,474 Deribit option symbols ARE available; failure was likely transient (wave-1 preemption/OOM); reprobe expected to resolve. Gate: af=0 after reprobe; if af>1,000 → escalate.
+
+**DERIBIT futures_chain:** af=7,600 (reprobe VMs with FORCE=1 re-recording failures; was reclassed at 10:45Z). After reprobe completes: re-run `market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py`.
+
+**Gate verdict:** ❌ NOT MET — af=540,607 (requires 0); eu=43,877 (requires 0); 80 VMs RUNNING.
+
+**Required before G4 can close (ordered):**
+1. All 80 VMs terminate (BF/KF/BF-F/BYBT/UPBIT/BITGET-F/BSPOT/OKX waves)
+2. Re-run `reclass_cefi_futures_chain_no_tardis_source.py` (DERIBIT + wave-2 venues futures_chain af → ec)
+3. Run phantom reconcile `--apply` if new phantoms appear
+4. Re-run `measure_honest_coverage.py` + `reconcile_phantom_manifest_rows_all.py --dry-run`
+5. Check DERIBIT options_chain af: if 0 → gate met; if >1,000 → escalate per issue doc
+6. Flip G4 checkbox
