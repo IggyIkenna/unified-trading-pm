@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Data Lineage — MTDS → MDPS → features-\* → ml-training → ml-inference
 summary:
-status:
+  Single-page data-lineage map MTDS ticks → MDPS candles → features-* → ml-training → ml-inference — per-layer
+  bucket/partition paths, SchemaContract keys, the 5-DeFi-type MDPS scope vs bypass types, manifest-driven
+  feature input discovery (not path-probe), and the Phase-10 symmetry invariants.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, instruments-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [data-lineage, mtds, mdps, features, ml, data-pipeline, defi]
+related: [availability-manifest-and-data-status.md, contracts-scope-and-layout.md, bucket-naming-and-config.md, partitioning.md]
 created: 2026-04-18
-authoritative_for:
+authoritative_for: [MTDS-MDPS-features-ml data-lineage layer map]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Bucket Naming and Config Standards — SUPERSEDED 2026-05-11
 summary:
-status: SUPERSEDED
+  SUPERSEDED redirect stub — the legacy {bucket_prefix}-{gcp_project_id} env-var bucket-naming pattern is BANNED;
+  use resolve_bucket_name(cloud, kind, asset_group, env) per the Bucket-name SSOT (b+) and the QG STEP 5.69
+  ratchet.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [bucket-naming, canonicalisation, ssot-audit, migration, infrastructure]
+related: [../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md, ../05-infrastructure/gcs-object-operations.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [legacy bucket-prefix env-var pattern deletion-gate stub]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

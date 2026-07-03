@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Unified Trading System: Complete End-to-End Workflow'
 summary:
-status:
+  Legacy Feb-2026 Level-1 orientation for the COD + service-spec end-to-end workflow and the 9-stage /
+  4-automation-level maturity model; superseded for current work by the agent-orchestrator + epic worktree model.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, execution-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [workflow, orchestrator, cod, service-spec, automation-levels, historical]
+related: [../12-agent-workflow/README.md, ../04-architecture/agent-orchestrator-overview.md, ../11-project-management/service-registry.yaml]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [legacy COD-era end-to-end workflow orientation (historical)]
 referenced_by:
 owner:
 last_reviewed:
