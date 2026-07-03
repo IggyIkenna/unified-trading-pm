@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Sports orchestrator iterates per-LEAGUE-per-day for FIXTURE_STATS / EVENTS / LINEUPS / INJURIES instead of per-FIXTURE — silent missing-fixture downstream gaps
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, instruments-service]

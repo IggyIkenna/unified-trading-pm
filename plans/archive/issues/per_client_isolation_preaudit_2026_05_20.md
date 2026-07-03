@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Per-client isolation pre-audit — read-only manifest (Phase 0)
 summary:
 status: ACKED-INTO-PLAN
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Staging/main clean-start from LDR-SSOT + stale-PR hygiene + LDR backlog drain
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, e2e-testing, execution-service, instruments-service]

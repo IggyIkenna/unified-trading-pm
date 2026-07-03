@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Plan: Composite Action — Quality Gates Inheritance'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, execution-service, unified-trading-library, unified-trading-pm]

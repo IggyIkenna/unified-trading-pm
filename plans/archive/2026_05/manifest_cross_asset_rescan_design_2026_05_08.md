@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Manifest cross-asset rescan — design (2026-05-08, Tab 3 separate scope)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, instruments-service]

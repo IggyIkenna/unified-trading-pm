@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Wave-2 — Polymarket / Kalshi record_captured_from_counts proper SSOT migration
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, features-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: GCP service account private key in git history — 5 repos (execution-service, instruments-service, MTDS, UTL, strategy-service)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library]

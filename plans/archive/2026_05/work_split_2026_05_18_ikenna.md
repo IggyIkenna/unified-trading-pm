@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Ikenna's daily work-split — 2026-05-18 (Cycle 2 Day-3; write-pause + delegate-flip + heavy cutover)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]

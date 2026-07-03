@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: S&P 500 Technical-Indicator ML Readiness — Master Plan
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]

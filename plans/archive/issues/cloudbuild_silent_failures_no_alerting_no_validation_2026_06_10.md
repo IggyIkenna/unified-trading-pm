@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: 'Cloud Build: silent config rejection, zero failure alerting, zero pre-push validation (3 gaps, fleet-wide)'
 summary: '**Gap 1 — config rejection is SILENT.** A GitHub push whose `cloudbuild.yaml` fails Cloud Build''s substitution validation (e.g. an unescaped shell var — `$PIN` reads as a substitution key) produces...'
 status: resolved

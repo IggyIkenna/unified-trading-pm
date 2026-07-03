@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CeFi venue universe expansion — Bitfinex/Bitget/Kraken (Tardis) + Extended/Pacifica/Lighter (DEX perp adapters) + Opinion.trade (prediction)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, market-tick-data-service, unified-api-contracts]

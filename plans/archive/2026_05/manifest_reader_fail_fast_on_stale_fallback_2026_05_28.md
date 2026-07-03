@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UTL read_availability_index — opt-in fail-fast on stale-consolidated → per-VM-merge fallback
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, features-service, market-data-processing-service, market-tick-data-service, system-integration-tests, unified-trading-library]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DART UX Refactor — From Route Tree to Guided Cross-Asset Trading Cockpit
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, unified-trading-pm, unified-trading-system-ui]

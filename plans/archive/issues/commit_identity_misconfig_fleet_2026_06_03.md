@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Commit identity wrong fleet-wide — ~14/25 worktrees author as semver-rollout[bot], ~7 as agent@ci.local; + add slot·host attribution
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, e2e-testing]

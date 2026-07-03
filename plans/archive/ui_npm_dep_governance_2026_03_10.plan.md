@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UI npm Dependency Governance — 2026-03-10
 summary:
 status: completed
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Plan hygiene sweep — next-session kickoff prompt
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]

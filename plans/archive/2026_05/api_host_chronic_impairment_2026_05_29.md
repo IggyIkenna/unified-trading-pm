@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Central orchestrator API host (i-0c9b283b31d6b5ca7) chronic impairment — root-cause + auto-recovery
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]

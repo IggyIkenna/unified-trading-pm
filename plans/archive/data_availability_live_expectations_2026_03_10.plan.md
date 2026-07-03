@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: data-availability-live-expectations-2026-03-10
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, execution-service, market-data-processing-service, market-tick-data-service, strategy-service, system-integration-tests]

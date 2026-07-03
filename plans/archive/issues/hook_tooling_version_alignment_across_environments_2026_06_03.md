@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: pre-commit/prek hook tooling + formatter versions are NOT aligned across environments (laptop tabs/main worktrees vs orchestrator VM vs worker VMs) — worker VMs install neither prek nor pre-commit, so agent commits there bypass hooks + use a different prettier than laptop/CI → reformat-residue churn that jams FF-sync
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]

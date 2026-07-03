@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: unified-trading-ui-auth — Provider-Agnostic OAuth 2.0 PKCE Refactor
 summary:
 status: completed
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

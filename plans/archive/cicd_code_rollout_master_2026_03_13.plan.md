@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: cicd-code-rollout-master-2026-03-13
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [system-integration-tests]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UI Navigation UX Model
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DeFi Fork 1 prep audit — 4-bug-class diagnostic before D4 launches (UAC SSOT date drifts on 13 (chain, protocol) pairs)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: SYSTEMIC bar-edge violation — pre-aggregated vendor-bar ingestion stamps the OPEN (left) edge while the canon + MDPS grid are CLOSE (right) edge
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]

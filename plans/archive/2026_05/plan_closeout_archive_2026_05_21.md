@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Plan closeout + archive sweep — 2026-05-21
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, execution-service, ml-service, strategy-service, unified-trading-pm]

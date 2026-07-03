@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Agent reliability mitigations — close the multi-agent loop gaps (2026-05-20)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]

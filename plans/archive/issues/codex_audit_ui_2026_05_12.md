@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Codex audit — UI area (Phase 1.K)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-ui, unified-trading-api, unified-trading-pm, unified-trading-system-ui]

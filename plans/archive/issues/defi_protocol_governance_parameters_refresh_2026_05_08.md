@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DeFi protocol governance parameters frozen-at-discovery — Aave / Compound / Morpho rate-model + liquidation thresholds + reserve factors not refreshed when governance changes them on-chain
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, execution-service, instruments-service, strategy-service]

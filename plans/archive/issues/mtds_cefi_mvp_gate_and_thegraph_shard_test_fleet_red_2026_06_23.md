@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: MTDS LDR fleet-red — cefi MVP-gate tests + thegraph 9-key shard tests fail on current live-defi-rollout
 summary: While shipping the DeFi per-pool writer fix (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`), the MTDS `quality-gates.sh --no-fix` over the **whole tree** surfaced **~54 pre-existin...
 status: resolved

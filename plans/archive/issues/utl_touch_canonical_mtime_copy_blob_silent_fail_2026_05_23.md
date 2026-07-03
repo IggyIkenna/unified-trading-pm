@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'UTL _touch_canonical_mtime: copy_blob-to-self silently fails in newer GCS SDK'
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-library]

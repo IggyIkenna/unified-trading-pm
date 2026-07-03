@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: API keys + wallets + accounts readiness — full credential provisioning for May-23 live-DeFi cutover
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]

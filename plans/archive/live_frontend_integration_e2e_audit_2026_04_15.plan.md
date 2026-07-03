@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: live-frontend-integration-e2e-audit
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, e2e-testing, execution-service, market-tick-data-service, strategy-service]

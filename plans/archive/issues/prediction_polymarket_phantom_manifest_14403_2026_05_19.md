@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: '🚨 P0 MIGRATION REGRESSION: Phase 3 GCS migration converted real captures to phantoms for tradfi (245,907) and prediction (14,403) — systematic root cause under investigation; DO NOT run Phase 6 --apply'
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

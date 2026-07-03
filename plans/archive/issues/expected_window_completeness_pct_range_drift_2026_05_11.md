@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: expected_window_completeness_pct range drift — UAC says 0-1 fraction, codex says 0-100 percentage
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api]

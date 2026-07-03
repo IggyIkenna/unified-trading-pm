@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: sports-data-available-at-rename
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Alerting-service FP rate analysis — Phase 7 quietness baseline findings
 summary:
 status: ARCHIVED 2026-06-02
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, unified-api-contracts]

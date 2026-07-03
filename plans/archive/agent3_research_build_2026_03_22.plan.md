@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: agent3-research-build
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm, unified-trading-system-ui]

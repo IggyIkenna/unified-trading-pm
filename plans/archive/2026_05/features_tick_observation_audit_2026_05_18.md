@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'features-tick-observation-audit: per-tick feature snapshot + MTDS provenance chain'
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [features-service, strategy-service]

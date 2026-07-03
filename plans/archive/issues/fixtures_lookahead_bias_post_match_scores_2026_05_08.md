@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: FIXTURES lookahead bias — post-match scores ride the same row as schedule, available_at uses arbitrary kickoff−7d heuristic
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts, unified-trading-library]

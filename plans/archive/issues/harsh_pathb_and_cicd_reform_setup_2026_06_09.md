@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Harsh host setup — align with the 2026-06-08/09 CI/CD reform + Path-B worktrees
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

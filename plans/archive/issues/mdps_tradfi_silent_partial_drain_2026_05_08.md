@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MDPS-tradfi 4-VM silent partial drain (no STOPPED event, mid-processing exit)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]

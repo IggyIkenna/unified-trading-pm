@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ML repo consolidation — ml-service + ml-training + ml-inference merge (2026-05-19)
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, ml-service, strategy-service]

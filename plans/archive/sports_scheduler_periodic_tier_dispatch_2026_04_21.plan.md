@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Sports Scheduler — Periodic Tier Dispatch (Tier-1 Discovery + Tier-2 Reference)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-trading-library, unified-trading-pm]

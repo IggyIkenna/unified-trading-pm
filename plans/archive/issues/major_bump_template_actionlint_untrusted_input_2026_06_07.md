@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: major-bump-issue-handler.yml actionlint untrusted-input fails QG step 5.5 fleet-wide (blocks A11c-candle-enum)
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service]

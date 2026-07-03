@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Permission Catalogue — Granular Access Registry for Admin Portal
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-api, unified-trading-system-ui]

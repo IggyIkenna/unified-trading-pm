@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Codex SSOT currency audit — 2026-05-12 Day-3 refresh (freeze-gate item 9 status update)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui]

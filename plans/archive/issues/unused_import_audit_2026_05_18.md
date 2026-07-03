@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Workspace unused-import audit — 2026-05-18
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, instruments-service, market-tick-data-service]

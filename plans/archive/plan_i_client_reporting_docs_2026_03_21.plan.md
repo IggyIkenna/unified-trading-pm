@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: plan-i-client-reporting-docs
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, unified-trading-api]

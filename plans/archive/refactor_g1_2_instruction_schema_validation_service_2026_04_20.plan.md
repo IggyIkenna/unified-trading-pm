@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Refactor G1.2 — Instruction-schema validation service
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-pm, unified-trading-system-ui]

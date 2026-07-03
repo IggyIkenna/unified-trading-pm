@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: agent-orchestrator Cloud Run deployment (Ikenna brain + Firebase Hosting)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]

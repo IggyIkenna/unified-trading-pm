@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ui-trader-acceptance-testing-2026-03-15
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-ui]

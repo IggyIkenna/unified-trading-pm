@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: strategy-service QG regression — dydx removed from UAC venue_tokens breaks test_target_universe.py
 summary:
 status: RESOLVED 2026-05-22
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service]

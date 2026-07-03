@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: execution-service DeFi backtest loader — canonical path candidate missing (LDR v2 RED)
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [execution-service]

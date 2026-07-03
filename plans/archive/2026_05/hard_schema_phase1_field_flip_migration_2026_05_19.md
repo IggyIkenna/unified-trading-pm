@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Hard Schema Phase 1 — Field-Flip Migration Plan
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [instruments-service, strategy-service, unified-trading-pm]

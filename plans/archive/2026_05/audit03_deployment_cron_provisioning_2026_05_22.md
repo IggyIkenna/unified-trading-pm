@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: AUDIT-03 remediation — deployment cron + cutover-gate provisioning (May-23 P0)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-service, e2e-testing, strategy-service, unified-trading-system-ui]

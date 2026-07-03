@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: quality-gates.sh doesn't write .qg_last_passed_sha sentinel despite codex doc claim
 summary:
 status: RESOLVED 2026-05-29
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: []

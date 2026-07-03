@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: cloud-infra-extended-bootstrap
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service]

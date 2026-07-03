@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Active consumers still reference archived/renamed repos as editable deps (+ 3 setup-recreate failures)
 summary:
 status: CLOSED — all items shipped
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, e2e-testing, execution-service, features-service]

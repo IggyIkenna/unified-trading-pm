@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: GCP Cloud Build image builds fail for sibling-COPY service repos — build context doesn't stage sibling repos (AWS CodeBuild does)
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, execution-service, features-service, fund-administration-service]

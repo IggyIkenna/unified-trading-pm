@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Deployment-UI Lifecycle Tabs — Cross-Cutting Activation Plan
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-api-contracts, unified-trading-pm]

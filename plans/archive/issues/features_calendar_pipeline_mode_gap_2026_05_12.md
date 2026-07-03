@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: features-calendar-service has no clean PipelineMode for time_features (datetime-only) + economic_events (FRED API)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service]

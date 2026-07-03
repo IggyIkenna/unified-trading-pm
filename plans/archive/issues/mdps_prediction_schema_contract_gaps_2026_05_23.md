@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'MDPS prediction schema contract: missing columns in candle DataFrame'
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: []

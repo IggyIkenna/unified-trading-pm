@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: 'STALE-IMAGE / not-latest-code: no alert when Cloud Run jobs run an outdated image'
 summary: 'There is **no alert** when a Cloud Run job (or long-lived service) is running an image that is older than the latest build on `live-defi-rollout` / `main`. The failure class is:'
 status: resolved

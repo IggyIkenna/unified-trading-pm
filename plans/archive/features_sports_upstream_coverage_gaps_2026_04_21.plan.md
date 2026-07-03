@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: features-sports — close upstream-data coverage gaps (Transfermarkt 2020-26 backfill, SFI LEAGUES+PROGRESSIVE backfill, weather venue-id cross-ref)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-api-contracts, unified-trading-pm]

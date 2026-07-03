@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Refactor G1.13 — Demo upsell-overlay tempt-logic
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ── STEP 0 ────────────────────────────────────────────────────────────────
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, system-integration-tests, unified-trading-pm]

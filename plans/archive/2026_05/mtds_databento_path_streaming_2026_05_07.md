@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MTDS Databento path-streaming successor plan (2026-05-07)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [market-tick-data-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Sports book scrapers — post-cutover successor (14 UK/EU + 2 US adapters)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [sports]
 stage: [meta]
 repos: [alerting-service, deployment-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: batch_live_symmetry Tab 2 BE-AWARE banners not landed on 4 downstream plans
 summary:
 status: RESOLVED — harsh-main landed all 4 banners + flipped checkbox (2026-05-14)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

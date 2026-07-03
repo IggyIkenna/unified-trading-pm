@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Solana restaking rewards coverage — Jito Restaking verify + Solayer + Picasso + Cambrian
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts, unified-trading-pm]

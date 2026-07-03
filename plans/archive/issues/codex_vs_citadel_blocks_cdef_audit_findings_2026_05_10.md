@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Codex-vs-Citadel Blocks C/D/E/F audit findings — researcher experience, operational governance, alpha-multiplying primitives, non-negotiable primitives
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, strategy-service, unified-trading-pm, unified-trading-system-ui]

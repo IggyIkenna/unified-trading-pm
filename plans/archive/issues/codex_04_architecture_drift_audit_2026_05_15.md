@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: codex/04-architecture full drift audit — 2026-05-15 pass
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Harsh-side Day-4 continuation prompts — paste-ready spawn prompts for 10-slot fan-out
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, e2e-testing, execution-service, features-service, instruments-service, market-data-processing-service]

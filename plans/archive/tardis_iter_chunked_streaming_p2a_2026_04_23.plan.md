@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Tardis iter_chunked HTTP streaming — P2.A
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, market-tick-data-service]

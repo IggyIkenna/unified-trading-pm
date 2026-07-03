@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Gap Classification: Service vs UI vs Mock — 2026-03-22'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-api]

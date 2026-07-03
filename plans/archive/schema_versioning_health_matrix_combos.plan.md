@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: schema_versioning_health_matrix_combos
 summary:
 status: DONE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts]

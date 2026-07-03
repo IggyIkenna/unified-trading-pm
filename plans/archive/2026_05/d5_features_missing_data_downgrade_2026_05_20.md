@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: D5 — Features missing-data downgrade plan
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, features-service, ml-service, strategy-service, unified-api-contracts]

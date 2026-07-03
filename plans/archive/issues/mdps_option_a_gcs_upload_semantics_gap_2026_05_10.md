@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MDPS Option A migration to UTL lifecycle blocked by GCS-upload semantics gap — `close_candle_writer` finalizes locally + `shutil.move`s, but `write_candle_parquet` consumers all upload to GCS
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service, unified-trading-library]

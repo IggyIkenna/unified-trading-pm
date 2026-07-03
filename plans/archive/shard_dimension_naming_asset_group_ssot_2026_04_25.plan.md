@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: shard-dimension-naming-asset-group-ssot-2026-04-25
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, instruments-service, system-integration-tests]

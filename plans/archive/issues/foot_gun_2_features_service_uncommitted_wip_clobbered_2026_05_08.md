@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'foot-gun #2 incident — clobbered other agent''s uncommitted WIP in features-service'
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, features-service]

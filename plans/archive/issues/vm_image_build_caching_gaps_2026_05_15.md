@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: VM image build caching gaps — deployment-service, execution-service, strategy-service
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service, unified-trading-library]

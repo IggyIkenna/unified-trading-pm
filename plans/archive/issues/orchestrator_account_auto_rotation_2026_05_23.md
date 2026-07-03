@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'Orchestrator: workers halt on rate-limit instead of rotating to next account'
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: bucket_name_ssot residual drift after 2026-05-18 workspace-wide grep audit (slot 10)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-api, execution-service, instruments-service, unified-api-contracts, unified-trading-library]

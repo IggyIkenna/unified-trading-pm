@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: mempool-feed-integration-2026-06-01
 summary:
 status: paused
-nature:
+nature: record
 asset_group: defi
 stage: [meta]
 repos: []

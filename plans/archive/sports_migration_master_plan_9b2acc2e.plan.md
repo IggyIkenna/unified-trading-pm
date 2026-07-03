@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Sports Migration Master Plan
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]

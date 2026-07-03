@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: interfaces-capability-contract-unification-2026-03-14
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts]

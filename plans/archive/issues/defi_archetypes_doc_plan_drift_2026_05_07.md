@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DeFi archetypes — doc ↔ plan drift (carry_staked_basis + leveraged_funding_arb)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, strategy-service, unified-api-contracts]

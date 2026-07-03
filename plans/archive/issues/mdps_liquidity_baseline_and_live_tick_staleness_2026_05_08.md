@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MDPS liquidity-baseline 3rd state (illiquidity vs data-bug) + live tick-staleness watchdog — both reuse same per-(venue, instrument, period) baseline
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, market-data-processing-service, strategy-service, unified-trading-library]

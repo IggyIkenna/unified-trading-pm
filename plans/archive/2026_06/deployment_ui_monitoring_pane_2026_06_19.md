@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Deployment-UI Monitoring Pane — CI/CD · codebase · fleet · images · alerts
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, features-service]

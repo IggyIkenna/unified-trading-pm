@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD docs + diagram refresh, then plan/issue consolidation
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: []

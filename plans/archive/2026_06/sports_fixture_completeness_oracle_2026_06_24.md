@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Sports fixture-completeness oracle — the depth_coverage Tier-B denominator for sports
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [sports]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]

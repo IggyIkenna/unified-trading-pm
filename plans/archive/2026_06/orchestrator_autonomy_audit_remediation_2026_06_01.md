@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: orchestrator autonomy audit remediation — uncovered findings from the 2026-06-01 § M audit
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui, trading-agent-service, unified-trading-pm]

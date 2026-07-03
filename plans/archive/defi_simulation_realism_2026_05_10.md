@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: defi-simulation-realism
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]

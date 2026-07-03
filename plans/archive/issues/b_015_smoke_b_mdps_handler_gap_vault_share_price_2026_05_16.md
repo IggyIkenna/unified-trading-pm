@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: B-015 Smoke B re-run blocker — MDPS has no vault_share_price handler; features-onchain pre-flight gate is over-reaching
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-data-processing-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: writegate UAC SERVICE_OUTPUT_POLICIES seed dict — MDPS service-name typo + book_snapshot_5 key shape blocks slice (b) POC + Phase 6.2
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service, unified-api-contracts, unified-trading-library]

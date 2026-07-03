@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: batch-live-design-symmetry-preaudit
 summary:
 status: ready-for-plan-extraction
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-service, execution-service, features-service]

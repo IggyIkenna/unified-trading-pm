@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD Release Machinery — semver, version surface, workflow sprawl, watchers + self-healing, gh-rate
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]

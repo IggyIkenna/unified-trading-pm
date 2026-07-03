@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: D0 — orchestrator-service → agent-orchestrator migration
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]

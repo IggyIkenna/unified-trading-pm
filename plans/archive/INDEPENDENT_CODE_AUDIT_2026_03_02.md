@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: INDEPENDENT CODE AUDIT REPORT
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, execution-service, instruments-service, market-data-processing-service]

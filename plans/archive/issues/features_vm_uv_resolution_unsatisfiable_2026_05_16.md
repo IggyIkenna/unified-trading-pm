@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: features-onchain-defi VM uv-pip-install hits unsatisfiable resolution — risk-and-exposure-service==0.1.0 vs unified-api-contracts>=0.2.38
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

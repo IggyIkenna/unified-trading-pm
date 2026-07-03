@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Manifest consolidator liveness + health contract (heartbeat watchdog, loud-fail-default, preflight gate)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, unified-trading-library]

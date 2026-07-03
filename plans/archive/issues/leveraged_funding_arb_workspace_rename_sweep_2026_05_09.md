@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Workspace `leveraged_funding_arb` rename sweep — Stream B gate close blocker
 summary:
 status: mostly-resolved-2026-05-10
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

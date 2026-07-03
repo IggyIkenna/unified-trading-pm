@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: honest-coverage cron VM not yet scheduled
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui]

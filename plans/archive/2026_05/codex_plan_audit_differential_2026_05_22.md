@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Codex ↔ Plan Differential Audit 2026-05-22
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, features-service, instruments-service, ml-service, trading-agent-service]

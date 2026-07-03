@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: GitHub PAT committed in instruments-service .env and .env.example (multiple commits)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-library]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: repo-readiness-semver-hardening-2026-03-11
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, execution-service, strategy-service, system-integration-tests, unified-trading-library]

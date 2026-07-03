@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Full Quickmerge + Act Staging Rollout — All Tiers (Excluding UI)
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, execution-service]

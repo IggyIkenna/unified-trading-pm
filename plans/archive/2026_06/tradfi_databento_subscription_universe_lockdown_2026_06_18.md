@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: TradFi Databento subscription-universe lockdown + billing-safety guards
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [tradfi]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library]

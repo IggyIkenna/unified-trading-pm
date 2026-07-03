@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Responsive Zoom Pass — 100%→200% Graceful Degradation
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

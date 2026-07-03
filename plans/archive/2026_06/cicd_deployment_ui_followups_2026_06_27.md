@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD deployment-ui follow-ups — Repos-CI working/pending render + unit-test flake
 summary: 'The two deployment-ui (TS UI) items from the cicd tracker, split out because plans are role-homogeneous and these need the ui-developer role: render the Repos-CI working/pending state per repo (orchestrator half already shipped — UI render remaining), and investigate the unstable unit test flake discovered 2026-06-27 (slot-1). UI repo — TS/Playwright only, no Python tools; every tick needs [UI] + pw:L2 ✓ + a cited regression spec.'
 status: superseded

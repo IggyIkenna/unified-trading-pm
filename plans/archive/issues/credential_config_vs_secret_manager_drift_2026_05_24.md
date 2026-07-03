@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Credential configs reference IDs that don't match real Secret Manager names/model (perp hedge venues)
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]

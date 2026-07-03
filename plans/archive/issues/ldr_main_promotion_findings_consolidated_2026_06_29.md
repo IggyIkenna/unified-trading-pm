@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: LDR→main promotion machinery — consolidated findings + doc contradictions (2026-06-29, for Ikenna escalation)
 summary: Single consolidated record of every finding from the 2026-06-29 LDR→main promotion-stall investigation, classified by whether it is already tracked (and where) or NEW/untracked, with evidence and current status — plus the contradictions these findings create with current docs. The systemic root cause of the broad delay was a legacy `promote/<repo>` ref D/F-conflict freezing per-SHA ref creation on 15/21 repos (NEW, now fixed). Several related issues were already known from the 2026-06-27 SIT-rehome adversarial review, but that doc is now STALE (says the gate is 'reverted/inert' when it is in fact live + gating). For Ikenna to review when free.
 status: resolved

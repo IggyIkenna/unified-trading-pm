@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: honest-coverage cron reads -prd while CeFi tick data is in flat (Phase 2.6 not yet run)
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [instruments-service]

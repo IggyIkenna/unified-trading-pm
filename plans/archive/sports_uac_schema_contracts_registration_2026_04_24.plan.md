@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: SPORTS UAC SchemaContract registration — close the SSOT gap for all 19 sports data_types
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service, strategy-service, unified-api-contracts, unified-trading-system-ui]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: workflow-template rollout pending — 22 repos, 3 templates, script bug fixed
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, unified-trading-pm, unified-trading-system-ui]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Hard Schema Enforcement at Write Boundary — Workspace-Wide
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [sports]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]

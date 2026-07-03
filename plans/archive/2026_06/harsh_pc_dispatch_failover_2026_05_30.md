@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: harsh-pc dispatch failover — when host offline > 10 min, roll its queue to fleet VMs by affinity
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]

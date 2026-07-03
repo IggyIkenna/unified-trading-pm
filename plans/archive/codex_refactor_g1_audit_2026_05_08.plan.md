@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: codex_refactor Phase G.1 — final cross-directory consistency audit
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, execution-service, features-service, unified-trading-pm]

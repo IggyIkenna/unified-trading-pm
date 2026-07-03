@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'DeFi: eliminate hardcoded on-chain-derivable values — write-once SSOT script for immutable facts (launch dates / token decimals) + remove stale fallbacks for governance-controlled values + dynamic-at-runtime for live reads (e2e fixture block numbers)'
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

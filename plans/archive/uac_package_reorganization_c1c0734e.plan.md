@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UAC Package Reorganization
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts]

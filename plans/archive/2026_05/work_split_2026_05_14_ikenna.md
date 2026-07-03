@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Ikenna's daily work-split — 2026-05-14 (Day-3 density-push, ~272 cal AI-days, pre-cutover stack)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]

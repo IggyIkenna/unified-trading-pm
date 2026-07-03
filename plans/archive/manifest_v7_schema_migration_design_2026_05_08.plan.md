@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: manifest-v7-schema-migration-design-2026-05-08
 summary:
-status: draft
-nature:
+status: complete
+nature: record
 asset_group: cross-cutting
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]

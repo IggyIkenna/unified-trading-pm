@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: e2e-testing STEP 5.95 TID251 ratchet is over baseline — pre-existing, blocks ALL e2e commits
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing]

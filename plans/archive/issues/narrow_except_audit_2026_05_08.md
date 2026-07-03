@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Workspace narrow-except audit — silent-bug pattern lifted from commodity Wave 3b finding
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, features-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]

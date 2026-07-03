@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: elysium-defi-system-fork-2026-03-10
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service]

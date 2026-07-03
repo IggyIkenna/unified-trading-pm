@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Cross-bucket DeFi canonical-manifest data_type vocabulary drift — SYSTEMIC (6 of 7 manifests affected)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service]

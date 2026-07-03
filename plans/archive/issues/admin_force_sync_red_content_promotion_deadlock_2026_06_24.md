@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: admin force-sync landed RED + divergent content on main → deadlocked LDR→staging drain + conflicted staging→main promotion (deployment-service, 2026-06-24)
 summary:
 status: resolved

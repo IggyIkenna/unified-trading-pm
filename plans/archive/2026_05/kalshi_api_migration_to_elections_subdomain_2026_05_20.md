@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Kalshi API migration — trading-api.kalshi.com → api.elections.kalshi.com
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [prediction]
 stage: [meta]
 repos: [e2e-testing, execution-service, instruments-service, market-tick-data-service, unified-trading-system-ui]

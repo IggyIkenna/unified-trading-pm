@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DART manual-trade UI — 5-surface MVP build (master Group G Item 23)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]

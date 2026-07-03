@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: basedpyright reportAny cleanup — features-service
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service]

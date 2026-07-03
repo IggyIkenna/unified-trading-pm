@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: features-service QG-codex cleanup + full byte-for-byte parity run + org-naming transfer
 summary:
 status: active-phase2-blocked
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-api, execution-service, features-service, strategy-service, unified-api-contracts]

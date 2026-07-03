@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Continuation prompts — 2026-05-12 — Harsh-side density-push cycle (3.5-4 AI-days/slot/day)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, instruments-service, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Phase 3.D cross-asset rescan VM fails at startup — CLI dispatcher gap
 summary:
 status: ✅ RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service]

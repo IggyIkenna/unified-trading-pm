@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Codex SSOT audit pass — 2026-05-11 (freeze-gate item 9 readiness)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service, unified-trading-library]

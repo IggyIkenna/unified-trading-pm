@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Quality-gates resource-contention speedup — do-less-work + cross-slot governance, not more parallelism
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, execution-service, features-service, fund-administration-service, greeks-service, instruments-service]

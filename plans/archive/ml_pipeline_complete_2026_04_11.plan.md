@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ml-pipeline-complete
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-library]

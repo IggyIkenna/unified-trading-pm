@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: cicd-audit-remediation-2026-03-13
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service]

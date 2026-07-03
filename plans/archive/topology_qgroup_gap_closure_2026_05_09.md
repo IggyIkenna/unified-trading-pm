@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Topology Q-group GAP closure — 18 GAPs + 2 WATCH + 1 ISSUE before 2026-05-23
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-service, execution-service, features-service, strategy-service]

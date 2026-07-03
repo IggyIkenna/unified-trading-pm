@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'unified-trading-library: strict-ify the ~116 pre-existing pyright/type suppressions (out of scope of the QG-green plan)'
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-library]

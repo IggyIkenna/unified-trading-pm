@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Sports Feature Completion — 857-Feature ML Target
 summary:
-status: active
-nature:
+status: superseded
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

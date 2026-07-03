@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: AWS migration — DeFi-first dual-cloud active (post-cutover)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]

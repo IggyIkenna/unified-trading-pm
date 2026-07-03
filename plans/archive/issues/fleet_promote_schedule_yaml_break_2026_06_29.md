@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: Fleet LDR→main promote was dead ~7h — a YAML break silently killed the */15 schedule (+ UTL flaky stale-status)
 summary: 'Fleet-wide LDR→main promotion-lag >60m alert (8 service repos: instruments-service, market-tick-data-service, market-data-processing-service, deployment-api, deployment-service, +3) — NOT a display bug. Root cause: the fleet promoter ldr-to-main-promote-fleet.yml had a YAML parse error (an embedded python3 -c heredoc at column-0 inside a 10-space `run: |` block → ''could not find expected :'' at line 307). GitHub does NOT schedule a workflow whose file is unparseable on the default branch, so the */15 cron silently STOPPED at 2026-06-28 22:58 UTC → the fleet auto-drain was dead ~7h. CORRECTION to an earlier analysis: the promoter IS scheduled (cron 8,23,38,53) — it was not ''0 scheduled runs ever''; the schedule was YAML-killed. Compounded by UTL''s stale ci_status=FAILING (a flaky QG dep-clone failure) dep-order-holding deployment-api. Both fixed.'
 status: resolved

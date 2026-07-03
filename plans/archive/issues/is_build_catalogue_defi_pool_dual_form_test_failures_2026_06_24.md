@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: instruments-service build_instrument_catalogue defi-pool dual-form tests FAIL on origin/LDR (pre-existing)
 summary: '`instruments-service/tests/unit/scripts/test_build_instrument_catalogue.py` has **4 FAILING tests on the clean `origin/live-defi-rollout` tip** (verified by running them in a worktree off origin/LD...'
 status: resolved

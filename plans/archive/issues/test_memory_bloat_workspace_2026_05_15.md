@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Python test suites are 2-3 GB RSS per run — investigate + reduce module-import bloat
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, unified-trading-library, unified-trading-pm]

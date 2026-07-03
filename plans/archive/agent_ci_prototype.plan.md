@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: agent-ci-prototype
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, execution-service, market-tick-data-service, system-integration-tests, unified-api-contracts, unified-trading-library]

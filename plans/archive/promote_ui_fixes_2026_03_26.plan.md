@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Promote UI Fixes — Layout, Tabs, Strategy Switcher
 summary:
-status: draft
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

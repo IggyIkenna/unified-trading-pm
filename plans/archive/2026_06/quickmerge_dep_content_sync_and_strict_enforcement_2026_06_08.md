@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Quickmerge dep-content sync (vs LDR, not version) + strict-quickmerge HARD enforcement
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]

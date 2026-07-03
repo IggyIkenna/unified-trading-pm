@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 22 Incident Runbooks + Evidence Store + config_hash + code_version + runbook_version
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, deployment-service, e2e-testing, execution-service]

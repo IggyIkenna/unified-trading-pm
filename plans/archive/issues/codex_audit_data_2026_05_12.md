@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Codex audit — Data area (Phase 1.A)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

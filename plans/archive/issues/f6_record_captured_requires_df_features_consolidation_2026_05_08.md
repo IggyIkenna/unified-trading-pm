@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: F6 migration blocker — record_captured() requires DataFrame, but writer.add() callsites don't have it in scope
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service]

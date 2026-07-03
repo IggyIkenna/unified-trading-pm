@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Solana DeFi venue naming reconciliation — canonicalize to PROTOCOL-SOLANA pattern
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]

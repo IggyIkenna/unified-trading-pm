@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Codex audit — Testing area (Phase 1.L)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, execution-service, instruments-service, market-tick-data-service, system-integration-tests, unified-api-contracts]

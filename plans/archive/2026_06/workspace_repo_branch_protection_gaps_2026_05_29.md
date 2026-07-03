@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Workspace repos lacking branch protection — UI + 3 others
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: cross-cutting
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-ui, features-service, unified-trading-api, unified-trading-system-ui]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: GitHub Integration Workflow - Complete Mermaid Diagram
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: live-batch-protocol-completeness-2026-03-10
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service, system-integration-tests]

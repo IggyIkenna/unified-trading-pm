@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: unified-trading-library full quality-gates.sh is RED on a pre-existing backlog
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-library]

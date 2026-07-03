@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'workspace-manifest.json: 10 repos in manifest but absent from disk'
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, fund-administration-service, unified-trading-pm]

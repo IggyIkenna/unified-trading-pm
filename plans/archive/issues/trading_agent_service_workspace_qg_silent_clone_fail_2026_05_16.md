@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: trading-agent-service workspace-qg clone step silently fails to clone unified-trading-library
 summary:
 status: ACKED-INTO-CODE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, trading-agent-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

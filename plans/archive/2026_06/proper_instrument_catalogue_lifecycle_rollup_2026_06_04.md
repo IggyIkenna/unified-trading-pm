@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Proper instrument catalogue — lifecycle roll-up from per-date definitions + IS completeness gate (all asset groups, v9)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]

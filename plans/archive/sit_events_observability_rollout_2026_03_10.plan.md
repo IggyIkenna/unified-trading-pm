@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: SIT Full Rollout + Orphaned Data Flow + Events/Config Standardisation
 summary:
 status: DONE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, execution-service, instruments-service, market-tick-data-service, strategy-service, system-integration-tests]

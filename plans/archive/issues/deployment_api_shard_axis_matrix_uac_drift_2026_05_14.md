@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'deployment-api: 13 test failures — SHARD_AXIS_MATRIX UAC alignment drift'
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, features-service]

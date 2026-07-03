@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Sports classifier — SFI_PROGRESSIVE_STATS + FOOTYSTATS_* should pin to fixture availability
 summary:
 status: DONE — slot 4 (2026-05-14)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

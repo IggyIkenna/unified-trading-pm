@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MDPS DeFi multi-bucket architectural gap — LST rates/DEX pools/lending indices not processable
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, features-service]

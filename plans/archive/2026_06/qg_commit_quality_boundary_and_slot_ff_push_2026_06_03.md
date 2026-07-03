@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: QG commit-quality-boundary + slot FF-push to LDR (aggregation of uv-determinism + governor-macOS-fix + commit-gate design)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service]

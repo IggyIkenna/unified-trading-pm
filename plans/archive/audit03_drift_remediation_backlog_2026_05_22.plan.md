@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: AUDIT-03 remediation — confirmed P1/P2 drift backlog (non-P0, non-decision)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, instruments-service, strategy-service]

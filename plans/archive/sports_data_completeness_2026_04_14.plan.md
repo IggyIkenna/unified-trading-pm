@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Sports Data Completeness — Backfill, Denominators, League Breakdowns, Weather, HT Pipeline
 summary:
-status: active
-nature:
+status: superseded
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, instruments-service, unified-trading-library, unified-trading-pm]

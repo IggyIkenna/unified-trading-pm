@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: cicd-citadel-hardening-2026-03-16
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [system-integration-tests, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Phase 0 — Audit Remediation
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]

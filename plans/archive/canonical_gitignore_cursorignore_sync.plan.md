@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Canonical .gitignore / .cursorignore Sync
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library]

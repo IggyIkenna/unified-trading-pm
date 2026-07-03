@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: deployment-ui scope cleanup — move trading/research surfaces to unified-trading-system-ui; keep the devops pane lean
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-ui, unified-trading-api, unified-trading-pm, unified-trading-system-ui]

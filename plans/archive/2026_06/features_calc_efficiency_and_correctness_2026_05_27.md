@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Features calculation pipeline — I/O efficiency + feature-function correctness verification
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-data-processing-service, market-tick-data-service]

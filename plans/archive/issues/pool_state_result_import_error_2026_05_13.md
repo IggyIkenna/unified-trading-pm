@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'execution-service: PoolStateResult ImportError in defi_execution/protocols/__init__.py'
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service]

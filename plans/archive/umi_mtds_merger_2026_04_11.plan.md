@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: umi-mtds-merger
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, instruments-service, market-tick-data-service, unified-trading-library, unified-trading-pm]

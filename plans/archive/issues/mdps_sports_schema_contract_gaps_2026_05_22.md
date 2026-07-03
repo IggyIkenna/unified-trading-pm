@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MDPS Sports manifest MalformedRowKeyError + streaming read schema gaps
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

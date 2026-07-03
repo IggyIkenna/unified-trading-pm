@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Solana perp DEX adapters — DRIFT debug + MANGO V4 + ZETA + FLASH + DRIFT funding backfill
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts, unified-trading-pm]

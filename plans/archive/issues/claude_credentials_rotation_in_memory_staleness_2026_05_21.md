@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Recurring `claude /login` prompts on VM + VS Code — refresh-token rotation, shared `.credentials.json`, in-memory staleness
 summary:
 status: BLOCKED-OPERATOR
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Codex audit — Governance area (Phase 1.J)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

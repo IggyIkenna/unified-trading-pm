@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Mock-data pipeline benchmarking — synthetic-data harness for per-stage bottleneck profile
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [features-service, instruments-service, unified-trading-pm]

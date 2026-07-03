@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UI & API Event Telemetry — Auth Events + Request Audit Trail
 summary:
 status: DONE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, unified-trading-library]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 8 Agent Prompts for Citadel-Grade System Refactor
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-ui, unified-api-contracts, unified-trading-api, unified-trading-library, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Phase 2a: Acquire Lifecycle Tab — Deep Audit'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service, market-tick-data-service, unified-trading-system-ui]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Harsh's daily work-split — 2026-05-18 (Cycle 2 Day-3; mechanical-only — heavy decisions on Ikenna side)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]

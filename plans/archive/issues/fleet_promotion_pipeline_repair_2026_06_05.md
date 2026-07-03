@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Fleet promotion pipeline — staging mechanics RESTORED; 7 repos blocked at quality-gates-v2 on real QG debt + dependency-ordering
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, execution-service, features-service, instruments-service, market-tick-data-service]

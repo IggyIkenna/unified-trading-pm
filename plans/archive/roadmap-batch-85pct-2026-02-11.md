@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Roadmap: Batch Production (49.0% → 85.0%)'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi data type completeness — 10 missing types + pool policy + data status
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]

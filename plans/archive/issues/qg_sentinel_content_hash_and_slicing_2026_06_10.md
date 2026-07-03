@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: QG sentinel is SHA-based → unwinnable race vs concurrent LDR writers; content-hash + slicing would restore fast-ship
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api]

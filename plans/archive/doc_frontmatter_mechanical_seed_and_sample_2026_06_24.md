@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: Mechanical frontmatter auto-seed + 5-per-doc_type sample (W3, cheap pass)
 summary: The cheap/mechanical frontmatter pass — a docspec-driven auto-seed that fills only the derivable universal-core + per-type fields (leaving summary/tags present-but-empty), applied breadth-first as a 5-per-doc_type in-place sample for operator review, ahead of the full rollout.
 status: complete

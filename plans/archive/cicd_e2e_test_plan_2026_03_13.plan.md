@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: cicd-e2e-test-plan
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]

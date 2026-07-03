@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: '07: Quality Gates Performance'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-data-processing-service]

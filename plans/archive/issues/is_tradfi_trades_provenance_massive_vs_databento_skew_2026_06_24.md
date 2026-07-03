@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: IS tradfi trades provenance test asserts massive-first but UAC derives databento-first (foreign skew)
 summary: '`tests/unit/scripts/test_enumerate_provenance_stamping.py::test_tradfi_trades_seed_carries_massive_batch_rest` FAILS on clean `origin/live-defi-rollout` (instruments-service): it asserts the tradfi...'
 status: resolved

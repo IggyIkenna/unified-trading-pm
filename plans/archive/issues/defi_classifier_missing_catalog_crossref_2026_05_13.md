@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: defi classifier missing instruments-service catalog cross-reference — 604k spurious attempted_failed flips blocked by 100k cap
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

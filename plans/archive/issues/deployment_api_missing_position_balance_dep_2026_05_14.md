@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: deployment-api missing position_balance_monitor_service dependency
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, e2e-testing, features-service, unified-trading-pm]

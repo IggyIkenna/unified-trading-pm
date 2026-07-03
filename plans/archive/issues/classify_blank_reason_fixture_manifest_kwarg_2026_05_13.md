@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: classify_blank_reason_row() fixture_manifest kwarg mismatch — Script 3 0 upgrades for defi/sports/prediction
 summary:
 status: OPS-VERIFIED COMPLETE — 0 upgrades (TypeError gone, classifier ran clean 2026-05-14)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-trading-library]

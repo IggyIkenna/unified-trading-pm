@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: aave-lending-rate-val VM ran validation in 3 min but stayed alive 7+ hours (no STOPPED event; no shutdown)
 summary:
 status: RESOLVED — root-cause fix shipped at deployment-service@472f9ca (2026-05-16 slot-8)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, unified-api-contracts]

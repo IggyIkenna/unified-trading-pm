@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi venue-name canonicalisation + rETH (ROCKETPOOL) universe gap remediation
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]

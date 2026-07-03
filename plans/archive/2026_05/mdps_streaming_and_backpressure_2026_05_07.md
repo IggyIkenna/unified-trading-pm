@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MDPS streaming + backpressure successor plan (2026-05-07)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, execution-service, unified-api-contracts, unified-trading-library]

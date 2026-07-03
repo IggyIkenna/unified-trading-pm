@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Strategy Architecture v2 — Family / Archetype / Axes / Cross-Cutting
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-system-ui]

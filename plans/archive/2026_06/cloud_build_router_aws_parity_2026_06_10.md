@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Cloud-build dual-cloud parity — AWS CodeBuild reaches GCP Cloud Build feature-parity (router + per-repo triggers + ECR + in-image QG)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-trading-library, unified-trading-pm]

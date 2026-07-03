@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: CeFi backfill VMs silently capturing 0 records — BlobMetadata.endswith() crash in CeFiCatalogReader
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-service, market-tick-data-service, unified-trading-library]

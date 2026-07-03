@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: promote-workflow-backtest-to-paper-to-live
 summary:
 status: plan-spawned
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-api, deployment-service, e2e-testing, execution-service, strategy-service]

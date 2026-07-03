@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: deployment-ui-version-selector
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, market-tick-data-service]

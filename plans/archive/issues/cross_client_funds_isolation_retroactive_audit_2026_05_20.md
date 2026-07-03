@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Cross-Client Funds Isolation — Retroactive Audit (execution-service, 2026-05-20)
 summary:
 status: ACKED-INTO-CODE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service]

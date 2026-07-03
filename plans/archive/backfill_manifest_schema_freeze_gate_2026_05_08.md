@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Backfill + manifest schema freeze gate — can MTDS/MDPS backfills (re)start without invalidation?
 summary:
 status: ratified-spawned-successor
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, features-service, instruments-service, unified-api-contracts]

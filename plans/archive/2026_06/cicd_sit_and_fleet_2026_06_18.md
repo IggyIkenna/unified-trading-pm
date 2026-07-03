@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD SIT + Fleet — system-integration-tests mechanics, fleet rulesets, UAC-orphan cap
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [e2e-testing, greeks-service, system-integration-tests]

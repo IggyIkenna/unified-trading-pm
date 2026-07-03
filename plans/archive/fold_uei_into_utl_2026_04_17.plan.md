@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: fold-uei-into-utl
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, e2e-testing]

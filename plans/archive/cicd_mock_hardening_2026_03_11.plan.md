@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD Mock Infrastructure Hardening (Citadel-Grade)
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, unified-api-contracts, unified-trading-pm]

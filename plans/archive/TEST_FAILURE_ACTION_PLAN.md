@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Test Failure Action Plan — T4 Services
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, unified-api-contracts]

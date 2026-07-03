@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: Monitoring Surfaces Overhaul — SPLIT into two single-surface plans (SUPERSEDED 2026-06-19)
 summary: Superseded two-track monitoring overhaul plan — split into deployment-ui monitoring pane and agent-orchestrator dashboard plans so separate agents can work them without collision.
 status: superseded

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: unified-trading-system-ui registry-drift CI job — RESOLVED (tokens/UIC/generator-args/py3.13/UTL/PM-checkout + registry refreshed from UAC main, pw:L2 ✓); GHA-green is the final confirmation
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm, unified-trading-system-ui]

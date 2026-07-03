@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: mtds-massive-reorganisation
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service]

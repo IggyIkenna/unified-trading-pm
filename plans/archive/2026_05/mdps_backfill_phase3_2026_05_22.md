@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MDPS bar reprocessor relaunch — Phase 3 per-asset-group
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, features-service, market-data-processing-service]

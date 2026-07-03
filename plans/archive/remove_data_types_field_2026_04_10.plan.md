@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: remove-data-types-field
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]

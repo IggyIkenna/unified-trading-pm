@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: deployment-events GCS bucket lifecycle policies audit
 summary:
 status: RESOLVED 2026-05-16 (slot-8) — 3 lifecycle policies applied + codified in codex
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api]

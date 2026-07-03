@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: ARBITRAGE_PRICE_DISPERSION Phase B tracer cannot run-to-completion — upstream data + features gaps across 6 perp venues
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

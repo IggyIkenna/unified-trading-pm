@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Per-Venue VENUE_HEARTBEAT_INTERVAL Empirical Calibration
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cefi]
 stage: [meta]
 repos: []

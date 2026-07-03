@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Ikenna 5-tab agent layout — coherent context bundles for parallel Opus 4.7 sessions (2026-05-07)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]

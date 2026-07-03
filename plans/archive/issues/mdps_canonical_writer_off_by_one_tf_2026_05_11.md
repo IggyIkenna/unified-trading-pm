@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MDPS canonical_writer `available_at` off-by-one timeframe overshoot — fix shipped 2026-05-11
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service, strategy-service, unified-api-contracts]

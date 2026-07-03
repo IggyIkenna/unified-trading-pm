@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'unified-trading-pm: CHANGELOG.md missing'
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

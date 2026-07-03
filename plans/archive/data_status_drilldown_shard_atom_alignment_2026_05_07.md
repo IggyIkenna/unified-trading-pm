@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: data_status_drilldown_shard_atom_alignment_2026_05_07
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]

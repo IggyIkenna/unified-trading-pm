@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: api_football_minimal_flattening_removal_2026_05_07
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, features-service, instruments-service, unified-api-contracts, unified-trading-pm]

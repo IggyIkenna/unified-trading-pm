@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'PM–Codex–Code Alignment: Version Tracking Design'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service, unified-trading-pm]

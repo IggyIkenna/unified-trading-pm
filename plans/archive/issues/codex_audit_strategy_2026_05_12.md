@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Codex audit — Strategy area (Phase 1.B)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-trading-system-ui]

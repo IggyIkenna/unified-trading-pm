@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: orchestrator RS256/ES256 asymmetric auth — central signs, workers verify (retire HS256 shared secret)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]

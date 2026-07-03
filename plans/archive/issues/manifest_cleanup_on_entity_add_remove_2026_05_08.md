@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Manifest cleanup as MANDATORY acceptance criterion when adding/removing data_types or instrument_ids — workspace-wide rule, not just periodic phantom audit
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, instruments-service, unified-trading-pm]

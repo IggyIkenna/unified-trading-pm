@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MTF intraday_regime + micro_regime emission policy classification
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, strategy-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DART UI — Strategy Dimension Filtering, Permission Tiers, Client Onboarding & Codex Integration
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]

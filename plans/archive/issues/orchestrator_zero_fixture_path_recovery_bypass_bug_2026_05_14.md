@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'instruments-service orchestrator: recovery_fixture_ids does not bypass zero-fixture fast path'
 summary:
 status: ✅ RESOLVED 2026-05-14 — instruments-service@b91b88a (slot-6-w2)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

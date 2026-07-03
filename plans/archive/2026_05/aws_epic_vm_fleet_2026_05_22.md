@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: AWS epic VM fleet — CLOUD_PROVIDER toggle + AWS-preferred default
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]

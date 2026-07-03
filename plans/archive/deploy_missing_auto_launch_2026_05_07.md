@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: deploy_missing_auto_launch_2026_05_07
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Independent Fallback — Twilio Voice/SMS (Layer-3) + Primary Provider Health Probe
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]

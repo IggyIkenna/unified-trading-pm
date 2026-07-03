@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Corporate Actions + Earnings to Calendar
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, strategy-service, unified-api-contracts, unified-trading-api, unified-trading-pm, unified-trading-system-ui]

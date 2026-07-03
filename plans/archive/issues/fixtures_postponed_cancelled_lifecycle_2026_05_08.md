@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: FIXTURES postponed/cancelled status lifecycle — api_football misflags + reference-source-itself-missing-data + new-time fixture identity question
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, unified-trading-pm]

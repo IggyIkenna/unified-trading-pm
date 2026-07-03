@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: UTL `quality-gates.sh` has 6 pre-existing failure categories (post-117-sweep finding)
 summary:
 status: filed (pre-existing; not blocking my sweep done-def)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, client-reporting-api, ibkr-gateway-infra, system-integration-tests, trading-agent-service, unified-api-contracts]

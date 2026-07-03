@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Pinned VM tarballs are pruned within seconds → VM-tarball code deploys are unreliable (race + prune)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, market-data-processing-service, unified-api-contracts, unified-trading-library]

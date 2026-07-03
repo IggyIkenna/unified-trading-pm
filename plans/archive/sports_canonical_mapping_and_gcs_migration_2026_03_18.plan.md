@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: sports-canonical-mapping-and-gcs-migration
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-api-contracts]

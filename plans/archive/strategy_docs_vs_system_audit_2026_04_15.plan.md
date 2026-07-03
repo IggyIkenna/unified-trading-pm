@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: strategy-docs-vs-system-audit
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-api, unified-trading-library, unified-trading-pm]

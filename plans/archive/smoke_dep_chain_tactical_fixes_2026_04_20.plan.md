@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ── 2026-04-20 canary context ───────────────────────────────────────────────
 summary:
-status:
-nature:
+status: superseded
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, system-integration-tests, unified-trading-library, unified-trading-pm]

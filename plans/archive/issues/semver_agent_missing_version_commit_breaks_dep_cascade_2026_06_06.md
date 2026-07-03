@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: semver-agent never commits the version bump → dep-update cascade fans out constraint bumps to a non-existent version → dependent v2 FAILING → staging→main dep-order gate jammed
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]

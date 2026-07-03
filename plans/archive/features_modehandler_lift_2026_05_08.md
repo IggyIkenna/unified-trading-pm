@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Features ModeHandler ABC lift — 4 families share local ModeHandler shape; lift to UTL canonical
 summary:
 status: complete
-nature:
+nature: record
 asset_group: cross-cutting
 stage: [meta]
 repos: [features-service, unified-trading-library]

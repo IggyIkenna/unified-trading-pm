@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: agent6-mock-data-quality
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-trading-api, unified-trading-pm, unified-trading-system-ui]

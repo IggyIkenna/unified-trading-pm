@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: instruments-service audit findings (download→manifest) — CF-11 swallows, removed-provider still wired, silent excepts
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-trading-library, unified-trading-pm]

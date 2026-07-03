@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DeFi market-data collection appears stalled ~1 month — all DEX/lending/LST buckets latest ≈ April
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]

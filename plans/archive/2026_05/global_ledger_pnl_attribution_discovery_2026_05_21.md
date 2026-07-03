@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Global Ledger + PnL Attribution — discovery, target-state spec, delta-to-current-system
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-service, execution-service, fund-administration-service, instruments-service]

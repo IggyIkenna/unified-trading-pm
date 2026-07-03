@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Streaming-finalize lift to UTL + CeFi VM downsize + DEX on-chain replay + KRAKEN-SPOT fix
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

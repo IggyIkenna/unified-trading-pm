@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: B-015 Smoke (c) — features-onchain VM ran past infra; calculator + orchestrator bugs surfaced
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, features-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: ML artefact path resolver consumer sweep — retrofit `resolve_bucket_name()` across 17 callsites
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

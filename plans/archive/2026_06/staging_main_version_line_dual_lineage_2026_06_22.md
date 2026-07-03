@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: staging→main promote PRs recur as pyproject `version =` conflicts — the version line has TWO writer lineages on main (gated semver bump vs LDR→main drain); the --rebase promote conflicts whenever the drain lineage wrote last, and the reactive drain that fixes it re-seeds the next conflict (treadmill). Structural cure = collapse to one writer lineage.
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, instruments-service, unified-trading-library]

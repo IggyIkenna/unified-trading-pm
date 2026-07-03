@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Disaster recovery + reconciliation + circuit breakers + kill switches — cutover-MVP
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]

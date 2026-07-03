@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Engine findings remediation — collateral / margin / netting / catalogue over-claims
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-pm]

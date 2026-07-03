@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CME x Polymarket cross-venue event-arb
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [tradfi]
 stage: [meta]
 repos: [instruments-service, strategy-service, unified-api-contracts]

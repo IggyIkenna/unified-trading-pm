@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Orchestrator fleet worker-spawn enablement (FM7 operator-mismatch + autospawn + VM_ID + worktree hygiene)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, unified-api-contracts, unified-trading-pm]

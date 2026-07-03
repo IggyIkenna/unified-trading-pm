@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: AUDIT-03 — findings routed to Ikenna for decision / codex-intent
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, strategy-service]

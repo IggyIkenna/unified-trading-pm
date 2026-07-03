@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Instruments lifecycle (futures expiry / options expiry hard-required) + fixtures end_time cascade + half-time / extra-time / penalty timing as captured fields and ML features
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, strategy-service, unified-api-contracts, unified-trading-library]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DEX perp onboarding — what shipped, what's open, how to make money on these venues
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, market-tick-data-service, unified-api-contracts, unified-trading-pm]

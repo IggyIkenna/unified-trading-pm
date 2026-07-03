@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MTDS per-instrument download API — bundle + per-symbol search via predicate pushdown
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-pm]

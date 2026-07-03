@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: deployment-ui vitest needs Node ≥22 (jsdom@29 ESM deps) — NOT a fleet breakage; RESOLVED via Node-22 pin
 summary:
 status: RESOLVED 2026-06-16
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui]

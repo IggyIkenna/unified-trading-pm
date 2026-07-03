@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Concurrent Backfill During Phase 2.6 Migration — Empirically Safe, Process Gap Documented
 summary:
 status: LESSONS-LEARNED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

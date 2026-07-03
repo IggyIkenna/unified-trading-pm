@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Backfill VMs silently stall — dead worker masked by independent heartbeat sidecar; missing per-shard wall-clock watchdog + bounded HTTP/RPC timeouts
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Databento 402 / PAYG-exhaustion had no explicit classifier — would retry-thrash a billing wall
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-api-contracts]

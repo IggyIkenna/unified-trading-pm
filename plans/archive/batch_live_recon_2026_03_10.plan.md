@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Batch-Live Reconciliation + Batch Audit System
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, execution-service, strategy-service]

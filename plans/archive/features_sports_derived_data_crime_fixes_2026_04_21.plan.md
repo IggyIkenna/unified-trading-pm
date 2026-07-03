@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: features-sports-service — Remove data-crime defaults in derived_features (squad-value zero-default + standings lookahead)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service]

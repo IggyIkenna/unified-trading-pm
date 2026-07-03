@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: CME legacy 2-segment instrument_id not re-normalized in MDPS — partition_mismatch / 'malformed instrument_id'
 summary:
 status: solved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service]

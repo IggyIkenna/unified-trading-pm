@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: cicd-e2e-testing-master-2026-03-13
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]

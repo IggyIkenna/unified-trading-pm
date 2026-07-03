@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Instruments Service Template Refactor
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts, unified-trading-library]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Handoff Guide: Unified Trading System - Epics 1-3'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service]

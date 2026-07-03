@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'vm_zombie_watchdog crash-loop: 101 TERMINATED VMs accumulate due to ModuleNotFoundError at boot'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, unified-trading-library]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Extend run_2yr_config_grid_backtest.py to all 6 Tier-A archetype families
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service]

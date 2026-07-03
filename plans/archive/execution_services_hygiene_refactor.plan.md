@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Execution-Service Hygiene & Refactor
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, unified-api-contracts]

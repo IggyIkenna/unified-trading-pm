@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: pyrightconfig.json — Workspace Venv Fix (All Repos)
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, instruments-service, unified-trading-library, unified-trading-pm]

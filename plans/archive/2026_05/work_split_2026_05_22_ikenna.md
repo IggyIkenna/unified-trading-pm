@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Ikenna work-split 2026-05-22 — 8-hour autonomous run (200 AI-days queued)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service]

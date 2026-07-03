@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Pre-audit manifest — features-* repo consolidation 2026-05-08
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, features-service, system-integration-tests, unified-api-contracts]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ui-api-flow-validation-citadel-grade
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui]

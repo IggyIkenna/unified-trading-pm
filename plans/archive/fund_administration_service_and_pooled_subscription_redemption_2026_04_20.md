@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: fund-administration-service-and-pooled-subscription-redemption
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, execution-service, fund-administration-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]

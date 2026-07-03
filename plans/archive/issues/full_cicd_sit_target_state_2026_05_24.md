@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Full CI/CD + SIT target state — close the gaps that let staging drift ~1 month undetected
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-service, e2e-testing, market-tick-data-service, system-integration-tests]

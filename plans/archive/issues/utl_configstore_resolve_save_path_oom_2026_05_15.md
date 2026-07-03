@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: UTL OOM root-cause + workspace audit + UTL architecture review (2026-05-15)
 summary:
 status: ROOT-CAUSE FIXED ✅ (utl@93ff771); follow-ups documented for triage
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, instruments-service, market-tick-data-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Writegate Phase 6.6 + 6.7 + 6.9 α-vs-β scope audit — Gate 4 close verdict
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, strategy-service]

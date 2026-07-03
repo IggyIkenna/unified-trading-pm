@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: agent7-observe-admin
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, execution-service, unified-trading-pm, unified-trading-system-ui]

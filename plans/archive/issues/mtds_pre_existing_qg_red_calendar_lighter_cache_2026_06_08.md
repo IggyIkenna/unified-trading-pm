@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MTDS QG RED on LDR — 6 pre-existing failing unit tests (calendar-boundary future-skip + lighter candles + hyperliquid cache TTL)
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service]

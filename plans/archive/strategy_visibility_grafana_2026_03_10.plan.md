@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: strategy-visibility-grafana-2026-03-10
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, execution-service, strategy-service, unified-trading-library, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Unified Feature Calculator Library — BaseFeatureService Upgrade
 summary:
 status: DONE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ui-react19-eslint9-upgrade-2026-03-16
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: instruments-service hyperliquid OHLCV reads LEFT (open) bar edge — violates canonical right-edge t_close
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

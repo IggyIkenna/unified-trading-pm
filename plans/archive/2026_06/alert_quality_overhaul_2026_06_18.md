@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Alert Quality Overhaul — dedup, error-pointer messages, GHA↔server de-duplication
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui, unified-api-contracts, unified-trading-pm]

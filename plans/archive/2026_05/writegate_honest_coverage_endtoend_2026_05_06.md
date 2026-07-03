@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Write-Gate + Honest-Coverage End-to-End — Plan (UMBRELLA)
 summary:
 status: drafted
-nature:
+nature: record
 asset_group: [sports]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service]

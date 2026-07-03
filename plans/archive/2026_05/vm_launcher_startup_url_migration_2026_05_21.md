@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: VM Launcher startup-script-url Migration (O-1 full consolidation)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, unified-trading-pm]

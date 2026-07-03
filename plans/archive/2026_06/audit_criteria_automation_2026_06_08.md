@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: Audit-criteria automation — convert recurring agentic audits into QG steps (code) + a scheduled data-state audit (GCS), all asset groups
 summary:
 status: complete

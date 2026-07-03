@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DeFi expected_coverage VENUE-CHAIN phantom entries + handler naming inconsistency
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-api-contracts, unified-trading-system-ui]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: error-normalisation-unknown-exchanges-2026-03-10
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, system-integration-tests, unified-api-contracts, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Wallet / treasury / client lifecycle MVP — onboarding + custody + allocation + post-trade for cutover
 summary:
 status: ready-for-archive
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service, strategy-service]

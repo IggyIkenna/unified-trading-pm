@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: api_football enrichment-only mode pre-flight vs runtime contract mismatch — blocks per-fixture entity backfill on forward-polled days
 summary:
 status: ✅ FIXED 2026-05-13 — instruments-service@4c5b68a (Option C consumer-side silent no-op)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

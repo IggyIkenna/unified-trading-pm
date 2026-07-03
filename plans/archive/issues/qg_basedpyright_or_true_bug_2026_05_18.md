@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: QG basedpyright || true bug — exit code always 0, errors silently swallowed
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service]

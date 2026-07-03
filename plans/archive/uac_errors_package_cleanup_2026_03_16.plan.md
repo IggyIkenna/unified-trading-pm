@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: contracts-observability-risk-cleanup
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, market-data-processing-service, strategy-service, unified-api-contracts, unified-trading-library]

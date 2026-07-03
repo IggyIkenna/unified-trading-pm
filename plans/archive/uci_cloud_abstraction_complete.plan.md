@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UCI Cloud Abstraction Complete
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, unified-trading-library]

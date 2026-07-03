@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: E2E and Smoke Test Plan (Pre-Deployment)
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, system-integration-tests]

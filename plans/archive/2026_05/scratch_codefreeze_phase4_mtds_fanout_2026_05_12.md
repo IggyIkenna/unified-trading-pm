@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Phase 4.MTDS + writegate-slice-(c) callsite-migration fan-out plan (Harsh slot 3, 2026-05-12)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service, unified-trading-library, unified-trading-pm]

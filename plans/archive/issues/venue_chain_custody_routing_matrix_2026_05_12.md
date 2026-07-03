@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Venue × deposit-chain × custody-routing matrix — missing dimension blocking cutover funds-flow
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service]

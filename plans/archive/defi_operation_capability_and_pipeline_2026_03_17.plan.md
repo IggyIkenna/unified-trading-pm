@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: defi-operation-capability-and-pipeline-2026-03-17
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, instruments-service, strategy-service, unified-trading-system-ui]

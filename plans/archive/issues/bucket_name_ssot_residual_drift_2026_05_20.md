@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: bucket_name_ssot residual drift — 2026-05-20 audit
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-api, deployment-service, execution-service, features-service, instruments-service]

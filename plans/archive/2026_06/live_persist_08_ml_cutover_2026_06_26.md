@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Live-persist 08 — ml-service cutover to the facade (consume features / produce predictions via the envelope)
 summary:
 status: completed
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [ml-service]

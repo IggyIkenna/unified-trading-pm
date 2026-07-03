@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: frontend-backend-bilateral-plan2-mock-alignment
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

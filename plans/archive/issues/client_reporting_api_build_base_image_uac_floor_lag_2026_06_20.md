@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: client-reporting-api Cloud Build RED fleet-wide — UTL base image carries UAC 0.23.0 but pyproject floor is unified-api-contracts>=0.24.0 (Dockerfile uv pip install cannot satisfy the floor)
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [client-reporting-api, strategy-service, unified-api-contracts, unified-trading-library]

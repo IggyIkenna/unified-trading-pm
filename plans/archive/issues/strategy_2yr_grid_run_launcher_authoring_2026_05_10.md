@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: '2-yr config-grid backtest VM launcher authoring + Item #4 bounce-sweep scope decision (operator triage)'
 summary:
 status: resolved-pending-completion
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, strategy-service, unified-trading-pm]

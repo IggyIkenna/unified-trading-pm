@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: TradFi data completion — live + batch, all venues/data_types/instruments (cold-start runbook)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [tradfi]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library]

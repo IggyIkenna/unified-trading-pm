@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MDPS DeFi Lending Indices Adapter
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [market-data-processing-service, unified-api-contracts]

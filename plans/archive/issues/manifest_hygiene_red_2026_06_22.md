@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: Manifest hygiene RED — 1 AG(s) with findings (2026_06_22)
 summary: 'The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: defi. Finding-classes: schema_version_not_v9, oracle_expects_but_empty, noncanonical_path_on_disk, phantom_captur...'
 status: superseded

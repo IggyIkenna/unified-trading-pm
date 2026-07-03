@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: workspace-qg CI startup_failure — GitHub BuildFailed ghost + cached validation failures
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]

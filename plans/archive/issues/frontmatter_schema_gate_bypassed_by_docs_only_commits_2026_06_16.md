@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Frontmatter SCHEMA gate bypassed by docs-only commits → non-compliant plan/issue docs land on LDR and block fleet-wide full QG
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

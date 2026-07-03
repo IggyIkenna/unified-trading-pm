@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Sports phantom-recon diagnosis (SFI_STANDINGS / open-meteo) + coverage-window reconciliation
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [sports]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]

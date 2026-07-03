@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: GitHub API rate-budget reduction + low-budget alerting/visibility (shared-PAT exhaustion)
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui, features-service, unified-trading-pm, unified-trading-system-ui]

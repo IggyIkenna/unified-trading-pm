@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: citadel_standard_production_readiness.plan
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, unified-api-contracts]

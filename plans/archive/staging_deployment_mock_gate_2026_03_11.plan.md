@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: staging-deployment-mock-gate-2026-03-11
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

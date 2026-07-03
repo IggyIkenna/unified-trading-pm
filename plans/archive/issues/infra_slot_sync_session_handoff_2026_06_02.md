@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'Session handoff — fleet VM sync + disk/tmpfs guards + AMI + slot reconciliation + quickmerge gates + prettier-churn fix + pre-commit config rollout (slot-1, 2026-06-02). Self-audited commit locations: LDR / main / local-only / dirty / stash.'
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]

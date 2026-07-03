@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Shared git stash pile archived + cleared — confirmation window before final purge
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]

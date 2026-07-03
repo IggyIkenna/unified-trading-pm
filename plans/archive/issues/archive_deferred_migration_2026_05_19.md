@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Archive DEFERRED-item migration audit — 24 plans with open items
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, client-reporting-api, execution-service, features-service, ml-service, strategy-service]

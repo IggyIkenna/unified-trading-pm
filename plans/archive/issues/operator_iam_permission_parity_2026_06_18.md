@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Operator IAM permission parity for Harsh — GCP + AWS audit + grants (manage infra without hitting walls)
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: []

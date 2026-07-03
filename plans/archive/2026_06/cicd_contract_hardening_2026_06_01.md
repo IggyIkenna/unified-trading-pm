@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD contract hardening — workspace-wide gate enforcement + build provenance
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]

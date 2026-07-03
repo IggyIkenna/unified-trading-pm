@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: deployment-topology-and-client-isolation
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]

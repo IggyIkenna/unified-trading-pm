@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Drawdown + Liquidation Policy + Per-Strategy 7-Threshold Risk Config
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]

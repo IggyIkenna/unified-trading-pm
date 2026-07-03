@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: frontend-backend-bilateral-plan3-backend-gap-fill
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-trading-api]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Orchestrator dirty-state/orphan gate stomps a LIVE session''s uncommitted WIP (liveness-gating bypassed) — TWO variants: (1) commit-then-reset-on-push-reject, (2) git-stash on slot-removal'
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]

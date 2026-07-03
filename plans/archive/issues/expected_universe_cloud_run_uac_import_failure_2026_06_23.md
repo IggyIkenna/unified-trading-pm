@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: expected-universe-v2-* Cloud Run jobs broken — UAC import failure in new instruments-service:latest image
 summary: 'All four `expected-universe-v2-{cefi,tradfi,sports,prediction}` Cloud Run jobs failed with exit code 1 when triggered manually on 2026-06-23 (~19:48 UTC). Root cause: the `instruments-service:lates...'
 status: resolved

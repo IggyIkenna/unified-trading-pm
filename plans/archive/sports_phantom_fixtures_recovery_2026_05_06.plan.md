@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: sports-phantom-fixtures-recovery-2026-05-06
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, deployment-ui, instruments-service, unified-api-contracts]

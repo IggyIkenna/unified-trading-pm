@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Strategy archetype taxonomy — share-class-driven neutrality + recursive carry rename + cross-domain extensions + vol surface infra + doc completion
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service, unified-api-contracts]

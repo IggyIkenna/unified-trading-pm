@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: '✅ RESOLVED 2026-05-08 — paper-trade smoke harness migrated (was: P0 BLOCKER stale import)'
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, strategy-service]

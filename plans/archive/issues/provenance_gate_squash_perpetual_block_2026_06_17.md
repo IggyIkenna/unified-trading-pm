@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Strict-quickmerge provenance gate PERPETUALLY re-flags a trailer-less LDR commit after a squash-promote — every LDR→staging drain re-blocks on the same commit (14b11e2) until manually admin-merged
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, unified-trading-library, unified-trading-pm]

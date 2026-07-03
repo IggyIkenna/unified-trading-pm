@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: live-defi-rollout-may-23-2026
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: defi
 stage: [meta]
 repos: [alerting-service, deployment-api, execution-service]

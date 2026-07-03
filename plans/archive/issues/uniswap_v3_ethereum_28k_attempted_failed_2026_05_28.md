@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'MTDS DeFi manifest: 28,634 UNISWAP_V3-ETHEREUM swaps_ohlcv attempted_failed rows — all SCHEMA_VALIDATION_FAILED, fix already shipped (chain propagation + amount_usd column), needs retry pass not new code'
 summary:
 status: ARCHIVED 2026-06-02 — acked + migrated (no new code; stale rows pending reprocess)
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [market-data-processing-service]

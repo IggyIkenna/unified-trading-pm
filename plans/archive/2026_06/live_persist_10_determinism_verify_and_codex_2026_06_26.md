@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Live-persist 10 — determinism verification (paper==batch-rerun) + lifecycle proof + codex SSOT
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, e2e-testing, strategy-service, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: AI-GENERATED — awaiting user review and promotion
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-trading-library]

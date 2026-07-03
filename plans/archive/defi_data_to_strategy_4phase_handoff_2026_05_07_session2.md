@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Session 2 of DeFi data → strategy 4-phase handoff (2026-05-07)
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

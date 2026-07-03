@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: UAC normalize_aster_ticker missing from tickers.py — blocks all emission policy tests in features-service
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service]

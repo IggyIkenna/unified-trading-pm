@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Context Bloat Remediation Plan
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, system-integration-tests, unified-api-contracts, unified-trading-pm]

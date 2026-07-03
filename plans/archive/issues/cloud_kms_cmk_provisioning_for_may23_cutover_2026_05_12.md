@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Cloud HSM CMK provisioning for May-23 cutover wallets
 summary:
 status: ✅ RESOLVED 2026-05-12 — agent-provisioned via ADC + smoke verified
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

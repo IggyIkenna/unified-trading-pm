@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MTDS-slice sports `available_at` wiring — audit + wiring point + open design Qs
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service]

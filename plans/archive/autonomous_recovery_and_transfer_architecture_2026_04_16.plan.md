@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: autonomous-recovery-and-transfer-architecture
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service]

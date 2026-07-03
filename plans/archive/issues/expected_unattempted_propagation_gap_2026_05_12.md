@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: expected_unattempted not propagated through instruments→MTDS→MDPS→features→ML chain
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, instruments-service, market-data-processing-service, market-tick-data-service, unified-trading-library]

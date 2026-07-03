@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: v1 strategy-registry consumer audit (Wave 7 pre-audit manifest)
 summary:
-status:
-nature:
+status: superseded
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

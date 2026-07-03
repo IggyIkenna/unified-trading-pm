@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Codex-vs-Citadel Block B (data + correctness model) — audit findings preserved from retired question doc
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library, unified-trading-pm]

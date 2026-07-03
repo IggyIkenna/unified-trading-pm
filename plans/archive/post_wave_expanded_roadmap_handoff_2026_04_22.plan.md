@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Post-wave expanded roadmap — handoff for next-session Claude
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, strategy-service]

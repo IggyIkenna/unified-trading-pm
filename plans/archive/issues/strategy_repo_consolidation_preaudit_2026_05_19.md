@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Strategy Repo Consolidation — Pre-Audit (2026-05-19)
 summary:
 status: ACKED-INTO-PLAN
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service]

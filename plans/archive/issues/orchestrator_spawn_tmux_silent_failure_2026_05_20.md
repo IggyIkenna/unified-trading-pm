@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Orchestrator /api/slots/<N>/spawn — tmux session silent-fail + workspace-trust prompt unhandled
 summary:
 status: ACKED-INTO-CODE
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]

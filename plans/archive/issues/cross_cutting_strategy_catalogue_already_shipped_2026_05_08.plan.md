@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: '✅ RESOLVED 2026-05-09 — Option A migration shipped (was: parallel SSOTs in cross_cutting_may_23_deliverables Items #1 + #2)'
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service, unified-trading-pm, unified-trading-system-ui]

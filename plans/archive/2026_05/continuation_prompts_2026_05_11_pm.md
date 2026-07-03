@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Continuation prompts — 2026-05-11 PM — push-through-nice-haves cycle
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, features-service, instruments-service, market-data-processing-service, unified-api-contracts]

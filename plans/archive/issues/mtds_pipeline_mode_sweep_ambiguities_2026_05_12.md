@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MTDS Phase 4.MTDS pipeline_mode sweep — operator-decision-required ambiguities
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-library, unified-trading-pm]

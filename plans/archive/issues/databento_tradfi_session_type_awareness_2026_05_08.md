@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Databento TradFi candles session-agnostic — pre/post-market + auction periods indistinguishable from regular session, contaminating every downstream feature
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service, unified-api-contracts]

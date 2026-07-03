@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: instruments-service version phantom — RESOLVED (de-inflated runaway semver to coherent 0.4.0)
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, system-integration-tests]

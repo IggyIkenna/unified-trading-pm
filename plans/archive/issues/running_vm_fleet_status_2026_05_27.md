@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Running VM Fleet Status & Kill/Keep Decision Matrix
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, instruments-service]

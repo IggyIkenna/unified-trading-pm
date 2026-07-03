@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Institutional Hardening — Stress Market Resilience, Research Integrity, Maintainability
 summary:
 status: DONE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, market-data-processing-service, strategy-service, unified-trading-library]

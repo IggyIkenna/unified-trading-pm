@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: footystats source has no BATCH_FOOTYSTATS PipelineMode value (closed-set rule violation when stamping footystats catalog refreshes)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]

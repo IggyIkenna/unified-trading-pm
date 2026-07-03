@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: registry-completeness-implementation-detail
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, system-integration-tests, unified-api-contracts, unified-trading-pm]

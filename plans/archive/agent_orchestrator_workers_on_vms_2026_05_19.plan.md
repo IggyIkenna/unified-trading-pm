@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: agent-orchestrator workers on VMs (asymmetric Ikenna+Harsh topology)
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Marketing site — 5-path restructure + light-auth research gate + schema click-throughs
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-system-ui]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Live-persist 06 — features-service cutover to the facade (consume MDPS / produce features via the envelope)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service]

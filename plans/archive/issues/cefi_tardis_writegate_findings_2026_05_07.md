@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: CeFi Tardis backfill — writegate Phase 2 findings (bundle shard shape + missing rows_captured)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: agent-orchestrator backlog state alignment — prune zombies, fix never-deletes regen, codify CI-safe rollout
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-pm]

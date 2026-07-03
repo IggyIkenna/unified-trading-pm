@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Quality-gates speed (change-scoped, single-core) + config SSOT centralisation (toml as single home)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-ui, execution-service, features-service]

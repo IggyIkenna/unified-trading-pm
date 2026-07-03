@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Simulation scenarios — post-cutover broader regression matrix (deferred from May-23 sprint)
 summary:
 status: scheduled
-nature:
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [execution-service, features-service, market-tick-data-service, strategy-service]

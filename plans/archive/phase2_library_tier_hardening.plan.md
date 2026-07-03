@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: phase2-library-tier-hardening
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-data-processing-service, strategy-service, unified-api-contracts, unified-trading-library]

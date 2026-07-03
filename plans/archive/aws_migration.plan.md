@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: aws-migration
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]

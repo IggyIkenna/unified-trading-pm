@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Sports manifest — phantom recon + footystats failure triage
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service, unified-api-contracts]

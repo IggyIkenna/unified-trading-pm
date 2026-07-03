@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: codex-refactor-2026-05-08
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: cross-cutting
 stage: [meta]
 repos: [alerting-service, deployment-service, deployment-ui, execution-service, features-service, instruments-service]

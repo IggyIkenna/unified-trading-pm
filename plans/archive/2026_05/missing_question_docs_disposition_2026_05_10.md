@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Missing question docs disposition — migrate or archive stale plans/questions/ files
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: []

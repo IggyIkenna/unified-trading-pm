@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Massive CME futures history is on the S3 FLAT-FILES, not the REST /futures/v1 endpoint
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [tradfi]
 stage: [meta]
 repos: [market-tick-data-service]

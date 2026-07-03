@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: features-service full QG red — cross-family test pollution (leaked cross_instrument global manifest writer w/ MagicMock get_settings poisons calendar capture_status test)
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [features-service, unified-trading-pm]

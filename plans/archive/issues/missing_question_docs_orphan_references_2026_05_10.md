@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Two question docs (client_reporting_pnl_attribution + risk_simulations_limits_alerting) + plans/questions/README.md genuinely lost — never committed, 8 active files reference them as canonical SSOTs
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

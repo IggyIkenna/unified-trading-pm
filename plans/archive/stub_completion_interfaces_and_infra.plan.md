@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: stub-completion-interfaces-and-infra
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-service, execution-service, instruments-service, strategy-service]

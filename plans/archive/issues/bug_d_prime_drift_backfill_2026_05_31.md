@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Bug-D-prime — Drift backfill VM silent data loss + bucket-name SSOT drift for sig index [SUPERSEDED 2026-06-01]
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, market-tick-data-service]

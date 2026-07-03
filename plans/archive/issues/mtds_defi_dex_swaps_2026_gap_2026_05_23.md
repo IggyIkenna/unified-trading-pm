@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MTDS DeFi DEX swap data stops after 2026-01-24 — no Ethereum DEX candles for 2026
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, market-data-processing-service, market-tick-data-service, unified-trading-library]

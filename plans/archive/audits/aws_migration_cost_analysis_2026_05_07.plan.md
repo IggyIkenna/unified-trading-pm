@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: AWS Migration Cost Analysis — 2026-05-07
 summary:
-status:
-nature:
+status: superseded
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, strategy-service, unified-trading-library, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: dev-environment-automated-onboarding-2026-03-10
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, unified-trading-library, unified-trading-pm]

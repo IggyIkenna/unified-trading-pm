@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: check-staging-lock rulesets in 3 repos still use v1-style required check
 summary:
 status: RESOLVED 2026-05-29
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-ui, execution-service, instruments-service]

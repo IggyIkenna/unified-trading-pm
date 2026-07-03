@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Manifest schema final gate — best v8 by 2026-05-23 (no partials, all items done)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, features-service, instruments-service]

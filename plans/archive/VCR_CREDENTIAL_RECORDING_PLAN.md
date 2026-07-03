@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: VCR Cassette Recording Plan — External API Credentials
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

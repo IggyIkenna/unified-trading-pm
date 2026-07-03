@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: API-Football Enrichment Historical Backfill — FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / PLAYER_STATS / INJURIES
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, unified-api-contracts]

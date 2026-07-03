@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Mega audit + plan beef-up progression tracker — 2026-05-20
 summary:
 status: RESOLVED 2026-05-22
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, execution-service, features-service, instruments-service]

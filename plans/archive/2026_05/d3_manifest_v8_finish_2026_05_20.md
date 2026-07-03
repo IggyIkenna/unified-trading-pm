@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: D3 — Manifest v8 finish + reason-enum wiring + divergence-detector
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, unified-api-contracts, unified-trading-library]

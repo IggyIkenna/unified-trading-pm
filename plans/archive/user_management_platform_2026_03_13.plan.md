@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: user-management-platform-2026-03-13
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, unified-trading-pm]

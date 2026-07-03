@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Data-Status Coverage Gaps + Prediction IS Manifest Structural Fix
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [prediction]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service, unified-trading-pm]

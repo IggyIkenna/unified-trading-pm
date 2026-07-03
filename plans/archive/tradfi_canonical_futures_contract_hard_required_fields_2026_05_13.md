@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: tradfi-canonical-futures-contract-hard-required-fields
 summary:
 status: complete
-nature:
+nature: record
 asset_group: tradfi
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]

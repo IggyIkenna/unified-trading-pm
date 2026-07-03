@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Connectivity + Dependency Buffer Policy (5-class taxonomy + expected_time+buffer)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]

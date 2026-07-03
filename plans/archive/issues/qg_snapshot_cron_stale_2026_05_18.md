@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: QG daily snapshot cron VM stale — last run 2026-05-14 (4 days)
 summary:
 status: ACKED-INTO-CODE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]

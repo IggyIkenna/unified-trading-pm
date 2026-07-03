@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Unit Tests and Test Failure Action Plan
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service]

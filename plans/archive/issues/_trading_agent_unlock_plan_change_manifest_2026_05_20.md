@@ -18,7 +18,7 @@ related_plans:
   - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md
   - plans/active/issues/trading_agent_service_workspace_qg_silent_clone_fail_2026_05_16.md
 priority: P2
-status: active
+status: resolved
 ---
 
 # Plan-change manifest — trading-agent-service architecture unlock (May-23)

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: unified-api-contracts TODO audit — 2 real issues requiring scope
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts]

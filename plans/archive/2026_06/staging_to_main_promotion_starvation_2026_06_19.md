@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: staging→main promotion starves 20/23 repos — two upstream failure modes (manifest version-bump desync + Tier-C squash-fallback eating semver labels), not a missing promoter
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]

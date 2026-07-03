@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: Instrument-Universe Registry Consolidation — UAC is the single source for venues + adapter routing (all 5 AGs)
 summary: 'Kill the hardcoded venue mirrors in instruments-service so the venue universe is UAC-sourced per asset_group. FINAL scope (post-audit, operator-locked 2026-06-29; see Progress Log): cefi → IS reads UAC via a named Tardis grain-adapter (UAC unchanged) + auto-fixes the KALSHI-PERP/POLYMARKET-PERP omission; tradfi → IS reads UAC minus a named YAHOO_FINANCE filter; prediction → IS reads UAC (was a local literal); defi + sports → EXEMPT from set-equality (IS keeps its defi producer; sports stays a two-registry split with MTDS owning odds venues); PLUS an operator-approved defi MVP-exclusion (re-phase DEFI_VENUE_PHASE live⟺IS-producible, narrow VENUES_BY_ASSET_GROUP[defi] denominator, remove ROCKETPOOL-ETHEREUM from MVP, bump MVP_SCOPE_CONFIG_VERSION). Phase 2 = UAC-derived adapter routing. The expected-universe single-entry-point work is folded into honest_coverage_v2_instrument_denominator. Two behaviour deltas (cefi +2 perps, defi MVP) are deliberate + operator-approved; all other
   AGs byte-identical.'

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'unified-trading-library: strict-ify the ~108 pre-existing pyright/type suppressions + drive CODEX_MAX_VIOLATIONS 6→0'
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-library, unified-trading-pm]

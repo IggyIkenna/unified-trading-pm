@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: URDI phantom references in active surface — cleanup sweep
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Compute-bound stage optimization via mock data — parallelize + big-machine the slow stages
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, strategy-service]

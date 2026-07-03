@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Harsh's daily work-split — 2026-05-08 (15 days to live-DeFi)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Workspace ruff auto-fix sweep — repo-by-repo, per-shippable-unit
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, execution-service, features-service]

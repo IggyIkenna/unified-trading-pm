@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: execution-service has 377 method-size violations (workspace outlier; ~13× the next-worst repo)
 summary:
 status: phase-b-in-progress (103/377 cleared = ~27%; milestone 100/377 crossed 2026-05-17)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-service, execution-service, features-service]

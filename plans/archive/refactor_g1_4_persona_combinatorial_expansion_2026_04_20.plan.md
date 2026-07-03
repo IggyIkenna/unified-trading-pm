@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Refactor G1.4 — Persona combinatorial expansion (11 → 15-20)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service, unified-trading-pm, unified-trading-system-ui]

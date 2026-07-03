@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: TradFi MVP — OHLCV-only Databento Backfill
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, market-tick-data-service, unified-api-contracts]

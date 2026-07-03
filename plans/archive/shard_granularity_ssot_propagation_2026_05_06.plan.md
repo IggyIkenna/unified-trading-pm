@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Shard-Granularity SSOT Propagation — Plan
 summary:
 status: phase-1-tier-1-partial-shipped
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]

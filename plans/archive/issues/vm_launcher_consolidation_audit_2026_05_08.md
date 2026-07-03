@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: VM launcher + Cloud Run consolidation audit — 30 ad-hoc launchers + 3 Cloud Run deploys to migrate
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, market-tick-data-service, unified-trading-pm]

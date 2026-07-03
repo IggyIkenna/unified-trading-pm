@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: UAC weekly-validation workflow failing — WIF_PROVIDER/WIF_SERVICE_ACCOUNT secrets not configured
 summary:
 status: ACKED-INTO-CODE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Session loose-ends index — 2026-05-08 Tab 1 main (gap-closure tracker)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, features-service, market-tick-data-service, strategy-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: TradFi futures roll-adjuster centralisation — MDPS continuous-contract stage, features reads persisted (+ Massive flat-files dispatch/backfill)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [tradfi]
 stage: [meta]
 repos: [features-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service]

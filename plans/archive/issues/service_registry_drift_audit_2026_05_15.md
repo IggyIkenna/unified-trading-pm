@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Service registry drift audit — VM prefix vs cloud-providers.yaml
 summary:
 status: RESOLVED 2026-05-16 — audit clean (0 drift) + P3 self-doc entry shipped at deployment-service@7ee18b4
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]

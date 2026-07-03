@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Expected-unattempted propagation chain — instruments → MTDS → MDPS → features → ML
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]

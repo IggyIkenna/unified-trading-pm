@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Service Control Surface — Issues Found During Testing
 summary:
 status: archived — pattern-level load_dotenv / dry-run / EnvironmentMode / TestnetMode / asyncio-nesting / expired-instrument fixes all shipped (verified 2026-05-07); remaining instruments-service-specific items folded into newer plans (instruments+MTDS-completion umbrella, predictions_master)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service]

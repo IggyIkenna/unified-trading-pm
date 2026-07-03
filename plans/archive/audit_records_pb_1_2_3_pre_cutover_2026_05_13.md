@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Audit Records PB-1/2/3 Pre-Cutover (append-only + retention-lock + path fix)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service]

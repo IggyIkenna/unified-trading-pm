@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: TradFi forward-poll cron missing — continuous-verification gap
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]

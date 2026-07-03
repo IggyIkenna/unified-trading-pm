@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD Phase-2 foundation — version-registry write-path (item B) + dynamic-versioning canary + spike guards
 summary: 'Phase-2 (version-out-of-source, D13) FOUNDATION lane. Stands up the registry write-path BEFORE any reader repoints: the event-driven tag→Firestore write-through (item B), the per-repo dynamic-versioning setup on ONE canary repo, and the three sandbox-spike hygiene guards (clean-checkout-at-tag build, publish-only-plain-3-part, stale-editable audit). Additive and reversible — breaks nothing live. This is registry-write-path step ① in the risk-ranked retarget order.'
 status: superseded

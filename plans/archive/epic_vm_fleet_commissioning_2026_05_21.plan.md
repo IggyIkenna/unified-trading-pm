@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Epic VM fleet commissioning — planning VM finalization + 9 epic VMs launch
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Global Ledger + PnL Attribution — Migration Sub-Plan
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, execution-service, strategy-service]

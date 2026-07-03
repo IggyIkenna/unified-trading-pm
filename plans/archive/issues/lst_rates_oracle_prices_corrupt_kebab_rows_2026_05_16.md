@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: lst-rates + oracle-prices canonical manifests contain CORRUPT legacy kebab rows (venue=data_type literal, chain empty) — 3,486 phantoms to delete
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

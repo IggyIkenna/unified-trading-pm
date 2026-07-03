@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Plan: quickmerge as Thin Wrapper Around Quality Gates'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

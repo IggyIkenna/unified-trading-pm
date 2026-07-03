@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Coverage Ratchet Policy + Mid/High Tier Uplift
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, execution-service]

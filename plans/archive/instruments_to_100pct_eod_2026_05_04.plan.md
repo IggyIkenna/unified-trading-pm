@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: instruments-service to 100% honest coverage across all 5 asset groups (2026-05-04 → 2026-05-05)
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service]

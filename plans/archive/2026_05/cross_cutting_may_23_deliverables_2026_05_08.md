@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Cross-cutting May-23 deliverables — catalogue / IDs / clients / DART (2026-05-08)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service]

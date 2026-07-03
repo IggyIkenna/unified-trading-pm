@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: CI/CD GitHub-Actions workflow sprawl audit — dead/duplicate/band-aid workflows fleet-wide (verified across 25 repos)
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, system-integration-tests, unified-trading-pm]

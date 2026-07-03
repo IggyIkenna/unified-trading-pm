@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Plan Amendments — Gap-Closing for 90%+ Demo Alignment
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service, system-integration-tests, unified-trading-api, unified-trading-pm, unified-trading-system-ui]

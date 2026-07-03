@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Canonical durable log archival for VMs (and per-repo log paths) — 2026-05-27
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, unified-trading-pm]

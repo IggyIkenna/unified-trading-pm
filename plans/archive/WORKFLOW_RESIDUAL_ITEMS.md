@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Workflow 1 Residual Items & Cross-Workflow Planning
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service]

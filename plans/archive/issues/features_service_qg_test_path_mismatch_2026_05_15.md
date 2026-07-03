@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: features-service QG test path mismatch — 350 per-family unit tests invisible to quality gates
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service]

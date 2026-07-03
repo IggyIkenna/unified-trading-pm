@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Strategy Expansion: Five Trading Themes'
 summary:
 status: completed
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service]

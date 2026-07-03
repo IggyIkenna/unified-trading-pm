@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: UTL FeatureBatchHandler ABC has zero production consumers; 8 features-* families run 4 distinct unrelated shapes
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, unified-trading-library]

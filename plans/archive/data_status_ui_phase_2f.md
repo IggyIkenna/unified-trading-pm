@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Data Status UI Phase 2F — deployment-api/UI gap fixes
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-trading-pm]

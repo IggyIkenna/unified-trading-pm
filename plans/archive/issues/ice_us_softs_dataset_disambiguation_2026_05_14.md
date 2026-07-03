@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: ICE US Softs (CT/CC/KC/SB/OJ/DX) dataset disambiguation — IFUS.IMPACT canonical
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts]

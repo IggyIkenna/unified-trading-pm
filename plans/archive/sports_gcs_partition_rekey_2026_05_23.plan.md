@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Sports GCS partition key rekey — category=sports/ → asset_group=sports/
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [sports]
 stage: [meta]
 repos: [deployment-api, market-tick-data-service]

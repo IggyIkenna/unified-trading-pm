@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: agent5-api-service-layer
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, unified-trading-api, unified-trading-pm, unified-trading-system-ui]

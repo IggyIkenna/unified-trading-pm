@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: CeFi manifest remediation — legacy markers + fresh failures 2026-05-24
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: []

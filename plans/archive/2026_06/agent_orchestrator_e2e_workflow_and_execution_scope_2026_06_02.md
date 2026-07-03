@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Agent-orchestrator end-to-end workflow + execution-scope plan-routing field
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, deployment-ui, execution-service, ml-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Topology Q-group — features / strategy ensemble / ML / execution × batch / live / paper
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-service, execution-service, features-service, strategy-service, unified-api-contracts]

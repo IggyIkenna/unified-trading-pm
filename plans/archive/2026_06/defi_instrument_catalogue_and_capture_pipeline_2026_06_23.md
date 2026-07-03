@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi instrument-availability → catalogue → MTDS per-pool capture (mirror CeFi)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]

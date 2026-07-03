@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MDPS adapter protocol pandas→polars + Phase-6 _publish_emission_check scalability
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [market-data-processing-service]

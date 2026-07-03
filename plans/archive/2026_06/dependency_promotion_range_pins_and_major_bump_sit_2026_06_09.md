@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Dependency promotion — range pins absorb minor/patch, only MAJOR forces rebuild (full SIT in dep order)
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, e2e-testing]

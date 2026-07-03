@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Orchestrator agent-lifecycle gaps — reaper skips stale records + central-VM VM_ID config drift
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, features-service, fund-administration-service, strategy-service, unified-api-contracts]

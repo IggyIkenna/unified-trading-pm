@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: CME event contracts (ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECBTC) — captured-as-OPTION but NOT linked to canonical_question_group; cross-venue arb (CME ↔ Polymarket binary outcomes) blocked by asset_group / shard-atom classification ambiguity + missing dedicated InstrumentType.EVENT_CONTRACT
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, strategy-service]

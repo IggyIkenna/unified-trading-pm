@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: bfg_history_scrub_sequence_2026_05_20
 summary:
 status: complete-all-5-repos-scrubbed
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MTDS defi lending/liquidations handlers below adapter-contract-call baseline
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-trading-pm]

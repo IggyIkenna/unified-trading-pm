@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Trigger-Based Sports Reference Data Refresh
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, instruments-service, unified-api-contracts]

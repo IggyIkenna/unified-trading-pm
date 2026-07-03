@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: deployment-api shard_detail.py + cloud_storage_client.py are GCS-locked — should use cloud-agnostic resolve_bucket_uri()
 summary:
 status: ACKED-OUT-OF-SCOPE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, unified-trading-pm]

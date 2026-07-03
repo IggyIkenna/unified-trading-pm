@@ -1,6 +1,6 @@
 ---
 type: operator-broadcast
-status: active
+status: complete
 created: 2026-05-19 15:00 UTC
 expires_after_ack: true
 sender: slot-1-main (Ikenna)

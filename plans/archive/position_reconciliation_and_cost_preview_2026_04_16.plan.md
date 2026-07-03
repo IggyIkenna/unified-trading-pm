@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: position-reconciliation-and-cost-preview
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, execution-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]

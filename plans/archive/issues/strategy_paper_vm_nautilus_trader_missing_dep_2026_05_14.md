@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: strategy-paper VM crashes on ModuleNotFoundError nautilus_trader
 summary:
 status: RESOLVED — e2e-testing@4e4a5da (2026-05-14 slot-2, Option B applied)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, unified-trading-pm]

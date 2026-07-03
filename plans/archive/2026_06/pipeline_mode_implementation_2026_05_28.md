@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: pipeline_mode — implement properly (column-fill + backfill + reconciliation; partition deferred to next migration window)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-api, deployment-ui, execution-service, features-service, instruments-service]

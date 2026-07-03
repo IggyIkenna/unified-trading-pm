@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Dynamic Config Injection
 summary:
 status: in_progress
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, execution-service, instruments-service, strategy-service]

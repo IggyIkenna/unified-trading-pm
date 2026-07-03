@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: AO blocked-questions UI (options + Other free-text · color-code by authority)
 summary: UI half of the blocked-questions work — render each blocked question with 2-3 option buttons plus an "Other" free-text field, and color-code operator-only questions distinctly from main-agent-answerable ones. Consumes the authority field added by the blocked-questions backend plan.
 status: complete

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Sports manifest + GCS canonical-form migration — single source of truth (IS + MTDS)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [sports]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service]

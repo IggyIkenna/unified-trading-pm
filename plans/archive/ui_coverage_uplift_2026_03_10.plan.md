@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UI Coverage Uplift — 70% Floor
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

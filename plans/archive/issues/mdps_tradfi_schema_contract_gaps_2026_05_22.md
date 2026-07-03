@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MDPS TradFi schema contract gaps — combo/UNKNOWN/futures_chain produce NaN bars
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

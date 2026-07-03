@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Prediction Markets Universe — Kalshi, Polymarket, Cross-Venue Arb
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

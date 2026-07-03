@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Deployment-UI Safety Ops Tab — Manual Override For Every Layer-0 + Layer-1 Action
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Paper-trade smoke runbook — carry_staked_basis Solana hedge (Tab 1 work-split 2026-05-08 Item 1 deliverable)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service]

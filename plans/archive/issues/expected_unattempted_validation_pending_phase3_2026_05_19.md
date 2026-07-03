@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: expected_unattempted production validation — pending Phase 3 MTDS run
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

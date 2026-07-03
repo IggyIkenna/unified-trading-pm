@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Workspace .code-workspace repo-list drift remediation (canonical commit + generator path-style fix + regression guard)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, fund-administration-service, greeks-service, instruments-service]

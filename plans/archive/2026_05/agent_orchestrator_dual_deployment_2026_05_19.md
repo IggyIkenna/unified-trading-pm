@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: agent-orchestrator dual-deployment topology (Harsh local + Ikenna Cloud Run)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]

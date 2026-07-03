@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Dependency Governance
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, system-integration-tests, unified-trading-library, unified-trading-pm]

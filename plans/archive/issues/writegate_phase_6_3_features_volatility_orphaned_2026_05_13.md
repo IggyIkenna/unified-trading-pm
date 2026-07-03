@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'Phase 6.3 features-volatility: Orphaned ownership decision — ✅ AUTO-RESOLVED'
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service]

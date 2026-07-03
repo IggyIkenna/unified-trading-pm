@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Manifest consolidator starves idle buckets — a per-VM shard written to an idle bucket never merges (incremental mtime-cutoff trap)
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-library]

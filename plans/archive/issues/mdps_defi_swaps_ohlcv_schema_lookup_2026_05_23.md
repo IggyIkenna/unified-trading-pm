@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MDPS DeFi dex_swaps → swaps_ohlcv schema lookup fails — instrument_type case mismatch (POOL vs pool)
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, market-data-processing-service]

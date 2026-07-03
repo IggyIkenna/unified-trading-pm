@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Refactor G1.1 — Phase unification (no forked research / paper / live UIs)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm, unified-trading-system-ui]

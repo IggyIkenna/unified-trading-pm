@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ARBITRAGE_PRICE_DISPERSION canonicalisation finalisation — strategy-service catalog + tracer + P&L attribution
 summary:
 status: complete
-nature:
+nature: record
 asset_group: defi
 stage: [meta]
 repos: [deployment-api, features-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-pm]

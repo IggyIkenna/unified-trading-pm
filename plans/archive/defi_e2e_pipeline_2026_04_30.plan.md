@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi e2e pipeline — both batch (GCS-mediated) and live (Pub/Sub-mediated) closure
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: defi
 stage: [meta]
 repos: [client-reporting-api, deployment-ui, execution-service, market-tick-data-service, strategy-service, unified-trading-pm]

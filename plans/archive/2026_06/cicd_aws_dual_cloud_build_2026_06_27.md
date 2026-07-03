@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD AWS dual-cloud image builds — router + buildspec + cross-cloud parity (mirror the GCP cloud-build-router)
 summary: 'Stand up the AWS side of dual-cloud image builds to mirror the GCP cloud-build-router: an AWS build router, buildspec.aws.yaml generator + fleet rollout, cross-cloud parity test, ECR live-target reconcile, the staging→main (now LDR→main) image build/validate gate, Tier-D per-service Cloud Run deploy-config audit, and the dual-cloud codex SSOT. Independent of Phase-2 — fully parallel-startable. Owns NEW files (no collision with the version-registry work).'
 status: superseded

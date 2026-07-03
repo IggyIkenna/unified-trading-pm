@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ui-cloud-mode-indicator
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui]

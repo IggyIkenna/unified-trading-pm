@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Live-persist 04 — MTDS producer cutover (publish envelope via facade; retire the per-window overwrite write)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service]

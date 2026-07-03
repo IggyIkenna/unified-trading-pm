@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: TradFi L1-L3 tick data (trades / tbbo / mbp_10) — restoration post-cutover
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [tradfi]
 stage: [meta]
 repos: [deployment-service, market-tick-data-service, unified-api-contracts]

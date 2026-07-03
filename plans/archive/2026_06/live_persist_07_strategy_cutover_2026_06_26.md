@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Live-persist 07 — strategy-service cutover to the facade (consume features/MDPS via the envelope; bar-close determinism intact)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service]

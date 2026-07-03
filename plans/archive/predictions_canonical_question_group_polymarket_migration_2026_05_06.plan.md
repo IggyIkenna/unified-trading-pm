@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Predictions Canonical-Question-Group SSOT + Polymarket Migration + Lifecycle Timing — Plan
 summary:
 status: drafted
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]

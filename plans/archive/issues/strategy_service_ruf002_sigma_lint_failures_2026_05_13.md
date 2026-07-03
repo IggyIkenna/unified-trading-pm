@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'strategy-service: pre-existing RUF002 lint failures (ambiguous σ) in dynamic_hedge_ratio.py'
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service]

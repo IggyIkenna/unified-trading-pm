@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Post-Consolidation Contract Alignment
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, unified-api-contracts, unified-trading-library, unified-trading-pm]

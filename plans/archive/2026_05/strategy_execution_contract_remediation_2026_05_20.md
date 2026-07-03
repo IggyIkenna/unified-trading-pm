@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: strategy→execution contract remediation — manifest emission + bucket SSOT + preflight gate
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, market-tick-data-service, strategy-service, unified-trading-library]

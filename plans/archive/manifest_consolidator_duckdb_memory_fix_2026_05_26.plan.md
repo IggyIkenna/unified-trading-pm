@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Manifest consolidator — memory-bounded DuckDB rewrite (cefi flat OOM fix)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-trading-library]

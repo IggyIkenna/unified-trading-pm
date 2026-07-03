@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, features-service, strategy-service, unified-api-contracts]

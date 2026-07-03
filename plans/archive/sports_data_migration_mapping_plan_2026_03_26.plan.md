@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: sports-data-migration-mapping-plan
 summary:
-status: active
-nature:
+status: superseded
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

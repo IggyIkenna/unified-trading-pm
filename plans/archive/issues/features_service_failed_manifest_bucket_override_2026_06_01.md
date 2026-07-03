@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: features-service _failed_group_manifest bypasses PROTOCOL_DATA_SINK_BUCKET_* override
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, unified-trading-pm]

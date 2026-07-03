@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Data Type Canonicalization — Cross-Service Alignment
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, market-data-processing-service]

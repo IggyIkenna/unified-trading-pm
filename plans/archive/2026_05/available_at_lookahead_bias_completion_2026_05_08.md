@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: available_at + lookahead-bias master — SINGLE OWNER for all stamping work
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service]

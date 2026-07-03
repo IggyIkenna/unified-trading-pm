@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Cross-operator account rotation + auth-fail trigger + Slack alert on rotation
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]

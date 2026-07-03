@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MDPS state adapter leading-NaN bins + NaN volume — multi-adapter audit
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, features-service, market-data-processing-service, strategy-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Wave 3.X residual SSOTs + classifier extensions + reconcilers — 2026-05-08
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [sports]
 stage: [meta]
 repos: [deployment-api, features-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

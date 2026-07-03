@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'Foot-gun #3 double-strike — concurrent-agent commit hijack despite mandatory pre-commit check'
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

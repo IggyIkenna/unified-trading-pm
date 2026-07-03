@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Simulation scenarios — synthetic topology gaps + price shocks for backtest robustness
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]

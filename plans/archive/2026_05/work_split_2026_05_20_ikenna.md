@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Ikenna work-split 2026-05-20 — Phase -2 + -1 + background QG sweep on slots 9-11
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]

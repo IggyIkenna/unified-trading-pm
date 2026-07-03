@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'MTDS QG: 5 pre-existing test failures in market_interface (Tardis network + smarkets UAC registry)'
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: AWS region decision brief — us-east-1 vs ap-northeast-1 (b+ Phase 0i)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]

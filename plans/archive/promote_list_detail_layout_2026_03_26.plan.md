@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Promote — List/Detail Split Layout (ML Training Pattern)
 summary:
-status: draft
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

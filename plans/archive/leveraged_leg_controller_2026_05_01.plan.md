@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: LeveragedLegController — generic delta-targeted, leveraged, multi-leg portfolio primitive
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: ALL
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, strategy-service, system-integration-tests, unified-trading-pm]

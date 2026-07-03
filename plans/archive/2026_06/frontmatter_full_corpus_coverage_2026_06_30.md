@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: Full-corpus frontmatter coverage — seed + enum-normalize every live doc_type to the schema
 summary: Extend the mechanical frontmatter rollout from plans/active to the WHOLE live corpus (codex, issues, epics, audit-results, audit-instructions, cursor-rules, agent-roles) AND add the enum-normalization pass the bare seeder cannot do (cross-asset->cross-cutting, data-ingestion->data, ...), so docspec.py is HARD-green on every non-exempt live doc. summary/tags/authoritative_for content stays present-but-empty (deferred content pass).
 status: complete

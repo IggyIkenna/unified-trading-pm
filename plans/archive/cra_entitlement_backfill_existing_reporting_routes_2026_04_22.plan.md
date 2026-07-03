@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: client-reporting-api — backfill entitlement enforcement on existing reporting routes
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: cefi-ml-may-23-2026
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: cefi
 stage: [meta]
 repos: [alerting-service, execution-service]

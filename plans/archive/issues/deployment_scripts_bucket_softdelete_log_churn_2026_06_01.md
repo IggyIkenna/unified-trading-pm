@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: deployment-scripts bucket — 57 TiB (99.9% soft-deleted) from VM run.log re-upload churn + 7-day soft-delete
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

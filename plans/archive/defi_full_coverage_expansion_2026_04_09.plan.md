@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi Full Coverage Expansion — Missing DEXes, Lending, LSTs, Perps, Swap Rates
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]

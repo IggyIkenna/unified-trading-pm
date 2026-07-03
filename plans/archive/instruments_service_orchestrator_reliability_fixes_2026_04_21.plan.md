@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: instruments-service Orchestrator Reliability + Per-League Shard Uniformity Fixes
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service]

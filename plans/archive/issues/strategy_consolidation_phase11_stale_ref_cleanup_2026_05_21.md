@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Strategy consolidation Phase 11 — workspace stale-ref cleanup (slots 5/6/8/3)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-service, e2e-testing, execution-service, strategy-service, system-integration-tests]

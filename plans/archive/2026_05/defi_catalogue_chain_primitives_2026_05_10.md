@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi catalogue + chain primitives buildout (May-23 cutover)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, instruments-service, market-tick-data-service, unified-api-contracts]

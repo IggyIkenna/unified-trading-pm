@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: uv.lock / --frozen model is half-applied + contradictory — collides with LDR↔staging tree convergence, makes the "regen lock" fix restart the Tier-C promote runaways
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, features-service, fund-administration-service, greeks-service, unified-api-contracts]

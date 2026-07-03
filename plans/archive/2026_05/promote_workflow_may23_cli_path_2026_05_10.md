@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]

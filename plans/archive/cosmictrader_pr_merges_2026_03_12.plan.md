@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Cosmictrader PR Merges — 2026-03-12
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm]

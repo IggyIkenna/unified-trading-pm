@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: context_fill_optimization_2026_05_14
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

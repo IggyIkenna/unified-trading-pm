@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Refactor G3.6 — Visibility-slicing e2e coverage expansion
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm, unified-trading-system-ui]

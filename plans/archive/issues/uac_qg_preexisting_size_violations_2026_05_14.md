@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: UAC QG pre-existing size violations (5 total)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts]

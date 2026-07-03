@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Repo docs → codex SSOT consolidation (kill doc duplication / stale drift, all repos)
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]

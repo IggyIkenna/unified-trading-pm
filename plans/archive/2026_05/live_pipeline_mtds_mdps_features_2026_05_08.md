@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Live pipeline (MTDS / MDPS / features-service) for 2026-05-23 DeFi cutover
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, features-service]

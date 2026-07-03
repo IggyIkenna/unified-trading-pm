@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Data Pipeline Canonical Sharding Alignment (MTDS + MDPS)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service, market-tick-data-service, unified-trading-library, unified-trading-pm]

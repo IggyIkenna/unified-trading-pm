@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Catalogue audit — defi (cross_asset_group plan)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, unified-api-contracts]

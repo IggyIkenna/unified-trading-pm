@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: Fleet MTDS QG red — qg-base ratchet ERRORs pre-existing hardcoded-URL + record_empty-string debt (blocks ALL MTDS ships)
 summary: '`market-tick-data-service/scripts/quality-gates.sh` (Pass-1 + the staging v2 gate) is RED for EVERY committer, on **foreign pre-existing** violations, after a `base-service.sh` qg-base rollout ~5-6...'
 status: resolved

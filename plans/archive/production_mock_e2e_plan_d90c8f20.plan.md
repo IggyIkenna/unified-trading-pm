@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: production-mock-e2e-plan-d90c8f20
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-service, execution-service, system-integration-tests, unified-api-contracts, unified-trading-pm]

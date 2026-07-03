@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: unified-pipeline-scheduling-and-triggers
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, strategy-service]

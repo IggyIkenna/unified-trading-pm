@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: orchestrator_autonomy_audit_remediation residual open findings — F1 (running VM behind LDR HEAD), F2 (vm-ml stopped/SSM-degraded), FM3 (foreign-repo playwright-report not gitignored) — surfaced when the parent plan was archived 2026-06-01 with these still open
 summary:
 status: RESOLVED — archived 2026-06-02 (F1/F2/FM3 + disk-guard all closed; see Resolution section)
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, deployment-ui, unified-trading-system-ui]

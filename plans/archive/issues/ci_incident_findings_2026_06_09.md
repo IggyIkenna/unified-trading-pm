@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: CI incident findings 2026-06-09 — readiness-verifier missing script + dirty-skip not alerted + orchestrator headroom
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, unified-api-contracts, unified-trading-pm]

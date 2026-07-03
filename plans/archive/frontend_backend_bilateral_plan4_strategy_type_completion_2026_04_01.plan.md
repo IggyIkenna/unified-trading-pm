@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: frontend-backend-bilateral-plan4-strategy-type-completion
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-api-contracts]

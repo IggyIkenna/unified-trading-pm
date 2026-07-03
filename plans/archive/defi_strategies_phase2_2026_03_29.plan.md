@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'DeFi Strategies Phase 2: Multi-Coin, LP, SOR, Recursive Staking'
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, e2e-testing, execution-service, unified-trading-pm]

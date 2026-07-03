@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: Path to 100% — post-migration backfill across MTDS + instruments-store
 summary: Drive post-v9-migration data backfill to 100% across MTDS and instruments-store for all asset groups, gated on the v9 migration and IS catalog rebuild landing first.
 status: superseded

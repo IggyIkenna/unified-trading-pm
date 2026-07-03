@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: LDR-trunk promotion decoupling — quickmerge lands on LDR, tier-drain promotes, hotfix is the only break-glass
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, ml-service]

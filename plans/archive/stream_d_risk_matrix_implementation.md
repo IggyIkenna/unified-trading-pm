@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Stream D: Risk Matrix & P&L Attribution — Implementation Specification'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts]

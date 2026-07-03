@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi protocol governance-parameters refresh — event listener → time-versioned parquet → asof-read migration
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-service, features-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]

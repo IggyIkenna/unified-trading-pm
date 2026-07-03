@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Deployed dashboard Image column blank + GCP/AWS toggle is a no-op in prod — IAM gap now, multi-cloud build-status architecture to decide
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-ui, market-tick-data-service, strategy-service, unified-trading-library]

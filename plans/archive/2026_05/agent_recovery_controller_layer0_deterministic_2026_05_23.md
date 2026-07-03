@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Agent Recovery Controller — Layer-0 Deterministic Scripts + AgentActionEvent
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]

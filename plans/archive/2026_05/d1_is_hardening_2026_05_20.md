@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: D1 — instruments-service hardening plan
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, strategy-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Marketing site — Phase 1 pre-audit manifest (tone / glossary / depth)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-system-ui]

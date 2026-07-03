@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: GitHub Actions BILLING wall — fleet-wide CI outage (every v2 job insta-fails) + spend root-cause & burn-down
 summary: Compiled by harsh-main 03:30–07:00Z with 2 sub-agent audits (72h run-volume/duration + full dispatch-emitter trace), then DEEPENED 07:00–09:30Z with 2 more (storm attribution via log-sampling + hou...
 status: resolved

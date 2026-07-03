@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'openapi.json drift: unified-trading-api vs UI mirror — UI generated types may be stale'
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, unified-trading-api, unified-trading-pm, unified-trading-system-ui]

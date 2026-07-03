@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: cross_asset not in instruments-service scope — needs design call
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, features-service, instruments-service, strategy-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD Promotion Pipeline (LDR → staging → SIT → main → image) + ci_status SSOT
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]

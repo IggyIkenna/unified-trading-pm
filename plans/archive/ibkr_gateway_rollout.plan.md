@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ibkr-gateway-rollout
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, ibkr-gateway-infra, market-tick-data-service]

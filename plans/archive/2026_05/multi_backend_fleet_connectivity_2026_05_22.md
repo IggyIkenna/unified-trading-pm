@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Multi-backend fleet connectivity — centralized API router (one HTTPS backend proxies all VMs over private VPC)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-api]

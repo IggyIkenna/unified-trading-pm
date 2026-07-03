@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: mtds-defi-data-normalization
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-api]

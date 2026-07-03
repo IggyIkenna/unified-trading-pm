@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/local-QG parity — local LDR-checkout QG (dep order) is the staging oracle; divergence is a bug
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

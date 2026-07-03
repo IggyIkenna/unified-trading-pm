@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Strategy Architecture v2 — Phases 3-11 Handoff
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]

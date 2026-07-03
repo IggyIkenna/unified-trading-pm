@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Workspace QG runner foot-guns surfaced by slot worktree sweep (2026-05-12)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, features-service, ibkr-gateway-infra, unified-trading-pm]

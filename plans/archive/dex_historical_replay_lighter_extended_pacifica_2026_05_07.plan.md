@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DEX historical replay — LIGHTER-ZKSYNC + EXTENDED-STARKNET + PACIFICA-SOLANA
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: BATCH_EIA PipelineMode added without SOURCE_PRIORITY entries
 summary:
-status: open
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service]

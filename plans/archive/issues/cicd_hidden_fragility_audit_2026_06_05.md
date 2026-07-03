@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: CI/CD pipeline hidden-fragility audit — silent-failure & instability risks
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, batch-live-reconciliation-service, client-reporting-api, deployment-api, instruments-service, market-tick-data-service]

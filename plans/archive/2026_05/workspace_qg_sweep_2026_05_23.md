@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Workspace-wide Quality Gates sweep — all 20 repos to QG green
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]

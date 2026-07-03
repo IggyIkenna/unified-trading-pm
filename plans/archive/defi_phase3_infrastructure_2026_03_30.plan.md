@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'DeFi Phase 3: Infrastructure Alignment — Chain Config, Tenderly, Pipelines, Custody'
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-library]

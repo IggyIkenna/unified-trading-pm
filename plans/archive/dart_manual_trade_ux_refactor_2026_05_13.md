@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DART manual-trade UX refactor — Phase C remainder pull-forward into May-23 cutover
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, unified-trading-system-ui]

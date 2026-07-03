@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: AUDIT-03 remediation — carry_staked_basis execution & risk safety (May-23 P0)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts]

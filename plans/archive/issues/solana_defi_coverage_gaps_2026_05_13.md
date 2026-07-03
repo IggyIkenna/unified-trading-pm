@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Solana DeFi data coverage gaps — LST + swap + lending + perp + native staking + restaking + oracle prices
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]

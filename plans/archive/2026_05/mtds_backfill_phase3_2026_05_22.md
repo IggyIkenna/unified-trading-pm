@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MTDS multi-venue backfill VM relaunch — Phase 3 per-asset-group
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts]

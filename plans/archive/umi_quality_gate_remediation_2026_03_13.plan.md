@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UMI Quality Gate Remediation Plan — No Exclusions, Proper Fixes
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Orchestrator / escalation / fleet-ops — consolidated REMAINING work (single SSOT; supersedes 7 prior orchestrator plans + 4 issue docs)
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui, instruments-service, unified-trading-pm]

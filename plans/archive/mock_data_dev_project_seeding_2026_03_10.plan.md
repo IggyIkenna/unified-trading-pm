@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: mock-data-dev-project-seeding-2026-03-10
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [system-integration-tests, unified-api-contracts, unified-trading-pm]

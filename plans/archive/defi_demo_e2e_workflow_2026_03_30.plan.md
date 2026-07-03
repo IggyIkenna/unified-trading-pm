@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'DeFi Demo: E2E Manual Trading Workflow — Treasury to P&L'
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, execution-service, strategy-service, unified-trading-pm, unified-trading-system-ui]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Deployment-UI: fix VM deployments page + history tab, add venue key-status & coverage visibility — 2026-05-27'
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-ui, market-tick-data-service, unified-trading-system-ui]

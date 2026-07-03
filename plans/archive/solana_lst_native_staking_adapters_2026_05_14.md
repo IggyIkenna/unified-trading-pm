@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Solana LST + native staking adapters — Successor Plan A
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service]

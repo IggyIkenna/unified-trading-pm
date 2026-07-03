@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Harsh's daily work-split — 2026-05-14 (Day-3 of density push, pre-freeze-gate close-out)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service, strategy-service, unified-trading-library, unified-trading-pm, unified-trading-system-ui]

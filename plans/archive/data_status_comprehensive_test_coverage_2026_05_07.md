@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: data_status_comprehensive_test_coverage_2026_05_07
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, market-tick-data-service, unified-api-contracts, unified-trading-library]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Quality Gates DRY Refactor — Centralized Base Scripts
 summary:
 status: completed
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, unified-trading-pm]

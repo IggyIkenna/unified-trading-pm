@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Live-persist 02 — UTL transport facade (publish/read; in-memory ↔ Pub/Sub; recency-routed read)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-data-processing-service, market-tick-data-service, unified-trading-library]

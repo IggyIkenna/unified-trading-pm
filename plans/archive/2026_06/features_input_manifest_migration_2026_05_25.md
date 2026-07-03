@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Features-service input-read migration to v8 manifest (fix stale-path / stale-discovery read failures)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, features-service, unified-trading-library]

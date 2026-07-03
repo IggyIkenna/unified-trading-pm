@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Slot-worktree `bash scripts/quality-gates.sh` resolves the wrong repo root (runs PM's tests when PM is a sibling worktree)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-pm]

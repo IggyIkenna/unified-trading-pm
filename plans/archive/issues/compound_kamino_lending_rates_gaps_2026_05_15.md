@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: COMPOUND_V3 + KAMINO lending_rates adapter data gaps — NaN borrow_apy and Solana missing
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service]

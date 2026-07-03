@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MDPS Phase 1.2 + Phase 2 deferral 2026-05-10 — semantic dual-SSOT collision blocks safe migration; needs plan refresh
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, market-data-processing-service]

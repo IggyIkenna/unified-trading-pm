@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Phase 10 Codex Audit — strategy-service backtest/family/venue-admission drift (2026-05-15)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service]

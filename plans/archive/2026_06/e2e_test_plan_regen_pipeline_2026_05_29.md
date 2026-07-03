@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: '[TEST] E2E test plan — plan_hygiene Phase 6 pipeline verification'
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: []

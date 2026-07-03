@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: sports-ml-may-23-2026
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: sports
 stage: [meta]
 repos: [execution-service, features-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: LDR → VM-deployment tarball auto-refresh (Cloud Run Job + cron)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, features-service]

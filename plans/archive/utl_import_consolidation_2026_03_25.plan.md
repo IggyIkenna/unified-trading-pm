@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UTL Import Consolidation — Services Import from UTL, Not Split Libraries
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]

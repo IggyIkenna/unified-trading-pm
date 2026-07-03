@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: deployment-api Cloud Build broken since 2026-06-10 — template rollout dropped the fetch-ui step (cloud image frozen at 05-19)
 summary: The `deployment-api-build` Cloud Build trigger (fires on `main` push, asia-northeast1) has FAILED on every run since ~2026-06-10 (06-10 ×2, 06-11), at step 3 `docker build` (exit 1). Consequently t...
 status: resolved

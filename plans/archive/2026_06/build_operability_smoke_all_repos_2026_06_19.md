@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Build-Operability Smoke — every repo image builds AND actually runs
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]

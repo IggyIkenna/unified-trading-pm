@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Live-persist 05 — MDPS hot-path cutover (consume envelope on trigger; drop the hot-path GCS read; kill the race)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service]

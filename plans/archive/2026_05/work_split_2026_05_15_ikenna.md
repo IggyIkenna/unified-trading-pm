@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Ikenna's daily work-split — 2026-05-15 (Day-4, ~150 cal AI-days, post-freeze-gate cycle)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service]

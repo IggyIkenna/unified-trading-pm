@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: code-readiness-master-plan
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-ui, execution-service, strategy-service, system-integration-tests, unified-trading-pm]

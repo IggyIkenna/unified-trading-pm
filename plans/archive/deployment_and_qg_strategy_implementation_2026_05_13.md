@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Deployment + QG strategy implementation — env-locking, act pre-flight, retention, 99%-repo pipeline
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]

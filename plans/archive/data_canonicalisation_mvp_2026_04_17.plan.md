@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Data Canonicalisation MVP — CeFi + TradFi + DeFi (schema, partitioning, migration)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-library, instruments-service, market-tick-data-service, deployment-api, deployment-ui, unified-trading-pm]

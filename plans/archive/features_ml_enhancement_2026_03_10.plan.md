@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Features ML Enhancement — R:R, Wedge Quality, Dynamic TF Pairs
 summary:
 status: DONE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

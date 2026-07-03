@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: cross-service-architecture-audit-remediation
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, instruments-service, market-tick-data-service, trading-agent-service]

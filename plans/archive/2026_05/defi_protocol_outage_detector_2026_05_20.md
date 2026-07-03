@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi protocol outage detector (R-NEW-6) — on-chain pause/freeze window detector populating PROTOCOL_PAUSE_WINDOWS
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]

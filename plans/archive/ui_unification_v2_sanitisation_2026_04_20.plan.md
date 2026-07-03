@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ui-unification-v2-sanitisation-2026-04-20
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, strategy-service, unified-api-contracts, unified-trading-system-ui]

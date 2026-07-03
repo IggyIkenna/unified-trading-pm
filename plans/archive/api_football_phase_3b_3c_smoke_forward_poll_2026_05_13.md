@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: api_football_phase_3b_3c_smoke_forward_poll
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [sports]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service]

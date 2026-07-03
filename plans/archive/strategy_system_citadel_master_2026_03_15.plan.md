@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: strategy-system-citadel-master-2026-03-15
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-ui, execution-service, instruments-service, strategy-service]

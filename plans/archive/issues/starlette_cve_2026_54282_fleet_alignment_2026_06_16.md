@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: starlette CVE-2026-54282/54283 — UTL floor bumped + fleet-wide canonical-constraint alignment SHIPPED (2026-06-16)
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, features-service, fund-administration-service, ml-service]

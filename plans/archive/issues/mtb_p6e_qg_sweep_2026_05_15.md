@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: mtb-p6e-final-qg-sweep — B-014 rollout 6-repo QG results
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, ibkr-gateway-infra, market-data-processing-service, system-integration-tests]

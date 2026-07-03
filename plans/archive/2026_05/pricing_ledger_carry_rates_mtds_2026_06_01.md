@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: PricingLedger carry-rate computation in MTDS — dividend_yield + rebase_rate + greeks-service handshake
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, deployment-service, features-service, fund-administration-service, greeks-service, instruments-service]

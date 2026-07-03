@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: VIX 15m route (Yahoo + Barchart) has no BATCH_YAHOO / BATCH_BARCHART PipelineMode values (closed-set rule violation when stamping VIX-gap empty_confirmed rows)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service, unified-api-contracts]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: consolidated-strategy-and-ui
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, market-tick-data-service, strategy-service, unified-trading-pm, unified-trading-system-ui]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: '✅ RESOLVED 2026-05-09 — UAC + UTL QG blockers cleared (was: blocked by foreign breakage 2026-05-08 PM)'
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, instruments-service, unified-api-contracts, unified-trading-library]

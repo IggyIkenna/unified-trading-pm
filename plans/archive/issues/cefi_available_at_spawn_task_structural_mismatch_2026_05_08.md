@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Tab F2 CeFi `available_at` spawn task structurally blocked — adapter file layout + UTL helper + UAC SOURCE_PRIORITY shape don't match the spec
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-api-contracts, unified-trading-library]

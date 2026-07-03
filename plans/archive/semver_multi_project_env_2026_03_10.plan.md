@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Semver Version Tagging + Multi-Project per Environment
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

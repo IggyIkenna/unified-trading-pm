@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi MTDS subgraph schema rewrites + adapter fixes (DEX-swaps / Compound V3 / Hyperliquid OHLCV / Extended-Starknet)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-ui, instruments-service, market-tick-data-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: features-sports-service — Per-Fixture Denormalisation Pipeline (Player Values / Standings / Weather Joins)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, instruments-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

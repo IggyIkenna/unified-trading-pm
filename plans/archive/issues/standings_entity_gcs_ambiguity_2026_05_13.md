@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Sports `entity=standings/` GCS directory — SFI vs api_football provenance ambiguity
 summary:
 status: RESOLVED — entity=standings/ is api_football, NOT SFI; no GCS action needed
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

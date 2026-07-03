@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: VM launchers missing --dry-run support — real-money risk during verification
 summary:
 status: RESOLVED — see "Fix shipped" below
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]

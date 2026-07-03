@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: SIT 94 failures — accumulated regression masked by the dangling staging lock
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, instruments-service, market-tick-data-service, system-integration-tests, unified-api-contracts]

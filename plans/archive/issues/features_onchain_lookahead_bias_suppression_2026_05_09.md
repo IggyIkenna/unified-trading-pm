@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: features-onchain suppresses LookaheadBiasError instead of raising loud
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service]

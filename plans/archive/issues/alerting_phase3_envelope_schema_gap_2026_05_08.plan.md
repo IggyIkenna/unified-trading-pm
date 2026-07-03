@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Alerting Phase 3 producer migration — UAC envelope schema gap (RESOLVED)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, execution-service]

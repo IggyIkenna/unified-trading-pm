@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'Prediction markets — full-coverage parity with sports pattern: 3-level hierarchy (asset → canonical_question_group → timeframe), MTDS lifecycle-bounded CLOB capture, MDPS sparse-but-honest 4-category, full-column instrument metadata (description/clob_token_ids/oracle/settlement-basket), deployment-ui drilldown + parquet download'
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]

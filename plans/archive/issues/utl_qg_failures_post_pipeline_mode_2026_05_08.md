@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: UTL QG broken on live-defi-rollout post Tab 2 pipeline_mode + streaming commits
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-library]

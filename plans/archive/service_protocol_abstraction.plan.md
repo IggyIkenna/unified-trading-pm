@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Plan: Service Protocol Abstraction (Intent-Level APIs)'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, market-data-processing-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: GCS migration bundle pre-audit (Phase 0)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CeFi/venue backfill coverage remediation + fleet VM fixes — 2026-05-27
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-trading-library]

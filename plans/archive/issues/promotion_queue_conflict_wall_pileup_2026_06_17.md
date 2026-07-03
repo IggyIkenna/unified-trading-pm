@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Promotion-queue "conflict wall" pile-up — 18 stuck promote/dep-update PRs (PM hub FIXED; dep-update fan-out + stale-mergeability + per-repo test failures remain), and they lack a stale-conflict alert
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-ui]

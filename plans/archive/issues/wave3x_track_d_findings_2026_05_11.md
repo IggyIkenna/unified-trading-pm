@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Wave3x Track D — zero-activity-bar adapter audit findings (MTDS / MDPS / features-service)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service]

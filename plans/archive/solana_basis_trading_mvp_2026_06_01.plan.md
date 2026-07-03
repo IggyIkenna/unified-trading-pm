@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Solana basis trading MVP — data source redesign (post Bug-D saga) [ARCHIVED 2026-06-01]
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [e2e-testing, instruments-service, market-tick-data-service, strategy-service]

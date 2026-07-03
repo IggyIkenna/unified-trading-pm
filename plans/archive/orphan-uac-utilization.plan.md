@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Plan: UAC Orphan Contracts Utilization'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, strategy-service, system-integration-tests, unified-api-contracts]

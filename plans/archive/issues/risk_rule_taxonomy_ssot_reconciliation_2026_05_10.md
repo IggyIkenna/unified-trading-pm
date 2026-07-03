@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Spawned plan risk_simulations_limits_alerting_2026_05_10 introduces RiskRuleConsequence enum without § 7 reconciliation against 5 existing canonical risk SSOTs
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-ui, execution-service, strategy-service]

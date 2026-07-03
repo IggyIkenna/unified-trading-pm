@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: workspace-manifest.json dependency drift — 10 misalignments
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-library]

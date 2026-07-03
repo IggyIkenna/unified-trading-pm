@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Risk rule taxonomy + per-archetype/venue/account/client limits + alerting wire + pre-flight check API
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-ui, execution-service, features-service, instruments-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Wave 1 quality audit — slots 2-9 execution review vs work-split done-defs
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service]

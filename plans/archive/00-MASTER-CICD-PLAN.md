@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MASTER CI/CD PLAN - Production-Grade Development Workflow (ARCHIVED)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

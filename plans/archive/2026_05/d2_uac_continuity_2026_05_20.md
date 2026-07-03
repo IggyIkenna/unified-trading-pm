@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: D2 — UAC continuity + known-gap calendars + expected_coverage integration
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [sports]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-tick-data-service, strategy-service]

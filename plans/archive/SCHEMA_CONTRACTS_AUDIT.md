@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Schema Contracts Full Audit
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service, instruments-service]

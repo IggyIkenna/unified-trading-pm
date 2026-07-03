@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: quality-gates-systemic-remediation-2026-03-16
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, system-integration-tests, unified-api-contracts, unified-trading-library, unified-trading-pm]

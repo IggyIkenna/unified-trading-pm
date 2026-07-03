@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: full_system_audit_resolution_2026_03_18
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, execution-service, unified-trading-pm]

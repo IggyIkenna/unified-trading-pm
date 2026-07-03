@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: instrument-data-source-separation
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service]

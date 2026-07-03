@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD staging→main dead-code retirement — remove the squash/conflict-fallback/auto-collapse now all 21 are ldr_main
 summary: WS-L Phase-1 cleanup. With all 21 standard repos on promotion_model=ldr_main, the staging→main squash machinery is dead code. Retire the staging→main squash step + the conflict-fallback + the WS-B auto-collapse SPEC per repo, and stop the redundant empty staging→main PRs across consecutive */15 runs. GATED on Phase-2 finalize because Phase-2 rewrites the same staging-to-main.yml / version-cure files — retiring before that would collide.
 status: superseded

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Cure-B `auto-resolve/version-line-<sha>` PRs orphan and accumulate as DIRTY cruft — `auto_resolve_version_promote.sh` closes the `staging→main` PR it supersedes but never closes the auto-resolve PRs IT creates, so each re-run leaves the prior one open; main advances past them → they go DIRTY and sit in the triage queue until closed by hand.
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, deployment-ui, market-tick-data-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: HedgeRatioSnapshot persistence — emit-to-data_type sub-plan
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, deployment-ui, strategy-service, unified-trading-pm]

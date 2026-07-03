@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Harsh's main-agent orchestration ledger (2026-05-07 → cycle close)
 summary:
 status: active (rewritten 2026-05-07 PM — pivoted from fixed-5-tab to dynamic ledger model)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, e2e-testing, features-service, instruments-service]

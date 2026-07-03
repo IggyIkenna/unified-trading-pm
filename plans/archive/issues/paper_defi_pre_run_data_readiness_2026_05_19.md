@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Paper-DeFi VM launches without verifying features-onchain data prerequisites
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, e2e-testing, strategy-service]

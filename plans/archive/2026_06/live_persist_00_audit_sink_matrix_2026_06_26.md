@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Live-persist 00 — pre-audit live transport/persistence + seed the SINK_MATRIX classification
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, unified-api-contracts, unified-trading-pm]

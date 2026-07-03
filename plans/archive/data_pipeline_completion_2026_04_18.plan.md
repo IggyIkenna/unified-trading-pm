@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Data Pipeline Completion — Instruments → MTDS → MDPS → Features (schema, manifest, backfill, retire, schedule)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-library, unified-cloud-interface, instruments-service, market-tick-data-service, market-data-processing-service, features-delta-one-service, features-volatility-service, features-onchain-service, features-sports-service, features-calendar-service, features-multi-timeframe-service, features-cross-instrument-service, features-commodity-service, ml-training-service, ml-inference-service, deployment-service, deployment-api, deployment-ui, unified-trading-pm]

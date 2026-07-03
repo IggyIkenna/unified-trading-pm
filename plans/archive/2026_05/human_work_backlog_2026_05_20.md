@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Human-work backlog 2026-05-20 — Ikenna + Harsh interactive task split with data_pipeline_master_coordination supervision
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DEX perp + venue data expansion
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, features-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]

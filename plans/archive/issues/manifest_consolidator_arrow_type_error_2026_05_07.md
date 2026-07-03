@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Manifest consolidator failing on defi/tradfi/prediction buckets — ArrowTypeError on instrument_count column
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service]

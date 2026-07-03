@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: AWS Phase 1 smoke blockers — bucket-name SSOT triple-drift + secrets fanout
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-trading-library]

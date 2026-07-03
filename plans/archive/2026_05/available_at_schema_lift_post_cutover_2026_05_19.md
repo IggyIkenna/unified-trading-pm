@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: available_at schema-level invariant lift + QG hardening (post-cutover architectural slice)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service]

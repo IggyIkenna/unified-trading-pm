@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Workspace .code-workspace repo-list drift + tab-worktree generator path-style bug
 summary:
 status: resolved-archived
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, features-service, fund-administration-service, greeks-service, ml-service, strategy-service]

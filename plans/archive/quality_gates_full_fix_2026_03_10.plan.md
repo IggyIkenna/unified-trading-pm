@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Quality Gates Full Fix — All Repos Pass Unit Tests + Coverage
 summary:
 status: paused
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]

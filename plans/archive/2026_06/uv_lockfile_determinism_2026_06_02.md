@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: uv.lock determinism — read-only QG verifier + pinned uv toolchain
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, trading-agent-service, unified-api-contracts, unified-trading-library]

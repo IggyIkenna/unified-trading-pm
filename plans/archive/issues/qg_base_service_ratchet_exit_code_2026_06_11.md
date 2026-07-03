@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: QG base-service.sh exit-code bug — a FAILED ratchet step (STEP 5.94 observed) falls through to overall exit 0 + sentinel write
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, execution-service, instruments-service, unified-trading-pm]

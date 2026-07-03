@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Memory-aware shard governance: aggregate semaphore + active MemoryWatchdog'
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-api-contracts, unified-trading-library]

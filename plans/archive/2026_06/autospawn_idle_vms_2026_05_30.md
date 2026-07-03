@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: autospawn idle VMs — orchestrator wakes a worker when (queue > 0 AND no workers AND account headroom > 50%)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Data Status institutional-grade drilldown — schema backfill, write-time validation, unified shard-detail
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service, unified-api-contracts]

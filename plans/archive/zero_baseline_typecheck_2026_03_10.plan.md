@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: zero-baseline-typecheck-2026-03-10
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, deployment-api, execution-service, instruments-service, market-data-processing-service, strategy-service]

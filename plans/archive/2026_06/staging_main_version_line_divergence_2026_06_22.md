@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: staging→main promote PRs recur as version-line (pyproject) conflicts — dual-path version divergence; the LDR→main fallback drains them but they regenerate every cycle (structural cure = single-lineage version stamping)
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, client-reporting-api, deployment-api, e2e-testing, ibkr-gateway-infra, instruments-service]

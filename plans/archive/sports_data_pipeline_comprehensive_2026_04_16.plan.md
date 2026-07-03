@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Sports Data Pipeline — Comprehensive Enrichment, Mapping, Scheduling & Validation
 summary:
-status: active
-nature:
+status: superseded
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts, instruments-service, features-sports-service, market-tick-data-service, market-data-processing-service, unified-trading-library, deployment-service, deployment-api, unified-trading-pm]

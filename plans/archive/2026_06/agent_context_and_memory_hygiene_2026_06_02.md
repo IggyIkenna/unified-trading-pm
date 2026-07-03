@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Agent context + memory hygiene — de-bloat CLAUDE.md, kill stale/contradictory facts, prune user memory
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [ml-service, unified-trading-pm, unified-trading-system-ui]

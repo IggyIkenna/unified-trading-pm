@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: vm-trading-core 2-commit local-only divergence — preserved on archive branch for review
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]

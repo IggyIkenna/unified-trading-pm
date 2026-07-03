@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: strategy-service QG step 6 production readiness validators fail — newly exposed after step 3.5 fixed
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service, unified-trading-pm]

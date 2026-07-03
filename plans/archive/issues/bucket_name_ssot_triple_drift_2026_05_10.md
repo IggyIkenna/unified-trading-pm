@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Bucket-name SSOT triple-drift — yaml SSOT vs service config templates vs UTL bucket_naming resolver
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, features-service, instruments-service, unified-trading-library]

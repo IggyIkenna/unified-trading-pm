@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: D8 — Performance upgrade plan (hot-path identification from A1)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-service, features-service, market-tick-data-service, strategy-service]

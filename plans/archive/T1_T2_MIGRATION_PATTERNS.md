@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: T1/T2 Migration Patterns for Remaining Services
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-data-processing-service, strategy-service]

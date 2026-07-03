@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: venue-axis-asset-group-vocabulary-2026-04-25
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, e2e-testing, execution-service, instruments-service, market-tick-data-service, strategy-service]

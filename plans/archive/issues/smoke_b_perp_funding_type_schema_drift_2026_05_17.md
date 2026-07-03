@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Smoke B FAILED — perp_funding Int64→Datetime schema drift + GcsEventSink rate-limit stall
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service]

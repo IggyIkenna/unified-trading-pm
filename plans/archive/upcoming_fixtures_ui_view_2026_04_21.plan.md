@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Upcoming Fixtures UI — Per-League Next-7-Days View
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, market-tick-data-service, unified-trading-system-ui]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Databento adapter `to_df(count=N)` chunk-iteration fails with int(Timestamp) error
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service]

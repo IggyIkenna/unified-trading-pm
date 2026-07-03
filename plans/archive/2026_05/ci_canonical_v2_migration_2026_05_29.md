@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CI canonical v2 migration — ghost-workflow workaround across PM/UAC/UTL (+5)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: cross-cutting
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-ui, execution-service, features-service, instruments-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DeFi address-citation baseline incompletely seeded — blocks ratchet-exit-code hardening rollout
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-service, e2e-testing, execution-service, features-service, instruments-service]

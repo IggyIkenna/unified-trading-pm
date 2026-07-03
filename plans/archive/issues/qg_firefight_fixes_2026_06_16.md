@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: QG firefight one-off fixes (2026-06-16) — deployment-api QG-allow, stale sports coverage tests, e2e [5.5a] escape
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, e2e-testing, features-service, unified-trading-library]

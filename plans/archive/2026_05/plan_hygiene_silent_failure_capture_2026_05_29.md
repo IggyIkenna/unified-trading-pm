@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Plan-hygiene cron — close the 3 remaining silent-failure gaps (parent_epic semantic, unpushed plan, stale-blocker reaper)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, features-service, instruments-service, market-data-processing-service, market-tick-data-service, ml-service]

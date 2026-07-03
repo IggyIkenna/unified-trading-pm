@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Live-pipeline pre-audit (Phase 0 of live_pipeline_mtds_mdps_features_2026_05_08)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]

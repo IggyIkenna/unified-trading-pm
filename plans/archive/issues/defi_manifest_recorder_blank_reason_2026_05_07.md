@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DefiManifestRecorder.record_empty() rejected by writegate Phase 3.D.5 — blank reason on every DeFi VM
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service]

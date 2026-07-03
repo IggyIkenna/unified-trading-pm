@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Strategy Architecture v2 — Finalization + Factory Cutover
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, e2e-testing, execution-service, features-service, strategy-service, unified-api-contracts]

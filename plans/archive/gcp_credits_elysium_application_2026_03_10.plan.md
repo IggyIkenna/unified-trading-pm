@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: gcp-credits-elysium-application-2026-03-10
 summary:
 status: superseded
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

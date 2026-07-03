@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Cursor Context Bloat Reduction
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]

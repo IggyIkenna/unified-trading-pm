@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Incident Gateway + 13-State Machine + Audit-Ack Queue
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, strategy-service]

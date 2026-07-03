@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Central orchestrator API host (i-0c9b283b31d6b5ca7) chronic StatusCheckFailed_Instance — intermittent impairment all day 2026-05-29; reboot is workaround
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]

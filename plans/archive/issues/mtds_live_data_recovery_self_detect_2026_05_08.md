@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MTDS live data recovery — connectivity-loss self-detect + manifest gap signal + auto-backfill on reconnect
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-ui, execution-service, market-tick-data-service, strategy-service]

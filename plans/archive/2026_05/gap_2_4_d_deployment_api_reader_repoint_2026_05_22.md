@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'GAP-2.4.D — Deployment-API Reader Repoint: flat → env-tiered bucket names'
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, ml-service]

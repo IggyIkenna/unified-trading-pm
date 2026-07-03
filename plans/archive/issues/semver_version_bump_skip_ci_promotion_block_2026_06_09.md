@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: semver-agent version-bump `[skip ci]` blocks staging→main promotion (+ re-bump loop) — root cause + recommended fix
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]

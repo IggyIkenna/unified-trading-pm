@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: F6 deeper df-flow refactor BLOCKED — 7 of 8 features families don't stamp available_at
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, unified-api-contracts]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DeFi 988-missing-dates audit — actionable breakdown by (chain, protocol, data_type)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui]

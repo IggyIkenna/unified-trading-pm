@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MTDS DeFi Handler Bugs + SOURCE_RETURNED_ZERO Manifest Cleanup
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service]

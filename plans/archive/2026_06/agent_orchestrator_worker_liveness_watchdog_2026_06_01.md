@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: worker liveness watchdog — kill+respawn on stuck-at-prompt / heartbeat-silent / context-full
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: frontend-backend-bilateral-plan1-instrument-registry
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, instruments-service, unified-trading-pm, unified-trading-system-ui]

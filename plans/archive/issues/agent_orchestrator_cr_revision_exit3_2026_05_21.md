@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: agent-orchestrator staging revision 00012 exits with code 3
 summary:
 status: BLOCKED-OPERATOR
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]

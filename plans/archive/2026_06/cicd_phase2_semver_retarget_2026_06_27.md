@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD Phase-2 semver-agent retarget — version writer moves from pyproject-commit to git-tag+registry (17 hooks)
 summary: Phase-2 (version-out-of-source, D13) RETARGET lane — the high-blast-radius core. Repoint the semver-agent so it mints a git tag + registry event INSTEAD of committing pyproject.toml; retarget the compute-next (CURRENT from latest tag, baseline from tag SHA) + the bump-rate circuit breaker (count tag/registry events, not chore(release) commits); stop the PM self-bump pyproject write. The fleet SSOT `.tmpl` is the primary writer, so editing it triggers a fleet rollout behind the canary flag. HIGH RISK — Opus-xhigh single-agent + an ultracode adversarial-verify in the finalize lane.
 status: superseded

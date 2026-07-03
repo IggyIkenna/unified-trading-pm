@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: unified-admin-ui-creation-2026-03-09
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

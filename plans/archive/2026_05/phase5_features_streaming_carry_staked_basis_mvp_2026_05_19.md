@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Phase 5 features streaming — carry staked basis MVP (2026-05-19)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-service, e2e-testing, execution-service, features-service, market-tick-data-service]

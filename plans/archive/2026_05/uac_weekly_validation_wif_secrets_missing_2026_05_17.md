@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UAC weekly-validation workflow failing — WIF_PROVIDER/WIF_SERVICE_ACCOUNT secrets not configured
 summary:
 status: RESOLVED 2026-05-20
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts]

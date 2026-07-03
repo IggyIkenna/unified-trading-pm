@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'Phase 2d: Run Lifecycle Tab — Deep Audit'
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-system-ui]

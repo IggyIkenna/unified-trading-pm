@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Handoff prompt — DeFi data + strategy code path (post-2026-05-07 sessions)
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, execution-service, strategy-service, unified-trading-pm]

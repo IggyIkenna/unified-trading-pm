@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Writegate slice (c) Phase 6.3-6.8 — BUILD emission infrastructure (not migrate) for 9 downstream services
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, strategy-service]

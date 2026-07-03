@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DeFi launcher audit — answers to the 3 operator-blocking Qs from defi_master 2026-05-07
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service]

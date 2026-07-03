@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: UTL main quality-gates-v2 RED while LDR is GREEN — dep-resolution skew on testnet-contracts / UAC registry during in-flight UAC promotion
 summary: '`unified-trading-library` (T0 base library) `main` `quality-gates-v2` is **FAILING** (run 27357450067, head `e8622793`, the CURRENT main tip) while the SAME-era `live-defi-rollout` v2 is **GREEN** ...'
 status: resolved

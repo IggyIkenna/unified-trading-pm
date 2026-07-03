@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: features-sports-honest-coverage
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service]

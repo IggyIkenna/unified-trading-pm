@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: ✅ PARTIAL-RESOLVED 2026-05-09 — 4 HARD RULES codified; retroactive sweeps tracked in session_loose_ends
 summary:
 status: partial-resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, e2e-testing, strategy-service]

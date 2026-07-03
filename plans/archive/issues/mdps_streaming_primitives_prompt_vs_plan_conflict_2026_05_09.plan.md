@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 'MDPS streaming primitives — spawn prompt''s open/close_candle_writer contract conflicts with plan-of-record (audit issue #3 P0)'
 summary:
 status: resolved-utl-shipped-2026-05-09
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library]

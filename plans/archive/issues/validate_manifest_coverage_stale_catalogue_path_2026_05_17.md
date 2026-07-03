@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: validate_manifest_coverage.py expects stale instruments_catalogue.jsonl path
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

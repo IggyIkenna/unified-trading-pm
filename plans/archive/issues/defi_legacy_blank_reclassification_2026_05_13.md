@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: defi 604,951 rows in attempted_failed/LegacyBlankErrorReasonError — need proper reclassification
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

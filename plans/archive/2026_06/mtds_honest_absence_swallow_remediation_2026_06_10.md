@@ -1,8 +1,8 @@
 ---
-doc_type:
+doc_type: plan
 title: MTDS honest-absence swallow remediation — re-verified P0/P1 fix batch (audit 2026-06-09/10)
 summary:
-status: archived
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Data Pipeline Completion — remaining items from instruments + MTDS + features sessions
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service]

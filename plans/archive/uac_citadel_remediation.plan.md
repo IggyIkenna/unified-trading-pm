@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: uac-citadel-remediation
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service, trading-agent-service, unified-trading-pm]

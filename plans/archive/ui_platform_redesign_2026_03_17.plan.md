@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Unified Trading Platform — UI/UX Redesign Vision
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, deployment-ui, execution-service, market-tick-data-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: UAC pyproject coverage.omit blanks the Phase 8.B/8.C error-classification + validation-logic ratchet
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm]

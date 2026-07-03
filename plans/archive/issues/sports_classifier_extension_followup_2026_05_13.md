@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Sports classifier extension scope re-opened (slot 9 grep-then-conclude miss)
 summary:
 status: RESOLVED — 2026-05-14 slot 4 (Task 1 + Task 2 close-out)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-library]

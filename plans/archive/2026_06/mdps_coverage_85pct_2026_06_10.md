@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MDPS quality-gates coverage → 85% (logic tests + branch coverage + entry-point omit)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [market-data-processing-service, unified-trading-pm]

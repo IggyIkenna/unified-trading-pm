@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: defunct_uac_provider_dirs_cleanup_2026_05_20
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-api-contracts, unified-trading-pm]

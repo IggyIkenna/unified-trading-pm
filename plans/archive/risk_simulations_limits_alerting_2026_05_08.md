@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: risk-simulations-limits-alerting
 summary:
 status: plan-spawned
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service, unified-trading-system-ui]

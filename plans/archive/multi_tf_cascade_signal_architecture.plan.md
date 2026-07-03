@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Citadel ML + Cascade Signal Master Plan
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, strategy-service, unified-api-contracts, unified-trading-pm]

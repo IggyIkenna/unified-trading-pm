@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Strategy repo consolidation — post-merge strategy-service cleanup (2026-05-19)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, e2e-testing, execution-service, features-service]

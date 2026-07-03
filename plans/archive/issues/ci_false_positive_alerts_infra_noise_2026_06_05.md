@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: CI false-positive alerts — infra/checkout noise pages
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Session Split — 4 Parallel Backend Sessions
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-service, execution-service, instruments-service, market-tick-data-service]

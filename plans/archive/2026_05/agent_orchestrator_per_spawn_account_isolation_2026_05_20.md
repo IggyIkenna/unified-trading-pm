@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: agent-orchestrator per-spawn account isolation (HOME-shim) — SUPERSEDED
 summary:
-status: archived
-nature:
+status: superseded
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]

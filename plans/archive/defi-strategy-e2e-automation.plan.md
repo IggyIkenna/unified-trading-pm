@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi Strategy E2E Testing Automation
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

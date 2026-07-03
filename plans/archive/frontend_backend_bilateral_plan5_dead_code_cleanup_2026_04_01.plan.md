@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: frontend-backend-bilateral-plan5-dead-code-cleanup
 summary:
 status: complete
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

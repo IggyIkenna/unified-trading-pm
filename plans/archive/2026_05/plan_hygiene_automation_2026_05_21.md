@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Plan hygiene automation — scripts + runbook + cron
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, unified-trading-pm]

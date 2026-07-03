@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: execution-service — 30 unit tests failing due to test harness missing methods
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service]

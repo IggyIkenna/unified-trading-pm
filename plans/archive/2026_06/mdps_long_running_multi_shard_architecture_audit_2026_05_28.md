@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MDPS architectural audit — long-running multi-shard execution (2026-05-28)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, market-data-processing-service, unified-api-contracts]

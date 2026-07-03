@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Sports classifier — open_meteo WEATHER should be no-op on no-fixture days (write + read side)
 summary:
 status: RESOLVED — read-side DONE (2026-05-14); write-side DONE (2026-05-16, instruments-service@f799109)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-library]

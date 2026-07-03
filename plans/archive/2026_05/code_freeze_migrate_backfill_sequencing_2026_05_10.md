@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Code-freeze → migrate → backfill sequencing master (May-23 cutover orchestration umbrella)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]

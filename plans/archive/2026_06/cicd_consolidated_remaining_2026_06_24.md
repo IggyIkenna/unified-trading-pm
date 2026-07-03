@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD — consolidated REMAINING work (single SSOT; supersedes the 7 prior cicd/dep-promotion/starvation plans)
 summary: 'Single SSOT consolidating all remaining CI/CD work: version-out-of-source (D13), promotion pipeline, quality gates, release machinery, and staging-branch retirement.'
 status: superseded

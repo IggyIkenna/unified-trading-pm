@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: unified-trading-library full quality-gates.sh → GREEN (B1 type-hardening campaign + imports/size/coverage backlog)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-library]

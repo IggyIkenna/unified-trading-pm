@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: P0/P1 substantial work surfaced by 2026-05-08 9-agent audit (Aster connector / 2yr backtest / MDPS streaming / 18 MTDS VMs)
 summary:
-status: open
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-service, e2e-testing, execution-service, market-data-processing-service, market-tick-data-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MTDS Streaming Sharding — venue×data_type batch downloads with memory management
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-trading-library]

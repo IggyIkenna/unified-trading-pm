@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Wallet / Treasury — Phase 1+3 PULLED FORWARD pre-May-15; Phase 2 DESCOPED (Copper/CEFFU is client-side)
 summary:
 status: phase-1-3-pulled-forward + phase-2-descoped-client-side
-nature:
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, unified-api-contracts]

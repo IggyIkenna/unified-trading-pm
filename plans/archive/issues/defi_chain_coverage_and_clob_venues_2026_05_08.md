@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DeFi chain coverage cross-service audit + Hyperliquid L1 chain identity phantom + CLOB-on-chain venue instrument definitions (Hyperliquid / Lighter / Pacifica / Extended) — manifest rows + per-archetype chain constraints
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, strategy-service]

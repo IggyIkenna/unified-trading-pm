@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: System Audit Report — 2026-03-09
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]

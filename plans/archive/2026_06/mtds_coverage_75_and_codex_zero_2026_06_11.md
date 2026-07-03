@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: 'MTDS: coverage → ≥75% + codex violations → 0 (MIN_COVERAGE=75, CODEX_MAX_VIOLATIONS=0)'
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [market-tick-data-service, unified-api-contracts]

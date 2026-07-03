@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Expected-universe v2 design — per-asset-group dynamic denominators
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service]

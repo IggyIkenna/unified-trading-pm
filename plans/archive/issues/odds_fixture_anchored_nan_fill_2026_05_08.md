@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: ODDS not FIXTURES-anchored — no NaN-fill for missing (fixture, bookmaker, market_type) triples
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]

@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: issue
 title: ci_status /repos shows MAIN_GREEN while a promotion PR's v2 FAILED + paged Slack CRITICAL — Slack↔/repos parity gap
 summary: The deployment-ui **/repos** CI/CD page reads a repo's headline status from the manifest `repositories.<repo>.ci_status` (FEATURE_GREEN | STAGING_GREEN | MAIN_GREEN | FAILING). That field is **bran...
 status: resolved

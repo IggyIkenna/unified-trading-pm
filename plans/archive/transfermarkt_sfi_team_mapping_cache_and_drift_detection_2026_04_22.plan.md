@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Transfermarkt + SFI team-mapping cache + league/team drift detection (reduce API calls; catch silent partial writes)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Cross-plan banner sweep findings — 2026-05-11 (extra-hands audit)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui]

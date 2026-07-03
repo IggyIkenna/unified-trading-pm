@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MTDS DeFi data_type alias drift — venue_data_types.yaml + graph adapters still on banned legacy names
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service]

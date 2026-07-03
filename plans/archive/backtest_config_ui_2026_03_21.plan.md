@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: backtest-config-ui-2026-03-21
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: client-reporting-pnl-attribution
 summary:
 status: plan-spawned
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, execution-service, market-tick-data-service, strategy-service, unified-trading-system-ui]

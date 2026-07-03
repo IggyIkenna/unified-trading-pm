@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Codex doc currency stamps + duplicate-doc consolidation (post-cutover)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui]

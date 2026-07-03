@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: CI dashboard shows the breaking-cascade but NOT the routine LDR→staging/main promotion drain — operator can't see 'when did we last promote + did it pass'
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, features-service, ml-service, unified-trading-pm]

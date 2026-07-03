@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: session_2026_05_07_data_status_audit_findings
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service, unified-api-contracts]

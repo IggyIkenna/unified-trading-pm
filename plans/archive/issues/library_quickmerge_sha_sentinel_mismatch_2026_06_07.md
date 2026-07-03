@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: library-repo quickmerge --agent checks .qg_last_passed_sha but base-library.sh only writes .qg_content_sentinel
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm]

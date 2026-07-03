@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: PM Codex Drift Zero vs Other Alignment Plan — Diff and Merge Guide
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

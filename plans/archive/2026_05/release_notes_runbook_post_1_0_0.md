@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Release-notes runbook — post-1.0.0 graduation
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]

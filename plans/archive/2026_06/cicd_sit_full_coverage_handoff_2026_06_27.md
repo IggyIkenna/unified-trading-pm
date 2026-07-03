@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: SIT full-coverage — every ldr_main repo on the cross-repo breaking gate (Option A) + SIT-rehome hardening
 summary: 'Hand-off plan (operator going offline 2026-06-27): drive the WS-L SIT-rehome from the shipped Option-B+ safe interim (5 of 21 ldr_main repos cross-repo-gated) to the FULL end-state — EVERY ldr_main repo on SIT, with a genuine cross-repo invariant per repo, the LDR->main breaking gate trusting all of them, each proven by a deliberately-breaking-change test. Also: verify/finish the Cloud Build hatch-vcs version regression unblock, and close the deferred SIT-rehome hardening findings (cross-repo-combination fingerprint, per-SHA immutable promote ref, SIT per-invariant isolation). Full E2E, no shortcuts, no matter the length.'
 status: superseded

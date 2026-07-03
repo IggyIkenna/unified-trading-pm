@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Refactor G1.14 — Presentation deck refresh (14-item G1 + 7 new slides + optional HTML stretch)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm, unified-trading-system-ui]

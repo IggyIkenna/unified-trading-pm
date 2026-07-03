@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: position-precision-pnl-hardening-2026-03-11
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, execution-service, strategy-service]

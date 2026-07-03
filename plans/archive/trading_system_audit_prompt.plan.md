@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: trading-system-audit-prompt
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, unified-trading-pm]

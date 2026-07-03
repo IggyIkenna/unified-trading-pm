@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CeFi DERIBIT combo capture (option_combo + future_combo)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]

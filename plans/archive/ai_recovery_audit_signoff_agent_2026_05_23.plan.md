@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: LLM Recovery-Audit-Signoff Agent (Layer-1) + Layer-1.5 Backup Actuator
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, e2e-testing, execution-service, strategy-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Catalogue audit — sports (cross_asset_group plan)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]

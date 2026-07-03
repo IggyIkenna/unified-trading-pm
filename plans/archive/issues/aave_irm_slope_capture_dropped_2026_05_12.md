@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Aave V3 IRM slope params fetched from The Graph but DROPPED at normalization — proxy used in lending rate-impact sim
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service]

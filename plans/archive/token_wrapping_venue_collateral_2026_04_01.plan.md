@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: token-wrapping-venue-collateral
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts]

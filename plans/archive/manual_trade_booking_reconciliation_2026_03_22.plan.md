@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: manual-trade-booking-reconciliation
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-service, execution-service, unified-api-contracts, unified-trading-system-ui]

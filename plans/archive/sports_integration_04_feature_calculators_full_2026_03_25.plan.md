@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: sports-integration-04-feature-calculators-full
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

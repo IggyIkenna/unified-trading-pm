@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Massive does NOT carry VX/VIX futures (CFE not in Massive's flat-file product set) — VIX gap stays Barchart+Yahoo
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [tradfi]
 stage: [meta]
 repos: []

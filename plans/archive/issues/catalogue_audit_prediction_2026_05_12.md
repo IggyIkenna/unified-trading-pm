@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Catalogue audit — prediction (cross_asset_group plan)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]

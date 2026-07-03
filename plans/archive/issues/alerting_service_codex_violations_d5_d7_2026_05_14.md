@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: alerting-service D.5+D.7 codex compliance violations (schema provenance + fail-fast)
 summary:
 status: RESOLVED — alerting-service@6a01b98 + UAC@0d7c8ca (2026-05-14 slot-11)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, features-service, unified-api-contracts]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: mtds-backfill-defi-20260523 VM broken — resolve_bucket_name() unexpected 'env' kwarg on every chunk
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

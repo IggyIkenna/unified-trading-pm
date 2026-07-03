@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: run-lifecycle-events-ssot
 summary:
 status: in_progress
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-trading-library, unified-trading-pm]

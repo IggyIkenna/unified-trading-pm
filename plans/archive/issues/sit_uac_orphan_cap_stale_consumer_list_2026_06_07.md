@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: SIT orphan-cap inflated by stale TERMINAL_CONSUMER_SERVICES list in check_uac_adoption.py
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, features-service, market-tick-data-service, ml-service, system-integration-tests, unified-api-contracts]

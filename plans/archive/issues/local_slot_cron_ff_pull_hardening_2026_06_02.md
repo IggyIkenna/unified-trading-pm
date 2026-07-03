@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Local slot-cron FF-pull hardening — stale top-level clones + ping-ledger FF-block
 summary:
 status: RESOLVED — archived 2026-06-07
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, e2e-testing, features-service, system-integration-tests, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: D4 — MTDS adapters preflight + batch-live parity
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [features-service]

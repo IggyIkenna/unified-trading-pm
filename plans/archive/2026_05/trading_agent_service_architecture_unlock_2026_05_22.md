@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: trading-agent-service architecture unlock (May-23, off-by-default)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, strategy-service, trading-agent-service]

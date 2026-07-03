@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: plan-d-testnet-stress-testing
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, system-integration-tests, unified-api-contracts, unified-trading-library]

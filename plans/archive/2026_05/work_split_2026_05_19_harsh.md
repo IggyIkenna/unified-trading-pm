@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Harsh's daily work-split — 2026-05-19 (Cycle 2 Day-4; mechanical + infra sweep, ~116 cal AI-days)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]

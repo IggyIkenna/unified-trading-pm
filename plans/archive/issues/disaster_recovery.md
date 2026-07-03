@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Trading Incident Alerting, Auto-Recovery, Human Escalation + Audit Operating Model
 summary:
 status: resolved-into-active-plans
-nature:
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: []

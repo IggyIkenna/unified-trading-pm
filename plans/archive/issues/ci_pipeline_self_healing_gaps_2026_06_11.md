@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: CI/CD pipeline self-healing gaps — semver-agent trigger starvation, LDR-rewind data loss, orchestrator stale-PR escalation
 summary:
-status: archived
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: SFI backfill — chunk-safe multi-VM parallelisation (cut 6.3-year backfill from ~70 days to ~3-5 days)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-trading-pm]

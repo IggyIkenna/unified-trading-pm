@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Content-based breaking-detection — SIT triggers on real schema/API-contract change, not 0.x-minor
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [system-integration-tests]

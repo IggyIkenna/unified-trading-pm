@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: defi-transfers-and-gas-fees
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service]

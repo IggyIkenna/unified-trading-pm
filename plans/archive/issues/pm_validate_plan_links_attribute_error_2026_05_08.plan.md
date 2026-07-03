@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: ✅ RESOLVED 2026-05-09 — PM validate_plan_links.py mds_dir AttributeError fixed (verified 2026-05-09 audit)
 summary:
 status: resolved
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, unified-trading-pm]

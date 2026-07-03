@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Governance HARD RULE automation + QG ratchet gaps (post-cutover)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, strategy-service, unified-trading-api, unified-trading-pm, unified-trading-system-ui]

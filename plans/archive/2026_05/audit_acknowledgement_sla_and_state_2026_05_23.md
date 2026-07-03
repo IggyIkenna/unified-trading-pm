@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Audit-Acknowledgement SLA + State (6h default + per-severity override + secondary-human + founder fallback)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]

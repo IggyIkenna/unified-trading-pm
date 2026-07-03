@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MTDS DeFi handler perf benchmark gap — 1k-event model N/A for HTTP-fetch handlers
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Data-pipeline acquisition-mechanics remediation (DeFi+CeFi audit 2026-06-03)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service, strategy-service]

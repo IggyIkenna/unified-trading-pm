@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Marinade (Solana mSOL) historical APR coverage — subgraph registration / Helius enrich
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service]

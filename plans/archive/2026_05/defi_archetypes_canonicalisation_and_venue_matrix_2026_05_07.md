@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi archetypes canonicalisation + venue-collateral matrix correction (multi-stream)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, deployment-ui, instruments-service, strategy-service, unified-api-contracts, unified-trading-pm]

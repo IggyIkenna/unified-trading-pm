@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: TradFi data-source close-out — KRX/Yahoo venue + centralised parity gate + Barchart removal + databento floor precision
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [tradfi]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, instruments-service, unified-api-contracts]

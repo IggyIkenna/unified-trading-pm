@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Hard schema enforcement at instruments-service write boundary — base/quote currency required for TradFi+DeFi+CeFi, instrument_id required everywhere, full-column capture for sports (audit beyond api_football to footystats/SFI/understat/transfermarkt/openmeteo/odds_api), per-row record_failed(SCHEMA_VALIDATION_FAILED) instead of venue-wide shard fail-all
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, instruments-service, unified-api-contracts]

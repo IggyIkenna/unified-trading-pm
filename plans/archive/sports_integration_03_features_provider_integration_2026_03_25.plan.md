@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: sports-integration-03-features-provider-integration
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]

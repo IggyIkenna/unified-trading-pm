@@ -1,5 +1,5 @@
 ---
-doc_type:
+doc_type: plan
 title: CI/CD repo dashboard — deployment-ui repo dropdown + branch×SHA matrix + stuck PRs + SIT state + image deploy signal
 summary: 'Build a CI/CD Repos surface in deployment-ui: fleet matrix with branch SHA history, quality-gate-v2 status, stuck PR detection, and SIT state.'
 status: complete

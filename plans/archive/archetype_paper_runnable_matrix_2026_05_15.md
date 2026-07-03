@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Archetype paper-runnable matrix — 2026-05-15 snapshot
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service]

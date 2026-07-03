@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Orchestrator headless agent auth — token-auth interactive agents (workers + main), account switching, Remote-Control deferral
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]

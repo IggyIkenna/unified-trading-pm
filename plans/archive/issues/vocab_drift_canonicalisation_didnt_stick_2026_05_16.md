@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Vocab drift canonicalisation --apply RAN but DIDN'T STICK — 4 of 6 buckets still carry kebab rows post-migration
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]

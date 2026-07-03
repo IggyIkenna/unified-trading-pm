@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Strict Quality Gate Alignment
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, ibkr-gateway-infra, system-integration-tests, unified-trading-pm]

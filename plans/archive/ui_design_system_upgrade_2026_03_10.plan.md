@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UI Design System Upgrade — Institutional Dark Terminal Aesthetic Across All UI Repos
 summary:
 status: DONE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui]

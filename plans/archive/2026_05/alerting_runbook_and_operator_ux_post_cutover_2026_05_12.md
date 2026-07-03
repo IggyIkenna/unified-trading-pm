@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Alerting lifecycle SLO + DART runbook + operator-UX gaps (post-cutover)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, deployment-ui, execution-service, unified-trading-pm, unified-trading-system-ui]

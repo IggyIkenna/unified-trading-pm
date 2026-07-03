@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Live-persist 03 — infra — Pub/Sub topics + Cloud Storage subscription (warm) + BQ external table + daily cold compaction
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, deployment-ui]

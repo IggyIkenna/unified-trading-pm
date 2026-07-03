@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: alerting-service KillSwitchBus publish-side hook + integration test deferred (Phase 2 closeout gap)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]

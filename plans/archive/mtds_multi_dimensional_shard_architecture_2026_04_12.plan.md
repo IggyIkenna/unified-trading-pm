@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: mtds-multi-dimensional-shard-architecture
 summary:
-status: archived
-nature:
+status: superseded
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Wave 3.X Track D — zero-activity-bar implementation (post-cutover)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [features-service, instruments-service]

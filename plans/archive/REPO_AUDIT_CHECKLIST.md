@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Repo Audit Checklist (Repo-by-Repo)
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]

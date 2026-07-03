@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Canary coverage QG enforcement — close the 3 cassette↔prod blind spots
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, execution-service, features-service, market-tick-data-service, unified-api-contracts]

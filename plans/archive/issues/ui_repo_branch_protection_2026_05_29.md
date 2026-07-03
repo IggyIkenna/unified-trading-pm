@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: UI repos missing branch protection on main + staging
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, features-service, unified-trading-api, unified-trading-system-ui]

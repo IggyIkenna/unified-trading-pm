@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: base-library.sh does not write .qg_last_passed_sha → quickmerge --agent Stage-3 fails on every library
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-library, unified-trading-pm]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: price-arbitrage-may-23-2026
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: tradfi
 stage: [meta]
 repos: []

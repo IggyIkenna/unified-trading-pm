@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: B-015 smoke VMs silent-skipped due to phantom manifest — features-onchain + MTDS lst_rates produced ZERO data
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service]

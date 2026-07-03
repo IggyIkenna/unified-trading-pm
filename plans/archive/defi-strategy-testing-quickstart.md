@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi Strategy Testing - Quick Start Guide
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

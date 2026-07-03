@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: UAC canonical/domain/__init__.py:266 imports get_expected_bookmakers from wrong module — blocks all instruments-service tests
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]

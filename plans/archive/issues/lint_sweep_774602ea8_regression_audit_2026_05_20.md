@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: 774602ea8 lint sweep blast-radius audit — adapter contract-call regressions
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-tick-data-service, unified-trading-pm]

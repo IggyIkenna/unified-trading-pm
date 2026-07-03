@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: MTDS 53 market_interface unit test failures — mixed API drift + mock issues
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service]

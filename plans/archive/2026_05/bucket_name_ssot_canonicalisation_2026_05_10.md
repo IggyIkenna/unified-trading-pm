@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Bucket-name SSOT canonicalisation — collapse three-layer drift (yaml + per-family config.py + UTL resolver) to one + provision env-tiered buckets to match yaml (operator decision option b 2026-05-11)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, execution-service, features-service]

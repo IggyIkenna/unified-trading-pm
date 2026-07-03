@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: DeFi upstream 46-day full backfill — operator approval required (instruments-service DeFi + MTDS DeFi raw_tick_data)
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service]

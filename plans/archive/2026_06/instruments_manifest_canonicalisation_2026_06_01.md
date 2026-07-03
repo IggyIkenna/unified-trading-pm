@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Instruments-service manifest + data canonicalisation (audit-first single-walk) — L3 owner for the instruments I/O surface
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, instruments-service, unified-api-contracts]

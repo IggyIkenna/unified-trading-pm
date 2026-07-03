@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Regime Clustering + Proximity → Factor-Targeted Structure Allocator
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, features-service, greeks-service, ml-service, strategy-service, trading-agent-service]

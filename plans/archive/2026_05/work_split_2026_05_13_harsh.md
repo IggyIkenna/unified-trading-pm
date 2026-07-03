@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Harsh's daily work-split — 2026-05-13 (Day-4 cycle close; Harsh-side ONLY — Ikenna on flights all day)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-service, e2e-testing, execution-service, features-service, instruments-service]

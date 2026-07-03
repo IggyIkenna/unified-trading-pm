@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: RECON_FREEZE_ARMED is never published — reconciliation→order-block safety chain is dormant
 summary:
-status: active
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]

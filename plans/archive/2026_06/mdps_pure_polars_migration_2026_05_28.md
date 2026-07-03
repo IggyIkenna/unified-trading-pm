@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: MDPS pure-Polars migration — staged engine cutover (2026-05-28)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [instruments-service, market-data-processing-service, unified-api-contracts, unified-trading-pm]

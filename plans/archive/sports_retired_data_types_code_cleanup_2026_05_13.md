@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: sports-retired-data-types-code-cleanup-2026-05-13
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: sports
 stage: [meta]
 repos: [deployment-api, instruments-service]

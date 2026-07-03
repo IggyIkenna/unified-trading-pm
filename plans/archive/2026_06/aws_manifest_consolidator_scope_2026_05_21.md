@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: AWS manifest consolidator — Batch + EventBridge (10 buckets + 16 extension)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, market-tick-data-service]

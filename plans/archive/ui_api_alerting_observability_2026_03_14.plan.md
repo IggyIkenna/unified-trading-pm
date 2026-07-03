@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: ui-api-alerting-observability-2026-03-14
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, e2e-testing]

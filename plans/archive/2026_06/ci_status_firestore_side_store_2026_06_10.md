@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CI-status side store — move ci_status from the git manifest to Firestore (doc-per-repo + CAS-on-rank)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, client-reporting-api, unified-trading-pm]

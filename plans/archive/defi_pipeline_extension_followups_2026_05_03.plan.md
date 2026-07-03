@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: defi-pipeline-extension-followups-2026-05-03
 summary:
 status: complete
-nature:
+nature: record
 asset_group: defi
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-pm]

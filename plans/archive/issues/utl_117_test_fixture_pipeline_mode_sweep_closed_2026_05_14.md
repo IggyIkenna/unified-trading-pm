@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: UTL 117 test-fixture sweep — pipeline_mode required kwarg — CLOSED
 summary:
 status: ✅ CLOSED (utl@26ded7d)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-library]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Observability and Health Endpoints
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service, system-integration-tests]

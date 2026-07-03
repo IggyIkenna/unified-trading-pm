@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Epic Readiness Checklists — MVP Plan
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, execution-service, instruments-service, strategy-service, unified-api-contracts]

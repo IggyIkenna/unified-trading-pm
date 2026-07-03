@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Structured Error Handling + Event Propagation
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]

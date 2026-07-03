@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: features-service codex compliance — 2 remaining size violations (Ikenna-owned)
 summary:
 status: RESOLVED — features-service@29cd4ea6 (2026-05-14 slot-11)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service]

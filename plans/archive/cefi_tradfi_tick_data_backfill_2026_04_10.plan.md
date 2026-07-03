@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: CeFi + TradFi Tick Data Backfill
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, deployment-ui, e2e-testing, instruments-service, market-tick-data-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: PM Codex Drift Zero Architecture
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, unified-trading-library]

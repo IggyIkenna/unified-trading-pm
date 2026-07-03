@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: noqa Suppression Sweep + C901 Complex Function Refactor
 summary:
 status: DONE
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-api, deployment-service, execution-service, instruments-service, market-data-processing-service]

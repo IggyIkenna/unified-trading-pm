@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Hybrid Sampler — 5s Resolution for Arb Detection
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []

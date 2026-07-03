@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Solana DeFi pool-state + lending history is FAKE — one live REST snapshot back-dated across every date partition
 summary:
 status: RESOLVED
-nature:
+nature: record
 asset_group: [defi]
 stage: [meta]
 repos: [market-tick-data-service]

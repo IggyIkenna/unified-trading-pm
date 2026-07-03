@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Batch+Live Shard Smoke Matrix — prove live=batch for every (asset_group × venue × data_type)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, e2e-testing, market-tick-data-service]

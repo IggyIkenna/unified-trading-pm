@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: features-service TODO/FIXME audit — 9 items, 0 stale, 0 quick-fixes
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, instruments-service]

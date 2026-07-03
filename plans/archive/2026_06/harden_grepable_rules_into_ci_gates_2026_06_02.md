@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Harden grep-able CLAUDE.md rules into CI gates (UTC datetimes · cloud-SDK direct-import ban · fallback-imports)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, market-tick-data-service]

@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Dependency Cleanup — Optional Extras & Fresh-Machine Setup Fix (2026-03-12)
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-cloud-interface, unified-trading-library, unified-config-interface, unified-ml-interface, execution-service, strategy-service, ibkr-gateway-infra, market-tick-data-service, unified-api-contracts, unified-internal-contracts, ml-inference-api, ml-training-api, features-multi-timeframe-service, client-reporting-api, unified-domain-client, batch-audit-api, unified-market-interface, unified-reference-data-interface, unified-trading-pm]

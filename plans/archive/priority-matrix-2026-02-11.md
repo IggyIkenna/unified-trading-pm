@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Priority Matrix (Eisenhower Matrix)
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service]

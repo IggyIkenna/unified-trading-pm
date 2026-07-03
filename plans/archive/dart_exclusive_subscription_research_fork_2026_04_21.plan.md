@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: dart-exclusive-subscription-research-fork-2026-04-21
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service, unified-api-contracts, unified-trading-api, unified-trading-library, unified-trading-system-ui]

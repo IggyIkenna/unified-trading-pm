@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: UAC SourceCapability metadata promotion — 2026-05-20
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, unified-api-contracts, unified-trading-pm]

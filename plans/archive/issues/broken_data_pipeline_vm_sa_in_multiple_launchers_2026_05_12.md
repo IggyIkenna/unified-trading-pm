@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Multiple VM launchers hardcode a non-existent `data-pipeline-vm` SA (gcloud `serviceAccount of type was not found`)
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]

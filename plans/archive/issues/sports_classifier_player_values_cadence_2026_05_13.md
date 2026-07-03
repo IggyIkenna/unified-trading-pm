@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: Sports classifier — transfermarkt PLAYER_VALUES needs cadence-aware rule (weekly, not daily)
 summary:
 status: DONE — slot 4 (2026-05-14)
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-library]

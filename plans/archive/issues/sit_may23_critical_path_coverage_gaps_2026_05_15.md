@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: issue
 title: SIT May-23 Critical Path Coverage Gaps
 summary:
-status:
-nature:
+status: resolved
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service, system-integration-tests]

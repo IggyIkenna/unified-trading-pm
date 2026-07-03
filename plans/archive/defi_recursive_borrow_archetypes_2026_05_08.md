@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: DeFi recursive-borrow archetypes — leveraged lending arb + long-funding-perp recursive-borrow flavor
 summary:
 status: closed-spawned-plan
-nature:
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service, unified-api-contracts]

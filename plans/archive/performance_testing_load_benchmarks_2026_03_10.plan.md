@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: performance-testing-load-benchmarks-2026-03-10
 summary:
-status: done
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, system-integration-tests, unified-trading-pm]

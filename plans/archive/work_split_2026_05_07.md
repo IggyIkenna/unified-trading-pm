@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Ikenna ↔ Harsh work split — 2026-05-07 → 2026-05-11 (5-day cycle to Week 2)
 summary:
-status: active
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]

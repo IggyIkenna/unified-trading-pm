@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Promote Workflow — Post-cutover UI pipeline + state-machine consolidation
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-ui, e2e-testing, execution-service]

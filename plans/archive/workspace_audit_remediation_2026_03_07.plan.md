@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Workspace Audit Remediation — 2026-03-07
 summary:
-status:
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, instruments-service]

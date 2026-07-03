@@ -1,9 +1,9 @@
 ---
-doc_type:
+doc_type: plan
 title: Batch=Live design symmetry — 8-tab execution plan (May-23 cutover-blocking subset)
 summary:
-status: archived
-nature:
+status: complete
+nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
