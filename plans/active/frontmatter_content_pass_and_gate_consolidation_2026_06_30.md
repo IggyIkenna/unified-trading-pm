@@ -185,6 +185,16 @@ instead of opening the doc — most valuable right before the codex↔code drift
 
 ## Progress Log
 
+- 2026-07-04 — **ZERO-VIOLATIONS ACHIEVED (operator directive): docspec HARD=0 SOFT=0 across all 1,298 docs; full
+  `quality-gates.sh` GREEN (exit 0).** Beyond P3.2: fixed the 3 pre-existing HARD-rot docs; validator↔schema lockstep
+  (empty-list `repos`/`related` valid per §2; `authoritative_for: []` valid on non-current docs; superseded-epic
+  identity fields exempt; `task_template.md` format-spec-exempt); **reconciled the `locked_by` contradiction** —
+  `check_frontmatter_schema` required it non-empty (breeding the literal-`NA` sentinels docspec flags) → now optional
+  per the canonical schema; lifted runbook owner/cadence/verifier from legacy `execution:` sub-maps; `auditor` derived
+  from git first-commit author (26); source/resolved_by derived from doc bodies; narrow claims on pointer stubs; 4 YAML
+  foot-gun breaks found+fixed (colon-space / ` #` / leading `{` / leading backtick in plain scalars — candidates for a
+  docspec parse-lint). **Defaulted values needing operator review** (grep the zero-pass commit): `owner: ikenna` /
+  `cadence: on-demand` / `verifier: operator` on runbooks where no value was derivable.
 - 2026-07-04 — **P3.2 COMPLETE — all 55 lanes committed locally.** ~990 docs filled by 55 Opus lane agents
   (2026-07-03 18:00Z → 2026-07-04); usage-managed per operator instruction (throttled 17:54–18:07Z at five_hour 89%,
   resumed post-reset; seven_day never exceeded ~51%, Sonnet switch never triggered). Final sweep: content-SOFT
