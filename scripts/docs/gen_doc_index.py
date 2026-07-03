@@ -38,7 +38,13 @@ _PER_TYPE_FACETS = {
     "agent-role": ["role"],
 }
 
-# the doc roots to walk (PM corpus + the cross-repo agent-role boot prompts)
+# The doc roots to walk — PM-repo LIVE trees ONLY (operator decision 2026-07-04):
+#   - NO other repos (the former agent-orchestrator/agents root is removed; cross-repo
+#     coverage is a future task, rolled out deliberately — not one repo at a time here).
+#   - NO plans/archive — EVER, even after the archive frontmatter backfill lands. Archived
+#     plans/issues are closed records: indexing them grows the L0 map without routing value.
+#     Agents needing history take the costlier grep-the-archive path, which is rare enough
+#     that keeping the hot index small wins.
 _ROOTS: list[tuple[str, str]] = [
     ("plans/active", "*.md"),
     ("plans/epics", "*.md"),
@@ -47,6 +53,7 @@ _ROOTS: list[tuple[str, str]] = [
     ("plans/audit/instructions", "**/*.md"),
     ("codex", "**/*.md"),
 ]
+_EXCLUDED_PREFIX = "plans/archive/"  # safety net if a future root glob ever reaches into it
 
 
 def _fmt_val(v: object) -> str:
@@ -94,17 +101,18 @@ def _rel(path: Path, pm_root: Path) -> str:
 
 
 def build_index(pm_root: Path) -> str:
-    ws = pm_root.parent
     entries: dict[str, list[str]] = {}
     seen: set[Path] = set()
-    roots = [pm_root / r for r, _ in _ROOTS] + [ws / "agent-orchestrator/agents"]
-    globs = [g for _, g in _ROOTS] + ["*.md"]
+    roots = [pm_root / r for r, _ in _ROOTS]
+    globs = [g for _, g in _ROOTS]
     for root, glob in zip(roots, globs, strict=True):
         if not root.is_dir():
             continue
         for path in root.glob(glob):
             rp = path.resolve()
             if rp in seen or not path.is_file():
+                continue
+            if _rel(path, pm_root).startswith(_EXCLUDED_PREFIX):
                 continue
             seen.add(rp)
             res = _doc_entry(path, pm_root)

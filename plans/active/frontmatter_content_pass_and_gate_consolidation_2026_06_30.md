@@ -207,11 +207,28 @@ urgent.
 
 ## Progress Log
 
+<<<<<<< Updated upstream
 - 2026-07-04 — **ALL agent-workable todos DONE.** P3.3 referenced_by (pm@a89ab2c36, 648 codex docs) + agent-role
   enforcement (agent-orchestrator@202c9b6) shipped by orchestrator session; P3.2/gate-consolidation/
   archive-bonus/zero-violations shipped by the operator-side concurrent session. Corpus: docspec HARD=0 SOFT=0 (1,298
   live docs, independently verified twice) + consolidated blocking gate GREEN. Sole remaining open item = P3.4 operator
   worklist (human-only by design). Plan is COMPLETE pending P3.4 tick-off + archival ritual.
+=======
+- 2026-07-04 — **Index scope decisions (operator) + an AO timing collision.** (1) The L0 index
+  (`DOC_INDEX.generated.md`) is **PM-repo live-trees ONLY**: the `agent-orchestrator/agents` root removed from
+  `gen_doc_index.py` (1,119 entries, zero cross-repo paths). Other repos join later as a deliberate separate task.
+  (2) **`plans/archive` is NEVER indexed** — not now and not after the archive backfill (closed records; unbounded
+  index growth, no routing value; rare history reads take the costlier archive-grep path). `_EXCLUDED_PREFIX` safety
+  net added. (3) **COLLISION for operator decision**: the operator deferred agent-orchestrator gate wiring ("not even
+  AO right now"), but a concurrent orchestrator session had ALREADY shipped it (agent-orchestrator@202c9b6) before
+  the deferral was voiced. Not reverted here (pushed work, other session's). Operator: keep the in-repo AO gate
+  (it gates only agents/*.md inside AO, invisible to PM) or revert it.
+- 2026-07-04 — **ALL agent-workable todos DONE.** P3.3 referenced_by (pm@a89ab2c36, 648 codex docs) +
+  agent-role enforcement (agent-orchestrator@202c9b6) shipped by orchestrator session; P3.2/gate-consolidation/
+  archive-bonus/zero-violations shipped by the operator-side concurrent session. Corpus: docspec HARD=0 SOFT=0
+  (1,298 live docs, independently verified twice) + consolidated blocking gate GREEN. Sole remaining open item =
+  P3.4 operator worklist (human-only by design). Plan is COMPLETE pending P3.4 tick-off + archival ritual.
+>>>>>>> Stashed changes
 - 2026-07-04 — **GATE CONSOLIDATION SHIPPED (operator-directed): frontmatter can no longer rot.**
   `check_frontmatter_schema.py` = the single comprehensive BLOCKING gate (docspec-backed, HARD+SOFT, live trees only —
   plans/archive excluded per operator); warn-only `check_docspec_coverage.py` retired; schema banner updated. Archive
