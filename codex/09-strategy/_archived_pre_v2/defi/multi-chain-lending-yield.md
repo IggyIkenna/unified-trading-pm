@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Multi-Chain Lending Yield Optimization
 summary:
-status:
+  Pre-v2 DeFi cross-chain lending yield optimizer — CrossChainSOR scores 22+ (protocol, chain) tuples across Aave V3 /
+  Compound V3 / Morpho / Kamino and bridges via Socket to the best net APY (gross minus annualized gas + bridge fee);
+  4H cadence, supply-only (no liquidation risk); targets 5-12% APY, $50M+. SUPERSEDED banner — see architecture-v2.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, lending, cross-chain, bridge, sor]
+related: [omnichain-transfers.md, cross-chain-yield-arb.md, cross-chain-sor-rebalancing.md, lending-protocol-arb.md]
 created: 2026-03-28
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: DeFi Recursive Staked Basis
 summary:
-status:
+  Pre-v2 DeFi leveraged staked-basis (ETH) — flash-loan atomic bundle to leverage weETH staking + Aave WETH borrow,
+  delta-hedged with a Hyperliquid ETH perp short; Aave E-Mode LTV, depeg-tolerance leverage cap, HF<1.5 deleverage /
+  HF<1.2 emergency exit; targets 25-35% APY at a 3x cap. SUPERSEDED banner — see architecture-v2.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, basis-trade, flash-loan, leverage, staking, hedging]
+related: [unhedged-recursive.md, staked-basis.md, sol-staked-basis.md, reward-lifecycle.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

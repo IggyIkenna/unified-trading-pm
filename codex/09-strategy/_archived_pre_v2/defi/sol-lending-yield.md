@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Solana Lending Yield (Kamino Finance)
 summary:
-status:
+  Pre-v2 DeFi Solana lending yield on Kamino Finance — supply USDC / SOL / USDT for 5-15% APY, optional 2x recursive
+  borrow leverage (HF target 2.0, deleverage 1.5, exit 1.2); 4H cadence, ~$0.60 full leveraged deploy; targets
+  8-15% (unlev) / 15-25% (lev) APY. SUPERSEDED banner — see architecture-v2.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, lending, solana, kamino, leverage]
+related: [aave-lending.md, sol-basis-trade.md, sol-staked-basis.md, multi-chain-lending-yield.md]
 created: 2026-03-28
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

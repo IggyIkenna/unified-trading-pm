@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: SOL Basis Trade (Drift Protocol)
 summary:
-status:
+  Pre-v2 DeFi Solana basis trade — long spot SOL (Jupiter-routed) + short SOL-PERP on Drift, delta-neutral funding
+  capture; Drift settles funding hourly (15-40% APY when positive), ~$0.15/tx Solana gas; targets 15-30% APY, $3M
+  capacity. SUPERSEDED banner — see architecture-v2.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, basis-trade, solana, drift, funding]
+related: [sol-staked-basis.md, sol-lending-yield.md, sol-concentrated-lp.md, basis-trade.md]
 created: 2026-03-28
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

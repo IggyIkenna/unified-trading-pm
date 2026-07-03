@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Lending Protocol Arbitrage
 summary:
-status:
+  Pre-v2 DeFi cross-protocol lending arbitrage — borrows cheap on one same-chain lending protocol and supplies
+  expensive on another (Aave V3 / Morpho Blue / Compound V3), using UAC simulate_rate_impact plus flash-loan atomic
+  rebalancing; targets 2-6% annual spread at HF>=1.3, ~$20M capacity. Superseded by architecture-v2.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, lending, arbitrage, flash-loan]
+related: [multi-chain-lending-yield.md, aave-lending.md, recursive-staked-basis.md]
 created: 2026-06-16
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

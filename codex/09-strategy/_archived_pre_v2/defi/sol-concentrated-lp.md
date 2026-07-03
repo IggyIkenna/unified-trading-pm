@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Solana Concentrated Liquidity LP (Raydium / Orca)
 summary:
-status:
+  Pre-v2 DeFi Solana concentrated LP — tight-range liquidity on Raydium CLMM / Orca Whirlpool with optional Drift
+  SOL-PERP delta hedge, ~$0.30-0.60 rebalance gas enabling aggressive 15M range management; vol-sized ranges;
+  targets 20-60% APY, ~$2M per pool. SUPERSEDED banner — see architecture-v2.
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, market-making, liquidity-provision, solana, raydium, orca]
+related: [market-making-lp.md, sol-basis-trade.md, sol-staked-basis.md]
 created: 2026-03-28
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

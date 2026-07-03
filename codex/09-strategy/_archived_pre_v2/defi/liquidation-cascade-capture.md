@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: DeFi Liquidation Cascade Capture
 summary:
-status:
+  Pre-v2 DeFi event-driven strategy that buys post-liquidation discounted collateral (WETH / WBTC / wstETH) via DEX in
+  scale-in tranches during Aave cascades; circuit breaker at 15% cascade depth, $100k/asset + $500k total caps,
+  urgency=HIGH SWAP routing across Uniswap V3 / Curve / 1inch. Superseded by architecture-v2.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, liquidation, event-driven]
+related: [aave-lending.md, market-making-lp.md, lending-protocol-arb.md]
 created: 2026-06-16
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:
