@@ -16,7 +16,7 @@ priority: P2
 source: [operator request 2026-06-29, ../../codex/04-architecture/agent-orchestrator-autospawn.md, session 2026-06-28/29 opus-routing fix]
 assigned_vm: planning
 resolved_by:
-locked_by:
+locked_by: NA
 execution_scope: orchestrator-agent
 assigned_role: backend-engineer
 model_tier: opus-required

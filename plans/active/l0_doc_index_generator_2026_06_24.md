@@ -19,7 +19,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 last_updated: 2026-06-24
-locked_by:
+locked_by: NA
 locked_since:
 supersedes:
 superseded_by:

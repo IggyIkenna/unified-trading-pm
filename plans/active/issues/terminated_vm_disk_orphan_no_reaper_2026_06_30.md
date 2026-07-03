@@ -16,7 +16,7 @@ priority: P2
 source: [operator request 2026-06-30 (GCP cost review), GCP central-element-323112 VM inventory, session 2026-06-30]
 assigned_vm: NA
 resolved_by: deployment-service@b5f8dec + deployment-service@738637c
-locked_by:
+locked_by: NA
 execution_scope: human
 assigned_role: backend-engineer
 drift_direction: advance-code

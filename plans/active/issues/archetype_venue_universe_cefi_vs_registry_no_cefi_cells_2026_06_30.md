@@ -23,7 +23,7 @@ source:
     surfaced by frontmatter canonicalization in frontmatter_full_corpus_coverage_2026_06_30 (codex@0b019a8b4),
   ]
 assigned_vm: NA
-locked_by:
+locked_by: NA
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

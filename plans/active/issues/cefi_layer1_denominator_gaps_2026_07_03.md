@@ -33,7 +33,7 @@ priority: P1
 source: honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md implementation session (Harsh)
 assigned_vm: NA
 resolved_by:
-locked_by:
+locked_by: NA
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium
