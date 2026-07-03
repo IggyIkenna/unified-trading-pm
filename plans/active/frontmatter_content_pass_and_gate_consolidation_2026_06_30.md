@@ -123,6 +123,17 @@ instead of opening the doc — most valuable right before the codex↔code drift
 
 ## Progress Log
 
+- 2026-07-03 — **P3.2 checkpoint: 29/55 lanes committed locally** (lanes 00-28 = codex 00/01/02-data,
+  02-venues, 03-*, 04-architecture, 05-infrastructure, 06-coding-standards, 07-security, 08-workflows,
+  09-strategy pre-v2 archive + archetypes/axes/cross-cutting chunks). All local commits, unpushed per operator
+  override. Per-lane evidence in commit messages `docs(frontmatter): P3.2 lane NN`. Anomaly log at scratchpad
+  `anomalies.md` (session) — headline items for final report: (1) SSOT contradiction 3-vs-4-category empty-output
+  decision (shard-level-failure-isolation vs validation-and-errors); (2) archetype maturity axis (design/
+  code-shipped/live) flattened by enum normalization — old values recoverable from lane diffs, operator to decide
+  on a dedicated key; (3) two agent-orchestrator docs presented the retired multi-VM fleet as live (marked stale);
+  (4) ~15 runbook/audit-shaped docs typed codex-ssot (retype list); (5) recurring dead body-citations captured
+  per lane. Usage at checkpoint: seven_day 48%, five_hour 76% (Opus continues; Sonnet switch only >90% seven_day).
+
 - 2026-06-30 — Plan created (operator decision) by splitting the deferred consolidation items out of the completed
   full-corpus coverage plan (now archived). P3 / nice-to-have, human-driven (`local-only`, `assigned_vm: NA`).
 - 2026-07-03 — **Measured the corpus + recalibrated the todos (operator-approved).** docspec sweep: 1,298 docs checked,
