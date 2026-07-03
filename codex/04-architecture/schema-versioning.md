@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Schema Versioning
 summary:
-status:
+  How UAC versions its schemas — semver rules (patch/minor/major = breaking), the 60-day parallel-publish
+  deprecation window, consumer major-version pinning, and how internal vs external canonical schemas differ.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [uac, schema, versioning, contracts, migration, semver]
+related: [artifact-versioning.md, schema-placement.md, ../02-data/contracts-scope-and-layout.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [UAC schema semver rules (patch/minor/major), UAC schema deprecation window + consumer major-version pinning]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

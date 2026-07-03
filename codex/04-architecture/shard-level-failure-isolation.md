@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Shard-Level Failure Isolation (SSOT)
 summary:
-status:
+  A failed shard must not kill the batch — log + record_failed + continue (no raise in per-shard loops);
+  covers the per-tier shard-atom matrix, the 4-pillar write-gate, and the 3-category (honest-absence /
+  upstream-timestamp-bias / malformed-field) empty-output decision tree.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, deployment-ui, execution-service, instruments-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, data-correctness, backfill, data-status, ssot]
+related: [../02-data/availability-manifest-and-data-status.md, ../05-infrastructure/deployment-clusters-live-vs-batch.md, ../06-coding-standards/validation-and-errors.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [shard-level failure isolation rule (no-raise per-shard loop + record_failed continuation), three-category empty-output decision tree]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

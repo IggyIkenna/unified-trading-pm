@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Strategy ↔ Execution Protocol
 summary:
-status:
+  The strategy-to-execution runtime contract — 5 protocol rules (target-state not deltas, intent not algo,
+  polymorphic targets, layer separation, benchmark fills), the 11-action StrategyInstruction envelope, idempotent reconciliation.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, execution, ssot, reconciliation, defi]
+related: [account-instructions.md, slow-fast-routing-split.md, ../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [strategy-execution runtime protocol (five rules + 11 polymorphic actions), StrategyInstruction target-state instruction semantics]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

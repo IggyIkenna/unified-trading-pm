@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Sports Batch/Live Architecture
 summary:
-status:
+  Per-asset-group batch/live architecture for asset_group=sports — no in-play live source (all sources are
+  replay-capable batch), the (source,data_type,league_id,day) shard atom with fixture_id as a row column,
+  L0Matcher/SportsMatchingEngine fills, and the fixture-dependent empty-reason taxonomy.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, batch-live, manifest, pipeline-mode, odds]
+related: [batch-live-architecture.md, sports-integration-plan.md, sports-live-odds-connectivity.md, ../02-data/pipeline-mode-partition.md]
 created: 2026-06-11
-authoritative_for:
+authoritative_for: [sports asset-group batch/live architecture, sports fixture-dependent empty-reason taxonomy]
 referenced_by:
 owner:
 last_reviewed: 2026-06-11

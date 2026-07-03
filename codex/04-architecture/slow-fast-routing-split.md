@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Slow-Fast Routing Split (Architecture View)
 summary:
-status:
+  Architectural justification for splitting venue routing — slow-path eligibility (strategy-service config,
+  human-approved) vs fast-path per-order SOR (execution-service, ms); the StrategyInstruction contract, meta-broker case, forbidden bypasses.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, strategy, mtds, ssot]
+related: [../09-strategy/architecture-v2/cross-cutting/venue-selection-split.md, execution-policy.md, ../02-venues/venue-registry-reference.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [slow-fast venue-routing split architecture (strategy eligibility vs execution SOR)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

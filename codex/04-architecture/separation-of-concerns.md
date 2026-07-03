@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: 'Separation of Concerns: Three-Layer Architecture'
 summary:
-status:
+  Three-layer architecture (UAC contracts / interface adapters / T3 services) with allowed-import rules,
+  plus the PBMS single-canonical positions+balances ledger invariant every consumer reads through (never a shadow copy).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [batch-live-reconciliation-service, execution-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-api]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [uac, contracts, ssot, positions, execution]
+related: [../02-data/contracts-scope-and-layout.md, schema-placement.md, batch-live-architecture.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [contracts/interface/service three-layer separation of concerns, PBMS single-canonical positions+balances ledger invariant]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

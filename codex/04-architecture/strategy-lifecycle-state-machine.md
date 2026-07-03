@@ -2,14 +2,16 @@
 doc_type: codex-ssot
 title: Strategy Lifecycle State Machine
 summary:
-status: stub
+  STUB — strategy promote-lifecycle states draft->paper_1d->live_early->live_full with rollback-to-paper_1d
+  via /api/promote/{id}/rollback; full spec in promote-workflow-architecture.md.
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, promote, ssot]
+related: [promote-workflow-architecture.md]
 created: 2026-05-21
 authoritative_for:
 referenced_by:
