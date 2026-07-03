@@ -10,7 +10,7 @@ status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [deployment-service]
 scope: [engineer, admin]
 tags: [runbook, observability, vm-tarball, infrastructure, monitoring, verification]
 related: [codex/05-infrastructure/vm-tarball-deployment.md, deployment-service/scripts/vm/lib/launcher_common.sh, deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh, deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh]

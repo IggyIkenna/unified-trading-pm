@@ -30,6 +30,9 @@ source:
     authoritative_for claims — the two docs claim adjacent phrases ("three-category empty-output decision tree" vs
     "four-category empty-output decision") for what appears to be the SAME decision at different revisions,
   ]
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # SSOT contradiction: 3-vs-4-category empty-output decision
