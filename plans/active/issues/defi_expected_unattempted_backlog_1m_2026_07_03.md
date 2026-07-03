@@ -27,9 +27,9 @@ estimate_calibrated_ai_days: 0.8
 assigned_role: data-pipeline-engineer
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-03
 locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_since: 2026-07-03
 ---
 
 # DeFi expected_unattempted backlog ≥1M — enumerator halt-safety (found 2026-07-03)
@@ -54,6 +54,37 @@ Discovered during the incremental-catalogue plan's Phase 4 consumer verification
 manifest row at all means the data-status defi denominators are silently understated — the rollup-vs-drilldown
 divergence class the Phase-3.D backward-fill exists to close.
 
+## OPERATOR DECISION REQUIRED (Ikenna) — approve the manifest seeding
+
+The apply-write mutates the availability manifest (~1.38M new rows) and the enumerator gates it on operator review by
+design. **What the write actually is**: `record_expected_empty(reason=EXPECTED_*)` honest-absence rows — typed "no data
+could ever exist here" documentation. It triggers **zero downloads**; only the 684 recent cells surface as real
+outstanding work in data-status afterwards.
+
+**A (RECOMMENDED): approve the FULL apply — all 1,380,376 rows, one run.** The designed Phase-3.D backward-fill;
+idempotent per tuple; per-VM-shard isolated (the consolidator merges it); the only option that makes the defi
+denominator fully honest AND stops every future scan from tripping the 1M halt. The consolidator already handles a
+75M-row cefi canonical — 1.4M metadata rows is well within its envelope.
+
+```bash
+cd instruments-service
+MANIFEST_PER_VM_SHARDS=true VM_NAME=enum-universe-defi-$(date +%s) \
+GCP_PROJECT_ID=central-element-323112 \
+python scripts/enumerate_expected_universe.py \
+    --asset-group defi --apply-write --max-writes-per-run 1500000
+```
+
+Post-apply verification (executor does all three): (1) manifest row-count delta ≈ +1.38M
+(`_index/availability_index.parquet` after the next consolidator cycle); (2) a fresh scan-only run reports ~0
+candidates; (3) the data-status defi denominator/remaining counts refresh.
+
+**B: seed only 2021→today (684 rows) now, defer the 2018–2019 block.** Smaller manifest, but deep-history denominators
+stay dishonest (contradicts the honest-absence model) and every future defi scan keeps halting at the 1M cap. Not
+recommended.
+
+**Other**: any custom slice (per-venue / per-year via `--start-date`/`--end-date` chunked runs — idempotent, safe to
+split arbitrarily).
+
 ## Fix path (operator-gated by design)
 
 The enumerator's halt message is explicit: "Increase `--max-writes-per-run` after operator review." Steps:
@@ -66,9 +97,9 @@ The enumerator's halt message is explicit: "Increase `--max-writes-per-run` afte
       YEARN_V3 / BEEFY etc. all launched years later), i.e. HONEST-ABSENCE documentation rows
       (`record_expected_empty(reason=EXPECTED*\*)`), NOT download work. Only **684 cells across 2021–2025** are     potentially actionable "remaining to download" rows. Even spread across data_types (~80k each); top venues BEEFY     96k / BALANCER 86k / PANCAKESWAP_V3 64k. (First attempt hit a transient consolidator read race — 404 on a     replaced `\_index`
       generation — retry succeeded; not a defect.)
-- [ ] [INFRA] P1. Operator-approved apply: `MANIFEST_PER_VM_SHARDS=true VM_NAME=enum-universe-defi-<ts>`
-      `--apply-write --max-writes-per-run <approved>` (chunked runs are fine — the enumerator is idempotent per tuple);
-      verify manifest row-count delta + a data-status defi denominator refresh afterwards.
+- [ ] [INFRA] P1. Operator-approved apply per the **OPERATOR DECISION REQUIRED** section above (exact command +
+      post-apply verification there). BLOCKED-OPERATOR-DECISION until Ikenna picks A / B / Other; then the executor runs
+      the apply + all three verification steps and flips this box with the run_id + manifest delta.
 - [ ] [VERIFY] P2. Check the other AGs for the same never-applied backlog (tradfi/cefi/prediction scan-only counts).
 
 ## Progress log
