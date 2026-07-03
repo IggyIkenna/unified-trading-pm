@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Service Level Objectives (SLOs) — Unified Trading System
 summary:
-status:
+  "Fleet SLOs on a 30-day rolling error-budget model (Google SRE): per-service SLIs/targets — execution order P99
+  <500ms, kill-switch P99 <200ms (hard/regulatory), alerting delivery P99 <30s, instruments refresh P95 <60s, etc.;
+  burn-rate alerting (fast 14× in 1h → P1 page), Prometheus metric naming + OpenTelemetry span conventions; Cloud
+  Monitoring SLO resources in Terraform."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, instruments-service, market-data-processing-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [slo, monitoring, observability, execution, performance, alerting]
+related: [alerting.md, lifecycle-events.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [service level objectives + error budgets, SLO burn-rate alerting]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Unity Integration
 summary:
-status:
+  "Unity sports-betting prime broker: META_BROKER, single USD wallet, single TCP connection + Java Feed Connector
+  sidecar, 10 child books (8 confirmed + 2 TBD; 0.2%–3.0% commission-on-win), all 3 sports; commercial terms —
+  $10.8k deposit refundable at $5.3M lifetime turnover, $2.6k/mo subscription waived at $260k/mo effective turnover,
+  1x rollover."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [unity, sports, odds, execution, meta-broker, cost]
+related:
+  [
+    prime-brokers.md,
+    venue-registry-reference.md,
+    ../03-services/venue-capability-registry.md,
+    ../04-architecture/capital-structure-and-regulatory.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [Unity prime-broker integration, Unity child-book registry + commercial terms]
 referenced_by:
 owner:
 last_reviewed:

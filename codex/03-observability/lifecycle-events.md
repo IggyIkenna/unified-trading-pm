@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Lifecycle Events
 summary:
-status:
+  "Lifecycle-event taxonomy: batch services emit 11 mandatory ordered events (STARTED→…→STOPPED/FAILED), live mode adds
+  DATA_BROADCAST (12); required envelope fields + per-event extras; conditional event families (instruments-live,
+  live-pipeline, ML, strategy hot-reload, kill-switch bus); ServiceBootstrap auto-emits STARTED/STOPPED/FAILED
+  (QG STEP 5.61). Machine SSOT = UAC internal/events.py."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [lifecycle-events, observability, pipeline, monitoring, data-quality, live-trading]
+related:
+  [
+    coordination-events.md,
+    alerting.md,
+    ../04-architecture/data-flow-map.md,
+    ../07-security/audit-logging.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [lifecycle-event taxonomy, mandatory lifecycle event sequence]
 referenced_by:
 owner:
 last_reviewed:

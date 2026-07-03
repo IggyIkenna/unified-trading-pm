@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Coordination Events -- Service-to-Service Wiring
 summary:
-status:
+  "Maps the 10 standard live-mode coordination events (DATA_READY, INSTRUMENTS_READY, FEATURES_READY, PREDICTIONS_READY,
+  SIGNALS_READY, sports LIVE_* ...) to their Pub/Sub publishers + subscribers — only INSTRUMENTS_READY is fully wired,
+  5 publish-only, 4 defined-only; inner-loop MTDS→MDPS→features candle cascade uses Redis Streams for sub-second
+  latency."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [coordination-events, pipeline, mtds, mdps, features, live-trading, observability]
+related:
+  [
+    lifecycle-events.md,
+    alerting.md,
+    ../04-architecture/data-flow-map.md,
+    ../05-infrastructure/live-pipeline-architecture.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [coordination-event service-to-service wiring, coordination-event wiring status]
 referenced_by:
 owner:
 last_reviewed:

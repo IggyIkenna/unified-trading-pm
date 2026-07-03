@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Monitoring control plane — CI dashboard + fleet git-health
 summary:
-status:
+  "SSOT for the monitoring read surfaces: the CI/CD repo dashboard (deployment-ui /repos + deployment-api
+  /api/repo-ci/*; hybrid GitHub-live + workspace-manifest) and fleet git-health (agent-orchestrator /fleet-git +
+  deployment-ui /fleet). Alert-parity principle — anything alerted on generically must be a continuously observable
+  dashboard state; every status atom deep-links to the authoritative UI."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [monitoring, observability, ci, quality-gates, orchestrator, ui]
+related:
+  [
+    alerting.md,
+    plans/active/monitoring_control_plane_master_2026_06_10.md,
+    ../08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-06-10
-authoritative_for:
+authoritative_for: [monitoring control plane read surfaces, CI dashboard + fleet git-health]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Data-Feed SLA Registry
 summary:
-status:
+  "Feed-SLA registry (SSOT in data_freshness.py — DataFreshnessContract + ALL_FRESHNESS_CONTRACTS): per-feed
+  max_age/warn_age/cadence/criticality (critical/important/informational) plus refetch_action Layer-0 self-healing;
+  four sub-dicts (MARKET_TICK/FEATURE/ML/ACCOUNT_STATE_FRESHNESS), CI-enforced no-orphan + warn<max invariants;
+  cross-validated with ALERT_THRESHOLDS tick_staleness (300s floor)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [data-feed-sla, data-quality, self-healing, monitoring, reconciliation, observability]
+related:
+  [
+    alerting.md,
+    ../04-architecture/autonomous-recovery-matrix.md,
+    ../04-architecture/reconciliation-age-tracking.md,
+    ../05-infrastructure/manifest-consolidator-ssot.md,
+  ]
 created: 2026-06-20
-authoritative_for:
+authoritative_for: [data-feed SLA registry, feed freshness contracts + refetch_action binding]
 referenced_by:
 owner:
 last_reviewed: 2026-06-20

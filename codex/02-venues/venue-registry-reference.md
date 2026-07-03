@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Venue Registry — Reference
 summary:
-status:
+  "Human-readable mirror of the UAC venue capability registry: the catalog of every venue the system trades on or
+  pulls data from, classified SINGLE_VENUE / META_BROKER / DATA_AGGREGATOR — 5 CeFi execution + 2 pricing-only, 3
+  TradFi (IBKR/CME/ICE), 7 DeFi chains + DEXes/lending/staking/perps, Unity + sports exchanges + aggregators,
+  prediction markets; lists permanently-removed venues (LSE/TSX/Elysium/Arkham/Bloxroute/Infura; Pyth Solana-only)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [venue, registry, cefi, defi, tradfi, sports, prediction]
+related:
+  [
+    prime-brokers.md,
+    unity-integration.md,
+    ../03-services/venue-capability-registry.md,
+    ../02-data/venue-availability.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [venue registry human-readable reference, permanently-removed venues list]
 referenced_by:
 owner:
 last_reviewed:
