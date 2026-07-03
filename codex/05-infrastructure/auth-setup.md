@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Authentication Setup Guide
 summary:
-status:
+  End-to-end authentication + credential setup guide — GitHub PATs / CLI, GCP ADC + service accounts + Workload Identity
+  Federation, GCP Secret Manager + GitHub secrets, Docker/Artifact-Registry auth, SSH keys, vendor API keys
+  (Tardis/Databento/TheGraph), and the Google-OAuth-client-id-from-Secret-Manager pattern.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [client-reporting-api, execution-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [auth, infrastructure, gcp, github, secrets, secret-manager, docker, ssh]
+related: [cicd-setup.md, service-setup-checklist.md, artifact-registry-setup.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [workspace authentication + credential setup guide]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

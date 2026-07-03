@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Token Wrapping and Venue Collateral
 summary:
-status:
+  Wrapped/unwrapped token protocol mapping (Aave/Morpho need WETH/weETH/wstETH) plus the per-venue collateral acceptance
+  matrix and haircuts — exposed via the UAC registry (needs_wrapping / venue_accepts_collateral /
+  get_collateral_haircut), auto-wrapped in execution-service WrapPreprocessor and enforced by the strategy-service
+  CollateralValidationMixin.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, collateral, token-wrapping, uac, strategy, aave, registry]
+related:
+  [
+    ../02-data/defi-canonical-naming-ssot.md,
+    defi-execution-overview.md,
+    flash-loan-receiver.md,
+    strategy-service-architecture.md,
+  ]
 created: 2026-04-03
-authoritative_for:
+authoritative_for: [token wrapping rules + venue collateral acceptance matrix]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

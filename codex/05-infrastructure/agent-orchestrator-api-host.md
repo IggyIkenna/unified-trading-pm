@@ -2,16 +2,24 @@
 doc_type: codex-ssot
 title: agent-orchestrator — central API host architecture
 summary:
-status: active
+  Central API host architecture for agent-orchestrator (EC2 i-0c9b283b31d6b5ca7, 13.113.200.22) — nginx :443 to uvicorn
+  :8765 router (fleet reached over private VPC :8026), systemd resource limits, the orch-watchdog forensic snapshots,
+  EventBridge+Lambda auto-reboot with a sliding-24h reboot ceiling, and the httpx (no-subprocess) usage poller.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [orchestrator, infrastructure, aws, ec2, monitoring, self-healing, nginx]
+related:
+  [
+    ../04-architecture/agent-orchestrator-overview.md,
+    agent-orchestrator-deploy.md,
+    agent-orchestrator-worker-topology.md,
+  ]
 created: 2026-05-30
-authoritative_for:
+authoritative_for: [agent-orchestrator central API host (systemd limits + watchdog + auto-reboot)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-30

@@ -2,21 +2,34 @@
 doc_type: codex-ssot
 title: TradFi Batch/Live Architecture
 summary:
-status:
+  Per-asset-group batch/live shape for asset_group=tradfi — the canonical MULTI-SOURCE group (databento + massive +
+  yahoo + barchart + eia), venue-calendar-gated staleness, L2Matcher fills, source-in-the-shard-atom, and the row-level
+  source= provenance contract proven here first.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, ibkr-gateway-infra, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [tradfi, batch-live, pipeline-mode, manifest, databento, source-provenance, data-correctness, mtds]
+related:
+  [
+    batch-live-architecture.md,
+    cefi-batch-live.md,
+    sports-batch-live.md,
+    ../02-data/pipeline-mode-partition.md,
+    ../02-data/tradfi-databento-sourcing-ssot.md,
+  ]
 created: 2026-05-16
-authoritative_for:
+authoritative_for: [TradFi (asset_group=tradfi) batch/live per-AG architecture]
 referenced_by:
 owner:
 last_reviewed: 2026-06-11
 code_refs:
-plan: plans/active/tradfi_manifest_canonicalisation_2026_06_01.md + pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc, replaces the 2026-05-16 placeholder)
+plan:
+  plans/active/tradfi_manifest_canonicalisation_2026_06_01.md +
+  pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc, replaces the 2026-05-16
+  placeholder)
 ---
 
 # TradFi Batch/Live Architecture

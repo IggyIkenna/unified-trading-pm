@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: AWS CloudTrail cost optimization — duplicate-trail removal (2026-06-20)
 summary:
-status:
+  AWS CloudTrail cost fix (account 427895769566, 2026-06-20) — a redundant `management-events` trail duplicated the free
+  first copy from the org trail `logs`, billing $322 over 20 days (~$500/mo, 96% of the CloudTrail bill); removed via
+  stop-logging + delete-trail with zero coverage loss, leaving exactly ONE account-wide multi-region org trail.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [admin, engineer]
-tags: []
-related: []
+tags: [aws, cost, cloudtrail, infrastructure, monitoring, audit]
+related: [aws-iam-matrix.md, custody-onboarding-checklist.md]
 created: 2026-06-20
-authoritative_for:
+authoritative_for: [AWS CloudTrail single-org-trail rule + duplicate-trail removal (2026-06-20)]
 referenced_by:
 owner:
 last_reviewed: 2026-06-20

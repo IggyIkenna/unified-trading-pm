@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Treasury Custody Flow
 summary:
-status:
+  Canonical treasury custody flow — the TreasurySource taxonomy (COPPER / CEFFU / DEFI_HOT_WALLET / sub-account sources)
+  and endpoint configs, the 60s-TTL pre-trade custody ping, and the REQUESTED-to-COMPLETED withdrawal lifecycle with
+  N-of-M quorum plus post-withdrawal reconciliation that arms KILL_PER_TREASURY breakers on balance drift.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [treasury, custody, execution, withdrawal, defi, cefi, kill-switch, uac]
+related:
+  [
+    transfer-architecture.md,
+    wallet-hierarchy-and-capital-flow.md,
+    custody-providers.md,
+    interface-credential-convention.md,
+    kill-switch-circuit-breaker.md,
+  ]
 created: 2026-05-13
-authoritative_for:
+authoritative_for: [TreasurySource taxonomy + withdrawal lifecycle N-of-M quorum + reconciliation invariant]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

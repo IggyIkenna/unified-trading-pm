@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Agent Orchestrator Worker Topology
 summary:
-status: active
+  Multi-VM fleet topology for agent-orchestrator — central `planning` VM + `human-planning` VM + 10 epic VMs (AWS EC2
+  ap-northeast-1), per-VM slot contract, bootstrap_vm.sh flow, the AWS/GCP cloud toggle, and the S3/GCS event bus. NOTE
+  the per-epic-VM fleet is retired (single-VM architecture 2026-06-27); only the central-VM topology persists.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, infrastructure, aws, ec2, fleet, topology, bootstrap]
+related:
+  [
+    agent-orchestrator-api-host.md,
+    agent-orchestrator-deploy.md,
+    agent-orchestrator-dns-cutover.md,
+    ../04-architecture/agent-orchestrator-overview.md,
+  ]
 created: 2026-05-21
-authoritative_for:
+authoritative_for: [agent-orchestrator historical multi-VM epic-fleet topology]
 referenced_by:
 owner: ikenna
 last_reviewed: 2026-05-28

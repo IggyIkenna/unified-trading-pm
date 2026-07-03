@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: agent-orchestrator — DNS cutover recipe (Phase 11)
 summary:
-status: active
+  Recipe (Phase 11) for putting per-VM FQDNs (api-<vm>.agent-orchestrator.odum-research.com) in front of the AWS epic-VM
+  fleet via allocated EIPs + Squarespace/Google-Cloud-DNS A records — operator/debug convenience only, NOT required for
+  browser traffic which hits only the central API. NOTE the per-epic-VM fleet is retired (single-VM architecture
+  2026-06-27).
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, infrastructure, aws, dns, eip, runbook]
+related:
+  [
+    agent-orchestrator-worker-topology.md,
+    agent-orchestrator-deploy.md,
+    ../04-architecture/agent-orchestrator-overview.md,
+  ]
 created: 2026-05-28
-authoritative_for:
+authoritative_for: [agent-orchestrator per-VM DNS/EIP cutover recipe (historical epic-VM fleet)]
 referenced_by:
 owner: ikenna
 last_reviewed: 2026-05-28
