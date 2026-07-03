@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: paper-vs-live-execution-seam
 summary:
-status: canonical (extracted from master plan + question doc 2026-05-10)
+  Pins the principle that batch / paper / live / manual differ ONLY at the execution-service fill source — strategy /
+  risk / P&L / position / alerting / reconciliation are identical across modes; pricing has no "paper" concept, mock
+  data is for risk-sims not paper-trading, and the mock-vs-paper boundary is operator-discipline (no code enforcement).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [batch-live-reconciliation-service, execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [paper-trading, live-trading, execution, reconciliation, defi, batch-live]
+related:
+  [
+    operational-modes.md,
+    batch-live-architecture.md,
+    ../05-infrastructure/per-venue-paper-policy.md,
+    reconciliation-resolution.md,
+  ]
 created: 2026-05-09
-authoritative_for:
+authoritative_for: [paper-vs-live-vs-batch execution seam, mode-divergence-only-at-execution-layer principle]
 referenced_by:
 owner:
 last_reviewed: 2026-05-10

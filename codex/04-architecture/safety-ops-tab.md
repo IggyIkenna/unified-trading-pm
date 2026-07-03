@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Safety Ops Tab
 summary:
-status:
+  The Layer-M manual-override surface in deployment-ui + unified-trading-system-ui (DART) that exposes every Layer-0/1
+  recovery action behind a typed-confirm-string gate — 4 sections (10 Layer-0 action buttons, LLM audit verdicts feed,
+  audit-ack queue, incident history), safety-ops:read vs restricted safety-ops:execute roles, all routed through the
+  alerting-service manual-action endpoint with provenance=MANUAL_OPERATOR.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, recovery, kill-switch, safety-ops, self-healing, escalation]
+related:
+  [
+    recovery-defence-in-depth-layers.md,
+    incident-gateway-state-machine.md,
+    kill-switch-circuit-breaker.md,
+  ]
 created: 2026-05-26
 authoritative_for:
+  [Safety Ops manual-override tab (Layer-M), Layer-0 typed-confirm action buttons]
 referenced_by:
 owner:
 last_reviewed: 2026-05-29

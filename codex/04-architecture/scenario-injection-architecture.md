@@ -2,16 +2,32 @@
 doc_type: codex-ssot
 title: Scenario injection architecture
 summary:
-status: living
+  The synthetic-adversarial scenario harness that rides the SAME prod codepaths as live/batch (only an overlay mutation
+  differs; synthetic=true suppresses paging) — the 6 closed-set pipeline-tap layers (ORDER is the only pre-cutover
+  wire-in), 11-member ScenarioMutationSpec union, 9 OutcomeCategory assertions, the per-archetype green-matrix runner
+  (RED = cutover blocker), and LookaheadBias downgrade for overlay-active paths.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-ui, execution-service, features-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [scenario-injection, simulation, risk, execution, validation, uac]
+related:
+  [
+    scenario-outcome-assertions.md,
+    kill-switch-circuit-breaker.md,
+    autonomous-recovery-matrix.md,
+    ../02-data/scenario-overlay-semantics.md,
+  ]
 created: 2026-05-12
 authoritative_for:
+  [
+    scenario injection harness architecture,
+    scenario mutation-type taxonomy,
+    scenario pipeline-tap layers,
+    scenario matrix runner,
+  ]
 referenced_by:
 owner: simulation-platform
 last_reviewed: 2026-05-17

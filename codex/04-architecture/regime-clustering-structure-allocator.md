@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Regime Clustering → Factor-Targeted Structure Allocator
 summary:
-status:
+  End-to-end 5-step pipeline from market-state vectorisation to live options-structure selection — features-service
+  PIT-lagged vectors → unsupervised regime clustering (GMM/HDBSCAN, OOD abstain guard) → factor-targeted discrete
+  structure construction (edge-maximising subject to Greek-tracking constraints, real listed strikes, no snap) → 3-layer
+  risk/portfolio/analog gates → multi-timeframe fusion; regime label produced in features/strategy (NOT ml-service).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, greeks-service, market-tick-data-service, ml-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, features, ml, execution, batch-live, performance]
+related: [batch-live-architecture.md]
 created: 2026-05-30
-authoritative_for:
+authoritative_for: [regime-clustering factor-targeted structure allocator pipeline]
 referenced_by:
 owner:
 last_reviewed:

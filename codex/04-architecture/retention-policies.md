@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Data Retention Policies
 summary:
-status:
+  The single retention schedule for all persistent data — per-category retention (lifecycle JSONL 90d, alert history
+  1yr, trade executions + audit trail 7yr FCA/MiFID II, market raw ticks 1yr, candles/models indefinite), enforced via
+  GCS/S3 bucket lifecycle rules today; the planned UCI DataSink.set_retention_policy() abstraction is not yet built.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
+tags: [retention, infrastructure, data-status, cost, compliance]
 related: []
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [data retention schedule and lifecycle-rule enforcement]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

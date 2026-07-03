@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Scenario Outcome Assertions
 summary:
-status:
+  The scenario outcome-assertion contract (child of scenario-injection-architecture) — the 9-member OutcomeCategory
+  closed-enum, the per-assertion 6-tuple (consequence / breaker_id / breaker_action / kill_switch_id / alert_codes /
+  expected_within_seconds) checked by UTL ScenarioOutcomeChecker, per-archetype matrix cell shape, and PASS/FAIL/WARN
+  semantics (any FAIL = cutover-block per master plan F-17.5); synthetic=true guards against real-fire masking.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service]
 scope: [engineer, admin]
-tags: []
+tags: [scenario-injection, simulation, validation, risk, kill-switch, uac]
 related: [plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md Phase 8.B]
 created: 2026-05-18
 authoritative_for:
+  [scenario outcome-assertion contract, OutcomeCategory closed-enum, scenario matrix PASS/FAIL/WARN semantics]
 referenced_by:
 owner:
 last_reviewed:

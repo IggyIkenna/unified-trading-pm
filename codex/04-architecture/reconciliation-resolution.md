@@ -2,16 +2,31 @@
 doc_type: codex-ssot
 title: Reconciliation Resolution Architecture
 summary:
-status:
+  The batch↔live↔paper reconciliation contract + operator resolution workflow — what gets compared (positions
+  baseline, live vs simulated fills), the comparison keys, the 6-stage recon DAG (stage0 config/manifest/data-pipeline →
+  stage1 ML → stage2 strategy → stage3 execution + 3b paper-live + 3c batch-paper), alpha decomposition (strategy vs
+  execution vs data-pipeline vs ML), per-stage/per-pair tolerance bands, and the ACCEPT/REJECT/INVESTIGATE + book-
+  correction UI flow. Per-archetype bands remain open (pvl-p21a).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [batch-live-reconciliation-service, execution-service, strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [reconciliation, batch-live, execution, strategy, ui, data-correctness]
+related:
+  [
+    batch-live-architecture.md,
+    paper-vs-live-execution-seam.md,
+    reconciliation-age-tracking.md,
+    separation-of-concerns.md,
+  ]
 created: 2026-03-27
 authoritative_for:
+  [
+    batch-live reconciliation resolution workflow (accept/reject/investigate + book-correction),
+    batch-vs-live recon stage-DAG comparison contract,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

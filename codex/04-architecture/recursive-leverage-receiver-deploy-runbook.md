@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: RecursiveLeverageReceiver — Deploy Runbook
 summary:
-status:
+  Operator runbook to deploy the Phase-4 RecursiveLeverageReceiver.sol to a target chain (Sepolia/Ethereum/Base/Tenderly
+  fork) and register it — pre-deploy checklist, deploy commands, the 4 mandatory post-deploy steps (capture address →
+  write Secret Manager → update UAC FLASH_LOAN_RECEIVER_REGISTRY → Web3 verify OWNER/POOL), known Sepolia deploy, and
+  failure-mode troubleshooting.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, runbook, deployment, uac]
+related: [flash-loan-receiver.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [RecursiveLeverageReceiver deploy runbook]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

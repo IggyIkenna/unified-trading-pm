@@ -2,16 +2,27 @@
 doc_type: codex-ssot
 title: Risk-Breaker Seam — Distinct Enums With Escalation Event
 summary:
-status:
+  The architectural contract between Layer-2 risk-controller (RiskRuleConsequence) and Layer-3 circuit-breaker
+  (BreakerAction) — two distinct closed enums that share a SCALE_DOWN member by design and never invoke each other,
+  composing only through the single UAC BREAKER_ESCALATION_REQUESTED event fired on N-consecutive SCALE_DOWN in window W
+  (RISK_TO_BREAKER_ESCALATION_MAP). Ratified Q9 2026-05-10 (distinct-enums-with-escalation-seam over unified-enum).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [risk, kill-switch, execution, escalation, uac]
+related:
+  [
+    risk-rule-taxonomy.md,
+    risk-preflight-flow.md,
+    kill-switch-circuit-breaker.md,
+    autonomous-recovery-matrix.md,
+  ]
 created: 2026-05-11
 authoritative_for:
+  [risk-controller ↔ circuit-breaker escalation seam (BREAKER_ESCALATION_REQUESTED)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

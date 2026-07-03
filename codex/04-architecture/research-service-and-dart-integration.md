@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Research-service ↔ DART integration
 summary:
-status:
+  Names the boundary between DART (operator-facing manual-trade gate for live mode — 6 first-class lanes, explicit
+  click-to-confirm per trade, same execution-service code path as automated) and research-service (offline strategy
+  authoring / signal exploration / backtest review that never places live orders); both share the strategy+execution
+  code path but expose distinct operator workflows.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ui, execution, strategy, defi, cefi, live-trading]
+related:
+  [
+    ../09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    ../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
+    batch-live-architecture.md,
+    defi-execution-overview.md,
+  ]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [research-service vs DART operator-workflow boundary]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

@@ -2,16 +2,33 @@
 doc_type: codex-ssot
 title: Runtime + Deployment Topology — Per-Service Behavior, Pipeline Layers, Cluster Shapes, Diagrams
 summary:
-status:
+  The merged runtime + deployment topology SSOT — the canonical 7-layer pipeline execution order (reference → raw →
+  processing → features → ML → strategy/execution → post-trade), repo naming categories, the UI→API→service chain, the
+  live-vs-batch transport matrix (Redis Stream inner-loop cascade vs PubSub fan-out vs GCS), co-location policy,
+  data lineage (one authoritative producer per dataset), and per-service sharding dimensions. Machine SSOT is
+  configs/runtime-topology.yaml.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, deployment, pipeline, mdps, mtds, observability, ui]
+related:
+  [
+    tier-and-import-architecture.md,
+    ../05-infrastructure/live-pipeline-architecture.md,
+    ../06-coding-standards/integration-testing-layers.md,
+    ../03-observability/lifecycle-events.md,
+  ]
 created: 2026-03-27
 authoritative_for:
+  [
+    runtime + deployment topology,
+    7-layer pipeline execution order,
+    live-vs-batch transport decision matrix,
+    per-service sharding dimensions,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-06-25
