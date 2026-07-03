@@ -1,8 +1,8 @@
 ---
 doc_type: codex-ssot
-title: Instrument-Universe Registry Consolidation — target architecture (PROPOSAL)
+title: Instrument-Universe Registry Consolidation — UAC owns venue + adapter-key truth
 summary:
-status: PROPOSAL
+status:
 nature: design
 asset_group: [meta]
 stage: [meta]
@@ -18,14 +18,15 @@ last_reviewed: 2026-06-29
 code_refs:
 ---
 
-# Instrument-Universe Registry Consolidation — target architecture (PROPOSAL)
+# Instrument-Universe Registry Consolidation — UAC owns venue + adapter-key truth
 
-> **Status: PROPOSAL, not yet implemented.** This doc describes the TARGET. The current state is the
-> layered/partly-mirrored arrangement described in
-> [`instruments-service-as-ssot-for-mtds.md`](instruments-service-as-ssot-for-mtds.md). The execution plan is
-> [`plans/active/instrument_universe_registry_consolidation_2026_06_29.md`](../../plans/active/instrument_universe_registry_consolidation_2026_06_29.md).
-> Until that plan ships, the SSOT for "how the universe is assembled today" remains the layered arrangement below — do
-> not code against this target before its phase lands.
+> **Status: IMPLEMENTED** — Phase 1 (venue producers UAC-consolidated) shipped 2026-06-29
+> (`instruments-service@4da6fe8` + `unified-api-contracts@6bcff215`); Phase 2 (adapter routing UAC-derived:
+> `registry/venue_adapter_keys.py::VENUE_TO_ADAPTER_KEY` + `NO_ADAPTER_YET` sentinel, IS factory resolves key→class
+> only, `URDI_SUPPORTED_VENUES` UAC-derived, UTL startup venue validation reads UAC directly) shipped 2026-07-03.
+> Execution record: `plans/.../instrument_universe_registry_consolidation_2026_06_29.md`. Move 3 (one expected-universe
+> entry point) remains tracked under
+> [`plans/active/honest_coverage_v2_instrument_denominator_2026_06_28.md`](../../plans/active/honest_coverage_v2_instrument_denominator_2026_06_28.md).
 
 ## Problem — the universe is assembled across mirrored layers
 
@@ -49,12 +50,12 @@ That EXPECTED matrix is sourced from **three places that can drift**:
 A hardcoded CeFi/TradFi mirror that silently diverges from UAC corrupts the denominator → corrupts the honest-coverage
 verdict. The mirrors exist for runtime convenience, not by design.
 
-## Target — one canonical input, thin runtime resolvers
+## Architecture — one canonical input, thin runtime resolvers
 
 ```
 UAC canonical registry  (the ONLY place a venue/data_type/coverage-window is DECLARED)
-  ├─ VENUES_BY_ASSET_GROUP / DATA_TYPES_BY_ASSET_GROUP / *_SOURCE_COVERAGE_START   (already canonical)
-  └─ VENUE_TO_ADAPTER_KEY                                                          (NEW — venue→adapter KEY, data only)
+  ├─ VENUES_BY_ASSET_GROUP / DATA_TYPES_BY_ASSET_GROUP / *_SOURCE_COVERAGE_START   (canonical)
+  └─ VENUE_TO_ADAPTER_KEY (registry/venue_adapter_keys.py)                          (venue→adapter KEY, data only)
             │  read at runtime, never mirrored
             ▼
 instruments-service (thin resolvers — code, no re-declared universe data)
@@ -68,13 +69,19 @@ honest-coverage Layer-1 EXPECTED matrix  (denominator now provably == UAC)
 
 ### The three moves
 
-1. **Venues read from UAC at runtime.** Delete `_CEFI_VENUES` / `_TRADFI_VENUES`; `get_venues_for_asset_groups()`
-   returns `VENUES_BY_ASSET_GROUP[ag]` directly. Any deliberate IS-side narrowing (e.g. dropping a not-yet-adapterable
-   venue) becomes an explicit, named filter with a reason — never a silent omission in a parallel list.
-2. **Adapter routing UAC-derived.** UAC owns the venue→adapter-**key** mapping (pure data, no IS import — respects the
-   tier/import architecture: UAC is upstream of IS). IS keeps only key→**class** instantiation.
-   `CANONICAL_VENUE_TO_ADAPTER` stops being an independent source of venue truth; a venue with no adapter key is a loud
-   UAC error, not a missing dict entry.
+1. **Venues read from UAC at runtime — SHIPPED 2026-06-29** (`instruments-service@4da6fe8` +
+   `unified-api-contracts@6bcff215`). `_CEFI_VENUES` / `_TRADFI_VENUES` deleted; `get_venues_for_asset_groups()` returns
+   `VENUES_BY_ASSET_GROUP[ag]` modulo NAMED filters (`expand_cefi_tardis_endpoints()` cefi grain-adapter,
+   `_TRADFI_NON_VENUE_KEYS`); defi denominator == IS-producible set; sports documented two-registry EXEMPT.
+   `TestVenueProducerUACInvariant` is the regression gate.
+2. **Adapter routing UAC-derived — SHIPPED 2026-07-03.** UAC owns the venue→adapter-**key** mapping
+   (`registry/venue_adapter_keys.py::VENUE_TO_ADAPTER_KEY`, pure data, no IS import — UAC is upstream of IS), with the
+   explicit `NO_ADAPTER_YET` sentinel for declared-adapterless venues (MTDS-owned odds venues, `YAHOO_FINANCE`,
+   expand-only bare `COINBASE`). IS keeps only key→**class** instantiation (`factory._ADAPTERS`); the old IS
+   `CANONICAL_VENUE_TO_ADAPTER` dict is DELETED; a venue with no UAC key raises loudly; `URDI_SUPPORTED_VENUES` and UTL
+   `validate_venue_names()` derive from UAC `VENUES_WITH_REFERENCE_ADAPTER`. Regression gates:
+   `test_venue_adapter_keys.py` (UAC — every canonical venue has a key or sentinel) +
+   `test_adapter_routing_uac_invariant.py` (IS — every key resolves to a class).
 3. **One expected-universe entry point.** `build_expected(asset_group)` is the single public function; the genuinely
    different per-AG grains (cefi lifecycle, defi chain-genesis, tradfi calendar, sports per-league) live behind it as
    per-AG strategy objects sharing one interface. This is a unified _interface_, not a collapse of the per-AG logic.

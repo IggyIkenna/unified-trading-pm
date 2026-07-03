@@ -1,16 +1,31 @@
 ---
 doc_type: plan
 title: Instrument-Universe Registry Consolidation — UAC is the single source for venues + adapter routing (all 5 AGs)
-summary: 'Kill the hardcoded venue mirrors in instruments-service so the venue universe is UAC-sourced per asset_group. FINAL scope (post-audit, operator-locked 2026-06-29; see Progress Log): cefi → IS reads UAC via a named Tardis grain-adapter (UAC unchanged) + auto-fixes the KALSHI-PERP/POLYMARKET-PERP omission; tradfi → IS reads UAC minus a named YAHOO_FINANCE filter; prediction → IS reads UAC (was a local literal); defi + sports → EXEMPT from set-equality (IS keeps its defi producer; sports stays a two-registry split with MTDS owning odds venues); PLUS an operator-approved defi MVP-exclusion (re-phase DEFI_VENUE_PHASE live⟺IS-producible, narrow VENUES_BY_ASSET_GROUP[defi] denominator, remove ROCKETPOOL-ETHEREUM from MVP, bump MVP_SCOPE_CONFIG_VERSION). Phase 2 = UAC-derived adapter routing. The expected-universe single-entry-point work is folded into honest_coverage_v2_instrument_denominator. Two behaviour deltas (cefi +2 perps, defi MVP) are deliberate + operator-approved; all other
-  AGs byte-identical.'
-status: active
+summary:
+  "Kill the hardcoded venue mirrors in instruments-service so the venue universe is UAC-sourced per asset_group. FINAL
+  scope (post-audit, operator-locked 2026-06-29; see Progress Log): cefi → IS reads UAC via a named Tardis grain-adapter
+  (UAC unchanged) + auto-fixes the KALSHI-PERP/POLYMARKET-PERP omission; tradfi → IS reads UAC minus a named
+  YAHOO_FINANCE filter; prediction → IS reads UAC (was a local literal); defi + sports → EXEMPT from set-equality (IS
+  keeps its defi producer; sports stays a two-registry split with MTDS owning odds venues); PLUS an operator-approved
+  defi MVP-exclusion (re-phase DEFI_VENUE_PHASE live⟺IS-producible, narrow VENUES_BY_ASSET_GROUP[defi] denominator,
+  remove ROCKETPOOL-ETHEREUM from MVP, bump MVP_SCOPE_CONFIG_VERSION). Phase 2 = UAC-derived adapter routing. The
+  expected-universe single-entry-point work is folded into honest_coverage_v2_instrument_denominator. Two behaviour
+  deltas (cefi +2 perps, defi MVP) are deliberate + operator-approved; all other AGs byte-identical."
+status: completed
 nature: design
 asset_group: [cefi, defi, tradfi, sports, prediction, infrastructure]
 stage: [data, meta]
 repos: [unified-api-contracts, instruments-service]
 scope: [engineer, admin]
 tags: [instrument-universe, venue-registry, adapter-routing, honest-coverage, ssot-consolidation, data-correctness]
-related: [../../codex/04-architecture/instrument-universe-registry-consolidation.md, ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md, ../../codex/04-architecture/tier-and-import-architecture.md, ../../codex/02-data/honest-coverage-model.md, honest_coverage_v2_instrument_denominator_2026_06_28.md]
+related:
+  [
+    ../../codex/04-architecture/instrument-universe-registry-consolidation.md,
+    ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    ../../codex/04-architecture/tier-and-import-architecture.md,
+    ../../codex/02-data/honest-coverage-model.md,
+    honest_coverage_v2_instrument_denominator_2026_06_28.md,
+  ]
 created: 2026-06-29
 parent_epic: instruments_master
 assigned_vm: NA
@@ -19,7 +34,7 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 1.6
-last_updated: 2026-06-29
+last_updated: 2026-07-03
 locked_by: NA
 locked_since:
 supersedes:
@@ -32,7 +47,14 @@ drift_direction: advance-code
 
 # Instrument-Universe Registry Consolidation (all 5 AGs)
 
-> **Status: active** — operator-approved 2026-06-29. Codex target:
+> **✅ COMPLETED + ARCHIVED 2026-07-03.** All 14 todos done. Phase 1 (venue producers → UAC) shipped 2026-06-29
+> (`instruments-service@4da6fe8` + `unified-api-contracts@6bcff215`); Phase 2 (adapter routing → UAC keys) + codex flip
+> shipped 2026-07-03 (`unified-api-contracts@9eb5518`+`@6516ed4`, `unified-trading-library@5a83484`,
+> `instruments-service@8b7ce01`). Standing SSOT:
+> [`codex/04-architecture/instrument-universe-registry-consolidation.md`](../../codex/04-architecture/instrument-universe-registry-consolidation.md).
+> One follow-up re-homed to `instruments_mtds_subset_consistency_remediation_2026_06_17.md` (MTDS prefix-map mirror).
+
+> **Operator-approved 2026-06-29.** Codex target:
 > [`instrument-universe-registry-consolidation.md`](../../codex/04-architecture/instrument-universe-registry-consolidation.md).
 > **Resolved 2026-06-29:** expected-universe single-entry-point work folded into
 > [`honest_coverage_v2_instrument_denominator`](honest_coverage_v2_instrument_denominator_2026_06_28.md) (this plan =
@@ -88,22 +110,47 @@ drift_direction: advance-code
 
 ## Phase 2 — adapter routing UAC-derived [SEQUENTIAL, after Phase 1]
 
-- [ ] [AGENT] P1. Add `VENUE_TO_ADAPTER_KEY` (venue→adapter-key, pure data, no IS import) to the UAC registry — respects
+- [x] [AGENT] P1. Add `VENUE_TO_ADAPTER_KEY` (venue→adapter-key, pure data, no IS import) to the UAC registry — respects
       the tier/import architecture (UAC upstream of IS). **Gate:** UAC QG green; every venue in `VENUES_BY_ASSET_GROUP`
-      has a key or a loud "no-adapter-yet" sentinel.
-- [ ] [AGENT] P1. Rewrite `factory.get_adapter_for_canonical_venue()` to resolve UAC adapter-key → IS adapter **class**;
+      has a key or a loud "no-adapter-yet" sentinel. ✅ **DONE 2026-07-03** — `unified-api-contracts@9eb5518`
+      (`registry/venue_adapter_keys.py`: `VENUE_TO_ADAPTER_KEY` 141 entries + `NO_ADAPTER_YET` sentinel ×9 +
+      `VENUE_PREFIX_TO_PROTOCOL`/`PROTOCOL_TO_ADAPTER_KEY` moved from IS + `VENUES_WITH_REFERENCE_ADAPTER` frozenset;
+      subgraph multi-chain expansion runs in UAC from its own `SUBGRAPH_IDS`) + root re-export `@6516ed4` (UTL top-level
+      import surface). Gate met: UAC QG green (228s) ×2; `tests/unit/test_venue_adapter_keys.py` (8 tests)
+      machine-asserts every `VENUES_BY_ASSET_GROUP` venue has a key-or-sentinel AND the sentinel set is exactly the 9
+      declared venues. **Parity-proven**: non-sentinel map == old IS `CANONICAL_VENUE_TO_ADAPTER` byte-identical (0
+      only-old / 0 only-new / 0 value-diffs); sentinels cover only venues that raised before.
+- [x] [AGENT] P1. Rewrite `factory.get_adapter_for_canonical_venue()` to resolve UAC adapter-key → IS adapter **class**;
       `CANONICAL_VENUE_TO_ADAPTER` stops being a source of venue truth (keep only the key→class table). A venue with no
       UAC key raises loudly. **Gate:** `rg 'CANONICAL_VENUE_TO_ADAPTER'` only matches the key→class table;
-      `URDI_SUPPORTED_VENUES` derives from UAC, not a frozen IS set.
-- [ ] [AGENT] P2. Invariant test: every UAC venue resolves to an adapter (or an explicit not-yet-supported sentinel); no
-      silent `KeyError`. **Gate:** test passes.
+      `URDI_SUPPORTED_VENUES` derives from UAC, not a frozen IS set. ✅ **DONE 2026-07-03** —
+      `instruments-service@8b7ce01`: venue→key dict + dynamic loop + both prefix maps DELETED from `factory.py` (~170
+      lines); `_resolve_uac_adapter_key()` raises loudly on unknown ("UNKNOWN to UAC") AND sentinel ("UAC declares it
+      adapterless") venues, both keeping the historical "No URDI adapter" message prefix;
+      `URDI_SUPPORTED_VENUES = VENUES_WITH_REFERENCE_ADAPTER` (UAC-derived); `urdi_reference_provider`
+      unsupported-classification now also catches sentinels; 3 migration scripts + 7 test files + README migrated. Gate
+      EXCEEDED: `rg 'CANONICAL_VENUE_TO_ADAPTER'` = **0 hits repo-wide** (name fully deleted, no shim). IS QG green
+      (93s, full suite). **Cross-repo rider (same ship unit):** `unified-trading-library@5a83484` —
+      `validate_venue_names()` reads UAC `VENUES_WITH_REFERENCE_ADAPTER` directly (hard dep), deleting the fragile
+      optional `instruments_service` sibling import that would have broken on the symbol deletion; the silent
+      degrade-to-warning path (URDI missing → skip validation) is GONE — venue preflight now always enforces. UTL QG
+      green.
+- [x] [AGENT] P2. Invariant test: every UAC venue resolves to an adapter (or an explicit not-yet-supported sentinel); no
+      silent `KeyError`. **Gate:** test passes. ✅ **DONE 2026-07-03** — `instruments-service@8b7ce01`
+      `tests/unit/test_adapter_routing_uac_invariant.py` (6 tests): key→class closure (every non-sentinel UAC key ∈
+      `_ADAPTERS`), canonical-venue coverage cross-check, `URDI_SUPPORTED_VENUES is VENUES_WITH_REFERENCE_ADAPTER`
+      identity, expanded-cefi enumeration fully resolvable end-to-end, loud-raise on sentinel (`ODDS_API`) + unknown
+      venues. Companion UAC-side suite in `test_venue_adapter_keys.py`.
 
 ## Codex flip
 
-- [ ] [AGENT] P2. After Phases 1–2 land, remove the PROPOSAL banner from
+- [x] [AGENT] P2. After Phases 1–2 land, remove the PROPOSAL banner from
       `codex/04-architecture/instrument-universe-registry-consolidation.md` and update
       `instruments-service-as-ssot-for-mtds.md` to point at the consolidated registry. **Gate:** `docs(plans):` flip +
-      codex audit clean.
+      codex audit clean. ✅ **DONE 2026-07-03** (this commit) — consolidation doc: PROPOSAL banner → IMPLEMENTED status
+      note with ship evidence, moves 1+2 marked SHIPPED (move 3 stays tracked in
+      `honest_coverage_v2_instrument_denominator`); SSOT-for-MTDS doc gains the "where the universe is DECLARED" pointer
+      block; workspace `cursor-configs/CLAUDE.md` service one-liner updated ("venue lists + adapter KEYS are UAC data").
 
 ## Success criteria (workspace-wide)
 
@@ -116,11 +163,12 @@ drift_direction: advance-code
 - [x] ✅ [AGENT] P2. **[IS] DeFi denominator drift-guard (follow-up, hardening).** Add an IS unit test asserting
       `set(VENUES_BY_ASSET_GROUP["defi"]) == set(get_venues_for_asset_groups(["DEFI"]))` (== `_build_defi_venues()`), so
       a future change to either side that re-introduces denominator/producible drift fails CI. Now PASSES (both == P
-      after `@6bcff215`). **Gate:** test green in IS suite. _(Captured 2026-06-29; small single-test IS ship.)_ —
-      **DONE 2026-07-01** `instruments-service@e0ca6c2`: on inspection the pre-existing `test_defi_exempt_is_subset_of_uac`
-      was STALE (subset-only, docstring claimed ~70 UAC-only venues). Verified live `is_defi == uac_defi ==
-      _build_defi_venues() == 55` (zero either side), so upgraded it to a two-direction equality drift-guard
-      (`test_defi_set_equals_uac_denominator_drift_guard`) + fixed the stale class/method docstrings. IS QG green (147s).
+      after `@6bcff215`). **Gate:** test green in IS suite. _(Captured 2026-06-29; small single-test IS ship.)_ — **DONE
+      2026-07-01** `instruments-service@e0ca6c2`: on inspection the pre-existing `test_defi_exempt_is_subset_of_uac` was
+      STALE (subset-only, docstring claimed ~70 UAC-only venues). Verified live
+      `is_defi == uac_defi ==     _build_defi_venues() == 55` (zero either side), so upgraded it to a two-direction
+      equality drift-guard (`test_defi_set_equals_uac_denominator_drift_guard`) + fixed the stale class/method
+      docstrings. IS QG green (147s).
 
 ## Notes / context
 
@@ -328,3 +376,48 @@ test (hardening, captured above); **Phase 2** (adapter routing UAC-derived); the
 note: 1 of 6 implementation sub-agents (the first UAC-defi one) produced incorrect output (misread constants) and was
 caught by orchestrator independent verification + revert — a reminder that data-correctness sub-agent output MUST be
 independently verified against ground truth, never trusted on self-report.
+
+### 2026-07-03 — PHASE 2 + CODEX FLIP SHIPPED — PLAN COMPLETE (Harsh session)
+
+Four ship units, each `quality-gates.sh`-green before quickmerge:
+
+1. **`unified-api-contracts@9eb5518`** — `registry/venue_adapter_keys.py`: `VENUE_TO_ADAPTER_KEY` (141 entries; the
+   whole IS dict moved verbatim incl. load-bearing comments) + `NO_ADAPTER_YET` sentinel (9 deliberate entries: bare
+   `COINBASE` expand-only alias, `YAHOO_FINANCE` source-as-venue, 7 MTDS-owned sports odds venues per Decision C) +
+   `VENUE_PREFIX_TO_PROTOCOL`/`PROTOCOL_TO_ADAPTER_KEY` (moved from IS privates) + subgraph multi-chain expansion now
+   computed inside UAC from its own `SUBGRAPH_IDS` + `VENUES_WITH_REFERENCE_ADAPTER` frozenset; 8-test gate suite.
+   **Refactor invariant PROVEN before shipping**: non-sentinel map == old `CANONICAL_VENUE_TO_ADAPTER` with empty
+   symmetric diff and zero value diffs (run in the IS venv against the live old dict).
+2. **`unified-api-contracts@6516ed4`** — root re-export of `VENUE_TO_ADAPTER_KEY` + `VENUES_WITH_REFERENCE_ADAPTER`
+   (discovered requirement: UTL's codex gate bans `unified_api_contracts.registry` deep imports at max=0, so the UTL
+   consumer needs the top-level surface).
+3. **`unified-trading-library@5a83484`** — `validate_venue_names()` now validates against UAC
+   `VENUES_WITH_REFERENCE_ADAPTER` via a hard top-level import. Deletes the optional
+   `instruments_service.reference_data` sibling import (which caught only `ModuleNotFoundError` and would have CRASHED
+   on the IS symbol deletion wherever both packages are installed) AND the silent degrade path ("URDI not installed →
+   skip validation") — venue-name preflight is now always enforced. Test suite rewritten against the REAL registry (old
+   suite mocked a fictional one containing bare `BINANCE`/`COINBASE`, which never existed in the real dict); new
+   sentinel-rejection test (`ODDS_API` must fail preflight).
+4. **`instruments-service@8b7ce01`** — factory keeps ONLY key→class (`_ADAPTERS`); `_resolve_uac_adapter_key()` gives
+   loud, distinct errors for unknown-to-UAC vs declared-adapterless (both keep the "No URDI adapter" prefix for existing
+   `pytest.raises` matchers); `URDI_SUPPORTED_VENUES` = UAC `VENUES_WITH_REFERENCE_ADAPTER` (exactly equal to the
+   pre-move set, since sentinels were never in the old dict); `urdi_reference_provider` classifies sentinel venues as
+   UNSUPPORTED honest-absence exactly like before; 3 migration scripts switched to UAC `VENUE_PREFIX_TO_PROTOCOL`; 7
+   test files + README migrated; NEW `tests/unit/test_adapter_routing_uac_invariant.py` (6 tests).
+   `rg 'CANONICAL_VENUE_TO_ADAPTER'` = 0 hits repo-wide (gate asked "only the key→class table"; delivered full deletion,
+   no shim). QG initially failed on the function-size cap (my raise branches pushed `get_adapter_for_canonical_venue` to
+   204L > 200L) → extracted `_resolve_uac_adapter_key()` helper → green (93s).
+
+**Codex flip (this commit):** consolidation doc PROPOSAL→IMPLEMENTED (moves 1+2 SHIPPED with evidence; move 3 remains
+with `honest_coverage_v2_instrument_denominator_2026_06_28.md`); `instruments-service-as-ssot-for-mtds.md` gains the
+"where the universe is DECLARED" block; `cursor-configs/CLAUDE.md` service one-liner updated.
+
+**Discovered follow-up (captured as a todo in `instruments_mtds_subset_consistency_remediation_2026_06_17.md`):** MTDS
+`cli/handlers/_instruments_metadata.py` maintains a hand-mirror of the venue-prefix→protocol map whose comment cites the
+now-deleted IS `_SUBGRAPH_VENUE_PREFIX_TO_PROTOCOL` — it can now read UAC `VENUE_PREFIX_TO_PROTOCOL` (the exact
+drift-class this plan exists to kill). Cosmetic residue noted, not actioned: `unified-trading-system-ui`
+`lib/types/defi.ts:226` comment names the deleted dict — update on next touch of that file.
+
+**PLAN COMPLETE** — all 14 todos ✅ (Phase 1: 7; success criteria: 3; Phase 2: 3; codex flip: 1). Status flipped
+`active → completed`; archived per the 5-step ritual (no deferred `- [ ]` left in this plan; codex-alignment done this
+session; `locked_by: NA`).

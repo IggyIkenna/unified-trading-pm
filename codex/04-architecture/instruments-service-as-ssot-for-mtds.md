@@ -29,6 +29,12 @@ instruments-service is the **single source of truth** for all venue reference da
 handlers MUST NOT hardcode venue URLs, universe lists, or coverage windows — they derive these at runtime from the
 instruments-service catalogue.
 
+> **Where the universe itself is DECLARED (registry consolidation, shipped 2026-06-29 → 2026-07-03):** the canonical
+> venue lists AND the venue→adapter-key routing are **UAC data** (`VENUES_BY_ASSET_GROUP`,
+> `registry/venue_adapter_keys.py::VENUE_TO_ADAPTER_KEY` + `NO_ADAPTER_YET` sentinel); instruments-service is the thin
+> runtime resolver (named filters, key→class instantiation) and re-declares NO venue truth of its own. SSOT:
+> [instrument-universe-registry-consolidation.md](instrument-universe-registry-consolidation.md).
+
 ```
                     ┌────────────────────────────────┐
                     │  instruments-service           │
