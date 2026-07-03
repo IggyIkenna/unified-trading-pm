@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Per-slot reference-clones — 3-tier isolation for parallel-agent flow
 summary:
-  "Path-B per-slot reference-clones (live since 2026-06-08; tab/<op>/N tab-branch model RETIRED): each slot is a
-  `git clone --reference` with its OWN .git checked out on live-defi-rollout, objects shared via --reference. The one
+  "Path-B per-slot reference-clones (live since 2026-06-08; tab/<op>/N tab-branch model RETIRED): each slot is a `git
+  clone --reference` with its OWN .git checked out on live-defi-rollout, objects shared via --reference. The one
   invariant — HEAD ancestor-or-equal of origin/live-defi-rollout. Covers bootstrap/setup recipe, FF-pull starvation
   watchdog, per-clone commit identity (slot+host in author NAME), merged-combination reconciliation on LDR push-reject,
   and liveness-gated dirty-WIP resolution."
@@ -17,7 +17,15 @@ tags: [infrastructure, quickmerge, scripts, orchestrator, reconciliation, self-h
 related: [plans/active/worktree_ldr_unification_2026_06_08.md, plans/archive/per_agent_worktrees_2026_05_10.md]
 created: 2026-05-10
 authoritative_for: [per-slot reference-clone worktree model]
-referenced_by: [codex/05-infrastructure/claude-code-settings-symlink.md, codex/05-infrastructure/manifest-consolidator-ssot.md, codex/05-infrastructure/plan-aware-merge-resolution.md, codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, codex/12-agent-workflow/orchestrator-safety-mechanisms.md]
+referenced_by:
+  [
+    codex/05-infrastructure/claude-code-settings-symlink.md,
+    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    codex/05-infrastructure/plan-aware-merge-resolution.md,
+    codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md,
+    codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
+    codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+  ]
 owner: workspace-platform
 last_reviewed: 2026-06-25
 code_refs:
@@ -338,9 +346,9 @@ set does not block `--ff-only`. **De-duplication:** one ping per (slot, repo) st
 
 ## Slot is durable; theme is daily
 
-The mapping of slot ↔ theme is daily-updated and lives authoritatively on the **agent-orchestrator dashboard**, with the
-operator LEDGER `## Today's slot assignments` table as the offline fallback (forward index that fresh slot agents read
-on bootstrap), mirroring the day's work-split plan (`plans/active/work_split_<YYYY_MM_DD>_<operator>.md`).
+The mapping of slot ↔ theme is daily-updated and lives authoritatively on the **agent-orchestrator dashboard**, with
+the operator LEDGER `## Today's slot assignments` table as the offline fallback (forward index that fresh slot agents
+read on bootstrap), mirroring the day's work-split plan (`plans/active/work_split_<YYYY_MM_DD>_<operator>.md`).
 
 Three benefits of fixed slots over ephemeral spin-ups:
 
@@ -460,9 +468,9 @@ overwritten by concurrent session fetches (unlike `FETCH_HEAD`, which is a singl
 
 ### Autostash conflict recovery on rebase
 
-When `git pull --rebase --autostash` (or `git rebase`) reports `Applying autostash resulted in conflicts`, the
-autostash pop has produced merge conflicts in the working tree. **Do not attempt to resolve them in place** — the
-autostash may contain the ONLY copy of a foreign agent's uncommitted WIP:
+When `git pull --rebase --autostash` (or `git rebase`) reports `Applying autostash resulted in conflicts`, the autostash
+pop has produced merge conflicts in the working tree. **Do not attempt to resolve them in place** — the autostash may
+contain the ONLY copy of a foreign agent's uncommitted WIP:
 
 1. **`git rebase --abort`** — this is safe: it unwinds the rebase, leaves your commits as they were, and preserves the
    autostash in the stash list (the conflicting hunks are still there, not discarded).
@@ -470,12 +478,12 @@ autostash may contain the ONLY copy of a foreign agent's uncommitted WIP:
 3. **Stash only YOUR files by name** — `git stash push -- <your-file-list>` — so the rebase replay starts from a
    minimal-dirty tree.
 4. Re-run `git pull --rebase` (without `--autostash` this time, since your files are now explicitly stashed).
-5. Resolve any remaining conflicts keeping BOTH sides' genuine work (see reconciliation rules above), then `git stash pop`
-   to restore your named stash.
+5. Resolve any remaining conflicts keeping BOTH sides' genuine work (see reconciliation rules above), then
+   `git stash pop` to restore your named stash.
 
-**NEVER do `git checkout HEAD -- <file>` then `git stash drop`**: `git checkout HEAD -- <file>` discards ALL
-uncommitted content for that file — if the autostash held a foreign agent's only WIP copy for that path, it is
-permanently gone (UNRECOVERABLE). The autostash drop follows silently and the WIP is lost with no warning.
+**NEVER do `git checkout HEAD -- <file>` then `git stash drop`**: `git checkout HEAD -- <file>` discards ALL uncommitted
+content for that file — if the autostash held a foreign agent's only WIP copy for that path, it is permanently gone
+(UNRECOVERABLE). The autostash drop follows silently and the WIP is lost with no warning.
 
 ### Isolated-worktree promotion (rare: concurrent session shares slot's `.git`)
 
@@ -501,9 +509,9 @@ cd -
 git worktree remove /tmp/slot-promote-wt
 ```
 
-This keeps your promotion isolated without touching the shared clone's index or working tree, so the concurrent session's
-in-flight state is unaffected. The throwaway worktree shares the same `.git` object store (no duplication) but has its
-own index file, so staging/committing there is completely independent.
+This keeps your promotion isolated without touching the shared clone's index or working tree, so the concurrent
+session's in-flight state is unaffected. The throwaway worktree shares the same `.git` object store (no duplication) but
+has its own index file, so staging/committing there is completely independent.
 
 ## Commit attribution — slot + host in the author NAME (codified 2026-06-03)
 
@@ -556,7 +564,7 @@ git config user.email "ikennaigboaka@gmail.com"
 
 `setup-tab-worktrees.sh` sets this at `--init` / `--add-slot` / `--reset-slot` (clone time). Sub-agents share the slot
 clone → inherit the identity automatically. Do NOT hand-edit `~/.gitconfig`. **Consumers:** CI alert workflows attribute
-via `github.event.head_commit.author.name`; the slot-git-status-report + orphan-ping crons can group by slot.
+via `github.event.head_commit.author.name`; the slot-git-status-report cron can group by slot.
 
 ## Ship into `live-defi-rollout` — visibility = durability (HARD RULE)
 
