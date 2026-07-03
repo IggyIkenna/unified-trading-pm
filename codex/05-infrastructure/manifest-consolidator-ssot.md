@@ -119,7 +119,10 @@ temp files and bounds working memory via `memory_limit`.
   canonical size.
 - **Full / `--force` rebuild** — window dedup over canonical + all shards, then a deterministic
   `ORDER BY date, venue, data_type`. `--force` ignores the incremental mtime cutoff (one-off seed after backfill /
-  schema change; for large buckets pair with a high `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` on a big-RAM host).
+  schema change; for large buckets pair with a high `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` on a big-RAM host). _(Pattern
+  adopted (2026-07-03): the instrument lifecycle-catalogue rollup now uses the same canonical+delta shape — prev
+  `catalog.parquet` + trailing-window upsert daily, weekly `--mode full` self-heal — see
+  [instruments-foundation-and-catalogue-completeness.md §4](../02-data/instruments-foundation-and-catalogue-completeness.md).)_
 - **`memory_limit`** = env `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` (default **8GB**), set BELOW the container so an oversized
   rebuild raises a catchable `OutOfMemoryException` instead of a kernel SIGKILL crash-loop. Anti/semi joins spill to
   `temp_directory`; the **window does NOT spill (DuckDB 1.5.x)** — so a bulk shard rewrite landing as one huge "changed"

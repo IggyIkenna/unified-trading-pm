@@ -35,6 +35,11 @@ instruments-service catalogue.
 > runtime resolver (named filters, key→class instantiation) and re-declares NO venue truth of its own. SSOT:
 > [instrument-universe-registry-consolidation.md](instrument-universe-registry-consolidation.md).
 
+> **How the catalogue stays fresh (2026-07-03):** the `prod/catalog.parquet` MTDS derives from is maintained by the
+> daily **incremental** lifecycle rollup (prev catalogue + self-widening trailing window + frozen-tail upsert; ~90s
+> tradfi vs the retired 2h17m full walk) with a weekly `--mode full` self-heal. Mechanism SSOT:
+> [instruments-foundation-and-catalogue-completeness.md §4](../02-data/instruments-foundation-and-catalogue-completeness.md).
+
 ```
                     ┌────────────────────────────────┐
                     │  instruments-service           │

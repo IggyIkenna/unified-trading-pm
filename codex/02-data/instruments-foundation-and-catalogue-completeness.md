@@ -298,7 +298,23 @@ The process (§0 gates + §1 checks + §2 layered coverage) is identical; only t
   un-pausing + verifying is a G1/G2 task).
 - **Lifecycle roll-up / aggregation** → `instruments-service/scripts/build_instrument_catalogue.py`, Cloud Run job
   `lifecycle-catalogue-regen-{ag}`, scheduler `0 1 * * *` (01:00 UTC daily). Output `prod/catalog.parquet`
-  (available_from/available_to/MVP/universe). **G3 must verify this job runs the latest code.**
+  (available_from/available_to/MVP/universe). **G3 must verify this job runs the latest code.** **INCREMENTAL since
+  2026-07-03 (instruments-service@b0596d0c, plan `instruments_catalogue_incremental_rollup_2026_06_29`)**: the daily run
+  is `--mode incremental` (the default) — load the previous `catalog.parquet` + re-read ONLY a **self-widening trailing
+  window** of by_date days (`max(21, days_since_prev_catalogue_mtime + 7)`; 21 ≥ the §7.3 14-day liveness window) via
+  per-day `day=` prefix listings (never a second whole-corpus walk), aggregate with the UNCHANGED builders (§7.3
+  verbatim), then **frozen-tail upsert** (`_merge_incremental`): known rows take the window recompute but keep
+  `available_from = min(prev, window)`; window-only rows append; an active-in-prev row absent from the whole window
+  closes at `window_start − 1` **ONLY if its venue captured in the window** (venue-level absence = capture outage, NOT a
+  mass delisting — parity with the full rebuild's per-venue frontier); everything else copies through unchanged, so the
+  merged row count is ≥ prev by construction (monotonic guard passes naturally). Sports is exempt (manifest
+  single-read); prediction shares the same merge at its multi-grain rows. Measured: tradfi 85.6s vs 137min full (~96×);
+  the pre-incremental full walk outgrew the 3600s job timeout and froze tradfi/cefi/defi catalogues 06-29→07-03. A
+  **weekly `--mode full` self-heal** (`lifecycle-catalogue-full-{cefi,defi,tradfi,prediction}`, Sat 03:00–06:00 UTC
+  staggered, `timeout_seconds=21600` — the Cloud Run Jobs ceiling is 24h, not 3600) repairs drift from retroactive
+  by_date edits older than the window; `--mode full` also = cold-start fallback + rollback (flip the job arg back). The
+  incremental run also emits **`CATALOGUE_STALE_BY_DATE`** when the by_date feed itself is unhealthy (newest window
+  day > 3d old, or a sharp latest-day count drop) — the catalogue is only as fresh as the 00:00 download that feeds it.
 - **Instruments manifest / coverage** → `_index/availability_index.parquet` (per-(day,venue), `capture_status` +
   `instrument_count`), consolidator cron `*/1`. This feeds `compute_honest_coverage` → data-status → UI.
 - **Downstream catalogue artefacts** → `instrument_catalogue_scheduler.tf` (02:00), `catalogue_regen_scheduler.tf`

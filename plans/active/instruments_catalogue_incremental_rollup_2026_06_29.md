@@ -279,12 +279,23 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
 
 ### Phase 5 — codex + observability
 
-- [ ] [DOCS] P1. Update the 5 codex SSOTs listed above (full-rebuild → incremental; window+frozen-tail; the periodic
+- [x] [DOCS] P1. ✅ Update the 5 codex SSOTs listed above (full-rebuild → incremental; window+frozen-tail; the periodic
       full self-heal; the manifest-consolidator parallel). Gate: each doc reflects the new mechanism; no plan↔codex
-      drift.
-- [ ] [SCRIPT] P2. Ship the never-built coverage-horizon warning (NICE-TO-HAVE from the originating plan): emit a
+      drift. — 2026-07-03: `instruments-foundation-and-catalogue-completeness.md` §4 (full mechanism: self-widening
+      window, 4-branch merge + venue-presence guard, weekly full jobs w/ 21600s timeout, CATALOGUE_STALE_BY_DATE);
+      `instruments-service-as-ssot-for-mtds.md` + `instrument-lifecycle-cache-delta-hot-reload.md` (freshness/producer
+      notes — artifact shape + delta contract unchanged); `manifest-consolidator-ssot.md` (pattern-adopted cross-ref).
+      **`data-catalogue-schema.md` needed NO change** — verified it covers the data-catalogue YAML manifest (per-service
+      inventory ledger), not the lifecycle `catalog.parquet`; the plan's codex list misattributed it, so there is no
+      drift to fix there.
+- [x] [SCRIPT] P2. ✅ Ship the never-built coverage-horizon warning (NICE-TO-HAVE from the originating plan): emit a
       `CATALOGUE_STALE_BY_DATE` warn when the latest by_date day is > N days old OR per-day instrument count drops
-      sharply — trivial now that the incremental run knows the window's latest day. Gate: unit test + a fired event.
+      sharply — trivial now that the incremental run knows the window's latest day. Gate: unit test + a fired event. —
+      instruments-service@5d31994a: `_warn_coverage_horizon` (3 reasons: latest_day_too_old >3d /
+      latest_day_sharp_count_drop <50%-of-median / no_window_data) wired into the incremental branch via day-count tees;
+      `test_coverage_horizon_warns_on_stale_latest_day` + `test_coverage_horizon_warns_on_sharp_count_drop` assert fired
+      events. (Same commit also bumps the Dockerfile UTL base pin to 0.55.0 — the stale pin's baked UAC lacked
+      `NO_ADAPTER_YET` and failed the image build's operability probe.)
 
 ## Risks & rollback
 
