@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Epic Execution with Sub-Agents
 summary:
-status:
+  Codex quick-reference to `plans/epics/README.md` (the epic-flow SSOT) — what an epic is, the audit→active-plan→epic
+  flow, epic vs active-plan frontmatter requirements, the epic×tier registry, and epic audit-lifecycle table.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [epic-execution, sub-agents, audit-lifecycle, plan-hygiene, orchestrator]
+related: [../../plans/epics/README.md, ../../plans/epics/orchestrator_master.md, active-plan-inventory-tracker.md, issue-doc-lifecycle.md, ../08-workflows/estimation-calibration.md, ../../plans/audit/README.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [epic-execution codex quick-reference]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

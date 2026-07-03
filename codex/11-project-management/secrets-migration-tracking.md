@@ -2,13 +2,16 @@
 doc_type: codex-ssot
 title: Secrets Migration Tracking
 summary:
-status: active
+  Per-secret GCP Secret Manager → AWS Secrets Manager dual-write migration tracking matrix + Phase-4 execution results
+  (165 secrets inventoried, 156 bulk-mirrored, 9 wallet private keys excluded) + DeFi-first credential request groups
+  A-D (per-venue exec keys / on-chain RPC / alerting paging / wallet custody).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
+tags: [secrets, aws-migration, dual-cloud, credentials, migration, tracking]
 related: [codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/04-architecture/interface-credential-convention.md, credentials-registry.yaml]
 created: 2026-05-07
 authoritative_for: Per-secret tracking matrix for the GCP Secret Manager → AWS Secrets Manager dual-write migration. Each row tracks `secret_name / current_provider / target_provider / migration_status / consumer_services / owner / target_completion_date`.

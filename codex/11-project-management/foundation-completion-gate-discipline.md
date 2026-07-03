@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Foundation-Completion-Gate Discipline
 summary:
-status:
+  The 9-layer sequencing rule (orchestration→reference→availability-oracle→manifest→market-data→features→
+  strategy/execution→live-adapters→perf) — no plan ships layer N+1 items before layer N is GREEN-audited +
+  manifest-divergence 0 for the affected asset_groups; referenced from CLAUDE.md Citadel standard item 8.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, execution-service, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [foundation-gate, layering, plan-review, audit, sequencing]
+related: [../../plans/archive/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md, ../../plans/epics/mtds_mdps_master.md, citadel-grade-planning-standards.md, issue-doc-lifecycle.md]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [foundation-completion-gate rule, layer sequencing table]
 referenced_by:
 owner:
 last_reviewed:
