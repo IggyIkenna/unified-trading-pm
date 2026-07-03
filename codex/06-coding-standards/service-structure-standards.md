@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Service Structure Standards
-summary:
-status: living
+summary: >-
+  Canonical engine/adapters/cli directory layout for every deployable T4 service — import
+  direction (engine has zero adapter imports), singleton adapters <100L, ServiceBootstrap
+  + make_health_router + typed config reloaders, shard-level failure isolation, and the
+  file/complexity limit table; QG-enforced via base-service.sh.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer]
-tags: []
-related: []
+tags: [service-structure, quality-gates, uac, instruments, mtds, refactor]
+related: [../04-architecture/tier-and-import-architecture.md, service-orchestration-patterns.md, config-reloader-pattern.md, ../04-architecture/shard-level-failure-isolation.md, cli-convention.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [service directory-structure standards (engine/adapters/cli layout + import-direction rule)]
 referenced_by:
 owner: pm-orchestrator
 last_reviewed: 2026-06-25

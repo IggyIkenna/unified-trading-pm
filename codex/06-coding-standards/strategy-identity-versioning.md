@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Coding Standard — Strategy Identity + Versioning
-summary:
-status:
+summary: >-
+  Strategy identity + versioning rules — the 5-layer identity
+  (family→archetype→instance→config→derived categories), archetype-ID
+  structural-descriptor rules (no CEFI_/DEFI_/TRADFI_ prefixes), the slot-label grammar,
+  config content-hash + monotonic version, the -vN slot suffix, the full event-tag tuple,
+  and the QG enforcement checks.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, strategy-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [strategy, versioning, uac, quality-gates, execution]
+related: [../09-strategy/architecture-v2/README.md, strategy-display-conventions.md, artifact-naming.md, ../04-architecture/artifact-versioning.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [strategy identity + versioning (5-layer identity, archetype-ID rules, slot-label grammar)]
 referenced_by:
 owner:
 last_reviewed:

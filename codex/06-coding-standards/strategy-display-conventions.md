@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Coding Standard — Strategy Display Conventions
-summary:
-status:
+summary: >-
+  UI strategy-display conventions — never render raw UNDERSCORE_IDs to clients; every
+  family/archetype/slot-label/venue-scope identifier pipes through the 7-function API in
+  lib/strategy-display.ts; covers the 18 bespoke archetype + 8 family display names, the
+  full-only vs both plan-tier classification, and acronym preservation.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [strategy, ui, terminology, defi, cefi, tradfi]
+related: [strategy-identity-versioning.md, ../09-strategy/architecture-v2/README.md, ../04-architecture/commercial-service-families.md]
 created: 2026-04-24
-authoritative_for:
+authoritative_for: [strategy display conventions (client-facing strategy-identifier formatting rules)]
 referenced_by:
 owner:
 last_reviewed:

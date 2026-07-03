@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Quality Gates
-summary:
-status:
+summary: >-
+  Workspace quality-gate SSOT — the gate-then-open model where quality-gates.sh runs
+  the full gate (lint/format/tests/typecheck/codex/security) and stamps a green-sentinel
+  SHA that quickmerge verifies before opening a PR; covers the STEP 5.x enforcement
+  catalogue, code limits, the CODEX_MAX_VIOLATIONS ≤5 ratchet, QG_SLICE CI parallel
+  slices, and the security gates.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [quality-gates, quickmerge, ci, ruff, basedpyright, security-gates, verification]
+related: [quality-gates-memory-governance.md, ruff-discipline.md, testing.md, setup-standards.md, semver.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [quality-gates.sh gate-then-open model + STEP 5.x enforcement catalogue, CODEX_MAX_VIOLATIONS ratchet ceiling, QG_SLICE CI parallel-slice partitioning]
 referenced_by:
 owner:
 last_reviewed:

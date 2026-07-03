@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Setup Standards (setup.sh)
-summary:
-status:
+summary: >-
+  Per-repo setup.sh dev-environment bootstrap standard — one idempotent 12-step command
+  (Python/arch check, uv venv, path + project deps, ripgrep/ruff/import smoke) with
+  .setup-stamp idempotency, --check/--force/--isolated flags, and CI skip of steps 1-8;
+  canonical template at unified-trading-pm/scripts/setup.sh.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer]
-tags: []
-related: []
+tags: [setup, scripts, quality-gates, quickmerge, infrastructure]
+related: [quality-gates.md, semver.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [per-repo setup.sh dev-environment bootstrap standard (12-step idempotent flow + flags)]
 referenced_by:
 owner:
 last_reviewed:

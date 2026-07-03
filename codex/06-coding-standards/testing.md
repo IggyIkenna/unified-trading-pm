@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Testing Standards
-summary:
-status:
+summary: >-
+  Test-file conventions SSOT — the no-`test_*_extended`/`_additional`/`_new.py` rule
+  (split by behaviour, not "part 2") and the singleton-conftest-fixture rule (codified
+  2026-05-12 per TS-10 audit); defers the 5-layer integration tier model to
+  integration-testing-layers.md and the emulator/mock infra table to README.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer]
-tags: []
-related: []
+tags: [testing, quality-gates, conventions, refactor]
+related: [integration-testing-layers.md, README.md, quality-gates.md, ui-testing-layers.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [test-file conventions (no-_extended rule + singleton-conftest-fixture rule)]
 referenced_by:
 owner:
 last_reviewed:

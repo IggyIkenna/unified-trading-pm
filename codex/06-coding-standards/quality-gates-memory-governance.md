@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: QG Memory Governance — OOM Prevention for Parallel-Slot QGs
-summary:
-status: active
+summary: >-
+  OOM guardrails for parallel-slot quality-gate runs — QG_MEM_CAP (systemd-run
+  MemoryMax hard cap, default 10G), PYTEST_WORKERS=1, and IDE basedpyright
+  openFilesOnly — landed after the 2026-05-15 79.7 GB-RSS kernel-OOM incident;
+  includes per-box cap table + relaxation order.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [quality-gates, oom-prevention, memory, parallel-slot, basedpyright, pytest, infrastructure]
+related: [quality-gates.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [quality-gate memory governance (QG_MEM_CAP / PYTEST_WORKERS OOM guardrails)]
 referenced_by:
 owner: harsh-main
 last_reviewed:
