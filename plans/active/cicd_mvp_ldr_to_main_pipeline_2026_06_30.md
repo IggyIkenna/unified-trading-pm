@@ -143,7 +143,8 @@ Phase 1:
       auto-revalidated same morning). Fix both sides: dep list de-selfed UTL@`9ad8f98d5` (LDR) + fleet-wide self-skip
       guard in the callee loop PM #767 (auto-merge → main). Only UTL had a self-referencing dep list (fleet-scanned);
       the template generator already excludes self, agent-audit.yml was hand-written.
-- [ ] [CICD] P1. **BLOCKED-CREDENTIALS — provision `AWS_BUILD_ROLE_ARN` for image-build-gate** (root-caused 2026-07-03):
+- [ ] [CICD] P1. **BLOCKED-CREDENTIALS — provision `AWS_BUILD_ROLE_ARN` for image-build-gate** (root-caused 2026-07-03;
+      ask filed: `ikenna_orchestrator/pings/slot_0.md` § CREDENTIAL APPROVAL REQUEST — `AWS_BUILD_ROLE_ARN`):
       `image-build-gate.yml` (rolled out fleet-wide 2026-06-27) has NEVER passed — every run fails at "Authenticate to
       AWS via OIDC" with "Could not load credentials from any providers" because `secrets.AWS_BUILD_ROLE_ARN` is not
       defined in ANY repo (verified `gh secret list` on UAC + PM; IggyIkenna is a user account → no org secrets, so
