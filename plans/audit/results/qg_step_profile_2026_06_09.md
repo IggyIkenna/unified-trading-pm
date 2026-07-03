@@ -1,7 +1,7 @@
 ---
 doc_type: audit-result
 title: QG per-phase wall+RAM profile — fleet sweep results + scopability classification
-summary:
+summary: >-
   QG per-phase wall+RAM profile (fleet sweep, 25 repos) — tests dominate (59.5% wall, 5.5GB RAM), codex is the real #2
   (21.7%, ~2× typecheck) not basedpyright; total serial wall ~6,145s. 2026-06-17 re-profile after per-step optimizations
   (codex --fast, size-checks batching, caches) + operator decision to keep tests+typecheck always-FULL → verdict STOP

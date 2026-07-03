@@ -1,7 +1,7 @@
 ---
 doc_type: codex-runbook
 title: CIRCUIT_BREAKER_OPEN Runbook
-summary:
+summary: >-
   Operator response to CIRCUIT_BREAKER_OPEN (CRITICAL, PagerDuty+Telegram) — a per-(service, venue) breaker tripped after
   N failures in the window; it is operating as designed and auto-recovers on half-open retry. Operator acts only if it
   stays OPEN >5min (KILL_SWITCH_VENUE_DISCONNECT cascades) or flaps: diagnose last_error_message, fix key/cert/DNS, or
