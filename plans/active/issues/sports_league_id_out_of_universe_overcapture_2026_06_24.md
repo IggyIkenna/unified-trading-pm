@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, manifest, data-correctness, honest-coverage, instruments, uac, canonicalisation, data-quality]
+related: [plans/active/issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md, plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md]
 created: 2026-06-24
 parent_epic: sports_master
 priority: P1

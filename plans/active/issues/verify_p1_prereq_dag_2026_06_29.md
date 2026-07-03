@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [honest-coverage, smoke-test, sports, golden-window, verification, manifest, data-correctness, mvp]
+related: [plans/active/honest_coverage_smoke_harness_2026_06_28.md, plans/active/issues/sports_data_capture_gap_2026_06_29.md]
 created: 2026-06-29
 parent_epic: plan_hygiene_master
 priority: P2

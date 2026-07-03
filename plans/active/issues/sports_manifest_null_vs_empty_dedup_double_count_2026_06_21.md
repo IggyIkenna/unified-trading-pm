@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, manifest, data-correctness, consolidation, canonicalisation, pipeline-mode, data-quality, honest-coverage]
+related: [plans/active/issues/sports_league_id_out_of_universe_overcapture_2026_06_24.md, plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md]
 created: 2026-06-21
 parent_epic: sports_master
 priority: P2

@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [sports, golden-window, manifest, data-correctness, honest-coverage, odds, instruments, backfill]
+related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, plans/active/sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md, plans/active/sports_p1_golden_window_mtds_odds_2026_06_27.md]
 created: 2026-06-24
 parent_epic: sports_master
 priority: P2

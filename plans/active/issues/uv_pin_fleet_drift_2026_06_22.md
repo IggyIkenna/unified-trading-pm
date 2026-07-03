@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, e2e-testing, fund-administration-service, strategy-service, system-integration-tests, trading-agent-service]
 scope: [engineer, admin]
-tags: []
+tags: [infrastructure, quality-gates, scripts, migration, verification, refactor, ci-cd]
 related: []
 created: 2026-06-22
 parent_epic: infrastructure_master
