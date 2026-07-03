@@ -58,8 +58,9 @@ for GitHub-OIDC CodeBuild triggering in account `427895769566` (trust policy mus
 
 **UPDATE 2026-07-03 (later same day) — NO LONGER URGENT, deferred (DEFERRED-OPERATOR-DECISION)**: Harsh ruled AWS image
 builds were a TEST — GCP Cloud Build is the production path and AWS should not spend money for now. All 3 AWS build
-surfaces are DISABLED: `build-aws` job + `cloud-build-router-aws.yml` `if:false` (PM@`f22fde880`), and the native GitHub
-webhooks on all 18 CodeBuild projects deleted (`aws codebuild delete-webhook`, verified 0 remain — these built on every
-push and were the actual spend). The gate now passes GCP-only, so promote PRs stop redding. **This ask is only needed
-when we WANT AWS builds again** — then: provision the role/secret as above, revert the two `if:false` guards in PM, and
-`aws codebuild create-webhook` per project.
+surfaces are OFF behind a reversible switch (PM@`d93388305`, PR #769): the GHA variable `AWS_BUILDS_ENABLED`
+(unset/false = off, default) gates the `build-aws` job + the `cloud-build-router-aws.yml` routing, and the native GitHub
+webhooks on all 18 CodeBuild projects are deleted (verified 0 remain — these built on every push and were the actual
+spend). The gate now passes GCP-only, so promote PRs stop redding. **This ask is only needed when we WANT AWS builds
+again** — then: provision the role/secret as above and run `bash scripts/cicd/toggle-aws-image-builds.sh on` (flips the
+vars fleet-wide + re-creates the CodeBuild webhooks in one command; `status` shows current state).
