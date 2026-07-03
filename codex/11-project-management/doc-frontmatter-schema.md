@@ -28,22 +28,15 @@ code_refs: []
 
 # Documentation frontmatter schema
 
-> **CURRENT — enforced (2026-06-30).** The W2 deliverable of
+> **CURRENT — fully enforced, BLOCKING (2026-07-04).** The W2 deliverable of
 > [`agent_operating_framework_master`](../../plans/epics/agent_operating_framework_master.md). This is the human SSOT; a
-> `docspec` machine validator (`scripts/docs/docspec.py`) mirrors it in lockstep. As of 2026-06-30 the full live corpus
-> is HARD-green and **anti-rot reporting is live (WARN-only)**: `scripts/quality_gates/check_docspec_coverage.py` (PM
-> quality-gates post-gate) **surfaces** any HARD violation across all PM doc trees but does **not** fail QG (operator
-> decision 2026-06-30 — rot is cleaned up periodically, not block-on-every-ship). The check exits non-zero standalone,
-> so it can flip to blocking later. SOFT (empty `summary`/`tags`/`authoritative_for` — the content pass) is not yet
-> reported. `agent-orchestrator/agents` (agent-role) is a separate repo, covered by that repo's gate.
->
-> **Two-checks lifecycle (operator decision 2026-06-30):** `check_docspec_coverage` (comprehensive, warn-only) coexists
-> with the pre-existing **blocking** `check_frontmatter_schema` (narrow structural: `parent_epic`/`assigned_vm`/etc.).
-> End-state = **one** comprehensive _blocking_ gate under `check_frontmatter_schema`, reached once the content fields
-> (`summary`/`tags`/`authoritative_for`) are populated; then `check_docspec_coverage` retires. The surviving gate should
-> call `docspec.validate_frontmatter()` (this SSOT's engine), not reimplement it. Path tracked in
-> [`plans/active/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md`](../../plans/active/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md)
-> (the initial full-corpus coverage that made this possible is archived complete).
+> `docspec` machine validator (`scripts/docs/docspec.py`) mirrors it in lockstep. The two-checks lifecycle is
+> **complete**: the live corpus reached **zero violations (HARD=0 SOFT=0, 1,298 docs) on 2026-07-04** and the single
+> comprehensive blocking gate is live — `scripts/plan-hygiene/check_frontmatter_schema.py` calls
+> `docspec.validate_frontmatter()` over the live trees (plans/active + epics + audit, codex, `*.mdc`) and **fails PM QG
+> on any violation, HARD or SOFT**. The interim warn-only `check_docspec_coverage.py` is RETIRED.
+> **`plans/archive/**`is deliberately outside the gated corpus** (operator decision 2026-07-04: archives are closed records — structurally seeded, summaries backfilled opportunistically, never ship-blocking).`agent-orchestrator/agents`
+> (agent-role) is a separate repo, covered by that repo's gate (still a plan todo).
 
 ## 1. Why — frontmatter is the grep-native L1 index
 
@@ -237,6 +230,6 @@ D7 "soak"), and only after the corpus it gates has converged. Each workstream is
   the SOFT content fields (`summary`/`tags`/`authoritative_for`), then collapse to the **one comprehensive blocking
   gate** under `check_frontmatter_schema` (per the two-checks lifecycle in the header banner).
 
-During the soak, `status` and the content fields stay **SOFT** (warn-only), and `check_docspec_coverage` reports HARD
-violations without failing QG (operator decision 2026-06-30). This staging is the contract: a downstream plan owns each
-flip — W2 deliberately adds none.
+The soak ended 2026-07-04: the corpus converged to zero violations and the single comprehensive blocking gate
+(`check_frontmatter_schema.py`, docspec-backed) now fails QG on any HARD or SOFT violation across the live trees
+(archives excluded). The staging contract above is retained as the historical record of how enforcement was sequenced.

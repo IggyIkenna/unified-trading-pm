@@ -592,13 +592,12 @@ if [ -f "$FRONTMATTER_FIXER" ]; then
         || { echo "⚠ Plan frontmatter auto-fixer errored (non-blocking — schema check follows)" >&2; }
 fi
 
-# ── Post-gates: per-doc-type frontmatter schema (required-non-empty + epic resolution) ──
-# SSOT: plans/PLAN_FORMAT.md (plan/epic) + plans/audit/README.md (audit-result) + CLAUDE.md
-# Findings-Triage (issue). Enforces NON-EMPTY required fields per doc type so agents can't drift
-# the frontmatter — parent_epic (plans) + assigned_vm (epics) + epic (audit, str|list) must be
-# non-empty AND resolve to a real plans/epics/<slug>.md, and audit-results carry instructions_ref.
-# Covers plan/epic/issue/audit; codex `scope:` stays on its own post-gate above pending the codex
-# scope-cleanup (178 docs). Exit 0/1 from check_frontmatter_schema.py.
+# ── Post-gates: THE comprehensive BLOCKING frontmatter gate (docspec-backed, 2026-07-04) ──
+# SSOT: codex/11-project-management/doc-frontmatter-schema.md (engine: scripts/docs/docspec.py).
+# Calls docspec.validate_frontmatter() over the LIVE doc trees (plans/active+epics+audit, codex,
+# *.mdc — plans/archive deliberately EXCLUDED) and fails on ANY violation, HARD or SOFT, so the
+# 2026-07-04 zero-violations corpus cannot rot. Replaces the two-checks lifecycle: the warn-only
+# check_docspec_coverage.py is RETIRED. Exit 0/1 from check_frontmatter_schema.py.
 FRONTMATTER_SCHEMA_CHECKER="${REPO_ROOT}/scripts/plan-hygiene/check_frontmatter_schema.py"
 if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
     echo "Running per-doc-type frontmatter schema check (plan/epic/issue/audit)..."
@@ -609,26 +608,6 @@ if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
         echo "   required field or an unresolvable epic. parent_epic (plans) + assigned_vm (epics) +" >&2
         echo "   epic (audit) must be non-empty + resolve. See plans/PLAN_FORMAT.md + plans/audit/README.md" >&2
         _post_gate_fail "frontmatter-schema"
-    fi
-fi
-
-# ── Post-gates: docspec coverage — the ANTI-ROT frontmatter check (WARN-ONLY — non-blocking) ──
-# SSOT: codex/11-project-management/doc-frontmatter-schema.md (validator: scripts/docs/docspec.py).
-# Frontmatter is the grep-native L1 index agents use to find docs + code<->codex drift; a doc that
-# loses its doc_type / required field / valid enum value silently drops out of every search. This is
-# the COMPREHENSIVE check (universal-core + per-type fields + closed-vocab enums across plan/epic/
-# issue/audit/codex/cursor-rule) — a superset of the narrow check_frontmatter_schema above.
-# DELIBERATELY warn-only: HARD frontmatter rot is SURFACED but does NOT fail QG (operator decision
-# 2026-06-30 — we clean up rot periodically, not block every ship on it). SOFT (empty summary/tags/
-# authoritative_for — the deferred content pass) is not reported here. Remedy: seed_frontmatter.py --apply.
-DOCSPEC_COVERAGE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_docspec_coverage.py"
-if [ -f "$DOCSPEC_COVERAGE_CHECKER" ]; then
-    echo "Running docspec frontmatter coverage check (anti-rot, warn-only)..."
-    if python3 "$DOCSPEC_COVERAGE_CHECKER" --quiet; then
-        log_success "docspec frontmatter coverage check passed (no HARD rot)"
-    else
-        log_warn "docspec coverage: HARD frontmatter rot detected (non-blocking) — see per-file reasons above;"
-        log_warn "  fix periodically with: python3 scripts/docs/seed_frontmatter.py --apply <path> (then set any enum/parent_epic by hand)."
     fi
 fi
 

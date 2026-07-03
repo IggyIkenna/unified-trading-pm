@@ -1,181 +1,122 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: agent_operating_framework_master
 # Lifecycle: permanent
 # Delete-when: NA
-"""Per-doc-type frontmatter SCHEMA gate for the PM repo (2026-06-16).
+"""THE comprehensive BLOCKING frontmatter gate — docspec-backed (2026-07-04).
 
-Enforces required-NON-EMPTY fields + value resolutions per doc type, so agents can't
-drift the frontmatter of plans / epics / issues / audit-results / codex docs. This is
-the hard gate referenced by quality-gates.sh; supersedes the presence-only
-`check_frontmatter.sh` for value-level enforcement (that one stays for the .sh-shaped
-"first line is ---" + deprecated-field checks).
+End-state of the two-checks lifecycle (codex/11-project-management/doc-frontmatter-schema.md):
+this gate calls `docspec.validate_frontmatter()` (the schema's machine SSOT — never a second
+hand-rolled validator) over the LIVE doc trees and fails on ANY violation, HARD (structure /
+enum / registry) or SOFT (needs-content), so the 2026-07-04 zero-violations corpus cannot rot.
 
-Doc type → required NON-EMPTY fields (classified by path):
-  plan   plans/active/*.md          parent_epic title priority status locked_by
-                                     estimate_class estimate_baseline_ai_days estimate_calibrated_ai_days
-                                     + VALUE: parent_epic (str|list) each resolves to plans/epics/<slug>.md
-  issue  plans/active/issues/*.md    title status priority locked_by created
-  epic   plans/epics/*.md            name title priority status tier assigned_vm
-  audit  plans/audit/results/*.md    type title epic auditor date status
-                                     + instructions_ref REQUIRED when type == audit-result
-                                     + VALUE: epic (str|list) each resolves to an epic
-  codex  codex/**/*.md               scope
+Corpus = the live trees only. `plans/archive/**` is deliberately OUT of scope (operator
+decision 2026-07-04: archives are closed records, backfilled opportunistically — do not gate
+shipping on them). The warn-only `check_docspec_coverage.py` is retired; this is the sole
+frontmatter gate.
 
-Usage: check_frontmatter_schema.py [file ...]   # no args → full corpus
+Supplementary check preserved from the retired narrow gate (not in the docspec field specs):
+an audit-result must carry a non-empty `instructions_ref`.
+
+Usage: check_frontmatter_schema.py [file ...]   # no args -> full live corpus
   --quiet      suppress the success line
-Exit 0 = every in-scope doc conforms. Exit 1 = violations.
-
-SSOT for the canonical sets: plans/PLAN_FORMAT.md (plan/epic) + plans/audit/README.md
-(audit-result) + CLAUDE.md Findings-Triage (issue) + codex scope convention.
+Exit 0 = zero violations. Exit 1 = violations (each printed with its remedy).
 """
 
 from __future__ import annotations
 
+import importlib.util
 import sys
 from pathlib import Path
-from typing import cast
-
-import yaml
 
 PM = Path(__file__).resolve().parents[2]
-EPICS_DIR = PM / "plans" / "epics"
 
-SKIP_NAMES = {"README.md", "INDEX.md", "task_template.md"}
-
-# locked_by is deliberately NOT required-non-empty: it is an optional lock MARKER per the canonical
-# schema (docspec FieldSpec Req.O; doc-frontmatter-schema.md empty-convention). Requiring it here bred
-# literal-`NA` sentinels that the docspec validator rightly flags — reconciled 2026-07-04.
-REQUIRED: dict[str, list[str]] = {
-    "plan": [
-        "parent_epic", "title", "priority", "status",
-        "estimate_class", "estimate_baseline_ai_days", "estimate_calibrated_ai_days",
-    ],
-    "issue": ["title", "status", "priority", "created"],
-    "epic": ["name", "title", "priority", "status", "tier", "assigned_vm"],
-    "audit": ["type", "title", "epic", "auditor", "date", "status"],
-    "codex": ["scope"],
-}
+# Live doc trees (glob patterns relative to the PM root). plans/archive is EXCLUDED by design.
+DOC_TREES: tuple[str, ...] = (
+    "plans/active/*.md",
+    "plans/active/issues/*.md",
+    "plans/epics/*.md",
+    "plans/audit/results/**/*.md",
+    "plans/audit/instructions/**/*.md",
+    "codex/**/*.md",
+    "**/*.mdc",
+)
+_ARCHIVE_PREFIX = "plans/archive/"
 
 
-def should_skip(name: str) -> bool:
-    return name in SKIP_NAMES or name.startswith("_") or name.endswith(".HANDOVER.md") or "SUPERSEDED" in name
+def _load_docspec():
+    spec = importlib.util.spec_from_file_location("docspec", PM / "scripts" / "docs" / "docspec.py")
+    if spec is None or spec.loader is None:
+        raise RuntimeError("cannot load scripts/docs/docspec.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["docspec"] = mod
+    spec.loader.exec_module(mod)
+    return mod
 
 
-def classify(path: Path) -> str | None:
-    """Map a doc to its type by path, or None if out of scope. Only DIRECT children
-    of each dir count (subdirs like plans/audit/instructions/ are out of scope here)."""
-    try:
-        rel = path.relative_to(PM).as_posix()
-    except ValueError:
-        return None
-    for prefix, kind in (
-        ("plans/active/issues/", "issue"),
-        ("plans/active/", "plan"),
-        ("plans/epics/", "epic"),
-        ("plans/audit/results/", "audit"),
-    ):
-        if rel.startswith(prefix):
-            return kind if "/" not in rel[len(prefix):] else None
-    if rel.startswith("codex/"):
-        return "codex"
-    return None
+def _iter_docs() -> list[Path]:
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for pat in DOC_TREES:
+        for p in PM.glob(pat):
+            rel = p.relative_to(PM).as_posix()
+            if p.is_file() and p not in seen and not rel.startswith(_ARCHIVE_PREFIX):
+                seen.add(p)
+                out.append(p)
+    return sorted(out)
 
 
-def _is_empty(v: object) -> bool:
-    if v is None:
-        return True
-    if isinstance(v, str):
-        return not v.strip()
-    if isinstance(v, (list, dict)):
-        return not v
-    return False
+def main(argv: list[str] | None = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    quiet = "--quiet" in args
+    files = [Path(a) for a in args if not a.startswith("--")]
 
+    ds = _load_docspec()
+    reg = ds.load_registries(PM)
+    paths = files if files else _iter_docs()
 
-def _load_frontmatter(path: Path) -> tuple[dict[str, object] | None, str | None]:
-    text = path.read_text(encoding="utf-8")
-    if not text.startswith("---"):
-        return None, "no frontmatter block (first line is not '---')"
-    end = text.find("\n---", 3)
-    if end == -1:
-        return None, "unterminated frontmatter (no closing '---')"
-    try:
-        parsed = cast("object", yaml.safe_load(text[3:end]))
-    except yaml.YAMLError as exc:
-        return None, f"frontmatter is not valid YAML ({str(exc).splitlines()[0]})"
-    if not isinstance(parsed, dict):
-        return None, f"frontmatter parses to {type(parsed).__name__}, not a mapping"
-    return cast("dict[str, object]", parsed), None
-
-
-def _check_epic_value(val: object, field: str, errs: list[str]) -> None:
-    """epic / parent_epic must be a slug (or list of slugs) each resolving to an epic file."""
-    slugs: list[object] = cast("list[object]", val) if isinstance(val, list) else [val]
-    for s in slugs:
-        if not isinstance(s, str) or not s.strip():
-            errs.append(f"{field}: empty or non-string entry")
+    checked = 0
+    bad: list[tuple[Path, list[str]]] = []
+    for path in paths:
+        if ds.is_exempt(str(path)):
             continue
-        if not (EPICS_DIR / f"{s.strip()}.md").is_file():
-            errs.append(f"{field}: '{s}' does not resolve to plans/epics/{s}.md")
-
-
-def check(path: Path) -> list[str]:
-    kind = classify(path)
-    if kind is None:
-        return []
-    fm, err = _load_frontmatter(path)
-    if err is not None:
-        return [err]
-    assert fm is not None
-    errs: list[str] = []
-    for field in REQUIRED[kind]:
-        if field not in fm or _is_empty(fm[field]):
-            errs.append(f"missing/empty required field: {field}")
-    if kind == "plan" and not _is_empty(fm.get("parent_epic")):
-        _check_epic_value(fm["parent_epic"], "parent_epic", errs)
-    if kind == "audit":
-        if not _is_empty(fm.get("epic")):
-            _check_epic_value(fm["epic"], "epic", errs)
-        type_val = fm.get("type")
-        if isinstance(type_val, str) and type_val.strip() == "audit-result" and _is_empty(fm.get("instructions_ref")):
-            errs.append("missing/empty instructions_ref (required for type: audit-result)")
-    return errs
-
-
-def _corpus() -> list[Path]:
-    # codex/**/*.md is intentionally EXCLUDED from the default corpus pending the
-    # codex `scope:` cleanup (178 codex docs lacked it as of 2026-06-16 — the
-    # existing QG codex-scope step isn't catching them; tracked separately). The
-    # codex branch in classify() still works when a codex file is passed explicitly,
-    # so this gate flips codex on by re-adding the glob once that cleanup lands.
-    return (
-        sorted(PM.glob("plans/active/*.md"))
-        + sorted(PM.glob("plans/active/issues/*.md"))
-        + sorted(PM.glob("plans/epics/*.md"))
-        + sorted(PM.glob("plans/audit/results/*.md"))
-    )
-
-
-def main(argv: list[str]) -> int:
-    quiet = "--quiet" in argv
-    file_args = [a for a in argv if a != "--quiet" and a.endswith(".md")]
-    files = [Path(a) if Path(a).is_absolute() else PM / a for a in file_args] if file_args else _corpus()
-    failures = 0
-    for f in files:
-        if not f.is_file() or should_skip(f.name):
+        dt = ds.doc_type_for_path(str(path))
+        if dt is None:  # outside the schema's scope
             continue
-        errs = check(f)
-        if errs:
-            failures += 1
-            print(f"  {f.relative_to(PM)}:")
-            for e in errs:
-                print(f"    - {e}")
-    if failures:
-        print(f"\n❌ check_frontmatter_schema: {failures} doc(s) with frontmatter violations")
+        checked += 1
+        problems: list[str] = []
+        try:
+            fm, _ = ds.parse_frontmatter(path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            bad.append((path, [f"frontmatter is not valid YAML: {exc}"]))
+            continue
+        if fm is None:
+            bad.append((path, ["no --- frontmatter block"]))
+            continue
+        problems.extend(f"{v.field}: {v.message}" for v in ds.validate_frontmatter(dt, fm, reg))
+        # exact legacy contract: keyed on the legacy `type:` field, not the path-derived doc_type
+        # (path-keying would newly fail ~15 pre-existing verdict-pack docs — widen only via worklist)
+        if fm.get("type") == "audit-result" and not fm.get("instructions_ref"):
+            problems.append("instructions_ref: required non-empty on audit-results")
+        if problems:
+            bad.append((path, problems))
+
+    if bad:
+        print(f"❌ check_frontmatter_schema: {len(bad)} doc(s) with frontmatter violations:", file=sys.stderr)
+        for path, problems in bad:
+            rel = path.relative_to(PM) if path.is_absolute() else path
+            print(f"  {rel}:", file=sys.stderr)
+            for pr in problems:
+                print(f"    - {pr}", file=sys.stderr)
+        print(
+            "  Remedy: python3 scripts/docs/seed_frontmatter.py --apply <path> (derivable fields), then fill"
+            " content fields by hand. Schema: codex/11-project-management/doc-frontmatter-schema.md",
+            file=sys.stderr,
+        )
         return 1
     if not quiet:
-        print("✅ check_frontmatter_schema: all in-scope docs conform")
+        print(f"✅ check_frontmatter_schema: {checked} docs, zero frontmatter violations (docspec HARD+SOFT)")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())
