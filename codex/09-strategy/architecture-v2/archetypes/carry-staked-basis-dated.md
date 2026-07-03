@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `CARRY_STAKED_BASIS_DATED`'
-summary:
-status: design
+summary: >-
+  Archetype CARRY_STAKED_BASIS_DATED: dated-contract variant of CARRY_STAKED_BASIS — stake into an LST
+  posted as cross-margin + SHORT a dated (quarterly/monthly) futures contract, locking the basis premium
+  at entry plus staking yield. net_apy_bps = staking_apy_total + annualised dated basis - fees; shares
+  staked_basis.py via ALLOWED_ARCHETYPES; Deribit/Drift/Bybit slots; must roll before expiry.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, carry, defi, cefi, execution, archetype, deribit]
+related: [carry-staked-basis.md, carry-basis-dated.md, ../families/carry-and-yield.md]
 created: 2026-05-18
-authoritative_for:
+authoritative_for: [CARRY_STAKED_BASIS_DATED archetype specification]
 referenced_by:
 owner:
 last_reviewed:

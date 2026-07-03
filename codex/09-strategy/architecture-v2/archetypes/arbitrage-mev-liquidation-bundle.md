@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`'
-summary:
-status: code-shipped
+summary: >-
+  Archetype ARBITRAGE_MEV_LIQUIDATION_BUNDLE: flash-loan-funded atomic liquidation of
+  under-collateralised lending positions (flashLoan -> liquidationCall -> swap collateral -> repay) in
+  one tx — zero held capital, one FlashLoanReceiver per chain across Aave/Compound/Morpho/Euler/etc.
+  Emits a bundle only when estimate_bundle_profit_usd >= min_net_profit_usd; reverts cost gas only.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, arbitrage, defi, mev, execution, archetype]
+related:
+  [
+    ../families/arbitrage-structural.md,
+    liquidation-capture.md,
+    arbitrage-mev-backrun.md,
+    arbitrage-mev-jit-liquidity.md,
+    arbitrage-price-dispersion.md,
+  ]
 created: 2026-05-01
-authoritative_for:
+authoritative_for: [ARBITRAGE_MEV_LIQUIDATION_BUNDLE archetype specification]
 referenced_by:
 owner:
 last_reviewed:

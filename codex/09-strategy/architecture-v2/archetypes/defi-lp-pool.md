@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `DEFI_LP_POOL`'
-summary:
-status: code-shipped
+summary: >-
+  Archetype DEFI_LP_POOL: full-range pool LP (Curve stableswap / Balancer weighted) held until
+  invariant-drift signals depeg — DEPOSIT while lp_pool_invariant_drift_bps < depeg_exit_bps, WITHDRAW
+  at/above threshold (or on kill switch). No in-range rebalance math (the pool invariant absorbs spot
+  moves); single-pool ATOMIC, cross-pool rotation LEADER_HEDGE.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, defi, execution, archetype, features]
+related:
+  [
+    ../families/market-making.md,
+    defi-lp-concentrated.md,
+    yield-rotation-lending.md,
+    arbitrage-price-dispersion.md,
+  ]
 created: 2026-05-01
-authoritative_for:
+authoritative_for: [DEFI_LP_POOL archetype specification]
 referenced_by:
 owner:
 last_reviewed:

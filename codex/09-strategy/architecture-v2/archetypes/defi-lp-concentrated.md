@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `DEFI_LP_CONCENTRATED`'
-summary:
-status: code-shipped
+summary: >-
+  Archetype DEFI_LP_CONCENTRATED: mints a Uniswap-V3-style concentrated-liquidity position +-range_pct
+  around spot, earns swap fees while in range, and rebalances (burn+mint) when spot exits
+  rebalance_band_pct subject to a gas-aware min_rebalance_interval_seconds. Exports the closed-form
+  position_value / liquidity_for_amounts / compute_il_pct helpers as the SSOT for IL calculators.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, defi, execution, archetype, features]
+related:
+  [
+    ../families/market-making.md,
+    defi-lp-pool.md,
+    arbitrage-mev-jit-liquidity.md,
+    market-making-continuous.md,
+  ]
 created: 2026-05-01
-authoritative_for:
+authoritative_for: [DEFI_LP_CONCENTRATED archetype specification]
 referenced_by:
 owner:
 last_reviewed:

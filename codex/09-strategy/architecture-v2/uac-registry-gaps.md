@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: UAC Registry Gaps — Additions for the Category × Instrument Coverage Matrix
-summary:
-status:
+summary: >-
+  The 12 additive UAC declarations (ArchetypeCapabilityV2, supported_signal_variants,
+  FlashLoanReceiverRegistry, LiquidationBonusScheduleV2, EventCalendarSourceCapability,
+  RepresentativeFutureRegistry, StrategyAvailabilityRegistry, ...) proposed to unblock the
+  BLOCKED/PARTIAL cells of the category x instrument coverage matrix — each with proposed shape,
+  consumers, and PR phasing (A-F). Companion proposal to category-instrument-coverage.md (the SSOT).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [uac, strategy, defi, registry, execution, features, archetype, coverage-matrix]
+related:
+  [
+    category-instrument-coverage.md,
+    cross-cutting/strategy-availability-and-locking.md,
+    cross-cutting/futures-roll-and-combos.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [UAC registry gap additions for the architecture-v2 category-instrument coverage matrix]
 referenced_by:
 owner:
 last_reviewed:

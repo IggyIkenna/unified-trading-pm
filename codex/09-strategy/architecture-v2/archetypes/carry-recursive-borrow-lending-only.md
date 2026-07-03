@@ -1,17 +1,29 @@
 ---
 doc_type: codex-ssot
 title: CARRY_RECURSIVE_BORROW_LENDING_ONLY
-summary:
-status: design
+summary: >-
+  Archetype CARRY_RECURSIVE_BORROW_LENDING_ONLY (Family 1): pure ETH-LST recursive supply-borrow loop on
+  Aave V3 / Morpho with NO perp leg — recursion amplifies the lending spread R_lend, not delta (net
+  ETH-equivalent exposure = base for all ltv,d). Closed-form R_lend, top-7 May-23 per-chain per-lender
+  cells; shares the recursive-loop engine via config flags.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, carry, defi, execution, archetype, uac]
+related:
+  [
+    carry-recursive-staked.md,
+    carry-recursive-borrow-perp-hedged.md,
+    carry-basis-perp-inv.md,
+    ../../../04-architecture/flash-loan-receiver.md,
+    yield-rotation-lending.md,
+    yield-staking-simple.md,
+  ]
 created: 2026-05-12
-authoritative_for:
+authoritative_for: [CARRY_RECURSIVE_BORROW_LENDING_ONLY archetype specification (Family 1 recursive lending loop)]
 referenced_by:
 owner:
 last_reviewed:

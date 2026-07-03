@@ -1,17 +1,20 @@
 ---
 doc_type: codex-ssot
 title: Carry Recursive-Staked Config Variants
-summary:
-status: stub
+summary: >-
+  STUB (full spec pending; ref plans/epics/defi_master.md): documents the config-variant sweep space
+  (LTV ratios, target utilisation, chain, collateral asset) for the carry_staked_basis recursive-borrow
+  leg used by the 2yr backtest grid.
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, carry, defi, archetype, backfill]
+related: [carry-recursive-staked.md, carry-staked-basis.md]
 created: 2026-05-21
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

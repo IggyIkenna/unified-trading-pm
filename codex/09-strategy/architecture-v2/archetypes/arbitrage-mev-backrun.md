@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `ARBITRAGE_MEV_BACKRUN`'
-summary:
-status: code-shipped
+summary: >-
+  Archetype ARBITRAGE_MEV_BACKRUN: submits a priority-gas tx in block N+1 to capture the cross-DEX/CEX
+  spread left by a large confirmed swap in block N. Reads confirmed blocks (no mempool needed); bids
+  priority_gas_bid = priority_gas_p90 * uplift; triggers on target_swap_size_usd >= min_target_swap_usd
+  AND spread_bps >= min_spread_bps.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, arbitrage, defi, mev, execution, archetype]
+related:
+  [
+    ../families/arbitrage-structural.md,
+    arbitrage-mev-sandwich.md,
+    arbitrage-mev-jit-liquidity.md,
+    arbitrage-mev-liquidation-bundle.md,
+    arbitrage-price-dispersion.md,
+  ]
 created: 2026-05-01
-authoritative_for:
+authoritative_for: [ARBITRAGE_MEV_BACKRUN archetype specification]
 referenced_by:
 owner:
 last_reviewed:

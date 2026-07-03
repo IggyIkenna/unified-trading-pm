@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `CARRY_BASIS_PERP`'
-summary:
-status: design
+summary: >-
+  Archetype CARRY_BASIS_PERP: long spot + short perpetual capturing funding rate while delta-neutral;
+  enter when annualized_funding > min_funding_threshold, rebalance on funding drop / venue migration /
+  delta drift. Single-venue netted (Binance/OKX/Bybit) or LEADER_HEDGE cross-venue; includes the
+  2026-06-01 Solana DRIFT-perp + ORCA-spot basis variant.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, carry, defi, cefi, execution, archetype, binance]
+related:
+  [
+    ../families/carry-and-yield.md,
+    carry-staked-basis.md,
+    carry-recursive-staked.md,
+    carry-basis-dated.md,
+    ../../../04-architecture/drift-v2-data-sources.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [CARRY_BASIS_PERP archetype specification]
 referenced_by:
 owner:
 last_reviewed:

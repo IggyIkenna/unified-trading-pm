@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `CARRY_BASIS_DATED_INV`'
-summary:
-status: design
+summary: >-
+  Archetype CARRY_BASIS_DATED_INV: inverse of CARRY_BASIS_DATED — short dated future + long cash to
+  capture backwardation (spot > future) convergence at expiry. Entry when (spot - future)/spot >
+  min_entry_threshold; delta-neutral; shares CarryBasisDatedEngine via ALLOWED_ARCHETYPES with direction
+  selected by archetype_id. TradFi energy spot crunches + crypto bear-market dated.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, carry, tradfi, defi, archetype, deribit]
+related:
+  [
+    carry-basis-dated.md,
+    carry-basis-perp.md,
+    carry-basis-perp-inv.md,
+    carry-staked-basis-dated.md,
+    ../families/carry-and-yield.md,
+  ]
 created: '2026-05-18'
-authoritative_for:
+authoritative_for: [CARRY_BASIS_DATED_INV archetype specification]
 referenced_by:
 owner:
 last_reviewed:

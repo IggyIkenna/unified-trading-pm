@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `ARBITRAGE_MEV_JIT_LIQUIDITY`'
-summary:
-status: code-shipped
+summary: >-
+  Archetype ARBITRAGE_MEV_JIT_LIQUIDITY: mints a 1-tick concentrated-LP position centred at spot just
+  before a large pending swap, collects the swap fee, and burns next block (near-zero inventory).
+  Triggers on jit_pending_swap_size_usd >= min_swap_threshold_usd (default $100k); runs only on 30/100
+  bps tiers; valid_blocks caps exposure to 2 blocks.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, arbitrage, defi, mev, execution, archetype]
+related:
+  [
+    ../families/arbitrage-structural.md,
+    defi-lp-concentrated.md,
+    arbitrage-mev-backrun.md,
+    arbitrage-mev-sandwich.md,
+    arbitrage-mev-liquidation-bundle.md,
+  ]
 created: 2026-05-01
-authoritative_for:
+authoritative_for: [ARBITRAGE_MEV_JIT_LIQUIDITY archetype specification]
 referenced_by:
 owner:
 last_reviewed:
