@@ -482,6 +482,36 @@ GCS script updated and 5 SPOT VMs re-launched at 09:54–09:57 UTC 2026-06-29.
 Coverage: 2025-09-01..2025-11-30 (P1 golden window, 91 dates across 5 VMs). Expected completion ~10:50–11:00 UTC. P2c
 Todo 1 (full 2015→present) remains blocked on Understat ETA ~2026-07-01 02:00 UTC. Checkbox NOT flipped.
 
+### 2026-07-03 — slot 4 (17th dispatch — BLOCKED-OPERATOR, prereq gates needed)
+
+**Todo 3 (features manifest clean) — BLOCKED-OPERATOR (BLK-2ff03344 answered: option C)**
+
+State verified 2026-07-03 06:00 UTC (consolidated manifest downloaded, IS availability_index.parquet at 05:21 UTC run):
+
+| Data | eu | af | captured | empty_confirmed |
+|------|----|----|----------|-----------------|
+| Understat XG_SHOTS | 13,796 | 384 | 0 | 286,560 |
+| Understat XG | 300 | 296 | 4,444 | 301,343 |
+| footystats MATCHES | 88,369 | 1,459 | 26,343 | 173,134 |
+| footystats PREDICTIONS | 97,105 | 0 | 28,513 | 141,961 |
+| footystats ODDS | 1,318 | 277 | 4,468 | 79,358 |
+
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (unchanged — no availability_index).
+- Footystats ODDS VM 2 (`fs-backfill-20260629-062206`) completed at 12:55 UTC 2026-06-29 (exit_code=0). ODDS still has 1,318 eu (VM did not fully clear pending_fetch).
+- Footystats M+P VM: **never launched** (was waiting for ODDS VM 2 completion — that dependency is now met).
+- Understat VM (`us-backfill-20260628-070120`) **preempted at date 2019-08-09** (14:49 UTC 2026-06-29). XG_SHOTS: 13,796 eu remain.
+- IS tarball current (instruments-service@a945516, 2026-07-01T07:30:51Z).
+- No sports backfill VMs running in asia-northeast1-c.
+
+**Main-agent answer to BLK-2ff03344**: Option C — park task until backlog prereq gates added. Options A/B rejected. **Operator action required**:
+1. Confirm hk OOM resolved (precondition for Understat VM re-launch mentioned by main agent)
+2. Re-launch Understat VM: `bash deployment-service/scripts/vm/launch-understat-backfill-vm.sh 2014-01-01 2026-07-03` (SPOT; skip-existing handles already-captured dates)
+3. Launch footystats M+P VM: `bash deployment-service/scripts/vm/launch-footystats-backfill-vm.sh 2019-01-01 2026-07-03` (SPOT; will process MATCHES + PREDICTIONS + remaining ODDS eu after ODDS subset run first)
+4. Add backlog prereq conditions to `agent-orchestrator/data/config/backlog.yaml` for tasks `sports_p2_features_history_to_ml_ready-005` and `-007`: gate on `understat-vm-xg-complete` AND `footystats-mp-complete`.
+5. Flip `understat-vm-xg-complete` condition when Understat VM completes (XG_SHOTS eu → 0).
+
+Checkbox NOT flipped. Task released via /done (BLOCKED-OPERATOR — gate unmet, operator VM launches + backlog prereq gates needed).
+
 ### 2026-07-03 — slot 2 (16th dispatch — WriteGateRejectedError semantic fix shipped, BLOCKED-PREREQ)
 
 **Code fix shipped (3-repo): WriteGateRejectedError semantic mapping**
