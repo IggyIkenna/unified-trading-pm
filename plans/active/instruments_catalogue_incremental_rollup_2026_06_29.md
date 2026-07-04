@@ -396,3 +396,19 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
   halt-safety design — the ONLY open thread, and it is outside this plan's scope). **What to watch**: the 01:00 UTC
   daily runs (first scheduled incremental 2026-07-04) and the first Saturday self-heal (2026-07-05 03:00–06:00 UTC).
   Rollback remains `--mode full` on the job args.
+- 2026-07-04 (slot-2): **First scheduled cycle + first weekly self-heal — one defect found by the guard, fixed.** (1)
+  All 5 daily 01:00 runs green (tradfi 2m30s / cefi 2m16s / defi 1m19s / prediction 2m33s / sports 1m02s), fresh
+  artifacts 01:01–01:02Z. (2) 2026-07-04 IS a Saturday — the weekly fulls fired their first cycle: defi full GREEN
+  (41m40s, rewrote artifact 04:41Z, +9 rows of drift healed); **cefi full FAILED exit-1 = `CATALOGUE_SHRINK_BLOCKED` —
+  the guard caught a REAL merge-key defect**: `_incremental_merge_keys` included the raw `venue` FIELD, but the full
+  rebuild's non-pool identity is `instrument_id` alone, so 122 DERIBIT combos whose venue field spelling changed
+  era-to-era (`DERIBIT-COMBO`→`DERIBIT`, same id) were ghost-DUPLICATED by the 07-03 catch-up merge → full rebuild
+  (which unifies them) < current → guard blocked, artifact protected. **Fix shipped instruments-service@dc378b62c**: key
+  = per-AG aggregate identity — non-pool `instrument_id` alone; defi pools dual-form (unchanged); prediction
+  `venue::id::data_type` (venue IS identity there — 31 REAL cross-venue cqg pairs in prod, e.g. `BNB_PRICE_RANGE_DAILY`
+  on KALSHI + POLYMARKET, proven before shipping so the id-only key would not over-collapse). Ghost regression test
+  added; all 4 prod artifacts profiled under the new key (tradfi 0 / defi 0 / prediction 0 legitimate / cefi 122 to
+  purge). Next: image rebuild → **corrective `--mode full --allow-catalogue-shrink` cefi run** (the documented
+  legitimate shrink: removes the 122 dupes; REQUIRED before the 2026-07-05 01:00 daily, which would otherwise
+  shrink-block when the fixed key collapses them) → verify rows==unique_keys → tradfi/prediction weekly-full outcomes
+  (in flight, started 05:00/06:00).
