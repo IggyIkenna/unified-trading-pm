@@ -20,7 +20,12 @@ related:
 created: 2026-06-24
 authoritative_for:
   [doc frontmatter schema, doc_type vocabulary, per-type field requirements, frontmatter closed-vocab enums]
-referenced_by: [codex/11-project-management/plan-hygiene.md, plans/active/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md, plans/active/issues/plan_issue_epic_consolidation_2026_06_30.md]
+referenced_by:
+  [
+    codex/11-project-management/plan-hygiene.md,
+    plans/active/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md,
+    plans/active/issues/plan_issue_epic_consolidation_2026_06_30.md,
+  ]
 owner: harsh
 last_reviewed:
 code_refs: []
@@ -118,7 +123,12 @@ Notes:
 - **`authoritative_for`** (codex-ssot) is the single highest-value codex field — "what this doc is THE SSOT for" — so an
   agent asking "the canonical rule for X" greps it and lands on the one right doc, not 826. 64 codex docs already carry
   it.
-- **`code_refs`** (codex) is the L4 jump (doc→exact code/workflow path). Code stays frontmatter-free (§7).
+- **`code_refs`** (codex) is the L4 jump (doc→code). **Point at the smallest STABLE unit — module/package directory by
+  default; an exact file only for stable single-file entry points** (content-pass rot data: file citations break on most
+  refactors, their module dirs survive; repo-level is already the `repos:` facet). Existence is checked by a scheduled
+  host-side audit, never a blocking commit gate (codex lives in PM, code in service repos — no cross-repo atomicity).
+  Backfill deferred (W7 rider); full locked decision: `plans/epics/agent_operating_framework_master.md` § "L4
+  `code_refs` granularity + enforcement". Code stays frontmatter-free (§7).
 
 ## 4. The `nature` facet (content-kind, orthogonal to `doc_type`)
 
