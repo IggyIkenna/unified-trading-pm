@@ -227,8 +227,14 @@ def main() -> int:
     )
 
     if new_master == master_text:
-        print("ERROR: marker substitution failed", file=sys.stderr)
-        return 2
+        # Markers are present (checked above) and the regenerated table is byte-identical:
+        # a no-op refresh, not a failure. Hook callers (prek pre-commit / post-merge) hit
+        # this on every run where no plan state changed — must exit 0.
+        print(
+            f"Inventory already fresh: {len(rows)} plans, {orphan_count} orphans, {tbd_count} TBD, "
+            f"{agg_pct:.0f}% done overall, {total_left_cal:.0f} cal AI-days left."
+        )
+        return 0
 
     MASTER_FILE.write_text(new_master)
     print(

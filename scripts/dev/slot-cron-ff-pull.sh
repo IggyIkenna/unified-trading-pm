@@ -556,16 +556,30 @@ done
 _write_ff_result
 
 # --- L0 doc-index regen (W4, agent_operating_framework_master) — piggyback the FF sweep ---
-# After the sweep pulls in new commits (possibly new frontmatter), refresh the grep-native L0 map.
-# `--stale-check` rewrites ONLY when the content changed, and the output (DOC_INDEX.generated.md) is
-# gitignored, so this never dirties the tree / jams the FF. Guarded + `timeout`-bounded so a bug can
-# never hang or fail the cron (|| true). Uses the repo .venv (has pyyaml), falls back to python3.
-_pm_idx="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-_idx_py="${_pm_idx}/.venv/bin/python"
-[[ -x "${_idx_py}" ]] || _idx_py="python3"
-if [[ -f "${_pm_idx}/scripts/docs/gen_doc_index.py" ]]; then
-    timeout 60 "${_idx_py}" "${_pm_idx}/scripts/docs/gen_doc_index.py" --stale-check >/dev/null 2>&1 || true
+# After the sweep pulls in new commits (possibly new frontmatter), refresh the grep-native L0 map
+# in EVERY PM clone on this host: the main-workspace PM (whose script copy cron runs) PLUS each
+# .tabs/<N>/unified-trading-pm slot clone. DOC_INDEX.generated.md is per-clone, gitignored,
+# consumer-side local. The sweep's per-repo dirty/ahead skips apply to the PULL only — a dirty PM
+# still gets its index refreshed here (the regen only READS docs + writes the ignored file; it can
+# never dirty the tree / jam the FF). PM-only by construction (paths end in /unified-trading-pm);
+# other repos don't carry the generator. `--stale-check` rewrites only on content change. Each run
+# guarded + `timeout`-bounded so a bug can never hang or fail the cron (|| true). Cost: ~1.4s per
+# clone, sequential, at sweep end — acceptable for a 5-min cron.
+# Workspace root derivation must be invocation-agnostic: the script may run from the
+# main-workspace PM (cron) OR a slot clone (.tabs/<N>/unified-trading-pm) — strip any
+# /.tabs/<N>/ suffix to land on the workspace root either way.
+_pm_home="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+if [[ "${_pm_home}" == */.tabs/* ]]; then
+    _ws_root="${_pm_home%%/.tabs/*}"
+else
+    _ws_root="$(dirname "${_pm_home}")"
 fi
+for _pm_clone in "${_ws_root}/unified-trading-pm" "${_ws_root}"/.tabs/*/unified-trading-pm; do
+    [[ -d "${_pm_clone}" && -f "${_pm_clone}/scripts/docs/gen_doc_index.py" ]] || continue
+    _idx_py="${_pm_clone}/.venv/bin/python"
+    [[ -x "${_idx_py}" ]] || _idx_py="python3"
+    timeout 60 "${_idx_py}" "${_pm_clone}/scripts/docs/gen_doc_index.py" --stale-check >/dev/null 2>&1 || true
+done
 
 # Heartbeat: write ONE line every run, even in --quiet on a fully-idle no-op sweep, so the
 # log mtime always refreshes while the cron is alive. verify-slot-host-symmetry.sh check 3

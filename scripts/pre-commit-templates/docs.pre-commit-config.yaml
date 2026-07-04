@@ -6,6 +6,7 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
+  # NEVER add pre-push here — .git/hooks/pre-push is the strict-quickmerge guard, not prek's.
 
 repos:
   # Conventional commit validation (feat:/fix:/chore:/docs:/refactor:/test:/ci:)
