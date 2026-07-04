@@ -54,6 +54,7 @@ _ROOTS: list[tuple[str, str]] = [
     ("codex", "**/*.md"),
 ]
 _EXCLUDED_PREFIX = "plans/archive/"  # safety net if a future root glob ever reaches into it
+ROOTS = _ROOTS  # public alias — gen_doc_graph.py walks the same corpus (keep in lockstep)
 
 
 def _fmt_val(v: object) -> str:

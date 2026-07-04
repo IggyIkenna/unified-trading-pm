@@ -57,6 +57,8 @@ central-element-323112-*.json
 #       cron via --stale-check. NEVER committed — a fleet-shared index is a multi-writer contention
 #       hotspot, and any dirty generated file jams slot-cron-ff-pull (C2 decision). ---
 /DOC_INDEX.generated.md
+/DOC_GRAPH.generated.html
+/scripts/docs/vendor-cache/
 #     DAG SVGs ← workspace-manifest.json (generate_workspace_dag.py / generate_data_flow_dag.py;
 #       generators are deterministic — churn is driven by mutable ci_status inside the manifest,
 #       so untracking removes it without needing the ci_status sidecar; nothing imports an SVG).
