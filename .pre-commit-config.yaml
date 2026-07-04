@@ -6,10 +6,7 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
-  # pull-side inventory refresh (PM-only hook below no-ops elsewhere). NEVER add
-  # pre-push here — .git/hooks/pre-push is the strict-quickmerge guard, not prek's.
-  - post-merge
-  - post-rewrite
+  # NEVER add pre-push here — .git/hooks/pre-push is the strict-quickmerge guard, not prek's.
 
 repos:
   # Conventional commit validation (feat:/fix:/chore:/docs:/refactor:/test:/ci:)
@@ -18,33 +15,6 @@ repos:
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
-
-  # Active-plan inventory freshness (PM-only; hook script no-ops in other repos).
-  # commit-time: regenerate + re-stage the master table when a commit touches plans
-  # (mutate+restage, same pattern as prettier-autostage). pull-time (post-merge /
-  # post-rewrite): regenerate so the local table reflects pulled-in plan state
-  # (left in the working tree, never auto-committed). Reads the LOCAL WORKING TREE.
-  - repo: local
-    hooks:
-      - id: regenerate-plan-inventory
-        name: Regenerate active-plan inventory (commit)
-        entry:
-          bash -c 'HOOK="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel)/.." &&
-          pwd)}/unified-trading-pm/scripts/hooks/regenerate-plan-inventory.sh"; [ -f "$HOOK" ] || exit 0; bash "$HOOK"
-          --stage'
-        language: system
-        files: ^plans/(active|epics)/.*\.md$
-        pass_filenames: false
-        stages: [pre-commit]
-      - id: regenerate-plan-inventory-post-pull
-        name: Regenerate active-plan inventory (post-pull)
-        entry:
-          bash -c 'HOOK="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel)/.." &&
-          pwd)}/unified-trading-pm/scripts/hooks/regenerate-plan-inventory.sh"; [ -f "$HOOK" ] || exit 0; bash "$HOOK"'
-        language: system
-        always_run: true
-        pass_filenames: false
-        stages: [post-merge, post-rewrite]
 
   # Branch drift check - blocks commit if you're behind origin
   - repo: local
