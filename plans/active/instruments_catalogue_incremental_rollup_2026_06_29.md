@@ -412,3 +412,18 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
   legitimate shrink: removes the 122 dupes; REQUIRED before the 2026-07-05 01:00 daily, which would otherwise
   shrink-block when the fixed key collapses them) → verify rows==unique_keys → tradfi/prediction weekly-full outcomes
   (in flight, started 05:00/06:00).
+- 2026-07-04 (slot-2, closing) — **remediation complete; all 4 weekly fulls GREEN; system clean for the next cycle.**
+  (1) Fixed image live: `cloudbuild=97962f5a` SUCCESS at dc378b6 → `:latest` (resubmitted with `_RUN_INIMAGE_QG=false` —
+  the in-image QG step needs a git checkout + sibling PM repo a tarball submit lacks; same substitution as the 07-03
+  green build). (2) **prediction weekly-full OOM root-caused + fixed**: full-history multi-grain aggregate exceeded the
+  daily map's 4Gi ("memory limit was reached", exec `…-prediction-6h4fd`); weekly fulls now carry their OWN resource
+  maps — prediction 4cpu/16Gi (Cloud Run couples cpu+memory: 2cpu caps at 8Gi) — deployment-service@LDR (2 commits:
+  memory map + cpu map), targeted applies green ("1 changed" ×2); re-run `…-prediction-qlz4b` GREEN 10m22s, artifact
+  06:46:51Z. (3) **Corrective cefi shrink executed**: args-override `--mode full --allow-catalogue-shrink` (the
+  documented corrective use; full path only), exec `…-cefi-j8v4z` GREEN 50m, artifact 07:16:20Z — verified **365,002
+  rows == 365,002 unique keys, 0 ghost dupes** (was 365,124 with 122 dupes). (4) tradfi weekly full `…-tradfi-mh959`
+  GREEN 2h33m (05:00→07:32), guard passed (confirms the tradfi incremental artifact carried no phantom rows), artifact
+  07:32:53Z. **End-state: all 4 by_date AGs hold full-rebuild-truth artifacts (defi 04:41Z / prediction 06:46Z / cefi
+  07:16Z / tradfi 07:32Z), the fixed merge key ships in `:latest` for the 2026-07-05 01:00 dailies, and next Saturday's
+  self-heals run with correct resources.** Residual watch: the 07-05 01:00 dailies (first cycle on the fixed key over
+  clean bases) — expected green ≥ prev.
