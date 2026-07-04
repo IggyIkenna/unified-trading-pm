@@ -92,7 +92,11 @@ rg 'doc_type=plan .*assigned_vm=vm-defi'   DOC_INDEX.generated.md   # defi plans
       window). Evidence: docspec HARD=0 SOFT=0 on 1,298 live docs; single blocking gate live (pm@d47886909); agent-role
       docs gated in-repo (agent-orchestrator@202c9b6).
 - [ ] [SCRIPT] P2. **Central read-only rendered L0 view** in the AO dashboard / deployment-ui (same generator, served —
-      not a git artifact) for human visibility.
+      not a git artifact) for human visibility. — 🟡 SUBSTANTIALLY DELIVERED 2026-07-04 as the LOCAL variant
+      (pm@d03703d0e): `scripts/docs/gen_doc_graph.py` → `DOC_GRAPH.generated.html` (gitignored, self-contained,
+      per-host): 1,119 nodes / 3,113 `related`+`referenced_by` edges, 3D force layout, facet filters + search +
+      neighborhood isolate + doc panel. REMAINING (the letter of this todo): serve that generated file from the AO
+      dashboard / deployment-ui as a static route for central human visibility.
 - [ ] [SCRIPT] P3. **On-demand stale-check before an agent reads** (covers the inter-FF-tick gap) — a thin wrapper an
       agent calls before grepping the index.
 
