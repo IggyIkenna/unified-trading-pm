@@ -2,10 +2,9 @@
 doc_type: epic
 title: Agent Operating Framework Master (L5)
 summary:
-  L5 epic owning how agents work — strict per-plan dispatch (assigned_vm fail-closed matcher, epic→VM
-  delegation DROPPED), grep-native (NOT vector-RAG) frontmatter/L0-index retrieval, role charters +
-  autonomy gradient, and the retrieval-eval loop; workstreams W1–W10 (dispatch fix, docspec, backfill,
-  L0 gen, QG gate, role registry+broker).
+  L5 epic owning how agents work — strict per-plan dispatch (assigned_vm fail-closed matcher, epic→VM delegation
+  DROPPED), grep-native (NOT vector-RAG) frontmatter/L0-index retrieval, role charters + autonomy gradient, and the
+  retrieval-eval loop; workstreams W1–W10 (dispatch fix, docspec, backfill, L0 gen, QG gate, role registry+broker).
 status: active
 nature: process
 asset_group: [defi]
@@ -13,7 +12,12 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-ui]
 scope: [engineer, admin]
 tags: [orchestrator, role-registry, frontmatter, rag, plan-hygiene, docspec, escalation, quality-gates]
-related: [../archive/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md, ../active/orchestrator_v07_multi_vm_topology_2026_05_21.md, ../active/agent_orchestrator_backlog_state_alignment_2026_05_29.md]
+related:
+  [
+    ../archive/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md,
+    ../active/orchestrator_v07_multi_vm_topology_2026_05_21.md,
+    ../active/agent_orchestrator_backlog_state_alignment_2026_05_29.md,
+  ]
 created: 2026-06-24
 name: agent_operating_framework_master
 tier: L5
@@ -22,7 +26,13 @@ assigned_vm: harsh_pc
 parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
 codex_ssots: [codex/11-project-management/plan-hygiene.md, codex/12-agent-workflow/canonical-plan-flow.md]
-related_plans: [../archive/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md, ../active/orchestrator_v07_multi_vm_topology_2026_05_21.md, ../active/agent_orchestrator_backlog_state_alignment_2026_05_29.md, ../active/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md]
+related_plans:
+  [
+    ../archive/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md,
+    ../active/orchestrator_v07_multi_vm_topology_2026_05_21.md,
+    ../active/agent_orchestrator_backlog_state_alignment_2026_05_29.md,
+    ../active/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md,
+  ]
 last_updated: 2026-06-25
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
@@ -144,6 +154,24 @@ load-bearing locks:
   contention. Human view = central read-only render (AO dashboard / deployment-ui), not a git artifact.
 - **`code_refs` is doc-side primary** (docs point to source/yaml/json, including volatile state); code→doc pointers are
   rare + optional (`See:`/`Implements:` line for the _why_); **code stays frontmatter-free** (C8).
+- **L4 `code_refs` granularity + enforcement (operator decision 2026-07-04 — captured, DEFERRED / aspirational):**
+  - **Granularity = MODULE/PACKAGE DIRECTORY by default, not exact files.** Content-pass rot data (55-lane sweep
+    2026-07-03/04) showed file-level citations rot on nearly every refactor (rename/split: `vol_carry_engine.py` →
+    `carry.py`, `routes/data_status.py` → split) while their module dirs survive almost all of them (only full service
+    consolidations kill a dir); repo-level is already covered by the `repos:` facet. Module-level keeps ~95% of the
+    navigation value (25 repos → 1 repo → one 5–20-file dir + one `rg`) at ~10% of the rot rate. Exact file paths
+    allowed ONLY for stable single-file entry points (e.g. `scripts/quickmerge.sh`, a QG checker) that demonstrably
+    don't move.
+  - **Enforcement = scheduled host-side existence audit (hygiene-sweep rider), warn + worklist — NEVER a blocking commit
+    gate.** Structural reason: codex lives in PM, code lives in service repos — a rename in a service repo cannot
+    atomically update PM codex docs, so a blocking gate would go red asynchronously on whoever touches PM next (rule-11
+    blast-radius class), ambushing a mid-refactor agent with breakage it didn't cause. Also technically forced: server
+    `quality-gates-v2` checks out ONE repo, so cross-repo path resolution is host-side-only. Optional courtesy:
+    WARN-only note in code repos' local pre-push ("you moved paths referenced by codex `code_refs`: <list>"),
+    skip-if-PM-absent.
+  - **Backfill = a W7 rider, not a standalone pass**: when the W7 de-drift pass repairs a doc's body citations, it
+    writes the verified survivors into `code_refs` at module granularity (near-free at that moment; current coverage
+    25/805 codex docs). Existence checks catch structural rot only; semantic drift stays W8/eval-loop territory.
 - **Autonomy gradient** (Proceed / Escalate-non-blocking / Gate) — already live as AO `conditions` + `/blocked` (C6).
 - **Dispatch matcher = `assigned_vm` only** (status quo); no plan-level `worked_by`/`executor` — in-flight state stays
   in the backend `.agent-claim` (C7).
@@ -161,16 +189,20 @@ load-bearing locks:
 This epic captures the design; the work splits into per-workstream child plans (D21). The current design-capture
 appendix's Phased DAG became **W1**.
 
-| WS  | Child plan                                           | Scope                                                                                                               | Serves          | Depends | Priority | Status             |
-| --- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------- | ------- | -------- | ------------------ |
-| W1  | `dispatch_strict_vm_matching_2026_06_24`             | Strict `assigned_vm==backend` matcher in regen (D1–D6) + immediate `harsh_pc` relief + supersede-audit of priors    | dispatch        | —       | P0       | ✅ created — ready |
-| W2  | `doc_frontmatter_schema_and_validator_2026_06_24`    | Universal-core + per-type schema SSOT + machine validator (`docspec`) + closed-vocab enums grown organically        | RAG foundation  | —       | P0       | ✅ created — ready |
-| W3  | `plans_frontmatter_backfill_2026_06_24`              | `PLAN_FORMAT` matrix + `task_template` + backfill ~112 active plans (collision-aware batches)                       | RAG             | W2      | P1       | proposed           |
-| W4  | `l0_doc_index_generator_2026_06_24`                  | Consumer-side local gitignored deterministic L0 index + FF-cron trigger + AO/deployment-ui rendered view            | RAG (L0)        | W2      | P1       | proposed           |
-| W5  | `doc_frontmatter_qg_gate_2026_06_24`                 | `check_plan_frontmatter_completeness.py` warn→error (enforce-LAST, active-only, archive exempt)                     | governance      | W3      | P1       | proposed           |
-| W6  | `agent_role_charters_and_operating_model_2026_06_24` | Schema-ify 11 `agents/*.md` (0 FM today) + autonomy-gradient action decls + operating-model arch doc + rule-tagging | operating model | W2      | P1       | proposed           |
-| W7  | `codex_condense_and_frontmatter_2026_06_24`          | Condense over-verbose + fix stale/code-drifted codex, THEN frontmatter on 826 (may graduate to its own epic)        | RAG (codex)     | W2      | P2       | deferred           |
-| W8  | `retrieval_eval_loop_2026_06_24`                     | Audits-as-gate-staging retrieval-eval loop (an audit; logs what agents retrieved + whether the action was correct)  | eval            | W2, W4  | P2       | deferred (late)    |
+| WS  | Child plan                                           | Scope                                                                                                                | Serves          | Depends | Priority | Status             |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------- | ------- | -------- | ------------------ |
+| W1  | `dispatch_strict_vm_matching_2026_06_24`             | Strict `assigned_vm==backend` matcher in regen (D1–D6) + immediate `harsh_pc` relief + supersede-audit of priors     | dispatch        | —       | P0       | ✅ created — ready |
+| W2  | `doc_frontmatter_schema_and_validator_2026_06_24`    | Universal-core + per-type schema SSOT + machine validator (`docspec`) + closed-vocab enums grown organically         | RAG foundation  | —       | P0       | ✅ **shipped**     |
+| W3  | `plans_frontmatter_backfill_2026_06_24`              | `PLAN_FORMAT` matrix + `task_template` + backfill ~112 active plans (collision-aware batches)                        | RAG             | W2      | P1       | ✅ **shipped**     |
+| W4  | `l0_doc_index_generator_2026_06_24`                  | Consumer-side local gitignored deterministic L0 index + FF-cron trigger + AO/deployment-ui rendered view             | RAG (L0)        | W2      | P1       | ✅ **shipped**¹    |
+| W5  | `doc_frontmatter_qg_gate_2026_06_24`                 | `check_plan_frontmatter_completeness.py` warn→error (enforce-LAST, active-only, archive exempt)                      | governance      | W3      | P1       | ✅ **shipped**²    |
+| W6  | `agent_role_charters_and_operating_model_2026_06_24` | Schema-ify 11 `agents/*.md` (0 FM today) + autonomy-gradient action decls + operating-model arch doc + rule-tagging  | operating model | W2      | P1       | ✅ **shipped**³    |
+| W7  | `codex_condense_and_frontmatter_2026_06_24`          | Condense over-verbose + fix stale/code-drifted codex (+ L4 module-level `code_refs` rider — see 2026-07-04 decision) | RAG (codex)     | W2      | P2       | **aspirational**   |
+| W8  | `retrieval_eval_loop_2026_06_24`                     | Audits-as-gate-staging retrieval-eval loop (an audit; logs what agents retrieved + whether the action was correct)   | eval            | W2, W4  | P2       | deferred (late)    |
+
+¹ W4 rendered view (AO/deployment-ui) remains open — P2 in `l0_doc_index_generator_2026_06_24`. ² W5 landed as the
+stronger consolidated blocking gate (pm@d47886909), not the named warn→error flip. ³ W6 rule-tagging portion unverified
+— rides W7 if absent. Evidence for all flips: the W-todo checkboxes below.
 
 **Critical path:** W1 ships independently NOW (dispatch fix). W2 is the foundation for W3/W4/W5/W6/W7/W8. W3→W5
 (backfill before the enforcing gate). W7/W8 are deferred (codex is its own effort; eval is sequenced late).
@@ -249,23 +281,41 @@ Owned by
 The universal-core + per-type schema SSOT + a `docspec` validator with closed-vocab enums (grown organically).
 Everything else (W3–W8) depends on this shape.
 
-- [ ] [DOCS] P0. `DOC_FORMAT`-equivalent SSOT: universal core + per-type extensions + the `NA`/null conventions. (W2)
-- [ ] [CODE] P0. Machine validator (`docspec`: enums + `FieldSpec` R/C/O + `validate_frontmatter()`), gate-wired LAST.
-      (W2)
+- [x] [DOCS] P0. `DOC_FORMAT`-equivalent SSOT: universal core + per-type extensions + the `NA`/null conventions. (W2) —
+      ✅ `codex/11-project-management/doc-frontmatter-schema.md` (banner: CURRENT — fully enforced, BLOCKING
+      2026-07-04).
+- [x] [CODE] P0. Machine validator (`docspec`: enums + `FieldSpec` R/C/O + `validate_frontmatter()`), gate-wired LAST.
+      (W2) — ✅ `scripts/docs/docspec.py`; gate-wired 2026-07-04 (pm@d47886909: `check_frontmatter_schema.py` calls
+      `docspec.validate_frontmatter()`, BLOCKING HARD+SOFT; warn-only coverage check retired).
 
 ## P1 — after the P0 foundation
 
-- [ ] [DOCS] P1. **W3** — plans-folder backfill (matrix in `PLAN_FORMAT.md` + `task_template` + sweep ~112 active
-      plans).
-- [ ] [SCRIPT] P1. **W4** — L0 index generator (consumer-side local, gitignored, FF-cron-triggered) + AO rendered view.
-- [ ] [SCRIPT] P1. **W5** — `check_plan_frontmatter_completeness.py` warn→error (enforce-LAST; active-only).
-- [ ] [DOCS] P1. **W6** — agent-role charters (schema-ify the 11 `agents/*.md`) + operating-model arch doc +
-      `[gate]`/`[convention]` rule-tagging.
+- [x] [DOCS] P1. **W3** — plans-folder backfill (matrix in `PLAN_FORMAT.md` + `task_template` + sweep ~112 active
+      plans). — ✅ delivered via `frontmatter_full_corpus_coverage_2026_06_30` (archived complete) + the content pass
+      (`frontmatter_content_pass_and_gate_consolidation_2026_06_30`): corpus docspec HARD=0 SOFT=0 on 1,298 live docs
+      (2026-07-04).
+- [x] [SCRIPT] P1. **W4** — L0 index generator (consumer-side local, gitignored, FF-cron-triggered) + AO rendered view.
+      — ✅ generator `scripts/docs/gen_doc_index.py` (1,119 docs, ~1.4s, `--stale-check`) + FF-cron regen across EVERY
+      PM clone incl. dirty trees (pm@b4d75366d, 2026-07-04). REMAINDER: the AO/deployment-ui rendered view stays open as
+      P2 in `l0_doc_index_generator_2026_06_24` (human view, not on the agent path).
+- [x] [SCRIPT] P1. **W5** — `check_plan_frontmatter_completeness.py` warn→error (enforce-LAST; active-only). — ✅
+      superseded by a STRONGER end-state 2026-07-04 (pm@d47886909): ONE comprehensive blocking gate
+      (`check_frontmatter_schema.py` backed by docspec, HARD+SOFT, live trees incl. codex + `*.mdc`; archives exempt).
+- [x] [DOCS] P1. **W6** — agent-role charters (schema-ify the 11 `agents/*.md`) + operating-model arch doc +
+      `[gate]`/`[convention]` rule-tagging. — ✅ charters: 14 `agents/*.md` carry full agent-role frontmatter, gated
+      in-repo (agent-orchestrator@202c9b6, `check_agent_role_frontmatter.py` blocking, 14/14 green); operating model:
+      `codex/12-agent-workflow/work-philosophy.md` + role registry. Rule-tagging `[gate]`/`[convention]` not
+      independently verified — if absent it rides W7 (aspirational).
 
 ## P2 — deferred (own efforts / sequenced late)
 
 - [ ] [DOCS] P2. **W7** — codex condense + fix-stale, THEN frontmatter on 826 docs (may graduate to its own epic —
-      bigger than frontmatter).
+      bigger than frontmatter). **ASPIRATIONAL (operator, 2026-07-04)** — not scheduled; frontmatter half already
+      delivered by `frontmatter_content_pass_and_gate_consolidation_2026_06_30` (corpus docspec 0/0 + blocking gate);
+      remaining scope = condense/de-drift + the L4 module-level `code_refs` rider (see the 2026-07-04 locked decision
+      above; fill at module granularity while repairing body citations, existence-audit host-side, never a blocking
+      gate). Inputs ready when picked up: the content-pass anomaly log (stale docs, dead citations, SUPERSEDED-banner
+      list, retype list) in that plan's Progress Log + P3.4 worklist.
 - [ ] [DOCS] P2. **W8** — retrieval-eval loop (audits-as-gate-staging; logs retrieval + action-correctness; feeds index
       quality + the delegation-graduation evidence).
 - [ ] [DOCS] P3. **DEFERRED** — controlled tag vocabulary · doc content/intent standardization · archive backfill ·
