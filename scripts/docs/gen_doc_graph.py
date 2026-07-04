@@ -27,6 +27,7 @@ from collections import Counter
 from pathlib import Path
 
 import docspec
+import yaml
 from docspec import doc_type_for_path, is_exempt, parse_frontmatter
 from gen_doc_index import ROOTS
 
@@ -99,7 +100,7 @@ def build_graph(pm_root: Path) -> tuple[list[dict[str, object]], list[dict[str, 
             continue
         try:
             fm, _ = parse_frontmatter(path.read_text(encoding="utf-8"))
-        except Exception:
+        except (OSError, UnicodeDecodeError, yaml.YAMLError):
             continue
         if not isinstance(fm, dict):
             continue
@@ -149,7 +150,7 @@ def build_graph(pm_root: Path) -> tuple[list[dict[str, object]], list[dict[str, 
 def _lib_js(timeout: int = 60) -> str:
     if not _LIB_CACHE.is_file():
         _LIB_CACHE.parent.mkdir(parents=True, exist_ok=True)
-        with urllib.request.urlopen(_LIB_URL, timeout=timeout) as resp:
+        with urllib.request.urlopen(_LIB_URL, timeout=timeout) as resp:  # nosec B310 — hardcoded unpkg.com https URL, not user input
             _LIB_CACHE.write_bytes(resp.read())
     return _LIB_CACHE.read_text(encoding="utf-8")
 
