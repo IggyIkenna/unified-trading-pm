@@ -153,6 +153,18 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`,
   plans, memory).
 
+## Doc retrieval — retrieve less but right (L0→L4, grep-native)
+
+Finding any doc/rule/SSOT: **grep the L0 index FIRST** — `unified-trading-pm/DOC_INDEX.generated.md` (per-clone,
+gitignored; absent/stale → `.venv/bin/python scripts/docs/gen_doc_index.py`, ~1.4s; NEVER read it whole, ~200k tok —
+grep it). Narrow with L1 frontmatter facets: `rg -l '^authoritative_for:.*<topic>' codex/` lands THE one SSOT; compose
+axes for broader cuts (`doc_type` / `asset_group` / `stage` / `repos` / `status` / `nature` / `tags`, e.g.
+`rg -l '^doc_type: codex-ssot' codex/ | xargs rg -l '^asset_group:.*defi'`). Confirm relevance via `summary:` (L2)
+before opening; open ONLY the confirmed doc (L3); jump doc→code via its `code_refs` (L4, module-dir granularity). The
+conditional domain index below stays the curated shortcut for known domains; the L0/L1 grep is the general path for
+everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` §1 + epic
+`agent_operating_framework_master` § "Target architecture (L0–L4)".
+
 ## Plans — format + authoring discipline
 
 - **Plan destination — ASK BEFORE CREATING (HARD RULE)**: before writing any new plan, ask the operator: _"Should this

@@ -127,9 +127,12 @@ Other: operator can type a custom answer
 - The orchestrator dashboard exposes an "Other" input for free-text — structure your options so the operator can pick
   one or override with custom text. Never block on a yes/no without framing both sides.
 
-## When in doubt
+## When in doubt — retrieve less but right
 
-Read `cursor-configs/CLAUDE.md` (the workspace index) + the ONE codex doc your task's domain points to —
-`codex/02-data/` (manifest/data), `codex/04-architecture/` (services/DeFi/funds), `codex/05-infrastructure/` (VM/infra),
-`codex/06-coding-standards/` (code/QG/UI). Or ask the operator a focused question (spend ≤1 min on read-only
+**Grep the L0 doc index first**: `unified-trading-pm/DOC_INDEX.generated.md` (per-clone, gitignored; regen
+`.venv/bin/python scripts/docs/gen_doc_index.py`; grep it, NEVER read whole). Narrow with frontmatter facets —
+`rg -l '^authoritative_for:.*<topic>' codex/` lands THE one SSOT; confirm its `summary:` line, open ONLY that doc; its
+`code_refs` jumps doc→code. Fallbacks: the curated domain pointers in `cursor-configs/CLAUDE.md` — `codex/02-data/`
+(manifest/data), `codex/04-architecture/` (services/DeFi/funds), `codex/05-infrastructure/` (VM/infra),
+`codex/06-coding-standards/` (code/QG/UI) — or ask the operator a focused question (spend ≤1 min on read-only
 investigation first so it's specific).

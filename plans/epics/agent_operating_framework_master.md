@@ -192,13 +192,17 @@ appendix's Phased DAG became **W1**.
 | WS  | Child plan                                           | Scope                                                                                                                | Serves          | Depends | Priority | Status             |
 | --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------- | ------- | -------- | ------------------ |
 | W1  | `dispatch_strict_vm_matching_2026_06_24`             | Strict `assigned_vm==backend` matcher in regen (D1–D6) + immediate `harsh_pc` relief + supersede-audit of priors     | dispatch        | —       | P0       | ✅ created — ready |
-| W2  | `doc_frontmatter_schema_and_validator_2026_06_24`    | Universal-core + per-type schema SSOT + machine validator (`docspec`) + closed-vocab enums grown organically         | RAG foundation  | —       | P0       | ✅ created — ready |
-| W3  | `plans_frontmatter_backfill_2026_06_24`              | `PLAN_FORMAT` matrix + `task_template` + backfill ~112 active plans (collision-aware batches)                        | RAG             | W2      | P1       | proposed           |
-| W4  | `l0_doc_index_generator_2026_06_24`                  | Consumer-side local gitignored deterministic L0 index + FF-cron trigger + AO/deployment-ui rendered view             | RAG (L0)        | W2      | P1       | proposed           |
-| W5  | `doc_frontmatter_qg_gate_2026_06_24`                 | `check_plan_frontmatter_completeness.py` warn→error (enforce-LAST, active-only, archive exempt)                      | governance      | W3      | P1       | proposed           |
-| W6  | `agent_role_charters_and_operating_model_2026_06_24` | Schema-ify 11 `agents/*.md` (0 FM today) + autonomy-gradient action decls + operating-model arch doc + rule-tagging  | operating model | W2      | P1       | proposed           |
+| W2  | `doc_frontmatter_schema_and_validator_2026_06_24`    | Universal-core + per-type schema SSOT + machine validator (`docspec`) + closed-vocab enums grown organically         | RAG foundation  | —       | P0       | ✅ **shipped**     |
+| W3  | `plans_frontmatter_backfill_2026_06_24`              | `PLAN_FORMAT` matrix + `task_template` + backfill ~112 active plans (collision-aware batches)                        | RAG             | W2      | P1       | ✅ **shipped**     |
+| W4  | `l0_doc_index_generator_2026_06_24`                  | Consumer-side local gitignored deterministic L0 index + FF-cron trigger + AO/deployment-ui rendered view             | RAG (L0)        | W2      | P1       | ✅ **shipped**¹    |
+| W5  | `doc_frontmatter_qg_gate_2026_06_24`                 | `check_plan_frontmatter_completeness.py` warn→error (enforce-LAST, active-only, archive exempt)                      | governance      | W3      | P1       | ✅ **shipped**²    |
+| W6  | `agent_role_charters_and_operating_model_2026_06_24` | Schema-ify 11 `agents/*.md` (0 FM today) + autonomy-gradient action decls + operating-model arch doc + rule-tagging  | operating model | W2      | P1       | ✅ **shipped**³    |
 | W7  | `codex_condense_and_frontmatter_2026_06_24`          | Condense over-verbose + fix stale/code-drifted codex (+ L4 module-level `code_refs` rider — see 2026-07-04 decision) | RAG (codex)     | W2      | P2       | **aspirational**   |
 | W8  | `retrieval_eval_loop_2026_06_24`                     | Audits-as-gate-staging retrieval-eval loop (an audit; logs what agents retrieved + whether the action was correct)   | eval            | W2, W4  | P2       | deferred (late)    |
+
+¹ W4 rendered view (AO/deployment-ui) remains open — P2 in `l0_doc_index_generator_2026_06_24`. ² W5 landed as the
+stronger consolidated blocking gate (pm@d47886909), not the named warn→error flip. ³ W6 rule-tagging portion unverified
+— rides W7 if absent. Evidence for all flips: the W-todo checkboxes below.
 
 **Critical path:** W1 ships independently NOW (dispatch fix). W2 is the foundation for W3/W4/W5/W6/W7/W8. W3→W5
 (backfill before the enforcing gate). W7/W8 are deferred (codex is its own effort; eval is sequenced late).
@@ -277,18 +281,31 @@ Owned by
 The universal-core + per-type schema SSOT + a `docspec` validator with closed-vocab enums (grown organically).
 Everything else (W3–W8) depends on this shape.
 
-- [ ] [DOCS] P0. `DOC_FORMAT`-equivalent SSOT: universal core + per-type extensions + the `NA`/null conventions. (W2)
-- [ ] [CODE] P0. Machine validator (`docspec`: enums + `FieldSpec` R/C/O + `validate_frontmatter()`), gate-wired LAST.
-      (W2)
+- [x] [DOCS] P0. `DOC_FORMAT`-equivalent SSOT: universal core + per-type extensions + the `NA`/null conventions. (W2) —
+      ✅ `codex/11-project-management/doc-frontmatter-schema.md` (banner: CURRENT — fully enforced, BLOCKING
+      2026-07-04).
+- [x] [CODE] P0. Machine validator (`docspec`: enums + `FieldSpec` R/C/O + `validate_frontmatter()`), gate-wired LAST.
+      (W2) — ✅ `scripts/docs/docspec.py`; gate-wired 2026-07-04 (pm@d47886909: `check_frontmatter_schema.py` calls
+      `docspec.validate_frontmatter()`, BLOCKING HARD+SOFT; warn-only coverage check retired).
 
 ## P1 — after the P0 foundation
 
-- [ ] [DOCS] P1. **W3** — plans-folder backfill (matrix in `PLAN_FORMAT.md` + `task_template` + sweep ~112 active
-      plans).
-- [ ] [SCRIPT] P1. **W4** — L0 index generator (consumer-side local, gitignored, FF-cron-triggered) + AO rendered view.
-- [ ] [SCRIPT] P1. **W5** — `check_plan_frontmatter_completeness.py` warn→error (enforce-LAST; active-only).
-- [ ] [DOCS] P1. **W6** — agent-role charters (schema-ify the 11 `agents/*.md`) + operating-model arch doc +
-      `[gate]`/`[convention]` rule-tagging.
+- [x] [DOCS] P1. **W3** — plans-folder backfill (matrix in `PLAN_FORMAT.md` + `task_template` + sweep ~112 active
+      plans). — ✅ delivered via `frontmatter_full_corpus_coverage_2026_06_30` (archived complete) + the content pass
+      (`frontmatter_content_pass_and_gate_consolidation_2026_06_30`): corpus docspec HARD=0 SOFT=0 on 1,298 live docs
+      (2026-07-04).
+- [x] [SCRIPT] P1. **W4** — L0 index generator (consumer-side local, gitignored, FF-cron-triggered) + AO rendered view.
+      — ✅ generator `scripts/docs/gen_doc_index.py` (1,119 docs, ~1.4s, `--stale-check`) + FF-cron regen across EVERY
+      PM clone incl. dirty trees (pm@b4d75366d, 2026-07-04). REMAINDER: the AO/deployment-ui rendered view stays open as
+      P2 in `l0_doc_index_generator_2026_06_24` (human view, not on the agent path).
+- [x] [SCRIPT] P1. **W5** — `check_plan_frontmatter_completeness.py` warn→error (enforce-LAST; active-only). — ✅
+      superseded by a STRONGER end-state 2026-07-04 (pm@d47886909): ONE comprehensive blocking gate
+      (`check_frontmatter_schema.py` backed by docspec, HARD+SOFT, live trees incl. codex + `*.mdc`; archives exempt).
+- [x] [DOCS] P1. **W6** — agent-role charters (schema-ify the 11 `agents/*.md`) + operating-model arch doc +
+      `[gate]`/`[convention]` rule-tagging. — ✅ charters: 14 `agents/*.md` carry full agent-role frontmatter, gated
+      in-repo (agent-orchestrator@202c9b6, `check_agent_role_frontmatter.py` blocking, 14/14 green); operating model:
+      `codex/12-agent-workflow/work-philosophy.md` + role registry. Rule-tagging `[gate]`/`[convention]` not
+      independently verified — if absent it rides W7 (aspirational).
 
 ## P2 — deferred (own efforts / sequenced late)
 
