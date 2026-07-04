@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>UTS doc graph (generated)</title>
+<style>
+  html,body{margin:0;height:100%;background:#0b0e14;color:#cdd6f4;font:13px/1.45 system-ui,sans-serif;overflow:hidden}
+  #graph{position:absolute;inset:0}
+  .hud{position:absolute;z-index:10;background:rgba(15,19,28,.92);border:1px solid #2a3245;border-radius:8px;padding:10px}
+  #controls{top:12px;left:12px;width:270px}
+  #controls input,#controls select{width:100%;margin:3px 0 8px;background:#141926;color:#cdd6f4;border:1px solid #2a3245;border-radius:5px;padding:5px 7px;font:inherit}
+  #controls label{font-size:11px;color:#8b95ad;text-transform:uppercase;letter-spacing:.04em}
+  #stats{bottom:12px;left:12px;font-size:11px;color:#8b95ad}
+  #panel{top:12px;right:12px;width:340px;max-height:calc(100% - 24px);overflow:auto;display:none}
+  #panel h2{margin:0 0 6px;font-size:14px}
+  #panel .path{font-family:ui-monospace,monospace;font-size:11px;color:#89b4fa;cursor:pointer;word-break:break-all}
+  #panel .facets{margin:8px 0;font-size:11px;color:#8b95ad}
+  #panel .nb{cursor:pointer;color:#a6e3a1;font-size:12px;padding:1px 0}
+  #panel .nb:hover,{text-decoration:underline}
+  .badge{display:inline-block;background:#1e2637;border-radius:4px;padding:1px 6px;margin:1px 2px 1px 0;font-size:10px}
+  button{background:#1e2637;color:#cdd6f4;border:1px solid #2a3245;border-radius:5px;padding:4px 9px;font:inherit;cursor:pointer}
+</style></head><body>
+<div id="graph"></div>
+<div id="controls" class="hud">
+  <label>search (title / path / summary / tag)</label>
+  <input id="q" placeholder="type + Enter to fly to first hit" />
+  <label>doc_type</label><select id="f_dt"><option value="">all</option></select>
+  <label>tree</label><select id="f_tree"><option value="">all</option></select>
+  <label>asset_group</label><select id="f_ag"><option value="">all</option></select>
+  <label>status</label><select id="f_st"><option value="">all</option></select>
+  <div style="display:flex;gap:6px;margin-top:2px">
+    <button id="reset">reset</button>
+    <button id="iso" title="after clicking a node: show only its neighborhood">isolate: off</button>
+  </div>
+</div>
+<div id="stats" class="hud"></div>
+<div id="panel" class="hud">
+  <h2 id="p_title"></h2>
+  <div class="path" id="p_path" title="click to copy"></div>
+  <div class="facets" id="p_facets"></div>
+  <div id="p_summary" style="font-size:12px"></div>
+  <div style="margin-top:8px"><label style="font-size:11px;color:#8b95ad">NEIGHBORS</label><div id="p_nb"></div></div>
+</div>
+<script>__LIB__</script>
+<script>
+const DATA = __DATA__;
+const byId = Object.fromEntries(DATA.nodes.map(n => [n.id, n]));
+const nbrs = {};
+DATA.links.forEach(l => { (nbrs[l.source] ??= new Set()).add(l.target); (nbrs[l.target] ??= new Set()).add(l.source); });
+const trees = [...new Set(DATA.nodes.map(n => n.tree))].sort();
+const dts = [...new Set(DATA.nodes.map(n => n.dt))].sort();
+const ags = [...new Set(DATA.nodes.flatMap(n => n.ag))].sort();
+const sts = [...new Set(DATA.nodes.map(n => n.st).filter(Boolean))].sort();
+const fill = (id, vals) => { const s = document.getElementById(id); vals.forEach(v => s.add(new Option(v, v))); };
+fill('f_dt', dts); fill('f_tree', trees); fill('f_ag', ags); fill('f_st', sts);
+
+let isolated = null, isoOn = false;
+const state = { q: '', dt: '', tree: '', ag: '', st: '' };
+function visibleNodes() {
+  let ns = DATA.nodes.filter(n =>
+    (!state.dt || n.dt === state.dt) && (!state.tree || n.tree === state.tree) &&
+    (!state.ag || n.ag.includes(state.ag)) && (!state.st || n.st === state.st));
+  if (state.q) {
+    const q = state.q.toLowerCase();
+    ns = ns.filter(n => n.id.toLowerCase().includes(q) || n.t.toLowerCase().includes(q) ||
+                        n.s.toLowerCase().includes(q) || n.tags.some(t => String(t).toLowerCase().includes(q)));
+  }
+  if (isoOn && isolated && byId[isolated]) {
+    const keep = new Set([isolated, ...(nbrs[isolated] || [])]);
+    ns = ns.filter(n => keep.has(n.id));
+  }
+  return ns;
+}
+function refresh(flyTo) {
+  const ns = visibleNodes();
+  const ids = new Set(ns.map(n => n.id));
+  const ls = DATA.links.filter(l => ids.has(l.source.id ?? l.source) && ids.has(l.target.id ?? l.target))
+                       .map(l => ({ source: l.source.id ?? l.source, target: l.target.id ?? l.target }));
+  Graph.graphData({ nodes: ns, links: ls });
+  document.getElementById('stats').textContent =
+    `${ns.length}/${DATA.nodes.length} docs · ${ls.length}/${DATA.links.length} links · drag=rotate · scroll=zoom · click node=panel`;
+  if (flyTo && ns.length) setTimeout(() => focusNode(ns[0].id), 400);
+}
+function focusNode(id) {
+  const n = Graph.graphData().nodes.find(x => x.id === id);
+  if (!n) return;
+  const d = 120, r = 1 + d / Math.hypot(n.x || 1, n.y || 1, n.z || 1);
+  Graph.cameraPosition({ x: n.x * r, y: n.y * r, z: n.z * r }, n, 900);
+  showPanel(id);
+}
+function showPanel(id) {
+  const n = byId[id]; if (!n) return;
+  document.getElementById('panel').style.display = 'block';
+  document.getElementById('p_title').textContent = n.t;
+  const p = document.getElementById('p_path');
+  p.textContent = n.id; p.onclick = () => navigator.clipboard.writeText(n.id);
+  document.getElementById('p_facets').innerHTML =
+    [n.dt, n.st, ...n.ag, ...n.tags.slice(0, 8)].filter(Boolean).map(x => `<span class="badge">${x}</span>`).join('');
+  document.getElementById('p_summary').textContent = n.s || '(no summary)';
+  const nb = document.getElementById('p_nb');
+  nb.innerHTML = '';
+  [...(nbrs[id] || [])].sort().forEach(t => {
+    if (!byId[t]) return;
+    const d = document.createElement('div');
+    d.className = 'nb'; d.textContent = byId[t].t;
+    d.onclick = () => { isolated = t; refresh(); focusNode(t); };
+    nb.appendChild(d);
+  });
+}
+const palette = ['#89b4fa','#a6e3a1','#f9e2af','#f38ba8','#cba6f7','#94e2d5','#fab387','#74c7ec','#eba0ac','#b4befe',
+                 '#40a02b','#d20f39','#df8e1d','#8839ef','#179299','#e64553','#7287fd','#dd7878','#209fb5','#ea76cb'];
+const treeColor = Object.fromEntries(trees.map((t, i) => [t, palette[i % palette.length]]));
+const Graph = ForceGraph3D()(document.getElementById('graph'))
+  .backgroundColor('#0b0e14')
+  .nodeLabel(n => `<div style="max-width:340px"><b>${n.t}</b><br><span style="color:#8b95ad">${n.id}</span></div>`)
+  .nodeColor(n => treeColor[n.tree])
+  .nodeVal(n => 1 + Math.min(n.deg, 40) * 0.6)
+  .linkOpacity(0.25).linkWidth(0.4)
+  .onNodeClick(n => { isolated = n.id; refresh(); showPanel(n.id); })
+  .onBackgroundClick(() => { document.getElementById('panel').style.display = 'none'; });
+['f_dt','f_tree','f_ag','f_st'].forEach(id => document.getElementById(id).onchange = e => {
+  state[id.slice(2)] = e.target.value; refresh(); });
+document.getElementById('q').oninput = e => { state.q = e.target.value; refresh(); };
+document.getElementById('q').onkeydown = e => { if (e.key === 'Enter') refresh(true); };
+document.getElementById('reset').onclick = () => {
+  Object.keys(state).forEach(k => state[k] = ''); isolated = null; isoOn = false;
+  document.getElementById('iso').textContent = 'isolate: off';
+  document.querySelectorAll('#controls select').forEach(s => s.value = '');
+  document.getElementById('q').value = ''; refresh();
+};
+document.getElementById('iso').onclick = e => {
+  isoOn = !isoOn; e.target.textContent = 'isolate: ' + (isoOn ? 'ON' : 'off'); refresh();
+};
+refresh();
+</script></body></html>
