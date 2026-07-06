@@ -181,11 +181,15 @@ unaddressed.
 
 ## Todos
 
-- [ ] [CODE] P2. Fix the escalation-commit loop in `e2e-testing/scripts/audit/{manifest_hygiene_daily.py,_dp_common.py}`
-      — choose Option A (script commits via sanctioned `docs(plans):` path on local runs, no-op in container) or Option
-      B (publish escalation via an already-ingested channel, stop writing to the live clone). Read
-      `SUB_AGENT_MANDATORY_RULES.md` + `codex/05-infrastructure/data-pipeline-alerts.md` +
-      `data_pipeline_hardening_self_monitoring_2026_06_22.md` first.
+- [x] ✅ [CODE] P2. Fix the escalation-commit loop in `e2e-testing/scripts/audit/{manifest_hygiene_daily.py,_dp_common.py}`
+      — chose Option A (script commits via sanctioned `docs(plans):` path on local runs, no-op in container). New
+      `_commit_and_push_pm_artifacts()` helper in `_dp_common.py` detects a real PM clone via `<pm_root>/.git`, stages
+      the issue doc + candidate CSVs, commits with the `docs(plans):` prefix (strict-quickmerge carve-out for
+      plans-only), and pushes to `live-defi-rollout`. `file_escalation_issue()` now invokes it (skipped when
+      `issues_dir` is a test override). Ephemeral container FS (no `.git` under `/app/unified-trading-pm/`) stays a
+      no-op so the Cloud Run cron path is unchanged. Best-effort — a git failure logs a warning but never sinks the
+      audit run. 6 new unit tests cover the no-git, has-git, missing-artifact, idempotent-noop, subprocess-error, and
+      test-override paths. — e2e-testing@694ff4c
 - [ ] [CODE] P2. Fix the artifact-size/gitignore mismatch — keep the 18 MB `divergence_*.csv` out of git history (narrow
       `.gitignore` line 140 or relocate the dump to scratch/GCS), keeping small candidate CSVs commit-eligible.
 - [ ] [DATA] P1. Re-run the cefi audit (`--mode full --asset-group cefi`) and file/ingest a fresh escalation so the
