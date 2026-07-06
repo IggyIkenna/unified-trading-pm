@@ -149,30 +149,46 @@ aggregated from all of that date's matches in that league) — exactly as the se
   approved a small validation write. §4.
 - [x] [DATA] P1. Validation write + consolidator test (2024-12-14, then 2024-12-21) — **surfaced 3 layered manifest
   bugs, see §9.** The consolidator does NOT promote captured over seed cleanly.
-- [ ] [CODE] P0. instruments-service `understat.py` — XG_SHOTS `record_captured` `instrument_type="shot" → ""` to match
-  the 297k existing rows + XG + sports convention. APPLIED in slot-16 (uncommitted); validated instrument_type now
-  matches. §9.1. (Not shipped — held pending the deeper §9.2 fix.)
-- [ ] [CODE] P0. **UTL manifest NULL-vs-`''` dedup bug (§9.2)** — captured rows write optional dedup-dims
-  (`timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type`) as `''`; seeds
-  use `NULL`; consolidator treats `NULL ≠ ''` → captured never supersedes seed across shards → duplicates. System-wide
-  (XG 610 / XG_SHOTS 2,235 dup groups). **DECIDED (operator, 2026-07-06): fix BOTH** — `record_captured` write `NULL`
-  for unset optional dims (root cause, forward-fix) AND `manifest_consolidator` treat `NULL == ''` in the dedup key
-  (resolves the pre-existing `''` rows system-wide without a historical migration). Ship together, as one change.
-- [ ] [CODE] P1. **asset_group blank on captured (§9.3)** — `record_captured` omits `venue` → `_resolve_asset_group`
-  Rule 1 (no venue → non-market-data → drop label) blanks `asset_group`. Pass `venue="understat"` so the kwarg
-  `"sports"` stamps. (Existing XG captured rows show `sports` — mechanism not fully reconciled; confirm before fixing.)
+- [x] [CODE] P0. instruments-service `understat.py` — XG_SHOTS `record_captured` `instrument_type="shot" → ""` to match
+  the existing rows + XG + sports convention. §9.1. **SHIPPED `instruments-service@4281a01db`** (LDR); QG green (108s);
+  no test pinned `"shot"`.
+- [x] [CODE] P0. **UTL manifest NULL-vs-`''` dedup bug (§9.2) — fix BOTH layers.** `record_captured` now serializes
+  unset optional dedup dims as `NULL` (`_records_to_dataframe`, forward-fix) AND `manifest_consolidator` treats
+  `NULL == ''` at EVERY dedup site — the anti-join keys AND the window `PARTITION BY` (which used raw values; the miss
+  the doc's first cut would have left) — via a new `_dedup_key_sql(coalesce(nullif(cast(x),''),sentinel))`. Resolves
+  the pre-existing `''` rows system-wide with NO historical migration. **SHIPPED `unified-trading-library@f5ec2291f`**
+  (LDR); 5 new regression tests (proven to fail without the fix) + 728 manifest tests green; validated on the LIVE
+  manifest — collapses **2,290** real duplicate rows (2,230 XG_SHOTS + 60 XG).
+- [x] [CODE] P0. **lookup_contract data_type-case + blank-instrument_type sports aliases (UAC).** After §9.1 the
+  write-time schema lookup is `("sports","","XG_SHOTS")`; the contract was keyed `("sports","shot","xg_shots")`, so it
+  missed on BOTH instrument_type AND data_type case → `MANIFEST_WRITE_SCHEMA_MISSING` (validation silently skipped).
+  Fix: `lookup_contract` case-normalizes data_type (mirrors the instrument_type fallback) AND `SPORTS_XG`/`SPORTS_XG_SHOTS`
+  are registered under blank-instrument_type aliases. **SHIPPED `unified-api-contracts@b5a4adce1`** (LDR); +2 regression
+  tests. (Not in the original §9 plan — discovered as a consequence of §9.1; restores schema validation for the backfill.)
+- [x] [CODE] P1. **asset_group blank on captured (§9.3) — CORRECTED APPROACH.** The doc proposed `venue="understat"`;
+  that is WRONG — `venue` is a BASE dedup key and sports rows carry `venue=""`, so it would re-split captured from the
+  `venue=""` seeds and RE-BREAK §9.2. Verified on the live manifest: XG captured = `sports` (pre-Rule-1 writes),
+  XG_SHOTS captured (my 9 validation rows, current code) = `''`. Root cause: `_resolve_asset_group` Rule 1 blanks ALL
+  no-venue rows. Fix: Rule 1 now HONORS an explicit closed-set `asset_group` on a no-venue reference row (stamps
+  `sports`), never touches `venue`. **SHIPPED with §9.2 in `unified-trading-library@f5ec2291f`**; +1 regression test.
 - [ ] [DATA] P1. One-off manifest normalization — clean the pre-existing dup pollution (incl. seed-vs-seed
   `empty_confirmed`+`expected_unattempted` dups) + the 5 stale `instrument_type=shot` test rows on 2024-12-14.
-  **Sequenced AFTER the §9.2 writer+consolidator fix ships** — normalizing first would just re-duplicate against the
-  still-buggy comparison. §9.
-- [ ] [SCRIPT] P1. Build the bulk writer reusing `_sports_ref_sink_for` + `record_captured` (no path/manifest reshape);
-  group season → per (date, league). §4/§6. (Blocked on §9.2 — fix now decided, unblocks once it ships.)
-- [ ] [DATA] P0. Full backfill run (operator-gated locus) → all 5 leagues 2014→present, XG + XG_SHOTS captured;
-  manifest `pending_fetch=0`, `attempted_failed=0`, `captured>0` for native leagues. §6. (Blocked on §9.2 — fix now
-  decided, unblocks once it ships.)
-- [ ] [CODE] P1. Register `XG_SHOTS` in `SPORTS_DATA_TYPE_META`
-  (`deployment-api/deployment_api/services/data_status/sports_helpers.py`) so the Data Status tab renders an XG_SHOTS
-  coverage row (currently filtered out → the broken type is invisible in coverage tracking). §5.
+  **Sequenced AFTER the §9.2 consolidator fix DEPLOYS to the Cloud Run jobs** — normalizing before the deployed
+  consolidator has the fix would just re-duplicate against the still-buggy comparison. §9.
+- [ ] [SCRIPT] P1. Build the bulk writer reusing `get_fixtures(league,season)` (bulk XG) + `get_match_shots` +
+  `_gated_sink_write` + `record_captured` (no path/manifest reshape); season getLeagueData cache + concurrent shots;
+  group season → per (date, league). §4/§6. (Unblocked — §9.2 shipped.)
+- [ ] [DATA] P0. Full backfill run (operator-gated locus; NOT a VM — bulk local) → all 5 leagues 2014→present,
+  XG + XG_SHOTS captured; manifest `pending_fetch=0`, `attempted_failed=0`, `captured>0` for native leagues. §6.
+  (Unblocked — §9.2 shipped. **`dont save before confirming` — operator gate before any GCS write.**)
+- [ ] [CODE] P1. **DEFERRED — Register `XG_SHOTS` in `SPORTS_DATA_TYPE_META`** (deployment-api) so the Data Status tab
+  renders an XG_SHOTS coverage row (currently filtered out → the broken type is invisible). §5. Change is READY (patch
+  saved: `scratchpad/deployment_api_xg_shots_meta.patch`) but **BLOCKED**: deployment-api LDR HEAD (`12e5603`) has 4
+  PRE-EXISTING unrelated test failures (`test_route_fleet` ×3 from the recent fleet feature `e04668d`,
+  `test_empty_reason_breakdown` taxonomy) → tree not QG-green → quickmerge blocked. Re-apply once LDR deployment-api is
+  green. Operator notified.
+- [ ] [VERIFY] P1. Verify the §9.2 consolidator fix reaches the DEPLOYED Cloud Run jobs (image rebuild on UTL promote);
+  the manifest self-heals once live. Then run the one-off normalization.
 - [ ] [VERIFY] P1. After backfill: re-evaluate the `understat-vm-xg-complete` gate against the manifest; flip only on
   real captured shots (not hollow). Then the 6 parked sports tasks unblock.
 
@@ -204,11 +220,16 @@ after both land — run the one-off normalization pass (§8) to clean up the dup
 XG / 2,235 XG_SHOTS dup groups + the 5 stale test rows); normalizing before the consolidator fix ships would just
 re-duplicate against the still-buggy comparison.
 
-**9.3 asset_group blank on captured.** `record_captured` does not pass `venue`; `_resolve_asset_group`
-(`_writer_ingest.py`) Rule 1 treats a no-venue row as non-market-data and drops the provided `asset_group="sports"` →
-`''`. Fix: pass `venue="understat"`. NOTE: existing XG captured rows have `asset_group="sports"` despite the same call
-shape — mechanism not fully reconciled; verify before fixing. asset_group is NOT a dedup key (cosmetic for the
-per-asset_group coverage rollup), so it does not cause the duplicate.
+**9.3 asset_group blank on captured — SHIPPED (`unified-trading-library@f5ec2291f`), CORRECTED from the doc's proposed
+fix.** `_resolve_asset_group` (`_writer_ingest.py`) Rule 1 treats a no-venue row as non-market-data and drops the
+provided `asset_group="sports"` → `''`. **The doc originally proposed `venue="understat"` — that is a BUG:** `venue`
+is a BASE dedup key and every sports row carries `venue=""`, so stamping `venue="understat"` on captured rows would
+re-split them from the `venue=""` seeds and RE-BREAK §9.2. Live-manifest check confirmed the asymmetry: XG captured =
+`sports` (written pre-Rule-1) but XG_SHOTS captured (the 9 validation rows, current code) = `''` — Rule 1 blanks ALL
+no-venue rows regardless of the provided kwarg. **Correct fix (shipped):** Rule 1 now HONORS an explicit *closed-set*
+`asset_group` on a no-venue reference row (stamps `sports`) — a non-closed-set label (ML `quant`) still drops to `''`.
+Never touches `venue`, so §9.2 is preserved. asset_group is NOT a dedup key (cosmetic for the per-asset_group coverage
+rollup), so it never caused the duplicate — but a blank one would drop XG_SHOTS from the SPORTS rollup.
 
 **Convention reference (operator-directed "use what other data types use"):** data_type = `XG_SHOTS` (UPPERCASE — all
 sports reference types + downstream `feature_upstream`); the contract-registry key `"xg_shots"` is lowercase only as a
@@ -246,3 +267,18 @@ instrument_type = `""` (blank) per §9.1.
   the proof, added a todo to register XG_SHOTS in `SPORTS_DATA_TYPE_META`, and corrected the `repos:` frontmatter
   (added `unified-trading-library` for §9.2 + `deployment-api` for the visibility fix; dropped the untouched
   `deployment-service`). No code shipped.
+- 2026-07-06 (implementation + ship): built and SHIPPED all four code fixes to LDR after the operator's "start working
+  on the fix" go-ahead. **`unified-api-contracts@b5a4adce1`** (lookup_contract data_type-case + blank-instrument_type
+  sports aliases — discovered as a §9.1 consequence, restores schema validation), **`unified-trading-library@f5ec2291f`**
+  (§9.2 both layers: writer emits NULL for unset optional dims + consolidator `_dedup_key_sql` treats `NULL == ''` at
+  the anti-join keys AND the window `PARTITION BY`; §9.3 asset_group Rule 1 honors closed-set label on no-venue reference
+  rows — CORRECTED from the doc's `venue="understat"`, which would have re-broken §9.2), **`instruments-service@4281a01db`**
+  (§9.1 instrument_type=""). Each landed via quickmerge with its full QG green (UAC 234s / UTL 140s / IS 108s) +
+  strict-quickmerge clean. 8 new regression tests total, all proven to fail without the fix; 728 UTL manifest tests +
+  92 UAC contract tests green. Validated on the LIVE manifest: the fixed consolidator dedup collapses **2,290** real
+  duplicate rows (2,230 XG_SHOTS + 60 XG). **deployment-api XG_SHOTS-meta DEFERRED** — LDR deployment-api HEAD carries 4
+  pre-existing unrelated failures (fleet routes + empty-reason taxonomy) so its tree isn't QG-green; patch saved, will
+  re-apply when green. **Deployment note:** the §9.2 consolidator fix reaches the ~20 Cloud Run consolidator jobs on the
+  next image rebuild after UTL promotes; the live manifest self-heals (dups collapse) once that lands — verify then run
+  the one-off normalization. NEXT: build the bulk writer, operator-gate the backfill run (`dont save before confirming`),
+  re-evaluate the `understat-vm-xg-complete` gate.

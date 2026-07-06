@@ -302,3 +302,11 @@ orchestrator-dispatched).
   gap), so next step is a LOCAL reproduce (fixed UTL) to get the real error + confirm whether e93483dd carries the
   coercion, then ship the real fix. Lesson logged: never trust a hand-rolled awk status watchdog for pass/fail — read
   `executions describe` fields explicitly.
+- 2026-07-06 ~12:55Z: **Real root cause of the cloud-enum failure found + fix shipped.** instruments-service's
+  Dockerfile pins the UTL base image by digest `a0359e03` — which PREDATES the coercion. The coercion base is `9f01cf8e`
+  (build `7c6e2437`/`0e85227`, UTL base `:latest` since 08:11). So the guard build (and every is-daily-enum image) was
+  built with pre-coercion UTL → the merge still crashes on the string-typed prediction/sports indexes. (The prior LOCAL
+  heal worked because local uses the sibling UTL source, not the pinned base image.) **Fixed:** bumped the Dockerfile
+  base pin `a0359e03→9f01cf8e` — instruments-service@1098731c4 (QG green incl. STEP 5.79 base-pin gate). Dispatched the
+  promoter; watchdog on the `:latest` rebuild. Next: on rebuild, re-run is-daily-enum-{prediction,sports} + verify
+  `succeededCount=1` via `executions describe`.
