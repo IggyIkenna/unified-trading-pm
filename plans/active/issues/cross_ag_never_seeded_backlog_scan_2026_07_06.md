@@ -32,8 +32,9 @@ related:
   ]
 created: 2026-07-06
 last_updated:
-  2026-07-06 (2026-07-06 19:30Z — tradfi credential-gated EU-seed scaffolds cross-reference marker closed [3rd marker],
-  slot-12·planning)
+  2026-07-06 (2026-07-06 20:15Z — cefi sub-bucket blank-chain phantom audit cross-reference marker closed [4th marker];
+  cefi _index verified glued, defi _index verified 0 legacy-combined blank-chain rows across oracle/perp sub-buckets,
+  slot-7·planning)
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -197,10 +198,38 @@ resolved_by:
       `data_completion_to_100_all_ag_2026_06_21.md` Step 2 P1. Evidence:
       `data_completion_to_100_all_ag_2026_06_21.md#L3279` (owning todo still open),
       `foundation_gates_and_capture_to_100_2026_07_06.md#L215-227` (Plan 5 -008 gate DONE, quantum stated).
-- [ ] [DATA] P2. cefi sub-bucket blank-chain phantom audit — collapse residual pre-@24c0dd5 blank-chain rows in
+- [x] ✅ [DATA] P2. cefi sub-bucket blank-chain phantom audit — collapse residual pre-@24c0dd5 blank-chain rows in
       oracle/perp sub-bucket shards; verify the consolidator's canonical-glue projection is applied per sub-bucket
       (repo: unified-trading-library + instruments-service; owning plan:
-      `plans/active/data_completion_to_100_all_ag_2026_06_21.md` §sub-bucket item P2 already open).
+      `plans/active/data_completion_to_100_all_ag_2026_06_21.md` §sub-bucket item P2 already open). —
+      **CROSS-REFERENCE MARKER CLOSED 2026-07-06** (Opus, slot-7·planning, `data_engineering`). **Verified current
+      state (this session):** (1) durable fix at the IS seeder is IN PLACE — `_canonical_manifest_venue_chain` at
+      `instruments-service/instruments_service/engine/orchestrator/writers.py:40-80` applies the canonical projection
+      for on-chain CeFi perp CLOBs (LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET) with the
+      `VENUE_TO_ASSET_GROUP.get(venue_str) == "cefi"` bypass added in `instruments-service@24c0dd5` (2026-06-27) +
+      catalogue builder alignment `instruments-service@79f2693` (2026-07-06 G1.3 follow-up). (2) Canonical-glue is
+      applied UNIFORMLY per sub-bucket — the same `_canonical_manifest_venue_chain` helper is called in both the
+      captured-row writer (`writers.py:201`) AND the EU seeder (`process_write.py:769`), so every sub-bucket data_type
+      write goes through the identical projection and a seed matches its later capture atom exactly. (3) Real-infra
+      verification (single-index-read per single-walk discipline): cefi `_index` (7,219,598 rows) shows
+      EXTENDED-STARKNET = 1,209 rows all glued (chain=''), LIGHTER-ZKSYNC / PACIFICA-SOLANA = 0 rows,
+      split-defi-form LIGHTER / PACIFICA / EXTENDED = 0 rows (`purge_cefi_perp_defi_contamination_2026_06_25.py`
+      already applied); defi `_index` (13,538,204 rows) shows 0 legacy-combined blank-chain rows across
+      oracle_prices (243,580) / perp_funding (217,753) / gas_fees (43,496) / token_transfers (423) / mev_events (379)
+      — every sub-bucket row carries a non-blank chain (chain-level phantoms handled by
+      `reconcile_phantom_manifest_rows_all.py::_chain_level_phantom_mask`). (4) Owning plan's P2 sub-bucket item at
+      `data_completion_to_100_all_ag_2026_06_21.md#L2611-2613` remains OPEN as the tracking anchor per the scan
+      contract ("file findings; seed in the owning plan, don't seed blind here" — issue-doc line 76 + § Recommended
+      decision line 170-173). (5) Plan 5's `foundation_gates_and_capture_to_100_2026_07_06.md` task -008 gate
+      ALREADY reads `[x] ✅` "quantified + filed" with an explicit cefi bullet at line 216 naming
+      "sub-bucket blank-chain phantom audit". No new code shipped here — the durable fix is fully propagated; the
+      owning plan's audit item stays as the formal sign-off anchor. — evidence: `instruments-service@24c0dd5`
+      (writer canonical-glue), `instruments-service@79f2693` (catalogue builder G1.3 follow-up),
+      `instruments-service/scripts/purge_cefi_perp_defi_contamination_2026_06_25.py` (legacy split-form purge),
+      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py:648-825` (chain-level phantom reconcile),
+      `writers.py:201` + `process_write.py:769` (canonical-glue applied per sub-bucket),
+      `data_completion_to_100_all_ag_2026_06_21.md#L2611` (owning P2 open),
+      `foundation_gates_and_capture_to_100_2026_07_06.md#L216` (Plan 5 -008 gate DONE with cefi bullet).
 - [x] ✅ [DATA] P1. tradfi credential-gated EU-seed scaffolds — once credentials land (Glassnode-class), anchor the
       enumerator to venue-launch/coverage-start dates so the pre-credential window seeds as EXPECTED_PRE_VENUE_LAUNCH or
       EXPECTED_INSTRUMENT_NOT_LISTED and the post-credential window materialises as `expected_unattempted` until
