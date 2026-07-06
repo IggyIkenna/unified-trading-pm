@@ -245,8 +245,19 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
       attempts (reverted, no residue): > `unified-api-contracts@0e3989ce`+revert `8cc76fd0`,
       `instruments-service@86354d75`+revert `77314c0e` (local, > unpushed, this slot only — safe to ignore, kept for
       anyone who wants the failure detail).
-- [ ] [CODE] P2. **Confirm the v1 `_ENUMERATORS`/`main()` dispatch is legacy → DELETE it** (the enumerator file carries
-      two dispatch tables; docstring calls v2 the live path). Removes the second producer surface C2 flagged.
+- [x] ✅ [CODE] P2. **Confirm the v1 `_ENUMERATORS`/`main()` dispatch is legacy → DELETE it** — **DEFERRED
+      2026-07-06 — v1 is NOT safe to delete.** Slot-10 investigation (`BLK-0ac84889`) confirmed three v1
+      roles v2 does NOT cover: (1) `_enumerate_v2_sports` explicitly delegates `EXPECTED_PRE_SOURCE_COVERAGE_START`
+      dates to v1 (docstring L1552-1555 "v2 must NOT re-emit them or the (data_type, date) cell is
+      double-counted at two grains"); (2) `tests/integration/test_enumerate_v2_superset_property.py` documents
+      "tradfi v1 (non-trading days) is NOT a v2 grain match — v2 doesn't enumerate weekend/holiday cells" as an
+      INTENTIONAL asymmetry; (3) v2 pre-venue-launch coverage is per-catalog-instrument grain vs v1 venue-grain
+      sentinel — empty-catalog windows would lose seeding. Cross-repo cleanup also required in deployment-service
+      (INFRA role). Main-agent ruling: BLOCK the full v1 deletion; file issue doc noting the finding. **Follow-on
+      todos filed in `plans/active/issues/v1_enumerator_dispatch_not_deletable_2026_07_06.md`** covering v2
+      coverage extension (tradfi calendar + sports pre-coverage + venue-grain pre-launch sentinel), deployment-
+      service infra cleanup, and the final v1 delete after those land. Evidence: no code change this pass; issue
+      doc is the tracked-work artifact.
 
 ## Related fragility (observed live 2026-07-03)
 
