@@ -189,11 +189,30 @@ approve / defer per category rather than per-venue.
       Layer-2 interpretation (this issue doc lines 116-118), the `blocked-not-registered` cell for BINANCE-DELIVERY
       correctly reflects "no live connector"; it does not drag Layer-2 capture % down when the batch REST capture is
       honest-complete.
-- [ ] [CODE] P2. **On-chain CeFi perps: EXTENDED-STARKNET + LIGHTER-ZKSYNC + PACIFICA-SOLANA WSFeedConnector build**
+- [x] ✅ [CODE] P2. **On-chain CeFi perps: EXTENDED-STARKNET + LIGHTER-ZKSYNC + PACIFICA-SOLANA WSFeedConnector build**
       (repo: market-tick-data-service). These are the on-chain-CeFi-perp venues from foundation-completeness §G1.3.
       **Currently BLOCKED-CREDENTIALS** for the paid-RPC endpoints per tracker Blocked/waiting register; build the
       scaffold anyway per External-data-always-available rule. Gate: 3 venues resolve OR carry `BLOCKED-CREDENTIALS`
       scaffolds with `_placeholder_factory` that raises the credential-required error.
+      **DONE 2026-07-06 — market-tick-data-service@b6d39859 (slot-5 planning).** 3 Protocol-conforming scaffolds
+      shipped mirroring the polymarket_perp_ws BLOCKED status pattern:
+      `market_tick_data_service/live/connectors/extended_starknet_perp_ws.py` (Extended Exchange Starknet L2 perp DEX;
+      paid X-Api-Key gate), `.../lighter_zksync_perp_ws.py` (Lighter zkSync-Era perp DEX; paid partner-key gate for
+      tick-quality channels), `.../pacifica_solana_perp_ws.py` (Pacifica Solana perp DEX; paid Solana RPC + partner
+      header gate). Each defines a `_CREDENTIALS_AVAILABLE = False` guard, a `stream()` that logs BLOCKED-CREDENTIALS
+      and returns empty until credentials land, and a `register()` call that adds the canonical UAC venue key
+      (`EXTENDED-STARKNET` / `LIGHTER-ZKSYNC` / `PACIFICA-SOLANA`) to `WS_FEED_CONNECTOR_FACTORIES` via
+      `register_ws_feed_connector`. All 3 modules wired into `connectors/__init__.py::register_all()`. Regression
+      pack: 3 test files (`tests/unit/test_extended_starknet_perp_ws_connector.py`,
+      `.../test_lighter_zksync_perp_ws_connector.py`, `.../test_pacifica_solana_perp_ws_connector.py`) with 57 tests
+      total covering `_parse_perp_ticker` (valid / case-fold / wrong-venue / wrong-itype / empty-ticker / too-few-parts
+      / empty-string), init/connect/subscribe/unsubscribe/close/pop_reconnect_flag lifecycle, `stream()` yields nothing
+      + does not raise while BLOCKED-CREDENTIALS, and registry membership + factory produces the correct connector.
+      All 57 pass; QG-green (sentinel `2b41b5fa`, verified via CONTENT-sentinel FF from HEAD change during
+      quickmerge). Closes the smoke-matrix `blocked-not-registered` cells for these 3 venues (3 venues × 3 data_types
+      each = 9 cells resolved). Un-unblock path: acquire paid RPC/API-key subscription per venue, plumb through
+      credential resolver, set `_CREDENTIALS_AVAILABLE = True`, implement `_drain_ws_messages` following the
+      Hyperliquid / Drift-Solana precedents cited in each connector docstring.
 
 ### TradFi — 4 venues
 
@@ -289,6 +308,24 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **gap-006 shipped (EXTENDED-STARKNET + LIGHTER-ZKSYNC + PACIFICA-SOLANA on-chain-perp scaffolds)**
+  by slot-5. 3 Protocol-conforming BLOCKED-CREDENTIALS scaffolds shipped at
+  `market-tick-data-service@b6d39859`, mirroring the polymarket_perp_ws scaffold pattern (venue registers so
+  `resolve_live_venue_key` finds it, `stream()` logs the credential gap and returns empty until credentials land).
+  Each connector: `_CREDENTIALS_AVAILABLE = False` guard; `_parse_perp_ticker` for `{VENUE}:PERPETUAL:{ticker}` input;
+  connect/subscribe/unsubscribe/pop_reconnect_flag/close lifecycle; `register()` under the canonical UAC venue key.
+  Files: `market_tick_data_service/live/connectors/{extended_starknet,lighter_zksync,pacifica_solana}_perp_ws.py`
+  (each ~188 lines) + `connectors/__init__.py` register_all wire-up + 3 test files (~145 lines each; 57 tests total).
+  Endpoints stubbed with real URLs so implementation can drop-in when creds land:
+  `wss://api.extended.exchange/stream.v1`, `wss://mainnet.zklighter.elliot.ai`, `wss://ws.pacifica.fi/v1`.
+  UAC data_type coverage per venue (from `market_data_categories.py:1196-1210`): trades + book_snapshot_5 +
+  derivative_ticker (perpetual). All 57 unit tests pass in 0.4s; QG-green (sentinel `2b41b5fa`). Smoke-matrix
+  `blocked-not-registered` cell resolution: 3 venues × ~3 MVP data_types each = ~9 cells reclassified from
+  "unwired" to "honest-BLOCKED-CREDENTIALS" (per Plan 4 Layer-2 interpretation lines 116-118). Un-block path spelled
+  out in each connector docstring (acquire paid subscription → plumb credential → flip
+  `_CREDENTIALS_AVAILABLE=True` → implement `_drain_ws_messages`). Consistent with existing scaffold precedents
+  (polymarket_perp_ws BLOCKED-UPSTREAM-OUTAGE, databento_tradfi_ws BLOCKED-CREDENTIALS).
 
 - **2026-07-06** — **gap-010 resolved (DRAFTKINGS + FANDUEL + PINNACLE WSFeedConnector build)** by slot-4. Confirmed via
   already-committed SSOT that all three are captured through ODDS_API aggregator fan-out — no direct WSFeedConnector
