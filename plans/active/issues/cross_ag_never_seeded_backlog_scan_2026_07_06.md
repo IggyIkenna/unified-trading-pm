@@ -41,7 +41,6 @@ estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 assigned_role: data_engineering
 drift_direction: advance-code
-author: slot-7·planning (Opus 4.7, data_engineering)
 source:
   [
     instruments-service/scripts/enumerate_expected_universe.py#L515,
