@@ -1260,8 +1260,8 @@
       "codebase_health": {
         "qg_red_reason": null,
         "warn_file_count": 20,
-        "coverage_pct": 89.72,
-        "large_file_count": 5
+        "large_file_count": 5,
+        "coverage_pct": 89.73
       }
     },
     "unified-trading-pm": {
@@ -1273,7 +1273,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1292,11 +1292,11 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
-        "qg_red_reason": "ruff",
-        "warn_file_count": 0,
+        "qg_red_reason": null,
         "large_file_count": 0,
+        "warn_file_count": 0,
         "coverage_pct": 71.07
       }
     },
