@@ -31,7 +31,9 @@ related:
     ../../codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-06 (2026-07-06 15:30Z — prediction token-id + cefi Kraken-6yr cross-reference markers closed, slot-12·planning)
+last_updated:
+  2026-07-06 (2026-07-06 19:30Z — tradfi credential-gated EU-seed scaffolds cross-reference marker closed [3rd marker],
+  slot-12·planning)
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -181,29 +183,57 @@ resolved_by:
 
 ## Actionable todos (per RULES.md §4.5.b)
 
-- [x] ✅ [DATA] P1. Seed the cefi IS-store historical listings for venues MTDS has but IS lacks (Kraken ~6yr class), so the
-      v2 cefi enumerator produces the missing pre-catalogue EU cells → over-reported completion % settles honestly
+- [x] ✅ [DATA] P1. Seed the cefi IS-store historical listings for venues MTDS has but IS lacks (Kraken ~6yr class), so
+      the v2 cefi enumerator produces the missing pre-catalogue EU cells → over-reported completion % settles honestly
       (repo: instruments-service; owning plan: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` Step 2 P1
       already open — this todo is the cross-reference marker so Plan 5's -008 gate reads "quantified + filed"). —
-      **CROSS-REFERENCE MARKER CLOSED 2026-07-06** (Opus, slot-12·planning, `data_engineering`). Verified: owning
-      plan's Step 2 P1 todo IS OPEN (`data_completion_to_100_all_ag_2026_06_21.md#L3279` — "IS-store backfill
-      historical listings for venues MTDS has but IS lacks (Kraken ~6yr, LIGHTER/PACIFICA/EXTENDED, BITGET gap days)
-      so MTDS↔IS subset closes both ways"). Plan 5's `foundation_gates_and_capture_to_100_2026_07_06.md` task -008
-      gate ALREADY reads `[x] ✅` "quantified + filed" for cefi (line 215-216 explicitly enumerates the Kraken ~6yr
-      class ≈ ~1.75M cells order-of-magnitude as the cefi residual). No new code shipped here — this scan's
-      contract is "file findings; seed in the owning plan, don't seed blind here" and the Kraken-6yr backfill
-      execution stays owned by `data_completion_to_100_all_ag_2026_06_21.md` Step 2 P1. Evidence:
+      **CROSS-REFERENCE MARKER CLOSED 2026-07-06** (Opus, slot-12·planning, `data_engineering`). Verified: owning plan's
+      Step 2 P1 todo IS OPEN (`data_completion_to_100_all_ag_2026_06_21.md#L3279` — "IS-store backfill historical
+      listings for venues MTDS has but IS lacks (Kraken ~6yr, LIGHTER/PACIFICA/EXTENDED, BITGET gap days) so MTDS↔IS
+      subset closes both ways"). Plan 5's `foundation_gates_and_capture_to_100_2026_07_06.md` task -008 gate ALREADY
+      reads `[x] ✅` "quantified + filed" for cefi (line 215-216 explicitly enumerates the Kraken ~6yr class ≈ ~1.75M
+      cells order-of-magnitude as the cefi residual). No new code shipped here — this scan's contract is "file findings;
+      seed in the owning plan, don't seed blind here" and the Kraken-6yr backfill execution stays owned by
+      `data_completion_to_100_all_ag_2026_06_21.md` Step 2 P1. Evidence:
       `data_completion_to_100_all_ag_2026_06_21.md#L3279` (owning todo still open),
       `foundation_gates_and_capture_to_100_2026_07_06.md#L215-227` (Plan 5 -008 gate DONE, quantum stated).
 - [ ] [DATA] P2. cefi sub-bucket blank-chain phantom audit — collapse residual pre-@24c0dd5 blank-chain rows in
       oracle/perp sub-bucket shards; verify the consolidator's canonical-glue projection is applied per sub-bucket
       (repo: unified-trading-library + instruments-service; owning plan:
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md` §sub-bucket item P2 already open).
-- [ ] [DATA] P1. tradfi credential-gated EU-seed scaffolds — once credentials land (Glassnode-class), anchor the
+- [x] ✅ [DATA] P1. tradfi credential-gated EU-seed scaffolds — once credentials land (Glassnode-class), anchor the
       enumerator to venue-launch/coverage-start dates so the pre-credential window seeds as EXPECTED_PRE_VENUE_LAUNCH or
       EXPECTED_INSTRUMENT_NOT_LISTED and the post-credential window materialises as `expected_unattempted` until
       captured (repo: instruments-service + unified-api-contracts; owning plan:
-      `plans/active/data_completion_to_100_all_ag_2026_06_21.md` Step 4 P1 `BLOCKED-CREDENTIALS` already open).
+      `plans/active/data_completion_to_100_all_ag_2026_06_21.md` Step 4 P1 `BLOCKED-CREDENTIALS` already open — this
+      todo is the cross-reference marker so Plan 5's -008 gate reads "quantified + filed"). — **CROSS-REFERENCE MARKER
+      CLOSED 2026-07-06** (Opus, slot-12·planning, `data_engineering`). Verified current state (this session): (1)
+      owning plan's Step 4 P1 todo IS OPEN at `data_completion_to_100_all_ag_2026_06_21.md#L3283-3284` — "**Step 4 —
+      credential-gated venues** `BLOCKED-CREDENTIALS`: file the asks (Helius/Alchemy, Glassnode/Kaiko, Tardis,
+      Databento, Sportradar/Odds-API); build scaffold + tests now, backfill on creds." — the ask-filing + scaffold
+      build + venue-launch-anchored seeding stays owned by that P1. (2) Plan 5's
+      `foundation_gates_and_capture_to_100_2026_07_06.md` task -008 gate ALREADY reads `[x] ✅` "quantified + filed"
+      (line 207-227) with an explicit tradfi bullet at line 217-220 naming "credential-gated EU-seed scaffolds
+      (Glassnode-class, BLOCKED-CREDENTIALS)". (3) Adapter-anchor mechanism present in the enumerator today —
+      `EXPECTED_PRE_VENUE_LAUNCH` + `EXPECTED_INSTRUMENT_NOT_LISTED` reasons ARE implemented and used for CeFi /
+      prediction / Yahoo-index pre-genesis / DeFi chain-genesis lanes (see
+      `instruments-service/scripts/enumerate_expected_universe.py:428/522/558/669/725/1055`); the residual gap is the
+      venue-launch/coverage-start-date INPUT for the credential-gated tradfi venues (Glassnode-class), which cannot be
+      captured or scaffold-anchored without the credentials landing. (4) Credential state: **Glassnode Pro
+      (~$999/yr)
+      subscription NOT YET APPROVED** — the credential ask is filed at
+      `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md#L236` ("operator approves **Glassnode Pro
+      (~$999/yr)**
+      credential ask") gating Phase 6 breadth expansion. (5) Cross-reference marker's purpose is fulfilled: filed +
+      tracked in owning plan (Step 4 P1 open) + Plan-5 -008 gate already `[x] ✅` "quantified + filed". No new code
+      shipped here — this scan's contract is **"file findings; seed in the owning plan, don't seed blind here"**
+      (issue-doc line 76 + § Recommended-decision line 170-173); the seeding execution stays owned by
+      `data_completion_to_100_all_ag_2026_06_21.md` Step 4 P1 and un-blocks when Glassnode-class credentials land. —
+      evidence: `data_completion_to_100_all_ag_2026_06_21.md#L3283` (owning P1 open, BLOCKED-CREDENTIALS),
+      `foundation_gates_and_capture_to_100_2026_07_06.md#L207-227` (Plan 5 -008 gate DONE with tradfi bullet),
+      `macro_micro_econ_data_capture_audit_2026_06_05.md#L236` (Glassnode credential ask un-approved),
+      `instruments-service/scripts/enumerate_expected_universe.py:428/522/558/669/725/1055` (anchor-reason mechanism
+      wired).
 - [ ] [DATA] P2. tradfi ohlcv_15m/24h conversion 4-part diagnosis close-out — resolve the remaining cells to `captured`
       / `honest-absence` per the 429-fixed conversion pass (repo: market-tick-data-service; owning plan:
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md` line 2533 P2 already open).
@@ -212,29 +242,29 @@ resolved_by:
       per the remediation plan's Workstream B), so the Polymarket ~17,772-token universe × per-day availability
       materialises as an on-manifest EU dimension (repo: instruments-service + deployment-service; owning plan:
       `plans/active/prediction_capture_incident_remediation_2026_07_06.md` Workstream A/B already open — this todo is
-      the cross-reference marker so Plan 5's -008 gate reads "quantified + filed"). — **CROSS-REFERENCE MARKER
-      CLOSED 2026-07-06** (Opus, slot-12·planning, `data_engineering`). **Verified current state (this session):**
-      (1) `lifecycle-catalogue-regen-prediction-daily` scheduler is ALREADY ENABLED (state=ENABLED, schedule=`0 1 * * *`,
-      succeededCount=1 on 07-03/04/05/06) — un-paused 13 days before this scan was filed by
-      `deployment-service@040e2fc` (2026-06-23) which added the missing `roles/run.invoker` grant + resumed all 5
-      per-AG schedulers. **(2) Correcting the causal chain in the scan's finding-#1 text (line ~129): un-pausing the
-      roll-up does NOT materialise the token-id `instrument_availability` parquet — `build_instrument_catalogue.py`
-      READS `instrument_availability/by_date/day=…/venue=…/instruments.parquet` snapshots and PRODUCES the cumulative
+      the cross-reference marker so Plan 5's -008 gate reads "quantified + filed"). — **CROSS-REFERENCE MARKER CLOSED
+      2026-07-06** (Opus, slot-12·planning, `data_engineering`). **Verified current state (this session):** (1)
+      `lifecycle-catalogue-regen-prediction-daily` scheduler is ALREADY ENABLED (state=ENABLED, schedule=`0 1 * * *`,
+      succeededCount=1 on 07-03/04/05/06) — un-paused 13 days before this scan was filed by `deployment-service@040e2fc`
+      (2026-06-23) which added the missing `roles/run.invoker` grant + resumed all 5 per-AG schedulers. **(2) Correcting
+      the causal chain in the scan's finding-#1 text (line ~129): un-pausing the roll-up does NOT materialise the
+      token-id `instrument_availability` parquet — `build_instrument_catalogue.py` READS
+      `instrument_availability/by_date/day=…/venue=…/instruments.parquet` snapshots and PRODUCES the cumulative
       `catalog.parquet` (per `lifecycle_catalogue_scheduler.tf` §6-11).** The by_date SNAPSHOT WRITER is
       `is-daily-enum-prediction` (Cloud Run Job invoking the IS orchestrator writers at
-      `instruments-service/instruments_service/engine/orchestrator/writers.py:252` +
-      `process_write.py:533`), which is currently FAILING exit(1) — the deployed `:latest`=f36f3bba image DOES carry
-      the UTL 1.6.0 coercion (docker-inspected) but a DIFFERENT error blocks completion (root cause opaque behind the
-      Cloud-Run observability gap — logs show only "Container called exit(1)"). (3) **Direct GCS verification:**
+      `instruments-service/instruments_service/engine/orchestrator/writers.py:252` + `process_write.py:533`), which is
+      currently FAILING exit(1) — the deployed `:latest`=f36f3bba image DOES carry the UTL 1.6.0 coercion
+      (docker-inspected) but a DIFFERENT error blocks completion (root cause opaque behind the Cloud-Run observability
+      gap — logs show only "Container called exit(1)"). (3) **Direct GCS verification:**
       `gs://instruments-store-prediction-central-element-323112/instrument_availability/by_date/canonical_question_group=SPX_UP_DOWN_DAILY/`
-      max `day=2026-05-22` (matches the plan's stale-since claim); token-id lane is genuinely not materialising.
-      (4) The actual un-block is TRACKED SEPARATELY in
-      `plans/active/prediction_capture_incident_remediation_2026_07_06.md` **Workstream A residual "[INFRA] P0" —
-      HANDED OFF (2026-07-06) → capture-hardening owner** (fixed-UTL→is-daily-enum image heal) + full diagnostic
-      handoff in `plans/active/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`. (5)
-      Cross-reference marker's purpose is fulfilled: Plan 5's `foundation_gates_and_capture_to_100_2026_07_06.md`
-      task -008 gate ALREADY reads `[x] ✅` "quantified + filed" (line 207-227). — evidence:
-      `deployment-service@040e2fc` (un-pause), `is-daily-enum-prediction` execution failures (HANDED-OFF P0),
+      max `day=2026-05-22` (matches the plan's stale-since claim); token-id lane is genuinely not materialising. (4) The
+      actual un-block is TRACKED SEPARATELY in `plans/active/prediction_capture_incident_remediation_2026_07_06.md`
+      **Workstream A residual "[INFRA] P0" — HANDED OFF (2026-07-06) → capture-hardening owner**
+      (fixed-UTL→is-daily-enum image heal) + full diagnostic handoff in
+      `plans/active/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`. (5) Cross-reference
+      marker's purpose is fulfilled: Plan 5's `foundation_gates_and_capture_to_100_2026_07_06.md` task -008 gate ALREADY
+      reads `[x] ✅` "quantified + filed" (line 207-227). — evidence: `deployment-service@040e2fc` (un-pause),
+      `is-daily-enum-prediction` execution failures (HANDED-OFF P0),
       `foundation_gates_and_capture_to_100_2026_07_06.md#L207` (Plan 5 -008 flipped DONE).
 - [ ] [DATA] P1. prediction Kalshi launcher gap — wire Kalshi into `launch-mtds-prediction-backfill-vm.sh` so the Kalshi
       historical + post-adapter window seeds/captures via a SPOT VM per the backfill-VMs-default-SPOT HARD rule (repo:
