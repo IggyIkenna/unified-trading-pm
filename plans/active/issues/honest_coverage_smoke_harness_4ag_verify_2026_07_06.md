@@ -176,6 +176,19 @@ Land the 4 fixes below (all tracked as todos). Priority ordering respects existi
   action required** (to prevent bounce-loop like the cefi -008 chain that hit 8×): add
   `depends_on: [tradfi_v9_stage1_finish tasks 2-11]` to `-004` in `data/config/backlog.yaml` +
   regen (or flip `-004` priority to 999). Slot-9 continues to next task per `can_continue`.
+- **2026-07-06** — **BOUNCE #3: -004 re-dispatched to slot-4 (`BLK-7fc2ba40`)**
+  (slot-4 planning). Same task `-004` dispatched a THIRD time — no operator action taken after
+  slot-9 (BLK-2a8ba36d) + slot-8 (BLK-8a12c73b) filed identical escalations earlier today. Slot-4
+  re-verified Plan 2 (`tradfi_v9_stage1_finish_2026_07_06.md`) checkbox state from HEAD
+  live-defi-rollout: task 1 ✅, tasks 2-7 all `- [ ]` (2 BLOCKED-ORDERING on task 4; 3
+  BLOCKED-STRAGGLER-VM-RUNNING; 4 E5 manifest rebuild unchecked; 5 E6 CF-7 relabel unchecked; 6 E7
+  verify unchecked; 7 IS enumerate-seed unchecked), tasks 8-9 ✅ (IS catalogue @6716f55, V6 flip),
+  tasks 10-11 `- [ ]` (10 BLOCKED-PREREQUISITES, 11 BLOCKED-OPERATOR-DECISION). PREREQ still not
+  met — running verify now still produces empty matrix (0 shards, no new signal). Slot-4 filed
+  `BLK-7fc2ba40` with the same recommendation as `BLK-2a8ba36d` + `BLK-8a12c73b` (PARK via
+  priority=999 OR DELETE OR condition-gate). Bounce loop will continue until an operator/admin
+  acts on one of the three parking options. Slot-4 continues to next task per `can_continue`.
+
 - **2026-07-06** — **BOUNCE #2: -004 re-dispatched to slot-8 (`BLK-8a12c73b`)**
   (slot-8 planning). Same task `-004` dispatched again — operator hadn't parked yet after slot-9's
   `BLK-2a8ba36d` escalation. Slot-8 re-verified fresh state: `catalog.parquet` at
