@@ -190,8 +190,13 @@ unaddressed.
       no-op so the Cloud Run cron path is unchanged. Best-effort — a git failure logs a warning but never sinks the
       audit run. 6 new unit tests cover the no-git, has-git, missing-artifact, idempotent-noop, subprocess-error, and
       test-override paths. — e2e-testing@694ff4c
-- [ ] [CODE] P2. Fix the artifact-size/gitignore mismatch — keep the 18 MB `divergence_*.csv` out of git history (narrow
-      `.gitignore` line 140 or relocate the dump to scratch/GCS), keeping small candidate CSVs commit-eligible.
+- [x] ✅ [CODE] P2. Fix the artifact-size/gitignore mismatch — keep the 18 MB `divergence_*.csv` out of git history —
+      chose "narrow the whitelist" (Option A): appended `plans/audit/results/divergence_*.csv` after the
+      `!plans/audit/results/*.csv` whitelist in `unified-trading-pm/.gitignore`. Verified with `git check-ignore`:
+      `divergence_2026-07-06.csv` → ignored (last-match line 146); `manifest_hygiene_cefi_*.csv` → still committable
+      (last-match line 140 whitelist). Divergence CLI (`unified-trading-library/scripts/detect_manifest_divergence.py`)
+      unchanged — the file still lands at the same path for local inspection, just not in git history.
+      — unified-trading-pm@&lt;SHA&gt;
 - [x] ✅ [DATA] P1. Re-run the cefi audit (`--mode full --asset-group cefi`) and file/ingest a fresh escalation so the
       stranded 2026-07-03 RED finding (20,282 DIVERGENT_EMPTY / non-v9 / phantom / 4-pillar) actually gets triaged in
       `market-tick-data-service`. — unified-trading-pm@460682f91 (slot-13, 2026-07-06). Evidence: audit ran 15:07-15:17
