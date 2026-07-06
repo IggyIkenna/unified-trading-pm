@@ -184,6 +184,11 @@ reference + examples for testing any DeFi strategy
 
 - citadel_per_service_remediation_2026_03_24.md — Per-service fixes
 - instruments_service_reorganisation_2026_03_27.md — Instruments service
+- prediction_capture_incident_remediation_2026_07_06.md — Remediation for the 07-01→07-06 prediction-capture outage: (A)
+  capture-path dtype hardening (UTL Int64/bool/float coercion shipped; consolidator dtype-at-source + missed-window
+  backfill residual) + (B) KALSHI/POLYMARKET-PERP adapter correction (wrong Kalshi host → fake PERPETUAL contamination
+  of cefi; demo-first repoint, prod cutover gated on access). References issue
+  `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`.
 
 ### Library Consolidation
 

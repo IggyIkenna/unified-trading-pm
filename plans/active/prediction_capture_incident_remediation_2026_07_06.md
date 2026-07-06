@@ -1,0 +1,272 @@
+---
+doc_type: plan
+title:
+  Prediction-capture incident remediation — capture-path dtype hardening + KALSHI/POLYMARKET-PERP adapter correction
+summary:
+  "Actionable remediation for the 2026-07-01→07-06 prediction-universe-capture outage (diagnosis + root-cause evidence:
+  issue doc prediction_universe_capture_dead_since_07_01_2026_07_06). Two workstreams: (A) harden the capture path — UTL
+  write-side dtype coercion shipped; residuals = fix the manifest consolidator's utf8 typing at source, audit sports for
+  the same double-consolidator race, get the fixed UTL into the is-daily-enum image, backfill the missed window, add
+  observability. (B) correct the KALSHI-PERP/POLYMARKET-PERP adapters — they query the WRONG Kalshi host (events, not
+  the auth'd margin/perps API) and emit the entire binary event universe as fake PERPETUAL, contaminating cefi with
+  25,473 rows. Demo-first repoint (config-drive host + shared RSA-PSS auth + margin API parse); prod cutover gated on
+  Ikenna's perps member-rollout access answer."
+status: active
+nature: design
+asset_group: [prediction, cefi]
+stage: [data]
+repos: [instruments-service, unified-trading-library, deployment-service]
+scope: [engineer, admin]
+tags:
+  [
+    manifest,
+    consolidator,
+    prediction,
+    capture,
+    dtype,
+    arrow,
+    adapter,
+    kalshi,
+    polymarket,
+    perpetual,
+    cefi,
+    contamination,
+    remediation,
+    observability,
+  ]
+related:
+  [
+    plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
+    plans/active/instruments_catalogue_incremental_rollup_2026_06_29.md,
+  ]
+created: 2026-07-06
+parent_epic: instruments_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P0
+estimate_class: infra
+estimate_baseline_ai_days: 4
+estimate_calibrated_ai_days: 3.2
+last_updated: 2026-07-06
+locked_by: live-defi-rollout
+locked_since: 2026-07-06
+depends_on: []
+supersedes: []
+superseded_by:
+source:
+  [
+    operator-directed remediation 2026-07-06 (Ikenna — "don't remove the PERP venues,
+    correct them; build against demo"),
+    is-daily-enum-prediction daily-failure investigation 2026-07-06,
+  ]
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+---
+
+# Prediction-capture incident remediation
+
+> **This plan tracks the ACTIONABLE remediation only. The diagnosis, root-cause evidence (live Kalshi API probe,
+> contamination timeline, why-nothing-alerted), the demo→prod switch-cost analysis, and the operator-decision context
+> are the RECORD and live in the issue doc — this plan references them, it does not duplicate them:**
+> [`plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`](issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md).
+
+## Codex SSOTs (read before touching the relevant workstream; post-phase audit updates them)
+
+- `codex/05-infrastructure/manifest-consolidator-ssot.md` — the consolidator that string-typed the canonical index
+  (Workstream A dtype-at-source fix).
+- `codex/02-data/availability-manifest-and-data-status.md` — ManifestRow schema (`instrument_count` is `int`); the
+  write-side coercion contract.
+- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` +
+  `codex/04-architecture/shard-level-failure-isolation.md` — reference-data adapter + per-shard-isolation contract
+  (Workstream B adapter rewrite; the shard-isolation catch that swallowed the crash without `exc_info`).
+- `codex/06-coding-standards/config-reloader-pattern.md` — typed config for the `KALSHI_PERP_ENV` host resolver.
+- Kalshi/Polymarket perps margin API: **no codex doc yet** — the issue doc is the reference until Phase 2/3 stub one.
+
+## Scope — two workstreams from one incident
+
+- **Workstream A — capture-path dtype hardening** (root cause #1: consolidator utf8-typed the canonical
+  `_index/availability_index.parquet` → UTL merge `ArrowTypeError` → `is-daily-enum-prediction` died daily 07-01→07-06).
+  The crash-proof UTL coercion is SHIPPED; residuals harden the source + close the missed window.
+- **Workstream B — KALSHI-PERP / POLYMARKET-PERP adapter correction** (root cause #2, unmasked once A stopped the
+  crash): the perp adapters query the **wrong Kalshi host** (events, not the auth'd margin/perps API) and emit the whole
+  binary event universe as fake `PERPETUAL`, contaminating cefi with **25,473 rows**. Operator: KEEP the venues, correct
+  the adapters. Demo-first; prod cutover gated on access.
+
+Both workstreams are `data-pipeline-engineer`, one owning agent (this session), `local-only` (not
+orchestrator-dispatched).
+
+---
+
+## Workstream A — capture-path dtype hardening
+
+### Shipped 2026-07-06 (record — verified green)
+
+- [x] [CODE] P0. ✅ UTL write-side schema coercion in `_merge_dataframes`:
+      `instrument_count`/`schema_version`/`row_count` → nullable `Int64`, then bool (`expected`/`available`) →
+      `boolean` + `expected_window_completeness_fraction` → `Float64` before every index/shard write — a dtype-divergent
+      co-writer can never crash the capture path again. — unified-trading-library@6c090bb (Int64) + @1651340
+      (bool/float). Gate: verified against the exact poisoned prod frame (24,994-row merge + `to_parquet` OK).
+- [x] [INFRA] P1. ✅ Paused `uts-prod-manifest-consolidator-instruments-prediction-legacy-cron` — prediction ran BOTH
+      legacy + non-legacy consolidators every minute (racing co-writers on one file; other AGs paused legacy 06-08).
+      (Reversible: `gcloud scheduler jobs resume …`.) Gate: legacy cron shows `state: PAUSED`.
+- [x] [CODE] P1. ✅ Catalogue feed-health clamp — `_warn_coverage_horizon` ignores future-dated (settlement) `day=`
+      partitions so `CATALOGUE_STALE_BY_DATE` is not blinded by prediction's out-to-2029 dirs, + regression test. —
+      instruments-service@4979429.
+- [x] [VERIFY] P0. ✅ Local healing run of the exact capture command on the fixed UTL → green exit + today's prediction
+      universe restored (index advanced to 07-06 with Int64 types). Gate: capture exit 0 + `max(available_from)` moved
+      past 06-27.
+
+### Residual open work
+
+- [ ] [CODE] P1. Fix the manifest **consolidator's dtype handling at ITS source** — it should persist schema-typed
+      columns, not utf8. Locate the consolidator image/repo (SSOT
+      `codex/05-infrastructure/manifest-consolidator-ssot.md`), find where the ~2026-06-27-era change began
+      string-typing `instrument_count`, fix + redeploy. Gate: a fresh consolidator cycle writes
+      `_index/availability_index.parquet` with `instrument_count` as int (not utf8), verified by direct read.
+      (Non-urgent — the UTL coercion crash-proofs the reader — but the canonical index dtype must be honest.)
+- [x] [INFRA] P1. ✅ Audited **sports** (2026-07-06) — SAME condition, confirmed WORSE than prediction:
+      `instruments-sports-cron` AND `instruments-sports-legacy-cron` were BOTH enabled (`*/1`); the sports instruments
+      availability index is string-poisoned (`instrument_count`/`row_count`/`expected`/`available` all object/str,
+      4,999,446 rows); and `is-daily-enum-sports` has FAILED every day 06-28→07-05 (failed_count=1) — sports instruments
+      capture has been DEAD longer than prediction, previously undetected. Paused
+      `uts-prod-manifest-consolidator-instruments-sports-legacy-cron` (now matches every other AG; reversible via
+      `gcloud scheduler jobs resume`). The heal folds into the item below.
+- [ ] [INFRA] P0. **URGENT — data-correctness heartbeat**: get the fixed UTL (coercion @6c090bb/@1651340) into the
+      `is-daily-enum-*` Cloud Run image (UTL base republish → instruments-service rebuild — the 07-04 recipe). Verified
+      2026-07-06: BOTH `is-daily-enum-prediction` (07-01→05) AND `is-daily-enum-sports` (06-28→05) FAIL every day in the
+      cloud on the old UTL — the local prediction heal did NOT fix the cloud job; sports+prediction instruments capture
+      stays dead until this ships. Gate: next `is-daily-enum-{prediction,sports}` cloud runs exit 0 + their indexes
+      rewrite with int-typed `instrument_count`; `Evidence: cloudbuild=<id>`.
+- [ ] [VERIFY] P1. Backfill the missed window 07-01→07-06: confirm the healed capture's `--days-back` reach covered the
+      gap days' by_date + manifest rows, or run a targeted backfill; then confirm the catalogue picks up post-06-27
+      listings (`max(available_from)` advances) on the next daily run. Gate: no by_date/manifest holes in 07-01→07-06;
+      catalogue `available_from` advances past 06-27.
+- [ ] [CODE] P2. Observability: add `exc_info=True` to the UTL shard-isolation catch (`service_framework/_adapter.py`
+      "Handler %s failed on payload") + root-cause why Cloud Run job stdout/stderr does not reach Cloud Logging (affects
+      every lifecycle-catalogue/enum job — the weekly-full diagnoses had to work blind). Gate: a forced handler
+      exception logs the full traceback; a Cloud Run job's app logs appear in Cloud Logging.
+
+---
+
+## Workstream B — KALSHI-PERP / POLYMARKET-PERP adapter correction (demo-first; prod gated on access)
+
+> **Root cause (issue doc, confirmed via live probe):** `kalshi_perp` queries
+> `https://api.elections.kalshi.com/trade-api/v2/markets` — the **events** host, 100% binary contracts, 0 perps. Real
+> perps live on the auth'd margin host `https://external-api.kalshi.com/trade-api/v2/margin/` (demo
+> `external-api.demo.kalshi.co`). The `category=Crypto` filter is ignored + the empty-category client filter passes →
+> the whole binary event universe is emitted as fake `PERPETUAL`. **Confirmed demo endpoint:**
+> `GET …/trade-api/v2/markets/margin` → `MarginMarket[]`. **Purge scope:** KALSHI-PERP 25,473 rows; POLYMARKET-PERP 0.
+> All 0 MVP-tagged.
+>
+> **Coordination:** this touches instruments-service@4da6fe8 (another workstream's feature that enabled the PERP
+> venues). Slot-2 executes Phases 0–3 + 5 and flags the 4da6fe8 author on the PR; Phase 4 (prod cutover) waits on
+> Ikenna's access answer. No UAC venue-list change — the venues stay declared.
+
+### Phase 0 — stop contamination + purge (NOW, no access needed) — SEQUENTIAL (guard ships before purge)
+
+- [x] [CODE] P0. ✅ Guard both `kalshi_perp` + `polymarket_perp` adapters to emit **0 records** from the current (wrong,
+      events) host until repointed — `_REPOINT_PENDING=True`; `get_instruments()`/`get_instrument()` return honest-empty
+      BEFORE any network call + fixed the `kalshi _parse_market` empty-category "pass" bug (defense-in-depth). Venue
+      declarations STAY. — instruments-service@c8c6dac76 | QG green (4000 pass, coverage ≥88%); tests assert 0 records
+      from an events-host payload (`test_get_instruments_empty_even_with_events_host_payload`) + the events-host binary
+      contract is rejected by the parser (`test_events_host_binary_market_is_rejected`); fetch-path coverage retained
+      guard-lifted for the machinery Phase 2/3 reuses.
+- [x] [INFRA] P0. ✅ Guard reached prod — cloud build `09a20bfe-4401-42cf-ae91-e832418550df` **SUCCESS** built
+      `instruments-service:latest` = `sha256:e93483dd…` from `de3bcf5` (main w/ guard, promoted via the fleet promoter I
+      dispatched); every `is-daily-enum-*` job resolves `:latest`.
+      `Evidence: cloudbuild=09a20bfe-4401-42cf-ae91-e832418550df`. Runtime confirm (next cefi run writes 0
+      `KALSHI-PERP`) = the post-purge catalogue staying clean through the 13:30 UTC run (folded into step 2's post-13:30
+      check).
+- [ ] [DATA] P0. Purge the 25,473 fake `KALSHI-PERP` rows from cefi: corrective `--mode full --allow-catalogue-shrink`
+      cefi run + delete the `venue=KALSHI-PERP` by_date + manifest cells. **PURGE, not MOVE (operator-decided
+      2026-07-06):** the perp parser stamped these binary EVENT contracts as `instrument_type=PERPETUAL`/`expiry=None`,
+      discarding their expiry/series/YES-NO structure; they are reference-data rows (no captured prices), the correct
+      producer is the prediction Kalshi adapter, and Kalshi is cheaply re-enumerable — moving would relocate degraded
+      stubs + conflict with the prediction store's canonical copies. (The "are these captured correctly anywhere?"
+      question is Phase 3's `[VERIFY]`.) Gate: cefi catalogue has 0 `KALSHI-PERP` rows; row-count drop == 25,473; no
+      other venue touched.
+
+### Phase 1 — foundation: config-drive host + shared RSA-PSS auth (no access needed) — PARALLEL
+
+- [ ] [CODE] P1. Make the perp base URL config-driven — `KALSHI_PERP_ENV=demo|prod` (via `UnifiedCloudConfig`, default
+      `demo`) resolving the host; delete the hardcoded `_KALSHI_BASE_URL` events-host const from the perp adapters.
+      Gate: unit test resolves demo vs prod host from config.
+- [ ] [CODE] P1. Extract the RSA-PSS signing that ALREADY EXISTS in `adapters/prediction/kalshi.py`
+      (`_signed_headers`/`_parse_kalshi_creds`/`_can_sign`) into a shared helper both perp adapters use; wire the demo
+      credential blob via the injection path (secret ref `kalshi-perp-demo`). Gate: signed-header unit test on the
+      shared helper.
+
+### Phase 2 — repoint kalshi_perp to the margin API (demo) — SEQUENTIAL after Phase 1
+
+- [ ] [CODE] P1. Rewrite `KalshiPerpReferenceDataAdapter.get_instruments` to hit `…/trade-api/v2/markets/margin` on the
+      demo host, parse `MarginMarket` → `InstrumentRecord(instrument_type=PERPETUAL)` (ticker; `underlying`→base_asset;
+      `contract_size`/`tick_size`; `is_active`→status; `expiry=None` — perps are continuous), status-filter active.
+      Gate: parses a captured demo `MarginMarket` fixture into a valid `InstrumentRecord`.
+- [ ] [VERIFY] P0. Demo dry-run: returned tickers are genuine perps (`BTC-PERPETUAL` shape, `contract_type` present),
+      **0 event contracts**. Capture into a NON-PROD / dry-run sink — demo data MUST NOT enter the prod cefi store.
+      Gate: demo run yields real perp instruments; a `KXMVE*` event ticker would be rejected.
+
+### Phase 3 — polymarket_perp repoint (demo) + prediction event-capture gap — SEQUENTIAL
+
+- [ ] [RESEARCH] P1. `docs.polymarket.com` perps API — find the markets-listing endpoint + auth (beta-gated; launched
+      2026-04-21). Gate: endpoint + auth documented in the issue doc's reference section.
+- [ ] [CODE] P1. Repoint `polymarket_perp` against Polymarket's perps API (demo/testnet if available) →
+      `InstrumentRecord(PERPETUAL)`. Gate: demo returns real Polymarket perps, 0 prediction-market rows.
+- [ ] [VERIFY] P1. **Pin the prediction-store event-capture gap** (the real question the purge-vs-move decision
+      surfaced): are the Kalshi/Polymarket EVENT markets (`KXMVESPORTSMULTIGAMEEXTENDED`, `KXMVECROSSCATEGORY`, …)
+      captured CORRECTLY in the PREDICTION store? Evidence to resolve: the healed prediction enum wrote 0 records under
+      top-level venues KALSHI/POLYMARKET but 7,981 across 63 sub-venue groups. Diff the prediction store's
+      KALSHI/POLYMARKET instrument set vs the live Kalshi `/markets` (events host) + Polymarket CLOB universe. Gate:
+      quantified — either "prediction captures them, purge loses nothing" (close), OR a named coverage gap (`N` markets
+      missing) → file the fix in the PREDICTION Kalshi/Polymarket adapter (NOT by relocating the malformed cefi rows).
+
+### Phase 4 — prod cutover (BLOCKED-OPERATOR-DECISION / -CREDENTIALS — Ikenna)
+
+- [ ] [BLOCKED-OPERATOR-DECISION] P1. Confirm Kalshi + Polymarket perps **prod access** (Kalshi member-rollout
+      enrollment; Polymarket beta enrollment) + provide prod credential blobs (`kalshi-perp-prod`,
+      `polymarket-perp-prod`). Gate: operator answers Q1 (access) + provides prod secrets.
+- [ ] [INFRA] P1. Flip `KALSHI_PERP_ENV=prod` + prod secret refs; confirm no 403 (enrollment live); **re-enumerate
+      against prod** → prod cefi catalogue. Gate: prod perps land as genuine `PERPETUAL` crypto perps; `KALSHI-PERP`/
+      `POLYMARKET-PERP` catalogue rows are real (spot-check tickers); `Evidence: cloudbuild=<id>`.
+
+### Phase 5 — guardrail so this class can't recur
+
+- [ ] [CODE] P2. Write-time validation: any `*-PERP` venue record MUST be `instrument_type=PERPETUAL` AND pass a
+      perp-ticker sanity check (reject event-contract patterns, e.g. `KXMVE*`/`KXMVECROSSCATEGORY*`); reject at the
+      writer, not silently. Gate: a synthetic event contract injected into a `-PERP` feed is rejected, not written to
+      the catalogue.
+
+---
+
+## Progress log
+
+- 2026-07-06: Plan carved out of the issue doc per operator direction ("issue doc = the issue; implementation items = a
+  plan that references it"). Workstream A shipped items back-referenced with their quickmerge shas
+  (UTL@6c090bb/@1651340, IS@4979429); the incremental-catalogue merge-key fix that preceded them is IS@dc378b6. Repo
+  HEADs at carve-out: instruments-service@5410111, unified-trading-library@0e85227, unified-trading-pm@9971a14cb.
+  Awaiting operator green-light to begin Phase 0.
+- 2026-07-06: Operator green-lit execution (`/autonomous`, slot 2). **Phase 0 step 1 (guard) SHIPPED** —
+  instruments-service@c8c6dac76. Design decision: implemented an unconditional `_REPOINT_PENDING` disable (return
+  `[]`/`None` before any network call) rather than only patching the category filter — the plan's "emit 0 from the
+  events host" needs a data-independent 0 (a filter-patch alone leaves a latent re-contamination path if Kalshi ever
+  tags a binary market `category=Crypto`); also fixed the `_parse_market` empty-category pass bug as defense-in-depth.
+  Rewrote both adapters' unit tests to the disabled contract + events-host rejection; restored fetch-path coverage
+  (guard-lifted via `monkeypatch _REPOINT_PENDING=False`) after the first QG caught a coverage regression (87.78% →
+  cleared ≥88% with the machinery tests re-added — the machinery is reused by the Phase 2/3 repoint). QG green (4000
+  pass, 91s). Next: rebuild+deploy the is-daily-enum cefi image (runtime half of the Gate), then the Phase 0 step 2
+  purge.
+- 2026-07-06: **Sports audit (Workstream A) surfaced a bigger data-correctness finding while the cefi guard deployed.**
+  `is-daily-enum-sports` has FAILED daily 06-28→07-05 (sports instruments index string-poisoned, 4.99M rows; sports had
+  BOTH consolidator crons enabled) — sports capture dead longer than prediction, undetected. AND
+  `is-daily-enum-prediction` still FAILS in the cloud 07-01→05 (the local heal never reached the deployed image). Paused
+  the sports legacy consolidator cron (protective, matches all other AGs). Escalated the "fixed-UTL→is-daily-enum image"
+  residual to P0 — it heals BOTH sports+prediction cloud capture. Operator notified. (Phase 0 cefi guard is independent:
+  the cefi index is NOT poisoned, so is-daily-enum-cefi succeeds and the guard stops KALSHI-PERP regardless of the UTL.)
+- 2026-07-06 ~11:00Z: **Guard deployed** (cloudbuild 09a20bfe SUCCESS → :latest=e93483dd). **Purge applied** — deleted
+  the 9 `venue=KALSHI-PERP` by_date snapshots (06-27→07-05) via
+  `scripts/purge_kalshi_perp_events_contamination_2026_07_06.py --apply`. Baseline for verification: cefi catalogue was
+  376,984 rows / 25,473 KALSHI-PERP / 0 POLYMARKET-PERP / 25 venues → expect 351,511 / 0 / 24 after rebuild. Catalogue
+  `--mode full --allow-catalogue-shrink` rebuild running. **Serendipity check**: the guard build (09a20bfe, 10:55)
+  pulled the UTL base image republished at 08:11 with the coercion fix (0e85227) — so :latest=e93483dd very likely ALSO
+  carries the fixed UTL, which would heal sports+prediction cloud capture as a side effect. Triggered
+  `is-daily-enum-prediction-n2kc9` on the new image to test+heal (runtime verification of the escalated P0).
