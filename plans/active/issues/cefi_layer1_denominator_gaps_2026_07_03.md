@@ -130,12 +130,25 @@ enough). The % is neither an upper nor lower bound of the real value.
       flip), the BYBIT-SPOT relabel, and the C2 MVP-data-type intersection (all detailed in the sections below).
       **PREREQ: 2a landed.** Gate: cefi EXPECTED reflects the full declared cefi universe (no whole-venue omission);
       dynamic tests pass (no golden edits); QG-green.
-- [ ] [DATA] P0. **2c. cefi MVP read-time gate (re-scoped — the manifest-pruning script is RETIRED).** Do NOT run
+- [x] ✅ [DATA] P0. **2c. cefi MVP read-time gate (re-scoped — the manifest-pruning script is RETIRED).** Do NOT run
       `reclassify_cefi_manifest_mvp_universe_2026_06_23.py` — DATA-LOSS: its `_derive_base` mis-parses Bitfinex
       `ADAF0:USTF0` + Kraken `PF_/PI_` wire-forms → would DELETE ~380k legit **captured** BITFINEX/KRAKEN rows; also
       circular (honest-coverage-v2 forbids deriving the denominator from the manifest). Instead apply the MVP filter as
       a **read-time gate in `measure_honest_coverage`**, folded into 2a `build_expected`. **PREREQ: 2b + the ASTER split
       landed.** Gate: MVP-cut applied at read time, ZERO manifest rows mutated, cefi measure honest.
+      **DONE 2026-07-06 — instruments-service@2fa3877 (slot-8 planning).** New public
+      `check_enumeration_completeness.filter_manifest_to_expected(ag, df)` filters manifest to rows whose canonical
+      `(venue, itype, dt)` key is in `build_expected(ag)` — MVP scope baked in via
+      `get_mvp_data_types_for_cefi_venue`. `measure_honest_coverage._compute_coverage` calls the filter for cefi
+      (`_MVP_READ_TIME_GATE_AGS = {"cefi"}`) BEFORE Layer-2 counting; Layer-1 keeps the UNFILTERED df so stray_tuples
+      remain visible. ZERO manifest mutation (returns a filtered VIEW; input df untouched). Same canonical key as the
+      L1 check (`_canon_key` — case-fold + UAC alias + bundle rollup + cefi venue-fold OKX-SPOT→OKX/etc). Smoke test
+      demonstrated: BYBIT-SPOT/perpetual/trades manifest row → dropped from Layer-2, still visible in Layer-1
+      stray_tuples (writer PERPETUAL-stamp defect surfaced honestly). 11 unit tests
+      (`tests/unit/scripts/test_filter_manifest_to_expected.py`) + 21 existing measure tests green (fake-checker stub
+      updated with passthrough). QG-green 92s (sentinel 4368f381e). Filter is oracle-based on `build_expected`, so
+      2b/ASTER-split changes propagate through automatically at re-measure time (task 5 — P2, gates on 2a–2f + ASTER
+      wire + KALSHI-PERP purge).
 - [ ] [CODE] P1. **2f. Reapply the denominator-gap model to LIGHTER / EXTENDED / PACIFICA** — they share the ASTER
       live-WS/no-REST profile, so the same start-date-gated treatment applies once enumerator `start_date` support
       exists. **PREREQ: 2b + enumerator `start_date` support.** Gate: LIGHTER/EXTENDED/PACIFICA EXPECTED correct;
