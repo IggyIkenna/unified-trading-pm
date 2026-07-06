@@ -90,9 +90,13 @@ source:
       GCS-504 straggler copy failures on 2026-01-15 handed off to task 3 · post-migration GCS shows canonical
       `pipeline_mode=batch_databento/batch_yahoo` subdirs present at day=2026-01-15 · run.log at
       `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-tradfi-20260706-145606/run.log`.
-- [ ] [DATA] P0. **Orphan sweep to E=0 + bucket-state evidence** (all years, `tradfi-prd`). Per
-      `tradfi_manifest_canonicalisation` §"Orphan sweep + bucket-state evidence" + `migration_verification` V6. Gate:
-      zero orphaned legacy-path objects; bucket-state evidence recorded.
+- [ ] [DATA] P0. **BLOCKED-ORDERING (depends on task 4 E5 manifest rebuild) — Orphan sweep to E=0 + bucket-state
+      evidence** (all years, `tradfi-prd`). Per `tradfi_manifest_canonicalisation` §"Orphan sweep + bucket-state
+      evidence" + `migration_verification` V6. Gate: zero orphaned legacy-path objects; bucket-state evidence recorded.
+      **⚠️ ORDER DEPENDENCY (surfaced 2026-07-06 BLK-71c6f4c4):** task 4 (E5 `rebuild_tradfi_manifest.py`) MUST run
+      first — the 2026 migration wrote v9-canonical paths WITHOUT rebuilding the manifest (per migrator docstring:
+      manifest columns are added by E5, this script fixes PATHS only). Running the orphan sweep before E5 would produce
+      false Class-E positives (real data with no manifest row) on the newly-migrated 122,703 canonical objects.
 - [ ] [DATA] P0. **Idempotent straggler re-run** — transient GCS 503/504 bursts on 2026-07-06 left ~7 objects unmoved on
       2025-02-03/04 **plus 4 objects unmoved on 2026-01-15** (all transient GCS timeouts, not memory, self-limited).
       Re-run the migrator over the affected day-partitions (idempotent — skips already-canonical). 2026-01-15
@@ -131,6 +135,13 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — Task 2 (Orphan sweep) parked with BLOCKED-ORDERING per BLK-71c6f4c4 (main agent).
+  Rationale: task 4 (E5 `rebuild_tradfi_manifest.py`) MUST run first — my task 1 migrator only fixed object PATHS (per
+  its docstring); the manifest columns `schema_version`/`source`/`pipeline_mode`/`asset_group`/`available_at` are added
+  by the E5 rebuild, not the migrator. Running the orphan sweep now would classify the newly-migrated 122,703 canonical
+  objects as Class-E ORPHAN (real data with no manifest row) — a false positive that would fail the E=0 gate. Fix:
+  reorder the chain so task 4 (E5) precedes task 2 (orphan sweep). Deletes remain never-autonomous / operator-gated
+  regardless of order.
 - **2026-07-06** — Task 1 DONE: 2026 tradfi v9 `--apply` migration landed at 15:14 UTC via
   `canonical-migration-tradfi-20260706-145606` (e2-standard-16 · SPOT · workers 24 · MTDS@9ecd1e29e16429). TOTAL
   planned=332825 moved=122703 (L-hive 210118/0 idempotent-skip; candles 122707/122703 with 4 GCS-504 stragglers on
