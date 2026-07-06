@@ -128,8 +128,21 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
       `ALL DATES CAPTURED (0 attempted_failed)`; (c) task 002 re-verifies via the same `/tmp/verify_understat_gate.py`;
       (d) tasks 003 (consolidator §9.2b confirmation) + 004 (one-off normalization) complete; (e) task 005
       re-dispatches, the manifest now shows DoD met, gate flips green.
-- [ ] [DOC] P1. Update the issue doc Progress Log with the final captured totals + the gate flip; then run the plan
-      archival ritual (this plan + the issue doc) once the gate is green and DONE is verified.
+- [ ] [DOC] P1. **BLOCKED-PREREQUISITES (2026-07-06, slot-7).** Update the issue doc Progress Log with the final
+      captured totals + the gate flip; then run the plan archival ritual (this plan + the issue doc) once the gate is
+      green and DONE is verified. **BLOCKED**: task -006 auto-dispatched to slot-7 at Tier 1 Priority 20 (third
+      priority-only dispatch after BLK-afcc5da6 → -001 and BLK-18a3d596 → -004) while the entire dependency chain is
+      unresolved — task -001 (backfill) still IN PROGRESS (PID 1782092 alive, log mtime 2026-07-06 18:16Z, 508
+      `rows written for date` and climbing, currently on early-2017 big-5 dates); tasks -002/-003 `status=queued`;
+      -004/-005 already carry BLOCKED-PREREQUISITES markers. Plan §4 DoD (`0 attempted_failed / 0 expected_unattempted`
+      on big-5 XG + XG_SHOTS) is NOT met — the -005 verification quoted 384 XG_SHOTS `attempted_failed` + 13,811
+      `expected_unattempted` + latest XG_SHOTS 2024-12-21. The gate `understat-vm-xg-complete` has NOT been flipped.
+      Cannot document "the final captured totals + the gate flip" when neither event has occurred. **Un-block
+      sequence**: (a) task -001 runs to `ALL DATES CAPTURED (0 attempted_failed)` (~1.5-2 h remaining); (b) tasks -002
+      (manifest verification), -003 (§9.2b consolidator confirmation), -004 (one-off normalization) complete in order;
+      (c) task -005 re-runs the verify and flips `understat-vm-xg-complete` green on real captured shots; (d) THEN task
+      -006 re-dispatches — this checkbox marker filters -006 from priority-only regen dispatch until (a)-(c) complete
+      and an operator clears it.
 - [ ] [SCRIPT] P2. Delete `scripts/backfill/understat_bulk_backfill.py` per its lifecycle marker once the gate is green
       (one-off; do not leave it in the tree).
 
@@ -194,3 +207,23 @@ shots; the 6 parked sports tasks are unblocked; issue-doc Progress Log updated; 
   monitor (report every 500-date milestone), do NOT flip `understat-vm-xg-complete` — operator confirmation required.
   -004 will re-dispatch after -003 completes and the checkbox marker is cleared. This entry + the checkbox edit are the
   operator-facing durable fix.
+- 2026-07-06 (slot-7 planning, `data_engineering`, 3rd auto-dispatch — this session): fresh slot-7 session booted
+  (`already_in_progress: false`, orchestrator lost tracking of prior slot-7 session that owned -001); auto-dispatched
+  to task **-006** at Tier 1 Priority 20 (`dispatch_reason: "highest-rank queued task with prereqs met and no
+  collision"`) — the plan's serial ordering (-001 → -002 → -005 → -006) is still not machine-encoded as
+  `depends_on`, and neither -004 nor -005 (each carrying an in-checkbox BLOCKED-PREREQUISITES marker) block -006 from
+  the regen. Verified live state on receipt: task -001 backfill process ALIVE (PID 1782092, PPID=1 orphaned from prior
+  slot-7 session, log mtime 2026-07-06 18:16Z, 508 `rows written for date` and climbing past the BLK-18a3d596 500-date
+  milestone, currently processing early-2017 big-5 dates — 2017-02-11, 2017-03-31, 2017-04-05 in the tail); backlog
+  shows -001 `status=dispatched` (owned by a now-dead slot-7 record), -002 `status=queued` P0, -003 `status=queued`
+  P1, -006 `status=dispatched` (this session), -007 `status=queued` P2; the manifest state hasn't advanced since -005's
+  DoD-NOT-MET verdict (backfill is only at ~2017, needs to reach 2025 before big-5 XG_SHOTS captured ≈ XG captured).
+  Applied established precedent (BLK-afcc5da6 → -001 OPTION A, BLK-18a3d596 → -004 OPTION A) without re-filing
+  /blocked — same pattern, same resolution: parked -006 with an in-checkbox `**BLOCKED-PREREQUISITES (2026-07-06,
+  slot-7)**` marker + full un-block sequence + Progress Log entry. `-006` re-dispatches only after -001 → -002 → -003
+  → -004 → -005 complete and an operator clears the marker. Parallel operator flag: task -001 is running as an
+  orphaned OS process; the current dispatched-slot record is stale — the completion signal
+  (`ALL DATES CAPTURED (0 attempted_failed)` in the log) will not automatically trigger `/done` for -001 unless a live
+  slot claims monitoring. Slot-7 has now released via `/done` on the -006 park; the operator/main-agent may want to
+  either reassign -001 monitoring to a live slot or reboot slot-7 to pick up the next queued item and continue
+  monitoring the log on the same host.
