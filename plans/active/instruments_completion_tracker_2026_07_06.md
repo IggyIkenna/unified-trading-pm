@@ -61,11 +61,12 @@ source:
 > (`assert_defi_catalog_fresh`; sports odds only enumerate against catalogued fixtures). So the order is always:
 > **correct + certify the denominator (cefi-first) → then complete capture.**
 
-> **🟡 VM FLEET IN FLIGHT (2026-07-06) — TradFi v9 migration.** Smoke (2025) VALIDATED memory-bounded (6.7 GB / 64 GB,
-> steady) → fanned out **2020-2024** (6 VMs total, `canonical-migration-tradfi-*`, all
-> `e2-standard-16 · SPOT · workers 24 · MTDS 9ecd1e2`); **2026 held for last** (live CME-OHLCV capture VMs are writing
-> 2026). Launcher OOM-fix: **deployment-service@77cfcda**. 06-29 OOM root cause: `--workers 64` pool-thrash + full-range
-> accumulation on e2-standard-8. See Stage 1 + the Progress Log.
+> **🟢 TradFi v9 migration APPLY DONE (2026-07-06) — all 6 years 2020-2025 `exit_code=0`, fatal=0.** The D3 fix held at
+> scale (e2-standard-16 · SPOT · workers 24 · per-year chunks; memory ~6.7 GB / 64 GB per VM; `moved<planned` =
+> idempotent skips of already-canonical objects). Launcher OOM-fix: **deployment-service@77cfcda**. **STILL PENDING
+> (deferred → AO/Ikenna):** 2026 (held for the live CME-OHLCV capture VMs) · post-apply chain (orphan-sweep E=0 ·
+> straggler re-run · `rebuild_tradfi_manifest` · IS enumerate-seed + catalogue) · Ikenna's migration sign-off (gates the
+> legacy-twin bucket deletes). See Stage 1 + the Progress Log.
 
 ---
 
@@ -254,6 +255,13 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **TradFi v9 migration APPLY COMPLETE — all 6 years (2020-2025), exit_code=0, fatal=0.** The D3 fix
+  (e2-standard-16 · SPOT · workers 24 · per-year chunks) held at scale — memory stayed ~6.7 GB / 64 GB per VM, zero OOM
+  across the fleet. `moved<planned` on every year = idempotent skips of already-canonical objects (per-year TOTALs: 2021
+  moved 783,448 · 2022 738,644 · 2024 786,334 · etc.). **NEXT (deferred → AO / Ikenna):** 2026 migration (after the live
+  CME-OHLCV capture VMs drain) → orphan-sweep E=0 + idempotent straggler re-run (transient 503s) →
+  `rebuild_tradfi_manifest` (E5) → IS enumerate-seed + catalogue → all 5 AGs canonical +
+  `migration_verification_orphan_safety` V6 closes. Ikenna's migration sign-off gates the legacy-twin bucket deletes.
 - **2026-07-06** — **2e SHIPPED — defi denominator corrected (+1,380,376 rows).** D1 defi `expected_unattempted` seeding
   ran (opus, v1 enumerator — the `--enumerator-version=v2` in the dispatch was my spec error, caught by the agent +
   confirmed). run_id `enum-universe-defi-20260706-130616`. Scan-gate hit **exactly 1,380,376** (0% dev) → 1-day smoke
