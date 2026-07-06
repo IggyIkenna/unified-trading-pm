@@ -427,3 +427,38 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   to `-005` in `data/config/backlog.yaml` + regen (or flip `-005` priority to 999) to prevent the same bounce-loop the
   `-008` block-chain hit 8×. -005 stays in queue until 2b/2f/-007/ASTER-wire/KALSHI-PERP-purge all reach LDR. Slot-8
   goes idle pending operator answer + backlog fix.
+- **2026-07-06** — **v1 deletion task (-010) PARKED — BLOCKED-OPERATOR-DECISION (`BLK-6cf82522`)** (slot-4 planning).
+  Task `cefi_layer1_denominator_gaps-010` ("Confirm the v1 `_ENUMERATORS`/`main()` dispatch is legacy → DELETE it") was
+  dispatched to slot-4 by priority=50. **Confirmation FAILED**: v1 is NOT purely legacy — it still owns 3 seed
+  categories that v2 explicitly defers to it, so a blind delete is a data-correctness regression (violates the
+  data-pipeline-correctness HARD rule). Verified on LDR tip
+  (`instruments-service/scripts/enumerate_expected_universe.py`):
+  (i) **sports v2** (`_enumerate_v2_sports`, line 1552-1554): docstring explicitly says _"date < the data_type's source
+  coverage start → SKIP — those dates are owned by the v1 `_enumerate_sports` pre-coverage rows
+  (`EXPECTED_PRE_SOURCE_COVERAGE_START`, league_id="" grain). v2 must NOT re-emit them or the (data_type, date) cell is
+  double-counted at two grains."_ — deleting v1 loses `EXPECTED_PRE_SOURCE_COVERAGE_START` seeds entirely.
+  (ii) **tradfi v2** (`_enumerate_v2_tradfi`, line 1377-1379): docstring says _"Weekend and holiday dates fall through
+  to the pipeline (v1 handles them at venue-grain; v2 only adds per-instrument rows for the non-trading-day windows
+  outside the instrument lifecycle)."_ — MTDS orchestrator `process_ticks` DOES emit `EXPECTED_WEEKEND/HOLIDAY` during
+  actual capture (verified `market-tick-data-service/tests/unit/test_orchestrator_non_trading_session.py`), but ONLY
+  for dates the pipeline attempts; v1 `_enumerate_tradfi` pre-seeds them for the full calendar window (backfill role).
+  Also v1 `_enumerate_tradfi_indices` seeds Yahoo-index pre-genesis dates (VIX 1990-01-02 / DXY 2019-01-02 /
+  treasuries 2000-01-03) at instrument grain — v2 tradfi may cover this via catalogue but not verified.
+  (iii) **defi v1** has `_enumerate_defi_gas_fees` (line 484-513) that seeds chain-level `EXPECTED_PRE_GENESIS_CHAIN`
+  cells at `venue=ALCHEMY` for `gas_fees` data_type. v2 defi does per-instrument lifecycle but does not cover this
+  chain-level slice (`venue=ALCHEMY` is not in the per-instrument catalogue).
+  Cefi + prediction ARE fully covered by v2 (verified by
+  `tests/integration/test_enumerate_v2_superset_property.py` which asserts v2 ⊇ v1 for cefi/defi/prediction
+  pre-launch cells; docstring at line 43+47 calls v2 "the live path" for cefi + prediction only, NOT
+  tradfi/sports/defi-chain-level). Production context: `expected_universe_v2_scheduler.tf` runs v2 only, on ALL 5 AGs
+  daily @ 01:30 UTC (v2 wired 2026-06-19). v1 launcher (`launch-expected-universe-enumerator-vm.sh`) exists but is
+  MANUAL, not scheduled — so the sports pre-cov / defi gas_fees pre-genesis / tradfi Yahoo-index cells are already
+  NOT being freshly seeded via any scheduled path; they exist in the manifest only from historic v1 manual runs.
+  Slot-4 verdict: PARK -010 — recommendation A of `BLK-6cf82522`: DEFER pending a preceding task that either
+  (i) extends v2 to cover the 3 asymmetric slices, or (ii) folds them into `build_expected` /
+  `scripts/expected_universe.py`; then delete v1 cleanly. **Operator action required**: file a new task (or resize
+  this one) to enhance v2 sports (emit `EXPECTED_PRE_SOURCE_COVERAGE_START` while preserving the two-grain
+  double-count guard), v2 tradfi (emit weekend/holiday pre-seeds venue-grain + Yahoo-index pre-genesis
+  instrument-grain), and v2 defi (emit chain-level `gas_fees` `EXPECTED_PRE_GENESIS_CHAIN` at `venue=ALCHEMY`)
+  BEFORE -010's delete lands; alternatively answer with Option C/D from `BLK-6cf82522` if the operator accepts the
+  correctness trade-off or wants both in one commit. Slot-4 goes idle pending operator answer.
