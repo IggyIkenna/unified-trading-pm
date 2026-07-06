@@ -105,6 +105,13 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 4TH OCCURRENCE TODAY**.
+  Dispatcher routed the same infra-scope task to slot 3 (also `data_engineering`). Slot 3 escalated via /blocked
+  (`BLK-58cfb164`); consistent PARK recommendation per prior 3 rulings (slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`, 8
+  `BLK-ec05e5dd`). **Escalation level UPGRADED**: 4 data_engineering slot boot windows wasted on the same task in one
+  day — operator action now required to (a) manually route to an infra-capable slot OR (b) land the AO dispatcher-side
+  `assigned_role` filter. The dispatcher will continue bouncing this task to `data_engineering` slots until one of those
+  happens. Slot 3 idle after this note.
 - **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 3RD OCCURRENCE TODAY**.
   Dispatcher routed the same infra-scope task to slot 8 (also `data_engineering`). Slot 8 escalated via /blocked
   (`BLK-ec05e5dd`); main answered PARK (3rd identical ruling — see slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`). Systemic
