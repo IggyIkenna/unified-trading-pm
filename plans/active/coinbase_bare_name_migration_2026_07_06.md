@@ -62,6 +62,8 @@ source:
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py#L232-L247,
     instruments-service/scripts/check_enumeration_completeness.py#L149-L199,
   ]
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # COINBASE bare-name UAC removal + downstream caller migration
