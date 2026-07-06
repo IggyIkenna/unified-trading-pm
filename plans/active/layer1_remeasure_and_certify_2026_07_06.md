@@ -168,8 +168,20 @@ source:
              governing law (Layer-1 gates Layer-2). None of the AGs are certified-complete; the certifications record the
              honest lower bound at 2026-07-06.
 
-- [ ] [VERIFY] P2. **`honest_coverage_smoke_harness` live-verify slices** — run the deferred cefi / defi / tradfi /
+- [x] ✅ [VERIFY] P2. **`honest_coverage_smoke_harness` live-verify slices** — run the deferred cefi / defi / tradfi /
       prediction slices (only sports ran). Gate: each AG's smoke slice green or its discrepancy filed.
+      **DONE 2026-07-06 (slot-9 planning) — Gate satisfied via `discrepancy filed`.** Ran what exists live-in-cloud
+      (`central-element-323112`, `--today 2026-07-06`, `--deployment-env prd`); surfaced 4 discrepancies filed at
+      `plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` with concrete P2 fix todos:
+      (1) **tradfi runner** returns empty matrix — catalogue 404 on GCS (BLOCKED-PLAN2 as documented in task 004);
+      (2) **prediction runner** crashes with `BucketNamingError` in
+      `e2e-testing/scripts/build_smoke/live_manifest_reader.py:149` `_bucket_for` — `resolve_bucket_name(kind='tick-data',
+      asset_group='prediction')` has no entry (the `tick-data` alias routes to `market-data-{asset_group}` which has no
+      prediction mapping; prediction bucket is the flat key `market-data-tick-prediction`); (3) **`run_live_verify_cefi.py`
+      does not exist**; (4) **`run_live_verify_defi.py` does not exist** — slot-4's [VERIFY] P2 patch built tradfi +
+      prediction runners only. Sports (verified 2026-06-29 by slot-4) unaffected. No data-correctness impact
+      (Layer-1 certifications use `measure_honest_coverage` on a different code path). Issue doc has 4 actionable todos
+      for a fix-worker, ordered by unblock-value.
 - [x] ✅ [CODE] P1. **Close `honest_coverage_v2` remaining measurement items** — build_expected landed in 2a (Plan 1);
       the UI drill-down moves to Plan 7. Flip the honest_coverage_v2 measurement checkboxes with evidence. Gate:
       honest_coverage_v2 measurement track closed (UI item excepted → Plan 7). **CLOSED 2026-07-06 (task 008, slot-6):**
@@ -188,6 +200,17 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **✅ Task 007 CLOSED — smoke-harness live-verify Gate satisfied via `discrepancy filed`** (slot-9).
+  Ran what exists (`GCP_PROJECT_ID=central-element-323112 --today 2026-07-06 --cloud gcp --deployment-env prd`) for the
+  4 deferred AGs; surfaced 4 concrete discrepancies (tradfi=empty-matrix-BLOCKED-PLAN2, prediction=BucketNamingError
+  in `_bucket_for`, cefi/defi = runner-does-not-exist) filed at
+  `plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` with 4 actionable P2 todos. Sports slice
+  (already verified 2026-06-29) unaffected. **Data-correctness impact: NONE** — Layer-1 certifications (73.61 cefi,
+  94.81 defi, 66.67 prediction, BLOCKED tradfi, 30.77 sports) use `measure_honest_coverage` on a different code path,
+  which read the manifests correctly. Discrepancy scope is confined to the smoke-harness's own [VERIFY] P2 gate: the
+  classifier's semantics were never end-to-end tested on production data for 4/5 AGs — the fix-worker per issue-doc
+  todos will land the runners so future rebuilds have a live smoke-test line-of-defence. Task 007 evidence:
+  `unified-trading-pm@<flip-sha>` (this commit).
 - **2026-07-06** — **✅ Task 008 CLOSED — honest_coverage_v2 measurement track officially closed** (slot-6). In
   `honest_coverage_v2_instrument_denominator_2026_06_28.md`: Phase 1 `[AGENT] P1.` `build_expected` consolidation
   FLIPPED to `[x] ✅` with evidence `instruments-service@681f50a` (landed via Plan 1 =
