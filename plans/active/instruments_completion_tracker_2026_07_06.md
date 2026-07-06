@@ -100,10 +100,18 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 ## Stage 0 — Unblock (decisions + plan consolidation)
 
 - [x] [DESIGN] P0. **D1–D3 decided** (see Decision Gates) — **hard gate on Stage 2** (all three decided 2026-07-06)
-- [ ] [ADMIN] P1. Plan consolidation (from `issues/instruments_service_plan_reconciliation_2026_06_29.md` §F.1): archive
-      `mvp_catalogue_finalization_v10` (done) · flip `instruments_catalogue_incremental_rollup` → `completed` (done,
-      never flipped) · merge `path_to_100pct` → `data_completion` · fold cefi items of `instruments_mtds_subset` →
-      foundation. _(Do this before engineering so you don't work a plan you're about to retire.)_
+- [ ] [ADMIN] P1. Plan consolidation (from `issues/instruments_service_plan_reconciliation_2026_06_29.md` §F.1) —
+      **REASSESSED 2026-07-06**:
+  - [x] **merge `path_to_100pct` → `data_completion` = ✅ ALREADY DONE** (superseded + archived 2026-06-30;
+        `data_completion` § "Folded-in from `path_to_100pct`"; only the DEDUP residual remains = the Stage-5 item).
+  - [ ] **flip `instruments_catalogue_incremental_rollup` → completed = ⛔ DO NOT FLIP** — its lone open item is a LIVE
+        issue, not moot: the operator-declined tradfi catalogue-scheduler band-aid **re-triggered 2026-07-03** (tradfi
+        `prod/catalog.parquet` stale since 2026-06-29, daily `lifecycle_catalogue_scheduler` runs killed at 3600s
+        timeout). Flipping would bury it → operator decision needed (re-enable band-aid vs. ship Phase-3 incremental).
+  - [ ] **archive `mvp_catalogue_finalization_v10`** (0-open, done) + **fold `instruments_mtds_subset` cefi items →
+        foundation** (60 open, ⚖️ REVIEW) — both `locked_by: live-defi-rollout` → **operator unlock/sign-off REQUIRED**
+        (HARD RULE: locked-plan archival is never-autonomous; §F.4 ⚖️). _(Do before engineering so you don't work a plan
+        you're about to retire.)_
 
 ## Stage 1 — Close the canonical manifest baseline
 
@@ -230,6 +238,16 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **Stage-0 consolidation REASSESSED (the one-liner was partly stale).** Investigated §F.1 before
+  executing: (1) **`path_to_100pct` → `data_completion` merge = already DONE** (superseded + archived 2026-06-30;
+  `data_completion` carries the "Folded-in from `path_to_100pct`" section; DEDUP residual is already a Stage-5 item — no
+  orphaned work). (2) **`instruments_catalogue_incremental_rollup` → completed = must NOT flip** — its lone open item is
+  a LIVE issue: the operator-declined tradfi catalogue-scheduler band-aid **re-triggered 2026-07-03** (tradfi
+  `prod/catalog.parquet` stale since 2026-06-29; daily `lifecycle_catalogue_scheduler` runs killed at the 3600s
+  timeout). Flipping would bury it. (3+4) **archive `mvp_catalogue_finalization_v10`** (0-open) + **fold
+  `instruments_mtds_subset` cefi items → foundation** (60 open, ⚖️ REVIEW) are both `locked_by: live-defi-rollout` →
+  **operator unlock/sign-off required** (HARD RULE: locked-plan archival never-autonomous; §F.4). No plan mutated
+  pending sign-off; surfaced to operator.
 - **2026-07-06** — **TradFi v9 migration RESTARTED (D3 fix) — 2025 smoke launched.** The 2026-06-29 full-range run
   OOM-killed on e2-standard-8 at `--workers 64`; baked the D3 fix into the launcher (`launch-canonical-migration-vm.sh`:
   `MACHINE_TYPE` override, SPOT default + `ON_DEMAND=true` opt-out, tradfi `--workers` default 24) —
