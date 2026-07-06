@@ -1,5 +1,5 @@
 ---
-doc_type: plan
+doc_type: issue
 title: "Manifest hygiene RED — 1 AG(s) with findings (2026_07_06)"
 created: 2026-07-06
 parent_epic: observability_master
@@ -9,19 +9,20 @@ source:
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
 locked_by: live-defi-rollout
 summary: "The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: cefi. Finding-classes: schema_version_not_v9, oracle_expects_but_empty, noncanonical_path_on_disk, phantom_captur..."
-status: active
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cefi]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
+tags: [manifest-hygiene, data-quality]
 related: [mvp_backfill_cefi_tick_v10_2026_06_27]
 execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-06
+resolved_by:
 ---
 
 > **🟢 LINK-TRACKED 2026-07-06 (slot-3 data_engineering).** Both finding-classes on this
