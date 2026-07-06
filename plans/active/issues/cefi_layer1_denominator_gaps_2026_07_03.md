@@ -353,3 +353,19 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   escalation)**: add `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and
   regen; -008 stays in queue until `-007` (enumerator `start_date`) reaches LDR. Slot-9 goes idle pending operator's
   backlog fix.
+- **2026-07-06** — **UAC capability flip RE-PARKED — BLOCKED-PREREQUISITES (8th dispatch, `BLK-e642f2aa`)** (slot-4
+  planning). Task `cefi_layer1_denominator_gaps-008` was RE-dispatched to slot-4 by priority=20 alone; the
+  machine-encoded `depends_on` gap flagged across 7 prior blocks (`BLK-36eeb447` + `BLK-d8cba69b` + `BLK-9072b84f` +
+  `BLK-545a3adb` + 6th + 7th) is STILL uncorrected. Re-verified at 8th re-dispatch via `/api/backlog?limit=500`:
+  `-008.status=dispatched, depends_on=null`; `-007.status=queued, depends_on=null`. Re-verified LDR tip with
+  `rg -c 'start_date|get_venue_data_type_start_date'` on both files: ZERO matches on
+  `instruments-service/scripts/expected_universe.py` + `scripts/check_enumeration_completeness.py` (last touching
+  commits unchanged: `a1038ee` 2a + `2fa3877` 2c). Confirmed ASTER capability entry alive at
+  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1144` (flip target). Slot-4 verdict:
+  PARK -008 — **8th consecutive block, same 17,282-row over-seed risk**. The bounce loop remains not self-correcting:
+  8 slots (8, 7, unnamed 3rd, 5, 2, 9, 9-again, 4) have now been spent verifying + escalating the identical
+  operator-backlog defect — this is now a systemic-cost finding (each dispatch consumes ~10 min of a worker's context
+  budget + a Claude-Code cycle). **Operator action required (8th escalation)**: add
+  `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and regen; alternatively
+  flip `-008`'s backlog priority to 999 so higher-priority queued tasks dispatch instead. -008 stays in queue until
+  `-007` (enumerator `start_date`) reaches LDR. Slot-4 goes idle pending operator's backlog fix.
