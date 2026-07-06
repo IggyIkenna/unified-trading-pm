@@ -117,9 +117,10 @@ follow-ons:
 
 ## Actionable todos (for the fix-worker)
 
-- [ ] [CODE] P1. writers.py:239 — change the record_captured `data_type=""` argument to `data_type="instruments"` for
+- [x] ✅ [CODE] P1. writers.py:239 — change the record_captured `data_type=""` argument to `data_type="instruments"` for
       the cefi/tradfi/defi non-sports path (matches `REFERENCE_DATA_TYPE` in migrate_instruments_store_v9.py). Add a
       unit test that asserts a fresh cefi captured row lands with `data_type='instruments'` (repo: instruments-service).
+      — instruments-service@46ba62b + regression tests at tests/unit/test_orchestrator_process.py:233 (cefi) & :275 (defi)
 - [ ] [DATA] P1. One-off patch script under `scripts/` that reads
       `instruments-store-cefi-prd/_index/availability_index.parquet`, selects rows with `date >= 2026-06-27` AND
       `capture_status == 'captured'` AND (`data_type is null` OR `data_type == ''`) AND `venue != ''` (cefi
