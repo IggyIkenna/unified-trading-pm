@@ -143,10 +143,16 @@ approve / defer per category rather than per-venue.
       `COINBASE ↔ COINBASE-SPOT` if MVP requires it), THEN drop the bare entry from UAC. Gate: 0 downstream call
       sites reference bare `COINBASE`; the entry is removed from `VENUES_BY_ASSET_GROUP["cefi"]`; smoke-matrix
       `blocked-not-registered` count for `COINBASE` drops to 0 (repo: unified-api-contracts + fan-out).
-- [ ] [CODE] P1. **BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build** — public WS APIs; BitFinex REST batch
-      already captures. Register under `BITFINEX-SPOT` / `BITFINEX-FUTURES` (repo: market-tick-data-service). Gate: both
-      venues resolve in `resolve_live_venue_key`; regression tests mirror
-      `test_deribit_options_chain_operation_registered`.
+- [x] [CODE] P1. **BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build** ✅ — mtds@2b41b5fa. Public WS at
+      `wss://api-pub.bitfinex.com/ws/2` (shared spot + perp endpoint; Bitfinex v2 `trades` channel).
+      `BitfinexSpotWSFeedConnector` (base — chan_id ↔ symbol tracking, snapshot + `te`/`tu` frame parsing, heartbeat
+      skip) registers under `BITFINEX-SPOT` (SPOT tag, `tBTCUSD` wire form); `BitfinexFuturesWSFeedConnector` extends
+      it and re-tags to `BITFINEX-FUTURES` / `PERPETUAL` (F0 perp wire form `tBTCF0:USTF0` — split preserves the
+      internal colon via `split(":", maxsplit=2)`). Regression pack (19 tests) mirrors
+      `test_deribit_options_chain_operation_registered`: instrument mapping, snapshot / `te` / `tu` / heartbeat / zero-
+      price / unknown-chan parsing paths, both venues resolved in `WS_FEED_CONNECTOR_FACTORIES` after
+      `register_all()`, factory returns objects satisfying the `WSFeedConnector` Protocol surface. Closes ~26 cefi
+      `blocked-not-registered` cells (BITFINEX-SPOT ~11 + BITFINEX-FUTURES ~15 per `data_type_capability`).
 - [ ] [CODE] P1. **BITGET-SPOT + BITGET-FUTURES WSFeedConnector build** — public WS APIs (repo:
       market-tick-data-service). Gate: both venues resolve; regression tests added.
 - [ ] [CODE] P1. **COINBASE-FUTURES WSFeedConnector build** — public WS on `wss://advanced-trade-ws.coinbase.com` (repo:
@@ -228,6 +234,38 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **gap-002 shipped (BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build)** by slot-2. Bitfinex
+  public WS at `wss://api-pub.bitfinex.com/ws/2` handles both spot pairs (`tBTCUSD` shape) and USDT-margined perps
+  (`tBTCF0:USTF0` shape) through a single endpoint with an identical trades-channel schema — the perp connector
+  extends the spot connector and re-tags only the venue/instrument_type. Bitfinex REST batch (Tardis) already
+  captures. Evidence (mtds@2b41b5fa):
+  1. `market_tick_data_service/live/connectors/bitfinex_spot_ws.py` — `BitfinexSpotWSFeedConnector` with
+     `_parse_bitfinex_trades` (list-shape frames, snapshot + `te`/`tu` update rows, `hb` heartbeat skip, amount-sign
+     → side mapping, negative-amount ⇒ sell). Chan-id ↔ symbol map populated from `{"event":"subscribed"}` acks so
+     trade frames (which only carry `chanId`, not the symbol) resolve to the right instrument. Registers
+     `BITFINEX-SPOT` via `register_ws_feed_connector`.
+  2. `market_tick_data_service/live/connectors/bitfinex_futures_ws.py` — `BitfinexFuturesWSFeedConnector` subclasses
+     the spot connector (identical URL + wire schema) and overrides the `_venue_key` / `_instrument_type` class
+     attributes to `BITFINEX-FUTURES` / `PERPETUAL`. Registers `BITFINEX-FUTURES`.
+  3. `market_tick_data_service/live/connectors/__init__.py` `register_all()` — both modules imported in the CeFi
+     spot + CeFi perp buckets (registry grows from 33 → 35 venues after `register_all()`).
+  4. `tests/unit/test_bitfinex_ws_connector.py` — 19 tests: instrument mapping (spot / perp / already-`t`-prefixed
+     / bare), trade parsing (snapshot / `te` / `tu` / heartbeat / unknown-chan / zero-price / zero-amount /
+     non-list-payload / futures venue tagging), `TestRegistry` mirror of `test_deribit_options_chain_operation_registered`
+     (`BITFINEX-SPOT` + `BITFINEX-FUTURES` both present in `WS_FEED_CONNECTOR_FACTORIES`, factory objects satisfy the
+     `WSFeedConnector` Protocol surface, plan-gate `resolve_live_venue_key` direct-match resolution). All 19
+     pass; local `bash scripts/quality-gates.sh` green (125s, sentinel = 2b41b5fa).
+  5. Smoke-matrix `blocked-not-registered` drop: `1439 → 1407` post-registration (32-cell drop matches
+     `expected_coverage` — BITFINEX-SPOT 2 data_types × ~5 instruments + BITFINEX-FUTURES 4 × ~5 across the QG
+     roll-up shape). Cefi bucket falls from 104 → 72 not-registered cells. Consistent with `expected_coverage.py`
+     (BITFINEX-SPOT: `["trades", "book_snapshot_5"]`; BITFINEX-FUTURES: `["trades", "book_snapshot_5",
+     "derivative_ticker", "liquidations"]`).
+
+  Follow-on: `book_snapshot_5` / `derivative_ticker` / `liquidations` sibling connectors slot in later (identical
+  pattern to `deribit_book_ticker_ws.py`). The current factories fall through to the trades connector for any
+  non-`trades` data_type — matching the Deribit pattern where the book/ticker sibling was added post-initial-rollout.
+
 
 - **2026-07-06** — **gap-007 resolved (FX WSFeedConnector build)** by slot-4. Confirmed via already-committed SSOT
   that FX is NOT MVP — no operator ping needed; the ruling exists as **2026-06-27 decision #7** (tradfi MVP =
