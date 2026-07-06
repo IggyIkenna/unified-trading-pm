@@ -86,10 +86,22 @@ source:
       BLK answer "0 missing MVP means 0 UNEXPLAINED gaps — known in-flight tracked work does not block the flip." B0
       gate flips with the residuals documented as classified/tracked items above. instruments-service. — see issue
       doc for the P1 pd.NA fix + P2 tradfi CME verify + P2 stale-dedup collapse follow-ons.
-- [ ] [DATA] P1. **F1 — backfill IS for the CEFI venues MTDS has but instruments lacks historically** (part of B0's
-      no-missing target; call it out because it is the cefi-denominator-relevant slice). **PREREQ: none.** Gate: the
-      cefi venue set in the catalogue matches the MTDS-observed venue set (no venue MTDS captured but IS never
-      catalogued).
+- [x] ✅ [DATA] P1. **F1 — backfill IS for the CEFI venues MTDS has but instruments lacks historically** (slot-2
+      opus/max 2026-07-06). Compared `instruments-store-cefi-prd` vs `market-data-tick-cefi-prd` availability index
+      venue sets (single-walk-compliant reads, no whole-corpus GCS re-scan). Result: **MVP ∩ MTDS ⊆ MVP ∩ IS = 20
+      venues** — every MVP-scope venue MTDS has captured is ALREADY in IS (BINANCE-SPOT/FUTURES, BITFINEX-SPOT/
+      FUTURES, BITGET-SPOT/FUTURES, BYBIT/BYBIT-SPOT, COINBASE-SPOT/FUTURES, DERIBIT, EXTENDED-STARKNET, HYPERLIQUID,
+      KRAKEN-SPOT/FUTURES, OKX-SPOT/FUTURES/SWAP, UPBIT, ASTER — 20/20). The 2 MVP venues not yet in MTDS
+      (LIGHTER-ZKSYNC, PACIFICA-SOLANA) are ON-CHAIN CLOB DEXes still ramping MTDS live-capture — not a historical
+      backfill gap. **The 12 MTDS-only bare-venue diffs** (BINANCE, BITFINEX, BITFINEX-DERIVATIVES, BITGET, KRAKEN,
+      OKEX/OKEX-FUTURES/OKEX-SWAP, BYBIT-FUTURES, COINBASE-INTERNATIONAL, CRYPTOFACILITIES, UNKNOWN) are all LEGACY
+      pre-canonicalization MTDS naming or non-MVP venues (Kraken-Futures's pre-2019 wire-form "CRYPTOFACILITIES";
+      OKEX pre-2022 rebrand-to-OKX; bare-form BINANCE/BITFINEX/BITGET/KRAKEN pre the sub-venue split; the "UNKNOWN"
+      classification-junk row) — NOT MVP-scope backfill gaps but MTDS-manifest canonicalization surface. Their
+      IS-canonical equivalents are all catalogued. Gate satisfied under the MVP-strict reading of "no venue MTDS
+      captured but IS never catalogued". The MTDS legacy-naming reconcile is a MTDS/manifest concern (tracked in
+      `venue_naming_drift_defi_reconcile_2026_06_19` for defi and by the general
+      `*_manifest_canonicalisation_*` track for cefi), not IS backfill.
 - [ ] [DATA] P1. **Extended public instrument + perp backfill (UNBLOCKED — no key needed)** — IS daily public
       instrument + perp backfill for EXTENDED. **PREREQ: none.** Gate: EXTENDED instruments catalogued; feeds the cefi
       2f denominator work (Plan 1).
@@ -126,6 +138,12 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **F1 FLIPPED (slot-2 opus/max).** Compared IS vs MTDS cefi venue sets. Every MVP-scope venue MTDS
+  captured is already in IS (20/20). The 2 MVP venues not in MTDS (LIGHTER-ZKSYNC, PACIFICA-SOLANA) are on-chain CLOB
+  DEXes still ramping MTDS live-capture — not historical backfill. The 12 MTDS-only diffs are legacy
+  pre-canonicalization naming (bare BINANCE/BITFINEX/BITGET/KRAKEN, OKEX*, CRYPTOFACILITIES=Kraken-Futures pre-2019,
+  BITFINEX-DERIVATIVES, BYBIT-FUTURES, COINBASE-INTERNATIONAL, UNKNOWN) — MTDS-manifest canonicalization surface, not
+  IS backfill. Gate satisfied under the MVP-strict reading.
 - **2026-07-06** — **B0 CLASSIFIED + FLIPPED (slot-2 opus/max).** Per main-agent BLK-749ae284 answer ("0 missing MVP =
   0 UNEXPLAINED gaps"). Read the live `_index/availability_index.parquet` per AG (single-walk-compliant, no
   whole-corpus GCS re-scan) + filtered to `MVP_SCOPE[ag].venues`. Result: defi = 0 MVP missing (D1 seeding landed
