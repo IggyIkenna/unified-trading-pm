@@ -104,42 +104,51 @@ source:
 - [x] ✅ [CODE] P1. **cefi G1.2** — `record_failed` routing + the 2026-06-26 re-capture (foundation §G1.2). Gate:
       `record_failed` routes correctly; the 06-26 re-capture cells reflect real status. — **DRIFT RECONCILED
       2026-07-06**: Part (a) `record_failed` routing is already SHIPPED — `_detect_thin_day_venues` in
-      `_finalize_completeness` at
-      `instruments-service` `instruments_service/engine/orchestrator/process_completeness.py:522-545` reclassifies
-      captured→attempted_failed when a written venue's count < 50% of its trailing 14-day median. Code
-      `instruments-service@3c10615` (2026-06-27, slot-4); metric shipped earlier `instruments-service@cc81cad`
-      (2026-06-27). Regression coverage: `tests/unit/test_process_completeness_thin_day.py` (8+ tests). Part (b)
-      06-26 historical re-capture cell verification is separate VM/manifest ops — captured as the follow-up P2
-      todo below. Daily schedulers have run 10+ times since 06-27 so the routing has been active on subsequent
-      days.
-- [ ] [VERIFY] P2. **06-26 partial-cell manifest verification (follow-up to G1.2 above, 2026-07-06)** — the
-      thin-day routing shipped 2026-06-27 covers NEW captures; the 06-26 partial (BINANCE-FUTURES 678@06-25 →
-      47@06-26) was the ORIGINAL trigger cell. Verify by single-shard manifest read (NOT whole-corpus): read the
-      cefi `_index/availability_index.parquet` row for
-      `(date=2026-06-26, venue=BINANCE-FUTURES, data_type=universe)` — expect `capture_status=attempted_failed`
-      with a corrective `record_failed`-style row layered atop the earlier thin `captured`. If still `captured`
-      with count=47, re-run the 06-26 catalog-snapshot job once so the thin-day guard fires on the corrective
-      re-write. Gate: 06-26 BINANCE-FUTURES cell resolves to attempted_failed (or captured with a HEALTHY count).
+      `_finalize_completeness` at `instruments-service`
+      `instruments_service/engine/orchestrator/process_completeness.py:522-545` reclassifies captured→attempted_failed
+      when a written venue's count < 50% of its trailing 14-day median. Code `instruments-service@3c10615` (2026-06-27,
+      slot-4); metric shipped earlier `instruments-service@cc81cad` (2026-06-27). Regression coverage:
+      `tests/unit/test_process_completeness_thin_day.py` (8+ tests). Part (b) 06-26 historical re-capture cell
+      verification is separate VM/manifest ops — captured as the follow-up P2 todo below. Daily schedulers have run 10+
+      times since 06-27 so the routing has been active on subsequent days.
+- [ ] [VERIFY] P2. **06-26 partial-cell manifest verification (follow-up to G1.2 above, 2026-07-06)** — the thin-day
+      routing shipped 2026-06-27 covers NEW captures; the 06-26 partial (BINANCE-FUTURES 678@06-25 → 47@06-26) was the
+      ORIGINAL trigger cell. Verify by single-shard manifest read (NOT whole-corpus): read the cefi
+      `_index/availability_index.parquet` row for `(date=2026-06-26, venue=BINANCE-FUTURES, data_type=universe)` —
+      expect `capture_status=attempted_failed` with a corrective `record_failed`-style row layered atop the earlier thin
+      `captured`. If still `captured` with count=47, re-run the 06-26 catalog-snapshot job once so the thin-day guard
+      fires on the corrective re-write. Gate: 06-26 BINANCE-FUTURES cell resolves to attempted_failed (or captured with
+      a HEALTHY count).
 - [ ] [DATA] P1. **cefi G1.3 follow-up** — the on-chain-CeFi-perp venue FORM issue (foundation finding 2026-06-27).
       Gate: on-chain-CeFi-perp venues carry the canonical venue form.
 - [x] ✅ [SCRIPT] P0. **G2 → G5 reconcile + sign-off (cefi) — DONE 2026-07-06**. Reconciled the checkbox-vs-reality
-      drift in `instruments_foundation_completeness_2026_06_24.md` (§Phase 1 cefi): **G2 SIGNED OFF** (day-axis
-      gap-free 2,646/2,646 days genesis→06-26; 20,580 EU materialised; per-AG daily scheduler LIVE
-      deployment-service@9d0e457; cumulative-drawdown guard SHIPPED instruments-service@cc81cad; catalogue
-      9,025 active post-G1.1). **G3 SIGNED OFF** (lifecycle-catalogue-regen-cefi 01:00 UTC + auto-build on main
-      fixed 2026-06-27 → `instruments-service:latest` sha256:d9418e6e tag 0.87.0; incremental rollup
-      instruments-service@b0596d0; staleness gates @5d31994/@4979429). **G3b SIGNED OFF** (venue-truth `available_to`
-      shipped instruments-service@8261203; prod-verified 8,520→302 false-delist cluster; per-venue thin-day-aware
-      `_venue_last_full_day`). **G4 SIGNED OFF** (CeFiCatalogReader + catalog_list_instruments filter mechanism
-      functional post BUG#4 fix; G4-gate honest-absence reclass market-tick-data-service@fccb1961 =
-      66,007 af→ec_EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE). **G5 SUB-SIGNED** (mechanism + typed-reason discipline
-      shipped: UAC@755c40515 layered-coverage SSOT + IS@9e6dab5 writer honest-absence + IS@3bb7acd UAC↔writer
-      reconciliation); full G5 sign-off held under `mvp_backfill_cefi_tick_v10_2026_06_27.md` waves — no redo needed.
-      No redo of already-run work; the reconcile is a checkbox-flip + evidence audit against the shipped SHAs.
-      — unified-trading-pm@<SHA>.
-- [ ] [DESIGN] P1. **DeFi completeness ORACLE design** — "do we have ALL instruments?" = on-chain truth (foundation
+      drift in `instruments_foundation_completeness_2026_06_24.md` (§Phase 1 cefi): **G2 SIGNED OFF** (day-axis gap-free
+      2,646/2,646 days genesis→06-26; 20,580 EU materialised; per-AG daily scheduler LIVE deployment-service@9d0e457;
+      cumulative-drawdown guard SHIPPED instruments-service@cc81cad; catalogue 9,025 active post-G1.1). **G3 SIGNED
+      OFF** (lifecycle-catalogue-regen-cefi 01:00 UTC + auto-build on main fixed 2026-06-27 →
+      `instruments-service:latest` sha256:d9418e6e tag 0.87.0; incremental rollup instruments-service@b0596d0; staleness
+      gates @5d31994/@4979429). **G3b SIGNED OFF** (venue-truth `available_to` shipped instruments-service@8261203;
+      prod-verified 8,520→302 false-delist cluster; per-venue thin-day-aware `_venue_last_full_day`). **G4 SIGNED OFF**
+      (CeFiCatalogReader + catalog_list_instruments filter mechanism functional post BUG#4 fix; G4-gate honest-absence
+      reclass market-tick-data-service@fccb1961 = 66,007 af→ec_EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE). **G5
+      SUB-SIGNED** (mechanism + typed-reason discipline shipped: UAC@755c40515 layered-coverage SSOT + IS@9e6dab5 writer
+      honest-absence + IS@3bb7acd UAC↔writer reconciliation); full G5 sign-off held under
+      `mvp_backfill_cefi_tick_v10_2026_06_27.md` waves — no redo needed. No redo of already-run work; the reconcile is a
+      checkbox-flip + evidence audit against the shipped SHAs. — unified-trading-pm@<SHA>.
+- [x] ✅ [DESIGN] P1. **DeFi completeness ORACLE design** — "do we have ALL instruments?" = on-chain truth (foundation
       §DeFi oracle). Gate: an oracle design that answers defi could-exist completeness from chain state, not the
-      manifest.
+      manifest. — **DONE 2026-07-06 (data_engineering, slot 5)**. Design SSOT lands as codex
+      `codex/02-data/defi-completeness-oracle.md` (authoritative*for the oracle contract + Tier-A/Tier-B policy + the
+      `available_from = block_ts(creation_block)` genesis rule). Contract: per (protocol, chain) a `CompletenessProbe`
+      returns `expected_count` from ON-CHAIN truth (DEX factory `poolCount` / lending registry / perps markets),
+      `enumerated_count` from the IS catalogue, `completeness_pct`, `missing_delta`, `probe_kind` (Tier-A subgraph vs
+      Tier-B RPC), `probe_block`, `status ∈ {complete, gap, over_enumerated, undefined, probe_failed}` — fail-CLOSED on
+      empty/probe-failed, mirrors honest-coverage v2's empty-denominator guard. Plugs into Layer-1 by REPLACING the DeFi
+      `EXPECTED` source (kills the circular `EXPECTED = ENUMERATED` that CK3-certified at 94.81%). Follow-on
+      implementation todos (P0 UAC type + P0 factory_address_by_chain + P1 dispatch registry + P1 Tier-A DEX/lending
+      probe reference impls + P2 Tier-B RPC + P2 catalogue genesis stamp) enumerated in §9 of the codex doc, to be filed
+      under `defi_pipeline_e2e_and_coverage_validation_2026_06_20.md` or a dedicated `defi_completeness_oracle_impl*\*`
+      plan (data_engineering role, ~2 calibrated AI-days). — unified-trading-pm@<SHA>.
 
 ## Capture to 100% (Layer-2 — PREREQ: Plan 4 certified Layer-1)
 
@@ -159,16 +168,33 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **✅ DeFi completeness ORACLE DESIGN shipped** (Opus, slot-5, data*engineering). Item 5 flipped.
+  Design SSOT lands at `codex/02-data/defi-completeness-oracle.md` (authoritative_for oracle contract + Tier-A/B
+  policy + genesis rule) — one page, 12 sections. Core contract: per (protocol, chain) a `CompletenessProbe` returns
+  `expected_count` from ON-CHAIN truth (DEX factory `poolCount` / lending registry `getReservesList` / Morpho
+  `marketsCount` / GMX `allWhitelistedTokens` / Hyperliquid REST `universe` / …), `enumerated_count` from the IS
+  catalogue, `completeness_pct = enumerated / expected` (fail-CLOSED if either is 0 or probe throws), `probe_kind`
+  (`dex_factory_subgraph_tierA` / `dex_factory_rpc_tierB` / …), `probe_block` for auditability,
+  `status ∈ {complete, gap, over_enumerated, undefined, probe_failed}`. Plugs into honest-coverage v2 Layer-1 by
+  REPLACING DeFi's `EXPECTED` source — kills the circular `EXPECTED = ENUMERATED` that CK3-certified at 94.81% (a
+  catalogue-vs-catalogue tautology). Tier-A → Tier-B rollout ladder (subgraph first for fast rollout; RPC event count as
+  truth once the adapter lands). Byproduct: per-pool `creation_blocks` dict populates catalogue `available_from` from
+  the on-chain `PoolCreated`/reserve-init block — kills the RAYDIUM `1970-01-01` defect + shrinks the over-fetched EU
+  seed window. Follow-on impl broken into 8 P0-P3 todos in §9 of the codex doc (~2 calibrated AI-days total), to be
+  filed under `defi_pipeline_e2e_and_coverage_validation_2026_06_20.md` or a fresh `defi_completeness_oracle_impl*\*`
+  plan. Zero code shipped this task; design-only per the [DESIGN] tag. No cross-plan banners needed (not launching a VM,
+  not in-flight refactor); no findings issue doc (design task, no audit findings).
+
 - **2026-07-06** — cefi G1.2 (item 2) **drift-reconciled + signed off** (Opus, slot-3) — no new code needed.
   Grep-verified against `instruments-service`: `_detect_thin_day_venues` in `_finalize_completeness` at
   `instruments_service/engine/orchestrator/process_completeness.py:522-545` already wires the thin-day verdict →
-  `attempted_failed` via a corrective `record_failed` row (consolidator last-write-wins semantics ensures it
-  supersedes the earlier thinned `captured`). Code shipped `instruments-service@3c10615` (2026-06-27, slot-4);
-  underlying monitor metric shipped `instruments-service@cc81cad` (2026-06-27). Regression coverage:
+  `attempted_failed` via a corrective `record_failed` row (consolidator last-write-wins semantics ensures it supersedes
+  the earlier thinned `captured`). Code shipped `instruments-service@3c10615` (2026-06-27, slot-4); underlying monitor
+  metric shipped `instruments-service@cc81cad` (2026-06-27). Regression coverage:
   `tests/unit/test_process_completeness_thin_day.py` (8+ tests). The plan carried this as `- [ ]` — the drift =
-  plan-vs-reality lag, not open work. Part (b) 06-26 historical partial cell (BINANCE-FUTURES 678@06-25 →
-  47@06-26) verification is captured as a new P2 follow-up manifest-read todo (single-shard read, not
-  whole-corpus). Zero code shipped this session on this item; PM-only plan flip.
+  plan-vs-reality lag, not open work. Part (b) 06-26 historical partial cell (BINANCE-FUTURES 678@06-25 → 47@06-26)
+  verification is captured as a new P2 follow-up manifest-read todo (single-shard read, not whole-corpus). Zero code
+  shipped this session on this item; PM-only plan flip.
 - **2026-07-06** — G2 → G5 cefi RECONCILE + SIGN-OFF (item 3) **shipped** (slot-4). Grep-audited the
   `instruments_foundation_completeness_2026_06_24.md` §Phase 1 cefi G-gates against the shipped commits (2026-06-25 →
   2026-07-03) + prod-verified numbers in the plan's Progress Log; the drift was heavy — G2/G3/G3b/G4 had all shipped
@@ -176,12 +202,12 @@ source:
   checkboxes were never flipped. Flipped in the sibling plan with evidence: G2 (day-axis gap-free 2,646/2,646 days + EU
   20,580 + per-AG scheduler `deployment-service@9d0e457` + drawdown guard `instruments-service@cc81cad`); G3
   (lifecycle-catalogue-regen-cefi 01:00 + auto-build fix `instruments-service:latest` sha256:d9418e6e + incremental
-  rollup @b0596d0 + staleness gate @5d31994/@4979429); G3b (venue-truth available_to
-  `instruments-service@8261203`, prod-verified 8,520→302 false-delist cluster); G4 (`sentinels.py` filter mechanism +
+  rollup @b0596d0 + staleness gate @5d31994/@4979429); G3b (venue-truth available_to `instruments-service@8261203`,
+  prod-verified 8,520→302 false-delist cluster); G4 (`sentinels.py` filter mechanism +
   `market-tick-data-service@fccb1961` G4-gate reclass 66,007 af→ec). G5 SUB-SIGNED (mechanism + typed-reason discipline
   shipped `UAC@755c40515` + `instruments-service@9e6dab5`/@3bb7acd); full G5 sign-off held under the MVP backfill plan
-  (waves in flight — separate coordinator, no redo here). No redo of already-run work. **Foundation = reconcile,
-  NOT redo** applied strictly.
+  (waves in flight — separate coordinator, no redo here). No redo of already-run work. **Foundation = reconcile, NOT
+  redo** applied strictly.
 
 - **2026-07-06** — **✅ Task 010 DONE — WSFeedConnector venue-level audit filed as issue** (Opus, slot-4). Ran
   `register_all()` on `mtds@HEAD` (post C5 fix); 31 registered venue keys. Cross-referenced UAC `VENUES_BY_ASSET_GROUP`
