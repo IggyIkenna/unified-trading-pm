@@ -192,8 +192,17 @@ unaddressed.
       test-override paths. — e2e-testing@694ff4c
 - [ ] [CODE] P2. Fix the artifact-size/gitignore mismatch — keep the 18 MB `divergence_*.csv` out of git history (narrow
       `.gitignore` line 140 or relocate the dump to scratch/GCS), keeping small candidate CSVs commit-eligible.
-- [ ] [DATA] P1. Re-run the cefi audit (`--mode full --asset-group cefi`) and file/ingest a fresh escalation so the
+- [x] ✅ [DATA] P1. Re-run the cefi audit (`--mode full --asset-group cefi`) and file/ingest a fresh escalation so the
       stranded 2026-07-03 RED finding (20,282 DIVERGENT_EMPTY / non-v9 / phantom / 4-pillar) actually gets triaged in
-      `market-tick-data-service`.
+      `market-tick-data-service`. — unified-trading-pm@460682f91 (slot-13, 2026-07-06). Evidence: audit ran 15:07-15:17
+      UTC from slot-13, wrote issue doc `plans/active/issues/manifest_hygiene_red_2026_07_06.md` + candidate CSV
+      `plans/audit/results/manifest_hygiene_cefi_2026_07_06.csv` (both committed at 460682f91); `assigned_vm`
+      hand-edited from the pre-694ff4c script default (`vm-cross-cutting`) to `planning` so PlanRegenLoop actually
+      ingests the escalation. Fresh findings: schema_version_not_v9 344,842/7,219,598 rows (dist 9/5/6/4 =
+      6.87M/178k/133k/33k — all legacy stragglers); oracle_expects_but_empty 23,451 DIVERGENT_EMPTY (mostly UPBIT
+      book_snapshot_5 around 2024-12-28..30); phantom 0; 4-pillar 0 (recovered vs rc=1 on 2026-07-03). The 18MB
+      `divergence_2026-07-06.csv` diagnostic was NOT committed — it is regeneratable and item #2 owns the gitignore
+      narrowing. Audit ran BEFORE item #1's commit-and-push helper (694ff4c) reached this slot; a repeat run with the
+      new helper is covered by item #4 (VERIFY).
 - [ ] [VERIFY] P2. Confirm a fresh full run leaves `git status` clean in the PM clone and the escalation is ingested by
       PlanRegenLoop (no dirty untracked artifacts).
