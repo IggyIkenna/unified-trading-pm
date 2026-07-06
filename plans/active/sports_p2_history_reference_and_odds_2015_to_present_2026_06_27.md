@@ -40,12 +40,18 @@ drift_direction: advance-code
 > MATCHES pending=6,569 / ODDS pending=1,595. GCS log:
 > `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260706-161335/run.log`. Singleton lock active.
 
-> **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260628-070120` SPOT e2-standard-8 asia-northeast1-c, launched 07:01
-> UTC 2026-06-28 (relaunch after SPOT preemption of `us-backfill-20260627-210801` at 06:20 UTC; reached 276/4561 dates =
-> 2014-10-03 before preemption). Range 2014-01-01..2026-06-27, all entities (XG+XG_SHOTS). GCS log:
-> `gs://deployment-scripts-central-element-323112/vm-logs/us-backfill-20260628-070120/run.log`. Host disk full (290G/290G)
-> → snap gcloud ENOSPC; workaround: `PATH=/home/ubuntu/google-cloud-sdk/bin:$PATH TMPDIR=/tmp` for relaunch.
-> Singleton: instance-based (no lock file), safe to relaunch after preemption.
+> **🟡 UNDERSTAT SPOT VM PREEMPTED + LOCAL BACKFILL TERMINATED** — SPOT VM `us-backfill-20260628-070120` was preempted at
+> 2026-06-29 14:49 UTC while still processing 2019-08-09 (no exit marker in run.log, last mtime 14:49:36Z; VM object
+> deleted). Never relaunched. Sibling plan `understat_local_backfill_completion_2026_07_06.md` shipped a resume-aware
+> LOCAL driver (`instruments-service/scripts/backfill/understat_bulk_backfill.py` @ 6716f55) — final process (PID 1782092
+> orphaned PPID=1) terminated 2026-07-06 20:46:53 UTC with `MAX ROUNDS reached; still 108 attempted_failed` +
+> `UNDERSTAT BULK BACKFILL COMPLETE`. Post-run manifest for big-5 native leagues via `/tmp/verify_understat_gate.py`
+> against `_index/availability_index.parquet` (5,387,490 total rows, 621,142 understat rows): XG `attempted_failed=0` /
+> `expected_unattempted=315` (63/league × 5); XG_SHOTS `attempted_failed=384` (all `HTTP_NOT_FOUND`, attempted_at
+> 2026-06-23 → 2026-06-29, i.e. pre-fix classify_error residue) / `expected_unattempted=13,811` (~2,762/league × 5).
+> Hollow-shots check: XG_SHOTS `(date, league)` captured atoms match XG at 99.5–100% per big-5 league (EPL/LA_LIGA/SERIE_A
+> 100.0%; BUNDESLIGA 99.7%; LIGUE_1 99.5%) — captured shots are REAL, not hollow. See Progress Log entry
+> `2026-07-06 ~21:00 UTC — slot-7`.
 
 > **🟢 ODDS-API (MTDS) BACKFILL RUNNING** — `mtds-backfill-odds-1` SPOT e2-standard-4 asia-northeast1-c, launched 21:12
 > UTC 2026-06-27, range 2020-06-06..2026-06-27, 7-day chunks, MANIFEST_PER_VM_SHARDS=true. GCS log:
@@ -108,7 +114,18 @@ singleton-lock namespace → may run concurrently.
       completed; typing script typed 8,744 non-TM leagues as EXPECTED_NO_PROVIDER_COVERAGE (@fbb032d).
 - [ ] [DATA] P0. **Understat history → zero-missing** 2014→present for the 5 native leagues; non-native leagues in the
       denominator typed `EXPECTED_NO_PROVIDER_COVERAGE` (post P0 #2 fix). **Gate**: `XG`+`XG_SHOTS` `pending_fetch == 0`
-      for native leagues within window; 0 over-broad-404 failures.
+      for native leagues within window; 0 over-broad-404 failures. **BLOCKED-PREREQUISITES (2026-07-06, slot-7)**: local
+      backfill terminated 2026-07-06 20:46:53 UTC (MAX_ROUNDS, 108 dates stubborn `attempted_failed`) — gate NOT MET.
+      Big-5 native residual: XG `expected_unattempted=315`; XG_SHOTS `attempted_failed=384` (all pre-fix HTTP_NOT_FOUND
+      2026-06-23→2026-06-29) + `expected_unattempted=13,811`. Un-block sequence: (a) run
+      `reclassify_xg_shots_false_failed_2026_06_29.py --apply` (@ instruments-service@15dc9b5) to reclassify the 384
+      pre-fix HTTP_NOT_FOUND rows to `empty_confirmed(EXPECTED_NO_FIXTURE)` — this is item -002 / part of
+      `understat_local_backfill_completion_2026_07_06.md`, not this plan; (b) resolve the 13,811 XG_SHOTS eu (residual
+      enum rows from `enum-universe-sports-20260628-213115` that the backfill's captured/empty_confirmed writes did NOT
+      supersede on last-write-wins) — likely needs consolidator §9.2b dedup deployment confirmation + potentially a
+      dedicated re-fetch of those specific dates or a typing pass for dates outside understat's actual fixture calendar;
+      (c) re-run `/tmp/verify_understat_gate.py` and confirm 0 af / 0 eu on big-5 for both XG and XG_SHOTS; (d) then flip
+      this checkbox. Hollow-shots verified NOT hollow (99.5–100% captured atom parity between XG and XG_SHOTS).
 - [ ] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
       removal reversed 2026-06-27 (#6 REVERSED, operator decision) — footystats ODDS are pre-match snapshot reference
       data that stays in IS; see sports_p0 task 003. **Gate**: `(footystats, PREDICTIONS)` + `(footystats, MATCHES)` +
@@ -517,6 +534,68 @@ lines confirm M+P+ODDS being fetched per date; per-VM shard updated every ~5-8 e
 `(footystats, MATCHES)+(footystats, PREDICTIONS)+(footystats, ODDS) pending_fetch == 0`. Post-VM steps unchanged
 from 16:13 UTC entry above (verify pending_fetch, run typing only if af/eu residues persist beyond phantoms, then
 flip item #5 checkbox).
+
+### 2026-07-06 ~21:00 UTC — slot-7: understat item #4 re-evaluation after local backfill terminated
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-016` (item #4 checkbox flip).
+
+**Live state check**:
+
+- SPOT VM `us-backfill-20260628-070120` — `gcloud describe` returns "not found" (deleted). run.log
+  (`gs://deployment-scripts-central-element-323112/vm-logs/us-backfill-20260628-070120/run.log`, mtime 2026-06-29
+  14:49:36 UTC, 1.62 MiB) last entry is `PIPELINE_HEARTBEAT ... ts=2026-06-29T14:49:22Z` while still processing
+  `date=2019-08-09`. No `PROGRAM_END`, no `exit`, no `preempt`/`shutdown` markers → SPOT preemption mid-run, ~15% into
+  the 4,561-date range. Never relaunched as a VM.
+- LOCAL backfill process (PID 1782092, orphaned PPID=1) — `ps -p 1782092` empty; `/tmp/understat_backfill.log` mtime
+  2026-07-06 20:46:53 UTC. Log ends with `[VERIFY 6] attempted_failed dates remaining: 108` → `WARNING === MAX ROUNDS
+  reached; still 108 attempted_failed ===` → `INFO === UNDERSTAT BULK BACKFILL COMPLETE ===` →
+  `ManifestWriter: per-VM shard updated (1040 total entries, 15 new, process_final=True)`. 2,767 `rows written for date`
+  log lines total. Process terminated cleanly at max-rounds cutoff.
+
+**Manifest verification (via `/tmp/verify_understat_gate.py`, reads single `_index/availability_index.parquet` —
+NO whole-corpus walk, respects single-walk discipline)**:
+
+Big-5 native leagues (EPL/LA_LIGA/BUNDESLIGA/SERIE_A/LIGUE_1):
+
+| data_type | captured | empty_confirmed | attempted_failed | expected_unattempted | pending_fetch |
+|-----------|----------|-----------------|------------------|----------------------|---------------|
+| XG        | 9,132    | 19,764          | 0                | 315 (63/league × 5)  | 315           |
+| XG_SHOTS  | 6,675    | 7,580           | 384              | 13,811               | 14,195        |
+
+XG_SHOTS `attempted_failed=384` all `error_reason='HTTP_NOT_FOUND'`, `attempted_at 2026-06-23 → 2026-06-29` — these are
+the pre-`_classify_error`-fix (instruments-service@7bb8c26) legacy false-failed rows that the reclassify script
+`reclassify_xg_shots_false_failed_2026_06_29.py` (instruments-service@15dc9b5) was written to fix. Neither script ran
+against this residue yet.
+
+Hollow-shots check (unique (date, league) captured atoms — did the shots endpoint return real data or hollow via the
+`/getMatch` dead endpoint?):
+
+| league     | XG captured atoms | XG_SHOTS captured atoms | common | shots-coverage |
+|------------|-------------------|-------------------------|--------|----------------|
+| EPL        | 1,318             | 1,318                   | 1,318  | 100.0%         |
+| LA_LIGA    | 1,576             | 1,576                   | 1,576  | 100.0%         |
+| BUNDESLIGA | 1,165             | 1,162                   | 1,162  | 99.7%          |
+| SERIE_A    | 1,342             | 1,342                   | 1,342  | 100.0%         |
+| LIGUE_1    | 1,275             | 1,268                   | 1,268  | 99.5%          |
+
+Post-fix `/getMatchData` endpoint (instruments-service@527b9d9) produced REAL shots data — the hollow-shots concern that
+motivated the parking is now proven resolved on the captured rows. Latest captured date per big-5 league: 2026-05-16
+(BUNDESLIGA/LIGUE_1) → 2026-05-24 (EPL/LA_LIGA/SERIE_A) — recent enough that XG `expected_unattempted=63/league` is
+plausibly ~9 weeks of post-latest window that the backfill's `--cutoff 2026-07-06` covered but understat didn't
+actually have data for (needs confirmation via a re-fetch pass, not gate-flippable as-is).
+
+**Gate NOT met** — item #4 (this checkbox) requires `XG+XG_SHOTS pending_fetch == 0` for native leagues + 0
+over-broad-404. Both conditions fail with the residues above. **Un-block sequence** encoded on the item #4 checkbox
+BLOCKED-PREREQUISITES marker; the immediate next-step owned by task -002 of
+`understat_local_backfill_completion_2026_07_06.md` (run the reclassify script) will collapse the 384 af to zero; the
+13,811 XG_SHOTS eu and 315 XG eu need a separate diagnosis pass (are they dates outside understat's real fixture
+calendar? if so, type as `EXPECTED_NO_FIXTURE`; if not, drive a re-run over just those dates).
+
+**Task -016 output**: no flip, no code, no VM launch. Deliverable = this Progress Log entry + the top-of-plan banner
+update from `🟢 UNDERSTAT BACKFILL RUNNING` → `🟡 UNDERSTAT SPOT VM PREEMPTED + LOCAL BACKFILL TERMINATED` + the item #4
+BLOCKED-PREREQUISITES marker so the dispatcher filters this task from priority-only regen until (a) task -002 of the
+sibling plan runs the reclassify script and (b) the XG_SHOTS eu is diagnosed + resolved. Slot-7 releases via /done on
+this update.
 
 ## References
 
