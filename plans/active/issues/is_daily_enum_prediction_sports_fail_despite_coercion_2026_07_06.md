@@ -44,6 +44,7 @@ estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 assigned_role: data-pipeline-engineer
 drift_direction: advance-code
+depends_on: []
 ---
 
 # is-daily-enum-{prediction,sports} still fail despite the coercion (handoff 2026-07-06)

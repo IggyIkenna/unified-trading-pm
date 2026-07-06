@@ -86,11 +86,11 @@ source:
 
 - [ ] [DATA] P1. **BLOCKED-CREDENTIALS — defi oracle/pyth `collect-oracle-prices` launcher.** No launcher for the
       `collect-oracle-prices` data_type today. Build the launcher scaffold; the pyth Hermes endpoint may need a key →
-      credential ask. Gate: launcher scaffold exists; status BLOCKED-CREDENTIALS until the key lands.
+      credential ask [ack-pending]. Gate: launcher scaffold exists; status BLOCKED-CREDENTIALS until the key lands.
 - [ ] [DATA] P1. **BLOCKED-CREDENTIALS — gas-fees MANTLE paid RPC.** gas-fees on MANTLE needs a paid RPC endpoint key (→
-      Secret Manager). Build the adapter scaffold anyway. Gate: adapter scaffold ready; BLOCKED-CREDENTIALS.
+      Secret Manager) [ack-pending]. Build the adapter scaffold anyway. Gate: adapter scaffold ready; BLOCKED-CREDENTIALS.
 - [ ] [DATA] P2. **BLOCKED-CREDENTIALS — Live ODDS quota + cheap second source.** The live ODDS quota decision + a cheap
-      second source. Gate: quota decision documented; scaffold for the second source.
+      second source [ack-pending]. Gate: quota decision documented; scaffold for the second source.
 - [ ] [INFRA] P1. **BLOCKED-OPERATOR-DECISION — rate-limit probe VM.** Needs a disposable-IP VM (operator-gated). Gate:
       probe design ready; awaits the operator's disposable-IP sanction.
 - [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification** (Lighter / Pacifica /

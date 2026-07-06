@@ -3,7 +3,7 @@ doc_type: issue
 title:
   InstrumentsHandler "boolean value of NA is ambiguous" blocks HYPERLIQUID captures + classification of 12 non-ASTER
   cefi MVP attempted_failed cells (B0 residual)
-summary:
+summary: |
   Surfaced 2026-07-06 while classifying the residual MVP-scoped attempted_failed cells for B0 in
   `is_catalogue_completion_2d_2026_07_06.md`. The 12 non-ASTER cefi MVP AF cells split into two classes on inspection.
   (1) FOUR HYPERLIQUID truly-missing days (2024-09-12/28, 2024-12-31, 2026-03-18) all fail the same way — a DEBUG-log
@@ -35,13 +35,20 @@ related:
   ]
 created: 2026-07-06
 assigned_vm: planning
-author: slot-2 [data_engineering, 2026-07-06 opus/max]
 source:
   [
     is_catalogue_completion_2d_2026_07_06.md B0 gate — classification residual per main-agent BLK-749ae284 answer,
     live DEBUG retry of HYPERLIQUID 2024-09-12 (2026-07-06 15:05Z),
     live retry of BITFINEX-SPOT 2023-12-16 + KRAKEN-FUTURES 2023-12-16..19 (2026-07-06 15:00/15:01Z),
   ]
+execution_scope: orchestrator-agent
+priority: P2
+drift_direction: advance-code
+depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
+parent_epic: instruments_master
+resolved_by:
 ---
 
 ## What I found
