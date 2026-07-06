@@ -188,8 +188,22 @@ source:
       cells resolve to captured or honest-absence") is a runtime/manifest observation that flows from the daily DeFi
       capture (`collect-risk-params`) or a backfill VM launch (`launch-mtds-risk-params-backfill-vm.sh`) — orthogonal
       to code delivery. — `market-tick-data-service@90cd3975`.
-- [ ] [DATA] P1. **Reconcile the DEDUP-flagged folded-in tail** (from the merged `path_to_100pct` → `data_completion`) —
-      **do NOT double-run.** **PREREQ: Plan 4.** Gate: the folded-in tail reconciled; no duplicate capture.
+- [x] ✅ [DATA] P1. **Reconcile the DEDUP-flagged folded-in tail** (from the merged `path_to_100pct` → `data_completion`) —
+      **do NOT double-run.** **PREREQ: Plan 4.** Gate: the folded-in tail reconciled; no duplicate capture. —
+      **DONE 2026-07-06 (Opus, slot-3)**. Two DEDUP-flagged items in `data_completion_to_100_all_ag_2026_06_21.md`
+      §"Folded-in from `path_to_100pct_backfill_mtds_is_2026_06_17`" (lines 3250-3254 pre-flip) — Step 0 (could-exist
+      universe) DEDUP-overlaps that plan's Step-0 enumerate lane, Step 1 (per-AG backfill) DEDUP-overlaps that plan's
+      per-AG operational lanes. Verified both parent lanes are ALREADY DONE / IN FLIGHT: Step 0 enumerate lane
+      (`instruments-service@38cec01` DEFI expected-universe canonical re-seed + `_enumerate_defi` per-market grain fix
+      + `enumerate_expected_universe.py:395` correction — ~+1.38M `expected_unattempted` cells landed); per-AG lanes
+      (5×`[x] ✅` in `data_completion` §"Path to 100% — per-AG launch matrix": prediction Kalshi-bulk + Polymarket
+      batch + fwd-poll, defi 8-datatype year-sharded VMs + LIVE wired, tradfi 17 Databento VMs, sports odds-backfill×7
+      + IS-sweep×8 + footystats-fwd, cefi 802k `attempted_failed` triaged + 48.5k free-venue diagnosed + LIVE stream
+      verified). Closed both DEDUP items as **DEDUP-RECONCILED** in the parent plan (flipped to `[x] ✅` with
+      explicit "do NOT double-run" notes — running Step-0 again would race the writer-materialised
+      `expected_unattempted` guarantee, and re-launching the per-AG lanes would race the in-flight fleet's
+      `MANIFEST_PER_VM_SHARDS=true` bookkeeping and silently double-count). No new code shipped; PM-only plan flip in
+      `unified-trading-pm@<SHA>` (two files: `data_completion_to_100_all_ag_2026_06_21.md` + this plan).
 - [ ] [VERIFY] P2. **2e follow-on — cross-AG never-seeded backlog check (cefi / tradfi / pred)** — the scan-only
       investigation split from the defi 2e seeding (Plan for defi already shipped +1.38M). Scan only; file findings.
       Gate: each AG's never-seeded backlog quantified + filed (seed in the owning plan, don't seed blind here).
@@ -201,6 +215,27 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — DEDUP-flagged folded-in tail (Capture-to-100% item 2) **reconciled + signed off** (Opus, slot-3) —
+  no new code shipped; PM-only plan flip in the parent + this plan. `data_completion_to_100_all_ag_2026_06_21.md`
+  §"Folded-in from `path_to_100pct_backfill_mtds_is_2026_06_17` (2026-06-30 consolidation merge)" carried 2 items
+  explicitly `_(DEDUP: overlaps ...)_`-flagged (Step 0 could-exist universe + Step 1 per-AG backfill). Grep-verified
+  both DEDUP parent-lanes are done / in-flight in the SAME parent plan: Step 0 enumerate lane =
+  `instruments-service@38cec01` (DEFI expected-universe canonical re-seed with `_enumerate_defi` per-market grain fix
+  + `enumerate_expected_universe.py:395` correction landing ~+1.38M `expected_unattempted`) + the P0 IS-enumerator +
+  P1 enumerator-fix checks in §"Wave-1 verify findings"; per-AG operational lanes = all 5 items in §"Path to 100% —
+  per-AG launch matrix" carry `[x] ✅` (prediction Kalshi-bulk + Polymarket + fwd-poll; defi 8-datatype year-sharded
+  VMs + LIVE wired `deployment-service@48d57a5`; tradfi 17 Databento VMs
+  `deployment-service@f243eb4`; sports odds-backfill×7 + IS-sweep×8 + footystats-fwd
+  `deployment-service@b42d98c`; cefi 802k `attempted_failed` triaged + 48.5k free-venue diagnosed + LIVE stream verified
+  `market-tick-data-service@46adace,e6b0f29` + `unified-trading-library@057264fd`). Closed both DEDUP items in the
+  parent plan by flipping to `[x] ✅` with explicit **do-NOT-double-run** rationale (running Step-0 again would race
+  the writer-materialised `expected_unattempted` guarantee; re-launching the per-AG lanes would race the in-flight
+  fleet's `MANIFEST_PER_VM_SHARDS=true` bookkeeping and silently double-count). The remaining folded-in items in that
+  same section (Steps 2-5, DeFi catalogue MVP, DeFi honest-absence residual tail, DeFi swallow-fixes CF-11, Kalshi
+  launcher gap, sports-odds `--tier` arg, BLOCKED-OPERATOR-DECISION CLOB-on-chain classification, QG 5.70 dex_swaps
+  baseline) do NOT carry `_(DEDUP: ...)_` markers and remain open — this task's gate is specifically "DEDUP-flagged
+  tail" not "all folded-in items", per the item text "no duplicate capture" (the concern is the double-run risk from
+  the two DEDUP overlaps, not the residual open items).
 - **2026-07-06** — DeFi `risk_params` MTDS handler (Capture-to-100% item 1) **drift-reconciled + C5-avoidance test
   added + signed off** (Opus, slot-3). Grep-verified against MTDS: the handler was already shipped
   `market-tick-data-service@2854c0a6` (2026-06-24) as a fully implemented per-market capture path — 674-line
