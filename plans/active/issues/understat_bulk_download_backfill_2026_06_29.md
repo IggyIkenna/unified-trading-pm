@@ -282,6 +282,20 @@ instrument_type = `""` (blank) per §9.1.
   next image rebuild after UTL promotes; the live manifest self-heals (dups collapse) once that lands — verify then run
   the one-off normalization. NEXT: build the bulk writer, operator-gate the backfill run (`dont save before confirming`),
   re-evaluate the `understat-vm-xg-complete` gate.
+- 2026-07-06 (slot-12, `data_engineering` — gate re-evaluation, task
+  `understat_local_backfill_completion-005`): the shipped verify (`/tmp/verify_understat_gate.py`) against the LIVE
+  consolidated manifest (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`,
+  5.28M rows, 611,728 understat) shows the full-history backfill has NOT reached completion in this era. Big-5 XG
+  captured=4,432 / empty=19,764 / **`expected_unattempted`=315** / attempted_failed=0; big-5 XG_SHOTS
+  captured=**1,961** (44% of XG) / empty=7,580 / **`attempted_failed`=384** (all `HTTP_NOT_FOUND`, attempted_at
+  2026-06-23 → 2026-06-29) / **`expected_unattempted`=13,811**. Hollow-shots ratio 67-73% per league (EPL 69.8%,
+  LA_LIGA 73.0%, BUNDESLIGA 67.5%, SERIE_A 69.6%, LIGUE_1 71.2%); latest captured dates: XG 2023-03-11, XG_SHOTS
+  2024-12-21. No active backfill process, no `/tmp/understat_backfill.log`. Gate cannot be flipped — DoD (`0
+  attempted_failed / 0 expected_unattempted / XG_SHOTS ≈ XG`) is NOT met. Task 005 marked BLOCKED-PREREQUISITES in
+  `plans/active/understat_local_backfill_completion_2026_07_06.md`; the ~2.4 h ETA run below appears to have been
+  interrupted (matches the plan preface's "~700+ dates 2014→2016" hand-off note). NEXT (operator): confirm + remove
+  any circular-prereq on `understat-vm-xg-complete` from tasks 001-004 in `backlog.yaml`, `POST /api/backlog/regen`,
+  then task 001 re-runs the resume-aware driver to completion.
 - 2026-07-06 (bulk writer + backfill run — operator go "build the writer and save the data" + "also fix XG capture now"):
   A small validation write (2023-03-11) — made possible ONLY because the lookup_contract fix made schema validation
   actually RUN — surfaced **three more pre-existing bugs** (all previously masked by the skipped validation), fixed +

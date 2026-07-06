@@ -93,9 +93,24 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
   `codex/05-infrastructure/manifest-consolidator-ssot.md`.
 - [ ] [DATA] P1. One-off manifest normalization (issue doc §8) — clean any residual dup pollution + the stale test rows,
   **only AFTER** the §9.2b consolidator is confirmed deployed (normalizing against the old consolidator re-duplicates).
-- [ ] [VERIFY] P0. **Re-evaluate the `understat-vm-xg-complete` gate** against the now-captured manifest; flip it green
-  ONLY on real captured shots (not hollow). Then the **6 parked sports tasks** unblock (this is the whole point). SSOT:
-  the issue doc + `agent-orchestrator` backlog gating (`prereqs.completed_tasks`).
+- [ ] [VERIFY] P0. **BLOCKED-PREREQUISITES (2026-07-06, slot-12).** Re-evaluate the `understat-vm-xg-complete` gate
+  against the now-captured manifest; flip it green ONLY on real captured shots (not hollow). Then the **6 parked sports
+  tasks** unblock (this is the whole point). SSOT: the issue doc + `agent-orchestrator` backlog gating
+  (`prereqs.completed_tasks`). **BLOCKED**: task 005 was dispatched to slot-12 at Tier 1 Priority 10 before tasks
+  001-004 completed (all four still `queued` with `prereqs: null` — the plan-derived task order was not enforced by
+  `prereqs.completed_tasks`). Manifest verification (via `/tmp/verify_understat_gate.py` against
+  `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, 5,277,543 total rows,
+  611,728 understat) shows the backfill has NOT been driven to completion — **DoD NOT MET**: big-5 XG_SHOTS captured =
+  1,961 vs XG = 4,432 (only 44% shots-coverage), **384 XG_SHOTS `attempted_failed`** (all `HTTP_NOT_FOUND`, attempted_at
+  2026-06-23 → 2026-06-29), **13,811 XG_SHOTS `expected_unattempted`**, **315 XG `expected_unattempted`**, latest
+  captured XG = 2023-03-11, latest XG_SHOTS = 2024-12-21. Flipping the gate now would flip on hollow shots (the explicit
+  "ONLY on real captured shots" prohibition). **Un-block sequence (operator action)**: (a) tasks 001-004 have a
+  circular-prereq risk on `understat-vm-xg-complete` (they must not gate on the gate they exist to flip) — verify + fix
+  the prereq in `backlog.yaml` if present, then `POST /api/backlog/regen`; (b) task 001 dispatches, the resume-aware
+  driver picks up the ~2016 hand-off (see 2026-07-06 progress-log entry in issue doc §Progress Log for the ~2.4 h ETA
+  interrupted local run), drives to `ALL DATES CAPTURED (0 attempted_failed)`; (c) task 002 re-verifies via the same
+  `/tmp/verify_understat_gate.py`; (d) tasks 003 (consolidator §9.2b confirmation) + 004 (one-off normalization)
+  complete; (e) task 005 re-dispatches, the manifest now shows DoD met, gate flips green.
 - [ ] [DOC] P1. Update the issue doc Progress Log with the final captured totals + the gate flip; then run the plan
   archival ritual (this plan + the issue doc) once the gate is green and DONE is verified.
 - [ ] [SCRIPT] P2. Delete `scripts/backfill/understat_bulk_backfill.py` per its lifecycle marker once the gate is green
@@ -122,3 +137,17 @@ shots; the 6 parked sports tasks are unblocked; issue-doc Progress Log updated; 
   ~700+ dates (2014→2016) before hand-off; the driver's resume logic + the verify/retry loop make a fresh worker run
   pick up cleanly and drive to verified completion. NEXT (worker): run → verify manifest → confirm §9.2b consolidator →
   flip the gate → unblock the 6 parked sports tasks → archive.
+- 2026-07-06 (slot-12, `data_engineering`): task 005 dispatched at Tier 1 Priority 10 while tasks 001-004 were still
+  `queued` with `prereqs: null` — the plan's task ordering was not being enforced by the dispatcher. Ran the shipped
+  verify against the LIVE consolidated manifest (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`,
+  5.28M rows, 611,728 understat rows via `/tmp/verify_understat_gate.py` — reads the SINGLE materialised parquet, NOT a
+  whole-corpus GCS walk). **DoD NOT MET**: big-5 XG_SHOTS captured 1,961 vs XG 4,432 (44% shots-coverage; 67-73% per
+  league); 384 XG_SHOTS `attempted_failed` (all `HTTP_NOT_FOUND`, 2026-06-23 → 2026-06-29); 13,811 XG_SHOTS + 315 XG
+  `expected_unattempted`; latest XG date 2023-03-11, latest XG_SHOTS 2024-12-21; no active backfill process
+  (`ps -ef | grep understat_bulk` empty; `/tmp/understat_backfill.log` absent). Escalated via /blocked (BLK-26536ba3);
+  main agent ruled DO NOT expand scope, DO NOT flip the gate — the assessment is correct. Marked task 005
+  BLOCKED-PREREQUISITES with the exact numbers + un-block sequence in the checkbox note. **OPERATOR ACTION REQUIRED**:
+  verify + remove any circular-prereq (`understat-vm-xg-complete`) from tasks 001-004 in `backlog.yaml`, then
+  `POST /api/backlog/regen` so 001 dispatches. Task 001 will re-launch the resume-aware local driver
+  (`instruments-service/scripts/backfill/understat_bulk_backfill.py`, per plan §2 runbook); it picks up cleanly from
+  the ~2016 hand-off and drives to `0 attempted_failed`.
