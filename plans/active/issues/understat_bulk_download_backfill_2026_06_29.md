@@ -8,7 +8,7 @@ status: open
 nature: design
 asset_group: [cross-cutting]
 stage: [data, meta]
-repos: [instruments-service, unified-api-contracts, deployment-service]
+repos: [instruments-service, unified-api-contracts, unified-trading-library, deployment-api]
 scope: [engineer]
 tags: [sports, understat, xg, backfill, manifest]
 related: [sports_p2_history_reference_and_odds_2015_to_present_2026_06_27, sports_p1_golden_window_reference_sources_2026_06_27]
@@ -98,9 +98,20 @@ aggregated from all of that date's matches in that league) — exactly as the se
 
 ## 5. Manifest correctness — the falsely-empty XG_SHOTS rows
 
-- Today the manifest has ~283k `XG_SHOTS` rows in `empty_confirmed` / `expected_unattempted` and `captured=0`.
-  These are WRONG (shots exist). A naive idempotent re-run **skips** them (log: "skipping date — all 5
-  expected leagues per-league captured"), so it would NOT backfill.
+- Live manifest (verified 2026-06-30 via `read_availability_index`): `XG_SHOTS` = 288,284 `empty_confirmed` +
+  13,781 `expected_unattempted` + 392 `attempted_failed` + **9 `captured`** (the 9 are the 2024-12-14/21 validation
+  writes; the doc previously said `captured=0`). Almost all the `empty_confirmed` is FALSE — shots exist upstream.
+- **PROOF the emptiness is false (understat, per `(league, date)`):** 4,436 league-dates have real XG captured but
+  only **9** have XG_SHOTS captured; on **≥1,675** of the *exact same* XG-captured dates XG_SHOTS is recorded
+  `empty_confirmed` — impossible, since every match's xG total is built from shot events. The dead `/getMatch`
+  endpoint's `[]` was absorbed as honest-absence. A naive idempotent re-run **skips** these (log: "skipping date —
+  all 5 expected leagues per-league captured"), so it would NOT backfill.
+- **Coverage-tab blind spot (new finding, 2026-06-30):** the deployment-ui Data Status tab NEVER shows XG_SHOTS —
+  it is absent from `SPORTS_DATA_TYPE_META` (`deployment-api/.../data_status/sports_helpers.py`), so the build loop
+  filters it out. And for SPORTS the tab's headline is *attempt* coverage (`(captured+empty+failed)/expected`), which
+  counts the false-empties as successful attempts → the broken type reads green via its healthy sibling (XG at 99% is
+  genuine) while being invisible. So the tab did not — and structurally cannot — surface this gap. Register XG_SHOTS
+  in `SPORTS_DATA_TYPE_META` so coverage tracking sees it.
 - The bulk writer must therefore **force-overwrite** those rows to `captured` (last-write-wins) — i.e. write
   with the force/overwrite path, not the skip-if-present path.
 - **OPEN Q2:** confirm the consolidator's last-write-wins dedup will promote `empty_confirmed → captured`
@@ -144,17 +155,24 @@ aggregated from all of that date's matches in that league) — exactly as the se
 - [ ] [CODE] P0. **UTL manifest NULL-vs-`''` dedup bug (§9.2)** — captured rows write optional dedup-dims
   (`timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type`) as `''`; seeds
   use `NULL`; consolidator treats `NULL ≠ ''` → captured never supersedes seed across shards → duplicates. System-wide
-  (XG 610 / XG_SHOTS 2,235 dup groups). Fix `record_captured` to write NULL for unset optional dims, OR consolidator to
-  treat `NULL == ''`. OPERATOR DECISION PENDING (writer vs consolidator).
+  (XG 610 / XG_SHOTS 2,235 dup groups). **DECIDED (operator, 2026-07-06): fix BOTH** — `record_captured` write `NULL`
+  for unset optional dims (root cause, forward-fix) AND `manifest_consolidator` treat `NULL == ''` in the dedup key
+  (resolves the pre-existing `''` rows system-wide without a historical migration). Ship together, as one change.
 - [ ] [CODE] P1. **asset_group blank on captured (§9.3)** — `record_captured` omits `venue` → `_resolve_asset_group`
   Rule 1 (no venue → non-market-data → drop label) blanks `asset_group`. Pass `venue="understat"` so the kwarg
   `"sports"` stamps. (Existing XG captured rows show `sports` — mechanism not fully reconciled; confirm before fixing.)
 - [ ] [DATA] P1. One-off manifest normalization — clean the pre-existing dup pollution (incl. seed-vs-seed
-  `empty_confirmed`+`expected_unattempted` dups) + the 5 stale `instrument_type=shot` test rows on 2024-12-14. §9.
+  `empty_confirmed`+`expected_unattempted` dups) + the 5 stale `instrument_type=shot` test rows on 2024-12-14.
+  **Sequenced AFTER the §9.2 writer+consolidator fix ships** — normalizing first would just re-duplicate against the
+  still-buggy comparison. §9.
 - [ ] [SCRIPT] P1. Build the bulk writer reusing `_sports_ref_sink_for` + `record_captured` (no path/manifest reshape);
-  group season → per (date, league). §4/§6. (Blocked on §9.2.)
+  group season → per (date, league). §4/§6. (Blocked on §9.2 — fix now decided, unblocks once it ships.)
 - [ ] [DATA] P0. Full backfill run (operator-gated locus) → all 5 leagues 2014→present, XG + XG_SHOTS captured;
-  manifest `pending_fetch=0`, `attempted_failed=0`, `captured>0` for native leagues. §6. (Blocked on §9.2.)
+  manifest `pending_fetch=0`, `attempted_failed=0`, `captured>0` for native leagues. §6. (Blocked on §9.2 — fix now
+  decided, unblocks once it ships.)
+- [ ] [CODE] P1. Register `XG_SHOTS` in `SPORTS_DATA_TYPE_META`
+  (`deployment-api/deployment_api/services/data_status/sports_helpers.py`) so the Data Status tab renders an XG_SHOTS
+  coverage row (currently filtered out → the broken type is invisible in coverage tracking). §5.
 - [ ] [VERIFY] P1. After backfill: re-evaluate the `understat-vm-xg-complete` gate against the manifest; flip only on
   real captured shots (not hollow). Then the 6 parked sports tasks unblock.
 
@@ -175,9 +193,16 @@ rows still duplicated. Root cause: `record_captured` (real pipeline) serializes 
 while seed rows (`record_expected_empty`/`record_empty`) leave them `NULL`. The consolidator substitutes NULL→sentinel
 (so NULL==NULL) but keeps `''` distinct → `NULL ≠ ''` → a captured row in a different shard than its seed never
 supersedes it. Confirmed on the live manifest: **XG = 610 dup (date,league) groups, XG_SHOTS = 2,235** (incl.
-seed-vs-seed `empty_confirmed`+`expected_unattempted` dups). NOT understat-specific — affects every data_type. Fix
-belongs in UTL `manifest_writer` (write NULL for unset optional dims, matching seeds) or `manifest_consolidator` (treat
-`NULL == ''` in the dedup key). Cross-cutting → operator decision pending.
+seed-vs-seed `empty_confirmed`+`expected_unattempted` dups). NOT understat-specific — affects every data_type.
+
+**DECIDED (operator, 2026-07-06): fix BOTH layers, not one or the other.** (1) `manifest_writer`'s `record_captured`
+must emit `NULL` (not `''`) for unset optional dedup dims going forward — root-cause correctness, matches seed
+semantics. (2) `manifest_consolidator` must ALSO treat `NULL == ''` in the dedup key — not redundant belt-and-suspenders,
+it's load-bearing: it's what correctly resolves the millions of pre-existing `''` rows already written across every
+asset_group (system-wide, all data_types) without a live migration of historical manifest data. (3) THEN — and only
+after both land — run the one-off normalization pass (§8) to clean up the duplicate rows the bug already created (610
+XG / 2,235 XG_SHOTS dup groups + the 5 stale test rows); normalizing before the consolidator fix ships would just
+re-duplicate against the still-buggy comparison.
 
 **9.3 asset_group blank on captured.** `record_captured` does not pass `venue`; `_resolve_asset_group`
 (`_writer_ingest.py`) Rule 1 treats a no-venue row as non-market-data and drops the provided `asset_group="sports"` →
@@ -203,3 +228,21 @@ instrument_type = `""` (blank) per §9.1.
   NOT promote captured over seed → gate won't clear until §9.2 is fixed. **Operator decision pending: fix manifest
   writer vs consolidator for the NULL-vs-`''` dedup.** Left 5 stale `instrument_type=shot` test rows on 2024-12-14 +
   fresh captured rows on 2024-12-21 (need cleanup). No code shipped; root working tree restored clean.
+- 2026-07-06: **§9.2 DECIDED — fix BOTH layers.** Operator ruled against picking just one side: `manifest_writer`'s
+  `record_captured` will emit `NULL` (not `''`) for unset optional dedup dims going forward (root-cause correctness,
+  matches seed semantics), AND `manifest_consolidator` will also treat `NULL == ''` in the dedup key — the consolidator
+  side is load-bearing, not redundant, since it's what resolves the millions of pre-existing `''` rows already written
+  system-wide (every asset_group, not just understat) without needing a live migration of historical manifest data.
+  Ship both as one change. The one-off normalization pass (§8) is sequenced strictly AFTER both land — normalizing
+  against the still-buggy comparison would just recreate the duplicates. Unblocks the bulk writer build + full backfill
+  run once shipped.
+- 2026-06-30 (manifest-grounded verification): pulled the live sports manifest (`read_availability_index`) to
+  reconcile the deployment-ui Data Status tab (operator saw "XG 99%", "SPORTS 85.5% captured / 100% attempted / 77%
+  empty"). Findings: (a) the tab is faithful but for SPORTS scores *attempt* coverage — empty_confirmed counts as a
+  successful attempt, so false-empties read as coverage; (b) XG (99%) is genuinely captured (validated byte-exact
+  earlier) — its empties are legit non-match days; (c) XG_SHOTS is the broken case AND is invisible in the tab (absent
+  from `SPORTS_DATA_TYPE_META`). Hard proof of false-emptiness: 4,436 XG-captured league-dates vs only 9 XG_SHOTS
+  captured; ≥1,675 of the identical XG-captured dates record XG_SHOTS `empty_confirmed`. Updated §5 with live counts +
+  the proof, added a todo to register XG_SHOTS in `SPORTS_DATA_TYPE_META`, and corrected the `repos:` frontmatter
+  (added `unified-trading-library` for §9.2 + `deployment-api` for the visibility fix; dropped the untouched
+  `deployment-service`). No code shipped.

@@ -62,10 +62,27 @@ locked_since: 2026-05-21
       `gh run list --workflow ldr-to-main-promote-fleet.yml     --json event,conclusion` shows `schedule`/`success`).
       **Stopgap (15-min `workflow_dispatch` loop) ran 08:15–09:00, auto-detected the heal, and stopped** — no longer
       needed; fleet auto-drain is self-sustaining.
-- [ ] [CICD] P1. harden the QG dep-clone (the recurring root). The phantom-version → stale-deps fallback is what made UTL
-      flake; it will re-trip the overnight Dead-Man-Switch and can re-stale a tier-0 ci_status → re-block the fleet.
-      Durable fix = make the cross-repo dep-clone resolution deterministic (don't fall through to stale deps; fail
-      loud).
+- [x] [CICD] P1. "harden the QG dep-clone" — INVESTIGATED 2026-07-03; the stated premise does NOT hold (the
+      "phantom-version → stale-deps" label was imprecise). Evidence: (a) the GHA `quality-gates-v2` dep-clone is NOT the
+      flake — `clone_repo()` (python-quality-gates-v2.yml:359) shallow-clones each sibling at LDR HEAD tagless, but
+      setuptools-scm does NOT `LookupError` on a tagless tree; it falls back to `0.1.devN+g<sha>` and the editable
+      install SUCCEEDS every run (green UTL run 28349073534: `+ unified-api-contracts==0.1.dev1+ga10374f9f`,
+      `+ unified-trading-library==0.1.dev2+gd98e65069`). The original UTL failure self-cleared on a same-commit rerun →
+      a genuine transient, not a structural defect. (b) The real D13 `LookupError` surface (Cloud Build wheel + Docker
+      image) is ALREADY FIXED fleet-wide and GREEN: 22 dynamic+`source="vcs"` repos carry either a `fetch-tags` step OR
+      an inline authenticated `git fetch --unshallow --tags` in `extract-version` + a `0.0.0.dev0` PEP-440 sentinel
+      (never `LookupError`); recent Cloud Builds for instruments/MTDS/execution = SUCCESS. → No structural dep-clone
+      flake to harden; the recurring D13 root is mitigated. Recurrence-prevention shipped as P3.
+- [x] [CICD] P3. D13 version-resolution regression gate SHIPPED — PM@f838b76c5 (PR #796). New per-repo QG
+      `scripts/quality_gates/check_scm_version_resolution.py` (wired into `base-service.sh`; resolves the repo via
+      git-toplevel since base-service.sh is sourced before quality-gates.sh sets REPO_ROOT) FAILS LOUD if a
+      dynamic+`source="vcs"` repo has a `python -m build` cloudbuild step OR an editable `pip install -e .` Dockerfile
+      WITHOUT tag/pretend-version resolution (`--tags` / `fetch-tags` / `SETUPTOOLS_SCM_PRETEND_VERSION` / `0.0.0.dev0`
+      sentinel / `FROM unified-trading-library` base). Zero-FP verified across all 25 repos (both `python -m build`
+      forms; Surface-2 base-image-inheritance-aware); `SCM_VERSION_GATE_WARN=1` escape valve. The surgical rollout
+      appliers (`patch_cloudbuild_fetch_tags.py` + `patch_dockerfile_scm_version.py`) committed as tracked tooling. This
+      is the only durable recurrence-prevention given there is no cloudbuild/Dockerfile template SSOT. Real-CI
+      confirmation pending (watch a repo's quality-gates-v2 for the `scm-version-gate` line).
 - [x] **P2 — workflow-YAML gate on PM `.github/` workflows (DONE — PM@94391e2e7).**
       `scripts/quality_gates/     check_workflow_yaml_valid.py` (wired into `scripts/quality-gates.sh` after the
       workflow-template-parity check) FAILS QG on any unparseable `.github/workflows/*.yml` (`yaml.safe_load`) — the

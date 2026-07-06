@@ -385,6 +385,28 @@ if [[ -f "$_FLOOR_GATE" && -f "$REPO_ROOT/uv.lock" && -x "$REPO_ROOT/.venv/bin/p
     fi
 fi
 
+# ── D13 hatch-vcs version-resolution gate — a dynamic-versioned (source="vcs") repo whose wheel/image
+# build runs setuptools-scm on a SHALLOW/TAGLESS tree MUST resolve the version (a --tags fetch /
+# fetch-tags step / 0.0.0.dev0 sentinel in cloudbuild, or SETUPTOOLS_SCM_PRETEND_VERSION / a
+# `FROM unified-trading-library` base in the Dockerfile) or hatch-vcs LookupError's → red build →
+# blocked promote → fleet lag. Recurrence-prevention for the WS-L/D13 regression (there is NO
+# cloudbuild/Dockerfile template SSOT). Stdlib-only → runs with system python3. BLOCKS by default
+# (fleet proven clean 2026-06-30); SCM_VERSION_GATE_WARN=1 downgrades to warn (the gate self-honours
+# the env). SSOT: plans/active/issues/fleet_promote_schedule_yaml_break_2026_06_29.md § P3.
+_SCM_VER_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality_gates/check_scm_version_resolution.py"
+if [[ -f "$_SCM_VER_GATE" ]]; then
+    # base-service.sh is sourced (quality-gates.sh:361) BEFORE that script sets the per-repo REPO_ROOT
+    # (:364), and at source-time REPO_ROOT may be a polluted env value (the workspace root, not the repo).
+    # This gate is top-level, so resolve the repo from the git working tree (cwd) — the reliable
+    # source of the ACTUAL repo — and only fall back to REPO_ROOT/cwd outside a git tree.
+    _scm_repo="$(git rev-parse --show-toplevel 2>/dev/null || echo "${REPO_ROOT:-$(pwd)}")"
+    _scm_py="$_scm_repo/.venv/bin/python"; [[ -x "$_scm_py" ]] || _scm_py="$(command -v python3)"
+    if ! "$_scm_py" "$_SCM_VER_GATE" --repo "$_scm_repo"; then
+        log_fail "scm-version gate: hatch-vcs version resolution missing on a build surface (see above; SCM_VERSION_GATE_WARN=1 to bypass)"
+        exit 1
+    fi
+fi
+
 # Git-aware: only check staged files when committing
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null | grep '\.py$' | tr '\n' ' ' || :)
 # Guard: only include tests/ if the directory exists (Docker images exclude it via .dockerignore)

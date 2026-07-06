@@ -61,6 +61,12 @@ source:
 > (`assert_defi_catalog_fresh`; sports odds only enumerate against catalogued fixtures). So the order is always:
 > **correct + certify the denominator (cefi-first) → then complete capture.**
 
+> **🟡 VM FLEET IN FLIGHT (2026-07-06) — TradFi v9 migration.** Smoke (2025) VALIDATED memory-bounded (6.7 GB / 64 GB,
+> steady) → fanned out **2020-2024** (6 VMs total, `canonical-migration-tradfi-*`, all
+> `e2-standard-16 · SPOT · workers 24 · MTDS 9ecd1e2`); **2026 held for last** (live CME-OHLCV capture VMs are writing
+> 2026). Launcher OOM-fix: **deployment-service@77cfcda**. 06-29 OOM root cause: `--workers 64` pool-thrash + full-range
+> accumulation on e2-standard-8. See Stage 1 + the Progress Log.
+
 ---
 
 ## ✅ Decision Gates — clear these first (only the operator can)
@@ -95,10 +101,18 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 ## Stage 0 — Unblock (decisions + plan consolidation)
 
 - [x] [DESIGN] P0. **D1–D3 decided** (see Decision Gates) — **hard gate on Stage 2** (all three decided 2026-07-06)
-- [ ] [ADMIN] P1. Plan consolidation (from `issues/instruments_service_plan_reconciliation_2026_06_29.md` §F.1): archive
-      `mvp_catalogue_finalization_v10` (done) · flip `instruments_catalogue_incremental_rollup` → `completed` (done,
-      never flipped) · merge `path_to_100pct` → `data_completion` · fold cefi items of `instruments_mtds_subset` →
-      foundation. _(Do this before engineering so you don't work a plan you're about to retire.)_
+- [ ] [ADMIN] P1. Plan consolidation (from `issues/instruments_service_plan_reconciliation_2026_06_29.md` §F.1) —
+      **REASSESSED 2026-07-06**:
+  - [x] **merge `path_to_100pct` → `data_completion` = ✅ ALREADY DONE** (superseded + archived 2026-06-30;
+        `data_completion` § "Folded-in from `path_to_100pct`"; only the DEDUP residual remains = the Stage-5 item).
+  - [ ] **flip `instruments_catalogue_incremental_rollup` → completed = ⛔ DO NOT FLIP** — its lone open item is a LIVE
+        issue, not moot: the operator-declined tradfi catalogue-scheduler band-aid **re-triggered 2026-07-03** (tradfi
+        `prod/catalog.parquet` stale since 2026-06-29, daily `lifecycle_catalogue_scheduler` runs killed at 3600s
+        timeout). Flipping would bury it → operator decision needed (re-enable band-aid vs. ship Phase-3 incremental).
+  - [ ] **archive `mvp_catalogue_finalization_v10`** (0-open, done) + **fold `instruments_mtds_subset` cefi items →
+        foundation** (60 open, ⚖️ REVIEW) — both `locked_by: live-defi-rollout` → **operator unlock/sign-off REQUIRED**
+        (HARD RULE: locked-plan archival is never-autonomous; §F.4 ⚖️). _(Do before engineering so you don't work a plan
+        you're about to retire.)_
 
 ## Stage 1 — Close the canonical manifest baseline
 
@@ -107,7 +121,11 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 - [ ] [DATA] P0. TradFi v9 G4 `--apply` — per **D3**: `--workers 24` (fallback 16) · per-year chunks 2020→2026
       (`--start-date/--end-date`) · e2-standard-16 · idempotent restart → `migration_verification_orphan_safety` V6
       closes; **all 5 AGs canonical**. Then `rebuild_tradfi_manifest.py` (E5) + IS enumerate-seed + IS catalogue for
-      tradfi.
+      tradfi. **🟡 IN FLIGHT (2026-07-06): 2025 smoke VALIDATED (memory 6.7 GB / 64 GB steady, 172k candles migrating) →
+      FANNED OUT 2020-2024 (6 VMs total: `canonical-migration-tradfi-*`, e2-standard-16 · SPOT · workers 24 · MTDS
+      9ecd1e2; launcher fix deployment-service@77cfcda). 2026 held last (live CME-OHLCV capture VMs writing 2026).
+      Post-apply: orphan-sweep E=0 + idempotent re-run for transient-503 stragglers, then `rebuild_tradfi_manifest` + IS
+      enumerate-seed + IS catalogue.**
 - [ ] [DATA] P1. Operator-gated legacy-twin **deletes** (defi / tradfi / pred; cefi + sports already done) in a quiet
       window
 
@@ -223,6 +241,36 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **TradFi smoke VALIDATED → fanned out 2020-2024.** The 2025 smoke proved the D3 fix: memory flat at
+  **6.7 GB / 64 GB** for 18+ min while migrating candles (172k/577k, steady ~11k/min) — vs. the 06-29 climb-to-OOM at
+  workers 64. Setup ran in ~1 min (`uv` install). Fanned out **2020, 2021, 2022, 2023, 2024** as 5 concurrent per-year
+  VMs (disjoint day-partitions; all e2-standard-16 · SPOT · workers 24 · MTDS 9ecd1e2 pinned). **2026 held for last**
+  (live `tradfi-bf-cme-ohlcv-1m-*` capture VMs are writing 2026 processed_candles). Noted: a transient GCS 503 burst
+  ("internal error, retry") left ~7 objects unmoved on 2025-02-03/04 — not memory / not our bug, self-limited; recovered
+  by the migrator's idempotency + the mandatory post-apply orphan-sweep (V6 E=0). Fleet watchdog armed on `run.log` (the
+  serial console is blind to the backgrounded migrator — lesson). **Next:** per-year completion (VMs self-stop) → 2026 →
+  orphan-sweep + straggler re-run → `rebuild_tradfi_manifest` + IS enumerate-seed + IS catalogue.
+- **2026-07-06** — **Stage-0 consolidation REASSESSED (the one-liner was partly stale).** Investigated §F.1 before
+  executing: (1) **`path_to_100pct` → `data_completion` merge = already DONE** (superseded + archived 2026-06-30;
+  `data_completion` carries the "Folded-in from `path_to_100pct`" section; DEDUP residual is already a Stage-5 item — no
+  orphaned work). (2) **`instruments_catalogue_incremental_rollup` → completed = must NOT flip** — its lone open item is
+  a LIVE issue: the operator-declined tradfi catalogue-scheduler band-aid **re-triggered 2026-07-03** (tradfi
+  `prod/catalog.parquet` stale since 2026-06-29; daily `lifecycle_catalogue_scheduler` runs killed at the 3600s
+  timeout). Flipping would bury it. (3+4) **archive `mvp_catalogue_finalization_v10`** (0-open) + **fold
+  `instruments_mtds_subset` cefi items → foundation** (60 open, ⚖️ REVIEW) are both `locked_by: live-defi-rollout` →
+  **operator unlock/sign-off required** (HARD RULE: locked-plan archival never-autonomous; §F.4). No plan mutated
+  pending sign-off; surfaced to operator.
+- **2026-07-06** — **TradFi v9 migration RESTARTED (D3 fix) — 2025 smoke launched.** The 2026-06-29 full-range run
+  OOM-killed on e2-standard-8 at `--workers 64`; baked the D3 fix into the launcher (`launch-canonical-migration-vm.sh`:
+  `MACHINE_TYPE` override, SPOT default + `ON_DEMAND=true` opt-out, tradfi `--workers` default 24) —
+  **deployment-service@77cfcda** (QG-green + quickmerge). Verified the VM runs from GCS **code tarballs** (no Docker)
+  and pinned `MTDS_TARBALL_SHA=9ecd1e2` (today's build; tradfi migrator byte-identical to LDR HEAD) so the smoke proxies
+  the fan-out. Launched the **2025 smoke** `canonical-migration-tradfi-20260706-170108` (e2-standard-16 · SPOT · workers
+  24 · `--apply`), verified STARTED (RUNNING <60s), armed a no-fire-and-forget watchdog. Migrator date-shards its walk
+  (`_iter_days`) so a 1-year range bounds the up-front object-list accumulation (the OOM cause). **Next:** watchdog
+  verdict ~T+16min → if memory-bounded + objects migrating, fan out 2020-2024 + 2026 (2026 last, after the live
+  CME-OHLCV capture VMs). NOT blocked on Stage 0 (its leftover is doc-consolidation on cefi/catalogue plans — running in
+  parallel).
 - **2026-07-06** — **DERIBIT-COMBO `future_combo` RESOLVED (Ikenna).** Ikenna confirmed `future_combo` is **NOT in MVP**
   — Deribit uses `options_chain` (OPTION) only. DERIBIT-COMBO stays `{OPTION}` in `INSTRUMENT_TYPES_BY_VENUE`; the D2a
   provisional is now **final, with no further code change**. Cleared the D2a Decision-Gates note, the Blocked/waiting
