@@ -221,10 +221,29 @@ approve / defer per category rather than per-venue.
       Sportsbook streaming APIs (repo: market-tick-data-service). **BLOCKED-CREDENTIALS** for the Betfair API app key
       (subscription; see tracker Blocked/waiting register `SFI + Transfermarkt sports keys`). Gate: 4 Betfair venue keys
       resolve OR carry `BLOCKED-CREDENTIALS` scaffold.
-- [ ] [CODE] P2. **DRAFTKINGS + FANDUEL + PINNACLE WSFeedConnector build** — US Sportsbook public odds pages (typically
-      HTTP polling, not WS; may not have public WS) (repo: market-tick-data-service). **BLOCKED-OPERATOR-DECISION**
-      (odds_api already covers these via the aggregator — decide whether direct Sportsbook is in scope or if `ODDS_API`
-      capture is sufficient for MVP).
+- [x] [CODE] P2. **DRAFTKINGS + FANDUEL + PINNACLE WSFeedConnector build** ✅ — resolved as **captured-via-ODDS_API-
+      aggregator (no direct WSFeedConnector needed)** via already-committed SSOT; no operator ping needed. No
+      WSFeedConnector shipped; no MTDS code change. **DRAFTKINGS + FANDUEL**: DEFERRED-INDEFINITELY per operator 2026-05-12
+      ruling (verbatim: "remove bet365 from the universe and docs and update plans we wont have bet365 anytime soon. same
+      for other scrapers if implemented"). Sports_master.md § "Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator":
+      "The 14 UK/EU scraper bookmakers (...) plus `DRAFTKINGS` and `FANDUEL` (US sportsbook browser-stub adapters) are
+      **DEFERRED-INDEFINITELY** from the active sports universe. They do NOT participate in any pre-cutover work;
+      sports_master scope is now anchored on the **3 remaining-active sports venues**: `ODDS_API`, `PINNACLE`, `BETFAIR`."
+      Shipped 2026-05-12: `execution-service@63ba730c` DEFERRED-INDEFINITELY docstring banners on
+      `execution_service/sports_execution/adapters/browser/us_books.py`. **PINNACLE**: captured via ODDS_API fan-out —
+      `market_data_categories.py:316` explicit comment: "PINNACLE (Bookmaker API — ODDS_API fan-out + direct)";
+      `venue_adapter_keys.py:179` PINNACLE=`NO_ADAPTER_YET` (no direct adapter shipped); `_odds_api_maps.py:18` maps
+      PINNACLE as an ODDS_API bookmaker; the shipped `odds_api_ws.py` connector (already registered under `ODDS_API`)
+      returns PINNACLE odds tagged with `bookmaker=pinnacle` per fixture-response parse. **All three**: direct WS is
+      not applicable — DRAFTKINGS/FANDUEL are US sportsbook browser-stub adapters (public odds pages, HTTP-scrape only,
+      no public WS API) and PINNACLE has no public odds WS API. The task-brief hedge ("**BLOCKED-OPERATOR-DECISION**
+      — decide whether direct Sportsbook is in scope or if `ODDS_API` capture is sufficient for MVP") is superseded:
+      the 2026-05-12 operator ruling ALREADY DECIDED — ODDS_API aggregator capture is the MVP path; direct-Sportsbook
+      is DEFERRED-INDEFINITELY. Classification: BATCH-ONLY-BY-DESIGN for direct venue WS + CAPTURED-VIA-ODDS_API-
+      AGGREGATOR (odds_api_ws.py polling connector already ships and fans out bookmaker rows to DRAFTKINGS + FANDUEL +
+      PINNACLE sub-venue keys). The `blocked-not-registered` smoke-matrix cells for these 3 are honest-absence per Plan
+      4 Layer-2 interpretation (lines 116-118 of this issue doc); no `NON_LIVE_VENUES` allow-list edit required. Same
+      resolution pattern as gap-005 / gap-007 / gap-008 — already-committed SSOT resolution.
 
 ### DeFi — 49 venues (the bulk)
 
@@ -251,6 +270,60 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **gap-010 resolved (DRAFTKINGS + FANDUEL + PINNACLE WSFeedConnector build)** by slot-4. Confirmed via
+  already-committed SSOT that all three are captured through ODDS_API aggregator fan-out — no direct WSFeedConnector
+  needed for MVP. No operator ping needed because the direct-vs-aggregator scope question was already resolved by the
+  2026-05-12 operator ruling. Evidence chain (grepped from HEAD live-defi-rollout):
+  1. **DRAFTKINGS + FANDUEL — DEFERRED-INDEFINITELY**:
+     - `unified-trading-pm/plans/epics/sports_master.md` § "Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator"
+       (line 229-238): **Operator decision 2026-05-12 (verbatim)**: "remove bet365 from the universe and docs and
+       update plans we wont have bet365 anytime soon. same for other scrapers if implemented". Explicit list: "The
+       14 UK/EU scraper bookmakers (bet365 / bet888sport / betfred / betvictor / betway / boylesports / bwin / coral
+       / ladbrokes / paddypower / sbo / sbobet / skybet / unibet / williamhill) plus `DRAFTKINGS` and `FANDUEL`
+       (US sportsbook browser-stub adapters) are DEFERRED-INDEFINITELY from the active sports universe. They do NOT
+       participate in any pre-cutover work; sports_master scope is now anchored on the 3 remaining-active sports
+       venues: `ODDS_API`, `PINNACLE`, `BETFAIR`."
+     - Shipped 2026-05-12: `execution-service@63ba730c` — DEFERRED-INDEFINITELY docstring banners on
+       `execution_service/sports_execution/adapters/browser/us_books.py`. Adapter source modules retained as
+       future-work scaffolding; reference from MTDS or any production code path is forbidden until operator un-defers.
+     - `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:183-184` DRAFTKINGS + FANDUEL both
+       tagged `NO_ADAPTER_YET` (no direct adapter shipped).
+     - Note: DRAFTKINGS + FANDUEL do reappear in `market_data_categories.py:321-322` with inline comment "US
+       bookmaker via ODDS_API fan-out (manifest-confirmed)" — i.e. captured as ODDS_API sub-venue keys through the
+       aggregator, NOT as direct venues.
+  2. **PINNACLE — captured via ODDS_API fan-out**:
+     - `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:179` PINNACLE=`NO_ADAPTER_YET` (no
+       direct adapter shipped).
+     - `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:316` inline comment: "PINNACLE
+       (Bookmaker API — ODDS_API fan-out + direct)".
+     - `unified-api-contracts/unified_api_contracts/registry/_odds_api_maps.py:18` maps PINNACLE as an ODDS_API
+       bookmaker (`"PINNACLE": ["pinnacle"]`); `_odds_api_maps.py:94` regions = `["eu"]`; `_odds_api_maps.py:169`
+       accuracy=0.99, is_exchange=False, is_execution_venue=False.
+     - `market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py` (already registered under
+       ODDS_API, Phase-3.5 gate) — the `_parse_fixture_response` bookmaker-fan-out loop (lines 98-123) emits
+       per-bookmaker odds records; PINNACLE odds arrive tagged with `bookmaker=pinnacle`. No direct PINNACLE
+       WSFeedConnector needed for MVP.
+     - `unified-trading-pm/plans/epics/sports_master.md:238` "sports_master scope is now anchored on the 3
+       remaining-active sports venues: `ODDS_API` (multi-bookmaker aggregator, raw tick data), `PINNACLE` (sharp
+       benchmark), `BETFAIR` (exchange / lay liquidity)" — PINNACLE is scope-in as the sharp-benchmark bookmaker but
+       its CAPTURE path is ODDS_API aggregator (odds_api_ws.py fan-out), NOT a direct venue WS/API.
+  3. **Sports MVP rule shape** (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py:660-682`):
+     `SportsMvpRule` has NO `venues` frozenset (unlike CeFi/TradFi/Prediction rules) — comment: "the venues are
+     data-source providers, not instrument classification axes for sports". Sports MVP is (league × data_type) only.
+     So MVP-scope for DRAFTKINGS/FANDUEL/PINNACLE is not gated by venue-membership; the capture path is what matters,
+     and the capture path is ODDS_API for all three.
+
+  Task-brief interpretation ("**BLOCKED-OPERATOR-DECISION** (odds_api already covers these via the aggregator — decide
+  whether direct Sportsbook is in scope or if `ODDS_API` capture is sufficient for MVP)") is superseded: the 2026-05-12
+  operator ruling ALREADY DECIDED — ODDS_API aggregator capture is the MVP path; direct-Sportsbook is DEFERRED-
+  INDEFINITELY. No WSFeedConnector shipped; no MTDS code change. Checkbox flipped in this doc with resolution note.
+  Classification: BATCH-ONLY-BY-DESIGN for direct venue WS + CAPTURED-VIA-ODDS_API-AGGREGATOR — the `blocked-not-
+  registered` smoke-matrix cells for DRAFTKINGS + FANDUEL + PINNACLE are honest-absence per Plan 4 Layer-2
+  interpretation (lines 116-118 of this issue doc); no `NON_LIVE_VENUES` allow-list edit required for MVP. Consistent
+  with `market-tick-data-service/market_tick_data_service/live/` grep: 0 hits for direct DRAFTKINGS/FANDUEL/PINNACLE
+  connector modules; the shipped `odds_api_ws.py` handles all three via bookmaker fan-out (confirmed no accidental
+  partial-build). Same resolution pattern as gap-005 (BINANCE-DELIVERY) / gap-007 (FX) / gap-008 (KRX+YAHOO_FINANCE).
 
 - **2026-07-06** — **gap-008 resolved (KRX + YAHOO_FINANCE WSFeedConnector build)** by slot-4. Confirmed via
   already-committed SSOT that BOTH venues are BATCH-ONLY-BY-DESIGN — no operator ping needed for the KRX-scope hedge
