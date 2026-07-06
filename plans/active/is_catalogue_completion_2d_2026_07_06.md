@@ -159,8 +159,29 @@ source:
 - [ ] [DATA] P2. **MVP tagging verify** — with MVP ON, data-status shows ~100% for captured MVP cells and does NOT count
       non-MVP cells in the MVP denominator (`mvp_scope_catalogue_tagging` verify). **PREREQ: B1.** Gate: MVP-view
       numbers correct on a spot slice.
-- [ ] [INFRA] P2. **Prediction catalogue bucket mismatch** — fix the prediction catalogue reading/writing the wrong
-      bucket (`instruments_mtds_subset` finding). Gate: prediction catalogue lands in the canonical bucket.
+- [x] ✅ [INFRA] P2. **Prediction catalogue bucket mismatch** — fix the prediction catalogue reading/writing the wrong
+      bucket (`instruments_mtds_subset` finding). Gate: prediction catalogue lands in the canonical bucket
+      (slot-6 opus/max 2026-07-06, deployment-service@33d53cf). Reconciled the stale
+      `instruments-store-prediction-central-element-323112` + `market-data-tick-prediction-central-element-323112`
+      literals in the two sibling schedulers (`instrument_catalogue_scheduler.tf` IAM read-grants for
+      `generate_instrument_catalogue.py`; `catalogue_regen_scheduler.tf` IAM read-grant for
+      `enumerate_envelope`/`availability`/`strategy_instruments`) to the SSOT canonical
+      `instruments-store-pred-prd-central-element-323112` + `market-data-tick-pred-prd-central-element-323112`
+      (per `unified-api-contracts/unified_api_contracts/config/cloud-providers.yaml` line 169: `instruments-store-prediction:
+      "instruments-store-pred-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"`; verified via UTL
+      `resolve_bucket_name(kind="instruments-store-prediction", cloud="gcp") →
+      instruments-store-pred-prd-central-element-323112`). Also updated the stale KNOWN-discrepancy
+      comment in `lifecycle_catalogue_scheduler.tf:40-44` to reflect the resolved state — this file's per-AG
+      map at line 72 has used the canonical `pred-prd` short-key since the 2026-06-11 fix and the sibling
+      files are now reconciled alongside. Primary writer (`build_instrument_catalogue.py` via
+      `lifecycle_catalogue_scheduler.tf`) unchanged — already writes to the canonical bucket (see B1 flip:
+      prediction 103.24MiB `prod/catalog.parquet` fresh 2026-07-06T01:02Z). Full `scripts/quality-gates.sh`
+      green in 93s; sentinel `.qg_last_passed_sha=adcff4a5904663f2e09cbad0623274ee98495fb8` written;
+      `check_strict_quickmerge.py` verified `no bypassed code commits in
+      adcff4a5904663f2e09cbad0623274ee98495fb8..33d53cf6d8223f15190ca804a2abe9103118e268`. Landed on
+      live-defi-rollout via `quickmerge.sh --agent --files
+      'terraform/gcp/instrument_catalogue_scheduler.tf terraform/gcp/catalogue_regen_scheduler.tf
+      terraform/gcp/lifecycle_catalogue_scheduler.tf'`. deployment-service@33d53cf.
 - [x] ✅ [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** (`reference_data/catalogue/catalogue_b…` legacy
       static path superseded by the lifecycle regen) — instruments-service@6138694 (slot-2 opus/max 2026-07-06). Deleted
       `instruments_service/reference_data/catalogue/{__init__.py,catalogue_builder.py}` (the CatalogueBuilder
@@ -199,6 +220,33 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **P2 prediction-catalogue-bucket-mismatch FLIPPED (slot-6 opus/max).** Reconciled the stale
+  `instruments-store-prediction-central-element-323112` + `market-data-tick-prediction-central-element-323112`
+  legacy-flat literals in the two sibling schedulers to the SSOT canonical
+  `instruments-store-pred-prd-central-element-323112` + `market-data-tick-pred-prd-central-element-323112`:
+  (a) `deployment-service/terraform/gcp/instrument_catalogue_scheduler.tf` — IAM read grants for the daily
+  `generate_instrument_catalogue.py` (UAC drilldown json/md) job at 02:00 UTC on all 5 asset_group
+  instruments-store buckets + market-data-tick buckets; (b) `deployment-service/terraform/gcp/catalogue_regen_scheduler.tf`
+  — IAM read grant for the daily `enumerate_envelope`/`availability`/`strategy_instruments` regen at 04:30 UTC
+  on all instruments-store buckets. Verified SSOT via UTL
+  `resolve_bucket_name(kind="instruments-store-prediction", cloud="gcp") →
+  instruments-store-pred-prd-central-element-323112` (cloud-providers.yaml line 169: `instruments-store-prediction:
+  "instruments-store-pred-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"`). Also updated the KNOWN-discrepancy
+  comment in `lifecycle_catalogue_scheduler.tf:40-44` to RESOLVED — this file's per-AG map (line 72) uses the
+  canonical `pred-prd` since the 2026-06-11 fix; sibling files now reconciled alongside. Primary writer
+  `build_instrument_catalogue.py` unchanged — already writes to canonical bucket (B1 flip 2026-07-06 evidence:
+  prediction 103.24MiB `prod/catalog.parquet` fresh 01:02Z). Full `scripts/quality-gates.sh` green in 93s;
+  sentinel `.qg_last_passed_sha=adcff4a5904663f2e09cbad0623274ee98495fb8` written; `check_strict_quickmerge.py`
+  clean (`no bypassed code commits in adcff4a5904663f2e09cbad0623274ee98495fb8..33d53cf6d8223f15190ca804a2abe9103118e268`).
+  Landed on live-defi-rollout via `quickmerge.sh --agent --files
+  'terraform/gcp/instrument_catalogue_scheduler.tf terraform/gcp/catalogue_regen_scheduler.tf
+  terraform/gcp/lifecycle_catalogue_scheduler.tf'`. deployment-service@33d53cf. **Source finding**
+  `instruments_mtds_subset_consistency_remediation_2026_06_17.md:1848-1851` is now satisfied for the
+  prediction-catalogue slice; MDPS-runtime IAM in
+  `terraform/services/market-data-processing-service/gcp/main.tf:224,229` (still on legacy `-prediction-` names)
+  is service-runtime scope, not catalogue-scope — out of this task's gate but noted for the wider
+  bucket_name_ssot decommission.
 
 - **2026-07-06** — **P3 UAC doc-pointer drift FLIPPED (slot-7 opus/max).** Rewrote
   `unified-api-contracts/docs/canonical-instrument-ids.md:183-185` Downstream Consumers bullet from the
