@@ -1,7 +1,9 @@
 ---
-doc_type: plan
-title: WSFeedConnector Phase-3.5 rollout gap — 73 unregistered venues account for the blocked-not-registered smoke-matrix cells
-summary:
+doc_type: issue
+title:
+  WSFeedConnector Phase-3.5 rollout gap — 73 unregistered venues account for the blocked-not-registered smoke-matrix
+  cells
+summary: |
   Per-venue WSFeedConnector registration audit surfaced by
   `foundation_gates_and_capture_to_100_2026_07_06` task 010. **Finding**: 0 built-but-unregistered venues (the C5
   handler-audit class of bug does NOT recur at the venue level); **73 genuinely-not-built venues** — Phase-3.5 rollout
@@ -9,7 +11,7 @@ summary:
   `blocked-not-registered` cell counts (cefi 104 · defi 1225 · sports 70 · tradfi 40). Filed as an ordered follow-up
   so each remaining venue is either wired to a WSFeedConnector (with a regression test) or classified
   `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` / `BATCH-ONLY-BY-DESIGN`.
-status: active
+status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -46,6 +48,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+resolved_by:
 ---
 
 # WSFeedConnector Phase-3.5 rollout gap — 73 unregistered venues
@@ -177,8 +180,8 @@ approve / defer per category rather than per-venue.
 
 ### DeFi — 49 venues (the bulk)
 
-- [x] [DESIGN] P0. **DeFi live-connector strategy call: chain-agnostic base OR per-(protocol × chain)?** ✅ —
-      **DECISION (Ikenna, 2026-07-06): Option B — per-(protocol×chain) registration.** Each canonical UAC venue key
+- [x] [DESIGN] P0. **DeFi live-connector strategy call: chain-agnostic base OR per-(protocol × chain)?** ✅ — **DECISION
+      (Ikenna, 2026-07-06): Option B — per-(protocol×chain) registration.** Each canonical UAC venue key
       (`PROTOCOL-CHAIN` form, e.g. `UNISWAP_V3-ETHEREUM`, `CURVE-ETHEREUM`, `AAVE_V3-ARBITRUM`) gets its own
       `register_ws_feed_connector` entry. Rationale: execution routing requires per-chain keys (Uniswap V3 exists on
       Ethereum/Arbitrum/Base/Optimism/Polygon simultaneously; chain-agnostic keys are ambiguous for gas, liquidity, and
@@ -201,11 +204,11 @@ approve / defer per category rather than per-venue.
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
-- **2026-07-06** — **Operator decision (gap-011)**: Ikenna confirmed **Option B — per-(protocol×chain)** via main
-  agent. Policy: each canonical UAC `PROTOCOL-CHAIN` venue key gets its own `register_ws_feed_connector` entry in
-  MTDS. Base classes with chain parameter OK for code reuse. Solana naming mismatches (orca/raydium/jito) and
-  curve/morpho renames are separate follow-on CODE tasks. Checkbox flipped; policy documented. CODE items below are
-  now unblocked on naming direction.
+- **2026-07-06** — **Operator decision (gap-011)**: Ikenna confirmed **Option B — per-(protocol×chain)** via main agent.
+  Policy: each canonical UAC `PROTOCOL-CHAIN` venue key gets its own `register_ws_feed_connector` entry in MTDS. Base
+  classes with chain parameter OK for code reuse. Solana naming mismatches (orca/raydium/jito) and curve/morpho renames
+  are separate follow-on CODE tasks. Checkbox flipped; policy documented. CODE items below are now unblocked on naming
+  direction.
 
 - **2026-07-06** — **Design analysis (task gap-011)** by slot-4. Researched the chain-agnostic vs per-(protocol×chain)
   question. Key findings:
@@ -226,7 +229,7 @@ approve / defer per category rather than per-venue.
   claims a chain it doesn't cover.
 
   **Option A — chain-agnostic (one venue key spans all chains)**:
-  - Pros: fewer registry keys; `curve` key resolves for all CURVE-* chains automatically.
+  - Pros: fewer registry keys; `curve` key resolves for all CURVE-\* chains automatically.
   - Cons: connectors must actually serve ALL chains simultaneously (Curve has per-chain REST endpoints:
     `/v1/getPools/all/optimism`, `/v1/getPools/all/avalanche`). Current connectors are Ethereum-only despite "resolving"
     for multi-chain — violates honest-absence principle. Hard to express in smoke matrix: `CURVE-OPTIMISM` shows
@@ -237,8 +240,8 @@ approve / defer per category rather than per-venue.
   - Cons: 46 separate factory registrations needed vs a smaller number of base classes.
   - Implementation: base classes with `chain` parameter are fine for code-reuse (e.g., `CurveWSFeedConnector(chain=...)`
     fetches the right endpoint); each chain gets its own `register_ws_feed_connector(venue="CURVE-OPTIMISM", ...)`.
-  - Existing connectors: `curve` → re-register as `CURVE-ETHEREUM`; `morpho` → `MORPHO-ETHEREUM`. Backward-compat:
-    add alias `curve` → `CURVE-ETHEREUM` in the registry if needed for existing test coverage.
+  - Existing connectors: `curve` → re-register as `CURVE-ETHEREUM`; `morpho` → `MORPHO-ETHEREUM`. Backward-compat: add
+    alias `curve` → `CURVE-ETHEREUM` in the registry if needed for existing test coverage.
 
   **Recommendation to Ikenna**: Option B (per-chain). Plus, regardless of Option A/B:
   1. Immediately rename Solana bare keys → canonical: `orca`→`ORCA-SOLANA`, `raydium`→`RAYDIUM-SOLANA`,
