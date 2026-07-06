@@ -247,6 +247,17 @@ urgent.
 
 ## Progress Log
 
+- 2026-07-06 — **`nature: issue` legalized + doc_type↔path consistency HARD-enforced (operator directive; closes the B3
+  "recurring authoring instinct" for good).** pm@1399d333e (quickmerge, QG exit 0; promote PR #793 v2-gated auto-merge).
+  NATURE gains `issue` (8 values) — three independent authors had reached for it against the enum, so the enum moved to
+  the authors. The enforcement half: `docspec.validate_frontmatter` now HARD-fails a declared `doc_type:` that
+  contradicts the path-derived type ("fix the field or move the doc"), so the plan-living-in-issues/ pattern is blocked
+  at every layer that calls docspec (prek staged-plans hook, PM QG corpus gate) — note the 3rd occurrence COMMITTED
+  despite the prek hook running this exact check, i.e. it was bypassed (`--no-verify` or uninstalled hook in that
+  clone); server-side QG remains the backstop that cannot be bypassed. Corpus sweep caught exactly 1 pre-existing
+  mismatch (defi_expected_unattempted_backlog_1m → `doc_type: issue`, the B3 residual placement nit — now closed);
+  prediction_universe doc restored to its author's original `nature: issue` as the exemplar. Schema SSOT §2/§4/§5
+  updated in lockstep; docspec tests 21 green; gate 1,299/0.
 - 2026-07-06 — **P3.4 COMPLETE — B1/B2/B6 executed (operator: "do all B1, B2 and B6"); plan is fully done.** Shipped
   pm@09cc91f48 (quickmerge, full QG exit 0 pre-commit; one index.lock race with the 5-min cron on first attempt, clean
   retry). B1: docspec gains the ELECTIVE requirement tier (`Req.E` — absent-is-fine, enum-validated when present;
