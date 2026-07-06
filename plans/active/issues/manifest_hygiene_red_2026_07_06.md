@@ -3,7 +3,7 @@ doc_type: issue
 title: "Manifest hygiene RED — 1 AG(s) with findings (2026_07_06)"
 created: 2026-07-06
 parent_epic: observability_master
-assigned_vm: vm-cross-cutting
+assigned_vm: planning
 source:
   - manifest_hygiene_daily.py
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
