@@ -830,3 +830,42 @@ writing data. Consolidator will merge these → INJURIES EU will decrease.
 (c) flip gate manually once INJURIES/TEAMS EU → 0.
 
 **Checkbox NOT flipped** — gate requires all 7 entities at EU=0. Operator escalation in progress.
+
+### 2026-07-06 — slot 2 (session 18 — Todo 9: coordinator progress analysis + gate-split BLK)
+
+**Coordinator PID 3837082 — ALIVE** (verified 14:23 UTC):
+- INJURIES: **COMPLETE** — 68 chunks done (12:32→13:19 UTC, ~47 min). All 68 chunks wrote per-VM shards to GCS.
+  `ManifestWriter` summary across 68 chunks: 38,717 new entries written covering full 2021-01-01→2026-07-06 range.
+  Key insight: `done_lines=0` in coordinator log is a FALSE NEGATIVE — the `grep -cE "DONE for date=|wrote [0-9]+
+  records|short-circuit"` pattern does NOT match "ManifestWriter: per-VM shard updated (N total entries, M new)".
+  Coordinator IS writing data (confirmed by chunk log inspection).
+- STANDINGS: at chunk 24/~104 at 14:23 UTC (started 13:19 UTC, ~2.75 min/chunk). ETA: ~80 chunks × 2.75 min ≈ 3.5h.
+- TEAMS: not started. ETA: ~8h after now (after STANDINGS).
+- Per-fixture entities (FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS): not started. 54s/fixture rate limit → ETA weeks.
+
+**IS index query (14:27 UTC, index 5,131,227 rows)**:
+
+| Data Type | captured | EC | AF | EU (pending) | Gate |
+|---|---|---|---|---|---|
+| FIXTURE_EVENTS | 11,587 | 154,745 | 11 | 49,070 | ❌ |
+| FIXTURE_LINEUPS | 13,321 | 150,103 | 31 | 51,777 | ❌ |
+| FIXTURE_STATS | 8,405 | 154,195 | 80 | 51,908 | ❌ |
+| PLAYER_STATS | 12,293 | 163,586 | 74 | 39,941 | ❌ |
+| INJURIES | 13,151 | 226,791 | 1,884 | 13,178 | ❌ |
+| STANDINGS | 114,313 | 242,163 | 1 | 8,996 | ❌ |
+| TEAMS | 104,317 | 0 | 20 | 194,331 | ❌ |
+
+EU unchanged from session 17 because consolidator hasn't merged INJURIES per-VM shards yet. After consolidation,
+INJURIES EU will become phantom (paired with captured/EC rows from coordinator write). After a dedup pass
+(same pattern as Todo 8), INJURIES EU → ~0.
+
+**done_lines=0 root cause fixed in analysis**: the grep pattern in `sports_chunked_backfill.sh` misses the
+actual ManifestWriter output. Coordinator IS making progress — confirmed via direct chunk log inspection.
+
+**Gate-split BLK filed (BLK-5e660d71)**: requesting operator/main-agent decision on:
+- **Rec A (split gate)**: flip Todo 9 when INJURIES+STANDINGS+TEAMS reach EU≈0 (ETA today after
+  consolidation+dedup), create new task for per-fixture entities with redesigned backfill
+- **B (wait full)**: re-park at priority 999 until all 7 entities clear (weeks for per-fixture)
+- **C (reduce sleep)**: reduce 54s→10s in coordinator script, still 1-2 weeks
+
+**Checkbox NOT flipped** — awaiting BLK-5e660d71 answer.
