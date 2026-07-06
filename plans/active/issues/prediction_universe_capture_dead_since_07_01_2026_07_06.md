@@ -212,6 +212,72 @@ This touches ANOTHER WORKSTREAM's feature commit (4da6fe8); the slot-2 agent wil
 mitigation + purge on approval, and leave the margin-API repoint to be done with the credentials answer + the 4da6fe8
 author in the loop.
 
+## EXECUTION PLAN — KALSHI-PERP / POLYMARKET-PERP correction (demo-first, prod cutover gated on access)
+
+Operator direction 2026-07-06: build against Kalshi/Polymarket DEMO endpoints now; live-market access unknown (Ikenna
+holds that answer) → prod cutover is a later, credentials-gated flip. Concrete endpoint confirmed:
+`GET https://external-api.demo.kalshi.co/trade-api/v2/markets/margin` → `MarginMarket[]`
+(`ticker`,`contract_type`,`underlying`,`strike_price`,`expiration_time`,`is_active`,`contract_size`,`tick_size`,
+`leverage_estimate`). Purge scope confirmed: **KALSHI-PERP 25,473 rows; POLYMARKET-PERP 0** (its adapter never
+contaminated). All 0 MVP.
+
+### Phase 0 — stop contamination + purge (NOW, no access needed)
+
+- [ ] [CODE] P0. Guard both `kalshi_perp` + `polymarket_perp` adapters to emit **0 records** from the current (wrong,
+      events) host until repointed — fix the `_parse_market` empty-category "pass" bug. Ship (QG + quickmerge) + image
+      rebuild so the 13:30 UTC cloud run stops writing fake perps. Venue declarations STAY. Gate: next cefi daily run
+      writes 0 `KALSHI-PERP` rows.
+- [ ] [DATA] P0. Purge the 25,473 fake `KALSHI-PERP` rows from cefi: corrective `--mode full --allow-catalogue-shrink`
+      cefi run + delete the `venue=KALSHI-PERP` by_date + manifest cells. Gate: cefi catalogue has 0 `KALSHI-PERP` rows,
+      row-count drop == 25,473, no other venue touched.
+
+### Phase 1 — foundation: config-drive host + shared RSA-PSS auth (no access needed)
+
+- [ ] [CODE] P1. Make the perp base URL config-driven — `KALSHI_PERP_ENV=demo|prod` (via `UnifiedCloudConfig`, default
+      `demo`) resolving the host; delete the hardcoded `_KALSHI_BASE_URL` events-host const from the perp adapters.
+      Gate: unit test resolves demo vs prod host.
+- [ ] [CODE] P1. Extract the RSA-PSS signing that ALREADY EXISTS in `adapters/prediction/kalshi.py`
+      (`_signed_headers`/`_parse_kalshi_creds`/`_can_sign`) into a shared helper both perp adapters use; wire the demo
+      credential blob via the injection path (secret ref `kalshi-perp-demo`). Gate: signed-header unit test.
+
+### Phase 2 — repoint kalshi_perp to the margin API (demo)
+
+- [ ] [CODE] P1. Rewrite `KalshiPerpReferenceDataAdapter.get_instruments` to hit `…/trade-api/v2/markets/margin` on the
+      demo host, parse `MarginMarket` → `InstrumentRecord(instrument_type=PERPETUAL)` (ticker; `underlying`→base_asset;
+      `contract_size`/`tick_size`; `is_active`→status; `expiry=None` — perps are continuous), status-filter active.
+      Gate: parses a captured demo `MarginMarket` fixture.
+- [ ] [VERIFY] P0. Demo dry-run: returned tickers are genuine perps (`BTC-PERPETUAL` shape, `contract_type` present),
+      **0 event contracts**. Capture into a NON-PROD / dry-run sink — demo data MUST NOT enter the prod cefi store.
+      Gate: demo run yields real perp instruments; a `KXMVE*` event ticker would be rejected.
+
+### Phase 3 — polymarket_perp repoint (demo)
+
+- [ ] [RESEARCH] P1. `docs.polymarket.com` perps API — find the markets-listing endpoint + auth (beta-gated; launched
+      2026-04-21). Gate: endpoint + auth documented in this issue.
+- [ ] [CODE] P1. Repoint `polymarket_perp` against Polymarket's perps API (demo/testnet if available) →
+      `InstrumentRecord     (PERPETUAL)`. Gate: demo returns real Polymarket perps, 0 prediction-market rows.
+
+### Phase 4 — prod cutover (BLOCKED-OPERATOR-DECISION / -CREDENTIALS — Ikenna)
+
+- [ ] [OPERATOR] P1. Confirm Kalshi + Polymarket perps **prod access** (Kalshi member-rollout enrollment; Polymarket
+      beta enrollment) + provide prod credential blobs (`kalshi-perp-prod`, `polymarket-perp-prod`). BLOCKED until
+      answered.
+- [ ] [INFRA] P1. Flip `KALSHI_PERP_ENV=prod` + prod secret refs; confirm no 403 (enrollment live); **re-enumerate
+      against prod** → prod cefi catalogue. Gate: prod perps land as genuine `PERPETUAL` crypto perps; `KALSHI-PERP`/
+      `POLYMARKET-PERP` catalogue rows are real (spot-check tickers).
+
+### Phase 5 — guardrail so this class can't recur
+
+- [ ] [CODE] P2. Write-time validation: any `*-PERP` venue record MUST be `instrument_type=PERPETUAL` AND pass a
+      perp-ticker sanity check (reject event-contract patterns, e.g. `KXMVE*`/`KXMVECROSSCATEGORY*`); reject at the
+      writer, not silently. Gate: a synthetic event contract injected into a `-PERP` feed is rejected, not written to
+      the catalogue.
+
+> **Coordination:** all of the above touches 4da6fe8 (another workstream's feature). The operator has directed this
+> correction; slot-2 will execute Phases 0–3 + 5 and flag the 4da6fe8 author on the PR; Phase 4 waits on Ikenna's access
+> answer. Repos: instruments-service (adapters) + config (host/secret) — no UAC venue-list change (venues stay
+> declared).
+
 ## Progress log
 
 - 2026-07-06: Found during the incremental-catalogue plan's weekend verification (catalogue rows green but prediction
