@@ -486,6 +486,38 @@ all entities (M+P+ODDS), via Python compute API (gcloud snap-confine broken). Ta
 5. If ODDS eu=1,318 persists: check if these are non-covered leagues → type as EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE
 6. Once all pending_fetch == 0 → flip checkbox ✅
 
+### 2026-07-06 16:45 UTC — slot-10: VM baseline + parked pending completion
+
+**VM `fs-backfill-20260706-161335`** RUNNING. At date=2019-01-18 as of 16:38 UTC (~25 min elapsed since 16:13 UTC
+launch; ~1% of 2743-date range). Rate ~1.4 dates/min effective (mix of API-call dates and skip dates).
+**ETA: 24-40 hours from launch** = ~2026-07-07 16:00 UTC to 2026-07-08 08:00 UTC. GCS log clean; FOOTYSTATS DONE
+lines confirm M+P+ODDS being fetched per date; per-VM shard updated every ~5-8 entries.
+
+**Manifest state (consolidated index `_index/availability_index.parquet`, updated 2026-07-06T16:40:50Z):**
+
+| data_type   | captured | empty_confirmed | expected_unattempted | attempted_failed | pending_fetch | coverage |
+|-------------|----------|-----------------|----------------------|------------------|---------------|----------|
+| MATCHES     | 26,366   | 256,528         | 5,630                | 939              | 6,569         | 97.7%    |
+| PREDICTIONS | 28,599   | 195,099         | 44,298               | 0                | 44,298        | 83.5%    |
+| ODDS        | 30,702   | 79,358          | 1,318                | 277              | 1,595         | 98.6%    |
+
+**Pre-analysis of residual af rows (all `phantom_captured_no_parquet_at_canonical_path`):**
+
+- MATCHES af=939: 100% SEGUNDA_DIVISION. Confirmed IS a footystats-covered Prediction+Features league (UAC
+  `get_expected_leagues_for_source("footystats", classifications=["Prediction","Features"])` → 46 leagues incl.
+  SEGUNDA_DIVISION).
+- ODDS af=277: SUPER_LIG=183, SWISS_SUPER_LEAGUE=92, LIGUE_1=1, blank=1; +1 RuntimeError. SUPER_LIG /
+  SWISS_SUPER_LEAGUE / LIGUE_1 are also all footystats-covered.
+- All 1,216 phantom af rows have `written_at` in 2026-05-01..2026-05-07 — 2 months old, present in the current
+  consolidated index BEFORE VM launched. VM's `_should_skip_date_for_per_league` reads the up-to-date index → sees
+  `af` (not `captured`) → will NOT skip → will re-process these dates and replace phantom af with fresh capture
+  attempts. No pre-VM typing scripts needed; auto-heal expected.
+
+**Task parked** — re-dispatch condition: VM TERMINATED AND
+`(footystats, MATCHES)+(footystats, PREDICTIONS)+(footystats, ODDS) pending_fetch == 0`. Post-VM steps unchanged
+from 16:13 UTC entry above (verify pending_fetch, run typing only if af/eu residues persist beyond phantoms, then
+flip item #5 checkbox).
+
 ## References
 
 - `sports_reference_backfill_oom_2026_06_22.md` — OOM single-read fix (vm-sports)
