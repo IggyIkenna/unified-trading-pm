@@ -104,6 +104,12 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT AGAIN** — dispatcher routed
+  the same infra-scope task to slot 6 (also `data_engineering`). Slot 6 escalated via /blocked (`BLK-fc827a35`,
+  same reasoning as slot 2's `BLK-a92f81ab`); main answered PARK again — do NOT cross the craft boundary. Confirms
+  the epic-level fix required: the AO dispatcher needs `assigned_role` filtering so infra tasks stop going to
+  `data_engineering` workers. Operator action = either manually route this task to an infra-capable slot, or
+  land the dispatcher-side role filter. Slot 6 idle after this note.
 - **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) marked **BLOCKED-CRAFT-MISMATCH**. Server dispatcher does
   not filter by `assigned_role`, so this infra-scope task auto-routed to a data_engineering slot (slot 2). Per
   worker boot-prompt STEP 0.5 (do not cross craft lines), slot 2 escalated via /blocked → main answered PARK; the
