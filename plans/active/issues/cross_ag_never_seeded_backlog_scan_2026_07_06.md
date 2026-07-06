@@ -31,7 +31,7 @@ related:
     ../../codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-06
+last_updated: 2026-07-06 (2026-07-06 15:20Z — prediction token-id lane cross-reference marker closed, slot-12·planning)
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -196,12 +196,35 @@ superseded_by:
 - [ ] [DATA] P2. tradfi ohlcv_15m/24h conversion 4-part diagnosis close-out — resolve the remaining cells to `captured`
       / `honest-absence` per the 429-fixed conversion pass (repo: market-tick-data-service; owning plan:
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md` line 2533 P2 already open).
-- [ ] [DATA] P0. prediction token-id `instrument_availability` lane seed — un-pause
+- [x] ✅ [DATA] P0. prediction token-id `instrument_availability` lane seed — un-pause
       `lifecycle-catalogue-regen-prediction-daily` (or wire the equivalent write in the fixed-UTL is-daily-enum image
       per the remediation plan's Workstream B), so the Polymarket ~17,772-token universe × per-day availability
       materialises as an on-manifest EU dimension (repo: instruments-service + deployment-service; owning plan:
       `plans/active/prediction_capture_incident_remediation_2026_07_06.md` Workstream A/B already open — this todo is
-      the cross-reference marker so Plan 5's -008 gate reads "quantified + filed").
+      the cross-reference marker so Plan 5's -008 gate reads "quantified + filed"). — **CROSS-REFERENCE MARKER
+      CLOSED 2026-07-06** (Opus, slot-12·planning, `data_engineering`). **Verified current state (this session):**
+      (1) `lifecycle-catalogue-regen-prediction-daily` scheduler is ALREADY ENABLED (state=ENABLED, schedule=`0 1 * * *`,
+      succeededCount=1 on 07-03/04/05/06) — un-paused 13 days before this scan was filed by
+      `deployment-service@040e2fc` (2026-06-23) which added the missing `roles/run.invoker` grant + resumed all 5
+      per-AG schedulers. **(2) Correcting the causal chain in the scan's finding-#1 text (line ~129): un-pausing the
+      roll-up does NOT materialise the token-id `instrument_availability` parquet — `build_instrument_catalogue.py`
+      READS `instrument_availability/by_date/day=…/venue=…/instruments.parquet` snapshots and PRODUCES the cumulative
+      `catalog.parquet` (per `lifecycle_catalogue_scheduler.tf` §6-11).** The by_date SNAPSHOT WRITER is
+      `is-daily-enum-prediction` (Cloud Run Job invoking the IS orchestrator writers at
+      `instruments-service/instruments_service/engine/orchestrator/writers.py:252` +
+      `process_write.py:533`), which is currently FAILING exit(1) — the deployed `:latest`=f36f3bba image DOES carry
+      the UTL 1.6.0 coercion (docker-inspected) but a DIFFERENT error blocks completion (root cause opaque behind the
+      Cloud-Run observability gap — logs show only "Container called exit(1)"). (3) **Direct GCS verification:**
+      `gs://instruments-store-prediction-central-element-323112/instrument_availability/by_date/canonical_question_group=SPX_UP_DOWN_DAILY/`
+      max `day=2026-05-22` (matches the plan's stale-since claim); token-id lane is genuinely not materialising.
+      (4) The actual un-block is TRACKED SEPARATELY in
+      `plans/active/prediction_capture_incident_remediation_2026_07_06.md` **Workstream A residual "[INFRA] P0" —
+      HANDED OFF (2026-07-06) → capture-hardening owner** (fixed-UTL→is-daily-enum image heal) + full diagnostic
+      handoff in `plans/active/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`. (5)
+      Cross-reference marker's purpose is fulfilled: Plan 5's `foundation_gates_and_capture_to_100_2026_07_06.md`
+      task -008 gate ALREADY reads `[x] ✅` "quantified + filed" (line 207-227). — evidence:
+      `deployment-service@040e2fc` (un-pause), `is-daily-enum-prediction` execution failures (HANDED-OFF P0),
+      `foundation_gates_and_capture_to_100_2026_07_06.md#L207` (Plan 5 -008 flipped DONE).
 - [ ] [DATA] P1. prediction Kalshi launcher gap — wire Kalshi into `launch-mtds-prediction-backfill-vm.sh` so the Kalshi
       historical + post-adapter window seeds/captures via a SPOT VM per the backfill-VMs-default-SPOT HARD rule (repo:
       deployment-service + market-tick-data-service; owning plan:
