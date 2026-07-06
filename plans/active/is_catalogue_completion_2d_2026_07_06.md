@@ -177,24 +177,46 @@ source:
       registered live at `orchestrator/__init__.py:456` — silent-fallback data-correctness risk for the DeFi expected
       universe. 2 actionable todos filed (P2 reader migration + P3 test port). **Doc-drift follow-on:** two stale
       cross-repo pointers to the deleted `instruments-service/docs/instrument-catalogue.md` remain (tracked below).
-- [ ] [DOC] P3. **Fix UAC cross-repo doc pointer drift from the deleted `instruments-service/docs/instrument-catalogue.md`**
-      — one stale reference remains: `unified-api-contracts/docs/canonical-instrument-ids.md:183-185`
-      ("instruments-service `CatalogueBuilder` populates `instrument_key` via `build_instrument_id(...)` for every record
-      — see `instruments-service/docs/instrument-catalogue.md`.") — rewrite to reference `unified_api_contracts.build_instrument_id`
-      directly (the CatalogueBuilder class no longer exists; canonical id population now happens inside the
-      reference-data adapters + `build_instrument_catalogue.py` rollup). The PM codex peer
-      (`codex/02-data/availability-manifest-and-data-status.md:1398`) was repointed in the same PM-flip commit as this
-      task. Gate: no doc points at the non-existent path. Repo: unified-api-contracts. The
-      operator-declined interim band-aid (`instruments_catalogue_incremental_rollup` — bump
-      `lifecycle_catalogue_scheduler.tf` timeout) RE-TRIGGERED 2026-07-03: tradfi `prod/catalog.parquet` stale since
-      2026-06-29, the daily `lifecycle_catalogue_scheduler` runs killed at the 3600s timeout. Decide: re-enable the
-      band-aid (bump timeout) vs. ship the Phase-3 incremental rollup. RAISE via blocked-queue; do not silently
-      re-enable the declined scheme. _(Carries `BLOCKED-` — the orchestrator will not dispatch it; stays
-      operator-visible.)_
+- [x] ✅ [DOC] P3. **Fix UAC cross-repo doc pointer drift from the deleted `instruments-service/docs/instrument-catalogue.md`**
+      — unified-api-contracts@0d47b50e (slot-7 opus/max 2026-07-06). Rewrote
+      `unified-api-contracts/docs/canonical-instrument-ids.md:183-185` from "instruments-service `CatalogueBuilder`
+      populates `instrument_key` via `build_instrument_id(...)` for every record — see
+      `instruments-service/docs/instrument-catalogue.md`." to reference `unified_api_contracts.build_instrument_id`
+      directly + describe the actual current population path (reference-data adapters emit records with
+      `instrument_key` populated via `unified_api_contracts.build_instrument_id(...)`; `build_instrument_catalogue.py`
+      walks the per-date snapshots into the daily `prod/catalog.parquet` rollup, the SSOT MTDS + data-status read).
+      Pre-verified: (a) `instruments-service/docs/instrument-catalogue.md` truly deleted (ls miss); (b) the
+      full-repo `rg` for `instrument-catalogue|CatalogueBuilder|catalogue_builder` in UAC returns only this
+      one stale reference (other hits are the UAC-internal `scripts/generate_instrument_catalogue.py` artifact —
+      different context, self-owned generator output, not a stale pointer to the deleted IS doc); (c) PM codex peer
+      `codex/02-data/availability-manifest-and-data-status.md:1398` claim verified — 0 hits in PM codex for
+      `instrument-catalogue.md|instruments-service/docs/instrument-catalogue`, previously repointed. Full
+      `scripts/quality-gates.sh` green in 254s; sentinel `.qg_last_passed_sha=0d47b50e70bfc97a6b004630720b51367c6dff81`
+      written; `check_strict_quickmerge.py` clean (`no bypassed code commits in 720d5322..0d47b50e`); landed on
+      live-defi-rollout via `quickmerge.sh --agent --files 'docs/canonical-instrument-ids.md'`. Gate satisfied: no doc
+      in the UAC repo points at the non-existent `instruments-service/docs/instrument-catalogue.md`.
 
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **P3 UAC doc-pointer drift FLIPPED (slot-7 opus/max).** Rewrote
+  `unified-api-contracts/docs/canonical-instrument-ids.md:183-185` Downstream Consumers bullet from the
+  stale `instruments-service CatalogueBuilder ... — see instruments-service/docs/instrument-catalogue.md`
+  reference (both the class and the doc were deleted in the P3 orphan-path clean-up
+  instruments-service@6138694 above) to a direct pointer at `unified_api_contracts.build_instrument_id` +
+  the current population path: reference-data adapters emit records with `instrument_key` populated via
+  `unified_api_contracts.build_instrument_id(...)`, `build_instrument_catalogue.py` walks the per-date
+  snapshots into the daily `prod/catalog.parquet` rollup (the SSOT MTDS + data-status read). Verified
+  scope before editing: `ls` confirms the deleted IS doc is gone; UAC-wide
+  `rg 'instrument-catalogue|CatalogueBuilder|catalogue_builder'` returns only this one stale reference
+  (other matches are the UAC's own `scripts/generate_instrument_catalogue.py` self-owned artifact — different
+  context, not a pointer to the deleted IS doc). PM codex peer claim verified: 0 hits in
+  `unified-trading-pm/codex/` for `instrument-catalogue.md|instruments-service/docs/instrument-catalogue`,
+  previously repointed. Full `scripts/quality-gates.sh` green (254s, all 6 stages incl. STEP 5.100
+  architectural ratchets); sentinel `.qg_last_passed_sha=0d47b50e70bfc97a6b004630720b51367c6dff81` written;
+  `check_strict_quickmerge.py` clean (`no bypassed code commits in 720d5322..0d47b50e`); landed on
+  live-defi-rollout via `quickmerge.sh --agent --files 'docs/canonical-instrument-ids.md'`. unified-api-contracts@0d47b50e.
 
 - **2026-07-06** — **P3 orphan-catalogue-path DELETE FLIPPED (slot-2 opus/max).** Deleted
   `instruments_service/reference_data/catalogue/{__init__.py,catalogue_builder.py}` (the
