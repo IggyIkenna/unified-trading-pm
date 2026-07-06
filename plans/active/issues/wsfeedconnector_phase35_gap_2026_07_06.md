@@ -151,11 +151,19 @@ approve / defer per category rather than per-venue.
       market-tick-data-service). Gate: both venues resolve; regression tests added.
 - [ ] [CODE] P1. **COINBASE-FUTURES WSFeedConnector build** — public WS on `wss://advanced-trade-ws.coinbase.com` (repo:
       market-tick-data-service). Gate: COINBASE-FUTURES resolves; regression test.
-- [ ] [CODE] P1. **BINANCE-DELIVERY WSFeedConnector build** — Binance COIN-M dated futures (public WS
-      `wss://dstream.binance.com`). NOTE: per tracker 06-27 decision, COIN-M is explicitly NOT MVP for perps, but
-      DELIVERY (dated futures) is separate. Confirm MVP scope before building (repo: market-tick-data-service). Gate:
-      BINANCE-DELIVERY resolves (or filed as BLOCKED-OPERATOR-DECISION honest-absence). **BLOCKED-OPERATOR-DECISION**
-      (Ikenna — MVP inclusion).
+- [x] [CODE] P1. **BINANCE-DELIVERY WSFeedConnector build** ✅ — resolved as **honest-absence (NOT MVP)** per
+      2026-06-27 operator **decision #3** (already-committed SSOT). No WS connector built. Sources:
+      `unified_api_contracts/canonical/crosscutting/mvp_scope.py:419-423` (comment: "BINANCE-DELIVERY (Binance
+      COIN-M inverse/delivery futures) was REMOVED from the cefi MVP set — the operator accepts COIN-M delivery is
+      NOT MVP. Other venues' dated/quarterly fixed-delivery futures STAY MVP.") + `codex/02-data/mvp-scope-canonical.md`
+      NOT-MVP row (`**NOT MVP** = **BINANCE-DELIVERY** (COIN-M inverse/delivery — dropped, decision #3)`) +
+      `mvp_backfill_cefi_tick_v10_2026_06_27.md` v10-catalogue confirmation ("BINANCE-DELIVERY 222 rows all mvp=False
+      ✓"). The task-brief hedge ("DELIVERY dated futures is separate") is superseded: decision #3 scope covers BOTH
+      COIN-M perps AND COIN-M delivery futures (mvp_scope.py comment is explicit). Classification: BATCH-ONLY-BY-DESIGN
+      for the smoke-matrix `blocked-not-registered` cell — no live WS to build, no factory to register. Per Plan 4
+      Layer-2 interpretation (this issue doc lines 116-118), the `blocked-not-registered` cell for BINANCE-DELIVERY
+      correctly reflects "no live connector"; it does not drag Layer-2 capture % down when the batch REST capture is
+      honest-complete.
 - [ ] [CODE] P2. **On-chain CeFi perps: EXTENDED-STARKNET + LIGHTER-ZKSYNC + PACIFICA-SOLANA WSFeedConnector build**
       (repo: market-tick-data-service). These are the on-chain-CeFi-perp venues from foundation-completeness §G1.3.
       **Currently BLOCKED-CREDENTIALS** for the paid-RPC endpoints per tracker Blocked/waiting register; build the
@@ -211,6 +219,27 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **gap-005 resolved (BINANCE-DELIVERY WSFeedConnector build)** by slot-4. Confirmed via
+  already-committed SSOT that BINANCE-DELIVERY is NOT MVP — no operator ping needed; the ruling exists as
+  **2026-06-27 decision #3**. Evidence chain (grepped from HEAD live-defi-rollout):
+  1. `unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py:419-423` — inline comment in the
+     cefi MVP `venues` frozenset explicitly says BINANCE-DELIVERY was REMOVED and "the operator accepts COIN-M
+     delivery is NOT MVP" (paired with "Other venues' dated/quarterly fixed-delivery futures STAY MVP" — so the
+     decision covers BOTH COIN-M perps + COIN-M delivery futures at BINANCE, not just perps).
+  2. `unified-trading-pm/codex/02-data/mvp-scope-canonical.md` NOT-MVP row: `**NOT MVP** = **BINANCE-DELIVERY**
+     (COIN-M inverse/delivery — dropped, decision #3)`. Codex SSOT is definitive.
+  3. `unified-trading-pm/plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md` cefi-G3 sign-off: "BINANCE-DELIVERY
+     222 rows all mvp=False ✓". Catalogue reality matches the decision.
+  4. `unified-api-contracts/unified_api_contracts/registry/venue_constants.py:413` still lists
+     `"BINANCE-DELIVERY": {"PERPETUAL", "FUTURE"}` — reference-data-only classification retained for
+     manifest/backfill-legacy paths; not a live-scope entry.
+
+  Task-brief interpretation ("DELIVERY dated futures is separate from COIN-M perps") was a hedge — the mvp_scope.py
+  comment resolves it: decision #3 covers both. No WSFeedConnector shipped; no MTDS code change. Checkbox flipped
+  in this doc with resolution note (line 154). Classification: BATCH-ONLY-BY-DESIGN — the
+  `blocked-not-registered` smoke-matrix cell for BINANCE-DELIVERY is honest-absence per Plan 4 Layer-2
+  interpretation, no `NON_LIVE_VENUES` allow-list edit required for MVP.
 
 - **2026-07-06** — **gap-001 shipped** by slot-6. Operator ruling on slot-4's 2026-07-06 recommendation received via
   main (BLK-31951ebc + BLK-f7372dd9): APPROVE items 1-3, DEFER item 4. Shipped MTDS bare-venue aliases + regression
