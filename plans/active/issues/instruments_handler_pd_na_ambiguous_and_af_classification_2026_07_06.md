@@ -196,6 +196,18 @@ remains valid — no correctness blocker uncovered by this verification.
   weekend) + 6 valid CMES sessions (fetch gaps awaiting tradfi v9 downstream). Written up in "Verification results"
   above. No new correctness finding requires a separate issue doc — the AF-on-Sat mislabel is absorbed by the existing
   P2 dedup-reconcile item 3.
+- **2026-07-06** — **Item 3 RE-DISPATCHED 7TH TIME — PREREQ STILL NOT MET** (`BLK-b7280ba5`, slot-11 planning). Same
+  root cause as the six prior PARKs today (`BLK-b81e4231` slot-9, `BLK-2e75351f` slot-3, `BLK-f96a851f` slot-5,
+  `BLK-b2595413` slot-7, `BLK-d5ac4b5b` slot-10, `BLK-3803f4fa` slot-2): dispatcher lacks natural-language prereq
+  visibility so item 3 keeps auto-routing to slots by priority=50 despite the explicit "NOT a naive add" / "Do NOT
+  hand-edit the dedup machine" clauses. Verified against PM tip `60cf17af0` — line 638 of
+  `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still `- [ ] [CODE] P2` (dedup fix has not
+  landed on LDR). Recommendation to main = PARK (same as the six prior rulings). Slot-11 idle-parks pending release
+  via /skip-current-task. **Systemic ask (now SEVERE — 7× today; single item has consumed 7 slot-planning boot
+  windows)**: operator to either (a) set `priority: 999` + add a `conditions:` gate keyed on the LDR-landing of the
+  dedup fix in `backlog.yaml`, OR (b) escalate the AO backlog schema NL-prereq parsing to an epic. Every additional
+  re-dispatch is a pure waste of a slot boot window on an item whose task body already says "NOT a naive add" and
+  whose prereq is trivially checkable against LDR.
 - **2026-07-06** — **Item 3 RE-DISPATCHED 6TH TIME — PREREQ STILL NOT MET** (`BLK-3803f4fa`, slot-2 planning). Same
   root cause as the five prior PARKs today (`BLK-b81e4231` slot-9, `BLK-2e75351f` slot-3, `BLK-f96a851f` slot-5,
   `BLK-b2595413` slot-7, `BLK-d5ac4b5b` slot-10): dispatcher lacks natural-language prereq visibility so item 3 keeps
