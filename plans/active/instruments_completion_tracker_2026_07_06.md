@@ -68,6 +68,29 @@ source:
 > straggler re-run · `rebuild_tradfi_manifest` · IS enumerate-seed + catalogue) · Ikenna's migration sign-off (gates the
 > legacy-twin bucket deletes). See Stage 1 + the Progress Log.
 
+> **🤖 DISPATCHED TO AGENT-ORCHESTRATOR (2026-07-06) — Stages 1-6 carved into 6 role-homogeneous AO plans, all
+> `assigned_vm: planning`, all Opus/max** (`model_tier: opus-required` + `thinking_tier: max` — AO's effort vocabulary
+> has no `xhigh`; `max` is the ceiling and overrides the role's default sonnet/high). This tracker stays the
+> operator-owned coordinator (`assigned_vm: NA`); the engineering now runs on AO. Each plan carries per-task `Gate:`,
+> `PREREQ:` ordering, smoke-first / stop-on-surprise guards, and `BLOCKED-OPERATOR-DECISION` / `BLOCKED-CREDENTIALS`
+> lines (regen auto-skips `BLOCKED-*` so they stay visible for you, never auto-dispatched — the working agent raises
+> them via the blocked-queue).
+>
+> | AO Plan                            | File                                                | Role             | Stages    | Dispatch                              |
+> | ---------------------------------- | --------------------------------------------------- | ---------------- | --------- | ------------------------------------- |
+> | **1** cefi denominator completion  | `issues/cefi_layer1_denominator_gaps_2026_07_03.md` | data_engineering | 2 (cefi)  | now (unblocked)                       |
+> | **2** TradFi Stage-1 finish        | `tradfi_v9_stage1_finish_2026_07_06.md`             | data_engineering | 1         | now (parallel)                        |
+> | **3** IS-catalogue completion      | `is_catalogue_completion_2d_2026_07_06.md`          | data_engineering | 2d        | now (parallel)                        |
+> | **4** Layer-1 re-measure + certify | `layer1_remeasure_and_certify_2026_07_06.md`        | data_engineering | 3         | **gated** `gate_on_depends` Plans 1-3 |
+> | **5** foundation gates + capture   | `foundation_gates_and_capture_to_100_2026_07_06.md` | data_engineering | 4-5       | handler-audit now; rest PREREQ Plan 4 |
+> | **6** infra capture + devops       | `infra_capture_and_devops_leftovers_2026_07_06.md`  | infra            | 5 (infra) | now (ASTER gates Plan 1 re-measure)   |
+>
+> **Stays OFF AO (true hard-stops — operator only):** legacy-twin bucket deletes (Ikenna's migration sign-off) ·
+> locked-plan archival/fold (Stage 0 §F.4) · COINBASE/DERIBIT-COMBO `MVP_SCOPE` call · CLOB-on-chain classification ·
+> paid-RPC / quota credentials. All are `BLOCKED-*` lines in the plans above (agent raises → you answer). **UI tail:**
+> the honest_coverage data-status drill-down (Stage 6) is a single P2 item — too small for its own AO plan (would break
+> the ≥10-item + role-homogeneity rule); stays tracked here + in `honest_coverage_v2`.
+
 ---
 
 ## ✅ Decision Gates — clear these first (only the operator can)
@@ -255,6 +278,20 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **Stages 1-6 DISPATCHED TO AO as 6 role-homogeneous plans (all Opus/max).** Carved the tracker's
+  remaining engineering into 6 AO plans (`assigned_vm: planning`, `execution_scope: orchestrator-agent`,
+  `model_tier: opus-required` + `thinking_tier: max`): P1 cefi denominator (`cefi_layer1_denominator_gaps`, assigned
+  in-place — D2a/D2b marked done, 2a/2c/2f folded in) `pm@5bff1354c`; P2 tradfi Stage-1 finish
+  (`tradfi_v9_stage1_finish`) `pm@f8bb8aa5f`; P3 IS-catalogue B0→B1→B2 (`is_catalogue_completion_2d`) + P4 Layer-1
+  re-measure/certify (`layer1_remeasure_and_certify`, `gate_on_depends` Plans 1-3) `pm@64a1c00f8`; P5 foundation+capture
+  (`foundation_gates_and_capture_to_100`, handler-audit ungated so it can precede P4) + P6 infra capture/devops
+  (`infra_capture_and_devops_leftovers`, infra role) `pm@3dc6fcf04`. Contract verified against
+  `agent-orchestrator/server/regen_backlog_from_plan.py`: model/effort is **per-plan** (frontmatter or role file), AO
+  has **no `xhigh`** (max is the ceiling; `data_engineering` role default = the rejected sonnet/high, so the explicit
+  opus-required+max override is load-bearing); `BLOCKED-*` lines auto-skip dispatch (operator-visible);
+  `gate_on_depends` machine-holds P4 until P1-3 done. Hard-stops (bucket deletes, locked-plan archival, COINBASE
+  `MVP_SCOPE`, CLOB classification, paid-RPC creds) stay off AO as `BLOCKED-*` lines the agents raise. UI drill-down (1
+  P2 item) left off AO — too small for a standalone plan.
 - **2026-07-06** — **TradFi v9 migration APPLY COMPLETE — all 6 years (2020-2025), exit_code=0, fatal=0.** The D3 fix
   (e2-standard-16 · SPOT · workers 24 · per-year chunks) held at scale — memory stayed ~6.7 GB / 64 GB per VM, zero OOM
   across the fleet. `moved<planned` on every year = idempotent skips of already-canonical objects (per-year TOTALs: 2021
