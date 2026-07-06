@@ -1,32 +1,43 @@
 ---
-doc_type: codex-ssot
+doc_type: audit-result
 title: VM Deployment Events — GCS / PubSub Forwarding Audit
 summary:
-  2026-05-15 audit of the VM deployment-event sink chain (heartbeat_cli.py → PubSubEventSink → deployment-events topic) —
-  STARTED/COMPLETED/FAILED confirmed via smoke VM, but no PubSub→GCS export exists so events expire at the 7-day TTL; P2
-  fix = switch heartbeat_cli.py to GCSEventSink.
-status: current
+  2026-05-15 audit of the VM deployment-event sink chain (heartbeat_cli.py → PubSubEventSink → deployment-events topic)
+  — STARTED/COMPLETED/FAILED confirmed via smoke VM, but no PubSub→GCS export exists so events expire at the 7-day TTL;
+  P2 fix = switch heartbeat_cli.py to GCSEventSink.
+status: partial
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [audit, pubsub, observability, deployment, infrastructure]
-related: [vm-event-emission-audit.md, pubsub-topic-inventory.md, ../02-data/live-data-persistence-and-event-log.md]
+related:
+  [
+    ../../../plans/audit/results/vm_event_emission_audit_2026_05_15.md,
+    ../../../codex/05-infrastructure/pubsub-topic-inventory.md,
+    ../../../codex/02-data/live-data-persistence-and-event-log.md,
+  ]
 created: 2026-05-15
 authoritative_for: [VM deployment-event GCS/PubSub forwarding gap audit]
-referenced_by: [codex/05-infrastructure/event-sink-chain.md, codex/05-infrastructure/vm-event-emission-audit.md]
+referenced_by: [codex/05-infrastructure/event-sink-chain.md, plans/audit/results/vm_event_emission_audit_2026_05_15.md]
 owner: deployment-platform
 last_reviewed: 2026-05-17
 code_refs:
 type: infrastructure
+auditor: ikenna
+severity: P2
+date: 2026-05-15
+audited_scope: VM deployment-event sink chain (heartbeat_cli.py -> PubSubEventSink -> deployment-events topic)
+parent_epic: observability_master
+resulting_plan:
+lib_version:
+doc_versions_checked: []
 ---
 
 # VM Deployment Events — GCS / PubSub Forwarding Audit
 
-**Author**: slot-2 agent  
-**Date**: 2026-05-15  
-**Scope**: VM event sink chain — heartbeat_cli.py through PubSub to GCS  
+**Author**: slot-2 agent **Date**: 2026-05-15 **Scope**: VM event sink chain — heartbeat_cli.py through PubSub to GCS
 **Smoke VM**: `measure-honest-coverage-20260515-115454` (exit 0)
 
 ---
@@ -73,8 +84,8 @@ PubSub topic: deployment-events (7-day retention)
 
 ## Smoke Verification
 
-**VM**: `measure-honest-coverage-20260515-115454`  
-**Log**: `gs://deployment-scripts-central-element-323112/vm-logs/measure-honest-coverage-20260515-115454/run.log`
+**VM**: `measure-honest-coverage-20260515-115454` **Log**:
+`gs://deployment-scripts-central-element-323112/vm-logs/measure-honest-coverage-20260515-115454/run.log`
 
 ```
 2026-05-15 06:28:32,027 INFO Event logging initialized: mode=batch, service=vm-heartbeat-daemon
@@ -116,4 +127,4 @@ the workspace pattern. This is a P2 (non-blocking for May-23, events still visib
 - `deployment-service/deployment_service/vm/heartbeat_cli.py` — `_init_events()` configures PubSubEventSink
 - `deployment-service/scripts/setup-pubsub.sh` — topic `deployment-events` + `deployment-events-monitor` subscription
 - `unified-trading-library/unified_trading_library/` — `GCSEventSink` / `PubSubEventSink` implementations
-- `codex/05-infrastructure/vm-event-emission-audit.md` — event emission architecture
+- `plans/audit/results/vm_event_emission_audit_2026_05_15.md` — event emission architecture

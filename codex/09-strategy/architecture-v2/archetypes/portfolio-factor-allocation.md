@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `PORTFOLIO_FACTOR_ALLOCATION`'
+title: "Archetype: `PORTFOLIO_FACTOR_ALLOCATION`"
 summary: >-
   `PORTFOLIO_FACTOR_ALLOCATION` archetype — factor-exposure sleeve: estimates child factor loadings (carry / momentum /
   vol_premium / size / quality) via OLS over `factor_lookback_days`, solves min‖Σ wᵢβᵢ − target_β‖² under child-weight
   bounds, and emits `AllocationDirective` per child; weekly rebalance with a drift-threshold guard.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,14 @@ related:
   ]
 created: 2026-05-18
 authoritative_for: [PORTFOLIO_FACTOR_ALLOCATION archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/portfolio-multi-strategy.md, codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md, codex/09-strategy/architecture-v2/archetypes/portfolio-tactical-overlay.md, codex/09-strategy/architecture-v2/families/portfolio.md, codex/09-strategy/strategy-summary.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/portfolio-multi-strategy.md,
+    codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md,
+    codex/09-strategy/architecture-v2/archetypes/portfolio-tactical-overlay.md,
+    codex/09-strategy/architecture-v2/families/portfolio.md,
+    codex/09-strategy/strategy-summary.md,
+  ]
 owner:
 last_reviewed: 2026-05-18
 code_refs:

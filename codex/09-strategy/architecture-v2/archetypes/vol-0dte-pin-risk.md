@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_0DTE_PIN_RISK`'
+title: "Archetype: `VOL_0DTE_PIN_RISK`"
 summary:
-  'Archetype spec for `VOL_0DTE_PIN_RISK` — manages extreme near-expiry gamma when spot pins a high-OI strike, detecting
-  pin proximity then carrying, flattening, or rolling the short-gamma book; Deribit + CBOE SPX, 50ms premium SLA.'
+  "Archetype spec for `VOL_0DTE_PIN_RISK` — manages extreme near-expiry gamma when spot pins a high-OI strike, detecting
+  pin proximity then carrying, flattening, or rolling the short-gamma book; Deribit + CBOE SPX, 50ms premium SLA."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,16 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, pin-risk, delta-hedge, 0dte]
-related: [vol-0dte-gamma-scalping.md, vol-carry.md, vol-straddle.md, vol-term-structure-arb.md, ../families/vol-trading.md]
+related:
+  [vol-0dte-gamma-scalping.md, vol-carry.md, vol-straddle.md, vol-term-structure-arb.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for: ['VOL_0DTE_PIN_RISK archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md, codex/09-strategy/architecture-v2/archetypes/vol-carry.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_0DTE_PIN_RISK archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +29,7 @@ archetype: VOL_0DTE_PIN_RISK
 family: VOL_TRADING
 venue_universe: [DERIBIT, CBOE]
 topology_requirements:
-  isolation: {execution-service: isolated, strategy-service: isolated}
+  isolation: { execution-service: isolated, strategy-service: isolated }
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 50
   min_sla_tier: premium

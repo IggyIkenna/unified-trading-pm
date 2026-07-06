@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `RULES_DIRECTIONAL_EVENT_SETTLED`'
+title: "Archetype: `RULES_DIRECTIONAL_EVENT_SETTLED`"
 summary: >-
   `RULES_DIRECTIONAL_EVENT_SETTLED` archetype — evaluates explicit sports/prediction rule registries (behavioural /
-  statistical patterns, e.g. scored-first-home → back HT draw) on features-service sports family, firing one-shot
-  stakes at rule `stake_fraction_of_equity` on the best-odds venue via Unity; per-rule hit-rate attribution.
+  statistical patterns, e.g. scored-first-home → back HT draw) on features-service sports family, firing one-shot stakes
+  at rule `stake_fraction_of_equity` on the best-odds venue via Unity; per-rule hit-rate attribution.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,14 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [RULES_DIRECTIONAL_EVENT_SETTLED archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md, codex/09-strategy/architecture-v2/archetypes/rules-directional-continuous.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/families/rules-directional.md, plans/epics/sports_master.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
+    codex/09-strategy/architecture-v2/archetypes/rules-directional-continuous.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/architecture-v2/families/rules-directional.md,
+    plans/epics/sports_master.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -30,7 +38,7 @@ archetype: RULES_DIRECTIONAL_EVENT_SETTLED
 family: RULES_DIRECTIONAL
 venue_universe: [UNITY, BETFAIR, SMARKETS, MATCHBOOK, POLYMARKET]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 500
   min_sla_tier: basic

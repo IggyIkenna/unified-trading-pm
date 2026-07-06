@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_STRADDLE`'
+title: "Archetype: `VOL_STRADDLE`"
 summary:
-  'Archetype spec for `VOL_STRADDLE` — long ATM straddle ahead of binary catalysts (gamma-scalped, exit post IV-crush) or
-  short straddle in IV-elevated calm; a directionless pure-vol view; Deribit/OKX/CBOE.'
+  "Archetype spec for `VOL_STRADDLE` — long ATM straddle ahead of binary catalysts (gamma-scalped, exit post IV-crush)
+  or short straddle in IV-elevated calm; a directionless pure-vol view; Deribit/OKX/CBOE."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,21 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, straddle, event-driven, gamma-scalping]
-related: [vol-0dte-gamma-scalping.md, vol-arb-rv-iv.md, vol-carry.md, vol-spread-structures.md, ../families/vol-trading.md]
+related:
+  [vol-0dte-gamma-scalping.md, vol-arb-rv-iv.md, vol-carry.md, vol-spread-structures.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for: ['VOL_STRADDLE archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md, codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md, codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md, codex/09-strategy/architecture-v2/archetypes/vol-ml-lean.md, codex/09-strategy/architecture-v2/archetypes/vol-overlay-covered-calls.md, codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md, codex/09-strategy/architecture-v2/archetypes/vol-spread-structures.md, codex/09-strategy/architecture-v2/archetypes/vol-synthetic-delta.md]
+authoritative_for: ["VOL_STRADDLE archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-ml-lean.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-overlay-covered-calls.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-spread-structures.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-synthetic-delta.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +34,7 @@ archetype: VOL_STRADDLE
 family: VOL_TRADING
 venue_universe: [DERIBIT, OKX_OPTIONS, CBOE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

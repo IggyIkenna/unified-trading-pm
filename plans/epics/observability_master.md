@@ -2,19 +2,34 @@
 doc_type: epic
 title: Observability Master
 summary:
-  L4 cross-cutting epic owning alerting-service + monitoring/telemetry + the Incident Gateway 13-state
-  machine + the 5-layer recovery defence-in-depth (L0 Python scripts → L1 LLM audit → L2 PagerDuty → L3
-  Twilio voice → L4 pager → L5 human ack) + kill-switch/drawdown alerting + the deployment-UI Safety Ops
-  manual-override tab + runbook governance.
+  L4 cross-cutting epic owning alerting-service + monitoring/telemetry + the Incident Gateway 13-state machine + the
+  5-layer recovery defence-in-depth (L0 Python scripts → L1 LLM audit → L2 PagerDuty → L3 Twilio voice → L4 pager → L5
+  human ack) + kill-switch/drawdown alerting + the deployment-UI Safety Ops manual-override tab + runbook governance.
 status: active
 nature: process
-asset_group: [defi]
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-ui]
 scope: [engineer, admin]
 tags: [observability, monitoring, escalation, self-healing, slack, runbook, live-trading, ui]
-related: [../archive/2026_05/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md, ../archive/2026_05/alerting_service_live_rules_2026_05_07.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md, ../archive/incident_gateway_and_state_machine_2026_05_23.plan.md, ../archive/2026_05/agent_recovery_controller_layer0_deterministic_2026_05_23.md, ../archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md, ../archive/reconciliation_age_tracking_and_escalation_2026_05_23.plan.md, ../archive/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.plan.md, ../archive/2026_05/connectivity_dependency_buffer_policy_2026_05_23.md, ../archive/2026_05/audit_acknowledgement_sla_and_state_2026_05_23.md, ../archive/independent_fallback_twilio_voice_2026_05_23.plan.md, ../archive/2026_05/physical_pager_research_and_webhook_prototype_2026_05_23.md, ../archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md, ../archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md,
-  ../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md]
+related:
+  [
+    ../archive/2026_05/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md,
+    ../archive/2026_05/alerting_service_live_rules_2026_05_07.md,
+    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    ../archive/incident_gateway_and_state_machine_2026_05_23.plan.md,
+    ../archive/2026_05/agent_recovery_controller_layer0_deterministic_2026_05_23.md,
+    ../archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md,
+    ../archive/reconciliation_age_tracking_and_escalation_2026_05_23.plan.md,
+    ../archive/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.plan.md,
+    ../archive/2026_05/connectivity_dependency_buffer_policy_2026_05_23.md,
+    ../archive/2026_05/audit_acknowledgement_sla_and_state_2026_05_23.md,
+    ../archive/independent_fallback_twilio_voice_2026_05_23.plan.md,
+    ../archive/2026_05/physical_pager_research_and_webhook_prototype_2026_05_23.md,
+    ../archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md,
+    ../archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md,
+    ../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
+  ]
 created: 2026-05-21
 name: observability_master
 tier: L4
@@ -23,8 +38,24 @@ assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [../archive/2026_05/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md, ../archive/2026_05/alerting_service_live_rules_2026_05_07.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md, ../archive/incident_gateway_and_state_machine_2026_05_23.plan.md, ../archive/2026_05/agent_recovery_controller_layer0_deterministic_2026_05_23.md, ../archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md, ../archive/reconciliation_age_tracking_and_escalation_2026_05_23.plan.md, ../archive/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.plan.md, ../archive/2026_05/connectivity_dependency_buffer_policy_2026_05_23.md, ../archive/2026_05/audit_acknowledgement_sla_and_state_2026_05_23.md, ../archive/independent_fallback_twilio_voice_2026_05_23.plan.md, ../archive/2026_05/physical_pager_research_and_webhook_prototype_2026_05_23.md, ../archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md, ../archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md,
-  ../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md]
+related_plans:
+  [
+    ../archive/2026_05/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md,
+    ../archive/2026_05/alerting_service_live_rules_2026_05_07.md,
+    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    ../archive/incident_gateway_and_state_machine_2026_05_23.plan.md,
+    ../archive/2026_05/agent_recovery_controller_layer0_deterministic_2026_05_23.md,
+    ../archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md,
+    ../archive/reconciliation_age_tracking_and_escalation_2026_05_23.plan.md,
+    ../archive/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.plan.md,
+    ../archive/2026_05/connectivity_dependency_buffer_policy_2026_05_23.md,
+    ../archive/2026_05/audit_acknowledgement_sla_and_state_2026_05_23.md,
+    ../archive/independent_fallback_twilio_voice_2026_05_23.plan.md,
+    ../archive/2026_05/physical_pager_research_and_webhook_prototype_2026_05_23.md,
+    ../archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md,
+    ../archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md,
+    ../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
+  ]
 last_updated: 2026-06-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -57,7 +88,7 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 | `codex/04-architecture/incident-gateway-state-machine.md`   | **NEW 2026-05-23** — 13-state incident lifecycle (DETECTED → … → CLOSED); audit-ack queue; dedup-key                          |
 | `codex/04-architecture/recovery-defence-in-depth-layers.md` | **NEW 2026-05-23** — 5-layer model: L0 Python → L1 LLM audit → L2 PagerDuty → L3 Twilio voice → L4 pager → L5 human audit ack |
 | `codex/05-infrastructure/disaster-recovery.md`              | RTO/RPO targets, Tier 0-3 recovery, restore from manifest (existing — extended 2026-05-23)                                    |
-| `codex/05-infrastructure/physical-pager-layer.md`           | **NEW 2026-05-23** — Pager device comparison, webhook prototype, Twilio voice bridge                                          |
+| `codex/15-runbooks/physical-pager-layer.md`                 | **NEW 2026-05-23** — Pager device comparison, webhook prototype, Twilio voice bridge                                          |
 | `codex/15-runbooks/alerting/pagerduty-escalation-policy.md` | Ikenna 14:30–02:30 UK / Harsh 02:30–14:30 UK; PagerDuty escalation ladder                                                     |
 | `codex/15-runbooks/alerting/audit-acknowledgement-flow.md`  | **NEW 2026-05-23** — 6h audit-ack SLA + secondary-human + founder fallback                                                    |
 | `codex/05-infrastructure/manifest-consolidator-ssot.md`     | Manifest consolidator freshness alerts; silence > 120s → CRITICAL                                                             |

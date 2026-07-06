@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `ML_DIRECTIONAL_EVENT_SETTLED`'
+title: "Archetype: `ML_DIRECTIONAL_EVENT_SETTLED`"
 summary: >-
   `ML_DIRECTIONAL_EVENT_SETTLED` archetype — event-settled ML value betting: model P(outcome) vs vig-free implied odds,
   gates on `model_confidence_threshold` / `max_odds` / `min_edge_threshold`, stakes fractional Kelly (capped at
   `max_stake_fraction`), routes to best odds via Unity; covers 1X2 / O-U / BTTS / 1H / HT-FT + binary prediction.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,17 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [ML_DIRECTIONAL_EVENT_SETTLED archetype specification]
-referenced_by: [codex/02-venues/unity-integration.md, codex/09-strategy/_archived_pre_v2/sports/first-half-prediction.md, codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md, codex/09-strategy/_archived_pre_v2/sports/odds-drift.md, codex/09-strategy/_archived_pre_v2/sports/pre-game-ml.md, codex/09-strategy/_archived_pre_v2/sports/value-betting.md, codex/09-strategy/architecture-v2/archetypes/event-driven.md, codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md]
+referenced_by:
+  [
+    codex/02-venues/unity-integration.md,
+    codex/09-strategy/_archived_pre_v2/sports/first-half-prediction.md,
+    codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md,
+    codex/09-strategy/_archived_pre_v2/sports/odds-drift.md,
+    codex/09-strategy/_archived_pre_v2/sports/pre-game-ml.md,
+    codex/09-strategy/_archived_pre_v2/sports/value-betting.md,
+    codex/09-strategy/architecture-v2/archetypes/event-driven.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -30,7 +41,7 @@ archetype: ML_DIRECTIONAL_EVENT_SETTLED
 family: ML_DIRECTIONAL
 venue_universe: [UNITY, BETFAIR, SMARKETS, MATCHBOOK, BETDAQ, POLYMARKET]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

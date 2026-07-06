@@ -1,9 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_SYNTHETIC_DELTA`'
+title: "Archetype: `VOL_SYNTHETIC_DELTA`"
 summary:
-  'Archetype spec for `VOL_SYNTHETIC_DELTA` — replicates delta-1 exposure via a same-strike call/put synthetic (long
-  call + short put, or reverse) to avoid perp funding and define max loss; used when funding > synthetic cost; Deribit/OKX/CBOE.'
+  "Archetype spec for `VOL_SYNTHETIC_DELTA` — replicates delta-1 exposure via a same-strike call/put synthetic (long
+  call + short put, or reverse) to avoid perp funding and define max loss; used when funding > synthetic cost;
+  Deribit/OKX/CBOE."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,7 +15,7 @@ scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, synthetic-delta, carry, delta-hedge]
 related: [carry-basis-perp.md, vol-straddle.md, vol-overlay-covered-calls.md, vol-carry.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for: ['VOL_SYNTHETIC_DELTA archetype spec']
+authoritative_for: ["VOL_SYNTHETIC_DELTA archetype spec"]
 referenced_by: [codex/09-strategy/architecture-v2/families/vol-trading.md]
 owner:
 last_reviewed:
@@ -22,7 +24,7 @@ archetype: VOL_SYNTHETIC_DELTA
 family: VOL_TRADING
 venue_universe: [DERIBIT, OKX_OPTIONS, CBOE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 200
   min_sla_tier: standard

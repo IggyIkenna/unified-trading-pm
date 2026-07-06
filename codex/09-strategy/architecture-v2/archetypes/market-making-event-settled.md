@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `MARKET_MAKING_EVENT_SETTLED`'
+title: "Archetype: `MARKET_MAKING_EVENT_SETTLED`"
 summary: >-
   `MARKET_MAKING_EVENT_SETTLED` archetype — posts back + lay quotes on sports exchanges (Betfair / Smarkets / Matchbook
   / Betdaq) and Polymarket, earning the spread on matched bets with inventory skew; cancels quotes
   `pre_event_cancel_minutes` before event start; positions settle discretely on event resolution.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -21,7 +22,17 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [MARKET_MAKING_EVENT_SETTLED archetype specification]
-referenced_by: [codex/02-venues/unity-integration.md, codex/09-strategy/_archived_pre_v2/sports/market-making.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md, codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md, codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md, codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md, codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md, codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md]
+referenced_by:
+  [
+    codex/02-venues/unity-integration.md,
+    codex/09-strategy/_archived_pre_v2/sports/market-making.md,
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -29,7 +40,7 @@ archetype: MARKET_MAKING_EVENT_SETTLED
 family: MARKET_MAKING
 venue_universe: [BETFAIR, SMARKETS, MATCHBOOK, BETDAQ, POLYMARKET]
 topology_requirements:
-  isolation: {execution-service: isolated, strategy-service: isolated}
+  isolation: { execution-service: isolated, strategy-service: isolated }
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 40
   min_sla_tier: premium

@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `CARRY_STAKED_BASIS_DATED`'
+title: "Archetype: `CARRY_STAKED_BASIS_DATED`"
 summary: >-
-  Archetype CARRY_STAKED_BASIS_DATED: dated-contract variant of CARRY_STAKED_BASIS — stake into an LST
-  posted as cross-margin + SHORT a dated (quarterly/monthly) futures contract, locking the basis premium
-  at entry plus staking yield. net_apy_bps = staking_apy_total + annualised dated basis - fees; shares
-  staked_basis.py via ALLOWED_ARCHETYPES; Deribit/Drift/Bybit slots; must roll before expiry.
+  Archetype CARRY_STAKED_BASIS_DATED: dated-contract variant of CARRY_STAKED_BASIS — stake into an LST posted as
+  cross-margin + SHORT a dated (quarterly/monthly) futures contract, locking the basis premium at entry plus staking
+  yield. net_apy_bps = staking_apy_total + annualised dated basis - fees; shares staked_basis.py via ALLOWED_ARCHETYPES;
+  Deribit/Drift/Bybit slots; must roll before expiry.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,7 +17,14 @@ tags: [strategy, carry, defi, cefi, execution, archetype, deribit]
 related: [carry-staked-basis.md, carry-basis-dated.md, ../families/carry-and-yield.md]
 created: 2026-05-18
 authoritative_for: [CARRY_STAKED_BASIS_DATED archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md, codex/09-strategy/strategy-summary.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    codex/09-strategy/strategy-summary.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -24,7 +32,7 @@ archetype: CARRY_STAKED_BASIS_DATED
 family: CARRY_AND_YIELD
 venue_universe: [LIDO, ETHERFI, JITO, DERIBIT, DRIFT, BYBIT, UNISWAP_V3, JUPITER]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `ML_DIRECTIONAL_CONTINUOUS`'
+title: "Archetype: `ML_DIRECTIONAL_CONTINUOUS`"
 summary: >-
   `ML_DIRECTIONAL_CONTINUOUS` archetype — consumes ML P(up)/P(down) predictions, calibrates, computes edge =
   calibrated_P − implied_P, gates on `confidence_threshold` and `min_edge_threshold`, sizes via fractional Kelly, and
   emits target-state TRADEs across spot/perp/future/options expressions; `HOLD_UNTIL_FLIP` default.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,17 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [ML_DIRECTIONAL_CONTINUOUS archetype specification]
-referenced_by: [codex/09-strategy/_archived_pre_v2/cefi/ml-directional.md, codex/09-strategy/_archived_pre_v2/cefi/momentum.md, codex/09-strategy/_archived_pre_v2/cross-cutting/ml-pipeline.md, codex/09-strategy/_archived_pre_v2/tradfi/ml-directional.md, codex/09-strategy/_archived_pre_v2/tradfi/tradfi-momentum.md, codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md, codex/09-strategy/architecture-v2/archetypes/rules-directional-continuous.md]
+referenced_by:
+  [
+    codex/09-strategy/_archived_pre_v2/cefi/ml-directional.md,
+    codex/09-strategy/_archived_pre_v2/cefi/momentum.md,
+    codex/09-strategy/_archived_pre_v2/cross-cutting/ml-pipeline.md,
+    codex/09-strategy/_archived_pre_v2/tradfi/ml-directional.md,
+    codex/09-strategy/_archived_pre_v2/tradfi/tradfi-momentum.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
+    codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
+    codex/09-strategy/architecture-v2/archetypes/rules-directional-continuous.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -30,7 +41,7 @@ archetype: ML_DIRECTIONAL_CONTINUOUS
 family: ML_DIRECTIONAL
 venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT, IBKR, CME, CBOE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

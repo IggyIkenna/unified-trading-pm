@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `CARRY_STAKED_BASIS`'
+title: "Archetype: `CARRY_STAKED_BASIS`"
 summary: >-
-  Archetype CARRY_STAKED_BASIS: USDC-share-class market-neutral basis — SWAP -> STAKE -> TRANSFER LST as
-  perp cross-margin -> SHORT perp, earning staking yield + funding at delta 0. LST_AS_MARGIN is the ONLY
-  allowed structure (SPLIT_STAKE + COLLATERAL_BORROW deleted); eligibility DERIVED from
-  VENUE_COLLATERAL_MATRIX (4 live slots 2026-05-20); staking APY from on-chain lst_rates, not vendor.
+  Archetype CARRY_STAKED_BASIS: USDC-share-class market-neutral basis — SWAP -> STAKE -> TRANSFER LST as perp
+  cross-margin -> SHORT perp, earning staking yield + funding at delta 0. LST_AS_MARGIN is the ONLY allowed structure
+  (SPLIT_STAKE + COLLATERAL_BORROW deleted); eligibility DERIVED from VENUE_COLLATERAL_MATRIX (4 live slots 2026-05-20);
+  staking APY from on-chain lst_rates, not vendor.
+implementation_status: code-shipped
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +24,17 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [CARRY_STAKED_BASIS archetype specification (LST_AS_MARGIN staked basis)]
-referenced_by: [codex/09-strategy/_archived_pre_v2/defi/ethena-benchmark.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md, codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md, codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md]
+referenced_by:
+  [
+    codex/09-strategy/_archived_pre_v2/defi/ethena-benchmark.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md,
+    codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md,
+    codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -31,7 +42,7 @@ archetype: CARRY_STAKED_BASIS
 family: CARRY_AND_YIELD
 venue_universe: [LIDO, ROCKET_POOL, ETHERFI, JITO, MARINADE, DRIFT, DERIBIT, BYBIT, OKX, UNISWAP_V3, JUPITER]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

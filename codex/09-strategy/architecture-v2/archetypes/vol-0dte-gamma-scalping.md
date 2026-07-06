@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_0DTE_GAMMA_SCALPING`'
+title: "Archetype: `VOL_0DTE_GAMMA_SCALPING`"
 summary:
-  'Archetype spec for `VOL_0DTE_GAMMA_SCALPING` — buys cheap 0DTE ATM straddles at session open and captures realized
-  gamma via frequent delta-hedge scalps, hard-closing before daily expiry; Deribit BTC/ETH, 100ms premium SLA.'
+  "Archetype spec for `VOL_0DTE_GAMMA_SCALPING` — buys cheap 0DTE ATM straddles at session open and captures realized
+  gamma via frequent delta-hedge scalps, hard-closing before daily expiry; Deribit BTC/ETH, 100ms premium SLA."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,8 +14,15 @@ scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, gamma-scalping, 0dte, delta-hedge]
 related: [vol-0dte-pin-risk.md, vol-straddle.md, vol-market-making.md, vol-carry.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for: ['VOL_0DTE_GAMMA_SCALPING archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md, codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md, codex/09-strategy/architecture-v2/archetypes/vol-market-making.md, codex/09-strategy/architecture-v2/archetypes/vol-straddle.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_0DTE_GAMMA_SCALPING archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-market-making.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-straddle.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +30,7 @@ archetype: VOL_0DTE_GAMMA_SCALPING
 family: VOL_TRADING
 venue_universe: [DERIBIT]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 100
   min_sla_tier: premium

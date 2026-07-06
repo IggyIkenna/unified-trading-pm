@@ -1,32 +1,50 @@
 ---
-doc_type: codex-ssot
+doc_type: audit-result
 title: VM Event Emission Compliance Audit
 summary:
   2026-05-15 audit of every VM launcher's event emission — ~83 launchers get STARTED/COMPLETED/FAILED via
   _launch_with_tee(), the fixed backtest bare-nohup gap (launch-strategy-test-vm.sh exited before heartbeat setup), full
   VM_TASK branch coverage, and the unit-test suite.
-status: current
+status: pass
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [audit, observability, deployment, infrastructure, scripts]
-related: [vm-deployment-events-audit.md, launcher-script-ssot.md, run-lifecycle-events-audit-2026-05-05.md]
+related:
+  [
+    vm_deployment_events_audit_2026_05_15.md,
+    ../../../codex/05-infrastructure/launcher-script-ssot.md,
+    ../../../plans/audit/results/run_lifecycle_events_audit_2026_05_05.md,
+  ]
 created: 2026-05-15
 authoritative_for: [VM launcher event-emission compliance audit]
-referenced_by: [codex/05-infrastructure/event-sink-chain.md, codex/05-infrastructure/pubsub-topic-inventory.md, codex/05-infrastructure/run-lifecycle-events-audit-2026-05-05.md, codex/05-infrastructure/vm-deployment-events-audit.md]
+referenced_by:
+  [
+    codex/05-infrastructure/event-sink-chain.md,
+    codex/05-infrastructure/pubsub-topic-inventory.md,
+    plans/audit/results/run_lifecycle_events_audit_2026_05_05.md,
+    plans/audit/results/vm_deployment_events_audit_2026_05_15.md,
+  ]
 owner: deployment-platform
 last_reviewed: 2026-05-17
 code_refs:
 type: infrastructure
+auditor: ikenna
+severity: P1
+date: 2026-05-15
+audited_scope: event emission (STARTED/COMPLETED/FAILED) across all ~83 VM launchers
+parent_epic: observability_master
+resulting_plan:
+lib_version:
+doc_versions_checked: []
 ---
 
 # VM Event Emission Compliance Audit
 
-**Author**: slot-2 agent  
-**Date**: 2026-05-15  
-**Scope**: All VM launchers in `deployment-service/scripts/vm/` + `setup-data-pipeline-vm.sh`
+**Author**: slot-2 agent **Date**: 2026-05-15 **Scope**: All VM launchers in `deployment-service/scripts/vm/` +
+`setup-data-pipeline-vm.sh`
 
 ---
 
@@ -42,7 +60,7 @@ type: infrastructure
 
 ## Architecture
 
-All non-backtest VM tasks route through a single startup script:  
+All non-backtest VM tasks route through a single startup script:
 `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`
 
 The event emission chain:
@@ -58,15 +76,15 @@ The event emission chain:
             └─ DEPLOYMENT_COMPLETED / DEPLOYMENT_FAILED  (emitted on cmd exit)
 ```
 
-Python binding: `deployment_service/vm/heartbeat_cli.py` wraps UTL `HeartbeatDaemon`  
-with `setup_events()` + `run_lifecycle()` (STEP 5.63 compliant).
+Python binding: `deployment_service/vm/heartbeat_cli.py` wraps UTL `HeartbeatDaemon` with `setup_events()` +
+`run_lifecycle()` (STEP 5.63 compliant).
 
 ---
 
 ## Audit Gap Found (2026-05-15)
 
-**File**: `setup-data-pipeline-vm.sh`, lines 469-495 (original)  
-**Trigger**: `VM_PIPELINE_MODE=backtest` (set by `launch-strategy-test-vm.sh`)
+**File**: `setup-data-pipeline-vm.sh`, lines 469-495 (original) **Trigger**: `VM_PIPELINE_MODE=backtest` (set by
+`launch-strategy-test-vm.sh`)
 
 **Root cause**: The `backtest` branch used bare `nohup bash` and then `exit 0` **before** the heartbeat sidecar and tee
 wrapper were downloaded (those were at lines 497-570, after the `exit 0`). As a result:

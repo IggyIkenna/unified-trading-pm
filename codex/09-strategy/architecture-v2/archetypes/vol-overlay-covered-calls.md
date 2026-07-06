@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_OVERLAY_COVERED_CALLS`'
+title: "Archetype: `VOL_OVERLAY_COVERED_CALLS`"
 summary:
-  'Archetype spec for `VOL_OVERLAY_COVERED_CALLS` — writes 15-25 delta OTM calls against an existing delta-1 long to
-  harvest premium and offset carry, rolling up on rally; covered-only, never naked; Deribit/OKX.'
+  "Archetype spec for `VOL_OVERLAY_COVERED_CALLS` — writes 15-25 delta OTM calls against an existing delta-1 long to
+  harvest premium and offset carry, rolling up on rally; covered-only, never naked; Deribit/OKX."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,22 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, covered-calls, overlay, income]
-related: [vol-overlay-protective-put.md, vol-carry.md, vol-straddle.md, ml-directional-continuous.md, ../families/vol-trading.md]
+related:
+  [
+    vol-overlay-protective-put.md,
+    vol-carry.md,
+    vol-straddle.md,
+    ml-directional-continuous.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
-authoritative_for: ['VOL_OVERLAY_COVERED_CALLS archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md, codex/09-strategy/architecture-v2/archetypes/vol-synthetic-delta.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_OVERLAY_COVERED_CALLS archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-synthetic-delta.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +35,7 @@ archetype: VOL_OVERLAY_COVERED_CALLS
 family: VOL_TRADING
 venue_universe: [DERIBIT, OKX_OPTIONS]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 300
   min_sla_tier: standard

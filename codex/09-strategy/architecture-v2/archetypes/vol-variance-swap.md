@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_VARIANCE_SWAP`'
+title: "Archetype: `VOL_VARIANCE_SWAP`"
 summary:
-  'Archetype spec for `VOL_VARIANCE_SWAP` — replicates a variance swap via a 1/K² static option strip plus daily
-  delta-hedging, trading the var_strike vs realised-variance gap; payoff (RV²−K²)×vega/2; Deribit BTC/ETH only.'
+  "Archetype spec for `VOL_VARIANCE_SWAP` — replicates a variance swap via a 1/K² static option strip plus daily
+  delta-hedging, trading the var_strike vs realised-variance gap; payoff (RV²−K²)×vega/2; Deribit BTC/ETH only."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,8 +14,14 @@ scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, variance-swap, replication, delta-hedge]
 related: [vol-dispersion.md, vol-carry.md, vol-ratio-spread.md, vol-term-structure-arb.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for: ['VOL_VARIANCE_SWAP archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md, codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md, codex/09-strategy/architecture-v2/archetypes/vol-ratio-spread.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_VARIANCE_SWAP archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-ratio-spread.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +29,7 @@ archetype: VOL_VARIANCE_SWAP
 family: VOL_TRADING
 venue_universe: [DERIBIT]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 200
   min_sla_tier: standard

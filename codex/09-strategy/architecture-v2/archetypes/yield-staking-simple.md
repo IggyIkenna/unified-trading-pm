@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `YIELD_STAKING_SIMPLE`'
+title: "Archetype: `YIELD_STAKING_SIMPLE`"
 summary:
-  'YIELD_STAKING_SIMPLE archetype (family CARRY_AND_YIELD): pure liquid staking — deposit a native PoS asset (ETH/SOL)
+  "YIELD_STAKING_SIMPLE archetype (family CARRY_AND_YIELD): pure liquid staking — deposit a native PoS asset (ETH/SOL)
   into an LST protocol (Lido/Rocket Pool/Jito/Marinade) to earn validator yield, no basis leg / leverage / directional
-  view. HOLD_UNTIL_FLIP; realises restaking layers (CARRY_BASE/AVS_CONTINUOUS/ISSUER_SEASONAL) via dust conversion;
-  100 bps LST-depeg auto-unwind kill-switch. Code backport DEFERRED.'
+  view. HOLD_UNTIL_FLIP; realises restaking layers (CARRY_BASE/AVS_CONTINUOUS/ISSUER_SEASONAL) via dust conversion; 100
+  bps LST-depeg auto-unwind kill-switch. Code backport DEFERRED."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +15,22 @@ repos: [strategy-service]
 scope: [engineer, admin]
 tags: [defi, strategy, staking, lst, yield, carry-yield]
 related:
-  [../families/carry-and-yield.md, carry-staked-basis.md, carry-recursive-staked.md, ../cross-cutting/restaking-reward-economics.md]
+  [
+    ../families/carry-and-yield.md,
+    carry-staked-basis.md,
+    carry-recursive-staked.md,
+    ../cross-cutting/restaking-reward-economics.md,
+  ]
 created: 2026-04-17
-authoritative_for: ['YIELD_STAKING_SIMPLE archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md, codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md]
+authoritative_for: ["YIELD_STAKING_SIMPLE archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md,
+    codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -25,7 +38,7 @@ archetype: YIELD_STAKING_SIMPLE
 family: CARRY_AND_YIELD
 venue_universe: [LIDO, ROCKET_POOL, ETHERFI, JITO, MARINADE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 500
   min_sla_tier: basic

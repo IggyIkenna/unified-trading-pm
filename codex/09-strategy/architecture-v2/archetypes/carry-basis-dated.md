@@ -1,11 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `CARRY_BASIS_DATED`'
+title: "Archetype: `CARRY_BASIS_DATED`"
 summary: >-
-  Archetype CARRY_BASIS_DATED: long spot + short dated future capturing contango/backwardation basis
-  convergence to zero at expiry. Enter when |basis_spread| > min_entry_threshold; delta-neutral, ATOMIC
-  or LEADER_HEDGE legs, roll before expiry. Covers TradFi commodities/equity-index + crypto dated
-  (Deribit quarterly).
+  Archetype CARRY_BASIS_DATED: long spot + short dated future capturing contango/backwardation basis convergence to zero
+  at expiry. Enter when |basis_spread| > min_entry_threshold; delta-neutral, ATOMIC or LEADER_HEDGE legs, roll before
+  expiry. Covers TradFi commodities/equity-index + crypto dated (Deribit quarterly).
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,19 @@ repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, carry, tradfi, defi, archetype, deribit]
 related:
-  [
-    carry-basis-perp.md,
-    carry-basis-dated-inv.md,
-    ../category-instrument-coverage.md,
-    ../families/carry-and-yield.md,
-  ]
+  [carry-basis-perp.md, carry-basis-dated-inv.md, ../category-instrument-coverage.md, ../families/carry-and-yield.md]
 created: 2026-04-17
 authoritative_for: [CARRY_BASIS_DATED archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md, codex/09-strategy/strategy-summary.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md,
+    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    codex/09-strategy/strategy-summary.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -30,7 +34,7 @@ archetype: CARRY_BASIS_DATED
 family: CARRY_AND_YIELD
 venue_universe: [CME, DERIBIT, OKX, BYBIT]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

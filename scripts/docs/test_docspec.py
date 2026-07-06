@@ -178,3 +178,45 @@ def test_optional_assigned_vm_empty_is_ok():
 
 def test_unknown_doc_type_is_hard():
     assert _fields(validate_frontmatter(None, {}, REG), Sev.HARD) == {"doc_type"}
+
+
+def _valid_codex_ssot() -> dict:
+    return {
+        "doc_type": "codex-ssot",
+        "title": "x",
+        "summary": "does x",
+        "status": "current",
+        "nature": "ssot",
+        "asset_group": ["defi"],
+        "stage": ["meta"],
+        "repos": [],
+        "scope": ["engineer"],
+        "tags": ["a"],
+        "related": [],
+        "created": "2026-06-24",
+        "authoritative_for": ["x topic"],
+        "referenced_by": [],
+        "owner": None,
+        "last_reviewed": None,
+        "code_refs": [],
+    }
+
+
+def test_elective_absent_is_ok():
+    vs = validate_frontmatter("codex-ssot", _valid_codex_ssot(), REG)
+    assert "implementation_status" not in _fields(vs, Sev.HARD)
+    assert "implementation_status" not in _fields(vs, Sev.SOFT)
+
+
+def test_elective_valid_value_is_ok():
+    fm = _valid_codex_ssot()
+    fm["implementation_status"] = "code-shipped"
+    vs = validate_frontmatter("codex-ssot", fm, REG)
+    assert "implementation_status" not in _fields(vs, Sev.HARD)
+    assert "implementation_status" not in _fields(vs, Sev.SOFT)
+
+
+def test_elective_bad_enum_is_hard():
+    fm = _valid_codex_ssot()
+    fm["implementation_status"] = "half-baked"
+    assert "implementation_status" in _fields(validate_frontmatter("codex-ssot", fm, REG), Sev.HARD)

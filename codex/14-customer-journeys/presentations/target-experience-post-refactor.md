@@ -2,11 +2,11 @@
 doc_type: codex-ssot
 title: Target-experience presentation — post-refactor view
 summary:
-  'Non-SSOT 23-slide presentation deck (v2, 2026-04-20) of the post-Stage-3E-refactor target experience;
-  regenerated from _ssot-rules / experience / commercial-model / infra-spec sources; covers the 14 G1
-  items, the 1-registry-4-derivations engine, per-persona restriction profiles and dev↔staging parity.'
+  "Non-SSOT 23-slide presentation deck (v2, 2026-04-20) of the post-Stage-3E-refactor target experience; regenerated
+  from _ssot-rules / experience / commercial-model / infra-spec sources; covers the 14 G1 items, the
+  1-registry-4-derivations engine, per-persona restriction profiles and dev↔staging parity."
 status: current
-nature: ssot
+nature: notes
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-trading-system-ui]

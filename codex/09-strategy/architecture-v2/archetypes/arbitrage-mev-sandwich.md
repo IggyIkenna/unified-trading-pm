@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `ARBITRAGE_MEV_SANDWICH` — theoretical-only (no live engine)'
+title: "Archetype: `ARBITRAGE_MEV_SANDWICH` — theoretical-only (no live engine)"
 summary: >-
-  Archetype ARBITRAGE_MEV_SANDWICH — TRACER ONLY, no live engine (workspace has no mempool feed since
-  Bloxroute removal). Walks confirmed blocks and computes the upper-bound theoretical sandwich profit
-  (wedge minus fee_drag) to drive the mempool build-vs-buy decision; a load-bearing test pins that no
-  live engine is factory-registered, gated on the paused mempool-feed-integration plan.
+  Archetype ARBITRAGE_MEV_SANDWICH — TRACER ONLY, no live engine (workspace has no mempool feed since Bloxroute
+  removal). Walks confirmed blocks and computes the upper-bound theoretical sandwich profit (wedge minus fee_drag) to
+  drive the mempool build-vs-buy decision; a load-bearing test pins that no live engine is factory-registered, gated on
+  the paused mempool-feed-integration plan.
+implementation_status: theoretical-only
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +24,12 @@ related:
   ]
 created: 2026-05-01
 authoritative_for: [ARBITRAGE_MEV_SANDWICH archetype (theoretical tracer, no-live-engine policy)]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-backrun.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-backrun.md,
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md,
+    codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -31,7 +37,7 @@ archetype: ARBITRAGE_MEV_SANDWICH
 family: ARBITRAGE_STRUCTURAL
 venue_universe: [UNISWAP_V3, BALANCER, CURVE, SUSHISWAP]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   latency_budget_ms: 150
   min_sla_tier: high
 ---

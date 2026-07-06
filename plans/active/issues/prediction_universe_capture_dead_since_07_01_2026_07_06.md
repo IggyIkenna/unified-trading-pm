@@ -1,5 +1,5 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Prediction universe capture dead 07-01→07-06 — consolidator string-types instrument_count, writer merge crashes
 summary:
   "is-daily-enum-prediction (the 13:30 UTC prediction universe capture) failed with exit 1 every day 2026-07-01→07-06:
@@ -10,8 +10,8 @@ summary:
   instruments consolidators every minute (racing co-writers; other AGs paused legacy 06-08); Cloud Run jobs ship no app
   logs to Cloud Logging; the shard-isolation catch logs without exc_info. UTL write-side Int64 coercion shipped as the
   crash-proof fix; consolidator dtype + migration + backfill of the missed days remain."
-status: active
-nature: issue
+status: open
+nature: record
 asset_group: [prediction]
 stage: [data]
 repos: [unified-trading-library, instruments-service, deployment-service]
@@ -23,11 +23,19 @@ parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P0
+source:
+  [
+    is-daily-enum-prediction daily failure investigation 2026-07-06 — consolidator string-typed instrument_count + UTL
+    writer merge ArrowTypeError,
+  ]
+resolved_by:
+locked_by:
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 assigned_role: data-pipeline-engineer
 drift_direction: advance-code
+depends_on: []
 ---
 
 # Prediction universe capture dead 2026-07-01 → 07-06 (found during catalogue weekend verification)

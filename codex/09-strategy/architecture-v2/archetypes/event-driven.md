@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `EVENT_DRIVEN`'
+title: "Archetype: `EVENT_DRIVEN`"
 summary: >-
   `EVENT_DRIVEN` archetype — schedules positioning around known scheduled events (FOMC / CPI / NFP / OPEC / EIA /
   earnings); computes surprise = (realized − consensus) / σ, emits directional TRADEs when `|surprise|` >
   `min_surprise_sigma` (default 1.5) and flattens at `exit_after_minutes`; per-event notional cap + post-event vol-exit.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -21,7 +22,13 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [EVENT_DRIVEN archetype specification]
-referenced_by: [codex/09-strategy/_archived_pre_v2/cross-cutting/event-driven-macro.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/families/event-driven.md, plans/epics/sports_master.md]
+referenced_by:
+  [
+    codex/09-strategy/_archived_pre_v2/cross-cutting/event-driven-macro.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/architecture-v2/families/event-driven.md,
+    plans/epics/sports_master.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -29,7 +36,7 @@ archetype: EVENT_DRIVEN
 family: EVENT_DRIVEN
 venue_universe: [BINANCE, OKX, HYPERLIQUID, IBKR, CME]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `MARKET_MAKING_QUEUE_MICROSTRUCTURE`'
+title: "Archetype: `MARKET_MAKING_QUEUE_MICROSTRUCTURE`"
 summary: >-
   `MARKET_MAKING_QUEUE_MICROSTRUCTURE` archetype — queue-aware MM modelling VPIN order-flow toxicity and FIFO queue
   position; posts only when fill-probability-adjusted EV > `min_ev_threshold`, cancels all quotes on VPIN >
   `vpin_kill_threshold` (0.85), reprices on queue-rank decay; ultra-premium / co-located (10ms latency budget).
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,13 @@ related:
   ]
 created: 2026-05-19
 authoritative_for: [MARKET_MAKING_QUEUE_MICROSTRUCTURE archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md, codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md, codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md, codex/09-strategy/architecture-v2/families/market-making.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md,
+    codex/09-strategy/architecture-v2/families/market-making.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -30,7 +37,7 @@ archetype: MARKET_MAKING_QUEUE_MICROSTRUCTURE
 family: MARKET_MAKING
 venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT]
 topology_requirements:
-  isolation: {execution-service: isolated, strategy-service: isolated}
+  isolation: { execution-service: isolated, strategy-service: isolated }
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 10
   min_sla_tier: ultra-premium

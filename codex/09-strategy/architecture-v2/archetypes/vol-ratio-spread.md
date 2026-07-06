@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_RATIO_SPREAD`'
+title: "Archetype: `VOL_RATIO_SPREAD`"
 summary:
-  'Archetype spec for `VOL_RATIO_SPREAD` — sells excess OTM options against a long strike (e.g. 1x2 call ratio) for net
-  credit to harvest rich OTM skew; breach-proximity trigger + hard USD stop cap the naked-wing tail; Deribit/CBOE.'
+  "Archetype spec for `VOL_RATIO_SPREAD` — sells excess OTM options against a long strike (e.g. 1x2 call ratio) for net
+  credit to harvest rich OTM skew; breach-proximity trigger + hard USD stop cap the naked-wing tail; Deribit/CBOE."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,22 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, ratio-spread, skew, credit]
-related: [vol-carry.md, vol-variance-swap.md, vol-cross-asset-spread.md, arbitrage-price-dispersion.md, ../families/vol-trading.md]
+related:
+  [
+    vol-carry.md,
+    vol-variance-swap.md,
+    vol-cross-asset-spread.md,
+    arbitrage-price-dispersion.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
-authoritative_for: ['VOL_RATIO_SPREAD archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md, codex/09-strategy/architecture-v2/archetypes/vol-variance-swap.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_RATIO_SPREAD archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-variance-swap.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +35,7 @@ archetype: VOL_RATIO_SPREAD
 family: VOL_TRADING
 venue_universe: [DERIBIT, CBOE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

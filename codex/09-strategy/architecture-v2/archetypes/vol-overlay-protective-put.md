@@ -1,9 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_OVERLAY_PROTECTIVE_PUT`'
+title: "Archetype: `VOL_OVERLAY_PROTECTIVE_PUT`"
 summary:
-  'Archetype spec for `VOL_OVERLAY_PROTECTIVE_PUT` — buys 15-30 delta OTM puts as tail insurance on a delta-1 long
-  (optionally financed as a collar via a covered call); a cost-centre bounding drawdown to strike + premium; Deribit/OKX.'
+  "Archetype spec for `VOL_OVERLAY_PROTECTIVE_PUT` — buys 15-30 delta OTM puts as tail insurance on a delta-1 long
+  (optionally financed as a collar via a covered call); a cost-centre bounding drawdown to strike + premium;
+  Deribit/OKX."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,8 +15,12 @@ scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, protective-put, overlay, hedging]
 related: [vol-overlay-covered-calls.md, vol-straddle.md, vol-carry.md, carry-basis-perp.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for: ['VOL_OVERLAY_PROTECTIVE_PUT archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-overlay-covered-calls.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_OVERLAY_PROTECTIVE_PUT archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-overlay-covered-calls.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +28,7 @@ archetype: VOL_OVERLAY_PROTECTIVE_PUT
 family: VOL_TRADING
 venue_universe: [DERIBIT, OKX_OPTIONS]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 300
   min_sla_tier: standard

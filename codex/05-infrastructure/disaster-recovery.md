@@ -13,9 +13,16 @@ stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [infrastructure, disaster-recovery, runbook, escalation]
-related: [codex/04-architecture/recovery-defence-in-depth-layers.md, codex/04-architecture/incident-gateway-state-machine.md, codex/05-infrastructure/physical-pager-layer.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
+related:
+  [
+    codex/04-architecture/recovery-defence-in-depth-layers.md,
+    codex/04-architecture/incident-gateway-state-machine.md,
+    codex/15-runbooks/physical-pager-layer.md,
+    codex/15-runbooks/alerting/audit-acknowledgement-flow.md,
+  ]
 created: 2026-03-13
-authoritative_for: [disaster-recovery RTO/RPO targets + Tier 0-3 recovery methods + manifest-restore procedure + GCS backup locations]
+authoritative_for:
+  [disaster-recovery RTO/RPO targets + Tier 0-3 recovery methods + manifest-restore procedure + GCS backup locations]
 referenced_by: [codex/04-architecture/recovery-defence-in-depth-layers.md]
 owner:
 last_reviewed: 2026-05-23
@@ -30,7 +37,7 @@ code_refs:
 >
 > - `codex/04-architecture/recovery-defence-in-depth-layers.md` — the 5+1 layer model
 > - `codex/04-architecture/incident-gateway-state-machine.md` — 13-state incident lifecycle
-> - `codex/05-infrastructure/physical-pager-layer.md` — Layer-4 device comparison + webhook
+> - `codex/15-runbooks/physical-pager-layer.md` — Layer-4 device comparison + webhook
 > - `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — Layer-5 6h ack SLA + escalation ladder
 > - `plans/active/issues/disaster_recovery.md` — operator-supplied target operating model (sections 1-22)
 > - `plans/audit/results/observability_disaster_recovery_audit_2026_05_23.md` — gap audit of target model vs prod

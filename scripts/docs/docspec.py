@@ -51,6 +51,9 @@ TIER = frozenset({"L0", "L1", "L2", "L3", "L4", "L5"})
 ESTIMATE_CLASS = frozenset({"refactor", "design", "infra", "brand-new", "research"})
 EXECUTION_SCOPE = frozenset({"orchestrator-agent", "local-only"})
 SEVERITY_P = PRIORITY  # audit-result severity is a P0..P3
+# archetype implementation-maturity axis (codex/09-strategy/architecture-v2/**) — restored per operator
+# decision 2026-07-06 after enum normalization flattened it out of `status:`; elective, archetype docs only
+IMPLEMENTATION_STATUS = frozenset({"design", "code-shipped", "stub", "active", "theoretical-only", "live", "complete"})
 
 STATUS_BY_TYPE: dict[str, frozenset[str] | None] = {
     "plan": frozenset({"draft", "active", "blocked", "paused", "complete", "superseded", "cancelled"}),
@@ -70,6 +73,7 @@ class Req(Enum):
     R = "required"
     O = "optional"  # noqa: E741 (enum member name, not a loop variable)
     C = "conditional"
+    E = "elective"  # absent is FINE (no present-but-empty convention); value validated only when present
 
 
 class Sev(Enum):
@@ -161,6 +165,7 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("owner", Req.O, "scalar"),
         FieldSpec("last_reviewed", Req.O, "date"),
         FieldSpec("code_refs", Req.O, "free_list"),
+        FieldSpec("implementation_status", Req.E, "enum", IMPLEMENTATION_STATUS),
     ],
     "codex-runbook": [
         FieldSpec("owner", Req.R, "scalar"),
@@ -357,6 +362,8 @@ def validate_frontmatter(doc_type: str | None, fm: dict, reg: Registries) -> lis
             cf, cv = spec.conditional_on
             req = Req.R if fm.get(cf) == cv else Req.O
         if spec.name not in fm:
+            if req == Req.E:
+                continue  # elective — absence is not a gap
             if req == Req.R:
                 out.append(Violation(spec.name, Sev.HARD, "required key missing"))
             else:

@@ -1,10 +1,10 @@
 ---
-doc_type: codex-ssot
+doc_type: codex-runbook
 title: Per-source credential rotation runbook — sports, prediction, DeFi data
 summary:
-  Per-data-source credential rotation runbook — sports sources 90d, prediction venues (Polymarket/Kalshi) 60d,
-  DeFi-data sources (Helius/CoinGecko/Tenderly) 90d; per-source owner/cadence/verifier/last_executed + Secret Manager
-  names + credential-probe.sh verification; public sources (understat/transfermarkt/open_meteo/pyth-hermes) excluded.
+  Per-data-source credential rotation runbook — sports sources 90d, prediction venues (Polymarket/Kalshi) 60d, DeFi-data
+  sources (Helius/CoinGecko/Tenderly) 90d; per-source owner/cadence/verifier/last_executed + Secret Manager names +
+  credential-probe.sh verification; public sources (understat/transfermarkt/open_meteo/pyth-hermes) excluded.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,14 +12,28 @@ stage: [meta]
 repos: [deployment-service, execution-service, instruments-service]
 scope: [admin, engineer]
 tags: [credentials, rotation, runbook, secret-manager, defi, sports, prediction]
-related: [../../05-infrastructure/rotation-runbook.md, ../../05-infrastructure/credentials-matrix.md, ../../05-infrastructure/secret-manager-naming.md]
+related:
+  [
+    credential-rotation-runbook.md,
+    ../05-infrastructure/credentials-matrix.md,
+    ../05-infrastructure/secret-manager-naming.md,
+  ]
 created: 2026-05-15
 authoritative_for: [per-data-source credential rotation (sports, prediction, DeFi-data)]
 referenced_by:
-owner:
+owner: operator (ikenna) — per-source credential rotation
 last_reviewed: 2026-05-17
 code_refs: [deployment-service/scripts/audit/credential-probe.sh]
-execution: {owner: operator (ikenna) — per-source credential rotation, cadence: per-source (see body table — typically 90d), verifier: gcloud secrets versions list --secret=<source>_api_key + verify latest enabled within cadence, last_executed: per-source rotation log appended in body; cross-ref codex/05-infrastructure/rotation-runbook.md}
+execution:
+  {
+    owner: operator (ikenna) — per-source credential rotation,
+    cadence: per-source (see body table — typically 90d),
+    verifier: gcloud secrets versions list --secret=<source>_api_key + verify latest enabled within cadence,
+    last_executed: per-source rotation log appended in body; cross-ref codex/15-runbooks/credential-rotation-runbook.md,
+  }
+cadence: per-source (see body table — typically 90d)
+verifier: gcloud secrets versions list --secret=<source>_api_key + verify latest enabled within cadence
+last_executed: per-source rotation log appended in body; cross-ref codex/15-runbooks/credential-rotation-runbook.md
 ---
 
 # Per-source credential rotation runbook — sports, prediction, DeFi data
@@ -27,10 +41,10 @@ execution: {owner: operator (ikenna) — per-source credential rotation, cadence
 > **Created 2026-05-15** per
 > [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 5.A.2. Full cross-class rotation cadence is at
-> [`codex/05-infrastructure/rotation-runbook.md`](../../05-infrastructure/rotation-runbook.md).
+> [`codex/15-runbooks/credential-rotation-runbook.md`](credential-rotation-runbook.md).
 >
-> This doc specialises on **data-source** credentials (sports, prediction, DeFi data) per the Runbook
-> Execution-Owner SSOT HARD RULE (4 required fields: `owner` / `cadence` / `verifier` / `last_executed`).
+> This doc specialises on **data-source** credentials (sports, prediction, DeFi data) per the Runbook Execution-Owner
+> SSOT HARD RULE (4 required fields: `owner` / `cadence` / `verifier` / `last_executed`).
 
 ---
 
@@ -47,7 +61,7 @@ execution:
 ```
 
 Secret Manager name: `prod-instruments-service-api-football-key` (see
-[`secret-manager-naming.md`](../../05-infrastructure/secret-manager-naming.md)).
+[`secret-manager-naming.md`](../05-infrastructure/secret-manager-naming.md)).
 
 Steps:
 
@@ -92,7 +106,8 @@ The following sports data sources are **public / key-free** — excluded from ro
 - **open_meteo** — public weather API, no API key
 - **pyth-hermes** — Pyth Network price feeds are on-chain public; Pyth-Hermes HTTP relay has no authentication
 
-These sources are NOT in `_TRADE_KEY_PATTERNS` / `_DATA_KEY_PATTERNS` in `deployment-service/scripts/audit/credential-probe.sh`.
+These sources are NOT in `_TRADE_KEY_PATTERNS` / `_DATA_KEY_PATTERNS` in
+`deployment-service/scripts/audit/credential-probe.sh`.
 
 ---
 
@@ -108,8 +123,8 @@ execution:
   last_executed: NEVER
 ```
 
-Secret Manager name: `prod-execution-service-polymarket-api-key` (added to `_TRADE_KEY_PATTERNS` 2026-05-09;
-secret value provisioning: BLOCKED-OPERATOR per Phase 5.B.1).
+Secret Manager name: `prod-execution-service-polymarket-api-key` (added to `_TRADE_KEY_PATTERNS` 2026-05-09; secret
+value provisioning: BLOCKED-OPERATOR per Phase 5.B.1).
 
 ### 2.2 Kalshi
 
@@ -167,11 +182,11 @@ Secret Manager name: `prod-execution-service-tenderly-access-key`.
 
 ## § 4 — References
 
-- [`codex/05-infrastructure/rotation-runbook.md`](../../05-infrastructure/rotation-runbook.md) — cross-class cadence
-  (wallets, CMK, CeFi trade-scope, withdraw-scope, aux).
-- [`codex/05-infrastructure/credentials-matrix.md`](../../05-infrastructure/credentials-matrix.md) — workspace
-  credential SSOT (full enumeration).
-- [`codex/05-infrastructure/secret-manager-naming.md`](../../05-infrastructure/secret-manager-naming.md) — secret name
+- [`codex/15-runbooks/credential-rotation-runbook.md`](credential-rotation-runbook.md) — cross-class cadence (wallets,
+  CMK, CeFi trade-scope, withdraw-scope, aux).
+- [`codex/05-infrastructure/credentials-matrix.md`](../05-infrastructure/credentials-matrix.md) — workspace credential
+  SSOT (full enumeration).
+- [`codex/05-infrastructure/secret-manager-naming.md`](../05-infrastructure/secret-manager-naming.md) — secret name
   conventions.
-- [`deployment-service/scripts/audit/credential-probe.sh`](../../../deployment-service/scripts/audit/credential-probe.sh) —
-  automated probe + verification.
+- [`deployment-service/scripts/audit/credential-probe.sh`](../../../deployment-service/scripts/audit/credential-probe.sh)
+  — automated probe + verification.

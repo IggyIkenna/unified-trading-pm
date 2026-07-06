@@ -1,5 +1,5 @@
 ---
-doc_type: codex-ssot
+doc_type: codex-runbook
 title: RecursiveLeverageReceiver — Deploy Runbook
 summary:
   Operator runbook to deploy the Phase-4 RecursiveLeverageReceiver.sol to a target chain (Sepolia/Ethereum/Base/Tenderly
@@ -13,14 +13,23 @@ stage: [meta]
 repos: [deployment-service, execution-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [defi, execution, runbook, deployment, uac]
-related: [flash-loan-receiver.md]
+related: [../04-architecture/flash-loan-receiver.md]
 created: 2026-05-15
 authoritative_for: [RecursiveLeverageReceiver deploy runbook]
 referenced_by: [codex/04-architecture/flash-loan-receiver.md]
-owner:
+owner: slot-2-ikenna
 last_reviewed: 2026-05-17
 code_refs:
-execution: {owner: slot-2-ikenna, cadence: one-shot-per-chain (Sepolia + Ethereum + Base) + per-Tenderly-fork, verifier: execution-service `AAVEConnector.connect()` + `eth_getCode` preflight, last_executed: 2026-05-15 (Sepolia)}
+execution:
+  {
+    owner: slot-2-ikenna,
+    cadence: one-shot-per-chain (Sepolia + Ethereum + Base) + per-Tenderly-fork,
+    verifier: execution-service `AAVEConnector.connect()` + `eth_getCode` preflight,
+    last_executed: 2026-05-15 (Sepolia),
+  }
+cadence: one-shot-per-chain (Sepolia + Ethereum + Base) + per-Tenderly-fork
+verifier: execution-service `AAVEConnector.connect()` + `eth_getCode` preflight
+last_executed: 2026-05-15 (Sepolia)
 ---
 
 # RecursiveLeverageReceiver — Deploy Runbook
@@ -28,7 +37,8 @@ execution: {owner: slot-2-ikenna, cadence: one-shot-per-chain (Sepolia + Ethereu
 Operator runbook for deploying the Phase 4 `RecursiveLeverageReceiver.sol` (action-encoder pattern) to a target chain
 and registering the address in UAC + Secret Manager.
 
-Companion SSOT to [`flash-loan-receiver.md`](flash-loan-receiver.md) § "Extended receiver".
+Companion SSOT to [`../04-architecture/flash-loan-receiver.md`](../04-architecture/flash-loan-receiver.md) § "Extended
+receiver".
 
 ## Pre-deploy checklist
 
@@ -187,4 +197,5 @@ UAC registry SHA:  unified-api-contracts@468df51
 
 - Phase 4 of
   [`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)
-- Companion: [`flash-loan-receiver.md`](flash-loan-receiver.md) (passthrough sibling contract)
+- Companion: [`../04-architecture/flash-loan-receiver.md`](../04-architecture/flash-loan-receiver.md) (passthrough
+  sibling contract)

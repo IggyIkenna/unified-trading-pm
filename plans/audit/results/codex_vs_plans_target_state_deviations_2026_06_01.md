@@ -2,13 +2,11 @@
 doc_type: audit-result
 title: Codex-vs-active-plans target-state deviation audit
 summary:
-  Deviation audit where an active plan's target end-state conflicts with or is
-  missing from the codex doc it cites as SSOT (codex = eventual SSOT; fix codex
-  ahead of archival so archival is mechanical) — one headline operator-conflict
-  (agent-orchestrator integration branch main vs live-defi-rollout) needing
-  resolution, plus ~25 high-confidence codex-stale themes (v8→v9, source column
-  now universal, HS256→ES256 orchestrator auth, EmptyConfirmedReason 31→33, fleet
-  10→11 VMs).
+  Deviation audit where an active plan's target end-state conflicts with or is missing from the codex doc it cites as
+  SSOT (codex = eventual SSOT; fix codex ahead of archival so archival is mechanical) — one headline operator-conflict
+  (agent-orchestrator integration branch main vs live-defi-rollout) needing resolution, plus ~25 high-confidence
+  codex-stale themes (v8→v9, source column now universal, HS256→ES256 orchestrator auth, EmptyConfirmedReason 31→33,
+  fleet 10→11 VMs).
 status: partial
 nature: record
 asset_group: [cross-cutting]
@@ -22,8 +20,10 @@ related:
     ../../../codex/04-architecture/agent-orchestrator-overview.md,
   ]
 created: 2026-06-01
-audited_scope: 'Where an active plan''s TARGET END-STATE conflicts with / is missing from the codex doc it claims as SSOT. Goal: update codex AHEAD of archival so archival is mechanical.'
-date: '2026-06-01'
+audited_scope:
+  "Where an active plan's TARGET END-STATE conflicts with / is missing from the codex doc it claims as SSOT. Goal:
+  update codex AHEAD of archival so archival is mechanical."
+date: "2026-06-01"
 auditor: ikenna + claude (opus-1m, 6-worker fan-out split by codex dir)
 parent_epic: infrastructure_master
 severity: P1
@@ -33,7 +33,10 @@ doc_versions_checked:
 type: analysis
 epic: plan_hygiene_master
 source: [plans/active/*.md (46 active plans; ~36 reference codex), codex/ (801 docs)]
-method: 6 read-only sonnet workers, one per codex-dir cluster (02-data; 04-architecture; 05-infrastructure; 06-coding-standards+08-workflows; 12-agent-workflow+governance; 09-strategy+security+master). Each given the focused plan set referencing its dir. Opus consolidation + contradiction verification.
+method:
+  6 read-only sonnet workers, one per codex-dir cluster (02-data; 04-architecture; 05-infrastructure;
+  06-coding-standards+08-workflows; 12-agent-workflow+governance; 09-strategy+security+master). Each given the focused
+  plan set referencing its dir. Opus consolidation + contradiction verification.
 ---
 
 # Codex-vs-plans target-state deviation audit (2026-06-01)
@@ -183,8 +186,8 @@ SM; workers verify with public key from GCS `internal-public.pem`; HS256 dual-ac
 - No codex doc names the rule behind the 2026-06-01 dual-write bug: a service domain string passed to
   `resolve_bucket_name` must match `_DOMAIN_TO_YAML_KIND` exactly (`market_data`, not `market-data-tick-{ag}`) or it
   silently falls through to the legacy flat name. → add a "Resolver domain-string contract" subsection to
-  `codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md` (+ addendum noting the resolver was canonical but
-  writers bypassed it via malformed domain; fix at market-tick-data-service@0b575651).
+  `codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md` (+ addendum noting the resolver was canonical but writers
+  bypassed it via malformed domain; fix at market-tick-data-service@0b575651).
 
 ### Theme R — Manifest-consolidator legacy crons pending decommission
 

@@ -33,7 +33,7 @@ Usage::
       --max-drift 0.0 --sample-parquets 50
 
 Wired by Wave 2-5 verify gates of
-`codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md`.
+`codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md`.
 
 Reference: `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` §
 "gap-2.6.B — verify_flat_to_env_tiered_drift.py".
@@ -324,8 +324,7 @@ def main() -> int:
 
     if fail:
         print(
-            "\nOperator GO/NO-GO required. See "
-            "codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md § rollback."
+            "\nOperator GO/NO-GO required. See codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md § rollback."
         )
         return 1
 

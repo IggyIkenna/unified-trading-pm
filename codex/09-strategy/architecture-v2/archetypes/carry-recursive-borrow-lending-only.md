@@ -2,10 +2,11 @@
 doc_type: codex-ssot
 title: CARRY_RECURSIVE_BORROW_LENDING_ONLY
 summary: >-
-  Archetype CARRY_RECURSIVE_BORROW_LENDING_ONLY (Family 1): pure ETH-LST recursive supply-borrow loop on
-  Aave V3 / Morpho with NO perp leg — recursion amplifies the lending spread R_lend, not delta (net
-  ETH-equivalent exposure = base for all ltv,d). Closed-form R_lend, top-7 May-23 per-chain per-lender
-  cells; shares the recursive-loop engine via config flags.
+  Archetype CARRY_RECURSIVE_BORROW_LENDING_ONLY (Family 1): pure ETH-LST recursive supply-borrow loop on Aave V3 /
+  Morpho with NO perp leg — recursion amplifies the lending spread R_lend, not delta (net ETH-equivalent exposure = base
+  for all ltv,d). Closed-form R_lend, top-7 May-23 per-chain per-lender cells; shares the recursive-loop engine via
+  config flags.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -24,7 +25,15 @@ related:
   ]
 created: 2026-05-12
 authoritative_for: [CARRY_RECURSIVE_BORROW_LENDING_ONLY archetype specification (Family 1 recursive lending loop)]
-referenced_by: [codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md, codex/09-strategy/strategy-summary.md]
+referenced_by:
+  [
+    codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    codex/09-strategy/strategy-summary.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -32,7 +41,7 @@ archetype: CARRY_RECURSIVE_BORROW_LENDING_ONLY
 family: CARRY_AND_YIELD
 venue_universe: [AAVE, MORPHO, COMPOUND, EULER, UNISWAP_V3]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

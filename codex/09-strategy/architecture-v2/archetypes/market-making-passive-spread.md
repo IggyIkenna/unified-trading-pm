@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `MARKET_MAKING_PASSIVE_SPREAD`'
+title: "Archetype: `MARKET_MAKING_PASSIVE_SPREAD`"
 summary: >-
   `MARKET_MAKING_PASSIVE_SPREAD` archetype — the simplest MM: post symmetric limit bid/ask at mid ± `half_spread_ticks`
   and repost the opposite side on each fill to target near-zero inventory; pauses below `min_spread_ticks` or above
   `latency_threshold_ms`, with `inventory_hard_cap` market-order exit and a daily P&L stop.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,13 @@ related:
   ]
 created: 2026-05-19
 authoritative_for: [MARKET_MAKING_PASSIVE_SPREAD archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md, codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md, codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md, codex/09-strategy/architecture-v2/families/market-making.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
+    codex/09-strategy/architecture-v2/families/market-making.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -30,7 +37,7 @@ archetype: MARKET_MAKING_PASSIVE_SPREAD
 family: MARKET_MAKING
 venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT]
 topology_requirements:
-  isolation: {execution-service: isolated, strategy-service: isolated}
+  isolation: { execution-service: isolated, strategy-service: isolated }
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 20
   min_sla_tier: premium

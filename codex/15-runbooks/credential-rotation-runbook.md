@@ -1,5 +1,5 @@
 ---
-doc_type: codex-ssot
+doc_type: codex-runbook
 title: Credential rotation runbook — per-class cadence + execution-owner
 summary:
   Credential rotation runbook — per-class cadence (venue trade-scope 30d, custody MPC 60d, data/aux 90d, wallet PK
@@ -12,14 +12,41 @@ stage: [meta]
 repos: [deployment-service]
 scope: [admin, engineer]
 tags: [rotation, runbook, secret-manager, credentials, security, defi]
-related: [secret-manager-naming.md, credentials-matrix.md, hsm-wallet-signing.md, ../04-architecture/custody-providers.md]
+related:
+  [
+    ../05-infrastructure/secret-manager-naming.md,
+    ../05-infrastructure/credentials-matrix.md,
+    ../05-infrastructure/hsm-wallet-signing.md,
+    ../04-architecture/custody-providers.md,
+  ]
 created: 2026-05-11
 authoritative_for: [credential rotation cadence and execution-owner per class]
-referenced_by: [codex/04-architecture/custody-providers.md, codex/05-infrastructure/aws-iam-matrix.md, codex/05-infrastructure/secret-manager-naming.md, codex/06-coding-standards/config-reloader-pattern.md, codex/14-customer-journeys/authentication/firebase-local.md, codex/14-customer-journeys/credentials/rotation-runbook.md]
-owner:
+referenced_by:
+  [
+    codex/04-architecture/custody-providers.md,
+    codex/05-infrastructure/aws-iam-matrix.md,
+    codex/05-infrastructure/secret-manager-naming.md,
+    codex/06-coding-standards/config-reloader-pattern.md,
+    codex/14-customer-journeys/authentication/firebase-local.md,
+    codex/15-runbooks/per-source-credential-rotation-runbook.md,
+  ]
+owner: credential-ops (operator) + per-class secondary owner declared in body
 last_reviewed: 2026-05-17
 code_refs:
-execution: {owner: credential-ops (operator) + per-class secondary owner declared in body, cadence: per-class (see body table — typically 90d/30d/event-driven), verifier: gh secret list --repo IggyIkenna/<repo> + Secret Manager versions API (verify latest enabled version date within cadence), last_executed: see per-class rotation log appended in body}
+execution:
+  {
+    owner: credential-ops (operator) + per-class secondary owner declared in body,
+    cadence: per-class (see body table — typically 90d/30d/event-driven),
+    verifier:
+      gh secret list --repo IggyIkenna/<repo> + Secret Manager versions API (verify latest enabled version date within
+      cadence),
+    last_executed: see per-class rotation log appended in body,
+  }
+cadence: per-class (see body table — typically 90d/30d/event-driven)
+verifier:
+  gh secret list --repo IggyIkenna/<repo> + Secret Manager versions API (verify latest enabled version date within
+  cadence)
+last_executed: see per-class rotation log appended in body
 ---
 
 # Credential rotation runbook — per-class cadence + execution-owner
@@ -95,7 +122,8 @@ Operator runbook (manual one-shot per rotation event):
 ### 2.2 Continuous verification
 
 Daily cron `credential-probe.sh --mode live` includes `cloud_kms_cmk_*` probes (see
-[`credentials-matrix.md`](credentials-matrix.md) § 6) — fails if KMS Decrypt returns version mismatch.
+[`../05-infrastructure/credentials-matrix.md`](../05-infrastructure/credentials-matrix.md) § 6) — fails if KMS Decrypt
+returns version mismatch.
 
 ---
 
@@ -126,7 +154,7 @@ Per Copper documentation + [`custody-providers.md`](../04-architecture/custody-p
 
 ### 3.2 Fireblocks rotation (RSA PEM + API user)
 
-Per [`fireblocks-integration-spec.md`](fireblocks-integration-spec.md) § 2.3:
+Per [`../05-infrastructure/fireblocks-integration-spec.md`](../05-infrastructure/fireblocks-integration-spec.md) § 2.3:
 
 1. Operator generates new RSA keypair on cold laptop: `openssl genrsa -out fireblocks-private-new.pem 4096`.
 2. Upload public key half to Fireblocks dashboard (Settings → API Users → Edit → New Public Key).
@@ -156,7 +184,8 @@ For each of the 10 venues (Bybit / Binance / OKX / Deribit / Hyperliquid / Aster
 
 1. Operator logs into venue dashboard + generates new trade-scope sub-key (IP whitelist pinned to VM egress IPs where
    supported).
-2. Provision in Secret Manager per [`secret-manager-naming.md`](secret-manager-naming.md) § 2.2:
+2. Provision in Secret Manager per
+   [`../05-infrastructure/secret-manager-naming.md`](../05-infrastructure/secret-manager-naming.md) § 2.2:
    `<venue>-trade-{api-key,api-secret,passphrase}`.
 3. Trading-VM `ApiKeyReloader` (from UTL) picks up new keys within reload interval (default 60s).
 4. Revoke old trade-scope key in venue dashboard.
@@ -177,7 +206,7 @@ execution:
   last_executed: NEVER
 ```
 
-Per [`credentials-matrix.md`](credentials-matrix.md) § 1, data + aux creds:
+Per [`../05-infrastructure/credentials-matrix.md`](../05-infrastructure/credentials-matrix.md) § 1, data + aux creds:
 
 - Sports (api-football, footystats, soccer-football-info): 90d.
 - DeFi data (helius, coingecko, tenderly): 90d.
@@ -234,12 +263,14 @@ zero rotation events.
 
 ## § 8 — References
 
-- [`credentials-matrix.md`](credentials-matrix.md) — workspace credential SSOT.
-- [`secret-manager-naming.md`](secret-manager-naming.md) — naming convention.
+- [`../05-infrastructure/credentials-matrix.md`](../05-infrastructure/credentials-matrix.md) — workspace credential
+  SSOT.
+- [`../05-infrastructure/secret-manager-naming.md`](../05-infrastructure/secret-manager-naming.md) — naming convention.
 - [`custody-providers.md`](../04-architecture/custody-providers.md) — Copper + CEFFU + Fireblocks architecture.
 - [`custody-onboarding-checklist.md`](custody-onboarding-checklist.md) — § A
   - B + C operator-action runbooks per surface.
-- [`hsm-wallet-signing.md`](hsm-wallet-signing.md) — § 6 acceptance criteria.
-- [`fireblocks-integration-spec.md`](fireblocks-integration-spec.md) — § 2.3 RS256 JWT auth + rotation pattern.
+- [`../05-infrastructure/hsm-wallet-signing.md`](../05-infrastructure/hsm-wallet-signing.md) — § 6 acceptance criteria.
+- [`../05-infrastructure/fireblocks-integration-spec.md`](../05-infrastructure/fireblocks-integration-spec.md) — § 2.3
+  RS256 JWT auth + rotation pattern.
 - [`deployment-service/scripts/audit/credential-probe.sh`](../../deployment-service/scripts/audit/credential-probe.sh) —
   audit harness used in pre-cutover gate + daily cron.

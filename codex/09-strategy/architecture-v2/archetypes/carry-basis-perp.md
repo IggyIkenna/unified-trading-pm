@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `CARRY_BASIS_PERP`'
+title: "Archetype: `CARRY_BASIS_PERP`"
 summary: >-
-  Archetype CARRY_BASIS_PERP: long spot + short perpetual capturing funding rate while delta-neutral;
-  enter when annualized_funding > min_funding_threshold, rebalance on funding drop / venue migration /
-  delta drift. Single-venue netted (Binance/OKX/Bybit) or LEADER_HEDGE cross-venue; includes the
-  2026-06-01 Solana DRIFT-perp + ORCA-spot basis variant.
+  Archetype CARRY_BASIS_PERP: long spot + short perpetual capturing funding rate while delta-neutral; enter when
+  annualized_funding > min_funding_threshold, rebalance on funding drop / venue migration / delta drift. Single-venue
+  netted (Binance/OKX/Bybit) or LEADER_HEDGE cross-venue; includes the 2026-06-01 Solana DRIFT-perp + ORCA-spot basis
+  variant.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +24,17 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [CARRY_BASIS_PERP archetype specification]
-referenced_by: [codex/09-strategy/_archived_pre_v2/defi/basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/btc-basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/l2-basis-trade.md, codex/09-strategy/architecture-v2/MIGRATION.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md, codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md]
+referenced_by:
+  [
+    codex/09-strategy/_archived_pre_v2/defi/basis-trade.md,
+    codex/09-strategy/_archived_pre_v2/defi/btc-basis-trade.md,
+    codex/09-strategy/_archived_pre_v2/defi/l2-basis-trade.md,
+    codex/09-strategy/architecture-v2/MIGRATION.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -31,7 +42,7 @@ archetype: CARRY_BASIS_PERP
 family: CARRY_AND_YIELD
 venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT, KRAKEN, UNISWAP_V3, JUPITER, DRIFT, ORCA, RAYDIUM]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

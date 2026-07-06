@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `DEFI_LP_POOL`'
+title: "Archetype: `DEFI_LP_POOL`"
 summary: >-
-  Archetype DEFI_LP_POOL: full-range pool LP (Curve stableswap / Balancer weighted) held until
-  invariant-drift signals depeg — DEPOSIT while lp_pool_invariant_drift_bps < depeg_exit_bps, WITHDRAW
-  at/above threshold (or on kill switch). No in-range rebalance math (the pool invariant absorbs spot
-  moves); single-pool ATOMIC, cross-pool rotation LEADER_HEDGE.
+  Archetype DEFI_LP_POOL: full-range pool LP (Curve stableswap / Balancer weighted) held until invariant-drift signals
+  depeg — DEPOSIT while lp_pool_invariant_drift_bps < depeg_exit_bps, WITHDRAW at/above threshold (or on kill switch).
+  No in-range rebalance math (the pool invariant absorbs spot moves); single-pool ATOMIC, cross-pool rotation
+  LEADER_HEDGE.
+implementation_status: code-shipped
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +15,15 @@ repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, defi, execution, archetype, features]
 related:
-  [
-    ../families/market-making.md,
-    defi-lp-concentrated.md,
-    yield-rotation-lending.md,
-    arbitrage-price-dispersion.md,
-  ]
+  [../families/market-making.md, defi-lp-concentrated.md, yield-rotation-lending.md, arbitrage-price-dispersion.md]
 created: 2026-05-01
 authoritative_for: [DEFI_LP_POOL archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md, codex/09-strategy/architecture-v2/families/market-making.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md,
+    codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md,
+    codex/09-strategy/architecture-v2/families/market-making.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -30,7 +31,7 @@ archetype: DEFI_LP_POOL
 family: MARKET_MAKING
 venue_universe: [CURVE, BALANCER_V2, BALANCER_V3]
 topology_requirements:
-  isolation: {execution-service: shared}
+  isolation: { execution-service: shared }
   latency_budget_ms: 1000
   min_sla_tier: standard
 ---

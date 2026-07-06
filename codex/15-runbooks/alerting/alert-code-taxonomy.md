@@ -13,7 +13,12 @@ stage: [meta]
 repos: [alerting-service, execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [alerting, uac, runbook, defi, ml, kill-switch, escalation, live-trading]
-related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/threshold-tuning.md, codex/05-infrastructure/live-deployment-monitoring.md]
+related:
+  [
+    codex/15-runbooks/alerting/operator-playbook.md,
+    codex/15-runbooks/alerting/threshold-tuning.md,
+    codex/05-infrastructure/live-deployment-monitoring.md,
+  ]
 created: 2026-05-07
 owner: ikenna
 cadence: on-demand
@@ -21,7 +26,10 @@ verifier: operator
 last_executed:
 code_refs:
 updated: 2026-05-07
-authoritative_for: The UAC `AlertCode` StrEnum SSOT — the closed set of alert codes the alerting-service may emit. Each code maps to a stable operator runbook entry, threshold owner, and severity. Phase 1 shipped UAC@d00326d; Phase 2 (alerting-service consumption) shipped alerting-service@b025e83.
+authoritative_for:
+  The UAC `AlertCode` StrEnum SSOT — the closed set of alert codes the alerting-service may emit. Each code maps to a
+  stable operator runbook entry, threshold owner, and severity. Phase 1 shipped UAC@d00326d; Phase 2 (alerting-service
+  consumption) shipped alerting-service@b025e83.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 
@@ -423,7 +431,7 @@ Findings Triage Discipline — this audit doc lists the shape; another slot ship
 
 > **Origin**: [`codex_audit_alerting_2026_05_12.md`](../../../plans/archive/issues/codex_audit_alerting_2026_05_12.md)
 > AL-15. **Source-of-truth pattern**: `CloudKmsCustodyProvider` at `execution-service@d45d24b4` + slot 4's
-> `rotation-runbook.md` Phase 9.D. **Custody-stale** = "key rotation is overdue".
+> `../credential-rotation-runbook.md` Phase 9.D. **Custody-stale** = "key rotation is overdue".
 
 - **Code**: `CUSTODY_KEY_ROTATION_OVERDUE` (preferred) OR `CUSTODY_HEALTH_DEGRADED` (umbrella code per PB-18 cross-link
   if the operator decision is to bundle multiple custody-health signals — key-rotation-overdue + webhook- stale +
@@ -438,8 +446,8 @@ Findings Triage Discipline — this audit doc lists the shape; another slot ship
 - **Routing**: Telegram (production on-call) + PagerDuty (P2 — "page within 30 min"). NOT the live-trading critical
   paging path; this is an operational-degradation signal.
 - **Wire-in path**: slot 4 PRE_CUTOVER follow-up (NOT slot-8-owned per Findings Triage). The slot 4
-  `rotation-runbook.md` Phase 9.D is the named successor for the wire-in; this audit doc only codifies the AlertCode
-  shape.
+  `../credential-rotation-runbook.md` Phase 9.D is the named successor for the wire-in; this audit doc only codifies the
+  AlertCode shape.
 
 ### Anti-patterns for AlertCode additions
 

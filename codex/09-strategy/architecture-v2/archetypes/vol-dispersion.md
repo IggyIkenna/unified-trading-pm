@@ -1,9 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_DISPERSION`'
+title: "Archetype: `VOL_DISPERSION`"
 summary:
-  'Archetype spec for `VOL_DISPERSION` — sells index vol and buys a weighted basket of component vols to harvest the
-  implied-over-realised correlation premium (BTC index vs ETH/SOL/BNB); entry at dispersion_premium > ~3 vp; Deribit/OKX.'
+  "Archetype spec for `VOL_DISPERSION` — sells index vol and buys a weighted basket of component vols to harvest the
+  implied-over-realised correlation premium (BTC index vs ETH/SOL/BNB); entry at dispersion_premium > ~3 vp;
+  Deribit/OKX."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +13,22 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, dispersion, correlation, spread]
-related: [vol-variance-swap.md, vol-cross-asset-spread.md, vol-carry.md, arbitrage-price-dispersion.md, ../families/vol-trading.md]
+related:
+  [
+    vol-variance-swap.md,
+    vol-cross-asset-spread.md,
+    vol-carry.md,
+    arbitrage-price-dispersion.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
-authoritative_for: ['VOL_DISPERSION archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md, codex/09-strategy/architecture-v2/archetypes/vol-variance-swap.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_DISPERSION archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-variance-swap.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +36,7 @@ archetype: VOL_DISPERSION
 family: VOL_TRADING
 venue_universe: [DERIBIT, OKX_OPTIONS]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 200
   min_sla_tier: standard

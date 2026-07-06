@@ -1,11 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `ARBITRAGE_CROSS_DOMAIN_EVENT`'
+title: "Archetype: `ARBITRAGE_CROSS_DOMAIN_EVENT`"
 summary: >-
-  Archetype ARBITRAGE_CROSS_DOMAIN_EVENT: riskless cross-domain event arb spanning sports books,
-  prediction CLOBs, and CME binaries priced on the same real-world outcome. ATOMIC fan-out across all
-  legs (abort/unwind on partial fill), USD* share class, entry gated on net_edge > min_arb_edge_usd AND
-  return > min_arb_return_pct with aligned expiries.
+  Archetype ARBITRAGE_CROSS_DOMAIN_EVENT: riskless cross-domain event arb spanning sports books, prediction CLOBs, and
+  CME binaries priced on the same real-world outcome. ATOMIC fan-out across all legs (abort/unwind on partial fill),
+  USD* share class, entry gated on net_edge > min_arb_edge_usd AND return > min_arb_return_pct with aligned expiries.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +22,11 @@ related:
   ]
 created: 2026-05-19
 authoritative_for: [ARBITRAGE_CROSS_DOMAIN_EVENT archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
+    codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -30,7 +34,7 @@ archetype: ARBITRAGE_CROSS_DOMAIN_EVENT
 family: ARBITRAGE_STRUCTURAL
 venue_universe: [PINNACLE, POLYMARKET, KALSHI, PREDICTIT, CME]
 topology_requirements:
-  isolation: {execution-service: isolated, strategy-service: isolated}
+  isolation: { execution-service: isolated, strategy-service: isolated }
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 200
   min_sla_tier: premium

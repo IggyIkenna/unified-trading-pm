@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_TERM_STRUCTURE_SLOPE`'
+title: "Archetype: `VOL_TERM_STRUCTURE_SLOPE`"
 summary:
-  'Archetype spec for `VOL_TERM_STRUCTURE_SLOPE` — trades term-structure shape via a daily Heston/SVI parametric slope
-  fit, entering front-vs-back straddle legs on slope z-score extremes with continuous roll; Deribit/CBOE.'
+  "Archetype spec for `VOL_TERM_STRUCTURE_SLOPE` — trades term-structure shape via a daily Heston/SVI parametric slope
+  fit, entering front-vs-back straddle legs on slope z-score extremes with continuous roll; Deribit/CBOE."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,22 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, term-structure, slope, mean-reversion]
-related: [vol-term-structure-arb.md, vol-carry.md, vol-leaps-convexity.md, vol-cross-asset-spread.md, ../families/vol-trading.md]
+related:
+  [
+    vol-term-structure-arb.md,
+    vol-carry.md,
+    vol-leaps-convexity.md,
+    vol-cross-asset-spread.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
-authoritative_for: ['VOL_TERM_STRUCTURE_SLOPE archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md, codex/09-strategy/architecture-v2/archetypes/vol-term-structure-arb.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_TERM_STRUCTURE_SLOPE archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-term-structure-arb.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +35,7 @@ archetype: VOL_TERM_STRUCTURE_SLOPE
 family: VOL_TRADING
 venue_universe: [DERIBIT, CBOE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

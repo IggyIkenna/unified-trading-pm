@@ -10,10 +10,24 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+  ]
 scope: [engineer, admin]
 tags: [quality-gates, infrastructure, ci-cd, deployment]
-related: [codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/08-workflows/ci-cd-flow.md, codex/06-coding-standards/quality-gates.md]
+related:
+  [
+    codex/05-infrastructure/vm-tarball-deployment.md,
+    codex/05-infrastructure/deployment-ui-architecture.md,
+    codex/08-workflows/ci-cd-flow.md,
+    codex/06-coding-standards/quality-gates.md,
+  ]
 created: 2026-05-14
 authoritative_for: [deployment-method decision matrix (tarball vs image per env) + the 4-tier QG enforcement stack]
 referenced_by: [codex/05-infrastructure/act-preflight-coverage.md]
@@ -290,7 +304,7 @@ Template reference: `scripts/vm/templates/startup-gcs-url.sh.tmpl` (GCS-URL patt
 ### VM security hardening audit
 
 Shellcheck sweep at `--severity=error` on all 83 `launch-*.sh` launchers (see
-`codex/05-infrastructure/vm-security-audit.md`):
+`plans/audit/results/vm_security_audit_2026_05_15.md`):
 
 - **P0 hardcoded credentials**: 0 found (clean)
 - **P0 curl-pipe-bash**: 0 found (clean)
@@ -303,7 +317,7 @@ New launchers must pass `shellcheck --severity=warning` before merge. QG `TestSh
 
 ### VM deployment-events pubsub gap
 
-Audit completed; findings in `codex/05-infrastructure/vm-deployment-events-audit.md`:
+Audit completed; findings in `plans/audit/results/vm_deployment_events_audit_2026_05_15.md`:
 
 - `vm-heartbeat-daemon` uses `PubSubEventSink` (7-day TTL) — all other services use `GCSEventSink` for permanent
   archival.

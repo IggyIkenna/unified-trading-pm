@@ -1,5 +1,5 @@
 ---
-doc_type: codex-ssot
+doc_type: codex-runbook
 title: Physical Pager Layer (Layer-4)
 summary:
   "SSOT for the Layer-4 physical alert device — a dedicated wake-up channel on a DIFFERENT network from the operator's
@@ -17,10 +17,18 @@ tags: [alerting, monitoring, escalation, infrastructure, runbook, observability]
 related: [../04-architecture/recovery-defence-in-depth-layers.md]
 created: 2026-05-23
 authoritative_for: [physical-pager-comparison, webhook-prototype, twilio-bridge]
-referenced_by: [codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/physical_pager_research_and_webhook_prototype_2026_05_23.md, plans/active/independent_fallback_twilio_voice_2026_05_23.md]
-owner:
+referenced_by:
+  [
+    codex/04-architecture/recovery-defence-in-depth-layers.md,
+    plans/active/physical_pager_research_and_webhook_prototype_2026_05_23.md,
+    plans/active/independent_fallback_twilio_voice_2026_05_23.md,
+  ]
+owner: ikenna
 last_reviewed: 2026-05-23
 code_refs:
+cadence: on-demand
+verifier: operator
+last_executed: never
 ---
 
 # Physical Pager Layer (Layer-4)

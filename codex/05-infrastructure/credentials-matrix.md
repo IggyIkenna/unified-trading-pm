@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Credentials matrix — workspace SSOT
 summary:
   Workspace SSOT for every credential across paper/batch/live modes + cloud / venue / custody / data / aux surfaces —
-  credential classes with storage + rotation cadence, the live pre-cutover inventory (10 Cloud-HSM CMKs, wallet
-  entries, Tenderly/RPC keys), per-mode + per-archetype credential subsets, and GCP-to-AWS Secret Manager parity.
+  credential classes with storage + rotation cadence, the live pre-cutover inventory (10 Cloud-HSM CMKs, wallet entries,
+  Tenderly/RPC keys), per-mode + per-archetype credential subsets, and GCP-to-AWS Secret Manager parity.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,30 @@ stage: [meta]
 repos: [deployment-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [defi, cefi, custody, credentials, verification]
-related: [codex/05-infrastructure/custody-onboarding-checklist.md, codex/05-infrastructure/secret-manager-naming.md, codex/04-architecture/custody-providers.md, codex/04-architecture/interface-credential-convention.md]
+related:
+  [
+    codex/15-runbooks/custody-onboarding-checklist.md,
+    codex/05-infrastructure/secret-manager-naming.md,
+    codex/04-architecture/custody-providers.md,
+    codex/04-architecture/interface-credential-convention.md,
+  ]
 created: 2026-05-11
-authoritative_for: [workspace credential matrix — credential classes + storage + rotation cadence, per-mode and per-archetype credential subsets]
-referenced_by: [codex/05-infrastructure/aws-iam-matrix.md, codex/05-infrastructure/custody-onboarding-checklist.md, codex/05-infrastructure/hsm-wallet-signing.md, codex/05-infrastructure/per-archetype-wallet-isolation.md, codex/05-infrastructure/rotation-runbook.md, codex/05-infrastructure/secret-manager-naming.md, codex/07-security/gha-wif-migration.md, codex/14-customer-journeys/authentication/firebase-local.md]
+authoritative_for:
+  [
+    workspace credential matrix — credential classes + storage + rotation cadence,
+    per-mode and per-archetype credential subsets,
+  ]
+referenced_by:
+  [
+    codex/05-infrastructure/aws-iam-matrix.md,
+    codex/15-runbooks/custody-onboarding-checklist.md,
+    codex/05-infrastructure/hsm-wallet-signing.md,
+    codex/05-infrastructure/per-archetype-wallet-isolation.md,
+    codex/15-runbooks/credential-rotation-runbook.md,
+    codex/05-infrastructure/secret-manager-naming.md,
+    codex/07-security/gha-wif-migration.md,
+    codex/14-customer-journeys/authentication/firebase-local.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -111,8 +131,9 @@ Full URI pattern:
 `defi-wallet-private-key-wrapped` from Secret Manager → Cloud HSM KMS Decrypt → web3.py `from_key` derived address →
 matched `defi-wallet-trust` value. The May-23 cutover `CLOUD_KMS_ENCRYPTED` signing path is **operationally verified**.
 
-Operator runbook: [`pre-cutover-test-wallets-runbook.md`](pre-cutover-test-wallets-runbook.md) § 0 (canonical lookup) +
-§ 3 (Solana via Trust Wallet operator-export flow).
+Operator runbook:
+[`../15-runbooks/pre-cutover-test-wallets-runbook.md`](../15-runbooks/pre-cutover-test-wallets-runbook.md) § 0
+(canonical lookup) + § 3 (Solana via Trust Wallet operator-export flow).
 
 ### Tenderly + chain RPC credentials (✅ SORTED 2026-05-12)
 
@@ -203,7 +224,7 @@ Pre-cutover gate (2026-05-22): full probe MUST return 100% pass before live-trad
 ## § 7 — References
 
 - [`secret-manager-naming.md`](secret-manager-naming.md) — naming SSOT.
-- [`custody-onboarding-checklist.md`](custody-onboarding-checklist.md) — operator runbook.
+- [`../15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md) — operator runbook.
 - [`fireblocks-integration-spec.md`](fireblocks-integration-spec.md) — June-1 paste-ready spec.
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — multi-wallet model.
 - [`hsm-wallet-signing.md`](hsm-wallet-signing.md) — HSM tier discipline.

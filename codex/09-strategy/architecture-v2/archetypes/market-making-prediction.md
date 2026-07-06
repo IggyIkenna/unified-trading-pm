@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `MARKET_MAKING_PREDICTION`'
+title: "Archetype: `MARKET_MAKING_PREDICTION`"
 summary: >-
-  `MARKET_MAKING_PREDICTION` archetype — prediction-market CLOB MM on Polymarket / Kalshi binary YES/NO contracts;
-  fair value blends sharp-book, base-rate prior, and model (weighted), quotes fair ± `half_spread_ticks` with inventory
-  skew, cancels `event_blackout_hours` before resolution; positions settle at 0 or 1.
+  `MARKET_MAKING_PREDICTION` archetype — prediction-market CLOB MM on Polymarket / Kalshi binary YES/NO contracts; fair
+  value blends sharp-book, base-rate prior, and model (weighted), quotes fair ± `half_spread_ticks` with inventory skew,
+  cancels `event_blackout_hours` before resolution; positions settle at 0 or 1.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,11 @@ related:
   ]
 created: 2026-05-19
 authoritative_for: [MARKET_MAKING_PREDICTION archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md, codex/09-strategy/architecture-v2/families/market-making.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md,
+    codex/09-strategy/architecture-v2/families/market-making.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -30,7 +35,7 @@ archetype: MARKET_MAKING_PREDICTION
 family: MARKET_MAKING
 venue_universe: [POLYMARKET, KALSHI]
 topology_requirements:
-  isolation: {execution-service: isolated, strategy-service: isolated}
+  isolation: { execution-service: isolated, strategy-service: isolated }
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 40
   min_sla_tier: premium

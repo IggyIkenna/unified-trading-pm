@@ -2,17 +2,20 @@
 doc_type: epic
 title: Execution Master
 summary:
-  L2 epic owning execution-service — order/transfer handlers, treasury coordinator, custody
-  integration, flash loans, the matching engine, MEV protection, and per-incident recon-freeze signal
-  emission consumed by alerting-service.
+  L2 epic owning execution-service — order/transfer handlers, treasury coordinator, custody integration, flash loans,
+  the matching engine, MEV protection, and per-incident recon-freeze signal emission consumed by alerting-service.
 status: active
 nature: process
-asset_group: [defi]
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, execution-service, trading-agent-service]
 scope: [engineer, admin]
 tags: [execution, defi, quality-gates, escalation, live-trading]
-related: [../active/execution_fidelity_tiers_uac_governed_2026_06_28.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+related:
+  [
+    ../active/execution_fidelity_tiers_uac_governed_2026_06_28.md,
+    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+  ]
 created: 2026-05-21
 name: execution_master
 tier: L2
@@ -21,7 +24,11 @@ assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [../active/execution_fidelity_tiers_uac_governed_2026_06_28.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+related_plans:
+  [
+    ../active/execution_fidelity_tiers_uac_governed_2026_06_28.md,
+    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+  ]
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

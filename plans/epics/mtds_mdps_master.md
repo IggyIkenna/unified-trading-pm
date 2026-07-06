@@ -2,20 +2,68 @@
 doc_type: epic
 title: Data pipeline master coordination — 2026-05-20
 summary:
-  L1 epic coordinating the MTDS/MDPS data pipeline — backfill-to-100% across all asset_groups, DeFi
-  catalogue→per-pool capture, honest-absence swallow remediation, MDPS book-microstructure precompute +
-  polars adapter seam + cost sharpening; live work runs through survivors M-1 (data_completion_to_100)
-  and M-2 (MTDS/MDPS tech-debt, deferred); the Phase -2…14 migration history is provenance only.
+  L1 epic coordinating the MTDS/MDPS data pipeline — backfill-to-100% across all asset_groups, DeFi catalogue→per-pool
+  capture, honest-absence swallow remediation, MDPS book-microstructure precompute + polars adapter seam + cost
+  sharpening; live work runs through survivors M-1 (data_completion_to_100) and M-2 (MTDS/MDPS tech-debt, deferred); the
+  Phase -2…14 migration history is provenance only.
 status: active
 nature: process
-asset_group: [defi]
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, execution-service, greeks-service]
 scope: [engineer, admin]
 tags: [mtds, mdps, backfill, polars, book-microstructure, data-correctness, cost, features]
-related: [../active/mdps_features_reduced_artifact_tracker_2026_06_28.md, ../active/mdps_book_microstructure_precompute_columns_2026_06_28.md, ../active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md, ../active/mdps_features_full_month_benchmark_binance_2026_06_28.md, ../active/mdps_polars_engine_cost_sharpening_2026_06_28.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md, ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md, ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md, ../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md, ../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md, ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md, ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md, ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md, ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
-  strategy_repo_consolidation_2026_05_19.md, ml_repo_consolidation_2026_05_19.md, features_repo_consolidation_2026_05_08.md, strategy_execution_contract_remediation_2026_05_20.md, bucket_name_ssot_canonicalisation_2026_05_10.md, code_freeze_migrate_backfill_sequencing_2026_05_10.md, aws_migration_defi_first_2026_05_07.md, gcs_migration_bundle_pipeline_mode_2026_05_08.md, writegate_honest_coverage_endtoend_2026_05_06.md, d3_manifest_v8_finish_2026_05_20.md, manifest_cross_asset_rescan_design_2026_05_08.md, manifest_schema_final_gate_2026_05_09.md, hard_schema_phase1_field_flip_migration_2026_05_19.md, honest_coverage_formula_consolidation_2026_05_19.md, data_status_drilldown_shard_atom_alignment_2026_05_07.md, archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md, deployment_ui_lifecycle_tabs_2026_05_08.md, issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md, audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md, audit/results/manifest_v8_compliance_2026_05_20_summary.md,
-  audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md, audit/results/manifest_divergence_2026_05_20_summary.md, audit/results/manifest_divergence_all_services_2026_05_20_summary.md, audit/is_mtds_contract_audit_2026_05_20.md, audit/mtds_features_contract_audit_2026_05_20.md, audit/mtds_strategy_contract_audit_2026_05_20.md, audit/strategy_execution_contract_audit_2026_05_20.md, audit/utl_consumer_contract_audit_2026_05_20.md, audit/uac_consumer_contract_audit_2026_05_20.md, ../../codex/02-data/data-pipeline-correctness-hard-rule.md, ../../codex/05-infrastructure/manifest-consolidator-ssot.md, ../../codex/11-project-management/foundation-completion-gate-discipline.md, ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+related:
+  [
+    ../active/mdps_features_reduced_artifact_tracker_2026_06_28.md,
+    ../active/mdps_book_microstructure_precompute_columns_2026_06_28.md,
+    ../active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md,
+    ../active/mdps_features_full_month_benchmark_binance_2026_06_28.md,
+    ../active/mdps_polars_engine_cost_sharpening_2026_06_28.md,
+    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+    ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md,
+    ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md,
+    ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md,
+    ../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    ../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md,
+    ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md,
+    ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md,
+    ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md,
+    ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
+    strategy_repo_consolidation_2026_05_19.md,
+    ml_repo_consolidation_2026_05_19.md,
+    features_repo_consolidation_2026_05_08.md,
+    strategy_execution_contract_remediation_2026_05_20.md,
+    bucket_name_ssot_canonicalisation_2026_05_10.md,
+    code_freeze_migrate_backfill_sequencing_2026_05_10.md,
+    aws_migration_defi_first_2026_05_07.md,
+    gcs_migration_bundle_pipeline_mode_2026_05_08.md,
+    writegate_honest_coverage_endtoend_2026_05_06.md,
+    d3_manifest_v8_finish_2026_05_20.md,
+    manifest_cross_asset_rescan_design_2026_05_08.md,
+    manifest_schema_final_gate_2026_05_09.md,
+    hard_schema_phase1_field_flip_migration_2026_05_19.md,
+    honest_coverage_formula_consolidation_2026_05_19.md,
+    data_status_drilldown_shard_atom_alignment_2026_05_07.md,
+    archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md,
+    deployment_ui_lifecycle_tabs_2026_05_08.md,
+    issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md,
+    audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md,
+    audit/results/manifest_v8_compliance_2026_05_20_summary.md,
+    audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md,
+    audit/results/manifest_divergence_2026_05_20_summary.md,
+    audit/results/manifest_divergence_all_services_2026_05_20_summary.md,
+    audit/is_mtds_contract_audit_2026_05_20.md,
+    audit/mtds_features_contract_audit_2026_05_20.md,
+    audit/mtds_strategy_contract_audit_2026_05_20.md,
+    audit/strategy_execution_contract_audit_2026_05_20.md,
+    audit/utl_consumer_contract_audit_2026_05_20.md,
+    audit/uac_consumer_contract_audit_2026_05_20.md,
+    ../../codex/02-data/data-pipeline-correctness-hard-rule.md,
+    ../../codex/05-infrastructure/manifest-consolidator-ssot.md,
+    ../../codex/11-project-management/foundation-completion-gate-discipline.md,
+    ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+  ]
 created: 2026-05-20
 name: mtds_mdps_master
 tier: L1
@@ -24,9 +72,57 @@ assigned_vm: vm-ml
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [../active/mdps_features_reduced_artifact_tracker_2026_06_28.md, ../active/mdps_book_microstructure_precompute_columns_2026_06_28.md, ../active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md, ../active/mdps_features_full_month_benchmark_binance_2026_06_28.md, ../active/mdps_polars_engine_cost_sharpening_2026_06_28.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md, ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md, ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md, ../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md, ../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md, ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md, ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md, ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md, ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
-  strategy_repo_consolidation_2026_05_19.md, ml_repo_consolidation_2026_05_19.md, features_repo_consolidation_2026_05_08.md, strategy_execution_contract_remediation_2026_05_20.md, bucket_name_ssot_canonicalisation_2026_05_10.md, code_freeze_migrate_backfill_sequencing_2026_05_10.md, aws_migration_defi_first_2026_05_07.md, gcs_migration_bundle_pipeline_mode_2026_05_08.md, writegate_honest_coverage_endtoend_2026_05_06.md, d3_manifest_v8_finish_2026_05_20.md, manifest_cross_asset_rescan_design_2026_05_08.md, manifest_schema_final_gate_2026_05_09.md, hard_schema_phase1_field_flip_migration_2026_05_19.md, honest_coverage_formula_consolidation_2026_05_19.md, data_status_drilldown_shard_atom_alignment_2026_05_07.md, archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md, deployment_ui_lifecycle_tabs_2026_05_08.md, issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md, audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md, audit/results/manifest_v8_compliance_2026_05_20_summary.md,
-  audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md, audit/results/manifest_divergence_2026_05_20_summary.md, audit/results/manifest_divergence_all_services_2026_05_20_summary.md, audit/is_mtds_contract_audit_2026_05_20.md, audit/mtds_features_contract_audit_2026_05_20.md, audit/mtds_strategy_contract_audit_2026_05_20.md, audit/strategy_execution_contract_audit_2026_05_20.md, audit/utl_consumer_contract_audit_2026_05_20.md, audit/uac_consumer_contract_audit_2026_05_20.md, ../../codex/02-data/data-pipeline-correctness-hard-rule.md, ../../codex/05-infrastructure/manifest-consolidator-ssot.md, ../../codex/11-project-management/foundation-completion-gate-discipline.md, ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+related_plans:
+  [
+    ../active/mdps_features_reduced_artifact_tracker_2026_06_28.md,
+    ../active/mdps_book_microstructure_precompute_columns_2026_06_28.md,
+    ../active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md,
+    ../active/mdps_features_full_month_benchmark_binance_2026_06_28.md,
+    ../active/mdps_polars_engine_cost_sharpening_2026_06_28.md,
+    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+    ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md,
+    ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md,
+    ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md,
+    ../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    ../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md,
+    ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md,
+    ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md,
+    ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md,
+    ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
+    strategy_repo_consolidation_2026_05_19.md,
+    ml_repo_consolidation_2026_05_19.md,
+    features_repo_consolidation_2026_05_08.md,
+    strategy_execution_contract_remediation_2026_05_20.md,
+    bucket_name_ssot_canonicalisation_2026_05_10.md,
+    code_freeze_migrate_backfill_sequencing_2026_05_10.md,
+    aws_migration_defi_first_2026_05_07.md,
+    gcs_migration_bundle_pipeline_mode_2026_05_08.md,
+    writegate_honest_coverage_endtoend_2026_05_06.md,
+    d3_manifest_v8_finish_2026_05_20.md,
+    manifest_cross_asset_rescan_design_2026_05_08.md,
+    manifest_schema_final_gate_2026_05_09.md,
+    hard_schema_phase1_field_flip_migration_2026_05_19.md,
+    honest_coverage_formula_consolidation_2026_05_19.md,
+    data_status_drilldown_shard_atom_alignment_2026_05_07.md,
+    archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md,
+    deployment_ui_lifecycle_tabs_2026_05_08.md,
+    issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md,
+    audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md,
+    audit/results/manifest_v8_compliance_2026_05_20_summary.md,
+    audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md,
+    audit/results/manifest_divergence_2026_05_20_summary.md,
+    audit/results/manifest_divergence_all_services_2026_05_20_summary.md,
+    audit/is_mtds_contract_audit_2026_05_20.md,
+    audit/mtds_features_contract_audit_2026_05_20.md,
+    audit/mtds_strategy_contract_audit_2026_05_20.md,
+    audit/strategy_execution_contract_audit_2026_05_20.md,
+    audit/utl_consumer_contract_audit_2026_05_20.md,
+    audit/uac_consumer_contract_audit_2026_05_20.md,
+    ../../codex/02-data/data-pipeline-correctness-hard-rule.md,
+    ../../codex/05-infrastructure/manifest-consolidator-ssot.md,
+    ../../codex/11-project-management/foundation-completion-gate-discipline.md,
+    ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+  ]
 last_updated: 2026-06-26
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
@@ -43,8 +139,8 @@ locked_since: 2026-05-20
 > - **M-1 · [`data_completion_to_100_all_ag_2026_06_21`](../active/data_completion_to_100_all_ag_2026_06_21.md)**
 >   (repointed 2026-06-30 — `path_to_100pct_backfill_mtds_is_2026_06_17` was MERGED + archived, `superseded_by`
 >   `data_completion_to_100_all_ag_2026_06_21`) — backfill-to-100% + DeFi catalogue→per-pool capture + honest-absence
->   swallow remediation (absorbed `defi_instrument_catalogue_and_capture_pipeline`, `defi_mtds_subgraph_and_adapter_fixes`,
->   `mtds_honest_absence_swallow_remediation`).
+>   swallow remediation (absorbed `defi_instrument_catalogue_and_capture_pipeline`,
+>   `defi_mtds_subgraph_and_adapter_fixes`, `mtds_honest_absence_swallow_remediation`).
 > - **M-2 · [`mtds_file_size_refactor_2026_06_08`](../active/mtds_file_size_refactor_2026_06_08.md)** (retitled
 >   "MTDS/MDPS tech-debt & coverage") — **⏸️ DEFERRED 2026-06-26 (operator, non-essential)**: file-size splits + polars
 >   adapter seam + coverage/QG residuals (absorbed `mdps_adapter_protocol_pandas_to_polars`,
@@ -246,7 +342,7 @@ top-down + dispatch slots accordingly.** No phase content duplicated here.
 | **-2. Strategy/ML/Features consolidation finish**                                                                                       | `strategy_repo_consolidation_2026_05_19.md` (Phase 11 cleanup — 30/31 base done; sub-phases 11a-11h appended by separate agent) + `ml_repo_consolidation_2026_05_19.md` (Phase 11 same structure) + `features_repo_consolidation_2026_05_08.md`. **Outstanding work** (per operator write-up 2026-05-20 round 5): ✅ **Bucket 1 DONE 2026-05-20**: `gh repo archive` executed for `ml-training-service` + `ml-inference-service` (`isArchived: true` confirmed via gh api). ✅ **Bucket 2 DONE 2026-05-20**: operator chose **unified bucket** for `strategy-store` — `strategy_execution_contract_remediation_2026_05_20.md` Phase 4a/4b unblocked; migration bundled into master coordinator Phase 1. 🟡 **Bucket 3** 545 stale refs to 5 archived services across 12 consumer repos (~50-150 real cleanup items) — separate-agent per-slot pings already dispatched to ikenna slots 3-8 with P0/P1 priority; **~4.75 cal AI-days fan-out**. 🟢 **Bucket 4 ACKED**: `strategy_archetype_logic_audit_2026_05_20` re-prioritised P0 + authorised to run **TONIGHT 2026-05-20 in parallel** with Phase 11 cleanup tail (operator round 5: "mostly done anyway"). Requires **Opus 4.7 (1M context)** — separate session. | Bucket 3: separate agent's slot dispatch (slots 3-8 per `ikenna_orchestrator/pings/slot_{3..8}.md`). Bucket 4: dedicated Opus-1M session (operator-orchestrated). | —                                     | Buckets 1+2 ACKED+DONE; Bucket 3 grep returns 0 real-cleanup hits across slots 3-8 dispatch; Bucket 4 strategy_archetype_logic_audit produces audit doc + R-items                                                                      |
 | **-1. Workspace-wide QG green**                                                                                                         | NEW CLAUDE.md HARD RULE this round + per-repo `bash scripts/quality-gates.sh` exit 0. **Round 6 ownership update 2026-05-20** (Harsh offline India tz): re-assigned to **Ikenna slots 9, 10, 11 BACKGROUND** (operator-choice: Ikenna AWS VM or local laptop) per `work_split_2026_05_20_ikenna.md` § Slots 9-11 with cluster split (A: UAC+UTL+IS / B: MTDS+features+MDPS / C: strategy+execution+ml — strategy under LOGIC-freeze, surface-only fixes). When Harsh wakes, Harsh-side slots resume QG ownership; slots 9-11 hand off via git rebase.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | **Ikenna slots 9, 10, 11** (Harsh slots resume on his next online window)                                                                                         | Phase -2 GREEN                        | Every active repo: `bash scripts/quality-gates.sh` exit 0; QG-green evidence line on every PR going forward; 9 repos GREEN (3 per cluster × 3 slots)                                                                                   |
 | **0. Pre-flight audits**                                                                                                                | `audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md` + the 6 contract audits in `audit/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | slot-1 main (mega-audit owner — already DONE round 4)                                                                                                             | Phase -1 GREEN                        | All R-items in mega-audit § 6 have named owner + plan; this file exists                                                                                                                                                                |
-| **1. AWS↔GCP bucket-name symmetry audit + fix**                                                                                         | `bucket_name_ssot_canonicalisation_2026_05_10.md` (extension) + see new § "Phase 1 — bucket symmetry" below                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | **Slot 2 + Slot 3** (code_freeze owners — closest to bucket plumbing)                                                                                             | Phase 0 GREEN                         | A3 v2 re-run: AWS bucket names match GCP template (env-tier present, no `unified-trading-` prefix), all ≤63 chars                                                                                                                      |
+| **1. AWS↔GCP bucket-name symmetry audit + fix**                                                                                        | `bucket_name_ssot_canonicalisation_2026_05_10.md` (extension) + see new § "Phase 1 — bucket symmetry" below                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | **Slot 2 + Slot 3** (code_freeze owners — closest to bucket plumbing)                                                                                             | Phase 0 GREEN                         | A3 v2 re-run: AWS bucket names match GCP template (env-tier present, no `unified-trading-` prefix), all ≤63 chars                                                                                                                      |
 | **2. CODE FREEZE WINDOW**                                                                                                               | This plan § "Phase 2 — code freeze protocol"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | **Slot 1 main** (operator triggers; main broadcasts)                                                                                                              | Phase 1 GREEN                         | All non-freeze slots ACK'd in `_agent_pings.md`; zombie watchdog + Cloud Run consolidators still RUNNING                                                                                                                               |
 | **3. VM fleet drain**                                                                                                                   | `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0 (existing)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | **Slot 2 + Slot 3**                                                                                                                                               | Phase 2 active                        | All non-essential VMs STOPPED; per-VM shards consolidated; manifest snapshot under `_index/snapshots/pre_migration_2026_05_XX.parquet`                                                                                                 |
 | **4. GCS bucket migration**                                                                                                             | `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.2-2.6 + `gcs_migration_bundle_pipeline_mode_2026_05_08.md` (single-walk discipline)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | **Slot 2 + Slot 3**                                                                                                                                               | Phase 3 GREEN                         | Every GCS object lives under the new env-tiered bucket; `resolve_bucket_name()` returns the new bucket name for all kinds                                                                                                              |
@@ -489,8 +585,8 @@ MTDS `scripts/quality-gates.sh` is **pre-existing-red** on LDR (independent of F
   - **Slot-7 FULL diagnosis + LIVE-VALIDATED fix spec 2026-06-01 — root cause is in instruments-service, NOT MTDS.**
     Traced end-to-end:
     1. **Venue→exchange map is CORRECT**: UAC `registry/venue_mapping.py` + `canonical/canonical_mappings.py` map
-       `OKX-FUTURES` ↔ Tardis exchange **`okex-futures`** (OKX has 3 Tardis exchanges: `okex` spot / `okex-swap` perps /
-       `okex-futures` fixed-expiry — instruments-service `engine/orchestrator.py` knows this).
+       `OKX-FUTURES` ↔ Tardis exchange **`okex-futures`** (OKX has 3 Tardis exchanges: `okex` spot / `okex-swap` perps
+       / `okex-futures` fixed-expiry — instruments-service `engine/orchestrator.py` knows this).
     2. **The `/exchanges/okex-futures` metadata endpoint is FREE (no paid key)** + authoritative — **probed live
        2026-06-01**: 5,740 `availableSymbols` with native ids `BTC-USD-260626` / `BTC-USDT-260626` / `BTC-USD_UM-260626`
        (USDT-margined = `_UM`, `YYMMDD` expiry), each carrying `availableSince`/`availableTo`. instruments-service

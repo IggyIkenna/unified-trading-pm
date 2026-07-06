@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: Flash Loan Receiver Contract
 summary:
   Two Aave-V3 flash-loan callback contracts — passthrough FlashLoanReceiver (approve-repay only) and action-encoding
-  RecursiveLeverageReceiver (whitelisted target/selector loop) — with deployed addresses, security model, and resolution.
+  RecursiveLeverageReceiver (whitelisted target/selector loop) — with deployed addresses, security model, and
+  resolution.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,25 @@ stage: [meta]
 repos: [deployment-service, e2e-testing, execution-service]
 scope: [engineer, admin]
 tags: [defi, execution, migration, verification]
-related: [execution-modes-and-chain-resolution.md, recursive-leverage-receiver-deploy-runbook.md, defi-phase3-infrastructure.md]
+related:
+  [
+    execution-modes-and-chain-resolution.md,
+    ../15-runbooks/recursive-leverage-receiver-deploy-runbook.md,
+    defi-phase3-infrastructure.md,
+  ]
 created: 2026-03-27
 authoritative_for: [FlashLoanReceiver and RecursiveLeverageReceiver contract architecture]
-referenced_by: [codex/02-data/defi-venue-protocol-catalogue.md, codex/04-architecture/cefi-perp-leg-bybit.md, codex/04-architecture/custody-providers.md, codex/04-architecture/defi-phase3-infrastructure.md, codex/04-architecture/mev-protection.md, codex/04-architecture/recursive-leverage-receiver-deploy-runbook.md, codex/04-architecture/strategy-service-architecture.md, codex/04-architecture/tenderly-execution-provider.md]
+referenced_by:
+  [
+    codex/02-data/defi-venue-protocol-catalogue.md,
+    codex/04-architecture/cefi-perp-leg-bybit.md,
+    codex/04-architecture/custody-providers.md,
+    codex/04-architecture/defi-phase3-infrastructure.md,
+    codex/04-architecture/mev-protection.md,
+    codex/15-runbooks/recursive-leverage-receiver-deploy-runbook.md,
+    codex/04-architecture/strategy-service-architecture.md,
+    codex/04-architecture/tenderly-execution-provider.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -286,5 +302,6 @@ the chain-specific Aave V3 pool.
 
 - Phase 4 of
   [`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)
-- See also [`recursive-leverage-receiver-deploy-runbook.md`](recursive-leverage-receiver-deploy-runbook.md) for the full
-  operator runbook (owner / cadence / verifier / last_executed metadata).
+- See also
+  [`../15-runbooks/recursive-leverage-receiver-deploy-runbook.md`](../15-runbooks/recursive-leverage-receiver-deploy-runbook.md)
+  for the full operator runbook (owner / cadence / verifier / last_executed metadata).
