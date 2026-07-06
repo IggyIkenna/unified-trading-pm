@@ -177,18 +177,15 @@ approve / defer per category rather than per-venue.
 
 ### DeFi — 49 venues (the bulk)
 
-- [ ] [DESIGN] P0. **DeFi live-connector strategy call: chain-agnostic base OR per-(protocol × chain)?** — the 49
-      unregistered DeFi venues break down as: (a) LENDING (Aave V3 × 8 chains · Compound V3 × 4 · Morpho `-BASE` only —
-      MORPHO-ETHEREUM already covered by `morpho`); (b) DEX-SWAP (Uniswap V2/V3/V4 × 6, PancakeSwap V3 × 3, SushiSwap ×
-      4, Balancer × 6, Curve `-BASE`/`-BSC` etc. beyond the 3 registered, Camelot V3, Aerodrome V3, Trader Joe V2,
-      Velodrome V2); (c) LST-STAKING (Lido-Eth, EtherFi, Etna, Kamino, Marinade, EigenLayer, Fluid, Spark, GMX-perp);
-      (d) `curve-*` per-chain aliases beyond the registered `curve` (Avalanche/Optimism — already resolved via the base
-      key). Question: does the existing generic polling per registered "curve"/"jito"
-      /"morpho"/"orca"/"raydium"/"phoenix" already cover these via the polling factory (in which case update UAC
-      `INSTRUMENT_TYPES_BY_VENUE` and MVP scope to reflect that ONE venue key spans all chains), or does each need a
-      per-(protocol × chain) registration? (repo: market-tick-data-service + unified-api-contracts).
-      **BLOCKED-OPERATOR-DECISION** (Ikenna — architectural call). Gate: the DeFi live-registry naming policy
-      documented + applied.
+- [x] [DESIGN] P0. **DeFi live-connector strategy call: chain-agnostic base OR per-(protocol × chain)?** ✅ —
+      **DECISION (Ikenna, 2026-07-06): Option B — per-(protocol×chain) registration.** Each canonical UAC venue key
+      (`PROTOCOL-CHAIN` form, e.g. `UNISWAP_V3-ETHEREUM`, `CURVE-ETHEREUM`, `AAVE_V3-ARBITRUM`) gets its own
+      `register_ws_feed_connector` entry. Rationale: execution routing requires per-chain keys (Uniswap V3 exists on
+      Ethereum/Arbitrum/Base/Optimism/Polygon simultaneously; chain-agnostic keys are ambiguous for gas, liquidity, and
+      alerting). Base classes parameterized by `chain` are fine for code-reuse. Consistent with IS as SSOT — venue_key
+      encodes (protocol × chain) uniquely. Full analysis + policy in Progress Log. The 3 Solana naming mismatches
+      (orca/raydium/jito → ORCA-SOLANA/RAYDIUM-SOLANA/JITO-SOLANA) and existing curve/morpho renames are separate
+      follow-on fixes (CODE tasks below).
 - [ ] [CODE] P1. **DeFi lending: AAVE_V3 + COMPOUND_V3 + MORPHO-BASE per-chain WSFeedConnector build** (repo:
       market-tick-data-service). Once the naming policy above lands. Gate: AAVE_V3 + COMPOUND_V3 canonical keys resolve;
       MORPHO-BASE resolves against the existing MORPHO base or a chain-specific override.
@@ -203,6 +200,12 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **Operator decision (gap-011)**: Ikenna confirmed **Option B — per-(protocol×chain)** via main
+  agent. Policy: each canonical UAC `PROTOCOL-CHAIN` venue key gets its own `register_ws_feed_connector` entry in
+  MTDS. Base classes with chain parameter OK for code reuse. Solana naming mismatches (orca/raydium/jito) and
+  curve/morpho renames are separate follow-on CODE tasks. Checkbox flipped; policy documented. CODE items below are
+  now unblocked on naming direction.
 
 - **2026-07-06** — **Design analysis (task gap-011)** by slot-4. Researched the chain-agnostic vs per-(protocol×chain)
   question. Key findings:
