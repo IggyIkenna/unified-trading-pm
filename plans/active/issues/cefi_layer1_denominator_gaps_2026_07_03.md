@@ -266,3 +266,16 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   `VENUES_BY_ASSET_GROUP["cefi"]` but `get_mvp_data_types_for_cefi_venue()` returns `frozenset()`); per plan warning,
   raised for operator decision rather than guessed — 2a itself is byte-identical so the silent zero persists exactly
   as before, and 2b/2c will act on the answer. 2a UNBLOCKS 2b (cefi gate-authority fix on `build_expected`).
+- **2026-07-06** — **2f dispatch blocked on missing PREREQs** (slot-8 planning, `BLK-02a4b067`). Task 2f
+  (`cefi_layer1_denominator_gaps-004`, "Reapply the denominator-gap model to LIGHTER / EXTENDED / PACIFICA") was
+  dispatched by priority=20 alone — but the plan-declared PREREQ chain (`2b + enumerator start_date support`) is not
+  machine-encoded on the backlog task, so the dispatcher missed it. Verified in code:
+  `instruments-service/scripts/expected_universe.py` has zero `start_date` awareness; the only consumer of
+  `get_venue_data_type_start_date` today is `market-tick-data-service/…/orchestrator/sentinels.py` +
+  `instruments-service/scripts/cefi_per_venue_capture_summary.py` — the enumerator itself does not read it.
+  Additionally verified LIGHTER's REST `_fetch_lighter_book_for_symbol` stamps `datetime.now(UTC)` as timestamp
+  (not the requested date) — confirming the ASTER live-WS/no-REST profile for `book_snapshot_5`; a UAC capability
+  flip that adds start_date before the enumerator honours it would re-create the 17,282-row over-seed the plan
+  warns against. Main-agent verdict: skip -004, add `depends_on: [cefi_layer1_denominator_gaps-002,
+  cefi_layer1_denominator_gaps-007]` to task -004 in `backlog.yaml` and regen so the dispatcher gates it correctly.
+  2f resumes when `-002` (2b) + `-007` (enumerator start_date) both land.
