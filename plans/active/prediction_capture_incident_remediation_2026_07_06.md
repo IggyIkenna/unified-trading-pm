@@ -131,12 +131,15 @@ orchestrator-dispatched).
       capture has been DEAD longer than prediction, previously undetected. Paused
       `uts-prod-manifest-consolidator-instruments-sports-legacy-cron` (now matches every other AG; reversible via
       `gcloud scheduler jobs resume`). The heal folds into the item below.
-- [ ] [INFRA] P0. **URGENT — data-correctness heartbeat**: get the fixed UTL (coercion @6c090bb/@1651340) into the
-      `is-daily-enum-*` Cloud Run image (UTL base republish → instruments-service rebuild — the 07-04 recipe). Verified
-      2026-07-06: BOTH `is-daily-enum-prediction` (07-01→05) AND `is-daily-enum-sports` (06-28→05) FAIL every day in the
-      cloud on the old UTL — the local prediction heal did NOT fix the cloud job; sports+prediction instruments capture
-      stays dead until this ships. Gate: next `is-daily-enum-{prediction,sports}` cloud runs exit 0 + their indexes
-      rewrite with int-typed `instrument_count`; `Evidence: cloudbuild=<id>`.
+- [ ] [INFRA] P0. **URGENT — data-correctness heartbeat**: fixed UTL (coercion @6c090bb/@1651340) into the
+      `is-daily-enum-*` Cloud Run image. **RESOLVED-BY-SIDE-EFFECT (2026-07-06):** the UTL base image was republished at
+      08:11 UTC with the coercion (build `7c6e2437`, `0e85227`), so the **cefi guard build `09a20bfe` (10:55) pulled
+      it** → `:latest`=e93483dd carries BOTH the perp guard AND the fixed UTL; every `is-daily-enum-*` job now runs it.
+      **Prediction VERIFIED healed** — manual `is-daily-enum-prediction-n2kc9` on the new image **succeeded** (11:39Z,
+      succeeded=1; the old image failed daily 07-01→05). `Evidence: cloudbuild=09a20bfe-4401-42cf-ae91-e832418550df`.
+      Sports heal triggered (`is-daily-enum-sports`, verifying via watchdog). Flip when sports also exits 0.
+      (Root-cause-#1 background: BOTH prediction 07-01→05 AND sports 06-28→05 FAILED daily in the cloud on the old UTL;
+      the earlier local prediction heal never reached the deployed image — this build did.)
 - [ ] [VERIFY] P1. Backfill the missed window 07-01→07-06: confirm the healed capture's `--days-back` reach covered the
       gap days' by_date + manifest rows, or run a targeted backfill; then confirm the catalogue picks up post-06-27
       listings (`max(available_from)` advances) on the next daily run. Gate: no by_date/manifest holes in 07-01→07-06;
@@ -177,14 +180,24 @@ orchestrator-dispatched).
       `Evidence: cloudbuild=09a20bfe-4401-42cf-ae91-e832418550df`. Runtime confirm (next cefi run writes 0
       `KALSHI-PERP`) = the post-purge catalogue staying clean through the 13:30 UTC run (folded into step 2's post-13:30
       check).
-- [ ] [DATA] P0. Purge the 25,473 fake `KALSHI-PERP` rows from cefi: corrective `--mode full --allow-catalogue-shrink`
-      cefi run + delete the `venue=KALSHI-PERP` by_date + manifest cells. **PURGE, not MOVE (operator-decided
-      2026-07-06):** the perp parser stamped these binary EVENT contracts as `instrument_type=PERPETUAL`/`expiry=None`,
-      discarding their expiry/series/YES-NO structure; they are reference-data rows (no captured prices), the correct
-      producer is the prediction Kalshi adapter, and Kalshi is cheaply re-enumerable — moving would relocate degraded
-      stubs + conflict with the prediction store's canonical copies. (The "are these captured correctly anywhere?"
-      question is Phase 3's `[VERIFY]`.) Gate: cefi catalogue has 0 `KALSHI-PERP` rows; row-count drop == 25,473; no
-      other venue touched.
+- [x] [DATA] P0. ✅ Purged the 25,473 fake `KALSHI-PERP` rows from cefi — deleted the 9 `venue=KALSHI-PERP` by_date
+      snapshots (06-27→07-05) via `scripts/purge_kalshi_perp_events_contamination_2026_07_06.py --apply`, then
+      `build_instrument_catalogue.py --asset-group cefi --mode full --allow-catalogue-shrink` (run
+      `catalogue-rollup-cefi-20260706T110652Z`, monotonic guard ACCEPT shrink_overridden). **Verified against
+      baseline:** catalogue 376,984→**351,511** rows (drop == **25,473**, exact), **KALSHI-PERP == 0**, 25→**24
+      venues**, DERIBIT 331,803 + all other venues UNCHANGED. **PURGE, not MOVE (operator-decided 2026-07-06):** the
+      perp parser stamped these binary EVENT contracts as `instrument_type=PERPETUAL`/`expiry=None`, discarding their
+      expiry/series/YES-NO structure; they are reference-data rows (no captured prices), the correct producer is the
+      prediction Kalshi adapter, and Kalshi is cheaply re-enumerable — moving would relocate degraded stubs + conflict
+      with the prediction store's canonical copies. (The "are these captured correctly anywhere?" question is Phase 3's
+      `[VERIFY]`.) Gate: cefi catalogue has 0 `KALSHI-PERP` rows; row-count drop == 25,473; no other venue touched. ✅
+      MET.
+- [ ] [DATA] P1. Manifest cells: the cefi `_index/availability_index.parquet` still carries **9 `KALSHI-PERP` cells**
+      (`capture_status=captured`, 2000 each, days 06-27→07-05) — they persisted through the consolidator (derived from
+      manifest shards, not by_date presence). The guard'd cefi enum records `KALSHI-PERP` as honest-empty on its next
+      run, which should flip these captured→empty (self-heal). Gate: after the next `is-daily-enum-cefi` run (13:30 UTC
+      or a manual trigger), 0 `KALSHI-PERP` `captured` cells remain in the cefi index (empty/absent cells are correct —
+      venue declared, feed empty pending repoint); if not self-healed, delete the cells explicitly.
 
 ### Phase 1 — foundation: config-drive host + shared RSA-PSS auth (no access needed) — PARALLEL
 
@@ -270,3 +283,9 @@ orchestrator-dispatched).
   pulled the UTL base image republished at 08:11 with the coercion fix (0e85227) — so :latest=e93483dd very likely ALSO
   carries the fixed UTL, which would heal sports+prediction cloud capture as a side effect. Triggered
   `is-daily-enum-prediction-n2kc9` on the new image to test+heal (runtime verification of the escalated P0).
+- 2026-07-06 ~11:40Z: **Phase 0 CLOSED (cefi) + escalated-P0 resolved for prediction.** Catalogue rebuild verified:
+  351,511 rows / 0 KALSHI-PERP / 24 venues / DERIBIT + all others unchanged (drop == 25,473 exact). `n2kc9` (prediction
+  enum on :latest=e93483dd) **SUCCEEDED** (11:39Z) — confirms the guard build's UTL base (0e85227) heals the
+  string-typed merge; prediction cloud capture restored. Triggered `is-daily-enum-sports` to heal sports (dead since
+  06-28); watchdog running. Remaining Phase 0 tail: 9 `KALSHI-PERP` `captured` cells linger in the cefi manifest index —
+  expected to self-heal to empty on the next guarded `is-daily-enum-cefi` run (13:30 UTC); verify post-13:30.
