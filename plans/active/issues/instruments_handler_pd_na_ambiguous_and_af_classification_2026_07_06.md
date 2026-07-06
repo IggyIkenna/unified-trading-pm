@@ -196,6 +196,14 @@ remains valid — no correctness blocker uncovered by this verification.
   weekend) + 6 valid CMES sessions (fetch gaps awaiting tradfi v9 downstream). Written up in "Verification results"
   above. No new correctness finding requires a separate issue doc — the AF-on-Sat mislabel is absorbed by the existing
   P2 dedup-reconcile item 3.
+- **2026-07-06** — **Item 3 RE-DISPATCHED 9TH TIME — PREREQ STILL NOT MET** (`BLK-3a65c6c0`, slot-6 planning).
+  Same pattern as the 8 prior PARKs today. Verified line 638 of `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`
+  is still `- [ ] [CODE] P2`. Latest UTL commit touching `_merge_dataframes` is `f5ec2291` (partial NULL==empty
+  normalization only, NOT the v6-v9 shard-atom dedup this reconcile depends on). /blocked with `can_continue: false`
+  awaiting /skip-current-task. Systemic ask escalated further — 9 slot-planning boot windows wasted today. Operator
+  action to unblock: (a) `priority: 999` + `conditions:` gate keyed on LDR-landing of the dedup fix in
+  `backlog.yaml`, OR (b) NL-prereq parsing in AO backlog schema.
+
 - **2026-07-06** — **Item 3 RE-DISPATCHED 8TH TIME — PREREQ STILL NOT MET** (`BLK-0316d90e`, slot-4 planning). Same
   root cause as the seven prior PARKs today (`BLK-b81e4231` slot-9, `BLK-2e75351f` slot-3, `BLK-f96a851f` slot-5,
   `BLK-b2595413` slot-7, `BLK-d5ac4b5b` slot-10, `BLK-3803f4fa` slot-2, `BLK-b7280ba5` slot-11): dispatcher lacks
