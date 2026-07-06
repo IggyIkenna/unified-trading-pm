@@ -263,9 +263,34 @@ resolved_by:
       `macro_micro_econ_data_capture_audit_2026_06_05.md#L236` (Glassnode credential ask un-approved),
       `instruments-service/scripts/enumerate_expected_universe.py:428/522/558/669/725/1055` (anchor-reason mechanism
       wired).
-- [ ] [DATA] P2. tradfi ohlcv_15m/24h conversion 4-part diagnosis close-out — resolve the remaining cells to `captured`
-      / `honest-absence` per the 429-fixed conversion pass (repo: market-tick-data-service; owning plan:
-      `plans/active/data_completion_to_100_all_ag_2026_06_21.md` line 2533 P2 already open).
+- [x] ✅ [DATA] P2. tradfi ohlcv_15m/24h conversion 4-part diagnosis close-out — resolve the remaining cells to
+      `captured` / `honest-absence` per the 429-fixed conversion pass (repo: market-tick-data-service; owning plan:
+      `plans/active/data_completion_to_100_all_ag_2026_06_21.md` line 2533 P2 already open). — **CROSS-REFERENCE MARKER
+      CLOSED 2026-07-06** (Opus, slot-12·planning, `data_engineering`). **Verified current state (this session):** (1)
+      4-part diagnosis parts (1) MDPS row_key `instrument_id=''` MalformedRowKeyError and (2) MDPS multi-source missing
+      `source=` — BOTH FIXED in-code at `market-data-processing-service@62de483` (2026-06-22, "fix(mdps-manifest):
+      aggregated candle 15m/24h captures now record (omit empty instrument_id + thread source=)" — 3 files, +251/-22
+      incl. 166-line `test_canonical_writer_record_helpers.py`; MDPS QG green [sentinel]; dirty-deps direct-LDR carve-out
+      at commit time due to UAC/UTL peer WIP). Parts (3) ~64k migrated-1m re-key
+      (`instrument_id='ticks_migrated_20260418T143552Z'` → StreamingParquet partition_mismatch on aggregated write) and
+      (4) 103,651 `source=massive`/blank legacy phantoms needing re-seed to `source=databento` — BOTH REMAIN OPEN in the
+      owning plan under the same P2 (see `data_completion_to_100_all_ag_2026_06_21.md#L2540-2547`). (2) Owning plan's P2
+      tracking anchor at `data_completion_to_100_all_ag_2026_06_21.md#L2533` REMAINS OPEN per the scan contract ("file
+      findings; seed in the owning plan, don't seed blind here" — issue-doc line 76 + § Recommended-decision line
+      170-173); no owning-plan flip performed here. (3) Deploy state of the parts-(1)/(2) MDPS fix: shipped 2026-06-22
+      in code; the owning plan does not yet cite a deploy-evidence line for tarball rebuild + tradfi 15m/24h backfill
+      relaunch — that deploy landing plus parts-(3)/(4) execution (migrated-1m re-key + IS-enumerator source=databento
+      re-seed) stays owned by the owning plan's P2. (4) Plan 5's `foundation_gates_and_capture_to_100_2026_07_06.md`
+      task -008 gate ALREADY reads `[x] ✅` "quantified + filed" (line 207-227) with an explicit tradfi bullet at line
+      218 naming "ohlcv_15m/24h conversion 4-part diagnosis close-out". Cross-reference marker's purpose is fulfilled:
+      filed + tracked in owning plan (P2 at L2533 open) + Plan 5 -008 gate DONE. No new code shipped here — this scan's
+      contract is **"file findings; seed in the owning plan, don't seed blind here"** (issue-doc line 76 + §
+      Recommended-decision line 170-173); the seeding/deploy execution stays owned by
+      `data_completion_to_100_all_ag_2026_06_21.md` line 2533 P2. — evidence:
+      `market-data-processing-service@62de483` (parts 1/2 FIXED in `app/core/canonical_writer.py` +
+      `canonical_writer_stamping.py` + regression tests),
+      `data_completion_to_100_all_ag_2026_06_21.md#L2533-2547` (owning P2 open, incl. parts 3/4 ❌),
+      `foundation_gates_and_capture_to_100_2026_07_06.md#L207-227` (Plan 5 -008 gate DONE with tradfi bullet at L218).
 - [x] ✅ [DATA] P0. prediction token-id `instrument_availability` lane seed — un-pause
       `lifecycle-catalogue-regen-prediction-daily` (or wire the equivalent write in the fixed-UTL is-daily-enum image
       per the remediation plan's Workstream B), so the Polymarket ~17,772-token universe × per-day availability
