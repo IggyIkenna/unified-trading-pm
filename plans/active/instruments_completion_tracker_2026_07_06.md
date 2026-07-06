@@ -249,6 +249,19 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **D2a SHIPPED + VERIFIED — cefi Layer-1 dropped to the honest number.** Both halves landed:
+  **uac@e76d874a** (`INSTRUMENT_TYPES_BY_VENUE` completes the 10 declared venues; DERIBIT-COMBO OPTION-only) +
+  **is@03cfd0f** (`_get_cefi_venue_itypes` now sources declarative `INSTRUMENT_TYPES_BY_VENUE`, not the tardis
+  fetch-routing table). QG-green both repos, trees clean, in sync, 41 tests pass (dynamic — no golden edits). **Measured
+  delta (same manifest snapshot, back-to-back): cefi Layer-1 84.09% → 73.61%** (expected 44→72, +28 tuples, 0 removed) —
+  the honest direction (the "79.55%" was a stale point-in-time snapshot; the before/after PAIR is apples-to-apples).
+  Agent caught + fixed 2 latent regressions via tuple-diffing: bare `COINBASE` (declared but absent from the dict) +
+  `DERIBIT` missing `SPOT_PAIR` (would have REMOVED 2 real tuples). D2b: added `VENUE_DATA_TYPE_CAPABILITIES` for
+  PACIFICA/EXTENDED/LIGHTER/COINBASE-FUTURES. **⚠️ BIG FINDING (operator decision): bare `COINBASE` + `DERIBIT-COMBO`
+  still produce 0 EXPECTED** — absent from `MVP_SCOPE["cefi"].venues` (which has COINBASE-SPOT/FUTURES, not bare
+  COINBASE), so gate #3 zeroes them regardless of the dict fix. **Decide: add bare `COINBASE` to `MVP_SCOPE.venues` (+ a
+  DERIBIT-COMBO MVP-membership call), or confirm intentionally out.** (BINANCE-DELIVERY also 0 — COIN-M explicitly
+  not-MVP per 06-27 decision #3, correct.)
 - **2026-07-06** — **2c cefi capture-rule REASSESSED (opus agent) — prevented a ~380k-row data-loss.** Cap-drop half was
   ALREADY shipped (`is@0fe8e71`, 06-23). Reclassification half STOPPED at the smoke (mutated NOTHING): the
   `reclassify_cefi_manifest_mvp_universe_2026_06_23.py` script would DELETE ~380k+ legit in-MVP **captured**
