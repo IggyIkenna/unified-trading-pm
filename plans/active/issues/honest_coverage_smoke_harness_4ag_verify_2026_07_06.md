@@ -138,3 +138,41 @@ Land the 4 fixes below (all tracked as todos). Priority ordering respects existi
 - Defi runner absence: same as cefi.
 - Sports (already-verified reference): `run_live_verify_sports.py` ships at `e2e-testing@cf6b7e1` (see
   `honest_coverage_smoke_harness_2026_06_28.md` Progress Log 2026-06-29).
+
+## Progress Log
+
+- **2026-07-06** — **-002 cefi runner shipped** (slot-9 planning). New
+  `e2e-testing/scripts/build_smoke/run_live_verify_cefi.py` (226 lines) mirrors the tradfi runner:
+  loads cefi catalogue via UTL StorageClient from
+  `resolve_bucket_name(kind='instruments-store', asset_group='cefi')/{env}/catalog.parquet`,
+  groups by (venue, instrument_type) → `MdpsUniverseProvider.instrument_catalogue`, runs
+  `build_coverage_matrix` iterating the 5 cefi MVP data_types
+  (`trades`/`book_snapshot_5`/`derivative_ticker`/`options_chain`/`futures_chain` — last two
+  auto-bundled) via `registered_data_types_for_asset_group('cefi')`. CLI parity with tradfi:
+  `--output-dir` / `--today` / `--cloud` / `--deployment-env`. Empty/unavailable catalogue →
+  WARNING + empty matrix (0 atoms → exit 1), never silent skip. Import + `--help` smoke tests
+  green. Full QG green 112s (sentinel `ceb09fd4e457b9b983e178bfec596892c5787851`). Shipped
+  `e2e-testing@ceb09fd` via quickmerge --agent --files.
+- **2026-07-06** — **-003 defi runner shipped** (slot-9 planning). New
+  `e2e-testing/scripts/build_smoke/run_live_verify_defi.py` (227 lines) same pattern as cefi/tradfi:
+  loads defi catalogue via UTL StorageClient from
+  `resolve_bucket_name(kind='instruments-store', asset_group='defi')/{env}/catalog.parquet`,
+  wraps in `MdpsUniverseProvider`, iterates 6 defi MVP data_types (`dex_pool_swaps` /
+  `dex_pool_state` / `lending_indices` / `lst_rates` / `oracle_prices` / `perp_funding` — all
+  leaf, none bundled). Full QG green 74s (sentinel
+  `be37c75660585e9b88f494f6a8e942afdbe0d048`). Shipped `e2e-testing@be37c75` via quickmerge
+  --agent --files. Completes the 4-AG runner set alongside -001 (prediction bucket fix, slot-4
+  `e2e-testing@1ca3672`) + -002 (cefi runner, slot-9 `e2e-testing@ceb09fd`).
+- **2026-07-06** — **-004 tradfi re-run PARKED — BLOCKED-PREREQUISITES (`BLK-2a8ba36d`)**
+  (slot-9 planning). Task `-004` ("Re-run `run_live_verify_tradfi.py` once Plan 2 lands +
+  `catalog.parquet` written") was dispatched after -003. Verified live: `catalog.parquet` at
+  `gs://instruments-store-tradfi-prd-central-element-323112/prd/catalog.parquet` returns
+  `NotFound: 404` (checked via UTL `get_storage_client().download_bytes`). Verified Plan 2
+  (`tradfi_v9_stage1_finish_2026_07_06.md`) — tasks 2-11 all still `- [ ]` unchecked (the
+  `rebuild_tradfi_manifest.py` E5, IS enumerate-seed for tradfi, CF-7 relabel, E7 verify are
+  all queued). Running the re-run now would produce the SAME empty-matrix result already
+  documented in the "What I found" section (`WARNING tradfi catalog not available ... 404`) —
+  no new signal. Slot-9 recommendation A of `BLK-2a8ba36d`: PARK -004 pending Plan 2. **Operator
+  action required** (to prevent bounce-loop like the cefi -008 chain that hit 8×): add
+  `depends_on: [tradfi_v9_stage1_finish tasks 2-11]` to `-004` in `data/config/backlog.yaml` +
+  regen (or flip `-004` priority to 999). Slot-9 continues to next task per `can_continue`.
