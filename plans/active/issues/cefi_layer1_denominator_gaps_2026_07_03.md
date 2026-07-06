@@ -109,13 +109,22 @@ enough). The % is neither an upper nor lower bound of the real value.
 
 **The critical spine (each task's `PREREQ:` defines the order; the review agent enforces it):**
 
-- [ ] [CODE] P0. **2a. Land the single `build_expected(asset_group)` producer** (`honest_coverage_v2` Phase 1, A17 — the
-      ROOT fix; blocker archived 07-03). Consolidate the expected-universe producer into ONE entry point; point
-      `check_enumeration_completeness._build_expected_tuples` + `measure_honest_coverage` at it; add a byte-identical
-      golden gate on a per-AG control date so there is no denominator drift. Bake D2a's declarative-gate authority in.
-      **PREREQ: none (unblocked).** Gate: ONE producer, all callers routed through it, per-AG golden byte-identical,
-      QG-green. ⚠️ You WILL hit the COINBASE / DERIBIT-COMBO MVP_SCOPE question here (see the BLOCKED-OPERATOR-DECISION
-      item) — RAISE it, don't guess.
+- [x] ✅ [CODE] P0. **2a. Land the single `build_expected(asset_group)` producer** — `instruments-service@681f50a`.
+      New module `scripts/expected_universe.py` exposes `build_expected(asset_group)` as THE public producer; per-AG
+      strategies share one callable interface but preserve cefi/defi/tradfi/sports/prediction grains.
+      `check_enumeration_completeness._build_expected_tuples` (and `..._sports`) now delegate via sibling-load (mirrors
+      `measure_honest_coverage._load_completeness_module`); `measure_honest_coverage` routes transitively through the
+      completeness module. Per-AG **byte-identical golden fixtures** at
+      `tests/unit/scripts/goldens/expected_universe/{cefi,defi,tradfi,sports,prediction}.json` (72/171/35/27/8 tuples)
+      + `test_expected_universe_golden.py` (14 tests: single-producer contract + delegator parity + byte-identical
+      golden per AG + fixture metadata coherence). D2a declarative-gate authority baked in
+      (`INSTRUMENT_TYPES_BY_VENUE` + `PROTOCOL_CAPABILITIES` + `TRADFI_VENUE_INSTRUMENT_TYPES` — NOT the Tardis
+      fetch-routing map). All 76 impacted tests pass; QG-green (105s); no producer surface duplication remains.
+      COINBASE / DERIBIT-COMBO MVP_SCOPE question raised as `BLK-5cc7590e` (bare COINBASE + DERIBIT-COMBO declared in
+      `VENUES_BY_ASSET_GROUP["cefi"]` but `get_mvp_data_types_for_cefi_venue()` returns `frozenset()` → silent
+      EXPECTED=0; 2a preserves byte-identical behaviour so both remain at 0, matching pre-refactor — the fix is
+      downstream in 2b/2c). Evidence: `.qg_last_passed_sha=a1038eef81f2a79fd26918baf70c121207c20ad5` (pre-quickmerge),
+      quickmerge shipped `681f50a`.
 - [ ] [CODE] P0. **2b. cefi gate-authority fix on `build_expected`.** Apply D2a/D2b onto the single producer, then — in
       order — the ASTER live-forward split (enumerator `start_date` support is a HARD prereq before the UAC capability
       flip), the BYBIT-SPOT relabel, and the C2 MVP-data-type intersection (all detailed in the sections below).
@@ -233,3 +242,14 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   carve-out shipped in `instruments-service` (see the reconciliation issue doc); this finding is the structural
   remainder. Also noted: `INSTRUMENT_TYPES_BY_VENUE` exists in UAC and already covers most of the gate-blind venues —
   strongest candidate for the (venue,itype) authority.
+- **2026-07-06** — **2a landed** (`instruments-service@681f50a`, slot-8 planning). Single-producer consolidation:
+  `scripts/expected_universe.py::build_expected(asset_group)` is now THE Layer-1 EXPECTED producer;
+  `check_enumeration_completeness._build_expected_tuples` delegates via sibling-load;
+  `measure_honest_coverage` routes transitively. Byte-identical output preserved for all 5 AGs (cefi 72 / defi 171 /
+  tradfi 35 / sports 27 / prediction 8) — captured as goldens under
+  `tests/unit/scripts/goldens/expected_universe/`. New regression `test_expected_universe_golden.py` (14 tests: contract
+  + delegator parity + golden byte-identical). Full suite green: 76 impacted tests + QG (105s). MVP_SCOPE
+  COINBASE/DERIBIT-COMBO question surfaced as `BLK-5cc7590e` (verified empirically: both declared in
+  `VENUES_BY_ASSET_GROUP["cefi"]` but `get_mvp_data_types_for_cefi_venue()` returns `frozenset()`); per plan warning,
+  raised for operator decision rather than guessed — 2a itself is byte-identical so the silent zero persists exactly
+  as before, and 2b/2c will act on the answer. 2a UNBLOCKS 2b (cefi gate-authority fix on `build_expected`).
