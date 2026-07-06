@@ -26,7 +26,6 @@ related:
   ]
 created: 2026-07-06
 last_updated: 2026-07-06
-author: slot-2 opus/max (data_engineering worker, task is_catalogue_completion_2d-009)
 source:
   - instruments-service audit finding (unified-trading-pm/plans/audit/results/instruments_master_audit_2026_06_08.md § "Dead duplicate catalogue path")
   - live trace during task is_catalogue_completion_2d-009 (P3 delete-orphan)
@@ -37,6 +36,10 @@ estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.08
 assigned_role: data_engineering
 drift_direction: advance-code
+execution_scope: orchestrator-agent
+depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # MTDS DefiCatalogReader silent-fallback — mirrors CeFi BUG #4 / TradFi G4 FIX
