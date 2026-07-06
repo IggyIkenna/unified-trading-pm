@@ -52,7 +52,7 @@ All fixes are on LDR (see the issue doc for full detail + SHAs):
 - **lookup_contract** data_type-case + blank-instrument_type sports aliases — `unified-api-contracts@b5a4adce1`
 - **§9.1** instrument_type `""` — `instruments-service@4281a01db`
 - **XG capture (2 bugs) + shots-schema + getLeagueData cache** — `instruments-service@9dfea859d`
-- Backfill driver (this plan's tool) — `instruments-service@<this-ship>`: `scripts/backfill/understat_bulk_backfill.py`
+- Backfill driver (this plan's tool) — `instruments-service@6716f55`: `scripts/backfill/understat_bulk_backfill.py`
 
 The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` + `_run_understat_shots_date`,
 `force=True`) — identical GCS layout / schema / honest-absence / manifest atom as the normal pipeline. It is
