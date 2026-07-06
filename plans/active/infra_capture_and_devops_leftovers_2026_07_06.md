@@ -78,6 +78,9 @@ source:
       the D5 captured=0 clears in the next measure.
 - [ ] [INFRA] P2. **Long-lived VM logs not backed up** — the live/long-lived VMs' `run.log` is lost on VM delete; wire a
       periodic log sync to GCS (`long_lived_vm_logs_not_backed_up`). Gate: long-lived VM logs persist to GCS.
+      **BLOCKED-CRAFT-MISMATCH (2026-07-06)** — auto-dispatched to a data_engineering slot; work sits in
+      `deployment-service/scripts/vm/*.sh` (VM launchers, setup-data-pipeline-vm.sh tee wiring, cron/systemd for
+      long-lived VMs) which is infra scope. Awaiting redispatch to an infra-role worker. See progress log.
 - [ ] [INFRA] P1. **Test-fleet image builds from current code** — the base-image local-build strategy + GCP build per
       service (`test_fleet_image_builds_from_current_code`) so the fleet images track HEAD. Gate: images build from
       current code; canonical build invocation documented.
@@ -101,6 +104,12 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) marked **BLOCKED-CRAFT-MISMATCH**. Server dispatcher does
+  not filter by `assigned_role`, so this infra-scope task auto-routed to a data_engineering slot (slot 2). Per
+  worker boot-prompt STEP 0.5 (do not cross craft lines), slot 2 escalated via /blocked → main answered PARK; the
+  task's checkbox now carries the BLOCKED-CRAFT-MISMATCH marker so an infra-role redispatch (via
+  `/api/slots/<N>/skip-current-task` or affinity re-routing) can pick it up cleanly. Finding logged as an operating
+  observation — cross-craft dispatch is a recurring class; the dispatcher-side filter is a separate epic-level fix.
 - **2026-07-06** — Plan authored + dispatched to AO (Plan 6 of the instruments-completion set). Infra-role slice of
   Stage-5 capture: ASTER connector (moved from Plan 1, gates its ASTER re-measure), Deribit options live runner, + the
   credential/operator-gated capture items parked as BLOCKED-\* (scaffold, don't descope).
