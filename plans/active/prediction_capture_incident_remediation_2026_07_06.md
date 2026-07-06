@@ -158,11 +158,16 @@ orchestrator-dispatched).
 
 ### Phase 0 — stop contamination + purge (NOW, no access needed) — SEQUENTIAL (guard ships before purge)
 
-- [ ] [CODE] P0. Guard both `kalshi_perp` + `polymarket_perp` adapters to emit **0 records** from the current (wrong,
-      events) host until repointed — fix the `_parse_market` empty-category "pass" bug. Ship (QG + quickmerge) + image
-      rebuild so the 13:30 UTC cloud run stops writing fake perps. Venue declarations STAY. Gate: unit test asserts 0
-      records from the events-host response; next cefi daily run writes 0 `KALSHI-PERP` rows;
-      `Evidence: cloudbuild=<id>`.
+- [x] [CODE] P0. ✅ Guard both `kalshi_perp` + `polymarket_perp` adapters to emit **0 records** from the current (wrong,
+      events) host until repointed — `_REPOINT_PENDING=True`; `get_instruments()`/`get_instrument()` return honest-empty
+      BEFORE any network call + fixed the `kalshi _parse_market` empty-category "pass" bug (defense-in-depth). Venue
+      declarations STAY. — instruments-service@c8c6dac76 | QG green (4000 pass, coverage ≥88%); tests assert 0 records
+      from an events-host payload (`test_get_instruments_empty_even_with_events_host_payload`) + the events-host binary
+      contract is rejected by the parser (`test_events_host_binary_market_is_rejected`); fetch-path coverage retained
+      guard-lifted for the machinery Phase 2/3 reuses.
+- [ ] [INFRA] P0. Rebuild + deploy the `is-daily-enum` cefi image so the shipped guard reaches prod, then confirm the
+      next cefi enum run writes **0** `KALSHI-PERP` rows (the runtime half of the guard's Gate — code is shipped but the
+      cloud job runs the deployed image). `Evidence: cloudbuild=<id>`.
 - [ ] [DATA] P0. Purge the 25,473 fake `KALSHI-PERP` rows from cefi: corrective `--mode full --allow-catalogue-shrink`
       cefi run + delete the `venue=KALSHI-PERP` by_date + manifest cells. **PURGE, not MOVE (operator-decided
       2026-07-06):** the perp parser stamped these binary EVENT contracts as `instrument_type=PERPETUAL`/`expiry=None`,
@@ -231,3 +236,13 @@ orchestrator-dispatched).
   (UTL@6c090bb/@1651340, IS@4979429); the incremental-catalogue merge-key fix that preceded them is IS@dc378b6. Repo
   HEADs at carve-out: instruments-service@5410111, unified-trading-library@0e85227, unified-trading-pm@9971a14cb.
   Awaiting operator green-light to begin Phase 0.
+- 2026-07-06: Operator green-lit execution (`/autonomous`, slot 2). **Phase 0 step 1 (guard) SHIPPED** —
+  instruments-service@c8c6dac76. Design decision: implemented an unconditional `_REPOINT_PENDING` disable (return
+  `[]`/`None` before any network call) rather than only patching the category filter — the plan's "emit 0 from the
+  events host" needs a data-independent 0 (a filter-patch alone leaves a latent re-contamination path if Kalshi ever
+  tags a binary market `category=Crypto`); also fixed the `_parse_market` empty-category pass bug as defense-in-depth.
+  Rewrote both adapters' unit tests to the disabled contract + events-host rejection; restored fetch-path coverage
+  (guard-lifted via `monkeypatch _REPOINT_PENDING=False`) after the first QG caught a coverage regression (87.78% →
+  cleared ≥88% with the machinery tests re-added — the machinery is reused by the Phase 2/3 repoint). QG green (4000
+  pass, 91s). Next: rebuild+deploy the is-daily-enum cefi image (runtime half of the Gate), then the Phase 0 step 2
+  purge.
