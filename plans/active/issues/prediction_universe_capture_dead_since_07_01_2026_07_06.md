@@ -11,7 +11,7 @@ summary:
   logs to Cloud Logging; the shard-isolation catch logs without exc_info. UTL write-side Int64 coercion shipped as the
   crash-proof fix; consolidator dtype + migration + backfill of the missed days remain."
 status: open
-nature: record
+nature: issue
 asset_group: [prediction]
 stage: [data]
 repos: [unified-trading-library, instruments-service, deployment-service]
@@ -116,9 +116,14 @@ STORE under the WRONG venue/type.
   (named Tardis grain-adapter; delete \_CEFI/\_TRADFI mirrors); **enable KALSHI-PERP/POLYMARKET-PERP enumeration** +
   canonical venue casing" — landed in the exact regression window; the enabled PERP venue keys route the prediction
   fetch's records into cefi per-venue bucket routing.
-- Timeline coherence: cefi contamination starts 06-27 (cefi index is NOT string-poisoned → those writes succeeded); the
-  prediction-store ArrowTypeError began 07-01 (root cause #1) — two independent failures from the same era, the second
-  masking the first.
+- Timeline coherence (write-times, NOT `day=` partitions): 4da6fe8 authored **2026-06-29 08:46 UTC**; the FIRST
+  contaminated production write was the 06-29 13:30 UTC enum run (object `day=2026-06-27/venue=KALSHI-PERP` written
+  **2026-06-29T13:40Z** — the `day=` floor is just how far `--days-back` reached, NOT the ship date; commit reached the
+  deployed `:latest` and ran in prod same-day, ~5h after authoring). Every 13:30 run since re-wrote KALSHI-PERP into
+  cefi and those writes SUCCEEDED (cefi index is not string-poisoned), so cefi accumulated ~9 days of contamination
+  while the SAME run's prediction-store write began dying on the ArrowTypeError 07-01 (root cause #1). Two independent,
+  same-day-shipped failures — the second masking the first. **Corrected span: contamination = 06-29→07-06 daily runs**
+  (earlier "since 06-27" was the logical partition floor, not the write date).
 
 ### OPERATOR DECISION REQUIRED (Ikenna) — how to unwind the misrouting
 

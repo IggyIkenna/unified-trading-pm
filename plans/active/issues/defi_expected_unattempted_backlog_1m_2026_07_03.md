@@ -1,5 +1,5 @@
 ---
-doc_type: plan
+doc_type: issue
 title: DeFi expected_unattempted backlog ≥1M cells — enumerator halt-safety trips on scan; seeding never applied
 summary:
   "enumerate_expected_universe --asset-group defi (scan-only) halts with ENUMERATOR_FAILED reason=max_writes_exceeded:
