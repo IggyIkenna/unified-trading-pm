@@ -128,13 +128,21 @@ approve / defer per category rather than per-venue.
 
 ### CeFi — 13 venues
 
-- [ ] [DESIGN] P1. **CeFi bare-venue triage: BYBIT · COINBASE · OKX · DERIBIT-COMBO** — bare names (no `-SPOT` /
-      `-FUTURES` suffix) may be legacy manifest tags, an MVP scope call, or true separate venues (repo:
-      market-tick-data-service). Confirm: (a) whether `MVP_SCOPE.cefi.venues` still needs the bare names or only `-SPOT`
-      / `-FUTURES` (COINBASE-FUTURES also flagged); (b) DERIBIT-COMBO stance (`{OPTION}` per D2a, but `options_chain`
-      handler is registered under `DERIBIT`, so DERIBIT-COMBO may be a manifest-only tag with no distinct live feed).
-      Gate: each of the 4 bare tags resolved (add live factory, remove from MVP scope, or confirm manifest-only).
-      **BLOCKED-OPERATOR-DECISION** (Ikenna).
+- [x] [DESIGN] P1. **CeFi bare-venue triage: BYBIT · COINBASE · OKX · DERIBIT-COMBO** ✅ — Operator ruling landed
+      (BLK-31951ebc + BLK-f7372dd9, 2026-07-06). Resolutions: **BYBIT** bare → alias-register to `_bybit_factory`
+      shipped (mtds@9d3c1aa1); **OKX** bare → alias-register to `_okx_factory` shipped (mtds@9d3c1aa1);
+      **DERIBIT-COMBO** → confirmed manifest/reference-only (no live tick feed — combos derive from bare DERIBIT
+      `options_chain`); **COINBASE** bare → **DEFERRED** as a follow-on [CODE] task (25 downstream callers — needs a
+      migration, not a drop). Regression tests added: `test_bybit_bare_alias_registered` +
+      `test_okx_bare_alias_registered`. Closes ~26 of 104 cefi `blocked-not-registered` smoke-matrix cells (BYBIT ~13
+      + OKX ~13).
+- [ ] [CODE] P2. **COINBASE bare-name UAC removal + downstream migration** — bare `COINBASE` entry in
+      `unified_api_contracts/.../market_data_categories.py:242` is a legacy pre-2026-06-23 tag (before the perp-gate
+      pair). Slot-6 initial grep suggested `COINBASE` was orphan; operator ruling (2026-07-06) found ~25 downstream
+      callers that still key off bare `COINBASE`. Migrate those callers to `COINBASE-SPOT` (or the perp-gate pair
+      `COINBASE ↔ COINBASE-SPOT` if MVP requires it), THEN drop the bare entry from UAC. Gate: 0 downstream call
+      sites reference bare `COINBASE`; the entry is removed from `VENUES_BY_ASSET_GROUP["cefi"]`; smoke-matrix
+      `blocked-not-registered` count for `COINBASE` drops to 0 (repo: unified-api-contracts + fan-out).
 - [ ] [CODE] P1. **BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build** — public WS APIs; BitFinex REST batch
       already captures. Register under `BITFINEX-SPOT` / `BITFINEX-FUTURES` (repo: market-tick-data-service). Gate: both
       venues resolve in `resolve_live_venue_key`; regression tests mirror
@@ -203,6 +211,22 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **gap-001 shipped** by slot-6. Operator ruling on slot-4's 2026-07-06 recommendation received via
+  main (BLK-31951ebc + BLK-f7372dd9): APPROVE items 1-3, DEFER item 4. Shipped MTDS bare-venue aliases + regression
+  tests at `mtds@9d3c1aa1`:
+  1. `bybit_ws.py` — bare `BYBIT` → `_bybit_factory` alias (wiring-only, MVP scope already includes bare BYBIT as
+     the canonical perp namespace of the perp-gate pair);
+  2. `okx_ws.py` — bare `OKX` → `_okx_factory` alias (wiring-only, bare OKX is in `_CEFI_SUB_VENUE_BASES`);
+  3. `test_bybit_ws_connector.py` + `test_okx_ws_connector.py` — regression tests
+     (`test_bybit_bare_alias_registered` / `test_okx_bare_alias_registered`) asserting each bare key resolves to
+     the same factory object as the `-FUTURES` key + produces a valid connector.
+
+  The DERIBIT-COMBO stance (manifest/reference-only, no live tick feed — combos derive from bare DERIBIT
+  `options_chain`) is CONFIRMED by the operator; no MTDS code change (there is no WS feed to build). COINBASE bare
+  removal is DEFERRED under a new [CODE] P2 todo (operator surfaced ~25 downstream callers requiring migration
+  before the UAC drop). Impact: ~26 of 104 cefi `blocked-not-registered` smoke-matrix cells resolved by items 1+2
+  (BYBIT ~13 + OKX ~13); DERIBIT-COMBO ~13 reclassified as honest-absence; ~52 residual on the P1/P2 CODE follow-ons.
 
 - **2026-07-06** — **Design analysis (task gap-001, CeFi bare-venue triage)** by slot-4. Investigated the 4 bare CeFi
   venue tags (BYBIT · OKX · COINBASE · DERIBIT-COMBO) that fail `resolve_live_venue_key` against the current
