@@ -1395,9 +1395,10 @@ Flow:
 3. Actual records override — a real ingestion with `instrument_count==0` stays as the caller wrote it; no zero-fill is
    appended for that id.
 
-The `instruments-service` catalogue (see `instruments-service/docs/instrument-catalogue.md`) is the canonical source for
-`expected_catalogue`. MTDS, features-\*, and ML services load it via UTL and feed it into their per-shard
-`write_with_zero_fill` call.
+The `instruments-service` catalogue — the lifecycle-regen rollup written by
+`instruments-service/scripts/build_instrument_catalogue.py` to
+`gs://instruments-store-{ag}-prd-{pid}/prod/catalog.parquet` — is the canonical source for `expected_catalogue`. MTDS,
+features-\*, and ML services load it via UTL and feed it into their per-shard `write_with_zero_fill` call.
 
 ## Integrity Principles
 
