@@ -1,0 +1,9 @@
+asset_group,finding,event,detail
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"  DIVERGENT_EMPTY                            23,451 ❌"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-07-06 15:08:11,156 WARNING DIVERGENT_EMPTY asset_group=cefi venue=UPBIT data_type=book_snapshot_5 date=2024-12-29"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-07-06 15:08:11,156 WARNING DIVERGENT_EMPTY asset_group=cefi venue=UPBIT data_type=book_snapshot_5 date=2024-12-30"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,6 WARNING DIVERGENT_EMPTY asset_group=cefi venue=UPBIT data_type=book_snapshot_5 date=2024-12-28
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"DIVERGENT_EMPTY:  23,451"
+cefi,phantom_captured_no_parquet,DP_PHANTOM_ROWS,"2026-07-06 15:16:41,470 INFO   Phantom captures: 0  ← will flip to attempted_failed"
+cefi,phantom_captured_no_parquet,DP_PHANTOM_ROWS,"2026-07-06 15:16:41,470 INFO No phantoms found and nothing to unphantom. Manifest is clean."
+cefi,schema_version_not_v9,DP_NOT_V9,"344842/7219598 rows non-v9 (legacy_version=344842, missing=0, contaminated=0); dist={'9': 6874756, '5': 178484, '6': 132960, '4': 33398}"
