@@ -229,7 +229,14 @@ contaminated). All 0 MVP.
       writes 0 `KALSHI-PERP` rows.
 - [ ] [DATA] P0. Purge the 25,473 fake `KALSHI-PERP` rows from cefi: corrective `--mode full --allow-catalogue-shrink`
       cefi run + delete the `venue=KALSHI-PERP` by_date + manifest cells. Gate: cefi catalogue has 0 `KALSHI-PERP` rows,
-      row-count drop == 25,473, no other venue touched.
+      row-count drop == 25,473, no other venue touched. **PURGE, not MOVE (operator Q 2026-07-06 — decided):** these are
+      not merely misfiled — the perp adapter parsed them through the WRONG schema (`instrument_type=PERPETUAL`,
+      `expiry=None`) whereas they are binary EVENT contracts that have expiries + event/series structure + YES/NO
+      settlement the perp parser discarded. They are reference-data rows (no captured prices/trades — nothing
+      irreplaceable), the correct producer is the prediction Kalshi adapter into the prediction store, and Kalshi is
+      cheaply re-enumerable — so moving would relocate degraded stubs AND duplicate/conflict with the prediction store's
+      canonical copies. Purge; let the correct producer re-capture. (The "are these markets captured anywhere
+      correctly?" question the move-instinct surfaces is folded into Phase 3.)
 
 ### Phase 1 — foundation: config-drive host + shared RSA-PSS auth (no access needed)
 
@@ -250,12 +257,22 @@ contaminated). All 0 MVP.
       **0 event contracts**. Capture into a NON-PROD / dry-run sink — demo data MUST NOT enter the prod cefi store.
       Gate: demo run yields real perp instruments; a `KXMVE*` event ticker would be rejected.
 
-### Phase 3 — polymarket_perp repoint (demo)
+### Phase 3 — polymarket_perp repoint (demo) + prediction Kalshi/Polymarket event-capture gap
 
 - [ ] [RESEARCH] P1. `docs.polymarket.com` perps API — find the markets-listing endpoint + auth (beta-gated; launched
       2026-04-21). Gate: endpoint + auth documented in this issue.
 - [ ] [CODE] P1. Repoint `polymarket_perp` against Polymarket's perps API (demo/testnet if available) →
-      `InstrumentRecord     (PERPETUAL)`. Gate: demo returns real Polymarket perps, 0 prediction-market rows.
+      `InstrumentRecord(PERPETUAL)`. Gate: demo returns real Polymarket perps, 0 prediction-market rows.
+- [ ] [VERIFY] P1. **Pin the prediction-store event-capture gap (surfaced by the purge-vs-move question 2026-07-06).**
+      The KALSHI-PERP contamination is the DUPLICATE-in-the-wrong-place symptom; the real question the move-instinct
+      raised is whether these Kalshi/Polymarket EVENT markets (`KXMVESPORTSMULTIGAMEEXTENDED`,`KXMVECROSSCATEGORY`, …)
+      are captured CORRECTLY in the PREDICTION store at all. Evidence to resolve: the healed prediction enum wrote 0
+      records under top-level venues `KALSHI`/`POLYMARKET` ("0 records after filtering") but 7,981 across 63 sub-venue
+      groups — so it is unclear whether the full Kalshi/Polymarket event universe lands in prediction. Diff the
+      prediction store's KALSHI/POLYMARKET instrument set vs the live Kalshi `/markets` (events host) + Polymarket CLOB
+      universe. Gate: quantified — either "prediction captures them, purge loses nothing" (close), OR a named coverage
+      gap (`N` markets missing) → file the fix in the PREDICTION Kalshi/Polymarket adapter (NOT by relocating the
+      malformed cefi rows). This is the correct home for these markets; the perp path is not.
 
 ### Phase 4 — prod cutover (BLOCKED-OPERATOR-DECISION / -CREDENTIALS — Ikenna)
 
