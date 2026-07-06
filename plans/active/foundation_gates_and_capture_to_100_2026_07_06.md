@@ -119,8 +119,23 @@ source:
       `captured`. If still `captured` with count=47, re-run the 06-26 catalog-snapshot job once so the thin-day guard
       fires on the corrective re-write. Gate: 06-26 BINANCE-FUTURES cell resolves to attempted_failed (or captured with
       a HEALTHY count).
-- [ ] [DATA] P1. **cefi G1.3 follow-up** — the on-chain-CeFi-perp venue FORM issue (foundation finding 2026-06-27).
-      Gate: on-chain-CeFi-perp venues carry the canonical venue form.
+- [x] ✅ [DATA] P1. **cefi G1.3 follow-up** — the on-chain-CeFi-perp venue FORM issue (foundation finding 2026-06-27).
+      Gate: on-chain-CeFi-perp venues carry the canonical venue form. — instruments-service@79f2693 (slot-13,
+      2026-07-06). Root cause: `_canonical_bare_venue_chain` in `scripts/build_instrument_catalogue.py` was blindly
+      applying the DeFi PROTOCOL-CHAIN split rule to every ``VENUE-CHAIN`` string whose suffix matched a KNOWN_CHAIN,
+      including LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET — which are UAC cefi venues
+      (`VENUE_TO_ASSET_GROUP == "cefi"`), NOT DeFi pools. Fix: added the same `VENUE_TO_ASSET_GROUP.get(v) == "cefi"`
+      bypass the writer already uses (`writers._canonical_manifest_venue_chain` @ 24c0dd5) so the catalogue builder
+      converges on the same glued form. Regression:
+      `tests/unit/scripts/test_build_instrument_catalogue.py::test_rollup_on_chain_cefi_perp_venue_kept_glued`
+      (asserts (venue, chain) == (`LIGHTER-ZKSYNC`, ``) etc. after `build_catalogue_dataframe`); all 80 file tests
+      pass. QG green (`.qg_last_passed_sha=79f2693e...`). Verified state: cefi `_index` is ALREADY 100% glued for
+      EXTENDED-STARKNET (1,209 rows, chain=``) and carries no LIGHTER-ZKSYNC / PACIFICA-SOLANA rows —
+      writer @24c0dd5 has fully propagated, so no manual `_index` re-glue is needed. Active-instrument
+      `prod/catalog.parquet` SPLIT rows (215 LIGHTER, 103 EXTENDED, 10 PACIFICA = 328 total) will heal on the next
+      01:00 UTC incremental regen: the 4-branch merge keys on `instrument_id` (already glued, e.g.
+      `EXTENDED-STARKNET:PERP:...`) so PREV SPLIT rows update in-place to the glued (venue, chain) — no ghost
+      duplicates. Delisted-tail SPLIT rows will heal on the next `--mode full` weekly rebuild.
 - [x] ✅ [SCRIPT] P0. **G2 → G5 reconcile + sign-off (cefi) — DONE 2026-07-06**. Reconciled the checkbox-vs-reality
       drift in `instruments_foundation_completeness_2026_06_24.md` (§Phase 1 cefi): **G2 SIGNED OFF** (day-axis gap-free
       2,646/2,646 days genesis→06-26; 20,580 EU materialised; per-AG daily scheduler LIVE deployment-service@9d0e457;
