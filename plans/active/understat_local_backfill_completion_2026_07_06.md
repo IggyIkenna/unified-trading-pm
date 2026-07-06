@@ -163,3 +163,18 @@ shots; the 6 parked sports tasks are unblocked; issue-doc Progress Log updated; 
   `POST /api/backlog/regen` so 001 dispatches. Task 001 will re-launch the resume-aware local driver
   (`instruments-service/scripts/backfill/understat_bulk_backfill.py`, per plan §2 runbook); it picks up cleanly from the
   ~2016 hand-off and drives to `0 attempted_failed`.
+- 2026-07-06 (slot-7 planning, `data_engineering`): tasks -001 and -004 both auto-dispatched to slot-7 in the same batch
+  (queued_at 15:35:40Z) by priority=20 alone; the plan's serial ordering (001 → 002 → 003 → 004) still not
+  machine-encoded as `depends_on`. Slot-7's active task per /heartbeat was -004 but its plan-explicit HARD PREREQ ("only
+  AFTER the §9.2b consolidator is confirmed deployed") is unmet — -003 remains `status=queued`. Filed `BLK-afcc5da6`
+  asking whether to route slot-7 to -001 (the critical path, also dispatched to slot-7) or park -004. Main-agent verdict
+  (`BLK-afcc5da6` answered): **OPTION A** — switch to -001 and run the understat backfill driver detached; park -004
+  with BLOCKED-PREREQUISITES (§9.2b consolidator not confirmed). Constraints: (1) detached background job with
+  stdout→/tmp/understat_backfill.log; (2) report progress metric (captured rows) each heartbeat; (3) DO NOT flip
+  `understat-vm-xg-complete` — operator confirmation required; (4) park -004 with note.
+- 2026-07-06 (slot-7 planning): **Task -004 PARKED — BLOCKED-PREREQUISITES** (§9.2b consolidator not confirmed
+  deployed). Per plan §3 line for -004: "only AFTER the §9.2b consolidator is confirmed deployed (normalizing against
+  the old consolidator re-duplicates)." Task -003 (§9.2b consolidator confirmation) is `status=queued` at LDR tip — the
+  Cloud Run consolidator image rebuild since `unified-trading-library@f5ec2291f` has NOT been verified. Running -004
+  against the old consolidator re-duplicates per plan warning. -004 resumes when -003 completes. Slot-7 rotated to -001
+  (the actual critical path).
