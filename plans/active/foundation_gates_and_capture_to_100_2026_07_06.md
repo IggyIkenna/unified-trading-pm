@@ -111,14 +111,22 @@ source:
       `tests/unit/test_process_completeness_thin_day.py` (8+ tests). Part (b) 06-26 historical re-capture cell
       verification is separate VM/manifest ops — captured as the follow-up P2 todo below. Daily schedulers have run 10+
       times since 06-27 so the routing has been active on subsequent days.
-- [ ] [VERIFY] P2. **06-26 partial-cell manifest verification (follow-up to G1.2 above, 2026-07-06)** — the thin-day
+- [x] ✅ [VERIFY] P2. **06-26 partial-cell manifest verification (follow-up to G1.2 above, 2026-07-06)** — the thin-day
       routing shipped 2026-06-27 covers NEW captures; the 06-26 partial (BINANCE-FUTURES 678@06-25 → 47@06-26) was the
       ORIGINAL trigger cell. Verify by single-shard manifest read (NOT whole-corpus): read the cefi
       `_index/availability_index.parquet` row for `(date=2026-06-26, venue=BINANCE-FUTURES, data_type=universe)` —
       expect `capture_status=attempted_failed` with a corrective `record_failed`-style row layered atop the earlier thin
       `captured`. If still `captured` with count=47, re-run the 06-26 catalog-snapshot job once so the thin-day guard
       fires on the corrective re-write. Gate: 06-26 BINANCE-FUTURES cell resolves to attempted_failed (or captured with
-      a HEALTHY count).
+      a HEALTHY count). — **VERIFIED 2026-07-06 (slot 10)**: single-shard read of
+      `gs://instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet` filtered to
+      `(date=2026-06-26, venue=BINANCE-FUTURES)` returned exactly ONE row: `capture_status=captured`,
+      `instrument_count=677`, `data_type=instruments`, `written_at=2026-06-28T13:39:01+00:00`. Reference days:
+      06-25=678 captured, 06-27=678 captured. **06-26 count 677 vs 06-25 baseline 678 = 99.85%** — well above the
+      thin-day guard's 50%-of-14d-median floor, so the guard correctly did NOT reclassify → **captured-with-HEALTHY-count
+      branch of the gate is satisfied.** The stale `count=47` row has been superseded by the healthy re-capture. Note:
+      the plan text says `data_type=universe`; the cefi instruments-store manifest actually uses `data_type=instruments`
+      as the canonical value (86,818/86,836 rows; 18 blank edge-cases). No re-run required. No new correctness finding.
 - [x] ✅ [DATA] P1. **cefi G1.3 follow-up** — the on-chain-CeFi-perp venue FORM issue (foundation finding 2026-06-27).
       Gate: on-chain-CeFi-perp venues carry the canonical venue form. — instruments-service@79f2693 (slot-13,
       2026-07-06). Root cause: `_canonical_bare_venue_chain` in `scripts/build_instrument_catalogue.py` was blindly
