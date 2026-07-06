@@ -97,10 +97,22 @@ Three steady-state surfaces + the final verdict:
         2026-06-23 16:52→16:53, 2026-06-24 01:00→01:01, 2026-06-25 01:00→01:01, 2026-06-26 01:00→01:01,
         2026-06-27 01:00→01:00 (each within ~51s). catalog.parquet updated (P1e task 002 ✅).
         `DP_CATALOG_NOT_RUNNING(sports)` cleared (P1e alerts task ✅). Gate ALL PASSED.
-- [ ] [VERIFY] P0. **FINAL full-history zero-missing (R1/R2/R3).** **Gate**:
+- [ ] [VERIFY] P0. **BLOCKED-PREREQUISITES (2026-07-06, slot-6 planning — BOUNCE-LOOP HALT).** **FINAL full-history zero-missing (R1/R2/R3).** **Gate**:
       `run_fixture_completeness_audit_2026_06_25.py` + `read_availability_index` over 2015→present (single-walk
       discipline) → 0 `expected_unattempted_pending_fetch`, 0 blank-reason, 0 un-evidenced `attempted_failed` for EVERY
       `(source, data_type)` within coverage windows; features ML-ready. Output pasted into the log.
+      **Task-10 self-park precedent applied** (see `tradfi_v9_stage1_finish_2026_07_06.md` task 10 — slot-7 in-checkbox
+      marker; also `honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` -004 slot-6 marker 2026-07-06). This task
+      has bounced 6× today (slot-2 06-28+06-29, slot-14 06-29, slot-12 07-06 20:52 UTC, slot-4 07-06 ~22 UTC
+      `BLK-4d04041a`, slot-6 07-06 this session `BLK-36e5e51e` answered by main "yield this slot immediately");
+      priority=999 alone does NOT suppress dispatch. Slot-12 evidence (20:52 UTC 2026-07-06) is definitive:
+      **656,486 total pending_fetch shards** (eu=651,185 + af=5,301) across every non-`odds_api` source, so the gate
+      fails by 6 orders of magnitude. **Un-block sequence**: (a) Understat VM re-launched + drained (was PREEMPTED
+      2026-06-25 at 2018-04-25 per P2c 18th-dispatch log, still never re-launched); (b) P2a enrichment coordinator
+      drains the ~180k api_football fixture-enrichment EU shards; (c) P2b footystats VM `fs-backfill-20260706-161335`
+      drains 51k footystats EU shards; (d) P2c features compute reaches ≥1 %; (e) phantom-audit `--apply` clears 2,094
+      `phantom_captured_no_parquet_at_canonical_path` rows after `prefix_tpls` cover the new shape; (f) operator clears
+      this BLOCKED- marker → verify re-dispatches.
       — 2026-06-28 BLOCKED-UPSTREAM: P2a 5/6 complete (AF cleanliness BLOCKED-CREDENTIALS); P2b 4/7 complete
         (Understat VM `us-backfill-20260627-210801` running, ~4-5d ETA; footystats VM running; odds-api not started);
         P2c 0/3 compute complete (BLOCKED-PREREQ on P2b). Gate cannot pass until P2a verify unblocks + P2b+P2c
