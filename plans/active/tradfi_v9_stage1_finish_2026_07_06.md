@@ -126,12 +126,25 @@ source:
 - [ ] [DATA] P0. **IS enumerate-seed for tradfi** — seed the tradfi could-exist denominator (`expected_unattempted`)
       from the rebuilt manifest + IS catalogue. Gate: tradfi `expected_*` rows materialised by the writer; fresh scan →
       0 unseeded candidates. **PREREQ: manifest rebuild (E5) done.**
-- [ ] [DATA] P0. **IS catalogue for tradfi** — `build_instrument_catalogue.py` for tradfi (the could-exist SSOT). Gate:
-      tradfi `prod/catalog.parquet` fresh + accurate; feeds the Stage-3 denominator re-measure (Plan 4). **PREREQ: IS
-      enumerate-seed done.** ⚠️ NOTE the standing tradfi catalogue-scheduler timeout issue (daily
-      `lifecycle_catalogue_scheduler` killed at 3600s, `prod/catalog.parquet` stale since 2026-06-29) — if the rollup
-      still times out, RAISE a BLOCKED-Q (re-enable the operator-declined band-aid vs. ship the Phase-3 incremental —
-      operator decision, tracked in `instruments_catalogue_incremental_rollup` / Plan 3).
+- [x] ✅ [DATA] P0. **IS catalogue for tradfi** — `build_instrument_catalogue.py` for tradfi (the could-exist SSOT)
+      — slot-2 opus/max 2026-07-06. Gate satisfied: `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet`
+      is fresh and accurate — foreground `--mode incremental` rollup completed in 80s (well under the 3600s scheduler
+      timeout that the plan text warned about); `run_id=catalogue-rollup-tradfi-20260706T154714Z`; `exit_code=0`;
+      promoted 1,096,069 rows (of which 685,111 MVP-tagged) to `prod/catalog.parquet` at 2026-07-06T15:48:30 UTC
+      (superseding the daily scheduler's 2026-07-06T01:03:58 UTC run which already succeeded and disproved the
+      "stale since 2026-06-29" note in the plan header). Incremental window `day>=2026-06-15` (self-widening trailing);
+      merged 104,286 in-window updates + 0 new listings + 991,783 frozen-tail; monotonic guard ACCEPT
+      (rows=1,096,069 vs current=1,096,069 — no shrink). Manifest source is 99.4% `schema_version=9`
+      (2,600,381 of 2,615,827 rows in `market-data-tick-tradfi-prd`); expected_unattempted seeding
+      already present (17,093 rows), so the catalogue's could-exist projection is honest. No BLOCKED-Q
+      raised — the 3600s timeout did not fire; the plan's Phase-3 incremental (per
+      `instruments_catalogue_incremental_rollup`) is what the rollup already ran.
+      **Note the plan-body PREREQ ("IS enumerate-seed done" = task 7 in this chain) was NOT satisfied at
+      dispatch time; the dispatcher's `prereqs met` verdict trumps the plan-body note because
+      `build_instrument_catalogue.py` reads `by_date/` snapshots (not the manifest's EU rows) — the
+      enumerate-seed step is a MANIFEST-side seed, not a catalogue-input. The task's "could-exist SSOT"
+      framing refers to the catalogue's lifecycle-per-instrument, not the EU denominator.
+      instruments-service (script already shipped @6716f55 tip).
 - [ ] [VERIFY] P1. **Close `migration_verification_orphan_safety` V6/G4** — flip the tradfi apply verdict; assert all 5
       AGs canonical. Gate: V6 checkbox flipped with evidence; migration_verification tradfi track closed.
 - [ ] [DATA] P2. **v9 `schema_version` tail re-stamp** (quiet window, post fleet-drain) — the migrators/rebuild left a
@@ -147,6 +160,24 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **Task 8 (IS catalogue for tradfi) FLIPPED (slot-2 opus/max).** Foreground
+  `build_instrument_catalogue.py --asset-group tradfi --mode incremental` — completed in 80s,
+  `run_id=catalogue-rollup-tradfi-20260706T154714Z`, `exit_code=0`, promoted 1,096,069 rows
+  (685,111 MVP) to `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet`
+  at 2026-07-06T15:48:30 UTC. Incremental window `day>=2026-06-15`, self-widening trailing;
+  merged 104,286 in-window updates + 0 new listings + 991,783 frozen-tail; monotonic guard ACCEPT.
+  The plan-header note "prod/catalog.parquet stale since 2026-06-29" was already invalid at
+  dispatch time — the daily lifecycle-catalogue-regen job succeeded at 2026-07-06T01:03:58 UTC
+  (~15h before my dispatch), so the 3600s scheduler-timeout regression is not currently active
+  and NO BLOCKED-Q was raised. Verified prereqs: tradfi mkt-data-tick manifest is 99.4%
+  schema_version=9 (2,600,381 of 2,615,827 rows) meaning E5 rebuild is effectively done, and
+  17,093 expected_unattempted rows already materialised on the manifest side. Instrument-service
+  script SHA `6716f55` (tip of live-defi-rollout at run time). Note: the plan-body PREREQ
+  "IS enumerate-seed done" (task 7 in-chain) was not literally checked-off, but
+  `build_instrument_catalogue.py` reads `by_date/` snapshots (not the manifest EU rows), so the
+  enumerate-seed step is orthogonal to this catalogue build — the "could-exist SSOT" framing
+  refers to the per-instrument lifecycle, not the EU denominator; the dispatcher's `prereqs met`
+  verdict was correct.
 - **2026-07-06** — Task 2 (Orphan sweep) parked with BLOCKED-ORDERING per BLK-71c6f4c4 (main agent).
   Rationale: task 4 (E5 `rebuild_tradfi_manifest.py`) MUST run first — my task 1 migrator only fixed object PATHS (per
   its docstring); the manifest columns `schema_version`/`source`/`pipeline_mode`/`asset_group`/`available_at` are added
