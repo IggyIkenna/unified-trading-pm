@@ -18,10 +18,10 @@ scope: [engineer, admin]
 tags: [frontmatter, docspec, content-pass, gate-consolidation, doc-governance, grep-native]
 related:
   [
-    ../archive/2026_06/frontmatter_full_corpus_coverage_2026_06_30.md,
-    doc_frontmatter_schema_and_validator_2026_06_24.md,
-    ../epics/agent_operating_framework_master.md,
-    ../../codex/11-project-management/doc-frontmatter-schema.md,
+    ../2026_06/frontmatter_full_corpus_coverage_2026_06_30.md,
+    ../2026_06/doc_frontmatter_schema_and_validator_2026_06_24.md,
+    ../../epics/agent_operating_framework_master.md,
+    ../../../codex/11-project-management/doc-frontmatter-schema.md,
   ]
 created: 2026-06-30
 parent_epic: agent_operating_framework_master
@@ -47,6 +47,17 @@ source:
 ---
 
 # Frontmatter content pass + gate consolidation
+
+> **✅ COMPLETE + ARCHIVED (2026-07-06).** Every todo shipped; corpus at docspec **HARD=0 SOFT=0 (1,299 live docs)**
+> behind the single BLOCKING gate. 5-step archival ritual executed 2026-07-06: **(1)** deferred residuals homed in the
+> parent epic (see "Deferred work after 2026-07-06" below — nothing dropped); **(2)** this banner; **(3)**
+> codex-alignment verified — the cited SSOT
+> [`doc-frontmatter-schema.md`](../../../codex/11-project-management/doc-frontmatter-schema.md) is in lockstep with
+> `scripts/docs/docspec.py` (NATURE 8 incl. `issue`, `implementation_status` elective, doc_type↔path HARD check);
+> **(4)** new durable contracts homed in their codex SSOTs (schema doc + `per-tab-worktrees.md`), no CLAUDE.md/sub-agent
+> staleness introduced; **(5)** no lock to clear (`locked_by` was empty). Superseding follow-on rides the epic
+> [`agent_operating_framework_master`](../../epics/agent_operating_framework_master.md). Body preserved verbatim as the
+> provenance record.
 
 The structural coverage is **done + enforced (warn-only)** — see the archived
 [`frontmatter_full_corpus_coverage_2026_06_30`](../archive/2026_06/frontmatter_full_corpus_coverage_2026_06_30.md):
@@ -244,6 +255,18 @@ urgent.
 - A single comprehensive **blocking** frontmatter gate (backed by `docspec.validate_frontmatter`);
   `check_docspec_coverage` retired; one validator engine, no duplication.
 - agent-role docs enforced in the agent-orchestrator repo.
+
+## Deferred work after 2026-07-06
+
+Nothing from THIS plan is dropped — every residual is homed in the parent epic
+[`agent_operating_framework_master`](../../epics/agent_operating_framework_master.md), never orphaned here:
+
+- **W7 (aspirational)** — codex condense/de-drift + the L4 module-level `code_refs` rider + **B8** (the codex-drift
+  document bodies surfaced during the content pass, P3.4 §B8). Home: epic W-table row W7 + its `[DOCS] P2. W7` todo.
+- **Archive backfill — carries B7** (SUPERSEDED banners on the 19 `_archived_pre_v2` docs) plus summary/tags on the
+  ~1,127 archive docs; operator-paused. Home: epic `[DOCS] P3. DEFERRED` todo (controlled tag vocabulary · archive
+  backfill · …).
+- **W8 retrieval-eval loop** — deferred by design. Home: epic W-table row W8.
 
 ## Progress Log
 
