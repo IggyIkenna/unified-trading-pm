@@ -117,9 +117,21 @@ source:
       gate (the plan reads coverage on `capture_status=='captured'` alone) but review-blocking downstream
       consumers that use the canonical `data_type=='instruments'` filter — 4 actionable todos filed for a
       fix-worker.
-- [ ] [DATA] P1. **CME EC\* event-contract backfill (v9-certification dependency)** — the CME event-contract instruments
-      the tradfi catalogue needs for the v9 cert. **PREREQ: none** (coordinate with Plan 2's tradfi IS seed). Gate: CME
-      EC\* instruments catalogued.
+- [x] ✅ [DATA] P1. **CME EC\* event-contract backfill (v9-certification dependency)** — the CME event-contract
+      instruments the tradfi catalogue needs for the v9 cert (slot-2 opus/max 2026-07-06). Gate satisfied: fresh
+      tradfi catalog (rebuilt today at 2026-07-06T15:48:30 UTC via Plan 2 task 8 — same
+      `catalogue-rollup-tradfi-20260706T154714Z` run) contains **222,694 CME EC\* rows** — all MVP CME EC roots
+      present (ECES=Snake500, ECNQ=Nasdaq-100, ECGC=Gold, ECBTC=Bitcoin — plus non-MVP ECCL/ECNG/EC6E/ECRTY/ECYM
+      and options-on-EC-futures folded into "OTHER" 13,532). Coverage window `available_from ∈ [2024-12-17,
+      2026-07-02]`; `available_to ∈ [2025-09-29, 2026-12-31]`. All 222,694 carry `venue='CME'`, `instrument_type='OPTION'`
+      (Databento's classification for the binary EC-family products — the adapter's `BAG→EVENT_CONTRACT` reclass at
+      `databento/adapter.py:764-766` is a documented fallback for a legacy Databento representation; the live GLBX.MDP3
+      feed classifies them as OPTION and the adapter passes that through). Plan 2's tradfi IS seed coordinated implicitly:
+      the same rollup includes them because `build_instrument_catalogue.py` walks `by_date/` snapshots the Databento
+      URDI adapter has emitted from `TRADFI_DATABENTO_INSTRUMENTS` (UAC registry includes ECES/ECNQ/ECGC/ECCL/ECNG/ECBTC
+      under `MVP_CME_EXCHANGE_CODES`, `unified-api-contracts@registry/tradfi_instrument_universe.py:713-720`).
+      Feeds Stage-3 denominator re-measure (Plan 4). instruments-service (fresh rollup landed via the shared
+      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet`).
 - [ ] [INFRA] P1. **B1 — instrument catalogue regen + un-pause the per-AG daily schedulers.**
       `build_instrument_catalogue.py` + `catalogue_builder.py` exist; the Cloud Run jobs
       `lifecycle-catalogue-regen-{cefi,defi,tradfi,sports,prediction}` exist but the `*-daily` SCHEDULERS are PAUSED
@@ -150,6 +162,19 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **CME EC\* event-contract backfill FLIPPED (slot-2 opus/max).** Gate satisfied by
+  the same tradfi catalogue rollup landed via Plan 2 task 8 (`catalogue-rollup-tradfi-20260706T154714Z`,
+  promoted 2026-07-06T15:48:30 UTC). Fresh `prod/catalog.parquet` contains 222,694 CME EC\* rows — all
+  MVP EC roots present (ECES, ECNQ, ECGC, ECBTC — full breakdown ECGCH:10,790 · ECGCJ:9,984 · ECNQV:9,174
+  · ECNQZ:9,033 · ECNQH:8,816 · ECGCG:8,738 · ECNQJ:8,600 · ECNQF:8,128 · ECESZ:4,628 · ...) plus 13,532
+  "OTHER" (non-MVP EC underliers ECCL/ECNG/EC6E/ECRTY/ECYM + options-on-EC-futures). All classified as
+  `instrument_type=OPTION` (Databento's classification for the binary EC-family products; the
+  `BAG→EVENT_CONTRACT` reclass at `databento/adapter.py:764-766` is a documented fallback for a legacy
+  Databento representation and does not fire on the live GLBX.MDP3 feed — classification detail, not a
+  data gap). Coverage window `available_from ∈ [2024-12-17, 2026-07-02]`; `available_to ∈ [2025-09-29,
+  2026-12-31]`. Fetch surface: `unified-api-contracts@registry/tradfi_instrument_universe.py:713-720`
+  → `MVP_CME_EXCHANGE_CODES` → Databento GLBX.MDP3 → IS URDI → `by_date/` snapshots →
+  `build_instrument_catalogue.py` rollup. Feeds Stage-3 denominator re-measure (Plan 4).
 - **2026-07-06** — **EXTENDED public instrument + perp backfill FLIPPED (slot-2 opus/max).** Gate satisfied via
   the running `uts-prod-instruments-service-cefi-t1-recon` daily job: `ExtendedReferenceDataAdapter` (public REST,
   no auth) captures 101–103 active markets per day; availability index shows 644 of 644 days captured 2024-10-01
