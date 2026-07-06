@@ -3,9 +3,9 @@ doc_type: codex-ssot
 title: Manifest Consolidator — SSOT
 summary:
   "Canonical reference for the manifest consolidator: GCP Cloud Run Job + Cloud Scheduler (AWS Batch Fargate +
-  EventBridge), one per (service_kind, asset_group), `python -m unified_trading_library.manifest_consolidator
-  --bucket X --once`. Memory-bounded DuckDB merge (not pandas) with canonical-order projection + blank-capture_status
-  drop; content-write-marker incremental cutoff (idle-bucket trap fix); loud-fails on stale canonical; dated-instrument
+  EventBridge), one per (service_kind, asset_group), `python -m unified_trading_library.manifest_consolidator --bucket X
+  --once`. Memory-bounded DuckDB merge (not pandas) with canonical-order projection + blank-capture_status drop;
+  content-write-marker incremental cutoff (idle-bucket trap fix); loud-fails on stale canonical; dated-instrument
   seeding must clip to the listing window (CeFi OOM lesson)."
 status: current
 nature: ssot
@@ -14,10 +14,26 @@ stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [manifest, consolidation, infrastructure, data-correctness, single-walk, instruments]
-related: [../02-data/availability-manifest-and-data-status.md, ../02-data/data-pipeline-correctness-hard-rule.md, ../03-observability/data-feed-sla-registry.md, per-tab-worktrees.md]
+related:
+  [
+    ../02-data/availability-manifest-and-data-status.md,
+    ../02-data/data-pipeline-correctness-hard-rule.md,
+    ../03-observability/data-feed-sla-registry.md,
+    per-tab-worktrees.md,
+  ]
 created: 2026-05-20
 authoritative_for: [manifest consolidator runtime]
-referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/03-observability/data-feed-sla-registry.md, codex/05-infrastructure/gcs-lifecycle-policies.md, codex/05-infrastructure/gcs-object-operations.md, codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md, codex/05-infrastructure/vm-tarball-deployment.md, plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md, plans/epics/mtds_mdps_master.md]
+referenced_by:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/03-observability/data-feed-sla-registry.md,
+    codex/05-infrastructure/gcs-lifecycle-policies.md,
+    codex/05-infrastructure/gcs-object-operations.md,
+    codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md,
+    codex/05-infrastructure/vm-tarball-deployment.md,
+    plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
+    plans/epics/mtds_mdps_master.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

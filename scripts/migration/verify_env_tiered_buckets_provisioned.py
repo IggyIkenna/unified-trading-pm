@@ -29,7 +29,7 @@ Usage::
     # Provision missing buckets (GCP only; AWS not yet automated)
     python3 verify_env_tiered_buckets_provisioned.py --env prd --provision-missing
 
-Wired by Wave 1 of `codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md`.
+Wired by Wave 1 of `codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md`.
 SSOT: `deployment-service/configs/cloud-providers.yaml`.
 
 Reference: `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` §
@@ -430,7 +430,7 @@ def main() -> int:
 
         print(
             f"\n❌ {len(missing)} bucket(s) missing — provision before Wave 1 rsync. "
-            "See codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md."
+            "See codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md."
         )
         return 1
 

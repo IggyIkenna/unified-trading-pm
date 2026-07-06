@@ -1,11 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `ARBITRAGE_MEV_JIT_LIQUIDITY`'
+title: "Archetype: `ARBITRAGE_MEV_JIT_LIQUIDITY`"
 summary: >-
-  Archetype ARBITRAGE_MEV_JIT_LIQUIDITY: mints a 1-tick concentrated-LP position centred at spot just
-  before a large pending swap, collects the swap fee, and burns next block (near-zero inventory).
-  Triggers on jit_pending_swap_size_usd >= min_swap_threshold_usd (default $100k); runs only on 30/100
-  bps tiers; valid_blocks caps exposure to 2 blocks.
+  Archetype ARBITRAGE_MEV_JIT_LIQUIDITY: mints a 1-tick concentrated-LP position centred at spot just before a large
+  pending swap, collects the swap fee, and burns next block (near-zero inventory). Triggers on jit_pending_swap_size_usd
+  >= min_swap_threshold_usd (default $100k); runs only on 30/100 bps tiers; valid_blocks caps exposure to 2 blocks.
+implementation_status: code-shipped
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +23,14 @@ related:
   ]
 created: 2026-05-01
 authoritative_for: [ARBITRAGE_MEV_JIT_LIQUIDITY archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-backrun.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-backrun.md,
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md,
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md,
+    codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md,
+    codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -31,7 +38,7 @@ archetype: ARBITRAGE_MEV_JIT_LIQUIDITY
 family: ARBITRAGE_STRUCTURAL
 venue_universe: [UNISWAP_V3, PANCAKESWAP_V3, SUSHISWAP_V3]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   latency_budget_ms: 150
   min_sla_tier: high
 ---

@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `CARRY_BASIS_DATED_INV`'
+title: "Archetype: `CARRY_BASIS_DATED_INV`"
 summary: >-
-  Archetype CARRY_BASIS_DATED_INV: inverse of CARRY_BASIS_DATED — short dated future + long cash to
-  capture backwardation (spot > future) convergence at expiry. Entry when (spot - future)/spot >
-  min_entry_threshold; delta-neutral; shares CarryBasisDatedEngine via ALLOWED_ARCHETYPES with direction
-  selected by archetype_id. TradFi energy spot crunches + crypto bear-market dated.
+  Archetype CARRY_BASIS_DATED_INV: inverse of CARRY_BASIS_DATED — short dated future + long cash to capture
+  backwardation (spot > future) convergence at expiry. Entry when (spot - future)/spot > min_entry_threshold;
+  delta-neutral; shares CarryBasisDatedEngine via ALLOWED_ARCHETYPES with direction selected by archetype_id. TradFi
+  energy spot crunches + crypto bear-market dated.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -21,9 +22,14 @@ related:
     carry-staked-basis-dated.md,
     ../families/carry-and-yield.md,
   ]
-created: '2026-05-18'
+created: "2026-05-18"
 authoritative_for: [CARRY_BASIS_DATED_INV archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md, codex/09-strategy/strategy-summary.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
+    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    codex/09-strategy/strategy-summary.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -31,7 +37,7 @@ archetype: CARRY_BASIS_DATED_INV
 family: CARRY_AND_YIELD
 venue_universe: [CME, DERIBIT, OKX, BYBIT]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

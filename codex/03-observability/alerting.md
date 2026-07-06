@@ -23,7 +23,17 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [autonomous-recovery alert matrix, alert delivery channels]
-referenced_by: [codex/03-observability/coordination-events.md, codex/03-observability/data-feed-sla-registry.md, codex/03-observability/lifecycle-events.md, codex/03-observability/monitoring-control-plane.md, codex/03-observability/slos.md, codex/04-architecture/dependency-health-policy.md, codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/kill-switch-event-bus.md]
+referenced_by:
+  [
+    codex/03-observability/coordination-events.md,
+    codex/03-observability/data-feed-sla-registry.md,
+    codex/03-observability/lifecycle-events.md,
+    codex/03-observability/monitoring-control-plane.md,
+    codex/03-observability/slos.md,
+    codex/04-architecture/dependency-health-policy.md,
+    codex/04-architecture/incident-gateway-state-machine.md,
+    codex/04-architecture/kill-switch-event-bus.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -322,7 +332,7 @@ codex_doc_currency_and_consolidation_post_cutover_2026_05_12 Sweep 3).
   pager → Layer-5 human audit ack)
 - `04-architecture/incident-gateway-state-machine.md` — **NEW 2026-05-23** 13-state incident lifecycle + dedup-key +
   audit-ack queue
-- `05-infrastructure/physical-pager-layer.md` — **NEW 2026-05-23** Layer-4 device comparison + webhook prototype
+- `15-runbooks/physical-pager-layer.md` — **NEW 2026-05-23** Layer-4 device comparison + webhook prototype
 - `15-runbooks/alerting/audit-acknowledgement-flow.md` — **NEW 2026-05-23** Layer-5 ack SLA + escalation ladder
 - `05-infrastructure/disaster-recovery.md` — RTO/RPO targets + Tier 0-3 recovery
 - `03-observability/lifecycle-events.md` — mandatory event sequences

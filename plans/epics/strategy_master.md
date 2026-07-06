@@ -2,18 +2,30 @@
 doc_type: epic
 title: Strategy Master (L2)
 summary: >-
-  L2 everlasting epic owning strategy-service post-2026-05-19 consolidation (engine + portfolio_allocator +
-  risk + position + pnl + 53 archetype engines), per-client subprocess isolation, and archetype lifecycle;
-  inherits the strategy side of the split strategy_and_dart_master umbrella (v2 factory cutover, shadow
-  deployment registry/ledger, capability gaps, cross-domain alpha).
+  L2 everlasting epic owning strategy-service post-2026-05-19 consolidation (engine + portfolio_allocator + risk +
+  position + pnl + 53 archetype engines), per-client subprocess isolation, and archetype lifecycle; inherits the
+  strategy side of the split strategy_and_dart_master umbrella (v2 factory cutover, shadow deployment registry/ledger,
+  capability gaps, cross-domain alpha).
 status: active
 nature: process
-asset_group: [defi]
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, defi, execution, consolidation, reconciliation, ssot-audit]
-related: [../active/capability_wizard_and_manifest_2026_06_11.md, ../active/compute_optimization_mock_data_2026_05_13.md, ../archive/2026_05/config_grid_archetype_extend_2026_05_20.md, ../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md, ../active/defi_recursive_borrow_archetypes_2026_05_10.md, ../archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md, ../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md, ../archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md, ../archive/2026_05/strategy_repo_consolidation_2026_05_19.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+related:
+  [
+    ../active/capability_wizard_and_manifest_2026_06_11.md,
+    ../active/compute_optimization_mock_data_2026_05_13.md,
+    ../archive/2026_05/config_grid_archetype_extend_2026_05_20.md,
+    ../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md,
+    ../active/defi_recursive_borrow_archetypes_2026_05_10.md,
+    ../archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md,
+    ../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md,
+    ../archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md,
+    ../archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
+    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+  ]
 created: 2026-05-21
 name: strategy_master
 tier: L2
@@ -22,7 +34,19 @@ assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [../active/capability_wizard_and_manifest_2026_06_11.md, ../active/compute_optimization_mock_data_2026_05_13.md, ../archive/2026_05/config_grid_archetype_extend_2026_05_20.md, ../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md, ../active/defi_recursive_borrow_archetypes_2026_05_10.md, ../archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md, ../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md, ../archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md, ../archive/2026_05/strategy_repo_consolidation_2026_05_19.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+related_plans:
+  [
+    ../active/capability_wizard_and_manifest_2026_06_11.md,
+    ../active/compute_optimization_mock_data_2026_05_13.md,
+    ../archive/2026_05/config_grid_archetype_extend_2026_05_20.md,
+    ../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md,
+    ../active/defi_recursive_borrow_archetypes_2026_05_10.md,
+    ../archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md,
+    ../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md,
+    ../archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md,
+    ../archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
+    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+  ]
 last_updated: 2026-06-11
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

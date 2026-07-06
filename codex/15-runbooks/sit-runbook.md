@@ -1,5 +1,5 @@
 ---
-doc_type: codex-ssot
+doc_type: codex-runbook
 title: SIT (System Integration Tests) Runbook
 summary:
   SIT (System Integration Tests) operational runbook — staging force-unlock via the sit-unlock dispatch, manual SIT
@@ -16,10 +16,20 @@ related: [../08-workflows/ci-cd-flow.md, ../06-coding-standards/integration-test
 created: 2026-03-27
 authoritative_for: [SIT staging force-unlock procedure, SIT staging-lock lifecycle + starvation detector]
 referenced_by:
-owner:
+owner: workspace-platform (CI maintainers)
 last_reviewed: 2026-05-17
 code_refs:
-execution: {owner: workspace-platform (CI maintainers), cadence: ad-hoc — when SIT is stuck or staging is locked, verifier: gh workflow run sit-unlock.yml --repo IggyIkenna/unified-trading-pm + verify staging-lock GCS blob removed, last_executed: documented; force-unlock procedure exercised periodically per CI fail-recovery}
+execution:
+  {
+    owner: workspace-platform (CI maintainers),
+    cadence: ad-hoc — when SIT is stuck or staging is locked,
+    verifier:
+      gh workflow run sit-unlock.yml --repo IggyIkenna/unified-trading-pm + verify staging-lock GCS blob removed,
+    last_executed: documented; force-unlock procedure exercised periodically per CI fail-recovery,
+  }
+cadence: ad-hoc — when SIT is stuck or staging is locked
+verifier: gh workflow run sit-unlock.yml --repo IggyIkenna/unified-trading-pm + verify staging-lock GCS blob removed
+last_executed: documented; force-unlock procedure exercised periodically per CI fail-recovery
 ---
 
 # SIT (System Integration Tests) Runbook

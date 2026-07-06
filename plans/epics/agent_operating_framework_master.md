@@ -7,7 +7,7 @@ summary:
   retrieval-eval loop; workstreams W1–W10 (dispatch fix, docspec, backfill, L0 gen, QG gate, role registry+broker).
 status: active
 nature: process
-asset_group: [defi]
+asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui]
 scope: [engineer, admin]

@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `CARRY_BASIS_PERP_INV`'
+title: "Archetype: `CARRY_BASIS_PERP_INV`"
 summary: >-
-  Archetype CARRY_BASIS_PERP_INV (renamed 2026-05-18 from CARRY_RECURSIVE_BORROW_PERP_HEDGED): recursive
-  ETH-LST supply-borrow loop on Aave/Morpho + a USDC-margined CeFi perp short sized to E_actual for delta
-  neutrality. Yield = R_lend + R_fund + R_usdc - gas - slippage; perp venue Hyperliquid PRIMARY / Bybit
-  <=50% SECONDARY; recursion amplifies the spread, not the delta.
+  Archetype CARRY_BASIS_PERP_INV (renamed 2026-05-18 from CARRY_RECURSIVE_BORROW_PERP_HEDGED): recursive ETH-LST
+  supply-borrow loop on Aave/Morpho + a USDC-margined CeFi perp short sized to E_actual for delta neutrality. Yield =
+  R_lend + R_fund + R_usdc - gas - slippage; perp venue Hyperliquid PRIMARY / Bybit <=50% SECONDARY; recursion amplifies
+  the spread, not the delta.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -24,7 +25,14 @@ related:
   ]
 created: 2026-05-18
 authoritative_for: [CARRY_BASIS_PERP_INV archetype specification (recursive borrow + perp-hedged carry)]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md, codex/09-strategy/strategy-summary.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
+    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    codex/09-strategy/strategy-summary.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -32,7 +40,7 @@ archetype: CARRY_BASIS_PERP_INV
 family: CARRY_AND_YIELD
 venue_universe: [AAVE, MORPHO, HYPERLIQUID, BYBIT]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 300
   min_sla_tier: standard

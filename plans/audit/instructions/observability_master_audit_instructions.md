@@ -48,7 +48,7 @@ Codex SSOTs governing this epic:
 | `codex/04-architecture/recovery-defence-in-depth-layers.md` | **NEW 2026-05-23** — 5-layer model: L0 deterministic Python → L1 LLM audit/signoff → L2 PagerDuty → L3 Twilio voice → L4 pager → L5 human audit ack |
 | `codex/04-architecture/incident-gateway-state-machine.md`   | **NEW 2026-05-23** — 13-state incident lifecycle (DETECTED → … → CLOSED); audit-ack queue                                                           |
 | `codex/05-infrastructure/disaster-recovery.md`              | RTO/RPO targets, Tier 0-3 recovery, restore from manifest                                                                                           |
-| `codex/05-infrastructure/physical-pager-layer.md`           | **NEW 2026-05-23** — Pager device comparison, webhook prototype, Twilio voice bridge                                                                |
+| `codex/15-runbooks/physical-pager-layer.md`                 | **NEW 2026-05-23** — Pager device comparison, webhook prototype, Twilio voice bridge                                                                |
 | `codex/05-infrastructure/live-deployment-monitoring.md`     | Per-archetype heartbeat thresholds; STARTED/progress/STOPPED/FAILED event cadence                                                                   |
 | `codex/15-runbooks/alerting/pagerduty-escalation-policy.md` | Ikenna 14:30–02:30 UK / Harsh 02:30–14:30 UK; escalation ladder                                                                                     |
 | `codex/15-runbooks/alerting/audit-acknowledgement-flow.md`  | **NEW 2026-05-23** — 6h ack SLA + secondary-human-escalation + founder fallback                                                                     |
@@ -196,8 +196,8 @@ Codex SSOTs governing this epic:
 
 ### Section J — Physical pager + final-mile fallback
 
-- [ ] (J.1) **Comparison matrix docs**: `codex/05-infrastructure/physical-pager-layer.md` documents 4-6 candidates with
-      price, webhook API path, pros/cons, recommended pick.
+- [ ] (J.1) **Comparison matrix docs**: `codex/15-runbooks/physical-pager-layer.md` documents 4-6 candidates with price,
+      webhook API path, pros/cons, recommended pick.
 - [ ] (J.2) **Webhook prototype**: `PhysicalPagerNotifier` abstract interface + 4 vendor subclasses ship in
       alerting-service.
 - [ ] (J.3) **Twilio voice bridge as permanent fallback**: Twilio voice triggers when SEV0 not acked within configured

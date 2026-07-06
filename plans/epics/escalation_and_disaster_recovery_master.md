@@ -1,10 +1,12 @@
 ---
 doc_type: epic
 title: Escalation & Disaster Recovery Master (L4)
-summary: Role-agnostic escalation pipeline (blocked → Slack → human-resolve → UI) + the self-healing/auto-recovery substrate every agent role escalates through; 95% self-resolve, the rest escalate cleanly.
+summary:
+  Role-agnostic escalation pipeline (blocked → Slack → human-resolve → UI) + the self-healing/auto-recovery substrate
+  every agent role escalates through; 95% self-resolve, the rest escalate cleanly.
 status: active
 nature: process
-asset_group: [defi]
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-ui]
 scope: [engineer, admin]
@@ -33,7 +35,7 @@ escalates **once, cleanly, with options it already researched**, and the whole l
 resolvable** in one UI.
 
 This epic is **role-agnostic infrastructure**. Each role (Data-Eng, DevOps, QA, …) declares its escalation triggers in
-its registry charter (`agent_operating_framework_master` W6); this epic owns the *pipeline* those triggers flow through.
+its registry charter (`agent_operating_framework_master` W6); this epic owns the _pipeline_ those triggers flow through.
 
 ## Why this epic exists
 
@@ -50,12 +52,12 @@ Today the blocked-question loop is built end-to-end but role-blind and operator-
 
 Three gaps separate this from the operator's vision (operator design pass, 2026-06-25):
 
-1. **The Slack link goes to the *whole* blocked queue, not a scoped single-question page** — the human has to hunt.
+1. **The Slack link goes to the _whole_ blocked queue, not a scoped single-question page** — the human has to hunt.
 2. **No alert state** — there's no `open / in-progress / resolved` lifecycle a human can filter on; no "someone is
    working on this" intermediate so two operators don't collide.
-3. **Escalation is not generalized across roles** — `/blocked` is worker→main→operator; there is no uniform
-   "role R hit a wall, route the decision to the human with R's pre-researched options" entry point that any role
-   (Data-Eng audit, DevOps CI-wall, QA UAT) uses identically.
+3. **Escalation is not generalized across roles** — `/blocked` is worker→main→operator; there is no uniform "role R hit
+   a wall, route the decision to the human with R's pre-researched options" entry point that any role (Data-Eng audit,
+   DevOps CI-wall, QA UAT) uses identically.
 
 ## Target pipeline (role-agnostic)
 
@@ -77,16 +79,16 @@ auto-recovery matrix. This epic only routes to a human for the **`manual_unkill`
 
 ## Workstream registry (child plans)
 
-| WS  | Child plan                          | Scope                                                                                                | Depends                                  | Priority | Status   |
-| --- | ----------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------- | -------- | -------- |
-| E1  | `escalation_pipeline_mvp_2026_06_25` | Generalize `/blocked` → role-agnostic escalation record + `open/in-progress/resolved` state + scoped Slack link + close the 3 gaps | `agent_operating_framework_master` W9 (broker) | P1       | proposed |
-| E2  | _(future)_ slack-interactive-resolve | Real Slack app (Block Kit action buttons / `/resolve` slash) so a human answers in Slack without the dashboard hop | E1                                       | P2       | deferred |
-| E3  | _(future)_ dr-runbook-registry      | Disaster-recovery runbooks (owner/cadence/verifier/last_executed) wired to the auto-recovery matrix for non-self-healing failure classes | E1                                       | P2       | deferred |
+| WS  | Child plan                           | Scope                                                                                                                                    | Depends                                        | Priority | Status   |
+| --- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------- | -------- |
+| E1  | `escalation_pipeline_mvp_2026_06_25` | Generalize `/blocked` → role-agnostic escalation record + `open/in-progress/resolved` state + scoped Slack link + close the 3 gaps       | `agent_operating_framework_master` W9 (broker) | P1       | proposed |
+| E2  | _(future)_ slack-interactive-resolve | Real Slack app (Block Kit action buttons / `/resolve` slash) so a human answers in Slack without the dashboard hop                       | E1                                             | P2       | deferred |
+| E3  | _(future)_ dr-runbook-registry       | Disaster-recovery runbooks (owner/cadence/verifier/last_executed) wired to the auto-recovery matrix for non-self-healing failure classes | E1                                             | P2       | deferred |
 
 ## Composition with other epics
 
-- **`agent_operating_framework_master`** — owns the role registry (W6) + the message broker (W9) this pipeline rides
-  on. Roles declare escalation triggers there; this epic consumes them. **Hard dependency: E1 needs W9.**
+- **`agent_operating_framework_master`** — owns the role registry (W6) + the message broker (W9) this pipeline rides on.
+  Roles declare escalation triggers there; this epic consumes them. **Hard dependency: E1 needs W9.**
 - **`observability_master`** (vm-cross-cutting, co-tier) — the deployment-ui surfaces + alert-state rendering compose
   with the observability dashboard. The "always visible / filter open-vs-resolved" UI lands as a deployment-ui tab.
 - **`client_isolation_and_governance_master`** — the `manual_unkill` / kill-switch governance that this pipeline's
@@ -94,17 +96,18 @@ auto-recovery matrix. This epic only routes to a human for the **`manual_unkill`
 
 ## Out of scope
 
-- The message broker itself (owned by `agent_operating_framework_master` W9 — this epic *consumes* it).
-- Per-role escalation *triggers* (declared in each role's W6 charter — this epic owns the *pipeline*, not the triggers).
+- The message broker itself (owned by `agent_operating_framework_master` W9 — this epic _consumes_ it).
+- Per-role escalation _triggers_ (declared in each role's W6 charter — this epic owns the _pipeline_, not the triggers).
 - A new Slack OAuth app (E2, deferred — the MVP keeps the one-way webhook + dashboard-resolve, just scoped + stateful).
 
 ## P1 — escalation pipeline MVP
 
-Owned by [`../active/escalation_pipeline_mvp_2026_06_25.md`](../active/escalation_pipeline_mvp_2026_06_25.md). Generalize
-the blocked loop into a role-agnostic, stateful, scoped-link escalation pipeline. Depends on the broker (W9).
+Owned by [`../active/escalation_pipeline_mvp_2026_06_25.md`](../active/escalation_pipeline_mvp_2026_06_25.md).
+Generalize the blocked loop into a role-agnostic, stateful, scoped-link escalation pipeline. Depends on the broker (W9).
 
-- [ ] [CODE] P1. Role-agnostic escalation record `{ role, domain, question, options[], recommendation, severity, state }`
-      generalizing `BlockedRow` (additive; existing `/blocked` keeps working). (E1)
+- [ ] [CODE] P1. Role-agnostic escalation record
+      `{ role, domain, question, options[], recommendation, severity, state }` generalizing `BlockedRow` (additive;
+      existing `/blocked` keeps working). (E1)
 - [ ] [CODE] P1. `open / in-progress / resolved` state + a `claim` ("I'm on it") transition; resolved rows stay
       browsable + filterable. (E1)
 - [ ] [CODE] P1. Scoped Slack link → `/escalation/{id}` (one question + its options), not the whole queue. (E1)
@@ -114,7 +117,8 @@ the blocked loop into a role-agnostic, stateful, scoped-link escalation pipeline
 ## P2 — deferred (own efforts)
 
 - [ ] [CODE] P2. **E2** — Slack-interactive resolve (Block Kit buttons / slash command) so the human answers in Slack.
-- [ ] [DOCS] P2. **E3** — DR runbook registry (owner/cadence/verifier/last_executed) for non-self-healing failure classes.
+- [ ] [DOCS] P2. **E3** — DR runbook registry (owner/cadence/verifier/last_executed) for non-self-healing failure
+      classes.
 
 ## Progress Log
 

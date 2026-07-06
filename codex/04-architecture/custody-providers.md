@@ -3,9 +3,8 @@ doc_type: codex-ssot
 title: Custody Providers — single SSOT
 summary:
   "Single SSOT for custody integration: the pluggable CustodyProvider protocol + all implementations
-  (mock/local_key/cloud_kms/copper/ceffu/fireblocks), factory + SigningSurface mapping, per-(asset_group,venue)
-  coverage matrix, mode matrix, and the §10A custody-ping health-check contract. May-23 default is
-  CLOUD_KMS_ENCRYPTED."
+  (mock/local_key/cloud_kms/copper/ceffu/fireblocks), factory + SigningSurface mapping, per-(asset_group,venue) coverage
+  matrix, mode matrix, and the §10A custody-ping health-check contract. May-23 default is CLOUD_KMS_ENCRYPTED."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +12,26 @@ stage: [meta]
 repos: [alerting-service, execution-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [custody, copper, ceffu, cloud-kms, execution, health-check]
-related: [wallet-hierarchy-and-capital-flow.md, interface-credential-convention.md, circuit-breaker-rule-taxonomy.md, ../05-infrastructure/custody-onboarding-checklist.md]
+related:
+  [
+    wallet-hierarchy-and-capital-flow.md,
+    interface-credential-convention.md,
+    circuit-breaker-rule-taxonomy.md,
+    ../15-runbooks/custody-onboarding-checklist.md,
+  ]
 created: 2026-03-30
 authoritative_for: [custody provider protocol and implementations, custody-ping health-check contract]
-referenced_by: [codex/04-architecture/client-funds-isolation.md, codex/04-architecture/custody-architecture.md, codex/04-architecture/defi-execution-overview.md, codex/04-architecture/defi-phase3-infrastructure.md, codex/04-architecture/execution-modes-and-chain-resolution.md, codex/04-architecture/interface-credential-convention.md, codex/04-architecture/separation-of-concerns.md, codex/04-architecture/strategy-ensemble-topology.md]
+referenced_by:
+  [
+    codex/04-architecture/client-funds-isolation.md,
+    codex/04-architecture/custody-architecture.md,
+    codex/04-architecture/defi-execution-overview.md,
+    codex/04-architecture/defi-phase3-infrastructure.md,
+    codex/04-architecture/execution-modes-and-chain-resolution.md,
+    codex/04-architecture/interface-credential-convention.md,
+    codex/04-architecture/separation-of-concerns.md,
+    codex/04-architecture/strategy-ensemble-topology.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -44,7 +59,7 @@ code_refs:
 > enum for future-flexibility but is NOT a May-23 / June-1 target.
 >
 > Operator-runbook for every cutover + June-1 onboarding step:
-> [`codex/05-infrastructure/custody-onboarding-checklist.md`](../05-infrastructure/custody-onboarding-checklist.md).
+> [`codex/15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md).
 >
 > Cloud-KMS adapter (§ B in checklist) — `CloudKmsCustodyProvider` **SHIPPED** at execution-service@`d45d24b4` per Plan
 > Phase 3.C.1 (envelope-encrypted PK via Cloud HSM CMK). Bridge function `custody_config_from_wallet_provisioning`
@@ -745,14 +760,14 @@ class CustodyProvider(Protocol):
 
 `CustodyHealth` shape (canonical in UAC `unified_api_contracts.canonical.crosscutting.custody`):
 
-| Field                  | Type          | Description                                                                                                                                            |
-| ---------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `healthy`              | `bool`        | `True` iff backend reachable AND last key-material rotation within freshness window                                                                    |
-| `last_key_rotation_at` | `datetime`    | Wall-clock of last successful CMK / key-material rotation (per [`../05-infrastructure/rotation-runbook.md`](../05-infrastructure/rotation-runbook.md)) |
-| `next_rotation_due_at` | `datetime`    | Wall-clock of next scheduled rotation (`last + cadence` per rotation-runbook per-class table)                                                          |
-| `provider`             | `str`         | Provider name (e.g. `"copper"`, `"ceffu"`, `"cloud_kms"`) — for routing alerts                                                                         |
-| `last_round_trip_ms`   | `int \| None` | Latency observed on the last successful ping; `None` if last ping failed                                                                               |
-| `error`                | `str \| None` | Error message if `healthy == False`; `None` on success                                                                                                 |
+| Field                  | Type          | Description                                                                                                                                                      |
+| ---------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `healthy`              | `bool`        | `True` iff backend reachable AND last key-material rotation within freshness window                                                                              |
+| `last_key_rotation_at` | `datetime`    | Wall-clock of last successful CMK / key-material rotation (per [`../15-runbooks/credential-rotation-runbook.md`](../15-runbooks/credential-rotation-runbook.md)) |
+| `next_rotation_due_at` | `datetime`    | Wall-clock of next scheduled rotation (`last + cadence` per rotation-runbook per-class table)                                                                    |
+| `provider`             | `str`         | Provider name (e.g. `"copper"`, `"ceffu"`, `"cloud_kms"`) — for routing alerts                                                                                   |
+| `last_round_trip_ms`   | `int \| None` | Latency observed on the last successful ping; `None` if last ping failed                                                                                         |
+| `error`                | `str \| None` | Error message if `healthy == False`; `None` on success                                                                                                           |
 
 ### §10A.2 Cadence + emitter
 
@@ -785,7 +800,7 @@ Closed set; mirrors the existing alerting taxonomy.
 | Single missed health-ping (transient)                                                                           | `last_round_trip_ms is None` on one tick                   | log debug; no alert (de-dup over 600s window per `balance_drift.md` pattern)                                                                                                                                                    |
 | Health-ping failed ≥ `CUSTODY_DISCONNECT_SECONDS` (default **300s** per `circuit-breaker-rule-taxonomy.md:228`) | rolling 5-tick failure window                              | emit `CUSTODY_HEALTH_DEGRADED` AlertCode → circuit-breaker `CUSTODY_DISCONNECT_SECONDS` rule fires `BLOCK_NEW` + CRITICAL severity (PagerDuty + Telegram). Slot 4 cred-rotation alert taxonomy AL-15 cross-references this code |
 | Balance-pull diff > `balance_drift_usd` threshold                                                               | per-(wallet, asset) reconciler, every 5 min                | emit `BALANCE_DRIFT` AlertCode → operator runbook per [`balance_drift.md`](../15-runbooks/alerting/balance_drift.md). Does NOT pause trading by default; pages tier-3 on `drift > 10x`                                          |
-| Key material stale (`now > next_rotation_due_at`)                                                               | health-check decision (`healthy = False` if past due-date) | emit `CREDENTIAL_ROTATION_OVERDUE` AlertCode → rotation runbook owner per [`../05-infrastructure/rotation-runbook.md`](../05-infrastructure/rotation-runbook.md) per-class table                                                |
+| Key material stale (`now > next_rotation_due_at`)                                                               | health-check decision (`healthy = False` if past due-date) | emit `CREDENTIAL_ROTATION_OVERDUE` AlertCode → rotation runbook owner per [`../15-runbooks/credential-rotation-runbook.md`](../15-runbooks/credential-rotation-runbook.md) per-class table                                      |
 
 `CUSTODY_HEALTH_DEGRADED` is the AlertCode name; the underlying circuit-breaker rule code is
 `CUSTODY_DISCONNECT_SECONDS` per `circuit-breaker-rule-taxonomy.md` (the two compose: emitter →
@@ -818,8 +833,8 @@ SSOT" invariant + slot 8 audit PB-19 deferred QG ratchet).
 
 ### §10A.8 Composes with
 
-- [`../05-infrastructure/rotation-runbook.md`](../05-infrastructure/rotation-runbook.md) — per-class rotation cadence
-  (Cloud HSM CMK 90d / Copper-JWT 60d / CEFFU-JWT 60d) drives `next_rotation_due_at`.
+- [`../15-runbooks/credential-rotation-runbook.md`](../15-runbooks/credential-rotation-runbook.md) — per-class rotation
+  cadence (Cloud HSM CMK 90d / Copper-JWT 60d / CEFFU-JWT 60d) drives `next_rotation_due_at`.
 - [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) `CUSTODY_DISCONNECT_SECONDS` rule.
 - [`../15-runbooks/alerting/balance_drift.md`](../15-runbooks/alerting/balance_drift.md) — the 5-min balance-pull
   failure runbook.

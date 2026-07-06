@@ -3,8 +3,9 @@ doc_type: codex-ssot
 title: Backtest Persistence and Ranking
 summary:
   STUB — backtest results persisted to gs://strategy-store-{pid}/backtests/, ranked by Sharpe ratio + max drawdown +
-  regime stability, with the top-N configs per archetype promoted to paper candidates; full spec pending strategy
-  Phase 3.
+  regime stability, with the top-N configs per archetype promoted to paper candidates; full spec pending strategy Phase
+  3.
+implementation_status: stub
 status: draft
 nature: ssot
 asset_group: [meta]

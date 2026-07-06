@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `STAT_ARB_CROSS_SECTIONAL`'
+title: "Archetype: `STAT_ARB_CROSS_SECTIONAL`"
 summary: >-
   `STAT_ARB_CROSS_SECTIONAL` archetype — cross-sectional ranking: scores a universe (Russell 1000 / S&P 500 / crypto
   top-50) via an ML or factor model, longs top-M and shorts bottom-M, rebalancing when ≥ `rebalance_threshold_pct` of
   the basket changes; dollar-neutral with `max_single_name_pct` cap, emitting a multi-instrument TRADE set.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,13 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [STAT_ARB_CROSS_SECTIONAL archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/stat-arb-pairs-fixed.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md, codex/09-strategy/architecture-v2/families/stat-arb-pairs.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/stat-arb-pairs-fixed.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md,
+    codex/09-strategy/architecture-v2/families/stat-arb-pairs.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -30,7 +37,7 @@ archetype: STAT_ARB_CROSS_SECTIONAL
 family: STAT_ARB_PAIRS
 venue_universe: [IBKR, CME, BINANCE, OKX]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

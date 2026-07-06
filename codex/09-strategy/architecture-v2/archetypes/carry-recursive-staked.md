@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `CARRY_RECURSIVE_STAKED`'
+title: "Archetype: `CARRY_RECURSIVE_STAKED`"
 summary: >-
-  Archetype CARRY_RECURSIVE_STAKED (Family 0): recursive leverage of a liquid-staking position
-  (stake -> pledge -> borrow -> restake, ~2.5-4x effective) capturing leveraged LST yield including the
-  three restaking layers (CARRY_BASE + AVS-continuous + issuer-seasonal, dust-converted). Cascading
-  liquidation/depeg risk amplified by leverage; tight max_stETH_depeg_bps + HF kill-switches.
+  Archetype CARRY_RECURSIVE_STAKED (Family 0): recursive leverage of a liquid-staking position (stake -> pledge ->
+  borrow -> restake, ~2.5-4x effective) capturing leveraged LST yield including the three restaking layers (CARRY_BASE +
+  AVS-continuous + issuer-seasonal, dust-converted). Cascading liquidation/depeg risk amplified by leverage; tight
+  max_stETH_depeg_bps + HF kill-switches.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +24,17 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [CARRY_RECURSIVE_STAKED archetype specification (Family 0 recursive staked carry)]
-referenced_by: [codex/04-architecture/capital-efficiency-patterns.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md]
+referenced_by:
+  [
+    codex/04-architecture/capital-efficiency-patterns.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -31,7 +42,7 @@ archetype: CARRY_RECURSIVE_STAKED
 family: CARRY_AND_YIELD
 venue_universe: [LIDO, AAVE, KAMINO, JITO, MARINADE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

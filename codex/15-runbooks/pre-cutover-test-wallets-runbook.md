@@ -1,11 +1,11 @@
 ---
-doc_type: codex-ssot
+doc_type: codex-runbook
 title: Pre-cutover test-wallet operator runbook
 summary:
-  "Operator runbook for provisioning pre-cutover test wallets (now → May-23 → June-1 window, using OUR wallets not
-  the client's). Trust Wallet is canonical across all 5 EVM testnets (same secp256k1 PK) + Solana (separate Ed25519
-  keypair, export required); MetaMask is address-only secondary. Covers EVM network add + faucets, envelope-encrypt via
-  staging CMK, WalletProvisioningConfig entries, Solana devnet setup, and the pre-cutover sign-and-broadcast smoke gate."
+  "Operator runbook for provisioning pre-cutover test wallets (now → May-23 → June-1 window, using OUR wallets not the
+  client's). Trust Wallet is canonical across all 5 EVM testnets (same secp256k1 PK) + Solana (separate Ed25519 keypair,
+  export required); MetaMask is address-only secondary. Covers EVM network add + faucets, envelope-encrypt via staging
+  CMK, WalletProvisioningConfig entries, Solana devnet setup, and the pre-cutover sign-and-broadcast smoke gate."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,14 +13,30 @@ stage: [meta]
 repos: [unified-api-contracts]
 scope: [admin, engineer]
 tags: [defi, wallet, custody, runbook, infrastructure, execution]
-related: [custody-onboarding-checklist.md, hsm-wallet-signing.md, per-archetype-wallet-isolation.md, ../14-customer-journeys/pod-elysium-client-onboarding.md]
+related:
+  [
+    custody-onboarding-checklist.md,
+    ../05-infrastructure/hsm-wallet-signing.md,
+    ../05-infrastructure/per-archetype-wallet-isolation.md,
+    ../14-customer-journeys/pod-elysium-client-onboarding.md,
+  ]
 created: 2026-05-12
 authoritative_for: [pre-cutover test wallet provisioning]
-referenced_by: [codex/05-infrastructure/credentials-matrix.md, codex/14-customer-journeys/pod-elysium-client-onboarding.md]
-owner:
+referenced_by:
+  [codex/05-infrastructure/credentials-matrix.md, codex/14-customer-journeys/pod-elysium-client-onboarding.md]
+owner: operator (ikenna) — wallet generation + KMS encryption
 last_reviewed: 2026-05-17
 code_refs:
-execution: {owner: operator (ikenna) — wallet generation + KMS encryption, cadence: one-shot (per cutover) — re-run only on wallet rotation, verifier: gcloud secrets list --filter='name~wallet_' + verify Tenderly testnet balances seeded per archetype, last_executed: pending May-23 cutover (test-wallet ramp)}
+execution:
+  {
+    owner: operator (ikenna) — wallet generation + KMS encryption,
+    cadence: one-shot (per cutover) — re-run only on wallet rotation,
+    verifier: gcloud secrets list --filter='name~wallet_' + verify Tenderly testnet balances seeded per archetype,
+    last_executed: pending May-23 cutover (test-wallet ramp),
+  }
+cadence: one-shot (per cutover) — re-run only on wallet rotation
+verifier: gcloud secrets list --filter='name~wallet_' + verify Tenderly testnet balances seeded per archetype
+last_executed: pending May-23 cutover (test-wallet ramp)
 ---
 
 # Pre-cutover test-wallet operator runbook
@@ -309,8 +325,9 @@ Sepolia + Polygon Amoy + Holesky
 
 - [`pod-elysium-client-onboarding.md`](../14-customer-journeys/pod-elysium-client-onboarding.md) — POD entity SSOT.
 - [`custody-onboarding-checklist.md`](custody-onboarding-checklist.md) § B.3 — envelope-encrypt operator runbook.
-- [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — N×M wallet model.
-- [`hsm-wallet-signing.md`](hsm-wallet-signing.md) — 5-tier HSM ladder.
+- [`../05-infrastructure/per-archetype-wallet-isolation.md`](../05-infrastructure/per-archetype-wallet-isolation.md) —
+  N×M wallet model.
+- [`../05-infrastructure/hsm-wallet-signing.md`](../05-infrastructure/hsm-wallet-signing.md) — 5-tier HSM ladder.
 - [`cutover_wallet_provisioning_mainnet_template.json`](../../unified-api-contracts/unified_api_contracts/config/cutover_wallet_provisioning_mainnet_template.json)
   — prod template.
 - [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)

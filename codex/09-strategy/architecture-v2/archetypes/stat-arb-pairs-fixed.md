@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `STAT_ARB_PAIRS_FIXED`'
+title: "Archetype: `STAT_ARB_PAIRS_FIXED`"
 summary: >-
   `STAT_ARB_PAIRS_FIXED` archetype — fixed cointegration-tested pair: enters long-underperformer / short-outperformer
   when `|z_score|` > `entry_z_score` (2.0) and cointegration pvalue < 0.05, exits on reversion, pvalue decay,
   `stop_loss_z_score`, or `max_hold_days`; Kalman/OLS hedge ratio, ATOMIC or LEADER_HEDGE legs.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -21,7 +22,14 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [STAT_ARB_PAIRS_FIXED archetype specification]
-referenced_by: [codex/09-strategy/_archived_pre_v2/cefi/stat-arb.md, codex/09-strategy/architecture-v2/archetypes/stat-arb-cross-sectional.md, codex/09-strategy/architecture-v2/archetypes/vol-trading-options.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/families/stat-arb-pairs.md]
+referenced_by:
+  [
+    codex/09-strategy/_archived_pre_v2/cefi/stat-arb.md,
+    codex/09-strategy/architecture-v2/archetypes/stat-arb-cross-sectional.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-trading-options.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/architecture-v2/families/stat-arb-pairs.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -29,7 +37,7 @@ archetype: STAT_ARB_PAIRS_FIXED
 family: STAT_ARB_PAIRS
 venue_universe: [IBKR, CME, BINANCE, OKX, DERIBIT]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: HSM-grade wallet signing — tier discipline
 summary:
-  "5-tier SigningSurface security ladder (UAC StrEnum), loosest→strictest: MOCK (test) · LOCAL_KEY (dev/testnet
-  only) · CLOUD_KMS_ENCRYPTED (May-23 cutover default, HSM-backed CMK envelope) · COPPER_MPC (June-1, 2-of-3 shards) ·
-  FIREBLOCKS_MPC (June-1, MPC + TAP rules). Per-tier threats/mitigations, per-wallet tier selection, latency budget,
-  and pre-cutover acceptance criteria."
+  "5-tier SigningSurface security ladder (UAC StrEnum), loosest→strictest: MOCK (test) · LOCAL_KEY (dev/testnet only) ·
+  CLOUD_KMS_ENCRYPTED (May-23 cutover default, HSM-backed CMK envelope) · COPPER_MPC (June-1, 2-of-3 shards) ·
+  FIREBLOCKS_MPC (June-1, MPC + TAP rules). Per-tier threats/mitigations, per-wallet tier selection, latency budget, and
+  pre-cutover acceptance criteria."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,26 @@ stage: [meta]
 repos: [unified-api-contracts]
 scope: [engineer, admin]
 tags: [defi, custody, wallet, hsm, execution, infrastructure]
-related: [../04-architecture/custody-providers.md, custody-onboarding-checklist.md, fireblocks-integration-spec.md, per-archetype-wallet-isolation.md, secret-manager-naming.md]
+related:
+  [
+    ../04-architecture/custody-providers.md,
+    ../15-runbooks/custody-onboarding-checklist.md,
+    fireblocks-integration-spec.md,
+    per-archetype-wallet-isolation.md,
+    secret-manager-naming.md,
+  ]
 created: 2026-05-11
 authoritative_for: [wallet signing surface tier ladder]
-referenced_by: [codex/05-infrastructure/aws-iam-matrix.md, codex/05-infrastructure/credentials-matrix.md, codex/05-infrastructure/fireblocks-integration-spec.md, codex/05-infrastructure/per-archetype-wallet-isolation.md, codex/05-infrastructure/pre-cutover-test-wallets-runbook.md, codex/05-infrastructure/rotation-runbook.md, codex/05-infrastructure/runtime-tiers-and-deployment.md]
+referenced_by:
+  [
+    codex/05-infrastructure/aws-iam-matrix.md,
+    codex/05-infrastructure/credentials-matrix.md,
+    codex/05-infrastructure/fireblocks-integration-spec.md,
+    codex/05-infrastructure/per-archetype-wallet-isolation.md,
+    codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
+    codex/15-runbooks/credential-rotation-runbook.md,
+    codex/05-infrastructure/runtime-tiers-and-deployment.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -146,7 +162,8 @@ wallet = WalletProvisioningConfig(
 
 ## § 4 — Operator runbook
 
-Provisioning + flipping wallets between tiers: [`custody-onboarding-checklist.md`](custody-onboarding-checklist.md).
+Provisioning + flipping wallets between tiers:
+[`../15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md).
 
 § B: Cloud-KMS provisioning (May-23). § C: Fireblocks flip (June-1). § A: Copper verification (pre-cutover gate).
 
@@ -194,7 +211,8 @@ Post-June-1 acceptance for COPPER/FIREBLOCKS flip MUST satisfy:
 ## § 7 — References
 
 - [`custody-providers.md`](../04-architecture/custody-providers.md) — full factory architecture.
-- [`custody-onboarding-checklist.md`](custody-onboarding-checklist.md) — operator-action runbook.
+- [`../15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md) — operator-action
+  runbook.
 - [`fireblocks-integration-spec.md`](fireblocks-integration-spec.md) — June-1 paste-ready spec.
 - [`credentials-matrix.md`](credentials-matrix.md) — workspace credential SSOT.
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — multi-wallet model.

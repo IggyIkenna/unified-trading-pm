@@ -100,7 +100,7 @@ value-or-empty.
 | **issue**             | `parent_epic`, `priority`, `source`                                                                                                                         | `assigned_vm`, `resolved_by` (req when `resolved`), `locked_by`                                    | `open·blocked·resolved·false-positive·superseded`                                                                                                                                                                   |
 | **audit-result**      | `audited_scope`, `date`, `auditor`, `parent_epic`, `severity` (P0–P3 of worst finding)                                                                      | `resulting_plan`, `lib_version`, `doc_versions_checked`                                            | `pass·partial·fail`                                                                                                                                                                                                 |
 | **audit-instruction** | `tier`, `parent_epic`, `cadence`                                                                                                                            | `verifier`, `lifespan`                                                                             | `active·retired`                                                                                                                                                                                                    |
-| **codex-ssot**        | `authoritative_for`                                                                                                                                         | `referenced_by`, `owner`, `last_reviewed`, `code_refs`                                             | `current·superseded·stale·draft`                                                                                                                                                                                    |
+| **codex-ssot**        | `authoritative_for`                                                                                                                                         | `referenced_by`, `owner`, `last_reviewed`, `code_refs`, `implementation_status` (elective)         | `current·superseded·stale·draft`                                                                                                                                                                                    |
 | **codex-runbook**     | `owner`, `cadence`, `verifier`, `last_executed`                                                                                                             | `code_refs`                                                                                        | `current·superseded·stale`                                                                                                                                                                                          |
 | **agent-role**        | `role`, `does`, `does_not`, `triggers`                                                                                                                      | `scope_tools`, `reports_to`                                                                        | `draft·active·retired`                                                                                                                                                                                              |
 | **cursor-rule**       | _(keep Cursor's `description`, `priority`, `alwaysApply`, `globs`)_                                                                                         | `tags`                                                                                             | — _(Cursor-governed; just add `doc_type`)_                                                                                                                                                                          |
@@ -123,6 +123,14 @@ Notes:
 - **`authoritative_for`** (codex-ssot) is the single highest-value codex field — "what this doc is THE SSOT for" — so an
   agent asking "the canonical rule for X" greps it and lands on the one right doc, not 826. 64 codex docs already carry
   it.
+- **`implementation_status`** (codex-ssot, **ELECTIVE** — a third requirement level, operator decision 2026-07-06): the
+  strategy-archetype implementation-maturity axis
+  (`design · code-shipped · stub · active · theoretical-only · live · complete`), restored after enum normalization
+  flattened it out of `status:` (which is doc-lifecycle, not implementation maturity). **Elective ≠ optional**: an
+  optional key must be present-but-empty (§6); an elective key is legitimately ABSENT on docs where the axis doesn't
+  apply — only `codex/09-strategy/architecture-v2/**` archetype docs carry it (66 docs at restore time). The value is
+  enum-validated (HARD) when present. Don't add elective fields casually — present-but-empty stays the default
+  convention; elective exists for subfolder-scoped axes where corpus-wide empty keys would be noise.
 - **`code_refs`** (codex) is the L4 jump (doc→code). **Point at the smallest STABLE unit — module/package directory by
   default; an exact file only for stable single-file entry points** (content-pass rot data: file citations break on most
   refactors, their module dirs survive; repo-level is already the `repos:` facet). Existence is checked by a scheduled
@@ -163,6 +171,8 @@ day-1). Target ≤~10–15 values each; past ~15 → consolidate, OR it should h
 
 - **Empty = `null` / `[]`, never omitted.** Every field is always present; an empty optional is `field:` (null) or
   `field: []` (list). So `rg '^summary: \S'` = "has a real summary"; a missing key is a **validator error**, not "N/A".
+  The ONE exception: **elective** fields (§3 `implementation_status`) are legitimately absent where their axis doesn't
+  apply — enum-validated only when present.
 - **Schema-sanctioned valid-empties (2026-07-04, validator in lockstep):** a present-but-empty **list** `repos: []` /
   `related: []` is VALID (§2 "[] if none" — a doc may genuinely govern no repo / have no sibling);
   `authoritative_for: []` is VALID when `status` ∈ {superseded, stale, draft} (a non-current doc claims no SSOT topic);

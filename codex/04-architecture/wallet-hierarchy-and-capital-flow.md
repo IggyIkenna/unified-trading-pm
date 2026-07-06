@@ -16,7 +16,17 @@ related:
   [transfer-architecture.md, treasury-custody-flow.md, custody-providers.md, per-client-isolation-architecture.md]
 created: 2026-03-30
 authoritative_for: [two-tier wallet hierarchy + share-class treasury capital-flow model + WalletMappingConfig]
-referenced_by: [codex/04-architecture/chain-environment-resolution.md, codex/04-architecture/custody-providers.md, codex/04-architecture/defi-phase3-infrastructure.md, codex/04-architecture/execution-modes-and-chain-resolution.md, codex/04-architecture/transfer-architecture.md, codex/04-architecture/treasury-custody-flow.md, codex/05-infrastructure/custody-onboarding-checklist.md, codex/05-infrastructure/per-archetype-wallet-isolation.md]
+referenced_by:
+  [
+    codex/04-architecture/chain-environment-resolution.md,
+    codex/04-architecture/custody-providers.md,
+    codex/04-architecture/defi-phase3-infrastructure.md,
+    codex/04-architecture/execution-modes-and-chain-resolution.md,
+    codex/04-architecture/transfer-architecture.md,
+    codex/04-architecture/treasury-custody-flow.md,
+    codex/15-runbooks/custody-onboarding-checklist.md,
+    codex/05-infrastructure/per-archetype-wallet-isolation.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Recovery Defence-In-Depth Layers (5+1)
 summary:
-  The 5+1 layered recovery model — Layer-0 deterministic Python (closed-set 10 scripts, never LLM on the critical
-  path), Layer-1 LLM audit-signoff (parallel; can DISPUTE), Layer-1.5 LLM-as-backup-actuator, Layer-2 PagerDuty, Layer-3
+  The 5+1 layered recovery model — Layer-0 deterministic Python (closed-set 10 scripts, never LLM on the critical path),
+  Layer-1 LLM audit-signoff (parallel; can DISPUTE), Layer-1.5 LLM-as-backup-actuator, Layer-2 PagerDuty, Layer-3
   Twilio, Layer-4 physical pager, Layer-5 human audit-ack (required even on APPROVED), Layer-M operator override; each
   layer independent, all emit to the Incident Gateway.
 status: current
@@ -23,7 +23,19 @@ related:
   ]
 created: 2026-05-23
 authoritative_for: [defence-in-depth-layers, layer-0-scripts, llm-audit-signoff]
-referenced_by: [codex/03-observability/alerting.md, codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/kill-switch-circuit-breaker.md, codex/05-infrastructure/disaster-recovery.md, codex/05-infrastructure/physical-pager-layer.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md, plans/archive/incident_gateway_and_state_machine_2026_05_23.plan.md, plans/active/agent_recovery_controller_layer0_deterministic_2026_05_23.md, plans/archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md]
+referenced_by:
+  [
+    codex/03-observability/alerting.md,
+    codex/04-architecture/incident-gateway-state-machine.md,
+    codex/04-architecture/autonomous-recovery-matrix.md,
+    codex/04-architecture/kill-switch-circuit-breaker.md,
+    codex/05-infrastructure/disaster-recovery.md,
+    codex/15-runbooks/physical-pager-layer.md,
+    codex/15-runbooks/alerting/audit-acknowledgement-flow.md,
+    plans/archive/incident_gateway_and_state_machine_2026_05_23.plan.md,
+    plans/active/agent_recovery_controller_layer0_deterministic_2026_05_23.md,
+    plans/archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md,
+  ]
 owner:
 last_reviewed: 2026-05-23
 code_refs:
@@ -204,5 +216,5 @@ with `provenance=MANUAL_OPERATOR` — full audit trail + LLM signoff applies.
 - `04-architecture/autonomous-recovery-matrix.md` — per-failure decision tree.
 - `04-architecture/kill-switch-circuit-breaker.md` — kill-switch + circuit-breaker.
 - `05-infrastructure/disaster-recovery.md` — RTO/RPO targets + DR procedures.
-- `05-infrastructure/physical-pager-layer.md` — Layer-4 device comparison.
+- `15-runbooks/physical-pager-layer.md` — Layer-4 device comparison.
 - `15-runbooks/alerting/audit-acknowledgement-flow.md` — Layer-5 ack flow.

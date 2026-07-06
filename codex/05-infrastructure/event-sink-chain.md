@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Deployment-Service Event Sink Chain
 summary:
-  "Deployment-service runs two concurrent event chains: Chain A orchestrator/CLI null-sink (sink=None, local log
-  only), Chain B VM heartbeat PubSubEventSink → `deployment-events` topic (7-day Pub/Sub TTL; monitor.py pulls →
-  deployment-status GCS registry), Chain C vm-exec-gcs-tee (run.log + EXIT_STATUS, permanent). Known gap: no GCS
-  export sub for permanent VM-event archival. Includes the canonical sink decision tree for new emitters."
+  "Deployment-service runs two concurrent event chains: Chain A orchestrator/CLI null-sink (sink=None, local log only),
+  Chain B VM heartbeat PubSubEventSink → `deployment-events` topic (7-day Pub/Sub TTL; monitor.py pulls →
+  deployment-status GCS registry), Chain C vm-exec-gcs-tee (run.log + EXIT_STATUS, permanent). Known gap: no GCS export
+  sub for permanent VM-event archival. Includes the canonical sink decision tree for new emitters."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,7 +13,12 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [deployment-service, observability, monitoring, infrastructure, pubsub, event-log]
-related: [vm-deployment-events-audit.md, vm-event-emission-audit.md, live-deployment-monitoring.md]
+related:
+  [
+    ../../plans/audit/results/vm_deployment_events_audit_2026_05_15.md,
+    ../../plans/audit/results/vm_event_emission_audit_2026_05_15.md,
+    live-deployment-monitoring.md,
+  ]
 created: 2026-05-15
 authoritative_for: [deployment-service event sink chain]
 referenced_by:
@@ -25,10 +30,9 @@ type: infrastructure
 
 # Deployment-Service Event Sink Chain
 
-**Author**: slot-2 agent  
-**Date**: 2026-05-15  
-**Scope**: All event emission paths in deployment-service — orchestrator, VM heartbeat, GCS tee  
-**References**: `vm-deployment-events-audit.md`, `vm-event-emission-audit.md`
+**Author**: slot-2 agent **Date**: 2026-05-15 **Scope**: All event emission paths in deployment-service — orchestrator,
+VM heartbeat, GCS tee **References**: `../../plans/audit/results/vm_deployment_events_audit_2026_05_15.md`,
+`../../plans/audit/results/vm_event_emission_audit_2026_05_15.md`
 
 ---
 
@@ -87,8 +91,7 @@ VM startup (gcloud instances create --metadata startup-script=...)
                     └─► same PubSubEventSink (UTL global, initialized by heartbeat_cli.py)
 ```
 
-**Pub/Sub topic**: `deployment-events` (project `central-element-323112`)  
-**Retention**: 7 days (Pub/Sub default)  
+**Pub/Sub topic**: `deployment-events` (project `central-element-323112`) **Retention**: 7 days (Pub/Sub default)
 **Active subscriptions**:
 
 - `deployment-events-monitor` — pull, consumed by `monitor.py` → writes deployment registry to
@@ -96,7 +99,8 @@ VM startup (gcloud instances create --metadata startup-script=...)
 
 **Gap**: No push subscription exports events to `gs://central-element-323112-events/` for permanent archival. All other
 services use `GCSEventSink` directly and land in that bucket. VM heartbeat events have 7-day TTL only. See
-`vm-deployment-events-audit.md` for the operator action required to add a GCS export sub.
+`../../plans/audit/results/vm_deployment_events_audit_2026_05_15.md` for the operator action required to add a GCS
+export sub.
 
 **Local mode**: `heartbeat_cli.py` uses `LocalFsEventSink` when `CLOUD_PROVIDER=local`, writing to
 `/tmp/vm-heartbeat-events.jsonl`.
@@ -113,9 +117,8 @@ vm-exec-with-gcs-tee.sh
         └─► gs://{deployment_scripts_bucket}/vm-logs/{vm_name}/EXIT_STATUS
 ```
 
-**Bucket**: `deployment-scripts-{project_id}` (e.g. `deployment-scripts-central-element-323112`)  
-**Retention**: permanent (no lifecycle rule on this bucket as of 2026-05-15)  
-**Consumers**:
+**Bucket**: `deployment-scripts-{project_id}` (e.g. `deployment-scripts-central-element-323112`) **Retention**:
+permanent (no lifecycle rule on this bucket as of 2026-05-15) **Consumers**:
 
 - `analyze_vm_costs.py` — reads `EXIT_STATUS` mtime for cost attribution
 - `vm_zombie_watchdog.py` — reads `run.log` mtime for shard heartbeat staleness check
@@ -189,13 +192,13 @@ Is this emitted FROM A VM (running as a startup script)?
 
 ## File Pointers
 
-| Component                  | File                                     |
-| -------------------------- | ---------------------------------------- |
-| VM heartbeat daemon        | `deployment_service/vm/heartbeat_cli.py` |
-| VM-side lifecycle helper   | `scripts/vm/deployment_heartbeat.py`     |
-| GCS tee wrapper            | `scripts/vm/vm-exec-with-gcs-tee.sh`     |
-| PubSub consumer            | `deployment_service/monitor.py`          |
-| Orchestrator events setup  | `deployment_service/orchestrator.py:227` |
-| CLI events setup           | `deployment_service/cli/main.py:90`      |
-| Smoke-verified event trace | `vm-deployment-events-audit.md`          |
-| VM event emission audit    | `vm-event-emission-audit.md`             |
+| Component                  | File                                                                 |
+| -------------------------- | -------------------------------------------------------------------- |
+| VM heartbeat daemon        | `deployment_service/vm/heartbeat_cli.py`                             |
+| VM-side lifecycle helper   | `scripts/vm/deployment_heartbeat.py`                                 |
+| GCS tee wrapper            | `scripts/vm/vm-exec-with-gcs-tee.sh`                                 |
+| PubSub consumer            | `deployment_service/monitor.py`                                      |
+| Orchestrator events setup  | `deployment_service/orchestrator.py:227`                             |
+| CLI events setup           | `deployment_service/cli/main.py:90`                                  |
+| Smoke-verified event trace | `../../plans/audit/results/vm_deployment_events_audit_2026_05_15.md` |
+| VM event emission audit    | `../../plans/audit/results/vm_event_emission_audit_2026_05_15.md`    |

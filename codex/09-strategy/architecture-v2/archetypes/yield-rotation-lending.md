@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `YIELD_ROTATION_LENDING`'
+title: "Archetype: `YIELD_ROTATION_LENDING`"
 summary:
-  'Archetype spec for `YIELD_ROTATION_LENDING` — single-sided (no leverage) supply of stablecoins/assets rotated across
-  chains and protocols by APY differential, gas-aware, via WITHDRAW→BRIDGE→LEND legs; Aave/Compound/Euler/Morpho/Kamino.'
+  "Archetype spec for `YIELD_ROTATION_LENDING` — single-sided (no leverage) supply of stablecoins/assets rotated across
+  chains and protocols by APY differential, gas-aware, via WITHDRAW→BRIDGE→LEND legs; Aave/Compound/Euler/Morpho/Kamino."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -20,8 +21,17 @@ related:
     ../../../02-venues/venue-registry-reference.md,
   ]
 created: 2026-04-17
-authoritative_for: ['YIELD_ROTATION_LENDING archetype spec']
-referenced_by: [codex/09-strategy/_archived_pre_v2/defi/aave-lending.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md]
+authoritative_for: ["YIELD_ROTATION_LENDING archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/_archived_pre_v2/defi/aave-lending.md,
+    codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md,
+    codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -29,7 +39,7 @@ archetype: YIELD_ROTATION_LENDING
 family: CARRY_AND_YIELD
 venue_universe: [AAVE, COMPOUND, EULER, MORPHO, KAMINO]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 500
   min_sla_tier: basic

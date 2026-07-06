@@ -1,24 +1,40 @@
 ---
-doc_type: codex-ssot
+doc_type: audit-result
 title: Run-Lifecycle Events Audit — 2026-05-05
 summary:
   Point-in-time (2026-05-05) audit classifying every long-running Python entry-point on UTL-events + run-lifecycle
-  adoption — 49 call setup_events, 17 C-class rollout targets emit no run-level events, and the Phase-3 rollout order for
-  the run_lifecycle helper refactor.
-status: current
+  adoption — 49 call setup_events, 17 C-class rollout targets emit no run-level events, and the Phase-3 rollout order
+  for the run_lifecycle helper refactor.
+status: partial
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [client-reporting-api, deployment-service, e2e-testing, features-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    client-reporting-api,
+    deployment-service,
+    e2e-testing,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer]
 tags: [audit, run-lifecycle, observability, mtds, mdps, scripts]
-related: [vm-event-emission-audit.md, ../04-architecture/service-emission-policy.md]
+related: [vm_event_emission_audit_2026_05_15.md, ../../../codex/04-architecture/service-emission-policy.md]
 created: 2026-05-05
 authoritative_for: [run_lifecycle entry-point rollout classification (2026-05-05 audit)]
-referenced_by: [codex/05-infrastructure/vm-event-emission-audit.md]
+referenced_by: [plans/audit/results/vm_event_emission_audit_2026_05_15.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
+auditor: ikenna
+severity: P2
+date: 2026-05-05
+audited_scope: run-lifecycle / UTL-events adoption across every long-running Python entry-point
+parent_epic: observability_master
+resulting_plan:
+lib_version:
+doc_versions_checked: []
 ---
 
 # Run-Lifecycle Events Audit — 2026-05-05

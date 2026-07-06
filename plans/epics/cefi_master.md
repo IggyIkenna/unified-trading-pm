@@ -2,18 +2,27 @@
 doc_type: epic
 title: CeFi Master — asset_group umbrella
 summary:
-  L0 asset_group umbrella for CeFi — 4 perp venues live by May-23 (Bybit/Deribit/Binance/OKX),
-  extended Tardis backfill (Bitfinex/Bitget/Kraken), DERIBIT options+futures + BINANCE-FUTURES
-  bundles, MTDS coverage to 100%, and the continuous ML directional signal; work dispatched via child
-  active plans (regen scans plans/active, not epics).
+  L0 asset_group umbrella for CeFi — 4 perp venues live by May-23 (Bybit/Deribit/Binance/OKX), extended Tardis backfill
+  (Bitfinex/Bitget/Kraken), DERIBIT options+futures + BINANCE-FUTURES bundles, MTDS coverage to 100%, and the continuous
+  ML directional signal; work dispatched via child active plans (regen scans plans/active, not epics).
 status: active
 nature: process
-asset_group: [defi]
+asset_group: [cefi]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, market-tick-data-service]
+repos:
+  [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [cefi, backfill, manifest, mtds, deribit, binance, ml, tradfi]
-related: [../active/mvp_backfill_cefi_tick_v10_2026_06_27.md, ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md, ../active/cefi_ml_directional_continuous_live_2026_06_20.md, ../active/cefi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md, ../active/trading_agent_service_architecture_unlock_2026_05_22.md]
+related:
+  [
+    ../active/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md,
+    ../active/cefi_ml_directional_continuous_live_2026_06_20.md,
+    ../active/cefi_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+    ../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md,
+    ../active/trading_agent_service_architecture_unlock_2026_05_22.md,
+  ]
 created: 2026-05-07
 name: cefi_master
 tier: L0
@@ -22,7 +31,16 @@ assigned_vm: vm-cefi
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [../active/mvp_backfill_cefi_tick_v10_2026_06_27.md, ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md, ../active/cefi_ml_directional_continuous_live_2026_06_20.md, ../active/cefi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md, ../active/trading_agent_service_architecture_unlock_2026_05_22.md]
+related_plans:
+  [
+    ../active/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md,
+    ../active/cefi_ml_directional_continuous_live_2026_06_20.md,
+    ../active/cefi_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+    ../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md,
+    ../active/trading_agent_service_architecture_unlock_2026_05_22.md,
+  ]
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -64,9 +82,9 @@ This plan implements / extends the following codex documents (read these BEFORE 
 and these docs is a review-blocking failure per `doc → plan → code`):
 
 - [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  — manifest schema v9 (live since 2026-05-30, `MANIFEST_SCHEMA_VERSION = 9`; "v5" corrected 2026-06-30, consolidation) +
-  canonical `pipeline_mode=` partition + 4-state capture taxonomy + cluster validation for bundled CeFi data_types (`options_chain` /
-  `futures_chain`)
+  — manifest schema v9 (live since 2026-05-30, `MANIFEST_SCHEMA_VERSION = 9`; "v5" corrected 2026-06-30,
+  consolidation) + canonical `pipeline_mode=` partition + 4-state capture taxonomy + cluster validation for bundled CeFi
+  data_types (`options_chain` / `futures_chain`)
 - [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
   CeFi `empty_confirmed` rule (only venue-level reasons legit: `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` /
   `EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PARTIAL_HALF_DAY`); zero-source-response on alive instrument-day must flip to

@@ -10,13 +10,32 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, deployment-api, deployment-service, execution-service, instruments-service, market-tick-data-service]
+repos:
+  [
+    alerting-service,
+    deployment-api,
+    deployment-service,
+    execution-service,
+    instruments-service,
+    market-tick-data-service,
+  ]
 scope: [engineer]
 tags: [integration-testing, quality-gates, ci-cd, uac, verification, smoke-test]
-related: [../04-architecture/tier-and-import-architecture.md, ../02-data/vcr-cassette-ownership.md, feature-branch-workflow.md]
+related:
+  [../04-architecture/tier-and-import-architecture.md, ../02-data/vcr-cassette-ownership.md, feature-branch-workflow.md]
 created: 2026-03-27
 authoritative_for: [five-layer integration-testing strategy (Layers 0-4)]
-referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/runtime-deployment-topology.md, codex/04-architecture/tier-and-import-architecture.md, codex/05-infrastructure/contracts-integration.md, codex/05-infrastructure/sit-runbook.md, codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md, codex/06-coding-standards/README.md, codex/06-coding-standards/feature-branch-workflow.md]
+referenced_by:
+  [
+    codex/04-architecture/batch-live-architecture.md,
+    codex/04-architecture/runtime-deployment-topology.md,
+    codex/04-architecture/tier-and-import-architecture.md,
+    codex/05-infrastructure/contracts-integration.md,
+    codex/15-runbooks/sit-runbook.md,
+    codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md,
+    codex/06-coding-standards/README.md,
+    codex/06-coding-standards/feature-branch-workflow.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

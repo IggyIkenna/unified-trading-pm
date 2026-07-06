@@ -2,11 +2,11 @@
 doc_type: codex-ssot
 title: Live data persistence and central event log
 summary: >-
-  SSOT for the live=batch event-log persistence spine — MTDS/MDPS/features/strategy/ml/execution all publish/read
-  via the UTL EventTransport facade (InMemoryTransport for paper, Pub/Sub for live), three automatic persistence
-  tiers (hot/warm/cold) classified by SINK_MATRIX (52 shards) + RetentionClass, giving paper(W)==batch-rerun(W)
-  trade-for-trade determinism (epsilon=0); 52 Pub/Sub topics + warm-GCS subscriptions + daily compaction
-  provisioned in Terraform.
+  SSOT for the live=batch event-log persistence spine — MTDS/MDPS/features/strategy/ml/execution all publish/read via
+  the UTL EventTransport facade (InMemoryTransport for paper, Pub/Sub for live), three automatic persistence tiers
+  (hot/warm/cold) classified by SINK_MATRIX (52 shards) + RetentionClass, giving paper(W)==batch-rerun(W)
+  trade-for-trade determinism (epsilon=0); 52 Pub/Sub topics + warm-GCS subscriptions + daily compaction provisioned in
+  Terraform.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +14,25 @@ stage: [meta]
 repos: [deployment-service, e2e-testing]
 scope: [engineer, admin]
 tags: [live-trading, event-log, pipeline-mode, reconciliation, data-pipeline, mtds, mdps]
-related: [pipeline-mode-partition.md, ../09-strategy/operational/paper-batch-live-reconciliation.md, ../04-architecture/batch-live-architecture.md]
+related:
+  [
+    pipeline-mode-partition.md,
+    ../09-strategy/operational/paper-batch-live-reconciliation.md,
+    ../04-architecture/batch-live-architecture.md,
+  ]
 created: 2026-06-26
-authoritative_for: [live=batch event-log persistence spine (hot/warm/cold tiers + SINK_MATRIX + EventTransport facade), paper==batch-rerun determinism proof]
-referenced_by: [codex/05-infrastructure/pubsub-topic-inventory.md, codex/05-infrastructure/vm-deployment-events-audit.md, plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md, plans/active/issues/mtds_plan_reconciliation_2026_06_29.md]
+authoritative_for:
+  [
+    live=batch event-log persistence spine (hot/warm/cold tiers + SINK_MATRIX + EventTransport facade),
+    paper==batch-rerun determinism proof,
+  ]
+referenced_by:
+  [
+    codex/05-infrastructure/pubsub-topic-inventory.md,
+    plans/audit/results/vm_deployment_events_audit_2026_05_15.md,
+    plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
+    plans/active/issues/mtds_plan_reconciliation_2026_06_29.md,
+  ]
 owner:
 last_reviewed: 2026-06-26
 code_refs:

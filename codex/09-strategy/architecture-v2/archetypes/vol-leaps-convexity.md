@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_LEAPS_CONVEXITY`'
+title: "Archetype: `VOL_LEAPS_CONVEXITY`"
 summary:
-  'Archetype spec for `VOL_LEAPS_CONVEXITY` — buys cheap 90-180d+ options for high vega/theta convexity and holds through
-  vol cycles for asymmetric spike payoff under a daily theta budget; Deribit quarterlies + CBOE SPX LEAPS.'
+  "Archetype spec for `VOL_LEAPS_CONVEXITY` — buys cheap 90-180d+ options for high vega/theta convexity and holds
+  through vol cycles for asymmetric spike payoff under a daily theta budget; Deribit quarterlies + CBOE SPX LEAPS."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,22 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, leaps, convexity, long-vol]
-related: [vol-carry.md, vol-term-structure-slope.md, vol-variance-swap.md, vol-0dte-gamma-scalping.md, ../families/vol-trading.md]
+related:
+  [
+    vol-carry.md,
+    vol-term-structure-slope.md,
+    vol-variance-swap.md,
+    vol-0dte-gamma-scalping.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
-authoritative_for: ['VOL_LEAPS_CONVEXITY archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-term-structure-arb.md, codex/09-strategy/architecture-v2/archetypes/vol-term-structure-slope.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_LEAPS_CONVEXITY archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-term-structure-arb.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-term-structure-slope.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +35,7 @@ archetype: VOL_LEAPS_CONVEXITY
 family: VOL_TRADING
 venue_universe: [DERIBIT, CBOE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 300
   min_sla_tier: standard

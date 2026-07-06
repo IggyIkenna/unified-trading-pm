@@ -2,18 +2,22 @@
 doc_type: epic
 title: Global Ledger + PnL Attribution Master
 summary:
-  L2 epic owning the canonical ledger architecture — 4 SSOT ledgers (Instruction/Passive/Treasury/
-  Pricing) + 4 derived views (Position/Exposure/PnL/PnLAttribution) + one RiskView; UAC LedgerRow +
-  EventType(37)/AssetClass(17) enums + CrossClientTransferForbiddenError validator shipped, migration
-  gated on operator [ack] of discovery Phase 3/4/5.
+  L2 epic owning the canonical ledger architecture — 4 SSOT ledgers (Instruction/Passive/Treasury/ Pricing) + 4 derived
+  views (Position/Exposure/PnL/PnLAttribution) + one RiskView; UAC LedgerRow + EventType(37)/AssetClass(17) enums +
+  CrossClientTransferForbiddenError validator shipped, migration gated on operator [ack] of discovery Phase 3/4/5.
 status: active
 nature: process
-asset_group: [defi]
+asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, client-reporting-api, execution-service, greeks-service, instruments-service, strategy-service]
+repos:
+  [alerting-service, client-reporting-api, execution-service, greeks-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, execution, uac, reconciliation, data-correctness, client-isolation]
-related: [plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md, plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md]
+related:
+  [
+    plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md,
+  ]
 created: 2026-05-21
 name: global_ledger_pnl_attribution_master
 tier: L2
@@ -22,7 +26,11 @@ assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md, plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md]
+related_plans:
+  [
+    plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md,
+  ]
 last_updated: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

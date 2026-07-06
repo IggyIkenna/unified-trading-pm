@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_ARB_RV_IV`'
+title: "Archetype: `VOL_ARB_RV_IV`"
 summary:
-  'Archetype spec for `VOL_ARB_RV_IV` — trades mean-reversion in the IV−RV spread (buy vol when IV is below RV, sell when
-  above), delta-hedged; entry at |IV−RV| ≥ ~4 vol points with z-score confirm; Deribit/OKX/CBOE.'
+  "Archetype spec for `VOL_ARB_RV_IV` — trades mean-reversion in the IV−RV spread (buy vol when IV is below RV, sell
+  when above), delta-hedged; entry at |IV−RV| ≥ ~4 vol points with z-score confirm; Deribit/OKX/CBOE."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,8 +14,18 @@ scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, iv-rv, mean-reversion, delta-hedge]
 related: [vol-carry.md, vol-spread-structures.md, vol-straddle.md, vol-ml-lean.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for: ['VOL_ARB_RV_IV archetype spec']
-referenced_by: [codex/09-strategy/_archived_pre_v2/tradfi/volatility-surface.md, codex/09-strategy/architecture-v2/archetypes/vol-carry.md, codex/09-strategy/architecture-v2/archetypes/vol-market-making.md, codex/09-strategy/architecture-v2/archetypes/vol-ml-lean.md, codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md, codex/09-strategy/architecture-v2/archetypes/vol-spread-structures.md, codex/09-strategy/architecture-v2/archetypes/vol-straddle.md, codex/09-strategy/architecture-v2/archetypes/vol-trading-options.md]
+authoritative_for: ["VOL_ARB_RV_IV archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/_archived_pre_v2/tradfi/volatility-surface.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-market-making.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-ml-lean.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-spread-structures.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-straddle.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-trading-options.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +33,7 @@ archetype: VOL_ARB_RV_IV
 family: VOL_TRADING
 venue_universe: [DERIBIT, OKX_OPTIONS, CBOE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 200
   min_sla_tier: standard

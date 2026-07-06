@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`'
+title: "Archetype: `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`"
 summary: >-
-  Archetype ARBITRAGE_MEV_LIQUIDATION_BUNDLE: flash-loan-funded atomic liquidation of
-  under-collateralised lending positions (flashLoan -> liquidationCall -> swap collateral -> repay) in
-  one tx — zero held capital, one FlashLoanReceiver per chain across Aave/Compound/Morpho/Euler/etc.
-  Emits a bundle only when estimate_bundle_profit_usd >= min_net_profit_usd; reverts cost gas only.
+  Archetype ARBITRAGE_MEV_LIQUIDATION_BUNDLE: flash-loan-funded atomic liquidation of under-collateralised lending
+  positions (flashLoan -> liquidationCall -> swap collateral -> repay) in one tx — zero held capital, one
+  FlashLoanReceiver per chain across Aave/Compound/Morpho/Euler/etc. Emits a bundle only when estimate_bundle_profit_usd
+  >= min_net_profit_usd; reverts cost gas only.
+implementation_status: code-shipped
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +24,13 @@ related:
   ]
 created: 2026-05-01
 authoritative_for: [ARBITRAGE_MEV_LIQUIDATION_BUNDLE archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-backrun.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-backrun.md,
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md,
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md,
+    codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -31,7 +38,7 @@ archetype: ARBITRAGE_MEV_LIQUIDATION_BUNDLE
 family: ARBITRAGE_STRUCTURAL
 venue_universe: [AAVE_V3, COMPOUND_V3, MORPHO_BLUE, FLUID, EULER_V2, RADIANT, VENUS, BENQI, UNISWAP_V3, BALANCER, CURVE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   latency_budget_ms: 150
   min_sla_tier: high
 ---

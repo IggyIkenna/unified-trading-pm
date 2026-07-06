@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Firebase local — emulator suite for dev
 summary:
   Firebase Emulator Suite local-dev auth via dev-tiers.sh (project odum-local-dev; localhost
-  Auth:9099/Firestore:8080/Storage:9199), same Admin SDK code path as staging/prod with 23-persona
-  auto-seed and gitignored .local-dev-cache state.
+  Auth:9099/Firestore:8080/Storage:9199), same Admin SDK code path as staging/prod with 23-persona auto-seed and
+  gitignored .local-dev-cache state.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,7 +15,13 @@ tags: [firebase, auth, ui, local-dev, emulator, onboarding]
 related: [firebase-staging.md, firebase-production.md, light-auth-briefings.md]
 created: 2026-04-25
 authoritative_for: [Firebase Emulator Suite local-dev auth environment]
-referenced_by: [codex/08-workflows/local-dev.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-production.md, codex/14-customer-journeys/authentication/firebase-staging.md]
+referenced_by:
+  [
+    codex/08-workflows/local-dev.md,
+    codex/14-customer-journeys/authentication/README.md,
+    codex/14-customer-journeys/authentication/firebase-production.md,
+    codex/14-customer-journeys/authentication/firebase-staging.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -218,7 +224,7 @@ Read access. NO non-UI service has Read access.
 
 ### Rotation cadence
 
-Per [`rotation-runbook.md`](../../05-infrastructure/rotation-runbook.md) § 5:
+Per [`credential-rotation-runbook.md`](../../15-runbooks/credential-rotation-runbook.md) § 5:
 
 - Firebase SA JSON — 90d rotation cadence (data/aux class).
 - Workload Identity Federation — indefinite (no long-lived key to rotate).

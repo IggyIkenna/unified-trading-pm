@@ -1,6 +1,6 @@
 ---
 plan_type: epic-index
-asset_group: cross-cutting
+asset_group: [cross-cutting]
 owner: ikenna
 created: 2026-05-08
 last_updated: 2026-05-21

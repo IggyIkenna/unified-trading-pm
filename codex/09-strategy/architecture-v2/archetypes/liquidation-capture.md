@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `LIQUIDATION_CAPTURE`'
+title: "Archetype: `LIQUIDATION_CAPTURE`"
 summary: >-
   `LIQUIDATION_CAPTURE` archetype — monitors DeFi lending `health_factor`; when it drops below 1.0, executes an atomic
   flash-loan liquidation (repay → seize → swap → repay) submitted as a Flashbots bundle to capture the protocol's 5-10%
   liquidation bonus; zero directional risk, skips opportunities below `min_profit_usd`.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -21,7 +22,15 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [LIQUIDATION_CAPTURE archetype specification]
-referenced_by: [codex/04-architecture/capital-efficiency-patterns.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md]
+referenced_by:
+  [
+    codex/04-architecture/capital-efficiency-patterns.md,
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md,
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md,
+    codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -29,7 +38,7 @@ archetype: LIQUIDATION_CAPTURE
 family: ARBITRAGE_STRUCTURAL
 venue_universe: [AAVE_V3, COMPOUND_V3, EULER, MORPHO, KAMINO]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

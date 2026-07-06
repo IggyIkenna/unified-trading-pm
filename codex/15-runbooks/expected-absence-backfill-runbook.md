@@ -1,5 +1,5 @@
 ---
-doc_type: codex-ssot
+doc_type: codex-runbook
 title: Expected-Absence Backfill Runbook
 summary: >-
   Runbook for the two batch passes that materialise honest expected-absence on disk — the reconciler
@@ -14,14 +14,28 @@ stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [manifest, backfill, honest-coverage, data-status, runbook, expected-absence, single-walk]
-related: [codex/02-data/honest-absence-downstream-handling.md, codex/02-data/availability-manifest-and-data-status.md, codex/02-data/manifest-migration-coordination.md]
+related:
+  [
+    codex/02-data/honest-absence-downstream-handling.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/manifest-migration-coordination.md,
+  ]
 created: 2026-05-07
 authoritative_for: [expected-absence backfill runbook (reconciler + enumerator passes)]
 referenced_by: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
-owner:
+owner: UTL maintainer (honest_coverage subsystem)
 last_reviewed: 2026-05-17
 code_refs:
-execution: {owner: UTL maintainer (honest_coverage subsystem), cadence: 'per asset_group, one-shot post writegate Phase 5; re-run on legacy null-reason discovery', verifier: python3 -m unified_trading_library.honest_coverage.classify_legacy_empty_row --dry-run --asset-group <ag>, last_executed: writegate Phase 5 closeout (per per-asset-group reconciler runs in writegate plan body)}
+execution:
+  {
+    owner: UTL maintainer (honest_coverage subsystem),
+    cadence: "per asset_group, one-shot post writegate Phase 5; re-run on legacy null-reason discovery",
+    verifier: python3 -m unified_trading_library.honest_coverage.classify_legacy_empty_row --dry-run --asset-group <ag>,
+    last_executed: writegate Phase 5 closeout (per per-asset-group reconciler runs in writegate plan body),
+  }
+cadence: per asset_group, one-shot post writegate Phase 5; re-run on legacy null-reason discovery
+verifier: python3 -m unified_trading_library.honest_coverage.classify_legacy_empty_row --dry-run --asset-group <ag>
+last_executed: writegate Phase 5 closeout (per per-asset-group reconciler runs in writegate plan body)
 ---
 
 # Expected-Absence Backfill Runbook
@@ -139,9 +153,10 @@ After each VM shutdown:
 - **Plan(s) implementing this:**
   [`writegate_honest_coverage_endtoend`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
   3.D.4 (enumerator) + § Phase 3.D.1/3.D.2 (reconciler).
-- **Related codex SSOTs:** [`honest-absence-downstream-handling`](./honest-absence-downstream-handling.md),
-  [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md) § "Rollup-vs-drilldown
-  denominator divergence" Half 2, [`manifest-migration-coordination`](./manifest-migration-coordination.md).
+- **Related codex SSOTs:** [`honest-absence-downstream-handling`](./../02-data/honest-absence-downstream-handling.md),
+  [`availability-manifest-and-data-status`](./../02-data/availability-manifest-and-data-status.md) §
+  "Rollup-vs-drilldown denominator divergence" Half 2,
+  [`manifest-migration-coordination`](./../02-data/manifest-migration-coordination.md).
 - **Code:** `instruments-service/scripts/enumerate_expected_universe.py` (Phase 3.D.4 enumerator),
   `instruments-service/scripts/reconcile_expected_absence_reasons.py` (Phase 3.D.1 reconciler),
   `unified-trading-library/legacy_reason_classifier.py` (UTL classifier dispatch),

@@ -1,11 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `ARBITRAGE_MEV_BACKRUN`'
+title: "Archetype: `ARBITRAGE_MEV_BACKRUN`"
 summary: >-
-  Archetype ARBITRAGE_MEV_BACKRUN: submits a priority-gas tx in block N+1 to capture the cross-DEX/CEX
-  spread left by a large confirmed swap in block N. Reads confirmed blocks (no mempool needed); bids
-  priority_gas_bid = priority_gas_p90 * uplift; triggers on target_swap_size_usd >= min_target_swap_usd
-  AND spread_bps >= min_spread_bps.
+  Archetype ARBITRAGE_MEV_BACKRUN: submits a priority-gas tx in block N+1 to capture the cross-DEX/CEX spread left by a
+  large confirmed swap in block N. Reads confirmed blocks (no mempool needed); bids priority_gas_bid = priority_gas_p90
+  * uplift; triggers on target_swap_size_usd >= min_target_swap_usd AND spread_bps >= min_spread_bps.
+implementation_status: code-shipped
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +23,13 @@ related:
   ]
 created: 2026-05-01
 authoritative_for: [ARBITRAGE_MEV_BACKRUN archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md,
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md,
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md,
+    codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -31,7 +37,7 @@ archetype: ARBITRAGE_MEV_BACKRUN
 family: ARBITRAGE_STRUCTURAL
 venue_universe: [UNISWAP_V3, BALANCER, CURVE, SUSHISWAP, BINANCE, BYBIT]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   latency_budget_ms: 150
   min_sla_tier: high
 ---

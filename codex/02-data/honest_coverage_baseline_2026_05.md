@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Honest-Coverage Baseline (2026-05)
 summary: >-
-  The May-2026 dated honest-coverage baseline table + methodology — per-(asset_group, data_type) coverage % with
-  exact expected_universe / captured / empty_confirmed_with_reason formulas — that feeds the QG ratchet blocking
+  The May-2026 dated honest-coverage baseline table + methodology — per-(asset_group, data_type) coverage % with exact
+  expected_universe / captured / empty_confirmed_with_reason formulas — that feeds the QG ratchet blocking
   coverage-regression PRs beyond ±0.5pp on live-defi-rollout; numbers TBD (DRAFT, populated by the operator-run
   measurement script).
 status: draft
@@ -13,7 +13,12 @@ stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [honest-coverage, manifest, quality-gates, data-status, data-correctness, verification]
-related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/02-data/expected-absence-backfill-runbook.md]
+related:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/honest-absence-downstream-handling.md,
+    codex/15-runbooks/expected-absence-backfill-runbook.md,
+  ]
 created: 2026-05-07
 authoritative_for: [May-2026 honest-coverage baseline table + QG coverage-regression ratchet]
 referenced_by: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
@@ -203,6 +208,6 @@ _(empty as of 2026-05-07 baseline draft — first entries land when an actual ov
   [`writegate_honest_coverage_endtoend`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase 5.
 - **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md),
   [`honest-absence-downstream-handling`](./honest-absence-downstream-handling.md),
-  [`expected-absence-backfill-runbook`](./expected-absence-backfill-runbook.md).
+  [`expected-absence-backfill-runbook`](./../15-runbooks/expected-absence-backfill-runbook.md).
 - **Code:** TBD ratchet check — `unified-trading-pm/scripts/qg/measure-honest-coverage.py` (measurement) +
   `unified-trading-pm/scripts/qg/honest-coverage-ratchet.sh` (CI gate).

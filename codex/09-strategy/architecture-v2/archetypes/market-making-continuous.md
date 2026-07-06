@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `MARKET_MAKING_CONTINUOUS`'
+title: "Archetype: `MARKET_MAKING_CONTINUOUS`"
 summary: >-
   `MARKET_MAKING_CONTINUOUS` archetype — two-sided liquidity provision spanning CLOB MM (Binance / OKX / Bybit /
-  Hyperliquid / Deribit) and AMM concentrated/passive LP (Uniswap V3/V4, Orca, Curve, Balancer); earns spread/swap
-  fees, manages inventory and impermanent loss via quote skew, range rebalancing, and optional CEX delta hedge.
+  Hyperliquid / Deribit) and AMM concentrated/passive LP (Uniswap V3/V4, Orca, Curve, Balancer); earns spread/swap fees,
+  manages inventory and impermanent loss via quote skew, range rebalancing, and optional CEX delta hedge.
+implementation_status: live
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,15 +23,26 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [MARKET_MAKING_CONTINUOUS archetype specification]
-referenced_by: [codex/09-strategy/_archived_pre_v2/cefi/market-making.md, codex/09-strategy/_archived_pre_v2/sports/market-making.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md, codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md, codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md, codex/09-strategy/architecture-v2/archetypes/vol-market-making.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/families/market-making.md]
+referenced_by:
+  [
+    codex/09-strategy/_archived_pre_v2/cefi/market-making.md,
+    codex/09-strategy/_archived_pre_v2/sports/market-making.md,
+    codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-market-making.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/architecture-v2/families/market-making.md,
+  ]
 owner:
 last_reviewed:
 code_refs: [strategy-service/strategy_service/engine/strategies/v2/market_making/continuous.py]
 archetype: MARKET_MAKING_CONTINUOUS
 family: MARKET_MAKING
-venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT, UNISWAP_V3, UNISWAP_V4, ORCA, AERODROME, RAYDIUM, CURVE, BALANCER]
+venue_universe:
+  [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT, UNISWAP_V3, UNISWAP_V4, ORCA, AERODROME, RAYDIUM, CURVE, BALANCER]
 topology_requirements:
-  isolation: {execution-service: isolated, strategy-service: isolated}
+  isolation: { execution-service: isolated, strategy-service: isolated }
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 40
   min_sla_tier: premium

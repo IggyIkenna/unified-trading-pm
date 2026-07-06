@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_SPREAD_STRUCTURES`'
+title: "Archetype: `VOL_SPREAD_STRUCTURES`"
 summary:
-  'Archetype spec for `VOL_SPREAD_STRUCTURES` — trades vol-surface shape (not level) via vega-neutral calendar and
-  butterfly spreads on term-structure slope and 25d smile signals, delta-hedged; Deribit/OKX/CBOE.'
+  "Archetype spec for `VOL_SPREAD_STRUCTURES` — trades vol-surface shape (not level) via vega-neutral calendar and
+  butterfly spreads on term-structure slope and 25d smile signals, delta-hedged; Deribit/OKX/CBOE."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,8 +14,13 @@ scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, calendar-spread, butterfly, term-structure]
 related: [vol-arb-rv-iv.md, vol-carry.md, vol-straddle.md, vol-term-structure-arb.md, ../families/vol-trading.md]
 created: 2026-05-19
-authoritative_for: ['VOL_SPREAD_STRUCTURES archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md, codex/09-strategy/architecture-v2/archetypes/vol-straddle.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_SPREAD_STRUCTURES archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-straddle.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +28,7 @@ archetype: VOL_SPREAD_STRUCTURES
 family: VOL_TRADING
 venue_universe: [DERIBIT, OKX_OPTIONS, CBOE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 200
   min_sla_tier: standard

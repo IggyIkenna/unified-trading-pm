@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: GCP Pub/Sub Topic Inventory
 summary:
   GCP Pub/Sub topic inventory for central-element-323112 — 61 topics (23 Terraform-managed event-bus + 38
-  legacy/unmanaged), the AWS-SNS-not-required-pre-cutover decision, and the UCI MessageBus SNS-vs-Pub/Sub abstraction gap.
+  legacy/unmanaged), the AWS-SNS-not-required-pre-cutover decision, and the UCI MessageBus SNS-vs-Pub/Sub abstraction
+  gap.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,15 @@ stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, execution-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: [pubsub, event-bus, infrastructure, migration, audit]
-related: [live-deployment-monitoring.md, vm-event-emission-audit.md, ../02-data/live-data-persistence-and-event-log.md]
+related:
+  [
+    live-deployment-monitoring.md,
+    ../../plans/audit/results/vm_event_emission_audit_2026_05_15.md,
+    ../02-data/live-data-persistence-and-event-log.md,
+  ]
 created: 2026-05-26
 authoritative_for: [GCP Pub/Sub topic inventory, AWS SNS event-bus mirroring decision]
-referenced_by: [codex/05-infrastructure/vm-deployment-events-audit.md]
+referenced_by: [plans/audit/results/vm_deployment_events_audit_2026_05_15.md]
 owner:
 last_reviewed: 2026-05-29
 code_refs:

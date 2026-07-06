@@ -1,11 +1,11 @@
 ---
-doc_type: codex-ssot
+doc_type: codex-runbook
 title: Phase 2.6 — Bucket-name SSOT Cutover Runbook
 summary:
   "Operator runbook for the 18-27h cutover flipping the workspace from flat bucket names (market-data-tick-{ag}-{pid})
   to env-tiered names (…-{env}-{pid}). 7-wave gating protocol with per-wave GO/NO-GO drift checks (≤0.01%), additive
-  rsync (no flat-side delete until verified), delegate-flip PR + deployment-api redeploy, write-pause LIFT, then
-  30-day flat-bucket archive. Also the resolver domain-string HARD RULE (must match _DOMAIN_TO_YAML_KIND verbatim)."
+  rsync (no flat-side delete until verified), delegate-flip PR + deployment-api redeploy, write-pause LIFT, then 30-day
+  flat-bucket archive. Also the resolver domain-string HARD RULE (must match _DOMAIN_TO_YAML_KIND verbatim)."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,21 +13,38 @@ stage: [meta]
 repos: [deployment-api, deployment-service, market-tick-data-service, unified-trading-library, unified-trading-pm]
 scope: [admin, engineer]
 tags: [infrastructure, migration, gcs, canonicalisation, runbook, cutover]
-related: [gcs-object-operations.md, path-registry.md, manifest-consolidator-ssot.md]
+related:
+  [
+    ../05-infrastructure/gcs-object-operations.md,
+    ../05-infrastructure/path-registry.md,
+    ../05-infrastructure/manifest-consolidator-ssot.md,
+  ]
 created: 2026-05-16
 authoritative_for: [bucket-name env-tier cutover runbook]
 referenced_by: [codex/05-infrastructure/path-registry.md]
-owner:
+owner: Operator (Ikenna or Harsh; whichever side initiates the cutover window)
 last_reviewed: 2026-05-16
 code_refs:
 type: runbook
-execution: {owner: Operator (Ikenna or Harsh; whichever side initiates the cutover window), cadence: 'one-shot, scheduled cutover (target window 2026-05-15 → 2026-05-19; 18–27h wall-clock)', verifier: 'Each wave has its own GO/NO-GO check (see § "Wave verify" sections below). Final verifier:
+execution:
+  {
+    owner: Operator (Ikenna or Harsh; whichever side initiates the cutover window),
+    cadence: "one-shot, scheduled cutover (target window 2026-05-15 → 2026-05-19; 18–27h wall-clock)",
+    verifier: 'Each wave has its own GO/NO-GO check (see § "Wave verify" sections below). Final verifier:
 
-    every flat bucket archived per Step 2.6.5 + zero callers reference flat names per
+      every flat bucket archived per Step 2.6.5 + zero callers reference flat names per
 
-    QG STEP 5.69 baselines all at 0 + deployment-api smoke green post-redeploy.
+      QG STEP 5.69 baselines all at 0 + deployment-api smoke green post-redeploy.
 
-    ', last_executed: NEVER (runbook codified 2026-05-16; first execution pending operator GO)}
+      ',
+    last_executed: NEVER (runbook codified 2026-05-16; first execution pending operator GO),
+  }
+cadence: one-shot, scheduled cutover (target window 2026-05-15 → 2026-05-19; 18–27h wall-clock)
+verifier:
+  'Each wave has its own GO/NO-GO check (see § "Wave verify" sections below). Final verifier: every flat bucket archived
+  per Step 2.6.5 + zero callers reference flat names per QG STEP 5.69 baselines all at 0 + deployment-api smoke green
+  post-redeploy.'
+last_executed: NEVER (runbook codified 2026-05-16; first execution pending operator GO)
 ---
 
 # Phase 2.6 — Bucket-name SSOT Cutover Runbook

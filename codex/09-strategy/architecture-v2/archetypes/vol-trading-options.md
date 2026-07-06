@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_TRADING_OPTIONS`'
+title: "Archetype: `VOL_TRADING_OPTIONS`"
 summary:
-  'Archetype spec for `VOL_TRADING_OPTIONS` (legacy general vol-view engine) — delta-hedged options expressing IV/RV,
+  "Archetype spec for `VOL_TRADING_OPTIONS` (legacy general vol-view engine) — delta-hedged options expressing IV/RV,
   skew, term, or soft-surface-residual dislocations via straddle/strangle/butterfly/calendar/risk-reversal; the granular
-  VOL_* archetypes carve out its specific expressions.'
+  VOL_* archetypes carve out its specific expressions."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +13,16 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, iv-rv, skew, delta-hedge]
-related: [arbitrage-price-dispersion.md, stat-arb-pairs-fixed.md, vol-carry.md, vol-arb-rv-iv.md, ../families/vol-trading.md]
+related:
+  [arbitrage-price-dispersion.md, stat-arb-pairs-fixed.md, vol-carry.md, vol-arb-rv-iv.md, ../families/vol-trading.md]
 created: 2026-04-17
-authoritative_for: ['VOL_TRADING_OPTIONS archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-carry.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_TRADING_OPTIONS archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -23,7 +30,7 @@ archetype: VOL_TRADING_OPTIONS
 family: VOL_TRADING
 venue_universe: [DERIBIT, CBOE, OKX_OPTIONS]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

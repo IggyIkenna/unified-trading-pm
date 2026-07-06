@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_CARRY`'
+title: "Archetype: `VOL_CARRY`"
 summary:
-  'Archetype spec for `VOL_CARRY` — harvests the structural IV-over-RV premium by selling 7-21 DTE
-  straddles/strangles/iron-condors for theta, delta-hedged; core carry_pnl=(IV²−RV²)×vega/2; Deribit/OKX/CBOE.'
+  "Archetype spec for `VOL_CARRY` — harvests the structural IV-over-RV premium by selling 7-21 DTE
+  straddles/strangles/iron-condors for theta, delta-hedged; core carry_pnl=(IV²−RV²)×vega/2; Deribit/OKX/CBOE."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,27 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, carry, theta, delta-hedge]
-related: [vol-arb-rv-iv.md, vol-term-structure-arb.md, vol-trading-options.md, vol-0dte-pin-risk.md, ../families/vol-trading.md]
+related:
+  [
+    vol-arb-rv-iv.md,
+    vol-term-structure-arb.md,
+    vol-trading-options.md,
+    vol-0dte-pin-risk.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
-authoritative_for: ['VOL_CARRY archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md, codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md, codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md, codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md, codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md, codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md, codex/09-strategy/architecture-v2/archetypes/vol-market-making.md, codex/09-strategy/architecture-v2/archetypes/vol-ml-lean.md]
+authoritative_for: ["VOL_CARRY archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-market-making.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-ml-lean.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +40,7 @@ archetype: VOL_CARRY
 family: VOL_TRADING
 venue_universe: [DERIBIT, OKX_OPTIONS, CBOE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

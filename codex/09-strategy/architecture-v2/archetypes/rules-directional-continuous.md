@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `RULES_DIRECTIONAL_CONTINUOUS`'
+title: "Archetype: `RULES_DIRECTIONAL_CONTINUOUS`"
 summary: >-
-  `RULES_DIRECTIONAL_CONTINUOUS` archetype — evaluates a versioned if-else `rule_registry_ref` (YAML feature
-  conditions) each tick, resolves conflicts (priority / unanimity / highest-confidence), and emits directional
-  target-state TRADEs at rule-specific `stake_fraction_of_equity`; per-rule P&L attribution + hit-rate auto-retire.
+  `RULES_DIRECTIONAL_CONTINUOUS` archetype — evaluates a versioned if-else `rule_registry_ref` (YAML feature conditions)
+  each tick, resolves conflicts (priority / unanimity / highest-confidence), and emits directional target-state TRADEs
+  at rule-specific `stake_fraction_of_equity`; per-rule P&L attribution + hit-rate auto-retire.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -21,7 +22,14 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [RULES_DIRECTIONAL_CONTINUOUS archetype specification]
-referenced_by: [codex/09-strategy/_archived_pre_v2/cefi/mean-reversion.md, codex/09-strategy/_archived_pre_v2/tradfi/commodity-regime.md, codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/families/rules-directional.md]
+referenced_by:
+  [
+    codex/09-strategy/_archived_pre_v2/cefi/mean-reversion.md,
+    codex/09-strategy/_archived_pre_v2/tradfi/commodity-regime.md,
+    codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/architecture-v2/families/rules-directional.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -29,7 +37,7 @@ archetype: RULES_DIRECTIONAL_CONTINUOUS
 family: RULES_DIRECTIONAL
 venue_universe: [IBKR, CME, CBOE, BINANCE, OKX, BYBIT, HYPERLIQUID]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 500
   min_sla_tier: basic

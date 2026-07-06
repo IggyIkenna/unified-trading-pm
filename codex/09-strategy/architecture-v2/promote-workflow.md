@@ -1,7 +1,11 @@
 ---
 doc_type: codex-ssot
 title: Strategy promote workflow (backtest → paper → live)
-summary: SSOT-stub for the operator-facing strategy-service --operation promote CLI that flips a strategy archetype across backtest→paper→live-testnet→live-mainnet with per-transition audit rows; the full 14-step orchestration lives in the two promote plan-of-records (May-23 CLI + post-cutover UI).
+summary:
+  SSOT-stub for the operator-facing strategy-service --operation promote CLI that flips a strategy archetype across
+  backtest→paper→live-testnet→live-mainnet with per-transition audit rows; the full 14-step orchestration lives in the
+  two promote plan-of-records (May-23 CLI + post-cutover UI).
+implementation_status: active
 status: current
 nature: ssot
 asset_group: [meta]

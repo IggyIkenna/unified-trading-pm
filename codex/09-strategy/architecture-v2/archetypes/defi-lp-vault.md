@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `DEFI_LP_VAULT`'
+title: "Archetype: `DEFI_LP_VAULT`"
 summary: >-
   `DEFI_LP_VAULT` archetype — deposit into an ERC-4626 vault (Yearn V3 / Morpho / Aave Vaults / Sommelier) and hold
   while `vault_share_price_apy_bps` >= `min_apy_bps` (default 100 = 1%); exit on APY-below-floor or `max_drawdown_bps`
   (default 500 = 5%) breach; single-leg ATOMIC deposit/redeem resolved via LegController.
+implementation_status: code-shipped
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,12 @@ related:
   ]
 created: 2026-05-01
 authoritative_for: [DEFI_LP_VAULT archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md, codex/09-strategy/architecture-v2/families/market-making.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md,
+    codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md,
+    codex/09-strategy/architecture-v2/families/market-making.md,
+  ]
 owner:
 last_reviewed:
 code_refs: [strategy-service/strategy_service/engine/strategies/v2/defi_lp/vault.py]
@@ -30,7 +36,7 @@ archetype: DEFI_LP_VAULT
 family: MARKET_MAKING
 venue_universe: [YEARN_V3, MORPHO, AAVE_VAULT, SOMMELIER]
 topology_requirements:
-  isolation: {execution-service: shared}
+  isolation: { execution-service: shared }
   latency_budget_ms: 1000
   min_sla_tier: standard
 ---

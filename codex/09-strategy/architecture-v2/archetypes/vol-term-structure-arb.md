@@ -1,9 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `VOL_TERM_STRUCTURE_ARB`'
+title: "Archetype: `VOL_TERM_STRUCTURE_ARB`"
 summary:
-  'Archetype spec for `VOL_TERM_STRUCTURE_ARB` — a discrete dual-expiry calendar spread that buys the underpriced tenor
-  and sells the overpriced one on term-slope z-score (|z| > 2), vega-neutral and delta-hedged; Deribit/CBOE.'
+  "Archetype spec for `VOL_TERM_STRUCTURE_ARB` — a discrete dual-expiry calendar spread that buys the underpriced tenor
+  and sells the overpriced one on term-slope z-score (|z| > 2), vega-neutral and delta-hedged; Deribit/CBOE."
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,26 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, term-structure, calendar-spread, mean-reversion]
-related: [vol-term-structure-slope.md, vol-carry.md, vol-cross-asset-spread.md, vol-leaps-convexity.md, ../families/vol-trading.md]
+related:
+  [
+    vol-term-structure-slope.md,
+    vol-carry.md,
+    vol-cross-asset-spread.md,
+    vol-leaps-convexity.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
-authoritative_for: ['VOL_TERM_STRUCTURE_ARB archetype spec']
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md, codex/09-strategy/architecture-v2/archetypes/vol-carry.md, codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md, codex/09-strategy/architecture-v2/archetypes/vol-spread-structures.md, codex/09-strategy/architecture-v2/archetypes/vol-term-structure-slope.md, codex/09-strategy/architecture-v2/archetypes/vol-variance-swap.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+authoritative_for: ["VOL_TERM_STRUCTURE_ARB archetype spec"]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-spread-structures.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-term-structure-slope.md,
+    codex/09-strategy/architecture-v2/archetypes/vol-variance-swap.md,
+    codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -22,7 +39,7 @@ archetype: VOL_TERM_STRUCTURE_ARB
 family: VOL_TRADING
 venue_universe: [DERIBIT, CBOE]
 topology_requirements:
-  isolation: {execution-service: isolated}
+  isolation: { execution-service: isolated }
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `PORTFOLIO_MULTI_STRATEGY`'
+title: "Archetype: `PORTFOLIO_MULTI_STRATEGY`"
 summary: >-
   `PORTFOLIO_MULTI_STRATEGY` archetype — the simplest Portfolio sleeve: fixed operator-set `child_weights` across child
   strategy instances, emits `AllocationDirective` only (never TRADE), redistributes across active children, rebalances
   on DAILY/WEEKLY/MONTHLY cadence + `rebalance_threshold`; enables nested (composable) portfolio construction.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,14 @@ related:
   ]
 created: 2026-05-18
 authoritative_for: [PORTFOLIO_MULTI_STRATEGY archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/portfolio-factor-allocation.md, codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md, codex/09-strategy/architecture-v2/archetypes/portfolio-tactical-overlay.md, codex/09-strategy/architecture-v2/families/portfolio.md, codex/09-strategy/strategy-summary.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/portfolio-factor-allocation.md,
+    codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md,
+    codex/09-strategy/architecture-v2/archetypes/portfolio-tactical-overlay.md,
+    codex/09-strategy/architecture-v2/families/portfolio.md,
+    codex/09-strategy/strategy-summary.md,
+  ]
 owner:
 last_reviewed: 2026-05-18
 code_refs:

@@ -12,10 +12,19 @@ stage: [meta]
 repos: [deployment-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [secret-manager, security, canonicalisation, credentials, defi]
-related: [rotation-runbook.md, credentials-matrix.md, ../04-architecture/custody-providers.md]
+related: [../15-runbooks/credential-rotation-runbook.md, credentials-matrix.md, ../04-architecture/custody-providers.md]
 created: 2026-05-11
 authoritative_for: [Secret Manager secret naming convention]
-referenced_by: [codex/05-infrastructure/aws-iam-matrix.md, codex/05-infrastructure/credentials-matrix.md, codex/05-infrastructure/hsm-wallet-signing.md, codex/05-infrastructure/per-archetype-wallet-isolation.md, codex/05-infrastructure/rotation-runbook.md, codex/14-customer-journeys/authentication/firebase-local.md, codex/14-customer-journeys/credentials/rotation-runbook.md]
+referenced_by:
+  [
+    codex/05-infrastructure/aws-iam-matrix.md,
+    codex/05-infrastructure/credentials-matrix.md,
+    codex/05-infrastructure/hsm-wallet-signing.md,
+    codex/05-infrastructure/per-archetype-wallet-isolation.md,
+    codex/15-runbooks/credential-rotation-runbook.md,
+    codex/14-customer-journeys/authentication/firebase-local.md,
+    codex/15-runbooks/per-source-credential-rotation-runbook.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -234,7 +243,8 @@ before merging.
 
 - [`credentials-matrix.md`](credentials-matrix.md) — workspace credential SSOT (which secrets each mode + archetype
   consumes).
-- [`custody-onboarding-checklist.md`](custody-onboarding-checklist.md) — operator-action provisioning runbook.
+- [`../15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md) — operator-action
+  provisioning runbook.
 - [`fireblocks-integration-spec.md`](fireblocks-integration-spec.md) — Fireblocks-specific naming (RSA PEM + vault
   account).
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — per-wallet wrapped PK naming pattern

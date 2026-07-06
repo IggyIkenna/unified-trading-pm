@@ -2,18 +2,35 @@
 doc_type: epic
 title: ML + Features Master (umbrella)
 summary:
-  L1 epic owning the full UAC feature-DAG → features-service writers → ml-training reader → ml-inference
-  → strategy-consumption chain — the feature_group→required_inputs registry, no-lookahead/available_at
-  gating, feature-DATA consolidation (pre-joined wide parquet), features-repo consolidation, and the
-  regime-clustering structure allocator; batch feature compute (live compute lives in the live-pipeline plan).
+  L1 epic owning the full UAC feature-DAG → features-service writers → ml-training reader → ml-inference →
+  strategy-consumption chain — the feature_group→required_inputs registry, no-lookahead/available_at gating,
+  feature-DATA consolidation (pre-joined wide parquet), features-repo consolidation, and the regime-clustering structure
+  allocator; batch feature compute (live compute lives in the live-pipeline plan).
 status: active
 nature: process
-asset_group: [defi]
+asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-ui, execution-service, features-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    deployment-api,
+    deployment-ui,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer, admin]
 tags: [features, ml, uac, data-correctness, mdps, polars, strategy, consolidation]
-related: [../active/features_read_book_columns_not_snapshots_2026_06_28.md, ../archive/2026_06/mvp_for_mdps_and_features_universe_uac_2026_06_28.md, ../archive/features_repo_consolidation_2026_05_08.plan.md, ../active/features_service_qg_cleanup_2026_05_11.md, ../active/ml_repo_consolidation_2026_05_19.md, ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md, ../active/regime_clustering_structure_allocator_2026_05_29.md]
+related:
+  [
+    ../active/features_read_book_columns_not_snapshots_2026_06_28.md,
+    ../archive/2026_06/mvp_for_mdps_and_features_universe_uac_2026_06_28.md,
+    ../archive/features_repo_consolidation_2026_05_08.plan.md,
+    ../active/features_service_qg_cleanup_2026_05_11.md,
+    ../active/ml_repo_consolidation_2026_05_19.md,
+    ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md,
+    ../active/regime_clustering_structure_allocator_2026_05_29.md,
+  ]
 created: 2026-05-07
 name: features_and_ml_master
 tier: L1
@@ -22,7 +39,16 @@ assigned_vm: vm-ml
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [../active/features_read_book_columns_not_snapshots_2026_06_28.md, ../archive/2026_06/mvp_for_mdps_and_features_universe_uac_2026_06_28.md, ../archive/features_repo_consolidation_2026_05_08.plan.md, ../active/features_service_qg_cleanup_2026_05_11.md, ../active/ml_repo_consolidation_2026_05_19.md, ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md, ../active/regime_clustering_structure_allocator_2026_05_29.md]
+related_plans:
+  [
+    ../active/features_read_book_columns_not_snapshots_2026_06_28.md,
+    ../archive/2026_06/mvp_for_mdps_and_features_universe_uac_2026_06_28.md,
+    ../archive/features_repo_consolidation_2026_05_08.plan.md,
+    ../active/features_service_qg_cleanup_2026_05_11.md,
+    ../active/ml_repo_consolidation_2026_05_19.md,
+    ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md,
+    ../active/regime_clustering_structure_allocator_2026_05_29.md,
+  ]
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07

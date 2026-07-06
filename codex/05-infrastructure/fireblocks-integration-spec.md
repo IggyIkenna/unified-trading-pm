@@ -13,10 +13,23 @@ stage: [meta]
 repos: [alerting-service, deployment-service, deployment-ui, execution-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [defi, execution, custody, wallet, hsm, infrastructure]
-related: [../04-architecture/custody-providers.md, custody-onboarding-checklist.md, hsm-wallet-signing.md, per-archetype-wallet-isolation.md]
+related:
+  [
+    ../04-architecture/custody-providers.md,
+    ../15-runbooks/custody-onboarding-checklist.md,
+    hsm-wallet-signing.md,
+    per-archetype-wallet-isolation.md,
+  ]
 created: 2026-05-11
 authoritative_for: [fireblocks custody provider spec]
-referenced_by: [codex/05-infrastructure/credentials-matrix.md, codex/05-infrastructure/hsm-wallet-signing.md, codex/05-infrastructure/rotation-runbook.md, codex/05-infrastructure/secret-manager-naming.md, codex/14-customer-journeys/pod-elysium-client-onboarding.md]
+referenced_by:
+  [
+    codex/05-infrastructure/credentials-matrix.md,
+    codex/05-infrastructure/hsm-wallet-signing.md,
+    codex/15-runbooks/credential-rotation-runbook.md,
+    codex/05-infrastructure/secret-manager-naming.md,
+    codex/14-customer-journeys/pod-elysium-client-onboarding.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -145,7 +158,7 @@ Headers emitted:
 
 ### 2.3 Secret Manager paths
 
-Per `codex/05-infrastructure/custody-onboarding-checklist.md` § C:
+Per `codex/15-runbooks/custody-onboarding-checklist.md` § C:
 
 - `fireblocks-api-key` — Fireblocks API user identifier (UUID).
 - `fireblocks-api-secret` — RSA private key PEM (multi-line, base64-encoded for Secret Manager storage; PEM-decoded at
@@ -357,8 +370,8 @@ execution:
 
 - [`codex/04-architecture/custody-providers.md`](../04-architecture/custody-providers.md) §2.3 (Copper reference
   architecture this spec mirrors).
-- [`codex/05-infrastructure/custody-onboarding-checklist.md`](custody-onboarding-checklist.md) § C (operator-action
-  runbook).
+- [`codex/15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md) § C
+  (operator-action runbook).
 - [`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
   (`SigningSurface.FIREBLOCKS_MPC` enum value + `WalletProvisioningConfig` schema fields consumed).
 - [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)

@@ -3,8 +3,9 @@ doc_type: codex-ssot
 title: Backtest Run Manifest
 summary:
   STUB — per-run metadata written alongside every backtest (archetype, param hash, date range, data versions,
-  Sharpe/drawdown/calmar, run duration) as results.json + run_manifest.json per run_id; full spec pending strategy
-  Phase 3.
+  Sharpe/drawdown/calmar, run duration) as results.json + run_manifest.json per run_id; full spec pending strategy Phase
+  3.
+implementation_status: stub
 status: draft
 nature: ssot
 asset_group: [meta]

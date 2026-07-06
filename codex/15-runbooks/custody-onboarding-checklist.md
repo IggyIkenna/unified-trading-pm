@@ -1,5 +1,5 @@
 ---
-doc_type: codex-ssot
+doc_type: codex-runbook
 title: Custody onboarding operator-action checklist
 summary:
   Operator-runnable checklist for every custody-onboarding human action (Copper / CEFFU / Fireblocks / Cloud-KMS) —
@@ -12,14 +12,44 @@ stage: [meta]
 repos: [execution-service, unified-api-contracts, unified-trading-pm]
 scope: [admin, engineer]
 tags: [custody, defi, credentials, runbook]
-related: [codex/04-architecture/custody-providers.md, codex/04-architecture/wallet-hierarchy-and-capital-flow.md, codex/05-infrastructure/credentials-matrix.md, codex/04-architecture/kill-switch-circuit-breaker.md]
+related:
+  [
+    codex/04-architecture/custody-providers.md,
+    codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
+    codex/05-infrastructure/credentials-matrix.md,
+    codex/04-architecture/kill-switch-circuit-breaker.md,
+  ]
 created: 2026-05-11
-authoritative_for: [custody onboarding operator-action checklist (Copper/CEFFU/Fireblocks KYB + Cloud-KMS CMK provisioning steps)]
-referenced_by: [codex/04-architecture/custody-providers.md, codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md, codex/05-infrastructure/credentials-matrix.md, codex/05-infrastructure/fireblocks-integration-spec.md, codex/05-infrastructure/hsm-wallet-signing.md, codex/05-infrastructure/pre-cutover-test-wallets-runbook.md, codex/05-infrastructure/rotation-runbook.md, codex/05-infrastructure/secret-manager-naming.md]
-owner:
+authoritative_for:
+  [custody onboarding operator-action checklist (Copper/CEFFU/Fireblocks KYB + Cloud-KMS CMK provisioning steps)]
+referenced_by:
+  [
+    codex/04-architecture/custody-providers.md,
+    codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md,
+    codex/05-infrastructure/credentials-matrix.md,
+    codex/05-infrastructure/fireblocks-integration-spec.md,
+    codex/05-infrastructure/hsm-wallet-signing.md,
+    codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
+    codex/15-runbooks/credential-rotation-runbook.md,
+    codex/05-infrastructure/secret-manager-naming.md,
+  ]
+owner: operator (custody portal logins, KYC + approval flows are human-attended)
 last_reviewed: 2026-05-17
 code_refs:
-execution: {owner: 'operator (custody portal logins, KYC + approval flows are human-attended)', cadence: one-shot (May-23 cutover) + per-onboarding (June-1 client-credential integration repeats per new client), verifier: 'each section''s "verification" sub-step (custody portal confirmation, exchange-side balance pull match, signed approval doc in compliance vault); cross-ref `master_to_live_defi_2026_05_23.md` Group F-19.', last_executed: NEVER (May-23 cutover + June-1 client onboarding pending)}
+execution:
+  {
+    owner: "operator (custody portal logins, KYC + approval flows are human-attended)",
+    cadence: one-shot (May-23 cutover) + per-onboarding (June-1 client-credential integration repeats per new client),
+    verifier:
+      'each section''s "verification" sub-step (custody portal confirmation, exchange-side balance pull match, signed
+      approval doc in compliance vault); cross-ref `master_to_live_defi_2026_05_23.md` Group F-19.',
+    last_executed: NEVER (May-23 cutover + June-1 client onboarding pending),
+  }
+cadence: one-shot (May-23 cutover) + per-onboarding (June-1 client-credential integration repeats per new client)
+verifier:
+  each section's "verification" sub-step (custody portal confirmation, exchange-side balance pull match, signed approval
+  doc in compliance vault); cross-ref `master_to_live_defi_2026_05_23.md` Group F-19.
+last_executed: NEVER (May-23 cutover + June-1 client onboarding pending)
 ---
 
 # Custody onboarding operator-action checklist

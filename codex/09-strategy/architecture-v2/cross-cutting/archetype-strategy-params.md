@@ -5,6 +5,7 @@ summary:
   STUB pointer for per-archetype parameter schema (target LTV, rebalance threshold, hedge ratio, entry/exit signals)
   validated by StrategyConfig in strategy-service; the concrete source-cited realisation is
   archetype-param-schema-inventory.md, full per-archetype specs under architecture-v2/archetypes/.
+implementation_status: stub
 status: draft
 nature: ssot
 asset_group: [meta]

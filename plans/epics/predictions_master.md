@@ -2,18 +2,28 @@
 doc_type: epic
 title: Predictions Master — asset_group umbrella
 summary: >-
-  L0 asset-group umbrella epic for the prediction-markets pipeline (Kalshi/Polymarket): coordinates the
-  child active plans covering manifest canonicalisation, available_at lookahead-bias stamping, ML
-  walk-forward + arb, and the A3 mega-audit MISSING_EXPECTED remediation (3,442 cells) — restructured
-  2026-06-20 so inline todos route to dispatchable child plans in plans/active/.
+  L0 asset-group umbrella epic for the prediction-markets pipeline (Kalshi/Polymarket): coordinates the child active
+  plans covering manifest canonicalisation, available_at lookahead-bias stamping, ML walk-forward + arb, and the A3
+  mega-audit MISSING_EXPECTED remediation (3,442 cells) — restructured 2026-06-20 so inline todos route to dispatchable
+  child plans in plans/active/.
 status: active
 nature: process
-asset_group: [defi]
+asset_group: [prediction]
 stage: [meta]
-repos: [deployment-api, deployment-ui, execution-service, instruments-service, market-tick-data-service, strategy-service]
+repos:
+  [deployment-api, deployment-ui, execution-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: [prediction, manifest, backfill, golden-window, data-correctness, ml, audit]
-related: [../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md, ../active/predictions_lookahead_and_reader_migration_2026_06_20.md, ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md, ../active/prediction_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md, ../active/trading_agent_service_architecture_unlock_2026_05_22.md]
+related:
+  [
+    ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
+    ../active/predictions_lookahead_and_reader_migration_2026_06_20.md,
+    ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
+    ../active/prediction_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+    ../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
+    ../active/trading_agent_service_architecture_unlock_2026_05_22.md,
+  ]
 created: 2026-05-07
 name: predictions_master
 tier: L0
@@ -22,7 +32,16 @@ assigned_vm: vm-prediction
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md, ../active/predictions_lookahead_and_reader_migration_2026_06_20.md, ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md, ../active/prediction_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md, ../active/trading_agent_service_architecture_unlock_2026_05_22.md]
+related_plans:
+  [
+    ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
+    ../active/predictions_lookahead_and_reader_migration_2026_06_20.md,
+    ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
+    ../active/prediction_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+    ../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
+    ../active/trading_agent_service_architecture_unlock_2026_05_22.md,
+  ]
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07

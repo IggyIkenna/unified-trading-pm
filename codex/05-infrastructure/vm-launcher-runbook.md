@@ -15,22 +15,33 @@ tags: [infrastructure, runbook, spot-vm, backfill, mtds, scripts]
 related: [vm-tarball-deployment.md, vm-log-archival.md, spot-vms-for-backfill.md, launcher-script-ssot.md]
 created: 2026-05-15
 authoritative_for: [VM launcher per-script usage runbook]
-referenced_by: [codex/05-infrastructure/spot-vms-for-backfill.md, codex/05-infrastructure/vm-log-archival.md, codex/05-infrastructure/vm-security-audit.md, codex/05-infrastructure/vm-tarball-deployment.md]
+referenced_by:
+  [
+    codex/05-infrastructure/spot-vms-for-backfill.md,
+    codex/05-infrastructure/vm-log-archival.md,
+    plans/audit/results/vm_security_audit_2026_05_15.md,
+    codex/05-infrastructure/vm-tarball-deployment.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
 type: infrastructure
-execution: {owner: deployment-platform, cadence: per VM-launcher add/change, verifier: bash deployment-service/scripts/vm/launch-*.sh --help (per-launcher); reference existing examples in deployment-service/scripts/vm/launch-*.sh, last_executed: 2026-05-17 (slot-8 frontmatter codification)}
+execution:
+  {
+    owner: deployment-platform,
+    cadence: per VM-launcher add/change,
+    verifier:
+      bash deployment-service/scripts/vm/launch-*.sh --help (per-launcher); reference existing examples in
+      deployment-service/scripts/vm/launch-*.sh,
+    last_executed: 2026-05-17 (slot-8 frontmatter codification),
+  }
 ---
 
 # VM Launcher Runbook
 
-**Author**: slot-2 agent  
-**Date**: 2026-05-15  
-**Scope**: All `deployment-service/scripts/vm/launch-*.sh` (83 launchers)  
-**Owner**: Harsh (infra/ops) / Ikenna (strategy/DeFi gate decisions)  
-**Verifier**: QG STEP 5.69 (bucket naming) + shellcheck (security)  
-**Last executed**: 2026-05-15 (slot-2 security audit sweep)
+**Author**: slot-2 agent **Date**: 2026-05-15 **Scope**: All `deployment-service/scripts/vm/launch-*.sh` (83 launchers)
+**Owner**: Harsh (infra/ops) / Ikenna (strategy/DeFi gate decisions) **Verifier**: QG STEP 5.69 (bucket naming) +
+shellcheck (security) **Last executed**: 2026-05-15 (slot-2 security audit sweep)
 
 ---
 
@@ -38,12 +49,12 @@ execution: {owner: deployment-platform, cadence: per VM-launcher add/change, ver
 
 Every section below: **When to use → Required args → Expected duration → Common failures**.
 
-For VM naming rules see `codex/05-infrastructure/launcher-script-ssot.md`.  
-For event emission see `codex/05-infrastructure/vm-event-emission-audit.md`.  
-For tarball creation see `codex/05-infrastructure/vm-tarball-deployment.md`.  
-For log backup, archival, and kill/teardown runbook see `codex/05-infrastructure/vm-log-archival.md`.  
-**Provisioning (HARD RULE): backfill VMs default to Spot** (`--provisioning-model=SPOT`, `--on-demand` opt-out; live VMs
-stay on-demand) — see `codex/05-infrastructure/spot-vms-for-backfill.md`.
+For VM naming rules see `codex/05-infrastructure/launcher-script-ssot.md`. For event emission see
+`plans/audit/results/vm_event_emission_audit_2026_05_15.md`. For tarball creation see
+`codex/05-infrastructure/vm-tarball-deployment.md`. For log backup, archival, and kill/teardown runbook see
+`codex/05-infrastructure/vm-log-archival.md`. **Provisioning (HARD RULE): backfill VMs default to Spot**
+(`--provisioning-model=SPOT`, `--on-demand` opt-out; live VMs stay on-demand) — see
+`codex/05-infrastructure/spot-vms-for-backfill.md`.
 
 ---
 
@@ -412,6 +423,6 @@ Forward-poll VMs run continuously (no end date). Self-delete on shutdown.
 
 - `codex/05-infrastructure/launcher-script-ssot.md` — naming, CODE_BUCKET, tarball patterns
 - `codex/05-infrastructure/vm-tarball-deployment.md` — tarball creation + deployment
-- `codex/05-infrastructure/vm-event-emission-audit.md` — event emission chain
-- `codex/05-infrastructure/vm-security-audit.md` — shellcheck security audit
+- `plans/audit/results/vm_event_emission_audit_2026_05_15.md` — event emission chain
+- `plans/audit/results/vm_security_audit_2026_05_15.md` — shellcheck security audit
 - `deployment-service/deployment_service/vm/vm_zombie_watchdog.py` — VM_PREFIX_TO_BUCKET registry

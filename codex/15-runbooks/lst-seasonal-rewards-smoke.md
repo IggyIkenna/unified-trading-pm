@@ -1,5 +1,5 @@
 ---
-doc_type: codex-ssot
+doc_type: codex-runbook
 title: LST Seasonal Rewards — Production Smoke Runbook
 summary:
   Production smoke runbook (Phase 6 leveraged-leg-controller) for the daily LST seasonal-rewards collector — Secret
@@ -12,13 +12,20 @@ stage: [meta]
 repos: [deployment-service, features-service, strategy-service, system-integration-tests, unified-trading-pm]
 scope: [engineer]
 tags: [runbook, defi, features, smoke-test, backfill, strategy]
-related: [../../09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md, ../../../plans/archive/leveraged_leg_controller_2026_05_01.plan.md]
+related:
+  [
+    ../09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md,
+    ../../plans/archive/leveraged_leg_controller_2026_05_01.plan.md,
+  ]
 created: 2026-05-01
 authoritative_for: [LST seasonal-rewards production smoke-test procedure]
 referenced_by:
-owner:
+owner: ikenna
 last_reviewed:
 code_refs:
+cadence: on-demand
+verifier: operator
+last_executed: never
 ---
 
 # LST Seasonal Rewards — Production Smoke Runbook

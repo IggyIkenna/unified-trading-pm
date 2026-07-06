@@ -2,17 +2,22 @@
 doc_type: epic
 title: Manifest evolution master — single owner for schema + writer code + GCS data layout (3-axis batch invariant)
 summary:
-  SUPERSEDED (2026-05-21) manifest-evolution epic — the 3-axis batch invariant (schema + writer code +
-  GCS data layout co-evolve at one gate) plus honest-absence taxonomy and IS↔MTDS contract enforcement
-  consolidated into manifest_master.md; archaeology only, no new work here.
+  SUPERSEDED (2026-05-21) manifest-evolution epic — the 3-axis batch invariant (schema + writer code + GCS data layout
+  co-evolve at one gate) plus honest-absence taxonomy and IS↔MTDS contract enforcement consolidated into
+  manifest_master.md; archaeology only, no new work here.
 status: superseded
 nature: process
-asset_group: [defi]
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service]
 scope: [engineer, admin]
 tags: [manifest, honest-coverage, data-correctness, consolidation, pipeline-mode, migration]
-related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/02-data/manifest-migration-coordination.md]
+related:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/honest-absence-downstream-handling.md,
+    codex/02-data/manifest-migration-coordination.md,
+  ]
 created: 2026-05-08
 name:
 tier:
@@ -25,7 +30,18 @@ related_plans:
 deadline: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-folds_in: [writegate_honest_coverage_endtoend_2026_05_06, hard_schema_enforcement_2026_05_08, wave3x_residual_ssots_2026_05_08, expected_universe_v2_design_2026_05_08, manifest_schema_final_gate_2026_05_09, manifest_cross_asset_rescan_design_2026_05_08, gcs_migration_bundle_pipeline_mode_2026_05_08, honest_coverage_formula_consolidation_2026_05_19, is_mtds_contract_audit_2026_05_20]
+folds_in:
+  [
+    writegate_honest_coverage_endtoend_2026_05_06,
+    hard_schema_enforcement_2026_05_08,
+    wave3x_residual_ssots_2026_05_08,
+    expected_universe_v2_design_2026_05_08,
+    manifest_schema_final_gate_2026_05_09,
+    manifest_cross_asset_rescan_design_2026_05_08,
+    gcs_migration_bundle_pipeline_mode_2026_05_08,
+    honest_coverage_formula_consolidation_2026_05_19,
+    is_mtds_contract_audit_2026_05_20,
+  ]
 companion_to: [available_at_lookahead_bias_completion_2026_05_08]
 todos: []
 isProject: false

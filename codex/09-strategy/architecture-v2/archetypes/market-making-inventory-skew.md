@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Archetype: `MARKET_MAKING_INVENTORY_SKEW`'
+title: "Archetype: `MARKET_MAKING_INVENTORY_SKEW`"
 summary: >-
   `MARKET_MAKING_INVENTORY_SKEW` archetype — Avellaneda-Stoikov quoting that offsets from mid by an inventory-risk
-  penalty (reservation_price = mid − net_inventory × gamma × sigma² × T), widening the over-filled side to
-  self-correct; `gamma`-calibrated, with `inventory_hard_cap` market-order exit and end-of-day flush.
+  penalty (reservation_price = mid − net_inventory × gamma × sigma² × T), widening the over-filled side to self-correct;
+  `gamma`-calibrated, with `inventory_hard_cap` market-order exit and end-of-day flush.
+implementation_status: design
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,14 @@ related:
   ]
 created: 2026-05-19
 authoritative_for: [MARKET_MAKING_INVENTORY_SKEW archetype specification]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md, codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md, codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md, codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md, codex/09-strategy/architecture-v2/families/market-making.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
+    codex/09-strategy/architecture-v2/families/market-making.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -30,7 +38,7 @@ archetype: MARKET_MAKING_INVENTORY_SKEW
 family: MARKET_MAKING
 venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT]
 topology_requirements:
-  isolation: {execution-service: isolated, strategy-service: isolated}
+  isolation: { execution-service: isolated, strategy-service: isolated }
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 30
   min_sla_tier: premium

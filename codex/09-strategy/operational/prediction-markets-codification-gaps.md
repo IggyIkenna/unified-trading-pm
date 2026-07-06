@@ -2,9 +2,10 @@
 doc_type: codex-ssot
 title: Prediction markets — codification gaps
 summary:
-  The scoped gaps register (G1-G7) tracking what is missing from the code/config surface to bring Polymarket + Kalshi
-  to registry parity — use-case classification, instrument-ID convention, semantic market matching, an automated
+  The scoped gaps register (G1-G7) tracking what is missing from the code/config surface to bring Polymarket + Kalshi to
+  registry parity — use-case classification, instrument-ID convention, semantic market matching, an automated
   classifier, VENUE_REGISTRY wiring, Kalshi testnet, and the historical-data pipeline. Close a gap = delete its row.
+implementation_status: active
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,11 +13,7 @@ stage: [meta]
 repos: [features-service]
 scope: [engineer, admin]
 tags: [prediction, features, uac, registry, catalogue, migration, data-pipeline]
-related:
-  [
-    ../architecture-v2/cross-cutting/prediction-markets.md,
-    instrument-filtering.md,
-  ]
+related: [../architecture-v2/cross-cutting/prediction-markets.md, instrument-filtering.md]
 created: 2026-04-20
 authoritative_for: [prediction-market codification gaps register (G1..GN)]
 referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md]
@@ -25,13 +22,22 @@ last_reviewed:
 code_refs:
 doc_kind: gaps_register
 ssot_for: prediction_market_codification_gaps
-execution: {owner: predictions-master owner (Ikenna; cross-ref `plans/active/predictions_master.md`), cadence: per-PR — every PR touching prediction registries / handlers / UAC predictions surface MUST review this gaps register; weekly sweep during the May-23 cutover window to close gaps as they land, verifier: 'Each gap (G1..GN) is closed by (a) deleting from this register + (b) landing the corresponding UAC / UIC /
+execution:
+  {
+    owner: predictions-master owner (Ikenna; cross-ref `plans/active/predictions_master.md`),
+    cadence:
+      per-PR — every PR touching prediction registries / handlers / UAC predictions surface MUST review this gaps
+      register; weekly sweep during the May-23 cutover window to close gaps as they land,
+    verifier: 'Each gap (G1..GN) is closed by (a) deleting from this register + (b) landing the corresponding UAC / UIC
+      /
 
-    features-cross-instrument change in the same logical unit (per CLAUDE.md "Commit + Push + Flip" rule).
+      features-cross-instrument change in the same logical unit (per CLAUDE.md "Commit + Push + Flip" rule).
 
-    Reviewers reject PRs that land the change but don''t delete the gap row, and vice versa.
+      Reviewers reject PRs that land the change but don''t delete the gap row, and vice versa.
 
-    ', last_executed: 2026-05-07 (file creation); ongoing per-PR review until predictions_master cutover}
+      ',
+    last_executed: 2026-05-07 (file creation); ongoing per-PR review until predictions_master cutover,
+  }
 ---
 
 # Prediction markets — codification gaps

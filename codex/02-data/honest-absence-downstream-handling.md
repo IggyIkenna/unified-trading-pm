@@ -2,23 +2,46 @@
 doc_type: codex-ssot
 title: Honest Absence — Downstream Handling SSOT
 summary: >-
-  Read/consume-side SSOT for honest absence (companion to the write-side availability-manifest-and-data-status) —
-  how downstream services (features, ML, strategy, execution, reconciliation) act when a (shard_key, day) manifest
-  row is empty_confirmed vs attempted_failed: NaN-handle honest empties, never fabricate placeholder rows /
-  sentinels, fail loud on unexpected gaps; carries the closed capture_status × error_reason taxonomy, the
-  per-source available_at stamping helpers, the §6A silent-drop violation classes, the 401≠honest-absence rule
-  and the DERIBIT-COMBO unbackfillability fact.
+  Read/consume-side SSOT for honest absence (companion to the write-side availability-manifest-and-data-status) — how
+  downstream services (features, ML, strategy, execution, reconciliation) act when a (shard_key, day) manifest row is
+  empty_confirmed vs attempted_failed: NaN-handle honest empties, never fabricate placeholder rows / sentinels, fail
+  loud on unexpected gaps; carries the closed capture_status × error_reason taxonomy, the per-source available_at
+  stamping helpers, the §6A silent-drop violation classes, the 401≠honest-absence rule and the DERIBIT-COMBO
+  unbackfillability fact.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
+repos:
+  [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
 tags: [manifest, honest-coverage, data-correctness, data-status, features, reconciliation, deribit]
-related: [availability-manifest-and-data-status.md, honest-coverage-model.md, expected-absence-backfill-runbook.md, data-pipeline-correctness-hard-rule.md, ../05-infrastructure/data-pipeline-alerts.md]
+related:
+  [
+    availability-manifest-and-data-status.md,
+    honest-coverage-model.md,
+    ../15-runbooks/expected-absence-backfill-runbook.md,
+    data-pipeline-correctness-hard-rule.md,
+    ../05-infrastructure/data-pipeline-alerts.md,
+  ]
 created: 2026-05-06
-authoritative_for: [honest-absence downstream read/consume handling, per-source available_at stamping helpers, DERIBIT-COMBO historical unbackfillability]
-referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/contract-failure-handling.md, codex/02-data/data-pipeline-correctness-hard-rule.md, codex/02-data/data-status-drilldown-hierarchy.md, codex/02-data/data-status-drilldown.md, codex/02-data/defi-data-type-taxonomy.md, codex/02-data/expected-absence-backfill-runbook.md, codex/02-data/external-data-always-available-rule.md]
+authoritative_for:
+  [
+    honest-absence downstream read/consume handling,
+    per-source available_at stamping helpers,
+    DERIBIT-COMBO historical unbackfillability,
+  ]
+referenced_by:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/contract-failure-handling.md,
+    codex/02-data/data-pipeline-correctness-hard-rule.md,
+    codex/02-data/data-status-drilldown-hierarchy.md,
+    codex/02-data/data-status-drilldown.md,
+    codex/02-data/defi-data-type-taxonomy.md,
+    codex/15-runbooks/expected-absence-backfill-runbook.md,
+    codex/02-data/external-data-always-available-rule.md,
+  ]
 owner:
 last_reviewed: 2026-05-22
 code_refs:
@@ -658,8 +681,8 @@ The source limitation is documented in the adapter docstring at:
 - § [Reconciler chain for legacy error_reason](#reconciler-chain-for-legacy-error_reason-the-three-passes) — the three
   `instruments-service/scripts/reconcile_*.py` passes that retrospectively backfill typed reasons
 - Per-asset-group backfill runbook (shipped 2026-05-07):
-  [`codex/02-data/expected-absence-backfill-runbook.md`](./expected-absence-backfill-runbook.md) — volumes per
-  asset_group, invocation recipe, reconciler + enumerator scripts
+  [`codex/15-runbooks/expected-absence-backfill-runbook.md`](./../15-runbooks/expected-absence-backfill-runbook.md) —
+  volumes per asset_group, invocation recipe, reconciler + enumerator scripts
   (`instruments-service/scripts/reconcile_expected_absence_reasons.py` + `enumerate_expected_universe.py`), UTL
   reader-side fallback `classify_legacy_empty_row()`
 
