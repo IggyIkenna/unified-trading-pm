@@ -11,7 +11,7 @@ summary:
   logs to Cloud Logging; the shard-isolation catch logs without exc_info. UTL write-side Int64 coercion shipped as the
   crash-proof fix; consolidator dtype + migration + backfill of the missed days remain."
 status: open
-nature: record
+nature: issue
 asset_group: [prediction]
 stage: [data]
 repos: [unified-trading-library, instruments-service, deployment-service]

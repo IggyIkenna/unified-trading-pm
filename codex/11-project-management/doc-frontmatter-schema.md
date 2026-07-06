@@ -64,20 +64,20 @@ rg '^(title|summary):'        codex/02-data/<slug>.md                           
 
 Every non-exempt doc (§9) carries all of these. Empty optionals are present-but-empty (§6), never omitted.
 
-| Field         | Req | Values                                                  | Purpose                                               |
-| ------------- | --- | ------------------------------------------------------- | ----------------------------------------------------- |
-| `doc_type`    | R   | the 9-value enum (§5)                                   | keystone search discriminator                         |
-| `title`       | R   | human one-liner                                         | identity (NO `name` — filename is the id)             |
-| `summary`     | R   | one-line "what this is / does"                          | highest-leverage RAG field — read instead of the body |
-| `status`      | R   | per-type lifecycle enum (§5)                            | authority / freshness                                 |
-| `nature`      | R   | `ssot\|guideline\|process\|design\|spec\|record\|notes` | content-kind facet (orthogonal to `doc_type`)         |
-| `asset_group` | R   | list ⊂ domain enum (§5)                                 | **domain** axis (multi-value)                         |
-| `stage`       | R   | list ⊂ pipeline enum (§5)                               | **pipeline** axis (multi-value)                       |
-| `repos`       | R   | list ⊂ workspace-manifest repos                         | **code** axis (single-line; `[]` if none)             |
-| `scope`       | R   | list ⊂ `engineer\|admin\|sales\|prospect\|investor`     | **audience** axis (who the doc is for)                |
-| `tags`        | R   | open free-list                                          | topical RAG index (the overflow valve)                |
-| `related`     | R   | list of doc slugs / paths                               | cross-links (`[]` if none)                            |
-| `created`     | R   | `YYYY-MM-DD`                                            | —                                                     |
+| Field         | Req | Values                                                         | Purpose                                               |
+| ------------- | --- | -------------------------------------------------------------- | ----------------------------------------------------- |
+| `doc_type`    | R   | the 9-value enum (§5)                                          | keystone search discriminator                         |
+| `title`       | R   | human one-liner                                                | identity (NO `name` — filename is the id)             |
+| `summary`     | R   | one-line "what this is / does"                                 | highest-leverage RAG field — read instead of the body |
+| `status`      | R   | per-type lifecycle enum (§5)                                   | authority / freshness                                 |
+| `nature`      | R   | `ssot\|guideline\|process\|design\|spec\|record\|notes\|issue` | content-kind facet (orthogonal to `doc_type`)         |
+| `asset_group` | R   | list ⊂ domain enum (§5)                                        | **domain** axis (multi-value)                         |
+| `stage`       | R   | list ⊂ pipeline enum (§5)                                      | **pipeline** axis (multi-value)                       |
+| `repos`       | R   | list ⊂ workspace-manifest repos                                | **code** axis (single-line; `[]` if none)             |
+| `scope`       | R   | list ⊂ `engineer\|admin\|sales\|prospect\|investor`            | **audience** axis (who the doc is for)                |
+| `tags`        | R   | open free-list                                                 | topical RAG index (the overflow valve)                |
+| `related`     | R   | list of doc slugs / paths                                      | cross-links (`[]` if none)                            |
+| `created`     | R   | `YYYY-MM-DD`                                                   | —                                                     |
 
 **The four search axes** — the heart of the index. They are independent and **multi-value lists** (a doc can be
 `asset_group: [defi, cefi]`):
@@ -146,7 +146,9 @@ authoritative; a `nature: notes` + `status: draft` doc is not.
 
 `ssot` (THE source of truth) · `guideline` (recommended practice) · `process` (a how-to / runbook procedure) · `design`
 (architecture / rationale / why) · `spec` (a contract / schema / API surface) · `record` (an immutable log: audit
-result, handoff, decision) · `notes` (working notes, not normative).
+result, handoff, decision) · `notes` (working notes, not normative) · `issue` (an incident / defect / gap report — the
+natural value for `plans/active/issues/` docs; added 2026-07-06 after three independent authors reached for it against
+the enum).
 
 ## 5. Closed-vocab enums (seed values — grown organically)
 
@@ -154,8 +156,12 @@ Closed facets are **enforced enums in the validator**, but **start small and gro
 day-1). Target ≤~10–15 values each; past ~15 → consolidate, OR it should have been `tags` (the open free-list).
 
 - `doc_type` (9):
-  `plan · epic · issue · audit-result · audit-instruction · codex-ssot · codex-runbook · agent-role · cursor-rule`
-- `nature` (7): `ssot · guideline · process · design · spec · record · notes`
+  `plan · epic · issue · audit-result · audit-instruction · codex-ssot · codex-runbook · agent-role · cursor-rule` —
+  **PATH-derived and path-checked (HARD, 2026-07-06)**: the validator derives the true type from the doc's location
+  (`docspec.doc_type_for_path`) and a declared `doc_type:` that contradicts it is a HARD violation ("fix the field or
+  move the doc"). A doc in `plans/active/issues/` IS an issue — declaring `doc_type: plan` there was the recurring
+  authoring mistake this check kills.
+- `nature` (8): `ssot · guideline · process · design · spec · record · notes · issue`
 - `asset_group` (8): `cefi · defi · tradfi · sports · prediction · cross-cutting · infrastructure · meta`
 - `stage` (9): `data · features · strategy · backtest · paper · live · execution · reporting · meta`
 - `scope` / audience (5): `engineer · admin · sales · prospect · investor`

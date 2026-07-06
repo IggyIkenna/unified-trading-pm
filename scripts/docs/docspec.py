@@ -42,7 +42,7 @@ DOC_TYPES = frozenset(
         "cursor-rule",
     }
 )
-NATURE = frozenset({"ssot", "guideline", "process", "design", "spec", "record", "notes"})
+NATURE = frozenset({"ssot", "guideline", "process", "design", "spec", "record", "notes", "issue"})
 ASSET_GROUP = frozenset({"cefi", "defi", "tradfi", "sports", "prediction", "cross-cutting", "infrastructure", "meta"})
 STAGE = frozenset({"data", "features", "strategy", "backtest", "paper", "live", "execution", "reporting", "meta"})
 SCOPE = frozenset({"engineer", "admin", "sales", "prospect", "investor"})
@@ -356,6 +356,18 @@ def validate_frontmatter(doc_type: str | None, fm: dict, reg: Registries) -> lis
         return []
     specs = UNIVERSAL_CORE + PER_TYPE.get(doc_type, [])
     out: list[Violation] = []
+    # doc_type is PATH-derived (the keystone discriminator); a declared value that contradicts the
+    # path is a lie the enum check can't see (recurring authoring instinct: `doc_type: plan` living
+    # in plans/active/issues/ — 3 occurrences by 2026-07-06). Fix the field or move the doc.
+    declared = fm.get("doc_type")
+    if isinstance(declared, str) and declared in DOC_TYPES and declared != doc_type:
+        out.append(
+            Violation(
+                "doc_type",
+                Sev.HARD,
+                f"declared '{declared}' contradicts path-derived '{doc_type}' — fix the field or move the doc",
+            )
+        )
     for spec in specs:
         req = spec.req
         if req == Req.C and spec.conditional_on is not None:

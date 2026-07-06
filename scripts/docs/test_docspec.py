@@ -220,3 +220,23 @@ def test_elective_bad_enum_is_hard():
     fm = _valid_codex_ssot()
     fm["implementation_status"] = "half-baked"
     assert "implementation_status" in _fields(validate_frontmatter("codex-ssot", fm, REG), Sev.HARD)
+
+
+def test_nature_issue_is_valid():
+    fm = _valid_plan()
+    fm["doc_type"] = "issue"
+    fm["nature"] = "issue"
+    fm["source"] = ["x"]
+    assert "nature" not in _fields(validate_frontmatter("issue", fm, REG), Sev.HARD)
+
+
+def test_declared_doc_type_contradicting_path_is_hard():
+    fm = _valid_plan()  # declares doc_type: plan
+    vs = validate_frontmatter("issue", fm, REG)  # path says issue
+    assert any(v.field == "doc_type" and v.severity == Sev.HARD and "contradicts" in v.message for v in vs)
+
+
+def test_declared_doc_type_matching_path_is_ok():
+    fm = _valid_plan()
+    vs = validate_frontmatter("plan", fm, REG)
+    assert "doc_type" not in _fields(vs, Sev.HARD)
