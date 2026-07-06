@@ -204,6 +204,83 @@ approve / defer per category rather than per-venue.
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **Design analysis (task gap-001, CeFi bare-venue triage)** by slot-4. Investigated the 4 bare CeFi
+  venue tags (BYBIT · OKX · COINBASE · DERIBIT-COMBO) that fail `resolve_live_venue_key` against the current
+  `WS_FEED_CONNECTOR_FACTORIES` set. Findings + per-venue recommendation:
+
+  **1. `BYBIT` (bare) — RECOMMENDATION: register alias to `BYBIT-FUTURES` factory.**
+  - MVP scope INCLUDES bare `BYBIT` (`mvp_scope.py:372`) — it is the canonical perp namespace for the perp-gate pair
+    `BYBIT ↔ BYBIT-SPOT` per `cefi_universe_capture_rule_2026_06_23`.
+  - `symbol_rules._VENUE_INSTRUMENT_TYPE["BYBIT"] = "perpetual"` (mtds engine).
+  - MTDS registers `BYBIT-FUTURES` (`bybit_ws.py:266`); no bare `BYBIT` registration exists → smoke matrix
+    `blocked-not-registered`.
+  - This is a wiring-only gap, NOT a scope question: the MVP rule already says bare BYBIT is in-scope.
+  - Fix: add `register_ws_feed_connector(venue="BYBIT", factory=_bybit_factory, overwrite=True)` in `bybit_ws.py`
+    (identical factory served under both keys — matches the OKX-SPOT/OKX-FUTURES symmetric-shape precedent).
+  - No MVP-rule change needed. Regression test: `resolve_live_venue_key("BYBIT", …)` returns `"BYBIT"`.
+
+  **2. `OKX` (bare) — RECOMMENDATION: register alias to `OKX-FUTURES` factory.**
+  - MVP scope uses sub-venues `OKX-SPOT` / `OKX-SWAP` / `OKX-FUTURES` (`mvp_scope.py:381-383`); bare `OKX` is in
+    `_CEFI_SUB_VENUE_BASES = frozenset({"OKX"})` as a legacy caller-convenience alias (`mvp_scope.py:89`) — the
+    `is_mvp("cefi", "OKX", …)` predicate base-normalises bare `OKX` to match any `OKX-*` sub-venue.
+  - MTDS registers `OKX-FUTURES` (`okx_ws.py:268`) + `OKX-SPOT` (`okx_spot_ws.py:59`); no bare `OKX` → smoke matrix
+    `blocked-not-registered`.
+  - Same wiring-only gap as BYBIT. `OKX-FUTURES` is the perp/swap primary (per
+    `_VENUE_INSTRUMENT_TYPE["OKX-SWAP"]="perpetual"`; `tardis_machine_ws.py:85` maps `OKX-FUTURES` → `okex-swap`).
+  - Fix: add `register_ws_feed_connector(venue="OKX", factory=_okx_factory, overwrite=True)` in `okx_ws.py`.
+  - No MVP-rule change needed.
+
+  **3. `COINBASE` (bare) — RECOMMENDATION: remove from `VENUES_BY_ASSET_GROUP["cefi"]` (legacy tag; no MVP semantics).**
+  - MVP scope declares `COINBASE-SPOT` + `COINBASE-FUTURES` (`mvp_scope.py:396-397`); bare `COINBASE` is NOT in the
+    MVP venues frozenset and NOT in `_CEFI_SUB_VENUE_BASES`.
+  - UAC `VENUES_BY_ASSET_GROUP["cefi"]` still carries bare `COINBASE` alongside `COINBASE-SPOT` +
+    `COINBASE-FUTURES` (`market_data_categories.py:242-247`) — legacy pre-2026-06-23 shape (before the perp-gate
+    pair was introduced).
+  - No downstream MVP/pipeline code references bare `COINBASE` (unlike bare BYBIT/OKX which the MVP rule does).
+  - The 5 · 5 = 25 `blocked-not-registered` cells attributed to bare `COINBASE` are a UAC-registry artifact, not a
+    real gap.
+  - Fix: remove the `"COINBASE",` entry from `market_data_categories.py:242`. The COINBASE-FUTURES live
+    connector build is already tracked as a separate P1 CODE todo (line 144 of this issue doc).
+  - Alt (if any downstream code still keys off bare `COINBASE`): register `COINBASE` → `COINBASE-SPOT` factory alias
+    instead of removing. Grep is clean; recommend the remove.
+
+  **4. `DERIBIT-COMBO` — RECOMMENDATION: confirm manifest-only / batch-only-by-design; no WS feed exists or is needed.**
+  - `DERIBIT-COMBO` is a REFERENCE-DATA venue (instruments-service adapter
+    `deribit_combo_adapter.py`, `VENUE_TO_ADAPTER["DERIBIT-COMBO"]="deribit_combo"`) that fetches multi-leg combo
+    instrument DEFINITIONS from Deribit's public REST `/get_instruments?kind=combo`. It has its own manifest shard
+    to preserve venue-tag integrity (per `market_data_categories.py:234-240`, the venue had 0 captured days
+    2026-05-23→06-18 before the kind-split fix).
+  - There is NO market-tick data feed for combos independent of bare `DERIBIT`: `grep -rn 'DERIBIT-COMBO'
+    market-tick-data-service/` returns 0 hits. Combo pricing derives from bare DERIBIT's `options_chain` (marks +
+    IVs of the constituent legs); the D2a `{OPTION}` → `options_chain`-only cut already handles it.
+  - Not in MVP scope (`mvp_scope.py` CeFi venues frozenset does not include `DERIBIT-COMBO`); historical is
+    unbackfillable (Deribit REST does not offer historical combos —
+    `relabel_deribit_combo_historical_to_empty_2026_06_27.py`).
+  - Fix: no WSFeedConnector to build. The `blocked-not-registered` cells for DERIBIT-COMBO are honest-absence
+    (BATCH-ONLY-BY-DESIGN for the reference-data side; no live tick equivalent). Confirm this stance so downstream
+    can classify these cells `expected_unattempted` with reason "reference-data-only venue".
+  - Optional cleanup: keep DERIBIT-COMBO in `VENUES_BY_ASSET_GROUP["cefi"]` (needed for URDI's venue-tag filter);
+    add a `NON_LIVE_VENUES` allow-list or equivalent so `resolve_live_venue_key` returns a sentinel
+    ("reference-data-only") rather than `None` for these venues, distinguishing them from real live gaps.
+
+  **Summary table:**
+
+  | Venue          | Verdict                          | Change                                           | Repo(s) |
+  | -------------- | -------------------------------- | ------------------------------------------------ | ------- |
+  | BYBIT          | add-live-factory (alias)         | `register(BYBIT, _bybit_factory)`                | mtds    |
+  | OKX            | add-live-factory (alias)         | `register(OKX, _okx_factory)`                    | mtds    |
+  | COINBASE       | remove-from-scope (legacy tag)   | drop `"COINBASE",` in `market_data_categories`   | UAC     |
+  | DERIBIT-COMBO  | confirm-manifest/reference-only  | classify honest-absence; optional NON_LIVE tag   | UAC/e2e |
+
+  **Impact on the `blocked-not-registered` cell count**: 4 venues × ~13 avg data_types = ~52 of the 104 `cefi`
+  blocked-not-registered cells resolved by these fixes alone (BYBIT ~13 + OKX ~13 + COINBASE ~13 remove +
+  DERIBIT-COMBO ~13 reclassify = ~52). The remaining ~52 cells are the 9 other unbuilt CeFi venues (BITFINEX ×2,
+  BITGET ×2, COINBASE-FUTURES, BINANCE-DELIVERY, LIGHTER/EXTENDED/PACIFICA) tracked as separate P1/P2 CODE todos.
+
+  Posting **BLOCKED-OPERATOR-DECISION** (Ikenna) for the 4-venue recommendation before shipping the register-alias +
+  remove-from-scope code changes. The 3 rename-only cases (BYBIT / OKX alias, COINBASE removal) are wiring/registry
+  edits with no scope shift; DERIBIT-COMBO is a pure classification confirm.
+
 - **2026-07-06** — **Operator decision (gap-011)**: Ikenna confirmed **Option B — per-(protocol×chain)** via main agent.
   Policy: each canonical UAC `PROTOCOL-CHAIN` venue key gets its own `register_ws_feed_connector` entry in MTDS. Base
   classes with chain parameter OK for code reuse. Solana naming mismatches (orca/raydium/jito) and curve/morpho renames

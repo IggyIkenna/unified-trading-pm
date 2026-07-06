@@ -279,3 +279,48 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   warns against. Main-agent verdict: skip -004, add `depends_on: [cefi_layer1_denominator_gaps-002,
   cefi_layer1_denominator_gaps-007]` to task -004 in `backlog.yaml` and regen so the dispatcher gates it correctly.
   2f resumes when `-002` (2b) + `-007` (enumerator start_date) both land.
+- **2026-07-06** — **UAC capability flip PARKED — BLOCKED-PREREQUISITES** (slot-8 planning, `BLK-36eeb447`). Task
+  `cefi_layer1_denominator_gaps-008` (UAC capability flip — add ASTER `book_snapshot_5` + `liquidations` to
+  `VENUE_DATA_TYPE_CAPABILITIES` with `start_date` = live-wire date, target
+  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1144`) was dispatched by priority=20
+  alone — SAME machine-encoded `depends_on` gap as -004. Verified LDR tip: `instruments-service/scripts/expected_universe.py`
+  + `check_enumeration_completeness.py` still have zero `start_date` references; task -007 (enumerator `start_date`
+  support) is `status=dispatched` to a peer slot but has NOT reached LDR (no commit to either file since 2a). Plan is
+  explicit: "**PREREQ for the capability flip — flipping first re-creates the 17,282-row over-seed purged 2026-07-03.**"
+  Main-agent verdict (`BLK-36eeb447` answered): PARK -008; do NOT touch UAC `VENUE_DATA_TYPE_CAPABILITIES` until -007
+  confirmed shipped to LDR; the machine-encoded `depends_on` fix is an operator backlog.yaml action. -008 resumes when
+  `-007` (enumerator `start_date`) lands. Slot-8 rotated to `cefi_layer1_denominator_gaps-009` (C2 point-fix).
+- **2026-07-06** — **UAC capability flip RE-PARKED — BLOCKED-PREREQUISITES (2nd dispatch)** (slot-7 planning,
+  `BLK-d8cba69b`). Task `cefi_layer1_denominator_gaps-008` was RE-dispatched to slot-7 by priority=20 alone (the
+  machine-encoded `depends_on` gap flagged in `BLK-36eeb447` is still uncorrected on the backlog task — `depends_on:
+  None` verified via `/api/backlog?limit=500`). Re-verified LDR tip at re-dispatch time:
+  `instruments-service/scripts/expected_universe.py` + `check_enumeration_completeness.py` still have zero `start_date`
+  references (last touching commits: `a1038ee` 2a, `2fa3877` 2c — neither adds start_date). Task -007 is `status=dispatched`
+  to slot-11; tmux pane capture confirms slot-11 mid-work adding a per-`(venue, dt) start_date` regression test to
+  `test_enumerate_expected_universe_v2.py`, but NOT yet shipped to LDR. Main-agent verdict (`BLK-d8cba69b` answered):
+  PARK -008 — same ruling as `BLK-36eeb447`; the 17,282-row over-seed risk is real and documented; -008 will be
+  re-dispatched after -007 lands. Slot-7 handed `understat_local_backfill_completion-004` (unrelated manifest
+  normalisation) as next task.
+- **2026-07-06** — **UAC capability flip RE-PARKED — BLOCKED-PREREQUISITES (4th dispatch, `BLK-9072b84f`)** (slot-5
+  planning). Task `cefi_layer1_denominator_gaps-008` was RE-dispatched to slot-5 by priority=20 alone; the
+  machine-encoded `depends_on` gap flagged in `BLK-36eeb447` + `BLK-d8cba69b` is still uncorrected on the backlog task.
+  Re-verified LDR tip at re-dispatch: `instruments-service/scripts/expected_universe.py` +
+  `check_enumeration_completeness.py` still have zero `start_date` / `get_venue_data_type_start_date` references (grep
+  returns empty). Task `-007` remains `status=queued` (has NOT reached LDR — dispatched to a peer slot per prior
+  entries but the work not committed). Main-agent verdict (`BLK-9072b84f` answered): PARK -008 — **4th ruling, same
+  answer**. The 17,282-row over-seed risk stands; do NOT flip UAC `VENUE_DATA_TYPE_CAPABILITIES`. **Operator action
+  required**: add `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and regen
+  to stop the bounce loop (4 dispatches, 4 blocks). Slot-5 goes idle pending operator's backlog fix; -008 resumes only
+  when `-007` (enumerator `start_date`) reaches LDR.
+- **2026-07-06** — **UAC capability flip RE-PARKED — BLOCKED-PREREQUISITES (5th dispatch, `BLK-545a3adb`)** (slot-2
+  planning). Task `cefi_layer1_denominator_gaps-008` was RE-dispatched to slot-2 by priority=20 alone; the
+  machine-encoded `depends_on` gap flagged in `BLK-36eeb447` + `BLK-d8cba69b` + `BLK-9072b84f` is STILL uncorrected on
+  the backlog task (verified via `/api/backlog?limit=500`: `-008.depends_on = null`). Re-verified LDR tip at 5th
+  re-dispatch: `instruments-service/scripts/expected_universe.py` last touched by `2fa3877` (2c) + `a1038ee` (2a) —
+  neither commit adds `start_date` awareness; `check_enumeration_completeness.py` likewise contains zero
+  `start_date` / `get_venue_data_type_start_date` refs. Task `-007` remains `status=queued` on the backlog
+  (unchanged since 4th dispatch — no worker has landed it). Slot-2 verdict: PARK -008 — **5th consecutive block,
+  same 17,282-row over-seed risk**. The bounce loop is now definitively an operator-backlog defect: 5 slots have been
+  spent (8, 7, unnamed 3rd, 5, 2) verifying + escalating the same fact. **Operator action required (5th escalation)**:
+  add `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and regen; -008 stays
+  in queue until `-007` (enumerator `start_date`) reaches LDR. Slot-2 goes idle pending operator's backlog fix.
