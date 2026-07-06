@@ -172,9 +172,18 @@ approve / defer per category rather than per-venue.
 
 ### TradFi — 4 venues
 
-- [ ] [CODE] P1. **FX WSFeedConnector build** — FX not a Databento code; likely needs another provider (repo:
-      market-tick-data-service). **BLOCKED-OPERATOR-DECISION** — pick provider (OANDA / TrueFX / bank-feed); currently
-      no candidate connector class. Filing as honest-absence in the meantime.
+- [x] [CODE] P1. **FX WSFeedConnector build** ✅ — resolved as **honest-absence (NOT MVP)** per 2026-06-27 operator
+      **decision #7** (already-committed SSOT). No WS connector built; no operator provider-pick needed. Sources:
+      `unified_api_contracts/canonical/crosscutting/mvp_scope.py` tradfi MVP rule (`venues=frozenset({"CME"})`,
+      `data_types=frozenset({"ohlcv_1m"})`, explicit comment: "Venues: CME only (Databento CME tick data is the
+      primary TradFi MVP data source ... ES, NQ, VX futures + options)"; "operator 2026-06-27 decision #7 — NO
+      ohlcv_1s, NO trades/tbbo in tradfi MVP"). FX is declared in `VENUES_BY_ASSET_GROUP["tradfi"]` for
+      reference/catalogue purposes only (KRW/USD daily rates via Yahoo Finance REST — `venue_mapping.py:211`
+      `"FX": "yahoo_finance"`; `market_data_categories.py:1269-1271` `"FX": {"ohlcv_24h": "2020-01-01"}` KRW/USD
+      daily). Yahoo Finance is REST OHLCV, not WS — there is no live-WS surface to build. Classification:
+      BATCH-ONLY-BY-DESIGN for the smoke-matrix `blocked-not-registered` cell — no live WS to build, no provider
+      selection required. The task-brief provider-pick ("OANDA / TrueFX / bank-feed") is superseded: FX is a
+      batch-only venue outside tradfi MVP, capture continues via the existing Yahoo Finance REST batch path.
 - [ ] [CODE] P1. **ICE WSFeedConnector build** — Databento supports ICE datasets but is BLOCKED-CREDENTIALS on the
       Real-Time key (per Databento connector docstring). Once credential arrives, wire ICE under the existing
       `databento_tradfi_ws.py` factory pattern (venue map = `_VENUE_TO_DATASET`) (repo: market-tick-data-service).
@@ -219,6 +228,27 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **gap-007 resolved (FX WSFeedConnector build)** by slot-4. Confirmed via already-committed SSOT
+  that FX is NOT MVP — no operator ping needed; the ruling exists as **2026-06-27 decision #7** (tradfi MVP =
+  CME ONLY, at ohlcv_1m grain). Evidence chain (grepped from HEAD live-defi-rollout):
+  1. `unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py` tradfi rule:
+     `TradFiMvpRule(venues=frozenset({"CME"}), instrument_types=frozenset({"FUTURE", "OPTION"}),
+     data_types=frozenset({"ohlcv_1m"}), ...)` — FX not in venues. Comment line: "operator 2026-06-27 decision
+     #7 — NO ohlcv_1s, NO trades/tbbo in tradfi MVP".
+  2. `unified-api-contracts/unified_api_contracts/registry/venue_mapping.py:211`: `"FX": "yahoo_finance"` — FX
+     source is Yahoo Finance (REST OHLCV, not WS).
+  3. `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1269-1271`:
+     `"FX": {"ohlcv_24h": "2020-01-01"}` — FX capability = KRW/USD daily rates only.
+  4. FX declared in `VENUES_BY_ASSET_GROUP["tradfi"]` (`market_data_categories.py:289`) for
+     reference/catalogue purposes; NOT a live-scope entry.
+
+  Task-brief provider-pick ("OANDA / TrueFX / bank-feed") is superseded: FX is a batch-only reference-data venue
+  outside tradfi MVP. Existing Yahoo Finance REST batch path is the correct capture surface (retail-grade daily
+  granularity is appropriate for reference-only FX rate). No WSFeedConnector shipped; no MTDS code change.
+  Checkbox flipped at plan line 168 with resolution note. Classification: BATCH-ONLY-BY-DESIGN — the
+  `blocked-not-registered` smoke-matrix cell for FX is honest-absence per Plan 4 Layer-2 interpretation, no
+  `NON_LIVE_VENUES` allow-list edit required.
 
 - **2026-07-06** — **gap-005 resolved (BINANCE-DELIVERY WSFeedConnector build)** by slot-4. Confirmed via
   already-committed SSOT that BINANCE-DELIVERY is NOT MVP — no operator ping needed; the ruling exists as
