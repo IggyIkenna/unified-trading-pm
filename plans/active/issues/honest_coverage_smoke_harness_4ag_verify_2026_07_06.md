@@ -176,3 +176,20 @@ Land the 4 fixes below (all tracked as todos). Priority ordering respects existi
   action required** (to prevent bounce-loop like the cefi -008 chain that hit 8×): add
   `depends_on: [tradfi_v9_stage1_finish tasks 2-11]` to `-004` in `data/config/backlog.yaml` +
   regen (or flip `-004` priority to 999). Slot-9 continues to next task per `can_continue`.
+- **2026-07-06** — **BOUNCE #2: -004 re-dispatched to slot-8 (`BLK-8a12c73b`)**
+  (slot-8 planning). Same task `-004` dispatched again — operator hadn't parked yet after slot-9's
+  `BLK-2a8ba36d` escalation. Slot-8 re-verified fresh state: `catalog.parquet` at
+  `gs://instruments-store-tradfi-prd-central-element-323112/prd/catalog.parquet` still 404
+  (present at `prod/catalog.parquet` = 10,561,159 bytes — the tradfi runner's default env is `prod`
+  so `--deployment-env prd` from slot-9's command mapped to the missing `prd/` path). Verified
+  Plan 2 checkboxes: task 1 ✅ (2026 migration), tasks 2-7 all `- [ ]` (orphan sweep BLOCKED-ORDERING,
+  straggler-VM RUNNING, E5 manifest rebuild QUEUED, CF-7 relabel QUEUED, E7 verify QUEUED, IS
+  enumerate-seed QUEUED), tasks 8-9 ✅ (IS catalogue @6716f55, V6 flip), tasks 10-11 `- [ ]`
+  (schema tail BLOCKED-PREREQUISITES, legacy-twin bucket deletes BLOCKED-OPERATOR-DECISION). PREREQ
+  ("tasks 2-11 done") remains **not met** — running verify now would still produce empty matrix
+  (0 shards) which is not new signal. Slot-8 re-filed `BLK-8a12c73b` with the same recommendation
+  as `BLK-2a8ba36d` (park via depends_on OR priority=999). No backlog.yaml exists (only
+  `backlog.test.yaml`) — the backlog SQLite is derived from plans via `regen_backlog_from_plan.py`;
+  parking must go through either (a) `POST /api/backlog/<id>/update` with `priority: 999`, (b) task
+  `DELETE /api/backlog/<id>`, or (c) adding `depends_on` at the todo level in the plan/issue doc
+  and regen. Slot-8 continues to next task per `can_continue`.
