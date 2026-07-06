@@ -81,8 +81,14 @@ source:
       (07-04), D2a (cefi 84.09→73.61), and the defi +1.38M seeding. **PREREQ (cross-plan): the KALSHI-PERP purge + the
       unregistered-handler audit (Plan 5) are both done** (else cefi Layer-2 is polluted / a wiring bug reads as a
       coverage gap). Gate: a fresh `coverage.json` produced from a real run; run id recorded.
-- [ ] [VERIFY] P0. **Certify cefi Layer-1** — record the fresh cefi denominator + % in this Progress Log and the tracker
-      Snapshot. Gate: cefi number recorded; denominator grew, % dropped vs 79.55 (the honest direction).
+- [x] ✅ [VERIFY] P0. **Certify cefi Layer-1** — record the fresh cefi denominator + % in this Progress Log and the
+      tracker Snapshot. Gate: cefi number recorded; denominator grew, % dropped vs 79.55 (the honest direction).
+      **CERTIFIED 2026-07-06 15:01 UTC: cefi Layer-1 = 73.61% (present 53 / expected 72; 19 missing tuples; 87 stray).**
+      Direction ✓ — 79.55 (stale 06-29) → 73.61 (fresh, honest); denominator grew 44→72 (+28 tuples, D2a). Evidence:
+      local `measure_honest_coverage.py --asset-group cefi` run at 2026-07-06 15:00 UTC on `is@03cfd0f` (post-D2a
+      catalogue); primary manifest
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` blob.updated
+      2026-07-06T14:55Z, merged 11,125,247 rows.
 - [ ] [VERIFY] P0. **Certify defi Layer-1** — post the +1.38M seeding, record the fresh defi denominator + %. Gate: defi
       number recorded; the seeded honest-absence rows are in the denominator.
 - [ ] [VERIFY] P0. **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue (Plan 2), record the
@@ -102,6 +108,21 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **✅ Task 002 CERTIFIED — cefi Layer-1 = 73.61%** (fresh local
+  `measure_honest_coverage.py --asset-group cefi` run at 2026-07-06 15:01 UTC on `is@03cfd0f` post-D2a; primary manifest
+  `gs://market-data-tick-cefi-prd-central-element-323112` blob.updated 2026-07-06T14:55Z; merged 11,125,247 rows).
+  Result: **expected_tuples 72, present_tuples 53, missing 19, stray 87 → 73.61%.** Direction ✓ — 79.55 (stale 06-29) →
+  73.61 (fresh, honest); denominator grew 44→72 (+28 tuples) matching D2a's `INSTRUMENT_TYPES_BY_VENUE` completion.
+  Missing tuples (first 5): BITFINEX-FUTURES {future book_snapshot_5, future derivative_ticker, future trades},
+  BITGET-FUTURES {future book_snapshot_5, future derivative_ticker}. Stray tuples (first 5): ASTER PERPETUAL
+  {futures_chain, ohlcv_1m, options_chain}, BINANCE-FUTURES {FUTURE liquidations, PERPETUAL futures_chain}. Layer-2
+  rollup for context: cefi coverage_pct 33.28% (captured 2,891,774 / reachable 8,689,530; total 11,125,247). **Note:**
+  Task 001 (multi-AG re-run) not flipped — task 001's cross-plan PREREQs (KALSHI-PERP purge, Plan 5 unregistered-handler
+  audit) primarily affect **Layer-2** correctness (fake-KALSHI-PERP capture pollution / unwired handlers reading as
+  gaps), not the cefi Layer-1 denominator; my single-AG cefi run satisfies task 002's Gate independently. Other AG
+  Layer-1 certifications (003 defi · 004 tradfi · 005 pred) remain queued and gated on their respective plans (defi
+  seeding done, tradfi migration follow-on, KALSHI-PERP purge). Evidence artefact (local):
+  `/home/ubuntu/coverage_cefi_20260706T150020Z.json`.
 - **2026-07-06** — Plan authored + dispatched to AO (Plan 4 of the instruments-completion set). Gated (gate_on_depends)
   on Plans 1-3; two cross-plan prereqs (KALSHI-PERP purge + unregistered-handler audit) called out on the re-measure.
   This is the Stage-3 all-AG Layer-1 certification that makes capture % trustworthy.

@@ -117,8 +117,10 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 
 ## 📊 Snapshot (2026-07-06)
 
-- **Certified Layer-1 (denominator), 2026-06-29 — STALE, needs re-measure (Stage 3):** cefi **79.55** · defi 69.44 ·
-  tradfi 51.43 · sports 30.77 · pred 66.67. _(Upper bounds where UAC under-specifies.)_
+- **Certified Layer-1 (denominator) — cefi CERTIFIED 2026-07-06 post-D2a; others still 06-29 STALE (pending re-measure
+  Stage 3):** cefi **73.61** (72 expected / 53 present / 19 missing / 87 stray; `is@03cfd0f`,
+  `layer1_remeasure_and_certify` task 002) · defi 69.44 [06-29 stale] · tradfi 51.43 [06-29 stale] · sports 30.77 [06-29
+  stale] · pred 66.67 [06-29 stale]. _(Upper bounds where UAC under-specifies.)_
 - **Layer-2 lower bounds (capture):** cefi 37.86 · defi 57.55 · tradfi 88.81 · sports 100 · pred 20.56.
 - **DONE already:** denominator **generation** (catalogue built + self-refreshing) · Issue-4 strays · 4/5 AG v9
   `--apply` · opus-checkpoints + registry-consolidation (archived).
@@ -282,6 +284,17 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **cefi Layer-1 CERTIFIED — 73.61% fresh** (via `layer1_remeasure_and_certify_2026_07_06` task 002).
+  Ran `measure_honest_coverage.py --asset-group cefi` locally at 2026-07-06 15:01 UTC on `is@03cfd0f` (post-D2a);
+  primary manifest `gs://market-data-tick-cefi-prd-central-element-323112` blob.updated 2026-07-06T14:55Z, merged
+  11,125,247 rows. Result: **expected_tuples 72 / present_tuples 53 / missing 19 / stray 87 → 73.61%.** Honest direction
+  ✓ — 79.55 stale → 73.61 fresh; denominator grew 44→72 (+28 tuples) matching D2a's `INSTRUMENT_TYPES_BY_VENUE`
+  completion. Layer-2 rollup context: cefi coverage_pct 33.28% (captured 2,891,774 / reachable 8,689,530; total
+  11,125,247; denominator_status INCOMPLETE — 19 tuples still missing so Layer-2 stays a lower bound). Task 001
+  (multi-AG re-run) NOT flipped by this task — its cross-plan PREREQs (KALSHI-PERP purge · Plan 5 unregistered-handler
+  audit) primarily affect Layer-2 correctness, so a single-AG cefi run satisfies task 002's Gate independently. Other AG
+  Layer-1 tasks (003 defi · 004 tradfi · 005 pred) remain queued and gated on their respective plans. Snapshot updated
+  above; evidence artefact (local): `/home/ubuntu/coverage_cefi_20260706T150020Z.json`.
 - **2026-07-06** — **AO tiering revised (operator): Plan 1 Opus/max, Plans 2-6 Sonnet/high.** Initial dispatch tagged
   all 6 Opus/max; operator dialed back after the per-plan reasoning — only **Plan 1** (the C2 `_row_data_types`
   instrument-type/bundle-aware fix that defeated two prior attempts + the denominator correctness) clearly needs Opus.
