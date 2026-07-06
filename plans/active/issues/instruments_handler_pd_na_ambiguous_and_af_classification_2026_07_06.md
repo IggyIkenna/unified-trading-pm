@@ -196,3 +196,10 @@ remains valid — no correctness blocker uncovered by this verification.
   weekend) + 6 valid CMES sessions (fetch gaps awaiting tradfi v9 downstream). Written up in "Verification results"
   above. No new correctness finding requires a separate issue doc — the AF-on-Sat mislabel is absorbed by the existing
   P2 dedup-reconcile item 3.
+- **2026-07-06** — **Item 3 PARKED — PENDING-DEDUP-FIX** (`BLK-b81e4231`, slot-9 planning). Task -003 was dispatched
+  by priority=50; verified the natural-language prereq is not met — the `_merge_dataframes` dedup fix in
+  `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still `- [ ] [CODE] P2.` on LDR tip (a
+  prior 2026-06-16 naive re-add was reverted; that plan explicitly says "NOT a naive add"). Task body forbids
+  hand-editing the dedup machine ("Do NOT hand-edit the dedup machine (per `instruments_mtds_subset` P2 finding)").
+  Main-agent answer (`BLK-b81e4231`): **PARK — do NOT run the reconcile now.** Slot-9 to idle-park pending release
+  via /skip-current-task. Item 3 stays queued until the `_merge_dataframes` dedup fix reaches LDR.
