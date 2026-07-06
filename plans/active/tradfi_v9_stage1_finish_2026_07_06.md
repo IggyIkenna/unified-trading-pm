@@ -97,13 +97,25 @@ source:
       first — the 2026 migration wrote v9-canonical paths WITHOUT rebuilding the manifest (per migrator docstring:
       manifest columns are added by E5, this script fixes PATHS only). Running the orphan sweep before E5 would produce
       false Class-E positives (real data with no manifest row) on the newly-migrated 122,703 canonical objects.
-- [ ] [DATA] P0. **Idempotent straggler re-run** — transient GCS 503/504 bursts on 2026-07-06 left ~7 objects unmoved on
-      2025-02-03/04 **plus 4 objects unmoved on 2026-01-15** (all transient GCS timeouts, not memory, self-limited).
-      Re-run the migrator over the affected day-partitions (idempotent — skips already-canonical). 2026-01-15
-      stragglers: `processed_candles/by_date/day=2026-01-15/timeframe=1h/data_type=tbbo/venue=NYSE/{BLK,LEN}.parquet`
+- [ ] [DATA] P0. **BLOCKED-STRAGGLER-VM-RUNNING · Idempotent straggler re-run** — transient GCS 503/504 bursts on
+      2026-07-06 left ~7 objects unmoved on 2025-02-03/04 **plus 4 objects unmoved on 2026-01-15** (all transient GCS
+      timeouts, not memory, self-limited). Re-run the migrator over the affected day-partitions (idempotent — skips
+      already-canonical). 2026-01-15 stragglers:
+      `processed_candles/by_date/day=2026-01-15/timeframe=1h/data_type=tbbo/venue=NYSE/{BLK,LEN}.parquet`
       + `.../timeframe=1h/data_type=trades/venue=CME/EW1G6_P6825.parquet`
       + `.../timeframe=1m/data_type=trades/venue=CME/ESH6_P5500.parquet`. Gate: all straggler objects are now
       canonical; orphan-sweep re-confirms E=0.
+      **STATUS 2026-07-06 15:47 UTC** (slot-9, BLK-77429ebd): Re-run VM
+      `canonical-migration-tradfi-20260706-152937` (zone `asia-northeast1-c`) launched 15:32:25 UTC and is CURRENTLY
+      RUNNING — L-hive phase complete (451,816 planned / 0 moved — all already-canonical skips) and mid-candles phase
+      (430,000 / 1,027,853 planned = 41% at 15:47:25, moved=7 so far). Progress tail read via UTL StorageClient from
+      `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-tradfi-20260706-152937/run.log`;
+      snap-confine on this slot broke `gcloud`/`gsutil` so no direct-CLI reads possible. The 1M-candle plan spans the
+      full tradfi window and therefore covers both 2025-02-03/04 and 2026-01-15 stragglers; expected finish ~15-25
+      min after 15:47 at the observed 28K objects/min rate (extrapolated: ~16:07-16:15 UTC). **PARKED — do NOT launch
+      a second migrator VM** (main 2026-07-06 iter=5: race condition on same GCS paths). Verify + flip after this VM
+      terminates (moved-count == stragglers + any additional idempotent moves; run.log tail contains `TOTAL … fatal=0`
+      + orphan-sweep re-confirms E=0).
 - [ ] [DATA] P0. **Rebuild the tradfi manifest** — `rebuild_tradfi_manifest.py` (E5; the built tool, not the superseded
       build-spec). Gate: fresh `tradfi-prd/_index` reads `schema_version=9` for 100% of rows; `pipeline_mode=` partition
       present; row-count reconciles with the migrated corpus.
