@@ -83,6 +83,12 @@ run green (universe restored to 07-06). Residual open work (consolidator dtype-a
 audit, fixed-UTL→image, missed-window backfill, `exc_info` observability) lives as the plan's Workstream A `- [ ]` items
 — not duplicated here.
 
+**Root cause #1 is NOT prediction-only (confirmed 2026-07-06):** the sports instruments availability index is
+string-poisoned too (4.99M rows), sports had BOTH consolidator crons enabled (legacy now paused), and
+`is-daily-enum-sports` has FAILED daily since **06-28** (longer than prediction, undetected). Both
+`is-daily-enum-{prediction,sports}` cloud jobs still FAIL daily on the OLD UTL — the local prediction heal never reached
+the deployed image. The fix (fixed-UTL→image) heals both and is escalated to P0 in the plan's Workstream A.
+
 ## ROOT CAUSE #2 (2026-07-06, found after the ArrowTypeError fix unmasked it) — cefi KALSHI-PERP adapter filter broken
 
 > **CORRECTION (2026-07-06, deeper verification — supersedes the "misrouting" mechanism below).** `KALSHI-PERP` /

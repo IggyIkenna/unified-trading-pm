@@ -124,13 +124,19 @@ orchestrator-dispatched).
       string-typing `instrument_count`, fix + redeploy. Gate: a fresh consolidator cycle writes
       `_index/availability_index.parquet` with `instrument_count` as int (not utf8), verified by direct read.
       (Non-urgent — the UTL coercion crash-proofs the reader — but the canonical index dtype must be honest.)
-- [ ] [INFRA] P1. Audit **sports** for the same double-consolidator condition (`…instruments-sports-legacy` also shows
-      recent every-minute runs); pause its legacy cron if confirmed + verify sports capture/index dtype health. Gate:
-      sports runs one consolidator; sports index dtypes match schema.
-- [ ] [INFRA] P1. Get the fixed UTL into the `is-daily-enum-*` Cloud Run image (UTL base republish → instruments-service
-      pin bump → image rebuild — the 07-04 dependency-update short-circuit recipe). Gate: the 13:30 UTC cloud
-      `is-daily-enum-prediction` run exits 0 on the deployed image (not just the local heal);
-      `Evidence: cloudbuild=<id>`.
+- [x] [INFRA] P1. ✅ Audited **sports** (2026-07-06) — SAME condition, confirmed WORSE than prediction:
+      `instruments-sports-cron` AND `instruments-sports-legacy-cron` were BOTH enabled (`*/1`); the sports instruments
+      availability index is string-poisoned (`instrument_count`/`row_count`/`expected`/`available` all object/str,
+      4,999,446 rows); and `is-daily-enum-sports` has FAILED every day 06-28→07-05 (failed_count=1) — sports instruments
+      capture has been DEAD longer than prediction, previously undetected. Paused
+      `uts-prod-manifest-consolidator-instruments-sports-legacy-cron` (now matches every other AG; reversible via
+      `gcloud scheduler jobs resume`). The heal folds into the item below.
+- [ ] [INFRA] P0. **URGENT — data-correctness heartbeat**: get the fixed UTL (coercion @6c090bb/@1651340) into the
+      `is-daily-enum-*` Cloud Run image (UTL base republish → instruments-service rebuild — the 07-04 recipe). Verified
+      2026-07-06: BOTH `is-daily-enum-prediction` (07-01→05) AND `is-daily-enum-sports` (06-28→05) FAIL every day in the
+      cloud on the old UTL — the local prediction heal did NOT fix the cloud job; sports+prediction instruments capture
+      stays dead until this ships. Gate: next `is-daily-enum-{prediction,sports}` cloud runs exit 0 + their indexes
+      rewrite with int-typed `instrument_count`; `Evidence: cloudbuild=<id>`.
 - [ ] [VERIFY] P1. Backfill the missed window 07-01→07-06: confirm the healed capture's `--days-back` reach covered the
       gap days' by_date + manifest rows, or run a targeted backfill; then confirm the catalogue picks up post-06-27
       listings (`max(available_from)` advances) on the next daily run. Gate: no by_date/manifest holes in 07-01→07-06;
@@ -246,3 +252,10 @@ orchestrator-dispatched).
   cleared ≥88% with the machinery tests re-added — the machinery is reused by the Phase 2/3 repoint). QG green (4000
   pass, 91s). Next: rebuild+deploy the is-daily-enum cefi image (runtime half of the Gate), then the Phase 0 step 2
   purge.
+- 2026-07-06: **Sports audit (Workstream A) surfaced a bigger data-correctness finding while the cefi guard deployed.**
+  `is-daily-enum-sports` has FAILED daily 06-28→07-05 (sports instruments index string-poisoned, 4.99M rows; sports had
+  BOTH consolidator crons enabled) — sports capture dead longer than prediction, undetected. AND
+  `is-daily-enum-prediction` still FAILS in the cloud 07-01→05 (the local heal never reached the deployed image). Paused
+  the sports legacy consolidator cron (protective, matches all other AGs). Escalated the "fixed-UTL→is-daily-enum image"
+  residual to P0 — it heals BOTH sports+prediction cloud capture. Operator notified. (Phase 0 cefi guard is independent:
+  the cefi index is NOT poisoned, so is-daily-enum-cefi succeeds and the guard stops KALSHI-PERP regardless of the UTL.)
