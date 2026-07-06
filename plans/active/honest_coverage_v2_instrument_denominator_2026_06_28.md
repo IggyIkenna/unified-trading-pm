@@ -1,15 +1,37 @@
 ---
 doc_type: plan
 title: Honest Coverage v2 — instrument-denominator audit baked in (two layers · two views · instrument gates downloads)
-summary: Upgrade the honest-coverage system so the instrument-enumeration (denominator) audit is a first-class, standing part of honest coverage — not a one-off. Two layers (instrument coverage gates data-download coverage), two views (day-by-day + shard-breakdown), drill-down/roll-up across asset_group → venue → instrument_type → data_type → day. Fix the measurability bugs first (stale-bucket read, prd/non-prd split, instrument_type normalization, VENUE_FETCH_FAILED swallowing 79% of failure causes, untyped empty_confirmed) so v2 reports real numbers.
+summary:
+  Upgrade the honest-coverage system so the instrument-enumeration (denominator) audit is a first-class, standing part
+  of honest coverage — not a one-off. Two layers (instrument coverage gates data-download coverage), two views
+  (day-by-day + shard-breakdown), drill-down/roll-up across asset_group → venue → instrument_type → data_type → day. Fix
+  the measurability bugs first (stale-bucket read, prd/non-prd split, instrument_type normalization, VENUE_FETCH_FAILED
+  swallowing 79% of failure causes, untyped empty_confirmed) so v2 reports real numbers.
 status: active
 nature: design
 asset_group: [cross-cutting]
 stage: [data, meta]
 repos: [instruments-service, unified-api-contracts, deployment-service, unified-trading-library]
 scope: [engineer, admin]
-tags: [honest-coverage, denominator-audit, instrument-coverage, availability-manifest, 4-state, drill-down, data-correctness]
-related: [../../codex/02-data/availability-manifest-and-data-status.md, ../../codex/02-data/data-pipeline-correctness-hard-rule.md, ../../codex/02-data/honest-absence-downstream-handling.md, ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md, mvp_backfill_cefi_tick_v10_2026_06_27.md, mvp_catalogue_finalization_v10_2026_06_27.md]
+tags:
+  [
+    honest-coverage,
+    denominator-audit,
+    instrument-coverage,
+    availability-manifest,
+    4-state,
+    drill-down,
+    data-correctness,
+  ]
+related:
+  [
+    ../../codex/02-data/availability-manifest-and-data-status.md,
+    ../../codex/02-data/data-pipeline-correctness-hard-rule.md,
+    ../../codex/02-data/honest-absence-downstream-handling.md,
+    ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    mvp_catalogue_finalization_v10_2026_06_27.md,
+  ]
 created: 2026-06-28
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -162,21 +184,18 @@ filter = UAC `mvp_scope.py`**.
       BTC/ETH options surface is effectively uncaptured despite G1 complete claim. Requires Layer-1 enumeration fix
       (OPUS-CK Phase 1).
 
-- [ ] [AGENT] P1. **Consolidate the expected-universe producer into ONE entry point** (folded in from
-      `instrument_universe_registry_consolidation_2026_06_29.md` Phase 3, per operator 2026-06-29). Introduce
-      `expected_universe.build_expected(asset_group)` as the single public producer; move the per-AG
-      `_enumerate_cefi/_tradfi/_defi/_sports` bodies behind per-AG strategy objects sharing one interface (preserve the
-      genuinely different grains: cefi lifecycle, defi chain-genesis, tradfi calendar, sports per-league). Point
-      `check_enumeration_completeness.py::_build_expected_tuples` at `build_expected` so there is exactly ONE
-      expected-universe producer feeding the Layer-1 EXPECTED matrix. Once the consolidation plan's Phases 1–2 land, the
-      venue input comes from the consolidated UAC registry (no re-mirrored lists). **Gate:** all callers go through
-      `build_expected`; Layer-1 completeness numbers byte-identical to current `coverage.json` for a control date per AG
-      (golden regression); instruments-service QG green. **🟡 BLOCKED-PREREQ (2026-06-29, Opus):** sequence AFTER
-      `instrument_universe_registry_consolidation_2026_06_29.md` Phases 1–2 (currently all OPEN — this item is a fold-in
-      of that plan's Phase 3; the venue-from-UAC-registry input depends on them). It refactors
-      `enumerate_expected_universe.py`, which is under ACTIVE concurrent edit by that plan (slot-4, last commit
-      `a510db1` 2026-06-29) — running a second agent on the same file now would collide (multi-agent same-file hard
-      rule). Land this WITHIN the registry-consolidation enumerator work, not as a parallel dispatch.
+- [x] ✅ [AGENT] P1. **Consolidate the expected-universe producer into ONE entry point** — **LANDED
+      `instruments-service@681f50a`** (via `cefi_layer1_denominator_gaps_2026_07_03.md` task 2a, 2026-07-06).
+      `scripts/expected_universe.py` introduced as THE single public producer; per-AG strategies preserve genuinely
+      different grains (cefi lifecycle · defi chain-genesis · tradfi calendar · sports odds · prediction).
+      `check_enumeration_completeness.py::_build_expected_tuples` (and `..._sports`) now delegate to `build_expected`
+      via sibling-load (mirrors `measure_honest_coverage`'s `_load_completeness_module` pattern);
+      measure_honest_coverage routes through transitively — ONE producer feeds both Layer-1 audit and Layer-2 measure.
+      Byte-identical golden fixtures under
+      `tests/unit/scripts/goldens/expected_universe/{cefi,defi,tradfi,sports,prediction}.json` (72/171/35/27/8 tuples) +
+      regression `test_expected_universe_golden.py` (14 tests: single-producer contract + delegator parity +
+      byte-identical goldens) locks the EXPECTED matrix so silent denominator drift fails loudly in review. Fold-in from
+      `instrument_universe_registry_consolidation_2026_06_29.md` Phase 3 satisfied.
 
 ## Phase 2 — Honest Coverage v2 harness
 
@@ -190,7 +209,10 @@ filter = UAC `mvp_scope.py`**.
       instrument_gates_download / denominator_complete / denominator_status / layer1_completeness_pct on each AG cell
       (denominator_status="UNDEFINED" with completeness_pct=None when EXPECTED==0); 21 unit tests green; QG passed
 - [ ] [UI] P2. Surface the drill-down/roll-up in the data-status UI (defer until the harness schema is stable; `[UI]`
-      gate applies).
+      gate applies). **→ MOVED to `instruments_completion_tracker_2026_07_06.md` Stage 6 (last open `honest_coverage_v2`
+      item; too small for its own AO plan, tracked as tracker hygiene singleton per operator 2026-07-06).** This plan's
+      **measurement track is now CLOSED** — every Phase 0/1/2 measurement item complete; only this UI drill-down
+      remains, and it is now owned by tracker Stage 6.
 
 ## Phase 3 — Codex SSOT
 
@@ -211,62 +233,74 @@ filter = UAC `mvp_scope.py`**.
       **61.77%** (2,886/4,672)
 
       **Phase 1+2 v2 live re-measure 2026-06-29 04:59 UTC** (schema_version=2, instrument_id dedup, prd+oracle merge,
-      Layer-1 enumeration-completeness check running):
-      - Layer-2 (download): cefi 37.83% (2,855,844/7,548,448) | defi 57.48% (2,471,687/4,299,821) |
-        tradfi 88.81% (341,060/384,039) | sports 100.00% (32,389/32,389) | prediction 18.96% (6,927/36,534)
-        _(Note: cefi lower than 74.55% baseline due to instrument_id shard-level dedup revealing more EU skeleton rows)_
-      - Layer-1 (denominator) **v1 (pre-bugfix)**: cefi 14.9% (EXPECTED=121) | defi **WRONG: 100% (EXPECTED=0, Bug 1:
-        raw dict has no defi keys)** | tradfi 18.8% (EXPECTED=101) | sports 0.0% (EXPECTED=46) | prediction 50.0%
-        (EXPECTED=2). **Bug 2**: EXPECTED==0 falsely reported 100% — this fix was the primary reason for the follow-up
-        commit instruments-service@875c47b.
+          Layer-1 enumeration-completeness check running):
+          - Layer-2 (download): cefi 37.83% (2,855,844/7,548,448) | defi 57.48% (2,471,687/4,299,821) |
+            tradfi 88.81% (341,060/384,039) | sports 100.00% (32,389/32,389) | prediction 18.96% (6,927/36,534)
+            _(Note: cefi lower than 74.55% baseline due to instrument_id shard-level dedup revealing more EU skeleton rows)_
+          - Layer-1 (denominator) **v1 (pre-bugfix)**: cefi 14.9% (EXPECTED=121) | defi **WRONG: 100% (EXPECTED=0, Bug 1:
+            raw dict has no defi keys)** | tradfi 18.8% (EXPECTED=101) | sports 0.0% (EXPECTED=46) | prediction 50.0%
+            (EXPECTED=2). **Bug 2**: EXPECTED==0 falsely reported 100% — this fix was the primary reason for the follow-up
+            commit instruments-service@875c47b.
 
-      **Phase 1+2 v2 post-bugfix re-measure 2026-06-29 05:18 UTC** (Bug1=UAC functions for defi, Bug2=UNDEFINED guard):
-      - Layer-2 (download): cefi 37.85% (2,857,273/7,549,878) | defi 57.55% (2,478,060/4,306,192) |
-        tradfi 88.81% (341,060/384,039) | sports 100.00% (38,182/38,182) | prediction 20.56% (7,661/37,268)
-      - Layer-1 (denominator): cefi INCOMPLETE 14.9% (EXPECTED=121, ENUMERATED=193, missing=103, stray=175) |
-        defi INCOMPLETE **0.0% (EXPECTED=3,581, ENUMERATED=255, missing=3,581, stray=255)** — Bug1 fixed, EXPECTED now
-        correct via UAC protocol functions | tradfi INCOMPLETE 18.8% (EXPECTED=101, missing=82, stray=76) |
-        sports INCOMPLETE 0.0% (EXPECTED=152, ENUMERATED=32, missing=152, stray=32) | prediction INCOMPLETE 12.5%
-        (EXPECTED=8, missing=7, stray=24)
-      - Layer-1 finding (all AGs): stray tuples confirm instrument_type in manifest is UPPERCASE (PERPETUAL/SPOT_PAIR/
-        LENDING) vs UAC lowercase; writer normalization (MTDS@4c2a13b6) landed but backfill of existing rows not yet
-        applied — this inflates both missing and stray counts. True Layer-1 completeness will improve significantly
-        after instrument_type backfill.
-      - No AG shows denominator_status=UNDEFINED (Bug 2 guard working correctly)
+          **Phase 1+2 v2 post-bugfix re-measure 2026-06-29 05:18 UTC** (Bug1=UAC functions for defi, Bug2=UNDEFINED guard):
+          - Layer-2 (download): cefi 37.85% (2,857,273/7,549,878) | defi 57.55% (2,478,060/4,306,192) |
+            tradfi 88.81% (341,060/384,039) | sports 100.00% (38,182/38,182) | prediction 20.56% (7,661/37,268)
+          - Layer-1 (denominator): cefi INCOMPLETE 14.9% (EXPECTED=121, ENUMERATED=193, missing=103, stray=175) |
+            defi INCOMPLETE **0.0% (EXPECTED=3,581, ENUMERATED=255, missing=3,581, stray=255)** — Bug1 fixed, EXPECTED now
+            correct via UAC protocol functions | tradfi INCOMPLETE 18.8% (EXPECTED=101, missing=82, stray=76) |
+            sports INCOMPLETE 0.0% (EXPECTED=152, ENUMERATED=32, missing=152, stray=32) | prediction INCOMPLETE 12.5%
+            (EXPECTED=8, missing=7, stray=24)
+          - Layer-1 finding (all AGs): stray tuples confirm instrument_type in manifest is UPPERCASE (PERPETUAL/SPOT_PAIR/
+            LENDING) vs UAC lowercase; writer normalization (MTDS@4c2a13b6) landed but backfill of existing rows not yet
+            applied — this inflates both missing and stray counts. True Layer-1 completeness will improve significantly
+            after instrument_type backfill.
+          - No AG shows denominator_status=UNDEFINED (Bug 2 guard working correctly)
 
-      **Phase 1+2 v3 post-Bug3 (VOCABULARY/GRAIN ALIGNMENT) re-measure 2026-06-29 06:00 UTC** —
-      instruments-service@051e5a8. Bug 3: EXPECTED (UAC vocab) and ENUMERATED (manifest written vocab) were intersected
-      WITHOUT alignment → the prior 0%/14.9% were largely casing/vocab/format ARTIFACTS. Fix: intersect on a CANONICAL
-      comparison key (case-fold + UAC `_INSTRUMENT_TYPE_ALIASES` + `bundle_instrument_type_for_leaf` + defi
-      `VenueMapping._canonicalise_defi_protocol_spelling`+chain-strip) PLUS a (venue,itype) validity gate (cefi via
-      `venue_instrument_type_to_tardis`, defi via `PROTOCOL_CAPABILITIES.instrument_types`, tradfi via the codified
-      `_VENUE_INSTRUMENT_TYPE` map) to stop cross-product over-generation, PLUS sports re-grained to the writer
-      `instrument_type=odds` surface (the reference-data `league` surface lives in a different bucket → out of scope).
-      Added `--diagnose-layer1` mode (per-AG EXPECTED-only/ENUMERATED-only/matched samples in
-      `layer_1.by_asset_group[ag].diagnostics`).
-      - Layer-2 (download): cefi 37.86% | defi 57.67% | tradfi 88.81% | sports 100.00% | prediction 22.46%
-      - Layer-1 (denominator, ALIGNED): cefi **65.91%** (29/44, missing=15, stray=118) | defi **69.44%** (75/108,
-        missing=33, stray=131) | tradfi **51.43%** (18/35, missing=17, stray=52) | sports **30.77%** (8/26, missing=18,
-        stray=24) | prediction **66.67%** (4/6, missing=2, stray=17). All INCOMPLETE; residual holes/strays are REAL
-        (verified via `--diagnose-layer1`):
-        - cefi: holes = OKX/KRAKEN-FUTURES perps captured under venue-suffix variants (OKX-SWAP) + BYBIT spot under
-          BYBIT-SPOT; strays = ASTER ohlcv_1m/liquidations (writer captures, MVP gate excludes).
-        - defi: holes = genuinely-absent protocols (EIGENLAYER/EULER_V2/BENQI/CONVEX/ACROSS); strays = writer itypes UAC
-          doesn't sanction (`a_token`, `liquidation`) + `swaps_ohlcv_*` data_types not in pool capabilities.
-        - tradfi: holes = YAHOO_FINANCE (un-gated, real) + CBOE/index ohlcv; strays = CME/ICE futures_chain trades/tbbo/
-          mbp_10/ohlcv_24h (real captured data_types UAC's tradfi matrix omits).
-        - sports: matched = (venue, odds, trades) for all 8 MVP venues; holes = bookmaker snapshot data_types
-          (markets/odds_snapshot/odds_movement/outcomes/settlements) not yet captured; strays = non-MVP bookmaker venues
-          (BETMGM/BOVADA/…) the writer captures beyond the UAC sports venue set.
-        - prediction: hole = MARKET_LIFECYCLE (real — absent from manifest); strays = POLYMARKET per-underlying-asset
-          partitions (btc/eth/…) + KALSHI book_snapshot_5 (real writer grain UAC doesn't enumerate).
-      - VERDICT per AG: all aligned, residual holes are REAL (not dialect artifacts). CK3 certification is the Opus
-        orchestrator's call from this evidence (NOT flipped here).
+          **Phase 1+2 v3 post-Bug3 (VOCABULARY/GRAIN ALIGNMENT) re-measure 2026-06-29 06:00 UTC** —
+          instruments-service@051e5a8. Bug 3: EXPECTED (UAC vocab) and ENUMERATED (manifest written vocab) were intersected
+          WITHOUT alignment → the prior 0%/14.9% were largely casing/vocab/format ARTIFACTS. Fix: intersect on a CANONICAL
+          comparison key (case-fold + UAC `_INSTRUMENT_TYPE_ALIASES` + `bundle_instrument_type_for_leaf` + defi
+          `VenueMapping._canonicalise_defi_protocol_spelling`+chain-strip) PLUS a (venue,itype) validity gate (cefi via
+          `venue_instrument_type_to_tardis`, defi via `PROTOCOL_CAPABILITIES.instrument_types`, tradfi via the codified
+          `_VENUE_INSTRUMENT_TYPE` map) to stop cross-product over-generation, PLUS sports re-grained to the writer
+          `instrument_type=odds` surface (the reference-data `league` surface lives in a different bucket → out of scope).
+          Added `--diagnose-layer1` mode (per-AG EXPECTED-only/ENUMERATED-only/matched samples in
+          `layer_1.by_asset_group[ag].diagnostics`).
+          - Layer-2 (download): cefi 37.86% | defi 57.67% | tradfi 88.81% | sports 100.00% | prediction 22.46%
+          - Layer-1 (denominator, ALIGNED): cefi **65.91%** (29/44, missing=15, stray=118) | defi **69.44%** (75/108,
+            missing=33, stray=131) | tradfi **51.43%** (18/35, missing=17, stray=52) | sports **30.77%** (8/26, missing=18,
+            stray=24) | prediction **66.67%** (4/6, missing=2, stray=17). All INCOMPLETE; residual holes/strays are REAL
+            (verified via `--diagnose-layer1`):
+            - cefi: holes = OKX/KRAKEN-FUTURES perps captured under venue-suffix variants (OKX-SWAP) + BYBIT spot under
+              BYBIT-SPOT; strays = ASTER ohlcv_1m/liquidations (writer captures, MVP gate excludes).
+            - defi: holes = genuinely-absent protocols (EIGENLAYER/EULER_V2/BENQI/CONVEX/ACROSS); strays = writer itypes UAC
+              doesn't sanction (`a_token`, `liquidation`) + `swaps_ohlcv_*` data_types not in pool capabilities.
+            - tradfi: holes = YAHOO_FINANCE (un-gated, real) + CBOE/index ohlcv; strays = CME/ICE futures_chain trades/tbbo/
+              mbp_10/ohlcv_24h (real captured data_types UAC's tradfi matrix omits).
+            - sports: matched = (venue, odds, trades) for all 8 MVP venues; holes = bookmaker snapshot data_types
+              (markets/odds_snapshot/odds_movement/outcomes/settlements) not yet captured; strays = non-MVP bookmaker venues
+              (BETMGM/BOVADA/…) the writer captures beyond the UAC sports venue set.
+            - prediction: hole = MARKET_LIFECYCLE (real — absent from manifest); strays = POLYMARKET per-underlying-asset
+              partitions (btc/eth/…) + KALSHI book_snapshot_5 (real writer grain UAC doesn't enumerate).
+          - VERDICT per AG: all aligned, residual holes are REAL (not dialect artifacts). CK3 certification is the Opus
+            orchestrator's call from this evidence (NOT flipped here).
 
 ---
 
 ## Progress Log
 
+- **2026-07-06** — **✅ Measurement track CLOSED** (via `layer1_remeasure_and_certify_2026_07_06` task 008). Phase 1
+  `[AGENT] P1. Consolidate the expected-universe producer` FLIPPED — landed as `instruments-service@681f50a` via
+  `cefi_layer1_denominator_gaps_2026_07_03.md` task 2a: `scripts/expected_universe.py::build_expected(asset_group)` is
+  now THE single public Layer-1 EXPECTED producer; `check_enumeration_completeness._build_expected_tuples` (and
+  `..._sports`) delegate via sibling-load; per-AG byte-identical goldens
+  (`tests/unit/scripts/goldens/expected_universe/{cefi,defi,tradfi,sports,prediction}.json` = 72/171/35/27/8 tuples) +
+  regression `test_expected_universe_golden.py` (14 tests) lock the EXPECTED matrix; QG green. The Phase 3 fold-in from
+  `instrument_universe_registry_consolidation_2026_06_29.md` is satisfied. Phase 2 `[UI] P2. drill-down` remains open
+  but **MOVED to `instruments_completion_tracker_2026_07_06.md` Stage 6** (last open honest_coverage_v2 item; too small
+  for its own AO plan, tracked as tracker hygiene singleton). All Phase 0/1/2 measurement items now complete; every
+  certified Layer-1 number per AG (cefi 73.61 · defi 94.81 · sports 30.77 · prediction 66.67; tradfi 51.43
+  STALE-BLOCKED-PLAN2) is landed in the sibling Layer-1 re-measure plan under tasks 002–006.
 - **2026-06-28** — Plan created (human-owned per operator). Live diagnostics captured from cefi prd manifest: catalogue
   Layer-1 clean (349,516 rows / 274,888 MVP / 0 false-delist/ghost/blank); Layer-2 real captured=2,920,384 (harness
   mis-reported 11.68% off a 20-day-stale bucket); af=610,205 (79% opaque `VENUE_FETCH_FAILED`); ec=1,743,268 (88%
