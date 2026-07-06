@@ -187,6 +187,17 @@ remains valid — no correctness blocker uncovered by this verification.
 
 ## Progress log
 
+- **2026-07-06** — **Item 3 RE-DISPATCHED 10TH TIME — PREREQ STILL NOT MET** (`BLK-c77f7c92`, slot-8 planning). Identical
+  pattern to the 9 prior PARKs today (BLK-b81e4231/2e75351f/f96a851f/b2595413/d5ac4b5b/3803f4fa/b7280ba5/0316d90e/3a65c6c0).
+  Verified against PM tip `8a8c91ae8` — line 638 of `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`
+  is still `- [ ] [CODE] P2` (dedup fix has not landed on LDR). Verified latest UTL commit touching `_merge_dataframes` is
+  `f5ec2291` (partial NULL==empty normalization only, NOT the v6-v9 shard-atom dedup this reconcile depends on). Task body
+  forbids the only action available outside the prereq (`"NOT a naive add"` / `"Do NOT hand-edit the dedup machine"`).
+  /blocked with `can_continue: false` awaiting /skip-current-task. **Systemic ask (10× today, ~100 min of slot-planning
+  boot windows consumed on the identical finding)**: operator to either (a) set `priority: 999` + add a `conditions:`
+  gate keyed on the LDR-landing of the dedup fix in `backlog.yaml`, OR (b) escalate the AO backlog schema NL-prereq
+  parsing to an epic. Every re-dispatch is a pure waste of a slot boot window on an item whose task body already says
+  "NOT a naive add" and whose prereq is trivially checkable against LDR.
 - **2026-07-06** — Issue filed. Root-caused HL InstrumentsHandler failure to a repeatable pd.NA-in-boolean bug via a
   DEBUG-log retry of 2024-09-12 (`is@LDR`). Classified the 12 non-ASTER cefi MVP AF cells into
   KNOWN_HANDLER_BUG_PD_NA (4) + RESOLVED_STALE_AF (8), plus the tradfi CME 7 as
