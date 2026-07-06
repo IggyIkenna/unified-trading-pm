@@ -132,12 +132,25 @@ source:
       under `MVP_CME_EXCHANGE_CODES`, `unified-api-contracts@registry/tradfi_instrument_universe.py:713-720`).
       Feeds Stage-3 denominator re-measure (Plan 4). instruments-service (fresh rollup landed via the shared
       `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet`).
-- [ ] [INFRA] P1. **B1 — instrument catalogue regen + un-pause the per-AG daily schedulers.**
-      `build_instrument_catalogue.py` + `catalogue_builder.py` exist; the Cloud Run jobs
-      `lifecycle-catalogue-regen-{cefi,defi,tradfi,sports,prediction}` exist but the `*-daily` SCHEDULERS are PAUSED
-      (last ran ~2026-06-11/15, pre-backfill, STALE). Re-run the regen jobs per AG → verify the catalogue reflects the
-      full deduped instrument lifecycle (genesis/first-seen/last-seen) → decide cadence + un-pause (or keep manual).
-      **PREREQ: B0 landed.** Gate: fresh catalogue per AG; scheduler cadence decided + applied.
+- [x] ✅ [INFRA] P1. **B1 — instrument catalogue regen + un-pause the per-AG daily schedulers** (slot-12 opus/max
+      2026-07-06). Gate satisfied: **task premise was stale** — the schedulers had already been un-paused between
+      2026-06-23 (deployment-service@9b74416 tradfi 32Gi→16Gi + timeout 1800→3600) and 2026-06-29
+      (instruments-service@b0596d0 Phase-3 incremental `--mode incremental` default + weekly `--mode full` self-heal
+      via deployment-service@c1d2e3e). CURRENT-STATE verification (2026-07-06T16:40 UTC): all 5
+      `lifecycle-catalogue-regen-{cefi,defi,tradfi,sports,prediction}-daily` schedulers **ENABLED** and ran successfully
+      today 2026-07-06T01:00 UTC — daily runtimes cefi 2m1s · defi 1m36s · tradfi 3m59s · sports 1m14s · prediction
+      1m57s (all well under the 3600s daily-job timeout — Phase-3 incremental made the tradfi walk ~90s per the
+      1800→3600 tf comment; observed 4m confirms). Weekly `lifecycle-catalogue-full-{cefi,defi,tradfi,prediction}-weekly`
+      self-heal (Sat 03/04/05/06:00 UTC, no sports) ran 2026-07-04 successfully — cefi 1h50m · defi 42m · tradfi 2h33m
+      · prediction 18m (all under the 6h `timeout_seconds=21600` ceiling). All 5 `prod/catalog.parquet` FRESH today
+      2026-07-06: cefi 4.42MiB (11:37Z — cascade regen), defi 992kiB (01:01Z daily), tradfi 10.07MiB (15:48Z —
+      Plan-2-task-8 CME EC\* rollup on top of daily), sports 11.74kiB (01:01Z daily), prediction 103.24MiB (01:02Z
+      daily). Sample content check on defi (smallest): 7,279 rows × 17 cols
+      {instrument_id, instrument_type, venue, chain, ..., available_from, available_to, ..., mvp}; 20+ venues
+      (AAVE_V3..ORCA); available_from 1970-01-01..2026-07-05 (lifecycle range as expected). **Scheduler cadence
+      decided + applied**: daily incremental 01:00 UTC per-AG + weekly full self-heal Sat 03/04/05/06 UTC (cefi/defi/
+      tradfi/prediction) — enforced via `terraform/gcp/lifecycle_catalogue_scheduler.tf`. **No code change needed for
+      this gate**; the plan checkbox flips on verification. deployment-service / instruments-service (unchanged).
 - [ ] [CODE] P1. **B2 downstream — wire the enumerator to the TOTAL_UNIVERSE_AXES SSOT.** The UAC SSOT is SHIPPED
       (`unified-api-contracts@b654eb6` — `canonical/crosscutting/total_universe.py`: `TOTAL_UNIVERSE_AXES`,
       `UniverseProvenance`, `UniverseTier` + `universe_membership()` MVP⊆TOTAL). Wire `enumerate_expected_universe.py`
@@ -161,6 +174,25 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **B1 FLIPPED (slot-12 opus/max).** Verification-only close: task premise was stale — the daily
+  `lifecycle-catalogue-regen-{cefi,defi,tradfi,sports,prediction}-daily` schedulers were already un-paused
+  between 2026-06-23 (deployment-service@9b74416: tradfi 32Gi→16Gi/cpu4 + timeout 1800→3600 after the durable
+  `_bounded_parallel_load` memory-bound landed) and 2026-06-29 (instruments-service@b0596d0: Phase-3 incremental
+  trailing-window + frozen-tail default; deployment-service@c1d2e3e: weekly `--mode full` self-heal jobs
+  `lifecycle-catalogue-full-*`, 6h timeout, staggered Sat 03/04/05/06 UTC cefi/defi/tradfi/prediction). Current
+  state read 2026-07-06T16:40 UTC via `gcloud scheduler jobs list` + `gcloud run jobs executions list`: all 5
+  daily schedulers ENABLED, ran today 2026-07-06T01:00Z with runtimes cefi 2m1s · defi 1m36s · tradfi 3m59s
+  · sports 1m14s · prediction 1m57s (all well within the 3600s daily budget — the operator-declined "band-aid"
+  timeout bump is moot; Phase-3 incremental won cleanly). Weekly full self-heal ran 2026-07-04 successfully
+  (cefi 1h50m · defi 42m · tradfi 2h33m · prediction 18m — all under the 21600s ceiling). All 5
+  `gs://instruments-store-<ag>-prd/prod/catalog.parquet` fresh today; defi sample: 7,279 rows × 17 lifecycle
+  cols spanning available_from 1970-01-01..2026-07-05 as expected. Scheduler cadence decided + applied per
+  `terraform/gcp/lifecycle_catalogue_scheduler.tf` (daily incremental 01:00 UTC + weekly full Sat AM). **No code
+  change needed for B1**; the checkbox flips on verification. **Note on BLOCKED-OPERATOR-DECISION line item** —
+  the Phase-3 incremental design has shipped end-to-end, so the operator-declined band-aid vs Phase-3 dilemma
+  is empirically defused; leaving as `- [ ]` for operator to formally close per the plan header guardrail (do
+  not silently re-enable a scheme the operator declined; but reality is Phase-3 shipped, not the band-aid).
 
 - **2026-07-06** — **CME EC\* event-contract backfill FLIPPED (slot-2 opus/max).** Gate satisfied by
   the same tradfi catalogue rollup landed via Plan 2 task 8 (`catalogue-rollup-tradfi-20260706T154714Z`,
