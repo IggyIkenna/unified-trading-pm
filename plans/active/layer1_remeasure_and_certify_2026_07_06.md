@@ -106,8 +106,18 @@ source:
       `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` blob.updated
       2026-07-06T15:11:42Z (13,515,019 rows), merged 10,828,935 rows. Evidence artefact (local):
       `/home/ubuntu/coverage_defi_20260706T151304Z.json`.
-- [ ] [VERIFY] P0. **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue (Plan 2), record the
-      fresh tradfi denominator + %. Gate: tradfi number recorded; all 5 AGs now canonical-and-measured.
+- [ ] 🚧 **BLOCKED-PLAN2** [VERIFY] P0. **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue
+      (Plan 2), record the fresh tradfi denominator + %. Gate: tradfi number recorded; all 5 AGs now
+      canonical-and-measured. **STATUS 2026-07-06 15:20 UTC — BLOCKED-PLAN2** (main-agent answer to `BLK-ab86f4e9`,
+      task 004 pickup): the tradfi IS catalogue rebuild (`build_instrument_catalogue.py` tradfi), the manifest rebuild
+      (`rebuild_tradfi_manifest.py`), and the E7 CF verify — all Plan 2 (`tradfi_v9_stage1_finish_2026_07_06`) tasks
+      2-11 — have NOT landed (only Plan 2 task 1 done: 2026-year v9 migration). Running
+      `measure_honest_coverage --asset-group tradfi` NOW would certify against the stale pre-v9 catalogue + un-rebuilt
+      manifest — a Layer-1 number that will move again once Plan 2 lands, defeating the point of certification (the
+      plan's own HARD guard: "do not certify a suspicious measure" applies analogously to pre-prereq measures). Gate
+      unresolvable from this task; DEFERRED until Plan 2 lands. Re-dispatch this task after
+      `tradfi_v9_stage1_finish_2026_07_06` tasks 2-11 flip (in particular the IS catalogue build + manifest rebuild +
+      E7 verify) — the operator/main agent controls re-queue timing.
 - [ ] [VERIFY] P0. **Certify prediction Layer-1** — post the KALSHI-PERP purge, record the fresh prediction
       denominator + %. Gate: prediction number recorded; no fake KALSHI-PERP rows in the measure.
 - [ ] [VERIFY] P1. **Reconcile the certified Layer-1 set against the Layer-2 lower bounds** — flag any AG where the
@@ -123,6 +133,15 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **🚧 Task 004 DOCUMENTED as BLOCKED-PLAN2** — tradfi Layer-1 certification cannot proceed until
+  Plan 2 (`tradfi_v9_stage1_finish_2026_07_06`) tasks 2-11 land (IS catalogue rebuild, manifest rebuild, E7 CF verify).
+  Currently Plan 2 has only 1/11 done (2026 v9 migration). Running the measurement now would certify against the stale
+  pre-v9 catalogue and re-measure again after Plan 2 → wasted certification. Escalated as `BLK-ab86f4e9`; main-agent
+  answer confirmed: "do NOT certify tradfi Layer-1 yet … tradfi Layer-1 measurement at this point would read stale
+  data". Checkbox annotated 🚧 BLOCKED-PLAN2 (not `[x]`); tracker Snapshot left with tradfi at 51.43 [06-29 stale]
+  (unchanged). Re-dispatch this task after Plan 2 rebuilds land — dispatcher's `gate_on_depends: true` should be
+  reviewed as per-plan-task granularity is not currently enforced (task 003 defi + task 002 cefi were correctly
+  dispatched despite tradfi PREREQ, but task 004 was ALSO dispatched despite the tradfi-specific Plan 2 PREREQ).
 - **2026-07-06** — **✅ Task 003 CERTIFIED — defi Layer-1 = 94.81%** (fresh local
   `measure_honest_coverage.py --asset-group defi` run at 2026-07-06 15:13 UTC on `is@681f50a` post-D1 defi seeding;
   primary manifest `gs://market-data-tick-defi-prd-central-element-323112` blob.updated 2026-07-06T15:11:42Z, 13,515,019
