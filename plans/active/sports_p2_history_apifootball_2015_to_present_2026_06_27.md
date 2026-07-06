@@ -129,7 +129,7 @@ drift_direction: advance-code
       was 52,747 due to consolidator activity since session 7). Snapshot at
       `gs://instruments-store-sports-prd-central-element-323112/_index/snapshots/availability_index_20260628_213954.parquet`.
       Gate verified: 0 phantom EU rows. unified-trading-pm@TODO
-- [ ] [VERIFY] P2. **Enrichment data_type cleanliness** — after Todo 5 enrichment backfill completes + Todo 8 dedup
+- [ ] [PARKED — coordinator running PID 3837082] [VERIFY] P2. **Enrichment data_type cleanliness** — after Todo 5 enrichment backfill completes + Todo 8 dedup
       pass, query IS index for FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES/STANDINGS/TEAMS: 0 pending-fetch
       (canonical leagues, within coverage windows), 0 blank-reason. **Gate**: all AF enrichment data_types show
       `expected_unattempted_pending_fetch == 0` for coverage dates.
@@ -763,3 +763,39 @@ Gate: FAILS — 387,337 total EU across 7 enrichment types. Checkbox NOT flipped
 
 **BLOCKED-PREREQ**: Gate cannot pass until coordinator completes all 7 entities. ETA: many days.
 Checkbox NOT flipped.
+
+### 2026-07-06 — slot 2 (session 16 — Todo 9: coordinator re-launched PID 3837082)
+
+**Gate check (12:26 UTC, index 4,999,521 rows)**:
+
+| Data Type | Coverage Start | captured | EC | AF | EU (pending) | Gate |
+|---|---|---|---|---|---|---|
+| FIXTURE_EVENTS | 2020-06-06 | 11,587 | 154,745 | 11 | 49,070 | ❌ |
+| FIXTURE_LINEUPS | 2020-06-06 | 13,321 | 150,103 | 31 | 51,777 | ❌ |
+| FIXTURE_STATS | 2020-06-06 | 8,405 | 154,195 | 80 | 51,908 | ❌ |
+| PLAYER_STATS | 2020-06-06 | 12,293 | 163,586 | 74 | 39,941 | ❌ |
+| INJURIES | 2021-01-01 | 8,837 | 169,958 | 1,884 | 13,178 | ❌ |
+| STANDINGS | 2018-01-01 | 90,169 | 198,791 | 0 | 8,996 | ❌ |
+| TEAMS | 2018-01-01 | 103,606 | 0 | 19 | 194,331 | ❌ |
+
+**Total EU: ~409,201** | Blank-reason AF: 0 ✅
+
+**Coordinator PID 991495 (session 15) — DEAD at INJURIES chunk 32 (2023-07-20→2023-08-18, 05:21 UTC 2026-07-03)**:
+Root cause: coordinator bash process killed externally (SIGHUP/SIGTERM, likely tmux session or OOM). The IS venv
+was missing in `.tabs/2/instruments-service/` (no `.venv/` present in slot 2 worktree), which also caused
+immediate crash when re-launched from slot 2's script dir. Fix: run coordinator from MAIN WORKSPACE
+instruments-service dir (has `.venv/bin/instruments-service`).
+
+**Coordinator re-launched (PID 3837082, 12:32 UTC 2026-07-06)**:
+```bash
+GCP_PROJECT_ID=central-element-323112 PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd \
+nohup bash /home/ubuntu/unified-trading-system-repos/instruments-service/scripts/run_sports_enrichment_core_p2a_2026_06_27.sh \
+  > /tmp/sports_p2a_enrichment_core_20260706_resume.log 2>&1 &
+# PID 3837082, confirmed ALIVE at 12:33 UTC (INJURIES chunk 1 completed, chunk 2 running)
+```
+Log: `/tmp/sports_p2a_enrichment_core_20260706_resume.log`
+Chunk logs: `/tmp/sports-p2a-injuries-20260706-123220/`, `/tmp/sports-chunked-api_football_injuries/`
+
+**BLOCKED-PREREQ**: Gate cannot pass until coordinator completes all 7 entities. TEAMS alone has 194,331 EU.
+ETA: many days. Coordinator re-launched from main workspace IS (has venv). Checkbox NOT flipped.
+Re-park task until all EU counts reach 0.
