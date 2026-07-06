@@ -117,11 +117,14 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 
 ## 📊 Snapshot (2026-07-06)
 
-- **Certified Layer-1 (denominator) — cefi CERTIFIED 2026-07-06 post-D2a; others still 06-29 STALE (pending re-measure
-  Stage 3):** cefi **73.61** (72 expected / 53 present / 19 missing / 87 stray; `is@03cfd0f`,
-  `layer1_remeasure_and_certify` task 002) · defi 69.44 [06-29 stale] · tradfi 51.43 [06-29 stale] · sports 30.77 [06-29
-  stale] · pred 66.67 [06-29 stale]. _(Upper bounds where UAC under-specifies.)_
-- **Layer-2 lower bounds (capture):** cefi 37.86 · defi 57.55 · tradfi 88.81 · sports 100 · pred 20.56.
+- **Certified Layer-1 (denominator) — cefi + defi CERTIFIED 2026-07-06; tradfi/sports/pred still 06-29 STALE (pending
+  re-measure Stage 3):** cefi **73.61** (72 expected / 53 present / 19 missing / 87 stray; `is@03cfd0f`,
+  `layer1_remeasure_and_certify` task 002) · defi **94.81** (77 expected / 73 present / 4 missing / 128 stray;
+  `is@681f50a` post-D1 seeding, denominator SHRANK 108→77 via `is@3bb7acd` defi lending grain roll-up 2026-07-03;
+  `layer1_remeasure_and_certify` task 003) · tradfi 51.43 [06-29 stale] · sports 30.77 [06-29 stale] · pred 66.67 [06-29
+  stale]. _(Upper bounds where UAC under-specifies.)_
+- **Layer-2 lower bounds (capture):** cefi 37.86 · defi **62.06** [fresh post-D1 seeding; expected_unattempted 1,534,304
+  confirms +1.38M in denominator, up from 57.55 stale] · tradfi 88.81 · sports 100 · pred 20.56.
 - **DONE already:** denominator **generation** (catalogue built + self-refreshing) · Issue-4 strays · 4/5 AG v9
   `--apply` · opus-checkpoints + registry-consolidation (archived).
 - **REMAINING (this tracker):** denominator **correctness + certification** → then **capture**.
@@ -284,6 +287,21 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **defi Layer-1 CERTIFIED — 94.81% fresh** (via `layer1_remeasure_and_certify_2026_07_06` task 003).
+  Ran `measure_honest_coverage.py --asset-group defi` locally at 2026-07-06 15:13 UTC on `is@681f50a` (post-D1 +1.38M
+  seeding); primary manifest `gs://market-data-tick-defi-prd-central-element-323112` blob.updated 2026-07-06T15:11:42Z,
+  13,515,019 rows; merged 10,828,935 rows. Result: **expected_tuples 77 / present_tuples 73 / missing 4 / stray 128 →
+  94.81%.** Honest direction ✓ — 69.44 stale (06-29) → 94.81 fresh; denominator SHRANK 108→77 (-31 tuples) driven by
+  `is@3bb7acd` (defi lending grain roll-up folds `a_token`/`debt_token`/`liquidation` → `lending` in Layer-1 canon,
+  2026-07-03) — legitimate schema tightening, NOT a wrong-direction shrink. **D1 seeding VERIFIED in Layer-2:**
+  `by_asset_group.defi.expected_unattempted = 1,534,304` — the +1,380,376-row apply landed in the reachable denominator.
+  Layer-2 defi rollup: coverage_pct **62.06%** (captured 2,857,320 / reachable 4,603,799; empty_confirmed 6,225,136;
+  attempted_failed 212,175; total 10,828,935; layer1_completeness_pct 94.81; denominator_status INCOMPLETE — 4 tuples
+  still missing so Layer-2 stays a lower bound but tightened +4.51 pp vs 57.55 stale). 4 missing tuples all one venue
+  (EIGENLAYER-ETHEREUM spot_asset {eigenlayer_rewards, oracle_prices, rewards, staking_yields}) — indicates one
+  unwired handler/venue not four independent gaps. Task 001 (multi-AG re-run) NOT flipped by this task — its cross-plan
+  PREREQs (KALSHI-PERP purge · Plan 5 unregistered-handler audit) primarily affect cefi/prediction Layer-2, not defi
+  Layer-1. Snapshot updated above; evidence artefact (local): `/home/ubuntu/coverage_defi_20260706T151304Z.json`.
 - **2026-07-06** — **cefi Layer-1 CERTIFIED — 73.61% fresh** (via `layer1_remeasure_and_certify_2026_07_06` task 002).
   Ran `measure_honest_coverage.py --asset-group cefi` locally at 2026-07-06 15:01 UTC on `is@03cfd0f` (post-D2a);
   primary manifest `gs://market-data-tick-cefi-prd-central-element-323112` blob.updated 2026-07-06T14:55Z, merged

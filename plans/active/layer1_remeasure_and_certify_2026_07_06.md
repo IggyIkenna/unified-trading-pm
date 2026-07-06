@@ -89,8 +89,23 @@ source:
       catalogue); primary manifest
       `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` blob.updated
       2026-07-06T14:55Z, merged 11,125,247 rows.
-- [ ] [VERIFY] P0. **Certify defi Layer-1** — post the +1.38M seeding, record the fresh defi denominator + %. Gate: defi
+- [x] ✅ [VERIFY] P0. **Certify defi Layer-1** — post the +1.38M seeding, record the fresh defi denominator + %. Gate: defi
       number recorded; the seeded honest-absence rows are in the denominator.
+      **CERTIFIED 2026-07-06 15:13 UTC: defi Layer-1 = 94.81% (present 73 / expected 77; 4 missing tuples; 128 stray).**
+      Direction ✓ — 69.44 (stale 06-29) → 94.81 (fresh, honest); denominator shrank 108→77 (-31 tuples) driven by
+      `is@3bb7acd` (defi lending grain roll-up: `a_token`/`debt_token`/`liquidation` → `lending` in Layer-1 canon,
+      2026-07-03) — legitimate schema tightening, NOT a suspicious measure. **Layer-2 seeding VERIFIED:**
+      `expected_unattempted=1,534,304` (Layer-2 rollup, `by_asset_group.defi.expected_unattempted`) — 1.38M seeded
+      honest-absence rows land in the reachable denominator (up from the pre-seeding baseline; D1 = 1,380,376-row apply
+      confirmed present). Layer-2 rollup: defi coverage_pct 62.06% (captured 2,857,320 / reachable 4,603,799; empty_confirmed
+      6,225,136; attempted_failed 212,175; total 10,828,935; layer1_completeness_pct 94.81; instrument_gates_download True).
+      Missing tuples (all EIGENLAYER-ETHEREUM spot_asset): eigenlayer_rewards, oracle_prices, rewards, staking_yields.
+      Stray tuples (first 5): AAVE_V3 a_token {oracle_prices, utilization}, AERODROME_V3 pool {dex_swaps, swaps_ohlcv_15m,
+      swaps_ohlcv_15s}. Evidence: local `.venv/bin/python scripts/measure_honest_coverage.py --asset-group defi` run at
+      2026-07-06 15:13 UTC on `is@681f50a` (post-D1 seeding); primary manifest
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` blob.updated
+      2026-07-06T15:11:42Z (13,515,019 rows), merged 10,828,935 rows. Evidence artefact (local):
+      `/home/ubuntu/coverage_defi_20260706T151304Z.json`.
 - [ ] [VERIFY] P0. **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue (Plan 2), record the
       fresh tradfi denominator + %. Gate: tradfi number recorded; all 5 AGs now canonical-and-measured.
 - [ ] [VERIFY] P0. **Certify prediction Layer-1** — post the KALSHI-PERP purge, record the fresh prediction
@@ -108,6 +123,25 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **✅ Task 003 CERTIFIED — defi Layer-1 = 94.81%** (fresh local
+  `measure_honest_coverage.py --asset-group defi` run at 2026-07-06 15:13 UTC on `is@681f50a` post-D1 defi seeding;
+  primary manifest `gs://market-data-tick-defi-prd-central-element-323112` blob.updated 2026-07-06T15:11:42Z, 13,515,019
+  rows; merged 10,828,935 rows). Result: **expected_tuples 77, present_tuples 73, missing 4, stray 128 → 94.81%.**
+  Direction ✓ — 69.44 (stale 06-29) → 94.81 (fresh, honest); denominator SHRANK 108→77 (-31 tuples) driven by
+  `is@3bb7acd` (2026-07-03: defi lending grain roll-up folds `a_token`/`debt_token`/`liquidation` → `lending` in
+  Layer-1 canon — legitimate schema tightening, NOT a wrong-direction move). All 4 missing tuples on the same venue
+  (EIGENLAYER-ETHEREUM spot_asset): `eigenlayer_rewards`, `oracle_prices`, `rewards`, `staking_yields` — indicates one
+  unwired handler/venue not four independent gaps. Stray tuples (first 5): AAVE_V3 a_token
+  {oracle_prices, utilization}, AERODROME_V3 pool {dex_swaps, swaps_ohlcv_15m, swaps_ohlcv_15s}. **Layer-2 seeding
+  VERIFIED (task Gate satisfied):** `by_asset_group.defi.expected_unattempted = 1,534,304` — the D1 +1,380,376-row apply
+  landed in the reachable denominator. Layer-2 defi rollup: coverage_pct 62.06% (captured 2,857,320 / reachable
+  4,603,799; empty_confirmed 6,225,136; attempted_failed 212,175; total 10,828,935; layer1_completeness_pct 94.81;
+  denominator_status INCOMPLETE — 4 tuples still missing so Layer-2 stays a lower bound but tightened vs 57.55 stale).
+  Task 001 (multi-AG re-run) not flipped — task 001's cross-plan PREREQs (KALSHI-PERP purge, Plan 5 unregistered-handler
+  audit) primarily affect **prediction/cefi** Layer-2 correctness, not defi Layer-1; my single-AG defi run satisfies
+  task 003's Gate independently. Remaining Layer-1 certifications (004 tradfi · 005 pred) queued and gated on their
+  respective plans (tradfi migration follow-on, KALSHI-PERP purge). Evidence artefact (local):
+  `/home/ubuntu/coverage_defi_20260706T151304Z.json`.
 - **2026-07-06** — **✅ Task 002 CERTIFIED — cefi Layer-1 = 73.61%** (fresh local
   `measure_honest_coverage.py --asset-group cefi` run at 2026-07-06 15:01 UTC on `is@03cfd0f` post-D2a; primary manifest
   `gs://market-data-tick-cefi-prd-central-element-323112` blob.updated 2026-07-06T14:55Z; merged 11,125,247 rows).
