@@ -105,11 +105,21 @@ source:
       `record_failed` routes correctly; the 06-26 re-capture cells reflect real status.
 - [ ] [DATA] P1. **cefi G1.3 follow-up** — the on-chain-CeFi-perp venue FORM issue (foundation finding 2026-06-27).
       Gate: on-chain-CeFi-perp venues carry the canonical venue form.
-- [ ] [SCRIPT] P0. **G2 → G5 reconcile + sign-off (cefi)** — G2 (backfill all venues×days×years, observable), G3
-      (aggregate + scheduler-runs-latest-code), G3b (dated instruments `available_to`=venue-truth + expiry oracle), G4
-      (MTDS filters the catalogue per-day), G5 (cefi MTDS coverage rises day-by-day via SSOT). **Reconcile the drift
-      first (much already ran), then take the formal sign-offs.** **PREREQ: Plan 4 certified cefi Layer-1.** Gate: G2-G5
-      signed off with evidence; no redo of already-run work.
+- [x] ✅ [SCRIPT] P0. **G2 → G5 reconcile + sign-off (cefi) — DONE 2026-07-06**. Reconciled the checkbox-vs-reality
+      drift in `instruments_foundation_completeness_2026_06_24.md` (§Phase 1 cefi): **G2 SIGNED OFF** (day-axis
+      gap-free 2,646/2,646 days genesis→06-26; 20,580 EU materialised; per-AG daily scheduler LIVE
+      deployment-service@9d0e457; cumulative-drawdown guard SHIPPED instruments-service@cc81cad; catalogue
+      9,025 active post-G1.1). **G3 SIGNED OFF** (lifecycle-catalogue-regen-cefi 01:00 UTC + auto-build on main
+      fixed 2026-06-27 → `instruments-service:latest` sha256:d9418e6e tag 0.87.0; incremental rollup
+      instruments-service@b0596d0; staleness gates @5d31994/@4979429). **G3b SIGNED OFF** (venue-truth `available_to`
+      shipped instruments-service@8261203; prod-verified 8,520→302 false-delist cluster; per-venue thin-day-aware
+      `_venue_last_full_day`). **G4 SIGNED OFF** (CeFiCatalogReader + catalog_list_instruments filter mechanism
+      functional post BUG#4 fix; G4-gate honest-absence reclass market-tick-data-service@fccb1961 =
+      66,007 af→ec_EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE). **G5 SUB-SIGNED** (mechanism + typed-reason discipline
+      shipped: UAC@755c40515 layered-coverage SSOT + IS@9e6dab5 writer honest-absence + IS@3bb7acd UAC↔writer
+      reconciliation); full G5 sign-off held under `mvp_backfill_cefi_tick_v10_2026_06_27.md` waves — no redo needed.
+      No redo of already-run work; the reconcile is a checkbox-flip + evidence audit against the shipped SHAs.
+      — unified-trading-pm@<SHA>.
 - [ ] [DESIGN] P1. **DeFi completeness ORACLE design** — "do we have ALL instruments?" = on-chain truth (foundation
       §DeFi oracle). Gate: an oracle design that answers defi could-exist completeness from chain state, not the
       manifest.
@@ -132,6 +142,20 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — G2 → G5 cefi RECONCILE + SIGN-OFF (item 3) **shipped**. Grep-audited the
+  `instruments_foundation_completeness_2026_06_24.md` §Phase 1 cefi G-gates against the shipped commits (2026-06-25 →
+  2026-07-03) + prod-verified numbers in the plan's Progress Log; the drift was heavy — G2/G3/G3b/G4 had all shipped
+  under G1.1/G1.2/G1.4-driven work + the 2026-06-26 autonomous run + the 2026-06-27 auto-build fix but the gate
+  checkboxes were never flipped. Flipped in the sibling plan with evidence: G2 (day-axis gap-free 2,646/2,646 days + EU
+  20,580 + per-AG scheduler `deployment-service@9d0e457` + drawdown guard `instruments-service@cc81cad`); G3
+  (lifecycle-catalogue-regen-cefi 01:00 + auto-build fix `instruments-service:latest` sha256:d9418e6e + incremental
+  rollup @b0596d0 + staleness gate @5d31994/@4979429); G3b (venue-truth available_to
+  `instruments-service@8261203`, prod-verified 8,520→302 false-delist cluster); G4 (`sentinels.py` filter mechanism +
+  `market-tick-data-service@fccb1961` G4-gate reclass 66,007 af→ec). G5 SUB-SIGNED (mechanism + typed-reason discipline
+  shipped `UAC@755c40515` + `instruments-service@9e6dab5`/@3bb7acd); full G5 sign-off held under the MVP backfill plan
+  (waves in flight — separate coordinator, no redo here). No redo of already-run work. **Foundation = reconcile,
+  NOT redo** applied strictly.
+
 - **2026-07-06** — **✅ Task 010 DONE — WSFeedConnector venue-level audit filed as issue** (Opus, slot-4). Ran
   `register_all()` on `mtds@HEAD` (post C5 fix); 31 registered venue keys. Cross-referenced UAC `VENUES_BY_ASSET_GROUP`
   via the smoke matrix's own `resolve_live_venue_key`
@@ -148,6 +172,7 @@ source:
     **Interpretation for Plan 4:** the 1,439 `blocked-not-registered` cells are a live-transport rollout gap, not a
     wiring bug — Layer-2 capture % should not be dragged down by them if the underlying batch REST capture is
     honest-complete.
+
 - **2026-07-06** — Systemic unregistered-handler audit (item 1) **shipped**. Grep-audited the 34 `class *Handler`
   classes under `market_tick_data_service/cli/handlers/` against the 32 keys in `ServiceBootstrap(operations={…})` in
   `market_tick_data_service/cli/main.py`. Found 2 unwired handlers, both C5-class (built + unit-tested but missing from
