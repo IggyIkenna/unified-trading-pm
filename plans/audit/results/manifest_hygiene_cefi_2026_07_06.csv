@@ -1,7 +1,25 @@
 asset_group,finding,event,detail
-cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"  DIVERGENT_EMPTY                            23,451 ❌"
-cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-07-06 19:36:14,182 WARNING DIVERGENT_EMPTY asset_group=cefi venue=UPBIT data_type=book_snapshot_5 date=2024-12-29"
-cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-07-06 19:36:14,182 WARNING DIVERGENT_EMPTY asset_group=cefi venue=UPBIT data_type=book_snapshot_5 date=2024-12-30"
-cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,82 WARNING DIVERGENT_EMPTY asset_group=cefi venue=UPBIT data_type=book_snapshot_5 date=2024-12-28
-cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"DIVERGENT_EMPTY:  23,451"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"BINANCE-FUTURES/book_snapshot_5 1,481"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"BINANCE-FUTURES/futures_chain 2,334"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,BITFINEX-FUTURES/book_snapshot_5 792
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,BITFINEX-FUTURES/trades 794
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,BYBIT/book_snapshot_5 870
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"BYBIT/futures_chain 1,968"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,DERIBIT/futures_chain 808
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"OKX-FUTURES/book_snapshot_5 1,425"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"OKX-FUTURES/trades 1,073"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"OKX-SWAP/book_snapshot_5 1,751"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"BITGET-SPOT/book_snapshot_5 2,466"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"BITGET-SPOT/trades 2,466"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"BYBIT-SPOT/book_snapshot_5 2,381"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"BYBIT-SPOT/trades 2,381"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"COINBASE-FUTURES/book_snapshot_5 2,615"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"COINBASE-FUTURES/derivative_ticker 2,615"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"COINBASE-FUTURES/futures_chain 2,615"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"COINBASE-FUTURES/liquidations 2,615"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"COINBASE-FUTURES/trades 2,615"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"OKX-SPOT/book_snapshot_5 2,455"
+cefi,phantom_captured_no_parquet,DP_PHANTOM_ROWS,"2026-07-06 22:41:55,406 INFO   Phantom captures: 0  ← will flip to attempted_failed"
+cefi,phantom_captured_no_parquet,DP_PHANTOM_ROWS,"2026-07-06 22:41:55,406 INFO No phantoms found and nothing to unphantom. Manifest is clean."
 cefi,schema_version_not_v9,DP_NOT_V9,"344842/7219598 rows non-v9 (legacy_version=344842, missing=0, contaminated=0); dist={'9': 6874756, '5': 178484, '6': 132960, '4': 33398}"
+cefi,shard_4pillar_fail,DP_SHARD_PILLAR_FAIL,"2026-07-06 22:42:18,868 INFO   tallies: {'checked': 32, 'green': 32, 'p1_fail': 0, 'p2_fail': 0, 'p3_fail': 0, 'p4_fail': 0, 'errors': 0} | manifest_phantom_captured_zero_rows=0"
