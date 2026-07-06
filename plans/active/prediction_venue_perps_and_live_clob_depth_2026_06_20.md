@@ -1,15 +1,22 @@
 ---
 doc_type: plan
 title: Kalshi + Polymarket perpetual futures + live CLOB depth/quotes (funding/basis/dispersion arb)
-summary: Add Kalshi and Polymarket perpetual futures to the crypto-perp universe and capture live CLOB depth/quotes for funding-rate arb and basis trading.
+summary:
+  Add Kalshi and Polymarket perpetual futures to the crypto-perp universe and capture live CLOB depth/quotes for
+  funding-rate arb and basis trading.
 status: active
 nature: process
 asset_group: [prediction, cefi]
 stage: [meta]
-repos: [agent-orchestrator, deployment-api, deployment-service, e2e-testing, features-service, fund-administration-service]
+repos:
+  [agent-orchestrator, deployment-api, deployment-service, e2e-testing, features-service, fund-administration-service]
 scope: [engineer, admin]
 tags: [prediction, kalshi, polymarket, perps, clob, live-data, arb, funding-rate, basis]
-related: []
+related:
+  [
+    plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
+    plans/active/prediction_capture_incident_remediation_2026_07_06.md,
+  ]
 created: 2026-06-20
 parent_epic: predictions_master
 assigned_vm: NA
@@ -18,7 +25,7 @@ priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8
-last_updated: 2026-06-27
+last_updated: 2026-07-06
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
@@ -45,6 +52,24 @@ out of the box. Do NOT route them through the prediction question-group canonica
 work, `instruments_mtds_subset_consistency_remediation_2026_06_17.md`). New venue tokens: `KALSHI_PERP` =
 `"KALSHI-PERP"` and `POLYMARKET_PERP` = `"POLYMARKET-PERP"` (distinct from prediction `KALSHI`/`POLYMARKET`). Resolved
 in P0 research — confirmed separate API infra and product lines.
+
+> **🟡 CORRECTION (2026-07-06 — read before trusting "Kalshi-perp verified"/"COMPLETE" below).** The Phase-1 P1 item's
+> "Kalshi live endpoint verified" and the "PERPS WORKSTREAM COMPLETE for Kalshi-perp end-to-end" entry are **WRONG**.
+> `KalshiPerpReferenceDataAdapter` (`cefi/kalshi_perp.py`, IS@fdc9bad) queries
+> `api.elections.kalshi.com/trade-api/v2/markets?category=Crypto&status=open` — the **binary EVENTS host**, not a perps
+> API. Live-probed 3,000 markets across every crypto series: **100% `market_type=binary`, 0 tickers containing "PERP"**.
+> This is the SAME `category` param ignored / KXMVE-flood mechanism this plan already diagnosed for the sibling
+> **prediction** Kalshi adapter (see the "P1 Kalshi canonical grouping — the premise was STALE" entry below) — it just
+> never got checked against `cefi/kalshi_perp.py` too, and there the flood has no `OTHER` bucket to land in: every KXMVE
+> binary event got mislabeled `instrument_type=PERPETUAL` and written straight into the **cefi catalogue** — **25,473
+> fake rows** (found + purged 2026-07-06). The adapter is now **guarded to emit 0** (`_REPOINT_PENDING`,
+> instruments-service@c8c6dac76) until it is repointed to Kalshi's actual authenticated margin/perps API
+> (`external-api.kalshi.com/trade-api/v2/margin/`) — a DIFFERENT host this plan never probed. **Consequence for this
+> plan:** the "COMPLETE" claim covering batch trades+funding / live CLOB ws / strategy archetype bundling for
+> KALSHI-PERP was built on an enumerator that returns 0 real perpetuals — those downstream layers should be re-verified
+> against a repointed adapter, not assumed correct. Full evidence, the live probe, and the fix:
+> `plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`. Dated entry with full detail at the
+> end of this plan's Progress Log. (Not fixing the repoint here — that's this plan's/owner's call; flagging only.)
 
 ## Phase 0 — API research (verify before building; no false premises)
 
@@ -1252,9 +1277,9 @@ already on LDR.
       group at axis-1. 73 tests pass. Politics P2 gap remains (its own open todo). 2026-06-26.
 - [ ] [DESIGN] P2. **Per-instrument same-game/same-settlement arb PAIRING within a shared cqg group** — the cqg is the
       CATEGORY (discovery); the actual arb pair is two instruments on the SAME real-world event (same NFL game / same
-      CPI print / same BTC daily strike+expiry) across venues. The pairing logic (match Kalshi event_ticker ↔ Polymarket
-      condition_id by teams+date / strike+expiry / release+date, with a same-settlement-time guard) lives in the
-      strategy/features arb layer, NOT the cqg classifier. Repo: strategy-service (arbitrage_price_dispersion) +
+      CPI print / same BTC daily strike+expiry) across venues. The pairing logic (match Kalshi event_ticker ↔
+      Polymarket condition_id by teams+date / strike+expiry / release+date, with a same-settlement-time guard) lives in
+      the strategy/features arb layer, NOT the cqg classifier. Repo: strategy-service (arbitrage_price_dispersion) +
       features-service. Provenance: operator 2026-06-23 — "so we can easily pair them up properly".
 
 ### 2026-06-23 (autonomous, continuous-flow) — fleet uv.lock unblock + P1 Kalshi-grouping ROOT CAUSE = enumeration KXMVE-flood (NOT the mapper)
@@ -2255,3 +2280,56 @@ themselves required manual VM backfill triggers.
   `cd deployment-service/terraform/gcp/live_event_log && terraform apply -var="create_bq_external_tables=true" -var="warm_gcs_bucket=central-element-323112-events" -var="cold_gcs_bucket=central-element-323112-events" -var="compactor_sa_email=unified-trading-sa@central-element-323112.iam.gserviceaccount.com" -auto-approve`
 - Grant project-level `roles/pubsub.publisher` to `1060025368044-compute@developer.gserviceaccount.com` (needs admin):
   `gcloud projects add-iam-policy-binding central-element-323112 --member="serviceAccount:1060025368044-compute@developer.gserviceaccount.com" --role="roles/pubsub.publisher"`
+
+### 2026-07-06 (cross-plan finding, filed from `prediction_capture_incident_remediation_2026_07_06.md`) — Kalshi-perp enumerator premise was WRONG: wrong host, 0 real perpetuals, 25,473-row cefi contamination found+purged
+
+**The Phase-1 P1 "Kalshi live endpoint verified" claim and the "PERPS WORKSTREAM COMPLETE for Kalshi-perp end-to-end"
+entry above do NOT hold — annotated in a banner near the top of this doc; full account here.**
+
+- **What was actually shipped (IS@fdc9bad, 2026-06-21):** `KalshiPerpReferenceDataAdapter` queries
+  `api.elections.kalshi.com/trade-api/v2/markets?category=Crypto&status=open` — this is the Kalshi **binary EVENTS
+  host** (the same host + endpoint the prediction-side `kalshi.py` adapter uses), NOT a perpetual-futures API. The 16
+  unit tests that passed used a synthetic fixture (`category: "Crypto"`) that never occurs on the real host — real
+  markets there carry `category: null`, and the adapter's `_parse_market` treated null/empty category as a PASS. So "QG
+  green + 16 tests passing" never actually exercised a real-shaped response.
+- **Live-probe evidence (2026-07-06):** 3,000 markets across every crypto series (`KXBTC` "Bitcoin range", `KXBTCD`,
+  `KXETHD`, …) — **100% `market_type=binary`, 0 tickers containing "PERP."** Every "crypto" market there is a dated
+  binary strike bet (e.g. `KXBTC-26JUL0605-T71799.99`).
+- **This is the SAME root cause already diagnosed in this plan's own "P1 Kalshi canonical grouping — the premise was
+  STALE" entry above** (`category=Crypto` is silently ignored by `/markets`; Kalshi's open universe is dominated by
+  auto-generated `KXMVE*` multivariate-parlay markets that flood any un-scoped page). That entry fixed it for the
+  PREDICTION adapter (series-scoped enumeration, sidesteps the flood into `canonical_question_group=OTHER`). It was
+  never checked against the sibling **cefi** adapter (`kalshi_perp.py`), which has no `OTHER` bucket to catch the flood
+  — every `KXMVESPORTSMULTIGAMEEXTENDED` / `KXMVECROSSCATEGORY` binary event that came back got stamped
+  `instrument_type=PERPETUAL`, venue `KALSHI-PERP`, and written straight into the cefi catalogue.
+- **Blast radius (measured):** cefi catalogue carried **25,473 `KALSHI-PERP` rows** (6.8% of 376,984 total), all fake —
+  `available_from` 2026-06-27→07-05 (write-time coherence: the enabling commit instruments-service@4da6fe8 authored
+  2026-06-29 08:46 UTC; first contaminated prod write same-day 13:30 UTC run). 0 rows were MVP-tagged (MVP-scoped
+  downloads unaffected). `POLYMARKET-PERP` was NOT contaminated (its adapter — separately unverified, see below — never
+  wrote any rows).
+- **Fixed/contained 2026-07-06 (instruments-service):**
+  - `@c8c6dac76` — both `kalshi_perp` and `polymarket_perp` adapters guarded (`_REPOINT_PENDING=True`):
+    `get_instruments()`/`get_instrument()` return honest-empty BEFORE any network call; also fixed the `_parse_market`
+    empty-category "pass" bug as defense-in-depth. Venue declarations (UAC `VENUES_BY_ASSET_GROUP`) are UNTOUCHED — this
+    doesn't undo anything Phase 1 shipped there.
+  - Purged the 25,473 fake rows: deleted the 9 `venue=KALSHI-PERP` by_date snapshots (06-27→07-05) + rebuilt the cefi
+    catalogue (`--mode full --allow-catalogue-shrink`). Verified: 376,984→351,511 rows, KALSHI-PERP→0, 24 venues,
+    DERIBIT + every other venue unchanged (no collateral).
+- **NOT fixed — the real repoint is NOT done.** Kalshi's actual perpetuals live on a separate authenticated host:
+  `external-api.kalshi.com/trade-api/v2/margin/` (demo `external-api.demo.kalshi.co`), tickers like `BTC-PERPETUAL`,
+  RSA-PSS auth, **rolling out member-by-member** — this plan never probed or built against that host. The assumed demo
+  endpoint (`…/markets/margin`) 404'd on a follow-up probe, so even the demo path needs re-confirming against Kalshi
+  docs before a repoint can be coded.
+- **Consequence for THIS plan's "COMPLETE" claim:** batch trades+funding (mtds@88c2f0c), live CLOB ws (mtds@c487a78),
+  and strategy archetype bundling (strategy-service@31ba481f) for KALSHI-PERP were all built assuming the enumerator
+  returns real perpetuals. It didn't. Those layers should be **re-verified against a correctly-repointed adapter**, not
+  assumed correct on the strength of the original "COMPLETE" entry — in particular, if strategy-service's carry/basis or
+  funding-dispersion bundles are live-querying/trading KALSHI-PERP believing it has real perpetual instruments+funding
+  rates today, that premise is currently false (the venue enumerates 0 instruments post-guard).
+- **Not this plan's scope to fix from here** — filed as a cross-plan annotation only (per findings-triage: "fits another
+  plan → annotate, don't fix — collision risk"). Full root-cause chain, the live-probe methodology, and the operator's
+  "keep the venues, correct the adapter" decision are in
+  `plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`; the actionable repoint work (config
+  - real endpoint research + demo dry-run + prod cutover, gated on Kalshi member-rollout access) is tracked in
+    `plans/active/prediction_capture_incident_remediation_2026_07_06.md` Workstream B — coordinate there before
+    re-touching `cefi/kalshi_perp.py` / `cefi/polymarket_perp.py` to avoid duplicate work.
