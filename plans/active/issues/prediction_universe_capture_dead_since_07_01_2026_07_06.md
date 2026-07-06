@@ -176,8 +176,37 @@ margin API `https://external-api.kalshi.com/trade-api/v2/margin/…` (perps host
   margin access? (Docs: "rolling out member by member"; margin API mirrors the event API's RSA-PSS auth — so it is NOT
   the public no-auth path the current adapter assumes.) If NO → the real fix is BLOCKED-CREDENTIALS; build the repointed
   adapter scaffold against demo `external-api.demo.kalshi.co` + status the venue pending-access.
-- **Q2 (scope):** POLYMARKET-PERP — does Polymarket actually expose perpetual futures, or is that venue also a
-  wrong-host/no-such-product case? (Same investigation owed; the polymarket_perp adapter was added in the same 4da6fe8.)
+- **Q2 (scope):** POLYMARKET-PERP — **ANSWERED (web research 2026-07-06): Polymarket perps ARE real.** Launched
+  2026-04-21, beta live 2026-05-28 for a RESTRICTED set of legacy/high-activity users; up to 20x leverage, isolated
+  margin, long/short any market continuously. So POLYMARKET-PERP is the SAME class as Kalshi: a real intended venue on a
+  perps API the current `polymarket_perp` adapter is almost certainly NOT pointed at, beta-gated on access. Needs the
+  same repoint + access check against `docs.polymarket.com` perps API. (Sources: bitcoin.com, cnbc.com, marketplace.org
+  2026-04/05.)
+
+### demo→prod switch cost (answers "what changes if we build against demo first")
+
+Built correctly, the demo→prod switch is **config + credentials + enrollment — ZERO adapter code change.** Concretely:
+
+1. **Host** — the ONLY deliberate change: `external-api.demo.kalshi.co` → `external-api.kalshi.com`. Today both perp
+   adapters hardcode a module const (`_KALSHI_BASE_URL`); make it config-driven (a single `KALSHI_PERP_ENV=demo|prod`
+   resolving the host) so the flip is one config value.
+2. **Credentials** — demo and prod are SEPARATE Kalshi accounts with SEPARATE RSA keypairs; only the injected credential
+   blob / Secret-Manager reference changes (`kalshi-perp-demo` → `kalshi-perp-prod`). The signing CODE is identical
+   RSA-PSS and ALREADY EXISTS in `adapters/prediction/kalshi.py` (`_signed_headers`/`_parse_kalshi_creds`/`_can_sign`,
+   blob `{api_key_id, private_key}`) — reuse it; the current `kalshi_perp` adapter does public no-auth reads and must
+   GAIN this signing regardless of demo/prod.
+3. **Member-rollout access** — prod "rolls out member by member": even with prod host+creds, the account must be
+   enrolled or the margin endpoints 403. This is the real gate, and it is NOT testable in demo. (Same for Polymarket's
+   restricted beta.)
+4. **Data-universe divergence (the trap)** — demo serves synthetic/limited markets; the demo instrument universe ≠ prod.
+   Demo validates the PLUMBING (auth, pagination, parse, schema→InstrumentRecord, catalogue integration) but demo
+   markets MUST NOT land in the prod cefi store/catalogue. Capture demo into a non-prod store (or a dry-run) and
+   re-enumerate against prod before the catalogue trusts KALSHI-PERP/POLYMARKET-PERP.
+5. **Ancillary** — WS + FIX use separate perps hosts (Kalshi docs); irrelevant to reference-data enumeration, only if we
+   later stream.
+
+Net: scaffold against demo now to prove auth+parse+schema; the prod cutover is a config flip + prod key + enrollment
+confirmation, with a mandatory prod re-enumeration before downstream trust. No throwaway work.
 
 This touches ANOTHER WORKSTREAM's feature commit (4da6fe8); the slot-2 agent will make ONLY the contamination-stopping
 mitigation + purge on approval, and leave the margin-API repoint to be done with the credentials answer + the 4da6fe8
