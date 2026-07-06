@@ -900,4 +900,15 @@ actual ManifestWriter output. Coordinator IS making progress — confirmed via d
 
 **Gate: FAILS** — same structural blocker as sessions 15–18. No change without operator decision. Filed **BLK-b37df00d** (2026-07-06 15:20 UTC) with 3 options + Rec A (accept partial + park at priority 999 to stop cycling). Main-agent already responded in session 18 with "operator action required."
 
-**Checkbox NOT flipped** — awaiting operator decision on BLK-b37df00d.
+**BLK-b37df00d answered by main-agent (session 19 heartbeat poll)**: Decision **Option A + park priority 999**. Verbatim rationale: "19 no-op dispatches is enough signal that Option C is wasteful and Option B requires operator intervention we cannot self-authorize. Accept partial coverage: when INJURIES/STANDINGS/TEAMS all reach EU=0 (projected later today based on STANDINGS ~ch31/104 at ~2.75min/chunk, TEAMS following), flip the Todo 9 checkbox and document FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS as coverage-time floor per ARGENTINA_PRIMERA precedent."
+
+**Parking API investigation**: no orchestrator endpoint exists to change backlog priority (only GET / POST reload / POST regen / DELETE / GET blockers). Parking a plan-derived task requires (a) hand-editing `agent-orchestrator/data/config/backlog.yaml` with `priority: 999` + `prereqs.conditions` (RULES.md § 4.2, operator-only) OR (b) strikethrough the checkbox in the plan (`~~- [ ] ...~~` = abandoned; misrepresents state). Neither is in a data_engineering worker's scope. The `[BLOCKED-OPERATOR-DECISION]` text prefix in the checkbox is text-only; the parser (`regen_backlog_from_plan.py`) only honors `- [ ]` / `- [x]` / `~~…~~` states, not annotation prefixes.
+
+**Session 19 close-out actions**:
+1. Main-agent's answer recorded above ✅
+2. Cannot flip checkbox (gate not met — TEAMS at 194,331 EU, STANDINGS at ~9K, INJURIES phantom 23K pending dedup)
+3. Attempted `DELETE /api/backlog/<task_id>` after /done to buy time until next PlanRegenLoop tick (will re-derive if plan checkbox still `- [ ]`)
+4. OPERATOR ACTION REQUIRED: manually set backlog priority to 999 OR wait ~8h for coordinator to complete INJURIES/STANDINGS/TEAMS then re-dispatch this task for flip
+5. When re-dispatched at EU=0 for INJURIES/STANDINGS/TEAMS: flip checkbox + document per-fixture (FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS) as coverage-time floor (~192K EU at 54s/fixture = weeks; ARGENTINA_PRIMERA precedent — accepted as API-rate floor, not a data gap)
+
+**Checkbox NOT flipped** — gate met condition (INJURIES/STANDINGS/TEAMS EU=0) not yet reached; coordinator PID 3837082 still working.
