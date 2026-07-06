@@ -97,7 +97,21 @@ depends_on: []
       Cloud Run job stdout/stderr does not reach Cloud Logging (affects every lifecycle-catalogue/enum job — the
       2026-07-04 cefi/prediction weekly-full diagnoses also had to work blind).
 
-## ROOT CAUSE #2 (2026-07-06, found after the ArrowTypeError fix unmasked it) — venue misrouting + cefi contamination
+## ROOT CAUSE #2 (2026-07-06, found after the ArrowTypeError fix unmasked it) — cefi KALSHI-PERP adapter filter broken
+
+> **CORRECTION (2026-07-06, deeper verification — supersedes the "misrouting" mechanism below).** `KALSHI-PERP` /
+> `POLYMARKET-PERP` are REAL, intended cefi venues (Kalshi launched CFTC-regulated crypto perpetual futures 2026-05-29;
+> dedicated `reference_data/adapters/cefi/kalshi_perp.py` + `polymarket_perp.py`, UAC `VENUES_BY_ASSET_GROUP["cefi"]`
+> members, unit tests — added by 4da6fe8). The bug is NOT prediction-record misrouting; it is that the `kalshi_perp`
+> adapter's Kalshi `/markets?category=Crypto&status=open` filter is **completely ineffective**: classified 25,473
+> catalogue rows, **0 are crypto perps** (`KXBTC…-PERP` etc.), **100% are general Kalshi EVENT contracts** —
+> `KXMVESPORTSMULTIGAMEEXTENDED` (21,187) + `KXMVECROSSCATEGORY` (4,286) — all stamped `instrument_type=PERPETUAL`,
+> venue `KALSHI-PERP`, written into the cefi store. So the confirmed defect is "the crypto-perp adapter ingests the
+> whole Kalshi event universe and mislabels it PERPETUAL." The cefi-contamination CONCLUSION below stands; the mechanism
+> is the broken adapter filter, not a prediction misroute. **STILL OPEN (do not act on as settled): whether the
+> prediction KALSHI/POLYMARKET "0 records after filtering" is caused by these markets being claimed by the -PERP path,
+> or is an independent prediction-enum issue — the heal run also wrote 7,981 records across 63 prediction sub-venue
+> groups, so prediction is NOT fully starved; needs one more focused pass before a fix is chosen.**
 
 The healed run (all writes green) exposed the DEEPER regression: the prediction records are being written to the WRONG
 STORE under the WRONG venue/type.
