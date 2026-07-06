@@ -61,10 +61,11 @@ source:
 > (`assert_defi_catalog_fresh`; sports odds only enumerate against catalogued fixtures). So the order is always:
 > **correct + certify the denominator (cefi-first) → then complete capture.**
 
-> **🟡 VM IN FLIGHT (2026-07-06) — TradFi v9 migration restart.** Smoke VM `canonical-migration-tradfi-20260706-170108`
-> (e2-standard-16 · SPOT · `--workers 24` · MTDS `9ecd1e2` pinned) is migrating **2025** as the one-chunk smoke before
-> the 2020-2024 + 2026 per-year fan-out. Launcher fix: **deployment-service@77cfcda**. 06-29 OOM root cause:
-> `--workers 64` pool-thrash + full-range object-list accumulation on e2-standard-8. See Stage 1 + the Progress Log.
+> **🟡 VM FLEET IN FLIGHT (2026-07-06) — TradFi v9 migration.** Smoke (2025) VALIDATED memory-bounded (6.7 GB / 64 GB,
+> steady) → fanned out **2020-2024** (6 VMs total, `canonical-migration-tradfi-*`, all
+> `e2-standard-16 · SPOT · workers 24 · MTDS 9ecd1e2`); **2026 held for last** (live CME-OHLCV capture VMs are writing
+> 2026). Launcher OOM-fix: **deployment-service@77cfcda**. 06-29 OOM root cause: `--workers 64` pool-thrash + full-range
+> accumulation on e2-standard-8. See Stage 1 + the Progress Log.
 
 ---
 
@@ -120,9 +121,11 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 - [ ] [DATA] P0. TradFi v9 G4 `--apply` — per **D3**: `--workers 24` (fallback 16) · per-year chunks 2020→2026
       (`--start-date/--end-date`) · e2-standard-16 · idempotent restart → `migration_verification_orphan_safety` V6
       closes; **all 5 AGs canonical**. Then `rebuild_tradfi_manifest.py` (E5) + IS enumerate-seed + IS catalogue for
-      tradfi. **🟡 IN FLIGHT (2026-07-06): 2025 smoke VM `canonical-migration-tradfi-20260706-170108` running
-      (e2-standard-16 · SPOT · workers 24 · MTDS 9ecd1e2 pinned; launcher fix deployment-service@77cfcda). Fan out
-      2020-2024 + 2026 once the smoke verifies memory-bounded + objects migrating.**
+      tradfi. **🟡 IN FLIGHT (2026-07-06): 2025 smoke VALIDATED (memory 6.7 GB / 64 GB steady, 172k candles migrating) →
+      FANNED OUT 2020-2024 (6 VMs total: `canonical-migration-tradfi-*`, e2-standard-16 · SPOT · workers 24 · MTDS
+      9ecd1e2; launcher fix deployment-service@77cfcda). 2026 held last (live CME-OHLCV capture VMs writing 2026).
+      Post-apply: orphan-sweep E=0 + idempotent re-run for transient-503 stragglers, then `rebuild_tradfi_manifest` + IS
+      enumerate-seed + IS catalogue.**
 - [ ] [DATA] P1. Operator-gated legacy-twin **deletes** (defi / tradfi / pred; cefi + sports already done) in a quiet
       window
 
@@ -238,6 +241,15 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **TradFi smoke VALIDATED → fanned out 2020-2024.** The 2025 smoke proved the D3 fix: memory flat at
+  **6.7 GB / 64 GB** for 18+ min while migrating candles (172k/577k, steady ~11k/min) — vs. the 06-29 climb-to-OOM at
+  workers 64. Setup ran in ~1 min (`uv` install). Fanned out **2020, 2021, 2022, 2023, 2024** as 5 concurrent per-year
+  VMs (disjoint day-partitions; all e2-standard-16 · SPOT · workers 24 · MTDS 9ecd1e2 pinned). **2026 held for last**
+  (live `tradfi-bf-cme-ohlcv-1m-*` capture VMs are writing 2026 processed_candles). Noted: a transient GCS 503 burst
+  ("internal error, retry") left ~7 objects unmoved on 2025-02-03/04 — not memory / not our bug, self-limited; recovered
+  by the migrator's idempotency + the mandatory post-apply orphan-sweep (V6 E=0). Fleet watchdog armed on `run.log` (the
+  serial console is blind to the backgrounded migrator — lesson). **Next:** per-year completion (VMs self-stop) → 2026 →
+  orphan-sweep + straggler re-run → `rebuild_tradfi_manifest` + IS enumerate-seed + IS catalogue.
 - **2026-07-06** — **Stage-0 consolidation REASSESSED (the one-liner was partly stale).** Investigated §F.1 before
   executing: (1) **`path_to_100pct` → `data_completion` merge = already DONE** (superseded + archived 2026-06-30;
   `data_completion` carries the "Folded-in from `path_to_100pct`" section; DEDUP residual is already a Stage-5 item — no
