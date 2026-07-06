@@ -3272,8 +3272,10 @@ HARD-gated on a pre-migration VM drain → `migration_verification_orphan_safety
       `unified-trading-library@057264fd`). Do NOT double-run; the fleet is already draining these buckets — a
       concurrent parallel launcher call would race the manifest and can silently double-count via `MANIFEST_PER_VM_
       SHARDS=true`. Closed as DEDUP-of-in-flight-parent-lane.
-- [ ] [DATA] P1. **Prediction Kalshi launcher gap** — `KalshiAdapter` wired but `launch-mtds-prediction-backfill-vm.sh`
-      hardcodes `VM_VENUE=POLYMARKET`; add `--venues` pass-through so Kalshi backfills (keyless-public trade-api).
+- [x] ✅ [DATA] P1. **Prediction Kalshi launcher gap** — `KalshiAdapter` wired but `launch-mtds-prediction-backfill-vm.sh`
+      hardcodes `VM_VENUE=POLYMARKET`; add `--venues` pass-through so Kalshi backfills (keyless-public trade-api). —
+      **DONE** `deployment-service@0a7c3f8` (2026-06-20): `--venue POLYMARKET|KALSHI` flag wired; cross-reference
+      marker closed in `plans/active/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md` (slot-12, 2026-07-06).
 - [ ] [SCRIPT] P2. **`launch-mtds-sports-odds-backfill-vm.sh --tier` arg rejected by MTDS CLI (intermittent)** — startup
       translates `VM_TIER`→`--tier`, a flag the CLI doesn't declare; fix the right side.
 - [ ] [DATA] P1. **Step 2 — IS-store backfill** historical listings for venues MTDS has but IS lacks (Kraken ~6yr,

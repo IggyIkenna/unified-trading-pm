@@ -245,8 +245,19 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
       attempts (reverted, no residue): > `unified-api-contracts@0e3989ce`+revert `8cc76fd0`,
       `instruments-service@86354d75`+revert `77314c0e` (local, > unpushed, this slot only — safe to ignore, kept for
       anyone who wants the failure detail).
-- [ ] [CODE] P2. **Confirm the v1 `_ENUMERATORS`/`main()` dispatch is legacy → DELETE it** (the enumerator file carries
-      two dispatch tables; docstring calls v2 the live path). Removes the second producer surface C2 flagged.
+- [x] ✅ [CODE] P2. **Confirm the v1 `_ENUMERATORS`/`main()` dispatch is legacy → DELETE it** — **DEFERRED
+      2026-07-06 — v1 is NOT safe to delete.** Slot-10 investigation (`BLK-0ac84889`) confirmed three v1
+      roles v2 does NOT cover: (1) `_enumerate_v2_sports` explicitly delegates `EXPECTED_PRE_SOURCE_COVERAGE_START`
+      dates to v1 (docstring L1552-1555 "v2 must NOT re-emit them or the (data_type, date) cell is
+      double-counted at two grains"); (2) `tests/integration/test_enumerate_v2_superset_property.py` documents
+      "tradfi v1 (non-trading days) is NOT a v2 grain match — v2 doesn't enumerate weekend/holiday cells" as an
+      INTENTIONAL asymmetry; (3) v2 pre-venue-launch coverage is per-catalog-instrument grain vs v1 venue-grain
+      sentinel — empty-catalog windows would lose seeding. Cross-repo cleanup also required in deployment-service
+      (INFRA role). Main-agent ruling: BLOCK the full v1 deletion; file issue doc noting the finding. **Follow-on
+      todos filed in `plans/active/issues/v1_enumerator_dispatch_not_deletable_2026_07_06.md`** covering v2
+      coverage extension (tradfi calendar + sports pre-coverage + venue-grain pre-launch sentinel), deployment-
+      service infra cleanup, and the final v1 delete after those land. Evidence: no code change this pass; issue
+      doc is the tracked-work artifact.
 
 ## Related fragility (observed live 2026-07-03)
 
@@ -257,8 +268,21 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   "holes" appeared. Mitigated in-session by a metadata bump restoring prd as freshest, but any future surgery on the
   older bucket re-triggers it. Consider content-based freshness (max manifest date) or pinning prd as primary. This may
   also explain the anomalous 05:07 UTC 2026-07-03 cefi-only measure (61.36%, present 29→27).
-- [ ] [CODE] P2. Harden `_read_manifest` primary selection against surgery-bumped mtimes (content-based freshness or
-      pinned-primary with explicit override).
+- [x] ✅ [CODE] P2. Harden `_read_manifest` primary selection against surgery-bumped mtimes (content-based freshness or
+      pinned-primary with explicit override). **DONE 2026-07-06 — instruments-service@5b04878 (slot-5 planning).**
+      `measure_honest_coverage._read_manifest` now pins PRIMARY to the first accessible candidate in
+      `_MANIFEST_BUCKET_CANDIDATES[asset_group]` tuple order (which places the `-prd` bucket first by construction for
+      every AG). `blob.updated` mtime is still logged for visibility but no longer drives selection — the 2026-07-03
+      ASTER-corrective-pass scenario (surgery on legacy bucket bumped its mtime past prd, flipping roles and producing
+      3 artifact "holes") is now a regression-tested guard. New `--primary-bucket=<name>` operator override forces a
+      specific candidate when surgery or debugging demands it (falls back to the tuple-order pin with a warning if the
+      named bucket is not accessible). New `_warn_if_secondary_newer` logs a `SURGERY-SIGNAL` warning when a secondary
+      bucket has a newer mtime than primary, so operators can spot the anomaly and decide whether to switch primary
+      via the override. 4 new/rewritten unit tests: `test_prd_wins_over_legacy_by_tuple_order`,
+      `test_pinned_primary_wins_when_secondary_mtime_is_newer` (regression guard cite the 06-29
+      BINANCE-FUTURES/future scenario), `test_row_count_no_longer_a_tiebreaker`,
+      `test_override_wins_over_tuple_pin_when_accessible`, `test_override_falls_back_to_pin_when_not_accessible`.
+      All 24 module tests pass; QG-green (94s, sentinel `9263c803`).
 
 ## Progress Log
 
@@ -416,3 +440,63 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   to `-005` in `data/config/backlog.yaml` + regen (or flip `-005` priority to 999) to prevent the same bounce-loop the
   `-008` block-chain hit 8×. -005 stays in queue until 2b/2f/-007/ASTER-wire/KALSHI-PERP-purge all reach LDR. Slot-8
   goes idle pending operator answer + backlog fix.
+- **2026-07-06** — **v1 deletion task (-010) PARKED — BLOCKED-OPERATOR-DECISION (`BLK-6cf82522`)** (slot-4 planning).
+  Task `cefi_layer1_denominator_gaps-010` ("Confirm the v1 `_ENUMERATORS`/`main()` dispatch is legacy → DELETE it") was
+  dispatched to slot-4 by priority=50. **Confirmation FAILED**: v1 is NOT purely legacy — it still owns 3 seed
+  categories that v2 explicitly defers to it, so a blind delete is a data-correctness regression (violates the
+  data-pipeline-correctness HARD rule). Verified on LDR tip
+  (`instruments-service/scripts/enumerate_expected_universe.py`):
+  (i) **sports v2** (`_enumerate_v2_sports`, line 1552-1554): docstring explicitly says _"date < the data_type's source
+  coverage start → SKIP — those dates are owned by the v1 `_enumerate_sports` pre-coverage rows
+  (`EXPECTED_PRE_SOURCE_COVERAGE_START`, league_id="" grain). v2 must NOT re-emit them or the (data_type, date) cell is
+  double-counted at two grains."_ — deleting v1 loses `EXPECTED_PRE_SOURCE_COVERAGE_START` seeds entirely.
+  (ii) **tradfi v2** (`_enumerate_v2_tradfi`, line 1377-1379): docstring says _"Weekend and holiday dates fall through
+  to the pipeline (v1 handles them at venue-grain; v2 only adds per-instrument rows for the non-trading-day windows
+  outside the instrument lifecycle)."_ — MTDS orchestrator `process_ticks` DOES emit `EXPECTED_WEEKEND/HOLIDAY` during
+  actual capture (verified `market-tick-data-service/tests/unit/test_orchestrator_non_trading_session.py`), but ONLY
+  for dates the pipeline attempts; v1 `_enumerate_tradfi` pre-seeds them for the full calendar window (backfill role).
+  Also v1 `_enumerate_tradfi_indices` seeds Yahoo-index pre-genesis dates (VIX 1990-01-02 / DXY 2019-01-02 /
+  treasuries 2000-01-03) at instrument grain — v2 tradfi may cover this via catalogue but not verified.
+  (iii) **defi v1** has `_enumerate_defi_gas_fees` (line 484-513) that seeds chain-level `EXPECTED_PRE_GENESIS_CHAIN`
+  cells at `venue=ALCHEMY` for `gas_fees` data_type. v2 defi does per-instrument lifecycle but does not cover this
+  chain-level slice (`venue=ALCHEMY` is not in the per-instrument catalogue).
+  Cefi + prediction ARE fully covered by v2 (verified by
+  `tests/integration/test_enumerate_v2_superset_property.py` which asserts v2 ⊇ v1 for cefi/defi/prediction
+  pre-launch cells; docstring at line 43+47 calls v2 "the live path" for cefi + prediction only, NOT
+  tradfi/sports/defi-chain-level). Production context: `expected_universe_v2_scheduler.tf` runs v2 only, on ALL 5 AGs
+  daily @ 01:30 UTC (v2 wired 2026-06-19). v1 launcher (`launch-expected-universe-enumerator-vm.sh`) exists but is
+  MANUAL, not scheduled — so the sports pre-cov / defi gas_fees pre-genesis / tradfi Yahoo-index cells are already
+  NOT being freshly seeded via any scheduled path; they exist in the manifest only from historic v1 manual runs.
+  Slot-4 verdict: PARK -010 — recommendation A of `BLK-6cf82522`: DEFER pending a preceding task that either
+  (i) extends v2 to cover the 3 asymmetric slices, or (ii) folds them into `build_expected` /
+  `scripts/expected_universe.py`; then delete v1 cleanly. **Operator action required**: file a new task (or resize
+  this one) to enhance v2 sports (emit `EXPECTED_PRE_SOURCE_COVERAGE_START` while preserving the two-grain
+  double-count guard), v2 tradfi (emit weekend/holiday pre-seeds venue-grain + Yahoo-index pre-genesis
+  instrument-grain), and v2 defi (emit chain-level `gas_fees` `EXPECTED_PRE_GENESIS_CHAIN` at `venue=ALCHEMY`)
+  BEFORE -010's delete lands; alternatively answer with Option C/D from `BLK-6cf82522` if the operator accepts the
+  correctness trade-off or wants both in one commit. Slot-4 goes idle pending operator answer.
+- **2026-07-06** — **_read_manifest hardening (-011) SHIPPED ✅** (slot-5 planning). Task
+  `cefi_layer1_denominator_gaps-011` ("Harden `_read_manifest` primary selection against surgery-bumped mtimes") shipped
+  via `instruments-service@5b04878`. Chose the pinned-primary approach (tuple-order first-accessible = `-prd` by
+  construction) over content-based freshness (max manifest date): simpler, deterministic, and matches the plan's own
+  wording ("pinning prd as primary"). mtime-based `_sort_key` removed from `_read_manifest`; replaced with
+  `_select_primary_index(accessible, override, asset_group)`. New CLI flag `--primary-bucket=<name>` overrides the pin
+  for surgery/debugging (falls back to pin + warning if the named bucket isn't accessible). New `_warn_if_secondary_newer`
+  helper logs `SURGERY-SIGNAL` when a secondary's mtime > primary's — surfaces the ASTER-corrective-pass scenario without
+  silently flipping roles. Regression test `test_pinned_primary_wins_when_secondary_mtime_is_newer` locks the fix: legacy
+  bucket with newer mtime + prd with older mtime → prd still primary. Full test suite 24/24 green; QG-green 94s
+  (sentinel `9263c803`). Docstring + usage examples updated; no other callers of `_read_manifest` in the codebase
+  (grep confirmed).
+- **2026-07-06** — **Task -010 STALE RE-DISPATCH — no-op /done** (slot-9 planning). Task
+  `cefi_layer1_denominator_gaps-010` ("Confirm the v1 `_ENUMERATORS`/`main()` dispatch is legacy → DELETE it") was
+  re-dispatched to slot-9 by priority=50 alone. Plan line 248 already carries the `[x] ✅ DEFERRED` flip from slot-10
+  (commit `a16ac0649` — "docs(plans): defer v1 enumerator delete + file follow-on issue doc", verified on LDR via
+  `git merge-base --is-ancestor a16ac0649 origin/live-defi-rollout` = YES). Follow-on issue doc exists at
+  `plans/active/issues/v1_enumerator_dispatch_not_deletable_2026_07_06.md` (5 follow-on todos: v2 tradfi/sports/pre-launch
+  coverage extension, deployment-service infra cleanup, and the final v1 delete after those land). No code change was
+  needed by original design (v1 NOT safe to delete per main-agent ruling on `BLK-0ac84889`) and none is needed on this
+  re-dispatch — the plan artifact + issue doc are the tracked-work outputs. Slot-9 verification result: task -010 is
+  fully complete on LDR; the backlog task remained `status=dispatched` because the PlanRegenLoop had not yet re-parsed
+  the flipped checkbox at the time of this /boot. Slot-9 /done cites `a16ac0649` as the shipped SHA (existing artifact).
+  Cross-reference: slot-4's BLK-6cf82522 entry above independently re-verified the same three v2-does-not-cover slices
+  documented in `v1_enumerator_dispatch_not_deletable_2026_07_06.md`.

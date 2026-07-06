@@ -97,10 +97,22 @@ Three steady-state surfaces + the final verdict:
         2026-06-23 16:52→16:53, 2026-06-24 01:00→01:01, 2026-06-25 01:00→01:01, 2026-06-26 01:00→01:01,
         2026-06-27 01:00→01:00 (each within ~51s). catalog.parquet updated (P1e task 002 ✅).
         `DP_CATALOG_NOT_RUNNING(sports)` cleared (P1e alerts task ✅). Gate ALL PASSED.
-- [ ] [VERIFY] P0. **FINAL full-history zero-missing (R1/R2/R3).** **Gate**:
+- [ ] [VERIFY] P0. **BLOCKED-PREREQUISITES (2026-07-06, slot-6 planning — BOUNCE-LOOP HALT).** **FINAL full-history zero-missing (R1/R2/R3).** **Gate**:
       `run_fixture_completeness_audit_2026_06_25.py` + `read_availability_index` over 2015→present (single-walk
       discipline) → 0 `expected_unattempted_pending_fetch`, 0 blank-reason, 0 un-evidenced `attempted_failed` for EVERY
       `(source, data_type)` within coverage windows; features ML-ready. Output pasted into the log.
+      **Task-10 self-park precedent applied** (see `tradfi_v9_stage1_finish_2026_07_06.md` task 10 — slot-7 in-checkbox
+      marker; also `honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` -004 slot-6 marker 2026-07-06). This task
+      has bounced 6× today (slot-2 06-28+06-29, slot-14 06-29, slot-12 07-06 20:52 UTC, slot-4 07-06 ~22 UTC
+      `BLK-4d04041a`, slot-6 07-06 this session `BLK-36e5e51e` answered by main "yield this slot immediately");
+      priority=999 alone does NOT suppress dispatch. Slot-12 evidence (20:52 UTC 2026-07-06) is definitive:
+      **656,486 total pending_fetch shards** (eu=651,185 + af=5,301) across every non-`odds_api` source, so the gate
+      fails by 6 orders of magnitude. **Un-block sequence**: (a) Understat VM re-launched + drained (was PREEMPTED
+      2026-06-25 at 2018-04-25 per P2c 18th-dispatch log, still never re-launched); (b) P2a enrichment coordinator
+      drains the ~180k api_football fixture-enrichment EU shards; (c) P2b footystats VM `fs-backfill-20260706-161335`
+      drains 51k footystats EU shards; (d) P2c features compute reaches ≥1 %; (e) phantom-audit `--apply` clears 2,094
+      `phantom_captured_no_parquet_at_canonical_path` rows after `prefix_tpls` cover the new shape; (f) operator clears
+      this BLOCKED- marker → verify re-dispatches.
       — 2026-06-28 BLOCKED-UPSTREAM: P2a 5/6 complete (AF cleanliness BLOCKED-CREDENTIALS); P2b 4/7 complete
         (Understat VM `us-backfill-20260627-210801` running, ~4-5d ETA; footystats VM running; odds-api not started);
         P2c 0/3 compute complete (BLOCKED-PREREQ on P2b). Gate cannot pass until P2a verify unblocks + P2b+P2c
@@ -145,6 +157,28 @@ Three steady-state surfaces + the final verdict:
         ETA ~16:30 UTC today; (E) P2a enrichment coordinator PID 3036674 RUNNING, ETA days (TEAMS 191k EU + 6 other
         types); (F) P2c features 0%. No action taken — no code or data changes needed. /blocked filed; park until
         Understat VM TERMINATED (~2026-07-01 02:00 UTC) + P2c features complete.
+      — 2026-07-06 slot-4 SAME-DAY RE-DISPATCH (~22:00 UTC, BLK-4d04041a): task -006 dispatched ~1h after
+        slot-12's verify. No structural change since slot-12 ran — Understat VM still not re-launched,
+        P2a-enrichment still running, P2b-footystats VM `fs-backfill-20260706-161335` still running per slot-12's
+        log. Same class of dispatch bug as `honest_coverage_smoke_harness_4ag_verify-004` (BLK-2a8ba36d /
+        BLK-8a12c73b / BLK-7fc2ba40 — priority=999 alone does not suppress dispatch). No verify re-run — slot-12
+        evidence definitive. /blocked filed; continue via can_continue.
+      — 2026-07-06 slot-12 VERIFY RUN (20:52 UTC): Queried IS availability_index (152MB parquet, mtime
+        2026-07-06T20:52:51Z; 5,386,738 rows). Filtered to 6 sports sources (api_football / footystats / odds_api /
+        open_meteo / soccer_football_info / transfermarkt / understat).
+        **Gate FAILS — 656,486 total pending_fetch shards (eu=651,185 + af=5,301) across every non-`odds_api` source.**
+        Per-source expected_unattempted totals: api_football 542,912 (dominated by TEAMS eu=194,331 + ODDS eu=89,073
+        + fixture-enrichment types eu≈180k — awaiting P2a enrichment coordinator); footystats 51,246 (VM
+        `fs-backfill-20260706-161335` RUNNING since 16:13 UTC, ETA ~2026-07-07/08); transfermarkt 36,379; understat
+        14,126 (Understat VM PREEMPTED at 2018-04-25 on 2026-06-29 and NEVER re-launched per P2c 18th-dispatch log);
+        soccer_football_info 3,261; open_meteo 3,261. attempted_failed 5,301 total, 0 blank-error_reason (all
+        evidenced); dominant reasons: phantom_captured_no_parquet_at_canonical_path 2,094 (needs phantom-audit
+        --apply once new prefix_tpls cover the shape); ApiFootballResponseError 1,639; FIXTURES_FETCH_FAILED 665;
+        UNCLASSIFIED_ADAPTER_ERROR 461; HTTP_NOT_FOUND 384. Only `odds_api` derivative rows (arbitrage_opportunity /
+        odds_movement / odds_snapshot) are at 0/0/0.
+        No action taken — task is [PARKED], priority 999; prereqs P2a-enrichment + P2b-Understat re-launch +
+        P2b-footystats VM completion + P2c-features compute are all outstanding. /blocked filed; re-dispatch after
+        all four prereqs land.
 - [x] ✅ [VERIFY] P0. **FINAL sports alerts == ZERO, steady-state (R5).** **Gate**: across ≥2 sweeps after daily-forward is
       live — `vm-census/active-dp-alerts*.json` 0 sports entries; `catalog.parquet` <24h; sports `_index` <180min;
       monitor sentinels fresh; `#data-pipeline-alerts` no unresolved sports WARN/CRITICAL (every prior alert

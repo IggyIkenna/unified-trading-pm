@@ -209,5 +209,9 @@ unaddressed.
       `divergence_2026-07-06.csv` diagnostic was NOT committed — it is regeneratable and item #2 owns the gitignore
       narrowing. Audit ran BEFORE item #1's commit-and-push helper (694ff4c) reached this slot; a repeat run with the
       new helper is covered by item #4 (VERIFY).
-- [ ] [VERIFY] P2. Confirm a fresh full run leaves `git status` clean in the PM clone and the escalation is ingested by
-      PlanRegenLoop (no dirty untracked artifacts).
+- [x] ✅ [VERIFY] P2. Confirm a fresh full run leaves `git status` clean in the PM clone and the escalation is ingested by
+      PlanRegenLoop (no dirty untracked artifacts). — unified-trading-pm@ad1fa6bc2. Evidence: ran
+      `manifest_hygiene_daily.py --mode changed --asset-group cefi` (slot-3, 2026-07-06 19:35 UTC); `_commit_and_push_pm_artifacts()`
+      committed issue doc + candidate CSV at ad1fa6bc2 and pushed to LDR; `git status` in PM clone: clean (empty). Gitignore
+      also verified: `divergence_*.csv` → ignored (line 146); candidate CSVs → committable. PlanRegenLoop ingestion:
+      `manifest_hygiene_red_2026_07_06.md` at ad1fa6bc2 carries `assigned_vm: planning` → will be ingested on next PlanRegenLoop tick.

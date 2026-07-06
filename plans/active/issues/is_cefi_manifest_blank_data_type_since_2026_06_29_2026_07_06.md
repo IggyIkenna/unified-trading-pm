@@ -140,6 +140,8 @@ follow-ons:
       → `data_type='instruments'` (7 venues, 10 dates)**. Post-run verify: 0 blank captured rows on 2026-06-27+ for both
       buckets. Safety gate OK: captured row totals preserved (defi 170887; tradfi 11810). The writer fix `@46ba62b` +
       periodic `migrate_instruments_store_v9` run drove the ongoing writes clean; this oneoff cleared the historical tail.
-- [ ] [DATA] P2. Add a `quality-gates.sh` check (or extend an existing one) that asserts the writer's `record_captured`
+- [x] ✅ [DATA] P2. Add a `quality-gates.sh` check (or extend an existing one) that asserts the writer's `record_captured`
       calls for non-sports paths always stamp `data_type='instruments'` — grep-level check on `writers.py` that catches
       a future regression at CI time (repo: instruments-service).
+      — instruments-service@9263c80 + scripts/qg/no_blank_instruments_data_type.sh in PM; QG STEP 5.86 added; grep-P
+      lookbehind catches data_type="" keyword arg, excludes manifest_data_type= variable assignments; QG green.

@@ -136,17 +136,42 @@ approve / defer per category rather than per-venue.
       migration, not a drop). Regression tests added: `test_bybit_bare_alias_registered` +
       `test_okx_bare_alias_registered`. Closes ~26 of 104 cefi `blocked-not-registered` smoke-matrix cells (BYBIT ~13
       + OKX ~13).
-- [ ] [CODE] P2. **COINBASE bare-name UAC removal + downstream migration** — bare `COINBASE` entry in
-      `unified_api_contracts/.../market_data_categories.py:242` is a legacy pre-2026-06-23 tag (before the perp-gate
-      pair). Slot-6 initial grep suggested `COINBASE` was orphan; operator ruling (2026-07-06) found ~25 downstream
-      callers that still key off bare `COINBASE`. Migrate those callers to `COINBASE-SPOT` (or the perp-gate pair
-      `COINBASE ↔ COINBASE-SPOT` if MVP requires it), THEN drop the bare entry from UAC. Gate: 0 downstream call
-      sites reference bare `COINBASE`; the entry is removed from `VENUES_BY_ASSET_GROUP["cefi"]`; smoke-matrix
-      `blocked-not-registered` count for `COINBASE` drops to 0 (repo: unified-api-contracts + fan-out).
-- [ ] [CODE] P1. **BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build** — public WS APIs; BitFinex REST batch
-      already captures. Register under `BITFINEX-SPOT` / `BITFINEX-FUTURES` (repo: market-tick-data-service). Gate: both
-      venues resolve in `resolve_live_venue_key`; regression tests mirror
-      `test_deribit_options_chain_operation_registered`.
+- [ ] [CODE] P2. **COINBASE bare-name UAC removal + downstream migration** — **BLOCKED-BY-D2a** (BLK-9d69f223
+      resolved 2026-07-06 by main after slot-4 escalation): the D2a naming reconciliation `uac@e76d874a` (shipped
+      2026-07-06 18:26 by Harsh, `feat(registry): cefi INSTRUMENT_TYPES_BY_VENUE completes the 10 declared venues
+      (D2a)`) EXPLICITLY requires bare `COINBASE` to REMAIN in `VENUES_BY_ASSET_GROUP` +
+      `INSTRUMENT_TYPES_BY_VENUE` — bare `COINBASE` is the `_CEFI_VENUE_FOLD` EXPECTED lookup key (the Layer-1
+      checker `check_enumeration_completeness.py` folds `COINBASE-SPOT` → `COINBASE` for the EXPECTED/ENUMERATED
+      comparison; without bare `COINBASE` as its OWN key, the itype-gate authority switch "silently zeroes COINBASE's
+      entire EXPECTED set" — data-correctness regression). Main's directive (2026-07-06): "Re-scope gap-015 to
+      EXCLUDE the bare COINBASE removal entirely. Only proceed with parts of gap-015 that do not touch the bare
+      COINBASE key. File a follow-on task for the bare COINBASE removal after the 25-caller migration plan is
+      drafted and lands." Prerequisites for this task (see follow-on `- [ ] [PLAN] P2. Draft the COINBASE-bare
+      migration plan` below): (1) draft the 25-caller migration to `COINBASE-SPOT`; (2) decide fate of the D2a
+      Layer-1 `_CEFI_VENUE_FOLD` (does it re-key to `COINBASE-SPOT`?); (3) land the migration; THEN drop bare
+      `COINBASE` from UAC. Original gate remains: 0 downstream call sites reference bare `COINBASE`; entry removed
+      from `VENUES_BY_ASSET_GROUP["cefi"]`; smoke-matrix `blocked-not-registered` count for `COINBASE` drops to 0
+      (repo: unified-api-contracts + fan-out).
+- [ ] [PLAN] P2. **Draft the COINBASE-bare-name migration plan (prerequisite for the CODE task above)** — before
+      the CODE task above can proceed, someone must draft a plan that: (1) enumerates the ~25 bare `COINBASE`
+      downstream callers (venue_constants.py:377 D2a critical; market_data_categories.py:242 VENUES_BY_ASSET_GROUP;
+      market_data_categories.py:1186 skip-filter; venue_mapping.py:154/818/868; venue_launch_dates.py:64/236;
+      restaking_rewards.py:657/663/676/718 cex_listings; venue_core.py:145 IS resolver; execution-service
+      registry.py:178/208/310 + utils.py:28/238; strategy-service seed_mock_data.py; and the test callers); (2)
+      decides the migration target per caller (COINBASE-SPOT vs perp-gate pair vs KEEP-BARE per D2a); (3) proposes
+      a fix for the D2a Layer-1 `_CEFI_VENUE_FOLD` if bare `COINBASE` is removed (re-key EXPECTED to
+      `COINBASE-SPOT`?) — MUST NOT regress the itype-gate authority switch; (4) sequences the multi-repo landings.
+      This plan is a **prerequisite blocker** for the CODE task above (repo: unified-trading-pm plan doc).
+- [x] [CODE] P1. **BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build** ✅ — mtds@2b41b5fa. Public WS at
+      `wss://api-pub.bitfinex.com/ws/2` (shared spot + perp endpoint; Bitfinex v2 `trades` channel).
+      `BitfinexSpotWSFeedConnector` (base — chan_id ↔ symbol tracking, snapshot + `te`/`tu` frame parsing, heartbeat
+      skip) registers under `BITFINEX-SPOT` (SPOT tag, `tBTCUSD` wire form); `BitfinexFuturesWSFeedConnector` extends
+      it and re-tags to `BITFINEX-FUTURES` / `PERPETUAL` (F0 perp wire form `tBTCF0:USTF0` — split preserves the
+      internal colon via `split(":", maxsplit=2)`). Regression pack (19 tests) mirrors
+      `test_deribit_options_chain_operation_registered`: instrument mapping, snapshot / `te` / `tu` / heartbeat / zero-
+      price / unknown-chan parsing paths, both venues resolved in `WS_FEED_CONNECTOR_FACTORIES` after
+      `register_all()`, factory returns objects satisfying the `WSFeedConnector` Protocol surface. Closes ~26 cefi
+      `blocked-not-registered` cells (BITFINEX-SPOT ~11 + BITFINEX-FUTURES ~15 per `data_type_capability`).
 - [ ] [CODE] P1. **BITGET-SPOT + BITGET-FUTURES WSFeedConnector build** — public WS APIs (repo:
       market-tick-data-service). Gate: both venues resolve; regression tests added.
 - [ ] [CODE] P1. **COINBASE-FUTURES WSFeedConnector build** — public WS on `wss://advanced-trade-ws.coinbase.com` (repo:
@@ -164,11 +189,30 @@ approve / defer per category rather than per-venue.
       Layer-2 interpretation (this issue doc lines 116-118), the `blocked-not-registered` cell for BINANCE-DELIVERY
       correctly reflects "no live connector"; it does not drag Layer-2 capture % down when the batch REST capture is
       honest-complete.
-- [ ] [CODE] P2. **On-chain CeFi perps: EXTENDED-STARKNET + LIGHTER-ZKSYNC + PACIFICA-SOLANA WSFeedConnector build**
+- [x] ✅ [CODE] P2. **On-chain CeFi perps: EXTENDED-STARKNET + LIGHTER-ZKSYNC + PACIFICA-SOLANA WSFeedConnector build**
       (repo: market-tick-data-service). These are the on-chain-CeFi-perp venues from foundation-completeness §G1.3.
       **Currently BLOCKED-CREDENTIALS** for the paid-RPC endpoints per tracker Blocked/waiting register; build the
       scaffold anyway per External-data-always-available rule. Gate: 3 venues resolve OR carry `BLOCKED-CREDENTIALS`
       scaffolds with `_placeholder_factory` that raises the credential-required error.
+      **DONE 2026-07-06 — market-tick-data-service@b6d39859 (slot-5 planning).** 3 Protocol-conforming scaffolds
+      shipped mirroring the polymarket_perp_ws BLOCKED status pattern:
+      `market_tick_data_service/live/connectors/extended_starknet_perp_ws.py` (Extended Exchange Starknet L2 perp DEX;
+      paid X-Api-Key gate), `.../lighter_zksync_perp_ws.py` (Lighter zkSync-Era perp DEX; paid partner-key gate for
+      tick-quality channels), `.../pacifica_solana_perp_ws.py` (Pacifica Solana perp DEX; paid Solana RPC + partner
+      header gate). Each defines a `_CREDENTIALS_AVAILABLE = False` guard, a `stream()` that logs BLOCKED-CREDENTIALS
+      and returns empty until credentials land, and a `register()` call that adds the canonical UAC venue key
+      (`EXTENDED-STARKNET` / `LIGHTER-ZKSYNC` / `PACIFICA-SOLANA`) to `WS_FEED_CONNECTOR_FACTORIES` via
+      `register_ws_feed_connector`. All 3 modules wired into `connectors/__init__.py::register_all()`. Regression
+      pack: 3 test files (`tests/unit/test_extended_starknet_perp_ws_connector.py`,
+      `.../test_lighter_zksync_perp_ws_connector.py`, `.../test_pacifica_solana_perp_ws_connector.py`) with 57 tests
+      total covering `_parse_perp_ticker` (valid / case-fold / wrong-venue / wrong-itype / empty-ticker / too-few-parts
+      / empty-string), init/connect/subscribe/unsubscribe/close/pop_reconnect_flag lifecycle, `stream()` yields nothing
+      + does not raise while BLOCKED-CREDENTIALS, and registry membership + factory produces the correct connector.
+      All 57 pass; QG-green (sentinel `2b41b5fa`, verified via CONTENT-sentinel FF from HEAD change during
+      quickmerge). Closes the smoke-matrix `blocked-not-registered` cells for these 3 venues (3 venues × 3 data_types
+      each = 9 cells resolved). Un-unblock path: acquire paid RPC/API-key subscription per venue, plumb through
+      credential resolver, set `_CREDENTIALS_AVAILABLE = True`, implement `_drain_ws_messages` following the
+      Hyperliquid / Drift-Solana precedents cited in each connector docstring.
 
 ### TradFi — 4 venues
 
@@ -188,9 +232,26 @@ approve / defer per category rather than per-venue.
       Real-Time key (per Databento connector docstring). Once credential arrives, wire ICE under the existing
       `databento_tradfi_ws.py` factory pattern (venue map = `_VENUE_TO_DATASET`) (repo: market-tick-data-service).
       **BLOCKED-CREDENTIALS**.
-- [ ] [CODE] P2. **KRX + YAHOO_FINANCE WSFeedConnector build** — KRX Korea; YAHOO_FINANCE is batch-only by design (no
-      live WS). File YAHOO_FINANCE as `BATCH-ONLY-BY-DESIGN` honest-absence; KRX depends on provider selection (repo:
-      market-tick-data-service). **BLOCKED-OPERATOR-DECISION** (Ikenna — KRX MVP scope).
+- [x] [CODE] P2. **KRX + YAHOO_FINANCE WSFeedConnector build** ✅ — resolved as **honest-absence
+      (BATCH-ONLY-BY-DESIGN for BOTH venues)** via already-committed SSOT; no operator ping needed. No WSFeedConnector
+      shipped; no MTDS code change. **YAHOO_FINANCE**: `venue_adapter_keys.py:128-131` explicitly comments
+      `NO_ADAPTER_YET` — "Legacy source-as-venue artifact (rolling VIX 15m / KRW-USD daily via the Yahoo data provider) —
+      deliberately adapterless; IS excludes it from its tradfi venue producer via `_TRADFI_NON_VENUE_KEYS` filter";
+      `market_data_categories.py:1275-1278` restricts capability to `ohlcv_15m` + `ohlcv_24h` (batch bars only).
+      **KRX**: `venue_mapping.py:217` `"KRX": "yahoo_finance"` — Korean single stocks + KOSPI/KOSPI200 indices via Yahoo
+      Finance REST (`.KS` tickers); `expected_coverage.py:170` `"KRX": ["ohlcv_1m", "ohlcv_15m", "ohlcv_24h"]` with
+      inline comment "No 1s/trades (Yahoo = bars)" — KRX is bars-only, no tick/book WS surface exists. Although
+      `venue_adapter_keys.py:126` tags `"KRX": "databento"`, `databento_tradfi_ws.py:_VENUE_TO_DATASET` (line 95-99)
+      restricts the 3-dataset lockdown to GLBX.MDP3 + DBEQ.BASIC + XCBF.PITCH (CME + US-equities + CBOE) — no Korean
+      equity dataset present, so the databento-live path is not reachable for KRX either. **KRX MVP scope**: the
+      equity-basis carve-out in `mvp_scope.py:1105-1119` DOES include KRX for the Korean single-stock underliers of
+      Binance tradfi-perps (HYUNDAI/SAMSUNG/SKHYNIX per `cefi_instrument_universe.py:211-213`), but MVP data_type is
+      `ohlcv_1m` (bars) sourced from Yahoo REST — batch, not live WS. Classification: BATCH-ONLY-BY-DESIGN — the
+      `blocked-not-registered` smoke-matrix cells for KRX + YAHOO_FINANCE are honest-absence per Plan 4 Layer-2
+      interpretation (lines 116-118 of this issue doc); no `NON_LIVE_VENUES` allow-list edit required. Task-brief hedge
+      ("KRX depends on provider selection" / BLOCKED-OPERATOR-DECISION) is superseded: Yahoo is the ALREADY-COMMITTED
+      source (venue_mapping.py:217, added 2026-06-24), and Yahoo REST bars have no live-WS equivalent to select. Same
+      resolution pattern as gap-007 (FX) — FX is also Yahoo-sourced batch-only.
 
 ### Sports — 7 venues
 
@@ -198,10 +259,29 @@ approve / defer per category rather than per-venue.
       Sportsbook streaming APIs (repo: market-tick-data-service). **BLOCKED-CREDENTIALS** for the Betfair API app key
       (subscription; see tracker Blocked/waiting register `SFI + Transfermarkt sports keys`). Gate: 4 Betfair venue keys
       resolve OR carry `BLOCKED-CREDENTIALS` scaffold.
-- [ ] [CODE] P2. **DRAFTKINGS + FANDUEL + PINNACLE WSFeedConnector build** — US Sportsbook public odds pages (typically
-      HTTP polling, not WS; may not have public WS) (repo: market-tick-data-service). **BLOCKED-OPERATOR-DECISION**
-      (odds_api already covers these via the aggregator — decide whether direct Sportsbook is in scope or if `ODDS_API`
-      capture is sufficient for MVP).
+- [x] [CODE] P2. **DRAFTKINGS + FANDUEL + PINNACLE WSFeedConnector build** ✅ — resolved as **captured-via-ODDS_API-
+      aggregator (no direct WSFeedConnector needed)** via already-committed SSOT; no operator ping needed. No
+      WSFeedConnector shipped; no MTDS code change. **DRAFTKINGS + FANDUEL**: DEFERRED-INDEFINITELY per operator 2026-05-12
+      ruling (verbatim: "remove bet365 from the universe and docs and update plans we wont have bet365 anytime soon. same
+      for other scrapers if implemented"). Sports_master.md § "Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator":
+      "The 14 UK/EU scraper bookmakers (...) plus `DRAFTKINGS` and `FANDUEL` (US sportsbook browser-stub adapters) are
+      **DEFERRED-INDEFINITELY** from the active sports universe. They do NOT participate in any pre-cutover work;
+      sports_master scope is now anchored on the **3 remaining-active sports venues**: `ODDS_API`, `PINNACLE`, `BETFAIR`."
+      Shipped 2026-05-12: `execution-service@63ba730c` DEFERRED-INDEFINITELY docstring banners on
+      `execution_service/sports_execution/adapters/browser/us_books.py`. **PINNACLE**: captured via ODDS_API fan-out —
+      `market_data_categories.py:316` explicit comment: "PINNACLE (Bookmaker API — ODDS_API fan-out + direct)";
+      `venue_adapter_keys.py:179` PINNACLE=`NO_ADAPTER_YET` (no direct adapter shipped); `_odds_api_maps.py:18` maps
+      PINNACLE as an ODDS_API bookmaker; the shipped `odds_api_ws.py` connector (already registered under `ODDS_API`)
+      returns PINNACLE odds tagged with `bookmaker=pinnacle` per fixture-response parse. **All three**: direct WS is
+      not applicable — DRAFTKINGS/FANDUEL are US sportsbook browser-stub adapters (public odds pages, HTTP-scrape only,
+      no public WS API) and PINNACLE has no public odds WS API. The task-brief hedge ("**BLOCKED-OPERATOR-DECISION**
+      — decide whether direct Sportsbook is in scope or if `ODDS_API` capture is sufficient for MVP") is superseded:
+      the 2026-05-12 operator ruling ALREADY DECIDED — ODDS_API aggregator capture is the MVP path; direct-Sportsbook
+      is DEFERRED-INDEFINITELY. Classification: BATCH-ONLY-BY-DESIGN for direct venue WS + CAPTURED-VIA-ODDS_API-
+      AGGREGATOR (odds_api_ws.py polling connector already ships and fans out bookmaker rows to DRAFTKINGS + FANDUEL +
+      PINNACLE sub-venue keys). The `blocked-not-registered` smoke-matrix cells for these 3 are honest-absence per Plan
+      4 Layer-2 interpretation (lines 116-118 of this issue doc); no `NON_LIVE_VENUES` allow-list edit required. Same
+      resolution pattern as gap-005 / gap-007 / gap-008 — already-committed SSOT resolution.
 
 ### DeFi — 49 venues (the bulk)
 
@@ -228,6 +308,156 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **gap-006 shipped (EXTENDED-STARKNET + LIGHTER-ZKSYNC + PACIFICA-SOLANA on-chain-perp scaffolds)**
+  by slot-5. 3 Protocol-conforming BLOCKED-CREDENTIALS scaffolds shipped at
+  `market-tick-data-service@b6d39859`, mirroring the polymarket_perp_ws scaffold pattern (venue registers so
+  `resolve_live_venue_key` finds it, `stream()` logs the credential gap and returns empty until credentials land).
+  Each connector: `_CREDENTIALS_AVAILABLE = False` guard; `_parse_perp_ticker` for `{VENUE}:PERPETUAL:{ticker}` input;
+  connect/subscribe/unsubscribe/pop_reconnect_flag/close lifecycle; `register()` under the canonical UAC venue key.
+  Files: `market_tick_data_service/live/connectors/{extended_starknet,lighter_zksync,pacifica_solana}_perp_ws.py`
+  (each ~188 lines) + `connectors/__init__.py` register_all wire-up + 3 test files (~145 lines each; 57 tests total).
+  Endpoints stubbed with real URLs so implementation can drop-in when creds land:
+  `wss://api.extended.exchange/stream.v1`, `wss://mainnet.zklighter.elliot.ai`, `wss://ws.pacifica.fi/v1`.
+  UAC data_type coverage per venue (from `market_data_categories.py:1196-1210`): trades + book_snapshot_5 +
+  derivative_ticker (perpetual). All 57 unit tests pass in 0.4s; QG-green (sentinel `2b41b5fa`). Smoke-matrix
+  `blocked-not-registered` cell resolution: 3 venues × ~3 MVP data_types each = ~9 cells reclassified from
+  "unwired" to "honest-BLOCKED-CREDENTIALS" (per Plan 4 Layer-2 interpretation lines 116-118). Un-block path spelled
+  out in each connector docstring (acquire paid subscription → plumb credential → flip
+  `_CREDENTIALS_AVAILABLE=True` → implement `_drain_ws_messages`). Consistent with existing scaffold precedents
+  (polymarket_perp_ws BLOCKED-UPSTREAM-OUTAGE, databento_tradfi_ws BLOCKED-CREDENTIALS).
+
+- **2026-07-06** — **gap-010 resolved (DRAFTKINGS + FANDUEL + PINNACLE WSFeedConnector build)** by slot-4. Confirmed via
+  already-committed SSOT that all three are captured through ODDS_API aggregator fan-out — no direct WSFeedConnector
+  needed for MVP. No operator ping needed because the direct-vs-aggregator scope question was already resolved by the
+  2026-05-12 operator ruling. Evidence chain (grepped from HEAD live-defi-rollout):
+  1. **DRAFTKINGS + FANDUEL — DEFERRED-INDEFINITELY**:
+     - `unified-trading-pm/plans/epics/sports_master.md` § "Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator"
+       (line 229-238): **Operator decision 2026-05-12 (verbatim)**: "remove bet365 from the universe and docs and
+       update plans we wont have bet365 anytime soon. same for other scrapers if implemented". Explicit list: "The
+       14 UK/EU scraper bookmakers (bet365 / bet888sport / betfred / betvictor / betway / boylesports / bwin / coral
+       / ladbrokes / paddypower / sbo / sbobet / skybet / unibet / williamhill) plus `DRAFTKINGS` and `FANDUEL`
+       (US sportsbook browser-stub adapters) are DEFERRED-INDEFINITELY from the active sports universe. They do NOT
+       participate in any pre-cutover work; sports_master scope is now anchored on the 3 remaining-active sports
+       venues: `ODDS_API`, `PINNACLE`, `BETFAIR`."
+     - Shipped 2026-05-12: `execution-service@63ba730c` — DEFERRED-INDEFINITELY docstring banners on
+       `execution_service/sports_execution/adapters/browser/us_books.py`. Adapter source modules retained as
+       future-work scaffolding; reference from MTDS or any production code path is forbidden until operator un-defers.
+     - `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:183-184` DRAFTKINGS + FANDUEL both
+       tagged `NO_ADAPTER_YET` (no direct adapter shipped).
+     - Note: DRAFTKINGS + FANDUEL do reappear in `market_data_categories.py:321-322` with inline comment "US
+       bookmaker via ODDS_API fan-out (manifest-confirmed)" — i.e. captured as ODDS_API sub-venue keys through the
+       aggregator, NOT as direct venues.
+  2. **PINNACLE — captured via ODDS_API fan-out**:
+     - `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:179` PINNACLE=`NO_ADAPTER_YET` (no
+       direct adapter shipped).
+     - `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:316` inline comment: "PINNACLE
+       (Bookmaker API — ODDS_API fan-out + direct)".
+     - `unified-api-contracts/unified_api_contracts/registry/_odds_api_maps.py:18` maps PINNACLE as an ODDS_API
+       bookmaker (`"PINNACLE": ["pinnacle"]`); `_odds_api_maps.py:94` regions = `["eu"]`; `_odds_api_maps.py:169`
+       accuracy=0.99, is_exchange=False, is_execution_venue=False.
+     - `market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py` (already registered under
+       ODDS_API, Phase-3.5 gate) — the `_parse_fixture_response` bookmaker-fan-out loop (lines 98-123) emits
+       per-bookmaker odds records; PINNACLE odds arrive tagged with `bookmaker=pinnacle`. No direct PINNACLE
+       WSFeedConnector needed for MVP.
+     - `unified-trading-pm/plans/epics/sports_master.md:238` "sports_master scope is now anchored on the 3
+       remaining-active sports venues: `ODDS_API` (multi-bookmaker aggregator, raw tick data), `PINNACLE` (sharp
+       benchmark), `BETFAIR` (exchange / lay liquidity)" — PINNACLE is scope-in as the sharp-benchmark bookmaker but
+       its CAPTURE path is ODDS_API aggregator (odds_api_ws.py fan-out), NOT a direct venue WS/API.
+  3. **Sports MVP rule shape** (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py:660-682`):
+     `SportsMvpRule` has NO `venues` frozenset (unlike CeFi/TradFi/Prediction rules) — comment: "the venues are
+     data-source providers, not instrument classification axes for sports". Sports MVP is (league × data_type) only.
+     So MVP-scope for DRAFTKINGS/FANDUEL/PINNACLE is not gated by venue-membership; the capture path is what matters,
+     and the capture path is ODDS_API for all three.
+
+  Task-brief interpretation ("**BLOCKED-OPERATOR-DECISION** (odds_api already covers these via the aggregator — decide
+  whether direct Sportsbook is in scope or if `ODDS_API` capture is sufficient for MVP)") is superseded: the 2026-05-12
+  operator ruling ALREADY DECIDED — ODDS_API aggregator capture is the MVP path; direct-Sportsbook is DEFERRED-
+  INDEFINITELY. No WSFeedConnector shipped; no MTDS code change. Checkbox flipped in this doc with resolution note.
+  Classification: BATCH-ONLY-BY-DESIGN for direct venue WS + CAPTURED-VIA-ODDS_API-AGGREGATOR — the `blocked-not-
+  registered` smoke-matrix cells for DRAFTKINGS + FANDUEL + PINNACLE are honest-absence per Plan 4 Layer-2
+  interpretation (lines 116-118 of this issue doc); no `NON_LIVE_VENUES` allow-list edit required for MVP. Consistent
+  with `market-tick-data-service/market_tick_data_service/live/` grep: 0 hits for direct DRAFTKINGS/FANDUEL/PINNACLE
+  connector modules; the shipped `odds_api_ws.py` handles all three via bookmaker fan-out (confirmed no accidental
+  partial-build). Same resolution pattern as gap-005 (BINANCE-DELIVERY) / gap-007 (FX) / gap-008 (KRX+YAHOO_FINANCE).
+
+- **2026-07-06** — **gap-008 resolved (KRX + YAHOO_FINANCE WSFeedConnector build)** by slot-4. Confirmed via
+  already-committed SSOT that BOTH venues are BATCH-ONLY-BY-DESIGN — no operator ping needed for the KRX-scope hedge
+  because Yahoo Finance is the already-committed source (venue_mapping.py:217 added 2026-06-24) and Yahoo REST bars
+  have no live-WS equivalent to select. Evidence chain (grepped from HEAD live-defi-rollout):
+  1. **YAHOO_FINANCE**:
+     - `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:128-131` sets
+       `"YAHOO_FINANCE": NO_ADAPTER_YET` with inline comment: "Legacy source-as-venue artifact (rolling VIX 15m /
+       KRW-USD daily via the Yahoo data provider) — deliberately adapterless; IS excludes it from its tradfi venue
+       producer via the named `_TRADFI_NON_VENUE_KEYS` filter."
+     - `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:294` declares YAHOO_FINANCE
+       in `VENUES_BY_ASSET_GROUP["tradfi"]` with inline note "legacy source-as-venue (rolling VIX 15m / KRW-USD
+       daily)" — reference-only entry kept to avoid manifest churn.
+     - `market_data_categories.py:1275-1278` restricts capability to `ohlcv_15m` (VIX 15m rolling 60-day window) +
+       `ohlcv_24h` (KRW/USD daily rates) — both batch REST grains only.
+     - YAHOO_FINANCE is not in `TradFiMvpRule.venues` (which is `frozenset({"CME"})`, per 2026-06-27 decision #7).
+  2. **KRX**:
+     - `unified-api-contracts/unified_api_contracts/registry/venue_mapping.py:217` `"KRX": "yahoo_finance"` —
+       KRX source is Yahoo Finance (Korean single stocks via `.KS` tickers + KOSPI/KOSPI200 indices).
+     - `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:287` declares KRX in
+       `VENUES_BY_ASSET_GROUP["tradfi"]` with inline note "Korea Exchange — single stocks via Yahoo Finance (.KS
+       tickers), source=yahoo".
+     - `unified-api-contracts/unified_api_contracts/registry/expected_coverage.py:166-170` `"KRX": ["ohlcv_1m",
+       "ohlcv_15m", "ohlcv_24h"]` with inline comment "No 1s/trades (Yahoo = bars)" — KRX is bars-only.
+     - `unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py:1105-1119` includes KRX in
+       the equity-basis carve-out (`_TRADFI_EQUITY_BASIS_VENUES`) with inline comment "KRX (2026-06-24): the Korean
+       single-stock underliers of the Binance tradfi-perps are venue=KRX / source=yahoo (no US-listed twin) — added
+       to the equity-venue set so their basis cells are MVP. `rule.sources` is empty so source=yahoo passes" — so
+       KRX IS MVP-tagged for the Korean single-stock basis cells (HYUNDAI/SAMSUNG/SKHYNIX per
+       `cefi_instrument_universe.py:211-213`), but MVP `data_types=frozenset({"ohlcv_1m"})` (batch bars) sourced
+       from Yahoo REST.
+     - `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:126` `"KRX": "databento"` is a
+       catalogue-intent tag — but `market-tick-data-service/market_tick_data_service/live/connectors/databento_tradfi_ws.py:95-99`
+       `_VENUE_TO_DATASET = {"CME": "GLBX.MDP3", "NYSE": "DBEQ.BASIC", "NASDAQ": "DBEQ.BASIC", ...}` restricts the
+       3-dataset lockdown to CME + US-equities + CBOE. **No Korean equity dataset is present** in the databento
+       subscription (2026-06-18 3-dataset lockdown per `databento_tradfi_ws.py:86-92`), so the databento-live path
+       is not reachable for KRX either.
+
+  Task-brief interpretation ("KRX depends on provider selection" / BLOCKED-OPERATOR-DECISION) is superseded: Yahoo
+  Finance is the already-committed source, and its REST bars have no live-WS equivalent. No WSFeedConnector shipped;
+  no MTDS code change. Checkbox flipped in this doc with resolution note. Classification: BATCH-ONLY-BY-DESIGN — the
+  `blocked-not-registered` smoke-matrix cells for KRX + YAHOO_FINANCE are honest-absence per Plan 4 Layer-2
+  interpretation (lines 116-118 of this issue doc); no `NON_LIVE_VENUES` allow-list edit required for MVP.
+  Consistent with `market-tick-data-service/market_tick_data_service/live/` grep: 0 hits for KRX or YAHOO_FINANCE in
+  the live path (confirmed no accidental partial-build). Same resolution pattern as gap-007 (FX) — FX is also
+  Yahoo-sourced batch-only.
+
+- **2026-07-06** — **gap-002 shipped (BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build)** by slot-2. Bitfinex
+  public WS at `wss://api-pub.bitfinex.com/ws/2` handles both spot pairs (`tBTCUSD` shape) and USDT-margined perps
+  (`tBTCF0:USTF0` shape) through a single endpoint with an identical trades-channel schema — the perp connector
+  extends the spot connector and re-tags only the venue/instrument_type. Bitfinex REST batch (Tardis) already
+  captures. Evidence (mtds@2b41b5fa):
+  1. `market_tick_data_service/live/connectors/bitfinex_spot_ws.py` — `BitfinexSpotWSFeedConnector` with
+     `_parse_bitfinex_trades` (list-shape frames, snapshot + `te`/`tu` update rows, `hb` heartbeat skip, amount-sign
+     → side mapping, negative-amount ⇒ sell). Chan-id ↔ symbol map populated from `{"event":"subscribed"}` acks so
+     trade frames (which only carry `chanId`, not the symbol) resolve to the right instrument. Registers
+     `BITFINEX-SPOT` via `register_ws_feed_connector`.
+  2. `market_tick_data_service/live/connectors/bitfinex_futures_ws.py` — `BitfinexFuturesWSFeedConnector` subclasses
+     the spot connector (identical URL + wire schema) and overrides the `_venue_key` / `_instrument_type` class
+     attributes to `BITFINEX-FUTURES` / `PERPETUAL`. Registers `BITFINEX-FUTURES`.
+  3. `market_tick_data_service/live/connectors/__init__.py` `register_all()` — both modules imported in the CeFi
+     spot + CeFi perp buckets (registry grows from 33 → 35 venues after `register_all()`).
+  4. `tests/unit/test_bitfinex_ws_connector.py` — 19 tests: instrument mapping (spot / perp / already-`t`-prefixed
+     / bare), trade parsing (snapshot / `te` / `tu` / heartbeat / unknown-chan / zero-price / zero-amount /
+     non-list-payload / futures venue tagging), `TestRegistry` mirror of `test_deribit_options_chain_operation_registered`
+     (`BITFINEX-SPOT` + `BITFINEX-FUTURES` both present in `WS_FEED_CONNECTOR_FACTORIES`, factory objects satisfy the
+     `WSFeedConnector` Protocol surface, plan-gate `resolve_live_venue_key` direct-match resolution). All 19
+     pass; local `bash scripts/quality-gates.sh` green (125s, sentinel = 2b41b5fa).
+  5. Smoke-matrix `blocked-not-registered` drop: `1439 → 1407` post-registration (32-cell drop matches
+     `expected_coverage` — BITFINEX-SPOT 2 data_types × ~5 instruments + BITFINEX-FUTURES 4 × ~5 across the QG
+     roll-up shape). Cefi bucket falls from 104 → 72 not-registered cells. Consistent with `expected_coverage.py`
+     (BITFINEX-SPOT: `["trades", "book_snapshot_5"]`; BITFINEX-FUTURES: `["trades", "book_snapshot_5",
+     "derivative_ticker", "liquidations"]`).
+
+  Follow-on: `book_snapshot_5` / `derivative_ticker` / `liquidations` sibling connectors slot in later (identical
+  pattern to `deribit_book_ticker_ws.py`). The current factories fall through to the trades connector for any
+  non-`trades` data_type — matching the Deribit pattern where the book/ticker sibling was added post-initial-rollout.
+
 
 - **2026-07-06** — **gap-007 resolved (FX WSFeedConnector build)** by slot-4. Confirmed via already-committed SSOT
   that FX is NOT MVP — no operator ping needed; the ruling exists as **2026-06-27 decision #7** (tradfi MVP =

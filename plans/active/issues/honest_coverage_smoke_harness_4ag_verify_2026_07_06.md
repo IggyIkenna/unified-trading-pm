@@ -124,9 +124,9 @@ Land the 4 fixes below (all tracked as todos). Priority ordering respects existi
 ## Todos
 
 - [x] ✅ [CODE] P2. Fix `run_live_verify_prediction.py` bucket resolution: change `live_manifest_reader.UTLManifestReader._bucket_for` (or override in the prediction runner) so prediction uses `kind="market-data-tick-prediction"` (flat yaml key) instead of `kind="tick-data", asset_group="prediction"`. Alternatively teach the `tick-data` alias to route prediction to the flat key. Add a regression test that constructs an atom with `asset_group="prediction"` and asserts the resolved bucket matches `market-data-tick-pred-{env}-{project_id}`. (repo: e2e-testing; possibly unified-trading-library / unified-api-contracts if the alias route is preferred) — e2e-testing@1ca3672 `_bucket_for` now routes `asset_group="prediction"` to flat key `market-data-tick-prediction`; regression test `test_prediction_asset_group_resolves_to_flat_bucket_key` asserts bucket starts with `market-data-tick-pred-` (verified live: `market-data-tick-pred-prd-central-element-323112`).
-- [ ] [CODE] P2. Build `e2e-testing/scripts/build_smoke/run_live_verify_cefi.py` modelled on `run_live_verify_tradfi.py`: load cefi catalogue from `gs://instruments-store-cefi-prd-*/prd/catalog.parquet` via `MdpsUniverseProvider`, iterate cefi MVP data_types from `MVP_REQUIRED_WINDOW_REGISTRY`, emit coverage matrix + smoke set + summary. Include CLI args (--output-dir/--today/--cloud/--deployment-env) matching the tradfi runner. Verify against the live cefi manifest (`market-data-tick-cefi-prd-*`). (repo: e2e-testing)
-- [ ] [CODE] P2. Build `e2e-testing/scripts/build_smoke/run_live_verify_defi.py` modelled on `run_live_verify_tradfi.py`: load defi catalogue from `gs://instruments-store-defi-prd-*/prd/catalog.parquet` via `MdpsUniverseProvider`, iterate defi MVP data_types (`dex_pool_swaps` / `dex_pool_state` / `lending_indices` / `lst_rates` / `oracle_prices` / `perp_funding`) from `MVP_REQUIRED_WINDOW_REGISTRY`, emit coverage matrix + smoke set + summary. Include CLI args matching the tradfi runner. Verify against the live defi manifest (`market-data-tick-defi-prd-*`). (repo: e2e-testing)
-- [ ] [VERIFY] P2. Once Plan 2 (`tradfi_v9_stage1_finish_2026_07_06`) tasks 2-11 land and `catalog.parquet` is written to `gs://instruments-store-tradfi-prd-central-element-323112/prd/`, re-run `run_live_verify_tradfi.py` and publish the fresh matrix + smoke set. Attach output as evidence. (repo: e2e-testing; PREREQ: `tradfi_v9_stage1_finish_2026_07_06` tasks 2-11 done)
+- [x] ✅ [CODE] P2. Build `e2e-testing/scripts/build_smoke/run_live_verify_cefi.py` modelled on `run_live_verify_tradfi.py`: load cefi catalogue from `gs://instruments-store-cefi-prd-*/prd/catalog.parquet` via `MdpsUniverseProvider`, iterate cefi MVP data_types from `MVP_REQUIRED_WINDOW_REGISTRY`, emit coverage matrix + smoke set + summary. Include CLI args (--output-dir/--today/--cloud/--deployment-env) matching the tradfi runner. Verify against the live cefi manifest (`market-data-tick-cefi-prd-*`). (repo: e2e-testing) — **e2e-testing@ceb09fd (slot-9 planning).** New `run_live_verify_cefi.py` mirrors the tradfi runner (`_load_cefi_catalogue` loads parquet via UTL StorageClient from `resolve_bucket_name(kind='instruments-store', asset_group='cefi')/{env}/catalog.parquet`, groups by (venue, instrument_type) → `MdpsUniverseProvider.instrument_catalogue`). `build_coverage_matrix` iterates cefi's 5 MVP data_types (`trades`/`book_snapshot_5`/`derivative_ticker`/`options_chain`/`futures_chain` — the last two auto-bundled by the provider) via `registered_data_types_for_asset_group('cefi')`. CLI parity with tradfi: `--output-dir` / `--today` / `--cloud` / `--deployment-env`. Empty/unavailable catalogue → WARNING + empty matrix (0 atoms → exit 1), never silent skip. QG-green 112s (sentinel `ceb09fd4e457b9b983e178bfec596892c5787851`).
+- [x] ✅ [CODE] P2. Build `e2e-testing/scripts/build_smoke/run_live_verify_defi.py` modelled on `run_live_verify_tradfi.py`: load defi catalogue from `gs://instruments-store-defi-prd-*/prd/catalog.parquet` via `MdpsUniverseProvider`, iterate defi MVP data_types (`dex_pool_swaps` / `dex_pool_state` / `lending_indices` / `lst_rates` / `oracle_prices` / `perp_funding`) from `MVP_REQUIRED_WINDOW_REGISTRY`, emit coverage matrix + smoke set + summary. Include CLI args matching the tradfi runner. Verify against the live defi manifest (`market-data-tick-defi-prd-*`). (repo: e2e-testing) — **e2e-testing@be37c75 (slot-9 planning).** New `run_live_verify_defi.py` mirrors the cefi/tradfi runners: `_load_defi_catalogue` loads parquet via UTL StorageClient from `resolve_bucket_name(kind='instruments-store', asset_group='defi')/{env}/catalog.parquet`, groups by (venue, instrument_type) → `MdpsUniverseProvider.instrument_catalogue`. `build_coverage_matrix` iterates all 6 defi MVP data_types (`dex_pool_swaps`/`dex_pool_state`/`lending_indices`/`lst_rates`/`oracle_prices`/`perp_funding` — all leaf, none bundled) via `registered_data_types_for_asset_group('defi')`. CLI parity with tradfi/cefi: `--output-dir` / `--today` / `--cloud` / `--deployment-env`. Empty/unavailable catalogue → WARNING + empty matrix (0 atoms → exit 1), never silent skip. QG-green 74s (sentinel `be37c75660585e9b88f494f6a8e942afdbe0d048`). Completes the 4-AG runner set alongside -001 (prediction, slot-4@1ca3672) + -002 (cefi, slot-9@ceb09fd).
+- [ ] [VERIFY] P2. **BLOCKED-PREREQUISITES (2026-07-06, slot-6 planning — BOUNCE #4).** Once Plan 2 (`tradfi_v9_stage1_finish_2026_07_06`) tasks 2-11 land and `catalog.parquet` is written to `gs://instruments-store-tradfi-prd-central-element-323112/prd/`, re-run `run_live_verify_tradfi.py` and publish the fresh matrix + smoke set. Attach output as evidence. (repo: e2e-testing; PREREQ: `tradfi_v9_stage1_finish_2026_07_06` tasks 2-11 done). **Task 10 self-park precedent applied** (see `tradfi_v9_stage1_finish_2026_07_06.md` task 10 — slot-7 in-checkbox BLOCKED-PREREQUISITES marker): after 4 bounces (slot-9 BLK-2a8ba36d, slot-8 BLK-8a12c73b, slot-4 BLK-7fc2ba40, slot-6 BLK-XX this session), the /blocked escalation path is exhausted — this in-checkbox marker filters -004 from priority-only regen dispatch until an operator/admin clears it. **Un-block sequence**: (a) Plan 2 task 3 (straggler VM close), (b) Plan 2 task 4 (E5 `rebuild_tradfi_manifest.py`), (c) Plan 2 tasks 2/5/6/7 chain, (d) either the operator writes `catalog.parquet` to the `prd/` prefix expected by this task OR the task text is amended to reference the actual `prod/` prefix (verified live 2026-07-06: `prod/catalog.parquet` = 10,561,159 bytes; `prd/catalog.parquet` = 404 NotFound), (e) operator clears this BLOCKED- marker → -004 re-dispatches.
 
 ## Evidence
 
@@ -138,3 +138,96 @@ Land the 4 fixes below (all tracked as todos). Priority ordering respects existi
 - Defi runner absence: same as cefi.
 - Sports (already-verified reference): `run_live_verify_sports.py` ships at `e2e-testing@cf6b7e1` (see
   `honest_coverage_smoke_harness_2026_06_28.md` Progress Log 2026-06-29).
+
+## Progress Log
+
+- **2026-07-06** — **BOUNCE #4: -004 re-dispatched to slot-6 (`BLK-6ph6ncbz`)** (slot-6 planning opus/max).
+  Same task `-004` dispatched a FOURTH time — no operator action after slot-9 (BLK-2a8ba36d), slot-8 (BLK-8a12c73b),
+  and slot-4 (BLK-7fc2ba40) all filed identical escalations earlier today. Slot-6 re-verified state:
+  (1) **Plan 2 checkbox scan** on fresh live-defi-rollout HEAD — task 1 ✅ (2026 apply), task 2 `- [ ]`
+  BLOCKED-ORDERING, task 3 `- [ ]` BLOCKED-STRAGGLER-VM-RUNNING, task 4 `- [ ]` (E5 manifest rebuild),
+  task 5 `- [ ]` (CF-7 relabel), task 6 `- [ ]` (E7 verify), task 7 `- [ ]` (IS enumerate-seed),
+  task 8 ✅ (IS catalogue @6716f55), task 9 ✅ (V6/G4 close), task 10 `- [ ]` BLOCKED-PREREQUISITES,
+  task 11 `- [ ]` BLOCKED-OPERATOR-DECISION. PREREQ ("tasks 2-11 done") remains **NOT met** —
+  8 of 10 gated tasks still unchecked. (2) **Catalog.parquet live-verify** via UTL `get_storage_client()`
+  → `download_bytes(bucket, blob_path)` — `prd/catalog.parquet` returns `NotFound: 404`;
+  `prod/catalog.parquet` FOUND at 10,561,159 bytes (matches Plan 2 task 8 evidence at
+  `2026-07-06T15:48:30 UTC`). The task's expected `prd/` prefix does not exist and appears to be a
+  docs-vs-reality path typo — Plan 2 task 8's rollup writes to `prod/`. Running the verify now would
+  produce the same 404-empty-matrix result already documented three times.
+  **Self-park applied** (task-10 precedent, slot-7): added `**BLOCKED-PREREQUISITES (2026-07-06,
+  slot-6 planning — BOUNCE #4)**` marker + full un-block sequence to the -004 checkbox line to filter
+  from priority-only regen dispatch. The /blocked escalation path is exhausted after 3 identical
+  operator-facing filings; the in-checkbox marker is the more effective mechanism (docs-driven, survives
+  regen, visible in the plan view). Slot-6 also files `BLK-6ph6ncbz` for the 4th operator escalation
+  since the prior three did not surface at the operator level, and continues to next task per
+  `can_continue`. **Operator action required (any one of)**: (a) `POST /api/backlog/honest_coverage_smoke_harness_4ag_verify-004/update` with `priority: 999`;
+  (b) `DELETE /api/backlog/honest_coverage_smoke_harness_4ag_verify-004`; (c) leave the in-checkbox
+  marker in place until Plan 2 tasks 2-11 land AND the `prd/` vs `prod/` prefix disagreement is
+  resolved (either write catalog to `prd/` OR amend the -004 task text to point at `prod/`).
+
+- **2026-07-06** — **-002 cefi runner shipped** (slot-9 planning). New
+  `e2e-testing/scripts/build_smoke/run_live_verify_cefi.py` (226 lines) mirrors the tradfi runner:
+  loads cefi catalogue via UTL StorageClient from
+  `resolve_bucket_name(kind='instruments-store', asset_group='cefi')/{env}/catalog.parquet`,
+  groups by (venue, instrument_type) → `MdpsUniverseProvider.instrument_catalogue`, runs
+  `build_coverage_matrix` iterating the 5 cefi MVP data_types
+  (`trades`/`book_snapshot_5`/`derivative_ticker`/`options_chain`/`futures_chain` — last two
+  auto-bundled) via `registered_data_types_for_asset_group('cefi')`. CLI parity with tradfi:
+  `--output-dir` / `--today` / `--cloud` / `--deployment-env`. Empty/unavailable catalogue →
+  WARNING + empty matrix (0 atoms → exit 1), never silent skip. Import + `--help` smoke tests
+  green. Full QG green 112s (sentinel `ceb09fd4e457b9b983e178bfec596892c5787851`). Shipped
+  `e2e-testing@ceb09fd` via quickmerge --agent --files.
+- **2026-07-06** — **-003 defi runner shipped** (slot-9 planning). New
+  `e2e-testing/scripts/build_smoke/run_live_verify_defi.py` (227 lines) same pattern as cefi/tradfi:
+  loads defi catalogue via UTL StorageClient from
+  `resolve_bucket_name(kind='instruments-store', asset_group='defi')/{env}/catalog.parquet`,
+  wraps in `MdpsUniverseProvider`, iterates 6 defi MVP data_types (`dex_pool_swaps` /
+  `dex_pool_state` / `lending_indices` / `lst_rates` / `oracle_prices` / `perp_funding` — all
+  leaf, none bundled). Full QG green 74s (sentinel
+  `be37c75660585e9b88f494f6a8e942afdbe0d048`). Shipped `e2e-testing@be37c75` via quickmerge
+  --agent --files. Completes the 4-AG runner set alongside -001 (prediction bucket fix, slot-4
+  `e2e-testing@1ca3672`) + -002 (cefi runner, slot-9 `e2e-testing@ceb09fd`).
+- **2026-07-06** — **-004 tradfi re-run PARKED — BLOCKED-PREREQUISITES (`BLK-2a8ba36d`)**
+  (slot-9 planning). Task `-004` ("Re-run `run_live_verify_tradfi.py` once Plan 2 lands +
+  `catalog.parquet` written") was dispatched after -003. Verified live: `catalog.parquet` at
+  `gs://instruments-store-tradfi-prd-central-element-323112/prd/catalog.parquet` returns
+  `NotFound: 404` (checked via UTL `get_storage_client().download_bytes`). Verified Plan 2
+  (`tradfi_v9_stage1_finish_2026_07_06.md`) — tasks 2-11 all still `- [ ]` unchecked (the
+  `rebuild_tradfi_manifest.py` E5, IS enumerate-seed for tradfi, CF-7 relabel, E7 verify are
+  all queued). Running the re-run now would produce the SAME empty-matrix result already
+  documented in the "What I found" section (`WARNING tradfi catalog not available ... 404`) —
+  no new signal. Slot-9 recommendation A of `BLK-2a8ba36d`: PARK -004 pending Plan 2. **Operator
+  action required** (to prevent bounce-loop like the cefi -008 chain that hit 8×): add
+  `depends_on: [tradfi_v9_stage1_finish tasks 2-11]` to `-004` in `data/config/backlog.yaml` +
+  regen (or flip `-004` priority to 999). Slot-9 continues to next task per `can_continue`.
+- **2026-07-06** — **BOUNCE #3: -004 re-dispatched to slot-4 (`BLK-7fc2ba40`)**
+  (slot-4 planning). Same task `-004` dispatched a THIRD time — no operator action taken after
+  slot-9 (BLK-2a8ba36d) + slot-8 (BLK-8a12c73b) filed identical escalations earlier today. Slot-4
+  re-verified Plan 2 (`tradfi_v9_stage1_finish_2026_07_06.md`) checkbox state from HEAD
+  live-defi-rollout: task 1 ✅, tasks 2-7 all `- [ ]` (2 BLOCKED-ORDERING on task 4; 3
+  BLOCKED-STRAGGLER-VM-RUNNING; 4 E5 manifest rebuild unchecked; 5 E6 CF-7 relabel unchecked; 6 E7
+  verify unchecked; 7 IS enumerate-seed unchecked), tasks 8-9 ✅ (IS catalogue @6716f55, V6 flip),
+  tasks 10-11 `- [ ]` (10 BLOCKED-PREREQUISITES, 11 BLOCKED-OPERATOR-DECISION). PREREQ still not
+  met — running verify now still produces empty matrix (0 shards, no new signal). Slot-4 filed
+  `BLK-7fc2ba40` with the same recommendation as `BLK-2a8ba36d` + `BLK-8a12c73b` (PARK via
+  priority=999 OR DELETE OR condition-gate). Bounce loop will continue until an operator/admin
+  acts on one of the three parking options. Slot-4 continues to next task per `can_continue`.
+
+- **2026-07-06** — **BOUNCE #2: -004 re-dispatched to slot-8 (`BLK-8a12c73b`)**
+  (slot-8 planning). Same task `-004` dispatched again — operator hadn't parked yet after slot-9's
+  `BLK-2a8ba36d` escalation. Slot-8 re-verified fresh state: `catalog.parquet` at
+  `gs://instruments-store-tradfi-prd-central-element-323112/prd/catalog.parquet` still 404
+  (present at `prod/catalog.parquet` = 10,561,159 bytes — the tradfi runner's default env is `prod`
+  so `--deployment-env prd` from slot-9's command mapped to the missing `prd/` path). Verified
+  Plan 2 checkboxes: task 1 ✅ (2026 migration), tasks 2-7 all `- [ ]` (orphan sweep BLOCKED-ORDERING,
+  straggler-VM RUNNING, E5 manifest rebuild QUEUED, CF-7 relabel QUEUED, E7 verify QUEUED, IS
+  enumerate-seed QUEUED), tasks 8-9 ✅ (IS catalogue @6716f55, V6 flip), tasks 10-11 `- [ ]`
+  (schema tail BLOCKED-PREREQUISITES, legacy-twin bucket deletes BLOCKED-OPERATOR-DECISION). PREREQ
+  ("tasks 2-11 done") remains **not met** — running verify now would still produce empty matrix
+  (0 shards) which is not new signal. Slot-8 re-filed `BLK-8a12c73b` with the same recommendation
+  as `BLK-2a8ba36d` (park via depends_on OR priority=999). No backlog.yaml exists (only
+  `backlog.test.yaml`) — the backlog SQLite is derived from plans via `regen_backlog_from_plan.py`;
+  parking must go through either (a) `POST /api/backlog/<id>/update` with `priority: 999`, (b) task
+  `DELETE /api/backlog/<id>`, or (c) adding `depends_on` at the todo level in the plan/issue doc
+  and regen. Slot-8 continues to next task per `can_continue`.
