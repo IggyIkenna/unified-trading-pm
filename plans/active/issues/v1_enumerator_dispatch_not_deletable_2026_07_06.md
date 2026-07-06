@@ -113,10 +113,21 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
 
 ## Actionable todos
 
-- [ ] [CODE] P2. **Extend `_enumerate_v2_tradfi` to emit `EXPECTED_NON_TRADING_DAY` at venue-grain**
+- [x] ✅ [CODE] P2. **Extend `_enumerate_v2_tradfi` to emit `EXPECTED_NON_TRADING_DAY` at venue-grain**
       (`instrument_type=""` `instrument_id=""`) — mirror v1 `_enumerate_tradfi`'s weekend/holiday walk via
       `is_non_trading_day` / `non_trading_day_reason`; add regression test asserting v2 output covers the same
       calendar cells v1 emits (repo: instruments-service).
+      — 2026-07-06 slot-12: instruments-service@24f7716 (feature: 705deec code + 24f7716 tests).
+        `_yield_v2_tradfi_non_trading_day_rows(date_axis, data_types)` helper mirrors v1
+        `_enumerate_tradfi`'s (venue × non-trading-day × data_type) walk, emitted as `instrument_type=""` /
+        `instrument_id=""` / `capture_status="empty_confirmed"` with reason `EXPECTED_WEEKEND` or
+        `EXPECTED_HOLIDAY` from `non_trading_day_reason()`. `_enumerate_v2_tradfi` `yield from`s it before the
+        per-instrument lifecycle pass. Regression test:
+        `tests/integration/test_enumerate_v2_superset_property.py::test_tradfi_v2_covers_v1_non_trading_day_cells`
+        (2024-07-01 → 2024-07-07 window spans Independence Day + Sat/Sun; verified v1=240 cells, v2=240 cells,
+        missing=0). 14 pre-existing per-instrument tests updated to filter the new venue-grain rows via a
+        `_drop_v2_tradfi_venue_grain(rows)` helper — the per-instrument assertions stay focused; the
+        v1↔v2 parity is asserted by the new superset test. Full `bash scripts/quality-gates.sh` green (117s).
 - [ ] [CODE] P2. **Extend `_enumerate_v2_sports` to emit `EXPECTED_PRE_SOURCE_COVERAGE_START` at (source, data_type,
       date) grain** with `league_id=""` for dates before each source's `SOURCE_COVERAGE_START`; drop the "date <
       coverage start → SKIP" branch that currently defers to v1; update the docstring to reflect the new
