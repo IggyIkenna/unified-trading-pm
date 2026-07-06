@@ -100,9 +100,15 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
       rebuilt yet, note it + the ETA; the manifest self-heals once it lands (do NOT hand-run the consolidator against
       prod while the old image is still deployed — it would fight the every-minute cron). SSOT:
       `codex/05-infrastructure/manifest-consolidator-ssot.md`.
-- [ ] [DATA] P1. One-off manifest normalization (issue doc §8) — clean any residual dup pollution + the stale test rows,
-      **only AFTER** the §9.2b consolidator is confirmed deployed (normalizing against the old consolidator
-      re-duplicates).
+- [ ] [DATA] P1. **BLOCKED-PREREQUISITES (2026-07-06, slot-7).** One-off manifest normalization (issue doc §8) — clean
+      any residual dup pollution + the stale test rows, **only AFTER** the §9.2b consolidator is confirmed deployed
+      (normalizing against the old consolidator re-duplicates). **BLOCKED**: 2nd auto-dispatch to slot-7 today with
+      the same unmet prereq (previous ruling BLK-afcc5da6 → this ruling BLK-18a3d596, main-agent verdict PARK).
+      Task -003 (§9.2b consolidator confirmation) still `status=queued` at LDR tip; zero UTL
+      `manifest_consolidator.py` commits in the last 24 h — the Cloud Run consolidator image rebuild post
+      `unified-trading-library@f5ec2291f` has NOT been verified. **Un-block sequence**: (a) task -003 completes (image
+      tag verify against the deployed Cloud Run consolidator jobs — captured-vs-seed dups collapsed for XG /
+      XG_SHOTS); (b) task -004 re-dispatches and runs the one-off normalization against the now-clean consolidator.
 - [ ] [VERIFY] P0. **BLOCKED-PREREQUISITES (2026-07-06, slot-12).** Re-evaluate the `understat-vm-xg-complete` gate
       against the now-captured manifest; flip it green ONLY on real captured shots (not hollow). Then the **6 parked
       sports tasks** unblock (this is the whole point). SSOT: the issue doc + `agent-orchestrator` backlog gating
@@ -178,3 +184,13 @@ shots; the 6 parked sports tasks are unblocked; issue-doc Progress Log updated; 
   Cloud Run consolidator image rebuild since `unified-trading-library@f5ec2291f` has NOT been verified. Running -004
   against the old consolidator re-duplicates per plan warning. -004 resumes when -003 completes. Slot-7 rotated to -001
   (the actual critical path).
+- 2026-07-06 (slot-7 planning, `data_engineering`, 2nd auto-dispatch): -004 auto-dispatched to slot-7 AGAIN despite the
+  previous PARK ruling — the earlier commit noted the block in the Progress Log but did NOT add a BLOCKED-PREREQUISITES
+  marker inside the checkbox line, so the dispatcher regen re-selected it on priority alone. Verified live state:
+  -001 backfill process alive (PID 1782092, `/tmp/understat_backfill.log` mtime 18:01:14Z, ~213 → 252 `rows written for
+  date` and climbing), -003 still `status=queued`, no UTL `manifest_consolidator.py` commits in the last 24 h.
+  Filed **BLK-18a3d596**; main-agent ruling: **OPTION A** — park -004, commit BLOCKED-PREREQUISITES note inside the
+  checkbox (so the next backlog regen filters it, matching how -005 is structured), stay on slot as -001 backfill
+  monitor (report every 500-date milestone), do NOT flip `understat-vm-xg-complete` — operator confirmation required.
+  -004 will re-dispatch after -003 completes and the checkbox marker is cleared. This entry + the checkbox edit are the
+  operator-facing durable fix.
