@@ -68,6 +68,33 @@ source:
 > straggler re-run · `rebuild_tradfi_manifest` · IS enumerate-seed + catalogue) · Ikenna's migration sign-off (gates the
 > legacy-twin bucket deletes). See Stage 1 + the Progress Log.
 
+> **🤖 DISPATCHED TO AGENT-ORCHESTRATOR (2026-07-06) — Stages 1-6 carved into 6 role-homogeneous AO plans, all
+> `assigned_vm: planning`.** **Tiering (operator 2026-07-06): Plan 1 = Opus/max** (the C2 `_row_data_types` fix +
+> denominator correctness — genuinely hard, defeated two prior attempts); **Plans 2-6 = Sonnet/high** (operational /
+> pattern-following, guarded by smoke-first + the main/review agents). Note: AO's effort vocabulary has **no `xhigh`**,
+> and **`max` requires Opus** (Sonnet+`max` HARD-STOPs the worker self-check), so Sonnet's valid ceiling is `high`. This
+> tracker stays the operator-owned coordinator (`assigned_vm: NA`); the engineering now runs on AO. Each plan carries
+> per-task `Gate:`, `PREREQ:` ordering, smoke-first / stop-on-surprise guards, and `BLOCKED-OPERATOR-DECISION` /
+> `BLOCKED-CREDENTIALS` lines (regen auto-skips `BLOCKED-*` so they stay visible for you, never auto-dispatched — the
+> working agent raises them via the blocked-queue).
+>
+> | AO Plan                            | File                                                | Role             | Tier            | Stages    | Dispatch                              |
+> | ---------------------------------- | --------------------------------------------------- | ---------------- | --------------- | --------- | ------------------------------------- |
+> | **1** cefi denominator completion  | `issues/cefi_layer1_denominator_gaps_2026_07_03.md` | data_engineering | **Opus / max**  | 2 (cefi)  | now (unblocked)                       |
+> | **2** TradFi Stage-1 finish        | `tradfi_v9_stage1_finish_2026_07_06.md`             | data_engineering | Sonnet / high   | 1         | now (parallel)                        |
+> | **3** IS-catalogue completion      | `is_catalogue_completion_2d_2026_07_06.md`          | data_engineering | Sonnet / high   | 2d        | now (parallel)                        |
+> | **4** Layer-1 re-measure + certify | `layer1_remeasure_and_certify_2026_07_06.md`        | data_engineering | Sonnet / high   | 3         | **gated** `gate_on_depends` Plans 1-3 |
+> | **5** foundation gates + capture   | `foundation_gates_and_capture_to_100_2026_07_06.md` | data_engineering | Sonnet / high\* | 4-5       | handler-audit now; rest PREREQ Plan 4 |
+> | **6** infra capture + devops       | `infra_capture_and_devops_leftovers_2026_07_06.md`  | infra            | Sonnet / high   | 5 (infra) | now (ASTER gates Plan 1 re-measure)   |
+>
+> _\*Plan 5 is the closest call — new `risk_params` handler + defi-oracle design; bump to Opus if you want a margin._
+>
+> **Stays OFF AO (true hard-stops — operator only):** legacy-twin bucket deletes (Ikenna's migration sign-off) ·
+> locked-plan archival/fold (Stage 0 §F.4) · COINBASE/DERIBIT-COMBO `MVP_SCOPE` call · CLOB-on-chain classification ·
+> paid-RPC / quota credentials. All are `BLOCKED-*` lines in the plans above (agent raises → you answer). **UI tail:**
+> the honest_coverage data-status drill-down (Stage 6) is a single P2 item — too small for its own AO plan (would break
+> the ≥10-item + role-homogeneity rule); stays tracked here + in `honest_coverage_v2`.
+
 ---
 
 ## ✅ Decision Gates — clear these first (only the operator can)
@@ -90,9 +117,20 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 
 ## 📊 Snapshot (2026-07-06)
 
-- **Certified Layer-1 (denominator), 2026-06-29 — STALE, needs re-measure (Stage 3):** cefi **79.55** · defi 69.44 ·
-  tradfi 51.43 · sports 30.77 · pred 66.67. _(Upper bounds where UAC under-specifies.)_
-- **Layer-2 lower bounds (capture):** cefi 37.86 · defi 57.55 · tradfi 88.81 · sports 100 · pred 20.56.
+- **Certified Layer-1 (denominator) — cefi + defi + sports + prediction CERTIFIED 2026-07-06; tradfi BLOCKED-PLAN2:**
+  cefi **73.61** (72 expected / 53 present / 19 missing / 87 stray; `is@03cfd0f`, task 002) · defi **94.81**
+  (77 expected / 73 present / 4 missing / 128 stray; `is@681f50a` post-D1 seeding, denominator SHRANK 108→77 via
+  `is@3bb7acd` defi lending grain roll-up 2026-07-03; task 003) · **sports 30.77** (26 expected / 8 present / 18 missing
+  all BETFAIR odds / 24 stray; `is@ebfd11d`; task 006 side-measurement) · **prediction 66.67** (6 expected / 4 present /
+  2 missing MARKET_LIFECYCLE / 17 stray; `is@6716f55` post-KALSHI-PERP-purge, denominator unchanged vs stale — purge
+  was cefi-side not prediction-side; task 005) · tradfi 51.43 [06-29 stale — 🚧 BLOCKED-PLAN2 pending
+  `tradfi_v9_stage1_finish` tasks 2-11]. _(Upper bounds where UAC under-specifies.)_
+- **Layer-2 lower bounds (capture) — fresh certified 2026-07-06 except tradfi:** cefi **33.28** [fresh
+  `is@03cfd0f`; captured 2,891,774 / reachable 8,689,530; total 11,125,247; down from 37.86 stale as D2a expansion grew
+  the denominator] · defi **62.06** [fresh post-D1 seeding; expected_unattempted 1,534,304 confirms +1.38M in
+  denominator, up from 57.55 stale] · **sports 100.00** [fresh `is@ebfd11d`; captured 38,182 / reachable 38,182;
+  attempted_failed 0; expected_unattempted 0; total 41,520] · pred **22.73** [fresh post-purge; captured 8,711 /
+  reachable 38,318; expected_unattempted 497; up from 20.56 stale] · tradfi 88.81 [06-29 stale — BLOCKED-PLAN2].
 - **DONE already:** denominator **generation** (catalogue built + self-refreshing) · Issue-4 strays · 4/5 AG v9
   `--apply` · opus-checkpoints + registry-consolidation (archived).
 - **REMAINING (this tracker):** denominator **correctness + certification** → then **capture**.
@@ -255,6 +293,89 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **Reconciled certified snapshot published** (via `layer1_remeasure_and_certify_2026_07_06` task 006).
+  Fresh-measured sports as part of the reconciliation (never re-measured in this plan cycle previously) — sports Layer-1
+  30.77% (8/26; 18 missing all BETFAIR odds; 24 stray) unchanged vs stale; sports Layer-2 100.00% (38,182/38,182
+  reachable; 0 attempted_failed; 0 expected_unattempted; total 41,520). Full 5-AG reconciliation table (Layer-1 +
+  Layer-2 + provenance + handler-audit-reread flags) added to `layer1_remeasure_and_certify_2026_07_06.md` under
+  task 006. **Handler-audit re-read flags:** 🟡 cefi only (Deribit `DeribitOptionsChainHandler` register
+  `mts@015abaf5` will move cefi L2 on next capture); defi/sports/prediction 🟢 clean; tradfi 🚧 STALE-BLOCKED-PLAN2.
+  73 unregistered venues per WSFeedConnector audit (`wsfeedconnector_phase35_gap_2026_07_06`) are honest
+  handler-not-built gaps, NOT C5-class re-read triggers. All 4/5 fresh certifications retain
+  `denominator_status: INCOMPLETE` → Layer-2 % remains a LOWER BOUND per the two-layer governing law. Sports evidence:
+  `/home/ubuntu/coverage_sports_20260706T153104Z.json`.
+- **2026-07-06** — **prediction Layer-1 CERTIFIED — 66.67% fresh** (via `layer1_remeasure_and_certify_2026_07_06` task
+  005). Ran `measure_honest_coverage.py --asset-group prediction` locally at 2026-07-06 15:27 UTC on `is@6716f55`
+  post-KALSHI-PERP-purge; primary manifest `gs://market-data-tick-pred-prd-central-element-323112` blob.updated
+  2026-07-06T15:26:46Z, 760,300 rows; merged 706,197 rows. Result: **expected_tuples 6 / present_tuples 4 / missing 2 /
+  stray 17 → 66.67%.** Direction ✓ — 66.67 stale (06-29) → 66.67 fresh; denominator stable at 6 (purge affected cefi
+  catalogue, not prediction). **Purge Gate verified:** 0 `KALSHI-PERP` mentions + 0 `POLYMARKET-PERP` mentions in the
+  prediction coverage.json (post-purge cefi state: catalogue 376,984→351,511 rows, KALSHI-PERP==0, 25→24 venues per
+  `prediction_capture_incident_remediation_2026_07_06` Workstream B Phase 0). Layer-2 prediction rollup: coverage_pct
+  **22.73%** (captured 8,711 / reachable 38,318; empty_confirmed 667,879; attempted_failed 29,110; expected_unattempted
+  497; total 706,197; layer1_completeness_pct 66.67; denominator_status INCOMPLETE — 2 unwired MARKET_LIFECYCLE
+  handlers so Layer-2 stays a lower bound, up +2.17 pp vs 20.56 stale). 2 missing tuples both MARKET_LIFECYCLE (KALSHI +
+  POLYMARKET prediction_market) — unwired handlers not adapter contamination. **Task 001 (multi-AG re-run) PREREQs both
+  now DONE** (KALSHI-PERP purge ✓ + Plan 5 unregistered-handler audit ✓ per
+  `foundation_gates_and_capture_to_100_2026_07_06` line 77 `- [x]`) — task 001 will re-dispatch as its own
+  /boot-per-shippable-unit. Snapshot updated above; evidence artefact (local):
+  `/home/ubuntu/coverage_prediction_20260706T152707Z.json`.
+- **2026-07-06** — **task 004 tradfi Layer-1 DOCUMENTED as BLOCKED-PLAN2** (via `layer1_remeasure_and_certify_2026_07_06`
+  task 004). Main-agent answer to `BLK-ab86f4e9` confirmed: do NOT certify tradfi Layer-1 now — the tradfi IS catalogue
+  rebuild + manifest rebuild + E7 CF verify from Plan 2 (`tradfi_v9_stage1_finish_2026_07_06`) tasks 2-11 have NOT
+  landed (only Plan 2 task 1 done). Running measure_honest_coverage --asset-group tradfi against the pre-v9 catalogue
+  produces a certification that would re-measure again. Task 004 checkbox annotated 🚧 BLOCKED-PLAN2; tradfi Snapshot
+  entry unchanged at 51.43 [06-29 stale]. Re-dispatch after Plan 2 rebuilds land. Also noted: dispatcher's
+  `gate_on_depends: true` needs review — per-plan-task granularity is not enforced (task 004 was dispatched despite
+  Plan 2 not being done).
+- **2026-07-06** — **defi Layer-1 CERTIFIED — 94.81% fresh** (via `layer1_remeasure_and_certify_2026_07_06` task 003).
+  Ran `measure_honest_coverage.py --asset-group defi` locally at 2026-07-06 15:13 UTC on `is@681f50a` (post-D1 +1.38M
+  seeding); primary manifest `gs://market-data-tick-defi-prd-central-element-323112` blob.updated 2026-07-06T15:11:42Z,
+  13,515,019 rows; merged 10,828,935 rows. Result: **expected_tuples 77 / present_tuples 73 / missing 4 / stray 128 →
+  94.81%.** Honest direction ✓ — 69.44 stale (06-29) → 94.81 fresh; denominator SHRANK 108→77 (-31 tuples) driven by
+  `is@3bb7acd` (defi lending grain roll-up folds `a_token`/`debt_token`/`liquidation` → `lending` in Layer-1 canon,
+  2026-07-03) — legitimate schema tightening, NOT a wrong-direction shrink. **D1 seeding VERIFIED in Layer-2:**
+  `by_asset_group.defi.expected_unattempted = 1,534,304` — the +1,380,376-row apply landed in the reachable denominator.
+  Layer-2 defi rollup: coverage_pct **62.06%** (captured 2,857,320 / reachable 4,603,799; empty_confirmed 6,225,136;
+  attempted_failed 212,175; total 10,828,935; layer1_completeness_pct 94.81; denominator_status INCOMPLETE — 4 tuples
+  still missing so Layer-2 stays a lower bound but tightened +4.51 pp vs 57.55 stale). 4 missing tuples all one venue
+  (EIGENLAYER-ETHEREUM spot_asset {eigenlayer_rewards, oracle_prices, rewards, staking_yields}) — indicates one
+  unwired handler/venue not four independent gaps. Task 001 (multi-AG re-run) NOT flipped by this task — its cross-plan
+  PREREQs (KALSHI-PERP purge · Plan 5 unregistered-handler audit) primarily affect cefi/prediction Layer-2, not defi
+  Layer-1. Snapshot updated above; evidence artefact (local): `/home/ubuntu/coverage_defi_20260706T151304Z.json`.
+- **2026-07-06** — **cefi Layer-1 CERTIFIED — 73.61% fresh** (via `layer1_remeasure_and_certify_2026_07_06` task 002).
+  Ran `measure_honest_coverage.py --asset-group cefi` locally at 2026-07-06 15:01 UTC on `is@03cfd0f` (post-D2a);
+  primary manifest `gs://market-data-tick-cefi-prd-central-element-323112` blob.updated 2026-07-06T14:55Z, merged
+  11,125,247 rows. Result: **expected_tuples 72 / present_tuples 53 / missing 19 / stray 87 → 73.61%.** Honest direction
+  ✓ — 79.55 stale → 73.61 fresh; denominator grew 44→72 (+28 tuples) matching D2a's `INSTRUMENT_TYPES_BY_VENUE`
+  completion. Layer-2 rollup context: cefi coverage_pct 33.28% (captured 2,891,774 / reachable 8,689,530; total
+  11,125,247; denominator_status INCOMPLETE — 19 tuples still missing so Layer-2 stays a lower bound). Task 001
+  (multi-AG re-run) NOT flipped by this task — its cross-plan PREREQs (KALSHI-PERP purge · Plan 5 unregistered-handler
+  audit) primarily affect Layer-2 correctness, so a single-AG cefi run satisfies task 002's Gate independently. Other AG
+  Layer-1 tasks (003 defi · 004 tradfi · 005 pred) remain queued and gated on their respective plans. Snapshot updated
+  above; evidence artefact (local): `/home/ubuntu/coverage_cefi_20260706T150020Z.json`.
+- **2026-07-06** — **AO tiering revised (operator): Plan 1 Opus/max, Plans 2-6 Sonnet/high.** Initial dispatch tagged
+  all 6 Opus/max; operator dialed back after the per-plan reasoning — only **Plan 1** (the C2 `_row_data_types`
+  instrument-type/bundle-aware fix that defeated two prior attempts + the denominator correctness) clearly needs Opus.
+  Plans **2** (tradfi, proven tooling), **3** (catalogue ops), **4** (measure+certify, guarded), **5** (foundation
+  reconcile + pattern-following handler), **6** (infra ops) run **Sonnet/high** with the smoke-first guards +
+  main/review agents as backstop. Turns on the AO-vocabulary facts: **no `xhigh`; `max` requires Opus** (Sonnet+`max`
+  HARD-STOPs the worker self-check), so Sonnet's valid ceiling is `high`. Frontmatter flipped on P2-6
+  (`model_tier: sonnet-doable` + `thinking_tier: high`); P1 unchanged. **P5 is the bump-to-Opus candidate** (new
+  `risk_params` handler + defi-oracle design) if a margin is wanted.
+- **2026-07-06** — **Stages 1-6 DISPATCHED TO AO as 6 role-homogeneous plans (tiered — see the entry above).** Carved
+  the tracker's remaining engineering into 6 AO plans (`assigned_vm: planning`, `execution_scope: orchestrator-agent`):
+  P1 cefi denominator (`cefi_layer1_denominator_gaps`, assigned in-place — D2a/D2b marked done, 2a/2c/2f folded in)
+  `pm@5bff1354c`; P2 tradfi Stage-1 finish (`tradfi_v9_stage1_finish`) `pm@f8bb8aa5f`; P3 IS-catalogue B0→B1→B2
+  (`is_catalogue_completion_2d`) + P4 Layer-1 re-measure/certify (`layer1_remeasure_and_certify`, `gate_on_depends`
+  Plans 1-3) `pm@64a1c00f8`; P5 foundation+capture (`foundation_gates_and_capture_to_100`, handler-audit ungated so it
+  can precede P4) + P6 infra capture/devops (`infra_capture_and_devops_leftovers`, infra role) `pm@3dc6fcf04`. Contract
+  verified against `agent-orchestrator/server/regen_backlog_from_plan.py`: model/effort is **per-plan** (frontmatter or
+  role file), AO has **no `xhigh`** (max is the ceiling; `data_engineering` role default = the rejected sonnet/high, so
+  the explicit opus-required+max override is load-bearing); `BLOCKED-*` lines auto-skip dispatch (operator-visible);
+  `gate_on_depends` machine-holds P4 until P1-3 done. Hard-stops (bucket deletes, locked-plan archival, COINBASE
+  `MVP_SCOPE`, CLOB classification, paid-RPC creds) stay off AO as `BLOCKED-*` lines the agents raise. UI drill-down (1
+  P2 item) left off AO — too small for a standalone plan.
 - **2026-07-06** — **TradFi v9 migration APPLY COMPLETE — all 6 years (2020-2025), exit_code=0, fatal=0.** The D3 fix
   (e2-standard-16 · SPOT · workers 24 · per-year chunks) held at scale — memory stayed ~6.7 GB / 64 GB per VM, zero OOM
   across the fleet. `moved<planned` on every year = idempotent skips of already-canonical objects (per-year TOTALs: 2021

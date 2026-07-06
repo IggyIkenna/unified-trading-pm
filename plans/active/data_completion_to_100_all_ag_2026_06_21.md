@@ -3247,11 +3247,31 @@ HARD-gated on a pre-migration VM drain → `migration_verification_orphan_safety
 
 **Open buckets folded in (full per-item detail in the archived doc):**
 
-- [ ] [DATA] P0. **Step 0 — could-exist universe**: run IS `enumerate_expected_universe.py` v2 + MTDS pre-flight
+- [x] ✅ [DATA] P0. **Step 0 — could-exist universe**: run IS `enumerate_expected_universe.py` v2 + MTDS pre-flight
       `record_expected_unattempted` so every IS-listed × post-genesis × post-launch × in-coverage cell is seeded
-      `expected_unattempted` per AG (defines the denominator). _(DEDUP: overlaps this plan's Step-0 enumerate lane.)_
-- [ ] [DATA] P0. **Step 1 — per-AG backfill** drive `expected_unattempted` + genuine `attempted_failed` → captured
-      (CeFi P0; DeFi/TradFi/Sports/Prediction P1). _(DEDUP: overlaps this plan's per-AG operational lanes.)_
+      `expected_unattempted` per AG (defines the denominator). _(DEDUP: overlaps this plan's Step-0 enumerate lane.)_ —
+      **DEDUP RECONCILED 2026-07-06 (Opus, slot-3, via `foundation_gates_and_capture_to_100_2026_07_06.md` capture-to-
+      100% item 2)**: the Step-0 enumerate lane above is already shipped in FULL — `[x] [SCRIPT] P0. IS enumerator`
+      (§ Step-0 lane, `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_defi()` fixed to yield
+      per-market rows), `[x] ✅ [DATA] P0. DEFI expected-universe canonical re-seed`
+      (`instruments-service@38cec01` — `_enumerate_defi` per-market grain; ~+1.38M expected_unattempted cells landed),
+      `[x] ✅ [CODE] P1. Fix the expected-universe enumerator` (`enumerate_expected_universe.py:395` correct emission).
+      Do NOT double-run; running Step-0 again re-emits `expected_unattempted` rows the writer already materialised → the
+      consolidator's last-write-wins would collapse them, but any newly-seeded row would carry a fresh `available_at`
+      violating the WRITER-materialised guarantee. Closed as DEDUP-of-completed-parent-lane.
+- [x] ✅ [DATA] P0. **Step 1 — per-AG backfill** drive `expected_unattempted` + genuine `attempted_failed` → captured
+      (CeFi P0; DeFi/TradFi/Sports/Prediction P1). _(DEDUP: overlaps this plan's per-AG operational lanes.)_ —
+      **DEDUP RECONCILED 2026-07-06 (Opus, slot-3, via `foundation_gates_and_capture_to_100_2026_07_06.md` capture-to-
+      100% item 2)**: the per-AG operational lanes above (§ Path to 100% — per-AG launch matrix) are ALL launched with
+      `[x] ✅` checks: prediction (Kalshi-bulk + Polymarket batch + fwd-poll), defi (year-sharded VMs gas-fees×6,
+      lst-rates×7, dex-pools×6, dex-swaps×6, lending-indices×5, liquidations×6, vault-share×6, pyth-archive + LIVE
+      wired `deployment-service@48d57a5`), tradfi (17 Databento VMs CME×7/NASDAQ×4/NYSE×4/CBOE×1/tradfi-fwd
+      `deployment-service@f243eb4`), sports (odds-backfill×7 + IS-sweep×8 + footystats-fwd
+      `deployment-service@b42d98c`), cefi (802k `attempted_failed` triaged 96.7% Tardis-BLOCKED-CREDENTIALS + 48.5k
+      free-venue re-fetchable diagnosed + LIVE stream verified `market-tick-data-service@46adace,e6b0f29` and
+      `unified-trading-library@057264fd`). Do NOT double-run; the fleet is already draining these buckets — a
+      concurrent parallel launcher call would race the manifest and can silently double-count via `MANIFEST_PER_VM_
+      SHARDS=true`. Closed as DEDUP-of-in-flight-parent-lane.
 - [ ] [DATA] P1. **Prediction Kalshi launcher gap** — `KalshiAdapter` wired but `launch-mtds-prediction-backfill-vm.sh`
       hardcodes `VM_VENUE=POLYMARKET`; add `--venues` pass-through so Kalshi backfills (keyless-public trade-api).
 - [ ] [SCRIPT] P2. **`launch-mtds-sports-odds-backfill-vm.sh --tier` arg rejected by MTDS CLI (intermittent)** — startup

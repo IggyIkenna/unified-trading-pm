@@ -61,9 +61,11 @@ drift_direction: advance-code
 
 # Migration verification & orphan-safety — the "migrate once" harness
 
-> **🟡 VM IN FLIGHT (2026-07-06) — V6 TradFi restart.** The OOM-blocked TradFi G4 `--apply` (V6 line, was
-> `canonical-migration-tradfi-20260629`) is RESTARTED per D3: 2025 smoke VM `canonical-migration-tradfi-20260706-170108`
-> (e2-standard-16 · SPOT · `--workers 24`) then per-year fan-out. Launcher OOM-fix: deployment-service@77cfcda. Tracker:
+> **🟢 V6 CLOSED (2026-07-06).** TradFi G4 `--apply` DONE for 2020-2025 + 2026 (7 VMs total, e2-standard-16 · SPOT ·
+> workers 24 · per-year; launcher OOM-fix `deployment-service@77cfcda`; MTDS pin `9ecd1e29e16429f8`). 2026 year landed
+> 15:14 UTC via `canonical-migration-tradfi-20260706-145606` (planned=332825 moved=122703, exit_code=0, fatal=0).
+> **All 5 AGs now canonical (5/5).** Post-apply cleanup (E5 manifest rebuild + orphan sweep re-run + enumerate-seed +
+> straggler re-run) tracked in `tradfi_v9_stage1_finish_2026_07_06.md`. Tracker:
 > `instruments_completion_tracker_2026_07_06.md`.
 
 > **Role**: this is the **G3.5 pre-apply verification gate** of
@@ -235,10 +237,18 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       `--apply` RAN to completion 2026-06-29 (evidence: `master_data_canonicalisation_migration_catalogue` "G4 apply run
       2026-06-29 — 4/5 AGs COMPLETE", slots 2/3/4/5 G4 `[x]`). The ⑬–⑲ verdict (orphan-E=0 + schema-completeness +
       candle-edge + projected preview) gated and passed for these four. cefi/pred=slot-3; defi/sports=slot-2.
-- [ ] [VERIFY] P0. **TradFi** pre-apply verdict ⑬–⑲ → G4 — OPEN: TradFi G4 `--apply` is OOM-BLOCKED (MTDS raw-tick v9
-      migration OOM-killed 2026-06-29, ~06:12-07:49 UTC; VM running, Python process dead — operator must restart with
-      lower concurrency / larger VM per `master_data_canonicalisation` slot-6 G4 item). IS v9 migration done; enumerate
-      seed + IS catalogue NOT YET run for TradFi. slot-2/vm-tradfi.
+- [x] ✅ [VERIFY] P0. **TradFi** pre-apply verdict ⑬–⑲ → G4 — **CLOSED 2026-07-06** (slot-7). TradFi G4 `--apply` DONE
+      for 2020-2025 + 2026 via `tradfi_v9_stage1_finish_2026_07_06.md` task 1 (7 VMs total, e2-standard-16 · SPOT ·
+      workers 24 · per-year fan-out; launcher OOM-fix `deployment-service@77cfcda`; MTDS pin `9ecd1e29e16429f8`;
+      2026 year landed 15:14 UTC via `canonical-migration-tradfi-20260706-145606` — TOTAL planned=332825 moved=122703,
+      exit_code=0, fatal=0; run.log at
+      `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-tradfi-20260706-145606/run.log`).
+      Pre-apply ⑬–⑲ verdict was GREEN: V2 orphan-E=0 for tradfi 14:32Z 2026-06-11 · V3 schema 0-RED/19 cells 2026-06-11
+      · V4 candle-edge convention QG-enforced · V5 projected preview rendered per-AG · IS catalogue tradfi
+      `catalogue-rollup-tradfi-20260706T154714Z` (1,096,069 rows / 685,111 MVP promoted to
+      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` 2026-07-06T15:48:30 UTC).
+      **All 5 AGs now canonical (5/5).** Post-apply cleanup (E5 manifest rebuild + orphan sweep re-run +
+      enumerate-seed + straggler re-run) tracked in `tradfi_v9_stage1_finish_2026_07_06.md`. slot-7.
 - [x] ✅ [SCRIPT] P0. **G4.5 verified-delete** `cleanup_legacy_twins.py` — the 'genetic' gate: a legacy object is
       deletable ONLY if its canonical twin is in the manifest (`captured`) AND `crc32c(legacy)==crc32c(canonical)`
       (byte-identical, fetched per-object); never delete a canonical object; class (C)/(C2)/(E) never candidates.

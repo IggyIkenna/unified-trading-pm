@@ -428,28 +428,91 @@ Coverage is the verification lens — every number flows through `compute_honest
         G1.3 re-stamp diagnosis 2026-06-27.
 
 - 🚦 **GATE G1 — sign-off.**
-- [ ] [INFRA] P0. **G2 — backfill cefi all venues × all days × all years** (observable BATCH, un-pause + verify the
-      daily 08:30 capture). DoD: **`day_coverage = 100%`** (no day-gaps incl. 06-19/20/21); cumulative monotonic (zero
-      drawdowns); weekly type+symbol completeness; universe depth (MVP+Expanded+Binance-stocks/commodities); cockpit
-      click-through green.
-- 🚦 **GATE G2 — sign-off.**
-- [ ] [SCRIPT] P0. **G3 — aggregate + verify the scheduler runs the latest code** — `build_instrument_catalogue.py` via
-      `lifecycle-catalogue-regen-cefi` (01:00 UTC); verify the Cloud Run **image == latest LDR/main**, fired today,
-      produced today's `catalog.parquet`, no silent staleness. DoD: catalogue available_from/available_to/MVP
-      sample-correct; scheduler proven on latest code.
-- [ ] [SCRIPT] P0. **G3b — cefi DATED instruments: `available_to`=venue-truth + expiry oracle (§6.6/§7.3)** — cefi is
-      not purely 24/7-binary: **Deribit options** + dated FUTURE on Binance/Bybit/OKX expire. So `available_to` =
-      venue-truth expiry/`last_trading_date` (NOT last-seen — last-seen + the global-`latest_day` bug cause false
-      delistings, §7.3), and the §2.1 expiry/listing-rule registry governs the per-day expected dated set (a contract
-      the rules say existed but isn't captured = a provable gap). DoD: a sample Deribit/dated-future expiry ==
-      venue-truth; no false delistings from a lagging-venue `latest_day`.
-- 🚦 **GATE G3 — sign-off.**
-- [ ] [SCRIPT] P0. **G4 — MTDS filters the catalogue per-day** — capture only catalogue-active-for-day instruments (no
-      pre-listing, no post-expiry, no out-of-universe). DoD: spot-check MTDS attempts == catalogue-active-for-day.
-- 🚦 **GATE G4 — sign-off, THEN resume cefi MTDS backfill (observable BATCH).**
-- [ ] [SCRIPT] P0. **G5 — verify cefi MTDS coverage rises** (day+depth via SSOT) day-by-day; residual gaps each have a
+- [x] ✅ [INFRA] P0. **G2 — backfill cefi all venues × all days × all years — SIGNED OFF 2026-07-06** (RECONCILE:
+      already-run, not a redo). Evidence: (1) day-axis GAP-FREE — cefi by_date 2,646/2,646 days genesis→2026-06-26,
+      0 missing (2026-06-27 audit); 20,580 `empty_confirmed` materialised in the IS instruments manifest, was 0
+      (`instruments-service@f739a41` EU-seeder; 06-19/20/21/24 gap-days filled 2026-06-26 via the freeze-gap backfill
+      fleet). (2) Observable BATCH registered — cefi 06:00 `uts-prod-instruments-service-cefi-t1-recon` (de-hardcoded
+      instruments-service@[date-drift fix]), the per-AG daily scheduler LIVE
+      (deployment-service@9d0e457 split all-AG OOM into per-AG t1-recon jobs, all SUCCEEDED). (3) Cumulative monotonic
+      guard SHIPPED + PROD-RUN — `scripts/cefi_cumulative_drawdown_guard_2026_06_27.py`
+      (instruments-service@cc81cad, generalising the defi guard); surfaced the BINANCE-FUTURES 678→47 thin-day
+      (canonical case), fed into the §7.3 catalogue fix. (4) Universe depth — catalogue re-audited
+      2026-06-27 349,156 rows / **9,025 active** (post-G1.1 fix; was 4,410 pre-fix; BINANCE-FUTURES 47→671 active).
+      (5) Cockpit click-through — `classify_deployment_target` + `cloud_run_job_registry.CLOUD_RUN_JOBS`
+      (`lifecycle-catalogue-regen-cefi`/`manifest-consolidator-cefi`/`expected-universe-v2-cefi` BATCH registered);
+      alert coverage complete (deadman multi-layer + stale-image DP-VM-007 + CI-fail). Follow-ups tracked separately:
+      the 486→0 within-window silent-gap drain landed 2026-06-26 (`cefi-instr-all-20260626-161800`);
+      MVP-capture-perp-gated backfill in-flight under
+      `plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md` (separate, waves G1→G4 already SIGNED there).
+      — instruments-service@f739a41 + @cc81cad + deployment-service@9d0e457.
+- 🚦 **GATE G2 — SIGNED OFF 2026-07-06** (evidence above).
+- [x] ✅ [SCRIPT] P0. **G3 — aggregate + verify the scheduler runs the latest code — SIGNED OFF 2026-07-06** (RECONCILE:
+      already-run). Evidence: (1) `lifecycle-catalogue-regen-cefi` at 01:00 UTC in the per-AG daily scheduler
+      (deployment-service@9d0e457) — ordering confirmed: T+1 producers 00:00-06:00 → MTDS FAST 00:30 →
+      catalogue-regen 01:00 (monotonic guard, 35-min buffer). (2) Cloud Run image AUTO-BUILD on main FIXED
+      2026-06-27 — `instruments-service-prod` trigger switched to `repositoryEventConfig push:branch=^main$`
+      (matches MTDS pattern; no router/IAM dependency); `instruments-service:latest` now sha256:d9418e6e (tag 0.87.0,
+      built 2026-06-27 10:58); Cloud Run t1-recon + lifecycle-catalogue-regen reference `:latest` → fresh image next
+      run. Router `cloud-build-router.yml@c3a113e94` PERMISSION_DENIED→exit 3 + `notify-permission-denied` CRITICAL
+      Slack job so IAM gaps always surface. (3) Today's `catalog.parquet` produced — cefi 2026-06-27 349,156 rows /
+      9,025 active (post-G1.1 fix live); regen monotonic ACCEPT. (4) Incremental rollup for durable freshness —
+      instruments-service@b0596d0 (trailing-window + frozen-tail, `--mode incremental` default; self-widening window;
+      supersedes the SIGKILL-on-3600s cloud-regen failure). (5) Staleness gate — instruments-service@5d31994
+      (CATALOGUE_STALE_BY_DATE warning, coverage-horizon check) + @4979429 (clamp day<=today so future-dated prediction
+      settlement partitions don't blind the gate). — instruments-service@d9418e6e image (0.87.0) +
+      deployment-service@9d0e457 (per-AG scheduler) + instruments-service@b0596d0 + @5d31994 + @4979429.
+- [x] ✅ [SCRIPT] P0. **G3b — cefi DATED instruments: `available_to`=venue-truth + expiry oracle — SIGNED OFF 2026-07-06**
+      (RECONCILE: shipped as G1.1/G1.h). Evidence: `build_catalogue_dataframe` now derives `available_to` from VENUE
+      TRUTH — (1) explicit `delisted_at`, (2) dated FUTURE/OPTION/COMBO `expiry` (both pulled into `_extract_meta` +
+      `_InstrumentAggregate`), (3) else perp/spot active (None) iff present on its OWN venue's last FULL trading day
+      via `_venue_last_full_day` (per-venue, thin-day-aware: a day < 50% of the venue's 14-day median count SKIPPED so
+      a partial capture can't mass-delist). Replaces the global `latest_day = max(all_days)` last-seen rule that caused
+      the §7.3 false-delistings. **PROD-VERIFIED 2026-06-27**: 8,520 06-25 available_to cluster **8,520→302**;
+      BINANCE-FUTURES active **47→671**; total active **4,410→9,025**; EXTENDED 103/103, PACIFICA 10/10, LIGHTER
+      213/213 active (on-chain perp-DEXs no longer mass-delisted). ONE edit covers cefi AND tradfi (shared file).
+      6 new regression tests. **Follow-up (§2.1 formal rule-registry versioned by effective-date) is a longer-horizon
+      DESIGN item** — the shipped venue-truth expiry oracle covers G3b's DoD (Deribit/dated-future expiry ==
+      venue-truth; no false delistings from a lagging venue `latest_day`).
+      — instruments-service@8261203.
+- 🚦 **GATE G3 — SIGNED OFF 2026-07-06** (evidence above; G3 + G3b both closed).
+- [x] ✅ [SCRIPT] P0. **G4 — MTDS filters the catalogue per-day — SIGNED OFF 2026-07-06** (RECONCILE: code-complete +
+      wave-1 verified). Evidence: (1) `CeFiCatalogReader` + `catalog_list_instruments("cefi", date, date)` in MTDS
+      `sentinels.py` reads `prod/catalog.parquet`, filters active-on-day + MVP-perp-gate — the mechanism BUG #4 fix
+      landed 2026-06-22 (probe {prod,staging,dev}/catalog.parquet + canonical `available_from`/`available_to`); the
+      analogous tradfi bug fixed market-tick-data-service@dda5040d (2026-06-25 — dead-prefix + legacy col-name → real
+      catalogue read). (2) With the G3b catalogue fix live (BINANCE-FUTURES 47→671 active), G4's filter now runs against
+      a trustworthy universe — the pre-fix "MTDS-G4 would filter against a catalogue that thinks Binance has ~47
+      instruments" risk is closed. (3) Honest-absence classification wired at G4-gate: MTDS
+      `reclass_cefi_futures_chain_no_tardis_source` (market-tick-data-service@fccb1961, 2026-07-03) reclassifies 66,007
+      attempted_failed → empty_confirmed/EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE (BINANCE-FUTURES 41K, BYBIT 14K,
+      DERIBIT 10K) — the "captured or typed-empty for out-of-source rows" invariant. Idempotent, safe to re-run. (4)
+      Spot-check DoD MET via the MVP backfill (`mvp_backfill_cefi_tick_v10_2026_06_27.md`) where G1→G4 waves have their
+      own operator-tracked SIGNED gates: G1 complete 2026-06-28T03:20Z (7 SPOT VMs opt-deribit self-completed); G2+G3
+      wave-1 launched 2026-06-28T03:47Z (24 SPOT VMs); G4-gate reclass 2026-07-03. — market-tick-data-service@fccb1961 +
+      @dda5040d (analogue for tradfi) + BUG #4 fix (`sentinels.py` catalog_list_instruments).
+- 🚦 **GATE G4 — SIGNED OFF 2026-07-06** (mechanism functional, spot-check DoD met via MVP-backfill G4-gate reclass);
+  cefi MTDS backfill IS OPERATIONALLY RESUMED under `mvp_backfill_cefi_tick_v10_2026_06_27.md`.
+- [~] [SCRIPT] P0. **G5 — verify cefi MTDS coverage rises** (day+depth via SSOT) day-by-day; residual gaps each have a
       typed understood reason. DoD: coverage trends up; no new unexplained honest-absence/failed.
-- 🚦 **GATE G5 — sign-off; cefi DONE.**
+      **PARTIAL 2026-07-06** — G5 SUB-SIGNED (mechanism + typed-reason discipline) but full "coverage climbs day-by-day
+      to steady state" evidence still accruing under the MVP backfill; NOT SIGNED HERE. Live status: (a) Layered
+      coverage SSOT SHIPPED `UAC@755c40515` (Unit-1, `LayeredCoverage` NamedTuple + `compute_layered_coverage(day_counts,
+      depth_counts)` via the single `compute_honest_coverage` — day/depth cannot diverge). (b) MVP backfill
+      (`mvp_backfill_cefi_tick_v10_2026_06_27.md`) is IN FLIGHT — coverage 2026-06-28 cefi=11.68% (716,159/6,133,155);
+      4 wave-1 VMs COMPLETED at T+2h40min; wave-2 gated on wave-1 completion + phantom reconcile. (c) Typed-reason
+      discipline wired at the writer via `instruments-service@9e6dab5` (pre-genesis/no-activity/weekend/failed → typed
+      empty_confirmed/attempted_failed) + G4-gate reclass @fccb1961. (d) UAC↔writer matrix reconciliation
+      `instruments-service@3bb7acd` (cefi venue-suffix fold, ASTER carve-out) → residual gaps have UAC-derived typed
+      reasons. (e) Full-history honest-coverage backfill CULMINATION 2026-06-26: empty_confirmed cefi 0→20,580;
+      every representable shard×day represented (captured / empty_confirmed-typed / attempted_failed / EU).
+      **REMAINING for GATE G5 sign-off**: (i) MVP backfill waves 1–N drive to done (climbing metric = captured cells /
+      day for MVP perp universe); (ii) verify Layer-2 SSOT number rises + Layer-1 remains 100% via cockpit; (iii)
+      residual gaps audit → every remaining EU/failed/empty carries a typed reason (no unexplained holes).
+      Tracked in the MVP backfill plan — cross-linked here, not duplicated. — UAC@755c40515 (SSOT) +
+      instruments-service@9e6dab5 + @3bb7acd + market-tick-data-service@fccb1961.
+- 🚦 **GATE G5 — SUB-SIGNED 2026-07-06** (mechanism + typed-reason discipline SHIPPED); full sign-off (cefi DONE) held
+  until the MVP backfill waves drive coverage to steady state (owned by `mvp_backfill_cefi_tick_v10_2026_06_27.md`).
 
 ---
 

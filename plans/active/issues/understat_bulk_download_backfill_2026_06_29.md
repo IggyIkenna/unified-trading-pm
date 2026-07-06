@@ -282,3 +282,44 @@ instrument_type = `""` (blank) per §9.1.
   next image rebuild after UTL promotes; the live manifest self-heals (dups collapse) once that lands — verify then run
   the one-off normalization. NEXT: build the bulk writer, operator-gate the backfill run (`dont save before confirming`),
   re-evaluate the `understat-vm-xg-complete` gate.
+- 2026-07-06 (slot-12, `data_engineering` — gate re-evaluation, task
+  `understat_local_backfill_completion-005`): the shipped verify (`/tmp/verify_understat_gate.py`) against the LIVE
+  consolidated manifest (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`,
+  5.28M rows, 611,728 understat) shows the full-history backfill has NOT reached completion in this era. Big-5 XG
+  captured=4,432 / empty=19,764 / **`expected_unattempted`=315** / attempted_failed=0; big-5 XG_SHOTS
+  captured=**1,961** (44% of XG) / empty=7,580 / **`attempted_failed`=384** (all `HTTP_NOT_FOUND`, attempted_at
+  2026-06-23 → 2026-06-29) / **`expected_unattempted`=13,811**. Hollow-shots ratio 67-73% per league (EPL 69.8%,
+  LA_LIGA 73.0%, BUNDESLIGA 67.5%, SERIE_A 69.6%, LIGUE_1 71.2%); latest captured dates: XG 2023-03-11, XG_SHOTS
+  2024-12-21. No active backfill process, no `/tmp/understat_backfill.log`. Gate cannot be flipped — DoD (`0
+  attempted_failed / 0 expected_unattempted / XG_SHOTS ≈ XG`) is NOT met. Task 005 marked BLOCKED-PREREQUISITES in
+  `plans/active/understat_local_backfill_completion_2026_07_06.md`; the ~2.4 h ETA run below appears to have been
+  interrupted (matches the plan preface's "~700+ dates 2014→2016" hand-off note). NEXT (operator): confirm + remove
+  any circular-prereq on `understat-vm-xg-complete` from tasks 001-004 in `backlog.yaml`, `POST /api/backlog/regen`,
+  then task 001 re-runs the resume-aware driver to completion.
+- 2026-07-06 (bulk writer + backfill run — operator go "build the writer and save the data" + "also fix XG capture now"):
+  A small validation write (2023-03-11) — made possible ONLY because the lookup_contract fix made schema validation
+  actually RUN — surfaced **three more pre-existing bugs** (all previously masked by the skipped validation), fixed +
+  regression-tested + **SHIPPED `instruments-service@9dfea859d`**:
+  **(A) shots schema** — `_run_understat_shots_date`'s df never matched `SPORTS_XG_SHOTS`: no `xa` column (understat
+  has no per-shot xA → nullable-null), `home_goals`/`away_goals`/`period` as `object` not `int64` (→ nullable `Int64`),
+  `available_at` `us` not `ns`. Conformed in the write path (fixes GCS parquet + validation).
+  **(B) XG capture recorded EMPTY despite fixtures — two coupled bugs:** (1) the fixture `league` field is a nested
+  `CanonicalLeague` dict, so the flatten exploded it into `league_*` columns leaving NO flat `league` key → the whole
+  per-league capture block was skipped; (2) `_captured_leagues` tracked the RAW league name while the honest-absence
+  loop subtracts the CANONICAL, so every non-already-uppercase league (all but EPL) got `empty` written OVER its
+  capture. A **2026-05-07 bulk run** had recorded empty for ~all XG match-days while the xG parquets sit in GCS —
+  manifest under-reported XG as **4,444 captured / 301,667 empty** (the "99%" in the tab is ATTEMPT coverage). NOT
+  operator-me: confirmed via untouched dates (2023-03-18 / 2024-01-13 show the same GCS-data-but-`empty` pattern,
+  timestamped 2026-05-07). Regression test reproduces the nested-dict + non-canonical shapes (the prior happy-path used
+  a string league + identity canonical, so it caught neither). **(C) adapter getLeagueData match cache** — memoise the
+  lightweight per-(league, season) match list so the full-history bulk backfill fetches each season ONCE, not per date
+  (~30k → ~72 fetches); autouse cache-clear fixture prevents test pollution.
+  **Bulk driver** (`scratchpad/bulk_backfill.py`) enumerates fixture-dates per league-season (pre-populating the cache)
+  then drives the EXISTING per-date functions with bounded concurrency — full reuse of the shipped write + honest
+  -absence path. Validated on 8 dates (98 XG + 2,100 shots, 0 errors, correct manifest shape: captured / sports /
+  instrument_type NULL / schema-valid). **FULL RUN LAUNCHED** (5 big-5 leagues 2014→present, XG + XG_SHOTS, force=True,
+  concurrency 6, per-VM shard `understat-bulk-backfill-slot16`): ~17 dates/min, ETA ~2.4h, 0 errors — repairs the ~300k
+  mis-recorded XG rows AND captures the previously-broken XG_SHOTS in one pass. Consolidator (with §9.2b) collapses the
+  captured-vs-seed dups once its image rebuilds on the UTL promote. NEXT: verify totals on completion, then re-evaluate
+  the gate. **UPDATE §4 table cell: XG_SHOTS instrument_type is `""` (not `"shot"`) per §9.1; GCS path DOES carry a
+  `league={lid}` segment (the doc's §4 "no league subdir" note was for XG only — XG_SHOTS partitions by league).**

@@ -21,6 +21,7 @@ related:
   [
     plans/active/prediction_capture_incident_remediation_2026_07_06.md,
     plans/active/instruments_catalogue_incremental_rollup_2026_06_29.md,
+    plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
   ]
 created: 2026-07-06
 parent_epic: instruments_master

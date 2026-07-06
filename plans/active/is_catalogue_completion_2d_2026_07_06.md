@@ -1,0 +1,246 @@
+---
+doc_type: plan
+title: IS-catalogue completion (2d) — backfill to no-missing, regen, un-pause (AO Plan 3)
+summary:
+  Complete the instruments-service could-exist catalogue so every expected-universe consumer reads a full, deduped
+  instrument lifecycle. Sequence is B0 (backfill instruments to no-missing) gates B1 (catalogue regen + un-pause the
+  per-AG daily schedulers) and the B2 downstream wiring (enumerate_expected_universe reads the shipped
+  TOTAL_UNIVERSE_AXES UAC SSOT). B0 is the hard prereq for the Stage-3 denominator re-measure (Plan 4) — a stale
+  catalogue means a wrong could-exist universe. Source items live in instruments_mtds_subset +
+  instruments_catalogue_incremental_rollup + mvp_scope_catalogue_tagging — this plan carries the catalogue-completion
+  slice and references them for detail.
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [data]
+repos: [instruments-service, unified-api-contracts, deployment-service]
+scope: [engineer]
+tags: [instruments, catalogue, could-exist, backfill, b0, b1, b2, mvp-universe, instruments-completion]
+related:
+  [
+    instruments_completion_tracker_2026_07_06.md,
+    instruments_mtds_subset_consistency_remediation_2026_06_17.md,
+    instruments_catalogue_incremental_rollup_2026_06_29.md,
+    mvp_scope_catalogue_tagging_2026_06_08.md,
+    ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+  ]
+created: 2026-07-06
+last_updated: 2026-07-06
+parent_epic: instruments_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P0
+estimate_class: infra
+estimate_baseline_ai_days: 3
+estimate_calibrated_ai_days: 2.4
+assigned_role: data_engineering
+model_tier: sonnet-doable
+thinking_tier: high
+drift_direction: advance-code
+depends_on:
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+source:
+---
+
+# IS-catalogue completion (2d) — B0 → B1 → B2 (AO Plan 3)
+
+> **🤖 AO PLAN 3 of the instruments-completion set.** Dispatched to the agent-orchestrator (`assigned_vm: planning`,
+> role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** Coordinator =
+> `instruments_completion_tracker_2026_07_06.md` (Stage 2d). Runs in **parallel** with Plans 1 (cefi) + 2 (tradfi). **B0
+> is foundational** — it gates B1 + the Stage-3 re-measure (Plan 4): every expected-universe consumer
+> (`enumerate_expected_universe.py`, data-status could-exist) reads the catalogue, so a stale/incomplete catalogue = a
+> wrong denominator. Source detail lives in `instruments_mtds_subset_consistency_remediation` (B0/B1/B2, F1) — READ
+> there; those items stay tracked-but-not-dispatched (that plan is `assigned_vm: NA`), this plan carries the dispatched
+> slice.
+>
+> **Worker guards (HARD):** (1) **smoke-first** on any backfill VM — one venue/slice foreground + verify the IS store +
+> catalogue side-effect before fanning out; **backfill VMs default SPOT**; no fire-and-forget (verify T+10min). (2) **B0
+> before B1** — do NOT regen the catalogue on an incomplete instrument set. (3) **scheduler un-pause is a cadence
+> decision** — if the daily rollup still times out at 3600s, RAISE the BLOCKED-Q (band-aid vs. Phase-3 incremental), do
+> not silently re-enable a scheme the operator declined. (4) ship via quickmerge; flip + Progress-Log in the same turn.
+
+## Codex SSOTs (read before touching)
+
+- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns reference data; catalogue = the could-exist
+  SSOT MTDS + data-status read.
+- `codex/02-data/honest-coverage-model.md` — Layer-1 denominator; do NOT derive the expected universe from the manifest.
+
+## B0 → B1 → B2 (order matters — each task's `PREREQ:` is load-bearing)
+
+- [x] ✅ [DATA] P0. **B0 — backfill instruments to NO-MISSING** (slot-2 opus/max 2026-07-06, evidence:
+      MVP-scoped gap = 83 cells (~0.1% of 76k MVP), all classified). CURRENT-STATE READ from
+      `instruments-store-{cefi,tradfi,defi}-prd/_index/availability_index.parquet` filtered to
+      `MVP_SCOPE[ag].venues`: **defi = 0 MVP missing** (2e D1 seeding landed same-day per tracker log); **cefi = 76
+      MVP non-captured** (40 ASTER = Stage-2c capture-rule work in-flight elsewhere; 24 EU 2023-12-16..19 = historical
+      service outage window across 6 venues, accept as coverage-time floor per main-agent guidance BLK-749ae284; 12
+      non-ASTER AF classified per `issues/instruments_handler_pd_na_ambiguous_and_af_classification_2026_07_06.md`
+      into 8 RESOLVED_STALE_AF (co-existing captured rows found — cleared by the `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` dedup fix) +
+      4 KNOWN_HANDLER_BUG_PD_NA (HYPERLIQUID 2024-09-12/28, 2024-12-31, 2026-03-18 — root-caused via a DEBUG-log
+      retry to a repeatable InstrumentsHandler "boolean value of NA is ambiguous" write-path crash, fix TODO in the
+      issue doc)); **tradfi = 7 MVP non-captured** (all CME — 1 AF 2026-06-20 + 6 EU sparse dates 2024-07-08 /
+      2024-11-26 / 2024-12-04 / 2025-08-07 / 2025-08-18 / 2026-06-24; pattern consistent with market-calendar
+      /Databento gaps, verify post `tradfi_v9_stage1_finish` completes). All residuals are TRACKED. Per main-agent's
+      BLK answer "0 missing MVP means 0 UNEXPLAINED gaps — known in-flight tracked work does not block the flip." B0
+      gate flips with the residuals documented as classified/tracked items above. instruments-service. — see issue
+      doc for the P1 pd.NA fix + P2 tradfi CME verify + P2 stale-dedup collapse follow-ons.
+- [x] ✅ [DATA] P1. **F1 — backfill IS for the CEFI venues MTDS has but instruments lacks historically** (slot-2
+      opus/max 2026-07-06). Compared `instruments-store-cefi-prd` vs `market-data-tick-cefi-prd` availability index
+      venue sets (single-walk-compliant reads, no whole-corpus GCS re-scan). Result: **MVP ∩ MTDS ⊆ MVP ∩ IS = 20
+      venues** — every MVP-scope venue MTDS has captured is ALREADY in IS (BINANCE-SPOT/FUTURES, BITFINEX-SPOT/
+      FUTURES, BITGET-SPOT/FUTURES, BYBIT/BYBIT-SPOT, COINBASE-SPOT/FUTURES, DERIBIT, EXTENDED-STARKNET, HYPERLIQUID,
+      KRAKEN-SPOT/FUTURES, OKX-SPOT/FUTURES/SWAP, UPBIT, ASTER — 20/20). The 2 MVP venues not yet in MTDS
+      (LIGHTER-ZKSYNC, PACIFICA-SOLANA) are ON-CHAIN CLOB DEXes still ramping MTDS live-capture — not a historical
+      backfill gap. **The 12 MTDS-only bare-venue diffs** (BINANCE, BITFINEX, BITFINEX-DERIVATIVES, BITGET, KRAKEN,
+      OKEX/OKEX-FUTURES/OKEX-SWAP, BYBIT-FUTURES, COINBASE-INTERNATIONAL, CRYPTOFACILITIES, UNKNOWN) are all LEGACY
+      pre-canonicalization MTDS naming or non-MVP venues (Kraken-Futures's pre-2019 wire-form "CRYPTOFACILITIES";
+      OKEX pre-2022 rebrand-to-OKX; bare-form BINANCE/BITFINEX/BITGET/KRAKEN pre the sub-venue split; the "UNKNOWN"
+      classification-junk row) — NOT MVP-scope backfill gaps but MTDS-manifest canonicalization surface. Their
+      IS-canonical equivalents are all catalogued. Gate satisfied under the MVP-strict reading of "no venue MTDS
+      captured but IS never catalogued". The MTDS legacy-naming reconcile is a MTDS/manifest concern (tracked in
+      `venue_naming_drift_defi_reconcile_2026_06_19` for defi and by the general
+      `*_manifest_canonicalisation_*` track for cefi), not IS backfill.
+- [x] ✅ [DATA] P1. **Extended public instrument + perp backfill (UNBLOCKED — no key needed)** — IS daily public
+      instrument + perp backfill for EXTENDED (slot-2 opus/max 2026-07-06). Gate satisfied: EXTENDED-STARKNET is
+      100% catalogued in its UAC discovery window — 644 of 644 days captured 2024-10-01 → 2026-07-06 (0 missing)
+      via the recurring `uts-prod-instruments-service-cefi-t1-recon` daily job that publish-runs the
+      `ExtendedReferenceDataAdapter` (public REST at `api.starknet.extended.exchange/api/v1/info/markets`,
+      no auth); 2012 pre-discovery-start rows (2019-03-30 → 2024-09-30) correctly classified
+      `empty_confirmed / EXPECTED_PRE_VENUE_LAUNCH`. Baseline read from
+      `instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet` (single-walk-compliant
+      per the codex, no whole-corpus GCS re-scan). Adjacent finding surfaced during verification:
+      `issues/is_cefi_manifest_blank_data_type_since_2026_06_29_2026_07_06.md` — every cefi venue's captured
+      shards since 2026-06-29 land with `data_type=""` (blank) instead of `data_type="instruments"`
+      (writers.py:239 emits blank; the migration script was the historical normalizer). Not blocking THIS
+      gate (the plan reads coverage on `capture_status=='captured'` alone) but review-blocking downstream
+      consumers that use the canonical `data_type=='instruments'` filter — 4 actionable todos filed for a
+      fix-worker.
+- [x] ✅ [DATA] P1. **CME EC\* event-contract backfill (v9-certification dependency)** — the CME event-contract
+      instruments the tradfi catalogue needs for the v9 cert (slot-2 opus/max 2026-07-06). Gate satisfied: fresh
+      tradfi catalog (rebuilt today at 2026-07-06T15:48:30 UTC via Plan 2 task 8 — same
+      `catalogue-rollup-tradfi-20260706T154714Z` run) contains **222,694 CME EC\* rows** — all MVP CME EC roots
+      present (ECES=Snake500, ECNQ=Nasdaq-100, ECGC=Gold, ECBTC=Bitcoin — plus non-MVP ECCL/ECNG/EC6E/ECRTY/ECYM
+      and options-on-EC-futures folded into "OTHER" 13,532). Coverage window `available_from ∈ [2024-12-17,
+      2026-07-02]`; `available_to ∈ [2025-09-29, 2026-12-31]`. All 222,694 carry `venue='CME'`, `instrument_type='OPTION'`
+      (Databento's classification for the binary EC-family products — the adapter's `BAG→EVENT_CONTRACT` reclass at
+      `databento/adapter.py:764-766` is a documented fallback for a legacy Databento representation; the live GLBX.MDP3
+      feed classifies them as OPTION and the adapter passes that through). Plan 2's tradfi IS seed coordinated implicitly:
+      the same rollup includes them because `build_instrument_catalogue.py` walks `by_date/` snapshots the Databento
+      URDI adapter has emitted from `TRADFI_DATABENTO_INSTRUMENTS` (UAC registry includes ECES/ECNQ/ECGC/ECCL/ECNG/ECBTC
+      under `MVP_CME_EXCHANGE_CODES`, `unified-api-contracts@registry/tradfi_instrument_universe.py:713-720`).
+      Feeds Stage-3 denominator re-measure (Plan 4). instruments-service (fresh rollup landed via the shared
+      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet`).
+- [x] ✅ [INFRA] P1. **B1 — instrument catalogue regen + un-pause the per-AG daily schedulers** (slot-12 opus/max
+      2026-07-06). Gate satisfied: **task premise was stale** — the schedulers had already been un-paused between
+      2026-06-23 (deployment-service@9b74416 tradfi 32Gi→16Gi + timeout 1800→3600) and 2026-06-29
+      (instruments-service@b0596d0 Phase-3 incremental `--mode incremental` default + weekly `--mode full` self-heal
+      via deployment-service@c1d2e3e). CURRENT-STATE verification (2026-07-06T16:40 UTC): all 5
+      `lifecycle-catalogue-regen-{cefi,defi,tradfi,sports,prediction}-daily` schedulers **ENABLED** and ran successfully
+      today 2026-07-06T01:00 UTC — daily runtimes cefi 2m1s · defi 1m36s · tradfi 3m59s · sports 1m14s · prediction
+      1m57s (all well under the 3600s daily-job timeout — Phase-3 incremental made the tradfi walk ~90s per the
+      1800→3600 tf comment; observed 4m confirms). Weekly `lifecycle-catalogue-full-{cefi,defi,tradfi,prediction}-weekly`
+      self-heal (Sat 03/04/05/06:00 UTC, no sports) ran 2026-07-04 successfully — cefi 1h50m · defi 42m · tradfi 2h33m
+      · prediction 18m (all under the 6h `timeout_seconds=21600` ceiling). All 5 `prod/catalog.parquet` FRESH today
+      2026-07-06: cefi 4.42MiB (11:37Z — cascade regen), defi 992kiB (01:01Z daily), tradfi 10.07MiB (15:48Z —
+      Plan-2-task-8 CME EC\* rollup on top of daily), sports 11.74kiB (01:01Z daily), prediction 103.24MiB (01:02Z
+      daily). Sample content check on defi (smallest): 7,279 rows × 17 cols
+      {instrument_id, instrument_type, venue, chain, ..., available_from, available_to, ..., mvp}; 20+ venues
+      (AAVE_V3..ORCA); available_from 1970-01-01..2026-07-05 (lifecycle range as expected). **Scheduler cadence
+      decided + applied**: daily incremental 01:00 UTC per-AG + weekly full self-heal Sat 03/04/05/06 UTC (cefi/defi/
+      tradfi/prediction) — enforced via `terraform/gcp/lifecycle_catalogue_scheduler.tf`. **No code change needed for
+      this gate**; the plan checkbox flips on verification. deployment-service / instruments-service (unchanged).
+- [ ] [CODE] P1. **B2 downstream — wire the enumerator to the TOTAL_UNIVERSE_AXES SSOT.** The UAC SSOT is SHIPPED
+      (`unified-api-contracts@b654eb6` — `canonical/crosscutting/total_universe.py`: `TOTAL_UNIVERSE_AXES`,
+      `UniverseProvenance`, `UniverseTier` + `universe_membership()` MVP⊆TOTAL). Wire `enumerate_expected_universe.py`
+      to read these axes for the could-exist denominator (the downstream half B2 left open). **PREREQ: B0.** Gate:
+      enumerator reads TOTAL_UNIVERSE_AXES; MVP⊆TOTAL respected; dynamic tests pass.
+- [ ] [DATA] P2. **MVP tagging verify** — with MVP ON, data-status shows ~100% for captured MVP cells and does NOT count
+      non-MVP cells in the MVP denominator (`mvp_scope_catalogue_tagging` verify). **PREREQ: B1.** Gate: MVP-view
+      numbers correct on a spot slice.
+- [ ] [INFRA] P2. **Prediction catalogue bucket mismatch** — fix the prediction catalogue reading/writing the wrong
+      bucket (`instruments_mtds_subset` finding). Gate: prediction catalogue lands in the canonical bucket.
+- [ ] [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** (`reference_data/catalogue/catalogue_b…` legacy
+      static path superseded by the lifecycle regen). Gate: no consumer reads the static snapshot; path removed.
+- [ ] [INFRA] P1. **BLOCKED-OPERATOR-DECISION — tradfi catalogue-scheduler band-aid vs. Phase-3 incremental.** The
+      operator-declined interim band-aid (`instruments_catalogue_incremental_rollup` — bump
+      `lifecycle_catalogue_scheduler.tf` timeout) RE-TRIGGERED 2026-07-03: tradfi `prod/catalog.parquet` stale since
+      2026-06-29, the daily `lifecycle_catalogue_scheduler` runs killed at the 3600s timeout. Decide: re-enable the
+      band-aid (bump timeout) vs. ship the Phase-3 incremental rollup. RAISE via blocked-queue; do not silently
+      re-enable the declined scheme. _(Carries `BLOCKED-` — the orchestrator will not dispatch it; stays
+      operator-visible.)_
+
+## Progress Log
+
+<!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **B1 FLIPPED (slot-12 opus/max).** Verification-only close: task premise was stale — the daily
+  `lifecycle-catalogue-regen-{cefi,defi,tradfi,sports,prediction}-daily` schedulers were already un-paused
+  between 2026-06-23 (deployment-service@9b74416: tradfi 32Gi→16Gi/cpu4 + timeout 1800→3600 after the durable
+  `_bounded_parallel_load` memory-bound landed) and 2026-06-29 (instruments-service@b0596d0: Phase-3 incremental
+  trailing-window + frozen-tail default; deployment-service@c1d2e3e: weekly `--mode full` self-heal jobs
+  `lifecycle-catalogue-full-*`, 6h timeout, staggered Sat 03/04/05/06 UTC cefi/defi/tradfi/prediction). Current
+  state read 2026-07-06T16:40 UTC via `gcloud scheduler jobs list` + `gcloud run jobs executions list`: all 5
+  daily schedulers ENABLED, ran today 2026-07-06T01:00Z with runtimes cefi 2m1s · defi 1m36s · tradfi 3m59s
+  · sports 1m14s · prediction 1m57s (all well within the 3600s daily budget — the operator-declined "band-aid"
+  timeout bump is moot; Phase-3 incremental won cleanly). Weekly full self-heal ran 2026-07-04 successfully
+  (cefi 1h50m · defi 42m · tradfi 2h33m · prediction 18m — all under the 21600s ceiling). All 5
+  `gs://instruments-store-<ag>-prd/prod/catalog.parquet` fresh today; defi sample: 7,279 rows × 17 lifecycle
+  cols spanning available_from 1970-01-01..2026-07-05 as expected. Scheduler cadence decided + applied per
+  `terraform/gcp/lifecycle_catalogue_scheduler.tf` (daily incremental 01:00 UTC + weekly full Sat AM). **No code
+  change needed for B1**; the checkbox flips on verification. **Note on BLOCKED-OPERATOR-DECISION line item** —
+  the Phase-3 incremental design has shipped end-to-end, so the operator-declined band-aid vs Phase-3 dilemma
+  is empirically defused; leaving as `- [ ]` for operator to formally close per the plan header guardrail (do
+  not silently re-enable a scheme the operator declined; but reality is Phase-3 shipped, not the band-aid).
+
+- **2026-07-06** — **CME EC\* event-contract backfill FLIPPED (slot-2 opus/max).** Gate satisfied by
+  the same tradfi catalogue rollup landed via Plan 2 task 8 (`catalogue-rollup-tradfi-20260706T154714Z`,
+  promoted 2026-07-06T15:48:30 UTC). Fresh `prod/catalog.parquet` contains 222,694 CME EC\* rows — all
+  MVP EC roots present (ECES, ECNQ, ECGC, ECBTC — full breakdown ECGCH:10,790 · ECGCJ:9,984 · ECNQV:9,174
+  · ECNQZ:9,033 · ECNQH:8,816 · ECGCG:8,738 · ECNQJ:8,600 · ECNQF:8,128 · ECESZ:4,628 · ...) plus 13,532
+  "OTHER" (non-MVP EC underliers ECCL/ECNG/EC6E/ECRTY/ECYM + options-on-EC-futures). All classified as
+  `instrument_type=OPTION` (Databento's classification for the binary EC-family products; the
+  `BAG→EVENT_CONTRACT` reclass at `databento/adapter.py:764-766` is a documented fallback for a legacy
+  Databento representation and does not fire on the live GLBX.MDP3 feed — classification detail, not a
+  data gap). Coverage window `available_from ∈ [2024-12-17, 2026-07-02]`; `available_to ∈ [2025-09-29,
+  2026-12-31]`. Fetch surface: `unified-api-contracts@registry/tradfi_instrument_universe.py:713-720`
+  → `MVP_CME_EXCHANGE_CODES` → Databento GLBX.MDP3 → IS URDI → `by_date/` snapshots →
+  `build_instrument_catalogue.py` rollup. Feeds Stage-3 denominator re-measure (Plan 4).
+- **2026-07-06** — **EXTENDED public instrument + perp backfill FLIPPED (slot-2 opus/max).** Gate satisfied via
+  the running `uts-prod-instruments-service-cefi-t1-recon` daily job: `ExtendedReferenceDataAdapter` (public REST,
+  no auth) captures 101–103 active markets per day; availability index shows 644 of 644 days captured 2024-10-01
+  → 2026-07-06 (0 missing) with pre-discovery-start 2012 rows classified `empty_confirmed /
+  EXPECTED_PRE_VENUE_LAUNCH`. Read via `read_availability_index("instruments-store-cefi-prd-…")` filtered to
+  `venue == "EXTENDED-STARKNET"` (single-walk-compliant per codex). Consistent with the B0 flip
+  ("MVP ∩ MTDS ⊆ MVP ∩ IS = 20 venues", EXTENDED-STARKNET among them). No new capture VM launched — the
+  daily job is the SSOT-catalogue writer for this venue. **Adjacent finding filed:**
+  `issues/is_cefi_manifest_blank_data_type_since_2026_06_29_2026_07_06.md` — since 2026-06-29 every cefi
+  venue's captured rows land with `data_type=""` instead of `data_type="instruments"` (writers.py:239 emits
+  blank; migration script was the historical normalizer, correlated with the UAC-producer consolidation
+  `is@4da6fe8` 2026-06-29). Fleet-wide (26 cefi venues × 10 days = 260 shards mis-typed). 4 actionable todos
+  filed for a fix-worker (`assigned_vm: planning`) covering writer stamp fix + one-off patch + defi/tradfi
+  parity check + QG regression check. Not blocking THIS gate; review-blocking for downstream `data_type ==
+  "instruments"` consumers.
+- **2026-07-06** — **F1 FLIPPED (slot-2 opus/max).** Compared IS vs MTDS cefi venue sets. Every MVP-scope venue MTDS
+  captured is already in IS (20/20). The 2 MVP venues not in MTDS (LIGHTER-ZKSYNC, PACIFICA-SOLANA) are on-chain CLOB
+  DEXes still ramping MTDS live-capture — not historical backfill. The 12 MTDS-only diffs are legacy
+  pre-canonicalization naming (bare BINANCE/BITFINEX/BITGET/KRAKEN, OKEX*, CRYPTOFACILITIES=Kraken-Futures pre-2019,
+  BITFINEX-DERIVATIVES, BYBIT-FUTURES, COINBASE-INTERNATIONAL, UNKNOWN) — MTDS-manifest canonicalization surface, not
+  IS backfill. Gate satisfied under the MVP-strict reading.
+- **2026-07-06** — **B0 CLASSIFIED + FLIPPED (slot-2 opus/max).** Per main-agent BLK-749ae284 answer ("0 missing MVP =
+  0 UNEXPLAINED gaps"). Read the live `_index/availability_index.parquet` per AG (single-walk-compliant, no
+  whole-corpus GCS re-scan) + filtered to `MVP_SCOPE[ag].venues`. Result: defi = 0 MVP missing (D1 seeding landed
+  same-day per tracker log); cefi = 76 MVP non-captured all classified (40 ASTER in-flight elsewhere at Stage-2c, 24
+  EU 2023-12-16..19 = historical service-outage floor per main-agent, 12 non-ASTER AF split into 8
+  RESOLVED_STALE_AF + 4 KNOWN_HANDLER_BUG_PD_NA — 4 HL 2024-09-12/28, 2024-12-31, 2026-03-18 root-caused via a
+  DEBUG-log retry to a repeatable `InstrumentsHandler` "boolean value of NA is ambiguous" write-path crash); tradfi
+  = 7 MVP non-captured all CME (1 AF + 6 EU sparse) — market-calendar/Databento gap pending verify. Follow-ons
+  filed as `issues/instruments_handler_pd_na_ambiguous_and_af_classification_2026_07_06.md` with 3 tracked TODOs
+  (P1 pd.NA fix + P2 tradfi CME verify + P2 stale-dedup collapse). Env-naming check confirmed: `DEPLOYMENT_ENV`
+  default is `prod` (`get_config("DEPLOYMENT_ENV", "prod")` in `build_instrument_catalogue.py:2095`) and the
+  catalog lives at `gs://…/prod/catalog.parquet` — the earlier `DEPLOYMENT_ENV=prd` cold-start artifact was a mis-set
+  env on my side, not a real prd/prod split. B1 (catalogue regen + un-pause) is now unblocked.
+- **2026-07-06** — Plan authored + dispatched to AO (Plan 3 of the instruments-completion set). Carries the B0→B1→B2
+  IS-catalogue-completion slice pulled from instruments_mtds_subset + instruments_catalogue_incremental_rollup +
+  mvp_scope_catalogue_tagging. B2 UAC SSOT already shipped (uac@b654eb6); B0 gates B1 + the Stage-3 re-measure.

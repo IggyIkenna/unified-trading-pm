@@ -138,6 +138,12 @@ logs/
 *.csv
 # Mega-audit diagnostic outputs are checked-in artefacts consumed by downstream phases.
 !plans/audit/results/*.csv
+# `divergence_*.csv` — raw ~18MB mostly-OK_* fully-regenerable dump from
+# unified-trading-library/scripts/detect_manifest_divergence.py: small candidate CSVs the
+# escalation issue doc references DO get committed (rule above), but the megabyte-scale
+# divergence dump must not enter git history (see plans/active/issues/
+# audit_writes_escalation_artifacts_but_never_commits_them_2026_07_06.md TODO#2).
+plans/audit/results/divergence_*.csv
 *.xlsx
 *.xls
 *.xlsm

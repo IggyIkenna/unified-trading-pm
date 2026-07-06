@@ -37,7 +37,9 @@ tags:
 related:
   [
     plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
+    plans/active/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
     plans/active/instruments_catalogue_incremental_rollup_2026_06_29.md,
+    plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
   ]
 created: 2026-07-06
 parent_epic: instruments_master
@@ -118,6 +120,12 @@ orchestrator-dispatched).
 
 ### Residual open work
 
+> **Scope note (2026-07-06):** Workstream A is **capture-hardening (root-cause-#1)** — NOT the KALSHI/POLYMARKET-PERP
+> correction the slot-2 agent was assigned (Workstream B). These residuals (consolidator dtype-at-source, the
+> is-daily-enum heal, missed-window backfill, exc_info) belong to the **capture-hardening owner**; the slot-2 agent is
+> NOT executing them further. The unresolved heal is handed off in
+> [`issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`](issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md).
+
 - [ ] [CODE] P1. Fix the manifest **consolidator's dtype handling at ITS source** — it should persist schema-typed
       columns, not utf8. Locate the consolidator image/repo (SSOT
       `codex/05-infrastructure/manifest-consolidator-ssot.md`), find where the ~2026-06-27-era change began
@@ -131,19 +139,14 @@ orchestrator-dispatched).
       capture has been DEAD longer than prediction, previously undetected. Paused
       `uts-prod-manifest-consolidator-instruments-sports-legacy-cron` (now matches every other AG; reversible via
       `gcloud scheduler jobs resume`). The heal folds into the item below.
-- [ ] [INFRA] P0. **URGENT — data-correctness heartbeat**: fixed UTL (coercion @6c090bb/@1651340) into the
-      `is-daily-enum-*` Cloud Run image. **NOT resolved — correction 2026-07-06:** I first (wrongly) reported the guard
-      build had healed prediction+sports as a side effect. That was a **false positive from a buggy watchdog** (gcloud's
-      tab output collapsed an empty `succeededCount` under `awk`, so `failedCount=1` was misread as success).
-      Re-verified EXPLICITLY: manual runs on `:latest`=e93483dd **BOTH FAILED** — `is-daily-enum-prediction-n2kc9`
-      (failedCount=1, exit 1 after 31min) AND `is-daily-enum-sports-rp2sm` (failedCount=1, NonZeroExitCode after 51min).
-      So the new image does NOT heal capture (either it lacks the coercion despite the 08:11 UTL base rebuild, or the
-      failure is a different error — Cloud Run logs show only "Container called exit(1)", the observability gap). BOTH
-      prediction (07-01→) and sports (06-28→) instruments capture remain DEAD. **Next:** reproduce locally (fixed UTL)
-      to get the real error signature, confirm whether e93483dd carries the coercion, then ship the actual fix (UTL
-      pin/base into the enum image) + re-verify with EXPLICIT status checks (never the awk watchdog). Gate:
-      `is-daily-enum-{prediction,     sports}` cloud runs `succeededCount=1` (verified via `executions describe`, not a
-      watchdog); `Evidence: cloudbuild=<id>`.
+- [ ] [INFRA] P0. **HANDED OFF (2026-07-06) → capture-hardening owner. NOT the perp-correction agent's scope.** The
+      "fixed UTL into the is-daily-enum image" heal is NOT resolved: the deployed image (`:latest`=f36f3bba) DOES carry
+      the coercion (docker-confirmed, UTL 1.6.0 — via base-pin bump instruments-service@1098731c4), but
+      `is-daily-enum-{prediction,sports}` STILL exit(1) after a full run — a DIFFERENT error, blocked by the Cloud-Run
+      observability gap (logs show only "Container called exit(1)"). The slot-2 agent went too deep here (out of its
+      perp lane) and has STOPPED. **Full diagnostic handoff — everything tried + the two infra changes made (UTL
+      base-pin bump + sports legacy-cron pause) — is in a dedicated issue doc:**
+      [`issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`](issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md).
 - [ ] [VERIFY] P1. Backfill the missed window 07-01→07-06: confirm the healed capture's `--days-back` reach covered the
       gap days' by_date + manifest rows, or run a targeted backfill; then confirm the catalogue picks up post-06-27
       listings (`max(available_from)` advances) on the next daily run. Gate: no by_date/manifest holes in 07-01→07-06;
@@ -310,3 +313,13 @@ orchestrator-dispatched).
   base pin `a0359e03→9f01cf8e` — instruments-service@1098731c4 (QG green incl. STEP 5.79 base-pin gate). Dispatched the
   promoter; watchdog on the `:latest` rebuild. Next: on rebuild, re-run is-daily-enum-{prediction,sports} + verify
   `succeededCount=1` via `executions describe`.
+- 2026-07-06 ~14:20Z: **The pin bump did NOT fix it + SCOPE CORRECTION.** After the rebuild (`:latest`=f36f3bba), re-ran
+  `is-daily-enum-prediction` → **STILL failedCount=1** (exec `hpmlr`, ~37min). docker-inspected f36f3bba → the coercion
+  IS present (UTL 1.6.0), so the failure is a DIFFERENT error, not the ArrowTypeError. Blocked by the observability gap
+  (logs = "Container called exit(1)" only). **Operator correction:** this whole capture-heal thread is root-cause-#1 /
+  capture-hardening — OUTSIDE the slot-2 agent's assigned PERP-correction scope, and risks colliding with another agent
+  who owns capture-hardening. Per findings-triage, it should have been an issue doc from the start, not a multi-hour
+  debug. **Stopped. Filed a full handoff issue doc**
+  (`issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`) with every attempt + the two infra
+  changes made (UTL base-pin bump is@1098731c4 — correct, keep it; sports legacy-cron pause — reversible). The pin bump
+  and sports-cron pause are LEFT in place (both correct). **Returning to Workstream B (the perp correction).**

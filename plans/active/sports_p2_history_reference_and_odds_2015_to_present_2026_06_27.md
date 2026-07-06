@@ -34,13 +34,11 @@ drift_direction: advance-code
 > 2026-06-28T21:31; IS fix at instruments-service@1835e11 prevents future regression). Tarball: instruments-service@051e5a8.
 > GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260629-060317/run.log`. Singleton lock active.
 
-> **🟢 FOOTYSTATS ODDS BACKFILL RUN 2** — `fs-backfill-20260629-062206` SPOT e2-standard-8 asia-northeast1-c,
-> launched 06:22 UTC 2026-06-29, range 2020-09-01..2026-06-15 (entity=ODDS only). Re-run needed because first ODDS VM
-> (fs-backfill-20260629-043218, completed 06:04 UTC) missed 285 af dates (race condition: VM started 07 min after
-> phantom-audit shard was written; consolidated index hadn't merged shard yet → VM saw captured → skipped those dates).
-> Also: 4,976 non-covered-league eu rows typed at instruments-service@810ac26
-> (type_footystats_odds_non_covered_leagues_2026_06_29.py). GCS log:
-> `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260629-062206/run.log`. Singleton lock active.
+> **🟢 FOOTYSTATS M+P+ODDS FULL-HISTORY BACKFILL** — `fs-backfill-20260706-161335` SPOT e2-standard-8 asia-northeast1-c,
+> launched 16:13 UTC 2026-07-06 by slot-11, range 2019-01-01..2026-07-05 (all entities: M+P+ODDS). Root cause: the
+> M+P VM for 2019-01-01..2026-02-19 never ran after ODDS VM 2 completed; current state: PREDICTIONS eu=44,298 /
+> MATCHES pending=6,569 / ODDS pending=1,595. GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260706-161335/run.log`. Singleton lock active.
 
 > **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260628-070120` SPOT e2-standard-8 asia-northeast1-c, launched 07:01
 > UTC 2026-06-28 (relaunch after SPOT preemption of `us-backfill-20260627-210801` at 06:20 UTC; reached 276/4561 dates =
@@ -114,10 +112,10 @@ singleton-lock namespace → may run concurrently.
 - [ ] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
       removal reversed 2026-06-27 (#6 REVERSED, operator decision) — footystats ODDS are pre-match snapshot reference
       data that stays in IS; see sports_p0 task 003. **Gate**: `(footystats, PREDICTIONS)` + `(footystats, MATCHES)` +
-      `(footystats, ODDS)` `pending_fetch == 0` within window; 0 blank-reason; ODDS parquets present in GCS. 🔄 IN
-      PROGRESS — slot-8 unflipped 2026-06-29: checkbox was premature (26,220 phantom ODDS rows wiped 2026-06-25; "intact"
-      claim was wrong). Phantom flip applied 04:25 UTC 2026-06-29. ODDS VM `fs-backfill-20260629-043218` RUNNING. After
-      VM completes → verify pending_fetch==0 → reflip. M+P 2019-01-01..2026-02-19 also needed after ODDS VM.
+      `(footystats, ODDS)` `pending_fetch == 0` within window; 0 blank-reason; ODDS parquets present in GCS. 🟢 VM
+      `fs-backfill-20260706-161335` RUNNING (slot-11, 2026-07-06 16:13 UTC, range 2019-01-01..2026-07-05 all entities).
+      Pre-VM manifest: PREDICTIONS eu=44,298 / MATCHES pending=6,569 / ODDS pending=1,595. M+P VM for 2019..2026-02-19
+      was the missing piece after ODDS VM 2 completed 2026-06-29. After VM TERMINATED → verify pending_fetch==0 → flip.
 - [x] [DATA] P0. **odds-api history → zero-missing** 2020-06→present (bookmaker-league subset; uncovered leagues typed).
       **Gate**: `(odds_api, trades)` `pending_fetch == 0` for covered leagues within window; uncovered leagues typed.
       ✅ — `mtds-backfill-odds-1` VM completed 2026-06-28T03:41 UTC (rc=0, 317/317 chunks, 2020-06-06→2026-06-27, 7-day
@@ -459,6 +457,66 @@ complete + gate met → reflip footystats checkbox. Issue doc
 **Gate status**: NOT MET. Understat VM ETA ~40h is the blocking constraint (XG `expected_unattempted=280`, XG_SHOTS `expected_unattempted=13,776`, XG_SHOTS `attempted_failed=424`). TM and FS may complete today but understat will not.
 
 **Task parked** — re-dispatch after Understat VM TERMINATED (~2026-07-01 02:00 UTC). No code action needed; all code ready. /blocked filed (slot 4).
+
+### 2026-07-06 16:13 UTC — slot-11: footystats M+P+ODDS full-history VM launched
+
+**Root cause (identified 2026-07-06):** The M+P VM for 2019-01-01..2026-02-19 was sequenced after ODDS VM 2
+(`fs-backfill-20260629-062206`) but never launched once ODDS VM 2 completed on 2026-06-29. This left the entire
+7-year history uncaptured for 49 PREDICTIONS leagues and several MATCHES leagues.
+
+**Manifest state at VM launch (2026-07-06 16:13 UTC):**
+
+| data_type | capture_status | count (footystats-sourced) |
+|---|---|---|
+| PREDICTIONS | expected_unattempted | 44,298 (49 leagues, all years 2019-2026) |
+| MATCHES | expected_unattempted | 5,630 (CHILE_PRIMERA/K_LEAGUE_1/LIGA_MX/ARGENTINA_PRIMERA + others) |
+| MATCHES | attempted_failed | 939 (SEGUNDA_DIVISION — investigate post-VM) |
+| ODDS | expected_unattempted | 1,318 (race-condition eu from ODDS VM 1; may resolve) |
+| ODDS | attempted_failed | 277 (phantom/ArrowType/PipelineModeSourceMismatch — investigate post-VM) |
+
+**Action:** Launched `fs-backfill-20260706-161335` SPOT e2-standard-8 asia-northeast1-c, range 2019-01-01..2026-07-05
+all entities (M+P+ODDS), via Python compute API (gcloud snap-confine broken). Tarball:
+`instruments-service-code@2fa38777a79b8bd95dc8c2c6acc44e13779fd41a.tar.gz` (updated 2026-07-06 16:00 UTC — fresh).
+
+**Post-VM steps:**
+1. Wait ≤1 min for consolidator merge after VM TERMINATED
+2. Re-query: MATCHES + PREDICTIONS + ODDS pending_fetch == 0 for footystats source
+3. If SEGUNDA_DIVISION af=939 persists: investigate — type as EXPECTED_NO_PROVIDER_COVERAGE if not covered
+4. If ODDS af=277 (phantom/ArrowType) persists: investigate each error_reason; phantom → phantom-audit; ArrowType → investigate schema
+5. If ODDS eu=1,318 persists: check if these are non-covered leagues → type as EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE
+6. Once all pending_fetch == 0 → flip checkbox ✅
+
+### 2026-07-06 16:45 UTC — slot-10: VM baseline + parked pending completion
+
+**VM `fs-backfill-20260706-161335`** RUNNING. At date=2019-01-18 as of 16:38 UTC (~25 min elapsed since 16:13 UTC
+launch; ~1% of 2743-date range). Rate ~1.4 dates/min effective (mix of API-call dates and skip dates).
+**ETA: 24-40 hours from launch** = ~2026-07-07 16:00 UTC to 2026-07-08 08:00 UTC. GCS log clean; FOOTYSTATS DONE
+lines confirm M+P+ODDS being fetched per date; per-VM shard updated every ~5-8 entries.
+
+**Manifest state (consolidated index `_index/availability_index.parquet`, updated 2026-07-06T16:40:50Z):**
+
+| data_type   | captured | empty_confirmed | expected_unattempted | attempted_failed | pending_fetch | coverage |
+|-------------|----------|-----------------|----------------------|------------------|---------------|----------|
+| MATCHES     | 26,366   | 256,528         | 5,630                | 939              | 6,569         | 97.7%    |
+| PREDICTIONS | 28,599   | 195,099         | 44,298               | 0                | 44,298        | 83.5%    |
+| ODDS        | 30,702   | 79,358          | 1,318                | 277              | 1,595         | 98.6%    |
+
+**Pre-analysis of residual af rows (all `phantom_captured_no_parquet_at_canonical_path`):**
+
+- MATCHES af=939: 100% SEGUNDA_DIVISION. Confirmed IS a footystats-covered Prediction+Features league (UAC
+  `get_expected_leagues_for_source("footystats", classifications=["Prediction","Features"])` → 46 leagues incl.
+  SEGUNDA_DIVISION).
+- ODDS af=277: SUPER_LIG=183, SWISS_SUPER_LEAGUE=92, LIGUE_1=1, blank=1; +1 RuntimeError. SUPER_LIG /
+  SWISS_SUPER_LEAGUE / LIGUE_1 are also all footystats-covered.
+- All 1,216 phantom af rows have `written_at` in 2026-05-01..2026-05-07 — 2 months old, present in the current
+  consolidated index BEFORE VM launched. VM's `_should_skip_date_for_per_league` reads the up-to-date index → sees
+  `af` (not `captured`) → will NOT skip → will re-process these dates and replace phantom af with fresh capture
+  attempts. No pre-VM typing scripts needed; auto-heal expected.
+
+**Task parked** — re-dispatch condition: VM TERMINATED AND
+`(footystats, MATCHES)+(footystats, PREDICTIONS)+(footystats, ODDS) pending_fetch == 0`. Post-VM steps unchanged
+from 16:13 UTC entry above (verify pending_fetch, run typing only if af/eu residues persist beyond phantoms, then
+flip item #5 checkbox).
 
 ## References
 
