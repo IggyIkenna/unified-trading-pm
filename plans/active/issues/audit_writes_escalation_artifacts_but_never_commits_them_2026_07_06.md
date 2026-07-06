@@ -196,7 +196,7 @@ unaddressed.
       `divergence_2026-07-06.csv` → ignored (last-match line 146); `manifest_hygiene_cefi_*.csv` → still committable
       (last-match line 140 whitelist). Divergence CLI (`unified-trading-library/scripts/detect_manifest_divergence.py`)
       unchanged — the file still lands at the same path for local inspection, just not in git history.
-      — unified-trading-pm@&lt;SHA&gt;
+      — unified-trading-pm@2d6fe63
 - [x] ✅ [DATA] P1. Re-run the cefi audit (`--mode full --asset-group cefi`) and file/ingest a fresh escalation so the
       stranded 2026-07-03 RED finding (20,282 DIVERGENT_EMPTY / non-v9 / phantom / 4-pillar) actually gets triaged in
       `market-tick-data-service`. — unified-trading-pm@460682f91 (slot-13, 2026-07-06). Evidence: audit ran 15:07-15:17
