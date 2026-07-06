@@ -204,6 +204,46 @@ approve / defer per category rather than per-venue.
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **Design analysis (task gap-011)** by slot-4. Researched the chain-agnostic vs per-(protocol×chain)
+  question. Key findings:
+
+  **49-venue breakdown (precise):**
+  - 3 are a **Solana naming mismatch**: `orca`/`raydium`/`jito` are registered under bare names but the smoke matrix's
+    `_normalize_venue_for_match` deliberately does NOT strip `-SOLANA` (only EVM chain suffixes are stripped). So
+    `ORCA-SOLANA`, `RAYDIUM-SOLANA`, `JITO-SOLANA` each fail to resolve to their connector. Fix: rename the three
+    `register_ws_feed_connector(venue=...)` calls from bare names to canonical UAC names. **Does not require the
+    architectural call — can proceed unilaterally.**
+  - 46 are genuinely-not-built (no connector exists). These need the architectural decision.
+
+  **Existing multi-chain honesty gap**: The 6 DeFi venues the smoke matrix shows as "resolved" include `CURVE-OPTIMISM`,
+  `CURVE-AVALANCHE` (matching the `curve` key via chain-strip), and `MORPHO-BASE` (matching `morpho`). BUT:
+  `CurveWSFeedConnector` hardcodes `api.curve.finance/v1/getPools/all/ethereum` (Ethereum only). `MorphoWSFeedConnector`
+  hardcodes `chainId_in: [1]` (Ethereum only). So the smoke matrix says these 3 venues are "registered" but the actual
+  connector does not serve their chain data. This is a correctness gap under Option A (chain-agnostic): the connector
+  claims a chain it doesn't cover.
+
+  **Option A — chain-agnostic (one venue key spans all chains)**:
+  - Pros: fewer registry keys; `curve` key resolves for all CURVE-* chains automatically.
+  - Cons: connectors must actually serve ALL chains simultaneously (Curve has per-chain REST endpoints:
+    `/v1/getPools/all/optimism`, `/v1/getPools/all/avalanche`). Current connectors are Ethereum-only despite "resolving"
+    for multi-chain — violates honest-absence principle. Hard to express in smoke matrix: `CURVE-OPTIMISM` shows
+    "registered" but actual data is Ethereum only.
+
+  **Option B — per-(protocol×chain) registration (RECOMMENDED)**:
+  - Pros: registry key = UAC canonical `PROTOCOL-CHAIN` form 1:1; smoke matrix is honest; correctness is verifiable.
+  - Cons: 46 separate factory registrations needed vs a smaller number of base classes.
+  - Implementation: base classes with `chain` parameter are fine for code-reuse (e.g., `CurveWSFeedConnector(chain=...)`
+    fetches the right endpoint); each chain gets its own `register_ws_feed_connector(venue="CURVE-OPTIMISM", ...)`.
+  - Existing connectors: `curve` → re-register as `CURVE-ETHEREUM`; `morpho` → `MORPHO-ETHEREUM`. Backward-compat:
+    add alias `curve` → `CURVE-ETHEREUM` in the registry if needed for existing test coverage.
+
+  **Recommendation to Ikenna**: Option B (per-chain). Plus, regardless of Option A/B:
+  1. Immediately rename Solana bare keys → canonical: `orca`→`ORCA-SOLANA`, `raydium`→`RAYDIUM-SOLANA`,
+     `jito`→`JITO-SOLANA`. This fixes 3 of the 49 unresolved without touching the architectural question.
+  2. Rename `curve`→`CURVE-ETHEREUM`, `morpho`→`MORPHO-ETHEREUM` to close the multi-chain honesty gap.
+
+  Posting BLOCKED-OPERATOR-DECISION for Ikenna to approve Option B before building the 46 remaining venues.
+
 - **2026-07-06** — **Issue filed** by `foundation_gates_and_capture_to_100-010` (venue-level WSFeedConnector audit). Ran
   `register_all()` on `mtds@HEAD` post the C5 handler fix: **31 registered venue keys**. Cross-referenced against UAC
   `VENUES_BY_ASSET_GROUP` via the smoke-matrix's own `resolve_live_venue_key` resolver → **73 unregistered venues**
