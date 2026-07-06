@@ -247,6 +247,17 @@ urgent.
 
 ## Progress Log
 
+- 2026-07-06 — **Hook gap was WORKSPACE-WIDE, not PM-only: 384/400 clones fixed (operator: "what about other repos?").**
+  Measured all 25 repos × 16 clones — every clone carries a `.pre-commit-config.yaml`, only the 16 PM ones (fixed
+  earlier today) had the prek pre-commit hook. On 384 clones, gitleaks / slot·host commit-identity / branch-drift / ruff
+  / prettier / conventional-commit never ran at commit time; 24 main-ws clones also lacked the pre-push
+  strict-quickmerge guard; 9 MORE stale `core.hooksPath` entries found (10 total incl. PM main-ws — all dead absolute
+  paths from the `/active` migration, each one disabling ALL hooks in that clone). Live remediation: 384 prek installs +
+  24 guards + 9 hooksPath clears, 0 failures, verified 400/400 both-hooks-ok. Durable (pm@730565a1e, QG exit 0): cron
+  self-heal widened from the PM-only loop to a generic ALL-repos × ALL-clones sweep per 5-min tick (heals either hook;
+  clears a hooksPath ONLY when its target dir is provably gone — a live custom one is deliberate and untouched);
+  clone-time install was already repo-generic from cb3f353fe. Other hosts (Ikenna's machine, VMs) self-heal
+  automatically once their cron self-updates from origin — no manual sweep. SSOT section updated with fleet numbers.
 - 2026-07-06 — **ROOT CAUSE of the bypassed prek hook found + fixed fleet-wide: prek pre-commit was NEVER installed on
   15/16 PM clones.** Operator asked whether the hook could simply be missing — audit confirmed: only slot-3 had
   `.git/hooks/pre-commit` (manual `prek install` at some point); the gate-red doc's author clone (slot-2) and every
