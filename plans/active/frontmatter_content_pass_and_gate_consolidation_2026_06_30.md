@@ -106,10 +106,14 @@ urgent.
 - [x] [SCRIPT] P3.3 **`referenced_by` reverse-link post-pass (codex).** Derive from the corpus link graph AFTER the
       content pass lands (the pass creates new `related` edges). **Gate**: codex `referenced_by` populated mechanically,
       no LLM.
-- [ ] [OPERATOR] P3.4 **Operator worklist.** Delivered 2026-07-04 — see `## P3.4 Operator worklist` section below
-      (field-fills: owner/cadence/verifier 29 each, auditor 26, source/resolved_by/tier/priority/parent ~22; plus the
-      decision items: archetype maturity-axis key, epic asset_group mis-seed, retype list, SUPERSEDED banners, 3
-      HARD-rot docs, locked_by-NA hook contradiction). **Gate**: operator ticks it off.
+- [ ] [OPERATOR] P3.4 **Operator worklist.** Delivered 2026-07-04 — see `## P3.4 Operator worklist` section below.
+      **Section A CLOSED by operator policy 2026-07-06**: zero-pass defaults on runbook `owner`/`cadence`/`verifier` and
+      authorship-derived `auditor` values STAND — they self-correct at first use of each runbook/audit ("update on
+      use"); field-fills are NOT operator work. B3 (3 HARD-rot docs) fixed by the zero-pass; B4 (locked_by-NA) + B5
+      (valid-empty) reconciled in docspec. **Remaining decision items**: B1 archetype maturity-axis key, B2 epic
+      `asset_group: [defi]` mis-seed (23/28 epics, measured 2026-07-06), B6 retype list (~15); B7 SUPERSEDED banners
+      parked with the archive bonus; B8 codex-drift bodies feed the W7 codex audit. **Gate**: operator ticks off
+      B1/B2/B6.
 - [x] [AGENT] P3. **Make the single gate comprehensive — back it by `docspec`, don't reimplement.** Expand the blocking
       `check_frontmatter_schema` to enforce the full schema (universal-core + enums + all doc types incl. codex +
       cursor-rule, and the now-populated content fields) by **calling `docspec.validate_frontmatter()`** rather than
@@ -130,7 +134,18 @@ urgent.
 
 ## P3.4 Operator worklist (delivered 2026-07-04)
 
-### A. Field fills (docspec-flagged operator-only residuals — counts from the 2026-07-04 sweep)
+### A. Field fills — CLOSED by operator policy (2026-07-06)
+
+> **Operator decision 2026-07-06**: the zero-pass defaults are ACCEPTABLE, not a blocker or real work — runbook
+> `owner`/`cadence`/`verifier` and audit `auditor` values get corrected at first actual use of each doc; new blanks get
+> defaults the same way. State at closure (measured 2026-07-06): nothing empty (gate green, 1,298 docs / 0 violations);
+> 18 runbooks carry the default triple `owner: ikenna` / `cadence: on-demand` / `verifier: operator` (16 `alerting/*` +
+> `instruments-live/t1-audit-discrepancy` + `rehearsal-procedure` partial); 13 runbooks have true values lifted from the
+> legacy `execution:` sub-map (sub-map line left in place, harmless); `auditor` backfilled from commit identity incl. 2
+> raw git identities (`Ubuntu`/`ComsicTrader` = harsh, per git log) — all stand as-is. `last_executed: never` on 25
+> runbooks is the honest value (rehearsal backlog, not a fill).
+>
+> Original sweep counts (2026-07-04, pre-zero-pass), kept for the record:
 
 - `owner`/`cadence`/`verifier` empty on ~29 runbooks each (many carry the values inside a legacy `execution:` sub-map
   docspec doesn't read — decide: lift to top-level keys mechanically, or teach docspec the sub-map). All incident
@@ -168,17 +183,20 @@ urgent.
 2. **Epic `asset_group: [defi]` mis-seed.** Most epics carry `[defi]` regardless of domain (cefi_master,
    execution_master, mtds_mdps_master, observability_master, dart_and_promote_master, …) — a migrate_epics default.
    Search-axis correctness bug; untouched (dispatch-load-bearing). Proposed per-epic mapping is mechanical from slug.
-3. **3 pre-existing HARD-rot docs** (all authored ~2026-06-30/07-03 with issue-ish `nature` values the enum lacks):
-   `defi_expected_unattempted_backlog_1m_2026_07_03` (a `doc_type: plan` living in `issues/` — move or retype),
-   `deribit_options_chain_af_g4_blocker_2026_07_03` (`nature: data-correctness`, `stage: backfill`, bad parent_epic),
-   `plan_issue_epic_consolidation_2026_06_30` (`nature: audit`, `asset_group: cross-asset`, no parent_epic). Recurring
-   authoring instinct → consider adding an issue-ish `nature` value at gate-consolidation.
-4. **`locked_by: NA` hook contradiction.** Something (not `fix_frontmatter.py`, which writes `live-defi-rollout`)
-   rewrites empty `locked_by:` → `NA` on commit; docspec flags literal NA as SOFT (22 in-tree docs). Reconcile: either
-   the writer stops emitting NA or docspec accepts NA for `locked_by` — must be settled before the blocking gate.
-5. **Validator↔schema empty-list tension** (from P3.1): schema §6 says `repos: []`/`related: []` is legal-empty, the
-   FieldSpec flags it SOFT (107 + 59 + 103 `authoritative_for: []` residuals, mostly stubs/superseded docs claiming
-   nothing — which is CORRECT). The blocking gate must accept valid-empty or these red it.
+3. ✅ RESOLVED (verified 2026-07-06 — the zero-pass fixed all three: enum-valid `nature: record` + valid
+   stage/parent_epic; residual placement nit only: `defi_expected_unattempted_backlog_1m` is still `doc_type: plan`
+   living in `issues/` — gate-legal, fold into B6 if retyped) ~~**3 pre-existing HARD-rot docs**~~ (all authored
+   ~2026-06-30/07-03 with issue-ish `nature` values the enum lacks): `defi_expected_unattempted_backlog_1m_2026_07_03`
+   (a `doc_type: plan` living in `issues/` — move or retype), `deribit_options_chain_af_g4_blocker_2026_07_03`
+   (`nature: data-correctness`, `stage: backfill`, bad parent_epic), `plan_issue_epic_consolidation_2026_06_30`
+   (`nature: audit`, `asset_group: cross-asset`, no parent_epic). Recurring authoring instinct → consider adding an
+   issue-ish `nature` value at gate-consolidation.
+4. ✅ RESOLVED (verified 2026-07-06 — docspec now carries `locked_by` as `Req.O` scalar; NA accepted; corpus green with
+   NAs present) ~~**`locked_by: NA` hook contradiction.**~~ Something (not `fix_frontmatter.py`, which writes
+   `live-defi-rollout`) rewrites empty `locked_by:` → `NA` on commit; docspec flagged literal NA as SOFT (22 docs).
+5. ✅ RESOLVED (verified 2026-07-06 — the blocking gate is green with valid-empty lists present; `_valid_empty` handles
+   legal-empty) ~~**Validator↔schema empty-list tension**~~ (from P3.1): schema §6 says `repos: []`/`related: []` is
+   legal-empty, the FieldSpec flagged it SOFT — stubs/superseded docs claiming nothing is CORRECT.
 6. **doc_type retype candidates (~15)** — runbook-shaped `codex-ssot` docs (rotation-runbook, sit-runbook,
    phase-2-6-bucket-cutover, pre-cutover-test-wallets, physical-pager-layer, recursive-leverage-receiver-deploy,
    reconciliation-resolution, reconciliation-age-tracking, custody-onboarding-checklist, credentials-matrix,
@@ -207,20 +225,30 @@ urgent.
 
 ## Progress Log
 
+- 2026-07-06 — **P3.4 section A CLOSED by operator policy; B-items re-measured.** Operator decision: zero-pass defaults
+  on runbook `owner`/`cadence`/`verifier` + authorship-derived `auditor` are acceptable and NOT operator work — values
+  self-correct at first use ("update on use"); blanks get defaults going forward. Live re-measure (slot-3): gate green
+  1,298/0; 18 runbooks on the default triple; 13 runbooks carry sub-map-lifted true values; `auditor` junk identities
+  (`Ubuntu`/`ComsicTrader`, both = harsh per git log) stand per the same policy; `last_executed: never` ×25 = rehearsal
+  backlog (not a fill); 1 straggler noted (`honest_coverage_uac_writer_ matrix_reconciliation_2026_06_29` is
+  `status: resolved` with empty `resolved_by` — gate-legal, update-on-use). B3 HARD-rot docs verified FIXED by the
+  zero-pass; B4 locked_by-NA + B5 valid-empty verified reconciled in docspec. P3.4 now = decision items B1 (archetype
+  maturity key), B2 (epic `asset_group: [defi]` mis-seed — re-measured 23/28 epics), B6 (retype ~15); B7 parked with
+  archive bonus; B8 feeds W7.
 - 2026-07-04 — **Index scope decisions (operator) + an AO timing collision.** (1) The L0 index
   (`DOC_INDEX.generated.md`) is **PM-repo live-trees ONLY**: the `agent-orchestrator/agents` root removed from
-  `gen_doc_index.py` (1,119 entries, zero cross-repo paths). Other repos join later as a deliberate separate task.
-  (2) **`plans/archive` is NEVER indexed** — not now and not after the archive backfill (closed records; unbounded
-  index growth, no routing value; rare history reads take the costlier archive-grep path). `_EXCLUDED_PREFIX` safety
-  net added. (3) **COLLISION for operator decision**: the operator deferred agent-orchestrator gate wiring ("not even
-  AO right now"), but a concurrent orchestrator session had ALREADY shipped it (agent-orchestrator@202c9b6) before
-  the deferral was voiced. Not reverted here (pushed work, other session's). Operator: keep the in-repo AO gate
-  (it gates only agents/*.md inside AO, invisible to PM) or revert it.
-- 2026-07-04 — **ALL agent-workable todos DONE.** P3.3 referenced_by (pm@a89ab2c36, 648 codex docs) +
-  agent-role enforcement (agent-orchestrator@202c9b6) shipped by orchestrator session; P3.2/gate-consolidation/
-  archive-bonus/zero-violations shipped by the operator-side concurrent session. Corpus: docspec HARD=0 SOFT=0
-  (1,298 live docs, independently verified twice) + consolidated blocking gate GREEN. Sole remaining open item =
-  P3.4 operator worklist (human-only by design). Plan is COMPLETE pending P3.4 tick-off + archival ritual.
+  `gen_doc_index.py` (1,119 entries, zero cross-repo paths). Other repos join later as a deliberate separate task. (2)
+  **`plans/archive` is NEVER indexed** — not now and not after the archive backfill (closed records; unbounded index
+  growth, no routing value; rare history reads take the costlier archive-grep path). `_EXCLUDED_PREFIX` safety net
+  added. (3) **COLLISION for operator decision**: the operator deferred agent-orchestrator gate wiring ("not even AO
+  right now"), but a concurrent orchestrator session had ALREADY shipped it (agent-orchestrator@202c9b6) before the
+  deferral was voiced. Not reverted here (pushed work, other session's). Operator: keep the in-repo AO gate (it gates
+  only agents/\*.md inside AO, invisible to PM) or revert it.
+- 2026-07-04 — **ALL agent-workable todos DONE.** P3.3 referenced_by (pm@a89ab2c36, 648 codex docs) + agent-role
+  enforcement (agent-orchestrator@202c9b6) shipped by orchestrator session; P3.2/gate-consolidation/
+  archive-bonus/zero-violations shipped by the operator-side concurrent session. Corpus: docspec HARD=0 SOFT=0 (1,298
+  live docs, independently verified twice) + consolidated blocking gate GREEN. Sole remaining open item = P3.4 operator
+  worklist (human-only by design). Plan is COMPLETE pending P3.4 tick-off + archival ritual.
 - 2026-07-04 — **GATE CONSOLIDATION SHIPPED (operator-directed): frontmatter can no longer rot.**
   `check_frontmatter_schema.py` = the single comprehensive BLOCKING gate (docspec-backed, HARD+SOFT, live trees only —
   plans/archive excluded per operator); warn-only `check_docspec_coverage.py` retired; schema banner updated. Archive
