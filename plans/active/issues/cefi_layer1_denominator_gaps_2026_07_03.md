@@ -338,3 +338,18 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   escalation)**: add `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and
   regen; -008 stays in queue until `-007` (enumerator `start_date`) reaches LDR. Slot-9 goes idle pending operator's
   backlog fix.
+- **2026-07-06** — **UAC capability flip RE-PARKED — BLOCKED-PREREQUISITES (7th dispatch)** (slot-9 planning, new
+  session). Task `cefi_layer1_denominator_gaps-008` was RE-dispatched to slot-9 AGAIN after the prior slot-9 session's
+  6th-block park commit `7ad9a3c6b` (18:09 UTC) landed on LDR; task status returned to queued/dispatched. Machine-encoded
+  `depends_on` gap flagged across 6 prior blocks (`BLK-36eeb447` + `BLK-d8cba69b` + `BLK-9072b84f` + `BLK-545a3adb` +
+  6th-block) remains uncorrected: `/api/backlog?limit=500` at 7th re-dispatch: `-008.status=dispatched,
+  depends_on=null`; `-007.status=queued, depends_on=null`. Re-verified LDR tip:
+  `instruments-service/scripts/expected_universe.py` + `scripts/check_enumeration_completeness.py` still contain ZERO
+  `start_date` / `get_venue_data_type_start_date` refs (last touching commits `a1038ee` 2a + `2fa3877` 2c —
+  neither adds start_date). Confirmed ASTER capability entry alive at `unified-api-contracts/registry/
+  market_data_categories.py:1144` (target of the flip). Slot-9 verdict: PARK -008 — **7th consecutive block, same
+  17,282-row over-seed risk**. The bounce loop is not self-correcting: 7 slots (8, 7, unnamed 3rd, 5, 2, 9, 9-again)
+  have now been spent verifying + escalating the identical operator-backlog defect. **Operator action required (7th
+  escalation)**: add `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and
+  regen; -008 stays in queue until `-007` (enumerator `start_date`) reaches LDR. Slot-9 goes idle pending operator's
+  backlog fix.
