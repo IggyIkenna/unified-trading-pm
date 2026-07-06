@@ -268,8 +268,21 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   "holes" appeared. Mitigated in-session by a metadata bump restoring prd as freshest, but any future surgery on the
   older bucket re-triggers it. Consider content-based freshness (max manifest date) or pinning prd as primary. This may
   also explain the anomalous 05:07 UTC 2026-07-03 cefi-only measure (61.36%, present 29→27).
-- [ ] [CODE] P2. Harden `_read_manifest` primary selection against surgery-bumped mtimes (content-based freshness or
-      pinned-primary with explicit override).
+- [x] ✅ [CODE] P2. Harden `_read_manifest` primary selection against surgery-bumped mtimes (content-based freshness or
+      pinned-primary with explicit override). **DONE 2026-07-06 — instruments-service@5b04878 (slot-5 planning).**
+      `measure_honest_coverage._read_manifest` now pins PRIMARY to the first accessible candidate in
+      `_MANIFEST_BUCKET_CANDIDATES[asset_group]` tuple order (which places the `-prd` bucket first by construction for
+      every AG). `blob.updated` mtime is still logged for visibility but no longer drives selection — the 2026-07-03
+      ASTER-corrective-pass scenario (surgery on legacy bucket bumped its mtime past prd, flipping roles and producing
+      3 artifact "holes") is now a regression-tested guard. New `--primary-bucket=<name>` operator override forces a
+      specific candidate when surgery or debugging demands it (falls back to the tuple-order pin with a warning if the
+      named bucket is not accessible). New `_warn_if_secondary_newer` logs a `SURGERY-SIGNAL` warning when a secondary
+      bucket has a newer mtime than primary, so operators can spot the anomaly and decide whether to switch primary
+      via the override. 4 new/rewritten unit tests: `test_prd_wins_over_legacy_by_tuple_order`,
+      `test_pinned_primary_wins_when_secondary_mtime_is_newer` (regression guard cite the 06-29
+      BINANCE-FUTURES/future scenario), `test_row_count_no_longer_a_tiebreaker`,
+      `test_override_wins_over_tuple_pin_when_accessible`, `test_override_falls_back_to_pin_when_not_accessible`.
+      All 24 module tests pass; QG-green (94s, sentinel `9263c803`).
 
 ## Progress Log
 
@@ -462,6 +475,18 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   instrument-grain), and v2 defi (emit chain-level `gas_fees` `EXPECTED_PRE_GENESIS_CHAIN` at `venue=ALCHEMY`)
   BEFORE -010's delete lands; alternatively answer with Option C/D from `BLK-6cf82522` if the operator accepts the
   correctness trade-off or wants both in one commit. Slot-4 goes idle pending operator answer.
+- **2026-07-06** — **_read_manifest hardening (-011) SHIPPED ✅** (slot-5 planning). Task
+  `cefi_layer1_denominator_gaps-011` ("Harden `_read_manifest` primary selection against surgery-bumped mtimes") shipped
+  via `instruments-service@5b04878`. Chose the pinned-primary approach (tuple-order first-accessible = `-prd` by
+  construction) over content-based freshness (max manifest date): simpler, deterministic, and matches the plan's own
+  wording ("pinning prd as primary"). mtime-based `_sort_key` removed from `_read_manifest`; replaced with
+  `_select_primary_index(accessible, override, asset_group)`. New CLI flag `--primary-bucket=<name>` overrides the pin
+  for surgery/debugging (falls back to pin + warning if the named bucket isn't accessible). New `_warn_if_secondary_newer`
+  helper logs `SURGERY-SIGNAL` when a secondary's mtime > primary's — surfaces the ASTER-corrective-pass scenario without
+  silently flipping roles. Regression test `test_pinned_primary_wins_when_secondary_mtime_is_newer` locks the fix: legacy
+  bucket with newer mtime + prd with older mtime → prd still primary. Full test suite 24/24 green; QG-green 94s
+  (sentinel `9263c803`). Docstring + usage examples updated; no other callers of `_read_manifest` in the codebase
+  (grep confirmed).
 - **2026-07-06** — **Task -010 STALE RE-DISPATCH — no-op /done** (slot-9 planning). Task
   `cefi_layer1_denominator_gaps-010` ("Confirm the v1 `_ENUMERATORS`/`main()` dispatch is legacy → DELETE it") was
   re-dispatched to slot-9 by priority=50 alone. Plan line 248 already carries the `[x] ✅ DEFERRED` flip from slot-10
