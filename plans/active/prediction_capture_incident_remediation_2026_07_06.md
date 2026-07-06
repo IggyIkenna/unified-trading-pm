@@ -132,14 +132,18 @@ orchestrator-dispatched).
       `uts-prod-manifest-consolidator-instruments-sports-legacy-cron` (now matches every other AG; reversible via
       `gcloud scheduler jobs resume`). The heal folds into the item below.
 - [ ] [INFRA] P0. **URGENT — data-correctness heartbeat**: fixed UTL (coercion @6c090bb/@1651340) into the
-      `is-daily-enum-*` Cloud Run image. **RESOLVED-BY-SIDE-EFFECT (2026-07-06):** the UTL base image was republished at
-      08:11 UTC with the coercion (build `7c6e2437`, `0e85227`), so the **cefi guard build `09a20bfe` (10:55) pulled
-      it** → `:latest`=e93483dd carries BOTH the perp guard AND the fixed UTL; every `is-daily-enum-*` job now runs it.
-      **Prediction VERIFIED healed** — manual `is-daily-enum-prediction-n2kc9` on the new image **succeeded** (11:39Z,
-      succeeded=1; the old image failed daily 07-01→05). `Evidence: cloudbuild=09a20bfe-4401-42cf-ae91-e832418550df`.
-      Sports heal triggered (`is-daily-enum-sports`, verifying via watchdog). Flip when sports also exits 0.
-      (Root-cause-#1 background: BOTH prediction 07-01→05 AND sports 06-28→05 FAILED daily in the cloud on the old UTL;
-      the earlier local prediction heal never reached the deployed image — this build did.)
+      `is-daily-enum-*` Cloud Run image. **NOT resolved — correction 2026-07-06:** I first (wrongly) reported the guard
+      build had healed prediction+sports as a side effect. That was a **false positive from a buggy watchdog** (gcloud's
+      tab output collapsed an empty `succeededCount` under `awk`, so `failedCount=1` was misread as success).
+      Re-verified EXPLICITLY: manual runs on `:latest`=e93483dd **BOTH FAILED** — `is-daily-enum-prediction-n2kc9`
+      (failedCount=1, exit 1 after 31min) AND `is-daily-enum-sports-rp2sm` (failedCount=1, NonZeroExitCode after 51min).
+      So the new image does NOT heal capture (either it lacks the coercion despite the 08:11 UTL base rebuild, or the
+      failure is a different error — Cloud Run logs show only "Container called exit(1)", the observability gap). BOTH
+      prediction (07-01→) and sports (06-28→) instruments capture remain DEAD. **Next:** reproduce locally (fixed UTL)
+      to get the real error signature, confirm whether e93483dd carries the coercion, then ship the actual fix (UTL
+      pin/base into the enum image) + re-verify with EXPLICIT status checks (never the awk watchdog). Gate:
+      `is-daily-enum-{prediction,     sports}` cloud runs `succeededCount=1` (verified via `executions describe`, not a
+      watchdog); `Evidence: cloudbuild=<id>`.
 - [ ] [VERIFY] P1. Backfill the missed window 07-01→07-06: confirm the healed capture's `--days-back` reach covered the
       gap days' by_date + manifest rows, or run a targeted backfill; then confirm the catalogue picks up post-06-27
       listings (`max(available_from)` advances) on the next daily run. Gate: no by_date/manifest holes in 07-01→07-06;
@@ -289,3 +293,12 @@ orchestrator-dispatched).
   string-typed merge; prediction cloud capture restored. Triggered `is-daily-enum-sports` to heal sports (dead since
   06-28); watchdog running. Remaining Phase 0 tail: 9 `KALSHI-PERP` `captured` cells linger in the cefi manifest index —
   expected to self-heal to empty on the next guarded `is-daily-enum-cefi` run (13:30 UTC); verify post-13:30.
+- 2026-07-06 ~12:40Z: **CORRECTION — the two entries above claiming `n2kc9`/prediction "SUCCEEDED"/"healed" are WRONG.**
+  My async watchdog used `awk '{print $1}'` on gcloud's `value(succeededCount,failedCount)` output; when the run FAILS,
+  `succeededCount` is empty and the leading tab collapses, so `awk $1` returned `failedCount=1` → the watchdog reported
+  "succeeded". Re-verified via explicit `gcloud run jobs executions describe`: **BOTH `is-daily-enum-prediction-n2kc9`
+  (failedCount=1, exit 1) AND `is-daily-enum-sports-rp2sm` (failedCount=1, NonZeroExitCode) FAILED.** So the guard build
+  did NOT heal capture — the escalated P0 is still OPEN. Cloud logs show only "Container called exit(1)" (observability
+  gap), so next step is a LOCAL reproduce (fixed UTL) to get the real error + confirm whether e93483dd carries the
+  coercion, then ship the real fix. Lesson logged: never trust a hand-rolled awk status watchdog for pass/fail — read
+  `executions describe` fields explicitly.
