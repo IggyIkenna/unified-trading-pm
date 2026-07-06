@@ -160,10 +160,15 @@ reconciling + signing off, not redoing.)_
       paid RPC · CLOB-on-chain asset_group classification (Lighter/Pacifica/Extended) · rate-limit probe VM
 - [ ] [DATA] P1. Reconcile the DEDUP-flagged folded-in tail (from merged `path_to_100pct`) — **do not double-run**
 - [ ] [CODE] P1. DeFi `risk_params` MTDS handler (193,042 EU, no handler today)
-- [ ] [CODE] P1. **Deribit `options_chain` capture** (Ikenna C5 — **owned by Ikenna, in progress**): register
-      `DeribitOptionsChainHandler` in MTDS (`handlers/__init__.py` `__all__` + `main.py` import + dispatcher key
-      `deribit-options-chain`) → then a `deribit-options-chain` backfill (BTC/ETH, MVP `options_chain`-only). Root cause
-      of D5's captured=0; feeds the Stage-3 re-measure.
+- [x] [CODE] P1. **Deribit `options_chain` — handler registration** (Ikenna C5; taken over from Ikenna + verified) —
+      **DONE, mtds@9ecd1e29e** (QG-green + quickmerge). Registered `DeribitOptionsChainHandler` in the MTDS operations
+      dispatcher (`main.py` import + `"deribit-options-chain"` key) + a regression test asserting the operation
+      resolves. NOTE: the `__init__.py` `__all__` step in Ikenna's sketch was cosmetic (main.py imports handlers by full
+      path) and correctly skipped. Root cause of D5's captured=0 is now closed at the code level.
+- [ ] [INFRA] P1. **Deribit `options_chain` — live runner**: wire a live cron/VM to run
+      `--operation deribit-options-chain` (the handler is **live/replay only — no backfill**, `process()` collects
+      `date.today()`), so it actually captures BTC/ETH `options_chain` daily → then feeds the Stage-3 re-measure.
+      Historical options are NOT captured by this handler (separate concern if ever needed).
 - [ ] [CODE] P1. prediction live token-universe fix (owned by `prediction_venue_perps_and_live_clob_depth_2026_06_20`;
       live=0 today)
 
@@ -213,6 +218,15 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **C5 FIX SHIPPED — took over Ikenna's unfinished fix.** Ikenna's C5 registration fix hadn't landed
+  (bad network Friday), so we completed it properly: verified the root cause end-to-end, made the minimal-correct change
+  (2 lines in `cli/main.py` — import + `"deribit-options-chain"` dispatcher key; the `__init__.py` `__all__` step in his
+  sketch was cosmetic — main.py imports handlers by full path — so skipped), added a regression test
+  (`test_deribit_options_chain_operation_registered`), ran the full MTDS QG (green, sentinel written), shipped via
+  quickmerge → **mtds@9ecd1e29e** on live-defi-rollout (Tier-C drain runs `quality-gates-v2` on the promote PR).
+  **Remaining to actually capture:** the handler is LIVE/replay only (no backfill — `process()` = `date.today()`), so a
+  live cron/VM must run `--operation deribit-options-chain` (Stage-5 [INFRA] item) before the Stage-3 re-measure shows
+  real Deribit options coverage. Historical options not covered by this handler.
 - **2026-07-06** — **D5 root cause CONFIRMED (Ikenna's C5, verified in our code).** DERIBIT `options_chain` captured=0/1
   because `DeribitOptionsChainHandler` (built — `cli/handlers/deribit_options_chain_handler.py`) is NEVER REGISTERED:
   absent from `handlers/__init__.py` `__all__` (line 9), no `cli/main.py` import, and NOT a key in the operations
