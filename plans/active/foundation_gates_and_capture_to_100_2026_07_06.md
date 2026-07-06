@@ -101,8 +101,25 @@ source:
 
 ## Foundation gate sign-offs (cefi-first — reconcile drift, take the sign-offs)
 
-- [ ] [CODE] P1. **cefi G1.2** — `record_failed` routing + the 2026-06-26 re-capture (foundation §G1.2). Gate:
-      `record_failed` routes correctly; the 06-26 re-capture cells reflect real status.
+- [x] ✅ [CODE] P1. **cefi G1.2** — `record_failed` routing + the 2026-06-26 re-capture (foundation §G1.2). Gate:
+      `record_failed` routes correctly; the 06-26 re-capture cells reflect real status. — **DRIFT RECONCILED
+      2026-07-06**: Part (a) `record_failed` routing is already SHIPPED — `_detect_thin_day_venues` in
+      `_finalize_completeness` at
+      `instruments-service` `instruments_service/engine/orchestrator/process_completeness.py:522-545` reclassifies
+      captured→attempted_failed when a written venue's count < 50% of its trailing 14-day median. Code
+      `instruments-service@3c10615` (2026-06-27, slot-4); metric shipped earlier `instruments-service@cc81cad`
+      (2026-06-27). Regression coverage: `tests/unit/test_process_completeness_thin_day.py` (8+ tests). Part (b)
+      06-26 historical re-capture cell verification is separate VM/manifest ops — captured as the follow-up P2
+      todo below. Daily schedulers have run 10+ times since 06-27 so the routing has been active on subsequent
+      days.
+- [ ] [VERIFY] P2. **06-26 partial-cell manifest verification (follow-up to G1.2 above, 2026-07-06)** — the
+      thin-day routing shipped 2026-06-27 covers NEW captures; the 06-26 partial (BINANCE-FUTURES 678@06-25 →
+      47@06-26) was the ORIGINAL trigger cell. Verify by single-shard manifest read (NOT whole-corpus): read the
+      cefi `_index/availability_index.parquet` row for
+      `(date=2026-06-26, venue=BINANCE-FUTURES, data_type=universe)` — expect `capture_status=attempted_failed`
+      with a corrective `record_failed`-style row layered atop the earlier thin `captured`. If still `captured`
+      with count=47, re-run the 06-26 catalog-snapshot job once so the thin-day guard fires on the corrective
+      re-write. Gate: 06-26 BINANCE-FUTURES cell resolves to attempted_failed (or captured with a HEALTHY count).
 - [ ] [DATA] P1. **cefi G1.3 follow-up** — the on-chain-CeFi-perp venue FORM issue (foundation finding 2026-06-27).
       Gate: on-chain-CeFi-perp venues carry the canonical venue form.
 - [x] ✅ [SCRIPT] P0. **G2 → G5 reconcile + sign-off (cefi) — DONE 2026-07-06**. Reconciled the checkbox-vs-reality
@@ -142,7 +159,17 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
-- **2026-07-06** — G2 → G5 cefi RECONCILE + SIGN-OFF (item 3) **shipped**. Grep-audited the
+- **2026-07-06** — cefi G1.2 (item 2) **drift-reconciled + signed off** (Opus, slot-3) — no new code needed.
+  Grep-verified against `instruments-service`: `_detect_thin_day_venues` in `_finalize_completeness` at
+  `instruments_service/engine/orchestrator/process_completeness.py:522-545` already wires the thin-day verdict →
+  `attempted_failed` via a corrective `record_failed` row (consolidator last-write-wins semantics ensures it
+  supersedes the earlier thinned `captured`). Code shipped `instruments-service@3c10615` (2026-06-27, slot-4);
+  underlying monitor metric shipped `instruments-service@cc81cad` (2026-06-27). Regression coverage:
+  `tests/unit/test_process_completeness_thin_day.py` (8+ tests). The plan carried this as `- [ ]` — the drift =
+  plan-vs-reality lag, not open work. Part (b) 06-26 historical partial cell (BINANCE-FUTURES 678@06-25 →
+  47@06-26) verification is captured as a new P2 follow-up manifest-read todo (single-shard read, not
+  whole-corpus). Zero code shipped this session on this item; PM-only plan flip.
+- **2026-07-06** — G2 → G5 cefi RECONCILE + SIGN-OFF (item 3) **shipped** (slot-4). Grep-audited the
   `instruments_foundation_completeness_2026_06_24.md` §Phase 1 cefi G-gates against the shipped commits (2026-06-25 →
   2026-07-03) + prod-verified numbers in the plan's Progress Log; the drift was heavy — G2/G3/G3b/G4 had all shipped
   under G1.1/G1.2/G1.4-driven work + the 2026-06-26 autonomous run + the 2026-06-27 auto-build fix but the gate
