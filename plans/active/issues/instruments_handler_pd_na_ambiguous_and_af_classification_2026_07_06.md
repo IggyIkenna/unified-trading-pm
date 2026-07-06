@@ -126,14 +126,64 @@ Accept the classification and flip B0. Track the pd.NA fix + tradfi CME verify a
       `pd.isna(…)` or `.fillna(False)`. Verify by re-running the 4 truly-missing HYPERLIQUID days
       (2024-09-12/28, 2024-12-31, 2026-03-18) and confirming `capture_status=captured` in the manifest.
       (repo: instruments-service)
-- [ ] [VERIFY] P2. Per-date confirm the 7 tradfi CME residual cells (2024-07-08 / 2024-11-26 / 2024-12-04 /
+- [x] ✅ [VERIFY] P2. Per-date confirm the 7 tradfi CME residual cells (2024-07-08 / 2024-11-26 / 2024-12-04 /
       2025-08-07 / 2025-08-18 / 2026-06-20 AF / 2026-06-24 EU) against the Databento CME trading-calendar. Cross-check
       whether each is a real market-closure day (holiday / session-end / no ohlcv-1m tick coverage) vs a fetch gap
-      that needs a re-fetch. Post-`tradfi_v9_stage1_finish` completes, re-measure. (repo: instruments-service)
+      that needs a re-fetch. Post-`tradfi_v9_stage1_finish` completes, re-measure. (repo: instruments-service) —
+      **Verified 2026-07-06 via `exchange_calendars.get_calendar("CMES")` (XCMES, the same source
+      `instruments_service/reference_data/adapters/tradfi/databento/sessions.py` consults via `_get_xcal`). 1
+      REAL-CLOSURE + 6 FETCH-GAP split (evidence in issue-doc Verification results below).**
 - [ ] [DATA] P2. When the manifest dedup fix (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`)
       lands, run the targeted reconcile that collapses the 8 stale-AF cefi rows (4 HL 2023-12-01/13, 2025-01-18,
       2026-06-06 + 4 2026-06-23 batch venues) so the coverage rollup stops double-counting them. Do NOT hand-edit the
       dedup machine (per `instruments_mtds_subset` P2 finding). (repo: unified-trading-library)
+
+## Verification results — 7 CME residual cells (2026-07-06)
+
+Cross-checked each of the 7 (venue=CME, date) cells against the Databento GLBX.MDP3 trading calendar
+(`exchange_calendars.get_calendar("CMES")` v4.13.2 — the SAME XCMES source the IS Databento adapter consults via
+`_get_xcal("CME") → _XCAL_MAPPING["CME"]="CMES"` in
+`instruments_service/reference_data/adapters/tradfi/databento/sessions.py`). Session duration checked for early-close
+anomaly (<20h) — none of the 7 dates fall on an early-close session; the adjacent Thanksgiving-2024 early-closes are
+Thu 2024-11-28 (19h) + Fri 2024-11-29 (19h), NEITHER of which is in the residual list.
+
+| Cell (venue, date) | Weekday   | XCMES session? | Duration | Classification                                                              |
+| ------------------ | --------- | -------------- | -------- | --------------------------------------------------------------------------- |
+| CME, 2024-07-08    | Monday    | SESSION        | 24.0h    | **FETCH-GAP** — valid trading day; not a market-closure edge                |
+| CME, 2024-11-26    | Tuesday   | SESSION        | 24.0h    | **FETCH-GAP** — valid trading day (Thanksgiving early-close is Thu/Fri)     |
+| CME, 2024-12-04    | Wednesday | SESSION        | 24.0h    | **FETCH-GAP** — valid trading day                                           |
+| CME, 2025-08-07    | Thursday  | SESSION        | 24.0h    | **FETCH-GAP** — valid trading day                                           |
+| CME, 2025-08-18    | Monday    | SESSION        | 24.0h    | **FETCH-GAP** — valid trading day                                           |
+| **CME, 2026-06-20**| **Sat.**  | **NON-SESSION**| **—**    | **REAL MARKET CLOSURE** — weekend; expected non-session (Sat=CME closed)    |
+| CME, 2026-06-24    | Wednesday | SESSION        | 24.0h    | **FETCH-GAP** — valid trading day                                           |
+
+**Split: 1 REAL-CLOSURE (`2026-06-20`) + 6 FETCH-GAP (2024-07-08 / 2024-11-26 / 2024-12-04 / 2025-08-07 / 2025-08-18 /
+2026-06-24).**
+
+The initial framing (2024-11-26 near Thanksgiving; 2024-07-08 post-July-4-observed) is **not borne out** by the CMES
+calendar — the immediate holiday-adjacent CME session anomalies (Nov 28 & 29 early-closes; July 4 close + July 3
+early-close) are NOT in the residual list. So there is no market-calendar edge behind the 6 EU cells; they are ordinary
+trading days awaiting the tradfi v9 apply-chain to reach them.
+
+### Follow-up actions (unblocked)
+
+1. **2026-06-20 AF misclassification** — the cell landed as `attempted_failed` on a Saturday. `is_non_trading_day("CME",
+   2026-06-20)` returns True per the CMES calendar (weekend), so the writer / pre-flight should have marked it
+   `expected_unattempted`. This is a small mislabel and does NOT invalidate any downstream count — the manifest
+   dedup-fix item already tracked (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` P2) sweeps
+   stale-AF vs new EU/captured collisions. No new issue-doc needed; the reconcile in item 3 of this doc absorbs it.
+
+2. **6 FETCH-GAP re-measure after tradfi v9 completes** — per this issue-doc's summary, `tradfi_v9_stage1_finish_2026_07_06`
+   is DONE for 2020–2025 + 2026 as of 2026-07-06 15:14 UTC. The 6 cells should convert to `captured` once the manifest
+   rebuild + tradfi_v9 downstream reads land. Re-measure via the `data-freshness` skill (READ the availability manifest,
+   NEVER a whole-corpus walk) after v9 downstream chain closes — that step is already tracked in
+   `tradfi_v9_stage1_finish_2026_07_06.md` (manifest rebuild + IS could-exist seed) and does not need a new todo here.
+
+### B0 acceptance
+
+Classification stands: 7 cells = 1 REAL-CLOSURE (accept as EU semantics; small AF-label rewrite folded into item 3) +
+6 FETCH-GAPs pending tradfi v9 downstream (accept as EU semantics; will re-classify at re-measure). B0 gate flip
+remains valid — no correctness blocker uncovered by this verification.
 
 ## Progress log
 
@@ -141,3 +191,8 @@ Accept the classification and flip B0. Track the pd.NA fix + tradfi CME verify a
   DEBUG-log retry of 2024-09-12 (`is@LDR`). Classified the 12 non-ASTER cefi MVP AF cells into
   KNOWN_HANDLER_BUG_PD_NA (4) + RESOLVED_STALE_AF (8), plus the tradfi CME 7 as
   MARKET_CALENDAR_OR_DATABENTO_GAP-pending-verify. Unblocks `is_catalogue_completion_2d` B0 gate flip.
+- **2026-07-06** — [VERIFY] P2 closed (slot 10). Cross-checked all 7 tradfi CME residual cells against the XCMES
+  calendar (the SSOT source the IS Databento adapter uses via `_get_xcal`). Result: 1 real closure (2026-06-20 Sat =
+  weekend) + 6 valid CMES sessions (fetch gaps awaiting tradfi v9 downstream). Written up in "Verification results"
+  above. No new correctness finding requires a separate issue doc — the AF-on-Sat mislabel is absorbed by the existing
+  P2 dedup-reconcile item 3.
