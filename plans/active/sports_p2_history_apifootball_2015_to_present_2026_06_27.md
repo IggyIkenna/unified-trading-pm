@@ -799,3 +799,34 @@ Chunk logs: `/tmp/sports-p2a-injuries-20260706-123220/`, `/tmp/sports-chunked-ap
 **BLOCKED-PREREQ**: Gate cannot pass until coordinator completes all 7 entities. TEAMS alone has 194,331 EU.
 ETA: many days. Coordinator re-launched from main workspace IS (has venv). Checkbox NOT flipped.
 Re-park task until all EU counts reach 0.
+
+### 2026-07-06 — slot 4 (session 17 — Todo 9: coordinator alive, gate FAILS, re-parked pending operator decision)
+
+**Gate check (12:57–13:03 UTC, index 4,999,521 rows — unchanged since session 16)**:
+
+| Data Type | Coverage Start | captured | EC | AF | EU (pending) | Gate |
+|---|---|---|---|---|---|---|
+| FIXTURE_EVENTS | 2020-06-06 | 11,587 | 154,745 | 11 | 49,070 | ❌ |
+| FIXTURE_LINEUPS | 2020-06-06 | 13,321 | 150,103 | 31 | 51,777 | ❌ |
+| FIXTURE_STATS | 2020-06-06 | 8,405 | 154,195 | 80 | 51,908 | ❌ |
+| PLAYER_STATS | 2020-06-06 | 12,293 | 163,586 | 74 | 39,941 | ❌ |
+| INJURIES | 2021-01-01 | 8,837 | 169,958 | 1,884 | 13,178 | ❌ |
+| STANDINGS | 2018-01-01 | 90,169 | 198,791 | 0 | 8,996 | ❌ |
+| TEAMS | 2018-01-01 | 103,606 | 0 | 19 | 194,331 | ❌ |
+
+**Total EU: 409,201** | Blank-reason AF: 0 ✅
+
+**Coordinator PID 3837082 — ALIVE**: At INJURIES chunk 48/~66 at 13:03 UTC (launched 12:32 UTC). Writing per-VM
+shards to GCS: `hk_api_football_injuries_20241012_9709ef.parquet` (49KB, 13:03:10 UTC) and
+`hk_api_football_injuries_20241111_3f6568.parquet` (42KB, 13:03:44 UTC) — coordinator IS making progress and
+writing data. Consolidator will merge these → INJURIES EU will decrease.
+
+**Root cause for slow progress**: per-fixture entities (FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS, combined
+~192,696 EU) have 54s sleep per fixture API call — ETA for these entities alone is weeks.
+
+**Main agent decision (BLK-0a559a1b)**: Re-park (priority 999) pending operator direction on:
+(a) accept weeks-long wait + keep re-parking;
+(b) reduce per-fixture sleep rate in coordinator;
+(c) flip gate manually once INJURIES/TEAMS EU → 0.
+
+**Checkbox NOT flipped** — gate requires all 7 entities at EU=0. Operator escalation in progress.
