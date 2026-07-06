@@ -462,3 +462,16 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   instrument-grain), and v2 defi (emit chain-level `gas_fees` `EXPECTED_PRE_GENESIS_CHAIN` at `venue=ALCHEMY`)
   BEFORE -010's delete lands; alternatively answer with Option C/D from `BLK-6cf82522` if the operator accepts the
   correctness trade-off or wants both in one commit. Slot-4 goes idle pending operator answer.
+- **2026-07-06** — **Task -010 STALE RE-DISPATCH — no-op /done** (slot-9 planning). Task
+  `cefi_layer1_denominator_gaps-010` ("Confirm the v1 `_ENUMERATORS`/`main()` dispatch is legacy → DELETE it") was
+  re-dispatched to slot-9 by priority=50 alone. Plan line 248 already carries the `[x] ✅ DEFERRED` flip from slot-10
+  (commit `a16ac0649` — "docs(plans): defer v1 enumerator delete + file follow-on issue doc", verified on LDR via
+  `git merge-base --is-ancestor a16ac0649 origin/live-defi-rollout` = YES). Follow-on issue doc exists at
+  `plans/active/issues/v1_enumerator_dispatch_not_deletable_2026_07_06.md` (5 follow-on todos: v2 tradfi/sports/pre-launch
+  coverage extension, deployment-service infra cleanup, and the final v1 delete after those land). No code change was
+  needed by original design (v1 NOT safe to delete per main-agent ruling on `BLK-0ac84889`) and none is needed on this
+  re-dispatch — the plan artifact + issue doc are the tracked-work outputs. Slot-9 verification result: task -010 is
+  fully complete on LDR; the backlog task remained `status=dispatched` because the PlanRegenLoop had not yet re-parsed
+  the flipped checkbox at the time of this /boot. Slot-9 /done cites `a16ac0649` as the shipped SHA (existing artifact).
+  Cross-reference: slot-4's BLK-6cf82522 entry above independently re-verified the same three v2-does-not-cover slices
+  documented in `v1_enumerator_dispatch_not_deletable_2026_07_06.md`.
