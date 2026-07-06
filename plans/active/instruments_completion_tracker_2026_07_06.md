@@ -169,6 +169,13 @@ reconciling + signing off, not redoing.)_
       `--operation deribit-options-chain` (the handler is **live/replay only — no backfill**, `process()` collects
       `date.today()`), so it actually captures BTC/ETH `options_chain` daily → then feeds the Stage-3 re-measure.
       Historical options are NOT captured by this handler (separate concern if ever needed).
+- [ ] [SCRIPT] P1. **Systemic unregistered-handler audit** (generalizes the Deribit C5 bug — do BEFORE the Stage-3
+      re-measure). Diff every handler class in `market-tick-data-service/.../cli/handlers/` against the `operations={…}`
+      dispatcher keys in `cli/main.py` to find handlers that are **built but never wired** (silent `captured=0`, same
+      class as Deribit). The MTDS QG live-coverage roll-up flags large `blocked-not-registered` counts (cefi 104 · defi
+      1225 · sports 70 · tradfi 40 cells) — the audit distinguishes **built-but-unwired** (fixable like C5: register +
+      test) from **genuinely-not-built** (needs a new handler / is honest-absence). Running it before the re-measure
+      keeps us from mislabelling a wiring bug as a real coverage gap. Each finding → register-and-test, or file/triage.
 - [ ] [CODE] P1. prediction live token-universe fix (owned by `prediction_venue_perps_and_live_clob_depth_2026_06_20`;
       live=0 today)
 
