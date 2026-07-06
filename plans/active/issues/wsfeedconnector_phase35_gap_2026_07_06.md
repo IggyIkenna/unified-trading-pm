@@ -152,16 +152,27 @@ approve / defer per category rather than per-venue.
       `COINBASE` from UAC. Original gate remains: 0 downstream call sites reference bare `COINBASE`; entry removed
       from `VENUES_BY_ASSET_GROUP["cefi"]`; smoke-matrix `blocked-not-registered` count for `COINBASE` drops to 0
       (repo: unified-api-contracts + fan-out).
-- [ ] [PLAN] P2. **Draft the COINBASE-bare-name migration plan (prerequisite for the CODE task above)** — before
-      the CODE task above can proceed, someone must draft a plan that: (1) enumerates the ~25 bare `COINBASE`
-      downstream callers (venue_constants.py:377 D2a critical; market_data_categories.py:242 VENUES_BY_ASSET_GROUP;
-      market_data_categories.py:1186 skip-filter; venue_mapping.py:154/818/868; venue_launch_dates.py:64/236;
-      restaking_rewards.py:657/663/676/718 cex_listings; venue_core.py:145 IS resolver; execution-service
-      registry.py:178/208/310 + utils.py:28/238; strategy-service seed_mock_data.py; and the test callers); (2)
-      decides the migration target per caller (COINBASE-SPOT vs perp-gate pair vs KEEP-BARE per D2a); (3) proposes
-      a fix for the D2a Layer-1 `_CEFI_VENUE_FOLD` if bare `COINBASE` is removed (re-key EXPECTED to
-      `COINBASE-SPOT`?) — MUST NOT regress the itype-gate authority switch; (4) sequences the multi-repo landings.
-      This plan is a **prerequisite blocker** for the CODE task above (repo: unified-trading-pm plan doc).
+- [x] ✅ [PLAN] P2. **Draft the COINBASE-bare-name migration plan (prerequisite for the CODE task above)** —
+      **DONE 2026-07-06 (slot-9 planning) — plan filed at
+      `plans/active/coinbase_bare_name_migration_2026_07_06.md`.** All four deliverables covered:
+      (1) enumerated 256 bare-`COINBASE` refs across ~100 files (30 source + ~70 test) — 30 CeFi-venue source
+      callers listed by file+line grouped per-repo (execution-service, instruments-service, strategy-service,
+      features-service, market-tick-data-service, market-data-processing-service, deployment-service,
+      unified-trading-api, unified-trading-library, UAC);
+      (2) per-caller migration target chosen — **CeFi-VENUE callers → `COINBASE-SPOT`; DeFi LST-ISSUER callers
+      (cbETH context in `_defi_lst.py` / `defi/lst.py` / `venue_launch_dates.py:236` / restaking rewards) KEEP bare
+      `COINBASE`** — the bare key names Coinbase-corporate as LST issuer (like `LIDO` / `ROCKET_POOL`), a
+      different semantic role from the CeFi spot exchange;
+      (3) D2a Layer-1 `_CEFI_VENUE_FOLD` fix — drop the `"COINBASE-SPOT": "COINBASE"` entry
+      (`check_enumeration_completeness.py:163`) IN THE SAME 30-min IS+UAC PR bundle as the UAC drop so no transient
+      state can zero the EXPECTED set (D2a authority-switch regression guard);
+      (4) sequenced multi-repo landings (dependents accept both names first → UAC drop LAST → post-flight parity
+      assertion → gap-015 unblocks).
+      Discovered a duplicate-key bug in `venue_launch_dates.py` (line 64 CeFi entry silently overwritten by line 236
+      DeFi cbETH entry — Python dict overwrite on import) that the migration exposes + fixes. Pre-flight Layer-1
+      baseline + post-flight parity diff = D2a regression guard. Plan is `status: active`, calibrated 1.6 AI-days
+      (refactor × 4 baseline). Gap-015 CODE task remains **BLOCKED-BY-D2a** until this migration plan's tasks
+      complete (repo: unified-trading-pm@<sha>).
 - [x] [CODE] P1. **BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build** ✅ — mtds@2b41b5fa. Public WS at
       `wss://api-pub.bitfinex.com/ws/2` (shared spot + perp endpoint; Bitfinex v2 `trades` channel).
       `BitfinexSpotWSFeedConnector` (base — chan_id ↔ symbol tracking, snapshot + `te`/`tu` frame parsing, heartbeat
