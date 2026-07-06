@@ -129,10 +129,10 @@ drift_direction: advance-code
       was 52,747 due to consolidator activity since session 7). Snapshot at
       `gs://instruments-store-sports-prd-central-element-323112/_index/snapshots/availability_index_20260628_213954.parquet`.
       Gate verified: 0 phantom EU rows. unified-trading-pm@TODO
-- [ ] [PARKED — coordinator running PID 3837082] [VERIFY] P2. **Enrichment data_type cleanliness** — after Todo 5 enrichment backfill completes + Todo 8 dedup
+- [ ] [PARKED — per-fixture EU blocker: 54s/fixture sleep, operator action required] [VERIFY] P2. **Enrichment data_type cleanliness** — after Todo 5 enrichment backfill completes + Todo 8 dedup
       pass, query IS index for FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES/STANDINGS/TEAMS: 0 pending-fetch
       (canonical leagues, within coverage windows), 0 blank-reason. **Gate**: all AF enrichment data_types show
-      `expected_unattempted_pending_fetch == 0` for coverage dates.
+      `expected_unattempted_pending_fetch == 0` for coverage dates. **BLOCKER**: INJURIES done (pending consolidation+dedup); STANDINGS/TEAMS coordinator completing (~8h); per-fixture entities blocked on 54s/fixture rate → weeks. Operator must (a) reduce sleep or (b) accept partial enrichment before gate can pass.
 
 **Full-execution criterion**:
 
@@ -869,3 +869,9 @@ actual ManifestWriter output. Coordinator IS making progress — confirmed via d
 - **C (reduce sleep)**: reduce 54s→10s in coordinator script, still 1-2 weeks
 
 **Checkbox NOT flipped** — awaiting BLK-5e660d71 answer.
+
+**BLK-5e660d71 answered by main agent**: Re-park cleanly, do NOT split gate. Gate split requires operator decision on per-fixture sleep. INJURIES done (pending consolidation). STANDINGS/TEAMS will progress with coordinator. Operator action required: (a) reduce 54s/fixture sleep OR (b) accept partial enrichment before gate can pass.
+
+**Re-parked**: task checkbox annotation updated to reflect per-fixture EU blocker. Coordinator PID 3837082 remains running.
+
+**Checkbox NOT flipped** — operator action required on per-fixture sleep parameter.
