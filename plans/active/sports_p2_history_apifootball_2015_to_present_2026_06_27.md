@@ -875,3 +875,30 @@ actual ManifestWriter output. Coordinator IS making progress — confirmed via d
 **Re-parked**: task checkbox annotation updated to reflect per-fixture EU blocker. Coordinator PID 3837082 remains running.
 
 **Checkbox NOT flipped** — operator action required on per-fixture sleep parameter.
+
+### 2026-07-06 — slot 10 (session 19 — Todo 9: dispatched despite park, escalated to operator)
+
+**Task dispatched again** despite `[PARKED — operator action required]` annotation (backlog priority still 50; the "PARKED" prefix is text-only and does NOT gate dispatch).
+
+**Coordinator PID 3837082 — ALIVE** (15:20 UTC 2026-07-06, 2h 12min elapsed since re-launch):
+- STANDINGS chunk 31/~80 at 14:42 UTC (advanced 7 chunks in 20min since session 18)
+- Steady progress at ~2.75 min/chunk; ETA STANDINGS complete ~16:00 UTC
+- TEAMS not started; per-fixture entities not started (unchanged)
+
+**IS index query (15:20 UTC, index 5,156,367 rows)**:
+
+| Data Type | captured | EC | AF | EU (pending) | Δ vs session 18 |
+|---|---|---|---|---|---|
+| FIXTURE_EVENTS | 16,993 | 182,682 | 11 | 49,070 | 0 |
+| FIXTURE_LINEUPS | 18,333 | 178,211 | 31 | 51,777 | 0 |
+| FIXTURE_STATS | 23,990 | 196,803 | 80 | 51,908 | 0 |
+| PLAYER_STATS | 15,869 | 178,627 | 74 | 36,680 | -3,261 (live sched) |
+| INJURIES | 13,151 | 240,186 | 1,946 | 23,302 | +10,124 (consolidator merged shards; phantoms) |
+| STANDINGS | 139,917 | 214,163 | 0 | 8,996 | 0 (STANDINGS in flight) |
+| TEAMS | 105,074 | 0 | 21 | 194,331 | 0 |
+
+**Total EU: 415,064** (up from 409,201 in session 18 — consolidator merging INJURIES shards adds phantom EU rows; will drop after dedup pass, but per-fixture entities remain the true blocker).
+
+**Gate: FAILS** — same structural blocker as sessions 15–18. No change without operator decision. Filed **BLK-b37df00d** (2026-07-06 15:20 UTC) with 3 options + Rec A (accept partial + park at priority 999 to stop cycling). Main-agent already responded in session 18 with "operator action required."
+
+**Checkbox NOT flipped** — awaiting operator decision on BLK-b37df00d.
