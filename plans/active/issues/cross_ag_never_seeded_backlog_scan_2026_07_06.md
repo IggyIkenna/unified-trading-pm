@@ -266,10 +266,21 @@ resolved_by:
       reads `[x] ✅` "quantified + filed" (line 207-227). — evidence: `deployment-service@040e2fc` (un-pause),
       `is-daily-enum-prediction` execution failures (HANDED-OFF P0),
       `foundation_gates_and_capture_to_100_2026_07_06.md#L207` (Plan 5 -008 flipped DONE).
-- [ ] [DATA] P1. prediction Kalshi launcher gap — wire Kalshi into `launch-mtds-prediction-backfill-vm.sh` so the Kalshi
-      historical + post-adapter window seeds/captures via a SPOT VM per the backfill-VMs-default-SPOT HARD rule (repo:
-      deployment-service + market-tick-data-service; owning plan:
-      `plans/active/data_completion_to_100_all_ag_2026_06_21.md` line 3275 P1 already open).
+- [x] ✅ [DATA] P1. prediction Kalshi launcher gap — wire Kalshi into `launch-mtds-prediction-backfill-vm.sh` so the
+      Kalshi historical + post-adapter window seeds/captures via a SPOT VM per the backfill-VMs-default-SPOT HARD rule
+      (repo: deployment-service + market-tick-data-service; owning plan:
+      `plans/active/data_completion_to_100_all_ag_2026_06_21.md` line 3275 P1 already open). —
+      **CROSS-REFERENCE MARKER CLOSED 2026-07-06** (Sonnet 4.6, slot-12·planning, `data_engineering`). **Verified
+      current state (this session):** `deployment-service@0a7c3f8` (2026-06-20) shipped the `--venue
+      POLYMARKET|KALSHI` flag in `launch-mtds-prediction-backfill-vm.sh`: the VENUE variable is parameterised (default
+      POLYMARKET), the case guard validates `POLYMARKET|KALSHI`, VM_NAME includes the venue slug
+      (`mtds-prediction-kalshi-…`), and `VM_VENUE=${VENUE}` propagates to the VM metadata so setup-data-pipeline-vm.sh
+      assembles `--venues KALSHI` in the MTDS CLI. MTDS Kalshi adapter is fully wired (adapter py + integration +
+      unit tests in market-tick-data-service). No new code needed — this is a cross-reference marker close identical to
+      the cefi/tradfi markers above. Owning plan item at line 3275 of `data_completion_to_100_all_ag_2026_06_21.md`
+      also flipped in the same commit. — evidence: `deployment-service@0a7c3f8` (Kalshi --venue wired),
+      `launch-mtds-prediction-backfill-vm.sh` lines 63-66/94-98/150/164-165 (VENUE case + VM_NAME + VM_VENUE),
+      `market-tick-data-service/market_tick_data_service/scripts/ingest_kalshi_bulk_to_canonical.py` (adapter wired).
 - [ ] [DOC] P3. prediction decision-338 documentation-only affirmation — no seed; keep the per-conditionId exclusion in
       `_enumerate_v2_prediction` and the >50M-row inflation risk visible in the docstring so a future re-open reads the
       rationale first (repo: instruments-service; owning plan:
