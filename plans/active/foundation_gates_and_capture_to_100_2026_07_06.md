@@ -207,14 +207,46 @@ source:
 - [ ] [VERIFY] P2. **2e follow-on — cross-AG never-seeded backlog check (cefi / tradfi / pred)** — the scan-only
       investigation split from the defi 2e seeding (Plan for defi already shipped +1.38M). Scan only; file findings.
       Gate: each AG's never-seeded backlog quantified + filed (seed in the owning plan, don't seed blind here).
-- [ ] [CODE] P1. **Prediction live token-universe fix** — live=0 today; the stale IS token universe. **Owned by
+- [x] ✅ [CODE] P1. **Prediction live token-universe fix** — live=0 today; the stale IS token universe. **Owned by
       `prediction_venue_perps_and_live_clob_depth_2026_06_20`** — this is a cross-plan pointer; coordinate, don't
-      duplicate. Gate: prediction live token universe refreshed; live capture > 0.
+      duplicate. Gate: prediction live token universe refreshed; live capture > 0. — **COORDINATION-CLOSED 2026-07-06
+      (Opus, slot-3)** — Plan 5 item is a cross-plan pointer, not a workstream. Actual work is IN FLIGHT under the
+      owning plan `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` + its remediation sibling
+      `prediction_capture_incident_remediation_2026_07_06.md` + issue doc
+      `plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`. Verified live capture is NO
+      LONGER 0 (staleness was 07-01→07-06, root-caused as the consolidator string-typing `instrument_count` →
+      `ArrowTypeError` on `merged.to_parquet` in the UTL `ManifestWriter` shard-merge, silently swallowed by the
+      shard-isolation catch — see issue doc §Root-cause chain). Shipped fixes: UTL write-side dtype coercion
+      (Int64/bool/float) `unified-trading-library@6c090bb` + `@1651340`; catalogue future-date clamp for the
+      `CATALOGUE_STALE_BY_DATE` blindness `instruments-service@4979429`; local heal run rebuilt the universe on
+      2026-07-06. Residual work — consolidator dtype-at-source fix, fixed-UTL→is-daily-enum image, missed-window
+      backfill, `exc_info` observability, sports double-consolidator audit, KALSHI-PERP/POLYMARKET-PERP host repoint —
+      is tracked in the remediation plan's Workstream A + B (NOT duplicated here per "coordinate, don't duplicate").
+      Historical progress on the Polymarket token-id universe (the ORIGINAL "stale IS token universe" cue): shipped
+      `instruments-service@1ecf5cb` + `market-tick-data-service@9447c71` (2026-06-22) with Polymarket LIVE+BATCH
+      token-id fix; token_ids OPERATIONALIZED; 4 `prediction-live-*` VMs running writing GCS parquets
+      (kalshi book_snapshot_5 = 2,107 parquets/06-26; polymarket book_snapshot_5 = 468 of 17,772 resolved tokens, thin
+      liquid-overlap gate tracked in the owning plan). — cross-plan pointer, no new code / no SHA from slot-3.
 
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — Prediction live token-universe fix (Capture-to-100% item 4) **coordination-closed** (Opus, slot-3) —
+  cross-plan pointer, work is IN FLIGHT under the owning plan
+  `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` + remediation
+  `prediction_capture_incident_remediation_2026_07_06.md` + issue doc
+  `plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`. The 07-01→07-06 live=0 outage was
+  root-caused (consolidator string-typing `instrument_count` → `ArrowTypeError` on UTL `ManifestWriter.merged.to_
+  parquet`, silently swallowed by shard-isolation catch); UTL write-side dtype coercion shipped
+  `unified-trading-library@6c090bb` + `@1651340`; catalogue future-date clamp `instruments-service@4979429`; local
+  heal restored the universe on 2026-07-06. Polymarket token-id universe (the original "stale IS token universe" cue)
+  was shipped 2026-06-22 as `instruments-service@1ecf5cb` + `market-tick-data-service@9447c71`; 4 `prediction-live-*`
+  VMs writing GCS parquets (Kalshi book_snapshot_5 = 2,107 parquets/06-26). Residual work (consolidator dtype-at-
+  source, is-daily-enum image bump, missed-window backfill, exc_info observability, sports double-consolidator audit,
+  KALSHI-PERP/POLYMARKET-PERP host repoint) tracked in the remediation plan's Workstream A + B — NOT duplicated here
+  per the item's own "coordinate, don't duplicate" instruction. No code shipped this session on this item; PM-only
+  plan flip in `unified-trading-pm@<SHA>`.
 - **2026-07-06** — DEDUP-flagged folded-in tail (Capture-to-100% item 2) **reconciled + signed off** (Opus, slot-3) —
   no new code shipped; PM-only plan flip in the parent + this plan. `data_completion_to_100_all_ag_2026_06_21.md`
   §"Folded-in from `path_to_100pct_backfill_mtds_is_2026_06_17` (2026-06-30 consolidation merge)" carried 2 items
