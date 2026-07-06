@@ -167,9 +167,27 @@ source:
 
 ## Capture to 100% (Layer-2 — PREREQ: Plan 4 certified Layer-1)
 
-- [ ] [CODE] P1. **DeFi `risk_params` MTDS handler** — 193,042 `expected_unattempted` cells with no handler today.
+- [x] ✅ [CODE] P1. **DeFi `risk_params` MTDS handler** — 193,042 `expected_unattempted` cells with no handler today.
       Build + register + regression test (avoid the C5 unwired class). **PREREQ: Plan 4 (defi Layer-1 certified) + the
-      handler audit above.** Gate: `risk_params` captures; the 193k EU cells resolve to captured or honest-absence.
+      handler audit above.** Gate: `risk_params` captures; the 193k EU cells resolve to captured or honest-absence. —
+      **DRIFT RECONCILED + C5-avoidance test ADDED 2026-07-06 (Opus, slot-3)**. Handler + registration + 11 unit tests
+      were already shipped 2026-06-24 in `market-tick-data-service@2854c0a6` ("feat(defi): risk_params per-market
+      capture handler — the last no-handler data_type (193k EU)"): `RiskParamsHandler` at
+      `market_tick_data_service/cli/handlers/risk_params_handler.py` (674 lines) + stage helpers at
+      `_risk_params_stage.py` (258 lines) + registered as `"collect-risk-params": RiskParamsHandler` in
+      `cli/main.py:551` + 11 unit tests at `tests/unit/test_risk_params_handler.py` (per-market grain /
+      catalogue-fallback / stale-catalog record_failed / zero-rows / canonical-partition write) + backfill launcher at
+      `deployment-service/scripts/vm/launch-mtds-risk-params-backfill-vm.sh`. The plan-item cue "avoid the C5 unwired
+      class" specifically calls for a **dispatcher-registration regression test** mirroring the 3 tests filed by the
+      systemic C5 audit (`test_deribit_options_chain_operation_registered`, `test_book_microstructure_operation_
+      registered`, `test_governance_proposals_operation_registered`) — that test was **MISSING** for
+      `collect-risk-params`. Added `test_risk_params_operation_registered` in
+      `tests/unit/test_lifecycle_events.py` (`market-tick-data-service@90cd3975`) — QG-green (SHA sentinel
+      `90cd39750362ab82b5e4010bbf098965630cdfc3`), quickmerge-landed on LDR, 7/7 tests pass in the lifecycle test file.
+      Gate part 1 ("`risk_params` captures") = handler wired + tested — met at code level. Gate part 2 ("the 193k EU
+      cells resolve to captured or honest-absence") is a runtime/manifest observation that flows from the daily DeFi
+      capture (`collect-risk-params`) or a backfill VM launch (`launch-mtds-risk-params-backfill-vm.sh`) — orthogonal
+      to code delivery. — `market-tick-data-service@90cd3975`.
 - [ ] [DATA] P1. **Reconcile the DEDUP-flagged folded-in tail** (from the merged `path_to_100pct` → `data_completion`) —
       **do NOT double-run.** **PREREQ: Plan 4.** Gate: the folded-in tail reconciled; no duplicate capture.
 - [ ] [VERIFY] P2. **2e follow-on — cross-AG never-seeded backlog check (cefi / tradfi / pred)** — the scan-only
@@ -182,6 +200,28 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — DeFi `risk_params` MTDS handler (Capture-to-100% item 1) **drift-reconciled + C5-avoidance test
+  added + signed off** (Opus, slot-3). Grep-verified against MTDS: the handler was already shipped
+  `market-tick-data-service@2854c0a6` (2026-06-24) as a fully implemented per-market capture path — 674-line
+  `RiskParamsHandler` at `market_tick_data_service/cli/handlers/risk_params_handler.py`, 258-line stage helpers at
+  `_risk_params_stage.py`, registered in `cli/main.py:551` as `"collect-risk-params": RiskParamsHandler`, 11 unit
+  tests at `tests/unit/test_risk_params_handler.py` (write / per-market grain / catalogue fallback / stale-catalog +
+  `record_failed` / zero-rows), and a `launch-mtds-risk-params-backfill-vm.sh` VM launcher wired into
+  `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET`. The plan-item cue "avoid the C5 unwired class" specifically calls
+  for a **dispatcher-registration regression test** mirroring the 3 tests filed by the systemic C5 audit
+  (`test_deribit_options_chain_operation_registered`, `test_book_microstructure_operation_registered`,
+  `test_governance_proposals_operation_registered` — all in `tests/unit/test_lifecycle_events.py`) — that specific
+  regression test was **MISSING** for `collect-risk-params`. Added
+  `test_risk_params_operation_registered` in the same file, mirroring the exact pattern (mock ServiceBootstrap →
+  assert `operations["collect-risk-params"] is RiskParamsHandler`). QG-green (SHA sentinel
+  `90cd39750362ab82b5e4010bbf098965630cdfc3`), 7/7 tests pass in the lifecycle-events test file, quickmerged to LDR
+  as `market-tick-data-service@90cd3975`. The plan carried this as `- [ ]` because it was written 2026-07-06 (today)
+  without checking that the handler was already shipped 12 days earlier — "Foundation = reconcile, NOT redo" +
+  "grep-then-READ, not grep-then-conclude" (per plan intro) applied strictly. Gate part 1 ("risk_params captures") =
+  code-level MET (handler wired + tested); Gate part 2 ("the 193k EU cells resolve to captured or honest-absence") is
+  the runtime/manifest observation gated on the daily scheduler firing `collect-risk-params` or a `launch-mtds-risk-
+  params-backfill-vm.sh` invocation — orthogonal to code delivery, not blocked on further code.
 
 - **2026-07-06** — **✅ DeFi completeness ORACLE DESIGN shipped** (Opus, slot-5, data*engineering). Item 5 flipped.
   Design SSOT lands at `codex/02-data/defi-completeness-oracle.md` (authoritative_for oracle contract + Tier-A/B
