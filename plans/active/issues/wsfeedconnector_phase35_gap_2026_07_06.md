@@ -136,13 +136,32 @@ approve / defer per category rather than per-venue.
       migration, not a drop). Regression tests added: `test_bybit_bare_alias_registered` +
       `test_okx_bare_alias_registered`. Closes ~26 of 104 cefi `blocked-not-registered` smoke-matrix cells (BYBIT ~13
       + OKX ~13).
-- [ ] [CODE] P2. **COINBASE bare-name UAC removal + downstream migration** — bare `COINBASE` entry in
-      `unified_api_contracts/.../market_data_categories.py:242` is a legacy pre-2026-06-23 tag (before the perp-gate
-      pair). Slot-6 initial grep suggested `COINBASE` was orphan; operator ruling (2026-07-06) found ~25 downstream
-      callers that still key off bare `COINBASE`. Migrate those callers to `COINBASE-SPOT` (or the perp-gate pair
-      `COINBASE ↔ COINBASE-SPOT` if MVP requires it), THEN drop the bare entry from UAC. Gate: 0 downstream call
-      sites reference bare `COINBASE`; the entry is removed from `VENUES_BY_ASSET_GROUP["cefi"]`; smoke-matrix
-      `blocked-not-registered` count for `COINBASE` drops to 0 (repo: unified-api-contracts + fan-out).
+- [ ] [CODE] P2. **COINBASE bare-name UAC removal + downstream migration** — **BLOCKED-BY-D2a** (BLK-9d69f223
+      resolved 2026-07-06 by main after slot-4 escalation): the D2a naming reconciliation `uac@e76d874a` (shipped
+      2026-07-06 18:26 by Harsh, `feat(registry): cefi INSTRUMENT_TYPES_BY_VENUE completes the 10 declared venues
+      (D2a)`) EXPLICITLY requires bare `COINBASE` to REMAIN in `VENUES_BY_ASSET_GROUP` +
+      `INSTRUMENT_TYPES_BY_VENUE` — bare `COINBASE` is the `_CEFI_VENUE_FOLD` EXPECTED lookup key (the Layer-1
+      checker `check_enumeration_completeness.py` folds `COINBASE-SPOT` → `COINBASE` for the EXPECTED/ENUMERATED
+      comparison; without bare `COINBASE` as its OWN key, the itype-gate authority switch "silently zeroes COINBASE's
+      entire EXPECTED set" — data-correctness regression). Main's directive (2026-07-06): "Re-scope gap-015 to
+      EXCLUDE the bare COINBASE removal entirely. Only proceed with parts of gap-015 that do not touch the bare
+      COINBASE key. File a follow-on task for the bare COINBASE removal after the 25-caller migration plan is
+      drafted and lands." Prerequisites for this task (see follow-on `- [ ] [PLAN] P2. Draft the COINBASE-bare
+      migration plan` below): (1) draft the 25-caller migration to `COINBASE-SPOT`; (2) decide fate of the D2a
+      Layer-1 `_CEFI_VENUE_FOLD` (does it re-key to `COINBASE-SPOT`?); (3) land the migration; THEN drop bare
+      `COINBASE` from UAC. Original gate remains: 0 downstream call sites reference bare `COINBASE`; entry removed
+      from `VENUES_BY_ASSET_GROUP["cefi"]`; smoke-matrix `blocked-not-registered` count for `COINBASE` drops to 0
+      (repo: unified-api-contracts + fan-out).
+- [ ] [PLAN] P2. **Draft the COINBASE-bare-name migration plan (prerequisite for the CODE task above)** — before
+      the CODE task above can proceed, someone must draft a plan that: (1) enumerates the ~25 bare `COINBASE`
+      downstream callers (venue_constants.py:377 D2a critical; market_data_categories.py:242 VENUES_BY_ASSET_GROUP;
+      market_data_categories.py:1186 skip-filter; venue_mapping.py:154/818/868; venue_launch_dates.py:64/236;
+      restaking_rewards.py:657/663/676/718 cex_listings; venue_core.py:145 IS resolver; execution-service
+      registry.py:178/208/310 + utils.py:28/238; strategy-service seed_mock_data.py; and the test callers); (2)
+      decides the migration target per caller (COINBASE-SPOT vs perp-gate pair vs KEEP-BARE per D2a); (3) proposes
+      a fix for the D2a Layer-1 `_CEFI_VENUE_FOLD` if bare `COINBASE` is removed (re-key EXPECTED to
+      `COINBASE-SPOT`?) — MUST NOT regress the itype-gate authority switch; (4) sequences the multi-repo landings.
+      This plan is a **prerequisite blocker** for the CODE task above (repo: unified-trading-pm plan doc).
 - [x] [CODE] P1. **BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build** ✅ — mtds@2b41b5fa. Public WS at
       `wss://api-pub.bitfinex.com/ws/2` (shared spot + perp endpoint; Bitfinex v2 `trades` channel).
       `BitfinexSpotWSFeedConnector` (base — chan_id ↔ symbol tracking, snapshot + `te`/`tu` frame parsing, heartbeat
