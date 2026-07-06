@@ -113,6 +113,20 @@ depends_on: []
 > or is an independent prediction-enum issue — the heal run also wrote 7,981 records across 63 prediction sub-venue
 > groups, so prediction is NOT fully starved; needs one more focused pass before a fix is chosen.**
 
+> **DEFINITIVE ROOT CAUSE (2026-07-06, confirmed via live Kalshi API probe + Kalshi docs — supersedes the "broken
+> filter" note above).** The `kalshi_perp` adapter is pointed at the **WRONG KALSHI API HOST ENTIRELY.** It queries
+> `https://api.elections.kalshi.com/trade-api/v2/markets` — the **events** host, which serves ONLY binary event
+> contracts. Live probe of 3,000 markets across all crypto series (KXBTC "Bitcoin range", KXBTCD, KXETHD …): **100%
+> `market_type=binary`, 0 tickers containing "PERP"** — every "crypto" market there is a dated binary strike bet
+> (`KXBTC-26JUL0605-T71799.99`), NOT a perpetual. Kalshi's actual perpetual futures ("Perps"/"margin") live on a
+> SEPARATE host + namespace (Kalshi docs): **`https://external-api.kalshi.com/trade-api/v2/margin/`** (demo
+> `external-api.demo.kalshi.co`), tickers like `BTC-PERPETUAL`, funding via `/margin/funding_rates/*`, **auth
+> required**, and **"rolling out member by member."** The adapter's `category=Crypto` URL param is ignored by the events
+> endpoint (markets carry `category: null`), and the client-side filter passes empty-category rows → it emits the entire
+> binary event universe as fake PERPETUAL. **The fix is a repoint to the margin API, which is gated on Kalshi
+> perps/margin API ACCESS + CREDENTIALS (member-rollout + API key) — an operator/credentials question, not a pure code
+> fix.** See the OPERATOR DECISION block below.
+
 The healed run (all writes green) exposed the DEEPER regression: the prediction records are being written to the WRONG
 STORE under the WRONG venue/type.
 
@@ -139,19 +153,35 @@ STORE under the WRONG venue/type.
   same-day-shipped failures — the second masking the first. **Corrected span: contamination = 06-29→07-06 daily runs**
   (earlier "since 06-27" was the logical partition floor, not the write date).
 
-### OPERATOR DECISION REQUIRED (Ikenna) — how to unwind the misrouting
+### OPERATOR DECISION REQUIRED (Ikenna) — KEEP the venues, fix the adapter (operator: "don't remove, correct them")
 
-**A (RECOMMENDED): disable the `KALSHI-PERP`/`POLYMARKET-PERP` enumeration** (surgical revert of the enable in the UAC
-venue producers) so prediction records key back to `KALSHI`/`POLYMARKET` → prediction store; then purge the 25,473 cefi
-rows (documented corrective: `--mode full --allow-catalogue-shrink` cefi run + by_date/manifest cleanup of
-`venue=KALSHI-PERP` cells). Smallest blast radius; preserves the rest of the 4da6fe8 consolidation. **B: keep the PERP
-venues but fix classification** — only genuine perp products (if such Kalshi/Polymarket products are actually intended)
-go to KALSHI-PERP; event contracts stay prediction. Needs the 4da6fe8 author's intent — do Kalshi/Polymarket perp
-products exist as a real roadmap item? **C: full revert of 4da6fe8** — heaviest; it also consolidated cefi/tradfi
-producers and deleted the mirrors; NOT recommended without the author. NOTE: whichever option — this touches ANOTHER
-WORKSTREAM's recent feature commit; the slot-2 agent deliberately did NOT modify UAC/producers unilaterally. Until
-decided, each 13:30 UTC run adds ~1 day of cefi contamination (non-MVP) and prediction by_date stays starved (catalogue
-stable on §7.3 tolerance).
+Operator instruction 2026-07-06: KALSHI-PERP/POLYMARKET-PERP are intended trading venues — KEEP them, correct the
+adapter. Given the definitive root cause (wrong host; real perps need the **auth'd, member-rollout margin API**), the
+"correct them" work splits into an immediate mitigation (agent can do now) + a real fix (gated on access):
+
+**Immediate mitigation — RECOMMENDED, agent-executable now (venue stays declared):**
+
+1. `kalshi_perp`/`polymarket_perp` adapters: **stop emitting binary event markets as perps.** Minimal correctness fix —
+   the `_parse_market` empty-category "pass" is wrong; until repointed, the adapter must return **0** records (there are
+   genuinely no perps on the events host). Stops the daily contamination at source; the UAC venue declaration stays
+   (venue remains a valid trading target, just with an empty reference-data feed until repointed).
+2. Purge the 25,473 fake `KALSHI-PERP` rows from the cefi catalogue (documented corrective:
+   `--mode full --allow-catalogue-shrink` cefi run + by_date/manifest cleanup of `venue=KALSHI-PERP` cells). 0 are MVP.
+
+**Real fix — the actual "correct them," GATED ON OPERATOR INPUT (credentials/access):** repoint the adapter to the
+margin API `https://external-api.kalshi.com/trade-api/v2/margin/…` (perps host; tickers `BTC-PERPETUAL`; funding via
+`/margin/funding_rates/*`). Two open questions ONLY the operator can answer:
+
+- **Q1 (access):** do we have a Kalshi account **enrolled in the perps/margin member rollout** with an API key that has
+  margin access? (Docs: "rolling out member by member"; margin API mirrors the event API's RSA-PSS auth — so it is NOT
+  the public no-auth path the current adapter assumes.) If NO → the real fix is BLOCKED-CREDENTIALS; build the repointed
+  adapter scaffold against demo `external-api.demo.kalshi.co` + status the venue pending-access.
+- **Q2 (scope):** POLYMARKET-PERP — does Polymarket actually expose perpetual futures, or is that venue also a
+  wrong-host/no-such-product case? (Same investigation owed; the polymarket_perp adapter was added in the same 4da6fe8.)
+
+This touches ANOTHER WORKSTREAM's feature commit (4da6fe8); the slot-2 agent will make ONLY the contamination-stopping
+mitigation + purge on approval, and leave the margin-API repoint to be done with the credentials answer + the 4da6fe8
+author in the loop.
 
 ## Progress log
 
