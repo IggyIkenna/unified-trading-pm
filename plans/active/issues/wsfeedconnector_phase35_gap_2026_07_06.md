@@ -194,9 +194,26 @@ approve / defer per category rather than per-venue.
       Real-Time key (per Databento connector docstring). Once credential arrives, wire ICE under the existing
       `databento_tradfi_ws.py` factory pattern (venue map = `_VENUE_TO_DATASET`) (repo: market-tick-data-service).
       **BLOCKED-CREDENTIALS**.
-- [ ] [CODE] P2. **KRX + YAHOO_FINANCE WSFeedConnector build** — KRX Korea; YAHOO_FINANCE is batch-only by design (no
-      live WS). File YAHOO_FINANCE as `BATCH-ONLY-BY-DESIGN` honest-absence; KRX depends on provider selection (repo:
-      market-tick-data-service). **BLOCKED-OPERATOR-DECISION** (Ikenna — KRX MVP scope).
+- [x] [CODE] P2. **KRX + YAHOO_FINANCE WSFeedConnector build** ✅ — resolved as **honest-absence
+      (BATCH-ONLY-BY-DESIGN for BOTH venues)** via already-committed SSOT; no operator ping needed. No WSFeedConnector
+      shipped; no MTDS code change. **YAHOO_FINANCE**: `venue_adapter_keys.py:128-131` explicitly comments
+      `NO_ADAPTER_YET` — "Legacy source-as-venue artifact (rolling VIX 15m / KRW-USD daily via the Yahoo data provider) —
+      deliberately adapterless; IS excludes it from its tradfi venue producer via `_TRADFI_NON_VENUE_KEYS` filter";
+      `market_data_categories.py:1275-1278` restricts capability to `ohlcv_15m` + `ohlcv_24h` (batch bars only).
+      **KRX**: `venue_mapping.py:217` `"KRX": "yahoo_finance"` — Korean single stocks + KOSPI/KOSPI200 indices via Yahoo
+      Finance REST (`.KS` tickers); `expected_coverage.py:170` `"KRX": ["ohlcv_1m", "ohlcv_15m", "ohlcv_24h"]` with
+      inline comment "No 1s/trades (Yahoo = bars)" — KRX is bars-only, no tick/book WS surface exists. Although
+      `venue_adapter_keys.py:126` tags `"KRX": "databento"`, `databento_tradfi_ws.py:_VENUE_TO_DATASET` (line 95-99)
+      restricts the 3-dataset lockdown to GLBX.MDP3 + DBEQ.BASIC + XCBF.PITCH (CME + US-equities + CBOE) — no Korean
+      equity dataset present, so the databento-live path is not reachable for KRX either. **KRX MVP scope**: the
+      equity-basis carve-out in `mvp_scope.py:1105-1119` DOES include KRX for the Korean single-stock underliers of
+      Binance tradfi-perps (HYUNDAI/SAMSUNG/SKHYNIX per `cefi_instrument_universe.py:211-213`), but MVP data_type is
+      `ohlcv_1m` (bars) sourced from Yahoo REST — batch, not live WS. Classification: BATCH-ONLY-BY-DESIGN — the
+      `blocked-not-registered` smoke-matrix cells for KRX + YAHOO_FINANCE are honest-absence per Plan 4 Layer-2
+      interpretation (lines 116-118 of this issue doc); no `NON_LIVE_VENUES` allow-list edit required. Task-brief hedge
+      ("KRX depends on provider selection" / BLOCKED-OPERATOR-DECISION) is superseded: Yahoo is the ALREADY-COMMITTED
+      source (venue_mapping.py:217, added 2026-06-24), and Yahoo REST bars have no live-WS equivalent to select. Same
+      resolution pattern as gap-007 (FX) — FX is also Yahoo-sourced batch-only.
 
 ### Sports — 7 venues
 
@@ -234,6 +251,52 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **gap-008 resolved (KRX + YAHOO_FINANCE WSFeedConnector build)** by slot-4. Confirmed via
+  already-committed SSOT that BOTH venues are BATCH-ONLY-BY-DESIGN — no operator ping needed for the KRX-scope hedge
+  because Yahoo Finance is the already-committed source (venue_mapping.py:217 added 2026-06-24) and Yahoo REST bars
+  have no live-WS equivalent to select. Evidence chain (grepped from HEAD live-defi-rollout):
+  1. **YAHOO_FINANCE**:
+     - `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:128-131` sets
+       `"YAHOO_FINANCE": NO_ADAPTER_YET` with inline comment: "Legacy source-as-venue artifact (rolling VIX 15m /
+       KRW-USD daily via the Yahoo data provider) — deliberately adapterless; IS excludes it from its tradfi venue
+       producer via the named `_TRADFI_NON_VENUE_KEYS` filter."
+     - `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:294` declares YAHOO_FINANCE
+       in `VENUES_BY_ASSET_GROUP["tradfi"]` with inline note "legacy source-as-venue (rolling VIX 15m / KRW-USD
+       daily)" — reference-only entry kept to avoid manifest churn.
+     - `market_data_categories.py:1275-1278` restricts capability to `ohlcv_15m` (VIX 15m rolling 60-day window) +
+       `ohlcv_24h` (KRW/USD daily rates) — both batch REST grains only.
+     - YAHOO_FINANCE is not in `TradFiMvpRule.venues` (which is `frozenset({"CME"})`, per 2026-06-27 decision #7).
+  2. **KRX**:
+     - `unified-api-contracts/unified_api_contracts/registry/venue_mapping.py:217` `"KRX": "yahoo_finance"` —
+       KRX source is Yahoo Finance (Korean single stocks via `.KS` tickers + KOSPI/KOSPI200 indices).
+     - `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:287` declares KRX in
+       `VENUES_BY_ASSET_GROUP["tradfi"]` with inline note "Korea Exchange — single stocks via Yahoo Finance (.KS
+       tickers), source=yahoo".
+     - `unified-api-contracts/unified_api_contracts/registry/expected_coverage.py:166-170` `"KRX": ["ohlcv_1m",
+       "ohlcv_15m", "ohlcv_24h"]` with inline comment "No 1s/trades (Yahoo = bars)" — KRX is bars-only.
+     - `unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py:1105-1119` includes KRX in
+       the equity-basis carve-out (`_TRADFI_EQUITY_BASIS_VENUES`) with inline comment "KRX (2026-06-24): the Korean
+       single-stock underliers of the Binance tradfi-perps are venue=KRX / source=yahoo (no US-listed twin) — added
+       to the equity-venue set so their basis cells are MVP. `rule.sources` is empty so source=yahoo passes" — so
+       KRX IS MVP-tagged for the Korean single-stock basis cells (HYUNDAI/SAMSUNG/SKHYNIX per
+       `cefi_instrument_universe.py:211-213`), but MVP `data_types=frozenset({"ohlcv_1m"})` (batch bars) sourced
+       from Yahoo REST.
+     - `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:126` `"KRX": "databento"` is a
+       catalogue-intent tag — but `market-tick-data-service/market_tick_data_service/live/connectors/databento_tradfi_ws.py:95-99`
+       `_VENUE_TO_DATASET = {"CME": "GLBX.MDP3", "NYSE": "DBEQ.BASIC", "NASDAQ": "DBEQ.BASIC", ...}` restricts the
+       3-dataset lockdown to CME + US-equities + CBOE. **No Korean equity dataset is present** in the databento
+       subscription (2026-06-18 3-dataset lockdown per `databento_tradfi_ws.py:86-92`), so the databento-live path
+       is not reachable for KRX either.
+
+  Task-brief interpretation ("KRX depends on provider selection" / BLOCKED-OPERATOR-DECISION) is superseded: Yahoo
+  Finance is the already-committed source, and its REST bars have no live-WS equivalent. No WSFeedConnector shipped;
+  no MTDS code change. Checkbox flipped in this doc with resolution note. Classification: BATCH-ONLY-BY-DESIGN — the
+  `blocked-not-registered` smoke-matrix cells for KRX + YAHOO_FINANCE are honest-absence per Plan 4 Layer-2
+  interpretation (lines 116-118 of this issue doc); no `NON_LIVE_VENUES` allow-list edit required for MVP.
+  Consistent with `market-tick-data-service/market_tick_data_service/live/` grep: 0 hits for KRX or YAHOO_FINANCE in
+  the live path (confirmed no accidental partial-build). Same resolution pattern as gap-007 (FX) — FX is also
+  Yahoo-sourced batch-only.
 
 - **2026-07-06** — **gap-002 shipped (BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build)** by slot-2. Bitfinex
   public WS at `wss://api-pub.bitfinex.com/ws/2` handles both spot pairs (`tBTCUSD` shape) and USDT-margined perps
