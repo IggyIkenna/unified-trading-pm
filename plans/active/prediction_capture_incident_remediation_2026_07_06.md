@@ -171,9 +171,12 @@ orchestrator-dispatched).
       from an events-host payload (`test_get_instruments_empty_even_with_events_host_payload`) + the events-host binary
       contract is rejected by the parser (`test_events_host_binary_market_is_rejected`); fetch-path coverage retained
       guard-lifted for the machinery Phase 2/3 reuses.
-- [ ] [INFRA] P0. Rebuild + deploy the `is-daily-enum` cefi image so the shipped guard reaches prod, then confirm the
-      next cefi enum run writes **0** `KALSHI-PERP` rows (the runtime half of the guard's Gate — code is shipped but the
-      cloud job runs the deployed image). `Evidence: cloudbuild=<id>`.
+- [x] [INFRA] P0. ✅ Guard reached prod — cloud build `09a20bfe-4401-42cf-ae91-e832418550df` **SUCCESS** built
+      `instruments-service:latest` = `sha256:e93483dd…` from `de3bcf5` (main w/ guard, promoted via the fleet promoter I
+      dispatched); every `is-daily-enum-*` job resolves `:latest`.
+      `Evidence: cloudbuild=09a20bfe-4401-42cf-ae91-e832418550df`. Runtime confirm (next cefi run writes 0
+      `KALSHI-PERP`) = the post-purge catalogue staying clean through the 13:30 UTC run (folded into step 2's post-13:30
+      check).
 - [ ] [DATA] P0. Purge the 25,473 fake `KALSHI-PERP` rows from cefi: corrective `--mode full --allow-catalogue-shrink`
       cefi run + delete the `venue=KALSHI-PERP` by_date + manifest cells. **PURGE, not MOVE (operator-decided
       2026-07-06):** the perp parser stamped these binary EVENT contracts as `instrument_type=PERPETUAL`/`expiry=None`,
@@ -259,3 +262,11 @@ orchestrator-dispatched).
   the sports legacy consolidator cron (protective, matches all other AGs). Escalated the "fixed-UTL→is-daily-enum image"
   residual to P0 — it heals BOTH sports+prediction cloud capture. Operator notified. (Phase 0 cefi guard is independent:
   the cefi index is NOT poisoned, so is-daily-enum-cefi succeeds and the guard stops KALSHI-PERP regardless of the UTL.)
+- 2026-07-06 ~11:00Z: **Guard deployed** (cloudbuild 09a20bfe SUCCESS → :latest=e93483dd). **Purge applied** — deleted
+  the 9 `venue=KALSHI-PERP` by_date snapshots (06-27→07-05) via
+  `scripts/purge_kalshi_perp_events_contamination_2026_07_06.py --apply`. Baseline for verification: cefi catalogue was
+  376,984 rows / 25,473 KALSHI-PERP / 0 POLYMARKET-PERP / 25 venues → expect 351,511 / 0 / 24 after rebuild. Catalogue
+  `--mode full --allow-catalogue-shrink` rebuild running. **Serendipity check**: the guard build (09a20bfe, 10:55)
+  pulled the UTL base image republished at 08:11 with the coercion fix (0e85227) — so :latest=e93483dd very likely ALSO
+  carries the fixed UTL, which would heal sports+prediction cloud capture as a side effect. Triggered
+  `is-daily-enum-prediction-n2kc9` on the new image to test+heal (runtime verification of the escalated P0).
