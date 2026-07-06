@@ -22,6 +22,8 @@ last_updated: 2026-07-06
 depends_on: []
 assigned_role: data_engineering
 drift_direction: advance-code
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 > **One agent, `data_engineering`.** All code is SHIPPED — this is the OPERATIONAL finish-line: run the backfill to

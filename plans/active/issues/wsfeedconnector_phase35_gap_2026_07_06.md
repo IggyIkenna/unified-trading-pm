@@ -26,7 +26,6 @@ related:
   ]
 created: 2026-07-06
 last_updated: 2026-07-06
-author: slot-4 · data_engineering worker (opus)
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

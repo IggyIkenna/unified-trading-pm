@@ -26,7 +26,6 @@ related:
   ]
 created: 2026-07-06
 last_updated: 2026-07-06
-author: slot-2 opus/max (data_engineering worker)
 source: [plans/active/is_catalogue_completion_2d_2026_07_06.md, is_catalogue_completion_2d-003]
 priority: P1
 parent_epic: instruments_master
