@@ -34,8 +34,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
 assigned_role: data_engineering
-model_tier: opus-required
-thinking_tier: max
+model_tier: sonnet-doable
+thinking_tier: high
 drift_direction: advance-code
 depends_on:
 locked_by:
@@ -48,7 +48,7 @@ source:
 # Foundation gate sign-offs + capture-to-100% (Stages 4-5) — AO Plan 5
 
 > **🤖 AO PLAN 5 of the instruments-completion set.** Dispatched to the agent-orchestrator (`assigned_vm: planning`,
-> role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Opus / max.** Coordinator =
+> role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** Coordinator =
 > `instruments_completion_tracker_2026_07_06.md` (Stages 4-5).
 >
 > **⚖️ The one law — Layer-1 gates Layer-2.** Everything here EXCEPT the handler audit is Layer-2 (capture) or a
@@ -85,12 +85,12 @@ source:
       follow-up finding.
 - [ ] [SCRIPT] P1. **Follow-up — venue-level WSFeedConnector registration audit** (surfaced by the C5 handler audit,
       2026-07-06). The blocked-not-registered counts cited above (cefi 104 · defi 1225 · sports 70 · tradfi 40) are
-      classified by `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py::check_live_l1` — a
-      DIFFERENT bug class from the operations-dispatcher C5 (per-VENUE `WSFeedConnector` factory, not
-      per-HANDLER operation key). The C5 audit closed 2 handler-registration gaps but does NOT reduce those cell
-      counts. Audit `_live_connector_factories` / venue key coverage per asset_group; distinguish `built-but-unregistered`
-      (add to factory registry + regression test) from `genuinely-no-connector-yet` (file). Gate: every VENUE with a
-      canonical batch expected_unattempted cell is either wired to a WS factory (with a test) or filed.
+      classified by `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py::check_live_l1` — a DIFFERENT
+      bug class from the operations-dispatcher C5 (per-VENUE `WSFeedConnector` factory, not per-HANDLER operation key).
+      The C5 audit closed 2 handler-registration gaps but does NOT reduce those cell counts. Audit
+      `_live_connector_factories` / venue key coverage per asset_group; distinguish `built-but-unregistered` (add to
+      factory registry + regression test) from `genuinely-no-connector-yet` (file). Gate: every VENUE with a canonical
+      batch expected_unattempted cell is either wired to a WS factory (with a test) or filed.
 
 ## Foundation gate sign-offs (cefi-first — reconcile drift, take the sign-offs)
 
@@ -125,25 +125,26 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
-- **2026-07-06** — Systemic unregistered-handler audit (item 1) **shipped**. Grep-audited the 34 `class *Handler` classes
-  under `market_tick_data_service/cli/handlers/` against the 32 keys in
-  `ServiceBootstrap(operations={…})` in `market_tick_data_service/cli/main.py`. Found 2 unwired handlers, both C5-class
-  (built + unit-tested but missing from the dispatcher): `BookMicrostructureHandler` (cefi Phase D P2b, derives
-  `order_flow_imbalance` from L5 `book_snapshot_5`; queue_position + depth_of_book_10 stay honest-gap) and
-  `GovernanceProposalsHandler` (defi_simulation_realism Phase 4A, writes UAC `GovernanceProposal` rows for Aave V3 /
-  Compound V3 / Spark / Lido). Registered as `derive-book-microstructure` and `collect-governance-proposals` +
-  two regression tests mirroring `test_deribit_options_chain_operation_registered` — `market-tick-data-service@015abaf5`
-  (register both handlers) + `market-tick-data-service@efd658c8` (regression tests). Zero GENUINELY-NOT-BUILT
-  handlers found in `cli/handlers/`; audit Gate met.
+- **2026-07-06** — Systemic unregistered-handler audit (item 1) **shipped**. Grep-audited the 34 `class *Handler`
+  classes under `market_tick_data_service/cli/handlers/` against the 32 keys in `ServiceBootstrap(operations={…})` in
+  `market_tick_data_service/cli/main.py`. Found 2 unwired handlers, both C5-class (built + unit-tested but missing from
+  the dispatcher): `BookMicrostructureHandler` (cefi Phase D P2b, derives `order_flow_imbalance` from L5
+  `book_snapshot_5`; queue_position + depth_of_book_10 stay honest-gap) and `GovernanceProposalsHandler`
+  (defi_simulation_realism Phase 4A, writes UAC `GovernanceProposal` rows for Aave V3 / Compound V3 / Spark / Lido).
+  Registered as `derive-book-microstructure` and `collect-governance-proposals` + two regression tests mirroring
+  `test_deribit_options_chain_operation_registered` — `market-tick-data-service@015abaf5` (register both handlers) +
+  `market-tick-data-service@efd658c8` (regression tests). Zero GENUINELY-NOT-BUILT handlers found in `cli/handlers/`;
+  audit Gate met.
 
   **Follow-up finding (filed as new plan todo above)**: the plan cited the QG batch+live smoke-matrix
   `blocked-not-registered` counts (cefi 104 · defi 1225 · sports 70 · tradfi 40) as the motivating signal, but a code
   read of `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py::check_live_l1` shows those cells are
-  classified by per-VENUE `WSFeedConnector` factory registration (`no WSFeedConnector registered for venue`), NOT by
-  the operations-dispatcher C5 class this audit covers. Running the QG after the two-handler fix confirms the counts
-  are unchanged: cefi 104 / defi 1225 / sports 70 / tradfi 40. Those counts will only fall after a per-VENUE WS-connector
+  classified by per-VENUE `WSFeedConnector` factory registration (`no WSFeedConnector registered for venue`), NOT by the
+  operations-dispatcher C5 class this audit covers. Running the QG after the two-handler fix confirms the counts are
+  unchanged: cefi 104 / defi 1225 / sports 70 / tradfi 40. Those counts will only fall after a per-VENUE WS-connector
   audit — captured as the P1 follow-up todo above so Plan 4's re-measure interprets them correctly (they are a
   live-transport gap, not a handler wiring bug).
+
 - **2026-07-06** — Plan authored + dispatched to AO (Plan 5 of the instruments-completion set). Combines Stage-4
   foundation sign-offs (reconcile, not redo) + Stage-5 capture-to-100% data work. The unregistered-handler audit runs
   early + ungated (Plan 4 depends on it); the rest PREREQs on Plan 4's Layer-1 certification.

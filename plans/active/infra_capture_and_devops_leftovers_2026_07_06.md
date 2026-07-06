@@ -33,8 +33,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 assigned_role: infra
-model_tier: opus-required
-thinking_tier: max
+model_tier: sonnet-doable
+thinking_tier: high
 drift_direction: advance-code
 depends_on:
 locked_by:
@@ -47,7 +47,7 @@ source:
 # Infra capture wiring + devops leftovers (Stage 5 infra) — AO Plan 6
 
 > **🤖 AO PLAN 6 of the instruments-completion set.** Dispatched to the agent-orchestrator (`assigned_vm: planning`,
-> role `infra`). **Dispatch tier (frontmatter-driven, EVERY task): Opus / max.** Coordinator =
+> role `infra`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** Coordinator =
 > `instruments_completion_tracker_2026_07_06.md` (Stage 5, infra slice).
 >
 > **Worker guards (HARD):** (1) **No fire-and-forget** on ANY VM/connector launch — STARTED <60s, ≥1 progress/hr, verify

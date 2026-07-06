@@ -34,8 +34,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 assigned_role: data_engineering
-model_tier: opus-required
-thinking_tier: max
+model_tier: sonnet-doable
+thinking_tier: high
 drift_direction: advance-code
 depends_on:
 locked_by:
@@ -48,7 +48,7 @@ source:
 # IS-catalogue completion (2d) — B0 → B1 → B2 (AO Plan 3)
 
 > **🤖 AO PLAN 3 of the instruments-completion set.** Dispatched to the agent-orchestrator (`assigned_vm: planning`,
-> role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Opus / max.** Coordinator =
+> role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** Coordinator =
 > `instruments_completion_tracker_2026_07_06.md` (Stage 2d). Runs in **parallel** with Plans 1 (cefi) + 2 (tradfi). **B0
 > is foundational** — it gates B1 + the Stage-3 re-measure (Plan 4): every expected-universe consumer
 > (`enumerate_expected_universe.py`, data-status could-exist) reads the catalogue, so a stale/incomplete catalogue = a

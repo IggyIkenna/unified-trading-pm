@@ -33,8 +33,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 assigned_role: data_engineering
-model_tier: opus-required
-thinking_tier: max
+model_tier: sonnet-doable
+thinking_tier: high
 drift_direction: advance-code
 depends_on:
   [cefi_layer1_denominator_gaps_2026_07_03, tradfi_v9_stage1_finish_2026_07_06, is_catalogue_completion_2d_2026_07_06]
@@ -49,7 +49,7 @@ source:
 # Layer-1 re-measure + certify (Stage 3) — all AGs (AO Plan 4)
 
 > **🤖 AO PLAN 4 of the instruments-completion set.** Dispatched to the agent-orchestrator (`assigned_vm: planning`,
-> role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Opus / max.** Coordinator =
+> role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** Coordinator =
 > `instruments_completion_tracker_2026_07_06.md` (Stage 3).
 >
 > **⛔ GATED (machine-enforced):** `depends_on` Plans 1 (cefi denominator), 2 (tradfi Stage-1 finish), 3 (IS-catalogue

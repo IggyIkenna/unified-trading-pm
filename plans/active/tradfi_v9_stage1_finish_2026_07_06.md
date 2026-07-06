@@ -33,8 +33,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 assigned_role: data_engineering
-model_tier: opus-required
-thinking_tier: max
+model_tier: sonnet-doable
+thinking_tier: high
 drift_direction: advance-code
 depends_on:
 locked_by:
@@ -47,7 +47,7 @@ source:
 # TradFi v9 Stage-1 finish — post-apply chain (AO Plan 2)
 
 > **🤖 AO PLAN 2 of the instruments-completion set.** Dispatched to the agent-orchestrator (`assigned_vm: planning`,
-> role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Opus / max.** Coordinator =
+> role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** Coordinator =
 > `instruments_completion_tracker_2026_07_06.md` (Stage 1). Runs in **parallel** with Plan 1 (cefi) — no `depends_on`;
 > tradfi is the only AG that waited on the migration. Detailed tooling (E5–E7, R1/R2, CF-audit) lives in
 > `tradfi_manifest_canonicalisation_2026_06_01.md` + `migration_verification_orphan_safety_2026_06_10.md` — READ there,
