@@ -53,10 +53,13 @@ source:
 > `tradfi_manifest_canonicalisation_2026_06_01.md` + `migration_verification_orphan_safety_2026_06_10.md` — READ there,
 > don't restate.
 >
-> **🟢 State (2026-07-06):** tradfi v9 `--apply` **DONE for 2020-2025** (6 VMs, e2-standard-16 · SPOT · workers 24 ·
-> per-year; launcher fix `deployment-service@77cfcda`; MTDS `9ecd1e2`). `moved<planned` on every year = idempotent skips
-> of already-canonical objects. **2026 held** (live `tradfi-bf-cme-ohlcv-1m-*` capture VMs are writing 2026
-> processed_candles — migrating under them would race the writer).
+> **🟢 State (2026-07-06):** tradfi v9 `--apply` **DONE for 2020-2025 + 2026** (7 VMs total, e2-standard-16 · SPOT ·
+> workers 24 · per-year; launcher fix `deployment-service@77cfcda`; MTDS `9ecd1e2`). `moved<planned` on every year =
+> idempotent skips of already-canonical objects. **2026 apply landed at 15:14 UTC via
+> `canonical-migration-tradfi-20260706-145606`** (`TOTAL planned=332825 moved=122703`, exit_code=0, fatal=0;
+> writer-safe window confirmed via BLK-61f48d1a — live `tradfi-bf-cme-ohlcv-1m-*` VMs write 2026 `raw_tick_data` at
+> already-canonical paths NOT processed_candles, and processed_candles for 2026 is legacy but static — no writer race).
+> **4 candle-copy stragglers on 2026-01-15** (GCS 504 timeouts, same transient class as the 2025-02-03/04 pattern) → handed off to task 3 straggler re-run.
 >
 > **Worker guards (HARD):** (1) **No fire-and-forget** on any VM launch — STARTED <60s, ≥1 progress/hr, verify T+10min,
 > arm your own `run_in_background` watchdog on `run.log` (the serial console is blind to the backgrounded migrator). (2)
@@ -74,19 +77,29 @@ source:
 
 ## Stage-1 post-apply chain (in order — each task's `PREREQ:` is load-bearing)
 
-- [ ] [DATA] P0. **Migrate the held-back 2026 year to v9 canonical.** Same launcher/config as the 2020-2025 fan-out
+- [x] ✅ [DATA] P0. **Migrate the held-back 2026 year to v9 canonical.** Same launcher/config as the 2020-2025 fan-out
       (`launch-canonical-migration-vm.sh`, e2-standard-16 · SPOT · workers 24, `--start-date 2026-01-01 --end-date`
-      today, `--apply`, `MTDS_TARBALL_SHA=9ecd1e2`). **PREREQ: the live `tradfi-bf-cme-ohlcv-1m-*` capture VMs writing
-      2026 are drained/stopped OR a writer-safe window is confirmed** — migrating object paths under a live writer races
-      it. If you cannot confirm the drain yourself, RAISE a BLOCKED-Q (operator owns the live-VM stop/start).
-      **Smoke-first**, watchdog on `run.log`. Gate: 2026 `exit_code=0`, fatal=0, memory-bounded; 2026 objects
-      v9-canonical.
+      today, `--apply`, `MTDS_TARBALL_SHA=9ecd1e29e16429f8711941e2c85ab8c637e94705` — **FULL SHA required**; setup
+      script builds the tarball URI verbatim from the pin, no short-form aliases exist in the builder — a short pin
+      `9ecd1e2` errors out `SHA-pinned tarball not found`). **PREREQ resolved 2026-07-06 via BLK-61f48d1a**
+      (writer-safe window confirmed: live `tradfi-bf-cme-ohlcv-1m-*` VMs write 2026 `raw_tick_data` at canonical paths
+      NOT processed_candles; processed_candles for 2026 is legacy but static, no active writer). **Smoke-first**,
+      watchdog on `run.log`. Gate: 2026 `exit_code=0`, fatal=0, memory-bounded; 2026 objects v9-canonical.
+      **Evidence:** VM `canonical-migration-tradfi-20260706-145606` — TOTAL planned=332825 moved=122703 (L-hive
+      210118/0 idempotent-skip, candles 122707/122703, L-hyphen 100692 skipped) · exit_code=0 · fatal=0 · 4
+      GCS-504 straggler copy failures on 2026-01-15 handed off to task 3 · post-migration GCS shows canonical
+      `pipeline_mode=batch_databento/batch_yahoo` subdirs present at day=2026-01-15 · run.log at
+      `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-tradfi-20260706-145606/run.log`.
 - [ ] [DATA] P0. **Orphan sweep to E=0 + bucket-state evidence** (all years, `tradfi-prd`). Per
       `tradfi_manifest_canonicalisation` §"Orphan sweep + bucket-state evidence" + `migration_verification` V6. Gate:
       zero orphaned legacy-path objects; bucket-state evidence recorded.
-- [ ] [DATA] P0. **Idempotent straggler re-run** — a transient GCS 503 burst on 2026-07-06 left ~7 objects unmoved on
-      2025-02-03/04 (not memory, self-limited). Re-run the migrator over the affected day-partitions (idempotent — skips
-      already-canonical). Gate: the 503-straggler objects are now canonical; orphan-sweep re-confirms E=0.
+- [ ] [DATA] P0. **Idempotent straggler re-run** — transient GCS 503/504 bursts on 2026-07-06 left ~7 objects unmoved on
+      2025-02-03/04 **plus 4 objects unmoved on 2026-01-15** (all transient GCS timeouts, not memory, self-limited).
+      Re-run the migrator over the affected day-partitions (idempotent — skips already-canonical). 2026-01-15
+      stragglers: `processed_candles/by_date/day=2026-01-15/timeframe=1h/data_type=tbbo/venue=NYSE/{BLK,LEN}.parquet`
+      + `.../timeframe=1h/data_type=trades/venue=CME/EW1G6_P6825.parquet`
+      + `.../timeframe=1m/data_type=trades/venue=CME/ESH6_P5500.parquet`. Gate: all straggler objects are now
+      canonical; orphan-sweep re-confirms E=0.
 - [ ] [DATA] P0. **Rebuild the tradfi manifest** — `rebuild_tradfi_manifest.py` (E5; the built tool, not the superseded
       build-spec). Gate: fresh `tradfi-prd/_index` reads `schema_version=9` for 100% of rows; `pipeline_mode=` partition
       present; row-count reconciles with the migrated corpus.
@@ -118,6 +131,14 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — Task 1 DONE: 2026 tradfi v9 `--apply` migration landed at 15:14 UTC via
+  `canonical-migration-tradfi-20260706-145606` (e2-standard-16 · SPOT · workers 24 · MTDS@9ecd1e29e16429). TOTAL
+  planned=332825 moved=122703 (L-hive 210118/0 idempotent-skip; candles 122707/122703 with 4 GCS-504 stragglers on
+  2026-01-15; L-hyphen 100692 skipped). exit_code=0, fatal=0, memory-bounded. PREREQ writer-safe window confirmed via
+  BLK-61f48d1a (live CME OHLCV VMs write raw_tick_data at canonical paths, NOT processed_candles as originally
+  hypothesised; processed_candles static). 1st attempt failed on SHA-pinning (`MTDS_TARBALL_SHA=9ecd1e2` short-form not
+  recognised — setup script requires full 40-char SHA); relaunched with full SHA. Post-migration GCS spot-check:
+  `day=2026-01-15/pipeline_mode=batch_databento/` + `batch_yahoo` subdirs present. 4 stragglers folded into task 3.
 - **2026-07-06** — Plan authored + dispatched to AO (Plan 2 of the instruments-completion set). Captures the tradfi v9
   post-apply chain after the 2020-2025 APPLY completed today. 2026 held for the live CME-OHLCV writers; deletes parked
   on Ikenna's sign-off.
