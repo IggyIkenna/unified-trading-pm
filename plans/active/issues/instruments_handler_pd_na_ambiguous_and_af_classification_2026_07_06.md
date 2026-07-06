@@ -126,10 +126,17 @@ Accept the classification and flip B0. Track the pd.NA fix + tradfi CME verify a
       `pd.isna(…)` or `.fillna(False)`. Verify by re-running the 4 truly-missing HYPERLIQUID days
       (2024-09-12/28, 2024-12-31, 2026-03-18) and confirming `capture_status=captured` in the manifest.
       (repo: instruments-service)
-- [ ] [VERIFY] P2. Per-date confirm the 7 tradfi CME residual cells (2024-07-08 / 2024-11-26 / 2024-12-04 /
+- [x] ✅ [VERIFY] P2. Per-date confirm the 7 tradfi CME residual cells (2024-07-08 / 2024-11-26 / 2024-12-04 /
       2025-08-07 / 2025-08-18 / 2026-06-20 AF / 2026-06-24 EU) against the Databento CME trading-calendar. Cross-check
       whether each is a real market-closure day (holiday / session-end / no ohlcv-1m tick coverage) vs a fetch gap
-      that needs a re-fetch. Post-`tradfi_v9_stage1_finish` completes, re-measure. (repo: instruments-service)
+      that needs a re-fetch. Post-`tradfi_v9_stage1_finish` completes, re-measure. (repo: instruments-service) —
+      **classified 2026-07-06 (slot-9 planning/opus): 1/7 is a real closure (2026-06-20 Saturday = EXPECTED_WEEKEND,
+      the AF is stale-AF class same as issue doc §2/§3; collapses via the `pipeline_mode_source_batch_live_replay_2026_06_05` dedup P2), 6/7
+      are regular trading days per the `venue_trading_calendar.US_MARKET_HOLIDAYS` SSOT (none of 2024-07-08/11-26/12-04, 2025-08-07/08-18, 2026-06-24 sit
+      on a US market holiday and none is a weekend) → the 6 EU cells are enumeration/fetch gaps, not calendar closures.
+      Final resolution deferred to the `tradfi_v9_stage1_finish` E5 manifest rebuild + IS enumerate-seed for tradfi
+      (which re-derive `expected_unattempted` from the canonical universe); tracked in `tradfi_v9_stage1_finish_2026_07_06.md`
+      tasks 4 (E5 rebuild) + 6 (IS enumerate-seed). See Progress log entry below.
 - [ ] [DATA] P2. When the manifest dedup fix (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`)
       lands, run the targeted reconcile that collapses the 8 stale-AF cefi rows (4 HL 2023-12-01/13, 2025-01-18,
       2026-06-06 + 4 2026-06-23 batch venues) so the coverage rollup stops double-counting them. Do NOT hand-edit the
