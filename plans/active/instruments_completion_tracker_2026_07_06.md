@@ -61,6 +61,11 @@ source:
 > (`assert_defi_catalog_fresh`; sports odds only enumerate against catalogued fixtures). So the order is always:
 > **correct + certify the denominator (cefi-first) → then complete capture.**
 
+> **🟡 VM IN FLIGHT (2026-07-06) — TradFi v9 migration restart.** Smoke VM `canonical-migration-tradfi-20260706-170108`
+> (e2-standard-16 · SPOT · `--workers 24` · MTDS `9ecd1e2` pinned) is migrating **2025** as the one-chunk smoke before
+> the 2020-2024 + 2026 per-year fan-out. Launcher fix: **deployment-service@77cfcda**. 06-29 OOM root cause:
+> `--workers 64` pool-thrash + full-range object-list accumulation on e2-standard-8. See Stage 1 + the Progress Log.
+
 ---
 
 ## ✅ Decision Gates — clear these first (only the operator can)
@@ -107,7 +112,9 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 - [ ] [DATA] P0. TradFi v9 G4 `--apply` — per **D3**: `--workers 24` (fallback 16) · per-year chunks 2020→2026
       (`--start-date/--end-date`) · e2-standard-16 · idempotent restart → `migration_verification_orphan_safety` V6
       closes; **all 5 AGs canonical**. Then `rebuild_tradfi_manifest.py` (E5) + IS enumerate-seed + IS catalogue for
-      tradfi.
+      tradfi. **🟡 IN FLIGHT (2026-07-06): 2025 smoke VM `canonical-migration-tradfi-20260706-170108` running
+      (e2-standard-16 · SPOT · workers 24 · MTDS 9ecd1e2 pinned; launcher fix deployment-service@77cfcda). Fan out
+      2020-2024 + 2026 once the smoke verifies memory-bounded + objects migrating.**
 - [ ] [DATA] P1. Operator-gated legacy-twin **deletes** (defi / tradfi / pred; cefi + sports already done) in a quiet
       window
 
@@ -223,6 +230,17 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **TradFi v9 migration RESTARTED (D3 fix) — 2025 smoke launched.** The 2026-06-29 full-range run
+  OOM-killed on e2-standard-8 at `--workers 64`; baked the D3 fix into the launcher (`launch-canonical-migration-vm.sh`:
+  `MACHINE_TYPE` override, SPOT default + `ON_DEMAND=true` opt-out, tradfi `--workers` default 24) —
+  **deployment-service@77cfcda** (QG-green + quickmerge). Verified the VM runs from GCS **code tarballs** (no Docker)
+  and pinned `MTDS_TARBALL_SHA=9ecd1e2` (today's build; tradfi migrator byte-identical to LDR HEAD) so the smoke proxies
+  the fan-out. Launched the **2025 smoke** `canonical-migration-tradfi-20260706-170108` (e2-standard-16 · SPOT · workers
+  24 · `--apply`), verified STARTED (RUNNING <60s), armed a no-fire-and-forget watchdog. Migrator date-shards its walk
+  (`_iter_days`) so a 1-year range bounds the up-front object-list accumulation (the OOM cause). **Next:** watchdog
+  verdict ~T+16min → if memory-bounded + objects migrating, fan out 2020-2024 + 2026 (2026 last, after the live
+  CME-OHLCV capture VMs). NOT blocked on Stage 0 (its leftover is doc-consolidation on cefi/catalogue plans — running in
+  parallel).
 - **2026-07-06** — **DERIBIT-COMBO `future_combo` RESOLVED (Ikenna).** Ikenna confirmed `future_combo` is **NOT in MVP**
   — Deribit uses `options_chain` (OPTION) only. DERIBIT-COMBO stays `{OPTION}` in `INSTRUMENT_TYPES_BY_VENUE`; the D2a
   provisional is now **final, with no further code change**. Cleared the D2a Decision-Gates note, the Blocked/waiting
