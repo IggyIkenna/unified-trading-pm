@@ -148,7 +148,7 @@ source:
       implementation todos (P0 UAC type + P0 factory_address_by_chain + P1 dispatch registry + P1 Tier-A DEX/lending
       probe reference impls + P2 Tier-B RPC + P2 catalogue genesis stamp) enumerated in §9 of the codex doc, to be filed
       under `defi_pipeline_e2e_and_coverage_validation_2026_06_20.md` or a dedicated `defi_completeness_oracle_impl*\*`
-      plan (data_engineering role, ~2 calibrated AI-days). — unified-trading-pm@<SHA>.
+      plan (data_engineering role, ~2 calibrated AI-days). — unified-trading-pm@650c2b881.
 
 ## Capture to 100% (Layer-2 — PREREQ: Plan 4 certified Layer-1)
 
