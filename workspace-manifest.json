@@ -1294,10 +1294,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": "ruff",
         "warn_file_count": 0,
-        "qg_red_reason": null,
-        "large_file_count": 0,
-        "coverage_pct": 71.07
+        "coverage_pct": 71.07,
+        "large_file_count": 0
       }
     },
     "unified-trading-api": {
