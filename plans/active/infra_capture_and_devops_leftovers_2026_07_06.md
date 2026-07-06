@@ -105,6 +105,12 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 5TH OCCURRENCE TODAY**.
+  Dispatcher routed the same infra-scope task to slot 11 (also `data_engineering`). Slot 11 escalated via /blocked
+  (`BLK-f1d45b7a`), same PARK recommendation as the prior 4 identical rulings (slots 2 `BLK-a92f81ab`, 6
+  `BLK-fc827a35`, 8 `BLK-ec05e5dd`, 3 `BLK-58cfb164`). Pattern continues: the AO dispatcher will keep routing this
+  infra-scope task to `data_engineering` slots until (a) an operator manually routes it to an infra-capable slot, or
+  (b) the AO dispatcher-side `assigned_role` filter lands. Slot 11 idle after this note.
 - **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 4TH OCCURRENCE TODAY**.
   Dispatcher routed the same infra-scope task to slot 3 (also `data_engineering`). Slot 3 escalated via /blocked
   (`BLK-58cfb164`); consistent PARK recommendation per prior 3 rulings (slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`, 8
