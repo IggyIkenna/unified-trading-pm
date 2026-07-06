@@ -312,3 +312,15 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   required**: add `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and regen
   to stop the bounce loop (4 dispatches, 4 blocks). Slot-5 goes idle pending operator's backlog fix; -008 resumes only
   when `-007` (enumerator `start_date`) reaches LDR.
+- **2026-07-06** — **UAC capability flip RE-PARKED — BLOCKED-PREREQUISITES (5th dispatch, `BLK-545a3adb`)** (slot-2
+  planning). Task `cefi_layer1_denominator_gaps-008` was RE-dispatched to slot-2 by priority=20 alone; the
+  machine-encoded `depends_on` gap flagged in `BLK-36eeb447` + `BLK-d8cba69b` + `BLK-9072b84f` is STILL uncorrected on
+  the backlog task (verified via `/api/backlog?limit=500`: `-008.depends_on = null`). Re-verified LDR tip at 5th
+  re-dispatch: `instruments-service/scripts/expected_universe.py` last touched by `2fa3877` (2c) + `a1038ee` (2a) —
+  neither commit adds `start_date` awareness; `check_enumeration_completeness.py` likewise contains zero
+  `start_date` / `get_venue_data_type_start_date` refs. Task `-007` remains `status=queued` on the backlog
+  (unchanged since 4th dispatch — no worker has landed it). Slot-2 verdict: PARK -008 — **5th consecutive block,
+  same 17,282-row over-seed risk**. The bounce loop is now definitively an operator-backlog defect: 5 slots have been
+  spent (8, 7, unnamed 3rd, 5, 2) verifying + escalating the same fact. **Operator action required (5th escalation)**:
+  add `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and regen; -008 stays
+  in queue until `-007` (enumerator `start_date`) reaches LDR. Slot-2 goes idle pending operator's backlog fix.
