@@ -204,11 +204,22 @@ nothing date-gates seeding at the (venue, data_type) grain. Execute IN ORDER:
 The venue-blind denominator producer gets the MVP-gate intersection now; the structural single-producer fold (A17
 `build_expected`) stays owned by `honest_coverage_v2_instrument_denominator_2026_06_28.md`.
 
-- [ ] [CODE] P1. **Point-fix `_row_data_types` (cefi branch): intersect with
+- [x] ✅ [CODE] P1. **Point-fix `_row_data_types` (cefi branch): intersect with
       `get_mvp_data_types_for_cefi_venue(venue)`** so the seeded denominator matches the capture gate (kills the MVP-cut
       over-seed class, e.g. COINBASE-SPOT trades-only). Complements the 2026-07-03 capability carve-out
       (`instruments-service@3bb7acd`) — that closed the VENUE_DATA_TYPE_CAPABILITIES half; this closes the MVP half. ~5
-      lines + tests. > **⚠️ CAUTION (verified 2026-07-06, do not implement naively):** a literal >
+      lines + tests.
+      **DONE 2026-07-06 — instruments-service@2170d9a3 (slot-11 planning).** Bundle-aware MVP data_type gate landed in
+      `_row_data_types` cefi branch (lines 873-899): `_mvp_capture_itype` normalises OPTIONS_CHAIN/COMBO→OPTION and
+      FUTURES_CHAIN→FUTURE; when the bundle-normalised itype is NOT in `MVP_SCOPE["cefi"].instrument_type_data_types`
+      (i.e. the flat/leaf case like COINBASE-SPOT trades), the venue-level MVP-gate intersection is applied against
+      `get_mvp_data_types_for_cefi_venue(venue)`; when it IS in the override (Deribit OPTION → {options_chain}) the
+      intersection is SKIPPED, preserving the upstream-narrowed `["options_chain"]` slice. A venue absent from MVP scope
+      entirely returns an empty MVP set → the `if mvp_dts:` guard leaves row_dts unchanged (no blanket-block of
+      non-MVP-scoped venues like BINANCE-DELIVERY). 4 regression tests added to `test_enumerate_expected_universe.py`
+      covering COINBASE-SPOT drop-book5, Deribit options_chain/futures_chain survival, Deribit PERP drop-liquidations,
+      and non-MVP-venue skip. QG-green (181s). Both failure modes flagged in the CAUTION avoided by the bundle-normalised
+      `instrument_type_data_types` guard. > **⚠️ CAUTION (verified 2026-07-06, do not implement naively):** a literal >
       `get_mvp_data_types_for_cefi_venue(venue)` intersection breaks Deribit `options_chain` enumeration. That > helper
       is venue-only — it resolves DERIBIT to the flat cefi set (`trades`/`book_snapshot_5`/ >
       `derivative_ticker`/`funding_rate`), which does NOT contain `"options_chain"`. But `_row_data_types` for a >
@@ -369,3 +380,14 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and regen; alternatively
   flip `-008`'s backlog priority to 999 so higher-priority queued tasks dispatch instead. -008 stays in queue until
   `-007` (enumerator `start_date`) reaches LDR. Slot-4 goes idle pending operator's backlog fix.
+- **2026-07-06** — **C2 point-fix (-009) flipped ✅** (slot-9 planning). Main released -008 via /skip-current-task
+  answering `BLK-be92ef1e` Option A; -009 dispatched to slot-9 next. Verified code already landed on LDR by slot-11:
+  `instruments-service@2170d9a3` (18:23:15 UTC, "feat(scripts): bundle-aware MVP data_type gate in _row_data_types
+  cefi branch — closes cefi_layer1_denominator_gaps C2 point-fix (item 009)") — 31 lines in
+  `scripts/enumerate_expected_universe.py` (the MVP data_type gate at lines 873-899) + 117 lines of regression tests
+  (4 tests) in `tests/unit/scripts/test_enumerate_expected_universe.py`; QG-green 181s per commit message. The
+  correct instrument-type/bundle-aware approach the CAUTION prescribed is implemented via `_mvp_capture_itype`
+  normalisation + `cefi_rule.instrument_type_data_types` membership check. Deribit `options_chain` slice preserved via
+  the OPTION-override skip; COINBASE-SPOT `book_snapshot_5` dropped; Deribit PERP `liquidations` dropped;
+  non-MVP-scoped venues (e.g. BINANCE-DELIVERY) unaffected by the empty-mvp_dts guard. Slot-9 action:
+  checkbox-flip only (no code change) — /done cites `2170d9a3` as the shipped SHA.
