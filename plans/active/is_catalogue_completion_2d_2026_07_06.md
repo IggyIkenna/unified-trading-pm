@@ -102,9 +102,21 @@ source:
       captured but IS never catalogued". The MTDS legacy-naming reconcile is a MTDS/manifest concern (tracked in
       `venue_naming_drift_defi_reconcile_2026_06_19` for defi and by the general
       `*_manifest_canonicalisation_*` track for cefi), not IS backfill.
-- [ ] [DATA] P1. **Extended public instrument + perp backfill (UNBLOCKED — no key needed)** — IS daily public
-      instrument + perp backfill for EXTENDED. **PREREQ: none.** Gate: EXTENDED instruments catalogued; feeds the cefi
-      2f denominator work (Plan 1).
+- [x] ✅ [DATA] P1. **Extended public instrument + perp backfill (UNBLOCKED — no key needed)** — IS daily public
+      instrument + perp backfill for EXTENDED (slot-2 opus/max 2026-07-06). Gate satisfied: EXTENDED-STARKNET is
+      100% catalogued in its UAC discovery window — 644 of 644 days captured 2024-10-01 → 2026-07-06 (0 missing)
+      via the recurring `uts-prod-instruments-service-cefi-t1-recon` daily job that publish-runs the
+      `ExtendedReferenceDataAdapter` (public REST at `api.starknet.extended.exchange/api/v1/info/markets`,
+      no auth); 2012 pre-discovery-start rows (2019-03-30 → 2024-09-30) correctly classified
+      `empty_confirmed / EXPECTED_PRE_VENUE_LAUNCH`. Baseline read from
+      `instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet` (single-walk-compliant
+      per the codex, no whole-corpus GCS re-scan). Adjacent finding surfaced during verification:
+      `issues/is_cefi_manifest_blank_data_type_since_2026_06_29_2026_07_06.md` — every cefi venue's captured
+      shards since 2026-06-29 land with `data_type=""` (blank) instead of `data_type="instruments"`
+      (writers.py:239 emits blank; the migration script was the historical normalizer). Not blocking THIS
+      gate (the plan reads coverage on `capture_status=='captured'` alone) but review-blocking downstream
+      consumers that use the canonical `data_type=='instruments'` filter — 4 actionable todos filed for a
+      fix-worker.
 - [ ] [DATA] P1. **CME EC\* event-contract backfill (v9-certification dependency)** — the CME event-contract instruments
       the tradfi catalogue needs for the v9 cert. **PREREQ: none** (coordinate with Plan 2's tradfi IS seed). Gate: CME
       EC\* instruments catalogued.
@@ -138,6 +150,21 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **EXTENDED public instrument + perp backfill FLIPPED (slot-2 opus/max).** Gate satisfied via
+  the running `uts-prod-instruments-service-cefi-t1-recon` daily job: `ExtendedReferenceDataAdapter` (public REST,
+  no auth) captures 101–103 active markets per day; availability index shows 644 of 644 days captured 2024-10-01
+  → 2026-07-06 (0 missing) with pre-discovery-start 2012 rows classified `empty_confirmed /
+  EXPECTED_PRE_VENUE_LAUNCH`. Read via `read_availability_index("instruments-store-cefi-prd-…")` filtered to
+  `venue == "EXTENDED-STARKNET"` (single-walk-compliant per codex). Consistent with the B0 flip
+  ("MVP ∩ MTDS ⊆ MVP ∩ IS = 20 venues", EXTENDED-STARKNET among them). No new capture VM launched — the
+  daily job is the SSOT-catalogue writer for this venue. **Adjacent finding filed:**
+  `issues/is_cefi_manifest_blank_data_type_since_2026_06_29_2026_07_06.md` — since 2026-06-29 every cefi
+  venue's captured rows land with `data_type=""` instead of `data_type="instruments"` (writers.py:239 emits
+  blank; migration script was the historical normalizer, correlated with the UAC-producer consolidation
+  `is@4da6fe8` 2026-06-29). Fleet-wide (26 cefi venues × 10 days = 260 shards mis-typed). 4 actionable todos
+  filed for a fix-worker (`assigned_vm: planning`) covering writer stamp fix + one-off patch + defi/tradfi
+  parity check + QG regression check. Not blocking THIS gate; review-blocking for downstream `data_type ==
+  "instruments"` consumers.
 - **2026-07-06** — **F1 FLIPPED (slot-2 opus/max).** Compared IS vs MTDS cefi venue sets. Every MVP-scope venue MTDS
   captured is already in IS (20/20). The 2 MVP venues not in MTDS (LIGHTER-ZKSYNC, PACIFICA-SOLANA) are on-chain CLOB
   DEXes still ramping MTDS live-capture — not historical backfill. The 12 MTDS-only diffs are legacy
