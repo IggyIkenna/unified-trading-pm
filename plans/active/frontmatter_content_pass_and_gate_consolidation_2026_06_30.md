@@ -247,6 +247,18 @@ urgent.
 
 ## Progress Log
 
+- 2026-07-06 — **ROOT CAUSE of the bypassed prek hook found + fixed fleet-wide: prek pre-commit was NEVER installed on
+  15/16 PM clones.** Operator asked whether the hook could simply be missing — audit confirmed: only slot-3 had
+  `.git/hooks/pre-commit` (manual `prek install` at some point); the gate-red doc's author clone (slot-2) and every
+  other clone had none, so ALL commit-time gates (staged-plans schema, commit-identity, gitleaks, prettier,
+  conventional-commit) silently never ran fleet-wide — no `--no-verify` involved. `setup-tab-worktrees.sh` only ever
+  installed the pre-push strict-quickmerge guard and ASSUMED the prek hook existed. Bonus finds: main-ws lacked pre-push
+  too, and carried a stale absolute `core.hooksPath` (pre-migration `/home/hk/...`) disabling all hooks there. Fixed at
+  three layers (pm@cb3f353fe, QG exit 0): (1) live remediation — `prek install` in all 16 clones + main-ws pre-push +
+  hooksPath cleared (verified: 16/16 both-hooks-ok); (2) clone-time — `install_prek_precommit_hook` in
+  setup-tab-worktrees.sh; (3) the 5-min `slot-cron-ff-pull.sh` PM loop self-heals either missing hook every tick. SSOT:
+  per-tab-worktrees.md § "Git hooks are per-clone and MUST both be installed". Local hooks = floor; `quality-gates-v2`
+  on the promote PR = the unbypassable wall.
 - 2026-07-06 — **`nature: issue` legalized + doc_type↔path consistency HARD-enforced (operator directive; closes the B3
   "recurring authoring instinct" for good).** pm@1399d333e (quickmerge, QG exit 0; promote PR #793 v2-gated auto-merge).
   NATURE gains `issue` (8 values) — three independent authors had reached for it against the enum, so the enum moved to
