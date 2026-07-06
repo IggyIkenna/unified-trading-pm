@@ -301,3 +301,14 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   PARK -008 — same ruling as `BLK-36eeb447`; the 17,282-row over-seed risk is real and documented; -008 will be
   re-dispatched after -007 lands. Slot-7 handed `understat_local_backfill_completion-004` (unrelated manifest
   normalisation) as next task.
+- **2026-07-06** — **UAC capability flip RE-PARKED — BLOCKED-PREREQUISITES (4th dispatch, `BLK-9072b84f`)** (slot-5
+  planning). Task `cefi_layer1_denominator_gaps-008` was RE-dispatched to slot-5 by priority=20 alone; the
+  machine-encoded `depends_on` gap flagged in `BLK-36eeb447` + `BLK-d8cba69b` is still uncorrected on the backlog task.
+  Re-verified LDR tip at re-dispatch: `instruments-service/scripts/expected_universe.py` +
+  `check_enumeration_completeness.py` still have zero `start_date` / `get_venue_data_type_start_date` references (grep
+  returns empty). Task `-007` remains `status=queued` (has NOT reached LDR — dispatched to a peer slot per prior
+  entries but the work not committed). Main-agent verdict (`BLK-9072b84f` answered): PARK -008 — **4th ruling, same
+  answer**. The 17,282-row over-seed risk stands; do NOT flip UAC `VENUE_DATA_TYPE_CAPABILITIES`. **Operator action
+  required**: add `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and regen
+  to stop the bounce loop (4 dispatches, 4 blocks). Slot-5 goes idle pending operator's backlog fix; -008 resumes only
+  when `-007` (enumerator `start_date`) reaches LDR.
