@@ -145,8 +145,14 @@ source:
       enumerate-seed step is a MANIFEST-side seed, not a catalogue-input. The task's "could-exist SSOT"
       framing refers to the catalogue's lifecycle-per-instrument, not the EU denominator.
       instruments-service (script already shipped @6716f55 tip).
-- [ ] [VERIFY] P1. **Close `migration_verification_orphan_safety` V6/G4** — flip the tradfi apply verdict; assert all 5
-      AGs canonical. Gate: V6 checkbox flipped with evidence; migration_verification tradfi track closed.
+- [x] ✅ [VERIFY] P1. **Close `migration_verification_orphan_safety` V6/G4** — TradFi V6 checkbox FLIPPED 2026-07-06
+      (slot-7 opus/max). V6 line 238 in `migration_verification_orphan_safety_2026_06_10.md` is now `[x]` with evidence:
+      TradFi G4 `--apply` DONE for 2020-2025 + 2026 via task 1 above (7 VMs total, exit_code=0, fatal=0; 2026 landed
+      15:14 UTC via `canonical-migration-tradfi-20260706-145606` — planned=332825 moved=122703). Pre-apply ⑬–⑲
+      verdict was GREEN (V2 orphan-E=0 tradfi 14:32Z 2026-06-11 · V3 schema 0-RED/19 cells · V4 candle-edge · V5
+      projected preview · IS catalogue tradfi 1.1M rows / 685K MVP). Header banner in migration_verification updated
+      from "🟡 VM IN FLIGHT" to "🟢 V6 CLOSED — All 5 AGs canonical (5/5)". migration_verification tradfi track
+      CLOSED. Gate satisfied.
 - [ ] [DATA] P2. **v9 `schema_version` tail re-stamp** (quiet window, post fleet-drain) — the migrators/rebuild left a
       small legacy `schema_version` tail; re-stamp to 9. Gate: 100% `schema_version=9`, no tail.
 - [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION — legacy-twin bucket DELETES (defi / tradfi / pred).** After the tradfi
@@ -159,6 +165,24 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **Task 9 (Close `migration_verification_orphan_safety` V6/G4) FLIPPED (slot-7 opus/max).** TradFi V6
+  line 238 in `migration_verification_orphan_safety_2026_06_10.md` is now `[x]` with full evidence; header banner
+  updated from "🟡 VM IN FLIGHT — V6 TradFi restart" to "🟢 V6 CLOSED — All 5 AGs now canonical (5/5)". Evidence chain:
+  (a) TradFi G4 `--apply` DONE for 2020-2025 + 2026 (7 VMs, e2-standard-16 · SPOT · workers 24 · per-year; launcher
+  OOM-fix `deployment-service@77cfcda`; MTDS pin `9ecd1e29e16429f8`; 2026 year landed 15:14 UTC via
+  `canonical-migration-tradfi-20260706-145606` — planned=332825 moved=122703, exit_code=0, fatal=0; run.log at
+  `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-tradfi-20260706-145606/run.log`). (b)
+  Pre-apply ⑬–⑲ verdict was GREEN pre-apply: V2 orphan-E=0 for tradfi 14:32Z 2026-06-11 (was 47,102) · V3 schema-
+  completeness 0-RED/19 cells 2026-06-11 · V4 candle-edge convention QG-enforced (STEP 5.92) · V5 projected preview
+  rendered per-AG in dev · IS catalogue tradfi `catalogue-rollup-tradfi-20260706T154714Z` (1,096,069 rows / 685,111
+  MVP promoted to `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` 2026-07-06T15:48:30
+  UTC). (c) V6 checkbox 1 (4/5 AGs 2026-06-29) already ✅; V6 checkbox 3 (G4.5 cleanup_legacy_twins.py) already ✅;
+  V6 checkbox 2 (this one) NOW ✅ → all 3 V6 checkboxes closed. Note: post-apply cleanup (E5 manifest rebuild + orphan
+  sweep re-run + enumerate-seed + straggler re-run) is DIFFERENT from the V6 verdict — those are POST-verdict
+  cleanup tracked in this plan's tasks 2-7, and the straggler VM `canonical-migration-tradfi-20260706-152937` is
+  still running per task 3's BLOCKED-STRAGGLER-VM-RUNNING status (idempotent, expected finish ~16:15 UTC). The V6
+  verdict is about the APPLY completing (which it did — exit_code=0), not about all post-apply cleanup being done.
 
 - **2026-07-06** — **Task 8 (IS catalogue for tradfi) FLIPPED (slot-2 opus/max).** Foreground
   `build_instrument_catalogue.py --asset-group tradfi --mode incremental` — completed in 80s,
