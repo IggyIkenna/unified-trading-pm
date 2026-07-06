@@ -579,6 +579,21 @@ for _pm_clone in "${_ws_root}/unified-trading-pm" "${_ws_root}"/.tabs/*/unified-
     _idx_py="${_pm_clone}/.venv/bin/python"
     [[ -x "${_idx_py}" ]] || _idx_py="python3"
     timeout 60 "${_idx_py}" "${_pm_clone}/scripts/docs/gen_doc_index.py" --stale-check >/dev/null 2>&1 || true
+    # Hook self-heal (2026-07-06): 15/16 PM clones had NO prek pre-commit hook (setup only ever
+    # installed pre-push), so commit-time gates (staged-plans schema, commit-identity, gitleaks)
+    # silently never ran — a gate-red doc reached LDR that way. Heal both hooks every tick:
+    # missing pre-commit → `prek install` (writes pre-commit + commit-msg ONLY — pre-push stays
+    # the strict-quickmerge guard); missing pre-push → copy the guard. Idempotent, guarded,
+    # || true — can never jam the cron. prek refuses on core.hooksPath; stale ones need a manual
+    # `git config --unset-all --local core.hooksPath` (deliberately NOT auto-unset here).
+    if [[ ! -f "${_pm_clone}/.git/hooks/pre-commit" ]]; then
+        _prek_bin="$(command -v prek || echo "${HOME}/.local/bin/prek")"
+        [[ -x "${_prek_bin}" ]] && (cd "${_pm_clone}" && timeout 30 "${_prek_bin}" install >/dev/null 2>&1) || true
+    fi
+    if [[ ! -f "${_pm_clone}/.git/hooks/pre-push" && -f "${_pm_clone}/scripts/dev/hooks/pre-push-strict-quickmerge.sh" ]]; then
+        cp "${_pm_clone}/scripts/dev/hooks/pre-push-strict-quickmerge.sh" "${_pm_clone}/.git/hooks/pre-push" 2>/dev/null \
+            && chmod +x "${_pm_clone}/.git/hooks/pre-push" || true
+    fi
 done
 
 # Heartbeat: write ONE line every run, even in --quiet on a fully-idle no-op sweep, so the

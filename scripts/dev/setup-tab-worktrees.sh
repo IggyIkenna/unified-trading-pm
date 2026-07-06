@@ -339,6 +339,7 @@ ensure_repo_worktree() {
         git -C "${slot_repo_dir}" config user.name "${CANON_GIT_NAME} [slot-${slot}·${WORKTREE_HOST}]"
         git -C "${slot_repo_dir}" config user.email "$(slot_identity_email)"
         install_strict_quickmerge_hook "${slot_repo_dir}"
+        install_prek_precommit_hook "${slot_repo_dir}"
         log "  CLONE ${repo} → ${slot_repo_dir} (Path-B reference-clone on ${base})"
     else
         log "  FAIL ${repo} reference-clone (url=${url})"
@@ -359,6 +360,20 @@ install_strict_quickmerge_hook() {
     if [[ -f "${hook_src}" && -d "${clone_dir}/.git/hooks" ]]; then
         cp "${hook_src}" "${hook_dst}" && chmod +x "${hook_dst}"
     fi
+}
+
+# Install the prek pre-commit hook into a Path-B clone's own .git/hooks. Without this, NO
+# commit-time gate runs in the clone (plan-hygiene staged-plans schema check, commit-identity,
+# gitleaks, prettier, conventional-commit) — found 2026-07-06: 15/16 PM clones had never had it,
+# which is how a gate-red issue doc reached LDR despite the check existing. prek writes only
+# pre-commit + commit-msg; pre-push stays the strict-quickmerge guard above (prek must NEVER
+# manage pre-push). Refuses on a set core.hooksPath — clear stale ones (post-migration absolute
+# paths) rather than force.
+install_prek_precommit_hook() {
+    local clone_dir="$1" prek_bin
+    prek_bin="$(command -v prek || echo "${HOME}/.local/bin/prek")"
+    [[ -x "${prek_bin}" && -f "${clone_dir}/.pre-commit-config.yaml" ]] || return 0
+    (cd "${clone_dir}" && "${prek_bin}" install >/dev/null 2>&1) || true
 }
 
 write_slot_envrc() {

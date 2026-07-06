@@ -566,6 +566,24 @@ git config user.email "ikennaigboaka@gmail.com"
 clone → inherit the identity automatically. Do NOT hand-edit `~/.gitconfig`. **Consumers:** CI alert workflows attribute
 via `github.event.head_commit.author.name`; the slot-git-status-report cron can group by slot.
 
+## Git hooks are per-clone and MUST both be installed (2026-07-06)
+
+Each Path-B clone has its OWN `.git/hooks` — hooks are NOT inherited from the reference clone. Two hooks are
+load-bearing:
+
+- **`pre-commit` = prek** (`prek install` — writes `pre-commit` + `commit-msg` only): runs the staged-plans frontmatter
+  schema gate, commit-identity enforcement, gitleaks, prettier, conventional-commit. **Found 2026-07-06: 15/16 PM clones
+  had NEVER had it installed** (setup only provisioned pre-push), so commit-time gates silently never ran — that's how a
+  gate-red issue doc reached LDR despite the check existing. prek REFUSES on a set `core.hooksPath`; a stale
+  post-migration absolute path there needs `git config --unset-all --local core.hooksPath` first.
+- **`pre-push` = the strict-quickmerge guard** (`scripts/dev/hooks/pre-push-strict-quickmerge.sh`, copied — **prek must
+  NEVER manage pre-push**).
+
+**Provisioning is now three-layered**: `setup-tab-worktrees.sh` installs BOTH at clone time
+(`install_strict_quickmerge_hook` + `install_prek_precommit_hook`); the 5-min `slot-cron-ff-pull.sh` PM-clone loop
+self-heals any clone missing either hook; and the server-side QG (`quality-gates-v2` on the promote PR) remains the
+backstop that no local bypass (`--no-verify`, uninstalled hook) can dodge. Local hooks are the floor, not the wall.
+
 ## Ship into `live-defi-rollout` — visibility = durability (HARD RULE)
 
 Ship every finished unit via `quickmerge --agent --files '<paths>'` (Pass-1 QG sentinel → Pass-2 commit + push to LDR;
