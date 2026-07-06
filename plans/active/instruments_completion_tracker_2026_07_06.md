@@ -117,14 +117,17 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 
 ## 📊 Snapshot (2026-07-06)
 
-- **Certified Layer-1 (denominator) — cefi + defi CERTIFIED 2026-07-06; tradfi/sports/pred still 06-29 STALE (pending
-  re-measure Stage 3):** cefi **73.61** (72 expected / 53 present / 19 missing / 87 stray; `is@03cfd0f`,
-  `layer1_remeasure_and_certify` task 002) · defi **94.81** (77 expected / 73 present / 4 missing / 128 stray;
-  `is@681f50a` post-D1 seeding, denominator SHRANK 108→77 via `is@3bb7acd` defi lending grain roll-up 2026-07-03;
-  `layer1_remeasure_and_certify` task 003) · tradfi 51.43 [06-29 stale] · sports 30.77 [06-29 stale] · pred 66.67 [06-29
-  stale]. _(Upper bounds where UAC under-specifies.)_
+- **Certified Layer-1 (denominator) — cefi + defi + prediction CERTIFIED 2026-07-06; tradfi/sports still pending
+  (tradfi BLOCKED-PLAN2; sports 06-29 stale):** cefi **73.61** (72 expected / 53 present / 19 missing / 87 stray;
+  `is@03cfd0f`, `layer1_remeasure_and_certify` task 002) · defi **94.81** (77 expected / 73 present / 4 missing / 128
+  stray; `is@681f50a` post-D1 seeding, denominator SHRANK 108→77 via `is@3bb7acd` defi lending grain roll-up 2026-07-03;
+  task 003) · **prediction 66.67** (6 expected / 4 present / 2 missing MARKET_LIFECYCLE / 17 stray; `is@6716f55`
+  post-KALSHI-PERP-purge, denominator unchanged vs stale — purge was cefi-side not prediction-side; task 005) · tradfi
+  51.43 [06-29 stale — 🚧 BLOCKED-PLAN2 pending `tradfi_v9_stage1_finish` tasks 2-11] · sports 30.77 [06-29 stale].
+  _(Upper bounds where UAC under-specifies.)_
 - **Layer-2 lower bounds (capture):** cefi 37.86 · defi **62.06** [fresh post-D1 seeding; expected_unattempted 1,534,304
-  confirms +1.38M in denominator, up from 57.55 stale] · tradfi 88.81 · sports 100 · pred 20.56.
+  confirms +1.38M in denominator, up from 57.55 stale] · tradfi 88.81 · sports 100 · pred **22.73** [fresh post-purge;
+  captured 8,711 / reachable 38,318; expected_unattempted 497; up from 20.56 stale].
 - **DONE already:** denominator **generation** (catalogue built + self-refreshing) · Issue-4 strays · 4/5 AG v9
   `--apply` · opus-checkpoints + registry-consolidation (archived).
 - **REMAINING (this tracker):** denominator **correctness + certification** → then **capture**.
@@ -287,6 +290,30 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **prediction Layer-1 CERTIFIED — 66.67% fresh** (via `layer1_remeasure_and_certify_2026_07_06` task
+  005). Ran `measure_honest_coverage.py --asset-group prediction` locally at 2026-07-06 15:27 UTC on `is@6716f55`
+  post-KALSHI-PERP-purge; primary manifest `gs://market-data-tick-pred-prd-central-element-323112` blob.updated
+  2026-07-06T15:26:46Z, 760,300 rows; merged 706,197 rows. Result: **expected_tuples 6 / present_tuples 4 / missing 2 /
+  stray 17 → 66.67%.** Direction ✓ — 66.67 stale (06-29) → 66.67 fresh; denominator stable at 6 (purge affected cefi
+  catalogue, not prediction). **Purge Gate verified:** 0 `KALSHI-PERP` mentions + 0 `POLYMARKET-PERP` mentions in the
+  prediction coverage.json (post-purge cefi state: catalogue 376,984→351,511 rows, KALSHI-PERP==0, 25→24 venues per
+  `prediction_capture_incident_remediation_2026_07_06` Workstream B Phase 0). Layer-2 prediction rollup: coverage_pct
+  **22.73%** (captured 8,711 / reachable 38,318; empty_confirmed 667,879; attempted_failed 29,110; expected_unattempted
+  497; total 706,197; layer1_completeness_pct 66.67; denominator_status INCOMPLETE — 2 unwired MARKET_LIFECYCLE
+  handlers so Layer-2 stays a lower bound, up +2.17 pp vs 20.56 stale). 2 missing tuples both MARKET_LIFECYCLE (KALSHI +
+  POLYMARKET prediction_market) — unwired handlers not adapter contamination. **Task 001 (multi-AG re-run) PREREQs both
+  now DONE** (KALSHI-PERP purge ✓ + Plan 5 unregistered-handler audit ✓ per
+  `foundation_gates_and_capture_to_100_2026_07_06` line 77 `- [x]`) — task 001 will re-dispatch as its own
+  /boot-per-shippable-unit. Snapshot updated above; evidence artefact (local):
+  `/home/ubuntu/coverage_prediction_20260706T152707Z.json`.
+- **2026-07-06** — **task 004 tradfi Layer-1 DOCUMENTED as BLOCKED-PLAN2** (via `layer1_remeasure_and_certify_2026_07_06`
+  task 004). Main-agent answer to `BLK-ab86f4e9` confirmed: do NOT certify tradfi Layer-1 now — the tradfi IS catalogue
+  rebuild + manifest rebuild + E7 CF verify from Plan 2 (`tradfi_v9_stage1_finish_2026_07_06`) tasks 2-11 have NOT
+  landed (only Plan 2 task 1 done). Running measure_honest_coverage --asset-group tradfi against the pre-v9 catalogue
+  produces a certification that would re-measure again. Task 004 checkbox annotated 🚧 BLOCKED-PLAN2; tradfi Snapshot
+  entry unchanged at 51.43 [06-29 stale]. Re-dispatch after Plan 2 rebuilds land. Also noted: dispatcher's
+  `gate_on_depends: true` needs review — per-plan-task granularity is not enforced (task 004 was dispatched despite
+  Plan 2 not being done).
 - **2026-07-06** — **defi Layer-1 CERTIFIED — 94.81% fresh** (via `layer1_remeasure_and_certify_2026_07_06` task 003).
   Ran `measure_honest_coverage.py --asset-group defi` locally at 2026-07-06 15:13 UTC on `is@681f50a` (post-D1 +1.38M
   seeding); primary manifest `gs://market-data-tick-defi-prd-central-element-323112` blob.updated 2026-07-06T15:11:42Z,

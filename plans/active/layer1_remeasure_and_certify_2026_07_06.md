@@ -118,8 +118,24 @@ source:
       unresolvable from this task; DEFERRED until Plan 2 lands. Re-dispatch this task after
       `tradfi_v9_stage1_finish_2026_07_06` tasks 2-11 flip (in particular the IS catalogue build + manifest rebuild +
       E7 verify) — the operator/main agent controls re-queue timing.
-- [ ] [VERIFY] P0. **Certify prediction Layer-1** — post the KALSHI-PERP purge, record the fresh prediction
+- [x] ✅ [VERIFY] P0. **Certify prediction Layer-1** — post the KALSHI-PERP purge, record the fresh prediction
       denominator + %. Gate: prediction number recorded; no fake KALSHI-PERP rows in the measure.
+      **CERTIFIED 2026-07-06 15:27 UTC: prediction Layer-1 = 66.67% (present 4 / expected 6; 2 missing tuples; 17
+      stray).** Direction ✓ — 66.67 (stale 06-29) → 66.67 (fresh); denominator stable at 6 tuples (KALSHI-PERP purge
+      landed on cefi, not prediction — prediction Layer-1 not expected to move). **No fake KALSHI-PERP rows verified:**
+      0 `KALSHI-PERP` mentions and 0 `POLYMARKET-PERP` mentions in the prediction coverage.json (contamination was
+      cefi-only, purged 2026-07-06 by `scripts/purge_kalshi_perp_events_contamination_2026_07_06.py --apply` per
+      `prediction_capture_incident_remediation_2026_07_06` Workstream B Phase 0 → cefi catalogue 376,984→351,511 rows,
+      KALSHI-PERP==0, 25→24 venues). Layer-2 prediction rollup: coverage_pct 22.73% (captured 8,711 / reachable 38,318;
+      empty_confirmed 667,879; attempted_failed 29,110; expected_unattempted 497; total 706,197; layer1_completeness_pct
+      66.67; instrument_gates_download True) — tightened +2.17 pp vs 20.56 stale. Missing tuples (both unwired
+      MARKET_LIFECYCLE handlers): KALSHI prediction_market MARKET_LIFECYCLE, POLYMARKET prediction_market
+      MARKET_LIFECYCLE. Stray tuples (first 5): KALSHI PREDICTION_MARKET book_snapshot_5, POLYMARKET {BNB, BTC, CRUDE_OIL,
+      DJIA} prediction_trades. Evidence: local `.venv/bin/python scripts/measure_honest_coverage.py --asset-group
+      prediction` run at 2026-07-06 15:27 UTC on `is@6716f55` (post-KALSHI-PERP-purge cefi state); primary manifest
+      `gs://market-data-tick-pred-prd-central-element-323112/_index/availability_index.parquet` blob.updated
+      2026-07-06T15:26:46Z (760,300 rows), merged 706,197 rows. Evidence artefact (local):
+      `/home/ubuntu/coverage_prediction_20260706T152707Z.json`.
 - [ ] [VERIFY] P1. **Reconcile the certified Layer-1 set against the Layer-2 lower bounds** — flag any AG where the
       handler audit (Plan 5) changed capture so Layer-2 is re-read too. Gate: a single certified snapshot table (all 5
       AGs, both layers) with provenance.
@@ -133,6 +149,23 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **✅ Task 005 CERTIFIED — prediction Layer-1 = 66.67%** (fresh local
+  `measure_honest_coverage.py --asset-group prediction` run at 2026-07-06 15:27 UTC on `is@6716f55` post-KALSHI-PERP
+  purge; primary manifest `gs://market-data-tick-pred-prd-central-element-323112` blob.updated 2026-07-06T15:26:46Z,
+  760,300 rows; merged 706,197 rows). Result: **expected_tuples 6, present_tuples 4, missing 2, stray 17 → 66.67%.**
+  Direction ✓ — 66.67 (stale 06-29) → 66.67 (fresh); denominator stable at 6 tuples (KALSHI-PERP contamination was
+  cefi-side, not prediction-side; prediction Layer-1 not expected to move — the purge Gate was a hygiene check, not a
+  denominator delta). **No fake KALSHI-PERP rows verified:** `raw.count('KALSHI-PERP')==0` and
+  `raw.count('POLYMARKET-PERP')==0` in the prediction coverage.json (post-purge state: cefi catalogue 376,984→351,511
+  rows, KALSHI-PERP==0). Layer-2 prediction rollup: coverage_pct **22.73%** (captured 8,711 / reachable 38,318;
+  empty_confirmed 667,879; attempted_failed 29,110; expected_unattempted 497; total 706,197; layer1_completeness_pct
+  66.67; denominator_status INCOMPLETE — 2 unwired MARKET_LIFECYCLE handlers so Layer-2 stays a lower bound but
+  tightened +2.17 pp vs 20.56 stale). 2 missing tuples both MARKET_LIFECYCLE (KALSHI + POLYMARKET
+  prediction_market) — unwired handlers, not adapter contamination. Task 001 (multi-AG re-run) NOT flipped by this
+  task — even though both its cross-plan PREREQs (KALSHI-PERP purge + Plan 5 unregistered-handler audit) are now DONE,
+  the /boot-per-shippable-unit discipline holds: task 001 flip is a separate shippable unit and will re-dispatch as its
+  own /boot. Remaining Layer-1 certification: 004 tradfi still BLOCKED-PLAN2 (Plan 2 rebuilds pending). Evidence
+  artefact (local): `/home/ubuntu/coverage_prediction_20260706T152707Z.json`.
 - **2026-07-06** — **🚧 Task 004 DOCUMENTED as BLOCKED-PLAN2** — tradfi Layer-1 certification cannot proceed until
   Plan 2 (`tradfi_v9_stage1_finish_2026_07_06`) tasks 2-11 land (IS catalogue rebuild, manifest rebuild, E7 CF verify).
   Currently Plan 2 has only 1/11 done (2026 v9 migration). Running the measurement now would certify against the stale
