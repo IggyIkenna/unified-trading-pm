@@ -97,6 +97,43 @@ depends_on: []
       Cloud Run job stdout/stderr does not reach Cloud Logging (affects every lifecycle-catalogue/enum job — the
       2026-07-04 cefi/prediction weekly-full diagnoses also had to work blind).
 
+## ROOT CAUSE #2 (2026-07-06, found after the ArrowTypeError fix unmasked it) — venue misrouting + cefi contamination
+
+The healed run (all writes green) exposed the DEEPER regression: the prediction records are being written to the WRONG
+STORE under the WRONG venue/type.
+
+- The heal run fetched a healthy universe (KALSHI 3,458 / POLYMARKET 7,577 after date filter) but wrote **0 records
+  under prediction venues** ("Shard completeness: fetched OK but 0 records after filtering: ['KALSHI','POLYMARKET']" →
+  `SOURCE_RETURNED_ZERO empty_confirmed` honest-absence rows — WRONG absence, the data exists).
+- The records went to the **CEFI instruments store** instead: e.g.
+  `instruments-store-cefi-prd/…/day=2026-07-05/venue=KALSHI-PERP/instruments.parquet` — 2,000 Kalshi SPORTS EVENT
+  CONTRACTS (`KXMVESPORTSMULTIGAMEEXTENDED-…`) typed **PERPETUAL**.
+- **cefi catalogue contamination: 25,473 `KALSHI-PERP` rows** (6.8% of 376,984), `available_from` 2026-06-27→07-05 —
+  i.e. contaminating since the producer change landed, and a large share of the "weekend cefi growth" observed in the
+  incremental-catalogue verification was THIS, not organic listings. Mitigation: **0 rows are MVP-tagged** (MVP views
+  - MVP-scoped downloads unaffected); 2,000 currently active.
+- **Suspect commit: instruments-service@4da6fe8** "feat: consolidate IS cefi/tradfi/prediction venue producers to UAC
+  (named Tardis grain-adapter; delete \_CEFI/\_TRADFI mirrors); **enable KALSHI-PERP/POLYMARKET-PERP enumeration** +
+  canonical venue casing" — landed in the exact regression window; the enabled PERP venue keys route the prediction
+  fetch's records into cefi per-venue bucket routing.
+- Timeline coherence: cefi contamination starts 06-27 (cefi index is NOT string-poisoned → those writes succeeded); the
+  prediction-store ArrowTypeError began 07-01 (root cause #1) — two independent failures from the same era, the second
+  masking the first.
+
+### OPERATOR DECISION REQUIRED (Ikenna) — how to unwind the misrouting
+
+**A (RECOMMENDED): disable the `KALSHI-PERP`/`POLYMARKET-PERP` enumeration** (surgical revert of the enable in the UAC
+venue producers) so prediction records key back to `KALSHI`/`POLYMARKET` → prediction store; then purge the 25,473 cefi
+rows (documented corrective: `--mode full --allow-catalogue-shrink` cefi run + by_date/manifest cleanup of
+`venue=KALSHI-PERP` cells). Smallest blast radius; preserves the rest of the 4da6fe8 consolidation. **B: keep the PERP
+venues but fix classification** — only genuine perp products (if such Kalshi/Polymarket products are actually intended)
+go to KALSHI-PERP; event contracts stay prediction. Needs the 4da6fe8 author's intent — do Kalshi/Polymarket perp
+products exist as a real roadmap item? **C: full revert of 4da6fe8** — heaviest; it also consolidated cefi/tradfi
+producers and deleted the mirrors; NOT recommended without the author. NOTE: whichever option — this touches ANOTHER
+WORKSTREAM's recent feature commit; the slot-2 agent deliberately did NOT modify UAC/producers unilaterally. Until
+decided, each 13:30 UTC run adds ~1 day of cefi contamination (non-MVP) and prediction by_date stays starved (catalogue
+stable on §7.3 tolerance).
+
 ## Progress log
 
 - 2026-07-06: Found during the incremental-catalogue plan's weekend verification (catalogue rows green but prediction
