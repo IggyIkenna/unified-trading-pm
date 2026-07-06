@@ -136,9 +136,17 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 - [ ] [CODE] P0. **2b. cefi gate-authority fix on `build_expected`** (`issues/cefi_layer1_denominator_gaps`): apply
       D2a/D2b → ASTER live-forward split (**enumerator `start_date` support is a hard prereq before the UAC capability
       flip**) → BYBIT-SPOT `PERPETUAL` relabel → C2 MVP-data-type intersection
-- [ ] [DATA] P0. **2c. cefi capture-rule residual** (`issues/cefi_universe_capture_rule`): drop
-      `CEFI_BASE_ASSET_UNIVERSE` cap from the IS adapter + **run the manifest reclassification `--apply`** (never
-      confirmed run → denominator may be stale for 6 venues)
+- [ ] [DATA] P0. **2c. cefi capture-rule residual** (`issues/cefi_universe_capture_rule`) — **REASSESSED (opus,
+      2026-07-06)**: **cap-drop = ✅ ALREADY DONE `is@0fe8e71` (06-23)** (`_passes_asset_filter` now applies only
+      accepted-quote + BTC/ETH- options gates; full-universe enumeration verified). **Reclassification `--apply` = ⛔ DO
+      NOT RUN — RE-SCOPED.** The `reclassify_cefi_manifest_mvp_universe_2026_06_23.py` script is unsafe + superseded:
+      (a) `_derive_base` DATA-LOSS bug — mis-parses Bitfinex `ADAF0:USTF0` + Kraken `PF_/PI_` wire-forms → would DELETE
+      ~380k+ legit in-MVP **captured** BITFINEX/KRAKEN rows; (b) architecturally superseded (honest-coverage-v2 forbids
+      deriving the denominator from the manifest — circular); (c) collides with the in-flight ASTER split (461k empty→EU
+      flips are ASTER `SOURCE_RETURNED_ZERO`); (d) the 6 "stale" venues are ALREADY in the manifest with real data. It
+      already ran 2× on 06-23 (snapshots exist — "never confirmed run" resolved). **→ retire the manifest-pruning
+      script; do the MVP filter as a read-time gate in `measure_honest_coverage` folded into 2a `build_expected`,
+      sequenced after 2b + the ASTER split.**
 - [ ] [DATA] P0. **2d. IS-catalogue completion `B0→B1→B2`** (`instruments_mtds_subset`): backfill instruments to
       no-missing (B0) → regen catalogue + un-pause daily schedulers (B1) → codify MVP-vs-total universe (B2). _B0 gates
       every expected-universe consumer._
@@ -241,6 +249,16 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **2c cefi capture-rule REASSESSED (opus agent) — prevented a ~380k-row data-loss.** Cap-drop half was
+  ALREADY shipped (`is@0fe8e71`, 06-23). Reclassification half STOPPED at the smoke (mutated NOTHING): the
+  `reclassify_cefi_manifest_mvp_universe_2026_06_23.py` script would DELETE ~380k+ legit in-MVP **captured**
+  BITFINEX/KRAKEN rows via a `_derive_base` bug (mis-parses Bitfinex `ADAF0:USTF0` + Kraken `PF_/PI_` wire-forms → wrong
+  base → perp-gate drops their spot rows), is architecturally superseded (honest-coverage-v2 forbids deriving the
+  denominator from the manifest — circular), collides with the in-flight ASTER split (461k ASTER `SOURCE_RETURNED_ZERO`
+  empty→EU flips), and destabilises measurement (index rewrite flips PRIMARY-bucket selection). It already ran 2× on
+  06-23 (snapshots exist). **RE-SCOPE (operator decision): retire the manifest-pruning script → MVP filter as a
+  read-time gate in `measure_honest_coverage`, folded into 2a `build_expected`, sequenced after 2b + the ASTER split.**
+  No data mutated, no reserved file touched.
 - **2026-07-06** — **TradFi smoke VALIDATED → fanned out 2020-2024.** The 2025 smoke proved the D3 fix: memory flat at
   **6.7 GB / 64 GB** for 18+ min while migrating candles (172k/577k, steady ~11k/min) — vs. the 06-29 climb-to-OOM at
   workers 64. Setup ran in ~1 min (`uv` install). Fanned out **2020, 2021, 2022, 2023, 2024** as 5 concurrent per-year
