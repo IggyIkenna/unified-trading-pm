@@ -145,6 +145,12 @@ Three steady-state surfaces + the final verdict:
         ETA ~16:30 UTC today; (E) P2a enrichment coordinator PID 3036674 RUNNING, ETA days (TEAMS 191k EU + 6 other
         types); (F) P2c features 0%. No action taken — no code or data changes needed. /blocked filed; park until
         Understat VM TERMINATED (~2026-07-01 02:00 UTC) + P2c features complete.
+      — 2026-07-06 slot-4 SAME-DAY RE-DISPATCH (~22:00 UTC, BLK-4d04041a): task -006 dispatched ~1h after
+        slot-12's verify. No structural change since slot-12 ran — Understat VM still not re-launched,
+        P2a-enrichment still running, P2b-footystats VM `fs-backfill-20260706-161335` still running per slot-12's
+        log. Same class of dispatch bug as `honest_coverage_smoke_harness_4ag_verify-004` (BLK-2a8ba36d /
+        BLK-8a12c73b / BLK-7fc2ba40 — priority=999 alone does not suppress dispatch). No verify re-run — slot-12
+        evidence definitive. /blocked filed; continue via can_continue.
       — 2026-07-06 slot-12 VERIFY RUN (20:52 UTC): Queried IS availability_index (152MB parquet, mtime
         2026-07-06T20:52:51Z; 5,386,738 rows). Filtered to 6 sports sources (api_football / footystats / odds_api /
         open_meteo / soccer_football_info / transfermarkt / understat).
