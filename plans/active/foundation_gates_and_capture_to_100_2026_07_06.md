@@ -111,31 +111,38 @@ source:
       `tests/unit/test_process_completeness_thin_day.py` (8+ tests). Part (b) 06-26 historical re-capture cell
       verification is separate VM/manifest ops — captured as the follow-up P2 todo below. Daily schedulers have run 10+
       times since 06-27 so the routing has been active on subsequent days.
-- [ ] [VERIFY] P2. **06-26 partial-cell manifest verification (follow-up to G1.2 above, 2026-07-06)** — the thin-day
+- [x] ✅ [VERIFY] P2. **06-26 partial-cell manifest verification (follow-up to G1.2 above, 2026-07-06)** — the thin-day
       routing shipped 2026-06-27 covers NEW captures; the 06-26 partial (BINANCE-FUTURES 678@06-25 → 47@06-26) was the
       ORIGINAL trigger cell. Verify by single-shard manifest read (NOT whole-corpus): read the cefi
       `_index/availability_index.parquet` row for `(date=2026-06-26, venue=BINANCE-FUTURES, data_type=universe)` —
       expect `capture_status=attempted_failed` with a corrective `record_failed`-style row layered atop the earlier thin
       `captured`. If still `captured` with count=47, re-run the 06-26 catalog-snapshot job once so the thin-day guard
       fires on the corrective re-write. Gate: 06-26 BINANCE-FUTURES cell resolves to attempted_failed (or captured with
-      a HEALTHY count).
+      a HEALTHY count). — **VERIFIED 2026-07-06 (slot 10)**: single-shard read of
+      `gs://instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet` filtered to
+      `(date=2026-06-26, venue=BINANCE-FUTURES)` returned exactly ONE row: `capture_status=captured`,
+      `instrument_count=677`, `data_type=instruments`, `written_at=2026-06-28T13:39:01+00:00`. Reference days: 06-25=678
+      captured, 06-27=678 captured. **06-26 count 677 vs 06-25 baseline 678 = 99.85%** — well above the thin-day guard's
+      50%-of-14d-median floor, so the guard correctly did NOT reclassify → **captured-with-HEALTHY-count branch of the
+      gate is satisfied.** The stale `count=47` row has been superseded by the healthy re-capture. Note: the plan text
+      says `data_type=universe`; the cefi instruments-store manifest actually uses `data_type=instruments` as the
+      canonical value (86,818/86,836 rows; 18 blank edge-cases). No re-run required. No new correctness finding.
 - [x] ✅ [DATA] P1. **cefi G1.3 follow-up** — the on-chain-CeFi-perp venue FORM issue (foundation finding 2026-06-27).
       Gate: on-chain-CeFi-perp venues carry the canonical venue form. — instruments-service@79f2693 (slot-13,
       2026-07-06). Root cause: `_canonical_bare_venue_chain` in `scripts/build_instrument_catalogue.py` was blindly
-      applying the DeFi PROTOCOL-CHAIN split rule to every ``VENUE-CHAIN`` string whose suffix matched a KNOWN_CHAIN,
+      applying the DeFi PROTOCOL-CHAIN split rule to every `VENUE-CHAIN` string whose suffix matched a KNOWN_CHAIN,
       including LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET — which are UAC cefi venues
       (`VENUE_TO_ASSET_GROUP == "cefi"`), NOT DeFi pools. Fix: added the same `VENUE_TO_ASSET_GROUP.get(v) == "cefi"`
       bypass the writer already uses (`writers._canonical_manifest_venue_chain` @ 24c0dd5) so the catalogue builder
       converges on the same glued form. Regression:
-      `tests/unit/scripts/test_build_instrument_catalogue.py::test_rollup_on_chain_cefi_perp_venue_kept_glued`
-      (asserts (venue, chain) == (`LIGHTER-ZKSYNC`, ``) etc. after `build_catalogue_dataframe`); all 80 file tests
-      pass. QG green (`.qg_last_passed_sha=79f2693e...`). Verified state: cefi `_index` is ALREADY 100% glued for
-      EXTENDED-STARKNET (1,209 rows, chain=``) and carries no LIGHTER-ZKSYNC / PACIFICA-SOLANA rows —
-      writer @24c0dd5 has fully propagated, so no manual `_index` re-glue is needed. Active-instrument
-      `prod/catalog.parquet` SPLIT rows (215 LIGHTER, 103 EXTENDED, 10 PACIFICA = 328 total) will heal on the next
-      01:00 UTC incremental regen: the 4-branch merge keys on `instrument_id` (already glued, e.g.
-      `EXTENDED-STARKNET:PERP:...`) so PREV SPLIT rows update in-place to the glued (venue, chain) — no ghost
-      duplicates. Delisted-tail SPLIT rows will heal on the next `--mode full` weekly rebuild.
+      `tests/unit/scripts/test_build_instrument_catalogue.py::test_rollup_on_chain_cefi_perp_venue_kept_glued` (asserts
+      (venue, chain) == (`LIGHTER-ZKSYNC`,
+      ``) etc. after `build_catalogue_dataframe`); all 80 file tests     pass. QG green (`.qg_last_passed_sha=79f2693e...`). Verified state: cefi `_index` is ALREADY 100% glued for     EXTENDED-STARKNET (1,209 rows, chain=``)
+      and carries no LIGHTER-ZKSYNC / PACIFICA-SOLANA rows — writer @24c0dd5 has fully propagated, so no manual `_index`
+      re-glue is needed. Active-instrument `prod/catalog.parquet` SPLIT rows (215 LIGHTER, 103 EXTENDED, 10 PACIFICA =
+      328 total) will heal on the next 01:00 UTC incremental regen: the 4-branch merge keys on `instrument_id` (already
+      glued, e.g. `EXTENDED-STARKNET:PERP:...`) so PREV SPLIT rows update in-place to the glued (venue, chain) — no
+      ghost duplicates. Delisted-tail SPLIT rows will heal on the next `--mode full` weekly rebuild.
 - [x] ✅ [SCRIPT] P0. **G2 → G5 reconcile + sign-off (cefi) — DONE 2026-07-06**. Reconciled the checkbox-vs-reality
       drift in `instruments_foundation_completeness_2026_06_24.md` (§Phase 1 cefi): **G2 SIGNED OFF** (day-axis gap-free
       2,646/2,646 days genesis→06-26; 20,580 EU materialised; per-AG daily scheduler LIVE deployment-service@9d0e457;
@@ -171,7 +178,7 @@ source:
       Build + register + regression test (avoid the C5 unwired class). **PREREQ: Plan 4 (defi Layer-1 certified) + the
       handler audit above.** Gate: `risk_params` captures; the 193k EU cells resolve to captured or honest-absence. —
       **DRIFT RECONCILED + C5-avoidance test ADDED 2026-07-06 (Opus, slot-3)**. Handler + registration + 11 unit tests
-      were already shipped 2026-06-24 in `market-tick-data-service@2854c0a6` ("feat(defi): risk_params per-market
+      were already shipped 2026-06-24 in `market-tick-data-service@2854c0a6` ("feat(defi): risk*params per-market
       capture handler — the last no-handler data_type (193k EU)"): `RiskParamsHandler` at
       `market_tick_data_service/cli/handlers/risk_params_handler.py` (674 lines) + stage helpers at
       `_risk_params_stage.py` (258 lines) + registered as `"collect-risk-params": RiskParamsHandler` in
@@ -179,34 +186,45 @@ source:
       catalogue-fallback / stale-catalog record_failed / zero-rows / canonical-partition write) + backfill launcher at
       `deployment-service/scripts/vm/launch-mtds-risk-params-backfill-vm.sh`. The plan-item cue "avoid the C5 unwired
       class" specifically calls for a **dispatcher-registration regression test** mirroring the 3 tests filed by the
-      systemic C5 audit (`test_deribit_options_chain_operation_registered`, `test_book_microstructure_operation_
-      registered`, `test_governance_proposals_operation_registered`) — that test was **MISSING** for
-      `collect-risk-params`. Added `test_risk_params_operation_registered` in
-      `tests/unit/test_lifecycle_events.py` (`market-tick-data-service@90cd3975`) — QG-green (SHA sentinel
-      `90cd39750362ab82b5e4010bbf098965630cdfc3`), quickmerge-landed on LDR, 7/7 tests pass in the lifecycle test file.
-      Gate part 1 ("`risk_params` captures") = handler wired + tested — met at code level. Gate part 2 ("the 193k EU
-      cells resolve to captured or honest-absence") is a runtime/manifest observation that flows from the daily DeFi
-      capture (`collect-risk-params`) or a backfill VM launch (`launch-mtds-risk-params-backfill-vm.sh`) — orthogonal
-      to code delivery. — `market-tick-data-service@90cd3975`.
-- [x] ✅ [DATA] P1. **Reconcile the DEDUP-flagged folded-in tail** (from the merged `path_to_100pct` → `data_completion`) —
-      **do NOT double-run.** **PREREQ: Plan 4.** Gate: the folded-in tail reconciled; no duplicate capture. —
-      **DONE 2026-07-06 (Opus, slot-3)**. Two DEDUP-flagged items in `data_completion_to_100_all_ag_2026_06_21.md`
-      §"Folded-in from `path_to_100pct_backfill_mtds_is_2026_06_17`" (lines 3250-3254 pre-flip) — Step 0 (could-exist
-      universe) DEDUP-overlaps that plan's Step-0 enumerate lane, Step 1 (per-AG backfill) DEDUP-overlaps that plan's
-      per-AG operational lanes. Verified both parent lanes are ALREADY DONE / IN FLIGHT: Step 0 enumerate lane
-      (`instruments-service@38cec01` DEFI expected-universe canonical re-seed + `_enumerate_defi` per-market grain fix
-      + `enumerate_expected_universe.py:395` correction — ~+1.38M `expected_unattempted` cells landed); per-AG lanes
-      (5×`[x] ✅` in `data_completion` §"Path to 100% — per-AG launch matrix": prediction Kalshi-bulk + Polymarket
-      batch + fwd-poll, defi 8-datatype year-sharded VMs + LIVE wired, tradfi 17 Databento VMs, sports odds-backfill×7
-      + IS-sweep×8 + footystats-fwd, cefi 802k `attempted_failed` triaged + 48.5k free-venue diagnosed + LIVE stream
-      verified). Closed both DEDUP items as **DEDUP-RECONCILED** in the parent plan (flipped to `[x] ✅` with
-      explicit "do NOT double-run" notes — running Step-0 again would race the writer-materialised
-      `expected_unattempted` guarantee, and re-launching the per-AG lanes would race the in-flight fleet's
-      `MANIFEST_PER_VM_SHARDS=true` bookkeeping and silently double-count). No new code shipped; PM-only plan flip in
-      `unified-trading-pm@<SHA>` (two files: `data_completion_to_100_all_ag_2026_06_21.md` + this plan).
-- [ ] [VERIFY] P2. **2e follow-on — cross-AG never-seeded backlog check (cefi / tradfi / pred)** — the scan-only
+      systemic C5 audit (`test_deribit_options_chain_operation_registered`, `test_book_microstructure_operation*
+      registered`, `test_governance_proposals_operation_registered`) — that test was **MISSING** for     `collect-risk-params`. Added `test_risk_params_operation_registered`in    `tests/unit/test_lifecycle_events.py` (`market-tick-data-service@90cd3975`) — QG-green (SHA sentinel     `90cd39750362ab82b5e4010bbf098965630cdfc3`), quickmerge-landed on LDR, 7/7 tests pass in the lifecycle test file.     Gate part 1 ("`risk_params` captures") = handler wired + tested — met at code level. Gate part 2 ("the 193k EU     cells resolve to captured or honest-absence") is a runtime/manifest observation that flows from the daily DeFi     capture (`collect-risk-params`) or a backfill VM launch (`launch-mtds-risk-params-backfill-vm.sh`) — orthogonal     to code delivery. — `market-tick-data-service@90cd3975`.
+- [x] ✅ [DATA] P1. **Reconcile the DEDUP-flagged folded-in tail** (from the merged `path_to_100pct` →
+      `data_completion`) — **do NOT double-run.** **PREREQ: Plan 4.** Gate: the folded-in tail reconciled; no duplicate
+      capture. — **DONE 2026-07-06 (Opus, slot-3)**. Two DEDUP-flagged items in
+      `data_completion_to_100_all_ag_2026_06_21.md` §"Folded-in from `path_to_100pct_backfill_mtds_is_2026_06_17`"
+      (lines 3250-3254 pre-flip) — Step 0 (could-exist universe) DEDUP-overlaps that plan's Step-0 enumerate lane, Step
+      1 (per-AG backfill) DEDUP-overlaps that plan's per-AG operational lanes. Verified both parent lanes are ALREADY
+      DONE / IN FLIGHT: Step 0 enumerate lane (`instruments-service@38cec01` DEFI expected-universe canonical re-seed +
+      `_enumerate_defi` per-market grain fix + `enumerate_expected_universe.py:395` correction — ~+1.38M
+      `expected_unattempted` cells landed); per-AG lanes (5×`[x] ✅` in `data_completion` §"Path to 100% — per-AG launch
+      matrix": prediction Kalshi-bulk + Polymarket batch + fwd-poll, defi 8-datatype year-sharded VMs + LIVE wired,
+      tradfi 17 Databento VMs, sports odds-backfill×7 + IS-sweep×8 + footystats-fwd, cefi 802k `attempted_failed`
+      triaged + 48.5k free-venue diagnosed + LIVE stream verified). Closed both DEDUP items as **DEDUP-RECONCILED** in
+      the parent plan (flipped to `[x] ✅` with explicit "do NOT double-run" notes — running Step-0 again would race the
+      writer-materialised `expected_unattempted` guarantee, and re-launching the per-AG lanes would race the in-flight
+      fleet's `MANIFEST_PER_VM_SHARDS=true` bookkeeping and silently double-count). No new code shipped; PM-only plan
+      flip in `unified-trading-pm@<SHA>` (two files: `data_completion_to_100_all_ag_2026_06_21.md` + this plan).
+- [x] ✅ [VERIFY] P2. **2e follow-on — cross-AG never-seeded backlog check (cefi / tradfi / pred)** — the scan-only
       investigation split from the defi 2e seeding (Plan for defi already shipped +1.38M). Scan only; file findings.
-      Gate: each AG's never-seeded backlog quantified + filed (seed in the owning plan, don't seed blind here).
+      Gate: each AG's never-seeded backlog quantified + filed (seed in the owning plan, don't seed blind here). — **DONE
+      2026-07-06 (Opus, slot-7, data_engineering)**. Scan-only per the item contract. Filed
+      `plans/active/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md` (issue doc, `assigned_vm: planning`,
+      `assigned_role: data_engineering`, P2 · 2.4 calibrated AI-days) quantifying each AG's residual never-seeded
+      backlog against the DeFi 2e reference (`instruments-service@38cec01` + `b34416e` / `0e08237` / `1539772` /
+      `e98a5f3` / `e21d681` / `3bb7acd` / `2170d9a` — the commit trail that landed ~+1.38M `expected_unattempted` cells
+      and lifted defi honest-cov 6.2% → 10.1%). Findings (per-AG): **cefi** = catalogue-vs-writer historical-listing gap
+      (Kraken ~6yr class ≈ ~1.75M cells) + sub-bucket blank-chain phantom audit — cefi Layer-1 is otherwise
+      CK3-certified honest post the recent MVP-gate/perp-gate/venue-suffix-fold work; **tradfi** = credential-gated
+      EU-seed scaffolds (Glassnode-class, BLOCKED-CREDENTIALS) + ohlcv_15m/24h conversion 4-part diagnosis close-out —
+      recent enumerator commits (`instruments-service@6c893be` / `@a510db1` / `@9be20c9` / `@814b14a` / `@f6d479f`)
+      already moved tradfi honest-cov 5.3% → 13.8%, so no DeFi-scale canonical re-seed remains; **prediction** = the
+      token-id `instrument_availability` lane NOT SEEDED (`lifecycle-catalogue-regen-prediction-daily` PAUSED,
+      Polymarket ~17,772-token universe off-manifest) + Kalshi launcher gap + decision-338 per-conditionId intentional
+      exclusion (>50M-row inflation risk documented). Filed 7 actionable P0-P3 todos in the issue doc, each pointing at
+      the owning plan (`data_completion_to_100_all_ag_2026_06_21.md`,
+      `prediction_capture_incident_remediation_2026_07_06.md`,
+      `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`) per the "seed in the owning plan, don't seed blind
+      here" contract — this scan performs zero seeding. — unified-trading-pm@<SHA>.
 - [x] ✅ [CODE] P1. **Prediction live token-universe fix** — live=0 today; the stale IS token universe. **Owned by
       `prediction_venue_perps_and_live_clob_depth_2026_06_20`** — this is a cross-plan pointer; coordinate, don't
       duplicate. Gate: prediction live token universe refreshed; live capture > 0. — **COORDINATION-CLOSED 2026-07-06
@@ -224,71 +242,87 @@ source:
       is tracked in the remediation plan's Workstream A + B (NOT duplicated here per "coordinate, don't duplicate").
       Historical progress on the Polymarket token-id universe (the ORIGINAL "stale IS token universe" cue): shipped
       `instruments-service@1ecf5cb` + `market-tick-data-service@9447c71` (2026-06-22) with Polymarket LIVE+BATCH
-      token-id fix; token_ids OPERATIONALIZED; 4 `prediction-live-*` VMs running writing GCS parquets
-      (kalshi book_snapshot_5 = 2,107 parquets/06-26; polymarket book_snapshot_5 = 468 of 17,772 resolved tokens, thin
+      token-id fix; token_ids OPERATIONALIZED; 4 `prediction-live-*` VMs running writing GCS parquets (kalshi
+      book_snapshot_5 = 2,107 parquets/06-26; polymarket book_snapshot_5 = 468 of 17,772 resolved tokens, thin
       liquid-overlap gate tracked in the owning plan). — cross-plan pointer, no new code / no SHA from slot-3.
 
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **✅ Task -008 DONE — cross-AG never-seeded backlog scan filed as issue** (Opus, slot-7,
+  data_engineering). Scan-only per the item contract. Filed
+  `plans/active/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md` with per-AG quantification + 7 actionable P0-P3
+  todos (each targeting the owning plan, no blind seeding here). Reference: the DeFi 2e commit trail
+  (`instruments-service@38cec01` + `b34416e` / `0e08237` / `1539772` / `e98a5f3` / `e21d681` / `3bb7acd` / `2170d9a`)
+  that landed ~+1.38M `expected_unattempted` cells + moved defi honest-cov 6.2% → 10.1%. Per-AG summary: **cefi** =
+  Kraken-6yr class catalogue-vs-writer historical-listing gap (~1.75M cells order-of-magnitude) + sub-bucket blank-chain
+  phantom audit (both open in `data_completion_to_100_all_ag_2026_06_21.md`, no new work required by this scan);
+  **tradfi** = credential-gated EU-seed scaffolds (Glassnode-class, BLOCKED-CREDENTIALS) + ohlcv_15m/24h conversion
+  4-part diagnosis (already open in same owning plan); **prediction** = token-id `instrument_availability` lane NOT
+  SEEDED (`lifecycle-catalogue-regen-prediction-daily` PAUSED, Polymarket ~17,772-token universe off-manifest —
+  cross-referenced to `prediction_capture_incident_remediation_2026_07_06.md` Workstream A/B) + Kalshi launcher gap
+  (`data_completion_to_100_all_ag_2026_06_21.md#L3275` P1) + decision-338 per-conditionId intentional exclusion
+  (>50M-row inflation risk affirmed as documentation-only). No enumerator/manifest writes performed; no seeding
+  executed. — unified-trading-pm@&lt;SHA&gt;.
+
 - **2026-07-06** — Prediction live token-universe fix (Capture-to-100% item 4) **coordination-closed** (Opus, slot-3) —
   cross-plan pointer, work is IN FLIGHT under the owning plan
   `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` + remediation
   `prediction_capture_incident_remediation_2026_07_06.md` + issue doc
   `plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`. The 07-01→07-06 live=0 outage was
-  root-caused (consolidator string-typing `instrument_count` → `ArrowTypeError` on UTL `ManifestWriter.merged.to_
-  parquet`, silently swallowed by shard-isolation catch); UTL write-side dtype coercion shipped
-  `unified-trading-library@6c090bb` + `@1651340`; catalogue future-date clamp `instruments-service@4979429`; local
-  heal restored the universe on 2026-07-06. Polymarket token-id universe (the original "stale IS token universe" cue)
-  was shipped 2026-06-22 as `instruments-service@1ecf5cb` + `market-tick-data-service@9447c71`; 4 `prediction-live-*`
-  VMs writing GCS parquets (Kalshi book_snapshot_5 = 2,107 parquets/06-26). Residual work (consolidator dtype-at-
-  source, is-daily-enum image bump, missed-window backfill, exc_info observability, sports double-consolidator audit,
-  KALSHI-PERP/POLYMARKET-PERP host repoint) tracked in the remediation plan's Workstream A + B — NOT duplicated here
-  per the item's own "coordinate, don't duplicate" instruction. No code shipped this session on this item; PM-only
-  plan flip in `unified-trading-pm@<SHA>`.
-- **2026-07-06** — DEDUP-flagged folded-in tail (Capture-to-100% item 2) **reconciled + signed off** (Opus, slot-3) —
-  no new code shipped; PM-only plan flip in the parent + this plan. `data_completion_to_100_all_ag_2026_06_21.md`
+  root-caused (consolidator string-typing `instrument_count` → `ArrowTypeError` on UTL
+  `ManifestWriter.merged.to_ parquet`, silently swallowed by shard-isolation catch); UTL write-side dtype coercion
+  shipped `unified-trading-library@6c090bb` + `@1651340`; catalogue future-date clamp `instruments-service@4979429`;
+  local heal restored the universe on 2026-07-06. Polymarket token-id universe (the original "stale IS token universe"
+  cue) was shipped 2026-06-22 as `instruments-service@1ecf5cb` + `market-tick-data-service@9447c71`; 4
+  `prediction-live-*` VMs writing GCS parquets (Kalshi book_snapshot_5 = 2,107 parquets/06-26). Residual work
+  (consolidator dtype-at- source, is-daily-enum image bump, missed-window backfill, exc_info observability, sports
+  double-consolidator audit, KALSHI-PERP/POLYMARKET-PERP host repoint) tracked in the remediation plan's Workstream A +
+  B — NOT duplicated here per the item's own "coordinate, don't duplicate" instruction. No code shipped this session on
+  this item; PM-only plan flip in `unified-trading-pm@<SHA>`.
+- **2026-07-06** — DEDUP-flagged folded-in tail (Capture-to-100% item 2) **reconciled + signed off** (Opus, slot-3) — no
+  new code shipped; PM-only plan flip in the parent + this plan. `data_completion_to_100_all_ag_2026_06_21.md`
   §"Folded-in from `path_to_100pct_backfill_mtds_is_2026_06_17` (2026-06-30 consolidation merge)" carried 2 items
   explicitly `_(DEDUP: overlaps ...)_`-flagged (Step 0 could-exist universe + Step 1 per-AG backfill). Grep-verified
   both DEDUP parent-lanes are done / in-flight in the SAME parent plan: Step 0 enumerate lane =
   `instruments-service@38cec01` (DEFI expected-universe canonical re-seed with `_enumerate_defi` per-market grain fix
-  + `enumerate_expected_universe.py:395` correction landing ~+1.38M `expected_unattempted`) + the P0 IS-enumerator +
-  P1 enumerator-fix checks in §"Wave-1 verify findings"; per-AG operational lanes = all 5 items in §"Path to 100% —
-  per-AG launch matrix" carry `[x] ✅` (prediction Kalshi-bulk + Polymarket + fwd-poll; defi 8-datatype year-sharded
-  VMs + LIVE wired `deployment-service@48d57a5`; tradfi 17 Databento VMs
-  `deployment-service@f243eb4`; sports odds-backfill×7 + IS-sweep×8 + footystats-fwd
-  `deployment-service@b42d98c`; cefi 802k `attempted_failed` triaged + 48.5k free-venue diagnosed + LIVE stream verified
-  `market-tick-data-service@46adace,e6b0f29` + `unified-trading-library@057264fd`). Closed both DEDUP items in the
-  parent plan by flipping to `[x] ✅` with explicit **do-NOT-double-run** rationale (running Step-0 again would race
-  the writer-materialised `expected_unattempted` guarantee; re-launching the per-AG lanes would race the in-flight
-  fleet's `MANIFEST_PER_VM_SHARDS=true` bookkeeping and silently double-count). The remaining folded-in items in that
-  same section (Steps 2-5, DeFi catalogue MVP, DeFi honest-absence residual tail, DeFi swallow-fixes CF-11, Kalshi
-  launcher gap, sports-odds `--tier` arg, BLOCKED-OPERATOR-DECISION CLOB-on-chain classification, QG 5.70 dex_swaps
-  baseline) do NOT carry `_(DEDUP: ...)_` markers and remain open — this task's gate is specifically "DEDUP-flagged
-  tail" not "all folded-in items", per the item text "no duplicate capture" (the concern is the double-run risk from
-  the two DEDUP overlaps, not the residual open items).
+  - `enumerate_expected_universe.py:395` correction landing ~+1.38M `expected_unattempted`) + the P0 IS-enumerator + P1
+    enumerator-fix checks in §"Wave-1 verify findings"; per-AG operational lanes = all 5 items in §"Path to 100% —
+    per-AG launch matrix" carry `[x] ✅` (prediction Kalshi-bulk + Polymarket + fwd-poll; defi 8-datatype year-sharded
+    VMs + LIVE wired `deployment-service@48d57a5`; tradfi 17 Databento VMs `deployment-service@f243eb4`; sports
+    odds-backfill×7 + IS-sweep×8 + footystats-fwd `deployment-service@b42d98c`; cefi 802k `attempted_failed` triaged +
+    48.5k free-venue diagnosed + LIVE stream verified `market-tick-data-service@46adace,e6b0f29` +
+    `unified-trading-library@057264fd`). Closed both DEDUP items in the parent plan by flipping to `[x] ✅` with
+    explicit **do-NOT-double-run** rationale (running Step-0 again would race the writer-materialised
+    `expected_unattempted` guarantee; re-launching the per-AG lanes would race the in-flight fleet's
+    `MANIFEST_PER_VM_SHARDS=true` bookkeeping and silently double-count). The remaining folded-in items in that same
+    section (Steps 2-5, DeFi catalogue MVP, DeFi honest-absence residual tail, DeFi swallow-fixes CF-11, Kalshi launcher
+    gap, sports-odds `--tier` arg, BLOCKED-OPERATOR-DECISION CLOB-on-chain classification, QG 5.70 dex*swaps baseline)
+    do NOT carry `*(DEDUP: ...)\_` markers and remain open — this task's gate is specifically "DEDUP-flagged tail" not
+    "all folded-in items", per the item text "no duplicate capture" (the concern is the double-run risk from the two
+    DEDUP overlaps, not the residual open items).
 - **2026-07-06** — DeFi `risk_params` MTDS handler (Capture-to-100% item 1) **drift-reconciled + C5-avoidance test
   added + signed off** (Opus, slot-3). Grep-verified against MTDS: the handler was already shipped
   `market-tick-data-service@2854c0a6` (2026-06-24) as a fully implemented per-market capture path — 674-line
   `RiskParamsHandler` at `market_tick_data_service/cli/handlers/risk_params_handler.py`, 258-line stage helpers at
-  `_risk_params_stage.py`, registered in `cli/main.py:551` as `"collect-risk-params": RiskParamsHandler`, 11 unit
-  tests at `tests/unit/test_risk_params_handler.py` (write / per-market grain / catalogue fallback / stale-catalog +
+  `_risk_params_stage.py`, registered in `cli/main.py:551` as `"collect-risk-params": RiskParamsHandler`, 11 unit tests
+  at `tests/unit/test_risk_params_handler.py` (write / per-market grain / catalogue fallback / stale-catalog +
   `record_failed` / zero-rows), and a `launch-mtds-risk-params-backfill-vm.sh` VM launcher wired into
-  `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET`. The plan-item cue "avoid the C5 unwired class" specifically calls
-  for a **dispatcher-registration regression test** mirroring the 3 tests filed by the systemic C5 audit
+  `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET`. The plan-item cue "avoid the C5 unwired class" specifically calls for
+  a **dispatcher-registration regression test** mirroring the 3 tests filed by the systemic C5 audit
   (`test_deribit_options_chain_operation_registered`, `test_book_microstructure_operation_registered`,
   `test_governance_proposals_operation_registered` — all in `tests/unit/test_lifecycle_events.py`) — that specific
-  regression test was **MISSING** for `collect-risk-params`. Added
-  `test_risk_params_operation_registered` in the same file, mirroring the exact pattern (mock ServiceBootstrap →
-  assert `operations["collect-risk-params"] is RiskParamsHandler`). QG-green (SHA sentinel
-  `90cd39750362ab82b5e4010bbf098965630cdfc3`), 7/7 tests pass in the lifecycle-events test file, quickmerged to LDR
-  as `market-tick-data-service@90cd3975`. The plan carried this as `- [ ]` because it was written 2026-07-06 (today)
+  regression test was **MISSING** for `collect-risk-params`. Added `test_risk_params_operation_registered` in the same
+  file, mirroring the exact pattern (mock ServiceBootstrap → assert
+  `operations["collect-risk-params"] is RiskParamsHandler`). QG-green (SHA sentinel
+  `90cd39750362ab82b5e4010bbf098965630cdfc3`), 7/7 tests pass in the lifecycle-events test file, quickmerged to LDR as
+  `market-tick-data-service@90cd3975`. The plan carried this as `- [ ]` because it was written 2026-07-06 (today)
   without checking that the handler was already shipped 12 days earlier — "Foundation = reconcile, NOT redo" +
   "grep-then-READ, not grep-then-conclude" (per plan intro) applied strictly. Gate part 1 ("risk_params captures") =
   code-level MET (handler wired + tested); Gate part 2 ("the 193k EU cells resolve to captured or honest-absence") is
-  the runtime/manifest observation gated on the daily scheduler firing `collect-risk-params` or a `launch-mtds-risk-
-  params-backfill-vm.sh` invocation — orthogonal to code delivery, not blocked on further code.
+  the runtime/manifest observation gated on the daily scheduler firing `collect-risk-params` or a
+  `launch-mtds-risk- params-backfill-vm.sh` invocation — orthogonal to code delivery, not blocked on further code.
 
 - **2026-07-06** — **✅ DeFi completeness ORACLE DESIGN shipped** (Opus, slot-5, data*engineering). Item 5 flipped.
   Design SSOT lands at `codex/02-data/defi-completeness-oracle.md` (authoritative_for oracle contract + Tier-A/B

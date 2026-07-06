@@ -121,15 +121,25 @@ follow-ons:
       the cefi/tradfi/defi non-sports path (matches `REFERENCE_DATA_TYPE` in migrate_instruments_store_v9.py). Add a
       unit test that asserts a fresh cefi captured row lands with `data_type='instruments'` (repo: instruments-service).
       — instruments-service@46ba62b + regression tests at tests/unit/test_orchestrator_process.py:233 (cefi) & :275 (defi)
-- [ ] [DATA] P1. One-off patch script under `scripts/` that reads
-      `instruments-store-cefi-prd/_index/availability_index.parquet`, selects rows with `date >= 2026-06-27` AND
-      `capture_status == 'captured'` AND (`data_type is null` OR `data_type == ''`) AND `venue != ''` (cefi
-      venue-grain), and rewrites `data_type = 'instruments'` + writes the fixed rows back via the manifest writer's
-      canonical update path. Idempotent + a dry-run flag. Verify via the same read → 0 blank cefi captured rows post-run
-      (repo: instruments-service).
-- [ ] [DATA] P2. Verify defi + tradfi are not affected. If the same regression exists there, extend the (a) fix to
+- [x] ✅ [DATA] P1. One-off patch script shipped instruments-service@40bdfe1d as
+      `scripts/backfill_cefi_blank_instruments_data_type_2026_07_06.py`. Contract: filter
+      `date >= 2026-06-27 AND capture_status == 'captured' AND (data_type is null OR data_type == '') AND venue != ''`;
+      rewrite `data_type = 'instruments'` (matches `REFERENCE_DATA_TYPE` in `migrate_instruments_store_v9.py:126`);
+      dry-run by default; `--apply --confirm` mutates; captured-row-count safety gate; post-run 0-blank verify;
+      idempotent. **Runtime verification 2026-07-06 dry-run against instruments-store-cefi-prd: manifest ALREADY CLEAN —
+      297/297 cefi captured venue-grain rows on 2026-06-27+ carry `data_type='instruments'` (writer fix `@46ba62b` +
+      periodic `migrate_instruments_store_v9` run already remediated the historical blanks)**. Script serves as a
+      defensive idempotent safety-net for future recurrence. Gate met: 0 blank cefi captured rows post-verify.
+- [x] ✅ [DATA] P2. Verify defi + tradfi are not affected. If the same regression exists there, extend the (a) fix to
       include their data_type stamp + (b) run the patch on their buckets too (`instruments-store-defi-prd`,
-      `instruments-store-tradfi-prd`) (repo: instruments-service).
+      `instruments-store-tradfi-prd`) (repo: instruments-service). — **DONE 2026-07-06 (Opus, slot-5)**. Regression
+      confirmed on both stores; mirror-script `scripts/backfill_defi_tradfi_blank_instruments_data_type_2026_07_06.py`
+      shipped `instruments-service@523d427` with same contract as the cefi oneoff (dry-run default; `--apply --confirm`
+      mutates; captured-row-count safety gate; idempotent). Runtime results (2026-07-06 `--apply --confirm`):
+      **defi 536 blank captured rows → `data_type='instruments'` (28 venues, 10 dates)**; **tradfi 46 blank captured rows
+      → `data_type='instruments'` (7 venues, 10 dates)**. Post-run verify: 0 blank captured rows on 2026-06-27+ for both
+      buckets. Safety gate OK: captured row totals preserved (defi 170887; tradfi 11810). The writer fix `@46ba62b` +
+      periodic `migrate_instruments_store_v9` run drove the ongoing writes clean; this oneoff cleared the historical tail.
 - [ ] [DATA] P2. Add a `quality-gates.sh` check (or extend an existing one) that asserts the writer's `record_captured`
       calls for non-sports paths always stamp `data_type='instruments'` — grep-level check on `writers.py` that catches
       a future regression at CI time (repo: instruments-service).

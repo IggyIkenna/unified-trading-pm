@@ -161,9 +161,30 @@ source:
       numbers correct on a spot slice.
 - [ ] [INFRA] P2. **Prediction catalogue bucket mismatch** — fix the prediction catalogue reading/writing the wrong
       bucket (`instruments_mtds_subset` finding). Gate: prediction catalogue lands in the canonical bucket.
-- [ ] [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** (`reference_data/catalogue/catalogue_b…` legacy
-      static path superseded by the lifecycle regen). Gate: no consumer reads the static snapshot; path removed.
-- [ ] [INFRA] P1. **BLOCKED-OPERATOR-DECISION — tradfi catalogue-scheduler band-aid vs. Phase-3 incremental.** The
+- [x] ✅ [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** (`reference_data/catalogue/catalogue_b…` legacy
+      static path superseded by the lifecycle regen) — instruments-service@6138694 (slot-2 opus/max 2026-07-06). Deleted
+      `instruments_service/reference_data/catalogue/{__init__.py,catalogue_builder.py}` (the CatalogueBuilder
+      static-`date=None`-snapshot writer) + `orchestrator/catalogue.refresh_catalogue` (the sole caller, orphan CLI hook
+      confirmed by audit `instruments_master_audit_2026_06_08.md` § "Dead duplicate catalogue path") + the co-located
+      `tests/unit/reference_data/test_catalogue.py` + `docs/instrument-catalogue.md` + the `!**/reference_data/catalogue/*.py`
+      QG exclude (line 144) + the stale `catalogue.refresh_catalogue`-cycle-example comment in the QG lazy-import
+      exclusion block. Post-delete grep in instruments-service returns 0 hits for `CatalogueBuilder|catalogue_builder|
+      reference_data.catalogue|refresh_catalogue|reference_data/catalogue`. Full `quality-gates.sh` green in 106s;
+      sentinel written; strict-quickmerge verified BYPASS-clean before push. **Adjacent finding filed:**
+      `plans/active/issues/mtds_defi_catalog_reader_reads_dead_static_snapshot_path_2026_07_06.md` — the MTDS
+      `DefiCatalogReader` still probes `reference_data/instruments/asset_group=defi/` (the same never-populated
+      CatalogueBuilder output path CeFi migrated away from in BUG #4 2026-06-22 and TradFi in G4 FIX 2026-06-25),
+      registered live at `orchestrator/__init__.py:456` — silent-fallback data-correctness risk for the DeFi expected
+      universe. 2 actionable todos filed (P2 reader migration + P3 test port). **Doc-drift follow-on:** two stale
+      cross-repo pointers to the deleted `instruments-service/docs/instrument-catalogue.md` remain (tracked below).
+- [ ] [DOC] P3. **Fix UAC cross-repo doc pointer drift from the deleted `instruments-service/docs/instrument-catalogue.md`**
+      — one stale reference remains: `unified-api-contracts/docs/canonical-instrument-ids.md:183-185`
+      ("instruments-service `CatalogueBuilder` populates `instrument_key` via `build_instrument_id(...)` for every record
+      — see `instruments-service/docs/instrument-catalogue.md`.") — rewrite to reference `unified_api_contracts.build_instrument_id`
+      directly (the CatalogueBuilder class no longer exists; canonical id population now happens inside the
+      reference-data adapters + `build_instrument_catalogue.py` rollup). The PM codex peer
+      (`codex/02-data/availability-manifest-and-data-status.md:1398`) was repointed in the same PM-flip commit as this
+      task. Gate: no doc points at the non-existent path. Repo: unified-api-contracts. The
       operator-declined interim band-aid (`instruments_catalogue_incremental_rollup` — bump
       `lifecycle_catalogue_scheduler.tf` timeout) RE-TRIGGERED 2026-07-03: tradfi `prod/catalog.parquet` stale since
       2026-06-29, the daily `lifecycle_catalogue_scheduler` runs killed at the 3600s timeout. Decide: re-enable the
@@ -174,6 +195,32 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **P3 orphan-catalogue-path DELETE FLIPPED (slot-2 opus/max).** Deleted
+  `instruments_service/reference_data/catalogue/{__init__.py,catalogue_builder.py}` (the
+  `CatalogueBuilder` writer that emitted a static `date=None` snapshot to
+  `reference_data/instruments/{ag}/all.parquet`) + its sole caller `orchestrator/catalogue.refresh_catalogue`
+  (a CLI hook with NO CLI/TF/test invocation surface — audit-confirmed
+  `instruments_master_audit_2026_06_08.md § "Dead duplicate catalogue path"`) + the co-located
+  `tests/unit/reference_data/test_catalogue.py` + `docs/instrument-catalogue.md` +
+  the `!**/reference_data/catalogue/*.py` QG exclude (line 144, `scripts/quality-gates.sh`) + the
+  now-stale `catalogue.refresh_catalogue`-cycle-example comment in the lazy-import exclusion block. Only
+  `refresh_catalogue` was removed from `engine/orchestrator/catalogue.py` — the rest of the cohesion
+  module (`_check_emission_policy` / `_get_instruments_bucket` / `_write_catalogue_record` /
+  `resolve_instruments_store_kind`) has ~20 live consumers and stays. Grep-verified 0 hits post-delete
+  (`CatalogueBuilder|catalogue_builder|reference_data.catalogue|refresh_catalogue|reference_data/catalogue`
+  → empty). Full `scripts/quality-gates.sh` green (106s, all 6 stages incl. STEP 5.100 architectural
+  ratchets); sentinel `.qg_last_passed_sha` written; `check_strict_quickmerge.py` verified
+  `no bypassed code commits in 523d427..6138694`. Landed on `live-defi-rollout` at
+  instruments-service@6138694. **Adjacent data-correctness finding filed:**
+  `plans/active/issues/mtds_defi_catalog_reader_reads_dead_static_snapshot_path_2026_07_06.md`
+  (`assigned_vm: planning`, 2 actionable todos — P2 MTDS `DefiCatalogReader` migration to
+  `prod/catalog.parquet` mirroring the CeFi BUG #4 / TradFi G4 fixes + P3 test port). The DeFi reader
+  is registered live at `MTDS/orchestrator/__init__.py:456` and probes exactly the never-populated
+  static-snapshot path this delete removes the writer for — same silent-fallback failure mode as the
+  CeFi/TradFi peers before their fixes. **Doc-drift follow-on** captured as a new P3 in this plan
+  (two stale cross-repo pointers at `unified-api-contracts/docs/canonical-instrument-ids.md:183-185`
+  and `codex/02-data/availability-manifest-and-data-status.md:1398`).
 
 - **2026-07-06** — **B1 FLIPPED (slot-12 opus/max).** Verification-only close: task premise was stale — the daily
   `lifecycle-catalogue-regen-{cefi,defi,tradfi,sports,prediction}-daily` schedulers were already un-paused

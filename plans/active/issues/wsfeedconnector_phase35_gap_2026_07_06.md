@@ -128,13 +128,21 @@ approve / defer per category rather than per-venue.
 
 ### CeFi — 13 venues
 
-- [ ] [DESIGN] P1. **CeFi bare-venue triage: BYBIT · COINBASE · OKX · DERIBIT-COMBO** — bare names (no `-SPOT` /
-      `-FUTURES` suffix) may be legacy manifest tags, an MVP scope call, or true separate venues (repo:
-      market-tick-data-service). Confirm: (a) whether `MVP_SCOPE.cefi.venues` still needs the bare names or only `-SPOT`
-      / `-FUTURES` (COINBASE-FUTURES also flagged); (b) DERIBIT-COMBO stance (`{OPTION}` per D2a, but `options_chain`
-      handler is registered under `DERIBIT`, so DERIBIT-COMBO may be a manifest-only tag with no distinct live feed).
-      Gate: each of the 4 bare tags resolved (add live factory, remove from MVP scope, or confirm manifest-only).
-      **BLOCKED-OPERATOR-DECISION** (Ikenna).
+- [x] [DESIGN] P1. **CeFi bare-venue triage: BYBIT · COINBASE · OKX · DERIBIT-COMBO** ✅ — Operator ruling landed
+      (BLK-31951ebc + BLK-f7372dd9, 2026-07-06). Resolutions: **BYBIT** bare → alias-register to `_bybit_factory`
+      shipped (mtds@9d3c1aa1); **OKX** bare → alias-register to `_okx_factory` shipped (mtds@9d3c1aa1);
+      **DERIBIT-COMBO** → confirmed manifest/reference-only (no live tick feed — combos derive from bare DERIBIT
+      `options_chain`); **COINBASE** bare → **DEFERRED** as a follow-on [CODE] task (25 downstream callers — needs a
+      migration, not a drop). Regression tests added: `test_bybit_bare_alias_registered` +
+      `test_okx_bare_alias_registered`. Closes ~26 of 104 cefi `blocked-not-registered` smoke-matrix cells (BYBIT ~13
+      + OKX ~13).
+- [ ] [CODE] P2. **COINBASE bare-name UAC removal + downstream migration** — bare `COINBASE` entry in
+      `unified_api_contracts/.../market_data_categories.py:242` is a legacy pre-2026-06-23 tag (before the perp-gate
+      pair). Slot-6 initial grep suggested `COINBASE` was orphan; operator ruling (2026-07-06) found ~25 downstream
+      callers that still key off bare `COINBASE`. Migrate those callers to `COINBASE-SPOT` (or the perp-gate pair
+      `COINBASE ↔ COINBASE-SPOT` if MVP requires it), THEN drop the bare entry from UAC. Gate: 0 downstream call
+      sites reference bare `COINBASE`; the entry is removed from `VENUES_BY_ASSET_GROUP["cefi"]`; smoke-matrix
+      `blocked-not-registered` count for `COINBASE` drops to 0 (repo: unified-api-contracts + fan-out).
 - [ ] [CODE] P1. **BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build** — public WS APIs; BitFinex REST batch
       already captures. Register under `BITFINEX-SPOT` / `BITFINEX-FUTURES` (repo: market-tick-data-service). Gate: both
       venues resolve in `resolve_live_venue_key`; regression tests mirror
@@ -143,11 +151,19 @@ approve / defer per category rather than per-venue.
       market-tick-data-service). Gate: both venues resolve; regression tests added.
 - [ ] [CODE] P1. **COINBASE-FUTURES WSFeedConnector build** — public WS on `wss://advanced-trade-ws.coinbase.com` (repo:
       market-tick-data-service). Gate: COINBASE-FUTURES resolves; regression test.
-- [ ] [CODE] P1. **BINANCE-DELIVERY WSFeedConnector build** — Binance COIN-M dated futures (public WS
-      `wss://dstream.binance.com`). NOTE: per tracker 06-27 decision, COIN-M is explicitly NOT MVP for perps, but
-      DELIVERY (dated futures) is separate. Confirm MVP scope before building (repo: market-tick-data-service). Gate:
-      BINANCE-DELIVERY resolves (or filed as BLOCKED-OPERATOR-DECISION honest-absence). **BLOCKED-OPERATOR-DECISION**
-      (Ikenna — MVP inclusion).
+- [x] [CODE] P1. **BINANCE-DELIVERY WSFeedConnector build** ✅ — resolved as **honest-absence (NOT MVP)** per
+      2026-06-27 operator **decision #3** (already-committed SSOT). No WS connector built. Sources:
+      `unified_api_contracts/canonical/crosscutting/mvp_scope.py:419-423` (comment: "BINANCE-DELIVERY (Binance
+      COIN-M inverse/delivery futures) was REMOVED from the cefi MVP set — the operator accepts COIN-M delivery is
+      NOT MVP. Other venues' dated/quarterly fixed-delivery futures STAY MVP.") + `codex/02-data/mvp-scope-canonical.md`
+      NOT-MVP row (`**NOT MVP** = **BINANCE-DELIVERY** (COIN-M inverse/delivery — dropped, decision #3)`) +
+      `mvp_backfill_cefi_tick_v10_2026_06_27.md` v10-catalogue confirmation ("BINANCE-DELIVERY 222 rows all mvp=False
+      ✓"). The task-brief hedge ("DELIVERY dated futures is separate") is superseded: decision #3 scope covers BOTH
+      COIN-M perps AND COIN-M delivery futures (mvp_scope.py comment is explicit). Classification: BATCH-ONLY-BY-DESIGN
+      for the smoke-matrix `blocked-not-registered` cell — no live WS to build, no factory to register. Per Plan 4
+      Layer-2 interpretation (this issue doc lines 116-118), the `blocked-not-registered` cell for BINANCE-DELIVERY
+      correctly reflects "no live connector"; it does not drag Layer-2 capture % down when the batch REST capture is
+      honest-complete.
 - [ ] [CODE] P2. **On-chain CeFi perps: EXTENDED-STARKNET + LIGHTER-ZKSYNC + PACIFICA-SOLANA WSFeedConnector build**
       (repo: market-tick-data-service). These are the on-chain-CeFi-perp venues from foundation-completeness §G1.3.
       **Currently BLOCKED-CREDENTIALS** for the paid-RPC endpoints per tracker Blocked/waiting register; build the
@@ -156,9 +172,18 @@ approve / defer per category rather than per-venue.
 
 ### TradFi — 4 venues
 
-- [ ] [CODE] P1. **FX WSFeedConnector build** — FX not a Databento code; likely needs another provider (repo:
-      market-tick-data-service). **BLOCKED-OPERATOR-DECISION** — pick provider (OANDA / TrueFX / bank-feed); currently
-      no candidate connector class. Filing as honest-absence in the meantime.
+- [x] [CODE] P1. **FX WSFeedConnector build** ✅ — resolved as **honest-absence (NOT MVP)** per 2026-06-27 operator
+      **decision #7** (already-committed SSOT). No WS connector built; no operator provider-pick needed. Sources:
+      `unified_api_contracts/canonical/crosscutting/mvp_scope.py` tradfi MVP rule (`venues=frozenset({"CME"})`,
+      `data_types=frozenset({"ohlcv_1m"})`, explicit comment: "Venues: CME only (Databento CME tick data is the
+      primary TradFi MVP data source ... ES, NQ, VX futures + options)"; "operator 2026-06-27 decision #7 — NO
+      ohlcv_1s, NO trades/tbbo in tradfi MVP"). FX is declared in `VENUES_BY_ASSET_GROUP["tradfi"]` for
+      reference/catalogue purposes only (KRW/USD daily rates via Yahoo Finance REST — `venue_mapping.py:211`
+      `"FX": "yahoo_finance"`; `market_data_categories.py:1269-1271` `"FX": {"ohlcv_24h": "2020-01-01"}` KRW/USD
+      daily). Yahoo Finance is REST OHLCV, not WS — there is no live-WS surface to build. Classification:
+      BATCH-ONLY-BY-DESIGN for the smoke-matrix `blocked-not-registered` cell — no live WS to build, no provider
+      selection required. The task-brief provider-pick ("OANDA / TrueFX / bank-feed") is superseded: FX is a
+      batch-only venue outside tradfi MVP, capture continues via the existing Yahoo Finance REST batch path.
 - [ ] [CODE] P1. **ICE WSFeedConnector build** — Databento supports ICE datasets but is BLOCKED-CREDENTIALS on the
       Real-Time key (per Databento connector docstring). Once credential arrives, wire ICE under the existing
       `databento_tradfi_ws.py` factory pattern (venue map = `_VENUE_TO_DATASET`) (repo: market-tick-data-service).
@@ -203,6 +228,64 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-06** — **gap-007 resolved (FX WSFeedConnector build)** by slot-4. Confirmed via already-committed SSOT
+  that FX is NOT MVP — no operator ping needed; the ruling exists as **2026-06-27 decision #7** (tradfi MVP =
+  CME ONLY, at ohlcv_1m grain). Evidence chain (grepped from HEAD live-defi-rollout):
+  1. `unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py` tradfi rule:
+     `TradFiMvpRule(venues=frozenset({"CME"}), instrument_types=frozenset({"FUTURE", "OPTION"}),
+     data_types=frozenset({"ohlcv_1m"}), ...)` — FX not in venues. Comment line: "operator 2026-06-27 decision
+     #7 — NO ohlcv_1s, NO trades/tbbo in tradfi MVP".
+  2. `unified-api-contracts/unified_api_contracts/registry/venue_mapping.py:211`: `"FX": "yahoo_finance"` — FX
+     source is Yahoo Finance (REST OHLCV, not WS).
+  3. `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1269-1271`:
+     `"FX": {"ohlcv_24h": "2020-01-01"}` — FX capability = KRW/USD daily rates only.
+  4. FX declared in `VENUES_BY_ASSET_GROUP["tradfi"]` (`market_data_categories.py:289`) for
+     reference/catalogue purposes; NOT a live-scope entry.
+
+  Task-brief provider-pick ("OANDA / TrueFX / bank-feed") is superseded: FX is a batch-only reference-data venue
+  outside tradfi MVP. Existing Yahoo Finance REST batch path is the correct capture surface (retail-grade daily
+  granularity is appropriate for reference-only FX rate). No WSFeedConnector shipped; no MTDS code change.
+  Checkbox flipped at plan line 168 with resolution note. Classification: BATCH-ONLY-BY-DESIGN — the
+  `blocked-not-registered` smoke-matrix cell for FX is honest-absence per Plan 4 Layer-2 interpretation, no
+  `NON_LIVE_VENUES` allow-list edit required.
+
+- **2026-07-06** — **gap-005 resolved (BINANCE-DELIVERY WSFeedConnector build)** by slot-4. Confirmed via
+  already-committed SSOT that BINANCE-DELIVERY is NOT MVP — no operator ping needed; the ruling exists as
+  **2026-06-27 decision #3**. Evidence chain (grepped from HEAD live-defi-rollout):
+  1. `unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py:419-423` — inline comment in the
+     cefi MVP `venues` frozenset explicitly says BINANCE-DELIVERY was REMOVED and "the operator accepts COIN-M
+     delivery is NOT MVP" (paired with "Other venues' dated/quarterly fixed-delivery futures STAY MVP" — so the
+     decision covers BOTH COIN-M perps + COIN-M delivery futures at BINANCE, not just perps).
+  2. `unified-trading-pm/codex/02-data/mvp-scope-canonical.md` NOT-MVP row: `**NOT MVP** = **BINANCE-DELIVERY**
+     (COIN-M inverse/delivery — dropped, decision #3)`. Codex SSOT is definitive.
+  3. `unified-trading-pm/plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md` cefi-G3 sign-off: "BINANCE-DELIVERY
+     222 rows all mvp=False ✓". Catalogue reality matches the decision.
+  4. `unified-api-contracts/unified_api_contracts/registry/venue_constants.py:413` still lists
+     `"BINANCE-DELIVERY": {"PERPETUAL", "FUTURE"}` — reference-data-only classification retained for
+     manifest/backfill-legacy paths; not a live-scope entry.
+
+  Task-brief interpretation ("DELIVERY dated futures is separate from COIN-M perps") was a hedge — the mvp_scope.py
+  comment resolves it: decision #3 covers both. No WSFeedConnector shipped; no MTDS code change. Checkbox flipped
+  in this doc with resolution note (line 154). Classification: BATCH-ONLY-BY-DESIGN — the
+  `blocked-not-registered` smoke-matrix cell for BINANCE-DELIVERY is honest-absence per Plan 4 Layer-2
+  interpretation, no `NON_LIVE_VENUES` allow-list edit required for MVP.
+
+- **2026-07-06** — **gap-001 shipped** by slot-6. Operator ruling on slot-4's 2026-07-06 recommendation received via
+  main (BLK-31951ebc + BLK-f7372dd9): APPROVE items 1-3, DEFER item 4. Shipped MTDS bare-venue aliases + regression
+  tests at `mtds@9d3c1aa1`:
+  1. `bybit_ws.py` — bare `BYBIT` → `_bybit_factory` alias (wiring-only, MVP scope already includes bare BYBIT as
+     the canonical perp namespace of the perp-gate pair);
+  2. `okx_ws.py` — bare `OKX` → `_okx_factory` alias (wiring-only, bare OKX is in `_CEFI_SUB_VENUE_BASES`);
+  3. `test_bybit_ws_connector.py` + `test_okx_ws_connector.py` — regression tests
+     (`test_bybit_bare_alias_registered` / `test_okx_bare_alias_registered`) asserting each bare key resolves to
+     the same factory object as the `-FUTURES` key + produces a valid connector.
+
+  The DERIBIT-COMBO stance (manifest/reference-only, no live tick feed — combos derive from bare DERIBIT
+  `options_chain`) is CONFIRMED by the operator; no MTDS code change (there is no WS feed to build). COINBASE bare
+  removal is DEFERRED under a new [CODE] P2 todo (operator surfaced ~25 downstream callers requiring migration
+  before the UAC drop). Impact: ~26 of 104 cefi `blocked-not-registered` smoke-matrix cells resolved by items 1+2
+  (BYBIT ~13 + OKX ~13); DERIBIT-COMBO ~13 reclassified as honest-absence; ~52 residual on the P1/P2 CODE follow-ons.
 
 - **2026-07-06** — **Design analysis (task gap-001, CeFi bare-venue triage)** by slot-4. Investigated the 4 bare CeFi
   venue tags (BYBIT · OKX · COINBASE · DERIBIT-COMBO) that fail `resolve_live_venue_key` against the current

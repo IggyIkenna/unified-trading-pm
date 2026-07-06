@@ -204,11 +204,22 @@ nothing date-gates seeding at the (venue, data_type) grain. Execute IN ORDER:
 The venue-blind denominator producer gets the MVP-gate intersection now; the structural single-producer fold (A17
 `build_expected`) stays owned by `honest_coverage_v2_instrument_denominator_2026_06_28.md`.
 
-- [ ] [CODE] P1. **Point-fix `_row_data_types` (cefi branch): intersect with
+- [x] ✅ [CODE] P1. **Point-fix `_row_data_types` (cefi branch): intersect with
       `get_mvp_data_types_for_cefi_venue(venue)`** so the seeded denominator matches the capture gate (kills the MVP-cut
       over-seed class, e.g. COINBASE-SPOT trades-only). Complements the 2026-07-03 capability carve-out
       (`instruments-service@3bb7acd`) — that closed the VENUE_DATA_TYPE_CAPABILITIES half; this closes the MVP half. ~5
-      lines + tests. > **⚠️ CAUTION (verified 2026-07-06, do not implement naively):** a literal >
+      lines + tests.
+      **DONE 2026-07-06 — instruments-service@2170d9a3 (slot-11 planning).** Bundle-aware MVP data_type gate landed in
+      `_row_data_types` cefi branch (lines 873-899): `_mvp_capture_itype` normalises OPTIONS_CHAIN/COMBO→OPTION and
+      FUTURES_CHAIN→FUTURE; when the bundle-normalised itype is NOT in `MVP_SCOPE["cefi"].instrument_type_data_types`
+      (i.e. the flat/leaf case like COINBASE-SPOT trades), the venue-level MVP-gate intersection is applied against
+      `get_mvp_data_types_for_cefi_venue(venue)`; when it IS in the override (Deribit OPTION → {options_chain}) the
+      intersection is SKIPPED, preserving the upstream-narrowed `["options_chain"]` slice. A venue absent from MVP scope
+      entirely returns an empty MVP set → the `if mvp_dts:` guard leaves row_dts unchanged (no blanket-block of
+      non-MVP-scoped venues like BINANCE-DELIVERY). 4 regression tests added to `test_enumerate_expected_universe.py`
+      covering COINBASE-SPOT drop-book5, Deribit options_chain/futures_chain survival, Deribit PERP drop-liquidations,
+      and non-MVP-venue skip. QG-green (181s). Both failure modes flagged in the CAUTION avoided by the bundle-normalised
+      `instrument_type_data_types` guard. > **⚠️ CAUTION (verified 2026-07-06, do not implement naively):** a literal >
       `get_mvp_data_types_for_cefi_venue(venue)` intersection breaks Deribit `options_chain` enumeration. That > helper
       is venue-only — it resolves DERIBIT to the flat cefi set (`trades`/`book_snapshot_5`/ >
       `derivative_ticker`/`funding_rate`), which does NOT contain `"options_chain"`. But `_row_data_types` for a >
@@ -324,3 +335,84 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   spent (8, 7, unnamed 3rd, 5, 2) verifying + escalating the same fact. **Operator action required (5th escalation)**:
   add `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and regen; -008 stays
   in queue until `-007` (enumerator `start_date`) reaches LDR. Slot-2 goes idle pending operator's backlog fix.
+- **2026-07-06** — **UAC capability flip RE-PARKED — BLOCKED-PREREQUISITES (6th dispatch)** (slot-9 planning). Task
+  `cefi_layer1_denominator_gaps-008` was RE-dispatched to slot-9 by priority=20 alone; `depends_on` gap flagged in
+  `BLK-36eeb447` + `BLK-d8cba69b` + `BLK-9072b84f` + `BLK-545a3adb` remains uncorrected on the backlog task (verified
+  via `/api/backlog?limit=500`: `-008.status=dispatched`, `-008.depends_on = null`; `-007.status=queued`,
+  `-007.depends_on = null`). Re-verified LDR tip at 6th re-dispatch: `instruments-service/scripts/expected_universe.py`
+  contains ZERO `start_date` / `get_venue_data_type_start_date` refs (grep empty; last touching commit `a1038ee` 2a);
+  `check_enumeration_completeness.py` likewise contains ZERO such refs (last touching commits `2fa3877` 2c + `a1038ee`
+  2a). Task `-007` (enumerator `start_date` support) remains `status=queued` on the backlog with no worker having
+  landed the work. Slot-9 verdict: PARK -008 — **6th consecutive block, same 17,282-row over-seed risk**. The bounce
+  loop persists: 6 slots have now been spent verifying + escalating the same operator-backlog defect
+  (`depends_on: [cefi_layer1_denominator_gaps-007]` still not encoded on `-008`). **Operator action required (6th
+  escalation)**: add `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and
+  regen; -008 stays in queue until `-007` (enumerator `start_date`) reaches LDR. Slot-9 goes idle pending operator's
+  backlog fix.
+- **2026-07-06** — **UAC capability flip RE-PARKED — BLOCKED-PREREQUISITES (7th dispatch)** (slot-9 planning, new
+  session). Task `cefi_layer1_denominator_gaps-008` was RE-dispatched to slot-9 AGAIN after the prior slot-9 session's
+  6th-block park commit `7ad9a3c6b` (18:09 UTC) landed on LDR; task status returned to queued/dispatched. Machine-encoded
+  `depends_on` gap flagged across 6 prior blocks (`BLK-36eeb447` + `BLK-d8cba69b` + `BLK-9072b84f` + `BLK-545a3adb` +
+  6th-block) remains uncorrected: `/api/backlog?limit=500` at 7th re-dispatch: `-008.status=dispatched,
+  depends_on=null`; `-007.status=queued, depends_on=null`. Re-verified LDR tip:
+  `instruments-service/scripts/expected_universe.py` + `scripts/check_enumeration_completeness.py` still contain ZERO
+  `start_date` / `get_venue_data_type_start_date` refs (last touching commits `a1038ee` 2a + `2fa3877` 2c —
+  neither adds start_date). Confirmed ASTER capability entry alive at `unified-api-contracts/registry/
+  market_data_categories.py:1144` (target of the flip). Slot-9 verdict: PARK -008 — **7th consecutive block, same
+  17,282-row over-seed risk**. The bounce loop is not self-correcting: 7 slots (8, 7, unnamed 3rd, 5, 2, 9, 9-again)
+  have now been spent verifying + escalating the identical operator-backlog defect. **Operator action required (7th
+  escalation)**: add `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and
+  regen; -008 stays in queue until `-007` (enumerator `start_date`) reaches LDR. Slot-9 goes idle pending operator's
+  backlog fix.
+- **2026-07-06** — **UAC capability flip RE-PARKED — BLOCKED-PREREQUISITES (8th dispatch, `BLK-e642f2aa`)** (slot-4
+  planning). Task `cefi_layer1_denominator_gaps-008` was RE-dispatched to slot-4 by priority=20 alone; the
+  machine-encoded `depends_on` gap flagged across 7 prior blocks (`BLK-36eeb447` + `BLK-d8cba69b` + `BLK-9072b84f` +
+  `BLK-545a3adb` + 6th + 7th) is STILL uncorrected. Re-verified at 8th re-dispatch via `/api/backlog?limit=500`:
+  `-008.status=dispatched, depends_on=null`; `-007.status=queued, depends_on=null`. Re-verified LDR tip with
+  `rg -c 'start_date|get_venue_data_type_start_date'` on both files: ZERO matches on
+  `instruments-service/scripts/expected_universe.py` + `scripts/check_enumeration_completeness.py` (last touching
+  commits unchanged: `a1038ee` 2a + `2fa3877` 2c). Confirmed ASTER capability entry alive at
+  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1144` (flip target). Slot-4 verdict:
+  PARK -008 — **8th consecutive block, same 17,282-row over-seed risk**. The bounce loop remains not self-correcting:
+  8 slots (8, 7, unnamed 3rd, 5, 2, 9, 9-again, 4) have now been spent verifying + escalating the identical
+  operator-backlog defect — this is now a systemic-cost finding (each dispatch consumes ~10 min of a worker's context
+  budget + a Claude-Code cycle). **Operator action required (8th escalation)**: add
+  `depends_on: [cefi_layer1_denominator_gaps-007]` to `-008` in `data/config/backlog.yaml` and regen; alternatively
+  flip `-008`'s backlog priority to 999 so higher-priority queued tasks dispatch instead. -008 stays in queue until
+  `-007` (enumerator `start_date`) reaches LDR. Slot-4 goes idle pending operator's backlog fix.
+- **2026-07-06** — **C2 point-fix (-009) flipped ✅** (slot-9 planning). Main released -008 via /skip-current-task
+  answering `BLK-be92ef1e` Option A; -009 dispatched to slot-9 next. Verified code already landed on LDR by slot-11:
+  `instruments-service@2170d9a3` (18:23:15 UTC, "feat(scripts): bundle-aware MVP data_type gate in _row_data_types
+  cefi branch — closes cefi_layer1_denominator_gaps C2 point-fix (item 009)") — 31 lines in
+  `scripts/enumerate_expected_universe.py` (the MVP data_type gate at lines 873-899) + 117 lines of regression tests
+  (4 tests) in `tests/unit/scripts/test_enumerate_expected_universe.py`; QG-green 181s per commit message. The
+  correct instrument-type/bundle-aware approach the CAUTION prescribed is implemented via `_mvp_capture_itype`
+  normalisation + `cefi_rule.instrument_type_data_types` membership check. Deribit `options_chain` slice preserved via
+  the OPTION-override skip; COINBASE-SPOT `book_snapshot_5` dropped; Deribit PERP `liquidations` dropped;
+  non-MVP-scoped venues (e.g. BINANCE-DELIVERY) unaffected by the empty-mvp_dts guard. Slot-9 action:
+  checkbox-flip only (no code change) — /done cites `2170d9a3` as the shipped SHA.
+- **2026-07-06** — **Re-measure task (-005) PARKED — BLOCKED-PREREQUISITES (`BLK-ad7abfcd`)** (slot-8 planning). Task
+  `cefi_layer1_denominator_gaps-005` ("Re-measure + re-certify the cefi Layer-1 row") was dispatched to slot-8 by
+  priority=50 alone; the machine-encoded `depends_on` gap flagged across 8 prior `-008` blocks now also affects `-005`
+  (verified via `/api/backlog?limit=500`: `-005.status=dispatched, depends_on=null`). Verified plan-declared PREREQ
+  chain ("2a–2f landed + ASTER live wire (Plan 5) + KALSHI-PERP purge (Stage-3)") is NOT met:
+  (i) `-002` (2b cefi gate-authority fix on `build_expected`) status=queued — D2a `INSTRUMENT_TYPES_BY_VENUE` authority
+  IS baked into `scripts/expected_universe.py` (part of 2a's consolidation) but the 2b sub-parts (ASTER live-forward
+  split + BYBIT-SPOT relabel) remain unshipped;
+  (ii) `-004` (2f LIGHTER/EXTENDED/PACIFICA denominator-gap) status=queued — depends on enumerator `start_date`;
+  (iii) `-007` (enumerator `start_date` support) status=queued — verified LDR tip:
+  `instruments-service/scripts/expected_universe.py` has ZERO `start_date` / `get_venue_data_type_start_date` refs
+  (grep empty; last touching commits `a1038ee` 2a + `2fa3877` 2c — neither adds start_date);
+  (iv) ASTER live wire (Plan 5, INFRA role) — connector `market_tick_data_service/live/connectors/aster_book_liq_ws.py`
+  EXISTS but is NOT registered in `market_tick_data_service/live/connector_registry.py` (grep empty on
+  `aster_book_liq_ws|AsterBookLiq`);
+  (v) KALSHI-PERP purge (Stage-3) — commit `c8c6dac` only guards the KALSHI-PERP/POLYMARKET-PERP adapters to emit 0 (a
+  forward stop-gap); the 25,473 fake `KALSHI-PERP` cefi Layer-2 rows still pollute the manifest and would over-inflate
+  the numerator. Running the re-measure now would produce a misleading % moving in the WRONG direction from the plan
+  Gate ("denominator GREW, % dropped honest") — the denominator would still UNDER-count (2f venues at 0-expected while
+  their manifest rows exist) while the numerator OVER-counts (fake KALSHI-PERP rows). Slot-8 verdict: PARK -005 —
+  recommendation A of `BLK-ad7abfcd`. **Operator action required**: add
+  `depends_on: [cefi_layer1_denominator_gaps-002, cefi_layer1_denominator_gaps-004, cefi_layer1_denominator_gaps-007]`
+  to `-005` in `data/config/backlog.yaml` + regen (or flip `-005` priority to 999) to prevent the same bounce-loop the
+  `-008` block-chain hit 8×. -005 stays in queue until 2b/2f/-007/ASTER-wire/KALSHI-PERP-purge all reach LDR. Slot-8
+  goes idle pending operator answer + backlog fix.
