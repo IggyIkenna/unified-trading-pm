@@ -150,8 +150,13 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 - [ ] [DATA] P0. **2d. IS-catalogue completion `B0→B1→B2`** (`instruments_mtds_subset`): backfill instruments to
       no-missing (B0) → regen catalogue + un-pause daily schedulers (B1) → codify MVP-vs-total universe (B2). _B0 gates
       every expected-universe consumer._
-- [ ] [DATA] P0. **2e. defi seeding apply** (D1) → then the follow-on check for the same never-seeded backlog on cefi /
-      tradfi / pred
+- [x] [DATA] P0. **2e. defi seeding apply (D1) — ✅ DONE** (opus, run_id `enum-universe-defi-20260706-130616`):
+      **+1,380,376 typed `empty_confirmed` rows** (per-year matches the issue to the row: 2018=695,830 / 2019=683,862 /
+      2021-25=684), `expected_unattempted` +0 (zero downloads), fresh full-window scan **→ 0 candidates** (≥1M
+      enumerator halt cleared), consolidator merged into the canonical defi manifest. Scan-gate hit EXACTLY 1,380,376 +
+      1-day smoke verified first. No enumerator edit (read/run only).
+- [ ] [VERIFY] P2. **2e follow-on** (was bundled into 2e): the cross-AG never-seeded backlog check on **cefi / tradfi /
+      pred** (scan-only investigation — dispatch separately)
 - [ ] [CODE] P1. **2f.** Reapply the denominator-gap model to **LIGHTER / EXTENDED / PACIFICA**
 
 ## Stage 3 — Re-measure + certify Layer-1
@@ -249,6 +254,13 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **2e SHIPPED — defi denominator corrected (+1,380,376 rows).** D1 defi `expected_unattempted` seeding
+  ran (opus, v1 enumerator — the `--enumerator-version=v2` in the dispatch was my spec error, caught by the agent +
+  confirmed). run_id `enum-universe-defi-20260706-130616`. Scan-gate hit **exactly 1,380,376** (0% dev) → 1-day smoke
+  (1,910 rows, 3-step clean) → full apply **1,380,376 rows** (per-year to the row) → fresh scan **→ 0 candidates** (≥1M
+  halt cleared), `expected_unattempted` +0 (zero downloads), consolidator merged into the canonical defi manifest. No
+  enumerator edit; poisoned `/tmp` cache cleaned. **Ready to flip** `issues/defi_expected_unattempted_backlog_1m` (same
+  evidence). Cross-AG never-seeded follow-on (cefi/tradfi/pred) split to a separate P2.
 - **2026-07-06** — **D2a SHIPPED + VERIFIED — cefi Layer-1 dropped to the honest number.** Both halves landed:
   **uac@e76d874a** (`INSTRUMENT_TYPES_BY_VENUE` completes the 10 declared venues; DERIBIT-COMBO OPTION-only) +
   **is@03cfd0f** (`_get_cefi_venue_itypes` now sources declarative `INSTRUMENT_TYPES_BY_VENUE`, not the tardis
