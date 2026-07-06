@@ -162,7 +162,9 @@ source:
 - [ ] [INFRA] P2. **Prediction catalogue bucket mismatch** — fix the prediction catalogue reading/writing the wrong
       bucket (`instruments_mtds_subset` finding). Gate: prediction catalogue lands in the canonical bucket.
 - [x] ✅ [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** (`reference_data/catalogue/catalogue_b…` legacy
-      static path superseded by the lifecycle regen) — instruments-service@6138694 (slot-2 opus/max 2026-07-06). Deleted
+      static path superseded by the lifecycle regen) — instruments-service@6138694 + @96d45cc (slot-2 opus/max 2026-07-06,
+      split across two commits: 6138694 landed the `reference_data/catalogue/__init__.py` delete alone, follow-on @96d45cc
+      landed the remaining 6 files). Deleted
       `instruments_service/reference_data/catalogue/{__init__.py,catalogue_builder.py}` (the CatalogueBuilder
       static-`date=None`-snapshot writer) + `orchestrator/catalogue.refresh_catalogue` (the sole caller, orphan CLI hook
       confirmed by audit `instruments_master_audit_2026_06_08.md` § "Dead duplicate catalogue path") + the co-located
