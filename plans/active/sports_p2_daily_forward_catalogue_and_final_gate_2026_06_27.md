@@ -145,6 +145,22 @@ Three steady-state surfaces + the final verdict:
         ETA ~16:30 UTC today; (E) P2a enrichment coordinator PID 3036674 RUNNING, ETA days (TEAMS 191k EU + 6 other
         types); (F) P2c features 0%. No action taken — no code or data changes needed. /blocked filed; park until
         Understat VM TERMINATED (~2026-07-01 02:00 UTC) + P2c features complete.
+      — 2026-07-06 slot-12 VERIFY RUN (20:52 UTC): Queried IS availability_index (152MB parquet, mtime
+        2026-07-06T20:52:51Z; 5,386,738 rows). Filtered to 6 sports sources (api_football / footystats / odds_api /
+        open_meteo / soccer_football_info / transfermarkt / understat).
+        **Gate FAILS — 656,486 total pending_fetch shards (eu=651,185 + af=5,301) across every non-`odds_api` source.**
+        Per-source expected_unattempted totals: api_football 542,912 (dominated by TEAMS eu=194,331 + ODDS eu=89,073
+        + fixture-enrichment types eu≈180k — awaiting P2a enrichment coordinator); footystats 51,246 (VM
+        `fs-backfill-20260706-161335` RUNNING since 16:13 UTC, ETA ~2026-07-07/08); transfermarkt 36,379; understat
+        14,126 (Understat VM PREEMPTED at 2018-04-25 on 2026-06-29 and NEVER re-launched per P2c 18th-dispatch log);
+        soccer_football_info 3,261; open_meteo 3,261. attempted_failed 5,301 total, 0 blank-error_reason (all
+        evidenced); dominant reasons: phantom_captured_no_parquet_at_canonical_path 2,094 (needs phantom-audit
+        --apply once new prefix_tpls cover the shape); ApiFootballResponseError 1,639; FIXTURES_FETCH_FAILED 665;
+        UNCLASSIFIED_ADAPTER_ERROR 461; HTTP_NOT_FOUND 384. Only `odds_api` derivative rows (arbitrage_opportunity /
+        odds_movement / odds_snapshot) are at 0/0/0.
+        No action taken — task is [PARKED], priority 999; prereqs P2a-enrichment + P2b-Understat re-launch +
+        P2b-footystats VM completion + P2c-features compute are all outstanding. /blocked filed; re-dispatch after
+        all four prereqs land.
 - [x] ✅ [VERIFY] P0. **FINAL sports alerts == ZERO, steady-state (R5).** **Gate**: across ≥2 sweeps after daily-forward is
       live — `vm-census/active-dp-alerts*.json` 0 sports entries; `catalog.parquet` <24h; sports `_index` <180min;
       monitor sentinels fresh; `#data-pipeline-alerts` no unresolved sports WARN/CRITICAL (every prior alert
