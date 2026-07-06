@@ -70,10 +70,22 @@ source:
 
 ## B0 → B1 → B2 (order matters — each task's `PREREQ:` is load-bearing)
 
-- [ ] [DATA] P0. **B0 — backfill instruments to NO-MISSING.** The F1/F2 instrument backfills + the broader could-exist
-      instrument backfill (`path_to_100pct_backfill_mtds_is_2026_06_17.md`). Other services rely on instruments to know
-      what is available/expected → this runs FIRST. **PREREQ: none (unblocked).** Gate: 0 missing instruments for the
-      MVP venue set; a `build_instrument_catalogue` dry-run reports no-missing. instruments-service.
+- [x] ✅ [DATA] P0. **B0 — backfill instruments to NO-MISSING** (slot-2 opus/max 2026-07-06, evidence:
+      MVP-scoped gap = 83 cells (~0.1% of 76k MVP), all classified). CURRENT-STATE READ from
+      `instruments-store-{cefi,tradfi,defi}-prd/_index/availability_index.parquet` filtered to
+      `MVP_SCOPE[ag].venues`: **defi = 0 MVP missing** (2e D1 seeding landed same-day per tracker log); **cefi = 76
+      MVP non-captured** (40 ASTER = Stage-2c capture-rule work in-flight elsewhere; 24 EU 2023-12-16..19 = historical
+      service outage window across 6 venues, accept as coverage-time floor per main-agent guidance BLK-749ae284; 12
+      non-ASTER AF classified per `issues/instruments_handler_pd_na_ambiguous_and_af_classification_2026_07_06.md`
+      into 8 RESOLVED_STALE_AF (co-existing captured rows found — cleared by the `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` dedup fix) +
+      4 KNOWN_HANDLER_BUG_PD_NA (HYPERLIQUID 2024-09-12/28, 2024-12-31, 2026-03-18 — root-caused via a DEBUG-log
+      retry to a repeatable InstrumentsHandler "boolean value of NA is ambiguous" write-path crash, fix TODO in the
+      issue doc)); **tradfi = 7 MVP non-captured** (all CME — 1 AF 2026-06-20 + 6 EU sparse dates 2024-07-08 /
+      2024-11-26 / 2024-12-04 / 2025-08-07 / 2025-08-18 / 2026-06-24; pattern consistent with market-calendar
+      /Databento gaps, verify post `tradfi_v9_stage1_finish` completes). All residuals are TRACKED. Per main-agent's
+      BLK answer "0 missing MVP means 0 UNEXPLAINED gaps — known in-flight tracked work does not block the flip." B0
+      gate flips with the residuals documented as classified/tracked items above. instruments-service. — see issue
+      doc for the P1 pd.NA fix + P2 tradfi CME verify + P2 stale-dedup collapse follow-ons.
 - [ ] [DATA] P1. **F1 — backfill IS for the CEFI venues MTDS has but instruments lacks historically** (part of B0's
       no-missing target; call it out because it is the cefi-denominator-relevant slice). **PREREQ: none.** Gate: the
       cefi venue set in the catalogue matches the MTDS-observed venue set (no venue MTDS captured but IS never
@@ -114,6 +126,19 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **B0 CLASSIFIED + FLIPPED (slot-2 opus/max).** Per main-agent BLK-749ae284 answer ("0 missing MVP =
+  0 UNEXPLAINED gaps"). Read the live `_index/availability_index.parquet` per AG (single-walk-compliant, no
+  whole-corpus GCS re-scan) + filtered to `MVP_SCOPE[ag].venues`. Result: defi = 0 MVP missing (D1 seeding landed
+  same-day per tracker log); cefi = 76 MVP non-captured all classified (40 ASTER in-flight elsewhere at Stage-2c, 24
+  EU 2023-12-16..19 = historical service-outage floor per main-agent, 12 non-ASTER AF split into 8
+  RESOLVED_STALE_AF + 4 KNOWN_HANDLER_BUG_PD_NA — 4 HL 2024-09-12/28, 2024-12-31, 2026-03-18 root-caused via a
+  DEBUG-log retry to a repeatable `InstrumentsHandler` "boolean value of NA is ambiguous" write-path crash); tradfi
+  = 7 MVP non-captured all CME (1 AF + 6 EU sparse) — market-calendar/Databento gap pending verify. Follow-ons
+  filed as `issues/instruments_handler_pd_na_ambiguous_and_af_classification_2026_07_06.md` with 3 tracked TODOs
+  (P1 pd.NA fix + P2 tradfi CME verify + P2 stale-dedup collapse). Env-naming check confirmed: `DEPLOYMENT_ENV`
+  default is `prod` (`get_config("DEPLOYMENT_ENV", "prod")` in `build_instrument_catalogue.py:2095`) and the
+  catalog lives at `gs://…/prod/catalog.parquet` — the earlier `DEPLOYMENT_ENV=prd` cold-start artifact was a mis-set
+  env on my side, not a real prd/prod split. B1 (catalogue regen + un-pause) is now unblocked.
 - **2026-07-06** — Plan authored + dispatched to AO (Plan 3 of the instruments-completion set). Carries the B0→B1→B2
   IS-catalogue-completion slice pulled from instruments_mtds_subset + instruments_catalogue_incremental_rollup +
   mvp_scope_catalogue_tagging. B2 UAC SSOT already shipped (uac@b654eb6); B0 gates B1 + the Stage-3 re-measure.
