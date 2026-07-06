@@ -144,17 +144,21 @@ aggregated from all of that date's matches in that league) — exactly as the se
 - [ ] [CODE] P0. **UTL manifest NULL-vs-`''` dedup bug (§9.2)** — captured rows write optional dedup-dims
   (`timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type`) as `''`; seeds
   use `NULL`; consolidator treats `NULL ≠ ''` → captured never supersedes seed across shards → duplicates. System-wide
-  (XG 610 / XG_SHOTS 2,235 dup groups). Fix `record_captured` to write NULL for unset optional dims, OR consolidator to
-  treat `NULL == ''`. OPERATOR DECISION PENDING (writer vs consolidator).
+  (XG 610 / XG_SHOTS 2,235 dup groups). **DECIDED (operator, 2026-07-06): fix BOTH** — `record_captured` write `NULL`
+  for unset optional dims (root cause, forward-fix) AND `manifest_consolidator` treat `NULL == ''` in the dedup key
+  (resolves the pre-existing `''` rows system-wide without a historical migration). Ship together, as one change.
 - [ ] [CODE] P1. **asset_group blank on captured (§9.3)** — `record_captured` omits `venue` → `_resolve_asset_group`
   Rule 1 (no venue → non-market-data → drop label) blanks `asset_group`. Pass `venue="understat"` so the kwarg
   `"sports"` stamps. (Existing XG captured rows show `sports` — mechanism not fully reconciled; confirm before fixing.)
 - [ ] [DATA] P1. One-off manifest normalization — clean the pre-existing dup pollution (incl. seed-vs-seed
-  `empty_confirmed`+`expected_unattempted` dups) + the 5 stale `instrument_type=shot` test rows on 2024-12-14. §9.
+  `empty_confirmed`+`expected_unattempted` dups) + the 5 stale `instrument_type=shot` test rows on 2024-12-14.
+  **Sequenced AFTER the §9.2 writer+consolidator fix ships** — normalizing first would just re-duplicate against the
+  still-buggy comparison. §9.
 - [ ] [SCRIPT] P1. Build the bulk writer reusing `_sports_ref_sink_for` + `record_captured` (no path/manifest reshape);
-  group season → per (date, league). §4/§6. (Blocked on §9.2.)
+  group season → per (date, league). §4/§6. (Blocked on §9.2 — fix now decided, unblocks once it ships.)
 - [ ] [DATA] P0. Full backfill run (operator-gated locus) → all 5 leagues 2014→present, XG + XG_SHOTS captured;
-  manifest `pending_fetch=0`, `attempted_failed=0`, `captured>0` for native leagues. §6. (Blocked on §9.2.)
+  manifest `pending_fetch=0`, `attempted_failed=0`, `captured>0` for native leagues. §6. (Blocked on §9.2 — fix now
+  decided, unblocks once it ships.)
 - [ ] [VERIFY] P1. After backfill: re-evaluate the `understat-vm-xg-complete` gate against the manifest; flip only on
   real captured shots (not hollow). Then the 6 parked sports tasks unblock.
 
@@ -175,9 +179,16 @@ rows still duplicated. Root cause: `record_captured` (real pipeline) serializes 
 while seed rows (`record_expected_empty`/`record_empty`) leave them `NULL`. The consolidator substitutes NULL→sentinel
 (so NULL==NULL) but keeps `''` distinct → `NULL ≠ ''` → a captured row in a different shard than its seed never
 supersedes it. Confirmed on the live manifest: **XG = 610 dup (date,league) groups, XG_SHOTS = 2,235** (incl.
-seed-vs-seed `empty_confirmed`+`expected_unattempted` dups). NOT understat-specific — affects every data_type. Fix
-belongs in UTL `manifest_writer` (write NULL for unset optional dims, matching seeds) or `manifest_consolidator` (treat
-`NULL == ''` in the dedup key). Cross-cutting → operator decision pending.
+seed-vs-seed `empty_confirmed`+`expected_unattempted` dups). NOT understat-specific — affects every data_type.
+
+**DECIDED (operator, 2026-07-06): fix BOTH layers, not one or the other.** (1) `manifest_writer`'s `record_captured`
+must emit `NULL` (not `''`) for unset optional dedup dims going forward — root-cause correctness, matches seed
+semantics. (2) `manifest_consolidator` must ALSO treat `NULL == ''` in the dedup key — not redundant belt-and-suspenders,
+it's load-bearing: it's what correctly resolves the millions of pre-existing `''` rows already written across every
+asset_group (system-wide, all data_types) without a live migration of historical manifest data. (3) THEN — and only
+after both land — run the one-off normalization pass (§8) to clean up the duplicate rows the bug already created (610
+XG / 2,235 XG_SHOTS dup groups + the 5 stale test rows); normalizing before the consolidator fix ships would just
+re-duplicate against the still-buggy comparison.
 
 **9.3 asset_group blank on captured.** `record_captured` does not pass `venue`; `_resolve_asset_group`
 (`_writer_ingest.py`) Rule 1 treats a no-venue row as non-market-data and drops the provided `asset_group="sports"` →
@@ -203,3 +214,11 @@ instrument_type = `""` (blank) per §9.1.
   NOT promote captured over seed → gate won't clear until §9.2 is fixed. **Operator decision pending: fix manifest
   writer vs consolidator for the NULL-vs-`''` dedup.** Left 5 stale `instrument_type=shot` test rows on 2024-12-14 +
   fresh captured rows on 2024-12-21 (need cleanup). No code shipped; root working tree restored clean.
+- 2026-07-06: **§9.2 DECIDED — fix BOTH layers.** Operator ruled against picking just one side: `manifest_writer`'s
+  `record_captured` will emit `NULL` (not `''`) for unset optional dedup dims going forward (root-cause correctness,
+  matches seed semantics), AND `manifest_consolidator` will also treat `NULL == ''` in the dedup key — the consolidator
+  side is load-bearing, not redundant, since it's what resolves the millions of pre-existing `''` rows already written
+  system-wide (every asset_group, not just understat) without needing a live migration of historical manifest data.
+  Ship both as one change. The one-off normalization pass (§8) is sequenced strictly AFTER both land — normalizing
+  against the still-buggy comparison would just recreate the duplicates. Unblocks the bulk writer build + full backfill
+  run once shipped.
