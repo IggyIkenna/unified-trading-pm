@@ -579,20 +579,36 @@ for _pm_clone in "${_ws_root}/unified-trading-pm" "${_ws_root}"/.tabs/*/unified-
     _idx_py="${_pm_clone}/.venv/bin/python"
     [[ -x "${_idx_py}" ]] || _idx_py="python3"
     timeout 60 "${_idx_py}" "${_pm_clone}/scripts/docs/gen_doc_index.py" --stale-check >/dev/null 2>&1 || true
-    # Hook self-heal (2026-07-06): 15/16 PM clones had NO prek pre-commit hook (setup only ever
-    # installed pre-push), so commit-time gates (staged-plans schema, commit-identity, gitleaks)
-    # silently never ran — a gate-red doc reached LDR that way. Heal both hooks every tick:
-    # missing pre-commit → `prek install` (writes pre-commit + commit-msg ONLY — pre-push stays
-    # the strict-quickmerge guard); missing pre-push → copy the guard. Idempotent, guarded,
-    # || true — can never jam the cron. prek refuses on core.hooksPath; stale ones need a manual
-    # `git config --unset-all --local core.hooksPath` (deliberately NOT auto-unset here).
-    if [[ ! -f "${_pm_clone}/.git/hooks/pre-commit" ]]; then
-        _prek_bin="$(command -v prek || echo "${HOME}/.local/bin/prek")"
-        [[ -x "${_prek_bin}" ]] && (cd "${_pm_clone}" && timeout 30 "${_prek_bin}" install >/dev/null 2>&1) || true
+done
+
+# --- Git-hook self-heal, ALL repos × ALL clones (2026-07-06) ---
+# Found: 384/400 clones (25 repos × 16 clones, every one carrying a .pre-commit-config.yaml) had
+# NO prek pre-commit hook — setup-tab-worktrees.sh only ever installed the pre-push guard, so
+# commit-time gates (gitleaks, slot·host commit-identity, staged-plans schema in PM, ruff,
+# prettier, conventional-commit) silently never ran fleet-wide; 24 main-ws clones also lacked the
+# pre-push strict-quickmerge guard, and 10 clones carried a stale absolute core.hooksPath from the
+# pre-/active migration that disabled ALL hooks. Heal every tick: missing pre-commit →
+# `prek install` (writes pre-commit + commit-msg ONLY — pre-push stays the strict-quickmerge
+# guard, prek must NEVER manage it); missing pre-push → copy the guard from the workspace PM.
+# core.hooksPath is cleared ONLY when provably dead (target dir gone) — a live custom hooksPath is
+# deliberate and left alone. Idempotent, guarded, || true — can never jam the cron.
+_prek_bin="$(command -v prek || echo "${HOME}/.local/bin/prek")"
+_pp_guard="${_ws_root}/unified-trading-pm/scripts/dev/hooks/pre-push-strict-quickmerge.sh"
+for _clone in "${_ws_root}"/*/ "${_ws_root}"/.tabs/*/*/; do
+    _clone="${_clone%/}"
+    [[ -e "${_clone}/.git" && -f "${_clone}/.pre-commit-config.yaml" ]] || continue
+    if [[ ! -f "${_clone}/.git/hooks/pre-commit" && -x "${_prek_bin}" ]]; then
+        if ! (cd "${_clone}" && timeout 30 "${_prek_bin}" install >/dev/null 2>&1); then
+            _hp="$(git -C "${_clone}" config --local core.hooksPath 2>/dev/null || true)"
+            if [[ -n "${_hp}" && ! -d "${_hp}" ]]; then
+                git -C "${_clone}" config --unset-all --local core.hooksPath 2>/dev/null || true
+                (cd "${_clone}" && timeout 30 "${_prek_bin}" install >/dev/null 2>&1) || true
+            fi
+        fi
     fi
-    if [[ ! -f "${_pm_clone}/.git/hooks/pre-push" && -f "${_pm_clone}/scripts/dev/hooks/pre-push-strict-quickmerge.sh" ]]; then
-        cp "${_pm_clone}/scripts/dev/hooks/pre-push-strict-quickmerge.sh" "${_pm_clone}/.git/hooks/pre-push" 2>/dev/null \
-            && chmod +x "${_pm_clone}/.git/hooks/pre-push" || true
+    if [[ ! -f "${_clone}/.git/hooks/pre-push" && -f "${_pp_guard}" ]]; then
+        cp "${_pp_guard}" "${_clone}/.git/hooks/pre-push" 2>/dev/null \
+            && chmod +x "${_clone}/.git/hooks/pre-push" || true
     fi
 done
 
