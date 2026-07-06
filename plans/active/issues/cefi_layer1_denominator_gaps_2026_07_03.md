@@ -290,3 +290,14 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   Main-agent verdict (`BLK-36eeb447` answered): PARK -008; do NOT touch UAC `VENUE_DATA_TYPE_CAPABILITIES` until -007
   confirmed shipped to LDR; the machine-encoded `depends_on` fix is an operator backlog.yaml action. -008 resumes when
   `-007` (enumerator `start_date`) lands. Slot-8 rotated to `cefi_layer1_denominator_gaps-009` (C2 point-fix).
+- **2026-07-06** — **UAC capability flip RE-PARKED — BLOCKED-PREREQUISITES (2nd dispatch)** (slot-7 planning,
+  `BLK-d8cba69b`). Task `cefi_layer1_denominator_gaps-008` was RE-dispatched to slot-7 by priority=20 alone (the
+  machine-encoded `depends_on` gap flagged in `BLK-36eeb447` is still uncorrected on the backlog task — `depends_on:
+  None` verified via `/api/backlog?limit=500`). Re-verified LDR tip at re-dispatch time:
+  `instruments-service/scripts/expected_universe.py` + `check_enumeration_completeness.py` still have zero `start_date`
+  references (last touching commits: `a1038ee` 2a, `2fa3877` 2c — neither adds start_date). Task -007 is `status=dispatched`
+  to slot-11; tmux pane capture confirms slot-11 mid-work adding a per-`(venue, dt) start_date` regression test to
+  `test_enumerate_expected_universe_v2.py`, but NOT yet shipped to LDR. Main-agent verdict (`BLK-d8cba69b` answered):
+  PARK -008 — same ruling as `BLK-36eeb447`; the 17,282-row over-seed risk is real and documented; -008 will be
+  re-dispatched after -007 lands. Slot-7 handed `understat_local_backfill_completion-004` (unrelated manifest
+  normalisation) as next task.
