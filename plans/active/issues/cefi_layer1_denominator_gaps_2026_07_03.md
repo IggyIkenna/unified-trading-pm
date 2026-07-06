@@ -279,3 +279,14 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   warns against. Main-agent verdict: skip -004, add `depends_on: [cefi_layer1_denominator_gaps-002,
   cefi_layer1_denominator_gaps-007]` to task -004 in `backlog.yaml` and regen so the dispatcher gates it correctly.
   2f resumes when `-002` (2b) + `-007` (enumerator start_date) both land.
+- **2026-07-06** — **UAC capability flip PARKED — BLOCKED-PREREQUISITES** (slot-8 planning, `BLK-36eeb447`). Task
+  `cefi_layer1_denominator_gaps-008` (UAC capability flip — add ASTER `book_snapshot_5` + `liquidations` to
+  `VENUE_DATA_TYPE_CAPABILITIES` with `start_date` = live-wire date, target
+  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1144`) was dispatched by priority=20
+  alone — SAME machine-encoded `depends_on` gap as -004. Verified LDR tip: `instruments-service/scripts/expected_universe.py`
+  + `check_enumeration_completeness.py` still have zero `start_date` references; task -007 (enumerator `start_date`
+  support) is `status=dispatched` to a peer slot but has NOT reached LDR (no commit to either file since 2a). Plan is
+  explicit: "**PREREQ for the capability flip — flipping first re-creates the 17,282-row over-seed purged 2026-07-03.**"
+  Main-agent verdict (`BLK-36eeb447` answered): PARK -008; do NOT touch UAC `VENUE_DATA_TYPE_CAPABILITIES` until -007
+  confirmed shipped to LDR; the machine-encoded `depends_on` fix is an operator backlog.yaml action. -008 resumes when
+  `-007` (enumerator `start_date`) lands. Slot-8 rotated to `cefi_layer1_denominator_gaps-009` (C2 point-fix).
