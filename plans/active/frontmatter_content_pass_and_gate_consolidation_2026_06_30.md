@@ -106,14 +106,16 @@ urgent.
 - [x] [SCRIPT] P3.3 **`referenced_by` reverse-link post-pass (codex).** Derive from the corpus link graph AFTER the
       content pass lands (the pass creates new `related` edges). **Gate**: codex `referenced_by` populated mechanically,
       no LLM.
-- [ ] [OPERATOR] P3.4 **Operator worklist.** Delivered 2026-07-04 — see `## P3.4 Operator worklist` section below.
-      **Section A CLOSED by operator policy 2026-07-06**: zero-pass defaults on runbook `owner`/`cadence`/`verifier` and
-      authorship-derived `auditor` values STAND — they self-correct at first use of each runbook/audit ("update on
-      use"); field-fills are NOT operator work. B3 (3 HARD-rot docs) fixed by the zero-pass; B4 (locked_by-NA) + B5
-      (valid-empty) reconciled in docspec. **Remaining decision items**: B1 archetype maturity-axis key, B2 epic
-      `asset_group: [defi]` mis-seed (23/28 epics, measured 2026-07-06), B6 retype list (~15); B7 SUPERSEDED banners
-      parked with the archive bonus; B8 codex-drift bodies feed the W7 codex audit. **Gate**: operator ticks off
-      B1/B2/B6.
+- [x] [OPERATOR] P3.4 **Operator worklist.** Delivered 2026-07-04 — see `## P3.4 Operator worklist` section below.
+      **Section A CLOSED by operator policy 2026-07-06** (defaults stand, update-on-use; field-fills are NOT operator
+      work). B3 fixed by the zero-pass; B4 + B5 reconciled in docspec. **B1/B2/B6 executed 2026-07-06 on operator
+      direction ("do all B1, B2 and B6")** — ✅ unified-trading-pm@09cc91f48: B1 `implementation_status` elective axis
+      restored (docspec Req.E + enum + schema §3/§6 + 66 archetype docs, 18 docspec tests green); B2 22 epics re-mapped
+      per the `fix_epic_frontmatter_2026_05_21.py` canonical registry (only defi_master keeps `[defi]`); B6 10 runbooks
+      → `codex/15-runbooks/` + 4 audits → `plans/audit/results/` (retyped `audit-result`), ~50 inbound refs
+      re-relativized, sub-map truth lifted, 5 leave-in-place calls recorded below. Evidence: frontmatter gate green
+      1,299/0; full `quality-gates.sh` exit 0; regen index 1,120 docs / graph 3,114 edges (no orphaned links). Residual:
+      B7 SUPERSEDED banners stay parked with the archive bonus; B8 codex-drift bodies feed W7.
 - [x] [AGENT] P3. **Make the single gate comprehensive — back it by `docspec`, don't reimplement.** Expand the blocking
       `check_frontmatter_schema` to enforce the full schema (universal-core + enums + all doc types incl. codex +
       cursor-rule, and the now-populated content fields) by **calling `docspec.validate_frontmatter()`** rather than
@@ -156,9 +158,12 @@ urgent.
 
 ### B. Decision items
 
-1. **Archetype maturity axis flattened (57 docs).** `status:` in `codex/09-strategy/architecture-v2/**` doubled as an
-   implementation-maturity axis; enum normalization erased it (recoverable below). Decide: add a dedicated
-   `implementation_status:` key (recommended) or accept body-only maturity. Old→new mapping:
+1. ✅ RESOLVED 2026-07-06 (pm@09cc91f48 — dedicated `implementation_status:` key added as recommended: new ELECTIVE
+   requirement tier in docspec — absent-is-fine, enum-validated when present, so 700 non-archetype codex docs don't need
+   a noise key; axis restored on all 66 docs from the mapping below) ~~**Archetype maturity axis flattened (57
+   docs).**~~ `status:` in `codex/09-strategy/architecture-v2/**` doubled as an implementation-maturity axis; enum
+   normalization erased it (recoverable below). Decide: add a dedicated `implementation_status:` key (recommended) or
+   accept body-only maturity. Old→new mapping:
 
 - `design` → enum (47): arbitrage-cross-domain-event, carry-basis-dated-inv, carry-basis-dated, carry-basis-perp-inv,
   carry-basis-perp, carry-recursive-borrow-lending-only, carry-recursive-staked, carry-staked-basis-dated, event-driven,
@@ -180,9 +185,13 @@ urgent.
 - `live` → enum (1): market-making-continuous
 - `complete` → enum (1): archetype-paper-readiness
 
-2. **Epic `asset_group: [defi]` mis-seed.** Most epics carry `[defi]` regardless of domain (cefi_master,
-   execution_master, mtds_mdps_master, observability_master, dart_and_promote_master, …) — a migrate_epics default.
-   Search-axis correctness bug; untouched (dispatch-load-bearing). Proposed per-epic mapping is mechanical from slug.
+2. ✅ RESOLVED 2026-07-06 (pm@09cc91f48 — 22 epics re-mapped per the canonical slug registry in
+   `scripts/plans/fix_epic_frontmatter_2026_05_21.py` (authoritative intent, not judgment): 5 domain epics → their
+   domain, 14 → `[cross-cutting]`, infrastructure_master → `[infrastructure]`, orchestrator + agent-operating -framework
+   → `[meta]`; only defi_master keeps `[defi]`; epics README normalized to list form) ~~**Epic `asset_group: [defi]`
+   mis-seed.**~~ Most epics carry `[defi]` regardless of domain (cefi_master, execution_master, mtds_mdps_master,
+   observability_master, dart_and_promote_master, …) — a migrate_epics default. Search-axis correctness bug; untouched
+   (dispatch-load-bearing). Proposed per-epic mapping is mechanical from slug.
 3. ✅ RESOLVED (verified 2026-07-06 — the zero-pass fixed all three: enum-valid `nature: record` + valid
    stage/parent_epic; residual placement nit only: `defi_expected_unattempted_backlog_1m` is still `doc_type: plan`
    living in `issues/` — gate-legal, fold into B6 if retyped) ~~**3 pre-existing HARD-rot docs**~~ (all authored
@@ -197,7 +206,20 @@ urgent.
 5. ✅ RESOLVED (verified 2026-07-06 — the blocking gate is green with valid-empty lists present; `_valid_empty` handles
    legal-empty) ~~**Validator↔schema empty-list tension**~~ (from P3.1): schema §6 says `repos: []`/`related: []` is
    legal-empty, the FieldSpec flagged it SOFT — stubs/superseded docs claiming nothing is CORRECT.
-6. **doc_type retype candidates (~15)** — runbook-shaped `codex-ssot` docs (rotation-runbook, sit-runbook,
+6. ✅ RESOLVED 2026-07-06 (pm@09cc91f48 — retype = MOVE, since `doc_type` is path-derived. **Moved → codex/15-runbooks/
+   (10)**: both rotation runbooks (renamed `credential-rotation-runbook` + `per-source-credential-rotation-runbook`),
+   sit-runbook, physical-pager-layer, custody-onboarding-checklist, lst-seasonal-rewards-smoke,
+   expected-absence-backfill-runbook, recursive-leverage-receiver-deploy-runbook, pre-cutover-test-wallets-runbook,
+   phase-2-6-bucket-name-cutover-runbook; `execution:` sub-map truth lifted to top-level keys. **Moved →
+   plans/audit/results/ as `audit-result` (4)**: vm_security_audit_2026_05_15 (pass/P1),
+   vm_deployment_events_audit_2026_05_15 (partial/P2), vm_event_emission_audit_2026_05_15 (pass/P1),
+   run_lifecycle_events_audit_2026_05_05 (partial/P2). **Leave-in-place by content (5)**: reconciliation-resolution +
+   reconciliation-age-tracking (genuine architecture SSOTs — contracts/DAG/dimensions, not procedures),
+   credentials-matrix (reference matrix, self-titled workspace SSOT), role-registry (registry schema spec),
+   presentations/target-experience-post-refactor (kept in place, `nature: ssot → notes` per its self-declared non-SSOT
+   status). ~50 inbound refs re-relativized across 40 files; pre-existing dead links found during the sweep
+   (archived-plan refs, `disaster_recovery.md` typo, bare epic mentions) → W7 dead-link inputs, NOT move breakage.)
+   ~~**doc_type retype candidates (~15)**~~ — runbook-shaped `codex-ssot` docs (rotation-runbook, sit-runbook,
    phase-2-6-bucket-cutover, pre-cutover-test-wallets, physical-pager-layer, recursive-leverage-receiver-deploy,
    reconciliation-resolution, reconciliation-age-tracking, custody-onboarding-checklist, credentials-matrix,
    lst-seasonal-rewards-smoke, expected-absence-backfill-runbook) + audit-shaped (vm-security-audit,
@@ -225,6 +247,21 @@ urgent.
 
 ## Progress Log
 
+- 2026-07-06 — **P3.4 COMPLETE — B1/B2/B6 executed (operator: "do all B1, B2 and B6"); plan is fully done.** Shipped
+  pm@09cc91f48 (quickmerge, full QG exit 0 pre-commit; one index.lock race with the 5-min cron on first attempt, clean
+  retry). B1: docspec gains the ELECTIVE requirement tier (`Req.E` — absent-is-fine, enum-validated when present;
+  deliberately NOT present-but-empty so 700 non-archetype docs don't carry a noise key) + `IMPLEMENTATION_STATUS` enum;
+  66 archetype docs restored from the preserved mapping (47 design · 8 code-shipped · 5 stub · 3 active · 1 each
+  theoretical-only/live/complete); schema SSOT §3/§6 updated; 3 new tests (18 green). B2: 22 epics re-mapped per the
+  canonical registry in `fix_epic_frontmatter_2026_05_21.py` — grep-found authoritative intent that overrode 3 of my
+  slug judgments (manifest/deployment/observability → cross-cutting, not infrastructure). B6: 14 moves (10 runbooks, 4
+  audits with pass/partial verdicts read from bodies), 3-pass inbound-link fixer (~50 refs / 40 files; passes: plain
+  tokens → moved↔moved cross-links → ../-prefixed + renamed-basename), execution sub-map truth lifted over defaults on
+  the 8 moved docs that had it, 5 recorded leave-in-place calls. Also fixed en-route: gate-red frontmatter on the fresh
+  `prediction_universe_capture_dead` issue doc (B3-class authoring instinct recurring — 3rd occurrence, consider the
+  issue-ish `nature` enum value). Verification: frontmatter gate 1,299/0; index regen 1,120 docs; graph 3,114 edges / 67
+  unlinked (edge count held through the moves — nothing orphaned). Remaining in this plan: NOTHING — B7 rides the paused
+  archive bonus, B8 rides W7 (both tracked in the epic, not here). Plan is archival-ready pending the 5-step ritual.
 - 2026-07-06 — **P3.4 section A CLOSED by operator policy; B-items re-measured.** Operator decision: zero-pass defaults
   on runbook `owner`/`cadence`/`verifier` + authorship-derived `auditor` are acceptable and NOT operator work — values
   self-correct at first use ("update on use"); blanks get defaults going forward. Live re-measure (slot-3): gate green
