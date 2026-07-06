@@ -391,3 +391,28 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   the OPTION-override skip; COINBASE-SPOT `book_snapshot_5` dropped; Deribit PERP `liquidations` dropped;
   non-MVP-scoped venues (e.g. BINANCE-DELIVERY) unaffected by the empty-mvp_dts guard. Slot-9 action:
   checkbox-flip only (no code change) — /done cites `2170d9a3` as the shipped SHA.
+- **2026-07-06** — **Re-measure task (-005) PARKED — BLOCKED-PREREQUISITES (`BLK-ad7abfcd`)** (slot-8 planning). Task
+  `cefi_layer1_denominator_gaps-005` ("Re-measure + re-certify the cefi Layer-1 row") was dispatched to slot-8 by
+  priority=50 alone; the machine-encoded `depends_on` gap flagged across 8 prior `-008` blocks now also affects `-005`
+  (verified via `/api/backlog?limit=500`: `-005.status=dispatched, depends_on=null`). Verified plan-declared PREREQ
+  chain ("2a–2f landed + ASTER live wire (Plan 5) + KALSHI-PERP purge (Stage-3)") is NOT met:
+  (i) `-002` (2b cefi gate-authority fix on `build_expected`) status=queued — D2a `INSTRUMENT_TYPES_BY_VENUE` authority
+  IS baked into `scripts/expected_universe.py` (part of 2a's consolidation) but the 2b sub-parts (ASTER live-forward
+  split + BYBIT-SPOT relabel) remain unshipped;
+  (ii) `-004` (2f LIGHTER/EXTENDED/PACIFICA denominator-gap) status=queued — depends on enumerator `start_date`;
+  (iii) `-007` (enumerator `start_date` support) status=queued — verified LDR tip:
+  `instruments-service/scripts/expected_universe.py` has ZERO `start_date` / `get_venue_data_type_start_date` refs
+  (grep empty; last touching commits `a1038ee` 2a + `2fa3877` 2c — neither adds start_date);
+  (iv) ASTER live wire (Plan 5, INFRA role) — connector `market_tick_data_service/live/connectors/aster_book_liq_ws.py`
+  EXISTS but is NOT registered in `market_tick_data_service/live/connector_registry.py` (grep empty on
+  `aster_book_liq_ws|AsterBookLiq`);
+  (v) KALSHI-PERP purge (Stage-3) — commit `c8c6dac` only guards the KALSHI-PERP/POLYMARKET-PERP adapters to emit 0 (a
+  forward stop-gap); the 25,473 fake `KALSHI-PERP` cefi Layer-2 rows still pollute the manifest and would over-inflate
+  the numerator. Running the re-measure now would produce a misleading % moving in the WRONG direction from the plan
+  Gate ("denominator GREW, % dropped honest") — the denominator would still UNDER-count (2f venues at 0-expected while
+  their manifest rows exist) while the numerator OVER-counts (fake KALSHI-PERP rows). Slot-8 verdict: PARK -005 —
+  recommendation A of `BLK-ad7abfcd`. **Operator action required**: add
+  `depends_on: [cefi_layer1_denominator_gaps-002, cefi_layer1_denominator_gaps-004, cefi_layer1_denominator_gaps-007]`
+  to `-005` in `data/config/backlog.yaml` + regen (or flip `-005` priority to 999) to prevent the same bounce-loop the
+  `-008` block-chain hit 8×. -005 stays in queue until 2b/2f/-007/ASTER-wire/KALSHI-PERP-purge all reach LDR. Slot-8
+  goes idle pending operator answer + backlog fix.
