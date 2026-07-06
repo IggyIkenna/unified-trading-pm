@@ -1292,7 +1292,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "qg_red_reason": "ruff",
         "coverage_pct": 71.07,
