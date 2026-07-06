@@ -117,17 +117,20 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 
 ## 📊 Snapshot (2026-07-06)
 
-- **Certified Layer-1 (denominator) — cefi + defi + prediction CERTIFIED 2026-07-06; tradfi/sports still pending
-  (tradfi BLOCKED-PLAN2; sports 06-29 stale):** cefi **73.61** (72 expected / 53 present / 19 missing / 87 stray;
-  `is@03cfd0f`, `layer1_remeasure_and_certify` task 002) · defi **94.81** (77 expected / 73 present / 4 missing / 128
-  stray; `is@681f50a` post-D1 seeding, denominator SHRANK 108→77 via `is@3bb7acd` defi lending grain roll-up 2026-07-03;
-  task 003) · **prediction 66.67** (6 expected / 4 present / 2 missing MARKET_LIFECYCLE / 17 stray; `is@6716f55`
-  post-KALSHI-PERP-purge, denominator unchanged vs stale — purge was cefi-side not prediction-side; task 005) · tradfi
-  51.43 [06-29 stale — 🚧 BLOCKED-PLAN2 pending `tradfi_v9_stage1_finish` tasks 2-11] · sports 30.77 [06-29 stale].
-  _(Upper bounds where UAC under-specifies.)_
-- **Layer-2 lower bounds (capture):** cefi 37.86 · defi **62.06** [fresh post-D1 seeding; expected_unattempted 1,534,304
-  confirms +1.38M in denominator, up from 57.55 stale] · tradfi 88.81 · sports 100 · pred **22.73** [fresh post-purge;
-  captured 8,711 / reachable 38,318; expected_unattempted 497; up from 20.56 stale].
+- **Certified Layer-1 (denominator) — cefi + defi + sports + prediction CERTIFIED 2026-07-06; tradfi BLOCKED-PLAN2:**
+  cefi **73.61** (72 expected / 53 present / 19 missing / 87 stray; `is@03cfd0f`, task 002) · defi **94.81**
+  (77 expected / 73 present / 4 missing / 128 stray; `is@681f50a` post-D1 seeding, denominator SHRANK 108→77 via
+  `is@3bb7acd` defi lending grain roll-up 2026-07-03; task 003) · **sports 30.77** (26 expected / 8 present / 18 missing
+  all BETFAIR odds / 24 stray; `is@ebfd11d`; task 006 side-measurement) · **prediction 66.67** (6 expected / 4 present /
+  2 missing MARKET_LIFECYCLE / 17 stray; `is@6716f55` post-KALSHI-PERP-purge, denominator unchanged vs stale — purge
+  was cefi-side not prediction-side; task 005) · tradfi 51.43 [06-29 stale — 🚧 BLOCKED-PLAN2 pending
+  `tradfi_v9_stage1_finish` tasks 2-11]. _(Upper bounds where UAC under-specifies.)_
+- **Layer-2 lower bounds (capture) — fresh certified 2026-07-06 except tradfi:** cefi **33.28** [fresh
+  `is@03cfd0f`; captured 2,891,774 / reachable 8,689,530; total 11,125,247; down from 37.86 stale as D2a expansion grew
+  the denominator] · defi **62.06** [fresh post-D1 seeding; expected_unattempted 1,534,304 confirms +1.38M in
+  denominator, up from 57.55 stale] · **sports 100.00** [fresh `is@ebfd11d`; captured 38,182 / reachable 38,182;
+  attempted_failed 0; expected_unattempted 0; total 41,520] · pred **22.73** [fresh post-purge; captured 8,711 /
+  reachable 38,318; expected_unattempted 497; up from 20.56 stale] · tradfi 88.81 [06-29 stale — BLOCKED-PLAN2].
 - **DONE already:** denominator **generation** (catalogue built + self-refreshing) · Issue-4 strays · 4/5 AG v9
   `--apply` · opus-checkpoints + registry-consolidation (archived).
 - **REMAINING (this tracker):** denominator **correctness + certification** → then **capture**.
@@ -290,6 +293,17 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-06** — **Reconciled certified snapshot published** (via `layer1_remeasure_and_certify_2026_07_06` task 006).
+  Fresh-measured sports as part of the reconciliation (never re-measured in this plan cycle previously) — sports Layer-1
+  30.77% (8/26; 18 missing all BETFAIR odds; 24 stray) unchanged vs stale; sports Layer-2 100.00% (38,182/38,182
+  reachable; 0 attempted_failed; 0 expected_unattempted; total 41,520). Full 5-AG reconciliation table (Layer-1 +
+  Layer-2 + provenance + handler-audit-reread flags) added to `layer1_remeasure_and_certify_2026_07_06.md` under
+  task 006. **Handler-audit re-read flags:** 🟡 cefi only (Deribit `DeribitOptionsChainHandler` register
+  `mts@015abaf5` will move cefi L2 on next capture); defi/sports/prediction 🟢 clean; tradfi 🚧 STALE-BLOCKED-PLAN2.
+  73 unregistered venues per WSFeedConnector audit (`wsfeedconnector_phase35_gap_2026_07_06`) are honest
+  handler-not-built gaps, NOT C5-class re-read triggers. All 4/5 fresh certifications retain
+  `denominator_status: INCOMPLETE` → Layer-2 % remains a LOWER BOUND per the two-layer governing law. Sports evidence:
+  `/home/ubuntu/coverage_sports_20260706T153104Z.json`.
 - **2026-07-06** — **prediction Layer-1 CERTIFIED — 66.67% fresh** (via `layer1_remeasure_and_certify_2026_07_06` task
   005). Ran `measure_honest_coverage.py --asset-group prediction` locally at 2026-07-06 15:27 UTC on `is@6716f55`
   post-KALSHI-PERP-purge; primary manifest `gs://market-data-tick-pred-prd-central-element-323112` blob.updated

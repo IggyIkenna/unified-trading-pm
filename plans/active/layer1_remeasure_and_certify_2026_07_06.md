@@ -136,9 +136,37 @@ source:
       `gs://market-data-tick-pred-prd-central-element-323112/_index/availability_index.parquet` blob.updated
       2026-07-06T15:26:46Z (760,300 rows), merged 706,197 rows. Evidence artefact (local):
       `/home/ubuntu/coverage_prediction_20260706T152707Z.json`.
-- [ ] [VERIFY] P1. **Reconcile the certified Layer-1 set against the Layer-2 lower bounds** — flag any AG where the
+- [x] ✅ [VERIFY] P1. **Reconcile the certified Layer-1 set against the Layer-2 lower bounds** — flag any AG where the
       handler audit (Plan 5) changed capture so Layer-2 is re-read too. Gate: a single certified snapshot table (all 5
       AGs, both layers) with provenance.
+      **CERTIFIED SNAPSHOT 2026-07-06 (task 006):**
+
+      | AG             | Layer-1 %        | L1 present/expected | L1 missing | L1 stray | Layer-2 %      | L2 captured / reachable | L2 total shards | Handler-audit re-read flag                                                                             | Provenance                                                                                                                                              |
+      | -------------- | ---------------- | ------------------- | ---------- | -------- | -------------- | ----------------------- | --------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+      | **cefi**       | **73.61 (fresh)**| 53 / 72             | 19         | 87       | 33.28 (fresh)  | 2,891,774 / 8,689,530   | 11,125,247      | 🟡 pending — mts@015abaf5 registered DeribitOptionsChainHandler; re-capture NOT yet run → cefi L2 will re-move on next backfill | task 002; `is@03cfd0f` (post-D2a); manifest `market-data-tick-cefi-prd` blob.updated 2026-07-06T14:55Z; `coverage_cefi_20260706T150020Z.json`             |
+      | **defi**       | **94.81 (fresh)**| 73 / 77             | 4          | 128      | 62.06 (fresh)  | 2,857,320 / 4,603,799   | 10,828,935      | 🟢 clean — no handler-audit findings that affect captured defi cells (49 unregistered venues are honest gaps, not C5-class) | task 003; `is@681f50a` (post-D1 +1.38M seeding); manifest `market-data-tick-defi-prd` blob.updated 2026-07-06T15:11:42Z; `coverage_defi_20260706T151304Z.json` |
+      | **tradfi**     | 51.43 [STALE 06-29] | (stale)          | (stale)    | (stale)  | 88.81 [STALE 06-29] | (stale)             | (stale)         | 🚧 BLOCKED-PLAN2 — no re-measure until `tradfi_v9_stage1_finish_2026_07_06` tasks 2-11 land | task 004 DOCUMENTED-BLOCKED-PLAN2 (main-agent `BLK-ab86f4e9`); provenance = last measurement 2026-06-29                                                  |
+      | **sports**     | **30.77 (fresh)**| 8 / 26              | 18         | 24       | 100.00 (fresh) | 38,182 / 38,182         | 41,520          | 🟢 clean — 100% L2 (nothing to re-read); 18 L1 misses are all BETFAIR odds (handler-not-built, honest gap not C5-class) | task 006 [this]; `is@ebfd11d`; manifest `market-data-tick-sports-prd` blob.updated 2026-07-06T15:30:44Z; `coverage_sports_20260706T153104Z.json`         |
+      | **prediction** | **66.67 (fresh)**| 4 / 6               | 2          | 17       | 22.73 (fresh)  | 8,711 / 38,318          | 706,197         | 🟢 clean — 0 KALSHI-PERP/POLYMARKET-PERP mentions post-purge; 2 L1 misses are MARKET_LIFECYCLE handlers (honest gap not C5-class) | task 005; `is@6716f55` (post-KALSHI-PERP-purge cefi state); manifest `market-data-tick-pred-prd` blob.updated 2026-07-06T15:26:46Z; `coverage_prediction_20260706T152707Z.json` |
+
+      **Reconciliation findings:**
+      1. **4 of 5 AGs fresh-certified** (cefi + defi + sports + prediction). tradfi remains STALE at 51.43 pending
+         Plan 2 completion.
+      2. **Handler-audit re-read flag = 🟡 cefi only.** The Deribit `DeribitOptionsChainHandler` registration
+         (mts@015abaf5) will move cefi Layer-2 on next capture cycle (2 handlers × Deribit BTC+ETH options_chain).
+         Defi/sports/prediction have zero C5-class fixes pending — their Layer-2 fresh numbers stand.
+      3. **73 unregistered venues (per WSFeedConnector audit)** are NOT C5-class bugs — they're genuine handler-not-
+         built gaps filed at `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md`. NO Layer-2 re-read
+         needed for them until the connectors are built.
+      4. **Layer-1 direction summary:** cefi ↑ (44→72, D2a `INSTRUMENT_TYPES_BY_VENUE`); defi ↓ (108→77, `is@3bb7acd`
+         lending grain roll-up — legitimate schema tightening); sports/prediction stable (schema unchanged); tradfi
+         BLOCKED. All fresh moves are HONEST directions (no suspicious measures).
+      5. **Layer-2 direction summary:** defi ↑ (57.55→62.06, +D1 seeding lands in denominator); prediction ↑
+         (20.56→22.73); cefi ↓ (37.86→33.28, denominator grew from D2a expansion); sports 100.00 stable; tradfi
+         STALE. All fresh moves consistent with the corrective plans that landed.
+      6. **Denominator status = INCOMPLETE for all 5 AGs** → every Layer-2 % is a LOWER BOUND per the two-layer
+         governing law (Layer-1 gates Layer-2). None of the AGs are certified-complete; the certifications record the
+         honest lower bound at 2026-07-06.
 - [ ] [VERIFY] P2. **`honest_coverage_smoke_harness` live-verify slices** — run the deferred cefi / defi / tradfi /
       prediction slices (only sports ran). Gate: each AG's smoke slice green or its discrepancy filed.
 - [ ] [CODE] P1. **Close `honest_coverage_v2` remaining measurement items** — build_expected landed in 2a (Plan 1); the
@@ -149,6 +177,19 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **✅ Task 006 RECONCILED — certified snapshot table published (5 AGs, both layers, provenance).**
+  Also fresh-measured sports (never re-measured in this plan cycle): sports Layer-1 = 30.77% (8/26, 18 missing all
+  BETFAIR odds, 24 stray); sports Layer-2 = 100.00% (38,182/38,182 reachable). Reconciliation table added under task
+  006 checkbox; key findings: (1) 4/5 AGs fresh-certified (cefi 73.61 · defi 94.81 · sports 30.77 · prediction 66.67);
+  tradfi 51.43 STALE-BLOCKED-PLAN2. (2) Handler-audit re-read flag = 🟡 cefi only (Deribit `DeribitOptionsChainHandler`
+  register `mts@015abaf5` will move cefi L2 on next capture); defi/sports/prediction 🟢 clean. (3) 73 unregistered
+  venues per WSFeedConnector audit are honest handler-not-built gaps (filed `wsfeedconnector_phase35_gap_2026_07_06`),
+  NOT C5-class re-read triggers. (4) Layer-1 direction: cefi ↑ (D2a), defi ↓ (lending roll-up `is@3bb7acd`), sports +
+  prediction stable, tradfi blocked. (5) Layer-2 direction: defi ↑ (D1 seeding), prediction ↑ (post-purge tighten),
+  cefi ↓ (D2a expansion enlarged denominator), sports 100.00, tradfi stale. (6) All 5 AGs remain
+  `denominator_status: INCOMPLETE` → every Layer-2 % is a LOWER BOUND per the two-layer governing law. Sports evidence
+  artefact (local): `/home/ubuntu/coverage_sports_20260706T153104Z.json` (`is@ebfd11d`; manifest
+  `market-data-tick-sports-prd` blob.updated 2026-07-06T15:30:44Z; merged 41,520 rows).
 - **2026-07-06** — **✅ Task 005 CERTIFIED — prediction Layer-1 = 66.67%** (fresh local
   `measure_honest_coverage.py --asset-group prediction` run at 2026-07-06 15:27 UTC on `is@6716f55` post-KALSHI-PERP
   purge; primary manifest `gs://market-data-tick-pred-prd-central-element-323112` blob.updated 2026-07-06T15:26:46Z,
