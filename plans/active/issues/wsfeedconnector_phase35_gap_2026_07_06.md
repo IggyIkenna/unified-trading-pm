@@ -152,16 +152,28 @@ approve / defer per category rather than per-venue.
       `COINBASE` from UAC. Original gate remains: 0 downstream call sites reference bare `COINBASE`; entry removed
       from `VENUES_BY_ASSET_GROUP["cefi"]`; smoke-matrix `blocked-not-registered` count for `COINBASE` drops to 0
       (repo: unified-api-contracts + fan-out).
-- [ ] [PLAN] P2. **Draft the COINBASE-bare-name migration plan (prerequisite for the CODE task above)** — before
-      the CODE task above can proceed, someone must draft a plan that: (1) enumerates the ~25 bare `COINBASE`
-      downstream callers (venue_constants.py:377 D2a critical; market_data_categories.py:242 VENUES_BY_ASSET_GROUP;
-      market_data_categories.py:1186 skip-filter; venue_mapping.py:154/818/868; venue_launch_dates.py:64/236;
-      restaking_rewards.py:657/663/676/718 cex_listings; venue_core.py:145 IS resolver; execution-service
-      registry.py:178/208/310 + utils.py:28/238; strategy-service seed_mock_data.py; and the test callers); (2)
-      decides the migration target per caller (COINBASE-SPOT vs perp-gate pair vs KEEP-BARE per D2a); (3) proposes
-      a fix for the D2a Layer-1 `_CEFI_VENUE_FOLD` if bare `COINBASE` is removed (re-key EXPECTED to
-      `COINBASE-SPOT`?) — MUST NOT regress the itype-gate authority switch; (4) sequences the multi-repo landings.
-      This plan is a **prerequisite blocker** for the CODE task above (repo: unified-trading-pm plan doc).
+      **Prerequisite plan LANDED 2026-07-06**: `plans/active/coinbase_bare_name_migration_2026_07_06.md`
+      (10 executable phased todos + D2a Layer-1 fold fix — `_CEFI_VENUE_FOLD["COINBASE-SPOT"] = "COINBASE"` is
+      dropped so `COINBASE-SPOT` stays canonical on both writer + EXPECTED sides). Once the migration plan's
+      Phase 1-3 land, this CODE task becomes redundant (its entire scope is folded into the plan's Todo A1);
+      close this checkbox with an "SUPERSEDED_BY: coinbase_bare_name_migration_2026_07_06" note when Phase 1
+      of the migration ships.
+- [x] ✅ [PLAN] P2. **Draft the COINBASE-bare-name migration plan (prerequisite for the CODE task above)** —
+      **DONE 2026-07-06 — unified-trading-pm plan drafted at
+      `plans/active/coinbase_bare_name_migration_2026_07_06.md`.** Plan enumerates 48 bare-`COINBASE` callsites
+      across 9 repos, categorised into 3 semantic namespaces: (A) CeFi venue → MIGRATE to `COINBASE-SPOT`
+      (production routing/registry/config); (B) DeFi LST protocol (cbETH — Coinbase-issued liquid-staking token,
+      chain=ETHEREUM) → KEEP BARE; (C) display/metadata (`cex_listings`, `spot_mvp_filtered_venues` for
+      coinbase-premium filter) → KEEP BARE. Proposes the D2a Layer-1 `_CEFI_VENUE_FOLD` fix: **delete the
+      `"COINBASE-SPOT": "COINBASE"` entry from `_CEFI_VENUE_FOLD`** in
+      `instruments-service/scripts/check_enumeration_completeness.py:163` — this aligns COINBASE with
+      BINANCE-SPOT / KRAKEN-SPOT / BITFINEX-SPOT (each keyed only by the suffixed form; not folded). The plan
+      also proposes retaining a `COINBASE → COINBASE-SPOT` compat alias in execution-service for a 1-plan
+      window (retirement scheduled as Phase 5 follow-on). Sequenced into 5 phases: Phase 1 (UAC + IS Layer-1
+      fold fix, coordinated wave, LAND FIRST); Phase 2 (MTDS registry+configs + IS resolver, parallel-safe);
+      Phase 3 (execution-service — largest per-repo footprint, single PR); Phase 4 (strategy + features + UTL +
+      e2e-testing + SIT tail, parallel-safe); Phase 5 (optional compat-alias retirement). 10 executable todos
+      filed on the new plan. Unblocks the P2 CODE task above (repo: unified-trading-pm plan doc).
 - [x] [CODE] P1. **BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnector build** ✅ — mtds@2b41b5fa. Public WS at
       `wss://api-pub.bitfinex.com/ws/2` (shared spot + perp endpoint; Bitfinex v2 `trades` channel).
       `BitfinexSpotWSFeedConnector` (base — chan_id ↔ symbol tracking, snapshot + `te`/`tu` frame parsing, heartbeat
