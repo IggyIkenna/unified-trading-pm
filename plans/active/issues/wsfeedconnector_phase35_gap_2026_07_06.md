@@ -223,9 +223,37 @@ approve / defer per category rather than per-venue.
 - [ ] [CODE] P1. **DeFi lending: AAVE_V3 + COMPOUND_V3 + MORPHO-BASE per-chain WSFeedConnector build** (repo:
       market-tick-data-service). Once the naming policy above lands. Gate: AAVE_V3 + COMPOUND_V3 canonical keys resolve;
       MORPHO-BASE resolves against the existing MORPHO base or a chain-specific override.
-- [ ] [CODE] P1. **DeFi DEX-swap: UNISWAP_V3 + UNISWAP_V2 + UNISWAP_V4 + SUSHISWAP + BALANCER + PANCAKESWAP_V3 +
-      CAMELOT_V3 + AERODROME_V3 + TRADER_JOE_V2 + VELODROME_V2 WSFeedConnector build** (repo: market-tick-data-service).
-      Depends on the naming policy above. Gate: each protocol canonical key resolves.
+- [x] [CODE] P1. **DeFi DEX-swap: UNISWAP_V3 + UNISWAP_V2 + UNISWAP_V4 + SUSHISWAP + BALANCER + PANCAKESWAP_V3 +
+      CAMELOT_V3 + AERODROME_V3 + TRADER_JOE_V2 + VELODROME_V2 WSFeedConnector build** ✅ — mtds@<sha>. Minimum-bar
+      scaffold shipped (`dex_swap_scaffold_ws.py`) — `DexSwapPlaceholderWSFeedConnector` registered for all **22
+      canonical (protocol × chain) UAC keys** (UNISWAP_V3 × 5 chains + UNISWAP_V2/V4 × ETHEREUM + SUSHISWAP-ARBITRUM +
+      BALANCER × 6 + PANCAKESWAP_V3 × 4 + CAMELOT_V3-ARBITRUM + AERODROME_V3-BASE + TRADER_JOE_V2-AVALANCHE +
+      VELODROME_V2-OPTIMISM). Smoke-matrix L1 flips each from `blocked-not-registered` → `schema-only`; L2 stays honest
+      (`connect()` raises `BLOCKED-BUILD`). 70-test parametric pack in `test_dex_swap_scaffold_ws.py` (22 × registry +
+      22 × Protocol conformance + 22 × isinstance + 4 unit). Real subgraph pollers hang off the 10 P2 follow-ons below;
+      re-registering with `overwrite=True` per protocol drops the placeholder cleanly.
+- [ ] [CODE] P2. **UNISWAP_V3 subgraph poller — real WSFeedConnector across ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON**
+      (repo: market-tick-data-service). Replace 5 keys in `DEX_SWAP_SCAFFOLD_VENUES` with a real class re-registered via
+      `register_ws_feed_connector(..., overwrite=True)`. Uniswap V3 subgraph shape is the reference — pattern for the
+      remaining 9 protocols.
+- [ ] [CODE] P2. **UNISWAP_V2 subgraph poller — real WSFeedConnector for UNISWAP_V2-ETHEREUM** (repo:
+      market-tick-data-service). Distinct AMM shape (x·y=k) from V3 tick-based — separate poller class.
+- [ ] [CODE] P2. **UNISWAP_V4 subgraph poller — real WSFeedConnector for UNISWAP_V4-ETHEREUM** (repo:
+      market-tick-data-service). Hook-enabled architecture; may or may not have subgraph coverage day-one.
+- [ ] [CODE] P2. **SUSHISWAP subgraph poller — real WSFeedConnector for SUSHISWAP-ARBITRUM** (repo:
+      market-tick-data-service). V3-shape fork; may reuse the UNISWAP_V3 poller with a different subgraph endpoint.
+- [ ] [CODE] P2. **BALANCER subgraph poller — real WSFeedConnector across ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON/
+      AVALANCHE** (repo: market-tick-data-service). Weighted-pool + stable-pool shape — distinct from V2/V3 AMMs.
+- [ ] [CODE] P2. **PANCAKESWAP_V3 subgraph poller — real WSFeedConnector across ETHEREUM/ARBITRUM/BASE/BSC** (repo:
+      market-tick-data-service). V3-shape fork; may reuse the UNISWAP_V3 poller with per-chain subgraph endpoints.
+- [ ] [CODE] P2. **CAMELOT_V3 subgraph poller — real WSFeedConnector for CAMELOT_V3-ARBITRUM** (repo:
+      market-tick-data-service). Algebra-fork V3-shape (concentrated liquidity with directional fee).
+- [ ] [CODE] P2. **AERODROME_V3 subgraph poller — real WSFeedConnector for AERODROME_V3-BASE** (repo:
+      market-tick-data-service). Velodrome fork; slipstream (concentrated-liquidity) pools.
+- [ ] [CODE] P2. **TRADER_JOE_V2 subgraph poller — real WSFeedConnector for TRADER_JOE_V2-AVALANCHE** (repo:
+      market-tick-data-service). Liquidity Book (bin-based) shape — distinct from tick-based V3.
+- [ ] [CODE] P2. **VELODROME_V2 subgraph poller — real WSFeedConnector for VELODROME_V2-OPTIMISM** (repo:
+      market-tick-data-service). ve(3,3) Solidly-derivative; stable + volatile pool shapes.
 - [ ] [CODE] P1. **DeFi LST + perp + specialty: LIDO + ETHERFI + ETHENA + EIGENLAYER + FLUID + SPARK + GMX + KAMINO +
       MARINADE + JITO-SOLANA WSFeedConnector build** — some (JITO) already have polling connectors but under a different
       key (`jito` vs `JITO-SOLANA`); reconcile the key naming (repo: market-tick-data-service). Gate: each protocol
