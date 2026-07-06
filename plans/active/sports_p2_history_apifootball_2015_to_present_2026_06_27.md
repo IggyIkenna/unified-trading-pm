@@ -129,10 +129,9 @@ drift_direction: advance-code
       was 52,747 due to consolidator activity since session 7). Snapshot at
       `gs://instruments-store-sports-prd-central-element-323112/_index/snapshots/availability_index_20260628_213954.parquet`.
       Gate verified: 0 phantom EU rows. unified-trading-pm@TODO
-- [ ] [PARKED — per-fixture EU blocker: 54s/fixture sleep, operator action required] [VERIFY] P2. **Enrichment data_type cleanliness** — after Todo 5 enrichment backfill completes + Todo 8 dedup
-      pass, query IS index for FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES/STANDINGS/TEAMS: 0 pending-fetch
-      (canonical leagues, within coverage windows), 0 blank-reason. **Gate**: all AF enrichment data_types show
-      `expected_unattempted_pending_fetch == 0` for coverage dates. **BLOCKER**: INJURIES done (pending consolidation+dedup); STANDINGS/TEAMS coordinator completing (~8h); per-fixture entities blocked on 54s/fixture rate → weeks. Operator must (a) reduce sleep or (b) accept partial enrichment before gate can pass.
+- [ ] [VERIFY] P2. BLOCKED-OPERATOR-DECISION: **Enrichment data_type cleanliness** — TRACKER-ONLY, NOT an agent-executed backfill. The enrichment backfill runs as the detached coordinator process on the `planning` VM; an agent's only role here is to TRACK progress (coordinator PID liveness via `kill -0`, coordinator-log chunk advance) — it MUST NOT gate on EU→0 (409k+ per-fixture EU is weeks away at the 54s/fixture API-Football rate, so gating an agent task on it thrashes the slot — the 2026-07-06 slot-4 BLOCKED alerts).
+      **Unblock condition** (operator decides the per-fixture path): (a) raise the API-Football key tier / parallelize keys to drop the 54s/fixture sleep, (b) move the coordinator to a dedicated SPOT backfill VM, or (c) accept partial enrichment. THEN, once the coordinator exits 0 AND the full-history enrichment cleanliness audit is GREEN, flip `sports-p2a-enrichment-coordinator-complete: true` and REMOVE the `BLOCKED-OPERATOR-DECISION` marker to re-ingest this VERIFY todo.
+      **Verify gate (runs only after unblock)**: query IS index for FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES/STANDINGS/TEAMS → 0 pending-fetch (canonical leagues, within coverage windows), 0 blank-reason; all AF enrichment data_types show `expected_unattempted_pending_fetch == 0` for coverage dates.
 
 **Full-execution criterion**:
 
