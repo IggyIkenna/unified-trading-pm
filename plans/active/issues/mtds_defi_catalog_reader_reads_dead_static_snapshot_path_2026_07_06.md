@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: MTDS DefiCatalogReader still reads the dead static-snapshot path — mirrors CeFi BUG #4 / TradFi G4 FIX
-summary:
+summary: |
   Discovered while shipping `is_catalogue_completion_2d-009` (P3 delete-orphaned-static-snapshot-catalogue-path).
   The IS CatalogueBuilder writer is orphan CODE (no CLI/TF/test caller — audit-confirmed), so nobody writes to
   `reference_data/instruments/asset_group=defi/written_at=<ISO>/all.parquet`. But `MTDS/engine/defi_catalog_reader.py`
@@ -11,8 +11,8 @@ summary:
   silent-fallback failure mode the CeFi reader had before its 2026-06-22 fix (BUG #4) and the TradFi reader
   before its 2026-06-25 fix (G4). Both peers were migrated to read the lifecycle-regen output
   `{env}/catalog.parquet` (freshly written by `build_instrument_catalogue.py` daily).
-status: active
-nature: bug
+status: open
+nature: process
 asset_group: [defi]
 stage: [data]
 repos: [market-tick-data-service]
@@ -37,7 +37,9 @@ estimate_calibrated_ai_days: 0.08
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: orchestrator-agent
+parent_epic: mtds_mdps_master
 depends_on: []
+resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

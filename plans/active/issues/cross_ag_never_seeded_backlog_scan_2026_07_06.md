@@ -60,6 +60,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+resolved_by:
 ---
 
 # Cross-AG never-seeded backlog scan (cefi / tradfi / prediction) — 2026-07-06
