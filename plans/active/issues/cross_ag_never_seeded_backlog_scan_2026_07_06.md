@@ -31,7 +31,7 @@ related:
     ../../codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-06 (2026-07-06 15:20Z — prediction token-id lane cross-reference marker closed, slot-12·planning)
+last_updated: 2026-07-06 (2026-07-06 15:30Z — prediction token-id + cefi Kraken-6yr cross-reference markers closed, slot-12·planning)
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -180,10 +180,20 @@ superseded_by:
 
 ## Actionable todos (per RULES.md §4.5.b)
 
-- [ ] [DATA] P1. Seed the cefi IS-store historical listings for venues MTDS has but IS lacks (Kraken ~6yr class), so the
+- [x] ✅ [DATA] P1. Seed the cefi IS-store historical listings for venues MTDS has but IS lacks (Kraken ~6yr class), so the
       v2 cefi enumerator produces the missing pre-catalogue EU cells → over-reported completion % settles honestly
       (repo: instruments-service; owning plan: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` Step 2 P1
-      already open — this todo is the cross-reference marker so Plan 5's -008 gate reads "quantified + filed").
+      already open — this todo is the cross-reference marker so Plan 5's -008 gate reads "quantified + filed"). —
+      **CROSS-REFERENCE MARKER CLOSED 2026-07-06** (Opus, slot-12·planning, `data_engineering`). Verified: owning
+      plan's Step 2 P1 todo IS OPEN (`data_completion_to_100_all_ag_2026_06_21.md#L3279` — "IS-store backfill
+      historical listings for venues MTDS has but IS lacks (Kraken ~6yr, LIGHTER/PACIFICA/EXTENDED, BITGET gap days)
+      so MTDS↔IS subset closes both ways"). Plan 5's `foundation_gates_and_capture_to_100_2026_07_06.md` task -008
+      gate ALREADY reads `[x] ✅` "quantified + filed" for cefi (line 215-216 explicitly enumerates the Kraken ~6yr
+      class ≈ ~1.75M cells order-of-magnitude as the cefi residual). No new code shipped here — this scan's
+      contract is "file findings; seed in the owning plan, don't seed blind here" and the Kraken-6yr backfill
+      execution stays owned by `data_completion_to_100_all_ag_2026_06_21.md` Step 2 P1. Evidence:
+      `data_completion_to_100_all_ag_2026_06_21.md#L3279` (owning todo still open),
+      `foundation_gates_and_capture_to_100_2026_07_06.md#L215-227` (Plan 5 -008 gate DONE, quantum stated).
 - [ ] [DATA] P2. cefi sub-bucket blank-chain phantom audit — collapse residual pre-@24c0dd5 blank-chain rows in
       oracle/perp sub-bucket shards; verify the consolidator's canonical-glue projection is applied per sub-bucket
       (repo: unified-trading-library + instruments-service; owning plan:
