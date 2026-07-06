@@ -335,10 +335,37 @@ resolved_by:
       also flipped in the same commit. — evidence: `deployment-service@0a7c3f8` (Kalshi --venue wired),
       `launch-mtds-prediction-backfill-vm.sh` lines 63-66/94-98/150/164-165 (VENUE case + VM_NAME + VM_VENUE),
       `market-tick-data-service/market_tick_data_service/scripts/ingest_kalshi_bulk_to_canonical.py` (adapter wired).
-- [ ] [DOC] P3. prediction decision-338 documentation-only affirmation — no seed; keep the per-conditionId exclusion in
-      `_enumerate_v2_prediction` and the >50M-row inflation risk visible in the docstring so a future re-open reads the
-      rationale first (repo: instruments-service; owning plan:
-      `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` — cross-reference marker only).
+- [x] ✅ [DOC] P3. prediction decision-338 documentation-only affirmation — no seed; keep the per-conditionId exclusion
+      in `_enumerate_v2_prediction` and the >50M-row inflation risk visible in the docstring so a future re-open reads
+      the rationale first (repo: instruments-service; owning plan:
+      `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` — cross-reference marker only). —
+      **CROSS-REFERENCE MARKER CLOSED 2026-07-06** (Opus, slot-12·planning, `data_engineering`). **Verified current
+      state (this session):** (1) The decision-338 per-conditionId exclusion is IN PLACE in `_enumerate_v2_prediction`
+      at `instruments-service/scripts/enumerate_expected_universe.py:1745-1753` — filter logic keeps ONLY the
+      cqg-bundle-grain rows (`_cqg_rows = [c for c in catalog if c.data_type == _PREDICTION_CQG_DATA_TYPE]`) with an
+      explicit `logger.info("prediction v2: cqg-bundle-grain filter active — %d cqg rows kept of %d catalogue rows
+      (per-conditionId trades/market_lifecycle EXCLUDED; decision 338)", …)` runtime log tag. (2) The >50M-row
+      catastrophic denominator-inflation risk is VISIBLE in the function docstring at
+      `enumerate_expected_universe.py:1728-1738` — "**cqg-bundle grain ONLY (decision 338, 2026-06-19).** … Seeding
+      `expected_unattempted` at per-conditionId grain emits >50M FALSE rows (435K conditionIds x ~574 days x 2
+      data_types) that NEVER match the per-conditionId-`trades` captured present-set → catastrophic denominator
+      inflation." A future re-opener reading the docstring encounters the rationale before the filter code. (3) The
+      fall-through preserved: "If the catalogue has NO cqg-bundle rows (legacy / test), fall through to all rows
+      unchanged (never silently drop a whole AG)" — the exclusion is data-dependent (fires only when cqg-bundle rows
+      exist), so a catalogue evolution that removes the bundle grain doesn't silently zero-seed the AG. (4) Owning plan
+      `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` is the tracking anchor per the scan
+      contract; no owning-plan flip performed here (scan contract line 76 + § Recommended-decision line 170-173 —
+      documentation-only affirmation, no code change). (5) Plan 5's
+      `foundation_gates_and_capture_to_100_2026_07_06.md` task -008 gate ALREADY reads `[x] ✅` "quantified + filed"
+      (line 207-227) with explicit prediction bullet at line 221-223 naming "decision-338 per-conditionId intentional
+      exclusion (>50M-row inflation risk documented)". Cross-reference marker's purpose is fulfilled: filed +
+      documented + tracked. No new code shipped here — this is a **documentation-only** affirmation per the item text
+      ("no seed; keep the per-conditionId exclusion … the >50M-row inflation risk visible in the docstring"). —
+      evidence: `instruments-service/scripts/enumerate_expected_universe.py:1728-1738` (docstring §"cqg-bundle grain
+      ONLY (decision 338, 2026-06-19)" with the >50M-row risk narrative),
+      `instruments-service/scripts/enumerate_expected_universe.py:1745-1753` (filter code with
+      `_PREDICTION_CQG_DATA_TYPE` predicate + decision-338 logger.info tag),
+      `foundation_gates_and_capture_to_100_2026_07_06.md#L221-223` (Plan 5 -008 gate DONE with prediction bullet).
 
 ## Provenance
 
