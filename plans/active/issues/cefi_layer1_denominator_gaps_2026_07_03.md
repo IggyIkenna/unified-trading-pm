@@ -127,6 +127,33 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
       over-seed class, e.g. COINBASE-SPOT trades-only). Complements the 2026-07-03 capability carve-out
       (`instruments-service@3bb7acd`) — that closed the VENUE_DATA_TYPE_CAPABILITIES half; this closes the MVP half. ~5
       lines + tests.
+      > **⚠️ CAUTION (verified 2026-07-06, do not implement naively):** a literal
+      > `get_mvp_data_types_for_cefi_venue(venue)` intersection breaks Deribit `options_chain` enumeration. That
+      > helper is venue-only — it resolves DERIBIT to the flat cefi set (`trades`/`book_snapshot_5`/
+      > `derivative_ticker`/`funding_rate`), which does NOT contain `"options_chain"`. But `_row_data_types` for a
+      > Deribit OPTION row has already been correctly narrowed upstream (via
+      > `valid_data_types_for_venue_instrument_type` + `instrument_type_data_types={"OPTION": {"options_chain"}}`)
+      > to `["options_chain"]` — intersecting that against the flat venue set empties it, silently wiping the
+      > Deribit options_chain denominator (the exact G1 backfill `mvp_backfill_cefi_tick_v10` centers on). Confirmed
+      > by running the change: no existing unit test in `test_enumerate_expected_universe*.py` currently covers
+      > Deribit OPTION through `_row_data_types` directly, so this would NOT be caught by the existing suite — add a
+      > Deribit-options regression test in the SAME commit as this point-fix.
+      > A second attempt using the instrument-type-aware `is_mvp("cefi", venue, instrument_type, data_type)` instead
+      > (to preserve the OPTION override) ALSO breaks: `is_mvp`'s cefi branch requires a `base_ccy` axis check
+      > (`rule.base_ccys`) that `_row_data_types` has no way to supply from `InstrumentCatalogEntry` — calling it
+      > with `base_ccy=None` fails that gate and wipes `row_dts` for every venue's every data_type, not just the
+      > intended MVP-cut venues (confirmed via 17 failures across `test_enumerate_expected_universe_v2.py`,
+      > including plain BTC/trades cases with no MVP-scope involvement at all). `is_mvp` also expects raw
+      > instrument_type values (`OPTION`/`FUTURE`), not the post-bundle-rollup names (`options_chain`/
+      > `futures_chain`) `_row_data_types` sometimes receives from `enumerate_v2` — a second incompatibility
+      > independent of the first.
+      > **Net: this point-fix needs to be instrument-type/bundle-aware** — e.g. skip the intersection entirely when
+      > `row_dts` was already narrowed by a non-trivial `instrument_type_data_types` override (Deribit OPTION,
+      > possibly other bundle types), and only apply the venue-level MVP-gate intersection to the flat/leaf case
+      > (e.g. COINBASE-SPOT). A correct implementation is closer to 15-20 lines + a Deribit-options regression test
+      > than the original ~5-line estimate. Full trace of both failed attempts (reverted, no residue):
+      > `unified-api-contracts@0e3989ce`+revert `8cc76fd0`, `instruments-service@86354d75`+revert `77314c0e` (local,
+      > unpushed, this slot only — safe to ignore, kept for anyone who wants the failure detail).
 - [ ] [CODE] P2. **Confirm the v1 `_ENUMERATORS`/`main()` dispatch is legacy → DELETE it** (the enumerator file carries
       two dispatch tables; docstring calls v2 the live path). Removes the second producer surface C2 flagged.
 
