@@ -8,7 +8,7 @@ status: open
 nature: design
 asset_group: [cross-cutting]
 stage: [data, meta]
-repos: [instruments-service, unified-api-contracts, deployment-service]
+repos: [instruments-service, unified-api-contracts, unified-trading-library, deployment-api]
 scope: [engineer]
 tags: [sports, understat, xg, backfill, manifest]
 related: [sports_p2_history_reference_and_odds_2015_to_present_2026_06_27, sports_p1_golden_window_reference_sources_2026_06_27]
@@ -98,9 +98,20 @@ aggregated from all of that date's matches in that league) — exactly as the se
 
 ## 5. Manifest correctness — the falsely-empty XG_SHOTS rows
 
-- Today the manifest has ~283k `XG_SHOTS` rows in `empty_confirmed` / `expected_unattempted` and `captured=0`.
-  These are WRONG (shots exist). A naive idempotent re-run **skips** them (log: "skipping date — all 5
-  expected leagues per-league captured"), so it would NOT backfill.
+- Live manifest (verified 2026-06-30 via `read_availability_index`): `XG_SHOTS` = 288,284 `empty_confirmed` +
+  13,781 `expected_unattempted` + 392 `attempted_failed` + **9 `captured`** (the 9 are the 2024-12-14/21 validation
+  writes; the doc previously said `captured=0`). Almost all the `empty_confirmed` is FALSE — shots exist upstream.
+- **PROOF the emptiness is false (understat, per `(league, date)`):** 4,436 league-dates have real XG captured but
+  only **9** have XG_SHOTS captured; on **≥1,675** of the *exact same* XG-captured dates XG_SHOTS is recorded
+  `empty_confirmed` — impossible, since every match's xG total is built from shot events. The dead `/getMatch`
+  endpoint's `[]` was absorbed as honest-absence. A naive idempotent re-run **skips** these (log: "skipping date —
+  all 5 expected leagues per-league captured"), so it would NOT backfill.
+- **Coverage-tab blind spot (new finding, 2026-06-30):** the deployment-ui Data Status tab NEVER shows XG_SHOTS —
+  it is absent from `SPORTS_DATA_TYPE_META` (`deployment-api/.../data_status/sports_helpers.py`), so the build loop
+  filters it out. And for SPORTS the tab's headline is *attempt* coverage (`(captured+empty+failed)/expected`), which
+  counts the false-empties as successful attempts → the broken type reads green via its healthy sibling (XG at 99% is
+  genuine) while being invisible. So the tab did not — and structurally cannot — surface this gap. Register XG_SHOTS
+  in `SPORTS_DATA_TYPE_META` so coverage tracking sees it.
 - The bulk writer must therefore **force-overwrite** those rows to `captured` (last-write-wins) — i.e. write
   with the force/overwrite path, not the skip-if-present path.
 - **OPEN Q2:** confirm the consolidator's last-write-wins dedup will promote `empty_confirmed → captured`
@@ -159,6 +170,9 @@ aggregated from all of that date's matches in that league) — exactly as the se
 - [ ] [DATA] P0. Full backfill run (operator-gated locus) → all 5 leagues 2014→present, XG + XG_SHOTS captured;
   manifest `pending_fetch=0`, `attempted_failed=0`, `captured>0` for native leagues. §6. (Blocked on §9.2 — fix now
   decided, unblocks once it ships.)
+- [ ] [CODE] P1. Register `XG_SHOTS` in `SPORTS_DATA_TYPE_META`
+  (`deployment-api/deployment_api/services/data_status/sports_helpers.py`) so the Data Status tab renders an XG_SHOTS
+  coverage row (currently filtered out → the broken type is invisible in coverage tracking). §5.
 - [ ] [VERIFY] P1. After backfill: re-evaluate the `understat-vm-xg-complete` gate against the manifest; flip only on
   real captured shots (not hollow). Then the 6 parked sports tasks unblock.
 
@@ -222,3 +236,13 @@ instrument_type = `""` (blank) per §9.1.
   Ship both as one change. The one-off normalization pass (§8) is sequenced strictly AFTER both land — normalizing
   against the still-buggy comparison would just recreate the duplicates. Unblocks the bulk writer build + full backfill
   run once shipped.
+- 2026-06-30 (manifest-grounded verification): pulled the live sports manifest (`read_availability_index`) to
+  reconcile the deployment-ui Data Status tab (operator saw "XG 99%", "SPORTS 85.5% captured / 100% attempted / 77%
+  empty"). Findings: (a) the tab is faithful but for SPORTS scores *attempt* coverage — empty_confirmed counts as a
+  successful attempt, so false-empties read as coverage; (b) XG (99%) is genuinely captured (validated byte-exact
+  earlier) — its empties are legit non-match days; (c) XG_SHOTS is the broken case AND is invisible in the tab (absent
+  from `SPORTS_DATA_TYPE_META`). Hard proof of false-emptiness: 4,436 XG-captured league-dates vs only 9 XG_SHOTS
+  captured; ≥1,675 of the identical XG-captured dates record XG_SHOTS `empty_confirmed`. Updated §5 with live counts +
+  the proof, added a todo to register XG_SHOTS in `SPORTS_DATA_TYPE_META`, and corrected the `repos:` frontmatter
+  (added `unified-trading-library` for §9.2 + `deployment-api` for the visibility fix; dropped the untouched
+  `deployment-service`). No code shipped.
