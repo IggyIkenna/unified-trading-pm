@@ -128,11 +128,29 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
         missing=0). 14 pre-existing per-instrument tests updated to filter the new venue-grain rows via a
         `_drop_v2_tradfi_venue_grain(rows)` helper — the per-instrument assertions stay focused; the
         v1↔v2 parity is asserted by the new superset test. Full `bash scripts/quality-gates.sh` green (117s).
-- [ ] [CODE] P2. **Extend `_enumerate_v2_sports` to emit `EXPECTED_PRE_SOURCE_COVERAGE_START` at (source, data_type,
+- [x] ✅ [CODE] P2. **Extend `_enumerate_v2_sports` to emit `EXPECTED_PRE_SOURCE_COVERAGE_START` at (source, data_type,
       date) grain** with `league_id=""` for dates before each source's `SOURCE_COVERAGE_START`; drop the "date <
       coverage start → SKIP" branch that currently defers to v1; update the docstring to reflect the new
       responsibility; add regression test asserting parity with v1 output on pre-coverage dates (repo:
       instruments-service).
+      — 2026-07-06 slot-11: instruments-service@3d26351.
+        `_yield_v2_sports_pre_source_coverage_rows(date_axis, data_types)` helper iterates the passed-in
+        data_types, resolves `source = SPORTS_DATA_TYPE_TO_SOURCE.get(dt)` +
+        `coverage_start = get_source_coverage_start(source, dt)` (honours the per-(source, dt)
+        `DATA_TYPE_COVERAGE_START` override before falling back to source-wide `SOURCE_COVERAGE_START`),
+        then emits ONE row per `(source, dt, day)` with `venue=source_key`, `league_id=""`,
+        `instrument_type=""`, `instrument_id=""`, `reason="EXPECTED_PRE_SOURCE_COVERAGE_START"`.
+        `_enumerate_v2_sports` `yield from`s it before the per-league loop. The per-league skip on
+        pre-coverage dates is RETAINED (comment updated to point at the helper) to prevent (a) double-
+        counting the (data_type, date) cell at two grains AND (b) fabricating expected_unattempted for
+        alive leagues on dates the source could never have covered. Regression test:
+        `tests/integration/test_enumerate_v2_superset_property.py::test_sports_v2_covers_v1_pre_source_coverage_cells`
+        (picks the day before the earliest `SOURCE_COVERAGE_START`, asserts v2 covers every v1
+        per-source pre-coverage cell on the mapped (source, dt) intersection — v1's Cartesian iteration
+        also emits spurious un-mapped cells that v2 correctly omits). Existing v2 sports precov unit test
+        in `tests/unit/scripts/test_build_instrument_catalogue.py` updated: pre-coverage date now yields
+        exactly ONE per-source sentinel row instead of zero. Full `bash scripts/quality-gates.sh` green
+        (95s), 238 enumerator unit tests pass.
 - [ ] [CODE] P2. **Extend cefi/defi/prediction v2 enumerators to emit venue-grain
       `EXPECTED_PRE_VENUE_LAUNCH` sentinel rows** when the catalog is empty for a `(venue, day)` in the
       pre-launch window; single sentinel row per (venue, data_type, day) matching v1's grain; add regression
