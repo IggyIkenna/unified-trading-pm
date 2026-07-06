@@ -88,9 +88,18 @@ GS_LOG="$(_freshest_log slot-git-status-report)"
 pass=0
 fail=0
 soft_fail=0
+# Accumulates the actual bad() messages for host-level checks (1-8) only, newline-separated,
+# so the Slack alert can name the SPECIFIC failing check instead of a generic category list
+# (codified after the 2026-07-06 incident: "1 HOST-level check(s) failed ... (crons/logs/
+# backend/token)" told the operator nothing about WHICH of those four it was — they had to
+# dig through the script + raw logs by hand to find the actual cause, an expired auth token).
+# IN_WORKTREE_SECTION flips to 1 right after the host_fail snapshot below, so per-worktree
+# nits (#9-11) are never appended here.
+HOST_FAIL_DETAILS=""
+IN_WORKTREE_SECTION=0
 
 ok() { [[ ${QUIET} -eq 0 ]] && echo "  ✓ $1"; pass=$((pass+1)); }
-bad() { echo "  ✗ $1" >&2; fail=$((fail+1)); }
+bad() { echo "  ✗ $1" >&2; fail=$((fail+1)); [[ ${IN_WORKTREE_SECTION} -eq 0 ]] && HOST_FAIL_DETAILS="${HOST_FAIL_DETAILS}$1"$'\n'; }
 # soft_bad — a DIAGNOSTIC failure that must NOT trigger the --alert Slack page (codified
 # 2026-06-10). Reserved for the two checks that are not host-SYMMETRY properties and that flap
 # or persistently fail for reasons outside this host's slot contract: (a) orchestrator backend
@@ -294,6 +303,7 @@ fi
 # is actually violated and stays violated until a human fixes THIS host. The --alert post fires
 # ONLY on host_fail>0 AND a sustained streak (debounce below).
 host_fail=$(( fail - soft_fail ))
+IN_WORKTREE_SECTION=1   # bad() from here on (#9-11) is per-worktree, never in the alert detail list
 
 # Transient-failure DEBOUNCE for the --alert Slack page (codified 2026-06-10). Even after the
 # flaky external/capability probes are demoted to soft_fail above, a page-worthy check can still
@@ -459,8 +469,25 @@ if [[ ${fail} -gt 0 ]]; then
         _wh="${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null || true)}"
         if [[ -n "${_wh}" ]]; then
             _host="$(hostname)"
-            curl -sS -X POST "${_wh}" -H 'Content-Type: application/json' \
-                -d "{\"text\":\":warning: slot-host-symmetry DRIFT on \`${_host}\` — ${host_fail} HOST-level check(s) failed for ${host_fail_streak} consecutive runs (crons/logs/backend/token)$([ ${_wt_fail} -gt 0 ] && echo " + ${_wt_fail} per-worktree nit(s)"). Run verify-slot-host-symmetry.sh on that host. SSOT: CLAUDE.md § 'Local slot host = VM slot host'.\"}" \
+            # Build the JSON payload via python3 (json.dumps) rather than manual string
+            # interpolation — HOST_FAIL_DETAILS holds the VERBATIM bad() messages (e.g. "git-
+            # status reporter has NO [ok] in last 50 lines (auth issue? backend down?)"), which
+            # may contain quotes/brackets that would break a hand-rolled JSON string. Passing it
+            # as a single argv item (embedded newlines intact) avoids bash array/nounset
+            # portability gotchas on macOS's bash 3.2.
+            _payload=$(python3 -c '
+import json, sys
+host, host_fail, streak, wt_fail, details_blob = sys.argv[1:6]
+details = [d for d in details_blob.split("\n") if d.strip()]
+lines = [f":warning: slot-host-symmetry DRIFT on `{host}` — {host_fail} HOST-level check(s) failed for {streak} consecutive runs:"]
+lines += [f"  - {d}" for d in details]
+wt = int(wt_fail)
+if wt > 0:
+    lines.append(f"+ {wt} per-worktree nit(s) (identity/upstream/branch-name drift — informational only, not paging).")
+lines.append("Run verify-slot-host-symmetry.sh on that host. SSOT: CLAUDE.md § \x27Local slot host = VM slot host\x27.")
+print(json.dumps({"text": "\n".join(lines)}))
+' "${_host}" "${host_fail}" "${host_fail_streak}" "${_wt_fail}" "${HOST_FAIL_DETAILS}")
+            curl -sS -X POST "${_wh}" -H 'Content-Type: application/json' -d "${_payload}" \
                 >/dev/null 2>&1 && echo "[alert] posted host-level symmetry-drift alert to Slack (streak=${host_fail_streak})" || echo "[alert] WARN: Slack post failed"
         else
             echo "[alert] WARN: no Slack webhook — host-level drift NOT alerted"
