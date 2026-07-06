@@ -581,6 +581,37 @@ for _pm_clone in "${_ws_root}/unified-trading-pm" "${_ws_root}"/.tabs/*/unified-
     timeout 60 "${_idx_py}" "${_pm_clone}/scripts/docs/gen_doc_index.py" --stale-check >/dev/null 2>&1 || true
 done
 
+# --- Git-hook self-heal, ALL repos × ALL clones (2026-07-06) ---
+# Found: 384/400 clones (25 repos × 16 clones, every one carrying a .pre-commit-config.yaml) had
+# NO prek pre-commit hook — setup-tab-worktrees.sh only ever installed the pre-push guard, so
+# commit-time gates (gitleaks, slot·host commit-identity, staged-plans schema in PM, ruff,
+# prettier, conventional-commit) silently never ran fleet-wide; 24 main-ws clones also lacked the
+# pre-push strict-quickmerge guard, and 10 clones carried a stale absolute core.hooksPath from the
+# pre-/active migration that disabled ALL hooks. Heal every tick: missing pre-commit →
+# `prek install` (writes pre-commit + commit-msg ONLY — pre-push stays the strict-quickmerge
+# guard, prek must NEVER manage it); missing pre-push → copy the guard from the workspace PM.
+# core.hooksPath is cleared ONLY when provably dead (target dir gone) — a live custom hooksPath is
+# deliberate and left alone. Idempotent, guarded, || true — can never jam the cron.
+_prek_bin="$(command -v prek || echo "${HOME}/.local/bin/prek")"
+_pp_guard="${_ws_root}/unified-trading-pm/scripts/dev/hooks/pre-push-strict-quickmerge.sh"
+for _clone in "${_ws_root}"/*/ "${_ws_root}"/.tabs/*/*/; do
+    _clone="${_clone%/}"
+    [[ -e "${_clone}/.git" && -f "${_clone}/.pre-commit-config.yaml" ]] || continue
+    if [[ ! -f "${_clone}/.git/hooks/pre-commit" && -x "${_prek_bin}" ]]; then
+        if ! (cd "${_clone}" && timeout 30 "${_prek_bin}" install >/dev/null 2>&1); then
+            _hp="$(git -C "${_clone}" config --local core.hooksPath 2>/dev/null || true)"
+            if [[ -n "${_hp}" && ! -d "${_hp}" ]]; then
+                git -C "${_clone}" config --unset-all --local core.hooksPath 2>/dev/null || true
+                (cd "${_clone}" && timeout 30 "${_prek_bin}" install >/dev/null 2>&1) || true
+            fi
+        fi
+    fi
+    if [[ ! -f "${_clone}/.git/hooks/pre-push" && -f "${_pp_guard}" ]]; then
+        cp "${_pp_guard}" "${_clone}/.git/hooks/pre-push" 2>/dev/null \
+            && chmod +x "${_clone}/.git/hooks/pre-push" || true
+    fi
+done
+
 # Heartbeat: write ONE line every run, even in --quiet on a fully-idle no-op sweep, so the
 # log mtime always refreshes while the cron is alive. verify-slot-host-symmetry.sh check 3
 # ("FF-pull log fresh <10m") reads only the mtime — without this, a quiet idle window (LDR

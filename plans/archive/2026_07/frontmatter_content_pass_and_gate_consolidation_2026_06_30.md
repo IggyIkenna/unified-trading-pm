@@ -18,10 +18,10 @@ scope: [engineer, admin]
 tags: [frontmatter, docspec, content-pass, gate-consolidation, doc-governance, grep-native]
 related:
   [
-    ../archive/2026_06/frontmatter_full_corpus_coverage_2026_06_30.md,
-    doc_frontmatter_schema_and_validator_2026_06_24.md,
-    ../epics/agent_operating_framework_master.md,
-    ../../codex/11-project-management/doc-frontmatter-schema.md,
+    ../2026_06/frontmatter_full_corpus_coverage_2026_06_30.md,
+    ../2026_06/doc_frontmatter_schema_and_validator_2026_06_24.md,
+    ../../epics/agent_operating_framework_master.md,
+    ../../../codex/11-project-management/doc-frontmatter-schema.md,
   ]
 created: 2026-06-30
 parent_epic: agent_operating_framework_master
@@ -47,6 +47,17 @@ source:
 ---
 
 # Frontmatter content pass + gate consolidation
+
+> **✅ COMPLETE + ARCHIVED (2026-07-06).** Every todo shipped; corpus at docspec **HARD=0 SOFT=0 (1,299 live docs)**
+> behind the single BLOCKING gate. 5-step archival ritual executed 2026-07-06: **(1)** deferred residuals homed in the
+> parent epic (see "Deferred work after 2026-07-06" below — nothing dropped); **(2)** this banner; **(3)**
+> codex-alignment verified — the cited SSOT
+> [`doc-frontmatter-schema.md`](../../../codex/11-project-management/doc-frontmatter-schema.md) is in lockstep with
+> `scripts/docs/docspec.py` (NATURE 8 incl. `issue`, `implementation_status` elective, doc_type↔path HARD check);
+> **(4)** new durable contracts homed in their codex SSOTs (schema doc + `per-tab-worktrees.md`), no CLAUDE.md/sub-agent
+> staleness introduced; **(5)** no lock to clear (`locked_by` was empty). Superseding follow-on rides the epic
+> [`agent_operating_framework_master`](../../epics/agent_operating_framework_master.md). Body preserved verbatim as the
+> provenance record.
 
 The structural coverage is **done + enforced (warn-only)** — see the archived
 [`frontmatter_full_corpus_coverage_2026_06_30`](../archive/2026_06/frontmatter_full_corpus_coverage_2026_06_30.md):
@@ -245,8 +256,43 @@ urgent.
   `check_docspec_coverage` retired; one validator engine, no duplication.
 - agent-role docs enforced in the agent-orchestrator repo.
 
+## Deferred work after 2026-07-06
+
+Nothing from THIS plan is dropped — every residual is homed in the parent epic
+[`agent_operating_framework_master`](../../epics/agent_operating_framework_master.md), never orphaned here:
+
+- **W7 (aspirational)** — codex condense/de-drift + the L4 module-level `code_refs` rider + **B8** (the codex-drift
+  document bodies surfaced during the content pass, P3.4 §B8). Home: epic W-table row W7 + its `[DOCS] P2. W7` todo.
+- **Archive backfill — carries B7** (SUPERSEDED banners on the 19 `_archived_pre_v2` docs) plus summary/tags on the
+  ~1,127 archive docs; operator-paused. Home: epic `[DOCS] P3. DEFERRED` todo (controlled tag vocabulary · archive
+  backfill · …).
+- **W8 retrieval-eval loop** — deferred by design. Home: epic W-table row W8.
+
 ## Progress Log
 
+- 2026-07-06 — **Hook gap was WORKSPACE-WIDE, not PM-only: 384/400 clones fixed (operator: "what about other repos?").**
+  Measured all 25 repos × 16 clones — every clone carries a `.pre-commit-config.yaml`, only the 16 PM ones (fixed
+  earlier today) had the prek pre-commit hook. On 384 clones, gitleaks / slot·host commit-identity / branch-drift / ruff
+  / prettier / conventional-commit never ran at commit time; 24 main-ws clones also lacked the pre-push
+  strict-quickmerge guard; 9 MORE stale `core.hooksPath` entries found (10 total incl. PM main-ws — all dead absolute
+  paths from the `/active` migration, each one disabling ALL hooks in that clone). Live remediation: 384 prek installs +
+  24 guards + 9 hooksPath clears, 0 failures, verified 400/400 both-hooks-ok. Durable (pm@730565a1e, QG exit 0): cron
+  self-heal widened from the PM-only loop to a generic ALL-repos × ALL-clones sweep per 5-min tick (heals either hook;
+  clears a hooksPath ONLY when its target dir is provably gone — a live custom one is deliberate and untouched);
+  clone-time install was already repo-generic from cb3f353fe. Other hosts (Ikenna's machine, VMs) self-heal
+  automatically once their cron self-updates from origin — no manual sweep. SSOT section updated with fleet numbers.
+- 2026-07-06 — **ROOT CAUSE of the bypassed prek hook found + fixed fleet-wide: prek pre-commit was NEVER installed on
+  15/16 PM clones.** Operator asked whether the hook could simply be missing — audit confirmed: only slot-3 had
+  `.git/hooks/pre-commit` (manual `prek install` at some point); the gate-red doc's author clone (slot-2) and every
+  other clone had none, so ALL commit-time gates (staged-plans schema, commit-identity, gitleaks, prettier,
+  conventional-commit) silently never ran fleet-wide — no `--no-verify` involved. `setup-tab-worktrees.sh` only ever
+  installed the pre-push strict-quickmerge guard and ASSUMED the prek hook existed. Bonus finds: main-ws lacked pre-push
+  too, and carried a stale absolute `core.hooksPath` (pre-migration `/home/hk/...`) disabling all hooks there. Fixed at
+  three layers (pm@cb3f353fe, QG exit 0): (1) live remediation — `prek install` in all 16 clones + main-ws pre-push +
+  hooksPath cleared (verified: 16/16 both-hooks-ok); (2) clone-time — `install_prek_precommit_hook` in
+  setup-tab-worktrees.sh; (3) the 5-min `slot-cron-ff-pull.sh` PM loop self-heals either missing hook every tick. SSOT:
+  per-tab-worktrees.md § "Git hooks are per-clone and MUST both be installed". Local hooks = floor; `quality-gates-v2`
+  on the promote PR = the unbypassable wall.
 - 2026-07-06 — **`nature: issue` legalized + doc_type↔path consistency HARD-enforced (operator directive; closes the B3
   "recurring authoring instinct" for good).** pm@1399d333e (quickmerge, QG exit 0; promote PR #793 v2-gated auto-merge).
   NATURE gains `issue` (8 values) — three independent authors had reached for it against the enum, so the enum moved to

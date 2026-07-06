@@ -23,7 +23,7 @@ authoritative_for:
 referenced_by:
   [
     codex/11-project-management/plan-hygiene.md,
-    plans/active/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md,
+    plans/archive/2026_07/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md,
     plans/active/issues/plan_issue_epic_consolidation_2026_06_30.md,
   ]
 owner: harsh
