@@ -83,14 +83,21 @@ source:
       a wiring bug is not mislabelled a coverage gap. — `market-tick-data-service@015abaf5` (register both handlers) +
       `market-tick-data-service@efd658c8` (regression tests) + Progress-Log entry with the venue-WSFeedConnector
       follow-up finding.
-- [ ] [SCRIPT] P1. **Follow-up — venue-level WSFeedConnector registration audit** (surfaced by the C5 handler audit,
+- [x] ✅ [SCRIPT] P1. **Follow-up — venue-level WSFeedConnector registration audit** (surfaced by the C5 handler audit,
       2026-07-06). The blocked-not-registered counts cited above (cefi 104 · defi 1225 · sports 70 · tradfi 40) are
       classified by `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py::check_live_l1` — a DIFFERENT
       bug class from the operations-dispatcher C5 (per-VENUE `WSFeedConnector` factory, not per-HANDLER operation key).
       The C5 audit closed 2 handler-registration gaps but does NOT reduce those cell counts. Audit
       `_live_connector_factories` / venue key coverage per asset_group; distinguish `built-but-unregistered` (add to
       factory registry + regression test) from `genuinely-no-connector-yet` (file). Gate: every VENUE with a canonical
-      batch expected_unattempted cell is either wired to a WS factory (with a test) or filed.
+      batch expected_unattempted cell is either wired to a WS factory (with a test) or filed. **AUDIT DONE 2026-07-06
+      (Opus, slot-4)**: 31 registered venue keys after `register_all()`; 73 unregistered venues (cefi 13 · tradfi 4 ·
+      defi 49 · sports 7 · prediction 0) cross-verified against UAC `VENUES_BY_ASSET_GROUP` via the smoke-matrix's own
+      `resolve_live_venue_key`; cell counts match the QG roll-up (1,439 = 104 + 1225 + 70 + 40). **0 built-but-
+      unregistered** (the 11 "unregistered" `_ws.py` files are all data-type-specific helpers imported by their base
+      venue's factory — the C5-class bug does NOT recur at the WS layer). Filed as
+      `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` with per-AG actionable todos (bare-venue triage,
+      per-venue build, DeFi live-connector naming policy, BLOCKED-CREDENTIALS scaffolds).
 
 ## Foundation gate sign-offs (cefi-first — reconcile drift, take the sign-offs)
 
@@ -125,6 +132,22 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-06** — **✅ Task 010 DONE — WSFeedConnector venue-level audit filed as issue** (Opus, slot-4). Ran
+  `register_all()` on `mtds@HEAD` (post C5 fix); 31 registered venue keys. Cross-referenced UAC `VENUES_BY_ASSET_GROUP`
+  via the smoke matrix's own `resolve_live_venue_key`
+  (`e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py:201`): **73 unregistered venues** total — cefi 13
+  · tradfi 4 · defi 49 · sports 7 · prediction 0. Cell counts reconcile exactly to the QG roll-up: 13·8=104
+  - 49·25=1225 + 7·10=70 + 4·10=40 = 1,439 `blocked-not-registered` cells. **0 built-but-unregistered** — the 11
+    `_ws.py` files on disk that `register_all()` doesn't import are ALL data-type-specific helpers imported by their
+    base venue's factory (binance_futures_book_ticker_ws → binance_futures_ws; deribit_book_ticker_ws → deribit_ws;
+    hyperliquid_l2book_ws + hyperliquid_ticker_ws → hyperliquid_ws; kalshi_trades_ws → kalshi_clob_ws;
+    polymarket_trades_ws → polymarket_clob_ws; coinbase_book_ws → coinbase_spot_ws; bybit/kraken/okx `_book_ticker`
+    variants → their base modules; tardis_machine_ws is intentional opt-in fallback). The C5-class bug does NOT recur at
+    the WS layer. **Filed** `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` with per-AG actionable todos
+    (bare-venue triage · per-venue build · DeFi live-connector naming policy call · BLOCKED-CREDENTIALS scaffolds).
+    **Interpretation for Plan 4:** the 1,439 `blocked-not-registered` cells are a live-transport rollout gap, not a
+    wiring bug — Layer-2 capture % should not be dragged down by them if the underlying batch REST capture is
+    honest-complete.
 - **2026-07-06** — Systemic unregistered-handler audit (item 1) **shipped**. Grep-audited the 34 `class *Handler`
   classes under `market_tick_data_service/cli/handlers/` against the 32 keys in `ServiceBootstrap(operations={…})` in
   `market_tick_data_service/cli/main.py`. Found 2 unwired handlers, both C5-class (built + unit-tested but missing from
