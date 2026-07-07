@@ -320,18 +320,27 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 ### Phase 4 — RC-2 / D2 dispatch routing: dynamic roles + plan→single-agent stickiness
 
-- [ ] [BACKEND] P0. Per-task role from `[TAG]` (mapping table), fallback plan `assigned_role`; carried on BacklogTask +
-      returned in the dispatch brief.
-- [ ] [BACKEND] P0. `SlotRow.last_role` column; set at spawn + updated on each dispatch.
-- [ ] [BACKEND] P0. Dispatch injects a "read `agents/<role>.md`" instruction when task role ≠ slot `last_role`; REMOVE
-      the worker-level role-refusal → skip path.
-- [ ] [BACKEND] P0. Plan→single-agent stickiness (F) — when a slot claims a plan's first task, stamp the plan's other
-      queued tasks `target_slot=<that slot>` + `affinity: medium` so the plan sticks to one owner (context accumulation)
-      and is worked in `plan_order`; the medium-affinity timeout spills the next task to a free slot when the owner is
-      slow. Reuses `_task_is_routable_to`; the new part is the first-claim auto-stamp + propagation.
-- [ ] [BACKEND] P0. Tests — plan sticks to its first-claiming slot; owner works its tasks in `plan_order`; a slow owner
+- [x] [BACKEND] P0. Per-task role from `[TAG]` (mapping table), fallback plan `assigned_role`; carried on BacklogTask +
+      returned in the dispatch brief. — ✅ DONE ao@f976b6e4 (`_task_role_from_tag` + `_resolve_task_tier` in regen:
+      INFRA/DATA/BACKEND/UI/REVIEW→role, generic→plan role; per-task model/effort/thinking derived from the task role;
+      `TaskBrief.assigned_role` via `to_task_brief`; 2 tests).
+- [x] [BACKEND] P0. `SlotRow.last_role` column; set at spawn + updated on each dispatch. — ✅ DONE ao@f976b6e4
+      (`SlotRow.last_role` + `bootstrap.py` `_add_missing_columns` migrate hook; `assign_task_to_slot(last_role=)` set
+      on every dispatch from the 3 call sites).
+- [x] [BACKEND] P0. Dispatch injects a "read `agents/<role>.md`" instruction when task role ≠ slot `last_role`; REMOVE
+      the worker-level role-refusal → skip path. — ✅ DONE ao@f976b6e4: the brief carries `assigned_role`; `worker.md`
+      "Per-task craft role — ADOPT, don't refuse (HARD RULE)" tells the worker to READ `agents/<role>.md` on a craft
+      change and NEVER `/skip` a role-mismatch (the exact thrash). (Server tracks `last_role` for future explicit
+      injection; the worker acts on the brief + its own craft memory.)
+- [x] [BACKEND] P0. Plan→single-agent stickiness (F) — first-claim `target_slot` + `affinity: medium` (spill when slow).
+      — ✅ DONE ao@f976b6e4: `_claim_plan_for_slot` already pinned siblings; **fixed `affinity: high`→`medium` + reset
+      `queued_at` at pin time** so a slow owner spills after the timeout (was a hard pin, no spillover — didn't match
+      §F). Explicit operator routing + other plans untouched.
+- [x] [BACKEND] P0. Tests — plan sticks to its first-claiming slot; owner works its tasks in `plan_order`; a slow owner
       → the next task spills after the timeout; role change injects the boot-prompt read; a mixed-role plan runs on ONE
       worker without thrash + no `slot_skips` for a role change; separate plans dispatch to separate agents in parallel.
+      — ✅ DONE ao@f976b6e4 (test_plan_claiming.py updated to medium+last_role; test_regen_reconcile.py per-task-role
+      tests; full `quality-gates.sh` green — a pre-existing high-affinity test correctly caught + updated to §F).
 
 ### Phase 5 — RC-3 slot_skips hygiene
 
@@ -369,6 +378,16 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07** — ✅ **Phase 4 SHIPPED** (`ao@f976b6e4`, LDR; staging-first drain → v2-gated). RC-2 dynamic craft
+  routing + stickiness: per-task role from the `[TAG]` (`_task_role_from_tag`/`_resolve_task_tier` — a mapped tag
+  overrides the plan role so ONE plan carries multiple crafts; per-task tier derived from the task role);
+  `SlotRow.last_role` col (+ `bootstrap.py` migrate hook) set on every dispatch; `TaskBrief.assigned_role` returned to
+  the worker; `worker.md` "ADOPT, don't refuse" HARD RULE (read `agents/<role>.md` on a craft change, NEVER `/skip` a
+  role-mismatch — killing the thrash); stickiness `_claim_plan_for_slot` fixed `high`→`medium` + `queued_at`-reset so a
+  slow owner spills to a free slot (§F, was a hard pin). A pre-existing high-affinity test correctly caught the behavior
+  change + was updated. Full `quality-gates.sh` green. **🎯 ALL 3 ROOT CAUSES NOW FIXED — RC-1 (Phase 2), RC-2 (Phase
+  4), RC-3 (Phase 5).** Code STAGED on LDR — live server NOT restarted. Remaining: Phase 3 (dispatched-retier capability
+  chain — edge case) + Phase 6 (codex SSOT).
 - **2026-07-07 — SESSION STATUS (autonomous, operator at lunch).** SHIPPED to LDR (all staged, live server NOT restarted
   — deploy is operator-gated): **Phase 1** (docs, `pm@08e6424`), **Phase 2** (RC-1 reconcile — Batch A `ao@ff6100ad` +
   Batch B `ao@c6a31ed6`), **Phase 5** (RC-3 skip hygiene, `ao@07035aba`). **2 of the 3 root causes (RC-1, RC-3) are
