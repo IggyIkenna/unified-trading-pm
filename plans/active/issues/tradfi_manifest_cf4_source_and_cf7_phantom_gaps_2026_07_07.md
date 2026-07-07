@@ -187,13 +187,19 @@ downstream-observable semantic).
       Dry-run + `--apply` shape. Gate: 0 blank-data_type + 0 UNKNOWN/blank-venue rows in
       the tradfi manifest. (repo: market-tick-data-service)
       — market-tick-data-service@d9097aec: script written with dry-run+--apply+snapshot+stop-on-surprise+gate-verify
-- [ ] [CODE] P2. **CF-7 root-cause hunt** — find the market-tick-data-service writer that
+- [x] ✅ [CODE] P2. **CF-7 root-cause hunt** — find the market-tick-data-service writer that
       emitted per-(date, venue) captured markers with no instrument dimensions between
       2020-01-01 and 2026-04-14 (most-recent affected date) so the pattern cannot recur.
       Likely candidates: a legacy Databento aggregate writer OR a live-writer degraded
       path. Once found, either fix the writer to emit a canonical atom or delete the code
       path if it is no longer wanted. Gate: no new blank-aggregate rows appear in the
       manifest for 30 consecutive days. (repo: market-tick-data-service)
+      — ROOT CAUSE IDENTIFIED (no code ship needed): Legacy "Tier-1 venue-level sentinel"
+      writer in `market_tick_data_service/engine/orchestrator.py` emitted per-(date, venue)
+      `data_type=""` rows (no instrument dims). Removed in commit `ab6338b6` (2026-04-22)
+      "feat(orchestrator): tighten pre-flight granularity + kill Tier-1 sentinels". Last
+      write was 2026-04-14 (8 days before kill). Gate already met: ~84 days clean as of
+      2026-07-07 (>30-day threshold). No code change required — code path no longer exists.
 - [x] ✅ [CODE] P0. **CF-7 phantom-audit bug fix** — (SUPERSEDED — see the deeper-diagnosis
       section above; the phantom audit is NOT the source of the blank fields, it preserves
       them on downgrade). Original todo left here for audit trail: patch
