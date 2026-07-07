@@ -653,3 +653,39 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   wsfeedconnector-014 quickmerge has been in CI for 15+ ticks — this single stuck CI is blocking cefi-004, cefi-005, and
   infra-001 simultaneously." Slot-8 action: this Progress Log entry, commit via `docs(plans):` cross-repo PM flip, then
   `/api/slots/8/skip-current-task`.
+
+- **2026-07-07** — **Task -005 (re-measure) RE-PARKED — BLOCKED-PREREQUISITES (3rd dispatch, `BLK-817416c3`)** (slot-11
+  planning). Task `cefi_layer1_denominator_gaps-005` was RE-dispatched to slot-11 by priority=50 alone; the
+  machine-encoded `depends_on` gap on the backlog task is still uncorrected (verified via `/api/backlog?limit=500`:
+  `-005.status=dispatched, depends_on=null`). Re-verified LDR at RE-dispatch with grep-and-read:
+  **MET** — (i) `-007` (enumerator `start_date` support) LANDED via `instruments-service@4a8cff7`
+  (`scripts/enumerate_expected_universe.py:1073` calls `get_venue_data_type_start_date(instr.venue, dt)`, per-`(venue,
+  dt)` gate baked into `_enumerate_v2_cefi`); (ii) KALSHI-PERP purge DONE (25,473 rows removed via
+  `purge_kalshi_perp_events_contamination_2026_07_06.py --apply`, cefi catalogue 376,984→351,511 per
+  `prediction_capture_incident_remediation_2026_07_06.md` line 190); (iii) ASTER connector wired
+  (`market-tick-data-service/market_tick_data_service/live/connectors/__init__.py:52` imports
+  `aster_book_liq_ws`).
+  **UNMET** — (iv) **UAC ASTER capability flip (-008) — plan/backlog DRIFT**: backlog task `-008` reports
+  `status=done, depends_on=null` but plan line 240 `- [ ] [CONFIG] P1. **UAC capability flip** — add book_snapshot_5
+  + liquidations to VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` is UNCHECKED, and code verification confirms UAC file
+  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1144` still holds only
+  `{trades: 2023-07-22, derivative_ticker: 2023-07-22, perp_funding: 2023-07-22}` — NO `book_snapshot_5`, NO
+  `liquidations`. Recent UAC commits on `market_data_categories.py` (top 10: `e76d874a` D2a `03cfd0f` …) do NOT include
+  the ASTER capability flip. **Main-agent verdict (`BLK-817416c3`)**: "the code is authoritative. -008 is NOT actually
+  done."
+  **UNMET** — (v) `-004` (2f LIGHTER/EXTENDED/PACIFICA): plan line 166 `- [ ]` unchecked, backlog `status=queued`,
+  `LIGHTER`/`EXTENDED`/`PACIFICA` produce zero grep matches in `instruments-service/scripts/expected_universe.py` (the
+  denominator-gap model has NOT been reapplied to those 3 venues on `build_expected`).
+  Running the re-measure now would produce a misleading % in the WRONG direction from the plan Gate ("denominator GREW,
+  % dropped honest"): denominator UNDER-counts (ASTER `book_snapshot_5`/`liquidations` still 0-expected until UAC flip;
+  LIGHTER/EXTENDED/PACIFICA still 0-expected until 2f). Main-agent verdict `BLK-817416c3`: PARK — "cefi-005 gates on
+  both -004 and -008. Neither is complete. Proceeding without them would produce incorrect enumeration for the
+  LIGHTER/EXTENDED/PACIFICA venues and missing ASTER book5/liquidations capability, which causes silent data-correctness
+  failures downstream." **Operator actions surfaced** (3rd escalation on the same task): (1) fix -008 backlog drift —
+  re-open -008, add `book_snapshot_5` + `liquidations` to UAC `market_data_categories.py:1144`, mark done only after code
+  is on LDR; (2) wait for `-004` (LIGHTER/EXTENDED/PACIFICA) to complete + flip its plan checkbox; (3) re-dispatch `-005`
+  only after both are confirmed on LDR. Slot-11 action: this Progress Log entry, commit via `docs(plans):` cross-repo PM
+  flip, then `/api/slots/11/skip-current-task` per main-agent instruction. This is now the 3rd `-005` PARK on
+  identical grounds (BLK-ad7abfcd 2026-07-06 slot-8, BLK-ae458864 2026-07-07 slot-8, BLK-817416c3 2026-07-07 slot-11) —
+  the bounce-loop pattern the `-008` chain hit 8× is beginning to repeat on `-005`; suggest same operator-backlog fix
+  (`depends_on: [cefi_layer1_denominator_gaps-004, cefi_layer1_denominator_gaps-008]` on `-005` + regen).
