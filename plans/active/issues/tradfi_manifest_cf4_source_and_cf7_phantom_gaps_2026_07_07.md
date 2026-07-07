@@ -210,8 +210,11 @@ downstream-observable semantic).
       `_index` has 0 attempted_failed rows with blank data_type + error_reason ends in
       `_no_parquet_at_canonical_path`. (repo: instruments-service)
       — SUPERSEDED (no code change): reconcile_phantom_manifest_rows_all.py:1195-1196 confirmed only sets capture_status + error_reason, preserves all other cols incl. data_type; blank data_type originates from upstream aggregate writers, not phantom audit
-- [ ] [DATA] P1. **CF-7 relabel of the existing 4,903 blank-data_type tail** — after the bug
+- [x] ✅ [DATA] P1. **CF-7 relabel of the existing 4,903 blank-data_type tail** — after the bug
       fix ships, do a one-shot re-emit (per-venue, per-day) to re-derive `data_type` from the
       original captured row (join on `date`, `venue`, `instrument_type` / `instrument_id`) and
       re-emit the attempted_failed row with the correct atom. Documented tradfi CF-7 cell
       count target: 0. (repo: market-tick-data-service)
+      — market-tick-data-service@d9097aec applied --apply: 6,287 degenerate-atom rows deleted
+      (4,903 blank-data_type + 1,384 blank/UNKNOWN venue); CF-7 Gate PASSED; snapshot at
+      _index/snapshots/pre_tradfi_aggregate_phantom_delete_20260707T105116Z.parquet
