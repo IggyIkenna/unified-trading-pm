@@ -113,7 +113,19 @@ output, all 29 CeFi venues, 64,096 captured cells:
 - [ ] [SCRIPT] P0. Diagnose LIGHTER and PACIFICA's adapters — both went silent 2026-06-26 after a partial capture.
       Check the standard suspects first (base-URL / auth / rate-limit change on either exchange's API, a deploy that
       broke the fetch, a queue/scheduler that stopped dispatching these two venues specifically). Re-run the guard
-      script post-fix to confirm data resumes.
+      script post-fix to confirm data resumes. **Partial finding 2026-07-07 (see Progress Log)**: exchange APIs +
+      adapter code both confirmed healthy right now; instead found the `uts-prod-instruments-service-cefi-t1-recon`
+      Cloud Run Job (2cpu/4Gi) OOM-killing on 07-05/06/07, timing-correlated with 3 venues being added to the same
+      CEFI batch on 2026-06-25 without a resource bump — plausible but NOT YET CONFIRMED as the actual 06-26 cause
+      (06-26 itself shows a clean "completed successfully" in the Cloud Run audit log). Next agent: (1) bump the
+      job to 4cpu/8Gi via `gcloud run jobs update uts-prod-instruments-service-cefi-t1-recon --region=asia-northeast1
+      --cpu=4 --memory=8Gi` and watch the next 06:00 UTC run for OOM recurrence + LIGHTER/PACIFICA row counts; (2)
+      find (or conclude is missing) the IaC resource pinning this job's current 2cpu/4Gi so the bump isn't reverted
+      by a future `terraform apply` — not found in `t1_batch_scheduler.tf` (scheduler-trigger only, not the job
+      itself), `cloud_run_job_registry.py` (observability classification only), `_imports_reconcile.tf`, the
+      `container-job` module, or `terraform/services/instruments-service/gcp/terraform.tfvars` (references a
+      different/legacy job name+schedule); (3) if genuinely unmanaged, that's its own infra-hygiene finding worth a
+      one-line note once confirmed.
 - [ ] [SCRIPT] P0. Once fixed, backfill the 2026-06-26 → fix-date gap for both venues if the source API supports
       historical reconstruction (same "filter the current adapter fetch by available_from/available_to" mechanism
       already used for other instrument-definition backfills); if not backfillable, stamp the gap with an honest
@@ -146,6 +158,26 @@ output, all 29 CeFi venues, 64,096 captured cells:
 
 ## Progress Log
 
+- **2026-07-07 (partial diagnosis — deprioritized mid-investigation, operator redirect)** — Ruled out: LIGHTER's
+  exchange API is up and healthy (direct `curl` to `mainnet.zklighter.elliot.ai` returns real market data);
+  PACIFICA's adapter is a static curated list with zero network dependency and cannot fail on the exchange side.
+  Ran both adapters' `get_instruments()` + UAC `validate_instrument_records()` locally against today's date — both
+  produce clean, fully-valid output right now (PACIFICA 10/10 valid), so the Python code itself is not currently
+  broken for either venue. **Found a real, currently-active, separate problem**: the daily Cloud Run Job
+  `uts-prod-instruments-service-cefi-t1-recon` (the actual CeFi capture job, `--asset-group=CEFI`, 2cpu/4Gi) has been
+  OOM-killing (`"The configured memory limit was reached"`, signal 9) on at least 2026-07-05, -06, -07 — timing that
+  lines up with 2026-06-25's reclassification commit (`2f7d4548`) adding 3 more venues (LIGHTER-ZKSYNC,
+  PACIFICA-SOLANA, EXTENDED-STARKNET) to the same CEFI batch without raising the container's resource limits.
+  2026-06-26 (the actual outage start) itself shows `"Execution completed successfully"` in the Cloud Run audit
+  log, and 2026-06-27 shows a different failure (`"container exited with an error"`, exit code 1) — so the OOM
+  pattern is NOT yet confirmed as the day-1 cause, only as a real problem that is CURRENTLY ongoing (last 3 days).
+  Could not find zero-arg application stdout/stderr for ANY of these executions (only Cloud Run's own
+  audit/system-event log lines) to see per-venue progress, and could not locate the Terraform/IaC resource that
+  pins this job's 2cpu/4Gi limit (searched `t1_batch_scheduler.tf`, `cloud_run_job_registry.py`, `_imports_reconcile.tf`,
+  the `container-job` module, `terraform/services/instruments-service/gcp/terraform.tfvars` — none is a confirmed
+  match; the job may be unmanaged/ad-hoc-`gcloud`-created, which is itself worth flagging). Stopped here on operator
+  redirect (session priority shifted to the deployment-api/deployment-ui drilldown work) — **not fixed, evidence
+  preserved below for whoever picks this back up.**
 - **2026-07-07** — Filed from the ASTER/CEFI instrument-service data-status audit, after the operator asked to
   actually run the manual guard script rather than only read its code. Read-only investigation + one real (safe,
   read-only) execution against production GCS; no files edited, no writes to any bucket.
