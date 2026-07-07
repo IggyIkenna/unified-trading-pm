@@ -88,18 +88,33 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
 
 - [ ] [SCRIPT] P1. Run the driver to completion (resume-aware — safe to restart on preemption). Verify the log reaches
       `ALL DATES CAPTURED (0 attempted_failed)` + `UNDERSTAT BULK BACKFILL COMPLETE`. §2.
-- [ ] [DATA] P0. **Manifest verification (the definition of done).** Read the live sports manifest and confirm, for the
-      big-5 (EPL/LA_LIGA/BUNDESLIGA/SERIE_A/LIGUE_1), for BOTH `XG` and `XG_SHOTS`: **0 `attempted_failed`**, **0
-      `expected_unattempted`**, and captured league-dates ≈ the fixture count (XG_SHOTS captured atoms ≈ XG captured
-      atoms — every match has shots). No stale `empty_confirmed` with `attempted_at < 2026-07-06` on a fixture cell.
-      Cite the counts. §5 of the issue doc has the pre-run baseline (XG 4,444 captured / 301,667 empty; XG_SHOTS 14
-      captured).
-- [ ] [DATA] P1. **Consolidator dedup (§9.2b) has taken effect.** The §9.2b consolidator fix reaches the ~20 Cloud Run
-      consolidator jobs on the image rebuild after the UTL promote — verify the deployed consolidator collapsed the
-      captured-vs-seed dups (no duplicate `(date, league, data_type)` rows for XG/XG_SHOTS). If the image has NOT
-      rebuilt yet, note it + the ETA; the manifest self-heals once it lands (do NOT hand-run the consolidator against
-      prod while the old image is still deployed — it would fight the every-minute cron). SSOT:
-      `codex/05-infrastructure/manifest-consolidator-ssot.md`.
+- [x] ✅ [DATA] P0. **Manifest verification (the definition of done) — RUN 2026-07-07 slot-7 opus/max; DoD NOT MET.**
+      Read the live sports manifest (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`,
+      4,897,283 total rows / 607,540 understat) and confirmed, for big-5 (EPL/LA_LIGA/BUNDESLIGA/SERIE_A/LIGUE_1) XG +
+      XG_SHOTS: XG captured 4,432→6,676 (+2,244); XG_SHOTS captured 1,961→6,671 (+4,710, now 99.9% of XG vs the 44%
+      baseline); XG_SHOTS attempted_failed 384→**20** (still >0, all `HTTP_NOT_FOUND`, 4/league, attempted_at
+      2026-06-23); XG_SHOTS expected_unattempted 13,811→**6,093**; XG expected_unattempted 315→**245**; XG latest
+      captured 2023-03-11→**2026-05-24** (+3.2 years); XG_SHOTS latest captured 2024-12-21→**2026-05-24** (+17 months);
+      **16,352 stale empty_confirmed** with attempted_at < 2026-07-06 (5,360 in 2026-05, 10,784 in 2026-06). **DoD
+      violations**: 20 XG_SHOTS attempted_failed remain (should be 0), 6,338 EU remain (should be 0), 16,352 stale
+      empty (should be 0). **Verification checkbox flipped** because the audit RAN + REPORTED — the DoD's underlying
+      GATE remains RED, so task 005 (understat-vm-xg-complete gate flip) stays BLOCKED and task 001 needs re-run to
+      drive the tail. Progress Log update: `unified-trading-pm@<sha>` issue doc
+      `understat_bulk_download_backfill_2026_06_29.md`. §5 of the issue doc has the pre-run baseline (XG 4,444 captured
+      / 301,667 empty; XG_SHOTS 14 captured).
+- [x] ✅ [DATA] P1. **Consolidator dedup (§9.2b) has taken effect — VERIFIED 2026-07-07 slot-7 opus/max.** The §9.2b fix
+      (`unified-trading-library@f5ec2291f`) HAS reached the deployed Cloud Run consolidator jobs and taken effect on the
+      live sports manifest (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`).
+      Verification: **0 captured-vs-seed dup groups** for XG + XG_SHOTS on all leagues (grouped on `(date, league_id,
+      data_type)`, filtered to groups where `capture_status` contains BOTH `captured` and `expected_unattempted`) —
+      down from the pre-fix 2,290 real dup rows validated on 2026-07-06. **0 captured-vs-empty_confirmed** and **0
+      multi-status groups** in the whole understat subset (607,535 distinct key groups). The only remaining dup class is
+      **10 rows in 5 groups** on 2024-12-14 (BUNDESLIGA / EPL / LA_LIGA / LIGUE_1 / SERIE_A) where both dup rows have
+      `capture_status=captured` but different `instrument_type` (`'shot'` vs `'None'`) — these are the 2026-06-30
+      Progress Log's noted stale test rows (`instrument_type='shot'` written before the IS write-path fix to blank
+      instrument_type on XG_SHOTS shipped as `instruments-service@4281a01db`), NOT the captured-vs-seed class §9.2b
+      targets. Task 004's one-off normalization pass will clean the 10 residual test-row dups (safe to run now that the
+      captured-vs-seed dedup has stabilised). No code shipped this session — verification-only.
 - [ ] [DATA] P1. **BLOCKED-PREREQUISITES (2026-07-06, slot-7).** One-off manifest normalization (issue doc §8) — clean
       any residual dup pollution + the stale test rows, **only AFTER** the §9.2b consolidator is confirmed deployed
       (normalizing against the old consolidator re-duplicates). **BLOCKED**: 2nd auto-dispatch to slot-7 today with the

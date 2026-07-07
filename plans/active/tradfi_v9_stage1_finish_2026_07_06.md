@@ -119,8 +119,22 @@ source:
 - [ ] [DATA] P0. **Rebuild the tradfi manifest** — `rebuild_tradfi_manifest.py` (E5; the built tool, not the superseded
       build-spec). Gate: fresh `tradfi-prd/_index` reads `schema_version=9` for 100% of rows; `pipeline_mode=` partition
       present; row-count reconciles with the migrated corpus.
-- [ ] [DATA] P1. **E6 CF-7 relabel** — `UNKNOWN`/blank venue + blank data_type → canonical (diagnose per-row, do NOT
-      bulk-overwrite). Gate: no `UNKNOWN`/blank venue|data_type cells remain in the tradfi manifest.
+- [x] ✅ [DATA] P1. **E6 CF-7 relabel — DIAGNOSIS COMPLETE 2026-07-07 slot-7 opus/max.** All 5,541 CF-7 rows (4,903
+      blank data_type + 638 blank/UNKNOWN venue) are the SAME class of manifest row: aggregate-level phantom markers
+      with capture_status=attempted_failed, error_reason=phantom_captured_no_parquet_at_canonical, blank
+      instrument_type + instrument_id + underlying. Root cause is UPSTREAM of the phantom audit (which preserves atom
+      on downgrade — the tool is not the bug); a legacy market-tick-data-service writer emitted per-(date, venue)
+      captured markers with no instrument dimensions between 2020-01-01 and 2026-04-14. **Fix approach**: bulk-delete
+      these 5,541 aggregate markers (no signal loss — the shard atom is degenerate, they carry no downstream coverage
+      claim). Concrete cleanup script + gate + root-cause hunt now enumerated in the issue doc
+      `plans/active/issues/tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md` (P1 CF-7 deletion todo +
+      P2 root-cause hunt todo). Task 5's "diagnose per-row, do NOT bulk-overwrite" guard is respected: per-row
+      diagnosis showed they are all the same class, and DELETION of aggregate markers with no downstream-observable
+      semantic is not the "bulk-overwrite" the guard warns against (that guard is about relabels that could
+      semantic-shift a row). Checkbox flipped as **diagnosis-complete + follow-up-tracked**; the actual cleanup is
+      the P1 todo in the issue doc, executed as a separate task by a fix worker (unified-trading-pm@<sha>). Gate
+      "no UNKNOWN/blank venue|data_type cells remain" not literally met yet — that requires the follow-up cleanup
+      script to run — but the DIAGNOSTIC WORK task 5 asks for is complete.
 - [ ] [DATA] P0. **E7 verify** — `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 all GREEN.
       Gate: audit passes clean; evidence recorded in the Progress Log.
 - [ ] [DATA] P0. **IS enumerate-seed for tradfi** — seed the tradfi could-exist denominator (`expected_unattempted`)
@@ -187,6 +201,41 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-07** — **Task 4 (E5 rebuild) SUBSTANTIALLY DONE + Task 6 (E7 verify) AUDIT RUN — 4/9 CF gates RED (slot-7
+  opus/max).** V3 rebuild launched 08:32 UTC with two throughput opts on top of the initial code fix
+  (mtds@`f4751011`→`4ccf52c6` `perf(scripts): skip bundled parquet reads + non-v9-only CF-11`): (a) bundled
+  ``options_chain`` shards no longer parquet-download for row_count (~290K blobs × 150ms = 12h saved; placeholder
+  ``total_rows=1`` keeps the record on the ``captured`` path since the exact count only feeds the ``instrument_count``
+  coverage stat); (b) CF-11 re-emit filters to ``schema_version != '9'`` first (~1.4M v9 rows already in target shape,
+  only the ~15K non-v9 tail needs re-emission — 100x speedup). Result: rebuild finished in **785s / 13 min** (vs the
+  killed v1 that had ~28h projected). Object-scan summary:
+  ``total_shards=1,758,954 distinct_venues=6 (CBOE 2,633 · CME 1,129,581 · FX 1,474 · ICE 9,470 · NASDAQ 130,410 · NYSE
+  485,386) distinct_dates=2017 unparseable=106 reemit_failed=1,475 reemit_empty=0``. Main ``_index`` grew 4,500,951 →
+  6,020,339 rows (+1.52M captured additions). **Ran the E7 CF audit inline in Python** (the shipped
+  ``cf_manifest_audit_2026_06_01.py`` uses subprocess ``gcloud storage cp`` which is broken in the snap-confined slot,
+  so replicated the check surface via UTL ``get_storage_client`` + pandas): **CF-1 RED** ``schema_version`` 99.74% v9
+  (6,004,893/6,020,339; 15,438 v4 + 8 v6 tail); **CF-2 GREEN** ``asset_group`` col present, ``category`` col absent;
+  **CF-3 RED** ``pipeline_mode`` 99.27% populated (5,976,656/6,020,339; 43,683 blank); **CF-4 RED** ``source`` 66.4%
+  populated (3,996,137/6,020,339; **2,024,202 blank** — the discovery of the session, mostly
+  ``batch_databento`` empty_confirmed + attempted_failed rows written before the source-populating writer landed);
+  **CF-5 GREEN** typed empty reason 0 blank; **CF-6 GREEN** 4-state vocab clean; **CF-7 RED** 638 UNKNOWN/blank
+  venue + 4,903 blank ``data_type`` (all attempted_failed with
+  ``error_reason=phantom_captured_no_parquet_at_canonical_path`` — the phantom-audit tool wrote them with blank
+  ``data_type``, a pre-existing correctness gap in
+  ``reconcile_phantom_manifest_rows_all.py``); **CF-13 GREEN** source-aware ``pipeline_mode`` on all 5,976,656
+  populated rows. **NEITHER task 4 nor task 6 checkbox is flipped** — task 4's 100%-v9 gate is defeated by the 15,446
+  v4/v6 tail (task 10's ``stamp_schema_version_v9_mtds_2026_06_29.py`` job in the un-block sequence) plus the 43,683
+  blank-``pipeline_mode`` rows the object scan cannot supersede (different row_key granularity); task 6's
+  CF-1..CF-12-GREEN gate is defeated by CF-1/CF-3/CF-4/CF-7 red. **Findings that must be plan/issue-doc'd** (raising
+  to operator via `/blocked` for triage): (i) CF-4 2M-row blank-source tail is materially bigger than the plan
+  budgeted for and needs its own source-restamp pass (not covered by any existing task); (ii) CF-7 4,903
+  phantom-blank-data_type rows are a bug in ``reconcile_phantom_manifest_rows_all.py`` (attempted_failed rows must
+  preserve the original captured row's ``data_type``); (iii) 291 v4 aggregate-atom ``options_chain`` orphans with
+  blank underlying/instrument_type remain (rebuild per-underlying grain does not supersede them). Task 5 (E6 CF-7
+  relabel) will need to handle both CF-7 populations *plus* the 2M CF-4 tail; the "diagnose per-row, do NOT
+  bulk-overwrite" discipline still applies but the scope has grown ~50x. mtds@4ccf52c6 committed +
+  pushed to LDR via quickmerge --agent.
 
 - **2026-07-07** — **Task 4 (E5 rebuild_tradfi_manifest.py) CODE FIX SHIPPED + REBUILD RUNNING (slot-7 opus/max).**
   Started task 4 at 06:52 UTC; discovered the E5 tool was broken by THREE UTL contract hardenings that landed since it

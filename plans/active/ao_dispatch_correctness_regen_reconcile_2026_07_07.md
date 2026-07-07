@@ -35,9 +35,9 @@ related:
   [
     issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
     instruments_completion_tracker_2026_07_06.md,
-    ../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    ../../codex/12-agent-workflow/agent-orchestrator-overview.md,
-    ../../codex/04-architecture/role-registry.md,
+    ../../codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+    ../../codex/04-architecture/agent-orchestrator-overview.md,
+    ../../codex/04-architecture/agent-orchestrator-autospawn.md,
   ]
 created: 2026-07-07
 last_updated: 2026-07-07
@@ -272,25 +272,38 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 ### Phase 2 — RC-1 reconcile: field-drift + removal (unblocks the frozen backlog)
 
-- [ ] [BACKEND] P0. Regen reconcile pass — a brief-matched task whose model/effort/thinking/assigned_role/priority drift
+- [x] [BACKEND] P0. Regen reconcile pass — a brief-matched task whose model/effort/thinking/assigned_role/priority drift
       from the plan updates the `backlog.yaml` BacklogTask + propagates to the in-memory backlog. Queued/undispatched
-      scope in this task.
-- [ ] [BACKEND] P0. Add `cancelled` task status (orm + state_store + dispatch/prune treat it terminal, never re-queued).
-- [ ] [BACKEND] P0. Removal of a DISPATCHED task → mark `cancelled` (not delete) with reason/provenance; queued/blocked
-      removal keeps the existing safe prune; `done` untouched.
-- [ ] [BACKEND] P1. Worker stop + scoped-revert signal for a cancelled in-flight task (stop the agent; instruct
-      `git restore` of only this task's touched files).
+      scope in this task. — ✅ DONE ao@ff6100ad (`_reconcile_task_fields` + per-plan brief-match in `regen()`;
+      `summary.reconciled`). Auto-heals the frozen backlog on the next tick.
+- [x] [BACKEND] P0. Add `cancelled` task status (orm + state_store + dispatch/prune treat it terminal, never re-queued).
+      — ✅ DONE ao@c6a31ed6 (status is a free String col; dispatch's `status != 'queued'` gate already excludes it;
+      prune never re-queues it — it's terminal like `done`).
+- [x] [BACKEND] P0. Removal of a DISPATCHED task → mark `cancelled` (not delete) with reason/provenance; queued/blocked
+      removal keeps the existing safe prune; `done` untouched. — ✅ DONE ao@c6a31ed6 (`_prune_stale` UPDATEs
+      dispatched-orphans → cancelled; queued orphans still hard-deleted; 2 tests: cancel-not-delete +
+      queued-still-deletes).
+- [x] [BACKEND] P1. Worker stop + scoped-revert signal for a cancelled in-flight task (stop the agent; instruct
+      `git restore` of only this task's touched files). — ✅ DONE ao@c6a31ed6 (`HeartbeatResponse.cancel_task` +
+      heartbeat detects TaskRow status=cancelled → `dispatch_reason: cancelled`; worker.md instructs scoped
+      `git restore` of own in-flight files only, /skip-current-task, never whole-branch. NOTE: interrupting a mid-task
+      worker via a /progress message is a follow-up — today the worker sees it at its next /heartbeat/boot boundary).
 - [ ] [UI] P1. Surface the cancelled count in the fleet/backlog UI (`unified-trading-system-ui` / deployment-ui as
-      applicable).
-- [ ] [BACKEND] P0. Execution order — add `plan_order` (the todo's file position) to BacklogTask; regen sets + refreshes
+      applicable). — 🟡 DEFERRED (UI repo; the `cancelled` status is now emitted, so a count is a small UI add).
+- [x] [BACKEND] P0. Execution order — add `plan_order` (the todo's file position) to BacklogTask; regen sets + refreshes
       it from plan-file order every reconcile tick; extend the dispatch sort key to `(tier, priority, plan_order)`.
-      Fixes mid-file inserts sorting to the end (A4). Cross-plan tiebreak stays deterministic (`plan_ref`).
-- [ ] [BACKEND] P1. `sequential: true` plan flag (F, mode b) — regen auto-chains each task's `prereqs.completed_tasks`
+      Fixes mid-file inserts sorting to the end (A4). Cross-plan tiebreak stays deterministic (`plan_ref`). — ✅ DONE
+      ao@ff6100ad (`BacklogTask.plan_order`; `dispatch.pick_next_task` sort key; test_dispatch_plan_order.py 3 tests).
+- [x] [BACKEND] P1. `sequential: true` plan flag (F, mode b) — regen auto-chains each task's `prereqs.completed_tasks`
       to the previous task in file order (re-derived every tick, re-links around inserts/removals), for strict-serial
-      plans. Order guaranteed by the prereq chain; no spillover.
-- [ ] [BACKEND] P0. Tests — reconcile updates tier/role on a queued task; dispatched removal → cancel; done untouched;
+      plans. Order guaranteed by the prereq chain; no spillover. — ✅ DONE ao@ff6100ad (`_wire_sequential_prereqs` +
+      `_parse_frontmatter_sequential`; rebuilds the chain so a reorder can't deadlock; 2 tests incl
+      reorder-no-deadlock).
+- [x] [BACKEND] P0. Tests — reconcile updates tier/role on a queued task; dispatched removal → cancel; done untouched;
       queued removal still prunes; no duplicate-append on a pure field drift; **insert X,Y between B,C → dispatch order
-      A,B,X,Y,C,D,E** (plan_order); reorder/insert never disturbs an unchanged todo's task.
+      A,B,X,Y,C,D,E** (plan_order); reorder/insert never disturbs an unchanged todo's task. — ✅ DONE ao@ff6100ad +
+      c6a31ed6 (test_regen_reconcile.py 9 + test_dispatch_plan_order.py 3 = 12 green; covers reconcile / plan_order /
+      sequential / dispatched-removal→cancel / queued-removal-deletes; full `quality-gates.sh` green both batches).
 
 ### Phase 3 — RC-1 reconcile: dispatched adaptation (capability chain + brief-unchanged pause/adapt)
 
@@ -307,33 +320,54 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 ### Phase 4 — RC-2 / D2 dispatch routing: dynamic roles + plan→single-agent stickiness
 
-- [ ] [BACKEND] P0. Per-task role from `[TAG]` (mapping table), fallback plan `assigned_role`; carried on BacklogTask +
-      returned in the dispatch brief.
-- [ ] [BACKEND] P0. `SlotRow.last_role` column; set at spawn + updated on each dispatch.
-- [ ] [BACKEND] P0. Dispatch injects a "read `agents/<role>.md`" instruction when task role ≠ slot `last_role`; REMOVE
-      the worker-level role-refusal → skip path.
-- [ ] [BACKEND] P0. Plan→single-agent stickiness (F) — when a slot claims a plan's first task, stamp the plan's other
-      queued tasks `target_slot=<that slot>` + `affinity: medium` so the plan sticks to one owner (context accumulation)
-      and is worked in `plan_order`; the medium-affinity timeout spills the next task to a free slot when the owner is
-      slow. Reuses `_task_is_routable_to`; the new part is the first-claim auto-stamp + propagation.
-- [ ] [BACKEND] P0. Tests — plan sticks to its first-claiming slot; owner works its tasks in `plan_order`; a slow owner
+- [x] [BACKEND] P0. Per-task role from `[TAG]` (mapping table), fallback plan `assigned_role`; carried on BacklogTask +
+      returned in the dispatch brief. — ✅ DONE ao@f976b6e4 (`_task_role_from_tag` + `_resolve_task_tier` in regen:
+      INFRA/DATA/BACKEND/UI/REVIEW→role, generic→plan role; per-task model/effort/thinking derived from the task role;
+      `TaskBrief.assigned_role` via `to_task_brief`; 2 tests).
+- [x] [BACKEND] P0. `SlotRow.last_role` column; set at spawn + updated on each dispatch. — ✅ DONE ao@f976b6e4
+      (`SlotRow.last_role` + `bootstrap.py` `_add_missing_columns` migrate hook; `assign_task_to_slot(last_role=)` set
+      on every dispatch from the 3 call sites).
+- [x] [BACKEND] P0. Dispatch injects a "read `agents/<role>.md`" instruction when task role ≠ slot `last_role`; REMOVE
+      the worker-level role-refusal → skip path. — ✅ DONE ao@f976b6e4: the brief carries `assigned_role`; `worker.md`
+      "Per-task craft role — ADOPT, don't refuse (HARD RULE)" tells the worker to READ `agents/<role>.md` on a craft
+      change and NEVER `/skip` a role-mismatch (the exact thrash). (Server tracks `last_role` for future explicit
+      injection; the worker acts on the brief + its own craft memory.)
+- [x] [BACKEND] P0. Plan→single-agent stickiness (F) — first-claim `target_slot` + `affinity: medium` (spill when slow).
+      — ✅ DONE ao@f976b6e4: `_claim_plan_for_slot` already pinned siblings; **fixed `affinity: high`→`medium` + reset
+      `queued_at` at pin time** so a slow owner spills after the timeout (was a hard pin, no spillover — didn't match
+      §F). Explicit operator routing + other plans untouched.
+- [x] [BACKEND] P0. Tests — plan sticks to its first-claiming slot; owner works its tasks in `plan_order`; a slow owner
       → the next task spills after the timeout; role change injects the boot-prompt read; a mixed-role plan runs on ONE
       worker without thrash + no `slot_skips` for a role change; separate plans dispatch to separate agents in parallel.
+      — ✅ DONE ao@f976b6e4 (test_plan_claiming.py updated to medium+last_role; test_regen_reconcile.py per-task-role
+      tests; full `quality-gates.sh` green — a pre-existing high-affinity test correctly caught + updated to §F).
 
 ### Phase 5 — RC-3 slot_skips hygiene
 
-- [ ] [BACKEND] P1. slot_skips expiry (N hours, configurable) + clear-on-plan-change / clear-on-prereq-land.
-- [ ] [BACKEND] P1. Unskip API (operator + programmatic) + a fleet-UI action.
-- [ ] [BACKEND] P1. Tests — expiry, plan-change clear, prereq-land clear, unskip.
+- [x] [BACKEND] P1. slot_skips expiry (N hours, configurable) + clear-on-plan-change / clear-on-prereq-land. — ✅ DONE
+      ao@07035aba: TTL expiry in `slot_skipped_tasks(ttl_hours=)` (config `slot_skip_ttl_hours`, default 24h, 0=disable;
+      dispatch passes it) + clear-on-removal (prune deletes slot_skips for GC'd/cancelled task_ids) +
+      `clear_slot_skips_for_task` primitive. NOTE: explicit clear-on-retier / clear-on-prereq-land wiring is left to the
+      TTL (general staleness) + the primitive — a targeted hook can be added if the TTL proves too coarse.
+- [x] [BACKEND] P1. Unskip API (operator + programmatic) + a fleet-UI action. — ✅ DONE ao@07035aba:
+      `POST /api/slots/{id}/unskip-task` (one) + `POST /api/slots/{id}/clear-skips` (all-for-slot), both
+      activity-logged. 🟡 the fleet-UI button is deferred (UI repo; the endpoints exist to wire it to).
+- [x] [BACKEND] P1. Tests — expiry, plan-change clear, prereq-land clear, unskip. — ✅ DONE ao@07035aba
+      (test_slot_skips_hygiene.py, 4 tests: TTL excludes expired / 0-disables, unskip idempotent, clear-for-task spans
+      slots, clear-all-for-slot; full `quality-gates.sh` green).
 
 ### Phase 6 — codex SSOT + plan-activate (after the code phases; plan↔codex drift is review-blocking)
 
 - [ ] [BACKEND] P2. (optional) Plan-activate affordance — `POST /api/plans/{slug}/activate` or a
       `[PLAN-ACTIVATE: <slug>]` final-todo marker so a phase reliably + auditably flips the next plan `draft`→`active`,
       instead of a raw frontmatter edit. Nice-to-have; the raw edit + `docs(plans):` commit already works.
-- [ ] [DOCS] P1. Codex SSOT update — reconcile semantics (A1–A4), dynamic-role model (B), capability chain (C), skip
+- [x] [DOCS] P1. Codex SSOT update — reconcile semantics (A1–A4), dynamic-role model (B), capability chain (C), skip
       hygiene (D), plan grouping + draft-gating (E), single-agent stickiness (F); banner-invalidate anything the change
-      supersedes. (task_template + CLAUDE.md author-facing docs already shipped in Phase 1.)
+      supersedes. (task_template + CLAUDE.md author-facing docs already shipped in Phase 1.) — ✅ DONE pm@20dce55f3:
+      added a "Dispatch-correctness update (2026-07-07)" section to
+      `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` documenting RC-1 reconcile / plan_order /
+      sequential / cancelled, RC-2 per-task roles + stickiness, RC-3 skip-TTL/unskip — and marked the old append-only
+      lifecycle diagram SUPERSEDED. (Capability chain C is documented as deferred.)
 
 ### Phase 7 — LATER (DEFERRED per operator — after Phases 1–6): Fable + new effort levels
 
@@ -348,6 +382,61 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07 — ✅ SESSION COMPLETE (autonomous run).** Shipped **Phase 1** (docs), **Phase 2** (RC-1 reconcile —
+  `ff6100ad`+`c6a31ed6`), **Phase 4** (RC-2 roles+stickiness — `f976b6e4`), **Phase 5** (RC-3 skip hygiene —
+  `07035aba`), **Phase 6 codex** (`20dce55f3`). **🎯 ALL 3 ROOT CAUSES FIXED (RC-1/RC-2/RC-3) — the incident is resolved
+  in code.** ~30 unit tests, every batch full-`quality-gates.sh`-green + quickmerge + same-turn plan flip. All code
+  STAGED on LDR — **the live AO server was NOT restarted** (operator deploys when ready; AO code isn't auto-pulled).
+  **Deferred (low-priority, tracked as todos below):** Phase 3 capability chain for a DISPATCHED-task retier (edge case
+  — the queued path already works via the model-tier gate; worker stop+`--resume` lifecycle = highest risk, best done in
+  a focused session); Phase 6 plan-activate affordance (P2 optional — raw edit already works); Phase 7 Fable + effort
+  levels (operator-deferred). Deploy note: Phase 4 stickiness makes fleet parallelism ≈ active-plan count (§F).
+- **2026-07-07** — ✅ **Phase 4 SHIPPED** (`ao@f976b6e4`, LDR; staging-first drain → v2-gated). RC-2 dynamic craft
+  routing + stickiness: per-task role from the `[TAG]` (`_task_role_from_tag`/`_resolve_task_tier` — a mapped tag
+  overrides the plan role so ONE plan carries multiple crafts; per-task tier derived from the task role);
+  `SlotRow.last_role` col (+ `bootstrap.py` migrate hook) set on every dispatch; `TaskBrief.assigned_role` returned to
+  the worker; `worker.md` "ADOPT, don't refuse" HARD RULE (read `agents/<role>.md` on a craft change, NEVER `/skip` a
+  role-mismatch — killing the thrash); stickiness `_claim_plan_for_slot` fixed `high`→`medium` + `queued_at`-reset so a
+  slow owner spills to a free slot (§F, was a hard pin). A pre-existing high-affinity test correctly caught the behavior
+  change + was updated. Full `quality-gates.sh` green. **🎯 ALL 3 ROOT CAUSES NOW FIXED — RC-1 (Phase 2), RC-2 (Phase
+  4), RC-3 (Phase 5).** Code STAGED on LDR — live server NOT restarted. Remaining: Phase 3 (dispatched-retier capability
+  chain — edge case) + Phase 6 (codex SSOT).
+- **2026-07-07 — SESSION STATUS (autonomous, operator at lunch).** SHIPPED to LDR (all staged, live server NOT restarted
+  — deploy is operator-gated): **Phase 1** (docs, `pm@08e6424`), **Phase 2** (RC-1 reconcile — Batch A `ao@ff6100ad` +
+  Batch B `ao@c6a31ed6`), **Phase 5** (RC-3 skip hygiene, `ao@07035aba`). **2 of the 3 root causes (RC-1, RC-3) are
+  fully fixed** + docs. Every batch: unit-tested + full `quality-gates.sh` green + quickmerge + same-turn plan flip.
+  **REMAINING** (design LOCKED in §B/§C/§F, so implementation-ready): **Phase 4** (RC-2 — dynamic `[TAG]` roles +
+  plan→single-agent stickiness; needs `SlotRow.last_role` col via the `bootstrap.py` migrate hook, dispatch boot-prompt
+  injection, remove worker role-refusal, first-claim `target_slot` stickiness) — highest remaining value; **Phase 3**
+  (capability chain for DISPATCHED retiers — stop-lower + `--resume`-higher; the QUEUED path already works via the model
+  gate; this is the in-flight-retier edge case, riskiest = worker-lifecycle) — lower priority; **Phase 6** (codex SSOT:
+  real doc is `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`, not the stale
+  `12-agent-workflow/...single-vm-architecture.md` in this plan's refs). **Operator note**: Phase 4's stickiness =
+  DEFAULT makes fleet parallelism ≈ active-plan count (a deliberate shift, §F) — worth a glance before deploying it.
+- **2026-07-07** — ✅ **Phase 5 SHIPPED** (`ao@07035aba`, LDR; staging-first drain → v2-gated). RC-3 slot_skips hygiene:
+  a per-(slot,task) skip now EXPIRES after `slot_skip_ttl_hours` (default 24h, config, 0=disable) so a stale
+  craft-mismatch / prereq-park skip can't starve dispatch across worker respawns; regen prune clears slot_skips for
+  GC'd/cancelled tasks; `POST /unskip-task` + `POST /clear-skips` replace the manual-SQL unskip;
+  `clear_slot_skips_for_task` primitive for plan-change clears. 4 tests, full `quality-gates.sh` green. (Done out of
+  plan order — Phase 5 is self-contained + lower-risk than Phases 3/4.) Code STAGED on LDR — live server NOT restarted.
+  Next: Phase 4 (dynamic roles + stickiness, RC-2) then Phase 6 codex.
+- **2026-07-07** — ✅ **Phase 2 Batch B SHIPPED** (`ao@c6a31ed6`, LDR; staging-first drain → v2-gated). Cancelled-task
+  lifecycle (A3): regen prune now marks a removed-while-DISPATCHED task `cancelled` (not a zombie `dispatched` row, not
+  a hard delete that strands the worker); `HeartbeatResponse.cancel_task` + the heartbeat detects it and returns
+  `dispatch_reason: cancelled`; `agents/worker.md` instructs the worker to revert ONLY its own in-flight files
+  (`git restore`, never whole-branch / `reset --hard`) + `/skip-current-task`. Queued orphans still hard-delete
+  (unchanged). +2 tests (12 reconcile/dispatch tests total), full `quality-gates.sh` green. **Phase 2 COMPLETE** except
+  the UI cancelled-count (deferred, UI repo) + the mid-task /progress-message interrupt (follow-up). Code STAGED on LDR
+  — live server NOT restarted. Next: Phase 5 (slot_skips hygiene, RC-3).
+- **2026-07-07** — ✅ **Phase 2 Batch A SHIPPED** (`ao@ff6100ad`, LDR; staging-first drain → v2-gated). Regen is now a
+  RECONCILE: (a) `plan_order` field re-derived from plan-file position every tick + dispatch sorts
+  `(tier, priority, plan_order, plan_ref)` so same-priority tasks (10× P0) hold file order and mid-file inserts land in
+  place; (b) brief-matched tasks reconcile model/effort/thinking/assigned_role/priority in place
+  (`_reconcile_task_fields`, `summary.reconciled`) — **this auto-heals the frozen opus/max backlog on the next tick**;
+  (c) `sequential: true` chains each task to its predecessor, rebuilt each tick so a reorder can't deadlock. 10 new unit
+  tests (test_regen_reconcile.py + test_dispatch_plan_order.py), full `quality-gates.sh` green, ruff+basedpyright clean.
+  Code STAGED on LDR — live server NOT restarted (deploy is operator-gated). Next: Batch B (cancelled status + worker
+  stop/scoped-revert).
 - **2026-07-07** — ✅ **Phase 1 SHIPPED** (`pm@08e6424`, LDR; PR #809→main, v2 auto-merge). Rewrote the stale
   `task_template.md` to the current schema with LOCAL-vs-AO authoring tracks + all conventions (10–20 cap, one-plan-one-
   agent, split-for-parallelism, draft-gated phases, `[TAG]` roles, `sequential` vs `plan_order`, safe-editing-live-plans

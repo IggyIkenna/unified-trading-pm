@@ -239,6 +239,40 @@ instrument_type = `""` (blank) per §9.1.
 
 ## Progress Log
 
+- **2026-07-07 (slot-7 opus/max, task `understat_local_backfill_completion-002` — Manifest verification):** Ran the
+  gate re-verify against the LIVE consolidated manifest
+  (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, 4,897,283 total rows,
+  607,540 understat). The full-history backfill driver has made **substantial progress since the 2026-07-06 baseline**
+  but the DoD is **still NOT MET**. Big-5 counts (EPL/LA_LIGA/BUNDESLIGA/SERIE_A/LIGUE_1) compared to the 2026-07-06
+  slot-12 baseline:
+
+  | metric                                         | baseline (2026-07-06 slot-12) | now (2026-07-07 slot-7) | delta       |
+  | ---------------------------------------------- | ----------------------------- | ----------------------- | ----------- |
+  | XG captured                                    | 4,432                         | **6,676**               | +2,244      |
+  | XG_SHOTS captured                              | 1,961 (44% of XG)             | **6,671 (99.9% of XG)** | +4,710      |
+  | XG_SHOTS attempted_failed                      | 384                           | **20**                  | −364        |
+  | XG_SHOTS expected_unattempted                  | 13,811                        | **6,093**               | −7,718      |
+  | XG expected_unattempted                        | 315                           | **245**                 | −70         |
+  | XG latest captured date                        | 2023-03-11                    | **2026-05-24**          | +3.2 years  |
+  | XG_SHOTS latest captured date                  | 2024-12-21                    | **2026-05-24**          | +17 months  |
+
+  The captured-shots ratio (XG_SHOTS / XG) is now **99.9%** (was 44%) — the driver drove XG_SHOTS to near-parity with
+  XG. Latest captured for both is 2026-05-24 (rolling window frontier).
+
+  **DoD violations that block a green flip on task `-005`**:
+  - **20 XG_SHOTS `attempted_failed`** remain (all `HTTP_NOT_FOUND`, 4 per big-5 league, attempted_at 2026-06-23) —
+    the plan's DoD requires 0.
+  - **6,093 XG_SHOTS + 245 XG `expected_unattempted`** remain (evenly split 1,218-1,219 per big-5 league for XG_SHOTS,
+    49 per league for XG) — the plan's DoD requires 0.
+  - **16,352 stale `empty_confirmed`** rows with `attempted_at < 2026-07-06` (breakdown by month: 208 in 2026-04,
+    5,360 in 2026-05, 10,784 in 2026-06) — the plan's DoD requires 0.
+
+  **Assessment**: the resume-aware driver from task -001 pushed the frontier forward by ~3 years (XG) / ~17 months
+  (XG_SHOTS) and closed 95% of the shots-captured gap, but the tail (attempted_failed + EU + stale empty) has not
+  cleared. This is the same class of tail as the ~2016 hand-off note in the plan preface — historical dates the driver
+  still needs to re-attempt. Task `-005` (gate flip) stays RED until task `-001` drives to `0 attempted_failed`. Task
+  `-003` (§9.2b consolidator confirmation) and task `-004` (one-off normalization) are also unchanged from their
+  BLOCKED-PREREQUISITES status. No code shipped this session.
 - 2026-06-29: shot-endpoint root-cause fixed + shipped (`instruments-service@527b9d9`); date-by-date VM
   `us-backfill-20260628-070120` deleted; bulk endpoints + throughput + save/manifest contract verified live;
   this issue written. Scope confirmed XG + XG_SHOTS only (raw bucket deprecated). Moved into slot-16 worktree.

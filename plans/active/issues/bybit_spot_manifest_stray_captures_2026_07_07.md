@@ -157,11 +157,17 @@ describes and (b) each subset needs its own diagnosis before mutation.
       market-tick-data-service). — market-tick-data-service@5611d9a7; script at
       `scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py` with dry-run/--smoke/--apply modes,
       stop-on-surprise guards, smoke-first protocol, snapshot before --apply.
-- [ ] [CONFIG] P2. **Populate `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` in UAC** with `trades` + `book_snapshot_5`
+- [x] ✅ [CONFIG] P2. **Populate `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` in UAC** with `trades` + `book_snapshot_5`
       (SPOT venue capabilities) so the cefi Layer-1 EXPECTED denominator includes BYBIT-SPOT instead of carve-out-1
       excluding it. Currently empty — matches the plan's separate BYBIT-SPOT capability-gap observation. Cross-repo
       depends on the corrective-relabel landing so the Layer-1 tuple appears with real captured data (repo:
-      unified-api-contracts).
+      unified-api-contracts). — unified-api-contracts@ab6bc7e5 (2026-07-07 slot-8). Added
+      `"BYBIT-SPOT": {"trades": "2021-12-04", "book_snapshot_5": "2021-12-04"}` to `VENUE_DATA_TYPE_CAPABILITIES` in
+      `unified_api_contracts/registry/market_data_categories.py`. Start date sourced from
+      `VenueMapping.venue_start_dates["BYBIT-SPOT"]` (Tardis `bybit-spot` availableSince); data_types mirror the
+      existing `expected_coverage.py` BYBIT-SPOT entry. Carve-out 1 (VENUE_CAPABILITY_AGS in
+      `check_enumeration_completeness.py`) will now recognise BYBIT-SPOT at the cefi Layer-1 EXPECTED denominator.
+      QG green (222s cached, sentinel ab6bc7e5); Quickmerge: agent trailer applied.
 
 ## Diagnosis (a): 82k EMPTY-instrument_type rows
 
@@ -352,3 +358,15 @@ rows land with correct `instrument_type=spot_pair`.
   non-empty; the runtime gate in the script bridges the current empty-dict state so operator can't
   accidentally run --apply before (d) lands. QG green (335s cached with sentinel matching commit HEAD).
   Checkbox flipped. Operator sequence: land (d) → run --smoke → run --apply.
+- **2026-07-07** — **Task -004 DONE** (slot-8 data_engineering). Todo (d) shipped at
+  `unified-api-contracts@ab6bc7e5`. Added `"BYBIT-SPOT": {"trades": "2021-12-04", "book_snapshot_5":
+  "2021-12-04"}` to `VENUE_DATA_TYPE_CAPABILITIES` in
+  `unified_api_contracts/registry/market_data_categories.py`. Start date sourced from
+  `VenueMapping.venue_start_dates["BYBIT-SPOT"]` (Tardis `bybit-spot` availableSince); data_types mirror the
+  existing `expected_coverage.py` BYBIT-SPOT entry. Effect: Carve-out 1 (VENUE_CAPABILITY_AGS in
+  `check_enumeration_completeness.py`) will now recognise BYBIT-SPOT at the cefi Layer-1 EXPECTED denominator,
+  and the enumerator's `_emit_skipped_venue_sentinels` (mtds@aa8bb137 gate) will stop broadcasting
+  spot-nonsense data_types to BYBIT-SPOT on the next cron cycle. **Unblocks (b1) --apply**: the b1
+  manifest-delete script's runtime gate now passes, so operator can run `--smoke` → `--apply` to remove the
+  53,934 spot-nonsense manifest rows. QG green (222s cached with sentinel matching commit HEAD ab6bc7e5).
+  Checkbox flipped.
