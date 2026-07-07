@@ -360,20 +360,27 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       `server/model_tier.py` CONSOLIDATES the two drifting `_MODEL_RANK` copies into ONE SSOT; `needs_respawn` +
       `model_supports_effort` + effort ladder; 9 tests + 236 regression. thinking `on↔off` gated to Haiku only (inert
       on adaptive models); mid-task = model-upgrade only.)
-- [ ] [BACKEND] P0. Mid-task UPGRADE trigger (liveness tick): a working slot whose `current_task` tier now EXCEEDS the
+- [x] [BACKEND] P0. Mid-task UPGRADE trigger (liveness tick): a working slot whose `current_task` tier now EXCEEDS the
       session tier → kill + respawn `--resume` at the higher tier (immediate, debounced by the respawn cooldown; timing
-      A). A mid-task decrease is ignored — the over-powered worker finishes its task.
-- [ ] [BACKEND] P0. Boundary realign (at `/done` → next STICKY task): the next task pinned to this slot (§F affinity)
+      A). A mid-task decrease is ignored — the over-powered worker finishes its task. — ✅ DONE ao@a21ca9e9
+      (`WorkerLivenessWatchdog` Trigger 5 `_maybe_realign_tier`; upgrade fires on `needs_respawn(at_boundary=False)`,
+      cooldown-gated + non-thinking-guarded + session-id-required.)
+- [x] [BACKEND] P0. Boundary realign (at `/done` → next STICKY task): the next task pinned to this slot (§F affinity)
       whose tier differs (up OR down) → kill + respawn `--resume` at the next task's tier BEFORE it proceeds; a
       non-sticky tier mismatch prefers a matching-tier slot. Reuse `worker_liveness_watchdog` `kill_session` +
-      `spawn(resume_session_id=…)`; performed by the background tick (the `/done` request can't self-kill).
+      `spawn(resume_session_id=…)`; performed by the background tick (the `/done` request can't self-kill). — ✅ DONE
+      ao@a21ca9e9 (same Trigger 5: BOUNDARY = `current_task` changed since last watchdog sight → realign any direction +
+      **persist tier back to SlotRow** (no thrash); `_slot_required_model` now honours `affinity=medium` within the
+      `queued_at` spill window for the idle-slot upgrade path. Non-sticky routing is the existing affinity dispatch.)
 - [ ] [BACKEND] P1. Role-only change within the SAME session tier → soft signal (heartbeat message) to read
       `agents/<role>.md` + re-read the plan item, continue — NO respawn (adapt-in-place; the model-chain rule takes over
       only if the role also raises the tier).
-- [ ] [BACKEND] P0. Tests — `_needs_respawn` matrix (model any-change / effort ±1 tolerated / effort `>1` respawn /
+- [x] [BACKEND] P0. Tests — `_needs_respawn` matrix (model any-change / effort ±1 tolerated / effort `>1` respawn /
       thinking flip / fable rank); mid-task upgrade respawns; mid-task downgrade does NOT; boundary sticky-down
       respawns; non-sticky routes away (no respawn); text-edit remove+add + no writeback. Spawn mocked (parity with the
-      `worker_liveness_watchdog` tests).
+      `worker_liveness_watchdog` tests). — ✅ DONE ao@f52d3cc4 (`test_model_tier.py` needs_respawn matrix, 9) +
+      ao@a21ca9e9 (`test_watchdog_tier_realign.py`, 8: mid-task up/down, boundary down, haiku-effort-omit, guards). The
+      text-edit remove+add assertion is tracked with the Phase 3 text-edit todo above.
 
 ### Phase 4 — RC-2 / D2 dispatch routing: dynamic roles + plan→single-agent stickiness
 
