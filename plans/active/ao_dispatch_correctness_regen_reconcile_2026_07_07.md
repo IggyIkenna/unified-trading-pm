@@ -353,10 +353,13 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       so A3 handles the old task by status (prune/cancel/keep) and the new text ingests fresh. Assert NO in-place text
       update + no plan-file writeback. (Behaviour is already live via Phase 2 reconcile+prune — this lands the explicit
       test.)
-- [ ] [BACKEND] P0. Tier primitives: `fable` into `_MODEL_RANK` (`haiku<sonnet<opus<fable`) in BOTH `dispatch.py` +
+- [x] [BACKEND] P0. Tier primitives: `fable` into `_MODEL_RANK` (`haiku<sonnet<opus<fable`) in BOTH `dispatch.py` +
       `autospawn.py` (kept in sync); effort ladder `[low, medium, high, xhigh, max]` + `_effort_index` (unset→`medium`);
       a PURE `_needs_respawn(session_tier, task_tier, *, at_boundary) -> bool` — model any-change, effort `|Δidx|>1`,
-      thinking `on↔off` flip; mid-task fires on INCREASE only, boundary fires on any change.
+      thinking `on↔off` flip; mid-task fires on INCREASE only, boundary fires on any change. — ✅ DONE ao@f52d3cc4 (new
+      `server/model_tier.py` CONSOLIDATES the two drifting `_MODEL_RANK` copies into ONE SSOT; `needs_respawn` +
+      `model_supports_effort` + effort ladder; 9 tests + 236 regression. thinking `on↔off` gated to Haiku only (inert
+      on adaptive models); mid-task = model-upgrade only.)
 - [ ] [BACKEND] P0. Mid-task UPGRADE trigger (liveness tick): a working slot whose `current_task` tier now EXCEEDS the
       session tier → kill + respawn `--resume` at the higher tier (immediate, debounced by the respawn cooldown; timing
       A). A mid-task decrease is ignored — the over-powered worker finishes its task.
@@ -436,12 +439,16 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 > `fable` (available since CLI 2.1.170). The `_MODEL_RANK` + effort-ladder + haiku-gate primitives are SHARED with Phase
 > 3 — build them once as the foundation.
 
-- [ ] [BACKEND] P0. Haiku-effort gate (CORRECTNESS — latent 400 bug): `_build_claude_flags` (`tmux_spawn.py:971`) must
+- [x] [BACKEND] P0. Haiku-effort gate (CORRECTNESS — latent 400 bug): `_build_claude_flags` (`tmux_spawn.py:971`) must
       NOT emit `--effort` when the model is haiku — the API 400s. Add `_model_supports_effort(model)` (haiku→False;
-      sonnet/opus/fable→True) + gate the flag. Single emission site (verified `rg`).
-- [ ] [BACKEND] P0. `fable` as a spawnable model: add to `ModelTier` (`models/_types.py`) + `_MODEL_RANK`
+      sonnet/opus/fable→True) + gate the flag. Single emission site (verified `rg`). — ✅ DONE ao@f52d3cc4
+      (`model_tier.model_supports_effort` matches haiku by SUBSTRING so full names `claude-haiku-4-5` are caught across
+      all ~13 spawn paths; `--max-thinking-tokens` left ungated — Haiku accepts it.)
+- [x] [BACKEND] P0. `fable` as a spawnable model: add to `ModelTier` (`models/_types.py`) + `_MODEL_RANK`
       (`{haiku:0, sonnet:1, opus:2, fable:3}`) in BOTH `dispatch.py` + `autospawn.py`; spawn `--model fable` (alias
-      confirmed; CLI 2.1.201 ≥ 2.1.170). `_higher_model` / `_slot_pinned_task_params` handle it via the rank.
+      confirmed; CLI 2.1.201 ≥ 2.1.170). `_higher_model` / `_slot_pinned_task_params` handle it via the rank. — ✅ DONE
+      ao@f52d3cc4 (`ModelTier` + `role_registry._coerce_model` + `_parse_frontmatter_model_tier` (`fable-required`) all
+      accept fable — operator-request-only per task_template §4.)
 - [ ] [BACKEND] P1. Per-role / per-plan `effort` field for the FULL ladder: extend `role_registry` + the
       plan-frontmatter parse so a role/plan can declare any of `low|medium|high|xhigh|max` DIRECTLY (today only
       `thinking: max|high` → effort). Keep `thinking: on/off` as Haiku's control. Validate against the ladder; unknown →

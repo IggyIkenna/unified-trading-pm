@@ -86,6 +86,7 @@ estimate_class: infra # refactor 0.4x | design 0.6x | infra 0.8x | brand-new 1.0
 estimate_baseline_ai_days: <n>
 estimate_calibrated_ai_days: <n × class-multiplier>
 assigned_role: <default craft — data_engineering | infra | backend-engineer | ui-developer | review>
+# model_tier: opus-required # optional — default sonnet (role-derived); fable-required = OPERATOR-REQUEST-ONLY (§4)
 drift_direction: advance-code
 depends_on: # optional — upstream plan slugs (documents ordering + gates archival)
 # gate_on_depends: true    # optional — machine-hold this plan's tasks until depends_on tasks are done
@@ -131,6 +132,11 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
 - **Multi-role in one plan** — use per-task `[TAG]`s; the one owning agent reads the extra role boot prompt. _[ROLLING
   OUT: `[TAG]` per-task routing. Today role is the plan-level `assigned_role` for ALL tasks — keep one role per plan, or
   split, until it ships.]_
+- **Model tier — sonnet/opus only (default).** Set `model_tier: opus-required` for hard reasoning; otherwise the role's
+  default (sonnet) applies. **`fable-required` (Fable 5) is OPERATOR-REQUEST-ONLY** — never assign it unless the
+  operator DIRECTLY asks for Fable (it is for the hardest / longest-running interactive work — overkill for routine
+  dispatch). Effort: Haiku has NO effort levels (thinking on/off only); sonnet/opus/fable support `--effort` low→max.
+  _[ROLLING OUT: fable spawn + per-model effort.]_
 - **NEVER hand-edit `backlog.yaml`.** Author plans; the backend derives the backlog.
 
 ---
