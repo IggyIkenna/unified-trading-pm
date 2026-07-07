@@ -187,6 +187,13 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
 
 ## Progress Log
 
+- **2026-07-07** — **-009 RE-DISPATCHED (4TH SLOT BOUNCE) — SAME PARK** (`BLK-035ed29a`, slot-9 planning). Same root
+  cause as the 3 prior bounces (slot-11 today, slots 7 + 8 on 2026-07-06): dispatcher re-issued -009 to slot-9 even
+  though the task's own text starts with `[PARKED — prereqs #3 and #4 not landed]` and the Progress Log below
+  documents the pattern. Verified: prereq #3 (v2 venue-grain sentinel) is still `- [ ]` at PM tip; prereq #4 (infra
+  launcher retirement) is PARKED. `/skip-current-task`. **Systemic ask (4th bounce across 2 days)**: operator to set
+  `priority: 999` + a `conditions:` gate keyed on the LDR-landing of BOTH #3 and #4 in `backlog.yaml`, so this stops
+  burning slot-boot windows on a task whose own text says PARK.
 - **2026-07-07** — slot-11 (data_engineering) received -008 (DELETE v1) dispatch. Prereq #3 (v2 venue-grain sentinel) is
   `- [ ]` and prereq #4 (infra launcher retirement) is PARKED. Deleting v1 now would silently drop the venue-grain
   PRE_VENUE_LAUNCH row class for empty-catalog windows (`_enumerate_cefi` line 617 emits it, v2's per-instrument path
