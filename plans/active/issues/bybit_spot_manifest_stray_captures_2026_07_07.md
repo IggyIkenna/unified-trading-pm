@@ -125,11 +125,12 @@ describes and (b) each subset needs its own diagnosis before mutation.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Diagnose the ~82k BYBIT-SPOT rows with EMPTY `instrument_type`.** Trace: (i) which
+- [x] ✅ [SCRIPT] P1. **Diagnose the ~82k BYBIT-SPOT rows with EMPTY `instrument_type`.** Trace: (i) which
       writer/consolidator produced them; (ii) which asset_group they land under in the raw parquet vs the consolidated
       manifest; (iii) whether their `symbol` values match spot-symbol patterns. Read-only — no manifest mutation.
       Deliverable: a diagnosis appended to this issue doc naming the root writer + whether the EMPTY-string is a
-      manifest projection artifact or a real writer bug (repo: market-tick-data-service).
+      manifest projection artifact or a real writer bug (repo: market-tick-data-service). **DIAGNOSIS DONE 2026-07-07
+      (slot-8 planning) — see "Diagnosis (a): 82k EMPTY-instrument_type rows" section below.**
 - [ ] [SCRIPT] P1. **Diagnose the ~54k BYBIT-SPOT rows under spot-nonsense data_types** (derivative_ticker /
       futures_chain / options_chain / ohlcv_1m / perp_funding / liquidations). Two candidate root causes: (i)
       canonical-venue-map bug that routed BYBIT-FUTURES rows to `venue=BYBIT-SPOT`; (ii) writer that stamps
@@ -147,6 +148,88 @@ describes and (b) each subset needs its own diagnosis before mutation.
       depends on the corrective-relabel landing so the Layer-1 tuple appears with real captured data (repo:
       unified-api-contracts).
 
+## Diagnosis (a): 82k EMPTY-instrument_type rows
+
+**KEY FINDING:** All 82k EMPTY-instrument_type BYBIT-SPOT rows are HONEST-ABSENCE rows — NOT captured data.
+`capture_status` breakdown (`measure_honest_coverage._read_manifest("cefi")` filtered to
+`venue == "BYBIT-SPOT" AND instrument_type == ""`, 2026-07-07 07:09 UTC):
+
+```
+total EMPTY-itype BYBIT-SPOT rows: 81,659
+by capture_status:
+  empty_confirmed:        80,638  (98.7%)  — source succeeded, returned 0 rows (typed honest absence)
+  attempted_failed:          978  (1.20%)  — fetch raised (UAC classify_venue_error bucket)
+  expected_unattempted:       43  (0.05%)  — enumerator-seeded, no fetch attempt yet
+by data_type (SAME 8 shard set as the total-135k breakdown — the EMPTY subset is NOT concentrated on any one dt):
+  book_snapshot_5:   13,988  (valid for spot)
+  trades:            13,737  (valid for spot)
+  derivative_ticker: 13,350  (INVALID for spot)
+  futures_chain:     13,350  (INVALID for spot)
+  ohlcv_1m:          13,350  (INVALID for spot)
+  options_chain:     13,350  (INVALID for spot)
+  perp_funding:         267  (INVALID for spot)
+  liquidations:         267  (INVALID for spot)
+date range: 2021-12-04 → 2026-01-01  (~4.1 years — the entire manifest history)
+sample instrument_ids: BTCUSDT, ACHUSDT, APEUSDT, CYBERUSDT, DOGEUSDT, ARBUSDT, ARUSDT, DOGEUSDC, OPUSDT, COMPUSDT
+(all SPOT-symbol shape — no dated-future / option-strike patterns)
+```
+
+**What this reveals:**
+
+1. **These 82k rows are NOT the -006 defect class** — the -006 code fix (SPOT-venue classifier + itype map) applies only
+   to the CAPTURED-row write path (Tardis batch's `_classify_row_instrument_type` stamps `_row_itype` on the captured
+   df; the writer's `_resolve_instrument_type_column` then normalises it). None of the empty-confirmed /
+   attempted-failed / expected-unattempted paths go through that classifier — they're separate writer routes.
+2. **The honest-absence writers do NOT stamp `instrument_type`** on their manifest rows for BYBIT-SPOT. The writer
+   routes that produce these three states (from a quick grep):
+   - `expected_unattempted`: `enumerate_expected_universe.py` seeder writes ahead of capture
+   - `empty_confirmed`: emitted by the capture path when a fetch call returns 0 rows (typed with an
+     `EmptyConfirmedReason` from UAC `EMPTY_CONFIRMED_REASONS`)
+   - `attempted_failed`: emitted by the capture path when the fetch raises (bucketed via UAC `classify_venue_error()`)
+     None of these three writer routes appears to consult `_VENUE_INSTRUMENT_TYPE` or the SPOT-classifier the way the
+     captured-write path does — they write `instrument_type=""` (EMPTY) because that's the pre-cascade default.
+3. **The spot-invalid data_types (~54k) span BOTH the EMPTY and PERPETUAL subsets** — 13,350 rows each of
+   derivative_ticker/futures_chain/options_chain/ohlcv_1m + 267 each of perp_funding/liquidations are present in the
+   EMPTY-itype subset, and (from the total-135k breakdown) the SAME data_types appear in the PERPETUAL subset. That
+   means these spot-nonsense data_types are being ENUMERATED as expected shards for BYBIT-SPOT for years, not just
+   leaking in via a routing bug on captured data. Points at the enumerator's cefi branch broadcasting all cefi
+   data_types across all cefi venues without a per-venue capability gate — the pre-D2b gap that
+   `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]={}` (per capability-empty carve-out) SHOULD have caught but did not for
+   the honest-absence enumerator path.
+4. **Post -006 code fix (mtds@c4df8ae0), NEW empty_confirmed / attempted_failed rows for BYBIT-SPOT will STILL be
+   written with instrument_type="" unless the honest-absence writers are updated to consult the same authorities** my
+   -006 code fix updated. That's a separate follow-on beyond the corrective-relabel — filed as sub-todo (a1) below.
+
+**Root writers to trace (deliverable ownership for the follow-ons):**
+
+- expected_unattempted seeder → `instruments-service/scripts/enumerate_expected_universe.py` (v1/v2). The `-009` C2
+  point-fix + the `-007` (dispatched to slot-5) enumerator start_date support are both in this file — the BYBIT-SPOT
+  itype-stamp needs an additional look at how `expected_unattempted` rows get their `instrument_type` during seeding (my
+  quick grep found no stamp — the seeder appears to leave it EMPTY for cefi).
+- empty_confirmed / attempted_failed → MTDS capture path — grep suggests `market_tick_data_service/engine/orchestrator/`
+  writes these via `record_captured` / `record_empty_confirmed` / `record_attempted_failed` sinks. Need to verify the
+  instrument_type they stamp matches the just-updated `_VENUE_INSTRUMENT_TYPE` map (should now stamp `spot` for
+  BYBIT-SPOT after mtds@c4df8ae0).
+
+**Recommendation:** the corrective-relabel (todo (c) above) SHOULD ALSO cover the 82k EMPTY rows — but only after (a1)
+below determines whether their `instrument_type` should be `spot_pair` (matches the newly-mapped BYBIT-SPOT → spot) or
+`""` should be preserved for honest-absence semantics (some rows may pre-date the SPOT mapping). Also file follow-up
+(a1) below to fix the honest-absence writers on the FORWARD path so new BYBIT-SPOT empty_confirmed / attempted_failed
+rows land with correct `instrument_type=spot_pair`.
+
+## Todos (follow-on from Diagnosis (a))
+
+- [ ] [CODE] P1. **(a1) Forward-path fix for honest-absence writers on BYBIT-SPOT.** After mtds@c4df8ae0
+      (`_VENUE_INSTRUMENT_TYPE["BYBIT-SPOT"] = "spot"`), the captured-row path stamps SPOT_PAIR correctly. But
+      `empty_confirmed` / `attempted_failed` / `expected_unattempted` writers appear to bypass the venue itype
+      resolution — new BYBIT-SPOT rows in those states will still land with `instrument_type=""`. Trace the three writer
+      routes; either wire them through `_resolve_instrument_type(venue, data_type)` (uses the newly-updated map) or
+      explicitly set `instrument_type` from the venue+data_type at emission time. Regression-test each route (BYBIT-SPOT
+      empty_confirmed → spot_pair, BYBIT-SPOT attempted_failed → spot_pair, BYBIT-SPOT expected_unattempted →
+      spot_pair). Gate: fresh BYBIT-SPOT rows in all three capture_status states carry `instrument_type` matching the
+      -006 forward-path stamp (repo: market-tick-data-service; possibly instruments-service for the expected_unattempted
+      seeder).
+
 ## Progress Log
 
 - **2026-07-07** — Filed by slot-8 planning during the -006 implementation session. Forward-path code fix shipped in the
@@ -154,3 +237,9 @@ describes and (b) each subset needs its own diagnosis before mutation.
   - `test_tardis_canonical_output.py` regression). The four follow-on todos above are the tracked-work outputs; the
     corrective-relabel step from the -006 plan text is deferred pending the diagnosis todos so we do not push through a
     partial fix that leaves the other 82k EMPTY rows + 54k spot-nonsense-data_type rows unaddressed.
+- **2026-07-07** — **Diagnosis (a) DONE** (slot-8 planning). Task `bybit_spot_manifest_stray_captures-001` ("Diagnose
+  the ~82k BYBIT-SPOT rows with EMPTY `instrument_type`") dispatched to slot-8 immediately after this issue doc was
+  filed. Key finding: all 82k EMPTY-instrument_type rows are HONEST-ABSENCE, NOT captured data — `capture_status`
+  breakdown: empty_confirmed 80,638 (98.7%) + attempted_failed 978 (1.2%) + expected_unattempted 43 (<0.1%). See
+  "Diagnosis (a)" section above for full breakdown + 4 numbered findings + follow-on todo (a1) filed for forward-path
+  fix of the honest-absence writers. Slot-8 /done cites this issue doc + Progress Log entry.
