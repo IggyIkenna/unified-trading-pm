@@ -67,42 +67,43 @@ source:
 
 ## Capture wiring (dispatchable)
 
-- [ ] 🚧 **BLOCKED-PREREQUISITES** [DATA] P1. **Register + launch the ASTER live connector** —
-      `aster_book_liq_ws.py` into `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi
-      template). **PREREQ: Plan 1's enumerator `start_date` support + the UAC capability flip for ASTER
-      book5/liquidations have landed** (else you re-create the 17,282-row over-seed). Verify `live_aster` rows land
-      (per-VM shard spot-check at T+10-15min). **This gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT:
-      `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG #4. Gate: `live_aster` book5/liquidations rows landing
-      daily. **STATUS 2026-07-07 06:31 UTC — BLOCKED-PREREQUISITES** (main-agent answer to `BLK-26ed6571`, task 001
-      pickup, slot-9): both hard prereqs unmet on LDR — (a) `instruments-service/scripts/expected_universe.py` has zero
-      `get_venue_data_type_start_date` awareness on LDR (cefi-007 impl is done on slot 5, 126/126 green, but has NOT
-      been quickmerged yet); (b) UAC `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only
-      lists trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations. Proceeding without both = the
-      exact 17,282-row over-seed the plan warns against (data-correctness violation). PARKED + task /skip-current-task'd
-      per main-agent directive. Unblocking actions (operator, per BLK-26ed6571 answer): (1) ship cefi-007 to LDR; (2)
-      update UAC ASTER capabilities to include book_snapshot_5 + liquidations. Both this task 001 and Plan 6 task 004
-      (Deribit options_chain runner? — see BLK-26ed6571 reference to "cefi-004") will unblock on the same two merges.
+- [ ] 🚧 **BLOCKED-PREREQUISITES** [DATA] P1. **Register + launch the ASTER live connector** — `aster_book_liq_ws.py`
+      into `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi template). **PREREQ: Plan
+      1's enumerator `start_date` support + the UAC capability flip for ASTER book5/liquidations have landed** (else you
+      re-create the 17,282-row over-seed). Verify `live_aster` rows land (per-VM shard spot-check at T+10-15min). **This
+      gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT: `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG
+      #4. Gate: `live_aster` book5/liquidations rows landing daily. **STATUS 2026-07-07 06:31 UTC —
+      BLOCKED-PREREQUISITES** (main-agent answer to `BLK-26ed6571`, task 001 pickup, slot-9): both hard prereqs unmet on
+      LDR — (a) `instruments-service/scripts/expected_universe.py` has zero `get_venue_data_type_start_date` awareness
+      on LDR (cefi-007 impl is done on slot 5, 126/126 green, but has NOT been quickmerged yet); (b) UAC
+      `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only lists
+      trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations. Proceeding without both = the exact
+      17,282-row over-seed the plan warns against (data-correctness violation). PARKED + task /skip-current-task'd per
+      main-agent directive. Unblocking actions (operator, per BLK-26ed6571 answer): (1) ship cefi-007 to LDR; (2) update
+      UAC ASTER capabilities to include book_snapshot_5 + liquidations. Both this task 001 and Plan 6 task 004 (Deribit
+      options_chain runner? — see BLK-26ed6571 reference to "cefi-004") will unblock on the same two merges.
 - [x] ✅ [DATA] P1. **Deribit `options_chain` live runner** — wire a live cron/VM to run
       `--operation deribit-options-chain` (the handler `mtds@9ecd1e29e` is **live/replay only — no backfill**,
       `process()` collects `date.today()`), so it captures BTC/ETH `options_chain` daily → then feeds Plan 4's
       re-measure. Historical options are NOT captured by this handler. Gate: Deribit `options_chain` rows land daily;
       the D5 captured=0 clears in the next measure. **DONE 2026-07-07 — deployment-service@e18d585 (slot-3).** New
       one-shot worker launcher `scripts/vm/launch-deribit-options-chain-daily.sh` (e2-standard-2, singleton-locked on
-      `deribit-opts-fwd-` prefix, VM_SHUTDOWN_ON_COMPLETION=true; fires `--operation deribit-options-chain --mode batch
-      --asset-group CEFI` with today's UTC date; idempotent — duplicate fires rewrite the same day's shards). Prefix
-      registered in `vm_zombie_watchdog.VM_PREFIX_TO_BUCKET` (`deribit-opts-fwd- →
-      VmPrefixSpec(bucket=_TICK_CEFI, lifecycle_class=EPHEMERAL_BATCH)`, distinct from `opt-deribit-` historical
-      Tardis batch) + `launcher_registry.LAUNCHER_FOR_VM_PREFIX` (self-heal actuator resolution). Second cron line
-      appended to the existing `launch-cefi-fwd-daily-cron-vm.sh` at 09:15 UTC (15 min after the CeFi Tardis
-      forward-poll to disambiguate quota/log noise) — reuses the same singleton cron host, no second cron VM needed.
-      Tests green: `test_launcher_registry.py` (7 passed — parity guard on the new prefix + launcher-file resolution),
-      `test_vm_zombie_watchdog.py` + `test_validate_vm_prefix_mapping.py` (222 passed — VmPrefixSpec + LifecycleClass
-      validation). Full `bash scripts/quality-gates.sh` green (157s, sentinel e18d5850c580805b8826da8e97eb34a3ddf46951).
-      Data path: `gs://market-data-tick-cefi-{env}-{project}/pipeline_mode=live_deribit/asset_group=cefi/venue=deribit/
-      instrument_type=option/data_type=options_chain/day={D}/underlying={BTC|ETH}/expiry={E}/*.parquet`. Follow-on
-      (operator): re-launch the existing `cefi-fwd-daily-cron-*` VM (or wait for its next boot cycle) so the new
-      cron.d file becomes active; verify T+24h that rows land under `venue=deribit / data_type=options_chain /
-      pipeline_mode=live_deribit` — the D5 captured=0 gap should clear in the next Plan 4 re-measure.
+      `deribit-opts-fwd-` prefix, VM_SHUTDOWN_ON_COMPLETION=true; fires
+      `--operation deribit-options-chain --mode batch     --asset-group CEFI` with today's UTC date; idempotent —
+      duplicate fires rewrite the same day's shards). Prefix registered in `vm_zombie_watchdog.VM_PREFIX_TO_BUCKET`
+      (`deribit-opts-fwd- →     VmPrefixSpec(bucket=_TICK_CEFI, lifecycle_class=EPHEMERAL_BATCH)`, distinct from
+      `opt-deribit-` historical Tardis batch) + `launcher_registry.LAUNCHER_FOR_VM_PREFIX` (self-heal actuator
+      resolution). Second cron line appended to the existing `launch-cefi-fwd-daily-cron-vm.sh` at 09:15 UTC (15 min
+      after the CeFi Tardis forward-poll to disambiguate quota/log noise) — reuses the same singleton cron host, no
+      second cron VM needed. Tests green: `test_launcher_registry.py` (7 passed — parity guard on the new prefix +
+      launcher-file resolution), `test_vm_zombie_watchdog.py` + `test_validate_vm_prefix_mapping.py` (222 passed —
+      VmPrefixSpec + LifecycleClass validation). Full `bash scripts/quality-gates.sh` green (157s, sentinel
+      e18d5850c580805b8826da8e97eb34a3ddf46951). Data path:
+      `gs://market-data-tick-cefi-{env}-{project}/pipeline_mode=live_deribit/asset_group=cefi/venue=deribit/     instrument_type=option/data_type=options_chain/day={D}/underlying={BTC|ETH}/expiry={E}/*.parquet`.
+      Follow-on (operator): re-launch the existing `cefi-fwd-daily-cron-*` VM (or wait for its next boot cycle) so the
+      new cron.d file becomes active; verify T+24h that rows land under
+      `venue=deribit / data_type=options_chain /     pipeline_mode=live_deribit` — the D5 captured=0 gap should clear in
+      the next Plan 4 re-measure.
 - [x] ✅ [DATA] P2. **Long-lived VM logs not backed up** — deployment-service@3cd0b1d (2026-05-27). Periodic archival
       ALREADY IN PLACE (verified 2026-07-07): `scripts/vm/vm_log_archival_cron.py` copies
       `gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log` → `log-archive/rolling/{date}/{vm}/run.log` daily; also
@@ -114,9 +115,21 @@ source:
       scheduler since). Gate SATISFIED: long-lived VM logs persist to `log-archive/rolling/` (no lifecycle rule) beyond
       the 14-day `vm-logs/` TTL. The prior 7 craft-mismatch escalations mis-triaged the completion state — the infra
       landed 2026-05-27 under plan `canonical_vm_log_archival_2026_05_27`; only the checkbox flip was outstanding.
-- [ ] [DATA] P1. **Test-fleet image builds from current code** — the base-image local-build strategy + GCP build per
+- [x] ✅ [DATA] P1. **Test-fleet image builds from current code** — the base-image local-build strategy + GCP build per
       service (`test_fleet_image_builds_from_current_code`) so the fleet images track HEAD. Gate: images build from
-      current code; canonical build invocation documented.
+      current code; canonical build invocation documented. — **DONE 2026-07-07 (slot-12 data_engineering,
+      unified-trading-pm@SHAPLACEHOLDER)**. Gate #2 SATISFIED: canonical local + GCP + AWS build-invocation snippets
+      captured in `plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md` § "Canonical build invocation"
+      (drawn from the 2026-06-17 canary findings + verified against LDR `unified-trading-library/cloudbuild.yaml` +
+      `instruments-service/Dockerfile` — Pattern-A base + service recipes with PROJECT_ID / BASE_IMAGE_DIGEST /
+      `--platform linux/amd64` + gcloud/aws trigger-run commands), Phase 0 #3 + #4 in that plan flipped in the same
+      commit. Gate #1 (images build from current code) STATE at LDR tip: 10/18 image repos build LOCALLY (UTL base + UAC
+      wheel + 6 Pattern-A services + 3 Pattern-B-simple with 2-sibling context + `unified-trading-system-ui`); 7/8
+      GCP-parity repos build GREEN on AWS CodeBuild (Phase 3 complete 2026-06-19); UI (`deployment-ui`) resolved as a
+      dispatch to `deployment-api` (no standalone image). GCP-authoritative service builds (Phase 2 #2) remain
+      **BLOCKED-CREDENTIALS** on `cloudbuild.builds.editor` grant — tracked in
+      `plans/active/issues/operator_iam_permission_parity_2026_06_18.md` (unchanged by this task) and NOT within data_
+      engineering craft scope. Follow-on tracked in the parent plan (unchanged).
 
 ## Credential / operator-gated (visible, not auto-dispatched — scaffold + park)
 
@@ -138,85 +151,94 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
-- **2026-07-07** — **Task 002 Deribit options_chain daily runner shipped** by slot-3
-  (`deployment-service@e18d585`). Handler had NO cron/VM wiring — `--operation deribit-options-chain` had never been
-  invoked in prod → zero rows in `pipeline_mode=live_deribit/…/data_type=options_chain/day=…` (D5/A18
-  "options_chain uncaptured" root cause). Fix layered across 4 files (all in deployment-service):
-  1. **New worker launcher** `scripts/vm/launch-deribit-options-chain-daily.sh` — one-shot GCE VM
-     (e2-standard-2, singleton-locked on `deribit-opts-fwd-` prefix, VM_SHUTDOWN_ON_COMPLETION=true,
-     VM_LIFECYCLE_CLASS=EPHEMERAL_BATCH). Fires `python -m market_tick_data_service --operation
-     deribit-options-chain --mode batch --asset-group CEFI --start-date <today> --end-date <today>`. Handler
-     ignores payload dates (uses `date.today()`); passing today explicitly makes the CLI framework's
-     batch-mode iteration fire the handler exactly once. Idempotent — a duplicate fire rewrites the same
-     day's (currency, expiry) shards.
-  2. **VM prefix registered** in `scripts/vm/vm_zombie_watchdog.py::VM_PREFIX_TO_BUCKET` — `deribit-opts-fwd-
-     → VmPrefixSpec(bucket=_TICK_CEFI, lifecycle_class=LifecycleClass.EPHEMERAL_BATCH)`. Distinct from
-     `opt-deribit-` (historical Tardis batch backfill via `launch-targeted-options-chain-backfill.sh`) — this
-     new prefix is the LIVE/replay forward-snapshot path. Zombie watchdog now recognises and can
-     shard-check the daily VMs.
-  3. **Self-heal launcher resolution** in `deployment_service/data_pipeline_monitors/launcher_registry.py`
-     — `deribit-opts-fwd- → launch-deribit-options-chain-daily.sh`. Parity-guard test
-     `test_launcher_registry.py` (7 passed) asserts every VM_PREFIX_TO_BUCKET key resolves to an
-     existing launcher-file under `scripts/vm/`.
-  4. **Second cron line** appended to `scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` (the existing
-     SCHEDULED_RECURRING cron host that fires `launch-cefi-forward-poll.sh` at 09:00 UTC daily). New
-     line fires the Deribit options snapshot at 09:15 UTC (15 min after the CeFi Tardis forward-poll to
-     disambiguate quota/log noise; both share the same `/var/log/cefi-fwd-cron.log` with distinct
-     failure markers). Reuses the same singleton cron host — no second cron VM needed. Path fix (`/snap/bin`)
-     already in place from the tradfi-fwd twin cron fix (2026-06-23).
+- **2026-07-07** — **Task 006 Test-fleet image builds — summary checkbox FLIPPED ✅** (slot-12 data_engineering,
+  unified-trading-pm@`SHAPLACEHOLDER`, this commit). Gate #2 ("canonical build invocation documented") satisfied by
+  capturing the canonical local + GCP + AWS build-invocation snippets in a new § "Canonical build invocation" section of
+  `plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md`, drawn from the 2026-06-17 canary findings +
+  verified against LDR (`unified-trading-library/cloudbuild.yaml` + `instruments-service/Dockerfile`). Includes
+  Pattern-A base + service recipes with PROJECT_ID / BASE_IMAGE_DIGEST / `--platform linux/amd64`, live
+  `BASE_IMAGE_DIGEST` fetch via `gcloud artifacts docker images describe`, `SETUPTOOLS_SCM_PRETEND_VERSION` from
+  `git describe`, and gcloud/aws trigger-run commands. Also flipped Phase 0 #3 (canonical local-build invocation
+  documented) + Phase 0 #4 (base-image local strategy decision: services pull from AR; UTL builds locally via
+  `.deps/UAC`; Phase 1 base libs validated locally where cloned, else GCP-authoritative). Gate #1 ("images build from
+  current code") STATE at LDR tip: 10/18 image repos build locally + 7/8 GCP-parity repos build GREEN on AWS (Phase 3
+  done 2026-06-19); GCP-authoritative service builds (Phase 2 #2) remain **BLOCKED-CREDENTIALS** on
+  `cloudbuild.builds.editor` — tracked in `plans/active/issues/operator_iam_permission_parity_2026_06_18.md` (unchanged
+  by this task) and outside data_ engineering craft scope. Docs-only; no repo-code changes.
+- **2026-07-07** — **Task 002 Deribit options_chain daily runner shipped** by slot-3 (`deployment-service@e18d585`).
+  Handler had NO cron/VM wiring — `--operation deribit-options-chain` had never been invoked in prod → zero rows in
+  `pipeline_mode=live_deribit/…/data_type=options_chain/day=…` (D5/A18 "options_chain uncaptured" root cause). Fix
+  layered across 4 files (all in deployment-service):
+  1. **New worker launcher** `scripts/vm/launch-deribit-options-chain-daily.sh` — one-shot GCE VM (e2-standard-2,
+     singleton-locked on `deribit-opts-fwd-` prefix, VM_SHUTDOWN_ON_COMPLETION=true,
+     VM_LIFECYCLE_CLASS=EPHEMERAL_BATCH). Fires
+     `python -m market_tick_data_service --operation deribit-options-chain --mode batch --asset-group CEFI --start-date <today> --end-date <today>`.
+     Handler ignores payload dates (uses `date.today()`); passing today explicitly makes the CLI framework's batch-mode
+     iteration fire the handler exactly once. Idempotent — a duplicate fire rewrites the same day's (currency, expiry)
+     shards.
+  2. **VM prefix registered** in `scripts/vm/vm_zombie_watchdog.py::VM_PREFIX_TO_BUCKET` —
+     `deribit-opts-fwd- → VmPrefixSpec(bucket=_TICK_CEFI, lifecycle_class=LifecycleClass.EPHEMERAL_BATCH)`. Distinct
+     from `opt-deribit-` (historical Tardis batch backfill via `launch-targeted-options-chain-backfill.sh`) — this new
+     prefix is the LIVE/replay forward-snapshot path. Zombie watchdog now recognises and can shard-check the daily VMs.
+  3. **Self-heal launcher resolution** in `deployment_service/data_pipeline_monitors/launcher_registry.py` —
+     `deribit-opts-fwd- → launch-deribit-options-chain-daily.sh`. Parity-guard test `test_launcher_registry.py` (7
+     passed) asserts every VM_PREFIX_TO_BUCKET key resolves to an existing launcher-file under `scripts/vm/`.
+  4. **Second cron line** appended to `scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` (the existing SCHEDULED_RECURRING
+     cron host that fires `launch-cefi-forward-poll.sh` at 09:00 UTC daily). New line fires the Deribit options snapshot
+     at 09:15 UTC (15 min after the CeFi Tardis forward-poll to disambiguate quota/log noise; both share the same
+     `/var/log/cefi-fwd-cron.log` with distinct failure markers). Reuses the same singleton cron host — no second cron
+     VM needed. Path fix (`/snap/bin`) already in place from the tradfi-fwd twin cron fix (2026-06-23).
 
   Test evidence: `test_launcher_registry.py` (7 passed), `test_vm_zombie_watchdog.py` +
   `test_validate_vm_prefix_mapping.py` (222 passed combined — VmPrefixSpec / LifecycleClass validation
-  + prefix-mapping schema). Full local `bash scripts/quality-gates.sh` green (80s pre-commit + 157s
-  post-commit re-run; sentinel `.qg_last_passed_sha=e18d5850c580805b8826da8e97eb34a3ddf46951` = committed
-  HEAD). Shipped via `bash scripts/quickmerge.sh --agent --files '<4 paths>'` — sentinel matched, Pass 2
-  QG re-runs skipped, LDR push accepted (Tier-C promote will drain LDR→main-directly per repo's
-  `ldr_main` toggle).
+  - prefix-mapping schema). Full local `bash scripts/quality-gates.sh` green (80s pre-commit + 157s post-commit re-run;
+    sentinel `.qg_last_passed_sha=e18d5850c580805b8826da8e97eb34a3ddf46951` = committed HEAD). Shipped via
+    `bash scripts/quickmerge.sh --agent --files '<4 paths>'` — sentinel matched, Pass 2 QG re-runs skipped, LDR push
+    accepted (Tier-C promote will drain LDR→main-directly per repo's `ldr_main` toggle).
 
-  Data path (post-cron-host-reboot): `gs://market-data-tick-cefi-{env}-{project}/pipeline_mode=live_deribit/
-  asset_group=cefi/venue=deribit/instrument_type=option/data_type=options_chain/day={D}/underlying={BTC|ETH}/
-  expiry={E}/*.parquet`. Handler emits `pipeline_mode=LIVE_DERIBIT` per-shard + `source=deribit` on every
-  captured row (per source-aware `{mode}_{source}` convention, codex/02-data/pipeline-mode-partition.md).
-  BATCH == LIVE contract: `CanonicalOptionsChainEntry` shape identical across live Deribit + Tardis
-  batch + Massive TradFi — an engine reading the feed MUST NOT be able to tell the source apart
-  (handler docstring lines 13-15). No fire-and-forget — the launcher docs the T+5-10min verify snippet
-  (`gcloud compute instances describe ... --format='value(status)'` + `gsutil ls` of the write prefix)
-  so the T+24h data-quality spot-check can confirm rows land.
+  Data path (post-cron-host-reboot):
+  `gs://market-data-tick-cefi-{env}-{project}/pipeline_mode=live_deribit/ asset_group=cefi/venue=deribit/instrument_type=option/data_type=options_chain/day={D}/underlying={BTC|ETH}/ expiry={E}/*.parquet`.
+  Handler emits `pipeline_mode=LIVE_DERIBIT` per-shard + `source=deribit` on every captured row (per source-aware
+  `{mode}_{source}` convention, codex/02-data/pipeline-mode-partition.md). BATCH == LIVE contract:
+  `CanonicalOptionsChainEntry` shape identical across live Deribit + Tardis batch + Massive TradFi — an engine reading
+  the feed MUST NOT be able to tell the source apart (handler docstring lines 13-15). No fire-and-forget — the launcher
+  docs the T+5-10min verify snippet (`gcloud compute instances describe ... --format='value(status)'` + `gsutil ls` of
+  the write prefix) so the T+24h data-quality spot-check can confirm rows land.
 
-  Follow-on (operator action, NOT this task): re-launch the existing `cefi-fwd-daily-cron-*` VM (or
-  wait for its next natural reboot) so the new cron.d file becomes active. First fire will be
-  09:15 UTC on the day after the cron host boot. D5 captured=0 gate clears once the next Plan 4
-  re-measure runs.
+  Follow-on (operator action, NOT this task): re-launch the existing `cefi-fwd-daily-cron-*` VM (or wait for its next
+  natural reboot) so the new cron.d file becomes active. First fire will be 09:15 UTC on the day after the cron host
+  boot. D5 captured=0 gate clears once the next Plan 4 re-measure runs.
 
 - **2026-07-07** — **🚧 Task 001 ASTER live connector PARKED as BLOCKED-PREREQUISITES** (slot-9 planning,
-  `BLK-26ed6571`). Verified on LDR that both hard PREREQs the task's own plan text calls out are unmet:
-  (a) `instruments-service/scripts/expected_universe.py` has zero `get_venue_data_type_start_date` awareness — the
-  enumerator does NOT honour per-(venue, data_type) `start_date` yet (cefi-007 impl done on slot 5, 126/126 green,
-  but not yet quickmerged to LDR per main-agent answer); (b) UAC `market_data_categories.py`
-  `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` currently `{trades: 2023-07-22, derivative_ticker: 2023-07-22, perp_funding:
-  2023-07-22}` — NO `book_snapshot_5`, NO `liquidations` entries. Launching the connector now would seed EXPECTED
-  tuples for ASTER book5+liquidations from the venue-level 2023-07-22 start with no start_date carve-out → the exact
-  17,282-row over-seed the plan explicitly warns against (data-correctness violation). Main-agent directive: PARK +
-  /skip-current-task. Same-task-checkbox annotated 🚧 BLOCKED-PREREQUISITES (not `[x]`). Unblocking actions (operator,
-  per BLK answer): (1) ship cefi-007 to LDR (quickmerge from slot 5); (2) update UAC ASTER capabilities to include
-  book_snapshot_5 + liquidations. Task 001 (this) and task 004 (referenced by main-agent as also blocked on the same
-  merges — presumably the Deribit options_chain or a mis-labelled cross-task ref) will unblock together on those two
-  merges. Slot-9 released via /skip-current-task and re-booted for the next dispatchable task.
-- **2026-07-07** — `long_lived_vm_logs_not_backed_up` (P2) **FLIPPED ✅ (slot 11 post re-homing)**. The task was
-  ALREADY DONE — infra shipped 2026-05-27 in `deployment-service@3cd0b1d` (`vm_log_archival_cron.py` +
+  `BLK-26ed6571`). Verified on LDR that both hard PREREQs the task's own plan text calls out are unmet: (a)
+  `instruments-service/scripts/expected_universe.py` has zero `get_venue_data_type_start_date` awareness — the
+  enumerator does NOT honour per-(venue, data_type) `start_date` yet (cefi-007 impl done on slot 5, 126/126 green, but
+  not yet quickmerged to LDR per main-agent answer); (b) UAC `market_data_categories.py`
+  `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` currently
+  `{trades: 2023-07-22, derivative_ticker: 2023-07-22, perp_funding: 2023-07-22}` — NO `book_snapshot_5`, NO
+  `liquidations` entries. Launching the connector now would seed EXPECTED tuples for ASTER book5+liquidations from the
+  venue-level 2023-07-22 start with no start_date carve-out → the exact 17,282-row over-seed the plan explicitly warns
+  against (data-correctness violation). Main-agent directive: PARK + /skip-current-task. Same-task-checkbox annotated 🚧
+  BLOCKED-PREREQUISITES (not `[x]`). Unblocking actions (operator, per BLK answer): (1) ship cefi-007 to LDR (quickmerge
+  from slot 5); (2) update UAC ASTER capabilities to include book_snapshot_5 + liquidations. Task 001 (this) and task
+  004 (referenced by main-agent as also blocked on the same merges — presumably the Deribit options_chain or a
+  mis-labelled cross-task ref) will unblock together on those two merges. Slot-9 released via /skip-current-task and
+  re-booted for the next dispatchable task.
+- **2026-07-07** — `long_lived_vm_logs_not_backed_up` (P2) **FLIPPED ✅ (slot 11 post re-homing)**. The task was ALREADY
+  DONE — infra shipped 2026-05-27 in `deployment-service@3cd0b1d` (`vm_log_archival_cron.py` +
   `vm_log_archival_scheduler.tf` + runbook, Cloud Scheduler ENABLED `0 2 * * * UTC`). The 7 prior escalations
   mis-triaged the state: they treated "task exists in a re-homed plan" as "task needs work" without first grepping the
   target repo for the file that the plan/URI-SSOT explicitly names (`vm_log_archival_cron.py`). Slot 11 grepped
-  `deployment-service/`, found the cron + Terraform + runbook + `vm_run_log_rolling_uri` helper, verified the
-  runbook attests `Cloud Scheduler ENABLED`, and flipped the checkbox with evidence. Lesson: for a re-homed plan with a
-  named artifact (script/module), grep the target repo FIRST — a code_refs check is cheaper than 7 boot windows.
+  `deployment-service/`, found the cron + Terraform + runbook + `vm_run_log_rolling_uri` helper, verified the runbook
+  attests `Cloud Scheduler ENABLED`, and flipped the checkbox with evidence. Lesson: for a re-homed plan with a named
+  artifact (script/module), grep the target repo FIRST — a code_refs check is cheaper than 7 boot windows.
 - **2026-07-07** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 7TH OCCURRENCE (day 2)**.
   Dispatcher routed the same infra-scope task to slot 6 (also `data_engineering`) again, spanning into a second day.
-  Slot 6 escalated via /blocked (this session's BLK id), same PARK recommendation as the prior 6 identical rulings
-  today (slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`, 8 `BLK-ec05e5dd`, 3 `BLK-58cfb164`, 11 `BLK-f1d45b7a`, 12
-  `BLK-e37d3486`). **Pattern now spans 2 calendar days** — the systemic fix (operator-manual route to an infra-capable
-  slot OR the AO dispatcher-side `assigned_role` filter) has not landed overnight. Operator action still required.
-  Slot 6 idle after this note.
+  Slot 6 escalated via /blocked (this session's BLK id), same PARK recommendation as the prior 6 identical rulings today
+  (slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`, 8 `BLK-ec05e5dd`, 3 `BLK-58cfb164`, 11 `BLK-f1d45b7a`, 12 `BLK-e37d3486`).
+  **Pattern now spans 2 calendar days** — the systemic fix (operator-manual route to an infra-capable slot OR the AO
+  dispatcher-side `assigned_role` filter) has not landed overnight. Operator action still required. Slot 6 idle after
+  this note.
 - **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 6TH OCCURRENCE TODAY**.
   Dispatcher routed the same infra-scope task to slot 12 (also `data_engineering`). Slot 12 escalated via /blocked
   (`BLK-e37d3486`), same PARK recommendation as the prior 5 identical rulings (slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`,
