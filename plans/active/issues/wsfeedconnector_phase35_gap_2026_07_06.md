@@ -383,10 +383,29 @@ approve / defer per category rather than per-venue.
       from `blocked-not-registered` → `schema-only`, per gap-013 Layer-2 interpretation). Real
       subgraph pollers land as 10 P2 follow-on todos (one per protocol family — file as separate CODE
       tasks after operator triage).
-- [ ] [CODE] P1. **DeFi LST + perp + specialty: LIDO + ETHERFI + ETHENA + EIGENLAYER + FLUID + SPARK + GMX + KAMINO +
+- [x] ✅ [CODE] P1. **DeFi LST + perp + specialty: LIDO + ETHERFI + ETHENA + EIGENLAYER + FLUID + SPARK + GMX + KAMINO +
       MARINADE + JITO-SOLANA WSFeedConnector build** — some (JITO) already have polling connectors but under a different
       key (`jito` vs `JITO-SOLANA`); reconcile the key naming (repo: market-tick-data-service). Gate: each protocol
-      canonical key resolves.
+      canonical key resolves. **DONE 2026-07-07 — market-tick-data-service@a49c0828 (slot-5 planning).** 10 canonical UAC
+      per-(protocol x chain) keys wired per the DeFi live-connector strategy Option B ruling: JITO-SOLANA aliased inside
+      `jito_defi_ws.py::register()` (both `jito` legacy + `JITO-SOLANA` canonical resolve to the same `_jito_factory` —
+      main directive `BLK-14fa3bb0`: alias not duplicate); the other 9 protocols ship as Protocol-conforming
+      BLOCKED-CREDENTIALS scaffolds via a shared base
+      (`_defi_ws_blocked_credentials_base.py::BlockedCredentialsDefiWSFeedConnectorBase`) — LIDO-ETHEREUM /
+      ETHERFI-ETHEREUM / ETHENA-ETHEREUM / EIGENLAYER-ETHEREUM / FLUID-ETHEREUM / SPARK-ETHEREUM (paid The-Graph key +
+      Ethereum-RPC WS); GMX-ARBITRUM (paid The-Graph + Arbitrum-RPC WS); KAMINO-SOLANA + MARINADE-SOLANA (paid Solana-RPC
+      WS). Each scaffold: subclass sets `_INSTRUMENT_ID_HEADER` + `_WS_URL` + `_CREDENTIAL_CLASS_DESC`; connect /
+      subscribe / unsubscribe / pop_reconnect_flag / close / stream inherited from the base; `stream()` logs
+      BLOCKED-CREDENTIALS + returns empty until `_CREDENTIALS_AVAILABLE = True` and `_drain_ws_messages` implemented. All
+      10 wired into `connectors/__init__.py::register_all()`. Regression pack: 37 parametrized tests in
+      `tests/unit/test_defi_lst_perp_specialty_ws_scaffolds.py` covering the -014 gate (canonical key resolves + factory
+      returns Protocol-conforming object + `stream()` no-ops under BLOCKED-CREDENTIALS + `close()` idempotent) for each
+      of the 9 scaffolds + 1 JITO-SOLANA alias test in `test_jito_defi_ws_connector.py` (canonical key resolves + is same
+      factory as `jito` + factory produces Protocol-conforming object). 57/57 tests pass; QG-green 181s (sentinel
+      `2115f867`). Closes the smoke-matrix `blocked-not-registered` cells for these 10 venues via the honest
+      BLOCKED-CREDENTIALS path (Plan 4 Layer-2 interpretation lines 116-118); un-block path per scaffold docstring
+      (acquire paid keys → plumb through credential resolver → set `_CREDENTIALS_AVAILABLE=True` → implement
+      `_drain_ws_messages` mirroring the JITO polling / Curve subgraph precedents).
 
 ## Progress Log
 
