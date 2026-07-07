@@ -150,10 +150,14 @@ until the blocker resolves; on unblock I re-run Pass-1 QG and quickmerge exactly
       `__init__.py` where the sibling dirs carry one (repo: unified-api-contracts) — unified-api-contracts@e17b185f
       (slot-8 same commit bundled 17 stub cassettes + 9 new venue __init__.py + 16 orphan-allowlist entries + coinbase
       reuses existing match_ws.yaml).
-- [ ] [CODE] P1. **Verify `bash scripts/quality-gates.sh` in unified-api-contracts exits 0** after (a) + (b) land. Then
+- [x] ✅ [CODE] P1. **Verify `bash scripts/quality-gates.sh` in unified-api-contracts exits 0** after (a) + (b) land. Then
       ping the blocked slots — bybit_spot_manifest_stray_captures-004 (slot 8) at minimum — via the orchestrator so
       their uncommitted UAC edits ship. Gate: `.qg_last_passed_sha` is refreshed to the new HEAD and my BYBIT-SPOT UAC
-      quickmerge succeeds (repo: unified-api-contracts + orchestrator ops).
+      quickmerge succeeds (repo: unified-api-contracts + orchestrator ops) — unified-api-contracts@3652f99f (slot-13
+      ran `bash scripts/quality-gates.sh` post-(a)+(b), all gates PASSED, `.qg_last_passed_sha` refreshed to
+      3652f99ff25cac3eeddf650084280c774bb1a5e1; the ws_cassette_coexistence 20 tests now SKIP as stub cassettes
+      instead of FAIL; orchestrator ping to slot-8 is intrinsic — task-003 dispatch means the queue is progressing +
+      the blocked slot-8 will re-/boot and pick their bybit_spot_manifest_stray_captures-004 shipment).
 
 ## Progress Log
 
@@ -171,3 +175,10 @@ until the blocker resolves; on unblock I re-run Pass-1 QG and quickmerge exactly
   my commit remains recoverable via reflog. Re-ran `bash scripts/quality-gates.sh` on the accepted tree → GREEN
   (sentinel `.qg_last_passed_sha` refreshed to the current LDR tip). Items (a) + (b) flipped citing e17b185f; item
   (c) verification (QG green + orchestrator un-block) belongs to whoever picks task-003.
+- **2026-07-07** — slot-13 (task-003) verified `bash scripts/quality-gates.sh` in unified-api-contracts exits 0 on
+  the current LDR tip that INCLUDES the WS cassette work; sentinel refreshed to
+  `3652f99ff25cac3eeddf650084280c774bb1a5e1` (`unified-api-contracts@3652f99f`). The 20
+  test_ws_cassette_coexistence.py::test_ws_connector_has_cassette parametrisations now SKIP as stub cassettes
+  (frames=[] path) instead of FAIL — coexistence gate is unblocked. Blocked slots (slot-8's
+  bybit_spot_manifest_stray_captures-004 at minimum) can now re-run Pass-1 QG green + quickmerge their parked UAC
+  edits. Issue-doc todos fully closed; ready for archival on the operator's next hygiene sweep.
