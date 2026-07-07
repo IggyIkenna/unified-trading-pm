@@ -31,7 +31,7 @@ related:
     ../../codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-06
+last_updated: 2026-07-07
 parent_epic: infrastructure_master
 priority: P2
 source: cefi_layer1_denominator_gaps-010 (slot-10 planning, BLK-0ac84889 operator answer 2026-07-06)
@@ -187,6 +187,20 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
 
 ## Progress Log
 
+- **2026-07-07** — **-009 RE-DISPATCHED (5TH SLOT BOUNCE) — SAME PARK** (`BLK-7237ea97`, slot-12 planning). Same root
+  cause as the 4 prior bounces (slot-11 + slot-9 today, slots 7 + 8 on 2026-07-06): dispatcher re-issued -009 to
+  slot-12 even though the task's own text starts with `[PARKED — prereqs #3 and #4 not landed]` and this Progress Log
+  documents the pattern across 5 bounces. Verified against `origin/live-defi-rollout` tip at commit `405ef9c4e`:
+  prereq #3 (v2 venue-grain sentinel, line 147) is still `- [ ]`; prereq #4 (infra launcher retirement, line 150) is
+  still `- [ ]` and PARKED for infra worker. Executing the delete would silently drop the venue-grain
+  `EXPECTED_PRE_VENUE_LAUNCH` row class for empty-catalog windows — main-agent already confirmed on `BLK-530cea75`
+  (2026-07-07, slot-11) that this is a **data-correctness hard-stop**, not a style preference. Awaiting
+  `/skip-current-task` on `BLK-7237ea97`. **Systemic ask (5th bounce across 2 days — still unaddressed after 4
+  requests)**: operator to set `priority: 999` + a `conditions:` gate on the -009 backlog entry keyed on the
+  LDR-landing of BOTH #3 and #4 in `backlog.yaml`, so this stops burning slot-boot windows on a task whose own text
+  says PARK. Follow-up (still needed): dispatch todo #3 (v2 venue-grain `EXPECTED_PRE_VENUE_LAUNCH` sentinel) as its
+  own `-006`-style backlog task to a data_engineering slot — slot-11 has a WIP starting point at
+  `instruments-service@2727dd7` (session revert), and it is the actionable in-craft blocker for -009.
 - **2026-07-07** — **-009 RE-DISPATCHED (4TH SLOT BOUNCE) — SAME PARK** (`BLK-035ed29a`, slot-9 planning). Same root
   cause as the 3 prior bounces (slot-11 today, slots 7 + 8 on 2026-07-06): dispatcher re-issued -009 to slot-9 even
   though the task's own text starts with `[PARKED — prereqs #3 and #4 not landed]` and the Progress Log below
