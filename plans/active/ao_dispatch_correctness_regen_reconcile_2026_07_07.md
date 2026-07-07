@@ -276,13 +276,20 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       from the plan updates the `backlog.yaml` BacklogTask + propagates to the in-memory backlog. Queued/undispatched
       scope in this task. — ✅ DONE ao@ff6100ad (`_reconcile_task_fields` + per-plan brief-match in `regen()`;
       `summary.reconciled`). Auto-heals the frozen backlog on the next tick.
-- [ ] [BACKEND] P0. Add `cancelled` task status (orm + state_store + dispatch/prune treat it terminal, never re-queued).
-- [ ] [BACKEND] P0. Removal of a DISPATCHED task → mark `cancelled` (not delete) with reason/provenance; queued/blocked
-      removal keeps the existing safe prune; `done` untouched.
-- [ ] [BACKEND] P1. Worker stop + scoped-revert signal for a cancelled in-flight task (stop the agent; instruct
-      `git restore` of only this task's touched files).
+- [x] [BACKEND] P0. Add `cancelled` task status (orm + state_store + dispatch/prune treat it terminal, never re-queued).
+      — ✅ DONE ao@c6a31ed6 (status is a free String col; dispatch's `status != 'queued'` gate already excludes it;
+      prune never re-queues it — it's terminal like `done`).
+- [x] [BACKEND] P0. Removal of a DISPATCHED task → mark `cancelled` (not delete) with reason/provenance; queued/blocked
+      removal keeps the existing safe prune; `done` untouched. — ✅ DONE ao@c6a31ed6 (`_prune_stale` UPDATEs
+      dispatched-orphans → cancelled; queued orphans still hard-deleted; 2 tests: cancel-not-delete +
+      queued-still-deletes).
+- [x] [BACKEND] P1. Worker stop + scoped-revert signal for a cancelled in-flight task (stop the agent; instruct
+      `git restore` of only this task's touched files). — ✅ DONE ao@c6a31ed6 (`HeartbeatResponse.cancel_task` +
+      heartbeat detects TaskRow status=cancelled → `dispatch_reason: cancelled`; worker.md instructs scoped
+      `git restore` of own in-flight files only, /skip-current-task, never whole-branch. NOTE: interrupting a mid-task
+      worker via a /progress message is a follow-up — today the worker sees it at its next /heartbeat/boot boundary).
 - [ ] [UI] P1. Surface the cancelled count in the fleet/backlog UI (`unified-trading-system-ui` / deployment-ui as
-      applicable).
+      applicable). — 🟡 DEFERRED (UI repo; the `cancelled` status is now emitted, so a count is a small UI add).
 - [x] [BACKEND] P0. Execution order — add `plan_order` (the todo's file position) to BacklogTask; regen sets + refreshes
       it from plan-file order every reconcile tick; extend the dispatch sort key to `(tier, priority, plan_order)`.
       Fixes mid-file inserts sorting to the end (A4). Cross-plan tiebreak stays deterministic (`plan_ref`). — ✅ DONE
@@ -292,11 +299,11 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       plans. Order guaranteed by the prereq chain; no spillover. — ✅ DONE ao@ff6100ad (`_wire_sequential_prereqs` +
       `_parse_frontmatter_sequential`; rebuilds the chain so a reorder can't deadlock; 2 tests incl
       reorder-no-deadlock).
-- [ ] [BACKEND] P0. Tests — reconcile updates tier/role on a queued task; dispatched removal → cancel; done untouched;
+- [x] [BACKEND] P0. Tests — reconcile updates tier/role on a queued task; dispatched removal → cancel; done untouched;
       queued removal still prunes; no duplicate-append on a pure field drift; **insert X,Y between B,C → dispatch order
-      A,B,X,Y,C,D,E** (plan_order); reorder/insert never disturbs an unchanged todo's task. — 🟡 PARTIAL: reconcile /
-      plan_order / sequential tests DONE ao@ff6100ad (test_regen_reconcile.py + test_dispatch_plan_order.py, 10 green);
-      the dispatched-removal→cancel + queued-removal-prunes tests land with Batch B (cancelled status).
+      A,B,X,Y,C,D,E** (plan_order); reorder/insert never disturbs an unchanged todo's task. — ✅ DONE ao@ff6100ad +
+      c6a31ed6 (test_regen_reconcile.py 9 + test_dispatch_plan_order.py 3 = 12 green; covers reconcile / plan_order /
+      sequential / dispatched-removal→cancel / queued-removal-deletes; full `quality-gates.sh` green both batches).
 
 ### Phase 3 — RC-1 reconcile: dispatched adaptation (capability chain + brief-unchanged pause/adapt)
 
@@ -354,6 +361,14 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07** — ✅ **Phase 2 Batch B SHIPPED** (`ao@c6a31ed6`, LDR; staging-first drain → v2-gated). Cancelled-task
+  lifecycle (A3): regen prune now marks a removed-while-DISPATCHED task `cancelled` (not a zombie `dispatched` row, not
+  a hard delete that strands the worker); `HeartbeatResponse.cancel_task` + the heartbeat detects it and returns
+  `dispatch_reason: cancelled`; `agents/worker.md` instructs the worker to revert ONLY its own in-flight files
+  (`git restore`, never whole-branch / `reset --hard`) + `/skip-current-task`. Queued orphans still hard-delete
+  (unchanged). +2 tests (12 reconcile/dispatch tests total), full `quality-gates.sh` green. **Phase 2 COMPLETE** except
+  the UI cancelled-count (deferred, UI repo) + the mid-task /progress-message interrupt (follow-up). Code STAGED on LDR
+  — live server NOT restarted. Next: Phase 5 (slot_skips hygiene, RC-3).
 - **2026-07-07** — ✅ **Phase 2 Batch A SHIPPED** (`ao@ff6100ad`, LDR; staging-first drain → v2-gated). Regen is now a
   RECONCILE: (a) `plan_order` field re-derived from plan-file position every tick + dispatch sorts
   `(tier, priority, plan_order, plan_ref)` so same-priority tasks (10× P0) hold file order and mid-file inserts land in
