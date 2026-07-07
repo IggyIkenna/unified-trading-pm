@@ -12,7 +12,6 @@ tags: [tradfi, manifest, cf4, cf7, source, phantom-audit, canonical-form]
 related:
   [tradfi_v9_stage1_finish_2026_07_06.md, tradfi_manifest_canonicalisation_2026_06_01.md]
 created: 2026-07-07
-author: slot-7 opus/max (planning VM)
 source:
   - tradfi_v9_stage1_finish_2026_07_06.md Progress Log 2026-07-07 (pm@6eb7a8ca)
   - E7 CF-1..CF-13 audit inline (BLK-1a166ffc)
@@ -23,6 +22,12 @@ estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 drift_direction: advance-code
+parent_epic: tradfi_master
+execution_scope: orchestrator-agent
+depends_on: []
+last_updated: 2026-06-27
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # TradFi manifest — CF-4 blank-source tail + CF-7 phantom-audit blank-data_type bug
