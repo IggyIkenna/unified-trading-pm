@@ -630,3 +630,26 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   BYBIT-FUTURES manifest to check for duplicates); (c) ship corrective-relabel script gated on (a)+(b); (d) populate
   `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` in UAC with `trades` + `book_snapshot_5`. Operator explicitly notified
   via the issue doc's NOTIFY-OPERATOR banner. Slot-8 /done cites `c4df8ae0` as the shipped SHA.
+
+- **2026-07-07** — **Task -005 (re-measure) RE-PARKED — BLOCKED-PREREQUISITES (`BLK-ae458864`)** (slot-8 planning). Task
+  `cefi_layer1_denominator_gaps-005` ("Re-measure + re-certify the cefi Layer-1 row") was RE-dispatched to slot-8
+  immediately after the -006 /done above. Same shape as BLK-ad7abfcd's earlier 2026-07-06 ruling — the machine-encoded
+  `depends_on` gap on `-005` is still uncorrected on the backlog task. Verified LDR state at RE-dispatch: (i) `-002`
+  (2b) LANDED via my earlier flip today; (ii) `-006` (BYBIT-SPOT itype-stamp) CODE FIX LANDED via mtds@c4df8ae0
+  immediately preceding this park, but the BYBIT-SPOT manifest-remediation follow-up
+  (`bybit_spot_manifest_stray_captures_2026_07_07.md`) is un-actioned; (iii) `-004` (2f) PARKED by me earlier this
+  session (BLK-7b511dcb) pending -007; (iv) `-007` (enumerator start_date support) — main-agent's answer: "slot5
+  wsfeedconnector-014 quickmerge has been in CI for 15+ ticks — this is the same CI slot that holds cefi-007"; LDR
+  re-verified: `scripts/expected_universe.py` + `scripts/check_enumeration_completeness.py` still contain ZERO
+  per-`(venue, dt)` `start_date` / `get_venue_data_type_start_date` refs; (v) ASTER live wire (Plan 5, INFRA role) —
+  connector `market_tick_data_service/live/connectors/aster_book_liq_ws.py` EXISTS but NOT registered in
+  `live/connector_registry.py`; (vi) KALSHI-PERP purge (Stage-3) — commit `c8c6dac` is a forward stop-gap only, 25,473
+  fake `KALSHI-PERP` cefi Layer-2 rows still pollute the manifest. Running the re-measure now would produce a misleading
+  % — denominator UNDER-counts (2f venues at 0-expected AND -006 BYBIT-SPOT stray captures still in
+  EMPTY/PERPETUAL/nonsense states) while numerator OVER-counts (fake KALSHI-PERP + BYBIT-SPOT stray rows). Main-agent
+  verdict (`BLK-ae458864`): "PARK — same ruling as BLK-ad7abfcd (2026-07-06). ... The full denominator-gap remediation
+  sequence requires -007 → -004 → -005 in that order. Take PARK + /skip-current-task. cefi-005 re-dispatches
+  automatically; at that point verify cefi-007 is on LDR before proceeding." Operator surfaced by main-agent: "slot5
+  wsfeedconnector-014 quickmerge has been in CI for 15+ ticks — this single stuck CI is blocking cefi-004, cefi-005, and
+  infra-001 simultaneously." Slot-8 action: this Progress Log entry, commit via `docs(plans):` cross-repo PM flip, then
+  `/api/slots/8/skip-current-task`.
