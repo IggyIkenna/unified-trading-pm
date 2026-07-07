@@ -543,3 +543,23 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   edit; no instruments-service commit). /done cites `681f50a` as the shipped SHA for the 2b `build_expected` change. 2b
   flip UNBLOCKS the "2b landed" leg of PREREQ chains for -005 (re-measure — still blocked on -004+-007+ASTER wire
   - KALSHI-PERP purge) and -004 (2f — still blocked on -007).
+- **2026-07-07** — **Task -004 (2f) RE-PARKED — BLOCKED-PREREQUISITES (`BLK-7b511dcb`)** (slot-8 planning). Task
+  `cefi_layer1_denominator_gaps-004` ("2f. Reapply the denominator-gap model to LIGHTER / EXTENDED / PACIFICA") was
+  RE-dispatched to slot-8 by priority=20 immediately after the 2b flip cited above; the machine-encoded `depends_on` gap
+  flagged in the 2026-07-06 slot-8 park entry (add
+  `depends_on: [cefi_layer1_denominator_gaps-002, cefi_layer1_denominator_gaps-007]` to `-004` in `backlog.yaml`) is
+  still uncorrected (verified via `/api/backlog?limit=500`: `-004.status=dispatched, depends_on=null`). Re-verified LDR
+  tip at RE-dispatch: (i) `scripts/expected_universe.py` + `scripts/check_enumeration_completeness.py` still contain
+  ZERO per-`(venue, dt)` `start_date` / `get_venue_data_type_start_date` refs (the CLI-level global `start_date` at
+  `enumerate_expected_universe.py:2991` is the only `start_date` string in the enumerator scripts — that's the batch
+  window, not the per-(venue,dt) gate the plan requires). The only in-tree consumer of `get_venue_data_type_start_date`
+  on LDR remains `scripts/cefi_per_venue_capture_summary.py`. (ii) UAC `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still
+  holds `{trades: 2023-07-22, derivative_ticker: 2023-07-22, perp_funding: 2023-07-22}` — NO `book_snapshot_5`, NO
+  `liquidations`. (iii) Task `-007` (enumerator `start_date` support) remains `status=dispatched to slot-5` on the
+  backlog — main-agent confirmed "slot5 has impl complete (126/126 tests green) but has NOT shipped via quickmerge".
+  Main-agent verdict (`BLK-7b511dcb` answered): "PARK — BLOCKED-PREREQUISITES. Same ruling as 2026-07-06. ... Take PARK
+  - /skip-current-task. Do NOT attempt workarounds." Operator actions main-agent surfaced: (a) ensure slot-5 ships
+    cefi-007 via quickmerge (impl done, tests green); (b) update UAC `ASTER` capabilities to include `book_snapshot_5` +
+    `liquidations`. Once both land on LDR, cefi-004 can re-dispatch. Slot-8 action: file this Progress Log entry, commit
+    via `docs(plans):` cross-repo PM flip, then call `/api/slots/8/skip-current-task` per main-agent instruction
+    (avoiding the same bounce-loop the `-008` chain hit 8×).
