@@ -272,9 +272,10 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 ### Phase 2 — RC-1 reconcile: field-drift + removal (unblocks the frozen backlog)
 
-- [ ] [BACKEND] P0. Regen reconcile pass — a brief-matched task whose model/effort/thinking/assigned_role/priority drift
+- [x] [BACKEND] P0. Regen reconcile pass — a brief-matched task whose model/effort/thinking/assigned_role/priority drift
       from the plan updates the `backlog.yaml` BacklogTask + propagates to the in-memory backlog. Queued/undispatched
-      scope in this task.
+      scope in this task. — ✅ DONE ao@ff6100ad (`_reconcile_task_fields` + per-plan brief-match in `regen()`;
+      `summary.reconciled`). Auto-heals the frozen backlog on the next tick.
 - [ ] [BACKEND] P0. Add `cancelled` task status (orm + state_store + dispatch/prune treat it terminal, never re-queued).
 - [ ] [BACKEND] P0. Removal of a DISPATCHED task → mark `cancelled` (not delete) with reason/provenance; queued/blocked
       removal keeps the existing safe prune; `done` untouched.
@@ -282,15 +283,20 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       `git restore` of only this task's touched files).
 - [ ] [UI] P1. Surface the cancelled count in the fleet/backlog UI (`unified-trading-system-ui` / deployment-ui as
       applicable).
-- [ ] [BACKEND] P0. Execution order — add `plan_order` (the todo's file position) to BacklogTask; regen sets + refreshes
+- [x] [BACKEND] P0. Execution order — add `plan_order` (the todo's file position) to BacklogTask; regen sets + refreshes
       it from plan-file order every reconcile tick; extend the dispatch sort key to `(tier, priority, plan_order)`.
-      Fixes mid-file inserts sorting to the end (A4). Cross-plan tiebreak stays deterministic (`plan_ref`).
-- [ ] [BACKEND] P1. `sequential: true` plan flag (F, mode b) — regen auto-chains each task's `prereqs.completed_tasks`
+      Fixes mid-file inserts sorting to the end (A4). Cross-plan tiebreak stays deterministic (`plan_ref`). — ✅ DONE
+      ao@ff6100ad (`BacklogTask.plan_order`; `dispatch.pick_next_task` sort key; test_dispatch_plan_order.py 3 tests).
+- [x] [BACKEND] P1. `sequential: true` plan flag (F, mode b) — regen auto-chains each task's `prereqs.completed_tasks`
       to the previous task in file order (re-derived every tick, re-links around inserts/removals), for strict-serial
-      plans. Order guaranteed by the prereq chain; no spillover.
+      plans. Order guaranteed by the prereq chain; no spillover. — ✅ DONE ao@ff6100ad (`_wire_sequential_prereqs` +
+      `_parse_frontmatter_sequential`; rebuilds the chain so a reorder can't deadlock; 2 tests incl
+      reorder-no-deadlock).
 - [ ] [BACKEND] P0. Tests — reconcile updates tier/role on a queued task; dispatched removal → cancel; done untouched;
       queued removal still prunes; no duplicate-append on a pure field drift; **insert X,Y between B,C → dispatch order
-      A,B,X,Y,C,D,E** (plan_order); reorder/insert never disturbs an unchanged todo's task.
+      A,B,X,Y,C,D,E** (plan_order); reorder/insert never disturbs an unchanged todo's task. — 🟡 PARTIAL: reconcile /
+      plan_order / sequential tests DONE ao@ff6100ad (test_regen_reconcile.py + test_dispatch_plan_order.py, 10 green);
+      the dispatched-removal→cancel + queued-removal-prunes tests land with Batch B (cancelled status).
 
 ### Phase 3 — RC-1 reconcile: dispatched adaptation (capability chain + brief-unchanged pause/adapt)
 
@@ -348,6 +354,15 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07** — ✅ **Phase 2 Batch A SHIPPED** (`ao@ff6100ad`, LDR; staging-first drain → v2-gated). Regen is now a
+  RECONCILE: (a) `plan_order` field re-derived from plan-file position every tick + dispatch sorts
+  `(tier, priority, plan_order, plan_ref)` so same-priority tasks (10× P0) hold file order and mid-file inserts land in
+  place; (b) brief-matched tasks reconcile model/effort/thinking/assigned_role/priority in place
+  (`_reconcile_task_fields`, `summary.reconciled`) — **this auto-heals the frozen opus/max backlog on the next tick**;
+  (c) `sequential: true` chains each task to its predecessor, rebuilt each tick so a reorder can't deadlock. 10 new unit
+  tests (test_regen_reconcile.py + test_dispatch_plan_order.py), full `quality-gates.sh` green, ruff+basedpyright clean.
+  Code STAGED on LDR — live server NOT restarted (deploy is operator-gated). Next: Batch B (cancelled status + worker
+  stop/scoped-revert).
 - **2026-07-07** — ✅ **Phase 1 SHIPPED** (`pm@08e6424`, LDR; PR #809→main, v2 auto-merge). Rewrote the stale
   `task_template.md` to the current schema with LOCAL-vs-AO authoring tracks + all conventions (10–20 cap, one-plan-one-
   agent, split-for-parallelism, draft-gated phases, `[TAG]` roles, `sequential` vs `plan_order`, safe-editing-live-plans
