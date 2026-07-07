@@ -176,7 +176,7 @@ downstream-observable semantic).
       `record_empty(...source=...)` / `record_failed(...source=...)` on the same row_key.
       Dry-run + `--apply` shape. Gate: CF-4 GREEN (0 blank source in tradfi manifest).
       (repo: market-tick-data-service)
-- [ ] [DATA] P1. **CF-7 aggregate-phantom-marker deletion** (SUPERSEDES the original P0
+- [x] ✅ [DATA] P1. **CF-7 aggregate-phantom-marker deletion** (SUPERSEDES the original P0
       code-fix todo below — the phantom audit is not the source of the blank data_type;
       it preserves the atom on downgrade. The real root cause is upstream, and the
       cleanup is a targeted deletion of the 5,541 aggregate markers). Write a small
@@ -186,6 +186,7 @@ downstream-observable semantic).
       (all three atom fields degenerate), and writes the manifest back without those rows.
       Dry-run + `--apply` shape. Gate: 0 blank-data_type + 0 UNKNOWN/blank-venue rows in
       the tradfi manifest. (repo: market-tick-data-service)
+      — market-tick-data-service@d9097aec: script written with dry-run+--apply+snapshot+stop-on-surprise+gate-verify
 - [ ] [CODE] P2. **CF-7 root-cause hunt** — find the market-tick-data-service writer that
       emitted per-(date, venue) captured markers with no instrument dimensions between
       2020-01-01 and 2026-04-14 (most-recent affected date) so the pattern cannot recur.
