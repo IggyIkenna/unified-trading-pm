@@ -35,9 +35,9 @@ related:
   [
     issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
     instruments_completion_tracker_2026_07_06.md,
-    ../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    ../../codex/12-agent-workflow/agent-orchestrator-overview.md,
-    ../../codex/04-architecture/role-registry.md,
+    ../../codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+    ../../codex/04-architecture/agent-orchestrator-overview.md,
+    ../../codex/04-architecture/agent-orchestrator-autospawn.md,
   ]
 created: 2026-07-07
 last_updated: 2026-07-07
@@ -369,6 +369,18 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07 — SESSION STATUS (autonomous, operator at lunch).** SHIPPED to LDR (all staged, live server NOT restarted
+  — deploy is operator-gated): **Phase 1** (docs, `pm@08e6424`), **Phase 2** (RC-1 reconcile — Batch A `ao@ff6100ad` +
+  Batch B `ao@c6a31ed6`), **Phase 5** (RC-3 skip hygiene, `ao@07035aba`). **2 of the 3 root causes (RC-1, RC-3) are
+  fully fixed** + docs. Every batch: unit-tested + full `quality-gates.sh` green + quickmerge + same-turn plan flip.
+  **REMAINING** (design LOCKED in §B/§C/§F, so implementation-ready): **Phase 4** (RC-2 — dynamic `[TAG]` roles +
+  plan→single-agent stickiness; needs `SlotRow.last_role` col via the `bootstrap.py` migrate hook, dispatch boot-prompt
+  injection, remove worker role-refusal, first-claim `target_slot` stickiness) — highest remaining value; **Phase 3**
+  (capability chain for DISPATCHED retiers — stop-lower + `--resume`-higher; the QUEUED path already works via the model
+  gate; this is the in-flight-retier edge case, riskiest = worker-lifecycle) — lower priority; **Phase 6** (codex SSOT:
+  real doc is `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`, not the stale
+  `12-agent-workflow/...single-vm-architecture.md` in this plan's refs). **Operator note**: Phase 4's stickiness =
+  DEFAULT makes fleet parallelism ≈ active-plan count (a deliberate shift, §F) — worth a glance before deploying it.
 - **2026-07-07** — ✅ **Phase 5 SHIPPED** (`ao@07035aba`, LDR; staging-first drain → v2-gated). RC-3 slot_skips hygiene:
   a per-(slot,task) skip now EXPIRES after `slot_skip_ttl_hours` (default 24h, config, 0=disable) so a stale
   craft-mismatch / prereq-park skip can't starve dispatch across worker respawns; regen prune clears slot_skips for
