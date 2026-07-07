@@ -167,6 +167,13 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
 
 ## Plans — format + authoring discipline
 
+- **Authoring a plan? READ `plans/active/task_template.md` FIRST (HARD RULE)** — it carries the LOCAL (human,
+  `assigned_vm: NA` + `execution_scope: local-only`, never ingested) vs AO-DISPATCHED (`assigned_vm: planning`) tracks +
+  the AO authoring rules: **10–20 todos max**, ONE plan = ONE agent (shared context; SPLIT into separate plans for
+  parallelism, don't spread one plan across agents), an audit is its own plan, draft-gated phase chains (later phases
+  `status: draft` until the prior phase's last todo flips them `active`), per-task `[TAG]` craft roles, and
+  `sequential: true` vs `plan_order` ordering. **Never hand-edit `backlog.yaml`** — author plans, the backend derives
+  it.
 - **Plan destination — ASK BEFORE CREATING (HARD RULE)**: before writing any new plan, ask the operator: _"Should this
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
   auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid

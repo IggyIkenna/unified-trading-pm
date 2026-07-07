@@ -1,173 +1,181 @@
 ---
 doc_type: plan
-title: Task Template — Reusable for Any Agent Task
-summary: Reusable template defining the canonical format and required YAML frontmatter for any new agent task plan.
+title: Task Template — How to Author a Plan
+summary:
+  How to author a plan the fleet can execute. Pick a TRACK (LOCAL/human vs AO-dispatched), copy the matching
+  frontmatter, follow the todo format, and honour the AO rules (10–20 todos, one plan = one agent, split for
+  parallelism, draft-gated phases, per-task roles). Read this BEFORE writing any plan. Dispatch mechanics are marked
+  ACTIVE-NOW vs ROLLING-OUT so an author never relies on unbuilt behavior.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: [template, format, canonical, agent-task]
-related: []
-created: '2026-02-25'
-parent_epic:
+tags: [template, format, canonical, agent-task, plan-authoring]
+related: [ao_dispatch_correctness_regen_reconcile_2026_07_07.md, PLAN_FORMAT.md]
+created: "2026-02-25"
+last_updated: 2026-07-07
+parent_epic: agent_operating_framework_master
 assigned_vm: NA
-execution_scope:
-priority:
+execution_scope: local-only
+priority: P2
 estimate_class:
 estimate_baseline_ai_days:
 estimate_calibrated_ai_days:
-last_updated: 2026-06-27
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 depends_on:
 source:
-assigned_role: infra-engineer
+assigned_role: infra
 drift_direction: advance-code
 ---
 
-# Task Template — Reusable for Any Agent Task
+# Task Template — How to Author a Plan
 
-**Copy this structure when creating new tasks. Every task plan MUST use `.plan.md` suffix and YAML frontmatter.**
+> **READ THIS before writing any plan.** Pick your TRACK (§1), copy the matching frontmatter (§2), follow the todo
+> format (§3). AO-dispatched plans have STRICT rules (§4). Editing a plan whose tasks are already live? §5. Canonical
+> frontmatter schema: `plans/PLAN_FORMAT.md`. **Never hand-edit `backlog.yaml`** — the backend owns it; you author
+> plans.
 
 ---
 
-## Plan File Format (Required)
+## 1. Pick your track — LOCAL vs AO-DISPATCHED
 
-All task plans must be saved as `<slug>.plan.md` in `plans/active/` and include this YAML frontmatter:
+|                    | **LOCAL / human plan**                                     | **AO-DISPATCHED plan**                   |
+| ------------------ | ---------------------------------------------------------- | ---------------------------------------- |
+| Who executes       | you / an interactive session                               | background AO fleet workers              |
+| `assigned_vm`      | `NA`                                                       | `planning`                               |
+| `execution_scope`  | `local-only`                                               | `orchestrator-agent`                     |
+| Ingested by regen? | **No** (never)                                             | **Yes** (when `status: active`)          |
+| Length             | any (not ingested)                                         | **10–20 todos — STRICT**                 |
+| Use when           | operator-only work, design docs, trackers, dispatcher work | autonomous work you want the fleet to do |
+
+**Default is LOCAL** unless you intend the fleet to pick it up. **HARD RULE (CLAUDE.md): ask the operator before
+creating an AO plan** — _"agent-orchestrator plan or human plan?"_ A `status: draft` plan is never ingested regardless
+of track — flip to `active` to dispatch.
+
+---
+
+## 2. Frontmatter (copy the matching block)
+
+**AO-DISPATCHED** (fleet executes):
 
 ```yaml
 ---
-name: task-slug # kebab-case, matches filename
-overview: One-line description
-type: code | infra | deployment | business | mixed
-epic: epic-code-completion | epic-deployment | epic-business | epic-infra | none
-status: active | blocked | paused
-execution_scope: orchestrator-agent | local-only # FUNDAMENTAL — orchestrator-agent (fleet-dispatchable) unless this is operator-only local work
-
-completion_gates:
-  code: C5 # C0–C5 or "none" — gate ALL repos must reach before archiving
-  deployment: none
-  business: none
-
-repo_gates:
-  - repo: repo-name
-    code: C2 # highest gate currently reached
-    deployment: none
-    business: none
-
-depends_on: []
-
-todos:
-  - id: task-id
-    content: Description
-    status: todo | in_progress | done | blocked
-    note: ""
-
-isProject: false
+doc_type: plan
+title: <concise — what this plan achieves>
+summary: <2–4 lines; NO ": " colon-space in unquoted text — use an em-dash —>
+status: active # active | draft (NOT ingested) | done | blocked
+nature: process # process | design
+asset_group: [<group>] # e.g. [defi] [tradfi] [meta]
+stage: [<stage>] # e.g. [data] [meta]
+repos: [<repo>, ...]
+scope: [engineer]
+tags: [<tag>, ...]
+related: [<doc>, ...]
+created: <YYYY-MM-DD>
+last_updated: <YYYY-MM-DD>
+parent_epic: <epic-slug> # REQUIRED — absence = orphan = review-blocking
+assigned_vm: planning # planning = AO executes | NA = not dispatched
+execution_scope: orchestrator-agent
+priority: P0
+estimate_class: infra # refactor 0.4x | design 0.6x | infra 0.8x | brand-new 1.0x | research 1.2x
+estimate_baseline_ai_days: <n>
+estimate_calibrated_ai_days: <n × class-multiplier>
+assigned_role: <default craft — data_engineering | infra | backend-engineer | ui-developer | review>
+drift_direction: advance-code
+depends_on: # optional — upstream plan slugs (documents ordering + gates archival)
+# gate_on_depends: true    # optional — machine-hold this plan's tasks until depends_on tasks are done
+# sequential: true         # optional — STRICT serial: task N waits for N-1 done  [ROLLING OUT — see §4]
 ---
 ```
 
-**Gate levels reference:**
-
-| Gate | Meaning                                      |
-| ---- | -------------------------------------------- |
-| C0   | Not started                                  |
-| C1   | Implementation complete (not tested)         |
-| C2   | Unit tests passing, coverage maintained      |
-| C3   | Linter + Codex gates (ruff, basedpyright)    |
-| C4   | Full `quality-gates.sh` Pass 1               |
-| C5   | Quickmerge complete (merged to staging/main) |
-
-Full spec: `unified-trading-pm/plans/PLAN_FORMAT.md`
+**LOCAL / human** — same block with `assigned_vm: NA` + `execution_scope: local-only`. Length is unconstrained (never
+ingested). Use for operator-only work, trackers, design docs, and dispatcher-surgery plans.
 
 ---
 
-## 🔒 CRITICAL SAFEGUARDS (Always Include)
+## 3. Todo format
+
+- Every todo: `- [ ] [TAG] P0. <description>` (open) → `- [x] N. ✅ [TAG] P0. <desc> — <repo>@<sha> + evidence` (done).
+- **`[TAG]` → craft role** (per-task, AO): `[INFRA]`→infra · `[DATA]`→data_engineering · `[BACKEND]`→backend-engineer ·
+  `[UI]`→ui-developer · `[REVIEW]`→review. Generic `[CODE]` / `[SCRIPT]` → the plan's `assigned_role`.
+- **Priority** `P0`–`P3` (P0 = most urgent). Same-priority tasks run in plan-file order (§4).
+- **Non-dispatchable** (kept visible, never ingested): a line containing `BLOCKED-<TOKEN>` (e.g. `BLOCKED-CREDENTIALS`,
+  `BLOCKED-OPERATOR-DECISION`), `[OPERATOR]` (operator-only action), or a `_(stretch, optional)_` marker.
+
+---
+
+## 4. AO-DISPATCHED plans — STRICT rules
+
+- **10–20 todos, never more.** Fewer is fine; group RELATED items so we don't get hundreds of tiny plans. A 100-todo
+  monolith is banned for dispatch — it bloats the backlog and couples unrelated work. _(LOCAL plans are exempt.)_
+- **One plan = one agent.** A plan's tasks are owned by one worker so it accumulates the plan's full context, worked in
+  order. To run work in **PARALLEL, SPLIT into separate plans** (one per agent) — do NOT spread one plan across agents.
+  _[ROLLING OUT: single-agent stickiness. Until it ships, tasks may spread across slots — use separate plans for
+  guaranteed parallelism.]_
+- **An AUDIT is its own plan** (its findings shape later phases — keep it separable).
+- **Draft-gated phase chains** — for multi-phase work, ship each phase as a SEPARATE plan: the current phase is
+  `status: active`, later phases are `status: draft` (regen skips drafts, so an unfinalised phase never floods the
+  backlog); the phase's LAST todo finalises the next phase's todos and flips it `draft`→`active`. _[ACTIVE NOW: draft =
+  not ingested; active→draft prunes queued tasks.]_ Distinct from `depends_on` + `gate_on_depends: true`, which INGEST
+  the downstream and machine-hold it until upstream is done — use that when the downstream is already finalised.
+- **Ordering** — tasks dispatch by `(tier, priority, plan_order)`, so same-priority tasks run in file order. _[ROLLING
+  OUT: `plan_order`. Today same-priority tasks fall back to creation order — use P-levels or explicit prereqs for order
+  until it ships.]_ For **STRICT serial** (task N cannot start until N-1 is `done`), set `sequential: true` _[ROLLING
+  OUT]_ or add explicit `prereqs.completed_tasks` _[ACTIVE NOW]_. Ordering controls DISPATCH order, not completion — the
+  fleet runs tasks concurrently; a hard "finish-before" is a prereq, not ordering.
+- **Multi-role in one plan** — use per-task `[TAG]`s; the one owning agent reads the extra role boot prompt. _[ROLLING
+  OUT: `[TAG]` per-task routing. Today role is the plan-level `assigned_role` for ALL tasks — keep one role per plan, or
+  split, until it ships.]_
+- **NEVER hand-edit `backlog.yaml`.** Author plans; the backend derives the backlog.
+
+---
+
+## 5. Safely editing a plan whose tasks are already assigned to AO
+
+_[This whole section is ROLLING OUT — the reconcile behavior is tracked in
+`ao_dispatch_correctness_regen_reconcile_2026_07_07.md`. Until it ships, the backend only APPENDS new todos; edits to
+existing todos do NOT propagate, and a removed-but-dispatched task keeps running. So today: prefer editing plans whose
+tasks are still queued, and avoid rewording or removing a todo whose task is already dispatched.]_
+
+Target behavior when it ships — what the backend does to a task by its state:
+
+| You change…              | `queued` / `blocked`   | `dispatched` (in-flight)                                  | `done` |
+| ------------------------ | ---------------------- | --------------------------------------------------------- | ------ |
+| **model / role / prio**  | updated in place       | adapt-in-place (retier stop-and-`--resume` if higher)     | no-op  |
+| **reword a todo's text** | old removed, new added | old task `cancelled` + scoped-revert; new text = fresh    | no-op  |
+| **remove a todo**        | pruned from backlog    | `cancelled` + scoped-revert (NOT deleted); UI shows count | kept   |
+
+Scoped revert = the worker reverts ONLY its own task's touched files (`git restore`) — never whole-branch, never
+`reset --hard`.
+
+---
+
+## 6. Safeguards (ALWAYS — these are battle-tested)
+
+**Before you change files** — record what you'll touch and make a reference backup (do NOT switch to it):
 
 ```bash
-# 1. Record which files you will touch BEFORE making changes
 FILES_TO_TOUCH="path/to/file1.py path/to/file2.py"
-
-# 2. Create a named backup branch (reference point only — do NOT switch to it)
-git checkout -b backup-before-[task]-$(date +%s)
-git add -A && git commit -m "Backup before [task]" || echo "Nothing to commit"
-BACKUP_BRANCH=$(git branch --show-current)
-echo "🔒 BACKUP: $BACKUP_BRANCH"
-
-# 3. Return to your working branch
-git checkout -   # back to previous branch
-
-# 4. Recovery if needed — ONLY restore the specific files you touched:
-# git restore --source=$BACKUP_BRANCH -- $FILES_TO_TOUCH
-#
-# ❌ NEVER: git checkout $BACKUP_BRANCH         (switches whole branch)
-# ❌ NEVER: git reset --hard $BACKUP_BRANCH     (destroys other agents' work)
-# ✅ ALWAYS: git restore --source=$BACKUP_BRANCH -- <file1> <file2>
+git branch "backup-before-<task>-$(date +%s)"   # reference point only
+# Recovery — ONLY the files you touched:
+#   git restore --source=<backup-branch> -- $FILES_TO_TOUCH
 ```
 
-### NEVER Rules:
+**NEVER**: `git reset --hard` / `git checkout <branch>` / `git clean -fd` a dirty tree · revert the WHOLE branch (other
+agents share the repo — only revert your own files) · skip tests or add `|| true` / `@pytest.mark.skip` without a
+documented reason · `# type: ignore` without fixing root cause · `Any` · `.get("k", {})` (fail loud) · hand-edit
+`backlog.yaml` · auto-commit from an AO worker without reporting back.
 
-- ❌ NEVER skip tests or add `|| true`
-- ❌ NEVER add `@pytest.mark.skip` without documented reason
-- ❌ NEVER use `git reset --hard` — not for conflicts, not for reverts, not ever without explicit user confirmation
-- ❌ NEVER revert the whole branch — other agents may be working on the same repo; only revert your own files
-- ❌ NEVER add `# type: ignore` without fixing root cause first
-- ❌ NEVER use `.get("key", {})` or `.get("key", [])` (fail loud!)
-- ❌ NEVER use `Type Any` (check source code for actual type)
-- ❌ NEVER auto-commit (report back first)
-
-### MUST DO Rules:
-
-- ✅ Fix root causes (not symptoms)
-- ✅ Test frequently
-- ✅ Keep a list of every file you touch; use that list if you need to revert
-- ✅ Document exceptions in QUALITY_GATE_BYPASS_AUDIT.md
-- ✅ Report back with structured format
+**ALWAYS**: fix root causes, not symptoms · keep the list of files you touched (for a scoped revert) · test frequently ·
+commit + push + flip the plan checkbox in the SAME turn (`docs(plans):` prefix) · cite evidence for a done claim
+(`<repo>@<sha>` + a resolving build/run).
 
 ---
 
-## 📋 TASK STRUCTURE
-
-````markdown
-# Task: [Task Name]
-
-**Goal**: [One sentence] **Method**: X fast sub-agents (Task tool) **Repos touched**: [list of repos]
-
-## Prompt (Copy-Paste to Execute):
-
-[Prompt text that explicitly uses Task tool]
-
-## Sub-Agent Allocation:
-
-Agent 1: [Description]
-
-- Files: [list — used for scoped revert if needed]
-- Task: [specific]
-
-[Repeat for each agent]
-
-## Success Criteria:
-
-- [x] [Criterion 1] <!-- TEMPLATE-PLACEHOLDER: replace when instantiating; closed 2026-05-19 slot 2 for audit -->
-- [x] [Criterion 2] <!-- TEMPLATE-PLACEHOLDER: replace when instantiating; closed 2026-05-19 slot 2 for audit -->
-
-## Verification:
-
-```bash
-[Commands to verify success]
-```
-````
-
----
-
-## ✅ Example Task Doc Structure
-
-See `TASK_1_ADD_QUALITY_CHECKS.md`, `TASK_2_FIX_VIOLATIONS.md`, `TASK_3_TYPE_CLEANUP.md`
-
----
-
-**Use this template to create new executable task docs as `<slug>.plan.md` in `plans/active/`**
+**This template is a LOCAL doc (not ingested). Copy §2 into a new `<slug>_<YYYY_MM_DD>.md` in `plans/active/` to
+start.**
