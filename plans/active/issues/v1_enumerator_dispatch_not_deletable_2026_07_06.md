@@ -187,3 +187,14 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
   codex audit YAMLs still reference `cron:expected-universe-enumerator-` as `continuous_verifier`, (b)
   `deployment-service/scripts/vm/launch-ec2-vm.sh:148` also registers the AWS EC2 mirror `"eu-enum-"`, and (c) todo #3
   is a blocked-by if the v1 launcher is still actively scheduled in prod.
+- **2026-07-06** — slot-8 (data_engineering) received the SAME todo #4 dispatch AGAIN (backlog task
+  `v1_enumerator_dispatch_not_deletable-007`, tier=1 priority=50), despite the `[PARKED — needs infra worker; do NOT
+  dispatch to data_engineering]` title marker added after slot-7's escalation. This is now the 2nd craft-mismatch
+  dispatch to a data_engineering slot for this todo. Escalated via BLK-0b46d0f3; main-agent confirmed self-park with
+  status `BLOCKED-CRAFT-SCOPE`. **Operator hardening ask (main-agent 2026-07-06)**: the title marker is not sufficient —
+  the dispatcher ignores it. Operator must (1) set `assigned_role: infra` on the -007 backlog entry so
+  data_engineering slots never receive it, AND (2) add a `depends_on` gate or prereq condition (e.g. a
+  `v1-enumerator-007-role-gated` condition seeded `false` until an infra worker is available) so the row is blocked
+  from dispatch until picked up by the correct craft. Until this is done, -007 will keep bouncing to data_engineering
+  slots on every /boot. No deployment-service files touched from slot-8; the todo remains `- [ ]` for a real infra
+  worker.

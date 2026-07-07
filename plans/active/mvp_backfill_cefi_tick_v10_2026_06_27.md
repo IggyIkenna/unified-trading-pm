@@ -864,58 +864,211 @@ OPERATOR.
 ### G4 Verification Run — 2026-07-03T12:33–12:42Z (GATE NOT MET — 80 VMs RUNNING)
 
 **Scripts run (instruments-service slot-6):**
-1. `measure_honest_coverage.py --asset-group cefi --no-merge` → JSON `gs://central-element-323112-honest-coverage/2026-07-03/coverage.json`
+
+1. `measure_honest_coverage.py --asset-group cefi --no-merge` → JSON
+   `gs://central-element-323112-honest-coverage/2026-07-03/coverage.json`
 2. `reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`
 
 **VM check (12:33Z):** 80 cefi VMs RUNNING — wave-1 reprobe (suffix 105623, 2020–2026) + wave-2 (suffix 102102).
 
 **Coverage (prd --no-merge) — 2026-07-03T12:33Z:**
 
-| metric   |    count | note                                             |
-| -------- | -------: | ------------------------------------------------ |
-| captured | 2,947,441|                                                  |
-| af       |   540,607| VMs actively recording new attempts              |
-| ec       | 2,220,003| legitimate empties                               |
-| eu (prd) |    43,877| unchanged                                        |
-| coverage |   83.45% |                                                  |
+| metric   |     count | note                                |
+| -------- | --------: | ----------------------------------- |
+| captured | 2,947,441 |                                     |
+| af       |   540,607 | VMs actively recording new attempts |
+| ec       | 2,220,003 | legitimate empties                  |
+| eu (prd) |    43,877 | unchanged                           |
+| coverage |    83.45% |                                     |
 
 **Top residual af by venue (prd, --no-merge):**
 
-| venue              | af       | eu     | status                                                    |
-| ------------------ | -------: | -----: | --------------------------------------------------------- |
-| BINANCE-FUTURES    | 131,112  |    991 | reprobe VMs RUNNING (2020–2026 heavy+light)              |
-| DERIBIT            |  80,387  |    435 | reprobe VMs RUNNING; options_chain=16,422 — see below    |
-| KRAKEN-FUTURES     |  73,395  |     80 | wave-2 VMs RUNNING                                       |
-| BITFINEX-FUTURES   |  64,893  |     28 | wave-2 VMs RUNNING                                       |
-| BYBIT              |  49,487  |    490 | reprobe VMs RUNNING (2021–2026 heavy+light)              |
-| UPBIT              |  32,708  |      1 | wave-2 VMs RUNNING                                       |
-| BITGET-FUTURES     |  16,632  |      4 | wave-2 VMs RUNNING                                       |
-| BINANCE-SPOT       |  14,270  |      0 | reprobe VMs RUNNING (2022–2024 heavy)                    |
-| OKX-SWAP           |  13,577  |     29 | reprobe VMs RUNNING (2021–2026 heavy+light)              |
-| CRYPTOFACILITIES   |   9,126  | 31,914 | legacy — pre-v10; DO NOT BLOCK G4                        |
-| OKEX-SWAP          |   8,439  |  1,472 | legacy — pre-v10; DO NOT BLOCK G4                        |
-| OKEX-FUTURES       |   7,631  |  1,614 | legacy — pre-v10; DO NOT BLOCK G4                        |
-| BITGET-SPOT        |   7,600  |      0 | wave-2 VMs RUNNING                                       |
-| OKEX/BITFINEX-D/.. |  ~11,000 |  ~5,500| legacy venue names — pre-v10; DO NOT BLOCK G4            |
-| COINBASE-SPOT      |   3,094  |      0 | reprobe VMs RUNNING                                      |
-| KRAKEN-SPOT        |   2,900  |      0 | wave-2 VMs RUNNING                                       |
-| OKX-FUTURES        |   2,399  |      0 | reprobe VMs RUNNING                                      |
-| BITFINEX-SPOT      |   2,000  |      0 | wave-2 VMs RUNNING                                       |
-| HYPERLIQUID        |   1,964  |    232 | 4 SPOT VMs RUNNING (HL S3, launched 10:12Z)              |
-| OKX-SPOT           |   1,129  |      0 | reprobe VMs RUNNING (2024 heavy)                         |
+| venue              |      af |     eu | status                                                |
+| ------------------ | ------: | -----: | ----------------------------------------------------- |
+| BINANCE-FUTURES    | 131,112 |    991 | reprobe VMs RUNNING (2020–2026 heavy+light)           |
+| DERIBIT            |  80,387 |    435 | reprobe VMs RUNNING; options_chain=16,422 — see below |
+| KRAKEN-FUTURES     |  73,395 |     80 | wave-2 VMs RUNNING                                    |
+| BITFINEX-FUTURES   |  64,893 |     28 | wave-2 VMs RUNNING                                    |
+| BYBIT              |  49,487 |    490 | reprobe VMs RUNNING (2021–2026 heavy+light)           |
+| UPBIT              |  32,708 |      1 | wave-2 VMs RUNNING                                    |
+| BITGET-FUTURES     |  16,632 |      4 | wave-2 VMs RUNNING                                    |
+| BINANCE-SPOT       |  14,270 |      0 | reprobe VMs RUNNING (2022–2024 heavy)                 |
+| OKX-SWAP           |  13,577 |     29 | reprobe VMs RUNNING (2021–2026 heavy+light)           |
+| CRYPTOFACILITIES   |   9,126 | 31,914 | legacy — pre-v10; DO NOT BLOCK G4                     |
+| OKEX-SWAP          |   8,439 |  1,472 | legacy — pre-v10; DO NOT BLOCK G4                     |
+| OKEX-FUTURES       |   7,631 |  1,614 | legacy — pre-v10; DO NOT BLOCK G4                     |
+| BITGET-SPOT        |   7,600 |      0 | wave-2 VMs RUNNING                                    |
+| OKEX/BITFINEX-D/.. | ~11,000 | ~5,500 | legacy venue names — pre-v10; DO NOT BLOCK G4         |
+| COINBASE-SPOT      |   3,094 |      0 | reprobe VMs RUNNING                                   |
+| KRAKEN-SPOT        |   2,900 |      0 | wave-2 VMs RUNNING                                    |
+| OKX-FUTURES        |   2,399 |      0 | reprobe VMs RUNNING                                   |
+| BITFINEX-SPOT      |   2,000 |      0 | wave-2 VMs RUNNING                                    |
+| HYPERLIQUID        |   1,964 |    232 | 4 SPOT VMs RUNNING (HL S3, launched 10:12Z)           |
+| OKX-SPOT           |   1,129 |      0 | reprobe VMs RUNNING (2024 heavy)                      |
 
 **Phantom reconcile dry-run (12:42Z):** 0 phantoms ✅ (prior `--apply` at 10:20Z still holds; manifest clean)
 
-**DERIBIT options_chain:** af=16,422 (grew from 10,114 at 10:45Z — reprobe VMs recording new failure attempts). Issue doc `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` states Tardis confirms 426,474 Deribit option symbols ARE available; failure was likely transient (wave-1 preemption/OOM); reprobe expected to resolve. Gate: af=0 after reprobe; if af>1,000 → escalate.
+**DERIBIT options_chain:** af=16,422 (grew from 10,114 at 10:45Z — reprobe VMs recording new failure attempts). Issue
+doc `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` states Tardis confirms 426,474 Deribit option symbols ARE
+available; failure was likely transient (wave-1 preemption/OOM); reprobe expected to resolve. Gate: af=0 after reprobe;
+if af>1,000 → escalate.
 
-**DERIBIT futures_chain:** af=7,600 (reprobe VMs with FORCE=1 re-recording failures; was reclassed at 10:45Z). After reprobe completes: re-run `market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py`.
+**DERIBIT futures_chain:** af=7,600 (reprobe VMs with FORCE=1 re-recording failures; was reclassed at 10:45Z). After
+reprobe completes: re-run `market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py`.
 
 **Gate verdict:** ❌ NOT MET — af=540,607 (requires 0); eu=43,877 (requires 0); 80 VMs RUNNING.
 
 **Required before G4 can close (ordered):**
+
 1. All 80 VMs terminate (BF/KF/BF-F/BYBT/UPBIT/BITGET-F/BSPOT/OKX waves)
 2. Re-run `reclass_cefi_futures_chain_no_tardis_source.py` (DERIBIT + wave-2 venues futures_chain af → ec)
 3. Run phantom reconcile `--apply` if new phantoms appear
 4. Re-run `measure_honest_coverage.py` + `reconcile_phantom_manifest_rows_all.py --dry-run`
 5. Check DERIBIT options_chain af: if 0 → gate met; if >1,000 → escalate per issue doc
 6. Flip G4 checkbox
+
+---
+
+### G4 Verification Run — 2026-07-06T22:32–22:58Z (GATE NOT MET — 3 independent failures)
+
+**Scripts run (instruments-service slot-11 planning VM):**
+
+1. `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/measure_honest_coverage.py --asset-group cefi --output-path /tmp/g4_verify_20260706/coverage_merged.json`
+   (instruments-service)
+2. `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`
+   (instruments-service)
+3. `GCP_PROJECT_ID=central-element-323112 <IS-venv>/python scripts/audit/manifest_hygiene_daily.py --asset-group cefi --mode full`
+   (e2e-testing, ran with instruments-service .venv)
+
+**VM check (2026-07-06T22:32Z):** 1 cefi VM RUNNING — `cefi-binance-futures-2021-heavy-20260703-105623` (created
+2026-07-03T03:57Z, SPOT, asia-northeast1-c, **3 days uptime**). NO per_vm shard exists for this VM in GCS (per_vm/ dir
+has only `_legacy_seed.parquet`) — VM has either self-consolidated to the main manifest or is silently stalled.
+**Infra-triage handoff** (SPOT VM life-cycle is outside `data_engineering` craft scope).
+
+**Coverage (prd merged) — 2026-07-06T22:32Z:**
+
+| metric                 |     count | vs 2026-07-03T12:33Z | note                                                                         |
+| ---------------------- | --------: | -------------------: | ---------------------------------------------------------------------------- |
+| captured               | 2,098,056 |                    — | merged view (7.2M prd + 4.1M secondary → 11.1M → MVP filter → 3.2M in-scope) |
+| attempted_failed       |     1,753 |         **-538,854** | **-99.7% since 07-03** — massive progress                                    |
+| expected_unattempted   |   632,974 |                    — | dominated by DERIBIT pre-v10 (524,391 = 82.8%)                               |
+| empty_confirmed        |   479,242 |                    — |                                                                              |
+| total                  | 3,212,025 |                    — | filter kept 28.9% of merged (11.1M → 3.2M)                                   |
+| coverage_pct (Layer-2) |     76.77 |                    — |                                                                              |
+| Layer-1 completeness   |     73.61 |               +12.21 | 19 missing tuples (was 17 at 07-03T05:07Z; 9 in plan text)                   |
+| denominator_complete   |     False |                    — | **Layer-1 gate NOT MET**                                                     |
+
+**Layer-2 af breakdown by venue/data_type (non-zero, sum=1,753):**
+
+| venue/data_type                           |         af |
+| ----------------------------------------- | ---------: |
+| HYPERLIQUID/derivative_ticker             |        522 |
+| HYPERLIQUID/book_snapshot_5               |        382 |
+| HYPERLIQUID/trades                        |        373 |
+| BINANCE-SPOT/trades                       |        205 |
+| BINANCE-SPOT/book_snapshot_5              |        138 |
+| BYBIT-FUTURES/{book5,deriv_ticker,trades} | 15 ea (45) |
+| BINANCE-FUTURES/trades                    |         15 |
+| OKX-FUTURES/{trades,book5,deriv_ticker}   | 15 ea (45) |
+| KRAKEN-FUTURES/{book5,deriv_ticker}       | 10 ea (20) |
+| OKX-SPOT/trades                           |          6 |
+| UPBIT/{trades,book5}                      |   1 ea (2) |
+
+HL dominates residual af (1,277 = 73%).
+
+**Layer-2 eu split:**
+
+- **DERIBIT pre-v10 exclusion (per plan G0 analysis — DOES NOT block G4): 524,391**
+  - OPTION/trades: 433,191 | COMBO/trades: 78,940 | PERPETUAL/{book5,trades,deriv_ticker}: 9,210 | FUTURE/trades: 122 |
+    SPOT_PAIR/{book5,trades}: 2,928
+- **Non-DERIBIT (v10 in-scope — DOES block G4): 108,583** — top contributors:
+  - OKX-SPOT (book5+trades) = 25,272
+  - OKX-SWAP (book5+trades+deriv_ticker) = 19,380
+  - BINANCE-SPOT (book5+trades) = 15,368
+  - BYBIT (book5+trades+deriv_ticker) = 15,309
+  - BINANCE-FUTURES (book5+trades+deriv_ticker) = 13,638
+  - HYPERLIQUID (book5+trades+deriv_ticker) = 11,291
+  - OKX-FUTURES/trades = 4,257
+  - UPBIT (book5+trades) = 4,068
+
+**Layer-1 19 missing tuples:**
+
+- BITFINEX-FUTURES/future × {book5, deriv_ticker, trades} (3)
+- BITGET-FUTURES/future × {book5, deriv_ticker, trades} (3)
+- BYBIT/spot_pair × {book5, trades} (2)
+- COINBASE-FUTURES/future/trades (1)
+- EXTENDED-STARKNET/perpetual × {book5, trades} (2)
+- KRAKEN-FUTURES/future/deriv_ticker (1)
+- LIGHTER-ZKSYNC/perpetual × {book5, deriv_ticker, trades} (3)
+- OKX/options_chain/trades (1)
+- PACIFICA-SOLANA/perpetual × {book5, deriv_ticker, trades} (3)
+
+These are the exact venue-gate gaps documented in `issues/cefi_layer1_denominator_gaps_2026_07_03.md` (Tier-3 venues +
+non-Tardis venues absent from `venue_instrument_type_to_tardis` / `VENUE_DATA_TYPE_CAPABILITIES` gate authorities;
+BYBIT-SPOT writer stamps PERPETUAL instead of spot_pair).
+
+**Layer-1 stray tuples (post-align):** 87 — writer emits `(venue, ITYPE-UPPERCASE, data_type)` triples not sanctioned by
+UAC (e.g. `('ASTER','PERPETUAL','options_chain')`, `('BINANCE-FUTURES','FUTURE','liquidations')`,
+`('BINANCE-FUTURES','PERPETUAL','futures_chain')`). Casing + vocabulary drift consistent with the denominator gap doc.
+
+**Data_type sparsity finding (surfaced 2026-07-06):**
+
+Current Layer-2 view shows manifest rows for only 3 data_types: `trades`, `book_snapshot_5`, `derivative_ticker`. The
+MVP scope also includes `funding_rate`, `liquidations`, `futures_chain`, and `options_chain` (Deribit).
+`grep options_chain coverage.json` returns 0 hits. Implications:
+
+- Coverage 76.77% is measured over a subset of MVP data_type universe
+- Deribit **options_chain** rows are NOT present as that data_type — either reclassified, filtered by MVP gate, or the
+  enumerator doesn't emit them; DERIBIT/OPTION/trades has cap=536 remaining (v10 gate wants 0 per-strike trades)
+- futures_chain / funding_rate / liquidations show up as **stray** L1 tuples (writer emits them) but 0 rows in the
+  data_type aggregation
+
+**Phantom reconcile dry-run (22:32–22:40Z):** ✅ 0 phantoms found; manifest clean. Real captures in scope: 2,978,655.
+
+**Manifest hygiene (--mode full, 22:32–22:58Z):** ❌ **RED** — 6 finding classes; auto-escalation issue filed at
+`plans/active/issues/manifest_hygiene_red_2026_07_06.md` + candidate CSV
+`plans/audit/results/manifest_hygiene_cefi_2026_07_06.csv`:
+
+- `schema_version_not_v9`: **344,842** (was 349,634 on 06-29 / 349,628 on 07-03 — slow bleed-down of
+  pre-canonicalization v4/v5/v6 legacy rows; does NOT block G4)
+- `noncanonical_path_on_disk`: SKIPPED (no_path_column)
+- `oracle_expects_but_empty`: **23,451** (up from 5 on 07-03 — new class expanded)
+- `oracle_expects_no_manifest_row`: **71,352** (new class this run — previously untracked / not surfaced)
+- `phantom_captured_no_parquet`: **2** (independent from my 07-06 dry-run which showed 0 — hygiene subprocess ran ~1 min
+  later; residual is tiny)
+- `shard_4pillar_fail`: **1** (validate_shards_4pillar SIGTERM'd at ~15 min mark to accelerate hygiene wrap-up; prior
+  runs TIMED OUT at 30 min with count=0)
+
+**Gate verdict:** ❌ **NOT MET** — three independent failures:
+
+1. **Layer-2 af=1,753 (requires 0)** — 12 venue/data_type cells; HL dominates (1,277 = 73%). No running VM covers HL
+   cells. Non-HL 476 needs reprobe or reclassification.
+2. **Layer-2 eu non-DERIBIT=108,583 (requires 0)** — Wave-3 HL VMs from 2026-07-03 terminated; residual eu on OKX /
+   BINANCE / BYBIT suggests recent captures didn't fully close the frontier. **1 VM (BF-2021-heavy) has been RUNNING 3
+   days with no per_vm shard** — infra-suspicious.
+3. **Layer-1 denominator_complete=False, 19 missing tuples (requires True + [])** — root cause per
+   `issues/cefi_layer1_denominator_gaps_2026_07_03.md` (P1 opus-required, in flight). G4 CANNOT close before it lands
+   per plan G4 gate-amended note.
+
+**Blocking items (ordered by unblock-cost / gate impact):**
+
+1. **Layer-1 fix (P1, gate-blocking)** — `issues/cefi_layer1_denominator_gaps_2026_07_03.md` must land to make Layer-1
+   denominator complete (Stage 2 cefi in `instruments_completion_tracker_2026_07_06.md`).
+2. **Wave-4 relaunch for HL af=1,277** — HL has 1,277 af remaining across 3 data_types. Prior wave-3 VMs completed but
+   didn't close the frontier. Needs infra worker to launch `launch-cefi-hl-aster-historical-backfill.sh` again (SPOT).
+3. **BF-2021-heavy VM triage** — 3 days RUNNING with no per_vm shard is anomalous. Serial console / recent progress
+   unknown. Infra handoff (`no fire-and-forget` HARD RULE alert).
+4. **Non-HL af=476** — BINANCE-SPOT (343), BYBIT-FUTURES (45), OKX-FUTURES (45), BINANCE-FUTURES (15), KRAKEN-FUTURES
+   (20), OKX-SPOT (6), UPBIT (2). Small residuals; may need Tardis reprobe or reclassification to honest-empty.
+5. **Data_type sparsity audit** — funding_rate / liquidations / futures_chain / options_chain not visible in current
+   coverage view. Confirm (a) captured under different data_type keys, (b) reclassified to honest-empty, or (c) still
+   missing but hidden by the aggregation.
+6. **DERIBIT/OPTION/trades cap=536** — per-strike trades still in manifest; plan G0 marks as pre-v10 artifact ("DO NOT
+   BLOCK G4"), but G4 gate text says "0 per-strike trades/book5 cells". Ambiguity — operator decision on scope-exclusion
+   cleanup vs residual acceptance.
+7. **Manifest hygiene RED** — 6 finding classes; `oracle_expects_no_manifest_row=71,352` is new class this run and
+   warrants investigation (may explain part of Layer-1 stray tuples). See `issues/manifest_hygiene_red_2026_07_06.md`.
+
+**Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** — verification is complete for this run. Layer-1 denominator work is in
+an open P1 issue doc → the correct next-action-owner is the agent picking up that issue doc. Progress vs 2026-07-03 is
+substantial (af -99.7%; 0 phantoms), but Layer-1 gate remains structural blocker for closure.
