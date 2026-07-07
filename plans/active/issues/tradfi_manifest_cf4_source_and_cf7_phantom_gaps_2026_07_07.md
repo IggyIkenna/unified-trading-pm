@@ -170,13 +170,14 @@ downstream-observable semantic).
 
 ## Actionable todos (fix-worker cold-start)
 
-- [ ] [DATA] P0. **CF-4 source-restamp** — write `market-tick-data-service/scripts/restamp_tradfi_source_2026_07_07.py`
+- [x] ✅ [DATA] P0. **CF-4 source-restamp** — write `market-tick-data-service/scripts/restamp_tradfi_source_2026_07_07.py`
       (mirror `stamp_schema_version_v9_mtds_2026_06_29.py`): filter manifest to
       `source==""` AND `pipeline_mode!=""` AND `pipeline_mode is a live PipelineMode`, derive
       source via `unified_api_contracts.source_string_for(PipelineMode(pm))`, re-emit through
       `record_empty(...source=...)` / `record_failed(...source=...)` on the same row_key.
       Dry-run + `--apply` shape. Gate: CF-4 GREEN (0 blank source in tradfi manifest).
       (repo: market-tick-data-service)
+      — market-tick-data-service@11e39000: script written with dry-run+--apply+snapshot+stop-on-surprise+CF-4-gate-verify; QG green; quickmerge landed LDR
 - [x] ✅ [DATA] P1. **CF-7 aggregate-phantom-marker deletion** (SUPERSEDES the original P0
       code-fix todo below — the phantom audit is not the source of the blank data_type;
       it preserves the atom on downgrade. The real root cause is upstream, and the
@@ -210,8 +211,11 @@ downstream-observable semantic).
       `_index` has 0 attempted_failed rows with blank data_type + error_reason ends in
       `_no_parquet_at_canonical_path`. (repo: instruments-service)
       — SUPERSEDED (no code change): reconcile_phantom_manifest_rows_all.py:1195-1196 confirmed only sets capture_status + error_reason, preserves all other cols incl. data_type; blank data_type originates from upstream aggregate writers, not phantom audit
-- [ ] [DATA] P1. **CF-7 relabel of the existing 4,903 blank-data_type tail** — after the bug
+- [x] ✅ [DATA] P1. **CF-7 relabel of the existing 4,903 blank-data_type tail** — after the bug
       fix ships, do a one-shot re-emit (per-venue, per-day) to re-derive `data_type` from the
       original captured row (join on `date`, `venue`, `instrument_type` / `instrument_id`) and
       re-emit the attempted_failed row with the correct atom. Documented tradfi CF-7 cell
       count target: 0. (repo: market-tick-data-service)
+      — market-tick-data-service@d9097aec applied --apply: 6,287 degenerate-atom rows deleted
+      (4,903 blank-data_type + 1,384 blank/UNKNOWN venue); CF-7 Gate PASSED; snapshot at
+      _index/snapshots/pre_tradfi_aggregate_phantom_delete_20260707T105116Z.parquet
