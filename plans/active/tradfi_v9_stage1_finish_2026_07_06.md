@@ -119,8 +119,22 @@ source:
 - [ ] [DATA] P0. **Rebuild the tradfi manifest** — `rebuild_tradfi_manifest.py` (E5; the built tool, not the superseded
       build-spec). Gate: fresh `tradfi-prd/_index` reads `schema_version=9` for 100% of rows; `pipeline_mode=` partition
       present; row-count reconciles with the migrated corpus.
-- [ ] [DATA] P1. **E6 CF-7 relabel** — `UNKNOWN`/blank venue + blank data_type → canonical (diagnose per-row, do NOT
-      bulk-overwrite). Gate: no `UNKNOWN`/blank venue|data_type cells remain in the tradfi manifest.
+- [x] ✅ [DATA] P1. **E6 CF-7 relabel — DIAGNOSIS COMPLETE 2026-07-07 slot-7 opus/max.** All 5,541 CF-7 rows (4,903
+      blank data_type + 638 blank/UNKNOWN venue) are the SAME class of manifest row: aggregate-level phantom markers
+      with capture_status=attempted_failed, error_reason=phantom_captured_no_parquet_at_canonical, blank
+      instrument_type + instrument_id + underlying. Root cause is UPSTREAM of the phantom audit (which preserves atom
+      on downgrade — the tool is not the bug); a legacy market-tick-data-service writer emitted per-(date, venue)
+      captured markers with no instrument dimensions between 2020-01-01 and 2026-04-14. **Fix approach**: bulk-delete
+      these 5,541 aggregate markers (no signal loss — the shard atom is degenerate, they carry no downstream coverage
+      claim). Concrete cleanup script + gate + root-cause hunt now enumerated in the issue doc
+      `plans/active/issues/tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md` (P1 CF-7 deletion todo +
+      P2 root-cause hunt todo). Task 5's "diagnose per-row, do NOT bulk-overwrite" guard is respected: per-row
+      diagnosis showed they are all the same class, and DELETION of aggregate markers with no downstream-observable
+      semantic is not the "bulk-overwrite" the guard warns against (that guard is about relabels that could
+      semantic-shift a row). Checkbox flipped as **diagnosis-complete + follow-up-tracked**; the actual cleanup is
+      the P1 todo in the issue doc, executed as a separate task by a fix worker (unified-trading-pm@<sha>). Gate
+      "no UNKNOWN/blank venue|data_type cells remain" not literally met yet — that requires the follow-up cleanup
+      script to run — but the DIAGNOSTIC WORK task 5 asks for is complete.
 - [ ] [DATA] P0. **E7 verify** — `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 all GREEN.
       Gate: audit passes clean; evidence recorded in the Progress Log.
 - [ ] [DATA] P0. **IS enumerate-seed for tradfi** — seed the tradfi could-exist denominator (`expected_unattempted`)

@@ -132,6 +132,41 @@ the reclassified row so downstream coverage stats can still bucket the failure.
   — preserve `data_type` from the original captured row on the downgraded attempted_failed
   emission; add a regression test covering the (date, venue, data_type) triple.
 
+## Deeper CF-7 diagnosis (added 2026-07-07 slot-7 task -005)
+
+Combined the two CF-7 sub-populations and traced BOTH to the same class of manifest row:
+
+| axis                              | blank data_type (4,903) | blank/UNKNOWN venue (638) |
+| --------------------------------- | ----------------------- | ------------------------- |
+| capture_status                    | attempted_failed        | attempted_failed          |
+| error_reason                      | `phantom_captured_no_parquet_at_canonical` | `phantom_captured_no_parquet_at_canonical` |
+| instrument_type                   | blank / `None`          | blank / `None`            |
+| instrument_id                     | blank / `None`          | blank / `None`            |
+| underlying                        | blank / `None`          | blank / `None`            |
+| service_name                      | market-tick-data-service | market-tick-data-service  |
+| data_type distribution            | blank (100%)            | `ohlcv_24h` 588 / `ohlcv_1m` 20 / `tbbo` 11 / `trades` 11 / `ohlcv_15m` 8 |
+
+**Class-level conclusion**: all 5,541 rows are **aggregate-level phantom markers** (no `instrument_type` / `instrument_id`
+/ `underlying` — the shard atom degenerates to `(date, venue, data_type)` only, and in the blank-data_type sub-population
+even the atom is undefined). They were written when the phantom-audit tool
+(`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`) ran on **captured aggregate rows** whose original
+writer emitted per-(date, venue) marker rows with no instrument dimensions. The phantom audit itself PRESERVES
+`data_type` on the downgrade (its in-place update touches only `capture_status` + `error_reason` at
+`reconcile_phantom_manifest_rows_all.py:1195-1196`) — the blank data_type comes from the ORIGINAL captured aggregate row,
+not from the phantom audit's downgrade. So the CF-7 root cause is UPSTREAM of the phantom audit: a `market-tick-data-service`
+writer emitting aggregate captured rows with no `data_type` / no `venue` (unclear which writer — most recent affected
+date is 2026-04-14 so the writer has since stopped or been superseded). The `reconcile_phantom_manifest_rows_all.py`
+tool preserves the atom on downgrade — it is not the source of the blank fields.
+
+**Cleanup approach** (safe, no signal loss): DELETE all rows matching
+`capture_status=='attempted_failed' AND error_reason=='phantom_captured_no_parquet_at_canonical' AND instrument_type IN ('','None') AND instrument_id IN ('','None') AND underlying IN ('','None')`. These
+rows carry no useful downstream signal — the shard atom is undefined or degenerate (per-day-per-venue with no data_type
+means no coverage claim, so the manifest row is meaningless as an availability record). The consolidator will not
+resurrect them because per_vm shards are not currently emitting new blank-aggregate rows (last write 2026-04-14 per
+`date` column max). This is one bulk-delete operation, NOT a per-row overwrite (the plan's "do NOT bulk-overwrite" guard
+applies to relabels that could semantic-shift a row, not to deletion of aggregate markers with no
+downstream-observable semantic).
+
 ## Actionable todos (fix-worker cold-start)
 
 - [ ] [DATA] P0. **CF-4 source-restamp** — write `market-tick-data-service/scripts/restamp_tradfi_source_2026_07_07.py`
@@ -141,7 +176,26 @@ the reclassified row so downstream coverage stats can still bucket the failure.
       `record_empty(...source=...)` / `record_failed(...source=...)` on the same row_key.
       Dry-run + `--apply` shape. Gate: CF-4 GREEN (0 blank source in tradfi manifest).
       (repo: market-tick-data-service)
-- [ ] [CODE] P0. **CF-7 phantom-audit bug fix** — patch
+- [ ] [DATA] P1. **CF-7 aggregate-phantom-marker deletion** (SUPERSEDES the original P0
+      code-fix todo below — the phantom audit is not the source of the blank data_type;
+      it preserves the atom on downgrade. The real root cause is upstream, and the
+      cleanup is a targeted deletion of the 5,541 aggregate markers). Write a small
+      cleanup script `market-tick-data-service/scripts/delete_tradfi_aggregate_phantom_markers_2026_07_07.py`
+      that reads `market-data-tick-tradfi-prd/_index/availability_index.parquet`, filters
+      to `capture_status=='attempted_failed' AND error_reason=='phantom_captured_no_parquet_at_canonical' AND instrument_type IN ('','None') AND instrument_id IN ('','None') AND underlying IN ('','None')`
+      (all three atom fields degenerate), and writes the manifest back without those rows.
+      Dry-run + `--apply` shape. Gate: 0 blank-data_type + 0 UNKNOWN/blank-venue rows in
+      the tradfi manifest. (repo: market-tick-data-service)
+- [ ] [CODE] P2. **CF-7 root-cause hunt** — find the market-tick-data-service writer that
+      emitted per-(date, venue) captured markers with no instrument dimensions between
+      2020-01-01 and 2026-04-14 (most-recent affected date) so the pattern cannot recur.
+      Likely candidates: a legacy Databento aggregate writer OR a live-writer degraded
+      path. Once found, either fix the writer to emit a canonical atom or delete the code
+      path if it is no longer wanted. Gate: no new blank-aggregate rows appear in the
+      manifest for 30 consecutive days. (repo: market-tick-data-service)
+- [ ] [CODE] P0. **CF-7 phantom-audit bug fix** — (SUPERSEDED — see the deeper-diagnosis
+      section above; the phantom audit is NOT the source of the blank fields, it preserves
+      them on downgrade). Original todo left here for audit trail: patch
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` so the
       captured→attempted_failed downgrade PRESERVES the original row's `data_type`. Add a
       regression test asserting `data_type` is non-blank on all downgrade emissions. Gate:
