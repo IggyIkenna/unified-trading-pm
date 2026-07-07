@@ -233,6 +233,15 @@ remains valid — no correctness blocker uncovered by this verification.
   satisfied (`capture_status=captured` in the manifest). Item 3 (stale-AF reconcile) remains PARKED on the same UTL
   `_merge_dataframes` dedup fix in `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` per the 13
   prior BLK rulings; my fix here does NOT touch that dedup surface.
+- **2026-07-07** — **Item 3 RE-DISPATCHED 14TH TIME — PREREQ STILL NOT MET** (`BLK-e959c3a7`, slot-9 planning).
+  Same pattern as the 13 prior PARKs. Verified at PM tip — line 638 of
+  `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still `- [ ] [CODE] P2`; latest UTL commit
+  touching `_merge_dataframes` remains `f5ec2291` (partial NULL==empty normalization only, NOT the v6-v9 shard-atom
+  dedup this reconcile depends on). My session shipped Item 1 (`unified-trading-library@b7925334`) but touched only
+  `_b`/`_s`/`_coerce_bool` NA-guard — not the dedup key surface. `/blocked` + `/skip-current-task`. **Systemic ask
+  (14× cumulative, ~140 min of slot-planning boot windows on the identical finding across two days)**: operator to
+  either (a) `priority: 999` + `conditions:` gate keyed on the LDR-landing of the dedup fix in `backlog.yaml`, OR (b)
+  NL-prereq parsing epic. Every re-dispatch is a pure waste of a slot boot window.
 - **2026-07-07** — **Item 3 RE-DISPATCHED 13TH TIME — PREREQ STILL NOT MET** (slot-12 planning). Same pattern as the 12
   prior PARKs (10 on 2026-07-06 + 2 earlier today). Verified at PM tip `a332aa5c0` — line 638 of
   `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still `- [ ] [CODE] P2` (dedup fix has NOT
