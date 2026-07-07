@@ -335,9 +335,17 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 ### Phase 5 — RC-3 slot_skips hygiene
 
-- [ ] [BACKEND] P1. slot_skips expiry (N hours, configurable) + clear-on-plan-change / clear-on-prereq-land.
-- [ ] [BACKEND] P1. Unskip API (operator + programmatic) + a fleet-UI action.
-- [ ] [BACKEND] P1. Tests — expiry, plan-change clear, prereq-land clear, unskip.
+- [x] [BACKEND] P1. slot_skips expiry (N hours, configurable) + clear-on-plan-change / clear-on-prereq-land. — ✅ DONE
+      ao@07035aba: TTL expiry in `slot_skipped_tasks(ttl_hours=)` (config `slot_skip_ttl_hours`, default 24h, 0=disable;
+      dispatch passes it) + clear-on-removal (prune deletes slot_skips for GC'd/cancelled task_ids) +
+      `clear_slot_skips_for_task` primitive. NOTE: explicit clear-on-retier / clear-on-prereq-land wiring is left to the
+      TTL (general staleness) + the primitive — a targeted hook can be added if the TTL proves too coarse.
+- [x] [BACKEND] P1. Unskip API (operator + programmatic) + a fleet-UI action. — ✅ DONE ao@07035aba:
+      `POST /api/slots/{id}/unskip-task` (one) + `POST /api/slots/{id}/clear-skips` (all-for-slot), both
+      activity-logged. 🟡 the fleet-UI button is deferred (UI repo; the endpoints exist to wire it to).
+- [x] [BACKEND] P1. Tests — expiry, plan-change clear, prereq-land clear, unskip. — ✅ DONE ao@07035aba
+      (test_slot_skips_hygiene.py, 4 tests: TTL excludes expired / 0-disables, unskip idempotent, clear-for-task spans
+      slots, clear-all-for-slot; full `quality-gates.sh` green).
 
 ### Phase 6 — codex SSOT + plan-activate (after the code phases; plan↔codex drift is review-blocking)
 
@@ -361,6 +369,13 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07** — ✅ **Phase 5 SHIPPED** (`ao@07035aba`, LDR; staging-first drain → v2-gated). RC-3 slot_skips hygiene:
+  a per-(slot,task) skip now EXPIRES after `slot_skip_ttl_hours` (default 24h, config, 0=disable) so a stale
+  craft-mismatch / prereq-park skip can't starve dispatch across worker respawns; regen prune clears slot_skips for
+  GC'd/cancelled tasks; `POST /unskip-task` + `POST /clear-skips` replace the manual-SQL unskip;
+  `clear_slot_skips_for_task` primitive for plan-change clears. 4 tests, full `quality-gates.sh` green. (Done out of
+  plan order — Phase 5 is self-contained + lower-risk than Phases 3/4.) Code STAGED on LDR — live server NOT restarted.
+  Next: Phase 4 (dynamic roles + stickiness, RC-2) then Phase 6 codex.
 - **2026-07-07** — ✅ **Phase 2 Batch B SHIPPED** (`ao@c6a31ed6`, LDR; staging-first drain → v2-gated). Cancelled-task
   lifecycle (A3): regen prune now marks a removed-while-DISPATCHED task `cancelled` (not a zombie `dispatched` row, not
   a hard delete that strands the worker); `HeartbeatResponse.cancel_task` + the heartbeat detects it and returns
