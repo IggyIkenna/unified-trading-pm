@@ -175,8 +175,31 @@ approve / defer per category rather than per-venue.
       price / unknown-chan parsing paths, both venues resolved in `WS_FEED_CONNECTOR_FACTORIES` after
       `register_all()`, factory returns objects satisfying the `WSFeedConnector` Protocol surface. Closes ~26 cefi
       `blocked-not-registered` cells (BITFINEX-SPOT ~11 + BITFINEX-FUTURES ~15 per `data_type_capability`).
-- [ ] [CODE] P1. **BITGET-SPOT + BITGET-FUTURES WSFeedConnector build** — public WS APIs (repo:
-      market-tick-data-service). Gate: both venues resolve; regression tests added.
+- [x] [CODE] P1. **BITGET-SPOT + BITGET-FUTURES WSFeedConnector build** ✅ — mtds@6bf4f616. Bitget v2 public
+      WS at `wss://ws.bitget.com/v2/ws/public` handles both spot pairs (`BTCUSDT` instId) and USDT-margined
+      perps (same instId) through a single endpoint with an identical `trade` channel row shape — the perp
+      connector extends the spot connector and re-tags only the venue/instrument_type/wire `instType`
+      (`"SPOT"` vs `"USDT-FUTURES"`). Bitget carries an explicit `side` field per row (`"buy"`/`"sell"`,
+      unlike Bitfinex's amount-sign convention) and uses the SAME row shape for `action="snapshot"` +
+      `action="update"` — every row becomes a `ReceivedTick`, downstream dedupes by `trade_id`.
+      Files: `market_tick_data_service/live/connectors/bitget_spot_ws.py` (~285 lines: parser +
+      instrument mapping + async lifecycle w/ backoff-reconnect + registry entry) +
+      `market_tick_data_service/live/connectors/bitget_futures_ws.py` (~50 lines: subclass with 3 class-attr
+      overrides + separate factory + registry entry) + `connectors/__init__.py::register_all()` wire-up in
+      the CeFi perp + CeFi spot buckets. Regression pack (27 tests) mirrors gap-002 Bitfinex:
+      `TestInstrumentMapping` (canonical→wire, case-fold, bare pass-through), `TestParseBitgetTrades`
+      (snapshot / update / multi-row / non-trade-channel / missing-arg / missing-data / bad-side /
+      missing-side / zero-price / zero-size / negative-price / non-numeric-price / non-dict-row /
+      non-dict-payload / futures venue tagging), `TestSubscribeArgs` (spot instType vs USDT-FUTURES
+      instType), `TestRegistry` (both venues in `WS_FEED_CONNECTOR_FACTORIES` after `register_all()`,
+      factory produces `WSFeedConnector` Protocol surface, both keys direct-match the smoke-matrix
+      `resolve_live_venue_key` gate), + connector initial-state asserts + a "one-URL-across-two-venues"
+      sanity assert. All 27 pass in 0.43s; full local `bash scripts/quality-gates.sh` green (sentinel =
+      6bf4f616). Closes the smoke-matrix `blocked-not-registered` cells for BITGET-SPOT (2 declared
+      data_types per `expected_coverage`: trades + book_snapshot_5) + BITGET-FUTURES (4 data_types:
+      trades + book_snapshot_5 + derivative_ticker + liquidations) at the trades atom — sibling
+      data_type connectors slot in on the same factory later (identical pattern to gap-002 Bitfinex
+      and pre-existing Deribit trades→book_ticker rollout).
 - [ ] [CODE] P1. **COINBASE-FUTURES WSFeedConnector build** — public WS on `wss://advanced-trade-ws.coinbase.com` (repo:
       market-tick-data-service). Gate: COINBASE-FUTURES resolves; regression test.
 - [x] [CODE] P1. **BINANCE-DELIVERY WSFeedConnector build** ✅ — resolved as **honest-absence (NOT MVP)** per
@@ -311,6 +334,42 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-07** — **gap-003 shipped (BITGET-SPOT + BITGET-FUTURES WSFeedConnector build)** by slot-4. Bitget
+  v2 public WS at `wss://ws.bitget.com/v2/ws/public` handles both spot pairs (`BTCUSDT` instId) and
+  USDT-margined perps (same instId) through a single endpoint with an identical `trade` channel row shape —
+  the perp connector extends the spot connector and re-tags only the venue/instrument_type/wire `instType`
+  (`"SPOT"` vs `"USDT-FUTURES"`). Bitget REST batch (Tardis) already captures. Evidence (mtds@6bf4f616):
+  1. `market_tick_data_service/live/connectors/bitget_spot_ws.py` — `BitgetSpotWSFeedConnector` with a
+     dict-row parser (`_parse_bitget_trades` — explicit `side` field per row, uniform snapshot/update
+     shape, drops rows with missing tradeId/ts/price/size/side, non-buy/sell side, or non-positive
+     price/size). App-level keepalive via aiohttp's WS-protocol `heartbeat=25s` (Bitget's ~30s idle
+     disconnect); tolerates `"pong"` text frames if any arrive. Registers `BITGET-SPOT` via
+     `register_ws_feed_connector`.
+  2. `market_tick_data_service/live/connectors/bitget_futures_ws.py` — `BitgetFuturesWSFeedConnector`
+     subclasses the spot connector (identical URL + wire schema) and overrides three class attributes
+     (`_venue_key` / `_instrument_type` / `_inst_type_wire`) → `BITGET-FUTURES` / `PERPETUAL` /
+     `"USDT-FUTURES"` on subscribe args. Registers `BITGET-FUTURES`.
+  3. `market_tick_data_service/live/connectors/__init__.py` `register_all()` — both modules imported in
+     the CeFi perp + CeFi spot buckets.
+  4. `tests/unit/test_bitget_ws_connector.py` — 27 tests: `TestInstrumentMapping` (canonical→wire,
+     case-fold to upper, bare pass-through), `TestParseBitgetTrades` (snapshot / update / multi-row /
+     non-trade-channel-ignored / missing-arg / missing-data / bad-side / missing-side / zero-price /
+     zero-size / negative-price / non-numeric-price / non-dict-row / non-dict-payload / futures venue
+     tagging), `TestSubscribeArgs` (spot `instType=SPOT` vs futures `instType=USDT-FUTURES`),
+     `TestRegistry` (both venues in `WS_FEED_CONNECTOR_FACTORIES` after `register_all()`, factory yields
+     `WSFeedConnector`-Protocol surface, direct-match resolution in the smoke-matrix `resolve_live_venue_key`
+     gate), + connector initial-state asserts + a "one-URL-across-two-venues" sanity assert. All 27 pass
+     in 0.43s; full local `bash scripts/quality-gates.sh` green (sentinel = 6bf4f616).
+  5. Smoke-matrix `blocked-not-registered` drop scope: closes cells for BITGET-SPOT (2 declared
+     data_types per `expected_coverage`: trades + book_snapshot_5) + BITGET-FUTURES (4 data_types:
+     trades + book_snapshot_5 + derivative_ticker + liquidations) at the trades atom. Sibling
+     data_type connectors slot in on the same factory later (identical pattern to gap-002 Bitfinex
+     + pre-existing Deribit trades→book_ticker rollout — the factory currently falls through to the
+     trades connector for any non-`trades` data_type).
+
+  Follow-on: `book_snapshot_5` / `derivative_ticker` / `liquidations` sibling connectors slot in later
+  on the same factory (identical pattern to `deribit_book_ticker_ws.py` and `bitfinex_futures_ws.py`).
 
 - **2026-07-06** — **gap-006 shipped (EXTENDED-STARKNET + LIGHTER-ZKSYNC + PACIFICA-SOLANA on-chain-perp scaffolds)**
   by slot-5. 3 Protocol-conforming BLOCKED-CREDENTIALS scaffolds shipped at
