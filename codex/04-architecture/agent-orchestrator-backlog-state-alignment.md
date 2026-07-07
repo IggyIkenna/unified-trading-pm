@@ -122,8 +122,30 @@ skips for GC'd/cancelled tasks; `POST /api/slots/{id}/unskip-task` + `/clear-ski
 Code: `regen_backlog_from_plan.py` (reconcile / plan_order / sequential / per-task-role / cancel-prune), `dispatch.py`
 (sort + `to_task_brief`), `state_store/slots.py` (`assign_task_to_slot` / `_claim_plan_for_slot` / skip helpers),
 `orm.py` + `bootstrap.py` (`SlotRow.last_role`), `routes/slots_worker.py` + `agents/worker.md` (cancel + adopt-not-
-refuse). **Deferred**: the dispatched-retier model **capability chain** (stop-lower + `--resume`-higher; the queued path
-already works via the model-tier gate) + Fable.
+refuse).
+
+**Session-tier realign + Fable + per-model effort (Phase 3/7 — the capability chain, now landed).** Model / effort /
+thinking are **spawn-fixed** per tmux session (`_build_claude_flags`), so a plan re-tier of a LIVE worker is applied by
+**kill + respawn `--resume`** at the new tier (context preserved) — never `/model` send-keys. `server/model_tier.py` is
+the ONE source of truth: `MODEL_RANK` (`haiku<sonnet<opus<fable` — consolidates the former two drifting `_MODEL_RANK`
+copies), the `--effort` ladder `[low,medium,high,xhigh,max]`, `model_supports_effort` (Haiku has NONE — passing
+`--effort` to it is an API 400, gated at the single spawn emission site), and `needs_respawn` (the realign decision).
+`WorkerLivenessWatchdog` Trigger-5 (`_maybe_realign_tier`) applies it: a working, non-thinking, non-cooldown slot whose
+running tier ≠ its current task's required tier resume-respawns at the task tier and **persists the new tier back to
+`SlotRow`** (else it thrashes). MID-TASK (same task) = model-upgrade only; a `/done`→next BOUNDARY (current_task
+changed) = realign any direction (the opus→sonnet down-shift). `_slot_required_model` also honours `affinity=medium`
+stickiness within the `queued_at` spill window (the idle-slot upgrade path). **Fable** is a first-class tier (top of the
+rank; `ModelTier` + `_coerce_model` + `model_tier: fable-required` frontmatter) but **operator-request-only** (plans
+default sonnet/opus; task_template §4). A plan/role sets any effort level directly via `effort:` (validated vs the
+ladder). `ultracode` is intentionally never wired (session-only `--settings` mode; operator decision). **Deferred
+(minor)**: role-only soft-signal on a same-tier craft change; per-account Fable capability gating (all accounts
+currently spawn any model — a Fable spawn on a non-capable account hard-errors; an operator-config concern, Fable being
+rare/operator-only).
+
+Code (Phase 3/7): `server/model_tier.py` (rank / ladder / haiku-gate / `needs_respawn`), `worker_liveness_watchdog.py`
+(Trigger-5 realign + persist-back), `autospawn.py` + `dispatch.py` (`_MODEL_RANK` import; `_slot_required_model`
+medium), `tmux_spawn.py` (`--effort` haiku gate), `regen_backlog_from_plan.py` (`effort:` field + `fable-required`),
+`role_registry.py` (`_coerce_model` fable), `models/_types.py` (`ModelTier` fable).
 
 ---
 

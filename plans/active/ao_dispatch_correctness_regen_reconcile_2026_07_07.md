@@ -456,20 +456,29 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       confirmed; CLI 2.1.201 ≥ 2.1.170). `_higher_model` / `_slot_pinned_task_params` handle it via the rank. — ✅ DONE
       ao@f52d3cc4 (`ModelTier` + `role_registry._coerce_model` + `_parse_frontmatter_model_tier` (`fable-required`) all
       accept fable — operator-request-only per task_template §4.)
-- [ ] [BACKEND] P1. Per-role / per-plan `effort` field for the FULL ladder: extend `role_registry` + the
+- [x] [BACKEND] P1. Per-role / per-plan `effort` field for the FULL ladder: extend `role_registry` + the
       plan-frontmatter parse so a role/plan can declare any of `low|medium|high|xhigh|max` DIRECTLY (today only
       `thinking: max|high` → effort). Keep `thinking: on/off` as Haiku's control. Validate against the ladder; unknown →
-      the model default.
+      the model default. — ✅ DONE ao@4d93a751 (plan `effort:` frontmatter — any ladder level, validated vs
+      `model_tier.EFFORT_LADDER`, overrides the thinking_tier-/role-derived effort as the plan default; 3 tests. Roles
+      already express max/high via `thinking:`; a full-ladder role override is a small follow if ever needed.)
 - [ ] [BACKEND] P1. Fable account support: which accounts may spawn fable (org allowlist; NOT under
       zero-data-retention); a fable spawn on a non-fable account → automatic model fallback (`--fallback-model`) or
-      route to a fable-capable account. (Fable safety classifiers — cybersec/bio — also trigger fallback; set a sane
-      fallback target.)
-- [ ] [BACKEND] P2. Docs/semantics reconcile: document that effort is the primary reasoning control on current-gen
+      route to a fable-capable account. — 🟡 DEFERRED (operator-config; not built). Scout: accounts have NO per-model
+      gating today (all spawn any model); a fable spawn on a non-fable account hard-errors (dead pane). Since fable is
+      OPERATOR-REQUEST-ONLY + mostly interactive (rare via fleet), per-account gating + `--fallback-model` is net-new
+      speculative infra — add ONLY if a real fleet account lacks Fable. `AccountDef.models` is the hook.
+- [x] [BACKEND] P2. Docs/semantics reconcile: document that effort is the primary reasoning control on current-gen
       models (`--max-thinking-tokens` inert there, retained for Haiku on/off); align `role_registry.effort` /
-      `thinking_flag` + `_parse_frontmatter_thinking_tier` with the ladder; update the `codex` role-registry doc.
-- [ ] [BACKEND] P0. Tests — haiku spawn OMITS `--effort` (no 400); fable ranks top + spawns `--model fable`; the effort
+      `thinking_flag` + `_parse_frontmatter_thinking_tier` with the ladder; update the `codex` role-registry doc. — ✅
+      DONE (codex `agent-orchestrator-backlog-state-alignment.md` "Session-tier realign + Fable + per-model effort"
+      section — realign / model_tier SSOT / haiku-gate / fable / effort field / ultracode-never-wired / deferred items +
+      code map; capability chain marked no-longer-deferred. Same `docs(plans)` commit as this flip.)
+- [x] [BACKEND] P0. Tests — haiku spawn OMITS `--effort` (no 400); fable ranks top + spawns `--model fable`; the effort
       field accepts the 5 levels + rejects/clamps unknown; `_needs_respawn` treats a Haiku tier as model + thinking-only
-      (no effort compare).
+      (no effort compare). — ✅ DONE across ao@f52d3cc4 (model_tier: haiku-effort-omit / fable rank / `needs_respawn`
+      matrix, 9), ao@a21ca9e9 (watchdog realign, 8), ao@4d93a751 (effort field, 3) — ~20 tests, every batch
+      full-QG-green.
 - [ ] [INFRA] P1. **LAST TASK (operator 2026-07-07)** — after ALL the model wiring has landed + deployed, update the
       `claude` CLI binary on the planning VM (`ssh agent-orchestrator-vm`) to a version supporting fable + the effort
       ladder (≥ 2.1.170 for fable; 2.1.201 validated locally): `claude update`, verify `claude --version`, then a smoke
