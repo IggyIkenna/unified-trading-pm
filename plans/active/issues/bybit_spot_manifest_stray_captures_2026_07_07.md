@@ -150,11 +150,13 @@ describes and (b) each subset needs its own diagnosis before mutation.
       enumerator's expected_unattempted SEEDER does not consult the same authority. Follow-up todo (a1) already covers
       the honest-absence-writer forward path; adding follow-on (b1) below for the manifest-delete of these 54k no-value
       rows once (d) capability populate lands (repo: market-tick-data-service OR instruments-service for the seeder).**
-- [ ] [SCRIPT] P1. **Once (a) + (b) are diagnosed, ship a corrective-relabel script for the ~53k PERPETUAL-stamp
+- [x] ✅ [SCRIPT] P1. **Once (a) + (b) are diagnosed, ship a corrective-relabel script for the ~53k PERPETUAL-stamp
       subset** (the class the -006 plan originally described). Smoke-first: relabel ONE shard, verify manifest split via
       `by_venue_instrument_type`, then scale. Gate: BYBIT-SPOT rows carry SPOT_PAIR; manifest `by_venue_instrument_type`
       shows the split. Depends on the two diagnostic todos above so we do not compound existing wrong labels (repo:
-      market-tick-data-service).
+      market-tick-data-service). — market-tick-data-service@5611d9a7; script at
+      `scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py` with dry-run/--smoke/--apply modes,
+      stop-on-surprise guards, smoke-first protocol, snapshot before --apply.
 - [ ] [CONFIG] P2. **Populate `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` in UAC** with `trades` + `book_snapshot_5`
       (SPOT venue capabilities) so the cefi Layer-1 EXPECTED denominator includes BYBIT-SPOT instead of carve-out-1
       excluding it. Currently empty — matches the plan's separate BYBIT-SPOT capability-gap observation. Cross-repo
@@ -305,3 +307,8 @@ rows land with correct `instrument_type=spot_pair`.
   `capture_status` × `data_type` × `instrument_type` breakdowns; -006's shipped code at
   `market-tick-data-service@c4df8ae0` (files: `symbol_rules.py`, `tardis_adapter.py`, `test_tardis_canonical_output.py`)
   shows the correct forward-path stamping to mirror in the relabel logic. Slot-8 next action: /skip-current-task.
+- **2026-07-07** — **Task -003 DONE** (slot-2). Corrective-relabel script shipped at
+  `market-tick-data-service@5611d9a7` (`scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py`). Script provides
+  dry-run (default) / --smoke (one shard, verify split) / --apply (all ~53,785 rows with pre-relabel snapshot)
+  modes. Stop-on-surprise guards: pre-existing SPOT_PAIR rows, count outside [50k,60k], per-shard > 400 rows.
+  Checkbox flipped. Operator should run --smoke then --apply against prod manifest to complete the remediation.
