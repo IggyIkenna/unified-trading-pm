@@ -193,7 +193,7 @@ downstream-observable semantic).
       path. Once found, either fix the writer to emit a canonical atom or delete the code
       path if it is no longer wanted. Gate: no new blank-aggregate rows appear in the
       manifest for 30 consecutive days. (repo: market-tick-data-service)
-- [ ] [CODE] P0. **CF-7 phantom-audit bug fix** — (SUPERSEDED — see the deeper-diagnosis
+- [x] ✅ [CODE] P0. **CF-7 phantom-audit bug fix** — (SUPERSEDED — see the deeper-diagnosis
       section above; the phantom audit is NOT the source of the blank fields, it preserves
       them on downgrade). Original todo left here for audit trail: patch
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` so the
@@ -201,6 +201,7 @@ downstream-observable semantic).
       regression test asserting `data_type` is non-blank on all downgrade emissions. Gate:
       `_index` has 0 attempted_failed rows with blank data_type + error_reason ends in
       `_no_parquet_at_canonical_path`. (repo: instruments-service)
+      — SUPERSEDED (no code change): reconcile_phantom_manifest_rows_all.py:1195-1196 confirmed only sets capture_status + error_reason, preserves all other cols incl. data_type; blank data_type originates from upstream aggregate writers, not phantom audit
 - [ ] [DATA] P1. **CF-7 relabel of the existing 4,903 blank-data_type tail** — after the bug
       fix ships, do a one-shot re-emit (per-venue, per-day) to re-derive `data_type` from the
       original captured row (join on `date`, `venue`, `instrument_type` / `instrument_id`) and
