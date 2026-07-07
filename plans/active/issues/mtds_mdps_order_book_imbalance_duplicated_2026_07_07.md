@@ -128,30 +128,49 @@ feasible, plus the full MTDS-retirement blast radius) is running; implementation
 
 ## Todos
 
-- [ ] [VERIFY] P0. **Compare `calculate_imbalance_numba` vs. `book_snapshot_adapter.py`'s inline calc for exact
+- [x] [VERIFY] P0. **Compare `calculate_imbalance_numba` vs. `book_snapshot_adapter.py`'s inline calc for exact
       mathematical equivalence AND relative performance** before deleting either — operator's explicit
-      instruction, don't assume orphaned=wrong. Confirm: same formula/edge-case handling, whether
-      `calculate_imbalance_numba` is actually `@njit`-decorated, whether other functions in the same
-      `numba_kernels.py` file are used elsewhere in MDPS (establishes whether numba is a real adopted performance
-      pattern here), and a real timing comparison if feasible. Investigation workflow launched 2026-07-07, results
-      pending.
-- [ ] [CODE] P0. **Depending on the verification above**: either (a) delete `calculate_imbalance_numba`
-      (`numba_kernels.py:395-421`, zero call sites) and keep the adapter's inline pandas/numpy calc as-is, or (b)
-      migrate `book_snapshot_adapter.py` to call `calculate_imbalance_numba` instead of its inline calc, then
-      delete the now-dead inline version — whichever the math+perf verification supports.
-- [ ] [CODE] P0. **Retire MTDS's `order_flow_imbalance` entirely** (`book_microstructure_handler.py` + its CLI
-      registration + the UAC capability declarations at `data_type_capability.py:260-287` and `:473-489` +
-      `DATA_TYPES_BY_ASSET_GROUP["cefi"]` if listed there) — per the operator's decision, MDPS's version is the
-      single source of truth going forward. Full consumer/blast-radius check (is anything besides MDPS actually
-      reading this data_type; has it ever actually been captured in production) is part of the same running
-      investigation workflow — do not retire until that confirms nothing real breaks.
-- [ ] [VERIFY] P1. Once the SSOT decision lands, check whether the two (now-one) live formulas actually agreed
-      numerically on the same real captured data historically (a quick side-by-side computation on one venue/day,
-      using whatever historical MTDS order_flow_imbalance rows exist before they're retired) — if they already
-      diverged, that's a data point on how long this silently drifted, not just a hygiene cleanup.
+      instruction, don't assume orphaned=wrong. **Result**: mathematically equivalent formula, but
+      `calculate_imbalance_numba` is non-functional as shipped — `typing.cast()` calls inside the `@njit`-decorated
+      body are not recognized by numba's nopython-mode type inferencer, so it raises `TypingError: Untyped global
+      name 'cast'` on first invocation (confirmed by direct execution in the repo's own `.venv`). Not a
+      faster-but-unwired implementation; a broken one. Verified via 2-agent workflow, 2026-07-07.
+- [x] [CODE] P0. **Deleted `calculate_imbalance_numba`** (`numba_kernels.py:393-421`, zero call sites, confirmed
+      broken per the verification above) — kept `book_snapshot_adapter.py`'s inline pandas/numpy calc as the sole
+      live implementation. Evidence: `market-data-processing-service@35ca5c1`, quality-gates.sh green.
+- [x] [CODE] P0. **Retired MTDS's `order_flow_imbalance` entirely** — deleted
+      `book_microstructure_handler.py`, `derived/book_microstructure_compute.py`,
+      `scripts/book_microstructure_connectivity_check.py` (found at repo-root `scripts/`, not the
+      `market_tick_data_service/scripts/` path the original audit cited), `tests/unit/test_book_microstructure_handler.py`,
+      `tests/unit/derived/test_book_microstructure.py`; removed the CLI import + dispatcher entry in `cli/main.py`,
+      the `derived/__init__.py` re-exports, and `test_book_microstructure_operation_registered()` in
+      `tests/unit/test_lifecycle_events.py`. Confirmed via grep: zero remaining references to
+      `book_microstructure`/`BookMicrostructure`/`order_flow_imbalance` anywhere in the MTDS repo. Blast-radius
+      check confirmed zero real consumers and zero production rows ever captured for this data_type before
+      deleting. Evidence: `market-tick-data-service@a4fb3d13`, quality-gates.sh green (153s).
+- [ ] [CODE] P1. **UAC-side retirement, not yet started**: `data_type_capability.py` (3 sites — the 9-venue block
+      at lines ~260-284/287, plus two more at ~470/488 and ~516 not in the original audit's line citation),
+      `_source_priority_data.py:130-136,366`, `pipeline_mode.py:112-116,204-205`
+      (`BATCH_MTDS_MICROSTRUCTURE`/`LIVE_MTDS_MICROSTRUCTURE`/`REPLAY_MTDS_MICROSTRUCTURE` — needs a usage
+      check before deletion, not simple), `availability_semantics.py:116-120`, plus 4 UAC test files
+      (`test_book_microstructure_schema.py`, `test_validity_matrix_completeness.py:148-153`,
+      `test_source_mode_capability.py:86`, `test_venue_source_adapter_parity.py:83`). **Caveat, must not violate**:
+      `canonical/domain/market/microstructure.py`'s `CanonicalBookMicrostructure`/`CanonicalDepthLevel` schema is
+      shared with the still-valid, never-captured `queue_position`/`depth_of_book_10` honest-gap declarations —
+      delete only the `order_flow_imbalance`-specific capability entries, not the schema itself.
+- [ ] [VERIFY] P2. Once the SSOT decision fully lands (UAC retirement above), check whether the two (now-one) live
+      formulas actually agreed numerically on the same real captured data historically (a quick side-by-side
+      computation on one venue/day, using whatever historical MTDS order_flow_imbalance rows exist — note: this
+      needs to run BEFORE the UAC schema/manifest entries are removed, since it reads MTDS's now-retired output).
 
 ## Progress Log
 
+- **2026-07-07 (shipped)** — Verification workflow confirmed the numba kernel is broken (not just unused), not a
+  faster unwired alternative — deleted it (`market-data-processing-service@35ca5c1`). Confirmed MTDS's
+  `order_flow_imbalance` has zero real consumers and zero production rows ever captured — fully retired it
+  (`market-tick-data-service@a4fb3d13`). Both shipped via quickmerge from a green `quality-gates.sh --no-fix`
+  tree. Remaining scope is UAC-side reference cleanup (P1, not started) and the historical-agreement check (P2,
+  blocked on nothing but deprioritized).
 - **2026-07-07 (operator decision)** — Operator decided: keep exactly one of the three implementations (MDPS's
   live version), retire MTDS's `order_flow_imbalance` entirely, delete MDPS's dead numba kernel — UNLESS the numba
   kernel is actually a faster, math-equivalent implementation that never got wired up, in which case migrate TO

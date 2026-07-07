@@ -158,6 +158,20 @@ orchestrator-dispatched).
 > **Coordination:** this touches instruments-service@4da6fe8 (another workstream's feature that enabled the PERP
 > venues). Slot-2 executes Phases 0–3 + 5 and flags the 4da6fe8 author on the PR; Phase 4 (prod cutover) waits on
 > Ikenna's access answer. No UAC venue-list change — the venues stay declared.
+>
+> **New evidence (2026-07-07, live probe, updates the Phase 1/4 auth assumption)**: a fresh, unauthenticated
+> read-only `GET` against the **prod** margin host `https://external-api.kalshi.com/trade-api/v2/margin/markets`
+> (not the demo host) returned **HTTP 200 with no auth headers sent** — 16 real crypto perp tickers
+> (`KXBTCPERP`/`KXETHPERP`/`KXSOLPERP`/... ). `.../margin/markets/KXBTCPERP/orderbook` and
+> `.../margin/trades?ticker=KXBTCPERP` also returned 200, real live depth and trades timestamped seconds before the
+> probe. This contradicts the assumption baked into Phase 1/4 that the margin API needs RSA-PSS auth
+> "rolling out member by member" — **market-data reads (listing/detail/orderbook/trades) appear to be public on
+> prod right now, no enrollment or credentials required.** Order-placement endpoints were NOT tested (not needed
+> for market data) and may still require auth/enrollment — this finding is about reads only. If confirmed, Phase 1's
+> RSA-PSS extraction may only be needed for POLYMARKET-PERP (not yet probed) or for a future
+> order-execution path, and Phase 4's `BLOCKED-OPERATOR-DECISION` may not gate the market-data repoint at all —
+> re-verify with a second independent probe before removing the auth path from Phase 1/2, since one probe could
+> be catching a temporarily-open endpoint or a Kalshi-side auth rollout gap.
 
 ### Phase 0 — stop contamination + purge (NOW, no access needed) — SEQUENTIAL (guard ships before purge)
 
@@ -328,3 +342,13 @@ orchestrator-dispatched).
   `execution_scope: orchestrator-agent`: `is_daily_enum_capture_heal_2026_07_07.md` (exc_info → diagnose → fix →
   backfill, one sequential thread) and `manifest_consolidator_dtype_at_source_fix_2026_07_07.md` (independent, different
   repo). The 3 residual todos here are now superseded by those plans — removed from this list to avoid duplication.
+- 2026-07-07: **Answered the operator's MVP-scope question for KALSHI-PERP ("can we even get instruments/tick data
+  with our keys, or should it come out of MVP") — verified live, don't remove.** Confirmed via a fresh read-only
+  probe against the PROD margin host (`https://external-api.kalshi.com/trade-api/v2/margin/markets` +
+  `/orderbook` + `/trades`) that market-data reads return real data (16 live perp tickers, real orderbook, trades
+  seconds-fresh) with no auth headers sent at all — contradicting the Phase 1/4 assumption that this API needs
+  RSA-PSS signing rolling out member-by-member. Added a callout under Workstream B's root-cause box with the full
+  evidence; flagged (not yet confirmed with a second independent probe) that Phase 4's `BLOCKED-OPERATOR-DECISION`
+  may not actually gate the market-data half of the repoint. Order-placement endpoints untested — reads-only
+  finding. No code changed; Workstream B's Phase 0-5 structure stands, this just updates the auth assumption
+  feeding Phase 1/2/4.

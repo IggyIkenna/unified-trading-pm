@@ -38,6 +38,8 @@ related:
     issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md,
     issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md,
     issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md,
+    issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     ../../codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
