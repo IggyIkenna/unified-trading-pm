@@ -203,6 +203,22 @@ remains valid — no correctness blocker uncovered by this verification.
 
 ## Progress log
 
+- **2026-07-07** — **Item 3 RE-DISPATCHED 17TH TIME — PREREQ STILL NOT MET** (`BLK-7690f906`, slot-12 planning).
+  Identical pattern to the 16 prior PARKs (10 on 2026-07-06 + 6 earlier today: `BLK-42bb5889` slot-10, `BLK-e2ff1535`
+  slot-10, `BLK-e959c3a7` slot-9, `BLK-dfce4f07` slot-5, `BLK-d02f687e` slot-4, plus slot-12 earlier today). Verified at
+  PM tip `60006b47e` — line 638 of `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still
+  `- [ ] [CODE] P2` (the dedup fix has NOT landed on LDR; the current plan explicitly says "NOT a naive add"). Verified
+  in UTL LDR clone: latest commit touching `_merge_dataframes` remains `f5ec2291` (partial NULL==empty normalization +
+  no-venue asset_group stamp, NOT the v6–v9 shard-atom dedup this reconcile depends on); the newest `manifest_writer/`
+  commits are `b7925334` (slot-9's Item 1 P1 pd.NA-in-nullable-Boolean guard — unrelated to the shard-atom dedup key),
+  `16513404`/`6c090bb9` (write-side dtype coercion — unrelated), and `39eccc9c` (memory-safe slim reads — unrelated).
+  Task body forbids the only action outside the prereq (`"NOT a naive add"` / `"Do NOT hand-edit the dedup machine"`).
+  `/blocked` with `can_continue: false` awaiting `/skip-current-task`.
+  **Systemic ask (17× cumulative, ~170 min of slot-planning boot windows consumed across two days on the identical
+  finding)**: operator to either (a) set `priority: 999` + add a `conditions:` gate keyed on the LDR-landing of the
+  dedup fix in `backlog.yaml`, OR (b) escalate the AO backlog schema NL-prereq parsing to an epic. Every re-dispatch
+  is a pure waste of a slot boot window on an item whose task body already says "NOT a naive add" and whose prereq is
+  trivially checkable against LDR.
 - **2026-07-07** — **Item 3 RE-DISPATCHED 16TH TIME — PREREQ STILL NOT MET** (`BLK-d02f687e`, slot-4 planning).
   Identical pattern to the 15 prior PARKs (10 on 2026-07-06 + 5 earlier today: `BLK-42bb5889` slot-10, `BLK-e2ff1535`
   slot-10, `BLK-e959c3a7` slot-9, plus slot-12/slot-6/slot-11 and `BLK-dfce4f07` slot-5). Verified at PM tip `60006b47e`
