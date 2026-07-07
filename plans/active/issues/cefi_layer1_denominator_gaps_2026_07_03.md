@@ -237,9 +237,25 @@ nothing date-gates seeding at the (venue, data_type) grain. Execute IN ORDER:
       (`test_enumerate_expected_universe`, `test_check_enumeration_completeness`, `test_filter_manifest_to_expected`,
       `test_expected_universe_golden`). Unblocks -008 (UAC capability flip for ASTER `book_snapshot_5` + `liquidations`
       — the 8-time bounced backlog task), -004 (2f LIGHTER/EXTENDED/PACIFICA), and -005 (re-measure).
-- [ ] [CONFIG] P1. **UAC capability flip** — add `book_snapshot_5` + `liquidations` to
+- [x] ✅ [CONFIG] P1. **UAC capability flip** — add `book_snapshot_5` + `liquidations` to
       `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` with `start_date` = the live-wire date; resolves the standing UAC
-      self-contradiction with `EXPECTED_COVERAGE._CEFI["ASTER"]` (which already lists both).
+      self-contradiction with `EXPECTED_COVERAGE._CEFI["ASTER"]` (which already lists both). **DONE 2026-07-07 —
+      unified-api-contracts@3652f99f (slot-2 planning).** Added `book_snapshot_5: "2026-06-23"` +
+      `liquidations: "2026-06-23"` to `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` at
+      `unified_api_contracts/registry/market_data_categories.py:1148-1150`. Live-wire date = mtds@d43fd62 (the
+      2026-06-23 aster_book_liq_ws.py code-land commit — Binance-Futures-compatible WS via
+      `wss://fstream.asterdex.com`, `<sym>@depth5@100ms` + `!forceOrder@arr`); pre-2026-06-23 dates stay typed
+      `EXPECTED_PRE_SOURCE_COVERAGE_START` via the enumerator's per-(venue,dt) start_date gate landed at
+      instruments-service@4a8cff7 (task -007), so the 17,282-row over-seed purged 2026-07-03 does NOT re-materialise.
+      Updated the comment block above the ASTER entry to reflect batch+live vs live-only mode-split; also updated the
+      test-suite: flipped `test_aster_book_snapshot_5_is_empty` → `test_aster_book_snapshot_5_and_liquidations_seeded`
+      to assert book_snapshot_5 now seeds non-empty (liquidations is venue-level so falls back to Tier-2 empty by
+      design), and dropped the now-stale ASTER example from the "capability not declared" comment inside
+      `get_expected_instruments_for_venue`. Peer commit `e17b185f` (unblocking the 20 pre-existing WS-cassette map
+      gaps) landed first, so QG went from RED→GREEN mid-shipflow; sentinel@3652f99f matches HEAD, quickmerge shipped
+      clean. UNBLOCKS -004 (2f LIGHTER/EXTENDED/PACIFICA still gated on their own capability flips + start_date
+      declarations) and -005 (re-measure — verify UAC ASTER capability flip landed on LDR before re-dispatch, per
+      slot-11 BLK-817416c3).
 - **[→ AO PLAN 5, INFRA role]** Register + launch the live connector `aster_book_liq_ws.py` into
   `live/connector_registry.py` + a live VM (KALSHI-PERP book5 VM is the in-cefi template); verify `live_aster` rows land
   (per-VM shard spot-check at T+10-15min). Connector SSOT: `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #4.
@@ -689,3 +705,29 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   identical grounds (BLK-ad7abfcd 2026-07-06 slot-8, BLK-ae458864 2026-07-07 slot-8, BLK-817416c3 2026-07-07 slot-11) —
   the bounce-loop pattern the `-008` chain hit 8× is beginning to repeat on `-005`; suggest same operator-backlog fix
   (`depends_on: [cefi_layer1_denominator_gaps-004, cefi_layer1_denominator_gaps-008]` on `-005` + regen).
+
+- **2026-07-07** — **UAC capability flip -008 SHIPPED ✅ — the 8-time bounced task finally lands** (slot-2 planning).
+  Prereq -007 (per-(venue,dt) start_date gate) confirmed on LDR at `instruments-service@4a8cff7` — the exact
+  correctness-safety mechanism that all 8 prior slots were correctly parking on. Verified UAC file
+  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1144` matched the
+  slot-11 BLK-817416c3 "code is authoritative — -008 is NOT actually done" verdict: only
+  `{trades, derivative_ticker, perp_funding}` present. Added `book_snapshot_5: "2026-06-23"` +
+  `liquidations: "2026-06-23"` — start_date follows the KALSHI-PERP live-only precedent (KALSHI book_snapshot_5 =
+  2026-06-22 = the `_CONNECTOR_TO_VENUE` re-add / VM-launch date, per `test_data_status_registries.py` line comment
+  "re-added 2026-06-23"). Chose 2026-06-23 = the `mtds@d43fd62` commit date for
+  `market_tick_data_service/live/connectors/aster_book_liq_ws.py` ("fix(cefi-bug4): catalogue-driven HL/ASTER
+  universe + ASTER live-only book/liq + drop HL liq") — the ASTER-side analog of the KALSHI code-land date.
+  Also flipped `test_aster_book_snapshot_5_is_empty` → `test_aster_book_snapshot_5_and_liquidations_seeded` (the
+  assertions had to move: book_snapshot_5 now seeds non-empty via the perp MVP seed; liquidations stays empty because
+  it's venue-level per `test_venue_level_dt_returns_empty` — that's Tier-2 fallback, not a capability gap). Dropped
+  the now-stale ASTER example from the "capability not declared" comment inside `get_expected_instruments_for_venue`.
+  Encountered 20 pre-existing WS-cassette `_CONNECTOR_TO_VENUE`-map failures on the initial QG (unrelated to ASTER —
+  connectors added without their test-registry entry, blocking sentinel refresh fleet-wide); peer landed
+  `unified-api-contracts@e17b185f` ("fix(tests): add 20 _CONNECTOR_TO_VENUE map entries + 17 stub *_ws.yaml
+  cassettes ...") during my investigation, tree went RED→GREEN, my commit auto-rebased to `3652f99f`, sentinel
+  written on the re-run, quickmerge shipped. Filed nothing new — peer commit's message calls out
+  "unblocks fleet-wide UAC ships" so the finding is already owned. UNBLOCKS -004 (2f LIGHTER/EXTENDED/PACIFICA — each
+  still needs its own capability entry + start_date, they were never seeded because their capability entry was empty
+  before D2b; -007 gate handles the date discipline uniformly). UNBLOCKS -005 (re-measure — verify UAC flip on LDR
+  before re-dispatch per slot-11 BLK-817416c3, then run; the slot-11 UAC-drift verdict is now false). No new
+  BLK-QUEUE raised — this was the honest shipping path once -007 was on LDR + the WS-cassette gap was fixed by peer.
