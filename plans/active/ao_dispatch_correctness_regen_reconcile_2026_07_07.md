@@ -378,6 +378,81 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 ---
 
+## Continuation notes (for a post-compact resume — 2026-07-07 session)
+
+Everything shipped is in the Progress Log with shas. This captures the IMPLEMENTATION CONTEXT a fresh context needs to
+resume Phase 3 (+ 6/7) without re-discovering it.
+
+### Environment + deploy boundary (HARD — don't break it)
+
+- **Do NOT restart / VM-side `git pull` agent-orchestrator until deploy.** The server runs
+  `uvicorn ... --reload --reload-dir server` (PID was 199450), so pulling AO code on the VM HOT-RELOADS it into the live
+  fleet. `pm-pull-ff.sh` (systemd `pm-pull.timer`, ~5 min) pulls the **PM repo ONLY** — AO code is NOT auto-pulled,
+  which is why LDR ships are safe. Deploy = a deliberate VM-side pull of agent-orchestrator (`--reload` picks it up;
+  `bootstrap.py` idempotently adds `SlotRow.last_role`).
+- VM: `ssh agent-orchestrator-vm` (13.113.200.22, ubuntu, `~/.ssh/agent-orchestrator-key`); server localhost-only
+  `127.0.0.1:8765`.
+- **Test fast**: `cd agent-orchestrator && .venv/bin/python -m pytest tests/<file> -q`. **Full gate before quickmerge**:
+  `bash scripts/quality-gates.sh` (records a green-SENTINEL tied to HEAD + files).
+- **Ship**: `bash scripts/quickmerge.sh "msg" --agent --files '<paths>'` → lands on LDR (AO is **staging-first**: Tier-C
+  drain promotes LDR→staging, v2-gated — NOT direct-to-main like PM). Plan flips = `docs(plans):` direct push
+  (carve-out). Commit identity on this host = `harshkantariya [main·harsh_pc]`.
+
+### Shipping gotchas hit this session (save the re-discovery)
+
+- **QG sentinel race**: the green proof is tied to HEAD + files. If HEAD moves (another quickmerge lands) between the QG
+  run and the quickmerge, the sentinel invalidates → `❌ sentinel invalid`. Fix: `git pull` to behind=0, then run QG +
+  quickmerge BACK-TO-BACK (`bash scripts/quality-gates.sh && bash scripts/quickmerge.sh …`).
+- **basedpyright bans `.rowcount`** on `session.execute(delete(...))` (typed `Result`), and `type: ignore` is banned →
+  use ORM-object deletes (`session.get`+`session.delete`, or `scalars(select).all()` + delete-each).
+- **`session.get` after `session.delete` (no flush)** still returns the pending-delete row from the identity map → add
+  `session.flush()` for an idempotent single-row delete.
+- A todo's `[TAG]` / P-level is IN the brief text, so changing it is a brief change = **remove+add** (A2), not a
+  field-reconcile. Only frontmatter (model/effort/thinking/role) drifts independently → reconciles in place.
+
+### Phase 3 (capability chain for a DISPATCHED retier) — implementation hooks
+
+Design locked in §A1/§C. The QUEUED path already works (dispatch `_task_outranks_slot` +
+`_MODEL_RANK {haiku,sonnet,opus}` leaves a higher-tier task for a higher spawn). Phase 3 = the DISPATCHED case:
+
+- **The `--resume` mechanism already EXISTS**: `SlotRow.claude_session_id` (deterministic `claude --session-id` at
+  spawn)
+  - the account-failover watchdog respawns a capped worker via `claude --resume <id>` on a fresh account with context
+    intact (`orchestrator_account_failover_resume_respawn_2026_06_17`). Phase 3 reuses it: on a dispatched-task tier
+    UPGRADE → stop the lower worker + respawn `--resume` at the higher tier.
+- **The reconcile already updates the yaml for a dispatched task** (`_reconcile_task_fields` runs regardless of status)
+  but does NOT trigger a worker swap. Phase 3 needs the TRIGGER: detect a dispatched task whose model rank rose above
+  its slot's model, then stop+resume-higher (downgrade = keep running, update stored tier only).
+- `autospawn._slot_pinned_task_params` + `_higher_model` already do a spawn-time model UPGRADE for a slot pinned to a
+  higher-tier QUEUED task — Phase 3's live case is the sibling of that. `_MODEL_RANK` lives in BOTH `dispatch.py` and
+  `autospawn.py` — keep them in sync; add `fable:3` when Fable (Phase 7) lands. Phase 3 makes the rank + stop/resume
+  Fable-READY only; Fable spawn flags / effort vocab / account support are Phase 7.
+
+### Code-location map (what moved this session)
+
+- `regen_backlog_from_plan.py`: `_reconcile_task_fields`, `_resolve_task_tier`+`_task_role_from_tag`+`_TAG_TO_ROLE`,
+  `_wire_sequential_prereqs`+`_parse_frontmatter_sequential`, prune dispatched-orphan→`cancelled` + slot_skips cleanup,
+  `RegenSummary.reconciled`.
+- `dispatch.py`: sort `(tier, priority, plan_order, plan_ref)`; `to_task_brief` carries `assigned_role`; `_MODEL_RANK`.
+- `state_store/slots.py`: `assign_task_to_slot(last_role=)`; `_claim_plan_for_slot` (affinity=medium + queued_at reset);
+  `slot_skipped_tasks(ttl_hours=)` + `clear_slot_skip` / `clear_slot_skips_for_task` / `clear_all_slot_skips_for_slot`.
+- `orm.py` `SlotRow.last_role` (+ `bootstrap.py` migrate) · `backlog.py` `BacklogTask.plan_order` · `config.py`
+  `slot_skip_ttl_hours` · `models/worker_api.py` `HeartbeatResponse.cancel_task` + `TaskBrief.assigned_role` ·
+  `routes/slots_worker.py` heartbeat cancel-signal + 3 `assign_task_to_slot` call sites · `agents/worker.md` cancel +
+  adopt-not-refuse.
+- Tests: `test_regen_reconcile.py`, `test_dispatch_plan_order.py`, `test_slot_skips_hygiene.py`, `test_plan_claiming.py`
+  (updated to medium + last_role).
+
+### Still-open todos (design locked, safe to pick up in any order)
+
+- **Phase 3** — capability chain (above). Highest care: live worker stop/resume.
+- **Phase 6** — `[BACKEND] P2` plan-activate affordance (`POST /api/plans/{slug}/activate` or `[PLAN-ACTIVATE:]`
+  marker). Optional — raw frontmatter edit + `docs(plans):` already works.
+- **Phase 7** — Fable + new effort levels (operator-deferred).
+- **UI** — cancelled-count surface (`[UI] P1`, deferred) — the `cancelled` status is emitted; it's a small UI add.
+
+---
+
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
