@@ -256,15 +256,22 @@ rows land with correct `instrument_type=spot_pair`.
       (43 `expected_unattempted` rows) is a separate concern: `_enumerate_v2_cefi` already stamps `instr.instrument_type`
       for per-instrument rows — those 43 blank-itype rows imply the IS BYBIT-SPOT catalog entries themselves have blank
       `instrument_type`, which is a catalogue-writer fix (out of MTDS scope; separate follow-up if needed).
-- [ ] [SCRIPT] P1. **(b1) Manifest cleanup — delete the 54k BYBIT-SPOT rows under spot-nonsense data_types.** Diagnosis
-      (b) confirmed all 53,934 rows are `empty_confirmed` with `instrument_type=""` — they carry ZERO captured data (0
-      rows each), so deleting them from the manifest is LOSSLESS. GATED ON todo (d) landing (populate
+- [x] ✅ [SCRIPT] P1. **(b1) Manifest cleanup — delete the 54k BYBIT-SPOT rows under spot-nonsense data_types.**
+      Diagnosis (b) confirmed all 53,934 rows are `empty_confirmed` with `instrument_type=""` — they carry ZERO captured
+      data (0 rows each), so deleting them from the manifest is LOSSLESS. GATED ON todo (d) landing (populate
       `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` = `{trades, book_snapshot_5}`) so the enumerator stops re-seeding
       these combinations on the next cron cycle. Also GATED ON the enumerator's expected_unattempted seeder honouring
       `VENUE_DATA_TYPE_CAPABILITIES` (may be already done via D2b in `build_expected`; verify the SEEDER path —
       `_row_data_types` or `_enumerate_v2_cefi` — also consults it). Smoke-first: delete ONE (venue=BYBIT-SPOT,
       data_type=perp_funding) shard row + verify manifest state; then scale to the full 53,934. Gate: `by_data_type` for
-      BYBIT-SPOT shows only `{trades, book_snapshot_5}` (repo: market-tick-data-service).
+      BYBIT-SPOT shows only `{trades, book_snapshot_5}` (repo: market-tick-data-service). — market-tick-data-service@aa8bb137;
+      script at `scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py` with dry-run/--smoke/--apply modes,
+      LOSSLESS-guard filter (venue+dtype+capture_status=empty_confirmed+instrument_type=""), stop-on-surprise guards
+      (row count outside [45k,60k]; any non-target capture_status; per-shard > 400), runtime gate check on --apply
+      that refuses if `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` still empty (enumerator seeder verified to honour
+      capabilities per `sentinels.py`:210-212 filter — falls open on empty dict), snapshot before --apply. Enumerator
+      seeder path verified: `_emit_skipped_venue_sentinels` DOES filter by `VENUE_DATA_TYPE_CAPABILITIES.get(venue, {})`
+      when the dict is non-empty. Operator should run --smoke then --apply once todo (d) lands.
 
 ## Progress Log
 
@@ -330,3 +337,18 @@ rows land with correct `instrument_type=spot_pair`.
   dry-run (default) / --smoke (one shard, verify split) / --apply (all ~53,785 rows with pre-relabel snapshot)
   modes. Stop-on-surprise guards: pre-existing SPOT_PAIR rows, count outside [50k,60k], per-shard > 400 rows.
   Checkbox flipped. Operator should run --smoke then --apply against prod manifest to complete the remediation.
+- **2026-07-07** — **Task -006 (b1) DONE** (slot-10 data_engineering). Manifest delete script shipped at
+  `market-tick-data-service@aa8bb137` (`scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py`). Script
+  provides dry-run (default) / --smoke (earliest perp_funding shard) / --apply (all ~53,934 rows with pre-delete
+  snapshot) modes. LOSSLESS-guard filter: `venue=BYBIT-SPOT` + `data_type` ∈ 6-nonsense set +
+  `capture_status=empty_confirmed` + `instrument_type=""`. Stop-on-surprise guards: row count outside
+  [45k, 60k]; any target `(venue, data_type)` universe row carrying non-target `capture_status` /
+  `instrument_type` (would risk destroying real data); per-shard row_count > 400. Runtime gate
+  check on --apply: refuses if `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` is empty (todo (d) still
+  open at ship time) because the enumerator seeder falls open on empty capability dicts and would
+  re-emit the same rows on the next cron cycle. Enumerator seeder gate verified — the
+  `_emit_skipped_venue_sentinels` in `market_tick_data_service/engine/orchestrator/sentinels.py`:210-212
+  DOES filter expected data_types by `VENUE_DATA_TYPE_CAPABILITIES.get(venue, {})` when the dict is
+  non-empty; the runtime gate in the script bridges the current empty-dict state so operator can't
+  accidentally run --apply before (d) lands. QG green (335s cached with sentinel matching commit HEAD).
+  Checkbox flipped. Operator sequence: land (d) → run --smoke → run --apply.
