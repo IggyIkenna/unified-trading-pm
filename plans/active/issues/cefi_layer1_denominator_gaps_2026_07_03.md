@@ -126,11 +126,25 @@ enough). The % is neither an upper nor lower bound of the real value.
       `get_mvp_data_types_for_cefi_venue()` returns `frozenset()` → silent EXPECTED=0; 2a preserves byte-identical
       behaviour so both remain at 0, matching pre-refactor — the fix is downstream in 2b/2c). Evidence:
       `.qg_last_passed_sha=a1038eef81f2a79fd26918baf70c121207c20ad5` (pre-quickmerge), quickmerge shipped `681f50a`.
-- [ ] [CODE] P0. **2b. cefi gate-authority fix on `build_expected`.** Apply D2a/D2b onto the single producer, then — in
-      order — the ASTER live-forward split (enumerator `start_date` support is a HARD prereq before the UAC capability
-      flip), the BYBIT-SPOT relabel, and the C2 MVP-data-type intersection (all detailed in the sections below).
-      **PREREQ: 2a landed.** Gate: cefi EXPECTED reflects the full declared cefi universe (no whole-venue omission);
-      dynamic tests pass (no golden edits); QG-green.
+- [x] ✅ [CODE] P0. **2b. cefi gate-authority fix on `build_expected`.** Apply D2a/D2b onto the single producer, then —
+      in order — the ASTER live-forward split (enumerator `start_date` support is a HARD prereq before the UAC
+      capability flip), the BYBIT-SPOT relabel, and the C2 MVP-data-type intersection (all detailed in the sections
+      below). **PREREQ: 2a landed.** Gate: cefi EXPECTED reflects the full declared cefi universe (no whole-venue
+      omission); dynamic tests pass (no golden edits); QG-green. **DONE 2026-07-07 — instruments-service@681f50a (2a
+      byte-identical fold with D2a authority baked into `build_expected`) + `03cfd0f` (D2a landing pre-2a) + `2170d9a3`
+      (C2 MVP intersection landed as -009 for `_row_data_types`).** Main-agent BLK-ec6dba83 (Option A) confirmed the 2b
+      core work — Apply D2a/D2b onto the single producer — is COMPLETE via those SHAs; the remaining "in order"
+      sub-parts are individually tracked backlog items with their own PREREQ chains (ASTER split → -007+-008, BYBIT-SPOT
+      relabel → -006, C2 MVP → -009 shipped). Verified Gate DYNAMICALLY:
+      `pytest     tests/unit/scripts/test_expected_universe_golden.py` → 14/14 pass (1.47s); `build_expected("cefi")`
+      returns 72 tuples over 18 of 24 declared cefi venues; the 6 absent (BINANCE-DELIVERY / DERIBIT-COMBO / KALSHI-PERP
+      / POLYMARKET-PERP / COINBASE / BYBIT-SPOT) each carry an explicit configuration reason — no silent whole-venue
+      omission remains: BINANCE-DELIVERY/DERIBIT-COMBO/KALSHI-PERP/POLYMARKET-PERP have BOTH empty
+      `VENUE_DATA_TYPE_CAPABILITIES` and empty `get_mvp_data_types_for_cefi_venue()`
+      (COIN-M/future_combo/prediction-perp not-MVP, intentional); COINBASE has caps={book5, trades} but MVP=empty per
+      BLK-5cc7590e (BLOCKED-OPERATOR-DECISION already surfaced); BYBIT-SPOT has MVP={book5, derv_ticker, funding,
+      trades} but caps=empty, tracked as the writer defect in task -006 (targeted at slot-8 affinity=high). No code
+      change or golden edit needed this turn — flip only.
 - [x] ✅ [DATA] P0. **2c. cefi MVP read-time gate (re-scoped — the manifest-pruning script is RETIRED).** Do NOT run
       `reclassify_cefi_manifest_mvp_universe_2026_06_23.py` — DATA-LOSS: its `_derive_base` mis-parses Bitfinex
       `ADAF0:USTF0` + Kraken `PF_/PI_` wire-forms → would DELETE ~380k legit **captured** BITFINEX/KRAKEN rows; also
@@ -498,3 +512,34 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   PlanRegenLoop had not yet re-parsed the flipped checkbox at the time of this /boot. Slot-9 /done cites `a16ac0649` as
   the shipped SHA (existing artifact). Cross-reference: slot-4's BLK-6cf82522 entry above independently re-verified the
   same three v2-does-not-cover slices documented in `v1_enumerator_dispatch_not_deletable_2026_07_06.md`.
+- **2026-07-07** — **2b flipped ✅ — checkpoint-only, no code change** (slot-8 planning). Task
+  `cefi_layer1_denominator_gaps-002` ("2b. cefi gate-authority fix on `build_expected`") was dispatched to slot-8 as the
+  highest-tier queued task (tier=1, priority=10, `depends_on=null`). Ambiguity in the task text — "Apply D2a/D2b onto
+  the single producer, then — in order — the ASTER live-forward split ... the BYBIT-SPOT relabel, and the C2
+  MVP-data-type intersection" — could be read as (i) 2b consists of a D2a/D2b checkpoint plus separately-tracked
+  followers, or (ii) 2b bundles all four items. Slot-8 filed `BLK-ec6dba83` asking main-agent to disambiguate. Main
+  answered Option A: "CLOSE cefi_layer1_denominator_gaps-002 as DONE. D2a+D2b are confirmed applied via 2a
+  byte-identical fold + commit 03cfd0f — the core gate-authority fix on build_expected is complete. The remaining
+  sub-parts are correctly tracked in their own dedicated backlog entries: ASTER live-forward split in -007 (has its own
+  HARD prereq gate), BYBIT-SPOT relabel in -006 (MTDS writer defect tracked separately), C2 MVP intersection in -009
+  (already shipped). Do NOT hold -002 open waiting for those — they are individually gated and dispatched." Verified on
+  LDR at flip time: (i) `scripts/expected_universe.py::_get_cefi_venue_itypes` sources `INSTRUMENT_TYPES_BY_VENUE`
+  restricted to `VENUES_BY_ASSET_GROUP["cefi"]` with `FUTURE_BUNDLE_VENUES` bundle roll-up — the D2a declarative
+  authority (last touched: `681f50a` 2a byte-identical fold, preceded by `03cfd0f` D2a landing). (ii)
+  `_expected_generic` applies `VENUE_DATA_TYPE_CAPABILITIES` as Carve-out 1 for
+  `VENUE_CAPABILITY_AGS = {"cefi", "tradfi"}` — the D2b intersection. (iii) Venue-level cefi MVP override via
+  `get_mvp_data_types_for_cefi_venue(venue)` applied as Carve-out 2 (the `build_expected` analogue of the -009 C2 fix on
+  `_row_data_types`). Dynamic Gate verification:
+  `.venv/bin/python -m pytest tests/unit/scripts/test_expected_universe_golden.py -x -q` → 14/14 pass in 1.47s.
+  `build_expected("cefi")` returns 72 tuples over 18 of 24 declared cefi venues (ASTER, BINANCE-FUTURES/SPOT,
+  BITFINEX-FUTURES/SPOT, BITGET-FUTURES/SPOT, BYBIT, COINBASE-FUTURES, DERIBIT, EXTENDED-STARKNET, HYPERLIQUID,
+  KRAKEN-FUTURES/SPOT, LIGHTER-ZKSYNC, OKX, PACIFICA-SOLANA, UPBIT); the 6 absent venues each carry an explicit
+  configuration reason — BINANCE-DELIVERY / DERIBIT-COMBO / KALSHI-PERP / POLYMARKET-PERP have BOTH
+  `VENUE_DATA_TYPE_CAPABILITIES[v]={}` AND `get_mvp_data_types_for_cefi_venue(v)==frozenset()` (COIN-M / future_combo /
+  prediction-perp not-MVP per operator decisions 06-27 #3 + Ikenna 07-03); bare COINBASE has caps={book5, trades} but
+  MVP=empty (BLK-5cc7590e BLOCKED-OPERATOR-DECISION already surfaced by 2a); BYBIT-SPOT has MVP populated but caps=empty
+  (writer-defect tracked as -006, `target_slot=8 affinity=high`). No silent whole-venue omission remains — every absence
+  is explicit, satisfying the plan Gate. Slot-8 action: checkbox-flip only (no `build_expected` code change; no golden
+  edit; no instruments-service commit). /done cites `681f50a` as the shipped SHA for the 2b `build_expected` change. 2b
+  flip UNBLOCKS the "2b landed" leg of PREREQ chains for -005 (re-measure — still blocked on -004+-007+ASTER wire
+  - KALSHI-PERP purge) and -004 (2f — still blocked on -007).
