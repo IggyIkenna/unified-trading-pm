@@ -168,15 +168,40 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
       enumeration output — the exact "silent placeholder" class the honest-coverage model exists to eliminate. Infra
       worker should confirm with data_engineering that #3 is landed OR that no live scheduler still invokes the v1
       launcher, before completing the retirement.
-- [ ] [CODE] P2. **DELETE v1 dispatch surface from enumerate_expected_universe.py** — after the four todos above land:
-      remove `_ENUMERATORS` dict, seven v1 functions (`_enumerate_tradfi` / `_enumerate_tradfi_indices` /
-      `_enumerate_defi` / `_enumerate_defi_gas_fees` / `_enumerate_sports` / `_enumerate_cefi` /
-      `_enumerate_prediction`), `main()` v1 branch, and `--enumerator-version=v1` choice (default flip to v2); refactor
-      `tests/unit/scripts/test_enumerate_expected_universe.py` +
-      `tests/integration/test_enumerate_v2_superset_property.py` to drop v1 references (repo: instruments-service).
+- [ ] **[PARKED — prereqs #3 and #4 not landed]** [CODE] P2. **DELETE v1 dispatch surface from
+      enumerate_expected_universe.py** — after the four todos above land: remove `_ENUMERATORS` dict, seven v1 functions
+      (`_enumerate_tradfi` / `_enumerate_tradfi_indices` / `_enumerate_defi` / `_enumerate_defi_gas_fees` /
+      `_enumerate_sports` / `_enumerate_cefi` / `_enumerate_prediction`), `main()` v1 branch, and
+      `--enumerator-version=v1` choice (default flip to v2); refactor `tests/unit/scripts/test_enumerate_expected_universe.py`
+      + `tests/integration/test_enumerate_v2_superset_property.py` to drop v1 references (repo: instruments-service).
+      **2026-07-07 slot-11 (data_engineering)** — dispatcher routed -008 with todo #3 still `- [ ]` and todo #4 PARKED.
+      Deleting v1 now silently drops the venue-grain PRE_VENUE_LAUNCH row class for empty-catalog windows (main-agent
+      confirmed this is a data-correctness hard-stop, not a style preference). Slot-11 raised BLK-530cea75; main answered
+      "implement todo #3 first, then #5". Slot-11 STARTED todo #3 (added `_yield_v2_cefi/defi/prediction_pre_venue_launch_rows`
+      helpers + venue-grain wiring in `_enumerate_v2_cefi/defi/prediction` at `instruments-service/scripts/enumerate_expected_universe.py`),
+      then reverted because todo #3 requires substantial existing-test refactoring (~10+ tests that assert row counts on
+      pre-launch date_axis fail when the helper walks all venues in `VENUES_BY_ASSET_GROUP` / `PROTOCOL_LAUNCH_DATES` —
+      any test using a date pre a venue/protocol launch gets extra venue-grain rows). Todo #3 needs its own dedicated
+      dispatch cycle. Todo #4 (deployment-service launcher retirement) needs an infra-role worker. -008 stays PARKED
+      until BOTH #3 and #4 land on LDR.
 
 ## Progress Log
 
+- **2026-07-07** — slot-11 (data_engineering) received -008 (DELETE v1) dispatch. Prereq #3 (v2 venue-grain sentinel) is
+  `- [ ]` and prereq #4 (infra launcher retirement) is PARKED. Deleting v1 now would silently drop the venue-grain
+  PRE_VENUE_LAUNCH row class for empty-catalog windows (`_enumerate_cefi` line 617 emits it, v2's per-instrument path
+  requires ≥1 catalog instrument to emit anything). Slot-11 raised BLK-530cea75 to main. Main answered: "DO NOT delete
+  v1 yet — data-correctness hard-stop. Implement todo #3 (in-craft) first; ship via quickmerge; then delete."
+  Slot-11 built the todo #3 helpers in-tree
+  (`_yield_v2_cefi_pre_venue_launch_rows` / `_yield_v2_defi_pre_launch_rows` / `_yield_v2_prediction_pre_venue_launch_rows`
+  walking `VENUES_BY_ASSET_GROUP` / `PROTOCOL_LAUNCH_DATES` and yielding-from at the top of each v2 enumerator; mirrors
+  the tradfi/sports pattern from todo #1/#2) but REVERTED before ship: the helpers emit venue-grain sentinels for ALL
+  pre-launch venues, breaking ~10+ existing per-instrument tests that assert on row counts using pre-launch date_axes
+  (e.g. `test_cefi_v2_pre_venue_launch_beats_instrument_lifecycle`, `test_defi_v2_pre_chain_genesis_yields_pre_genesis`,
+  `test_defi_v2_empty_catalog`, others). Full test refactor + the `_drop_v2_venue_grain(rows)` filter pattern is a
+  dedicated dispatch cycle, not within -008's scope. Recommendation: dispatch **-006** (todo #3) to a data_engineering
+  slot as its own unit; the helpers above are a WIP starting point (see slot-11 session revert on
+  `instruments-service@2727dd7`). -008 PARKED with prereq marker; slot-11 idle after this note.
 - **2026-07-06** — Issue filed by slot-10 planning after gap-010 investigation. Operator ruling (main-agent,
   BLK-0ac84889): "BLOCK the full v1 deletion — v1 is NOT safe to fully delete. Re-scope this task to defer the delete;
   file an issue doc noting the v1-cannot-be-deleted finding for operator review." Gap-010 checkbox flipped to DEFERRED
