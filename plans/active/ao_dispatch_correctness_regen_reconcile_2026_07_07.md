@@ -428,11 +428,13 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 > Ground truth (installed CLI 2.1.201 + Claude Code model-config docs): `--effort` = `low, medium, high, xhigh, max` (5
 > levels; extension "extra high" = `xhigh`). **`ultracode` is NOT an `--effort` value** — it is a session-only Claude
 > Code setting (`"ultracode": true` via `--settings`) = `xhigh` + dynamic-workflow orchestration; out of scope for spawn
-> effort. **Haiku supports NO effort — passing `--effort` to it returns a 400 error** (effort is supported on Fable 5 /
-> Sonnet 5 / Opus 4.x). On current-gen models (Sonnet 5 / Opus 4.8 / Fable 5) **effort is the PRIMARY reasoning control
-> (adaptive reasoning) and `--max-thinking-tokens` does NOT apply** — our thinking-via-`--max-thinking-tokens` is inert
-> on them, retained only for Haiku's thinking on/off. Fable alias = `fable` (available since CLI 2.1.170). The
-> `_MODEL_RANK` + effort-ladder + haiku-gate primitives are SHARED with Phase 3 — build them once as the foundation.
+> effort — and **operator decision 2026-07-07: ultracode stays FALSE for every AO worker, never wired (overkill for a
+> dispatched worker)**. **Haiku supports NO effort — passing `--effort` to it returns a 400 error** (effort is supported
+> on Fable 5 / Sonnet 5 / Opus 4.x). On current-gen models (Sonnet 5 / Opus 4.8 / Fable 5) **effort is the PRIMARY
+> reasoning control (adaptive reasoning) and `--max-thinking-tokens` does NOT apply** — our
+> thinking-via-`--max-thinking-tokens` is inert on them, retained only for Haiku's thinking on/off. Fable alias =
+> `fable` (available since CLI 2.1.170). The `_MODEL_RANK` + effort-ladder + haiku-gate primitives are SHARED with Phase
+> 3 — build them once as the foundation.
 
 - [ ] [BACKEND] P0. Haiku-effort gate (CORRECTNESS — latent 400 bug): `_build_claude_flags` (`tmux_spawn.py:971`) must
       NOT emit `--effort` when the model is haiku — the API 400s. Add `_model_supports_effort(model)` (haiku→False;
@@ -454,6 +456,11 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 - [ ] [BACKEND] P0. Tests — haiku spawn OMITS `--effort` (no 400); fable ranks top + spawns `--model fable`; the effort
       field accepts the 5 levels + rejects/clamps unknown; `_needs_respawn` treats a Haiku tier as model + thinking-only
       (no effort compare).
+- [ ] [INFRA] P1. **LAST TASK (operator 2026-07-07)** — after ALL the model wiring has landed + deployed, update the
+      `claude` CLI binary on the planning VM (`ssh agent-orchestrator-vm`) to a version supporting fable + the effort
+      ladder (≥ 2.1.170 for fable; 2.1.201 validated locally): `claude update`, verify `claude --version`, then a smoke
+      resume-respawn so live workers can actually select `--model fable` / `--effort`. Do this LAST so the VM only
+      upgrades once the backend can drive the new flags — an early upgrade gains nothing and risks a version skew.
 
 ---
 
