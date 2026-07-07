@@ -187,6 +187,16 @@ remains valid — no correctness blocker uncovered by this verification.
 
 ## Progress log
 
+- **2026-07-07** — **Item 3 RE-DISPATCHED 12TH TIME — PREREQ STILL NOT MET** (slot-6 planning). Same pattern as the 11
+  prior PARKs (10 on 2026-07-06 + 1 earlier today `BLK-42bb5889` slot-10). Verified at PM tip `69d48bf7e` — line 638 of
+  `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still `- [ ] [CODE] P2` (dedup fix has NOT
+  landed on LDR). Verified in UTL LDR clone: latest commit touching `_merge_dataframes` remains `f5ec2291` (2026-07-06
+  12:57 UTC — partial NULL==empty normalization + no-venue asset_group stamp, NOT the v6-v9 shard-atom dedup this
+  reconcile depends on); no `manifest_writer/` commits in the last 4 h. Task body forbids the only action outside the
+  prereq (`"NOT a naive add"` / `"Do NOT hand-edit the dedup machine"`). /blocked with `can_continue: false` awaiting
+  /skip-current-task. **Systemic ask (12× cumulative, ~120 min of slot-planning boot windows consumed across two days
+  on the identical finding)**: operator to either (a) set `priority: 999` + add a `conditions:` gate keyed on the
+  LDR-landing of the dedup fix in `backlog.yaml`, OR (b) escalate the AO backlog schema NL-prereq parsing to an epic.
 - **2026-07-07** — **Item 3 RE-DISPATCHED 11TH TIME — PREREQ STILL NOT MET, NOW SPILLING INTO A SECOND DAY**
   (`BLK-42bb5889`, slot-10 planning). Identical pattern to the 10 prior PARKs from 2026-07-06 — the systemic ask
   (either `priority: 999` + a `conditions:` gate on the dedup-fix LDR-landing, OR NL-prereq parsing in the AO backlog
