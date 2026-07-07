@@ -108,9 +108,10 @@ priority differ). Update the `backlog.yaml` BacklogTask + propagate to the in-me
 task's DB status:
 
 - `queued` / `blocked` (undispatched) → just updated; the next `pick_next_task` uses the new tier/role. Done.
-- `dispatched` (in-flight) with a **model/effort/thinking** change → apply the capability chain (section C): higher tier
-  required than the running worker → **stop the lower worker + redispatch via `--resume`** at the higher tier; lower-or-
-  equal → keep the running (≥) worker, update the stored tier for the next respawn.
+- `dispatched` (in-flight) with a **model/effort/thinking** change → §C session-tier realign (tier is SPAWN-FIXED per
+  tmux session): an INCREASE the current task now needs → **kill + respawn `--resume`** at the higher tier immediately;
+  a decrease → keep the running (≥) worker to FINISH the current task, then the session realigns to the lower tier at
+  the next-task boundary if that next task is sticky here (§C).
 - `dispatched` with a **role** change → signal the worker to read the new role's boot prompt (section B); no stop unless
   the role also implies a higher model (then the model-chain rule applies).
 - `done` → no-op.
@@ -163,14 +164,46 @@ priority stays the lever (plan_order is intra-plan; a deterministic `plan_ref` t
     keeps the shared context.
   - **No shared context → SEPARATE plans** — independent workers, independent context.
 
-### C. Model capability chain + effort (RC-1 dispatched path)
+### C. Session-tier realign — model / effort / thinking are SPAWN-FIXED (RC-1 dispatched path)
 
-- Rank `haiku < sonnet < opus < fable` (fable highest). A higher-rank worker always serves a lower-rank task; the
-  reverse never dispatches. Queued tasks keep the existing `_task_outranks_slot` gate (leave-for-higher-spawn); already-
-  dispatched retiers use the stop-and-`--resume`-higher mechanism (preserves the worker's session/context).
-- **Fable + new effort levels: enablement DEFERRED to Phase 6** (operator). This plan makes the rank ordering and the
-  stop/resume mechanism Fable-ready; wiring Fable as a spawnable model (CLI flags, effort vocabulary, account support)
-  is the later phase.
+A worker's **model, effort, and thinking are set ONCE at tmux spawn** (`_build_claude_flags` → `--model` / `--effort` /
+`--max-thinking-tokens`, `tmux_spawn.py`) and are **FIXED for the whole session** — the same tmux session serves EVERY
+subsequent task at that spawn tier until it is killed (a plan of 5 opus tasks re-homed to sonnet keeps running on opus,
+task after task, because the session — not the task — carries the model). Changing a live worker's tier has exactly two
+mechanisms: **(1) kill the tmux session + respawn `--model/--effort/... X --resume`** (the new session comes up at the
+new tier WITH the prior conversation/context + the same worktree, so no work is lost) — **USE THIS**; (2) `/model` via
+`send-keys` + arrow-select — fragile, error-prone, **BANNED**.
+
+- **Three spawn-fixed params, each its own respawn trigger** (any trigger → respawn with the full new
+  `(model, effort, thinking)` triple, always `--resume`):
+  - **model** — ANY change → respawn. Rank `haiku < sonnet < opus < fable` (fable highest).
+  - **effort** — ordered ladder `[low, medium, high, xhigh, max]`, compared by INDEX; respawn only when `|Δindex| > 1`
+    (a ±1 drift is tolerated — not worth the churn). Unset effort → the default index (`medium`) for the compare.
+  - **thinking** — flip `on ↔ off` → respawn.
+- **Two moments it fires:**
+  - **Mid-task** (the in-flight task is retiered): respawn ONLY on an INCREASE — the current task now needs more than
+    the session has (the capability gate; a sonnet session cannot do opus-required work). A decrease is IGNORED mid-task
+    — the over-powered worker just finishes the task it is on.
+  - **At the `/done` → next-task boundary**: respawn on ANY change (up OR down) BEFORE the next task proceeds, **but
+    only when that next task is sticky to this slot** (pinned by §F affinity). Sticky → kill this slot's session +
+    respawn at the next task's tier + `--resume` (context locality kept). NOT sticky → prefer routing the task to a slot
+    already at that tier (the affinity dispatch already does this when a matching slot is free); respawn only when this
+    slot is genuinely the task's home.
+- **Affinity GOVERNS the boundary realign** — this is what lets §F stickiness survive a MIXED-TIER plan: one agent owns
+  the plan and **re-spawns itself to each task's tier as it walks the plan**, keeping context across every tier change
+  via `--resume`, instead of scattering the plan across slots.
+- **Queued path unchanged**: the existing `_task_outranks_slot` gate + spawn-time `_slot_pinned_task_params` upgrade
+  already handle a QUEUED higher-tier task (leave-for-higher-spawn). Phase 3 adds only the DISPATCHED / boundary cases.
+- **Mechanism reuse (proven)**: `_build_claude_flags` treats `--model` and `--resume` as INDEPENDENT flags, so
+  `--resume <id> --model opus` continues the conversation on a higher model; the watchdog already does `kill_session` +
+  `spawn(resume_session_id=…, model/effort/thinking=…)` in the same worktree (`worker_liveness_watchdog.py`). The
+  `/done` HTTP call cannot kill its own tmux session, so the boundary respawn is performed by the background liveness
+  tick.
+- **Timing = A (immediate-but-debounced via the liveness tick)** — operator-confirmed 2026-07-07 (the respawn cooldown
+  guards against edit-thrash; idempotent — after the respawn `slot tier == task tier`, so it will not re-fire).
+- **Fable SPAWN enablement DEFERRED to Phase 7** (operator): Phase 3 lands the rank ordering, the effort ladder, and the
+  realign mechanism (all Fable-READY); wiring Fable as an actually-spawnable model (CLI flags, account support) is
+  Phase 7.
 
 ### D. slot_skips hygiene (RC-3)
 
@@ -305,18 +338,34 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       c6a31ed6 (test_regen_reconcile.py 9 + test_dispatch_plan_order.py 3 = 12 green; covers reconcile / plan_order /
       sequential / dispatched-removal→cancel / queued-removal-deletes; full `quality-gates.sh` green both batches).
 
-### Phase 3 — RC-1 reconcile: dispatched adaptation (capability chain + brief-unchanged pause/adapt)
+### Phase 3 — RC-1 dispatched adaptation: session-tier realign (kill + `--resume`) + text-edit
+
+> Model / effort / thinking are SPAWN-FIXED (§C) — a live tmux session serves every task at its spawn tier until killed.
+> The only clean re-tier is kill + respawn `--resume` at the new tier; `/model` send-keys is BANNED. Highest
+> worker-lifecycle risk in this plan — the reuse target is the proven `worker_liveness_watchdog` kill+resume path.
 
 - [ ] [BACKEND] P0. Text-edited todo → remove-old + add-new (no anchor): the changed brief drops out of current-briefs
       so A3 handles the old task by status (prune/cancel/keep) and the new text ingests fresh. Assert NO in-place text
-      update + no plan-file writeback.
-- [ ] [BACKEND] P0. Extend `_MODEL_RANK` with fable (`haiku<sonnet<opus<fable`); a dispatched task whose reconcile
-      raises its required tier ABOVE the running worker → stop the lower worker + redispatch via `--resume` at the
-      higher tier; downgrade → keep the running (≥) worker + update the stored tier for the next respawn.
-- [ ] [BACKEND] P1. A dispatched task whose tier/role changed but stays within the worker's model tier → pause + hand
-      the updated definition (pull LDR, re-read the plan item), resume (adapt-in-place; brief unchanged).
-- [ ] [BACKEND] P0. Tests — text-edit remove+add; upgrade stop+resume; downgrade keeps worker; brief-unchanged
-      adapt-in-place; rank ordering incl fable placeholder.
+      update + no plan-file writeback. (Behaviour is already live via Phase 2 reconcile+prune — this lands the explicit
+      test.)
+- [ ] [BACKEND] P0. Tier primitives: `fable` into `_MODEL_RANK` (`haiku<sonnet<opus<fable`) in BOTH `dispatch.py` +
+      `autospawn.py` (kept in sync); effort ladder `[low, medium, high, xhigh, max]` + `_effort_index` (unset→`medium`);
+      a PURE `_needs_respawn(session_tier, task_tier, *, at_boundary) -> bool` — model any-change, effort `|Δidx|>1`,
+      thinking `on↔off` flip; mid-task fires on INCREASE only, boundary fires on any change.
+- [ ] [BACKEND] P0. Mid-task UPGRADE trigger (liveness tick): a working slot whose `current_task` tier now EXCEEDS the
+      session tier → kill + respawn `--resume` at the higher tier (immediate, debounced by the respawn cooldown; timing
+      A). A mid-task decrease is ignored — the over-powered worker finishes its task.
+- [ ] [BACKEND] P0. Boundary realign (at `/done` → next STICKY task): the next task pinned to this slot (§F affinity)
+      whose tier differs (up OR down) → kill + respawn `--resume` at the next task's tier BEFORE it proceeds; a
+      non-sticky tier mismatch prefers a matching-tier slot. Reuse `worker_liveness_watchdog` `kill_session` +
+      `spawn(resume_session_id=…)`; performed by the background tick (the `/done` request can't self-kill).
+- [ ] [BACKEND] P1. Role-only change within the SAME session tier → soft signal (heartbeat message) to read
+      `agents/<role>.md` + re-read the plan item, continue — NO respawn (adapt-in-place; the model-chain rule takes over
+      only if the role also raises the tier).
+- [ ] [BACKEND] P0. Tests — `_needs_respawn` matrix (model any-change / effort ±1 tolerated / effort `>1` respawn /
+      thinking flip / fable rank); mid-task upgrade respawns; mid-task downgrade does NOT; boundary sticky-down
+      respawns; non-sticky routes away (no respawn); text-edit remove+add + no writeback. Spawn mocked (parity with the
+      `worker_liveness_watchdog` tests).
 
 ### Phase 4 — RC-2 / D2 dispatch routing: dynamic roles + plan→single-agent stickiness
 
@@ -369,12 +418,13 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       sequential / cancelled, RC-2 per-task roles + stickiness, RC-3 skip-TTL/unskip — and marked the old append-only
       lifecycle diagram SUPERSEDED. (Capability chain C is documented as deferred.)
 
-### Phase 7 — LATER (DEFERRED per operator — after Phases 1–6): Fable + new effort levels
+### Phase 7 — LATER (DEFERRED per operator — after Phases 1–6): Fable spawn + full effort vocabulary
 
-- [ ] [BACKEND] P2. DEFERRED. Enable Fable as a spawnable model at the top of the capability chain (CLI flags, account
-      support, `_higher_model` wiring).
-- [ ] [BACKEND] P2. DEFERRED. New effort-level vocabulary + spawn wiring; reconcile the effort ladder with the role
-      registry + `thinking_tier`.
+- [ ] [BACKEND] P2. DEFERRED. Enable Fable as a SPAWNABLE model at the top of the chain (CLI flags, account support,
+      `_higher_model` wiring). Phase 3 already RANKS fable + makes the realign Fable-ready; this makes it actually
+      spawn.
+- [ ] [BACKEND] P2. DEFERRED. Wire the FULL effort-ladder vocabulary end-to-end at spawn (Phase 3 lands the ladder + the
+      by-index `_needs_respawn` compare); reconcile it with the role registry + `thinking_tier`.
 
 ---
 
@@ -410,23 +460,28 @@ resume Phase 3 (+ 6/7) without re-discovering it.
 - A todo's `[TAG]` / P-level is IN the brief text, so changing it is a brief change = **remove+add** (A2), not a
   field-reconcile. Only frontmatter (model/effort/thinking/role) drifts independently → reconciles in place.
 
-### Phase 3 (capability chain for a DISPATCHED retier) — implementation hooks
+### Phase 3 (dispatched session-tier realign) — implementation hooks (design CONFIRMED 2026-07-07)
 
-Design locked in §A1/§C. The QUEUED path already works (dispatch `_task_outranks_slot` +
-`_MODEL_RANK {haiku,sonnet,opus}` leaves a higher-tier task for a higher spawn). Phase 3 = the DISPATCHED case:
+Design locked in §A1/§C. Model / effort / thinking are **SPAWN-FIXED** (`_build_claude_flags` →
+`--model`/`--effort`/`--max-thinking-tokens`, `tmux_spawn.py` L968-977) — a tmux session serves every task at its spawn
+tier until killed, so the ONLY clean re-tier is kill + respawn `--resume` (CONFIRMED: `--model` and `--resume` are
+independent flags, so `--resume <id> --model opus` continues on a higher model). The QUEUED path already works
+(`_task_outranks_slot` + `_MODEL_RANK` leave-for-higher-spawn). Phase 3 = the DISPATCHED / boundary cases:
 
-- **The `--resume` mechanism already EXISTS**: `SlotRow.claude_session_id` (deterministic `claude --session-id` at
-  spawn)
-  - the account-failover watchdog respawns a capped worker via `claude --resume <id>` on a fresh account with context
-    intact (`orchestrator_account_failover_resume_respawn_2026_06_17`). Phase 3 reuses it: on a dispatched-task tier
-    UPGRADE → stop the lower worker + respawn `--resume` at the higher tier.
-- **The reconcile already updates the yaml for a dispatched task** (`_reconcile_task_fields` runs regardless of status)
-  but does NOT trigger a worker swap. Phase 3 needs the TRIGGER: detect a dispatched task whose model rank rose above
-  its slot's model, then stop+resume-higher (downgrade = keep running, update stored tier only).
-- `autospawn._slot_pinned_task_params` + `_higher_model` already do a spawn-time model UPGRADE for a slot pinned to a
-  higher-tier QUEUED task — Phase 3's live case is the sibling of that. `_MODEL_RANK` lives in BOTH `dispatch.py` and
-  `autospawn.py` — keep them in sync; add `fable:3` when Fable (Phase 7) lands. Phase 3 makes the rank + stop/resume
-  Fable-READY only; Fable spawn flags / effort vocab / account support are Phase 7.
+- **Reuse target (proven kill+resume)**: `worker_liveness_watchdog.py` — `_resume_or_fresh_respawn` (~L1240-1257) + the
+  usage-cap resume (~L1137-1155) do `tmux_spawn.kill_session(session)` then
+  `tmux_spawn.spawn(slot_id, boot_prompt="", model=…, effort=…, thinking=…, resume_session_id=stored_sid)` in the SAME
+  worktree (uncommitted work preserved) + a "continue" nudge. Phase 3 calls the same path with the NEW tier instead of
+  the slot's current one.
+- **Two triggers**: (a) mid-task UPGRADE — a background tick finds a working slot where `current_task` tier > session
+  tier → respawn higher immediately (timing A, debounced by the respawn cooldown; idempotent — after respawn
+  `slot.model == task.model`). (b) boundary realign — at `/done`, the next STICKY task (pinned by §F affinity) whose
+  tier differs (up or down) → respawn at its tier before it proceeds; done by the background tick (the `/done` request
+  can't kill its own session).
+- **`_MODEL_RANK` lives in BOTH `dispatch.py` (L25) and `autospawn.py` (L431)** — add `fable:3` to both. Effort ladder
+  `[low, medium, high, xhigh, max]` compared by index (respawn when `|Δidx|>1`, unset→`medium`); thinking `on↔off` flip
+  respawns. Pure `_needs_respawn(session_tier, task_tier, *, at_boundary)` is the unit-testable core (spawn mocked).
+- **Fable SPAWN (CLI flags / account support) is Phase 7** — Phase 3 makes the rank + realign Fable-ready only.
 
 ### Code-location map (what moved this session)
 
@@ -457,6 +512,17 @@ Design locked in §A1/§C. The QUEUED path already works (dispatch `_task_outran
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07 — Phase 3 design REFINED + CONFIRMED with operator (pre-implementation).** Corrected the core model:
+  model / effort / thinking are **spawn-fixed per tmux session** (not per-task) — a session serves every task at its
+  spawn tier until killed, so the ONLY clean re-tier is kill + respawn `--resume` at the new tier (`/model` send-keys is
+  BANNED — fragile arrow-select). Rewrote §C as a **three-param session-tier realign**: model ANY-change, effort ladder
+  `[low, medium, high, xhigh, max]` by-index `|Δ|>1`, thinking `on↔off` flip → respawn with the full new triple. Two
+  moments: mid-task fires on an INCREASE only (capability gate); the `/done`→next-task boundary fires on any change but
+  ONLY for a task STICKY to this slot (§F) — which is what makes stickiness survive a mixed-tier plan (one agent
+  re-spawns to each task's tier as it walks the plan). Timing = A (immediate, debounced) — operator-confirmed. Reuse
+  target = the proven `worker_liveness_watchdog` kill+resume path (verified `--model`/`--resume` are independent flags).
+  Updated §C + §A1 + Phase 3 todos + Phase 7 + Continuation-notes hooks; Fable SPAWN stays Phase 7 (rank/realign
+  Fable-ready in P3). No code yet — implementation next.
 - **2026-07-07 — ✅ SESSION COMPLETE (autonomous run).** Shipped **Phase 1** (docs), **Phase 2** (RC-1 reconcile —
   `ff6100ad`+`c6a31ed6`), **Phase 4** (RC-2 roles+stickiness — `f976b6e4`), **Phase 5** (RC-3 skip hygiene —
   `07035aba`), **Phase 6 codex** (`20dce55f3`). **🎯 ALL 3 ROOT CAUSES FIXED (RC-1/RC-2/RC-3) — the incident is resolved
