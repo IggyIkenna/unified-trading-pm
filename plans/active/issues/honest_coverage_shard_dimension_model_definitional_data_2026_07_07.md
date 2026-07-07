@@ -231,8 +231,129 @@ DERIBIT): OPTION=2,586, COMBO=273, FUTURE=71, PERPETUAL=21, SPOT_PAIR=14, summin
 populate historical dates with the corrected per-type rows (today's fix only affects NEW writes going forward);
 DERIBIT-COMBO venue-identity retirement (separate todo below, deliberately deferred).
 
+## Update 2026-07-07 (mockup review, round 1 — operator feedback on the drilldown shape)
+
+Operator reviewed a draft visual mockup of the full venue/chain/league drilldown across all 5 asset groups (real
+names, illustrative % only) and found two real shape bugs before any implementation started — exactly what the
+mockup was for. Both are logged here as the durable ledger; the mockup artifact itself was corrected live to match.
+
+**Finding 1 — `data_type` is not a per-day drilldown leaf for instruments-service's reference data; it's a static
+UAC-declared capability.** The mockup had wired CEFI/TRADFI/DEFI's leaf level to `trades`/`book_snapshot_5`/etc.
+with their own illustrative %, which is wrong on two counts: (a) those specific values are MTDS's tick-capture
+`VENUE_DATA_TYPE_CAPABILITIES`, not instruments-service's own reference-data `data_type` (which per the very first
+audit in this doc is a near-constant `"instruments"`); (b) even where `data_type` is meaningful, it doesn't have
+its own day-by-day coverage in the reference-data view — it's a fixed attribute of the venue. **The real leaf is
+`instrument_type`** (e.g. `SPOT_PAIR`/`PERPETUAL`/`FUTURE` under BYBIT) — that's what has genuine
+available-vs-missing days, and that's what a user actually wants to CSV-export or drill further from.
+`data_type` renders as a static chip row next to the venue, informational only. Corrected in the mockup (all
+`leaf3`/`proto` builders reworked so instrument_type is the leaf with day-coverage + a CSV-download affordance;
+data_type moved to `dataTypesTopLevel` chips) — see the redeployed artifact.
+
+**Finding 2 — today's writer fix (one manifest ROW per instrument_type) does not split the physical FILE, and the
+drilldown's "download" action has to account for that.** Confirmed as an intentional, already-documented scope
+line from today's writer-fix Update above ("the physical `instruments.parquet` write... is UNCHANGED — this fix
+is scoped to the manifest ROW grain only"). The operator's point: when someone drills into e.g. BYBIT → PERPETUAL
+and clicks download, there is still only ONE blended `instruments.parquet` per (date, venue) — the read/download
+path must filter that shared file by `instrument_type` at request time, not assume a per-instrument_type file
+exists. The operator names the general shape as **"one parquet per actual shard dimension is the ideal; where
+we've already deviated (blended files), the manifest + read/download layer must still make it look correct by
+filtering at read time"** — referred to informally as the operator's "C5 principle" pending a firmer name. This
+generalizes past CeFi: the same shared-file problem exists wherever a physical file is coarser than the
+manifest's row grain, and it recurs one level deeper in MTDS — drilling past `instrument_type` into a specific
+instrument or a bundle (e.g. `options_chain`) means serving out of whatever's actually captured (single-instrument
+file or bundle file), filtered/selected correctly, not assumed to be a 1:1 file-per-instrument layout.
+
+**Finding 2, decided (same day, follow-up):** read-time filtering of the shared blended file was floated above as
+the interim fix; the operator has now decided the REAL fix is to actually reshard the physical files, not just
+filter around the mismatch. Rationale in the operator's own terms: "the granularity of instrument definitions is a
+list of instrument IDs and some other information about those instruments — that's the parquet file we're
+deciding how to shard... I think we should just go through all our instrument definitions and just reshard them
+to the dimensions for CEFI venue and instrument_type, not really data_type for CEFI, because it doesn't affect the
+instrument ID... that would be the most sensible way of doing things, because then it's going to be a lot easier
+to do proper numerator counts on the instruments because the shards will match the files." **Decision: CEFI
+instrument-definition parquets get resharded to (date, venue, instrument_type) — one physical file per shard,
+matching the manifest row grain exactly, no read-time filtering needed once this lands.** `data_type` is
+confirmed NOT a sharding dimension for reference data (a UAC-static attribute, per Finding 1) — this is now a
+locked decision, not just a UI display choice. **Sequencing, explicit from the operator:** this is a documentation
++ mockup-visualization step for now ("we are fixing the visualisation in this artefact so I can see it, like how
+it's going to be, before we start the work") — the actual resharding + a manifest migration are real follow-on
+work, not started yet, gated on the operator seeing and signing off on the full mockup first.
+
+**Finding 3 — `INSTRUMENT_TYPES_BY_VENUE["BYBIT"]` (and `["OKX"]`) wrongly declare `SPOT_PAIR` for a bare venue
+whose real spot data lives entirely under a separate canonical venue.** Operator noticed the mockup showing both
+`BYBIT` (bare, declaring SPOT_PAIR+PERPETUAL+FUTURE) and `BYBIT-SPOT` (declaring SPOT_PAIR) and asked directly
+whether this is a real double-count risk. Verified against the real production manifest
+(`gs://instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet`) — **not a
+double-counting risk, one side is simply fictitious**: bare `BYBIT` has ZERO `SPOT_PAIR` rows across its entire
+history (blank/`PERPETUAL` only); all real Bybit spot data lives under `BYBIT-SPOT`
+(1,677 real `SPOT_PAIR` rows, sum 748,013). Same pattern confirmed for `OKX`: bare `OKX` has only 2 legacy rows
+total in its whole history — everything real lives under `OKX-SPOT`/`OKX-SWAP`/`OKX-FUTURES`. This matches the
+Tardis venue-routing table itself (`unified-api-contracts/unified_api_contracts/registry/venue_mapping.py:804-808`),
+which already routes `(BYBIT, SPOT_PAIR)` to the exact same Tardis source (`bybit-spot`) as canonical
+`BYBIT-SPOT` — i.e. the routing table already knows bare BYBIT's "SPOT_PAIR" declaration is really BYBIT-SPOT's
+data, it's just that `INSTRUMENT_TYPES_BY_VENUE` (the D2a declarative expected-universe dict, shipped
+2026-07-06 per the tracker) never got that memo. **Impact: this inflates the cefi Layer-1 denominator with at
+least 1 permanently-unfulfillable tuple per affected bare venue** (BYBIT confirmed, OKX likely worse — bare OKX
+declares 4 types, `SPOT_PAIR`/`PERPETUAL`/`FUTURE`/`OPTION`, against a venue that's realistically almost entirely
+dead) — every one of these phantom tuples will show as permanently "missing" in Layer-1/Layer-2 honest-coverage
+forever, since nothing will ever fetch under that exact venue identity. **Fix: remove `SPOT_PAIR` from bare
+`BYBIT`'s and `OKX`'s declared `INSTRUMENT_TYPES_BY_VENUE` entries** (and audit whether `PERPETUAL`/`FUTURE`/`OPTION`
+on bare `OKX` have the same problem, given bare OKX is almost entirely dead in real data) — cross-references the
+tracker's D2a entry and `cefi_layer1_denominator_gaps` plan.
+
+**Finding 4 — `BINANCE-DELIVERY` is real and actively captured (2,126 rows, 2019-03-30 → today, ongoing right
+now) but has no `VENUE_DATA_TYPE_CAPABILITIES` declaration anywhere in UAC** — confirmed by direct query against
+the production manifest after the operator asked why the mockup showed it with a GAP flag and no data_type chips.
+Unlike a dead/unwired venue (RADIANT/RENZO-class), the CAPTURE side works fine — instruments-service is writing
+real reference-data rows for it every day. It's specifically the market-data-capability *declaration* that was
+never written when the venue was set up (its sibling `BINANCE-FUTURES` has a full declared set: trades,
+book_snapshot_5, derivative_ticker, liquidations, futures_chain; `BINANCE-DELIVERY` has none). Practical effect:
+MTDS has nothing to gate its tick-data expected-universe on for this venue, so its market-data denominator is
+either zero or falls back to an undeclared default. **Fix: add the missing `VENUE_DATA_TYPE_CAPABILITIES` entry
+for `BINANCE-DELIVERY`** in `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`
+(mirror `BINANCE-FUTURES`'s declared set as the starting point, verify against real Tardis coverage before
+committing to it).
+
+**Finding 5 — the drilldown needs a day-level sub-view under each `instrument_type` leaf, and downloads are
+strictly per-day.** Operator confirmed (a) deployment-ui already renders full per-venue day lists well, so the
+mockup only needs to demonstrate the *shape*, not replicate the full view, and (b) critically: **"when I download
+a CSV, I'm going to download it for a specific day shard, not several days"** — each day is its own physical
+file/shard, so there is no such thing as a multi-day export; the download action belongs at the individual-day
+row, not aggregated at the instrument_type level. Corrected in the mockup: `instrument_type` leaves are now
+themselves expandable, revealing a small sample of day rows (captured/missing, with a disabled "no shard to
+download" state on missing days), each carrying its own per-day download affordance. The instrument_type row
+itself keeps the day-coverage bar (aggregate %) but no longer has its own download button.
+
 ## Todos
 
+- [ ] [DESIGN] P1. **Fix the mockup's leaf model everywhere it still needs it** (Finding 1) — CEFI/TRADFI/DEFI's
+      `leaf3`/`proto` builders were reworked in the live artifact; re-verify SPORTS/PREDICTION (already
+      structurally correct — league/bookmaker/question-group names are already the leaf) don't have an analogous
+      mistake once the operator's review reaches those tabs.
+- [ ] [DESIGN] P1. **Design the CEFI instrument-definition parquet resharding** (Finding 2, decided) — reshard
+      physical `instruments.parquet` files to (date, venue, instrument_type), one file per shard, matching the
+      manifest row grain from today's writer fix; `data_type` confirmed NOT a sharding dimension for reference
+      data. Design only for now (file layout, backfill/migration approach for existing blended files, manifest
+      row_key/path implications) — operator has explicitly gated the actual resharding + manifest migration on
+      seeing the full mockup first. Generalizes to MTDS one level deeper (instrument/bundle-level files) once this
+      lands for instruments-service.
+- [ ] [CODE] P1. **Remove the phantom `SPOT_PAIR` declaration from bare `BYBIT`/`OKX`** (Finding 3) —
+      `unified-api-contracts/unified_api_contracts/registry/venue_constants.py`'s `INSTRUMENT_TYPES_BY_VENUE`
+      dict; confirmed via real production manifest data that bare BYBIT has zero SPOT_PAIR rows ever (all real
+      spot data lives under BYBIT-SPOT) and bare OKX is almost entirely dead (2 legacy rows total). Also audit
+      whether bare OKX's `PERPETUAL`/`FUTURE`/`OPTION` declarations have the same problem before fixing just the
+      one confirmed case. Re-measure cefi Layer-1 after the fix (this currently inflates the denominator with
+      permanently-unfulfillable tuples) — cross-reference `cefi_layer1_denominator_gaps` / the tracker's D2a entry.
+- [ ] [CODE] P2. **Add the missing `VENUE_DATA_TYPE_CAPABILITIES` entry for `BINANCE-DELIVERY`** (Finding 4) —
+      `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`; the venue is real and
+      actively captured on the reference-data side, it's just missing its market-data capability declaration
+      (unlike sibling `BINANCE-FUTURES`, which has one). Verify against real Tardis coverage before committing to
+      a specific data_type set.
+- [x] [DESIGN] P1. **Add a day-level sub-drilldown under each `instrument_type` leaf, per-day download only**
+      (Finding 5) — corrected live in the mockup artifact; `instrument_type` leaves are now expandable to a
+      sample day-list (captured/missing, download per day, disabled on missing days). Real implementation in
+      deployment-ui is unaffected by this decision since it already has a fuller per-day view — this just confirms
+      the new `instrument_type`-as-leaf shape composes correctly with what already exists.
 - [x] [DESIGN] P1. **Operator decision (D6):** approve generalizing `instrument_type` into a first-class breakdown
       dimension for every venue with more than one (CEFI: DERIBIT, KRAKEN-FUTURES, etc.; DEFI: any multi-type
       chain/venue), fixing DERIBIT-COMBO to be a sibling `instrument_type` under `DERIBIT` rather than its own venue
@@ -308,6 +429,19 @@ DERIBIT-COMBO venue-identity retirement (separate todo below, deliberately defer
 
 ## Progress Log
 
+- **2026-07-07 (mockup review, round 1)** — Operator reviewed the drilldown mockup artifact and found 3 real bugs
+  plus locked 2 design decisions before any implementation started — exactly the mockup's purpose. (1) `data_type`
+  wrongly modeled as a per-day leaf for reference data — fixed live in the mockup, `instrument_type` is now the
+  leaf. (2) Confirmed decision: CEFI instrument-definition parquets will be resharded to (date, venue,
+  instrument_type), not just filtered at read time — design-only for now, actual resharding + manifest migration
+  explicitly gated on full mockup sign-off. (3) Real bug found and verified against production data: bare
+  `BYBIT`/`OKX` wrongly declare `SPOT_PAIR` in `INSTRUMENT_TYPES_BY_VENUE` when all real spot data lives under
+  `BYBIT-SPOT`/`OKX-SPOT` — inflates the cefi Layer-1 denominator with unfulfillable phantom tuples. (4) Real gap
+  found and verified: `BINANCE-DELIVERY` is live-captured (2,126 rows, ongoing) but has no
+  `VENUE_DATA_TYPE_CAPABILITIES` declaration in UAC. (5) Decision: drilldown needs a day-level sub-view per
+  `instrument_type` leaf, download is strictly per-day (never multi-day) — fixed live in the mockup. 5 new/updated
+  todos above. No production code touched — all findings verified read-only against real GCS manifests; only the
+  mockup artifact and this doc were edited.
 - **2026-07-07 (UI fix shipped)** — Shipped the DataStatusTab.tsx chains-vs-venues fix via quickmerge,
   `deployment-ui@8a3781b`, landed on `live-defi-rollout`. Re-verified clean (tsc, eslint, vitest 21/21) immediately
   before shipping since it had sat uncommitted since earlier in the session.
