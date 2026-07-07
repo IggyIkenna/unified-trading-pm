@@ -90,9 +90,13 @@ drift_direction: advance-code
    extrapolated by the main + monitor agents to `"30 tasks all gated on understat prereq"`, and they dropped into
    passive monitoring instead of dispatching — even though the blockers API said the tasks were ready.
 
-5. **Account credit/overage strain.** All 4 Claude accounts show `overage_status: rejected` (sub-c `out_of_credits`;
-   sub-a/b/d `org_level_disabled`), though weekly subscription usage is only 23-77%. Pushing Opus/max (root cause 1)
-   against overage-disabled accounts is the worst load. (Operator/billing item.)
+5. **Account status — VERIFIED HEALTHY 2026-07-07, NOT a root cause.** A live `claude /usage` refresh on all 4 accounts
+   (each via its own `oauth_token_env_file`; probe SUCCEEDED = tokens authenticate) returned `unified_status: allowed`
+   for all 4, none rate-limited (`rate_limited_until` all stale at 2026-07-01, expired), with subscription headroom
+   (weekly 25-78%, 5h 12-19%). The `overage_status: rejected` (sub-c `out_of_credits`; sub-a/b/d `org_level_disabled`)
+   governs only PAID OVERAGE beyond the subscription — it does NOT block normal in-quota use. Earlier framing of
+   accounts as a blocker was WRONG; corrected here. The Opus/max load (RC-1) is a COST/efficiency problem, not an
+   availability one.
 
 ## Immediate remediation applied 2026-07-07
 
@@ -107,7 +111,9 @@ drift_direction: advance-code
   queued tasks' `model`/`effort`/`assigned_role` in `backlog.yaml`, which crosses the **"never hand-edit backlog.yaml"**
   HARD RULE. Options: (a) one-time scoped correction of the 6 plans' tasks (backed up, reversible); (b) fix RC-1 in
   regen (below) + reload; (c) delete+regen the tasks (new IDs, lost dispatch state). NOT done autonomously.
-- ⏳ Operator: account credit/overage (`out_of_credits` / `org_level_disabled`).
+- ✅ Accounts verified HEALTHY (live `/usage` refresh 2026-07-07) — all 4 `unified_status: allowed`, authenticated, not
+  rate-limited, subscription headroom. The overage-rejected flags are not a blocker. NO operator action needed on
+  accounts.
 
 ## Prevention (the fix-so-it-doesn't-recur todos)
 
