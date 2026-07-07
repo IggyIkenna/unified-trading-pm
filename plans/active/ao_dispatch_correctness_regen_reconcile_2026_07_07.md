@@ -349,10 +349,11 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 > The only clean re-tier is kill + respawn `--resume` at the new tier; `/model` send-keys is BANNED. Highest
 > worker-lifecycle risk in this plan — the reuse target is the proven `worker_liveness_watchdog` kill+resume path.
 
-- [ ] [BACKEND] P0. Text-edited todo → remove-old + add-new (no anchor): the changed brief drops out of current-briefs
+- [x] [BACKEND] P0. Text-edited todo → remove-old + add-new (no anchor): the changed brief drops out of current-briefs
       so A3 handles the old task by status (prune/cancel/keep) and the new text ingests fresh. Assert NO in-place text
       update + no plan-file writeback. (Behaviour is already live via Phase 2 reconcile+prune — this lands the explicit
-      test.)
+      test.) — ✅ DONE ao@e4284752 (`test_text_edit_is_remove_and_add_not_in_place`: fresh task id + old brief pruned +
+      plan file byte-identical post-regen).
 - [x] [BACKEND] P0. Tier primitives: `fable` into `_MODEL_RANK` (`haiku<sonnet<opus<fable`) in BOTH `dispatch.py` +
       `autospawn.py` (kept in sync); effort ladder `[low, medium, high, xhigh, max]` + `_effort_index` (unset→`medium`);
       a PURE `_needs_respawn(session_tier, task_tier, *, at_boundary) -> bool` — model any-change, effort `|Δidx|>1`,
@@ -571,6 +572,18 @@ independent flags, so `--resume <id> --model opus` continues on a higher model).
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07 — ✅ Phase 3 + Phase 7 SHIPPED (session 2).** The dispatched-retier CAPABILITY CHAIN is live in code:
+  **foundation** `ao@f52d3cc4` (new `server/model_tier.py` — consolidated `MODEL_RANK`+fable, effort ladder,
+  `model_supports_effort`, `needs_respawn`; **haiku-`--effort` 400 gate** at the single spawn site; fable in
+  `ModelTier`/`_coerce_model`/`model_tier: fable-required`), **Phase 3 realign** `ao@a21ca9e9` (`WorkerLivenessWatchdog`
+  Trigger-5 `_maybe_realign_tier`: mid-task model-upgrade + `/done`→next boundary realign via kill+resume `--resume` at
+  the task tier + **persist-back** to SlotRow; `_slot_required_model` medium-affinity fix), **effort field**
+  `ao@4d93a751` (plan `effort:` frontmatter, full ladder), **text-edit test** `ao@e4284752`, **codex** `pm@7eb0bda97`.
+  ~20 tests, every batch full-`quality-gates.sh`-green. All STAGED on LDR — **live server + slots NOT restarted**
+  (operator deploys: restart backend + all slots + update the planning-VM `claude` binary to ≥ 2.1.170 for fable).
+  **Deferred (minor, tracked as todos):** role-only soft-signal on a same-tier craft change (P1 — the worker already
+  adopts a new craft on its next dispatch); per-account Fable capability gating (operator-config; speculative — Fable is
+  operator-request-only). `ultracode` intentionally never wired (operator).
 - **2026-07-07 — Phase 7 researched + scoped (fable + per-model effort; pre-implementation).** Verified against the
   installed CLI (2.1.201) + Claude Code model-config docs: `--effort` = `low/medium/high/xhigh/max` (5; "extra high" =
   `xhigh`); **`ultracode` is NOT an `--effort` value** — a session-only Claude Code setting (`"ultracode": true` via
