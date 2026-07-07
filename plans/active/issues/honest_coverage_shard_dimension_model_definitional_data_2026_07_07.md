@@ -246,10 +246,13 @@ DERIBIT-COMBO venue-identity retirement (separate todo below, deliberately defer
       single `DERIBIT` venue instead of a separate venue identity. Deferred out of the initial writer-fix scope
       (2026-07-07) to keep that change surgical; needs its own consumer check since venue-identity changes touch
       more call sites than a manifest-row-grain change.
-- [ ] [CODE] P1. **Ship the already-implemented DataStatusTab.tsx chains-vs-venues fix** (Update §1 above) —
-      `deployment-ui/src/components/DataStatusTab.tsx` + `tests/unit/components/DataStatusTab.chains_plus_venues.test.ts`,
-      implemented and tested 2026-07-07, not yet committed/quickmerged. This is independent of the D6 decision —
-      it's a straightforward bug fix, not a design question.
+- [x] ✅ [CODE] P1. **Ship the already-implemented DataStatusTab.tsx chains-vs-venues fix** (Update §1 above) —
+      deployment-ui@8a3781b | tsc clean, eslint clean, vitest 21/21 across the 3 DataStatusTab spec files (the new
+      `chains_plus_venues` file + the 2 pre-existing ones) | regression:
+      tests/unit/components/DataStatusTab.chains_plus_venues.test.ts. No `tests/smoke/` spec exercises DataStatusTab
+      yet (the dir exists but doesn't cover this component), so `pw:L2` is N/A rather than run-and-green — verified
+      instead via an earlier live browser check against a captured real API payload (documented in this doc's
+      Update §1) plus the unit-level regression spec above.
 - [ ] [CODE] P1. **Widen the writer-fix scope to Solana DeFi + CURVE-OPTIMISM** (Update §2 above) — the blank
       `instrument_type` bug found on DERIBIT also hits `DRIFT-SOLANA`, `KAMINO-SOLANA`, `MARGINFI-SOLANA`,
       `MARINADE-SOLANA`, `ORCA-SOLANA`, `RAYDIUM-SOLANA`, `SOLEND-SOLANA`, and `CURVE-OPTIMISM` — all have real
@@ -305,6 +308,9 @@ DERIBIT-COMBO venue-identity retirement (separate todo below, deliberately defer
 
 ## Progress Log
 
+- **2026-07-07 (UI fix shipped)** — Shipped the DataStatusTab.tsx chains-vs-venues fix via quickmerge,
+  `deployment-ui@8a3781b`, landed on `live-defi-rollout`. Re-verified clean (tsc, eslint, vitest 21/21) immediately
+  before shipping since it had sat uncommitted since earlier in the session.
 - **2026-07-07 (writer fix implemented)** — Per operator go-ahead, ran a 3-agent pre-audit then implemented the
   CeFi/TradFi manifest writer fix in `instruments-service/instruments_service/engine/orchestrator/writers.py`
   (`_derive_instrument_type` → `_split_by_instrument_type`, one `record_captured()` call per distinct
