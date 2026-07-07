@@ -1041,7 +1041,7 @@ last_executed. Closed-set inventory + per-script disposition (annotated for the 
 | `flip_phantom_to_attempted_failed.py`       | one-shot remediation               | per phantom-audit run                      | per-incident   | YES (post-run)     |
 | `purge_pre_launch_manifest_rows.py`         | pre-launch sweep                   | per venue-launch-date update               | per-incident   | YES (post-run)     |
 | `dedupe_manifest_schema_drift.py`           | schema-drift sweep                 | one-shot per migration                     | per-migration  | YES (post-run)     |
-| `fix_manifest_venue_casing.py`              | CF-3/SP-3 case-folding remediation | one-shot once `to_canonical_venue()` ships | one-shot       | YES (post-run)     |
+| ~~`fix_manifest_venue_casing.py`~~           | CF-3/SP-3 case-folding remediation | DELETED 2026-07-07 — dead (broken `args.category` typo) + its groupby omitted `instrument_type`, which would have re-collapsed the multi-type CeFi/TradFi manifest fix | n/a | DELETED |
 
 Per the IN-22 QG ratchet (in-flight): one-shot reconcilers + flip scripts should be MOVED to `scripts/_one_shot/` +
 deleted on archive-boundary per the "Plans Run To Actual Completion" rule (operationally-shipped =

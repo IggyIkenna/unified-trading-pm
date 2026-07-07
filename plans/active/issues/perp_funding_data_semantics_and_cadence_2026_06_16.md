@@ -153,7 +153,9 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
       capture the earlier trades history (genesis 2021-08-30, `expected_start_dates.yaml`), add a **standalone trades
       collect** (a `--cefi-operations trades` op or a dedicated handler) that runs aggTrades on the trades genesis floor
       independent of the funding floor — reusing `_write_aster_trades` (already trades-genesis-agnostic). **Repo:
-      market-tick-data-service.**
+      market-tick-data-service.** **⚠️ Do not execute this until GAP 4 below is resolved** — as currently scoped this
+      todo would backfill 2021-08-30→2023-07-22 as if it were native ASTER trading activity, which GAP 4 flags as
+      likely Binance-proxied / pre-venue-launch, not honest ASTER-native coverage.
 - [x] ✅ [DATA] P3. **Aster OHLCV→cefi write = N/A (resolved by operator principle 2026-06-17).** OPERATOR PRINCIPLE:
       OHLCV (open/high/low/close/volume) is a first-class data_type for **TradFi**; on **CeFi** we store `ohlcv_*`
       directly **ONLY for a TRADES-LESS venue** (where OHLCV is the only data the source provides). **When a venue has
@@ -281,3 +283,34 @@ is expected. The code path is verified-ready; running it at G5 will produce real
 UAC normalizer; tests pass; live API→canonical proven end-to-end; cadence (8h) correct. Backfill is confirmed ready to
 produce real canonical Aster funding data at G5. Two non-blocking gaps to resolve before/at backfill: (P2) mark_price
 null → premiumIndex, (P1) reconcile the genesis date to a single operator-confirmed value.
+
+**GAP 4 — the GAP-2 genesis sweep to 2023-07-22 never touched the `trades` entry in `expected_start_dates.yaml`; it
+now disagrees with UAC (P1, data-correctness) — found 2026-07-07 during an unrelated ASTER/CEFI audit.**
+`market-tick-data-service/configs/expected_start_dates.yaml` still carries `ASTER: "2021-08-30"` for `trades` in
+three places (the instruments-service CEFI block, the MTDS CEFI venues block, and the `data_type_start_dates`
+block), annotated in its own comment as *"earliest aggTrades observed (BTCUSDT); trades-only; pre-launch data may
+be proxy/aggregated."* GAP 2's resolution (above) swept UAC's `market_data_categories.py` `trades` /
+`derivative_ticker` / `perp_funding` for ASTER all to `2023-07-22`, and named `expected_start_dates.yaml`'s
+`derivative_ticker` entry specifically as one of the files it touched — but never mentions `trades`, and the
+`trades` entry in that same file was left at `2021-08-30`. This was a deliberate carve-out, not solely an
+oversight: line 151-156 above already plans a standalone backfill of exactly this 2021-08-30→2023-07-22 window,
+under the (currently unstated) assumption that 2021-08-30 is a usable trades floor.
+
+Recommendation: **2023-07-22 should win for any coverage %, missing-days, or backfill-target calculation** — the
+same logic already applied to funding (a confirmed flat placeholder before real launch) likely applies to trades
+too, and this file's own `aggTrades` endpoint has only ~30-day rolling depth, meaning whatever produced the
+2021-08-30 observation came from a different (archival/vendor) source than the live Astherus-native path — it is
+not native ASTER liquidity in the sense a coverage panel implies. The 2021-08-30 bytes are legitimate to keep
+archived, but only with an honest `source=` label (proxied/pre-launch), consistent with the "label source honestly"
+directive already applied to the funding leg — never counted as native ASTER coverage. Because this file's own
+header states it is "used to accurately calculate completion percentages," the current `trades: 2021-08-30` entry
+is live-risk, not just stale documentation: anything reading it today would treat the ~23-month gap as
+expected-and-missing ASTER trades days, contradicting `venue_launch_dates.py`'s `EXPECTED_PRE_VENUE_LAUNCH` clipping
+for the exact same venue and window.
+
+- [ ] [DATA] P1. Reconcile `expected_start_dates.yaml`'s `trades: 2021-08-30` entries for ASTER (all 3 locations)
+      against UAC's swept `2023-07-22` — either move the floor to 2023-07-22 to match, or, if the pre-2023-07-22
+      bytes are kept, add an explicit `source=` / proxy annotation so no coverage calculation treats that window as
+      honest native ASTER trades coverage. **Do this before executing the pre-funding-genesis trades backfill todo
+      above**, or the backfill will write real archived bytes labeled as native ASTER coverage for a period before
+      the venue is confirmed to have existed. **Repo: market-tick-data-service + unified-api-contracts.**
