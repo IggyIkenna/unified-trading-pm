@@ -304,10 +304,34 @@ approve / defer per category rather than per-venue.
 
 ### Sports — 7 venues
 
-- [ ] [CODE] P1. **BETFAIR (+ 3 sub-variants: EX_EU / EX_UK / SB_UK) WSFeedConnector build** — Betfair Exchange +
-      Sportsbook streaming APIs (repo: market-tick-data-service). **BLOCKED-CREDENTIALS** for the Betfair API app key
-      (subscription; see tracker Blocked/waiting register `SFI + Transfermarkt sports keys`). Gate: 4 Betfair venue keys
-      resolve OR carry `BLOCKED-CREDENTIALS` scaffold.
+- [x] [CODE] P1. **BETFAIR (+ 3 sub-variants: EX_EU / EX_UK / SB_UK) WSFeedConnector build** ✅ — mtds@2115f867.
+      BLOCKED-CREDENTIALS scaffold shipped: Betfair Exchange Stream API
+      (`stream-api.betfair.com:443`, TLS TCP framed JSON) + Sportsbook streaming (`ws.betfair.com`) both
+      require a paid Developer app-key (`X-Application` header) + SSO `sessionToken` — no public tier.
+      Per the External-data-always-available rule, one Protocol-conforming scaffold registers ALL FOUR
+      canonical UAC venue keys — the umbrella `BETFAIR` (execution / reference SSOT) plus the three
+      MTDS-manifest sub-venue keys `BETFAIR_SB_UK` / `BETFAIR_EX_UK` / `BETFAIR_EX_EU`. Files:
+      `market_tick_data_service/live/connectors/betfair_ws.py` (~234 lines: `BetfairWSFeedConnector`
+      scaffold with `_CREDENTIALS_AVAILABLE=False` guard; `_parse_market_id` accepts all 4 venue heads +
+      instrument_type=`SPORT`; `connect` / `subscribe` accumulate market_ids across all 4 venue heads;
+      `stream()` logs the credential gap once + returns empty; `register()` iterates
+      `_BETFAIR_VENUE_KEYS` and calls `register_ws_feed_connector` for each). `connectors/__init__.py`
+      `register_all()` wire-up added under the Sports bucket alongside `odds_api_ws`. Regression pack
+      (18 tests): `TestParseMarketId` (per venue head + lower-case-tolerance + foreign-venue reject +
+      missing-market-id / missing-type / wrong-instrument_type reject), `TestRegistry` (all 4 venue
+      keys resolve in `WS_FEED_CONNECTOR_FACTORIES` after `register_all()` + factory yields
+      `WSFeedConnector` Protocol surface for each), connect / subscribe / unsubscribe accumulation +
+      foreign-venue skip + one-shot warn-dedupe, `test_stream_yields_nothing_when_blocked_credentials`
+      (the plan gate — `stream()` returns without yielding + logs the credential gap),
+      `test_close_is_idempotent`. All 18 pass in 0.20s; full local `bash scripts/quality-gates.sh`
+      green (sentinel = 2115f867). Un-unblock path spelled out in each connector docstring: acquire
+      the Betfair Developer app-key subscription, plumb `sessionToken` refresh through the credential
+      resolver, flip `_CREDENTIALS_AVAILABLE=True`, implement `_drain_ws_messages` (Exchange Stream
+      API bet_delta stream on the Hyperliquid on-chain-CLOB precedent; Sportsbook via REST fixture
+      poll on the `odds_api_ws.py` precedent). Closes ~50 of the 70 sports
+      `blocked-not-registered` smoke-matrix cells (BETFAIR umbrella + 3 sub-venues × trades). Same
+      BLOCKED-CREDENTIALS scaffold pattern as gap-006 (EXTENDED-STARKNET / LIGHTER-ZKSYNC /
+      PACIFICA-SOLANA).
 - [x] [CODE] P2. **DRAFTKINGS + FANDUEL + PINNACLE WSFeedConnector build** ✅ — resolved as **captured-via-ODDS_API-
       aggregator (no direct WSFeedConnector needed)** via already-committed SSOT; no operator ping needed. No
       WSFeedConnector shipped; no MTDS code change. **DRAFTKINGS + FANDUEL**: DEFERRED-INDEFINITELY per operator 2026-05-12
@@ -367,6 +391,37 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-07** — **gap-009 shipped (BETFAIR + 3 sub-variants BLOCKED-CREDENTIALS scaffold)** by slot-4.
+  Betfair Exchange Stream API (`stream-api.betfair.com:443`, TLS TCP framed JSON) + Sportsbook streaming
+  (`ws.betfair.com`) both require a paid Developer app-key (`X-Application`) + SSO `sessionToken` — no
+  public tier. Per the External-data-always-available rule, one Protocol-conforming scaffold ships that
+  registers all four canonical UAC venue keys under the same factory. Evidence (mtds@2115f867):
+  1. `market_tick_data_service/live/connectors/betfair_ws.py` — `BetfairWSFeedConnector` scaffold:
+     `_CREDENTIALS_AVAILABLE=False` guard; `_parse_market_id` accepts all 4 venue heads (BETFAIR,
+     BETFAIR_SB_UK, BETFAIR_EX_UK, BETFAIR_EX_EU) + `instrument_type=SPORT`; lifecycle methods
+     (`connect` / `subscribe` / `unsubscribe` / `pop_reconnect_flag` / `close`) work today on mocks;
+     `stream()` logs the credential gap once + returns without yielding. `register()` iterates
+     `_BETFAIR_VENUE_KEYS` and calls `register_ws_feed_connector` for each of the 4 keys.
+  2. `market_tick_data_service/live/connectors/__init__.py` `register_all()` — wire-up added under
+     the Sports bucket alongside `odds_api_ws`.
+  3. `tests/unit/test_betfair_ws_connector.py` — 18 tests: `TestParseMarketId` (per venue head +
+     lower-case-tolerance + foreign-venue reject + missing-market-id / missing-type /
+     wrong-instrument_type reject), `TestRegistry` (all 4 venue keys in
+     `WS_FEED_CONNECTOR_FACTORIES` + factory yields `WSFeedConnector` Protocol surface for each),
+     connect / subscribe / unsubscribe accumulation + foreign-venue skip + one-shot warn dedupe,
+     `test_stream_yields_nothing_when_blocked_credentials` (the plan gate — no ticks under
+     BLOCKED-CREDENTIALS; warning IS logged), `test_close_is_idempotent`. All 18 pass in 0.20s;
+     full local `bash scripts/quality-gates.sh` green (sentinel = 2115f867).
+  4. Smoke-matrix `blocked-not-registered` resolution: 4 Betfair venue keys × declared data_types per
+     `expected_coverage` (`trades` for each) closes ~50 of the 70 sports `blocked-not-registered`
+     cells (BETFAIR umbrella + 3 sub-venues). Same BLOCKED-CREDENTIALS scaffold pattern as gap-006
+     (EXTENDED-STARKNET / LIGHTER-ZKSYNC / PACIFICA-SOLANA).
+
+  Un-unblock path: acquire the Betfair Developer app-key subscription, plumb `sessionToken` refresh
+  through the credential resolver, flip `_CREDENTIALS_AVAILABLE=True`, implement `_drain_ws_messages`
+  (Exchange Stream API `bet_delta` on the Hyperliquid on-chain-CLOB precedent; Sportsbook via REST
+  fixture poll on the `odds_api_ws.py` precedent).
 
 - **2026-07-07** — **gap-004 shipped (COINBASE-FUTURES WSFeedConnector build)** by slot-4. Coinbase
   Derivatives (INTX perps + weekly / monthly cash-settled CDE dated contracts) stream through the Advanced
