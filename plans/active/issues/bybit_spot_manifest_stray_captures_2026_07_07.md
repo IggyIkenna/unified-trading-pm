@@ -234,7 +234,7 @@ rows land with correct `instrument_type=spot_pair`.
 
 ## Todos (follow-on from Diagnosis (a))
 
-- [ ] [CODE] P1. **(a1) Forward-path fix for honest-absence writers on BYBIT-SPOT.** After mtds@c4df8ae0
+- [x] ✅ [CODE] P1. **(a1) Forward-path fix for honest-absence writers on BYBIT-SPOT.** After mtds@c4df8ae0
       (`_VENUE_INSTRUMENT_TYPE["BYBIT-SPOT"] = "spot"`), the captured-row path stamps SPOT_PAIR correctly. But
       `empty_confirmed` / `attempted_failed` / `expected_unattempted` writers appear to bypass the venue itype
       resolution — new BYBIT-SPOT rows in those states will still land with `instrument_type=""`. Trace the three writer
@@ -243,7 +243,19 @@ rows land with correct `instrument_type=spot_pair`.
       empty_confirmed → spot_pair, BYBIT-SPOT attempted_failed → spot_pair, BYBIT-SPOT expected_unattempted →
       spot_pair). Gate: fresh BYBIT-SPOT rows in all three capture_status states carry `instrument_type` matching the
       -006 forward-path stamp (repo: market-tick-data-service; possibly instruments-service for the expected_unattempted
-      seeder).
+      seeder). — 2026-07-07 slot-6: market-tick-data-service@9d21b133. Wired four honest-absence writer sites in
+      `sentinels.py` through `_orch._resolve_instrument_type(fan_venue, dt)`: (1) `_emit_skipped_venue_sentinels`
+      `record_expected_unattempted` at L244, (2) tier-2 `record_empty` / `record_failed` `row_key_dt` at L633,
+      (3) tier-3 pre-listing `record_expected_empty` `_pre_rk` at L702, (4) tier-3 per-instrument `record_empty` /
+      `record_failed` `row_key_instrument` at L729. Same resolver the captured-write path uses (reads
+      `_VENUE_INSTRUMENT_TYPE` which mtds@c4df8ae0 populated with `BYBIT-SPOT → spot`); blank for unmapped venues
+      (unchanged). Regression test
+      `test_emit_skipped_venue_sentinels_stamps_instrument_type_from_resolver` asserts BYBIT-SPOT
+      `record_expected_unattempted` `row_key` carries `instrument_type='spot'`. Full `bash scripts/quality-gates.sh`
+      green (27s cached); 24 sentinels-coverage tests + 15 per-data-type-sentinel tests pass. IS enumerator seeder path
+      (43 `expected_unattempted` rows) is a separate concern: `_enumerate_v2_cefi` already stamps `instr.instrument_type`
+      for per-instrument rows — those 43 blank-itype rows imply the IS BYBIT-SPOT catalog entries themselves have blank
+      `instrument_type`, which is a catalogue-writer fix (out of MTDS scope; separate follow-up if needed).
 - [ ] [SCRIPT] P1. **(b1) Manifest cleanup — delete the 54k BYBIT-SPOT rows under spot-nonsense data_types.** Diagnosis
       (b) confirmed all 53,934 rows are `empty_confirmed` with `instrument_type=""` — they carry ZERO captured data (0
       rows each), so deleting them from the manifest is LOSSLESS. GATED ON todo (d) landing (populate
@@ -256,6 +268,12 @@ rows land with correct `instrument_type=spot_pair`.
 
 ## Progress Log
 
+- **2026-07-07** — slot-6 (data_engineering) received -005 (a1 forward-path fix) and shipped
+  market-tick-data-service@9d21b133. Wired four honest-absence writer sites in `sentinels.py`
+  through `_orch._resolve_instrument_type(fan_venue, dt)` (the same resolver mtds@c4df8ae0 used
+  for the captured-write path). Regression test asserts BYBIT-SPOT `record_expected_unattempted`
+  stamps `instrument_type='spot'`. QG-green (27s cached); 39 sentinels/per-dt-sentinel tests
+  pass. Todos (b1), (c), (d) still open.
 - **2026-07-07** — Filed by slot-8 planning during the -006 implementation session. Forward-path code fix shipped in the
   -006 quickmerge (MTDS `symbol_rules._VENUE_INSTRUMENT_TYPE` + `TardisAdapter._classify_row_instrument_type`
   - `test_tardis_canonical_output.py` regression). The four follow-on todos above are the tracked-work outputs; the
