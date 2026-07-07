@@ -24,7 +24,7 @@ related:
     ../../codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-06
+last_updated: 2026-07-07
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -107,6 +107,13 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 7TH OCCURRENCE (day 2)**.
+  Dispatcher routed the same infra-scope task to slot 6 (also `data_engineering`) again, spanning into a second day.
+  Slot 6 escalated via /blocked (this session's BLK id), same PARK recommendation as the prior 6 identical rulings
+  today (slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`, 8 `BLK-ec05e5dd`, 3 `BLK-58cfb164`, 11 `BLK-f1d45b7a`, 12
+  `BLK-e37d3486`). **Pattern now spans 2 calendar days** — the systemic fix (operator-manual route to an infra-capable
+  slot OR the AO dispatcher-side `assigned_role` filter) has not landed overnight. Operator action still required.
+  Slot 6 idle after this note.
 - **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 6TH OCCURRENCE TODAY**.
   Dispatcher routed the same infra-scope task to slot 12 (also `data_engineering`). Slot 12 escalated via /blocked
   (`BLK-e37d3486`), same PARK recommendation as the prior 5 identical rulings (slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`,
