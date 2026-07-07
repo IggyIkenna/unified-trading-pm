@@ -278,3 +278,30 @@ rows land with correct `instrument_type=spot_pair`.
   D2b authority. Follow-on todo (b1) added below for the 54k-row manifest-delete gated on todo (d) landing (which
   populates BYBIT-SPOT capabilities so the enumerator stops broadcasting spot-nonsense data_types forward). Slot-8 /done
   cites this issue doc + Progress Log entry.
+- **2026-07-07** — **Task -003 (corrective-relabel of 53k PERPETUAL BYBIT-SPOT rows) HANDED OFF — BLK-28621e0a** (slot-8
+  planning). Slot-8 was dispatched -003 after /done on -002 but declined to execute because context was at 93% and the
+  task is a data-mutation with the smoke-first + stop-on-surprise + 2c-reclassify-380k-landmine guardrails that require
+  full-context vigilance. Main-agent BLK-28621e0a verdict: "PARK + HAND OFF — do not attempt this data-mutation task at
+  93% context. ... A fresh worker starts with 100% context budget and can hold all the guards from start to finish. ...
+  Slot-8 has already been extremely productive: -002 checkpoint flip, -004 park, -006 code fix (mtds@c4df8ae0) shipped.
+  Three outcomes is a strong session." **Handoff note for -003's next executor (fresh worker):** (i) SCOPE =
+  corrective-relabel of 53,785 BYBIT-SPOT rows currently stamped `instrument_type=PERPETUAL` →
+  `instrument_type=spot_pair`; sources of these rows are Tardis batch captures pre-dating mtds@c4df8ae0 (my -006 code
+  fix, LDR); (ii) the forward path is already fixed (new BYBIT-SPOT batch captures land as SPOT_PAIR since
+  mtds@c4df8ae0), so -003 is PURELY historical remediation; (iii) SMOKE-FIRST protocol per plan header: identify ONE
+  `(day, venue=BYBIT-SPOT, instrument_type=perpetual, data_type=trades)` shard, relabel it, verify manifest
+  `by_venue_instrument_type` shows both `perpetual` (remaining) and `spot_pair` (added row) BEFORE scaling; (iv)
+  STOP-ON-SURPRISE: if any shard has unexpected row counts (e.g. > 400 rows/day for BYBIT-SPOT is suspicious since the
+  53k are spread over 40k trades + 40k book_5 shards over ~4y) OR if the target
+  `venue=BYBIT-SPOT/instrument_type=spot_pair/` path already exists (indicating pre-existing state we'd overwrite), STOP
+  and post a BLK — do NOT push through; (v) 2c-reclassify LESSON: `reclassify_cefi_manifest_mvp_universe_2026_06_23.py`
+  was pulled last cycle due to `_derive_base` mis-parsing Bitfinex `ADAF0:USTF0` + Kraken `PF_/PI_` wire-forms leading
+  to ~380k row DELETE — the same risk applies here; the BYBIT-SPOT USDT symbols like BTCUSDT/ACHUSDT/APEUSDT look
+  straightforward but SPOT-instrument symbols can carry venue-native suffixes (USDC / USDT / USD / _PERP / _2X, etc.) —
+  VERIFY the identity-match filter on manifest key `(date, venue, instrument_id, data_type)` catches EVERY row before
+  mutation; (vi) DO NOT relabel the 82k EMPTY-instrument_type rows in this task — those are honest-absence rows tracked
+  separately (their fix is (a1) forward-path writer fix + potentially the same (b1) delete pass); scope of -003 is ONLY
+  the 53,785 PERPETUAL subset; (vii) reference materials: my Diagnosis (a) + (b) sections above have the exact
+  `capture_status` × `data_type` × `instrument_type` breakdowns; -006's shipped code at
+  `market-tick-data-service@c4df8ae0` (files: `symbol_rules.py`, `tardis_adapter.py`, `test_tardis_canonical_output.py`)
+  shows the correct forward-path stamping to mirror in the relabel logic. Slot-8 next action: /skip-current-task.
