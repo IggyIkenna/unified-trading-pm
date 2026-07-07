@@ -480,11 +480,84 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       (no effort compare). — ✅ DONE across ao@f52d3cc4 (model_tier: haiku-effort-omit / fable rank / `needs_respawn`
       matrix, 9), ao@a21ca9e9 (watchdog realign, 8), ao@4d93a751 (effort field, 3) — ~20 tests, every batch
       full-QG-green.
-- [ ] [INFRA] P1. **LAST TASK (operator 2026-07-07)** — after ALL the model wiring has landed + deployed, update the
-      `claude` CLI binary on the planning VM (`ssh agent-orchestrator-vm`) to a version supporting fable + the effort
-      ladder (≥ 2.1.170 for fable; 2.1.201 validated locally): `claude update`, verify `claude --version`, then a smoke
-      resume-respawn so live workers can actually select `--model fable` / `--effort`. Do this LAST so the VM only
-      upgrades once the backend can drive the new flags — an early upgrade gains nothing and risks a version skew.
+- [ ] [INFRA] P1. **DEPLOY (operator-authorized VM agent)** — deploy the whole plan (Phases 2–7) per the **§ Deployment
+      runbook** below: disable service → stop backend → pull code → **update the `claude` binary to ≥ 2.1.170** (fable +
+      effort) → DB migration (idempotent `SlotRow.last_role` at startup) → enable service → start backend + verify →
+      redeploy the UI. Execute IN ORDER; verify each step. The claude-binary update is step 4 (do it in the sequence,
+      not early — a bare upgrade before the backend can drive the flags gains nothing).
+
+---
+
+## Deployment runbook — VM agent (execute in THIS order)
+
+> **Operator-authorized deploy** of the ENTIRE `ao_dispatch_correctness` plan (Phases 2–7). The live server was
+> deliberately NEVER restarted during development, so this is the **FIRST deploy of all of it at once**: RC-1 reconcile
+> (Phase 2), dynamic `[TAG]` roles + `SlotRow.last_role` + one-plan-one-agent stickiness (Phase 4), slot_skips hygiene
+> (Phase 5), session-tier realign / capability chain (Phase 3), Fable + per-model effort (Phase 7). Run on the planning
+> VM (`ssh agent-orchestrator-vm` — 13.113.200.22, `ubuntu`). **Do the steps IN ORDER; verify each before the next.**
+> `sudo` is needed for the `systemctl` steps.
+
+**Pre-flight (before step 1):**
+
+- **Confirm the code is on the branch this VM's `agent-orchestrator` clone tracks.** Production tracks `main`, so the
+  `live-defi-rollout → staging → main` promotion (v2-gated) must have completed; if you deploy from LDR directly, the
+  shas are already on `live-defi-rollout`. Verify these commits are HEAD-reachable on the tracked branch:
+  `git -C <ao-repo> log --oneline -40 | grep -E 'f52d3cc|a21ca9e|4d93a75|e428475|f976b6e|07035ab|ff6100a|c6a31ed'`
+  (foundation / realign / effort / text-edit / roles+last_role / skip-hygiene / reconcile). If any are missing, STOP —
+  the promotion isn't done.
+- **Back up `state.db`**: `cp <ao-repo>/data/state/state.db /tmp/state.db.pre-deploy` (the migration is idempotent, but
+  a backup is cheap insurance).
+
+**1. Disable the backend service** (so nothing auto-restarts it mid-deploy). Identify it first —
+`systemctl list-units --type=service | grep -iE 'orchestr|agent'` (it supervises the uvicorn on `127.0.0.1:8765`). Then
+`sudo systemctl disable <svc>`. _(If the backend isn't under systemd but a bare uvicorn / tmux, skip to step 2 and just
+ensure nothing respawns it.)_
+
+**2. Stop the backend.** `sudo systemctl stop <svc>` (or kill the uvicorn PID on :8765). Verify down: the health
+endpoint on `127.0.0.1:8765` no longer responds / `pgrep -af uvicorn` is empty. _(The fleet's tmux worker sessions are
+separate process trees — they keep running and simply can't heartbeat until the backend returns; that's expected.)_
+
+**3. Pull the latest backend code.** `git -C <ao-repo> pull --ff-only` on the tracked branch, then re-run the sha check
+from pre-flight against HEAD. **This deliberate pull IS the deploy** — AO code is never auto-pulled, which is why the
+live server stayed safe during development.
+
+**4. Update the `claude` CLI binary** to **≥ 2.1.170** (Fable; 2.1.201 validated locally): `claude update`, then confirm
+`claude --version`. Without this, `--model fable` fails and the current `--effort` ladder isn't guaranteed.
+
+**5. DB schema migration.** The ONLY new column across the whole plan is **`SlotRow.last_role`** (Phase 4), added
+**idempotently** by `bootstrap.py._add_missing_columns` when the backend boots — there is **no separate migration
+command**; it is applied automatically by the start in step 7. (state.db was backed up in pre-flight.) You will VERIFY
+it in step 7. _No new columns were added by Phases 3/7 — the realign reads/writes the existing
+`model`/`effort`/`thinking` columns._
+
+**6. Re-enable the service.** `sudo systemctl enable <svc>`.
+
+**7. Start the backend.** `sudo systemctl start <svc>` (or relaunch the uvicorn). **VERIFY:**
+
+- **Health**: the backend answers on `127.0.0.1:8765` (health endpoint).
+- **Migration applied**: `sqlite3 <ao-repo>/data/state/state.db "PRAGMA table_info(slots);" | grep last_role` returns a
+  row.
+- **Clean boot**: no bootstrap/import errors in the logs (`journalctl -u <svc> -n 120 --no-pager`, or the uvicorn log).
+- **Fleet**: existing tmux workers reconnect on their next heartbeat. They run the OLD `worker.md` boot prompt until
+  they respawn — to activate the new adopt-not-refuse / cancel-handling behaviour, let the watchdog/AutoSpawn cycle the
+  slots (self-healing) or restart the worker sessions. **Do NOT manually kill the runtime loops** (AutoSpawn / failover
+  / watchdog self-heal).
+
+**8. Update the UI (Firebase/Firestore-hosted dashboard)** so it reflects the new backend. Rebuild + redeploy the
+dashboard via the repo's **established UI deploy path** (its build+deploy script) — _exact command per the UI deploy
+runbook; not reproduced here._ No dashboard code changed in this plan, so this is a routine redeploy to stay in sync.
+
+**Post-deploy smoke (prove the plan is live):**
+
+- **Reconcile (RC-1)**: on the next regen tick (≤30 min), a real model/role drift on a queued task updates its
+  `backlog.yaml` BacklogTask (log line reports `reconciled>0`).
+- **Realign (Phase 3)**: a plan re-tier of a dispatched task logs `watchdog_tier_realign` within ~60s.
+- **Haiku gate (Phase 7)**: a haiku spawn's flags contain NO `--effort` (previously a 400).
+- **Roles (Phase 4)**: dispatch no longer thrashes on a role mismatch (the worker adopts the craft).
+
+**Rollback**: if the backend won't come up or a regression appears — `git -C <ao-repo> checkout <prev-sha>` + restart;
+restore `state.db` from `/tmp/state.db.pre-deploy` only if the schema is implicated (`last_role` is additive +
+idempotent, so this is unlikely). Then re-enable the service.
 
 ---
 
