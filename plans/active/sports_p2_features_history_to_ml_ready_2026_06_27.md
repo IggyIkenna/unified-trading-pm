@@ -627,3 +627,113 @@ Gate cannot be met: features availability_index absent (0 entries to evaluate). 
 1. Re-launch Understat VM: `bash deployment-service/scripts/vm/launch-understat-backfill-vm.sh 2019-08-09 2026-07-03` (SPOT; skip-existing; range starts at preemption date to resume)
 2. Launch footystats M+P VM: `bash deployment-service/scripts/vm/launch-footystats-backfill-vm.sh 2019-01-01 2026-07-03` (SPOT; MATCHES+PREDICTIONS full range)
 3. Add prereq conditions to backlog.yaml gating task -005 and -007 on upstream completion
+
+### 2026-07-07 — slot 11 (19th dispatch — BLOCKED-PREREQ, structural gate absent, deep verification)
+
+**Todo 1 (compute features 2015→present) — BLOCKED-PREREQ (19th dispatch)**
+
+Fresh slot (Opus/max) picked up per slot-10 handoff ("route to fresh slot" — main-agent answer to
+BLK-9b45b24d). Full context re-verified:
+
+**Upstream state (2026-07-07, verified from IS availability index @ 07:46 UTC + GCS)**:
+
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9 todos complete**. Todo 9
+  (enrichment cleanliness) OFFICIALLY PARKED as **BLOCKED-OPERATOR-DECISION / TRACKER-ONLY**
+  (commit c8caeaada, 2026-07-07). Main-agent explicit verdict: agent tasks MUST NOT gate on EU→0
+  (409,201 EU at 54s/fixture rate = weeks-months away). Unblock requires operator action: raise
+  api-football tier, dedicated SPOT VM, or accept partial enrichment. Enrichment coordinator PID
+  3837082 alive per 2026-07-06 session-16 log.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete**.
+  - Todo 4 (Understat XG_SHOTS): PARKED BLOCKED-PREREQUISITES 2026-07-06 (slot-7). Local backfill
+    terminated MAX_ROUNDS; big-5 residual XG_SHOTS af=384 + eu=13,811. Concrete 4-step unblock
+    sequence in plan (reclassify script + 13,811 eu resolution + verify + flip) — none run yet.
+  - Todo 5 (footystats M+P+ODDS): VM `fs-backfill-20260706-161335` (e2-standard-8, spot) RUNNING
+    22+ hours (created 2026-07-06T09:13:37-07:00, verified via gcloud). Progress unknown from this
+    slot — did NOT interrupt to check.
+  - Todo 7 (verify): PARKED BLOCKED-PREREQUISITES on items #4 + #5.
+
+**Features bucket state (verified via non-snap gcloud, `ikenna@odum-research.com`)**:
+
+- `gs://features-sports-prd-central-element-323112/sports_features/by_date/`: **92 days** (P1
+  golden window 2025-09-01..2025-11-30 = ✅ COMPLETE per P1d Todo 4 flipped 2026-07-03). All three
+  feature_groups (fixture / derived / odds) 91/91 with 0 blank-reason and 0 un-evidenced
+  attempted_failed.
+- `gs://features-sports-prd-central-element-323112/_index/availability_index.parquet`: present
+  (not queried this dispatch).
+- The OTHER bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: 1
+  object (`day=2020-01-01/`, stale — not the compute output bucket; several prior BLKs (12th,
+  17th, 18th) reference this as "empty" but the correct bucket is `-prd-`).
+- No fss-backfill-vm-\* running in asia-northeast1-c (verified via `gcloud compute instances list
+  --filter=name~fss-backfill-vm`).
+
+**`assert_upstream_manifest_healthy` code re-read** (features-service@LDR-HEAD,
+`features_service/sports/cli/handlers/_manifest_preflight.py`): checks **consolidator freshness
+only** (`assert_consolidator_healthy` — no-ops on empty bucket; raises
+`ManifestConsolidatorStaleError` when stale AND other-VM shards exist). Does NOT gate on
+`pending_fetch == 0` per data_type. Compute would RUN and write UPSTREAM_MISSING typed
+honest-absence for still-pending P2a enrichment + P2b understat cells. This matches the slot-12
+7th-dispatch code analysis.
+
+**Structural failure diagnosis (19 dispatches deep)**:
+
+The task's `depends_on` (P2a, P2b, P0-spot-vm-launchers) is a plan-level directive. The backlog
+does NOT translate this into dispatcher `prereqs.conditions` — so the dispatcher re-picks this
+task every time other high-priority work drains, causing 19 dispatches over 10+ days. Every
+dispatch verifies the same blocked state and returns to queue, burning ~1 slot-hour + LLM cost per
+cycle. BLK-fbaabf35 (slot-7, 12th dispatch) explicitly asked operator to add backlog prereq
+conditions; BLK-2ff03344 (slot-4, 17th dispatch) resolved to option C (park until backlog gates
+added). **The backlog gates have not been added** (verified from `git log --since=2026-07-03 --
+data/` in agent-orchestrator — 0 commits touching `data/`).
+
+**Why prior operator answers repeatedly said B (wait) — restated**:
+
+1. `--skip-existing` locks in `UPSTREAM_MISSING` NaN cells on partial upstream. A later force
+   recompute is a SECOND full-history pass at material VM cost.
+2. Correct order: fill upstream to zero-missing → single compute pass.
+3. This is the "no silent placeholders" craft rule — locked-in UPSTREAM_MISSING against upstream
+   that IS filling is worse than the honest "not yet computed" state.
+
+**What I DID NOT do this session (and why)**:
+
+- Did NOT launch features compute for 2015→present. Prior operator answer (BLK-9a447c3e slot-7,
+  BLK-90adcb19 slot-12, BLK-9083fd18 slot-12) resolved to B (wait). No later answer overturned it.
+  Main-agent 2026-07-07 "route to fresh slot" (BLK-9b45b24d) I read as: slot-10 shouldn't attempt
+  at 87% context — decision on WHETHER to attempt is not overturned.
+- Did NOT compute odds_features 2020-06→present partial (upstream is complete, would be viable) —
+  the plan's Todo 1 gate is per-day-per-feature-group and could be partially met, but the plan
+  intent per operator direction is single-pass compute after upstream fill; partial odds-only
+  compute now would leave the same "second pass needed for enrichment/derived" problem, no gain.
+- Did NOT modify `agent-orchestrator` config (backlog conditions) — outside craft scope
+  (data_engineering ≠ infra / orchestrator config). This is the exact structural fix needed, but
+  requires an infra/operator craft.
+- Did NOT verify fs-backfill VM progress — interrupting a live backfill is a scope violation and
+  its completion doesn't unblock THIS task (Understat blocker is separate).
+
+**Recommendation to operator (this is escalation #6 asking the same structural fix)**:
+
+Add prereq conditions to backlog for `sports_p2_features_history_to_ml_ready-007` (and -005,
+-003 if they exist) gating on:
+
+```yaml
+conditions:
+  sports-p2a-enrichment-coordinator-complete: false # already exists? verify
+  sports-p2b-understat-xg-complete: false
+  sports-p2b-footystats-mp-complete: false
+
+# per-task:
+- id: sports_p2_features_history_to_ml_ready-007
+  prereqs:
+    conditions:
+      - sports-p2a-enrichment-coordinator-complete
+      - sports-p2b-understat-xg-complete
+      - sports-p2b-footystats-mp-complete
+```
+
+Then when P2a Todo 9 unblock path resolves + P2b Todos 4/5 flip, operator/main flips the
+conditions to true and dispatcher resumes. Zero further churn until then.
+
+**BLK filing**: this dispatch → single choice A (add backlog conditions immediately; task stays
+blocked with no further dispatches until conditions flip). No B/C alternatives because prior
+operator answers exhausted them.
+
+Checkbox NOT flipped. Slot 11 releases task; no VM launched.
