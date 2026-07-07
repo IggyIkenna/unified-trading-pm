@@ -78,11 +78,17 @@ source:
       `process()` collects `date.today()`), so it captures BTC/ETH `options_chain` daily → then feeds Plan 4's
       re-measure. Historical options are NOT captured by this handler. Gate: Deribit `options_chain` rows land daily;
       the D5 captured=0 clears in the next measure.
-- [ ] [DATA] P2. **Long-lived VM logs not backed up** — the live/long-lived VMs' `run.log` is lost on VM delete; wire a
-      periodic log sync to GCS (`long_lived_vm_logs_not_backed_up`). Gate: long-lived VM logs persist to GCS.
-      **BLOCKED-CRAFT-MISMATCH (2026-07-06)** — auto-dispatched to a data_engineering slot; work sits in
-      `deployment-service/scripts/vm/*.sh` (VM launchers, setup-data-pipeline-vm.sh tee wiring, cron/systemd for
-      long-lived VMs) which is infra scope. Awaiting redispatch to an infra-role worker. See progress log.
+- [x] ✅ [DATA] P2. **Long-lived VM logs not backed up** — deployment-service@3cd0b1d (2026-05-27). Periodic archival
+      ALREADY IN PLACE (verified 2026-07-07): `scripts/vm/vm_log_archival_cron.py` copies
+      `gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log` → `log-archive/rolling/{date}/{vm}/run.log` daily; also
+      captures serial for LONG_LIVED_LIVE + SCHEDULED_RECURRING VMs (28 long-lived prefixes classified). Wiring: Cloud
+      Run Job `vm-log-archival-prd` + Cloud Scheduler `0 2 * * * UTC` (ENABLED per runbook), Terraform
+      `terraform/gcp/vm_log_archival_scheduler.tf`. URI SSOT
+      `deployment_service.deployments_registry.vm_run_log_rolling_uri`. Runbook:
+      `deployment-service/runbooks/vm_log_archival_maintenance.md` (last_executed 2026-06-02 image-fix, daily via
+      scheduler since). Gate SATISFIED: long-lived VM logs persist to `log-archive/rolling/` (no lifecycle rule) beyond
+      the 14-day `vm-logs/` TTL. The prior 7 craft-mismatch escalations mis-triaged the completion state — the infra
+      landed 2026-05-27 under plan `canonical_vm_log_archival_2026_05_27`; only the checkbox flip was outstanding.
 - [ ] [DATA] P1. **Test-fleet image builds from current code** — the base-image local-build strategy + GCP build per
       service (`test_fleet_image_builds_from_current_code`) so the fleet images track HEAD. Gate: images build from
       current code; canonical build invocation documented.
@@ -107,6 +113,14 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07** — `long_lived_vm_logs_not_backed_up` (P2) **FLIPPED ✅ (slot 11 post re-homing)**. The task was
+  ALREADY DONE — infra shipped 2026-05-27 in `deployment-service@3cd0b1d` (`vm_log_archival_cron.py` +
+  `vm_log_archival_scheduler.tf` + runbook, Cloud Scheduler ENABLED `0 2 * * * UTC`). The 7 prior escalations
+  mis-triaged the state: they treated "task exists in a re-homed plan" as "task needs work" without first grepping the
+  target repo for the file that the plan/URI-SSOT explicitly names (`vm_log_archival_cron.py`). Slot 11 grepped
+  `deployment-service/`, found the cron + Terraform + runbook + `vm_run_log_rolling_uri` helper, verified the
+  runbook attests `Cloud Scheduler ENABLED`, and flipped the checkbox with evidence. Lesson: for a re-homed plan with a
+  named artifact (script/module), grep the target repo FIRST — a code_refs check is cheaper than 7 boot windows.
 - **2026-07-07** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 7TH OCCURRENCE (day 2)**.
   Dispatcher routed the same infra-scope task to slot 6 (also `data_engineering`) again, spanning into a second day.
   Slot 6 escalated via /blocked (this session's BLK id), same PARK recommendation as the prior 6 identical rulings
