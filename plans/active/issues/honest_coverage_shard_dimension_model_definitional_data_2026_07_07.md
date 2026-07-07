@@ -301,18 +301,29 @@ forever, since nothing will ever fetch under that exact venue identity. **Fix: r
 on bare `OKX` have the same problem, given bare OKX is almost entirely dead in real data) — cross-references the
 tracker's D2a entry and `cefi_layer1_denominator_gaps` plan.
 
-**Finding 4 — `BINANCE-DELIVERY` is real and actively captured (2,126 rows, 2019-03-30 → today, ongoing right
-now) but has no `VENUE_DATA_TYPE_CAPABILITIES` declaration anywhere in UAC** — confirmed by direct query against
-the production manifest after the operator asked why the mockup showed it with a GAP flag and no data_type chips.
-Unlike a dead/unwired venue (RADIANT/RENZO-class), the CAPTURE side works fine — instruments-service is writing
-real reference-data rows for it every day. It's specifically the market-data-capability *declaration* that was
-never written when the venue was set up (its sibling `BINANCE-FUTURES` has a full declared set: trades,
-book_snapshot_5, derivative_ticker, liquidations, futures_chain; `BINANCE-DELIVERY` has none). Practical effect:
-MTDS has nothing to gate its tick-data expected-universe on for this venue, so its market-data denominator is
-either zero or falls back to an undeclared default. **Fix: add the missing `VENUE_DATA_TYPE_CAPABILITIES` entry
-for `BINANCE-DELIVERY`** in `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`
-(mirror `BINANCE-FUTURES`'s declared set as the starting point, verify against real Tardis coverage before
-committing to it).
+**Finding 4, CORRECTED same day (initial conclusion was wrong) — `BINANCE-DELIVERY`'s missing
+`VENUE_DATA_TYPE_CAPABILITIES` declaration is an intentional, recent MVP-scope exclusion, not a registry
+oversight.** Originally logged (below, struck through) as "capture already works, just add the declaration" —
+that conflated two SEPARATE pipelines. Re-investigated with a 3-way workflow (real MTDS tick-data manifest check,
+Tardis coverage research, adapter/routing check) and the conclusion flips: **MTDS's tick-data manifest
+(`market-data-tick-cefi-*`) has ZERO rows for `BINANCE-DELIVERY` ever** — no trades/book_snapshot_5/derivative_ticker/
+liquidations, no history, nothing, confirmed across every casing variant. The 2,126 rows found earlier are from
+instruments-service's SEPARATE reference-data manifest (`instruments-store-cefi-*` — "which contracts exist"),
+not MTDS's tick-data manifest ("do we capture their market data") — two different pipelines, two different
+questions, and only the first one is actually flowing for this venue. Crucially, `unified-api-contracts`'s own
+`mvp_scope.py` (v10, 2026-06-27, decision #3) shows this is deliberate and recent: `BINANCE-DELIVERY` was BRIEFLY
+added to cefi MVP scope on 2026-06-24, then explicitly dropped again 3 days later — "operator accepts COIN-M
+delivery is NOT MVP." Tardis itself has full coverage available if this is ever revisited (confirmed live against
+Tardis's own docs: trades, L2 book, funding/mark-price, and a liquidations feed — the same coverage class as
+`BINANCE-FUTURES`, just under Tardis's `binance-delivery` exchange id) — so there's no technical blocker, only a
+scope decision. **Revised conclusion: the GAP flag the mockup already showed was honestly correct all along — no
+UAC fix needed on the declaration side.** The mockup's GAP tooltip should say WHY (intentionally out of MVP
+scope, not an oversight) rather than just THAT it's missing — more useful information, and this is exactly the
+kind of denominator-correctness detail the whole mockup exercise is for.
+
+~~Finding 4 (original, superseded above) — `BINANCE-DELIVERY` is real and actively captured (2,126 rows,
+2019-03-30 → today) but has no `VENUE_DATA_TYPE_CAPABILITIES` declaration anywhere in UAC... Fix: add the missing
+`VENUE_DATA_TYPE_CAPABILITIES` entry for `BINANCE-DELIVERY`.~~ — **do not do this**, see correction above.
 
 **Finding 5 — the drilldown needs a day-level sub-view under each `instrument_type` leaf, and downloads are
 strictly per-day.** Operator confirmed (a) deployment-ui already renders full per-venue day lists well, so the
@@ -344,11 +355,15 @@ itself keeps the day-coverage bar (aggregate %) but no longer has its own downlo
       whether bare OKX's `PERPETUAL`/`FUTURE`/`OPTION` declarations have the same problem before fixing just the
       one confirmed case. Re-measure cefi Layer-1 after the fix (this currently inflates the denominator with
       permanently-unfulfillable tuples) — cross-reference `cefi_layer1_denominator_gaps` / the tracker's D2a entry.
-- [ ] [CODE] P2. **Add the missing `VENUE_DATA_TYPE_CAPABILITIES` entry for `BINANCE-DELIVERY`** (Finding 4) —
-      `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`; the venue is real and
-      actively captured on the reference-data side, it's just missing its market-data capability declaration
-      (unlike sibling `BINANCE-FUTURES`, which has one). Verify against real Tardis coverage before committing to
-      a specific data_type set.
+- [x] [VERIFY] P2. **CLOSED, no code fix — `BINANCE-DELIVERY`'s missing declaration is correct as-is** (Finding 4,
+      corrected). Investigated via a 3-way workflow; confirmed MTDS has zero tick-data rows ever for this venue
+      and `mvp_scope.py` v10 (2026-06-27) explicitly descopes it from cefi MVP. Not a registry gap — closing this
+      todo. Follow-up (separate, not urgent): update the mockup's GAP tooltip to explain WHY (intentional MVP
+      exclusion) rather than just flagging absence.
+- [ ] [DESIGN] P3. **Update the mockup's `BINANCE-DELIVERY` GAP tooltip to explain the real reason** (Finding 4
+      follow-up) — currently says "no declared data_type capability found"; should say something like
+      "intentionally out of cefi MVP scope (`mvp_scope.py` v10, 2026-06-27 decision) — Tardis has full coverage
+      available if this is ever revisited, this is a scope choice, not a technical gap." Low priority, cosmetic.
 - [x] [DESIGN] P1. **Add a day-level sub-drilldown under each `instrument_type` leaf, per-day download only**
       (Finding 5) — corrected live in the mockup artifact; `instrument_type` leaves are now expandable to a
       sample day-list (captured/missing, download per day, disabled on missing days). Real implementation in
@@ -429,6 +444,18 @@ itself keeps the day-coverage bar (aggregate %) but no longer has its own downlo
 
 ## Progress Log
 
+- **2026-07-07 (mockup review, round 2 — self-correction)** — Operator asked two follow-up questions on the round-1
+  mockup: what `order_flow_imbalance` is (confirmed it's MTDS-computed from `book_snapshot_5`, not a raw Tardis
+  field — same class as `greeks_snapshot`; not a bug, added a `†` tooltip to the mockup so this doesn't confuse
+  the next reviewer) and re-confirmed the still-confusing bare-BYBIT/BYBIT-SPOT `SPOT_PAIR` duplication (already
+  logged as Finding 3 last round but not yet patched into the mockup itself — fixed now, phantom `SPOT_PAIR`
+  removed from bare BYBIT/OKX in the live artifact). Separately, ran a 3-way investigation into whether
+  `BINANCE-DELIVERY` needed a UAC fix (per round-1 Finding 4) before touching UAC, and it **overturned that
+  finding**: MTDS has zero tick-data rows ever for this venue, and `mvp_scope.py` v10 (2026-06-27) shows it was
+  explicitly descoped from cefi MVP 3 days after being briefly added — an intentional, recent operator decision,
+  not a registry oversight. Corrected Finding 4 above and closed its todo with no code change (the GAP flag the
+  mockup already showed was honestly correct). No production code touched this round either — corrections stayed
+  in the mockup artifact and this doc.
 - **2026-07-07 (mockup review, round 1)** — Operator reviewed the drilldown mockup artifact and found 3 real bugs
   plus locked 2 design decisions before any implementation started — exactly the mockup's purpose. (1) `data_type`
   wrongly modeled as a per-day leaf for reference data — fixed live in the mockup, `instrument_type` is now the
