@@ -118,7 +118,7 @@ source:
 - [x] ✅ [DATA] P1. **Test-fleet image builds from current code** — the base-image local-build strategy + GCP build per
       service (`test_fleet_image_builds_from_current_code`) so the fleet images track HEAD. Gate: images build from
       current code; canonical build invocation documented. — **DONE 2026-07-07 (slot-12 data_engineering,
-      unified-trading-pm@e4cca79)**. Gate #2 SATISFIED: canonical local + GCP + AWS build-invocation snippets
+      unified-trading-pm@3aafae3)**. Gate #2 SATISFIED: canonical local + GCP + AWS build-invocation snippets
       captured in `plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md` § "Canonical build invocation"
       (drawn from the 2026-06-17 canary findings + verified against LDR `unified-trading-library/cloudbuild.yaml` +
       `instruments-service/Dockerfile` — Pattern-A base + service recipes with PROJECT_ID / BASE_IMAGE_DIGEST /
@@ -152,7 +152,7 @@ source:
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
 - **2026-07-07** — **Task 006 Test-fleet image builds — summary checkbox FLIPPED ✅** (slot-12 data_engineering,
-  unified-trading-pm@`e4cca79`, this commit). Gate #2 ("canonical build invocation documented") satisfied by
+  unified-trading-pm@`3aafae3`, this commit). Gate #2 ("canonical build invocation documented") satisfied by
   capturing the canonical local + GCP + AWS build-invocation snippets in a new § "Canonical build invocation" section of
   `plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md`, drawn from the 2026-06-17 canary findings +
   verified against LDR (`unified-trading-library/cloudbuild.yaml` + `instruments-service/Dockerfile`). Includes
