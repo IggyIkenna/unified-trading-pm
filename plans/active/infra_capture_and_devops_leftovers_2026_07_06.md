@@ -67,12 +67,21 @@ source:
 
 ## Capture wiring (dispatchable)
 
-- [ ] [DATA] P1. **Register + launch the ASTER live connector** — `aster_book_liq_ws.py` into
-      `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi template). **PREREQ: Plan 1's
-      enumerator `start_date` support + the UAC capability flip for ASTER book5/liquidations have landed** (else you
-      re-create the 17,282-row over-seed). Verify `live_aster` rows land (per-VM shard spot-check at T+10-15min). **This
-      gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT: `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG
-      #4. Gate: `live_aster` book5/liquidations rows landing daily.
+- [ ] 🚧 **BLOCKED-PREREQUISITES** [DATA] P1. **Register + launch the ASTER live connector** —
+      `aster_book_liq_ws.py` into `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi
+      template). **PREREQ: Plan 1's enumerator `start_date` support + the UAC capability flip for ASTER
+      book5/liquidations have landed** (else you re-create the 17,282-row over-seed). Verify `live_aster` rows land
+      (per-VM shard spot-check at T+10-15min). **This gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT:
+      `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG #4. Gate: `live_aster` book5/liquidations rows landing
+      daily. **STATUS 2026-07-07 06:31 UTC — BLOCKED-PREREQUISITES** (main-agent answer to `BLK-26ed6571`, task 001
+      pickup, slot-9): both hard prereqs unmet on LDR — (a) `instruments-service/scripts/expected_universe.py` has zero
+      `get_venue_data_type_start_date` awareness on LDR (cefi-007 impl is done on slot 5, 126/126 green, but has NOT
+      been quickmerged yet); (b) UAC `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only
+      lists trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations. Proceeding without both = the
+      exact 17,282-row over-seed the plan warns against (data-correctness violation). PARKED + task /skip-current-task'd
+      per main-agent directive. Unblocking actions (operator, per BLK-26ed6571 answer): (1) ship cefi-007 to LDR; (2)
+      update UAC ASTER capabilities to include book_snapshot_5 + liquidations. Both this task 001 and Plan 6 task 004
+      (Deribit options_chain runner? — see BLK-26ed6571 reference to "cefi-004") will unblock on the same two merges.
 - [ ] [DATA] P1. **Deribit `options_chain` live runner** — wire a live cron/VM to run
       `--operation deribit-options-chain` (the handler `mtds@9ecd1e29e` is **live/replay only — no backfill**,
       `process()` collects `date.today()`), so it captures BTC/ETH `options_chain` daily → then feeds Plan 4's
@@ -113,6 +122,20 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07** — **🚧 Task 001 ASTER live connector PARKED as BLOCKED-PREREQUISITES** (slot-9 planning,
+  `BLK-26ed6571`). Verified on LDR that both hard PREREQs the task's own plan text calls out are unmet:
+  (a) `instruments-service/scripts/expected_universe.py` has zero `get_venue_data_type_start_date` awareness — the
+  enumerator does NOT honour per-(venue, data_type) `start_date` yet (cefi-007 impl done on slot 5, 126/126 green,
+  but not yet quickmerged to LDR per main-agent answer); (b) UAC `market_data_categories.py`
+  `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` currently `{trades: 2023-07-22, derivative_ticker: 2023-07-22, perp_funding:
+  2023-07-22}` — NO `book_snapshot_5`, NO `liquidations` entries. Launching the connector now would seed EXPECTED
+  tuples for ASTER book5+liquidations from the venue-level 2023-07-22 start with no start_date carve-out → the exact
+  17,282-row over-seed the plan explicitly warns against (data-correctness violation). Main-agent directive: PARK +
+  /skip-current-task. Same-task-checkbox annotated 🚧 BLOCKED-PREREQUISITES (not `[x]`). Unblocking actions (operator,
+  per BLK answer): (1) ship cefi-007 to LDR (quickmerge from slot 5); (2) update UAC ASTER capabilities to include
+  book_snapshot_5 + liquidations. Task 001 (this) and task 004 (referenced by main-agent as also blocked on the same
+  merges — presumably the Deribit options_chain or a mis-labelled cross-task ref) will unblock together on those two
+  merges. Slot-9 released via /skip-current-task and re-booted for the next dispatchable task.
 - **2026-07-07** — `long_lived_vm_logs_not_backed_up` (P2) **FLIPPED ✅ (slot 11 post re-homing)**. The task was
   ALREADY DONE — infra shipped 2026-05-27 in `deployment-service@3cd0b1d` (`vm_log_archival_cron.py` +
   `vm_log_archival_scheduler.tf` + runbook, Cloud Scheduler ENABLED `0 2 * * * UTC`). The 7 prior escalations
