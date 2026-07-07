@@ -37,6 +37,7 @@ related:
     issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
     issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md,
     issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md,
+    issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md,
     ../../codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06

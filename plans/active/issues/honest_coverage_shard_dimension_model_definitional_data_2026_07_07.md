@@ -348,13 +348,23 @@ itself keeps the day-coverage bar (aggregate %) but no longer has its own downlo
       row_key/path implications) — operator has explicitly gated the actual resharding + manifest migration on
       seeing the full mockup first. Generalizes to MTDS one level deeper (instrument/bundle-level files) once this
       lands for instruments-service.
-- [ ] [CODE] P1. **Remove the phantom `SPOT_PAIR` declaration from bare `BYBIT`/`OKX`** (Finding 3) —
-      `unified-api-contracts/unified_api_contracts/registry/venue_constants.py`'s `INSTRUMENT_TYPES_BY_VENUE`
-      dict; confirmed via real production manifest data that bare BYBIT has zero SPOT_PAIR rows ever (all real
-      spot data lives under BYBIT-SPOT) and bare OKX is almost entirely dead (2 legacy rows total). Also audit
-      whether bare OKX's `PERPETUAL`/`FUTURE`/`OPTION` declarations have the same problem before fixing just the
-      one confirmed case. Re-measure cefi Layer-1 after the fix (this currently inflates the denominator with
-      permanently-unfulfillable tuples) — cross-reference `cefi_layer1_denominator_gaps` / the tracker's D2a entry.
+- [x] ✅ [CODE] P1. **Remove the phantom `SPOT_PAIR` declaration from bare `BYBIT`/`OKX`** (Finding 3) —
+      unified-api-contracts@23fa3a99, landed on `live-defi-rollout`. Before touching it, checked git-blame on the
+      DERIBIT-COMBO entry in the same dict and found a near-miss: that one carries an explicit, dated
+      (2026-07-06, operator-attributed) rationale comment justifying its own apparent oddity — NOT a bug, so left
+      untouched. Cross-checked bare BYBIT/OKX the same way: `git log -L` on those lines shows the entries
+      unchanged since the file's first commit, no rationale comment ever added — confirmed via real production
+      manifest data (zero SPOT_PAIR rows ever under either bare venue) and Tardis's own routing table (which
+      already sends `(BYBIT, SPOT_PAIR)`/`(OKX, SPOT_PAIR)` to the same source as the canonical `-SPOT` venues) —
+      genuinely unscrutinized, not deliberate. Also confirmed `is_mvp()` has its own independent
+      `_cefi_venue_in_rule` resolution for bare OKX/BYBIT, unaffected by this dict, so no MVP-scope regression
+      risk. `OPTION` on bare OKX (and `OKX_FUTURES`) is ALSO confirmed phantom (zero real OPTION rows anywhere in
+      the OKX family) but deliberately NOT touched yet — only `SPOT_PAIR` was explicitly requested; `OPTION`
+      tracked as its own follow-up below, pending explicit go-ahead.
+- [ ] [CODE] P2. **Remove the phantom `OPTION` declaration from bare `OKX` and `OKX_FUTURES`** — confirmed via the
+      same production-manifest check above (zero real OPTION rows anywhere across bare OKX/OKX-SPOT/OKX-SWAP/
+      OKX-FUTURES), flagged in the mockup, not yet fixed in code — deliberately deferred pending explicit
+      go-ahead (unlike SPOT_PAIR, this wasn't explicitly requested yet).
 - [x] [VERIFY] P2. **CLOSED, no code fix — `BINANCE-DELIVERY`'s missing declaration is correct as-is** (Finding 4,
       corrected). Investigated via a 3-way workflow; confirmed MTDS has zero tick-data rows ever for this venue
       and `mvp_scope.py` v10 (2026-06-27) explicitly descopes it from cefi MVP. Not a registry gap — closing this
@@ -444,6 +454,33 @@ itself keeps the day-coverage bar (aggregate %) but no longer has its own downlo
 
 ## Progress Log
 
+- **2026-07-07 (mockup review, round 3 — instruments-only scope correction + real fixes shipped)** — Operator
+  called out a bigger version of the round-1/2 conflation: the mockup's `data_type` CHIP CONTENT (not just the
+  leaf structure) was still sourced from MTDS's market-data capability lists (`trades`/`book_snapshot_5`/etc.)
+  across CEFI/TRADFI/DEFI, when this mockup is explicitly instruments-service-only. Fixed: `data_type` is now
+  uniformly the real instruments-service constant (`"instruments"`) for those three asset groups; MTDS-flavored
+  lists at call sites are now dead/ignored, not deleted (kept to avoid a large mechanical diff in a throwaway
+  mockup file). Also fixed a real omission (never actually added `OKX-SPOT`/`OKX-SWAP`/`OKX-FUTURES` as their own
+  venue nodes despite describing the split in a note) and a real labeling error (DERIBIT-COMBO's instrument_type
+  was invented as "FUTURE_COMBO" without verification — the real adapter
+  (`deribit_combo_adapter.py:360`) stamps a single generic `COMBO` for every multi-leg combo, confirmed in
+  production, 375 real rows, no split). Nearly shipped a WRONG fix in the process: UAC's own `DERIBIT-COMBO`
+  declaration (`venue_constants.py:429`, `{"OPTION"}`) looked like the same class of bug as bare BYBIT/OKX's
+  phantom `SPOT_PAIR` — but it carries an explicit, dated (2026-07-06, operator-attributed) rationale comment
+  (MVP-scope bundle-rollup: only `option_combo` counts, `future_combo` is deliberately excluded) that a git-blame
+  check surfaced just in time. Left untouched — this was a real near-miss, caught by checking before acting, not
+  luck. Cross-checked bare BYBIT/OKX the same way (git-blame + real production data + Tardis routing table) and
+  confirmed THOSE genuinely are unscrutinized bugs, unlike DERIBIT-COMBO — **shipped**
+  `unified-api-contracts@23fa3a99` removing the phantom `SPOT_PAIR`. Operator confirmed KALSHI-PERP/POLYMARKET-PERP
+  are fine as CEFI (not prediction), not MVP, but should stay visible (not removed) — articulated two care levels:
+  MVP venues get full scrutiny ("I'm actually going to start trading" this), non-MVP venues just need to visibly
+  exist for future exploration. Separately, operator asked to double-check whether `order_flow_imbalance` (flagged
+  as MTDS-computed, round 2) duplicates work already done in market-data-processing-service — confirmed it does,
+  filed as its own doc (`mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md`, cross-repo, out of this doc's
+  scope). Operator also requested a real smoke-test of HYPERLIQUID/PACIFICA-SOLANA/EXTENDED-STARKNET/
+  LIGHTER-ZKSYNC's declared MTDS data_types against their bespoke native APIs — explicit, deliberate exception to
+  the instruments-only focus since these 4 aren't Tardis-sourced and nobody's verified them; workflow launched,
+  results pending, will land in a follow-up doc (MTDS-scoped, not this one).
 - **2026-07-07 (mockup review, round 2 — self-correction)** — Operator asked two follow-up questions on the round-1
   mockup: what `order_flow_imbalance` is (confirmed it's MTDS-computed from `book_snapshot_5`, not a raw Tardis
   field — same class as `greeks_snapshot`; not a bug, added a `†` tooltip to the mockup so this doesn't confuse
