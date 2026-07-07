@@ -96,7 +96,7 @@ keeps that and extends it to already-DISPATCHED retiers + adds fable.
 
 ---
 
-## Designed behavior (the contract — SSOT-in-flight; migrate to codex at Phase 5)
+## Designed behavior (the contract — SSOT-in-flight; migrate to codex at Phase 6)
 
 ### A. Regen becomes a RECONCILE (RC-1)
 
@@ -250,22 +250,25 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 > Docs before code: establish the plan-authoring conventions so every plan written from here follows them. Mark clearly
 > which DISPATCH mechanics are ACTIVE NOW vs ROLLING OUT in this plan, so an author never relies on unbuilt behavior.
 
-- [ ] [DOCS] P0. Rewrite `plans/active/task_template.md` to the CURRENT frontmatter schema (the existing template is
+- [x] [DOCS] P0. Rewrite `plans/active/task_template.md` to the CURRENT frontmatter schema (the existing template is
       STALE — `.plan.md` suffix + completion_gates C0–C5 predate PLAN_FORMAT.md). Two authoring tracks: LOCAL/human plan
       (`assigned_vm: NA`, `execution_scope: local-only` — never ingested, may be long, operator does + verifies) vs
       AO-DISPATCHED plan (`assigned_vm: planning`, `execution_scope: orchestrator-agent`, `status: active`, STRICT 10–20
-      todos).
-- [ ] [DOCS] P0. task_template.md — the AO plan-authoring rules: 10–20 cap + group related items (E); ONE plan = ONE
+      todos). — ✅ DONE pm@08e6424 (LDR); PR #809→main auto-merge.
+- [x] [DOCS] P0. task_template.md — the AO plan-authoring rules: 10–20 cap + group related items (E); ONE plan = ONE
       agent / shared context, split into separate plans for PARALLELISM (F); an audit is its own plan; draft-gated phase
       chains — current `active`, later `draft`, last todo flips next→active (E); `[TAG]`→role for per-task craft (B);
-      `sequential: true` vs default `plan_order` ordering (F); NEVER hand-edit `backlog.yaml`.
-- [ ] [DOCS] P0. task_template.md — a "Safely editing a live plan" section: what a reword / removal / retier does to a
+      `sequential: true` vs default `plan_order` ordering (F); NEVER hand-edit `backlog.yaml`. — ✅ DONE pm@08e6424
+      (§1–§4 of the new template).
+- [x] [DOCS] P0. task_template.md — a "Safely editing a live plan" section: what a reword / removal / retier does to a
       queued vs dispatched vs done task (A1–A3); removed-dispatched → `cancelled` + scoped-revert (not delete);
       retier-upgrade → stop-and-`--resume`. Tag each dispatch mechanic ACTIVE-NOW vs ROLLING-OUT (this plan); until
-      `plan_order` / `sequential: true` ship, use explicit prereqs for strict ordering.
-- [ ] [DOCS] P0. CLAUDE.md (PM + agent-orchestrator copies) — directive under the Plans section: **READ
+      `plan_order` / `sequential: true` ship, use explicit prereqs for strict ordering. — ✅ DONE pm@08e6424 (§5 of the
+      new template, A1–A3 table).
+- [x] [DOCS] P0. CLAUDE.md (PM + agent-orchestrator copies) — directive under the Plans section: **READ
       `plans/active/task_template.md` before authoring any plan**; + the one-liners (local vs AO; 10–20 cap; one-plan =
-      one-agent, split for parallelism). Respect the size budget (condense, don't grow the cap).
+      one-agent, split for parallelism). Respect the size budget (condense, don't grow the cap). — ✅ DONE pm@08e6424
+      (cursor-configs/CLAUDE.md L170-175; 28,629 B < 40,960 cap; both symlinked copies update).
 
 ### Phase 2 — RC-1 reconcile: field-drift + removal (unblocks the frozen backlog)
 
@@ -345,6 +348,12 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07** — ✅ **Phase 1 SHIPPED** (`pm@08e6424`, LDR; PR #809→main, v2 auto-merge). Rewrote the stale
+  `task_template.md` to the current schema with LOCAL-vs-AO authoring tracks + all conventions (10–20 cap, one-plan-one-
+  agent, split-for-parallelism, draft-gated phases, `[TAG]` roles, `sequential` vs `plan_order`, safe-editing-live-plans
+  A1–A3) — every dispatch mechanic marked ACTIVE-NOW vs ROLLING-OUT. Added the CLAUDE.md "READ task_template before
+  authoring a plan" HARD-RULE directive (cursor-configs canonical, 28.6 KB < 40 KB cap, both symlinked copies update).
+  Plan doc pushed `pm@74164718d`. Next: Phase 2 (regen reconcile — unblocks the frozen backlog).
 - **2026-07-07** — Reordered per operator: **docs-first**. New Phase 1 = rewrite task_template.md (stale) to current
   schema with LOCAL vs AO-DISPATCHED authoring tracks + all conventions (10–20 cap, one-plan-one-agent, split for
   parallelism, draft-gating, `[TAG]` roles, sequential vs plan_order, safe-editing-live-plans) + a CLAUDE.md "READ
