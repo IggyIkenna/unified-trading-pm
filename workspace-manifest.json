@@ -756,10 +756,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 91.01,
-        "large_file_count": 5,
         "warn_file_count": 5,
-        "qg_red_reason": "pytest"
+        "coverage_pct": 91.01,
+        "qg_red_reason": null,
+        "large_file_count": 5
       }
     },
     "market-data-processing-service": {
@@ -1295,9 +1295,9 @@
       "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": 71.07,
-        "large_file_count": 0,
+        "qg_red_reason": null,
         "warn_file_count": 0,
-        "qg_red_reason": "ruff"
+        "large_file_count": 0
       }
     },
     "unified-trading-api": {
