@@ -200,8 +200,31 @@ approve / defer per category rather than per-venue.
       trades + book_snapshot_5 + derivative_ticker + liquidations) at the trades atom — sibling
       data_type connectors slot in on the same factory later (identical pattern to gap-002 Bitfinex
       and pre-existing Deribit trades→book_ticker rollout).
-- [ ] [CODE] P1. **COINBASE-FUTURES WSFeedConnector build** — public WS on `wss://advanced-trade-ws.coinbase.com` (repo:
-      market-tick-data-service). Gate: COINBASE-FUTURES resolves; regression test.
+- [x] [CODE] P1. **COINBASE-FUTURES WSFeedConnector build** ✅ — mtds@fd436aea. Coinbase Derivatives
+      (INTX perps + weekly / monthly cash-settled CDE dated contracts) stream through the Advanced Trade
+      WS at `wss://advanced-trade-ws.coinbase.com` — a DIFFERENT endpoint from the existing COINBASE-SPOT
+      connector (Coinbase Exchange at `wss://ws-feed.exchange.coinbase.com` + the `matches` channel).
+      Subscribe uses `{"type":"subscribe","product_ids":[...],"channel":"market_trades"}`; trade frames
+      arrive nested in `events[].trades[]` with an UPPER-CASE `side` field (`"BUY"`/`"SELL"` — case-folded
+      on emit). COINBASE-FUTURES carries BOTH `PERPETUAL` (INTX perps) AND `FUTURE` (CDE dated) — the
+      connector caches a `product_id → instrument_type` map populated at `connect()` / `subscribe()` time
+      (extracted from the canonical `COINBASE-FUTURES:{PERPETUAL|FUTURE}:{product_id}` shape) and reads
+      it at parse time; unknown product_ids default to `FUTURE` (the smoke-matrix regression covers this
+      path). Files: `market_tick_data_service/live/connectors/coinbase_futures_ws.py` (~380 lines: parser
+      + instrument-id split helper + async lifecycle w/ backoff-reconnect + registry entry) +
+      `connectors/__init__.py::register_all()` wire-up in the CeFi perp bucket. Regression pack (23
+      tests) mirrors gap-002 / gap-003: `TestSplitInstrumentId` (perp / dated / lower-case-upper /
+      bare-fallback), `TestParseCoinbaseAdvancedMarketTrades` (snapshot perp / dated future / mixed
+      types in one envelope / unknown-product default / non-market-trades-channel-ignored /
+      missing-events / non-list-events / bad-side / missing-side / zero-price / zero-size /
+      missing-product_id / non-dict-payload / ISO timestamp without `Z` suffix), `TestSubscribeShape`
+      (wire-product mapping), `TestRegistry` (venue in `WS_FEED_CONNECTOR_FACTORIES` after
+      `register_all()`, factory produces `WSFeedConnector` Protocol surface, direct-match resolution in
+      the smoke-matrix gate), + connector initial-state + product-map population asserts. All 23 pass in
+      0.23s; full local `bash scripts/quality-gates.sh` green (sentinel = fd436aea). Closes the
+      smoke-matrix `blocked-not-registered` cells for COINBASE-FUTURES (5 declared data_types per
+      `expected_coverage`: trades + book_snapshot_5 + derivative_ticker + liquidations + futures_chain)
+      at the trades atom — sibling data_type connectors slot in on the same factory later.
 - [x] [CODE] P1. **BINANCE-DELIVERY WSFeedConnector build** ✅ — resolved as **honest-absence (NOT MVP)** per
       2026-06-27 operator **decision #3** (already-committed SSOT). No WS connector built. Sources:
       `unified_api_contracts/canonical/crosscutting/mvp_scope.py:419-423` (comment: "BINANCE-DELIVERY (Binance
@@ -344,6 +367,39 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-07** — **gap-004 shipped (COINBASE-FUTURES WSFeedConnector build)** by slot-4. Coinbase
+  Derivatives (INTX perps + weekly / monthly cash-settled CDE dated contracts) stream through the Advanced
+  Trade WS at `wss://advanced-trade-ws.coinbase.com` — a DIFFERENT endpoint from the existing
+  COINBASE-SPOT connector (Coinbase Exchange at `wss://ws-feed.exchange.coinbase.com` + the `matches`
+  channel, unchanged). Evidence (mtds@fd436aea):
+  1. `market_tick_data_service/live/connectors/coinbase_futures_ws.py` — `CoinbaseFuturesWSFeedConnector`
+     with `_parse_coinbase_advanced_market_trades` (channel-gate on `"market_trades"`; iterates the
+     nested `events[].trades[]`; drops rows with missing/degenerate price/size/side/product_id;
+     case-folds UPPER-CASE side; ISO-8601 timestamp parse). COINBASE-FUTURES carries BOTH `PERPETUAL`
+     (INTX) AND `FUTURE` (CDE dated) — the connector caches a `product_id → instrument_type` map
+     populated at `connect()` / `subscribe()` time from the canonical
+     `COINBASE-FUTURES:{PERPETUAL|FUTURE}:{product_id}` shape; unknown product_ids default to `FUTURE`
+     (fallback covered by regression). Registers `COINBASE-FUTURES` via
+     `register_ws_feed_connector`.
+  2. `market_tick_data_service/live/connectors/__init__.py` `register_all()` — wire-up added in the CeFi
+     perp bucket (alphabetical order between `bybit_ws` and `deribit_ws`).
+  3. `tests/unit/test_coinbase_futures_ws_connector.py` — 23 tests: `TestSplitInstrumentId` (perp / dated
+     / lower-case→upper / bare-fallback), `TestParseCoinbaseAdvancedMarketTrades` (snapshot perp / dated
+     future / mixed-types-in-one-envelope / unknown-product default / non-market-trades-channel /
+     missing-events / non-list-events / bad-side / missing-side / zero-price / zero-size /
+     missing-product_id / non-dict-payload / ISO timestamp without `Z`), `TestSubscribeShape`
+     (wire-product mapping), `TestRegistry` (venue in `WS_FEED_CONNECTOR_FACTORIES` + direct-match
+     smoke-matrix resolution), + connector initial-state + product-map population asserts. All 23 pass
+     in 0.23s; full local `bash scripts/quality-gates.sh` green (sentinel = fd436aea).
+  4. Smoke-matrix `blocked-not-registered` drop scope: closes cells for COINBASE-FUTURES at the trades
+     atom (5 declared data_types per `expected_coverage`: trades + book_snapshot_5 + derivative_ticker +
+     liquidations + futures_chain). Sibling data_type connectors slot in on the same factory later —
+     identical pattern to gap-002 Bitfinex, gap-003 Bitget, and pre-existing Deribit
+     trades→book_ticker rollout.
+
+  Follow-on: `book_snapshot_5` / `derivative_ticker` / `liquidations` / `futures_chain` sibling
+  connectors slot in later on the same factory.
 
 - **2026-07-07** — **gap-013 verified + checkbox flipped (DeFi DEX-swap 10-protocol scaffold)** by slot-3.
   Retrospective flip — the code shipped 2026-07-06 by slot-2 in `mtds@0ac6cb74` (`feat(live-connectors):
