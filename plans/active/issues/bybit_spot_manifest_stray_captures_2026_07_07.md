@@ -131,12 +131,25 @@ describes and (b) each subset needs its own diagnosis before mutation.
       Deliverable: a diagnosis appended to this issue doc naming the root writer + whether the EMPTY-string is a
       manifest projection artifact or a real writer bug (repo: market-tick-data-service). **DIAGNOSIS DONE 2026-07-07
       (slot-8 planning) — see "Diagnosis (a): 82k EMPTY-instrument_type rows" section below.**
-- [ ] [SCRIPT] P1. **Diagnose the ~54k BYBIT-SPOT rows under spot-nonsense data_types** (derivative_ticker /
+- [x] ✅ [SCRIPT] P1. **Diagnose the ~54k BYBIT-SPOT rows under spot-nonsense data_types** (derivative_ticker /
       futures_chain / options_chain / ohlcv_1m / perp_funding / liquidations). Two candidate root causes: (i)
       canonical-venue-map bug that routed BYBIT-FUTURES rows to `venue=BYBIT-SPOT`; (ii) writer that stamps
       `venue=BYBIT-SPOT` on a wrong shard. Read-only — cross-reference the rows' `symbol` values + GCS paths + capture
       windows against the BYBIT-FUTURES manifest to see whether these are duplicates of BYBIT-FUTURES captures.
       Deliverable: a diagnosis + a smoke-first delete/re-route plan appended here (repo: market-tick-data-service).
+      **DIAGNOSIS DONE 2026-07-07 (slot-8 planning) — HYPOTHESIS REJECTED: these are NOT stray captures. All 53,934 rows
+      are `capture_status=empty_confirmed` with `instrument_type=""` (100% both). ZERO captured, zero attempted failed,
+      zero expected_unattempted (they've all been through a fetch attempt that returned 0). By data_type ×
+      capture_status: derivative_ticker/empty_confirmed=13,350 + futures_chain/empty_confirmed=13,350 +
+      options_chain/empty_confirmed=13,350 + ohlcv_1m/empty_confirmed=13,350 + perp_funding/empty_confirmed=267 +
+      liquidations/empty_confirmed=267 = 53,934 exactly. Root cause: the ENUMERATOR broadcasts ALL cefi data_types to
+      ALL cefi venues (BYBIT-SPOT included) as expected_unattempted rows; the capture path attempts each and gets 0 rows
+      (because BYBIT-SPOT doesn't have those data types), stamping empty_confirmed. This is the pre-D2b failure mode
+      that `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]={}` (currently empty) does NOT gate at the enumerator seeding
+      layer — the D2b VENUE_CAPABILITY_AGS carve-out is applied in `build_expected` (Layer-1 audit reader) but the
+      enumerator's expected_unattempted SEEDER does not consult the same authority. Follow-up todo (a1) already covers
+      the honest-absence-writer forward path; adding follow-on (b1) below for the manifest-delete of these 54k no-value
+      rows once (d) capability populate lands (repo: market-tick-data-service OR instruments-service for the seeder).**
 - [ ] [SCRIPT] P1. **Once (a) + (b) are diagnosed, ship a corrective-relabel script for the ~53k PERPETUAL-stamp
       subset** (the class the -006 plan originally described). Smoke-first: relabel ONE shard, verify manifest split via
       `by_venue_instrument_type`, then scale. Gate: BYBIT-SPOT rows carry SPOT_PAIR; manifest `by_venue_instrument_type`
@@ -229,6 +242,15 @@ rows land with correct `instrument_type=spot_pair`.
       spot_pair). Gate: fresh BYBIT-SPOT rows in all three capture_status states carry `instrument_type` matching the
       -006 forward-path stamp (repo: market-tick-data-service; possibly instruments-service for the expected_unattempted
       seeder).
+- [ ] [SCRIPT] P1. **(b1) Manifest cleanup — delete the 54k BYBIT-SPOT rows under spot-nonsense data_types.** Diagnosis
+      (b) confirmed all 53,934 rows are `empty_confirmed` with `instrument_type=""` — they carry ZERO captured data (0
+      rows each), so deleting them from the manifest is LOSSLESS. GATED ON todo (d) landing (populate
+      `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` = `{trades, book_snapshot_5}`) so the enumerator stops re-seeding
+      these combinations on the next cron cycle. Also GATED ON the enumerator's expected_unattempted seeder honouring
+      `VENUE_DATA_TYPE_CAPABILITIES` (may be already done via D2b in `build_expected`; verify the SEEDER path —
+      `_row_data_types` or `_enumerate_v2_cefi` — also consults it). Smoke-first: delete ONE (venue=BYBIT-SPOT,
+      data_type=perp_funding) shard row + verify manifest state; then scale to the full 53,934. Gate: `by_data_type` for
+      BYBIT-SPOT shows only `{trades, book_snapshot_5}` (repo: market-tick-data-service).
 
 ## Progress Log
 
@@ -243,3 +265,16 @@ rows land with correct `instrument_type=spot_pair`.
   breakdown: empty_confirmed 80,638 (98.7%) + attempted_failed 978 (1.2%) + expected_unattempted 43 (<0.1%). See
   "Diagnosis (a)" section above for full breakdown + 4 numbered findings + follow-on todo (a1) filed for forward-path
   fix of the honest-absence writers. Slot-8 /done cites this issue doc + Progress Log entry.
+- **2026-07-07** — **Diagnosis (b) DONE — HYPOTHESIS REJECTED** (slot-8 planning). Task
+  `bybit_spot_manifest_stray_captures-002` ("Diagnose the ~54k BYBIT-SPOT rows under spot-nonsense data_types")
+  dispatched to slot-8 immediately after -001 /done. Key finding: the initial hypothesis of "stray captures from
+  BYBIT-FUTURES leaked into BYBIT-SPOT partition via canonical-venue-map bug" is REJECTED. All 53,934 spot-nonsense rows
+  are `capture_status=empty_confirmed` with `instrument_type=""` (100% of both) — ZERO captured rows in this subset.
+  Root cause: the enumerator (`enumerate_expected_universe.py`) broadcasts ALL cefi data_types to ALL cefi venues as
+  expected_unattempted rows without a per-venue capability gate; the capture path attempts each combination and
+  honest-fails at the source (BYBIT-SPOT can't produce derivative_ticker/etc.), stamping empty_confirmed with 0 rows.
+  This is the pre-D2b failure mode that `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]={}` was supposed to gate at the
+  `build_expected` (Layer-1 audit reader) side — the enumerator's expected_unattempted SEEDER does not consult the same
+  D2b authority. Follow-on todo (b1) added below for the 54k-row manifest-delete gated on todo (d) landing (which
+  populates BYBIT-SPOT capabilities so the enumerator stops broadcasting spot-nonsense data_types forward). Slot-8 /done
+  cites this issue doc + Progress Log entry.
