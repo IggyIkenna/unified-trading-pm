@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Agent Orchestrator — Backlog ↔ State DB Alignment Architecture
 summary:
-  Backlog↔state.db alignment — PlanRegenLoop regenerates backlog.yaml from plans/active/*.md `- [ ]` todos every
-  30 min (dedup by brief + slug-NNN id); prune_stale deletes orphan yaml + queued-undispatched state.db zombie
-  rows, never done/dispatched rows.
+  Backlog↔state.db alignment — PlanRegenLoop regenerates backlog.yaml from plans/active/*.md `- [ ]` todos every 30 min
+  (dedup by brief + slug-NNN id); prune_stale deletes orphan yaml + queued-undispatched state.db zombie rows, never
+  done/dispatched rows.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,15 +12,16 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, plan-hygiene, self-healing, backlog, infrastructure]
-related:
-  [
-    agent-orchestrator-overview.md,
-    agent-orchestrator-autospawn.md,
-    agent-orchestrator-host-offline-failover.md,
-  ]
+related: [agent-orchestrator-overview.md, agent-orchestrator-autospawn.md, agent-orchestrator-host-offline-failover.md]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator backlog-to-state.db alignment and regen]
-referenced_by: [codex/04-architecture/agent-orchestrator-autospawn.md, codex/04-architecture/agent-orchestrator-host-offline-failover.md, codex/04-architecture/agent-orchestrator-overview.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
+referenced_by:
+  [
+    codex/04-architecture/agent-orchestrator-autospawn.md,
+    codex/04-architecture/agent-orchestrator-host-offline-failover.md,
+    codex/04-architecture/agent-orchestrator-overview.md,
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+  ]
 owner:
 last_reviewed: 2026-05-30
 code_refs:
@@ -84,6 +85,45 @@ backlog.yaml (append-only by default)
        - DELETE orphan state.db rows WHERE status='queued' AND dispatched_to IS NULL
        - NEVER touch done / dispatched rows
 ```
+
+---
+
+## Dispatch-correctness update (2026-07-07 — `ao_dispatch_correctness_regen_reconcile`)
+
+The append-only flow above is **superseded**: regen is now a **reconcile**, and dispatch carries per-task craft + order.
+The three 2026-07-07 fleet-stall root causes are fixed here.
+
+**RC-1 — regen RECONCILES existing tasks (not append-only).** For each plan todo, regen matches the existing task by
+(`plan_ref`, brief) and UPDATES its `model` / `effort` / `thinking` / `assigned_role` / `priority` / `plan_order` in
+place when they drift (`_reconcile_task_fields`, `summary.reconciled`) — so a plan retier / re-home reaches an
+already-queued task on the next tick instead of being silently inert (the frozen-backlog bug). Removal of a todo whose
+task is **dispatched** → the task is marked terminal `cancelled` (not a zombie `dispatched` row, not a hard delete); the
+worker's next `/heartbeat` returns `cancel_task` and it reverts ONLY its own in-flight files + stops. Queued orphans
+still hard-delete.
+
+**Execution order + strict-serial.** Each task carries `plan_order` (its ordinal among the plan's open todos, re-derived
+every tick); dispatch sorts `(tier, priority, plan_order, plan_ref)`, so same-priority tasks (e.g. 10× P0) hold
+plan-file order and a mid-file insert lands in place. `sequential: true` (plan frontmatter) auto-chains each task's
+`prereqs.completed_tasks` to its predecessor (rebuilt each tick — a reorder can't deadlock).
+
+**RC-2 — dynamic per-task craft + one-plan-one-agent stickiness.** A todo's `[TAG]` (INFRA/DATA/BACKEND/UI/REVIEW) gives
+the task's craft role, overriding the plan's `assigned_role` per-task (mapped tag; generic tags fall back) — so ONE plan
+carries multiple crafts. `TaskBrief.assigned_role` is returned to the worker; `SlotRow.last_role` tracks the craft it
+last served. The worker ADOPTS a new craft (reads `agents/<role>.md`) on a role change and NEVER `/skip`s a
+role-mismatch (`worker.md` HARD RULE) — killing the dispatch→refuse→skip thrash. `_claim_plan_for_slot` pins a plan's
+sibling tasks to the first-claiming slot with `affinity="medium"` (+ `queued_at` reset), so the plan sticks to one owner
+but a slow owner spills to a free slot after the timeout. **Fleet parallelism ≈ active-plan count** (split work into
+separate plans for parallelism).
+
+**RC-3 — slot_skips hygiene.** A per-(slot,task) skip expires after `slot_skip_ttl_hours` (default 24h, config,
+0=disable) in `slot_skipped_tasks(ttl_hours=)`, so a stale skip can't starve dispatch across respawns; the prune clears
+skips for GC'd/cancelled tasks; `POST /api/slots/{id}/unskip-task` + `/clear-skips` replace the manual-SQL unskip.
+
+Code: `regen_backlog_from_plan.py` (reconcile / plan_order / sequential / per-task-role / cancel-prune), `dispatch.py`
+(sort + `to_task_brief`), `state_store/slots.py` (`assign_task_to_slot` / `_claim_plan_for_slot` / skip helpers),
+`orm.py` + `bootstrap.py` (`SlotRow.last_role`), `routes/slots_worker.py` + `agents/worker.md` (cancel + adopt-not-
+refuse). **Deferred**: the dispatched-retier model **capability chain** (stop-lower + `--resume`-higher; the queued path
+already works via the model-tier gate) + Fable.
 
 ---
 
