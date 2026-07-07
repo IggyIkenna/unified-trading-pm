@@ -361,9 +361,13 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 - [ ] [BACKEND] P2. (optional) Plan-activate affordance — `POST /api/plans/{slug}/activate` or a
       `[PLAN-ACTIVATE: <slug>]` final-todo marker so a phase reliably + auditably flips the next plan `draft`→`active`,
       instead of a raw frontmatter edit. Nice-to-have; the raw edit + `docs(plans):` commit already works.
-- [ ] [DOCS] P1. Codex SSOT update — reconcile semantics (A1–A4), dynamic-role model (B), capability chain (C), skip
+- [x] [DOCS] P1. Codex SSOT update — reconcile semantics (A1–A4), dynamic-role model (B), capability chain (C), skip
       hygiene (D), plan grouping + draft-gating (E), single-agent stickiness (F); banner-invalidate anything the change
-      supersedes. (task_template + CLAUDE.md author-facing docs already shipped in Phase 1.)
+      supersedes. (task_template + CLAUDE.md author-facing docs already shipped in Phase 1.) — ✅ DONE pm@20dce55f3:
+      added a "Dispatch-correctness update (2026-07-07)" section to
+      `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` documenting RC-1 reconcile / plan_order /
+      sequential / cancelled, RC-2 per-task roles + stickiness, RC-3 skip-TTL/unskip — and marked the old append-only
+      lifecycle diagram SUPERSEDED. (Capability chain C is documented as deferred.)
 
 ### Phase 7 — LATER (DEFERRED per operator — after Phases 1–6): Fable + new effort levels
 
@@ -378,6 +382,15 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07 — ✅ SESSION COMPLETE (autonomous run).** Shipped **Phase 1** (docs), **Phase 2** (RC-1 reconcile —
+  `ff6100ad`+`c6a31ed6`), **Phase 4** (RC-2 roles+stickiness — `f976b6e4`), **Phase 5** (RC-3 skip hygiene —
+  `07035aba`), **Phase 6 codex** (`20dce55f3`). **🎯 ALL 3 ROOT CAUSES FIXED (RC-1/RC-2/RC-3) — the incident is resolved
+  in code.** ~30 unit tests, every batch full-`quality-gates.sh`-green + quickmerge + same-turn plan flip. All code
+  STAGED on LDR — **the live AO server was NOT restarted** (operator deploys when ready; AO code isn't auto-pulled).
+  **Deferred (low-priority, tracked as todos below):** Phase 3 capability chain for a DISPATCHED-task retier (edge case
+  — the queued path already works via the model-tier gate; worker stop+`--resume` lifecycle = highest risk, best done in
+  a focused session); Phase 6 plan-activate affordance (P2 optional — raw edit already works); Phase 7 Fable + effort
+  levels (operator-deferred). Deploy note: Phase 4 stickiness makes fleet parallelism ≈ active-plan count (§F).
 - **2026-07-07** — ✅ **Phase 4 SHIPPED** (`ao@f976b6e4`, LDR; staging-first drain → v2-gated). RC-2 dynamic craft
   routing + stickiness: per-task role from the `[TAG]` (`_task_role_from_tag`/`_resolve_task_tier` — a mapped tag
   overrides the plan role so ONE plan carries multiple crafts; per-task tier derived from the task role);
