@@ -117,6 +117,39 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-07 — slot 10 planning (handoff — CONTEXT-PARK to fresh slot)
+
+**Todo 1 (compute features 2015→present)** — DISPATCHED again; slot-10 arrived at ~87% context and filed BLK-9b45b24d
+asking route-vs-attempt. Main answered **PARK — route to fresh slot** (RULES /compact >70% threshold; mid-backfill
+overflow leaves partial state that is worse than no run). `/skip-current-task` taken.
+
+**Handoff note for the fresh slot that picks this up next**:
+
+- Plan file: `plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md` (this file).
+- Task text: line 80 `[ ] [DATA] P0. Compute features 2015→present …` — un-flipped, no year chunks executed yet
+  (only `day=2020-01-01/feature_group=sfi_progressive/` present per slot-12 GCS check 2026-06-27).
+- Environment state: NO VM running for this task on slot-10. No partial writes attributable to this session. FSS bucket
+  `gs://features-sports-central-element-323112/sports_features/by_date/` remains essentially empty (last observed by
+  slot-12 2026-06-27; re-check before launching).
+- Invocation for compute: `python3 -m features_service.sports --operation compute --mode batch --asset-group SPORTS
+  --start-date <Y>-01-01 --end-date <Y>-12-31 --skip-existing` (year-chunked, resumable — see § Mechanics line 73) or
+  the parallel-backfill launcher `launch-features-sports-parallel-backfill-vm.sh`.
+- Final verification: `features-service/scripts/sports/check_pipeline_completeness.py --start-date 2015-01-01
+  --end-date <today>` per era (script's `setup_events()` fix is already shipped at `features-service@5ebac9a8`, so it
+  runs cleanly).
+
+**Prereq gate — VERIFY BEFORE LAUNCHING (main's specific instruction on BLK-9b45b24d)**: `sports-p2a-enrichment-
+coordinator-complete=False`. Cross-verify against the upstream plans BEFORE attempting compute:
+
+- `plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md` — needs 6/6 P2a todos complete.
+- `plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md` — needs 7/7 P2b todos complete.
+
+Prior operator answers on this same task (BLK-90adcb19 slot-12, BLK-9a447c3e slot-7) resolved to **B (wait)** — do NOT
+proceed on partial upstream (locks in `UPSTREAM_MISSING` NaN rows via `--skip-existing`; force-recompute after fill
+would be a second full pass at significant cost). Only launch after BOTH upstream plans are zero-missing.
+
+Slot-10 idle-parks pending re-dispatch to a fresh slot with a clean context window.
+
 ### 2026-06-27 — slot 4
 
 **Todo 2 (ML-ready verify)**: BLOCKED-PREREQ (BLK-497e5765)
