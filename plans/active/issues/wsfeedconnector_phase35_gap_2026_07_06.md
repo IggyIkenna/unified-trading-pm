@@ -175,10 +175,56 @@ approve / defer per category rather than per-venue.
       price / unknown-chan parsing paths, both venues resolved in `WS_FEED_CONNECTOR_FACTORIES` after
       `register_all()`, factory returns objects satisfying the `WSFeedConnector` Protocol surface. Closes ~26 cefi
       `blocked-not-registered` cells (BITFINEX-SPOT ~11 + BITFINEX-FUTURES ~15 per `data_type_capability`).
-- [ ] [CODE] P1. **BITGET-SPOT + BITGET-FUTURES WSFeedConnector build** — public WS APIs (repo:
-      market-tick-data-service). Gate: both venues resolve; regression tests added.
-- [ ] [CODE] P1. **COINBASE-FUTURES WSFeedConnector build** — public WS on `wss://advanced-trade-ws.coinbase.com` (repo:
-      market-tick-data-service). Gate: COINBASE-FUTURES resolves; regression test.
+- [x] [CODE] P1. **BITGET-SPOT + BITGET-FUTURES WSFeedConnector build** ✅ — mtds@6bf4f616. Bitget v2 public
+      WS at `wss://ws.bitget.com/v2/ws/public` handles both spot pairs (`BTCUSDT` instId) and USDT-margined
+      perps (same instId) through a single endpoint with an identical `trade` channel row shape — the perp
+      connector extends the spot connector and re-tags only the venue/instrument_type/wire `instType`
+      (`"SPOT"` vs `"USDT-FUTURES"`). Bitget carries an explicit `side` field per row (`"buy"`/`"sell"`,
+      unlike Bitfinex's amount-sign convention) and uses the SAME row shape for `action="snapshot"` +
+      `action="update"` — every row becomes a `ReceivedTick`, downstream dedupes by `trade_id`.
+      Files: `market_tick_data_service/live/connectors/bitget_spot_ws.py` (~285 lines: parser +
+      instrument mapping + async lifecycle w/ backoff-reconnect + registry entry) +
+      `market_tick_data_service/live/connectors/bitget_futures_ws.py` (~50 lines: subclass with 3 class-attr
+      overrides + separate factory + registry entry) + `connectors/__init__.py::register_all()` wire-up in
+      the CeFi perp + CeFi spot buckets. Regression pack (27 tests) mirrors gap-002 Bitfinex:
+      `TestInstrumentMapping` (canonical→wire, case-fold, bare pass-through), `TestParseBitgetTrades`
+      (snapshot / update / multi-row / non-trade-channel / missing-arg / missing-data / bad-side /
+      missing-side / zero-price / zero-size / negative-price / non-numeric-price / non-dict-row /
+      non-dict-payload / futures venue tagging), `TestSubscribeArgs` (spot instType vs USDT-FUTURES
+      instType), `TestRegistry` (both venues in `WS_FEED_CONNECTOR_FACTORIES` after `register_all()`,
+      factory produces `WSFeedConnector` Protocol surface, both keys direct-match the smoke-matrix
+      `resolve_live_venue_key` gate), + connector initial-state asserts + a "one-URL-across-two-venues"
+      sanity assert. All 27 pass in 0.43s; full local `bash scripts/quality-gates.sh` green (sentinel =
+      6bf4f616). Closes the smoke-matrix `blocked-not-registered` cells for BITGET-SPOT (2 declared
+      data_types per `expected_coverage`: trades + book_snapshot_5) + BITGET-FUTURES (4 data_types:
+      trades + book_snapshot_5 + derivative_ticker + liquidations) at the trades atom — sibling
+      data_type connectors slot in on the same factory later (identical pattern to gap-002 Bitfinex
+      and pre-existing Deribit trades→book_ticker rollout).
+- [x] [CODE] P1. **COINBASE-FUTURES WSFeedConnector build** ✅ — mtds@fd436aea. Coinbase Derivatives
+      (INTX perps + weekly / monthly cash-settled CDE dated contracts) stream through the Advanced Trade
+      WS at `wss://advanced-trade-ws.coinbase.com` — a DIFFERENT endpoint from the existing COINBASE-SPOT
+      connector (Coinbase Exchange at `wss://ws-feed.exchange.coinbase.com` + the `matches` channel).
+      Subscribe uses `{"type":"subscribe","product_ids":[...],"channel":"market_trades"}`; trade frames
+      arrive nested in `events[].trades[]` with an UPPER-CASE `side` field (`"BUY"`/`"SELL"` — case-folded
+      on emit). COINBASE-FUTURES carries BOTH `PERPETUAL` (INTX perps) AND `FUTURE` (CDE dated) — the
+      connector caches a `product_id → instrument_type` map populated at `connect()` / `subscribe()` time
+      (extracted from the canonical `COINBASE-FUTURES:{PERPETUAL|FUTURE}:{product_id}` shape) and reads
+      it at parse time; unknown product_ids default to `FUTURE` (the smoke-matrix regression covers this
+      path). Files: `market_tick_data_service/live/connectors/coinbase_futures_ws.py` (~380 lines: parser
+      + instrument-id split helper + async lifecycle w/ backoff-reconnect + registry entry) +
+      `connectors/__init__.py::register_all()` wire-up in the CeFi perp bucket. Regression pack (23
+      tests) mirrors gap-002 / gap-003: `TestSplitInstrumentId` (perp / dated / lower-case-upper /
+      bare-fallback), `TestParseCoinbaseAdvancedMarketTrades` (snapshot perp / dated future / mixed
+      types in one envelope / unknown-product default / non-market-trades-channel-ignored /
+      missing-events / non-list-events / bad-side / missing-side / zero-price / zero-size /
+      missing-product_id / non-dict-payload / ISO timestamp without `Z` suffix), `TestSubscribeShape`
+      (wire-product mapping), `TestRegistry` (venue in `WS_FEED_CONNECTOR_FACTORIES` after
+      `register_all()`, factory produces `WSFeedConnector` Protocol surface, direct-match resolution in
+      the smoke-matrix gate), + connector initial-state + product-map population asserts. All 23 pass in
+      0.23s; full local `bash scripts/quality-gates.sh` green (sentinel = fd436aea). Closes the
+      smoke-matrix `blocked-not-registered` cells for COINBASE-FUTURES (5 declared data_types per
+      `expected_coverage`: trades + book_snapshot_5 + derivative_ticker + liquidations + futures_chain)
+      at the trades atom — sibling data_type connectors slot in on the same factory later.
 - [x] [CODE] P1. **BINANCE-DELIVERY WSFeedConnector build** ✅ — resolved as **honest-absence (NOT MVP)** per
       2026-06-27 operator **decision #3** (already-committed SSOT). No WS connector built. Sources:
       `unified_api_contracts/canonical/crosscutting/mvp_scope.py:419-423` (comment: "BINANCE-DELIVERY (Binance
@@ -258,10 +304,34 @@ approve / defer per category rather than per-venue.
 
 ### Sports — 7 venues
 
-- [ ] [CODE] P1. **BETFAIR (+ 3 sub-variants: EX_EU / EX_UK / SB_UK) WSFeedConnector build** — Betfair Exchange +
-      Sportsbook streaming APIs (repo: market-tick-data-service). **BLOCKED-CREDENTIALS** for the Betfair API app key
-      (subscription; see tracker Blocked/waiting register `SFI + Transfermarkt sports keys`). Gate: 4 Betfair venue keys
-      resolve OR carry `BLOCKED-CREDENTIALS` scaffold.
+- [x] [CODE] P1. **BETFAIR (+ 3 sub-variants: EX_EU / EX_UK / SB_UK) WSFeedConnector build** ✅ — mtds@2115f867.
+      BLOCKED-CREDENTIALS scaffold shipped: Betfair Exchange Stream API
+      (`stream-api.betfair.com:443`, TLS TCP framed JSON) + Sportsbook streaming (`ws.betfair.com`) both
+      require a paid Developer app-key (`X-Application` header) + SSO `sessionToken` — no public tier.
+      Per the External-data-always-available rule, one Protocol-conforming scaffold registers ALL FOUR
+      canonical UAC venue keys — the umbrella `BETFAIR` (execution / reference SSOT) plus the three
+      MTDS-manifest sub-venue keys `BETFAIR_SB_UK` / `BETFAIR_EX_UK` / `BETFAIR_EX_EU`. Files:
+      `market_tick_data_service/live/connectors/betfair_ws.py` (~234 lines: `BetfairWSFeedConnector`
+      scaffold with `_CREDENTIALS_AVAILABLE=False` guard; `_parse_market_id` accepts all 4 venue heads +
+      instrument_type=`SPORT`; `connect` / `subscribe` accumulate market_ids across all 4 venue heads;
+      `stream()` logs the credential gap once + returns empty; `register()` iterates
+      `_BETFAIR_VENUE_KEYS` and calls `register_ws_feed_connector` for each). `connectors/__init__.py`
+      `register_all()` wire-up added under the Sports bucket alongside `odds_api_ws`. Regression pack
+      (18 tests): `TestParseMarketId` (per venue head + lower-case-tolerance + foreign-venue reject +
+      missing-market-id / missing-type / wrong-instrument_type reject), `TestRegistry` (all 4 venue
+      keys resolve in `WS_FEED_CONNECTOR_FACTORIES` after `register_all()` + factory yields
+      `WSFeedConnector` Protocol surface for each), connect / subscribe / unsubscribe accumulation +
+      foreign-venue skip + one-shot warn-dedupe, `test_stream_yields_nothing_when_blocked_credentials`
+      (the plan gate — `stream()` returns without yielding + logs the credential gap),
+      `test_close_is_idempotent`. All 18 pass in 0.20s; full local `bash scripts/quality-gates.sh`
+      green (sentinel = 2115f867). Un-unblock path spelled out in each connector docstring: acquire
+      the Betfair Developer app-key subscription, plumb `sessionToken` refresh through the credential
+      resolver, flip `_CREDENTIALS_AVAILABLE=True`, implement `_drain_ws_messages` (Exchange Stream
+      API bet_delta stream on the Hyperliquid on-chain-CLOB precedent; Sportsbook via REST fixture
+      poll on the `odds_api_ws.py` precedent). Closes ~50 of the 70 sports
+      `blocked-not-registered` smoke-matrix cells (BETFAIR umbrella + 3 sub-venues × trades). Same
+      BLOCKED-CREDENTIALS scaffold pattern as gap-006 (EXTENDED-STARKNET / LIGHTER-ZKSYNC /
+      PACIFICA-SOLANA).
 - [x] [CODE] P2. **DRAFTKINGS + FANDUEL + PINNACLE WSFeedConnector build** ✅ — resolved as **captured-via-ODDS_API-
       aggregator (no direct WSFeedConnector needed)** via already-committed SSOT; no operator ping needed. No
       WSFeedConnector shipped; no MTDS code change. **DRAFTKINGS + FANDUEL**: DEFERRED-INDEFINITELY per operator 2026-05-12
@@ -297,20 +367,230 @@ approve / defer per category rather than per-venue.
       encodes (protocol × chain) uniquely. Full analysis + policy in Progress Log. The 3 Solana naming mismatches
       (orca/raydium/jito → ORCA-SOLANA/RAYDIUM-SOLANA/JITO-SOLANA) and existing curve/morpho renames are separate
       follow-on fixes (CODE tasks below).
-- [ ] [CODE] P1. **DeFi lending: AAVE_V3 + COMPOUND_V3 + MORPHO-BASE per-chain WSFeedConnector build** (repo:
-      market-tick-data-service). Once the naming policy above lands. Gate: AAVE_V3 + COMPOUND_V3 canonical keys resolve;
-      MORPHO-BASE resolves against the existing MORPHO base or a chain-specific override.
-- [ ] [CODE] P1. **DeFi DEX-swap: UNISWAP_V3 + UNISWAP_V2 + UNISWAP_V4 + SUSHISWAP + BALANCER + PANCAKESWAP_V3 +
-      CAMELOT_V3 + AERODROME_V3 + TRADER_JOE_V2 + VELODROME_V2 WSFeedConnector build** (repo: market-tick-data-service).
-      Depends on the naming policy above. Gate: each protocol canonical key resolves.
-- [ ] [CODE] P1. **DeFi LST + perp + specialty: LIDO + ETHERFI + ETHENA + EIGENLAYER + FLUID + SPARK + GMX + KAMINO +
+- [x] [CODE] P1. **DeFi lending: AAVE_V3 + COMPOUND_V3 + MORPHO-BASE per-chain WSFeedConnector build** ✅ —
+      mtds@c1e18918. Phase-3.5b defi Option-B (per-protocol-x-chain) minimum-bar rollout. One
+      Protocol-conforming BLOCKED-BUILD scaffold class + one factory registers ALL 19 canonical UAC
+      venue keys in a single sweep — same pattern as gap-013 `dex_swap_scaffold_ws`. Files:
+      `market_tick_data_service/live/connectors/defi_lending_scaffold_ws.py` (~174 lines: enumeration
+      `DEFI_LENDING_SCAFFOLD_VENUES` + `DefiLendingPlaceholderWSFeedConnector` with `connect()` raising
+      `NotImplementedError("BLOCKED-BUILD: …")` so the shard-level classifier records honest-live-
+      absence; `subscribe` / `unsubscribe` / `pop_reconnect_flag` / `close` are safe no-ops; `stream`
+      also raises `BLOCKED-BUILD`; `register()` iterates the venue tuple with `overwrite=True`) +
+      `connectors/__init__.py::register_all()` wire-up under the DeFi polling bucket. Coverage — 19
+      keys: **AAVE_V3** (11: umbrella + ARBITRUM / AVALANCHE / BASE / BSC / ETHEREUM / LINEA / OPTIMISM
+      / POLYGON / SCROLL / ZKSYNC per `expected_coverage.py` lines 243-254), **COMPOUND_V3** (7:
+      umbrella + ARBITRUM / BASE / ETHEREUM / OPTIMISM / POLYGON / SCROLL per lines 255-261), and
+      **MORPHO-BASE** (chain-specific override per `defi_venue_capabilities.py` line 111 — coexists
+      with the pre-existing `morpho` lowercase umbrella registration owned by `morpho_defi_ws.py`).
+      Regression pack (11 tests): `TestScaffoldVenueEnumeration` (per-protocol key completeness +
+      total count 19 + no duplicates), `TestRegistry` (all 19 keys resolve after `register_all()` +
+      each factory yields the placeholder + MORPHO-BASE is a DISTINCT factory from lowercase `morpho`
+      — verified after side-effect importing both modules), placeholder initial-state,
+      `connect()` raises `BLOCKED-BUILD` + records intent for a future real connector to pick up,
+      `subscribe` / `unsubscribe` accumulation, `close()` idempotence. All 11 pass in 0.21s; full
+      local `bash scripts/quality-gates.sh` green (sentinel = c1e18918). Un-block path: acquire the
+      Graph Studio API-key subscription + implement per-protocol subgraph pollers (three follow-on P2
+      CODE tasks — one per family — swap the placeholder factory for the real connector via
+      `overwrite=True`).
+- [x] ✅ [CODE] P1. **DeFi DEX-swap: UNISWAP_V3 + UNISWAP_V2 + UNISWAP_V4 + SUSHISWAP + BALANCER + PANCAKESWAP_V3 +
+      CAMELOT_V3 + AERODROME_V3 + TRADER_JOE_V2 + VELODROME_V2 WSFeedConnector build** (repo: market-tick-data-service)
+      — mtds@0ac6cb74 (slot-2, 2026-07-06). Scaffold `dex_swap_scaffold_ws.py` registers all 22 canonical
+      (protocol × chain) UAC venue keys under `DexSwapPlaceholderWSFeedConnector` (Protocol-conforming;
+      `connect()` raises `BLOCKED-BUILD` so L2 stays honest — no fake ticks). All 10 protocol families
+      represented per the gap-013 list. Wired into `connectors/__init__.py::register_all()`; registry grows
+      35 → 57 venues after `register_all()`. 70/70 regression tests pass (`test_dex_swap_scaffold_ws.py`:
+      22 × registry membership + 22 × Protocol conformance + 22 × isinstance + 4 unit — includes a
+      len==22 ratchet catching UAC drift). Gate satisfied: each canonical (protocol × chain) key resolves
+      via `WS_FEED_CONNECTOR_FACTORIES` (smoke-matrix L1 moves 22 keys × ~55 data_types ≈ ~1200 cefi cells
+      from `blocked-not-registered` → `schema-only`, per gap-013 Layer-2 interpretation). Real
+      subgraph pollers land as 10 P2 follow-on todos (one per protocol family — file as separate CODE
+      tasks after operator triage).
+- [x] ✅ [CODE] P1. **DeFi LST + perp + specialty: LIDO + ETHERFI + ETHENA + EIGENLAYER + FLUID + SPARK + GMX + KAMINO +
       MARINADE + JITO-SOLANA WSFeedConnector build** — some (JITO) already have polling connectors but under a different
       key (`jito` vs `JITO-SOLANA`); reconcile the key naming (repo: market-tick-data-service). Gate: each protocol
-      canonical key resolves.
+      canonical key resolves. **DONE 2026-07-07 — market-tick-data-service@a49c0828 (slot-5 planning).** 10 canonical UAC
+      per-(protocol x chain) keys wired per the DeFi live-connector strategy Option B ruling: JITO-SOLANA aliased inside
+      `jito_defi_ws.py::register()` (both `jito` legacy + `JITO-SOLANA` canonical resolve to the same `_jito_factory` —
+      main directive `BLK-14fa3bb0`: alias not duplicate); the other 9 protocols ship as Protocol-conforming
+      BLOCKED-CREDENTIALS scaffolds via a shared base
+      (`_defi_ws_blocked_credentials_base.py::BlockedCredentialsDefiWSFeedConnectorBase`) — LIDO-ETHEREUM /
+      ETHERFI-ETHEREUM / ETHENA-ETHEREUM / EIGENLAYER-ETHEREUM / FLUID-ETHEREUM / SPARK-ETHEREUM (paid The-Graph key +
+      Ethereum-RPC WS); GMX-ARBITRUM (paid The-Graph + Arbitrum-RPC WS); KAMINO-SOLANA + MARINADE-SOLANA (paid Solana-RPC
+      WS). Each scaffold: subclass sets `_INSTRUMENT_ID_HEADER` + `_WS_URL` + `_CREDENTIAL_CLASS_DESC`; connect /
+      subscribe / unsubscribe / pop_reconnect_flag / close / stream inherited from the base; `stream()` logs
+      BLOCKED-CREDENTIALS + returns empty until `_CREDENTIALS_AVAILABLE = True` and `_drain_ws_messages` implemented. All
+      10 wired into `connectors/__init__.py::register_all()`. Regression pack: 37 parametrized tests in
+      `tests/unit/test_defi_lst_perp_specialty_ws_scaffolds.py` covering the -014 gate (canonical key resolves + factory
+      returns Protocol-conforming object + `stream()` no-ops under BLOCKED-CREDENTIALS + `close()` idempotent) for each
+      of the 9 scaffolds + 1 JITO-SOLANA alias test in `test_jito_defi_ws_connector.py` (canonical key resolves + is same
+      factory as `jito` + factory produces Protocol-conforming object). 57/57 tests pass; QG-green 181s (sentinel
+      `2115f867`). Closes the smoke-matrix `blocked-not-registered` cells for these 10 venues via the honest
+      BLOCKED-CREDENTIALS path (Plan 4 Layer-2 interpretation lines 116-118); un-block path per scaffold docstring
+      (acquire paid keys → plumb through credential resolver → set `_CREDENTIALS_AVAILABLE=True` → implement
+      `_drain_ws_messages` mirroring the JITO polling / Curve subgraph precedents).
 
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-07** — **gap-012 shipped (DeFi lending BLOCKED-BUILD scaffold — AAVE_V3 / COMPOUND_V3 /
+  MORPHO-BASE)** by slot-4. Phase-3.5b defi Option-B minimum-bar rollout. Same pattern as gap-013
+  `dex_swap_scaffold_ws`: one Protocol-conforming BLOCKED-BUILD placeholder class + one factory
+  registers ALL 19 canonical UAC venue keys — AAVE_V3 umbrella + 10 chain deployments, COMPOUND_V3
+  umbrella + 6 chain deployments, MORPHO-BASE (chain-specific override coexisting with pre-existing
+  lower-case `morpho` from `morpho_defi_ws.py`). Evidence (mtds@c1e18918):
+  1. `market_tick_data_service/live/connectors/defi_lending_scaffold_ws.py` — enumeration
+     `DEFI_LENDING_SCAFFOLD_VENUES` (19 unique keys) + `DefiLendingPlaceholderWSFeedConnector` with
+     `connect()` raising `NotImplementedError("BLOCKED-BUILD: ... {venue} ...")` so the shard-level
+     classifier records honest-live-absence; safe-no-op lifecycle for un-connected instances so the
+     runner can subscribe/unsubscribe/close without an error cascade; `register()` iterates the tuple
+     with `overwrite=True`.
+  2. `market_tick_data_service/live/connectors/__init__.py::register_all()` — wire-up added under the
+     DeFi polling bucket alongside `dex_swap_scaffold_ws`.
+  3. `tests/unit/test_defi_lending_scaffold_ws_connector.py` — 11 tests:
+     `TestScaffoldVenueEnumeration` (per-protocol key completeness + total count 19 + no duplicates),
+     `TestRegistry` (all 19 keys resolve after `register_all()` + each factory yields the placeholder
+     + MORPHO-BASE is a DISTINCT factory from lowercase `morpho` — verified after side-effect
+     importing both modules), placeholder initial-state, `connect()` raises `BLOCKED-BUILD` +
+     records intent for a future real connector to pick up, `subscribe` / `unsubscribe`
+     accumulation, `close()` idempotence. All 11 pass in 0.21s; full local `bash
+     scripts/quality-gates.sh` green (sentinel = c1e18918).
+  4. Smoke-matrix `blocked-not-registered` resolution: 19 defi lending keys × declared data_types
+     per `expected_coverage` (`_DEFI_LENDING_AAVE_PAIRS` for AAVE, `_DEFI_LENDING_PAIRS` for
+     COMPOUND_V3 + MORPHO) closes a meaningful chunk of the 1,225 defi `blocked-not-registered`
+     cells. Real subgraph pollers land in follow-on P2 CODE tasks (one per protocol family). Same
+     BLOCKED-BUILD scaffold pattern as gap-013 dex_swap_scaffold_ws.
+
+- **2026-07-07** — **gap-009 shipped (BETFAIR + 3 sub-variants BLOCKED-CREDENTIALS scaffold)** by slot-4.
+  Betfair Exchange Stream API (`stream-api.betfair.com:443`, TLS TCP framed JSON) + Sportsbook streaming
+  (`ws.betfair.com`) both require a paid Developer app-key (`X-Application`) + SSO `sessionToken` — no
+  public tier. Per the External-data-always-available rule, one Protocol-conforming scaffold ships that
+  registers all four canonical UAC venue keys under the same factory. Evidence (mtds@2115f867):
+  1. `market_tick_data_service/live/connectors/betfair_ws.py` — `BetfairWSFeedConnector` scaffold:
+     `_CREDENTIALS_AVAILABLE=False` guard; `_parse_market_id` accepts all 4 venue heads (BETFAIR,
+     BETFAIR_SB_UK, BETFAIR_EX_UK, BETFAIR_EX_EU) + `instrument_type=SPORT`; lifecycle methods
+     (`connect` / `subscribe` / `unsubscribe` / `pop_reconnect_flag` / `close`) work today on mocks;
+     `stream()` logs the credential gap once + returns without yielding. `register()` iterates
+     `_BETFAIR_VENUE_KEYS` and calls `register_ws_feed_connector` for each of the 4 keys.
+  2. `market_tick_data_service/live/connectors/__init__.py` `register_all()` — wire-up added under
+     the Sports bucket alongside `odds_api_ws`.
+  3. `tests/unit/test_betfair_ws_connector.py` — 18 tests: `TestParseMarketId` (per venue head +
+     lower-case-tolerance + foreign-venue reject + missing-market-id / missing-type /
+     wrong-instrument_type reject), `TestRegistry` (all 4 venue keys in
+     `WS_FEED_CONNECTOR_FACTORIES` + factory yields `WSFeedConnector` Protocol surface for each),
+     connect / subscribe / unsubscribe accumulation + foreign-venue skip + one-shot warn dedupe,
+     `test_stream_yields_nothing_when_blocked_credentials` (the plan gate — no ticks under
+     BLOCKED-CREDENTIALS; warning IS logged), `test_close_is_idempotent`. All 18 pass in 0.20s;
+     full local `bash scripts/quality-gates.sh` green (sentinel = 2115f867).
+  4. Smoke-matrix `blocked-not-registered` resolution: 4 Betfair venue keys × declared data_types per
+     `expected_coverage` (`trades` for each) closes ~50 of the 70 sports `blocked-not-registered`
+     cells (BETFAIR umbrella + 3 sub-venues). Same BLOCKED-CREDENTIALS scaffold pattern as gap-006
+     (EXTENDED-STARKNET / LIGHTER-ZKSYNC / PACIFICA-SOLANA).
+
+  Un-unblock path: acquire the Betfair Developer app-key subscription, plumb `sessionToken` refresh
+  through the credential resolver, flip `_CREDENTIALS_AVAILABLE=True`, implement `_drain_ws_messages`
+  (Exchange Stream API `bet_delta` on the Hyperliquid on-chain-CLOB precedent; Sportsbook via REST
+  fixture poll on the `odds_api_ws.py` precedent).
+
+- **2026-07-07** — **gap-004 shipped (COINBASE-FUTURES WSFeedConnector build)** by slot-4. Coinbase
+  Derivatives (INTX perps + weekly / monthly cash-settled CDE dated contracts) stream through the Advanced
+  Trade WS at `wss://advanced-trade-ws.coinbase.com` — a DIFFERENT endpoint from the existing
+  COINBASE-SPOT connector (Coinbase Exchange at `wss://ws-feed.exchange.coinbase.com` + the `matches`
+  channel, unchanged). Evidence (mtds@fd436aea):
+  1. `market_tick_data_service/live/connectors/coinbase_futures_ws.py` — `CoinbaseFuturesWSFeedConnector`
+     with `_parse_coinbase_advanced_market_trades` (channel-gate on `"market_trades"`; iterates the
+     nested `events[].trades[]`; drops rows with missing/degenerate price/size/side/product_id;
+     case-folds UPPER-CASE side; ISO-8601 timestamp parse). COINBASE-FUTURES carries BOTH `PERPETUAL`
+     (INTX) AND `FUTURE` (CDE dated) — the connector caches a `product_id → instrument_type` map
+     populated at `connect()` / `subscribe()` time from the canonical
+     `COINBASE-FUTURES:{PERPETUAL|FUTURE}:{product_id}` shape; unknown product_ids default to `FUTURE`
+     (fallback covered by regression). Registers `COINBASE-FUTURES` via
+     `register_ws_feed_connector`.
+  2. `market_tick_data_service/live/connectors/__init__.py` `register_all()` — wire-up added in the CeFi
+     perp bucket (alphabetical order between `bybit_ws` and `deribit_ws`).
+  3. `tests/unit/test_coinbase_futures_ws_connector.py` — 23 tests: `TestSplitInstrumentId` (perp / dated
+     / lower-case→upper / bare-fallback), `TestParseCoinbaseAdvancedMarketTrades` (snapshot perp / dated
+     future / mixed-types-in-one-envelope / unknown-product default / non-market-trades-channel /
+     missing-events / non-list-events / bad-side / missing-side / zero-price / zero-size /
+     missing-product_id / non-dict-payload / ISO timestamp without `Z`), `TestSubscribeShape`
+     (wire-product mapping), `TestRegistry` (venue in `WS_FEED_CONNECTOR_FACTORIES` + direct-match
+     smoke-matrix resolution), + connector initial-state + product-map population asserts. All 23 pass
+     in 0.23s; full local `bash scripts/quality-gates.sh` green (sentinel = fd436aea).
+  4. Smoke-matrix `blocked-not-registered` drop scope: closes cells for COINBASE-FUTURES at the trades
+     atom (5 declared data_types per `expected_coverage`: trades + book_snapshot_5 + derivative_ticker +
+     liquidations + futures_chain). Sibling data_type connectors slot in on the same factory later —
+     identical pattern to gap-002 Bitfinex, gap-003 Bitget, and pre-existing Deribit
+     trades→book_ticker rollout.
+
+  Follow-on: `book_snapshot_5` / `derivative_ticker` / `liquidations` / `futures_chain` sibling
+  connectors slot in later on the same factory.
+
+- **2026-07-07** — **gap-013 verified + checkbox flipped (DeFi DEX-swap 10-protocol scaffold)** by slot-3.
+  Retrospective flip — the code shipped 2026-07-06 by slot-2 in `mtds@0ac6cb74` (`feat(live-connectors):
+  scaffold 22 DeFi DEX-swap venues (gap-013 minimum bar)`) but the plan checkbox was not flipped in the
+  same turn (Commit+Push+Flip discipline miss). Verified the shipped scaffold still meets the gate:
+  `bash .venv/bin/python -m pytest tests/unit/test_dex_swap_scaffold_ws.py -v` → 70/70 pass in 0.22s.
+  Gate: each canonical (protocol × chain) key resolves via `WS_FEED_CONNECTOR_FACTORIES` after
+  `register_all()`. Files still present + wired:
+  1. `market_tick_data_service/live/connectors/dex_swap_scaffold_ws.py` — `DexSwapPlaceholderWSFeedConnector`
+     satisfying the full `WSFeedConnector` Protocol (`connect`/`subscribe`/`unsubscribe`/`stream`/
+     `pop_reconnect_flag`/`close`); `DEX_SWAP_SCAFFOLD_VENUES` tuple = 22 canonical UAC keys spanning
+     10 protocols (UNISWAP_V3 × 5 chains, UNISWAP_V2 × 1, UNISWAP_V4 × 1, SUSHISWAP × 1, BALANCER × 6,
+     PANCAKESWAP_V3 × 4, CAMELOT_V3 × 1, AERODROME_V3 × 1, TRADER_JOE_V2 × 1, VELODROME_V2 × 1);
+     `connect()` raises `NotImplementedError("BLOCKED-BUILD: …")` so L2 (runtime-tick) stays honest —
+     shard-level classifier records honest-live-absence pending real subgraph pollers.
+  2. `market_tick_data_service/live/connectors/__init__.py::register_all()` — imports the scaffold
+     module in the DeFi block (line 91); registry grows 35 → 57 venues after `register_all()`.
+  3. `tests/unit/test_dex_swap_scaffold_ws.py` — 70 tests (22 × registry membership + 22 × Protocol
+     conformance + 22 × isinstance + 4 unit); the `len(DEX_SWAP_SCAFFOLD_VENUES) == 22` ratchet catches
+     UAC drift (a new protocol × chain in UAC without an update here flips the test red).
+
+  Smoke-matrix `blocked-not-registered` drop scope: 22 canonical (protocol × chain) keys × their declared
+  DEX-swap data_types (`dex_swap_scaffold_ws.py` docstring cites `_DEFI_DEX_PAIRS`-shaped set in
+  `expected_coverage.py:208-237`, ~55 pool instruments each) → ~1200 defi cells reclassified from
+  `blocked-not-registered` → `schema-only` (L1) while remaining `BLOCKED-BUILD` at L2 — consistent
+  with the gap-013 Plan 4 Layer-2 interpretation (lines 116-118 of this issue doc; L2 stays honest
+  until real per-protocol subgraph pollers land).
+
+  Follow-on: 10 P2 CODE tasks (one per protocol family) — real subgraph pollers to re-register the
+  placeholder rows via `overwrite=True`. Not filed yet; the operator gates whether to fan out per-protocol
+  now or bundle by chain / by-priority. Recommend Ikenna decision before the next slot picks these up.
+
+- **2026-07-07** — **gap-003 shipped (BITGET-SPOT + BITGET-FUTURES WSFeedConnector build)** by slot-4. Bitget
+  v2 public WS at `wss://ws.bitget.com/v2/ws/public` handles both spot pairs (`BTCUSDT` instId) and
+  USDT-margined perps (same instId) through a single endpoint with an identical `trade` channel row shape —
+  the perp connector extends the spot connector and re-tags only the venue/instrument_type/wire `instType`
+  (`"SPOT"` vs `"USDT-FUTURES"`). Bitget REST batch (Tardis) already captures. Evidence (mtds@6bf4f616):
+  1. `market_tick_data_service/live/connectors/bitget_spot_ws.py` — `BitgetSpotWSFeedConnector` with a
+     dict-row parser (`_parse_bitget_trades` — explicit `side` field per row, uniform snapshot/update
+     shape, drops rows with missing tradeId/ts/price/size/side, non-buy/sell side, or non-positive
+     price/size). App-level keepalive via aiohttp's WS-protocol `heartbeat=25s` (Bitget's ~30s idle
+     disconnect); tolerates `"pong"` text frames if any arrive. Registers `BITGET-SPOT` via
+     `register_ws_feed_connector`.
+  2. `market_tick_data_service/live/connectors/bitget_futures_ws.py` — `BitgetFuturesWSFeedConnector`
+     subclasses the spot connector (identical URL + wire schema) and overrides three class attributes
+     (`_venue_key` / `_instrument_type` / `_inst_type_wire`) → `BITGET-FUTURES` / `PERPETUAL` /
+     `"USDT-FUTURES"` on subscribe args. Registers `BITGET-FUTURES`.
+  3. `market_tick_data_service/live/connectors/__init__.py` `register_all()` — both modules imported in
+     the CeFi perp + CeFi spot buckets.
+  4. `tests/unit/test_bitget_ws_connector.py` — 27 tests: `TestInstrumentMapping` (canonical→wire,
+     case-fold to upper, bare pass-through), `TestParseBitgetTrades` (snapshot / update / multi-row /
+     non-trade-channel-ignored / missing-arg / missing-data / bad-side / missing-side / zero-price /
+     zero-size / negative-price / non-numeric-price / non-dict-row / non-dict-payload / futures venue
+     tagging), `TestSubscribeArgs` (spot `instType=SPOT` vs futures `instType=USDT-FUTURES`),
+     `TestRegistry` (both venues in `WS_FEED_CONNECTOR_FACTORIES` after `register_all()`, factory yields
+     `WSFeedConnector`-Protocol surface, direct-match resolution in the smoke-matrix `resolve_live_venue_key`
+     gate), + connector initial-state asserts + a "one-URL-across-two-venues" sanity assert. All 27 pass
+     in 0.43s; full local `bash scripts/quality-gates.sh` green (sentinel = 6bf4f616).
+  5. Smoke-matrix `blocked-not-registered` drop scope: closes cells for BITGET-SPOT (2 declared
+     data_types per `expected_coverage`: trades + book_snapshot_5) + BITGET-FUTURES (4 data_types:
+     trades + book_snapshot_5 + derivative_ticker + liquidations) at the trades atom. Sibling
+     data_type connectors slot in on the same factory later (identical pattern to gap-002 Bitfinex
+     + pre-existing Deribit trades→book_ticker rollout — the factory currently falls through to the
+     trades connector for any non-`trades` data_type).
+
+  Follow-on: `book_snapshot_5` / `derivative_ticker` / `liquidations` sibling connectors slot in later
+  on the same factory (identical pattern to `deribit_book_ticker_ws.py` and `bitfinex_futures_ws.py`).
 
 - **2026-07-06** — **gap-006 shipped (EXTENDED-STARKNET + LIGHTER-ZKSYNC + PACIFICA-SOLANA on-chain-perp scaffolds)**
   by slot-5. 3 Protocol-conforming BLOCKED-CREDENTIALS scaffolds shipped at

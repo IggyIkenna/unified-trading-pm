@@ -1,12 +1,22 @@
 ---
 doc_type: plan
 title: Test fleet image builds from current code — local (amd64) → GCP → AWS, base-first, no-deploy
-summary: Validate that every repo container image builds correctly from current code — local amd64, then GCP, then AWS — base-first with no deploy.
+summary:
+  Validate that every repo container image builds correctly from current code — local amd64, then GCP, then AWS —
+  base-first with no deploy.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: [docker, image-build, fleet, gcp, aws, ci, validation]
 related: []
@@ -18,13 +28,21 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-last_updated: 2026-06-27
+last_updated: 2026-07-07
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source: ['2026-06-17 operator (Harsh) — proactively validate that every repo''s container image builds from current code BEFORE prod-readiness, so we surface + fix build breakage now instead of under prod pressure', '2026-06-17 Ikenna context — UI repos auto-build+deploy (rapid-dev, low harm); the rest are cost-gated behind quickmerge --build; the dashboard "unknown" image state is a SEPARATE (IAM) issue', '2026-06-17 diagnosis (harsh-slot-3) — full build-pipeline trace (base→service FROM-digest chain, test-in-image, GCP/AWS dual build paths, tarball-vs-image distinction)']
+source:
+  [
+    "2026-06-17 operator (Harsh) — proactively validate that every repo's container image builds from current code
+    BEFORE prod-readiness, so we surface + fix build breakage now instead of under prod pressure",
+    '2026-06-17 Ikenna context — UI repos auto-build+deploy (rapid-dev, low harm); the rest are cost-gated behind
+    quickmerge --build; the dashboard "unknown" image state is a SEPARATE (IAM) issue',
+    "2026-06-17 diagnosis (harsh-slot-3) — full build-pipeline trace (base→service FROM-digest chain, test-in-image,
+    GCP/AWS dual build paths, tarball-vs-image distinction)",
+  ]
 assigned_role: infra-engineer
 drift_direction: advance-code
 ---
@@ -127,12 +145,22 @@ Docker-image path.
       image `sha256:f3b6c7f0…`, installed `instruments-service==0.10.0`, exit 0). `--no-deps` service install needs NO
       extra in-image AR auth (base carries deps). 2 cosmetic Dockerfile lint warnings only (empty default `BASE_IMAGE`
       arg; `--platform` constant). **Repo:** instruments-service.
-- [ ] [SCRIPT] P1. Document the canonical local-build invocation (PROJECT_ID + BASE_IMAGE_DIGEST args,
-      `--platform linux/amd64`) + the in-image AR-auth handling (does the `--no-deps` service install need ADC mounted?
-      resolve once on the canary). Capture as a short runnable snippet IN THIS PLAN (no separate summary doc).
-- [ ] [INFRA] P1. Decide base-image local strategy: services can pull the existing base from AR (no local base build
-      needed); the base libs (UTL) build locally only if we want to test the base Dockerfile itself (heavier — needs UAC
-      source + PM QG scripts). Record whether Phase 1 base libs are validated locally or GCP-only.
+- [x] ✅ [SCRIPT] P1. Document the canonical local-build invocation — DONE 2026-07-07 (slot-12 data_engineering, via
+      `infra_capture_and_devops_leftovers-006`). Runnable snippets captured in the § "Canonical build invocation"
+      section below (drawn from the 2026-06-17 canary findings + verified against current
+      `unified-trading-library/cloudbuild.yaml` + `instruments-service/Dockerfile` on LDR). In-image AR-auth resolved on
+      the canary (2026-06-17): the `--no-deps` service install needs NO extra ADC mount — the UTL base bakes UAC + all
+      shared deps, so `uv pip install --system --no-sources -e .` at the service layer resolves against the
+      pre-installed base with no additional Artifact Registry auth. AR auth is only needed inside the UTL base build for
+      the wheel/ base-image publish step (handled by the cloudbuild `auth-ar` + `configure-docker` steps + the
+      `.deps/UAC` sibling fallback in `Dockerfile:88`).
+- [x] ✅ [INFRA] P1. Base-image local strategy — DECIDED 2026-07-07 (slot-12): **services pull existing base from AR (no
+      local base build needed)**; **base libs (UTL) build locally only when testing the base Dockerfile itself**
+      (heavier — needs UAC source in `.deps/` and, for the in-build wheel/QG cloudbuild path, PM QG scripts). Phase 1
+      base libs are validated **locally** (UTL PASS on the `.deps/UAC` recipe → `sha256:7b614fec…`; UAC wheel PASS via
+      `uv build --wheel`). `unified-cloud-interface` and `unified-internal-contracts` are NOT locally cloned and are
+      **GCP-authoritative** (their `-build` triggers fire on LDR push). Recorded here per the Phase-0 gate; no separate
+      summary doc.
 
 ### Phase 1 — Base libraries (local → GCP), base-first
 
@@ -280,10 +308,114 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
 | 3     | ≥1 lib + ≥1 service build on AWS CodeBuild                                    | AWS CodeBuild build SUCCESS                      | —             |
 | 4     | 1–2 trial images deploy + run healthy                                         | service health endpoint 200                      | —             |
 
+## Canonical build invocation
+
+Captured 2026-07-07 from the 2026-06-17 canary + verified against LDR (`unified-trading-library/cloudbuild.yaml` +
+`instruments-service/Dockerfile`). Two paths — local (dev, free, fast feedback) and GCP (authoritative, test-in-image).
+
+### Local — UTL base image (Pattern A: fleet-wide base)
+
+```bash
+cd unified-trading-library
+
+# UAC source is required in .deps/ — the Dockerfile installs UAC editable from
+# /app/.deps/unified-api-contracts when present (line 88), sidestepping the AR
+# python index. Use a sibling clone (fast) or a fresh branch clone.
+mkdir -p .deps
+git clone --branch live-defi-rollout ../unified-api-contracts .deps/unified-api-contracts
+
+# hatch-vcs (source = "vcs") can't detect the version inside the docker build
+# (.git is .dockerignore'd) — pass the git-tag-derived version as a build arg.
+VERSION=$(git describe --tags --abbrev=0 --match 'v*' | sed 's/^v//')
+
+# EXTRA_PYTHON_INDEX_URL can be omitted locally (UAC comes from .deps/; other
+# 59 UTL deps are public PyPI). Provide it only on AWS CodeBuild → CodeArtifact.
+DOCKER_BUILDKIT=1 docker build --platform linux/amd64 \
+  --build-arg SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION}" \
+  --build-arg BUILDKIT_INLINE_CACHE=1 \
+  -t unified-trading-library:local \
+  .
+
+# Verify import works inside the built image (entrypoint intercepts args → override):
+docker run --rm --entrypoint python unified-trading-library:local \
+  -c "import unified_trading_library, unified_api_contracts; print('IMPORT OK')"
+```
+
+### Local — Pattern-A service image (self-contained, base-image-leveraging)
+
+```bash
+cd instruments-service  # or any Pattern-A repo: client-reporting-api, deployment-service,
+                        # features-service, market-tick-data-service, agent-orchestrator
+
+PROJECT_ID=<your-gcp-project-id>
+
+# Fetch the CURRENT base digest from AR (override the Dockerfile ARG default so the
+# build tests against live base, not a stale pin).
+BASE_IMAGE_DIGEST=$(gcloud artifacts docker images describe \
+  asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest \
+  --format='value(image_summary.digest)')
+
+VERSION=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null | sed 's/^v//' || echo "0.0.0.dev0")
+
+docker build --platform linux/amd64 \
+  --build-arg PROJECT_ID="${PROJECT_ID}" \
+  --build-arg BASE_IMAGE_DIGEST="${BASE_IMAGE_DIGEST}" \
+  --build-arg SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION}" \
+  -t instruments-service:local \
+  .
+```
+
+The Pattern-A service layer is `uv pip install --system --no-sources -e .` with `--no-deps` semantics — the base already
+carries UTL + UAC + shared deps, so no additional AR auth is needed inside the service Dockerfile (canary-confirmed
+2026-06-17: `--no-deps` service install needs NO ADC mount).
+
+**Pattern-B services** (alerting, batch-live-reconciliation, execution, fund-administration, market-data-processing, ml,
+strategy, trading-agent, greeks) `COPY` sibling sources into the build context (`unified-api-contracts/`,
+`unified-trading-library/`, sometimes `market-tick-data-service/` + `configs/cloud-providers.yaml`) — local builds need
+a multi-repo context; these are **GCP-authoritative**. See
+`plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md` for the normalization proposal.
+
+### GCP — trigger fire (authoritative build with test-in-image)
+
+```bash
+# Base libs on live-defi-rollout (UTL rebuilds base image + publishes wheel; UAC publishes wheel):
+gcloud builds triggers run unified-trading-library-live-defi-rollout \
+  --branch live-defi-rollout --region asia-northeast1
+
+# Service images on main (canonical `<repo>-build` triggers):
+gcloud builds triggers run instruments-service-build --branch main --region asia-northeast1
+
+# Watch:
+gcloud builds list --limit 5 --region asia-northeast1
+gcloud builds log <BUILD_ID> --region asia-northeast1
+```
+
+Manual trigger-run requires `roles/cloudbuild.builds.editor` — the `github-actions-deploy` SA + `harshkantariya`
+currently hold `builds.viewer` (WATCH only). The **natural push path** is the always-available fallback: `git push` to
+`main` for services, `live-defi-rollout` for base libs → the `_live` triggers fire automatically. See
+`plans/active/issues/operator_iam_permission_parity_2026_06_18.md` for the editor-grant path.
+
+### AWS CodeBuild — trigger fire
+
+```bash
+# Native webhooks fire on push (LDR for UTL + UAC + mtds; main for all other services).
+# Manual start (requires codebuild:StartBuild on the project):
+aws codebuild start-build --project-name instruments-service --source-version main
+aws codebuild list-builds-for-project --project-name instruments-service
+```
+
 ## Findings log
 
 _(append each build failure + fix here as we go — this IS the plan's progress log; no separate summary doc.)_
 
+- 2026-07-07: **Phase 0 #3 + #4 shipped** (slot-12 data_engineering, via
+  `plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` task 006). Canonical local + GCP + AWS build
+  invocation captured in the new § "Canonical build invocation" section above (drawn from the 2026-06-17 canary
+  findings + verified against LDR `unified-trading-library/cloudbuild.yaml` + `instruments-service/Dockerfile`); base-
+  image local strategy decision recorded (services pull from AR; UTL builds locally on the `.deps/UAC` recipe; Phase 1
+  base libs validated locally where cloned, else GCP-authoritative). No repo-code changes — docs-only. Remaining open:
+  Phase 1 #2, #3 (GCP builds — need `cloudbuild.builds.editor` per `operator_iam_permission_parity`); Phase 2 #2, #3
+  (GCP service builds — same credential block); Phase 3 terraform-import (S3 state backend); Phase 4 trial deploy.
 - 2026-06-17: plan created.
 - 2026-06-17: **canary local build PASS** — `instruments-service` built locally (amd64) against current base digest
   `a1b0cf83…` → 3.07GB image, exit 0. Confirms: (a) local amd64 build harness works; (b) `--no-deps` service layer needs

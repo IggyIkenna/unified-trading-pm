@@ -184,10 +184,32 @@ enough). The % is neither an upper nor lower bound of the real value.
 
 **BYBIT-SPOT writer defect (independent of the gate work — can run in parallel with 2a):**
 
-- [ ] [CODE] P1. Diagnose + fix the BYBIT-SPOT `PERPETUAL` itype stamp (MTDS `symbol_rules._VENUE_INSTRUMENT_TYPE` has
-      `"BYBIT": "perpetual"` but NO `BYBIT-SPOT` entry → spot rows fall through to PERPETUAL); add the map entry, fix
-      the writer path, corrective-relabel existing rows. **Smoke-first** (relabel ONE shard + verify the manifest split,
-      then scale). Gate: BYBIT-SPOT rows carry SPOT_PAIR; manifest `by_venue_instrument_type` shows the split.
+- [x] ✅ [CODE] P1. Diagnose + fix the BYBIT-SPOT `PERPETUAL` itype stamp (MTDS `symbol_rules._VENUE_INSTRUMENT_TYPE`
+      has `"BYBIT": "perpetual"` but NO `BYBIT-SPOT` entry → spot rows fall through to PERPETUAL); add the map entry,
+      fix the writer path, corrective-relabel existing rows. **Smoke-first** (relabel ONE shard + verify the manifest
+      split, then scale). Gate: BYBIT-SPOT rows carry SPOT_PAIR; manifest `by_venue_instrument_type` shows the split.
+      **CODE FIX DONE 2026-07-07 — market-tick-data-service@c4df8ae0 (slot-8 planning).** Root cause verified in TWO
+      authorities: (i) `TardisAdapter._classify_row_instrument_type` at `tardis_adapter.py:321` — SPOT-venue set did not
+      include `"BYBIT-SPOT"` so BYBIT-SPOT batch rows (arriving via the `bybit-spot` Tardis exchange) fell through to
+      `return InstrumentType.PERPETUAL`; (ii) `symbol_rules._VENUE_INSTRUMENT_TYPE` — had bare `"BYBIT": "perpetual"`
+      but no `"BYBIT-SPOT"` entry (unlike `BITFINEX-SPOT` / `BITGET-SPOT` / `KRAKEN-SPOT` which map → `spot`). Fixed
+      both + regression test extended in
+      `test_tardis_canonical_output.py::test_classify_row_instrument_type_option_future_perp_spot` covering BYBIT-SPOT
+      (BTCUSDT / SOLUSDT) → SPOT_PAIR AND bare BYBIT (BTCUSDT) → PERPETUAL so the BYBIT-SPOT fix cannot silently regress
+      BYBIT-FUTURES rows and vice versa. QG-green (sentinel `c4df8ae0`; retried three times through peer BITGET-SPOT +
+      COINBASE-FUTURES connector landings). **Corrective-relabel DEFERRED — BIG FINDING, main-agent BLK-aff71ec9
+      verdict**: the manifest state is materially larger than this plan's text anticipates (135,444 BYBIT-SPOT rows:
+      81,659 EMPTY instrument_type + 53,785 PERPETUAL; ~54k rows under spot-nonsense data_types derivative_ticker /
+      futures_chain / options_chain / ohlcv_1m / perp_funding / liquidations — likely stray / mis-routed captures over
+      months, not just the PERPETUAL stamp defect). A simple PERPETUAL→SPOT_PAIR relabel of the 53k subset would NOT
+      close the Gate ("manifest by_venue_instrument_type shows the split") because 82k EMPTY-instrument_type rows + 54k
+      spot-nonsense-data_type rows remain in states not modeled by this plan's relabel step. Filed follow-up issue doc
+      **`plans/active/issues/bybit_spot_manifest_stray_captures_2026_07_07.md`** with 4 tracked todos: (a) diagnose the
+      82k EMPTY rows; (b) diagnose the 54k spot-nonsense-data_type rows; (c) ship the corrective-relabel script gated on
+      (a)+(b); (d) populate `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` in UAC. Main-agent explicitly ruled: "-006
+      forward-path fix (code) is the deliverable; mark DONE after the commit + issue doc are in; do not hold it open for
+      the remediation." Operator notified via the issue doc — the stray-data_type finding may indicate re-capture (not
+      just relabel) is needed for that subset.
 
 ## ASTER live-forward mode split (C1 RESOLVED — Ikenna 2026-07-03; sequencing is load-bearing)
 
@@ -197,10 +219,24 @@ pattern — live capture accumulates the history batch cannot provide; pre-wire 
 Capability check found the connectors already built (`aster_book_liq_ws.py`) but unwired, and ONE structural gap:
 nothing date-gates seeding at the (venue, data_type) grain. Execute IN ORDER:
 
-- [ ] [CODE] P1. **Enumerator honours per-(venue,dt) `start_date`** — `_row_data_types`/the cefi date loop must read
+- [x] ✅ [CODE] P1. **Enumerator honours per-(venue,dt) `start_date`** — `_row_data_types`/the cefi date loop must read
       `get_venue_data_type_start_date(venue, dt)` and seed `expected_unattempted` only from that date (earlier days →
       typed `EXPECTED_*` absence or out-of-universe). PREREQ for the capability flip — flipping first re-creates the
-      17,282-row over-seed purged 2026-07-03.
+      17,282-row over-seed purged 2026-07-03. **DONE 2026-07-07 — instruments-service@4a8cff7 (slot-5 planning).**
+      `_enumerate_v2_cefi` pre-computes `dt_start_ts_by_dt` once per instrument (one `get_venue_data_type_start_date`
+      UAC lookup per data_type — priority order: `VENUE_DATA_TYPE_CAPABILITIES` → `VENUE_REFERENCE_DATA_CAPABILITIES` →
+      `VenueMapping.venue_start_dates` venue-level fallback). Alive branch consults the gate PER data_type before the
+      expected_unattempted seed: dates before the declared start_date now emit `EXPECTED_PRE_SOURCE_COVERAGE_START`
+      (empty_confirmed, closed-set-compliant) instead of `expected_unattempted`. Gate is scoped to manifest-aware mode
+      (present_set is not None); legacy mode alive- branch continues to skip (unchanged). 4 new regression tests in
+      `test_enumerate_expected_universe_v2.py` cover (i) alive < dt_start → EXPECTED_PRE_SOURCE_COVERAGE_START
+      (HYPERLIQUID trades scenario, 2024-06-01 pre-2025-03-22), (ii) alive == dt_start → expected_unattempted
+      (unchanged), (iii) per-data_type independence (HYPERLIQUID trades pre-2025-03-22 AND book_snapshot_5
+      post-2023-04-15 on the same date → different reasons), (iv) unknown venue/dt permissive (no fallback → no gate
+      applied). QG-green 93s (sentinel `7ded594`). 126/126 v2 unit tests pass + 102/102 across related enumerator suites
+      (`test_enumerate_expected_universe`, `test_check_enumeration_completeness`, `test_filter_manifest_to_expected`,
+      `test_expected_universe_golden`). Unblocks -008 (UAC capability flip for ASTER `book_snapshot_5` + `liquidations`
+      — the 8-time bounced backlog task), -004 (2f LIGHTER/EXTENDED/PACIFICA), and -005 (re-measure).
 - [ ] [CONFIG] P1. **UAC capability flip** — add `book_snapshot_5` + `liquidations` to
       `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` with `start_date` = the live-wire date; resolves the standing UAC
       self-contradiction with `EXPECTED_COVERAGE._CEFI["ASTER"]` (which already lists both).
@@ -543,3 +579,113 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   edit; no instruments-service commit). /done cites `681f50a` as the shipped SHA for the 2b `build_expected` change. 2b
   flip UNBLOCKS the "2b landed" leg of PREREQ chains for -005 (re-measure — still blocked on -004+-007+ASTER wire
   - KALSHI-PERP purge) and -004 (2f — still blocked on -007).
+- **2026-07-07** — **Task -004 (2f) RE-PARKED — BLOCKED-PREREQUISITES (`BLK-7b511dcb`)** (slot-8 planning). Task
+  `cefi_layer1_denominator_gaps-004` ("2f. Reapply the denominator-gap model to LIGHTER / EXTENDED / PACIFICA") was
+  RE-dispatched to slot-8 by priority=20 immediately after the 2b flip cited above; the machine-encoded `depends_on` gap
+  flagged in the 2026-07-06 slot-8 park entry (add
+  `depends_on: [cefi_layer1_denominator_gaps-002, cefi_layer1_denominator_gaps-007]` to `-004` in `backlog.yaml`) is
+  still uncorrected (verified via `/api/backlog?limit=500`: `-004.status=dispatched, depends_on=null`). Re-verified LDR
+  tip at RE-dispatch: (i) `scripts/expected_universe.py` + `scripts/check_enumeration_completeness.py` still contain
+  ZERO per-`(venue, dt)` `start_date` / `get_venue_data_type_start_date` refs (the CLI-level global `start_date` at
+  `enumerate_expected_universe.py:2991` is the only `start_date` string in the enumerator scripts — that's the batch
+  window, not the per-(venue,dt) gate the plan requires). The only in-tree consumer of `get_venue_data_type_start_date`
+  on LDR remains `scripts/cefi_per_venue_capture_summary.py`. (ii) UAC `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still
+  holds `{trades: 2023-07-22, derivative_ticker: 2023-07-22, perp_funding: 2023-07-22}` — NO `book_snapshot_5`, NO
+  `liquidations`. (iii) Task `-007` (enumerator `start_date` support) remains `status=dispatched to slot-5` on the
+  backlog — main-agent confirmed "slot5 has impl complete (126/126 tests green) but has NOT shipped via quickmerge".
+  Main-agent verdict (`BLK-7b511dcb` answered): "PARK — BLOCKED-PREREQUISITES. Same ruling as 2026-07-06. ... Take PARK
+  - /skip-current-task. Do NOT attempt workarounds." Operator actions main-agent surfaced: (a) ensure slot-5 ships
+    cefi-007 via quickmerge (impl done, tests green); (b) update UAC `ASTER` capabilities to include `book_snapshot_5` +
+    `liquidations`. Once both land on LDR, cefi-004 can re-dispatch. Slot-8 action: file this Progress Log entry, commit
+    via `docs(plans):` cross-repo PM flip, then call `/api/slots/8/skip-current-task` per main-agent instruction
+    (avoiding the same bounce-loop the `-008` chain hit 8×).
+
+- **2026-07-07** — **Task -006 (BYBIT-SPOT itype-stamp) CODE FIX SHIPPED ✅** (slot-8 planning). Task
+  `cefi_layer1_denominator_gaps-006` ("Diagnose + fix the BYBIT-SPOT `PERPETUAL` itype stamp") was dispatched after the
+  -004 park + /skip. Diagnosis on LDR: the PERPETUAL stamp on BYBIT-SPOT batch rows comes from **two** authorities that
+  both silently omitted BYBIT-SPOT — (i) `TardisAdapter._classify_row_instrument_type` at `tardis_adapter.py:321`
+  SPOT-venue set had `BINANCE-SPOT / OKX-SPOT / COINBASE-SPOT / UPBIT / BITFINEX-SPOT / BITGET-SPOT / KRAKEN-SPOT` but
+  NOT `BYBIT-SPOT` → the venue's rows fell through to `return InstrumentType.PERPETUAL`; (ii)
+  `symbol_rules._VENUE_INSTRUMENT_TYPE` had bare `"BYBIT": "perpetual"` with no `"BYBIT-SPOT"` entry (unlike the Tier-3
+  sisters `BITFINEX-SPOT / BITGET-SPOT / KRAKEN-SPOT` which explicitly map → `spot`). Fixed both authorities +
+  regression-tested via `test_tardis_canonical_output.py::test_classify_row_instrument_type_option_future_perp_spot`
+  which now covers BYBIT-SPOT (BTCUSDT + SOLUSDT) → SPOT_PAIR AND bare BYBIT (BTCUSDT) → PERPETUAL to prevent the
+  BYBIT-SPOT fix silently regressing BYBIT-FUTURES (bare BYBIT is the canonical MTDS venue for BYBIT perp/futures via
+  Tardis `bybit` exchange). Shipped via `market-tick-data-service@c4df8ae0` after three QG cycles (peers landed
+  BITGET-SPOT + COINBASE-FUTURES connectors between my QG runs; each landed via clean rebase; sentinel finally matched
+  HEAD at `c4df8ae0`). **BIG FINDING surfaced during manifest audit — main-agent BLK-aff71ec9 verdict**: BYBIT-SPOT
+  manifest holds 135,444 rows in three anomalous states — 81,659 with EMPTY `instrument_type` (not modeled by the -006
+  plan) + 53,785 stamped PERPETUAL (the class this task describes) + ~54,000 rows under spot-nonsense data_types
+  (derivative_ticker / futures_chain / options_chain / ohlcv_1m / perp_funding / liquidations — none valid for a spot
+  venue; likely stray captures leaked from BYBIT-FUTURES or another venue). A simple PERPETUAL→SPOT_PAIR relabel of the
+  53k subset would NOT close the plan's Gate ("manifest `by_venue_instrument_type` shows the split") because 82k EMPTY
+  rows + 54k spot-nonsense-data_type rows would remain in states the plan does not model. Main-agent ruled: "-006
+  forward-path fix (code) is the deliverable; mark DONE after the commit + issue doc are in; do not hold it open for the
+  remediation. Operator notify: the stray derivative_ticker/futures_chain/options_chain/perp_funding/liquidations rows
+  on a spot venue may indicate months of mis-routed capture — the issue doc should flag whether a re-capture (not just
+  relabel) is needed for those rows." Follow-up issue doc filed at
+  **`plans/active/issues/bybit_spot_manifest_stray_captures_2026_07_07.md`** (`assigned_vm: planning`,
+  `assigned_role: data_engineering`, `depends_on: [cefi_layer1_denominator_gaps-006]`) with 4 P1/P2 todos: (a) diagnose
+  the 82k EMPTY rows (read-only); (b) diagnose the 54k spot-nonsense-data_type rows (read-only, cross-reference against
+  BYBIT-FUTURES manifest to check for duplicates); (c) ship corrective-relabel script gated on (a)+(b); (d) populate
+  `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` in UAC with `trades` + `book_snapshot_5`. Operator explicitly notified
+  via the issue doc's NOTIFY-OPERATOR banner. Slot-8 /done cites `c4df8ae0` as the shipped SHA.
+
+- **2026-07-07** — **Task -005 (re-measure) RE-PARKED — BLOCKED-PREREQUISITES (`BLK-ae458864`)** (slot-8 planning). Task
+  `cefi_layer1_denominator_gaps-005` ("Re-measure + re-certify the cefi Layer-1 row") was RE-dispatched to slot-8
+  immediately after the -006 /done above. Same shape as BLK-ad7abfcd's earlier 2026-07-06 ruling — the machine-encoded
+  `depends_on` gap on `-005` is still uncorrected on the backlog task. Verified LDR state at RE-dispatch: (i) `-002`
+  (2b) LANDED via my earlier flip today; (ii) `-006` (BYBIT-SPOT itype-stamp) CODE FIX LANDED via mtds@c4df8ae0
+  immediately preceding this park, but the BYBIT-SPOT manifest-remediation follow-up
+  (`bybit_spot_manifest_stray_captures_2026_07_07.md`) is un-actioned; (iii) `-004` (2f) PARKED by me earlier this
+  session (BLK-7b511dcb) pending -007; (iv) `-007` (enumerator start_date support) — main-agent's answer: "slot5
+  wsfeedconnector-014 quickmerge has been in CI for 15+ ticks — this is the same CI slot that holds cefi-007"; LDR
+  re-verified: `scripts/expected_universe.py` + `scripts/check_enumeration_completeness.py` still contain ZERO
+  per-`(venue, dt)` `start_date` / `get_venue_data_type_start_date` refs; (v) ASTER live wire (Plan 5, INFRA role) —
+  connector `market_tick_data_service/live/connectors/aster_book_liq_ws.py` EXISTS but NOT registered in
+  `live/connector_registry.py`; (vi) KALSHI-PERP purge (Stage-3) — commit `c8c6dac` is a forward stop-gap only, 25,473
+  fake `KALSHI-PERP` cefi Layer-2 rows still pollute the manifest. Running the re-measure now would produce a misleading
+  % — denominator UNDER-counts (2f venues at 0-expected AND -006 BYBIT-SPOT stray captures still in
+  EMPTY/PERPETUAL/nonsense states) while numerator OVER-counts (fake KALSHI-PERP + BYBIT-SPOT stray rows). Main-agent
+  verdict (`BLK-ae458864`): "PARK — same ruling as BLK-ad7abfcd (2026-07-06). ... The full denominator-gap remediation
+  sequence requires -007 → -004 → -005 in that order. Take PARK + /skip-current-task. cefi-005 re-dispatches
+  automatically; at that point verify cefi-007 is on LDR before proceeding." Operator surfaced by main-agent: "slot5
+  wsfeedconnector-014 quickmerge has been in CI for 15+ ticks — this single stuck CI is blocking cefi-004, cefi-005, and
+  infra-001 simultaneously." Slot-8 action: this Progress Log entry, commit via `docs(plans):` cross-repo PM flip, then
+  `/api/slots/8/skip-current-task`.
+
+- **2026-07-07** — **Task -005 (re-measure) RE-PARKED — BLOCKED-PREREQUISITES (3rd dispatch, `BLK-817416c3`)** (slot-11
+  planning). Task `cefi_layer1_denominator_gaps-005` was RE-dispatched to slot-11 by priority=50 alone; the
+  machine-encoded `depends_on` gap on the backlog task is still uncorrected (verified via `/api/backlog?limit=500`:
+  `-005.status=dispatched, depends_on=null`). Re-verified LDR at RE-dispatch with grep-and-read:
+  **MET** — (i) `-007` (enumerator `start_date` support) LANDED via `instruments-service@4a8cff7`
+  (`scripts/enumerate_expected_universe.py:1073` calls `get_venue_data_type_start_date(instr.venue, dt)`, per-`(venue,
+  dt)` gate baked into `_enumerate_v2_cefi`); (ii) KALSHI-PERP purge DONE (25,473 rows removed via
+  `purge_kalshi_perp_events_contamination_2026_07_06.py --apply`, cefi catalogue 376,984→351,511 per
+  `prediction_capture_incident_remediation_2026_07_06.md` line 190); (iii) ASTER connector wired
+  (`market-tick-data-service/market_tick_data_service/live/connectors/__init__.py:52` imports
+  `aster_book_liq_ws`).
+  **UNMET** — (iv) **UAC ASTER capability flip (-008) — plan/backlog DRIFT**: backlog task `-008` reports
+  `status=done, depends_on=null` but plan line 240 `- [ ] [CONFIG] P1. **UAC capability flip** — add book_snapshot_5
+  + liquidations to VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` is UNCHECKED, and code verification confirms UAC file
+  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1144` still holds only
+  `{trades: 2023-07-22, derivative_ticker: 2023-07-22, perp_funding: 2023-07-22}` — NO `book_snapshot_5`, NO
+  `liquidations`. Recent UAC commits on `market_data_categories.py` (top 10: `e76d874a` D2a `03cfd0f` …) do NOT include
+  the ASTER capability flip. **Main-agent verdict (`BLK-817416c3`)**: "the code is authoritative. -008 is NOT actually
+  done."
+  **UNMET** — (v) `-004` (2f LIGHTER/EXTENDED/PACIFICA): plan line 166 `- [ ]` unchecked, backlog `status=queued`,
+  `LIGHTER`/`EXTENDED`/`PACIFICA` produce zero grep matches in `instruments-service/scripts/expected_universe.py` (the
+  denominator-gap model has NOT been reapplied to those 3 venues on `build_expected`).
+  Running the re-measure now would produce a misleading % in the WRONG direction from the plan Gate ("denominator GREW,
+  % dropped honest"): denominator UNDER-counts (ASTER `book_snapshot_5`/`liquidations` still 0-expected until UAC flip;
+  LIGHTER/EXTENDED/PACIFICA still 0-expected until 2f). Main-agent verdict `BLK-817416c3`: PARK — "cefi-005 gates on
+  both -004 and -008. Neither is complete. Proceeding without them would produce incorrect enumeration for the
+  LIGHTER/EXTENDED/PACIFICA venues and missing ASTER book5/liquidations capability, which causes silent data-correctness
+  failures downstream." **Operator actions surfaced** (3rd escalation on the same task): (1) fix -008 backlog drift —
+  re-open -008, add `book_snapshot_5` + `liquidations` to UAC `market_data_categories.py:1144`, mark done only after code
+  is on LDR; (2) wait for `-004` (LIGHTER/EXTENDED/PACIFICA) to complete + flip its plan checkbox; (3) re-dispatch `-005`
+  only after both are confirmed on LDR. Slot-11 action: this Progress Log entry, commit via `docs(plans):` cross-repo PM
+  flip, then `/api/slots/11/skip-current-task` per main-agent instruction. This is now the 3rd `-005` PARK on
+  identical grounds (BLK-ad7abfcd 2026-07-06 slot-8, BLK-ae458864 2026-07-07 slot-8, BLK-817416c3 2026-07-07 slot-11) —
+  the bounce-loop pattern the `-008` chain hit 8× is beginning to repeat on `-005`; suggest same operator-backlog fix
+  (`depends_on: [cefi_layer1_denominator_gaps-004, cefi_layer1_denominator_gaps-008]` on `-005` + regen).

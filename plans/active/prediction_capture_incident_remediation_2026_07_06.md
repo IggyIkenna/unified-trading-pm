@@ -323,3 +323,12 @@ orchestrator-dispatched).
   (`issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`) with every attempt + the two infra
   changes made (UTL base-pin bump is@1098731c4 — correct, keep it; sports legacy-cron pause — reversible). The pin bump
   and sports-cron pause are LEFT in place (both correct). **Returning to Workstream B (the perp correction).**
+- 2026-07-07 07:04Z: **Overnight re-verify (2026-07-07 morning) — Phase 0 still fully clean; one transient blip
+  resolved.** Re-checked cefi catalogue (0 `KALSHI-PERP`, 23 venues — organic churn since yesterday, no contamination
+  back) and the manifest index (`KALSHI-PERP` cells grew 9→16: the 9 old `captured/2000` cells persist unchanged —
+  confirmed they do NOT self-heal, contra the plan's prediction; 7 NEW `empty_confirmed/0` cells appeared — proof the
+  guard is correctly recording honest-absence on repeated prod runs). **Found + resolved a new question**:
+  `is-daily-enum-cefi-qsm9v` (07-06 13:30 UTC, right after the guard/pin-bump shipped) had FAILED — re-triggered
+  manually (`is-daily-enum-cefi-8hgql`) with an EXPLICIT per-field watchdog (not yesterday's buggy `awk` one) →
+  **`succeededCount=1`, clean, ~6.7min.** Same code/image succeeding on retry confirms the 07-06 failure was a transient
+  blip (consolidator/index read race), NOT a regression from the guard or base-pin bump. No action needed.

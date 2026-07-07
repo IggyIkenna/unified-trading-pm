@@ -118,14 +118,30 @@ Databento CME calendar / TradFi v9 apply completion (in-flight via `tradfi_v9_st
 
 Accept the classification and flip B0. Track the pd.NA fix + tradfi CME verify as the P1/P2 todos below.
 
-- [ ] [CODE] P1. Reproduce + fix the InstrumentsHandler "boolean value of NA is ambiguous" on HYPERLIQUID payloads;
+- [x] ✅ [CODE] P1. Reproduce + fix the InstrumentsHandler "boolean value of NA is ambiguous" on HYPERLIQUID payloads;
       first reproduce with `.venv/bin/python -m instruments_service --operation instruments --mode batch --asset-group
       cefi --venues HYPERLIQUID --start-date 2024-09-12 --end-date 2024-09-12 --force --log-level DEBUG`, capture the
       full traceback (raise `logger` in `cli/instruments_handler.py` to log the exception's traceback not just the
       "failed on payload" one-liner), narrow to the pandas op that receives a pd.NA in a boolean context, guard with
       `pd.isna(…)` or `.fillna(False)`. Verify by re-running the 4 truly-missing HYPERLIQUID days
       (2024-09-12/28, 2024-12-31, 2026-03-18) and confirming `capture_status=captured` in the manifest.
-      (repo: instruments-service)
+      (repo: instruments-service) **DONE 2026-07-07 07:11 UTC — unified-trading-library@b7925334 (slot-9 planning).**
+      Root-caused NOT in instruments-service but in **UTL `manifest_writer/_writer_io.py`**: three call sites (`_b`,
+      `_s`, and `_coerce_bool`) guarded pd-NA only via `isinstance(value, float) and pd.isna(value)`, which catches
+      float NaN but MISSES `pd.NA` (nullable BooleanDtype). When the manifest carried a `pd.NA` in
+      `expected`/`available` (the payload shape HYPERLIQUID 2024-09-12 hit), `bool(pd.NA)` raised
+      `TypeError: boolean value of NA is ambiguous` and the handler crashed at payload 1 → "Batch complete: 0 results
+      collected" → no manifest write. **Fix:** switched to `pd.isna(value)` unconditionally (handles float NaN, pd.NA,
+      pd.NaT); introduced a local `_is_na` scalar-safe helper. Also added `exc_info=exc` on the UTL adapter's
+      per-payload failure log so a `--log-level DEBUG` retry surfaces the full traceback (was a bare one-liner). New
+      regression: `tests/unit/test_manifest_writer_capture_status.py::test_merge_survives_pd_na_in_nullable_bool_column`
+      exercises both `_merge_dataframes` and `lookup` with `pd.array([pd.NA], dtype="boolean")`. **Live verify (per the
+      task Gate, all 4 truly-missing HL dates):** 2024-09-12 → 106 records + Shard completeness OK; 2024-09-28 → 112
+      records + OK; 2024-12-31 → 128 records + OK; 2026-03-18 → 174 records + OK. Every run: no "failed on payload"
+      warning; ManifestWriter wrote availability_index rows with `capture_status=captured` (default per `add()` path);
+      EU seeding also landed pre-launch `empty_confirmed` rows for out-of-universe venues on each date. Full UTL
+      quality-gates.sh green (385s), sentinel `b7925334c74a1a1682bc98ef34c6ec1187cd2c99`. Shipped:
+      `unified-trading-library@b7925334c74a1a1682bc98ef34c6ec1187cd2c99` via `quickmerge --agent --files`.
 - [x] ✅ [VERIFY] P2. Per-date confirm the 7 tradfi CME residual cells (2024-07-08 / 2024-11-26 / 2024-12-04 /
       2025-08-07 / 2025-08-18 / 2026-06-20 AF / 2026-06-24 EU) against the Databento CME trading-calendar. Cross-check
       whether each is a real market-closure day (holiday / session-end / no ohlcv-1m tick coverage) vs a fetch gap
@@ -187,6 +203,58 @@ remains valid — no correctness blocker uncovered by this verification.
 
 ## Progress log
 
+- **2026-07-07** — **Item 3 RE-DISPATCHED 14TH TIME — PREREQ STILL NOT MET** (`BLK-e2ff1535`, slot-10 planning). Same
+  pattern as the 13 prior PARKs (10 on 2026-07-06 + 3 earlier today, incl. slot-10's own `BLK-42bb5889` from earlier
+  today). Verified at PM tip `cbab2d1e6` — line 638 of
+  `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still `- [ ] [CODE] P2` (dedup fix has NOT
+  landed on LDR). Verified in UTL LDR clone: latest commit touching `_merge_dataframes` remains `f5ec2291` (partial
+  NULL==empty normalization + no-venue asset_group stamp, NOT the v6–v9 shard-atom dedup this reconcile depends on);
+  the newest `manifest_writer/` commit `b7925334` is a separate pd.NA-in-nullable-Boolean guard (unrelated to the
+  shard-atom dedup key). Task body forbids the only action outside the prereq (`"NOT a naive add"` / `"Do NOT
+  hand-edit the dedup machine"`). `/blocked` with `can_continue: false` awaiting `/skip-current-task`.
+  **Systemic ask (14× cumulative, ~140 min of slot-planning boot windows consumed across two days on the identical
+  finding)**: operator to either (a) set `priority: 999` + add a `conditions:` gate keyed on the LDR-landing of the
+  dedup fix in `backlog.yaml`, OR (b) escalate the AO backlog schema NL-prereq parsing to an epic. Every re-dispatch is
+  a pure waste of a slot boot window on an item whose task body already says "NOT a naive add" and whose prereq is
+  trivially checkable against LDR.
+- **2026-07-07** — **✅ Item 1 [CODE] P1 FIXED + SHIPPED — pd.NA HYPERLIQUID crash CLOSED**
+  (`unified-trading-library@b7925334`, slot-9 planning). Root-caused, fixed, tested, and live-verified in a single
+  session. Bug lived in UTL `manifest_writer/_writer_io.py` (`_b`, `_s`, `_coerce_bool` — three parallel sites) not
+  IS: each guarded pd-NA via `isinstance(value, float) and pd.isna(value)`, which silently let `pd.NA` (nullable
+  BooleanDtype) fall through to `bool(value)` → `TypeError`. Fixed by switching to `pd.isna(value)` unconditionally
+  (float NaN + pd.NA + pd.NaT), via a local scalar-safe `_is_na` helper. Also `exc_info=exc` on the UTL adapter's
+  per-payload failure log so the traceback surfaces on `--log-level DEBUG` retry (was a bare one-liner). New
+  regression `test_merge_survives_pd_na_in_nullable_bool_column` covers both `_merge_dataframes` and `lookup`. Live
+  verify — all 4 truly-missing HL dates cleared cleanly: 2024-09-12 (106 rows) · 2024-09-28 (112) · 2024-12-31 (128)
+  · 2026-03-18 (174); every run "Batch complete: 1 results collected" + "Shard completeness OK" + EU seeding landing
+  pre-launch `empty_confirmed`, no "failed on payload" warnings. UTL `quality-gates.sh` green (385s, sentinel
+  `b7925334c74a1a1682bc98ef34c6ec1187cd2c99`). Downstream: the 4 KNOWN_HANDLER_BUG_PD_NA HL cells now flip
+  from `attempted_failed` to `captured` on their next retry — the fix is the classifier's precondition. Task Gate
+  satisfied (`capture_status=captured` in the manifest). Item 3 (stale-AF reconcile) remains PARKED on the same UTL
+  `_merge_dataframes` dedup fix in `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` per the 13
+  prior BLK rulings; my fix here does NOT touch that dedup surface.
+- **2026-07-07** — **Item 3 RE-DISPATCHED 14TH TIME — PREREQ STILL NOT MET** (`BLK-e959c3a7`, slot-9 planning).
+  Same pattern as the 13 prior PARKs. Verified at PM tip — line 638 of
+  `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still `- [ ] [CODE] P2`; latest UTL commit
+  touching `_merge_dataframes` remains `f5ec2291` (partial NULL==empty normalization only, NOT the v6-v9 shard-atom
+  dedup this reconcile depends on). My session shipped Item 1 (`unified-trading-library@b7925334`) but touched only
+  `_b`/`_s`/`_coerce_bool` NA-guard — not the dedup key surface. `/blocked` + `/skip-current-task`. **Systemic ask
+  (14× cumulative, ~140 min of slot-planning boot windows on the identical finding across two days)**: operator to
+  either (a) `priority: 999` + `conditions:` gate keyed on the LDR-landing of the dedup fix in `backlog.yaml`, OR (b)
+  NL-prereq parsing epic. Every re-dispatch is a pure waste of a slot boot window.
+- **2026-07-07** — **Item 3 RE-DISPATCHED 13TH TIME — PREREQ STILL NOT MET** (slot-12 planning). Same pattern as the 12
+  prior PARKs (10 on 2026-07-06 + 2 earlier today). Verified at PM tip `a332aa5c0` — line 638 of
+  `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still `- [ ] [CODE] P2` (dedup fix has NOT
+  landed on LDR). Verified in UTL LDR clone: latest commit touching `_merge_dataframes` remains `f5ec2291` (partial
+  NULL==empty normalization + no-venue asset_group stamp, NOT the v6-v9 shard-atom dedup this reconcile depends on);
+  no fresh `manifest_writer/_writer_io.py` commits addressing the dedup key in the last 24 h (most recent
+  manifest_writer commit is `16513404` — bool/float write-side schema coercion, unrelated). Task body forbids the only
+  action outside the prereq (`"NOT a naive add"` / `"Do NOT hand-edit the dedup machine"`). /blocked with
+  `can_continue: false` awaiting /skip-current-task. **Systemic ask (13× cumulative, ~130 min of slot-planning boot
+  windows consumed across two days on the identical finding)**: operator to either (a) set `priority: 999` + add a
+  `conditions:` gate keyed on the LDR-landing of the dedup fix in `backlog.yaml`, OR (b) escalate the AO backlog
+  schema NL-prereq parsing to an epic. Every re-dispatch is a pure waste of a slot boot window on an item whose task
+  body already says "NOT a naive add" and whose prereq is trivially checkable against LDR.
 - **2026-07-07** — **Item 3 RE-DISPATCHED 12TH TIME — PREREQ STILL NOT MET** (slot-6 planning). Same pattern as the 11
   prior PARKs (10 on 2026-07-06 + 1 earlier today `BLK-42bb5889` slot-10). Verified at PM tip `69d48bf7e` — line 638 of
   `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still `- [ ] [CODE] P2` (dedup fix has NOT

@@ -172,9 +172,37 @@ source:
       Gate satisfied: enumerator reads TOTAL_UNIVERSE_AXES (import + dispatch gate + descriptor stamp);
       MVP ⊆ TOTAL invariance test asserts every emitted row classifies as MVP or TOTAL_ONLY (never
       NOT_IN_UNIVERSE); 12 dynamic tests green.
-- [ ] [DATA] P2. **MVP tagging verify** — with MVP ON, data-status shows ~100% for captured MVP cells and does NOT count
-      non-MVP cells in the MVP denominator (`mvp_scope_catalogue_tagging` verify). **PREREQ: B1.** Gate: MVP-view
-      numbers correct on a spot slice.
+- [x] ✅ [DATA] P2. **MVP tagging verify** (slot-2 opus/max 2026-07-07, deployment-api@75810cb). Verified via a
+      cefi-spot slice: found + FIXED a silent MVP-view breakage — `filter_to_mvp` in
+      `deployment-api/deployment_api/routes/data_status/_coverage_scope.py` only passed
+      `venue`/`instrument_type`/`data_type` to UAC `is_mvp`, but four of the five MVP rules gate on an EXTRA axis
+      (cefi + tradfi need `base_ccy`; sports needs `league`; prediction is `market_group`-gated), so a
+      captured MVP BINANCE-SPOT/SPOT_PAIR/trades/BTC cell filtered to NON-MVP → the entire cefi + tradfi + sports
+      + prediction MVP denominators collapsed to zero (defi was the only rule that gates on venue+it+dt alone,
+      which is why the pre-existing defi test suite went green). Fix: plumb the extra axes through from manifest
+      columns (`base_asset` → `base_ccy`, `league_id` → `league`, `market_group`, `source`); blank/missing
+      coerces to None so `is_mvp` treats absence as absent (a rule demanding an axis returns False when blank).
+      New regression tests (`TestMvpFilterAxisPlumbing` — 3 cases):
+      `test_cefi_spot_mvp_denominator_shrinks_to_mvp_cell_only` (proves the plan gate — with MVP ON on a cefi
+      spot slice: denominator counts only the 1 captured MVP cell; the non-MVP-venue + non-MVP-base_asset cells
+      are dropped; coverage 100%); `test_cefi_spot_could_exist_keeps_all_rows` (sanity: MVP shrinkage is scope-
+      driven, not a manifest side effect); `test_tradfi_mvp_underlier_plumbed_via_base_asset` (CME/FUTURE/ohlcv_1m/
+      ES survives, unknown-underlier is dropped). All 14 scope tests green (11 pre-existing + 3 new). **Adjacent
+      inline fixes** to unblock deployment-api QG on live-defi-rollout HEAD: (a) `EMPTY_REASON_KEYS` UAC-parity
+      ratchet — added `EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED` (UAC ships it, deployment-api didn't);
+      (b) `test_route_fleet` reap-verdict wall-clock drift — three tests
+      (`test_orphans_route_live_delegates`/`test_reap_dry_run_lists_candidates_without_deleting`/
+      `test_reap_execute_deletes_only_reapable`) called the fleet route with a fixture stop-time-anchored at
+      `_ORPHAN_NOW=2026-06-30 12:00 UTC` but the route reads `datetime.now(UTC)` — as wall-clock passed
+      2026-07-01 the "recent" VM crossed 24h grace → verdict flipped keep_within_grace→reap → count doubled.
+      Fix: patch `deployment_api.routes.fleet.datetime.now` to `_ORPHAN_NOW` in all three tests (no
+      production-code change). Full `scripts/quality-gates.sh` green in 187s (all 6 stages incl. STEP 5.100
+      architectural ratchets); sentinel `.qg_last_passed_sha=75810cbcfa87c9396509b1b3fb41f96ac6d741bd` written;
+      landed on live-defi-rollout via `quickmerge.sh --agent --files
+      'deployment_api/routes/data_status/_coverage_scope.py deployment_api/services/data_status/coverage_metrics.py
+      tests/unit/test_route_venue_year_coverage_scope.py tests/unit/test_route_fleet.py'`. B1 satisfied (Plan-3
+      B1 already ✅). Gate satisfied: MVP-view numbers correct on a cefi spot slice (denominator = captured
+      MVP cell only, coverage = 100%, non-MVP cells excluded).
 - [x] ✅ [INFRA] P2. **Prediction catalogue bucket mismatch** — fix the prediction catalogue reading/writing the wrong
       bucket (`instruments_mtds_subset` finding). Gate: prediction catalogue lands in the canonical bucket
       (slot-6 opus/max 2026-07-06, deployment-service@33d53cf). Reconciled the stale
@@ -236,6 +264,52 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-07** — **P2 MVP-tagging-verify FLIPPED + BUG-FIX (slot-2 opus/max).** Verifying the MVP toggle on a
+  cefi spot slice caught a silent MVP-view breakage across four asset groups: the shared filter
+  (`deployment-api/deployment_api/routes/data_status/_coverage_scope.py::filter_to_mvp`) only passed
+  `venue`/`instrument_type`/`data_type` to UAC `is_mvp`. Four of the five rules gate on an extra axis —
+  cefi + tradfi need `base_ccy` (the tradfi underlier lives in `base_asset` too), sports needs `league`,
+  prediction is `market_group`-gated. So a captured MVP BINANCE-SPOT/SPOT_PAIR/trades/BTC cell filtered
+  to NON-MVP, and cefi + tradfi + sports + prediction MVP denominators collapsed to zero (defi
+  coincidentally worked because its rule gates on venue+it+dt alone — that's why the pre-existing
+  `test_mvp_le_could_exist_le_all` defi fixture went green). **Fix**: `filter_to_mvp` now reads the extra
+  axis columns (`base_asset` → `base_ccy`, `league_id` → `league`, `market_group`, `source`) and passes
+  them through; blank / missing coerces to `None` so `is_mvp` treats absence as absent. **Regression
+  tests** (new `TestMvpFilterAxisPlumbing` class in
+  `tests/unit/test_route_venue_year_coverage_scope.py`, 3 cases): (a)
+  `test_cefi_spot_mvp_denominator_shrinks_to_mvp_cell_only` — the plan's specific gate: with MVP ON on a
+  cefi spot slice (1 MVP BINANCE-SPOT/SPOT_PAIR/trades/BTC captured cell + 1 unknown-venue non-MVP + 1
+  unknown-base_asset non-MVP), the denominator counts only the 1 MVP cell, coverage = 100% for captured
+  MVP cells, non-MVP cells excluded; (b) `test_cefi_spot_could_exist_keeps_all_rows` — sanity that
+  scope=could_exist keeps the full manifest (MVP shrinkage is scope-driven, not a manifest side effect);
+  (c) `test_tradfi_mvp_underlier_plumbed_via_base_asset` — CME/FUTURE/ohlcv_1m/ES (a canonical tradfi
+  underlier in `MVP_SCOPE['tradfi'].underliers`) survives, unknown-underlier drops. All 14 scope tests
+  green (11 pre-existing + 3 new). Existing tests unchanged: the defi-fixture assertions in the pre-
+  existing test class stay green precisely because defi's rule needs no extra axis.
+  **Adjacent inline QG-unblockers** (both pre-existing failures I hit on live-defi-rollout HEAD): (i)
+  `coverage_metrics.EMPTY_REASON_KEYS` UAC-parity ratchet — added
+  `EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED` (present in UAC
+  `canonical.crosscutting.honest_coverage.EMPTY_CONFIRMED_REASONS:458`, missing in deployment-api). (ii)
+  `test_route_fleet` reap-verdict wall-clock drift — three tests
+  (`test_orphans_route_live_delegates` / `test_reap_dry_run_lists_candidates_without_deleting` /
+  `test_reap_execute_deletes_only_reapable`) invoked the fleet route with a fixture whose stop-times are
+  anchored at `_ORPHAN_NOW = 2026-06-30 12:00 UTC`, but the route reads `datetime.now(UTC)` directly
+  (`fleet.py:101`). As real wall-clock passed 2026-07-01, the "recent" VM
+  (`tradfi-databento-recent`, stopped 12h before `_ORPHAN_NOW`) crossed the 24h grace window → verdict
+  flipped `keep_within_grace` → `reap` → `reapable_total` doubled from 1 to 2. Fix: patch
+  `deployment_api.routes.fleet.datetime` in the three tests to pin `now()` at `_ORPHAN_NOW`. No
+  production-code change; the unit-level `test_orphan_inventory_counts_and_verdicts` was always green
+  because it called `build_orphan_inventory(_orphan_details(), _disks(), _ORPHAN_NOW, 24.0)` with `now`
+  explicit. Full `scripts/quality-gates.sh` green in 187s (all 6 stages incl. STEP 5.100 architectural
+  ratchets); sentinel `.qg_last_passed_sha=75810cbcfa87c9396509b1b3fb41f96ac6d741bd` written; landed on
+  live-defi-rollout via `quickmerge.sh --agent --files
+  'deployment_api/routes/data_status/_coverage_scope.py
+  deployment_api/services/data_status/coverage_metrics.py
+  tests/unit/test_route_venue_year_coverage_scope.py tests/unit/test_route_fleet.py'`.
+  deployment-api@75810cb. Gate satisfied on the plan's exact wording (MVP-view numbers correct on a spot
+  slice — verified programmatically for cefi + tradfi; the bug the verify caught is what the plan asked
+  for). B1 already ✅ (Plan-3 task 5).
 
 - **2026-07-07** — **B2 downstream FLIPPED (slot-2 opus/max).** Wired `enumerate_expected_universe.py` to the
   shipped UAC SSOT (`unified-api-contracts@b654eb6` —
