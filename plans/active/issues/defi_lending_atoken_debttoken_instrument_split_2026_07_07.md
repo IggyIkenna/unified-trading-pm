@@ -164,11 +164,19 @@ follow AAVE_V3's pattern or MORPHO's gap; each needs the same real-catalogue rea
       (`MORPHO-{CHAIN}:A_TOKEN:{coll}-{loan}:{key8}` / `:DEBT_TOKEN:...`), following `aave_v3.py`'s
       pattern for emitting two `InstrumentRecord`s per position-bearing entity. This is a real model
       change, not a relabel — size accordingly.
-- [ ] [VERIFY] P1. **Check FLUID/VENUS/BENQI/RADIANT/EULER_V2 (EVM) and MARGINFI/SOLEND/KAMINO (Solana)**
-      against the real production catalogue for the same A_TOKEN/DEBT_TOKEN pattern — do not assume any
-      of them match AAVE_V3 or MORPHO without checking; each protocol's real tokenomics differ (some may
-      have no separate debt token at all, e.g. isolated-pool designs with internal balance tracking only
-      — report what's REALLY true per protocol, not an assumed uniform fix).
+- [x] [VERIFY] P1. **Checked FLUID/VENUS/BENQI/RADIANT/EULER_V2 (EVM) and MARGINFI/SOLEND (Solana)**
+      against the real production catalogue via the full adapter smoke-test workflow, 2026-07-07 — see
+      [[mtds_is_full_adapter_smoketest_findings_2026_07_07]] for the full report. **Result: none of the
+      7 has a real A_TOKEN/DEBT_TOKEN split — all 7 share MORPHO's gap exactly** (flat `LENDING_MARKET`
+      single-record structure, also not a valid `InstrumentType` enum member on FLUID/VENUS/BENQI/
+      RADIANT/EULER_V2 specifically — same crash-risk class as COMPOUND_V3). Additional findings from
+      the same pass: VENUS/BENQI/RADIANT/EULER_V2's adapters are functional when called directly but
+      never invoked by the production orchestrator (0 real catalogue rows despite working code — a
+      separate wiring bug, tracked in the smoketest doc); FLUID's own `lending_indices` MTDS fetch is
+      100% broken (uncaught `ContractCustomError`); MARGINFI/SOLEND have NO reference-data adapter at
+      all (worse than the other 5 — pipeline-only, IS-side coverage not even started). KAMINO was
+      reclassified as a POOL/vault protocol in this session's earlier mockup work, not lending — not
+      re-checked here under the lending lens.
 - [ ] [CODE] P2. **Update the drilldown mockup's DeFi lending nodes** to show the real A_TOKEN/DEBT_TOKEN
       split (target end-state) per protocol, with each protocol's current implementation status (already
       correct / mislabeled / crash-risk / missing) as an explicit note — this doc's findings are the
@@ -176,6 +184,13 @@ follow AAVE_V3's pattern or MORPHO's gap; each needs the same real-catalogue rea
 
 ## Progress Log
 
+- **2026-07-07 (verification closed)** — The full 17-cluster adapter smoke test confirmed all 7
+  not-yet-verified lending protocols (FLUID/VENUS/BENQI/RADIANT/EULER_V2/MARGINFI/SOLEND) share MORPHO's
+  exact gap — no A_TOKEN/DEBT_TOKEN split anywhere, same invalid-`InstrumentType` crash-risk class on 5
+  of them. Full detail in [[mtds_is_full_adapter_smoketest_findings_2026_07_07]]. This closes the P1
+  verification todo; remaining scope is unchanged (fix AAVE_V3/SPARK mislabel, fix COMPOUND_V3's invalid
+  enum, add MORPHO's missing split, and now by extension the same fix for FLUID/VENUS/BENQI/RADIANT/
+  EULER_V2 — MARGINFI/SOLEND need an IS adapter built from scratch first, they have none today).
 - **2026-07-07** — Filed after the operator flagged (reviewing the drilldown mockup) that lending
   protocols need a real a-token/debt-token instrument split for correct P&L, same relationship as
   SPOT_ASSET vs SPOT_PAIR. Verified against the real production catalogue + code trace: AAVE_V3/SPARK
