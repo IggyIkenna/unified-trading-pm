@@ -2,8 +2,9 @@
 doc_type: issue
 title: TradFi manifest — CF-4 blank-source 2M-row tail + CF-7 phantom-audit blank-data_type bug (audit findings from tradfi v9 Stage-1 finish task 6)
 summary: E7 verify audit of market-data-tick-tradfi-prd on 2026-07-07 post the v3 rebuild surfaced two gaps that are NOT covered by existing plan tasks — a 2,024,202-row blank-``source`` tail (CF-4) that needs a source-restamp pass, and 4,903 blank-``data_type`` rows written by a bug in reconcile_phantom_manifest_rows_all.py (CF-7). Both are pre-existing manifest state; the rebuild does not clear either.
-status: active
-nature: audit
+status: open
+nature: issue
+resolved_by:
 asset_group: [tradfi]
 stage: [data]
 repos: [market-tick-data-service, instruments-service]
