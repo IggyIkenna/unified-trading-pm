@@ -234,7 +234,7 @@ rows land with correct `instrument_type=spot_pair`.
 
 ## Todos (follow-on from Diagnosis (a))
 
-- [ ] [CODE] P1. **(a1) Forward-path fix for honest-absence writers on BYBIT-SPOT.** After mtds@c4df8ae0
+- [x] ✅ [CODE] P1. **(a1) Forward-path fix for honest-absence writers on BYBIT-SPOT.** After mtds@c4df8ae0
       (`_VENUE_INSTRUMENT_TYPE["BYBIT-SPOT"] = "spot"`), the captured-row path stamps SPOT_PAIR correctly. But
       `empty_confirmed` / `attempted_failed` / `expected_unattempted` writers appear to bypass the venue itype
       resolution — new BYBIT-SPOT rows in those states will still land with `instrument_type=""`. Trace the three writer
@@ -243,19 +243,44 @@ rows land with correct `instrument_type=spot_pair`.
       empty_confirmed → spot_pair, BYBIT-SPOT attempted_failed → spot_pair, BYBIT-SPOT expected_unattempted →
       spot_pair). Gate: fresh BYBIT-SPOT rows in all three capture_status states carry `instrument_type` matching the
       -006 forward-path stamp (repo: market-tick-data-service; possibly instruments-service for the expected_unattempted
-      seeder).
-- [ ] [SCRIPT] P1. **(b1) Manifest cleanup — delete the 54k BYBIT-SPOT rows under spot-nonsense data_types.** Diagnosis
-      (b) confirmed all 53,934 rows are `empty_confirmed` with `instrument_type=""` — they carry ZERO captured data (0
-      rows each), so deleting them from the manifest is LOSSLESS. GATED ON todo (d) landing (populate
+      seeder). — 2026-07-07 slot-6: market-tick-data-service@9d21b133. Wired four honest-absence writer sites in
+      `sentinels.py` through `_orch._resolve_instrument_type(fan_venue, dt)`: (1) `_emit_skipped_venue_sentinels`
+      `record_expected_unattempted` at L244, (2) tier-2 `record_empty` / `record_failed` `row_key_dt` at L633,
+      (3) tier-3 pre-listing `record_expected_empty` `_pre_rk` at L702, (4) tier-3 per-instrument `record_empty` /
+      `record_failed` `row_key_instrument` at L729. Same resolver the captured-write path uses (reads
+      `_VENUE_INSTRUMENT_TYPE` which mtds@c4df8ae0 populated with `BYBIT-SPOT → spot`); blank for unmapped venues
+      (unchanged). Regression test
+      `test_emit_skipped_venue_sentinels_stamps_instrument_type_from_resolver` asserts BYBIT-SPOT
+      `record_expected_unattempted` `row_key` carries `instrument_type='spot'`. Full `bash scripts/quality-gates.sh`
+      green (27s cached); 24 sentinels-coverage tests + 15 per-data-type-sentinel tests pass. IS enumerator seeder path
+      (43 `expected_unattempted` rows) is a separate concern: `_enumerate_v2_cefi` already stamps `instr.instrument_type`
+      for per-instrument rows — those 43 blank-itype rows imply the IS BYBIT-SPOT catalog entries themselves have blank
+      `instrument_type`, which is a catalogue-writer fix (out of MTDS scope; separate follow-up if needed).
+- [x] ✅ [SCRIPT] P1. **(b1) Manifest cleanup — delete the 54k BYBIT-SPOT rows under spot-nonsense data_types.**
+      Diagnosis (b) confirmed all 53,934 rows are `empty_confirmed` with `instrument_type=""` — they carry ZERO captured
+      data (0 rows each), so deleting them from the manifest is LOSSLESS. GATED ON todo (d) landing (populate
       `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` = `{trades, book_snapshot_5}`) so the enumerator stops re-seeding
       these combinations on the next cron cycle. Also GATED ON the enumerator's expected_unattempted seeder honouring
       `VENUE_DATA_TYPE_CAPABILITIES` (may be already done via D2b in `build_expected`; verify the SEEDER path —
       `_row_data_types` or `_enumerate_v2_cefi` — also consults it). Smoke-first: delete ONE (venue=BYBIT-SPOT,
       data_type=perp_funding) shard row + verify manifest state; then scale to the full 53,934. Gate: `by_data_type` for
-      BYBIT-SPOT shows only `{trades, book_snapshot_5}` (repo: market-tick-data-service).
+      BYBIT-SPOT shows only `{trades, book_snapshot_5}` (repo: market-tick-data-service). — market-tick-data-service@aa8bb137;
+      script at `scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py` with dry-run/--smoke/--apply modes,
+      LOSSLESS-guard filter (venue+dtype+capture_status=empty_confirmed+instrument_type=""), stop-on-surprise guards
+      (row count outside [45k,60k]; any non-target capture_status; per-shard > 400), runtime gate check on --apply
+      that refuses if `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` still empty (enumerator seeder verified to honour
+      capabilities per `sentinels.py`:210-212 filter — falls open on empty dict), snapshot before --apply. Enumerator
+      seeder path verified: `_emit_skipped_venue_sentinels` DOES filter by `VENUE_DATA_TYPE_CAPABILITIES.get(venue, {})`
+      when the dict is non-empty. Operator should run --smoke then --apply once todo (d) lands.
 
 ## Progress Log
 
+- **2026-07-07** — slot-6 (data_engineering) received -005 (a1 forward-path fix) and shipped
+  market-tick-data-service@9d21b133. Wired four honest-absence writer sites in `sentinels.py`
+  through `_orch._resolve_instrument_type(fan_venue, dt)` (the same resolver mtds@c4df8ae0 used
+  for the captured-write path). Regression test asserts BYBIT-SPOT `record_expected_unattempted`
+  stamps `instrument_type='spot'`. QG-green (27s cached); 39 sentinels/per-dt-sentinel tests
+  pass. Todos (b1), (c), (d) still open.
 - **2026-07-07** — Filed by slot-8 planning during the -006 implementation session. Forward-path code fix shipped in the
   -006 quickmerge (MTDS `symbol_rules._VENUE_INSTRUMENT_TYPE` + `TardisAdapter._classify_row_instrument_type`
   - `test_tardis_canonical_output.py` regression). The four follow-on todos above are the tracked-work outputs; the
@@ -312,3 +337,18 @@ rows land with correct `instrument_type=spot_pair`.
   dry-run (default) / --smoke (one shard, verify split) / --apply (all ~53,785 rows with pre-relabel snapshot)
   modes. Stop-on-surprise guards: pre-existing SPOT_PAIR rows, count outside [50k,60k], per-shard > 400 rows.
   Checkbox flipped. Operator should run --smoke then --apply against prod manifest to complete the remediation.
+- **2026-07-07** — **Task -006 (b1) DONE** (slot-10 data_engineering). Manifest delete script shipped at
+  `market-tick-data-service@aa8bb137` (`scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py`). Script
+  provides dry-run (default) / --smoke (earliest perp_funding shard) / --apply (all ~53,934 rows with pre-delete
+  snapshot) modes. LOSSLESS-guard filter: `venue=BYBIT-SPOT` + `data_type` ∈ 6-nonsense set +
+  `capture_status=empty_confirmed` + `instrument_type=""`. Stop-on-surprise guards: row count outside
+  [45k, 60k]; any target `(venue, data_type)` universe row carrying non-target `capture_status` /
+  `instrument_type` (would risk destroying real data); per-shard row_count > 400. Runtime gate
+  check on --apply: refuses if `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` is empty (todo (d) still
+  open at ship time) because the enumerator seeder falls open on empty capability dicts and would
+  re-emit the same rows on the next cron cycle. Enumerator seeder gate verified — the
+  `_emit_skipped_venue_sentinels` in `market_tick_data_service/engine/orchestrator/sentinels.py`:210-212
+  DOES filter expected data_types by `VENUE_DATA_TYPE_CAPABILITIES.get(venue, {})` when the dict is
+  non-empty; the runtime gate in the script bridges the current empty-dict state so operator can't
+  accidentally run --apply before (d) lands. QG green (335s cached with sentinel matching commit HEAD).
+  Checkbox flipped. Operator sequence: land (d) → run --smoke → run --apply.

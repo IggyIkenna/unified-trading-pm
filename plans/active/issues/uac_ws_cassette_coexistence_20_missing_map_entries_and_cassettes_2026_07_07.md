@@ -128,7 +128,7 @@ until the blocker resolves; on unblock I re-run Pass-1 QG and quickmerge exactly
 
 ## Todos
 
-- [ ] [CODE] P0. **Add `_CONNECTOR_TO_VENUE` map entries for the 20 new connectors** in
+- [x] ✅ [CODE] P0. **Add `_CONNECTOR_TO_VENUE` map entries for the 20 new connectors** in
       `unified-api-contracts/tests/test_ws_cassette_coexistence.py` (venue routing derivable from the connector stem;
       LST venues → `<protocol>` short-name matching existing `unified_api_contracts/external/<venue>/` dirs; if a dir
       does not yet exist create it under (b) below). Concrete stem → venue mapping (following the prior-precedent
@@ -139,14 +139,17 @@ until the blocker resolves; on unblock I re-run Pass-1 QG and quickmerge exactly
       `etherfi_ethereum_ws→etherfi`, `extended_starknet_perp_ws→extended`, `fluid_ethereum_ws→fluid`,
       `gmx_arbitrum_ws→gmx`, `kamino_solana_ws→kamino`, `lido_ethereum_ws→lido`, `lighter_zksync_perp_ws→lighter`,
       `marinade_solana_ws→marinade`, `pacifica_solana_perp_ws→pacifica`, `spark_ethereum_ws→spark` (repo:
-      unified-api-contracts).
-- [ ] [CODE] P0. **Provide at least one `*_ws.yaml` cassette per venue directory** listed in (a) that lacks one, under
+      unified-api-contracts) — unified-api-contracts@e17b185f (slot-8 landed atomic (a)+(b); evidence: 20 entries added
+      in `_CONNECTOR_TO_VENUE` dict at test_ws_cassette_coexistence.py:56).
+- [x] ✅ [CODE] P0. **Provide at least one `*_ws.yaml` cassette per venue directory** listed in (a) that lacks one, under
       `unified_api_contracts/external/<venue>/mocks/`. Stub-cassette pattern (per the existing
       `polymarket_perp_ws.yaml`, `tardis_machine_ws.yaml` precedents that pass coexistence + skip frame-JSON checks):
       minimal `ws_url` + `subscription` fields + `frames: []` + `version: 1`. Only `coinbase` already carries a cassette
       (`match_ws.yaml`) — the other 19 venues need one. NOTE for the executor: some venue dirs (e.g.
       `defi_lending_scaffold/`, `dex_swap_scaffold/`) may not exist yet — create the `external/<venue>/mocks/` tree + an
-      `__init__.py` where the sibling dirs carry one (repo: unified-api-contracts).
+      `__init__.py` where the sibling dirs carry one (repo: unified-api-contracts) — unified-api-contracts@e17b185f
+      (slot-8 same commit bundled 17 stub cassettes + 9 new venue __init__.py + 16 orphan-allowlist entries + coinbase
+      reuses existing match_ws.yaml).
 - [ ] [CODE] P1. **Verify `bash scripts/quality-gates.sh` in unified-api-contracts exits 0** after (a) + (b) land. Then
       ping the blocked slots — bybit_spot_manifest_stray_captures-004 (slot 8) at minimum — via the orchestrator so
       their uncommitted UAC edits ship. Gate: `.qg_last_passed_sha` is refreshed to the new HEAD and my BYBIT-SPOT UAC
@@ -159,3 +162,12 @@ until the blocker resolves; on unblock I re-run Pass-1 QG and quickmerge exactly
   dict-entry addition + surrounding attribution comment in `market_data_categories.py`); on-hold pending this blocker
   lifting so I can re-run Pass-1 QG green and quickmerge --agent through it. Root-cause diagnosis in the "What I found"
   section above; the 3 concrete todos below are the tracked-work outputs.
+- **2026-07-07** — slot-13 (data_engineering worker, task-001) picked up item (a) via orchestrator dispatch, executed
+  full bundle (map + 17 cassettes + 9 venue __init__.py + 16 allowlist entries) → local commit `6053d7cd` (28 files,
+  239 insertions, QG-green sentinel written). Push to LDR raced with slot-8 (task filer) shipping the same fix at
+  `e17b185f` (28 files, 247 insertions) ~1 min earlier; auto-rebase hit add/add conflicts on all 16 cassettes + the
+  allowlist. Content is functionally identical (URL placeholder differences only: `.example` vs `.placeholder`), so
+  reset HEAD to origin/live-defi-rollout (accepted peer's e17b185f) rather than force a reconcile-then-repush cycle;
+  my commit remains recoverable via reflog. Re-ran `bash scripts/quality-gates.sh` on the accepted tree → GREEN
+  (sentinel `.qg_last_passed_sha` refreshed to the current LDR tip). Items (a) + (b) flipped citing e17b185f; item
+  (c) verification (QG green + orchestrator un-block) belongs to whoever picks task-003.

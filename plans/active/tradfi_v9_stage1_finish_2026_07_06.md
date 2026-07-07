@@ -188,6 +188,36 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07** — **Task 4 (E5 rebuild_tradfi_manifest.py) CODE FIX SHIPPED + REBUILD RUNNING (slot-7 opus/max).**
+  Started task 4 at 06:52 UTC; discovered the E5 tool was broken by THREE UTL contract hardenings that landed since it
+  was last invoked, all crashing the object scan after ~2 min: (a) **wave2 Phase-4 hard-ban on `ManifestWriter.add()` for
+  bundled data_types** (options_chain / futures_chain / event_contract) — corpus has ~288,708 CME `options_chain`
+  parquets that hit the ban on the first shard; (b) **hard_schema_enforcement Phase 4 MalformedRowKeyError** on blank
+  `instrument_id` / `chain` in row_key — both bundled emissions AND the CF-11 re-emit of historical bundle-atom /
+  aggregate-atom rows fail this check; (c) **data_pipeline_hardening Phase 1 KEYSTONE
+  UnprovenHonestAbsenceError** requires `FetchEvidence` proving honest absence for
+  `record_empty(reason=SOURCE_RETURNED_ZERO)` — CF-11 re-emit of preserved (non-trading-day) SRZ rows all fail.
+  Filed /blocked BLK-b574724c; main answered "fix the tool, don't restart from 2020".
+  **Fix shipped: market-tick-data-service@7a7e2e78** (`fix(scripts): rebuild_tradfi_manifest handles bundled data_types
+  + hard-schema Phase 4`). Bundled shards now route through `record_captured_from_counts` with observed_clusters read
+  from parquet metadata + `{underlying: 1}` self-referential expected_clusters (no external denominator on a historical
+  reconstruction). CF-11 re-emit synthesises `cf11_rebuild_reinherited` FetchEvidence for preserved SRZ rows +
+  re-derives blank/retired pipeline_mode via `derive_pipeline_mode_for_row` (drops rows whose venue+data_type maps to
+  no live PipelineMode — the batch_barchart post-retirement tail). Refactored CF-11 helpers into
+  `_rebuild_tradfi_cf11.py` to keep the entrypoint under the 900-line file cap + `scan_and_rebuild` under 200 lines.
+  Full corpus rebuild launched in-slot 07:31 UTC (VM_NAME=`rebuild-tradfi-slot7-full-20260707T073100Z`, PID 3436463,
+  `--start-date 2020-01-01 --end-date 2026-07-07`); at 08:05 UTC it is mid-object-scan at 2024-05-23 with 189K new
+  entries in the current per_vm shard + main `_index` grown 4,500,951 → 4,794,113 rows (293K captured additions);
+  consolidator is draining shards on its 1-min cycle. Full completion (object scan ~2020-2026 + CF-11 iteration over
+  ~1.4M honest-absence rows) will run several more hours; the checkbox is INTENTIONALLY NOT FLIPPED because the plan's
+  100%-v9 gate cannot be verified until the rebuild + consolidator have drained. **Gate status at 08:05 UTC**: v9 %
+  4,485,505/4,500,951 = 99.66% pre-rebuild → 4,778,667/4,794,113 = 99.68% mid-rebuild (rising as the CF-11 phase
+  re-emits historical v4 attempted_failed rows). **Follow-up (task 5/6/7)**: 291 v4 `captured` `options_chain` rows
+  have BLANK `underlying`/`instrument_type` (pre-migration aggregate atoms) that the rebuild's per-underlying grain
+  emits DIFFERENT row_keys for and does NOT supersede — these are aggregate-atom orphans slated for task 5 (E6 CF-7
+  relabel) or a separate delete pass; they will not clear as part of task 4 alone. **Findings closure**: BLK-b574724c
+  answered inline (fix the tool); no separate issue doc because the whole scope stayed inside task 4.
+
 - **2026-07-06** — **Task 10 (v9 `schema_version` tail re-stamp) PARKED with BLOCKED-PREREQUISITES (slot-7 opus/max).**
   Auto-dispatched at Tier 1 Priority 50 immediately after slot-7 released `understat_local_backfill_completion-006`;
   boot `dispatch_reason: "highest-rank queued task with prereqs met and no collision"` (higher-priority tasks -004

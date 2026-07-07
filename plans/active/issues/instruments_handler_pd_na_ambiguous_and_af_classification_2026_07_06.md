@@ -203,6 +203,56 @@ remains valid — no correctness blocker uncovered by this verification.
 
 ## Progress log
 
+- **2026-07-07** — **Item 3 RE-DISPATCHED 17TH TIME — PREREQ STILL NOT MET** (`BLK-7690f906`, slot-12 planning).
+  Identical pattern to the 16 prior PARKs (10 on 2026-07-06 + 6 earlier today: `BLK-42bb5889` slot-10, `BLK-e2ff1535`
+  slot-10, `BLK-e959c3a7` slot-9, `BLK-dfce4f07` slot-5, `BLK-d02f687e` slot-4, plus slot-12 earlier today). Verified at
+  PM tip `60006b47e` — line 638 of `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still
+  `- [ ] [CODE] P2` (the dedup fix has NOT landed on LDR; the current plan explicitly says "NOT a naive add"). Verified
+  in UTL LDR clone: latest commit touching `_merge_dataframes` remains `f5ec2291` (partial NULL==empty normalization +
+  no-venue asset_group stamp, NOT the v6–v9 shard-atom dedup this reconcile depends on); the newest `manifest_writer/`
+  commits are `b7925334` (slot-9's Item 1 P1 pd.NA-in-nullable-Boolean guard — unrelated to the shard-atom dedup key),
+  `16513404`/`6c090bb9` (write-side dtype coercion — unrelated), and `39eccc9c` (memory-safe slim reads — unrelated).
+  Task body forbids the only action outside the prereq (`"NOT a naive add"` / `"Do NOT hand-edit the dedup machine"`).
+  `/blocked` with `can_continue: false` awaiting `/skip-current-task`.
+  **Systemic ask (17× cumulative, ~170 min of slot-planning boot windows consumed across two days on the identical
+  finding)**: operator to either (a) set `priority: 999` + add a `conditions:` gate keyed on the LDR-landing of the
+  dedup fix in `backlog.yaml`, OR (b) escalate the AO backlog schema NL-prereq parsing to an epic. Every re-dispatch
+  is a pure waste of a slot boot window on an item whose task body already says "NOT a naive add" and whose prereq is
+  trivially checkable against LDR.
+- **2026-07-07** — **Item 3 RE-DISPATCHED 16TH TIME — PREREQ STILL NOT MET** (`BLK-d02f687e`, slot-4 planning).
+  Identical pattern to the 15 prior PARKs (10 on 2026-07-06 + 5 earlier today: `BLK-42bb5889` slot-10, `BLK-e2ff1535`
+  slot-10, `BLK-e959c3a7` slot-9, plus slot-12/slot-6/slot-11 and `BLK-dfce4f07` slot-5). Verified at PM tip `60006b47e`
+  — line 638 of `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still `- [ ] [CODE] P2` (the
+  dedup fix has NOT landed on LDR; the most-recent PM commit is literally logging the 15TH PARK of the same item).
+  Verified in UTL LDR clone: latest commit touching `_merge_dataframes` remains `f5ec2291` (partial NULL==empty
+  normalization + no-venue asset_group stamp, NOT the v6–v9 shard-atom dedup this reconcile depends on); the newest
+  `manifest_writer/` commits are `b7925334` (slot-9's pd.NA-in-nullable-Boolean guard from Item 1 P1 — unrelated to the
+  shard-atom dedup key), `16513404`/`6c090bb9` (write-side dtype coercion — also unrelated), and `39eccc9c` (memory-safe
+  slim reads — unrelated). Task body forbids the only action outside the prereq (`"NOT a naive add"` / `"Do NOT
+  hand-edit the dedup machine"`); regression `test_manifest_writer_capture_status::test_failed_then_captured_last_write_wins`
+  documents the naive add was reverted 2026-06-16. `/blocked` with `can_continue: false` awaiting `/skip-current-task`.
+  Slot-4 planning also already PARKed this same item once today via `BLK-0316d90e` — the same slot re-encountered it,
+  which underscores the dispatcher-visibility gap.
+  **Systemic ask (16× cumulative, ~160 min of slot-planning boot windows consumed across two days on the identical
+  finding)**: operator to either (a) set `priority: 999` + add a `conditions:` gate keyed on the LDR-landing of the
+  dedup fix in `backlog.yaml`, OR (b) escalate the AO backlog schema NL-prereq parsing to an epic. Every re-dispatch
+  is a pure waste of a slot boot window on an item whose task body already says "NOT a naive add" and whose prereq is
+  trivially checkable against LDR.
+- **2026-07-07** — **Item 3 RE-DISPATCHED 15TH TIME — PREREQ STILL NOT MET** (`BLK-dfce4f07`, slot-5 planning).
+  Identical pattern to the 14 prior PARKs (10 on 2026-07-06 + 4 earlier today: `BLK-42bb5889` slot-10, `BLK-e2ff1535`
+  slot-10, `BLK-e959c3a7` slot-9, plus slot-12/slot-6/slot-11/etc. earlier today). Verified at PM tip `c8f9e5c13` —
+  line 638 of `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` is still `- [ ] [CODE] P2` (dedup
+  fix has NOT landed on LDR). Verified in UTL LDR clone: latest commit touching `_merge_dataframes` remains `f5ec2291`
+  (partial NULL==empty normalization + no-venue asset_group stamp, NOT the v6–v9 shard-atom dedup this reconcile
+  depends on); the newest `manifest_writer/` commit `b7925334` is slot-9's pd.NA-in-nullable-Boolean guard from earlier
+  today (Item 1 P1 fix — unrelated to the shard-atom dedup key surface). Task body forbids the only action outside
+  the prereq (`"NOT a naive add"` / `"Do NOT hand-edit the dedup machine"`). `/blocked` with `can_continue: false`
+  awaiting `/skip-current-task`.
+  **Systemic ask (15× cumulative, ~150 min of slot-planning boot windows consumed across two days on the identical
+  finding)**: operator to either (a) set `priority: 999` + add a `conditions:` gate keyed on the LDR-landing of the
+  dedup fix in `backlog.yaml`, OR (b) escalate the AO backlog schema NL-prereq parsing to an epic. Every re-dispatch
+  is a pure waste of a slot boot window on an item whose task body already says "NOT a naive add" and whose prereq
+  is trivially checkable against LDR.
 - **2026-07-07** — **Item 3 RE-DISPATCHED 14TH TIME — PREREQ STILL NOT MET** (`BLK-e2ff1535`, slot-10 planning). Same
   pattern as the 13 prior PARKs (10 on 2026-07-06 + 3 earlier today, incl. slot-10's own `BLK-42bb5889` from earlier
   today). Verified at PM tip `cbab2d1e6` — line 638 of
