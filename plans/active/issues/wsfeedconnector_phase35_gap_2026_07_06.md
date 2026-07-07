@@ -323,9 +323,19 @@ approve / defer per category rather than per-venue.
 - [ ] [CODE] P1. **DeFi lending: AAVE_V3 + COMPOUND_V3 + MORPHO-BASE per-chain WSFeedConnector build** (repo:
       market-tick-data-service). Once the naming policy above lands. Gate: AAVE_V3 + COMPOUND_V3 canonical keys resolve;
       MORPHO-BASE resolves against the existing MORPHO base or a chain-specific override.
-- [ ] [CODE] P1. **DeFi DEX-swap: UNISWAP_V3 + UNISWAP_V2 + UNISWAP_V4 + SUSHISWAP + BALANCER + PANCAKESWAP_V3 +
-      CAMELOT_V3 + AERODROME_V3 + TRADER_JOE_V2 + VELODROME_V2 WSFeedConnector build** (repo: market-tick-data-service).
-      Depends on the naming policy above. Gate: each protocol canonical key resolves.
+- [x] ✅ [CODE] P1. **DeFi DEX-swap: UNISWAP_V3 + UNISWAP_V2 + UNISWAP_V4 + SUSHISWAP + BALANCER + PANCAKESWAP_V3 +
+      CAMELOT_V3 + AERODROME_V3 + TRADER_JOE_V2 + VELODROME_V2 WSFeedConnector build** (repo: market-tick-data-service)
+      — mtds@0ac6cb74 (slot-2, 2026-07-06). Scaffold `dex_swap_scaffold_ws.py` registers all 22 canonical
+      (protocol × chain) UAC venue keys under `DexSwapPlaceholderWSFeedConnector` (Protocol-conforming;
+      `connect()` raises `BLOCKED-BUILD` so L2 stays honest — no fake ticks). All 10 protocol families
+      represented per the gap-013 list. Wired into `connectors/__init__.py::register_all()`; registry grows
+      35 → 57 venues after `register_all()`. 70/70 regression tests pass (`test_dex_swap_scaffold_ws.py`:
+      22 × registry membership + 22 × Protocol conformance + 22 × isinstance + 4 unit — includes a
+      len==22 ratchet catching UAC drift). Gate satisfied: each canonical (protocol × chain) key resolves
+      via `WS_FEED_CONNECTOR_FACTORIES` (smoke-matrix L1 moves 22 keys × ~55 data_types ≈ ~1200 cefi cells
+      from `blocked-not-registered` → `schema-only`, per gap-013 Layer-2 interpretation). Real
+      subgraph pollers land as 10 P2 follow-on todos (one per protocol family — file as separate CODE
+      tasks after operator triage).
 - [ ] [CODE] P1. **DeFi LST + perp + specialty: LIDO + ETHERFI + ETHENA + EIGENLAYER + FLUID + SPARK + GMX + KAMINO +
       MARINADE + JITO-SOLANA WSFeedConnector build** — some (JITO) already have polling connectors but under a different
       key (`jito` vs `JITO-SOLANA`); reconcile the key naming (repo: market-tick-data-service). Gate: each protocol
@@ -334,6 +344,37 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-07** — **gap-013 verified + checkbox flipped (DeFi DEX-swap 10-protocol scaffold)** by slot-3.
+  Retrospective flip — the code shipped 2026-07-06 by slot-2 in `mtds@0ac6cb74` (`feat(live-connectors):
+  scaffold 22 DeFi DEX-swap venues (gap-013 minimum bar)`) but the plan checkbox was not flipped in the
+  same turn (Commit+Push+Flip discipline miss). Verified the shipped scaffold still meets the gate:
+  `bash .venv/bin/python -m pytest tests/unit/test_dex_swap_scaffold_ws.py -v` → 70/70 pass in 0.22s.
+  Gate: each canonical (protocol × chain) key resolves via `WS_FEED_CONNECTOR_FACTORIES` after
+  `register_all()`. Files still present + wired:
+  1. `market_tick_data_service/live/connectors/dex_swap_scaffold_ws.py` — `DexSwapPlaceholderWSFeedConnector`
+     satisfying the full `WSFeedConnector` Protocol (`connect`/`subscribe`/`unsubscribe`/`stream`/
+     `pop_reconnect_flag`/`close`); `DEX_SWAP_SCAFFOLD_VENUES` tuple = 22 canonical UAC keys spanning
+     10 protocols (UNISWAP_V3 × 5 chains, UNISWAP_V2 × 1, UNISWAP_V4 × 1, SUSHISWAP × 1, BALANCER × 6,
+     PANCAKESWAP_V3 × 4, CAMELOT_V3 × 1, AERODROME_V3 × 1, TRADER_JOE_V2 × 1, VELODROME_V2 × 1);
+     `connect()` raises `NotImplementedError("BLOCKED-BUILD: …")` so L2 (runtime-tick) stays honest —
+     shard-level classifier records honest-live-absence pending real subgraph pollers.
+  2. `market_tick_data_service/live/connectors/__init__.py::register_all()` — imports the scaffold
+     module in the DeFi block (line 91); registry grows 35 → 57 venues after `register_all()`.
+  3. `tests/unit/test_dex_swap_scaffold_ws.py` — 70 tests (22 × registry membership + 22 × Protocol
+     conformance + 22 × isinstance + 4 unit); the `len(DEX_SWAP_SCAFFOLD_VENUES) == 22` ratchet catches
+     UAC drift (a new protocol × chain in UAC without an update here flips the test red).
+
+  Smoke-matrix `blocked-not-registered` drop scope: 22 canonical (protocol × chain) keys × their declared
+  DEX-swap data_types (`dex_swap_scaffold_ws.py` docstring cites `_DEFI_DEX_PAIRS`-shaped set in
+  `expected_coverage.py:208-237`, ~55 pool instruments each) → ~1200 defi cells reclassified from
+  `blocked-not-registered` → `schema-only` (L1) while remaining `BLOCKED-BUILD` at L2 — consistent
+  with the gap-013 Plan 4 Layer-2 interpretation (lines 116-118 of this issue doc; L2 stays honest
+  until real per-protocol subgraph pollers land).
+
+  Follow-on: 10 P2 CODE tasks (one per protocol family) — real subgraph pollers to re-register the
+  placeholder rows via `overwrite=True`. Not filed yet; the operator gates whether to fan out per-protocol
+  now or bundle by chain / by-priority. Recommend Ikenna decision before the next slot picks these up.
 
 - **2026-07-07** — **gap-003 shipped (BITGET-SPOT + BITGET-FUTURES WSFeedConnector build)** by slot-4. Bitget
   v2 public WS at `wss://ws.bitget.com/v2/ws/public` handles both spot pairs (`BTCUSDT` instId) and
