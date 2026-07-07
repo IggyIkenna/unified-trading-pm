@@ -367,9 +367,31 @@ approve / defer per category rather than per-venue.
       encodes (protocol × chain) uniquely. Full analysis + policy in Progress Log. The 3 Solana naming mismatches
       (orca/raydium/jito → ORCA-SOLANA/RAYDIUM-SOLANA/JITO-SOLANA) and existing curve/morpho renames are separate
       follow-on fixes (CODE tasks below).
-- [ ] [CODE] P1. **DeFi lending: AAVE_V3 + COMPOUND_V3 + MORPHO-BASE per-chain WSFeedConnector build** (repo:
-      market-tick-data-service). Once the naming policy above lands. Gate: AAVE_V3 + COMPOUND_V3 canonical keys resolve;
-      MORPHO-BASE resolves against the existing MORPHO base or a chain-specific override.
+- [x] [CODE] P1. **DeFi lending: AAVE_V3 + COMPOUND_V3 + MORPHO-BASE per-chain WSFeedConnector build** ✅ —
+      mtds@c1e18918. Phase-3.5b defi Option-B (per-protocol-x-chain) minimum-bar rollout. One
+      Protocol-conforming BLOCKED-BUILD scaffold class + one factory registers ALL 19 canonical UAC
+      venue keys in a single sweep — same pattern as gap-013 `dex_swap_scaffold_ws`. Files:
+      `market_tick_data_service/live/connectors/defi_lending_scaffold_ws.py` (~174 lines: enumeration
+      `DEFI_LENDING_SCAFFOLD_VENUES` + `DefiLendingPlaceholderWSFeedConnector` with `connect()` raising
+      `NotImplementedError("BLOCKED-BUILD: …")` so the shard-level classifier records honest-live-
+      absence; `subscribe` / `unsubscribe` / `pop_reconnect_flag` / `close` are safe no-ops; `stream`
+      also raises `BLOCKED-BUILD`; `register()` iterates the venue tuple with `overwrite=True`) +
+      `connectors/__init__.py::register_all()` wire-up under the DeFi polling bucket. Coverage — 19
+      keys: **AAVE_V3** (11: umbrella + ARBITRUM / AVALANCHE / BASE / BSC / ETHEREUM / LINEA / OPTIMISM
+      / POLYGON / SCROLL / ZKSYNC per `expected_coverage.py` lines 243-254), **COMPOUND_V3** (7:
+      umbrella + ARBITRUM / BASE / ETHEREUM / OPTIMISM / POLYGON / SCROLL per lines 255-261), and
+      **MORPHO-BASE** (chain-specific override per `defi_venue_capabilities.py` line 111 — coexists
+      with the pre-existing `morpho` lowercase umbrella registration owned by `morpho_defi_ws.py`).
+      Regression pack (11 tests): `TestScaffoldVenueEnumeration` (per-protocol key completeness +
+      total count 19 + no duplicates), `TestRegistry` (all 19 keys resolve after `register_all()` +
+      each factory yields the placeholder + MORPHO-BASE is a DISTINCT factory from lowercase `morpho`
+      — verified after side-effect importing both modules), placeholder initial-state,
+      `connect()` raises `BLOCKED-BUILD` + records intent for a future real connector to pick up,
+      `subscribe` / `unsubscribe` accumulation, `close()` idempotence. All 11 pass in 0.21s; full
+      local `bash scripts/quality-gates.sh` green (sentinel = c1e18918). Un-block path: acquire the
+      Graph Studio API-key subscription + implement per-protocol subgraph pollers (three follow-on P2
+      CODE tasks — one per family — swap the placeholder factory for the real connector via
+      `overwrite=True`).
 - [x] ✅ [CODE] P1. **DeFi DEX-swap: UNISWAP_V3 + UNISWAP_V2 + UNISWAP_V4 + SUSHISWAP + BALANCER + PANCAKESWAP_V3 +
       CAMELOT_V3 + AERODROME_V3 + TRADER_JOE_V2 + VELODROME_V2 WSFeedConnector build** (repo: market-tick-data-service)
       — mtds@0ac6cb74 (slot-2, 2026-07-06). Scaffold `dex_swap_scaffold_ws.py` registers all 22 canonical
@@ -410,6 +432,34 @@ approve / defer per category rather than per-venue.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-07** — **gap-012 shipped (DeFi lending BLOCKED-BUILD scaffold — AAVE_V3 / COMPOUND_V3 /
+  MORPHO-BASE)** by slot-4. Phase-3.5b defi Option-B minimum-bar rollout. Same pattern as gap-013
+  `dex_swap_scaffold_ws`: one Protocol-conforming BLOCKED-BUILD placeholder class + one factory
+  registers ALL 19 canonical UAC venue keys — AAVE_V3 umbrella + 10 chain deployments, COMPOUND_V3
+  umbrella + 6 chain deployments, MORPHO-BASE (chain-specific override coexisting with pre-existing
+  lower-case `morpho` from `morpho_defi_ws.py`). Evidence (mtds@c1e18918):
+  1. `market_tick_data_service/live/connectors/defi_lending_scaffold_ws.py` — enumeration
+     `DEFI_LENDING_SCAFFOLD_VENUES` (19 unique keys) + `DefiLendingPlaceholderWSFeedConnector` with
+     `connect()` raising `NotImplementedError("BLOCKED-BUILD: ... {venue} ...")` so the shard-level
+     classifier records honest-live-absence; safe-no-op lifecycle for un-connected instances so the
+     runner can subscribe/unsubscribe/close without an error cascade; `register()` iterates the tuple
+     with `overwrite=True`.
+  2. `market_tick_data_service/live/connectors/__init__.py::register_all()` — wire-up added under the
+     DeFi polling bucket alongside `dex_swap_scaffold_ws`.
+  3. `tests/unit/test_defi_lending_scaffold_ws_connector.py` — 11 tests:
+     `TestScaffoldVenueEnumeration` (per-protocol key completeness + total count 19 + no duplicates),
+     `TestRegistry` (all 19 keys resolve after `register_all()` + each factory yields the placeholder
+     + MORPHO-BASE is a DISTINCT factory from lowercase `morpho` — verified after side-effect
+     importing both modules), placeholder initial-state, `connect()` raises `BLOCKED-BUILD` +
+     records intent for a future real connector to pick up, `subscribe` / `unsubscribe`
+     accumulation, `close()` idempotence. All 11 pass in 0.21s; full local `bash
+     scripts/quality-gates.sh` green (sentinel = c1e18918).
+  4. Smoke-matrix `blocked-not-registered` resolution: 19 defi lending keys × declared data_types
+     per `expected_coverage` (`_DEFI_LENDING_AAVE_PAIRS` for AAVE, `_DEFI_LENDING_PAIRS` for
+     COMPOUND_V3 + MORPHO) closes a meaningful chunk of the 1,225 defi `blocked-not-registered`
+     cells. Real subgraph pollers land in follow-on P2 CODE tasks (one per protocol family). Same
+     BLOCKED-BUILD scaffold pattern as gap-013 dex_swap_scaffold_ws.
 
 - **2026-07-07** — **gap-009 shipped (BETFAIR + 3 sub-variants BLOCKED-CREDENTIALS scaffold)** by slot-4.
   Betfair Exchange Stream API (`stream-api.betfair.com:443`, TLS TCP framed JSON) + Sportsbook streaming
