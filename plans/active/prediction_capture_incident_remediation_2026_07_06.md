@@ -126,12 +126,6 @@ orchestrator-dispatched).
 > NOT executing them further. The unresolved heal is handed off in
 > [`issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`](issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md).
 
-- [ ] [CODE] P1. Fix the manifest **consolidator's dtype handling at ITS source** — it should persist schema-typed
-      columns, not utf8. Locate the consolidator image/repo (SSOT
-      `codex/05-infrastructure/manifest-consolidator-ssot.md`), find where the ~2026-06-27-era change began
-      string-typing `instrument_count`, fix + redeploy. Gate: a fresh consolidator cycle writes
-      `_index/availability_index.parquet` with `instrument_count` as int (not utf8), verified by direct read.
-      (Non-urgent — the UTL coercion crash-proofs the reader — but the canonical index dtype must be honest.)
 - [x] [INFRA] P1. ✅ Audited **sports** (2026-07-06) — SAME condition, confirmed WORSE than prediction:
       `instruments-sports-cron` AND `instruments-sports-legacy-cron` were BOTH enabled (`*/1`); the sports instruments
       availability index is string-poisoned (`instrument_count`/`row_count`/`expected`/`available` all object/str,
@@ -139,22 +133,15 @@ orchestrator-dispatched).
       capture has been DEAD longer than prediction, previously undetected. Paused
       `uts-prod-manifest-consolidator-instruments-sports-legacy-cron` (now matches every other AG; reversible via
       `gcloud scheduler jobs resume`). The heal folds into the item below.
-- [ ] [INFRA] P0. **HANDED OFF (2026-07-06) → capture-hardening owner. NOT the perp-correction agent's scope.** The
-      "fixed UTL into the is-daily-enum image" heal is NOT resolved: the deployed image (`:latest`=f36f3bba) DOES carry
-      the coercion (docker-confirmed, UTL 1.6.0 — via base-pin bump instruments-service@1098731c4), but
-      `is-daily-enum-{prediction,sports}` STILL exit(1) after a full run — a DIFFERENT error, blocked by the Cloud-Run
-      observability gap (logs show only "Container called exit(1)"). The slot-2 agent went too deep here (out of its
-      perp lane) and has STOPPED. **Full diagnostic handoff — everything tried + the two infra changes made (UTL
-      base-pin bump + sports legacy-cron pause) — is in a dedicated issue doc:**
-      [`issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`](issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md).
-- [ ] [VERIFY] P1. Backfill the missed window 07-01→07-06: confirm the healed capture's `--days-back` reach covered the
-      gap days' by_date + manifest rows, or run a targeted backfill; then confirm the catalogue picks up post-06-27
-      listings (`max(available_from)` advances) on the next daily run. Gate: no by_date/manifest holes in 07-01→07-06;
-      catalogue `available_from` advances past 06-27.
-- [ ] [CODE] P2. Observability: add `exc_info=True` to the UTL shard-isolation catch (`service_framework/_adapter.py`
-      "Handler %s failed on payload") + root-cause why Cloud Run job stdout/stderr does not reach Cloud Logging (affects
-      every lifecycle-catalogue/enum job — the weekly-full diagnoses had to work blind). Gate: a forced handler
-      exception logs the full traceback; a Cloud Run job's app logs appear in Cloud Logging.
+- [x] [DOCS] P0. ✅ **SPLIT OUT into AO-ready plans (2026-07-07)** — per operator direction, the 3 remaining residuals
+      (consolidator dtype-at-source, the is-daily-enum heal, missed-window backfill, exc_info observability) were carved
+      into 2 small AO-DISPATCHED plans, born `status: draft` (not ingested until flipped `active` — operator is updating
+      the AO code first): - [`is_daily_enum_capture_heal_2026_07_07.md`](is_daily_enum_capture_heal_2026_07_07.md) —
+      exc_info fix → redeploy → real diagnosis → fix → backfill (one sequential thread; the heal + backfill +
+      observability items below all folded in here). -
+      [`manifest_consolidator_dtype_at_source_fix_2026_07_07.md`](manifest_consolidator_dtype_at_source_fix_2026_07_07.md)
+      — the consolidator dtype fix, independent (different repo — `market-tick-data-service` — parallel with the above).
+      These supersede the 3 residual todos previously listed here; do not re-add them to this plan.
 
 ---
 
@@ -332,3 +319,12 @@ orchestrator-dispatched).
   manually (`is-daily-enum-cefi-8hgql`) with an EXPLICIT per-field watchdog (not yesterday's buggy `awk` one) →
   **`succeededCount=1`, clean, ~6.7min.** Same code/image succeeding on retry confirms the 07-06 failure was a transient
   blip (consolidator/index read race), NOT a regression from the guard or base-pin bump. No action needed.
+- 2026-07-07: **Split Workstream A's residuals into 2 AO-ready plans** (operator direction: "what's safe to give AO
+  right now, split it, keep status draft — flipping active once AO code updates land"). Verified before authoring: the
+  consolidator runs as `python -m unified_trading_library.manifest_consolidator` deployed inside the
+  **`market-tick-data-service`** image (NOT instruments-service — confirmed via `gcloud run jobs describe`), and found a
+  concrete (unconfirmed) lead — `manifest_consolidator.py:325`'s VARCHAR-cast dedup-key expression — as the first thing
+  to trace, not an assumed fix. Both plans born `status: draft`, `assigned_vm: planning`,
+  `execution_scope: orchestrator-agent`: `is_daily_enum_capture_heal_2026_07_07.md` (exc_info → diagnose → fix →
+  backfill, one sequential thread) and `manifest_consolidator_dtype_at_source_fix_2026_07_07.md` (independent, different
+  repo). The 3 residual todos here are now superseded by those plans — removed from this list to avoid duplication.

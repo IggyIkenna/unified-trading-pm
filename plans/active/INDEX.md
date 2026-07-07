@@ -185,10 +185,15 @@ reference + examples for testing any DeFi strategy
 - citadel_per_service_remediation_2026_03_24.md — Per-service fixes
 - instruments_service_reorganisation_2026_03_27.md — Instruments service
 - prediction_capture_incident_remediation_2026_07_06.md — Remediation for the 07-01→07-06 prediction-capture outage: (A)
-  capture-path dtype hardening (UTL Int64/bool/float coercion shipped; consolidator dtype-at-source + missed-window
-  backfill residual) + (B) KALSHI/POLYMARKET-PERP adapter correction (wrong Kalshi host → fake PERPETUAL contamination
-  of cefi; demo-first repoint, prod cutover gated on access). References issue
-  `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`.
+  capture-path dtype hardening (UTL Int64/bool/float coercion shipped; residuals split out, see below) + (B)
+  KALSHI/POLYMARKET-PERP adapter correction (wrong Kalshi host → fake PERPETUAL contamination of cefi — guard + purge
+  DONE; demo-first repoint gated on the pre-existing `prediction_venue_perps_and_live_clob_depth` plan's ownership; prod
+  cutover gated on access). References issue `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`.
+- **is-daily-enum capture heal + consolidator fix — AO-ready (2026-07-07; born draft):**
+  is_daily_enum_capture_heal_2026_07_07.md (exc_info fix → real diagnosis → fix → backfill; one sequential thread) +
+  manifest_consolidator_dtype_at_source_fix_2026_07_07.md (independent, different repo — parallel). Both split from
+  prediction_capture_incident_remediation's Workstream A; flip to `active` once AO updates land. References issue
+  `issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`.
 
 ### Library Consolidation
 
