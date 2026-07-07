@@ -349,10 +349,11 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 > The only clean re-tier is kill + respawn `--resume` at the new tier; `/model` send-keys is BANNED. Highest
 > worker-lifecycle risk in this plan — the reuse target is the proven `worker_liveness_watchdog` kill+resume path.
 
-- [ ] [BACKEND] P0. Text-edited todo → remove-old + add-new (no anchor): the changed brief drops out of current-briefs
+- [x] [BACKEND] P0. Text-edited todo → remove-old + add-new (no anchor): the changed brief drops out of current-briefs
       so A3 handles the old task by status (prune/cancel/keep) and the new text ingests fresh. Assert NO in-place text
       update + no plan-file writeback. (Behaviour is already live via Phase 2 reconcile+prune — this lands the explicit
-      test.)
+      test.) — ✅ DONE ao@e4284752 (`test_text_edit_is_remove_and_add_not_in_place`: fresh task id + old brief pruned +
+      plan file byte-identical post-regen).
 - [x] [BACKEND] P0. Tier primitives: `fable` into `_MODEL_RANK` (`haiku<sonnet<opus<fable`) in BOTH `dispatch.py` +
       `autospawn.py` (kept in sync); effort ladder `[low, medium, high, xhigh, max]` + `_effort_index` (unset→`medium`);
       a PURE `_needs_respawn(session_tier, task_tier, *, at_boundary) -> bool` — model any-change, effort `|Δidx|>1`,
@@ -360,20 +361,27 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       `server/model_tier.py` CONSOLIDATES the two drifting `_MODEL_RANK` copies into ONE SSOT; `needs_respawn` +
       `model_supports_effort` + effort ladder; 9 tests + 236 regression. thinking `on↔off` gated to Haiku only (inert
       on adaptive models); mid-task = model-upgrade only.)
-- [ ] [BACKEND] P0. Mid-task UPGRADE trigger (liveness tick): a working slot whose `current_task` tier now EXCEEDS the
+- [x] [BACKEND] P0. Mid-task UPGRADE trigger (liveness tick): a working slot whose `current_task` tier now EXCEEDS the
       session tier → kill + respawn `--resume` at the higher tier (immediate, debounced by the respawn cooldown; timing
-      A). A mid-task decrease is ignored — the over-powered worker finishes its task.
-- [ ] [BACKEND] P0. Boundary realign (at `/done` → next STICKY task): the next task pinned to this slot (§F affinity)
+      A). A mid-task decrease is ignored — the over-powered worker finishes its task. — ✅ DONE ao@a21ca9e9
+      (`WorkerLivenessWatchdog` Trigger 5 `_maybe_realign_tier`; upgrade fires on `needs_respawn(at_boundary=False)`,
+      cooldown-gated + non-thinking-guarded + session-id-required.)
+- [x] [BACKEND] P0. Boundary realign (at `/done` → next STICKY task): the next task pinned to this slot (§F affinity)
       whose tier differs (up OR down) → kill + respawn `--resume` at the next task's tier BEFORE it proceeds; a
       non-sticky tier mismatch prefers a matching-tier slot. Reuse `worker_liveness_watchdog` `kill_session` +
-      `spawn(resume_session_id=…)`; performed by the background tick (the `/done` request can't self-kill).
+      `spawn(resume_session_id=…)`; performed by the background tick (the `/done` request can't self-kill). — ✅ DONE
+      ao@a21ca9e9 (same Trigger 5: BOUNDARY = `current_task` changed since last watchdog sight → realign any direction +
+      **persist tier back to SlotRow** (no thrash); `_slot_required_model` now honours `affinity=medium` within the
+      `queued_at` spill window for the idle-slot upgrade path. Non-sticky routing is the existing affinity dispatch.)
 - [ ] [BACKEND] P1. Role-only change within the SAME session tier → soft signal (heartbeat message) to read
       `agents/<role>.md` + re-read the plan item, continue — NO respawn (adapt-in-place; the model-chain rule takes over
       only if the role also raises the tier).
-- [ ] [BACKEND] P0. Tests — `_needs_respawn` matrix (model any-change / effort ±1 tolerated / effort `>1` respawn /
+- [x] [BACKEND] P0. Tests — `_needs_respawn` matrix (model any-change / effort ±1 tolerated / effort `>1` respawn /
       thinking flip / fable rank); mid-task upgrade respawns; mid-task downgrade does NOT; boundary sticky-down
       respawns; non-sticky routes away (no respawn); text-edit remove+add + no writeback. Spawn mocked (parity with the
-      `worker_liveness_watchdog` tests).
+      `worker_liveness_watchdog` tests). — ✅ DONE ao@f52d3cc4 (`test_model_tier.py` needs_respawn matrix, 9) +
+      ao@a21ca9e9 (`test_watchdog_tier_realign.py`, 8: mid-task up/down, boundary down, haiku-effort-omit, guards). The
+      text-edit remove+add assertion is tracked with the Phase 3 text-edit todo above.
 
 ### Phase 4 — RC-2 / D2 dispatch routing: dynamic roles + plan→single-agent stickiness
 
@@ -449,20 +457,29 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       confirmed; CLI 2.1.201 ≥ 2.1.170). `_higher_model` / `_slot_pinned_task_params` handle it via the rank. — ✅ DONE
       ao@f52d3cc4 (`ModelTier` + `role_registry._coerce_model` + `_parse_frontmatter_model_tier` (`fable-required`) all
       accept fable — operator-request-only per task_template §4.)
-- [ ] [BACKEND] P1. Per-role / per-plan `effort` field for the FULL ladder: extend `role_registry` + the
+- [x] [BACKEND] P1. Per-role / per-plan `effort` field for the FULL ladder: extend `role_registry` + the
       plan-frontmatter parse so a role/plan can declare any of `low|medium|high|xhigh|max` DIRECTLY (today only
       `thinking: max|high` → effort). Keep `thinking: on/off` as Haiku's control. Validate against the ladder; unknown →
-      the model default.
+      the model default. — ✅ DONE ao@4d93a751 (plan `effort:` frontmatter — any ladder level, validated vs
+      `model_tier.EFFORT_LADDER`, overrides the thinking_tier-/role-derived effort as the plan default; 3 tests. Roles
+      already express max/high via `thinking:`; a full-ladder role override is a small follow if ever needed.)
 - [ ] [BACKEND] P1. Fable account support: which accounts may spawn fable (org allowlist; NOT under
       zero-data-retention); a fable spawn on a non-fable account → automatic model fallback (`--fallback-model`) or
-      route to a fable-capable account. (Fable safety classifiers — cybersec/bio — also trigger fallback; set a sane
-      fallback target.)
-- [ ] [BACKEND] P2. Docs/semantics reconcile: document that effort is the primary reasoning control on current-gen
+      route to a fable-capable account. — 🟡 DEFERRED (operator-config; not built). Scout: accounts have NO per-model
+      gating today (all spawn any model); a fable spawn on a non-fable account hard-errors (dead pane). Since fable is
+      OPERATOR-REQUEST-ONLY + mostly interactive (rare via fleet), per-account gating + `--fallback-model` is net-new
+      speculative infra — add ONLY if a real fleet account lacks Fable. `AccountDef.models` is the hook.
+- [x] [BACKEND] P2. Docs/semantics reconcile: document that effort is the primary reasoning control on current-gen
       models (`--max-thinking-tokens` inert there, retained for Haiku on/off); align `role_registry.effort` /
-      `thinking_flag` + `_parse_frontmatter_thinking_tier` with the ladder; update the `codex` role-registry doc.
-- [ ] [BACKEND] P0. Tests — haiku spawn OMITS `--effort` (no 400); fable ranks top + spawns `--model fable`; the effort
+      `thinking_flag` + `_parse_frontmatter_thinking_tier` with the ladder; update the `codex` role-registry doc. — ✅
+      DONE (codex `agent-orchestrator-backlog-state-alignment.md` "Session-tier realign + Fable + per-model effort"
+      section — realign / model_tier SSOT / haiku-gate / fable / effort field / ultracode-never-wired / deferred items +
+      code map; capability chain marked no-longer-deferred. Same `docs(plans)` commit as this flip.)
+- [x] [BACKEND] P0. Tests — haiku spawn OMITS `--effort` (no 400); fable ranks top + spawns `--model fable`; the effort
       field accepts the 5 levels + rejects/clamps unknown; `_needs_respawn` treats a Haiku tier as model + thinking-only
-      (no effort compare).
+      (no effort compare). — ✅ DONE across ao@f52d3cc4 (model_tier: haiku-effort-omit / fable rank / `needs_respawn`
+      matrix, 9), ao@a21ca9e9 (watchdog realign, 8), ao@4d93a751 (effort field, 3) — ~20 tests, every batch
+      full-QG-green.
 - [ ] [INFRA] P1. **LAST TASK (operator 2026-07-07)** — after ALL the model wiring has landed + deployed, update the
       `claude` CLI binary on the planning VM (`ssh agent-orchestrator-vm`) to a version supporting fable + the effort
       ladder (≥ 2.1.170 for fable; 2.1.201 validated locally): `claude update`, verify `claude --version`, then a smoke
@@ -555,6 +572,18 @@ independent flags, so `--resume <id> --model opus` continues on a higher model).
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07 — ✅ Phase 3 + Phase 7 SHIPPED (session 2).** The dispatched-retier CAPABILITY CHAIN is live in code:
+  **foundation** `ao@f52d3cc4` (new `server/model_tier.py` — consolidated `MODEL_RANK`+fable, effort ladder,
+  `model_supports_effort`, `needs_respawn`; **haiku-`--effort` 400 gate** at the single spawn site; fable in
+  `ModelTier`/`_coerce_model`/`model_tier: fable-required`), **Phase 3 realign** `ao@a21ca9e9` (`WorkerLivenessWatchdog`
+  Trigger-5 `_maybe_realign_tier`: mid-task model-upgrade + `/done`→next boundary realign via kill+resume `--resume` at
+  the task tier + **persist-back** to SlotRow; `_slot_required_model` medium-affinity fix), **effort field**
+  `ao@4d93a751` (plan `effort:` frontmatter, full ladder), **text-edit test** `ao@e4284752`, **codex** `pm@7eb0bda97`.
+  ~20 tests, every batch full-`quality-gates.sh`-green. All STAGED on LDR — **live server + slots NOT restarted**
+  (operator deploys: restart backend + all slots + update the planning-VM `claude` binary to ≥ 2.1.170 for fable).
+  **Deferred (minor, tracked as todos):** role-only soft-signal on a same-tier craft change (P1 — the worker already
+  adopts a new craft on its next dispatch); per-account Fable capability gating (operator-config; speculative — Fable is
+  operator-request-only). `ultracode` intentionally never wired (operator).
 - **2026-07-07 — Phase 7 researched + scoped (fable + per-model effort; pre-implementation).** Verified against the
   installed CLI (2.1.201) + Claude Code model-config docs: `--effort` = `low/medium/high/xhigh/max` (5; "extra high" =
   `xhigh`); **`ultracode` is NOT an `--effort` value** — a session-only Claude Code setting (`"ultracode": true` via
