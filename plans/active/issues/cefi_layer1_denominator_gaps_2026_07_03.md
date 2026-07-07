@@ -197,10 +197,25 @@ pattern — live capture accumulates the history batch cannot provide; pre-wire 
 Capability check found the connectors already built (`aster_book_liq_ws.py`) but unwired, and ONE structural gap:
 nothing date-gates seeding at the (venue, data_type) grain. Execute IN ORDER:
 
-- [ ] [CODE] P1. **Enumerator honours per-(venue,dt) `start_date`** — `_row_data_types`/the cefi date loop must read
+- [x] ✅ [CODE] P1. **Enumerator honours per-(venue,dt) `start_date`** — `_row_data_types`/the cefi date loop must read
       `get_venue_data_type_start_date(venue, dt)` and seed `expected_unattempted` only from that date (earlier days →
       typed `EXPECTED_*` absence or out-of-universe). PREREQ for the capability flip — flipping first re-creates the
-      17,282-row over-seed purged 2026-07-03.
+      17,282-row over-seed purged 2026-07-03. **DONE 2026-07-07 — instruments-service@4a8cff7 (slot-5 planning).**
+      `_enumerate_v2_cefi` pre-computes `dt_start_ts_by_dt` once per instrument (one
+      `get_venue_data_type_start_date` UAC lookup per data_type — priority order:
+      `VENUE_DATA_TYPE_CAPABILITIES` → `VENUE_REFERENCE_DATA_CAPABILITIES` → `VenueMapping.venue_start_dates` venue-level
+      fallback). Alive branch consults the gate PER data_type before the expected_unattempted seed: dates before the
+      declared start_date now emit `EXPECTED_PRE_SOURCE_COVERAGE_START` (empty_confirmed, closed-set-compliant) instead
+      of `expected_unattempted`. Gate is scoped to manifest-aware mode (present_set is not None); legacy mode alive-
+      branch continues to skip (unchanged). 4 new regression tests in `test_enumerate_expected_universe_v2.py` cover
+      (i) alive < dt_start → EXPECTED_PRE_SOURCE_COVERAGE_START (HYPERLIQUID trades scenario, 2024-06-01 pre-2025-03-22),
+      (ii) alive == dt_start → expected_unattempted (unchanged), (iii) per-data_type independence (HYPERLIQUID trades
+      pre-2025-03-22 AND book_snapshot_5 post-2023-04-15 on the same date → different reasons), (iv) unknown venue/dt
+      permissive (no fallback → no gate applied). QG-green 93s (sentinel `7ded594`). 126/126 v2 unit tests pass + 102/102
+      across related enumerator suites (`test_enumerate_expected_universe`, `test_check_enumeration_completeness`,
+      `test_filter_manifest_to_expected`, `test_expected_universe_golden`). Unblocks -008 (UAC capability flip for ASTER
+      `book_snapshot_5` + `liquidations` — the 8-time bounced backlog task), -004 (2f LIGHTER/EXTENDED/PACIFICA), and
+      -005 (re-measure).
 - [ ] [CONFIG] P1. **UAC capability flip** — add `book_snapshot_5` + `liquidations` to
       `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` with `start_date` = the live-wire date; resolves the standing UAC
       self-contradiction with `EXPECTED_COVERAGE._CEFI["ASTER"]` (which already lists both).
