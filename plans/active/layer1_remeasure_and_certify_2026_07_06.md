@@ -76,11 +76,23 @@ source:
 
 ## Re-measure + certify (the gate is machine-enforced; certify in this order)
 
-- [ ] [SCRIPT] P0. **Re-run `measure_honest_coverage`** on the corrected catalogue + seeded manifests (all AGs). The
+- [x] ✅ [SCRIPT] P0. **Re-run `measure_honest_coverage`** on the corrected catalogue + seeded manifests (all AGs). The
       06-29 numbers are stale — they predate v12, the incremental-rollup switch, the cefi 122-row ghost-dupe fix
       (07-04), D2a (cefi 84.09→73.61), and the defi +1.38M seeding. **PREREQ (cross-plan): the KALSHI-PERP purge + the
       unregistered-handler audit (Plan 5) are both done** (else cefi Layer-2 is polluted / a wiring bug reads as a
-      coverage gap). Gate: a fresh `coverage.json` produced from a real run; run id recorded.
+      coverage gap). Gate: a fresh `coverage.json` produced from a real run; run id recorded. **DONE 2026-07-07 06:22
+      UTC — multi-AG `measure_honest_coverage.py --asset-group all` run on `is@68f174a`** with both cross-plan PREREQs
+      verified done (KALSHI-PERP purge: cefi catalogue 351,511 rows post-purge, 0 KALSHI-PERP/POLYMARKET-PERP mentions
+      in the prediction coverage; Plan 5 unregistered-handler audit: filed at
+      `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md`). Fresh manifest blobs (blob.updated
+      2026-07-07T06:20:42-45Z): cefi 11,125,247 · defi 10,908,735 · tradfi 1,719,843 · sports 41,520 · prediction
+      706,197 merged rows. **Layer-1:** cefi 73.61% · defi 94.81% · tradfi 51.43% [STALE-BLOCKED-PLAN2 per task 004] ·
+      sports 30.77% · prediction 66.67%. **Layer-2 rollup:** cefi 76.77% (2,098,056/2,732,783 reachable) · defi 61.97%
+      (2,872,219/4,635,082) · tradfi 96.00% (420,533/438,035) [STALE] · sports 100.00% (38,182/38,182) · prediction
+      22.73% (8,711/38,318). All 4 non-blocked-AG Layer-1 % byte-match the per-AG certifications (tasks 002/003/005/006);
+      tradfi 51.43 unchanged as expected under BLOCKED-PLAN2 pending Plan 2 rebuilds. **Run id:**
+      `2026-07-07T06:20:58Z / is@68f174a`. Evidence artefact (local):
+      `/home/ubuntu/coverage_all_20260707T062058Z.json` (4.6 MB, single unified all-AG JSON).
 - [x] ✅ [VERIFY] P0. **Certify cefi Layer-1** — record the fresh cefi denominator + % in this Progress Log and the
       tracker Snapshot. Gate: cefi number recorded; denominator grew, % dropped vs 79.55 (the honest direction).
       **CERTIFIED 2026-07-06 15:01 UTC: cefi Layer-1 = 73.61% (present 53 / expected 72; 19 missing tuples; 87 stray).**
@@ -200,6 +212,24 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07** — **✅ Task 001 CLOSED — multi-AG `measure_honest_coverage.py --asset-group all` re-run produced a
+  single unified fresh coverage.json** (slot-9 planning). Run at 2026-07-07 06:22 UTC on `is@68f174a` with both
+  cross-plan PREREQs verified done (KALSHI-PERP purge landed cefi catalogue 376,984→351,511 rows, 0
+  KALSHI-PERP/POLYMARKET-PERP mentions in the prediction coverage; Plan 5 unregistered-handler audit filed at
+  `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md`). Fresh primary-bucket manifest reads (all
+  `blob.updated` 2026-07-07T06:20:42-45Z, pinned-primary `-prd` for every AG): cefi 11,125,247 · defi 10,908,735 ·
+  tradfi 1,719,843 · sports 41,520 · prediction 706,197 merged rows. **Layer-1 (task-001 primary output):** cefi 73.61%
+  (72/53/19/87) · defi 94.81% (77/73/4/128) · tradfi 51.43% (35/18/17/52) [STALE-BLOCKED-PLAN2] · sports 30.77%
+  (26/8/18/24) · prediction 66.67% (6/4/2/17). **Layer-2 rollup:** cefi 76.77% · defi 61.97% · tradfi 96.00% [STALE] ·
+  sports 100.00% · prediction 22.73%. All 4 non-blocked-AG Layer-1 percentages byte-match the per-AG certifications
+  from tasks 002 (cefi 73.61), 003 (defi 94.81), 005 (prediction 66.67), and 006 (sports 30.77) — cross-verifies the
+  unified all-AG run against the per-AG partials. tradfi 51.43 unchanged as expected under BLOCKED-PLAN2 (task 004);
+  the all-run does NOT re-open the tradfi certification (Plan 2 rebuilds still pending). Gate satisfied per the task
+  spec: "a fresh `coverage.json` produced from a real run; run id recorded" — **Run id:** `2026-07-07T06:20:58Z /
+  is@68f174a`. Evidence artefact (local): `/home/ubuntu/coverage_all_20260707T062058Z.json` (4.6 MB, single unified
+  all-AG JSON, schema_version present). Task run log: `/tmp/measure_honest_coverage_all_20260707T062058Z.log` (Layer-1
+  INCOMPLETE warnings for all 5 AGs — expected under the two-layer governing law: `denominator_status: INCOMPLETE`
+  everywhere). No new findings; no code shipped (script-only run gate).
 - **2026-07-06** — **✅ Task 007 CLOSED — smoke-harness live-verify Gate satisfied via `discrepancy filed`** (slot-9).
   Ran what exists (`GCP_PROJECT_ID=central-element-323112 --today 2026-07-06 --cloud gcp --deployment-env prd`) for the
   4 deferred AGs; surfaced 4 concrete discrepancies (tradfi=empty-matrix-BLOCKED-PLAN2, prediction=BucketNamingError

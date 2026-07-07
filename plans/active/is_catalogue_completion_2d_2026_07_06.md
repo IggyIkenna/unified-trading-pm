@@ -151,11 +151,27 @@ source:
       decided + applied**: daily incremental 01:00 UTC per-AG + weekly full self-heal Sat 03/04/05/06 UTC (cefi/defi/
       tradfi/prediction) — enforced via `terraform/gcp/lifecycle_catalogue_scheduler.tf`. **No code change needed for
       this gate**; the plan checkbox flips on verification. deployment-service / instruments-service (unchanged).
-- [ ] [CODE] P1. **B2 downstream — wire the enumerator to the TOTAL_UNIVERSE_AXES SSOT.** The UAC SSOT is SHIPPED
-      (`unified-api-contracts@b654eb6` — `canonical/crosscutting/total_universe.py`: `TOTAL_UNIVERSE_AXES`,
-      `UniverseProvenance`, `UniverseTier` + `universe_membership()` MVP⊆TOTAL). Wire `enumerate_expected_universe.py`
-      to read these axes for the could-exist denominator (the downstream half B2 left open). **PREREQ: B0.** Gate:
-      enumerator reads TOTAL_UNIVERSE_AXES; MVP⊆TOTAL respected; dynamic tests pass.
+- [x] ✅ [CODE] P1. **B2 downstream — wire the enumerator to the TOTAL_UNIVERSE_AXES SSOT.** (slot-2 opus/max
+      2026-07-07, instruments-service@7ded594). Wired `enumerate_expected_universe.py` to the UAC SSOT
+      (`unified-api-contracts@b654eb6` — `canonical/crosscutting/total_universe.py`): imports
+      `TOTAL_UNIVERSE_AXES`, `TOTAL_UNIVERSE_CONFIG_VERSION`, `TOTAL_UNIVERSE_CONFIG_HASH`, `is_total_universe`;
+      added a load-time SSOT parity assertion (`_ENUMERATORS`/`_V2_ENUMERATORS`/`SUPPORTED_ASSET_GROUPS` MUST
+      equal `TOTAL_UNIVERSE_AXES` keys — fails loud at import before any wrong-denominator run stamps a
+      manifest); `enumerate_v2` gate replaced with `is_total_universe(asset_group, "", "")` — error message names
+      the UAC SSOT so operators trace back to the axes; `ENUMERATOR_STARTED` event now stamps
+      `total_universe_config_version` + `total_universe_config_hash` so a coverage delta attributes to a
+      universe-DEFINITION change (version/hash flip) vs a DATA change. New tests
+      `tests/unit/scripts/test_enumerate_total_universe_wiring.py` (12 cases): dispatch parity (v1 / v2 / CLI ≡
+      `TOTAL_UNIVERSE_AXES`), SSOT-gate reject on unknown AG + error names UAC SSOT, dispatch accepts every
+      declared AG, MVP ⊆ TOTAL invariance on a cefi BINANCE-FUTURES BTC PERPETUAL row (never `NOT_IN_UNIVERSE`),
+      module holds the UAC descriptor constants. All 12 new + 163 existing enumerator tests green. Full
+      `scripts/quality-gates.sh` green in 94s (all 6 stages incl. STEP 5.100 architectural ratchets); sentinel
+      `.qg_last_passed_sha=7ded5940661bc89f7e77591471810b4943541b01` written; `check_strict_quickmerge.py` clean
+      (`no bypassed code commits in 68f174a4..7ded5940`); landed on live-defi-rollout via `quickmerge.sh --agent
+      --files 'scripts/enumerate_expected_universe.py tests/unit/scripts/test_enumerate_total_universe_wiring.py'`.
+      Gate satisfied: enumerator reads TOTAL_UNIVERSE_AXES (import + dispatch gate + descriptor stamp);
+      MVP ⊆ TOTAL invariance test asserts every emitted row classifies as MVP or TOTAL_ONLY (never
+      NOT_IN_UNIVERSE); 12 dynamic tests green.
 - [ ] [DATA] P2. **MVP tagging verify** — with MVP ON, data-status shows ~100% for captured MVP cells and does NOT count
       non-MVP cells in the MVP denominator (`mvp_scope_catalogue_tagging` verify). **PREREQ: B1.** Gate: MVP-view
       numbers correct on a spot slice.
@@ -220,6 +236,35 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-07** — **B2 downstream FLIPPED (slot-2 opus/max).** Wired `enumerate_expected_universe.py` to the
+  shipped UAC SSOT (`unified-api-contracts@b654eb6` —
+  `unified_api_contracts.canonical.crosscutting.total_universe`). Four surface changes: (1) imports
+  `TOTAL_UNIVERSE_AXES`, `TOTAL_UNIVERSE_CONFIG_VERSION`, `TOTAL_UNIVERSE_CONFIG_HASH`, `is_total_universe` from
+  `unified_api_contracts`; (2) load-time SSOT parity assert — the enumerator's three dispatch surfaces (v1
+  `_ENUMERATORS`, v2 `_V2_ENUMERATORS`, CLI `SUPPORTED_ASSET_GROUPS`) MUST equal `TOTAL_UNIVERSE_AXES` keys, else
+  `AssertionError` at import (fails loud before a run stamps a wrong denominator into a manifest); (3)
+  `enumerate_v2`'s AG gate replaced with `is_total_universe(asset_group, "", "")` — the error message now names
+  `TOTAL_UNIVERSE_AXES` so operators trace back to the UAC SSOT; (4) `ENUMERATOR_STARTED` event stamps
+  `total_universe_config_version=TOTAL_UNIVERSE_CONFIG_VERSION` + `total_universe_config_hash=TOTAL_UNIVERSE_CONFIG_HASH`
+  so a downstream coverage delta attributes to a universe-DEFINITION change (version/hash flip) vs a DATA change.
+  New test file `tests/unit/scripts/test_enumerate_total_universe_wiring.py` — 12 cases, all green: dispatch
+  parity for v1/v2/CLI vs the UAC SSOT keys; `enumerate_v2` rejects an unknown AG (`equities_options`) with the
+  SSOT named in the error; `enumerate_v2` accepts every declared AG (5 parametrized: cefi/defi/prediction/sports/
+  tradfi); MVP ⊆ TOTAL invariance verified on a cefi BINANCE-FUTURES BTC PERPETUAL row (never `NOT_IN_UNIVERSE`);
+  the enumerator module carries the UAC descriptor constants (16-hex hash). Existing enumerator regression suite
+  (163 tests) all still green. Full `scripts/quality-gates.sh` green in 94s (all 6 stages incl. STEP 5.100
+  architectural ratchets); sentinel `.qg_last_passed_sha=7ded5940661bc89f7e77591471810b4943541b01` written;
+  `check_strict_quickmerge.py` clean (`no bypassed code commits in 68f174a4..7ded5940`); landed on
+  live-defi-rollout via `quickmerge.sh --agent --files 'scripts/enumerate_expected_universe.py
+  tests/unit/scripts/test_enumerate_total_universe_wiring.py'`. instruments-service@7ded594. B2 gate
+  satisfied on all three plan criteria: (a) enumerator reads TOTAL_UNIVERSE_AXES (import + dispatch gate +
+  descriptor stamp); (b) MVP ⊆ TOTAL respected (invariance test asserts every emitted row classifies MVP or
+  TOTAL_ONLY, never NOT_IN_UNIVERSE); (c) 12 dynamic tests pass. Notes for downstream: the enumerator is now
+  bound to `TOTAL_UNIVERSE_CONFIG_VERSION=1` / `TOTAL_UNIVERSE_CONFIG_HASH=ca093f9265cdf688` — any future UAC
+  axis-taxonomy change (adding an AG, changing an axis's provenance, editing a description) will bump the hash
+  and surface in the `ENUMERATOR_STARTED` event, so a manifest denominator delta can be attributed to the SSOT
+  version bump vs a data change without a git blame.
 
 - **2026-07-06** — **P2 prediction-catalogue-bucket-mismatch FLIPPED (slot-6 opus/max).** Reconciled the stale
   `instruments-store-prediction-central-element-323112` + `market-data-tick-prediction-central-element-323112`

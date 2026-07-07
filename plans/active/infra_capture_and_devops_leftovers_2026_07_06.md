@@ -24,7 +24,7 @@ related:
     ../../codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-06
+last_updated: 2026-07-07
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -32,7 +32,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-assigned_role: infra
+assigned_role: data_engineering
 model_tier: sonnet-doable
 thinking_tier: high
 drift_direction: advance-code
@@ -47,8 +47,10 @@ source:
 # Infra capture wiring + devops leftovers (Stage 5 infra) — AO Plan 6
 
 > **🤖 AO PLAN 6 of the instruments-completion set.** Dispatched to the agent-orchestrator (`assigned_vm: planning`,
-> role `infra`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** Coordinator =
-> `instruments_completion_tracker_2026_07_06.md` (Stage 5, infra slice).
+> role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** _(Re-homed 2026-07-07
+> from role `infra` → `data_engineering`: the fleet has no infra-craft worker, so these tasks parked as craft-mismatch
+> ~6×; data_engineering agents have the VM-launch tools and execute them under the no-fire-and-forget guards below.)_
+> Coordinator = `instruments_completion_tracker_2026_07_06.md` (Stage 5, infra slice).
 >
 > **Worker guards (HARD):** (1) **No fire-and-forget** on ANY VM/connector launch — STARTED <60s, ≥1 progress/hr, verify
 > T+10-15min with a **data-quality spot-check** (per-VM shard parquet captured/empty ratio — events alone hide
@@ -65,23 +67,29 @@ source:
 
 ## Capture wiring (dispatchable)
 
-- [ ] [INFRA] P1. **Register + launch the ASTER live connector** — `aster_book_liq_ws.py` into
+- [ ] [DATA] P1. **Register + launch the ASTER live connector** — `aster_book_liq_ws.py` into
       `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi template). **PREREQ: Plan 1's
       enumerator `start_date` support + the UAC capability flip for ASTER book5/liquidations have landed** (else you
       re-create the 17,282-row over-seed). Verify `live_aster` rows land (per-VM shard spot-check at T+10-15min). **This
       gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT: `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG
       #4. Gate: `live_aster` book5/liquidations rows landing daily.
-- [ ] [INFRA] P1. **Deribit `options_chain` live runner** — wire a live cron/VM to run
+- [ ] [DATA] P1. **Deribit `options_chain` live runner** — wire a live cron/VM to run
       `--operation deribit-options-chain` (the handler `mtds@9ecd1e29e` is **live/replay only — no backfill**,
       `process()` collects `date.today()`), so it captures BTC/ETH `options_chain` daily → then feeds Plan 4's
       re-measure. Historical options are NOT captured by this handler. Gate: Deribit `options_chain` rows land daily;
       the D5 captured=0 clears in the next measure.
-- [ ] [INFRA] P2. **Long-lived VM logs not backed up** — the live/long-lived VMs' `run.log` is lost on VM delete; wire a
-      periodic log sync to GCS (`long_lived_vm_logs_not_backed_up`). Gate: long-lived VM logs persist to GCS.
-      **BLOCKED-CRAFT-MISMATCH (2026-07-06)** — auto-dispatched to a data_engineering slot; work sits in
-      `deployment-service/scripts/vm/*.sh` (VM launchers, setup-data-pipeline-vm.sh tee wiring, cron/systemd for
-      long-lived VMs) which is infra scope. Awaiting redispatch to an infra-role worker. See progress log.
-- [ ] [INFRA] P1. **Test-fleet image builds from current code** — the base-image local-build strategy + GCP build per
+- [x] ✅ [DATA] P2. **Long-lived VM logs not backed up** — deployment-service@3cd0b1d (2026-05-27). Periodic archival
+      ALREADY IN PLACE (verified 2026-07-07): `scripts/vm/vm_log_archival_cron.py` copies
+      `gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log` → `log-archive/rolling/{date}/{vm}/run.log` daily; also
+      captures serial for LONG_LIVED_LIVE + SCHEDULED_RECURRING VMs (28 long-lived prefixes classified). Wiring: Cloud
+      Run Job `vm-log-archival-prd` + Cloud Scheduler `0 2 * * * UTC` (ENABLED per runbook), Terraform
+      `terraform/gcp/vm_log_archival_scheduler.tf`. URI SSOT
+      `deployment_service.deployments_registry.vm_run_log_rolling_uri`. Runbook:
+      `deployment-service/runbooks/vm_log_archival_maintenance.md` (last_executed 2026-06-02 image-fix, daily via
+      scheduler since). Gate SATISFIED: long-lived VM logs persist to `log-archive/rolling/` (no lifecycle rule) beyond
+      the 14-day `vm-logs/` TTL. The prior 7 craft-mismatch escalations mis-triaged the completion state — the infra
+      landed 2026-05-27 under plan `canonical_vm_log_archival_2026_05_27`; only the checkbox flip was outstanding.
+- [ ] [DATA] P1. **Test-fleet image builds from current code** — the base-image local-build strategy + GCP build per
       service (`test_fleet_image_builds_from_current_code`) so the fleet images track HEAD. Gate: images build from
       current code; canonical build invocation documented.
 
@@ -105,6 +113,21 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07** — `long_lived_vm_logs_not_backed_up` (P2) **FLIPPED ✅ (slot 11 post re-homing)**. The task was
+  ALREADY DONE — infra shipped 2026-05-27 in `deployment-service@3cd0b1d` (`vm_log_archival_cron.py` +
+  `vm_log_archival_scheduler.tf` + runbook, Cloud Scheduler ENABLED `0 2 * * * UTC`). The 7 prior escalations
+  mis-triaged the state: they treated "task exists in a re-homed plan" as "task needs work" without first grepping the
+  target repo for the file that the plan/URI-SSOT explicitly names (`vm_log_archival_cron.py`). Slot 11 grepped
+  `deployment-service/`, found the cron + Terraform + runbook + `vm_run_log_rolling_uri` helper, verified the
+  runbook attests `Cloud Scheduler ENABLED`, and flipped the checkbox with evidence. Lesson: for a re-homed plan with a
+  named artifact (script/module), grep the target repo FIRST — a code_refs check is cheaper than 7 boot windows.
+- **2026-07-07** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 7TH OCCURRENCE (day 2)**.
+  Dispatcher routed the same infra-scope task to slot 6 (also `data_engineering`) again, spanning into a second day.
+  Slot 6 escalated via /blocked (this session's BLK id), same PARK recommendation as the prior 6 identical rulings
+  today (slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`, 8 `BLK-ec05e5dd`, 3 `BLK-58cfb164`, 11 `BLK-f1d45b7a`, 12
+  `BLK-e37d3486`). **Pattern now spans 2 calendar days** — the systemic fix (operator-manual route to an infra-capable
+  slot OR the AO dispatcher-side `assigned_role` filter) has not landed overnight. Operator action still required.
+  Slot 6 idle after this note.
 - **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 6TH OCCURRENCE TODAY**.
   Dispatcher routed the same infra-scope task to slot 12 (also `data_engineering`). Slot 12 escalated via /blocked
   (`BLK-e37d3486`), same PARK recommendation as the prior 5 identical rulings (slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`,
@@ -113,10 +136,10 @@ source:
   infra-capable slot OR (b) land the AO dispatcher-side `assigned_role` filter. Slot 12 idle after this note.
 - **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 5TH OCCURRENCE TODAY**.
   Dispatcher routed the same infra-scope task to slot 11 (also `data_engineering`). Slot 11 escalated via /blocked
-  (`BLK-f1d45b7a`), same PARK recommendation as the prior 4 identical rulings (slots 2 `BLK-a92f81ab`, 6
-  `BLK-fc827a35`, 8 `BLK-ec05e5dd`, 3 `BLK-58cfb164`). Pattern continues: the AO dispatcher will keep routing this
-  infra-scope task to `data_engineering` slots until (a) an operator manually routes it to an infra-capable slot, or
-  (b) the AO dispatcher-side `assigned_role` filter lands. Slot 11 idle after this note.
+  (`BLK-f1d45b7a`), same PARK recommendation as the prior 4 identical rulings (slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`,
+  8 `BLK-ec05e5dd`, 3 `BLK-58cfb164`). Pattern continues: the AO dispatcher will keep routing this infra-scope task to
+  `data_engineering` slots until (a) an operator manually routes it to an infra-capable slot, or (b) the AO
+  dispatcher-side `assigned_role` filter lands. Slot 11 idle after this note.
 - **2026-07-06** — `long_lived_vm_logs_not_backed_up` (P2) **RE-DISPATCHED TO WRONG CRAFT — 4TH OCCURRENCE TODAY**.
   Dispatcher routed the same infra-scope task to slot 3 (also `data_engineering`). Slot 3 escalated via /blocked
   (`BLK-58cfb164`); consistent PARK recommendation per prior 3 rulings (slots 2 `BLK-a92f81ab`, 6 `BLK-fc827a35`, 8
