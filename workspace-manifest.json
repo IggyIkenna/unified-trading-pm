@@ -818,7 +818,7 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 1,
-        "coverage_pct": 88.36,
+        "coverage_pct": 88.44,
         "qg_red_reason": null,
         "warn_file_count": 6
       }
@@ -877,10 +877,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 83.31,
         "large_file_count": 0,
-        "warn_file_count": 34,
-        "qg_red_reason": null
+        "coverage_pct": 83.41,
+        "qg_red_reason": null,
+        "warn_file_count": 34
       }
     },
     "ml-service": {
