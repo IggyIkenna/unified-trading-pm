@@ -149,10 +149,20 @@ Accept the classification and flip B0. Track the pd.NA fix + tradfi CME verify a
       **Verified 2026-07-06 via `exchange_calendars.get_calendar("CMES")` (XCMES, the same source
       `instruments_service/reference_data/adapters/tradfi/databento/sessions.py` consults via `_get_xcal`). 1
       REAL-CLOSURE + 6 FETCH-GAP split (evidence in issue-doc Verification results below).**
-- [ ] [DATA] P2. When the manifest dedup fix (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`)
-      lands, run the targeted reconcile that collapses the 8 stale-AF cefi rows (4 HL 2023-12-01/13, 2025-01-18,
-      2026-06-06 + 4 2026-06-23 batch venues) so the coverage rollup stops double-counting them. Do NOT hand-edit the
-      dedup machine (per `instruments_mtds_subset` P2 finding). (repo: unified-trading-library)
+- [x] ✅ [DATA] P2. **STALE-AF cefi reconcile SUBSTANTIALLY DONE — verified 2026-07-07 slot-7 opus/max.** Verified
+      against `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`: 7 of the 8
+      originally-flagged stale-AF cefi rows have already been collapsed by the deployed dedup fix (the §9.2b
+      consolidator + writer NULL-vs-`''` semantic equivalence from `unified-trading-library@f5ec2291f`, verified in the
+      understat plan's task 003 as taken-effect). Concretely: 0 remaining HL attempted_failed on 2023-12-01, 2023-12-13,
+      2026-06-06 (was 3 rows); 1 remaining HL AF on 2025-01-18 (blank data_type + blank pipeline_mode +
+      `error_reason=phantom_captured_no_parquet_at_canonical_path` — same aggregate-phantom-marker class as the tradfi
+      CF-7 5,541 rows tracked in
+      `plans/active/issues/tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md`); 0 remaining batch AF venues
+      on 2026-06-23 (was 4). The 1 remaining HL row rolls up as part of the cross-AG aggregate-phantom-marker cleanup
+      todo in the tradfi CF-4/CF-7 issue doc (P1 CF-7 aggregate-phantom-marker deletion — expand the filter to also
+      cover the cefi bucket); no separate cefi-only reconcile is needed. Coverage rollup no longer double-counts these
+      cells. Verification-only, no code shipped. (repo: unified-trading-library — but no UTL code change needed on this
+      task; the §9.2b fix already landed and the reconcile fell out naturally)
 
 ## Verification results — 7 CME residual cells (2026-07-06)
 
