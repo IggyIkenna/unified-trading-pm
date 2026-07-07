@@ -180,6 +180,11 @@ new tier WITH the prior conversation/context + the same worktree, so no work is 
   - **effort** — ordered ladder `[low, medium, high, xhigh, max]`, compared by INDEX; respawn only when `|Δindex| > 1`
     (a ±1 drift is tolerated — not worth the churn). Unset effort → the default index (`medium`) for the compare.
   - **thinking** — flip `on ↔ off` → respawn.
+  - **Per-model capability** (CLI ground truth — installed 2.1.201 + model-config docs): effort applies to **sonnet /
+    opus / fable ONLY** — **Haiku has NO effort (passing `--effort` 400s)**, so a Haiku tier is model + thinking-on/off
+    only (no effort compare in `_needs_respawn`). On current-gen models (Sonnet 5 / Opus 4.8 / Fable 5) effort is the
+    PRIMARY reasoning control (adaptive reasoning) and `--max-thinking-tokens` is INERT there (retained only for Haiku's
+    on/off). The per-model matrix + `fable` spawn land in Phase 7.
 - **Two moments it fires:**
   - **Mid-task** (the in-flight task is retiered): respawn ONLY on an INCREASE — the current task now needs more than
     the session has (the capability gate; a sonnet session cannot do opus-required work). A decrease is IGNORED mid-task
@@ -348,10 +353,13 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       so A3 handles the old task by status (prune/cancel/keep) and the new text ingests fresh. Assert NO in-place text
       update + no plan-file writeback. (Behaviour is already live via Phase 2 reconcile+prune — this lands the explicit
       test.)
-- [ ] [BACKEND] P0. Tier primitives: `fable` into `_MODEL_RANK` (`haiku<sonnet<opus<fable`) in BOTH `dispatch.py` +
+- [x] [BACKEND] P0. Tier primitives: `fable` into `_MODEL_RANK` (`haiku<sonnet<opus<fable`) in BOTH `dispatch.py` +
       `autospawn.py` (kept in sync); effort ladder `[low, medium, high, xhigh, max]` + `_effort_index` (unset→`medium`);
       a PURE `_needs_respawn(session_tier, task_tier, *, at_boundary) -> bool` — model any-change, effort `|Δidx|>1`,
-      thinking `on↔off` flip; mid-task fires on INCREASE only, boundary fires on any change.
+      thinking `on↔off` flip; mid-task fires on INCREASE only, boundary fires on any change. — ✅ DONE ao@f52d3cc4 (new
+      `server/model_tier.py` CONSOLIDATES the two drifting `_MODEL_RANK` copies into ONE SSOT; `needs_respawn` +
+      `model_supports_effort` + effort ladder; 9 tests + 236 regression. thinking `on↔off` gated to Haiku only (inert
+      on adaptive models); mid-task = model-upgrade only.)
 - [ ] [BACKEND] P0. Mid-task UPGRADE trigger (liveness tick): a working slot whose `current_task` tier now EXCEEDS the
       session tier → kill + respawn `--resume` at the higher tier (immediate, debounced by the respawn cooldown; timing
       A). A mid-task decrease is ignored — the over-powered worker finishes its task.
@@ -418,13 +426,48 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       sequential / cancelled, RC-2 per-task roles + stickiness, RC-3 skip-TTL/unskip — and marked the old append-only
       lifecycle diagram SUPERSEDED. (Capability chain C is documented as deferred.)
 
-### Phase 7 — LATER (DEFERRED per operator — after Phases 1–6): Fable spawn + full effort vocabulary
+### Phase 7 — Fable spawn + per-model effort capability (was DEFERRED; researched + scoped 2026-07-07)
 
-- [ ] [BACKEND] P2. DEFERRED. Enable Fable as a SPAWNABLE model at the top of the chain (CLI flags, account support,
-      `_higher_model` wiring). Phase 3 already RANKS fable + makes the realign Fable-ready; this makes it actually
-      spawn.
-- [ ] [BACKEND] P2. DEFERRED. Wire the FULL effort-ladder vocabulary end-to-end at spawn (Phase 3 lands the ladder + the
-      by-index `_needs_respawn` compare); reconcile it with the role registry + `thinking_tier`.
+> Ground truth (installed CLI 2.1.201 + Claude Code model-config docs): `--effort` = `low, medium, high, xhigh, max` (5
+> levels; extension "extra high" = `xhigh`). **`ultracode` is NOT an `--effort` value** — it is a session-only Claude
+> Code setting (`"ultracode": true` via `--settings`) = `xhigh` + dynamic-workflow orchestration; out of scope for spawn
+> effort — and **operator decision 2026-07-07: ultracode stays FALSE for every AO worker, never wired (overkill for a
+> dispatched worker)**. **Haiku supports NO effort — passing `--effort` to it returns a 400 error** (effort is supported
+> on Fable 5 / Sonnet 5 / Opus 4.x). On current-gen models (Sonnet 5 / Opus 4.8 / Fable 5) **effort is the PRIMARY
+> reasoning control (adaptive reasoning) and `--max-thinking-tokens` does NOT apply** — our
+> thinking-via-`--max-thinking-tokens` is inert on them, retained only for Haiku's thinking on/off. Fable alias =
+> `fable` (available since CLI 2.1.170). The `_MODEL_RANK` + effort-ladder + haiku-gate primitives are SHARED with Phase
+> 3 — build them once as the foundation.
+
+- [x] [BACKEND] P0. Haiku-effort gate (CORRECTNESS — latent 400 bug): `_build_claude_flags` (`tmux_spawn.py:971`) must
+      NOT emit `--effort` when the model is haiku — the API 400s. Add `_model_supports_effort(model)` (haiku→False;
+      sonnet/opus/fable→True) + gate the flag. Single emission site (verified `rg`). — ✅ DONE ao@f52d3cc4
+      (`model_tier.model_supports_effort` matches haiku by SUBSTRING so full names `claude-haiku-4-5` are caught across
+      all ~13 spawn paths; `--max-thinking-tokens` left ungated — Haiku accepts it.)
+- [x] [BACKEND] P0. `fable` as a spawnable model: add to `ModelTier` (`models/_types.py`) + `_MODEL_RANK`
+      (`{haiku:0, sonnet:1, opus:2, fable:3}`) in BOTH `dispatch.py` + `autospawn.py`; spawn `--model fable` (alias
+      confirmed; CLI 2.1.201 ≥ 2.1.170). `_higher_model` / `_slot_pinned_task_params` handle it via the rank. — ✅ DONE
+      ao@f52d3cc4 (`ModelTier` + `role_registry._coerce_model` + `_parse_frontmatter_model_tier` (`fable-required`) all
+      accept fable — operator-request-only per task_template §4.)
+- [ ] [BACKEND] P1. Per-role / per-plan `effort` field for the FULL ladder: extend `role_registry` + the
+      plan-frontmatter parse so a role/plan can declare any of `low|medium|high|xhigh|max` DIRECTLY (today only
+      `thinking: max|high` → effort). Keep `thinking: on/off` as Haiku's control. Validate against the ladder; unknown →
+      the model default.
+- [ ] [BACKEND] P1. Fable account support: which accounts may spawn fable (org allowlist; NOT under
+      zero-data-retention); a fable spawn on a non-fable account → automatic model fallback (`--fallback-model`) or
+      route to a fable-capable account. (Fable safety classifiers — cybersec/bio — also trigger fallback; set a sane
+      fallback target.)
+- [ ] [BACKEND] P2. Docs/semantics reconcile: document that effort is the primary reasoning control on current-gen
+      models (`--max-thinking-tokens` inert there, retained for Haiku on/off); align `role_registry.effort` /
+      `thinking_flag` + `_parse_frontmatter_thinking_tier` with the ladder; update the `codex` role-registry doc.
+- [ ] [BACKEND] P0. Tests — haiku spawn OMITS `--effort` (no 400); fable ranks top + spawns `--model fable`; the effort
+      field accepts the 5 levels + rejects/clamps unknown; `_needs_respawn` treats a Haiku tier as model + thinking-only
+      (no effort compare).
+- [ ] [INFRA] P1. **LAST TASK (operator 2026-07-07)** — after ALL the model wiring has landed + deployed, update the
+      `claude` CLI binary on the planning VM (`ssh agent-orchestrator-vm`) to a version supporting fable + the effort
+      ladder (≥ 2.1.170 for fable; 2.1.201 validated locally): `claude update`, verify `claude --version`, then a smoke
+      resume-respawn so live workers can actually select `--model fable` / `--effort`. Do this LAST so the VM only
+      upgrades once the backend can drive the new flags — an early upgrade gains nothing and risks a version skew.
 
 ---
 
@@ -512,6 +555,17 @@ independent flags, so `--resume <id> --model opus` continues on a higher model).
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-07 — Phase 7 researched + scoped (fable + per-model effort; pre-implementation).** Verified against the
+  installed CLI (2.1.201) + Claude Code model-config docs: `--effort` = `low/medium/high/xhigh/max` (5; "extra high" =
+  `xhigh`); **`ultracode` is NOT an `--effort` value** — a session-only Claude Code setting (`"ultracode": true` via
+  `--settings`) = `xhigh` + dynamic-workflow orchestration, out of scope for spawn effort. **Haiku supports NO effort —
+  passing `--effort` 400s** (latent bug: `_build_claude_flags` `tmux_spawn.py:971` emits it unconditionally); effort is
+  supported on Fable 5 / Sonnet 5 / Opus 4.x. On current-gen models (Sonnet 5 / Opus 4.8 / Fable 5) effort is the
+  PRIMARY reasoning control (adaptive reasoning) — `--max-thinking-tokens` is inert there, kept only for Haiku's on/off.
+  Fable alias = `fable` (available since CLI 2.1.170). Rewrote Phase 7 into concrete todos (haiku-effort gate = P0
+  correctness; fable spawn + `_MODEL_RANK` `fable:3`; per-role/plan effort field for the full ladder; fable account
+  support/fallback; docs reconcile) + a §C per-model-capability note. Sources: platform.claude.com/docs/…/effort,
+  code.claude.com/docs/…/model-config, anthropics/claude-code#30760 (haiku-effort 400).
 - **2026-07-07 — Phase 3 design REFINED + CONFIRMED with operator (pre-implementation).** Corrected the core model:
   model / effort / thinking are **spawn-fixed per tmux session** (not per-task) — a session serves every task at its
   spawn tier until killed, so the ONLY clean re-tier is kill + respawn `--resume` at the new tier (`/model` send-keys is

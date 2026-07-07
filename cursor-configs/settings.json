@@ -1,6 +1,5 @@
 {
   "permissions": {
-    "defaultMode": "bypassPermissions",
     "allow": [
       "Bash",
       "Git",
@@ -12,6 +11,32 @@
       "WebFetch",
       "mcp__claude_ai_Context7__resolve-library-id",
       "mcp__claude_ai_Context7__query-docs",
+      "mcp__playwright__run",
+      "mcp__playwright__get-test-info",
+      "mcp__playwright__get-test-results",
+      "mcp__playwright__get-test-logs",
+      "mcp__playwright__get-test-attachments",
+      "mcp__playwright__get-test-screenshots",
+      "mcp__playwright__get-test-videos",
+      "mcp__playwright__get-test-traces",
+      "mcp__playwright__get-test-coverage",
+      "mcp__playwright__get-test-har",
+      "mcp__playwright__get-test-metadata",
+      "mcp__playwright__get-test-status",
+      "mcp__playwright__get-test-errors",
+      "mcp__playwright__get-test-warnings",
+      "mcp__playwright__get-test-info",
+      "mcp__playwright__get-test-results",
+      "mcp__playwright__get-test-logs",
+      "mcp__playwright__get-test-attachments",
+      "mcp__playwright__get-test-screenshots",
+      "mcp__playwright__get-test-videos",
+      "mcp__playwright__get-test-traces",
+      "mcp__playwright__get-test-coverage",
+      "mcp__playwright__get-test-har",
+      "mcp__playwright__get-test-metadata",
+      "mcp__playwright__get-test-status",
+      "mcp__playwright__get-test-errors",
       "Monitor",
       "Workflow",
       "Agent",
@@ -19,10 +44,17 @@
       "TaskOutput",
       "TaskStop",
       "SendMessage",
-      "TodoWrite"
+      "TodoWrite",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_take_screenshot",
+      "WebSearch"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "defaultMode": "bypassPermissions"
   },
   "enabledPlugins": {
     "pyright-lsp@claude-plugins-official": true
