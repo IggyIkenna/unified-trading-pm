@@ -7,11 +7,11 @@ summary:
   On 2026-07-07 the agent-orchestrator fleet sat idle (0 working, 14 idle slots) while 30 tasks were queued and
   blocker-free. Not a crash — the server + VM were healthy and AutoSpawn was spawning workers every ~30s. Root causes
   compounded — the whole backlog was frozen at model=opus/effort=max (regen does not propagate plan frontmatter
-  tier/role changes to already-queued tasks), so every spawn was Opus/max against credit-limited accounts;
-  pick_next_task has no assigned_role craft filter, so infra tasks dispatched to data_engineering slots and were
-  skipped; 326 per-(slot,task) slot_skips accumulated and persist across respawns, starving dispatch; and the monitor
-  agents over-generalized one sports gate to the whole backlog and went passive. This doc records the failure mode + the
-  prevention fixes so it does not recur.
+  tier/role changes to already-queued tasks), so every spawn was Opus/max (a cost inefficiency — the accounts themselves
+  are healthy, verified live); pick_next_task has no assigned_role craft filter, so infra tasks dispatched to
+  data_engineering slots and were skipped; 326 per-(slot,task) slot_skips accumulated and persist across respawns,
+  starving dispatch; and the monitor agents over-generalized one sports gate to the whole backlog and went passive. This
+  doc records the failure mode + the prevention fixes so it does not recur.
 status: open
 nature: notes
 asset_group: [meta]
@@ -69,8 +69,9 @@ drift_direction: advance-code
    later, the **already-queued tasks keep their original tier/role**. Evidence: after retiering all 6 plans to
    Sonnet/high, every queued task still read `model=opus effort=max` (incl. `tradfi_v9_stage1_finish-004`, whose plan
    was Sonnet since 2026-07-06), and `infra_capture_and_devops_leftovers-001` still read `role=infra` after the plan was
-   re-homed to `data_engineering`. → **Every spawn is Opus/max** (`_top_queued_task_params` picks the top task's tier),
-   maximally straining the credit-limited accounts, for tasks the plans intended to run cheap on Sonnet.
+   re-homed to `data_engineering`. → **Every spawn is Opus/max** (`_top_queued_task_params` picks the top task's tier) —
+   a cost inefficiency (burns Opus quota for tasks the plans intended to run cheap on Sonnet), though NOT an
+   availability blocker since the accounts are healthy (RC-5).
 
 2. **`pick_next_task` has NO `assigned_role` craft filter.** `server/dispatch.py::pick_next_task` filters on status,
    model-tier, deferred-prefix, prereqs, affinity(target_slot), repo-collision, collision_group, and slot_skips — but
