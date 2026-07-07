@@ -170,13 +170,14 @@ downstream-observable semantic).
 
 ## Actionable todos (fix-worker cold-start)
 
-- [ ] [DATA] P0. **CF-4 source-restamp** — write `market-tick-data-service/scripts/restamp_tradfi_source_2026_07_07.py`
+- [x] ✅ [DATA] P0. **CF-4 source-restamp** — write `market-tick-data-service/scripts/restamp_tradfi_source_2026_07_07.py`
       (mirror `stamp_schema_version_v9_mtds_2026_06_29.py`): filter manifest to
       `source==""` AND `pipeline_mode!=""` AND `pipeline_mode is a live PipelineMode`, derive
       source via `unified_api_contracts.source_string_for(PipelineMode(pm))`, re-emit through
       `record_empty(...source=...)` / `record_failed(...source=...)` on the same row_key.
       Dry-run + `--apply` shape. Gate: CF-4 GREEN (0 blank source in tradfi manifest).
       (repo: market-tick-data-service)
+      — market-tick-data-service@11e39000: script written with dry-run+--apply+snapshot+stop-on-surprise+CF-4-gate-verify; QG green; quickmerge landed LDR
 - [x] ✅ [DATA] P1. **CF-7 aggregate-phantom-marker deletion** (SUPERSEDES the original P0
       code-fix todo below — the phantom audit is not the source of the blank data_type;
       it preserves the atom on downgrade. The real root cause is upstream, and the
