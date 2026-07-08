@@ -1058,10 +1058,13 @@ RAW_JSON=$(codex_rg 'response\.json\(\)|await response\.json\(\)' --type py --gl
     | grep -v "# noqa:.*qg-raw-json\|# noqa: qg-raw-json" || :)
 [[ -n "$RAW_JSON" ]] && { log_fail "Raw response.json() — parse through Pydantic model_validate()"; echo "$RAW_JSON" | head -3; V=$(( V + 1 )); } || log_success "No raw response.json()"
 
-EMPTY_STR_EXTRA=()
-for g in ${EMPTY_STR_EXCLUDE_GLOBS[@]+"${EMPTY_STR_EXCLUDE_GLOBS[@]}"}; do EMPTY_STR_EXTRA+=(--glob "$g"); done
-EMPTY_STR=$(codex_rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "${EMPTY_STR_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
-[[ -n "$EMPTY_STR" ]] && { log_fail "Empty string fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty string fallbacks"
+# Empty-string fallback (`.get("key", "")`) is now STEP 5.101 below — a per-repo
+# baseline-ratchet (check_no_empty_string_fallback.py), replacing the zero-tolerance
+# inline check that used to live here (no ratchet -> pre-existing debt in ANY repo
+# permanently blocked every push to that repo; see
+# plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md).
+# EMPTY_STR_EXCLUDE_GLOBS (legacy per-repo bash excludes) is no longer consumed —
+# the new checker has its own uniform exclusions (tests/, testing/, venvs, noqa marker).
 
 ED_EL_EXTRA=()
 for g in ${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]+"${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]}"}; do ED_EL_EXTRA+=(--glob "$g"); done
@@ -3302,6 +3305,40 @@ if [ -f "$_ARCH_RATCHETS_CHECKER" ]; then
     fi
 else
     log_success "STEP 5.100: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
+# ── STEP 5.101: .get("key", "") empty-string-fallback ratchet ─────────────────
+#
+# Enforces "Empty string fallback — fail fast": a dict `.get("key", "")` call
+# silently swaps a genuinely-missing/error-worthy field for an empty string
+# instead of failing loud. Replaces the old zero-tolerance inline `codex_rg`
+# check (no ratchet — any repo's pre-existing debt permanently blocked every
+# push to that repo). Per-repo SHRINKING count ratchet:
+# no_empty_string_fallback_baseline.yaml grandfathers the fleet-wide count
+# measured 2026-07-08 (mtds_empty_string_fallback_codex_gate_blocking_pushes);
+# a NEW site above baseline fails CI. Per-line opt-out (already used at ~250
+# sites): `# noqa: qg-empty-fallback` with a one-line reason.
+# SSOT: plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md.
+_ESF_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_empty_string_fallback.py"
+if [ -f "$_ESF_CHECKER" ]; then
+    _ESF_REPO=$(basename "$PROJECT_ROOT")
+    _ESF_WS="$REPO_ROOT"
+    if $PYTHON_CMD "$_ESF_CHECKER" \
+            --workspace-root "$_ESF_WS" --scope "$_ESF_REPO" >/tmp/no_empty_string_fallback_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/no_empty_string_fallback_qg.log 2>/dev/null; then
+            log_warn "STEP 5.101: below the empty-string-fallback baseline — ratchet no_empty_string_fallback_baseline.yaml DOWN (re-run --update-baseline)"
+        else
+            log_success "STEP 5.101: No new .get(\"key\", \"\") empty-string-fallback sites (baseline-ratchet)"
+        fi
+    else
+        log_fail "STEP 5.101: NEW .get(\"key\", \"\") empty-string-fallback site(s) above the per-repo baseline. Rewrite to fail fast (raise, or return None and let the caller decide), or add '# noqa: qg-empty-fallback' with a one-line reason:"
+        cat /tmp/no_empty_string_fallback_qg.log
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/no_empty_string_fallback_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_empty_string_fallback.py --workspace-root $_ESF_WS --scope $_ESF_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.101: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────

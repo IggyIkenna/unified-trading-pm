@@ -1,0 +1,66 @@
+# Baseline for QG STEP 5.101 — .get("key", "") empty-string-fallback ratchet.
+#
+# This is a SHRINKING ratchet. `repos[<repo>].count` is the number of
+# `.get("key", "")` / `.get('key', '')` empty-string-fallback call sites
+# (WITHOUT a `# noqa: qg-empty-fallback` marker) the gate tolerates in that
+# repo (tests/ + testing/ excluded). A repo whose live count EXCEEDS its
+# baseline fails CI — a NEW site landed; rewrite it to fail fast (raise, or
+# return None and let the caller decide), or add `# noqa: qg-empty-fallback`
+# with a one-line reason for a genuinely deliberate, safe case.
+#
+# LOWER a count (re-run `--update-baseline`) the moment sites are fixed.
+# NEVER raise a count. Repos not listed default to count=0.
+#
+# SSOT: plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md.
+note: Seeded 2026-07-08 — mtds_empty_string_fallback_codex_gate_blocking_pushes fleet audit (QG STEP 5.101).
+repos:
+  agent-orchestrator:
+    count: 25
+  alerting-service:
+    count: 0
+  batch-live-reconciliation-service:
+    count: 0
+  client-reporting-api:
+    count: 230
+  deployment-api:
+    count: 2
+  deployment-service:
+    count: 91
+  deployment-ui:
+    count: 0
+  e2e-testing:
+    count: 221
+  execution-service:
+    count: 65
+  features-service:
+    count: 28
+  fund-administration-service:
+    count: 0
+  greeks-service:
+    count: 0
+  ibkr-gateway-infra:
+    count: 0
+  instruments-service:
+    count: 369
+  market-data-processing-service:
+    count: 66
+  market-tick-data-service:
+    count: 199
+  ml-service:
+    count: 8
+  strategy-service:
+    count: 166
+  system-integration-tests:
+    count: 1
+  trading-agent-service:
+    count: 2
+  unified-api-contracts:
+    count: 12
+  unified-trading-api:
+    count: 3
+  unified-trading-library:
+    count: 5
+  unified-trading-pm:
+    count: 319
+  unified-trading-system-ui:
+    count: 0

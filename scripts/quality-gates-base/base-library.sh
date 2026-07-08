@@ -596,9 +596,10 @@ RAW_JSON=$(codex_rg 'response\.json\(\)|await response\.json\(\)' --type py --gl
 
 _efb_extra_globs=()
 for _excl in "${EMPTY_FALLBACK_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _efb_extra_globs+=("--glob" "!${_excl}"); done
-ES=$(codex_rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" --glob "!**/testing/**" "${_efb_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
-    | grep -v "# noqa:.*qg-empty-fallback\|# noqa: qg-empty-fallback" || :)
-[[ -n "$ES" ]] && { log_fail "Empty string fallback — fail fast"; echo "$ES" | head -3; V=$(( V + 1 )); } || log_success "No empty string fallbacks"
+# Empty-string fallback (`.get("key", "")`) is now STEP 5.101 below — a per-repo
+# baseline-ratchet (check_no_empty_string_fallback.py), replacing the zero-tolerance
+# inline check that used to live here. See
+# plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md.
 
 ED=$(codex_rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" --glob "!**/testing/**" "${_efb_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa:.*qg-empty-fallback\|# noqa: qg-empty-fallback" || :)
@@ -1313,6 +1314,26 @@ if [ -f "$_BAG_CHECKER" ]; then
     else
         log_fail "STEP 5.96: NEW blank asset_group callsite — use a non-blank asset_group or add '# noqa: blank-asset-group  <reason>' on the same line:"
         cat /tmp/no_blank_asset_group_qg.log
+        exit 1
+    fi
+fi
+
+# ── STEP 5.101: .get("key", "") empty-string-fallback ratchet ─────────────────
+# Library-repo parity with base-service.sh STEP 5.101. "Empty string fallback —
+# fail fast": a dict `.get("key", "")` call silently swaps a genuinely-missing/
+# error-worthy field for an empty string instead of failing loud. Baseline-
+# ratchet: no_empty_string_fallback_baseline.yaml. Per-line opt-out (already
+# used at ~250 sites fleet-wide): `# noqa: qg-empty-fallback` + a one-line reason.
+# SSOT: plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md.
+_ESF_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_empty_string_fallback.py"
+if [ -f "$_ESF_CHECKER" ]; then
+    _ESF_REPO=$(basename "$PROJECT_ROOT")
+    if "${PYTHON_CMD:-python3}" "$_ESF_CHECKER" \
+            --workspace-root "$REPO_ROOT" --scope "$_ESF_REPO" >/tmp/no_empty_string_fallback_qg.log 2>&1; then
+        log_ok "STEP 5.101: No NEW .get(\"key\", \"\") empty-string-fallback sites (baseline-ratchet)"
+    else
+        log_fail "STEP 5.101: NEW .get(\"key\", \"\") empty-string-fallback site (not baselined). Rewrite to fail fast (raise, or return None and let the caller decide), or add '# noqa: qg-empty-fallback' with a one-line reason:"
+        cat /tmp/no_empty_string_fallback_qg.log
         exit 1
     fi
 fi
