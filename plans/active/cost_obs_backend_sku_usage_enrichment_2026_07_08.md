@@ -91,8 +91,8 @@ source: cost_observability_ui_2026_07_08.md
 - [ ] [BACKEND] P2. **AWS net + invoice reconciliation.** Use `line_item_net_unblended_cost` (net of discounts) and add
       a tax/fee line (relax the `Usage`/`DiscountedUsage`-only filter or a second query) so the AWS total reconciles to
       the invoice; label the current figure "usage spend" until then. pytest.
-- [ ] [BACKEND] P3. **Zone dimension.** Add `location.zone` (GCP) / `line_item_availability_zone` (AWS) to
-      `CostRecord` + a finer zone cut of the region dimension. pytest.
+- [x] ✅ [BACKEND] P3. **Zone dimension** — deployment-api@537af3d. Add `location.zone` (GCP) /
+      `line_item_availability_zone` (AWS) to `CostRecord` + a finer zone cut of the region dimension. pytest.
 - [ ] [BACKEND] P3. **Codex contract update.** Post-phase codex audit — update
       `codex/05-infrastructure/billing-cost-observability.md` with the new SKU / usage / bucket-volume / waste fields +
       the extended `/api/costs/breakdown` row contract.
