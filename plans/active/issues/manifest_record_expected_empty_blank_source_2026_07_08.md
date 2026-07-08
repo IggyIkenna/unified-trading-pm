@@ -171,7 +171,7 @@ doc's understat cells post-fix, audit other high-concurrency buckets for the sam
       (`writers.py` / `_write_prediction_venue`). Root-cause note: see the new P0 finding below — a systemic
       library-level gap, not a per-callsite pattern, so this audit's scope (the 5 named callsites) is now closed but the
       class of bug is NOT fully closed until that finding resolves.
-- [ ] [DATA] P0. **Root-cause found during the audit above**: `ManifestWriter._record_status()`
+- [x] ✅ [DATA] P0. **Root-cause found during the audit above**: `ManifestWriter._record_status()`
       (`unified_trading_library/manifest_writer/_writer_record.py`, backs `record_empty`/`record_expected_empty`/
       `record_failed`/`record_expected_unattempted`) never calls `_stamp_producer_source()` — the helper
       `record_captured()` DOES call (`_writer_captured.py:263`, `:643`) that stamps a blank-resolved source with
@@ -190,7 +190,15 @@ doc's understat cells post-fix, audit other high-concurrency buckets for the sam
       non-captured row currently landing blank-sourced under a BATCH pipeline_mode with no `asset_group` kwarg — a
       repo-wide grep for existing tests asserting blank `source` on an
       `empty_confirmed`/`attempted_failed`/`expected_unattempted` row is needed before landing (repo:
-      unified-trading-library).
+      unified-trading-library). — unified-trading-library@ca5f1dbd. Added the
+      `_stamp_producer_source(resolved_source, resolved_pipeline_mode)` call at the exact placement specified above.
+      Test-impact review: `grep -rn '\.source == ""' tests/` across UTL found exactly 3 tests whose blank-stays-blank
+      assertion used a BATCH pipeline_mode (all in `test_manifest_writer_source_noncaptured.py` — none in
+      `test_manifest_writer_source.py` / `test_manifest_writer_transport.py`, both `record_captured`-only and already
+      stamped pre-fix); switched those 3 to a non-batch (`LIVE_DATABENTO`) pipeline_mode so they keep testing the
+      OPTIONAL-source contract instead of asserting now-incorrect blank output, and added 4 new tests covering the
+      auto-stamp directly (incl. the literal `record_expected_empty` repro scenario and an explicit-source-wins
+      regression guard). Full `quality-gates.sh` green (6309+ tests passed) before shipping via quickmerge.
 - [x] ✅ [DATA] P1. Re-verify item #1 (weather) and item #2 (SFI) gate state in
       `sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md` using an UNFILTERED-by-source query (or
       post-fix filtered query) to confirm their ✅ flips still hold (repo: unified-trading-pm, plan file). — Read the
