@@ -1,0 +1,150 @@
+---
+doc_type: plan
+title:
+  Sports reference catalog is intentionally league-grain-only today — decide + scope fixture/team/player-grain catalog &
+  coverage tracking
+summary: |
+  `prod/catalog.parquet` for sports has 116 rows, all `venue=""` and `instrument_type="league"` — confirmed via a
+  real GCS read (2026-07-08). This is NOT a silently-broken write path (unlike the earlier weather stale-GCS-path
+  bug): `build_sports_catalogue_from_manifest()` in `scripts/build_instrument_catalogue.py` is a documented,
+  deliberate 2026-06-07 design decision to scope the sports "could-exist" catalog to LEAGUE grain only, because the
+  captured manifest atom itself is per-(league_id, data_type, date) with no fixture/team/player grain — a
+  fixture-grain catalogue would inflate `expected_unattempted` against a manifest that can never match it. The
+  11-step pipeline in SPORTS_INSTRUMENTS.md describes fixture/team/player reference DATA flowing through
+  instruments-service to GCS, which is real and separate from this catalog — but nothing today rolls that data up
+  into fixture/team/player-grain catalog ("could-exist") rows or coverage tracking. This plan scopes the decision +
+  follow-on work, it does not force an immediate fix.
+status: active
+nature: design
+asset_group: [sports]
+stage: [data]
+repos: [instruments-service]
+scope: [engineer]
+tags:
+  [sports, catalog, reference-data, coverage, manifest, league-grain, fixture-grain, honest-coverage, data-completeness]
+related:
+  [
+    instruments-service/docs/SPORTS_INSTRUMENTS.md,
+    plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md,
+    plans/active/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/honest-coverage-model.md,
+  ]
+created: 2026-07-08
+last_updated: 2026-07-08
+parent_epic: sports_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+estimate_class: research
+estimate_baseline_ai_days: 3
+estimate_calibrated_ai_days: 3.6
+assigned_role: data_engineering
+drift_direction: advance-code
+depends_on: []
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+source: SUB_AGENT_MANDATORY_RULES dispatch (slot-3 this session) — "reference catalog is bare" investigation task
+---
+
+# Sports reference catalog is intentionally league-grain-only today
+
+## What I was asked to investigate
+
+`instruments-service/docs/SPORTS_INSTRUMENTS.md`'s "Known gaps" section documented: `venue` empty for all 116 real
+catalog rows, one sentinel `"UNKNOWN"` key, and only league-level entities present despite an 11-step pipeline designed
+to carry fixtures/teams/players through. I was asked to trace the real write path with the same rigor as the earlier
+weather stale-GCS-path fix (real GCS reads, not just static code reading) and either ship a scoped fix with real
+before/after evidence, or — if the gap is bigger than a single bug — file this plan instead of forcing a rushed fix.
+
+## Real evidence (this session, 2026-07-08)
+
+Downloaded and read the real production catalog directly:
+`gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet` → 116 rows, columns
+`[instrument_id, instrument_type, venue, chain, league_id, available_from, available_to, market_created_at, settlement_time, data_type, underlying, raw_symbol, base_asset, mvp, margin_type, glued_pair_id, pool_address]`.
+`df["venue"].value_counts()` → `""` × 116 (100%). `df["instrument_type"].value_counts()` → `"league"` × 116 (100%).
+Matches the doc's prior finding exactly, **including** the sentinel row: `df["instrument_id"] == "UNKNOWN"` → 1 row
+(`league_id="UNKNOWN"`, `available_from="2025-12-15"`, `available_to=None` — still active today, not a one-off
+historical artifact).
+
+Pulling the thread on that one sentinel catalog row turned into its own, bigger, ongoing finding: the real manifest
+behind it (`_index/availability_index.parquet`) has **2,373 rows** with `league_id="UNKNOWN"` across all 17 sports
+data_types, dated 2025-12-15 through **2026-07-08 (today — still recurring)**. That's a separate, currently-active
+data-correctness bug, not a scoping question, so it's split out into its own issue doc rather than folded into this
+plan's grain-scoping decision: see `plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md` for the full
+evidence, what was ruled out (the per-fixture-entity write path explicitly guards against bare unmapped writes, so it is
+NOT the source), and the recommended next step (root-cause trace, not yet pinned to a specific write call site).
+
+## Root cause (confirmed by reading the real builder code, not inferred)
+
+`scripts/build_instrument_catalogue.py::build_instrument_catalogue()` dispatches on `asset_group`; for
+`asset_group == "sports"` (line ~2158-2164) it calls **only** `build_sports_catalogue_from_manifest()` — it never calls
+any adapter's `get_instruments()` (unlike, say, DeFi/CeFi paths), so fixture/team/player/Betfair-runner
+`InstrumentRecord`s produced by the reference-data adapters (`api_football_reference.py`, `betfair.py`, etc.) are
+**never** rolled into the catalog at all, regardless of whether those adapters run successfully.
+
+`build_sports_catalogue_from_manifest()` (line 1135-1207) is itself explicitly LEAGUE-grain-only **by design**,
+documented in its own docstring as a "slot-4 re-diagnosis 2026-06-07" decision:
+
+> "the sports captured manifest atom is per-`(league_id, data_type, date)` ... so the could-exist universe is
+> per-LEAGUE, not per-fixture. A fixture-grain catalogue would never match the league-grain manifest present-set → every
+> cell would seed `expected_unattempted` → massively inflated coverage denominator."
+
+`venue=""` is likewise deliberate (line 1061-1066 of the same file, in the superseded
+`build_sports_catalogue_dataframe()` docstring, same invariant applies to the active function): written blank so the
+seeded `expected_unattempted` atom matches the captured manifest atom, which is also venue-blank at league grain.
+
+**This is not the same bug class as the weather fix.** The weather bug was a write path silently reading from the wrong
+GCS prefix (a real defect with a real fix and real before/after row counts). This is a documented, intentional
+architectural scoping decision: the sports "could-exist" catalog / coverage-denominator system was built to match the
+CURRENT manifest grain (league-level), and fixture/team/player-grain catalog+coverage tracking was **never implemented**
+— not silently broken, genuinely absent. The 11-step pipeline in SPORTS_INSTRUMENTS.md is real and does write
+fixture/team/player reference DATA to GCS (`sports_reference/by_date/day={date}/entity={fixtures,teams, injuries}/`) —
+that data exists independently of this catalog; it just isn't rolled up into catalog/coverage rows.
+
+## Why this needs a decision, not a rushed fix
+
+Building a correct fixture/team/player-grain catalog is not a small patch — per the builder's own reasoning, it requires
+the sports MANIFEST to also track presence at fixture/team/player grain (not just league grain) before a fixture-grain
+"could-exist" catalogue can be seeded without inflating `expected_unattempted`. That is itself a manifest-schema-level
+change with cross-cutting implications for `codex/02-data/availability-manifest-and-data-status.md` and the
+honest-coverage denominator math, not a same-file fix.
+
+## Todos
+
+- [ ] [DATA] P1. Root-cause + fix the `league_id="UNKNOWN"` manifest write bug — tracked separately, see
+      `plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md` (2,373 real rows, all 17 sports data_types,
+      ongoing through today). Not a same-file quick fix — do the trace there first.
+- [ ] [DATA] P1. Decide, with the operator: does the "could-exist" catalog / honest-coverage system for Sports NEED
+      fixture/team/player grain at all, or is league-grain the permanently-correct scope for Sports coverage tracking
+      (with fixture-level completeness tracked some other way, e.g. directly against the manifest's per-date fixture
+      counts rather than a catalog join)? This is the load-bearing decision the rest of this plan depends on.
+- [ ] [DATA] P2. If fixture-grain IS wanted: design the manifest schema extension needed to track per-fixture capture
+      presence (today's atom is `(league_id, data_type, date)`) without breaking the existing league-grain
+      honest-coverage denominator for in-flight consumers.
+- [ ] [DATA] P2. If fixture-grain IS wanted: write `build_sports_fixture_catalogue_from_manifest()` (or equivalent)
+      analogous to `build_sports_catalogue_from_manifest()`, gated on the manifest extension above, with the same
+      "catalogue superset ⊇ manifest present-set" invariant the league-grain function already documents.
+- [ ] [DATA] P3. If fixture-grain IS wanted: extend the catalog build to also invoke reference-data adapters that are
+      currently never called from `build_instrument_catalogue.py` for sports (`api_football_reference.py` fixtures,
+      `betfair.py` runners once BETFAIR is wired into the sports fetch pipeline — see
+      `plans/active/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md` for why Betfair specifically is not
+      fetched today) — or confirm the manifest-only path (no direct adapter calls) remains the intended source of truth
+      and the "11-step pipeline" doc language should be corrected instead.
+- [ ] [DATA] P3. If league-grain IS confirmed as the permanent, correct scope: update
+      `instruments-service/docs/SPORTS_INSTRUMENTS.md`'s "11-step pipeline" section so it no longer implies the catalog
+      itself carries fixture/team/player-grain `instrument_id`s — reframe steps 3-8 as "reference DATA written to GCS"
+      (true) distinct from "catalog/coverage tracks these grains" (not true today, by design).
+- [ ] [REVIEW] P3. Post-decision codex alignment check: if the manifest/catalog grain changes,
+      `codex/02-data/availability-manifest-and-data-status.md` and `codex/02-data/honest-coverage-model.md` need a
+      corresponding update (this is the HARD RULE "post-phase codex audit" — do not skip it if this plan's scope changes
+      those contracts).
+
+## Codex SSOTs
+
+- `codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`, honest-coverage denominator.
+- `codex/02-data/honest-coverage-model.md` — two-layer / two-view / instrument-gates-download model this plan's
+  fixture-grain option would need to fit into, not bypass.
