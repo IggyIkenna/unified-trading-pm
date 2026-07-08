@@ -62,29 +62,16 @@ non-exchange bookmakers (API or scraping) in the unified trading system. It trac
 | Pinnacle | pinnacle/schemas | PinnacleAdapter | Sharp reference odds |
 | OneXBet  | -                | OneXBetAdapter  | BOOKMAKER_REGISTRY   |
 
-### 4b. Scraping (Playwright)
+### 4b. Scraping (Playwright) — RETIRED 2026-07-08 per operator decision
 
-| Provider     | UAC Schemas | USEI Adapter       | Notes                     |
-| ------------ | ----------- | ------------------ | ------------------------- |
-| Bet365       | -           | Bet365Adapter      | Playwright scraper        |
-| SkyBet       | -           | SkyBetAdapter      | Playwright scraper        |
-| William Hill | -           | WilliamHillAdapter | Playwright scraper        |
-| Ladbrokes    | -           | LadbrokesAdapter   | Playwright scraper        |
-| Paddy Power  | -           | PaddyPowerAdapter  | Flutter-owned             |
-| Coral        | -           | CoralAdapter       | Playwright scraper        |
-| Betfred      | -           | BetfredAdapter     | Playwright scraper        |
-| BetVictor    | -           | BetVictorAdapter   | Playwright scraper        |
-| BoyleSports  | -           | BoyleSportsAdapter | Playwright scraper        |
-| Bwin         | -           | BwinAdapter        | Playwright scraper        |
-| Betway       | -           | BetwayAdapter      | Playwright scraper        |
-| Unibet       | -           | UnibetAdapter      | Playwright scraper        |
-| 888sport     | -           | Bet888sportAdapter | Playwright scraper        |
-| SBO          | Planned     | -                  | Asian bookmaker (planned) |
-
-**Scraping for orders and market data:** Non-exchange bookmakers without APIs (Bovada, BetOnline, Bet365, SkyBet, etc.)
-require Playwright-based scraping for both order placement and market data. USEI scraper adapters use Playwright for
-browser automation. Odds API and aggregators (SharpAPI, Odds Engine) provide odds without scraping; scraping is only for
-providers with no API.
+The 14 Playwright-scraper USEI adapters previously listed here (Bet365, SkyBet, William Hill, Ladbrokes, Paddy Power,
+Coral, Betfred, BetVictor, BoyleSports, Bwin, Betway, Unibet, 888sport, plus a planned SBO) have been **deleted
+outright** from `execution-service/execution_service/sports_execution/adapters/scrapers/` (source + dedicated tests),
+not just left dormant — this supersedes the 2026-05-12 DEFERRED-INDEFINITELY scaffolding-retention call. 0 real
+production rows / 0 real callers confirmed before deletion. See `unified-trading-pm/plans/epics/sports_master.md` §
+"Scrapers retired 2026-07-08 per operator" for the canonical provenance record. Odds API and aggregators (SharpAPI, Odds
+Engine) continue to provide these bookmakers' odds without scraping — direct-to-bookmaker scraping is not the trading
+plan.
 
 ---
 
@@ -94,7 +81,7 @@ providers with no API.
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | UAC     | Schemas: api_football, footystats, understat, soccer_football_info, transfermarkt, open_meteo, odds_api, betfair, pinnacle, matchbook, smarkets, betdaq, opticodds, oddsjam. BOOKMAKER_REGISTRY (22 entries). CanonicalOdds, OddsType, BetExecution, BetOrder, BookmakerUnavailableError, ScraperError. |
 | UMI     | SPORTS_REGISTRY: OddsApiAdapter, OpticOddsAdapter, OddsJamAdapter. Data: APIFootballAdapter, FootyStatsAdapter, UnderstatAdapter, etc. Config: MarketDataProviderConfig.                                                                                                                                |
-| USEI    | Aggregator: OddsApiAdapter. Exchanges: Betfair, Matchbook, Smarkets, Betdaq. Bookmaker API: Pinnacle, OneXBet. Scrapers: 13 (Bet365, SkyBet, William Hill, Ladbrokes, Paddy Power, Coral, Betfred, BetVictor, BoyleSports, Bwin, Betway, Unibet, 888sport). BaseSportsAdapter protocol.                 |
+| USEI    | Aggregator: OddsApiAdapter. Exchanges: Betfair, Matchbook, Smarkets, Betdaq. Bookmaker API: Pinnacle, OneXBet. Scrapers: 0 — the 14 Playwright scraper adapters were RETIRED 2026-07-08 per operator decision (see § 4b). BaseSportsAdapter protocol.                                                   |
 
 ---
 
