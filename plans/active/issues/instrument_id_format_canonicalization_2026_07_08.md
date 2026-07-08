@@ -80,10 +80,10 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
 2. **DEX-pool instrument_id is a bare on-chain pool address, zero VENUE:TYPE:SYMBOL structure, confirmed across 6,180
    real rows / 13 protocols (Uniswap V2/V3/V4, Balancer, Curve, PancakeSwap_V3, Sushiswap/\_V3, Camelot_V3,
    Aerodrome_V3, TraderJoe_V2, Velodrome_V2, GMX) — zero exceptions.** Real:
-   `0x00822ba38a39b79cbc5b7f62ba1a6886a45f9e4c` (venue/chain/base_asset live in separate columns instead). **Target**:
+   `0x00822ba38a39b79cbc5b7f62ba1a6886a45f9e4c` (venue/chain/base*asset live in separate columns instead). **Target**:
    `VENUE-CHAIN:POOL:TOKEN0-TOKEN1[-FEE_TIER]` (matching `canonical_id_builder.py`'s own `_build_defi` docstring
    example, `UNISWAP_V3-ETHEREUM:POOL:USDC-WETH-500`) — pool_address stays as its own column for on-chain lookups, it
-   just stops being the _entire_ identity key.
+   just stops being the \_entire* identity key.
 
 3. **The 5 on-chain-perp venues (HYPERLIQUID/ASTER/PACIFICA-SOLANA/EXTENDED-STARKNET/LIGHTER-ZKSYNC) all store
    instrument_type=PERPETUAL as the field but embed PERP (not PERPETUAL) in the instrument_id key** — consistent across
@@ -114,9 +114,17 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
 - Not a claim that any of these 6 are fixed today — every target format above is illustrative only, shown in the mockup
   as an explicit "NOT REAL — target canonical" 3rd sample alongside the real captured ones, same visual pattern as the
   A_TOKEN/DEBT_TOKEN decision's current-state-vs-target-state entries.
-- Not a complete enumeration — this session's real-catalog reads covered CeFi + DeFi only (not TradFi/Sports/
-  Prediction), and only the venues/protocols already touched by this session's other findings. A dedicated audit pass
-  would likely find more instances of the same 6 divergence classes elsewhere.
+- Not a complete enumeration of every possible instrument_id anywhere — but coverage was extended 2026-07-08 (operator:
+  "shouldl be evertyhting all AG that we expect shown in [the mockup] so we know how things will look") to every
+  DEX-pool protocol×chain combination in the DeFi tab (27 total, not just a flagship sample), plus a deliberate check of
+  TradFi/Sports/Prediction: TradFi's dated-derivative codes (e.g. `CME:FUTURE:6AF0`) are real industry-standard terse
+  contract codes, not an uncleaned internal prefix like Kraken's — no divergence to canonicalize there; Sports fixture
+  IDs are provider-native opaque identifiers, not VENUE:TYPE:SYMBOL keys; Prediction already routes through its own
+  dedicated domain builder (`canonical/domain/prediction/prediction_mapping.py`), not the ad-hoc CeFi/DeFi pattern this
+  doc is about. DERIBIT-COMBO's underscore-in-strikes format was also checked and confirmed a real, internally
+  consistent convention (not a canonicalization gap). A dedicated future audit could still find more instances of the 6
+  divergence classes on venues/protocols this session never touched at all (this doc's scope is bounded by what this
+  session's other findings happened to surface, not a from-scratch audit of the full instrument universe).
 - Not asking for `canonical_id_builder.py` itself to become the enforced single builder as part of this decision —
   that's a separate, larger refactor question (does every adapter route through one shared function, or do per-domain
   builders exist but each still individually canonicalize). This doc scopes the FORMAT decision; the
@@ -149,3 +157,9 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
   operator chose full scope. All 6 divergences enumerated here were already discovered during this session's mockup
   backfill pass (2026-07-08) — this doc is the first time they're captured as a decided target-state rather than
   scattered mockup bug notes. No implementation work done yet; migration mechanics are an open todo.
+- **2026-07-08 (later same day)** — Operator asked for full-AG coverage in the mockup itself ("shouldl be evertyhting
+  all AG that we expect shown in [the mockup] so we know how things will look"), not just the initially-touched sample
+  entries. Extended the CURRENT-vs-TARGET-STATE mockup treatment to all 27 real DEX-pool protocol×chain combinations in
+  the DeFi tab (previously only 1 flagship example had it). Checked TradFi/Sports/Prediction for the same 6 divergence
+  classes and confirmed none apply there (see updated "What this is NOT" section above) — not silently skipped, actively
+  ruled out. DERIBIT-COMBO's underscore-in-strikes format also checked and confirmed real/consistent, not a gap.
