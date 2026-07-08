@@ -175,6 +175,11 @@ business-context fast-follow (asset_group via labels/tags), deliberately out of 
 - [ ] [BACKEND] P3. Deployed AWS-credential cutover — wire the Athena reader to the keyless WIF role
       (`_code_builds_aws.py` precedent) so the Cloud Run deployment reaches Athena without a static key. Local dev uses
       the ambient profile; this is only needed at deploy time.
+- [ ] [UI] P3. _(found 2026-07-08 during the row-cap fix)_ Breakdown stale-during-refetch — switching dimension+range
+      quickly on the slow real backend briefly renders the previous fetch's rows under the new column header (e.g.
+      service rows under a "Day" header). Gate the table body on `breakdown.dimension === dimension` (+ matching days),
+      or skeleton the panel while `loadBreakdown` is in flight. Pre-existing; cosmetic-only (self-corrects on fetch
+      completion).
 
 ## Progress Log
 
@@ -268,3 +273,22 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
     passed** + UI codex + production build) → quickmerge to `live-defi-rollout`; screenshotted 6 pages (cost / cockpit /
     landing / deployments / research / safety-ops) in dark — controls match the mock, vertical rhythm restored, **0
     breakage**. Both CSS root-cause fixes (margin + padding) now live in one `@layer base` block.
+- 2026-07-08 — **Breakdown table only ever showed the top 15 rows of every dimension (operator-reported).** "In By day
+  - 90d I still see only some of them … same for other breakdowns — 40 items, only some shown." Root cause: the
+    breakdown **table** rendered `sorted.slice(0, 15)`, a hard cap independent of dimension. Verified the data path is
+    honest end-to-end first: `_by_day` returns **all** N days uncapped (`service.py:211`), `_grouped`/`_by_resource`
+    return up to `_BREAKDOWN_LIMIT=50`, and the client passes no limit — so the backend was handing over up to 90 (day)
+    / 50 (grouped) rows and the UI discarded everything past the 15th.
+  * **Fix (frontend-only):** the table now maps **every** `sorted` row inside a `max-h-[400px] overflow-auto` container
+    with a **sticky header** (opaque panel-bg `<th>`, opt-in via a new `sticky` prop on `SortHead`/`PlainHead` so the
+    LeafPanel tables stay unaffected). Footprint stays ~the old 15-row height but all rows are reachable by scroll; the
+    panel-header hint gains a live row count (`· 90 rows`). Left-side bars stay a top-12 "biggest items" chart (a 90-bar
+    stack is unreadable) — chart = top spenders, table = full ledger.
+  * **deployment-ui@`ec88032`** — full UI QG green (tsc + ESLint + orphan-audit + **vitest 911 passed** + UI codex +
+    production build) → quickmerge to `live-defi-rollout`. Added a **pw:L2** regression (`By day @90d` lists >30 rows in
+    an overflowing scroll region) — Playwright smoke **5/5**. Screenshotted the mock (**90 rows**, container clamped
+    400px / scrollHeight 2636px) and real `:5183` (40 rows, same clamp) — all rows present, page stays compact.
+  * **Note (adjacent, NOT fixed — flagged):** switching dimension+range quickly on the slow real backend briefly shows
+    the previous fetch's rows under the new column header (stale-during-refetch). Pre-existing and orthogonal to this
+    cap fix; follow-up would gate the table on `breakdown.dimension === dimension` or skeleton the panel while
+    refetching. Tracked below.
