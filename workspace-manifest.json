@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 0,
+        "coverage_pct": 73.17,
         "warn_file_count": 11,
         "qg_red_reason": null,
-        "coverage_pct": 73.14
+        "large_file_count": 0
       }
     },
     "execution-service": {
@@ -756,10 +756,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 91.21,
+        "warn_file_count": 6,
         "qg_red_reason": null,
-        "large_file_count": 5,
-        "coverage_pct": 91.2,
-        "warn_file_count": 6
+        "large_file_count": 5
       }
     },
     "market-data-processing-service": {
@@ -878,9 +878,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": 83.19,
-        "large_file_count": 0,
-        "qg_red_reason": "ruff",
-        "warn_file_count": 34
+        "warn_file_count": 34,
+        "qg_red_reason": null,
+        "large_file_count": 0
       }
     },
     "ml-service": {
