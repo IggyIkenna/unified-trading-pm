@@ -101,9 +101,16 @@ source: cost_observability_ui_2026_07_08.md
       last-seen value across its many SKU lines. 4 new pytest cases (classifier unit test, provider-mapping test,
       resource/service aggregation-fold test). Rebased 3x onto concurrent idle-waste/bucket-storage/AWS-reconciliation
       tasks landing on the same files (models.py, service.py); full backend QG green on each merge.
-- [ ] [BACKEND] P2. **VM machine specs.** Parse machine type + vCPU + RAM from the billing `system_labels`
-      (`compute.googleapis.com/machine_spec` / `cores` / `memory`) — no Compute API; expose on vm resource rows (e.g.
-      `e2-highmem-16` → 16 vCPU / 128 GB). pytest.
+- [x] ✅ [BACKEND] P2. **VM machine specs** — deployment-api@c3f5c39. Verified `system_labels` schema live via a bq
+      probe against the resource-level export (only the instance's Core/Ram SKU rows carry
+      `compute.googleapis.com/machine_spec` / `cores` / `memory` — disk/IP SKU rows for the same VM don't; memory is
+      MiB, e.g. `n2-highmem-16` → cores=16, memory=131072 → 128 GB). `gcp_facts_sql` pulls the three labels via an
+      `ANY_VALUE(SELECT ... FROM UNNEST(system_labels) ...)` per-key helper (no Compute API); added
+      `machine_type`/`vcpu`/`memory_gb` to `CostRecord` + `BreakdownRow`; `_by_resource` tracks the latest non-empty
+      spec per resource across its SKU rows. pytest: parser-helper tests, a provider-mapping test (VM row carries the
+      spec, sibling disk-SKU row doesn't), a service-aggregation test. Rebased 3x onto concurrent
+      idle-waste/bucket-storage/spot-purchase-option tasks landing on the same files (models.py, providers.py,
+      service.py); full backend QG green + 4335-test suite green on each merge.
 - [x] ✅ [BACKEND] P2. **AWS net + invoice reconciliation** — deployment-api@301ccfc. `aws_facts_sql` switched
       `line_item_unblended_cost` → `line_item_net_unblended_cost` (net of RI/SP discounts) and relaxed the
       `Usage`/`DiscountedUsage`-only filter to `IN ('Usage', 'DiscountedUsage', 'Tax', 'Fee')`, so the AWS total now
