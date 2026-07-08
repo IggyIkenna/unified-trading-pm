@@ -250,15 +250,44 @@ blank-`pipeline_mode` rows splitting into two very different populations:
    current-relevance than) the retired-Barchart theory and is not covered by task 10 (schema_version tail) or any other
    task in `tradfi_v9_stage1_finish_2026_07_06.md`.
 
-- [ ] [DATA] P1. **CF-3 live-writer pipeline_mode gap** — find the writer path (likely in `market-tick-data-service`,
-      honest-absence emission for `mbp_10` / `corporate_action_confirmed` / `earnings_result` / `ohlcv_1m` / `trades` /
-      `ohlcv_24h` / `tbbo` / `macro_result` / `options_chain` on NASDAQ/NYSE/CME/ICE/FX/KRX/CBOE/YAHOO_FINANCE) that
-      calls `record_empty` / `record_expected_unattempted` without a `pipeline_mode` kwarg for 2026-dated rows, and fix
-      it to derive + pass `pipeline_mode` like the live writers do for other data_types. Then a one-shot backstamp
-      (mirror `restamp_tradfi_source_2026_07_07.py`'s dry-run/--apply/snapshot/stop-on-surprise shape) for the 28,344
-      existing rows once the correct `pipeline_mode` value per (venue, data_type) is known. Gate: CF-3 GREEN (0 blank
-      pipeline_mode among schema_version=9 rows); no new blank-pipeline_mode rows appear for 7 consecutive days
-      post-fix. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. **CF-3 live-writer pipeline_mode gap — FIXED + backstamped 2026-07-08 (slot-7, data_engineering).**
+      Root cause was NOT a live MTDS writer omitting the `pipeline_mode` kwarg
+      (`record_empty`/`record_expected_unattempted` require it as a mandatory keyword — a blank literal is structurally
+      impossible from those call sites). The actual writer is
+      `instruments-service/scripts/enumerate_expected_universe.py`'s `_derive_pm_source_transport` helper, which seeds
+      `expected_unattempted`/`empty_confirmed` denominator rows for cells with no existing manifest row: it derived
+      `pipeline_mode` from UAC `SOURCE_PRIORITY` ONLY, falling to `("", "", "")` when a `(tradfi, data_type)` pair had
+      no registered entry. `mbp_10` / `corporate_action_confirmed` / `earnings_result` / `macro_result` are ALL missing
+      `SOURCE_PRIORITY` entries for tradfi (confirmed via direct grep of
+      `unified_api_contracts/canonical/crosscutting/_source_priority_data.py`) — a genuine registry gap, not a live-mode
+      symptom (`ohlcv_1m`/`trades`/`ohlcv_24h`/`tbbo`/`options_chain` from the original 2026-07-07 diagnosis were
+      ALREADY resolved by another session before this todo dispatched; only these 4 data_types remained blank, confirmed
+      via a fresh manifest read: 28,344 rows exactly = 11,208 mbp_10 + 8,392 earnings_result + 8,392
+      corporate_action_confirmed + 352 macro_result). Meanwhile the REAL capture writer (MTDS orchestrator
+      `_resolve_pipeline_mode_for_sentinel` -> UTL `derive_pipeline_mode_for_row`) has a per-asset_group fallback
+      (`tradfi` -> `BATCH_DATABENTO`) the enumerator's seed path lacked, so real rows for the SAME cells already carried
+      `pipeline_mode=batch_databento` (confirmed: 497,683+1,186 mbp_10 rows, 219,334+799 earnings_result rows,
+      219,400+807 corporate_action_confirmed rows, 339 macro_result rows all already batch_databento — only the
+      enumerator's OWN seed rows were blank) — a corpus-wide divergence between seed and real rows for the identical
+      cell, which is exactly what CF-3's own comment ("the seeded rows MUST carry the same pipeline_mode as the real
+      rows they reconcile against") already required. **Fix**: `_derive_pm_source_transport` now falls back to
+      `unified_trading_library.derive_pipeline_mode_for_row` (the SAME helper the real writer uses) when
+      `SOURCE_PRIORITY` has no entry — `instruments-service@699e2cf` (+ 4 new regression tests in
+      `test_enumerate_provenance_stamping.py`, all passing; updated the old `test_unregistered_cell_is_exempt_blank`
+      test since it asserted the very behavior being fixed — replaced with separate tests for "genuinely computed
+      asset_group stays blank" vs "asset_group with a writer fallback uses it"). Costs nothing for genuinely
+      computed/service-only asset_groups (no `_ASSET_GROUP_FALLBACKS` entry there either, so those still correctly stay
+      blank — verified `_derive("calendar", ...)` / `_derive("features", ...)` unchanged). **Backstamp**:
+      `market-tick-data-service/scripts/restamp_tradfi_cf3_pipeline_mode_2026_07_08.py`
+      (`market-tick-data-service@626e44c`, dry-run/--apply/snapshot/stop-on-surprise shape mirroring
+      `restamp_tradfi_source_2026_07_07.py`) — ran `--apply` against production: snapshot at
+      `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_tradfi_cf3_pipeline_mode_restamp_20260708T214509Z.parquet`,
+      stamped 28,344 rows, row count invariant held (6,022,024 before/after), post-apply gate verify logged
+      `CF-3 Gate PASSED: 0 blank-pipeline_mode schema_version=9 rows`. Independently re-verified via a fresh manifest
+      read: 0 blank-pipeline_mode rows corpus-wide (any schema_version). **CF-3 is now genuinely GREEN.** Residual, NOT
+      part of this todo's scope: 339 PRE-EXISTING real-writer rows for `macro_result` have a blank `transport` column (a
+      separate, smaller gap in the real MTDS writer, unrelated to CF-3's pipeline_mode scope — noted for a future todo,
+      not blocking).
 
 ## Minor finding (2026-07-08, slot-7 sonnet/high) — ICE COMBO symbols dropped from G1-ENUM bundle roll-up
 
@@ -271,8 +300,14 @@ numeric suffixes that look like strike/spread IDs rather than month codes). **Fa
 exclusion, not a wrong value) — these 1,459 instruments simply won't get `expected_unattempted` seeding until the
 underlying-extraction regex is extended to cover this ICE COMBO symbol shape. Low severity, not blocking task 7.
 
-- [ ] [CODE] P3. **ICE COMBO underlying-extraction gap** — extend the G1-ENUM bundle-grain underlying parser (likely in
-      `instruments-service/scripts/enumerate_expected_universe.py` or a shared bundle-rollup helper it imports) to
+- [x] ✅ [CODE] P3. **ICE COMBO underlying-extraction gap** — extend the G1-ENUM bundle-grain underlying parser (likely
+      in `instruments-service/scripts/enumerate_expected_universe.py` or a shared bundle-rollup helper it imports) to
       handle ICE COMBO symbols like `BRN   3  30615524` / `G   FSF0032.M0032` (currently unparseable → dropped with a
       WARNING). Gate: 0 "no underlying for tradfi leaf" warnings on an ICE-scoped enumerate run. (repo:
-      instruments-service)
+      instruments-service) — **instruments-service@4a02085**: `_derive_underlying` (the fallback used when the catalogue
+      `underlying` column is blank) now also tries the whitespace-delimited leading token against the UAC `TRADFI_ROOTS`
+      registry for `asset_group=tradfi` when the "-"-split shape doesn't match (the crypto-style fallback it already
+      had). Both sample symbols resolve (`BRN   3  30615524` → `BRN`, `G   FSF0032.M0032` → `G`); an unregistered
+      leading token still returns "" (no mis-key). 5 new regression tests in `test_enumerate_expected_universe_v2.py`
+      (parametrized symbol resolution + unknown-root + asset-group scoping + a full `_rollup_bundle_grain` roll-up
+      test), full suite green (167 passed), `quality-gates.sh` green.

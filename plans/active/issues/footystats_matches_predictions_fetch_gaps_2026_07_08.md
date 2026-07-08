@@ -109,11 +109,30 @@ code-fix task). A data_engineering slot with a full session budget should:
 
 ## Actionable todos
 
-- [ ] [CODE] P2. **Root-cause + fix footystats MATCHES 4-league fetch gap** (CHILE_PRIMERA, K_LEAGUE_1, LIGA_MX,
-      ARGENTINA_PRIMERA — 96% of the 5,641-row residual) — investigate
-      `instruments_service/engine/orchestrator/footystats.py` MATCHES row-emission path (~line 405 onward) for a
-      league-specific fetch/mapping bug; add regression test asserting these 4 leagues fetch clean over a representative
-      date range (repo: instruments-service).
+- [x] ✅ [CODE] P2. **Root-cause + fix footystats MATCHES 4-league fetch gap** (CHILE_PRIMERA, K_LEAGUE_1, LIGA_MX,
+      ARGENTINA_PRIMERA — 96% of the 5,641-row residual) — instruments-service@1af6c92 (slot-8 sonnet/high). **Root
+      cause**: all 4 leagues carry `data_sources=PRED_NO_FOOTYSTATS` (footystats excluded per subscription limit —
+      `unified-api-contracts/.../league_data_prediction.py`), so they are correctly ABSENT from the footystats-scoped
+      expected-league set (`_ft_expected`) used by the honest-coverage skip/gap loop in
+      `_fetch_footystats_matches`/`_fetch_footystats_predictions`. But the per-league captured-write gate in both
+      functions checked only the GENERIC `_is_in_canonical_write_universe` (api_football-scoped, which DOES track these
+      leagues) — not the footystats-scoped set. FootyStats' bulk `/todays-matches` endpoint returns incidental rows for
+      these leagues regardless of subscription; the mismatched gate let those get written as `captured`, fooling the "≥1
+      captured row = covered" dynamic heuristic in
+      `type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py` into treating them as footystats-covered
+      and seeding a full-history expected-universe denominator the per-league loop (correctly scoped to `_ft_expected`)
+      never systematically backfills — a permanent, unclosable `pending_fetch` gap. **Fix**: both write paths now also
+      gate on the footystats-subscribed expected-league set, matching the honest-coverage loop's own scoping; future
+      incidental rows for out-of-subscription leagues are dropped (no captured/empty manifest row written), consistent
+      with how the ~62 other non-covered footystats leagues already behave. Added 2 regression tests in
+      `tests/unit/test_orchestrator_sports.py` (`test_out_of_subscription_league_dropped_not_captured` in both
+      `TestFetchFootystatsMatches` and `TestFetchFootystatsPredictions`) asserting the drop + no manifest pollution.
+      Full `quality-gates.sh` green (ALL QUALITY GATES PASSED), shipped via quickmerge --agent. **Scope note**: this
+      closes the WRITE-PATH bug (prevents future recurrence) but does NOT retroactively clean the EXISTING ~5,415
+      pending_fetch rows already seeded for these 4 leagues in the live manifest — that data cleanup is todo #4 below's
+      scope (re-run the typing pass after this fix lands; the existing few incidental `captured` rows for these leagues
+      will still need an explicit re-type pass since the dynamic "≥1 captured row" heuristic reads historical manifest
+      state, not just going-forward writes).
 - [ ] [CODE] P2. **Add cup/continental-competition fixture-calendar awareness to footystats PREDICTIONS** — mirror the
       existing `EmptyConfirmedReason.EXPECTED_NO_FIXTURE` resolution already used for MATCHES (footystats.py:584/598) so
       no-fixture dates for UECL/UEL/UCL/SWISS_CUP/COPA_ARGENTINA/+37 more resolve to a terminal typed state instead of
@@ -122,13 +141,48 @@ code-fix task). A data_engineering slot with a full session budget should:
 - [ ] [DATA] P3. **Root-cause footystats ODDS 1,264-row residual** — no investigation session has looked at this
       cluster; determine whether it shares the MATCHES or PREDICTIONS root cause or is a distinct third gap (repo:
       instruments-service).
-- [ ] [DATA] P2. **Re-verify + re-dispatch footystats backfill VM after the above land** — once the two CODE fixes are
-      shipped, re-run the typing pass, confirm `(footystats, MATCHES)` + `(footystats, PREDICTIONS)` +
-      `(footystats,     ODDS)` `pending_fetch == 0`, then flip `sports_p2_history_reference_and_odds_2015_to_present`
-      item #5 (and contribute to unblocking item #7) (repo: instruments-service).
+- [ ] [DATA] P2. **BLOCKED-PREREQUISITES (2026-07-08, slot-8).** **Re-verify + re-dispatch footystats backfill VM after
+      the above land** — once the two CODE fixes are shipped, re-run the typing pass, confirm `(footystats, MATCHES)` +
+      `(footystats, PREDICTIONS)` + `(footystats, ODDS)` `pending_fetch == 0`, then flip
+      `sports_p2_history_reference_and_odds_2015_to_present` item #5 (and contribute to unblocking item #7) (repo:
+      instruments-service). **BLOCKED**: auto-dispatched to slot-8 immediately after todo #1 (MATCHES fix) closed —
+      `dispatch_reason: "highest-rank queued task with prereqs met and no collision"` (priority-only dispatch, same
+      known failure mode as the tradfi plan's task-10 precedent: the dispatcher's machine-readable `prereqs` don't
+      encode this todo's own in-text dependency on todo #2 AND todo #3). This todo's literal gate ("once the two CODE
+      fixes are shipped... confirm MATCHES + PREDICTIONS + ODDS pending_fetch == 0") requires ALL THREE of: todo #1 (✅
+      done, instruments-service@1af6c92), todo #2 (PREDICTIONS cup fixture-calendar — still `- [ ]`), and todo #3 (ODDS
+      root-cause — still `- [ ]`, not yet even investigated). Running the typing pass / backfill VM now would only
+      re-confirm the SAME PREDICTIONS + ODDS residuals already diagnosed, wasting VM spend before the remaining two code
+      fixes land (same "VM re-run without the code fix reproduces the same residual" lesson this issue doc already
+      documents for MATCHES). **Un-block sequence**: (a) todo #2 (PREDICTIONS fixture-calendar fix) ships; (b) todo #3
+      (ODDS root-cause + fix, if code-fixable) ships; (c) THEN this todo re-dispatches and the typing pass / backfill VM
+      re-run genuinely closes `pending_fetch == 0` across all three data_types.
 
 ## Progress Log
 
+- **2026-07-08** — Todo #4 re-dispatched a SECOND time (slot-4 sonnet/high, boot 22:05 UTC,
+  `dispatch_reason: "highest-rank queued task with prereqs met and no collision"`) despite the in-doc
+  BLOCKED-PREREQUISITES marker slot-8 already added below — the marker text matches the orchestrator's
+  `_NON_DISPATCHABLE_RE` taxonomy (`BLOCKED-[A-Z]`) so a future `PlanRegenLoop` prune tick will stop re-offering it, but
+  the already-queued DB row from before the marker existed isn't retroactively pruned (prune only touches
+  `status=queued AND dispatched_to IS NULL` rows, and this row was still `dispatched` at the time). Re-verified via the
+  backlog API (not re-run from scratch): `footystats_matches_predictions_fetch_gaps-002` (PREDICTIONS fixture-calendar)
+  = `dispatched` to slot 13, `-003` (ODDS root-cause) = `dispatched` to slot 9 — neither `done` yet, so todo #4's gate
+  is still unmet. Not re-running the typing pass / backfill VM (would only reproduce the known residual). Releasing back
+  to the queue via `/skip-current-task` rather than looping slot-4 on a task it cannot complete; this slot won't be
+  re-offered it again (`slot_skips` exclusion). **If this task gets dispatched a THIRD time before #2/#3 land**, that's
+  a P2 dispatcher/regen-prune-cadence issue worth its own issue doc (repo: agent-orchestrator, out of data_engineering
+  craft scope) — the `BLOCKED-*` in-text marker taxonomy is doing its job for NEW ingestion, the gap is the orphan-prune
+  cadence for a task that was already `dispatched` when the marker was added.
+- **2026-07-08** — Todo #4 (re-verify + re-dispatch backfill VM) PARKED with BLOCKED-PREREQUISITES (slot-8 sonnet/high).
+  Auto-dispatched immediately after todo #1 closed; boot
+  `dispatch_reason: "highest-rank queued task with prereqs met and no collision"` — priority-only dispatch doesn't see
+  this todo's in-text dependency on BOTH todo #2 (PREDICTIONS fixture-calendar) and todo #3 (ODDS root-cause), neither
+  of which is done. Parked per the established tradfi-plan precedent (in-checkbox marker + un-block sequence) rather
+  than re-running the typing pass prematurely (would just reproduce the already-diagnosed PREDICTIONS/ODDS residuals).
+  Re-dispatches after todo #2 + #3 land.
+- **2026-07-08** — Todo #1 (MATCHES 4-league fetch gap) FLIPPED (slot-8 sonnet/high). See the todo's own entry above for
+  the full root-cause + fix writeup. instruments-service@1af6c92.
 - **2026-07-08** — Issue filed by slot-14 (data_engineering), dispatched to
   `sports_p2_history_reference_and_odds_2015_to_present-015` (item #7 VERIFY gate). Re-confirmed
   `tm-backfill-20260708-205809` (item #7's TM sub-gate) still RUNNING and healthy (heartbeats + successful club fetches
