@@ -16,13 +16,15 @@ scope: [engineer]
 tags: [dispatch, role-routing, craft-scoping, worker-lifecycle]
 related: [cost_obs_ui_unified_breakdown_2026_07_08.md]
 created: "2026-07-08"
-author: slot-7
 parent_epic: agent_operating_framework_master
 priority: P2
 assigned_vm: planning
 source: [cost_obs_ui_unified_breakdown_2026_07_08.md]
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
