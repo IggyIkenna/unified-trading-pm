@@ -48,6 +48,8 @@ related_plans:
     ../active/issues/instrument_id_format_canonicalization_2026_07_08.md,
     ../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
     ../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
+    ../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
+    ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
   ]
 last_updated: 2026-07-08
 locked_by: live-defi-rollout
@@ -200,14 +202,14 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
 | `02-data/pipeline-coverage-matrix.md`                        | Add live-source row per (asset_group, data_type)                                           | C.1   |
 | `00-SSOT-INDEX.md`                                           | Add row pointing to `instruments-live-architecture.md`                                     | A.1   |
 | `15-runbooks/instruments-live/t1-audit-discrepancy.md` (NEW) | Operator playbook for T+1 audit discrepancies                                              | I.3   |
-| `instruments-service/docs/ARCHITECTURE.md`                   | Add live-mode CLI invocation matrix table                                                  | A.7   |
+| `instruments-service/docs/ADAPTER_ARCHITECTURE.md`           | Add live-mode CLI invocation matrix table                                                  | A.7   |
 
 ## Architectural conflicts found in instruments-service repo
 
-**None.** Reviewed `instruments-service/docs/ARCHITECTURE.md` and the per-asset-group docs (CEFI/DEFI/TRADFI/SPORTS/
-POLYMARKET) plus `instrument-catalogue.md`. The repo's documented architecture already aligns with live=batch symmetry:
-no statement that "live mode has different schema" or "live writes to a separate path" was found. The existing CLI is
-single-codepath; adding `--trigger` as a new axis is additive (Phase A.7).
+**None.** Reviewed `instruments-service/docs/ADAPTER_ARCHITECTURE.md` and the per-asset-group docs (CEFI/DEFI/TRADFI/
+SPORTS/PREDICTION) plus `instrument-catalogue.md`. The repo's documented architecture already aligns with live=batch
+symmetry: no statement that "live mode has different schema" or "live writes to a separate path" was found. The existing
+CLI is single-codepath; adding `--trigger` as a new axis is additive (Phase A.7).
 
 ## Out of scope (referenced but owned elsewhere)
 
@@ -279,7 +281,7 @@ Phase G (deployment-UI tab)  ║  Phase H (alerting + circuit breakers, parallel
 - `codex/06-coding-standards/cli-convention.md` — CLI axis SSOT
 - `codex/02-data/availability-manifest-and-data-status.md` — manifest schema, available_at
 - `codex/02-data/pipeline-coverage-matrix.md` — per-source coverage matrix
-- `instruments-service/docs/ARCHITECTURE.md` + per-asset-group docs — service-internal entry-points
+- `instruments-service/docs/ADAPTER_ARCHITECTURE.md` + per-asset-group docs — service-internal entry-points
 
 ## Plan-format compliance
 
@@ -448,12 +450,20 @@ new epic, per operator decision to use the existing fixed 20-epic registry.
 
 - [`instrument_id_format_canonicalization_2026_07_08`](../active/issues/instrument_id_format_canonicalization_2026_07_08.md)
   — the decided target-state format (`VENUE:TYPE:BASE[_QUOTE]@LIN|@INV-YYYYMMDD[-STRIKE-C|P]`, no trailing `@VENUE`).
-- [`instruments_service_docs_consolidation_2026_07_08`](../active/instruments_service_docs_consolidation_2026_07_08.md)
-  — 17→7 docs, depends on this audit's findings for Phase 1.
-- [`canonical_id_p0_kraken_futures_collision_2026_07_08`](../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md)
-  — P0, real data collision, 5 real instruments on one key.
-- [`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08`](../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md)
-  — P0, 23 adapters silently return empty on canonical-form type filters.
+- ✅
+  [`instruments_service_docs_consolidation_2026_07_08`](../active/instruments_service_docs_consolidation_2026_07_08.md)
+  — DONE, `instruments-service@10ad69a4` — 18→7 docs (real count was 18, not 17).
+- ✅
+  [`canonical_id_p0_kraken_futures_collision_2026_07_08`](../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md)
+  — DONE, `market-tick-data-service@3d7491b1` — real data collision, 5 real instruments on one key, fixed.
+- ✅
+  [`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08`](../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md)
+  — DONE, `instruments-service@4b4185b6` — 24 adapters (23 named + 1 the audit missed) fixed.
+- ✅
+  [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)
+  — DONE, `instruments-service@8544273d` — all 13 canonical CeFi venues verified converged live=batch.
+- [`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08`](../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
+  — P1, real `InstrumentLeg`/`COMBO` infrastructure exists (proven for CME), just not wired up for CBOE/VX spreads.
 
 ## P1 — done/archived (historical — pre-consolidation)
 

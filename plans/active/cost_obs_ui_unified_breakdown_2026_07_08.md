@@ -101,8 +101,15 @@ source: cost_observability_ui_2026_07_08.md
       regression: tests/smoke/cost-observability.spec.ts ("By resource shows machine specs + cost-waste badges" —
       asserts the machine-spec text renders, the orphaned-disk row carries an "orphaned" badge + its own $68.62 cost, a
       non-waste row dashes, and both columns disappear under "By bucket").
-- [ ] [UI] P2. **Spot vs on-demand display.** A `purchase_option` column (or chip) on resource/service rows, from the
-      backend field. vitest.
+- [x] ✅ [UI] P2. **Spot vs on-demand display.** — deployment-ui@`5b99519`. Added `purchase_option` to
+      `CostBreakdownRow` (mirrors the backend's resource/service-dimension field). `BreakdownPanel` renders a
+      **Purchase** column, resource/service-dimension-only: a green "spot" badge, plain "on-demand" text, or a dash for
+      "other"/non-compute rows. `mock-api.ts` fixtures give the backfill VMs "spot" (mirrors the workspace's
+      spot-by-default backfill rule, `codex/05-infrastructure/spot-vms-for-backfill.md`) and the AWS EC2 instance
+      "on-demand". tsc/ESLint/vitest (85 tests) all green — 2 new vitest cases (chip on service rows, on-demand +
+      column-omitted-on-other-dimensions on resource rows) per the plan's "vitest" spec for this task (no pw:L2 cited).
+      Reconciled 2x onto concurrently-landed resource/waste-columns (`047494b`) and stale-during-refetch (`0b396a8`)
+      commits touching the same 4 files; full QG green on each merge.
 - [ ] [UI] P3. **Dimension-aware columns + leaf tables.** Show the right detail columns per dimension (VM cols under
       By-resource, bucket cols under By-bucket, SKU under By-SKU); apply the same detail columns to the `LeafPanel` "Top
       compute instances" / "Top storage buckets" tables. Detail columns scroll horizontally on narrow widths. pw:L2.

@@ -255,9 +255,10 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
       spreads too, apply the existing `_resolve_product_root()` human-name registry (`ES→SP500`, `GC→GOLD`, `VX→VIX`) to
       leg symbols, and drop the redundant per-leg `VENUE:` prefix. Real 34,017/4,211/5-row counts (2/3/4-leg) at the
       2026-07-08 evidence pull — re-check row counts if this decision lands materially later, they'll have grown.
-- [ ] [SCRIPT] P1. **File a dedicated fix plan for finding 7** once confirmed — real code gap (CBOE/VX spreads bypass
-      existing leg-decomposition infrastructure entirely), not just a naming decision; independently shippable, same
-      pattern as the 4 existing P0 fix plans. Repo: instruments-service.
+- [x] [SCRIPT] P1. **File a dedicated fix plan for finding 7** — real code gap (CBOE/VX spreads bypass existing
+      leg-decomposition infrastructure entirely), not just a naming decision; independently shippable, same pattern as
+      the P0 fix plans. Filed: [[canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08]]. Repo:
+      instruments-service.
 - [ ] [DATA] P2. **Investigate `prediction_mapping.py`'s real extraction logic** (finding 8) before proposing any target
       format — need to understand whether the short readable instrument_ids (e.g. `BNB_PRICE_RANGE_DAILY`) are a
       recurring-series/template key or something else, and why `base_asset`/`underlying`/`raw_symbol` are 100% NULL
