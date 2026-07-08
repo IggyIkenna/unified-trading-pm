@@ -127,6 +127,8 @@ source: cost_observability_ui_2026_07_08.md
       storage_gb/storage_class_gb/cost_per_gb, purchase_option, machine_type/vcpu/memory_gb), the AWS net+invoice
       reconciliation note, the `zone` dimension, and the extended `CostRecord` tuple, in
       `codex/05-infrastructure/billing-cost-observability.md`.
-- [ ] [BACKEND] P3. **Release the UI plan (draft-gate).** As the final backend task, flip
-      `plans/active/cost_obs_ui_unified_breakdown_2026_07_08.md` `status: draft`→`active` (a `docs(plans):` commit) so
-      the UI agent picks it up against the now-existing API contract.
+- [x] ✅ [BACKEND] P3. **Release the UI plan (draft-gate)** — unified-trading-pm (this commit). All 10 prior backend
+      tasks (incl. the codex contract update, completed adjacent to this task after discovering it was marked done but
+      never actually finished) are shipped and checked off; flipped
+      `plans/active/cost_obs_ui_unified_breakdown_2026_07_08.md` `status: draft`→`active` so the UI agent picks it up
+      against the now-complete API contract.
