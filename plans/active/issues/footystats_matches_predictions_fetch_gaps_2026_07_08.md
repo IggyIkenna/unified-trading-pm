@@ -188,9 +188,9 @@ code-fix task). A data_engineering slot with a full session budget should:
       added to MATCHES/PREDICTIONS (`if _canonical not in set(_ft_expected): drop`, footystats.py:198-203/543-548) — its
       per-league write loop (~line 830-907) writes ANY league present in the API response as `captured` with no
       subscription-scope check at all. The 5 `PRED_NO_FOOTYSTATS`-excluded leagues (confirmed via
-      `unified-api-contracts/.../league_data_prediction.py`: ARGENTINA_PRIMERA, CHILE_PRIMERA, LIGA_MX, K_LEAGUE_1,
+      `unified-api-contracts/.../league_data_prediction.py`: ARGENTINA*PRIMERA, CHILE_PRIMERA, LIGA_MX, K_LEAGUE_1,
       A_LEAGUE) will leak into ODDS coverage the exact same way MATCHES/PREDICTIONS did pre-fix — apply the identical
-      guard here. **Separately**, ODDS shows an ~177-row _ongoing_ daily gap (2026-06-01→06-23, near-100% miss) for 8
+      guard here. **Separately**, ODDS shows an ~177-row \_ongoing* daily gap (2026-06-01→06-23, near-100% miss) for 8
       leagues, only 3 of which (CHILE_PRIMERA, K_LEAGUE_1, ARGENTINA_PRIMERA) are `PRED_NO_FOOTYSTATS`-excluded — the
       other 5 (ALLSVENSKAN, J1_LEAGUE, MLS, ELITESERIEN, BRASILEIRAO) are NOT subscription-excluded and are NOT
       explained by todo #1's confirmed mechanism; all 5 are currently in-season, so this is a live, unexplained,
