@@ -66,11 +66,11 @@ full `quality-gates.sh` runs for `unified-trading-library`. Both hit `/tmp` disk
 
 ## Recommended decision
 
-- [ ] [INFRA] P2. Set `TMPDIR` (or pytest's `--basetemp`) to a root-partition path (e.g. `/var/tmp/pytest-<slot>` or a
-      per-slot dir under `/home`) by default in `unified-trading-pm/scripts/quality-gates-base/base-library.sh`'s pytest
-      invocation, instead of relying on the default `/tmp` tmpfs — the root partition has ~95G free vs `/tmp`'s 2G, and
-      this is a one-line env-var change with no other side effects (verified working via manual `TMPDIR=` override this
-      session) (repo: unified-trading-pm).
+- [x] ✅ [INFRA] P2. Set `TMPDIR` (or pytest's `--basetemp`) to a root-partition path (e.g. `/var/tmp/pytest-<slot>` or
+      a per-slot dir under `/home`) by default in `unified-trading-pm/scripts/quality-gates-base/base-library.sh`'s
+      pytest invocation, instead of relying on the default `/tmp` tmpfs — the root partition has ~95G free vs `/tmp`'s
+      2G, and this is a one-line env-var change with no other side effects (verified working via manual `TMPDIR=`
+      override this session) (repo: unified-trading-pm). — unified-trading-pm@0e29e6d81
 - [ ] [INFRA] P3. Consider whether `/tmp` should be resized (a host/VM-image change, e.g. `mount -o remount,size=` or
       the underlying cloud instance's tmpfs config) given N-way concurrent slot QG runs are an expected steady state,
       not an edge case — lower priority than the TMPDIR redirect since that alone resolves the contention without
@@ -79,3 +79,18 @@ full `quality-gates.sh` runs for `unified-trading-library`. Both hit `/tmp` disk
 - [ ] [INFRA] P3. Consider a periodic `find /tmp/pytest-of-ubuntu -maxdepth 1 -mmin +60 -exec rm -rf {} +` cron (or
       equivalent) as a belt-and-suspenders cleanup for whichever stale scratch dirs the TMPDIR redirect above doesn't
       eliminate (e.g. from tools other than pytest that still default to `/tmp`) (repo: unified-trading-pm).
+
+## Progress Log
+
+- **2026-07-08** — Implemented by slot-2 (infra craft). Root-caused the recommended target: `/` (and `/var/tmp` under
+  it) is actually mounted **read-only** on this host (`ro`, `errors=remount-ro`) — the doc's original `/var/tmp`
+  suggestion would have silently no-op'd (`mkdir -p ... || true` swallowing the failure), so the fix targets
+  `$HOME/.cache/qg-tmp` (the separate `rw` `/home` mount, ~95G free) instead, matching the manual workaround already
+  recorded above and the existing `QG_CACHE_ROOT` convention. Landed in `qg-common.sh` (the shared foundation sourced by
+  ALL of base-service.sh/base-library.sh/base-ui.sh/base-codex.sh, not just base-library.sh as originally scoped — same
+  one-line pattern, same root cause, single control point) rather than duplicating the export per base script. Verified
+  end-to-end: unclean-tmpdir sourcing test confirms the new default + mkdir; a full `unified-trading-library` pytest run
+  (via `base-library.sh`) populated `$HOME/.cache/qg-tmp` instead of `/tmp`; `unified-trading-pm`'s own
+  `quality-gates.sh` passes (warn-only pre-existing drift unrelated to this change). A caller-exported `TMPDIR` still
+  wins (verified). P3 items (tmpfs resize, stale-dir cron) left open — operator-input / belt-and-suspenders, lower
+  priority per the doc's own ordering.
