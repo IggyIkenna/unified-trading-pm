@@ -55,16 +55,42 @@ source: cost_observability_ui_2026_07_08.md
 
 ## Tasks
 
-- [ ] [UI] P0. **Merge the bars + table into one table** (foundation for every column below). Collapse
-      `BreakdownPanel`'s left top-12 bar chart + right table into ONE scrollable, sortable table with an inline
-      proportional **bar-in-cell that carries the cost value** (bar width = cost / max), dropping the separate bars
-      column. Keep the sticky header + 400px scroll region. pw:L2 + a cited spec.
-- [ ] [UI] P1. **Gross / credit / net columns.** Render the backend bifurcation — net primary, gross + credit secondary
-      — shown only where credit ≠ 0 (mirrors the KPI band down into the table). vitest + pw:L2.
-- [ ] [UI] P2. **SKU dimension in the control.** Add `sku` to the breakdown `Segmented` + its note ("Google/AWS SKU").
-      Update `mock-api.ts` with SKU fixtures. vitest.
-- [ ] [UI] P2. **Bucket columns** (dimension = bucket): total GB, storage-class split, $/GB. Format GB (not bytes).
-      pw:L2.
+- [x] ✅ [UI] P0. **Merge the bars + table into one table** (foundation for every column below) —
+      deployment-ui@`212acb6`. Collapsed `BreakdownPanel`'s left top-12 bar chart + right table into ONE scrollable,
+      sortable table with an inline proportional **bar-in-cell that carries the cost value** (bar width = cost / max
+      across the full dataset), dropping the separate bars column. Sticky header + 400px scroll region unchanged.
+      tsc/ESLint/vitest (912 passed) all green. pw:L2 ✓ | regression: tests/smoke/cost-observability.spec.ts ("breakdown
+      bars + table are merged into one table with an inline bar-in-cell" — asserts a single `cost-breakdown-table`, the
+      top row's bar-in-cell renders at >90% width matching its max cost, and re-sorting ascending shrinks the bar,
+      proving it's data-driven).
+- [x] ✅ [UI] P1. **Gross / credit / net columns** — deployment-ui@`f27e40f`. Added `gross`+`credit` to
+      `CostBreakdownRow` (mirrors the backend `BreakdownRow` bifurcation) and `mock-api.ts` fixtures (GCP rows carry
+      ~20% credit, mirroring the existing summary mock). `BreakdownPanel` renders net as the primary Cost column with
+      secondary Gross/Credit columns — shown only when a row in view carries a credit (dash for zero-credit rows;
+      columns omitted entirely when nothing in view has credits, e.g. an AWS-only filter), mirroring the KPI band's
+      per-cloud `GrossCredit` treatment down into the table. tsc/ESLint/vitest (914 passed, incl. 2 new cases) all
+      green. pw:L2 ✓ | regression: tests/smoke/cost-observability.spec.ts ("breakdown table shows gross/credit columns
+      only where a credit applies" — asserts the columns render + a dash + a credited row by default, then disappear
+      entirely under an AWS-only filter).
+- [x] ✅ [UI] P2. **SKU dimension in the control** — deployment-ui@`0d33ef0`. Added `"sku"` to `CostDimension` + the
+      breakdown `Segmented` control ("By SKU", note "Google/AWS SKU"), backed by the already-shipped backend `_by_sku`
+      grouping. `mock-api.ts` gets SKU fixtures mirroring the audit's #1 finding (Regional Coldline Class A Operations,
+      the top cost driver hidden inside the Cloud Storage service rollup). Rebased onto the concurrently-landed
+      bucket-columns commit (`034c89a`) touching the same files; both features kept. tsc/ESLint/ vitest (915 passed) all
+      green; existing pw:L2 8/8 unaffected (no regression spec required for this task per the plan).
+- [x] ✅ [UI] P2. **Bucket columns** (dimension = bucket): total GB, storage-class split,
+      $/GB. Format GB (not bytes) —
+      deployment-ui@`034c89a`. Added `storage_gb` / `storage_class_gb` / `cost_per_gb` to `CostBreakdownRow` (mirrors
+      the backend bucket-only fields) + `mock-api.ts` fixtures (per-bucket GB + class split). `BreakdownPanel` renders
+      three bucket-dimension-only columns — Storage (GB, thousands-separated, never bytes), Storage class (per-class GB
+      split, largest first), $/GB
+      — shown only when `dimension === "bucket"` (dash for a bucket row with no storage-volume usage this window).
+      Reconciled onto the concurrently-landed gross/credit-columns commit (`f27e40f`) touching the same 4 files (stash +
+      ff-pull + manual 3-way resolve, both features kept). tsc/ESLint/ vitest (914 passed) all green. pw:L2 ✓ |
+      regression: tests/smoke/cost-observability.spec.ts ("By bucket shows
+      storage/class-split/$-per-GB columns formatted in GB, not bytes" — asserts the Storage cell reads "18,500 GB" not
+      a raw byte count, the class-split cell lists "Standard", the $/GB
+      cell suffixes "/GB", and all three columns disappear under "By resource").
 - [ ] [UI] P2. **Resource / waste columns** (dimension = resource): machine type (e.g. `e2-highmem-16` → 16 vCPU · 128
       GB), **idle-IP $** with an "idle" badge, **orphaned-disk $** with a badge. These are the operator's cost-waste
       signals — make them visually obvious. pw:L2.

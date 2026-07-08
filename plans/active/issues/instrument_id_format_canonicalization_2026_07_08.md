@@ -106,7 +106,21 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
    `0x00822ba38a39b79cbc5b7f62ba1a6886a45f9e4c` (venue/chain/base*asset live in separate columns instead). **Target**:
    `VENUE-CHAIN:POOL:TOKEN0-TOKEN1[-FEE_TIER]` (matching `canonical_id_builder.py`'s own `_build_defi` docstring
    example, `UNISWAP_V3-ETHEREUM:POOL:USDC-WETH-500`) — pool_address stays as its own column for on-chain lookups, it
-   just stops being the \_entire* identity key.
+   just stops being the \_entire* identity key. **UPDATE 2026-07-08, reconciled — this is a data-regeneration gap, NOT
+   (only) a code gap**: real current adapter code
+   (`instruments-service/instruments_service/reference_data/adapters/defi/uniswap_v3.py:489-492`, `_build_pool_record`)
+   already builds a structured key — `instrument_key = f"{venue_tag}:POOL:{base}-{quote}:{fee_str}"` (e.g.
+   `UNISWAP_V3-ETHEREUM:POOL:USDC-WETH:3000`) — confirmed by reading the code directly. But the REAL, CURRENT
+   `prod/catalog.parquet` (re-verified 2026-07-08, 7,284 DeFi rows) still shows the bare-address form with a bare
+   `UNISWAP_V3` venue (no `-ETHEREUM` chain suffix) for all 2,030 real Uniswap V3 rows — a venue-tagging shape the
+   current code doesn't even produce anymore. This means the persisted catalog predates this adapter code (or was built
+   by a different, older write path) and has never been regenerated since — the fix here is likely a **catalog
+   regeneration/backfill against the current adapter code**, not a from-scratch code change, though the current code's
+   own gaps still apply on top (colon-before-fee-tier should be dash per this finding's target; `fee_str` uses Uniswap's
+   raw feeTier units — e.g. `3000` — not real basis points — a real basis-point value is computed separately as
+   `pool_fee_tier_bps` but isn't the one embedded in the instrument_key string). **Not yet re-verified across the other
+   12 protocols** — only Uniswap V3 was spot-checked for this update; don't assume the same code-vs-catalog gap shape
+   holds for all of them without checking.
 
 3. **The 5 on-chain-perp venues (HYPERLIQUID/ASTER/PACIFICA-SOLANA/EXTENDED-STARKNET/LIGHTER-ZKSYNC) all store
    instrument_type=PERPETUAL as the field but embed PERP (not PERPETUAL) in the instrument_id key** — consistent across
@@ -132,18 +146,33 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
    3rd colon is ambiguous to any naive `split(":")` parser. **Target**: dash-separate instead, matching the
    pool-fee-tier fix already applied elsewhere — `MORPHO-BASE:LENDING_MARKET:USDC-EURC-0x305dd1`.
 
-7. **TradFi multi-leg spreads reuse the single-leg `SPOT_PAIR` type and separate legs with a whitespace-padded dash** —
-   real, confirmed via `prod/catalog.parquet` (1,096,069 rows): 34,017 rows carry 2 legs
-   (`CBOE:SPOT_PAIR:VX/F1:1:S - VX/G1:1:B`), 4,211 carry 3 legs, 5 carry 4 legs (up to 9 colon-segments). This is a
-   genuinely different finding from the single-leg contract-code check already done (`CME:FUTURE:6AF0`-style codes,
-   confirmed fine, see "What this is NOT" below) — single-leg TradFi is not in scope, multi-leg combos are. Two real
-   problems: (a) `SPOT_PAIR` is the equity-spot type, not a spread/combo type — it's being reused, not a genuine spread
-   `TYPE`; (b) the literal `" - "` leg-separator carries the same never-acceptable whitespace the operator already ruled
-   out for other venues, plus it collides visually with a legitimate dash elsewhere in the id. **Proposed target
-   (pending operator confirmation)**: introduce a real `SPREAD` instrument_type, and join legs with `;` (unused
-   elsewhere in the convention — `-` is already claimed by dates/strikes/pool-fees, `_` by BASE_QUOTE pairs), each leg
-   keeping its own `SYMBOL-RATIO-SIDE` shape (colon swapped for dash since colon is the reserved top-level delimiter):
-   `CBOE:SPREAD:VX/F1-1-S;VX/G1-1-B`.
+7. **TradFi multi-leg spreads reuse the single-leg `SPOT_PAIR` type and separate legs with a whitespace-padded dash of
+   raw exchange tickers — but real, structured infrastructure to do this properly already exists and just isn't wired up
+   for CBOE.** Real, confirmed via `prod/catalog.parquet` (1,096,069 rows): 34,017 rows carry 2 legs
+   (`CBOE:SPOT_PAIR:VX/F1:1:S - VX/G1:1:B`), 4,211 carry 3 legs, 5 carry 4 legs (up to 9 colon-segments). Operator
+   pushback on an initial flat-string proposal (a `VENUE:SPREAD:LEG-RATIO-SIDE;...` grammar using raw tickers) was
+   correct and led to finding real prior art: `unified_api_contracts.internal.InstrumentLeg` (a proper `BaseModel` with
+   `instrument_key`/`side` (`"BUY"`/`"SELL"` words, not letters)/`ratio` fields) is already used by
+   `databento/symbology.py::_parse_cme_calendar_spread_legs` (wired into `databento/adapter.py:802`, CME/GLBX.MDP3 only)
+   and independently by 2 Deribit combo builders (`cefi/tardis/combos.py`, `cefi/deribit_combo_adapter.py`); a real
+   `InstrumentType.COMBO` enum value already exists (`databento/symbology.py:60`); a real ticker→human-name registry
+   already exists and covers exactly the operator's own examples — `unified_api_contracts.registry.tradfi_symbology`:
+   `"ES": "SP500"`, `"GC": "GOLD"`, `"VX": "VIX"` — via `_resolve_product_root()`; and `process_write.py:184` already
+   serializes `legs: list[InstrumentLeg]` to a separate JSON column rather than encoding structure into instrument_id.
+   **The real gaps, not a from-scratch design question**: (a) CBOE/VX calendar spreads are explicitly EXCLUDED from
+   `_parse_cme_calendar_spread_legs` (`_FUTURES_DATASETS = {"GLBX.MDP3"}` only; comment: "VX class-'S' calendar spreads
+   are dropped (outright-only universe)") — wherever the real 34K CBOE `SPOT_PAIR` rows actually come from, it bypasses
+   this infrastructure entirely, landing as an undecomposed flat string with the wrong type; (b) even the CME path that
+   DOES work doesn't apply `_resolve_product_root()` — `instrument_key=f"{venue}:FUTURE:{front}"` uses the raw ticker
+   (`ESM6`), not the human name; (c) that CME `instrument_key` also repeats `VENUE:` per leg, which the operator
+   correctly flagged as unnecessary (a combo is already scoped to one venue at the top level) — same redundancy
+   objection already settled for margin-marker `@VENUE` in finding 1. **Proposed fix (pending operator confirmation)**:
+   route CBOE/VX spreads through the same `InstrumentLeg`/`COMBO` pathway already proven for CME, apply
+   `_resolve_product_root()` so legs read `TYPE:SYMBOL` in human names (e.g. `FUTURE:VIX`, not `FUTURE:VX/F1` or
+   `FUTURE:VXF1`), and drop the per-leg `VENUE:` prefix in the existing CME builder too (`instrument_key` becomes
+   `TYPE:SYMBOL` only, venue implied by the combo's own top-level `VENUE:COMBO:...`). Recommend this become its own fix
+   plan under `instruments_master` (real code gap affecting 34K+ live rows, not just a naming decision) — separate from
+   and shippable in parallel with the docs-consolidation work.
 
 8. **Prediction's per-market instrument_id is genuinely opaque, and its enrichment columns are 100% empty — this is
    deeper than a formatting question.** Real, confirmed via `prod/catalog.parquet` (2,486,092 rows, both venues):
@@ -221,10 +250,14 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
       Confirmed live via `api-pub.bitfinex.com/v2/tickers`: `ETHF0:BTCF0` trades ~~2,034 ETH/day (~~$6-7M/day) — not a
       negligible edge case. Fix: add BTC to the per-venue accepted-quote extension for Bitfinex derivatives, same
       mechanism already used for UPBIT's KRW extension.
-- [ ] [DECISION] P2. **Confirm or revise the proposed TradFi multi-leg spread target** (finding 7) —
-      `VENUE:SPREAD:LEG1-RATIO-SIDE;LEG2-RATIO-SIDE[;LEG3-RATIO-SIDE...]`, e.g. `CBOE:SPREAD:VX/F1-1-S;VX/G1-1-B`. Real
-      34,017/4,211/5-row counts (2/3/4-leg) at the 2026-07-08 evidence pull — re-check row counts if this decision lands
-      materially later, they'll have grown.
+- [ ] [DECISION] P1. **Confirm the revised TradFi combo fix** (finding 7, superseding the earlier flat-string proposal)
+      — reuse the existing `InstrumentLeg`/`InstrumentType.COMBO` infrastructure (already proven for CME) for CBOE/VX
+      spreads too, apply the existing `_resolve_product_root()` human-name registry (`ES→SP500`, `GC→GOLD`, `VX→VIX`) to
+      leg symbols, and drop the redundant per-leg `VENUE:` prefix. Real 34,017/4,211/5-row counts (2/3/4-leg) at the
+      2026-07-08 evidence pull — re-check row counts if this decision lands materially later, they'll have grown.
+- [ ] [SCRIPT] P1. **File a dedicated fix plan for finding 7** once confirmed — real code gap (CBOE/VX spreads bypass
+      existing leg-decomposition infrastructure entirely), not just a naming decision; independently shippable, same
+      pattern as the 4 existing P0 fix plans. Repo: instruments-service.
 - [ ] [DATA] P2. **Investigate `prediction_mapping.py`'s real extraction logic** (finding 8) before proposing any target
       format — need to understand whether the short readable instrument_ids (e.g. `BNB_PRICE_RANGE_DAILY`) are a
       recurring-series/template key or something else, and why `base_asset`/`underlying`/`raw_symbol` are 100% NULL
@@ -283,3 +316,12 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
   chains, DeFi's many-pools-per-file) get just the underlying_symbol — path/partition structure is unaffected, this is
   about the leaf filename only. Operator confirmed intent to eventually migrate GCS filenames to true canonical form
   (not just rely on path-derivability), sequenced as part of the already-planned GCS/manifest/filename migration stage.
+- **2026-07-08 (final)** — Operator correctly pushed back on the initial flat-string TradFi spread proposal
+  (`VENUE:SPREAD:LEG-RATIO-SIDE;...` using raw exchange tickers) as not actually human-readable canonical, and
+  articulated the real requirement: drop redundant per-leg venue, keep per-leg type + a REAL translated symbol (not
+  exchange jargon), signed/labeled direction, ratio. Investigating found this isn't a from-scratch design question —
+  `InstrumentLeg`/`InstrumentType.COMBO` + a ticker→human-name registry (`ES→SP500`, `GC→GOLD`, `VX→VIX`) already exist
+  and are already used for CME calendar spreads; CBOE/VX spreads are just explicitly excluded from that pathway today
+  (dropped, not decomposed), and even the working CME path doesn't yet apply the human-name translation or drop the
+  per-leg venue redundancy. Finding 7 rewritten to reflect this; recommended it become its own fix plan (real code gap,
+  not a design decision) rather than something resolved purely in this doc.

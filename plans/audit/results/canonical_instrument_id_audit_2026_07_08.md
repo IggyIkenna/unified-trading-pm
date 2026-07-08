@@ -145,7 +145,13 @@ out it's where the `@LIN`/`@INV` convention already lives).
 
 - Venue-token duplicate-spelling pattern is systemic, not a 1-off: `AAVE_V3`/`AAVEV3` (OPTIMISM),
   `MORPHO_VAULTS`/`MORPHOVAULTS`, `YEARN_V3`/`YEARNV3`, `UNISWAP_V3`/`UNISWAPV3` (the last 2 acknowledged only in a code
-  comment inside `rebuild_defi_manifest.py`, never fixed at the GCS-object-path level).
+  comment inside `rebuild_defi_manifest.py`, never fixed at the GCS-object-path level). **New instance found 2026-07-08
+  (docs-consolidation pass)**: `yearn.py:133` hardcodes `venue_tag = f"YEARN-{self._chain}"` (bare `YEARN`, no `_V3`) —
+  every UAC registry (`defi_venue_capabilities.py`, `venue_launch_dates.py`, `defi_venues.py`, `venue_mapping.py`)
+  consistently expects `YEARN_V3-{chain}`. This is a distinct variant from the `YEARN_V3`/`YEARNV3` underscore-spacing
+  typo already listed — here the adapter's real instrument records key off a venue string (`YEARN-ARBITRUM`) that
+  literally never matches any UAC venue-capability/launch-date lookup for `YEARN_V3-ARBITRUM`, silently breaking
+  venue-gated feature/capability checks for every real Yearn instrument. Not yet fixed.
 - Key-vs-field abbreviation mismatch (already known for PERP/PERPETUAL, LST/YIELD_BEARING/LENDING) recurs on
   `SPOT`-vs-`SPOT_PAIR`, `VAULT`-vs-`POOL`, `STAKE`-vs-`STAKING`, and reaches 10 more Solana/DeFi venues not previously
   listed (drift, mango, zeta, flash_trade, meteora, jupiter, phoenix, lifinity, kamino, marinade) plus MTDS's own
