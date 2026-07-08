@@ -144,10 +144,13 @@ not have.
       (`unified_trading_library/manifest_writer/_writer_io.py:688-709`, "one read-merge-write cycle" per attempt). Add a
       regression test that simulates two overlapping `consolidate()` calls against the same bucket (mock GCS generation
       bump mid-cycle) and asserts the canonical after both completes contains exactly ONE row per dedup key, not two.
-- [ ] [DATA] P1. Correct the misleading module docstring (`unified_trading_library/manifest_consolidator.py:38-40`) — it
-      cites `ManifestWriter._write_with_generation_match`, which the consolidator never calls; replace with an accurate
-      description of `_write_consolidated`'s actual (buggy, pending the P0 fix above) retry behavior, updated again once
-      the fix lands (repo: unified-trading-library).
+- [x] ✅ [DATA] P1. Correct the misleading module docstring (`unified_trading_library/manifest_consolidator.py:38-40`) —
+      it cites `ManifestWriter._write_with_generation_match`, which the consolidator never calls; replace with an
+      accurate description of `_write_consolidated`'s actual (buggy, pending the P0 fix above) retry behavior, updated
+      again once the fix lands (repo: unified-trading-library). — unified-trading-library@84528344 (slot-4 sonnet/high).
+      Docstring now accurately states the CAS retry re-uploads the same stale payload without re-merging (a lost-update
+      race, linked to this issue doc) and corrects the wrong function citation; will need a follow-up edit once the P0
+      fix above ships.
 - [ ] [DATA] P1. Once the P0 fix ships, re-run this doc's reproduction (15-cell sample query against
       `instruments-store-sports-prd-central-element-323112`'s canonical index) to confirm the specific understat
       XG/XG_SHOTS duplicate cells collapse to one row each, then re-verify item #4's gate in
