@@ -182,29 +182,84 @@ code-fix task). A data_engineering slot with a full session budget should:
       MLS, ELITESERIEN, BRASILEIRAO (see todo #6) is NOT a subscription-scope issue and needs its own root-cause before
       it clears; and the 20 `attempted_failed`/`phantom_captured_no_parquet_at_canonical_path` rows are OUT of the
       `pending_fetch` figure entirely and need todo #7 instead.
-- [ ] [CODE] P2. **Extend the confirmed subscription-scope write-gate fix (todo #1, instruments-service@1af6c92) to
-      ODDS, plus root-cause a separate 5-league gap ODDS alone shows** — investigation (slot-9, 2026-07-08, see Progress
-      Log) confirms `_fetch_footystats_odds` (footystats.py ~line 705-933) never received the write-gate guard todo #1
-      added to MATCHES/PREDICTIONS (`if _canonical not in set(_ft_expected): drop`, footystats.py:198-203/543-548) — its
-      per-league write loop (~line 830-907) writes ANY league present in the API response as `captured` with no
-      subscription-scope check at all. The 5 `PRED_NO_FOOTYSTATS`-excluded leagues (confirmed via
-      `unified-api-contracts/.../league_data_prediction.py`: ARGENTINA*PRIMERA, CHILE_PRIMERA, LIGA_MX, K_LEAGUE_1,
-      A_LEAGUE) will leak into ODDS coverage the exact same way MATCHES/PREDICTIONS did pre-fix — apply the identical
-      guard here. **Separately**, ODDS shows an ~177-row \_ongoing* daily gap (2026-06-01→06-23, near-100% miss) for 8
-      leagues, only 3 of which (CHILE_PRIMERA, K_LEAGUE_1, ARGENTINA_PRIMERA) are `PRED_NO_FOOTYSTATS`-excluded — the
-      other 5 (ALLSVENSKAN, J1_LEAGUE, MLS, ELITESERIEN, BRASILEIRAO) are NOT subscription-excluded and are NOT
-      explained by todo #1's confirmed mechanism; all 5 are currently in-season, so this is a live, unexplained,
-      undiagnosed gap needing its own investigation (repo: instruments-service).
-- [ ] [DATA] P3. **Reconcile the 20 footystats ODDS `attempted_failed`/`phantom_captured_no_parquet_at_canonical_path`
-      rows** — a DISTINCT, already-known issue class (manifest says an attempt was made but the parquet write is missing
-      at the canonical path), NOT part of the `pending_fetch=1,264` figure (these are `attempted_failed`, not
-      `expected_unattempted`) and NOT related to the write-gate root cause above. Existing tooling already handles this
-      pattern (`scripts/reconcile_phantom_manifest_rows_all.py`, `scripts/dedup_phantom_after_recovery.py`) — run the
-      existing reconciler scoped to `(source=footystats, data_type=ODDS)` rather than writing new code (repo:
-      instruments-service).
+- [x] ✅ [CODE] P2. **Extend the confirmed subscription-scope write-gate fix (todo #1, instruments-service@1af6c92) to
+      ODDS, plus root-cause a separate 5-league gap ODDS alone shows** — instruments-service@e951813 (slot-6
+      sonnet/high). **Part 1 (write-gate)**: added the identical `if _canonical not in set(_ft_expected): drop` guard
+      (mirroring footystats.py:198-203/543-548) to `_fetch_footystats_odds`'s per-league write loop, so the 5
+      `PRED_NO_FOOTYSTATS`-excluded leagues no longer leak into ODDS coverage as `captured`. **Part 2 (5-league gap root
+      cause)**: read the live `_index/availability_index.parquet` ONCE (single-walk discipline; cached locally for
+      repeated analysis) and joined ODDS `expected_unattempted` rows against MATCHES rows for the same (date, league):
+      **990 of the 1,264 total ODDS `pending_fetch` rows (78%) correlate 1:1 with a MATCHES `empty_confirmed` row for
+      the identical (date, league)** — i.e. no fixture that day for that league, while OTHER leagues DID have fixtures
+      that day (so `odds_rows` was non-empty overall and the date-level skip never fired). Confirmed
+      `_fetch_footystats_odds` was missing the exact per-league fixture-calendar completion loop PREDICTIONS got in todo
+      #2 below: its per-league write loop only ever iterated over leagues actually PRESENT in the API response, so a
+      league with zero fixtures that date got no manifest row at all — neither `captured` nor `empty_confirmed` —
+      leaving it `pending_fetch` forever regardless of backfill VM re-runs. The apparent "5-league" concentration in the
+      original diagnosis (ALLSVENSKAN, J1_LEAGUE, MLS, ELITESERIEN, BRASILEIRAO) is explained by June being off-season
+      for most European top leagues (so `/todays-matches` often returns rows for OTHER competitions, keeping the
+      date-level skip from firing) while these 5 calendar-year leagues are genuinely in-season and therefore hit this
+      gap far more visibly during that window — not a league-specific bug. **Fix**: added the identical
+      `_captured_leagues` completion pattern to `_fetch_footystats_odds` (tracks captured leagues during the per-league
+      write loop, then loops `sorted(set(_ft_expected) - _captured_leagues)` emitting
+      `record_empty(EXPECTED_NO_FIXTURE)`), plus replaced the old single date-aggregate `record_empty` in the "no odds
+      data at all" branch with the same per-league loop (mirrors PREDICTIONS' all-empty-day fix). Added 4 regression
+      tests in `tests/unit/test_orchestrator_sports.py::TestFetchFootystatsOdds`
+      (`test_out_of_subscription_league_dropped_not_captured`,
+      `test_league_with_no_fixture_today_records_empty_expected_no_fixture`,
+      `test_all_leagues_off_today_records_empty_per_league`, plus the existing `_ft_odds_stack` helper extended with an
+      `expected_league_ids` param). Full `quality-gates.sh` green (ALL QUALITY GATES PASSED), shipped via quickmerge
+      --agent. **Scope note**: like todo #1, this closes the WRITE-PATH bugs (prevents future recurrence going forward)
+      but does NOT retroactively clean the existing ~1,264 pending_fetch ODDS rows already seeded in the live manifest —
+      that data cleanup is todo #4's scope (re-run the typing pass after all CODE fixes land).
+- [x] ✅ [DATA] P3. **Reconcile the 20 footystats ODDS
+      `attempted_failed`/`phantom_captured_no_parquet_at_canonical_path` rows** — a DISTINCT, already-known issue class
+      (manifest says an attempt was made but the parquet write is missing at the canonical path), NOT part of the
+      `pending_fetch=1,264` figure (these are `attempted_failed`, not `expected_unattempted`) and NOT related to the
+      write-gate root cause above. Existing tooling already handles this pattern
+      (`scripts/reconcile_phantom_manifest_rows_all.py`, `scripts/dedup_phantom_after_recovery.py`) — run the existing
+      reconciler scoped to `(source=footystats, data_type=ODDS)` rather than writing new code (repo:
+      instruments-service). **— data-only fix, no code change (slot-12 sonnet/high).** `ODDS` is exclusively a
+      footystats data_type (`SPORTS_DATA_TYPE_TO_FOLDER["ODDS"] = "footystats_odds"`,
+      `unified-api-contracts/.../sports/gcs_paths.py`), so `--data-types ODDS` already scopes to `source=footystats` —
+      no extra filter needed. Confirmed the manifest held 78 ODDS `attempted_failed` rows total (47
+      `PipelineModeSourceMismatchError` + 19 `phantom_captured_no_parquet_at_canonical_path` + 11 `ArrowTypeError` + 1
+      `RuntimeError`) — the 19+1=20 matches this todo's scope exactly; the 47+11=58 are a separate, out-of-scope issue
+      class (different error_reasons, not mentioned in this todo) and were left untouched. Ran
+      `scripts/reconcile_phantom_manifest_rows_all.py --asset-group sports --data-types ODDS --unphantom-only --dry-run`
+      first: all 19 phantom-flagged rows now have real parquet at their canonical path (0 still-phantom) — the data
+      exists on disk today (whether it always did or arrived since the earlier phantom-flip is unconfirmed, but the
+      re-validation is unambiguous). Applied without `--dry-run`: manifest `captured` count 30,898→30,917 (+19),
+      `attempted_failed` 78→59, `phantom_captured_no_parquet_at_canonical_path` count now 0. Safe-by-construction (this
+      mode can only flip phantom→captured, never the reverse). Probed the single `RuntimeError` row separately
+      (date=2026-01-13, blank league_id — `--unphantom` only re-validates
+      `error_reason ==     'phantom_captured_no_parquet_at_canonical_path'`, so it wasn't touched by the above): listed
+      `sports_reference/by_date/day=2026-01-13/entity=footystats_odds/` directly — 0 blobs, confirming this row is a
+      genuine capture failure (no parquet anywhere for that day), correctly tagged `attempted_failed`, NOT a phantom —
+      nothing to reconcile; it's eligible for the normal backfill retry cadence like any other real failure. No
+      instruments-service commit needed (data-only manifest fix, no code touched).
 
 ## Progress Log
 
+- **2026-07-08** — Todo #6 (extend write-gate fix to ODDS + root-cause 5-league gap) FLIPPED (slot-6 sonnet/high). See
+  the todo's own entry above for the full write-up. Summary: (1) added the confirmed subscription-scope write-gate guard
+  to `_fetch_footystats_odds`'s per-league write loop (mirrors todo #1); (2) root-caused the 5-league ongoing gap by
+  reading the live manifest once and finding 990/1,264 (78%) of ODDS `pending_fetch` rows correlate 1:1 with a MATCHES
+  `empty_confirmed` row for the same (date, league) — ODDS was missing the same per-league fixture-calendar completion
+  loop PREDICTIONS got in todo #2; fixed with the identical `_captured_leagues` pattern. `instruments-service@e951813`,
+  4 new regression tests, full `quality-gates.sh` green, shipped via quickmerge --agent. **This was the last open todo
+  in this doc** — all 7 todos are now `- [x]`. Todo #4 (re-verify + re-dispatch the footystats backfill VM) can now
+  genuinely proceed: all CODE fixes (todos #1, #2, #6) are shipped and todo #7's data cleanup is done, so the next
+  dispatch of todo #4 should re-run the typing pass and confirm `pending_fetch == 0` for `(footystats, MATCHES)` +
+  `(footystats, PREDICTIONS)` + `(footystats, ODDS)` before re-dispatching a backfill VM.
+- **2026-07-08** — Todo #7 (reconcile the 20 footystats ODDS `attempted_failed`/phantom rows) FLIPPED (slot-12
+  sonnet/high). Data-only fix, no code change — see the todo's own entry above for the full breakdown. Ran
+  `scripts/reconcile_phantom_manifest_rows_all.py --asset-group sports --data-types ODDS --unphantom-only` (dry-run
+  first, then applied): 19 `phantom_captured_no_parquet_at_canonical_path` rows all had real parquet on disk and flipped
+  back to `captured`; the 1 `RuntimeError` row was confirmed genuinely failed (0 blobs at its canonical
+  entity=footystats_odds/day= prefix) and left as `attempted_failed` (not a phantom, nothing to reconcile). No commit to
+  instruments-service (no code touched, only the live GCS manifest). Todo #6 (extend the write-gate fix to ODDS +
+  root-cause the 5-league ongoing gap) remains the only open todo in this doc.
 - **2026-07-08** — Todo #4 re-dispatched a SEVENTH time (slot-7 sonnet/high, boot ~22:5x UTC,
   `dispatch_reason: "tier=1 priority=50 plan_order=3 — highest-rank queued task with prereqs met and no collision"`).
   Verified via backlog API: `-003` (ODDS root-cause) flipped to `done` (slot-9, instruments-service@cf89f6061) moments
