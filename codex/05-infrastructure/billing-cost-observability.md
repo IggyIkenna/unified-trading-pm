@@ -121,6 +121,41 @@ Negligible: GCP BQ export storage a few cents/mo; AWS CUR = a few Parquet files/
 crawler (about $0.44/crawler-hour, minutes/day) + Athena at $5/TB scanned (a cost dashboard scans MB). Far cheaper than
 `GetCostAndUsageWithResources` at $0.01/request for a polling UI.
 
+## Consumer — deployment-api `/api/costs` + the `/ops/costs` UI (2026-07-08)
+
+The exports are consumed by the **cost-observability service** in `deployment-api`
+(`deployment_api/services/cost_observability/`), which reads both through the UTL analytics wrappers — **never raw
+`boto3`/`google.cloud`**:
+
+- GCP: `get_analytics_client(provider="gcp").execute_query(...)` (returns typed rows).
+- AWS: `AWSAnalyticsClient(region="us-east-1", output_bucket="uts-billing-cur-427895769566")` — the CUR/Athena live in
+  **us-east-1**, not the app default region; pin both explicitly (the factory's `get_athena_output_bucket()` needs
+  `ATHENA_OUTPUT_BUCKET` set, so pass it directly). Athena returns every value as a **string** — costs are coerced to
+  float.
+
+Both native schemas are normalized into one `CostRecord`
+(`cloud, day, service, resource_id, resource_kind, region, cost, credit, is_provisional, is_placeholder`); every view
+derives from a **daily-refresh-cached** window fetch (billing data is ~daily-lagged, so per-load re-queries buy nothing
+— and avoid Athena's no-free-tier cost). Per-cloud failure is isolated (one cloud down ≠ blank page). Source
+table/db/region/bucket are config (`GCP_BILLING_DATASET/RESOURCE_TABLE`, `AWS_CUR_DATABASE/TABLE/REGION`,
+`AWS_ATHENA_OUTPUT_BUCKET`), defaulting to the values above.
+
+**Endpoints** (`routes/costs.py`, mounted `/api`, auth + rate-limited):
+
+| Endpoint                    | Params                                                                         | Returns                                                              |
+| --------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| `GET /api/costs/summary`    | `days`, `refresh`                                                              | total + per-cloud totals/deltas/daily sparkline + `provisional_days` |
+| `GET /api/costs/breakdown`  | `dimension=service\|resource\|bucket\|region\|day`, `cloud`, `days`, `refresh` | grouped rows (label, cloud, cost, share)                             |
+| `GET /api/costs/timeseries` | `days`, `cloud`, `refresh`                                                     | daily per-cloud series (stacked trend)                               |
+
+- **UI**: `deployment-ui/src/pages/CostObservability.tsx` at route **`/ops/costs`** (Cockpit tile "Billing
+  (GitHub+GCP+AWS)") — KPI band → trend + donut → dimension breakdown → per-VM/per-bucket leaf tables → GitHub
+  placeholder. Recent days flagged **provisional** (GCP ~2-day reconcile; AWS re-trues month-end 6th–7th).
+- **GitHub**: a labelled **dummy** provider (`is_placeholder=true`) until a classic PAT with `user` scope exists —
+  swap-to-real is a provider change only.
+- The narrow self-reported `cost_summary`-blob pipeline (`routes/cost_daily.py`, `/api/costs/daily`) that previously
+  backed this page is **retired/deleted**; the health-overview cost tile now reads `summarize(days=1)`.
+
 ## Related
 
 - [`spot-vms-for-backfill.md`](spot-vms-for-backfill.md) ·
