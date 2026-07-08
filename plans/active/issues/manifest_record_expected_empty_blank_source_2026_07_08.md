@@ -110,17 +110,21 @@ none of which set `row_key["source"]` either (there'd be nowhere for it to go pr
 - Re-ran the residual closer (`understat-eu-residual-closer-20260708-v2`) with the fix live to confirm resolution before
   flipping item #4's checkbox — see the plan's Progress Log for the outcome.
 
-## Open question — dedup non-collision (unconfirmed, needs its own investigation)
+## Open question — dedup non-collision — RESOLVED 2026-07-08 (slot-13): confirmed (b), escalated
 
-The 7,553 blank-source rows and the 250+5,843 `source='understat'` blank-reason rows share the SAME
-`(date, venue, data_type, service_name, league_id)` — the full dedup key per both
-`unified_trading_library/manifest_consolidator.py::_resolve_dedup_cols` and the reader's `_merge_shard_frames` (`source`
-is NOT part of either's dedup key). They should have collapsed to one row (newest `attempted_at` wins) — instead both
-coexist in the canonical parquet. This is either (a) resolved by the source fix alone once the writer stops producing a
-NEW distinct-looking row, or (b) a second, independent dedup bug in the DuckDB incremental anti-join merge. The re-run
-in this session's Progress Log entry should disambiguate — if the v2 closer's rows correctly supersede the old
-blank-reason rows, (a); if both still coexist, file (b) as its own P0 issue with the DuckDB merge SQL as the
-investigation target.
+Root-caused. Confirmed via a direct read of the persisted canonical `_index/availability_index.parquet` (bypassing the
+reader's self-shard overlay entirely — a plain `pandas.read_parquet` against the GCS blob, so this reflects exactly what
+the DuckDB consolidator itself wrote) that the OLD blank-reason `source='understat'` rows and the NEW correctly-typed
+rows written by today's `understat-eu-residual-closer-20260708-v2` run DO coexist for byte-identical dedup keys — **9/15
+sampled (date, data_type, league_id) cells have both rows present**, the newer one ~10 days more recent by
+`attempted_at`/`written_at`. This is scenario **(b)**: a real, independent bug in the manifest consolidator's CAS-retry
+path (NOT the DuckDB anti-join SQL itself, which is logically correct on inspection) — see the escalated issue doc for
+the full root cause (a lost-update race in `_write_consolidated()`'s `PreconditionFailed` retry loop, which re-uploads a
+stale already-computed merge instead of recomputing against the fresh canonical).
+
+**Filed**: `plans/active/issues/manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md` (P0, repo
+unified-trading-library) with 4 actionable todos (fix the race, correct the misleading module docstring, re-verify this
+doc's understat cells post-fix, audit other high-concurrency buckets for the same symptom).
 
 ## Recommended decision
 
@@ -207,7 +211,13 @@ investigation target.
       drift-since-flip in the sibling plan's VERIFY item (daily-pipeline-lag hypothesis, "unverified this session,"
       2026-07-08 slot-7/slot-5) and is out of scope for this todo to re-diagnose. Full counts + Progress Log entry added
       to `plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md`.
-- [ ] [DATA] P1. Root-cause the dedup non-collision question above — if the v2 closer re-run (this session) shows the
+- [x] ✅ [DATA] P1. Root-cause the dedup non-collision question above — if the v2 closer re-run (this session) shows the
       old blank-reason rows STILL coexisting alongside new correctly-sourced rows, escalate as its own P0 issue
       targeting `unified_trading_library/manifest_consolidator.py`'s DuckDB incremental anti-join (repo:
-      unified-trading-library).
+      unified-trading-library). — unified-trading-pm (this doc + new issue doc, no code SHA). Confirmed (b): 9/15
+      sampled cells show the OLD blank row and a NEW (~10-days-newer) correctly-typed row coexisting for a
+      byte-identical dedup key. Root cause is NOT the DuckDB anti-join SQL (inspected, logically correct) but a
+      lost-update race in `_write_consolidated()`'s CAS-retry loop, which re-uploads a stale already-computed merge on
+      `PreconditionFailed` instead of recomputing. Filed
+      `plans/active/issues/manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md` (P0) with the fix + 3
+      follow-up todos.
