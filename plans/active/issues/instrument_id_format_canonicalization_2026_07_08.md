@@ -14,7 +14,7 @@ summary:
   vs target-state framing in the mockup, staged migration to follow — not fixed today)."
 status: open
 nature: notes
-asset_group: [cefi, defi]
+asset_group: [cefi, defi, prediction]
 stage: [data, meta]
 repos: [instruments-service, unified-api-contracts, market-tick-data-service]
 scope: [engineer, admin]
@@ -38,6 +38,7 @@ related:
     ../canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
     ../canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
     ../canonical_id_p0_strategy_reconciliation_2026_07_08.md,
+    ../prediction_canonical_identity_migration_2026_07_08.md,
   ]
 created: 2026-07-08
 parent_epic: instruments_master
@@ -118,9 +119,37 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
    regeneration/backfill against the current adapter code**, not a from-scratch code change, though the current code's
    own gaps still apply on top (colon-before-fee-tier should be dash per this finding's target; `fee_str` uses Uniswap's
    raw feeTier units — e.g. `3000` — not real basis points — a real basis-point value is computed separately as
-   `pool_fee_tier_bps` but isn't the one embedded in the instrument_key string). **Not yet re-verified across the other
-   12 protocols** — only Uniswap V3 was spot-checked for this update; don't assume the same code-vs-catalog gap shape
-   holds for all of them without checking.
+   `pool_fee_tier_bps` but isn't the one embedded in the instrument_key string). **UPDATE 2026-07-08 (all 13 protocols
+   re-verified, not just Uniswap V3)** — read `prod/catalog.parquet` directly (6,180 real DEX-pool rows) and traced
+   every protocol's adapter code. Result: **zero code gaps found anywhere; this is a pure catalog-regeneration gap
+   across all 13 protocols, uniformly.**
+
+   | Protocol              | Real rows | Real chains (catalog)                                  | Persisted `instrument_id` shape        | Adapter code shape                                                      |
+   | --------------------- | --------- | ------------------------------------------------------ | -------------------------------------- | ----------------------------------------------------------------------- |
+   | UNISWAP_V3            | 2,030     | ARBITRUM, BASE, ETHEREUM, OPTIMISM, POLYGON            | bare address, no chain suffix on venue | Structured (`uniswap_v3.py:490-492`)                                    |
+   | BALANCER              | 2,413     | ARBITRUM, AVALANCHE, BASE, ETHEREUM, OPTIMISM, POLYGON | bare address, no chain suffix          | Structured (`balancer.py:224-226`, own adapter class)                   |
+   | UNISWAP_V4            | 413       | ETHEREUM                                               | bare address, no chain suffix          | Structured (`uniswap_v4.py:245-247`, own adapter class)                 |
+   | TRADER_JOE_V2         | 304       | AVALANCHE                                              | bare address, no chain suffix          | Structured (shares `UniswapV3ReferenceDataAdapter` via `protocol_slug`) |
+   | PANCAKESWAP_V3        | 614       | BSC, ZKSYNC, BASE, ETHEREUM                            | bare address, no chain suffix          | Structured (shares `UniswapV3ReferenceDataAdapter`)                     |
+   | VELODROME_V2          | 96        | OPTIMISM                                               | bare address, no chain suffix          | Structured (shares `UniswapV3ReferenceDataAdapter`)                     |
+   | AERODROME_V3          | 76        | BASE                                                   | bare address, no chain suffix          | Structured (shares `UniswapV3ReferenceDataAdapter`)                     |
+   | CAMELOT_V3            | 63        | ARBITRUM                                               | bare address, no chain suffix          | Structured (shares `UniswapV3ReferenceDataAdapter`)                     |
+   | SUSHISWAP_V3          | 122       | AVALANCHE, BASE, ETHEREUM                              | bare address, no chain suffix          | Structured (shares `UniswapV3ReferenceDataAdapter`)                     |
+   | SUSHISWAP (legacy V2) | 4         | ARBITRUM                                               | bare address, no chain suffix          | Structured (shares `UniswapV3ReferenceDataAdapter`)                     |
+   | UNISWAP_V2            | 24        | ETHEREUM                                               | bare address, no chain suffix          | Structured (`uniswap_v2.py:216-218`, own adapter class)                 |
+   | CURVE                 | 20        | AVALANCHE, ETHEREUM, OPTIMISM                          | bare address, no chain suffix          | Structured (`curve.py:162-164`, own adapter class, RPC not subgraph)    |
+   | GMX                   | 1         | ARBITRUM                                               | bare address, no chain suffix          | Structured (shares `UniswapV3ReferenceDataAdapter`)                     |
+
+   The 8 "shares `UniswapV3ReferenceDataAdapter`" rows are not independently-written code — `factory.py`'s
+   `supports_protocol_slug`/`VENUE_PREFIX_TO_PROTOCOL` routing (lines ~474-492) instantiates the SAME
+   `UniswapV3ReferenceDataAdapter` class with a different `protocol_slug` constructor arg for all of them, so they run
+   through the literal same `_build_pool_record` method already confirmed structured for Uniswap V3 — verifying Uniswap
+   V3's code transitively verifies all 8. Balancer/Uniswap V2/Uniswap V4/Curve are separate adapter classes and were
+   each individually read and confirmed structured. **No protocol in this list needs a code fix** — the only remaining
+   work is the catalog regeneration (already tracked as a todo below) plus the 2 already-known Uniswap-V3-specific code
+   gaps noted above (colon-vs-dash fee-tier delimiter, raw feeTier vs bps) which likely also apply to Uniswap V4's
+   `fee_str` (same `:{fee_str}` colon shape at `uniswap_v4.py:247`) — not independently re-verified for V4's bps
+   handling in this pass.
 
 3. **The 5 on-chain-perp venues (HYPERLIQUID/ASTER/PACIFICA-SOLANA/EXTENDED-STARKNET/LIGHTER-ZKSYNC) all store
    instrument_type=PERPETUAL as the field but embed PERP (not PERPETUAL) in the instrument_id key** — consistent across
@@ -174,20 +203,59 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
    plan under `instruments_master` (real code gap affecting 34K+ live rows, not just a naming decision) — separate from
    and shippable in parallel with the docs-consolidation work.
 
-8. **Prediction's per-market instrument_id is genuinely opaque, and its enrichment columns are 100% empty — this is
-   deeper than a formatting question.** Real, confirmed via `prod/catalog.parquet` (2,486,092 rows, both venues):
-   `base_asset`/`underlying`/`raw_symbol` are NULL for every single row. The bulk of individual Polymarket markets carry
-   a bare on-chain hash as `instrument_id` (e.g. `0xa91339c0f2c46cbb289ae592f7c0a66f35ff278a3846253f3a11fd059674af11`);
-   a smaller subset of both venues (1,243,069 of 2,486,092 rows are unique instrument_ids — real ~50% duplication) carry
-   a short readable label shared verbatim across venues (e.g. `BNB_PRICE_RANGE_DAILY`, appearing exactly once per venue
-   with different `available_from`/`available_to` windows — likely a recurring-series/template key, not a specific dated
-   market instance, though this hasn't been confirmed against `prediction_mapping.py`'s real extraction logic). Unlike
-   findings 1-7, this isn't a "wrong delimiter" problem — the fields the format would need are never populated in the
-   first place, so no target format is proposed here yet. **Not the same finding as the already-settled
-   `canonical_question_group` sharing behavior** (that's confirmed correct-as-designed, see "What this is NOT"); this is
-   about the base `instrument_id` field itself for individual markets. Also reconfirmed real and still live: the
-   bucket-naming split from the audit — `instruments-store-pred-prd-central-element-323112` exists (33,122 blobs),
-   `instruments-store-prediction-prd-central-element-323112` returns a 404.
+8. **RESOLVED 2026-07-08 (was: "Prediction's per-market instrument_id is genuinely opaque, and its enrichment columns
+   are 100% empty").** Root cause diagnosed, the null-fields bug fixed, and a canonical scheme decided — full write-up
+   in `instruments-service/docs/PREDICTION_INSTRUMENTS.md` § "Canonical identity model" (this entry summarizes it; that
+   doc is the SSOT).
+   - **Root cause (was "not yet understood")**: `base_asset`/`raw_symbol` ARE populated correctly by both adapters at
+     `InstrumentRecord` construction and DO survive into the per-day `instrument_availability/by_date/...` parquet
+     snapshots (verified: `process_write.py::_records_to_dataframe()` serializes every `InstrumentRecord` field via
+     `model_dump()`). They were dropped one level up, in
+     `instruments-service/scripts/build_instrument_catalogue.py::build_prediction_catalogue_dataframe()` — Prediction's
+     dedicated multi-grain catalogue roll-up never read `raw_symbol`/`base_asset` off the per-day rows into its
+     `_PredLifecycle` accumulator (unlike the generic `_extract_meta()` roll-up every other asset group uses, which
+     does), so `_emit()` never included those keys and `pd.DataFrame(rows, columns=CATALOG_COLUMNS)` silently backfilled
+     `NaN` for all 2,486,092 rows. **Fixed** — `_PredLifecycle`/`_merge_lifecycle`/`_emit()` now thread
+     `raw_symbol`/`base_asset` through at the per-conditionId grain; next catalogue regen carries real values.
+   - **`underlying` is a genuinely different case** — no adapter ever calls `InstrumentRecord(underlying=...)` at all,
+     so there is nothing to "fix" in the roll-up for this field; it was never computed upstream. Conceptually it IS
+     sensible for a real subset (crypto/macro/commodity price markets have a natural subject asset — BTC, CPI, GOLD) and
+     honestly absent for the rest (politics/geo/entertainment have none; sports has a fixture identity, not a scalar
+     asset) — `unified_api_contracts/canonical/domain/predictions/two_axis.py`'s `PredictionUnderlying` enum already
+     gives a comprehensive per-cqg mapping, and `cross_venue_mapping.py::_build_mapping()` already applies the right
+     `None if sports else underlying.value` convention for its own (separate, matched-pair-only) output schema.
+     Populating `InstrumentRecord.underlying` from this same pipeline at adapter-construction time is scoped as a
+     migration, not fixed in this pass (see plan below).
+   - **The operator's follow-up question — are these fields conceptually sensible for Prediction, and what's the real
+     canonical scheme — is answered directly in `PREDICTION_INSTRUMENTS.md`**: `raw_symbol` is real venue-native data,
+     not vestigial (was purely a rollup bug). `base_asset`'s VALUES are real but the field name is a poor fit for
+     Prediction (Kalshi's value is a genuine venue grouping key; Polymarket's is a synthesized label whose shape varies
+     by category — asset-like for crypto, instrument-id-like for sports, raw question text for "other"). `underlying` is
+     the right field for the crypto/macro/commodity subset and correctly `None`/`OTHER` for the rest. The canonical
+     scheme reuses what already exists rather than inventing a parallel mechanism, per the operator's framing ("pick one
+     … from what exists"): `canonical_question_group` stays the family axis; `underlying` (adapter-populated from the
+     existing classifier pipeline) + `canonical_instrument_id` (an already-existing `InstrumentRecord` field, currently
+     unused for Prediction, populated from `cross_venue_mapping.build_cross_venue_mapping()`'s `canonical_event_id` when
+     a real cross-venue pair exists) together are the per-instance axis. Sports specifically ties to the Sports asset
+     group's own `build_fixture_id()` scheme (`{LEAGUE}:{HOME}_v_{AWAY}:{YYYYMMDD}`) — same information content today
+     via two independent implementations (`SportsFixtureKey.pairing_key()` vs. `build_fixture_id()`), a real
+     (currently-unwired) `_cross_reference_fixture()` method already sits in Polymarket's adapter for exactly this
+     alignment.
+   - **Migration scope** (adapter-level `underlying` population + cross-venue `canonical_instrument_id` wiring + sports
+     fixture_id alignment) tracked in [[prediction_canonical_identity_migration_2026_07_08]] (`plans/active/`,
+     `assigned_vm: NA`) — not implemented in this pass; requires adapter changes + a cross-venue join step that doesn't
+     exist in the per-day write path today.
+   - **Bucket-naming split — fixed for INSTRUMENTS, deliberately left for MARKET_DATA.**
+     `unified_api_contracts/canonical/gcs_paths.py`'s `BUCKET_TEMPLATES_BY_ASSET_GROUP_KIND[(PREDICTION, INSTRUMENTS)]`
+     templated the dead, unabbreviated `instruments-store-prediction-{env}-{project_id}` (confirmed 404;
+     `instruments-store-pred-prd-central-element-323112` is the real bucket, 33,122 blobs) — now fixed to the
+     abbreviated form. `BUCKET_TEMPLATES_BY_ASSET_GROUP_KIND[(PREDICTION, MARKET_DATA)]` was ALSO found unabbreviated
+     (`market-data-tick-prediction-{env}-{project_id}`) and is ACTIVELY consumed by `market-data-processing-service`'s
+     `DependencyChecker.UPSTREAM_DEPS_BY_ASSET_GROUP["PREDICTION"]` — but that long-form bucket is a real, still-live
+     legacy bucket mid-migration to `market-data-tick-pred-prd-{pid}`
+     (`market-tick-data-service/scripts/migrate_prediction_to_pred_prd_v9.py`,
+     `prediction_manifest_canonicalisation_2026_06_01.md` §C), so it was deliberately left unchanged pending that
+     migration's completion — flipping it now would point the dependency check at the less-complete bucket.
 
 ## What this is NOT
 
@@ -227,6 +295,15 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
 
 ## Todos
 
+- [ ] [SCRIPT] P2. **DEX-pool catalog regeneration (finding 2, all 13 protocols)** — real code is already correct for
+      every protocol (see the per-protocol table in finding 2, 2026-07-08 update); the ONLY gap is that
+      `prod/catalog.parquet`'s 6,180 DEX-pool rows predate the current adapter code and still show bare on-chain
+      addresses with no `-CHAIN` venue suffix. Scope: re-run instrument discovery for all 13 protocol×chain combinations
+      in the table above and rewrite/backfill the catalog rows in place (per the migration-mechanics decision below:
+      rewrite already-captured rows from already-known data, not a fresh re-download) so `instrument_id` reflects the
+      current adapter's structured `VENUE-CHAIN:POOL:BASE-QUOTE[:FEE]` shape. Do this AFTER (or together with) the 2
+      Uniswap-V3/V4 fee-tier-delimiter code fixes noted in finding 2, so the regeneration produces the FINAL target
+      shape (dash-separated bps fee tier) rather than needing a second regen pass immediately after.
 - [ ] [DECISION] P2. **Confirm exact target quote-currency per on-chain-perp venue** (finding 4) — ASTER/PACIFICA/
       LIGHTER-ZKSYNC's real settlement currency needs a quick per-venue API check before the illustrative targets in
       this doc become real implementation targets (e.g. confirm ASTER really settles BTC-USDT in USDT, not some other
@@ -262,11 +339,17 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
       leg-decomposition infrastructure entirely), not just a naming decision; independently shippable, same pattern as
       the P0 fix plans. Filed: [[canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08]]. Repo:
       instruments-service.
-- [ ] [DATA] P2. **Investigate `prediction_mapping.py`'s real extraction logic** (finding 8) before proposing any target
-      format — need to understand whether the short readable instrument_ids (e.g. `BNB_PRICE_RANGE_DAILY`) are a
-      recurring-series/template key or something else, and why `base_asset`/`underlying`/`raw_symbol` are 100% NULL
-      (never extracted, or extracted-then-dropped downstream) before deciding what a canonical Prediction instrument_id
-      should even contain.
+- [x] [DATA] P2. **Investigate `prediction_mapping.py`'s real extraction logic — RESOLVED 2026-07-08.** The short
+      readable ids (e.g. `BNB_PRICE_RANGE_DAILY`) are `canonical_question_group` cluster-grain rows, confirmed
+      correct-as-designed (see "What this is NOT"), not a `prediction_mapping.py` artifact —
+      `PredictionMarketMapper.canonical_id` is computed but discarded, never reaching any `InstrumentRecord` field. The
+      real `base_asset`/`raw_symbol` NULL cause: dropped in
+      `instruments-service/scripts/build_instrument_catalogue.py::build_prediction_catalogue_dataframe()`'s
+      per-conditionId accumulator (never read those columns off the per-day rows) — FIXED same-session. `underlying` was
+      never computed upstream at all (no bug to fix there; a real adapter-level migration to populate it is scoped in
+      [[prediction_canonical_identity_migration_2026_07_08]]). See finding 8 above +
+      `instruments-service/docs/PREDICTION_INSTRUMENTS.md` § "Canonical identity model" for the full write-up. Evidence:
+      instruments-service@<pending quickmerge sha>.
 
 ## Progress Log
 
@@ -329,3 +412,35 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
   (dropped, not decomposed), and even the working CME path doesn't yet apply the human-name translation or drop the
   per-leg venue redundancy. Finding 7 rewritten to reflect this; recommended it become its own fix plan (real code gap,
   not a design decision) rather than something resolved purely in this doc.
+- **2026-07-08 (finding 8 resolved)** — Operator asked two things together: diagnose the null-fields root cause, and
+  answer directly whether `base_asset`/`underlying`/`raw_symbol` even make conceptual sense for Prediction given its
+  real matching mechanism is cross-venue question-group sharing, not a base/quote pair. Traced the write path
+  end-to-end: both adapters populate `base_asset`/`raw_symbol` correctly at `InstrumentRecord` construction, and
+  `process_write.py` correctly serializes them into the per-day GCS snapshots — the NULL happened one level up, in
+  `build_instrument_catalogue.py::build_prediction_catalogue_dataframe()`'s dedicated multi-grain roll-up, which never
+  read those two columns off the per-day rows into its accumulator (unlike the generic roll-up every other asset group
+  uses). Fixed (instruments-service). `underlying` is a different, non-bug case — no adapter ever computes it; read
+  `cross_venue_mapping.py` (the real per-instrument Kalshi↔Polymarket matcher — this IS the "something we already have"
+  the operator referenced) and `two_axis.py`'s comprehensive `PredictionUnderlying` axis in full: confirmed `underlying`
+  is conceptually sound for crypto/macro/commodity markets and correctly None/OTHER for the rest (politics/sports),
+  matching a convention `cross_venue_mapping.py` already applies for its own output. Proposed and documented (in
+  `PREDICTION_INSTRUMENTS.md`) ONE canonical scheme reusing existing mechanisms: `canonical_question_group` (family
+  axis, unchanged) + `underlying` (adapter-populated from the existing classifier, migration) +
+  `canonical_instrument_id` (an existing-but-unused `InstrumentRecord` field, populated from `cross_venue_mapping`'s
+  `canonical_event_id`, migration) — with sports additionally tying to the Sports asset group's own `build_fixture_id()`
+  scheme via a currently-unwired `_cross_reference_fixture()` method already sitting in the Polymarket adapter. Also
+  fixed the `gcs_paths.py` dead `instruments-store-prediction-*` bucket template (INSTRUMENTS kind only — the
+  MARKET_DATA kind's long form is a real, still-live legacy bucket mid-migration per a separate 2026-06-01 plan,
+  deliberately left alone). Filed [[prediction_canonical_identity_migration_2026_07_08]] for the remaining adapter-level
+  migration work.
+- **2026-07-08 (finding 2, all 13 DEX-pool protocols individually re-verified)** — Follow-up to the earlier
+  Uniswap-V3-only reconciliation: read `prod/catalog.parquet` directly (6,180 real DEX-pool rows across all 13
+  protocols) and traced every protocol's adapter code (4 independent adapter classes — Uniswap V2/V3/V4, Balancer, Curve
+  — plus 8 protocols confirmed to share `UniswapV3ReferenceDataAdapter` via `factory.py`'s `protocol_slug` routing, so
+  verifying Uniswap V3's code transitively covers those 8). Result: every one of the 13 protocols shows the identical
+  shape — real adapter code already builds a structured `VENUE-CHAIN:POOL:BASE-QUOTE[:FEE]` key, but the persisted
+  catalog uniformly still shows the old bare on-chain address with no chain suffix. Zero code gaps found in any of the
+  13 — confirms this is purely a catalog-regeneration/backfill gap, not a from-scratch code problem for any protocol.
+  Added the full per-protocol table to finding 2 and a dedicated regeneration todo (does not attempt the actual regen in
+  this pass — that's a real backfill job, scoped separately). Evidence: instruments-service (no code changes needed for
+  this finding — verification only).
