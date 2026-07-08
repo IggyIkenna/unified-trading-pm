@@ -143,29 +143,26 @@ source:
       currently joins on the bare `condition_id`/`ticker` shape (the Polymarket adapter's own
       `_register_clob_token_ids(condition_id, ...)` side-table keyed by the CURRENT bare value is one real consumer
       found in `parsing.py:135` — confirm it and any others tolerate or get updated for the wrapped shape) — same
-      consumer-impact-check discipline as the CCXT plan.
+      consumer-impact-check discipline as the CCXT plan. **Coordinate with, don't conflate against,
+      `prediction_canonical_identity_migration_2026_07_08.md`** — that plan's `canonical_instrument_id` field (populated
+      from `cross_venue_mapping`) is a SEPARATE, complementary field from the `instrument_key` this todo wraps, not a
+      conflicting proposal. Sequence so this todo's downstream-consumer check and that plan's todo 6 (same underlying
+      question, different field) don't get answered inconsistently by 2 different agents.
 - [ ] [DATA] P3. **Cross-reference, don't duplicate, the TradFi combo-leg fix** — finding 7 (CBOE/VX spreads bypassing
       `InstrumentLeg`/COMBO entirely) already has its own dedicated plan,
       `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`. Note there that the new `build_leg()` helper is
       now available for that plan to use once its pending `[DECISION]` (per-leg `VENUE:` prefix drop) resolves — do not
       re-scope that work into this plan.
-- [ ] [VERIFY] P3. **Decide whether `ccxt_adapter.py` should be refactored to CALL the shared builder** (pure DRY, no
-      output change) instead of keeping its own parallel `_build_instrument_key()` / `_resolve_instrument_key_venue()`
-      logic. This round only added a regression-test proof
-      (`unified-api-contracts/tests/internal/unit/test_canonical_id_builder.py::TestCcxtTardisCompatibility`) that the
-      shared builder CAN reproduce its real shipped output — the file itself was deliberately left untouched (recently
-      shipped by a sibling plan, `canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md`). Lower priority than the ad
-      hoc adapters above since this one already produces the correct canonical shape.
-- [ ] [DATA] P3. **Evaluate upgrading MTDS's already-correct callers to the new one-entry-point** —
+- [ ] [DATA] P3. **DECIDED — yes, refactor `ccxt_adapter.py` to call the shared builder.** Operator guidance: no real
+      ambiguity here (explicitly "no output change" either way per this todo's own framing) — do it for consistency,
+      same for the MTDS callers below. Not urgent, pick up opportunistically.
+- [ ] [DATA] P3. **DECIDED — yes, upgrade MTDS's already-correct callers to the new one-entry-point** —
       `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py:242` and
-      `.../cefi/tardis_shared.py:433,464,473` already call `build_instrument_id()` directly (confirmed real, working
-      callers — the "few more real callers than initially known" the old ADAPTER_ARCHITECTURE.md doc referenced). Purely
-      cosmetic: consider whether they should call `build_canonical_instrument_id(AssetGroup.X, ...)` instead for
-      consistency with the new one-entry-point convention. No behavior change expected either way.
-- [ ] [DATA] P3. **Retire the misspelled `AAVEV3-OPTIMISM` venue-token duplicate** (finding 5) — 4 real rows under the
-      typo'd venue token coexist with 12 correctly-spelled `AAVE_V3-OPTIMISM` rows, fragmenting the real per-chain
-      reserve set. Consolidate under the correct spelling; the misspelled variant is retired, not migrated (a typo, not
-      a distinct entity).
+      `.../cefi/tardis_shared.py:433,464,473`. Cosmetic consistency change, no behavior change expected. Not urgent.
+- [x] [DATA] P3. **Retire the misspelled `AAVEV3-OPTIMISM` venue-token duplicate** (finding 5) — DONE, fixed by a
+      concurrent sibling agent the same session (DeFi venue-token naming cleanup), confirmed via a fresh real re-query
+      of `prod/catalog.parquet`: 0 ghost rows, 16 rows correctly under `AAVE_V3-OPTIMISM`. This todo was stale by the
+      time this plan was filed — the parallel work wasn't visible to the agent that wrote it.
 - [ ] [SCRIPT] P2. **Ship each retrofit batch via quickmerge**, quality-gates green per repo, citing before/after
       `instrument_key` evidence per adapter touched (same evidence pattern as the CCXT plan's per-venue table). Batch by
       asset-group-cluster (todo 1+2 together, todo 4 alone, todo 6 alone, etc.) rather than one giant commit.
