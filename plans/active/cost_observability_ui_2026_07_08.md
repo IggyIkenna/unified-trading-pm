@@ -181,6 +181,49 @@ business-context fast-follow (asset_group via labels/tags), deliberately out of 
       or skeleton the panel while `loadBreakdown` is in flight. Pre-existing; cosmetic-only (self-corrects on fetch
       completion).
 
+## Data-fidelity audit findings (2026-07-08) — UI vs BigQuery/Athena source
+
+Operator-requested audit: what the exports actually contain vs what `/ops/costs` surfaces. Evidence = live `bq` probes
+on the resource table + the running backend endpoints (last-30d window).
+
+### Correctness (the displayed numbers are wrong today)
+
+- [ ] [BACKEND] P1. **GCP shows GROSS cost, not NET of credits.** `credit` is fetched into `CostRecord`
+      (`providers.py:96`) but **never read** — every aggregation sums `r.cost` only. Live proof (resource table, last
+      30d): gross **$15,134.51** − credits **$2,541.19** = net **$12,593.32** → the page **overstates GCP ~17%**. The
+      credits are mostly **active PROMOTION** (−$2,487/30d), so the codex "promo exhausted ~2026-06-20" note is stale.
+      Fix: apply credit in the aggregations (effective = `cost + credit`); the codex reference query already intends
+      `SUM(cost)+SUM(credits) AS net_cost`. Then correct `codex/05-infrastructure/billing-cost-observability.md`.
+- [ ] [BACKEND] P2. **AWS shows unblended usage-only, not net / not invoice-total.** `aws_facts_sql` sums
+      `line_item_unblended_cost` and filters `line_item_type IN ('Usage','DiscountedUsage')` — excludes Tax / Credit /
+      Fee / RIFee / SavingsPlan\* and ignores `line_item_net_unblended_cost`. So the AWS total (~$213/30d) is usage
+      spend, not the AWS invoice. Decide net-of-discounts (`net_unblended_cost`) + a tax/fee line so it reconciles; at
+      minimum label it "usage spend". (AWS is ~1.4% of total, so lower $ impact than the GCP item.)
+- [ ] [BACKEND] P3. **Provisional flag is trailing-2-days for BOTH clouds**, but AWS re-trues the whole current month
+      (6th–7th). Early-current-month AWS days render as final though they aren't — make the AWS cutoff month-aware.
+
+### Granularity we HAVE but don't surface (near-zero extra query cost)
+
+- [ ] [UI+BACKEND] P2. **SKU (GCP) / usage_type (AWS) breakdown dimension** — highest-value add. The #1 GCP line item is
+      "Regional Coldline Class A Operations **$2,870/30d**", invisible today inside "Cloud Storage"; SKU is the "why is
+      this service expensive" axis. Resource table already carries `sku.description`; AWS has `line_item_usage_type`.
+      Add as a 6th breakdown dimension.
+- [ ] [UI+BACKEND] P2. **Spot vs On-Demand (purchase option) split** — GCP SKU exposes "Spot Preemptible E2…"; AWS has
+      `pricing_purchase_option`. Directly validates the SPOT-VMs-for-backfill HARD RULE + quantifies the savings.
+- [ ] [UI+BACKEND] P3. **Credits/discounts as a first-class view** — we already fetch GCP credits; surface gross →
+      credits → net + the effective discount rate (how much promo/CUD/SUD is saving).
+- [ ] [BACKEND] P3. **Usage quantity + unit** (GCP `usage.amount/unit`; AWS `line_item_usage_amount/pricing_unit`) →
+      unit economics ($/GB-month, $/vCPU-hour), and GB-stored vs GB-egress for buckets.
+- [ ] [BACKEND] P3. **Zone (GCP `location.zone`) / AZ (AWS `line_item_availability_zone`)** — finer than region.
+
+### Structural
+
+- [ ] [BACKEND] P3. Only the **resource table** is wired; the cheaper **standard table** (`gcp_billing_export_v1_*`,
+      SKU/project) isn't. Fine while single-project, and SKU is reachable off the resource table anyway — revisit only
+      if per-project or query-cost matters.
+- [ ] [UI] P3. No **"other resources" leaf** — Cloud Run Jobs is ~$2.9k/30d (CPU $2,047 + Mem $882), bigger than any
+      single VM, but only vm+bucket leaf tables exist; it surfaces only in the "By resource" breakdown.
+
 ## Progress Log
 
 _(Session findings go here — agent memory writes are BANNED. Append dated notes as work proceeds.)_
