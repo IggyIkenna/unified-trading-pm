@@ -124,25 +124,45 @@ singleton-lock namespace → may run concurrently.
       completed; typing script typed 8,744 non-TM leagues as EXPECTED_NO_PROVIDER_COVERAGE (@fbb032d).
 - [ ] [DATA] P0. **Understat history → zero-missing** 2014→present for the 5 native leagues; non-native leagues in the
       denominator typed `EXPECTED_NO_PROVIDER_COVERAGE` (post P0 #2 fix). **Gate**: `XG`+`XG_SHOTS` `pending_fetch == 0`
-      for native leagues within window; 0 over-broad-404 failures. **BLOCKED-PREREQUISITES (2026-07-06, slot-7)**: local
-      backfill terminated 2026-07-06 20:46:53 UTC (MAX_ROUNDS, 108 dates stubborn `attempted_failed`) — gate NOT MET.
-      Big-5 native residual: XG `expected_unattempted=315`; XG_SHOTS `attempted_failed=384` (all pre-fix HTTP_NOT_FOUND
-      2026-06-23→2026-06-29) + `expected_unattempted=13,811`. Un-block sequence: (a) run
-      `reclassify_xg_shots_false_failed_2026_06_29.py --apply` (@ instruments-service@15dc9b5) to reclassify the 384
-      pre-fix HTTP_NOT_FOUND rows to `empty_confirmed(EXPECTED_NO_FIXTURE)` — this is item -002 / part of
-      `understat_local_backfill_completion_2026_07_06.md`, not this plan; (b) resolve the 13,811 XG_SHOTS eu (residual
-      enum rows from `enum-universe-sports-20260628-213115` that the backfill's captured/empty_confirmed writes did NOT
-      supersede on last-write-wins) — likely needs consolidator §9.2b dedup deployment confirmation + potentially a
-      dedicated re-fetch of those specific dates or a typing pass for dates outside understat's actual fixture calendar;
-      (c) re-run `/tmp/verify_understat_gate.py` and confirm 0 af / 0 eu on big-5 for both XG and XG_SHOTS; (d) then
-      flip this checkbox. Hollow-shots verified NOT hollow (99.5–100% captured atom parity between XG and XG_SHOTS).
+      for native leagues within window; 0 over-broad-404 failures. **BLOCKED-PREREQUISITES (2026-07-08, slot-7)**:
+      sibling plan's task -001 (driver re-run) completed 2026-07-08 — big-5 `attempted_failed=0` confirmed (the 384 af +
+      manifest-dedup-gap residues from the 2026-07-06 entry are RESOLVED). **Gate still NOT MET on
+      `expected_unattempted` alone** (re-verified 2026-07-08 20:10 UTC via `read_availability_index`, shard-merged, no
+      whole-corpus walk): XG `pending_fetch=250` (dates 2026-05-05→2026-07-08, 50/league × 5 — simply outside the
+      driver's `--end 2025` season range, NOT a real gap: a driver re-run with an updated `--end`/`--cutoff` covering
+      2026 would close this in minutes); XG_SHOTS `pending_fetch=5,843` (evenly spread ~1,168/league across
+      2018-06-01→2026-07-08 — a genuine, broad per-date shots-capture gap the completed driver did NOT close despite
+      reporting `ALL DATES CAPTURED (0 attempted_failed)`; matches the sibling plan's task -001 residual note that most
+      of these dates DO have a captured row for a _different_ big-5 league the same day, i.e. per-league fixture-date
+      gaps, not a global failure — needs the sibling plan's task -002/-004 diagnosis, not a fresh typing pass).
+      Un-block: sibling plan `understat_local_backfill_completion_2026_07_06.md` tasks -002 (re-verify, done) → -003
+      (consolidator confirm, done) → -004 (one-off normalization, still blocked-prerequisites as of this read) → -005
+      (gate flip) must complete first; this item flips only once XG_SHOTS pending_fetch is diagnosed + closed to 0 (or
+      the 2026-tail XG gap is closed by a driver re-run).
 - [ ] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
       removal reversed 2026-06-27 (#6 REVERSED, operator decision) — footystats ODDS are pre-match snapshot reference
       data that stays in IS; see sports_p0 task 003. **Gate**: `(footystats, PREDICTIONS)` + `(footystats, MATCHES)` +
-      `(footystats, ODDS)` `pending_fetch == 0` within window; 0 blank-reason; ODDS parquets present in GCS. 🟢 VM
-      `fs-backfill-20260706-161335` RUNNING (slot-11, 2026-07-06 16:13 UTC, range 2019-01-01..2026-07-05 all entities).
-      Pre-VM manifest: PREDICTIONS eu=44,298 / MATCHES pending=6,569 / ODDS pending=1,595. M+P VM for 2019..2026-02-19
-      was the missing piece after ODDS VM 2 completed 2026-06-29. After VM TERMINATED → verify pending_fetch==0 → flip.
+      `(footystats, ODDS)` `pending_fetch == 0` within window; 0 blank-reason; ODDS parquets present in GCS.
+      **BLOCKED-PREREQUISITES (2026-07-08, slot-7)**: VM `fs-backfill-20260706-161335` TERMINATED cleanly (`exit_code=0`
+      confirmed via GCS run.log, completed 2026-07-07 23:46 UTC, processed through end-cutoff 2026-07-05). **Ran a
+      typing pass** (`type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py --apply`,
+      instruments-service@4368f38, dynamic "≥1 captured row = covered" logic) to clear 432 genuinely non-covered-league
+      rows (119, AUSTRALIA_CUP, COPA_LIBERTADORES, etc.) — down from the stale-looking 44,454/5,782 pre-typing snapshot.
+      **Gate still FAILS on real gaps** (re-verified 2026-07-08 20:10 UTC, shard-merged read): MATCHES
+      `pending_fetch=5,641` — 96% concentrated in 4 REGULAR leagues (CHILE_PRIMERA=1,459, K_LEAGUE_1=1,451,
+      LIGA_MX=1,291, ARGENTINA_PRIMERA=1,228), i.e. near-total-history gaps for leagues nominally "covered" (≥1 captured
+      row exists) — looks like a footystats MATCHES fetch bug specific to these 4 leagues, not a config/typing issue.
+      PREDICTIONS `pending_fetch=44,163` — 93% concentrated in continental/cup competitions (UECL=2,303, UEL=2,302,
+      UCL=2,297, SWISS_CUP=2,279, COPA_ARGENTINA=2,277, CHILE_PRIMERA_B=2,277, LIGA_EXPANSION_MX=2,275,
+      JLEAGUE_CUP=2,069, TURKIYE_KUPASI=2,063, TACA_DE_PORTUGAL=2,061, +37 more), each missing ~75-85% of its full
+      2019-2026 date range — the pattern (near-uniform per-league residual spanning the FULL history, not a recent tail)
+      looks like a fixture-calendar-awareness gap: cup competitions don't play every day, and the PREDICTIONS
+      orchestrator likely never resolves a no-fixture-that-day cup date to `empty_confirmed(EXPECTED_NO_FIXTURE)`,
+      leaving the enum's blanket eu placeholder untouched forever (same shape as the understat over-broad-404 fix, but
+      unaddressed for footystats). ODDS `pending_fetch=1,264` (not yet root-caused this session). **This is a CODE gap,
+      not closeable by re-running the same backfill VM or a typing script** — recommend filing a dedicated follow-up
+      plan/issue for footystats MATCHES (4-league fetch bug) + PREDICTIONS (fixture-calendar honest-absence) before the
+      next VM launch, else a re-run will reproduce the same residual.
 - [x] [DATA] P0. **odds-api history → zero-missing** 2020-06→present (bookmaker-league subset; uncovered leagues typed).
       **Gate**: `(odds_api, trades)` `pending_fetch == 0` for covered leagues within window; uncovered leagues typed. ✅
       — `mtds-backfill-odds-1` VM completed 2026-06-28T03:41 UTC (rc=0, 317/317 chunks, 2020-06-06→2026-06-27, 7-day
@@ -152,20 +172,31 @@ singleton-lock namespace → may run concurrently.
       attempted_failed).
 - [ ] [VERIFY] P1. **Full-history reference cleanliness.** **Gate**: full-history audit → 0 pending-fetch + 0
       blank-reason + 0 un-evidenced failed for all 6 sources within their coverage windows. **BLOCKED-PREREQUISITES
-      (2026-07-06, slot-5)**: items #4 (understat) + #5 (footystats) both unflipped. **Item #4**: local backfill
-      terminated 20:46:53 UTC 2026-07-06 with `MAX ROUNDS reached; still 108 attempted_failed`; big-5 residue XG eu=315
-      (63/league × 5), XG_SHOTS af=384 (all `HTTP_NOT_FOUND` attempted_at 2026-06-23→2026-06-29, pre-fix
-      `_classify_error` legacy) + eu=13,811 (2,762/league × 5) — verified via `/tmp/verify_understat_gate.py` against
-      `_index/availability_index.parquet` (no whole-corpus walk). Un-block path owned by sibling plan
-      `understat_local_backfill_completion_2026_07_06.md` (tasks -001→-006). **Item #5**: VM
-      `fs-backfill-20260706-161335` RUNNING (verified `status=RUNNING` via compute API 2026-07-06 22:00 UTC), currently
-      processing date=2020-03-15 (~16% into 2019-01-01..2026-07-05 range, ~5.75h elapsed since 16:13 UTC launch), ETA
-      ~2026-07-08 04:00-08:00 UTC. **Un-block sequence**: (a) footystats VM TERMINATED +
-      `(footystats, MATCHES)+     (footystats, PREDICTIONS)+(footystats, ODDS) pending_fetch == 0` → flip item #5; (b)
-      understat un-block sequence completes (reclassify script for 384 af + diagnosis pass for 13,811 XG_SHOTS eu + 315
-      XG eu + re-run verify) → flip item #4; (c) THEN re-dispatch item #7, re-run full-history audit across all 6
-      sources, confirm gate met → flip this checkbox. This marker filters item #7 from priority-only regen dispatch
-      until both prerequisites complete and an operator clears it.
+      (2026-07-08, slot-7)**: items #4 (understat) + #5 (footystats) both still unflipped — re-verified LIVE 2026-07-08
+      20:10 UTC via `read_availability_index` (shard-merged, single-walk-safe, no whole-corpus GCS list). **Fixed a real
+      correctness bug found while re-verifying**: `type_weather_eu_no_provider_coverage_2026_06_27.py` and
+      `type_sfi_eu_no_provider_coverage_2026_06_27.py` had NO league-coverage check in their masks — they blanket-typed
+      every blank-reason EU row as `EXPECTED_NO_PROVIDER_COVERAGE` regardless of whether the league was actually
+      covered. Safe on the 2026-06-27 one-time run (every matching row happened to be non-covered), but a recurring
+      daily forward-poll enum keeps writing NEW blank-reason EU rows for covered leagues too (264 rows each for
+      weather/SFI, dates 2026-06-30→2026-07-08) — re-running the scripts unchanged would have silently mistyped a real
+      pending-fetch as permanent no-coverage. Fixed both masks to exclude currently-covered leagues
+      (instruments-service, this commit) before re-running. Also ran the existing (already-correct, dynamic-coverage)
+      `type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py --apply` (432 genuinely non-covered rows
+      typed). **Net effect**: weather/SFI eu dropped 3,601→264 each; footystats MATCHES eu dropped 5,782→5,641,
+      PREDICTIONS 44,454→44,163 (the non-covered-league noise is gone; what's left is a REAL gap, not a typing backlog).
+      Transfermarkt needed NO typing — 0 non-covered rows against the authoritative 55-league covered set (its full
+      1,364 pending_fetch is a real gap, dates 2025-12-10→2026-07-08, needs a new backfill VM covering that window — the
+      last TM VM only ran through 2026-06-29). **Current per-source state (all FAIL)**: open_meteo pending_fetch=264,
+      SFI pending_fetch=264 (both recent-date covered-league — plausibly daily-pipeline lag, not backfill scope, but
+      unverified this session), transfermarkt pending_fetch=1,364 (real gap, needs VM), understat XG pending_fetch=250 /
+      XG_SHOTS pending_fetch=5,843 (see item #4 note), footystats MATCHES pending_fetch=5,641 / PREDICTIONS
+      pending_fetch=44,163 / ODDS pending_fetch=1,264 (see item #5 note — these are CODE gaps, not VM-rerun-closeable).
+      odds_api PASS (unchanged). **Un-block sequence unchanged in shape**: item #4 and #5 must both reach
+      pending_fetch=0 before this item can flip; given items #4/#5 residuals are now diagnosed as requiring either a
+      targeted re-fetch (TM, understat XG-tail) or an orchestrator code fix (footystats MATCHES 4-league bug, footystats
+      PREDICTIONS cup fixture-calendar gap), this is NOT a quick re-dispatch — recommend the operator review whether
+      footystats MATCHES/PREDICTIONS deserves its own follow-up plan before further VM spend.
 
 **Full-execution criterion**:
 
@@ -186,6 +217,60 @@ singleton-lock namespace → may run concurrently.
 - **Feeds**: P2c (features history). Runs concurrently with P2a.
 
 ## Progress Log
+
+### 2026-07-08 20:12 UTC — slot-7: item #7 re-verify + typing-bug fix + true-residual characterization
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-015` (item #7 P1 verify flip).
+
+**Live re-verify** (via `read_availability_index`, shard-merged, single-walk-safe — NOT a whole-corpus GCS list) across
+all 6 sources confirmed the gate is still FAIL, but found the prior "0 pending-fetch blocked only on VM completion"
+framing was stale: the footystats VM (`fs-backfill-20260706-161335`) and the understat driver (sibling plan task -001)
+had BOTH already completed, yet the gate still failed — because a large fraction of the reported `pending_fetch` was
+actually non-covered-league typing noise, not a real gap. Ran the existing typing pipeline to separate the two:
+
+**Bug found + fixed before running**: `type_weather_eu_no_provider_coverage_2026_06_27.py` and
+`type_sfi_eu_no_provider_coverage_2026_06_27.py` had NO league-coverage check in their mask — they blanket-typed every
+blank-`error_reason` EU row for their source as `EXPECTED_NO_PROVIDER_COVERAGE`, regardless of whether the league is
+actually covered. This was safe on the original 2026-06-27 one-time run (every matching row happened to be non-covered),
+but a **daily forward-poll enum keeps writing fresh blank-reason EU rows every ~24h for ALL 6 sources** (confirmed via
+`written_at`: batches on 2026-06-30, 07-01…07-08) — some of those NEW rows are for genuinely-covered leagues (264 each
+for weather/SFI, dates 2026-06-30→2026-07-08). Re-running the scripts unchanged would have silently mistyped real
+pending-fetch as permanent no-coverage — a silent-placeholder violation. Fixed both masks to exclude currently-covered
+leagues (`get_expected_leagues_for_source`) before applying.
+
+**Typing pass applied** (instruments-service, this session):
+
+| Script                                                                  | Rows typed  | Safety                                      |
+| ----------------------------------------------------------------------- | ----------- | ------------------------------------------- |
+| `type_weather_eu_no_provider_coverage_2026_06_27.py` (fixed)            | 3,337       | now excludes covered leagues                |
+| `type_sfi_eu_no_provider_coverage_2026_06_27.py` (fixed)                | 3,337       | now excludes covered leagues                |
+| `type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py` | 432         | already dynamic-covered (≥1 captured row)   |
+| `type_footystats_odds_non_covered_leagues_2026_06_29.py`                | 0           | already clean                               |
+| `type_tm_non_provider_coverage_2026_06_27.py`                           | 0 (not run) | checked: 0 non-covered rows exist currently |
+
+**Post-typing true state (2026-07-08 20:10 UTC, all still FAIL):**
+
+| source               | data_type             | captured | empty   | eu     | af  | pending_fetch | note                                                                                                                                                                                                        |
+| -------------------- | --------------------- | -------- | ------- | ------ | --- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| open_meteo           | WEATHER               | 12,037   | 245,808 | 264    | 51  | 264           | recent dates 06-30→07-08, covered leagues — maybe daily lag                                                                                                                                                 |
+| soccer_football_info | SFI_PROGRESSIVE_STATS | 19,743   | 207,504 | 264    | 10  | 264           | same pattern as weather                                                                                                                                                                                     |
+| transfermarkt        | PLAYER_VALUES         | 45,911   | 213,907 | 1,364  | 0   | 1,364         | real gap, 2025-12-10→2026-07-08, needs new backfill VM                                                                                                                                                      |
+| understat            | XG                    | 6,673    | 11,283  | 250    | 0   | 250           | 2026-05-05→2026-07-08 — driver's `--end 2025` didn't cover 2026                                                                                                                                             |
+| understat            | XG_SHOTS              | 6,671    | 3,927   | 5,843  | 0   | 5,843         | ~1,168/league spread 2018-2026 — genuine gap, driver did NOT close despite "ALL DATES CAPTURED"                                                                                                             |
+| footystats           | MATCHES               | 23,328   | 206,629 | 5,641  | 21  | 5,641         | 96% in CHILE_PRIMERA/K_LEAGUE_1/LIGA_MX/ARGENTINA_PRIMERA — near-total gap, looks like a per-league fetch bug                                                                                               |
+| footystats           | PREDICTIONS           | 23,890   | 195,775 | 44,163 | 0   | 44,163        | 93% in cup/continental competitions — near-uniform ~75-85% gap per league, looks like missing fixture-calendar honest-absence (same shape as the understat over-broad-404 fix, never applied to footystats) |
+| footystats           | ODDS                  | 27,392   | 79,350  | 1,264  | 20  | 1,264         | not root-caused this session                                                                                                                                                                                |
+| odds_api             | trades                | 223,701  | 14      | 0      | 0   | 0             | PASS                                                                                                                                                                                                        |
+
+**Assessment**: the remaining residuals across TM/understat-XG_SHOTS/footystats-MATCHES/footystats-PREDICTIONS are NOT
+closeable by re-running the same VM or a typing script — they need either a targeted backfill for a specific date window
+(TM, understat XG-tail) or an orchestrator code fix (footystats MATCHES 4-league bug, footystats PREDICTIONS
+fixture-calendar gap). Filed the full breakdown in
+`plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md` (already-open P0 issue covering the "eu
+regression" theme — added an update rather than a new doc since this is the same root class, now confirmed
+recurring/daily rather than one-time). **No checkbox flipped** (items #4, #5, #7 all remain gate-not-met, correctly).
+Code shipped: instruments-service (2 script fixes). Recommend operator review: footystats MATCHES + PREDICTIONS likely
+deserve a dedicated follow-up plan before the next VM launch, else a re-run reproduces the same residual.
 
 ### transfermarkt PLAYER_VALUES coverage state (2026-06-27 23:45 UTC, slot-5 monitoring)
 
