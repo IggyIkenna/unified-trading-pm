@@ -91,9 +91,16 @@ source: cost_observability_ui_2026_07_08.md
       export, don't fabricate it elsewhere" contract as the bucket-volume task's dropped soft-delete split). pytest: 11
       new tests covering the classifiers + service-level flagging (evidence resources: `harsh-static-ip`,
       `ikenna-windows-tokyo-restored`). Full backend QG green.
-- [ ] [BACKEND] P2. **Spot vs on-demand split.** Derive a `purchase_option` (spot | on-demand | other) from the GCP SKU
-      (`Spot Preemptible …`) / AWS purchase option; expose on resource/service rows (validates the SPOT-VMs HARD RULE +
-      quantifies savings). pytest.
+- [x] ✅ [BACKEND] P2. **Spot vs on-demand split** — deployment-api@947a48b. Added `purchase_option` (spot | on-demand |
+      other) to `CostRecord` + `BreakdownRow`, derived via `providers._purchase_option`: GCP `sku.description` text
+      match on "spot"/"preemptible" vs "instance core"/"instance ram" (else "other" — the axis only applies to
+      compute-instance SKUs, not storage/network); AWS `usage_type` text match on "SpotUsage" vs
+      "BoxUsage"/"HeavyUsage"/"DedicatedUsage" (else "other"). Exposed on resource + service breakdown rows via a
+      rank-based fold (`_PURCHASE_RANK`: spot > on-demand > other) — a group shows "spot" if ANY of its underlying SKU
+      lines is spot-priced, since the question is "did this resource/service have any spot cost", not an arbitrary
+      last-seen value across its many SKU lines. 4 new pytest cases (classifier unit test, provider-mapping test,
+      resource/service aggregation-fold test). Rebased 3x onto concurrent idle-waste/bucket-storage/AWS-reconciliation
+      tasks landing on the same files (models.py, service.py); full backend QG green on each merge.
 - [ ] [BACKEND] P2. **VM machine specs.** Parse machine type + vCPU + RAM from the billing `system_labels`
       (`compute.googleapis.com/machine_spec` / `cores` / `memory`) — no Compute API; expose on vm resource rows (e.g.
       `e2-highmem-16` → 16 vCPU / 128 GB). pytest.
