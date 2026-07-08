@@ -342,7 +342,7 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "warn_file_count": 14,
-        "coverage_pct": 81.53,
+        "coverage_pct": 81.64,
         "large_file_count": 0,
         "qg_red_reason": null
       }
@@ -877,10 +877,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "warn_file_count": 33,
+        "coverage_pct": 83.24,
         "large_file_count": 0,
-        "coverage_pct": 83.41,
-        "qg_red_reason": null,
-        "warn_file_count": 34
+        "qg_red_reason": null
       }
     },
     "ml-service": {
@@ -1409,8 +1409,8 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 7,
-        "coverage_pct": 75.67,
-        "large_file_count": 11,
+        "coverage_pct": 75.55,
+        "large_file_count": 12,
         "qg_red_reason": null
       }
     },
