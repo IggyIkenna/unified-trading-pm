@@ -34,7 +34,7 @@ summary: |
   so it unconditionally re-fetches TEAMS + STANDINGS (and everything else) every day regardless of season
   boundaries — real, confirmed via GCS reads of `sports_reference/by_date/day=2026-07-0{1..6}/
   pipeline_mode=batch_api_football/entity=teams/league={L}/teams.parquet` (all 33 leagues, every day).
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data, meta]
@@ -66,6 +66,7 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+  "SUB_AGENT_MANDATORY_RULES dispatch (slot-3, 2026-07-08) — deployment-service-scoped fix + real-infra verification"
 audited_scope: data-correctness
 ---
 
@@ -148,3 +149,78 @@ the blunter `is-daily-enum-sports` unconditional daily refetch, which is what th
    `--sports-entity FIXTURES,INJURIES,STANDINGS` excluding `TEAMS`/`LEAGUES` once the season-boundary path is proven
    reliable) — do this LAST, only after the replacement mechanism is verified working for a real season boundary, so
    there is no coverage gap in between.
+
+## Resolution (2026-07-08, `deployment-service`-scoped agent)
+
+**Root cause confirmed exactly as diagnosed above** (CLI never passed `backend=`/`workspace_root=` to
+`SportsTriggerScheduler(...)`, defaulting to `backend="local"` which cannot work in the `deployment-service`-only Cloud
+Run Job image). Fixed:
+
+1. **CLI wiring** (`deployment-service/deployment_service/cli/commands/sports_trigger.py`): added `--backend`
+   (`local`/`cloud`), `--workspace-root`, `--cloud-run-project`, `--cloud-run-region`, `--cloud-run-service-account`
+   options to both `sports_trigger_run` and `sports_trigger_evaluate`, wired into `SportsTriggerScheduler(...)`.
+   `--cloud-run-*` fall back to `DeploymentConfig()` (project_id / gcs_region / service_account_email) when omitted.
+2. **Terraform** (`deployment-service/terraform/gcp/sports_scheduler_cron.tf`): the Cloud Run Job container now
+   overrides `args` to pass
+   `--backend cloud --cloud-run-project <project> --cloud-run-region <region> --cloud-run-service-account <unified-trading-sa email>`
+   (previously inherited the Dockerfile CMD verbatim, no backend flag at all). Also corrected the stale top-of-file
+   comment claiming this job was "DEFERRED... VM instead" — confirmed via `gcloud compute instances list` that no
+   `sports-scheduler-*` VM exists; the Cloud Run Job + Cloud Scheduler cron IS the live mechanism and has been since
+   some point after 2026-04-22.
+3. **Config** (`deployment-service/configs/sports-trigger-tiers.yaml`): `cloud_run_job_name` fields were pointing at 4
+   scheduler-specific job names (`sports-trigger-instruments` / `-mtds` / `-features-sports` / `-ml`) that were NEVER
+   provisioned (confirmed zero matches via `gcloud run jobs list`). Repointed at the REAL, already-provisioned,
+   already-working per-service Cloud Run Jobs the T+1 batch reconciliation cron (`terraform/gcp/t1_batch_scheduler.tf`)
+   already dispatches into: `uts-prod-instruments-service-t1-recon`, `uts-prod-market-tick-data-service-fast-t1-recon`,
+   `features-sports-service-job` (all verified live via `gcloud run jobs describe`; execution SA `unified-trading-sa`
+   already holds project-level `roles/run.invoker`, so no new IAM grants were needed). **No real ml-service Cloud Run
+   Job exists** — the `inference_pre_match` trigger's `cloud_run_job_name` is left empty on purpose (fires the
+   dispatcher's existing loud warning + skip instead of pointing at a name that doesn't resolve); provisioning one is a
+   separate, still-open follow-up (item 1's "bigger infra lift" caveat, now narrowed to just ml-service).
+4. **Second latent bug found + fixed in the same code path**: `_dispatch_services`'s inline `cloud` branch passed the
+   FULL `"python -m <module> ..."` command as the Cloud Run Jobs execution-override `args`. Verified via
+   `gcloud run jobs describe uts-prod-instruments-service-t1-recon` that the real target job's container `command` is
+   `None` (image ENTRYPOINT already resolves the module) and `args` is CLI-flags-only
+   (`['--operation=instruments', '--mode=batch', '--asset-group=DEFI', '--run-tag=t1-recon']`) — Cloud Run Jobs V2
+   execution overrides can only replace `args`, never `command`. Extracted a shared `_strip_python_module_prefix()`
+   static method (deduplicating what the dead, never-called `_dispatch_cloud` method already did correctly) and used it
+   in `_dispatch_services`'s cloud branch. This bug would have silently broken every cloud dispatch even after fix #1-#3
+   above. Removed `_dispatch_cloud` as genuinely dead code (confirmed zero call sites) — it was never wired into
+   `_dispatch_services`, which had its own divergent, buggy inline implementation instead.
+
+**Verified against real production infra (not just unit tests)**: instantiated the fixed `SportsTriggerScheduler` with
+`backend="cloud"` and the real `cloud_run_config`, and called `_check_reference()` directly against the real GCS state
+file (`gs://deployment-scripts-central-element-323112/sports_scheduler_state/scheduler.json`) and the real Cloud Run
+Jobs API. Result:
+
+```
+=== BEFORE ===
+last_run.discovery: 2026-06-27 15:40:40.665723+00:00
+last_run.reference: 2026-06-24 01:19:35.834717+00:00
+
+=== Firing Tier-2 reference check (real dispatch) ===
+check_reference() fired=2   # INJURIES (run_always) + TRANSFERS (transfer window open, 49 leagues)
+
+=== AFTER ===
+last_run.discovery: 2026-06-27 15:40:40.665723+00:00
+last_run.reference: 2026-07-08 21:30:23.827692+00:00
+```
+
+Both dispatches were real Cloud Run Jobs API calls against `uts-prod-instruments-service-t1-recon` (log line:
+`Triggering Cloud Run Job for shard instruments-service-reference-periodic in region asia-northeast1`), and the real
+production state file's `last_run.reference` advanced from 14-days-stale to now — the exact symptom this issue was filed
+about, cured. Did not fire `_check_discovery()` for real in this pass (would trigger a heavier 33-league
+FIXTURES+STANDINGS rolling-window refetch) or a live end-to-end Cloud Scheduler cron tick (the terraform change needs a
+normal deploy/apply cycle to reach the running job) — the direct `_check_reference()` call against real infra was judged
+sufficient real-infra proof for the dispatch-path fix without over-scoping this verification pass.
+
+Added regression tests: `tests/unit/test_sports_trigger_cli.py` (`TestBackendWiring` — CLI flags reach the ctor,
+cloud_run_config fallback to `DeploymentConfig`) and `tests/unit/test_sports_trigger_scheduler_periodic.py`
+(`_strip_python_module_prefix` unit coverage + a regression test asserting `deploy_shard` never receives a "python -m
+module" prefix). Full `deployment-service` `quality-gates.sh` green.
+
+**Still open (out of scope for this fix, tracked here for continuity)**: item 2 above (add `VENUES` to the Tier-2
+season-boundary services) and item 3 above (re-narrow `is-daily-enum-sports` once the season-boundary path is proven
+reliable over a real season boundary) were NOT done in this pass — this fix's scope was specifically the zero-dispatch
+bug. A real ml-service Cloud Run Job also still needs provisioning for the `inference_pre_match` trigger to work
+end-to-end.
