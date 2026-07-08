@@ -142,8 +142,8 @@ business-context fast-follow (asset_group via labels/tags), deliberately out of 
 
 - [x] [UI] P1. `deploymentApi.ts` — client funcs + types for `/api/costs/{summary,breakdown,timeseries}`; remove
       `fetchDailyCosts` + `DailyCost*` types.
-- [x] [UI] P1. High-level overview band — total spend for range, per-cloud split donut, spend trend (recharts area;
-      follow `DeploymentFrequencyChart.tsx`), top-N movers, a provisional-data badge.
+- [x] [UI] P1. High-level overview band — total spend for range, per-cloud split donut, spend trend (custom SVG
+      stacked-area with crosshair + tooltip), top-N movers, a provisional-data badge.
 - [x] [UI] P1. Global time-range selector (7 / 30 / 90d presets + custom range) replacing the single-date input; wire it
       to every panel.
 - [x] [UI] P1. Dimension-switchable breakdown — by service / resource / bucket / region / day, with a per-cloud filter
@@ -203,3 +203,16 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
     project id.
   - **Still open (Deferred, intentional):** business-context enrichment; GitHub real billing (`BLOCKED-CREDENTIALS` —
     needs a classic PAT `user` scope); deployed-AWS keyless-WIF credential cutover.
+- 2026-07-08 — **UI redesign to mockup fidelity (follow-up).** Operator feedback on the first pass: "nowhere close to
+  the mock in terms of UI." Rebuilt `pages/CostObservability.tsx` on the real deployment-ui tokens to match the
+  reference mockup — non-sticky page header (gradient icon tile + `/ops/costs` subtitle; no duplicate site-chrome or
+  theme-toggle since the app `<Header/>` owns those), corner-sparkline KPI cards (**anchored to a $0 baseline** so a
+  near-flat series like GitHub reads flat instead of a full-height zig-zag), a **custom SVG** stacked-area (gridded,
+  crisp via `ResizeObserver`, crosshair + per-cloud+total tooltip, faint amber **provisional band** over the trailing
+  unreconciled day so today's not-yet-reported `$0` reads as "pending", not "crashed") + custom SVG donut, tighter
+  `Panel` density, refined bars + sortable tables, a two-column GitHub placeholder, and a source-attribution footer
+  (BigQuery / Athena table names + last-updated). **recharts dropped on this page** (chart-theme.ts stays for other
+  pages). Every `data-testid` + button label preserved, so vitest + Playwright stayed green with only the recharts mock
+  removed. **deployment-ui@`8a56b6b`** — tsc + ESLint + vitest 4/4 + Playwright L2 4/4 + full UI QG green; re-verified
+  on `:5183` in **both themes** (0 console errors; real total `$15,367.85`). Mockup HTML kept untracked — delete once
+  the page fully supersedes it.
