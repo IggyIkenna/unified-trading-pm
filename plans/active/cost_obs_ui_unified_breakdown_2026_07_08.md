@@ -74,8 +74,19 @@ source: cost_observability_ui_2026_07_08.md
       entirely under an AWS-only filter).
 - [ ] [UI] P2. **SKU dimension in the control.** Add `sku` to the breakdown `Segmented` + its note ("Google/AWS SKU").
       Update `mock-api.ts` with SKU fixtures. vitest.
-- [ ] [UI] P2. **Bucket columns** (dimension = bucket): total GB, storage-class split, $/GB. Format GB (not bytes).
-      pw:L2.
+- [x] ✅ [UI] P2. **Bucket columns** (dimension = bucket): total GB, storage-class split,
+      $/GB. Format GB (not bytes) —
+      deployment-ui@`034c89a`. Added `storage_gb` / `storage_class_gb` / `cost_per_gb` to `CostBreakdownRow` (mirrors
+      the backend bucket-only fields) + `mock-api.ts` fixtures (per-bucket GB + class split). `BreakdownPanel` renders
+      three bucket-dimension-only columns — Storage (GB, thousands-separated, never bytes), Storage class (per-class GB
+      split, largest first), $/GB
+      — shown only when `dimension === "bucket"` (dash for a bucket row with no storage-volume usage this window).
+      Reconciled onto the concurrently-landed gross/credit-columns commit (`f27e40f`) touching the same 4 files (stash +
+      ff-pull + manual 3-way resolve, both features kept). tsc/ESLint/ vitest (914 passed) all green. pw:L2 ✓ |
+      regression: tests/smoke/cost-observability.spec.ts ("By bucket shows
+      storage/class-split/$-per-GB columns formatted in GB, not bytes" — asserts the Storage cell reads "18,500 GB" not
+      a raw byte count, the class-split cell lists "Standard", the $/GB
+      cell suffixes "/GB", and all three columns disappear under "By resource").
 - [ ] [UI] P2. **Resource / waste columns** (dimension = resource): machine type (e.g. `e2-highmem-16` → 16 vCPU · 128
       GB), **idle-IP $** with an "idle" badge, **orphaned-disk $** with a badge. These are the operator's cost-waste
       signals — make them visually obvious. pw:L2.
