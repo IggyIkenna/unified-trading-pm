@@ -136,10 +136,16 @@ investigation target.
       recommended decision.
 - [ ] [DATA] P0. Add `source=` at the 3 `sfi.py` `record_expected_empty()` callsites (repo: instruments-service) — same
       pattern; re-verify SFI's item #2 gate afterward (already flipped ✅).
-- [ ] [DATA] P0. Add `source=` at the 4 `footystats.py` `record_expected_empty()` callsites (repo: instruments-service)
-      — this may also close some fraction of item #5's PREDICTIONS/MATCHES residual (the cup-fixture-calendar gap slot-7
-      diagnosed 2026-07-08 20:10 UTC as a separate CODE gap — re-verify AFTER this fix lands whether that gap is smaller
-      than currently measured, since the measurement itself may be source-blind).
+- [x] ✅ [DATA] P0. Add `source=` at the 4 `footystats.py` `record_expected_empty()` callsites (repo:
+      instruments-service) — this may also close some fraction of item #5's PREDICTIONS/MATCHES residual (the
+      cup-fixture-calendar gap slot-7 diagnosed 2026-07-08 20:10 UTC as a separate CODE gap — re-verify AFTER this fix
+      lands whether that gap is smaller than currently measured, since the measurement itself may be source-blind). —
+      instruments-service@31dbcc6. Unlike weather.py, these 4 callsites (2 PREDICTIONS coverage-start/season-window
+      guards, 2 MATCHES coverage-start/season- window guards) had NO source in `row_key` pre-fix — genuinely
+      blank-sourced writes, confirmed correctness fix (not a convention-only change). Added
+      `source=_orch._sports_ref_source("footystats_predictions"|"footystats_matches")` as a top-level kwarg, matching
+      this file's own `record_captured`/`record_empty` callsites. Re-verification of item #5's PREDICTIONS/MATCHES
+      residual still needed per the recommended decision — not done in this session.
 - [ ] [DATA] P1. Audit `process_write.py` (3 callsites) / `process_completeness.py` (1) / `process_zero_records.py` (1)
       for the correct `source=` value per callsite (these are cross-asset-group, not sports-specific — needs a wider
       audit than this doc's sports scope covers) (repo: instruments-service).
