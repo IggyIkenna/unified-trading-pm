@@ -138,6 +138,28 @@ Fix in `unified-trading-library` (the shared root cause), not per-service:
    plans for any other `--dry-run` invocations against prod buckets, to bound whether other manifests were similarly
    polluted.
 
+## Follow-up audit (Todo 3, 2026-07-08)
+
+Grepped all 9 `plans/active/sports_p1_*` + `plans/active/sports_p2_*` plan files (the full set of 19 prior dispatches,
+2026-06-27 → 2026-07-07) for every `--dry-run` occurrence, then traced each one to its actual code path rather than
+pattern-matching on the string alone:
+
+| Plan file (line)                                                  | `--dry-run` command                                                                                               | Traced to                                                                                                                                                                                                                 | Vulnerable?                                                                                                                            |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `sports_p1_golden_window_apifootball_2026_06_27.md:221`           | `reconcile_phantom_manifest_rows.py --dry-run --data-types STANDINGS,TEAMS`                                       | `instruments-service/scripts/reconcile_phantom_manifest_rows.py:221` — `if args.dry_run: logger.info(...); return 0` **before** any write call                                                                            | No — script's own dry-run returns before the canonical-manifest write; never touches `ManifestWriter`/`get_storage_client` write path. |
+| `sports_p2_history_apifootball_2015_to_present_2026_06_27.md:97`  | `run_sports_fixtures_p2a_2026_06_27.sh` "--dry-run verified"                                                      | `instruments-service/scripts/run_sports_fixtures_p2a_2026_06_27.sh:49-50` — dry-run branch only echoes "[DRY RUN] Would run: …" and never invokes `sports_chunked_backfill.sh`/the instruments-service CLI                | No — coordinator's dry-run never spawns the service process at all.                                                                    |
+| `sports_p2_history_apifootball_2015_to_present_2026_06_27.md:267` | `audit_fixtures_via_api_football.py --dry-run` (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd`) | `instruments-service/scripts/audit_fixtures_via_api_football.py:417-431` — dry-run branch only logs the would-be work plan; `get_storage_client()` call above it (line 406) is read-only (loads the manifest for diffing) | No — no `ManifestWriter`/write call anywhere in this script; the one `get_storage_client()` use is a read.                             |
+| `sports_p2_history_apifootball_2015_to_present_2026_06_27.md:321` | `run_sports_enrichment_core_p2a_2026_06_27.sh` "--dry-run"                                                        | `instruments-service/scripts/run_sports_enrichment_core_p2a_2026_06_27.sh:72-73` — same pattern as the fixtures coordinator: dry-run branch only echoes, never spawns the service                                         | No — same as above.                                                                                                                    |
+| `sports_p2_features_history_to_ml_ready_2026_06_27.md:146`        | `features_service --dry-run --force --date 2025-09-01`                                                            | This IS the original incident that produced this issue doc — not a second occurrence.                                                                                                                                     | N/A — already the documented finding.                                                                                                  |
+
+Confirmed via a second grep pass requiring a service-CLI name (`features_service`/`instruments-service`/
+`instruments_service`/`market-tick-data-service`/`mtds`) on the same line as `--dry-run` across all 9 files: **zero
+matches**. None of the 19 prior dispatches invoked a `ServiceRuntime`-bootstrapped service CLI (the only code path that
+calls `factory.set_dry_run(True)` and therefore reaches the leaking `ManifestWriter` → `get_storage_client()` call) with
+`--dry-run`. **No additional manifest pollution found** — the single incident already documented above (33 rows,
+`features-sports-prd-central-element-323112`, `date=2025-09-01`) is the only one in this window. No further cleanup
+action needed beyond Todo (3) above (natural overwrite on the real recompute).
+
 ## Todos
 
 - [ ] [BACKEND] P1. Add dry-run awareness to `ManifestWriter`'s GCS write path — gate the two `get_storage_client()`
@@ -148,8 +170,10 @@ Fix in `unified-trading-library` (the shared root cause), not per-service:
 - [ ] [BACKEND] P1. Add a regression test to `unified-trading-library`'s manifest_writer test suite:
       `set_dry_run(True)` + `ManifestWriter(...).record_captured(...).write()` must NOT call the real
       `get_storage_client()` / hit GCS. (repo: unified-trading-library)
-- [ ] [DATA] P2. Follow-up audit: grep `plans/active/sports_p2*` + `plans/active/sports_p1*` Progress Log entries (19
+- [x] ✅ [DATA] P2. Follow-up audit: grep `plans/active/sports_p2*` + `plans/active/sports_p1*` Progress Log entries (19
       prior dispatches, 2026-06-27 → 2026-07-07) for `--dry-run` invocations against `features-sports-prd-*` or
       `instruments-store-*` buckets; for any found, diff the affected date's manifest rows the same way this issue doc
       did, to bound whether other manifest pollution needs the same natural-overwrite cleanup path. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — unified-trading-pm@(this commit). Result: 5 `--dry-run` mentions found across all 9 sports
+      plan files, all traced to code paths that do NOT reach the vulnerable `ManifestWriter`/`get_storage_client()`
+      write call (see "Follow-up audit" section above). Zero additional pollution found; no cleanup action needed.
