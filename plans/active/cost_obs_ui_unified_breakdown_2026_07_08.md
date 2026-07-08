@@ -91,14 +91,33 @@ source: cost_observability_ui_2026_07_08.md
       storage/class-split/$-per-GB columns formatted in GB, not bytes" — asserts the Storage cell reads "18,500 GB" not
       a raw byte count, the class-split cell lists "Standard", the $/GB
       cell suffixes "/GB", and all three columns disappear under "By resource").
-- [ ] [UI] P2. **Resource / waste columns** (dimension = resource): machine type (e.g. `e2-highmem-16` → 16 vCPU · 128
-      GB), **idle-IP $** with an "idle" badge, **orphaned-disk $** with a badge. These are the operator's cost-waste
-      signals — make them visually obvious. pw:L2.
+- [x] ✅ [UI] P2. **Resource / waste columns** (dimension = resource) — deployment-ui@`047494b`. Added
+      `machine_type`/`vcpu`/`memory_gb` + `is_idle`/`waste_kind` to `CostBreakdownRow` (mirrors the backend's
+      resource-dimension fields). `BreakdownPanel` renders, resource-dimension-only: a **Machine** column (e.g.
+      "e2-highmem-8 · 8 vCPU · 64 GB", dash when unset — AWS has no machine-spec equivalent) and a **Waste** column
+      badging idle-IP / orphaned-disk rows (amber "idle IP" / red "orphaned") with the row's own cost as the waste
+      amount, dash for non-waste rows. `mock-api.ts` fixtures mirror the live audit's evidence resources
+      (`harsh-static-ip`, `ikenna-windows-tokyo-restored`). tsc/ESLint/vitest (916 passed) all green. pw:L2 ✓ |
+      regression: tests/smoke/cost-observability.spec.ts ("By resource shows machine specs + cost-waste badges" —
+      asserts the machine-spec text renders, the orphaned-disk row carries an "orphaned" badge + its own $68.62 cost, a
+      non-waste row dashes, and both columns disappear under "By bucket").
 - [ ] [UI] P2. **Spot vs on-demand display.** A `purchase_option` column (or chip) on resource/service rows, from the
       backend field. vitest.
 - [ ] [UI] P3. **Dimension-aware columns + leaf tables.** Show the right detail columns per dimension (VM cols under
       By-resource, bucket cols under By-bucket, SKU under By-SKU); apply the same detail columns to the `LeafPanel` "Top
       compute instances" / "Top storage buckets" tables. Detail columns scroll horizontally on narrow widths. pw:L2.
-- [ ] [UI] P3. **Stale-during-refetch fix** (carried over from the parent plan). Gate the breakdown table body on
+- [x] ✅ [UI] P3. **Stale-during-refetch fix** (carried over from the parent plan). Gate the breakdown table body on
       `breakdown.dimension === dimension` (+ matching days), or skeleton the panel while `loadBreakdown` is in flight,
-      so switching dimension/range never shows the prior fetch's rows under the new column header. pw:L2.
+      so switching dimension/range never shows the prior fetch's rows under the new column header —
+      deployment-ui@`0b396a8`. Two-part fix: (1) a request-token guard in `loadBreakdown()` so a slower, now-stale
+      response can never resolve after a newer one and clobber fresher state; (2) a render-time freshness gate
+      (`breakdown.dimension/cloud/days === current state`) — the table body renders a loading placeholder instead of the
+      prior fetch's rows whenever `breakdown` hasn't caught up to the currently-selected filters. Added a
+      `__mockBreakdownDelayMs` test hook to `mock-api.ts` so a spec can deterministically slow one dimension's response
+      to reproduce the out-of-order-response race. Reconciled onto two concurrently-landed column commits (`0d33ef0` SKU
+      dimension, `047494b` resource/waste columns) touching the same files. tsc/ESLint/vitest (916 passed) all green.
+      pw:L2 ✓ | regression: tests/smoke/cost-observability.spec.ts — two new cases: "switching dimension never shows the
+      prior fetch's rows under the new header (loading gate during refetch)" (asserts the loading gate appears + old
+      rows never show under the new header while a slowed fetch is in flight) and "a stale slower response never
+      clobbers a fresher one after a rapid dimension switch" (asserts a late-resolving stale response never overwrites a
+      fresher one). Both verified to FAIL without the fix before being kept.
