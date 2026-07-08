@@ -28,6 +28,7 @@ estimate_calibrated_ai_days: 2.4
 assigned_role: backend-engineer
 drift_direction: advance-code
 depends_on: []
+sequential: true
 locked_by:
 locked_since:
 supersedes:
