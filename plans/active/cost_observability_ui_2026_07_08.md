@@ -229,3 +229,9 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
   (grid-cols-12), service views, landing, capability, deployment-details. `underline` variant untouched.
   **deployment-ui@`6377437`** — tsc + ESLint + **full vitest 910/910** + full UI QG (incl. build) green; screenshotted
   the cockpit + a service tab bar in dark (0 page errors, clean dividers, active cell filled, no layout breakage).
+- 2026-07-08 — **Last custom tab group (DeployConsole).** Full sweep of `role="tab"`/`aria-selected` groups:
+  LiveDeployments panel tabs + LaunchTab pane tabs already carry per-button `border` (fine); `FeatureFamilyFilter` is a
+  dropdown (n/a). Only `cockpit/DeployConsole.tsx` deploy-view tabs were bare text — gave them the same bordered-frame +
+  divider treatment. **deployment-ui@`aaed6647`** — tsc + ESLint + full vitest 910/910 + full UI QG green. All
+  segmented/pill tab groups in deployment-ui now have clear cell boundaries; `underline` Radix tabs deliberately left
+  (different idiom).
