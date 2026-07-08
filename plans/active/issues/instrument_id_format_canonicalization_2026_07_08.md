@@ -68,14 +68,30 @@ locked_since:
 
 All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` asset groups), 2026-07-08.
 
-1. **Dated-derivative raw venue prefixes never get cleaned, unlike the same venue's PERPETUAL.**
-   `KRAKEN-FUTURES:FUTURE:FF_XBTUSD_260731` (Kraken's own raw `FF_`/`FI_` prefix, unstripped) vs the same venue's
-   `KRAKEN-FUTURES:PERPETUAL:ACH-USD` (Kraken's raw `PF_ACHUSD` IS cleaned — prefix stripped, dash inserted).
-   `BINANCE-FUTURES:FUTURE:BTCUSDT_260925` (raw concatenated + underscore-date) vs the same venue's
-   `BINANCE-FUTURES:PERPETUAL:BTC-USDT` (cleaned). **Target**: `VENUE:FUTURE:BASE-QUOTE-margin_type-YYYYMMDD` for venues
-   where margin type needs disambiguating (matching `canonical_id_builder.py`'s own already-written `_build_future` v6
-   dash convention, e.g. `KRAKEN-FUTURES:FUTURE:XBT-USD-inverse-20260731`), or plain `VENUE:FUTURE:BASE-QUOTE-YYYYMMDD`
-   where margin type is unambiguous.
+1. **Dated-derivative raw venue prefixes never get cleaned, unlike the same venue's PERPETUAL — and the formats aren't
+   even consistent with EACH OTHER across venues.** `KRAKEN-FUTURES:FUTURE:FF_XBTUSD_260731` (Kraken's own raw
+   `FF_`/`FI_` prefix, unstripped) vs the same venue's `KRAKEN-FUTURES:PERPETUAL:ACH-USD` (Kraken's raw `PF_ACHUSD` IS
+   cleaned). `BINANCE-FUTURES:FUTURE:BTCUSDT_260925` (raw concatenated + underscore-date). `BYBIT:FUTURE:BTC-01DEC23`
+   (no quote segment at all, DDMMMYY date). `DERIBIT:OPTION:BTC-10JUL26-48000-C` (DDMMMYY date, real, and looks clean in
+   isolation — but that's not the same as consistent with the other 3 venues above). **Target format — DECIDED
+   2026-07-08** (operator, after reviewing an inconsistency between this doc's own illustrative Kraken target and a
+   recollection of the strategy-service `@LIN`/`@INV` convention, plus catching that the mockup itself used two
+   different date formats across its own targets): `VENUE:TYPE:BASE[_QUOTE]@LIN|@INV-YYYYMMDD[-STRIKE-C|P]` — uniform
+   across every venue and every dated-derivative instrument_type (FUTURE and OPTION alike), e.g.
+   `KRAKEN-FUTURES:FUTURE:XBT-USD@INV-20260731`, `BYBIT:FUTURE:BTC-USDT@LIN-20231201`,
+   `DERIBIT:OPTION:BTC@INV-20260710-48000-C`. Two explicit sub-decisions, both settled over the `-linear-`/`-inverse-`
+   word alternative and the `DDMMMYY` alternative respectively:
+   - **Margin marker = `@LIN`/`@INV` suffix**, not `canonical_id_builder.py`'s already-written but unused
+     `-linear-`/`-inverse-` word form. Chosen to match strategy-service's existing position-ID convention (e.g.
+     `HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID`) rather than introduce a 3rd convention. Open sub-question not yet
+     resolved: strategy-service's version also appends a trailing `@VENUE` after the marker — this doc's working
+     assumption is that base instrument_ids should DROP that trailing `@VENUE` (redundant, since VENUE is already the
+     first colon-segment), but that's an interpretation, not an explicit operator confirmation.
+   - **Date format = `YYYYMMDD`**, not Deribit's real `DDMMMYY` (e.g. `10APR26`). Rationale given: `YYYYMMDD` is
+     string-sortable (chronological order = alphabetical order); `DDMMMYY` is more human-glanceable but does NOT sort
+     correctly as a string (`"10APR26"` sorts after `"10JAN27"` alphabetically despite being earlier). This means
+     Deribit's OPTION/FUTURE entries — previously assessed in the mockup as "already canonical, no fix needed" — are now
+     ALSO in scope for this canonicalization; that earlier assessment is superseded.
 
 2. **DEX-pool instrument_id is a bare on-chain pool address, zero VENUE:TYPE:SYMBOL structure, confirmed across 6,180
    real rows / 13 protocols (Uniswap V2/V3/V4, Balancer, Curve, PancakeSwap_V3, Sushiswap/\_V3, Camelot_V3,
@@ -148,6 +164,14 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
 - [ ] [DECISION] P3. **Decide the builder-architecture question** (see "What this is NOT" above) — one shared
       `canonical_id_builder.py`-style function across all adapters, vs many per-domain builders that each independently
       canonicalize consistently. Affects how much of this fix is one PR vs N per-adapter PRs.
+- [ ] [SCRIPT] P1. **Fix the Bitfinex BTC-margined-perp asset-filter bug** — found 2026-07-08 while spot-checking real
+      volume, not an instrument_id-format issue but adjacent (same investigative pass): the accepted-quote filter
+      (`parsing.py:463`, `cefi_instrument_universe.py:131-133`) is documented "derivatives carry no quote and pass," but
+      Bitfinex's own symbol parser (`parsing.py:325-339`) DOES extract a real quote for its inverse perps (`ETHF0:BTCF0`
+      → base=ETH, quote=BTC), so real Bitfinex derivatives get rejected as if they were an exotic spot cross-pair.
+      Confirmed live via `api-pub.bitfinex.com/v2/tickers`: `ETHF0:BTCF0` trades ~~2,034 ETH/day (~~$6-7M/day) — not a
+      negligible edge case. Fix: add BTC to the per-venue accepted-quote extension for Bitfinex derivatives, same
+      mechanism already used for UPBIT's KRW extension.
 
 ## Progress Log
 
@@ -163,3 +187,10 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
   the DeFi tab (previously only 1 flagship example had it). Checked TradFi/Sports/Prediction for the same 6 divergence
   classes and confirmed none apply there (see updated "What this is NOT" section above) — not silently skipped, actively
   ruled out. DERIBIT-COMBO's underscore-in-strikes format also checked and confirmed real/consistent, not a gap.
+- **2026-07-08 (later still)** — Operator spot-checked the mockup's CeFi tab directly and caught 3 more things in one
+  pass: (1) `BYBIT:FUTURE:BTCUSDT-25DEC26` was fabricated — real is `BYBIT:FUTURE:BTC-01DEC23` (no quote at all, DDMMMYY
+  date), fixed; (2) bare `OKX`'s empty PERPETUAL/FUTURE leaves had no cross-reference to where the real data actually
+  lives (OKX-SWAP/OKX-FUTURES) — added; (3) surfaced the margin-marker and date-format inconsistency described in
+  finding #1 above, which got settled into the two explicit sub-decisions now recorded there. Separately, operator asked
+  whether Bitfinex's dropped BTC-margined perps have real volume — checked live, they do (~$6-7M/day on the top one),
+  added as a new P1 SCRIPT todo since it's a real, evidence-backed, non-negligible bug, not just a documented gap.
