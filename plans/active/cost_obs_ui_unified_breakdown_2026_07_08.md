@@ -91,9 +91,16 @@ source: cost_observability_ui_2026_07_08.md
       storage/class-split/$-per-GB columns formatted in GB, not bytes" — asserts the Storage cell reads "18,500 GB" not
       a raw byte count, the class-split cell lists "Standard", the $/GB
       cell suffixes "/GB", and all three columns disappear under "By resource").
-- [ ] [UI] P2. **Resource / waste columns** (dimension = resource): machine type (e.g. `e2-highmem-16` → 16 vCPU · 128
-      GB), **idle-IP $** with an "idle" badge, **orphaned-disk $** with a badge. These are the operator's cost-waste
-      signals — make them visually obvious. pw:L2.
+- [x] ✅ [UI] P2. **Resource / waste columns** (dimension = resource) — deployment-ui@`047494b`. Added
+      `machine_type`/`vcpu`/`memory_gb` + `is_idle`/`waste_kind` to `CostBreakdownRow` (mirrors the backend's
+      resource-dimension fields). `BreakdownPanel` renders, resource-dimension-only: a **Machine** column (e.g.
+      "e2-highmem-8 · 8 vCPU · 64 GB", dash when unset — AWS has no machine-spec equivalent) and a **Waste** column
+      badging idle-IP / orphaned-disk rows (amber "idle IP" / red "orphaned") with the row's own cost as the waste
+      amount, dash for non-waste rows. `mock-api.ts` fixtures mirror the live audit's evidence resources
+      (`harsh-static-ip`, `ikenna-windows-tokyo-restored`). tsc/ESLint/vitest (916 passed) all green. pw:L2 ✓ |
+      regression: tests/smoke/cost-observability.spec.ts ("By resource shows machine specs + cost-waste badges" —
+      asserts the machine-spec text renders, the orphaned-disk row carries an "orphaned" badge + its own $68.62 cost, a
+      non-waste row dashes, and both columns disappear under "By bucket").
 - [ ] [UI] P2. **Spot vs on-demand display.** A `purchase_option` column (or chip) on resource/service rows, from the
       backend field. vitest.
 - [ ] [UI] P3. **Dimension-aware columns + leaf tables.** Show the right detail columns per dimension (VM cols under
