@@ -52,6 +52,7 @@ related_plans:
     ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
     ../active/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md,
     ../active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,
+    ../active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md,
   ]
 last_updated: 2026-07-08
 locked_by: live-defi-rollout
@@ -489,6 +490,10 @@ working end-to-end).
 - [`sports_dependency_check_manifest_vs_gcs_path_2026_07_08`](../active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md)
   — sports fixture-dependency check does per-date live GCS probes instead of a manifest slice; measured 60-130x slower
   for a 1-year backfill (~11-25 min vs. ~11s).
+- [`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08`](../active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
+  — from the operator-requested MVP-catalogue-code audit: TradFi's `mvp_mode` fetch-time filter is unreachable dead code
+  (zero real callers pass `mvp_mode=True` anywhere); production always downloads the full 93-instrument universe
+  unfiltered, regardless of the curated TradFi MVP rule.
 
 ## P3 — backlog; revisit quarterly
 
