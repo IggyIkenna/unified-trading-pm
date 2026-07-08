@@ -111,7 +111,11 @@ The UI backend (`deployment-api`) service identities were granted read-only bill
 - **GCP** — SA `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (runs Cloud Run
   `uts-shared-deployment-api`): dataset **READER** on `billing_export` + project `roles/bigquery.jobUser`.
 - **AWS** — managed policy **`uts-billing-readonly`** (Athena on wg `uts-billing` + Glue read on `aws_billing` + S3 read
-  on the CUR bucket + `ce:*` read) attached to roles **`uts-deployment-api-{prod,dev,staging}`**.
+  on the CUR bucket) attached to roles **`uts-deployment-api-{prod,dev,staging}`**. **`ce:*` DRIFT (verified
+  2026-07-08):** `ce:GetCostAndUsage` was **DENIED** for the checked `ikenna-worker` identity, despite the earlier note
+  here that the policy includes it. Non-blocking — the `/api/costs` code path is **Athena-only** and never calls Cost
+  Explorer (CE was only ever the zero-setup fallback until the CUR landed, which it has). Grant `ce:*` only if a live
+  spend-forecast tile is built.
 
 **If the UI is served by a different identity** (e.g. the dashboard Cloud Run compute SA `1060025368044-compute@…`, or a
 new AWS task role), grant it the same: GCP dataset-READER + `bigquery.jobUser`; AWS attach `uts-billing-readonly`. The
