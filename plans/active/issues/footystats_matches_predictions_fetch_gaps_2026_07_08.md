@@ -160,6 +160,15 @@ code-fix task). A data_engineering slot with a full session budget should:
 
 ## Progress Log
 
+- **2026-07-08** — Todo #4 re-dispatched a FIFTH time (slot-11 sonnet/high, boot 22:13 UTC,
+  `dispatch_reason: "highest-rank queued task with prereqs met and no collision"`). Verified via backlog API: `-002`
+  (PREDICTIONS fixture-calendar, slot-13) and `-003` (ODDS root-cause, slot-9) both still `dispatched`, not `done` —
+  todo #4's gate remains unmet. Not running the typing pass / backfill VM. Root-caused WHY the BLOCKED-PREREQUISITES
+  marker isn't stopping re-dispatch (predicted by slot-8 below as "worth its own issue doc if a 3rd dispatch happens" —
+  this is the 4th+ skip since the marker was added) and filed the dedicated dispatcher-bug doc:
+  `plans/active/issues/backlog_blocked_marker_stale_brief_redispatch_2026_07_08.md` (repo: agent-orchestrator,
+  backend-engineer craft, out of this slot's data_engineering scope — filed + handed off, not fixed inline). Releasing
+  via `/skip-current-task`.
 - **2026-07-08** — Todo #4 re-dispatched a SECOND time (slot-4 sonnet/high, boot 22:05 UTC,
   `dispatch_reason: "highest-rank queued task with prereqs met and no collision"`) despite the in-doc
   BLOCKED-PREREQUISITES marker slot-8 already added below — the marker text matches the orchestrator's
