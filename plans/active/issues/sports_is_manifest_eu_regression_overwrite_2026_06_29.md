@@ -178,8 +178,35 @@ Candidates:
       `expected_unattempted` for a league outside a source's coverage in the first place (matching the "materialised by
       the WRITER, never re-derived" SSOT), rather than relying on one-off typing sweeps that need re-running every few
       days. Full detail + exact residual numbers: sports_p2 plan Progress Log, item #4/#5/#7, entry dated 2026-07-08.
+- [ ] [SCRIPT] P1. **Diagnose + close understat XG/XG_SHOTS blank-reason `expected_unattempted` residual (250 XG + 5,843
+      XG_SHOTS, big-5 only) — same daily-forward-poll bug family, NOT previously covered by the residual list above.**
+      Confirmed 2026-07-08 (slot-2): all 250+5,843 rows carry a BLANK `error_reason` and `attempted_at`
+      2026-06-19→2026-07-08 (the daily enum's write window, not the backfill driver's). **Ruled out** as a season-range
+      gap: re-ran `understat_bulk_backfill.py --end 2026` live — zero change to either count (proves the driver's own
+      fixture-derived date enumeration never contains these dates, so no re-run of the existing driver can touch them).
+      XG_SHOTS residual spans 2018-2026 across every month (Jun/Jul skewed but present year-round) — consistent with
+      mostly-legitimate per-league non-matchdays, not a global capture failure. **What's needed**: (a) build a
+      `type_understat_eu_no_provider_coverage.py` analogous to the weather/SFI scripts — but per-league MATCHDAY-aware
+      (not just league-coverage-aware, since understat's gap is date-level within an otherwise-covered league) — that
+      either (i) stamps a real reason (e.g. `EXPECTED_NO_FIXTURE`) confirming genuine non-matchdays via the
+      already-fetched `getLeagueData` fixture list, or (ii) for any date that DOES have a real fixture but is
+      blank-reason `expected_unattempted`, force-refetches it (same `_fetch_understat_xg`/`_run_understat_shots_date`
+      path, `force=True`) rather than leaving it blank; (b) an operator call on whether a nonzero blank-reason residual
+      should even be considered a gate failure once genuinely justified via (i). (repo: instruments-service)
 
 ## Progress Log
+
+### 2026-07-08 20:55 UTC — slot-2: understat blank-reason EU residual diagnosed, driver re-run hypothesis disproven
+
+Task `sports_p2_history_reference_and_odds_2015_to_present-016` (item #4). Prior note guessed the XG 250-row gap was a
+season-range artifact closeable by `--end 2026`; tested live (PID 3289798) — zero change to either XG (250) or XG_SHOTS
+(5,843) `expected_unattempted` counts. Root cause instead: both residuals are blank-`error_reason` rows written by the
+daily forward-poll enum (`attempted_at` 2026-06-19→2026-07-08), the same bug family as the weather/SFI/footystats
+residuals already tracked above — just never enumerated for understat specifically. Filed the new todo above with the
+concrete fix shape (per-league matchday-aware typing script + operator call on whether a justified nonzero residual
+should count as a gate failure at all). Full numeric detail + supporting scripts (`/tmp/verify_understat_gate.py`,
+`/tmp/check_eu_reason.py`, `/tmp/check_fixture_calendar.py`) referenced from
+`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md` item #4's updated note (same session).
 
 ### 2026-06-29 ~06:30 UTC — slot-8: partial audit state (all VMs still running)
 
