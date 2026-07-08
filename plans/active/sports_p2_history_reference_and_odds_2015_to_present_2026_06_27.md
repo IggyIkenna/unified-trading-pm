@@ -124,21 +124,35 @@ singleton-lock namespace → may run concurrently.
       completed; typing script typed 8,744 non-TM leagues as EXPECTED_NO_PROVIDER_COVERAGE (@fbb032d).
 - [ ] [DATA] P0. **Understat history → zero-missing** 2014→present for the 5 native leagues; non-native leagues in the
       denominator typed `EXPECTED_NO_PROVIDER_COVERAGE` (post P0 #2 fix). **Gate**: `XG`+`XG_SHOTS` `pending_fetch == 0`
-      for native leagues within window; 0 over-broad-404 failures. **BLOCKED-PREREQUISITES (2026-07-08, slot-7)**:
-      sibling plan's task -001 (driver re-run) completed 2026-07-08 — big-5 `attempted_failed=0` confirmed (the 384 af +
-      manifest-dedup-gap residues from the 2026-07-06 entry are RESOLVED). **Gate still NOT MET on
-      `expected_unattempted` alone** (re-verified 2026-07-08 20:10 UTC via `read_availability_index`, shard-merged, no
-      whole-corpus walk): XG `pending_fetch=250` (dates 2026-05-05→2026-07-08, 50/league × 5 — simply outside the
-      driver's `--end 2025` season range, NOT a real gap: a driver re-run with an updated `--end`/`--cutoff` covering
-      2026 would close this in minutes); XG_SHOTS `pending_fetch=5,843` (evenly spread ~1,168/league across
-      2018-06-01→2026-07-08 — a genuine, broad per-date shots-capture gap the completed driver did NOT close despite
-      reporting `ALL DATES CAPTURED (0 attempted_failed)`; matches the sibling plan's task -001 residual note that most
-      of these dates DO have a captured row for a _different_ big-5 league the same day, i.e. per-league fixture-date
-      gaps, not a global failure — needs the sibling plan's task -002/-004 diagnosis, not a fresh typing pass).
-      Un-block: sibling plan `understat_local_backfill_completion_2026_07_06.md` tasks -002 (re-verify, done) → -003
-      (consolidator confirm, done) → -004 (one-off normalization, still blocked-prerequisites as of this read) → -005
-      (gate flip) must complete first; this item flips only once XG_SHOTS pending_fetch is diagnosed + closed to 0 (or
-      the 2026-tail XG gap is closed by a driver re-run).
+      for native leagues within window; 0 over-broad-404 failures. **BLOCKED-PREREQUISITES (2026-07-08, slot-2) —
+      corrects the prior slot-7 hypothesis, which was tested and DISPROVEN this session**: prior note guessed "a driver
+      re-run with an updated `--end`/`--cutoff` covering 2026 would close [the XG 250-gap] in minutes" — **tested
+      live**: re-ran `understat_bulk_backfill.py --start 2014 --end 2026 --cutoff 2026-07-06` (PID 3289798,
+      `/tmp/understat_backfill_tail2.log`), completed clean (`RESUME: 1/2202 dates pending` →
+      `ALL DATES CAPTURED (0     attempted_failed)`), **re-verified via `/tmp/verify_understat_gate.py`: ZERO CHANGE** —
+      XG `expected_unattempted` still exactly 250, XG_SHOTS still exactly 5,843, identical date ranges. Root cause is
+      NOT a season-range gap: `enumerate_dates()` only ever contains dates understat's own `getLeagueData` marks
+      `isResult=true`; the 250/5,843 `expected_unattempted` dates are **not in that fixture set at all** (confirmed:
+      latest XG/XG_SHOTS captured date for every big-5 league is 2026-05-16→05-24, i.e. genuine end-of-2025-season — the
+      2026-05-05→07-08 XG dates are past-season/close-season with no real fixtures). Also confirmed via direct manifest
+      read (`/tmp/check_eu_reason.py`): **all 250 + 5,843 rows carry a BLANK `error_reason`** (not a documented
+      `EXPECTED_NO_FIXTURE`-style reason) and were `attempted_at` 2026-06-19→2026-07-08 — i.e. written by the DAILY
+      forward-poll enum, not the backfill driver (driver's own `pending_dates()` correctly treats `expected_unattempted`
+      as still-pending and would reprocess it — but only for dates already in its own fixture-derived `all_dates` set,
+      which these aren't). XG_SHOTS year/month distribution (`/tmp/check_fixture_calendar.py`): spread across ALL years
+      2018-2026 and all months (skewed toward Jun/Jul off-season, but present in every month) — consistent with the
+      sibling plan's earlier note that most of these are legitimate per-league non-matchday dates (this league didn't
+      play that day; a different big-5 league did) rather than a global capture failure. **Unresolved question requiring
+      an operator/architecture call, not a re-run**: are blank-`error_reason` `expected_unattempted` rows for genuine
+      non-matchdays a PASSING terminal state (i.e. is the plan's own "`pending_fetch == 0`" gate wording being loosely
+      applied to a state that's actually fine), or is this the SAME blank-reason daily-forward-poll bug class already
+      fixed for weather/SFI in item #7's 2026-07-08 typing pass (`type_weather_eu_no_provider_coverage_2026_06_27.py` /
+      SFI sibling) — i.e. does understat need its own analogous typed-reason pass instead of a bare backfill re-run?
+      Filed as a todo in `plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md` (understat
+      blank-reason EU rows, same root-cause family as weather/SFI, 250 XG + 5,843 XG_SHOTS rows, big-5 only).
+      **Un-block**: resolve that todo (either a documented-reason typing pass if these are legitimate non-matchdays, or
+      a targeted force-refetch of the specific dates if some are real gaps) — sibling plan's task -004/-005 remain the
+      gate-flip vehicle once this item's own residual is closed.
 - [ ] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
       removal reversed 2026-06-27 (#6 REVERSED, operator decision) — footystats ODDS are pre-match snapshot reference
       data that stays in IS; see sports_p0 task 003. **Gate**: `(footystats, PREDICTIONS)` + `(footystats, MATCHES)` +
