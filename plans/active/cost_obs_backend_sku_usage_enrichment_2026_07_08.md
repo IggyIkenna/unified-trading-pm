@@ -59,11 +59,11 @@ source: cost_observability_ui_2026_07_08.md
 
 ## Tasks
 
-- [ ] [BACKEND] P0. **SKU + usage foundation** (unlocks tasks 3-8). In `services/cost_observability/queries.py`
-      `gcp_facts_sql`, add `sku.description AS sku`, `usage.amount_in_pricing_units AS usage_amount`,
-      `usage.pricing_unit AS usage_unit` (extend the GROUP BY); in `aws_facts_sql` add
-      `line_item_usage_type AS     usage_type` + `SUM(line_item_usage_amount) AS usage_amount`. Add `sku` /
-      `usage_amount` / `usage_unit` to `CostRecord` + the GCP/AWS adapters in `providers.py`. pytest for the new
+- [x] ✅ [BACKEND] P0. **SKU + usage foundation** (unlocks tasks 3-8) — deployment-api@1a6e8a8. In
+      `services/cost_observability/queries.py` `gcp_facts_sql`, add `sku.description AS sku`,
+      `usage.amount_in_pricing_units AS usage_amount`, `usage.pricing_unit AS usage_unit` (extend the GROUP BY); in
+      `aws_facts_sql` add `line_item_usage_type AS     usage_type` + `SUM(line_item_usage_amount) AS usage_amount`. Add
+      `sku` / `usage_amount` / `usage_unit` to `CostRecord` + the GCP/AWS adapters in `providers.py`. pytest for the new
       columns.
 - [ ] [BACKEND] P1. **Bifurcate gross/credit/net per breakdown row.** Add `gross` + `credit` to `BreakdownRow`
       (currently net-only); populate net (primary), gross = Σcost, credit = Σcredit in `_grouped` / `_by_resource` /
