@@ -50,6 +50,8 @@ related_plans:
     ../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
     ../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
     ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
+    ../active/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md,
+    ../active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,
   ]
 last_updated: 2026-07-08
 locked_by: live-defi-rollout
@@ -475,7 +477,18 @@ new epic, per operator decision to use the existing fixed 20-epic registry.
 
 ## P2 — useful; opportunistic
 
-_(no plans currently assigned at this priority)_
+### 🔴 2026-07-08 CLI-arg audit + sports manifest findings
+
+**status**: 🔴 NEW — from a dedicated CLI-argument audit run while confirming `--venues` was a safe replacement for a
+just-removed dead single-venue-fetch function (removed clean, `instruments-service`, all other CLI args confirmed
+working end-to-end).
+
+- [`instruments_service_run_tag_flag_not_applied_2026_07_08`](../active/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md)
+  — `--run-tag`'s help text promises a GCS output-prefix tag; `apply_run_tag()` is never called, the value never reaches
+  any output path.
+- [`sports_dependency_check_manifest_vs_gcs_path_2026_07_08`](../active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md)
+  — sports fixture-dependency check does per-date live GCS probes instead of a manifest slice; measured 60-130x slower
+  for a 1-year backfill (~11-25 min vs. ~11s).
 
 ## P3 — backlog; revisit quarterly
 
