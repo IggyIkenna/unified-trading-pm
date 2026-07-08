@@ -142,26 +142,32 @@ can ship first, A can supersede.)
 
 ## Todos
 
-- [ ] [BACKEND] P1. Add `answered_at` (+ `redelivery_count`) to `agent_messages`, idempotent `bootstrap.py` migrate
-      (mirror the `slots.last_role` add). (Option A)
-- [ ] [BACKEND] P1. `drain_agent_pending`: return undelivered OR delivered-but-unanswered `to_agent` messages (redeliver
-      until answered), oldest-first; increment `redelivery_count`. (Option A)
-- [ ] [BACKEND] P1. `agent_reply`: stamp `answered_at` on the outstanding unanswered `to_agent` message(s) for the role
-      (support optional `in_reply_to` id). (Option A)
-- [ ] [BACKEND] P2. Redelivery cap: after N redeliveries / M min unanswered → set `needs_operator`, stop redelivering.
-      Config knobs. (Option A)
-- [ ] [BACKEND] P2. (Alt / mitigation-first) Redeliver-unanswered reconcile loop that re-queues + re-nudges
-      delivered-but-unanswered messages after M min. (Option B — can ship before A)
-- [ ] [UI] P2. Dashboard: surface unanswered operator questions ("delivered, awaiting reply >N min") per role so a
-      silent drop is visible.
-- [ ] [DOCS] P2. Harden `agents/main.md` loop: persist drained-unanswered messages to a scratch file before processing;
-      add a "drained-but-unanswered → retry next tick" step (survive `/compact`).
-- [ ] [BACKEND] P3. Fix the `last_msg` field misuse (main.md wants a status STRING; agent sends a message-id) so the
-      dashboard "current activity" is not frozen at a stale id.
-- [ ] [TEST] P1. Unit tests: drain→no-reply→next drain STILL returns the message; `/reply` stamps `answered_at`;
-      redelivery cap fires; regression reproducing the 641/643 silent drop.
+- [x] [BACKEND] P1. Add `answered_at` (+ `redelivery_count`) to `agent_messages`, idempotent `bootstrap.py` migrate
+      (mirror the `slots.last_role` add) + a one-time delivered→answered backfill so deploy doesn't re-flood. (Option A)
+      — ao@8076257 (`orm.py`, `bootstrap.py::_migrate_agent_message_reply_ack`)
+- [x] [BACKEND] P1. `drain_agent_pending`: return undelivered OR delivered-but-unanswered `to_agent` messages (redeliver
+      until answered), oldest-first; increment `redelivery_count`. (Option A) — ao@8076257 (`state_store/agents.py`)
+- [x] [BACKEND] P1. `agent_reply`: stamp `answered_at` on the outstanding unanswered `to_agent` message(s) for the role
+      via `mark_role_messages_answered` (optional `in_reply_to` id). (Option A) — ao@8076257 (`routes/agents.py`,
+      `models/agents.py`)
+- [x] [BACKEND] P2. Redelivery cap: after `agent_message_max_redeliveries` (default 30) unanswered → stops redelivering,
+      surfaced via `count_needs_operator_to_agent` + `AgentView.needs_operator_count`. Config knob. (Option A) —
+      ao@8076257
+- [~] [BACKEND] P2. (Alt / mitigation-first) Redeliver-unanswered reconcile loop. **SUPERSEDED by Option A** —
+  redelivery is now inline in `drain_agent_pending`, so a separate background loop is unnecessary. Not shipping.
+- [~] [UI] P2. Dashboard: surface unanswered operator questions. **Backend surfacing shipped** (ao@8076257):
+  `pending_count` is now unanswered (sticky, not undelivered) + new `needs_operator_count`. **Remaining**: render a Vite
+  badge for `needs_operator_count` in the dashboard Agents panel (small `[UI]` follow-up; pw gate).
+- [x] [DOCS] P2. Harden `agents/main.md` loop: persist drained-unanswered messages to a scratch file before processing;
+      add a "drained-but-unanswered → retry next tick" step (survive `/compact`). — ao@8076257 (`agents/main.md`)
+- [x] [BACKEND] P3. Fix the `last_msg` field misuse (main.md now says status STRING, NOT a message-id). — ao@8076257
+      (`agents/main.md`)
+- [x] [TEST] P1. Unit tests: drain→no-reply→next drain STILL returns the message; `/reply` stamps `answered_at`;
+      redelivery cap fires; 641/643 silent-drop regression; migration backfill. 8 tests, full QG green. — ao@8076257
+      (`tests/test_agent_message_redelivery.py`)
 - [ ] [BACKEND] P2. Verify the `send_to_role` tmux nudge reliably wakes a heads-down `/loop` (`tmux_spawn.nudge` →
-      `_nudge_message`); if flaky, make it idempotent + retried.
+      `_nudge_message`); if flaky, make it idempotent + retried. (Existing `test_agent_nudge.py` covers the primitive +
+      endpoint + auto-nudge; no flakiness surfaced this pass — deeper hardening deferred.)
 
 ## Immediate remediation (operator-gated — NOT part of the code fix)
 
@@ -177,6 +183,19 @@ fleet-reclaim gap is a separate issue worth its own doc.)
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what happened>.` -->
 
+- **2026-07-08** — ✅ **Option A SHIPPED** (ao@8076257, live-defi-rollout; staging-first drain → v2-gated).
+  Operator→agent delivery is now AT-LEAST-ONCE with reply-ack: `drain_agent_pending` redelivers
+  undelivered-OR-unanswered messages every poll until `/reply` stamps `answered_at` (`mark_role_messages_answered`,
+  optional `in_reply_to`); a `redelivery_count` cap (config `agent_message_max_redeliveries`, default 30) stops runaway
+  redelivery and surfaces `needs_operator_count`. `agent_messages` gained `answered_at`+`redelivery_count` via
+  idempotent `bootstrap.py` migrate with a **one-time delivered→answered backfill** (so the deploy does NOT re-flood
+  main with 400+ historical messages). `count_pending_to_agent` now = unanswered (sticky in the dashboard).
+  `agents/main.md` loop hardened (scratch-file, `in_reply_to`, don't-fake-ack, `last_msg` is a status-string). 8
+  regression tests incl. the 641/643 case; full `quality-gates.sh` green (1102 py + 79 vitest). ao-self-pull
+  auto-restarts the live backend within 15 min (applies the migration). **Remaining**: `[UI]` Vite badge for
+  `needs_operator_count`; `[BACKEND]` nudge-reliability verify (both P2, low-risk). Option B (reconcile loop) superseded
+  by Option A. Recovered a careless `git stash` that tangled a foreign `redeploy2` stash into `server/escalation.py` —
+  restored to HEAD, foreign stash preserved (not dropped).
 - **2026-07-08** — Filed. Root-caused the silent-drop (drain-on-poll, no reply-ack/redelivery — Layer 1; main agent
   monitoring-loop drain-without-reply — Layer 2) from live DB + tmux pane + code read during the
   `ao_dispatch_correctness` deploy session. Human plan (`assigned_vm: NA`), operator-chosen. Fix Option A
