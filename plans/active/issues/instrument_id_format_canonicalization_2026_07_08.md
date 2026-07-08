@@ -33,6 +33,11 @@ related:
     ../instruments_completion_tracker_2026_07_06.md,
     adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
     defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
+    ../../audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    ../canonical_id_p0_kraken_futures_collision_2026_07_08.md,
+    ../canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
+    ../canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
+    ../canonical_id_p0_strategy_reconciliation_2026_07_08.md,
   ]
 created: 2026-07-08
 parent_epic: instruments_master
@@ -83,10 +88,12 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
    word alternative and the `DDMMMYY` alternative respectively:
    - **Margin marker = `@LIN`/`@INV` suffix**, not `canonical_id_builder.py`'s already-written but unused
      `-linear-`/`-inverse-` word form. Chosen to match strategy-service's existing position-ID convention (e.g.
-     `HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID`) rather than introduce a 3rd convention. Open sub-question not yet
-     resolved: strategy-service's version also appends a trailing `@VENUE` after the marker — this doc's working
-     assumption is that base instrument_ids should DROP that trailing `@VENUE` (redundant, since VENUE is already the
-     first colon-segment), but that's an interpretation, not an explicit operator confirmation.
+     `HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID`) rather than introduce a 3rd convention. **RESOLVED 2026-07-08**:
+     operator explicitly confirmed NO trailing `@VENUE` — "I don't see why you would append the venue suffix to
+     something that already has venue in its canonical name, so that just seems weird." Also confirmed: the convention
+     must be enforced via real, callable builder functions everywhere it applies, not docstring-only assertions (the
+     state of both `canonical_id_builder.py` and strategy-service's `@LIN`/`@INV` today, per
+     [[canonical_instrument_id_audit_2026_07_08]]).
    - **Date format = `YYYYMMDD`**, not Deribit's real `DDMMMYY` (e.g. `10APR26`). Rationale given: `YYYYMMDD` is
      string-sortable (chronological order = alphabetical order); `DDMMMYY` is more human-glanceable but does NOT sort
      correctly as a string (`"10APR26"` sorts after `"10JAN27"` alphabetically despite being earlier). This means
@@ -194,3 +201,20 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
   finding #1 above, which got settled into the two explicit sub-decisions now recorded there. Separately, operator asked
   whether Bitfinex's dropped BTC-margined perps have real volume — checked live, they do (~$6-7M/day on the top one),
   added as a new P1 SCRIPT todo since it's a real, evidence-backed, non-negligible bug, not just a documented gap.
+- **2026-07-08 (final)** — A full 7-layer canonical instrument_id audit ([[canonical_instrument_id_audit_2026_07_08]],
+  `plans/audit/results/`) ran (6-agent Workflow + 1 strategy-service follow-up), found the scope is far larger than this
+  doc's original 6 findings: 5 real P0 live-correctness bugs (Kraken-Futures 5-instrument data collision, silently
+  -defeated live reconciliation for every CCXT venue, 23 DeFi adapters silently returning empty on type filters, a
+  live≠batch id divergence for 13 CeFi venues, deployment-api cross-service exact-match bugs) plus ~40 more P1/P2
+  findings. Operator reviewed and made several corrections + decisions: sports keeps its own ID scheme (not forced into
+  VENUE:TYPE:SYMBOL); the 31 shared `canonical_question_group` keys between Polymarket/Kalshi are NOT a collision (venue
+  is tracked separately, sharing the label is the intended cross-venue-arb mechanism, same as sports fixtures); no
+  trailing `@VENUE`; real builder-function enforcement required, not docstrings; DEX-pool fee tier must be in the
+  canonical symbol (real basis-point values); whitespace-as-delimiter is never acceptable; DeFi mirrors CeFi's shape.
+  Full scope now: audit (done) → decisions (mostly done) → ground-up migration (UAC → instruments- service → MTDS →
+  strategy-service → deployment, live breakage explicitly authorized) → mockup refresh → GCS/ manifest/filename
+  migrations (spec'd + executed) → MTDS resumes downloading the remaining MVP universe. Tracked under existing epics
+  (`instruments_master` primary, cross-referenced from `batch_live_symmetry_master` and
+  `client_isolation_and_governance_master`) per operator decision, not a new epic — this workspace's epic registry is a
+  fixed 20-entry table. 4 new P0 fix plans filed for the live bugs (see `related:` above), each independently shippable
+  ahead of the broader canonicalization decision.

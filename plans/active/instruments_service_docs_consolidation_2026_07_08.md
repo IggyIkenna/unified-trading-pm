@@ -28,6 +28,7 @@ related:
     issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
     issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     instruments_completion_tracker_2026_07_06.md,
+    ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
   ]
 created: 2026-07-08
 last_updated: 2026-07-08
@@ -40,7 +41,7 @@ estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
 assigned_role: data_engineering
 drift_direction: advance-code
-depends_on:
+depends_on: [../audit/results/canonical_instrument_id_audit_2026_07_08.md]
 locked_by:
 locked_since:
 supersedes:
@@ -166,3 +167,9 @@ list as part of Phase 2's design checkpoint**, this table is a starting hypothes
   `docs/specs/*.md` splits cleanly into setup-guide material, adapter-architecture material, and AG-specific material
   currently living outside its AG doc). Operator chose human-driven execution (assigned_vm: NA) over agent-orchestrator
   dispatch. No audit work started yet — Phase 1 is next.
+- **2026-07-08 (later)** — Phase 1's audit was split out and run as its own effort per the operator's expanded ask
+  (audit every service + GCS + manifest, not just cross-check the 17 docs) — see
+  [[canonical_instrument_id_audit_2026_07_08]] (`plans/audit/results/`). That audit is now DONE: found 5 P0 live bugs
+  - ~40 P1/P2 findings across instruments-service/MTDS/deployment-api/deployment-ui/GCS/manifest/strategy-service. This
+    plan's `depends_on` now points at that audit doc — Phase 1 here is satisfied by its findings rather than a separate
+    re-derivation. Phase 2 (design checkpoint) is next, once the 5 P0 bugs' own fix plans are underway.

@@ -33,8 +33,11 @@ related_plans:
     ../active/honest_coverage_smoke_harness_2026_06_28.md,
     ../archive/2026_05/available_at_schema_lift_post_cutover_2026_05_19.md,
     ../archive/2026_05/batch_live_symmetry_2026_05_10.md,
+    ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    ../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
+    ../active/canonical_id_p0_strategy_reconciliation_2026_07_08.md,
   ]
-last_updated: 2026-05-21
+last_updated: 2026-07-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -69,7 +72,19 @@ order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_
 
 ## P0 — must complete before next foundation gate
 
-_(no plans currently assigned at this priority)_
+### 🔴 2026-07-08 canonical instrument_id — live≠batch findings
+
+**status**: 🔴 NEW — from
+[`canonical_instrument_id_audit_2026_07_08`](../audit/results/canonical_instrument_id_audit_2026_07_08.md) (owned
+primarily by `instruments_master`, cross-referenced here since these 2 findings are direct live=batch determinism
+violations). Not a new epic — operator decision 2026-07-08 to track under existing epics.
+
+- [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)
+  — the CCXT live adapter stores bare ccxt-native symbols; batch (Tardis) produces a differently-shaped canonical id for
+  the same real instrument, across 13 major CeFi venues.
+- [`canonical_id_p0_strategy_reconciliation_2026_07_08`](../active/canonical_id_p0_strategy_reconciliation_2026_07_08.md)
+  — depends on the plan above; live position reconciliation is silently defeated for every CCXT venue because the
+  canonical-vs-raw string comparison never matches.
 
 ## P1 — important; post-current-gate
 

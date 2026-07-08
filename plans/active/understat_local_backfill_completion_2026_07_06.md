@@ -86,30 +86,49 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
 
 ## 3. Todos
 
-- [ ] [SCRIPT] P1. Run the driver to completion (resume-aware — safe to restart on preemption). Verify the log reaches
-      `ALL DATES CAPTURED (0 attempted_failed)` + `UNDERSTAT BULK BACKFILL COMPLETE`. §2.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-08 (slot-7, data_engineering).** Driver ran to completion: `instruments-service`
+      log `/tmp/understat_backfill_v3.log` reaches `[VERIFY 1] attempted_failed dates remaining:     0` →
+      `=== ALL DATES CAPTURED (0 attempted_failed) ===` → `=== UNDERSTAT BULK BACKFILL COMPLETE ===` (cutoff 2026-07-06,
+      matching this plan's era; `RESUME: 1/2202 dates pending` — only the one known stale date needed reprocessing,
+      confirming the resume/idempotency design worked as intended). Independent re-verification via a fresh
+      `read_availability_index` call (not the driver's own cached view): big-5 XG+XG_SHOTS `attempted_failed = 0`; XG
+      captured=6,673, XG_SHOTS captured=6,671 (ratio 1.000, ≈ DoD's "XG_SHOTS ≈ XG" requirement). **Prerequisite
+      root-caused + fixed first** (this is why prior sessions' retries never converged): the retry-verify loop was
+      permanently stuck at 4 `attempted_failed` dates across 6 rounds — root cause was a manifest dedup gap (NULL vs
+      `""` `instrument_type` never collapsing to one key, both in the reader's own `_merge_shard_frames` AND,
+      separately, in the deployed Cloud Run consolidator's live state). Fixed + shipped
+      `unified-trading-library@d64563da` (reader fix + regression test); force-rebuilt the sports bucket consolidator
+      (`dedup_dropped=273,579`) as a one-off mitigation. Full detail + cross-bucket follow-up:
+      `plans/active/issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md` (updated same session).
+      **Residual, NOT part of this todo's scope**: big-5 `expected_unattempted` is still 6,093 (250 XG + 5,843 XG_SHOTS)
+      — this is the SAME pre-existing gap task -002's 2026-07-07 run already flagged (315→245, not zero) and belongs to
+      -002 (re-verify)/-004 (one-off normalization)/-005 (gate flip), not -001 (driver-completion). Spot check: most
+      residual dates DO have a captured/empty_confirmed row for a DIFFERENT big-5 league the same day (per-league
+      fixture-date gaps, not a global capture failure) plus a tail of 2026-05 dates the `--end 2025` season range may
+      not fully cover — needs -002/-004 to characterize, not guessed here.
 - [x] ✅ [DATA] P0. **Manifest verification (the definition of done) — RUN 2026-07-07 slot-7 opus/max; DoD NOT MET.**
-      Read the live sports manifest (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`,
-      4,897,283 total rows / 607,540 understat) and confirmed, for big-5 (EPL/LA_LIGA/BUNDESLIGA/SERIE_A/LIGUE_1) XG +
-      XG_SHOTS: XG captured 4,432→6,676 (+2,244); XG_SHOTS captured 1,961→6,671 (+4,710, now 99.9% of XG vs the 44%
-      baseline); XG_SHOTS attempted_failed 384→**20** (still >0, all `HTTP_NOT_FOUND`, 4/league, attempted_at
-      2026-06-23); XG_SHOTS expected_unattempted 13,811→**6,093**; XG expected_unattempted 315→**245**; XG latest
-      captured 2023-03-11→**2026-05-24** (+3.2 years); XG_SHOTS latest captured 2024-12-21→**2026-05-24** (+17 months);
-      **16,352 stale empty_confirmed** with attempted_at < 2026-07-06 (5,360 in 2026-05, 10,784 in 2026-06). **DoD
-      violations**: 20 XG_SHOTS attempted_failed remain (should be 0), 6,338 EU remain (should be 0), 16,352 stale
-      empty (should be 0). **Verification checkbox flipped** because the audit RAN + REPORTED — the DoD's underlying
-      GATE remains RED, so task 005 (understat-vm-xg-complete gate flip) stays BLOCKED and task 001 needs re-run to
-      drive the tail. Progress Log update: `unified-trading-pm@<sha>` issue doc
-      `understat_bulk_download_backfill_2026_06_29.md`. §5 of the issue doc has the pre-run baseline (XG 4,444 captured
-      / 301,667 empty; XG_SHOTS 14 captured).
+      Read the live sports manifest
+      (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, 4,897,283 total
+      rows / 607,540 understat) and confirmed, for big-5 (EPL/LA_LIGA/BUNDESLIGA/SERIE_A/LIGUE_1) XG + XG_SHOTS: XG
+      captured 4,432→6,676 (+2,244); XG_SHOTS captured 1,961→6,671 (+4,710, now 99.9% of XG vs the 44% baseline);
+      XG_SHOTS attempted_failed 384→**20** (still >0, all `HTTP_NOT_FOUND`, 4/league, attempted_at 2026-06-23); XG_SHOTS
+      expected_unattempted 13,811→**6,093**; XG expected_unattempted 315→**245**; XG latest captured
+      2023-03-11→**2026-05-24** (+3.2 years); XG_SHOTS latest captured 2024-12-21→**2026-05-24** (+17 months); **16,352
+      stale empty_confirmed** with attempted_at < 2026-07-06 (5,360 in 2026-05, 10,784 in 2026-06). **DoD violations**:
+      20 XG_SHOTS attempted_failed remain (should be 0), 6,338 EU remain (should be 0), 16,352 stale empty (should be
+      0). **Verification checkbox flipped** because the audit RAN + REPORTED — the DoD's underlying GATE remains RED, so
+      task 005 (understat-vm-xg-complete gate flip) stays BLOCKED and task 001 needs re-run to drive the tail. Progress
+      Log update: `unified-trading-pm@<sha>` issue doc `understat_bulk_download_backfill_2026_06_29.md`. §5 of the issue
+      doc has the pre-run baseline (XG 4,444 captured / 301,667 empty; XG_SHOTS 14 captured).
 - [x] ✅ [DATA] P1. **Consolidator dedup (§9.2b) has taken effect — VERIFIED 2026-07-07 slot-7 opus/max.** The §9.2b fix
       (`unified-trading-library@f5ec2291f`) HAS reached the deployed Cloud Run consolidator jobs and taken effect on the
-      live sports manifest (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`).
-      Verification: **0 captured-vs-seed dup groups** for XG + XG_SHOTS on all leagues (grouped on `(date, league_id,
-      data_type)`, filtered to groups where `capture_status` contains BOTH `captured` and `expected_unattempted`) —
-      down from the pre-fix 2,290 real dup rows validated on 2026-07-06. **0 captured-vs-empty_confirmed** and **0
-      multi-status groups** in the whole understat subset (607,535 distinct key groups). The only remaining dup class is
-      **10 rows in 5 groups** on 2024-12-14 (BUNDESLIGA / EPL / LA_LIGA / LIGUE_1 / SERIE_A) where both dup rows have
+      live sports manifest
+      (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`). Verification: **0
+      captured-vs-seed dup groups** for XG + XG_SHOTS on all leagues (grouped on `(date, league_id,     data_type)`,
+      filtered to groups where `capture_status` contains BOTH `captured` and `expected_unattempted`) — down from the
+      pre-fix 2,290 real dup rows validated on 2026-07-06. **0 captured-vs-empty_confirmed** and **0 multi-status
+      groups** in the whole understat subset (607,535 distinct key groups). The only remaining dup class is **10 rows in
+      5 groups** on 2024-12-14 (BUNDESLIGA / EPL / LA_LIGA / LIGUE_1 / SERIE_A) where both dup rows have
       `capture_status=captured` but different `instrument_type` (`'shot'` vs `'None'`) — these are the 2026-06-30
       Progress Log's noted stale test rows (`instrument_type='shot'` written before the IS write-path fix to blank
       instrument_type on XG_SHOTS shipped as `instruments-service@4281a01db`), NOT the captured-vs-seed class §9.2b
@@ -295,3 +314,41 @@ shots; the 6 parked sports tasks are unblocked; issue-doc Progress Log updated; 
   not automatically trigger `/done` for -001 unless a live slot claims monitoring. Slot-7 releases via `/done` on the
   -007 park; operator/main-agent may want to either reassign -001 monitoring to a live slot or route the next slot-7
   boot at a queued task that doesn't share the same broken serial-ordering dependency chain.
+- 2026-07-08 (slot-7 planning, `data_engineering`, fresh dispatch): re-dispatched to task **-001** directly (the prior
+  orphaned-process/dead-slot state had cleared; no `understat_bulk_backfill.py` process was running on receipt). Before
+  running, diagnosed WHY prior sessions' retry-verify loop never converged (stuck at "4 attempted_failed" across all 6
+  rounds, `raised=0` every round — the retries were succeeding but the verify check never saw it): root cause is a
+  manifest dedup gap where `instrument_type=None` (written by the season-window-guard skip path) and
+  `instrument_type=""` (written by the original failed attempt) were treated as two DISTINCT dedup-key values instead of
+  collapsing to one — present in TWO independent code paths: (1)
+  `unified_trading_library/manifest_writer/_read_index.py ::_merge_shard_frames` (the reader's own
+  self-shard-vs-canonical merge, used whenever `read_availability_index` layers a caller's fresh per-VM write on top of
+  the consolidated blob) never got the NULL/`""` normalization the consolidator's SQL path already has; (2) separately,
+  the LIVE deployed sports-bucket consolidator had ~297 already-un-collapsed twin keys sitting in the canonical index
+  despite the consolidator's `_dedup_key_sql` being provably correct in isolation (verified via a direct DuckDB test) —
+  meaning the deployed Cloud Run job's incremental cycles were not actually applying it continuously in production.
+  Fixed + shipped (1): `unified-trading-library@d64563da`
+  (`fix(manifest): dedup NULL vs empty-string optional dims in reader shard merge`, regression test
+  `test_reader_dedups_optional_dim_null_vs_empty_string`). Mitigated (2) for the sports bucket via the sanctioned
+  one-off
+  `python -m unified_trading_library.manifest_consolidator --bucket instruments-store-sports-prd-central-element-323112 --force`
+  (`rows_in=5,175,040 rows_out=4,901,461 dedup_dropped=273,579` — far more than the 297 keys visible from the narrow
+  XG_SHOTS angle, confirming the pattern is broad across the whole sports manifest). Filed full detail + a cross-bucket
+  (cefi/defi/tradfi/prediction) follow-up note in
+  `plans/active/issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md` (`unified-trading-pm@94061da28`)
+  rather than a new issue doc (this exact bug class was already tracked there since 2026-06-21; today's finding confirms
+  the consolidator's own "fix" landed in code but isn't converging in production). With both fixes in place, re-ran the
+  driver (`--cutoff 2026-07-06`, matching this plan's era — **NOTE for future re-runs: do NOT pass today's date as
+  `--cutoff`**, it makes the resume-check treat every already-captured row as stale and forces a full unnecessary
+  2014-2025 re-scrape; learned this the hard way on a first attempt, killed it after ~2 min once the mistake was visible
+  in the log, no material time/rate-limit lost). Result: `RESUME: 1/2202 dates pending` (only 1 date needed reprocessing
+  — the known 2026-05-07 stale-empty date — confirming the fix + prior work already covered everything else), driver
+  completed in ~3 min: `[VERIFY 1] attempted_failed dates remaining: 0` → `ALL DATES CAPTURED (0 attempted_failed)` →
+  `UNDERSTAT BULK BACKFILL COMPLETE`. Independently re-verified via a fresh (cache-busted) `read_availability_index`
+  call: big-5 XG+XG_SHOTS `attempted_failed=0`, XG captured=6,673, XG_SHOTS captured=6,671 (ratio 1.000). Flipped task
+  -001's checkbox. **Residual, explicitly out of -001's scope**: `expected_unattempted` is still 6,093 (250 XG + 5,843
+  XG_SHOTS) — the SAME pre-existing gap -002's 2026-07-07 run already found (315→245, not zero); most of it is
+  per-league fixture-date gaps (a date captured for one big-5 league but not another) plus a 2026-05 tail possibly
+  outside `--end 2025`'s season coverage — -002 (re-verify) and -004 (one-off normalization) should characterize and
+  close this, not -001. Plan §4's full DoD (0 expected_unattempted too) is therefore still NOT met after this todo —
+  -001 was scoped to the driver-completion signal only, which IS now achieved.

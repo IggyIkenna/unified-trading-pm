@@ -43,8 +43,13 @@ related_plans:
     ../archive/2026_05/expected_universe_v2_design_2026_05_08.md,
     ../archive/2026_05/trigger_based_reference_data_2026_04_13.md,
     ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    ../active/instruments_service_docs_consolidation_2026_07_08.md,
+    ../active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    ../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
+    ../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
   ]
-last_updated: 2026-06-26
+last_updated: 2026-07-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -429,6 +434,26 @@ DeFi-LST residuals. The live home for instruments-foundation work post-consolida
 
 **status**: 🟠 ACTIVE (60 open) — IS↔MTDS canonical-form single-walk (CF-1…CF-12) + IS audit-finding code remediation.
 The live home for the instruments I/O canonicalisation + consistency surface. [vm: vm-cross-cutting]
+
+### 🔴 2026-07-08 canonical instrument_id audit + remediation
+
+**status**: 🔴 NEW — cross-repo audit
+([`canonical_instrument_id_audit_2026_07_08`](../audit/results/canonical_instrument_id_audit_2026_07_08.md)) found 5
+real P0 live-correctness bugs (data collision, silently-defeated reconciliation, silent empty-query bugs, live≠batch id
+divergence) plus ~40 P1/P2 format/key-vs-field findings across every asset group. Operator decided: canonicalize
+everywhere, ground-up (UAC → instruments-service → MTDS → strategy-service → deployment), live breakage explicitly
+authorized (nothing trading live yet). Tracked here + cross-referenced from `batch_live_symmetry_master`
+(live≠batch/reconciliation findings) and `client_isolation_and_governance_master` (UAC-schema governance angle) — not a
+new epic, per operator decision to use the existing fixed 20-epic registry.
+
+- [`instrument_id_format_canonicalization_2026_07_08`](../active/issues/instrument_id_format_canonicalization_2026_07_08.md)
+  — the decided target-state format (`VENUE:TYPE:BASE[_QUOTE]@LIN|@INV-YYYYMMDD[-STRIKE-C|P]`, no trailing `@VENUE`).
+- [`instruments_service_docs_consolidation_2026_07_08`](../active/instruments_service_docs_consolidation_2026_07_08.md)
+  — 17→7 docs, depends on this audit's findings for Phase 1.
+- [`canonical_id_p0_kraken_futures_collision_2026_07_08`](../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md)
+  — P0, real data collision, 5 real instruments on one key.
+- [`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08`](../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md)
+  — P0, 23 adapters silently return empty on canonical-form type filters.
 
 ## P1 — done/archived (historical — pre-consolidation)
 

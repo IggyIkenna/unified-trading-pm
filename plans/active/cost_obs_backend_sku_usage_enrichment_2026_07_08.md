@@ -28,6 +28,7 @@ estimate_calibrated_ai_days: 2.4
 assigned_role: backend-engineer
 drift_direction: advance-code
 depends_on: []
+sequential: true
 locked_by:
 locked_since:
 supersedes:
@@ -59,18 +60,18 @@ source: cost_observability_ui_2026_07_08.md
 
 ## Tasks
 
-- [ ] [BACKEND] P0. **SKU + usage foundation** (unlocks tasks 3-8). In `services/cost_observability/queries.py`
-      `gcp_facts_sql`, add `sku.description AS sku`, `usage.amount_in_pricing_units AS usage_amount`,
-      `usage.pricing_unit AS usage_unit` (extend the GROUP BY); in `aws_facts_sql` add
-      `line_item_usage_type AS     usage_type` + `SUM(line_item_usage_amount) AS usage_amount`. Add `sku` /
-      `usage_amount` / `usage_unit` to `CostRecord` + the GCP/AWS adapters in `providers.py`. pytest for the new
+- [x] ✅ [BACKEND] P0. **SKU + usage foundation** (unlocks tasks 3-8) — deployment-api@1a6e8a8. In
+      `services/cost_observability/queries.py` `gcp_facts_sql`, add `sku.description AS sku`,
+      `usage.amount_in_pricing_units AS usage_amount`, `usage.pricing_unit AS usage_unit` (extend the GROUP BY); in
+      `aws_facts_sql` add `line_item_usage_type AS     usage_type` + `SUM(line_item_usage_amount) AS usage_amount`. Add
+      `sku` / `usage_amount` / `usage_unit` to `CostRecord` + the GCP/AWS adapters in `providers.py`. pytest for the new
       columns.
 - [ ] [BACKEND] P1. **Bifurcate gross/credit/net per breakdown row.** Add `gross` + `credit` to `BreakdownRow`
       (currently net-only); populate net (primary), gross = Σcost, credit = Σcredit in `_grouped` / `_by_resource` /
       `_by_day`. pytest asserting the per-row split and that it reconciles to the summary net/gross/credit.
-- [ ] [BACKEND] P2. **SKU breakdown dimension.** Add `sku` to the route `Dimension` literal + a `_by_sku` grouping (by
-      `(cloud, service, sku)`), wired into `breakdown()`. This surfaces the hidden #1 cost driver (Coldline Class A
-      Operations). pytest.
+- [x] ✅ [BACKEND] P2. **SKU breakdown dimension** — deployment-api@9b4e59d. Add `sku` to the route `Dimension`
+      literal + a `_by_sku` grouping (by `(cloud, service, sku)`), wired into `breakdown()`. This surfaces the hidden #1
+      cost driver (Coldline Class A Operations). pytest.
 - [ ] [BACKEND] P2. **Bucket storage volume + class split.** For `dimension=bucket` rows, attach total **GB** + a
       per-storage-class split (Standard / Nearline / Coldline / Archive) + derived **$/GB**, from the storage SKUs'
       `usage_amount` (`gibibyte month` → average GB over the window) grouped by `resource.name`. New optional
@@ -90,8 +91,8 @@ source: cost_observability_ui_2026_07_08.md
 - [ ] [BACKEND] P2. **AWS net + invoice reconciliation.** Use `line_item_net_unblended_cost` (net of discounts) and add
       a tax/fee line (relax the `Usage`/`DiscountedUsage`-only filter or a second query) so the AWS total reconciles to
       the invoice; label the current figure "usage spend" until then. pytest.
-- [ ] [BACKEND] P3. **Zone dimension.** Add `location.zone` (GCP) / `line_item_availability_zone` (AWS) to
-      `CostRecord` + a finer zone cut of the region dimension. pytest.
+- [x] ✅ [BACKEND] P3. **Zone dimension** — deployment-api@537af3d. Add `location.zone` (GCP) /
+      `line_item_availability_zone` (AWS) to `CostRecord` + a finer zone cut of the region dimension. pytest.
 - [ ] [BACKEND] P3. **Codex contract update.** Post-phase codex audit — update
       `codex/05-infrastructure/billing-cost-observability.md` with the new SKU / usage / bucket-volume / waste fields +
       the extended `/api/costs/breakdown` row contract.

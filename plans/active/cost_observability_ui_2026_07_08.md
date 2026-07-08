@@ -6,14 +6,19 @@ summary:
   driven by the real billing exports — GCP BigQuery billing_export and AWS CUR→Athena (aws_billing.cur_uts_cost_usage).
   High-level total → per-cloud → per-service → per-day → per-resource/bucket, on data we fully have today. GitHub
   renders dummy data until a billing PAT lands; business-context (asset_group/archetype) is a tracked fast-follow.
-status: active
+status: superseded
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui, unified-trading-library]
 scope: [engineer]
 tags: [billing, cost, observability, bigquery, athena, cur, deployment-ui, cockpit]
-related: [billing-cost-observability.md]
+related:
+  [
+    billing-cost-observability.md,
+    cost_obs_backend_sku_usage_enrichment_2026_07_08.md,
+    cost_obs_ui_unified_breakdown_2026_07_08.md,
+  ]
 created: "2026-07-08"
 last_updated: "2026-07-08"
 parent_epic: deployment_and_user_management_master
@@ -29,11 +34,20 @@ depends_on:
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: [cost_obs_backend_sku_usage_enrichment_2026_07_08.md, cost_obs_ui_unified_breakdown_2026_07_08.md]
 source:
 ---
 
 # Cost Observability UI — comprehensive GCP + AWS billing breakdown on /ops/costs
+
+> **⏩ SUPERSEDED 2026-07-08 — the remaining build is now two AO-dispatched plans:**
+> **`cost_obs_backend_sku_usage_enrichment_2026_07_08.md`** (backend-engineer, active) +
+> **`cost_obs_ui_unified_breakdown_2026_07_08.md`** (ui-developer, draft-gated on the backend). **RETAINED as the
+> verification checkpoint** — when the workers finish we reconcile their output against the design + evidence here (the
+> audit findings, the live `bq` probes, the enrichment spec) and fix any residual gaps in the code. **NOT carried by the
+> AO plans (still live here):** the GitHub real-billing PAT (BLOCKED-CREDENTIALS), the AWS WIF deploy-time cutover, and
+> the business-context / asset_group fast-follow — re-home these to a new plan when picked up. Everything already
+> shipped below (Phase A/B/C + the net-of-credits P1 fix) stays done.
 
 > **LOCAL / human plan** (`assigned_vm: NA`) — driven hands-on in a slot-4 interactive session, not AO-dispatched.
 > Operator decisions captured 2026-07-08: (1) human plan; (2) build GCP + AWS live now, GitHub renders **dummy data**
