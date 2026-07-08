@@ -134,15 +134,12 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
       instrument_type on XG_SHOTS shipped as `instruments-service@4281a01db`), NOT the captured-vs-seed class §9.2b
       targets. Task 004's one-off normalization pass will clean the 10 residual test-row dups (safe to run now that the
       captured-vs-seed dedup has stabilised). No code shipped this session — verification-only.
-- [ ] [DATA] P1. **BLOCKED-PREREQUISITES (2026-07-06, slot-7).** One-off manifest normalization (issue doc §8) — clean
-      any residual dup pollution + the stale test rows, **only AFTER** the §9.2b consolidator is confirmed deployed
-      (normalizing against the old consolidator re-duplicates). **BLOCKED**: 2nd auto-dispatch to slot-7 today with the
-      same unmet prereq (previous ruling BLK-afcc5da6 → this ruling BLK-18a3d596, main-agent verdict PARK). Task -003
-      (§9.2b consolidator confirmation) still `status=queued` at LDR tip; zero UTL `manifest_consolidator.py` commits in
-      the last 24 h — the Cloud Run consolidator image rebuild post `unified-trading-library@f5ec2291f` has NOT been
-      verified. **Un-block sequence**: (a) task -003 completes (image tag verify against the deployed Cloud Run
-      consolidator jobs — captured-vs-seed dups collapsed for XG / XG_SHOTS); (b) task -004 re-dispatches and runs the
-      one-off normalization against the now-clean consolidator.
+- [ ] [DATA] P1. **UNBLOCKED (2026-07-08, slot-2)** — prior BLOCKED-PREREQUISITES cleared: task -003 (§9.2b consolidator
+      confirmation) is now VERIFIED complete (2026-07-07, slot-7 opus/max entry above) — 0 captured-vs-seed dup groups
+      for XG/XG_SHOTS on all leagues, consolidator confirmed deployed and taking effect on the live sports manifest.
+      One-off manifest normalization (issue doc §8) may now run against the clean consolidator: clean the 10 residual
+      test-row dups (2024-12-14, `instrument_type` `'shot'` vs `'None'`, pre-dating `instruments-service@4281a01db`) +
+      re-verify no new captured-vs-seed dups reappeared.
 - [ ] [VERIFY] P0. **BLOCKED-PREREQUISITES (2026-07-06, slot-12).** Re-evaluate the `understat-vm-xg-complete` gate
       against the now-captured manifest; flip it green ONLY on real captured shots (not hollow). Then the **6 parked
       sports tasks** unblock (this is the whole point). SSOT: the issue doc + `agent-orchestrator` backlog gating
