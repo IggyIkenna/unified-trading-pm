@@ -106,7 +106,21 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
    `0x00822ba38a39b79cbc5b7f62ba1a6886a45f9e4c` (venue/chain/base*asset live in separate columns instead). **Target**:
    `VENUE-CHAIN:POOL:TOKEN0-TOKEN1[-FEE_TIER]` (matching `canonical_id_builder.py`'s own `_build_defi` docstring
    example, `UNISWAP_V3-ETHEREUM:POOL:USDC-WETH-500`) — pool_address stays as its own column for on-chain lookups, it
-   just stops being the \_entire* identity key.
+   just stops being the \_entire* identity key. **UPDATE 2026-07-08, reconciled — this is a data-regeneration gap, NOT
+   (only) a code gap**: real current adapter code
+   (`instruments-service/instruments_service/reference_data/adapters/defi/uniswap_v3.py:489-492`, `_build_pool_record`)
+   already builds a structured key — `instrument_key = f"{venue_tag}:POOL:{base}-{quote}:{fee_str}"` (e.g.
+   `UNISWAP_V3-ETHEREUM:POOL:USDC-WETH:3000`) — confirmed by reading the code directly. But the REAL, CURRENT
+   `prod/catalog.parquet` (re-verified 2026-07-08, 7,284 DeFi rows) still shows the bare-address form with a bare
+   `UNISWAP_V3` venue (no `-ETHEREUM` chain suffix) for all 2,030 real Uniswap V3 rows — a venue-tagging shape the
+   current code doesn't even produce anymore. This means the persisted catalog predates this adapter code (or was built
+   by a different, older write path) and has never been regenerated since — the fix here is likely a **catalog
+   regeneration/backfill against the current adapter code**, not a from-scratch code change, though the current code's
+   own gaps still apply on top (colon-before-fee-tier should be dash per this finding's target; `fee_str` uses Uniswap's
+   raw feeTier units — e.g. `3000` — not real basis points — a real basis-point value is computed separately as
+   `pool_fee_tier_bps` but isn't the one embedded in the instrument_key string). **Not yet re-verified across the other
+   12 protocols** — only Uniswap V3 was spot-checked for this update; don't assume the same code-vs-catalog gap shape
+   holds for all of them without checking.
 
 3. **The 5 on-chain-perp venues (HYPERLIQUID/ASTER/PACIFICA-SOLANA/EXTENDED-STARKNET/LIGHTER-ZKSYNC) all store
    instrument_type=PERPETUAL as the field but embed PERP (not PERPETUAL) in the instrument_id key** — consistent across
