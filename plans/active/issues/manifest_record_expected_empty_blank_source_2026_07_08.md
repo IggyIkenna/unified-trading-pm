@@ -221,3 +221,12 @@ doc's understat cells post-fix, audit other high-concurrency buckets for the sam
       `PreconditionFailed` instead of recomputing. Filed
       `plans/active/issues/manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md` (P0) with the fix + 3
       follow-up todos.
+- [x] ✅ [DATA] P0. **Fourth blank-source callsite found this session (2026-07-08, slot-4)**: the understat.py table
+      above marked ALL 4 `record_expected_empty()` callsites fixed (`instruments-service@5fc535e`), but that fix did NOT
+      cover the file's separate per-league **honest-absence** `record_empty()` calls (3 in `_fetch_understat_xg`'s "no
+      fixtures this date" fallback paths, 1 in `_run_understat_shots_date`) — these still landed `source=''`, confirmed
+      live via the understat-eu-residual-closer-20260708-v2 re-run (see plan Progress Log, 22:5x UTC entry). Fixed:
+      `instruments-service@ffe7555`, added `source=_orch._sports_ref_source("understat_xg"|"understat_xg_shots")` to
+      all 4. Reinforces the still-open P0 root-cause todo below (`_record_status()` missing `_stamp_producer_source()`)
+      — this file alone needed 2 separate rounds of per-callsite patching (`record_expected_empty()` then
+      `record_empty()`), exactly the whack-a-mole pattern that root fix would end.

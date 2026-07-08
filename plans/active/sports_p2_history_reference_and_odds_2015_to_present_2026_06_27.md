@@ -286,6 +286,49 @@ re-diagnosing that drift is out of scope for this re-verification todo (it is or
 question this task was dispatched to close). No checkbox change to items #1/#2 themselves — they remain ✅, now with an
 independent confirmatory pass on record. Issue doc todo flipped ✅ with full counts.
 
+### 2026-07-08 22:5x UTC — slot-4: item #4 — independent dedup-non-collision confirmation + fourth blank-source callsite found + fixed
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-016` (item #4), resumed from slot-5's 22:1x UTC "v2
+closer running" handoff.
+
+**v2 closer (`understat-eu-residual-closer-20260708-v2`, PID 303494) completed while I was picking up this task** —
+`processed=1169 raised=0`, `ALL DATES RESOLVED (0 attempted_failed)`. Its OWN internal re-check
+(`blank_reason_eu_dates()`) reported **1169 blank-reason dates still remain — byte-identical to the pre-run count**.
+
+Independently reproduced the same "old row + new row coexist" symptom slot-13 root-caused in parallel this same window
+(`plans/active/issues/manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md`, filed ~23:08 UTC — a lost-update
+race in `manifest_consolidator.py::_write_consolidated()`'s `PreconditionFailed` CAS-retry loop: it re-uploads the SAME
+stale pre-computed `payload` instead of re-running the DuckDB merge against the fresh canonical). **Deferring to that
+issue doc as the SSOT for this bug** — no need to re-diagnose here. Applying last-write-wins dedup manually (by
+`written_at`) to get the TRUE current gate state despite the race:
+
+| data_type | pre-closer pending_fetch | post-closer pending_fetch (deduped) | resolved |
+| --------- | ------------------------ | ----------------------------------- | -------- |
+| XG        | 250                      | 190                                 | 60       |
+| XG_SHOTS  | 5,843                    | 2,065                               | 3,778    |
+
+**Gate still NOT MET** (190 + 2,065 = 2,255 rows remain, real residual — understated by any undeduped OR source-filtered
+query until the CAS-retry race is fixed).
+
+**New finding, distinct from the consolidator race**: while comparing old-vs-new row pairs I found the NEW rows (the
+ones the closer just wrote) carry `source=''`, not `source='understat'` — a FOURTH blank-source callsite, in code
+slot-5's fix (`instruments-service@5fc535e`, which only touched `record_expected_empty()` callsites) didn't cover: the
+per-league **honest-absence** `record_empty()` calls inside `_fetch_understat_xg` (3 callsites — the
+coverage-start/season-window guards already had `source=`, but the "no fixtures this date" fallback paths did not) and
+`_run_understat_shots_date` (1 callsite). **Fixed**: `instruments-service@ffe7555` — added
+`source=_orch._sports_ref_source("understat_xg"|"understat_xg_shots")` to all 4, matching the pattern
+`manifest_record_expected_empty_blank_source_2026_07_08.md` already established for weather/sfi/footystats. QG green,
+shipped via quickmerge. Does not retroactively fix the 7,553 already-written blank-source rows, and — per that issue
+doc's still-open P0 root-cause todo (`ManifestWriter._record_status()` never calls `_stamp_producer_source()`) —
+per-callsite patches like this one will keep being needed for any NEW callsite until that root fix lands.
+
+**No checkbox flip — gate genuinely not met.** **Next slot**: item #4 is now blocked on TWO already-filed, already
+-owned P0 fixes landing first, neither of which is a quick re-dispatch: (1)
+`manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md`'s CAS-retry fix (without it, no gate-verification query
+on ANY source in this plan is fully trustworthy), and (2) re-running the residual closer AFTER (1) lands to
+force-refetch just the still-outstanding ~2,255 cells (cheap once the race stops eating the writes). Do not re-attempt a
+bare re-run before (1) ships — it will reproduce the same coexistence symptom.
+
 ### 2026-07-08 22:1x UTC — slot-5: item #4 — SECOND, deeper root cause found (source-blindness) + fixed + re-verifying
 
 **Task**: `sports_p2_history_reference_and_odds_2015_to_present-016` (item #4), resumed from slot-3's 21:3x UTC closer
