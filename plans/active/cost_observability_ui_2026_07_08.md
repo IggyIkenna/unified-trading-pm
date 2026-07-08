@@ -246,3 +246,25 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
   cell is a cyan pill, 0 page errors. **Note (app-wide active-colour change):** pill tab bars now show the active tab as
   a cyan pill (was a dark inset pill) — consistent with the mock + the sidebar nav's own active style; flagged for
   operator review.
+- 2026-07-08 — **Root cause found + fixed: the CSS reset was zeroing ALL Tailwind spacing app-wide (one commit).** After
+  the mock-match pass the controls still ran together (`All clouds` then `GCPAWSGitHub`) and, per operator, stacked
+  cards had no vertical separation (horizontal only). Diagnosed via computed styles: every Tailwind `p-*`/`px-*`/`py-*`
+  AND `m-*`/`space-y-*` resolved to `0` — the unlayered `* { margin:0; padding:0 }` reset in `index.css` outranks
+  Tailwind v4's _layered_ utilities (layer-vs-unlayered cascade), silently killing all Tailwind margin + padding. This —
+  not the gap — was the real source of the app-wide "cramped/ugly" look; the earlier divider/gap passes were treating a
+  symptom (removing the gap fully collapsed the zero-padding buttons).
+  - **Fix (one place):** moved the reset into `@layer base` (`* { box-sizing }` stays unlayered;
+    `@layer base { * { margin:0; padding:0 } }`) so `@layer utilities` wins. Un-utility'd elements still get 0;
+    hand-written unlayered rules (`.card-content`, `select`, …) still win; the only 2 negative-margin utilities
+    (edge-bleed separators) are benign. Measured: seg-button padding 0→11px, cost sections 0→14px vertical gap
+    (bounding-box; Tailwind v4 `space-y` applies logical `margin-block-start`, so a naive `.marginTop` read shows 0 —
+    the rendered gap is the truth).
+  - **Controls onto the mock spec (padding restored → flush pills read correctly):** shared `ui/tabs.tsx` pill (drop
+    `gap-1`, `p-1`→`p-0.5`, pill-scoped inactive-hover — fixes 6 pages), cost `Segmented` (exact `px-[11px] py-[5px]`,
+    no hover box), `DeployConsole`; **converted** `LaunchTab` (bordered card-tabs → segmented pill) + `LiveDeployments`
+    events/logs (also fixed a **dark-mode bug**: hardcoded `bg-blue-50`/`text-blue-700` light colours on the dark theme
+    → `accent-dim`/`accent` tokens). Cloud filter kept segmented (now readable; mock's dropdown is an optional tweak).
+  - **deployment-ui@`f4c59e7`** — `quality-gates.sh --no-fix`-green (tsc + ESLint + orphan-audit + **vitest 911
+    passed** + UI codex + production build) → quickmerge to `live-defi-rollout`; screenshotted 6 pages (cost / cockpit /
+    landing / deployments / research / safety-ops) in dark — controls match the mock, vertical rhythm restored, **0
+    breakage**. Both CSS root-cause fixes (margin + padding) now live in one `@layer base` block.
