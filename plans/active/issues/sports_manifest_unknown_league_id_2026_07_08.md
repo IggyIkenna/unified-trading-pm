@@ -113,3 +113,43 @@ each data_type family, and follow that fetcher's code path to the exact line wri
 the scale (17 data_types affected) it may be a SHARED upstream helper rather than 17 independently broken fetchers —
 check for a common dependency (e.g. a league-name-to-id lookup table missing an entry for one specific real league)
 before assuming per-fetcher fixes are needed.
+
+## 2026-07-08 follow-up — re-verified with real data, re-characterizes severity, 2 more candidates ruled out
+
+Re-pulled the real manifest (`_index/availability_index.parquet`, same 2,373 `league_id="UNKNOWN"` rows) and sampled
+their `capture_status` / `venue` / `source` columns directly (not just counted them):
+
+- **All 2,373 rows are `capture_status ∈ {expected_unattempted, empty_confirmed}` — ZERO are `captured`.** This changes
+  the bug's characterization: these are honest-absence / gap-fill BOOKKEEPING rows (the "we expected data here but
+  didn't get it" placeholder), not real fetched data silently mislabeled under the wrong league. The "Why it matters"
+  section above ("means whatever real league(s) these rows actually belong to are under-counted... a data-completeness
+  correctness bug") should be read as: a phantom "UNKNOWN" pseudo-league is polluting the DENOMINATOR/gap-tracking side
+  of honest-coverage, not silently corrupting any real captured row's league attribution. Still a real, worth-fixing,
+  currently-recurring bug — just a different (lower-severity) failure mode than "real data mislabeled."
+- `source` is populated per data_type-family (`api_football` 983, `footystats` 278, `understat` 278, `transfermarkt`
+  139, `soccer_football_info` 139, `open_meteo` 139, `mdps_odds_horizon_bucket` 139 — sums to 2,373), `venue` is blank
+  on all 2,373. Every affected data_type count is exactly 139 (`FIXTURE_STATS`/`FIXTURE_EVENTS` at 144, matching the
+  original finding). The fact that MULTIPLE independent source families (not just api_football) produce the identical
+  "UNKNOWN" sentinel strongly suggests either (a) a shared helper all these per-source gap-fill loops call, or (b) each
+  per-source enrichment orchestrator module (`footystats.py`, `understat.py`, `transfermarkt.py`, `sfi.py`,
+  `weather`/`open_meteo`, `mdps` odds-horizon-bucket) has its OWN structurally-similar version of the
+  `emit_empty_gaps_for_entity`-style loop found in `sports_reference_core.py` (`_AfManifestHooks`, around lines 95-133)
+  and each independently hits the same edge case — this still needs a per-module trace to confirm which.
+- **Ruled out (2 more candidates, checked this session):**
+  1. `instruments_service/reference_data/adapters/sports/adapters/base.py:357` — this `return "UNKNOWN"` is the fallback
+     branch of `_classify_error()`, an HTTP/network-error CLASSIFICATION string (alongside
+     `INVALID_API_KEY`/`RATE_LIMIT_EXCEEDED`/etc.) — unrelated to `league_id` construction. Not the source.
+  2. `unified_api_contracts.canonical.domain.sports.LEAGUE_REGISTRY` (via `league_classification_data_a.py` / `_b.py`)
+     contains no literal `"UNKNOWN"` league_id entry (`grep -n "UNKNOWN"` on both files: zero hits) — the 94-league
+     registry itself is clean; this isn't a bad static-data seed row propagating through
+     `get_expected_leagues_for_source("api_football")`.
+- Also checked for a generic `fillna("UNKNOWN")`-style manifest-consolidation substitution (would explain why it spans
+  so many independent per-source paths uniformly) — no hit in `unified_trading_library` or `instruments-service`
+  (grepped both for the literal pattern). Not ruled out entirely (a consolidator-side cause could still use a different
+  literal/pattern), but the most common "blank → sentinel" idiom isn't present.
+- **Did not attempt a data migration this pass**: with the exact write call site still unconfirmed, I don't know what
+  the CORRECT `league_id` substitution should be for each of the 2,373 rows — rewriting them to a guessed value risks
+  creating new, differently-wrong data. Recommend the dedicated trace above land FIRST, then a rewrite-in-place
+  migration (operator's stated preferred mechanic) once the correct per-row league_id can be derived with confidence
+  (e.g. from `fixture_id`/`date` cross-referenced against the real per-league fixtures parquet for that date, for the
+  data_types that carry a `fixture_id`).

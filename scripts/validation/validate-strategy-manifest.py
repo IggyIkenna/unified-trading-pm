@@ -273,7 +273,9 @@ def validate_maturity_consistency(strategies: list[dict[str, object]]) -> list[s
 
         code = maturity.get("code")
         if isinstance(code, dict):
-            status = str(code.get("status", ""))
+            status = str(code.get("status", ""))  # noqa: qg-empty-fallback — status is optional; "" safely falls
+            # through the `status in code_level_map` check below (only "C0".."C4" are members), so an absent status
+            # is correctly treated as "nothing to validate", not silently misread as a real maturity level.
             if status in code_level_map:
                 expected_true = code_level_map[status]
                 for field in ("class_exists", "unit_tests", "qg_pass", "merged"):

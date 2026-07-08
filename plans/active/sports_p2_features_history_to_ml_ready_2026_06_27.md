@@ -117,6 +117,57 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-08 — slot 3 (20th dispatch of Todo 1/Todo 3 cycle — code fix shipped + critical new finding)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ; concrete progress made, checkbox NOT flipped**
+
+Re-verified state (unchanged from slot-11's 2026-07-07 19th dispatch): P2a 8/9 (Todo 9 parked
+BLOCKED-OPERATOR-DECISION/tracker-only), P2b 4/7 (Understat Todo 4 parked BLOCKED-PREREQUISITES, footystats VM
+`fs-backfill-20260706-161335` running 22+h progress unknown, Todo 7 verify parked on #4+#5). No sports backfill VMs
+running in asia-northeast1-c. Features bucket `features-sports-prd-central-element-323112`: still only the 92-day P1
+golden window (2025-09-01..2026-01-15 span), full 2015→present compute (Todo 1) NOT run — gate remains genuinely unmet,
+consistent with all 19 prior dispatches.
+
+**Root-caused + fixed a real bug found in the existing 92-day window's manifest**: downloaded + diffed the
+availability_index — 130 `attempted_failed(ValueError)` entries (14 dates: 2025-09-01→2025-09-13 + 2025-10-01, mostly
+`injuries`/`teams`/`leagues`/`fixtures` etc.). Traced to `_stamp_available_at`'s post-match join in
+`_available_at_helpers.py`: `injuries` and `fixture_player_stats` have no registered GCS normalizer
+(`gcs_normalizers._ENTITY_NORMALIZERS`), so they keep a raw **int64** `fixture_id` from source parquet, while
+`fixtures_for_join` (via `normalize_fixtures`) always carries a **stringified** `fixture_id` — the merge raised
+`ValueError: You are trying to merge on int64 and object columns`, caught by the generic handler and recorded as an
+un-evidenced `attempted_failed(ValueError)` instead of a real outcome. Fixed by coercing both merge-key sides to the
+codebase's canonical numeric-id-string convention (mirrors `gcs_normalizers._to_str_id`). Added a regression test
+(`test_post_match_join_survives_int_fixture_id`, parametrized over both affected tables); 27/27 unit tests pass. QG
+green (272s), shipped: **features-service@12816d87**. This fix does NOT by itself flip the gate — full-history compute
+(Todo 1) still needs P2a/P2b done — but it means the eventual full compute pass will correctly classify
+`injuries`/`fixture_player_stats` instead of repeating this failure mode across 2015→present.
+
+**CRITICAL SEPARATE FINDING — filed as its own issue, NOT sports-scoped**: while validating the fix with
+`--dry-run --force --date 2025-09-01` (intended as a safe no-op check), the run silently wrote 33 real rows to the
+PRODUCTION `features-sports-prd-central-element-323112/_index/availability_index.parquet` (verified via `gsutil stat`
+before/after: 90,331→91,211 bytes, row count 3564→3584, `written_at` matching the dry-run's wall clock) despite logging
+"DRY RUN — no cloud writes will be performed". Root cause: `ManifestWriter`'s GCS write path
+(`unified_trading_library/manifest_writer/_writer_io.py:565,627`) calls `get_storage_client()` directly, which has NO
+dry-run awareness — only `get_data_sink()` (used by the real feature/candle/tick writers) checks the UCI
+`_dry_run_active` flag. This is a cross-cutting UTL bug affecting every service using `ManifestWriter` under
+`--dry-run`, not sports-specific. Filed:
+[`plans/active/issues/manifest_writer_dry_run_gcs_write_leak_2026_07_08.md`](issues/manifest_writer_dry_run_gcs_write_leak_2026_07_08.md)
+(P1, 3 actionable todos: UTL dry-run gate fix, UTL regression test, cross-plan pollution audit) —
+`unified-trading-pm@eb01957c0`. The 33 polluted rows are expected to self-correct on the eventual real `--force`
+recompute of 2025-09-01 (manifest dedups on row key, not `written_at` — confirmed by this session's own diff: 33 raw
+appends net to only +20 rows, implying partial dedup already occurred at write time). No manual GCS surgery attempted —
+flagged in the issue doc instead.
+
+**What I did NOT do**: did not launch full 2015→present compute (Todo 1) — P2a/P2b remain incomplete, and all prior
+operator answers (BLK-9a447c3e, BLK-90adcb19, BLK-9083fd18) resolved to "wait" with no later reversal. Did not attempt
+to fix the UTL dry-run leak myself — cross-repo, high blast-radius (every ManifestWriter consumer), filed for a
+dedicated fix rather than a rushed same-session change. Did not run any further `--dry-run` commands after discovering
+the leak (used real, non-dry, unit-test-based validation instead for the regression test).
+
+Checkbox NOT flipped (Todo 1 still unmet, so full-history cleanliness is still structurally unreachable) — but this
+dispatch produced a real, shipped, tested code fix plus a critical cross-repo finding, unlike the 19 purely diagnostic
+prior dispatches on this exact blocked state.
+
 ### 2026-07-07 — slot 10 planning (handoff — CONTEXT-PARK to fresh slot)
 
 **Todo 1 (compute features 2015→present)** — DISPATCHED again; slot-10 arrived at ~87% context and filed BLK-9b45b24d
@@ -126,20 +177,21 @@ overflow leaves partial state that is worse than no run). `/skip-current-task` t
 **Handoff note for the fresh slot that picks this up next**:
 
 - Plan file: `plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md` (this file).
-- Task text: line 80 `[ ] [DATA] P0. Compute features 2015→present …` — un-flipped, no year chunks executed yet
-  (only `day=2020-01-01/feature_group=sfi_progressive/` present per slot-12 GCS check 2026-06-27).
+- Task text: line 80 `[ ] [DATA] P0. Compute features 2015→present …` — un-flipped, no year chunks executed yet (only
+  `day=2020-01-01/feature_group=sfi_progressive/` present per slot-12 GCS check 2026-06-27).
 - Environment state: NO VM running for this task on slot-10. No partial writes attributable to this session. FSS bucket
   `gs://features-sports-central-element-323112/sports_features/by_date/` remains essentially empty (last observed by
   slot-12 2026-06-27; re-check before launching).
-- Invocation for compute: `python3 -m features_service.sports --operation compute --mode batch --asset-group SPORTS
-  --start-date <Y>-01-01 --end-date <Y>-12-31 --skip-existing` (year-chunked, resumable — see § Mechanics line 73) or
-  the parallel-backfill launcher `launch-features-sports-parallel-backfill-vm.sh`.
-- Final verification: `features-service/scripts/sports/check_pipeline_completeness.py --start-date 2015-01-01
-  --end-date <today>` per era (script's `setup_events()` fix is already shipped at `features-service@5ebac9a8`, so it
-  runs cleanly).
+- Invocation for compute:
+  `python3 -m features_service.sports --operation compute --mode batch --asset-group SPORTS --start-date <Y>-01-01 --end-date <Y>-12-31 --skip-existing`
+  (year-chunked, resumable — see § Mechanics line 73) or the parallel-backfill launcher
+  `launch-features-sports-parallel-backfill-vm.sh`.
+- Final verification:
+  `features-service/scripts/sports/check_pipeline_completeness.py --start-date 2015-01-01 --end-date <today>` per era
+  (script's `setup_events()` fix is already shipped at `features-service@5ebac9a8`, so it runs cleanly).
 
-**Prereq gate — VERIFY BEFORE LAUNCHING (main's specific instruction on BLK-9b45b24d)**: `sports-p2a-enrichment-
-coordinator-complete=False`. Cross-verify against the upstream plans BEFORE attempting compute:
+**Prereq gate — VERIFY BEFORE LAUNCHING (main's specific instruction on BLK-9b45b24d)**:
+`sports-p2a-enrichment- coordinator-complete=False`. Cross-verify against the upstream plans BEFORE attempting compute:
 
 - `plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md` — needs 6/6 P2a todos complete.
 - `plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md` — needs 7/7 P2b todos complete.
@@ -521,29 +573,39 @@ Todo 1 (full 2015→present) remains blocked on Understat ETA ~2026-07-01 02:00 
 
 State verified 2026-07-03 06:00 UTC (consolidated manifest downloaded, IS availability_index.parquet at 05:21 UTC run):
 
-| Data | eu | af | captured | empty_confirmed |
-|------|----|----|----------|-----------------|
-| Understat XG_SHOTS | 13,796 | 384 | 0 | 286,560 |
-| Understat XG | 300 | 296 | 4,444 | 301,343 |
-| footystats MATCHES | 88,369 | 1,459 | 26,343 | 173,134 |
-| footystats PREDICTIONS | 97,105 | 0 | 28,513 | 141,961 |
-| footystats ODDS | 1,318 | 277 | 4,468 | 79,358 |
+| Data                   | eu     | af    | captured | empty_confirmed |
+| ---------------------- | ------ | ----- | -------- | --------------- |
+| Understat XG_SHOTS     | 13,796 | 384   | 0        | 286,560         |
+| Understat XG           | 300    | 296   | 4,444    | 301,343         |
+| footystats MATCHES     | 88,369 | 1,459 | 26,343   | 173,134         |
+| footystats PREDICTIONS | 97,105 | 0     | 28,513   | 141,961         |
+| footystats ODDS        | 1,318  | 277   | 4,468    | 79,358          |
 
-- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (unchanged — no availability_index).
-- Footystats ODDS VM 2 (`fs-backfill-20260629-062206`) completed at 12:55 UTC 2026-06-29 (exit_code=0). ODDS still has 1,318 eu (VM did not fully clear pending_fetch).
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (unchanged — no
+  availability_index).
+- Footystats ODDS VM 2 (`fs-backfill-20260629-062206`) completed at 12:55 UTC 2026-06-29 (exit_code=0). ODDS still has
+  1,318 eu (VM did not fully clear pending_fetch).
 - Footystats M+P VM: **never launched** (was waiting for ODDS VM 2 completion — that dependency is now met).
-- Understat VM (`us-backfill-20260628-070120`) **preempted at date 2019-08-09** (14:49 UTC 2026-06-29). XG_SHOTS: 13,796 eu remain.
+- Understat VM (`us-backfill-20260628-070120`) **preempted at date 2019-08-09** (14:49 UTC 2026-06-29). XG_SHOTS: 13,796
+  eu remain.
 - IS tarball current (instruments-service@a945516, 2026-07-01T07:30:51Z).
 - No sports backfill VMs running in asia-northeast1-c.
 
-**Main-agent answer to BLK-2ff03344**: Option C — park task until backlog prereq gates added. Options A/B rejected. **Operator action required**:
+**Main-agent answer to BLK-2ff03344**: Option C — park task until backlog prereq gates added. Options A/B rejected.
+**Operator action required**:
+
 1. Confirm hk OOM resolved (precondition for Understat VM re-launch mentioned by main agent)
-2. Re-launch Understat VM: `bash deployment-service/scripts/vm/launch-understat-backfill-vm.sh 2014-01-01 2026-07-03` (SPOT; skip-existing handles already-captured dates)
-3. Launch footystats M+P VM: `bash deployment-service/scripts/vm/launch-footystats-backfill-vm.sh 2019-01-01 2026-07-03` (SPOT; will process MATCHES + PREDICTIONS + remaining ODDS eu after ODDS subset run first)
-4. Add backlog prereq conditions to `agent-orchestrator/data/config/backlog.yaml` for tasks `sports_p2_features_history_to_ml_ready-005` and `-007`: gate on `understat-vm-xg-complete` AND `footystats-mp-complete`.
+2. Re-launch Understat VM: `bash deployment-service/scripts/vm/launch-understat-backfill-vm.sh 2014-01-01 2026-07-03`
+   (SPOT; skip-existing handles already-captured dates)
+3. Launch footystats M+P VM: `bash deployment-service/scripts/vm/launch-footystats-backfill-vm.sh 2019-01-01 2026-07-03`
+   (SPOT; will process MATCHES + PREDICTIONS + remaining ODDS eu after ODDS subset run first)
+4. Add backlog prereq conditions to `agent-orchestrator/data/config/backlog.yaml` for tasks
+   `sports_p2_features_history_to_ml_ready-005` and `-007`: gate on `understat-vm-xg-complete` AND
+   `footystats-mp-complete`.
 5. Flip `understat-vm-xg-complete` condition when Understat VM completes (XG_SHOTS eu → 0).
 
-Checkbox NOT flipped. Task released via /done (BLOCKED-OPERATOR — gate unmet, operator VM launches + backlog prereq gates needed).
+Checkbox NOT flipped. Task released via /done (BLOCKED-OPERATOR — gate unmet, operator VM launches + backlog prereq
+gates needed).
 
 ### 2026-07-03 — slot 2 (16th dispatch — WriteGateRejectedError semantic fix shipped, BLOCKED-PREREQ)
 
@@ -599,24 +661,29 @@ preempted; (B) launch Footystats M+P VM; (C) restart enrichment coordinator.
 
 **Todo 3 (features manifest clean) — BLOCKED-PREREQ (18th dispatch)**
 
-State verified 2026-07-03 ~08:25 UTC (IS availability_index downloaded from GCS, features bucket queried via non-snap gcloud `ikenna@odum-research.com`):
+State verified 2026-07-03 ~08:25 UTC (IS availability_index downloaded from GCS, features bucket queried via non-snap
+gcloud `ikenna@odum-research.com`):
 
-| Data | eu | af | captured | empty_confirmed |
-|------|----|----|----------|-----------------|
-| Understat XG_SHOTS | 13,796 | 384 | 9 | 286,560 |
-| Understat XG | 300 | 296 | 4,444 | 301,343 |
-| footystats MATCHES | 88,369 | 1,459 | 26,343 | 173,134 |
-| footystats PREDICTIONS | 97,105 | 0 | 28,515 | 141,961 |
-| footystats ODDS | 1,318 | 277 | 30,633 | 79,358 |
+| Data                   | eu     | af    | captured | empty_confirmed |
+| ---------------------- | ------ | ----- | -------- | --------------- |
+| Understat XG_SHOTS     | 13,796 | 384   | 9        | 286,560         |
+| Understat XG           | 300    | 296   | 4,444    | 301,343         |
+| footystats MATCHES     | 88,369 | 1,459 | 26,343   | 173,134         |
+| footystats PREDICTIONS | 97,105 | 0     | 28,515   | 141,961         |
+| footystats ODDS        | 1,318  | 277   | 30,633   | 79,358          |
 
-- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (unchanged — `day=2020-01-01/` only; no `availability_index/`). Features compute has NOT run.
-- Understat VM `us-backfill-20260628-070120`: **PREEMPTED at 2019-08-09** (last log 2026-06-29 14:49 UTC). NOT re-launched. XG_SHOTS eu=13,796 (dates 2019-08-09→present uncovered).
-- Footystats ODDS VM 2 (`fs-backfill-20260629-062206`): completed exit_code=0 at 12:55 UTC 2026-06-29. ODDS eu=1,318 still remain (small residual from completed dates range).
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (unchanged —
+  `day=2020-01-01/` only; no `availability_index/`). Features compute has NOT run.
+- Understat VM `us-backfill-20260628-070120`: **PREEMPTED at 2019-08-09** (last log 2026-06-29 14:49 UTC). NOT
+  re-launched. XG_SHOTS eu=13,796 (dates 2019-08-09→present uncovered).
+- Footystats ODDS VM 2 (`fs-backfill-20260629-062206`): completed exit_code=0 at 12:55 UTC 2026-06-29. ODDS eu=1,318
+  still remain (small residual from completed dates range).
 - Footystats M+P VM: **never launched** (MATCHES eu=88,369, PREDICTIONS eu=97,105 — entire 2019-2026 range uncovered).
 - No sports backfill VMs currently running in asia-northeast1-c.
 - P2a enrichment coordinator: re-launched 04:59 UTC 2026-07-03 from slot 3 (PID 991495), EU=406,995 at last check.
 
 Operator actions from 17th dispatch (BLK-2ff03344, Option C) have NOT yet been applied:
+
 - Understat VM NOT re-launched
 - Footystats M+P VM NOT launched
 - Backlog prereq conditions NOT added to task -005 or -007
@@ -624,95 +691,91 @@ Operator actions from 17th dispatch (BLK-2ff03344, Option C) have NOT yet been a
 Gate cannot be met: features availability_index absent (0 entries to evaluate). Checkbox NOT flipped.
 
 **BLK raised**: same operator action items as 17th dispatch:
-1. Re-launch Understat VM: `bash deployment-service/scripts/vm/launch-understat-backfill-vm.sh 2019-08-09 2026-07-03` (SPOT; skip-existing; range starts at preemption date to resume)
-2. Launch footystats M+P VM: `bash deployment-service/scripts/vm/launch-footystats-backfill-vm.sh 2019-01-01 2026-07-03` (SPOT; MATCHES+PREDICTIONS full range)
+
+1. Re-launch Understat VM: `bash deployment-service/scripts/vm/launch-understat-backfill-vm.sh 2019-08-09 2026-07-03`
+   (SPOT; skip-existing; range starts at preemption date to resume)
+2. Launch footystats M+P VM: `bash deployment-service/scripts/vm/launch-footystats-backfill-vm.sh 2019-01-01 2026-07-03`
+   (SPOT; MATCHES+PREDICTIONS full range)
 3. Add prereq conditions to backlog.yaml gating task -005 and -007 on upstream completion
 
 ### 2026-07-07 — slot 11 (19th dispatch — BLOCKED-PREREQ, structural gate absent, deep verification)
 
 **Todo 1 (compute features 2015→present) — BLOCKED-PREREQ (19th dispatch)**
 
-Fresh slot (Opus/max) picked up per slot-10 handoff ("route to fresh slot" — main-agent answer to
-BLK-9b45b24d). Full context re-verified:
+Fresh slot (Opus/max) picked up per slot-10 handoff ("route to fresh slot" — main-agent answer to BLK-9b45b24d). Full
+context re-verified:
 
 **Upstream state (2026-07-07, verified from IS availability index @ 07:46 UTC + GCS)**:
 
-- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9 todos complete**. Todo 9
-  (enrichment cleanliness) OFFICIALLY PARKED as **BLOCKED-OPERATOR-DECISION / TRACKER-ONLY**
-  (commit c8caeaada, 2026-07-07). Main-agent explicit verdict: agent tasks MUST NOT gate on EU→0
-  (409,201 EU at 54s/fixture rate = weeks-months away). Unblock requires operator action: raise
-  api-football tier, dedicated SPOT VM, or accept partial enrichment. Enrichment coordinator PID
-  3837082 alive per 2026-07-06 session-16 log.
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9 todos complete**. Todo 9 (enrichment
+  cleanliness) OFFICIALLY PARKED as **BLOCKED-OPERATOR-DECISION / TRACKER-ONLY** (commit c8caeaada, 2026-07-07).
+  Main-agent explicit verdict: agent tasks MUST NOT gate on EU→0 (409,201 EU at 54s/fixture rate = weeks-months away).
+  Unblock requires operator action: raise api-football tier, dedicated SPOT VM, or accept partial enrichment. Enrichment
+  coordinator PID 3837082 alive per 2026-07-06 session-16 log.
 - P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete**.
-  - Todo 4 (Understat XG_SHOTS): PARKED BLOCKED-PREREQUISITES 2026-07-06 (slot-7). Local backfill
-    terminated MAX_ROUNDS; big-5 residual XG_SHOTS af=384 + eu=13,811. Concrete 4-step unblock
-    sequence in plan (reclassify script + 13,811 eu resolution + verify + flip) — none run yet.
-  - Todo 5 (footystats M+P+ODDS): VM `fs-backfill-20260706-161335` (e2-standard-8, spot) RUNNING
-    22+ hours (created 2026-07-06T09:13:37-07:00, verified via gcloud). Progress unknown from this
-    slot — did NOT interrupt to check.
+  - Todo 4 (Understat XG_SHOTS): PARKED BLOCKED-PREREQUISITES 2026-07-06 (slot-7). Local backfill terminated MAX_ROUNDS;
+    big-5 residual XG_SHOTS af=384 + eu=13,811. Concrete 4-step unblock sequence in plan (reclassify script + 13,811 eu
+    resolution + verify + flip) — none run yet.
+  - Todo 5 (footystats M+P+ODDS): VM `fs-backfill-20260706-161335` (e2-standard-8, spot) RUNNING 22+ hours (created
+    2026-07-06T09:13:37-07:00, verified via gcloud). Progress unknown from this slot — did NOT interrupt to check.
   - Todo 7 (verify): PARKED BLOCKED-PREREQUISITES on items #4 + #5.
 
 **Features bucket state (verified via non-snap gcloud, `ikenna@odum-research.com`)**:
 
-- `gs://features-sports-prd-central-element-323112/sports_features/by_date/`: **92 days** (P1
-  golden window 2025-09-01..2025-11-30 = ✅ COMPLETE per P1d Todo 4 flipped 2026-07-03). All three
-  feature_groups (fixture / derived / odds) 91/91 with 0 blank-reason and 0 un-evidenced
-  attempted_failed.
-- `gs://features-sports-prd-central-element-323112/_index/availability_index.parquet`: present
-  (not queried this dispatch).
-- The OTHER bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: 1
-  object (`day=2020-01-01/`, stale — not the compute output bucket; several prior BLKs (12th,
-  17th, 18th) reference this as "empty" but the correct bucket is `-prd-`).
-- No fss-backfill-vm-\* running in asia-northeast1-c (verified via `gcloud compute instances list
-  --filter=name~fss-backfill-vm`).
+- `gs://features-sports-prd-central-element-323112/sports_features/by_date/`: **92 days** (P1 golden window
+  2025-09-01..2025-11-30 = ✅ COMPLETE per P1d Todo 4 flipped 2026-07-03). All three feature_groups (fixture / derived /
+  odds) 91/91 with 0 blank-reason and 0 un-evidenced attempted_failed.
+- `gs://features-sports-prd-central-element-323112/_index/availability_index.parquet`: present (not queried this
+  dispatch).
+- The OTHER bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: 1 object (`day=2020-01-01/`,
+  stale — not the compute output bucket; several prior BLKs (12th, 17th, 18th) reference this as "empty" but the correct
+  bucket is `-prd-`).
+- No fss-backfill-vm-\* running in asia-northeast1-c (verified via
+  `gcloud compute instances list --filter=name~fss-backfill-vm`).
 
 **`assert_upstream_manifest_healthy` code re-read** (features-service@LDR-HEAD,
-`features_service/sports/cli/handlers/_manifest_preflight.py`): checks **consolidator freshness
-only** (`assert_consolidator_healthy` — no-ops on empty bucket; raises
-`ManifestConsolidatorStaleError` when stale AND other-VM shards exist). Does NOT gate on
-`pending_fetch == 0` per data_type. Compute would RUN and write UPSTREAM_MISSING typed
-honest-absence for still-pending P2a enrichment + P2b understat cells. This matches the slot-12
-7th-dispatch code analysis.
+`features_service/sports/cli/handlers/_manifest_preflight.py`): checks **consolidator freshness only**
+(`assert_consolidator_healthy` — no-ops on empty bucket; raises `ManifestConsolidatorStaleError` when stale AND other-VM
+shards exist). Does NOT gate on `pending_fetch == 0` per data_type. Compute would RUN and write UPSTREAM_MISSING typed
+honest-absence for still-pending P2a enrichment + P2b understat cells. This matches the slot-12 7th-dispatch code
+analysis.
 
 **Structural failure diagnosis (19 dispatches deep)**:
 
-The task's `depends_on` (P2a, P2b, P0-spot-vm-launchers) is a plan-level directive. The backlog
-does NOT translate this into dispatcher `prereqs.conditions` — so the dispatcher re-picks this
-task every time other high-priority work drains, causing 19 dispatches over 10+ days. Every
-dispatch verifies the same blocked state and returns to queue, burning ~1 slot-hour + LLM cost per
-cycle. BLK-fbaabf35 (slot-7, 12th dispatch) explicitly asked operator to add backlog prereq
-conditions; BLK-2ff03344 (slot-4, 17th dispatch) resolved to option C (park until backlog gates
-added). **The backlog gates have not been added** (verified from `git log --since=2026-07-03 --
-data/` in agent-orchestrator — 0 commits touching `data/`).
+The task's `depends_on` (P2a, P2b, P0-spot-vm-launchers) is a plan-level directive. The backlog does NOT translate this
+into dispatcher `prereqs.conditions` — so the dispatcher re-picks this task every time other high-priority work drains,
+causing 19 dispatches over 10+ days. Every dispatch verifies the same blocked state and returns to queue, burning ~1
+slot-hour + LLM cost per cycle. BLK-fbaabf35 (slot-7, 12th dispatch) explicitly asked operator to add backlog prereq
+conditions; BLK-2ff03344 (slot-4, 17th dispatch) resolved to option C (park until backlog gates added). **The backlog
+gates have not been added** (verified from `git log --since=2026-07-03 -- data/` in agent-orchestrator — 0 commits
+touching `data/`).
 
 **Why prior operator answers repeatedly said B (wait) — restated**:
 
-1. `--skip-existing` locks in `UPSTREAM_MISSING` NaN cells on partial upstream. A later force
-   recompute is a SECOND full-history pass at material VM cost.
+1. `--skip-existing` locks in `UPSTREAM_MISSING` NaN cells on partial upstream. A later force recompute is a SECOND
+   full-history pass at material VM cost.
 2. Correct order: fill upstream to zero-missing → single compute pass.
-3. This is the "no silent placeholders" craft rule — locked-in UPSTREAM_MISSING against upstream
-   that IS filling is worse than the honest "not yet computed" state.
+3. This is the "no silent placeholders" craft rule — locked-in UPSTREAM_MISSING against upstream that IS filling is
+   worse than the honest "not yet computed" state.
 
 **What I DID NOT do this session (and why)**:
 
-- Did NOT launch features compute for 2015→present. Prior operator answer (BLK-9a447c3e slot-7,
-  BLK-90adcb19 slot-12, BLK-9083fd18 slot-12) resolved to B (wait). No later answer overturned it.
-  Main-agent 2026-07-07 "route to fresh slot" (BLK-9b45b24d) I read as: slot-10 shouldn't attempt
-  at 87% context — decision on WHETHER to attempt is not overturned.
-- Did NOT compute odds_features 2020-06→present partial (upstream is complete, would be viable) —
-  the plan's Todo 1 gate is per-day-per-feature-group and could be partially met, but the plan
-  intent per operator direction is single-pass compute after upstream fill; partial odds-only
-  compute now would leave the same "second pass needed for enrichment/derived" problem, no gain.
-- Did NOT modify `agent-orchestrator` config (backlog conditions) — outside craft scope
-  (data_engineering ≠ infra / orchestrator config). This is the exact structural fix needed, but
-  requires an infra/operator craft.
-- Did NOT verify fs-backfill VM progress — interrupting a live backfill is a scope violation and
-  its completion doesn't unblock THIS task (Understat blocker is separate).
+- Did NOT launch features compute for 2015→present. Prior operator answer (BLK-9a447c3e slot-7, BLK-90adcb19 slot-12,
+  BLK-9083fd18 slot-12) resolved to B (wait). No later answer overturned it. Main-agent 2026-07-07 "route to fresh slot"
+  (BLK-9b45b24d) I read as: slot-10 shouldn't attempt at 87% context — decision on WHETHER to attempt is not overturned.
+- Did NOT compute odds_features 2020-06→present partial (upstream is complete, would be viable) — the plan's Todo 1 gate
+  is per-day-per-feature-group and could be partially met, but the plan intent per operator direction is single-pass
+  compute after upstream fill; partial odds-only compute now would leave the same "second pass needed for
+  enrichment/derived" problem, no gain.
+- Did NOT modify `agent-orchestrator` config (backlog conditions) — outside craft scope (data_engineering ≠ infra /
+  orchestrator config). This is the exact structural fix needed, but requires an infra/operator craft.
+- Did NOT verify fs-backfill VM progress — interrupting a live backfill is a scope violation and its completion doesn't
+  unblock THIS task (Understat blocker is separate).
 
 **Recommendation to operator (this is escalation #6 asking the same structural fix)**:
 
-Add prereq conditions to backlog for `sports_p2_features_history_to_ml_ready-007` (and -005,
--003 if they exist) gating on:
+Add prereq conditions to backlog for `sports_p2_features_history_to_ml_ready-007` (and -005, -003 if they exist) gating
+on:
 
 ```yaml
 conditions:
@@ -729,11 +792,10 @@ conditions:
       - sports-p2b-footystats-mp-complete
 ```
 
-Then when P2a Todo 9 unblock path resolves + P2b Todos 4/5 flip, operator/main flips the
-conditions to true and dispatcher resumes. Zero further churn until then.
+Then when P2a Todo 9 unblock path resolves + P2b Todos 4/5 flip, operator/main flips the conditions to true and
+dispatcher resumes. Zero further churn until then.
 
-**BLK filing**: this dispatch → single choice A (add backlog conditions immediately; task stays
-blocked with no further dispatches until conditions flip). No B/C alternatives because prior
-operator answers exhausted them.
+**BLK filing**: this dispatch → single choice A (add backlog conditions immediately; task stays blocked with no further
+dispatches until conditions flip). No B/C alternatives because prior operator answers exhausted them.
 
 Checkbox NOT flipped. Slot 11 releases task; no VM launched.
