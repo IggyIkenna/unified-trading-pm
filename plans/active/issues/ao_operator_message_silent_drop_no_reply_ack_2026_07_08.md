@@ -179,10 +179,40 @@ an immediate respawn — respawn remains available on your go. (Meanwhile the fl
 orphaned-dispatched — their slots last pinged ~4h ago — which is the real answer to operator question 643; that
 fleet-reclaim gap is a separate issue worth its own doc.)
 
+## Follow-on fix (same session, 2026-07-08): orphaned dispatched-task reclaim
+
+The "separate fleet-reclaim gap" flagged above turned out to be a real, related dispatch bug — fixed in the same session
+per operator ("fix the root cause right away, add it to this plan").
+
+**Root cause**: `WorkerLivenessWatchdog._reclaim_exited_slot` cleared `slot.current_task` when a crashed worker's tmux
+session was gone, but did NOT release the task — leaving it `status=dispatched` with no owning slot. Such an orphan is
+unreachable by `/reassign` (its precondition checks `slot.current_task` → 400 "slot has no current task") and requeued
+by nothing, so it sat `dispatched` forever (`understat_local_backfill_completion-001`,
+`v1_enumerator_dispatch_not_deletable-009`). (The main agent's chat report blamed the tmux_pruner; the real culprit was
+the watchdog's own reclaim.)
+
+- [x] [BACKEND] `_reclaim_exited_slot` releases the still-`dispatched` task inline before clearing `current_task`
+      (root-cause fix). — ao@62d4da8f (`server/worker_liveness_watchdog.py`)
+- [x] [BACKEND] Task-centric backstop `reclaim_orphaned_dispatched_tasks` — the watchdog requeues any `dispatched` task
+      whose slot no longer owns it (`slot.current_task != task_id`) every tick (60s), preserving `target_slot`+affinity,
+      guarded by a 120s dispatch grace so a just-dispatched task is never falsely reclaimed. — ao@62d4da8f
+      (`server/state_store/tasks.py`, `server/config.py`)
+- [x] [TEST] 7 tests: broken-binding / missing-slot / live-binding-untouched / fresh-within-grace / queued+done ignored
+      / `_reclaim_exited_slot` releases / done-task-untouched. Full `quality-gates.sh` green. — ao@62d4da8f
+      (`tests/test_orphaned_task_reclaim.py`)
+
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what happened>.` -->
 
+- **2026-07-08** — ✅ **Orphaned dispatched-task reclaim SHIPPED** (ao@62d4da8f, live-defi-rollout; staging-first
+  drain). Root-caused live during operator's chat with the main agent (main tried `/api/slots/6,7/reassign`, got 400
+  "slot has no current task"): `WorkerLivenessWatchdog._reclaim_exited_slot` cleared `slot.current_task` on a
+  session-gone worker WITHOUT releasing the task → orphaned dispatched, unreachable by `/reassign`, requeued by nothing.
+  Fixed the creation path (release inline) + added a task-centric backstop (`reclaim_orphaned_dispatched_tasks`,
+  watchdog every 60s, preserves affinity, 120s grace). 7 tests, full QG green. Verified the main agent's own manual
+  patch (`ss.release_task_to_queue` on both tasks) was correct + safe first; this makes it self-heal so it never needs a
+  manual patch again. (Operator: fix-now, no separate issue doc — tracked in this plan.)
 - **2026-07-08** — ✅ **Option A SHIPPED** (ao@8076257, live-defi-rollout; staging-first drain → v2-gated).
   Operator→agent delivery is now AT-LEAST-ONCE with reply-ack: `drain_agent_pending` redelivers
   undelivered-OR-unanswered messages every poll until `/reply` stamps `answered_at` (`mark_role_messages_answered`,
