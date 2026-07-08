@@ -254,6 +254,49 @@ singleton-lock namespace → may run concurrently.
 
 ## Progress Log
 
+### 2026-07-08 21:3x UTC — slot-3: item #4 root cause found + fix shipped + closer running
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-016` (item #4), resumed from slot-2's 20:55 UTC
+diagnosis (which filed the follow-up todo in
+`plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md`).
+
+**Root cause identified** (reading `scripts/enumerate_expected_universe.py::_enumerate_v2_sports`, line ~2007): the v2
+sports enumerator is LEAGUE-GRAIN, not fixture-grain — for every alive `(league, data_type, date)` cell not already
+present in the manifest it seeds a bare `expected_unattempted` row with `reason=""`, regardless of whether the league
+actually played that day. This is exactly the same bug shape as the weather/SFI/footystats blank-reason residuals fixed
+earlier today, just never enumerated for understat specifically (understat has its own per-league entity-coverage
+filter, so the naive "type away as EXPECTED_NO_PROVIDER_COVERAGE" fix used for weather/SFI does NOT apply — a big-5
+league IS covered, the gap is at the DATE level, not the league level). Confirmed live: 6,093 residual rows (XG=250,
+XG_SHOTS=5,843) span exactly 1,169 unique dates, near-evenly across all 5 big-5 leagues (~1,218-1,219 each) — consistent
+with a blanket per-date seed rather than a real per-league fixture gap.
+
+**Why the existing backfill driver can't touch these**: `understat_bulk_backfill.py`'s own `enumerate_dates()` only
+contains dates understat's `getLeagueData` marks `isResult=true` — a residual date that isn't a real fixture day for ANY
+big-5 league literally never enters its date set, so re-running it (as slot-2 already tested) produces zero change,
+confirming this needs a different tool, not a different `--end`/`--cutoff`.
+
+**Fix shipped** (no operator call needed — this follows the exact WRITER-materializes-the-answer pattern already used
+elsewhere, just needs the right date set): `instruments-service@c14ef7d`,
+`scripts/backfill/understat_eu_residual_closer_2026_07_08.py`. Does NOT re-implement fixture-calendar logic — reads the
+manifest for the LIVE blank-reason residual dates, then force-refetches exactly those dates via the SHIPPED per-date
+capture path (`_fetch_understat_xg` / `_run_understat_shots_date`, `force=True`). That path already does the correct
+thing per (date, league): real fixture found → captures real data; season-window guard / no fixture →
+`record_expected_empty`/`record_empty(reason=...)` which stamps `capture_status=empty_confirmed` with a typed reason —
+converting every blank-reason `expected_unattempted` row into a correctly-typed terminal state either way, closing the
+"0 over-broad-404 failures" / `pending_fetch == 0` gate honestly (no re-derivation risk, no new silent placeholders).
+
+**Running now** (local process, PID 3704218, `/tmp/understat_eu_residual_closer.log` on the planning VM slot-3 worktree
+— matches the sibling bulk-backfill driver's precedent of running LOCAL rather than a VM, since understat is a
+single-origin scraper with no bulk endpoint and one IP is the rate ceiling regardless of VM count). Self-healing retry
+loop built in (mirrors `understat_bulk_backfill.py`). Early observation: pure off-season dates (e.g. 2019-07-xx) resolve
+via the season-window guard without even hitting the network (cheap); in-season no-match dates correctly resolve via
+`record_empty` after a real per-league fixture check.
+
+**Gate still NOT MET — no checkbox flip yet.** Next step (this session or next slot, whichever finishes first): once the
+closer logs `=== UNDERSTAT EU RESIDUAL CLOSER COMPLETE ===`, re-verify via a live manifest read
+(`data_type in (XG, XG_SHOTS)`, `league_id` in big-5, `capture_status=expected_unattempted`, blank `error_reason`) — if
+0, flip this item's checkbox with the before/after counts as evidence.
+
 ### 2026-07-08 21:0x UTC — slot-14: item #7 re-dispatch — TM VM healthy (too early to close), footystats issue doc filed
 
 **Task**: `sports_p2_history_reference_and_odds_2015_to_present-015` (item #7 P1 verify flip), re-dispatched moments
