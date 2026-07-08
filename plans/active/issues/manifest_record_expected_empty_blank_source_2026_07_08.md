@@ -124,9 +124,16 @@ investigation target.
 
 ## Recommended decision
 
-- [ ] [DATA] P0. Add `source=` at the 2 `weather.py` `record_expected_empty()` callsites (repo: instruments-service) —
-      use the same source-resolution helper the file's `record_captured`/`record_empty` callsites already use for
-      weather; re-verify weather's item #1 gate afterward since it's already flipped ✅ on possibly-blind data.
+- [x] ✅ [DATA] P0. Add `source=` at the 2 `weather.py` `record_expected_empty()` callsites (repo: instruments-service)
+      — use the same source-resolution helper the file's `record_captured`/`record_empty` callsites already use for
+      weather; re-verify weather's item #1 gate afterward since it's already flipped ✅ on possibly-blind data. —
+      instruments-service@c09980b. Note: row_key already embedded `"source": "open_meteo"` for both callsites (commit
+      8ad3b57, 2026-06-27, predates this issue) and `ManifestWriter._record_status` resolves
+      `row_key["source"] or kwarg` with row_key winning, so these 2 writes were NOT actually blank-sourced — this change
+      is a convention-consistency fix (top-level `source=` kwarg, matching understat.py + this file's own
+      record_captured/record_empty callsites), not a correctness fix for these 2 sites specifically. Re-verification of
+      item #1's gate is therefore not expected to change its result, but still worth a confirmatory pass per the
+      recommended decision.
 - [ ] [DATA] P0. Add `source=` at the 3 `sfi.py` `record_expected_empty()` callsites (repo: instruments-service) — same
       pattern; re-verify SFI's item #2 gate afterward (already flipped ✅).
 - [ ] [DATA] P0. Add `source=` at the 4 `footystats.py` `record_expected_empty()` callsites (repo: instruments-service)
