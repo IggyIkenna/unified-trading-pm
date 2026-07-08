@@ -48,6 +48,8 @@ related_plans:
     ../active/issues/instrument_id_format_canonicalization_2026_07_08.md,
     ../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
     ../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
+    ../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
+    ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
   ]
 last_updated: 2026-07-08
 locked_by: live-defi-rollout
@@ -448,12 +450,20 @@ new epic, per operator decision to use the existing fixed 20-epic registry.
 
 - [`instrument_id_format_canonicalization_2026_07_08`](../active/issues/instrument_id_format_canonicalization_2026_07_08.md)
   — the decided target-state format (`VENUE:TYPE:BASE[_QUOTE]@LIN|@INV-YYYYMMDD[-STRIKE-C|P]`, no trailing `@VENUE`).
-- [`instruments_service_docs_consolidation_2026_07_08`](../active/instruments_service_docs_consolidation_2026_07_08.md)
-  — 17→7 docs, depends on this audit's findings for Phase 1.
-- [`canonical_id_p0_kraken_futures_collision_2026_07_08`](../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md)
-  — P0, real data collision, 5 real instruments on one key.
-- [`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08`](../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md)
-  — P0, 23 adapters silently return empty on canonical-form type filters.
+- ✅
+  [`instruments_service_docs_consolidation_2026_07_08`](../active/instruments_service_docs_consolidation_2026_07_08.md)
+  — DONE, `instruments-service@10ad69a4` — 18→7 docs (real count was 18, not 17).
+- ✅
+  [`canonical_id_p0_kraken_futures_collision_2026_07_08`](../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md)
+  — DONE, `market-tick-data-service@3d7491b1` — real data collision, 5 real instruments on one key, fixed.
+- ✅
+  [`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08`](../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md)
+  — DONE, `instruments-service@4b4185b6` — 24 adapters (23 named + 1 the audit missed) fixed.
+- ✅
+  [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)
+  — DONE, `instruments-service@8544273d` — all 13 canonical CeFi venues verified converged live=batch.
+- [`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08`](../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
+  — P1, real `InstrumentLeg`/`COMBO` infrastructure exists (proven for CME), just not wired up for CBOE/VX spreads.
 
 ## P1 — done/archived (historical — pre-consolidation)
 
