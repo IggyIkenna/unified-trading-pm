@@ -195,16 +195,43 @@ code-fix task). A data_engineering slot with a full session budget should:
       other 5 (ALLSVENSKAN, J1_LEAGUE, MLS, ELITESERIEN, BRASILEIRAO) are NOT subscription-excluded and are NOT
       explained by todo #1's confirmed mechanism; all 5 are currently in-season, so this is a live, unexplained,
       undiagnosed gap needing its own investigation (repo: instruments-service).
-- [ ] [DATA] P3. **Reconcile the 20 footystats ODDS `attempted_failed`/`phantom_captured_no_parquet_at_canonical_path`
-      rows** — a DISTINCT, already-known issue class (manifest says an attempt was made but the parquet write is missing
-      at the canonical path), NOT part of the `pending_fetch=1,264` figure (these are `attempted_failed`, not
-      `expected_unattempted`) and NOT related to the write-gate root cause above. Existing tooling already handles this
-      pattern (`scripts/reconcile_phantom_manifest_rows_all.py`, `scripts/dedup_phantom_after_recovery.py`) — run the
-      existing reconciler scoped to `(source=footystats, data_type=ODDS)` rather than writing new code (repo:
-      instruments-service).
+- [x] ✅ [DATA] P3. **Reconcile the 20 footystats ODDS
+      `attempted_failed`/`phantom_captured_no_parquet_at_canonical_path` rows** — a DISTINCT, already-known issue class
+      (manifest says an attempt was made but the parquet write is missing at the canonical path), NOT part of the
+      `pending_fetch=1,264` figure (these are `attempted_failed`, not `expected_unattempted`) and NOT related to the
+      write-gate root cause above. Existing tooling already handles this pattern
+      (`scripts/reconcile_phantom_manifest_rows_all.py`, `scripts/dedup_phantom_after_recovery.py`) — run the existing
+      reconciler scoped to `(source=footystats, data_type=ODDS)` rather than writing new code (repo:
+      instruments-service). **— data-only fix, no code change (slot-12 sonnet/high).** `ODDS` is exclusively a
+      footystats data_type (`SPORTS_DATA_TYPE_TO_FOLDER["ODDS"] = "footystats_odds"`,
+      `unified-api-contracts/.../sports/gcs_paths.py`), so `--data-types ODDS` already scopes to `source=footystats` —
+      no extra filter needed. Confirmed the manifest held 78 ODDS `attempted_failed` rows total (47
+      `PipelineModeSourceMismatchError` + 19 `phantom_captured_no_parquet_at_canonical_path` + 11 `ArrowTypeError` + 1
+      `RuntimeError`) — the 19+1=20 matches this todo's scope exactly; the 47+11=58 are a separate, out-of-scope issue
+      class (different error_reasons, not mentioned in this todo) and were left untouched. Ran
+      `scripts/reconcile_phantom_manifest_rows_all.py --asset-group sports --data-types ODDS --unphantom-only --dry-run`
+      first: all 19 phantom-flagged rows now have real parquet at their canonical path (0 still-phantom) — the data
+      exists on disk today (whether it always did or arrived since the earlier phantom-flip is unconfirmed, but the
+      re-validation is unambiguous). Applied without `--dry-run`: manifest `captured` count 30,898→30,917 (+19),
+      `attempted_failed` 78→59, `phantom_captured_no_parquet_at_canonical_path` count now 0. Safe-by-construction (this
+      mode can only flip phantom→captured, never the reverse). Probed the single `RuntimeError` row separately
+      (date=2026-01-13, blank league_id — `--unphantom` only re-validates
+      `error_reason ==     'phantom_captured_no_parquet_at_canonical_path'`, so it wasn't touched by the above): listed
+      `sports_reference/by_date/day=2026-01-13/entity=footystats_odds/` directly — 0 blobs, confirming this row is a
+      genuine capture failure (no parquet anywhere for that day), correctly tagged `attempted_failed`, NOT a phantom —
+      nothing to reconcile; it's eligible for the normal backfill retry cadence like any other real failure. No
+      instruments-service commit needed (data-only manifest fix, no code touched).
 
 ## Progress Log
 
+- **2026-07-08** — Todo #7 (reconcile the 20 footystats ODDS `attempted_failed`/phantom rows) FLIPPED (slot-12
+  sonnet/high). Data-only fix, no code change — see the todo's own entry above for the full breakdown. Ran
+  `scripts/reconcile_phantom_manifest_rows_all.py --asset-group sports --data-types ODDS --unphantom-only` (dry-run
+  first, then applied): 19 `phantom_captured_no_parquet_at_canonical_path` rows all had real parquet on disk and flipped
+  back to `captured`; the 1 `RuntimeError` row was confirmed genuinely failed (0 blobs at its canonical
+  entity=footystats_odds/day= prefix) and left as `attempted_failed` (not a phantom, nothing to reconcile). No commit to
+  instruments-service (no code touched, only the live GCS manifest). Todo #6 (extend the write-gate fix to ODDS +
+  root-cause the 5-league ongoing gap) remains the only open todo in this doc.
 - **2026-07-08** — Todo #4 re-dispatched a SEVENTH time (slot-7 sonnet/high, boot ~22:5x UTC,
   `dispatch_reason: "tier=1 priority=50 plan_order=3 — highest-rank queued task with prereqs met and no collision"`).
   Verified via backlog API: `-003` (ODDS root-cause) flipped to `done` (slot-9, instruments-service@cf89f6061) moments
