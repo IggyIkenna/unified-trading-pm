@@ -42,6 +42,7 @@ related:
     issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
     issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
+    issues/instrument_id_format_canonicalization_2026_07_08.md,
     ../../codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
