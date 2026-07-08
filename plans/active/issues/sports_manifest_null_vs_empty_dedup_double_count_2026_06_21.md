@@ -1,26 +1,41 @@
 ---
 doc_type: issue
 title: Sports IS manifest double-count is caused by NULL-vs-empty-string in optional dedup columns, not pipeline_mode
-summary: While implementing the one-off `canonicalize_sports_legacy_pipeline_mode_2026_06_21.py` (re-stamp legacy `batch_instruments_service` sports rows → `batch_<source>` + fill blank `empty_confirmed` re...
+summary:
+  While implementing the one-off `canonicalize_sports_legacy_pipeline_mode_2026_06_21.py` (re-stamp legacy
+  `batch_instruments_service` sports rows → `batch_<source>` + fill blank `empty_confirmed` re...
 status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: [sports, manifest, data-correctness, consolidation, canonicalisation, pipeline-mode, data-quality, honest-coverage]
-related: [plans/active/issues/sports_league_id_out_of_universe_overcapture_2026_06_24.md, plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md]
+tags:
+  [sports, manifest, data-correctness, consolidation, canonicalisation, pipeline-mode, data-quality, honest-coverage]
+related:
+  [
+    plans/active/issues/sports_league_id_out_of_universe_overcapture_2026_06_24.md,
+    plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md,
+  ]
 created: 2026-06-21
 parent_epic: sports_master
 priority: P2
-source: [instruments-store-sports-prd/_index/availability_index.parquet (live read 2026-06-21), unified_trading_library/manifest_consolidator.py (_resolve_dedup_cols / _DEDUP_NULL_SENTINEL), instruments-service/scripts/canonicalize_sports_legacy_pipeline_mode_2026_06_21.py]
+source:
+  [
+    instruments-store-sports-prd/_index/availability_index.parquet (live read 2026-06-21,
+    re-verified 2026-07-08),
+    unified_trading_library/manifest_consolidator.py (_resolve_dedup_cols / _DEDUP_NULL_SENTINEL),
+    unified_trading_library/manifest_writer/_read_index.py (_merge_shard_frames,
+    2026-07-08 fix),
+    instruments-service/scripts/canonicalize_sports_legacy_pipeline_mode_2026_06_21.py,
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-08
 ---
 
 ## What I found
@@ -69,6 +84,40 @@ the stated double-count mechanism is **incorrect**:
   normalisation). If (a), a small change to `_duckdb_consolidate_and_write` (coalesce `NULL` AND `''` to one sentinel)
   fixes it fleet-wide with no whole-corpus walk. Until then, non-legacy NULL/"" twins in sports (and likely cefi/defi/
   tradfi/prediction IS + MTDS indices) remain a latent double-count.
+
+## Update 2026-07-08 (slot-7, data_engineering) — option (a) WAS shipped, but two gaps left the twins live
+
+Confirms this doc's option (a) is no longer hypothetical —
+`unified_trading_library.manifest_consolidator._dedup_key_sql` already coalesces NULL and `""` to one sentinel (shipped
+as `unified-trading-library@f5ec2291f`, §9.2b, referenced from
+`plans/active/understat_local_backfill_completion_2026_07_06.md`). Verified the SQL is _correct_ by feeding it the exact
+duplicate pair directly (DuckDB `PARTITION BY` on the normalized key correctly picks 1 survivor). Yet the LIVE sports
+canonical index still carried the twins. Two independent gaps, both now closed:
+
+1. **Reader-side gap (different code path, same bug class)** —
+   `unified_trading_library/manifest_writer/_read_index.py ::_merge_shard_frames` (the pandas dedup
+   `read_availability_index` uses to layer a caller's just-written per-VM shard on top of the consolidated blob) never
+   got the equivalent NULL/`""` normalization; it deduped on raw values, so a caller's own fresh read could see the same
+   NULL-vs-`""` twin the consolidator was designed to prevent. Fixed + shipped: `unified-trading-library@d64563da`
+   (`fix(manifest): dedup NULL vs empty-string optional dims in reader shard merge`), with a regression test
+   (`test_reader_dedups_optional_dim_null_vs_empty_string`).
+2. **Consolidator staleness/operational gap** — even after the SQL fix (#1 above notwithstanding), the LIVE sports
+   canonical still held ~297 un-collapsed `(date, league_id, data_type)` keys with an `attempted_failed` row coexisting
+   with a newer valid-status row (discovered while driving `understat_local_backfill_completion-001`'s retry-verify
+   loop, which never reached 0 `attempted_failed` because of these twins). This means the DEPLOYED Cloud Run
+   consolidator job's incremental cycles were NOT applying the `_dedup_key_sql` fix continuously in production — either
+   a stale image (never rebuilt post-`f5ec2291f`) or the incremental anti-join is missing some contested-key cases the
+   isolated SQL test doesn't reproduce. **Not root-caused further here** — out of this session's scope (infra/deploy
+   craft, not data_engineering) and already tracked as `plans/active/understat_local_backfill_completion_2026_07_06.md`
+   task -003 ("confirm §9.2b consolidator deployed"). **Mitigated for sports only**: ran
+   `python -m unified_trading_library.manifest_consolidator --bucket instruments-store-sports-prd-central-element-323112 --force`
+   (one-off full rebuild, sanctioned per the tool's own docstring: "one-off seed after backfill"). Result:
+   `rows_in=5,175,040 rows_out=4,901,461 dedup_dropped=273,579` — a FAR larger cleanup than the 297 keys I could see
+   from the narrow attempted_failed/XG_SHOTS angle, confirming this NULL/`""` twin pattern is broad across the whole
+   sports manifest, not just understat. Cross-check needed for cefi/defi/tradfi/prediction buckets — task -003 (or a new
+   dedicated audit) should verify whether their Cloud Run consolidator jobs are running the fixed image, and if not, run
+   the equivalent one-off `--force` rebuild per bucket (each is a quick, self-contained, locked operation — no
+   whole-corpus GCS walk, just the existing canonical + shards).
 
 ## Non-FIXTURES blank-reason residue (left untouched, by design)
 
