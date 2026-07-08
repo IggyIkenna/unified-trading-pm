@@ -110,9 +110,22 @@ source: cost_observability_ui_2026_07_08.md
       column-omitted-on-other-dimensions on resource rows) per the plan's "vitest" spec for this task (no pw:L2 cited).
       Reconciled 2x onto concurrently-landed resource/waste-columns (`047494b`) and stale-during-refetch (`0b396a8`)
       commits touching the same 4 files; full QG green on each merge.
-- [ ] [UI] P3. **Dimension-aware columns + leaf tables.** Show the right detail columns per dimension (VM cols under
-      By-resource, bucket cols under By-bucket, SKU under By-SKU); apply the same detail columns to the `LeafPanel` "Top
-      compute instances" / "Top storage buckets" tables. Detail columns scroll horizontally on narrow widths. pw:L2.
+- [x] ✅ [UI] P3. **Dimension-aware columns + leaf tables.** — deployment-ui@`88c4b70`. The breakdown table's
+      resource/bucket dimension columns were already dimension-gated from the P2 tasks above; this task's gap was the
+      `LeafPanel` "Top compute instances" / "Top storage buckets" tables, which only rendered Name/Type/Cost. Added a
+      `kind: "vm" | "bucket"` prop to `LeafPanel` and applied the SAME detail columns (same helpers, same data-testids)
+      as the breakdown table: Machine + Waste (via a new shared `WasteCell`) for vm rows, Storage / Storage class /
+      $-per-GB for bucket rows. Detail-column `<td>`s now render `whitespace-nowrap` (in both the breakdown table and
+      the leaf tables) so narrow viewports genuinely scroll horizontally instead of wrapping; added `role="region"` +
+      `tabIndex={0}` to the scroll wrappers to keep them keyboard-reachable (axe `scrollable-region-focusable` — a real
+      a11y regression the new overflow caught, fixed in the same commit). Also fixed a mock-fixture gap: `mock-api.ts`
+      only populated bucket `storage_gb`/`storage_class_gb` for the `dimension=bucket` query, not `dimension=resource`
+      (which feeds the leaf tables) — keyed off `resource_kind` instead, matching the real backend's `_by_resource`.
+      Reconciled onto the concurrently-landed resource/waste-columns (`047494b`), spot/on-demand (`5b99519`), and
+      stale-during-refetch (`0b396a8`) commits touching the same file (rebase + manual merge, all four features kept).
+      tsc/ESLint/vitest (919 passed, incl. 2 new cases) all green. pw:L2 ✓ (20/20, incl. the a11y suite) | regression:
+      tests/smoke/cost-observability.spec.ts ("leaf tables carry the same dimension-aware detail columns as the
+      breakdown table" + "leaf table detail columns scroll horizontally instead of overflowing on narrow widths").
 - [x] ✅ [UI] P3. **Stale-during-refetch fix** (carried over from the parent plan). Gate the breakdown table body on
       `breakdown.dimension === dimension` (+ matching days), or skeleton the panel while `loadBreakdown` is in flight,
       so switching dimension/range never shows the prior fetch's rows under the new column header —
