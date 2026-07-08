@@ -205,6 +205,21 @@ code-fix task). A data_engineering slot with a full session budget should:
 
 ## Progress Log
 
+- **2026-07-08** — Todo #4 re-dispatched a SEVENTH time (slot-7 sonnet/high, boot ~22:5x UTC,
+  `dispatch_reason: "tier=1 priority=50 plan_order=3 — highest-rank queued task with prereqs met and no collision"`).
+  Verified via backlog API: `-003` (ODDS root-cause) flipped to `done` (slot-9, instruments-service@cf89f6061) moments
+  after this boot — but slot-9's own Progress Log entry above shows that landing was docs-only and spawned 2 NEW todos
+  (#6: extend the confirmed write-gate fix to ODDS + root-cause a separate 5-league ongoing gap; #7: reconcile 20
+  `attempted_failed` rows, P3, out of the `pending_fetch` figure so non-gating). Todo #4's own updated un-block note
+  (slot-9) says only todo #6 remains before the typing-pass re-verify is meaningful. Neither #6 nor #7 had been ingested
+  into the backlog yet (PlanRegenLoop hadn't ticked since slot-9's commit) — ran `POST /api/backlog/regen` (safe,
+  additive, PM-plan-derived) to surface them now rather than leave them stranded for another dispatch cycle: 3 new tasks
+  appeared, `footystats_matches_predictions_fetch_gaps-005` (todo #6, [CODE] P2, queued/unassigned) and `-006` (todo #7,
+  [DATA] P3, queued/unassigned). Not running the typing pass / backfill VM (would only re-confirm the same ODDS residual
+  before #6 lands — the same lesson this doc already documents for MATCHES/PREDICTIONS). Releasing `-004` via
+  `/skip-current-task` and re-booting so the dispatcher can hand out the now-unblocked `-005` (this slot's craft:
+  data_engineering, CODE fix in instruments-service, same write-gate pattern as todo #1 — footystats.py is no longer
+  being concurrently edited by slots 8/13, both now `done`).
 - **2026-07-08** — Todo #4 re-dispatched a SIXTH time (slot-2 sonnet/high, boot ~22:40 UTC,
   `dispatch_reason: "tier=1 priority=50 plan_order=3 — highest-rank queued task with prereqs met and no collision"`).
   Verified via backlog API: `-002` (PREDICTIONS fixture-calendar) is now `done` (slot-13, instruments-service@78636dd),
