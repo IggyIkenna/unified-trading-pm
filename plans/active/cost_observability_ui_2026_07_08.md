@@ -235,3 +235,14 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
   divider treatment. **deployment-ui@`aaed6647`** — tsc + ESLint + full vitest 910/910 + full UI QG green. All
   segmented/pill tab groups in deployment-ui now have clear cell boundaries; `underline` Radix tabs deliberately left
   (different idiom).
+- 2026-07-08 — **Matched the design mock (course-correction).** Operator compared the mock vs the shipped controls
+  side-by-side: the hard-divider look diverged from the mock. Reverted to the **mock's exact aesthetic** — padded
+  rounded pills with a gap between them + a filled accent (cyan `accent-dim`) active pill; the separation comes from
+  padding + the active pill, not dividers. Applied uniformly: cost-page `Segmented`, the shared `ui/tabs.tsx` pill
+  variant (active override is pill-scoped via `[&>[data-state=active]]:…!` so the `underline` variant — Monitor /
+  DataStatus tabs — is untouched), and `cockpit/DeployConsole` view tabs. **deployment-ui@`4c65cfb`** — tsc + ESLint +
+  full vitest 910/910 + full UI QG (incl. production build, which validates the arbitrary important selector) green;
+  screenshotted the cost range/dimension controls + cockpit + service tab bars in dark — pills match the mock, active
+  cell is a cyan pill, 0 page errors. **Note (app-wide active-colour change):** pill tab bars now show the active tab as
+  a cyan pill (was a dark inset pill) — consistent with the mock + the sidebar nav's own active style; flagged for
+  operator review.
