@@ -153,6 +153,48 @@ not have.
       XG/XG_SHOTS duplicate cells collapse to one row each, then re-verify item #4's gate in
       `plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md` (repo: unified-trading-pm, plan
       file).
-- [ ] [DATA] P2. Audit other high-write-concurrency buckets (cefi/defi/tradfi backfills that run many parallel VMs
-      against one bucket) for symptoms of the same duplicate-row pattern — this bug is not sports-specific, only
-      diagnosed here first (repo: unified-trading-library / instruments-service, scope: cross-asset-group audit).
+- [x] ✅ [DATA] P2. **Audit other high-write-concurrency buckets — COMPLETE 2026-07-08 (slot-3 sonnet/high).** Audited
+      the 3 named `market-data-tick-{ag}-prd-central-element-323112` canonical indices directly (ONE bounded
+      `_index/availability_index.parquet` object read per bucket via UTL `get_storage_client().download_bytes` — not a
+      corpus walk; single-walk discipline held; PyArrow column-pruned to the dedup-key + status columns, held in memory
+      only, no disk write, to avoid the shared host's small `/tmp` tmpfs which hit ENOSPC mid-run from other slots'
+      concurrent activity). Grouped by the CONSOLIDATOR'S OWN dedup key (`_BASE_DEDUP_COLS` + `_OPTIONAL_DEDUP_COLS`
+      present in the schema, `coalesce(nullif(cast(col AS VARCHAR), ''), sentinel)` — mirrors `_dedup_key_sql` exactly,
+      both NULL and `''` collapse to the same sentinel) via memory-bounded DuckDB (`memory_limit=6GB`, spill directory
+      pointed at `/home` — the large disk-backed partition — not the tiny `/tmp` tmpfs). - **cefi**
+      (`market-data-tick-cefi-prd-...`, 7,219,598 rows): **0 duplicate dedup-key groups. CLEAN.** - **defi**
+      (`market-data-tick-defi-prd-...`, 13,766,590 rows): **0 duplicate dedup-key groups. CLEAN.** - **tradfi**
+      (`market-data-tick-tradfi-prd-...`, 6,022,040 rows): **1,023,968 duplicate dedup-key groups, spanning 2,047,936
+      rows — 34.0% of the entire canonical index.** This is a MUCH larger instance of the same bug than the sports
+      diagnosis (which found 9/15 sampled cells affected) — confirmed via full-population GROUP BY, not sampling.
+      Verified the row-level fingerprint on 3 concrete sample dup-keys matches the sports root cause exactly (an OLDER
+      row's `capture_status`/`error_reason` persisting alongside a NEWER row for the identical dedup key, instead of the
+      newer row correctly superseding it per last-write-wins): - `(2026-06-01, NASDAQ, ohlcv_1s, AXTI)`:
+      `empty_confirmed/SOURCE_RETURNED_ZERO` written 2026-06-28T00:46Z COEXISTS with
+      `attempted_failed/WithinBoundsTradfiSourceZero` written 2026-07-07T07:28Z (9 days newer). -
+      `(2023-09-18, NASDAQ, ohlcv_1m, BAC)`: same pattern — `empty_confirmed/SOURCE_RETURNED_ZERO` (06-28) coexists with
+      `attempted_failed/WithinBoundsTradfiSourceZero` (07-07). - `(2024-12-10, NASDAQ, ohlcv_1s, KLAC)`: BOTH rows are
+      `captured` (blank error_reason) from two SEPARATE write events (06-28 and 07-07) — the older `captured` row should
+      have been collapsed by the newer cycle's merge but wasn't, so the dedup violation isn't limited to status-flip
+      cells; even same-status re-writes duplicate. - **Why tradfi and not cefi/defi (plausible, not proven)**: tradfi
+      has had exceptionally dense overlapping consolidation-cycle activity today and over the past ~10 days — the 7-VM
+      v9 canonical migration (this plan's task 1), the E5 `rebuild_tradfi_manifest.py` full-corpus rebuild (task 4, ran
+      2026-07-07 for 785s writing 1.52M+ additions), the CF-4 source-restamp `--apply` (2026-07-08), and multiple
+      straggler re-run VMs — all writing shards to the SAME bucket in tight, overlapping windows, which is exactly the
+      race's precondition (cycle A reads canonical, cycle B writes first, cycle A's CAS retry re-uploads its now-stale
+      merge). cefi/defi did not have comparably dense overlapping-cycle activity in this snapshot, so their absence of
+      duplicates is consistent with the race being probabilistic (requires two cycles racing), not a bucket-specific
+      immunity — it does NOT mean cefi/defi are structurally safe from this bug once they see similarly dense concurrent
+      activity (e.g. a future multi-VM cefi/defi backfill or manifest rebuild). - **Not audited this pass (explicit
+      scope note, not a silent cap)**: the sibling `instruments-store-{ag}-prd-...` buckets (IS catalogue /
+      enumerate-seed side, same consolidator code path, same race is structurally possible) were not checked — this pass
+      covered the 3 named `market-data-tick-{ag}-prd-...` buckets per the task's literal scope. Flagging as a candidate
+      follow-up, not filing a separate todo for it (P2 audit, already over its 1h estimate; the P0 fix in item #1 is the
+      actual remediation regardless of which buckets are affected). - **Escalation**: this is a "big finding" per the
+      data-correctness HARD RULE (quantified data-correctness bug, cross-repo, changes the scale understanding of item
+      #1's urgency) — surfacing here rather than a new issue doc since item #1 (the P0 fix) already exists and is the
+      correct remediation target; this entry supplies the quantified evidence that tradfi specifically needs
+      re-verification (task 4/6 in `tradfi_v9_stage1_finish_2026_07_06.md`, both already unflipped/RED) once item #1
+      ships — the 34% duplicate-row rate materially affects any row-count-based percentage those tasks compute (e.g.
+      CF-1's 99.77% v9 figure, CF-4's blank-source counts) since duplicated cells double-count in a naive `COUNT(*)`.
+      unified-trading-pm@(this commit).
