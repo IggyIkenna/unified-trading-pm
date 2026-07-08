@@ -109,11 +109,30 @@ code-fix task). A data_engineering slot with a full session budget should:
 
 ## Actionable todos
 
-- [ ] [CODE] P2. **Root-cause + fix footystats MATCHES 4-league fetch gap** (CHILE_PRIMERA, K_LEAGUE_1, LIGA_MX,
-      ARGENTINA_PRIMERA — 96% of the 5,641-row residual) — investigate
-      `instruments_service/engine/orchestrator/footystats.py` MATCHES row-emission path (~line 405 onward) for a
-      league-specific fetch/mapping bug; add regression test asserting these 4 leagues fetch clean over a representative
-      date range (repo: instruments-service).
+- [x] ✅ [CODE] P2. **Root-cause + fix footystats MATCHES 4-league fetch gap** (CHILE_PRIMERA, K_LEAGUE_1, LIGA_MX,
+      ARGENTINA_PRIMERA — 96% of the 5,641-row residual) — instruments-service@1af6c92 (slot-8 sonnet/high). **Root
+      cause**: all 4 leagues carry `data_sources=PRED_NO_FOOTYSTATS` (footystats excluded per subscription limit —
+      `unified-api-contracts/.../league_data_prediction.py`), so they are correctly ABSENT from the footystats-scoped
+      expected-league set (`_ft_expected`) used by the honest-coverage skip/gap loop in
+      `_fetch_footystats_matches`/`_fetch_footystats_predictions`. But the per-league captured-write gate in both
+      functions checked only the GENERIC `_is_in_canonical_write_universe` (api_football-scoped, which DOES track these
+      leagues) — not the footystats-scoped set. FootyStats' bulk `/todays-matches` endpoint returns incidental rows for
+      these leagues regardless of subscription; the mismatched gate let those get written as `captured`, fooling the "≥1
+      captured row = covered" dynamic heuristic in
+      `type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py` into treating them as footystats-covered
+      and seeding a full-history expected-universe denominator the per-league loop (correctly scoped to `_ft_expected`)
+      never systematically backfills — a permanent, unclosable `pending_fetch` gap. **Fix**: both write paths now also
+      gate on the footystats-subscribed expected-league set, matching the honest-coverage loop's own scoping; future
+      incidental rows for out-of-subscription leagues are dropped (no captured/empty manifest row written), consistent
+      with how the ~62 other non-covered footystats leagues already behave. Added 2 regression tests in
+      `tests/unit/test_orchestrator_sports.py` (`test_out_of_subscription_league_dropped_not_captured` in both
+      `TestFetchFootystatsMatches` and `TestFetchFootystatsPredictions`) asserting the drop + no manifest pollution.
+      Full `quality-gates.sh` green (ALL QUALITY GATES PASSED), shipped via quickmerge --agent. **Scope note**: this
+      closes the WRITE-PATH bug (prevents future recurrence) but does NOT retroactively clean the EXISTING ~5,415
+      pending_fetch rows already seeded for these 4 leagues in the live manifest — that data cleanup is todo #4 below's
+      scope (re-run the typing pass after this fix lands; the existing few incidental `captured` rows for these leagues
+      will still need an explicit re-type pass since the dynamic "≥1 captured row" heuristic reads historical manifest
+      state, not just going-forward writes).
 - [ ] [CODE] P2. **Add cup/continental-competition fixture-calendar awareness to footystats PREDICTIONS** — mirror the
       existing `EmptyConfirmedReason.EXPECTED_NO_FIXTURE` resolution already used for MATCHES (footystats.py:584/598) so
       no-fixture dates for UECL/UEL/UCL/SWISS_CUP/COPA_ARGENTINA/+37 more resolve to a terminal typed state instead of
