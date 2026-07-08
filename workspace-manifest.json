@@ -848,7 +848,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -877,10 +877,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
+        "coverage_pct": 83.19,
         "large_file_count": 0,
-        "coverage_pct": 83.21,
-        "warn_file_count": 33
+        "qg_red_reason": "ruff",
+        "warn_file_count": 34
       }
     },
     "ml-service": {
@@ -1258,10 +1258,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 89.72,
+        "warn_file_count": 20,
         "qg_red_reason": null,
-        "large_file_count": 5,
-        "coverage_pct": 89.74,
-        "warn_file_count": 20
+        "large_file_count": 5
       }
     },
     "unified-trading-pm": {
@@ -1294,9 +1294,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": "ruff",
-        "large_file_count": 0,
         "coverage_pct": 71.07,
+        "large_file_count": 0,
+        "qg_red_reason": null,
         "warn_file_count": 0
       }
     },
