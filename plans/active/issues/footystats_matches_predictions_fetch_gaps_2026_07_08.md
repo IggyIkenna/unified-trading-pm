@@ -159,9 +159,9 @@ code-fix task). A data_engineering slot with a full session budget should:
       rows). Full `quality-gates.sh` green (ALL QUALITY GATES PASSED), shipped via quickmerge --agent. **Note**: this
       closes the WRITE-PATH bug going forward; existing already-seeded `pending_fetch` rows for cup competitions still
       need the re-verify/re-dispatch pass (todo #4 below) to clear.
-- [ ] [DATA] P3. **Root-cause footystats ODDS 1,264-row residual** — no investigation session has looked at this
+- [x] ✅ [DATA] P3. **Root-cause footystats ODDS 1,264-row residual** — no investigation session has looked at this
       cluster; determine whether it shares the MATCHES or PREDICTIONS root cause or is a distinct third gap (repo:
-      instruments-service).
+      instruments-service). — docs-only (see Progress Log 2026-07-08 slot-9 entry + the 2 new todos below it).
 - [ ] [DATA] P2. **BLOCKED-PREREQUISITES (2026-07-08, slot-8).** **Re-verify + re-dispatch footystats backfill VM after
       the above land** — once the two CODE fixes are shipped, re-run the typing pass, confirm `(footystats, MATCHES)` +
       `(footystats, PREDICTIONS)` + `(footystats, ODDS)` `pending_fetch == 0`, then flip
@@ -171,13 +171,37 @@ code-fix task). A data_engineering slot with a full session budget should:
       known failure mode as the tradfi plan's task-10 precedent: the dispatcher's machine-readable `prereqs` don't
       encode this todo's own in-text dependency on todo #2 AND todo #3). This todo's literal gate ("once the two CODE
       fixes are shipped... confirm MATCHES + PREDICTIONS + ODDS pending_fetch == 0") requires ALL THREE of: todo #1 (✅
-      done, instruments-service@1af6c92), todo #2 (PREDICTIONS cup fixture-calendar — still `- [ ]`), and todo #3 (ODDS
-      root-cause — still `- [ ]`, not yet even investigated). Running the typing pass / backfill VM now would only
-      re-confirm the SAME PREDICTIONS + ODDS residuals already diagnosed, wasting VM spend before the remaining two code
-      fixes land (same "VM re-run without the code fix reproduces the same residual" lesson this issue doc already
-      documents for MATCHES). **Un-block sequence**: (a) todo #2 (PREDICTIONS fixture-calendar fix) ships; (b) todo #3
-      (ODDS root-cause + fix, if code-fixable) ships; (c) THEN this todo re-dispatches and the typing pass / backfill VM
-      re-run genuinely closes `pending_fetch == 0` across all three data_types.
+      done, instruments-service@1af6c92), todo #2 (PREDICTIONS cup fixture-calendar — ✅ **now done too**,
+      instruments-service@78636dd, slot-13), and todo #3 (ODDS root-cause — ✅ done, see below, but its own #6 CODE fix
+      is still `- [ ]`). Running the typing pass / backfill VM now would only re-confirm the SAME ODDS residual already
+      diagnosed, wasting VM spend before todo #6 lands (same "VM re-run without the code fix reproduces the same
+      residual" lesson this issue doc already documents for MATCHES). **Un-block sequence (UPDATED 2026-07-08
+      slot-9)**: todos #1 and #2 are both now shipped — only todo #6 (ODDS write-gate fix, see below) remains before
+      this todo can genuinely re-dispatch and have its typing-pass re-verify closes `pending_fetch == 0` across all
+      three data_types. **NOTE**: do NOT assume ODDS clears purely from todo #6 — the ~177-row ongoing gap for
+      ALLSVENSKAN, J1_LEAGUE, MLS, ELITESERIEN, BRASILEIRAO (see todo #6) is NOT a subscription-scope issue and needs
+      its own root-cause before it clears; and the 20 `attempted_failed`/`phantom_captured_no_parquet_at_canonical_path`
+      rows are OUT of the `pending_fetch` figure entirely and need todo #7 instead.
+- [ ] [CODE] P2. **Extend the confirmed subscription-scope write-gate fix (todo #1, instruments-service@1af6c92) to
+      ODDS, plus root-cause a separate 5-league gap ODDS alone shows** — investigation (slot-9, 2026-07-08, see Progress
+      Log) confirms `_fetch_footystats_odds` (footystats.py ~line 705-933) never received the write-gate guard todo #1
+      added to MATCHES/PREDICTIONS (`if _canonical not in set(_ft_expected): drop`, footystats.py:198-203/543-548) — its
+      per-league write loop (~line 830-907) writes ANY league present in the API response as `captured` with no
+      subscription-scope check at all. The 5 `PRED_NO_FOOTYSTATS`-excluded leagues (confirmed via
+      `unified-api-contracts/.../league_data_prediction.py`: ARGENTINA_PRIMERA, CHILE_PRIMERA, LIGA_MX, K_LEAGUE_1,
+      A_LEAGUE) will leak into ODDS coverage the exact same way MATCHES/PREDICTIONS did pre-fix — apply the identical
+      guard here. **Separately**, ODDS shows an ~177-row _ongoing_ daily gap (2026-06-01→06-23, near-100% miss) for 8
+      leagues, only 3 of which (CHILE_PRIMERA, K_LEAGUE_1, ARGENTINA_PRIMERA) are `PRED_NO_FOOTYSTATS`-excluded — the
+      other 5 (ALLSVENSKAN, J1_LEAGUE, MLS, ELITESERIEN, BRASILEIRAO) are NOT subscription-excluded and are NOT
+      explained by todo #1's confirmed mechanism; all 5 are currently in-season, so this is a live, unexplained,
+      undiagnosed gap needing its own investigation (repo: instruments-service).
+- [ ] [DATA] P3. **Reconcile the 20 footystats ODDS `attempted_failed`/`phantom_captured_no_parquet_at_canonical_path`
+      rows** — a DISTINCT, already-known issue class (manifest says an attempt was made but the parquet write is missing
+      at the canonical path), NOT part of the `pending_fetch=1,264` figure (these are `attempted_failed`, not
+      `expected_unattempted`) and NOT related to the write-gate root cause above. Existing tooling already handles this
+      pattern (`scripts/reconcile_phantom_manifest_rows_all.py`, `scripts/dedup_phantom_after_recovery.py`) — run the
+      existing reconciler scoped to `(source=footystats, data_type=ODDS)` rather than writing new code (repo:
+      instruments-service).
 
 ## Progress Log
 
@@ -240,3 +264,37 @@ code-fix task). A data_engineering slot with a full session budget should:
   diagnosis (slot-7, 2026-07-08 20:10 UTC) explicitly recommended filing a dedicated follow-up before further VM spend —
   checked and no such doc existed — filed this issue with 4 actionable todos so a future data_engineering dispatch with
   full session budget can execute the code fixes instead of re-diagnosing from scratch.
+- **2026-07-08 (slot-9)** — Dispatched item #4 (re-verify + re-dispatch) first; checked the backlog and found -001
+  (MATCHES fix) dispatched to slot 8 and -002 (PREDICTIONS fix) dispatched to slot 13, both still in-progress — item #4
+  cannot execute yet (its own done_definition requires those to ship first, and the issue doc explicitly warns a VM
+  re-run without the code fix reproduces the identical residual). Skipped -004 back to queue rather than sit idle, and
+  the dispatcher handed me -003 (ODDS root-cause) instead — independently scoped, unblocked, no collision with slots
+  8/13 (they're editing `footystats.py`; this task is read-only manifest analysis). <br><br>**ODDS root-cause finding**:
+  read the live `_index/availability_index.parquet` ONCE (single-walk discipline — this is the consolidated manifest,
+  not a corpus walk) and filtered to `(source=footystats, data_type=ODDS)`. `pending_fetch=1,264`
+  (`expected_unattempted`) + 20 `attempted_failed` (separate bucket, not in the 1,264 figure). Initial pass (before todo
+  #1 landed) found MATCHES, PREDICTIONS, and ODDS all showed `expected_unattempted` for the IDENTICAL leagues on the
+  IDENTICAL dates across 10 sampled historical burst dates (2026-03-18, 03-26, 04-15/16, 04-29/30, 05-06/07, 05-27/28),
+  suggesting a shared root cause. **After todo #1 landed (instruments-service@1af6c92, slot-8) with the CONFIRMED
+  mechanism — a subscription-scope write-gate leak for the 5 `PRED_NO_FOOTYSTATS` leagues (verified via
+  `unified-api-contracts/.../league_data_prediction.py`: ARGENTINA_PRIMERA, CHILE_PRIMERA, LIGA_MX, K_LEAGUE_1,
+  A_LEAGUE) — re-checked against the actual code**: `_fetch_footystats_odds` (footystats.py ~705-933) never received the
+  `if _canonical not in set(_ft_expected): drop` guard todo #1 added to MATCHES/PREDICTIONS
+  (footystats.py:198-203/543-548); its write loop (~830-907) has NO subscription-scope check, so it will leak the same 5
+  excluded leagues into ODDS coverage. This explains the ~1,087-row historical cluster **for the 3 of those 5 leagues
+  that appear in it** (CHILE_PRIMERA, K_LEAGUE_1, ARGENTINA_PRIMERA) but does NOT explain rows for major non-excluded
+  leagues (EPL, LA_LIGA, SERIE_A, etc.) also seen in the burst-date sample — that portion's mechanism is still open
+  (possibly a shared `/todays-matches` API hiccup on those specific historical dates across all 3 endpoints, since they
+  share one bulk call — not yet confirmed, flagged rather than asserted). Separately, an ~177-row **ongoing** daily gap
+  (2026-06-01→06-23, near-100% miss) affects 8 leagues: the 3 shared `PRED_NO_FOOTYSTATS` leagues above plus 5 NOT
+  subscription-excluded (ALLSVENSKAN, J1_LEAGUE, MLS, ELITESERIEN, BRASILEIRAO, all currently in-season) — this 5-league
+  subset is a genuinely separate, unexplained, live gap, not covered by todo #1's mechanism. The remaining 20
+  `attempted_failed` rows (`phantom_captured_no_parquet_at_canonical_path` ×19, `RuntimeError` ×1) are a wholly
+  separate, already-tooled issue class (`scripts/reconcile_phantom_manifest_rows_all.py` already exists for this) and
+  are not part of the 1,264 `pending_fetch` figure at all. <br><br>Filed 2 new actionable todos (item #6: extend todo
+  #1's confirmed write-gate fix to ODDS + root-cause the separate 5-league ongoing gap; item #7: run the existing
+  phantom-reconciler for the 20 unrelated rows) and revised item #4's park-note so a future re-verify doesn't assume
+  ODDS clears purely from todo #6. Flipped item #3's own checkbox — the root-cause ask is answered (partially explained
+  by todo #1's confirmed mechanism, partially a distinct, still-open gap, plus one wholly separate known category); did
+  not attempt a code fix myself since `footystats.py` was being actively edited by slots 8/13 concurrently (same-file
+  collision risk) and todo #1's own fix is the template to extend, not something to duplicate from scratch.
