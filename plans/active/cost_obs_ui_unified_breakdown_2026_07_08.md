@@ -8,7 +8,7 @@ summary:
   to the leaf tables. Starts draft, released to active by the last task of
   cost_obs_backend_sku_usage_enrichment_2026_07_08 once the API contract exists. Every UI task carries a Playwright L2
   regression.
-status: draft
+status: active
 nature: process
 asset_group: [meta]
 stage: [meta]
