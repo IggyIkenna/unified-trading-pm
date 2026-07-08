@@ -49,56 +49,83 @@ history shows `unified-api-contracts@f16c79e8` deliberately corrected the LIGHTE
 `"lighter-zksync"` to the real Tardis identifier `"lighter"` (confirmed live: `_DEFAULT_EXCHANGES` already contains
 `"lighter"`, not `"lighter-zksync"`).
 `test_databento_tardis_adapter.py::test_default_exchanges_cover_captured_cefi_venues` just hadn't been updated to match
-— fixed in the same commit as the sports/understat manifest-write fix.
+— fixed in the same commit as the sports/understat manifest-write fix. **Verification note (slot-8 planning, 2026-07-08,
+checked after this doc was filed)**: re-ran this exact test on `live-defi-rollout` HEAD `be95c76` — still FAILS
+(`assert 'lighter-zksync' in _DEFAULT_EXCHANGES`) — the companion fix described above had not reached LDR as of this
+check. Root cause is correctly diagnosed here (rename the assertion string to `"lighter"`); just confirming the fix
+commit's landing status for whoever picks up the todos below.
 
-**2 of 3 are a genuine, unresolved regression, NOT fixed here — outside my craft-scope/context for this session:**
+**2 of 3 — ROOT CAUSE FOUND 2026-07-08 (slot-8 planning), NOT the enumerator-side regression this doc originally
+suspected — it's a `unified-api-contracts` capability-declaration fix with an unhandled side effect. None of the 3
+bisect candidates above (`980f329` / `4a8cff7` / `7ded594`) are the cause; they're all `instruments-service` commits,
+but the actual change is in UAC:**
 
-- `tests/unit/scripts/test_expected_universe_golden.py::TestGoldenByteIdentical::test_expected_matches_golden[cefi]`:
-  `build_expected('cefi')` (in `scripts/expected_universe.py`, delegating through
-  `scripts/enumerate_expected_universe.py::_enumerate_v2_cefi`) now returns **71** tuples vs the checked-in golden's
-  **75** — missing exactly
-  `[('BYBIT', 'spot_pair', 'book_snapshot_5'), ('BYBIT', 'spot_pair', 'trades'), ('OKX', 'spot_pair', 'book_snapshot_5'), ('OKX', 'spot_pair', 'trades')]`.
-  The golden was bumped 73→75 by
-  `617795b fix(golden): update cefi expected-universe fixture 73→75 tuples (BYBIT-SPOT spot_pair capabilities from UAC@ab6bc7e5)`
-  — so these 4 tuples were INTENTIONALLY added once, and something since (candidates from `git log`:
-  `980f329 feat(enumerator): v2 cefi/defi/prediction subsume v1 venue-grain PRE_VENUE_LAUNCH sentinel`,
-  `4a8cff7 feat(scripts): per-(venue,dt) start_date gate in _enumerate_v2_cefi`,
-  `7ded594 feat(enumerator): wire enumerate_expected_universe to UAC TOTAL_UNIVERSE_AXES SSOT`) dropped them back out. I
-  have NOT diagnosed which of these three touched the BYBIT/OKX spot_pair path, or whether it's a genuine UAC
-  capability-declaration regression vs. an enumerator-side filter regression.
-- `tests/unit/scripts/test_filter_manifest_to_expected.py::TestFilterCanonicalisation::test_cefi_okx_spot_folds_to_okx`:
-  fails with the SAME symptom — `filter_manifest_to_expected` logs
-  `"no manifest triples in EXPECTED — gate would drop every row"` for cefi and returns an empty frame instead of the
-  expected 1-row OKX-folded result. Almost certainly the same root cause as the golden drift (EXPECTED is short the
-  OKX/BYBIT spot_pair tuples the test fixture relies on).
+- **Root commit**: `unified-api-contracts@23fa3a99` ("fix(cefi): remove phantom SPOT_PAIR from bare BYBIT/OKX
+  INSTRUMENT_TYPES_BY_VENUE", slot-3, 2026-07-07 16:25 UTC+1). This is **NOT an accidental regression** — it's a
+  deliberate, production-verified fix (full rationale in the inline comment at
+  `unified_api_contracts/registry/venue_constants.py:380-402`): "confirmed against production
+  (gs://instruments-store-cefi-prd-.../availability_index.parquet): bare OKX has ZERO SPOT_PAIR rows across its entire
+  history ... Tardis's own routing table already sends (OKX, SPOT_PAIR) to the same 'okex' source as canonical OKX_SPOT
+  — this entry was a redundant alias, not a distinct real capability." Same rationale for bare BYBIT (2,657 blank +
+  legacy-cased rows + 1,193 PERPETUAL-only, zero genuine SPOT_PAIR).
+- **BUT it has an unhandled side effect for OKX specifically (BYBIT is fine)**: `BYBIT-SPOT` IS separately declared in
+  `VENUES_BY_ASSET_GROUP["cefi"]` (verified: `['BYBIT', 'BYBIT-SPOT']`), so its own EXPECTED tuples resolve directly and
+  the golden's `["BYBIT-SPOT", "spot_pair", ...]` entries are UNCHANGED (still present, correctly, at 71 tuples).
+  `OKX-SPOT` is **NOT** declared in `VENUES_BY_ASSET_GROUP["cefi"]` (only bare `"OKX"` is — verified via
+  `VENUES_BY_ASSET_GROUP['cefi']`), so its `VENUE_DATA_TYPE_CAPABILITIES["OKX-SPOT"]` entry
+  (`market_data_categories.py:378`, `{"SPOT_PAIR": ...}`) is orphaned — `build_expected` never iterates a non-declared
+  venue. AND `instruments-service`'s `check_enumeration_completeness._CEFI_VENUE_FOLD` still folds manifest `"OKX-SPOT"`
+  → `"OKX"` for comparison, so real captured OKX spot rows now compare against `(OKX, spot_pair, *)` — which no longer
+  exists post-`23fa3a99`. **Net: real captured OKX spot data is genuinely invisible to both Layer-1 and Layer-2 now** —
+  this part IS a real bug, just not the "revert the enumerator" shape originally suspected.
+- `test_cefi_okx_spot_folds_to_okx` fails for exactly this reason: it feeds an `OKX-SPOT` manifest row through
+  `filter_manifest_to_expected`, which folds it to `OKX` and finds no match.
+- **Golden fixture** (`tests/unit/scripts/goldens/expected_universe/cefi.json`, still 75) is simply stale — 71 IS the
+  correct current output MINUS the OKX-SPOT hole (i.e. once OKX-SPOT is fixed per below, actual would be 73, still short
+  of 75's phantom bare-OKX/BYBIT entries, which really were phantom per the production-verified rationale). **Do NOT
+  regenerate to 75** (that WOULD launder the phantom bare-venue tuples back in) — regenerate only after the OKX-SPOT fix
+  below lands, expecting 73.
 
-**Per the test's own docstring warning ("If the change is INTENTIONAL, regenerate the fixture per the docstring
-recipe")**: I deliberately did NOT regenerate the golden fixture to match the regressed `actual` output — that would
-silently launder a real coverage regression into the new "expected" baseline, which is exactly the failure mode this
-golden-byte-identical test exists to catch (per `codex/02-data/honest-coverage-model.md` — the honest-coverage
-denominator is read verbatim downstream, never re-derived).
+Full duplicate-avoidance cross-reference: this same root cause + fix options are also tracked as a
+BLOCKED-OPERATOR-DECISION todo in `cefi_layer1_denominator_gaps_2026_07_03.md` (the plan this drift was discovered
+against while verifying task -004) — resolve there or here, not both, and cross out the other when done.
 
 ## Why it matters
 
 This blocks `quickmerge --agent` for the ENTIRE instruments-service repo — the sentinel mechanism requires a full green
 `quality-gates.sh` run on the exact committed HEAD, and no one currently gets one on `live-defi-rollout` tip without
-either fixing this regression or (incorrectly) papering over it via a golden-fixture regen. Per
+either fixing this hole or (incorrectly) papering over it via a golden-fixture regen. Per
 `codex/02-data/data-pipeline-correctness-hard-rule.md` this is exactly the class of cross-cutting data-correctness break
 that freezes downstream shipping until resolved.
 
 ## Recommended decision
 
-Need someone with CEFI-enumerator context (not this session's sports/understat scope) to:
+**BLOCKED-OPERATOR-DECISION** — spans 2 repos + changes the certified cefi denominator, do not guess:
 
-1. Bisect which of the 3 candidate commits (`980f329` / `4a8cff7` / `7ded594`) regressed BYBIT/OKX `spot_pair`
-   `book_snapshot_5`/`trades` out of `_enumerate_v2_cefi`'s output.
-2. Fix the enumerator (or the UAC capability source it reads) so `build_expected('cefi')` produces the 75-tuple set
-   again, confirmed against the ALREADY-shipped golden (do not regenerate the golden to match the regression).
+(A) Declare `OKX-SPOT` as its own cefi venue (mirror the `BYBIT-SPOT` precedent already in the same codebase) + remove
+`"OKX-SPOT"` from `instruments-service`'s `_CEFI_VENUE_FOLD` so it stops folding to bare `OKX` — **recommended**,
+matches the established convention for exchanges with genuinely distinct spot/perp Tardis dialects. Result:
+`build_expected('cefi')` → 73 tuples (71 + the 2 real OKX-SPOT tuples), regenerate golden to 73.
+
+(B) Revert `23fa3a99`'s bare-OKX/BYBIT `SPOT_PAIR` removal — re-accepts the fold-target tuples as load-bearing,
+contradicting the production-verified rationale that motivated the removal (this would knowingly reintroduce phantom
+EXPECTED tuples with zero real captures behind them).
+
+Once decided:
+
+1. Implement the chosen fix (A: `unified-api-contracts` venue declaration + `instruments-service` fold-table edit; or B:
+   revert `23fa3a99` in `unified-api-contracts`).
+2. Regenerate `tests/unit/scripts/goldens/expected_universe/cefi.json` to match (73 tuples under A, 75 under B) — use
+   the docstring recipe in `test_expected_universe_golden.py`, preserving the existing compact one-tuple-per-line JSON
+   format (the recipe's raw `json.dump(indent=2)` reformats every entry across 3 lines — reformat back to the checked-in
+   single-line-per-tuple style to keep the diff reviewable).
 3. Re-run full `quality-gates.sh` on instruments-service to re-establish a green sentinel for `live-defi-rollout` HEAD.
 
 ## Todos
 
-- [ ] [FIX] P0. Bisect + fix the CEFI v2 enumerator regression dropping BYBIT/OKX spot_pair book_snapshot_5+trades from
-      `build_expected('cefi')` (71 vs golden 75 tuples) (repo: instruments-service).
+- [ ] [DESIGN] P0. **BLOCKED-OPERATOR-DECISION** — decide OKX-SPOT venue declaration (option A, recommended) vs
+      reverting the bare-OKX/BYBIT SPOT_PAIR removal (option B) (repo: unified-api-contracts).
+- [ ] [FIX] P0. Implement the decided option + regenerate `tests/unit/scripts/goldens/expected_universe/cefi.json` to
+      match (repos: unified-api-contracts, instruments-service).
 - [ ] [VERIFY] P0. Re-run full `bash scripts/quality-gates.sh` on instruments-service HEAD after the fix to confirm a
       clean green sentinel is re-established for `live-defi-rollout` (repo: instruments-service).

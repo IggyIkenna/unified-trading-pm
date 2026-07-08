@@ -163,21 +163,45 @@ enough). The % is neither an upper nor lower bound of the real value.
       green (fake-checker stub updated with passthrough). QG-green 92s (sentinel 4368f381e). Filter is oracle-based on
       `build_expected`, so 2b/ASTER-split changes propagate through automatically at re-measure time (task 5 — P2, gates
       on 2a–2f + ASTER wire + KALSHI-PERP purge).
-- [ ] [CODE] P1. **2f. Reapply the denominator-gap model to LIGHTER / EXTENDED / PACIFICA** — they share the ASTER
+- [x] ✅ [CODE] P1. **2f. Reapply the denominator-gap model to LIGHTER / EXTENDED / PACIFICA** — they share the ASTER
       live-WS/no-REST profile, so the same start-date-gated treatment applies once enumerator `start_date` support
       exists. **PREREQ: 2b + enumerator `start_date` support.** Gate: LIGHTER/EXTENDED/PACIFICA EXPECTED correct;
-      tuple-diff clean.
+      tuple-diff clean. **DONE 2026-07-08 — checkpoint-only, no code change (slot-8 planning).** Both PREREQs confirmed
+      landed: 2b (`-002`) flipped 2026-07-07; enumerator `start_date` support (`-007`) landed
+      `instruments-service@4a8cff7` (per-`(venue, dt)` gate in `_enumerate_v2_cefi`, fully generic — no ASTER-specific
+      code path, verified by reading `enumerate_expected_universe.py:1073-1135`). The LIGHTER-ZKSYNC / EXTENDED-STARKNET
+      / PACIFICA-SOLANA `VENUE_DATA_TYPE_CAPABILITIES` entries (trades/book_snapshot_5/ derivative_ticker + start_dates)
+      were already landed as part of D2b — `unified-api-contracts@e76d874a` (2026-07-06) — confirming the slot-6 note in
+      the `-005` re-measure entry above. Dynamic Gate verification (no golden edit needed — this is the same mechanism
+      ASTER uses, generically applied): `.venv/bin/python -c "from expected_universe import build_expected; ..."` →
+      `build_expected('cefi')` returns exactly 3 tuples per venue for all three —
+      `(<venue>, perpetual, book_snapshot_5)`, `(<venue>, perpetual, derivative_ticker)`, `(<venue>, perpetual, trades)`
+      — matching the ASTER live-forward profile byte-for-byte (ASTER itself currently also resolves to the same 3-tuple
+      set at this measurement grain). Tuple-diff clean: no code change required to close this Gate. **Adjacent findings
+      surfaced during verification — filed below, NOT fixed inline (out of -004's scope,
+      cross-repo/architecture-decision territory):** (1) cefi Layer-1 golden fixture
+      (`tests/unit/scripts/goldens/expected_universe/cefi.json`) is stale (75 vs actual 71 tuples) from the 2026-07-07
+      bare-OKX/BYBIT `SPOT_PAIR` removal (`instruments-service@23fa3a99`) never being regenerated; (2) that same removal
+      left **OKX-SPOT with ZERO EXPECTED tuples anywhere** — a genuine denominator hole, NOT just a stale fixture (see
+      new BLOCKED-OPERATOR-DECISION todo below); (3) a month-old regression test
+      (`test_default_exchanges_cover_captured_cefi_venues`, landed 2026-06-08 `is@ff063a28`) asserts `lighter-zksync`
+      must be a Tardis exchange id in IS's `_DEFAULT_EXCHANGES`, but the current UAC `VenueMapping.all_tardis_exchanges`
+      SSOT does not contain it — contradicts the 2026-07-06 D2b comment stating LIGHTER/EXTENDED/PACIFICA are
+      native-REST/WS, not Tardis-routed. instruments-service QG is RED on LDR HEAD from these 2 test failures (verified
+      via `bash scripts/quality-gates.sh --no-fix`: 2 failed, 4056 passed) — independent of anything shipped in this
+      task; no commit made against instruments-service this turn since a golden-only fix cannot land through a QG gate
+      that's red for unrelated reasons. Regenerated golden held locally then reverted (`git checkout --`) rather than
+      shipped uncommitted-with-caveats.
 - [x] ✅ [SCRIPT] P2. **Re-measure + re-certify the cefi Layer-1 row** on the corrected catalogue (consolidates the two
       old re-measure todos). **PREREQ: 2a–2f landed + the ASTER live wire (Plan 5) + the KALSHI-PERP purge (Stage-3
       cross-plan prereq — 25,473 fake `KALSHI-PERP` rows pollute cefi Layer-2).** Gate: fresh cefi Layer-1 recorded in
       the Progress Log; denominator GREW, % dropped (honest). Feeds the global Stage-3 certify (Plan 4). **DONE
-      2026-07-07 — instruments-service@<f722845> (slot-6 planning).** Ran
-      `measure_honest_coverage --asset-group cefi` at 08:54 UTC: cefi Layer-1 = **72.60%** (present 53 / expected 73),
-      denominator_status INCOMPLETE (20 missing, 87 stray). Trajectory: 65.91% on 44 tuples (2026-06-29 cert) → 73.61% on
-      72 tuples (D2a fold + 2b) → **72.60% on 73 tuples** (post uac@3652f99f -008 ASTER book_snapshot_5 live-wire cap
-      flip). Denominator GREW +1 (ASTER perpetual book_snapshot_5); % dropped honestly (the new tuple has 0 captured
-      rows — awaiting live-wire capture from the aster_book_liq_ws connector). Full details in the Progress Log entry
-      below.
+      2026-07-07 — instruments-service@<f722845> (slot-6 planning).** Ran `measure_honest_coverage --asset-group cefi`
+      at 08:54 UTC: cefi Layer-1 = **72.60%** (present 53 / expected 73), denominator_status INCOMPLETE (20 missing, 87
+      stray). Trajectory: 65.91% on 44 tuples (2026-06-29 cert) → 73.61% on 72 tuples (D2a fold + 2b) → **72.60% on 73
+      tuples** (post uac@3652f99f -008 ASTER book_snapshot_5 live-wire cap flip). Denominator GREW +1 (ASTER perpetual
+      book_snapshot_5); % dropped honestly (the new tuple has 0 captured rows — awaiting live-wire capture from the
+      aster_book_liq_ws connector). Full details in the Progress Log entry below.
 
 **Operator decision — agent RAISES via blocked-queue, operator answers later (do NOT guess):**
 
@@ -188,6 +212,16 @@ enough). The % is neither an upper nor lower bound of the real value.
       out-of-MVP. (BINANCE-DELIVERY correctly 0 — COIN-M not-MVP per the 06-27 decision #3.) Park the dependent rows
       pending the answer. _(This line carries `BLOCKED-` so the orchestrator will not dispatch it — it stays visible for
       the operator; the working 2a/2b agent surfaces it via the blocked-queue.)_
+
+- [ ] [DESIGN] P1. **BLOCKED-OPERATOR-DECISION — OKX-SPOT has ZERO EXPECTED tuples anywhere (denominator hole) — TRACKED
+      IN FULL at `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`.** Surfaced 2026-07-08
+      (slot-8 planning) while verifying `-004`'s Gate; root-caused to `unified-api-contracts@23fa3a99` (deliberate,
+      production-verified bare-OKX/BYBIT `SPOT_PAIR` removal) orphaning `OKX-SPOT`'s capability entry since `OKX-SPOT`
+      was never declared its own cefi venue (unlike `BYBIT-SPOT`, which IS declared and unaffected). Also blocks
+      `instruments-service` QG (2 pre-existing red tests: the OKX-fold test here + a separate stale `lighter-zksync`
+      Tardis-exchange-id assertion, root-caused to a slug rename `uac@f16c79e8` — resolve BOTH in the linked doc, not
+      here, to avoid duplicate-tracking drift). This todo is a pointer only; do the actual decision/fix/verify work
+      against the 3 todos in that doc.
 
 **BYBIT-SPOT writer defect (independent of the gate work — can run in parallel with 2a):**
 
@@ -250,19 +284,19 @@ nothing date-gates seeding at the (venue, data_type) grain. Execute IN ORDER:
       unified-api-contracts@3652f99f (slot-2 planning).** Added `book_snapshot_5: "2026-06-23"` +
       `liquidations: "2026-06-23"` to `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` at
       `unified_api_contracts/registry/market_data_categories.py:1148-1150`. Live-wire date = mtds@d43fd62 (the
-      2026-06-23 aster_book_liq_ws.py code-land commit — Binance-Futures-compatible WS via
-      `wss://fstream.asterdex.com`, `<sym>@depth5@100ms` + `!forceOrder@arr`); pre-2026-06-23 dates stay typed
-      `EXPECTED_PRE_SOURCE_COVERAGE_START` via the enumerator's per-(venue,dt) start_date gate landed at
-      instruments-service@4a8cff7 (task -007), so the 17,282-row over-seed purged 2026-07-03 does NOT re-materialise.
-      Updated the comment block above the ASTER entry to reflect batch+live vs live-only mode-split; also updated the
-      test-suite: flipped `test_aster_book_snapshot_5_is_empty` → `test_aster_book_snapshot_5_and_liquidations_seeded`
-      to assert book_snapshot_5 now seeds non-empty (liquidations is venue-level so falls back to Tier-2 empty by
-      design), and dropped the now-stale ASTER example from the "capability not declared" comment inside
-      `get_expected_instruments_for_venue`. Peer commit `e17b185f` (unblocking the 20 pre-existing WS-cassette map
-      gaps) landed first, so QG went from RED→GREEN mid-shipflow; sentinel@3652f99f matches HEAD, quickmerge shipped
-      clean. UNBLOCKS -004 (2f LIGHTER/EXTENDED/PACIFICA still gated on their own capability flips + start_date
-      declarations) and -005 (re-measure — verify UAC ASTER capability flip landed on LDR before re-dispatch, per
-      slot-11 BLK-817416c3).
+      2026-06-23 aster_book_liq_ws.py code-land commit — Binance-Futures-compatible WS via `wss://fstream.asterdex.com`,
+      `<sym>@depth5@100ms` + `!forceOrder@arr`); pre-2026-06-23 dates stay typed `EXPECTED_PRE_SOURCE_COVERAGE_START`
+      via the enumerator's per-(venue,dt) start_date gate landed at instruments-service@4a8cff7 (task -007), so the
+      17,282-row over-seed purged 2026-07-03 does NOT re-materialise. Updated the comment block above the ASTER entry to
+      reflect batch+live vs live-only mode-split; also updated the test-suite: flipped
+      `test_aster_book_snapshot_5_is_empty` → `test_aster_book_snapshot_5_and_liquidations_seeded` to assert
+      book_snapshot_5 now seeds non-empty (liquidations is venue-level so falls back to Tier-2 empty by design), and
+      dropped the now-stale ASTER example from the "capability not declared" comment inside
+      `get_expected_instruments_for_venue`. Peer commit `e17b185f` (unblocking the 20 pre-existing WS-cassette map gaps)
+      landed first, so QG went from RED→GREEN mid-shipflow; sentinel@3652f99f matches HEAD, quickmerge shipped clean.
+      UNBLOCKS -004 (2f LIGHTER/EXTENDED/PACIFICA still gated on their own capability flips + start_date declarations)
+      and -005 (re-measure — verify UAC ASTER capability flip landed on LDR before re-dispatch, per slot-11
+      BLK-817416c3).
 - **[→ AO PLAN 5, INFRA role]** Register + launch the live connector `aster_book_liq_ws.py` into
   `live/connector_registry.py` + a live VM (KALSHI-PERP book5 VM is the in-cefi template); verify `live_aster` rows land
   (per-VM shard spot-check at T+10-15min). Connector SSOT: `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #4.
@@ -680,115 +714,120 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
 - **2026-07-07** — **Task -005 (re-measure) RE-PARKED — BLOCKED-PREREQUISITES (3rd dispatch, `BLK-817416c3`)** (slot-11
   planning). Task `cefi_layer1_denominator_gaps-005` was RE-dispatched to slot-11 by priority=50 alone; the
   machine-encoded `depends_on` gap on the backlog task is still uncorrected (verified via `/api/backlog?limit=500`:
-  `-005.status=dispatched, depends_on=null`). Re-verified LDR at RE-dispatch with grep-and-read:
-  **MET** — (i) `-007` (enumerator `start_date` support) LANDED via `instruments-service@4a8cff7`
-  (`scripts/enumerate_expected_universe.py:1073` calls `get_venue_data_type_start_date(instr.venue, dt)`, per-`(venue,
-  dt)` gate baked into `_enumerate_v2_cefi`); (ii) KALSHI-PERP purge DONE (25,473 rows removed via
+  `-005.status=dispatched, depends_on=null`). Re-verified LDR at RE-dispatch with grep-and-read: **MET** — (i) `-007`
+  (enumerator `start_date` support) LANDED via `instruments-service@4a8cff7`
+  (`scripts/enumerate_expected_universe.py:1073` calls `get_venue_data_type_start_date(instr.venue, dt)`,
+  per-`(venue, dt)` gate baked into `_enumerate_v2_cefi`); (ii) KALSHI-PERP purge DONE (25,473 rows removed via
   `purge_kalshi_perp_events_contamination_2026_07_06.py --apply`, cefi catalogue 376,984→351,511 per
   `prediction_capture_incident_remediation_2026_07_06.md` line 190); (iii) ASTER connector wired
-  (`market-tick-data-service/market_tick_data_service/live/connectors/__init__.py:52` imports
-  `aster_book_liq_ws`).
+  (`market-tick-data-service/market_tick_data_service/live/connectors/__init__.py:52` imports `aster_book_liq_ws`).
   **UNMET** — (iv) **UAC ASTER capability flip (-008) — plan/backlog DRIFT**: backlog task `-008` reports
   `status=done, depends_on=null` but plan line 240 `- [ ] [CONFIG] P1. **UAC capability flip** — add book_snapshot_5
-  + liquidations to VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` is UNCHECKED, and code verification confirms UAC file
-  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1144` still holds only
-  `{trades: 2023-07-22, derivative_ticker: 2023-07-22, perp_funding: 2023-07-22}` — NO `book_snapshot_5`, NO
-  `liquidations`. Recent UAC commits on `market_data_categories.py` (top 10: `e76d874a` D2a `03cfd0f` …) do NOT include
-  the ASTER capability flip. **Main-agent verdict (`BLK-817416c3`)**: "the code is authoritative. -008 is NOT actually
-  done."
-  **UNMET** — (v) `-004` (2f LIGHTER/EXTENDED/PACIFICA): plan line 166 `- [ ]` unchecked, backlog `status=queued`,
-  `LIGHTER`/`EXTENDED`/`PACIFICA` produce zero grep matches in `instruments-service/scripts/expected_universe.py` (the
-  denominator-gap model has NOT been reapplied to those 3 venues on `build_expected`).
-  Running the re-measure now would produce a misleading % in the WRONG direction from the plan Gate ("denominator GREW,
-  % dropped honest"): denominator UNDER-counts (ASTER `book_snapshot_5`/`liquidations` still 0-expected until UAC flip;
-  LIGHTER/EXTENDED/PACIFICA still 0-expected until 2f). Main-agent verdict `BLK-817416c3`: PARK — "cefi-005 gates on
-  both -004 and -008. Neither is complete. Proceeding without them would produce incorrect enumeration for the
-  LIGHTER/EXTENDED/PACIFICA venues and missing ASTER book5/liquidations capability, which causes silent data-correctness
-  failures downstream." **Operator actions surfaced** (3rd escalation on the same task): (1) fix -008 backlog drift —
-  re-open -008, add `book_snapshot_5` + `liquidations` to UAC `market_data_categories.py:1144`, mark done only after code
-  is on LDR; (2) wait for `-004` (LIGHTER/EXTENDED/PACIFICA) to complete + flip its plan checkbox; (3) re-dispatch `-005`
-  only after both are confirmed on LDR. Slot-11 action: this Progress Log entry, commit via `docs(plans):` cross-repo PM
-  flip, then `/api/slots/11/skip-current-task` per main-agent instruction. This is now the 3rd `-005` PARK on
-  identical grounds (BLK-ad7abfcd 2026-07-06 slot-8, BLK-ae458864 2026-07-07 slot-8, BLK-817416c3 2026-07-07 slot-11) —
-  the bounce-loop pattern the `-008` chain hit 8× is beginning to repeat on `-005`; suggest same operator-backlog fix
-  (`depends_on: [cefi_layer1_denominator_gaps-004, cefi_layer1_denominator_gaps-008]` on `-005` + regen).
+  - liquidations to
+    VENUE_DATA_TYPE_CAPABILITIES["ASTER"]`is UNCHECKED, and code verification confirms UAC file`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1144`still holds only`{trades:
+    2023-07-22, derivative_ticker: 2023-07-22, perp_funding:
+    2023-07-22}`— NO`book_snapshot_5`, NO `liquidations`. Recent UAC commits on `market_data_categories.py`(top 10:`e76d874a`D2a`03cfd0f` …) do NOT include the ASTER capability flip. **Main-agent verdict (`BLK-817416c3`)**: "the code is authoritative. -008 is NOT actually done." **UNMET** — (v) `-004`(2f LIGHTER/EXTENDED/PACIFICA): plan line 166`-
+    [
+    ]`unchecked, backlog`status=queued`, `LIGHTER`/`EXTENDED`/`PACIFICA`produce zero grep matches in`instruments-service/scripts/expected_universe.py`(the denominator-gap model has NOT been reapplied to those 3 venues on`build_expected`). Running the re-measure now would produce a misleading % in the WRONG direction from the plan Gate ("denominator GREW, % dropped honest"): denominator UNDER-counts (ASTER `book_snapshot_5`/`liquidations`still 0-expected until UAC flip; LIGHTER/EXTENDED/PACIFICA still 0-expected until 2f). Main-agent verdict`BLK-817416c3`: PARK — "cefi-005 gates on both -004 and -008. Neither is complete. Proceeding without them would produce incorrect enumeration for the LIGHTER/EXTENDED/PACIFICA venues and missing ASTER book5/liquidations capability, which causes silent data-correctness failures downstream." **Operator actions surfaced** (3rd escalation on the same task): (1) fix -008 backlog drift — re-open -008, add `book_snapshot_5`+`liquidations`to UAC`market_data_categories.py:1144`, mark done only after code is on LDR; (2) wait for `-004`(LIGHTER/EXTENDED/PACIFICA) to complete + flip its plan checkbox; (3) re-dispatch`-005`only after both are confirmed on LDR. Slot-11 action: this Progress Log entry, commit via`docs(plans):`cross-repo PM flip, then`/api/slots/11/skip-current-task`per main-agent instruction. This is now the 3rd`-005`PARK on identical grounds (BLK-ad7abfcd 2026-07-06 slot-8, BLK-ae458864 2026-07-07 slot-8, BLK-817416c3 2026-07-07 slot-11) — the bounce-loop pattern the`-008`chain hit 8× is beginning to repeat on`-005`; suggest same operator-backlog fix (`depends_on:
+    [cefi_layer1_denominator_gaps-004, cefi_layer1_denominator_gaps-008]`on`-005` + regen).
 
 - **2026-07-07** — **UAC capability flip -008 SHIPPED ✅ — the 8-time bounced task finally lands** (slot-2 planning).
   Prereq -007 (per-(venue,dt) start_date gate) confirmed on LDR at `instruments-service@4a8cff7` — the exact
   correctness-safety mechanism that all 8 prior slots were correctly parking on. Verified UAC file
-  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1144` matched the
-  slot-11 BLK-817416c3 "code is authoritative — -008 is NOT actually done" verdict: only
-  `{trades, derivative_ticker, perp_funding}` present. Added `book_snapshot_5: "2026-06-23"` +
-  `liquidations: "2026-06-23"` — start_date follows the KALSHI-PERP live-only precedent (KALSHI book_snapshot_5 =
-  2026-06-22 = the `_CONNECTOR_TO_VENUE` re-add / VM-launch date, per `test_data_status_registries.py` line comment
-  "re-added 2026-06-23"). Chose 2026-06-23 = the `mtds@d43fd62` commit date for
-  `market_tick_data_service/live/connectors/aster_book_liq_ws.py` ("fix(cefi-bug4): catalogue-driven HL/ASTER
-  universe + ASTER live-only book/liq + drop HL liq") — the ASTER-side analog of the KALSHI code-land date.
-  Also flipped `test_aster_book_snapshot_5_is_empty` → `test_aster_book_snapshot_5_and_liquidations_seeded` (the
-  assertions had to move: book_snapshot_5 now seeds non-empty via the perp MVP seed; liquidations stays empty because
-  it's venue-level per `test_venue_level_dt_returns_empty` — that's Tier-2 fallback, not a capability gap). Dropped
-  the now-stale ASTER example from the "capability not declared" comment inside `get_expected_instruments_for_venue`.
-  Encountered 20 pre-existing WS-cassette `_CONNECTOR_TO_VENUE`-map failures on the initial QG (unrelated to ASTER —
-  connectors added without their test-registry entry, blocking sentinel refresh fleet-wide); peer landed
-  `unified-api-contracts@e17b185f` ("fix(tests): add 20 _CONNECTOR_TO_VENUE map entries + 17 stub *_ws.yaml
-  cassettes ...") during my investigation, tree went RED→GREEN, my commit auto-rebased to `3652f99f`, sentinel
-  written on the re-run, quickmerge shipped. Filed nothing new — peer commit's message calls out
-  "unblocks fleet-wide UAC ships" so the finding is already owned. UNBLOCKS -004 (2f LIGHTER/EXTENDED/PACIFICA — each
-  still needs its own capability entry + start_date, they were never seeded because their capability entry was empty
-  before D2b; -007 gate handles the date discipline uniformly). UNBLOCKS -005 (re-measure — verify UAC flip on LDR
-  before re-dispatch per slot-11 BLK-817416c3, then run; the slot-11 UAC-drift verdict is now false). No new
-  BLK-QUEUE raised — this was the honest shipping path once -007 was on LDR + the WS-cassette gap was fixed by peer.
+  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1144` matched the slot-11 BLK-817416c3
+  "code is authoritative — -008 is NOT actually done" verdict: only `{trades, derivative_ticker, perp_funding}` present.
+  Added `book_snapshot_5: "2026-06-23"` + `liquidations: "2026-06-23"` — start_date follows the KALSHI-PERP live-only
+  precedent (KALSHI book_snapshot_5 = 2026-06-22 = the `_CONNECTOR_TO_VENUE` re-add / VM-launch date, per
+  `test_data_status_registries.py` line comment "re-added 2026-06-23"). Chose 2026-06-23 = the `mtds@d43fd62` commit
+  date for `market_tick_data_service/live/connectors/aster_book_liq_ws.py` ("fix(cefi-bug4): catalogue-driven HL/ASTER
+  universe + ASTER live-only book/liq + drop HL liq") — the ASTER-side analog of the KALSHI code-land date. Also flipped
+  `test_aster_book_snapshot_5_is_empty` → `test_aster_book_snapshot_5_and_liquidations_seeded` (the assertions had to
+  move: book_snapshot_5 now seeds non-empty via the perp MVP seed; liquidations stays empty because it's venue-level per
+  `test_venue_level_dt_returns_empty` — that's Tier-2 fallback, not a capability gap). Dropped the now-stale ASTER
+  example from the "capability not declared" comment inside `get_expected_instruments_for_venue`. Encountered 20
+  pre-existing WS-cassette `_CONNECTOR_TO_VENUE`-map failures on the initial QG (unrelated to ASTER — connectors added
+  without their test-registry entry, blocking sentinel refresh fleet-wide); peer landed `unified-api-contracts@e17b185f`
+  ("fix(tests): add 20 _CONNECTOR_TO_VENUE map entries + 17 stub *_ws.yaml cassettes ...") during my investigation, tree
+  went RED→GREEN, my commit auto-rebased to `3652f99f`, sentinel written on the re-run, quickmerge shipped. Filed
+  nothing new — peer commit's message calls out "unblocks fleet-wide UAC ships" so the finding is already owned.
+  UNBLOCKS -004 (2f LIGHTER/EXTENDED/PACIFICA — each still needs its own capability entry + start_date, they were never
+  seeded because their capability entry was empty before D2b; -007 gate handles the date discipline uniformly). UNBLOCKS
+  -005 (re-measure — verify UAC flip on LDR before re-dispatch per slot-11 BLK-817416c3, then run; the slot-11 UAC-drift
+  verdict is now false). No new BLK-QUEUE raised — this was the honest shipping path once -007 was on LDR + the
+  WS-cassette gap was fixed by peer.
 
 - **2026-07-07** — **Task -005 (re-measure) SHIPPED ✅** (slot-6 planning, 4th dispatch — the one that finally landed).
   Task `cefi_layer1_denominator_gaps-005` re-dispatched after prior 3 parks (BLK-ad7abfcd 2026-07-06 slot-8,
   BLK-ae458864 2026-07-07 slot-8, BLK-817416c3 2026-07-07 slot-11) — this time verified all prereqs are met and the
   main-agent authorized proceed via `BLK-057bf3b0` Option A. **Prereq re-verification on LDR:** (i) -002 (2b) DONE via
   earlier plan-checkbox flip; (ii) -007 (per-(venue,dt) start_date gate) LANDED (is@4a8cff7,
-  `enumerate_expected_universe.py:1073` calls `get_venue_data_type_start_date(instr.venue, dt)`);
-  (iii) -008 (UAC ASTER cap flip) LANDED at 2026-07-07 08:10 UTC via uac@3652f99f — the change slot-11 BLK-817416c3
-  flagged as MISSING did in fact land ~6 h before -005's 4th re-dispatch. UAC ASTER now:
-  `{trades: 2023-07-22, derivative_ticker: 2023-07-22, perp_funding: 2023-07-22, book_snapshot_5: 2026-06-23,
-  liquidations: 2026-06-23}`. Plan line 240 flipped `[x]` DONE on the same landing commit;
-  (iv) -006 (BYBIT-SPOT itype-stamp) LANDED (mtds@c4df8ae0);
-  (v) KALSHI-PERP purge DONE (25,473 rows removed 2026-07-06);
-  (vi) ASTER live wire (Plan 5) — connector `aster_book_liq_ws` imported at
-  `market-tick-data-service/market_tick_data_service/live/connectors/__init__.py:52`;
-  (vii) -004 (2f LIGHTER/EXTENDED/PACIFICA) plan line 166 still `[ ]` unchecked BUT verified code-level gate met by
-  directly invoking `build_expected('cefi')` — LIGHTER-ZKSYNC/EXTENDED-STARKNET/PACIFICA-SOLANA each emit exactly 3
-  tuples (`trades`/`book_snapshot_5`/`derivative_ticker`) matching the ASTER live-forward profile the 2f section
-  prescribes. Main-agent verdict: 2f plan checkbox unflip is docs-drift for slot-8 to fold when it executes -004
-  (backlog `queued, target_slot=8, affinity=high`); it is NOT a runtime blocker. **Fresh re-measure**
+  `enumerate_expected_universe.py:1073` calls `get_venue_data_type_start_date(instr.venue, dt)`); (iii) -008 (UAC ASTER
+  cap flip) LANDED at 2026-07-07 08:10 UTC via uac@3652f99f — the change slot-11 BLK-817416c3 flagged as MISSING did in
+  fact land ~6 h before -005's 4th re-dispatch. UAC ASTER now:
+  `{trades: 2023-07-22, derivative_ticker: 2023-07-22, perp_funding: 2023-07-22, book_snapshot_5: 2026-06-23, liquidations: 2026-06-23}`.
+  Plan line 240 flipped `[x]` DONE on the same landing commit; (iv) -006 (BYBIT-SPOT itype-stamp) LANDED
+  (mtds@c4df8ae0); (v) KALSHI-PERP purge DONE (25,473 rows removed 2026-07-06); (vi) ASTER live wire (Plan 5) —
+  connector `aster_book_liq_ws` imported at
+  `market-tick-data-service/market_tick_data_service/live/connectors/__init__.py:52`; (vii) -004 (2f
+  LIGHTER/EXTENDED/PACIFICA) plan line 166 still `[ ]` unchecked BUT verified code-level gate met by directly invoking
+  `build_expected('cefi')` — LIGHTER-ZKSYNC/EXTENDED-STARKNET/PACIFICA-SOLANA each emit exactly 3 tuples
+  (`trades`/`book_snapshot_5`/`derivative_ticker`) matching the ASTER live-forward profile the 2f section prescribes.
+  Main-agent verdict: 2f plan checkbox unflip is docs-drift for slot-8 to fold when it executes -004 (backlog
+  `queued, target_slot=8, affinity=high`); it is NOT a runtime blocker. **Fresh re-measure**
   (`.venv/bin/python scripts/measure_honest_coverage.py --asset-group cefi --output-path /tmp/cefi-remeasure/coverage.json`,
-  2026-07-07 08:54:47 UTC): **cefi Layer-1 = 72.60%** (present 53 / expected 73);
-  `denominator_status=INCOMPLETE`; 20 missing, 87 stray. Layer-2 reachable coverage 76.77% (2,098,056 / 2,732,783).
-  **Denominator trajectory**: 44 tuples @ 65.91% (2026-06-29 certified — the pre-D2a baseline that gate-blindly
-  omitted whole venues) → 72 tuples @ 73.61% (post-D2a fold + 2b — the declarative INSTRUMENT_TYPES_BY_VENUE
-  authority + capabilities completion) → **73 tuples @ 72.60% (this measure — post-uac@3652f99f -008 ASTER
-  book_snapshot_5 live-wire capability flip)**. Denominator GREW +1 (`ASTER perpetual book_snapshot_5`, in the missing
-  set because the ASTER live-wire connector's captures haven't propagated to the manifest yet); % dropped
-  0.99 pp honestly. **Missing tuples (20)** — same known holes as prior measure PLUS the newly-added ASTER book5:
-  ASTER perp book5 (NEW — pending live-wire); BITFINEX-FUTURES future ×3 (book5/derivative_ticker/trades);
-  BITGET-FUTURES future ×3; BYBIT spot_pair ×2 (book5/trades — the -006 forward-path fix landed but corrective-relabel
-  is still in the follow-up issue doc `bybit_spot_manifest_stray_captures_2026_07_07.md`); COINBASE-FUTURES future
-  trades; EXTENDED-STARKNET perp ×2 (book5/trades); KRAKEN-FUTURES future derivative_ticker;
-  LIGHTER-ZKSYNC perp ×3; OKX options_chain trades; PACIFICA-SOLANA perp ×3. **Stray tuples (87)** — writer emits
-  data_types UAC doesn't sanction (writer-itype-case tuples like `ASTER PERPETUAL futures_chain`,
-  `DERIBIT COMBO options_chain`, `BYBIT-SPOT PERPETUAL book_snapshot_5`, etc.); tracked cross-plan in the honest
-  coverage v2 stray_tuples surface. **Adjacent finding fixed inline** — the 2026-07-07 UAC change (uac@3652f99f) also
-  silently broke 3 instruments-service tests written to guard the pre-008 carve-out state
+  2026-07-07 08:54:47 UTC): **cefi Layer-1 = 72.60%** (present 53 / expected 73); `denominator_status=INCOMPLETE`; 20
+  missing, 87 stray. Layer-2 reachable coverage 76.77% (2,098,056 / 2,732,783). **Denominator trajectory**: 44 tuples @
+  65.91% (2026-06-29 certified — the pre-D2a baseline that gate-blindly omitted whole venues) → 72 tuples @ 73.61%
+  (post-D2a fold + 2b — the declarative INSTRUMENT_TYPES_BY_VENUE authority + capabilities completion) → **73 tuples @
+  72.60% (this measure — post-uac@3652f99f -008 ASTER book_snapshot_5 live-wire capability flip)**. Denominator GREW +1
+  (`ASTER perpetual book_snapshot_5`, in the missing set because the ASTER live-wire connector's captures haven't
+  propagated to the manifest yet); % dropped 0.99 pp honestly. **Missing tuples (20)** — same known holes as prior
+  measure PLUS the newly-added ASTER book5: ASTER perp book5 (NEW — pending live-wire); BITFINEX-FUTURES future ×3
+  (book5/derivative_ticker/trades); BITGET-FUTURES future ×3; BYBIT spot_pair ×2 (book5/trades — the -006 forward-path
+  fix landed but corrective-relabel is still in the follow-up issue doc
+  `bybit_spot_manifest_stray_captures_2026_07_07.md`); COINBASE-FUTURES future trades; EXTENDED-STARKNET perp ×2
+  (book5/trades); KRAKEN-FUTURES future derivative_ticker; LIGHTER-ZKSYNC perp ×3; OKX options_chain trades;
+  PACIFICA-SOLANA perp ×3. **Stray tuples (87)** — writer emits data_types UAC doesn't sanction (writer-itype-case
+  tuples like `ASTER PERPETUAL futures_chain`, `DERIBIT COMBO options_chain`, `BYBIT-SPOT PERPETUAL book_snapshot_5`,
+  etc.); tracked cross-plan in the honest coverage v2 stray_tuples surface. **Adjacent finding fixed inline** — the
+  2026-07-07 UAC change (uac@3652f99f) also silently broke 3 instruments-service tests written to guard the pre-008
+  carve-out state
   (`test_check_enumeration_completeness.py::TestAsterCarveOut::test_aster_book_snapshot_5_not_in_expected` +
   `test_aster_book_snapshot_5_absent_from_manifest_is_not_a_hole` +
-  `test_enumerate_expected_universe.py::test_row_data_types_aster_capability_carveout`); IS `.qg_last_passed_sha =
-  4a8cff75` pre-dates uac@3652f99f, so IS QG has been silently red on LDR HEAD since 2026-07-07 08:10 UTC. Renamed
-  `TestAsterCarveOut → TestAsterCapabilities` and inverted the assertions (ASTER book_snapshot_5 IS now in EXPECTED
-  and IS a Layer-1 hole when absent — the live-wire capability guard); ASTER liquidations still not-expected (not in
-  MVP scope, unchanged). Renamed `test_row_data_types_aster_capability_carveout →
-  ..._aster_capability_profile` with the updated cap ∩ MVP assertions. All 91 tests in the affected suites pass; QG
-  green. **Golden regen**: `tests/unit/scripts/goldens/expected_universe/cefi.json` 72 → 73 tuples (added
+  `test_enumerate_expected_universe.py::test_row_data_types_aster_capability_carveout`); IS
+  `.qg_last_passed_sha = 4a8cff75` pre-dates uac@3652f99f, so IS QG has been silently red on LDR HEAD since 2026-07-07
+  08:10 UTC. Renamed `TestAsterCarveOut → TestAsterCapabilities` and inverted the assertions (ASTER book_snapshot_5 IS
+  now in EXPECTED and IS a Layer-1 hole when absent — the live-wire capability guard); ASTER liquidations still
+  not-expected (not in MVP scope, unchanged). Renamed
+  `test_row_data_types_aster_capability_carveout → ..._aster_capability_profile` with the updated cap ∩ MVP assertions.
+  All 91 tests in the affected suites pass; QG green. **Golden regen**:
+  `tests/unit/scripts/goldens/expected_universe/cefi.json` 72 → 73 tuples (added
   `["ASTER", "perpetual", "book_snapshot_5"]`, `captured_at 2026-07-06 → 2026-07-07`); all 14 golden tests pass.
-  **Shipped via quickmerge**: is@<f722845> `feat(scripts): re-measure cefi Layer-1 post-008 (72.60% on 73
-  tuples) + regen golden + rename obsolete ASTER carve-out tests`. Plan checkbox flipped in the same agent turn.
-  UNBLOCKS Plan 4 Stage-3 global certify. **Follow-up notes**: (1) the ASTER book5 hole will close when live-wire
-  captures start hitting the manifest — no code change needed; (2) BYBIT-SPOT stray captures (135k rows in
-  EMPTY/PERPETUAL/spot-nonsense states) tracked in `bybit_spot_manifest_stray_captures_2026_07_07.md` — not gating
-  -005; (3) LIGHTER/EXTENDED/PACIFICA perp tuples still missing (0 captured — new venues, first captures pending).
+  **Shipped via quickmerge**: is@<f722845>
+  `feat(scripts): re-measure cefi Layer-1 post-008 (72.60% on 73 tuples) + regen golden + rename obsolete ASTER carve-out tests`.
+  Plan checkbox flipped in the same agent turn. UNBLOCKS Plan 4 Stage-3 global certify. **Follow-up notes**: (1) the
+  ASTER book5 hole will close when live-wire captures start hitting the manifest — no code change needed; (2) BYBIT-SPOT
+  stray captures (135k rows in EMPTY/PERPETUAL/spot-nonsense states) tracked in
+  `bybit_spot_manifest_stray_captures_2026_07_07.md` — not gating -005; (3) LIGHTER/EXTENDED/PACIFICA perp tuples still
+  missing (0 captured — new venues, first captures pending).
+
+- **2026-07-08** — **Task -004 (2f) FLIPPED ✅ — checkpoint-only, no code change** (slot-8 planning). Both PREREQs
+  confirmed on LDR: `-002` (2b) flipped 2026-07-07; `-007` (enumerator `start_date` support) landed
+  `instruments-service@4a8cff7`, verified generic (no ASTER-specific code path — `get_venue_data_type_start_date` called
+  per-`(venue, dt)` for ANY venue at `enumerate_expected_universe.py:1132-1135`). LIGHTER-ZKSYNC / EXTENDED-STARKNET /
+  PACIFICA-SOLANA capability declarations (trades/book_snapshot_5/derivative_ticker + start_dates) already landed via
+  D2b (`unified-api-contracts@e76d874a`, 2026-07-06). Dynamic verification: `build_expected('cefi')` invoked directly —
+  each of the 3 venues returns exactly
+  `{(v, 'perpetual', 'book_snapshot_5'), (v, 'perpetual', 'derivative_ticker'), (v, 'perpetual', 'trades')}`, matching
+  the ASTER live-forward profile. No code change needed; Gate satisfied by data already on LDR. Slot-8 action:
+  checkbox-flip only. **Adjacent finding surfaced while dynamically verifying the Gate (pre-existing on LDR HEAD, not
+  caused by this task)**: `instruments-service` QG is RED (verified via `bash scripts/quality-gates.sh --no-fix`: 2
+  failed, 4056 passed) — root-caused + filed in full at
+  `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` (a peer, slot-7, had already opened
+  that doc minutes earlier from an unrelated task; I updated it with the correct root cause — `uac@23fa3a99` orphaning
+  `OKX-SPOT`'s EXPECTED tuples, not the enumerator regression the doc originally suspected — rather than fork a
+  duplicate). Also added a pointer-only BLOCKED-OPERATOR-DECISION todo above so this plan's own denominator-drift
+  history stays discoverable in one place. A golden-fixture fix was drafted + verified clean locally, then **reverted
+  (`git checkout --`, not shipped)** — it can't land through a QG gate that's red for unrelated pre-existing reasons,
+  and shipping it alone would misleadingly suggest the underlying OKX-SPOT hole is "handled". No `instruments-service`
+  commit this turn.
