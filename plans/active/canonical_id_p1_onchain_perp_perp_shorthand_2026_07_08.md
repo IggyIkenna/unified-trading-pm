@@ -200,3 +200,14 @@ Grepped the workspace for `:PERP:` construction sites (not just references) befo
   instruments-service's quickmerge was transiently blocked by a live sibling agent's concurrent uncommitted WIP in the
   shared `unified-api-contracts` clone (protected per the workspace's inherited-dirty-WIP liveness rule, not
   force-pushed through) — retried once the sibling's changes landed.
+- **2026-07-08 (later)** — The dry-run's `discover_parquet_files()` listing (walking the WHOLE `raw_tick_data/by_date/`
+  prefix client-side-filtered, same approach as the 2026-06-22 precedent — there is no day-independent prefix for
+  `pipeline_mode=`) ran for 25+ minutes with a live, ESTABLISHED HTTPS connection to a GCS endpoint the whole time
+  (confirmed via `lsof` — not hung, genuinely slow real pagination) without completing. This is itself real evidence the
+  historical volume is large — consistent with the 2026-06-22 precedent script's own real production run, which needed
+  periodic "renamed N/M" progress logging for exactly this reason. Left running in the background (read-only,
+  non-mutating, safe to let finish unattended); real counts were not captured before this pass ended. **Explicit
+  decision, not a silent skip**: given the confirmed-large scale, do NOT attempt `--apply` in the same pass that
+  produced the dry-run — the 2 open todos above (capture real counts, then apply) are the correct next step for whoever
+  picks this up, following the same operator-decided migration-mechanics discipline (rewrite in place, backup first,
+  dedup on capture_status precedence) already proven safe by the 2026-06-22 precedent.
