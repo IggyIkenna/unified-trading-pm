@@ -63,8 +63,15 @@ source: cost_observability_ui_2026_07_08.md
       bars + table are merged into one table with an inline bar-in-cell" — asserts a single `cost-breakdown-table`, the
       top row's bar-in-cell renders at >90% width matching its max cost, and re-sorting ascending shrinks the bar,
       proving it's data-driven).
-- [ ] [UI] P1. **Gross / credit / net columns.** Render the backend bifurcation — net primary, gross + credit secondary
-      — shown only where credit ≠ 0 (mirrors the KPI band down into the table). vitest + pw:L2.
+- [x] ✅ [UI] P1. **Gross / credit / net columns** — deployment-ui@`f27e40f`. Added `gross`+`credit` to
+      `CostBreakdownRow` (mirrors the backend `BreakdownRow` bifurcation) and `mock-api.ts` fixtures (GCP rows carry
+      ~20% credit, mirroring the existing summary mock). `BreakdownPanel` renders net as the primary Cost column with
+      secondary Gross/Credit columns — shown only when a row in view carries a credit (dash for zero-credit rows;
+      columns omitted entirely when nothing in view has credits, e.g. an AWS-only filter), mirroring the KPI band's
+      per-cloud `GrossCredit` treatment down into the table. tsc/ESLint/vitest (914 passed, incl. 2 new cases) all
+      green. pw:L2 ✓ | regression: tests/smoke/cost-observability.spec.ts ("breakdown table shows gross/credit columns
+      only where a credit applies" — asserts the columns render + a dash + a credited row by default, then disappear
+      entirely under an AWS-only filter).
 - [ ] [UI] P2. **SKU dimension in the control.** Add `sku` to the breakdown `Segmented` + its note ("Google/AWS SKU").
       Update `mock-api.ts` with SKU fixtures. vitest.
 - [ ] [UI] P2. **Bucket columns** (dimension = bucket): total GB, storage-class split, $/GB. Format GB (not bytes).
