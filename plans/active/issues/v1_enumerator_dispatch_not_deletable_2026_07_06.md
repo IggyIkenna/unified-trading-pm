@@ -146,23 +146,23 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
       tests pass.
 - [x] ✅ [CODE] P2. **Extend cefi/defi/prediction v2 enumerators to emit venue-grain `EXPECTED_PRE_VENUE_LAUNCH`
       sentinel rows** when the catalog is empty for a `(venue, day)` in the pre-launch window; single sentinel row per
-      (venue, data_type, day) matching v1's grain; add regression test using an empty catalog (repo:
+      (venue, data*type, day) matching v1's grain; add regression test using an empty catalog (repo:
       instruments-service). — 2026-07-07 slot-6: instruments-service@980f329. Added
-      `_yield_v2_{cefi,defi,prediction}_pre_venue_launch_rows(date_axis, data_types)` helpers wired via `yield from` at
-      the top of the respective v2 enumerators. cefi/prediction mirror v1 `_enumerate_{cefi,prediction}` (walk
-      `VENUES_BY_ASSET_GROUP[<ag>]` × `{CEFI,PREDICTION}_VENUE_LAUNCH_DATES` × date × data_types, emit
-      `EXPECTED_PRE_VENUE_LAUNCH` at instrument_type="" / instrument_id=""). defi mirrors v1 `_enumerate_defi` +
-      `_enumerate_defi_gas_fees` (chain-level `gas_fees` pre-genesis at venue=ALCHEMY + per-(chain, protocol) pre-launch
-      with `EXPECTED_PRE_GENESIS_CHAIN` / `EXPECTED_INSTRUMENT_NOT_LISTED`; chain-level data_types excluded from the
-      per-protocol pass to avoid the ~142k `venue=<PROTOCOL>` phantom class). Renamed
-      `_drop_v2_tradfi_venue_grain(rows)` → generic `_drop_v2_venue_grain(rows)` in the unit test file and applied it to
+      `\_yield_v2*{cefi,defi,prediction}_pre_venue_launch_rows(date_axis, data_types)`helpers wired
+      via`yield     from`at the top of the respective v2 enumerators. cefi/prediction mirror
+      v1`\_enumerate_{cefi,prediction}`(walk `VENUES*BY_ASSET_GROUP[<ag>]`×`{CEFI,PREDICTION}\_VENUE_LAUNCH_DATES`× date
+      × data_types, emit `EXPECTED_PRE_VENUE_LAUNCH`at instrument_type="" / instrument_id=""). defi mirrors
+      v1`\_enumerate_defi`+ `\_enumerate_defi_gas_fees`(chain-level`gas_fees`pre-genesis at venue=ALCHEMY + per-(chain,
+      protocol) pre-launch with`EXPECTED_PRE_GENESIS_CHAIN`/`EXPECTED_INSTRUMENT_NOT_LISTED`; chain-level data_types
+      excluded from the per-protocol pass to avoid the ~142k `venue=<PROTOCOL>`phantom class). Renamed
+      `\_drop_v2_tradfi_venue_grain(rows)`→ generic`\_drop_v2_venue_grain(rows)`in the unit test file and applied it to
       ~30 per-instrument cefi/defi tests so their per-instrument row-count assertions stay focused (venue-grain rows
       have blank instrument_type/id — filter matches the existing tradfi convention). Regression tests added in
-      `tests/integration/test_enumerate_v2_superset_property.py::test_{cefi,defi,prediction}_v2_covers_v1_pre_venue_launch_cells_with_empty_catalog`
-      — assert v2 covers every v1 venue-grain pre-launch cell with `catalog=[]`. Fixed pre-existing filter bug in
-      `test_defi_v2_covers_v1_pre_genesis_chain_cells` (v1 emits `venue=<PROTOCOL>` bare per the 2026-05 canonical
-      naming SSOT, NOT `<PROTOCOL>-<CHAIN>` — filter now matches). Full `bash scripts/quality-gates.sh` green (110s);
-      126 v2 unit tests + 92 catalogue/wiring tests + 8 superset property tests pass.
+      `tests/integration/test_enumerate_v2_superset_property.py::test*{cefi,defi,prediction}\_v2_covers_v1_pre_venue_launch_cells_with_empty_catalog`
+      — assert v2 covers every v1 venue-grain pre-launch cell with`catalog=[]`. Fixed pre-existing filter bug in
+      `test_defi_v2_covers_v1_pre_genesis_chain_cells`(v1 emits`venue=<PROTOCOL>`bare per the 2026-05 canonical naming
+      SSOT, NOT`<PROTOCOL>-<CHAIN>`— filter now matches). Full`bash     scripts/quality-gates.sh` green (110s); 126 v2
+      unit tests + 92 catalogue/wiring tests + 8 superset property tests pass.
 - [ ] **[PARKED — needs infra worker; do NOT dispatch to data_engineering]** [CODE] P2. **Retire deployment-service v1
       launcher path** — remove `launch-expected-universe-enumerator-vm.sh`, delete the `"expected-universe-enum-"` entry
       from `launcher_registry.py` + `vm_zombie_watchdog.py`; verify no live scheduler still references the prefix (repo:
@@ -205,6 +205,39 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
 
 ## Progress Log
 
+- **2026-07-08** — **-009 RE-DISPATCHED (13TH SLOT BOUNCE) — SAME PARK** (slot-8 data_engineering). Re-verified
+  independently against the current `.tabs/8` clones (fresh-pulled `instruments-service` to `be95c76` and
+  `deployment-service` to `87df9d1` on `live-defi-rollout` — SAME tips as the 12th bounce, no new commits landed in the
+  interim): prereq #3 (v2 venue-grain sentinel) IS landed in
+  `instruments-service/scripts/enumerate_expected_universe.py` — `_yield_v2_cefi_pre_venue_launch_rows` (line 1007),
+  `_yield_v2_defi_pre_launch_rows` (line 1215) confirmed present and wired. Prereq #4 (infra launcher retirement) is
+  STILL NOT landed — `deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py:183`,
+  `scripts/vm/vm_zombie_watchdog.py:627`, and `scripts/vm/launch-ec2-vm.sh:148` all still reference the v1
+  `expected-universe-enum-`/`eu-enum-` prefix, and `scripts/vm/launch-expected-universe-enumerator-vm.sh` still exists.
+  This is an infra-role task, outside `data_engineering` craft scope. The underlying decision was already made — this is
+  not a fresh ambiguity, so self-parking via `/skip-current-task` per the established precedent from bounces 3-12 rather
+  than re-raising `/blocked`. **Systemic ask (13th bounce across 3 days — still unaddressed after 12 requests)**:
+  unchanged from every prior bounce — set `priority: 999` / a `conditions:` gate on the
+  `v1_enumerator_dispatch_not_deletable-0XX` backlog entry keyed on prereq #4 landing, or dispatch an infra-role worker
+  to close prereq #4 directly (removes the parked task's blocker entirely).
+- **2026-07-08** — **-009 RE-DISPATCHED (12TH SLOT BOUNCE) — SAME PARK** (slot-9 data_engineering). Re-verified
+  independently against the current `.tabs/9` clones (fresh-fetched `instruments-service` to `be95c76` and
+  `deployment-service` to `87df9d1` on `live-defi-rollout` — SAME tips as the 10th and 11th bounce, no new commits
+  landed in the interim): prereq #3 (v2 venue-grain sentinel) IS landed in
+  `instruments-service/scripts/enumerate_expected_universe.py` — `_yield_v2_cefi_pre_venue_launch_rows` (line 1007),
+  `_yield_v2_defi_pre_launch_rows` (line 1215), `_yield_v2_prediction_pre_venue_launch_rows` (line 2023) all present and
+  wired via `yield from`. Prereq #4 (infra launcher retirement) is STILL NOT landed —
+  `deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py:183`,
+  `scripts/vm/vm_zombie_watchdog.py:627`, and `scripts/vm/launch-ec2-vm.sh:148` all still reference the v1
+  `expected-universe-enum-`/`eu-enum-` prefix, and `scripts/vm/launch-expected-universe-enumerator-vm.sh` still exists.
+  This is an infra-role task, outside `data_engineering` craft scope (per RULES.md craft-lines + the 2026-07-06
+  main-agent ruling on BLK-0b46d0f3 / BLK-8b97bdfe / BLK-530cea75 / BLK-0ac84889). The underlying decision was already
+  made — this is not a fresh ambiguity, so self-parking via `/skip-current-task` per the established precedent from
+  bounces 3-11 rather than re-raising `/blocked`. **Systemic ask (12th bounce across 3 days — still unaddressed after 11
+  requests)**: the backlog entry for `v1_enumerator_dispatch_not_deletable-0XX` (currently `-009`) STILL has no
+  `priority: 999` / `conditions:` gate keyed on prereq #4 landing, and `assigned_role: data_engineering` alone is not
+  stopping the bounce. Recommend dispatching an infra-role worker to close prereq #4 directly (removes the parked task's
+  blocker entirely — unchanged advice from every prior bounce, now at a dozen repeats and still growing).
 - **2026-07-08** — **-009 RE-DISPATCHED (11TH SLOT BOUNCE) — SAME PARK** (slot-6 data_engineering). Re-verified
   independently against the current `.tabs/6` clones (fresh-fetched `instruments-service` to `be95c76` and
   `deployment-service` to `87df9d1` on `live-defi-rollout` — same tips as the 10th bounce, no new commits landed in the

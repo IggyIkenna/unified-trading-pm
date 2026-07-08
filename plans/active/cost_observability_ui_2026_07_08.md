@@ -227,6 +227,43 @@ on the resource table + the running backend endpoints (last-30d window).
 - [ ] [UI] P3. No **"other resources" leaf** — Cloud Run Jobs is ~$2.9k/30d (CPU $2,047 + Mem $882), bigger than any
       single VM, but only vm+bucket leaf tables exist; it surfaces only in the "By resource" breakdown.
 
+## Resource-detail enrichment + unified breakdown (operator-requested 2026-07-08)
+
+Operator wants a cleaner breakdown and richer per-resource detail. The table-merge (1) creates the columns the rest
+(2–5) fill. All target `deployment-ui/src/pages/CostObservability.tsx` (`BreakdownPanel` / `LeafPanel`) + new backend
+fields on `BreakdownRow`. **Confirm exact field/label names at implementation time (grep-then-read).**
+
+- [ ] [UI] P2. **Merge the breakdown bars + table into one table.** Today `BreakdownPanel` renders the same rows twice —
+      a top-12 bar chart (left) and a sortable table (right), duplicating label + cost. Collapse to ONE scrollable,
+      sortable table with an inline proportional **bar-in-cell that carries the cost value** (bar width = cost / max),
+      dropping the separate bars column. Keep the sticky header + 400px scroll region; this frees horizontal space for
+      the detail columns below and removes the duplication.
+- [ ] [BACKEND+UI] P2. **Gross / credits / net split per breakdown row (bifurcation).** Answers the operator Q — yes,
+      the data supports it: `credit` is per-`CostRecord` at (day, service, resource, region) granularity, _finer_ than
+      any breakdown group, so gross = Σcost, credit = Σcredit, net = Σ(cost+credit) reconcile for every dimension. Add
+      `gross` + `credit` to `BreakdownRow` (currently net-only) and populate in `_grouped` / `_by_resource` / `_by_day`;
+      render net as primary with gross + credit columns, shown only where credit ≠ 0 (GCP). Pushes the KPI-band
+      treatment down into the table.
+- [ ] [BACKEND+UI] P2. **Bucket detail columns** (dimension = bucket): total stored bytes, **soft-deleted / noncurrent
+      bytes** (reclaimable later), and object count per bucket. Source = **Cloud Monitoring** (GCS)
+      `storage.googleapis.com/storage/v2/total_bytes` + `.../total_count` split by the `type` label (live / noncurrent /
+      soft-deleted); **CloudWatch** (S3) `BucketSizeBytes` per `StorageType` + `NumberOfObjects`. NOT
+      `gcloud storage du` (walks every object — hours on M-object buckets). Join on the billing `resource_id` (bucket
+      name). Adds $/TB + reclaimable-GB context to storage spend (soft-delete = wasted spend you can clean up).
+- [ ] [BACKEND+UI] P2. **VM detail columns** (dimension = resource, vm rows): machine type (e.g. `e2-highmem-16`) with a
+      human spec (**16 vCPU · 128 GB**), vCPU, RAM, disk, and IP per VM. Reuse existing deployment-api code —
+      `routes/_fleet_inventory.py` already fetches per-VM GCE details incl. boot-disk size/type (+ IP from the same
+      instance details); `vm_cost_estimate.py` `_MACHINE_HOURLY_USD` is the machine-type registry (extend to vCPU/RAM,
+      or derive from the type). Join on the billing `resource_id` (VM name); machine type is also in the billing
+      resource export's `system_labels` (`compute.googleapis.com/machine_spec`) for stopped/deleted VMs.
+- [ ] [UI] P3. **Dimension-aware columns + leaf tables.** Merged table = label · [bar+cost] · net (· gross · credit) ·
+      share by default; add bucket columns when `dimension=bucket` / VM columns when `dimension=resource` (vm rows).
+      Apply the same detail columns to the `LeafPanel` "Top compute instances" / "Top storage buckets" tables (their
+      natural home too). Detail columns scroll horizontally on narrow widths. `[UI]` gate: `pw:L2` + a cited spec.
+
+**Codex SSOTs:** `codex/05-infrastructure/billing-cost-observability.md` (exports + net/gross/credit contract),
+`codex/06-coding-standards/ui-testing-layers.md` (Playwright L2 gate).
+
 ## Progress Log
 
 _(Session findings go here — agent memory writes are BANNED. Append dated notes as work proceeds.)_
