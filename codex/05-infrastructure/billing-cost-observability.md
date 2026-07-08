@@ -53,8 +53,11 @@ request). Both are provisioned; the frontend just queries them.
   `gcp_billing_export_resource_v1_016B25_109840_AF2ACB` (**resource-level**: per-bucket, per-VM). Enabled via Billing
   console → Billing export (standard + detailed). **Not retroactive** — data from 2026-06-20 forward (GCP backfilled Apr
   1–May 20 on enablement; a gap May 21–Jun 19 may persist — use the console Reports CSV for that window).
-- Credits: the `credits` array carries `type=PROMOTION` etc. **Promo credits exhausted ~2026-06-20** (see
-  [`spot-vms-for-backfill.md`](spot-vms-for-backfill.md)).
+- Credits: the `credits` array carries `type=PROMOTION` / `DISCOUNT` (CUD/SUD/free-tier) as negative amounts. **Net =
+  `SUM(cost) + SUM(credits)`** and is what's actually invoiced. Promo credits are **still active** (~$2.5k/30d as of
+  2026-07-08, mostly `PROMOTION`) — an earlier "exhausted ~2026-06-20" note was **wrong**; `cost` is the pre-credit
+  usage/list cost, net is real spend. The `/api/costs` consumer sums **net** (`_net(r)=cost+credit`) across every view
+  and surfaces `gross`+`credit` on the summary for the "you pay = gross - credits" headline.
 
 ```sql
 -- per-service per-day (net of credits)
@@ -142,11 +145,11 @@ table/db/region/bucket are config (`GCP_BILLING_DATASET/RESOURCE_TABLE`, `AWS_CU
 
 **Endpoints** (`routes/costs.py`, mounted `/api`, auth + rate-limited):
 
-| Endpoint                    | Params                                                                         | Returns                                                              |
-| --------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| `GET /api/costs/summary`    | `days`, `refresh`                                                              | total + per-cloud totals/deltas/daily sparkline + `provisional_days` |
-| `GET /api/costs/breakdown`  | `dimension=service\|resource\|bucket\|region\|day`, `cloud`, `days`, `refresh` | grouped rows (label, cloud, cost, share)                             |
-| `GET /api/costs/timeseries` | `days`, `cloud`, `refresh`                                                     | daily per-cloud series (stacked trend)                               |
+| Endpoint                    | Params                                                                         | Returns                                                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `GET /api/costs/summary`    | `days`, `refresh`                                                              | **net** total (+ `gross`/`credit`) + per-cloud net/gross/credit/deltas/daily sparkline + `provisional_days` |
+| `GET /api/costs/breakdown`  | `dimension=service\|resource\|bucket\|region\|day`, `cloud`, `days`, `refresh` | grouped rows (label, cloud, cost, share)                                                                    |
+| `GET /api/costs/timeseries` | `days`, `cloud`, `refresh`                                                     | daily per-cloud series (stacked trend)                                                                      |
 
 - **UI**: `deployment-ui/src/pages/CostObservability.tsx` at route **`/ops/costs`** (Cockpit tile "Billing
   (GitHub+GCP+AWS)") — KPI band → trend + donut → dimension breakdown → per-VM/per-bucket leaf tables → GitHub
