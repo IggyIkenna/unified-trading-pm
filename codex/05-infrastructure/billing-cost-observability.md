@@ -18,7 +18,7 @@ authoritative_for:
   [deployment-UI billing/cost-observability backends (GCP BQ export + AWS CUR/Athena) and their read-only access grants]
 referenced_by: []
 owner:
-last_reviewed: 2026-06-27
+last_reviewed: 2026-07-08
 code_refs:
 type: infrastructure
 execution:
@@ -137,19 +137,31 @@ The exports are consumed by the **cost-observability service** in `deployment-ap
   float.
 
 Both native schemas are normalized into one `CostRecord`
-(`cloud, day, service, resource_id, resource_kind, region, cost, credit, is_provisional, is_placeholder`); every view
-derives from a **daily-refresh-cached** window fetch (billing data is ~daily-lagged, so per-load re-queries buy nothing
-— and avoid Athena's no-free-tier cost). Per-cloud failure is isolated (one cloud down ≠ blank page). Source
+(`cloud, day, service, resource_id, resource_kind, region, cost, credit, sku, usage_amount, usage_unit, is_provisional, is_placeholder`);
+every view derives from a **daily-refresh-cached** window fetch (billing data is ~daily-lagged, so per-load re-queries
+buy nothing — and avoid Athena's no-free-tier cost). Per-cloud failure is isolated (one cloud down ≠ blank page). Source
 table/db/region/bucket are config (`GCP_BILLING_DATASET/RESOURCE_TABLE`, `AWS_CUR_DATABASE/TABLE/REGION`,
 `AWS_ATHENA_OUTPUT_BUCKET`), defaulting to the values above.
 
+`sku` / `usage_amount` / `usage_unit` (2026-07-08) come straight from each export — GCP `sku.description` +
+`usage.amount_in_pricing_units` + `usage.pricing_unit`; AWS `line_item_usage_type` (as `sku`) +
+`SUM(line_item_usage_amount)` (AWS has no separate pricing-unit column, so `usage_unit` is `""` for AWS records). A
+`sku` breakdown dimension groups by `(cloud, service, sku)` — this surfaces the actual top cost driver inside a service
+(e.g. GCS Coldline Class-A ops) that the service-level rollup hides.
+
 **Endpoints** (`routes/costs.py`, mounted `/api`, auth + rate-limited):
 
-| Endpoint                    | Params                                                                         | Returns                                                                                                     |
-| --------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `GET /api/costs/summary`    | `days`, `refresh`                                                              | **net** total (+ `gross`/`credit`) + per-cloud net/gross/credit/deltas/daily sparkline + `provisional_days` |
-| `GET /api/costs/breakdown`  | `dimension=service\|resource\|bucket\|region\|day`, `cloud`, `days`, `refresh` | grouped rows (label, cloud, cost, share)                                                                    |
-| `GET /api/costs/timeseries` | `days`, `cloud`, `refresh`                                                     | daily per-cloud series (stacked trend)                                                                      |
+| Endpoint                    | Params                                                                              | Returns                                                                                                     |
+| --------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `GET /api/costs/summary`    | `days`, `refresh`                                                                   | **net** total (+ `gross`/`credit`) + per-cloud net/gross/credit/deltas/daily sparkline + `provisional_days` |
+| `GET /api/costs/breakdown`  | `dimension=service\|resource\|bucket\|region\|day\|sku`, `cloud`, `days`, `refresh` | grouped rows (label, cloud, cost, share)                                                                    |
+| `GET /api/costs/timeseries` | `days`, `cloud`, `refresh`                                                          | daily per-cloud series (stacked trend)                                                                      |
+
+> **In flight** (`cost_obs_backend_sku_usage_enrichment_2026_07_08.md`): the SKU/usage foundation above is shipped;
+> still pending are gross/credit split per breakdown row, bucket storage volume + class split, idle static-IP /
+> orphaned-disk waste flags, spot-vs-on-demand purchase-option split, VM machine specs from `system_labels`, AWS
+> net/invoice reconciliation, and a zone dimension. This doc gets a second pass once those land — don't assume any field
+> beyond `sku`/`usage_amount`/`usage_unit` exists yet.
 
 - **UI**: `deployment-ui/src/pages/CostObservability.tsx` at route **`/ops/costs`** (Cockpit tile "Billing
   (GitHub+GCP+AWS)") — KPI band → trend + donut → dimension breakdown → per-VM/per-bucket leaf tables → GitHub
