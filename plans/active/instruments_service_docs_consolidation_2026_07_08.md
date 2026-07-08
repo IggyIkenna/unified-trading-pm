@@ -119,13 +119,16 @@ list as part of Phase 2's design checkpoint**, this table is a starting hypothes
 
 ### Phase 2 — Design checkpoint (operator review before writing)
 
-- [ ] [DESIGN] P0. **Finalize the exact 7-doc → source-doc mapping** (the table above is a starting hypothesis) —
-      confirm with the operator, especially how `INSTRUMENT_SPECIFICATION.md`/`MVP_INSTRUMENTS.md`'s cross-cutting
-      content splits between the adapter-architecture doc (general convention) and the 5 AG docs (per-AG specifics +
-      deviations).
-- [ ] [OPERATOR] P0. **Review the deviation log + finalized structure with the operator** before any prose is written —
-      a checkpoint, not a rubber stamp; several deviations may need an operator decision on which side is correct (doc
-      or code) before the new doc can state either.
+- [x] [DESIGN] P0. **Finalize the exact 7-doc → source-doc mapping** — confirmed with operator 2026-07-08; the table
+      above stands, with `INSTRUMENT_SPECIFICATION.md`'s general grammar/builder-function content going to
+      `ADAPTER_ARCHITECTURE.md` and its per-AG format examples (PERPETUAL `@LIN`/`@INV`, POOL fee-tier) going to the
+      relevant AG docs. Two real conflicts surfaced + resolved: doc's 6-digit `YYMMDD` (mislabeled "yyyymmdd") vs
+      session's 8-digit `YYYYMMDD` — operator: dash/YYYYMMDD wins (sortable, evidence-based); doc's colon-delimited POOL
+      fee-tier (`ETH-USDT:3000@ETHEREUM`) vs session's dash-delimited decision — same resolution (colon collides with
+      the top-level `VENUE:TYPE:SYMBOL` delimiter).
+- [x] [OPERATOR] P0. **Review the deviation log + finalized structure with the operator** — done 2026-07-08 via the
+      audit doc + this plan's mapping table + the 2 conflicts above; operator: "Yeah, continue now that we've solved
+      those issues." Phase 3 is unblocked.
 
 ### Phase 3 — Write (draft-gated on Phase 2 completing — do not start until the checkpoint above is done)
 
@@ -173,3 +176,15 @@ list as part of Phase 2's design checkpoint**, this table is a starting hypothes
   - ~40 P1/P2 findings across instruments-service/MTDS/deployment-api/deployment-ui/GCS/manifest/strategy-service. This
     plan's `depends_on` now points at that audit doc — Phase 1 here is satisfied by its findings rather than a separate
     re-derivation. Phase 2 (design checkpoint) is next, once the 5 P0 bugs' own fix plans are underway.
+- **2026-07-08 (later still)** — Phase 2 closed: the dash/YYYYMMDD-vs-doc conflicts resolved, operator confirmed
+  "continue now." Also resolved an operator due-diligence question before starting Phase 3: does `@`/`:` in a canonical
+  instrument_id risk breaking GCS filenames or column identifiers? No — real production MTDS filenames already contain
+  colons today (`BINANCE-FUTURES:PERP:BTCUSDT.parquet`, live); GCS has no filename character restriction; zero
+  pivot-to-column-header pattern found anywhere in features-service; the only 3 real BigQuery references in the
+  workspace are about Hive-partition auto-discovery, not instrument_id-as-column-name. DeFi and instruments-service
+  catalogs both store instrument_id as a row **value** in a shared parquet file (never a filename or column name), so
+  this was a non-issue there by construction. Flagged honestly: no real file today actually uses `@LIN`/`@INV` yet, so
+  that specific combination is untested (though structurally no different from the already-proven-safe colon). Starting
+  Phase 3 now — but instruments-service currently has 2 P0 fix agents mid-flight in the same clone (Kraken collision
+  fix, DeFi adapter casing fix), so Phase 3 drafting happens in scratch space first; the actual `docs/*.md` write +
+  retirement + quickmerge waits until both agents ship, to avoid a git-state race in the shared worktree.

@@ -73,25 +73,52 @@ source: cost_observability_ui_2026_07_08.md
 - [x] ✅ [BACKEND] P2. **SKU breakdown dimension** — deployment-api@9b4e59d. Add `sku` to the route `Dimension`
       literal + a `_by_sku` grouping (by `(cloud, service, sku)`), wired into `breakdown()`. This surfaces the hidden #1
       cost driver (Coldline Class A Operations). pytest.
-- [ ] [BACKEND] P2. **Bucket storage volume + class split.** For `dimension=bucket` rows, attach total **GB** + a
-      per-storage-class split (Standard / Nearline / Coldline / Archive) + derived **$/GB**, from the storage SKUs'
-      `usage_amount` (`gibibyte month` → average GB over the window) grouped by `resource.name`. New optional
-      `BreakdownRow` fields. **Show GB, not raw bytes.** No object count, no soft-delete split (not billable — absent
-      from the export). pytest with a storage-SKU fixture.
-- [ ] [BACKEND] P2. **Idle static-IP + orphaned-disk cost-waste.** Per resource: the `Static Ip Charge` SKU is a
-      reserved IP billed while **unattached** (distinct from `External IP Charge on a Standard VM` = in-use) — surface
-      it with an `idle` flag; `… PD Capacity` SKUs keyed by disk `resource.name` — flag disks with no matching running
-      VM (cross-ref the fleet inventory in `routes/_fleet_inventory.py`). AWS analog — idle Elastic-IP + unattached-EBS
-      usage-types. pytest (evidence: `harsh-static-ip`, `ikenna-windows-tokyo-restored` in the parent plan).
-- [ ] [BACKEND] P2. **Spot vs on-demand split.** Derive a `purchase_option` (spot | on-demand | other) from the GCP SKU
-      (`Spot Preemptible …`) / AWS purchase option; expose on resource/service rows (validates the SPOT-VMs HARD RULE +
-      quantifies savings). pytest.
-- [ ] [BACKEND] P2. **VM machine specs.** Parse machine type + vCPU + RAM from the billing `system_labels`
-      (`compute.googleapis.com/machine_spec` / `cores` / `memory`) — no Compute API; expose on vm resource rows (e.g.
-      `e2-highmem-16` → 16 vCPU / 128 GB). pytest.
-- [ ] [BACKEND] P2. **AWS net + invoice reconciliation.** Use `line_item_net_unblended_cost` (net of discounts) and add
-      a tax/fee line (relax the `Usage`/`DiscountedUsage`-only filter or a second query) so the AWS total reconciles to
-      the invoice; label the current figure "usage spend" until then. pytest.
+- [x] ✅ [BACKEND] P2. **Bucket storage volume + class split** — deployment-api@171a61c. `dimension=bucket` rows now
+      carry `storage_gb` (avg GB over the window), `storage_class_gb` (Standard/Nearline/Coldline/Archive split), and
+      `cost_per_gb`, derived from the storage-volume SKUs' `usage_amount` (GCP `gibibyte month`, filtered via
+      `usage_unit` to exclude operations/retrieval SKUs; AWS `TimedStorage-*` usage-types) grouped by `resource.name`.
+      Rescaled GiB/GB-month → avg GB via `_AVG_DAYS_PER_MONTH` (365.25/12). Show GB, not raw bytes; no object count, no
+      soft-delete split (dropped, not billable). pytest with GCP + AWS storage-SKU fixtures. Rebased 3x onto concurrent
+      SKU-dimension/gross-credit/idle-waste tasks landing on the same file; full backend QG green on each merge.
+- [x] ✅ [BACKEND] P2. **Idle static-IP + orphaned-disk cost-waste** — deployment-api@8d8802f. New
+      `services/cost_observability/waste.py`: `Static Ip Charge` SKU (GCP) and `...ElasticIP:IdleAddress` usage-type
+      (AWS) are self-contained idle flags (no cross-ref needed — those SKUs only bill while unattached);
+      `... PD     Capacity` SKUs (GCP disks) cross-ref the currently-RUNNING VM fleet via
+      `vm_utils.list_running_vm_names` (degrades to "not flagged" — never a false-positive orphan — when the fleet
+      lookup is unavailable). Wired into `_by_resource` as new `BreakdownRow.is_idle` / `waste_kind` fields,
+      resource-dimension only. AWS unattached-EBS dropped (not billable-native — no distinct idle usage-type in the CUR,
+      and no AWS volume-attachment API integration exists in this codebase to cross-ref against; same "if not in the
+      export, don't fabricate it elsewhere" contract as the bucket-volume task's dropped soft-delete split). pytest: 11
+      new tests covering the classifiers + service-level flagging (evidence resources: `harsh-static-ip`,
+      `ikenna-windows-tokyo-restored`). Full backend QG green.
+- [x] ✅ [BACKEND] P2. **Spot vs on-demand split** — deployment-api@947a48b. Added `purchase_option` (spot | on-demand |
+      other) to `CostRecord` + `BreakdownRow`, derived via `providers._purchase_option`: GCP `sku.description` text
+      match on "spot"/"preemptible" vs "instance core"/"instance ram" (else "other" — the axis only applies to
+      compute-instance SKUs, not storage/network); AWS `usage_type` text match on "SpotUsage" vs
+      "BoxUsage"/"HeavyUsage"/"DedicatedUsage" (else "other"). Exposed on resource + service breakdown rows via a
+      rank-based fold (`_PURCHASE_RANK`: spot > on-demand > other) — a group shows "spot" if ANY of its underlying SKU
+      lines is spot-priced, since the question is "did this resource/service have any spot cost", not an arbitrary
+      last-seen value across its many SKU lines. 4 new pytest cases (classifier unit test, provider-mapping test,
+      resource/service aggregation-fold test). Rebased 3x onto concurrent idle-waste/bucket-storage/AWS-reconciliation
+      tasks landing on the same files (models.py, service.py); full backend QG green on each merge.
+- [x] ✅ [BACKEND] P2. **VM machine specs** — deployment-api@c3f5c39. Verified `system_labels` schema live via a bq
+      probe against the resource-level export (only the instance's Core/Ram SKU rows carry
+      `compute.googleapis.com/machine_spec` / `cores` / `memory` — disk/IP SKU rows for the same VM don't; memory is
+      MiB, e.g. `n2-highmem-16` → cores=16, memory=131072 → 128 GB). `gcp_facts_sql` pulls the three labels via an
+      `ANY_VALUE(SELECT ... FROM UNNEST(system_labels) ...)` per-key helper (no Compute API); added
+      `machine_type`/`vcpu`/`memory_gb` to `CostRecord` + `BreakdownRow`; `_by_resource` tracks the latest non-empty
+      spec per resource across its SKU rows. pytest: parser-helper tests, a provider-mapping test (VM row carries the
+      spec, sibling disk-SKU row doesn't), a service-aggregation test. Rebased 3x onto concurrent
+      idle-waste/bucket-storage/spot-purchase-option tasks landing on the same files (models.py, providers.py,
+      service.py); full backend QG green + 4335-test suite green on each merge.
+- [x] ✅ [BACKEND] P2. **AWS net + invoice reconciliation** — deployment-api@301ccfc. `aws_facts_sql` switched
+      `line_item_unblended_cost` → `line_item_net_unblended_cost` (net of RI/SP discounts) and relaxed the
+      `Usage`/`DiscountedUsage`-only filter to `IN ('Usage', 'DiscountedUsage', 'Tax', 'Fee')`, so the AWS total now
+      reconciles toward the invoice instead of reporting usage-only spend (Refund/Credit/RIFee/SavingsPlanRecurringFee
+      rows stay excluded — a further refinement, not required to close the usage-only gap). Tax/Fee rows carry no
+      `usage_type` and fall back to `'Unknown'` via the existing `COALESCE(NULLIF(...))`. Rebased 3x onto concurrent
+      zone-dimension/gross-credit/bucket-volume/idle-waste tasks landing on the same file; full backend QG green on each
+      merge. pytest: `test_aws_facts_sql_uses_net_cost_and_includes_tax_and_fee`.
 - [x] ✅ [BACKEND] P3. **Zone dimension** — deployment-api@537af3d. Add `location.zone` (GCP) /
       `line_item_availability_zone` (AWS) to `CostRecord` + a finer zone cut of the region dimension. pytest.
 - [ ] [BACKEND] P3. **Codex contract update.** Post-phase codex audit — update

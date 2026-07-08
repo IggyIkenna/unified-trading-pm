@@ -132,6 +132,34 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
    3rd colon is ambiguous to any naive `split(":")` parser. **Target**: dash-separate instead, matching the
    pool-fee-tier fix already applied elsewhere — `MORPHO-BASE:LENDING_MARKET:USDC-EURC-0x305dd1`.
 
+7. **TradFi multi-leg spreads reuse the single-leg `SPOT_PAIR` type and separate legs with a whitespace-padded dash** —
+   real, confirmed via `prod/catalog.parquet` (1,096,069 rows): 34,017 rows carry 2 legs
+   (`CBOE:SPOT_PAIR:VX/F1:1:S - VX/G1:1:B`), 4,211 carry 3 legs, 5 carry 4 legs (up to 9 colon-segments). This is a
+   genuinely different finding from the single-leg contract-code check already done (`CME:FUTURE:6AF0`-style codes,
+   confirmed fine, see "What this is NOT" below) — single-leg TradFi is not in scope, multi-leg combos are. Two real
+   problems: (a) `SPOT_PAIR` is the equity-spot type, not a spread/combo type — it's being reused, not a genuine spread
+   `TYPE`; (b) the literal `" - "` leg-separator carries the same never-acceptable whitespace the operator already ruled
+   out for other venues, plus it collides visually with a legitimate dash elsewhere in the id. **Proposed target
+   (pending operator confirmation)**: introduce a real `SPREAD` instrument_type, and join legs with `;` (unused
+   elsewhere in the convention — `-` is already claimed by dates/strikes/pool-fees, `_` by BASE_QUOTE pairs), each leg
+   keeping its own `SYMBOL-RATIO-SIDE` shape (colon swapped for dash since colon is the reserved top-level delimiter):
+   `CBOE:SPREAD:VX/F1-1-S;VX/G1-1-B`.
+
+8. **Prediction's per-market instrument_id is genuinely opaque, and its enrichment columns are 100% empty — this is
+   deeper than a formatting question.** Real, confirmed via `prod/catalog.parquet` (2,486,092 rows, both venues):
+   `base_asset`/`underlying`/`raw_symbol` are NULL for every single row. The bulk of individual Polymarket markets carry
+   a bare on-chain hash as `instrument_id` (e.g. `0xa91339c0f2c46cbb289ae592f7c0a66f35ff278a3846253f3a11fd059674af11`);
+   a smaller subset of both venues (1,243,069 of 2,486,092 rows are unique instrument_ids — real ~50% duplication) carry
+   a short readable label shared verbatim across venues (e.g. `BNB_PRICE_RANGE_DAILY`, appearing exactly once per venue
+   with different `available_from`/`available_to` windows — likely a recurring-series/template key, not a specific dated
+   market instance, though this hasn't been confirmed against `prediction_mapping.py`'s real extraction logic). Unlike
+   findings 1-7, this isn't a "wrong delimiter" problem — the fields the format would need are never populated in the
+   first place, so no target format is proposed here yet. **Not the same finding as the already-settled
+   `canonical_question_group` sharing behavior** (that's confirmed correct-as-designed, see "What this is NOT"); this is
+   about the base `instrument_id` field itself for individual markets. Also reconfirmed real and still live: the
+   bucket-naming split from the audit — `instruments-store-pred-prd-central-element-323112` exists (33,122 blobs),
+   `instruments-store-prediction-prd-central-element-323112` returns a 404.
+
 ## What this is NOT
 
 - Not a claim that any of these 6 are fixed today — every target format above is illustrative only, shown in the mockup
@@ -140,14 +168,28 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
 - Not a complete enumeration of every possible instrument_id anywhere — but coverage was extended 2026-07-08 (operator:
   "shouldl be evertyhting all AG that we expect shown in [the mockup] so we know how things will look") to every
   DEX-pool protocol×chain combination in the DeFi tab (27 total, not just a flagship sample), plus a deliberate check of
-  TradFi/Sports/Prediction: TradFi's dated-derivative codes (e.g. `CME:FUTURE:6AF0`) are real industry-standard terse
-  contract codes, not an uncleaned internal prefix like Kraken's — no divergence to canonicalize there; Sports fixture
-  IDs are provider-native opaque identifiers, not VENUE:TYPE:SYMBOL keys; Prediction already routes through its own
-  dedicated domain builder (`canonical/domain/prediction/prediction_mapping.py`), not the ad-hoc CeFi/DeFi pattern this
-  doc is about. DERIBIT-COMBO's underscore-in-strikes format was also checked and confirmed a real, internally
-  consistent convention (not a canonicalization gap). A dedicated future audit could still find more instances of the 6
-  divergence classes on venues/protocols this session never touched at all (this doc's scope is bounded by what this
-  session's other findings happened to surface, not a from-scratch audit of the full instrument universe).
+  TradFi/Sports/Prediction: TradFi's **single-leg** dated-derivative codes (e.g. `CME:FUTURE:6AF0`) are real
+  industry-standard terse contract codes, not an uncleaned internal prefix like Kraken's — no divergence to canonicalize
+  there (this carve-out does NOT extend to TradFi's multi-leg spreads — see finding 7, a real divergence found on a
+  later pass); Sports fixture IDs are provider-native opaque identifiers, not VENUE:TYPE:SYMBOL keys; Prediction already
+  routes through its own dedicated domain builder (`canonical/domain/prediction/prediction_mapping.py`) rather than the
+  ad-hoc CeFi/DeFi pattern this doc is mainly about — but a dedicated builder existing doesn't mean its real output is
+  canonical (see finding 8: it isn't, though that's a data-completeness gap more than a delimiter/syntax question, and
+  is scoped separately from findings 1-7). DERIBIT-COMBO's underscore-in-strikes format was also checked and confirmed a
+  real, internally consistent convention (not a canonicalization gap). A dedicated future audit could still find more
+  instances of the 6 CeFi/DeFi divergence classes on venues/protocols this session never touched at all (this doc's
+  scope is bounded by what this session's other findings happened to surface, not a from-scratch audit of the full
+  instrument universe).
+- **Filename-vs-instrument_id naming rule (settled 2026-07-08, operator)**: when a file/partition holds exactly one
+  instrument's data, the filename is that instrument's full canonical instrument_id. When a file/partition holds a
+  BUNDLE of related instruments for one underlying (e.g. an options/futures chain, or DeFi's many-pools-per-file
+  pattern), the filename is the underlying_symbol only — not an attempt to cram multiple instrument_ids into one name.
+  Hive-style partition-path directories (venue=/instrument_type=/data_type=/day=) are unaffected and stay exactly as
+  they are — this rule is about the leaf filename only, not path structure. Operator intent going forward: "I'd rather
+  migrate the GCS so that we do have canonical names" — even though venue/type can already be derived from the
+  surrounding path for older files (e.g. bare `BTC-PERPETUAL.parquet`), the eventual GCS/filename migration (last stage
+  in the sequencing under "Operator decisions" below) should move every single-instrument file to its full canonical
+  instrument_id as the actual filename, not just rely on path-derivability.
 - Not asking for `canonical_id_builder.py` itself to become the enforced single builder as part of this decision —
   that's a separate, larger refactor question (does every adapter route through one shared function, or do per-domain
   builders exist but each still individually canonicalize). This doc scopes the FORMAT decision; the
@@ -179,6 +221,15 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
       Confirmed live via `api-pub.bitfinex.com/v2/tickers`: `ETHF0:BTCF0` trades ~~2,034 ETH/day (~~$6-7M/day) — not a
       negligible edge case. Fix: add BTC to the per-venue accepted-quote extension for Bitfinex derivatives, same
       mechanism already used for UPBIT's KRW extension.
+- [ ] [DECISION] P2. **Confirm or revise the proposed TradFi multi-leg spread target** (finding 7) —
+      `VENUE:SPREAD:LEG1-RATIO-SIDE;LEG2-RATIO-SIDE[;LEG3-RATIO-SIDE...]`, e.g. `CBOE:SPREAD:VX/F1-1-S;VX/G1-1-B`. Real
+      34,017/4,211/5-row counts (2/3/4-leg) at the 2026-07-08 evidence pull — re-check row counts if this decision lands
+      materially later, they'll have grown.
+- [ ] [DATA] P2. **Investigate `prediction_mapping.py`'s real extraction logic** (finding 8) before proposing any target
+      format — need to understand whether the short readable instrument_ids (e.g. `BNB_PRICE_RANGE_DAILY`) are a
+      recurring-series/template key or something else, and why `base_asset`/`underlying`/`raw_symbol` are 100% NULL
+      (never extracted, or extracted-then-dropped downstream) before deciding what a canonical Prediction instrument_id
+      should even contain.
 
 ## Progress Log
 
@@ -218,3 +269,17 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
   `client_isolation_and_governance_master`) per operator decision, not a new epic — this workspace's epic registry is a
   fixed 20-entry table. 4 new P0 fix plans filed for the live bugs (see `related:` above), each independently shippable
   ahead of the broader canonicalization decision.
+- **2026-07-08 (even later)** — Before starting the docs-consolidation Phase 3 rewrite, operator asked whether any more
+  cross-AG instrument_id conflicts remain. Pulled real `prod/catalog.parquet` evidence for TradFi and Prediction (not
+  previously read row-by-row, only spot-checked). Found 2 more real divergences, added as findings 7-8 above: TradFi's
+  multi-leg spreads reuse the `SPOT_PAIR` type and whitespace-pad a dash as an uncontrolled leg-separator (real example,
+  a VIX calendar spread: `CBOE:SPOT_PAIR:VX/F1:1:S - VX/G1:1:B`) — proposed a target, pending confirmation; Prediction's
+  per-market instrument_id is a genuine mix of bare on-chain hashes and short shared labels, with
+  `base_asset`/`underlying`/`raw_symbol` 100% NULL across all 2.48M rows — flagged as needing investigation into
+  `prediction_mapping.py`'s real extraction logic before any target format gets proposed (deeper than a delimiter
+  question). Also reconfirmed the audit's bucket-naming bug is real and still live (`instruments-store-pred-prd` exists,
+  `instruments-store-prediction` 404s). Also settled a new rule from the operator on filename-vs-instrument_id:
+  single-instrument files get the full canonical instrument_id as filename; bundle-of-many-instruments files (options
+  chains, DeFi's many-pools-per-file) get just the underlying_symbol — path/partition structure is unaffected, this is
+  about the leaf filename only. Operator confirmed intent to eventually migrate GCS filenames to true canonical form
+  (not just rely on path-derivability), sequenced as part of the already-planned GCS/manifest/filename migration stage.
