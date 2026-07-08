@@ -214,11 +214,13 @@ tracking: `instrument_id_format_canonicalization_2026_07_08.md` +
 - **Fix options:** **A (recommended)** add the suffix logic to the builder + a go-forward switch, then a
   rewrite-in-place catalog migration. **B:** defer until B1 adoption is complete (avoids migrating the same rows twice).
 
-### B3. Asset-class prefix (`CEFI:`/`DEFI:`) unimplemented — `DECISION` — NEW
+### B3. Asset-class prefix (`CEFI:`/`DEFI:`) unimplemented — RESOLVED 2026-07-09 (operator): drop it
 
 - **Evidence:** `grep -rn '"CEFI:"|"DEFI:"'` across `instruments_service/` → 0 hits; the doc labelled it "aspirational".
-- **Fix options:** **A** confirm whether this prefix is still wanted at all (operator) before building anything; **B**
-  if wanted, implement in the builder; **C** if not, delete the aspirational language from the spec.
+- **Decision:** operator confirmed this was about the instrument_id prefix specifically, and dropped it — venues are
+  already distinct per asset group without needing an extra leading token. **Fix option C applied**: delete the
+  aspirational language from the spec. Not yet applied to `ADAPTER_ARCHITECTURE.md` itself — that file is mid-edit by
+  another agent this session; whoever next has a clean window on it should strip this language.
 
 ### B4. DeFi pool fee-tier is colon-separated + raw units, not dash/bps — `P1` — tracked: `instrument_id_format_canonicalization_2026_07_08.md`
 
@@ -423,8 +425,9 @@ tracking: `instrument_id_format_canonicalization_2026_07_08.md` +
 - **E2. Sports fixture/team/player-grain coverage tracking** — never built. **A** build it; **B** confirm it isn't
   wanted and close the gap in the spec.
 - **E3. CeFi 6 reused tickers** (`CFG/DIA/INX/ROBO/SLX/SPX`, `cefi_instrument_universe.py:268,284-285`) — kept despite
-  Binance ticker reuse. **A** run a cross-venue audit → keep the real equity-basis ones, drop the reused-crypto ones;
-  **B** keep all, accept the ambiguity. (Needs a live cross-venue API check — DATA.)
+  Binance ticker reuse. **DECIDED 2026-07-09 (operator): keep all 6**, accept the ambiguity — no cross-venue audit
+  needed. Doc update (not yet applied — coordinate with whichever agent next has a clean window on
+  `CEFI_INSTRUMENTS.md`): replace the "PARTIALLY OPEN" framing with this resolved decision.
 - **E4. CeFi `FI_`/`FF_` Kraken-Futures subtype** — code comment (`tardis_shared.py`) says `FI*` "no longer active" but
   real 2024-26 data contradicts it. **A** update the comment + add a contract-subtype field to the schema; **B** confirm
   inactive and drop the data. (Needs a GCS data check — DATA.)
