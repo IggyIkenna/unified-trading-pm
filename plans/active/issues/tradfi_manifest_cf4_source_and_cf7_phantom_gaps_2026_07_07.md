@@ -300,8 +300,14 @@ numeric suffixes that look like strike/spread IDs rather than month codes). **Fa
 exclusion, not a wrong value) — these 1,459 instruments simply won't get `expected_unattempted` seeding until the
 underlying-extraction regex is extended to cover this ICE COMBO symbol shape. Low severity, not blocking task 7.
 
-- [ ] [CODE] P3. **ICE COMBO underlying-extraction gap** — extend the G1-ENUM bundle-grain underlying parser (likely in
-      `instruments-service/scripts/enumerate_expected_universe.py` or a shared bundle-rollup helper it imports) to
+- [x] ✅ [CODE] P3. **ICE COMBO underlying-extraction gap** — extend the G1-ENUM bundle-grain underlying parser (likely
+      in `instruments-service/scripts/enumerate_expected_universe.py` or a shared bundle-rollup helper it imports) to
       handle ICE COMBO symbols like `BRN   3  30615524` / `G   FSF0032.M0032` (currently unparseable → dropped with a
       WARNING). Gate: 0 "no underlying for tradfi leaf" warnings on an ICE-scoped enumerate run. (repo:
-      instruments-service)
+      instruments-service) — **instruments-service@4a02085**: `_derive_underlying` (the fallback used when the catalogue
+      `underlying` column is blank) now also tries the whitespace-delimited leading token against the UAC `TRADFI_ROOTS`
+      registry for `asset_group=tradfi` when the "-"-split shape doesn't match (the crypto-style fallback it already
+      had). Both sample symbols resolve (`BRN   3  30615524` → `BRN`, `G   FSF0032.M0032` → `G`); an unregistered
+      leading token still returns "" (no mis-key). 5 new regression tests in `test_enumerate_expected_universe_v2.py`
+      (parametrized symbol resolution + unknown-root + asset-group scoping + a full `_rollup_bundle_grain` roll-up
+      test), full suite green (167 passed), `quality-gates.sh` green.
