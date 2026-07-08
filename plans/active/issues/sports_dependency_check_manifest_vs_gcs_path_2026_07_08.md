@@ -138,22 +138,102 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
       direct-GCS path as a fallback ONLY if a genuine same-run consolidation-lag risk is confirmed real (the manifest
       consolidator cron runs every 1 minute — `codex/05-infrastructure/manifest-consolidator-ssot.md` — so there's a
       real but small lag window worth explicitly deciding how to handle, not silently ignoring).
-- [ ] [DATA] P2. **Apply the same manifest-slice replacement to the ~9 once-per-date sites in the expanded-scope table**
-      (`weather.py:248,350,352,504`; `sports_fixtures.py:160,537`; `footystats.py:652,654`;
-      `sports_reference_fixtures.py:110,121`) — same fix shape as the primary function above, same manifest slice can
-      likely be shared/reused across all of them in one load per backfill run rather than one load per site.
+- [x] [DATA] P0. **CRITICAL correctness bug found + fixed while auditing the ~9 sites (2026-07-08, later)**:
+      `weather.py::_fetch_weather_data`'s primary fixtures read used the stale LEGACY bare prefix (`entity=fixtures/`,
+      no `pipeline_mode=`) — confirmed via real GCS reads that this prefix has had **zero blobs** for every recent date
+      checked, while the canonical per-league prefix (`pipeline_mode=batch_api_football/entity=fixtures/league={L}/`)
+      has real data (e.g. 2026-07-04: 80 leagues/508 rows). This meant weather was **silently almost never captured**
+      despite fixtures existing in large numbers on most days — the function always fell through to
+      `empty_confirmed`/`EXPECTED_NO_FIXTURE`. Fixed by adding a shared `_read_per_league_entity_df()` helper
+      (canonical-prefix-list-first, legacy-prefix-fallback, mirrors the already-correct pattern in
+      `footystats._load_scheduled_footystats_fixture_map` / `sports_dependency.py::_prefix_has_object`) and pointing the
+      fixtures read at it. Verified against real production data before/after (old bare-prefix probe: 0 blobs on
+      2026-07-04/07-01/06-23; new helper: 508/129/104 rows respectively) + a regression test that fails against the
+      pre-fix code (`test_fixtures_read_finds_data_only_present_at_canonical_prefix`). — instruments-service@2b45cb78.
+- [x] [DATA] P1. **A SECOND, previously-unflagged data-loss bug found in the same function while fixing the above**:
+      `weather.py`'s "merge with existing weather" step (the old-line ~503 area) re-derived a hardcoded LEGACY-ONLY
+      weather prefix instead of reusing the already-resolved canonical-or-legacy `weather_prefix` computed a few lines
+      above (used to populate `existing_venue_ids`) — since the real writer only ever populates the canonical
+      (`pipeline_mode=`) path, this merge always found zero existing blobs and **silently dropped previously-captured
+      venues' weather rows** on any incremental re-run that added a new venue for an already-partially-covered date (a
+      genuine data-loss bug, not a performance nit — NOT in the original expanded-scope table, which characterized this
+      line only as a non-manifest-replaceable "re-list during merge"). Fixed by reusing the already-resolved
+      `weather_prefix` variable. Verified with a regression test that fails against the pre-fix code
+      (`test_incremental_rerun_preserves_previously_captured_venue`, confirmed 1-venue-written-not-2 failure mode before
+      the fix). — instruments-service@2b45cb78.
+- [x] [DATA] P1. **Applied the manifest-slice-adjacent fix to the ~9 once-per-date sites — but most turned out to be the
+      SAME stale-path correctness bug class, not purely a performance question** (per-site verification against real GCS
+      data, not assumption):
+  - `weather.py:248` (part of the primary fixtures-read block) — same bug as above, fixed together.
+  - `weather.py:350,352` (existing-weather-data check) — **verified healthy**: already correctly canonical-prefix-first
+    - legacy-fallback. Genuinely just a performance question (2 GCS list calls/date); left as-is per the original
+      table's "No — needs venue_id-level state" verdict (manifest is league-level, not venue-level).
+  - `weather.py:504` — see the P1 data-loss bug above; fixed.
+  - `sports_fixtures.py:160` (`_read_fixture_ids_from_gcs`) — **confirmed the same stale bare-path bug**: probed a
+    single bare `entity=fixtures/fixtures.parquet` blob that no writer has populated since the per-league migration, so
+    it always silently returned `[]`. Fixed via `_read_per_league_entity_df`; verified against real data (2026-06-23: 44
+    completed fixture IDs found post-fix vs. 0 pre-fix).
+  - `sports_fixtures.py:537` (`_build_fixture_league_map_from_gcs`) — **confirmed the same stale bare-path bug**, same
+    fix. See the NEW follow-up finding below — the fix makes the path resolution correct, but real-data verification
+    surfaced a SEPARATE, deeper mapping-coverage gap in this same function (not a path bug) that is NOT yet fixed — new
+    todo added below.
+  - `footystats.py:652,654` (`_load_scheduled_footystats_fixture_map`) — **verified healthy**: already correctly
+    canonical-prefix-first + legacy-fallback (the reference implementation this fix's shared helper mirrors). Genuinely
+    just a performance question; left as-is.
+  - `sports_reference_fixtures.py:110,121` (`_ensure_canonical_fixtures_for_override`) — **confirmed the same stale
+    bare-path bug**: the "does canonical data already exist" check probed a bare blob that's never populated
+    post-migration, so this function ALWAYS fell through to the old-path/API-fetch branch (33 api-football calls) even
+    when real per-league fixtures were already captured for the date — a real cost bug (not data-loss, since the write
+    path itself was unaffected). Fixed via `_read_per_league_entity_df`.
+  - All fixes share ONE helper (`_read_per_league_entity_df`, canonical-then-legacy per-league prefix listing) rather
+    than one bespoke path construction per site, addressing the "share path-template constants" todo below for these
+    call sites. — instruments-service@2b45cb78, with regression tests for every fixed site (see
+    `tests/unit/test_sports_reference_v9_path.py::TestReadPerLeagueEntityDf`,
+    `::TestEnsureCanonicalFixturesForOverride`, `tests/unit/test_orchestrator_data_fetchers.py::TestFetchWeatherData`).
+- [ ] [DATA] P2. **NEW FOLLOW-UP FINDING (2026-07-08, flagged not fixed) — `_build_fixture_league_map_from_gcs` has a
+      real mapping-coverage gap, independent of the path bug just fixed above.** Real-data check: for 2026-06-23,
+      2026-07-01, 2026-07-04 the "fixtures" GCS entity's real captured universe spans 22-82 distinct leagues per date,
+      but only 0-2 of those overlap `get_prediction_leagues()` (the ONLY set this function's af_league_id→ canonical
+      mapping uses) — so even with the path bug fixed, this function still returns a near-empty or empty map for real
+      dates. Checked whether reading `fixtures_schedule` instead of `fixtures` changes this: it does NOT (same near-zero
+      overlap measured against `fixtures_schedule` too), so this is a genuine gap in the mapping's league universe, not
+      a which-entity-to-read question. Downstream impact: `_af_fid_to_league` feeds `_write_per_fixture_entities`'s
+      per-league write gate (`if _fid_col in df.columns and af_fid_to_league:`) — an empty map means per-fixture
+      entities (fixture_stats/fixture_events/fixture_lineups/player_stats) may be silently skipped (bare-path-fallback
+      warning, no write) for real fixtures reached via the `fixture_ids_override` (URDI) path. NOT fixed in this pass —
+      needs an operator/architecture decision on whether the mapping should use the broader
+      Prediction+Features+Reference set (matching `_fetch_fixture_ids_via_api`'s fallback-path scope) or whether
+      `fixture_ids_override`'s real callers only ever pass fixture_ids that already have a working non-GCS league
+      source, making this dead weight — real verification of which, before choosing a fix, is required.
 - [ ] [DATA] P2. **Design a separate, cached/batched fix for `sports_fixtures.py:356`** — this one needs
       fixture_id-level set membership the manifest doesn't carry; likely a single per-date (or per-backfill-window)
       parquet read of the real fixture-capture file, cached across the (entity × league) loop instead of one GCS call
-      per pair.
-- [ ] [SCRIPT] P3. **Remove the 2 confirmed-dead-code sites** (`weather.py:46` `_load_venue_coordinates`,
-      `weather.py:87` `_extract_fixture_venue_ids`) — zero real callers, verified.
-- [ ] [DATA] P2. **Share path-template constants between the real fixtures writer and this checker** (or derive the
-      checker's expectations FROM the manifest instead of independent path literals) so a future path migration can't
-      silently desync them — this fixes the path-drift risk regardless of the manifest-vs-GCS decision above.
+      per pair. (Out of scope for this pass — explicitly excluded per operator instruction.)
+- [x] [SCRIPT] P3. **Remove the 2 confirmed-dead-code sites** (`weather.py:46` `_load_venue_coordinates`,
+      `weather.py:87` `_extract_fixture_venue_ids`) — zero real callers, verified (full-repo grep, zero hits besides
+      declaration/export). Removed + their dedicated unit-test classes
+      (`TestLoadVenueCoordinates`/`TestExtractFixtureVenueIds` in `tests/unit/test_orchestrator_helpers.py`) deleted. —
+      instruments-service@2b45cb78.
+- [ ] [DATA] P2. **Design a manifest-slice-based replacement for `check_api_football_dependency()`** — load+filter once
+      per backfill run (or per reasonable chunk, e.g. per year) rather than per-date network calls; keep the current
+      direct-GCS path as a fallback ONLY if a genuine same-run consolidation-lag risk is confirmed real (the manifest
+      consolidator cron runs every 1 minute — `codex/05-infrastructure/manifest-consolidator-ssot.md` — so there's a
+      real but small lag window worth explicitly deciding how to handle, not silently ignoring). **Still open** — out of
+      scope for this pass (this todo is about the ORIGINAL function's manifest-vs-GCS performance question, not the
+      correctness bugs fixed above; `sports_dependency.py::check_api_football_dependency` itself was verified to already
+      be path-CORRECT — canonical-prefix-first + legacy-fallback via `_prefix_has_object` — it is purely a
+      performance/cost question, unlike the sites fixed above).
+- [ ] [DATA] P2. **Share path-template constants between the real fixtures writer and this checker** — PARTIALLY
+      addressed: the ~9 expanded-scope sites now share ONE helper (`_read_per_league_entity_df`); the ORIGINAL
+      `check_api_football_dependency()` function (todo above) still has its own independent path-template constants, not
+      yet unified.
 - [ ] [VERIFY] P2. **Confirm real backfill speedup** against a real multi-month or full-year backfill run, before vs.
-      after, not just the isolated per-call measurements above.
-- [ ] [SCRIPT] P2. **Ship via quickmerge**, quality-gates green.
+      after, not just the isolated per-call measurements above. **Still open** — this pass fixed correctness (not
+      performance) at most sites; a real backfill timing run is still needed for whatever manifest-slice work remains
+      for `check_api_football_dependency()` and `sports_fixtures.py:356`.
+- [x] [SCRIPT] P2. **Ship via quickmerge**, quality-gates green. — instruments-service@2b45cb78 (quality-gates.sh full
+      run PASSED before commit; quickmerge landed on `live-defi-rollout`, strict-quickmerge verified, pushed to origin —
+      confirmed via `git merge-base --is-ancestor`).
 
 ## Progress Log
 
@@ -171,3 +251,27 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
   60-130x-fixable function to a real 2-4x understatement across all 5 sports files (tens of minutes to ~1-2 hours
   total), with 2 confirmed dead-code sites and one site needing a genuinely different fix shape (not a manifest swap).
   Todos updated accordingly. No fix applied yet.
+- **2026-07-08 (fix pass)** — Dispatched a fix sub-agent scoped to: (1) the CRITICAL bug found while verifying the 2
+  dead functions were safe to remove — `weather.py::_fetch_weather_data`'s primary fixtures read used a stale LEGACY
+  bare prefix that real data has fully migrated away from, so weather was essentially never captured despite fixtures
+  existing on most days; (2) removing the 2 confirmed-dead functions; (3) re-verifying (not assuming) each of the ~9
+  expanded-scope sites for the SAME stale-path bug class before applying either a manifest-slice (performance) or a path
+  fix (correctness). Real-data verification (real GCS reads against `instruments-store-sports-prd`, bucket
+  `instruments-store-sports-prd-central-element-323112`, before/after every fix) found: the critical bug confirmed and
+  fixed (0 blobs pre-fix → 508/129/104 real rows post-fix on 2026-07-04/07-01/06-23); a SECOND, previously unflagged
+  data-loss bug in the same function's "merge with existing weather" step (wrong hardcoded prefix silently dropped
+  previously-captured venues on incremental re-runs) found + fixed; 3 of the ~9 sites (`sports_fixtures.py:160,537`,
+  `sports_reference_fixtures.py:110,121`) turned out to be the SAME stale-bare-path bug class (not just a performance
+  question as originally characterized) and were fixed via one new shared helper (`_read_per_league_entity_df`); 2 sites
+  (`weather.py:350,352`, `footystats.py:652,654`) verified genuinely healthy (already canonical-then-legacy) and left as
+  pure performance questions. A NEW, separate (not path-related) mapping- coverage gap was discovered in
+  `_build_fixture_league_map_from_gcs` while verifying its fix against real data — flagged as a new todo, NOT fixed
+  (needs an operator/architecture decision, out of this pass's scope). All fixes ship with regression tests that were
+  confirmed to FAIL against the pre-fix code (not just pass against the fix) —
+  `test_fixtures_read_finds_data_only_present_at_canonical_prefix`,
+  `test_incremental_rerun_preserves_previously_captured_venue`,
+  `TestReadPerLeagueEntityDf`/`TestEnsureCanonicalFixturesForOverride` in `test_sports_reference_v9_path.py`.
+  `quality-gates.sh` full run PASSED; shipped via quickmerge to `live-defi-rollout` at instruments-service@2b45cb78
+  (verified on `origin/live-defi-rollout`). Manifest-slice performance work for `check_api_football_dependency()` and
+  `sports_fixtures.py:356`, plus the real backfill-speedup verification, remain open (out of this pass's assigned scope)
+  — see updated todos above.
