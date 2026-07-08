@@ -188,12 +188,15 @@ on the resource table + the running backend endpoints (last-30d window).
 
 ### Correctness (the displayed numbers are wrong today)
 
-- [ ] [BACKEND] P1. **GCP shows GROSS cost, not NET of credits.** `credit` is fetched into `CostRecord`
-      (`providers.py:96`) but **never read** — every aggregation sums `r.cost` only. Live proof (resource table, last
-      30d): gross **$15,134.51** − credits **$2,541.19** = net **$12,593.32** → the page **overstates GCP ~17%**. The
-      credits are mostly **active PROMOTION** (−$2,487/30d), so the codex "promo exhausted ~2026-06-20" note is stale.
-      Fix: apply credit in the aggregations (effective = `cost + credit`); the codex reference query already intends
-      `SUM(cost)+SUM(credits) AS net_cost`. Then correct `codex/05-infrastructure/billing-cost-observability.md`.
+- [x] ✅ [BACKEND+UI] P1. **GCP showed GROSS, not NET of credits — FIXED.** `credit` was fetched into `CostRecord`
+      (`providers.py:96`) but **never read** — every aggregation summed `r.cost`. Live proof (resource table, last 30d):
+      gross **$15,134.51** − credits **$2,541.19** = net **$12,593.32** → page had **overstated GCP ~17%**; credits are
+      mostly **active PROMOTION** (−$2,487/30d), so the codex "promo exhausted ~2026-06-20" note was stale. Fix:
+      `_net(r)=cost+credit` summed across summary / breakdown / timeseries; `SummaryResponse`+`CloudSummary` expose
+      `gross`+`credit`; the KPI band leads with net + a "(gross − credits)" derivation (GCP tiles + grand; AWS/GitHub
+      have none). Corrected the codex note. **deployment-api@`f10b0914`** + **deployment-ui@`0f653068`** — both full QGs
+      green (backend pytest incl. a credit-netting test; vitest 911 + a pw:L2 derivation regression); live `:5183` net
+      **$12,593.31** reconciles to the bq probe **$12,593.32**.
 - [ ] [BACKEND] P2. **AWS shows unblended usage-only, not net / not invoice-total.** `aws_facts_sql` sums
       `line_item_unblended_cost` and filters `line_item_type IN ('Usage','DiscountedUsage')` — excludes Tax / Credit /
       Fee / RIFee / SavingsPlan\* and ignores `line_item_net_unblended_cost`. So the AWS total (~$213/30d) is usage
@@ -335,3 +338,18 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
     the previous fetch's rows under the new column header (stale-during-refetch). Pre-existing and orthogonal to this
     cap fix; follow-up would gate the table on `breakdown.dimension === dimension` or skeleton the panel while
     refetching. Tracked below.
+- 2026-07-08 — **NET-of-credits (audit finding P1) — the page was overstating GCP spend ~17%.** Operator: "add this so
+  we have the actual cost we have to pay, but show all 3 — actual $ then in bracket (gross − credit)." Root cause (from
+  the data-fidelity audit): `CostRecord.credit` was fetched but **never read**, so every view summed pre-credit gross.
+  - **Backend (`deployment-api@`f10b0914`):** `_net(r)=cost+credit` now summed across summary / breakdown / timeseries
+    (net is canonical everywhere, so trend / donut / tables all reconcile to the headline); `SummaryResponse` +
+    `CloudSummary` gained `gross` + `credit`. GCP populates credit; AWS/GitHub carry 0 (net==gross). New pytest asserts
+    net = gross + credit end-to-end. Existing tests unaffected (their fixtures have credit 0).
+  - **Frontend (`deployment-ui@`0f653068`):** KPI band leads with **net** (what you pay) and, when credits apply, shows
+    the derivation **"(gross − credits)"** — grand total + GCP tiles; AWS/GitHub (no credits) render no line. Credits in
+    green. `deploymentApi.ts` types + the frontend mock (GCP ~20% promo credit) updated; vitest + a **pw:L2** regression
+    assert the split renders (and is absent without credits).
+  - **Verify:** both full QGs green (backend 71s; UI tsc+ESLint+vitest 911+build); Playwright cost smoke **6/6**. Live
+    `:5183` net **$12,593.31** matches the bq probe **$12,593.32** (1-cent rounding) — the fix is correct against the
+    source. Corrected the codex's stale "promo exhausted ~2026-06-20" note (promo is **active**, ~$2.5k/30d). The other
+    audit findings (SKU dim, spot-vs-on-demand, AWS net/invoice, usage units) remain tracked P2/P3.
