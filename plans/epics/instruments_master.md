@@ -200,14 +200,14 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
 | `02-data/pipeline-coverage-matrix.md`                        | Add live-source row per (asset_group, data_type)                                           | C.1   |
 | `00-SSOT-INDEX.md`                                           | Add row pointing to `instruments-live-architecture.md`                                     | A.1   |
 | `15-runbooks/instruments-live/t1-audit-discrepancy.md` (NEW) | Operator playbook for T+1 audit discrepancies                                              | I.3   |
-| `instruments-service/docs/ARCHITECTURE.md`                   | Add live-mode CLI invocation matrix table                                                  | A.7   |
+| `instruments-service/docs/ADAPTER_ARCHITECTURE.md`           | Add live-mode CLI invocation matrix table                                                  | A.7   |
 
 ## Architectural conflicts found in instruments-service repo
 
-**None.** Reviewed `instruments-service/docs/ARCHITECTURE.md` and the per-asset-group docs (CEFI/DEFI/TRADFI/SPORTS/
-POLYMARKET) plus `instrument-catalogue.md`. The repo's documented architecture already aligns with live=batch symmetry:
-no statement that "live mode has different schema" or "live writes to a separate path" was found. The existing CLI is
-single-codepath; adding `--trigger` as a new axis is additive (Phase A.7).
+**None.** Reviewed `instruments-service/docs/ADAPTER_ARCHITECTURE.md` and the per-asset-group docs (CEFI/DEFI/TRADFI/
+SPORTS/PREDICTION) plus `instrument-catalogue.md`. The repo's documented architecture already aligns with live=batch
+symmetry: no statement that "live mode has different schema" or "live writes to a separate path" was found. The existing
+CLI is single-codepath; adding `--trigger` as a new axis is additive (Phase A.7).
 
 ## Out of scope (referenced but owned elsewhere)
 
@@ -279,7 +279,7 @@ Phase G (deployment-UI tab)  ║  Phase H (alerting + circuit breakers, parallel
 - `codex/06-coding-standards/cli-convention.md` — CLI axis SSOT
 - `codex/02-data/availability-manifest-and-data-status.md` — manifest schema, available_at
 - `codex/02-data/pipeline-coverage-matrix.md` — per-source coverage matrix
-- `instruments-service/docs/ARCHITECTURE.md` + per-asset-group docs — service-internal entry-points
+- `instruments-service/docs/ADAPTER_ARCHITECTURE.md` + per-asset-group docs — service-internal entry-points
 
 ## Plan-format compliance
 

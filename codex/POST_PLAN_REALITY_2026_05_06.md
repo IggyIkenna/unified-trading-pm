@@ -1,16 +1,26 @@
 ---
 doc_type: codex-ssot
 title: Post-Plan Reality — Pointer for Fresh Agents (2026-05-06)
-summary: Fresh-agent override pointer for the 2026-05-06 writegate-honest-coverage work-package — lists the 10 cross-cutting
+summary:
+  Fresh-agent override pointer for the 2026-05-06 writegate-honest-coverage work-package — lists the 10 cross-cutting
   principles (honest coverage, single-SSOT, live=batch, A/B/C empty-output tree, mandatory cluster validation, per-VM
   shard isolation) and enumerates every stale codex + per-service doc carrying a banner back to it.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-trading-pm]
+repos:
+  [
+    deployment-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-trading-pm,
+  ]
 scope: [engineer]
-tags: [honest-coverage, data-correctness, ssot-audit, manifest, cluster-validation, single-walk, live-trading, migration]
+tags:
+  [honest-coverage, data-correctness, ssot-audit, manifest, cluster-validation, single-walk, live-trading, migration]
 related: [02-data/availability-manifest-and-data-status.md, 06-coding-standards/validation-and-errors.md]
 created: 2026-05-06
 authoritative_for: [2026-05-06 writegate post-plan reality (10 cross-cutting principles + stale-doc banner registry)]
@@ -200,19 +210,23 @@ The following codex docs have a banner at top pointing here. The banner does NOT
 — only that there are sections that contradict the post-plan reality. Read the banner + this doc + the active plans
 before believing anything specific in the linked doc.
 
-| Doc                                                | Stale because                                                                                                                                                                                         |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| `02-data/availability-manifest-and-data-status.md` | Doesn't reflect 4-pillar write-gate (row-count + NaN-ratio + schema + cluster-coverage), `record_empty` / `record_failed` typed reasons, per-VM shard isolation rule, per-fixture sharding for sports |
-| `02-data/per-asset-group-bucket-layouts.md`        | Uses `category=` legacy hive vocab. `asset_group=` is canonical; `category=` is legacy-preserved.                                                                                                     |
-| `02-data/sports-scheduling-and-sharding.md`        | Pre-(per-fixture sharding) — needs update to reflect `(source, data_type, league_id, fixture_id                                                                                                       | day-aggregate, day)` v5/v6 shard atom |
-| `02-data/sports-data-source-coverage-matrix.md`    | Pre-`SOURCE_PRIORITY` registry; doesn't list multi-source merge rules                                                                                                                                 |
-| `02-data/mtds-data-source-coverage-matrix.md`      | Same — missing `SOURCE_PRIORITY` SSOT reference                                                                                                                                                       |
-| `02-data/canonical-schema-groups.md`               | Doesn't list `available_at` as a required column on every row                                                                                                                                         |
-| `02-data/prediction-schema-paths.md`               | Pre-canonical_question_group; describes per-base_asset Polymarket sharding                                                                                                                            |
-| `04-architecture/sports-integration-plan.md`       | Pre-(per-fixture sharding)                                                                                                                                                                            |
-| `04-architecture/asset-class-ownership.md`         | Sports section pre-(per-fixture sharding)                                                                                                                                                             |
-| `06-coding-standards/validation-and-errors.md`     | Merged 2026-05-08 (D.5) — supersedes the legacy `error-handling.md` / `validation-patterns.md` / `schema-validation.md`. 4-category empty-output decision + cluster validation pillar both included.  |
-| `00-SSOT-INDEX.md`                                 | Top-level pointer doc — needs to surface this post-plan doc + the active plans                                                                                                                        |
+| Doc | Stale because | | -------------------------------------------------- |
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| ------------------------------------- | | `02-data/availability-manifest-and-data-status.md` | Doesn't reflect
+4-pillar write-gate (row-count + NaN-ratio + schema + cluster-coverage), `record_empty` / `record_failed` typed reasons,
+per-VM shard isolation rule, per-fixture sharding for sports | | `02-data/per-asset-group-bucket-layouts.md` | Uses
+`category=` legacy hive vocab. `asset_group=` is canonical; `category=` is legacy-preserved. | |
+`02-data/sports-scheduling-and-sharding.md` | Pre-(per-fixture sharding) — needs update to reflect
+`(source, data_type, league_id, fixture_id                                                                                                       | day-aggregate, day)`
+v5/v6 shard atom | | `02-data/sports-data-source-coverage-matrix.md` | Pre-`SOURCE_PRIORITY` registry; doesn't list
+multi-source merge rules | | `02-data/mtds-data-source-coverage-matrix.md` | Same — missing `SOURCE_PRIORITY` SSOT
+reference | | `02-data/canonical-schema-groups.md` | Doesn't list `available_at` as a required column on every row | |
+`02-data/prediction-schema-paths.md` | Pre-canonical_question_group; describes per-base_asset Polymarket sharding | |
+`04-architecture/sports-integration-plan.md` | Pre-(per-fixture sharding) | | `04-architecture/asset-class-ownership.md`
+| Sports section pre-(per-fixture sharding) | | `06-coding-standards/validation-and-errors.md` | Merged 2026-05-08 (D.5)
+— supersedes the legacy `error-handling.md` / `validation-patterns.md` / `schema-validation.md`. 4-category empty-output
+decision + cluster validation pillar both included. | | `00-SSOT-INDEX.md` | Top-level pointer doc — needs to surface
+this post-plan doc + the active plans |
 
 ---
 
@@ -220,8 +234,8 @@ before believing anything specific in the linked doc.
 
 | Doc                                                                                             | Stale because                                                                                                   |
 | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `instruments-service/docs/POLYMARKET_PREDICTION.md`                                             | Pre-canonical_question_group + lifecycle                                                                        |
-| `instruments-service/docs/SPORTS_INSTRUMENTS.md`                                                | Pre-(per-fixture sharding)                                                                                      |
+| `instruments-service/docs/PREDICTION_INSTRUMENTS.md` (renamed from `POLYMARKET_PREDICTION.md`)  | **RESOLVED 2026-07-08** — fully rewritten as part of the 17→7 docs consolidation, no longer stale               |
+| `instruments-service/docs/SPORTS_INSTRUMENTS.md`                                                | **RESOLVED 2026-07-08** — fully rewritten as part of the 17→7 docs consolidation, no longer stale               |
 | `market-tick-data-service/docs/ARCHITECTURE.md`                                                 | Pre-3-category empty-output + pre-cluster-validation-mandatory                                                  |
 | `market-tick-data-service/docs/DATA_TYPE_DECISIONS.md`                                          | Pre-`SOURCE_PRIORITY` + missing per-fixture sharding for sports adapter                                         |
 | `market-tick-data-service/docs/DATABENTO_FUTURES_DOWNLOAD.md` + `DATABENTO_OPTIONS_DOWNLOAD.md` | Missing `DatabentoClassification.root_cluster` weekly-series cluster note                                       |

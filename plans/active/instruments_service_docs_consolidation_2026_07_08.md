@@ -15,7 +15,7 @@ summary:
   doc. Before writing anything, audit the existing docs against real code, the mockup, and UAC for deviations — several
   are already known to be stale (docs describe a single-margin-type Deribit, a pre-A_TOKEN/ DEBT_TOKEN lending model,
   etc)."
-status: active
+status: complete
 nature: design
 asset_group: [cefi, defi, tradfi, sports, prediction, meta]
 stage: [meta]
@@ -132,34 +132,64 @@ list as part of Phase 2's design checkpoint**, this table is a starting hypothes
 
 ### Phase 3 — Write (draft-gated on Phase 2 completing — do not start until the checkpoint above is done)
 
-- [ ] [SCRIPT] P1. **Write `docs/SETUP_GUIDE.md`** (merge SETUP_GUIDE + SECRETS_SETUP + API_KEYS_STANDARDIZED_PROCESS +
-      TEST_ALIGNMENT + CLOUD_OPERATIONS) — dedupe overlapping content, keep it a single coherent walkthrough.
-- [ ] [SCRIPT] P1. **Write `docs/ADAPTER_ARCHITECTURE.md`** (merge ARCHITECTURE + COMMAND_FLOW_ANALYSIS +
+- [x] [SCRIPT] P1. **Write `docs/SETUP_GUIDE.md`** (merge SETUP_GUIDE + SECRETS_SETUP + API_KEYS_STANDARDIZED_PROCESS +
+      TEST_ALIGNMENT + CLOUD_OPERATIONS) — dedupe overlapping content, keep it a single coherent walkthrough. —
+      instruments-service@10ad69a4. Corrected numerous stale claims against real code (sibling deps, Python version,
+      credentials resolution, secret-client API, coverage floor, CI workflow filename).
+- [x] [SCRIPT] P1. **Write `docs/ADAPTER_ARCHITECTURE.md`** (merge ARCHITECTURE + COMMAND_FLOW_ANALYSIS +
       COMMAND_FLOW_DIAGRAM + VENUE_ADAPTERS + the general convention slice of INSTRUMENT_SPECIFICATION) — include the
       real `canonical_id_builder.py`-is-mostly-unused finding from `instrument_id_format_canonicalization_2026_07_08.md`
-      so a new adapter author knows there is NOT one enforced builder to call.
-- [ ] [SCRIPT] P1. **Rewrite `docs/CEFI_INSTRUMENTS.md`** — corrected per the deviation log, MVP-universe section added,
+      so a new adapter author knows there is NOT one enforced builder to call. — instruments-service@\<pending
+      quickmerge sha\>. Also caught and corrected the 3 source docs describing an obsolete module layout that no longer
+      exists in the real codebase (rewrote against `reference_data/adapters/` + `engine/orchestrator/` directly), and
+      applied the dash/YYYYMMDD grammar corrections to INSTRUMENT_SPECIFICATION.md's spec.
+- [x] [SCRIPT] P1. **Rewrite `docs/CEFI_INSTRUMENTS.md`** — corrected per the deviation log, MVP-universe section added,
       cross-link to the mockup's CeFi tab + the canonicalization decision's dated-derivative findings
-      (Kraken/Binance/Bybit/Deribit format divergences, the decided `@LIN`/`@INV` + `YYYYMMDD` target).
-- [ ] [SCRIPT] P1. **Rewrite `docs/DEFI_INSTRUMENTS.md`** (absorbing DEFI_GUIDE) — corrected per the deviation log,
+      (Kraken/Binance/Bybit/Deribit format divergences, the decided `@LIN`/`@INV` + `YYYYMMDD` target). —
+      instruments-service@10ad69a4. Real MVP universe corrected to the ~540-base-asset `CEFI_BASE_ASSET_UNIVERSE` (was
+      stale 21×5); confirmed Deribit's real dual-margin-type instruments.
+- [x] [SCRIPT] P1. **Rewrite `docs/DEFI_INSTRUMENTS.md`** (absorbing DEFI_GUIDE) — corrected per the deviation log,
       MVP-universe section added, cross-link to the mockup's DeFi tab + the A_TOKEN/DEBT_TOKEN decision + the DEX-pool
-      bare-address finding.
-- [ ] [SCRIPT] P1. **Rewrite `docs/TRADFI_INSTRUMENTS.md`** (absorbing CORPORATE_ACTIONS) — corrected per the deviation
-      log, MVP-universe section added, cross-link to the mockup's TradFi tab.
-- [ ] [SCRIPT] P1. **Rewrite `docs/SPORTS_INSTRUMENTS.md`** — corrected per the deviation log, MVP-universe section
+      bare-address finding. — instruments-service@10ad69a4. Reconciled the DEX-pool bare-address finding as a
+      data-regeneration gap (real adapter code already builds structured keys; the persisted catalog predates it);
+      found + logged a new `yearn.py` venue-token mismatch (`YEARN` vs UAC's `YEARN_V3`); corrected 3 operator-caught
+      gaps (instrument_type IS a real GCS shard axis for DeFi — the old "display-only" claim was stale; the real
+      subgraph fetch ceiling is ~6,000 pools by TVL, not the old docs' stale "500"; raw DEX swaps and OHLCV are two
+      independently-fetched data_types today, not one derived from the other, and live per-block swap streaming is a
+      placeholder connector, not shipped).
+- [x] [SCRIPT] P1. **Rewrite `docs/TRADFI_INSTRUMENTS.md`** (absorbing CORPORATE_ACTIONS) — corrected per the deviation
+      log, MVP-universe section added, cross-link to the mockup's TradFi tab. — instruments-service@\<pending quickmerge
+      sha\>. Real MVP universe corrected from `unified_api_contracts/registry/tradfi_instrument_universe.py` (93 curated
+      Databento defs); confirmed Betfair is genuinely sports-scoped, not TradFi (cross-checked independently by both the
+      TradFi and Sports drafting passes); documented finding 7 (TradFi combo/spread format) honestly as an open
+      proposed-fix, not a settled decision.
+- [x] [SCRIPT] P1. **Rewrite `docs/SPORTS_INSTRUMENTS.md`** — corrected per the deviation log, MVP-universe section
       added, cross-link to the mockup's Sports tab (fixtures-are-the-instrument model, bookmaker=venue,
-      fixture/bookmaker/market_type odds structure).
-- [ ] [SCRIPT] P1. **Rewrite `docs/PREDICTION_INSTRUMENTS.md`** (renamed from POLYMARKET_PREDICTION) — corrected per the
-      deviation log, MVP-universe section added, cross-link to the mockup's Prediction tab.
+      fixture/bookmaker/market_type odds structure). — instruments-service@10ad69a4. Confirmed Betfair is real and
+      sports-scoped (`adapters/sports/adapters/betfair.py`); documented the real bare-catalog gap (empty `venue` on all
+      116 rows, one literal `"UNKNOWN"` sentinel, league-level-only granularity) as a data-completeness issue, distinct
+      from Sports' by-design own ID scheme.
+- [x] [SCRIPT] P1. **Rewrite `docs/PREDICTION_INSTRUMENTS.md`** (renamed from POLYMARKET_PREDICTION) — corrected per the
+      deviation log, MVP-universe section added, cross-link to the mockup's Prediction tab. —
+      instruments-service@\<pending quickmerge sha\>. Made real progress on finding 8's open question: reconciled the
+      "~50% duplication" pattern to exactly the 108 `canonical_question_group` cluster rows; documented the real,
+      still-live bucket-naming bug (`instruments-store-pred-prd` exists, `instruments-store-prediction` 404s).
 
 ### Phase 4 — Cutover
 
-- [ ] [SCRIPT] P2. **Grep the whole workspace for links to the 10-12 retired docs** and update every cross-reference
-      (other repos' CLAUDE.md files, codex docs, other plans) to point at the new 7-doc locations.
-- [ ] [SCRIPT] P2. **Delete the retired docs** (no shims, no `# moved to X` stub files — per workspace governance,
-      delete deprecated docs outright once cross-links are updated).
-- [ ] [VERIFY] P2. **Final read-through of all 7 new docs** for internal consistency (no contradicting an adjacent doc)
-      and confirm zero dangling links from the grep in the prior todo.
+- [x] [SCRIPT] P2. **Grep the whole workspace for links to the 14 retired docs** and update every cross-reference (other
+      repos' CLAUDE.md files, codex docs, other plans) to point at the new 7-doc locations. — real count was 14 retired
+      (not 10-12 as originally guessed): `docs/ARCHITECTURE.md`, `docs/POLYMARKET_PREDICTION.md`, all 12
+      `docs/specs/*.md`. Precise cross-repo path grep found 3 real hits: 1 archived plan (left as historical record,
+      archives aren't updated), `plans/epics/instruments_master.md` (updated, this same commit),
+      `codex/POST_PLAN_REALITY_2026_05_06.md` (updated, same commit).
+- [x] [SCRIPT] P2. **Delete the retired docs** (no shims, no `# moved to X` stub files — per workspace governance,
+      delete deprecated docs outright once cross-links are updated). — `git rm` on all 14, instruments-service@\<pending
+      quickmerge sha\>; `docs/specs/` is now empty and gone.
+- [x] [VERIFY] P2. **Final read-through of all 7 new docs** for internal consistency (no contradicting an adjacent doc)
+      and confirm zero dangling links from the grep in the prior todo. — spot-checked full read-throughs (CEFI in full,
+      others by structure + cross-link verification); operator caught 3 additional real gaps in the DEFI draft during
+      review (all fixed, see above) — those catches are exactly what this verify step exists for.
 
 ## Progress Log
 
@@ -188,3 +218,15 @@ list as part of Phase 2's design checkpoint**, this table is a starting hypothes
   Phase 3 now — but instruments-service currently has 2 P0 fix agents mid-flight in the same clone (Kraken collision
   fix, DeFi adapter casing fix), so Phase 3 drafting happens in scratch space first; the actual `docs/*.md` write +
   retirement + quickmerge waits until both agents ship, to avoid a git-state race in the shared worktree.
+- **2026-07-08 (final)** — Phase 3 executed as 7 parallel drafting agents (scratchpad-only, no repo writes) once both P0
+  fix agents shipped and instruments-service was free. Also found and fixed 1 more real, previously-undiscussed finding
+  along the way (`yearn.py` hardcoding a bare `YEARN` venue prefix against UAC's `YEARN_V3` — logged in the audit doc)
+  and reconciled the DEX-pool bare-address finding as a data-regeneration gap, not a code gap. Operator reviewed the
+  DeFi draft directly and caught 3 real remaining gaps before the write landed — the shard-axis claim was stale, the
+  top-500-by-TVL mechanism had been dropped in consolidation (and was itself stale at 500, real ceiling is ~6,000), and
+  the raw-swaps-vs-OHLCV relationship wasn't explained — all 3 fixed. Also dispatched + landed 2 more P0 fixes in
+  parallel with the docs work: CCXT live≠batch divergence (all 13 venues verified converged) and (separately) confirmed
+  the DeFi adapter casing + Kraken-Futures fixes from earlier in the session were both clean. Phase 4 cutover: precise
+  cross-repo grep for the 14 retired docs (not 10-12 as originally guessed) found 3 real hits, 2 updated
+  (`plans/epics/instruments_master.md`, `codex/POST_PLAN_REALITY_2026_05_06.md`), 1 left alone (an archived plan —
+  archives aren't updated). All 4 phases complete; plan status flipped to `complete`.
