@@ -221,7 +221,10 @@ enough). The % is neither an upper nor lower bound of the real value.
       `instruments-service` QG (2 pre-existing red tests: the OKX-fold test here + a separate stale `lighter-zksync`
       Tardis-exchange-id assertion, root-caused to a slug rename `uac@f16c79e8` — resolve BOTH in the linked doc, not
       here, to avoid duplicate-tracking drift). This todo is a pointer only; do the actual decision/fix/verify work
-      against the 3 todos in that doc.
+      against the 3 todos in that doc. **Status update 2026-07-08 (slot-5 planning)**: the P0 QG-red shipping freeze is
+      CLEARED — shipped an interim Option-B fix (`unified-api-contracts@1771d59a` + `instruments-service@666bca5`, full
+      detail + trade-offs in the linked doc). The DESIGN decision itself (Option A vs keeping B) is still open pending
+      operator confirmation; this todo's urgency is now P1-cleanup, not P0-blocker.
 
 **BYBIT-SPOT writer defect (independent of the gate work — can run in parallel with 2a):**
 
