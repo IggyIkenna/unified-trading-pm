@@ -210,8 +210,8 @@ The following codex docs have a banner at top pointing here. The banner does NOT
 — only that there are sections that contradict the post-plan reality. Read the banner + this doc + the active plans
 before believing anything specific in the linked doc.
 
-| Doc | Stale because | | -------------------------------------------------- |
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## | Doc | Stale because | | -------------------------------------------------- |
+
 | ------------------------------------- | | `02-data/availability-manifest-and-data-status.md` | Doesn't reflect
 4-pillar write-gate (row-count + NaN-ratio + schema + cluster-coverage), `record_empty` / `record_failed` typed reasons,
 per-VM shard isolation rule, per-fixture sharding for sports | | `02-data/per-asset-group-bucket-layouts.md` | Uses
