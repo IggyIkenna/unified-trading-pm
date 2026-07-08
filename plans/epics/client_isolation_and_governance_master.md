@@ -30,8 +30,9 @@ related_plans:
   [
     ../active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md,
     ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
   ]
-last_updated: 2026-05-22
+last_updated: 2026-07-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -145,7 +146,13 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-_(no plans currently assigned at this priority)_
+### 🔴 2026-07-08 canonical instrument_id — UAC-schema governance angle
+
+**status**: 🔴 CROSS-REFERENCE ONLY — owned primarily by `instruments_master`
+([`canonical_instrument_id_audit_2026_07_08`](../audit/results/canonical_instrument_id_audit_2026_07_08.md)), noted here
+since `canonical_id_builder.py` and the instrument-id/instrument-type UAC schema definitions are exactly this epic's
+"UAC schema" governance scope. No new plan filed under this epic — see `instruments_master` for the actual work items
+(the audit, the decision doc, and 4 P0 fix plans).
 
 ## P3 — backlog; revisit quarterly
 
