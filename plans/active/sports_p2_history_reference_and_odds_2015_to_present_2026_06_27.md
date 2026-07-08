@@ -176,7 +176,10 @@ singleton-lock namespace → may run concurrently.
       unaddressed for footystats). ODDS `pending_fetch=1,264` (not yet root-caused this session). **This is a CODE gap,
       not closeable by re-running the same backfill VM or a typing script** — recommend filing a dedicated follow-up
       plan/issue for footystats MATCHES (4-league fetch bug) + PREDICTIONS (fixture-calendar honest-absence) before the
-      next VM launch, else a re-run will reproduce the same residual.
+      next VM launch, else a re-run will reproduce the same residual. **FILED 2026-07-08 (slot-14)**:
+      `plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md` — 4 actionable todos (MATCHES fix,
+      PREDICTIONS fixture-calendar fix, ODDS root-cause, re-verify-and-flip) so a future data_engineering dispatch can
+      execute without re-diagnosing.
 - [x] [DATA] P0. **odds-api history → zero-missing** 2020-06→present (bookmaker-league subset; uncovered leagues typed).
       **Gate**: `(odds_api, trades)` `pending_fetch == 0` for covered leagues within window; uncovered leagues typed. ✅
       — `mtds-backfill-odds-1` VM completed 2026-06-28T03:41 UTC (rc=0, 317/317 chunks, 2020-06-06→2026-06-27, 7-day
@@ -210,7 +213,26 @@ singleton-lock namespace → may run concurrently.
       pending_fetch=0 before this item can flip; given items #4/#5 residuals are now diagnosed as requiring either a
       targeted re-fetch (TM, understat XG-tail) or an orchestrator code fix (footystats MATCHES 4-league bug, footystats
       PREDICTIONS cup fixture-calendar gap), this is NOT a quick re-dispatch — recommend the operator review whether
-      footystats MATCHES/PREDICTIONS deserves its own follow-up plan before further VM spend.
+      footystats MATCHES/PREDICTIONS deserves its own follow-up plan before further VM spend. **UPDATE 2026-07-08 20:58
+      UTC (slot-5)**: re-verified live via `read_availability_index` (single-walk-safe) — state byte-for-byte unchanged
+      from slot-7's 20:10 UTC snapshot (confirmed no VM had launched in the interim: 0
+      `tm-backfill-*`/`us-backfill-*`/`fs-backfill-*` instances RUNNING). Drilled into the TM 1,364-row residual by
+      `league_id` (not the always-blank `league` column): confirmed genuine, 47 TM-covered leagues × 34 sparse dates
+      (2025-12-10, then clusters 2026-05-01→05-04, 05-27→06-24, 07-07→07-08), `written_at` in small daily-forward-poll
+      batches (993 on 06-19, 184 on 06-23, ~46-47/day since) — a real per-league fetch gap inside dates the prior TM VM
+      (`tm-backfill-20260629-060317`, range 2021-01-01→2026-06-29) nominally covered but didn't fully close, NOT a
+      typing-fixable artifact. **Action taken**: launched `tm-backfill-20260708-205809` SPOT e2-standard-8
+      asia-northeast1-c, range 2025-12-10→2026-07-08 (tarball verified fresh: default `instruments-service-code.tar.gz`
+      built from @19693ca, only 2 non-sports commits behind current HEAD @42eeefb). GCS log:
+      `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260708-205809/run.log`. Singleton lock
+      confirmed clear before launch. Understat XG-tail (250 rows, 2026-05-05→2026-07-08) and XG_SHOTS/footystats
+      residuals left untouched — XG_SHOTS is explicitly gated on sibling plan
+      `understat_local_backfill_completion_2026_07_06.md` tasks -002/-004 (do not duplicate that diagnosis from this
+      plan), and footystats MATCHES/PREDICTIONS need an orchestrator code fix per slot-7's diagnosis, outside a VERIFY
+      task's scope pending operator review. **Gate still NOT MET** — no checkbox flip. **Post-VM step** (next slot to
+      pick this up): wait for `tm-backfill-20260708-205809` TERMINATED + consolidator merge (≤1 min), re-query
+      `(transfermarkt, PLAYER_VALUES) pending_fetch`; if 0 (or only the window-closed baseline), TM is fully resolved
+      and the remaining blockers are understat XG_SHOTS + footystats MATCHES/PREDICTIONS only.
 
 **Full-execution criterion**:
 
@@ -231,6 +253,63 @@ singleton-lock namespace → may run concurrently.
 - **Feeds**: P2c (features history). Runs concurrently with P2a.
 
 ## Progress Log
+
+### 2026-07-08 21:0x UTC — slot-14: item #7 re-dispatch — TM VM healthy (too early to close), footystats issue doc filed
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-015` (item #7 P1 verify flip), re-dispatched moments
+after slot-5's 20:58 UTC TM VM launch.
+
+**VM check**: `tm-backfill-20260708-205809` confirmed RUNNING via
+`/home/ubuntu/google-cloud-sdk/bin/gcloud compute instances list` (non-snap gcloud; snap gcloud still broken on this
+host). `run.log` tail shows healthy heartbeats + successful club fetches as of 21:03 UTC (VM started 21:00 UTC — ~3 min
+in, far too early to expect the 2025-12-10 → 2026-07-08 range to finish; not stalled, no action needed). Did not
+block-wait on it (async-wait discipline — polling a freshly-launched multi-hour VM is not productive use of this
+dispatch).
+
+**Gate cannot flip regardless of the TM outcome** — items #4 (understat) and #5 (footystats) are both still `- [ ]` with
+real residuals requiring code work, not a VM re-run. Item #5's own diagnosis (slot-7, 2026-07-08 20:10 UTC) recommended
+filing a dedicated follow-up issue before further footystats VM spend; checked and none existed. **Filed**
+`plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md` with 4 actionable todos (MATCHES 4-league
+fetch-bug root-cause, PREDICTIONS cup fixture-calendar fix, ODDS root-cause, re-verify-and-flip) so a future
+data_engineering dispatch with full session budget can execute the fix instead of re-diagnosing from the same snapshot a
+4th time.
+
+**Gate still NOT MET — no checkbox flip.** Next slot: check `tm-backfill-20260708-205809` for TERMINATED + consolidator
+merge (won't be soon — launched 21:00 UTC, 7-month range); if resolved, TM closes and only understat XG_SHOTS + the
+newly-filed footystats issue doc's 4 todos remain before item #5 (and then #7) can flip.
+
+### 2026-07-08 20:58 UTC — slot-5: item #7 re-dispatch — TM gap confirmed real, backfill VM launched
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-015` (item #7 P1 verify flip), re-dispatched moments
+after slot-7's exhaustive 20:12 UTC re-verify.
+
+**Freshness check first** (avoided duplicating slot-7's work): re-ran `read_availability_index` — all 6 sources'
+`pending_fetch` counts matched slot-7's snapshot exactly (TM=1,364, understat XG=250, XG_SHOTS=5,843, footystats
+MATCHES=5,641, PREDICTIONS=44,163, ODDS=1,264); confirmed 0 `tm-backfill-*`/`us-backfill-*`/`fs-backfill-*` VMs RUNNING
+via `gcloud compute instances list` (non-snap gcloud at `/home/ubuntu/google-cloud-sdk/bin` — the snap gcloud on this
+host is broken, `snap-confine` permission error, matching the earlier 2026-06-29 note).
+
+**New diagnosis on the TM residual**: drilled into the 1,364 TM eu rows by the correct `league_id` column (the `league`
+column in this manifest schema is always blank — a red herring on first pass). Confirmed 47 distinct TM-covered
+`league_id`s across 34 sparse dates (2025-12-10 standalone, then clusters 2026-05-01→05-04, 05-27→06-24, 07-07→07-08) —
+a genuine per-league fetch gap inside the range the prior TM VM (`tm-backfill-20260629-060317`, 2021-01-01→2026-06-29)
+nominally covered but didn't fully close, not a typing-fixable artifact. This confirms slot-7's "real gap, needs new
+backfill VM" call.
+
+**Action**: verified the default code tarball (`instruments-service-code.tar.gz`, built from @19693ca) is fresh — only 2
+non-sports commits behind current HEAD (@42eeefb: a docs commit + an unrelated DeFi dedupe fix) — so it already carries
+slot-7's enumerate-race fix (@1835e11) and today's typing-mask fixes. Launched `tm-backfill-20260708-205809` SPOT
+e2-standard-8 asia-northeast1-c, range 2025-12-10→2026-07-08. GCS log:
+`gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260708-205809/run.log`.
+
+**Left untouched** (outside this task's scope / already assigned elsewhere): understat XG_SHOTS (gated on sibling plan
+`understat_local_backfill_completion_2026_07_06.md` tasks -002/-004 — did not duplicate that diagnosis) and footystats
+MATCHES/PREDICTIONS (need an orchestrator code fix per slot-7's diagnosis; recommend operator review before further VM
+spend, as slot-7 already flagged).
+
+**Gate still NOT MET — no checkbox flip.** Full detail appended to item #7's bullet above. Next slot: after
+`tm-backfill-20260708-205809` TERMINATED + consolidator merge, re-verify TM `pending_fetch`; if resolved, only understat
+XG_SHOTS + footystats MATCHES/PREDICTIONS remain (both need code work, not a quick re-dispatch).
 
 ### 2026-07-08 20:12 UTC — slot-7: item #7 re-verify + typing-bug fix + true-residual characterization
 
