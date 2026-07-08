@@ -121,9 +121,12 @@ source: cost_observability_ui_2026_07_08.md
       merge. pytest: `test_aws_facts_sql_uses_net_cost_and_includes_tax_and_fee`.
 - [x] ✅ [BACKEND] P3. **Zone dimension** — deployment-api@537af3d. Add `location.zone` (GCP) /
       `line_item_availability_zone` (AWS) to `CostRecord` + a finer zone cut of the region dimension. pytest.
-- [ ] [BACKEND] P3. **Codex contract update.** Post-phase codex audit — update
-      `codex/05-infrastructure/billing-cost-observability.md` with the new SKU / usage / bucket-volume / waste fields +
-      the extended `/api/costs/breakdown` row contract.
+- [x] ✅ [BACKEND] P3. **Codex contract update** — unified-trading-pm (this commit). The earlier partial pass
+      (deployment-api@075bf2542, before tasks 2/4-9 shipped) left the doc's "in flight / still pending" note stale —
+      replaced with the full `BreakdownRow` field set (gross/credit, waste flags,
+      storage_gb/storage_class_gb/cost_per_gb, purchase_option, machine_type/vcpu/memory_gb), the AWS net+invoice
+      reconciliation note, the `zone` dimension, and the extended `CostRecord` tuple, in
+      `codex/05-infrastructure/billing-cost-observability.md`.
 - [ ] [BACKEND] P3. **Release the UI plan (draft-gate).** As the final backend task, flip
       `plans/active/cost_obs_ui_unified_breakdown_2026_07_08.md` `status: draft`→`active` (a `docs(plans):` commit) so
       the UI agent picks it up against the now-existing API contract.

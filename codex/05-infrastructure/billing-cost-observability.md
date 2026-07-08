@@ -141,13 +141,13 @@ The exports are consumed by the **cost-observability service** in `deployment-ap
   float.
 
 Both native schemas are normalized into one `CostRecord`
-(`cloud, day, service, resource_id, resource_kind, region, cost, credit, sku, usage_amount, usage_unit, is_provisional, is_placeholder`);
+(`cloud, day, service, resource_id, resource_kind, region, cost, credit, sku, usage_amount, usage_unit, zone, purchase_option, machine_type, vcpu, memory_gb, is_provisional, is_placeholder`);
 every view derives from a **daily-refresh-cached** window fetch (billing data is ~daily-lagged, so per-load re-queries
 buy nothing — and avoid Athena's no-free-tier cost). Per-cloud failure is isolated (one cloud down ≠ blank page). Source
 table/db/region/bucket are config (`GCP_BILLING_DATASET/RESOURCE_TABLE`, `AWS_CUR_DATABASE/TABLE/REGION`,
 `AWS_ATHENA_OUTPUT_BUCKET`), defaulting to the values above.
 
-`sku` / `usage_amount` / `usage_unit` (2026-07-08) come straight from each export — GCP `sku.description` +
+`sku` / `usage_amount` / `usage_unit` come straight from each export — GCP `sku.description` +
 `usage.amount_in_pricing_units` + `usage.pricing_unit`; AWS `line_item_usage_type` (as `sku`) +
 `SUM(line_item_usage_amount)` (AWS has no separate pricing-unit column, so `usage_unit` is `""` for AWS records). A
 `sku` breakdown dimension groups by `(cloud, service, sku)` — this surfaces the actual top cost driver inside a service
@@ -155,17 +155,40 @@ table/db/region/bucket are config (`GCP_BILLING_DATASET/RESOURCE_TABLE`, `AWS_CU
 
 **Endpoints** (`routes/costs.py`, mounted `/api`, auth + rate-limited):
 
-| Endpoint                    | Params                                                                              | Returns                                                                                                     |
-| --------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `GET /api/costs/summary`    | `days`, `refresh`                                                                   | **net** total (+ `gross`/`credit`) + per-cloud net/gross/credit/deltas/daily sparkline + `provisional_days` |
-| `GET /api/costs/breakdown`  | `dimension=service\|resource\|bucket\|region\|day\|sku`, `cloud`, `days`, `refresh` | grouped rows (label, cloud, cost, share)                                                                    |
-| `GET /api/costs/timeseries` | `days`, `cloud`, `refresh`                                                          | daily per-cloud series (stacked trend)                                                                      |
+| Endpoint                    | Params                                                                                    | Returns                                                                                                     |
+| --------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `GET /api/costs/summary`    | `days`, `refresh`                                                                         | **net** total (+ `gross`/`credit`) + per-cloud net/gross/credit/deltas/daily sparkline + `provisional_days` |
+| `GET /api/costs/breakdown`  | `dimension=service\|resource\|bucket\|region\|day\|sku\|zone`, `cloud`, `days`, `refresh` | grouped rows — full field set above                                                                         |
+| `GET /api/costs/timeseries` | `days`, `cloud`, `refresh`                                                                | daily per-cloud series (stacked trend)                                                                      |
 
-> **In flight** (`cost_obs_backend_sku_usage_enrichment_2026_07_08.md`): the SKU/usage foundation above is shipped;
-> still pending are gross/credit split per breakdown row, bucket storage volume + class split, idle static-IP /
-> orphaned-disk waste flags, spot-vs-on-demand purchase-option split, VM machine specs from `system_labels`, AWS
-> net/invoice reconciliation, and a zone dimension. This doc gets a second pass once those land — don't assume any field
-> beyond `sku`/`usage_amount`/`usage_unit` exists yet.
+`cost_obs_backend_sku_usage_enrichment_2026_07_08.md` is now fully shipped — every field below has landed; the sibling
+UI plan (`cost_obs_ui_unified_breakdown_2026_07_08.md`) builds the breakdown-table UI against this contract.
+
+**`BreakdownRow` — full field set** (`services/cost_observability/models.py`): every row carries `label`, `cloud`,
+`cost` (**net** — primary, matches the summary net total), `gross` (Σcost before credits), `credit` (Σcredit, ≤ 0;
+`cost == gross + credit`), `detail`, `resource_kind`, `share_pct`, `is_provisional`. Plus, populated where the axis
+applies (`None`/`""`/`0` when it doesn't):
+
+- `is_idle` + `waste_kind` (`""` | `idle_static_ip` | `orphaned_disk` | `idle_elastic_ip`) — cost-waste flags, resource
+  dimension only, from `services/cost_observability/waste.py`. GCP `Static Ip Charge` SKU = idle (distinct SKU from
+  in-use `External IP Charge on a Standard VM`, so no cross-ref needed); GCP `… PD Capacity` disk SKUs are
+  cross-referenced against the live running-VM fleet (`vm_utils.list_running_vm_names`) — a disk with no matching
+  running VM is `orphaned_disk`. AWS `…ElasticIP:IdleAddress` usage-type = `idle_elastic_ip`. AWS orphaned-EBS is
+  **not** flagged (no AWS instance/volume-attachment API integration to cross-ref against — dropped, not fabricated).
+- `storage_gb` / `storage_class_gb` (`{"Standard"|"Nearline"|"Coldline"|"Archive": gb}`) / `cost_per_gb` — `bucket`
+  dimension rows only, derived from the storage-volume SKUs' `usage_amount` (GiB/GB-month → average GB over the window).
+  **GB only, never raw bytes**; no object count or soft-delete split (not billable, absent from the export).
+- `purchase_option` (`spot` | `on-demand` | `other`) — derived from the GCP SKU text (`Spot Preemptible …`) / AWS
+  purchase-option marker, not a billed-export column; `other` covers non-compute SKUs where the axis doesn't apply.
+- `machine_type` / `vcpu` / `memory_gb` — VM rows only, parsed from the GCP billing `system_labels`
+  (`compute.googleapis.com/machine_spec` / `cores` / `memory`, the latter MiB → GB) via `ANY_VALUE(...)` in
+  `gcp_facts_sql` — **no Compute API call**. AWS has no machine-spec system_labels equivalent — left unset.
+
+**AWS net + invoice reconciliation**: `aws_facts_sql` sums `line_item_net_unblended_cost` (net of RI/SP discounts, not
+list-price `line_item_unblended_cost`) and the line-item-type filter is now `('Usage', 'DiscountedUsage', 'Tax', 'Fee')`
+(was `Usage`/`DiscountedUsage`-only) so the AWS total tracks the invoice including tax/fee lines.
+
+A `zone` breakdown dimension slices by GCP `location.zone` / AWS `line_item_availability_zone` — finer than `region`.
 
 - **UI**: `deployment-ui/src/pages/CostObservability.tsx` at route **`/ops/costs`** (Cockpit tile "Billing
   (GitHub+GCP+AWS)") — KPI band → trend + donut → dimension breakdown → per-VM/per-bucket leaf tables → GitHub
