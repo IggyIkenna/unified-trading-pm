@@ -72,8 +72,12 @@ source: cost_observability_ui_2026_07_08.md
       green. pw:L2 ✓ | regression: tests/smoke/cost-observability.spec.ts ("breakdown table shows gross/credit columns
       only where a credit applies" — asserts the columns render + a dash + a credited row by default, then disappear
       entirely under an AWS-only filter).
-- [ ] [UI] P2. **SKU dimension in the control.** Add `sku` to the breakdown `Segmented` + its note ("Google/AWS SKU").
-      Update `mock-api.ts` with SKU fixtures. vitest.
+- [x] ✅ [UI] P2. **SKU dimension in the control** — deployment-ui@`0d33ef0`. Added `"sku"` to `CostDimension` + the
+      breakdown `Segmented` control ("By SKU", note "Google/AWS SKU"), backed by the already-shipped backend `_by_sku`
+      grouping. `mock-api.ts` gets SKU fixtures mirroring the audit's #1 finding (Regional Coldline Class A Operations,
+      the top cost driver hidden inside the Cloud Storage service rollup). Rebased onto the concurrently-landed
+      bucket-columns commit (`034c89a`) touching the same files; both features kept. tsc/ESLint/ vitest (915 passed) all
+      green; existing pw:L2 8/8 unaffected (no regression spec required for this task per the plan).
 - [x] ✅ [UI] P2. **Bucket columns** (dimension = bucket): total GB, storage-class split,
       $/GB. Format GB (not bytes) —
       deployment-ui@`034c89a`. Added `storage_gb` / `storage_class_gb` / `cost_per_gb` to `CostBreakdownRow` (mirrors
