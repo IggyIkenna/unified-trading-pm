@@ -40,6 +40,7 @@ related:
     mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
     defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    instrument_id_format_canonicalization_2026_07_08.md,
     ../../codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-08
@@ -208,11 +209,10 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
 - [ ] [DECISION] P2. **Once the pilot trace (AAVE_V3) lands, decide the reconciliation cadence for the remaining 58
       findings** — full trace per finding (expensive, thorough) vs a lighter spot-check pattern informed by what the
       AAVE_V3 pilot reveals about where 3-layer drift actually tends to occur.
-- [ ] [DECISION] P2. **Scope whether/when to pursue real `instrument_id` canonicalization** — per the
-      `canonical_id_builder.py` finding above, real instrument_id shape varies by adapter (and sometimes by
-      instrument_type within one adapter) with no enforced shared builder. Not urgent, but every future migration
-      (A_TOKEN/DEBT_TOKEN canonicalization, DEX-pool key redesign, PERP-vs-PERPETUAL cleanup) will re-encounter this
-      same gap piecemeal unless it's addressed once, centrally.
+- [x] [DECISION] P2. **Scope whether/when to pursue real `instrument_id` canonicalization** — **DECIDED 2026-07-08**:
+      operator chose to canonicalize, full scope, rather than leave unscoped. Moved to its own doc —
+      [[instrument_id_format_canonicalization_2026_07_08]] — since it grew into a 6-finding enumeration with real target
+      formats, not a one-line scoping question anymore.
 
 ## Progress Log
 
