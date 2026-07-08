@@ -216,3 +216,10 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
   removed. **deployment-ui@`8a56b6b`** — tsc + ESLint + vitest 4/4 + Playwright L2 4/4 + full UI QG green; re-verified
   on `:5183` in **both themes** (0 console errors; real total `$15,367.85`). Mockup HTML kept untracked — delete once
   the page fully supersedes it.
+- 2026-07-08 — **Segmented-control boundaries (operator feedback).** "7d/30d/90d buttons are not separated properly … no
+  clear boundaries." The shared `Segmented` (range / cloud-filter / breakdown-dimension) now renders a bordered
+  container with **`border-emphasis` dividers between every cell** + a filled active cell, so options read as distinct
+  buttons, not one run-together word. Verified both themes. **deployment-ui@`b0eacaf`** — full UI QG green. Audit of the
+  rest of deployment-ui: RepoCi "sort:" + Deployments status-chips/umbrella-tabs already give each button its own
+  `rounded border` (fine); the app-wide **`ui/tabs.tsx` pill variant** (cockpit / landing / service-details / capability
+  / deployment-details) shares the defect — extending the same bordered-cell + divider treatment there next.
