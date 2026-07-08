@@ -78,11 +78,17 @@ source: cost_observability_ui_2026_07_08.md
       `usage_amount` (`gibibyte month` → average GB over the window) grouped by `resource.name`. New optional
       `BreakdownRow` fields. **Show GB, not raw bytes.** No object count, no soft-delete split (not billable — absent
       from the export). pytest with a storage-SKU fixture.
-- [ ] [BACKEND] P2. **Idle static-IP + orphaned-disk cost-waste.** Per resource: the `Static Ip Charge` SKU is a
-      reserved IP billed while **unattached** (distinct from `External IP Charge on a Standard VM` = in-use) — surface
-      it with an `idle` flag; `… PD Capacity` SKUs keyed by disk `resource.name` — flag disks with no matching running
-      VM (cross-ref the fleet inventory in `routes/_fleet_inventory.py`). AWS analog — idle Elastic-IP + unattached-EBS
-      usage-types. pytest (evidence: `harsh-static-ip`, `ikenna-windows-tokyo-restored` in the parent plan).
+- [x] ✅ [BACKEND] P2. **Idle static-IP + orphaned-disk cost-waste** — deployment-api@8d8802f. New
+      `services/cost_observability/waste.py`: `Static Ip Charge` SKU (GCP) and `...ElasticIP:IdleAddress` usage-type
+      (AWS) are self-contained idle flags (no cross-ref needed — those SKUs only bill while unattached);
+      `... PD     Capacity` SKUs (GCP disks) cross-ref the currently-RUNNING VM fleet via
+      `vm_utils.list_running_vm_names` (degrades to "not flagged" — never a false-positive orphan — when the fleet
+      lookup is unavailable). Wired into `_by_resource` as new `BreakdownRow.is_idle` / `waste_kind` fields,
+      resource-dimension only. AWS unattached-EBS dropped (not billable-native — no distinct idle usage-type in the CUR,
+      and no AWS volume-attachment API integration exists in this codebase to cross-ref against; same "if not in the
+      export, don't fabricate it elsewhere" contract as the bucket-volume task's dropped soft-delete split). pytest: 11
+      new tests covering the classifiers + service-level flagging (evidence resources: `harsh-static-ip`,
+      `ikenna-windows-tokyo-restored`). Full backend QG green.
 - [ ] [BACKEND] P2. **Spot vs on-demand split.** Derive a `purchase_option` (spot | on-demand | other) from the GCP SKU
       (`Spot Preemptible …`) / AWS purchase option; expose on resource/service rows (validates the SPOT-VMs HARD RULE +
       quantifies savings). pytest.
