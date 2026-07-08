@@ -1,0 +1,100 @@
+---
+doc_type: plan
+title: Cost Observability — SKU/usage data foundation + breakdown enrichment (backend)
+summary:
+  Backend half of the cost-breakdown enrichment — pull the SKU and usage fields the query currently drops (all BigQuery
+  and Athena-native, verified via a live bq probe) and derive the operator-requested detail on top. Adds gross/credit
+  bifurcation per breakdown row, an SKU dimension, bucket storage volume plus class split, idle static-IP and
+  orphaned-disk cost-waste, spot-vs-on-demand, VM machine specs from system_labels, and AWS invoice reconciliation.
+  Feeds the UI half (cost_obs_ui_unified_breakdown_2026_07_08), which stays draft until this plan's last task releases
+  it.
+status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api]
+scope: [engineer]
+tags: [billing, cost, observability, bigquery, athena, sku, breakdown, deployment-api]
+related: [cost_observability_ui_2026_07_08.md, billing-cost-observability.md]
+created: "2026-07-08"
+last_updated: "2026-07-08"
+parent_epic: deployment_and_user_management_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: design
+estimate_baseline_ai_days: 4
+estimate_calibrated_ai_days: 2.4
+assigned_role: backend-engineer
+drift_direction: advance-code
+depends_on: []
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+source: cost_observability_ui_2026_07_08.md
+---
+
+# Cost Observability — SKU/usage data foundation + breakdown enrichment (backend)
+
+> **AO-DISPATCHED backend plan.** The backend half of the operator-requested cost-breakdown enrichment. Full design
+> context, the live `bq` evidence, and the data-fidelity audit that motivated all of this live in the LOCAL parent plan
+> **`cost_observability_ui_2026_07_08.md`** (read its "Resource-detail enrichment + unified breakdown" and
+> "Data-fidelity audit findings" sections first). The UI half is **`cost_obs_ui_unified_breakdown_2026_07_08.md`** — it
+> stays `draft` until this plan's LAST task flips it `active`, so the UI agent never builds against fields that don't
+> exist yet.
+>
+> **Core principle (operator-decided, probe-verified):** every field here is **BigQuery/Athena-native** — pull
+> `sku.description` + `usage.amount_in_pricing_units` (GCP) / `line_item_usage_type` + `usage_amount` (AWS CUR), the
+> SKU + usage fields the current query drops, and derive everything from them keyed by `resource.name`. **NO Cloud
+> Monitoring / CloudWatch** (extra API cost + an IAM grant we don't have). Anything not in the export is dropped, not
+> sourced elsewhere.
+
+## Codex SSOTs (read before touching)
+
+- `codex/05-infrastructure/billing-cost-observability.md` — the two exports + the net/gross/credit contract; **update it
+  in task 10** with the new SKU/usage/waste/volume fields.
+- `codex/06-coding-standards/` — no raw `boto3` / `google.cloud` (UTL wrappers), no `os.getenv`, UTC datetimes; run
+  `bash scripts/quality-gates.sh` before every commit; ship via quickmerge.
+
+## Tasks
+
+- [ ] [BACKEND] P0. **SKU + usage foundation** (unlocks tasks 3-8). In `services/cost_observability/queries.py`
+      `gcp_facts_sql`, add `sku.description AS sku`, `usage.amount_in_pricing_units AS usage_amount`,
+      `usage.pricing_unit AS usage_unit` (extend the GROUP BY); in `aws_facts_sql` add
+      `line_item_usage_type AS     usage_type` + `SUM(line_item_usage_amount) AS usage_amount`. Add `sku` /
+      `usage_amount` / `usage_unit` to `CostRecord` + the GCP/AWS adapters in `providers.py`. pytest for the new
+      columns.
+- [ ] [BACKEND] P1. **Bifurcate gross/credit/net per breakdown row.** Add `gross` + `credit` to `BreakdownRow`
+      (currently net-only); populate net (primary), gross = Σcost, credit = Σcredit in `_grouped` / `_by_resource` /
+      `_by_day`. pytest asserting the per-row split and that it reconciles to the summary net/gross/credit.
+- [ ] [BACKEND] P2. **SKU breakdown dimension.** Add `sku` to the route `Dimension` literal + a `_by_sku` grouping (by
+      `(cloud, service, sku)`), wired into `breakdown()`. This surfaces the hidden #1 cost driver (Coldline Class A
+      Operations). pytest.
+- [ ] [BACKEND] P2. **Bucket storage volume + class split.** For `dimension=bucket` rows, attach total **GB** + a
+      per-storage-class split (Standard / Nearline / Coldline / Archive) + derived **$/GB**, from the storage SKUs'
+      `usage_amount` (`gibibyte month` → average GB over the window) grouped by `resource.name`. New optional
+      `BreakdownRow` fields. **Show GB, not raw bytes.** No object count, no soft-delete split (not billable — absent
+      from the export). pytest with a storage-SKU fixture.
+- [ ] [BACKEND] P2. **Idle static-IP + orphaned-disk cost-waste.** Per resource: the `Static Ip Charge` SKU is a
+      reserved IP billed while **unattached** (distinct from `External IP Charge on a Standard VM` = in-use) — surface
+      it with an `idle` flag; `… PD Capacity` SKUs keyed by disk `resource.name` — flag disks with no matching running
+      VM (cross-ref the fleet inventory in `routes/_fleet_inventory.py`). AWS analog — idle Elastic-IP + unattached-EBS
+      usage-types. pytest (evidence: `harsh-static-ip`, `ikenna-windows-tokyo-restored` in the parent plan).
+- [ ] [BACKEND] P2. **Spot vs on-demand split.** Derive a `purchase_option` (spot | on-demand | other) from the GCP SKU
+      (`Spot Preemptible …`) / AWS purchase option; expose on resource/service rows (validates the SPOT-VMs HARD RULE +
+      quantifies savings). pytest.
+- [ ] [BACKEND] P2. **VM machine specs.** Parse machine type + vCPU + RAM from the billing `system_labels`
+      (`compute.googleapis.com/machine_spec` / `cores` / `memory`) — no Compute API; expose on vm resource rows (e.g.
+      `e2-highmem-16` → 16 vCPU / 128 GB). pytest.
+- [ ] [BACKEND] P2. **AWS net + invoice reconciliation.** Use `line_item_net_unblended_cost` (net of discounts) and add
+      a tax/fee line (relax the `Usage`/`DiscountedUsage`-only filter or a second query) so the AWS total reconciles to
+      the invoice; label the current figure "usage spend" until then. pytest.
+- [ ] [BACKEND] P3. **Zone dimension.** Add `location.zone` (GCP) / `line_item_availability_zone` (AWS) to
+      `CostRecord` + a finer zone cut of the region dimension. pytest.
+- [ ] [BACKEND] P3. **Codex contract update.** Post-phase codex audit — update
+      `codex/05-infrastructure/billing-cost-observability.md` with the new SKU / usage / bucket-volume / waste fields +
+      the extended `/api/costs/breakdown` row contract.
+- [ ] [BACKEND] P3. **Release the UI plan (draft-gate).** As the final backend task, flip
+      `plans/active/cost_obs_ui_unified_breakdown_2026_07_08.md` `status: draft`→`active` (a `docs(plans):` commit) so
+      the UI agent picks it up against the now-existing API contract.
