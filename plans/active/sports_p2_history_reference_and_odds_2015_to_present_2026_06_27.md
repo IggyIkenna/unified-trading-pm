@@ -254,6 +254,38 @@ singleton-lock namespace → may run concurrently.
 
 ## Progress Log
 
+### 2026-07-08 23:0x UTC — slot-11: re-verify items #1 (weather) and #2 (SFI) gate state against the source-blindness bug
+
+**Task**: `manifest_record_expected_empty_blank_source-005`, closing the issue doc's
+(`plans/active/issues/manifest_record_expected_empty_blank_source_2026_07_08.md`) re-verification todo raised by
+slot-5's understat blank-source discovery below (2026-07-08 22:1x UTC).
+
+**Method**: single read of the consolidated sports `availability_index` (`read_availability_index`, shard-merged,
+single-walk-safe — no whole-corpus GCS list), filtered by `data_type` only (many calendar-pre-skip
+`record_expected_empty()` row_keys omit `venue` entirely — a venue-filtered query would itself be blind to them, the
+same class of bug this issue is about). Compared UNFILTERED `capture_status` counts against `source==<X>`-filtered
+counts for `(data_type=WEATHER)` and `(data_type=SFI_PROGRESSIVE_STATS)`.
+
+**Weather (item #1)**: 0 blank-source rows out of 263,103 total — every row carries `source='open_meteo'`. Confirms the
+issue doc's code-level finding (weather.py's `row_key` already embedded `source` pre-fix, `_record_status` resolves
+row_key-wins) holds at the data level: weather's calendar-pre-skip writes were NEVER actually blank-sourced.
+`pending_fetch` (`expected_unattempted`) UNFILTERED=264, filtered(`source=='open_meteo'`)=264 — identical.
+
+**SFI (item #2)**: 31 blank-source rows out of 227,722 total (confirms sfi.py's calendar-pre-skip path — still unfixed,
+per the issue doc's open P0 todo — IS actively producing blank-sourced writes, as expected). All 31 are
+`capture_status='empty_confirmed'` (single batch, `attempted_at=2026-07-07T13:49:57Z`), NONE `expected_unattempted`.
+`pending_fetch` UNFILTERED=264, filtered(`source=='soccer_football_info'`)=264 — identical.
+
+**Conclusion — both ✅ flips hold w.r.t. the source-blindness bug**: neither item's `pending_fetch==0`-at-flip-time
+claim (2026-06-27) was corrupted by this bug, because the bug has not (yet, for SFI) produced any blank-sourced
+`expected_unattempted` rows — only blank-sourced `empty_confirmed` rows for SFI, which don't feed the pending_fetch gate
+count. **Separately** (not a new finding — already documented in this plan's VERIFY item below, 2026-07-08 20:10/20:58
+UTC, slot-7/slot-5): the CURRENT unfiltered `pending_fetch=264` for BOTH weather and SFI is real and non-zero (drifted
+from the 2026-06-27 flip-time 0), attributed there to a "daily-pipeline-lag" hypothesis, still unverified —
+re-diagnosing that drift is out of scope for this re-verification todo (it is orthogonal to the source-blindness
+question this task was dispatched to close). No checkbox change to items #1/#2 themselves — they remain ✅, now with an
+independent confirmatory pass on record. Issue doc todo flipped ✅ with full counts.
+
 ### 2026-07-08 22:1x UTC — slot-5: item #4 — SECOND, deeper root cause found (source-blindness) + fixed + re-verifying
 
 **Task**: `sports_p2_history_reference_and_odds_2015_to_present-016` (item #4), resumed from slot-3's 21:3x UTC closer

@@ -58,9 +58,9 @@ filter:
 - Every one of those 7,553 rows carries `source=''` (blank) instead of `source='understat'` — invisible to any
   `source=='understat'` filtered read, including the exact tooling this plan's last 3 sessions used to conclude "no
   change."
-- The 250 XG + 5,843 XG_SHOTS original blank-_reason_ rows (`source='understat'`, unresolved) are UNTOUCHED — confirming
-  the new typed rows did not even dedup-collide with them (a second, currently-unconfirmed anomaly — see "Open question"
-  below).
+- The 250 XG + 5,843 XG*SHOTS original blank-\_reason* rows (`source='understat'`, unresolved) are UNTOUCHED —
+  confirming the new typed rows did not even dedup-collide with them (a second, currently-unconfirmed anomaly — see
+  "Open question" below).
 
 **Root cause, confirmed by reading the code**: `ManifestWriter.record_expected_empty()`
 (`unified-trading-library/unified_trading_library/manifest_writer/_writer_record.py`) is a thin wrapper over
@@ -149,9 +149,26 @@ investigation target.
 - [ ] [DATA] P1. Audit `process_write.py` (3 callsites) / `process_completeness.py` (1) / `process_zero_records.py` (1)
       for the correct `source=` value per callsite (these are cross-asset-group, not sports-specific — needs a wider
       audit than this doc's sports scope covers) (repo: instruments-service).
-- [ ] [DATA] P1. Re-verify item #1 (weather) and item #2 (SFI) gate state in
+- [x] ✅ [DATA] P1. Re-verify item #1 (weather) and item #2 (SFI) gate state in
       `sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md` using an UNFILTERED-by-source query (or
-      post-fix filtered query) to confirm their ✅ flips still hold (repo: unified-trading-pm, plan file).
+      post-fix filtered query) to confirm their ✅ flips still hold (repo: unified-trading-pm, plan file). — Read the
+      consolidated sports `availability_index` once (`read_availability_index`, shard-merged, single-walk-safe) and
+      compared UNFILTERED vs `source==<X>`-filtered `capture_status` counts for both `(data_type=WEATHER)` and
+      `(data_type=SFI_PROGRESSIVE_STATS)` (filtered by `data_type` only, not `venue` — many calendar-pre-skip row_keys
+      omit `venue` entirely, so a venue-filtered query would itself be blind). **Weather: 0 blank-source rows out of
+      263,103** (100% carry `source='open_meteo'`) — confirms the code-level finding (row_key already embedded `source`
+      pre-fix) holds at the data level too; `pending_fetch` (`expected_unattempted`) UNFILTERED=264 == filtered=264,
+      identical. **SFI: 31 blank-source rows out of 227,722** (confirms sfi.py's still-unfixed calendar-pre-skip path IS
+      actively producing blank-sourced writes, as expected — the sfi.py fix todo above remains unchecked) — but all 31
+      are `capture_status='empty_confirmed'` (a single batch, `attempted_at` 2026-07-07T13:49:57Z), none
+      `expected_unattempted`; `pending_fetch` UNFILTERED=264 == filtered (`source=='soccer_football_info'`)=264,
+      identical. **Conclusion: both items' ✅ flips hold w.r.t. THIS bug** — the source-blindness bug has not (yet, for
+      SFI) produced any blank-sourced `expected_unattempted` rows that a filtered query would miss, so neither item's
+      `pending_fetch==0`-at-flip-time claim (2026-06-27) was corrupted by it. Note: the CURRENT (2026-07-08) unfiltered
+      `pending_fetch=264` for BOTH weather and SFI is NOT a new finding — it's the same already-documented
+      drift-since-flip in the sibling plan's VERIFY item (daily-pipeline-lag hypothesis, "unverified this session,"
+      2026-07-08 slot-7/slot-5) and is out of scope for this todo to re-diagnose. Full counts + Progress Log entry added
+      to `plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md`.
 - [ ] [DATA] P1. Root-cause the dedup non-collision question above — if the v2 closer re-run (this session) shows the
       old blank-reason rows STILL coexisting alongside new correctly-sourced rows, escalate as its own P0 issue
       targeting `unified_trading_library/manifest_consolidator.py`'s DuckDB incremental anti-join (repo:
