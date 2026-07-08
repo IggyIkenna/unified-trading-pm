@@ -800,6 +800,34 @@ dispatches until conditions flip). No B/C alternatives because prior operator an
 
 Checkbox NOT flipped. Slot 11 releases task; no VM launched.
 
+### 2026-07-08 — slot 7 (22nd dispatch — fast re-verify, no material change, no new BLK)
+
+**Todo 1/Todo 3 — same structural blocker, re-verified in <5 min (not a repeat multi-hour deep-dive)**
+
+Fresh state check (GCS, `central-element-323112`):
+
+- `gs://features-sports-prd-central-element-323112/sports_features/by_date/`: 6,734 objects but only **92 unique dates**
+  (2025-09-01→2025-11-30 P1 golden window + one stray 2026-01-15 — matches slot-3's 20th-dispatch finding of the
+  `--dry-run` GCS-write-leak polluting production; NOT new compute progress). `_index/availability_index.parquet`
+  updated 2026-07-08T22:03:42Z (recent write activity, but date-range unchanged — consistent with ongoing P1-window
+  read/verify traffic, not a Todo-1 full-history run). Todo 1 (2015→present compute) still NOT run.
+- P2a: unchanged, 8/9 (Todo 9 tracker-only per operator ruling — MUST NOT gate agent tasks on its EU→0, weeks away).
+- P2b: unchanged, 4/7. One directly-relevant update from THIS session's own concurrent work on the sibling
+  `understat_local_backfill_completion_2026_07_06.md` plan (same slot-7, earlier today): re-verified the live manifest
+  and confirmed big-5 XG+XG_SHOTS `pending_fetch == 0` (the LITERAL gate P2b Todo 4 states) — the todo stays unflipped
+  only because of the separate, still-open "is a blank-`error_reason` non-matchday `expected_unattempted` row a real gap
+  or a legitimate terminal state" architecture question (tracked in
+  `plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md`), not because `pending_fetch` is
+  nonzero. Doesn't change this task's overall block (P2a's independent tracker-only status + P2b footystats M+P
+  never-launched + P2b Todo 7 verify still keep the gate unmet either way).
+
+**Not filing BLK #7**: the structural fix (backlog `prereqs.conditions` gating this task + `-007` on P2a/P2b) has been
+requested 6 times (BLK-fbaabf35/-8c392089/-35c77a6c/-2ff03344/-d734c268 + slot-11's 19th dispatch) with no operator
+action on the gates themselves; a duplicate ask adds no new information, matching slot-12's same-day precedent below.
+The concrete unblock actions (launch Understat + footystats M+P SPOT VMs, resolve the blank-reason architecture
+question) belong to P2b's own todos and an operator/architecture call, not this task. Checkbox NOT flipped;
+`/skip-current-task` taken so this slot moves to other available work.
+
 ### 2026-07-08 — slot 12 (21st dispatch — re-verify only, no new BLK)
 
 **Todo 3 (features manifest clean) — BLOCKED-PREREQ, unchanged from slot-3's 20th dispatch earlier today**
