@@ -223,3 +223,9 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
   rest of deployment-ui: RepoCi "sort:" + Deployments status-chips/umbrella-tabs already give each button its own
   `rounded border` (fine); the app-wide **`ui/tabs.tsx` pill variant** (cockpit / landing / service-details / capability
   / deployment-details) shares the defect — extending the same bordered-cell + divider treatment there next.
+- 2026-07-08 — **App-wide pill-tab boundaries (same feedback, shared component).** `ui/tabs.tsx` pill variant now
+  renders a bordered frame + `border-emphasis` divider between every trigger (`[&>*]:rounded-none` squares the shared
+  `TabsTrigger` inside the frame; the active cell fills edge-to-edge). One change fixes every pill tab bar — cockpit
+  (grid-cols-12), service views, landing, capability, deployment-details. `underline` variant untouched.
+  **deployment-ui@`6377437`** — tsc + ESLint + **full vitest 910/910** + full UI QG (incl. build) green; screenshotted
+  the cockpit + a service tab bar in dark (0 page errors, clean dividers, active cell filled, no layout breakage).
