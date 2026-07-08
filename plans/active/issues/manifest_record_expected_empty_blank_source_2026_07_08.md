@@ -110,17 +110,21 @@ none of which set `row_key["source"]` either (there'd be nowhere for it to go pr
 - Re-ran the residual closer (`understat-eu-residual-closer-20260708-v2`) with the fix live to confirm resolution before
   flipping item #4's checkbox — see the plan's Progress Log for the outcome.
 
-## Open question — dedup non-collision (unconfirmed, needs its own investigation)
+## Open question — dedup non-collision — RESOLVED 2026-07-08 (slot-13): confirmed (b), escalated
 
-The 7,553 blank-source rows and the 250+5,843 `source='understat'` blank-reason rows share the SAME
-`(date, venue, data_type, service_name, league_id)` — the full dedup key per both
-`unified_trading_library/manifest_consolidator.py::_resolve_dedup_cols` and the reader's `_merge_shard_frames` (`source`
-is NOT part of either's dedup key). They should have collapsed to one row (newest `attempted_at` wins) — instead both
-coexist in the canonical parquet. This is either (a) resolved by the source fix alone once the writer stops producing a
-NEW distinct-looking row, or (b) a second, independent dedup bug in the DuckDB incremental anti-join merge. The re-run
-in this session's Progress Log entry should disambiguate — if the v2 closer's rows correctly supersede the old
-blank-reason rows, (a); if both still coexist, file (b) as its own P0 issue with the DuckDB merge SQL as the
-investigation target.
+Root-caused. Confirmed via a direct read of the persisted canonical `_index/availability_index.parquet` (bypassing the
+reader's self-shard overlay entirely — a plain `pandas.read_parquet` against the GCS blob, so this reflects exactly what
+the DuckDB consolidator itself wrote) that the OLD blank-reason `source='understat'` rows and the NEW correctly-typed
+rows written by today's `understat-eu-residual-closer-20260708-v2` run DO coexist for byte-identical dedup keys — **9/15
+sampled (date, data_type, league_id) cells have both rows present**, the newer one ~10 days more recent by
+`attempted_at`/`written_at`. This is scenario **(b)**: a real, independent bug in the manifest consolidator's CAS-retry
+path (NOT the DuckDB anti-join SQL itself, which is logically correct on inspection) — see the escalated issue doc for
+the full root cause (a lost-update race in `_write_consolidated()`'s `PreconditionFailed` retry loop, which re-uploads a
+stale already-computed merge instead of recomputing against the fresh canonical).
+
+**Filed**: `plans/active/issues/manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md` (P0, repo
+unified-trading-library) with 4 actionable todos (fix the race, correct the misleading module docstring, re-verify this
+doc's understat cells post-fix, audit other high-concurrency buckets for the same symptom).
 
 ## Recommended decision
 
@@ -134,8 +138,16 @@ investigation target.
       record_captured/record_empty callsites), not a correctness fix for these 2 sites specifically. Re-verification of
       item #1's gate is therefore not expected to change its result, but still worth a confirmatory pass per the
       recommended decision.
-- [ ] [DATA] P0. Add `source=` at the 3 `sfi.py` `record_expected_empty()` callsites (repo: instruments-service) — same
-      pattern; re-verify SFI's item #2 gate afterward (already flipped ✅).
+- [x] ✅ [DATA] P0. Add `source=` at the 3 `sfi.py` `record_expected_empty()` callsites (repo: instruments-service) —
+      same pattern; re-verify SFI's item #2 gate afterward (already flipped ✅). — instruments-service@d6fff68. Added
+      `source=_orch._sports_ref_source("progressive_stats")` as a top-level kwarg to all 3 callsites (lines 284, 291,
+      315 — the coverage-start/known-gap guard and the season-window guard), matching this file's own `record_captured`
+      callsite (L456) and the already-fixed understat.py/weather.py/footystats.py pattern; these had NO source in
+      `row_key` pre-fix — genuinely blank-sourced writes, same correctness-fix class as footystats.py. Gate
+      re-verification: already covered by the P1 unfiltered-vs-filtered re-verify item below — it found SFI's 31
+      blank-source rows (pre-this-fix) were all `capture_status='empty_confirmed'`, none `expected_unattempted`, so item
+      #2's `pending_fetch==0`-at-flip-time claim was not corrupted by this bug even before this fix landed; this fix
+      closes the ongoing blank-source production going forward.
 - [x] ✅ [DATA] P0. Add `source=` at the 4 `footystats.py` `record_expected_empty()` callsites (repo:
       instruments-service) — this may also close some fraction of item #5's PREDICTIONS/MATCHES residual (the
       cup-fixture-calendar gap slot-7 diagnosed 2026-07-08 20:10 UTC as a separate CODE gap — re-verify AFTER this fix
@@ -146,9 +158,39 @@ investigation target.
       `source=_orch._sports_ref_source("footystats_predictions"|"footystats_matches")` as a top-level kwarg, matching
       this file's own `record_captured`/`record_empty` callsites. Re-verification of item #5's PREDICTIONS/MATCHES
       residual still needed per the recommended decision — not done in this session.
-- [ ] [DATA] P1. Audit `process_write.py` (3 callsites) / `process_completeness.py` (1) / `process_zero_records.py` (1)
-      for the correct `source=` value per callsite (these are cross-asset-group, not sports-specific — needs a wider
-      audit than this doc's sports scope covers) (repo: instruments-service).
+- [x] ✅ [DATA] P1. Audit `process_write.py` (3 callsites) / `process_completeness.py` (1) / `process_zero_records.py`
+      (1) for the correct `source=` value per callsite (these are cross-asset-group, not sports-specific — needs a wider
+      audit than this doc's sports scope covers) (repo: instruments-service). — instruments-service@e493e6d. All 5
+      callsites (`_write_tradfi_non_trading_day_entries` L441, `_pre_stamp_non_trading_tradfi` L487,
+      `_seed_expected_unattempted_for_target_universe` pre-launch branch L786 in `process_write.py`;
+      `_finalize_completeness` L486 in `process_completeness.py`; `_zero_records_non_sports` L528 in
+      `process_zero_records.py`) uniformly pass `pipeline_mode=BATCH_INSTRUMENTS_SERVICE` with row_keys carrying no
+      `source` — genuinely blank-sourced (same correctness-fix class as footystats.py, not weather.py's convention-only
+      case). Added `source=source_string_for(PipelineMode.BATCH_INSTRUMENTS_SERVICE)` == `"instruments_service"` at
+      each, matching the C-#6 pipeline_mode⇔source contract already enforced for `record_captured` in this same file
+      (`writers.py` / `_write_prediction_venue`). Root-cause note: see the new P0 finding below — a systemic
+      library-level gap, not a per-callsite pattern, so this audit's scope (the 5 named callsites) is now closed but the
+      class of bug is NOT fully closed until that finding resolves.
+- [ ] [DATA] P0. **Root-cause found during the audit above**: `ManifestWriter._record_status()`
+      (`unified_trading_library/manifest_writer/_writer_record.py`, backs `record_empty`/`record_expected_empty`/
+      `record_failed`/`record_expected_unattempted`) never calls `_stamp_producer_source()` — the helper
+      `record_captured()` DOES call (`_writer_captured.py:263`, `:643`) that stamps a blank-resolved source with
+      `source_string_for(pipeline_mode)` for any BATCH producer row. Because `_record_status` is missing this call,
+      EVERY current and future `record_empty`/`record_expected_empty`/`record_failed`/`record_expected_unattempted`
+      callsite across the ENTIRE codebase (not just sports or instruments-service) that passes a BATCH `pipeline_mode`
+      without an explicit `source=` kwarg silently lands blank-sourced — the identical bug class this whole issue doc is
+      about, just at its root instead of at each callsite. Fixing callsites one at a time (as this doc has done for
+      understat/weather/footystats/process_write/process_completeness/process_zero_records) will never fully close this
+      class — any NEW callsite added anywhere in the codebase reintroduces it by default. Fix: add
+      `resolved_source = self._stamp_producer_source(resolved_source, resolved_pipeline_mode)` in `_record_status`
+      (mirroring `_writer_captured.py`'s pattern), placed after the existing `explicit_source`/`default_source`
+      resolution block and before `_assert_source_matches_pipeline_mode` (so the C-#6 cross-check's `explicit_source`
+      semantics — "only an EXPLICITLY-provided source is policed" — are preserved; the stamp only fires when
+      `resolved_source` is still blank). Needs its own test-impact review: this changes runtime behaviour for every
+      non-captured row currently landing blank-sourced under a BATCH pipeline_mode with no `asset_group` kwarg — a
+      repo-wide grep for existing tests asserting blank `source` on an
+      `empty_confirmed`/`attempted_failed`/`expected_unattempted` row is needed before landing (repo:
+      unified-trading-library).
 - [x] ✅ [DATA] P1. Re-verify item #1 (weather) and item #2 (SFI) gate state in
       `sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md` using an UNFILTERED-by-source query (or
       post-fix filtered query) to confirm their ✅ flips still hold (repo: unified-trading-pm, plan file). — Read the
@@ -169,7 +211,13 @@ investigation target.
       drift-since-flip in the sibling plan's VERIFY item (daily-pipeline-lag hypothesis, "unverified this session,"
       2026-07-08 slot-7/slot-5) and is out of scope for this todo to re-diagnose. Full counts + Progress Log entry added
       to `plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md`.
-- [ ] [DATA] P1. Root-cause the dedup non-collision question above — if the v2 closer re-run (this session) shows the
+- [x] ✅ [DATA] P1. Root-cause the dedup non-collision question above — if the v2 closer re-run (this session) shows the
       old blank-reason rows STILL coexisting alongside new correctly-sourced rows, escalate as its own P0 issue
       targeting `unified_trading_library/manifest_consolidator.py`'s DuckDB incremental anti-join (repo:
-      unified-trading-library).
+      unified-trading-library). — unified-trading-pm (this doc + new issue doc, no code SHA). Confirmed (b): 9/15
+      sampled cells show the OLD blank row and a NEW (~10-days-newer) correctly-typed row coexisting for a
+      byte-identical dedup key. Root cause is NOT the DuckDB anti-join SQL (inspected, logically correct) but a
+      lost-update race in `_write_consolidated()`'s CAS-retry loop, which re-uploads a stale already-computed merge on
+      `PreconditionFailed` instead of recomputing. Filed
+      `plans/active/issues/manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md` (P0) with the fix + 3
+      follow-up todos.
