@@ -55,10 +55,14 @@ source: cost_observability_ui_2026_07_08.md
 
 ## Tasks
 
-- [ ] [UI] P0. **Merge the bars + table into one table** (foundation for every column below). Collapse
-      `BreakdownPanel`'s left top-12 bar chart + right table into ONE scrollable, sortable table with an inline
-      proportional **bar-in-cell that carries the cost value** (bar width = cost / max), dropping the separate bars
-      column. Keep the sticky header + 400px scroll region. pw:L2 + a cited spec.
+- [x] ✅ [UI] P0. **Merge the bars + table into one table** (foundation for every column below) —
+      deployment-ui@`212acb6`. Collapsed `BreakdownPanel`'s left top-12 bar chart + right table into ONE scrollable,
+      sortable table with an inline proportional **bar-in-cell that carries the cost value** (bar width = cost / max
+      across the full dataset), dropping the separate bars column. Sticky header + 400px scroll region unchanged.
+      tsc/ESLint/vitest (912 passed) all green. pw:L2 ✓ | regression: tests/smoke/cost-observability.spec.ts ("breakdown
+      bars + table are merged into one table with an inline bar-in-cell" — asserts a single `cost-breakdown-table`, the
+      top row's bar-in-cell renders at >90% width matching its max cost, and re-sorting ascending shrinks the bar,
+      proving it's data-driven).
 - [ ] [UI] P1. **Gross / credit / net columns.** Render the backend bifurcation — net primary, gross + credit secondary
       — shown only where credit ≠ 0 (mirrors the KPI band down into the table). vitest + pw:L2.
 - [ ] [UI] P2. **SKU dimension in the control.** Add `sku` to the breakdown `Segmented` + its note ("Google/AWS SKU").
