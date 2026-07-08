@@ -799,3 +799,27 @@ dispatcher resumes. Zero further churn until then.
 dispatches until conditions flip). No B/C alternatives because prior operator answers exhausted them.
 
 Checkbox NOT flipped. Slot 11 releases task; no VM launched.
+
+### 2026-07-08 — slot 12 (21st dispatch — re-verify only, no new BLK)
+
+**Todo 3 (features manifest clean) — BLOCKED-PREREQ, unchanged from slot-3's 20th dispatch earlier today**
+
+Re-verified via non-snap gcloud (`ikenna@odum-research.com`, `central-element-323112`):
+
+- Features bucket `gs://features-sports-prd-central-element-323112/sports_features/by_date/`: **92 objects** (P1 golden
+  window only, unchanged). `availability_index.parquet` present, updated 2026-07-08T21:59:35Z (from slot-3's session
+  this morning). Todo 1 full-history compute still NOT run.
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9** — Todo 9 still parked
+  BLOCKED-OPERATOR-DECISION/tracker-only.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7** — Todos 4 (Understat), 5 (footystats
+  M+P), 7 (verify) still pending.
+- `gcloud compute instances list` for Understat/footystats backfill VM name patterns: **0 running**. Full
+  `asia-northeast1-c` instance list checked — no `us-backfill-*` or `fs-backfill-*` VM active; only unrelated
+  tradfi/defi/forward-scrape VMs running.
+
+Not filing a new BLK — the structural fix (backlog `prereqs.conditions` gating this task + `-007` on P2a/P2b completion)
+has been requested 6 times (BLK-fbaabf35, BLK-8c392089, BLK-35c77a6c, BLK-2ff03344, BLK-d734c268 line of reasoning, and
+slot-11's 19th dispatch) with no operator action yet on the gates themselves, and the concrete unblock actions (launch
+Understat + footystats M+P SPOT VMs) belong to P2b's own todos, not this task. A 7th duplicate ask adds no new
+information. Checkbox NOT flipped. Skipping this task for slot 12 (per skip-current-task semantics — other slots remain
+eligible) so this session moves to different available work instead of re-running the same multi-hour verification.
