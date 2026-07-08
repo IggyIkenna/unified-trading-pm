@@ -55,6 +55,14 @@ checked after this doc was filed)**: re-ran this exact test on `live-defi-rollou
 check. Root cause is correctly diagnosed here (rename the assertion string to `"lighter"`); just confirming the fix
 commit's landing status for whoever picks up the todos below.
 
+**Verification note (slot-3 planning, 2026-07-08, dispatched task `instruments_service_cefi_qg_red_on_ldr_head-002`
+[VERIFY])**: ran full `bash scripts/quality-gates.sh` on instruments-service at `live-defi-rollout` HEAD `be95c76`
+(unchanged) — still RED, same 3 failures as originally filed (`test_cefi_okx_spot_folds_to_okx`,
+`test_default_exchanges_cover_captured_cefi_venues`, `test_default_exchanges_cover_captured_cefi_venues` lighter-zksync
+assert). Confirms the DESIGN (todo 1) and FIX (todo 2) below have NOT landed yet — the VERIFY todo (3) cannot pass until
+they do. Not attempting the fix myself: the DESIGN todo is explicitly `BLOCKED-OPERATOR-DECISION` spanning 2 repos +
+changes the certified cefi denominator. Filing `/blocked` on the dispatcher instead of guessing.
+
 **2 of 3 — ROOT CAUSE FOUND 2026-07-08 (slot-8 planning), NOT the enumerator-side regression this doc originally
 suspected — it's a `unified-api-contracts` capability-declaration fix with an unhandled side effect. None of the 3
 bisect candidates above (`980f329` / `4a8cff7` / `7ded594`) are the cause; they're all `instruments-service` commits,
