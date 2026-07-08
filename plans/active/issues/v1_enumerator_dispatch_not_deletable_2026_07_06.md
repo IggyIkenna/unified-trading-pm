@@ -205,6 +205,23 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
 
 ## Progress Log
 
+- **2026-07-08** — **-009 RE-DISPATCHED (8TH SLOT BOUNCE) — SAME PARK** (slot-2 data_engineering). Re-verified against
+  the current `.tabs/2` clones (no new fetch needed — worktree already current): prereq #3 (v2 venue-grain sentinel) IS
+  landed in `instruments-service/scripts/enumerate_expected_universe.py` (`_yield_v2_cefi_pre_venue_launch_rows` /
+  `_yield_v2_defi_pre_launch_rows` / `_yield_v2_prediction_pre_venue_launch_rows` all present, wired via `yield from`).
+  Prereq #4 (infra launcher retirement) is STILL NOT landed —
+  `deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py:183`,
+  `scripts/vm/vm_zombie_watchdog.py:627`, and `scripts/vm/launch-ec2-vm.sh:148` all still reference the v1
+  `expected-universe-enum-`/`eu-enum-` prefix, and `scripts/vm/launch-expected-universe-enumerator-vm.sh` still exists.
+  This is an infra-role task, outside `data_engineering` craft scope (per RULES.md craft-lines + the prior 2026-07-06
+  main-agent ruling on BLK-0b46d0f3). The underlying decision was already made (main-agent, BLK-530cea75 / BLK-0ac84889:
+  data-correctness hard-stop, do not delete v1 until BOTH prereqs land) — this is not a fresh ambiguity, so self-parking
+  via `/skip-current-task` per the established precedent from bounces 3-7 rather than re-raising `/blocked`. **Systemic
+  ask (8th bounce across 3 days — still unaddressed after 7 requests)**: operator/main-agent to either (a) set
+  `priority: 999` + a `conditions:` gate on the `v1_enumerator_dispatch_not_deletable-0XX` backlog entry keyed on prereq
+  #4 landing, since `assigned_role: data_engineering` alone isn't stopping the bounce, or (b) dispatch an infra-role
+  worker to close prereq #4 directly (removes the parked task's blocker entirely — the single highest- leverage fix
+  available, unchanged advice from every prior bounce).
 - **2026-07-08** — **-009 RE-DISPATCHED (7TH SLOT BOUNCE) — SAME PARK** (slot-3 planning, resumed session). Verified
   against `origin/live-defi-rollout` tip `c8a5925a2`: prereq #3 (v2 venue-grain sentinel) IS landed
   (`instruments-service@980f329` — confirmed `_yield_v2_cefi_pre_venue_launch_rows` / `_yield_v2_defi_pre_launch_rows` /
