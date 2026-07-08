@@ -68,9 +68,9 @@ source: cost_observability_ui_2026_07_08.md
 - [ ] [BACKEND] P1. **Bifurcate gross/credit/net per breakdown row.** Add `gross` + `credit` to `BreakdownRow`
       (currently net-only); populate net (primary), gross = Σcost, credit = Σcredit in `_grouped` / `_by_resource` /
       `_by_day`. pytest asserting the per-row split and that it reconciles to the summary net/gross/credit.
-- [ ] [BACKEND] P2. **SKU breakdown dimension.** Add `sku` to the route `Dimension` literal + a `_by_sku` grouping (by
-      `(cloud, service, sku)`), wired into `breakdown()`. This surfaces the hidden #1 cost driver (Coldline Class A
-      Operations). pytest.
+- [x] ✅ [BACKEND] P2. **SKU breakdown dimension** — deployment-api@9b4e59d. Add `sku` to the route `Dimension`
+      literal + a `_by_sku` grouping (by `(cloud, service, sku)`), wired into `breakdown()`. This surfaces the hidden #1
+      cost driver (Coldline Class A Operations). pytest.
 - [ ] [BACKEND] P2. **Bucket storage volume + class split.** For `dimension=bucket` rows, attach total **GB** + a
       per-storage-class split (Standard / Nearline / Coldline / Archive) + derived **$/GB**, from the storage SKUs'
       `usage_amount` (`gibibyte month` → average GB over the window) grouped by `resource.name`. New optional
