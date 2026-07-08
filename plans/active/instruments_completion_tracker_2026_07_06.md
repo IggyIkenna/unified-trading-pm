@@ -41,6 +41,7 @@ related:
     issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
     issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
+    issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
     ../../codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
@@ -108,16 +109,16 @@ source:
 > the honest_coverage data-status drill-down (Stage 6) is a single P2 item — too small for its own AO plan (would break
 > the ≥10-item + role-homogeneity rule); stays tracked here + in `honest_coverage_v2`.
 
-> **🔴 NEW FROM THE 2026-07-07 ASTER/CEFI AUDIT — three live, currently-unexplained findings, not yet folded into
-> Stage 2/3 estimates above.** (1) **LIGHTER and PACIFICA have produced zero manifest rows of any status since
-> 2026-06-26** (11 days) — found by actually running `cefi_cumulative_drawdown_guard_2026_06_27.py` against prod;
-> see `issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md`. (2) **ASTER's MTDS `attempted_failed`
-> count looks regressed to ~its original pre-05-14-fix state** (17,681 → 3,491 documented 06-22 → 17,675 live
-> 07-07) — see `issues/aster_mtds_failure_count_regression_2026_07_07.md`. (3) **The DeFi turbo API silently
-> reports 0/0 for venues with real, current captured data** (AAVE_V3-ARBITRUM: 18,771 real rows through 2026-06-21;
-> AAVE_V3-POLYGON: 24,278; SPARK: 7,405, omitted entirely) — see
-> `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`. All three are unassessed against this tracker's
-> own numbers; the cefi Layer-2 37.86 and defi Layer-2 57.55 snapshots above may need revisiting once root-caused.
+> **🔴 NEW FROM THE 2026-07-07 ASTER/CEFI AUDIT — three live, currently-unexplained findings, not yet folded into Stage
+> 2/3 estimates above.** (1) **LIGHTER and PACIFICA have produced zero manifest rows of any status since 2026-06-26**
+> (11 days) — found by actually running `cefi_cumulative_drawdown_guard_2026_06_27.py` against prod; see
+> `issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md`. (2) **ASTER's MTDS `attempted_failed` count
+> looks regressed to ~its original pre-05-14-fix state** (17,681 → 3,491 documented 06-22 → 17,675 live 07-07) — see
+> `issues/aster_mtds_failure_count_regression_2026_07_07.md`. (3) **The DeFi turbo API silently reports 0/0 for venues
+> with real, current captured data** (AAVE_V3-ARBITRUM: 18,771 real rows through 2026-06-21; AAVE_V3-POLYGON: 24,278;
+> SPARK: 7,405, omitted entirely) — see `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`. All three are
+> unassessed against this tracker's own numbers; the cefi Layer-2 37.86 and defi Layer-2 57.55 snapshots above may need
+> revisiting once root-caused.
 
 ---
 
@@ -125,15 +126,15 @@ source:
 
 D1–D3 **block Stage 2**. D4–D5 are lower-urgency. Record your call + date in the last column.
 
-| #       | Decision                                                                                                                             | Options — **[REC]** = my recommendation                                                                        | Status            | Your call (date)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **D1**  | defi `expected_unattempted` seeding (≥1.38M cells never seeded → defi denominator understated + scans halt at 1M cap)                | **A: full 1,380,376-row apply, one run [REC]** · B: 684 recent only · Other: custom `--start/--end` slice      | ✅ **DECIDED: A** | **A — full apply** (2026-07-06). Genesis-verified safe: MVP floor = CURVE 2020-01-19; per-protocol pre-genesis classification. Still to execute the apply + 3-step verify.                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **D2a** | cefi Layer-1 `(venue,itype)` gate authority (whole venues currently omitted → 79.55% is not even a bound)                            | **switch to UAC `INSTRUMENT_TYPES_BY_VENUE` [REC]** · extend `venue_instrument_type_to_tardis` · dedicated map | ✅ **DECIDED**    | **switch to `INSTRUMENT_TYPES_BY_VENUE`** + complete the 10 missing declared venues (2026-07-06). DERIBIT-COMBO → OPTION **(CONFIRMED by Ikenna 2026-07-06 — future_combo NOT in MVP, options only)**.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| **D2b** | `VENUE_DATA_TYPE_CAPABILITIES` semantics for wholly-absent venues (BYBIT-SPOT / COINBASE-FUTURES / BINANCE-DELIVERY / KALSHI-PERP …) | add owner-verified capability entries · codify the no-entry semantics                                          | ✅ **DECIDED**    | **complete the table properly** + codify absent = not-expected (2026-07-06).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| **D3**  | TradFi v9 `--apply` OOM restart (lone AG not yet canonical)                                                                          | restart the migration VM with **lower concurrency / larger machine** (mechanical; operator-launched)           | ✅ **DECIDED**    | **`--workers 24`** (fallback 16) · **per-year chunks** 2020→2026 · **e2-standard-16** · idempotent restart (2026-07-06). Manifest schema **v9** confirmed current.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| **D4**  | cefi_tick G4 gate — Layer-1 carve-out                                                                                                | sanction as intentional Layer-2-only gate · **fold under the two-layer gate [REC]**                            | ✅ **DECIDED**    | **Fold under the two-layer gate** — ALREADY RESOLVED by Ikenna 2026-07-03 (C4 option a): G4 enforces Layer-1 AND Layer-2; cefi-MVP not honest-complete while the denominator has holes. Matches the governing law; G4 can't close until D2 (`cefi_layer1_denominator_gaps`) lands. Tracker was stale (reconciliation predated the 07-03 call).                                                                                                                                                                                                                                                                                                     |
-| **D5**  | Deribit options stance (`options_chain` effectively uncaptured)                                                                      | **not a standalone decision** — capture gap, root-caused to an unregistered handler (Ikenna C5)                | ✅ **RESOLVED**   | **Not an operator fork — ROOT-CAUSED (Ikenna C5, verified in code 2026-07-06).** DERIBIT `options_chain` captured=0/1 because `DeribitOptionsChainHandler` is BUILT but NEVER REGISTERED (absent from `handlers/__init__.py` `__all__`, `main.py` import, and the operations dispatcher) → no operation invokes it → zero shards. **A re-measure alone won't move it — it's a real CAPTURE GAP.** Fix = Ikenna's 3-line MTDS handler registration (he owns it, in progress) → `deribit-options-chain` backfill (Stage 5) → THEN the honest number shows in the Stage-3 re-measure. MVP "don't widen beyond BTC/ETH `options_chain`" stance STANDS. |
-| **D6**  | Shard dimension model for instruments-service: should `instrument_type` become a real breakdown axis everywhere a venue has >1 (today it only works by coincidence for single-type venues — DERIBIT has zero `instrument_types` breakdown; DERIBIT-COMBO is bolted on as a fake 4th venue instead of a sibling type)? See `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`. | **[REC] generalize `instrument_type` as a real dimension + retire the empty `VENUE_REFERENCE_DATA_CAPABILITIES` stub in favor of the already-working `reference_scope.py` mechanism** · leave as-is (accept the Deribit-options blind spot) | ⏳ **OPEN** | — |
+| #       | Decision                                                                                                                                                                                                                                                                                                                                                                                                  | Options — **[REC]** = my recommendation                                                                                                                                                                                                     | Status            | Your call (date)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **D1**  | defi `expected_unattempted` seeding (≥1.38M cells never seeded → defi denominator understated + scans halt at 1M cap)                                                                                                                                                                                                                                                                                     | **A: full 1,380,376-row apply, one run [REC]** · B: 684 recent only · Other: custom `--start/--end` slice                                                                                                                                   | ✅ **DECIDED: A** | **A — full apply** (2026-07-06). Genesis-verified safe: MVP floor = CURVE 2020-01-19; per-protocol pre-genesis classification. Still to execute the apply + 3-step verify.                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **D2a** | cefi Layer-1 `(venue,itype)` gate authority (whole venues currently omitted → 79.55% is not even a bound)                                                                                                                                                                                                                                                                                                 | **switch to UAC `INSTRUMENT_TYPES_BY_VENUE` [REC]** · extend `venue_instrument_type_to_tardis` · dedicated map                                                                                                                              | ✅ **DECIDED**    | **switch to `INSTRUMENT_TYPES_BY_VENUE`** + complete the 10 missing declared venues (2026-07-06). DERIBIT-COMBO → OPTION **(CONFIRMED by Ikenna 2026-07-06 — future_combo NOT in MVP, options only)**.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **D2b** | `VENUE_DATA_TYPE_CAPABILITIES` semantics for wholly-absent venues (BYBIT-SPOT / COINBASE-FUTURES / BINANCE-DELIVERY / KALSHI-PERP …)                                                                                                                                                                                                                                                                      | add owner-verified capability entries · codify the no-entry semantics                                                                                                                                                                       | ✅ **DECIDED**    | **complete the table properly** + codify absent = not-expected (2026-07-06).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **D3**  | TradFi v9 `--apply` OOM restart (lone AG not yet canonical)                                                                                                                                                                                                                                                                                                                                               | restart the migration VM with **lower concurrency / larger machine** (mechanical; operator-launched)                                                                                                                                        | ✅ **DECIDED**    | **`--workers 24`** (fallback 16) · **per-year chunks** 2020→2026 · **e2-standard-16** · idempotent restart (2026-07-06). Manifest schema **v9** confirmed current.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **D4**  | cefi_tick G4 gate — Layer-1 carve-out                                                                                                                                                                                                                                                                                                                                                                     | sanction as intentional Layer-2-only gate · **fold under the two-layer gate [REC]**                                                                                                                                                         | ✅ **DECIDED**    | **Fold under the two-layer gate** — ALREADY RESOLVED by Ikenna 2026-07-03 (C4 option a): G4 enforces Layer-1 AND Layer-2; cefi-MVP not honest-complete while the denominator has holes. Matches the governing law; G4 can't close until D2 (`cefi_layer1_denominator_gaps`) lands. Tracker was stale (reconciliation predated the 07-03 call).                                                                                                                                                                                                                                                                                                     |
+| **D5**  | Deribit options stance (`options_chain` effectively uncaptured)                                                                                                                                                                                                                                                                                                                                           | **not a standalone decision** — capture gap, root-caused to an unregistered handler (Ikenna C5)                                                                                                                                             | ✅ **RESOLVED**   | **Not an operator fork — ROOT-CAUSED (Ikenna C5, verified in code 2026-07-06).** DERIBIT `options_chain` captured=0/1 because `DeribitOptionsChainHandler` is BUILT but NEVER REGISTERED (absent from `handlers/__init__.py` `__all__`, `main.py` import, and the operations dispatcher) → no operation invokes it → zero shards. **A re-measure alone won't move it — it's a real CAPTURE GAP.** Fix = Ikenna's 3-line MTDS handler registration (he owns it, in progress) → `deribit-options-chain` backfill (Stage 5) → THEN the honest number shows in the Stage-3 re-measure. MVP "don't widen beyond BTC/ETH `options_chain`" stance STANDS. |
+| **D6**  | Shard dimension model for instruments-service: should `instrument_type` become a real breakdown axis everywhere a venue has >1 (today it only works by coincidence for single-type venues — DERIBIT has zero `instrument_types` breakdown; DERIBIT-COMBO is bolted on as a fake 4th venue instead of a sibling type)? See `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`. | **[REC] generalize `instrument_type` as a real dimension + retire the empty `VENUE_REFERENCE_DATA_CAPABILITIES` stub in favor of the already-working `reference_scope.py` mechanism** · leave as-is (accept the Deribit-options blind spot) | ⏳ **OPEN**       | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 **Already-resolved (no action — context only):** Issue-4 UAC↔writer strays (RESOLVED 07-03, cefi 65.91→79.55) · ASTER
 mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, banner text; no operational risk).
@@ -211,10 +212,11 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       already ran 2× on 06-23 (snapshots exist — "never confirmed run" resolved). **→ retire the manifest-pruning
       script; do the MVP filter as a read-time gate in `measure_honest_coverage` folded into 2a `build_expected`,
       sequenced after 2b + the ASTER split.**
-  - [ ] [CODE] P1. Fix `_fetch_earliest_funding_date` (`instruments-service/instruments_service/reference_data/adapters/cefi/aster.py:247-267`)
-        to exclude the synthetic pre-launch placeholder funding rows (flat `0.0001` rate) before deriving
-        `available_from_datetime` — otherwise ASTER's per-instrument genesis can still stamp a spuriously
-        pre-2023-07-22 date even though the venue-level fallback is correct. Found 2026-07-07 audit.
+  - [ ] [CODE] P1. Fix `_fetch_earliest_funding_date`
+        (`instruments-service/instruments_service/reference_data/adapters/cefi/aster.py:247-267`) to exclude the
+        synthetic pre-launch placeholder funding rows (flat `0.0001` rate) before deriving `available_from_datetime` —
+        otherwise ASTER's per-instrument genesis can still stamp a spuriously pre-2023-07-22 date even though the
+        venue-level fallback is correct. Found 2026-07-07 audit.
   - [ ] [DATA] P1. Reconcile ASTER's `trades` genesis cross-registry contradiction (2021-08-30 in
         `expected_start_dates.yaml` vs. 2023-07-22 everywhere else) — see GAP 4 in
         `issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`. Do before any pre-funding-genesis trades
@@ -244,9 +246,9 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 - [ ] [VERIFY] P0. Certify per-AG Layer-1; **record fresh numbers in the Progress Log** — only now is any Layer-2 %
       trustworthy
 - [ ] [VERIFY] P1. Reconcile ASTER's two disagreeing missing-date counts before certifying: the manifest cell-presence
-      view says 0 missing dates (1,082 consecutive days, 2023-07-22→2026-07-07); the live turbo API says 11 missing
-      / 1,071 expected for the same venue+window. Confirm which methodology the re-measure adopts. Found 2026-07-07
-      audit, `issues/aster_mtds_failure_count_regression_2026_07_07.md` context.
+      view says 0 missing dates (1,082 consecutive days, 2023-07-22→2026-07-07); the live turbo API says 11 missing /
+      1,071 expected for the same venue+window. Confirm which methodology the re-measure adopts. Found 2026-07-07 audit,
+      `issues/aster_mtds_failure_count_regression_2026_07_07.md` context.
 - [ ] [CODE] P1. Close `honest_coverage_v2` remaining (build_expected done in 2a; UI drill-down → Stage 6)
 
 ## Stage 4 — Foundation gate sign-offs (formalize the spine, cefi-first)
@@ -256,11 +258,11 @@ reconciling + signing off, not redoing.)_
 
 - [ ] [CODE] P0. cefi **G1.2** (`record_failed` routing + 06-26 re-capture) + **G1.3 follow-up** (on-chain-CeFi-perp
       venue form). **Caveat added 2026-07-07:** this is a thin-day/50%-of-trailing-median gate, not DeFi's strict
-      never-regress-below-all-time-max block — confirm with operator whether literal DeFi parity is required, or
-      whether the looser threshold is the intended CeFi policy (CeFi delistings are real, expected decreases in
-      today's active count, unlike DeFi's provably-monotonic contracts). See
-      `issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` for the alerting gap on top of this
-      same guard, and the two currently-dark venues (LIGHTER, PACIFICA) it already missed.
+      never-regress-below-all-time-max block — confirm with operator whether literal DeFi parity is required, or whether
+      the looser threshold is the intended CeFi policy (CeFi delistings are real, expected decreases in today's active
+      count, unlike DeFi's provably-monotonic contracts). See
+      `issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` for the alerting gap on top of this same
+      guard, and the two currently-dark venues (LIGHTER, PACIFICA) it already missed.
 - [ ] [VERIFY] P0. Reconcile checkbox drift; take the formal **G2 → G5** sign-offs (cefi)
 - [ ] [DATA] P1. tradfi **§8 retirement purge** (4-leg GCS delete — ICE / CBOE-OPRA / VX-spread / VIX-cash) —
       **OPERATOR-CONFIRM**
@@ -269,10 +271,10 @@ reconciling + signing off, not redoing.)_
 ## Stage 5 — Capture to 100% (Layer-2 — only after Layer-1 is honest)
 
 - [ ] [INFRA] P1. `data_completion` operator-gated items: pyth `collect-oracle-prices` launch · Live ODDS quota · MANTLE
-      paid RPC · CLOB-on-chain asset_group classification (**Lighter/Pacifica/Extended-Starknet, + HYPERLIQUID/ASTER
-      — operator-confirmed 2026-07-07 same hybrid pattern: CEFI holds instrument definitions, DEFI holds chain
-      classification**, see `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` Update
-      §3) · rate-limit probe VM
+      paid RPC · CLOB-on-chain asset_group classification (**Lighter/Pacifica/Extended-Starknet, + HYPERLIQUID/ASTER —
+      operator-confirmed 2026-07-07 same hybrid pattern: CEFI holds instrument definitions, DEFI holds chain
+      classification**, see `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` Update §3) ·
+      rate-limit probe VM
 - [ ] [DATA] P1. Reconcile the DEDUP-flagged folded-in tail (from merged `path_to_100pct`) — **do not double-run**
 - [ ] [CODE] P1. DeFi `risk_params` MTDS handler (193,042 EU, no handler today)
 - [x] [CODE] P1. **Deribit `options_chain` — handler registration** (Ikenna C5; taken over from Ikenna + verified) —
@@ -295,12 +297,12 @@ reconciling + signing off, not redoing.)_
       `market_tick_data_service/market_interface/factory.py` is a SEPARATE registration point from `cli/main.py`'s
       operations dispatcher. `RENZO` is fully built and registered there (`factory.py:178`, real `RenzoAdapter` class,
       real UAC capability declared) but has zero hits in `cli/main.py` or any `deployment-service/scripts/vm/` launch
-      script — built, factory-wired, never actually invoked. `RADIANT` is one step further back: its subgraph IDs
-      were verified working via The Graph on Arbitrum + Ethereum 2026-06-02 (`_defi.py:203-210`), but it doesn't even
-      have a `factory.py` adapter entry. Neither is "shouldn't exist" clutter — both have real invested
-      infrastructure sitting inert. The likely-related "defi 1225 blocked-not-registered" count above may already
-      include these; confirm during the audit rather than assuming, and check `factory.py` alongside `cli/handlers/`
-      for every DeFi protocol the audit finds silently zero.
+      script — built, factory-wired, never actually invoked. `RADIANT` is one step further back: its subgraph IDs were
+      verified working via The Graph on Arbitrum + Ethereum 2026-06-02 (`_defi.py:203-210`), but it doesn't even have a
+      `factory.py` adapter entry. Neither is "shouldn't exist" clutter — both have real invested infrastructure sitting
+      inert. The likely-related "defi 1225 blocked-not-registered" count above may already include these; confirm during
+      the audit rather than assuming, and check `factory.py` alongside `cli/handlers/` for every DeFi protocol the audit
+      finds silently zero.
 - [ ] [CODE] P1. prediction live token-universe fix (owned by `prediction_venue_perps_and_live_clob_depth_2026_06_20`;
       live=0 today)
 
@@ -312,12 +314,12 @@ reconciling + signing off, not redoing.)_
       slices (only sports ran)
 - [ ] [DATA] P2. v9 `schema_version` tail re-stamp (quiet window, post fleet-drain)
 - [ ] [UI] P2. data-status **UI drill-down** (last open `honest_coverage_v2` item)
-- [ ] [DESIGN] P2. Delete-or-document decision on instruments-service's dead `GET /api/data-status` endpoint (zero
-      real HTTP consumers, only its own unit test). See
+- [ ] [DESIGN] P2. Delete-or-document decision on instruments-service's dead `GET /api/data-status` endpoint (zero real
+      HTTP consumers, only its own unit test). See
       `issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md`.
 - [ ] [CODE] P2. Build a generic manifest-reprocessing utility (11 near-identical one-off reclassify scripts written
-      across instruments-service + market-tick-data-service in 8 weeks; codex's own `script-homes.md` says a
-      recurring need like this should graduate to a permanent tool). See
+      across instruments-service + market-tick-data-service in 8 weeks; codex's own `script-homes.md` says a recurring
+      need like this should graduate to a permanent tool). See
       `issues/manifest_reprocessing_generic_utility_2026_07_07.md`.
 
 ---
@@ -357,85 +359,82 @@ reconciling + signing off, not redoing.)_
 
 - **2026-07-07 (later same day, round 3)** — **🔴 P0 filed: `defi_turbo_api_hides_real_captured_data_2026_07_07.md`.**
   Chasing an operator hypothesis that AAVE_V3-ARBITRUM/POLYGON/EULER_V2/FLUID's `0/0` turbo readings might be a
-  venue-naming mismatch: no naming mismatch was found (the write path produces the exact canonical strings), but
-  a live GCS manifest read found something worse — **AAVE_V3-ARBITRUM has 18,771 real captured rows and
-  AAVE_V3-POLYGON has 24,278, both current through 2026-06-21, under the exact canonical key**, yet the turbo API
-  reports both as `0/0`. **SPARK has 7,405 real captured rows and doesn't appear in the turbo response at all.**
-  This is a deployment-api read/aggregation bug, not a capture gap — real coverage is being silently understated.
-  EULER_V2 (both chains) and FLUID-ARBITRUM/PLASMA, by contrast, are confirmed genuinely zero real data anywhere —
-  those readings are accurate. Also found: EULER_V2's real, Goldsky-verified-working (2026-06-02) subgraph infra
-  has never actually been polled — a "finish what's already built" case, folded into the existing RENZO-adjacent
-  unregistered-handler-audit item above. Scope of the read-path bug beyond these 3 venues is unknown — flagged as
-  a P1 follow-up in the new doc, not yet swept systematically.
-- **2026-07-07 (later same day, round 4)** — **Full ~34-venue systematic sweep of the turbo-API read-bug's true
-  scope.** Found 5 more confirmed "REAL DATA HIDDEN" venues (MANTLE/PUFFER/STADER/STAKEWISE/SWELL-ETHEREUM — each
-  ~1 row/manifest-entry, likely liveness markers rather than real volume, but the same dashboard bug either way)
-  plus 4 bonus finds needing a live turbo-API cross-check (HYPERLIQUID 3.77M rows, ASTER 1.07M rows, COMPOUND_V3
-  233K rows, FLUID-ETHEREUM 690 rows). Everything else checked (BEEFY ×6 chains, IDLE ×3, KARAK ×2, RENZO ×2,
+  venue-naming mismatch: no naming mismatch was found (the write path produces the exact canonical strings), but a live
+  GCS manifest read found something worse — **AAVE_V3-ARBITRUM has 18,771 real captured rows and AAVE_V3-POLYGON has
+  24,278, both current through 2026-06-21, under the exact canonical key**, yet the turbo API reports both as `0/0`.
+  **SPARK has 7,405 real captured rows and doesn't appear in the turbo response at all.** This is a deployment-api
+  read/aggregation bug, not a capture gap — real coverage is being silently understated. EULER_V2 (both chains) and
+  FLUID-ARBITRUM/PLASMA, by contrast, are confirmed genuinely zero real data anywhere — those readings are accurate.
+  Also found: EULER_V2's real, Goldsky-verified-working (2026-06-02) subgraph infra has never actually been polled — a
+  "finish what's already built" case, folded into the existing RENZO-adjacent unregistered-handler-audit item above.
+  Scope of the read-path bug beyond these 3 venues is unknown — flagged as a P1 follow-up in the new doc, not yet swept
+  systematically.
+- **2026-07-07 (later same day, round 4)** — **Full ~34-venue systematic sweep of the turbo-API read-bug's true scope.**
+  Found 5 more confirmed "REAL DATA HIDDEN" venues (MANTLE/PUFFER/STADER/STAKEWISE/SWELL-ETHEREUM — each ~1
+  row/manifest-entry, likely liveness markers rather than real volume, but the same dashboard bug either way) plus 4
+  bonus finds needing a live turbo-API cross-check (HYPERLIQUID 3.77M rows, ASTER 1.07M rows, COMPOUND_V3 233K rows,
+  FLUID-ETHEREUM 690 rows). Everything else checked (BEEFY ×6 chains, IDLE ×3, KARAK ×2, RENZO ×2,
   YEARN_V3-ARBITRUM/OPTIMISM, etc.) came back genuinely empty. Folded into
   `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`.
 - **2026-07-07 (writer fix implemented)** — Per operator go-ahead, ran a 3-agent pre-audit then implemented the
   CeFi/TradFi manifest writer fix in `instruments-service/instruments_service/engine/orchestrator/writers.py`
-  (`_derive_instrument_type` → `_split_by_instrument_type`, one `record_captured()` call per distinct
-  `instrument_type` instead of one blended call per venue×date). Confirmed this is ONE shared code path for CeFi
-  AND TradFi (CME hits the identical bug live) and flagged 5 more likely-affected CeFi venues from registry
-  evidence. Deleted the dead/broken `fix_manifest_venue_casing.py` one-off as a companion cleanup. Verified against
-  today's real DERIBIT day-snapshot (2,965 rows → 5 correct groups: OPTION 2,586/COMBO 273/FUTURE 71/PERPETUAL
-  21/SPOT_PAIR 14). Quality gates green (153s). Shipped via quickmerge to `is@<pending sha>`. Full detail in
+  (`_derive_instrument_type` → `_split_by_instrument_type`, one `record_captured()` call per distinct `instrument_type`
+  instead of one blended call per venue×date). Confirmed this is ONE shared code path for CeFi AND TradFi (CME hits the
+  identical bug live) and flagged 5 more likely-affected CeFi venues from registry evidence. Deleted the dead/broken
+  `fix_manifest_venue_casing.py` one-off as a companion cleanup. Verified against today's real DERIBIT day-snapshot
+  (2,965 rows → 5 correct groups: OPTION 2,586/COMBO 273/FUTURE 71/PERPETUAL 21/SPOT_PAIR 14). Quality gates green
+  (153s). Shipped via quickmerge to `is@<pending sha>`. Full detail in
   `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`.
-- **2026-07-07 (later same day)** — **D6/combinator docs updated with the round-2 findings; nothing new filed.**
-  (1) The CEFI chains-vs-venues rendering fix (Progress Log entry two above) is now implemented + tested in code —
-  not yet committed. (2) Pulling the full real `chain → venue → instrument_type → data_type` tree for DeFi found
-  the writer-side blank-`instrument_type` bug isn't Deribit-only: all 7 Solana DeFi venues (DRIFT, KAMINO,
-  MARGINFI, MARINADE, ORCA, RAYDIUM, SOLEND) plus CURVE-OPTIMISM have real captured data but zero
-  `instrument_types` breakdown — same root cause, wider scope. (3) HYPERLIQUID/ASTER's dual CEFI+DEFI listing
-  (both `0/0` under DEFI) is operator-confirmed intentional — same hybrid on-chain-CLOB pattern as
-  Lighter/Pacifica/Extended-Starknet, folded into that existing Stage-5 item above rather than filed as a new
-  finding. (4) Added Aave's `debt_token` (declared, schema-ready, zero captured rows — the supply side `a_token`
-  works, the borrow side doesn't) to the combinator doc's existing DeFi-drift finding. (5) **Still open**: a
-  workflow is checking whether AAVE_V3-ARBITRUM/POLYGON, EULER_V2, and FLUID's `0/0` readings are genuinely
-  never-captured or a canonical-venue-naming mismatch hiding real data under a different key — will update once it
-  resolves. All changes landed in `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`
+- **2026-07-07 (later same day)** — **D6/combinator docs updated with the round-2 findings; nothing new filed.** (1) The
+  CEFI chains-vs-venues rendering fix (Progress Log entry two above) is now implemented + tested in code — not yet
+  committed. (2) Pulling the full real `chain → venue → instrument_type → data_type` tree for DeFi found the writer-side
+  blank-`instrument_type` bug isn't Deribit-only: all 7 Solana DeFi venues (DRIFT, KAMINO, MARGINFI, MARINADE, ORCA,
+  RAYDIUM, SOLEND) plus CURVE-OPTIMISM have real captured data but zero `instrument_types` breakdown — same root cause,
+  wider scope. (3) HYPERLIQUID/ASTER's dual CEFI+DEFI listing (both `0/0` under DEFI) is operator-confirmed intentional
+  — same hybrid on-chain-CLOB pattern as Lighter/Pacifica/Extended-Starknet, folded into that existing Stage-5 item
+  above rather than filed as a new finding. (4) Added Aave's `debt_token` (declared, schema-ready, zero captured rows —
+  the supply side `a_token` works, the borrow side doesn't) to the combinator doc's existing DeFi-drift finding. (5)
+  **Still open**: a workflow is checking whether AAVE_V3-ARBITRUM/POLYGON, EULER_V2, and FLUID's `0/0` readings are
+  genuinely never-captured or a canonical-venue-naming mismatch hiding real data under a different key — will update
+  once it resolves. All changes landed in `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`
   and `issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`; no new docs this round.
-- **2026-07-07** — **UAC data-type-validity combinator audit — 1 new issue doc filed, scoped by operator.** Follow-up
-  to the D6 shard-dimension work: asked whether UAC is a consistent SSOT for "which data_types are valid for
-  (venue, instrument_type)" across all 5 asset groups. 5-way parallel audit found: **no asset group has a real
-  combinator** — CEFI has a flat venue map + an asset-group-wide (not venue-wide) instrument-shape matrix patched by
-  3 independently-bolted-on venue overrides; DeFi has a real `(protocol, instrument_type)` object but it's drifted
-  from its own "actually captured" registry; TradFi has 3 never-joined axes producing a **live, provably-wrong
-  cell** (CME and ICE get an identical `futures_chain` data_type set despite ICE having no Databento coverage).
-  **Operator scoped the fix to CEFI/DEFI/TRADFI only** — Sports has no tradeable-instrument concept at all (correct
-  as-is, not a gap) and Prediction's instrument is always one shape by domain nature (also correct as-is); Prediction
-  DOES have a separate, smaller, unrelated gap (its flat venue map under-declares real data types). Filed
+- **2026-07-07** — **UAC data-type-validity combinator audit — 1 new issue doc filed, scoped by operator.** Follow-up to
+  the D6 shard-dimension work: asked whether UAC is a consistent SSOT for "which data_types are valid for (venue,
+  instrument_type)" across all 5 asset groups. 5-way parallel audit found: **no asset group has a real combinator** —
+  CEFI has a flat venue map + an asset-group-wide (not venue-wide) instrument-shape matrix patched by 3
+  independently-bolted-on venue overrides; DeFi has a real `(protocol, instrument_type)` object but it's drifted from
+  its own "actually captured" registry; TradFi has 3 never-joined axes producing a **live, provably-wrong cell** (CME
+  and ICE get an identical `futures_chain` data_type set despite ICE having no Databento coverage). **Operator scoped
+  the fix to CEFI/DEFI/TRADFI only** — Sports has no tradeable-instrument concept at all (correct as-is, not a gap) and
+  Prediction's instrument is always one shape by domain nature (also correct as-is); Prediction DOES have a separate,
+  smaller, unrelated gap (its flat venue map under-declares real data types). Filed
   `issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md` with the CME/ICE fix flagged P1 as a
-  live-wrong-answer item independent of whether the full combinator redesign is approved. No files edited beyond
-  this doc + tracker pointers.
+  live-wrong-answer item independent of whether the full combinator redesign is approved. No files edited beyond this
+  doc + tracker pointers.
 - **2026-07-07** — **ASTER/CEFI instrument-service data-status audit — 5 new issue docs filed + GAP 4 appended.**
-  Operator-driven audit starting from the ASTER CEFI data-status dashboard, verified against live production APIs
-  (not code-reading alone) and one real execution of `cefi_cumulative_drawdown_guard_2026_06_27.py` against prod
-  GCS. Filed: (1) `issues/aster_mtds_failure_count_regression_2026_07_07.md` — 🔴 ASTER MTDS `attempted_failed`
-  looks regressed from a documented 3,491 (06-22) back to 17,675 (live 07-07), near its original pre-05-14-fix
-  total; unexplained, staleness ruled out. (2)
-  `issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` — 🔴 LIGHTER and PACIFICA have had zero
-  captured data of any status since 2026-06-26 (11 days), found only by actually running the manual guard script
-  (its own stdout truncates to top-40 and hides its own `total_thin` counter of 1,007 catalogue-wide collapses); the
-  monotonicity guard that DOES run daily has zero alerting wired anywhere. (3)
+  Operator-driven audit starting from the ASTER CEFI data-status dashboard, verified against live production APIs (not
+  code-reading alone) and one real execution of `cefi_cumulative_drawdown_guard_2026_06_27.py` against prod GCS. Filed:
+  (1) `issues/aster_mtds_failure_count_regression_2026_07_07.md` — 🔴 ASTER MTDS `attempted_failed` looks regressed from
+  a documented 3,491 (06-22) back to 17,675 (live 07-07), near its original pre-05-14-fix total; unexplained, staleness
+  ruled out. (2) `issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` — 🔴 LIGHTER and PACIFICA have
+  had zero captured data of any status since 2026-06-26 (11 days), found only by actually running the manual guard
+  script (its own stdout truncates to top-40 and hides its own `total_thin` counter of 1,007 catalogue-wide collapses);
+  the monotonicity guard that DOES run daily has zero alerting wired anywhere. (3)
   `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` — new Decision Gate **D6**:
-  `instrument_type` is only a real breakdown dimension by coincidence today (works for ASTER because it has exactly
-  one type; DERIBIT, which has 4, has zero `instrument_types` breakdown, and DERIBIT-COMBO is faked in as a 4th
-  venue); the same MTDS-daily-axis-on-definitional-data mismatch was independently confirmed live for PREDICTION's
+  `instrument_type` is only a real breakdown dimension by coincidence today (works for ASTER because it has exactly one
+  type; DERIBIT, which has 4, has zero `instrument_types` breakdown, and DERIBIT-COMBO is faked in as a 4th venue); the
+  same MTDS-daily-axis-on-definitional-data mismatch was independently confirmed live for PREDICTION's
   `market_metadata`. (4) `issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md` — IS's own
-  `GET /api/data-status` has zero real HTTP consumers. (5)
-  `issues/manifest_reprocessing_generic_utility_2026_07_07.md` — 11 near-identical one-off reclassify scripts across
-  8 weeks, no generic mechanism. Also appended **GAP 4** to `issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`:
-  the GAP-2 genesis sweep to 2023-07-22 never touched `expected_start_dates.yaml`'s `trades` entry for ASTER, which
-  still disagrees at 2021-08-30 — flagged as live-risk since that file drives completion-% calculations, and as a
-  blocker on the file's own pending pre-funding-genesis trades backfill todo. Separately confirmed as NOT bugs from
-  this audit: TradFi's non-trading-day handling (already correct), the `2023-07-22` ASTER genesis vs. `2021-08-30`
-  trades floor being a deliberate GAP-2 split (not solely an oversight — see GAP 4 for the residual it missed), and
-  the Sports "bookmaker vs. data-source-then-league" view difference (a `secondary_axis` selector, not a
-  regression). Wired into Stage 2b/3/4/6 above + D6 + the urgent-findings banner; none of these are yet reflected in
-  the cefi Layer-2 37.86 snapshot number.
+  `GET /api/data-status` has zero real HTTP consumers. (5) `issues/manifest_reprocessing_generic_utility_2026_07_07.md`
+  — 11 near-identical one-off reclassify scripts across 8 weeks, no generic mechanism. Also appended **GAP 4** to
+  `issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`: the GAP-2 genesis sweep to 2023-07-22 never touched
+  `expected_start_dates.yaml`'s `trades` entry for ASTER, which still disagrees at 2021-08-30 — flagged as live-risk
+  since that file drives completion-% calculations, and as a blocker on the file's own pending pre-funding-genesis
+  trades backfill todo. Separately confirmed as NOT bugs from this audit: TradFi's non-trading-day handling (already
+  correct), the `2023-07-22` ASTER genesis vs. `2021-08-30` trades floor being a deliberate GAP-2 split (not solely an
+  oversight — see GAP 4 for the residual it missed), and the Sports "bookmaker vs. data-source-then-league" view
+  difference (a `secondary_axis` selector, not a regression). Wired into Stage 2b/3/4/6 above + D6 + the urgent-findings
+  banner; none of these are yet reflected in the cefi Layer-2 37.86 snapshot number.
 - **2026-07-06** — **Reconciled certified snapshot published** (via `layer1_remeasure_and_certify_2026_07_06` task 006).
   Fresh-measured sports as part of the reconciliation (never re-measured in this plan cycle previously) — sports Layer-1
   30.77% (8/26; 18 missing all BETFAIR odds; 24 stray) unchanged vs stale; sports Layer-2 100.00% (38,182/38,182
@@ -701,9 +700,9 @@ reconciling + signing off, not redoing.)_
   `issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md` (dead-code cleanup) ·
   `issues/manifest_reprocessing_generic_utility_2026_07_07.md` (no generic reprocessing tool) ·
   `issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` GAP 4 (ASTER trades-genesis contradiction, newly
-  appended) · `issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md` (🔴 no AG has a real
-  (venue, instrument_type) → data_types combinator; CME/ICE cell is live-wrong; scoped to CEFI/DEFI/TRADFI only —
-  Sports/Prediction correctly excluded) ·
-  `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md` (🔴 P0 — AAVE_V3-ARBITRUM/POLYGON + SPARK have
-  real current captured data the turbo API silently reports as 0/0; a read-path bug, not a capture gap)
+  appended) · `issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md` (🔴 no AG has a real (venue,
+  instrument_type) → data_types combinator; CME/ICE cell is live-wrong; scoped to CEFI/DEFI/TRADFI only —
+  Sports/Prediction correctly excluded) · `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md` (🔴 P0 —
+  AAVE_V3-ARBITRUM/POLYGON + SPARK have real current captured data the turbo API silently reports as 0/0; a read-path
+  bug, not a capture gap)
 - **SSOT:** `../../codex/02-data/honest-coverage-model.md`
