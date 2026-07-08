@@ -259,3 +259,20 @@ blank-`pipeline_mode` rows splitting into two very different populations:
       existing rows once the correct `pipeline_mode` value per (venue, data_type) is known. Gate: CF-3 GREEN (0 blank
       pipeline_mode among schema_version=9 rows); no new blank-pipeline_mode rows appear for 7 consecutive days
       post-fix. (repo: market-tick-data-service)
+
+## Minor finding (2026-07-08, slot-7 sonnet/high) — ICE COMBO symbols dropped from G1-ENUM bundle roll-up
+
+While running `enumerate_expected_universe.py --asset-group tradfi --enumerator-version v2 --full-history` (task 7 of
+`tradfi_v9_stage1_finish_2026_07_06.md`), 1,459 ICE COMBO catalogue instruments (of 1,096,069 total, ~0.13%) logged
+`G1-ENUM bundle-grain: no underlying for tradfi leaf 'ICE:COMBO:<symbol>' (venue=ICE) — dropped from roll-up` and were
+excluded from the could-exist enumeration. Sample symbols: `ICE:COMBO:BRN   3  30615524`, `ICE:COMBO:G   FSF0032.M0032`
+— these don't match the standard letter+month-code underlying-extraction pattern the roll-up expects (extra whitespace,
+numeric suffixes that look like strike/spread IDs rather than month codes). **Failure mode is safe** (conservative
+exclusion, not a wrong value) — these 1,459 instruments simply won't get `expected_unattempted` seeding until the
+underlying-extraction regex is extended to cover this ICE COMBO symbol shape. Low severity, not blocking task 7.
+
+- [ ] [CODE] P3. **ICE COMBO underlying-extraction gap** — extend the G1-ENUM bundle-grain underlying parser (likely in
+      `instruments-service/scripts/enumerate_expected_universe.py` or a shared bundle-rollup helper it imports) to
+      handle ICE COMBO symbols like `BRN   3  30615524` / `G   FSF0032.M0032` (currently unparseable → dropped with a
+      WARNING). Gate: 0 "no underlying for tradfi leaf" warnings on an ICE-scoped enumerate run. (repo:
+      instruments-service)

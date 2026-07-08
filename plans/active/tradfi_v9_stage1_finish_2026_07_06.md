@@ -154,7 +154,19 @@ source:
       already-adjudicated non-issues per `tradfi_manifest_canonicalisation_2026_06_01.md` (linked below), not new gaps.
 - [ ] [DATA] P0. **IS enumerate-seed for tradfi** — seed the tradfi could-exist denominator (`expected_unattempted`)
       from the rebuilt manifest + IS catalogue. Gate: tradfi `expected_*` rows materialised by the writer; fresh scan →
-      0 unseeded candidates. **PREREQ: manifest rebuild (E5) done.**
+      0 unseeded candidates. **PREREQ: manifest rebuild (E5) done.** **STATUS 2026-07-08 (slot-7 sonnet/high):** PREREQ
+      satisfied (E5 rebuild ran 2026-07-07). Ran
+      `enumerate_expected_universe.py --asset-group tradfi --enumerator-version v2 --full-history` scan-only against the
+      fresh catalogue (1,096,069 instruments) + fresh manifest (6,022,012 rows): found 3,961,480 per-instrument-day EU
+      candidates, range-encoding to 49,379 rows for the `_index/expected_universe_ranges.parquet` companion artifact
+      (80x compaction; that artifact currently holds 109,388 STALE rows from 2026-07-03, predating both the catalogue
+      refresh and the manifest rebuild). The per-day candidate count (3.96M) exceeds the tool's default
+      `--max-writes-per-run` safety cap (1M) — its own error message requires operator review before raising the cap.
+      Verified the actual `--apply-write` write target is safe: full-history mode writes only the 49,379 range rows to a
+      SEPARATE companion artifact (never touches the main `_index`), last-writer-wins, idempotent per the script's own
+      docstring. **Filed BLK-447957a5** recommending proceeding with `--max-writes-per-run 5000000 --apply-write` —
+      awaiting operator/main-agent answer. Also filed a minor P3 finding (ICE COMBO underlying-parsing gap, 1,459/1.1M
+      instruments, safe conservative-exclusion failure mode) in the CF-4/CF-7 issue doc.
 - [x] ✅ [DATA] P0. **IS catalogue for tradfi** — `build_instrument_catalogue.py` for tradfi (the could-exist SSOT) —
       slot-2 opus/max 2026-07-06. Gate satisfied:
       `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` is fresh and accurate — foreground
