@@ -134,8 +134,16 @@ investigation target.
       record_captured/record_empty callsites), not a correctness fix for these 2 sites specifically. Re-verification of
       item #1's gate is therefore not expected to change its result, but still worth a confirmatory pass per the
       recommended decision.
-- [ ] [DATA] P0. Add `source=` at the 3 `sfi.py` `record_expected_empty()` callsites (repo: instruments-service) — same
-      pattern; re-verify SFI's item #2 gate afterward (already flipped ✅).
+- [x] ✅ [DATA] P0. Add `source=` at the 3 `sfi.py` `record_expected_empty()` callsites (repo: instruments-service) —
+      same pattern; re-verify SFI's item #2 gate afterward (already flipped ✅). — instruments-service@d6fff68. Added
+      `source=_orch._sports_ref_source("progressive_stats")` as a top-level kwarg to all 3 callsites (lines 284, 291,
+      315 — the coverage-start/known-gap guard and the season-window guard), matching this file's own `record_captured`
+      callsite (L456) and the already-fixed understat.py/weather.py/footystats.py pattern; these had NO source in
+      `row_key` pre-fix — genuinely blank-sourced writes, same correctness-fix class as footystats.py. Gate
+      re-verification: already covered by the P1 unfiltered-vs-filtered re-verify item below — it found SFI's 31
+      blank-source rows (pre-this-fix) were all `capture_status='empty_confirmed'`, none `expected_unattempted`, so item
+      #2's `pending_fetch==0`-at-flip-time claim was not corrupted by this bug even before this fix landed; this fix
+      closes the ongoing blank-source production going forward.
 - [x] ✅ [DATA] P0. Add `source=` at the 4 `footystats.py` `record_expected_empty()` callsites (repo:
       instruments-service) — this may also close some fraction of item #5's PREDICTIONS/MATCHES residual (the
       cup-fixture-calendar gap slot-7 diagnosed 2026-07-08 20:10 UTC as a separate CODE gap — re-verify AFTER this fix
