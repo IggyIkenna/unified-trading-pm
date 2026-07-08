@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Sports Data Source — Coverage Matrix SSOT
 summary:
-  Per-sports-data_type coverage matrix — responsible source, expected-league denominators (api_football 95, footystats 46,
-  understat 5, …), coverage axis, and record_empty expectations feeding the v5 honest-coverage aggregator.
+  Per-sports-data_type coverage matrix — responsible source, expected-league denominators (api_football 95, footystats
+  46, understat 5, …), coverage axis, and record_empty expectations feeding the v5 honest-coverage aggregator.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,12 +11,28 @@ stage: [meta]
 repos: [deployment-api, deployment-ui, execution-service, instruments-service]
 scope: [engineer, admin]
 tags: [sports, honest-coverage, data-status, footystats, odds, audit]
-related: [codex/02-data/sports-adapter-dependency-order.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/sports-gcs-path-ssot.md, codex/02-data/availability-manifest-and-data-status.md]
+related:
+  [
+    codex/02-data/sports-adapter-dependency-order.md,
+    codex/02-data/sports-scheduling-and-sharding.md,
+    codex/02-data/sports-gcs-path-ssot.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+  ]
 created: 2026-04-20
 authoritative_for: [sports data_type source-to-coverage-axis matrix, per-source expected-league denominators]
-referenced_by: [codex/01-domain/sports-instruments.md, codex/02-data/chunk-safe-manifest-migrations.md, codex/02-data/mtds-data-source-coverage-matrix.md, codex/02-data/pipeline-coverage-matrix.md, codex/02-data/sports-adapter-dependency-order.md, codex/02-data/sports-data-types-catalog.md, codex/02-data/sports-gcs-path-ssot.md, codex/02-data/sports-scheduling-and-sharding.md]
+referenced_by:
+  [
+    codex/01-domain/sports-instruments.md,
+    codex/02-data/chunk-safe-manifest-migrations.md,
+    codex/02-data/mtds-data-source-coverage-matrix.md,
+    codex/02-data/pipeline-coverage-matrix.md,
+    codex/02-data/sports-adapter-dependency-order.md,
+    codex/02-data/sports-data-types-catalog.md,
+    codex/02-data/sports-gcs-path-ssot.md,
+    codex/02-data/sports-scheduling-and-sharding.md,
+  ]
 owner:
-last_reviewed: 2026-05-22
+last_reviewed: 2026-07-08
 code_refs:
 ---
 
@@ -161,10 +177,21 @@ Expected leagues: 5 PREDICTION only — EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE
 
 Expected leagues: 55 (PREDICTION 33 + FEATURES 22). Reference leagues NOT covered.
 
-| data_type               | Coverage axis                          | Expected shards per day    | `record_empty` expected |
-| ----------------------- | -------------------------------------- | -------------------------- | ----------------------- |
-| `PLAYER_VALUES`         | per-league × periodic (weekly cadence) | 55 leagues × cadence-dates | Yes                     |
-| `TRANSFERMARKT_LEAGUES` | per-league × periodic (weekly cadence) | 55 leagues × cadence-dates | Yes                     |
+**2026-07-08 correction**: `PLAYER_VALUES`'s axis below was stale — it previously read
+`per-league × periodic (weekly cadence)`, describing pre-2026-04-29 behavior. The 2026-04-29 reconciliation
+(deployment-api commit `6b7aa696`, landed 2026-06-11) deleted 167k phantom denorm-to-fixture-date rows and moved
+`PLAYER_VALUES` onto the axis below. Verified live 2026-07-08 by downloading the real production manifest
+(`gs://instruments-store-sports-prd-{pid}/_index/availability_index.parquet`) and calling the real
+`sports_honest_coverage()` against it: 2,564 / 3,400 expected (league, trigger-date) shards = 75.41% all-time
+(2014-2026), 439 / 441 = 99.55% for the current era (2025-01-01 to 2026-07-08) — see
+`instruments-service/docs/SPORTS_INSTRUMENTS.md` § "Reference-data providers" for the full before/after writeup.
+`TRANSFERMARKT_LEAGUES` is retired (2026-05-05, per `deployment-api`'s `sports_helpers.py` comment) — its row below is a
+historical record, not a currently-active data_type.
+
+| data_type               | Coverage axis                                                                                                              | Expected shards per day                                                 | `record_empty` expected |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------- |
+| `PLAYER_VALUES`         | per-league × trigger-date (season-start + transfer-window-open + transfer-window-close, via `get_reference_refresh_dates`) | 55 leagues × ~3-4 trigger-dates/year (NOT daily/weekly cadence-sampled) | Yes                     |
+| `TRANSFERMARKT_LEAGUES` | per-league × periodic (weekly cadence) — RETIRED 2026-05-05                                                                | 55 leagues × cadence-dates (historical only)                            | Yes                     |
 
 ### 2.5 Soccer-Football-Info (SFI) — source key = `soccer_football_info`
 
@@ -266,6 +293,14 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
   dedup bug is fixed.
 
 ## 5. Changelog
+
+- **2026-07-08** — §2.4 `PLAYER_VALUES` axis corrected from stale `per-league × periodic (weekly cadence)` to the real,
+  currently-shipped `per-league × trigger-date` axis (deployment-api commit `6b7aa696`, landed 2026-06-11 — this doc had
+  not been updated since, despite `last_reviewed: 2026-05-22` postdating the code change). Verified live against the
+  real production manifest + the real `sports_honest_coverage()` function (not re-implemented): 75.41% all-time / 99.55%
+  current-era for Transfermarkt `PLAYER_VALUES`; 99.9% all-time / 99.56% current-era for SFI `SFI_PROGRESSIVE_STATS`
+  (§2.5 axis — `per_league_per_fixture_date` — was already correct, no change needed there). Full writeup:
+  `instruments-service/docs/SPORTS_INSTRUMENTS.md` § "Reference-data providers".
 
 - **2026-04-20** — Initial SSOT. Authored during SPORTS data-status audit: manifest was v5-correct on disk but the
   deployment-api aggregator was using FIXTURES row-count as the denominator for 1-to-many children, producing nonsense

@@ -175,34 +175,37 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
       -006 re-dispatches — this checkbox marker filters -006 from priority-only regen dispatch until (a)-(c) complete
       and an operator clears it.
 - [ ] [SCRIPT] P2. Delete `scripts/backfill/understat_bulk_backfill.py` per its lifecycle marker once the gate is green
-      (one-off; do not leave it in the tree). **BLOCKED-PREREQUISITES (2026-07-06, slot-7).** -007 auto-dispatched at
-      Tier 1 Priority 50 (fourth priority-only regen dispatch after BLK-afcc5da6 → -001, BLK-18a3d596 → -004, and this
-      session's -006 park) while the entire dependency chain is unresolved. Script's own lifecycle marker
-      (`# Delete-when: understat-vm-xg-complete gate flips green on real captured shots AND the manifest shows     0 attempted_failed / 0 stale-empty for XG+XG_SHOTS on the big-5`)
-      makes the gate-green precondition machine-checkable — and neither clause is satisfied. Live state (verified
-      2026-07-06 ~18:49Z from this session): **backfill process ALIVE** (PID 1782092 orphaned from prior slot-7 session,
-      PPID=1, log mtime 18:49:30Z, 1,121 `rows written for date` and climbing — currently processing 2020-12-27 /
-      2021-01-01 big-5 dates, still ~4 years of dates before the 2025 end-cutoff and roughly 8× the current row-count
-      away from the -005 verification point that already ruled DoD-NOT-MET); **-001 `status=dispatched`** to the
-      now-dead slot record; **-002 (manifest-verify P0) `status=queued`**; **-003 (§9.2b consolidator confirmation)
-      `status=queued`**; conditions endpoint 404 (no way to read the gate value via API, but the -005 verdict earlier
-      today explicitly showed big-5 XG_SHOTS captured 1,961 vs XG 4,432 = 44% shots-coverage, 384 XG_SHOTS
-      `attempted_failed`, 13,811 XG_SHOTS + 315 XG `expected_unattempted`, latest XG date 2023-03-11, latest XG_SHOTS
-      2024-12-21 — DoD NOT MET and no gate flip has occurred since; the backfill hasn't even reached those DoD dates
-      yet). Deleting the driver now would **remove the still-running tool** (the shipped resume-aware driver that is
-      currently generating the very rows the DoD requires) — the process is orphaned, meaning if the host restarts or
-      the process dies the driver MUST exist on disk to resume; deletion here is a data-correctness regression, not just
-      a lifecycle violation. **Un-block sequence** (identical shape to the -004/-005/-006 parks): (a) task -001 runs to
-      `ALL DATES CAPTURED (0 attempted_failed)` + `UNDERSTAT BULK BACKFILL COMPLETE` (~2 h remaining at ~14-17
-      dates/min); (b) task -002 re-runs `/tmp/verify_understat_gate.py` against the consolidated manifest and confirms 0
-      `attempted_failed` / 0 `expected_unattempted` for XG + XG_SHOTS on the big-5, XG_SHOTS captured atoms ≈ XG
-      captured atoms; (c) task -003 confirms the §9.2b consolidator image rebuild reached the deployed Cloud Run jobs
-      (dedup collapsed captured-vs-seed dups); (d) parked -004 one-off normalization completes against the now-clean
-      consolidator; (e) parked -005 re-flips `understat-vm-xg-complete` green on real captured shots; (f) parked -006
-      documents the final captured totals + gate flip in the issue-doc Progress Log; (g) THEN -007 re-dispatches, the
-      delete-when precondition is verifiably met, and the driver is deleted in the same commit as the archival ritual.
-      This checkbox marker filters -007 from priority-only regen dispatch until (a)-(f) complete and an operator clears
-      it.
+      (one-off; do not leave it in the tree). **BLOCKED-PREREQUISITES (2026-07-08, slot-7) — updated, materially
+      different blocker than the 2026-07-06 note.** Re-verified live state directly against the consolidated manifest
+      (`.venv/bin/python /tmp/verify_understat_gate.py`, single-parquet read, no whole-corpus walk) rather than trusting
+      the stale in-checkbox numbers: **no `understat_bulk_backfill.py` process is running** (the driver is NOT currently
+      executing — the 2026-07-06 "still-running, don't delete" concern no longer applies), and the driver's OWN
+      precondition clause is now met: **big-5 `attempted_failed` = 0 for both XG and XG_SHOTS** (was 384/20 in earlier
+      sessions). BUT the second clause is still unmet: **big-5 `expected_unattempted` = 6,093** (250 XG + 5,843
+      XG_SHOTS) — nonzero, so plan §4's DoD ("0 expected_unattempted for XG+XG_SHOTS") and this script's own
+      `# Delete-when` marker ("0 stale-empty for XG+XG_SHOTS") are both still unmet. Critically, this residual is now
+      **proven NOT closeable by this driver**: slot-7 (this session, 2026-07-08) already ran the driver to
+      `ALL DATES CAPTURED (0 attempted_failed)` / `UNDERSTAT BULK BACKFILL COMPLETE` with zero effect on the EU count,
+      and slot-2 independently re-ran it with `--end 2026` (~20:47-20:49 UTC, `/tmp/understat_backfill_tail2.log`) —
+      also zero change. Root cause (diagnosed by slot-2,
+      `plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md` Progress Log 2026-07-08 20:55 UTC):
+      the 6,093 rows are blank-`error_reason`, `attempted_at` 2026-06-19→2026-07-08 — written by the **daily
+      forward-poll enum**, a different code path than this backfill driver touches at all. Fix requires a **new**
+      per-league matchday-aware typing script (`type_understat_eu_no_provider_coverage.py`, not yet built) plus an
+      **operator call** on whether a justified nonzero residual should even count as a gate failure — tracked as its own
+      `[SCRIPT] P1` todo in that issue doc, filed 2026-07-08. XG_SHOTS captured (6,671) ≈ XG captured (6,673, ratio
+      0.9997) — that DoD clause IS met. Gate `understat-vm-xg-complete` has NOT flipped (conditions endpoint still 404,
+      no API read; this plan's own -004/-005/-006 remain open `- [ ]` in the chain above). **Revised un-block
+      sequence**: (a) the new EU-residual typing script lands + runs (repo: instruments-service, tracked in the
+      sports_is_manifest_eu_regression_overwrite issue doc, NOT this plan's task -001 — -001's scope is done); (b)
+      operator decision on whether a justified residual counts as a gate failure is resolved one way or the other; (c)
+      -005 re-verifies + flips `understat-vm-xg-complete` on the resolved state; (d) -006 documents the final totals;
+      (e) THEN -007 re-dispatches and deletes the driver. Since the driver is provably NOT part of closing the remaining
+      gap (two independent re-runs proved zero effect) and is not currently running, there is no data-correctness reason
+      to keep it beyond the lifecycle-marker discipline itself — but the marker's literal precondition (gate green) is
+      still unmet, so deleting now would violate the documented delete-when contract. Leaving in place until (a)-(d)
+      resolve, consistent with "do not leave it in the tree" applying only once its job — and the gate — are actually
+      done. This checkbox marker filters -007 from priority-only regen dispatch until an operator clears it.
 
 ## 4. Definition of DONE
 
@@ -349,3 +352,19 @@ shots; the 6 parked sports tasks are unblocked; issue-doc Progress Log updated; 
   outside `--end 2025`'s season coverage — -002 (re-verify) and -004 (one-off normalization) should characterize and
   close this, not -001. Plan §4's full DoD (0 expected_unattempted too) is therefore still NOT met after this todo —
   -001 was scoped to the driver-completion signal only, which IS now achieved.
+- 2026-07-08 21:30 UTC (slot-7 planning, `data_engineering`, 5th auto-dispatch — this session): re-dispatched to task
+  **-007** (delete the driver). Before acting, re-verified live state directly against the consolidated manifest
+  (`/tmp/verify_understat_gate.py`, single-parquet read) rather than trusting the 2026-07-06 in-checkbox numbers: no
+  `understat_bulk_backfill.py` process running; big-5 `attempted_failed=0` for XG + XG_SHOTS (driver's own precondition
+  now met, confirming -001's completion held); big-5 `expected_unattempted=6,093` (250 XG + 5,843 XG_SHOTS) still
+  nonzero — plan §4 DoD and this script's own `# Delete-when` marker both still unmet. Cross-referenced the sibling
+  issue doc `sports_is_manifest_eu_regression_overwrite_2026_06_29.md` and found a **20:55 UTC entry from slot-2** (~40
+  min prior to this dispatch) that materially changes the blocker: the 6,093 residual is proven NOT closeable by this
+  driver (two independent re-runs — this session's completion + slot-2's `--end 2026` re-run — both left the count
+  unchanged) because it's written by the daily forward-poll enum, a different code path. A new typing script + an
+  operator call on whether a justified residual counts as a gate failure are now the actual blocker, tracked as their
+  own todo in that issue doc — NOT something this plan's -001/-005 re-running can resolve. Updated -007's checkbox with
+  the corrected blocker + revised un-block sequence (see above) rather than re-parking with the stale 2026-07-06
+  rationale (the "driver still running, don't delete" concern no longer applies; the actual gate-green precondition
+  does). Did not delete the script — its lifecycle marker's literal precondition (gate green) remains unmet. No code
+  shipped this session; plan-doc update only, via the sibling `unified-trading-pm` worktree.

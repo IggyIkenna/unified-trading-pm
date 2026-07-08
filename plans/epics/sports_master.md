@@ -251,17 +251,56 @@ Shipped 2026-05-12:
   modules retained as future-work scaffolding; reference from MTDS or any production code path is forbidden until
   operator un-defers.
 
-Retained scaffolding (NOT removed, but inactive):
+Retained scaffolding (NOT removed, but inactive) — **as of 2026-05-12; see "Scrapers retired 2026-07-08 per operator"
+below for what changed**:
 
 - UAC `venue_constants.py`
   `BET365 / DRAFTKINGS / FANDUEL / WILLIAMHILL / LADBROKES / CORAL / PADDYPOWER / SKYBET / BETWAY / BETVICTOR / BOYLESPORTS / BWIN / BET888SPORT / UNIBET / BETFRED / SBOBET`
   venue constants + their `SPORTS_BOOKMAKER_WEB_VENUES` / `SPORTS_CAPTCHA_RISK` / `VENUE_EXECUTION_REGISTRY` /
   `INSTRUMENT_TYPES_BY_VENUE` / `VENUE_FEE_MODEL_MAP` / `VENUE_ALPHA_PROFILE` rows (broader UAC venue-constants cleanup
   is owned by the cross-asset catalogue audit plan Phase 1D `to_canonical_venue()` work; mass-sweep would collide with
-  that plan).
-- UAC `BETTING_SPORTS_VENUES` manifest entries for the 14 scrapers.
-- execution-service `adapters/scrapers/*.py` files (14 scrapers + `base_scraper.py` + `version_registry.py`) and
-  `adapters/browser/us_books.py` `_make_us_book` factory.
+  that plan). **Still retained 2026-07-08** — 6 of these 14 constants (`CORAL`, `PADDYPOWER`, `SKYBET`, `BETWAY`,
+  `BOYLESPORTS`, `UNIBET`) double as bookmaker-DATA labels consumed by the ACTIVE Odds-API path
+  (`execution-service/execution_service/sports_execution/adapters/aggregator/odds_api.py`'s `_ODDS_API_BOOKMAKER_MAP` +
+  UAC `_odds_api_maps.py`) — deleting the constant would break real, currently-live odds-ingestion, not just the retired
+  scrapers. Untangling venue-execution-key vs. odds-data-label is explicitly cross-asset-catalogue-audit scope, not this
+  retirement's.
+- UAC `BETTING_SPORTS_VENUES` manifest entries for the 14 scrapers — unchanged, same reasoning.
+- ~~execution-service `adapters/scrapers/*.py` files (14 scrapers + `base_scraper.py` + `version_registry.py`)~~ —
+  **DELETED 2026-07-08, see below** — and `adapters/browser/us_books.py` `_make_us_book` factory (unrelated, untouched
+  by this retirement).
+
+## Scrapers retired 2026-07-08 per operator
+
+> **Operator decision 2026-07-08 (verbatim)**: _"retire the 14 bookmaker scrapers."_
+
+Escalates the 2026-05-12 DEFERRED-INDEFINITELY scaffolding-retention call (above) to a full deletion. Shipped
+2026-07-08:
+
+- `execution-service@29a888a8d` — deleted the entire `execution_service/sports_execution/adapters/scrapers/` package:
+  the 14 adapter modules (`bet365`, `bet888sport`, `betfred`, `betvictor`, `betway`, `boylesports`, `bwin`, `coral`,
+  `ladbrokes`, `paddypower`, `sbobet`, `skybet`, `unibet`, `williamhill`) plus shared `base_scraper.py` +
+  `version_registry.py` + package `__init__.py`. Removed the re-export block from
+  `execution_service/sports_execution/adapters/__init__.py`. Deleted the 14 dedicated adapter tests under
+  `tests/sports_execution/unit/scrapers/` (+ its `__init__.py`),
+  `tests/sports_execution/unit/adapters/ test_scraper_version_registry.py`, and the scraper-specific cases from
+  `tests/sports_execution/unit/ test_adapter_stubs.py` (kept the exchange/bookmaker-API/odds-API/paper coverage in that
+  file). Full `quality-gates.sh` green (214s, exit 0) before commit.
+- **Consumer check before deletion**: grepped the whole workspace for every adapter class name + the `adapters.scrapers`
+  import path — the only hits were the package's own re-export (`adapters/__init__.py`) and its dedicated tests. No
+  MTDS/strategy/deployment/UI code imported these classes (already stripped from MTDS `_ADAPTER_PATHS` in 2026-05-12);
+  confirmed still 0 real production rows.
+- `instruments-service` — `docs/SPORTS_INSTRUMENTS.md` § "Betfair's real current state" updated from an open operator
+  question to the retirement record.
+- **`bookmaker_api/onexbet.py` explicitly evaluated and KEPT** — it is a real, non-scraping HTTP API adapter (rate
+  limiting, canonical-odds mapping, real error classification) with its own passing HTTP-mocked test suite
+  (`tests/sports_execution/unit/bookmaker_api/test_onexbet_adapter.py`), and `onexbet` is one of the 20 active
+  Odds-API-sourced bookmakers (`instruments-service/docs/SPORTS_INSTRUMENTS.md` § "Bookmakers (20)") — categorically
+  different from the 14 dormant Playwright scraper stubs (no DEFERRED banner, no stub `NotImplementedError`/
+  `ScraperError` bodies).
+- **UAC venue constants/`_odds_api_maps.py` NOT touched** — see "Retained scaffolding" note above; 6 of the 14
+  bookmaker-name constants are shared with the live Odds-API ingestion path and untangling them is cross-asset
+  catalogue-audit scope.
 
 Closes:
 
@@ -695,10 +734,10 @@ The two data_types collide visually in the data-status panel without a clear dis
       `normalize_footystats_odds` for the full bookmaker-odds vs FootyStats-predictions distinction.
 
       Codex doc updated: `codex/02-data/sports-data-source-coverage-matrix.md` §2.2 — added `PREDICTIONS vs ODDS —
-      disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
-      (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
-      (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
-      use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
+          disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
+          (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
+          (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
+          use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
 
 #### C.4 — Transfermarkt PLAYER_VALUES per-player flatten
 
@@ -791,9 +830,10 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
   - **MATCHES (footystats) — PARTIAL FIELD-MAPPING.** `normalize_footystats_match`
     (`unified_api_contracts/external/footystats/normalize.py:26-114`): populates ~25 CanonicalFixture fields but
     hardcodes 15+ to `None` (referee, halftime goals, shots*on_target, fouls, yellow/red cards, shots_blocked, offsides,
-    passes_total/accuracy) **despite the FootyStatsMatch source dataclass carrying**
-    `team_a*_`/    `team*b*_`for shots_on_target / yellow_cards / red_cards / fouls (verified via`rg` on schemas.py).     Source-to-canonical name-mapping miss (`team_a`→`home`, `team_b`→`away`).
-    Smaller scope than full flatten; just rewire the field assignments. **Follow-up #3 below.**
+    passes_total/accuracy) **despite the FootyStatsMatch source dataclass carrying** `team_a*_`/ `team*b*_`for
+    shots_on_target / yellow_cards / red_cards / fouls (verified via`rg` on schemas.py). Source-to-canonical
+    name-mapping miss (`team_a`→`home`, `team_b`→`away`). Smaller scope than full flatten; just rewire the field
+    assignments. **Follow-up #3 below.**
 - [x] [SCRIPT] P1. **Follow-up #1 — STANDINGS flatten.** UAC `normalize_api_football_standing` rewrite to unpack the
       nested `league.standings: [[...]]` array into per-(league, team, season, position) row records with full stats
       subobjects (all/home/away each have played/win/draw/lose/goals/goalsAgainst/goalDifference/points). Same migration
@@ -1138,7 +1178,9 @@ ikenna-sports-re-audit-sp-5-10-12 slot 8 sub-agent):
       KEPT `scrapers/` (odds-data), the 4 real venues, and the UAC-owned `VENUE_EXECUTION_REGISTRY` (no local registry
       files existed). 304 targeted tests green, basedpyright clean, clean break (no shims). (Supersedes the earlier
       OPTION-B-open note + the original SP-5 "bet365 wired wrong / DK-FD have no scraper — ship-or-delete" framing —
-      both resolved by the deletion above.)
+      both resolved by the deletion above.) **STALE as of 2026-07-08**: the "KEPT `scrapers/`" clause above is
+      superseded — the 14 scraper modules (including `scrapers/bet365.py`) were fully deleted 2026-07-08 per operator
+      decision. See "Scrapers retired 2026-07-08 per operator" below.
 - [x] ✅ [SCRIPT] **P1**. **SP-10 — cluster-validation kwargs MISSING workspace-wide**. **[DONE —
       instruments-service@b2a7ad75 2026-06-05: ASSESSED — no sports `record_captured_from_counts` site is a genuine
       multi-cluster bundle (one row per entity at (date,data_type[,league]); league is the row KEY, not a sub-cluster)
@@ -1158,13 +1200,13 @@ ikenna-sports-re-audit-sp-5-10-12 slot 8 sub-agent):
       2026-06-05: VERIFIED CONSISTENT — exactly 4 execution-capable sources (betfair/kalshi/polymarket/matchbook) each
       have an adapter; the other 11 sources are market/reference-data-only (Pinnacle correctly has NO execution
       adapter). The "17 vs 15" was a stale ill-posed count (it counted all sports SourceCapability data-feeds incl.
-      removed _MANIFOLD/_SHARPAPI). Bidirectional capability⇄adapter drift-guard test added.]** ~~17 caps declared vs 15
-      execution classes present. Reconcile.~~
+      removed \_MANIFOLD/\_SHARPAPI). Bidirectional capability⇄adapter drift-guard test added.]** ~~17 caps declared vs
+      15 execution classes present. Reconcile.~~
 - [x] ✅ [SCRIPT] **P2**. **SP-12(f) — shard-level isolation**. **[DONE — execution-service@dbab41a0e 2026-06-05:
-      ALREADY per-adapter — `concurrent_executor._execute_single` wraps each venue's `place_bet()` in its own try/except
-      + records the failure (not swallowed); `asyncio.gather` returns one result per venue without aborting the batch.
-      Per-adapter isolation regression tests added.]** ~~Orchestrator-level catch preserves isolation but per-adapter
-      not enforced. Tighten.~~
+      ALREADY per-adapter — `concurrent_executor._execute_single` wraps each venue's `place_bet()` in its own
+      try/except + records the failure (not swallowed); `asyncio.gather` returns one result per venue without aborting
+      the batch. Per-adapter isolation regression tests added.]** ~~Orchestrator-level catch preserves isolation but
+      per-adapter not enforced. Tighten.~~
 
 Already GREEN (re-audit closed): SP-1/SP-2/SP-3 case-folding (cross_asset_group Phase 1D), SP-4 data-type-namespace note
 (cross_asset_group Phase 1D), SP-6 KNOWN_COVERAGE_GAPS (folded to sports phantom-recon plan), SP-7 launch-dates
@@ -1247,8 +1289,10 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
       denominate against). — **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1`
       (~365/yr) and `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written
       at trigger dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
-      `\_sports_trigger_dates_for*{window,league}`helpers (union     of`get_reference_refresh_dates`across leagues, clipped) reading from the UAC`LEAGUE_REGISTRY`(no GCS I/O, so it     works before the IS write-path lands — coverage shows 0% until then, correctly).`TEAMS`→`global_trigger_date`,     `PLAYER_VALUES`→`per_league_trigger_date`.
-      8 tests incl. the trigger-date≪daily-calendar invariant. QG exit 0.
+      `\_sports_trigger_dates_for*{window,league}`helpers (union of`get_reference_refresh_dates`across leagues, clipped)
+      reading from the UAC`LEAGUE_REGISTRY`(no GCS I/O, so it works before the IS write-path lands — coverage shows 0%
+      until then, correctly).`TEAMS`→`global_trigger_date`, `PLAYER_VALUES`→`per_league_trigger_date`. 8 tests incl. the
+      trigger-date≪daily-calendar invariant. QG exit 0.
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
 
 ## Assigned active plans
