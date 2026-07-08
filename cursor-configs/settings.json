@@ -72,5 +72,8 @@
     }
   },
   "model": "opus[1m]",
-  "effortLevel": "xhigh"
+  "effortLevel": "xhigh",
+  "env": {
+    "DISABLE_AUTOUPDATER": "1"
+  }
 }
