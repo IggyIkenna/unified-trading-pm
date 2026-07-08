@@ -141,13 +141,34 @@ code-fix task). A data_engineering slot with a full session budget should:
 - [ ] [DATA] P3. **Root-cause footystats ODDS 1,264-row residual** — no investigation session has looked at this
       cluster; determine whether it shares the MATCHES or PREDICTIONS root cause or is a distinct third gap (repo:
       instruments-service).
-- [ ] [DATA] P2. **Re-verify + re-dispatch footystats backfill VM after the above land** — once the two CODE fixes are
-      shipped, re-run the typing pass, confirm `(footystats, MATCHES)` + `(footystats, PREDICTIONS)` +
-      `(footystats,     ODDS)` `pending_fetch == 0`, then flip `sports_p2_history_reference_and_odds_2015_to_present`
-      item #5 (and contribute to unblocking item #7) (repo: instruments-service).
+- [ ] [DATA] P2. **BLOCKED-PREREQUISITES (2026-07-08, slot-8).** **Re-verify + re-dispatch footystats backfill VM after
+      the above land** — once the two CODE fixes are shipped, re-run the typing pass, confirm `(footystats, MATCHES)` +
+      `(footystats, PREDICTIONS)` + `(footystats, ODDS)` `pending_fetch == 0`, then flip
+      `sports_p2_history_reference_and_odds_2015_to_present` item #5 (and contribute to unblocking item #7) (repo:
+      instruments-service). **BLOCKED**: auto-dispatched to slot-8 immediately after todo #1 (MATCHES fix) closed —
+      `dispatch_reason: "highest-rank queued task with prereqs met and no collision"` (priority-only dispatch, same
+      known failure mode as the tradfi plan's task-10 precedent: the dispatcher's machine-readable `prereqs` don't
+      encode this todo's own in-text dependency on todo #2 AND todo #3). This todo's literal gate ("once the two CODE
+      fixes are shipped... confirm MATCHES + PREDICTIONS + ODDS pending_fetch == 0") requires ALL THREE of: todo #1 (✅
+      done, instruments-service@1af6c92), todo #2 (PREDICTIONS cup fixture-calendar — still `- [ ]`), and todo #3 (ODDS
+      root-cause — still `- [ ]`, not yet even investigated). Running the typing pass / backfill VM now would only
+      re-confirm the SAME PREDICTIONS + ODDS residuals already diagnosed, wasting VM spend before the remaining two code
+      fixes land (same "VM re-run without the code fix reproduces the same residual" lesson this issue doc already
+      documents for MATCHES). **Un-block sequence**: (a) todo #2 (PREDICTIONS fixture-calendar fix) ships; (b) todo #3
+      (ODDS root-cause + fix, if code-fixable) ships; (c) THEN this todo re-dispatches and the typing pass / backfill VM
+      re-run genuinely closes `pending_fetch == 0` across all three data_types.
 
 ## Progress Log
 
+- **2026-07-08** — Todo #4 (re-verify + re-dispatch backfill VM) PARKED with BLOCKED-PREREQUISITES (slot-8 sonnet/high).
+  Auto-dispatched immediately after todo #1 closed; boot
+  `dispatch_reason: "highest-rank queued task with prereqs met and no collision"` — priority-only dispatch doesn't see
+  this todo's in-text dependency on BOTH todo #2 (PREDICTIONS fixture-calendar) and todo #3 (ODDS root-cause), neither
+  of which is done. Parked per the established tradfi-plan precedent (in-checkbox marker + un-block sequence) rather
+  than re-running the typing pass prematurely (would just reproduce the already-diagnosed PREDICTIONS/ODDS residuals).
+  Re-dispatches after todo #2 + #3 land.
+- **2026-07-08** — Todo #1 (MATCHES 4-league fetch gap) FLIPPED (slot-8 sonnet/high). See the todo's own entry above for
+  the full root-cause + fix writeup. instruments-service@1af6c92.
 - **2026-07-08** — Issue filed by slot-14 (data_engineering), dispatched to
   `sports_p2_history_reference_and_odds_2015_to_present-015` (item #7 VERIFY gate). Re-confirmed
   `tm-backfill-20260708-205809` (item #7's TM sub-gate) still RUNNING and healthy (heartbeats + successful club fetches
