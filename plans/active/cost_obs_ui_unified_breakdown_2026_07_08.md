@@ -1,0 +1,78 @@
+---
+doc_type: plan
+title: Cost Observability — unified breakdown table + resource-detail columns (UI)
+summary:
+  UI half of the cost-breakdown enrichment — merge the duplicated bars and table into one sortable table with an inline
+  bar-in-cell, then surface the backend's new fields as columns (gross/credit/net, SKU dimension, bucket volume plus
+  class split, idle-IP and orphaned-disk cost-waste, spot-vs-on-demand, VM machine specs), dimension-aware and applied
+  to the leaf tables. Starts draft, released to active by the last task of
+  cost_obs_backend_sku_usage_enrichment_2026_07_08 once the API contract exists. Every UI task carries a Playwright L2
+  regression.
+status: draft
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-ui]
+scope: [engineer]
+tags: [billing, cost, observability, breakdown, ui, deployment-ui, playwright]
+related: [cost_observability_ui_2026_07_08.md, cost_obs_backend_sku_usage_enrichment_2026_07_08.md]
+created: "2026-07-08"
+last_updated: "2026-07-08"
+parent_epic: deployment_and_user_management_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: design
+estimate_baseline_ai_days: 3
+estimate_calibrated_ai_days: 1.8
+assigned_role: ui-developer
+drift_direction: advance-code
+depends_on: [cost_obs_backend_sku_usage_enrichment_2026_07_08]
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+source: cost_observability_ui_2026_07_08.md
+---
+
+# Cost Observability — unified breakdown table + resource-detail columns (UI)
+
+> **AO-DISPATCHED UI plan — starts `draft` (NOT ingested).** Released to `active` by the LAST task of the backend plan
+> **`cost_obs_backend_sku_usage_enrichment_2026_07_08.md`**, so this agent only starts once the new `BreakdownRow`
+> fields (gross/credit, sku, bucket volume, waste flags, machine specs) actually exist in the API. Full design context
+> is in the LOCAL parent plan **`cost_observability_ui_2026_07_08.md`** ("Resource-detail enrichment + unified
+> breakdown" section — read it first).
+>
+> **UI gate (HARD):** no `[UI]` task ticks without `pw:L2 ✓` + a cited regression spec. TS strict; tsc / ESLint / Vitest
+> / Playwright only (no Python tools). All cost work lives in `src/pages/CostObservability.tsx` (`BreakdownPanel` /
+> `LeafPanel`) + `src/api/deploymentApi.ts` types + `src/lib/mock-api.ts`.
+
+## Codex SSOTs (read before touching)
+
+- `codex/06-coding-standards/ui-testing-layers.md` — the Playwright L2 gate.
+- `codex/05-infrastructure/billing-cost-observability.md` — the API row contract the backend plan extends (net/gross/
+  credit, sku, usage, bucket-volume, waste fields).
+
+## Tasks
+
+- [ ] [UI] P0. **Merge the bars + table into one table** (foundation for every column below). Collapse
+      `BreakdownPanel`'s left top-12 bar chart + right table into ONE scrollable, sortable table with an inline
+      proportional **bar-in-cell that carries the cost value** (bar width = cost / max), dropping the separate bars
+      column. Keep the sticky header + 400px scroll region. pw:L2 + a cited spec.
+- [ ] [UI] P1. **Gross / credit / net columns.** Render the backend bifurcation — net primary, gross + credit secondary
+      — shown only where credit ≠ 0 (mirrors the KPI band down into the table). vitest + pw:L2.
+- [ ] [UI] P2. **SKU dimension in the control.** Add `sku` to the breakdown `Segmented` + its note ("Google/AWS SKU").
+      Update `mock-api.ts` with SKU fixtures. vitest.
+- [ ] [UI] P2. **Bucket columns** (dimension = bucket): total GB, storage-class split, $/GB. Format GB (not bytes).
+      pw:L2.
+- [ ] [UI] P2. **Resource / waste columns** (dimension = resource): machine type (e.g. `e2-highmem-16` → 16 vCPU · 128
+      GB), **idle-IP $** with an "idle" badge, **orphaned-disk $** with a badge. These are the operator's cost-waste
+      signals — make them visually obvious. pw:L2.
+- [ ] [UI] P2. **Spot vs on-demand display.** A `purchase_option` column (or chip) on resource/service rows, from the
+      backend field. vitest.
+- [ ] [UI] P3. **Dimension-aware columns + leaf tables.** Show the right detail columns per dimension (VM cols under
+      By-resource, bucket cols under By-bucket, SKU under By-SKU); apply the same detail columns to the `LeafPanel` "Top
+      compute instances" / "Top storage buckets" tables. Detail columns scroll horizontally on narrow widths. pw:L2.
+- [ ] [UI] P3. **Stale-during-refetch fix** (carried over from the parent plan). Gate the breakdown table body on
+      `breakdown.dimension === dimension` (+ matching days), or skeleton the panel while `loadBreakdown` is in flight,
+      so switching dimension/range never shows the prior fetch's rows under the new column header. pw:L2.
