@@ -254,6 +254,46 @@ singleton-lock namespace → may run concurrently.
 
 ## Progress Log
 
+### 2026-07-08 22:1x UTC — slot-5: item #4 — SECOND, deeper root cause found (source-blindness) + fixed + re-verifying
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-016` (item #4), resumed from slot-3's 21:3x UTC closer
+run (PID 3704218, completed cleanly: `processed=1169 raised=0`, `ALL DATES RESOLVED`).
+
+**Re-verified via the plan's own `source=='understat'` filtered gate query — ZERO CHANGE** (XG eu=250, XG_SHOTS
+eu=5,843, byte-for-byte identical to pre-closer-run). Did NOT stop there — traced the closer's actual writes in raw GCS
+content (bypassing the source filter every prior session used) and found the writes DID land (7,553 new rows,
+`attempted_at` in the closer's run window, manifest consolidator confirmed healthy via concurrent TM/api_football writes
+merging correctly in the same window) — but **every one of those 7,553 rows carries `source=''` (blank) instead of
+`source='understat'`**, invisible to the exact query this plan's last 3 sessions used to conclude "no change."
+
+**Root cause**: `ManifestWriter.record_expected_empty()` (unified-trading-library) never accepted or forwarded a
+`source` kwarg to `record_empty()` (which HAS supported one since CF-4) — every calendar-pre-skip write through this
+method, across **18 callsites in 6 instruments-service orchestrator files** (weather.py, sfi.py, understat.py,
+footystats.py, process_write.py, process_completeness.py, process_zero_records.py), landed permanently source-blind.
+This is a SEPARATE bug from slot-3's enumerator-grain fix — that fix correctly identifies + resolves the right dates;
+this bug just makes the resolution invisible to verification.
+
+**Fixed this session**: `unified-trading-library@192b2836` (added `source=`/`asset_group=` passthrough to
+`record_expected_empty()`, backward compatible) + `instruments-service@5fc535e` (wired the 4 understat.py callsites to
+`_sports_ref_source("understat_xg"|"understat_xg_shots")`, the same helper the file's `record_captured` callsites
+already use). Both shipped via quickmerge, QG green.
+
+**Filed** `plans/active/issues/manifest_record_expected_empty_blank_source_2026_07_08.md` (P0) — the other 14 callsites
+(weather/SFI/footystats/process_write/process_completeness/process_zero_records) are NOT fixed yet, with 6 actionable
+todos including **re-verifying items #1 (weather) and #2 (SFI), already flipped ✅ in this same plan, in case their
+gate-verification queries were equally source-blind** — I did not have scope to check that in this session.
+
+**Re-running the closer now** (`understat-eu-residual-closer-20260708-v2`, started 22:1x UTC) with the fix live, to
+confirm the TRUE gate state before flipping this item. Also flagged in the issue doc: the OLD blank-reason rows did NOT
+dedup-collide with the NEW (wrongly-sourced) rows despite sharing the full dedup key — an unconfirmed SECOND anomaly the
+v2 re-run should disambiguate (if resolved by the source fix alone: fine; if not: a separate manifest-consolidator dedup
+bug needs its own P0 issue).
+
+**Gate still NOT MET — no checkbox flip yet.** Next: once the v2 closer completes + consolidator merges (~1 min),
+re-verify via BOTH `source=='understat'`-filtered AND unfiltered `(data_type, league_id)` reads; if XG/XG_SHOTS eu=0 for
+big-5 native leagues, flip this item's checkbox with before/after counts. If old rows still persist unresolved, escalate
+the dedup anomaly per the issue doc.
+
 ### 2026-07-08 21:3x UTC — slot-3: item #4 root cause found + fix shipped + closer running
 
 **Task**: `sports_p2_history_reference_and_odds_2015_to_present-016` (item #4), resumed from slot-2's 20:55 UTC
