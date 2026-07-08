@@ -97,9 +97,14 @@ source: cost_observability_ui_2026_07_08.md
 - [ ] [BACKEND] P2. **VM machine specs.** Parse machine type + vCPU + RAM from the billing `system_labels`
       (`compute.googleapis.com/machine_spec` / `cores` / `memory`) — no Compute API; expose on vm resource rows (e.g.
       `e2-highmem-16` → 16 vCPU / 128 GB). pytest.
-- [ ] [BACKEND] P2. **AWS net + invoice reconciliation.** Use `line_item_net_unblended_cost` (net of discounts) and add
-      a tax/fee line (relax the `Usage`/`DiscountedUsage`-only filter or a second query) so the AWS total reconciles to
-      the invoice; label the current figure "usage spend" until then. pytest.
+- [x] ✅ [BACKEND] P2. **AWS net + invoice reconciliation** — deployment-api@301ccfc. `aws_facts_sql` switched
+      `line_item_unblended_cost` → `line_item_net_unblended_cost` (net of RI/SP discounts) and relaxed the
+      `Usage`/`DiscountedUsage`-only filter to `IN ('Usage', 'DiscountedUsage', 'Tax', 'Fee')`, so the AWS total now
+      reconciles toward the invoice instead of reporting usage-only spend (Refund/Credit/RIFee/SavingsPlanRecurringFee
+      rows stay excluded — a further refinement, not required to close the usage-only gap). Tax/Fee rows carry no
+      `usage_type` and fall back to `'Unknown'` via the existing `COALESCE(NULLIF(...))`. Rebased 3x onto concurrent
+      zone-dimension/gross-credit/bucket-volume/idle-waste tasks landing on the same file; full backend QG green on each
+      merge. pytest: `test_aws_facts_sql_uses_net_cost_and_includes_tax_and_fee`.
 - [x] ✅ [BACKEND] P3. **Zone dimension** — deployment-api@537af3d. Add `location.zone` (GCP) /
       `line_item_availability_zone` (AWS) to `CostRecord` + a finer zone cut of the region dimension. pytest.
 - [ ] [BACKEND] P3. **Codex contract update.** Post-phase codex audit — update
