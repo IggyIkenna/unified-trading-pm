@@ -26,7 +26,7 @@ summary: |
   IMMEDIATELY re-offered to the next slot's boot/heartbeat (dispatch runs continuously; the orphan-prune runs
   at most once per 30 min) — a live race the marker was specifically introduced to prevent, that it does not
   actually prevent. Confirmed independently by 4 slots on the same task instance in one evening.
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -42,7 +42,7 @@ priority: P2
 source:
   footystats_matches_predictions_fetch_gaps-004 (slot-11, re-surfacing slot-4's + slot-8's + slot-12's identical skips)
 assigned_vm: planning
-resolved_by:
+resolved_by: agent-orchestrator@3995384
 locked_by:
 execution_scope: orchestrator-agent
 estimate_class: refactor
@@ -103,11 +103,11 @@ A backend-engineer-craft worker (agent-orchestrator repo, Python service code) s
    immediately without any file re-read at dispatch time. Larger change (touches the general reconcile-matching
    semantics), but fixes the deeper issue behind this symptom too.
 
-- [ ] [BACKEND] P2. Implement option 1 (skip-time re-check) or option 3 (reconcile-by-position + dispatch-time marker
+- [x] ✅ [BACKEND] P2. Implement option 1 (skip-time re-check) or option 3 (reconcile-by-position + dispatch-time marker
       check) from the Recommended decision above so a `BLOCKED-*`-marked todo stops being re-offered within the SAME
       dispatch cycle it's skipped in, not up to 30 minutes later (repo: agent-orchestrator). Add a regression test: task
       marked `BLOCKED-*` post-hoc while `dispatched` → skip → assert `pick_next_task` does NOT return it on the very
-      next call (no sleep/tick wait).
+      next call (no sleep/tick wait). — agent-orchestrator@3995384
 
 ## Progress Log
 
@@ -117,3 +117,12 @@ A backend-engineer-craft worker (agent-orchestrator repo, Python service code) s
   in agent-orchestrator, out of this slot's data_engineering craft scope (per RULES.md — craft-scoped slots escalate
   mis-scoped work rather than cross craft lines). Releasing `footystats_matches_predictions_fetch_gaps-004` back to the
   queue via `/skip-current-task`.
+- **2026-07-08** — Implemented option 1 (skip-time re-check) by slot-2 (backend-engineer craft):
+  `task_still_dispatchable()` added to `regen_backlog_from_plan.py` (re-reads only the one task's own plan file, no
+  corpus walk) and wired into `skip_current_task()` (`server/routes/slots_ops.py`) — when the todo is no longer
+  dispatchable (BLOCKED-*/stretch marker added, checked off, or removed) the `TaskRow` is deleted immediately instead of
+  being requeued, closing the race independent of the 1800s prune tick. Regression tests added
+  (`tests/test_skip_stale_marker_orphan.py`): unit coverage for `task_still_dispatchable` (unchanged / marker-added /
+  checked-off / missing-file / issues-subdir) plus an end-to-end test asserting a stale-marker task is orphaned on skip
+  and `pick_next_task` never hands it back out. Full `quality-gates.sh` green; shipped via
+  `quickmerge agent-orchestrator@3995384`.
