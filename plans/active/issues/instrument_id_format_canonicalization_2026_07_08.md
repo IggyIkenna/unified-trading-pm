@@ -219,10 +219,11 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
   surrounding path for older files (e.g. bare `BTC-PERPETUAL.parquet`), the eventual GCS/filename migration (last stage
   in the sequencing under "Operator decisions" below) should move every single-instrument file to its full canonical
   instrument_id as the actual filename, not just rely on path-derivability.
-- Not asking for `canonical_id_builder.py` itself to become the enforced single builder as part of this decision —
-  that's a separate, larger refactor question (does every adapter route through one shared function, or do per-domain
-  builders exist but each still individually canonicalize). This doc scopes the FORMAT decision; the
-  implementation-architecture decision (one builder vs many) is still open.
+- **RESOLVED 2026-07-08**: `canonical_id_builder.py` (or its successor) becomes the ONE enforced shared builder for
+  EVERY asset group and instrument type, sports fixtures included — operator: "one builder for everything would make
+  more sense... every asset group, every instrument type, can get its canonical instrument IDs, same with fixtures, just
+  by filling in the right inputs." Per-domain builders that each independently canonicalize are explicitly REJECTED. See
+  the dedicated builder-unification workstream tracked from this decision.
 
 ## Todos
 
@@ -230,18 +231,20 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
       LIGHTER-ZKSYNC's real settlement currency needs a quick per-venue API check before the illustrative targets in
       this doc become real implementation targets (e.g. confirm ASTER really settles BTC-USDT in USDT, not some other
       stable).
-- [ ] [SCRIPT] P2. **Scope the actual migration mechanics** — for each of the 6 findings, does correcting instrument_id
-      require a backfill/rewrite of historical GCS rows (breaking existing joins/manifest keys), or can it be a
-      go-forward-only change (old rows keep the legacy format, new rows use canonical, readers handle both)? This
-      determines whether this is a cheap relabel or a real migration with downtime/backfill cost.
+- [x] [DECISION] P2. **Migration mechanics — RESOLVED 2026-07-08 (operator)**: always backfill/rewrite historical GCS
+      rows in place AND correct going forward — never leave a legacy-format historical range unfixed. Mechanism:
+      **rewrite/relabel already-downloaded data in place (re-derive the corrected instrument_id from already-captured
+      raw fields and rewrite the parquet/partition), not a re-download from the source venue** — applies to every
+      finding in this doc (Kraken-Futures historical collision, the dated-derivative `@LIN/@INV-YYYYMMDD` migration,
+      TradFi combo/CBOE-VX decomposition, and any other backfill this canonicalization work triggers).
 - [ ] [VERIFY] P2. **Check whether the manifest / deployment-api key off instrument_id VALUE anywhere** (as opposed to
       just the instrument_type field, already checked in
       [[adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08]]) — if any downstream consumer
       pattern-matches or parses the instrument_id string itself (e.g. extracting margin type from a `-inverse-`
       substring), changing the format is a breaking change for that consumer, not just a cosmetic cleanup.
-- [ ] [DECISION] P3. **Decide the builder-architecture question** (see "What this is NOT" above) — one shared
-      `canonical_id_builder.py`-style function across all adapters, vs many per-domain builders that each independently
-      canonicalize consistently. Affects how much of this fix is one PR vs N per-adapter PRs.
+- [x] [DECISION] P3. **Builder-architecture question — RESOLVED 2026-07-08 (operator)**: ONE shared builder for every
+      asset group + instrument type + sports fixtures, filled in by structured inputs. See "What this is NOT" above for
+      the exact decision language.
 - [ ] [SCRIPT] P1. **Fix the Bitfinex BTC-margined-perp asset-filter bug** — found 2026-07-08 while spot-checking real
       volume, not an instrument_id-format issue but adjacent (same investigative pass): the accepted-quote filter
       (`parsing.py:463`, `cefi_instrument_universe.py:131-133`) is documented "derivatives carry no quote and pass," but
