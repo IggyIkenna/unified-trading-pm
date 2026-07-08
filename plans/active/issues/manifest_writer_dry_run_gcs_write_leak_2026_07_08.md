@@ -20,7 +20,7 @@ summary: |
   market-tick-data-service, features-service, …), so this is a cross-cutting UTL bug, not sports-specific: **any
   `--dry-run` invocation anywhere in the fleet silently writes real manifest rows to production**, contradicting
   the documented/logged contract ("no cloud writes will be performed").
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -40,7 +40,7 @@ source:
     unified_trading_library/cloud_interface/factory.py:429-460,
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-trading-library@4e28da4e
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -162,14 +162,24 @@ action needed beyond Todo (3) above (natural overwrite on the real recompute).
 
 ## Todos
 
-- [ ] [BACKEND] P1. Add dry-run awareness to `ManifestWriter`'s GCS write path — gate the two `get_storage_client()`
+- [x] ✅ [BACKEND] P1. Add dry-run awareness to `ManifestWriter`'s GCS write path — gate the two `get_storage_client()`
       call sites in `unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py` (~lines 560-568,
       625-630) behind the existing `unified_trading_library.cloud_interface.factory._dry_run_active` flag (add a public
       `is_dry_run()` accessor in `factory.py` alongside `set_dry_run()`), matching `get_data_sink()`'s existing
-      redirect-to-local behavior. Ship via UTL QG + quickmerge. (repo: unified-trading-library)
-- [ ] [BACKEND] P1. Add a regression test to `unified-trading-library`'s manifest_writer test suite:
+      redirect-to-local behavior. Ship via UTL QG + quickmerge. (repo: unified-trading-library) — 2026-07-08 (slot-2):
+      shipped `unified-trading-library@4e28da4e`. `is_dry_run()` accessor added next to `set_dry_run()`
+      (`cloud_interface/factory.py`, re-exported from `cloud_interface/__init__.py`); both `_writer_io.py` call sites
+      (`_write_to_gcs` legacy CAS path, `_flush_per_vm_pending` per-VM shard path) now short-circuit before
+      `get_storage_client()` when `is_dry_run()` is true, logging what would have been written and draining any staged
+      per-VM pending rows so nothing leaks into a later real write. QG green (124s), pushed via quickmerge.
+- [x] ✅ [BACKEND] P1. Add a regression test to `unified-trading-library`'s manifest_writer test suite:
       `set_dry_run(True)` + `ManifestWriter(...).record_captured(...).write()` must NOT call the real
-      `get_storage_client()` / hit GCS. (repo: unified-trading-library)
+      `get_storage_client()` / hit GCS. (repo: unified-trading-library) — 2026-07-08 (slot-2): shipped in the same
+      commit, `unified-trading-library@4e28da4e`, `tests/unit/test_manifest_writer_dry_run.py` (3 tests: legacy-mode
+      no-op, per-VM-mode no-op, dry-run-off control). Used `writer.add()`/`write()`/`flush()`/`_drain()` rather than
+      `record_captured()` directly (simpler kwargs, same code path) — verified BOTH fail with
+      `AssertionError: get_storage_client() must not be called` when stashed against pre-fix code (proving they exercise
+      the real bug), and pass clean post-fix.
 - [x] ✅ [DATA] P2. Follow-up audit: grep `plans/active/sports_p2*` + `plans/active/sports_p1*` Progress Log entries (19
       prior dispatches, 2026-06-27 → 2026-07-07) for `--dry-run` invocations against `features-sports-prd-*` or
       `instruments-store-*` buckets; for any found, diff the affected date's manifest rows the same way this issue doc
@@ -177,3 +187,16 @@ action needed beyond Todo (3) above (natural overwrite on the real recompute).
       unified-trading-pm) — unified-trading-pm@(this commit). Result: 5 `--dry-run` mentions found across all 9 sports
       plan files, all traced to code paths that do NOT reach the vulnerable `ManifestWriter`/`get_storage_client()`
       write call (see "Follow-up audit" section above). Zero additional pollution found; no cleanup action needed.
+
+## Progress Log
+
+### 2026-07-08 21:10 UTC — slot-2: both fix todos shipped, issue resolved
+
+Task `manifest_writer_dry_run_gcs_write_leak-002` (regression test). Implemented both remaining todos together since the
+test has nothing to assert without the fix existing first: `unified-trading-library@4e28da4e` adds `is_dry_run()` next
+to `set_dry_run()` in `cloud_interface/factory.py` (+ re-export from `cloud_interface/__init__.py`) and gates both
+`_writer_io.py` GCS call sites (`_write_to_gcs`, `_flush_per_vm_pending`) behind it, logging what would have been
+written instead of hitting the network. Added `tests/unit/test_manifest_writer_dry_run.py` (3 tests) — verified they
+fail with `AssertionError: get_storage_client() must not be called` when stashed against the pre-fix tree (proving they
+exercise the real bug) and pass clean post-fix. QG green (124s), shipped via quickmerge. Todo (3) (natural-overwrite
+cleanup) and (4) (follow-up audit) were already closed by a prior session. Marking `status: resolved`.
