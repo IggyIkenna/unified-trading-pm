@@ -73,11 +73,13 @@ source: cost_observability_ui_2026_07_08.md
 - [x] ✅ [BACKEND] P2. **SKU breakdown dimension** — deployment-api@9b4e59d. Add `sku` to the route `Dimension`
       literal + a `_by_sku` grouping (by `(cloud, service, sku)`), wired into `breakdown()`. This surfaces the hidden #1
       cost driver (Coldline Class A Operations). pytest.
-- [ ] [BACKEND] P2. **Bucket storage volume + class split.** For `dimension=bucket` rows, attach total **GB** + a
-      per-storage-class split (Standard / Nearline / Coldline / Archive) + derived **$/GB**, from the storage SKUs'
-      `usage_amount` (`gibibyte month` → average GB over the window) grouped by `resource.name`. New optional
-      `BreakdownRow` fields. **Show GB, not raw bytes.** No object count, no soft-delete split (not billable — absent
-      from the export). pytest with a storage-SKU fixture.
+- [x] ✅ [BACKEND] P2. **Bucket storage volume + class split** — deployment-api@171a61c. `dimension=bucket` rows now
+      carry `storage_gb` (avg GB over the window), `storage_class_gb` (Standard/Nearline/Coldline/Archive split), and
+      `cost_per_gb`, derived from the storage-volume SKUs' `usage_amount` (GCP `gibibyte month`, filtered via
+      `usage_unit` to exclude operations/retrieval SKUs; AWS `TimedStorage-*` usage-types) grouped by `resource.name`.
+      Rescaled GiB/GB-month → avg GB via `_AVG_DAYS_PER_MONTH` (365.25/12). Show GB, not raw bytes; no object count, no
+      soft-delete split (dropped, not billable). pytest with GCP + AWS storage-SKU fixtures. Rebased 3x onto concurrent
+      SKU-dimension/gross-credit/idle-waste tasks landing on the same file; full backend QG green on each merge.
 - [x] ✅ [BACKEND] P2. **Idle static-IP + orphaned-disk cost-waste** — deployment-api@8d8802f. New
       `services/cost_observability/waste.py`: `Static Ip Charge` SKU (GCP) and `...ElasticIP:IdleAddress` usage-type
       (AWS) are self-contained idle flags (no cross-ref needed — those SKUs only bill while unattached);
