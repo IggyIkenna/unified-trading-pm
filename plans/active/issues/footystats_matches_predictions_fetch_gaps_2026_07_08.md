@@ -133,11 +133,32 @@ code-fix task). A data_engineering slot with a full session budget should:
       scope (re-run the typing pass after this fix lands; the existing few incidental `captured` rows for these leagues
       will still need an explicit re-type pass since the dynamic "≥1 captured row" heuristic reads historical manifest
       state, not just going-forward writes).
-- [ ] [CODE] P2. **Add cup/continental-competition fixture-calendar awareness to footystats PREDICTIONS** — mirror the
-      existing `EmptyConfirmedReason.EXPECTED_NO_FIXTURE` resolution already used for MATCHES (footystats.py:584/598) so
-      no-fixture dates for UECL/UEL/UCL/SWISS_CUP/COPA_ARGENTINA/+37 more resolve to a terminal typed state instead of
-      staying un-typed `pending_fetch` forever; add regression test on a cup competition's known off-days (repo:
-      instruments-service).
+- [x] ✅ [CODE] P2. **Add cup/continental-competition fixture-calendar awareness to footystats PREDICTIONS** — mirror
+      the existing `EmptyConfirmedReason.EXPECTED_NO_FIXTURE` resolution already used for MATCHES
+      (footystats.py:584/598) so no-fixture dates for UECL/UEL/UCL/SWISS_CUP/COPA_ARGENTINA/+37 more resolve to a
+      terminal typed state instead of staying un-typed `pending_fetch` forever; add regression test on a cup
+      competition's known off-days (repo: instruments-service) — **instruments-service@78636dd (slot-13 sonnet/high)**.
+      **Root cause confirmed**: MATCHES already tracked `_captured_leagues` per date and, after processing the fetch,
+      looped `for _exp_lid in sorted(set(_ft_expected) - _captured_leagues)` to `record_empty(EXPECTED_NO_FIXTURE)` for
+      every expected league with no fixture that day (footystats.py:580-586, 594-600 pre-fix line numbers) — but
+      `_fetch_footystats_predictions` had NO equivalent loop: it only wrote `record_captured` rows for leagues actually
+      present in the response, so a cup/continental league not playing on a given date got no manifest row at all
+      (neither `captured` nor `empty_confirmed`), leaving it `pending_fetch` forever regardless of how many times the
+      backfill VM re-ran. **Fix**: added the identical per-league completion pattern to `_fetch_footystats_predictions`
+      — track `_captured_leagues` as leagues are written, then after the write block loop over
+      `sorted(set(_ft_expected) - _captured_leagues)` emitting `record_empty(EXPECTED_NO_FIXTURE)` per league; also
+      replaced the old single date-aggregate `record_empty` in the "no predictions at all" branch with the same
+      per-league loop (mirrors MATCHES' all-empty branch), so a day with zero predictions closes every expected league
+      individually rather than one blanket row. Verified compatible with the sibling out-of-subscription write-gate fix
+      (`instruments-service@1af6c92`, todo #1 above) that landed mid-session: its `continue` guard fires before my
+      `_captured_leagues.add(...)`, and an out-of-subscription league is also absent from `_ft_expected`, so it never
+      gets spuriously backfilled by my completion loop. Added 2 regression tests in
+      `tests/unit/test_orchestrator_sports.py::TestFetchFootystatsPredictions`
+      (`test_cup_league_with_no_fixture_today_records_empty_expected_no_fixture` — mixed captured+uncaptured league day;
+      `test_all_leagues_off_today_records_empty_per_league` — zero-prediction day, asserts per-league not aggregate
+      rows). Full `quality-gates.sh` green (ALL QUALITY GATES PASSED), shipped via quickmerge --agent. **Note**: this
+      closes the WRITE-PATH bug going forward; existing already-seeded `pending_fetch` rows for cup competitions still
+      need the re-verify/re-dispatch pass (todo #4 below) to clear.
 - [ ] [DATA] P3. **Root-cause footystats ODDS 1,264-row residual** — no investigation session has looked at this
       cluster; determine whether it shares the MATCHES or PREDICTIONS root cause or is a distinct third gap (repo:
       instruments-service).
@@ -160,6 +181,15 @@ code-fix task). A data_engineering slot with a full session budget should:
 
 ## Progress Log
 
+- **2026-07-08** — Todo #2 (PREDICTIONS cup fixture-calendar completion) FLIPPED (slot-13 sonnet/high). Mirrored the
+  MATCHES `_captured_leagues` + per-league `record_empty(EXPECTED_NO_FIXTURE)` completion pattern into
+  `_fetch_footystats_predictions`, replacing the old single date-aggregate empty row with a per-league loop for the
+  all-empty branch too. Verified the fix composes correctly with the sibling out-of-subscription write-gate fix
+  (`instruments-service@1af6c92`, todo #1) that landed mid-session on the same file — its `continue` guard runs before
+  `_captured_leagues.add(...)`, and an out-of-subscription league is also outside `_ft_expected`, so no double-counting.
+  Added 2 regression tests. `instruments-service@78636dd`, full `quality-gates.sh` green, shipped via quickmerge
+  --agent. Todo #4's un-block sequence now needs only todo #3 (ODDS root-cause) before the typing-pass re-verify makes
+  sense.
 - **2026-07-08** — Todo #4 re-dispatched a FIFTH time (slot-11 sonnet/high, boot 22:13 UTC,
   `dispatch_reason: "highest-rank queued task with prereqs met and no collision"`). Verified via backlog API: `-002`
   (PREDICTIONS fixture-calendar, slot-13) and `-003` (ODDS root-cause, slot-9) both still `dispatched`, not `done` —
