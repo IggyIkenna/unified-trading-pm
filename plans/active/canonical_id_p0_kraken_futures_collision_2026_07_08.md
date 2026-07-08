@@ -79,13 +79,59 @@ greedily grabs `FI` (the 2-letter contract-type prefix) instead of the real tick
       `KRAKEN-FUTURES:FUTURE:XBT-USD-inverse-20220624`, `FI_XBTUSD_220930` →
       `KRAKEN-FUTURES:FUTURE:XBT-USD-inverse-20220930` (both previously distinct from the 220325 group only by
       expiry-date collision-avoidance, now also correctly ticker-distinct from siblings at their own expiry).
-- [ ] [DATA] P1. **Scope real historical damage** — query the real GCS bucket for how many days/symbol-pairs this
-      collision has silently affected (not just the one 2022-03-25 expiry sample), to size the blast radius before
-      deciding on remediation. (Left unchecked — operator-decision-gated per task scope, not attempted.)
-- [ ] [DECISION] P1. **Decide remediation for already-collided historical data** — the colliding rows are already
-      captured under one wrong shared key; deciding whether to re-backfill the correct per-instrument data (if
-      recoverable from Tardis) or accept the historical gap and only fix go-forward captures is an operator call once
-      the blast-radius scoping above lands. (Left unchecked — operator decision, not attempted.)
+- [x] [DATA] P1. **Scope real historical damage** — full-corpus walk (all 2,649 real `day=` partitions under
+      `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/`, not a sample) for
+      `venue=KRAKEN-FUTURES` found dated-future (`instrument_type=future`) captures on exactly **5 real days**:
+      `2022-03-01`, `2022-03-04`, `2024-02-01`, `2025-01-10`, `2026-01-10` (across `data_type=trades` +
+      `data_type=book_snapshot_5`, 10 (day, data_type) combos total) — **125 real parquet files**, **37,559,524 total
+      rows**, **6 distinct real tickers** confirmed corrupted (`BCH`, `ETH`, `LTC`, `SOL`, `XBT`, `XRP`) across 15
+      distinct real expiry codes. The legacy pre-migration bucket (`market-data-tick-cefi-central-element-323112`, 2,613
+      days) was also checked directly — 0 Kraken-Futures dated futures there (only perpetuals; this data was captured
+      2026-07-03 → 2026-07-08, after the 2026-06-01 legacy migration cutoff). Important structural finding: **0 of the
+      125 files were physically merged/bundled** — every file already isolates exactly one real (ticker, expiry) by its
+      raw-symbol filename (e.g. `FI_XBTUSD_220325.parquet`, `instrument_type=future` singular, not the multi-symbol
+      `futures_chain` bundle shape) because none of these captures ever went through the production multi-symbol fan-out
+      path that would merge same-day siblings into one `underlying=FI/...` v6 shard — confirmed 0 such bundle files/v6
+      `underlying=` shards exist anywhere in the corpus for this venue. So the bug corrupted the **derived
+      `underlying` + `instrument_id` COLUMN VALUES inside** each file, not the physical file/partition layout.
+- [x] [DECISION] P1. **Decide remediation for already-collided historical data** — per the operator's 2026-07-08
+      migration-mechanics decision ([[instrument_id_format_canonicalization_2026_07_08]]): rewrite/relabel in place from
+      the untouched raw `symbol` column, no re-download. Since 0 files needed physical re-splitting (see scoping above),
+      remediation was column-level only, executed for real against all 125 files: (1) server-side backup of every
+      original object to `_remediation_backups/kraken_futures_collision_2026_07_08/<original path>` (verified present
+      post-run); (2) recompute `underlying` via the shipped-fixed `TardisAdapter._extract_underlying_for_chain` and
+      `instrument_id` via `derive_row_instrument_id`, both driven off the real `symbol` column; (3) overwrite each file
+      in place, preserving every other column/row untouched; (4) re-download + assert
+      row-count/symbol-column/instrument_id match post-write. Result: **125/125 files fixed, 0 errors, 37,559,524 rows
+      corrected**. Independent post-hoc re-scan (fresh full-corpus walk + content read of all 125 files) confirms **0
+      files remain showing the buggy bare-prefix `KRAKEN-FUTURES:FUTURE:{FI,FF,PI,PF}-USD-inverse-*` instrument_id**,
+      and an aggregate distinct-count check confirms 0 remaining collisions between DIFFERENT real tickers
+      (BCH/ETH/LTC/SOL/XBT/XRP are all correctly distinct now). **New, separate finding surfaced by this verification**
+      (not the ticker-collision bug, and not fixed here — see new todo below): 13 of the 49 distinct corrected
+      `instrument_id`s (45 of the 125 files) map to TWO different real raw symbols sharing the same corrected id — an
+      `FI_` and an `FF_` prefix variant of the same (ticker, expiry), e.g. `FI_ETHUSD_240329` (129,010 book_snapshot_5
+      rows + 447 trades) and `FF_ETHUSD_240329` (107,156 book_snapshot_5 rows + 330 trades) both derive
+      `KRAKEN-FUTURES:FUTURE:ETH-USD-inverse-20240329` — real, different row counts on both sides (not duplicates), only
+      affecting ETH/XBT (the 2 most liquid pairs) across 13 (ticker, expiry) combos in the 2024-2026 range.
+      `derive_row_instrument_id`'s FUTURE branch has no field to encode the `FI`/`FF` contract-subtype distinction at
+      all — a schema gap, not an extraction bug — so it also affects any FI/FF pair that could exist beyond the 125-file
+      scope of this fix. Manifest secondary finding: `_index/availability_index.parquet` carries exactly 4 stale rows
+      (`2022-03-01`/`2022-03-04` × `trades`+`book_snapshot_5`) with the pre-fix bare `instrument_id="FI"` — the other 3
+      affected days have NO manifest row at all for `instrument_type=FUTURE` despite real GCS files existing (a
+      pre-existing, unrelated manifest-recording gap — these captures bypassed the
+      `record_shard_count`/`record_instrument` bookkeeping entirely). Not hand-patched here (a coarse day-level manifest
+      row cannot correctly represent a 6-ticker split without re-deriving multiple new rows against a 7.2M-row SSOT
+      index outside the consolidator's own rebuild path) — flagged for the manifest consolidator to reconcile on its
+      next real-content rebuild.
+- [ ] [DATA] P2. **NEW (found during this fix's historical-damage verification, 2026-07-08): resolve the `FI_`-vs-`FF_`
+      same-(ticker,expiry) instrument_id collision** — 13 real (ticker, expiry) pairs (ETH/XBT only, 2024-2026 range, 45
+      of the 125 remediated files) have BOTH an `FI_` and an `FF_` raw Tardis symbol with real, differing row counts
+      (not duplicates) that now derive the IDENTICAL corrected `instrument_id` because `derive_row_instrument_id`'s
+      FUTURE branch has no field for the `FI`/`FF` contract-subtype. Needs an operator decision on what `FI_` actually
+      represents relative to `FF_` for KRAKEN-FUTURES (the existing code comment in `tardis_shared.py` calling `FI_`
+      "old index, pre-2020, no longer active" is contradicted by real 2024-2026 data found here) and how to encode the
+      distinction in the canonical instrument_id (e.g. a contract-subtype marker) before any further Kraken-Futures
+      remediation or backfill.
 - [x] [SCRIPT] P1. **Ship the fix via quickmerge**, quality-gates green, following this workspace's standard
       commit-push-flip discipline. — market-tick-data-service@3d7491b1bcbebc17af0aa31219e90f38478d57cd via
       `bash scripts/quickmerge.sh ... --agent --files 'market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py tests/unit/test_tardis_symbol_normalization.py'`.
@@ -104,3 +150,23 @@ greedily grabs `FI` (the 2-letter contract-type prefix) instead of the real tick
   (previously the 5 same-expiry files all collapsed to one). `quality-gates.sh --no-fix` fully green (full test suite +
   basedpyright confirmed via forced non-cached re-run). Historical-damage scoping + remediation decision left unchecked
   per task scope — operator-decision-gated, not attempted.
+- **2026-07-08 (later)** — Historical-damage scoping + remediation executed for real (operator's standing decision:
+  "always fix history"). Full-corpus GCS walk (2,649 real day-partitions,
+  `market-data-tick-cefi-prd-central-element-323112`, plus the 2,613-day legacy pre-migration bucket checked and
+  confirmed clean) found real Kraken-Futures dated-future captures on 5 days (`2022-03-01`, `2022-03-04`, `2024-02-01`,
+  `2025-01-10`, `2026-01-10`), 125 real parquet files, 37,559,524 rows, 6 real tickers (BCH/ETH/LTC/SOL/XBT/XRP).
+  Structural finding: every affected file was already single-real-instrument by filename (the production multi-symbol
+  chain-bundling path never actually ran for this venue — 0 merged `futures_chain`/v6 `underlying=` shards exist
+  anywhere in the corpus), so the bug only corrupted the derived `underlying`/`instrument_id` COLUMN VALUES, not the
+  physical file layout — no repartition/rename needed. Remediated all 125 files in place (server-side backup to
+  `_remediation_backups/kraken_futures_collision_2026_07_08/` first, then recomputed `underlying`+`instrument_id` from
+  the untouched raw `symbol` column via the already-shipped fix, overwrote, re-verified): 125/125 fixed, 0 errors.
+  Independent post-hoc full re-scan confirms 0 files still carry the buggy bare-prefix instrument_id and 0 remaining
+  collisions between different real tickers. Discovered (not fixed — new todo filed) a SEPARATE real ambiguity while
+  verifying: 13 (ticker,expiry) pairs (ETH/XBT only, 45 of the 125 files) have both a real `FI_` and a real `FF_` raw
+  symbol with different row counts that now share one corrected `instrument_id` — a schema gap (no field for `FI`/`FF`
+  contract-subtype), not an extraction bug, and not in scope for this fix. Also found (not fixed — flagged, not silently
+  patched) a 4-row staleness in `_index/availability_index.parquet` (still shows the pre-fix bare `"FI"` for the 2
+  earliest days) plus a 3-day gap where real GCS captures have no manifest row at all — a pre-existing, unrelated
+  manifest-recording issue, left for the manifest consolidator's own rebuild rather than hand-patched against the live
+  7.2M-row SSOT index.
