@@ -175,13 +175,13 @@ code-fix task). A data_engineering slot with a full session budget should:
       instruments-service@78636dd, slot-13), and todo #3 (ODDS root-cause — ✅ done, see below, but its own #6 CODE fix
       is still `- [ ]`). Running the typing pass / backfill VM now would only re-confirm the SAME ODDS residual already
       diagnosed, wasting VM spend before todo #6 lands (same "VM re-run without the code fix reproduces the same
-      residual" lesson this issue doc already documents for MATCHES). **Un-block sequence (UPDATED 2026-07-08
-      slot-9)**: todos #1 and #2 are both now shipped — only todo #6 (ODDS write-gate fix, see below) remains before
-      this todo can genuinely re-dispatch and have its typing-pass re-verify closes `pending_fetch == 0` across all
-      three data_types. **NOTE**: do NOT assume ODDS clears purely from todo #6 — the ~177-row ongoing gap for
-      ALLSVENSKAN, J1_LEAGUE, MLS, ELITESERIEN, BRASILEIRAO (see todo #6) is NOT a subscription-scope issue and needs
-      its own root-cause before it clears; and the 20 `attempted_failed`/`phantom_captured_no_parquet_at_canonical_path`
-      rows are OUT of the `pending_fetch` figure entirely and need todo #7 instead.
+      residual" lesson this issue doc already documents for MATCHES). **Un-block sequence (UPDATED 2026-07-08 slot-9)**:
+      todos #1 and #2 are both now shipped — only todo #6 (ODDS write-gate fix, see below) remains before this todo can
+      genuinely re-dispatch and have its typing-pass re-verify closes `pending_fetch == 0` across all three data_types.
+      **NOTE**: do NOT assume ODDS clears purely from todo #6 — the ~177-row ongoing gap for ALLSVENSKAN, J1_LEAGUE,
+      MLS, ELITESERIEN, BRASILEIRAO (see todo #6) is NOT a subscription-scope issue and needs its own root-cause before
+      it clears; and the 20 `attempted_failed`/`phantom_captured_no_parquet_at_canonical_path` rows are OUT of the
+      `pending_fetch` figure entirely and need todo #7 instead.
 - [ ] [CODE] P2. **Extend the confirmed subscription-scope write-gate fix (todo #1, instruments-service@1af6c92) to
       ODDS, plus root-cause a separate 5-league gap ODDS alone shows** — investigation (slot-9, 2026-07-08, see Progress
       Log) confirms `_fetch_footystats_odds` (footystats.py ~line 705-933) never received the write-gate guard todo #1
