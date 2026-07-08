@@ -160,6 +160,20 @@ code-fix task). A data_engineering slot with a full session budget should:
 
 ## Progress Log
 
+- **2026-07-08** — Todo #4 re-dispatched a SECOND time (slot-4 sonnet/high, boot 22:05 UTC,
+  `dispatch_reason: "highest-rank queued task with prereqs met and no collision"`) despite the in-doc
+  BLOCKED-PREREQUISITES marker slot-8 already added below — the marker text matches the orchestrator's
+  `_NON_DISPATCHABLE_RE` taxonomy (`BLOCKED-[A-Z]`) so a future `PlanRegenLoop` prune tick will stop re-offering it, but
+  the already-queued DB row from before the marker existed isn't retroactively pruned (prune only touches
+  `status=queued AND dispatched_to IS NULL` rows, and this row was still `dispatched` at the time). Re-verified via the
+  backlog API (not re-run from scratch): `footystats_matches_predictions_fetch_gaps-002` (PREDICTIONS fixture-calendar)
+  = `dispatched` to slot 13, `-003` (ODDS root-cause) = `dispatched` to slot 9 — neither `done` yet, so todo #4's gate
+  is still unmet. Not re-running the typing pass / backfill VM (would only reproduce the known residual). Releasing back
+  to the queue via `/skip-current-task` rather than looping slot-4 on a task it cannot complete; this slot won't be
+  re-offered it again (`slot_skips` exclusion). **If this task gets dispatched a THIRD time before #2/#3 land**, that's
+  a P2 dispatcher/regen-prune-cadence issue worth its own issue doc (repo: agent-orchestrator, out of data_engineering
+  craft scope) — the `BLOCKED-*` in-text marker taxonomy is doing its job for NEW ingestion, the gap is the orphan-prune
+  cadence for a task that was already `dispatched` when the marker was added.
 - **2026-07-08** — Todo #4 (re-verify + re-dispatch backfill VM) PARKED with BLOCKED-PREREQUISITES (slot-8 sonnet/high).
   Auto-dispatched immediately after todo #1 closed; boot
   `dispatch_reason: "highest-rank queued task with prereqs met and no collision"` — priority-only dispatch doesn't see
