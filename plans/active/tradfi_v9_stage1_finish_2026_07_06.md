@@ -145,7 +145,13 @@ source:
       venue|data_type cells remain" not literally met yet — that requires the follow-up cleanup script to run — but the
       DIAGNOSTIC WORK task 5 asks for is complete.
 - [ ] [DATA] P0. **E7 verify** — `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 all GREEN.
-      Gate: audit passes clean; evidence recorded in the Progress Log.
+      Gate: audit passes clean; evidence recorded in the Progress Log. **STATUS 2026-07-08 (slot-7 sonnet/high):** ran
+      the full audit inline (the shipped `cf_manifest_audit_2026_06_01.py` uses subprocess `gcloud storage cp/ls`,
+      broken in this slot per snap-confine — replicated via UTL storage client, same workaround as the 2026-07-07
+      session). Result: **not all-GREEN, checkbox stays unflipped.** See Progress Log for the full per-CF breakdown. Two
+      genuine REDs remain (CF-1 schema tail = task 10's scope; CF-3 pipeline_mode blank = the new CF-3 todo filed
+      today); CF-4/CF-7 are now GREEN; CF-8 and Era-B are RED on this tool's literal check but both are pre-existing,
+      already-adjudicated non-issues per `tradfi_manifest_canonicalisation_2026_06_01.md` (linked below), not new gaps.
 - [ ] [DATA] P0. **IS enumerate-seed for tradfi** — seed the tradfi could-exist denominator (`expected_unattempted`)
       from the rebuilt manifest + IS catalogue. Gate: tradfi `expected_*` rows materialised by the writer; fresh scan →
       0 unseeded candidates. **PREREQ: manifest rebuild (E5) done.**
@@ -208,6 +214,57 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-08** — **Task 6 (E7 verify) dispatch (slot-7 sonnet/high): full CF-1..CF-14 audit re-run inline, checkbox
+  stays unflipped (2 genuine REDs, 2 REDs-but-adjudicated).** `gcloud`/`gsutil` both broken in this slot (snap-confine);
+  replicated `cf_manifest_audit_2026_06_01.py`'s checks via UTL storage client (`download_bytes` for the index parquet,
+  bounded `list_blobs(prefix=..., max_results=N)` samples for the object-path-scheme checks — no corpus walk,
+  single-walk discipline held). Full result against `market-data-tick-tradfi-prd-central-element-323112` (6,022,012
+  rows, read immediately after task 4's CF-4 restamp apply):
+  - **CF-1 schema_version — RED**: 6,008,041/6,022,012 = 99.77% v9 (13,971-row v4 tail). Genuine gap, tracked as task 10
+    below (BLOCKED-PREREQUISITES pending fleet-drain).
+  - **CF-2 asset_group (rows) — GREEN**: `asset_group` column present, no `category` column.
+  - **CF-2 paths (object scheme) — GREEN**: sampled
+    `raw_tick_data/by_date/day=.../pipeline_mode=.../asset_group=tradfi/...` and
+    `processed_candles/by_date/day=.../pipeline_mode=.../...` prefixes (bounded 6-8 object samples each, not a corpus
+    scan) — `asset_group=` segment present, no `/category=` segment found in any sample. (My first attempt at this check
+    used a naive root-level delimiter descent and mis-reported RED — the UTL `list_blobs` wrapper does not expose GCS's
+    `.prefixes` on delimited listings, only blob names, so a shallow common-prefix walk isn't directly supported;
+    switched to bounded known-good-prefix sampling instead, which is both correct and single-walk-safe.)
+  - **CF-3 pipeline_mode (column populated) — RED**: 42,315/6,022,012 blank. Genuine gap — see the new CF-3 todo filed
+    in `tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md` today (task 4's Progress Log entry above).
+  - **CF-3 partition (object scheme) — GREEN**: `pipeline_mode=` segment confirmed present in the same bounded samples
+    used for CF-2 paths above.
+  - **CF-4 source — GREEN** (was RED before task 4's apply today): 0 blank-source rows with a valid `pipeline_mode`;
+    residual blank-source rows (42,341) are exactly the CF-3 blank-pipeline_mode population (source is undefined without
+    a pipeline_mode to derive it from — expected).
+  - **CF-5 typed empty reason — GREEN**: 0 blank `error_reason` among `empty_confirmed` rows.
+  - **CF-6 4-state vocab — GREEN**: no non-canonical `capture_status` values.
+  - **CF-7 atom completeness — GREEN**: 0 blank `data_type`, 0 blank/UNKNOWN `venue` — the 2026-07-07 CF-7 cleanup
+    (mtds@d9097aec) holds.
+  - **CF-8 available_at — RED on the literal column check, but NOT a new/real gap**: the tradfi `_index` has no
+    `available_at` column (only `written_at`/`attempted_at`). Per `tradfi_manifest_canonicalisation_2026_06_01.md` (§
+    "available_at FINDING"), this was already diagnosed 2026-06 and reclassified: `available_at` is a per-row field
+    INSIDE the tick-data parquets, not a field in the UTL `AvailabilityRecord` manifest schema — CF-8 as coded in the
+    audit tool conflates the two layers. Tracked there as an E4 parquet-layer verify, not a manifest-rebuild concern. No
+    new todo filed.
+  - **CF-9 env bucket — GREEN**: bucket name carries the `-prd-` marker.
+  - **CF-10 phantom/object-backed — SKIP** (by design — the audit tool defers to
+    `reconcile_phantom_manifest_rows_all.py --dry-run` for the full per-object check, to avoid a corpus walk here).
+  - **CF-13 pipeline_mode source-aware form — GREEN**: 100% of non-blank `pipeline_mode` values start with
+    `batch_`/`live_`/`replay_` (no bare/coarse `batch`/`live` values).
+  - **Era-B chain data_type — RED on the literal check (242,210 `options_chain`/`futures_chain` rows), but ADJUDICATED,
+    not a new gap**: `tradfi_manifest_canonicalisation_2026_06_01.md` (operator-reviewed, session 2026-06-08 verdict
+    supersession) already established that `options_chain` is a real schema-backed DATA_TYPE for tradfi (UAC
+    `TRADFI_OPTIONS_CHAIN_SNAPSHOT`, present on disk, carried intentionally by the fixed migrator mtds@51c604a4) — the
+    audit tool's Era-B "must be 0" premise does not hold for tradfi's adjudicated bundle-grain design. No new todo.
+  - **CF-14 catalogue ⊇ present-set — not run**: the tradfi IS catalogue lives in a separate bucket
+    (`instruments-store-tradfi-prd-...`, already built + verified fresh per task 8) rather than a `_catalogue/` prefix
+    inside this market-data-tick bucket; a cross-bucket comparison is a heavier operation than this pass's scope — left
+    as an honest gap, not attempted this session. **Verdict: not all-GREEN — checkbox stays unflipped.** Of the RED
+    checks, 2 are genuine and already tracked (CF-1 → task 10, CF-3 → the new todo), 2 are false-positives from the
+    audit tool checking the wrong layer/an already-adjudicated design decision (CF-8, Era-B) and need no new tracking,
+    and CF-4/CF-7 are now GREEN after task 4's fix earlier this session. unified-trading-pm@(this commit).
 
 - **2026-07-08** — **Task 4 dispatch (slot-7 sonnet/high): found + fixed a false-completion, re-diagnosed CF-3, task 4
   checkbox stays unflipped (gate genuinely not 100% yet).** Verified current manifest state directly via UTL storage
