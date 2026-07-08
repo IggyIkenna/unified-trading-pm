@@ -22,6 +22,22 @@
 # ── TIMESTAMP ────────────────────────────────────────────────────────────────
 QG_START=$(date +%s)
 
+# ── TMPDIR (shared_host_tmp_tmpfs_exhaustion_2026_07_08) ──────────────────────
+# `/tmp` on the orchestrator host is a small tmpfs shared by every slot; a single
+# tmp_path-heavy pytest run can leave hundreds of MB behind, and several slots'
+# concurrent QG runs exhaust it within minutes — spurious ENOSPC test failures
+# (unrelated to the change under review) and, once, the Claude Code harness's own
+# /tmp-backed Bash-tool output capture. Default every base-*.sh's TMPDIR (pytest's
+# tmp_path, RUFF_CACHE_DIR, BASEDPYRIGHT_CACHE_DIR, qg-host-governor's token dir all
+# key off it) to a writable, spacious mount unless the caller already set one — every
+# consumer already does `${TMPDIR:-/tmp}`, so this is a single control point.
+# NOTE: `/` (and `/var/tmp` under it) is mounted read-only on this host (`ro`,
+# errors=remount-ro) — `$HOME` (under the separate `rw` /home mount, ~95G free) is the
+# writable large-disk target, mirroring the existing QG_CACHE_ROOT convention below and
+# the manual workaround recorded in the issue doc.
+export TMPDIR="${TMPDIR:-${HOME}/.cache/qg-tmp}"
+mkdir -p "$TMPDIR" 2>/dev/null || true
+
 # ── COLORS ───────────────────────────────────────────────────────────────────
 RED='\033[0;31m'
 GREEN='\033[0;32m'
