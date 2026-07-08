@@ -117,6 +117,27 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-08 — slot 8 (23rd dispatch — fast re-verify, no material change, no new BLK)
+
+**Todo 3 (features manifest clean) — BLOCKED-PREREQ, unchanged from slot-7's/slot-12's same-day re-verifications**
+
+Re-verified via non-snap gcloud (`ikenna@odum-research.com`, `central-element-323112`):
+
+- Features bucket `gs://features-sports-prd-central-element-323112/sports_features/by_date/`: **92 unique dates**
+  (2025-09-01..2025-11-30 P1 golden window + the stray 2026-01-15 dry-run-leak date) — unchanged. Todo 1 full-history
+  compute still NOT run.
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9** — Todo 9 still parked
+  BLOCKED-OPERATOR-DECISION/tracker-only.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7** — Todos 4 (Understat), 5 (footystats
+  M+P), 7 (verify) still pending.
+- `gcloud compute instances list` filtered on `us-backfill`/`fs-backfill`: **0 running**.
+
+Not filing an 8th duplicate BLK — the structural fix (backlog `prereqs.conditions` gating this task + `-007` on P2a/P2b
+completion) has been requested 6+ times with no operator action on the gates themselves, and is outside data_engineering
+craft scope (agent-orchestrator/infra config, not a data-pipeline code/data fix). Checkbox NOT flipped;
+`/skip-current-task` taken so this slot moves to other available work instead of re-running the same multi-hour
+verification a 23rd time.
+
 ### 2026-07-08 — slot 3 (20th dispatch of Todo 1/Todo 3 cycle — code fix shipped + critical new finding)
 
 **Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ; concrete progress made, checkbox NOT flipped**
