@@ -231,7 +231,11 @@ on the resource table + the running backend endpoints (last-30d window).
 
 Operator wants a cleaner breakdown and richer per-resource detail. The table-merge (1) creates the columns the rest
 (2–5) fill. All target `deployment-ui/src/pages/CostObservability.tsx` (`BreakdownPanel` / `LeafPanel`) + new backend
-fields on `BreakdownRow`. **Confirm exact field/label names at implementation time (grep-then-read).**
+fields on `BreakdownRow`. **Key decision (operator, verified via live `bq` probe): the detail is all
+BigQuery/Athena-native — pull `sku.description` + `usage.amount_in_pricing_units` (the SKU + usage fields the query
+currently drops; same enrichment as the audit's "SKU dimension" finding) and group by `resource.name`. NO Cloud
+Monitoring / CloudWatch (extra API cost + an IAM grant we don't have); anything not in the billing export is dropped,
+not sourced elsewhere.** Confirm exact field/label names at implementation time (grep-then-read).
 
 - [ ] [UI] P2. **Merge the breakdown bars + table into one table.** Today `BreakdownPanel` renders the same rows twice —
       a top-12 bar chart (left) and a sortable table (right), duplicating label + cost. Collapse to ONE scrollable,
@@ -244,18 +248,24 @@ fields on `BreakdownRow`. **Confirm exact field/label names at implementation ti
       `gross` + `credit` to `BreakdownRow` (currently net-only) and populate in `_grouped` / `_by_resource` / `_by_day`;
       render net as primary with gross + credit columns, shown only where credit ≠ 0 (GCP). Pushes the KPI-band
       treatment down into the table.
-- [ ] [BACKEND+UI] P2. **Bucket detail columns** (dimension = bucket): total stored bytes, **soft-deleted / noncurrent
-      bytes** (reclaimable later), and object count per bucket. Source = **Cloud Monitoring** (GCS)
-      `storage.googleapis.com/storage/v2/total_bytes` + `.../total_count` split by the `type` label (live / noncurrent /
-      soft-deleted); **CloudWatch** (S3) `BucketSizeBytes` per `StorageType` + `NumberOfObjects`. NOT
-      `gcloud storage du` (walks every object — hours on M-object buckets). Join on the billing `resource_id` (bucket
-      name). Adds $/TB + reclaimable-GB context to storage spend (soft-delete = wasted spend you can clean up).
-- [ ] [BACKEND+UI] P2. **VM detail columns** (dimension = resource, vm rows): machine type (e.g. `e2-highmem-16`) with a
-      human spec (**16 vCPU · 128 GB**), vCPU, RAM, disk, and IP per VM. Reuse existing deployment-api code —
-      `routes/_fleet_inventory.py` already fetches per-VM GCE details incl. boot-disk size/type (+ IP from the same
-      instance details); `vm_cost_estimate.py` `_MACHINE_HOURLY_USD` is the machine-type registry (extend to vCPU/RAM,
-      or derive from the type). Join on the billing `resource_id` (VM name); machine type is also in the billing
-      resource export's `system_labels` (`compute.googleapis.com/machine_spec`) for stopped/deleted VMs.
+- [ ] [BACKEND+UI] P2. **Bucket detail columns** (dimension = bucket): total stored **GB** + a **storage-class split**
+      (Standard / Nearline / Coldline / Archive) + derived **$/GB** per bucket — **all from the billing export itself,
+      no Cloud Monitoring / CloudWatch** (operator: don't pay to query stats we already have). Pull `sku.description` +
+      `usage.amount_in_pricing_units` (unit `gibibyte month`) on the storage SKUs, group by `resource.name`, convert
+      GiB-month → avg GB over the window; show **GB, not raw bytes**. AWS analog = CUR `line_item_usage_amount` on the
+      S3 storage usage-types. **Dropped (not billable → absent from BQ/Athena, per operator's "if not in BQ, drop it"):
+      the soft-delete / noncurrent split (verified — no soft-delete SKU in the export) + object count (only Class-A/B
+      _operations_ counts are billed, not object totals).**
+- [ ] [BACKEND+UI] P2. **Resource detail + waste flags** (dimension = resource): machine type (e.g. `e2-highmem-16` →
+      **16 vCPU · 128 GB**) per VM from the billing `system_labels` (`compute.googleapis.com/machine_spec`, + `cores` /
+      `memory`) — no Compute API. Plus the **cost-waste the operator actually wants** (their case: a static IP billed
+      unused for ~4 months): **idle static-IP cost** — the `Static Ip Charge` SKU is a reserved IP billed while NOT
+      attached (distinct from `External IP Charge on a Standard VM` = in-use), keyed by `resource.name` (verified live:
+      `harsh-static-ip` $5.95, `deployment-dashboard-ip` $3.35, `grafana` $2.24 …); and **orphaned-disk cost** —
+      `… PD Capacity` SKUs keyed by disk `resource.name`, flag disks with no matching running VM (verified:
+      `ikenna-windows-tokyo-restored` SSD **$68.62/30d**). AWS analog = idle Elastic-IP + unattached-EBS usage-types in
+      the CUR. **All billing-native.** (Dropped, per operator: the live IP _address_ / current disk from the Compute API
+      — they want the _cost of idle resources_, not network config, and not running-VM detail.)
 - [ ] [UI] P3. **Dimension-aware columns + leaf tables.** Merged table = label · [bar+cost] · net (· gross · credit) ·
       share by default; add bucket columns when `dimension=bucket` / VM columns when `dimension=resource` (vm rows).
       Apply the same detail columns to the `LeafPanel` "Top compute instances" / "Top storage buckets" tables (their
