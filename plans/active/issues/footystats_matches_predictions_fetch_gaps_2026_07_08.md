@@ -181,6 +181,16 @@ code-fix task). A data_engineering slot with a full session budget should:
 
 ## Progress Log
 
+- **2026-07-08** — Todo #4 re-dispatched a SIXTH time (slot-2 sonnet/high, boot ~22:40 UTC,
+  `dispatch_reason: "tier=1 priority=50 plan_order=3 — highest-rank queued task with prereqs met and no collision"`).
+  Verified via backlog API: `-002` (PREDICTIONS fixture-calendar) is now `done` (slot-13, instruments-service@78636dd),
+  but `-003` (ODDS root-cause, slot-9) is still `dispatched`, not `done` — todo #4's gate ("confirm MATCHES +
+  PREDICTIONS + ODDS pending_fetch == 0") requires all three of todo #1/#2/#3; #3 remains open. Not running the typing
+  pass / backfill VM (would only re-confirm the already-diagnosed ODDS residual before its code fix, if any, lands). The
+  dispatcher-cadence root cause for this repeat re-dispatch is already tracked in
+  `plans/active/issues/backlog_blocked_marker_stale_brief_redispatch_2026_07_08.md` (agent-orchestrator,
+  backend-engineer craft) — not re-filing. Releasing via `/skip-current-task`; will re-dispatch cleanly once `-003`
+  flips to `done`.
 - **2026-07-08** — Todo #2 (PREDICTIONS cup fixture-calendar completion) FLIPPED (slot-13 sonnet/high). Mirrored the
   MATCHES `_captured_leagues` + per-league `record_empty(EXPECTED_NO_FIXTURE)` completion pattern into
   `_fetch_footystats_predictions`, replacing the old single date-aggregate empty row with a per-league loop for the
