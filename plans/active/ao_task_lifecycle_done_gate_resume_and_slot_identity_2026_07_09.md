@@ -330,6 +330,10 @@ preserve-on-handoff (the ONLY auto-commit point):
 - [x] [CODE] P1. ✅ unified-trading-pm@c997993 — **AO-side clone/repair paths stamp identity** —
       `agent-orchestrator/server/worktree_setup.py` (and any other AO code path that creates or repairs a slot clone)
       stamps the same worktree identity at creation so a backend-provisioned slot is never identity-less.
+- [ ] [SCRIPT] P2. **Re-provision slot 10** — its PM/UAC/UTL "clones" were SYMLINKS to the root workspace clones
+      (discovered + removed 2026-07-09 during the identity sweep — the checker had stamped "slot-10" THROUGH them into
+      the ROOT configs; guards shipped in `unified-trading-pm@9f53f2b99`). Run
+      `bash scripts/dev/setup-tab-worktrees.sh --add-slot 10` on the planning VM to restore real Path-B clones.
 
 ### Phase E — tests, runtime verification, docs
 
@@ -363,6 +367,19 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 ## 7. Progress Log
 
+- 2026-07-09 ~15:45Z — **Deploy + first-hour runtime findings.** Deploy mechanism confirmed: uvicorn runs under systemd
+  with `--reload --reload-dir server`, so the 5-min FF-pull cron IS the deploy — the reloader restarted the app on the
+  new code at 15:06 with no manual restart. LIVE WINS: (1) the dispatch-ACK reconciler fired in production at 14:51 —
+  `slot_dispatch_unacked` on the slot-3 zombie (dispatched >1h, frozen pane), task requeued PINNED and re-dispatched
+  cleanly at 14:53 (§1.6 class closed); (2) shipped commits carry `[slot-16·planning]` attribution end-to-end; (3) host
+  identity sweep: 419 repos, 117 drifted → 0 (`check-slot-commit-identity.sh --fix`). REGRESSION found + fixed:
+  `_boot_submitted` (B5) initially failed EVERY fresh spawn — two false-pending sources caught by frame-by-frame pane
+  watch: Claude's greyed GHOST placeholder (`Try "write a test for <filepath>"`) reads as typed text in a capture, and
+  large boot pastes take ~8-10s to ingest (the single rescue C-m at +2s hit the same ingestion window). Fix: ghost
+  filter + patient ~30s verify window with up to 3 rescue C-m (window widened 24→30s per operator). Also: slot-10's
+  PM/UAC/UTL were SYMLINKS to the root workspace clones — the checker stamped "slot-10" through them into the ROOT
+  configs; links removed, roots re-stamped, checker + provisioner now refuse symlinked repo dirs
+  (`unified-trading-pm@9f53f2b99`); slot 10 needs re-provisioning (todo below).
 - 2026-07-09 ~15:15Z — **Phases A + B + B2 (6/7) + C SHIPPED**: `agent-orchestrator@5b07bd3` (quickmerge → LDR; QG
   green, 1137 tests incl. 12 new lifecycle tests in `tests/test_task_lifecycle_done_gate_resume.py`). The commit itself
   carries the fixed attribution `ikennaigboaka [slot-16·planning]` — first production proof of the Phase-D identity
