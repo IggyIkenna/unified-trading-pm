@@ -330,10 +330,11 @@ preserve-on-handoff (the ONLY auto-commit point):
 - [x] [CODE] P1. ✅ unified-trading-pm@c997993 — **AO-side clone/repair paths stamp identity** —
       `agent-orchestrator/server/worktree_setup.py` (and any other AO code path that creates or repairs a slot clone)
       stamps the same worktree identity at creation so a backend-provisioned slot is never identity-less.
-- [ ] [SCRIPT] P2. **Re-provision slot 10** — its PM/UAC/UTL "clones" were SYMLINKS to the root workspace clones
-      (discovered + removed 2026-07-09 during the identity sweep — the checker had stamped "slot-10" THROUGH them into
-      the ROOT configs; guards shipped in `unified-trading-pm@9f53f2b99`). Run
-      `bash scripts/dev/setup-tab-worktrees.sh --add-slot 10` on the planning VM to restore real Path-B clones.
+- [x] [SCRIPT] P2. ✅ **Re-provision slot 10** — DONE 2026-07-09 ~17:55Z: `setup-tab-worktrees.sh --add-slot 10`
+      restored real Path-B clones for the formerly-symlinked PM/UAC/UTL (+ added missing deployment-ui / e2e-testing /
+      agent-orchestrator); all three verified REAL-CLONE with `ikennaigboaka [slot-10·planning]`; final checker step
+      `checked=25 drift=0 fixed=0` ✅. (Symlink landmine originally discovered + removed same day; guards in
+      `unified-trading-pm@9f53f2b99`.)
 - [ ] [CODE] P2. **Manual /spawn route still expects the RETIRED tab branch** — found 2026-07-09 during preserve-path
       verification: `POST /api/slots/12/spawn` was refused by the branch-state gate with `expected_branch: tab/plan…`
       (the manual route's operator arg feeds `check_slot_branch_state` a tab-scheme expectation; AutoSpawn's own spawns
