@@ -84,13 +84,13 @@ drift_direction: advance-code
      existence, so no double-list); gated opt-in so the `/freshness` reuse (`consolidator_posture`) pays no extra list.
      `_mock_response` carries reps (cefi 2/6, defi 47/48). — `deployment-api@575810d` + 2 unit tests. (3 pre-existing
      unrelated QG failures in `test_data_status_drilldown.py` — DeFi uniswap pool schema, another agent's code.)
-- [ ] [UI] P1. **Backlog display** — `pending_shard_count` on `ConsolidatorAssetGroup` (health.ts) + render "N shards
-      pending" per AG card (prominent when > 0). `pw:L2` on a mock AG with a pending backlog.
-- [ ] [UI] P1. **Live throughput sparkline** — accumulate the polled `pending_shard_count` per AG into a session rolling
-      window (~last 10 min); render a small recharts sparkline of backlog-over-time per card; derive + label "absorbed
-      this tick" from backlog drops. Honest caption ("this session · inferred from backlog deltas"). Load the `dataviz`
-      skill before writing chart code; reuse `chart-theme.ts`. `pw:L2` that the sparkline renders + updates on a 2nd
-      poll.
+- [x] 3. ✅ [UI] P1. **Backlog display** — `pending_shard_count`/`total_shard_count` on `ConsolidatorAssetGroup`
+     (health.ts) + "backlog (pending shards) N / total" per AG card (prominent when > 0). — `deployment-ui@8eb4001`.
+     `pw:L2 ✓` cockpit.spec.ts O5 (cefi 47/48).
+- [x] 4. ✅ [UI] P1. **Live throughput sparkline** — session rolling window (~40 samples ≈ 10 min) accumulated from the
+     polls; per-AG recharts Area sparkline (`chart-theme` tones); "−N absorbed" derived from backlog drops; honest
+     caption ("this session · inferred from backlog deltas"). — `deployment-ui@8eb4001`. `dataviz` skill loaded
+     (single-series, no legend, 2px line). `pw:L2 ✓` O5 (sparkline accumulates across polls).
 - [ ] [REVIEW] P1. QG both repos green; **deploy deployment-api** (Cloud Build) so the live tab shows the real backlog,
       and cite `Evidence: cloudbuild=<id>` SUCCESS. Verify the live endpoint returns `pending_shard_count`.
 
