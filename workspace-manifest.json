@@ -341,10 +341,10 @@
       "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "large_file_count": 1,
         "qg_red_reason": "pytest",
         "warn_file_count": 13,
-        "large_file_count": 1,
-        "coverage_pct": 82.18
+        "coverage_pct": 82.24
       }
     },
     "deployment-service": {
@@ -756,10 +756,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "coverage_pct": 91.38,
-        "warn_file_count": 7,
         "large_file_count": 5,
-        "qg_red_reason": null
+        "coverage_pct": 91.37,
+        "warn_file_count": 7,
+        "qg_red_reason": "ruff"
       }
     },
     "market-data-processing-service": {
@@ -848,7 +848,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -877,10 +877,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "qg_red_reason": null,
-        "warn_file_count": 34,
         "large_file_count": 0,
-        "coverage_pct": 83.04
+        "coverage_pct": 83.04,
+        "warn_file_count": 35,
+        "qg_red_reason": null
       }
     },
     "ml-service": {
@@ -1258,9 +1258,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 89.72,
-        "warn_file_count": 20,
         "large_file_count": 5,
+        "coverage_pct": 89.74,
+        "warn_file_count": 20,
         "qg_red_reason": null
       }
     },
@@ -1408,10 +1408,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 75.82,
-        "warn_file_count": 7,
         "large_file_count": 13,
-        "qg_red_reason": "qg"
+        "coverage_pct": 75.86,
+        "warn_file_count": 7,
+        "qg_red_reason": null
       }
     },
     "e2e-testing": {
