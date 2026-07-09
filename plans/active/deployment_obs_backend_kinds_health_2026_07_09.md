@@ -86,6 +86,22 @@ source: deployment_observability_expansion_2026_07_08.md
       (the >1000-line P3 below) — deliberately NOT folded in, to keep this correctness-critical fix focused + low-risk
       while the plan is being finished here; the split remains its own open P3.
 
+### 🟡 Runtime findings from the live P0 verification (2026-07-09 — capture, not yet fixed)
+
+- [ ] [BACKEND] P1. **`google-cloud-functions` missing from deployment-api's deps/lock** — the live CLOUD_FUNCTION
+      census fails `No module named 'google.cloud.functions_v2'` and honest-degrades to empty (0 functions shown; would
+      also break on a prod deploy of the new census code). deployment-service@fb217de added `google-cloud-functions` but
+      deployment-api's `pyproject.toml`/`uv.lock` (which pulls deployment-service editable) was never regenerated to
+      include it, and the QG's `uv sync` prunes it from the venv (grep `google-cloud-functions` in deployment-api
+      `uv.lock` = 0). Fix: add the dep to deployment-api (or re-export functions_v2 through the deployment-service
+      `_gcp_sdk` boundary that already declares it) + regenerate the lock; verify the live census returns the functions.
+- [ ] [BACKEND] P2. **Object-delta cold census is slow (>45 s → degrades)** — with the str→numeric coercion landed
+      (@934f22f) `_batched_object_deltas` no longer errors, but its per-distinct-asset_group manifest reads exceed the
+      45 s per-provider census bound on a cold cycle (`object-delta census exceeded 45s — degraded to empty`), so the
+      composite-health `working`/`stalled` signal that reads `object_delta` degrades to `unknown` on cold cycles (warm
+      cache unaffected). Fix: parallelize the per-asset_group manifest reads (same fan-out as the cloud-run jobs N+1)
+      and/or cache the index reads across the census cycle.
+
 ### Kinds census (make the estate visible)
 
 - [x] ✅ [BACKEND] P1. Add `CLOUD_RUN_SERVICE` to the census — `run_v2.ServicesClient` list + ready-state + revision +
