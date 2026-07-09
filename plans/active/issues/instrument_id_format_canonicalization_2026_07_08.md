@@ -881,3 +881,24 @@ state before acting (still multi-hour, 0-1 flat errors, not climbing) and script
   `instruments-service/docs/DEFI_INSTRUMENTS.md` § "Legacy GCS naming audit — real per-protocol findings and migration
   (2026-07-09)". Evidence: instruments-service@11192be2 (landed on `origin/live-defi-rollout`, verified via
   `git merge-base --is-ancestor`).
+
+**UPDATE 2026-07-09 — `wf_9e5f13e3-962` COMPLETE (4/4 agents), independently verified — one genuinely NEW,
+previously-unreported bug caught by the verify pass.** Live-construction wiring (`instruments-service@8128189e`) and
+both audits' completions above are all independently re-confirmed with real evidence (fresh byte-level GCS
+downloads/diffs, not trusting self-reports): the OKX shape-B fix and the AAVE_V3-OPTIMISM ghost-merge sample both match
+their claimed row counts exactly. The Deribit "no gap" and the 18-venue "never backfilled" claims both hold up under
+independent spot-check too.
+
+**Real new finding, not caught by either audit itself**: the ghost-venue-merge migration
+(`legacy_naming_audit_dexpool_ghost_venue_merge_2026_07_09.py`'s `_merge_frames()`) concatenates ghost-only rows into
+the canonical file via `pd.concat([canon_df, ghost_only], ignore_index=True)` **without rewriting those rows'
+`instrument_key`/`venue` COLUMN VALUES** to canonical spelling — only the GCS _path_ is canonical now, the _data inside_
+still literally reads `instrument_key='AAVEV3-OPTIMISM:A_TOKEN:ALINK'`/`venue='AAVEV3-OPTIMISM'` (no underscore) for
+every ghost-only row that got merged in. Confirmed via direct download+read, not assumption. This directly contradicts
+"zero trace of the old formats in data" — any downstream consumer that filters/joins on the `venue` COLUMN (not the GCS
+path) will silently miss or mis-bucket these rows. The doc's own cited examples (`UNISWAPV3-OPTIMISM` day=2023-11-18 6
+rows, `PANCAKESWAPV3-BSC` day=2024-10-07 59 rows) suggest this is very likely systemic across some fraction of the
+29,840 same-day-collision pairs, not a one-off. **Real fix needed**: rewrite `_merge_frames()` to also correct
+`instrument_key`/`venue` on the ghost-only rows before concat, then re-run a one-time pass over every (day,venue) pair
+that had ghost-only rows (a subset of the already-known 29,840, not a fresh full-corpus walk). Not yet fixed — filing as
+its own follow-up.
