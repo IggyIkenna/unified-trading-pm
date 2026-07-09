@@ -7,7 +7,7 @@ summary: |
   test_ws_cassette_coexistence.py::test_ws_connector_has_cassette (STEP 5.7X) was not updated with a matching
   *_ws.yaml cassette — quality-gates.sh now fails on a clean unified-api-contracts tree for every worker,
   unrelated to their own change.
-status: open
+status: resolved
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -36,7 +36,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-api-contracts@2bb9c165
 ---
 
 # unified-api-contracts WS cassette coexistence gate broken by the real dex_swap_uniswap_v3_ws connector
@@ -94,13 +94,21 @@ adds a `*_ws.yaml` cassette for it under `unified_api_contracts/external/uniswap
 
 ## Actionable todos
 
-- [ ] [CODE] P1. Add a `dex_swap_uniswap_v3_ws` cassette (or `_REST_POLLER_CONNECTORS`/`_CONNECTOR_TO_VENUE` entry, per
-      the recommended decision above) so
+- [x] ✅ [CODE] P1. Add a `dex_swap_uniswap_v3_ws` cassette (or `_REST_POLLER_CONNECTORS`/`_CONNECTOR_TO_VENUE` entry,
+      per the recommended decision above) so
       `unified-api-contracts/tests/test_ws_cassette_coexistence.py::test_ws_connector_has_cassette[dex_swap_uniswap_v3_ws]`
-      passes on a clean tree (repo: unified-api-contracts).
+      passes on a clean tree (repo: unified-api-contracts) — unified-api-contracts@2bb9c165
 
 ## Progress Log
 
 - 2026-07-09 — Filed by slot-4 (backend-engineer) after `bash scripts/quality-gates.sh` on `unified-api-contracts`
   failed on a clean-of-my-changes tree while shipping an unrelated `deployment_obs_backend_kinds_health_2026_07_09.md`
   task. Confirmed pre-existing/unrelated via `git stash` re-run.
+- 2026-07-09 — Verified RESOLVED by slot-7 (data_engineering). `unified-api-contracts@2bb9c165` ("feat(lifecycle-class):
+  extend DeploymentKind to 6 compute kinds", landed 2026-07-09 06:53:37 UTC, already merged into current `.tabs/7`
+  worktree HEAD `dacdcad1`) added `"dex_swap_uniswap_v3_ws"` to `_REST_POLLER_CONNECTORS` in
+  `tests/test_ws_cassette_coexistence.py`. This removes the connector from `_get_true_ws_connector_stems()`, so the
+  parametrized `test_ws_connector_has_cassette[dex_swap_uniswap_v3_ws]` case no longer exists (confirmed: pytest
+  collects 0 items for that node id post-fix). Ran the full `tests/test_ws_cassette_coexistence.py` file standalone: 149
+  passed, 20 skipped, 0 failed. No code change needed from this task — closing as already-resolved by a prior slot's
+  unrelated commit that happened to touch the same allowlist.
