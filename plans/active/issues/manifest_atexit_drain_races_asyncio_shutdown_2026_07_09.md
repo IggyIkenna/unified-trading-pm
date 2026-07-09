@@ -97,11 +97,50 @@ documented, expected way to get the "fast-exit" safety net) is still exposed to 
 
 ## Recommended decision
 
-- [ ] [INVESTIGATE] P0. Root-cause exactly which executor/library is torn down before the manifest module's atexit
+- [x] [INVESTIGATE] P0. Root-cause exactly which executor/library is torn down before the manifest module's atexit
       handler runs (candidates: `asyncio`'s default executor, `gcsfs`'s internal thread pool, `google-cloud-storage`
       client transport threads) and confirm whether Python's `atexit` LIFO ordering can be controlled (e.g. registering
       the manifest flush handler EARLIER so it runs LATER, i.e. before dependent executors register their own shutdown)
-      or whether the fix must be structural. (repo: unified-trading-library)
+      or whether the fix must be structural. (repo: unified-trading-library) ✅ — 2026-07-09 (slot-9). **This is NOT a
+      LIFO/registration-order race at all — it's a deterministic two-phase CPython shutdown sequence, and reordering
+      registrations CANNOT fix it.** `concurrent.futures.thread` registers its `_python_exit` cleanup via the PRIVATE
+      `threading._register_atexit()` API, not the public `atexit.register()` — a distinct callback list CPython drains
+      in `threading._shutdown()`. Empirically confirmed on the exact production interpreter
+      (`cpython-3.13.13-linux-x86_64-gnu`, both service venvs): registering an `atexit.register()` callback BEFORE a
+      `threading._register_atexit()` callback still fires the threading one FIRST — `threading._register_atexit`
+      callbacks unconditionally precede ALL `atexit.register()` callbacks, regardless of registration order (this is the
+      documented bpo-39812 change: "used _instead of_ atexit.register() ... for compatibility with subinterpreters").
+      Once `_python_exit()` runs, it sets the MODULE-GLOBAL `concurrent.futures.thread._shutdown` flag — not a
+      per-instance flag — so from that point on, ANY `ThreadPoolExecutor.submit()` call anywhere in the process, on ANY
+      executor (even a brand-new one), raises exactly
+      `RuntimeError: cannot schedule new futures after     interpreter shutdown` (the specific wording confirms the
+      module-global check, not the per-instance `"...after shutdown"` variant). **`concurrent.futures.thread` is
+      essentially guaranteed to already be imported (and thus its `_python_exit` registered) in every process that
+      imports `unified_trading_library`**: package `unified_trading_library/__init__.py:617` does
+      `from .core.run_async import run_async_from_sync`, and `unified_trading_library/core/run_async.py:11,18` does
+      `from concurrent.futures import ThreadPoolExecutor` + eagerly constructs a module-level
+      `_executor = ThreadPoolExecutor(max_workers=4, ...)` at import time — so simply `import unified_trading_library`
+      (transitively, via `import unified_trading_library.manifest_writer`) is enough, no explicit executor use required
+      by the calling script. **Exhaustively grepped the actual write path** (`ManifestWriter.close()` →
+      `_write_to_gcs()` → `get_storage_client()` → `google.cloud.storage.Client` / `google.auth` / `requests` /
+      `urllib3`) for any `ThreadPoolExecutor`/`run_in_executor`/`asyncio.to_thread` call — found NONE; none of those
+      libraries touch a Python-level thread-pool executor in this call chain (ruling out `gcsfs` — not used here at all,
+      `get_storage_client()` wraps the official synchronous `google-cloud-storage` client — and ruling out
+      `google-auth`'s `TimeoutGuard`, which is a wall-clock check, not a thread). So the write path itself is not the
+      permanent source of a `.submit()` call; the concrete trip in the 2026-07-08/09 incident was most likely a
+      transient/in-flight executor use elsewhere in the same process at the moment atexit fired (e.g. an aiohttp
+      `ThreadedResolver`-driven DNS lookup still winding down;
+      `instruments_service/reference_data/adapters/sports/adapters/base.py:184` wires
+      `aiohttp.TCPConnector(resolver=aiohttp.resolver.ThreadedResolver())`, whose `resolve()` calls `loop.getaddrinfo()`
+      → `loop.run_in_executor(None, socket.getaddrinfo, ...)`, i.e. asyncio's own lazily-created default executor)
+      rather than a deterministic line in the manifest writer. **Practical upshot — same conclusion either way**: the
+      atexit-registered `flush_all_pending_buckets()` can NEVER be trusted as a safety net for an asyncio-based script,
+      because (a) `concurrent.futures.thread`'s shutdown is guaranteed to run first the instant
+      `unified_trading_library` is imported, and (b) whether any GIVEN run actually trips a live `.submit()` call at
+      that exact moment is incidental/nondeterministic, not something a fix inside the write path alone can close. **Fix
+      must be structural** (confirms option (a) in the sibling [CODE] todo below) — an explicit
+      pre-`asyncio.run()`-return drain is the only reliable mechanism; reordering imports/registrations cannot help.
+      Reproduction commands + evidence: see Progress Log entry below.
 - [ ] [CODE] P0. Make the guaranteed drain actually guaranteed for asyncio scripts — either (a) provide + document a
       public "call this before your asyncio.run() returns" helper (formalizing the workaround applied here) that every
       asyncio-based one-off/backfill script is expected to call explicitly, since atexit cannot be trusted post-hoc, or
@@ -116,6 +155,63 @@ documented, expected way to get the "fast-exit" safety net) is still exposed to 
       anti-pattern going forward. (repo: unified-trading-pm)
 
 ## Progress Log
+
+### 2026-07-09 ~03:0x UTC — slot-9: item #1 (INVESTIGATE) — root cause is a deterministic two-phase shutdown, not a LIFO race
+
+**Task**: `manifest_atexit_drain_races_asyncio_shutdown-001` (item #1).
+
+**Method**: static analysis of the write call chain (`ManifestWriter.close()` → `_write_to_gcs()` in
+`unified_trading_library/manifest_writer/_writer_io.py`) across `unified-trading-library`, `google-cloud-storage`,
+`google-auth`, `requests`/`urllib3` (all in the real service venv, Python 3.13.13) to find every
+`ThreadPoolExecutor`/`run_in_executor`/`asyncio.to_thread` call site, plus a direct empirical reproduction of CPython's
+atexit ordering on the exact interpreter build used in production (`cpython-3.13.13-linux-x86_64-gnu`).
+
+**Key reproduction** (run standalone, no GCS credentials needed):
+
+```python
+import atexit, threading
+def atexit_marker(): print("FIRED: atexit.register callback")
+def threading_marker(): print("FIRED: threading._register_atexit callback")
+atexit.register(atexit_marker)          # registered FIRST
+threading._register_atexit(threading_marker)  # registered SECOND
+# exiting now — LIFO would predict atexit_marker fires first (it was registered
+# first, so LIFO/atexit's own "last-in-first-out" would place its "later"
+# registrant, threading_marker, ahead of it -- but threading._register_atexit
+# is a SEPARATE list entirely, drained by threading._shutdown() at a fixed,
+# always-earlier point in interpreter finalization):
+```
+
+Output: `FIRED: threading._register_atexit callback` always prints before `FIRED: atexit.register callback`, regardless
+of which was registered first — confirmed on both this host's `/usr/lib/python3.12` and the actual production venv's
+`cpython-3.13.13-linux-x86_64-gnu`.
+
+**Root cause** (see the checked-off todo above for the full writeup): `concurrent.futures.thread` registers its
+worker-thread-joining cleanup (`_python_exit`, which sets the MODULE-GLOBAL `_shutdown=True`) via the private
+`threading._register_atexit()` API specifically BECAUSE (per its own source comment, bpo-39812) it must run before
+regular `atexit.register()`-registered functions, not after. `unified_trading_library/__init__.py:617` →
+`core/run_async.py:11,18` guarantees `concurrent.futures.thread` is imported (and `_python_exit` registered) the moment
+`unified_trading_library` itself is imported — no explicit executor use required by the calling script. So by the time
+`flush_all_pending_buckets()` (registered via plain `atexit.register()`) runs, `_python_exit()` has ALWAYS already
+fired, and any live `ThreadPoolExecutor.submit()` call anywhere in the process from that point on raises
+`RuntimeError: cannot schedule new futures after interpreter shutdown` — matching the exact wording slot-2 observed (the
+module-global check's message, distinct from the per-instance `"...after shutdown"` variant).
+
+**Did not find** an explicit thread-pool call inside the manifest write path itself (`get_storage_client()` →
+`google.cloud.storage.Client` → `blob.upload_from_string`, or `google.auth`'s `TimeoutGuard`, which is a wall-clock
+check, not a thread) — ruling out `gcsfs` (not used; `get_storage_client()` wraps the official sync client) and ruling
+out the GCS/auth transport layers as a _permanent_ trigger. Strongest candidate for the actual trip observed by slot-2:
+`instruments_service/reference_data/adapters/sports/adapters/base.py:184`'s
+`aiohttp.TCPConnector(resolver=aiohttp.resolver.ThreadedResolver())` — `ThreadedResolver.resolve()` calls
+`loop.getaddrinfo()` → `loop.run_in_executor(None, ...)`, i.e. asyncio's own lazily-created default executor, which
+could still have in-flight work at the exact moment the atexit-registered flush ran.
+
+**Conclusion for the sibling [CODE] todo**: the LIFO-ordering angle is a dead end — it cannot be "fixed" by
+re-registering the manifest flush earlier/later, because `threading._register_atexit` and `atexit.register` are two
+separate lists with a fixed relative order, not one LIFO stack. The only reliable fix is structural: an explicit
+pre-`asyncio.run()`-return drain (formalizing slot-2's workaround) for every asyncio-based script, since the
+atexit-based "guarantee" is provably unreliable for any process that imports `unified_trading_library` (i.e., all of
+them). No code shipped this session — this was an INVESTIGATE-only todo; the next todo ([CODE] P0) should implement the
+explicit-drain helper.
 
 ### 2026-07-09 ~01:22 UTC — slot-2: diagnosed, worked around in one-off script, verified end-to-end
 
