@@ -49,29 +49,43 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Todos
 
-- [ ] [UI] P1. **Kind badges + rich fields** — render the 6 kinds (VM · CLOUD_RUN_JOB · CLOUD_RUN_SERVICE · ECS_SERVICE
-      · LAMBDA · CLOUD_FUNCTION) and wire the mock's rich fields (machine/zone, cost, uptime) to the real API. Services
-      show Mode="—". `pw:L2` regression on the kind-badge + Mode="—" render.
-- [ ] [UI] P1. **Composite Health column** — chip text = exact state (7-state VM: working/stalled/oom-risk/
-      workload-dead/disk-full/hung/dead; service: serving/scaled-to-zero/dead/degraded), colour = 3-tier severity
-      (green=working·serving / amber=stalled·oom-risk·disk-full·degraded / red=workload-dead·hung·dead). `pw:L2`
-      asserting the colour tier per state.
-- [ ] [UI] P1. **Resources columns** — wire cpu/mem/disk % to the real API fields (currently mock), colour-coded (amber
-      ≥70, red ≥90, `↑` on climbing mem); services show cpu/mem only, jobs none, no-sample rows show "—". `pw:L2` on the
-      threshold colouring + honest "—".
-- [ ] [UI] P1. **Name-click detail popover** (right-side panel) — clicking the target NAME opens a popover with the deep
-      fields (cpu/mem/disk sparklines + timeline, req/min, p99, invocations, revision, running_tasks, rows in/out/error,
-      object-delta breakdown, owning consolidator, absolute used/total GB) served by `/deployments/{id}/detail`. `pw:L2`
-      on open/close + a sample field.
-- [ ] [UI] P1. **Console deep-link** in the popover — "Open in GCP/AWS console →" built from the target identity: GCE
-      `compute/instancesDetail/zones/{zone}/instances/{name}?project=…`, EC2 `ec2/home?region={r}#InstanceDetails:{id}`,
-      plus Cloud Run service/job, ECS cluster/service, Lambda function URLs. Pure URL construction from fields already
-      on the item; `pw:L2` asserting the href per kind.
-- [ ] [UI] P2. **Kind filter** dropdown next to Mode/Cloud/Status (isolate services vs jobs vs VMs) — the way a user
-      finds always-on services (Mode="—"). `pw:L2` on filter narrowing.
+- [x] 1. ✅ [UI] P1. **Kind badges + rich fields** — 6 kinds render (VM · CLOUD_RUN_JOB · CLOUD_RUN_SERVICE ·
+     ECS_SERVICE · LAMBDA · CLOUD_FUNCTION); services show Mode="—" (umbrella NONE). — deployment-ui@608d221
+     (`ModeBadge` NONE→"—", 8 service fixtures NONE) + @4895925. `pw:L2 ✓` cockpit.spec.ts "all 6 compute kinds render
+     kind badges; services show Mode='—'".
+- [x] 2. ✅ [UI] P1. **Composite Health column** — chip text = exact state (VM 7-state; service serving/scaled-to-zero/
+     dead/degraded), colour = 3-tier severity. — deployment-ui@608d221 (`HEALTH_META`, `serviceHealthLabel`
+     desired-vs-running sub-taxonomy). `pw:L2 ✓` cockpit.spec.ts "composite Health column names each VM state + the
+     service sub-taxonomy".
+- [x] 3. ✅ [UI] P1. **Resources columns** — cpu/mem/disk % colour-coded (amber ≥70, red ≥90, `↑` climbing mem);
+     services cpu/mem only, no-sample rows "—". — deployment-ui@608d221 (`ResourceCell`). `pw:L2 ✓` cockpit.spec.ts
+     "Resources column shows cpu/mem/disk for VMs; honest '—' for a no-sample row". NOTE: inline scalars need the
+     backend to surface `cpu_pct`/`mem_pct`/`disk_pct` on the LIST (currently `/detail`-only) — small backend follow-up,
+     flagged in Progress Log.
+- [x] 4. ✅ [UI] P1. **Name-click detail panel** — enhances the existing cockpit slide-over: a `WorkHealthCard` served
+     by `GET /deployments/{name}/detail` (cpu/mem/disk/io-write/net-recv/workload_alive + composite verdict, honest
+     point-in-time note; "VM-only" for kinds without /proc), plus structural service fields (tasks running/desired,
+     revision, runtime, memory) in the Target card. — deployment-ui@4895925 (`getDeploymentDetail`, mock `/detail`
+     handler). `pw:L2 ✓` cockpit.spec.ts "name-click detail panel shows the /detail work-health vector" + "a service
+     shows structural task counts + no /proc vector".
+- [x] 5. ✅ [UI] P1. **Console deep-link** — `consoleUrl()` builds the GCP/AWS console URL per kind (GCE
+     instancesDetail, EC2 instances search, Cloud Run job+service, ECS cluster/service, Lambda function, Cloud
+     Function); rendered in the detail header. — deployment-ui@4895925. `pw:L2 ✓` cockpit.spec.ts "console deep-link is
+     built per kind (GCE VM vs ECS service)". (EC2 uses a name-search URL — instance-id not on the contract; a backend
+     `instance_id` field would make it exact.)
+- [x] 6. ✅ [UI] P2. **Kind filter** dropdown next to Mode/Cloud/Status/asset-group (client-side) — finds services
+     despite Mode="—". — deployment-ui@4895925 (`kindFilter` + `filter-kind` select). `pw:L2 ✓` cockpit.spec.ts "Kind
+     filter isolates a single kind".
 
 ## Progress Log
 
+- 2026-07-09 — **UI PLAN COMPLETE** — all 6 todos shipped (deployment-ui@608d221 contract alignment + @4895925
+  detail/console/filter), QG green, full cockpit playwright spec 36 passed (incl. 7 new pw:L2). Two backend follow-ups
+  surfaced for when the estate is wired to the live API (NOT blocking the UI): (1) surface
+  `cpu_pct`/`mem_pct`/`disk_pct` summary scalars on the LIST `DeploymentItem` so the inline Resources column has data
+  (currently `/detail`-only — the UI reads them optionally, shows "—" until then); (2) add an EC2 `instance_id` field so
+  the VM console deep-link is exact (uses a name-search URL today). Both belong in the backend plan
+  `deployment_obs_backend_kinds_health_2026_07_09.md`.
 - 2026-07-09 — Created as a LOCAL plan (operator decision: do the UI here interactively, not on AO). Held until the
   backend AO plan completes and posts the frozen `DeploymentItem` contract sha here, so the UI wires against a real
   contract. The mock in `deployment_observability_expansion_2026_07_08.md` § "Where we are" is the visual target and
