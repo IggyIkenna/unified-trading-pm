@@ -334,6 +334,11 @@ preserve-on-handoff (the ONLY auto-commit point):
       (discovered + removed 2026-07-09 during the identity sweep — the checker had stamped "slot-10" THROUGH them into
       the ROOT configs; guards shipped in `unified-trading-pm@9f53f2b99`). Run
       `bash scripts/dev/setup-tab-worktrees.sh --add-slot 10` on the planning VM to restore real Path-B clones.
+- [ ] [CODE] P2. **Manual /spawn route still expects the RETIRED tab branch** — found 2026-07-09 during preserve-path
+      verification: `POST /api/slots/12/spawn` was refused by the branch-state gate with `expected_branch: tab/plan…`
+      (the manual route's operator arg feeds `check_slot_branch_state` a tab-scheme expectation; AutoSpawn's own spawns
+      pass the host operator and correctly expect `live-defi-rollout`). Align the manual route's expected-branch
+      derivation with Path-B (same fix class as the identity hook's §1.5).
 
 ### Phase E — tests, runtime verification, docs
 
