@@ -160,9 +160,9 @@ documented, expected way to get the "fast-exit" safety net) is still exposed to 
       containing both `asyncio.run(` and `MANIFEST_PER_VM_SHARDS` but no `flush_all_pending_buckets(` call. Per-repo
       SHRINKING baseline ratchet (`asyncio_manifest_explicit_drain_baseline.yaml`); item #3's audit (instruments-
       service@a745898, concurrent with this task) fixed 2 of the original 3 known offenders, leaving 1
-      (`scripts/recover_fixtures_from_truthset.py`) — baseline seeded at 1, matching the live re-scan; per-file
-      opt-out `# noqa: qg-asyncio-manifest-drain`. `unified-trading-pm@0452119bb` (checker + tests: `d863e01d6`;
-      wiring: `0452119bb`); 10 unit tests pass; full `quality-gates.sh --no-fix` green (STEP 5.103 ✅).
+      (`scripts/recover_fixtures_from_truthset.py`) — baseline seeded at 1, matching the live re-scan; per-file opt-out
+      `# noqa: qg-asyncio-manifest-drain`. `unified-trading-pm@0452119bb` (checker + tests: `d863e01d6`; wiring:
+      `0452119bb`); 10 unit tests pass; full `quality-gates.sh --no-fix` green (STEP 5.103 ✅).
 
 ## Progress Log
 
