@@ -100,6 +100,19 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
      correctly as a string (`"10APR26"` sorts after `"10JAN27"` alphabetically despite being earlier). This means
      Deribit's OPTION/FUTURE entries — previously assessed in the mockup as "already canonical, no fix needed" — are now
      ALSO in scope for this canonicalization; that earlier assessment is superseded.
+   - **SCOPE EXPANDED 2026-07-09 (operator) — `@LIN`/`@INV` now applies to `PERPETUAL` too, not just dated
+     derivatives.** Original framing above treated PERPETUAL as "already clean" since a venue's real quote currency was
+     assumed to disclose margin type. Real evidence disproves that assumption: Kraken-Futures'
+     `KRAKEN-FUTURES:PERPETUAL:AAVE-USD` (linear) and `KRAKEN-FUTURES:PERPETUAL:BTC-USD` (inverse) are both real, both
+     quote `USD` — the id alone cannot distinguish them today (also the root of the already-known Kraken
+     inverse-mislabeled-as-linear bug). Operator: "perps should be included for exactly that reason across the board —
+     you can't tell whether something is inverse just from its quote currency because USD is a valid quote currency as
+     well." **New target for PERPETUAL**: `VENUE:PERPETUAL:BASE-QUOTE@LIN` / `...@INV` — same marker, no date suffix
+     (perpetuals don't expire). Applies everywhere `PERPETUAL` exists across CeFi (including the 5 on-chain-perp CLOBs)
+     and TradFi (no TradFi perpetual product exists today). Real examples: `DERIBIT:PERPETUAL:BTC-USD@INV` /
+     `DERIBIT:PERPETUAL:BTC-USDC@LIN`; `BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN` /
+     `BINANCE-DELIVERY:PERPETUAL:BTC-USD@INV`. **Not yet determined**: the real LIN/INV value for each of the 5
+     on-chain-perp CLOBs — needs real verification of actual settlement/margin mechanics per venue, not an assumption.
 
 2. **DEX-pool instrument_id is a bare on-chain pool address, zero VENUE:TYPE:SYMBOL structure, confirmed across 6,180
    real rows / 13 protocols (Uniswap V2/V3/V4, Balancer, Curve, PancakeSwap_V3, Sushiswap/\_V3, Camelot_V3,
