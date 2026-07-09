@@ -141,12 +141,22 @@ documented, expected way to get the "fast-exit" safety net) is still exposed to 
       must be structural** (confirms option (a) in the sibling [CODE] todo below) — an explicit
       pre-`asyncio.run()`-return drain is the only reliable mechanism; reordering imports/registrations cannot help.
       Reproduction commands + evidence: see Progress Log entry below.
-- [ ] [CODE] P0. Make the guaranteed drain actually guaranteed for asyncio scripts — either (a) provide + document a
+- [x] [CODE] P0. Make the guaranteed drain actually guaranteed for asyncio scripts — either (a) provide + document a
       public "call this before your asyncio.run() returns" helper (formalizing the workaround applied here) that every
       asyncio-based one-off/backfill script is expected to call explicitly, since atexit cannot be trusted post-hoc, or
       (b) fix the executor-teardown race so plain atexit is reliable again. Add a regression test that simulates an
       asyncio script exiting fast with pending per-VM records and asserts the shard is written. (repo:
-      unified-trading-library)
+      unified-trading-library) ✅ — unified-trading-library@baeeff9e (slot-8). Went with option (a), per item #1's
+      finding that the race is structural (not fixable by reordering atexit registrations):
+      `flush_all_pending_buckets()`'s docstring now documents the explicit-call contract and it's exported from the
+      top-level `unified_trading_library` package (was previously reachable only via the `manifest_writer` submodule).
+      Also added a `MANIFEST_ATEXIT_DRAIN_INCOMPLETE` structured event (emitted from `_write_to_gcs`'s existing
+      except-block, gated on `process_final=True`) so a guaranteed-drain failure is machine-detectable instead of only
+      the pre-existing `logger.warning` line — this closes the "why it matters #2" silent-loss gap even for scripts that
+      still rely on bare atexit. Two regression tests in `tests/unit/test_manifest_writer_atexit_asyncio_drain.py`: (1)
+      calling `flush_all_pending_buckets()` from inside a still-running `asyncio.run()` coroutine persists a debounced
+      per-VM shard remainder correctly; (2) a simulated upload failure (the exact production `RuntimeError` text) during
+      the guaranteed drain now emits the new event with accurate row counts. Full `quality-gates.sh` green.
 - [x] [SCRIPT] P1. Audit other asyncio-based one-off/backfill scripts under `instruments-service/scripts/backfill/` (and
       sibling repos) for the same reliance-on-bare-atexit pattern; apply the same explicit-pre-exit-drain workaround to
       any that matter for an active plan's gate, pending the real fix above. (repo: instruments-service) ✅ —
