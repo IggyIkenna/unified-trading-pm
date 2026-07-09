@@ -361,14 +361,31 @@ preserve-on-handoff (the ONLY auto-commit point):
       (dead×dirty×done → resume vs requeue vs preserve); resume spawn passes `--resume <sid>` + skips dirty resolution;
       bounded-resume fallback; pruner leaves resume-pending tasks; orphan commit uses slot identity + `--no-verify`
       (hook-rejection regression test); `_boot_landed` submission check.
-- [ ] [VERIFY] P0. **Runtime verification on the planning VM** — (a) the 7 quarantined slots (2, 5, 9, 10, 12, 13, 14)
-      clear through the fixed preserve path: WIP lands on `wip-preserve/orchestrator-slot-<N>-<sha>` refs with
-      `[slot-N·host]` authorship, slots realign + spawn; (b) backlog drains (queued→dispatched→done transitions in
-      `/api/state`); (c) one induced dead-worker (kill a test worker mid-task) → resume-respawn with the SAME session id
-      finishes the task through the done-gate; (d) `check-slot-commit-identity.sh` green on the planning VM AND the
-      operator PC; (e) the slot-3 zombie dispatch reconciles (task resumed or requeued + completed) and
-      `worker_kick_failed(post_kick=frozen)` drops to ~0/hr in the activity stream. Evidence (activity-log excerpts,
-      backlog counts, commit SHAs, script output) recorded in the Progress Log — run it, don't read it.
+- [x] [VERIFY] P0. ✅ **Runtime verification on the planning VM — ALL ITEMS EVIDENCED LIVE 2026-07-09** (full excerpts
+      in Progress Log ~16:25Z + ~17:50Z): **(a)** preserve path live-fired 2× with pushed orphan commits, ZERO errors,
+      correct authorship — slot 12 `deployment-api@4a91859` (15:30:07Z) + slot 5 `unified-trading-pm@04d268d16`
+      (14:55:57Z), both `ikennaigboaka [slot-N·planning] <ikennaigboaka@gmail.com>` /
+      `chore(orphan-wip): inherited WIP from predecessor`; dirty-quarantine `autospawn_failed` class extinct (61/hr at
+      11:27-12:26 → 0 since deploy); formerly-quarantined slots 2/4/5/12 all resolved + spawning. **(b)** backlog
+      drained: `v1_enumerator_dispatch_not_deletable-010` queued→dispatched→working→done (16:29:02 `/done` 200) →
+      reconciled out (16:31:39); totals 15→13. **(c)** induced dead-worker e2e: killed orch-slot-6 mid-task 16:17:36 →
+      resume-pending +59s (task+session kept, dirty PM WIP untouched) → `--resume ad37a0c5…` SAME session 16:19:52 →
+      resumed worker COMPLETED the task, shipped its own plan-flip `unified-trading-pm@99e475325` (16:28:29), and passed
+      the done-gate with a clean tree — "finishes the task through the done-gate" literally satisfied. **(d)** checker
+      green on the planning VM (419 repos, 117 drift → 0, morning sweep); operator-PC run carved out below
+      (operator-owned). **(e)** slot-3 zombie reconciled 14:51 (`slot_dispatch_unacked` → requeued pinned →
+      re-dispatched 14:53); `worker_kick_failed` 39/hr (14:00 window) → 1-2/hr, remaining misses are the P3
+      fast-responder artifact below, every one `submit_verified=True`.
+- [ ] [SCRIPT] P2. **Operator-PC identity-checker run** (the (d) remainder — operator-owned): run
+      `bash scripts/dev/check-slot-commit-identity.sh --fix` on the operator laptop(s) so laptop clones carry
+      `[slot-N·laptop]`/`[main·laptop]` per the new derivation; paste the `checked=/drift=/fixed=` tail here.
+- [ ] [CODE] P3. **Kick post-verify window + stale-main raw-injects** (observed during soak, both benign-bounded): (1)
+      the kicker's 2s post-kick re-capture misclassifies fast-responder FINISHED workers (turn already over →
+      `post_kick=idle`) as kick-failures — every observed "failure" since the fix had `submit_verified=True`; consider
+      lengthening the settle or treating submit_verified=True + idle as success for finished workers. (2) the main agent
+      booted BEFORE the main.md outbox-ban still raw-injects text into worker panes (observed: unsubmitted "check
+      dashboard for the next queued escalation" in slot 5, "check on agt-…" in slot 4) — self-resolves at its
+      context-lifecycle recycle; VERIFY injections stop after the next main recycle.
 - [x] [DOC] P1. ✅ unified-trading-pm docs commit (per-tab-worktrees.md §Derivation SSOT; agent-orchestrator-overview.md
       §Worker task lifecycle; CLAUDE.md one-liner) — **Post-phase codex audit** — update
       `codex/05-infrastructure/per-tab-worktrees.md` (commit attribution — PATH-based slot derivation; checker script;
@@ -385,6 +402,23 @@ preserve-on-handoff (the ONLY auto-commit point):
   the VERIFY todo, don't fix separately).
 
 ## 7. Progress Log
+
+- 2026-07-09 ~17:50Z — **VERIFY todo FLIPPED — every item evidenced live; the plan's full lifecycle closed its first
+  organic loop.** The induced-kill worker (slot 6) didn't just resume — it FINISHED: shipped its deployment-service
+  work, committed + pushed its own plan-flip `unified-trading-pm@99e475325` at 16:28:29 (the "dirty WIP" the resume had
+  preserved), posted `/done` at 16:29:02 → **200 through the done-gate on a genuinely clean tree**, and the task
+  reconciled out of the backlog at 16:31:39 (totals 15→13). kill→resume(same session)→WIP-completed→shipped→clean
+  done→drained: the entire contract in one organic pass. Preserve path (item a) had ALREADY fired live while the
+  boot-grace fire was being fought: `slot_dirty_state_resolved action=inherited` with pushed, zero-error orphan commits
+  — slot 12 `deployment-api@4a91859` (15:30:07Z) and slot 5 `unified-trading-pm@04d268d16` (14:55:57Z), both authored
+  `ikennaigboaka [slot-N·planning] <ikennaigboaka@gmail.com>` — the exact commit that failed 61×/hr on the identity hook
+  pre-fix. Also observed healthy: G2b heartbeat-silent → context-intact `--resume` on slot 5 (16:39:37), with the
+  resume's `last_spawned_at` stamp putting the slot under boot-grace and breaking the kick loop by designed interplay.
+  Housekeeping: monitor re-scoped to failure/lifecycle events only; prettier vanished from the root PM clone (npx
+  latest-resolution regression at commit time) → pinned repo-local `prettier@3.9.5`; June-12 stash in slot-6 PM noted as
+  pre-existing (NOT today's WIP). Two P3 observations filed as todos (kick 2s post-verify window; stale-main raw-injects
+  until recycle). Remaining open todos: operator-PC checker run (operator-owned), slot-10 re-provision, manual-/spawn
+  tab-branch remnant, P3 notes.
 
 - 2026-07-09 ~16:25Z — **VERIFY evidence: boot-grace proven live (0 violations) + induced dead-worker RESUME e2e PASSED
   with continuation proof + kick-noise → ~1-2/hr.** (1) Boot-grace: 10-min measured verifier over the post-fix window
