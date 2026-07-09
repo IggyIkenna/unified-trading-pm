@@ -114,8 +114,12 @@ source: deployment_observability_expansion_2026_07_08.md
       `workload_alive = kill -0 CMD_PID`. Kills the OOM-false-alive without the exit-file race.
 - [ ] [INFRA] P1. **`parse_counters` tail-read fix** — seek-to-end / read last ~64 KB, not `read_text()` on a multi-GB
       log every tick (existing per-VM I/O waste at scale).
-- [ ] [BACKEND] P1. **Object-delta = manifest lookup** (authoritative write-truth) — extend `/freshness` to an
-      object-count-delta per shard off the manifest the consolidator maintains; NO new bucket walk.
+- [x] ✅ [BACKEND] P1. **Object-delta = manifest lookup** (authoritative write-truth) — extend `/freshness` to an
+      object-count-delta per shard off the manifest the consolidator maintains; NO new bucket walk. —
+      `deployment-api@defdabe`: `_object_delta_for_bucket()` reads the SAME consolidated availability-index blob
+      `consolidator_posture` already resolves (`read_availability_index`, zero new bucket walks), sums captured
+      `row_count`/`instrument_count` per written date, diffs the two most recent dates; wired onto
+      `DeploymentFreshness.object_delta` + `object_delta_detail`. QG green; 11 unit tests (4 new) passing.
 - [ ] [BACKEND] P1. **Hang detection = control-plane existence + stale heartbeat** (NOT Cloud Monitoring) — reuse the
       `aggregated_list` / EC2 / Run-execution lists already fetched.
 - [ ] [BACKEND] P1. **Composite health status** (parent D.3) replacing `_vm_status` — VM 7-state + the
