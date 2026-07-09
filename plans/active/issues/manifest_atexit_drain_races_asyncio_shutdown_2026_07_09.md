@@ -151,9 +151,18 @@ documented, expected way to get the "fast-exit" safety net) is still exposed to 
       sibling repos) for the same reliance-on-bare-atexit pattern; apply the same explicit-pre-exit-drain workaround to
       any that matter for an active plan's gate, pending the real fix above. (repo: instruments-service) ✅ —
       instruments-service@a745898 (slot-11). See Progress Log entry below for the audit methodology + findings.
-- [ ] [SCRIPT] P2. Add a QG check that greps for `asyncio.run(` in a script alongside `MANIFEST_PER_VM_SHARDS` env usage
+- [x] [SCRIPT] P2. Add a QG check that greps for `asyncio.run(` in a script alongside `MANIFEST_PER_VM_SHARDS` env usage
       and requires an explicit `flush_all_pending_buckets()` call in the same file, to catch new instances of this
-      anti-pattern going forward. (repo: unified-trading-pm)
+      anti-pattern going forward. (repo: unified-trading-pm) ✅ — 2026-07-09 (slot-13). Added
+      `scripts/quality_gates/check_asyncio_manifest_explicit_drain.py` (QG STEP 5.103 — 5.102 was claimed concurrently
+      by the sibling manifest_early_return_missing_write_loss checker; wired into
+      `scripts/quality-gates-base/base-service.sh` so every repo's own gate run scans itself) — flags any `.py` file
+      containing both `asyncio.run(` and `MANIFEST_PER_VM_SHARDS` but no `flush_all_pending_buckets(` call. Per-repo
+      SHRINKING baseline ratchet (`asyncio_manifest_explicit_drain_baseline.yaml`); item #3's audit (instruments-
+      service@a745898, concurrent with this task) fixed 2 of the original 3 known offenders, leaving 1
+      (`scripts/recover_fixtures_from_truthset.py`) — baseline seeded at 1, matching the live re-scan; per-file opt-out
+      `# noqa: qg-asyncio-manifest-drain`. `unified-trading-pm@0452119bb` (checker + tests: `d863e01d6`; wiring:
+      `0452119bb`); 10 unit tests pass; full `quality-gates.sh --no-fix` green (STEP 5.103 ✅).
 
 ## Progress Log
 
