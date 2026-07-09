@@ -132,8 +132,18 @@ source: deployment_observability_expansion_2026_07_08.md
       `health_status` (raw GCE status), `boot_disk_name`, `labels`). All optional, default `None` for Cloud Run jobs /
       an unjoined VM (honest absence). New unit test `test_build_inventory_surfaces_tier0_free_wins` pins both the
       joined and unjoined paths. QG green (sentinel 517bbbe).
-- [ ] [BACKEND] P3. Recent error count / last log line — from the EXISTING teed GCS log / Cloud Logging (popover only);
-      no new CloudWatch dependency.
+- [x] ✅ [BACKEND] P3. Recent error count / last log line — from the EXISTING teed GCS log / Cloud Logging (popover
+      only); no new CloudWatch dependency. — deployment-service@9ef144e. `recent_log_summary()`
+      (`data_pipeline_monitors/_gcs.py`) reuses the SAME durable run.log blob + `_ERROR_LINE_RE` classifier
+      `error_snippet_from_run_log` already reads for Slack alerts — no new GCS path, no CloudWatch call. Returns
+      `RecentLogSummary(recent_error_count, last_log_line)` over the tail (`tail_lines=200` default); missing/empty log
+      degrades to `(0, None)`, never raises. On-demand single-target read (popover-triggered), not a bulk sweep — same
+      acceptable read pattern the existing snippet functions use. Not yet wired to an HTTP response — the
+      `/deployments/{id}/detail` endpoint (separate P2 todo below) landed concurrently (slot 15,
+      `deployment-api@7c4265a`) while this todo was in flight, so wiring `recent_log_summary()` onto
+      `DeploymentDetailResponse` is now a small, immediately-actionable fast-follow rather than blocked on that endpoint
+      existing. 4 unit tests (error-line counting, honest-empty, trailing-blank-line handling, tail-window respect). QG
+      green, sentinel=9ef144e.
 - [ ] [REVIEW] P2. Extend `DeploymentItem` in UAC/backend to the mock's optional rich-field shape (already in the UI
       type) so the wire contract matches — one SSOT, no client-only fields.
 
@@ -246,6 +256,13 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **Recent error count / last log line shipped** (slot 4): `deployment-service@9ef144e`
+  (`deployment_service/data_pipeline_monitors/_gcs.py`) — `recent_log_summary()` returns
+  `RecentLogSummary(recent_error_count, last_log_line)` for the popover, reusing the SAME durable run.log blob +
+  `_ERROR_LINE_RE` classifier `error_snippet_from_run_log` already reads for Slack alerts (no new GCS path, no
+  CloudWatch dependency). Not yet wired to an HTTP response — the `/deployments/{id}/detail` endpoint (slot 15,
+  `deployment-api@7c4265a`, next entry below) landed concurrently, so wiring this in is now a small fast-follow, not
+  blocked. 4 unit tests. QG green, sentinel=9ef144e.
 - 2026-07-09 — **`/deployments/{name}/detail` drill-down endpoint shipped** (slot 15): `deployment-api@7c4265a`
   (`deployment_api/routes/deployments_inventory.py`) — `DeploymentDetailResponse` (thin-list item + the D.1 metrics
   vector) served via a new `_vm_entry_by_name_cache` side-cache populated as a side effect of the SAME GCP census
