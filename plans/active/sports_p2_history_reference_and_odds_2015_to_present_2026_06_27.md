@@ -122,37 +122,23 @@ singleton-lock namespace → may run concurrently.
       Gate verified 2026-06-28 UTC: pending_fetch=0, attempted_failed=0, captured=39,678, empty_confirmed=272,910,
       expected_unattempted=6,845 (transfer-window-closed dates, TM-covered leagues). VM tm-backfill-20260627-222604
       completed; typing script typed 8,744 non-TM leagues as EXPECTED_NO_PROVIDER_COVERAGE (@fbb032d).
-- [ ] [DATA] P0. **Understat history → zero-missing** 2014→present for the 5 native leagues; non-native leagues in the
+- [x] [DATA] P0. **Understat history → zero-missing** 2014→present for the 5 native leagues; non-native leagues in the
       denominator typed `EXPECTED_NO_PROVIDER_COVERAGE` (post P0 #2 fix). **Gate**: `XG`+`XG_SHOTS` `pending_fetch == 0`
-      for native leagues within window; 0 over-broad-404 failures. **BLOCKED-PREREQUISITES (2026-07-08, slot-2) —
-      corrects the prior slot-7 hypothesis, which was tested and DISPROVEN this session**: prior note guessed "a driver
-      re-run with an updated `--end`/`--cutoff` covering 2026 would close [the XG 250-gap] in minutes" — **tested
-      live**: re-ran `understat_bulk_backfill.py --start 2014 --end 2026 --cutoff 2026-07-06` (PID 3289798,
-      `/tmp/understat_backfill_tail2.log`), completed clean (`RESUME: 1/2202 dates pending` →
-      `ALL DATES CAPTURED (0     attempted_failed)`), **re-verified via `/tmp/verify_understat_gate.py`: ZERO CHANGE** —
-      XG `expected_unattempted` still exactly 250, XG_SHOTS still exactly 5,843, identical date ranges. Root cause is
-      NOT a season-range gap: `enumerate_dates()` only ever contains dates understat's own `getLeagueData` marks
-      `isResult=true`; the 250/5,843 `expected_unattempted` dates are **not in that fixture set at all** (confirmed:
-      latest XG/XG_SHOTS captured date for every big-5 league is 2026-05-16→05-24, i.e. genuine end-of-2025-season — the
-      2026-05-05→07-08 XG dates are past-season/close-season with no real fixtures). Also confirmed via direct manifest
-      read (`/tmp/check_eu_reason.py`): **all 250 + 5,843 rows carry a BLANK `error_reason`** (not a documented
-      `EXPECTED_NO_FIXTURE`-style reason) and were `attempted_at` 2026-06-19→2026-07-08 — i.e. written by the DAILY
-      forward-poll enum, not the backfill driver (driver's own `pending_dates()` correctly treats `expected_unattempted`
-      as still-pending and would reprocess it — but only for dates already in its own fixture-derived `all_dates` set,
-      which these aren't). XG_SHOTS year/month distribution (`/tmp/check_fixture_calendar.py`): spread across ALL years
-      2018-2026 and all months (skewed toward Jun/Jul off-season, but present in every month) — consistent with the
-      sibling plan's earlier note that most of these are legitimate per-league non-matchday dates (this league didn't
-      play that day; a different big-5 league did) rather than a global capture failure. **Unresolved question requiring
-      an operator/architecture call, not a re-run**: are blank-`error_reason` `expected_unattempted` rows for genuine
-      non-matchdays a PASSING terminal state (i.e. is the plan's own "`pending_fetch == 0`" gate wording being loosely
-      applied to a state that's actually fine), or is this the SAME blank-reason daily-forward-poll bug class already
-      fixed for weather/SFI in item #7's 2026-07-08 typing pass (`type_weather_eu_no_provider_coverage_2026_06_27.py` /
-      SFI sibling) — i.e. does understat need its own analogous typed-reason pass instead of a bare backfill re-run?
-      Filed as a todo in `plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md` (understat
-      blank-reason EU rows, same root-cause family as weather/SFI, 250 XG + 5,843 XG_SHOTS rows, big-5 only).
-      **Un-block**: resolve that todo (either a documented-reason typing pass if these are legitimate non-matchdays, or
-      a targeted force-refetch of the specific dates if some are real gaps) — sibling plan's task -004/-005 remain the
-      gate-flip vehicle once this item's own residual is closed.
+      for native leagues within window; 0 over-broad-404 failures. ✅ — 2026-07-09 (slot-2). Root cause was NOT a data
+      gap — it was a silent WRITE-LOSS bug: `_fetch_understat_xg`/`_run_understat_shots_date`'s calendar-guard
+      early-return paths called `record_expected_empty()` but never `.write()`, so every attempt to close the
+      blank-`error_reason` residual via the real per-date capture path silently no-op'd (0 raised, "ALL DATES RESOLVED",
+      zero actual manifest change — confirmed via fresh-process reads + forced consolidation). Fixed 10 such sites
+      across `understat.py`/`weather.py`/`footystats.py` (`instruments-service@920b303`) + a second, independent
+      atexit-vs-asyncio-shutdown drain race in the one-off closer script (worked around in the same commit). Re-ran
+      `understat_eu_residual_closer_2026_07_08.py` end-to-end against prod GCS: `processed=413     raised=0`, 4,125 rows
+      written this time (confirmed via per-VM shard log + explicit pre-exit drain). Gate independently re-verified in a
+      fresh process post forced-consolidation: XG `pending_fetch` 190→0, XG_SHOTS `pending_fetch` 2,065→0,
+      `attempted_failed=0` for both (0 over-broad-404). Full root-cause + fix details:
+      `plans/active/issues/manifest_early_return_missing_write_loss_2026_07_09.md` +
+      `plans/active/issues/manifest_atexit_drain_races_asyncio_shutdown_2026_07_09.md` (both filed with follow-up todos
+      — weather gate re-verification, a QG lint for the write-loss anti-pattern, the deeper atexit/asyncio race fix in
+      unified-trading-library — none of which block this item's gate).
 - [ ] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
       removal reversed 2026-06-27 (#6 REVERSED, operator decision) — footystats ODDS are pre-match snapshot reference
       data that stays in IS; see sports_p0 task 003. **Gate**: `(footystats, PREDICTIONS)` + `(footystats, MATCHES)` +
@@ -1091,6 +1077,56 @@ operator clears it).
 #7 BLOCKED-PREREQUISITES marker with the full un-block sequence. Slot-5 releases via /done on this update. Operator
 flag: when both prereqs complete, item #7 re-dispatch should regen after items #4 and #5 checkboxes flip (no direct
 `depends_on` encoding available on the item-level; the checkbox marker is the current gating mechanism).
+
+### 2026-07-09 ~01:25 UTC — slot-2: item #4 — root cause was a silent write-loss bug, not a data gap; fixed + flipped
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-016` (item #4), resumed from slot-6's 2026-07-09
+CAS-race-fix-verification entry (which confirmed the residual unchanged at XG=190/XG_SHOTS=2,065, blocked on this item's
+own "blank-reason typing-pass" todo, not the CAS bug).
+
+**Re-ran the existing closer** (`understat_eu_residual_closer_2026_07_08.py`, v3) to force-refetch the residual dates
+via the real per-date capture path. `processed=413 raised=0`, "ALL DATES RESOLVED" — but independently re-verified via a
+fresh Python process (bypassing the closer's own in-process self-shard-overlay read, unreliable per the 2026-07-08
+CAS-race incident) and a manually forced full consolidation: **zero change**, byte-identical to pre-run. The closer's
+own per-VM shard never appeared in `_index/per_vm/` at all.
+
+**Root-caused via a single-date reproduction**: `_fetch_understat_xg(date=..., force=True)` followed by
+`flush_all_live_writers()` returned `{}` (nothing pending), despite the function having just run the season-window guard
+and called `record_expected_empty()` in a per-league loop. Read `ManifestWriter.write()`'s docstring + the orchestrator
+source line-by-line: both calendar-guard early-return paths per function (coverage-start/known-gap; season-window) call
+`record_expected_empty()` then `return counts` with **no `.write()` call** — unlike every other exit path in the same
+functions. A fresh `ManifestWriter` instance is created per call and discarded on the early return, so the buffered
+records never reach the module-level flush buffer. **This bug has existed since these guard blocks were introduced** —
+every closer/backfill attempt at this residual for understat was silently doomed regardless of how correct its date
+targeting was.
+
+An Explore sub-agent confirmed the identical pattern in `weather.py` (2 sites) and `footystats.py` (4 sites); `sfi.py`
+is clean (single trailing `.write()` covers all guard paths). Fixed all 10 sites (`instruments-service@920b303`).
+
+Re-running the closer (v4) with the fix surfaced a **second, independent** bug: the atexit-registered "guaranteed" drain
+races the asyncio event loop's own executor teardown (`cannot schedule new futures after interpreter shutdown`) — only
+the FIRST date's write landed; the remaining ~408 dates' buffered records were lost again, silently. Worked around it
+(same commit) with an explicit `flush_all_pending_buckets()` call at the end of the closer's `main()`, called while the
+event loop is still alive.
+
+**Re-ran (v5) with both fixes**:
+`ManifestWriter: per-VM shard updated (4130 total entries, 4125 new, process_final=True)` +
+`EXPLICIT PRE-EXIT DRAIN: {'instruments-store-sports-prd-...': 4125}`. Independently re-verified in a fresh process,
+post forced-consolidation: XG `pending_fetch` 190→0 (37→0 unique dates), XG_SHOTS `pending_fetch` 2,065→0 (413→0 unique
+dates), `attempted_failed=0` for both. **Gate MET** — flipped item #4's checkbox ✅.
+
+Shipped: `instruments-service@920b303` (the 10-site fix + closer hardening, via `quality-gates.sh` green +
+`quickmerge --agent`) and two issue docs via `unified-trading-pm` PR #862 —
+`plans/active/issues/manifest_early_return_missing_write_loss_2026_07_09.md` (the write-loss bug, with a follow-up todo
+to re-verify item #1/weather's already-flipped gate given weather shared this bug) and
+`plans/active/issues/manifest_atexit_drain_races_asyncio_shutdown_2026_07_09.md` (the atexit/asyncio race, unfixed at
+the library level — cross-cutting, not sports-specific, filed with root-cause + fix todos for
+`unified-trading-library`).
+
+**Task -016 output**: item #4 checkbox flipped ✅ with real before/after evidence; 2 issue docs filed with 7 actionable
+follow-up todos (weather re-verification, QG lint, non-sports write-loss audit, atexit/asyncio race root-cause + fix +
+script audit + QG lint). Did not absorb the follow-up items into this task — they're tracked, unplanned scope belongs to
+their own dispatch.
 
 ## References
 
