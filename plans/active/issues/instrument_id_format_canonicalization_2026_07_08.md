@@ -624,6 +624,27 @@ agent**: either extend `launch-canonical-migration-vm.sh` with a new case for th
 `canonical-migration-cefi-<timestamp>[-suffix]` (on-chain-perp is already classified under the `cefi` asset group) +
 reuse `setup-data-pipeline-vm.sh` + the same metadata/label shape — never an unregistered ad hoc prefix. Report pending.
 
+**UPDATE 2026-07-09 — on-chain-perp symbol-canonicalization DONE, verified, real completion evidence.** Diagnosed the
+earlier 404 volume as harmless: 3-4 overlapping local copies of the same idempotent job were hammering the same GCS
+prefix from one laptop's network stack, starving connection pools — not a real data bug (download→backup→
+upload-new→delete-old ordering makes an interrupted run always safely resumable, confirmed by reading the script).
+Relaunched the VM (still the ad hoc `onchain-perp-symbol-canon-*` name — real gap above NOT yet fixed, flagged as a
+"don't reuse as-is" for the next migration VM rather than fixed this time since there was no pending future launch to
+correct) — booted clean this time, processed all **38,884 files in ~9 minutes**,
+`{'skip_already_migrated_prior_run': 9232, 'migrated': 29652}` (sums to 38,884, 0 errors), self-terminated after. Real
+GCS spot-check post-run confirms canonical filenames present, zero bare-symbol shapes remain in the sample checked.
+Redundant local copy killed once the VM was confirmed healthy. **The naming-registration gap is NOT yet fixed in code**
+— next VM launch for this effort MUST either extend `launch-canonical-migration-vm.sh` or use a properly-registered
+prefix; do not reuse the scratchpad script again.
+
+**Ghost-venue-merge** (`instruments-service/scripts/legacy_naming_audit_dexpool_ghost_venue_merge_2026_07_09.py`,
+`UNISWAPV2-ETHEREUM` vs `UNISWAP_V2-ETHEREUM` etc., `--apply --workers 48`): confirmed same safe backup-then-mutate-
+then-verify pattern (genuinely resumable), 55% done (18,000/33,003) at a steady clean rate, ~40min to finish —
+deliberately left running locally rather than disrupted for a VM move this close to completion (real judgment call:
+restart/re-list overhead would cost more than it saves). **If the operator needs to close their laptop before this
+finishes, it is safe to interrupt and resume later** (idempotent, backup-verified) but is NOT yet durable against that
+in its current local-only form — flag if closing the laptop is imminent so this can be checked/resumed properly.
+
 - **2026-07-09 — GENERALIZED FINDING + DECISION: legacy GCS filename/path conventions are a systemic risk, not just an
   on-chain-perp issue.** The on-chain-perp full-historical-sweep branch found that a real GCS narrow-prefix listing (not
   the manifest's summary count) shows ~99% of "captured" HL/ASTER historical objects (~19,255 of 19,435) sit under an
