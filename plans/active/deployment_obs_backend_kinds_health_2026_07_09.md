@@ -66,9 +66,24 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ### Kinds census (make the estate visible)
 
-- [ ] [BACKEND] P1. Add `CLOUD_RUN_SERVICE` to the census — `run_v2.ServicesClient` list + ready-state + revision +
+- [x] ✅ [BACKEND] P1. Add `CLOUD_RUN_SERVICE` to the census — `run_v2.ServicesClient` list + ready-state + revision +
       region. New `DeploymentKind` value in UAC. **Mode = "—"** (a service has no live/batch/paper phase; the `Kind`
-      badge/filter carries "this is a service"). No PLATFORM/INFRA mode.
+      badge/filter carries "this is a service"). No PLATFORM/INFRA mode. — deployment-api@ab0c431. New
+      `deployment_api/routes/_cloud_run_services.py` (`list_cloud_run_services()`, mirrors `_cloud_run_executions.py`'s
+      `run_v2` boundary pattern) lists every live Cloud Run service in one region via
+      `run_v2.ServicesClient.list_services` and maps ready-state (`terminal_condition`), latest revision, region, and
+      URI. `_cloud_run_service_item()` wires it into `DeploymentItem(kind=CLOUD_RUN_SERVICE)`;
+      `DeploymentKind.CLOUD_RUN_SERVICE` + the formal `DeploymentUmbrella.NONE` enum member (UAC) had already landed
+      from a concurrent sibling slot by the time this shipped (superset of a first draft this task briefly duplicated
+      with an ad-hoc `"—"` wire sentinel before realigning to the shipped `NONE` enum — see Progress Log). Honest
+      degradation: a services-list failure yields zero rows without blocking the VM/job/ECS/Lambda/CloudFunction census.
+      New tests: ready/reconciling state mapping, region parsing, GCP-error degradation, `build_inventory` wiring
+      (umbrella=NONE, revision/region surfaced), unclassifiable-name skip. QG green (sentinel ab0c431). Rebased ~8 times
+      onto concurrently-landing sibling census/health todos on this same file this session (Tier-0 free wins,
+      ECS_SERVICE, kind-count/filter extension, D.3 composite health, Lambda census, detail endpoint, CLOUD_FUNCTION
+      census, oom-risk/stalled alerting) — all additive, kept both sides at every conflict; squashed 3
+      manual-rebase-conflict commits into one clean commit + added the `Quickmerge: agent` trailer by hand after
+      `check_strict_quickmerge.py` flagged manually-recommitted rebase-continue commits as bypassing quickmerge.
 - [x] ✅ [BACKEND] P1. Add `ECS_SERVICE` census — ECS list-services/describe-services across the prod clusters
       (uts-defi-prod, unified-trading-prod) → **desiredCount + runningCount** + task-def revision; `cloud=AWS`. Always
       emit the row even at 0 running tasks (state derives from desired-vs-running — see the service sub-taxonomy task).
@@ -308,6 +323,21 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **`CLOUD_RUN_SERVICE` census shipped** (slot 8): `deployment-api@ab0c431` (new
+  `deployment_api/routes/_cloud_run_services.py` + wiring in `deployments_inventory.py`) — lists live Cloud Run services
+  via `run_v2.ServicesClient.list_services` (ready-state/revision/region/URI), builds
+  `DeploymentItem(kind=CLOUD_RUN_SERVICE, umbrella=DeploymentUmbrella.NONE.value)`. Started this task before a sibling
+  slot's UAC `DeploymentKind` 6-kind extension had landed, so an early draft added its OWN `CLOUD_RUN_SERVICE` enum
+  member + a raw `"—"` wire-string sentinel for the umbrella (no `DeploymentUmbrella.NONE` existed yet); once the
+  sibling slot's superset UAC change (`CLOUD_RUN_SERVICE`/`ECS_SERVICE`/`LAMBDA`/`CLOUD_FUNCTION` + the formal
+  `DeploymentUmbrella.NONE` member) landed on origin, discarded the now-fully-redundant local UAC commits (verified
+  byte-identical via diff before dropping — nothing unique lost) and realigned the deployment-api wiring to emit
+  `DeploymentUmbrella.NONE.value` instead of `"—"`. This file was the single hottest convergence point in the whole plan
+  this session (4+ slots landing sibling census/health todos concurrently) — required ~8 `git pull --rebase` cycles to
+  land, each a clean additive merge (new field/section per side, no logic conflicts); `check_strict_quickmerge.py`
+  flagged 2 rounds of manually-recommitted `git rebase --continue` commits as quickmerge-bypassing (they lacked the
+  `Quickmerge: agent` trailer peer commits carry) — fixed by squashing to one commit with the trailer added by hand
+  before the final ship. QG green (sentinel ab0c431, 129s). Confirmed on `origin/live-defi-rollout` post-push.
 - 2026-07-09 — **Alerts on oom-risk/stalled wired into the alert ledger** (slot 15): `deployment-api@5e25dce`
   (`deployment_api/routes/deployments_inventory.py`) — `_persist_alert()` appends to the SAME shared GCS ledger
   (`unified-trading-cicd-events/cicd/alerts/{date}/alerts.jsonl`) agent-orchestrator's watchers already write to
