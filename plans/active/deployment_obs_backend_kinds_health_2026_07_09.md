@@ -159,8 +159,28 @@ source: deployment_observability_expansion_2026_07_08.md
       `DeploymentDetailResponse` is now a small, immediately-actionable fast-follow rather than blocked on that endpoint
       existing. 4 unit tests (error-line counting, honest-empty, trailing-blank-line handling, tail-window respect). QG
       green, sentinel=9ef144e.
-- [ ] [REVIEW] P2. Extend `DeploymentItem` in UAC/backend to the mock's optional rich-field shape (already in the UI
-      type) so the wire contract matches — one SSOT, no client-only fields.
+- [x] ✅ [REVIEW] P2. Extend `DeploymentItem` in UAC/backend to the mock's optional rich-field shape (already in the UI
+      type) so the wire contract matches — one SSOT, no client-only fields. — deployment-api@e5f2ad4. **Premise
+      correction (found, not assumed)**: verified against the actual UI code first — the mock's rich-field shape is NOT
+      on the UI `DeploymentItem` type (`deployment-ui/src/api/deploymentApi.ts:636`, 12 thin fields, matches the backend
+      model exactly, zero client-only fields on either side). Those rich fields (`rows_in`/`machine_type`/ `zone`/etc.)
+      actually live on a DIFFERENT, unrelated UI type (`VmDeploymentEntry`, the legacy `/api/vm-deployments` shape) —
+      and the backend `DeploymentItem` already carries its OWN 12 additional optional rich fields (Tier-0 free wins +
+      composite/service health, landed earlier this session by sibling slots), all with honest `None` defaults. So the
+      stated direction (UI has rich fields the backend lacks) doesn't hold; the real, still-open gap runs the other way
+      inside the backend itself: `_ecs_service_item`/`_lambda_item` (`deployment_api/routes/_aws_deployments.py`)
+      already fetch `cluster`/`desired_count`/`running_count`/`task_definition_revision` (ECS) and `runtime`/
+      `memory_size_mb`/`package_type` (Lambda) from the AWS census but collapse them into just `status`, discarding the
+      rest — the exact same "fetched-and-discarded" pattern the GCP Tier-0 todo fixed for VMs, just not yet applied to
+      AWS. Fixed it: added the 7 fields to `DeploymentItem` (`deployments_inventory.py`) as optional Tier-0-style wins
+      (`None` for kinds without the source, honest absence) and wired them through `_ecs_service_item`/`_lambda_item`. 2
+      tests extended (`test_build_aws_inventory_classifies_ecs_service_running`,
+      `test_build_aws_inventory_classifies_lambda_functions`) to assert the new fields. Extending the UI
+      `DeploymentItem` type itself is explicitly out of this plan's `repos` scope (`deployment-api`/
+      `deployment-service`/`unified-api-contracts` only) — that's the separate LOCAL UI plan
+      (`deployment_obs_ui_popover_health_2026_07_09.md`, hand-off todo below). QG green (sentinel e5f2ad4, rebased 3x
+      onto concurrently-landing sibling commits on this same file this session — `f914cc4` cost-obs fix, `a025563`
+      CLOUD_FUNCTION census — no conflicts, all clean fast-forward re-applies).
 
 ### VM / service work-health (capture → store → API)
 
