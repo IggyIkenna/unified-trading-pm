@@ -97,7 +97,7 @@ cleanup + outstanding items are captured in the deferred note (see §H).
 
 ## A. Correctness / data-integrity bugs
 
-### A1. Sports `league_id="UNKNOWN"` — 2,373 manifest rows — `P1` — tracked: `sports_manifest_unknown_league_id_2026_07_08.md`
+### A1. Sports `league_id="UNKNOWN"` — 2,373 manifest rows — `P1` — RESOLVED 2026-07-09 — tracked: `sports_manifest_unknown_league_id_2026_07_08.md`
 
 - **What:** 2,373 rows in the real sports availability manifest carry the literal `league_id="UNKNOWN"`, spanning all 17
   sports data_types and 7 source families, dated 2025-12-15 → today. All are
@@ -146,6 +146,20 @@ cleanup + outstanding items are captured in the deferred note (see §H).
     unnecessary for the fix since the write-universe gate already blocks new UNKNOWN captures.
 - **Note:** the dedicated doc `sports_manifest_unknown_league_id_2026_07_08.md` still records this root cause as "not
   yet pinned" — it should be updated to point here (now pinned).
+- **RESOLVED 2026-07-09 (both fix options A + B shipped together, plus the backfill):**
+  `build_sports_catalogue_from_manifest` now excludes a `SPORTS_LEAGUE_ID_SENTINELS = frozenset({"UNKNOWN"})` set
+  (case-insensitive) before the roll-up — deliberately a narrow sentinel check, NOT the "defensively any not in the
+  canonical league universe" language above, because verifying against the real prod catalogue found 22 real leagues
+  (raw numeric long-tail ids, `LA_LIGA_2`, `RFPL`, `SCOTTISH_LEAGUE_CUP_185`) that are NOT in `LEAGUE_REGISTRY` — a
+  membership-based filter would have wrongly dropped all 22. `_enumerate_v2_sports` carries a matching defense-in-depth
+  sentinel guard. `api_football_reference.py:165` intentionally left untouched (frozen by the 2026-06-24 write-universe
+  gate already; not the fix's blast radius). Backfill executed against real prod GCS
+  (`instruments-store-sports-prd-central-element-323112`): 1 catalogue row (116→115) + 2,373 manifest index rows
+  removed, both objects backed up first (`*.20260708-234112.unknown_league_backfill.bak.parquet`); per-VM shards checked
+  and confirmed clean (0 rows, no cleanup needed). Post-backfill verify: 0 sentinel rows remain anywhere; rebuilding the
+  catalogue from the live post-backfill manifest through the patched roll-up still mints 0 `"UNKNOWN"` rows (loop
+  confirmed broken, not just patched at one layer). Full evidence in `sports_manifest_unknown_league_id_2026_07_08.md`'s
+  "Resolution (2026-07-09)" section.
 
 ### A2. Deribit multi-leg combo id is malformed (missing `:TYPE:` segment) — `P1` — NEW
 
@@ -573,3 +587,10 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   pinned.
 - 2026-07-08: D7 (`sports-odds-ready` publisher) resolved to **NEVER-PUBLISHED dead trigger** (latent — live odds is
   BLOCKED-CREDENTIALS). Fix A/B/C recorded.
+- 2026-07-09: A1 (Sports `UNKNOWN` league_id) **RESOLVED** — fix options A + B both shipped
+  (`build_instrument_catalogue.py`'s roll-up + `enumerate_expected_universe.py`'s `_enumerate_v2_sports`, both
+  `instruments-service`), narrowed from the "defensively any not in LEAGUE_REGISTRY" language to an exact sentinel check
+  after verifying 22 real leagues would otherwise have been wrongly dropped. Backfill executed against real prod GCS (1
+  catalogue row + 2,373 manifest rows removed, backed up first, per-VM shards confirmed clean). Verified 0 remaining + a
+  live post-backfill catalogue rebuild via the patched code mints 0 new phantom rows. Regression tests added in
+  `instruments-service/tests/unit/scripts/`. Full evidence: `sports_manifest_unknown_league_id_2026_07_08.md`.
