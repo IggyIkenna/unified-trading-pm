@@ -3341,6 +3341,45 @@ else
     log_success "STEP 5.101: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.102: ManifestWriter record_*() early-return missing .write() ───────
+#
+# A ManifestWriter `record_*()` call only appends to the calling instance's
+# local buffer — `.write()`/`.flush()` is what moves those records into the
+# module-level pending buffer that actually reaches GCS. An early-return
+# guard block that calls `record_*()` then `return`s with no `.write()`/
+# `.flush()` silently discards every honest-absence write on that path, while
+# OTHER exit paths in the same function correctly call it. This was live in
+# understat.py/weather.py/footystats.py's calendar guards for their entire
+# lifetime (fixed instruments-service@920b303) — this is the generalised
+# standing guard the issue doc's follow-up todo asked for. SHRINKING ratchet:
+# manifest_writer_missing_write_baseline.yaml (0 entries at bootstrap — a full
+# workspace sweep the day this checker landed found 0 remaining occurrences).
+# Escape: `# QG-allow: manifest-write-not-required` on the return line.
+#
+# SSOT: plans/active/issues/manifest_early_return_missing_write_loss_2026_07_09.md.
+_MW_MISSING_WRITE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_manifest_writer_missing_write_before_return.py"
+if [ -f "$_MW_MISSING_WRITE_CHECKER" ]; then
+    _MWW_REPO=$(basename "$PROJECT_ROOT")
+    _MWW_WS="$REPO_ROOT"
+    _MWW_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _MWW_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_MW_MISSING_WRITE_CHECKER" \
+            --workspace-root "$_MWW_WS" --scope "$_MWW_REPO" "${_MWW_SRC_ARG[@]}" >/tmp/manifest_writer_missing_write_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/manifest_writer_missing_write_qg.log 2>/dev/null; then
+            log_warn "STEP 5.102: $(grep -c '^\[WARN\]' /tmp/manifest_writer_missing_write_qg.log) baselined ManifestWriter missing-.write() occurrence(s); 0 new"
+        else
+            log_success "STEP 5.102: No ManifestWriter record_*() early-return missing .write()/.flush() sites"
+        fi
+    else
+        log_fail "STEP 5.102: NEW ManifestWriter record_*() call followed by a return with no .write()/.flush(), while another exit path in the same function DOES call it (manifest_early_return_missing_write_loss_2026_07_09):"
+        cat /tmp/manifest_writer_missing_write_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_manifest_writer_missing_write_before_return.py --workspace-root $_MWW_WS --scope $_MWW_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.102: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call

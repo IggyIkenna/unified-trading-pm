@@ -1,0 +1,21 @@
+# Baseline for check_manifest_writer_missing_write_before_return.py
+#
+# Each entry = a CURRENTLY-KNOWN function+return where a ManifestWriter
+# `record_*()` call is not followed by `.write()`/`.flush()` before that
+# return, while another exit path in the SAME function DOES call it.
+# Surfaces as WARNING (informational, exit-clean). A new occurrence not in
+# this file -> ERROR, exit 1. SHRINKING ratchet — only ever remove entries.
+#
+# Bootstrap: 0 entries (2026-07-09, slot-4, manifest_early_return_missing_write_loss
+# item #2). The 10 known real-world occurrences (understat.py x4, weather.py x2,
+# footystats.py x4) were already fixed same-day in instruments-service@920b303
+# before this checker was written; a full workspace sweep at bootstrap time
+# found 0 remaining occurrences anywhere. The sibling P2 INVESTIGATE todo
+# ("audit non-sports orchestrators for the same pattern") is a separate,
+# still-open task in the same issue doc — this checker is now the standing
+# guard that would catch any occurrence that audit finds (or any NEW one).
+#
+# SSOT: plans/active/issues/manifest_early_return_missing_write_loss_2026_07_09.md
+
+default_successor: manifest_early_return_missing_write_loss_2026_07_09
+entries: []
