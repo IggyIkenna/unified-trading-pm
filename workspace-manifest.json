@@ -726,7 +726,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -756,10 +756,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "large_file_count": 5,
+        "coverage_pct": 91.37,
         "warn_file_count": 7,
-        "coverage_pct": 91.37
+        "qg_red_reason": "ruff",
+        "large_file_count": 5
       }
     },
     "market-data-processing-service": {
