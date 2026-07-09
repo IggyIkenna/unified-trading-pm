@@ -69,9 +69,20 @@ source: deployment_observability_expansion_2026_07_08.md
 - [ ] [BACKEND] P1. Add `CLOUD_RUN_SERVICE` to the census — `run_v2.ServicesClient` list + ready-state + revision +
       region. New `DeploymentKind` value in UAC. **Mode = "—"** (a service has no live/batch/paper phase; the `Kind`
       badge/filter carries "this is a service"). No PLATFORM/INFRA mode.
-- [ ] [BACKEND] P1. Add `ECS_SERVICE` census — ECS list-services/describe-services across the prod clusters
+- [x] ✅ [BACKEND] P1. Add `ECS_SERVICE` census — ECS list-services/describe-services across the prod clusters
       (uts-defi-prod, unified-trading-prod) → **desiredCount + runningCount** + task-def revision; `cloud=AWS`. Always
       emit the row even at 0 running tasks (state derives from desired-vs-running — see the service sub-taxonomy task).
+      — deployment-service@3262d7c (`list_ecs_census()` pages `list_services`/`describe_services` across both prod
+      clusters → `AwsEcsServiceCensus` with desired_count/running_count/task_definition_revision) +
+      deployment-api@c90eaf4 (`_ecs_service_item()` wires the census into
+      `DeploymentItem(kind=ECS_SERVICE,     umbrella=NONE, cloud=AWS)`; `load_aws_inventory()` now census all three AWS
+      kinds). A service is always emitted, including at 0 running/desired tasks (an intentional scale-to-zero stays
+      visible — Open-Q7). Status is a conservative desired-vs-running placeholder (`running`/`stopped`/`unknown`); the
+      full `serving`/`scaled-to-zero`/ `dead`/`degraded` sub-taxonomy is the separate service-health-sub-taxonomy todo
+      (already shipped, not yet wired here since `ecs_service_health_status()` needs an error-rate signal this census
+      doesn't carry yet). Tests: `test_build_aws_inventory_classifies_ecs_service_running` /
+      `_scaled_to_zero_always_emitted` / `_desired_but_not_running_is_unknown` + a moto-backed
+      `test_list_ecs_census_discovers_service_across_clusters` pinning both cluster names. QG green, sentinel=c90eaf4.
 - [x] ✅ [BACKEND] P1. Make the Cloud Run **jobs** census DYNAMIC — list live jobs instead of the hardcoded
       `CLOUD_RUN_JOBS` name-registry, so off-pattern jobs stop hiding (keep the registry only for classification hints,
       not as the allow-list). Run the exact registry-vs-live diff first to quantify the current hidden set. —
