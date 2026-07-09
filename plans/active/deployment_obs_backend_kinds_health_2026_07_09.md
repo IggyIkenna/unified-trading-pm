@@ -157,10 +157,20 @@ source: deployment_observability_expansion_2026_07_08.md
       `consolidator_posture` already resolves (`read_availability_index`, zero new bucket walks), sums captured
       `row_count`/`instrument_count` per written date, diffs the two most recent dates; wired onto
       `DeploymentFreshness.object_delta` + `object_delta_detail`. QG green; 11 unit tests (4 new) passing.
-- [ ] [BACKEND] P1. **Hang detection = control-plane existence + stale heartbeat** (NOT Cloud Monitoring) — reuse the
-      `aggregated_list` / EC2 / Run-execution lists already fetched.
-- [ ] [BACKEND] P1. **Composite health status** (parent D.3) replacing `_vm_status` — VM 7-state + the
-      per-lifecycle-class `stalled` threshold table (progress-metric primary, cpu secondary, never a global CPU cut).
+- [x] ✅ [BACKEND] P1. **Hang detection = control-plane existence + stale heartbeat** (NOT Cloud Monitoring) — reuse the
+      `aggregated_list` / EC2 / Run-execution lists already fetched. — deployment-api@f5f6ff4 (same commit as the
+      composite status below — `_composite_health_status`'s `hung` branch IS this todo: `control_plane_running` derived
+      from the GCE aggregated-list join's key set, combined with heartbeat staleness).
+- [x] ✅ [BACKEND] P1. **Composite health status** (parent D.3) replacing `_vm_status` — VM 7-state + the
+      per-lifecycle-class `stalled` threshold table (progress-metric primary, cpu secondary, never a global CPU cut). —
+      deployment-api@f5f6ff4. Additive `DeploymentItem.composite_health_status` (no wire break — `status` untouched).
+      `_composite_health_status()` computes the 5 states with a real signal today: `dead` (control-plane confirms the VM
+      is gone) / `hung` (control-plane confirms running but heartbeat stale) / `disk-full` / `oom-risk` / `working` (D.1
+      `/proc` metrics). `stalled` + `workload-dead` degrade honestly to `"unknown"` (WS-D.0 principle 2 — a hint is not
+      truth) rather than being guessed from a proxy signal. Blocked-question BLK-7751ce11 (operator-answered Option B)
+      scoped this to the signals available at the time; `object_delta` (Object-delta todo above) and `workload_alive`
+      (Workload-PID liveness todo above) have SINCE landed from sibling slots mid-task — wiring them into
+      `stalled`/`workload-dead` is captured as its own follow-on todo below rather than re-opening this diff.
 - [x] ✅ [BACKEND] P1. **Service-health sub-taxonomy** (parent D.3) — `serving`/`scaled-to-zero`/`dead`/`degraded` from
       ECS desired-vs-running (and Cloud Run ready-state/revision); services always emit a row. Read-only in v1 (no
       controls). — deployment-api@eda5be5. `ecs_service_health_status()` + `cloud_run_service_health_status()`
@@ -180,6 +190,22 @@ source: deployment_observability_expansion_2026_07_08.md
       into the existing alerts surface.
 - [ ] [REVIEW] P2. Gate `/freshness` fetches to VM kinds only (services use error-rate health, not manifest freshness) —
       the mock currently fetches freshness for all LIVE rows.
+- [ ] [BACKEND] P1. **Wire `stalled` + `workload-dead` into `_composite_health_status`** (`deployment-api`,
+      `deployments_inventory.py`) — both prerequisite signals now exist: `object_delta` via
+      `deployment_freshness.compute_freshness()` / `_object_delta_for_bucket()` (per-asset_group manifest lookup,
+      `deployment_freshness.py`), and `workload_alive` via the heartbeat daemon's `CMD_PID` liveness field
+      (`unified-trading-library`/`deployment-service`, Workload-PID liveness todo above). `stalled`'s threshold table is
+      per-`lifecycle_class` (backfill/batch → `object_delta==0` ≥15min AND cpu<10%; live-capture → no progress ≥5min in
+      an expected-active window; paper → `work_delta==0` ≥15min) — `compute_freshness` needs a `deployment_id` +
+      resolves per-asset_group, not per-VM-entry, so this needs its own call-shape design (batch the lookup once per
+      asset_group per census cycle, not once per VM, to respect the zero-new-bucket-walk principle at scale), not a
+      copy-paste into the per-entry loop. Filed here rather than expanding deployment_obs_backend_kinds_health-015
+      (deployment-api@f5f6ff4) — that diff was already large from 3 concurrent cross-slot rebases on this same file.
+- [ ] [REVIEW] P3. **`deployments_inventory.py` is now 1000+ lines** (cap is 900; QG's file-size check is non-blocking
+      in this repo's config today but the file is a real hotspot — 4+ slots landed sibling D.3/kinds-census todos here
+      concurrently in one session). Consider splitting Cloud-Run-job census / composite-health / service- taxonomy into
+      sibling modules once this plan's todos stop actively converging on it (splitting mid-convergence risks more
+      cross-slot conflicts than it saves).
 
 ### Hand off to the interactive UI session (LAST task)
 
@@ -191,6 +217,21 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **Composite health status + hang detection shipped** (slot 12): `deployment-api@f5f6ff4`
+  (`deployments_inventory.py`) — additive `DeploymentItem.composite_health_status` (renamed from an initial
+  `health_status` to avoid a real field-name collision with the concurrently-shipped Tier-0 free-wins commit's OWN
+  `health_status` field, a different concept — raw GCE instance status). `_composite_health_status()` computes 5 of the
+  D.3 7 states with a real signal today: `dead` (the GCE aggregated-list join's key set doesn't contain the VM — also
+  completes the separate "Hang detection" todo's control-plane half), `hung` (control-plane confirms running but
+  heartbeat stale), `disk-full`, `oom-risk`, `working` (D.1 `/proc` metrics, already sampled by the heartbeat daemon).
+  `stalled`/`workload-dead` degrade honestly to `"unknown"` — filed as a follow-on todo above now that their
+  prerequisite signals (`object_delta`, `workload_alive`) landed from sibling slots mid-task. Required 3 separate
+  `git pull --rebase --autostash` cycles (this file had 4+ concurrent slots landing sibling D.3/kinds-census commits in
+  the same session) and one real hand-resolved merge conflict on `_vm_item`/`build_inventory`'s signatures + the
+  `health_status` field-name collision — consolidated onto the Tier-0 commit's `vm_details_by_name` join so no separate
+  running-set parameter was needed. Blocked-question BLK-7751ce11: operator approved Option B (additive field, compute
+  `hung` now since its inputs already exist, degrade `stalled`/`workload-dead` honestly). 61+ unit tests pin the 5
+  states + the honest-unknown fallback; full suite (4381 tests) + QG green (sentinel f5f6ff4).
 - 2026-07-09 — **Workload-PID liveness shipped** (slot 7): `unified-trading-library@0265663b`
   (`unified_trading_library/lifecycle/signal_protocol.py`, `daemon.py`) — `SignalProtocol` gains a `cmd_pid_file` field
   - `read_cmd_pid()`/`workload_alive()` (`kill -0` semantics: `ProcessLookupError`→dead, `PermissionError`→alive-under-
