@@ -255,17 +255,22 @@ preserve-on-handoff (the ONLY auto-commit point):
       Build the backend-driven two-tier policy, **COOPERATIVE-FIRST** (operator 2026-07-09: never compact an agent
       mid-work; a single pane-snapshot "looks idle" is untrustworthy — §1.7's classifier ambiguity, background shells,
       check-then-send race). **Tier 1 — proactive guided compact** at `context_used_pct` ≥ ~45-50% (≈450-500k on [1m];
-      pct-based so 200k workers get the same policy if ever enabled): keeper REQUESTS — sets `compact_requested` on the
-      SlotRow + outbox message; the main/review loop contract gains a step at TICK START (the one provably-idle boundary
-      — just woke, nothing in flight): check flag → run
-      `/compact keep: operating loop, current watchlist, unanswered messages, in-flight items; drop: tick-by-tick history`
-      → ack via `compact_done`. FORCED fallback only past a deadline (unacked 2 ticks / ~45 min) and only on a MEASURED
-      multi-signal idle verdict: pane `idle` debounced across ≥3 observations over ~60s + NO child processes under the
-      pane shell (`pgrep -P <pane_pid>` — catches "1 shell still running") + empty input box → inject via the
-      verified-submit helper + confirm the compact ran; log `proactive_compact` vs `forced_compact`. (Race note: a
-      `/compact` submitted during an active turn QUEUES and runs at the next turn boundary — worst case is deferral, not
-      corruption; multi-turn-intent disturbance is why cooperative is primary.) Hard never-force: spinner, running
-      shells, non-empty input box, or `thrashing` (escalate to recycle instead). **Tier 2 — checkpoint-recycle** after 2
+      pct-based so 200k workers get the same policy if ever enabled). Delivery — NO new per-tick flag check (operator: a
+      1-min loop must not grow a compact banner): the keeper enqueues a normal OUTBOX message ("context at N% — run
+      /compact at your next natural checkpoint, focus: keep operating loop / watchlist / unanswered messages / in-flight
+      items; drop tick-by-tick history"), which the main/review loops ALREADY drain every cycle (main.md STEP 2A/2B;
+      workers at boot/heartbeat) — zero added overhead. Execution — `/compact` is a CLIENT-side command, not a model
+      tool, so the agent runs it by SELF-INJECTION: from a Bash call, `tmux send-keys` the /compact line into ITS OWN
+      session (it knows `#S`), then END the turn — mid-turn typed input QUEUES and executes the moment the turn ends, so
+      "runs when free" holds by construction; ack via `compact_done` next tick. Ship this as a sanctioned helper
+      (`scripts/agent/self-compact.sh`, built on the verified-submit helper — the raw-send-keys ban exempts only this
+      instrument). FORCED fallback only past a deadline (unacked 2 ticks / ~45 min) and only on a MEASURED multi-signal
+      idle verdict: pane `idle` debounced across ≥3 observations over ~60s + NO child processes under the pane shell
+      (`pgrep -P <pane_pid>` — catches "1 shell still running") + empty input box → inject via the verified-submit
+      helper + confirm the compact ran; log `proactive_compact` vs `forced_compact`. (Race note: a `/compact` submitted
+      during an active turn QUEUES and runs at the next turn boundary — worst case is deferral, not corruption.) Hard
+      never-force: spinner, running shells, non-empty input box, or `thrashing` (escalate to recycle instead).
+      Client-side auto-compact stays underneath as the final safety net. **Tier 2 — checkpoint-recycle** after 2
       proactive compacts OR 24h (immediately on `thrashing`): cooperative too — agent writes its checkpoint (watchlist +
       open items → `main-agent-checkpoint.md` + `last_msg`) and **EXITS ITSELF** (no kill; dead session → keeper's
       normal respawn with the boot prompt referencing the checkpoint — same voluntary-exit pattern account rotation
