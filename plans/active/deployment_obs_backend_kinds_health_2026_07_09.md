@@ -20,8 +20,8 @@ related: [deployment_observability_expansion_2026_07_08.md, deployment_obs_ui_po
 created: "2026-07-09"
 last_updated: "2026-07-09"
 parent_epic: observability_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 9
@@ -38,12 +38,13 @@ source: deployment_observability_expansion_2026_07_08.md
 
 # Deployment observability — full-estate kinds census + VM/service work-health (backend)
 
-> **AO-DISPATCHED backend plan.** Full design context — the universal metric vector, the capture→store→API→UI data path,
-> the composite health taxonomy, the scale/cost budget, and the 8 resolved open questions — lives in the LOCAL parent
-> **`deployment_observability_expansion_2026_07_08.md`** (read WS-B, WS-C, and all of WS-D first, incl. D.0 principles
-> and the D.3 taxonomy). The UI half is **`deployment_obs_ui_popover_health_2026_07_09.md`** — a LOCAL plan built
-> interactively AFTER this one lands; this plan's LAST task hands off the frozen contract sha so the UI wires against
-> real fields.
+> **CONVERTED TO LOCAL 2026-07-09** (`assigned_vm: NA` + `execution_scope: local-only`) — the AO worker stalled at 19/24
+> (last activity 08:59); the operator took the remaining work over in the interactive slot. Setting `local-only` makes
+> `_plan_contributes_briefs` return False, so on the next regen tick `_prune_stale` garbage-collects this plan's
+> already-queued tasks from the AO DB (the anti-zombie path, Gap 3) — a first live test of that pruning behaviour. Full
+> design context — the metric vector, capture→store→API→UI data path, composite health taxonomy, scale/cost budget, 8
+> resolved open questions — lives in the LOCAL parent **`deployment_observability_expansion_2026_07_08.md`** (read WS-B,
+> WS-C, all of WS-D). The UI half **`deployment_obs_ui_popover_health_2026_07_09.md`** is DONE (built here).
 
 ## Non-negotiable design principles (from parent WS-D.0 — inherit on every task)
 
@@ -63,6 +64,16 @@ source: deployment_observability_expansion_2026_07_08.md
 - Shard-level failure isolation (honest per-kind degradation): `codex/04-architecture/shard-level-failure-isolation.md`.
 
 ## Todos
+
+### 🔴 Census hang — real-data blocker (found 2026-07-09, operator takeover)
+
+- [ ] [BACKEND] P0. **Inventory census must not hang** — `GET /api/deployments/inventory` blocks >240 s (0 bytes) on the
+      new-contract backend. Bound EACH provider census (GCE / Cloud Run jobs+services / ECS / Lambda / Cloud Functions)
+      with a client-side timeout and wrap it in try/except so one slow/hanging provider degrades to an honest absence
+      for that KIND (per WS-B) instead of blocking the whole inventory. Fix the unbounded `.result()` collection
+      (`deployments_inventory.py:1207-1209` + the AWS/Cloud-Run census fan-out). Reproduce against a locally-run
+      backend, verify `/inventory` returns <10 s warm, then point the slot-5 live UI at it. Fold in the file-split
+      (the >1000-line todo below) since this touches the same file.
 
 ### Kinds census (make the estate visible)
 
@@ -298,7 +309,7 @@ source: deployment_observability_expansion_2026_07_08.md
       the mock currently fetches freshness for all LIVE rows.
 - [x] ✅ [BACKEND] P1. **Wire `stalled` + `workload-dead` into `_composite_health_status`** (`deployment-api`,
       `deployments_inventory.py`) — both prerequisite signals now exist: `object_delta` via
-      `deployment_freshness.compute_freshness()` / `_object_delta_for_bucket()` (per-asset_group manifest lookup,
+      `deployment_freshness.compute_freshness()` / `_object_delta_for_bucket()` (per-asset*group manifest lookup,
       `deployment_freshness.py`), and `workload_alive` via the heartbeat daemon's `CMD_PID` liveness field
       (`unified-trading-library`/`deployment-service`, Workload-PID liveness todo above). `stalled`'s threshold table is
       per-`lifecycle_class` (backfill/batch → `object_delta==0` ≥15min AND cpu<10%; live-capture → no progress ≥5min in
@@ -321,14 +332,8 @@ source: deployment_observability_expansion_2026_07_08.md
       wiring (deployment-api@5e25dce) on a genuinely-idle-but-healthy window. Also folded `object_delta>0` into the
       `working` state per the parent WS-D.3 spec's own OR clause (`object_delta>0 OR io_write_rate>0`), which the
       original `f5f6ff4` composite landed without since `object_delta` didn't exist yet. 10 new/updated unit tests
-      (`test_composite_health_workload_dead_*`, `test_composite_health_stalled_for_batch_*`,
-      `test_composite_health_batch_working_when_object_delta_positive_*`,
-      `test_composite_health_live_umbrella_stalled_*`, `test_batched_object_deltas_calls_once_per_distinct_asset_group`,
-      `test_build_inventory_threads_object_deltas_*`) + `health_consolidator`/`deployment_freshness` object-delta tests
-      moved to their new home. Landed through 2 real rebase cycles against concurrently-shipped sibling work on this
-      same hotspot file (CLOUD_RUN_SERVICE census `ab0c431`, ECS/Lambda field surfacing, the oom-risk/stalled alert
-      wiring `5e25dce`) — one import-ordering conflict, one `build_inventory` new-param conflict (kept both the
-      sibling's `cloud_run_services` param and my `object_deltas` param). QG green (sentinel 29f3be5, 119s).
+      (`test_composite_health_workload_dead*_`, `test*composite_health_stalled_for_batch*_`,     `test*composite_health_batch_working_when_object_delta_positive*_`,     `test*composite_health_live_umbrella_stalled*_`, `test*batched_object_deltas_calls_once_per_distinct_asset_group`,     `test_build_inventory_threads_object_deltas*\*`) + `health_consolidator`/`deployment_freshness`object-delta tests     moved to their new home. Landed through 2 real rebase cycles against concurrently-shipped sibling work on this     same hotspot file (CLOUD_RUN_SERVICE census`ab0c431`, ECS/Lambda field surfacing, the oom-risk/stalled alert     wiring `5e25dce`) — one import-ordering conflict, one `build_inventory`new-param conflict (kept both the     sibling's`cloud_run_services`param and my`object_deltas`
+      param). QG green (sentinel 29f3be5, 119s).
 - [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals don't exist yet** — discovered while wiring the BATCH row above
       (deployment-api@29f3be5). LIVE needs an expected-active-window calendar (market-hours-aware, so an
       idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta` (rows-out-delta) tracker — grepped
@@ -353,6 +358,19 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **CONVERTED TO LOCAL — operator takeover** (AO worker stalled at 19/24, last activity 08:59). Frontmatter
+  flipped `assigned_vm: planning→NA` + `execution_scope: orchestrator-agent→local-only` so the regen `_prune_stale`
+  garbage-collects the 5 still-queued tasks from the AO DB (`_plan_contributes_briefs`→False for a `local-only` plan;
+  the Gap-3 anti-zombie path — FIRST live test of prune-on-local-only). Remaining work now executed in the interactive
+  slot. **Verification of the regen path**: watch the AO backlog/dashboard after the next regen tick (≤30 min on
+  central) — the 5 open tasks should disappear from `queued`; if they don't, `_prune_stale`/`prune_stale` config is the
+  bug to file.
+- 2026-07-09 — **🔴 NEW FINDING (blocks real-data viewing): the inventory census HANGS.**
+  `GET /api/deployments/inventory` on the local slot-4 backend (`:8004`, new-contract code) returned 0 bytes after a 240
+  s timeout (`/api/health` is instant, so the server is fine — the census itself blocks). Root cause candidate: the
+  provider censuses are collected with unbounded `.result()` (e.g. `deployments_inventory.py:1207-1209`) — a
+  slow/hanging provider (Cloud Run services / ECS / Lambda) blocks the whole inventory forever. This VIOLATES WS-B's "a
+  census failure for one kind never blocks the others" (a hang bypasses the try/except). Captured as the P0 todo below.
 - 2026-07-09 — **`CLOUD_RUN_SERVICE` census shipped** (slot 8): `deployment-api@ab0c431` (new
   `deployment_api/routes/_cloud_run_services.py` + wiring in `deployments_inventory.py`) — lists live Cloud Run services
   via `run_v2.ServicesClient.list_services` (ready-state/revision/region/URI), builds

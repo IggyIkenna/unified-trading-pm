@@ -56,7 +56,7 @@ thinking_tier: medium
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-last_updated: 2026-07-08
+last_updated: 2026-07-09
 supersedes:
 superseded_by:
 depends_on:
@@ -559,6 +559,71 @@ live-construction path (`tardis/adapter.py`, `ccxt_adapter.py`) so new captures 
 generalized CeFi + DeFi legacy-GCS-naming audit decided below, then verifies both. Script:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/live-wiring-plus-legacy-naming-audit-wf_9e5f13e3-962.js`
 
+**OPERATOR DECISION 2026-07-09 — prefer real VM-based execution over session-tied agent execution for the remaining
+heavy migrations, because "I will have to leave my laptop at some point."** All 4 `Workflow` runs above execute as
+background tasks tied to the operator's current interactive session — if that session ends (laptop closed/asleep), any
+in-progress, not-yet-committed/not-yet-written work in them is at risk. Real GCS spot VMs, once launched and verified
+started, run independently of any laptop or session — matching this workspace's existing
+`codex/05-infrastructure/spot-vms-for-backfill.md` pattern (SPOT by default, no fire-and-forget: verify STARTED<60s +
+real progress within the first ~10min, then let it run unattended to completion). Dispatched a survey+launch agent to:
+(1) check real current state so no VM is launched for work the session agents already finished, (2) launch real spot VMs
+for genuinely large remaining pieces (Binance per-day corpus if still pending, on-chain-perp's ~19,255-object
+legacy-naming gap, MTDS's real migration once its discovery scope is known, and any large CeFi/DeFi legacy-naming
+migration found), each verified-started before being left to run unattended. **Operator also confirmed (same message)**:
+every migration in this effort should move straight from smoke-test-verified to the real full run, not pause for a
+second go/no-go — already the standing instruction given to every dispatched agent this session, reconfirmed here.
+Report pending — once it lands, this section will be updated with real VM names/instance IDs and how to check on them
+from a future session.
+
+**UPDATE 2026-07-09 — VM survey/launch agent reported back. Real result: mostly NOT needed (session agents already
+finished the big items); the one genuine VM candidate was ATTEMPTED and FAILED, reverted to local.** Confirmed DONE and
+durable via real log evidence (no VM needed): Binance per-day corpus (9,234 files), Bybit/Kraken per-day corpus (9,560
+files), Deribit per-day corpus (5,342 files), DEX-pool catalog write-back (`instruments-service@bcfdef1a`). **The one
+real VM candidate — on-chain-perp LIGHTER-ZKSYNC/PACIFICA-SOLANA/EXTENDED-STARKNET (38,884 files, ~60min projected) —
+did NOT end up durably on a VM**: v1 launch failed at boot (`unified-api-contracts` install failure, fixed via
+`SETUPTOOLS_SCM_PRETEND_VERSION`), v2 booted and briefly ran real work then stalled (process alive via SSH but zero new
+log lines for 5+ min) — agent deleted it under time pressure rather than debug further, and reverted to running the job
+**locally** (session-tied again, reduced to 20 workers to fix a real connection-pool contention root cause). No orphaned
+VMs confirmed (`onchain-perp-symbol-canon-20260709-123056` verified TERMINATED via direct
+`gcloud compute instances list`, not billing). **This directly does not yet satisfy the operator's stated durability
+need** — flagging for a proper retry with real stall-debugging (SSH in and diagnose, don't abandon after 5 min) rather
+than accepting local execution as the final state.
+
+**Also found, real and still open:**
+
+- ASTER/HYPERLIQUID legacy bare-symbol-shape gap (~19,255 objects): the path-based venue-parsing regex extension looks
+  complete in code but is UNCOMMITTED and unvalidated; a fresh dry-run for real numbers has been running 25+ min on the
+  initial GCS listing alone (confirmed still alive via direct process check, not obviously hung — GCS listing over a
+  huge prefix can genuinely take a while — but no real numbers yet as of this update).
+- OKX per-day `@LIN`/`@INV` migration: **no script exists yet** (only a narrower margin_type-only fix shipped earlier);
+  confirmed via direct GCS sampling the per-day corpus is still 0% migrated. Blocked on
+  `ccxt_adapter.py`/`tardis/adapter.py` live-wiring landing first (`wf_9e5f13e3-962`, still in flight).
+- **NEW real finding — CeFi/DeFi legacy-naming audit surfaced a genuine ghost-venue-merge problem**, e.g.
+  `UNISWAPV2-ETHEREUM` vs `UNISWAP_V2-ETHEREUM`, `AAVEV3-*` vs `AAVE_V3-*` (echoes the already-known AAVE_V3-OPTIMISM
+  misspelling finding 5 above, but broader) — large real scope (many venue-pairs × 1,000-2,300 days each); a sibling
+  agent has scaled this to a full local `--apply --workers 48` run as of 13:41 BST — durability status of that run not
+  yet independently confirmed.
+- TradFi single-leg product-root extension + Prediction instrument-id wrap: both newly-written, still in incremental
+  sample-size validation, not yet at full scope.
+
+**UPDATE 2026-07-09 — real gap found in the VM launch itself: it was NOT properly registered for monitoring.** Operator
+asked directly whether these migration VMs launch through deployment-service such that they surface in the real
+monitoring (deployment-ui `/deployments`, `/cockpit`, Slack, fleet reconciliation) — verified via direct code read that
+they did NOT. `deployment-service/scripts/vm/vm_zombie_watchdog.py:762-768`'s `VM_PREFIX_TO_BUCKET` registry (the SSOT
+`classify_deployment_target()` longest-prefix-matches against, raising `UnclassifiedDeploymentError` — never a silent
+default, per `codex/05-infrastructure/deployment-observability.md`) only recognizes
+`canonical-migration-{cefi,tradfi,defi,prediction,legacy}-` prefixes. The prior agent's ad hoc VM name
+(`onchain-perp-symbol-canon-...`) matched none of them — it would have surfaced as `UNKNOWN` in
+`/api/fleet/reconciliation` (subject to classify-or-kill), never shown in deployment-ui/cockpit/Slack. Real, existing,
+purpose-built tool found: `deployment-service/scripts/vm/launch-canonical-migration-vm.sh`
+(`Epic: infrastructure_master`, `Lifecycle: oneoff`) already does correct naming/bootstrap (`setup-data-pipeline-vm.sh`,
+durable log streaming)/labels — but its `_script_for()` is hardcoded to the older v9 flat→hive canonical-migration
+tools, not this session's `@LIN`/`@INV`/legacy-naming scripts. **Corrected instruction issued to the in-flight retry
+agent**: either extend `launch-canonical-migration-vm.sh` with a new case for this session's real migration scripts
+(preferred — ships via quickmerge in `deployment-service`), or at minimum name any new VM
+`canonical-migration-cefi-<timestamp>[-suffix]` (on-chain-perp is already classified under the `cefi` asset group) +
+reuse `setup-data-pipeline-vm.sh` + the same metadata/label shape — never an unregistered ad hoc prefix. Report pending.
+
 - **2026-07-09 — GENERALIZED FINDING + DECISION: legacy GCS filename/path conventions are a systemic risk, not just an
   on-chain-perp issue.** The on-chain-perp full-historical-sweep branch found that a real GCS narrow-prefix listing (not
   the manifest's summary count) shows ~99% of "captured" HL/ASTER historical objects (~19,255 of 19,435) sit under an
@@ -574,3 +639,86 @@ generalized CeFi + DeFi legacy-GCS-naming audit decided below, then verifies bot
   migrated to it — not just the already-known target-format gap this doc's findings 1-6 describe, but genuinely
   unknown-until-audited older shapes the way this one was. Dispatched as a dedicated discovery+migration workflow, see
   Orchestration state below.
+- **2026-07-09 — `wf_118d8268-18c` onchain-perp venue-family slice (HYPERLIQUID/ASTER/PACIFICA-SOLANA/
+  EXTENDED-STARKNET/LIGHTER-ZKSYNC) — real discovery + code fix + historical migration, MTDS.** Real discovery (live
+  `gcloud storage`/parquet reads, not guesses) confirmed all 5 venues' raw-tick `symbol` column diverges from the
+  `BASE-QUOTE@LIN` target: ASTER emitted the raw concatenated exchange symbol (`"BTCUSDT"`, no dash); HYPERLIQUID's S3
+  archive + REST-fallback paths emitted the pre-2026-07-08 `"{coin}-PERP"` shape; LIGHTER-ZKSYNC/PACIFICA-SOLANA emitted
+  a bare base-asset string (`"BTC"`); EXTENDED-STARKNET emitted a bare base-asset `symbol` alongside an already-dash-
+  joined-but-unmarked `instrument_id` (`"BTC-USD"`). **Fixed (code, all 5 venues' NATIVE REST/S3 write paths)**:
+  `market-tick-data-service@<pending quickmerge sha>` — `aster_adapter.py::_to_canonical_symbol`,
+  `adapters/hyperliquid_s3.py::_canonical_perp_symbol`, `adapters/_umi_lighter.py::_lighter_canonical_symbol`,
+  `adapters/_umi_pacifica.py::_pacifica_canonical_symbol`, `adapters/_umi_extended.py::_extended_canonical_symbol`, plus
+  `live/websocket_runner.py::live_tick_blob_path` now sanitizes the filename component (colon-laden live filenames no
+  longer diverge from the batch path's bare-symbol convention). 8 pre-existing unit tests updated to assert the new
+  canonical values (`test_hyperliquid_s3_coverage.py`, `test_extended_candles.py`, `test_pacifica_candles.py`,
+  `test_lighter_candles.py`); full targeted suite green (225 passed). **Historical migration (real, `--apply`,
+  backup-first, real concurrency)**: LIGHTER-ZKSYNC (1,593 files) + PACIFICA-SOLANA (1,408 files) + EXTENDED-STARKNET
+  (35,883 files) under `pipeline_mode=batch_tardis` — real scope discovered via a bounded per-day+venue-prefix scoped
+  GCS list (2024-09-01..2026-07-08, NOT a whole-corpus walk). Elapsed time + final counts: see this session's completion
+  report (agent-orchestrator task output) for the honest real numbers — not restated here to avoid this doc going stale
+  the moment the doc is re-read. **Deliberately deferred, NOT a scope choice — real, confirmed live multi-agent
+  conflict**: (1) ASTER/HYPERLIQUID historical GCS filename-rename + row-content symbol-column fix —
+  `scripts/migrate_onchain_perp_perpetual_canonical_ 2026_07_08.py` was actively dirty (another agent's in-flight WIP,
+  still dry-run-only as of this session, no `_index/backups/availability_index.pre_perpetual_canonical_*` found) at
+  write time; touching the same GCS objects would race. (2) The Tardis-archive (`batch_tardis`) post-fetch `symbol`
+  remap for LIGHTER-ZKSYNC/PACIFICA-SOLANA/ EXTENDED-STARKNET (the actual highest-volume current source for these 3
+  venues) — `market_interface/adapters/cefi/ tardis_shared.py` + `market_interface/adapters/tradfi/tardis_adapter.py`
+  were BOTH actively dirty (mtime 159s/228s at discovery, part of a larger actively-churning cluster also touching
+  `partitioned_writer.py`, `kalshi_adapter.py`, `databento_enrichment.py`, `_dex_pools_*.py` — evidently this session's
+  `wf_9e5f13e3-962` / `canonical-id-full-historical-sweep` work) at write time. **Insertion point identified for
+  whichever agent picks this up next**: canonicalize the DataFrame's `symbol` column for these 3 venues before it
+  reaches `finalise_rows_and_path`/`derive_row_instrument_id` in `tardis_cefi_shards.py`'s
+  `finalise_and_write_cefi_shards`/`_tardis_cefi_shard_router` (both already group by the raw `symbol` column) — no
+  `canonical_id_builder.py`/UAC change needed, since `_build_cefi_simple` just upper-cases and wraps whatever `symbol`
+  string it receives (confirmed by reading `_build_cefi_simple` + `build_instrument_id`'s PERPETUAL dispatch directly).
+  Full write-up + the LIGHTER-ZKSYNC market_id→symbol table (live-verified 2026-07-09 via
+  `mainnet.zklighter.elliot.ai/api/v1/orderBookDetails`): `market-tick-data-service/docs/canonical-write-conventions.md`
+  § "On-chain-perp `symbol` canonicalization".
+- **2026-07-09 — CeFi legacy GCS naming-convention audit (the generalized finding's CeFi half) — COMPLETE, real gap
+  found + fixed for OKX-SWAP/OKX-FUTURES, no gap for the other 4 target venues.** Real GCS listing (not the manifest
+  summary — one flat `gsutil ls -r` over `instruments-store-cefi-prd-central-element-323112`'s
+  `instrument_availability/by_date/`, 110,636 real objects, single walk) across BINANCE-FUTURES, BINANCE-DELIVERY,
+  BYBIT, KRAKEN-FUTURES, DERIBIT, OKX-SWAP, OKX-FUTURES. **Found 4 distinct real path shapes** coexisting for the
+  per-day snapshot corpus — all under the same fixed leaf filename (`instruments.parquet`; CeFi has NO
+  bare-symbol-per-instrument-file shape anywhere, unlike the HL/ASTER on-chain-perp case that triggered this audit): (A)
+  bare `day=D/venue=V/instruments.parquet` (33,602 real objects across the 7 target venues); (B) pipelined
+  `day=D/pipeline_mode=batch_instruments_service/asset_group=cefi/venue=V/instruments.parquet`, a real coexisting
+  duplicate write path spanning the SAME 2019-current range as shape A, not a superseded relic (28,710 real objects);
+  (C) doubled-`day=` bug, pipelined variant (144 objects); (D) doubled-`day=` bug, bare variant (144 objects) — C/D both
+  bounded to 18 real dates (2026-05-05..2026-05-22) across 12 venues, a real partition-key double-write bug, separate
+  from the A/B duplication.
+  - **Coverage, verified by exact reconciliation (real total objects vs. real `.bak` backup count already written, not
+    just code inspection)**: `canonicalize_bybit_kraken_futures_catalog_2026_07_09.py`,
+    `canonicalize_binance_futures_delivery_catalog_2026_07_09.py`, and `canonicalize_deribit_id_markers_2026_07_09.py`
+    all list via a FLAT substring scan (`"venue=X/" in blob.name`) over the whole `by_date/` prefix — depth-agnostic,
+    already covers every shape found. Full coverage confirmed: BYBIT+KRAKEN-FUTURES 9,540 real objects / 9,560 real
+    `.bak` (the +20 is a separate, pre-existing, already-documented double-backup-of-a-backup artifact, not a coverage
+    gap); BINANCE-FUTURES+DELIVERY 9,234/9,234 exact; DERIBIT 5,342/5,342 exact. **No new script needed for these 4
+    venues.**
+  - **Real gap found: `canonicalize_okx_margin_type_2026_07_09.py`'s `--by-day` mode.** Its listing
+    (`_list_okx_day_files`) does a two-level DELIMITED (non-recursive) listing — `day=D/` prefixes, then checks only
+    whether `venue=V/` is a DIRECT CHILD of each `day=D/` prefix — structurally can never see shape B (one level deeper,
+    under `pipeline_mode=.../asset_group=cefi/`) or shapes C/D. Real reconciliation: 9,576 total real
+    OKX-SWAP+OKX-FUTURES objects, only 4,762 (shape A, 49.7%) ever carried an `.okxmarginfix.` backup — **4,814 real
+    objects (shape B 4,742 + shape C 36 + shape D 36) were silently never discovered**, still carrying the original
+    margin-type-inversion bug that script exists to fix. This means the doc's own earlier "FIXED 2026-07-09, 0 remaining
+    mismatches" claim for this corpus (`instruments-service/docs/CEFI_INSTRUMENTS.md`, since corrected) was wrong — its
+    own re-verification pass shared the same blind spot as the fix it was verifying. Confirmed with real content, not
+    just path inspection: sampled `day=2023-06-15` OKX-FUTURES — shape A (migrated) correctly showed `BTC-USD-230616` as
+    `inverse`; the shape-B copy of the SAME (day, venue, instrument) still showed `linear` for all 60 real rows before
+    this fix ran.
+  - **Fix — new script `instruments-service/scripts/legacy_naming_audit_okx_2026_07_09.py`, real full sweep RAN
+    2026-07-09.** Same `_expected_margin_type` correction rule as the original script (byte-for-byte identical formula),
+    applied via a flat depth-agnostic listing (same proven pattern as the Bybit/Kraken/Binance/Deribit scripts). Real
+    results (`--apply --confirm --full-sweep --workers 30`, all 9,576 real files scanned, shape A included idempotently
+    to prove nothing was missed): `files_scanned=9,576, files_written=4,798, rows_fixed=155,614, errors=0`, elapsed 927s
+    (15.5 min). A full-corpus re-verification dry-run immediately after confirmed
+    `files_written=0, rows_fixed=0, errors=0` — 0 remaining legacy-shape-hidden mismatches across the ENTIRE real
+    corpus, all 4 path shapes. Backup-first (`instruments.legacynamingauditokx.<ts>.bak.parquet` per touched file). Full
+    write-up: `instruments-service/docs/CEFI_INSTRUMENTS.md` § "CeFi legacy GCS path-shape audit (2026-07-09)" (also
+    corrects the OKX per-day section's and "Known limitations" table's prior false-completeness claims).
+  - **DeFi half of the generalized finding** (13 DEX-pool protocols + lending/staking) audited in parallel by a separate
+    in-flight sibling workflow this session
+    (`instruments-service/scripts/legacy_naming_audit_dexpool_ghost_venue_merge_2026_07_09.py`) — not this entry's
+    scope; see that script/its own commit for DeFi-side real findings.
