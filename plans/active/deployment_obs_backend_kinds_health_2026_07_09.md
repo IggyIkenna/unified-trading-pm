@@ -260,8 +260,25 @@ source: deployment_observability_expansion_2026_07_08.md
       extend `DeploymentRegistryEntry` with a bounded ring-buffer field (`unified-trading-library`/`deployment-service`,
       mirrors the "Enrich the heartbeat" todo's scope) + surface it on `DeploymentDetailResponse` (`deployment-api`,
       additive — the current single-sample fields stay for back-compat).
-- [ ] [BACKEND] P2. **Alerts** on `oom-risk` (before the kill) + `stalled` (progress flatlines, heartbeat fresh) — wire
-      into the existing alerts surface.
+- [x] ✅ [BACKEND] P2. **Alerts** on `oom-risk` (before the kill) + `stalled` (progress flatlines, heartbeat fresh) —
+      wire into the existing alerts surface. — deployment-api@5e25dce. New `_persist_alert()` appends a JSONL row to the
+      SAME shared GCS ledger (`unified-trading-cicd-events/cicd/alerts/{date}/alerts.jsonl`) agent-orchestrator's
+      watchers + `notify-slack.yml` already write to (mirrors `notifications.slack._persist_to_gcs`'s exact row shape) —
+      `GET /api/alerts` (`_repo_ci_alerts.py`) picks these up with zero reader-side changes. New
+      `_alert_on_health_transition()` fires only on a fresh TRANSITION into `oom-risk`/`stalled` (in-process
+      last-alerted-state per VM name), never on every ~45s cache-refresh poll while the state persists — avoids an
+      alert-storm on a VM that stays unhealthy across many polls; a recovery back to a non-alertable state (e.g.
+      `working`) clears the tracked state so re-entering `oom-risk` fires again as a genuine new transition. Wired into
+      `_compute_inventory`'s GCP branch, shard-level isolated (a ledger-write failure logs + never breaks inventory
+      computation). **`stalled` cannot actually fire yet** — `_composite_health_status` still degrades it to `"unknown"`
+      pending the separate `[BACKEND] P1` "Wire `stalled` + `workload-dead`" todo below; included in
+      `_ALERT_HEALTH_STATES` now so no code change is needed once that lands. 4 new tests
+      (`test_alert_on_health_transition_fires_once_per_transition`,
+      `test_alert_on_health_transition_ignores_non_alertable_states`, `test_persist_alert_writes_expected_row_shape`,
+      `test_persist_alert_never_raises_on_storage_failure`). QG green (sentinel 5e25dce, 73s). Rebased onto 2
+      concurrently-shipped sibling census todos (CLOUD_FUNCTION `a025563`, ECS/Lambda field surfacing `e5f2ad4`) —
+      genuine same-file conflict (both call sites append to `_compute_inventory`'s GCP branch), resolved by keeping both
+      additions (no logical overlap).
 - [ ] [REVIEW] P2. Gate `/freshness` fetches to VM kinds only (services use error-rate health, not manifest freshness) —
       the mock currently fetches freshness for all LIVE rows.
 - [ ] [BACKEND] P1. **Wire `stalled` + `workload-dead` into `_composite_health_status`** (`deployment-api`,
@@ -291,6 +308,17 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **Alerts on oom-risk/stalled wired into the alert ledger** (slot 15): `deployment-api@5e25dce`
+  (`deployment_api/routes/deployments_inventory.py`) — `_persist_alert()` appends to the SAME shared GCS ledger
+  (`unified-trading-cicd-events/cicd/alerts/{date}/alerts.jsonl`) agent-orchestrator's watchers already write to
+  (mirrors `notifications.slack._persist_to_gcs`'s row shape exactly), so `GET /api/alerts` picks these up with zero
+  reader changes. `_alert_on_health_transition()` fires only on a fresh TRANSITION into `oom-risk`/`stalled` (in-process
+  per-VM last-alerted-state), never every ~45s poll — deliberately conservative to avoid an alert-storm. Honest note:
+  `stalled` can't fire yet (its `_composite_health_status` classifier still degrades to `"unknown"` pending the separate
+  `stalled`/`workload-dead` wiring todo below) — included now so nothing else needs to change once that lands. 4 new
+  tests. QG green (sentinel 5e25dce, 73s). Rebased onto 2 concurrent census landings (CLOUD_FUNCTION `a025563`,
+  ECS/Lambda field surfacing `e5f2ad4`) — a genuine same-file conflict in `_compute_inventory`'s GCP branch (two
+  independent appends), resolved by keeping both.
 - 2026-07-09 — **Recent error count / last log line shipped** (slot 4): `deployment-service@9ef144e`
   (`deployment_service/data_pipeline_monitors/_gcs.py`) — `recent_log_summary()` returns
   `RecentLogSummary(recent_error_count, last_log_line)` for the popover, reusing the SAME durable run.log blob +
