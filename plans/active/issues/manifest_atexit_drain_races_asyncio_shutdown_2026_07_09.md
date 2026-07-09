@@ -147,9 +147,10 @@ documented, expected way to get the "fast-exit" safety net) is still exposed to 
       (b) fix the executor-teardown race so plain atexit is reliable again. Add a regression test that simulates an
       asyncio script exiting fast with pending per-VM records and asserts the shard is written. (repo:
       unified-trading-library)
-- [ ] [SCRIPT] P1. Audit other asyncio-based one-off/backfill scripts under `instruments-service/scripts/backfill/` (and
+- [x] [SCRIPT] P1. Audit other asyncio-based one-off/backfill scripts under `instruments-service/scripts/backfill/` (and
       sibling repos) for the same reliance-on-bare-atexit pattern; apply the same explicit-pre-exit-drain workaround to
-      any that matter for an active plan's gate, pending the real fix above. (repo: instruments-service)
+      any that matter for an active plan's gate, pending the real fix above. (repo: instruments-service) ✅ —
+      instruments-service@a745898 (slot-11). See Progress Log entry below for the audit methodology + findings.
 - [ ] [SCRIPT] P2. Add a QG check that greps for `asyncio.run(` in a script alongside `MANIFEST_PER_VM_SHARDS` env usage
       and requires an explicit `flush_all_pending_buckets()` call in the same file, to catch new instances of this
       anti-pattern going forward. (repo: unified-trading-pm)
@@ -221,3 +222,48 @@ independent bug. Added an explicit `flush_all_pending_buckets()` call to `unders
 end-to-end and confirmed via a fresh-process read + forced consolidation that all 4,125 buffered rows persisted
 correctly. Filed this doc since the underlying `unified_trading_library` race is unfixed and cross-cutting — out of
 scope for this task (understat item #4 checkbox) to fix at the library level.
+
+### 2026-07-09 ~02:xx UTC — slot-11: item #3 (SCRIPT audit) — 3 more scripts fixed, 1 checked-and-skipped
+
+**Task**: `manifest_atexit_drain_races_asyncio_shutdown-003` (item #3, [SCRIPT] P1).
+
+**Method**: `grep -rl MANIFEST_PER_VM_SHARDS instruments-service/scripts` → 52 hits, then narrowed to `asyncio.run(`
+callers only (4 hits: the already-fixed `understat_eu_residual_closer_2026_07_08.py` + 3 unfixed). Cross-checked
+`sibling repos` per the todo's wording — grepped `MANIFEST_PER_VM_SHARDS` across every other repo in the workspace
+(`deployment-api`, `deployment-service`, `features-service`, `market-data-processing-service`,
+`market-tick-data-service`, `unified-trading-library`, `unified-api-contracts`); none of their hits call `asyncio.run(`
+— the bare-atexit-reliance pattern is confined to `instruments-service` one-off scripts.
+
+**Fixed** (`instruments-service@a745898`):
+
+- `scripts/backfill/understat_bulk_backfill.py` — async `main()` had no explicit drain before its final log line; added
+  `_mw.flush_all_pending_buckets()` right before `=== ... COMPLETE ===`, matching the sibling closer script's pattern
+  exactly. Actively gates `plans/active/understat_local_backfill_completion_2026_07_06.md` (status: active).
+- `scripts/backfill_understat_xg_epl_2025_2026_06_29.py` — different shape: sync `main()` calls
+  `asyncio.run(_run_backfill(...))`, so the drain has to run **inside** the `_run_backfill` coroutine (before it
+  returns), not after `asyncio.run()` in the outer sync `main()` — the loop (and any executors it owns) is already torn
+  down by the time `asyncio.run()` hands control back. Added the `_mw` import + explicit flush at the end of
+  `_run_backfill()`. Its issue doc (`sports_data_capture_gap_2026_06_29.md`) has all 4 todos checked but no final
+  re-verify confirming the XG backfill's result stuck — applied the fix defensively since the cost is zero and the
+  script could still be re-run.
+- `scripts/recover_fixtures_from_truthset.py` — **different bug shape, same root cause.** This script already calls an
+  explicit `manifest.flush()` before returning (looks like it already had the "explicit drain" pattern) — but
+  `ManifestWriter.flush()` docstring is explicit that it does **NOT** force the per-VM shard rewrite, only the
+  module-buffer/legacy-CAS write; the per-VM shard's "true finality" is deliberately left to `close()`/atexit
+  (`process_final=True`). So this script's existing `.flush()` call gave a false sense of safety — it was still exposed
+  to the exact atexit race for the per-VM shard specifically. Swapped `manifest.flush()` → `manifest.close()` so the
+  guaranteed drain runs explicitly, in-loop. **This script is NOT dead despite its own `Delete-when` marker and parent
+  plan (`sports_fixtures_truthset_recovery_2026_05_06.md`) being archived** — it's actively referenced as a
+  still-to-be-re-run recovery tool in the current active plan
+  `plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md` (line ~487: "generate a fresh truthset ...
+  → run `recover_fixtures_from_truthset.py --flip-empty-attempts`"). Worth flagging: don't trust a script's own
+  `Lifecycle`/`Delete-when` header as proof of deadness — grep for its filename across `plans/active/` before assuming
+  it's safe to skip or delete.
+
+**Checked, not fixed** — `scripts/recover_fixtures_from_truthset.py`'s own sibling from the same Phase-1/Phase-2
+recovery effort has no other asyncio-based counterparts; no other candidate scripts were found once the `asyncio.run(`
+filter was applied, so no further scripts in this repo needed the workaround.
+
+Shipped: `instruments-service@a745898` (QG green, quickmerge --agent). This todo does not fix the underlying
+`unified_trading_library` race (that's [CODE] P0, still open) — it's the scoped mitigation across every currently-live
+asyncio one-off script, same as the sibling closer-script fix.
