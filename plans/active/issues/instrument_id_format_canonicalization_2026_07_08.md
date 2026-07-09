@@ -840,4 +840,5 @@ state before acting (still multi-hour, 0-1 flat errors, not climbing) and script
   `e2e-testing/scripts/defi/audit_legacy_gcs_dup_delete_list.py`, and the exact same shape-B pattern the CeFi audit
   above already found + partially fixed), NOT executed this pass. Full evidence + per-protocol table:
   `instruments-service/docs/DEFI_INSTRUMENTS.md` § "Legacy GCS naming audit — real per-protocol findings and migration
-  (2026-07-09)". Evidence: instruments-service@<pending quickmerge sha>.
+  (2026-07-09)". Evidence: instruments-service@11192be2 (landed on `origin/live-defi-rollout`, verified via
+  `git merge-base --is-ancestor`).
