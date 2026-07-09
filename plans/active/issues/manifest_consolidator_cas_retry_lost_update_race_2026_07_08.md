@@ -136,21 +136,27 @@ not have.
 
 ## Recommended decision
 
-- [ ] [DATA] P0. Fix the lost-update race in `_write_consolidated()`
+- [x] ✅ [DATA] P0. Fix the lost-update race in `_write_consolidated()`
       (`unified_trading_library/manifest_consolidator.py:1490-1565`, repo: unified-trading-library): on
       `PreconditionFailed`, RE-RUN the full merge (`_duckdb_consolidate_and_write`, re-reading the canonical at its NEW
       generation + the same changed-shard set) before re-attempting the CAS write — do not re-upload the stale
       `payload`. Mirror the correct pattern already used by `ManifestWriter._try_conditional_write`
       (`unified_trading_library/manifest_writer/_writer_io.py:688-709`, "one read-merge-write cycle" per attempt). Add a
       regression test that simulates two overlapping `consolidate()` calls against the same bucket (mock GCS generation
-      bump mid-cycle) and asserts the canonical after both completes contains exactly ONE row per dedup key, not two.
+      bump mid-cycle) and asserts the canonical after both completes contains exactly ONE row per dedup key, not two. —
+      unified-trading-library@75e59a89 (slot-7 sonnet/high). `_duckdb_consolidate_and_write`'s merge body extracted into
+      `_duckdb_merge_payload`; `_write_consolidated` now takes a `merge_payload` callable and re-invokes it (fresh
+      canonical download + re-merge) on every `PreconditionFailed` retry instead of re-uploading the first attempt's
+      payload. Regression test `test_write_consolidated_rereads_canonical_on_precondition_failed_no_lost_update`
+      simulates two racing cycles and asserts both survive; sanity-verified against a blind-reupload simulation of the
+      pre-fix behavior (fails as expected). Also folded in the P1 docstring follow-up edit below (module docstring now
+      describes the fixed, not pending, behavior).
 - [x] ✅ [DATA] P1. Correct the misleading module docstring (`unified_trading_library/manifest_consolidator.py:38-40`) —
       it cites `ManifestWriter._write_with_generation_match`, which the consolidator never calls; replace with an
       accurate description of `_write_consolidated`'s actual (buggy, pending the P0 fix above) retry behavior, updated
-      again once the fix lands (repo: unified-trading-library). — unified-trading-library@84528344 (slot-4 sonnet/high).
-      Docstring now accurately states the CAS retry re-uploads the same stale payload without re-merging (a lost-update
-      race, linked to this issue doc) and corrects the wrong function citation; will need a follow-up edit once the P0
-      fix above ships.
+      again once the fix lands (repo: unified-trading-library). — unified-trading-library@84528344 (slot-4 sonnet/high),
+      follow-up unified-trading-library@75e59a89 (slot-7). Docstring now describes the FIXED retry behavior (the P0 fix
+      above landed in the same commit as the follow-up edit) and still corrects the wrong function citation.
 - [ ] [DATA] P1. Once the P0 fix ships, re-run this doc's reproduction (15-cell sample query against
       `instruments-store-sports-prd-central-element-323112`'s canonical index) to confirm the specific understat
       XG/XG_SHOTS duplicate cells collapse to one row each, then re-verify item #4's gate in
