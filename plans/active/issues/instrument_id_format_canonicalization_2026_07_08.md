@@ -902,3 +902,37 @@ rows, `PANCAKESWAPV3-BSC` day=2024-10-07 59 rows) suggest this is very likely sy
 `instrument_key`/`venue` on the ghost-only rows before concat, then re-run a one-time pass over every (day,venue) pair
 that had ghost-only rows (a subset of the already-known 29,840, not a fresh full-corpus walk). Not yet fixed — filing as
 its own follow-up.
+
+**UPDATE 2026-07-09 — `wf_c4796aec-f35` (full historical sweep) COMPLETE, all 7 agents (6 packages + verify) done.**
+Real production migrations, verified: Bybit/Kraken-Futures catalog+full by_date corpus (`instruments-service@ba4f7d2e`,
+9,540 files, 1.98M id relabels), Deribit catalog+full by_date corpus (263,979/263,979 + 5,342/5,342 files, 7.98M rows),
+OKX catalog+full by_date corpus (6,053 + 4,762 files, ~156K rows), on-chain-perp GCS renames+manifest (134,855 renamed,
+7.2M manifest rows) — all independently re-verified by the verify agent against live production GCS, not self-reports.
+
+**Two urgent, real findings from the verify pass, not yet actioned:**
+
+1. **A live-trading correctness bug sits uncommitted, local-only, right now**:
+   `market-tick-data-service/market_tick_data_service/live/connectors/deribit_ws.py` has a real, correct fix already
+   written (the `count("-")==2` dead-code check was misclassifying every real Deribit FUTURE trade as OPTION) but it has
+   NOT shipped — **live trading is currently running the buggy classifier**. This is the single highest-priority item in
+   this whole update.
+2. **Real production migrations exist that are not reproducible from git** — 3 scripts that already ran real GCS
+   mutations (`canonicalize_deribit_id_markers_2026_07_09.py`'s `--by-date-all` mode,
+   `canonicalize_binance_futures_ delivery_catalog_2026_07_09.py`'s concurrency, and BOTH OKX scripts entirely) exist
+   only in this one machine's working tree — a fresh clone of `origin/live-defi-rollout` cannot audit, reproduce, or
+   re-run any of them. The underlying data mutations are real and independently verified against live GCS (not
+   fabricated), but the audit-trail gap itself is real and needs closing — commit these scripts.
+
+**Also found — a real regression exposed by this session's own earlier fix, currently blocking ALL new Bybit captures.**
+The Bybit/Kraken-Futures migration agent found: 46 real legacy coin-margined quarterly futures (`BTCUSDH22`-shape, 4
+still actively trading) fail to capture — `adapter.py`'s expiry-resolution fallback chain has no branch for this no-dash
+CME-month-code shape, and the resulting uncaught `pydantic.ValidationError` **kills the entire BYBIT venue fetch, not
+just these 46 symbols** — real command reproduces it:
+`python -m instruments_service --operation instruments --mode batch --asset-group cefi --venues BYBIT --start-date 2026-07-09 --end-date 2026-07-09 --force`
+→ 0 records for the whole venue. This is a live regression, exposed (not caused) by the earlier margin-type fix
+(`176d4610`) which removed a guard that previously silently absorbed this case. Correctly not fixed by the migration
+agent (belongs in `adapter.py`, locked by concurrent live-wiring work all session) — needs its own urgent fix once that
+lock clears.
+
+Real evidence for all of the above: `instruments-service/docs/CEFI_INSTRUMENTS.md`, `docs/DEFI_INSTRUMENTS.md`, plus the
+verify agent's per-venue-family honest-status table (git-vs-origin, live GCS spot-checks) in the workflow journal.
