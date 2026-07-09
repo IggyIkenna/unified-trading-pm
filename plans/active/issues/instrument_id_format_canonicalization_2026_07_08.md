@@ -575,6 +575,37 @@ second go/no-go — already the standing instruction given to every dispatched a
 Report pending — once it lands, this section will be updated with real VM names/instance IDs and how to check on them
 from a future session.
 
+**UPDATE 2026-07-09 — VM survey/launch agent reported back. Real result: mostly NOT needed (session agents already
+finished the big items); the one genuine VM candidate was ATTEMPTED and FAILED, reverted to local.** Confirmed DONE and
+durable via real log evidence (no VM needed): Binance per-day corpus (9,234 files), Bybit/Kraken per-day corpus (9,560
+files), Deribit per-day corpus (5,342 files), DEX-pool catalog write-back (`instruments-service@bcfdef1a`). **The one
+real VM candidate — on-chain-perp LIGHTER-ZKSYNC/PACIFICA-SOLANA/EXTENDED-STARKNET (38,884 files, ~60min projected) —
+did NOT end up durably on a VM**: v1 launch failed at boot (`unified-api-contracts` install failure, fixed via
+`SETUPTOOLS_SCM_PRETEND_VERSION`), v2 booted and briefly ran real work then stalled (process alive via SSH but zero new
+log lines for 5+ min) — agent deleted it under time pressure rather than debug further, and reverted to running the job
+**locally** (session-tied again, reduced to 20 workers to fix a real connection-pool contention root cause). No orphaned
+VMs confirmed (`onchain-perp-symbol-canon-20260709-123056` verified TERMINATED via direct
+`gcloud compute instances list`, not billing). **This directly does not yet satisfy the operator's stated durability
+need** — flagging for a proper retry with real stall-debugging (SSH in and diagnose, don't abandon after 5 min) rather
+than accepting local execution as the final state.
+
+**Also found, real and still open:**
+
+- ASTER/HYPERLIQUID legacy bare-symbol-shape gap (~19,255 objects): the path-based venue-parsing regex extension looks
+  complete in code but is UNCOMMITTED and unvalidated; a fresh dry-run for real numbers has been running 25+ min on the
+  initial GCS listing alone (confirmed still alive via direct process check, not obviously hung — GCS listing over a
+  huge prefix can genuinely take a while — but no real numbers yet as of this update).
+- OKX per-day `@LIN`/`@INV` migration: **no script exists yet** (only a narrower margin_type-only fix shipped earlier);
+  confirmed via direct GCS sampling the per-day corpus is still 0% migrated. Blocked on
+  `ccxt_adapter.py`/`tardis/adapter.py` live-wiring landing first (`wf_9e5f13e3-962`, still in flight).
+- **NEW real finding — CeFi/DeFi legacy-naming audit surfaced a genuine ghost-venue-merge problem**, e.g.
+  `UNISWAPV2-ETHEREUM` vs `UNISWAP_V2-ETHEREUM`, `AAVEV3-*` vs `AAVE_V3-*` (echoes the already-known AAVE_V3-OPTIMISM
+  misspelling finding 5 above, but broader) — large real scope (many venue-pairs × 1,000-2,300 days each); a sibling
+  agent has scaled this to a full local `--apply --workers 48` run as of 13:41 BST — durability status of that run not
+  yet independently confirmed.
+- TradFi single-leg product-root extension + Prediction instrument-id wrap: both newly-written, still in incremental
+  sample-size validation, not yet at full scope.
+
 - **2026-07-09 — GENERALIZED FINDING + DECISION: legacy GCS filename/path conventions are a systemic risk, not just an
   on-chain-perp issue.** The on-chain-perp full-historical-sweep branch found that a real GCS narrow-prefix listing (not
   the manifest's summary count) shows ~99% of "captured" HL/ASTER historical objects (~19,255 of 19,435) sit under an
