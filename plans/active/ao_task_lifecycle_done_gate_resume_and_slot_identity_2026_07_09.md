@@ -182,6 +182,13 @@ preserve-on-handoff (the ONLY auto-commit point):
       if needed): done preconditions — push every touched repo via QG+quickmerge BEFORE `/done`; on 409 → important WIP
       → quickmerge it; unimportant → slot-tagged `git stash push --include-untracked -m slot-<N>-…`, report the stash in
       the retry payload; never delete/reset WIP.
+- [ ] [CODE] P0. **Boot prompt bans ask-permission turns** — observed (slot 12, 07:50Z): a freshly-spawned worker
+      finished its memory-housekeeping preamble and ENDED ITS TURN with _"should I proceed with STEP 0 … and then
+      /boot?"_ — an interactive Claude that ends a turn is inert, so the spawn is wasted until a kick lands. Harden the
+      worker boot prompt + `agents/worker.md`: NO human watches this pane — never end a turn with a question or
+      permission-ask; STEP-0 reads and the CLAUDE.md memory-reset are silent preamble, not discussion; the FIRST turn
+      must reach `/boot` (or arm the idle heartbeat loop when no task, as slot 4 correctly does) in the SAME turn.
+      Evidence gate — sampled fresh spawns reach `/boot` on turn 1 with zero permission-ask turns.
 - [ ] [CODE] P1. **Stash-notify** — done-retry payload carries `stashed: [{repo, stash_ref, files}]`; backend logs
       `slot_stash_on_done` activity + fires a Slack notification (`server/notifications/`) with slot, task id, repo,
       stash ref, file list — so every stash is visible and root-caused (target = zero stashes steady-state).
@@ -230,10 +237,14 @@ preserve-on-handoff (the ONLY auto-commit point):
       (`assign_task_to_slot` dispatch bump, `_respawn.py:349`, spinner branch false-positives). Regression test — a
       frozen-pane slot with a stale worker trips heartbeat-silence within the watchdog window.
 - [ ] [CODE] P1. **Worker messaging goes through the outbox, not raw tmux typing** — find the depositor(s) of the
-      unsubmitted input-box instructions (`check again`, `file the CLAUDE.md fix as a plan todo` — main-agent /
-      plan-health guidance paths) and route them through the pending-messages outbox (`take_pending_messages`, drained
-      at boot/heartbeat) or the verified-submit helper; raw `tmux send-keys` text deposits into worker panes are banned
-      outside that helper.
+      unsubmitted input-box instructions (`check again`, `stop the loop` on slot 1, `check on the poll loop status` on
+      slot 4 — live 12:40Z survey; `file the CLAUDE.md fix as a plan todo`). Server-side audit (12:40Z) already clears
+      the server: the ONLY free-text pane typer is `_kick_session` (fixed strings) — `/api/slots/{id}/message` correctly
+      uses the outbox — so the depositors are OUTSIDE the server (main-agent Bash `tmux send-keys` / operator dashboard
+      terminals). Route them through the pending-messages outbox (`take_pending_messages`, drained at boot/heartbeat) or
+      the verified-submit helper; add the ban to `agents/main.md`; optionally add a pane-deposit detector
+      (frozen-with-text that matches no kick text → `pane_text_deposited` activity) so future depositors self-identify.
+      NOTE — an unsubmitted deposit is LOST OPERATOR INTENT (slot 1's `stop the loop` never executed), not just noise.
 - [ ] [CODE] P2. **Spawn-vs-respawn TOCTOU** — `autospawn_failed: tmux session orch-slot-4 already exists` — re-check
       `has_session` inside the spawn (or serialize respawn ownership between kicker-respawn and AutoSpawn); treat an
       existing live session as a benign skip, not a failure.
