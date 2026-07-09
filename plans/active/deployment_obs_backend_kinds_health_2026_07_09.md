@@ -98,8 +98,19 @@ source: deployment_observability_expansion_2026_07_08.md
       stats are CloudWatch-only (no host/cgroup on Lambda) — the ONE scoped exception to principle 4; default to
       existence-only and add a CloudWatch call ONLY if Lambda health proves worth it.
 - [ ] [BACKEND] P2. Add `CLOUD_FUNCTION` (gen2) census — `functions list`; note gen2 = Cloud Run underneath.
-- [ ] [BACKEND] P1. Extend `DeploymentKind` (UAC) + the inventory route's kind counts + filters to the 6 kinds; keep
-      honest degradation (a census failure for one kind never blocks the others).
+- [x] ✅ [BACKEND] P1. Extend `DeploymentKind` (UAC) + the inventory route's kind counts + filters to the 6 kinds; keep
+      honest degradation (a census failure for one kind never blocks the others). — deployment-api@9353d28. UAC
+      `DeploymentKind` already carried all 6 values (VM/CLOUD_RUN_JOB/CLOUD_RUN_SERVICE/ECS_SERVICE/LAMBDA/
+      CLOUD_FUNCTION) — no UAC change needed. Added a `kind=` query filter to `GET /deployments/inventory` (case-
+      insensitive, same pattern as `umbrella`/`cloud`/`status`) and a `counts_by_kind: dict[str, int]` rollup on
+      `DeploymentInventoryResponse`, additive alongside the legacy `vm_count`/`cloud_run_job_count` (kept for
+      back-compat, no UI break). `counts_by_kind` only keys a kind actually present in the (post-filter) item set — a
+      kind whose census hasn't shipped yet or failed this cycle is simply absent from the map, never a fabricated `0` —
+      so this generic, kind-agnostic counting/filtering layer needs no further changes as the remaining census todos
+      (CLOUD_RUN_SERVICE, LAMBDA, CLOUD_FUNCTION) land; ECS_SERVICE already flows through it today (landed concurrently
+      by another slot, `deployment-api@c90eaf4`, verified by rebase). New tests:
+      `test_counts_by_kind_omits_absent_kinds` (pure function) + `test_inventory_route_kind_filter` + `counts_by_kind`
+      assertions in `test_inventory_route_mock_shape`. QG green (sentinel 9353d28, 142s).
 
 ### Rich per-target fields + wire contract
 
@@ -172,6 +183,17 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **Kind counts + filter extended to all 6 DeploymentKind values** (slot 15): `deployment-api@9353d28`
+  (`deployment_api/routes/deployments_inventory.py`) — UAC `DeploymentKind` already carried all 6 kinds, so this was
+  purely the inventory-route half: a `kind=` query filter (same case-insensitive pattern as `umbrella`/`cloud`/`status`)
+  - a `counts_by_kind: dict[str, int]` rollup on `DeploymentInventoryResponse`, additive alongside the legacy
+    `vm_count`/`cloud_run_job_count` (kept for UI back-compat). `counts_by_kind` only keys a kind actually present
+    post-filter — a kind whose census hasn't shipped or failed this cycle is simply absent, never a fabricated `0`; this
+    generic layer needs no changes as the remaining census todos (CLOUD_RUN_SERVICE/LAMBDA/CLOUD_FUNCTION) land.
+    ECS_SERVICE already flows through it today (landed concurrently, `deployment-api@c90eaf4` — rebased cleanly, one
+    one-line docstring conflict). New tests: `test_counts_by_kind_omits_absent_kinds`,
+    `test_inventory_route_kind_filter`, `counts_by_kind` assertions in `test_inventory_route_mock_shape`. QG green
+    (sentinel 9353d28, 142s).
 - 2026-07-09 — **Tier-0 free wins surfaced** (slot 15): `deployment-api@517bbbe`
   (`deployment_api/routes/deployments_inventory.py`) — the GCE aggregated-list join (`get_vm_instance_details`,
   previously discarded down to just the running-VM-name set) is now threaded through `_load_gcp_vm_entries` ->
