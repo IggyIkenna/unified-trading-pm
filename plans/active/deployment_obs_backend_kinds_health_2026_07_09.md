@@ -125,9 +125,19 @@ source: deployment_observability_expansion_2026_07_08.md
       `aggregated_list` / EC2 / Run-execution lists already fetched.
 - [ ] [BACKEND] P1. **Composite health status** (parent D.3) replacing `_vm_status` — VM 7-state + the
       per-lifecycle-class `stalled` threshold table (progress-metric primary, cpu secondary, never a global CPU cut).
-- [ ] [BACKEND] P1. **Service-health sub-taxonomy** (parent D.3) — `serving`/`scaled-to-zero`/`dead`/`degraded` from ECS
-      desired-vs-running (and Cloud Run ready-state/revision); services always emit a row. Read-only in v1 (no
-      controls).
+- [x] ✅ [BACKEND] P1. **Service-health sub-taxonomy** (parent D.3) — `serving`/`scaled-to-zero`/`dead`/`degraded` from
+      ECS desired-vs-running (and Cloud Run ready-state/revision); services always emit a row. Read-only in v1 (no
+      controls). — deployment-api@eda5be5. `ecs_service_health_status()` + `cloud_run_service_health_status()`
+      (`deployments_inventory.py`) are pure classifiers implementing the exact D.3 state set — `scaled-to-zero` wins on
+      `desired_count<=0` (or Cloud Run `min_instance_count<=0` + no active instances) regardless of stray running/active
+      counts (never flagged red for an intentional off switch); `dead` on `desired>0, running==0` (ECS) or
+      `ready is False` (Cloud Run, and takes priority over scale-to-zero config); `degraded` on partial capacity
+      (`0<running<desired`), unknown ready-state, or error-rate over a v1 0.05 threshold (undocumented SLO in the plan,
+      tune later); `serving` otherwise. 15 unit tests (`test_service_health_taxonomy.py`) pin every state + boundary
+      (threshold is `>` not `>=`, dead beats scaled-to-zero on priority). NOT yet wired to live inventory rows — the
+      `ECS_SERVICE`/`CLOUD_RUN_SERVICE` census this consumes (this plan's kinds-census todos, still unchecked) hasn't
+      landed, and `DeploymentKind` doesn't carry those kinds yet; these are the reusable status-derivation half, ready
+      for that census to call once it ships. QG green (sentinel eda5be5).
 - [ ] [BACKEND] P2. **`/deployments/{id}/detail`** endpoint serving the rolling window (popover); the thin list carries
       only the composite + headline numbers.
 - [ ] [BACKEND] P2. **Alerts** on `oom-risk` (before the kill) + `stalled` (progress flatlines, heartbeat fresh) — wire
@@ -145,6 +155,19 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **Service-health sub-taxonomy shipped** (slot 4): `deployment-api@eda5be5`
+  (`deployment_api/routes/deployments_inventory.py`) — `ecs_service_health_status()` +
+  `cloud_run_service_health_status()` implement the D.3 4-state set (`serving`/`scaled-to-zero`/`dead`/`degraded`) as
+  pure, testable classifiers (mirrors the existing local `_vm_status` pattern). `scaled-to-zero` is checked first so an
+  intentional `desired_count==0` (or Cloud Run `min_instance_count==0` + no active instances) never reads red; `dead`
+  fires on `desired>0, running==0` or Cloud Run `ready is False` (priority over scale-to-zero config — "should be up,
+  isn't" beats "configured off"); `degraded` covers partial capacity, unknown ready-state, and an over-threshold
+  error-rate (v1 default 0.05, undocumented SLO — no committed number in the plan, revisit with operator feedback). 15
+  unit tests (`tests/unit/test_service_health_taxonomy.py`) pin every state + the two boundary cases (`>` not `>=` on
+  the error-rate threshold; dead-beats-scaled-to-zero priority). **Not yet wired to live inventory rows** — this plan's
+  `ECS_SERVICE`/`CLOUD_RUN_SERVICE` kinds-census todos (still unchecked, `DeploymentKind` doesn't carry those kinds yet)
+  are the prerequisite census that will call these; scoped this way to avoid duplicating/colliding with those
+  separately-tracked todos. QG green, sentinel=eda5be5.
 - 2026-07-09 — **Cloud Run jobs census made DYNAMIC** (slot 12): `deployment-api@9d50835`
   (`deployment_api/routes/deployments_inventory.py`) — `build_inventory` now iterates the LIVE job set
   (`cloud_run_status` keys, already fetched by `latest_execution_by_job`'s `run_v2.JobsClient.list_jobs`, no new API
