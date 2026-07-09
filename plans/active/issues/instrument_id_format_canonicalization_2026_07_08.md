@@ -675,7 +675,21 @@ zero error rate (no active correctness signal, unlike DEX-pool), left running to
 **explicitly recommended for a VM move if the laptop is closing within the next several hours** (same
 `canonical-migration-prediction-` registered prefix, no file upload needed, same command as the local invocation).
 
-- **2026-07-09 — GENERALIZED FINDING + DECISION: legacy GCS filename/path conventions are a systemic risk, not just an
+**UPDATE 2026-07-09 — Prediction shard4c + shard5b also moved to VMs, both confirmed healthy.** Re-verified real current
+state before acting (still multi-hour, 0-1 flat errors, not climbing) and script idempotency (copy-to-new-key
+
+- `gcs_describe_object` pre-check = safe to kill/resume anywhere). `launch-canonical-migration-vm.sh prediction`'s
+  hardcoded `_script_for` mapping points at a different, older tool — followed the same precedent as the tradfi/defi
+  moves (direct `gcloud compute instances create` under the registered `canonical-migration-prediction-` prefix with a
+  custom `VM_MIGRATION_CMD`, same startup-script/labels/metadata shape). Launched
+  `canonical-migration-prediction-20260709-163134-shard4c` and `-shard5b`; health verified via real GCS-streamed
+  `run.log` content before killing the local PIDs (the other, untouched 3 local processes are unaffected). Real speedup:
+  shard4c 21→71 obj/s (~3.4x), shard5b 14.2→86 obj/s (~6x). New real ETA: shard5b ~2-2.5h (single POLYMARKET phase),
+  shard4c ~4-5h total (KALSHI phase then POLYMARKET phase run sequentially). **Only one long-running local job remains:
+  on-chain-perp HL/ASTER (~5-6h), deliberately left per the sunk-cost reasoning above** — needs an operator call if the
+  laptop is closing within that window.
+
+* **2026-07-09 — GENERALIZED FINDING + DECISION: legacy GCS filename/path conventions are a systemic risk, not just an
   on-chain-perp issue.** The on-chain-perp full-historical-sweep branch found that a real GCS narrow-prefix listing (not
   the manifest's summary count) shows ~99% of "captured" HL/ASTER historical objects (~19,255 of 19,435) sit under an
   EVEN OLDER bare-symbol filename shape (`AAVEUSDT.parquet`, `AAVE-PERP.parquet` — no venue, no type marker in the name
@@ -690,7 +704,7 @@ zero error rate (no active correctness signal, unlike DEX-pool), left running to
   migrated to it — not just the already-known target-format gap this doc's findings 1-6 describe, but genuinely
   unknown-until-audited older shapes the way this one was. Dispatched as a dedicated discovery+migration workflow, see
   Orchestration state below.
-- **2026-07-09 — `wf_118d8268-18c` onchain-perp venue-family slice (HYPERLIQUID/ASTER/PACIFICA-SOLANA/
+* **2026-07-09 — `wf_118d8268-18c` onchain-perp venue-family slice (HYPERLIQUID/ASTER/PACIFICA-SOLANA/
   EXTENDED-STARKNET/LIGHTER-ZKSYNC) — real discovery + code fix + historical migration, MTDS.** Real discovery (live
   `gcloud storage`/parquet reads, not guesses) confirmed all 5 venues' raw-tick `symbol` column diverges from the
   `BASE-QUOTE@LIN` target: ASTER emitted the raw concatenated exchange symbol (`"BTCUSDT"`, no dash); HYPERLIQUID's S3
@@ -726,7 +740,7 @@ zero error rate (no active correctness signal, unlike DEX-pool), left running to
   Full write-up + the LIGHTER-ZKSYNC market_id→symbol table (live-verified 2026-07-09 via
   `mainnet.zklighter.elliot.ai/api/v1/orderBookDetails`): `market-tick-data-service/docs/canonical-write-conventions.md`
   § "On-chain-perp `symbol` canonicalization".
-- **2026-07-09 — CeFi legacy GCS naming-convention audit (the generalized finding's CeFi half) — COMPLETE, real gap
+* **2026-07-09 — CeFi legacy GCS naming-convention audit (the generalized finding's CeFi half) — COMPLETE, real gap
   found + fixed for OKX-SWAP/OKX-FUTURES, no gap for the other 4 target venues.** Real GCS listing (not the manifest
   summary — one flat `gsutil ls -r` over `instruments-store-cefi-prd-central-element-323112`'s
   `instrument_availability/by_date/`, 110,636 real objects, single walk) across BINANCE-FUTURES, BINANCE-DELIVERY,
@@ -774,7 +788,7 @@ zero error rate (no active correctness signal, unlike DEX-pool), left running to
     (`instruments-service/scripts/legacy_naming_audit_dexpool_ghost_venue_merge_2026_07_09.py`) — not this entry's
     scope; see that script/its own commit for DeFi-side real findings.
 
-- **2026-07-09 — DeFi legacy GCS naming-convention audit + migration COMPLETE** (the DeFi half of the generalized
+* **2026-07-09 — DeFi legacy GCS naming-convention audit + migration COMPLETE** (the DeFi half of the generalized
   finding immediately above; `wf_9e5f13e3-962`'s DeFi scope). Real, narrow (single-venue-prefix) GCS listings — not the
   manifest summary — against `instrument_availability/by_date/` in BOTH `instruments-store-defi-prd-{pid}` (2,363 real
   day-partitions, 2020-01-20..2026-07-09) and the legacy env-less `instruments-store-defi-{pid}` (2,315, confirmed
