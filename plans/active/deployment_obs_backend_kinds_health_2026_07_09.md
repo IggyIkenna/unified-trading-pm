@@ -94,9 +94,16 @@ source: deployment_observability_expansion_2026_07_08.md
       static registry) — this sandboxed worker slot has no working `gcloud` (snap confinement blocks it here), so no
       fresh live diff was re-run; the fix + a new regression test (`test_off_pattern_live_cloud_run_job_is_not_hidden`)
       prove an off-pattern job now surfaces instead of hiding.
-- [ ] [BACKEND] P2. Add `LAMBDA` census — existence + config via `list_functions` (`cloud=AWS`). NOTE: invocation/error
-      stats are CloudWatch-only (no host/cgroup on Lambda) — the ONE scoped exception to principle 4; default to
-      existence-only and add a CloudWatch call ONLY if Lambda health proves worth it.
+- [x] ✅ [BACKEND] P2. Add `LAMBDA` census — existence + config via `list_functions` (`cloud=AWS`). NOTE:
+      invocation/error stats are CloudWatch-only (no host/cgroup on Lambda) — the ONE scoped exception to principle 4;
+      default to existence-only and add a CloudWatch call ONLY if Lambda health proves worth it. —
+      deployment-service@7c8b210 + deployment-api@050d9a4. `list_lambda_census()` (single paginated `list_functions`
+      call, no per-function `describe`/`list_tags` N+1) + `_lambda_item()` (classifies by `FunctionName`, same
+      name-based resolution as Cloud Run jobs) → `DeploymentItem(kind=LAMBDA)`, existence-only status from `State`
+      (Active/Pending/Failed/Inactive → running/pending/failed/stopped), no CloudWatch call. Landed + merged alongside 2
+      concurrently-shipped sibling census todos on this same plan (ECS_SERVICE @ deployment-service/deployment-api, the
+      DeploymentKind 6-kind UAC extension) — 3-way conflict resolution kept all three kinds' code paths. QG green both
+      repos (sentinels 7c8b210 / 050d9a4).
 - [ ] [BACKEND] P2. Add `CLOUD_FUNCTION` (gen2) census — `functions list`; note gen2 = Cloud Run underneath.
 - [x] ✅ [BACKEND] P1. Extend `DeploymentKind` (UAC) + the inventory route's kind counts + filters to the 6 kinds; keep
       honest degradation (a census failure for one kind never blocks the others). — deployment-api@9353d28. UAC
@@ -217,6 +224,26 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **LAMBDA census shipped** (slot 4): `deployment-service@7c8b210`
+  (`deployment_service/backends/aws_census.py`) adds `AwsLambdaFunctionCensus` + `list_lambda_census()` — one paginated
+  `list_functions` call, deliberately no per-function `describe`/`list_tags` follow-up (avoids an N+1; classification is
+  by `FunctionName`, the same name-based resolution Cloud Run jobs already use, not tags). `deployment-api@050d9a4`
+  (`deployment_api/routes/_aws_deployments.py`) wires it: `_lambda_item()` classifies via
+  `classify_deployment_target(kind=DeploymentKind.LAMBDA)`, status from `State` only (Active/Pending/Failed/Inactive →
+  running/pending/failed/stopped) — no CloudWatch call, per the plan's existence-only default. Landed through TWO 3-way
+  merge conflicts against concurrently-shipped sibling work on this same plan: the ECS_SERVICE census
+  (deployment-service/deployment-api) and the DeploymentKind 6-kind UAC extension (`unified-api-contracts`) — my own UAC
+  `DeploymentKind.LAMBDA` addition turned out fully redundant with the other slot's more complete 6-kind extension
+  (`CLOUD_RUN_SERVICE`/`ECS_SERVICE`/`LAMBDA`/`CLOUD_FUNCTION` all at once), so it was dropped rather than duplicated.
+  Also fixed a pre-existing STEP-5.101 empty-string-fallback baseline breach in `deployment-service` (94 > 91, unrelated
+  3 script files) that was blocking `quality-gates.sh` for the whole repo — noqa-marked/rewrote to fail-fast, back to 89
+  ≤ baseline 91. Filed `plans/active/issues/uac_ws_cassette_coexistence_dex_swap_uniswap_v3_2026_07_09.md` for an
+  unrelated pre-existing `unified-api-contracts` QG blocker (STEP 5.7X WS cassette coexistence, broken by
+  `mtds@d02cf88f`'s real `dex_swap_uniswap_v3_ws` connector landing with no matching cassette) discovered while shipping
+  this — cross-repo, blocks quickmerge for all of UAC, tracked separately since it's out of DeFi-craft scope for this
+  task. New/updated tests: `test_build_aws_inventory_classifies_lambda_functions`,
+  `test_build_aws_inventory_lambda_defaults_to_empty_list`, `test_list_lambda_census_discovers_deployed_function`
+  (moto). QG green both repos (sentinels 7c8b210 / 050d9a4).
 - 2026-07-09 — **Composite health status + hang detection shipped** (slot 12): `deployment-api@f5f6ff4`
   (`deployments_inventory.py`) — additive `DeploymentItem.composite_health_status` (renamed from an initial
   `health_status` to avoid a real field-name collision with the concurrently-shipped Tier-0 free-wins commit's OWN
