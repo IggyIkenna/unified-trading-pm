@@ -1477,10 +1477,28 @@ if [ "$BUILD_LDR" = true ]; then
   echo "[$REPO_NAME] 🏗️  --build: stamping 'Build-LDR: true' trailer → opt-in LDR image build"
 fi
 
-if [ -z "$(git diff --cached --name-only)" ] && [ -z "$(git status --porcelain)" ]; then
-  # Nothing staged and working tree is clean — changes were already committed
+# RE-ASSERT --files SCOPE (same discipline as the pre-commit-modified-files retry below):
+# a shared, non-isolated working tree can have OTHER agents' concurrent foreign dirty files
+# at the exact moment quickmerge runs (observed 2026-07-09: --files pointed at already-
+# committed paths, but an unrelated tree-wide `git status --porcelain` check saw foreign
+# WIP and fell through to a doomed `git commit` with nothing staged, hard-failing the whole
+# run). When --files is set, only THOSE paths need to be clean to conclude "already
+# committed, safe to push" — the unscoped path is unaffected and still requires a fully
+# clean tree (the caller owns the whole tree there).
+_QM_ALREADY_COMMITTED=0
+if [ -z "$(git diff --cached --name-only)" ]; then
+  if [ -n "$FILES_ARG" ]; then
+    # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
+    [ -z "$(git status --porcelain -- $FILES_ARG)" ] && _QM_ALREADY_COMMITTED=1
+  elif [ -z "$(git status --porcelain)" ]; then
+    _QM_ALREADY_COMMITTED=1
+  fi
+fi
+
+if [ "$_QM_ALREADY_COMMITTED" = 1 ]; then
+  # Nothing staged and (--files paths | whole tree) clean — changes were already committed
   # in a previous quickmerge run. Skip commit and go straight to push + PR.
-  echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed. Proceeding to push."
+  echo "[$REPO_NAME] ℹ️  Working tree clean (scoped to --files, if set) — changes already committed. Proceeding to push."
 elif ! git commit -m "$_QM_COMMIT_MSG" --quiet; then
   # Pre-commit may have modified files (e.g. Prettier). Re-stage and retry once.
   # RE-ASSERT --files SCOPE: a hook that reformats files must NOT let `git add -A`
