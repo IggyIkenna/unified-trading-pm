@@ -96,8 +96,12 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ### VM / service work-health (capture → store → API)
 
-- [ ] [INFRA] P0. **Enrich the heartbeat** — the daemon loop samples the D.1 vector from `/proc` (psutil or raw, no new
-      dep) + `mem_slope` from a rolling window; stamp onto the registry entry each tick.
+- [x] [INFRA] P0. ✅ **Enrich the heartbeat** — the daemon loop samples the D.1 vector from `/proc` (psutil or raw, no
+      new dep) + `mem_slope` from a rolling window; stamp onto the registry entry each tick. —
+      `unified-trading-library@6da762b3` (new `HostMetricsSampler`, wired into `HeartbeatDaemon.heartbeat_once`) +
+      `deployment-service@a6881d1` (D.1 fields on `DeploymentRegistryEntry` + `heartbeat_cli.py` wiring). Sampled
+      fields: cpu_pct/mem_pct/mem_slope/disk_pct/io_write_rate_bytes_sec/net_recv_rate_bytes_sec. `object_delta` +
+      `workload_alive` are separate todos below (manifest lookup / `kill -0 CMD_PID`), not part of this one.
 - [ ] [INFRA] P0. **Workload-PID liveness** — shell passes `CMD_PID`; daemon includes
       `workload_alive = kill -0 CMD_PID`. Kills the OOM-false-alive without the exit-file race.
 - [ ] [INFRA] P1. **`parse_counters` tail-read fix** — seek-to-end / read last ~64 KB, not `read_text()` on a multi-GB
@@ -128,6 +132,15 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **D.5 "Enrich the heartbeat" shipped** (slot 6): new `HostMetricsSampler`
+  (`unified_trading_library.lifecycle.host_metrics`, `unified-trading-library@6da762b3`) samples
+  cpu_pct/mem_pct/disk_pct/io_write_rate_bytes_sec/net_recv_rate_bytes_sec via psutil (no new dep) + a rolling-window
+  `mem_slope`; wired into `HeartbeatDaemon.heartbeat_once()` so it samples + stamps onto `entry.metadata` every
+  heartbeat tick (shard-level failure isolation — a sampler exception logs + skips the tick, never breaks it).
+  `deployment-service@a6881d1` adds the 6 fields to `DeploymentRegistryEntry` (0.0 defaults so pre-2026-07-09 registry
+  rows keep loading) + wires `heartbeat_cli.py`'s `_entry_to_registry` / `_registry_to_entry` / `_vm_payload` to carry
+  them. Out of scope for this todo (separate D.5 todos): `object_delta` (manifest lookup) and `workload_alive`
+  (`kill -0 CMD_PID`).
 - 2026-07-09 — Created from the LOCAL parent (`deployment_observability_expansion_2026_07_08.md`) after all 8 open
   questions were resolved. Backend v1 scope: kinds census + rich fields + composite/service work-health, all
   cheap/central/free (no Cloud Monitoring/CloudWatch, no per-workload instrumentation). Cost-per-target (WS-E) and typed
