@@ -2,7 +2,7 @@
 doc_type: issue
 title:
   Sports manifest has 2,373 real rows with league_id="UNKNOWN", spanning all 17 sports data_types, ongoing through today
-  (2025-12-15 → 2026-07-08) — root cause not yet pinned to a write call site
+  (2025-12-15 → 2026-07-08) — RESOLVED 2026-07-09, root cause pinned + fixed + backfilled
 summary: |
   While investigating why the real sports reference catalog (prod/catalog.parquet) is bare (116 rows, all
   league-grain), found the catalog's single instrument_id="UNKNOWN" row is the DEDUPED tip of a much bigger bug:
@@ -11,23 +11,26 @@ summary: |
   PLAYER_VALUES, etc.), dated 2025-12-15 through 2026-07-08 (today) — i.e. this is an ONGOING, currently-active
   write-path bug, not a historical artifact. Confirmed the per-fixture-entity write path
   (sports_reference_fixtures.py) explicitly guards against unmapped-league bare writes, so it is NOT the source.
-  Root cause not yet traced to a specific write call site — needs a dedicated investigation, not folded into the
-  broader catalog-grain-scoping plan.
-status: open
+  RESOLVED 2026-07-09: root cause pinned to a catalogue↔enumerator feedback loop
+  (build_instrument_catalogue.build_sports_catalogue_from_manifest + enumerate_expected_universe._enumerate_v2_sports),
+  fixed at both layers, and backfilled against real prod data (1 catalogue row + 2,373 manifest rows removed,
+  0 remaining verified). See "Resolution (2026-07-09)" below for full evidence.
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
 repos: [instruments-service]
 scope: [engineer]
-tags: [sports, manifest, league-id, data-correctness, honest-coverage, write-path, ongoing-bug]
+tags: [sports, manifest, league-id, data-correctness, honest-coverage, write-path, resolved]
 related:
   [
     plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
     instruments-service/docs/SPORTS_INSTRUMENTS.md,
     codex/02-data/availability-manifest-and-data-status.md,
+    plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
   ]
 created: 2026-07-08
-last_updated: 2026-07-08
+last_updated: 2026-07-09
 parent_epic: sports_master
 priority: P1
 source:
@@ -39,7 +42,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: sub-agent dispatch (slot-3), 2026-07-09 — code fix + real prod backfill + verification
 audited_scope: data-correctness
 ---
 
@@ -153,3 +156,64 @@ their `capture_status` / `venue` / `source` columns directly (not just counted t
   migration (operator's stated preferred mechanic) once the correct per-row league_id can be derived with confidence
   (e.g. from `fixture_id`/`date` cross-referenced against the real per-league fixtures parquet for that date, for the
   data_types that carry a `fixture_id`).
+
+## Resolution (2026-07-09)
+
+Root cause pinned same-day by a separate audit pass
+(`plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md` item A1) and fixed + backfilled by this
+dispatch. **Not a per-row-mislabel bug needing a rewrite migration** (the earlier "recommended next step" above) — these
+were all bookkeeping rows (`expected_unattempted`/`empty_confirmed`/10 zero-count `captured`) minted by a feedback loop,
+so the correct fix is DELETE, not rewrite-in-place.
+
+**Root cause — catalogue↔enumerator feedback loop:**
+
+- `instruments-service/scripts/build_instrument_catalogue.py`'s `build_sports_catalogue_from_manifest()` (~L1237,
+  pre-fix) rolled the manifest into one catalogue row per distinct `league_id`, filtering only `league_id != ""` — it
+  did NOT exclude the `"UNKNOWN"` sentinel, so it minted a real, persisted catalogue row
+  `instrument_id="UNKNOWN"/league_id="UNKNOWN"` in `prod/catalog.parquet`.
+- `instruments-service/scripts/enumerate_expected_universe.py`'s `_enumerate_v2_sports()` (~L1935, pre-fix) did
+  `league_id = instr.league_id or instr.instrument_id` with no sentinel guard, read that phantom catalogue row back, and
+  emitted one row per sports data_type × every alive day for it — the amplifier that grew the 2,373 manifest rows,
+  recurring daily via the `enum-universe-sports-*` cron.
+- The literal `"UNKNOWN"` seed traces to
+  `instruments_service/reference_data/adapters/sports/adapters/api_football_reference.py:165` (fallback for a fixture
+  with empty `league.name`) — frozen since the 2026-06-24 `_is_in_canonical_write_universe` write-universe gate; not
+  touched by this fix.
+
+**Code fix (both layers):**
+
+1. `build_sports_catalogue_from_manifest()` now excludes `SPORTS_LEAGUE_ID_SENTINELS` (`{"UNKNOWN"}`, case-insensitive)
+   before the roll-up. Deliberately a NARROW sentinel check, not a full `LEAGUE_REGISTRY` membership check — verified
+   against the real prod catalogue that 22 real leagues (raw numeric long-tail ids, `LA_LIGA_2`, `RFPL`,
+   `SCOTTISH_LEAGUE_CUP_185`) are not in `LEAGUE_REGISTRY`; a membership-based filter would have wrongly dropped all 22.
+2. `_enumerate_v2_sports()` carries a matching defense-in-depth sentinel guard so it can never re-amplify a phantom
+   league into expected/empty rows even if one somehow re-enters the catalogue.
+3. Regression tests added:
+   `tests/unit/scripts/test_build_instrument_catalogue.py::test_sports_catalogue_from_manifest_excludes_sentinel_league_ids`,
+   `tests/unit/scripts/test_enumerate_expected_universe_v2.py::test_sports_v2_sentinel_league_id_never_emits_rows`.
+
+**Backfill (real prod GCS, `instruments-store-sports-prd-central-element-323112`, 2026-07-09):**
+
+- Verified before deleting: `prod/catalog.parquet` had exactly 1 `league_id="UNKNOWN"` row;
+  `_index/availability_index.parquet` had exactly 2,373 (1,352 `expected_unattempted` + 1,011 `empty_confirmed` + 10
+  `captured`, all 10 `instrument_count=0` with `error_reason="reconciled_from_existing_per_league_parquet"` written once
+  2026-05-01 — the frozen bootstrap rows, no real captured data found under the sentinel beyond them, matching this
+  doc's 2026-07-08 follow-up finding exactly). Two `_index/per_vm/*.parquet` shards checked: 0 `UNKNOWN` rows in either
+  — no per-VM cleanup needed.
+- Backed up both objects first (`prod/catalog.20260708-234112.unknown_league_backfill.bak.parquet`,
+  `_index/availability_index.20260708-234112.unknown_league_backfill.bak.parquet`), then deleted: catalogue 116 → 115
+  rows; manifest index 2,373 rows removed.
+- Script: `instruments-service/scripts/backfill_remove_unknown_league_phantom_2026_07_09.py` (`--dry-run` / `--apply` /
+  `--verify-only`; hard-aborts before writing if any `captured` row under the sentinel has non-zero `instrument_count`).
+
+**Verification the loop is broken (not just patched at one layer):**
+
+- Post-backfill `--verify-only`: 0 sentinel rows remaining across catalog, manifest index, and per-VM shards.
+- Re-downloaded the LIVE post-backfill manifest and ran it through the PATCHED `build_sports_catalogue_from_manifest` —
+  0 `"UNKNOWN"` rows minted (proves a real catalogue rebuild against current prod data cannot resurrect the phantom).
+- Unit-level: constructed a synthetic `league_id="UNKNOWN"` catalog entry and ran it through the patched
+  `_enumerate_v2_sports` — 0 rows emitted for it, while a sibling real-league entry in the same call emitted rows
+  normally (control passed).
+
+Ship: `instruments-service` (code fix + tests + backfill script), `docs/SPORTS_INSTRUMENTS.md` (updated in place), this
+doc. Via quickmerge, quality-gates green.
