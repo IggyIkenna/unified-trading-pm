@@ -2,22 +2,44 @@
 doc_type: codex-ssot
 title: Quality Gates
 summary: >-
-  Workspace quality-gate SSOT — the gate-then-open model where quality-gates.sh runs
-  the full gate (lint/format/tests/typecheck/codex/security) and stamps a green-sentinel
-  SHA that quickmerge verifies before opening a PR; covers the STEP 5.x enforcement
-  catalogue, code limits, the CODEX_MAX_VIOLATIONS ≤5 ratchet, QG_SLICE CI parallel
+  Workspace quality-gate SSOT — the gate-then-open model where quality-gates.sh runs the full gate
+  (lint/format/tests/typecheck/codex/security) and stamps a green-sentinel SHA that quickmerge verifies before opening a
+  PR; covers the STEP 5.x enforcement catalogue, code limits, the CODEX_MAX_VIOLATIONS ≤5 ratchet, QG_SLICE CI parallel
   slices, and the security gates.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer]
 tags: [quality-gates, quickmerge, ci, ruff, basedpyright, security-gates, verification]
 related: [quality-gates-memory-governance.md, ruff-discipline.md, testing.md, setup-standards.md, semver.md]
 created: 2026-03-27
-authoritative_for: [quality-gates.sh gate-then-open model + STEP 5.x enforcement catalogue, CODEX_MAX_VIOLATIONS ratchet ceiling, QG_SLICE CI parallel-slice partitioning]
-referenced_by: [codex/02-data/data-pipeline-correctness-hard-rule.md, codex/05-infrastructure/deployment-and-qg-strategy.md, codex/05-infrastructure/quickmerge-architecture.md, codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md, codex/05-infrastructure/workspace-setup.md, codex/06-coding-standards/README.md, codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md, codex/06-coding-standards/audit-remediation-guide.md]
+authoritative_for:
+  [
+    quality-gates.sh gate-then-open model + STEP 5.x enforcement catalogue,
+    CODEX_MAX_VIOLATIONS ratchet ceiling,
+    QG_SLICE CI parallel-slice partitioning,
+  ]
+referenced_by:
+  [
+    codex/02-data/data-pipeline-correctness-hard-rule.md,
+    codex/05-infrastructure/deployment-and-qg-strategy.md,
+    codex/05-infrastructure/quickmerge-architecture.md,
+    codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md,
+    codex/05-infrastructure/workspace-setup.md,
+    codex/06-coding-standards/README.md,
+    codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md,
+    codex/06-coding-standards/audit-remediation-guide.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -1004,6 +1026,62 @@ enum extension).
   `ast.walk()` shape applied to the explicit-pipeline-mode problem.
 - `manifest_schema_final_gate_2026_05_09.md` Phase 4.MTDS / Phase 4.FEATURES / Phase 4.DEFAULT-REMOVAL — the successors
   that shrink the baseline to zero; Phase 4.GREP-VERIFY is the phase that shipped this checker + baseline.
+
+---
+
+## STEP 5.102: `ManifestWriter.record_*()` early-return missing `.write()`/`.flush()`
+
+Enforces the follow-up standing-guard todo from
+[`manifest_early_return_missing_write_loss_2026_07_09.md`](../../plans/active/issues/manifest_early_return_missing_write_loss_2026_07_09.md):
+a `record_*()` call only appends to the calling `ManifestWriter` INSTANCE's local buffer — `.write()`/`.flush()` is what
+moves those records into the module-level pending buffer that actually reaches GCS. An early-return guard block that
+calls `record_*()` in a loop then `return`s with no `.write()`/`.flush()` silently discards every honest-absence write
+on that path — while OTHER exit paths in the same function correctly call it. This exact anti-pattern was live in
+`understat.py`/`weather.py`/`footystats.py`'s calendar-guard blocks for their entire lifetime (fixed
+`instruments-service@920b303`, 10 sites) before this check existed.
+
+**Reference incident**: a one-off closer script re-fetched 413 residual dates, logged `processed=413 raised=0` / "ALL
+DATES RESOLVED", yet the manifest showed **zero** change even after a forced full consolidation — the fix path itself
+was silently no-op'ing via this exact pattern.
+
+### How it works
+
+1. **Record/write method sets** — in
+   [`unified-trading-pm/scripts/quality_gates/check_manifest_writer_missing_write_before_return.py`](../../scripts/quality_gates/check_manifest_writer_missing_write_before_return.py):
+   `RECORD_METHOD_NAMES` = the 7 buffer-appending `ManifestWriter` methods (`record_captured`,
+   `record_captured_from_counts`, `record_empty`, `record_expected_empty`, `record_expected_unattempted`,
+   `record_failed`, `record_zero_rows`); `WRITE_METHOD_NAMES` = `{write, flush}` (either persists).
+2. **Block-scoped sequential scan** — for each function (not descending into nested function/lambda scopes), each
+   literal statement-list block (function body, or an if/elif/else/for/while/try/except/with body) is walked in order
+   tracking, per variable, an "unflushed record pending" flag: a statement calling `V.record_*(...)` sets it; a
+   statement calling `V.write()`/`V.flush()` clears it. A `return` statement flags every variable still pending at that
+   point. Nested blocks get their own independent local state — this matches the real bug shape exactly (record-loop +
+   return as SIBLING statements in the same guard block) without needing full control-flow-graph reasoning.
+3. **"Other exit paths DO call it" gate** — a candidate finding for variable `V` is only kept if the SAME function has
+   at least one OTHER `return` where `V` was NOT pending (i.e. some other path correctly writes). This avoids flagging a
+   helper that legitimately never flushes on any path (the caller owns that instance's lifecycle) — exactly the framing
+   the issue doc asked for.
+4. **Baseline** — `manifest_writer_missing_write_baseline.yaml` is a **SHRINKING ratchet**; 0 entries at bootstrap
+   (2026-07-09) — a full workspace sweep the day this checker landed found 0 remaining occurrences (the 10 known sites
+   were already fixed same-day pre-checker).
+5. **QG wiring** — `scripts/quality-gates-base/base-service.sh` STEP 5.102, same per-repo-scope invocation shape as STEP
+   5.70. If the checker file is absent (older PM checkout), the STEP is skipped clean.
+
+### Adding a new occurrence? Don't — fix it instead.
+
+If STEP 5.102 fails on YOUR code, add the missing `.write()` (or `.flush()` for a fast-exit / guaranteed-drain path)
+immediately before the flagged `return`, matching the pattern every other exit path in the same function already uses.
+If the omission is genuinely deliberate (e.g. a dry-run/preview path that must never persist), add inline marker
+`# QG-allow: manifest-write-not-required` on the `return` line. Baseline edits are removal-only.
+
+### Composes with
+
+- STEP 5.70 (explicit `pipeline_mode=`) — same baseline-aware-ratchet + `ast.walk()` shape, same `ManifestWriter`
+  write-boundary concern, one layer earlier (persistence happening at all, vs. persistence being correctly attributed).
+- [`codex/02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md) — a dropped
+  `record_expected_empty()`/`record_empty()` write leaves the enumerator's `expected_unattempted` seed row stuck at its
+  blank-reason state — the same "eu residual" signature this whole codebase's honest-absence discipline hunts for, just
+  caused by the write path itself rather than upstream enumerator noise.
 
 ---
 

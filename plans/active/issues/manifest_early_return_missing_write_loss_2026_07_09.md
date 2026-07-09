@@ -125,11 +125,23 @@ blank-reason `expected_unattempted` for big-5 native leagues dropped from **185/
       fix landed 920b303 same day as most of these dates — the daily forward-poll needs to re-run against the fixed code
       to resolve them); flagged in the plan's Progress Log for whoever next picks up item #6. — unified-trading-pm (this
       doc, no code change needed; 920b303 already shipped by the prior session). Slot-4, 2026-07-09.
-- [ ] [SCRIPT] P2. Add a QG lint check (or extend an existing one, e.g. STEP 5.7x in
+- [x] ✅ [SCRIPT] P2. Add a QG lint check (or extend an existing one, e.g. STEP 5.7x in
       `codex/06-coding-standards/quality-gates.md`) that flags a `ManifestWriter`/`record_*()` call followed by a
       `return` with no `.write()`/`.flush()` on that variable before the function exits, when OTHER exit paths in the
       same function DO call it — generalizes this fix into a standing guard instead of relying on manual review. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — Wired as **STEP 5.102** (new checker, not an extension of 5.7x — those steps are unrelated
+      `pipeline_mode=`/other checks). `scripts/quality_gates/check_manifest_writer_missing_write_before_return.py`: AST
+      block-scoped scan (function-scoped, non-nested) tracking per-variable "unflushed record pending" state across
+      sequential statements per block; flags a `return` where a `record_*()`-called var has no preceding
+      `.write()`/`.flush()` in the SAME block, gated to only report when another exit path in the SAME function DOES
+      write (avoids flagging helpers that never flush on any path). Validated against ground truth: run against the
+      pre-fix (920b303~1) understat.py/weather.py/footystats.py/sfi.py — found the exact 10 known sites (0 false
+      positives/negatives vs. the hand-diagnosis), correctly silent on sfi.py (confirmed clean). Wired
+      `scripts/quality-gates-base/base-service.sh` STEP 5.102 (same per-repo-scope shape as STEP 5.70) +
+      `manifest_writer_missing_write_baseline.yaml` (0-entry bootstrap — a full workspace sweep found 0 remaining
+      occurrences) + doc section in `codex/06-coding-standards/quality-gates.md` +
+      `test_check_manifest_writer_missing_write_before_return.py` (10 unit tests). — unified-trading-pm (this session,
+      slot-4, 2026-07-09).
 - [x] ✅ [INVESTIGATE] P2. Audit whether the same early-return-no-write anti-pattern exists in non-sports orchestrators
       (TradFi/DeFi/CeFi calendar-guard paths) — the pattern is generic, not sports-specific; this session only scanned
       the sports orchestrator files named in the sibling plan. (repo: instruments-service) — **CLEAN, no bug found.**
