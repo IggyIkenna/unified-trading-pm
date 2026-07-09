@@ -191,8 +191,30 @@ source: deployment_observability_expansion_2026_07_08.md
       `ECS_SERVICE`/`CLOUD_RUN_SERVICE` census this consumes (this plan's kinds-census todos, still unchecked) hasn't
       landed, and `DeploymentKind` doesn't carry those kinds yet; these are the reusable status-derivation half, ready
       for that census to call once it ships. QG green (sentinel eda5be5).
-- [ ] [BACKEND] P2. **`/deployments/{id}/detail`** endpoint serving the rolling window (popover); the thin list carries
-      only the composite + headline numbers.
+- [x] ✅ [BACKEND] P2. **`/deployments/{id}/detail`** endpoint serving the rolling window (popover); the thin list
+      carries only the composite + headline numbers. — deployment-api@7c4265a. `GET /deployments/{name}/detail` (path
+      param is the wire `DeploymentItem.name` — VM/job/service name, not an orchestration `deployment_id`; distinct
+      3-segment template from `routes/deployments/`'s `/deployments/{deployment_id}/verify`, no collision) returns
+      `DeploymentDetailResponse` — the thin-list item plus the D.1 metrics vector
+      (`cpu_pct`/`mem_pct`/`mem_slope`/`disk_pct`/`io_write_rate_bytes_sec`/
+      `net_recv_rate_bytes_sec`/`workload_alive`). New `_vm_entry_by_name_cache` side-cache is populated as a side
+      effect of the SAME GCP census `_compute_inventory` already runs each cache cycle (zero new bucket walks/API
+      calls); 404 if the name isn't in the current cached inventory. **Honest scope note**: this serves the single
+      most-recent D.1 sample (overwritten in place each heartbeat tick) — NOT a persisted rolling window. The original
+      D.2 STORE design called for keeping the last ~10 samples on the registry entry so `mem_slope`/ "sustained idle"
+      have a trend to plot; that persistence never shipped (the "Enrich the heartbeat" todo above only stamps
+      single-point values). Filed as a new todo below rather than silently claiming more than this delivers. 3 new tests
+      (`test_detail_route_mock_shape`, `test_detail_route_unknown_name_404`,
+      `test_detail_route_live_path_includes_d1_metrics`). QG green (sentinel 7c4265a, 78s). Rebased twice onto
+      concurrent same-file landings (D.3 composite health `f5f6ff4`, AWS Lambda census `050d9a4`) — one duplicate-field
+      artifact from an auto-merge in the test file's `_FakeEntry` dataclass, caught + fixed before shipping.
+- [ ] [INFRA] P2. **Persist a short D.1 rolling window** (last ~10 samples) on the registry entry — today only a single
+      most-recent sample is stored (overwritten each heartbeat tick), so `mem_slope` / "sustained idle" have no real
+      trend to plot and the new `/deployments/{id}/detail` endpoint (above) can only serve a point-in-time snapshot, not
+      a sparkline. Per the original D.2 STORE design (parent `deployment_observability_expansion_2026_07_08.md` D.2):
+      extend `DeploymentRegistryEntry` with a bounded ring-buffer field (`unified-trading-library`/`deployment-service`,
+      mirrors the "Enrich the heartbeat" todo's scope) + surface it on `DeploymentDetailResponse` (`deployment-api`,
+      additive — the current single-sample fields stay for back-compat).
 - [ ] [BACKEND] P2. **Alerts** on `oom-risk` (before the kill) + `stalled` (progress flatlines, heartbeat fresh) — wire
       into the existing alerts surface.
 - [ ] [REVIEW] P2. Gate `/freshness` fetches to VM kinds only (services use error-rate health, not manifest freshness) —
@@ -224,6 +246,19 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **`/deployments/{name}/detail` drill-down endpoint shipped** (slot 15): `deployment-api@7c4265a`
+  (`deployment_api/routes/deployments_inventory.py`) — `DeploymentDetailResponse` (thin-list item + the D.1 metrics
+  vector) served via a new `_vm_entry_by_name_cache` side-cache populated as a side effect of the SAME GCP census
+  `_compute_inventory` already runs each cache cycle (zero new bucket walks). Path param is the wire
+  `DeploymentItem.name`, not an orchestration `deployment_id` — a distinct 3-segment route template from
+  `routes/deployments/`'s existing `/deployments/{deployment_id}/verify`, no collision. **Finding surfaced + tracked,
+  not absorbed**: the endpoint currently serves a single most-recent D.1 sample (each heartbeat tick overwrites the
+  registry entry's fields in place) rather than a true persisted rolling window — the original D.2 STORE design called
+  for keeping the last ~10 samples, but that was never actually shipped by the earlier "Enrich the heartbeat" todo.
+  Added a new `[INFRA] P2` todo above (rolling-window persistence) instead of silently claiming the endpoint delivers a
+  trend it can't yet plot. 3 new tests. QG green (sentinel 7c4265a, 78s). Rebased twice onto concurrent same-file
+  landings (D.3 composite health `f5f6ff4`, AWS Lambda census `050d9a4`) — caught and fixed one duplicate-field artifact
+  an auto-merge left in the test file's `_FakeEntry` dataclass before shipping.
 - 2026-07-09 — **LAMBDA census shipped** (slot 4): `deployment-service@7c8b210`
   (`deployment_service/backends/aws_census.py`) adds `AwsLambdaFunctionCensus` + `list_lambda_census()` — one paginated
   `list_functions` call, deliberately no per-function `describe`/`list_tags` follow-up (avoids an N+1; classification is
