@@ -138,8 +138,16 @@ source: deployment_observability_expansion_2026_07_08.md
       `deployment-service@a6881d1` (D.1 fields on `DeploymentRegistryEntry` + `heartbeat_cli.py` wiring). Sampled
       fields: cpu_pct/mem_pct/mem_slope/disk_pct/io_write_rate_bytes_sec/net_recv_rate_bytes_sec. `object_delta` +
       `workload_alive` are separate todos below (manifest lookup / `kill -0 CMD_PID`), not part of this one.
-- [ ] [INFRA] P0. **Workload-PID liveness** — shell passes `CMD_PID`; daemon includes
-      `workload_alive = kill -0 CMD_PID`. Kills the OOM-false-alive without the exit-file race.
+- [x] ✅ [INFRA] P0. **Workload-PID liveness** — shell passes `CMD_PID`; daemon includes
+      `workload_alive = kill -0 CMD_PID`. Kills the OOM-false-alive without the exit-file race. —
+      `unified-trading-library@0265663b` (`SignalProtocol.cmd_pid_file`/`read_cmd_pid()`/`workload_alive()` +
+      `HeartbeatDaemon._sample_workload_liveness()`, sampled every heartbeat tick, independent of the terminal
+      `exit_status_file` check) + `deployment-service@2794163` (`vm-exec-with-gcs-tee.sh` passes
+      `--cmd-pid-file "$PID_FILE"` to the daemon at launch — the daemon starts BEFORE `CMD_PID` exists so it reads the
+      file lazily each tick; `DeploymentRegistryEntry.workload_alive` (default `True`, honest-unknown) wired through
+      `_entry_to_registry`/`_registry_to_entry`/`_vm_payload`). `None` (unconfigured/not-yet-written/unparseable) never
+      overwrites the entry's prior value — only a resolved `kill -0` reading stamps `workload_alive`. QG green both
+      repos (UTL sentinel 0265663b, deployment-service sentinel 2794163).
 - [x] ✅ [INFRA] P1. **`parse_counters` tail-read fix** — seek-to-end / read last ~64 KB, not `read_text()` on a
       multi-GB log every tick (existing per-VM I/O waste at scale). — `unified-trading-library@b77c8592` (binary seek to
       the last `DEFAULT_TAIL_BYTES` (64 KiB) from EOF instead of `read_text()` loading the whole file).
@@ -183,6 +191,27 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **Workload-PID liveness shipped** (slot 7): `unified-trading-library@0265663b`
+  (`unified_trading_library/lifecycle/signal_protocol.py`, `daemon.py`) — `SignalProtocol` gains a `cmd_pid_file` field
+  - `read_cmd_pid()`/`workload_alive()` (`kill -0` semantics: `ProcessLookupError`→dead, `PermissionError`→alive-under-
+    another-UID, any other `OSError`→dead); `HeartbeatDaemon._sample_workload_liveness()` samples it every heartbeat
+    tick (independent of the terminal `exit_status_file` check in `complete()`, so a mid-run OOM-kill is visible before
+    the wrapper's final `wait` writes the exit status — "kills the OOM-false-alive without the exit-file race" per the
+    todo). `deployment-service@2794163` (`scripts/vm/vm-exec-with-gcs-tee.sh`, `deployment_service/vm/heartbeat_cli.py`,
+    `deployment_service/deployments_registry.py`) — the wrapper already captured `CMD_PID` into `$PID_FILE` (line 169);
+    it now also passes `--cmd-pid-file "$PID_FILE"` to the daemon at launch, even though the daemon starts BEFORE
+    `CMD_PID` exists (`read_cmd_pid()` tolerates the file not existing yet and returns `None`/"unknown", never "dead").
+    `DeploymentRegistryEntry.workload_alive: bool = True` (honest-unknown default, non-alarming for pre-2026-07-09 rows
+    and non-VM callers without a configured `cmd_pid_file`) wired through `_entry_to_registry`/`_registry_to_entry`/
+    `_vm_payload`. New tests: UTL `test_signal_protocol.py` (cmd-pid read/unparseable/own-pid-alive/fork-and-reap-dead)
+  - `test_daemon.py` (stamps on known PID, leaves untouched when unconfigured, stamps `False` once the wrapper PID
+    dies) + deployment-service `test_deployments_registry.py` (round-trip `False`, legacy-row defaults `True`). QG green
+    both repos (UTL sentinel 0265663b — a QG_HOST_CONCURRENCY=1 governor-token wait inflated the FIRST run's wall clock
+    to ~3100s, which failed only the sanctioned wall-clock meta-gate with every substantive check green; re-ran with
+    `IGNORE_TIMEOUT=true` per codex quality-gates.md's documented transient-contention escape, completing in 132-232s
+    once it actually held the token; deployment-service sentinel 2794163, 107s). Not yet wired into the deployment-api
+    inventory route / composite health status — that's this plan's separate "Composite health status" P1 todo, which
+    consumes `workload_alive` alongside the D.1 host-metric vector already shipped.
 - 2026-07-09 — **Kind counts + filter extended to all 6 DeploymentKind values** (slot 15): `deployment-api@9353d28`
   (`deployment_api/routes/deployments_inventory.py`) — UAC `DeploymentKind` already carried all 6 kinds, so this was
   purely the inventory-route half: a `kind=` query filter (same case-insensitive pattern as `umbrella`/`cloud`/`status`)
