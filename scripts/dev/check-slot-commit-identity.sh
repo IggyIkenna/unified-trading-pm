@@ -59,6 +59,15 @@ fixed=0
 
 check_repo() {
   local repo_dir="$1"
+  # A SYMLINKED repo dir is not a real clone — stamping through it hits the SYMLINK
+  # TARGET's config (live incident 2026-07-09: slot-10 carried symlinks to the main
+  # workspace's PM/UAC/UTL clones, so the slot-10 stamp landed in the ROOT clones'
+  # configs). Report + skip; the repair is re-provisioning the slot with real
+  # Path-B clones (setup-tab-worktrees.sh --add-slot N after removing the links).
+  if [ -L "${repo_dir}" ]; then
+    echo "SKIP   ${repo_dir} (symlinked repo dir → $(readlink "${repo_dir}") — not a real slot clone; re-provision)"
+    return 0
+  fi
   [ -e "${repo_dir}/.git" ] || return 0
   checked=$((checked + 1))
 

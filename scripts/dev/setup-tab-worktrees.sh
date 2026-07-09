@@ -319,6 +319,14 @@ ensure_repo_worktree() {
     # Contention is deferred to LDR push-time (rebase-on-reject, quickmerge STAGE 0.4). The
     # `tab/<op>/N` tab-branch model is RETIRED. SSOT: worktree_ldr_unification_2026_06_08.md.
     local base url; base="$(base_branch_for_repo "${repo}")"
+    if [[ -L "${slot_repo_dir}" ]]; then
+        # A symlinked "clone" points at ANOTHER checkout (observed 2026-07-09: slot-10
+        # symlinked PM/UAC/UTL to the main workspace clones) — any config/identity write
+        # through it hits the TARGET. Never treat it as provisioned; require manual
+        # removal so the re-run can create a real Path-B clone.
+        err "  BAD  ${repo}: ${slot_repo_dir} is a SYMLINK → $(readlink "${slot_repo_dir}") — remove it, then re-run --add-slot ${slot}"
+        return 1
+    fi
     if [[ -d "${slot_repo_dir}/.git" ]]; then
         # Already a Path-B clone → re-assert identity + FF to LDR (idempotent re-run).
         git -C "${slot_repo_dir}" config user.name "${CANON_GIT_NAME} [slot-${slot}·${WORKTREE_HOST}]" 2>/dev/null || true

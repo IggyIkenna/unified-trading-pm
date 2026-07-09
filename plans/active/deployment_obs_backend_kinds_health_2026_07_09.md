@@ -67,13 +67,56 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ### 🔴 Census hang — real-data blocker (found 2026-07-09, operator takeover)
 
-- [ ] [BACKEND] P0. **Inventory census must not hang** — `GET /api/deployments/inventory` blocks >240 s (0 bytes) on the
-      new-contract backend. Bound EACH provider census (GCE / Cloud Run jobs+services / ECS / Lambda / Cloud Functions)
-      with a client-side timeout and wrap it in try/except so one slow/hanging provider degrades to an honest absence
-      for that KIND (per WS-B) instead of blocking the whole inventory. Fix the unbounded `.result()` collection
-      (`deployments_inventory.py:1207-1209` + the AWS/Cloud-Run census fan-out). Reproduce against a locally-run
-      backend, verify `/inventory` returns <10 s warm, then point the slot-5 live UI at it. Fold in the file-split
-      (the >1000-line todo below) since this touches the same file.
+- [x] ✅ [BACKEND] P0. **Inventory census must not hang** — `GET /api/deployments/inventory` blocked >240 s (0 bytes) on
+      the new-contract backend: the GCP censuses ran serially with no per-provider timeout/isolation, so one wedged RPC
+      blocked the whole inventory (only `_load_gcp_vm_entries`/`_load_aws_items` were wrapped, and the VM one _raised_
+      502 rather than degrading). — **deployment-api@720697d**. New `_census_or_degrade()` + a dedicated `_census_pool`:
+      each provider census (GCE VM registry / Cloud Run jobs / Cloud Run services / Cloud Functions / AWS) runs on its
+      own worker, **wall-clock bounded (`_PROVIDER_CENSUS_TIMEOUT_SEC` = 45 s)**, and degrades to an honest EMPTY census
+      for its own KIND on hang/error (WS-B / shard-level isolation) — never blocks or crashes the inventory.
+      `_compute_inventory` now **fans the censuses out concurrently** (cold path ≈ slowest single census, not their sum)
+      and **no longer 502s** on a VM-registry failure (degrades so the rest of the estate still shows). Root-cause
+      hardening: **client-level RPC `timeout=30 s`** on every GCP list/aggregated call (`vm_utils` ×4, Cloud Run
+      jobs/executions, services, functions) — a wedged RPC unwinds its worker (`DeadlineExceeded`, caught → empty)
+      instead of leaking + starving the census pool. 3 regression tests (helper exception + timeout paths; a route-level
+      proof that a hung services census degrades while VM/jobs/functions/AWS still return, bounded <10 s) + 3 fake GCP
+      clients updated for the `timeout` kwarg. QG green (typecheck + 4360 tests; the only 3 failures are a pre-existing
+      unrelated uniswap schema-override break in `test_data_status_drilldown.py`, another slot's UAC change — not this
+      diff). Runtime-verified against a locally-run backend (see Progress Log). **File-split kept SEPARATE**
+      (the >1000-line P3 below) — deliberately NOT folded in, to keep this correctness-critical fix focused + low-risk
+      while the plan is being finished here; the split remains its own open P3.
+
+### 🟡 Runtime findings from the live P0 verification (2026-07-09)
+
+- [x] ✅ [BACKEND] P1. **Object-delta `str > int` TypeError** — `object_delta_for_bucket` raised
+      `'>' not supported between 'str' and 'int'` when the availability index stored `row_count`/`instrument_count` as
+      an object/string dtype, silently degrading EVERY object-delta to `None` and breaking the composite-health
+      `working`/`stalled` signal that reads it. Fixed with `pd.to_numeric(errors="coerce").fillna(0)` before the `> 0`
+      comparison + a string-dtype regression test (`test_object_delta_for_bucket_coerces_string_dtype_counts`). —
+      **deployment-api@934f22f (LOCAL, unpushed** — held per operator until the pre-existing uniswap drilldown break is
+      solved). Verified live: the TypeError no longer appears in the census log.
+- [x] ✅ [BACKEND] P1. **Cloud Run jobs census N+1 → parallelized** — `latest_execution_by_job` issued one
+      `ListExecutions` RPC per job serially (~70 jobs → routinely exceeded the 45 s per-provider census bound → the
+      whole `CLOUD_RUN_JOB` kind flickered to empty). Fanned the per-job lookups out concurrently (`ThreadPoolExecutor`,
+      16 workers) so the census is ~max(single RPC) not their sum. — **deployment-api@934f22f (LOCAL, unpushed)**.
+      Verified live: no longer degrades, cold `/inventory` dropped 99.6 s → 85 s, census now captures **118** jobs (was
+      73 when it intermittently timed out).
+
+### 🟡 Runtime findings from the live P0 verification (2026-07-09 — capture, not yet fixed)
+
+- [ ] [BACKEND] P1. **`google-cloud-functions` missing from deployment-api's deps/lock** — the live CLOUD_FUNCTION
+      census fails `No module named 'google.cloud.functions_v2'` and honest-degrades to empty (0 functions shown; would
+      also break on a prod deploy of the new census code). deployment-service@fb217de added `google-cloud-functions` but
+      deployment-api's `pyproject.toml`/`uv.lock` (which pulls deployment-service editable) was never regenerated to
+      include it, and the QG's `uv sync` prunes it from the venv (grep `google-cloud-functions` in deployment-api
+      `uv.lock` = 0). Fix: add the dep to deployment-api (or re-export functions_v2 through the deployment-service
+      `_gcp_sdk` boundary that already declares it) + regenerate the lock; verify the live census returns the functions.
+- [ ] [BACKEND] P2. **Object-delta cold census is slow (>45 s → degrades)** — with the str→numeric coercion landed
+      (@934f22f) `_batched_object_deltas` no longer errors, but its per-distinct-asset_group manifest reads exceed the
+      45 s per-provider census bound on a cold cycle (`object-delta census exceeded 45s — degraded to empty`), so the
+      composite-health `working`/`stalled` signal that reads `object_delta` degrades to `unknown` on cold cycles (warm
+      cache unaffected). Fix: parallelize the per-asset_group manifest reads (same fan-out as the cloud-run jobs N+1)
+      and/or cache the index reads across the census cycle.
 
 ### Kinds census (make the estate visible)
 
@@ -358,6 +401,23 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **🟢 P0 CENSUS-HANG FIXED + RUNTIME-VERIFIED** — deployment-api@720697d (**pushed to LDR**). Ran the
+  slot-5 backend against the live estate (GCP `central-element-323112` ADC, real mode `mock_mode:false`): `/inventory`
+  returned **HTTP 200 in 99.6 s cold → 1.3 s warm** with **2.49 MB / 3597 real items** (`counts_by_kind`: VM 3507,
+  CLOUD_RUN_JOB 73, CLOUD_RUN_SERVICE 12, CLOUD_FUNCTION 2, ECS_SERVICE 3) — down from the ∞/240 s-timeout/0-byte hang.
+  The two degradation logs PROVE the per-kind isolation works (a hung provider degrades instead of blocking). **Two
+  follow-up fixes those logs surfaced** — deployment-api@934f22f (**committed LOCAL, NOT pushed** — held per operator
+  until a pre-existing unrelated uniswap `VENUE_CONTRACT_OVERRIDES` break in `test_data_status_drilldown.py` is solved;
+  that break FAILS at 5dc4208, the commit BEFORE the P0 fix — proven not-ours, blocks the deployment-api QG/quickmerge):
+  (1) **object-delta TypeError** — `object_delta_for_bucket` raised `'>' not supported between 'str' and 'int'` when the
+  availability index stored `row_count`/`instrument_count` as an object/string dtype, silently degrading EVERY
+  object-delta to `None` and breaking the composite-health `working`/`stalled` signal → fixed with
+  `pd.to_numeric(errors="coerce")` + a regression test. (2) **cloud-run-jobs N+1** — `latest_execution_by_job` ran one
+  `ListExecutions` RPC per job serially (~70 jobs → routinely > the 45 s census bound → whole `CLOUD_RUN_JOB` kind
+  flickered to empty) → parallelised the per-job lookups (`ThreadPoolExecutor`, 16 workers). QG green both commits
+  (4360+ passed; the only 3 failures are the pre-existing uniswap drilldown break). Cold-path perf (99.6 s, dominated by
+  3507 transpacific registry-JSON reads) is a separate optimisation, not a hang — warm cache serves the cockpit at 1.3
+  s.
 - 2026-07-09 — **CONVERTED TO LOCAL — operator takeover** (AO worker stalled at 19/24, last activity 08:59). Frontmatter
   flipped `assigned_vm: planning→NA` + `execution_scope: orchestrator-agent→local-only` so the regen `_prune_stale`
   garbage-collects the 5 still-queued tasks from the AO DB (`_plan_contributes_briefs`→False for a `local-only` plan;
