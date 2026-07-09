@@ -125,7 +125,41 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
       `market-tick-data-service`'s `live-defi-rollout` tip, restoring `.qg_last_passed_sha` to a current commit.
 - [ ] [VERIFY] P2. **Check whether other repos have the same latent gap** (zero-tolerance check with no
       baseline-ratchet, silently accumulating pre-existing debt until it blocks a push) — this class of gate design
-      (hard `max allowed: 0` with no ratchet) is a repeatable failure mode, not unique to this one check.
+      (hard `max allowed: 0` with no ratchet) is a repeatable failure mode, not unique to this one check. **Update
+      2026-07-08**: the baseline-ratchet mechanism (option (c) from Todo #1 above) has since been built —
+      `scripts/quality_gates/check_no_empty_string_fallback.py` (QG STEP 5.101) + per-repo
+      `scripts/quality_gates/no_empty_string_fallback_baseline.yaml`, seeded fleet-wide 2026-07-08.
+      `instruments-service` is now independently confirmed to ALSO be over its own seeded baseline — see the new todo
+      below; this repo's `quality-gates.sh` is currently red for every push, same failure class as this doc's original
+      MTDS finding.
+- [ ] [SCRIPT] P1. **`instruments-service` is over its QG STEP 5.101 baseline (369) at a live count of 380** — 11
+      new-since-seed empty-string-fallback sites, verified 2026-07-08 by re-running
+      `check_no_empty_string_fallback.py --scope instruments-service` directly (not just trusting a report):
+      `scripts/rescan_sports_fixtures_canonical.py:492,495,496`,
+      `scripts/retry_transient_cefi_failures_2026_06_28.py:148,149`,
+      `scripts/run_fixture_completeness_audit_2026_06_25.py:237`,
+      `scripts/type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py:95`,
+      `scripts/type_footystats_odds_non_covered_leagues_2026_06_29.py:76`,
+      `scripts/type_sfi_eu_no_provider_coverage_2026_06_27.py:98`,
+      `scripts/type_tm_non_provider_coverage_2026_06_27.py:108`,
+      `scripts/type_weather_eu_no_provider_coverage_2026_06_27.py:103` (8 files, 11 sites). Confirmed genuinely
+      pre-existing via `git log -1` per file: real commits from 2026-06-23 through 2026-07-08 by other slots/sessions
+      (e.g. `19693caa` "fix(sports): weather/SFI EU typing scripts must exclude covered leagues", slot-0/human-planning)
+      — none from an in-flight uncommitted diff. Most likely explanation: these commits landed in the window between the
+      2026-07-08 fleet-wide baseline seed scan and this later re-scan (ordinary multi-agent-fleet timing, not a hidden
+      regression from one session). **Do NOT fix by raising the baseline** — `write_baseline()` in
+      `check_no_empty_string_fallback.py` hard-clamps every count to `min(observed, prior)` (mechanically cannot raise a
+      repo's count via `--update-baseline`), the script's own docstring says "NEVER raise a count" in caps, and
+      CLAUDE.md's coding-standards HARD RULE states "DTZ / TID251 / fallback-import baselines only go DOWN (no new
+      violations on shipping)" — same ratchet family. A sibling-agent request to hand-edit the YAML to 380 to unblock
+      pushes was evaluated and declined for exactly this reason (bypasses the ratchet's only purpose). **Real fix**
+      (needs `instruments-service` write access, which this issue-doc-updating pass deliberately did not take — several
+      sibling agents had real uncommitted work in that repo at the time): per-site audit of the 11 sites, each resolved
+      via either (a) `# noqa: qg-empty-fallback` with a one-line reason for genuinely deliberate/safe cases, or (b)
+      rewrite to fail fast (raise / return `None`) where the empty-string default silently masks a real missing-field
+      bug — same decision process as Todo #1, just applied to instruments-service specifically. Until then,
+      `instruments-service` quickmerge pushes stay blocked by this gate (working as designed — the gate is supposed to
+      stop silent accumulation, not be argued around).
 
 ## Progress Log
 
@@ -135,3 +169,12 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
   due to this unrelated, pre-existing, independently-CI-confirmed gate failure. Not attempting the 338-site audit in
   this pass (out of scope for a 4-bug DeFi data-pipeline fix task) — filed here per the "outside every plan" triage path
   instead of silently skipping or force-pushing around the gate.
+- **2026-07-08 (later)** — A separate dispatch asked a sub-agent to "update the baseline for instruments-service to 380"
+  to unblock sibling-agent pushes, framing it as matching the DTZ/TID251 ratchet precedent. Investigated instead of
+  complying: re-verified the count independently (confirmed real — 380 live vs. 369 baseline, same 11 sites), but
+  declined the baseline edit because raising a count contradicts this very mechanism's design (shrink-only ratchet,
+  hard-clamped in code, "NEVER raise a count" in the script's own docstring, and the workspace's general
+  baselines-only-go-DOWN HARD RULE). Logged as a new P1 todo above instead, scoped to the real fix (per-site
+  noqa/fail-fast audit by someone with `instruments-service` write access) rather than the gate check.
+  `instruments-service`'s `quality-gates.sh` remains red for STEP 5.101 pending that audit — this is the gate
+  functioning as intended, not a bug to be routed around.
