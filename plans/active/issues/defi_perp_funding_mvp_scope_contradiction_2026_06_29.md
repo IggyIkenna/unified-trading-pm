@@ -1,7 +1,11 @@
 ---
 doc_type: issue
 title: DeFi perp_funding MVP-scope contradiction — is_mvp() vs capability registries vs the backfill plan (2026-06-29)
-summary: The `perp_funding` data_type evaluates is_mvp()=False for EVERY venue (DRIFT, Hyperliquid) under BOTH cefi and defi, yet the v10 backfill plan launched two perp_funding backfill VMs as MVP work and the honest-coverage denominator counts 424 DRIFT perp_funding cells as reachable. Three SSOTs disagree about whether DeFi perp_funding is in MVP scope. Blocks resolution of the P0 AO item on the Solana-drift backfill stall.
+summary:
+  The `perp_funding` data_type evaluates is_mvp()=False for EVERY venue (DRIFT, Hyperliquid) under BOTH cefi and defi,
+  yet the v10 backfill plan launched two perp_funding backfill VMs as MVP work and the honest-coverage denominator
+  counts 424 DRIFT perp_funding cells as reachable. Three SSOTs disagree about whether DeFi perp_funding is in MVP
+  scope. Blocks resolution of the P0 AO item on the Solana-drift backfill stall.
 status: open
 nature: process
 asset_group: [defi]
@@ -13,30 +17,41 @@ related: [plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md]
 created: 2026-06-29
 parent_epic: defi_master
 priority: P1
-source: [mvp_backfill_defi_onchain_v10_2026_06_27.md (G1.5 blocked OPERATOR item + perp_funding backfill VMs), agent-orchestrator backlog item mvp_backfill_defi_onchain_v10-010 (blocked), unified_api_contracts/canonical/crosscutting/mvp_scope.py (is_mvp SSOT)]
+source:
+  [
+    mvp_backfill_defi_onchain_v10_2026_06_27.md (G1.5 blocked OPERATOR item + perp_funding backfill VMs),
+    agent-orchestrator backlog item mvp_backfill_defi_onchain_v10-010 (blocked),
+    unified_api_contracts/canonical/crosscutting/mvp_scope.py (is_mvp SSOT),
+  ]
 assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
 drift_direction: advance-code
 execution_scope: orchestrator-agent
 depends_on: []
-last_updated: 2026-06-29
+last_updated: 2026-07-09
 locked_since: 2026-05-21
 ---
 
 # DeFi perp_funding MVP-scope contradiction (2026-06-29)
 
+> **🟡 2026-07-09: the "Resolution status" / "Recommendation" sections below (provisional Option 1, "out of MVP scope")
+> are SUPERSEDED.** A broader operator ruling on DeFi MVP framing (`MVP_SCOPE["defi"]` v13,
+> `unified-api-contracts@89b16943`) resolves this as **Option 2** — DRIFT-SOLANA `PERPETUAL` `perp_funding` IS MVP now.
+> See the 2026-07-09 Progress Log entry at the bottom for what changed and what's still genuinely open (todos 2-4 — the
+> registry pinning test, the v10 plan cell flip, and the Helius-ceiling backfill work are all unactioned).
+
 > Filed while investigating the only `blocked` item in the locally-running agent-orchestrator backlog
 > (`mvp_backfill_defi_onchain_v10-010`, `[OPERATOR] P0` — "Solana-drift backfill performance stall"). Before deciding
-> the stall intervention, the operator asked: **is DRIFT / Solana actually in the DeFi MVP list?** Verifying that against
-> the UAC SSOT surfaced a three-way contradiction that gates the answer.
+> the stall intervention, the operator asked: **is DRIFT / Solana actually in the DeFi MVP list?** Verifying that
+> against the UAC SSOT surfaced a three-way contradiction that gates the answer.
 
 ## TL;DR
 
 - **DRIFT-SOLANA the venue IS in the defi MVP list** — but only in its **DEX role** (`POOL`/`DEX_POOL` →
   `dex_pool_state`/`dex_pool_swaps`). Those cells are `is_mvp()`-true.
-- **DRIFT `perp_funding` is NOT MVP**, and neither is Hyperliquid `perp_funding`. The `perp_funding` data_type
-  evaluates `is_mvp()=False` for **every** venue under **both** asset groups.
+- **DRIFT `perp_funding` is NOT MVP**, and neither is Hyperliquid `perp_funding`. The `perp_funding` data_type evaluates
+  `is_mvp()=False` for **every** venue under **both** asset groups.
 - Funding data for perps is actually MVP **under `cefi`** via the `funding_rate` / `derivative_ticker` data_types on
   `PERPETUAL` instruments — NOT via the defi `perp_funding` data_type.
 - **Per the operator's standing rule** ("fix only if under MVP scope, else don't download for now"), the blocked
@@ -46,9 +61,9 @@ locked_since: 2026-05-21
 ## Resolution status (2026-06-29)
 
 **Provisional operator call (Harsh, pending Ikenna confirm): OUT OF MVP SCOPE.** UAC `is_mvp()` is the designated SSOT
-for "what is MVP"; it says not-MVP, so it's not-MVP. The AO blocked item `mvp_backfill_defi_onchain_v10-010` was resolved
-on the planning-VM AO (plan G1.5 checkbox flipped, blocked-queue answered, stale task pruned). The UAC code fix below is
-**deferred until Ikenna confirms** — do not ship it on the provisional call.
+for "what is MVP"; it says not-MVP, so it's not-MVP. The AO blocked item `mvp_backfill_defi_onchain_v10-010` was
+resolved on the planning-VM AO (plan G1.5 checkbox flipped, blocked-queue answered, stale task pruned). The UAC code fix
+below is **deferred until Ikenna confirms** — do not ship it on the provisional call.
 
 ## Evidence
 
@@ -59,23 +74,24 @@ cell on a **strict 3-axis AND**: `venue` AND `instrument_type` AND `data_type` m
 
 Probe results (run via `unified-api-contracts/.venv`):
 
-| asset_group | venue | instrument_type | data_type | `is_mvp` |
-|---|---|---|---|---|
-| defi | DRIFT-SOLANA | DEX_POOL | dex_pool_swaps | ✅ True |
-| defi | DRIFT-SOLANA | POOL | dex_pool_state | ✅ True |
-| defi | DRIFT-SOLANA | **PERPETUAL** | **perp_funding** | ❌ **False** |
-| cefi | DRIFT / DRIFT-SOLANA | PERPETUAL | perp_funding | ❌ False (DRIFT not a classified cefi venue) |
-| cefi | HYPERLIQUID | PERPETUAL | **perp_funding** | ❌ **False** |
-| cefi | HYPERLIQUID | PERPETUAL | funding_rate | ✅ True |
-| cefi | HYPERLIQUID | PERPETUAL | derivative_ticker | ✅ True |
-| cefi | HYPERLIQUID | PERPETUAL | trades | ✅ True |
+| asset_group | venue                | instrument_type | data_type         | `is_mvp`                                     |
+| ----------- | -------------------- | --------------- | ----------------- | -------------------------------------------- |
+| defi        | DRIFT-SOLANA         | DEX_POOL        | dex_pool_swaps    | ✅ True                                      |
+| defi        | DRIFT-SOLANA         | POOL            | dex_pool_state    | ✅ True                                      |
+| defi        | DRIFT-SOLANA         | **PERPETUAL**   | **perp_funding**  | ❌ **False**                                 |
+| cefi        | DRIFT / DRIFT-SOLANA | PERPETUAL       | perp_funding      | ❌ False (DRIFT not a classified cefi venue) |
+| cefi        | HYPERLIQUID          | PERPETUAL       | **perp_funding**  | ❌ **False**                                 |
+| cefi        | HYPERLIQUID          | PERPETUAL       | funding_rate      | ✅ True                                      |
+| cefi        | HYPERLIQUID          | PERPETUAL       | derivative_ticker | ✅ True                                      |
+| cefi        | HYPERLIQUID          | PERPETUAL       | trades            | ✅ True                                      |
 
 Root cause:
+
 - **defi rule** (`mvp_scope.py` ~L567-584): `instrument_types = {POOL, DEX_POOL, LST, LENDING}` — **no `PERPETUAL`**;
-  `data_types` includes `perp_funding`. Perp funding semantically lives on `PERPETUAL` instruments, so the 3-axis AND can
-  never pass for `perp_funding`.
-- **cefi rule**: `data_types = {book_snapshot_5, derivative_ticker, funding_rate, trades}` — **no `perp_funding`**.
-  cefi captures funding via `funding_rate` / `derivative_ticker` instead.
+  `data_types` includes `perp_funding`. Perp funding semantically lives on `PERPETUAL` instruments, so the 3-axis AND
+  can never pass for `perp_funding`.
+- **cefi rule**: `data_types = {book_snapshot_5, derivative_ticker, funding_rate, trades}` — **no `perp_funding`**. cefi
+  captures funding via `funding_rate` / `derivative_ticker` instead.
 - **`perp_funding`** is therefore a **defi-only data_type name** that is unreachable for MVP under either rule.
 
 git-blame: the defi `instrument_types` frozenset was authored 2026-06-08 (`824944660`); `PERPETUAL` was never included.
@@ -84,6 +100,7 @@ Current `MVP_SCOPE_CONFIG_VERSION = 12`.
 ### 2. The defi rule's own comment lists perp_funding as intended-MVP
 
 `mvp_scope.py` ~L537:
+
 > `perp_funding — Perpetual funding rates (Hyperliquid, Aster, Drift)`
 
 So author **intent** was that perp_funding (incl. Drift) is MVP — but the coded `instrument_types` axis contradicts it.
@@ -92,8 +109,7 @@ So author **intent** was that perp_funding (incl. Drift) is MVP — but the code
 
 - `unified_api_contracts/registry/defi_venue_capabilities.py` ~L139:
   `"DRIFT-SOLANA": {"perp_funding": "2022-01-01", "dex_pool_swaps": "2022-01-01"}`
-- `unified_api_contracts/registry/expected_coverage.py` ~L268:
-  `"DRIFT-SOLANA": ["perp_funding", "position_data"]`
+- `unified_api_contracts/registry/expected_coverage.py` ~L268: `"DRIFT-SOLANA": ["perp_funding", "position_data"]`
 
 `instruments-service/scripts/measure_honest_coverage.py` computes
 `reachable = captured + attempted_failed + expected_unattempted` (~L429) — it does **NOT** gate the denominator on
@@ -104,24 +120,27 @@ filled — even though `is_mvp()` says those cells are out of MVP.
 ### 4. The v10 plan treats perp_funding as MVP and launched two perp backfill VMs
 
 `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md`:
-- G1 launched `mtds-solana-drift-backfill` (DRIFT `perp_funding`) **and** `mtds-perp-funding-backfill` (Hyperliquid `perp_funding`) as MVP work.
+
+- G1 launched `mtds-solana-drift-backfill` (DRIFT `perp_funding`) **and** `mtds-perp-funding-backfill` (Hyperliquid
+  `perp_funding`) as MVP work.
 - G2 gate enumerates `perp_funding` as 1 of the 6 MVP defi data_types that must reach `attempted_failed=0`.
 
 ### 5. Live state of the blocked backfill (2026-06-29)
 
 - VM `mtds-solana-drift-backfill` no longer exists (SPOT — preempted/terminated after its last log write 09:13Z).
-- Consolidated `_index/drift_v2_sig_index.parquet` was **never built** (Option A not executed); only the 6,293+ parts exist.
-- The **429-burst anomaly** is real: run.log's final writes show ~24 batches advanced in 0.25s on pure HTTP 429s
-  (no backoff). DRIFT `perp_funding` parquets exist only for 2025-01-09/10/11 (117/94/74 MB); the 429-burst dates
-  (e.g. 2026-03-05/06) have **no** DRIFT parquet. The repeated Helius 429s point to a Helius plan rate-limit ceiling.
+- Consolidated `_index/drift_v2_sig_index.parquet` was **never built** (Option A not executed); only the 6,293+ parts
+  exist.
+- The **429-burst anomaly** is real: run.log's final writes show ~24 batches advanced in 0.25s on pure HTTP 429s (no
+  backoff). DRIFT `perp_funding` parquets exist only for 2025-01-09/10/11 (117/94/74 MB); the 429-burst dates (e.g.
+  2026-03-05/06) have **no** DRIFT parquet. The repeated Helius 429s point to a Helius plan rate-limit ceiling.
 
 ## The three-way contradiction (what must be ruled on)
 
-| SSOT | Says about DeFi `perp_funding` |
-|---|---|
-| `mvp_scope.is_mvp()` (the "what is MVP" SSOT) | **NOT MVP** — unreachable for any cell |
-| `defi_venue_capabilities` + `expected_coverage` (drive the manifest/coverage denominator) | **In scope** — DRIFT-SOLANA produces perp_funding since 2022-01-01 → 424 reachable cells, gate-failing |
-| v10 backfill plan + cefi `funding_rate`/`derivative_ticker` | Plan treats it as MVP; meanwhile cefi already models perp funding under a different data_type/asset_group |
+| SSOT                                                                                      | Says about DeFi `perp_funding`                                                                            |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `mvp_scope.is_mvp()` (the "what is MVP" SSOT)                                             | **NOT MVP** — unreachable for any cell                                                                    |
+| `defi_venue_capabilities` + `expected_coverage` (drive the manifest/coverage denominator) | **In scope** — DRIFT-SOLANA produces perp_funding since 2022-01-01 → 424 reachable cells, gate-failing    |
+| v10 backfill plan + cefi `funding_rate`/`derivative_ticker`                               | Plan treats it as MVP; meanwhile cefi already models perp funding under a different data_type/asset_group |
 
 ## Resolution options (OPERATOR RULING REQUIRED)
 
@@ -131,8 +150,8 @@ filled — even though `is_mvp()` says those cells are out of MVP.
   not download DRIFT perp data now. **← provisional pick (2026-06-29).**
 - **Option 2 — intent is correct; perp_funding IS MVP.** Add `PERPETUAL` to the defi rule's `instrument_types` (matching
   the line-537 comment) so DRIFT/Hyperliquid/Aster perp_funding becomes `is_mvp()`-true; then the DRIFT backfill IS in
-  scope → fix it (Helius plan upgrade for the 429 ceiling + build the consolidated sig index). Must also reconcile
-  defi `perp_funding` vs cefi `funding_rate`/`derivative_ticker` to avoid double-modeling the same funding data.
+  scope → fix it (Helius plan upgrade for the 429 ceiling + build the consolidated sig index). Must also reconcile defi
+  `perp_funding` vs cefi `funding_rate`/`derivative_ticker` to avoid double-modeling the same funding data.
 - **Option 3 — perp funding is cefi-only.** Treat DRIFT/Hyperliquid perps as cefi; capture funding via cefi
   `funding_rate`/`derivative_ticker` on `PERPETUAL`; remove `perp_funding` from the defi rule + registries entirely;
   classify DRIFT as a cefi perp venue if it should be in scope at all.
@@ -144,16 +163,17 @@ and the v10 G2 perp_funding gate are valid.
 
 ## Todos
 
-- [ ] [OPERATOR] P0. Confirm the ruling: Option 1 / 2 / 3 above (provisional = Option 1, out of scope). Determines DRIFT
-      + Hyperliquid perp backfill scope and whether the AO item stays resolved or reopens.
+- [ ] [OPERATOR] P0. Confirm the ruling: Option 1 / 2 / 3 above (provisional = Option 1, out of scope). Determines
+      DRIFT + Hyperliquid perp backfill scope and whether the AO item stays resolved or reopens.
 - [ ] [SCRIPT] P1. Once ruled: reconcile `mvp_scope.py` (defi `instrument_types` / `data_types`) with
       `defi_venue_capabilities.py` + `expected_coverage.py` so `is_mvp()` and the coverage denominator agree on
       `perp_funding`. Repo: `unified-api-contracts`. Add a `test_mvp_scope.py` assertion pinning the ruling.
 - [ ] [SCRIPT] P1. Apply the ruling to the v10 plan: update G1/G2 scope for `perp_funding`; flip 424 DRIFT
       `perp_funding` cells to the correct honest state (out-of-scope vs attempted_failed) so the coverage gate reflects
       reality. Repos: `instruments-service`, `unified-trading-pm`.
-- [ ] [SCRIPT] P2. If Option 1/3: confirm Hyperliquid perp funding is captured via cefi `funding_rate`/`derivative_ticker`
-      and is not silently dropped by removing defi `perp_funding`. Repo: `market-tick-data-service`.
+- [ ] [SCRIPT] P2. If Option 1/3: confirm Hyperliquid perp funding is captured via cefi
+      `funding_rate`/`derivative_ticker` and is not silently dropped by removing defi `perp_funding`. Repo:
+      `market-tick-data-service`.
 
 ## Codex SSOTs
 
@@ -170,6 +190,37 @@ Investigation triggered by the blocked AO item. Confirmed `is_mvp()` returns Fal
 cefi), confirmed the capability/coverage registries declare DRIFT-SOLANA perp_funding (424 reachable cells), confirmed
 cefi models funding via `funding_rate`/`derivative_ticker`, and confirmed the v10 plan launched two perp_funding VMs as
 MVP work. Live state: DRIFT VM gone, sig index never built, 429-burst anomaly real (only 3 dates of genuine data).
-Operator (Harsh) provisional call: out of MVP scope per UAC `is_mvp()`. Resolved the AO item on the planning-VM AO
-(G1.5 checkbox flipped, blocked-queue entry answered as operator, stale blocked task pruned → 0 blocked). UAC code fix
+Operator (Harsh) provisional call: out of MVP scope per UAC `is_mvp()`. Resolved the AO item on the planning-VM AO (G1.5
+checkbox flipped, blocked-queue entry answered as operator, stale blocked task pruned → 0 blocked). UAC code fix
 deferred pending Ikenna confirm.
+
+### 2026-07-09 — superseded by a broader operator ruling: **Option 2** (perp_funding IS MVP)
+
+A separate, broader operator ruling on DeFi MVP framing generally (§E5 of
+`instruments_docs_audit_outstanding_items_2026_07_08.md`: _"DeFi MVP framing — define for now, just keep all as MVP
+though"_) landed a real `MVP_SCOPE["defi"]` rule (`DeFiMvpRule` v13, `unified-api-contracts@89b16943`) that resolves
+this issue's three-way contradiction as **Option 2**, not the provisional Option 1 above: `PERPETUAL` is now a real DeFi
+MVP `instrument_type` (derived from live adapter code, not hand-picked), so
+`is_mvp("defi", "DRIFT-SOLANA", "PERPETUAL", "perp_funding")` now evaluates `True`. This is a side effect of the broader
+"everything we capture" ruling, not a dedicated re-litigation of the DRIFT-perp-backfill question specifically — the
+operator ruling this doc tracks is superseded, not independently re-confirmed.
+
+**What this changes**: `is_mvp()` (Evidence §1) now agrees with the capability/coverage registries (Evidence §3) and the
+v10 plan (Evidence §4) that DRIFT-SOLANA `perp_funding` is in scope — the axis-1-vs-axis-3 contradiction this doc was
+filed to track is closed.
+
+**What this does NOT change / still open**:
+
+- Todo 2 (reconcile `defi_venue_capabilities.py` / `expected_coverage.py` with `is_mvp()`, add a pinning test) — NOT
+  done. Those registries were never edited by the v13 pass; they already independently declared DRIFT-SOLANA
+  perp_funding, so no conflict remains to reconcile, but the todo's own pinning-test ask is still unactioned.
+- Todo 3 (apply the ruling to the v10 backfill plan; flip the 424 DRIFT perp_funding cells) — NOT done. The real
+  live-state finding in Evidence §5 (VM gone, sig index never built, 429-burst Helius rate-limit ceiling) is unaffected
+  by the MVP-scope ruling — a Helius plan upgrade + sig-index build is still real, unstarted work if the Solana-drift
+  backfill is to actually run.
+- Todo 4 (confirm Hyperliquid perp funding capture path) — NOT done, unaffected by this ruling.
+- Todo 1 (operator confirm) — the ORIGINAL question (Option 1/2/3 for THIS specific DRIFT-backfill decision) was never
+  independently re-asked; it was overtaken by the broader DeFi-MVP-framing ruling before an explicit answer landed. If
+  the Helius-ceiling / sig-index work is picked up, worth a fresh explicit confirm that "in MVP scope" (now true) also
+  means "worth spending the backfill effort now" — those are two different questions this doc's Option 1/2/3 only
+  partially separates.

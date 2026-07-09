@@ -157,11 +157,30 @@ not have.
       again once the fix lands (repo: unified-trading-library). — unified-trading-library@84528344 (slot-4 sonnet/high),
       follow-up unified-trading-library@75e59a89 (slot-7). Docstring now describes the FIXED retry behavior (the P0 fix
       above landed in the same commit as the follow-up edit) and still corrects the wrong function citation.
-- [ ] [DATA] P1. Once the P0 fix ships, re-run this doc's reproduction (15-cell sample query against
-      `instruments-store-sports-prd-central-element-323112`'s canonical index) to confirm the specific understat
-      XG/XG_SHOTS duplicate cells collapse to one row each, then re-verify item #4's gate in
-      `plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md` (repo: unified-trading-pm, plan
-      file).
+- [x] ✅ [DATA] P1. **Once the P0 fix ships, re-run this doc's reproduction... — COMPLETE 2026-07-09 (slot-6
+      sonnet/high).** Confirmed `-001`/`-002` shipped (unified-trading-library@75e59a89 / @84528344), fast-forwarded my
+      worktree, and confirmed via code read the retry loop now re-invokes `merge_payload()` (fresh canonical download +
+      re-merge) on `PreconditionFailed` instead of re-uploading stale bytes. **The fix alone does not retroactively heal
+      already-duplicated rows** — routine incremental cycles only anti-join on _changed_ shard keys, so pre-existing
+      duplicates from before the fix landed stay in the canonical until a full window-dedup runs. Ran
+      `python -m unified_trading_library.manifest_consolidator --bucket     instruments-store-sports-prd-central-element-323112 --force`
+      (single cycle, `memory_limit=8GB` default, 11.7s): `rows_in=4,981,844 rows_out=4,899,088 dedup_dropped=82,756`.
+      Re-ran the reproduction against the raw canonical post-rebuild: understat XG/XG_SHOTS big-5 duplicate dedup-key
+      groups dropped **7,565 → 5**; all 5 remaining are a DIFFERENT, unrelated bug (producer `instrument_type`
+      population inconsistency on XG_SHOTS 2024-12-14 — both rows are already-resolved `captured` states, not the
+      stale-seed-vs-typed-row CAS-race pattern), filed separately at
+      `plans/active/issues/sports_xg_shots_instrument_type_dedup_key_instability_2026_07_09.md`
+      (unified-trading-pm@e12926029) so it doesn't block this item. **CAS-retry lost-update race confirmed fixed at both
+      the code level and the sports bucket's data level.** **Re-verified item #4's gate** in
+      `sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md`: post-fix + post-rebuild,
+      `read_availability_index()` shows understat XG `pending_fetch=190`, XG_SHOTS `pending_fetch=2,065` (both
+      blank-`error_reason`) — byte-identical to slot-4's 2026-07-08 22:5x UTC manually-deduped count already recorded in
+      that plan. **Gate state UNCHANGED (still NOT MET)** — the CAS race never affected the _true_ pending count
+      (slot-4's manual last-write-wins dedup already computed it correctly); the fix+rebuild means the raw canonical now
+      matches that count natively, but item #4 remains blocked on its own pre-existing, unrelated prerequisite
+      (`plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md`'s blank-reason typing-pass todo) —
+      not on this doc's bug. No checkbox flip made in the sports_p2 plan (gate genuinely not met); left its existing
+      note as the accurate record.
 - [x] ✅ [DATA] P2. **Audit other high-write-concurrency buckets — COMPLETE 2026-07-08 (slot-3 sonnet/high).** Audited
       the 3 named `market-data-tick-{ag}-prd-central-element-323112` canonical indices directly (ONE bounded
       `_index/availability_index.parquet` object read per bucket via UTL `get_storage_client().download_bytes` — not a
