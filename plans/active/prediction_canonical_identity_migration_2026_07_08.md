@@ -10,7 +10,7 @@ summary:
   InstrumentRecord.underlying from the existing classify_*_to_canonical_group SSOT, materialise canonical_instrument_id
   from the existing cross_venue_mapping.build_cross_venue_mapping() output, and align Prediction's sports fixture key
   with the Sports asset group's own build_fixture_id() scheme."
-status: draft
+status: active
 nature: design
 asset_group: [prediction]
 stage: [data, meta]
@@ -54,9 +54,10 @@ assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
-> **Status: `draft`** — not ingested/dispatched. Flip to `active` when an operator or agent picks this up. Everything
-> here is scoped, evidence-backed design work from the 2026-07-08 investigation session; nothing here has been
-> implemented yet.
+> **Status: `active`** — picked up 2026-07-09. Todos 1, 3, 4, 5 implemented + verified against real prod GCS data this
+> session (see Progress Log). Todo 2 (full catalogue regen/backfill) is real-scoped + smoke-tested but the FULL
+> unsupervised run is intentionally NOT executed this session (workspace staged-rollout rule). Todos 6-8 carried
+> forward, not started.
 
 ## Codex SSOTs
 
@@ -82,43 +83,43 @@ being wired into the write path or persisted on the catalog. This plan is the mi
 
 ## Todos
 
-- [ ] [DATA] P1. **Populate `InstrumentRecord.underlying` at adapter-construction time** — in both
+- [x] [DATA] P1. ✅ **Populate `InstrumentRecord.underlying` at adapter-construction time** —
+      `instruments-service@0d0c3742`. Both
       `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket/parsing.py::_parse_market()`
-      and `.../prediction/kalshi.py::_parse_market()`, call `classify_polymarket_to_canonical_group()` /
+      and `.../prediction/kalshi.py::_parse_market()` call `classify_polymarket_to_canonical_group()` /
       `classify_kalshi_to_canonical_group()` (already called for `MarketLifecycle.canonical_group` in the same method —
-      reuse the result, don't reclassify) → `underlying_for_group()`
-      (`unified_api_contracts.canonical.domain.predictions.two_axis`), and pass
-      `underlying=None if <sports bet_type> else underlying_value.value` to the `InstrumentRecord(...)` constructor —
+      reused via a new `classify_lifecycle(market, group=...)` param, not reclassified) → `underlying_for_group()`, and
+      pass `underlying=None if is_sports else underlying_value.value` to the `InstrumentRecord(...)` constructor —
       mirroring the exact convention `cross_venue_mapping.py::_build_mapping()` already uses for its own output schema.
-      Add unit coverage asserting a real BTC/CPI/politics/sports example each get the right `underlying`/`None`.
+      Unit coverage: `tests/unit/test_prediction_underlying.py` (new, 11 tests) — real BTC/CPI/politics/sports examples
+      per adapter. Evidence: Progress Log.
 - [ ] [DATA] P1. **Regenerate/backfill `prod/catalog.parquet` for Prediction** after the `raw_symbol`/`base_asset`
       rollup fix (already shipped) AND the `underlying` adapter change above ship together — a full
       `build_instrument_catalogue.py --asset-group prediction` run against real GCS data, manifest-verified row counts
-      (per the workspace's "plans run to actual completion on real infra" rule — no smoke-test-only claim).
-- [ ] [DATA] P2. **Wire `cross_venue_mapping.build_cross_venue_mapping()` into a real, scheduled step** that runs over
-      the full Kalshi + Polymarket universes (today it's a pure function with no caller in the write/rollup path) and
-      persists `PredictionMarketCrossVenueMapping.canonical_event_id` onto the matched side's
-      `InstrumentRecord.canonical_instrument_id` (an already-existing, currently Prediction-unused field) — either at
-      adapter-write time (requires cross-adapter coordination, since each adapter only sees its own venue) or as a
-      post-processing step inside `build_instrument_catalogue.py` (which already reads both venues' snapshots together
-      in `build_prediction_catalogue_dataframe()` — likely the lower-friction integration point). Unmatched instruments
-      keep `canonical_instrument_id=None` (honest absence, never a false pair — matches the matcher's existing design).
-- [ ] [DATA] P2. **Decide + document the `titles` map source for sports fixture matching** — `cross_venue_mapping.py`'s
-      sports branch needs an `instrument_key -> title` map the canonical `InstrumentRecord` doesn't carry (the `symbol`
-      field was dropped from the schema); today only a caller-supplied map enables sports pairing. Identify the real
-      source for this — the per-day parquet's raw title-bearing fields, or a re-derivation — before wiring todo 3 for
-      the sports branch specifically.
-- [ ] [DATA] P2. **Align Prediction's sports fixture key with the Sports asset group's `build_fixture_id()`** —
-      `SportsFixtureKey.pairing_key()` (`unified_api_contracts/canonical/domain/predictions/fixture_parsing.py`) and
-      `build_fixture_id()` (`unified_api_contracts/canonical/domain/sports/canonical_ids.py`,
-      `{LEAGUE}:{HOME}_v_{AWAY}:{YYYYMMDD}`) carry the same information (league + two teams + date) via two independent
-      implementations today — not guaranteed to normalize team names identically. Either (a) make `fixture_parsing.py`
-      call `build_fixture_id()`'s own team-normalization registry, or (b) wire up the already- written-but-unused
-      `_cross_reference_fixture()` method in `polymarket/parsing.py` (resolves a real API-Football `fixture_id`) and
-      surface that resolved id on `canonical_instrument_id` for Prediction sports rows specifically — giving a
-      Prediction sports market's identity byte-parity with the Sports asset group's fixture_id for the SAME real event,
-      not just conceptual similarity. Concrete test: one real EPL fixture that exists in both the Sports asset group's
-      fixture registry and a live Polymarket/Kalshi sports market, asserting the two resolve to the same id.
+      (per the workspace's "plans run to actual completion on real infra" rule — no smoke-test-only claim). Real
+      scoping/smoke-test/ETA done 2026-07-09 (see Progress Log) — the full run itself is NOT executed yet (staged
+      rollout).
+- [x] [DATA] P2. ✅ **Wire `cross_venue_mapping.build_cross_venue_mapping()` into a real, scheduled step** —
+      `instruments-service@0d0c3742`. Wired into `build_instrument_catalogue.py::build_prediction_catalogue_dataframe()`
+      as a post-processing step (runs every catalogue regen) that persists
+      `PredictionMarketCrossVenueMapping.canonical_event_id` onto the matched side's new `canonical_instrument_id`
+      catalogue column. Unmatched instruments keep `canonical_instrument_id=""` (honest absence, never a false pair —
+      matches the matcher's existing design; verified by a dedicated unit test). Real evidence against prod GCS: 250 /
+      1264 matched pairs on 200-/2000-blob samples — see Progress Log.
+- [x] [DATA] P2. ✅ **Decide + document the `titles` map source for sports fixture matching** —
+      `instruments-service@0d0c3742` (`docs/PREDICTION_INSTRUMENTS.md` §3 item 4). DECIDED: no per-instrument title
+      survives anywhere the offline roll-up can reach (`InstrumentRecord` dropped the `symbol` field) — shipped with no
+      `titles=` kwarg (the matcher's own honest-absence default). A persisted title side-table (mirroring
+      `clob_token_ids`) is documented as the real, buildable follow-up, NOT built this migration.
+- [x] [DATA] P2. ✅ **Align Prediction's sports fixture key with the Sports asset group's `build_fixture_id()`** —
+      `instruments-service@0d0c3742`, **Polymarket only** (Kalshi explicitly deferred — no team-name-to-canonical
+      registry exists for Kalshi's city-level sports titles, left undone rather than guessed).
+      `polymarket/parsing.py::_build_sports_id()` now calls `parse_polymarket_sports_fixture()` +
+      `build_fixture_id(league, build_team_id(home), build_team_id(away), date)` — the exact call shape
+      `build_sports_fixture_team_player_catalogue()` uses for the Sports asset group's own fixture rows (verified by
+      reading that function; no network call, unlike the unused `_cross_reference_fixture()`). Real example: EPL Arsenal
+      vs. Chelsea, 2026-03-22 → `canonical_instrument_id="EPL:CHELSEA_v_ARSENAL:20260322"`. Concrete byte-parity test in
+      `tests/unit/test_polymarket_boost.py::TestBuildSportsId::test_valid_league_returns_tuple`.
 - [ ] [VERIFY] P2. **Check whether any real downstream consumer treats Prediction `instrument_id` as globally unique
       without also keying on `venue`** (carried over from the original finding-8 open question — never actually
       checked). If one exists, the `canonical_instrument_id` population in todo 3 needs to preserve per-venue uniqueness
@@ -141,3 +142,67 @@ being wired into the write path or persisted on the catalog. This plan is the mi
   catalogue-rollup fix + canonical scheme decision, done same session — see
   `instrument_id_format_canonicalization_2026_07_08.md` and `instruments-service/docs/PREDICTION_INSTRUMENTS.md`). No
   implementation here yet; `status: draft` until an operator/agent picks it up.
+- **2026-07-09** — Todos 1, 3, 4, 5 implemented in `instruments-service` (adapters + `build_instrument_catalogue.py`)
+  and verified end-to-end against real prod GCS data. Real evidence:
+  - **Todo 1 (`underlying`)**: `_parse_market()` in both adapters now calls `underlying_for_group()` on the SAME
+    `classify_*_to_canonical_group()` result already computed for `MarketLifecycle.canonical_group` (new optional
+    `group=` param on `classify_lifecycle()` so the caller's classification is reused, not redone). Verified with real
+    market shapes (direct `_parse_market()` calls, both adapters): Polymarket BTC daily → `underlying="BTC"`; CPI macro
+    → `"CPI"`; Trump approval → `"TRUMP"`; unclassifiable → `"OTHER"`; EPL sports → `None`. Kalshi `KXBTCD-*` → `"BTC"`;
+    `KXCPIYOY-*` → `"CPI"`; `KXFEDDECISION-*` → `"FED"`; `KXMLBGAME-*` sports → `None`; unclassifiable → `"OTHER"`.
+    Correction to this plan's own todo 1 wording: `OTHER` is NOT a blanket politics/sports bucket — most classified
+    politics/geo/culture markets get their OWN named underlying (`TRUMP`, `GEO_ISRAEL_IRAN`, `OSCARS`, …); `OTHER` is
+    reserved for genuinely-unclassified markets. Unit tests:
+    `instruments-service/tests/unit/test_prediction_underlying.py` (new file, 11 tests).
+  - **Todo 3 (cross-venue `canonical_instrument_id`)**: wired `build_cross_venue_mapping()` into
+    `build_instrument_catalogue.py::build_prediction_catalogue_dataframe()` as a real step that runs on every catalogue
+    regen — builds minimal per-conditionId `InstrumentRecord` views split by venue, runs the matcher, and persists
+    `canonical_event_id` onto the new `CATALOG_COLUMNS` field `canonical_instrument_id` for matched conditionIds (`""`
+    honest absence for unmatched, verified). **Real evidence against prod GCS**
+    (`instruments-store-pred-prd-central-element-323112`, `--max-blobs` smoke tests, `--dry-run` forced — see todo 2
+    evidence below for the full run log): a 200-blob sample (935 Kalshi + 3024 Polymarket instruments) found **250 real
+    matched pairs**; a 2000-blob sample (3834 Kalshi + 31118 Polymarket) found **1264 real matched pairs**, e.g. Kalshi
+    `KXBTCD-26JUN24-T95000` ↔ a same-day Polymarket BTC UP_DOWN market both resolving to
+    `canonical_instrument_id="PRICE::BTC::UP_DOWN::2026-06-24::DIR"` (unit-test-reproduced in
+    `tests/unit/scripts/test_build_instrument_catalogue.py`). Unmatched-stays-blank verified by a dedicated unit test.
+  - **Todo 4 (titles map decision)**: DECIDED not to build a titles map this migration — no per-instrument human title
+    survives anywhere the offline catalogue roll-up can reach (`InstrumentRecord` dropped the `symbol` field per
+    `cross_venue_mapping.py`'s own docstring). Shipped with no `titles=` kwarg, which is the matcher's own documented
+    honest-absence default (sports cross-venue pairing stays honestly absent in the catalogue). A persisted title
+    side-table (mirroring the existing `clob_token_ids` side-table pattern) is the real, buildable follow-up — NOT done
+    this session, left as a documented option in `instruments-service/docs/PREDICTION_INSTRUMENTS.md` §3 item 4.
+  - **Todo 5 (sports fixture_id alignment)**: SHIPPED for Polymarket only (not Kalshi — see below). `_build_sports_id()`
+    now calls `parse_polymarket_sports_fixture()` (same "Away vs Home" title parser `cross_venue_mapping.py` uses) then
+    `build_fixture_id(league, build_team_id(home), build_team_id(away), date)` — the EXACT call shape
+    `build_sports_fixture_team_player_catalogue()` uses for the Sports asset group's own fixture rows (verified by
+    reading that function; no crosswalk, no network call — the unused `_cross_reference_fixture()` was deliberately NOT
+    wired, since a per-market API-Football call is unsuitable for the hot adapter-parsing loop over a 1M+-market
+    universe). Confirmed Prediction's league short-code space (`POLYMARKET_PREDICTION_LEAGUES`, e.g. `"EPL"`) IS the
+    Sports asset group's own `LEAGUE_REGISTRY` canonical `league_id` space (`league_data_prediction.py`), not a separate
+    namespace. Real example: EPL Arsenal vs. Chelsea, 2026-03-22 →
+    `canonical_instrument_id="EPL:CHELSEA_v_ARSENAL:20260322"`. Kalshi sports alignment is a real, tracked gap (no
+    Kalshi-specific team-name-to-canonical registry exists to safely bridge city-level names like "Seattle" — left
+    undone rather than guessed).
+  - **Todo 2 (full catalogue regen) — real scoping/smoke-test/ETA, per the staged-rollout rule (full run NOT
+    executed)**: real corpus size measured via `gcloud storage ls` on the by_date prefix: **20,909**
+    `instruments.parquet` blobs under
+    `gs://instruments-store-pred-prd-central-element-323112/instrument_availability/by_date/` (current
+    `prod/catalog.parquet` = 2,486,092 rows). Two real, bounded `--max-blobs` dry-run smoke tests against this bucket
+    (`--mode full`, ADC admin, ran to completion, correctly `CATALOGUE_SHRINK_BLOCKED`-rejected the write since a
+    truncated sample is always smaller than the full catalogue — the monotonic guard worked exactly as designed):
+    - 200 blobs: listing ~42s, download+rollup+cross-venue-match ~11s, guard-check ~13s → 7,923 rows, 250 matched pairs.
+    - 2000 blobs: listing ~40s, download+rollup+cross-venue-match ~118s, guard-check ~12s → 69,929 rows, 1,264 matched
+      pairs. Listing time is roughly FLAT between the two samples (~40-42s — dominated by GCS prefix-walk overhead, not
+      blob count in this range); download+rollup+match scales close to linearly with blob count (~59ms/blob).
+      Extrapolating the linear phase to the full 20,909 blobs: ~20-25 minutes for download+rollup+match, plus ~1 min
+      listing and ~1-2 min guard+promote-write (writing the larger final parquet) → **ETA ~25-40 minutes for a complete
+      `--mode full` non-dry-run regen**. Honest caveat: row-DENSITY per blob in the small early-path-sorted samples
+      (200/2000-blob: ~35-40 rows/blob average) is lower than the full corpus's real average (2,486,092/20,909 ≈ 119
+      rows/blob) — the path-sorted walk likely front-loads chronologically-earlier, thinner-universe dates, so the
+      row-count extrapolation is NOT reliable (the wall-clock-time extrapolation above, based on directly-measured
+      per-blob processing cost, is the trustworthy number). **This plan's execution_scope is `local-only` — the full
+      regen is a real, schedulable follow-up run, intentionally not executed unsupervised this session.**
+  - Ship: `instruments-service` (adapters, `build_instrument_catalogue.py`, tests) — `unified-api-contracts` needed NO
+    changes (all consumed via existing public `unified_api_contracts.predictions` / `unified_api_contracts.sports`
+    facade exports).
+  - Deferred (todos 6-8): not started this session — carried forward as-is.
