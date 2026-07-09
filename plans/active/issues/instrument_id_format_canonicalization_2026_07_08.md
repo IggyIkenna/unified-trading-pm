@@ -559,6 +559,45 @@ live-construction path (`tardis/adapter.py`, `ccxt_adapter.py`) so new captures 
 generalized CeFi + DeFi legacy-GCS-naming audit decided below, then verifies both. Script:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/live-wiring-plus-legacy-naming-audit-wf_9e5f13e3-962.js`
 
+**UPDATE 2026-07-09 — `wf_118d8268-18c` (MTDS raw-tick symbol migration) COMPLETE, all 10 stages (5 discover + 5
+migrate) done.** Real per-family outcome:
+
+- **on-chain-perp — 100% COMPLETE.** Code shipped `market-tick-data-service@b416ffce96e9` (PR #498, CI green, pending
+  automerge); real bugs fixed across all 5 venues' native write paths + live filename sanitization. Historical migration
+  independently, comprehensively verified (not sampled): **38,883/38,883 real files canonical, 0 remaining** for
+  LIGHTER-ZKSYNC/PACIFICA-SOLANA/EXTENDED-STARKNET (a real duplicate-shape consolidation found and fixed along the way),
+  plus EXTENDED-STARKNET's manifest (1,175/1,209 rows). Survived 6 background-process kills via idempotent restarts,
+  verified against real GCS state each time. ASTER/HYPERLIQUID's own historical rename + Tardis-archive post-fetch remap
+  for LIGHTER/PACIFICA/EXTENDED were correctly deferred (real file-lock conflicts with concurrent sibling agents, not
+  scope avoidance) — flagged as follow-ups.
+- **cefi-dated-perps — code shipped, historical backfill NOT completed this session (environmental, not a code
+  defect).** `market-tick-data-service@3ee21c8c` fixes 3 real bugs: OKX-FUTURES dated futures silently written as
+  `perpetual` (regex never matched OKX's dash+6-digit shape), Bybit's glued base/quote parsed wrong
+  (`BTCUSDT-10JUL26`→`BTC` needed quote-suffix stripping), and a dead `normalise_kraken_futures_symbol` now wired into
+  the write path. The historical migration script is real and tested (a clean 81/81-file dry-run) but hit a reproducible
+  environmental GCS stall (list/download calls 4-5x slower than normal) across 3 attempts with **zero real writes
+  landed** — needs a re-run in a less-contended window, the tool itself is ready.
+- **TradFi single-leg — code fixed, historical migration running (now on VM, see below), and a large NEW gap found**:
+  120,946 CME `options_chain` entries (**~187.5M rows**) sit under a different, unverified legacy per-contract/spread
+  flat layout this fix does NOT cover — correctly excluded rather than risked at that scale, documented in
+  `docs/TRADFI_INSTRUMENTS.md` as its own open follow-up, not silently dropped.
+- **DEX-pool — code shipped `market-tick-data-service@0ce28623`, historical migration running (now on VM, see below),
+  and 2 NEW gaps found**: (1) a **second, distinct writer path** (`0x<address>.parquet` per-pool files, no
+  `symbol`/`venue`/`chain` columns, under `pipeline_mode=batch_onchain_subgraph`, confirmed live for CURVE) whose
+  forward code is already fixed (different commit `0713c01a`) but whose historical backlog needs its own separate
+  migration — correctly skipped, not mis-touched, by the current script; (2) confirmed via repo-wide grep that
+  `uniswap_v2`/`uniswap_v4`/`trader_joe_v2`/`velodrome_v2` have **zero forward capture code at all** in
+  `dex_pools_handler.py`/`dex_swaps_handler.py` — a real, pre-existing, separate gap.
+- **Prediction — code + a real performance bug fixed, historical migration running (2 of 5 shards now on VM)**: found or
+  worker counts above 32 made throughput WORSE (128 workers slower than 32) due to undersized HTTP connection pools on 3
+  separate client instances (main session, OAuth refresh session, listing client) — fixed by widening the pool. A
+  further hardening fix was tested clean but not committed (its own QG run was CPU-starved by the 5 live migration
+  shards, correctly not force-shipped) — flagged as a follow-up.
+
+All 5 families' migration scripts are real, backup-first (copy-to-new-key or explicit backup-before-overwrite), and
+idempotent/resumable — safe against interruption. The TradFi and DEX-pool historical runs referenced above are the same
+ones already moved to VMs in the local-migration-audit update further up this Progress Log.
+
 **OPERATOR DECISION 2026-07-09 — prefer real VM-based execution over session-tied agent execution for the remaining
 heavy migrations, because "I will have to leave my laptop at some point."** All 4 `Workflow` runs above execute as
 background tasks tied to the operator's current interactive session — if that session ends (laptop closed/asleep), any
