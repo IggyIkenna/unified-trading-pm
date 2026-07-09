@@ -240,6 +240,30 @@ singleton-lock namespace → may run concurrently.
 
 ## Progress Log
 
+### 2026-07-09 ~02:1x UTC — slot-4: item #1 re-verified against the write-loss bug (holds) + likely explanation found for item #6's "daily lag" residual
+
+**Task**: `manifest_early_return_missing_write_loss-001`, closing the sibling issue doc's
+(`plans/active/issues/manifest_early_return_missing_write_loss_2026_07_09.md`) P1 VERIFY todo — re-checking item #1
+(weather) now that the calendar-guard missing-`.write()` bug is fixed (`instruments-service@920b303`).
+
+**Item #1 (weather) gate CONFIRMED HOLDS**: live `read_availability_index` read, `(data_type=WEATHER)`, split at the
+original flip window boundary (2019-03-02→2026-06-27) — **0** blank-reason `expected_unattempted` rows inside the window
+(`attempted_failed=51` in-window matches the flip's cited evidence exactly). The write-loss bug did not retroactively
+invalidate the 2026-06-27 flip. No checkbox change (item #1 was already ✅ and stays ✅).
+
+**Side finding relevant to item #6 below** (not fixed here, out of this task's scope — flagging for the next slot that
+picks up item #6): the CURRENT open_meteo `pending_fetch` residual (264 as of 2026-07-08, now 379 as of 2026-07-09, all
+dates 2026-06-30→2026-07-09) was attributed by slot-7/slot-5 (2026-07-08) to an unverified "maybe daily-pipeline-lag"
+hypothesis. Tracing weather.py's season-window guard shows it resolves via `record_expected_empty()` → typed
+`empty_confirmed`, never a blank-reason write itself — so a cell stuck at blank-reason `expected_unattempted` is exactly
+the signature of the missing-`.write()` bug (live through 2026-07-09 01:27 UTC) dropping that guard's resolution for a
+date where weather's full expected-league set is off-season (plausible for this window — northern-hemisphere summer
+break). This is a better-fitting explanation than lag, which would self-clear; a dropped write does not — it needs the
+daily forward-poll to re-touch these dates against the now-fixed code (or a targeted re-fetch, same pattern as the
+understat closer script) to actually resolve. SFI's parallel ~264-row residual (item #2) is plausibly the same story and
+worth checking together. Full detail + counts:
+`plans/active/issues/manifest_early_return_missing_write_loss_2026_07_09.md` Progress Log.
+
 ### 2026-07-08 23:0x UTC — slot-11: re-verify items #1 (weather) and #2 (SFI) gate state against the source-blindness bug
 
 **Task**: `manifest_record_expected_empty_blank_source-005`, closing the issue doc's

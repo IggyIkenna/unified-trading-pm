@@ -107,10 +107,24 @@ blank-reason `expected_unattempted` for big-5 native leagues dropped from **185/
 
 - [x] ✅ [CODE] P0. Fix the 10 confirmed missing-`.write()` sites in understat.py (4), weather.py (2), footystats.py (4)
       (repo: instruments-service). — `instruments-service@920b303` (slot-2 sonnet/high, this session).
-- [ ] [VERIFY] P1. Re-verify weather's already-flipped gate (item #1 in
+- [x] ✅ [VERIFY] P1. Re-verify weather's already-flipped gate (item #1 in
       `sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md`) now that its early-return write-loss bug is
       fixed — confirm no blank-reason residual was silently masked by a prior "fix" that never persisted. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — **CONFIRMED HOLDS.** Live read of `read_availability_index` (shard-merged, single-walk-safe)
+      for `(data_type=WEATHER)`: **0** blank-reason (`capture_status=expected_unattempted`, `error_reason=""`) rows
+      within the original flip window (2019-03-02→2026-06-27) — the 2026-06-27 flip's `pending_fetch=0` claim was NOT
+      corrupted by this bug. In-window breakdown: `empty_confirmed=244,662`, `captured=12,036`, `attempted_failed=51`
+      (matches the flip's cited `attempted_failed=51` exactly). **Side finding (adjacent, not this todo's scope to
+      fix)**: ALL 379 current blank-reason WEATHER rows fall AFTER the flip window (dates 2026-06-30→2026-07-09) — this
+      is the same residual the sibling plan's item #6 attributed to an unverified "daily-pipeline-lag" hypothesis. Given
+      weather.py's season-window guard resolves via `record_expected_empty()`→typed `empty_confirmed` (not a
+      blank-reason write itself) and the missing `.write()` was live through 2026-07-09 01:27 UTC, a dropped
+      guard-resolution leaves the enumerator's `expected_unattempted` seed row stuck exactly at this signature — far
+      more consistent with this SAME write-loss bug (guard firing for dates where weather's full expected-league set is
+      off-season, e.g. northern-hemisphere summer break) than with "lag." Not independently re-verified post-fix (the
+      fix landed 920b303 same day as most of these dates — the daily forward-poll needs to re-run against the fixed code
+      to resolve them); flagged in the plan's Progress Log for whoever next picks up item #6. — unified-trading-pm (this
+      doc, no code change needed; 920b303 already shipped by the prior session). Slot-4, 2026-07-09.
 - [ ] [SCRIPT] P2. Add a QG lint check (or extend an existing one, e.g. STEP 5.7x in
       `codex/06-coding-standards/quality-gates.md`) that flags a `ManifestWriter`/`record_*()` call followed by a
       `return` with no `.write()`/`.flush()` on that variable before the function exits, when OTHER exit paths in the
@@ -121,6 +135,36 @@ blank-reason `expected_unattempted` for big-5 native leagues dropped from **185/
       the sports orchestrator files named in the sibling plan. (repo: instruments-service)
 
 ## Progress Log
+
+### 2026-07-09 ~02:1x UTC — slot-4: re-verified weather's item #1 gate — holds; found likely explanation for item #6's "daily lag" residual
+
+**Task**: `manifest_early_return_missing_write_loss-001` (the P1 VERIFY todo above).
+
+Read the live consolidated sports `availability_index` once (`read_availability_index`, shard-merged, single-walk-safe —
+no whole-corpus GCS list) for `(data_type=WEATHER)`, split by the original item #1 flip window (2019-03-02→2026-06-27,
+the `weather-backfill-20260627-160501` VM's range) vs. after it. **0** blank-reason `expected_unattempted` rows within
+the original window — the flip holds; the write-loss bug (920b303) did not retroactively invalidate it. In-window
+`attempted_failed=51` matches the flip's cited evidence exactly.
+
+All 379 CURRENT blank-reason WEATHER rows sit outside that window (dates 2026-06-30→2026-07-09) — this is the residual
+`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md`'s item #6 has been carrying since 2026-07-08 as an
+unverified "maybe daily-pipeline-lag" hypothesis (open_meteo `pending_fetch=264` at the time, now grown to 379 as more
+days accumulated). Traced why: weather.py's season-window guard resolves a cell via `record_expected_empty()` → typed
+`empty_confirmed`, never a blank-reason write itself — so a cell stuck at `expected_unattempted`/blank `error_reason` is
+exactly what you'd see when the guard's resolution write is silently dropped (the missing-`.write()` bug, live through
+2026-07-09 01:27 UTC) for a date where weather's full expected-league set is off-season (plausible for this 06-30→07-09
+window — northern-hemisphere summer break). This is a materially better explanation than "lag": lag would clear as the
+poll catches up; a dropped resolution write does NOT clear on its own — it needs the daily forward-poll to re-run
+against the now-fixed code.
+
+**Not fixed in this task** (out of the VERIFY todo's scope — item #6 is a separate, already-open item covering 6
+sources, several still blocked on unrelated code gaps). Left as a pointer for whoever next re-verifies item #6: check
+whether the 379-row weather residual (and probably SFI's parallel ~264-379 row residual, item #2) clears once the daily
+forward-poll next touches those dates post-920b303; if it doesn't clear on its own, a targeted re-fetch (same
+closer-script pattern as the understat fix) should resolve it now that the guard's write actually persists.
+
+No code changed this session — 920b303 (prior session) already shipped the fix. This is a pure manifest re-verification;
+checkbox flipped in this same doc with full counts.
 
 ### 2026-07-09 ~01:25 UTC — slot-2: root-caused, fixed, verified end-to-end, shipped
 
