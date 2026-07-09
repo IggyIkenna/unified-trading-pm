@@ -386,6 +386,25 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 ## 7. Progress Log
 
+- 2026-07-09 ~16:25Z — **VERIFY evidence: boot-grace proven live (0 violations) + induced dead-worker RESUME e2e PASSED
+  with continuation proof + kick-noise → ~1-2/hr.** (1) Boot-grace: 10-min measured verifier over the post-fix window
+  (16:04→16:14) paired every spawn with subsequent reclaims/kicks —
+  `spawns=6 reclaims=1 kicks=14 fresh-reclaim-violations=0 fresh-kick-violations=0`; the one reclaim was a legitimately
+  old lingering session. Slot 6 (spawned 16:08:21 under the new code) booted, attached backlog task
+  `v1_enumerator_dispatch_not_deletable-010`, and went `working` — the full healthy lifecycle that was impossible during
+  the churn. (2) Kick-noise (VERIFY item e): `worker_kick_failed` 39/hr (14:00 window, pre-verified-submit) → 1/hr
+  (15:00) → 2/hr (16:00); kick volume 40→16-17/hr and the remainder are designed idle-nudges that now demonstrably land.
+  (3) Induced resume e2e (VERIFY item c): killed `orch-slot-6` mid-task at 16:17:36 (worker had REAL dirty WIP:
+  `dirty=['unified-trading-pm']`); +59s TmuxPruner→classifier marked resume-pending (task KEPT, session `ad37a0c5…`
+  preserved, dirty repos untouched — the no-dirty-resolution contract); +2m16s AutoSpawn `_resume_pass` →
+  `Resumed tmux session orch-slot-6 (resume=ad37a0c5…, flags=(…, '--resume', 'ad37a0c5…'))`; DB after: `status=working`,
+  task kept, session id UNCHANGED, `resume_pending_session_id=NULL`, `resume_attempts=1`. Continuation proof: the
+  resumed pane is actively re-running its QG (`✶ Spinning…`) under the session-scoped scratchpad path that embeds the
+  SAME session id. Zero work lost. Two operator systemd restarts (16:15:20 + earlier) confirmed the grace anchors on the
+  DB column and survives process bounces. STILL OPEN before the VERIFY flip: (a) organic preserve-path fire on a
+  dead+dirty slot at a done→new-work handoff, and a live done-gate 409 (slot 6's dirty PM clone will exercise it at its
+  next `/done`).
+
 - 2026-07-09 ~16:10Z — **Soak finding #2 fixed + deployed: boot-grace (agent-orchestrator@a4611f3).** The 15:25/15:30
   operator systemd restarts (clean: `NRestarts=0`, graceful STOPPED events; not a crash) reset every slot to
   idle-with-live-session and exposed a churn loop the soak monitor caught within minutes: the watchdog's
