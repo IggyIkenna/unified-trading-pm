@@ -7,7 +7,7 @@
 # Installs:
 #   1. /usr/local/bin/pm-pull-ff.sh          — smart FF-pull script (from PM repo)
 #   2. pm-pull.service + pm-pull.timer       — pull every 5 min
-#   3. orchestrator regen-interval drop-in   — tighten PlanRegenLoop to 30 min
+#   3. orchestrator regen-interval drop-in   — tighten PlanRegenLoop to 5 min
 #
 # Plan: unified-trading-pm/plans/active/plan_hygiene_silent_failure_capture_2026_05_29.md § Phase 6
 #
@@ -102,17 +102,19 @@ systemctl start pm-pull.service  # immediate first pull
 echo "pm-pull.timer enabled and started"
 systemctl status pm-pull.timer --no-pager | head -10
 
-# --- 6. Regen-interval drop-in (tighten from 6h to 30 min) ---
+# --- 6. Regen-interval drop-in (tighten to 5 min — operator 2026-07-09: regen is cheap,
+#         and a 30-min tick left an operator plan-takeover dispatchable for up to 30 min
+#         before the local-only prune could fire) ---
 if systemctl list-unit-files | grep -q "^orchestrator.service"; then
     mkdir -p "$ORCH_DROPIN_DIR"
     cat > "$ORCH_REGEN_DROPIN" <<'EOF'
 [Service]
-Environment=ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS=1800
+Environment=ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS=300
 EOF
     echo "Written: $ORCH_REGEN_DROPIN"
     systemctl daemon-reload
     systemctl restart orchestrator
-    echo "orchestrator restarted with ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS=1800"
+    echo "orchestrator restarted with ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS=300"
     systemctl show orchestrator --property=Environment | grep -i regen || echo "(regen env — check drop-in)"
 else
     echo "(orchestrator.service not found — skipping regen-interval drop-in)"
