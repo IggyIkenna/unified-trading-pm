@@ -756,10 +756,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": "ruff",
         "large_file_count": 5,
+        "coverage_pct": 91.32,
         "warn_file_count": 6,
-        "coverage_pct": 91.31
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -1258,10 +1258,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "coverage_pct": 89.77,
+        "large_file_count": 5,
+        "coverage_pct": 89.75,
         "warn_file_count": 20,
-        "large_file_count": 5
+        "qg_red_reason": null
       }
     },
     "unified-trading-pm": {
