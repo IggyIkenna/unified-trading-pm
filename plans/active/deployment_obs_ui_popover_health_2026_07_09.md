@@ -9,7 +9,7 @@ summary:
   deployment_obs_backend_kinds_health_2026_07_09 lands the DeploymentItem contract (depends_on documents the ordering).
   Every UI task carries a Playwright L2 regression. Full design + the mock that is the visual contract live in the LOCAL
   parent deployment_observability_expansion_2026_07_08.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -76,3 +76,15 @@ source: deployment_observability_expansion_2026_07_08.md
   backend AO plan completes and posts the frozen `DeploymentItem` contract sha here, so the UI wires against a real
   contract. The mock in `deployment_observability_expansion_2026_07_08.md` § "Where we are" is the visual target and
   already lives in this slot's `deployment-ui` working tree.
+- 2026-07-09 — **STARTED (operator go-ahead despite AO not firing the handoff task).** Backend AO plan is 18/23; the
+  three UI-critical items ALL landed: `DeploymentItem` contract + `composite_health_status` (deployment-api@9353d28
+  area)
+  - `/deployments/{id}/detail` (`DeploymentDetailResponse`, deployment-api@7c4265a). **Frozen contract** =
+    `deployment-api/deployment_api/routes/deployments_inventory.py:176` (`DeploymentItem`) + `:237`
+    (`DeploymentDetailResponse`). **Two reconciliations to honour when wiring:** (1) the D.1 metrics vector
+    (cpu/mem/disk/slope/io/net/workload_alive) lives on `/detail`, NOT the thin list — inline Resources column needs 3
+    summary scalars (`cpu_pct`/`mem_pct`/`disk_pct`) added to `DeploymentItem` (small backend follow-up; recommended
+    over moving the glance into the popover); (2) service metrics are STRUCTURAL
+    (`desired_count`/`running_count`/`task_definition_revision`, `revision`/`region`,
+    `runtime`/`memory_size_mb`/`package_type`) not latency (req/min/p99/error_rate mock fields are dropped). Building
+    against the mock with field names aligned to this contract so wiring is a no-op.
