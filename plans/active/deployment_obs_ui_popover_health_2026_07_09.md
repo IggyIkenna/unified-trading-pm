@@ -5,10 +5,10 @@ summary:
   UI half of the deployment-observability expansion — render the full-estate kinds (6 kind badges), the composite VM
   health chip (7-state, 3-tier severity colour) and the service health states, the cpu/mem/disk Resources columns, a
   Kind filter, and a name-click detail popover (sparklines + timeline + absolute used/total + owning consolidator + an
-  "Open in GCP/AWS console" deep-link). Starts draft, released to active by the last task of
-  deployment_obs_backend_kinds_health_2026_07_09 once the API contract exists. Every UI task carries a Playwright L2
-  regression. Full design + the mock that is the visual contract live in the LOCAL parent
-  deployment_observability_expansion_2026_07_08.
+  "Open in GCP/AWS console" deep-link). LOCAL plan — executed interactively in this slot once the backend AO plan
+  deployment_obs_backend_kinds_health_2026_07_09 lands the DeploymentItem contract (depends_on documents the ordering).
+  Every UI task carries a Playwright L2 regression. Full design + the mock that is the visual contract live in the LOCAL
+  parent deployment_observability_expansion_2026_07_08.
 status: draft
 nature: process
 asset_group: [cross-cutting]
