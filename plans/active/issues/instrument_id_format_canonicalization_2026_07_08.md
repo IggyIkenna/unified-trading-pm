@@ -525,15 +525,19 @@ unfinished tail re-runs.
 - `market-tick-data-service@19357ad4` (OKX venue-key fix), `@1e8870b1` (on-chain-perp live connectors + manifest
   migration script).
 
-**Committed locally, NOT yet on origin (instruments-service clone, verify before trusting — may have landed since):**
-`6a1122e5`/`a326f6b9`/`57f8a754`/`1a696db7` (TradFi combo/K-fix/IBKR, empty-string-fallback ratchet fix, on-chain-perp
-`@LIN` marker, Binance `@LIN`/`@INV` migration+docs) — blocked pending a clean `quality-gates.sh` push window on the
-shared tree; a dedicated workflow (`wf_41d76b71-c79`) was dispatched to land these, check its completion status.
+**UPDATE 2026-07-09 — `wf_41d76b71-c79` COMPLETED and independently verified (SHA + content + isolated clean-worktree
+test run, not self-report).** `instruments-service@6a1122e5` (`git rev-parse HEAD origin/live-defi-rollout` both return
+`6a1122e5b59c1d57b50f9e6d5f676eac8ea7fb12`) plus the 3 previously-local commits (`a326f6b9`, `57f8a754`, `1a696db7`) are
+now ALL genuinely on `origin/live-defi-rollout` — this section's prior "committed locally, not yet on origin" is now
+stale, kept only as history. Also landed: `unified-trading-pm@f05b57f93`, a real `quickmerge.sh` bug fix (the "already
+committed, skip to push" check previously required the WHOLE working tree to be porcelain-clean, essentially never true
+in this heavily concurrent shared-tree session — scoped to `--files` instead; may reduce false quickmerge blocks for
+every other in-flight agent). Verification also reconfirmed the catalog-durability finding above with direct evidence
+(91/312 rows re-surfaced identically after a roll-up 6h post-fix, 0 new pollution).
 
 **In-flight `Workflow` runs (script + run ID, resumable):**
 
-1. `wf_41d76b71-c79` — `tradfi-combo-inherit-and-land` — lands the 4 local-only instruments-service commits above.
-   Script:
+1. `wf_41d76b71-c79` — `tradfi-combo-inherit-and-land` — **COMPLETE**, verified landed (see update above). Script:
    `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/tradfi-combo-inherit-and-land-wf_41d76b71-c79.js`
 2. `wf_c4796aec-f35` — `canonical-id-full-historical-sweep` — real (non-smoke-test) catalog + per-day-corpus + GCS
    filename migrations for Bybit/Kraken, Deribit, OKX, on-chain-perp, DEX-pool, Binance. Script:
@@ -544,8 +548,29 @@ shared tree; a dedicated workflow (`wf_41d76b71-c79`) was dispatched to land the
    symbol portion is). Script:
    `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/mtds-canonical-symbol-migration-wf_118d8268-18c.js`
 
-**Still queued, not yet dispatched:** wiring the shared live-construction path
-(`instruments_service/reference_data/ adapters/cefi/tardis/adapter.py`, `ccxt_adapter.py`) for
+**Still queued:** wiring the shared live-construction path
+(`instruments_service/reference_data/adapters/cefi/ tardis/adapter.py`, `ccxt_adapter.py`) for
 Bybit/Kraken/OKX/Deribit/Binance's PERPETUAL/FUTURE/OPTION `instrument_key` — every sibling agent this session deferred
-touching this shared file due to lock contention with the TradFi WIP; dispatch once (1) above lands. A final cross-repo
-zero-old-format-traces verification pass is also queued behind all of the above.
+touching this shared file due to lock contention with the TradFi WIP, now cleared per the update above; dispatching now.
+A final cross-repo zero-old-format-traces verification pass is also queued behind all of the above.
+
+**UPDATE 2026-07-09 — dispatched `wf_9e5f13e3-962`** — `live-wiring-plus-legacy-naming-audit` — wires the shared
+live-construction path (`tardis/adapter.py`, `ccxt_adapter.py`) so new captures emit `@LIN`/`@INV` directly, PLUS the
+generalized CeFi + DeFi legacy-GCS-naming audit decided below, then verifies both. Script:
+`/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/live-wiring-plus-legacy-naming-audit-wf_9e5f13e3-962.js`
+
+- **2026-07-09 — GENERALIZED FINDING + DECISION: legacy GCS filename/path conventions are a systemic risk, not just an
+  on-chain-perp issue.** The on-chain-perp full-historical-sweep branch found that a real GCS narrow-prefix listing (not
+  the manifest's summary count) shows ~99% of "captured" HL/ASTER historical objects (~19,255 of 19,435) sit under an
+  EVEN OLDER bare-symbol filename shape (`AAVEUSDT.parquet`, `AAVE-PERP.parquet` — no venue, no type marker in the name
+  at all) that neither the original nor the already-extended migration script's regex recognizes; they'd be silently
+  skipped, not migrated. **Operator decision, 2026-07-09**: (1) extend that script to also parse venue from the object's
+  GCS PATH (not just the filename) so this older shape is covered too, not left behind; (2) treat this as a general
+  pattern, not an on-chain-perp-only bug — **audit CeFi (Binance/Bybit/Kraken/Deribit/OKX) and DeFi (13 DEX-pool
+  protocols + lending/staking) historical GCS data for the same problem**: multiple coexisting filename/path naming
+  conventions from different points in this workspace's history, only the most recent of which any current migration
+  script recognizes. **Target**: exactly ONE canonical path/filename convention per venue going forward (per the
+  filename-vs-instrument_id rule already settled above); every object under any OTHER legacy shape gets discovered and
+  migrated to it — not just the already-known target-format gap this doc's findings 1-6 describe, but genuinely
+  unknown-until-audited older shapes the way this one was. Dispatched as a dedicated discovery+migration workflow, see
+  Orchestration state below.

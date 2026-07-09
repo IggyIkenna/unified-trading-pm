@@ -219,7 +219,7 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
   per-site reasoning): 5 reported sites + the adjacent `venue` read in
   `reconcile_phantom_manifest_rows_all.py::_build_triage_records` (a cross-asset-group best-effort Gate-3 triage-report
   builder — `main()` already guards `"venue" in phantom_df.columns` a few lines below the same function, confirming
-  these columns are genuinely optional depending on asset_group/schema vintage) +
+  these columns are genuinely optional depending on asset*group/schema vintage) +
   `reconcile_sports_blank_empty_reason_2026_06_24.py`'s `VM_NAME` read (same optional-env-flag pattern as the
   98198613/86df11b3 precedent). Verified via direct re-run: 377 → 368 (< baseline 369, real fix, not a baseline edit —
   `write_baseline()` is hard-clamped DOWN-only regardless). Landed as `instruments-service@a326f6b9`
@@ -240,11 +240,11 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
   `quickmerge.sh --agent --files "scripts/reconcile_phantom_manifest_rows_all.py scripts/reconcile_sports_blank_empty_reason_2026_06_24.py" --skip-preflight`
   (pre-flight skipped because an unrelated dependency repo, `unified-api-contracts`, has unrelated uncommitted changes
   from another session) reaches Stage 3 (Local Quality Gates) and fails on 4 pre-existing, unrelated test failures in
-  `tests/unit/test_cefi_tradfi_comprehensive.py::TestDatabentoHelpers::test_parse_cme_spread_legs_*` — root cause
-  confirmed (not assumed) by inspecting `git status`: another agent has a **live** uncommitted WIP on
-  `instruments_service/reference_data/adapters/tradfi/databento/{__init__,adapter,symbology}.py` (mtime ~5 min old at
+  `tests/unit/test_cefi_tradfi_comprehensive.py::TestDatabentoHelpers::test_parse_cme_spread_legs*\*`— root cause
+  confirmed (not assumed) by inspecting`git status`: another agent has a **live** uncommitted WIP on
+  `instruments*service/reference_data/adapters/tradfi/databento/{**init**,adapter,symbology}.py` (mtime ~5 min old at
   observation time, actively multi-file, matches this session's explicit "DO NOT touch databento files" scope boundary)
-  that has _temporarily_ reverted `_parse_cme_calendar_spread_legs` to a 1-arg signature, while the already-committed
+  that has \_temporarily* reverted `_parse_cme_calendar_spread_legs` to a 1-arg signature, while the already-committed
   test file (from `86df11b3`) expects the real, current 2-arg `(raw_symbol, venue)` signature. Confirmed via a bounded
   3-minute poll (6× 30s) that this WIP was still unresolved at observation end — not something this pass fixed or should
   fix (explicitly out-of-scope file per this dispatch's own instructions; touching another agent's live WIP file is a
@@ -252,3 +252,19 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
   gate-clean (verified via direct checker re-runs above, not just quickmerge's full-suite run) — landing is pending only
   on that unrelated sibling WIP resolving (or a future push once the tree is quiescent). No baseline edits, no
   force-push, no `--skip-tests`.
+- **2026-07-09 (re-confirmed, blocking a 4th independent fix)** — Hit the identical wall shipping the real
+  OKX-SWAP/OKX-FUTURES `margin_type` full-sweep (`prod/catalog.parquet` 2,753 rows + `instrument_availability/by_date/`
+  per-day corpus 4,762 files, both real production GCS writes, already applied + verified independent of this gate — see
+  `instruments-service/docs/CEFI_INSTRUMENTS.md`). `bash scripts/quality-gates.sh --no-fix` on `instruments-service`
+  again fails STEP 5.101: **live count 372 vs. baseline 369 (3 over)**, exactly
+  `scripts/reconcile_phantom_manifest_rows_all.py:470-472` — net movement since the `a326f6b9` fix (368) is +4, i.e. new
+  sites landed via later, unrelated commits in the same fast-moving shared tree (consistent with this doc's own
+  368→377→368-pattern across entries: this ratchet keeps drifting back over baseline as concurrent agents ship unrelated
+  real fixes, not from any one change). Confirmed the specific flagged lines are genuinely pre-existing (not this
+  session's or any sibling's uncommitted WIP):
+  `git show origin/live-defi-rollout:scripts/reconcile_phantom_manifest_rows_all.py` contains the identical code at
+  those lines. Did not attempt a per-site audit (out of scope for the OKX task; same reasoning as every prior entry).
+  Net effect: this session's `docs/CEFI_INSTRUMENTS.md` OKX write-up +
+  `scripts/canonicalize_okx_margin_type_2026_07_09.py` are staged and ready but left uncommitted, same as the BINANCE/
+  Deribit/Bybit-Kraken fixes above — the real, authorized, already-applied production data migration is NOT gated by
+  this (GCS writes are independent of git), only the paperwork commit is.
