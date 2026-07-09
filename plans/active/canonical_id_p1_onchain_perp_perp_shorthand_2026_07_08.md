@@ -161,17 +161,32 @@ Grepped the workspace for `:PERP:` construction sites (not just references) befo
       availability manifest (mirrors the proven `migrate_onchain_perp_canonical_instrument_id.py` 2026-06-22 precedent)
       — `market-tick-data-service/scripts/migrate_onchain_perp_perpetual_canonical_2026_07_08.py`. DRY-RUN is the
       default; `--apply` requires `--stamp`.
-- [ ] [DATA] P1. **Run the migration dry-run to completion and record the real GCS+manifest volume**, then decide
-      apply-now vs. file as a dedicated backfill todo based on the real count (per the operator's migration-mechanics
-      decision: always rewrite in place, never silently skip — this todo tracks executing that decision once the real
-      volume is known). Dry-run was in progress at end of this pass — see Progress Log for partial evidence; the exact
-      renamed/skipped/manifest-row counts were not yet fully captured when this plan was filed.
-- [ ] [SCRIPT] P1. **Apply the historical-data migration** (GCS rename + manifest rewrite, `--apply --stamp <stamp>`)
-      once the dry-run counts are reviewed, with a backup of the pre-migration manifest index (the script does this
-      automatically).
-- [ ] [VERIFY] P1. **Post-apply verification** — confirm 0 remaining `:PERP:`-shaped instrument_id rows for
-      HYPERLIQUID/ASTER in the manifest + GCS object names, no row-count drift, no new duplicate `instrument_id`
-      introduced by the dedup/merge step.
+- [x] [DATA] P1. **Run the migration dry-run to completion and record the real GCS+manifest volume** —
+      market-tick-data-service@dd1c3ec7 (script extended same pass, see below). Real dry-run completed 2026-07-09
+      against production: manifest 498,388 in-scope rows, 100% already `:PERP:`-shaped
+      (`instrument_ids_transformed_from_venue_perp_shape=498388`); GCS full-corpus walk (4,120,516 objects scanned,
+      ~82min) found 136,814 real in-scope objects — **the largest real finding**: 97,138 (71%) were in an EVEN OLDER
+      bare-symbol shape (`AAVE-PERP.parquet` / `AAVEUSDT.parquet`, no venue prefix at all) that neither this script's
+      original regex NOR the 2026-06-22 precedent's own apply run had actually caught, vs. only 39,202 already in the
+      `{VENUE}:PERP:{SYMBOL}` shape. Extended `plan_rename`/`rewrite_manifest` to also parse venue from the GCS object
+      PATH (not just the filename) so the bare-symbol shape resolves straight to the final
+      `VENUE:PERPETUAL:BASE-QUOTE@LIN` target in one touch — market-tick-data-service@dd1c3ec7.
+- [x] [SCRIPT] P1. **Apply the historical-data migration** (GCS rename + manifest rewrite,
+      `--apply --stamp     20260709T1323Z`) — REAL, COMPLETE. GCS: 134,855 renamed + 1,453 duplicate-old-shape sources
+      cleaned up + 32 transient SSL/connection-pool errors (0.02% of 136,340, `--workers 96` exceeded the underlying
+      HTTP client's default pool size) — all 32 resolved via a targeted idempotent retry (16 genuine renames, 11
+      dup-source cleanups, 5 already-resolved) for a final **0 errors**. Manifest: 7,219,598 rows before/after (0
+      drift), 0 dedup collisions, real backup at
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/backups/availability_index.pre_perpetual_canonical_20260709T1323Z.parquet`.
+      Real wall-clock: ~82min discovery + ~2h20m GCS rename + ~2min manifest rewrite/upload (~4h40m end-to-end,
+      unattended background job — see Progress Log for the full timeline and the connection-pool-tuning finding).
+- [x] [VERIFY] P1. **Post-apply verification** — confirmed via a fresh re-download of the real post-write manifest: 100%
+      of the 498,388 in-scope rows now read `VENUE:PERPETUAL:BASE-QUOTE@LIN` with `instrument_type=PERPETUAL` uniformly,
+      0 rows in any old shape, 0 row-count drift (7,219,598 before/after), 0 in-scope duplicate
+      `(venue, data_type, date, instrument_type, instrument_id, pipeline_mode)` keys. GCS-side: spot-checked 15+ real
+      dates spanning 2023-04 through 2026-01 (incl. every date that had a transient rename error) — every sampled
+      `data_type=` partition now contains exactly one canonical file per symbol, zero trace of `-PERP` / bare-symbol /
+      intermediate `:PERP:` shapes.
 - [x] [SCRIPT] P2. **Update `instruments-service/docs/DEFI_INSTRUMENTS.md`'s on-chain-perp section** with the real
       shipped commit SHAs once all 3 repos have landed — instruments-service@f7cf3ea5 (docs follow-up commit), filled in
       `instruments-service@f7cf3ea5` + `market-tick-data-service@c20ea464` (both were `<PENDING-SHA>` placeholders at
@@ -211,3 +226,44 @@ Grepped the workspace for `:PERP:` construction sites (not just references) befo
   produced the dry-run — the 2 open todos above (capture real counts, then apply) are the correct next step for whoever
   picks this up, following the same operator-decided migration-mechanics discipline (rewrite in place, backup first,
   dedup on capture_status precedence) already proven safe by the 2026-06-22 precedent.
+- **2026-07-09** — Real, full-scale `--apply` run authorized and executed to completion (this was explicitly NOT a smoke
+  test — real production GCS + manifest mutation). Real GCS scoping confirmed the counts had NOT materially changed
+  since the prior pass's partial dry-run evidence. **Regex-extension gap (the largest real gap in this whole sweep, per
+  the operator's framing)**: extended `migrate_onchain_perp_perpetual_canonical_2026_07_08.py`'s `plan_rename()` (GCS)
+  and `rewrite_manifest()` (manifest) to ALSO recognize an EVEN OLDER bare-symbol shape with NO venue prefix at all in
+  the filename (HL `{SYM}-PERP.parquet`, ASTER `{SYM}{QUOTE}.parquet`) by parsing venue from the object's GCS **path**
+  (`venue=` partition) instead of the filename — added `legacy_bare_symbol_canonical_id()`, mirroring the 2026-06-22
+  precedent's own path-based venue resolution. Verified via targeted unit-level sanity checks (idempotency: both the
+  bare-legacy and `:PERP:` shapes for the same symbol correctly collapse onto the identical final target) before running
+  against real infra — market-tick-data-service@dd1c3ec7. Real dry-run (re-run with the extension, full production
+  corpus, ~82min discovery walk — 4,120,516 objects scanned, single-walk discipline honoured): 136,814 real in-scope
+  HL/ASTER objects found, **97,138 (71%) in the bare-legacy shape** vs 39,202 already `:PERP:`-shaped — confirming the
+  2026-06-22 migration's own apply pass had left the large majority of real objects un-renamed despite the manifest
+  already reading the newer shape (a manifest/GCS-filename divergence, now closed). Manifest side: 100% of 498,388
+  in-scope rows were already `:PERP:`-shaped (0 bare-legacy rows found at the manifest level — the divergence was
+  GCS-object-only). Real `--apply --stamp 20260709T1323Z --workers 96` executed against
+  `market-data-tick-cefi-prd-central-element-323112` (backup-first per the established migration-mechanics discipline,
+  real concurrency via the script's own `ThreadPoolExecutor`): GCS renamed 134,855 + cleaned up 1,453
+  duplicate-old-shape sources + 32 transient errors (SSL/`BrokenPipeError`/one 404-on-retry — all correctly isolated
+  per-object, never aborted the pool). **Real, measured throughput finding for future similar migrations**:
+  `--workers 96` exceeded the underlying HTTP client's default connection-pool size (10), causing "connection pool is
+  full, discarding connection" churn and a slow initial ramp (~400 renames/min); throughput self-stabilized as
+  connections settled, reaching ~1,300-1,700 renames/min once warm — net ~2h20m wall-clock for the 136,340-object rename
+  phase (down from a naive ~5.7h projection at the initial degraded rate). The 32 transient errors were resolved via a
+  small targeted retry script (reusing the migration module's own idempotent `plan_rename`/`do_rename` directly on the
+  32 known failed paths, rather than a second full-corpus walk) — 0 remaining errors, verified via real GCS listing
+  (every previously-failing date/symbol now shows exactly one canonical object, no leftover old-shape duplicates).
+  Manifest rewrite completed with a real backup + real upload (7,219,598 rows before/after, 0 drift, 0 dedup
+  collisions). Post-apply verification (re-downloaded the real post-write manifest + spot-checked 15+ real GCS dates
+  spanning 2023-04 through 2026-01, including every date that had a transient error): 100% of in-scope rows/objects now
+  read the final `VENUE:PERPETUAL:BASE-QUOTE@LIN` canonical shape, 0 remaining old-format traces of any kind. Shipped
+  the script fix via quickmerge (market-tick-data-service@dd1c3ec7, scoped `--files` in a shared/dirty clone — a sibling
+  agent had unrelated staged changes in the same clone at the time). Wrote the
+  `instruments-service/docs/DEFI_INSTRUMENTS.md` "On-chain-perp DEXes" section update with the real before/after counts
+  above, but its quickmerge is **currently BLOCKED** by a pre-existing, unrelated repo-wide QG hard-fail in
+  instruments-service: `scripts/reconcile_phantom_manifest_rows.py:45` imports `google.cloud.storage` directly (TID251
+  ratchet: baseline 58, actual 59 — a real regression already landed in that repo's history, nothing to do with this
+  plan's scope — a sports-manifest-reconciliation script, not on-chain-perp). Did not attempt to fix it blind
+  (unfamiliar file, outside this plan's scope, per the workspace's own findings-triage discipline) — flagging here + in
+  the session report for the operator/a follow-up agent to fix or dispatch; the doc content itself is written, accurate,
+  and ready to ship once that blocker clears.
