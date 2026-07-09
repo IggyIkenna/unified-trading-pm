@@ -31,7 +31,7 @@ related:
     ../../codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-07
+last_updated: 2026-07-09
 parent_epic: infrastructure_master
 priority: P2
 source: cefi_layer1_denominator_gaps-010 (slot-10 planning, BLK-0ac84889 operator answer 2026-07-06)
@@ -205,6 +205,21 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
 
 ## Progress Log
 
+- **2026-07-09** — **-009 RE-DISPATCHED (22ND SLOT BOUNCE) — SAME PARK** (slot-2 data_engineering). Re-verified
+  independently against a fresh `.tabs/2` pull (`instruments-service` to `f136eec0`, `deployment-service` to `a1bf966`
+  on `live-defi-rollout`): prereq #3 (v2 venue-grain sentinel) IS landed in
+  `instruments-service/scripts/enumerate_expected_universe.py` — `_yield_v2_cefi_pre_venue_launch_rows` (line 1061),
+  `_yield_v2_defi_pre_launch_rows` (line 1269), `_yield_v2_prediction_pre_venue_launch_rows` (line 2084) all confirmed
+  present and wired via `yield from`. Prereq #4 (infra launcher retirement) is STILL NOT landed —
+  `deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py:183`,
+  `scripts/vm/vm_zombie_watchdog.py:627`, and `scripts/vm/launch-ec2-vm.sh:148` all still reference the v1
+  `expected-universe-enum-`/`eu-enum-` prefix, and `scripts/vm/launch-expected-universe-enumerator-vm.sh` still exists.
+  This is an infra-role task, outside `data_engineering` craft scope. The underlying decision was already made — this is
+  not a fresh ambiguity, so self-parking via `/skip-current-task` per the established precedent from bounces 3-21.
+  **Systemic ask (22nd bounce across 3 days — still unaddressed after 21 requests)**: unchanged from every prior bounce
+  — set `priority: 999` / a `conditions:` gate on the `v1_enumerator_dispatch_not_deletable-0XX` backlog entry keyed on
+  prereq #4 landing, or dispatch an infra-role worker to close prereq #4 directly (removes the parked task's blocker
+  entirely).
 - **2026-07-09** — **-009 RE-DISPATCHED (21ST SLOT BOUNCE) — SAME PARK** (slot-3 data_engineering). Re-verified
   independently against a fresh `.tabs/3` pull (`instruments-service` to `bac235a3`, `deployment-service` to `a1bf966`
   on `live-defi-rollout`, both later than the 20th bounce's tips): prereq #3 (v2 venue-grain sentinel) IS landed in
