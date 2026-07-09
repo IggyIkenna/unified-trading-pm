@@ -553,3 +553,19 @@ every other in-flight agent). Verification also reconfirmed the catalog-durabili
 Bybit/Kraken/OKX/Deribit/Binance's PERPETUAL/FUTURE/OPTION `instrument_key` — every sibling agent this session deferred
 touching this shared file due to lock contention with the TradFi WIP, now cleared per the update above; dispatching now.
 A final cross-repo zero-old-format-traces verification pass is also queued behind all of the above.
+
+- **2026-07-09 — GENERALIZED FINDING + DECISION: legacy GCS filename/path conventions are a systemic risk, not just an
+  on-chain-perp issue.** The on-chain-perp full-historical-sweep branch found that a real GCS narrow-prefix listing (not
+  the manifest's summary count) shows ~99% of "captured" HL/ASTER historical objects (~19,255 of 19,435) sit under an
+  EVEN OLDER bare-symbol filename shape (`AAVEUSDT.parquet`, `AAVE-PERP.parquet` — no venue, no type marker in the name
+  at all) that neither the original nor the already-extended migration script's regex recognizes; they'd be silently
+  skipped, not migrated. **Operator decision, 2026-07-09**: (1) extend that script to also parse venue from the object's
+  GCS PATH (not just the filename) so this older shape is covered too, not left behind; (2) treat this as a general
+  pattern, not an on-chain-perp-only bug — **audit CeFi (Binance/Bybit/Kraken/Deribit/OKX) and DeFi (13 DEX-pool
+  protocols + lending/staking) historical GCS data for the same problem**: multiple coexisting filename/path naming
+  conventions from different points in this workspace's history, only the most recent of which any current migration
+  script recognizes. **Target**: exactly ONE canonical path/filename convention per venue going forward (per the
+  filename-vs-instrument_id rule already settled above); every object under any OTHER legacy shape gets discovered and
+  migrated to it — not just the already-known target-format gap this doc's findings 1-6 describe, but genuinely
+  unknown-until-audited older shapes the way this one was. Dispatched as a dedicated discovery+migration workflow, see
+  Orchestration state below.
