@@ -404,6 +404,14 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 ## 7. Progress Log
 
+- 2026-07-09 ~18:30Z — **Preserve path: third+fourth+fifth fires (slot 2, 18:26), incl. the CONFLICT branch behaving as
+  designed.** `slot_dirty_state_resolved action=inherited` on three ad-hoc worktrees: `_is-recover-wt@94557bf6` pushed
+  clean; `_tradfi-evidence-wt@604f62a0` and `is-bug2-wt@cfa36153` committed locally with correct identity but push
+  REJECTED → `pull --rebase --autostash` recovery hit a genuine same-file conflict → aborted per contract, local commits
+  kept, per-repo error recorded in the activity log, slot NOT quarantined. WIP preserved in all three cases; the two
+  conflict shas live in the slot-2 worktrees' parent clones if anyone needs to salvage them. (Follow-up consideration
+  folded into the P3 todo: a periodic sweep for local-only orphan-wip commits older than N days.)
+
 - 2026-07-09 ~17:50Z — **VERIFY todo FLIPPED — every item evidenced live; the plan's full lifecycle closed its first
   organic loop.** The induced-kill worker (slot 6) didn't just resume — it FINISHED: shipped its deployment-service
   work, committed + pushed its own plan-flip `unified-trading-pm@99e475325` at 16:28:29 (the "dirty WIP" the resume had
