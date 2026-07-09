@@ -43,7 +43,7 @@ thinking_tier: medium
 estimate_class: refactor
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
-last_updated: 2026-07-08
+last_updated: 2026-07-09
 supersedes:
 superseded_by:
 depends_on:
@@ -159,7 +159,13 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
       rewrite to fail fast (raise / return `None`) where the empty-string default silently masks a real missing-field
       bug — same decision process as Todo #1, just applied to instruments-service specifically. Until then,
       `instruments-service` quickmerge pushes stay blocked by this gate (working as designed — the gate is supposed to
-      stop silent accumulation, not be argued around).
+      stop silent accumulation, not be argued around). **Update 2026-07-09**: this exact 380/11-site snapshot was
+      resolved by `instruments-service@98198613` (10 noqa + 1 fail-fast) — superseded by fresh overage (377/8 sites,
+      different files) that accumulated afterward from other unrelated commits; see the 2026-07-09 Progress Log entry
+      below for that batch's resolution (`instruments-service@a326f6b9`, code-complete + gate-verified, landing pending
+      on an unrelated concurrent WIP collision). Not checking this box — checkbox flips require the fix to be actually
+      landed (pushed), and the overage this todo names has already moved on twice since it was written; the durable
+      state lives in the Progress Log, not this checkbox.
 
 ## Progress Log
 
@@ -195,3 +201,54 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
   to `instruments-service` is still blocked**, including this session's fully-implemented, tested, real-GCS-verified
   BINANCE canonicalization fix — left uncommitted in the working tree rather than force-pushed around the gate. Same
   conclusion as the prior entries: real fix is the per-site noqa/fail-fast audit (Todo above), not a baseline edit.
+- **2026-07-09 (resolution)** — Ran the real checker
+  (`unified-trading-pm/scripts/quality_gates/check_no_empty_string_fallback.py --workspace-root <ws> --scope instruments-service`)
+  directly rather than trusting the prior entry's snapshot: live count **377 vs baseline 369 (8 over)** — confirmed
+  genuinely reproducible, exactly the 8 sites the prior entry predicted:
+  `scripts/reconcile_phantom_manifest_rows_all.py:564-568` (5 sites),
+  `scripts/reconcile_sports_blank_empty_reason_2026_06_24.py:229`,
+  `scripts/reconcile_tradfi_non_trading_day_captured_2026_06_26.py:375`,
+  `scripts/relabel_sports_no_provider_coverage_2026_06_21.py:174`. **Concurrent-fix race discovered mid-task**: a
+  separate sibling dispatch
+  (`86df11b3 "fix(qg): unblock quality-gates-v2 on LDR — stale CME-spread test + empty-string-fallback ratchet"`, author
+  `slot-0·human-planning`) independently fixed 2 of the 8 sites (the `reconcile_tradfi_non_trading_day_captured`
+  `MANIFEST_PER_VM_SHARDS` read + `relabel_sports_no_provider_coverage` `VM_NAME` read, both
+  `# noqa: qg-empty-fallback`) and pushed to `origin/live-defi-rollout` while this fix was in progress in the same
+  shared working tree; a background auto-pull rebased local history onto it mid-session. Per-site audit + fix for the
+  remaining 6 (all `# noqa: qg-empty-fallback`, no fail-fast rewrite needed this pass — see commit body for full
+  per-site reasoning): 5 reported sites + the adjacent `venue` read in
+  `reconcile_phantom_manifest_rows_all.py::_build_triage_records` (a cross-asset-group best-effort Gate-3 triage-report
+  builder — `main()` already guards `"venue" in phantom_df.columns` a few lines below the same function, confirming
+  these columns are genuinely optional depending on asset_group/schema vintage) +
+  `reconcile_sports_blank_empty_reason_2026_06_24.py`'s `VM_NAME` read (same optional-env-flag pattern as the
+  98198613/86df11b3 precedent). Verified via direct re-run: 377 → 368 (< baseline 369, real fix, not a baseline edit —
+  `write_baseline()` is hard-clamped DOWN-only regardless). Landed as `instruments-service@a326f6b9`
+  ("fix(instruments-service): resolve remaining QG STEP 5.101 empty-string-fallback overage"). Also caught + fixed a
+  genuine STEP 5.95 DTZ007 regression this fix's own `ruff --fix` pre-commit hook introduced as collateral damage
+  (auto-stripped a pre-existing, unrelated `# noqa: DTZ007` on an adjacent line as "unused" — this repo's own
+  `pyproject.toml` `[tool.ruff.lint] select` excludes `DTZ`, so the routine hook and the isolated
+  `check_ruff_rule_ratchet.py` STEP 5.95 checker disagree about whether that suppression is "used"; the routine hook
+  wins and strips it every time the file is re-linted, so a bare noqa restore does not durably survive a future commit
+  touching this file). Real fix instead of a suppression: `reconcile_phantom_manifest_rows_all.py`'s
+  `PHANTOM_WEEKEND_TRADFI` weekday check only ever needed `date.fromisoformat(...)`, not `datetime.strptime(...)` — a
+  `date` has no timezone concept at all, eliminating the DTZ007 violation at the source. Verified via direct
+  `check_ruff_rule_ratchet.py` re-run: `dtz 25 == baseline 25` (was 26 mid-fix, confirmed the regression was real before
+  fixing it). **Landing status — blocked on an unrelated, live, concurrent multi-agent collision, not on this fix**:
+  `git log origin/live-defi-rollout..HEAD` shows 3 local-only commits (`a326f6b9` this fix, `57f8a754` a sibling's real
+  on-chain-perp `@LIN` margin-marker fix, `1a696db7` a sibling's real BINANCE-FUTURES/BINANCE-DELIVERY migration — all
+  genuinely committed, none authored by this pass).
+  `quickmerge.sh --agent --files "scripts/reconcile_phantom_manifest_rows_all.py scripts/reconcile_sports_blank_empty_reason_2026_06_24.py" --skip-preflight`
+  (pre-flight skipped because an unrelated dependency repo, `unified-api-contracts`, has unrelated uncommitted changes
+  from another session) reaches Stage 3 (Local Quality Gates) and fails on 4 pre-existing, unrelated test failures in
+  `tests/unit/test_cefi_tradfi_comprehensive.py::TestDatabentoHelpers::test_parse_cme_spread_legs_*` — root cause
+  confirmed (not assumed) by inspecting `git status`: another agent has a **live** uncommitted WIP on
+  `instruments_service/reference_data/adapters/tradfi/databento/{__init__,adapter,symbology}.py` (mtime ~5 min old at
+  observation time, actively multi-file, matches this session's explicit "DO NOT touch databento files" scope boundary)
+  that has _temporarily_ reverted `_parse_cme_calendar_spread_legs` to a 1-arg signature, while the already-committed
+  test file (from `86df11b3`) expects the real, current 2-arg `(raw_symbol, venue)` signature. Confirmed via a bounded
+  3-minute poll (6× 30s) that this WIP was still unresolved at observation end — not something this pass fixed or should
+  fix (explicitly out-of-scope file per this dispatch's own instructions; touching another agent's live WIP file is a
+  workspace HARD RULE violation). This pass's own STEP 5.101 + STEP 5.95 fix is itself real, complete, and independently
+  gate-clean (verified via direct checker re-runs above, not just quickmerge's full-suite run) — landing is pending only
+  on that unrelated sibling WIP resolving (or a future push once the tree is quiescent). No baseline edits, no
+  force-push, no `--skip-tests`.
