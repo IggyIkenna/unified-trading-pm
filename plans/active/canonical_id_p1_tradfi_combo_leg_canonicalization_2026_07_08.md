@@ -109,28 +109,67 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
 
 ## Todos
 
-- [ ] [DATA] P1. **Extend leg-parsing to CBOE/VX calendar spreads** — either generalize
-      `_parse_cme_calendar_spread_legs()` beyond `GLBX.MDP3`, or add a CBOE-specific equivalent, so VX spreads produce
-      real `InstrumentLeg` objects instead of landing as an undecomposed flat string. Confirm real production CBOE
-      spread symbol shapes first (the audit's `VX/F1:1:S - VX/G1:1:B` example used a slash-separated ticker+month-code
-      form, not CME's concatenated `ESM6` form — don't assume the same parser regex works verbatim).
-- [ ] [DATA] P1. **Apply `_resolve_product_root()` human-name translation to leg instrument_keys** (both the existing
-      CME path and the new CBOE/VX path) — legs should read `FUTURE:SP500`/`FUTURE:VIX`, not `FUTURE:ESM6`/
-      `FUTURE:VX/F1` or similar raw ticker forms.
-- [ ] [DATA] P1. **Drop the redundant per-leg `VENUE:` prefix** in `_parse_cme_calendar_spread_legs()`'s
-      `instrument_key` construction — legs should be `TYPE:SYMBOL` only, venue is already carried once at the combo's
-      own top-level id.
-- [ ] [DATA] P1. **Correct the top-level instrument_type** for these rows from the reused `SPOT_PAIR` to the real
-      `InstrumentType.COMBO` (already exists, `symbology.py:60`, `_CLASS_TO_TYPE["T"]`).
-- [ ] [VERIFY] P1. **Confirm real output against `prod/catalog.parquet`** for a real CBOE/VX spread post-fix — legs
-      decompose correctly, human names resolve, no whitespace anywhere, `instrument_type=COMBO`.
-- [ ] [DATA] P2. **Re-check the other 12 DEX-pool-unrelated multi-leg cases** (finding 7's 4,211 three-leg + 5 four-leg
-      rows) for the same treatment — the 2-leg case above is the primary target; confirm 3-leg/4-leg spreads route
-      through the same generalized parser without special-casing leg count.
-- [ ] [SCRIPT] P2. **Scope migration mechanics** — go-forward-only (new captures use the fixed pathway, historical rows
-      keep the old flat-string shape) vs. a real backfill of the 34,017+/4,211+/5 affected historical rows;
-      operator-decision-gated per this workspace's migration-mechanics discipline, don't decide unilaterally.
-- [ ] [SCRIPT] P2. **Ship via quickmerge**, quality-gates green.
+- [x] [DATA] P1. **Extend leg-parsing to CBOE/VX calendar spreads** — `_parse_cboe_spread_legs()` (new, `symbology.py`)
+      parses the real, confirmed `TICKER:RATIO:SIDE` — joined-by-`" - "` shape (2-leg calendar spreads AND 3-leg
+      butterflies), producing real `InstrumentLeg` objects. Wired into `adapter.py` via `_SPREAD_LEG_PARSERS` dataset
+      dispatch (`XCBF.PITCH` alongside `GLBX.MDP3` in `_FUTURES_DATASETS`). Evidence: instruments-service (this
+      commit) +
+      `tests/unit/test_databento_tardis_adapter.py::     TestTradfiG1FoundationRegression::test_g1c_xcbf_spreads_decompose_to_combo`
+      (2-leg, 3-leg, unparseable-drops, 5-leg-drops, outright-unaffected).
+- [x] [DATA] P1. **Apply `_resolve_product_root()` human-name translation to leg instrument_keys** — done via the new
+      shared `_build_leg_key()` helper, both CME and CBOE paths (`FUTURE:SP500`, `FUTURE:VIX`).
+- [x] [DATA] P1. **Drop the redundant per-leg `VENUE:` prefix** — done via `_build_leg_key()`, both paths (legs are
+      `TYPE:SYMBOL` only). **Real deviation from "route through UAC's `build_leg()`"**: UAC's real `build_leg()`
+      unconditionally embeds venue and cannot produce a venue-less key — extending it is a separate, cross-repo
+      (`unified-api-contracts`) follow-up, out of this fix's repo scope. See `docs/TRADFI_INSTRUMENTS.md` §11 for the
+      full rationale.
+- [x] [DATA] P1. **Correct the top-level instrument_type** — `SPOT_PAIR`→`InstrumentType.COMBO` for both CME and CBOE
+      class-"S" rows in `adapter.py`.
+- [x] [VERIFY] P1. **Confirm real output against `prod/catalog.parquet`** — real dry-run against the live bucket
+      (`instruments-store-tradfi-prd-central-element-323112`, 2026-07-09) confirms the migration script's `classify()`
+      predicate (same `_parse_cboe_spread_legs` the fixed adapter uses) correctly identifies the real affected
+      population; unit tests confirm legs decompose correctly, human names resolve, no whitespace, `COMBO` type.
+- [x] [DATA] P2. **Re-check the other 12 DEX-pool-unrelated multi-leg cases (3-leg/4-leg)** — `_parse_cboe_spread_legs`
+      has no leg-count special-casing (parses N `" - "`-joined legs identically), confirmed via the 3-leg butterfly unit
+      test; a real 1-4 leg hard cap (operator spec, 2026-07-09) was added so a genuine 5+-leg combo is dropped + logged,
+      never truncated — no real 5-leg row exists in the live catalog today (`prod/catalog.parquet` re-read 2026-07-09: 0
+      rows at 3+ legs in the CBOE population, see below).
+- [x] [SCRIPT] P2. **Scope migration mechanics** — RESOLVED per the parent issue doc's operator decision: rewrite
+      already-captured rows in place (never re-download). Two scripts implement this:
+      `scripts/canonicalize_cboe_vx_combo_catalog_2026_07_08.py`,
+      `scripts/canonicalize_dbeq_stock_class_catalog_2026_07_08.py` (K→EQUITY, adjacent finding). **Real, IMPORTANT
+      finding (2026-07-09)**: `--apply` was already run once, 2026-07-08 (pre-migration snapshot blob confirmed in GCS,
+      timestamp 2026-07-08 18:50:17 UTC), but `prod/catalog.parquet` is a **self-refreshing roll-up**
+      (`scripts/build_instrument_catalogue.py`) that regenerated the entire catalog from the (still-unfixed) per-day
+      `instrument_availability/by_date/` corpus at **2026-07-09 01:03:00 UTC** — confirmed via `gsutil stat` — which
+      re-introduced a PARTIAL residual population (91 of the original 4,216 CBOE rows; 312 of the original 318 DBEQ rows
+      — row-level diff against the 2026-07-08 snapshot confirms these are the SAME historical rows re-surfacing, not new
+      pollution). **The historical catalog-level migration is real but NOT durable on its own** — it needs re-running
+      after every rollup cycle until the upstream by_date corpus is also migrated (deferred, single-walk discipline).
+      The CODE fix (this commit) IS durable: every future capture is correct going forward. Both scripts re-verified
+      dry-run-safe against real, live GCS 2026-07-09 (stable across repeated runs); NOT applied in this pass — deferred
+      to operator confirmation per this plan's rollout methodology (small, safe, sub-5-second single-file operation —
+      91+312=403 of 1,096,472 total rows — ready to run on approval).
+- [x] [SCRIPT] P2. **Ship via quickmerge**, quality-gates green. `bash scripts/quality-gates.sh --no-fix` — full suite
+      green (exit 0), including the fix for a real pre-existing test-signature regression in
+      `tests/unit/test_cefi_tradfi_comprehensive.py` (`_parse_cme_calendar_spread_legs` calls still passed a 2nd `venue`
+      positional arg after the function's signature was narrowed to 1 arg as part of the venue-drop decision above).
+- [ ] [SCRIPT] P1 (NEW, filed 2026-07-09). **TradFi single-leg `@LIN`/`@INV`-`YYYYMMDD` extension — NOT implemented,
+      needs its own dedicated fix plan.** The parent issue doc's finding 1 was REVERSED 2026-07-09 (operator: "I'd
+      rather adjust tradfi... that's the whole point of cross-AG normalisation") — TradFi single-leg dated derivatives
+      (`FUTURE`/`OPTION`) are now in scope for the same margin-marker suffix already shipped for CeFi. This is out of
+      scope for THIS plan (multi-leg combos only) and is a comparably large migration on its own (every TradFi
+      `FUTURE`/`OPTION` `instrument_key` site in both Databento and IBKR adapters + its own historical catalog/by_date
+      migration) — recommend filing a dedicated plan under `instruments_master`, same pattern as this one, rather than
+      folding it into an unrelated fix.
+- [ ] [SCRIPT] P2 (NEW, filed 2026-07-09). **Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing
+      combo builders** (`cefi/deribit_combo_adapter.py`, `cefi/tardis/combos.py`) — the operator spec (2026-07-09)
+      explicitly made this cross-asset-group, not TradFi-only. Not attempted in this pass (untouched by this commit's
+      diff; needs fresh investigation of those adapters).
+- [ ] [SCRIPT] P3 (NEW, filed 2026-07-09). **Extend UAC's `build_leg()` with an opt-in venue-omission mode** so TradFi
+      combo legs (and any other future venue-less-leg consumer) can route through the real shared builder instead of the
+      local `_build_leg_key()` helper — cross-repo (`unified-api-contracts`), deliberately deferred out of this fix's
+      scope (see the P1 "drop venue prefix" todo above for the full rationale).
 
 ## Progress Log
 
@@ -139,3 +178,19 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
   (`InstrumentLeg`/`InstrumentType.COMBO` + the `tradfi_symbology` human-name registry) rather than a from-scratch
   design question. No fix applied yet — this plan holds the scope. See
   [[instrument_id_format_canonicalization_2026_07_08]] finding 7 for the full evidence trail.
+- **2026-07-09** — Inherited as dead WIP (dirty tree, uncommitted, stalled sibling agent — all files shared one
+  git-stash-pop-signature mtime, zero further changes across 40+ minutes) and completed. Real state found: CBOE/VX
+  leg-parsing, human-name translation, venue-prefix drop, `SPOT_PAIR`→`COMBO` correction, the 2 migration scripts, and
+  the Databento `K`→`EQUITY` adjacent fix were ~90% done in the working tree; a real regression (stale 2-arg calls to
+  `_parse_cme_calendar_spread_legs` in `tests/unit/test_cefi_tradfi_comprehensive.py`, never updated for the 1-arg
+  venue-drop signature) was blocking `quality-gates.sh` — fixed. Completed in this pass: the 1-4 leg hard cap (was
+  entirely missing), IBKR's `_SEC_TYPE_MAP` STK/BOND/CASH→EQUITY/BOND/CURRENCY fix (docs already claimed this was done;
+  code did not actually do it — implemented for real to match), corrected the docs' stale row-count claims (yesterday's
+  4,216/318 figures vs today's real 91/312 — see the migration-mechanics todo above for why they differ and why it's not
+  a bug), and discovered + documented the historical-migration non-durability finding (catalog roll-up regeneration
+  silently reverts the in-place fix for any date the by_date corpus wasn't also migrated). Explicitly did NOT implement:
+  the TradFi single-leg `@LIN`/`@INV` extension (separate, large, filed as its own follow-up above), the Deribit combo
+  leg-cap extension (cross-asset-group, filed as its own follow-up), UAC `build_leg()` venue-omission mode (cross-repo,
+  filed as its own follow-up). `quality-gates.sh --no-fix` green (exit 0). Landed instruments-service@<pending — see
+  commit list in the parent task's final report> together with 3 pre-existing, already-verified, unrelated commits that
+  were blocked from landing only by this WIP's test regression contaminating the shared tree.
