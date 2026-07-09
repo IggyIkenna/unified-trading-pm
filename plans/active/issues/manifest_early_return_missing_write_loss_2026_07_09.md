@@ -130,11 +130,51 @@ blank-reason `expected_unattempted` for big-5 native leagues dropped from **185/
       `return` with no `.write()`/`.flush()` on that variable before the function exits, when OTHER exit paths in the
       same function DO call it — generalizes this fix into a standing guard instead of relying on manual review. (repo:
       unified-trading-pm)
-- [ ] [INVESTIGATE] P2. Audit whether the same early-return-no-write anti-pattern exists in non-sports orchestrators
+- [x] ✅ [INVESTIGATE] P2. Audit whether the same early-return-no-write anti-pattern exists in non-sports orchestrators
       (TradFi/DeFi/CeFi calendar-guard paths) — the pattern is generic, not sports-specific; this session only scanned
-      the sports orchestrator files named in the sibling plan. (repo: instruments-service)
+      the sports orchestrator files named in the sibling plan. (repo: instruments-service) — **CLEAN, no bug found.**
+      Audited every `engine/orchestrator/*.py` function that OWNS a `ManifestWriter` instance (created it directly, not
+      received one as a parameter) in the TradFi/DeFi/CeFi paths — `grep -rl "ManifestWriter("` across the package found
+      instantiation sites in `catalogue.py`, `process_completeness.py`, `process_write.py`, `process_zero_records.py`,
+      `process_fetch.py`, `process_preflight.py`, `process_enrichment.py` (+ the sports files already
+      fixed/confirmed-clean in the sibling session). For each, traced every exit path against every `record_*()` call
+      site: `catalogue.py:_write_catalogue_record` (single-exit, `.write()` unconditional);
+      `process_completeness.py:_finalize_completeness` (`_failed_manifest`/`_thin_manifest` each call `.close()` inside
+      the SAME conditional block before any return), `:_completeness_and_retry` (`_empty_ok_manifest.close()`
+      same-block), `:_retry_missing_venues` (`retry_manifest.close()` same-block, loop `continue`/`break` never skip
+      it); `process_write.py:_write_all_venues` (single-exit — the ONLY return is the final line, reached after
+      `manifest.close()`/`_extra_manifest.close()` for every lazily-created per-bucket writer in `_extra_manifests`);
+      `process_zero_records.py:_zero_records_non_sports` (`manifest.write()` at line 536 precedes its only early return
+      at 552-555; the function's other exit is a `raise RuntimeError` — loud failure, not the silent-discard failure
+      mode this bug class is about). **Root-cause reason the bug didn't reproduce here**: every non-sports
+      owning-function in this codebase either (a) is single-exit (one return, always past the flush), or (b) creates the
+      writer AND flushes it within the same tight conditional block before branching to any early return — unlike
+      understat.py/weather.py/footystats.py, which created a writer near the TOP of a long multi-branch function then
+      only flushed on some of the LATER branches. `defi.py` (DeFi venue-universe assembly) doesn't own a
+      `ManifestWriter` at all — DeFi manifest rows are written through the shared `_write_all_venues` path (confirmed
+      clean above), not a DeFi-specific calendar guard. **Scope note**: this audit covered
+      `instruments_service/engine/orchestrator/*.py` (the live per-date orchestrator — the direct structural analogue of
+      the fixed sports files) but did NOT re-audit the `scripts/` one-off backfill scripts that also call
+      `ManifestWriter(` (e.g. `aggregate_legacy_es_opt_trades.py`, `full_polymarket_dump.py`,
+      `patch_prediction_shards.py`) — those are TEMPORARY one-offs per `codex/06-coding-standards/script-homes.md`, not
+      the standing calendar-guard orchestrator path this bug class targets, so out of this todo's scope. Slot-12,
+      2026-07-09.
 
 ## Progress Log
+
+### 2026-07-09 — slot-12: audited non-sports orchestrators for the same anti-pattern — CLEAN, no bug found
+
+**Task**: `manifest_early_return_missing_write_loss-003` (the P2 INVESTIGATE todo above).
+
+Grepped `engine/orchestrator/*.py` for every `ManifestWriter(` instantiation site (13 files own an instance), then for
+each non-sports (TradFi/DeFi/CeFi) owning function traced every `record_*()` call against every exit path looking for
+the same shape: a writer created, `record_*()` called in a loop, then a `return` with no `.write()`/`.close()`/
+`.flush()` while OTHER exit paths in the same function DO flush. Found none. The non-sports owning functions are
+structurally different from the buggy sports ones in a way that happens to avoid this bug class: they're either
+single-exit (the flush is the only path to `return`) or they create-and-flush the writer within one tight conditional
+block, never spanning it across multiple later branches the way `understat.py`'s per-function writer did. Full
+per-function trace + scope note (didn't re-audit `scripts/` one-off backfills — out of scope, temporary code) is in the
+checkbox item above. No code changes — this is a negative-result audit, nothing to ship in instruments-service.
 
 ### 2026-07-09 ~02:1x UTC — slot-4: re-verified weather's item #1 gate — holds; found likely explanation for item #6's "daily lag" residual
 
