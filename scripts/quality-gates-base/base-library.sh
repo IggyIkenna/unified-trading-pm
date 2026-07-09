@@ -340,6 +340,13 @@ fi
 if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     log_section "[3/6] TESTS"
     qg_prof start tests
+    # Redirect pytest's tmp_path scratch off the shared 2G /tmp tmpfs onto the root
+    # partition (~95G free) — concurrent slot QG runs otherwise exhaust /tmp, causing
+    # spurious ENOSPC test failures unrelated to the change under review (and can even
+    # break the harness's own Bash-tool output capture, which shares the same tmpfs).
+    # Explicit TMPDIR wins; else default to a root-partition path.
+    export TMPDIR="${TMPDIR:-/var/tmp/pytest-qg}"
+    mkdir -p "$TMPDIR"
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
     # TIER-A config-SSOT (2026-06-17): no --cov-fail-under — pytest-cov reads fail_under
