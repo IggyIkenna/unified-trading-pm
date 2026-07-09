@@ -72,9 +72,17 @@ source: deployment_observability_expansion_2026_07_08.md
 - [ ] [BACKEND] P1. Add `ECS_SERVICE` census — ECS list-services/describe-services across the prod clusters
       (uts-defi-prod, unified-trading-prod) → **desiredCount + runningCount** + task-def revision; `cloud=AWS`. Always
       emit the row even at 0 running tasks (state derives from desired-vs-running — see the service sub-taxonomy task).
-- [ ] [BACKEND] P1. Make the Cloud Run **jobs** census DYNAMIC — list live jobs instead of the hardcoded
+- [x] ✅ [BACKEND] P1. Make the Cloud Run **jobs** census DYNAMIC — list live jobs instead of the hardcoded
       `CLOUD_RUN_JOBS` name-registry, so off-pattern jobs stop hiding (keep the registry only for classification hints,
-      not as the allow-list). Run the exact registry-vs-live diff first to quantify the current hidden set.
+      not as the allow-list). Run the exact registry-vs-live diff first to quantify the current hidden set. —
+      deployment-api@9d50835. `build_inventory` now iterates the LIVE job set (`cloud_run_status` keys, already fetched
+      by `latest_execution_by_job`'s `list_jobs` — no new API call) and treats `CLOUD_RUN_JOBS` as a classification hint
+      (stem match), falling back to the honest `EPHEMERAL_BATCH` default for off-pattern jobs; degrades to the static
+      registry (status=unknown) only when the live list itself is empty. Registry-vs-live diff was already quantified by
+      this plan's own parent doc's 2026-07-08 live census (WS-B gap table: "~10-15 of ~48" GCP Cloud Run jobs off the
+      static registry) — this sandboxed worker slot has no working `gcloud` (snap confinement blocks it here), so no
+      fresh live diff was re-run; the fix + a new regression test (`test_off_pattern_live_cloud_run_job_is_not_hidden`)
+      prove an off-pattern job now surfaces instead of hiding.
 - [ ] [BACKEND] P2. Add `LAMBDA` census — existence + config via `list_functions` (`cloud=AWS`). NOTE: invocation/error
       stats are CloudWatch-only (no host/cgroup on Lambda) — the ONE scoped exception to principle 4; default to
       existence-only and add a CloudWatch call ONLY if Lambda health proves worth it.
@@ -132,6 +140,17 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **Cloud Run jobs census made DYNAMIC** (slot 12): `deployment-api@9d50835`
+  (`deployment_api/routes/deployments_inventory.py`) — `build_inventory` now iterates the LIVE job set
+  (`cloud_run_status` keys, already fetched by `latest_execution_by_job`'s `run_v2.JobsClient.list_jobs`, no new API
+  call) and treats `CLOUD_RUN_JOBS` as a classification hint (stem match via `_match_registered_job`) rather than an
+  allow-list; an off-pattern job falls back to `classify_deployment_target(..., lifecycle_class=EPHEMERAL_BATCH)` (the
+  honest default) instead of being hidden. Degrades to the static registry with status="unknown" only when the live list
+  itself is empty (GCP call failed) — never an empty census. New regression test
+  `test_off_pattern_live_cloud_run_job_is_not_hidden` pins the fix; `test_build_inventory_classifies_vms_and_jobs`
+  updated for the dynamic (live-count, not registry-count) row count. Registry-vs-live diff: already quantified by this
+  plan's parent doc's 2026-07-08 live census ("~10-15 of ~48" off-pattern) — this worker slot's `gcloud` is
+  snap-confined/non-functional, so no fresh live diff was re-run here.
 - 2026-07-09 — **D.5 "Enrich the heartbeat" shipped** (slot 6): new `HostMetricsSampler`
   (`unified_trading_library.lifecycle.host_metrics`, `unified-trading-library@6da762b3`) samples
   cpu_pct/mem_pct/disk_pct/io_write_rate_bytes_sec/net_recv_rate_bytes_sec via psutil (no new dep) + a rolling-window
