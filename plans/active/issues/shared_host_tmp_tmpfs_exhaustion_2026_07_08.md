@@ -79,9 +79,15 @@ full `quality-gates.sh` runs for `unified-trading-library`. Both hit `/tmp` disk
       2026-07-08: the P2 `TMPDIR` redirect already resolves the practical contention without touching shared
       host/VM-image config; a `mount -o remount,size=` affecting every slot on the shared VM is exactly the kind of
       shared-infra/irreversible-adjacent change that should not be self-authorized by an agent).
-- [ ] [INFRA] P3. Consider a periodic `find /tmp/pytest-of-ubuntu -maxdepth 1 -mmin +60 -exec rm -rf {} +` cron (or
+- [x] ✅ [INFRA] P3. Consider a periodic `find /tmp/pytest-of-ubuntu -maxdepth 1 -mmin +60 -exec rm -rf {} +` cron (or
       equivalent) as a belt-and-suspenders cleanup for whichever stale scratch dirs the TMPDIR redirect above doesn't
-      eliminate (e.g. from tools other than pytest that still default to `/tmp`) (repo: unified-trading-pm).
+      eliminate (e.g. from tools other than pytest that still default to `/tmp`) (repo: unified-trading-pm). —
+      `scripts/dev/cleanup-stale-qg-tmp.sh` + `scripts/dev/install-cleanup-stale-qg-tmp-cron.sh`: hourly sweep of
+      `${HOME}/.cache/qg-tmp/pytest-of-*` (the new TMPDIR target) + legacy `/tmp/pytest-of-*` (covers tools that still
+      bypass TMPDIR), `-mmin +60` staleness gate, `fuser`-checked to never remove a dir with an open fd. Cron
+      **registration** is left to the operator (same as `install-slot-cron-ff-pull.sh`'s existing convention — a
+      per-user crontab write on a shared host is not self-authorized by this session; run
+      `install-cleanup-stale-qg-tmp-cron.sh` once per host to activate).
 
 ## Progress Log
 
@@ -102,3 +108,11 @@ full `quality-gates.sh` runs for `unified-trading-library`. Both hit `/tmp` disk
   practical cross-slot contention; a shared-VM mount resize needing root is an irreversible-adjacent, shared-infra
   change the operator wants to gate explicitly rather than have an agent self-authorize. No code change for this item.
   Remaining open item: the stale-dir cron (P3, belt-and-suspenders).
+- **2026-07-08** — Stale-dir-cron P3 item closed by slot-2: added `scripts/dev/cleanup-stale-qg-tmp.sh` (hourly-cron
+  candidate; sweeps `${HOME}/.cache/qg-tmp/pytest-of-*` + legacy `/tmp/pytest-of-*` on an `-mmin +60` staleness gate,
+  `fuser`-checked before any `rm -rf` so a live QG run's scratch dir is never touched) +
+  `scripts/dev/install-cleanup-stale-qg-tmp-cron.sh` (idempotent installer, same self-pull/marker-line convention as
+  `install-slot-cron-ff-pull.sh`). Verified via `--dry-run` locally: correctly no-ops on the host's live
+  `pytest-of-ubuntu` dir at the default 60-min threshold, correctly matches it with `--min-age 0`. Cron **registration**
+  (writing to the operator's crontab) is left to the operator to run once per host — a shared-host crontab write is the
+  same category of change flagged in the prior item as not-self-authorized.
