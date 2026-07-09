@@ -338,7 +338,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "qg_red_reason": "pytest",
@@ -1406,7 +1406,7 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "skipped_gates": [],
       "semver_policy": "agent",
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": 75.82,
         "warn_file_count": 7,
