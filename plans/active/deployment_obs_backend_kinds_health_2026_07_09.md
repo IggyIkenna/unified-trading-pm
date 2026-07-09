@@ -296,7 +296,7 @@ source: deployment_observability_expansion_2026_07_08.md
       additions (no logical overlap).
 - [ ] [REVIEW] P2. Gate `/freshness` fetches to VM kinds only (services use error-rate health, not manifest freshness) —
       the mock currently fetches freshness for all LIVE rows.
-- [ ] [BACKEND] P1. **Wire `stalled` + `workload-dead` into `_composite_health_status`** (`deployment-api`,
+- [x] ✅ [BACKEND] P1. **Wire `stalled` + `workload-dead` into `_composite_health_status`** (`deployment-api`,
       `deployments_inventory.py`) — both prerequisite signals now exist: `object_delta` via
       `deployment_freshness.compute_freshness()` / `_object_delta_for_bucket()` (per-asset_group manifest lookup,
       `deployment_freshness.py`), and `workload_alive` via the heartbeat daemon's `CMD_PID` liveness field
@@ -306,7 +306,37 @@ source: deployment_observability_expansion_2026_07_08.md
       resolves per-asset_group, not per-VM-entry, so this needs its own call-shape design (batch the lookup once per
       asset_group per census cycle, not once per VM, to respect the zero-new-bucket-walk principle at scale), not a
       copy-paste into the per-entry loop. Filed here rather than expanding deployment_obs_backend_kinds_health-015
-      (deployment-api@f5f6ff4) — that diff was already large from 3 concurrent cross-slot rebases on this same file.
+      (deployment-api@f5f6ff4) — that diff was already large from 3 concurrent cross-slot rebases on this same file. —
+      deployment-api@29f3be5. `workload-dead` fires unconditionally on `entry.workload_alive is False` (ahead of the
+      D.1-metric-dependent states — the CMD_PID reading is authoritative regardless of disk/mem/cpu). `stalled` is wired
+      for the **BATCH umbrella only** — the one row of the threshold table whose prerequisite signal is real today;
+      `object_delta` moved to a new public `health_consolidator.object_delta_for_bucket`/`object_delta_for_asset_group`
+      (out of `deployment_freshness`, which already imports `deployments_inventory.classify_vm_target` — a reverse
+      import would have cycled) and is batched via a new `_batched_object_deltas()` pre-pass: ONE manifest lookup per
+      DISTINCT asset_group across the whole census cycle, threaded into `build_inventory`/`_vm_item` as an explicit
+      `object_deltas` param so both functions stay pure/I/O-free for their existing unit tests (the manifest read
+      happens once in `_compute_inventory`, the caller). LIVE/PAPER `stalled` still degrade honestly to `"unknown"` —
+      their threshold-table signals (an expected-active-window calendar, a `work_delta` rows-out-delta tracker) don't
+      exist anywhere in the codebase yet; guessing from idle io/net would misfire the now-live oom-risk/stalled alert
+      wiring (deployment-api@5e25dce) on a genuinely-idle-but-healthy window. Also folded `object_delta>0` into the
+      `working` state per the parent WS-D.3 spec's own OR clause (`object_delta>0 OR io_write_rate>0`), which the
+      original `f5f6ff4` composite landed without since `object_delta` didn't exist yet. 10 new/updated unit tests
+      (`test_composite_health_workload_dead_*`, `test_composite_health_stalled_for_batch_*`,
+      `test_composite_health_batch_working_when_object_delta_positive_*`,
+      `test_composite_health_live_umbrella_stalled_*`, `test_batched_object_deltas_calls_once_per_distinct_asset_group`,
+      `test_build_inventory_threads_object_deltas_*`) + `health_consolidator`/`deployment_freshness` object-delta tests
+      moved to their new home. Landed through 2 real rebase cycles against concurrently-shipped sibling work on this
+      same hotspot file (CLOUD_RUN_SERVICE census `ab0c431`, ECS/Lambda field surfacing, the oom-risk/stalled alert
+      wiring `5e25dce`) — one import-ordering conflict, one `build_inventory` new-param conflict (kept both the
+      sibling's `cloud_run_services` param and my `object_deltas` param). QG green (sentinel 29f3be5, 119s).
+- [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals don't exist yet** — discovered while wiring the BATCH row above
+      (deployment-api@29f3be5). LIVE needs an expected-active-window calendar (market-hours-aware, so an
+      idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta` (rows-out-delta) tracker — grepped
+      the codebase, `     work_delta` doesn't exist anywhere today, it's a parent-doc spec concept only. Both `stalled`
+      branches stay honest `"unknown"` until one of these lands; not urgent (v1 shipped the one row — BATCH — with a
+      real signal), but should not be silently forgotten now that the oom-risk/stalled alert wiring
+      (deployment-api@5e25dce) is live and would otherwise start firing on the FIRST real signal any of these umbrellas
+      get.
 - [ ] [REVIEW] P3. **`deployments_inventory.py` is now 1000+ lines** (cap is 900; QG's file-size check is non-blocking
       in this repo's config today but the file is a real hotspot — 4+ slots landed sibling D.3/kinds-census todos here
       concurrently in one session). Consider splitting Cloud-Run-job census / composite-health / service- taxonomy into
