@@ -112,8 +112,9 @@ source: deployment_observability_expansion_2026_07_08.md
       `workload_alive` are separate todos below (manifest lookup / `kill -0 CMD_PID`), not part of this one.
 - [ ] [INFRA] P0. **Workload-PID liveness** — shell passes `CMD_PID`; daemon includes
       `workload_alive = kill -0 CMD_PID`. Kills the OOM-false-alive without the exit-file race.
-- [ ] [INFRA] P1. **`parse_counters` tail-read fix** — seek-to-end / read last ~64 KB, not `read_text()` on a multi-GB
-      log every tick (existing per-VM I/O waste at scale).
+- [x] ✅ [INFRA] P1. **`parse_counters` tail-read fix** — seek-to-end / read last ~64 KB, not `read_text()` on a
+      multi-GB log every tick (existing per-VM I/O waste at scale). — `unified-trading-library@b77c8592` (binary seek to
+      the last `DEFAULT_TAIL_BYTES` (64 KiB) from EOF instead of `read_text()` loading the whole file).
 - [x] ✅ [BACKEND] P1. **Object-delta = manifest lookup** (authoritative write-truth) — extend `/freshness` to an
       object-count-delta per shard off the manifest the consolidator maintains; NO new bucket walk. —
       `deployment-api@defdabe`: `_object_delta_for_bucket()` reads the SAME consolidated availability-index blob
