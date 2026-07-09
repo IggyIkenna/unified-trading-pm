@@ -6,9 +6,9 @@ summary:
   (Cloud Run services, ECS/Fargate services, off-registry Cloud Run jobs, Lambda, Cloud Functions), surface the rich
   GCP/AWS fields already fetched-and-discarded, and replace heartbeat-only VM health with a composite work-health model
   (edge /proc metrics + workload-PID liveness + manifest object-delta + control-plane hang detection) plus a service
-  sub-taxonomy. No Cloud Monitoring / CloudWatch. Feeds the UI half (deployment_obs_ui_popover_health_2026_07_09), which
-  stays draft until this plan's last task releases it. Full design + open-question resolutions live in the LOCAL parent
-  deployment_observability_expansion_2026_07_08.
+  sub-taxonomy. No Cloud Monitoring / CloudWatch. Feeds the UI half (deployment_obs_ui_popover_health_2026_07_09), a
+  LOCAL plan executed interactively once this plan lands the contract. Full design + open-question resolutions live in
+  the LOCAL parent deployment_observability_expansion_2026_07_08.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -41,8 +41,9 @@ source: deployment_observability_expansion_2026_07_08.md
 > **AO-DISPATCHED backend plan.** Full design context — the universal metric vector, the capture→store→API→UI data path,
 > the composite health taxonomy, the scale/cost budget, and the 8 resolved open questions — lives in the LOCAL parent
 > **`deployment_observability_expansion_2026_07_08.md`** (read WS-B, WS-C, and all of WS-D first, incl. D.0 principles
-> and the D.3 taxonomy). The UI half is **`deployment_obs_ui_popover_health_2026_07_09.md`** — it stays `draft` until
-> THIS plan's LAST task flips it `active`, so the UI agent never wires against fields that don't exist yet.
+> and the D.3 taxonomy). The UI half is **`deployment_obs_ui_popover_health_2026_07_09.md`** — a LOCAL plan built
+> interactively AFTER this one lands; this plan's LAST task hands off the frozen contract sha so the UI wires against
+> real fields.
 
 ## Non-negotiable design principles (from parent WS-D.0 — inherit on every task)
 
@@ -117,11 +118,13 @@ source: deployment_observability_expansion_2026_07_08.md
 - [ ] [REVIEW] P2. Gate `/freshness` fetches to VM kinds only (services use error-rate health, not manifest freshness) —
       the mock currently fetches freshness for all LIVE rows.
 
-### Release the UI plan (LAST task)
+### Hand off to the interactive UI session (LAST task)
 
-- [ ] [REVIEW] P3. **Release the UI half** — once the census + `DeploymentItem` contract + composite/service health
-      land, flip `deployment_obs_ui_popover_health_2026_07_09.md` `status: draft` → `active` (docs(plans): commit) so
-      the UI agent starts against a real API contract, and record the contract sha in its Progress Log.
+- [ ] [REVIEW] P3. **Hand off the UI half** — the UI plan `deployment_obs_ui_popover_health_2026_07_09.md` is LOCAL
+      (executed interactively, NOT AO-dispatched). Once the census + `DeploymentItem` contract + composite/service
+      health land, record the frozen contract sha (`<repo>@<sha>` + the new `DeploymentItem` field list) in that plan's
+      Progress Log and NOTIFY THE OPERATOR so the UI work can start here. Do NOT flip its status — a LOCAL plan is never
+      ingested.
 
 ## Progress Log
 

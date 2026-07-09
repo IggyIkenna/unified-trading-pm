@@ -358,9 +358,11 @@ uses ready-state + revision health in place of desired/running.
 - 2026-07-09 — **Split into 2 AO-dispatched child plans** (this doc stays the LOCAL parent tracker): backend =
   `deployment_obs_backend_kinds_health_2026_07_09.md` (`status: active`, 20 todos — kinds census + rich fields +
   composite/service work-health), UI = `deployment_obs_ui_popover_health_2026_07_09.md` (`status: draft` — badges,
-  composite health, resource columns, name-click popover + console deep-link; released to `active` by the backend plan's
-  last task via `depends_on`). Cost-per-target (WS-E), typed structured-progress (WS-H), and deferred service-controls
-  (WS-F) remain here for later phases. Pattern mirrors the cost split (backend + UI, draft-gated).
+  composite health, resource columns, name-click popover + console deep-link). **UI is LOCAL** (`assigned_vm: NA`,
+  operator decision) — executed interactively in this slot once the backend AO plan lands + hands off the frozen
+  `DeploymentItem` contract (`depends_on` documents the ordering); it's visual-iteration-heavy so best built here
+  against the mock. Cost-per-target (WS-E), typed structured-progress (WS-H), and deferred service-controls (WS-F)
+  remain here for later phases.
 - 2026-07-09 — **All 8 open questions RESOLVED with the operator** (see the Open-questions section for each decision).
   Net: Q1 no PLATFORM/INFRA mode (Kind carries services, Mode="—"); Q2 keep 7 states + 3-tier severity colour; Q3
   per-lifecycle-class `stalled` table; Q5 thin list + `/deployments/{id}/detail`; Q6 mock = inline contract, rest in

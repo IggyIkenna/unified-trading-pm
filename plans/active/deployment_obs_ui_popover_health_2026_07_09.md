@@ -20,8 +20,8 @@ related: [deployment_observability_expansion_2026_07_08.md, deployment_obs_backe
 created: "2026-07-09"
 last_updated: "2026-07-09"
 parent_epic: observability_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 4
@@ -38,13 +38,14 @@ source: deployment_observability_expansion_2026_07_08.md
 
 # Deployment observability — kind badges, composite health, resource columns + detail popover (UI)
 
-> **AO-DISPATCHED UI plan — starts `draft` (NOT ingested).** Released to `active` by the LAST task of the backend plan
-> **`deployment_obs_backend_kinds_health_2026_07_09.md`**, so this agent only starts once the new `DeploymentItem`
-> fields (6 kinds, composite/service health, cpu/mem/disk, object-delta, console-link identity) actually exist in the
-> API. Full design context + the committed/mock visual contract live in the LOCAL parent
-> **`deployment_observability_expansion_2026_07_08.md`** (read "Where we are" + WS-C + WS-D first). **UI gate:** no tick
-> without `[UI]` + `pw:L2 ✓` + a cited regression spec (`codex/06-coding-standards/ui-testing-layers.md`); Python tools
-> are banned in this repo (tsc/ESLint/Vitest/Playwright only).
+> **LOCAL / human plan** (`assigned_vm: NA`, `execution_scope: local-only` — NOT AO-dispatched, never ingested).
+> Executed **interactively in this slot** once the backend AO plan
+> **`deployment_obs_backend_kinds_health_2026_07_09.md`** completes (`depends_on` documents the ordering) — the UI is
+> visual-iteration-heavy (popover layout, chip colours, sparklines), so it's built here against the mock and wired to
+> the real `DeploymentItem` fields the backend ships. Full design context + the mock visual contract live in the LOCAL
+> parent **`deployment_observability_expansion_2026_07_08.md`** (read "Where we are" + WS-C + WS-D first). **UI gate:**
+> no tick without `[UI]` + `pw:L2 ✓` + a cited regression spec (`codex/06-coding-standards/ui-testing-layers.md`);
+> Python tools are banned in this repo (tsc/ESLint/Vitest/Playwright only).
 
 ## Todos
 
@@ -71,6 +72,7 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
-- 2026-07-09 — Created `draft` from the LOCAL parent. Held until the backend plan's last task flips it `active` so the
-  UI wires against a real `DeploymentItem` contract, not the local mock. The mock in
-  `deployment_observability_expansion_2026_07_08.md` § "Where we are" is the visual target.
+- 2026-07-09 — Created as a LOCAL plan (operator decision: do the UI here interactively, not on AO). Held until the
+  backend AO plan completes and posts the frozen `DeploymentItem` contract sha here, so the UI wires against a real
+  contract. The mock in `deployment_observability_expansion_2026_07_08.md` § "Where we are" is the visual target and
+  already lives in this slot's `deployment-ui` working tree.
