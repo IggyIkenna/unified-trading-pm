@@ -43,6 +43,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
+sequential: true
 drift_direction: advance-code
 locked_since:
 depends_on:
@@ -163,7 +164,7 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
       `test_defi_v2_covers_v1_pre_genesis_chain_cells`(v1 emits`venue=<PROTOCOL>`bare per the 2026-05 canonical naming
       SSOT, NOT`<PROTOCOL>-<CHAIN>`— filter now matches). Full`bash     scripts/quality-gates.sh` green (110s); 126 v2
       unit tests + 92 catalogue/wiring tests + 8 superset property tests pass.
-- [ ] **[PARKED — needs infra worker; do NOT dispatch to data_engineering]** [CODE] P2. **Retire deployment-service v1
+- [ ] **[PARKED — needs infra worker; do NOT dispatch to data_engineering]** [INFRA] P2. **Retire deployment-service v1
       launcher path** — remove `launch-expected-universe-enumerator-vm.sh`, delete the `"expected-universe-enum-"` entry
       from `launcher_registry.py` + `vm_zombie_watchdog.py`; verify no live scheduler still references the prefix (repo:
       deployment-service; role: **infra** — cross-craft handoff). — 2026-07-06 slot-7 (data_engineering) PARKED with
@@ -205,6 +206,26 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
 
 ## Progress Log
 
+- **2026-07-09** — **-009 RE-DISPATCHED (23RD SLOT BOUNCE) — SYSTEMIC FIX APPLIED, SAME PARK** (slot-5
+  data_engineering). Re-verified independently against a fresh `.tabs/5` pull (`instruments-service@f136eec0`,
+  `deployment-service@a1bf966` on `live-defi-rollout`): prereq #3 (v2 venue-grain sentinel) confirmed landed
+  (`_yield_v2_cefi_pre_venue_launch_rows` line 1061, `_yield_v2_defi_pre_launch_rows` line 1269 present, wired via
+  `yield from`). Prereq #4 (infra launcher retirement) still NOT landed —
+  `deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py:183`,
+  `scripts/vm/vm_zombie_watchdog.py:627`, `scripts/vm/launch-ec2-vm.sh:148` still reference the v1 prefix;
+  `scripts/vm/launch-expected-universe-enumerator-vm.sh` still exists. Rather than bounce a 23rd identical note, applied
+  the systemic fix every prior bounce (3 through 22) recommended, using mechanisms already supported by
+  `regen_backlog_from_plan.py` (no `backlog.yaml` hand-edit — this is a plan-doc frontmatter/tag change, which the
+  backend derives from): (1) retagged todo #4's checkbox from `[CODE]` → `[INFRA]` — `_TAG_TO_ROLE` maps `INFRA` →
+  `infra`, so the per-task role resolution now assigns todo #4 to the `infra` craft and the dispatcher will stop
+  offering it to `data_engineering` slots (root cause of the parallel todo-#4 bounces documented in the 2026-07-06
+  slot-7/slot-8 entries below); (2) added `sequential: true` to this doc's frontmatter — `regen`'s
+  `_wire_sequential_prereqs` chains each remaining unchecked todo's backlog task to its immediate predecessor by
+  `plan_order` within the plan, so todo #5 (-00X, DELETE v1) will get `prereqs.completed_tasks` wired to todo #4's task
+  id on the next regen tick and stop being dispatched until an infra worker actually completes todo #4 — turning the
+  22-bounce prose-only PARK into a structural gate. Self-parked via `/skip-current-task` (decision already made, not a
+  fresh ambiguity). No code touched; only this issue doc edited. Next regen tick should confirm the gate landed (watch
+  for todo #4 dispatching to an `infra` slot instead of `data_engineering`, and todo #5/-0XX no longer bouncing here).
 - **2026-07-09** — **-009 RE-DISPATCHED (22ND SLOT BOUNCE) — SAME PARK** (slot-2 data_engineering). Re-verified
   independently against a fresh `.tabs/2` pull (`instruments-service` to `f136eec0`, `deployment-service` to `a1bf966`
   on `live-defi-rollout`): prereq #3 (v2 venue-grain sentinel) IS landed in
