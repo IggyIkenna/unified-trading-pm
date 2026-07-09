@@ -86,6 +86,22 @@ source: deployment_observability_expansion_2026_07_08.md
       (the >1000-line P3 below) — deliberately NOT folded in, to keep this correctness-critical fix focused + low-risk
       while the plan is being finished here; the split remains its own open P3.
 
+### 🟡 Runtime findings from the live P0 verification (2026-07-09)
+
+- [x] ✅ [BACKEND] P1. **Object-delta `str > int` TypeError** — `object_delta_for_bucket` raised
+      `'>' not supported between 'str' and 'int'` when the availability index stored `row_count`/`instrument_count` as
+      an object/string dtype, silently degrading EVERY object-delta to `None` and breaking the composite-health
+      `working`/`stalled` signal that reads it. Fixed with `pd.to_numeric(errors="coerce").fillna(0)` before the `> 0`
+      comparison + a string-dtype regression test (`test_object_delta_for_bucket_coerces_string_dtype_counts`). —
+      **deployment-api@934f22f (LOCAL, unpushed** — held per operator until the pre-existing uniswap drilldown break is
+      solved). Verified live: the TypeError no longer appears in the census log.
+- [x] ✅ [BACKEND] P1. **Cloud Run jobs census N+1 → parallelized** — `latest_execution_by_job` issued one
+      `ListExecutions` RPC per job serially (~70 jobs → routinely exceeded the 45 s per-provider census bound → the
+      whole `CLOUD_RUN_JOB` kind flickered to empty). Fanned the per-job lookups out concurrently (`ThreadPoolExecutor`,
+      16 workers) so the census is ~max(single RPC) not their sum. — **deployment-api@934f22f (LOCAL, unpushed)**.
+      Verified live: no longer degrades, cold `/inventory` dropped 99.6 s → 85 s, census now captures **118** jobs (was
+      73 when it intermittently timed out).
+
 ### 🟡 Runtime findings from the live P0 verification (2026-07-09 — capture, not yet fixed)
 
 - [ ] [BACKEND] P1. **`google-cloud-functions` missing from deployment-api's deps/lock** — the live CLOUD_FUNCTION
