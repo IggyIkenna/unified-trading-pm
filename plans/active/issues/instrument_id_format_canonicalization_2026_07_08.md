@@ -346,11 +346,21 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
       Confirmed live via `api-pub.bitfinex.com/v2/tickers`: `ETHF0:BTCF0` trades ~~2,034 ETH/day (~~$6-7M/day) — not a
       negligible edge case. Fix: add BTC to the per-venue accepted-quote extension for Bitfinex derivatives, same
       mechanism already used for UPBIT's KRW extension.
-- [ ] [DECISION] P1. **Confirm the revised TradFi combo fix** (finding 7, superseding the earlier flat-string proposal)
-      — reuse the existing `InstrumentLeg`/`InstrumentType.COMBO` infrastructure (already proven for CME) for CBOE/VX
-      spreads too, apply the existing `_resolve_product_root()` human-name registry (`ES→SP500`, `GC→GOLD`, `VX→VIX`) to
-      leg symbols, and drop the redundant per-leg `VENUE:` prefix. Real 34,017/4,211/5-row counts (2/3/4-leg) at the
-      2026-07-08 evidence pull — re-check row counts if this decision lands materially later, they'll have grown.
+- [x] [DECISION] P1. **Confirm the revised TradFi combo fix — DONE 2026-07-09** (finding 7, superseding the earlier
+      flat-string proposal) — reuse the existing `InstrumentLeg`/`InstrumentType.COMBO` infrastructure (already proven
+      for CME) for CBOE/VX spreads too, apply the existing `_resolve_product_root()` human-name registry (`ES→SP500`,
+      `GC→GOLD`, `VX→VIX`) to leg symbols, and drop the redundant per-leg `VENUE:` prefix. **Real row-count correction,
+      twice over**: the original 34,017/4,211/5 (2/3/4-leg) figures above were wrong (never reproducible against real
+      data); the 2026-07-08 fix-plan pass corrected this to 4,211(2-leg)+5(3-leg)=4,216, 0 four-leg; a FRESH re-read one
+      calendar day later (2026-07-09, this finding's completion pass) found the real population had shrunk to 91 rows
+      (all 2-leg) — real, expected volatility (`prod/catalog.parquet` is a lifecycle catalogue for short-dated
+      instruments; see the dedicated plan's Progress Log for the full mechanism). Code shipped instruments-service (this
+      session); the historical catalog migration ran once 2026-07-08 but was found NOT durable — a subsequent
+      independent catalog-rollup regeneration (`build_instrument_catalogue.py`, 2026-07-09 01:03 UTC) re-derived
+      `SPOT_PAIR` for the still-unmigrated historical by_date corpus, re-surfacing a 91-row (CBOE) + 312-row (DBEQ,
+      adjacent K→EQUITY finding) residual population. Full evidence + the not-yet-implemented TradFi single-leg
+      `@LIN`/`@INV` extension (finding 1's 2026-07-09 scope reversal) tracked in
+      [[canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08]].
 - [x] [SCRIPT] P1. **File a dedicated fix plan for finding 7** — real code gap (CBOE/VX spreads bypass existing
       leg-decomposition infrastructure entirely), not just a naming decision; independently shippable, same pattern as
       the P0 fix plans. Filed: [[canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08]]. Repo:
@@ -460,3 +470,82 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
   Added the full per-protocol table to finding 2 and a dedicated regeneration todo (does not attempt the actual regen in
   this pass — that's a real backfill job, scoped separately). Evidence: instruments-service (no code changes needed for
   this finding — verification only).
+- **2026-07-09 (finding 7 completion pass)** — Inherited the finding-7 fix plan's dead WIP (stalled sibling agent, dirty
+  tree, no commit) and completed it: CBOE/VX leg decomposition, human-name translation, venue-prefix drop,
+  `SPOT_PAIR`→`COMBO` correction, the adjacent Databento `K`→`EQUITY` bug (100% of fresh NASDAQ/NYSE equity captures
+  were mistyped `SPOT_PAIR`), and IBKR's `_SEC_TYPE_MAP` collapse (`STK`/`BOND`/`CASH` all→`SPOT_PAIR`, now→`EQUITY`/
+  `BOND`/`CURRENCY`) — full evidence in [[canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08]]'s Progress Log.
+  Fixed a real pre-existing test regression blocking `quality-gates.sh` (stale 2-arg calls to
+  `_parse_cme_calendar_spread_legs` after its signature was narrowed to 1 arg mid-WIP). **New, real finding**: the
+  historical `prod/catalog.parquet` in-place migration (already run once, 2026-07-08) is NOT durable —
+  `build_instrument_catalogue.py`'s self-refreshing roll-up regenerated the entire catalog from the still-unmigrated
+  per-day corpus 2026-07-09 01:03 UTC, silently reverting part of the fix (91 of 4,216 CBOE rows, 312 of 318 DBEQ rows
+  re-surfaced as their pre-fix type — confirmed via GCS blob timestamps + a row-level diff against the pre-migration
+  snapshot, not new pollution). The durable fix is the CODE change (every future capture is correct); the historical
+  by_date corpus itself remains unmigrated (single-walk-discipline-gated, deferred) and is now the real blocker to a
+  durable historical fix, not a nice-to-have. **Also confirmed NOT done**: the TradFi single-leg
+  `@LIN`/`@INV`-`YYYYMMDD` extension this doc's finding 1 scope-reversal (2026-07-09) calls for — a separate, comparably
+  large migration (every TradFi `FUTURE`/`OPTION` build site across 2 adapters + its own historical migration),
+  correctly out of scope for the finding-7 combo/leg fix plan; recommend a dedicated fix plan, same pattern as finding 7
+  got. 4 commits **committed** instruments-service (3 pre-existing verified commits that were blocked by this WIP's test
+  regression, plus this session's combo/leg + IBKR + K-fix work) — see the fix plan's Progress Log for SHAs.
+  **Correction, verified via direct `git fetch` + log comparison 2026-07-09**: these 4 commits (`6a1122e5`, `a326f6b9`,
+  `57f8a754`, `1a696db7`) are still **local-only on the instruments-service clone**, NOT yet on
+  `origin/live-defi-rollout` — "landed" above should read "committed, push pending." Check current real state before
+  assuming this is stale:
+  `cd instruments-service && git fetch origin live-defi-rollout && git log origin/live-defi-rollout..HEAD --oneline`.
+
+- **2026-07-09 — CRITICAL cross-venue finding: catalog.parquet fixes are NOT durable on their own.**
+  `build_instrument_catalogue.py`'s self-refreshing rollup regenerates the entire catalog from the still-unmigrated
+  per-day `instrument_availability/by_date/` corpus on every real regen run — confirmed for CBOE/DBEQ (91 of 4,216 CBOE
+  rows + 312 of 318 DBEQ rows silently reverted to their pre-fix type after a 2026-07-09 01:03 UTC regen, verified via
+  GCS blob timestamps + a row-level diff against the pre-migration snapshot). **This is not TradFi-specific** — the same
+  rollup mechanism serves every venue in this doc's scope, so any catalog-level fix for
+  Bybit/Kraken/Deribit/OKX/Binance/on-chain-perp/DEX-pool is equally at risk of silent reversion on the next regen
+  unless the underlying per-day corpus is ALSO migrated, not just the catalog snapshot. This is why the in-flight
+  full-historical-sweep work (below) was scoped to include the per-day corpus, not catalog.parquet alone — treat any
+  catalog-only fix reported by an agent as **provisional**, not durable, until its per-day corpus is confirmed migrated
+  too.
+
+## Orchestration state, 2026-07-09 — durable record of in-flight parallel work (for context-loss recovery)
+
+Following the operator's directive to execute this doc's findings entirely including data migration, "so there is zero
+trace of the old formats in doc, data, or manifest," work was fanned out across multiple `Workflow` tool runs (scripts
+persisted to disk, resumable independent of any chat session). If context is lost, use
+`Workflow({scriptPath, resumeFromRunId})` with the paths below — completed agent() calls replay from cache, only the
+unfinished tail re-runs.
+
+**Landed on `origin/live-defi-rollout` (verified via direct `git fetch` + log comparison, not agent self-report):**
+
+- `unified-api-contracts@06edd868` + `07d22bdf` — 900-line file-size split (`mvp_scope.py`/`honest_coverage.py`/
+  `source_priority.py`/`tradfi_ticker_universe.py`) + `canonical_id_builder.py`'s `margin_marker` kwarg.
+- `instruments-service@176d4610` (Bybit/Kraken-Futures margin-type bugs + `@LIN`/`@INV` builder), `@554ef058` (OKX
+  margin-type inversion bug), `@7fbc38c1` (Deribit OPTION `@LIN`/`@INV`-`YYYYMMDD`), `@4e072d93` (DEX-pool fee-tier
+  dash+bps), `@0d0c3742` (Prediction underlying + cross-venue canonical_instrument_id).
+- `market-tick-data-service@19357ad4` (OKX venue-key fix), `@1e8870b1` (on-chain-perp live connectors + manifest
+  migration script).
+
+**Committed locally, NOT yet on origin (instruments-service clone, verify before trusting — may have landed since):**
+`6a1122e5`/`a326f6b9`/`57f8a754`/`1a696db7` (TradFi combo/K-fix/IBKR, empty-string-fallback ratchet fix, on-chain-perp
+`@LIN` marker, Binance `@LIN`/`@INV` migration+docs) — blocked pending a clean `quality-gates.sh` push window on the
+shared tree; a dedicated workflow (`wf_41d76b71-c79`) was dispatched to land these, check its completion status.
+
+**In-flight `Workflow` runs (script + run ID, resumable):**
+
+1. `wf_41d76b71-c79` — `tradfi-combo-inherit-and-land` — lands the 4 local-only instruments-service commits above.
+   Script:
+   `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/tradfi-combo-inherit-and-land-wf_41d76b71-c79.js`
+2. `wf_c4796aec-f35` — `canonical-id-full-historical-sweep` — real (non-smoke-test) catalog + per-day-corpus + GCS
+   filename migrations for Bybit/Kraken, Deribit, OKX, on-chain-perp, DEX-pool, Binance. Script:
+   `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/canonical-id-full-historical-sweep-wf_c4796aec-f35.js`
+3. `wf_118d8268-18c` — `mtds-canonical-symbol-migration` — discovers + migrates MTDS raw trade-tick/orderbook `symbol`
+   values (not the full instrument_id) to the canonical symbol shape, per venue family (operator: "every single value,
+   parquet file, etc., needs to be part of the scope" — full instrument_id prefix not required for raw ticks, but the
+   symbol portion is). Script:
+   `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/mtds-canonical-symbol-migration-wf_118d8268-18c.js`
+
+**Still queued, not yet dispatched:** wiring the shared live-construction path
+(`instruments_service/reference_data/ adapters/cefi/tardis/adapter.py`, `ccxt_adapter.py`) for
+Bybit/Kraken/OKX/Deribit/Binance's PERPETUAL/FUTURE/OPTION `instrument_key` — every sibling agent this session deferred
+touching this shared file due to lock contention with the TradFi WIP; dispatch once (1) above lands. A final cross-repo
+zero-old-format-traces verification pass is also queued behind all of the above.
