@@ -91,8 +91,17 @@ drift_direction: advance-code
      polls; per-AG recharts Area sparkline (`chart-theme` tones); "−N absorbed" derived from backlog drops; honest
      caption ("this session · inferred from backlog deltas"). — `deployment-ui@8eb4001`. `dataviz` skill loaded
      (single-series, no legend, 2px line). `pw:L2 ✓` O5 (sparkline accumulates across polls).
-- [ ] [REVIEW] P1. QG both repos green; **deploy deployment-api** (Cloud Build) so the live tab shows the real backlog,
-      and cite `Evidence: cloudbuild=<id>` SUCCESS. Verify the live endpoint returns `pending_shard_count`.
+- [x] 5. ✅ [BACKEND] P1. **FINDING — cefi false-degraded fix (per-AG staleness budget).** Root cause (verified vs live
+     GCS + Cloud Run): cefi market-tick is a DAILY batch, its consolidator effectively runs ~every 5 min (executions 5
+     min apart; index age climbed 174→228s), but the endpoint judged every AG against a uniform 120s budget → cefi
+     `degraded` ~60% of the time. Fix: `_AG_STALENESS_BUDGET_SEC`/`_budget_for` — cefi = 86400s (its launchers'
+     `MANIFEST_CONSOLIDATED_STALENESS_SEC`), others keep 120s default. — `deployment-api@90ace9f` + unit test; live cefi
+     now `age=120s status=ok`.
+- [x] 6. ✅ [UI] P2. **Poll cadence 15s→30s** — consolidation changes every 1–5 min, so 15s over-polled. —
+     `deployment-ui@b00454b` (O5 test waits the new 30s 2nd-poll).
+- [ ] [REVIEW] P1. QG both repos green; **deploy deployment-api** (Cloud Build) so the live tab shows the real backlog +
+      the cefi fix, and cite `Evidence: cloudbuild=<id>` SUCCESS. Verify the live endpoint returns `pending_shard_count`
+      and cefi=ok.
 
 ## WS-2 — v2: truthful merged-per-tick histogram (DEFERRED — 🟡 UNDER DISCUSSION / nice-to-have)
 

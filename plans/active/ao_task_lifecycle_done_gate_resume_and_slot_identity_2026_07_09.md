@@ -330,6 +330,29 @@ preserve-on-handoff (the ONLY auto-commit point):
 - [x] [CODE] P1. ✅ unified-trading-pm@c997993 — **AO-side clone/repair paths stamp identity** —
       `agent-orchestrator/server/worktree_setup.py` (and any other AO code path that creates or repairs a slot clone)
       stamps the same worktree identity at creation so a backend-provisioned slot is never identity-less.
+- [ ] [SCRIPT] P2. **Re-provision slot 10** — its PM/UAC/UTL "clones" were SYMLINKS to the root workspace clones
+      (discovered + removed 2026-07-09 during the identity sweep — the checker had stamped "slot-10" THROUGH them into
+      the ROOT configs; guards shipped in `unified-trading-pm@9f53f2b99`). Run
+      `bash scripts/dev/setup-tab-worktrees.sh --add-slot 10` on the planning VM to restore real Path-B clones.
+- [ ] [CODE] P2. **Manual /spawn route still expects the RETIRED tab branch** — found 2026-07-09 during preserve-path
+      verification: `POST /api/slots/12/spawn` was refused by the branch-state gate with `expected_branch: tab/plan…`
+      (the manual route's operator arg feeds `check_slot_branch_state` a tab-scheme expectation; AutoSpawn's own spawns
+      pass the host operator and correctly expect `live-defi-rollout`). Align the manual route's expected-branch
+      derivation with Path-B (same fix class as the identity hook's §1.5).
+- [x] [CODE] P0. ✅ agent-orchestrator@a4611f3 — **Boot-grace: watchdog/kicker were killing every booting worker**
+      (discovered 2026-07-09 ~15:50Z during post-deploy soak; fixed same session). The idle-lingering reclaim keys on
+      status∈{idle,stale} + live session + 2 ticks with NO spawn-age input, and a fresh spawn sits status=idle until its
+      first task attaches — the patient boot flow (B5) stretched that window past the ~2-min threshold, so EVERY
+      AutoSpawn worker was reclaimed 56-120s post-spawn (11 spawns / 10 reclaims / 13 kicks in the 25 min after the
+      15:30 restart; slots 2+3 killed ~30s AFTER a successful `/boot` 200 while polling for their first task). Fix:
+      `boot_grace_seconds` knob (default 300s, `ORCHESTRATOR_BOOT_GRACE_SECONDS`) anchored on `slots.last_spawned_at`
+      gates BOTH the kicker (skip classify/kick entirely — a mid-paste kick C-m can submit a PARTIAL boot prompt) and
+      the lingering reclaim (no tick counting inside the grace). `classify_pane` now filters the ghost + box-drawing
+      phantom-input shapes via shared `tmux_spawn.INPUT_GHOST_RE`/`INPUT_DECORATION_RE` (it had its OWN unfiltered
+      parser — kicked a 3-second-old booting pane "frozen" on a torn-frame `❯ ────…` snippet and later re-kicked its own
+      prior kick text). `alert_spawn_failed` skips self-resolving `benign:` TOCTOU reasons (paged during the restart
+      overlap). +5 tests; ambient-tmux flake hardened in `test_account_failover_resume` (missing `has_session` patch —
+      same class as the morning autospawn sweep). QG 1143 passed; live via FF-pull→reload 16:01:41Z.
 
 ### Phase E — tests, runtime verification, docs
 
@@ -363,6 +386,39 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 ## 7. Progress Log
 
+- 2026-07-09 ~16:10Z — **Soak finding #2 fixed + deployed: boot-grace (agent-orchestrator@a4611f3).** The 15:25/15:30
+  operator systemd restarts (clean: `NRestarts=0`, graceful STOPPED events; not a crash) reset every slot to
+  idle-with-live-session and exposed a churn loop the soak monitor caught within minutes: the watchdog's
+  `_reclaim_idle_lingering_sessions` (designed 2026-06-10 for FINISHED workers that never exit) keys on status
+  idle/stale + live session + 2 ticks with no spawn-age awareness, and a fresh worker is idle-with-live-session BY
+  DESIGN until its first task attaches — our patient boot flow (B5: deliberate paste + 30s submit-verify) stretched that
+  window past the ~2-min threshold, converting a latent race into a deterministic kill. Observed: EVERY AutoSpawn worker
+  reclaimed 56-120s post-spawn, slots 2/3 killed ~30s AFTER a successful `/boot` 200; 11 spawns / 10 reclaims / 13 kicks
+  in 25 min, each cycle burning account spawn budget. The same soak window caught the kicker classifying a 3-second-old
+  BOOTING pane "frozen" on a torn-frame `❯ ────…` snippet — `classify_pane` is a SECOND pane parser with none of B5's
+  ghost/decoration filters — and later re-kicking its own prior kick text on slot 4 (" — proceed now" as the frozen
+  snippet). Fix (QG 1143 green → quickmerge → FF-pull → WatchFiles reload live at 16:01:41Z): `boot_grace_seconds`
+  (default 300s) anchored on `slots.last_spawned_at` gates both the kicker and the lingering reclaim; `classify_pane`
+  shares `tmux_spawn.INPUT_GHOST_RE`/`INPUT_DECORATION_RE`; `alert_spawn_failed` skips `benign:` TOCTOU reasons. Bonus
+  live proof: the restart's brief old/new-process overlap fired the B2 TOCTOU guard exactly as designed
+  (`benign: session already exists (raced by another spawn path)` instead of a crash-loop) — and its page is what the
+  benign-alert skip now silences. Ambient-tmux test flake fixed in `test_account_failover_resume` (unpatched
+  `has_session` met the churn's real `orch-slot-5`). VERIFY next: first post-reload spawn survives >5 min + attaches a
+  task; `reclaiming idle lingering` on fresh spawns → 0.
+
+- 2026-07-09 ~15:45Z — **Deploy + first-hour runtime findings.** Deploy mechanism confirmed: uvicorn runs under systemd
+  with `--reload --reload-dir server`, so the 5-min FF-pull cron IS the deploy — the reloader restarted the app on the
+  new code at 15:06 with no manual restart. LIVE WINS: (1) the dispatch-ACK reconciler fired in production at 14:51 —
+  `slot_dispatch_unacked` on the slot-3 zombie (dispatched >1h, frozen pane), task requeued PINNED and re-dispatched
+  cleanly at 14:53 (§1.6 class closed); (2) shipped commits carry `[slot-16·planning]` attribution end-to-end; (3) host
+  identity sweep: 419 repos, 117 drifted → 0 (`check-slot-commit-identity.sh --fix`). REGRESSION found + fixed:
+  `_boot_submitted` (B5) initially failed EVERY fresh spawn — two false-pending sources caught by frame-by-frame pane
+  watch: Claude's greyed GHOST placeholder (`Try "write a test for <filepath>"`) reads as typed text in a capture, and
+  large boot pastes take ~8-10s to ingest (the single rescue C-m at +2s hit the same ingestion window). Fix: ghost
+  filter + patient ~30s verify window with up to 3 rescue C-m (window widened 24→30s per operator). Also: slot-10's
+  PM/UAC/UTL were SYMLINKS to the root workspace clones — the checker stamped "slot-10" through them into the ROOT
+  configs; links removed, roots re-stamped, checker + provisioner now refuse symlinked repo dirs
+  (`unified-trading-pm@9f53f2b99`); slot 10 needs re-provisioning (todo below).
 - 2026-07-09 ~15:15Z — **Phases A + B + B2 (6/7) + C SHIPPED**: `agent-orchestrator@5b07bd3` (quickmerge → LDR; QG
   green, 1137 tests incl. 12 new lifecycle tests in `tests/test_task_lifecycle_done_gate_resume.py`). The commit itself
   carries the fixed attribution `ikennaigboaka [slot-16·planning]` — first production proof of the Phase-D identity

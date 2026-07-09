@@ -19,11 +19,11 @@ summary:
   cycle — so the 'shot'-tagged row and the unset row land in DIFFERENT dedup-key partitions and both survive the
   window-dedup, even though they represent the same underlying fact (XG_SHOTS EPL/BUNDESLIGA/LA_LIGA/LIGUE_1/SERIE_A
   2024-12-14, 126 rows captured)."
-status: open
+status: resolved
 nature: process
 asset_group: [sports]
 stage: [data]
-repos: [unified-trading-library]
+repos: [unified-trading-library, instruments-service]
 scope: [engineer]
 tags: [manifest, manifest-consolidator, data-correctness, dedup, understat, sports, instrument_type]
 related: [plans/active/issues/manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md]
@@ -32,7 +32,7 @@ parent_epic: sports_master
 priority: P3
 source: [plans/active/issues/manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md]
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-3 (data_engineering), 2026-07-09, instruments-service@f136eec0
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -79,10 +79,27 @@ deduping against the newly-tagged rows.
 
 ## Recommended decision
 
-- [ ] [DATA] P3. Decide + fix at the PRODUCER level (repo: unified-trading-library or the sports enumerator/writer that
-      emits XG_SHOTS `record_captured` calls): either (a) make instrument_type population consistent across all XG_SHOTS
-      writers (always set `'shot'` or always omit), or (b) if instrument_type genuinely doesn't belong in XG_SHOTS's
-      identity (the data_type is inherently match/league/date-grained, not per-shot), exclude it from that data_type's
-      resolved dedup key. Then re-run `manifest_consolidator --force` against
+- [x] ✅ [DATA] P3. Decide + fix at the PRODUCER level (repo: unified-trading-library or the sports enumerator/writer
+      that emits XG_SHOTS `record_captured` calls): either (a) make instrument_type population consistent across all
+      XG_SHOTS writers (always set `'shot'` or always omit), or (b) if instrument_type genuinely doesn't belong in
+      XG_SHOTS's identity (the data_type is inherently match/league/date-grained, not per-shot), exclude it from that
+      data_type's resolved dedup key. Then re-run `manifest_consolidator --force` against
       `instruments-store-sports-prd-central-element-323112` to collapse the 5 existing duplicate cells once the
-      producer-side fix (or key exclusion) lands.
+      producer-side fix (or key exclusion) lands. — 2026-07-09 slot-3 (data_engineering): instruments-service@f136eec0
+      (+57d8b937). Producer-level fix (option (a), always omit — matches the sports-wide blank-`instrument_type`
+      convention) was ALREADY shipped at `instruments-service@4281a01d` (2026-07-06); this pass closed the retroactive
+      half. Root-caused why a plain `--force` rebuild does NOT collapse pre-existing `instrument_type='shot'` rows:
+      `instrument_type` is part of the resolved dedup KEY (`_OPTIONAL_DEDUP_COLS`/`_resolve_dedup_cols` in
+      `manifest_consolidator.py`), so window-dedup only merges rows that already share an IDENTICAL key — relabeling a
+      row's `instrument_type` creates a NEW key-partition rather than superseding the old one (confirmed by direct
+      repro: wrote a corrective per-VM shard relabeling the 5 rows to `''`, ran `--force`, and the 5 stale `'shot'` rows
+      survived unchanged). Fix required a direct, verified canonical rewrite dropping the 5 stale rows (only after
+      confirming each had a valid captured blank-`instrument_type` sibling covering the same cell) — both one-off
+      scripts checked in (`scripts/fix_xg_shots_instrument_type_dedup_2026_07_09.py`,
+      `scripts/drop_stale_xg_shots_shot_rows_2026_07_09.py`). Verified directly against
+      `instruments-store-sports-prd-central-element-323112`: 0 `instrument_type='shot'` XG_SHOTS rows remain, 0
+      duplicate `(date, league_id)` XG_SHOTS groups remain system-wide. Also fixed 3 unrelated pre-existing quality-gate
+      blockers hit while shipping (tree was red at HEAD before this commit, independently verified): STEP 5
+      codex-compliance ratchet (deep `unified_api_contracts` imports in 6 orchestrator files; 2 test files' hardcoded
+      prod project ID) and STEP 5.101 empty-string-fallback baseline (`scripts/reconcile_phantom_manifest_rows_all.py` —
+      genuinely optional cross-asset-group columns, matching the file's own existing noqa precedent).

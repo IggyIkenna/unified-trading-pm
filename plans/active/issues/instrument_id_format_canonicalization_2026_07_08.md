@@ -638,14 +638,58 @@ Redundant local copy killed once the VM was confirmed healthy. **The naming-regi
 prefix; do not reuse the scratchpad script again.
 
 **Ghost-venue-merge** (`instruments-service/scripts/legacy_naming_audit_dexpool_ghost_venue_merge_2026_07_09.py`,
-`UNISWAPV2-ETHEREUM` vs `UNISWAP_V2-ETHEREUM` etc., `--apply --workers 48`): confirmed same safe backup-then-mutate-
-then-verify pattern (genuinely resumable), 55% done (18,000/33,003) at a steady clean rate, ~40min to finish —
-deliberately left running locally rather than disrupted for a VM move this close to completion (real judgment call:
-restart/re-list overhead would cost more than it saves). **If the operator needs to close their laptop before this
-finishes, it is safe to interrupt and resume later** (idempotent, backup-verified) but is NOT yet durable against that
-in its current local-only form — flag if closing the laptop is imminent so this can be checked/resumed properly.
+`UNISWAPV2-ETHEREUM` vs `UNISWAP_V2-ETHEREUM` etc., `--apply --workers 48`): **DONE** —
+`total=33003 ok=32992 failed=11 total_ghost_rows=2309519 total_merged_rows=2823314`, real completion log confirmed
+(`full_apply_run.log`), 99.97% success.
 
-- **2026-07-09 — GENERALIZED FINDING + DECISION: legacy GCS filename/path conventions are a systemic risk, not just an
+**UPDATE 2026-07-09 — real audit of ALL concurrently-running local migrations found the durability risk was broader than
+the single job first flagged, and a real (not cosmetic) data-loss mechanism.** A full re-check found **9 real local
+Python migration processes running simultaneously**, none on a VM. Re-verified real current ETAs (not the stale
+first-pass numbers): TradFi single-leg (~6.5h), **DEX-pool symbol-shape (~12.6h — actually the longest, not TradFi)**,
+on-chain-perp HL/ASTER (~5-6h, mid-scan), on-chain-perp LIGHTER/PACIFICA/EXTENDED (~1.1h), 5 sharded Prediction jobs
+(~1.3h/1.3h/2.3h/**8.2h**/**9.1h**).
+
+**Real finding on the connection-pool warnings**: two distinct phenomena. "Connection pool is full, discarding
+connection" (thousands of occurrences) is cosmetic urllib3 noise, zero correlation with real failures. But real
+`BrokenPipeError`/`ConnectionResetError`/`SSLEOFError` exceptions (logged as actual errors, each a genuinely
+lost/skipped shard, not auto-retried) clustered in the same 1-2 second windows across unrelated processes — real local
+resource contention from 9 concurrent processes (several 48-96 workers each) hammering GCS simultaneously. **Confirmed
+causally**: DEX-pool's climbing error count (11→45→96) and on-chain-perp's went flat immediately after killing the 2
+heaviest local processes — reducing local concurrency measurably improves correctness, not just laptop-closing
+durability. Failure rate ~0.1-0.3% of objects, shard-isolated (no corruption) but not auto-retried — needs a small
+follow-up remediation pass over each job's `error`-tagged shards once done.
+
+**Moved to properly-registered VMs** (first real use of the corrected naming pattern):
+`canonical-migration-tradfi-20260709-160919` (TradFi single-leg — real ~26x speedup once off the shared laptop
+connection pool, 145 obj/s vs 5.5 obj/s local, new ETA ~15min not 6.5h) and `canonical-migration-defi-20260709-161510`
+(DEX-pool — was the real worst offender: longest ETA + climbing real error count). Both bucket targets verified
+byte-identical to the local runs before trusting them; both confirmed healthy via real `run.log` content. **Note**: the
+TradFi run used `--skip-manifest` — the `_index/ availability_index.parquet` manifest rewrite is a separate follow-up
+once the VM's GCS pass completes, not yet done.
+
+**Left running locally, with real reasoning**: 3 short jobs (~1.1-2.3h each, low/zero errors) — fine as-is.
+On-chain-perp HL/ASTER (~5-6h) — idempotent but already paid a 1.5h full-bucket-scan sunk cost with no resumable
+worklist; moving now would re-pay that scan, so left running — **flag if the laptop needs to close before ~5-6h from
+now, this one specifically would need a VM move first**. Prediction shard4c (~8.2h) and shard5b (~9.1h) — flat/near-
+zero error rate (no active correctness signal, unlike DEX-pool), left running to bound this pass's blast radius, but
+**explicitly recommended for a VM move if the laptop is closing within the next several hours** (same
+`canonical-migration-prediction-` registered prefix, no file upload needed, same command as the local invocation).
+
+**UPDATE 2026-07-09 — Prediction shard4c + shard5b also moved to VMs, both confirmed healthy.** Re-verified real current
+state before acting (still multi-hour, 0-1 flat errors, not climbing) and script idempotency (copy-to-new-key
+
+- `gcs_describe_object` pre-check = safe to kill/resume anywhere). `launch-canonical-migration-vm.sh prediction`'s
+  hardcoded `_script_for` mapping points at a different, older tool — followed the same precedent as the tradfi/defi
+  moves (direct `gcloud compute instances create` under the registered `canonical-migration-prediction-` prefix with a
+  custom `VM_MIGRATION_CMD`, same startup-script/labels/metadata shape). Launched
+  `canonical-migration-prediction-20260709-163134-shard4c` and `-shard5b`; health verified via real GCS-streamed
+  `run.log` content before killing the local PIDs (the other, untouched 3 local processes are unaffected). Real speedup:
+  shard4c 21→71 obj/s (~3.4x), shard5b 14.2→86 obj/s (~6x). New real ETA: shard5b ~2-2.5h (single POLYMARKET phase),
+  shard4c ~4-5h total (KALSHI phase then POLYMARKET phase run sequentially). **Only one long-running local job remains:
+  on-chain-perp HL/ASTER (~5-6h), deliberately left per the sunk-cost reasoning above** — needs an operator call if the
+  laptop is closing within that window.
+
+* **2026-07-09 — GENERALIZED FINDING + DECISION: legacy GCS filename/path conventions are a systemic risk, not just an
   on-chain-perp issue.** The on-chain-perp full-historical-sweep branch found that a real GCS narrow-prefix listing (not
   the manifest's summary count) shows ~99% of "captured" HL/ASTER historical objects (~19,255 of 19,435) sit under an
   EVEN OLDER bare-symbol filename shape (`AAVEUSDT.parquet`, `AAVE-PERP.parquet` — no venue, no type marker in the name
@@ -660,7 +704,7 @@ in its current local-only form — flag if closing the laptop is imminent so thi
   migrated to it — not just the already-known target-format gap this doc's findings 1-6 describe, but genuinely
   unknown-until-audited older shapes the way this one was. Dispatched as a dedicated discovery+migration workflow, see
   Orchestration state below.
-- **2026-07-09 — `wf_118d8268-18c` onchain-perp venue-family slice (HYPERLIQUID/ASTER/PACIFICA-SOLANA/
+* **2026-07-09 — `wf_118d8268-18c` onchain-perp venue-family slice (HYPERLIQUID/ASTER/PACIFICA-SOLANA/
   EXTENDED-STARKNET/LIGHTER-ZKSYNC) — real discovery + code fix + historical migration, MTDS.** Real discovery (live
   `gcloud storage`/parquet reads, not guesses) confirmed all 5 venues' raw-tick `symbol` column diverges from the
   `BASE-QUOTE@LIN` target: ASTER emitted the raw concatenated exchange symbol (`"BTCUSDT"`, no dash); HYPERLIQUID's S3
@@ -696,7 +740,7 @@ in its current local-only form — flag if closing the laptop is imminent so thi
   Full write-up + the LIGHTER-ZKSYNC market_id→symbol table (live-verified 2026-07-09 via
   `mainnet.zklighter.elliot.ai/api/v1/orderBookDetails`): `market-tick-data-service/docs/canonical-write-conventions.md`
   § "On-chain-perp `symbol` canonicalization".
-- **2026-07-09 — CeFi legacy GCS naming-convention audit (the generalized finding's CeFi half) — COMPLETE, real gap
+* **2026-07-09 — CeFi legacy GCS naming-convention audit (the generalized finding's CeFi half) — COMPLETE, real gap
   found + fixed for OKX-SWAP/OKX-FUTURES, no gap for the other 4 target venues.** Real GCS listing (not the manifest
   summary — one flat `gsutil ls -r` over `instruments-store-cefi-prd-central-element-323112`'s
   `instrument_availability/by_date/`, 110,636 real objects, single walk) across BINANCE-FUTURES, BINANCE-DELIVERY,
@@ -743,3 +787,56 @@ in its current local-only form — flag if closing the laptop is imminent so thi
     in-flight sibling workflow this session
     (`instruments-service/scripts/legacy_naming_audit_dexpool_ghost_venue_merge_2026_07_09.py`) — not this entry's
     scope; see that script/its own commit for DeFi-side real findings.
+
+* **2026-07-09 — DeFi legacy GCS naming-convention audit + migration COMPLETE** (the DeFi half of the generalized
+  finding immediately above; `wf_9e5f13e3-962`'s DeFi scope). Real, narrow (single-venue-prefix) GCS listings — not the
+  manifest summary — against `instrument_availability/by_date/` in BOTH `instruments-store-defi-prd-{pid}` (2,363 real
+  day-partitions, 2020-01-20..2026-07-09) and the legacy env-less `instruments-store-defi-{pid}` (2,315, confirmed
+  frozen since 2026-05-22 — 0 real writes past that date) covering the 13 DEX-pool protocols + 25
+  lending/staking/yield/restaking venues. **Real finding, same class as the CeFi ghost-venue/shape-B findings above**: a
+  ghost (no-underscore) vs canonical venue-token spelling was written IN PARALLEL for 28 real venue×chain pairs across
+  ~4 years (2022-03-27..~2026-05-11, then stopped — `writers.py`'s `canonicalize_defi_venue_combined()` fix, 2026-05-22,
+  already prevents new ghost writes but never touched the historical corpus) — 33,012 real ghost objects (31,968
+  `-prd-` + 1,044 legacy-bucket-only), including 2 fully-orphaned cases (`PANCAKESWAPV3-ZKSYNC` 446/446 days,
+  `VELODROME_V2-OPTIMISM` 1,044/1,044 days — zero canonical counterpart existed anywhere pre-migration). A real content
+  diff (81 sampled pairs) proved ghost≠canonical duplicates — each side commonly holds real pools the other is missing
+  (schema also differs: canonical 51 cols vs ghost 40) — so this was a MERGE migration (column+row union, canonical wins
+  on identity-column conflict, ghost-only rows carried over honestly), not a blind rename, backed by a real before/after
+  example (`AAVE_V3-OPTIMISM` day=2022-04-23: 12+12 rows, 3 unique each side → 15 merged, 0 lost, independently
+  re-verified post-write). Executed via
+  `instruments-service/scripts/legacy_naming_audit_dexpool_ghost_venue_merge_2026_07_09.py` — backup-first (every
+  pre-migration object server-side-copied under `_migration_backup/legacy_naming_audit_dexpool_2026_07_09/` before any
+  write), verify-then-delete (ghost only deleted after a post-write re-read confirms row-count ≥ the identity-deduped
+  union floor), real `ThreadPoolExecutor` concurrency (48 workers). **Real final results**: 33,003/33,003
+  (bucket,ghost,day) triples migrated successfully (100%, 0 remaining failures after an 11-item mop-up pass), a
+  follow-up idempotent full re-scan of all 29 ghost-venue prefixes across both buckets confirmed **0 real ghost objects
+  remain anywhere** — durable, not just catalog-level. Real elapsed time ~78 minutes wall-clock (main pass 4,568s +
+  mop-up 41s + verification listings; measured throughput ramped 4.4→7.6 objects/sec). Real content recovered: 2,314,285
+  total rows read from ghost objects, merged into canonical objects now totaling 2,828,070 rows. **Real mid-run bug
+  found and fixed in the same pass**: 11/33,003 objects (1 transient GCS 503, 10 `UNISWAPV3-POLYGON` days) initially
+  failed a post-write verify check SAFELY (ghost not deleted, no data at risk) — root cause: the verify floor compared
+  against the ghost object's RAW row count, but a real source file can carry an internal duplicate identity value (e.g.
+  `UNISWAPV3-POLYGON` day=2025-01-10: 476 raw rows, 475 unique `raw_symbol` — a real subgraph-pagination-overlap
+  re-listing, not corruption); the merge already correctly deduped on the identity column, so the raw-row-count floor
+  was rejecting a genuinely correct result as a false positive. Fixed (floor now uses the unique identity-column count)
+  and all 11 re-ran clean. **Lending/staking finding**: of the 25 requested venues, only
+  Aave_V3/Spark/Compound_V3/Morpho/Fluid have EVER written a real object to this path — the other 18 (Euler_V2, Radiant,
+  Venus, Benqi, MarginFi, Solend, Renzo, KelpDAO, Puffer, RocketPool, Sanctum, Solblaze, Yearn_V3, Beefy, Karak, Idle,
+  Symbiotic, Convex) have ZERO real objects under ANY naming variant — confirmed via a full real venue-token inventory
+  (87 distinct tokens, full 2020-2026 history, both buckets) — NOT a naming gap (nothing to rename), a separate
+  pre-existing "never backfilled" state, out of THIS audit's scope. **Second finding, flagged not executed, mirrors
+  CeFi's shape-B finding above**: a fully distinct real duplicate write path was found —
+  `day={D}/pipeline_mode=batch_instruments_service/asset_group=defi/venue={V}/...` — mirroring ~104K of the flat tree's
+  real objects in `-prd-` (2,353/2,363 days), confirmed dead going-forward (real writes stopped ~2026-06-30). Unlike
+  CeFi's shape B (which the CeFi audit above found DOES carry stale/buggy unmigrated content in some cases), DeFi's
+  shape-B samples checked (oldest `day=2020-01-20` + a recent `day=2026-06-10`, CRC32C+MD5 hash-verified) were
+  byte-for-byte identical to their flat-shape sibling — but this was only 2 spot-checked samples, not a full
+  reconciliation, so treat as a real-but-narrow finding, not a proven full-corpus guarantee. Confirmed UNREAD by every
+  real consumer (`unified_trading_library`'s
+  `instrument_lifecycle_loader.py`/`domain/instruments_client.py`/`domain_client/clients/instruments.py`/
+  `options_cluster_lookup.py`/`core/cloud_data_provider.py` — all read the flat shape only). Recommended as its own
+  dedicated SAFE-TO-DELETE audit (same pattern as MTDS's own
+  `e2e-testing/scripts/defi/audit_legacy_gcs_dup_delete_list.py`, and the exact same shape-B pattern the CeFi audit
+  above already found + partially fixed), NOT executed this pass. Full evidence + per-protocol table:
+  `instruments-service/docs/DEFI_INSTRUMENTS.md` § "Legacy GCS naming audit — real per-protocol findings and migration
+  (2026-07-09)". Evidence: instruments-service@<pending quickmerge sha>.
