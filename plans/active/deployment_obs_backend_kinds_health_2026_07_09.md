@@ -104,7 +104,22 @@ source: deployment_observability_expansion_2026_07_08.md
       concurrently-shipped sibling census todos on this same plan (ECS_SERVICE @ deployment-service/deployment-api, the
       DeploymentKind 6-kind UAC extension) — 3-way conflict resolution kept all three kinds' code paths. QG green both
       repos (sentinels 7c8b210 / 050d9a4).
-- [ ] [BACKEND] P2. Add `CLOUD_FUNCTION` (gen2) census — `functions list`; note gen2 = Cloud Run underneath.
+- [x] ✅ [BACKEND] P2. Add `CLOUD_FUNCTION` (gen2) census — `functions list`; note gen2 = Cloud Run underneath. —
+      deployment-service@fb217de (exposes `functions_v2` on the deferred `_gcp_sdk` GCP-SDK boundary + adds
+      `google-cloud-functions` as a dependency, mirroring the existing `run_v2`/`compute_v1` pattern) +
+      deployment-api@a025563 (new `_gcp_cloud_functions.py`: `list_cloud_functions()` lists every gen2 function via
+      `FunctionServiceClient.list_functions`, existence + config only per WS-B scope — `state` maps to
+      running/failed/pending/unknown, `build_config.runtime` and the underlying Cloud Run `service_config.service` name
+      are surfaced, no CloudWatch/invocation-stats call; `_cloud_function_item()` classifies directly with
+      `umbrella=NONE` — same no-live/batch/paper-phase precedent as ECS_SERVICE/CLOUD_RUN_SERVICE; wired into
+      `_compute_inventory` under `want_gcp`, honest-degrades to `{}` on any GCP error without blocking the other kinds).
+      8 new unit tests (state-mapping parametrized over all 6 `Function.State` values, config extraction, GCP-error
+      degradation) + 1 new `_cloud_function_item` builder test — all credential-free (patches
+      `deployment_service.backends._gcp_sdk.functions_v2` directly rather than `sys.modules` stubbing, since
+      `tests/unit/conftest.py` pre-stubs the whole `deployment_service` package as empty for the session and several
+      OTHER `deployment_service.backends` submodules import `_gcp_sdk` at their own module-init time). Rebased twice
+      onto concurrent sibling census todos (Lambda census, kind-counts extension, detail endpoint, dead-VM fix) landing
+      on this same plan — all merges additive, no logic conflicts. QG green both repos (sentinels fb217de / a025563).
 - [x] ✅ [BACKEND] P1. Extend `DeploymentKind` (UAC) + the inventory route's kind counts + filters to the 6 kinds; keep
       honest degradation (a census failure for one kind never blocks the others). — deployment-api@9353d28. UAC
       `DeploymentKind` already carried all 6 values (VM/CLOUD_RUN_JOB/CLOUD_RUN_SERVICE/ECS_SERVICE/LAMBDA/
