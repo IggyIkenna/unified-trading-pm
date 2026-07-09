@@ -116,9 +116,12 @@ daemon reads structured-progress-when-present, else the log-scrape) means it rol
 ## WS-B — Census the compute kinds the backend ignores (make the mock real)
 
 - [ ] [BACKEND] P1. Add `CLOUD_RUN_SERVICE` to the census — `run_v2.ServicesClient` list + ready-state + revision +
-      region; classify under an umbrella (services are LIVE). New `DeploymentKind` value in UAC.
+      region. New `DeploymentKind` value in UAC. **Mode = "—"** (a service has no live/batch/paper phase; the `Kind`
+      badge/filter carries "this is a service" — see Open-Q1). No PLATFORM/INFRA mode.
 - [ ] [BACKEND] P1. Add `ECS_SERVICE` census — ECS list-services/describe-services across the prod clusters
-      (uts-defi-prod, unified-trading-prod) → desired/running task count + task-def revision; `cloud=AWS`.
+      (uts-defi-prod, unified-trading-prod) → **desiredCount + runningCount** + task-def revision; `cloud=AWS`. Always
+      emit the row even at 0 running tasks (state derives from desired-vs-running — see Open-Q7 + WS-D service-health
+      sub-taxonomy).
 - [ ] [BACKEND] P1. Make the Cloud Run **jobs** census DYNAMIC — list live jobs instead of the hardcoded
       `CLOUD_RUN_JOBS` name-registry, so off-pattern jobs stop hiding (keep the registry only for classification hints,
       not as the allow-list). Run the exact registry-vs-live diff first to quantify the current hidden set.
@@ -143,10 +146,16 @@ daemon reads structured-progress-when-present, else the log-scrape) means it rol
       WS-C column/drill-down wiring.
 - [ ] [BACKEND] P3. Recent error count / last log line — from the EXISTING teed GCS log / Cloud Logging (drill-down
       only); no new CloudWatch dependency.
-- [ ] [UI] P1. Row **drill-down panel** — show the deep fields (cpu/mem sparklines, req/min, p99, invocations, revision,
-      running_tasks, rows in/out/error) so the flat table stays scannable. (Mock stores these fields already; wire the
-      panel.)
-- [ ] [UI] P2. **Kind filter** dropdown next to Mode/Cloud/Status (isolate services vs jobs vs VMs).
+- [ ] [UI] P1. **Name-click detail popover** (right-side panel) — table row shows current/last stats; clicking the
+      target NAME opens a popover with the deep fields (cpu/mem/disk sparklines + timeline, req/min, p99, invocations,
+      revision, running_tasks, rows in/out/error, object-delta breakdown, owning consolidator, absolute used/total GB).
+      Flat table stays scannable; deep detail lives here. (Mock stores these fields already; wire the panel.)
+- [ ] [UI] P1. **Console deep-link** in the popover — "Open in GCP/AWS console →" built from the target's identity: GCE
+      `compute/instancesDetail/zones/{zone}/instances/{name}?project=…`, EC2 `ec2/home?region={r}#InstanceDetails:{id}`,
+      plus Cloud Run service/job, ECS cluster/service, Lambda function URLs. Pure URL construction from fields already
+      fetched (zone/region/id) — no new API call.
+- [ ] [UI] P2. **Kind filter** dropdown next to Mode/Cloud/Status (isolate services vs jobs vs VMs). This is how a user
+      finds always-on services (they have Mode="—") — see Open-Q1.
 - [ ] [REVIEW] P2. Extend `DeploymentItem` in UAC/backend to the mock's optional rich-field shape (already in the UI
       type) so the wire contract matches — one SSOT, no client-only fields.
 
@@ -211,10 +220,22 @@ Sampled at the edge each heartbeat, stamped onto the registry entry:
 
 ### D.3 Composite health taxonomy (replaces heartbeat-only `_vm_status`)
 
-`working` (resource in-band AND (`object_delta`>0 OR `io_write_rate`>0)) · `stalled` (fresh heartbeat, flat
-`object_delta` + idle cpu/net) · `oom-risk` (`mem_slope`>0 toward >90%) · `workload-dead` (daemon alive, PID gone) ·
-`disk-full` (`disk_pct`>90) · `hung` (heartbeat stale + control-plane says RUNNING) · `dead` (control-plane not
-running).
+**VM / job (7-state), keep all 7 — colour by 3-tier severity** (green=working · amber=stalled/oom-risk/disk-full ·
+red=workload-dead/hung/dead); the chip TEXT carries the exact state, the COLOUR carries urgency (Open-Q2): `working`
+(resource in-band AND (`object_delta`>0 OR `io_write_rate`>0)) · `stalled` (fresh heartbeat, flat `object_delta` + idle
+cpu/net — thresholded PER lifecycle_class, Open-Q3) · `oom-risk` (`mem_slope`>0 toward >90%) · `workload-dead` (daemon
+alive, PID gone) · `disk-full` (`disk_pct`>90) · `hung` (heartbeat stale + control-plane says RUNNING) · `dead`
+(control-plane not running).
+
+**`stalled` threshold table (v1 defaults, Open-Q3)** — progress-metric primary, cpu secondary, NEVER a global CPU cut:
+backfill/batch/feature-compute → `object_delta==0` for ≥15 min AND cpu<10% · live-capture/live-trading → no
+events/heartbeat-progress ≥5 min during an expected-active window · paper → `work_delta==0` ≥15 min · service → N/A (use
+request/error-rate, below).
+
+**Service (Cloud Run service / ECS) sub-taxonomy** — services have no manifest/object-delta, so a SEPARATE state set
+(Open-Q7): `serving` (running==desired>0, green) · `scaled-to-zero` (desired==0, neutral — off on purpose) · `dead`
+(desired>0 but running==0, RED — should be up, isn't) · `degraded` (error-rate over threshold, amber). Cloud Run service
+uses ready-state + revision health in place of desired/running.
 
 ### D.4 Scale & cost budget (constrain the impl to the cheap architecture from day one)
 
@@ -238,11 +259,16 @@ running).
       object-count-delta per shard off the manifest the consolidator maintains; NO new bucket walk.
 - [ ] [BACKEND] P1. **Hang detection = control-plane existence + stale heartbeat** (NOT Cloud Monitoring) — reuse the
       `aggregated_list` / EC2 / Run-execution lists already fetched.
-- [ ] [BACKEND] P1. **Composite health status** (D.3) replacing `_vm_status`.
+- [ ] [BACKEND] P1. **Composite health status** (D.3) replacing `_vm_status` — VM 7-state + the per-lifecycle-class
+      `stalled` threshold table (Open-Q3).
+- [ ] [BACKEND] P1. **Service-health sub-taxonomy** (D.3) — `serving`/`scaled-to-zero`/`dead`/`degraded` from ECS
+      desired-vs-running (and Cloud Run ready-state/revision); services always emit a row (Open-Q7). Read-only in v1 (no
+      controls — Open-Q8).
 - [ ] [BACKEND] P2. **`/deployments/{id}/detail`** endpoint serving the rolling window (drill-down); the thin list
       carries the composite + headline numbers.
-- [ ] [UI] P1. **Health column = composite** + drill-down (cpu/mem/disk sparklines, rows_out + object delta, owning
-      consolidator).
+- [ ] [UI] P1. **Health column = composite** — chip text = exact state, colour = 3-tier severity (Open-Q2); deep metrics
+      move to the name-click popover (WS-C), not an inline drill-down. Controls column stays VM-only; services render
+      read-only (Open-Q8).
 - [ ] [BACKEND] P2. **Alerts** on `oom-risk` (before the kill) + `stalled` (progress flatlines, heartbeat fresh) — wire
       into the existing alerts surface.
 - [ ] [OPERATOR] P2. Decide Cloud-Run-job live cpu/mem — **(b)** bucket-truth + exit-137 now (rec), or **(a)** a cgroup
@@ -263,6 +289,9 @@ running).
 - [ ] [UI] P3. EXPERIMENT badge label — keep `batch·exp` vs plain `batch`. (Rec: keep.)
 - [ ] [REVIEW] P1. When the real census lands, gate `/freshness` fetches to VM kinds only (services use error-rate
       health, not manifest freshness) — the mock currently fetches freshness for all LIVE rows.
+- [ ] [DESIGN] P3. **Service controls (deferred, Open-Q8)** — scale-to-zero / restart affordances for Cloud Run / ECS
+      services behind a safety design: confirmation modal + audit log + role check. NOT v1 (v1 services are read-only).
+      Its own phase; high blast radius on prod.
 
 ## WS-H — Structured progress reporting (retire the log-scrape) — LAST PHASE, nice-to-have
 
@@ -287,33 +316,45 @@ running).
 
 ---
 
-## Open questions / to discuss (capture now — do not lose)
+## Open questions — ALL RESOLVED 2026-07-09 (operator; unambiguous for AO dispatch)
 
-1. **Umbrella for always-on services.** Services (deployment-api, market-data-query) aren't live/batch/paper trading
-   work — do they belong under LIVE, or do we add an `INFRA`/`PLATFORM` umbrella so the mode filter stays
-   trading-centric? (Mock puts them under LIVE for now.)
-2. **Health taxonomy granularity.** Is the 7-state composite (working/stalled/oom-risk/workload-dead/disk-full/
-   hung/dead) the right set, or do we collapse some for the table and keep the detail in the drill-down?
-3. **`stalled` thresholds.** What defines "idle" — CPU < X% AND rows_out flat for Y min? Per-workload-type (a paper
-   strategy waiting on a websocket is legitimately low-CPU; a backfill at 0% is stuck). May need a per-lifecycle-class
-   threshold table.
+1. **Umbrella for always-on services.** ✅ RESOLVED — **no PLATFORM/INFRA mode; the `Kind` column carries it.** Services
+   (deployment-api, market-data-query, execution/strategy-service-prod) ARE our deployments and belong in the tab, but
+   have no live/batch/paper phase → **Mode = "—"**. Users find them via the **Kind filter** (WS-C). Topology note: our
+   always-on services run on Cloud Run/ECS (one managed service = one deployment unit); VMs are single-purpose — the
+   "many services on one VM" case does not occur today.
+2. **Health taxonomy granularity.** ✅ RESOLVED — **keep all 7 states, colour by 3-tier severity** (green=working ·
+   amber=stalled/oom-risk/disk-full · red=workload-dead/hung/dead). Chip text = exact state (actionable), colour =
+   urgency. Metric values live in the popover. See D.3.
+3. **`stalled` thresholds.** ✅ RESOLVED — **per-lifecycle-class table, progress-metric primary, cpu secondary, never a
+   global CPU cut.** v1 defaults in D.3 (backfill/batch/feature ≥15 min flat object_delta + cpu<10%; live ≥5 min no
+   events during active window; paper ≥15 min flat work_delta). Numbers tunable once real data lands.
 4. **Push vs pull cost.** ✅ RESOLVED (2026-07-08) — **no Cloud Monitoring / CloudWatch.** Metrics = edge-push (60 s
    heartbeat, free); existence = control-plane list already called; write-truth = manifest lookup; OOM cause = exit-137.
-   The only paid pull line is removed. See WS-D.0 + WS-D.4.
-5. **Rich-field contract ownership.** Do the new per-target fields live on `DeploymentItem` (one fat contract) or a
-   separate `/deployments/{id}/detail` endpoint (thin list + rich detail)? Leaning thin-list + detail endpoint for the
-   drill-down.
-6. **Inline columns vs drill-down.** Which rich fields earn an always-on column (cost/day, uptime?) vs drill-down-only
-   (cpu/mem/req/p99)? Current mock: cost + machine/zone inline, rest deferred.
-7. **ECS 0-task services.** Show ECS services with 0 running tasks as `dead`/`idle` rows, or hide until they scale?
-   (They're the DeFi execution estate — probably show, so we see when they SHOULD be up but aren't.)
-8. **Kill-switch / controls for non-VM kinds.** The Controls column is VM-only today. Do services get scale-to-zero /
-   restart affordances, and what's the safety story (these are prod services)?
+   See WS-D.0 + WS-D.4.
+5. **Rich-field contract ownership.** ✅ RESOLVED — **thin list + `/deployments/{id}/detail`.** List carries only the
+   rendered columns + cpu/mem/disk summary scalars; the detail endpoint serves the full metric vector + rolling window +
+   object-delta breakdown + owning consolidator for the name-click popover. See D.2 + WS-C.
+6. **Inline columns vs drill-down.** ✅ RESOLVED — **the current mock IS the inline contract** (Mode·Kind·Target·Cloud·
+   Service·Asset group·Status·Last run/up·Progress·Cost/day·Exit·Resources[cpu/mem/disk]·Health·Controls). Everything
+   else → the name-click popover. Cost stays inline but nullable (`—` until WS-E).
+7. **ECS 0-task services.** ✅ RESOLVED — **always show; desired-vs-running drives state** (`serving`/`scaled-to-zero`/
+   `dead`/`degraded`, D.3 service sub-taxonomy). Hiding a 0-task service would make an intentional scale-to-zero
+   indistinguishable from a crashed prod execution service — the exact blind spot to kill.
+8. **Kill-switch / controls for non-VM kinds.** ✅ RESOLVED — **v1 = read-only for services** (Controls stay VM-only).
+   Restarting/scaling a prod service is a high-blast-radius write; deferred to a later phase behind a real safety design
+   (confirmation modal + audit log + role check). Tracked as WS-F below.
 
 ---
 
 ## Progress Log
 
+- 2026-07-09 — **All 8 open questions RESOLVED with the operator** (see the Open-questions section for each decision).
+  Net: Q1 no PLATFORM/INFRA mode (Kind carries services, Mode="—"); Q2 keep 7 states + 3-tier severity colour; Q3
+  per-lifecycle-class `stalled` table; Q5 thin list + `/deployments/{id}/detail`; Q6 mock = inline contract, rest in
+  popover; Q7 always show services, desired-vs-running state; Q8 v1 read-only. New todos folded in: service-health
+  sub-taxonomy (WS-D), console deep-link + name-click popover (WS-C), deferred service-controls safety design (WS-F).
+  Plan is now unambiguous for AO split/dispatch.
 - 2026-07-08 — Merged Deployments tab shipped (`deployment-ui@50a6947`). Richer-estate mock built + verified (18 rows, 6
   kinds, rich fields, 0 console errors) — uncommitted. Live GCP/AWS census run to quantify the gap. VM heartbeat traced:
   liveness + work-counters only, no resource metrics, daemon decoupled from workload. Plan authored (local).
