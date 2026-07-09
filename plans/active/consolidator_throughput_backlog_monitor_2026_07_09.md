@@ -74,15 +74,16 @@ drift_direction: advance-code
 
 ## WS-1 — v1: backlog field + live session throughput (BUILD NOW)
 
-- [ ] [BACKEND] P1. **UTL backlog helper** — add `per_vm_shard_backlog(client, bucket, index_last_modified)` next to
-      `_per_vm_shards_exist` (manifest_writer `_state.py`): ONE list of `_index/per_vm/*.parquet`, return
-      `(pending_count, total_count)` where pending = shards with `last_modified` > the index's. Non-legacy shards only.
-      Single-walk-safe; export via the manifest_writer facade + a unit test.
-- [ ] [BACKEND] P1. **Endpoint field** — add `pending_shard_count: int | None` + `total_shard_count: int | None` to
-      `ConsolidatorAgHealth`; populate in `_ag_health` (reuse the index mtime already derived for
-      `last_successful_run_at`). Additive only (the freshness route reuses `consolidator_posture` — must not break it).
-      Include in `_mock_response`. Unit tests (pending>0 when shards newer than index; None when bucket resolution
-      fails).
+- [x] 1. ✅ [BACKEND] P1. **UTL backlog helper** — `per_vm_shard_backlog(client, bucket, index_last_modified)` next to
+     `_per_vm_shards_exist` (manifest_writer `_state.py`): ONE `_index/per_vm/*.parquet` list, returns
+     `(pending, total)` where pending = non-legacy shards with `last_modified` STRICTLY AFTER the index's; missing/None
+     mtime → not pending (honest under-count). Exported via facade + top-level `__init__`/`__all__`. —
+     `unified-trading-library@da31ef2` + 5 unit tests (`test_per_vm_shard_backlog.py`), UTL QG green.
+- [x] 2. ✅ [BACKEND] P1. **Endpoint field** — `pending_shard_count` + `total_shard_count` on `ConsolidatorAgHealth`;
+     `_ag_health(..., include_backlog=True)` computes them via ONE `per_vm_shard_backlog` list (also yields shard
+     existence, so no double-list); gated opt-in so the `/freshness` reuse (`consolidator_posture`) pays no extra list.
+     `_mock_response` carries reps (cefi 2/6, defi 47/48). — `deployment-api@575810d` + 2 unit tests. (3 pre-existing
+     unrelated QG failures in `test_data_status_drilldown.py` — DeFi uniswap pool schema, another agent's code.)
 - [ ] [UI] P1. **Backlog display** — `pending_shard_count` on `ConsolidatorAssetGroup` (health.ts) + render "N shards
       pending" per AG card (prominent when > 0). `pw:L2` on a mock AG with a pending backlog.
 - [ ] [UI] P1. **Live throughput sparkline** — accumulate the polled `pending_shard_count` per AG into a session rolling
