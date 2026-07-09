@@ -454,6 +454,13 @@ provision_slot() {
     done < <(active_repos)
     # Slot PM worktree now exists → seed agent symlinks (skills + startup CLAUDE.md).
     seed_slot_claude_assets "${slot}"
+    # Final identity gate (ao_task_lifecycle plan Phase D, 2026-07-09): verify + stamp
+    # every clone in the slot with the SAME derivation the fix-commit-identity hook
+    # enforces (shared lib — scripts/hooks/slot-identity-lib.sh). Idempotent: a re-run
+    # on an existing slot also stamps repos ADDED to the slot dir after creation,
+    # closing the partial-slot / late-repo gap.
+    bash "${SCRIPT_DIR}/check-slot-commit-identity.sh" --fix --slot "${slot}" 2>&1 | sed 's/^/  /' \
+        || err "identity checker reported a problem on slot ${slot} (continuing — inspect above)"
 }
 
 verify_slot_clean() {

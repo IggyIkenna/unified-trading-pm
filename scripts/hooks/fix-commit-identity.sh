@@ -28,37 +28,18 @@ if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
   exit 0
 fi
 
-# Canonical per-host identity (per-operator). The GitHub-attributed email + name handle DIFFER
-# per operator (Ikenna `ikennaigboaka@gmail.com` vs Harsh `harshkantariya@odum-research.com`), so
-# they MUST NOT be hardcoded — a hardcoded constant rewrote every non-Ikenna slot's commits to
-# Ikenna's identity (the bug that made Harsh's verify-slot-host-symmetry step 4 unachievable).
-# Resolution order (host-stable + readable from this per-repo pre-commit hook):
-#   1. env override            SLOT_CANON_EMAIL / SLOT_CANON_NAME
-#   2. per-machine git config   `git config --global slotIdentity.email` / `slotIdentity.name`
-#   3. fleet default            ikennaigboaka@gmail.com / ikennaigboaka  (VMs + Ikenna laptop)
-# A non-Ikenna host declares itself ONCE (Harsh's laptop):
-#   git config --global slotIdentity.email "harshkantariya@odum-research.com"
-#   git config --global slotIdentity.name  "harshkantariya"
-# SSOT: CLAUDE.md § "Commit attribution" + codex/05-infrastructure/per-tab-worktrees.md.
-CANON_EMAIL="${SLOT_CANON_EMAIL:-$(git config --global slotIdentity.email 2>/dev/null || true)}"
-CANON_EMAIL="${CANON_EMAIL:-ikennaigboaka@gmail.com}"
-CANON_NAME="${SLOT_CANON_NAME:-$(git config --global slotIdentity.name 2>/dev/null || true)}"
-CANON_NAME="${CANON_NAME:-ikennaigboaka}"
-
-# 2) Derive the EXPECTED label: slot-<N> from a tab/<op>/<N> branch, else "main".
-#    `symbolic-ref --short` resolves the branch name even on an unborn branch (no commits yet),
-#    where `rev-parse --abbrev-ref` would return the literal "HEAD".
-branch="$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
-slot="$(printf '%s' "$branch" | sed -nE 's#^tab/[^/]+/([0-9]+)$#\1#p')"
-if [ -n "$slot" ]; then label="slot-${slot}"; else label="main"; fi
-
-# 3) Derive host: a fleet VM advertises ORCHESTRATOR_VM_ID (the canonical short registry id,
-#    e.g. vm-cefi — same value bootstrap_vm.sh brands the tab branch prefix with), with VM_NAME
-#    as a fallback; else this is a laptop. ORCHESTRATOR_VM_ID-first keeps the commit host in
-#    agreement with the branch prefix (setup-tab-worktrees.sh resolves both the same way).
-host="${ORCHESTRATOR_VM_ID:-${VM_NAME:-laptop}}"
-
-exp_name="${CANON_NAME} [${label}·${host}]"
+# 2+3) Expected identity — canon (per-operator), label (PATH-based slot-N, ao_task_lifecycle
+#      Phase D 2026-07-09: the old tab/<op>/<N> BRANCH derivation is RETIRED — Path-B slots sit
+#      on live-defi-rollout, so it resolved "main" in EVERY slot and actively REWROTE correct
+#      stamped identities away), host (ORCHESTRATOR_VM_ID → VM_NAME → laptop). Derivation SSOT
+#      is the sourced lib — shared verbatim with scripts/dev/check-slot-commit-identity.sh so
+#      enforcement and audit can never drift.
+# shellcheck source=scripts/hooks/slot-identity-lib.sh
+. "$(dirname "${BASH_SOURCE[0]}")/slot-identity-lib.sh"
+slot_identity_resolve "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+CANON_EMAIL="$SLOT_ID_CANON_EMAIL"
+CANON_NAME="$SLOT_ID_CANON_NAME"
+exp_name="$SLOT_ID_EXPECTED_NAME"
 cur_name="$(git config user.name 2>/dev/null || echo '')"
 cur_email="$(git config user.email 2>/dev/null || echo '')"
 

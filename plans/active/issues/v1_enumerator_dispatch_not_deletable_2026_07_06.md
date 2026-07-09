@@ -205,6 +205,20 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
 
 ## Progress Log
 
+- **2026-07-09** — **-009 RE-DISPATCHED (21ST SLOT BOUNCE) — SAME PARK** (slot-3 data_engineering). Re-verified
+  independently against a fresh `.tabs/3` pull (`instruments-service` to `bac235a3`, `deployment-service` to `a1bf966`
+  on `live-defi-rollout`, both later than the 20th bounce's tips): prereq #3 (v2 venue-grain sentinel) IS landed in
+  `instruments-service/scripts/enumerate_expected_universe.py` — `_yield_v2_cefi_pre_venue_launch_rows` (line 1061),
+  `_yield_v2_defi_pre_launch_rows` (line 1269), `_yield_v2_prediction_pre_venue_launch_rows` (line 2084) all confirmed
+  present and wired via `yield from`. Prereq #4 (infra launcher retirement) is STILL NOT landed —
+  `deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py:183` and
+  `scripts/vm/vm_zombie_watchdog.py:627` still reference the v1 `expected-universe-enum-` prefix, and
+  `scripts/vm/launch-expected-universe-enumerator-vm.sh` still exists. This is an infra-role task, outside
+  `data_engineering` craft scope. The underlying decision was already made — this is not a fresh ambiguity, so
+  self-parking via `/skip-current-task` per the established precedent from bounces 3-20. **Systemic ask (21st bounce
+  across 3 days — still unaddressed after 20 requests)**: unchanged from every prior bounce — set `priority: 999` / a
+  `conditions:` gate on the `v1_enumerator_dispatch_not_deletable-0XX` backlog entry keyed on prereq #4 landing, or
+  dispatch an infra-role worker to close prereq #4 directly (removes the parked task's blocker entirely).
 - **2026-07-09** — **-009 RE-DISPATCHED (20TH SLOT BOUNCE) — SAME PARK** (slot-6 data_engineering). Re-verified
   independently against a fresh `.tabs/6` pull (`instruments-service` to `8128189e`, `deployment-service` to `a1bf966`
   on `live-defi-rollout`, both later than the 19th bounce's tips): prereq #3 (v2 venue-grain sentinel) IS landed in

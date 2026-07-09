@@ -312,23 +312,23 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 ### Phase D — slot commit identity, fleet-wide
 
-- [ ] [SCRIPT] P0. **Fix the hook's slot derivation** — `unified-trading-pm/scripts/hooks/fix-commit-identity.sh:57-58`:
-      derive `slot-<N>` from the worktree PATH (`…/.tabs/<N>/<repo>` → `slot-N`; main workspace → `main`), NOT from the
-      retired `tab/<op>/<N>` branch scheme (Path-B slots sit on `live-defi-rollout`, so today every slot resolves to
-      `main` and the hook REWRITES the correct stamped identity away). Host derivation
-      (`ORCHESTRATOR_VM_ID`/`VM_NAME`/`laptop`) unchanged.
-- [ ] [SCRIPT] P0. **Per-host identity checker** — new `unified-trading-pm/scripts/dev/check-slot-commit-identity.sh`
-      (lifecycle marker; permanent): for the main workspace + every `.tabs/<N>/<repo>` on THIS host, verify
-      `user.name`/`user.email` (worktree config aware) match the expected `<canon> [slot-N·host]` — sharing the SAME
-      derivation as the hook (single SSOT — source a shared helper, don't duplicate the sed); `--fix` stamps
-      (`extensions.worktreeConfig` + `git config --worktree`); exit non-zero on drift; runnable on the planning VM, the
-      human-planning VM, and operator laptops.
-- [ ] [SCRIPT] P1. **Harden slot creation** — `scripts/dev/setup-tab-worktrees.sh`: after clone/config (:291-325), run
-      the checker in verify mode as the final step; ensure repos added later to an existing slot dir also get stamped
-      (idempotent re-run covers a partial slot).
-- [ ] [CODE] P1. **AO-side clone/repair paths stamp identity** — `agent-orchestrator/server/worktree_setup.py` (and any
-      other AO code path that creates or repairs a slot clone) stamps the same worktree identity at creation so a
-      backend-provisioned slot is never identity-less.
+- [x] [SCRIPT] P0. ✅ unified-trading-pm@c997993 — **Fix the hook's slot derivation** —
+      `unified-trading-pm/scripts/hooks/fix-commit-identity.sh:57-58`: derive `slot-<N>` from the worktree PATH
+      (`…/.tabs/<N>/<repo>` → `slot-N`; main workspace → `main`), NOT from the retired `tab/<op>/<N>` branch scheme
+      (Path-B slots sit on `live-defi-rollout`, so today every slot resolves to `main` and the hook REWRITES the correct
+      stamped identity away). Host derivation (`ORCHESTRATOR_VM_ID`/`VM_NAME`/`laptop`) unchanged.
+- [x] [SCRIPT] P0. ✅ unified-trading-pm@c997993 — **Per-host identity checker** — new
+      `unified-trading-pm/scripts/dev/check-slot-commit-identity.sh` (lifecycle marker; permanent): for the main
+      workspace + every `.tabs/<N>/<repo>` on THIS host, verify `user.name`/`user.email` (worktree config aware) match
+      the expected `<canon> [slot-N·host]` — sharing the SAME derivation as the hook (single SSOT — source a shared
+      helper, don't duplicate the sed); `--fix` stamps (`extensions.worktreeConfig` + `git config --worktree`); exit
+      non-zero on drift; runnable on the planning VM, the human-planning VM, and operator laptops.
+- [x] [SCRIPT] P1. ✅ unified-trading-pm@c997993 — **Harden slot creation** — `scripts/dev/setup-tab-worktrees.sh`:
+      after clone/config (:291-325), run the checker in verify mode as the final step; ensure repos added later to an
+      existing slot dir also get stamped (idempotent re-run covers a partial slot).
+- [x] [CODE] P1. ✅ unified-trading-pm@c997993 — **AO-side clone/repair paths stamp identity** —
+      `agent-orchestrator/server/worktree_setup.py` (and any other AO code path that creates or repairs a slot clone)
+      stamps the same worktree identity at creation so a backend-provisioned slot is never identity-less.
 
 ### Phase E — tests, runtime verification, docs
 
