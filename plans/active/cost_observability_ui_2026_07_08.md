@@ -508,3 +508,15 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
   gross gap (→ £40 / 1.6% once Pacific-aligned). Operator decisions: **USD everywhere + a GBP option for GCP**;
   **investigate AWS CUR backfill** (else July-onward is fine); **TZ note in a top tooltip**. Findings + plan only — no
   code shipped this step.
+- 2026-07-09 (EOD) — **All slot-4 repos pushed to LDR** (operator: "make sure everything is pushed").
+  - **deployment-ui@`f9d0a00`** — bold the `/` in the `N/total` breakdown-rows fraction (legibility); via quickmerge, UI
+    QG green.
+  - **deployment-api@`33d5afe`** — the top-100 breakdown-cap checkpoint (`_finalize_rows` Other/Unattributed roll-ups +
+    `cost_by_component`), **direct-pushed under the dirty-deps carve-out** (operator-authorized): backend QG is red ONLY
+    on the 3 UAC-drift `data_status_drilldown::TestGetSchemaForShard::test_uppercase_*` tests — verified this run **4364
+    passed / 3 failed, all UAC** (`assert 'symbol' == 'pool_address'/'pool_id'`, from unified-api-contracts@9ec7dde6);
+    cost-obs code + tests clean. strict-quickmerge WARNed (no `Quickmerge:` trailer), push succeeded. **NB the commit
+    BODY still reads "held, NOT pushed" — stale; it IS on LDR now** (amend aborted by the identity hook; won't
+    force-push a shared branch for cosmetic text). Author label reads `[main·harsh_pc]` not `[slot-4·]` (same reason,
+    pre-existing). The P1 GCP→USD conversion resumes tomorrow AM on top of this.
+  - **unified-trading-pm@`eadf1c173`** — the currency / AWS-history / TZ plan follow-ups (added earlier this session).
