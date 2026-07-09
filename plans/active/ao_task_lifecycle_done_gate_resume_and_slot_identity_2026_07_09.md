@@ -264,21 +264,24 @@ preserve-on-handoff (the ONLY auto-commit point):
       session (it knows `#S`), then END the turn — mid-turn typed input QUEUES and executes the moment the turn ends, so
       "runs when free" holds by construction; ack via `compact_done` next tick. Ship this as a sanctioned helper
       (`scripts/agent/self-compact.sh`, built on the verified-submit helper — the raw-send-keys ban exempts only this
-      instrument). FORCED fallback only past a deadline (unacked 2 ticks / ~45 min) and only on a MEASURED multi-signal
-      idle verdict: pane `idle` debounced across ≥3 observations over ~60s + NO child processes under the pane shell
-      (`pgrep -P <pane_pid>` — catches "1 shell still running") + empty input box → inject via the verified-submit
-      helper + confirm the compact ran; log `proactive_compact` vs `forced_compact`. (Race note: a `/compact` submitted
-      during an active turn QUEUES and runs at the next turn boundary — worst case is deferral, not corruption.) Hard
-      never-force: spinner, running shells, non-empty input box, or `thrashing` (escalate to recycle instead).
-      Client-side auto-compact stays underneath as the final safety net. **Tier 2 — checkpoint-recycle** after 2
-      proactive compacts OR 24h (immediately on `thrashing`): cooperative too — agent writes its checkpoint (watchlist +
-      open items → `main-agent-checkpoint.md` + `last_msg`) and **EXITS ITSELF** (no kill; dead session → keeper's
-      normal respawn with the boot prompt referencing the checkpoint — same voluntary-exit pattern account rotation
-      already uses, `slots_worker.py:153` "exiting, new session spawning"). Fresh model state beats an N-times-compacted
-      session for loop agents whose durable state is already external (state.db / activity / inbox scratch). Cost
-      rationale — a 20-min-tick agent is past the 5-min prompt-cache TTL, so EVERY tick re-reads the whole conversation
-      at full input price; lean context is directly cheaper + faster. Workers excluded (/boot-per-shippable-unit already
-      bounds them; Phase B covers death).
+      instrument). HARD GUARD (live-fired 2026-07-09): the helper MUST require `$TMUX`/`$TMUX_PANE` set and target its
+      OWN pane id — `tmux display-message -p '#S'` on a NON-tmux shell silently returns the most-recently-active session
+      (observed: an interactive VSCode session resolved to `orch-slot-1` = the REVIEW agent), so a blind fallback would
+      compact a DIFFERENT agent; abort loudly when not inside tmux. FORCED fallback only past a deadline (unacked 2
+      ticks / ~45 min) and only on a MEASURED multi-signal idle verdict: pane `idle` debounced across ≥3 observations
+      over ~60s + NO child processes under the pane shell (`pgrep -P <pane_pid>` — catches "1 shell still running") +
+      empty input box → inject via the verified-submit helper + confirm the compact ran; log `proactive_compact` vs
+      `forced_compact`. (Race note: a `/compact` submitted during an active turn QUEUES and runs at the next turn
+      boundary — worst case is deferral, not corruption.) Hard never-force: spinner, running shells, non-empty input
+      box, or `thrashing` (escalate to recycle instead). Client-side auto-compact stays underneath as the final safety
+      net. **Tier 2 — checkpoint-recycle** after 2 proactive compacts OR 24h (immediately on `thrashing`): cooperative
+      too — agent writes its checkpoint (watchlist + open items → `main-agent-checkpoint.md` + `last_msg`) and **EXITS
+      ITSELF** (no kill; dead session → keeper's normal respawn with the boot prompt referencing the checkpoint — same
+      voluntary-exit pattern account rotation already uses, `slots_worker.py:153` "exiting, new session spawning").
+      Fresh model state beats an N-times-compacted session for loop agents whose durable state is already external
+      (state.db / activity / inbox scratch). Cost rationale — a 20-min-tick agent is past the 5-min prompt-cache TTL, so
+      EVERY tick re-reads the whole conversation at full input price; lean context is directly cheaper + faster. Workers
+      excluded (/boot-per-shippable-unit already bounds them; Phase B covers death).
 
 ### Phase C — preserve-on-handoff only + identity-correct orphan commit
 
