@@ -72,6 +72,41 @@ source:
   `GC→GOLD`, `VX→VIX` — `unified_api_contracts.registry.tradfi_symbology`); and it repeats `VENUE:` on every leg, which
   is redundant since a combo is already scoped to one venue at its own top-level `VENUE:COMBO:...` id.
 
+## Operator spec, 2026-07-09 — the exact leg/combo shape wanted (supersedes/refines the todos below)
+
+Read in full before touching any todo — this is the concrete acceptance spec, not just a bug fix:
+
+- **Per leg**: real, canonical, human-readable `instrument_key` (via `_resolve_product_root()` + the SAME `@LIN`/
+  `@INV`-`YYYYMMDD`[-`STRIKE`-`C`|`P`] dated-derivative format decided for CeFi — NOT the raw exchange ticker), a
+  **weight** (the existing `ratio` field), and a **direction exposed as a sign** — a consumer must be able to get a
+  signed weight per leg (positive = long/BUY, negative = short/SELL) without extra lookup logic. Whether this is a new
+  computed field/property on `InstrumentLeg` or a documented convention derived from `side`+`ratio` is an implementation
+  choice — the requirement is that "signed weight" is directly usable, not that a new stored field is mandatory.
+- **Leg count: 1 to 4 legs supported, hard cap.** A real combo with 5+ legs is dropped (not captured, not truncated) —
+  log/record why (real count) rather than silently losing it. This covers every real combo shape found this session
+  (2-leg: 34,017 CBOE rows + the CME calendar-spread precedent; 3-leg: 4,211; 4-leg: 5) with headroom, and deliberately
+  excludes anything larger.
+- **No separate stored "strategy name" field** (call calendar, put spread, butterfly, etc.) — the strategy shape is
+  inferable from the legs' own properties (types, expiries/strikes, signed weights) per-leg, matching the operator's own
+  reasoning: "the weights tell us that anyway." Don't add a parallel taxonomy to maintain.
+- **This is now cross-asset-group, not TradFi-only** — the SAME leg shape (human-readable symbol + signed weight, 1-4
+  legs) applies to CeFi's Deribit combos too (`DERIBIT-COMBO`), not just CME/CBOE. Route through the shared
+  `build_leg()` (`unified_api_contracts.internal.reference.canonical_id_builder`) for both, so there's one real
+  implementation, not two independently-evolving ones.
+- **Migrate code AND data** — this is not a go-forward-only decision (see the resolved migration-mechanics todo below):
+  existing combo rows get their `legs` re-derived from already-captured raw fields and rewritten in place, not
+  re-fetched from the venue. Extends to **parquet file naming** anywhere a combo's canonical id is embedded in a
+  filename (per this workspace's existing filename-vs-instrument_id convention) — MTDS and any other downstream
+  reader/writer of combo data must read the new canonical shape, not the old flat string.
+- **Minimize the change surface** — route everything through the shared Instrument Builder
+  (`build_canonical_instrument_id`/`build_leg`) and canonical SSOT readers/writers rather than patching each consumer
+  independently, so this ideally lands in a small number of real places (the builder + the write path + the affected
+  adapters), not a scattered per-consumer rewrite.
+- **Rollout methodology (operator, 2026-07-09)**: code fix first → smoke test on a small real sample (VM-based if
+  practical) → measure real timing → report a real ETA for the full historical sweep → **pause for confirmation before
+  running the full sweep** → optimize afterward once it's working correctly. Do not run an unsupervised multi-hour/day
+  full sweep without reporting the smoke-test ETA back first.
+
 ## Todos
 
 - [ ] [DATA] P1. **Extend leg-parsing to CBOE/VX calendar spreads** — either generalize

@@ -100,6 +100,19 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
      correctly as a string (`"10APR26"` sorts after `"10JAN27"` alphabetically despite being earlier). This means
      Deribit's OPTION/FUTURE entries — previously assessed in the mockup as "already canonical, no fix needed" — are now
      ALSO in scope for this canonicalization; that earlier assessment is superseded.
+   - **SCOPE EXPANDED 2026-07-09 (operator) — `@LIN`/`@INV` now applies to `PERPETUAL` too, not just dated
+     derivatives.** Original framing above treated PERPETUAL as "already clean" since a venue's real quote currency was
+     assumed to disclose margin type. Real evidence disproves that assumption: Kraken-Futures'
+     `KRAKEN-FUTURES:PERPETUAL:AAVE-USD` (linear) and `KRAKEN-FUTURES:PERPETUAL:BTC-USD` (inverse) are both real, both
+     quote `USD` — the id alone cannot distinguish them today (also the root of the already-known Kraken
+     inverse-mislabeled-as-linear bug). Operator: "perps should be included for exactly that reason across the board —
+     you can't tell whether something is inverse just from its quote currency because USD is a valid quote currency as
+     well." **New target for PERPETUAL**: `VENUE:PERPETUAL:BASE-QUOTE@LIN` / `...@INV` — same marker, no date suffix
+     (perpetuals don't expire). Applies everywhere `PERPETUAL` exists across CeFi (including the 5 on-chain-perp CLOBs)
+     and TradFi (no TradFi perpetual product exists today). Real examples: `DERIBIT:PERPETUAL:BTC-USD@INV` /
+     `DERIBIT:PERPETUAL:BTC-USDC@LIN`; `BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN` /
+     `BINANCE-DELIVERY:PERPETUAL:BTC-USD@INV`. **Not yet determined**: the real LIN/INV value for each of the 5
+     on-chain-perp CLOBs — needs real verification of actual settlement/margin mechanics per venue, not an assumption.
 
 2. **DEX-pool instrument_id is a bare on-chain pool address, zero VENUE:TYPE:SYMBOL structure, confirmed across 6,180
    real rows / 13 protocols (Uniswap V2/V3/V4, Balancer, Curve, PancakeSwap_V3, Sushiswap/\_V3, Camelot_V3,
@@ -265,18 +278,21 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
 - Not a complete enumeration of every possible instrument_id anywhere — but coverage was extended 2026-07-08 (operator:
   "shouldl be evertyhting all AG that we expect shown in [the mockup] so we know how things will look") to every
   DEX-pool protocol×chain combination in the DeFi tab (27 total, not just a flagship sample), plus a deliberate check of
-  TradFi/Sports/Prediction: TradFi's **single-leg** dated-derivative codes (e.g. `CME:FUTURE:6AF0`) are real
-  industry-standard terse contract codes, not an uncleaned internal prefix like Kraken's — no divergence to canonicalize
-  there (this carve-out does NOT extend to TradFi's multi-leg spreads — see finding 7, a real divergence found on a
-  later pass); Sports fixture IDs are provider-native opaque identifiers, not VENUE:TYPE:SYMBOL keys; Prediction already
-  routes through its own dedicated domain builder (`canonical/domain/prediction/prediction_mapping.py`) rather than the
-  ad-hoc CeFi/DeFi pattern this doc is mainly about — but a dedicated builder existing doesn't mean its real output is
-  canonical (see finding 8: it isn't, though that's a data-completeness gap more than a delimiter/syntax question, and
-  is scoped separately from findings 1-7). DERIBIT-COMBO's underscore-in-strikes format was also checked and confirmed a
-  real, internally consistent convention (not a canonicalization gap). A dedicated future audit could still find more
-  instances of the 6 CeFi/DeFi divergence classes on venues/protocols this session never touched at all (this doc's
-  scope is bounded by what this session's other findings happened to surface, not a from-scratch audit of the full
-  instrument universe).
+  TradFi/Sports/Prediction: TradFi's **single-leg** dated-derivative codes (e.g. `CME:FUTURE:6AF0`) were originally
+  assessed as real industry-standard terse contract codes, not an uncleaned internal prefix like Kraken's — no
+  divergence to canonicalize there. **REVERSED 2026-07-09 (operator)**: "I'd rather adjust tradfi... that's the whole
+  point of cross-AG normalisation" — readability of ONE internal standard across every asset group outweighs preserving
+  TradFi's real exchange-native terse codes. TradFi single-leg dated derivatives are now IN SCOPE for the same
+  `@LIN`/`@INV`-`YYYYMMDD`[-`STRIKE`-`C`|`P`] target as CeFi (finding 1) — this carve-out is retracted, not narrowed.
+  TradFi's multi-leg spreads (finding 7) were already in scope regardless; Sports fixture IDs are provider-native opaque
+  identifiers, not VENUE:TYPE:SYMBOL keys; Prediction already routes through its own dedicated domain builder
+  (`canonical/domain/prediction/prediction_mapping.py`) rather than the ad-hoc CeFi/DeFi pattern this doc is mainly
+  about — but a dedicated builder existing doesn't mean its real output is canonical (see finding 8: it isn't, though
+  that's a data-completeness gap more than a delimiter/syntax question, and is scoped separately from findings 1-7).
+  DERIBIT-COMBO's underscore-in-strikes format was also checked and confirmed a real, internally consistent convention
+  (not a canonicalization gap). A dedicated future audit could still find more instances of the 6 CeFi/DeFi divergence
+  classes on venues/protocols this session never touched at all (this doc's scope is bounded by what this session's
+  other findings happened to surface, not a from-scratch audit of the full instrument universe).
 - **Filename-vs-instrument_id naming rule (settled 2026-07-08, operator)**: when a file/partition holds exactly one
   instrument's data, the filename is that instrument's full canonical instrument_id. When a file/partition holds a
   BUNDLE of related instruments for one underlying (e.g. an options/futures chain, or DeFi's many-pools-per-file

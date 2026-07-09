@@ -439,3 +439,25 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
     **25.50→0.0061**, resource-dim bucket storage **0→10** populated. Root-cause pattern for the reviewer's log: **green
     tests ≠ works on real data** when fixtures don't mirror the live SKU naming — every fix here is now covered by a
     test asserting the real regional strings.
+- 2026-07-09 — **AWS showed $0 — root-caused to a fully-credited account + 2 bugs (operator: "AWS 0 doesn't sound
+  right").**
+  - **The truth:** AWS is genuinely fully credited — usage ~$752/30d, offset by ~-$752 in AWS promotional credits →
+    **net ~$0**. The page showed $0 for the _wrong_ reasons and never surfaced the credited gross.
+  - **Bug 1 — deployment-api@`f914cc47`:** task 301ccfc's `line_item_net_unblended_cost` does not exist in this CUR's
+    crawler schema (verified `SHOW COLUMNS`) → Athena errored → per-cloud isolation silently zeroed AWS. Reverted to
+    `line_item_unblended_cost`, then made AWS mirror GCP's cost/credit split — the query pulls gross
+    (Usage/DiscountedUsage/Tax/Fee) + credit (`Credit` line-items) via conditional aggregation and `aws_facts` populates
+    `CostRecord.credit`.
+  - **Bug 2 — unified-trading-library@`999383e`:** `AWSAnalyticsClient.execute_query` fetched only the first Athena
+    `GetQueryResults` page (no `NextToken`) → truncated at ~1000 rows; the new usage_type+zone columns pushed the query
+    to 4266 groups → 999 returned (~$48 of ~$752). Now paginates via `paginate_athena_result_rows` (extracted to
+    `_aws_sdk_protocols.py` to keep `aws.py` <900L, per that module's role). Unit test covers 2-page accumulation + the
+    `NextToken` pass-through.
+  - **Verify:** backend QG + full UTL QG green; live via the real service path (paginated): AWS **net $0.00 / gross
+    $752.29 / credit -$752.29**. AWS now reads **$0 net** WITH the ($752.29 gross − $752.29 credits) split — honest
+    "fully credited", plus a heads-up that the real AWS bill lands when those credits run out. Corrected the AWS-net
+    task's stale `net_unblended_cost` premise.
+  - **Note (pre-existing, FLAGGED not fixed):** `test_event_sink_factory::TestGcpEventSink` is order-fragile under
+    pytest-xdist — a stale `GCP_PROJECT_ID=test-project` leaks through a cache `clear_client_caches()` misses, so it
+    intermittently reads the wrong project. Surfaced (not caused) by the extra AWS test shifting the xdist distribution;
+    passed on the shipping run. A real UTL test-isolation bug worth a separate fix.

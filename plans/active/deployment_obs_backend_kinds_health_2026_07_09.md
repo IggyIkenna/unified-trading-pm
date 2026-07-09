@@ -66,9 +66,24 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ### Kinds census (make the estate visible)
 
-- [ ] [BACKEND] P1. Add `CLOUD_RUN_SERVICE` to the census — `run_v2.ServicesClient` list + ready-state + revision +
+- [x] ✅ [BACKEND] P1. Add `CLOUD_RUN_SERVICE` to the census — `run_v2.ServicesClient` list + ready-state + revision +
       region. New `DeploymentKind` value in UAC. **Mode = "—"** (a service has no live/batch/paper phase; the `Kind`
-      badge/filter carries "this is a service"). No PLATFORM/INFRA mode.
+      badge/filter carries "this is a service"). No PLATFORM/INFRA mode. — deployment-api@ab0c431. New
+      `deployment_api/routes/_cloud_run_services.py` (`list_cloud_run_services()`, mirrors `_cloud_run_executions.py`'s
+      `run_v2` boundary pattern) lists every live Cloud Run service in one region via
+      `run_v2.ServicesClient.list_services` and maps ready-state (`terminal_condition`), latest revision, region, and
+      URI. `_cloud_run_service_item()` wires it into `DeploymentItem(kind=CLOUD_RUN_SERVICE)`;
+      `DeploymentKind.CLOUD_RUN_SERVICE` + the formal `DeploymentUmbrella.NONE` enum member (UAC) had already landed
+      from a concurrent sibling slot by the time this shipped (superset of a first draft this task briefly duplicated
+      with an ad-hoc `"—"` wire sentinel before realigning to the shipped `NONE` enum — see Progress Log). Honest
+      degradation: a services-list failure yields zero rows without blocking the VM/job/ECS/Lambda/CloudFunction census.
+      New tests: ready/reconciling state mapping, region parsing, GCP-error degradation, `build_inventory` wiring
+      (umbrella=NONE, revision/region surfaced), unclassifiable-name skip. QG green (sentinel ab0c431). Rebased ~8 times
+      onto concurrently-landing sibling census/health todos on this same file this session (Tier-0 free wins,
+      ECS_SERVICE, kind-count/filter extension, D.3 composite health, Lambda census, detail endpoint, CLOUD_FUNCTION
+      census, oom-risk/stalled alerting) — all additive, kept both sides at every conflict; squashed 3
+      manual-rebase-conflict commits into one clean commit + added the `Quickmerge: agent` trailer by hand after
+      `check_strict_quickmerge.py` flagged manually-recommitted rebase-continue commits as bypassing quickmerge.
 - [x] ✅ [BACKEND] P1. Add `ECS_SERVICE` census — ECS list-services/describe-services across the prod clusters
       (uts-defi-prod, unified-trading-prod) → **desiredCount + runningCount** + task-def revision; `cloud=AWS`. Always
       emit the row even at 0 running tasks (state derives from desired-vs-running — see the service sub-taxonomy task).
@@ -94,10 +109,32 @@ source: deployment_observability_expansion_2026_07_08.md
       static registry) — this sandboxed worker slot has no working `gcloud` (snap confinement blocks it here), so no
       fresh live diff was re-run; the fix + a new regression test (`test_off_pattern_live_cloud_run_job_is_not_hidden`)
       prove an off-pattern job now surfaces instead of hiding.
-- [ ] [BACKEND] P2. Add `LAMBDA` census — existence + config via `list_functions` (`cloud=AWS`). NOTE: invocation/error
-      stats are CloudWatch-only (no host/cgroup on Lambda) — the ONE scoped exception to principle 4; default to
-      existence-only and add a CloudWatch call ONLY if Lambda health proves worth it.
-- [ ] [BACKEND] P2. Add `CLOUD_FUNCTION` (gen2) census — `functions list`; note gen2 = Cloud Run underneath.
+- [x] ✅ [BACKEND] P2. Add `LAMBDA` census — existence + config via `list_functions` (`cloud=AWS`). NOTE:
+      invocation/error stats are CloudWatch-only (no host/cgroup on Lambda) — the ONE scoped exception to principle 4;
+      default to existence-only and add a CloudWatch call ONLY if Lambda health proves worth it. —
+      deployment-service@7c8b210 + deployment-api@050d9a4. `list_lambda_census()` (single paginated `list_functions`
+      call, no per-function `describe`/`list_tags` N+1) + `_lambda_item()` (classifies by `FunctionName`, same
+      name-based resolution as Cloud Run jobs) → `DeploymentItem(kind=LAMBDA)`, existence-only status from `State`
+      (Active/Pending/Failed/Inactive → running/pending/failed/stopped), no CloudWatch call. Landed + merged alongside 2
+      concurrently-shipped sibling census todos on this same plan (ECS_SERVICE @ deployment-service/deployment-api, the
+      DeploymentKind 6-kind UAC extension) — 3-way conflict resolution kept all three kinds' code paths. QG green both
+      repos (sentinels 7c8b210 / 050d9a4).
+- [x] ✅ [BACKEND] P2. Add `CLOUD_FUNCTION` (gen2) census — `functions list`; note gen2 = Cloud Run underneath. —
+      deployment-service@fb217de (exposes `functions_v2` on the deferred `_gcp_sdk` GCP-SDK boundary + adds
+      `google-cloud-functions` as a dependency, mirroring the existing `run_v2`/`compute_v1` pattern) +
+      deployment-api@a025563 (new `_gcp_cloud_functions.py`: `list_cloud_functions()` lists every gen2 function via
+      `FunctionServiceClient.list_functions`, existence + config only per WS-B scope — `state` maps to
+      running/failed/pending/unknown, `build_config.runtime` and the underlying Cloud Run `service_config.service` name
+      are surfaced, no CloudWatch/invocation-stats call; `_cloud_function_item()` classifies directly with
+      `umbrella=NONE` — same no-live/batch/paper-phase precedent as ECS_SERVICE/CLOUD_RUN_SERVICE; wired into
+      `_compute_inventory` under `want_gcp`, honest-degrades to `{}` on any GCP error without blocking the other kinds).
+      8 new unit tests (state-mapping parametrized over all 6 `Function.State` values, config extraction, GCP-error
+      degradation) + 1 new `_cloud_function_item` builder test — all credential-free (patches
+      `deployment_service.backends._gcp_sdk.functions_v2` directly rather than `sys.modules` stubbing, since
+      `tests/unit/conftest.py` pre-stubs the whole `deployment_service` package as empty for the session and several
+      OTHER `deployment_service.backends` submodules import `_gcp_sdk` at their own module-init time). Rebased twice
+      onto concurrent sibling census todos (Lambda census, kind-counts extension, detail endpoint, dead-VM fix) landing
+      on this same plan — all merges additive, no logic conflicts. QG green both repos (sentinels fb217de / a025563).
 - [x] ✅ [BACKEND] P1. Extend `DeploymentKind` (UAC) + the inventory route's kind counts + filters to the 6 kinds; keep
       honest degradation (a census failure for one kind never blocks the others). — deployment-api@9353d28. UAC
       `DeploymentKind` already carried all 6 values (VM/CLOUD_RUN_JOB/CLOUD_RUN_SERVICE/ECS_SERVICE/LAMBDA/
@@ -125,10 +162,40 @@ source: deployment_observability_expansion_2026_07_08.md
       `health_status` (raw GCE status), `boot_disk_name`, `labels`). All optional, default `None` for Cloud Run jobs /
       an unjoined VM (honest absence). New unit test `test_build_inventory_surfaces_tier0_free_wins` pins both the
       joined and unjoined paths. QG green (sentinel 517bbbe).
-- [ ] [BACKEND] P3. Recent error count / last log line — from the EXISTING teed GCS log / Cloud Logging (popover only);
-      no new CloudWatch dependency.
-- [ ] [REVIEW] P2. Extend `DeploymentItem` in UAC/backend to the mock's optional rich-field shape (already in the UI
-      type) so the wire contract matches — one SSOT, no client-only fields.
+- [x] ✅ [BACKEND] P3. Recent error count / last log line — from the EXISTING teed GCS log / Cloud Logging (popover
+      only); no new CloudWatch dependency. — deployment-service@9ef144e. `recent_log_summary()`
+      (`data_pipeline_monitors/_gcs.py`) reuses the SAME durable run.log blob + `_ERROR_LINE_RE` classifier
+      `error_snippet_from_run_log` already reads for Slack alerts — no new GCS path, no CloudWatch call. Returns
+      `RecentLogSummary(recent_error_count, last_log_line)` over the tail (`tail_lines=200` default); missing/empty log
+      degrades to `(0, None)`, never raises. On-demand single-target read (popover-triggered), not a bulk sweep — same
+      acceptable read pattern the existing snippet functions use. Not yet wired to an HTTP response — the
+      `/deployments/{id}/detail` endpoint (separate P2 todo below) landed concurrently (slot 15,
+      `deployment-api@7c4265a`) while this todo was in flight, so wiring `recent_log_summary()` onto
+      `DeploymentDetailResponse` is now a small, immediately-actionable fast-follow rather than blocked on that endpoint
+      existing. 4 unit tests (error-line counting, honest-empty, trailing-blank-line handling, tail-window respect). QG
+      green, sentinel=9ef144e.
+- [x] ✅ [REVIEW] P2. Extend `DeploymentItem` in UAC/backend to the mock's optional rich-field shape (already in the UI
+      type) so the wire contract matches — one SSOT, no client-only fields. — deployment-api@e5f2ad4. **Premise
+      correction (found, not assumed)**: verified against the actual UI code first — the mock's rich-field shape is NOT
+      on the UI `DeploymentItem` type (`deployment-ui/src/api/deploymentApi.ts:636`, 12 thin fields, matches the backend
+      model exactly, zero client-only fields on either side). Those rich fields (`rows_in`/`machine_type`/ `zone`/etc.)
+      actually live on a DIFFERENT, unrelated UI type (`VmDeploymentEntry`, the legacy `/api/vm-deployments` shape) —
+      and the backend `DeploymentItem` already carries its OWN 12 additional optional rich fields (Tier-0 free wins +
+      composite/service health, landed earlier this session by sibling slots), all with honest `None` defaults. So the
+      stated direction (UI has rich fields the backend lacks) doesn't hold; the real, still-open gap runs the other way
+      inside the backend itself: `_ecs_service_item`/`_lambda_item` (`deployment_api/routes/_aws_deployments.py`)
+      already fetch `cluster`/`desired_count`/`running_count`/`task_definition_revision` (ECS) and `runtime`/
+      `memory_size_mb`/`package_type` (Lambda) from the AWS census but collapse them into just `status`, discarding the
+      rest — the exact same "fetched-and-discarded" pattern the GCP Tier-0 todo fixed for VMs, just not yet applied to
+      AWS. Fixed it: added the 7 fields to `DeploymentItem` (`deployments_inventory.py`) as optional Tier-0-style wins
+      (`None` for kinds without the source, honest absence) and wired them through `_ecs_service_item`/`_lambda_item`. 2
+      tests extended (`test_build_aws_inventory_classifies_ecs_service_running`,
+      `test_build_aws_inventory_classifies_lambda_functions`) to assert the new fields. Extending the UI
+      `DeploymentItem` type itself is explicitly out of this plan's `repos` scope (`deployment-api`/
+      `deployment-service`/`unified-api-contracts` only) — that's the separate LOCAL UI plan
+      (`deployment_obs_ui_popover_health_2026_07_09.md`, hand-off todo below). QG green (sentinel e5f2ad4, rebased 3x
+      onto concurrently-landing sibling commits on this same file this session — `f914cc4` cost-obs fix, `a025563`
+      CLOUD_FUNCTION census — no conflicts, all clean fast-forward re-applies).
 
 ### VM / service work-health (capture → store → API)
 
@@ -184,13 +251,52 @@ source: deployment_observability_expansion_2026_07_08.md
       `ECS_SERVICE`/`CLOUD_RUN_SERVICE` census this consumes (this plan's kinds-census todos, still unchecked) hasn't
       landed, and `DeploymentKind` doesn't carry those kinds yet; these are the reusable status-derivation half, ready
       for that census to call once it ships. QG green (sentinel eda5be5).
-- [ ] [BACKEND] P2. **`/deployments/{id}/detail`** endpoint serving the rolling window (popover); the thin list carries
-      only the composite + headline numbers.
-- [ ] [BACKEND] P2. **Alerts** on `oom-risk` (before the kill) + `stalled` (progress flatlines, heartbeat fresh) — wire
-      into the existing alerts surface.
+- [x] ✅ [BACKEND] P2. **`/deployments/{id}/detail`** endpoint serving the rolling window (popover); the thin list
+      carries only the composite + headline numbers. — deployment-api@7c4265a. `GET /deployments/{name}/detail` (path
+      param is the wire `DeploymentItem.name` — VM/job/service name, not an orchestration `deployment_id`; distinct
+      3-segment template from `routes/deployments/`'s `/deployments/{deployment_id}/verify`, no collision) returns
+      `DeploymentDetailResponse` — the thin-list item plus the D.1 metrics vector
+      (`cpu_pct`/`mem_pct`/`mem_slope`/`disk_pct`/`io_write_rate_bytes_sec`/
+      `net_recv_rate_bytes_sec`/`workload_alive`). New `_vm_entry_by_name_cache` side-cache is populated as a side
+      effect of the SAME GCP census `_compute_inventory` already runs each cache cycle (zero new bucket walks/API
+      calls); 404 if the name isn't in the current cached inventory. **Honest scope note**: this serves the single
+      most-recent D.1 sample (overwritten in place each heartbeat tick) — NOT a persisted rolling window. The original
+      D.2 STORE design called for keeping the last ~10 samples on the registry entry so `mem_slope`/ "sustained idle"
+      have a trend to plot; that persistence never shipped (the "Enrich the heartbeat" todo above only stamps
+      single-point values). Filed as a new todo below rather than silently claiming more than this delivers. 3 new tests
+      (`test_detail_route_mock_shape`, `test_detail_route_unknown_name_404`,
+      `test_detail_route_live_path_includes_d1_metrics`). QG green (sentinel 7c4265a, 78s). Rebased twice onto
+      concurrent same-file landings (D.3 composite health `f5f6ff4`, AWS Lambda census `050d9a4`) — one duplicate-field
+      artifact from an auto-merge in the test file's `_FakeEntry` dataclass, caught + fixed before shipping.
+- [ ] [INFRA] P2. **Persist a short D.1 rolling window** (last ~10 samples) on the registry entry — today only a single
+      most-recent sample is stored (overwritten each heartbeat tick), so `mem_slope` / "sustained idle" have no real
+      trend to plot and the new `/deployments/{id}/detail` endpoint (above) can only serve a point-in-time snapshot, not
+      a sparkline. Per the original D.2 STORE design (parent `deployment_observability_expansion_2026_07_08.md` D.2):
+      extend `DeploymentRegistryEntry` with a bounded ring-buffer field (`unified-trading-library`/`deployment-service`,
+      mirrors the "Enrich the heartbeat" todo's scope) + surface it on `DeploymentDetailResponse` (`deployment-api`,
+      additive — the current single-sample fields stay for back-compat).
+- [x] ✅ [BACKEND] P2. **Alerts** on `oom-risk` (before the kill) + `stalled` (progress flatlines, heartbeat fresh) —
+      wire into the existing alerts surface. — deployment-api@5e25dce. New `_persist_alert()` appends a JSONL row to the
+      SAME shared GCS ledger (`unified-trading-cicd-events/cicd/alerts/{date}/alerts.jsonl`) agent-orchestrator's
+      watchers + `notify-slack.yml` already write to (mirrors `notifications.slack._persist_to_gcs`'s exact row shape) —
+      `GET /api/alerts` (`_repo_ci_alerts.py`) picks these up with zero reader-side changes. New
+      `_alert_on_health_transition()` fires only on a fresh TRANSITION into `oom-risk`/`stalled` (in-process
+      last-alerted-state per VM name), never on every ~45s cache-refresh poll while the state persists — avoids an
+      alert-storm on a VM that stays unhealthy across many polls; a recovery back to a non-alertable state (e.g.
+      `working`) clears the tracked state so re-entering `oom-risk` fires again as a genuine new transition. Wired into
+      `_compute_inventory`'s GCP branch, shard-level isolated (a ledger-write failure logs + never breaks inventory
+      computation). **`stalled` cannot actually fire yet** — `_composite_health_status` still degrades it to `"unknown"`
+      pending the separate `[BACKEND] P1` "Wire `stalled` + `workload-dead`" todo below; included in
+      `_ALERT_HEALTH_STATES` now so no code change is needed once that lands. 4 new tests
+      (`test_alert_on_health_transition_fires_once_per_transition`,
+      `test_alert_on_health_transition_ignores_non_alertable_states`, `test_persist_alert_writes_expected_row_shape`,
+      `test_persist_alert_never_raises_on_storage_failure`). QG green (sentinel 5e25dce, 73s). Rebased onto 2
+      concurrently-shipped sibling census todos (CLOUD_FUNCTION `a025563`, ECS/Lambda field surfacing `e5f2ad4`) —
+      genuine same-file conflict (both call sites append to `_compute_inventory`'s GCP branch), resolved by keeping both
+      additions (no logical overlap).
 - [ ] [REVIEW] P2. Gate `/freshness` fetches to VM kinds only (services use error-rate health, not manifest freshness) —
       the mock currently fetches freshness for all LIVE rows.
-- [ ] [BACKEND] P1. **Wire `stalled` + `workload-dead` into `_composite_health_status`** (`deployment-api`,
+- [x] ✅ [BACKEND] P1. **Wire `stalled` + `workload-dead` into `_composite_health_status`** (`deployment-api`,
       `deployments_inventory.py`) — both prerequisite signals now exist: `object_delta` via
       `deployment_freshness.compute_freshness()` / `_object_delta_for_bucket()` (per-asset_group manifest lookup,
       `deployment_freshness.py`), and `workload_alive` via the heartbeat daemon's `CMD_PID` liveness field
@@ -200,7 +306,37 @@ source: deployment_observability_expansion_2026_07_08.md
       resolves per-asset_group, not per-VM-entry, so this needs its own call-shape design (batch the lookup once per
       asset_group per census cycle, not once per VM, to respect the zero-new-bucket-walk principle at scale), not a
       copy-paste into the per-entry loop. Filed here rather than expanding deployment_obs_backend_kinds_health-015
-      (deployment-api@f5f6ff4) — that diff was already large from 3 concurrent cross-slot rebases on this same file.
+      (deployment-api@f5f6ff4) — that diff was already large from 3 concurrent cross-slot rebases on this same file. —
+      deployment-api@29f3be5. `workload-dead` fires unconditionally on `entry.workload_alive is False` (ahead of the
+      D.1-metric-dependent states — the CMD_PID reading is authoritative regardless of disk/mem/cpu). `stalled` is wired
+      for the **BATCH umbrella only** — the one row of the threshold table whose prerequisite signal is real today;
+      `object_delta` moved to a new public `health_consolidator.object_delta_for_bucket`/`object_delta_for_asset_group`
+      (out of `deployment_freshness`, which already imports `deployments_inventory.classify_vm_target` — a reverse
+      import would have cycled) and is batched via a new `_batched_object_deltas()` pre-pass: ONE manifest lookup per
+      DISTINCT asset_group across the whole census cycle, threaded into `build_inventory`/`_vm_item` as an explicit
+      `object_deltas` param so both functions stay pure/I/O-free for their existing unit tests (the manifest read
+      happens once in `_compute_inventory`, the caller). LIVE/PAPER `stalled` still degrade honestly to `"unknown"` —
+      their threshold-table signals (an expected-active-window calendar, a `work_delta` rows-out-delta tracker) don't
+      exist anywhere in the codebase yet; guessing from idle io/net would misfire the now-live oom-risk/stalled alert
+      wiring (deployment-api@5e25dce) on a genuinely-idle-but-healthy window. Also folded `object_delta>0` into the
+      `working` state per the parent WS-D.3 spec's own OR clause (`object_delta>0 OR io_write_rate>0`), which the
+      original `f5f6ff4` composite landed without since `object_delta` didn't exist yet. 10 new/updated unit tests
+      (`test_composite_health_workload_dead_*`, `test_composite_health_stalled_for_batch_*`,
+      `test_composite_health_batch_working_when_object_delta_positive_*`,
+      `test_composite_health_live_umbrella_stalled_*`, `test_batched_object_deltas_calls_once_per_distinct_asset_group`,
+      `test_build_inventory_threads_object_deltas_*`) + `health_consolidator`/`deployment_freshness` object-delta tests
+      moved to their new home. Landed through 2 real rebase cycles against concurrently-shipped sibling work on this
+      same hotspot file (CLOUD_RUN_SERVICE census `ab0c431`, ECS/Lambda field surfacing, the oom-risk/stalled alert
+      wiring `5e25dce`) — one import-ordering conflict, one `build_inventory` new-param conflict (kept both the
+      sibling's `cloud_run_services` param and my `object_deltas` param). QG green (sentinel 29f3be5, 119s).
+- [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals don't exist yet** — discovered while wiring the BATCH row above
+      (deployment-api@29f3be5). LIVE needs an expected-active-window calendar (market-hours-aware, so an
+      idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta` (rows-out-delta) tracker — grepped
+      the codebase, `     work_delta` doesn't exist anywhere today, it's a parent-doc spec concept only. Both `stalled`
+      branches stay honest `"unknown"` until one of these lands; not urgent (v1 shipped the one row — BATCH — with a
+      real signal), but should not be silently forgotten now that the oom-risk/stalled alert wiring
+      (deployment-api@5e25dce) is live and would otherwise start firing on the FIRST real signal any of these umbrellas
+      get.
 - [ ] [REVIEW] P3. **`deployments_inventory.py` is now 1000+ lines** (cap is 900; QG's file-size check is non-blocking
       in this repo's config today but the file is a real hotspot — 4+ slots landed sibling D.3/kinds-census todos here
       concurrently in one session). Consider splitting Cloud-Run-job census / composite-health / service- taxonomy into
@@ -217,6 +353,89 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **`CLOUD_RUN_SERVICE` census shipped** (slot 8): `deployment-api@ab0c431` (new
+  `deployment_api/routes/_cloud_run_services.py` + wiring in `deployments_inventory.py`) — lists live Cloud Run services
+  via `run_v2.ServicesClient.list_services` (ready-state/revision/region/URI), builds
+  `DeploymentItem(kind=CLOUD_RUN_SERVICE, umbrella=DeploymentUmbrella.NONE.value)`. Started this task before a sibling
+  slot's UAC `DeploymentKind` 6-kind extension had landed, so an early draft added its OWN `CLOUD_RUN_SERVICE` enum
+  member + a raw `"—"` wire-string sentinel for the umbrella (no `DeploymentUmbrella.NONE` existed yet); once the
+  sibling slot's superset UAC change (`CLOUD_RUN_SERVICE`/`ECS_SERVICE`/`LAMBDA`/`CLOUD_FUNCTION` + the formal
+  `DeploymentUmbrella.NONE` member) landed on origin, discarded the now-fully-redundant local UAC commits (verified
+  byte-identical via diff before dropping — nothing unique lost) and realigned the deployment-api wiring to emit
+  `DeploymentUmbrella.NONE.value` instead of `"—"`. This file was the single hottest convergence point in the whole plan
+  this session (4+ slots landing sibling census/health todos concurrently) — required ~8 `git pull --rebase` cycles to
+  land, each a clean additive merge (new field/section per side, no logic conflicts); `check_strict_quickmerge.py`
+  flagged 2 rounds of manually-recommitted `git rebase --continue` commits as quickmerge-bypassing (they lacked the
+  `Quickmerge: agent` trailer peer commits carry) — fixed by squashing to one commit with the trailer added by hand
+  before the final ship. QG green (sentinel ab0c431, 129s). Confirmed on `origin/live-defi-rollout` post-push.
+- 2026-07-09 — **Alerts on oom-risk/stalled wired into the alert ledger** (slot 15): `deployment-api@5e25dce`
+  (`deployment_api/routes/deployments_inventory.py`) — `_persist_alert()` appends to the SAME shared GCS ledger
+  (`unified-trading-cicd-events/cicd/alerts/{date}/alerts.jsonl`) agent-orchestrator's watchers already write to
+  (mirrors `notifications.slack._persist_to_gcs`'s row shape exactly), so `GET /api/alerts` picks these up with zero
+  reader changes. `_alert_on_health_transition()` fires only on a fresh TRANSITION into `oom-risk`/`stalled` (in-process
+  per-VM last-alerted-state), never every ~45s poll — deliberately conservative to avoid an alert-storm. Honest note:
+  `stalled` can't fire yet (its `_composite_health_status` classifier still degrades to `"unknown"` pending the separate
+  `stalled`/`workload-dead` wiring todo below) — included now so nothing else needs to change once that lands. 4 new
+  tests. QG green (sentinel 5e25dce, 73s). Rebased onto 2 concurrent census landings (CLOUD_FUNCTION `a025563`,
+  ECS/Lambda field surfacing `e5f2ad4`) — a genuine same-file conflict in `_compute_inventory`'s GCP branch (two
+  independent appends), resolved by keeping both.
+- 2026-07-09 — **Recent error count / last log line shipped** (slot 4): `deployment-service@9ef144e`
+  (`deployment_service/data_pipeline_monitors/_gcs.py`) — `recent_log_summary()` returns
+  `RecentLogSummary(recent_error_count, last_log_line)` for the popover, reusing the SAME durable run.log blob +
+  `_ERROR_LINE_RE` classifier `error_snippet_from_run_log` already reads for Slack alerts (no new GCS path, no
+  CloudWatch dependency). Not yet wired to an HTTP response — the `/deployments/{id}/detail` endpoint (slot 15,
+  `deployment-api@7c4265a`, next entry below) landed concurrently, so wiring this in is now a small fast-follow, not
+  blocked. 4 unit tests. QG green, sentinel=9ef144e.
+- 2026-07-09 — **Fixed: "dead" was unreachable in the live path** (slot 6): `deployment-api@25afc62`
+  (`deployment_api/routes/deployments_inventory.py`). Both "Hang detection" and "Composite health status" were already
+  flipped `[x]` by slot 12's `f5f6ff4` before this task was picked up — its `composite_health_status` classifier
+  correctly implements control-plane-existence + stale-heartbeat per the "Hang detection" mandate, so no duplicate
+  implementation was added. Two residual bugs verified + fixed instead: (1) `_load_gcp_vm_entries` still filtered
+  `active/` registry entries to those present in the GCE aggregated-list join (`if e.vm_name in running_vm_names`) — the
+  exact "hard-killed VM" entry `dead` exists to catch was silently dropped before `_composite_health_status` ever saw
+  it, making `dead` practically unreachable on the live path; removed the filter. (2) `build_inventory` derived
+  `control_plane_running` from mere key presence in the join rather than the raw status value — GCE keeps a
+  stopping/stopped/terminated instance visible in the aggregated-list for a while, so a present-but-not-`RUNNING` VM
+  false-negatived as confirmed-running; now checks `status == "RUNNING"`. 2 new tests pin both (an active entry absent
+  from a fresh GCE census survives `_load_gcp_vm_entries` unfiltered; a VM present in the join with a non-RUNNING status
+  still resolves `dead`). Also fixed one pre-existing, unrelated QG STEP 5.101 empty-string-fallback violation in
+  `fleet.py` that was blocking the full gate. Rebased through 5 concurrent same-file landings this session (dynamic
+  Cloud Run census, service-health sub-taxonomy, Tier-0 free-wins, kind-count/filter extension, composite health, AWS
+  Lambda census, drill-down endpoint) — 3 real conflicts hand-resolved (docstrings, signature unification), 2 clean
+  auto-merges. QG green (sentinel 25afc62, 86s).
+- 2026-07-09 — **`/deployments/{name}/detail` drill-down endpoint shipped** (slot 15): `deployment-api@7c4265a`
+  (`deployment_api/routes/deployments_inventory.py`) — `DeploymentDetailResponse` (thin-list item + the D.1 metrics
+  vector) served via a new `_vm_entry_by_name_cache` side-cache populated as a side effect of the SAME GCP census
+  `_compute_inventory` already runs each cache cycle (zero new bucket walks). Path param is the wire
+  `DeploymentItem.name`, not an orchestration `deployment_id` — a distinct 3-segment route template from
+  `routes/deployments/`'s existing `/deployments/{deployment_id}/verify`, no collision. **Finding surfaced + tracked,
+  not absorbed**: the endpoint currently serves a single most-recent D.1 sample (each heartbeat tick overwrites the
+  registry entry's fields in place) rather than a true persisted rolling window — the original D.2 STORE design called
+  for keeping the last ~10 samples, but that was never actually shipped by the earlier "Enrich the heartbeat" todo.
+  Added a new `[INFRA] P2` todo above (rolling-window persistence) instead of silently claiming the endpoint delivers a
+  trend it can't yet plot. 3 new tests. QG green (sentinel 7c4265a, 78s). Rebased twice onto concurrent same-file
+  landings (D.3 composite health `f5f6ff4`, AWS Lambda census `050d9a4`) — caught and fixed one duplicate-field artifact
+  an auto-merge left in the test file's `_FakeEntry` dataclass before shipping.
+- 2026-07-09 — **LAMBDA census shipped** (slot 4): `deployment-service@7c8b210`
+  (`deployment_service/backends/aws_census.py`) adds `AwsLambdaFunctionCensus` + `list_lambda_census()` — one paginated
+  `list_functions` call, deliberately no per-function `describe`/`list_tags` follow-up (avoids an N+1; classification is
+  by `FunctionName`, the same name-based resolution Cloud Run jobs already use, not tags). `deployment-api@050d9a4`
+  (`deployment_api/routes/_aws_deployments.py`) wires it: `_lambda_item()` classifies via
+  `classify_deployment_target(kind=DeploymentKind.LAMBDA)`, status from `State` only (Active/Pending/Failed/Inactive →
+  running/pending/failed/stopped) — no CloudWatch call, per the plan's existence-only default. Landed through TWO 3-way
+  merge conflicts against concurrently-shipped sibling work on this same plan: the ECS_SERVICE census
+  (deployment-service/deployment-api) and the DeploymentKind 6-kind UAC extension (`unified-api-contracts`) — my own UAC
+  `DeploymentKind.LAMBDA` addition turned out fully redundant with the other slot's more complete 6-kind extension
+  (`CLOUD_RUN_SERVICE`/`ECS_SERVICE`/`LAMBDA`/`CLOUD_FUNCTION` all at once), so it was dropped rather than duplicated.
+  Also fixed a pre-existing STEP-5.101 empty-string-fallback baseline breach in `deployment-service` (94 > 91, unrelated
+  3 script files) that was blocking `quality-gates.sh` for the whole repo — noqa-marked/rewrote to fail-fast, back to 89
+  ≤ baseline 91. Filed `plans/active/issues/uac_ws_cassette_coexistence_dex_swap_uniswap_v3_2026_07_09.md` for an
+  unrelated pre-existing `unified-api-contracts` QG blocker (STEP 5.7X WS cassette coexistence, broken by
+  `mtds@d02cf88f`'s real `dex_swap_uniswap_v3_ws` connector landing with no matching cassette) discovered while shipping
+  this — cross-repo, blocks quickmerge for all of UAC, tracked separately since it's out of DeFi-craft scope for this
+  task. New/updated tests: `test_build_aws_inventory_classifies_lambda_functions`,
+  `test_build_aws_inventory_lambda_defaults_to_empty_list`, `test_list_lambda_census_discovers_deployed_function`
+  (moto). QG green both repos (sentinels 7c8b210 / 050d9a4).
 - 2026-07-09 — **Composite health status + hang detection shipped** (slot 12): `deployment-api@f5f6ff4`
   (`deployments_inventory.py`) — additive `DeploymentItem.composite_health_status` (renamed from an initial
   `health_status` to avoid a real field-name collision with the concurrently-shipped Tier-0 free-wins commit's OWN
