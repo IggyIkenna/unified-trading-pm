@@ -28,6 +28,7 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # Action needed: enable GitHub billing on the Cost dashboard
