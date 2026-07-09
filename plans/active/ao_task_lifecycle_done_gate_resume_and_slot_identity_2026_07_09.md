@@ -9,7 +9,7 @@ summary:
   → permanent quarantine → dispatch starvation). Plus fleet-wide slot commit-identity correctness — the hook derives
   slot-N from the RETIRED tab/<op>/<N> branch scheme so every Path-B slot resolves to "main"; fix the derivation, add a
   per-host checker script, and harden the slot-creation paths.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -40,9 +40,9 @@ drift_direction: advance-code
 
 # AO task lifecycle — done-gate, dead-worker resume, preserve-on-handoff + slot commit identity
 
-> **Status: DRAFT — operator reviews, then flips `status: active`. Executed by the operator's interactive session
-> (`execution_scope: local-only`) — the AO fleet does NOT execute this plan (it patches the AO's own spawn/watchdog
-> path).**
+> **Status: ACTIVE — operator approved 2026-07-09; executing in SLOT 16 (interactive session, claimed + `paused` so
+> AutoSpawn never spawns over it). `execution_scope: local-only` — the AO fleet does NOT execute this plan (it patches
+> the AO's own spawn/watchdog path).**
 
 ## 1. Problem — evidence from the 2026-07-09 investigation
 
@@ -354,3 +354,9 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 - 2026-07-09 — Plan drafted from the live investigation (quarantine deadlock chain, resume gap, identity-hook stale
   derivation confirmed with file:line + activity-log evidence). Awaiting operator review → flip `status: active`.
+- 2026-07-09 13:46Z — Operator approved; `status: active`. Execution claimed SLOT 16: `POST /api/slots/16/pause`
+  (status=paused — AutoSpawn/watchdog/escalation skip it) + `POST /api/slots/16/claim-interactive` (12h claim
+  `slot16-interactive-20260709-134626-5f29`). Slot-16 clones stamped `ikennaigboaka [slot-16·planning]` (AO clone had
+  EMPTY identity; PM clone had `[slot-0·human-planning] [main·planning]` in `.git/config.worktree` — live proof of the
+  §1.5 hook-mangling this plan fixes; root PM clone is `[slot-0·human-planning] [main·laptop]`, same class). Code work
+  happens in `.tabs/16/{agent-orchestrator,unified-trading-pm}`; plan-file flips from the root PM clone.
