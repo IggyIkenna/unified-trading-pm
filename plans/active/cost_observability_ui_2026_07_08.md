@@ -20,7 +20,7 @@ related:
     cost_obs_ui_unified_breakdown_2026_07_08.md,
   ]
 created: "2026-07-08"
-last_updated: "2026-07-08"
+last_updated: "2026-07-09"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -240,6 +240,43 @@ on the resource table + the running backend endpoints (last-30d window).
       if per-project or query-cost matters.
 - [ ] [UI] P3. No **"other resources" leaf** — Cloud Run Jobs is ~$2.9k/30d (CPU $2,047 + Mem $882), bigger than any
       single VM, but only vm+bucket leaf tables exist; it surfaces only in the "By resource" breakdown.
+
+### Currency, AWS history & timezone reconciliation (2026-07-09) — UI vs operator-downloaded GCP/AWS console CSVs
+
+Operator (Harsh) reconciled `/ops/costs` against console CSVs pulled direct from the clouds
+(`odum_gcp_acc_Reports, 2026-07-03 — 2026-07-09.csv`, GBP; `aws_gross_usage_by_service_jan_jun_2026.csv`, USD). The UI
+faithfully mirrors its sources — every GCP per-service figure matches the `bq` probe to the penny — so the gaps are
+**source-level, not UI math**. Evidence = live `bq` probes on the resource table + `SHOW COLUMNS`/Athena probes on the
+CUR (2026-07-09). Operator decisions captured inline.
+
+- [ ] [BACKEND+UI] P1. **GCP is billed in GBP but the UI prints `$` — convert to USD everywhere.** The BQ export's
+      `currency` column = **`GBP`** on all 1.79M rows (last 60d); the pipeline selects `cost` raw with no FX and the
+      frontend `usd()` hardcodes `$`, so every GCP figure is a **pound value wearing a dollar sign** (the "GCP
+      $12,593/30d" is really £12,593). Proven 3 independent ways: (a) `currency='GBP'`, zero USD rows; (b)
+      `currency_conversion_rate` = **0.7413–0.756** (≠ 1.0 ⇒ non-USD account); (c) currency-blind — Coldline Iowa unit
+      cost £0.002956 vs GCP's public USD list $0.004 = ratio 0.739, matching the rate column. AWS is USD
+      (`line_item_currency_code=USD`; 157 CUR columns, **none** a conversion rate), so today's cross-cloud grand total
+      **sums GBP + USD under one `$`** = invalid. **FIX — convert GCP→USD at query time using GCP's OWN embedded per-day     rate (no external FX feed):** in `gcp_facts_sql`, `cost`→`SUM(SAFE_DIVIDE(cost,
+      currency_conversion_rate))`and     the credit line divides the`UNNEST(credits)`sum by the same outer-row`currency_conversion_rate`; usage amounts     untouched; AWS/GitHub paths unchanged. Verified: Jul3–9 gross £2,708.12 → **$3,581.93** (rate 0.756), flows     per-service (Cloud Run £1,264.84→$1,672.96). Whole page becomes genuinely USD → the `$`label +`usd()`become     correct and the cross-cloud total valid. Add a unit test asserting the`/rate`split; update    `codex/05-infrastructure/billing-cost-observability.md`
+      (GCP GBP-native, USD at query time). NB reports the **USD list-equivalent** (comparable to AWS), NOT the GBP
+      invoice cash figure.
+- [ ] [UI] P2. **GBP view option for GCP (tally against the £ invoice).** Primary display stays USD everywhere; add an
+      option to also read GCP figures in **native GBP** so the operator can tie out to the GBP console/invoice. AWS
+      can't be GBP (no AWS-supplied rate — external FX only), so the GBP view is GCP-only-meaningful: thread
+      `currency` + the native amount through the cost model and surface GCP's £ in a tooltip / secondary line (or a
+      USD⇄GBP control that only re-denominates GCP while AWS stays USD-labelled). Confirm exact UX at build time.
+- [ ] [BACKEND/INFRA] P2. **AWS Athena holds July-2026 only — investigate a CUR historical backfill.** Per-month probe:
+      `aws_billing.cur_uts_cost_usage` contains ONLY `2026-07` (gross $792.89) — the CUR delivery started in July, so
+      `/ops/costs` structurally cannot show any pre-July AWS spend. The operator's AWS CSV is Jan–Jun (Cost Explorer,
+      ~14mo retention; $8,584 gross), **zero temporal overlap** with the CUR. Also: AWS is **fully credited** — every
+      July day gross≈−credit → **net $0** (~$98/day gross visible). **Investigate** a backfill: CUR "include historical
+      data" on report re-creation, or a one-off Cost Explorer `GetCostAndUsage` import into a side table. If feasible →
+      backfill full-year AWS history; else document the AWS tab as **July-2026-onward** (operator: acceptable). Not a
+      code bug — a data-source coverage gap.
+- [ ] [UI] P3. **Top-of-page tooltip: GCP console = Pacific day boundary, export = UTC.** Not a bug — it's why a console
+      CSV won't tie to the penny. Same Jul3–9 window/currency: console gross £2,509.38 vs export(UTC) £2,708.12;
+      re-windowing the export on Pacific midnight (07:00 UTC) → £2,549.07, within £40 (1.6%) of console (residual =
+      late-arriving recent-day data). Add a one-line tooltip so operators don't chase the ~8% phantom gap.
 
 ## Resource-detail enrichment + unified breakdown (operator-requested 2026-07-08)
 
@@ -461,3 +498,13 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
     pytest-xdist — a stale `GCP_PROJECT_ID=test-project` leaks through a cache `clear_client_caches()` misses, so it
     intermittently reads the wrong project. Surfaced (not caused) by the extra AWS test shifting the xdist distribution;
     passed on the shipping run. A real UTL test-isolation bug worth a separate fix.
+- 2026-07-09 — **Reconciliation vs operator console CSVs + GCP currency root-cause (slot 4, interactive).** Reconciled
+  `/ops/costs` against the operator's GCP (£, Jul3–9) + AWS
+  ($, Jan–Jun) console CSVs. Confirmed the UI == its billing
+  sources to the penny (GCP per-service matches `bq`). Root-caused 3 source-level facts, logged as the "Currency, AWS
+  history & timezone reconciliation (2026-07-09)" findings above: (1) GCP export is GBP mislabelled `$`(3 independent proofs) → fix = in-query`/currency_conversion_rate`
+  USD conversion using GCP's own rate, no external FX; (2) AWS CUR is July-only (Cost Explorer has Jan–Jun, zero
+  overlap; AWS fully credited → net $0); (3) console(Pacific) vs export(UTC) day-boundary explains the residual ~8%
+  gross gap (→ £40 / 1.6% once Pacific-aligned). Operator decisions: **USD everywhere + a GBP option for GCP**;
+  **investigate AWS CUR backfill** (else July-onward is fine); **TZ note in a top tooltip**. Findings + plan only — no
+  code shipped this step.
