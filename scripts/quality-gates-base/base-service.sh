@@ -3380,6 +3380,43 @@ else
     log_success "STEP 5.102: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.103: asyncio script must explicitly drain ManifestWriter before exit ──
+#
+# (STEP 5.102 was claimed concurrently by the sibling
+# manifest_early_return_missing_write_loss_2026_07_09 checker — this takes 5.103.)
+#
+# Per manifest_atexit_drain_races_asyncio_shutdown_2026_07_09.md: the atexit-registered
+# flush_all_pending_buckets() handler — documented as the GUARANTEED drain for fast-exit
+# processes — races the asyncio event loop's own executor teardown and can silently drop
+# buffered manifest writes (a WARNING log line, not a raised exception; no non-zero exit).
+# Flags any `.py` file that calls `asyncio.run(` AND references `MANIFEST_PER_VM_SHARDS`
+# but has no explicit `flush_all_pending_buckets(` call in the same file. Per-repo
+# SHRINKING count ratchet: asyncio_manifest_explicit_drain_baseline.yaml grandfathers the
+# 2026-07-09 sweep's 3 known offenders (instruments-service scripts/backfill/) pending the
+# sibling P1 audit item in the same issue doc; a NEW offending file fails CI. Per-file
+# opt-out: `# noqa: qg-asyncio-manifest-drain` with a one-line reason.
+_ASYNCIO_DRAIN_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_asyncio_manifest_explicit_drain.py"
+if [ -f "$_ASYNCIO_DRAIN_CHECKER" ]; then
+    _AD_REPO=$(basename "$PROJECT_ROOT")
+    _AD_WS="$REPO_ROOT"
+    if $PYTHON_CMD "$_ASYNCIO_DRAIN_CHECKER" \
+            --workspace-root "$_AD_WS" --scope "$_AD_REPO" >/tmp/asyncio_manifest_explicit_drain_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/asyncio_manifest_explicit_drain_qg.log 2>/dev/null; then
+            log_warn "STEP 5.103: below the asyncio-manifest-drain baseline — ratchet asyncio_manifest_explicit_drain_baseline.yaml DOWN (re-run --update-baseline)"
+        else
+            log_success "STEP 5.103: No new asyncio.run(+MANIFEST_PER_VM_SHARDS scripts missing an explicit flush_all_pending_buckets() drain (baseline-ratchet)"
+        fi
+    else
+        log_fail "STEP 5.103: NEW asyncio.run(+MANIFEST_PER_VM_SHARDS script missing explicit flush_all_pending_buckets() above the per-repo baseline. Add an explicit _mw.flush_all_pending_buckets() call before asyncio.run() returns, or add '# noqa: qg-asyncio-manifest-drain' with a one-line reason:"
+        cat /tmp/asyncio_manifest_explicit_drain_qg.log
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/asyncio_manifest_explicit_drain_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_asyncio_manifest_explicit_drain.py --workspace-root $_AD_WS --scope $_AD_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.103: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call
