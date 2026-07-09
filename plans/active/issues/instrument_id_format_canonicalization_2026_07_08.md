@@ -559,6 +559,22 @@ live-construction path (`tardis/adapter.py`, `ccxt_adapter.py`) so new captures 
 generalized CeFi + DeFi legacy-GCS-naming audit decided below, then verifies both. Script:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/live-wiring-plus-legacy-naming-audit-wf_9e5f13e3-962.js`
 
+**OPERATOR DECISION 2026-07-09 — prefer real VM-based execution over session-tied agent execution for the remaining
+heavy migrations, because "I will have to leave my laptop at some point."** All 4 `Workflow` runs above execute as
+background tasks tied to the operator's current interactive session — if that session ends (laptop closed/asleep), any
+in-progress, not-yet-committed/not-yet-written work in them is at risk. Real GCS spot VMs, once launched and verified
+started, run independently of any laptop or session — matching this workspace's existing
+`codex/05-infrastructure/spot-vms-for-backfill.md` pattern (SPOT by default, no fire-and-forget: verify STARTED<60s +
+real progress within the first ~10min, then let it run unattended to completion). Dispatched a survey+launch agent to:
+(1) check real current state so no VM is launched for work the session agents already finished, (2) launch real spot VMs
+for genuinely large remaining pieces (Binance per-day corpus if still pending, on-chain-perp's ~19,255-object
+legacy-naming gap, MTDS's real migration once its discovery scope is known, and any large CeFi/DeFi legacy-naming
+migration found), each verified-started before being left to run unattended. **Operator also confirmed (same message)**:
+every migration in this effort should move straight from smoke-test-verified to the real full run, not pause for a
+second go/no-go — already the standing instruction given to every dispatched agent this session, reconfirmed here.
+Report pending — once it lands, this section will be updated with real VM names/instance IDs and how to check on them
+from a future session.
+
 - **2026-07-09 — GENERALIZED FINDING + DECISION: legacy GCS filename/path conventions are a systemic risk, not just an
   on-chain-perp issue.** The on-chain-perp full-historical-sweep branch found that a real GCS narrow-prefix listing (not
   the manifest's summary count) shows ~99% of "captured" HL/ASTER historical objects (~19,255 of 19,435) sit under an
@@ -574,3 +590,39 @@ generalized CeFi + DeFi legacy-GCS-naming audit decided below, then verifies bot
   migrated to it — not just the already-known target-format gap this doc's findings 1-6 describe, but genuinely
   unknown-until-audited older shapes the way this one was. Dispatched as a dedicated discovery+migration workflow, see
   Orchestration state below.
+- **2026-07-09 — `wf_118d8268-18c` onchain-perp venue-family slice (HYPERLIQUID/ASTER/PACIFICA-SOLANA/
+  EXTENDED-STARKNET/LIGHTER-ZKSYNC) — real discovery + code fix + historical migration, MTDS.** Real discovery (live
+  `gcloud storage`/parquet reads, not guesses) confirmed all 5 venues' raw-tick `symbol` column diverges from the
+  `BASE-QUOTE@LIN` target: ASTER emitted the raw concatenated exchange symbol (`"BTCUSDT"`, no dash); HYPERLIQUID's S3
+  archive + REST-fallback paths emitted the pre-2026-07-08 `"{coin}-PERP"` shape; LIGHTER-ZKSYNC/PACIFICA-SOLANA emitted
+  a bare base-asset string (`"BTC"`); EXTENDED-STARKNET emitted a bare base-asset `symbol` alongside an already-dash-
+  joined-but-unmarked `instrument_id` (`"BTC-USD"`). **Fixed (code, all 5 venues' NATIVE REST/S3 write paths)**:
+  `market-tick-data-service@<pending quickmerge sha>` — `aster_adapter.py::_to_canonical_symbol`,
+  `adapters/hyperliquid_s3.py::_canonical_perp_symbol`, `adapters/_umi_lighter.py::_lighter_canonical_symbol`,
+  `adapters/_umi_pacifica.py::_pacifica_canonical_symbol`, `adapters/_umi_extended.py::_extended_canonical_symbol`, plus
+  `live/websocket_runner.py::live_tick_blob_path` now sanitizes the filename component (colon-laden live filenames no
+  longer diverge from the batch path's bare-symbol convention). 8 pre-existing unit tests updated to assert the new
+  canonical values (`test_hyperliquid_s3_coverage.py`, `test_extended_candles.py`, `test_pacifica_candles.py`,
+  `test_lighter_candles.py`); full targeted suite green (225 passed). **Historical migration (real, `--apply`,
+  backup-first, real concurrency)**: LIGHTER-ZKSYNC (1,593 files) + PACIFICA-SOLANA (1,408 files) + EXTENDED-STARKNET
+  (35,883 files) under `pipeline_mode=batch_tardis` — real scope discovered via a bounded per-day+venue-prefix scoped
+  GCS list (2024-09-01..2026-07-08, NOT a whole-corpus walk). Elapsed time + final counts: see this session's completion
+  report (agent-orchestrator task output) for the honest real numbers — not restated here to avoid this doc going stale
+  the moment the doc is re-read. **Deliberately deferred, NOT a scope choice — real, confirmed live multi-agent
+  conflict**: (1) ASTER/HYPERLIQUID historical GCS filename-rename + row-content symbol-column fix —
+  `scripts/migrate_onchain_perp_perpetual_canonical_ 2026_07_08.py` was actively dirty (another agent's in-flight WIP,
+  still dry-run-only as of this session, no `_index/backups/availability_index.pre_perpetual_canonical_*` found) at
+  write time; touching the same GCS objects would race. (2) The Tardis-archive (`batch_tardis`) post-fetch `symbol`
+  remap for LIGHTER-ZKSYNC/PACIFICA-SOLANA/ EXTENDED-STARKNET (the actual highest-volume current source for these 3
+  venues) — `market_interface/adapters/cefi/ tardis_shared.py` + `market_interface/adapters/tradfi/tardis_adapter.py`
+  were BOTH actively dirty (mtime 159s/228s at discovery, part of a larger actively-churning cluster also touching
+  `partitioned_writer.py`, `kalshi_adapter.py`, `databento_enrichment.py`, `_dex_pools_*.py` — evidently this session's
+  `wf_9e5f13e3-962` / `canonical-id-full-historical-sweep` work) at write time. **Insertion point identified for
+  whichever agent picks this up next**: canonicalize the DataFrame's `symbol` column for these 3 venues before it
+  reaches `finalise_rows_and_path`/`derive_row_instrument_id` in `tardis_cefi_shards.py`'s
+  `finalise_and_write_cefi_shards`/`_tardis_cefi_shard_router` (both already group by the raw `symbol` column) — no
+  `canonical_id_builder.py`/UAC change needed, since `_build_cefi_simple` just upper-cases and wraps whatever `symbol`
+  string it receives (confirmed by reading `_build_cefi_simple` + `build_instrument_id`'s PERPETUAL dispatch directly).
+  Full write-up + the LIGHTER-ZKSYNC market_id→symbol table (live-verified 2026-07-09 via
+  `mainnet.zklighter.elliot.ai/api/v1/orderBookDetails`): `market-tick-data-service/docs/canonical-write-conventions.md`
+  § "On-chain-perp `symbol` canonicalization".
