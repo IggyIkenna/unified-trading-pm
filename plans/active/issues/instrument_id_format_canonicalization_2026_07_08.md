@@ -936,3 +936,8 @@ lock clears.
 
 Real evidence for all of the above: `instruments-service/docs/CEFI_INSTRUMENTS.md`, `docs/DEFI_INSTRUMENTS.md`, plus the
 verify agent's per-venue-family honest-status table (git-vs-origin, live GCS spot-checks) in the workflow journal.
+
+**UPDATE 2026-07-09 — dispatched `wf_c59510fe-3f5`** — `urgent-postverify-fixes` — the 3 items above: ships the live
+Deribit trading-classifier fix, commits the 4 orphaned production-migration scripts, and fixes the Bybit `adapter.py`
+regression (now unlocked). Script:
+`/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-instruments-service/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/urgent-postverify-fixes-wf_c59510fe-3f5.js`
