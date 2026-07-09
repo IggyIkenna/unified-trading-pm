@@ -73,7 +73,8 @@ UAC-internal.
   another slot's `pytest`/QG.
 - **Commit attribution = slot + host**: author NAME `ikennaigboaka [slot-<N>·<host>]`, email = operator's GitHub account
   (Ikenna `…@gmail.com`, Harsh `…@odum-research.com`); each slot clone has its own `.git/config` (set at clone time by
-  `setup-tab-worktrees.sh`).
+  `setup-tab-worktrees.sh`). Derivation SSOT `scripts/hooks/slot-identity-lib.sh` (slot-N from the PATH, 2026-07-09);
+  audit/stamp a host via `scripts/dev/check-slot-commit-identity.sh [--fix]`.
 - **quickmerge lands on LDR**; **default promote is LDR→`main` DIRECT — staging is BYPASSED** (per-repo `ldr_main` GHA
   toggle; the standing `ldr-to-main-promote.yml` + fleet `ldr-to-main-promote-fleet.yml` PR, `*/15`, v2-gated
   auto-merge; verify by CONTENT `gh api …/compare/main...live-defi-rollout`, not squash-inflated `ahead_by`). `--hotfix`

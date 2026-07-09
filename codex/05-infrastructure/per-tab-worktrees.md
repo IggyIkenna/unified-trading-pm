@@ -346,9 +346,9 @@ set does not block `--ff-only`. **De-duplication:** one ping per (slot, repo) st
 
 ## Slot is durable; theme is daily
 
-The mapping of slot ↔ theme is daily-updated and lives authoritatively on the **agent-orchestrator dashboard**, with
-the operator LEDGER `## Today's slot assignments` table as the offline fallback (forward index that fresh slot agents
-read on bootstrap), mirroring the day's work-split plan (`plans/active/work_split_<YYYY_MM_DD>_<operator>.md`).
+The mapping of slot ↔ theme is daily-updated and lives authoritatively on the **agent-orchestrator dashboard**, with the
+operator LEDGER `## Today's slot assignments` table as the offline fallback (forward index that fresh slot agents read
+on bootstrap), mirroring the day's work-split plan (`plans/active/work_split_<YYYY_MM_DD>_<operator>.md`).
 
 Three benefits of fixed slots over ephemeral spin-ups:
 
@@ -565,6 +565,36 @@ git config user.email "ikennaigboaka@gmail.com"
 `setup-tab-worktrees.sh` sets this at `--init` / `--add-slot` / `--reset-slot` (clone time). Sub-agents share the slot
 clone → inherit the identity automatically. Do NOT hand-edit `~/.gitconfig`. **Consumers:** CI alert workflows attribute
 via `github.event.head_commit.author.name`; the slot-git-status-report cron can group by slot.
+
+### Derivation SSOT + checker (rework 2026-07-09 — ao_task_lifecycle plan Phase D)
+
+The expected-identity rule lives in ONE sourced lib — `scripts/hooks/slot-identity-lib.sh`
+(`slot_identity_resolve <repo-toplevel>`) — shared by the `fix-commit-identity.sh` pre-commit hook (enforce) and
+`scripts/dev/check-slot-commit-identity.sh` (audit/stamp), so enforcement and audit can never drift:
+
+- **Label is PATH-derived**: `…/.tabs/<N>/<repo>` → `slot-N`; anything else → `main`. The pre-2026-07-09 BRANCH
+  derivation (`tab/<op>/<N>` → slot-N) was retired with the tab-branch model — Path-B slots sit on `live-defi-rollout`,
+  so it resolved `main` in EVERY slot and actively REWROTE correct stamped identities away (the fleet-wide
+  missing-slot-number bug).
+- **Canon is SANITIZED**: any " [label·host]" suffix is stripped from the resolved canon name. (Live incident: the
+  planning VM's global `slotIdentity.name` had itself been polluted with a label, so every hook self-heal CONCATENATED —
+  `ikennaigboaka [slot-0·human-planning] [main·laptop]`.)
+- **Host resolution gains a machine-level source**: `ORCHESTRATOR_VM_ID` → `VM_NAME` →
+  `git config --global slotIdentity.host` → `laptop`. Fleet processes carry the env; INTERACTIVE shells on a VM don't
+  (they used to stamp `·laptop` on the planning VM) — a VM declares itself once:
+  `git config --global slotIdentity.host planning`.
+- **Checker**: `bash scripts/dev/check-slot-commit-identity.sh [--fix] [--slot N]` — audits the main workspace + every
+  `.tabs/<N>/<repo>` on the host against the lib's expectation; `--fix` stamps (worktree-aware; plain-config fallback);
+  exit non-zero on drift. `setup-tab-worktrees.sh` runs `--fix --slot <N>` as the FINAL provisioning step, which also
+  stamps repos added to an existing slot later (idempotent re-run). First host sweep (planning VM 2026-07-09): 419
+  repos, 117 drifted → 114 fixed + hand-repaired globals (`slotIdentity.name` de-polluted,
+  `slotIdentity.host=planning`).
+- **Orphan-WIP preserve commits carry the SLOT'S OWN identity**
+  (`agent-orchestrator server/worktree_clean_check/_orphan.py`): the old distinct `agent-orchestrator (orphan-wip)`
+  author was REJECTED by the fail-closed hook → permanent slot quarantine → dispatch starvation (7/17 slots,
+  2026-07-09). Preserve commits now resolve/stamp the slot identity (same resolution order as the lib) and use
+  `--no-verify` (a preservation commit to a `wip-preserve/` ref is not a QG boundary); they stay greppable via the
+  `chore(orphan-wip):` subject + `Orphan-WIP: slot-<N>` trailer.
 
 ## Git hooks are per-clone and MUST both be installed (2026-07-06)
 

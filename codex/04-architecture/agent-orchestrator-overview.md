@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: agent-orchestrator — architecture overview
 summary:
-  agent-orchestrator service architecture — FastAPI + Vite dashboard coordinating parallel Claude Code workers
-  (SQLite state, ES256 internal / HS256 dashboard auth, central API proxy over private VPC to 10 epic VMs);
-  explicitly NOT a trading service (no asset_group / kill-switch / event-bus).
+  agent-orchestrator service architecture — FastAPI + Vite dashboard coordinating parallel Claude Code workers (SQLite
+  state, ES256 internal / HS256 dashboard auth, central API proxy over private VPC to 10 epic VMs); explicitly NOT a
+  trading service (no asset_group / kill-switch / event-bus).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +22,17 @@ related:
   ]
 created: 2026-05-19
 authoritative_for: [agent-orchestrator service architecture overview]
-referenced_by: [codex/00-getting-started/E2E_WORKFLOW_UNIFIED.md, codex/04-architecture/agent-orchestrator-autospawn.md, codex/04-architecture/agent-orchestrator-backlog-state-alignment.md, codex/04-architecture/agent-orchestrator-host-offline-failover.md, codex/04-architecture/agent-orchestrator-worker-liveness.md, codex/04-architecture/role-registry.md, codex/05-infrastructure/agent-orchestrator-api-host.md, codex/05-infrastructure/agent-orchestrator-deploy.md]
+referenced_by:
+  [
+    codex/00-getting-started/E2E_WORKFLOW_UNIFIED.md,
+    codex/04-architecture/agent-orchestrator-autospawn.md,
+    codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+    codex/04-architecture/agent-orchestrator-host-offline-failover.md,
+    codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    codex/04-architecture/role-registry.md,
+    codex/05-infrastructure/agent-orchestrator-api-host.md,
+    codex/05-infrastructure/agent-orchestrator-deploy.md,
+  ]
 owner:
 last_reviewed: 2026-06-27
 code_refs:
@@ -283,6 +293,42 @@ service shape (HISTORICAL)".
 Consequence: Do NOT add `--asset-group` flags, backtest modes, or emit STARTED/STOPPED events to this service. Do NOT
 add it to the trading-pipeline DAG (instruments-service → MTDS → features → strategy → execution). It is purely an
 operator coordination surface.
+
+---
+
+## Worker task lifecycle — done-gate, resume-on-death, preserve-on-handoff (reworked 2026-07-09)
+
+Shipped by `plans/active/ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09.md`
+(`agent-orchestrator@5b07bd3` + `@16faa7e`). The lifecycle contract around dirty WIP:
+
+- **Done-gate (`/done`)**: a task is NOT done while ANY repo in the slot dir carries uncommitted WIP. `done_slot` runs
+  `check_slot_clean` (after generated-artifact auto-restore) and rejects with a structured 409
+  (`required_action: "quickmerge-or-stash"`); the task stays `dispatched`, the retry is idempotent. Worker options:
+  important WIP → QG + quickmerge push; unimportant → slot-tagged stash reported in the retry's `stashed` field (every
+  stash logs `slot_stash_on_done` + Slack-alerts — steady-state target is zero). Emergency off-switch:
+  `ORCHESTRATOR_DONE_REQUIRE_CLEAN=false`.
+- **Dead worker + in-flight task + dirty WIP → RESUME, not requeue** (`server/resume_lifecycle.py`
+  `classify_dead_worker`, consulted by TmuxPruner, the watchdog's exited-slot reclaim, and kick-escalation): the task
+  stays `dispatched_to` the slot, the dead session id freezes on `SlotRow.resume_pending_session_id`, and AutoSpawn's
+  `_resume_pass` respawns `claude --resume <sid>` in the same cwd — the WIP is the resumed agent's working context, so
+  the resume path NEVER runs dirty resolution (read-only FM5/FM7 diagnostics only). Bounded:
+  `ORCHESTRATOR_RESUME_MAX_ATTEMPTS` (default 2) per task-assignment episode → exhaustion falls back to requeue +
+  preserve. Dead + CLEAN keeps the legacy requeue/fresh path.
+- **Preserve-on-handoff is the ONLY auto-commit point**: pre-spawn `resolve_dirty_state` runs ONLY when the slot has no
+  in-flight task (done→new-work handoff). The orphan-WIP commit carries the SLOT'S OWN `[slot-N·host]` identity +
+  `--no-verify` (the old distinct author was hook-rejected → permanent quarantine → dispatch starvation, 7/17 slots).
+  Quarantine `detail` now surfaces the first real per-repo error.
+- **Wedged-ALIVE workers**: dispatch-ACK reconciler (`ORCHESTRATOR_DISPATCH_ACK_TIMEOUT_SECONDS`, default 30 min — a
+  `dispatched` task with no task-scoped worker signal and no active pane returns to `queued` pinned to the slot);
+  kick-failure escalation (`ORCHESTRATOR_KICK_ESCALATION_THRESHOLD` consecutive verified-failed kicks → kill+resume,
+  bypassing the last_ping gate); ALL pane injections go through the verified-submit helper (`tmux_spawn.submit_to_pane`
+  — send-keys -l → C-m → verify the input box cleared); spawn success requires the boot prompt SUBMITTED, not merely
+  delivered; `last_ping` accepts worker-originated signals + genuine spinner observations only (dispatch/respawn no
+  longer fake it).
+- **Context lifecycle for main/review** (`server/context_lifecycle.py`, keeper-driven): outbox compact-guidance at ~50%
+  context; agent self-injects via `scripts/agent/self-compact.sh` (own-pane only, hard `$TMUX` guard); FORCED `/compact`
+  only past ~45 min unacked AND a measured multi-signal idle verdict; checkpoint-recycle (agent exits itself, keeper
+  respawns fresh) after 2 compactions / 24 h / thrashing.
 
 ---
 

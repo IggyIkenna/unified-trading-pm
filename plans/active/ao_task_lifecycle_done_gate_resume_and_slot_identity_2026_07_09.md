@@ -256,40 +256,41 @@ preserve-on-handoff (the ONLY auto-commit point):
       `autospawn_failed: tmux session orch-slot-4 already exists` — re-check `has_session` inside the spawn (or
       serialize respawn ownership between kicker-respawn and AutoSpawn); treat an existing live session as a benign
       skip, not a failure.
-- [ ] [CODE] P1. **Context lifecycle for long-running agents (main + review)** — operator 2026-07-09: these sessions
-      ideally run for days, which the model isn't designed for; today the only control is honor-system self-compact
-      guidance (`agents/main.md` "run /compact at >~70%") while the backend's pressure signal (`derive_context_pressure`
-      low/medium/high/thrashing, `CompactionRow` detection — `state_store/slots.py:352`) is observed but never ACTED on.
-      Build the backend-driven two-tier policy, **COOPERATIVE-FIRST** (operator 2026-07-09: never compact an agent
-      mid-work; a single pane-snapshot "looks idle" is untrustworthy — §1.7's classifier ambiguity, background shells,
-      check-then-send race). **Tier 1 — proactive guided compact** at `context_used_pct` ≥ ~45-50% (≈450-500k on [1m];
-      pct-based so 200k workers get the same policy if ever enabled). Delivery — NO new per-tick flag check (operator: a
-      1-min loop must not grow a compact banner): the keeper enqueues a normal OUTBOX message ("context at N% — run
-      /compact at your next natural checkpoint, focus: keep operating loop / watchlist / unanswered messages / in-flight
-      items; drop tick-by-tick history"), which the main/review loops ALREADY drain every cycle (main.md STEP 2A/2B;
-      workers at boot/heartbeat) — zero added overhead. Execution — `/compact` is a CLIENT-side command, not a model
-      tool, so the agent runs it by SELF-INJECTION: from a Bash call, `tmux send-keys` the /compact line into ITS OWN
-      session (it knows `#S`), then END the turn — mid-turn typed input QUEUES and executes the moment the turn ends, so
-      "runs when free" holds by construction; ack via `compact_done` next tick. Ship this as a sanctioned helper
-      (`scripts/agent/self-compact.sh`, built on the verified-submit helper — the raw-send-keys ban exempts only this
-      instrument). HARD GUARD (live-fired 2026-07-09): the helper MUST require `$TMUX`/`$TMUX_PANE` set and target its
-      OWN pane id — `tmux display-message -p '#S'` on a NON-tmux shell silently returns the most-recently-active session
-      (observed: an interactive VSCode session resolved to `orch-slot-1` = the REVIEW agent), so a blind fallback would
-      compact a DIFFERENT agent; abort loudly when not inside tmux. FORCED fallback only past a deadline (unacked 2
-      ticks / ~45 min) and only on a MEASURED multi-signal idle verdict: pane `idle` debounced across ≥3 observations
-      over ~60s + NO child processes under the pane shell (`pgrep -P <pane_pid>` — catches "1 shell still running") +
-      empty input box → inject via the verified-submit helper + confirm the compact ran; log `proactive_compact` vs
-      `forced_compact`. (Race note: a `/compact` submitted during an active turn QUEUES and runs at the next turn
-      boundary — worst case is deferral, not corruption.) Hard never-force: spinner, running shells, non-empty input
-      box, or `thrashing` (escalate to recycle instead). Client-side auto-compact stays underneath as the final safety
-      net. **Tier 2 — checkpoint-recycle** after 2 proactive compacts OR 24h (immediately on `thrashing`): cooperative
-      too — agent writes its checkpoint (watchlist + open items → `main-agent-checkpoint.md` + `last_msg`) and **EXITS
-      ITSELF** (no kill; dead session → keeper's normal respawn with the boot prompt referencing the checkpoint — same
-      voluntary-exit pattern account rotation already uses, `slots_worker.py:153` "exiting, new session spawning").
-      Fresh model state beats an N-times-compacted session for loop agents whose durable state is already external
-      (state.db / activity / inbox scratch). Cost rationale — a 20-min-tick agent is past the 5-min prompt-cache TTL, so
-      EVERY tick re-reads the whole conversation at full input price; lean context is directly cheaper + faster. Workers
-      excluded (/boot-per-shippable-unit already bounds them; Phase B covers death).
+- [x] [CODE] P1. ✅ agent-orchestrator@16faa7e — **Context lifecycle for long-running agents (main + review)** —
+      operator 2026-07-09: these sessions ideally run for days, which the model isn't designed for; today the only
+      control is honor-system self-compact guidance (`agents/main.md` "run /compact at >~70%") while the backend's
+      pressure signal (`derive_context_pressure` low/medium/high/thrashing, `CompactionRow` detection —
+      `state_store/slots.py:352`) is observed but never ACTED on. Build the backend-driven two-tier policy,
+      **COOPERATIVE-FIRST** (operator 2026-07-09: never compact an agent mid-work; a single pane-snapshot "looks idle"
+      is untrustworthy — §1.7's classifier ambiguity, background shells, check-then-send race). **Tier 1 — proactive
+      guided compact** at `context_used_pct` ≥ ~45-50% (≈450-500k on [1m]; pct-based so 200k workers get the same policy
+      if ever enabled). Delivery — NO new per-tick flag check (operator: a 1-min loop must not grow a compact banner):
+      the keeper enqueues a normal OUTBOX message ("context at N% — run /compact at your next natural checkpoint, focus:
+      keep operating loop / watchlist / unanswered messages / in-flight items; drop tick-by-tick history"), which the
+      main/review loops ALREADY drain every cycle (main.md STEP 2A/2B; workers at boot/heartbeat) — zero added overhead.
+      Execution — `/compact` is a CLIENT-side command, not a model tool, so the agent runs it by SELF-INJECTION: from a
+      Bash call, `tmux send-keys` the /compact line into ITS OWN session (it knows `#S`), then END the turn — mid-turn
+      typed input QUEUES and executes the moment the turn ends, so "runs when free" holds by construction; ack via
+      `compact_done` next tick. Ship this as a sanctioned helper (`scripts/agent/self-compact.sh`, built on the
+      verified-submit helper — the raw-send-keys ban exempts only this instrument). HARD GUARD (live-fired 2026-07-09):
+      the helper MUST require `$TMUX`/`$TMUX_PANE` set and target its OWN pane id — `tmux display-message -p '#S'` on a
+      NON-tmux shell silently returns the most-recently-active session (observed: an interactive VSCode session resolved
+      to `orch-slot-1` = the REVIEW agent), so a blind fallback would compact a DIFFERENT agent; abort loudly when not
+      inside tmux. FORCED fallback only past a deadline (unacked 2 ticks / ~45 min) and only on a MEASURED multi-signal
+      idle verdict: pane `idle` debounced across ≥3 observations over ~60s + NO child processes under the pane shell
+      (`pgrep -P <pane_pid>` — catches "1 shell still running") + empty input box → inject via the verified-submit
+      helper + confirm the compact ran; log `proactive_compact` vs `forced_compact`. (Race note: a `/compact` submitted
+      during an active turn QUEUES and runs at the next turn boundary — worst case is deferral, not corruption.) Hard
+      never-force: spinner, running shells, non-empty input box, or `thrashing` (escalate to recycle instead).
+      Client-side auto-compact stays underneath as the final safety net. **Tier 2 — checkpoint-recycle** after 2
+      proactive compacts OR 24h (immediately on `thrashing`): cooperative too — agent writes its checkpoint (watchlist +
+      open items → `main-agent-checkpoint.md` + `last_msg`) and **EXITS ITSELF** (no kill; dead session → keeper's
+      normal respawn with the boot prompt referencing the checkpoint — same voluntary-exit pattern account rotation
+      already uses, `slots_worker.py:153` "exiting, new session spawning"). Fresh model state beats an N-times-compacted
+      session for loop agents whose durable state is already external (state.db / activity / inbox scratch). Cost
+      rationale — a 20-min-tick agent is past the 5-min prompt-cache TTL, so EVERY tick re-reads the whole conversation
+      at full input price; lean context is directly cheaper + faster. Workers excluded (/boot-per-shippable-unit already
+      bounds them; Phase B covers death).
 
 ### Phase C — preserve-on-handoff only + identity-correct orphan commit
 
@@ -332,7 +333,8 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 ### Phase E — tests, runtime verification, docs
 
-- [ ] [TEST] P1. **Unit tests** (AO `tests/unit/`): done-gate 409 payload + accept-after-clean; classifier matrix
+- [x] [TEST] P1. ✅ agent-orchestrator@5b07bd3 (tests/test_task_lifecycle_done_gate_resume.py, 12 tests; suite 1137
+      green) — **Unit tests** (AO `tests/unit/`): done-gate 409 payload + accept-after-clean; classifier matrix
       (dead×dirty×done → resume vs requeue vs preserve); resume spawn passes `--resume <sid>` + skips dirty resolution;
       bounded-resume fallback; pruner leaves resume-pending tasks; orphan commit uses slot identity + `--no-verify`
       (hook-rejection regression test); `_boot_landed` submission check.
@@ -344,11 +346,12 @@ preserve-on-handoff (the ONLY auto-commit point):
       operator PC; (e) the slot-3 zombie dispatch reconciles (task resumed or requeued + completed) and
       `worker_kick_failed(post_kick=frozen)` drops to ~0/hr in the activity stream. Evidence (activity-log excerpts,
       backlog counts, commit SHAs, script output) recorded in the Progress Log — run it, don't read it.
-- [ ] [DOC] P1. **Post-phase codex audit** — update `codex/05-infrastructure/per-tab-worktrees.md` (commit attribution —
-      PATH-based slot derivation; checker script; orphan-WIP identity),
-      `codex/04-architecture/agent-orchestrator-overview.md` (task lifecycle states — done-gate, resume-on-death,
-      preserve-on-handoff), and the CLAUDE.md one-liners if the shipped contract changed; SUPERSEDED-banner anything
-      invalidated.
+- [x] [DOC] P1. ✅ unified-trading-pm docs commit (per-tab-worktrees.md §Derivation SSOT; agent-orchestrator-overview.md
+      §Worker task lifecycle; CLAUDE.md one-liner) — **Post-phase codex audit** — update
+      `codex/05-infrastructure/per-tab-worktrees.md` (commit attribution — PATH-based slot derivation; checker script;
+      orphan-WIP identity), `codex/04-architecture/agent-orchestrator-overview.md` (task lifecycle states — done-gate,
+      resume-on-death, preserve-on-handoff), and the CLAUDE.md one-liners if the shipped contract changed;
+      SUPERSEDED-banner anything invalidated.
 
 ## 6. Out of scope (tracked elsewhere / follow-ups)
 
