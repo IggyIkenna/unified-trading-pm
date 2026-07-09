@@ -252,13 +252,24 @@ preserve-on-handoff (the ONLY auto-commit point):
       ideally run for days, which the model isn't designed for; today the only control is honor-system self-compact
       guidance (`agents/main.md` "run /compact at >~70%") while the backend's pressure signal (`derive_context_pressure`
       low/medium/high/thrashing, `CompactionRow` detection — `state_store/slots.py:352`) is observed but never ACTED on.
-      Build the backend-driven two-tier policy: **Tier 1 — proactive guided compact** at `context_used_pct` ≥ ~45-50%
-      (≈450-500k on [1m]; pct-based so 200k workers get the same policy if ever enabled) — keeper sends
-      `/compact keep: operating loop, current watchlist, unanswered messages, in-flight     items; drop: tick-by-tick history`
-      via the verified-submit helper, ONLY when the pane is idle-at-prompt (never mid-turn); log `proactive_compact`
-      activity. **Tier 2 — checkpoint-recycle** after 2 proactive compacts OR 24h (and immediately on `thrashing`):
-      agent writes its checkpoint (watchlist + open items → `main-agent-checkpoint.md` + `last_msg`), keeper kills +
-      fresh-spawns with the boot prompt referencing the checkpoint — fresh model state beats an N-times-compacted
+      Build the backend-driven two-tier policy, **COOPERATIVE-FIRST** (operator 2026-07-09: never compact an agent
+      mid-work; a single pane-snapshot "looks idle" is untrustworthy — §1.7's classifier ambiguity, background shells,
+      check-then-send race). **Tier 1 — proactive guided compact** at `context_used_pct` ≥ ~45-50% (≈450-500k on [1m];
+      pct-based so 200k workers get the same policy if ever enabled): keeper REQUESTS — sets `compact_requested` on the
+      SlotRow + outbox message; the main/review loop contract gains a step at TICK START (the one provably-idle boundary
+      — just woke, nothing in flight): check flag → run
+      `/compact keep: operating loop, current watchlist, unanswered messages, in-flight items; drop: tick-by-tick history`
+      → ack via `compact_done`. FORCED fallback only past a deadline (unacked 2 ticks / ~45 min) and only on a MEASURED
+      multi-signal idle verdict: pane `idle` debounced across ≥3 observations over ~60s + NO child processes under the
+      pane shell (`pgrep -P <pane_pid>` — catches "1 shell still running") + empty input box → inject via the
+      verified-submit helper + confirm the compact ran; log `proactive_compact` vs `forced_compact`. (Race note: a
+      `/compact` submitted during an active turn QUEUES and runs at the next turn boundary — worst case is deferral, not
+      corruption; multi-turn-intent disturbance is why cooperative is primary.) Hard never-force: spinner, running
+      shells, non-empty input box, or `thrashing` (escalate to recycle instead). **Tier 2 — checkpoint-recycle** after 2
+      proactive compacts OR 24h (immediately on `thrashing`): cooperative too — agent writes its checkpoint (watchlist +
+      open items → `main-agent-checkpoint.md` + `last_msg`) and **EXITS ITSELF** (no kill; dead session → keeper's
+      normal respawn with the boot prompt referencing the checkpoint — same voluntary-exit pattern account rotation
+      already uses, `slots_worker.py:153` "exiting, new session spawning"). Fresh model state beats an N-times-compacted
       session for loop agents whose durable state is already external (state.db / activity / inbox scratch). Cost
       rationale — a 20-min-tick agent is past the 5-min prompt-cache TTL, so EVERY tick re-reads the whole conversation
       at full input price; lean context is directly cheaper + faster. Workers excluded (/boot-per-shippable-unit already
