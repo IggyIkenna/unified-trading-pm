@@ -181,17 +181,37 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
       (`cron:expected-universe-enumerator- + manifest spot-check` → `cron:expected-universe-v2- + manifest spot-check`,
       this same commit — see PM commit below). Full `bash scripts/quality-gates.sh` green (65s), sentinel verified,
       shipped via `quickmerge --agent --files`.
-- [ ] **[PARKED — prereqs #3 and #4 not landed]** [CODE] P2. **DELETE v1 dispatch surface from
-      enumerate_expected_universe.py** — after the four todos above land: remove `_ENUMERATORS` dict, seven v1 functions
-      (`_enumerate_tradfi` / `_enumerate_tradfi_indices` / `_enumerate_defi` / `_enumerate_defi_gas_fees` /
-      `_enumerate_sports` / `_enumerate_cefi` / `_enumerate_prediction`), `main()` v1 branch, and
-      `--enumerator-version=v1` choice (default flip to v2); refactor
+- [x] ✅ [CODE] P2. **DELETE v1 dispatch surface from enumerate_expected_universe.py** — after the four todos above
+      land: remove `_ENUMERATORS` dict, seven v1 functions (`_enumerate_tradfi` / `_enumerate_tradfi_indices` /
+      `_enumerate_defi` / `_enumerate_defi_gas_fees` / `_enumerate_sports` / `_enumerate_cefi` /
+      `_enumerate_prediction`), `main()` v1 branch, and `--enumerator-version=v1` choice (default flip to v2); refactor
       `tests/unit/scripts/test_enumerate_expected_universe.py` +
-      `tests/integration/test_enumerate_v2_superset_property.py` to drop v1 references (repo: instruments-service).
-      **2026-07-07 slot-11 (data_engineering)** — dispatcher routed -008 with todo #3 still `- [ ]` and todo #4 PARKED.
-      Deleting v1 now silently drops the venue-grain PRE_VENUE_LAUNCH row class for empty-catalog windows (main-agent
-      confirmed this is a data-correctness hard-stop, not a style preference). Slot-11 raised BLK-530cea75; main
-      answered "implement todo #3 first, then #5". Slot-11 STARTED todo #3 (added
+      `tests/integration/test_enumerate_v2_superset_property.py` to drop v1 references (repo: instruments-service). —
+      **2026-07-09 slot-7 (data_engineering)**: instruments-service@b0859183. Both prereqs (#3 v2 venue-grain sentinels,
+      #4 deployment-service launcher retirement) were independently re-verified landed on a fresh pull before starting
+      (26th dispatch of this park, first time both were actually true — see Progress Log for prior 25 bounces). Deleted
+      `_ENUMERATORS` + all 7 v1 functions, kept the 3 helpers v2 also depends on (`_DEFI_CHAIN_LEVEL_DATA_TYPES` /
+      `_GAS_FEE_VENUE` / `_gas_fee_chain_names`), flattened `main()`'s `if enumerator_version == "v2":` wrapper (dead
+      branch removed, so the `-> int` return type stays satisfied without a v1 else), flipped `--enumerator-version` to
+      `choices=["v2"], default="v2"`, and dropped the now-dead `manifest_df` param + column-alignment branch on
+      `_write_absent_rows` (only the v1 caller ever passed it). Refactored both named test files: removed the 13 v1-only
+      enumerator tests + the 2 `_ENUMERATORS`-keyed cross-asset-group invariant tests from
+      `test_enumerate_expected_universe.py` (already covered by `test_enumerate_expected_universe_v2.py`'s v2
+      equivalents — verified `test_v2_all_reasons_in_closed_set` + the `_V2_ENUMERATORS` dispatch-completeness test
+      exist there first); deleted `test_enumerate_v2_superset_property.py` entirely since every test in it except one
+      called a deleted v1 function — its whole purpose (prove v2 ⊇ v1) is moot once v1 doesn't exist. Also found + fixed
+      a live breakage `git grep` surfaced outside the two named files:
+      `tests/unit/scripts/test_enumerate_total_universe_wiring.py::test_v1_dispatch_equals_uac_total_universe_axes`
+      asserted on `enumerator_module._ENUMERATORS` directly — removed. Scrubbed dangling docstring pointers to the
+      deleted superset-property file (4 in the script, 4 in `test_enumerate_expected_universe_v2.py`) and updated the
+      module docstring's per-asset-group implementation-status table + CLI examples (default is now v2, which requires
+      `--catalog-path`). 156/156 tests pass in the 3 touched+kept test files; full test collection (4511 tests) clean;
+      `bash scripts/quality-gates.sh` green (108s, sentinel-verified); shipped via `quickmerge --agent --files`. Prereq
+      #1 (extend-v2-tradfi), #2 (extend-v2-sports), #3, #4, and this todo #5 are now ALL done — this issue doc's
+      actionable-todo list is fully closed. **2026-07-07 slot-11 (data_engineering)** — dispatcher routed -008 with todo
+      #3 still `- [ ]` and todo #4 PARKED. Deleting v1 now silently drops the venue-grain PRE_VENUE_LAUNCH row class for
+      empty-catalog windows (main-agent confirmed this is a data-correctness hard-stop, not a style preference). Slot-11
+      raised BLK-530cea75; main answered "implement todo #3 first, then #5". Slot-11 STARTED todo #3 (added
       `_yield_v2_cefi/defi/prediction_pre_venue_launch_rows` helpers + venue-grain wiring in
       `_enumerate_v2_cefi/defi/prediction` at `instruments-service/scripts/enumerate_expected_universe.py`), then
       reverted because todo #3 requires substantial existing-test refactoring (~10+ tests that assert row counts on
