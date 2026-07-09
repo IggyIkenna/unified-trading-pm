@@ -756,10 +756,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 91.37,
+        "large_file_count": 5,
+        "qg_red_reason": null,
         "warn_file_count": 7,
-        "qg_red_reason": "ruff",
-        "large_file_count": 5
+        "coverage_pct": 91.37
       }
     },
     "market-data-processing-service": {
