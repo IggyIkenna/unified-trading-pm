@@ -65,14 +65,18 @@
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["@playwright/mcp@latest", "--output-dir", ".playwright-mcp"],
+      "args": [
+        "@playwright/mcp@latest",
+        "--output-dir",
+        ".playwright-mcp"
+      ],
       "env": {
         "PLAYWRIGHT_HEADLESS": "false"
       }
     }
   },
-  "model": "opus[1m]",
-  "effortLevel": "xhigh",
+  "model": "sonnet",
+  "effortLevel": "high",
   "env": {
     "DISABLE_AUTOUPDATER": "1"
   }
