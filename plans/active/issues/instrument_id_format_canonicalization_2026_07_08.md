@@ -554,6 +554,11 @@ Bybit/Kraken/OKX/Deribit/Binance's PERPETUAL/FUTURE/OPTION `instrument_key` — 
 touching this shared file due to lock contention with the TradFi WIP, now cleared per the update above; dispatching now.
 A final cross-repo zero-old-format-traces verification pass is also queued behind all of the above.
 
+**UPDATE 2026-07-09 — dispatched `wf_9e5f13e3-962`** — `live-wiring-plus-legacy-naming-audit` — wires the shared
+live-construction path (`tardis/adapter.py`, `ccxt_adapter.py`) so new captures emit `@LIN`/`@INV` directly, PLUS the
+generalized CeFi + DeFi legacy-GCS-naming audit decided below, then verifies both. Script:
+`/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/live-wiring-plus-legacy-naming-audit-wf_9e5f13e3-962.js`
+
 - **2026-07-09 — GENERALIZED FINDING + DECISION: legacy GCS filename/path conventions are a systemic risk, not just an
   on-chain-perp issue.** The on-chain-perp full-historical-sweep branch found that a real GCS narrow-prefix listing (not
   the manifest's summary count) shows ~99% of "captured" HL/ASTER historical objects (~19,255 of 19,435) sit under an
