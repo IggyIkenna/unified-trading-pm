@@ -2,7 +2,7 @@
 # Epic: infrastructure_master
 # Lifecycle: permanent
 # Delete-when: NA
-"""QG STEP 5.102 — asyncio script must explicitly drain ManifestWriter before exit.
+"""QG STEP 5.103 — asyncio script must explicitly drain ManifestWriter before exit.
 
 Per ``plans/active/issues/manifest_atexit_drain_races_asyncio_shutdown_2026_07_09.md``:
 ``ManifestWriter``'s ``atexit``-registered ``flush_all_pending_buckets()`` handler —
@@ -54,7 +54,7 @@ The baseline ONLY shrinks: re-run with ``--update-baseline`` after fixing sites
 
 Usage::
 
-    # per-repo (run by base-service.sh STEP 5.102):
+    # per-repo (run by base-service.sh STEP 5.103):
     python check_asyncio_manifest_explicit_drain.py --workspace-root <ws> --scope <repo-dir>
 
     # workspace-wide sweep:
@@ -181,7 +181,7 @@ def write_baseline(counts: dict[str, int], existing: Baseline, path: Path | None
         prior = existing.allowed(repo)
         merged[repo] = {"count": min(observed, prior) if repo in existing.counts else observed}
     header = (
-        "# Baseline for QG STEP 5.102 — asyncio-script-must-explicitly-drain-manifest ratchet.\n"
+        "# Baseline for QG STEP 5.103 — asyncio-script-must-explicitly-drain-manifest ratchet.\n"
         "#\n"
         "# This is a SHRINKING ratchet. `repos[<repo>].count` is the number of `.py`\n"
         "# files (WITHOUT a `# noqa: qg-asyncio-manifest-drain` marker) the gate\n"
@@ -201,7 +201,7 @@ def write_baseline(counts: dict[str, int], existing: Baseline, path: Path | None
     body = yaml.safe_dump(
         {
             "note": existing.note
-            or ("Seeded 2026-07-09 — manifest_atexit_drain_races_asyncio_shutdown fleet sweep (QG STEP 5.102)."),
+            or ("Seeded 2026-07-09 — manifest_atexit_drain_races_asyncio_shutdown fleet sweep (QG STEP 5.103)."),
             "repos": merged,
         },
         sort_keys=True,
@@ -301,7 +301,7 @@ def _resolve_scopes(workspace_root: Path, scope: str | None, source_dir: str | N
 
 def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="asyncio-script-must-explicitly-drain-manifest ratchet (QG STEP 5.102)."
+        description="asyncio-script-must-explicitly-drain-manifest ratchet (QG STEP 5.103)."
     )
     parser.add_argument("--workspace-root", required=True, type=Path)
     parser.add_argument("--scope", default=None, help="Single repo dir name (per-repo QG mode).")

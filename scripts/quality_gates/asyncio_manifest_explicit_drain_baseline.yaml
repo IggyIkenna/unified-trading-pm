@@ -1,4 +1,4 @@
-# Baseline for QG STEP 5.102 — asyncio-script-must-explicitly-drain-manifest ratchet.
+# Baseline for QG STEP 5.103 — asyncio-script-must-explicitly-drain-manifest ratchet.
 #
 # This is a SHRINKING ratchet. `repos[<repo>].count` is the number of `.py`
 # files (WITHOUT a `# noqa: qg-asyncio-manifest-drain` marker) the gate
@@ -15,9 +15,9 @@
 #
 # SSOT: plans/active/issues/manifest_atexit_drain_races_asyncio_shutdown_2026_07_09.md.
 note:
-  Seeded 2026-07-09 — manifest_atexit_drain_races_asyncio_shutdown fleet sweep (QG STEP 5.102). The 3
-  instruments-service offenders are tracked for a real fix by the sibling P1 audit todo in the same issue doc
-  (scripts/backfill/ asyncio one-off audit).
+  Seeded 2026-07-09 — manifest_atexit_drain_races_asyncio_shutdown fleet sweep (QG STEP 5.103). Initial sweep found 3
+  instruments-service offenders (sibling P1 audit todo, same issue doc); the concurrent instruments-service@a745898 fix
+  cleared 2 of them, leaving scripts/recover_fixtures_from_truthset.py — baseline set to the live count.
 repos:
   instruments-service:
-    count: 3
+    count: 1
