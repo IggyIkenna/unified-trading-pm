@@ -161,10 +161,18 @@ cleanup + outstanding items are captured in the deferred note (see §H).
   confirmed broken, not just patched at one layer). Full evidence in `sports_manifest_unknown_league_id_2026_07_08.md`'s
   "Resolution (2026-07-09)" section.
 
-### A2. Deribit multi-leg combo id is malformed (missing `:TYPE:` segment) — `P1` — NEW
+### A2. Deribit multi-leg combo id is malformed (missing `:TYPE:` segment) — `P1` — RESOLVED 2026-07-09
 
-- **What:** Deribit combo legs build an `instrument_key` with no type segment, so the id doesn't parse under the
-  canonical `VENUE:TYPE:PAYLOAD` grammar.
+- **RESOLVED 2026-07-09**: `deribit_combo_adapter.py::_build_legs` now routes through the shared `build_leg()` builder
+  via a new `_classify_deribit_leg_instrument_type()` classifier, verified against Deribit's real live
+  `public/get_combos` API (89 real BTC combos / 32 unique legs, 88 real ETH combos / 30 unique legs, 2026-07-09). Real
+  before/after: `DERIBIT:BTC-PERPETUAL` → `DERIBIT:PERPETUAL:BTC-PERPETUAL`; `DERIBIT:BTC-10JUL26` →
+  `DERIBIT:FUTURE:BTC-10JUL26`; `DERIBIT:BTC-17JUL26-65000-C` → `DERIBIT:OPTION:BTC-17JUL26-65000-C`. Shipped
+  `instruments-service@ca2f44e5`, confirmed ancestor of `origin/live-defi-rollout`. Same pass also opportunistically
+  retrofitted the 5 on-chain-perp adapters (Hyperliquid/Aster/Pacifica/Extended/Lighter) onto the shared builder — pure
+  DRY, byte-identical output, closing `canonical_id_builder_retrofit_checklist_2026_07_08.md` todos 4 and 5.
+- **What (original finding):** Deribit combo legs build an `instrument_key` with no type segment, so the id doesn't
+  parse under the canonical `VENUE:TYPE:PAYLOAD` grammar.
 - **Evidence:**
   [deribit_combo_adapter.py:310](instruments-service/instruments_service/reference_data/adapters/cefi/deribit_combo_adapter.py#L310)
   — `instrument_key=f"DERIBIT:{leg_name}"`.

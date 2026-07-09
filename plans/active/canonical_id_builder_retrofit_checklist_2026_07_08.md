@@ -107,24 +107,13 @@ source:
       be fixed and the divergence is a **catalog-regeneration gap** (stale `prod/catalog.parquet` predating this adapter
       code), not a code gap. Confirm via a live re-fetch or a fresh backfill sample before assuming finding 6 needs a
       code change here.
-- [ ] [DATA] P1. **Retrofit the 5 on-chain-perp adapters** to
-      `build_canonical_instrument_id(AssetGroup.CEFI, venue,     InstrumentType.PERPETUAL, ...)` — real file:line:
-      `hyperliquid.py:164` (`HYPERLIQUID:PERPETUAL:{name}-USD`), `aster.py:207` (`ASTER:PERPETUAL:{base}-{quote}`),
-      `pacifica.py:86` (`PACIFICA-SOLANA:PERPETUAL:{coin}-USDC`), `extended.py:147`
-      (`EXTENDED-STARKNET:PERPETUAL:{sym}`), `lighter.py:121` (`LIGHTER-ZKSYNC:PERPETUAL:{base}-USDC`). These 5 already
-      produce the DECIDED target shape (`VENUE:PERPETUAL:     BASE-QUOTE`, finding 3/4) — this todo is pure DRY (route
-      the existing correct construction through the shared builder instead of a parallel f-string), not a behavior
-      change. Confirm the per-venue settlement quote currency is really correct while here (finding 4's still-open
-      `[DECISION]` todo in the canonicalization issue doc).
-- [ ] [DATA] P1. **Fix the real `:TYPE:` segment bug in Deribit's combo-leg builder** — `deribit_combo_adapter.py:310`
-      (`_build_legs`) constructs `InstrumentLeg(instrument_key=f"DERIBIT:{leg_name}", ...)`, which is missing the
-      `:TYPE:` segment entirely (2 colon-parts instead of 3 — every other leg/instrument in the workspace is
-      `VENUE:TYPE:SYMBOL`). Route through the new
-      `build_leg("DERIBIT", <type>, leg_name, side=..., ratio=..., passthrough=True)` instead — this requires first
-      classifying each leg's `InstrumentType` from Deribit's own instrument_name convention (`-PERPETUAL` suffix →
-      PERPETUAL; `-{DDMMMYY}` 2-part suffix → FUTURE; `-{DDMMMYY}-{STRIKE}-{C|P}` 4-part suffix → OPTION) since the
-      Deribit `get_combos` API doesn't return a per-leg type field directly. Add a small classifier + unit tests before
-      wiring it in — do not guess the type without verifying against real Deribit combo API responses.
+- [x] [DATA] P1. **Retrofit the 5 on-chain-perp adapters** — DONE 2026-07-09, `instruments-service@ca2f44e5`. Pure DRY,
+      byte-identical output confirmed against the existing test suite, no behavior change.
+- [x] [DATA] P1. **Fix the real `:TYPE:` segment bug in Deribit's combo-leg builder** — DONE 2026-07-09,
+      `instruments-service@ca2f44e5`. New `_classify_deribit_leg_instrument_type()` classifier verified against
+      Deribit's real live `public/get_combos` API (89 real BTC combos / 32 unique legs, 88 real ETH combos / 30 unique
+      legs). Real before/after: `DERIBIT:BTC-PERPETUAL` → `DERIBIT:PERPETUAL:BTC-PERPETUAL`. Full evidence:
+      `instruments_docs_audit_outstanding_items_2026_07_08.md` finding A2.
 - [ ] [DATA] P2. **Fix the real `/`-delimiter bug in Betfair's sports adapter** — `betfair.py:279`
       (`_build_runner_record`) builds `instrument_key = f"{market_id}/{selection_id}"`, using `/` instead of the
       workspace's `:`-delimited convention (confirmed in `instruments-service/docs/SPORTS_INSTRUMENTS.md`'s "Known gaps"
