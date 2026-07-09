@@ -81,6 +81,39 @@ against live state + the AO's own activity log on the planning VM):
    `[main·<host>]` in EVERY slot and actively REWRITES the correct slot identity away on the first commit. This is why
    slot numbers are missing across the planning VM and operator PCs, and why cross-slot commit attribution is broken.
 
+Second sweep (same day, operator-reported `worker_kick_failed` + `autospawn_failed` UI noise) — activity histogram last
+500 events (11:27→12:26Z): 62 `autospawn_failed` (61 = the §1.1 dirty-quarantine on slots 2/5/9/10/12/13/14 — same root
+cause; 1 = a `tmux session orch-slot-4 already exists` spawn race), 60 `worker_kick_failed`
+(`post_kick_classification=frozen` on every one), 45 `autospawn_succeeded`/hr + 44 `slot_boot`/hr = heavy
+spawn→boot→vanish churn:
+
+6. **Zombie dispatch — the lone "working" slot is not working.** Task
+   `sports_xg_shots_instrument_type_dedup_key_instability-001` is `dispatched_to=3`, SlotRow `status=working`, fresh
+   `last_ping` — but slot 3's live pane shows the worker idling ("Boot returned no eligible task … I'm holding idle")
+   with `❯ check again` sitting UNSUBMITTED in its input box. The boot resume-branch exists (`slots_worker.py:110-122`
+   returns the slot's own `current_task` with `dispatch_reason="resume"`), and heartbeat re-offers it too — but a
+   dispatch handed out in a boot/heartbeat RESPONSE has **no ACK/progress deadline**: if the worker freezes without
+   acting on the response (slot 3), the task stays `dispatched` forever and nothing reconciles pane-reality against
+   DB-state.
+7. **Kicks don't land, and nothing escalates.** `_kick_session` (`worker_liveness/__init__.py:220-232`) does raw
+   `send-keys <text>` + 1s + `C-m` with NO submit verification (same delivered≠submitted family as `_boot_landed`); 37
+   consecutive failed kicks on slot 3 in one hour with zero escalation. The kicker's auto-respawn (`_respawn.py`
+   `maybe_auto_respawn_stuck_slot`) (a) SKIPS slots whose DB status is `working` — exactly the zombie state — and (b)
+   when it does fire, kills + FRESH-spawns (context lost) instead of `--resume`. `classify_pane`'s spinner regex vs
+   past-tense `✻ Worked for Xs` ambiguity is flagged in the code's own comments (`worker_liveness/__init__.py:418-420`).
+8. **Liveness-signal integrity.** `last_ping` is written by non-worker paths — `assign_task_to_slot`
+   (`state_store/slots.py` dispatch-time bump), the kicker's spinner-observation branch
+   (`worker_liveness/__init__.py:437-440`), the respawn path (`_respawn.py:349`) — so a frozen worker can read as alive
+   and the watchdog's heartbeat-silence never fires (slot 3: frozen pane, fresh ping).
+9. **Unsubmitted-text depositors.** The frozen input boxes hold operator-style instructions (`check again`,
+   `file the CLAUDE.md fix as a plan todo`, `check why those 7 tasks are blocked`) — something (main-agent / plan-health
+   guidance path) types into worker panes WITHOUT a verified submit, manufacturing the frozen state the kicker then
+   fails to clear. A pending-messages outbox already exists (`take_pending_messages`) and is the right channel.
+
+Non-bugs confirmed while sweeping: `idle_blocker_inferred` (17/hr) = the `footystats-mp-complete` prerequisite
+legitimately gating one queued task; `plan_health_dispatch_failed` 503s = no-free-slot symptom of the wedge above, not a
+separate defect.
+
 ## 2. Target task lifecycle (the contract)
 
 ```
@@ -175,6 +208,36 @@ preserve-on-handoff (the ONLY auto-commit point):
       holds the marker; optionally confirm the worker's `/boot` POST within T). Retry the submit (`C-m`) once before
       failing the spawn. Without this, died-vs-working classification (Phase B trigger) is untrustworthy.
 
+### Phase B2 — wedged-ALIVE workers (the slot-3 zombie class; 2nd sweep findings §1.6-1.9)
+
+- [ ] [CODE] P0. **Dispatch-ACK contract** — a task handed out in a boot/heartbeat response records `offered_at`; if the
+      worker shows no ack/progress within T (progress event, spinner, or context growth), the dispatch is reconciled:
+      task auto-returns to `queued` (pinned `target_slot` per Phase B) + `slot_dispatch_unacked` activity. Kills the
+      zombie-dispatch class (slot 3: `dispatched` >1h, worker idle in-pane, zero progress events).
+- [ ] [CODE] P0. **Kick-failure escalation → kill + resume** — after K consecutive `worker_kick_failed` on a live
+      session (or dispatched-task-no-progress past T), stop kicking: kill the wedged session and respawn via the Phase-B
+      `--resume` path (context preserved). Fix `maybe_auto_respawn_stuck_slot` (`_respawn.py:141-266`): (a) it currently
+      SKIPS `status=working` slots — the exact zombie state; (b) when it fires it must `--resume` when a task is in
+      flight, not fresh-spawn.
+- [ ] [CODE] P1. **One verified-submit helper for every pane injection** — extract a shared
+      `submit_to_pane(session, text)` (send-keys `-l`, verify the input box cleared / spinner appeared, single retry)
+      and use it in `_kick_session` (`worker_liveness/__init__.py:220-232`), `tmux_spawn._submit`, and any messaging
+      path; also disambiguate `classify_pane`'s spinner regex vs past-tense `✻ Worked for Xs` (its own comment flags it)
+      so working/frozen/idle verdicts are truthful. Evidence gate — `worker_kick_failed` with `post_kick=frozen` drops
+      to ~0 in the activity stream.
+- [ ] [CODE] P1. **Liveness-signal integrity** — only worker-originated signals (`/boot`, `/heartbeat`, `/progress`,
+      `/done`) plus a GENUINE active-spinner observation may refresh `last_ping`; audit + fix the non-worker writers
+      (`assign_task_to_slot` dispatch bump, `_respawn.py:349`, spinner branch false-positives). Regression test — a
+      frozen-pane slot with a stale worker trips heartbeat-silence within the watchdog window.
+- [ ] [CODE] P1. **Worker messaging goes through the outbox, not raw tmux typing** — find the depositor(s) of the
+      unsubmitted input-box instructions (`check again`, `file the CLAUDE.md fix as a plan todo` — main-agent /
+      plan-health guidance paths) and route them through the pending-messages outbox (`take_pending_messages`, drained
+      at boot/heartbeat) or the verified-submit helper; raw `tmux send-keys` text deposits into worker panes are banned
+      outside that helper.
+- [ ] [CODE] P2. **Spawn-vs-respawn TOCTOU** — `autospawn_failed: tmux session orch-slot-4 already exists` — re-check
+      `has_session` inside the spawn (or serialize respawn ownership between kicker-respawn and AutoSpawn); treat an
+      existing live session as a benign skip, not a failure.
+
 ### Phase C — preserve-on-handoff only + identity-correct orphan commit
 
 - [ ] [CODE] P0. **Lifecycle-gate the pre-spawn dirty resolution** — `autospawn.py` `_do_spawn`: run
@@ -225,8 +288,9 @@ preserve-on-handoff (the ONLY auto-commit point):
       `[slot-N·host]` authorship, slots realign + spawn; (b) backlog drains (queued→dispatched→done transitions in
       `/api/state`); (c) one induced dead-worker (kill a test worker mid-task) → resume-respawn with the SAME session id
       finishes the task through the done-gate; (d) `check-slot-commit-identity.sh` green on the planning VM AND the
-      operator PC. Evidence (activity-log excerpts, backlog counts, commit SHAs, script output) recorded in the Progress
-      Log — run it, don't read it.
+      operator PC; (e) the slot-3 zombie dispatch reconciles (task resumed or requeued + completed) and
+      `worker_kick_failed(post_kick=frozen)` drops to ~0/hr in the activity stream. Evidence (activity-log excerpts,
+      backlog counts, commit SHAs, script output) recorded in the Progress Log — run it, don't read it.
 - [ ] [DOC] P1. **Post-phase codex audit** — update `codex/05-infrastructure/per-tab-worktrees.md` (commit attribution —
       PATH-based slot derivation; checker script; orphan-WIP identity),
       `codex/04-architecture/agent-orchestrator-overview.md` (task lifecycle states — done-gate, resume-on-death,
@@ -235,10 +299,11 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 ## 6. Out of scope (tracked elsewhere / follow-ups)
 
-- Worker-freeze kicker behavior (force-submitting stale buffer text instead of clearing the input box) — related but
-  separable; file as its own issue if it persists after the `_boot_landed` fix.
 - Changing the identity hook's fail-closed semantics for interactive commits — intentionally unchanged.
 - The `147 = 139 done + 8 open` backlog-summary presentation on the dashboard — cosmetic, not a defect.
+- `idle_blocker_inferred` on `footystats-mp-complete` — a real prerequisite doing its job, not a defect.
+- `plan_health_dispatch_failed` 503s — symptom of the frozen-session wedge; expected to clear with Phase B2 (verify in
+  the VERIFY todo, don't fix separately).
 
 ## 7. Progress Log
 
