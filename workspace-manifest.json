@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "coverage_pct": 81.91,
+        "warn_file_count": 14,
         "large_file_count": 0,
-        "qg_red_reason": null,
-        "coverage_pct": 81.97,
-        "warn_file_count": 14
+        "qg_red_reason": null
       }
     },
     "deployment-service": {
