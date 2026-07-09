@@ -72,9 +72,17 @@ source: deployment_observability_expansion_2026_07_08.md
 - [ ] [BACKEND] P1. Add `ECS_SERVICE` census — ECS list-services/describe-services across the prod clusters
       (uts-defi-prod, unified-trading-prod) → **desiredCount + runningCount** + task-def revision; `cloud=AWS`. Always
       emit the row even at 0 running tasks (state derives from desired-vs-running — see the service sub-taxonomy task).
-- [ ] [BACKEND] P1. Make the Cloud Run **jobs** census DYNAMIC — list live jobs instead of the hardcoded
+- [x] ✅ [BACKEND] P1. Make the Cloud Run **jobs** census DYNAMIC — list live jobs instead of the hardcoded
       `CLOUD_RUN_JOBS` name-registry, so off-pattern jobs stop hiding (keep the registry only for classification hints,
-      not as the allow-list). Run the exact registry-vs-live diff first to quantify the current hidden set.
+      not as the allow-list). Run the exact registry-vs-live diff first to quantify the current hidden set. —
+      deployment-api@9d50835. `build_inventory` now iterates the LIVE job set (`cloud_run_status` keys, already fetched
+      by `latest_execution_by_job`'s `list_jobs` — no new API call) and treats `CLOUD_RUN_JOBS` as a classification hint
+      (stem match), falling back to the honest `EPHEMERAL_BATCH` default for off-pattern jobs; degrades to the static
+      registry (status=unknown) only when the live list itself is empty. Registry-vs-live diff was already quantified by
+      this plan's own parent doc's 2026-07-08 live census (WS-B gap table: "~10-15 of ~48" GCP Cloud Run jobs off the
+      static registry) — this sandboxed worker slot has no working `gcloud` (snap confinement blocks it here), so no
+      fresh live diff was re-run; the fix + a new regression test (`test_off_pattern_live_cloud_run_job_is_not_hidden`)
+      prove an off-pattern job now surfaces instead of hiding.
 - [ ] [BACKEND] P2. Add `LAMBDA` census — existence + config via `list_functions` (`cloud=AWS`). NOTE: invocation/error
       stats are CloudWatch-only (no host/cgroup on Lambda) — the ONE scoped exception to principle 4; default to
       existence-only and add a CloudWatch call ONLY if Lambda health proves worth it.
@@ -96,14 +104,23 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ### VM / service work-health (capture → store → API)
 
-- [ ] [INFRA] P0. **Enrich the heartbeat** — the daemon loop samples the D.1 vector from `/proc` (psutil or raw, no new
-      dep) + `mem_slope` from a rolling window; stamp onto the registry entry each tick.
+- [x] [INFRA] P0. ✅ **Enrich the heartbeat** — the daemon loop samples the D.1 vector from `/proc` (psutil or raw, no
+      new dep) + `mem_slope` from a rolling window; stamp onto the registry entry each tick. —
+      `unified-trading-library@6da762b3` (new `HostMetricsSampler`, wired into `HeartbeatDaemon.heartbeat_once`) +
+      `deployment-service@a6881d1` (D.1 fields on `DeploymentRegistryEntry` + `heartbeat_cli.py` wiring). Sampled
+      fields: cpu_pct/mem_pct/mem_slope/disk_pct/io_write_rate_bytes_sec/net_recv_rate_bytes_sec. `object_delta` +
+      `workload_alive` are separate todos below (manifest lookup / `kill -0 CMD_PID`), not part of this one.
 - [ ] [INFRA] P0. **Workload-PID liveness** — shell passes `CMD_PID`; daemon includes
       `workload_alive = kill -0 CMD_PID`. Kills the OOM-false-alive without the exit-file race.
-- [ ] [INFRA] P1. **`parse_counters` tail-read fix** — seek-to-end / read last ~64 KB, not `read_text()` on a multi-GB
-      log every tick (existing per-VM I/O waste at scale).
-- [ ] [BACKEND] P1. **Object-delta = manifest lookup** (authoritative write-truth) — extend `/freshness` to an
-      object-count-delta per shard off the manifest the consolidator maintains; NO new bucket walk.
+- [x] ✅ [INFRA] P1. **`parse_counters` tail-read fix** — seek-to-end / read last ~64 KB, not `read_text()` on a
+      multi-GB log every tick (existing per-VM I/O waste at scale). — `unified-trading-library@b77c8592` (binary seek to
+      the last `DEFAULT_TAIL_BYTES` (64 KiB) from EOF instead of `read_text()` loading the whole file).
+- [x] ✅ [BACKEND] P1. **Object-delta = manifest lookup** (authoritative write-truth) — extend `/freshness` to an
+      object-count-delta per shard off the manifest the consolidator maintains; NO new bucket walk. —
+      `deployment-api@defdabe`: `_object_delta_for_bucket()` reads the SAME consolidated availability-index blob
+      `consolidator_posture` already resolves (`read_availability_index`, zero new bucket walks), sums captured
+      `row_count`/`instrument_count` per written date, diffs the two most recent dates; wired onto
+      `DeploymentFreshness.object_delta` + `object_delta_detail`. QG green; 11 unit tests (4 new) passing.
 - [ ] [BACKEND] P1. **Hang detection = control-plane existence + stale heartbeat** (NOT Cloud Monitoring) — reuse the
       `aggregated_list` / EC2 / Run-execution lists already fetched.
 - [ ] [BACKEND] P1. **Composite health status** (parent D.3) replacing `_vm_status` — VM 7-state + the
@@ -128,6 +145,26 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **Cloud Run jobs census made DYNAMIC** (slot 12): `deployment-api@9d50835`
+  (`deployment_api/routes/deployments_inventory.py`) — `build_inventory` now iterates the LIVE job set
+  (`cloud_run_status` keys, already fetched by `latest_execution_by_job`'s `run_v2.JobsClient.list_jobs`, no new API
+  call) and treats `CLOUD_RUN_JOBS` as a classification hint (stem match via `_match_registered_job`) rather than an
+  allow-list; an off-pattern job falls back to `classify_deployment_target(..., lifecycle_class=EPHEMERAL_BATCH)` (the
+  honest default) instead of being hidden. Degrades to the static registry with status="unknown" only when the live list
+  itself is empty (GCP call failed) — never an empty census. New regression test
+  `test_off_pattern_live_cloud_run_job_is_not_hidden` pins the fix; `test_build_inventory_classifies_vms_and_jobs`
+  updated for the dynamic (live-count, not registry-count) row count. Registry-vs-live diff: already quantified by this
+  plan's parent doc's 2026-07-08 live census ("~10-15 of ~48" off-pattern) — this worker slot's `gcloud` is
+  snap-confined/non-functional, so no fresh live diff was re-run here.
+- 2026-07-09 — **D.5 "Enrich the heartbeat" shipped** (slot 6): new `HostMetricsSampler`
+  (`unified_trading_library.lifecycle.host_metrics`, `unified-trading-library@6da762b3`) samples
+  cpu_pct/mem_pct/disk_pct/io_write_rate_bytes_sec/net_recv_rate_bytes_sec via psutil (no new dep) + a rolling-window
+  `mem_slope`; wired into `HeartbeatDaemon.heartbeat_once()` so it samples + stamps onto `entry.metadata` every
+  heartbeat tick (shard-level failure isolation — a sampler exception logs + skips the tick, never breaks it).
+  `deployment-service@a6881d1` adds the 6 fields to `DeploymentRegistryEntry` (0.0 defaults so pre-2026-07-09 registry
+  rows keep loading) + wires `heartbeat_cli.py`'s `_entry_to_registry` / `_registry_to_entry` / `_vm_payload` to carry
+  them. Out of scope for this todo (separate D.5 todos): `object_delta` (manifest lookup) and `workload_alive`
+  (`kill -0 CMD_PID`).
 - 2026-07-09 — Created from the LOCAL parent (`deployment_observability_expansion_2026_07_08.md`) after all 8 open
   questions were resolved. Backend v1 scope: kinds census + rich fields + composite/service work-health, all
   cheap/central/free (no Cloud Monitoring/CloudWatch, no per-workload instrumentation). Cost-per-target (WS-E) and typed
