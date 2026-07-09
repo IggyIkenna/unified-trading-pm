@@ -164,7 +164,7 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
       `test_defi_v2_covers_v1_pre_genesis_chain_cells`(v1 emits`venue=<PROTOCOL>`bare per the 2026-05 canonical naming
       SSOT, NOT`<PROTOCOL>-<CHAIN>`— filter now matches). Full`bash     scripts/quality-gates.sh` green (110s); 126 v2
       unit tests + 92 catalogue/wiring tests + 8 superset property tests pass.
-- [ ] **[PARKED — needs infra worker; do NOT dispatch to data_engineering]** [INFRA] P2. **Retire deployment-service v1
+- [ ] [INFRA] **[PARKED — needs infra worker; do NOT dispatch to data_engineering]** P2. **Retire deployment-service v1
       launcher path** — remove `launch-expected-universe-enumerator-vm.sh`, delete the `"expected-universe-enum-"` entry
       from `launcher_registry.py` + `vm_zombie_watchdog.py`; verify no live scheduler still references the prefix (repo:
       deployment-service; role: **infra** — cross-craft handoff). — 2026-07-06 slot-7 (data_engineering) PARKED with
@@ -206,6 +206,33 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
 
 ## Progress Log
 
+- **2026-07-09** — **-010 RE-DISPATCHED (24TH SLOT BOUNCE) — ROOT CAUSE OF THE 23RD-BOUNCE FIX FAILURE FOUND + FIXED**
+  (slot-3 data_engineering). Booted and received `v1_enumerator_dispatch_not_deletable-010` — the regen'd successor to
+  `-009` after the 23rd-bounce systemic fix (commit `8e4ea0058`, 2026-07-09T15:42:56Z) retagged todo #4 `[CODE]` →
+  `[INFRA]` in this doc. `-010`'s own title/brief correctly SHOW the `[INFRA]` tag text
+  (`queued_at 2026-07-09T15:46:54Z`, i.e. regen'd AFTER the fix landed) — yet the backlog row still carried
+  `dispatched_to: 3` and the `/boot` response still reported `"assigned_role":"data_engineering"`, meaning the retag did
+  NOT actually change routing. Root-caused by reading `agent-orchestrator/server/regen_backlog_from_plan.py`:
+  `_TAG_RE = re.compile(r"^\s*\[([A-Z]+)\]")` (line 691) only matches when `[TAG]` is the FIRST thing in the todo's
+  description string — and `_parse_open_todos` sets `description = m.group(1).strip()` from the raw
+  `- [ ] <description>` text with no stripping of leading bold/marker text. The 23rd-bounce edit placed `[INFRA]` AFTER
+  the `**[PARKED — needs infra worker; do NOT dispatch to data_engineering]**` prefix
+  (`- [ ] **[PARKED …]** [INFRA] P2. …`), so `_TAG_RE.match(description)` saw `**[PARKED` first, never matched `[A-Z]+`,
+  and `_task_role_from_tag` silently fell through to `plan_role` (this doc's frontmatter
+  `assigned_role: data_engineering`) — reproducing the exact bounce the fix was meant to close. **Fix applied THIS
+  bounce** (doc-only, no orchestrator code touched — same category of change as the 23rd-bounce fix): reordered todo
+  #4's line to `- [ ] [INFRA] **[PARKED — …]** P2. **Retire deployment-service v1 …` so `[INFRA]` is the first token
+  after the checkbox, matching `_TAG_RE` at position 0. `_PRIORITY_RE.search()` (P-tag extraction) is unaffected — it
+  uses `.search`, not `.match`, so it's position-independent and still finds `P2.` after the reordering. No other open
+  todo in this doc needs the same fix: todo #5 (`-009`, DELETE v1) carries `[CODE]` which is UNMAPPED in `_TAG_TO_ROLE`
+  (only `INFRA` / `DATA` / `BACKEND` / `UI` / `REVIEW` are mapped) and correctly falls through to the plan's
+  `data_engineering` role regardless of position, so it was never affected by this bug. Self-parked -010 via
+  `/skip-current-task` (craft-mismatch, established precedent) — the fix should take effect on the next `PlanRegenLoop`
+  tick / next dispatch of the regenerated todo-#4 task, watch for it landing on an `infra` slot next time instead of
+  bouncing back here. If it bounces again with `[INFRA]` still not routing, the bug is deeper than tag position (e.g.
+  `_TAG_TO_ROLE` map not being consulted at dispatch time at all, only at task-creation time when the role field is
+  first written and never re-read) — that would need an agent-orchestrator code fix, outside data_engineering craft
+  scope, and should route to an infra/backend worker via `/blocked` rather than another doc-only park.
 - **2026-07-09** — **-009 RE-DISPATCHED (23RD SLOT BOUNCE) — SYSTEMIC FIX APPLIED, SAME PARK** (slot-5
   data_engineering). Re-verified independently against a fresh `.tabs/5` pull (`instruments-service@f136eec0`,
   `deployment-service@a1bf966` on `live-defi-rollout`): prereq #3 (v2 venue-grain sentinel) confirmed landed
