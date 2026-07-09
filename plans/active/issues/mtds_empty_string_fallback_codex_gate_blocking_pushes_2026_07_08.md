@@ -178,3 +178,20 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
   noqa/fail-fast audit by someone with `instruments-service` write access) rather than the gate check.
   `instruments-service`'s `quality-gates.sh` remains red for STEP 5.101 pending that audit — this is the gate
   functioning as intended, not a bug to be routed around.
+- **2026-07-09** — Independently re-confirmed while trying to ship an unrelated BINANCE-FUTURES/BINANCE-DELIVERY
+  `instrument_id` `@LIN`/`@INV` canonicalization fix (`instrument_id_format_canonicalization_2026_07_08.md` finding 1;
+  new file `instruments-service/scripts/canonicalize_binance_futures_delivery_catalog_2026_07_09.py`, zero overlap with
+  the sites below). `bash scripts/quality-gates.sh --no-fix` on `instruments-service` still fails STEP 5.101: **live
+  count 377 vs. baseline 369** (8 over, not the 11-over/380 snapshot from the prior entry — some of that entry's 8 files
+  have since been fixed, but new sites appeared from other, later-merged commits, net movement 380→377, still over
+  baseline). Confirmed via direct re-run of
+  `unified-trading-pm/scripts/quality_gates/check_no_empty_string_fallback.py --workspace-root <ws> --scope instruments-service`,
+  and confirmed every offending file is CLEAN in `git status` (i.e. genuinely committed to `live-defi-rollout` HEAD, not
+  this session's or any sibling's uncommitted WIP): `scripts/reconcile_phantom_manifest_rows_all.py:564-568` (5 sites),
+  `scripts/reconcile_sports_blank_empty_reason_2026_06_24.py:229`,
+  `scripts/reconcile_tradfi_non_trading_day_captured_2026_06_26.py:375`,
+  `scripts/relabel_sports_no_provider_coverage_2026_06_21.py:174`. Did not attempt the per-site audit (out of scope for
+  the BINANCE task; no context on these 4 sports/tradfi/phantom-reconcile scripts). Net effect: **every quickmerge push
+  to `instruments-service` is still blocked**, including this session's fully-implemented, tested, real-GCS-verified
+  BINANCE canonicalization fix — left uncommitted in the working tree rather than force-pushed around the gate. Same
+  conclusion as the prior entries: real fix is the per-site noqa/fail-fast audit (Todo above), not a baseline edit.
