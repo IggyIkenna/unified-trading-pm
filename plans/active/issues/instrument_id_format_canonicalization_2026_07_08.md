@@ -711,7 +711,8 @@ state before acting (still multi-hour, 0-1 flat errors, not climbing) and script
   archive + REST-fallback paths emitted the pre-2026-07-08 `"{coin}-PERP"` shape; LIGHTER-ZKSYNC/PACIFICA-SOLANA emitted
   a bare base-asset string (`"BTC"`); EXTENDED-STARKNET emitted a bare base-asset `symbol` alongside an already-dash-
   joined-but-unmarked `instrument_id` (`"BTC-USD"`). **Fixed (code, all 5 venues' NATIVE REST/S3 write paths)**:
-  `market-tick-data-service@<pending quickmerge sha>` — `aster_adapter.py::_to_canonical_symbol`,
+  `market-tick-data-service@b416ffce` (confirmed on `origin/live-defi-rollout` via real `git fetch` +
+  `merge-base --is-ancestor`, not just local HEAD) — `aster_adapter.py::_to_canonical_symbol`,
   `adapters/hyperliquid_s3.py::_canonical_perp_symbol`, `adapters/_umi_lighter.py::_lighter_canonical_symbol`,
   `adapters/_umi_pacifica.py::_pacifica_canonical_symbol`, `adapters/_umi_extended.py::_extended_canonical_symbol`, plus
   `live/websocket_runner.py::live_tick_blob_path` now sanitizes the filename component (colon-laden live filenames no

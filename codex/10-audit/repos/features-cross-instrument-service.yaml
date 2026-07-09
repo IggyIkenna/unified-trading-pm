@@ -423,7 +423,7 @@ live_defi_readiness:
     "14":
       group: "D"
       criterion: ">=2 years representative history captured (full-window backfill)"
-      continuous_verifier: "cron:expected-universe-enumerator- + manifest spot-check"
+      continuous_verifier: "cron:expected-universe-v2- + manifest spot-check"
       status: "not_assessed"
       last_verified: null
       na_reason: null

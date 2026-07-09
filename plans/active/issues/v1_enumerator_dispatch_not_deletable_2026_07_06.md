@@ -164,27 +164,23 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
       `test_defi_v2_covers_v1_pre_genesis_chain_cells`(v1 emits`venue=<PROTOCOL>`bare per the 2026-05 canonical naming
       SSOT, NOT`<PROTOCOL>-<CHAIN>`— filter now matches). Full`bash     scripts/quality-gates.sh` green (110s); 126 v2
       unit tests + 92 catalogue/wiring tests + 8 superset property tests pass.
-- [ ] [INFRA] **[PARKED — needs infra worker; do NOT dispatch to data_engineering]** P2. **Retire deployment-service v1
-      launcher path** — remove `launch-expected-universe-enumerator-vm.sh`, delete the `"expected-universe-enum-"` entry
-      from `launcher_registry.py` + `vm_zombie_watchdog.py`; verify no live scheduler still references the prefix (repo:
-      deployment-service; role: **infra** — cross-craft handoff). — 2026-07-06 slot-7 (data_engineering) PARKED with
-      reason
-      `craft-mismatch: infra task (deployment-service       VM launcher + Cloud Scheduler/Run coordination) dispatched to data_engineering slot`.
-      Escalated via BLK-8b97bdfe, main-agent confirmed (2026-07-06): "self-park -004 ... Do NOT touch
-      launch-expected-universe-enumerator-vm.sh, launcher_registry.py, vm_zombie_watchdog.py, or Cloud Scheduler/Run
-      teardown." — **IMPORTANT for the infra worker who picks this up**: retiring the `expected-universe-enumerator-` /
-      `cron:expected-universe-enumerator-` prefix ALSO requires updating the `continuous_verifier` field in **19 codex
-      audit YAMLs** under `unified-trading-pm/codex/10-audit/repos/*.yaml` (each currently reads
-      `continuous_verifier: "cron:expected-universe-enumerator- + manifest spot-check"`). Enumerate with
-      `rg -l 'cron:expected-universe-enumerator-' unified-trading-pm/codex/10-audit/repos/`. Also review
-      `deployment-service/scripts/vm/launch-ec2-vm.sh` line 148
-      (`_register "expected-universe-enumerator" …       "eu-enum-" …`) — the AWS EC2 registration mirrors the GCP
-      prefix and needs the same treatment. — **Blocked-by note**: todo #3 above (v2 venue-grain
-      `EXPECTED_PRE_VENUE_LAUNCH` sentinel) is still `- [ ]`. If v1 is currently the sole producer of the venue-grain
-      sentinel row class in prod, retiring the v1 launcher path BEFORE #3 lands silently drops that row class from the
-      enumeration output — the exact "silent placeholder" class the honest-coverage model exists to eliminate. Infra
-      worker should confirm with data_engineering that #3 is landed OR that no live scheduler still invokes the v1
-      launcher, before completing the retirement.
+- [x] ✅ [INFRA] P2. **Retire deployment-service v1 launcher path** — remove
+      `launch-expected-universe-enumerator-vm.sh`, delete the `"expected-universe-enum-"` entry from
+      `launcher_registry.py` + `vm_zombie_watchdog.py`; verify no live scheduler still references the prefix (repo:
+      deployment-service; role: **infra** — cross-craft handoff). — 2026-07-09 slot-6 (infra):
+      deployment-service@f45f89a (delete launcher script) + @466f4c6 (registry entries + dead dispatch branch) +
+      @dc67a61 (restore TID251/RUF100 noqa dropped by prek autofix collateral, unrelated fix). Prereq #3 (v2 venue-grain
+      sentinel) confirmed landed before starting (instruments-service@980f329, see todo #3 above). Verified no live
+      Cloud Scheduler/Terraform job references the v1 prefix — only
+      `deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf` exists, no v1 equivalent. Removed: GCP
+      launcher script + `launcher_registry.py` `"expected-universe-enum-"` entry + `vm_zombie_watchdog.py`
+      `"expected-universe-enum-"` entry + `vm_zombie_watchdog_aws.py` `"eu-enum-"` entry + `launch-ec2-vm.sh`
+      `_register "expected-universe-enumerator" … "eu-enum-" …` AWS mirror + the now-unreachable
+      `expected-universe-enum` branch in `setup-data-pipeline-vm.sh` (v2 uses a different VM_TASK, unaffected). Also
+      updated the `continuous_verifier` field in the 19 codex audit YAMLs
+      (`cron:expected-universe-enumerator- + manifest spot-check` → `cron:expected-universe-v2- + manifest spot-check`,
+      this same commit — see PM commit below). Full `bash scripts/quality-gates.sh` green (65s), sentinel verified,
+      shipped via `quickmerge --agent --files`.
 - [ ] **[PARKED — prereqs #3 and #4 not landed]** [CODE] P2. **DELETE v1 dispatch surface from
       enumerate_expected_universe.py** — after the four todos above land: remove `_ENUMERATORS` dict, seven v1 functions
       (`_enumerate_tradfi` / `_enumerate_tradfi_indices` / `_enumerate_defi` / `_enumerate_defi_gas_fees` /
@@ -206,6 +202,31 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
 
 ## Progress Log
 
+- **2026-07-09** — **TODO #4 SHIPPED — infra worker finally routed correctly, 25 bounces later** (slot-6 infra,
+  `v1_enumerator_dispatch_not_deletable-010`, the 24th-bounce `[INFRA]`-tag-position fix landed and this dispatch was
+  the first to actually route to an `infra` slot instead of bouncing back to `data_engineering`). Fresh-pulled all
+  slot-6 repos; confirmed prereq #3 (v2 venue-grain sentinel) landed (`instruments-service@980f329`,
+  `_yield_v2_cefi/defi/prediction_pre_venue_launch_rows` present + wired). Confirmed no live Cloud Scheduler/Terraform
+  job references the v1 prefix (`deployment-service/terraform/gcp/` has `expected_universe_v2_scheduler.tf` only, no v1
+  equivalent — safe to retire). Removed the v1 GCP launcher script + the `"expected-universe-enum-"`/`"eu-enum-"`
+  registry entries from `launcher_registry.py`, `vm_zombie_watchdog.py`, `vm_zombie_watchdog_aws.py`, `launch-ec2-vm.sh`
+  (AWS mirror), and the now-dead `expected-universe-enum` dispatch branch in `setup-data-pipeline-vm.sh` — shipped as
+  `deployment-service@f45f89a` + `@466f4c6`. Also updated the `continuous_verifier` field in all 19 codex audit YAMLs
+  (`cron:expected-universe-enumerator-` → `cron:expected-universe-v2-`, this PM commit). **Self-inflicted detour, fixed
+  same session**: the `466f4c6` commit's prek ruff-autofix pass silently stripped two pre-existing `# noqa: TID251`
+  markers on `google.cloud`/`boto3` imports in `vm_zombie_watchdog.py`/`vm_zombie_watchdog_aws.py` as an unrelated side
+  effect (RUF100 "unused noqa" — the repo's default `pyproject.toml` ruff select doesn't enable TID251, but the isolated
+  STEP 5.95 ratchet checker (`check_ruff_rule_ratchet.py`) DOES select it explicitly, so the suppression is load-bearing
+  there). First re-run of `quality-gates.sh` caught this (STEP 5.95 failed: tid251 14 > baseline 13). Restored using the
+  established `# noqa: TID251,RUF100 — reason` double-code pattern already in use at
+  `deployment_service/backends/aws_census.py:39` (RUF100 suppresses ruff's own "unused" complaint under the local
+  default config) — shipped as `deployment-service@dc67a61`. Verified
+  `check_ruff_rule_ratchet.py --scope deployment-service` reports `tid251: 13 (== baseline)`, `dtz: 7 (== baseline)`
+  before re-running full QG (green, 65s, sentinel matched HEAD). **Lesson for future infra workers touching import lines
+  near an existing `# noqa: TID251` comment in this repo**: the local `ruff check`/prek hook alone is NOT sufficient to
+  validate a TID251 noqa — it will happily "fix" (strip) it as unused, since TID251 isn't in this repo's own pyproject
+  select. Always also run `check_ruff_rule_ratchet.py --scope <repo>` (or the full `quality-gates.sh` STEP 5.95) before
+  trusting a green `ruff check`.
 - **2026-07-09** — **-010 RE-DISPATCHED (24TH SLOT BOUNCE) — ROOT CAUSE OF THE 23RD-BOUNCE FIX FAILURE FOUND + FIXED**
   (slot-3 data_engineering). Booted and received `v1_enumerator_dispatch_not_deletable-010` — the regen'd successor to
   `-009` after the 23rd-bounce systemic fix (commit `8e4ea0058`, 2026-07-09T15:42:56Z) retagged todo #4 `[CODE]` →
