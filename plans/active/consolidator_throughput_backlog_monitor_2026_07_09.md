@@ -74,22 +74,23 @@ drift_direction: advance-code
 
 ## WS-1 — v1: backlog field + live session throughput (BUILD NOW)
 
-- [ ] [BACKEND] P1. **UTL backlog helper** — add `per_vm_shard_backlog(client, bucket, index_last_modified)` next to
-      `_per_vm_shards_exist` (manifest_writer `_state.py`): ONE list of `_index/per_vm/*.parquet`, return
-      `(pending_count, total_count)` where pending = shards with `last_modified` > the index's. Non-legacy shards only.
-      Single-walk-safe; export via the manifest_writer facade + a unit test.
-- [ ] [BACKEND] P1. **Endpoint field** — add `pending_shard_count: int | None` + `total_shard_count: int | None` to
-      `ConsolidatorAgHealth`; populate in `_ag_health` (reuse the index mtime already derived for
-      `last_successful_run_at`). Additive only (the freshness route reuses `consolidator_posture` — must not break it).
-      Include in `_mock_response`. Unit tests (pending>0 when shards newer than index; None when bucket resolution
-      fails).
-- [ ] [UI] P1. **Backlog display** — `pending_shard_count` on `ConsolidatorAssetGroup` (health.ts) + render "N shards
-      pending" per AG card (prominent when > 0). `pw:L2` on a mock AG with a pending backlog.
-- [ ] [UI] P1. **Live throughput sparkline** — accumulate the polled `pending_shard_count` per AG into a session rolling
-      window (~last 10 min); render a small recharts sparkline of backlog-over-time per card; derive + label "absorbed
-      this tick" from backlog drops. Honest caption ("this session · inferred from backlog deltas"). Load the `dataviz`
-      skill before writing chart code; reuse `chart-theme.ts`. `pw:L2` that the sparkline renders + updates on a 2nd
-      poll.
+- [x] 1. ✅ [BACKEND] P1. **UTL backlog helper** — `per_vm_shard_backlog(client, bucket, index_last_modified)` next to
+     `_per_vm_shards_exist` (manifest_writer `_state.py`): ONE `_index/per_vm/*.parquet` list, returns
+     `(pending, total)` where pending = non-legacy shards with `last_modified` STRICTLY AFTER the index's; missing/None
+     mtime → not pending (honest under-count). Exported via facade + top-level `__init__`/`__all__`. —
+     `unified-trading-library@da31ef2` + 5 unit tests (`test_per_vm_shard_backlog.py`), UTL QG green.
+- [x] 2. ✅ [BACKEND] P1. **Endpoint field** — `pending_shard_count` + `total_shard_count` on `ConsolidatorAgHealth`;
+     `_ag_health(..., include_backlog=True)` computes them via ONE `per_vm_shard_backlog` list (also yields shard
+     existence, so no double-list); gated opt-in so the `/freshness` reuse (`consolidator_posture`) pays no extra list.
+     `_mock_response` carries reps (cefi 2/6, defi 47/48). — `deployment-api@575810d` + 2 unit tests. (3 pre-existing
+     unrelated QG failures in `test_data_status_drilldown.py` — DeFi uniswap pool schema, another agent's code.)
+- [x] 3. ✅ [UI] P1. **Backlog display** — `pending_shard_count`/`total_shard_count` on `ConsolidatorAssetGroup`
+     (health.ts) + "backlog (pending shards) N / total" per AG card (prominent when > 0). — `deployment-ui@8eb4001`.
+     `pw:L2 ✓` cockpit.spec.ts O5 (cefi 47/48).
+- [x] 4. ✅ [UI] P1. **Live throughput sparkline** — session rolling window (~40 samples ≈ 10 min) accumulated from the
+     polls; per-AG recharts Area sparkline (`chart-theme` tones); "−N absorbed" derived from backlog drops; honest
+     caption ("this session · inferred from backlog deltas"). — `deployment-ui@8eb4001`. `dataviz` skill loaded
+     (single-series, no legend, 2px line). `pw:L2 ✓` O5 (sparkline accumulates across polls).
 - [ ] [REVIEW] P1. QG both repos green; **deploy deployment-api** (Cloud Build) so the live tab shows the real backlog,
       and cite `Evidence: cloudbuild=<id>` SUCCESS. Verify the live endpoint returns `pending_shard_count`.
 
