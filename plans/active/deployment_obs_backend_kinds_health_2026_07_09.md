@@ -92,11 +92,17 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ### Rich per-target fields + wire contract
 
-- [ ] [BACKEND] P1. Surface the **Tier-0 free wins** already fetched-and-discarded: the GCE aggregated-list returns
+- [x] ✅ [BACKEND] P1. Surface the **Tier-0 free wins** already fetched-and-discarded: the GCE aggregated-list returns
       machine_type/zone/labels/boot-disk but the inventory uses only `.keys()`
       (`deployments_inventory.py:_load_gcp_vm_entries`) — keep the values. The registry entry already carries
       `rows_in/rows_error/events_emitted/uptime_hours/machine_type/zone/health_status` — surface them (today only
-      `rows_out` → captured_progress is exposed).
+      `rows_out` → captured_progress is exposed). — deployment-api@517bbbe. `_load_gcp_vm_entries` now returns the GCE
+      aggregated-list join (`name -> machine_type/zone/labels/boot_disk_name/status`) alongside the registry entries;
+      threaded through `build_inventory` -> `_vm_item` -> `DeploymentItem` (new fields: `rows_in`, `rows_error`,
+      `events_emitted`, `uptime_hours` (derived `started_at`->`completed_at`/now), `machine_type`, `zone`,
+      `health_status` (raw GCE status), `boot_disk_name`, `labels`). All optional, default `None` for Cloud Run jobs /
+      an unjoined VM (honest absence). New unit test `test_build_inventory_surfaces_tier0_free_wins` pins both the
+      joined and unjoined paths. QG green (sentinel 517bbbe).
 - [ ] [BACKEND] P3. Recent error count / last log line — from the EXISTING teed GCS log / Cloud Logging (popover only);
       no new CloudWatch dependency.
 - [ ] [REVIEW] P2. Extend `DeploymentItem` in UAC/backend to the mock's optional rich-field shape (already in the UI
@@ -155,6 +161,18 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ## Progress Log
 
+- 2026-07-09 — **Tier-0 free wins surfaced** (slot 15): `deployment-api@517bbbe`
+  (`deployment_api/routes/deployments_inventory.py`) — the GCE aggregated-list join (`get_vm_instance_details`,
+  previously discarded down to just the running-VM-name set) is now threaded through `_load_gcp_vm_entries` ->
+  `build_inventory` -> `_vm_item` and surfaced on `DeploymentItem` alongside the registry entry's
+  `rows_in`/`rows_error`/`events_emitted` (already captured, only `rows_out` was wired) and a new derived
+  `uptime_hours`. New fields (`rows_in`, `rows_error`, `events_emitted`, `uptime_hours`, `machine_type`, `zone`,
+  `health_status`, `boot_disk_name`, `labels`) are all optional, defaulting to `None` for kinds without the underlying
+  source (Cloud Run jobs, a VM absent from the join) — honest absence, never fabricated. New unit test
+  `test_build_inventory_surfaces_tier0_free_wins` covers both the joined and unjoined paths plus Cloud Run job
+  None-defaults. Rebased cleanly onto two concurrent same-file landings from this session (`eda5be5` service-health
+  sub-taxonomy, `9d50835` dynamic Cloud Run census) — only a docstring merge conflict, resolved by keeping both
+  paragraphs. QG green (sentinel 517bbbe, 188s).
 - 2026-07-09 — **Service-health sub-taxonomy shipped** (slot 4): `deployment-api@eda5be5`
   (`deployment_api/routes/deployments_inventory.py`) — `ecs_service_health_status()` +
   `cloud_run_service_health_status()` implement the D.3 4-state set (`serving`/`scaled-to-zero`/`dead`/`degraded`) as
