@@ -272,14 +272,17 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
 - **Touching UI?** No Python tools (tsc/ESLint/Vitest/Playwright only); TS strict; **playwright gate** — no tick without
   `[UI]` + `pw:L2 ✓` + a cited regression spec. SSOT: `codex/06-coding-standards/ui-testing-layers.md`.
 - **Launching VMs / infra?** **No fire-and-forget** (STARTED <60s + ≥1 progress/hr + STOPPED/FAILED; verify T+10min);
-  launchers in `deployment-service/scripts/vm/` (name in `VM_PREFIX_TO_BUCKET` + `lifecycle_class`; zone
+  launchers in `deployment-service/scripts/vm/` (name MUST match a real `VM_PREFIX_TO_BUCKET` entry + `lifecycle_class`
+  — **grep the registry FIRST, never hand-roll a name**: unregistered = silently invisible in
+  deployment-ui/cockpit/Slack until someone goes looking, not a loud failure; prefer reusing/extending an existing
+  `launch-*.sh` over a new one, e.g. `launch-canonical-migration-vm.sh` for one-off migrations; zone
   `asia-northeast1-c`); per-VM shards `VM_NAME=<tag>` + `MANIFEST_PER_VM_SHARDS=true`; **pre-migration drain** (stop ALL
   VMs both clouds, consolidate, snapshot before any GCS cutover); every compute unit is a classified DEPLOYMENT TARGET
   (`classify_deployment_target`). **Backfill VMs default to SPOT (HARD RULE)**: every backfill/idempotent launcher
   provisions `--provisioning-model=SPOT` (~60-91% cheaper; idempotent shards re-run on preemption) — `--on-demand` (env
   `ON_DEMAND=true`) is the only opt-out; live/forward/cron/paper VMs + `--mode live` stay on-demand (preemption loses
-  live data); on-demand for backfill is a bug. SSOTs: `codex/05-infrastructure/spot-vms-for-backfill.md`,
-  `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
+  live data); on-demand for backfill is a bug. SSOTs: `codex/05-infrastructure/vm-launcher-runbook.md`,
+  `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko/Polygon.io) — do
   NOT reference; Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:

@@ -56,6 +56,21 @@ For VM naming rules see `codex/05-infrastructure/launcher-script-ssot.md`. For e
 (`--provisioning-model=SPOT`, `--on-demand` opt-out; live VMs stay on-demand) — see
 `codex/05-infrastructure/spot-vms-for-backfill.md`.
 
+**HARD RULE — never hand-roll a VM name; verify the registry FIRST, before launch, not after a failure.**
+`VM_PREFIX_TO_BUCKET` (`deployment-service/scripts/vm/vm_zombie_watchdog.py`) is the SSOT `classify_deployment_target()`
+longest-prefix-matches every VM name against; an unregistered prefix does **not** fail loudly at launch time — it just
+silently never appears in deployment-ui `/deployments`, `/cockpit`, Slack, or `/api/fleet/reconciliation` (surfaces as
+`UNKNOWN`, a classify-or-kill candidate) until someone goes looking. Real incident, 2026-07-09: an agent invented an ad
+hoc one-off migration VM name instead of reusing `launch-canonical-migration-vm.sh` (the existing
+`canonical-migration-{cefi,tradfi,defi,prediction,legacy}-` launcher for exactly this job class) — the VM ran and
+finished before the gap was caught, but it was invisible to every monitoring surface the whole time. **Before launching
+ANY new one-off/migration VM**: (1) check whether an existing `launch-*.sh` in this doc already covers the job —
+reuse/extend it, don't hand-roll; (2) if a genuinely new prefix is needed,
+`grep VM_PREFIX_TO_BUCKET deployment-service/scripts/vm/vm_zombie_watchdog.py` first and add a real `VmPrefixSpec` entry
+(shipped via quickmerge) before using that prefix — never launch first and register later. Full incident write-up:
+`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md` Progress Log, 2026-07-09 "real gap found in
+the VM launch itself" entry.
+
 ---
 
 ## 1. Infrastructure / Cron VMs
@@ -406,16 +421,17 @@ Forward-poll VMs run continuously (no end date). Self-delete on shutdown.
 
 ## Common Failure Patterns (All Launchers)
 
-| Failure                                   | Diagnosis                   | Fix                                                               |
-| ----------------------------------------- | --------------------------- | ----------------------------------------------------------------- |
-| `ERROR: No code tarball found`            | Tarballs not uploaded       | `bash create-code-tarballs.sh --asset-group X`                    |
-| VM spins up then immediately exits        | Startup script error        | `gsutil cat gs://.../vm-logs/{VM_NAME}/run.log`                   |
-| `PERMISSION_DENIED` on GCS write          | Missing IAM binding         | Check VM service account has `storage.objectCreator`              |
-| DEPLOYMENT_STARTED not emitted within 60s | Heartbeat sidecar failed    | Check vm-exec-with-gcs-tee.sh download from GCS                   |
-| `Unknown VM prefix` in watchdog           | New launcher not registered | Add prefix to `VM_PREFIX_TO_BUCKET` in vm_zombie_watchdog.py      |
-| VM running >4h (zombie)                   | Pipeline hung               | `gcloud compute instances delete {VM_NAME} --zone={ZONE} --quiet` |
-| Bucket name hardcoded (pre-B-011)         | Old launcher style          | Refactor to `${PROJECT}` pattern per `launcher-script-ssot.md`    |
-| SC2046 shellcheck warning                 | Unquoted flag substitution  | Use `EXTRA_FLAGS=()` array pattern                                |
+| Failure                                                          | Diagnosis                                                                               | Fix                                                                                     |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `ERROR: No code tarball found`                                   | Tarballs not uploaded                                                                   | `bash create-code-tarballs.sh --asset-group X`                                          |
+| VM spins up then immediately exits                               | Startup script error                                                                    | `gsutil cat gs://.../vm-logs/{VM_NAME}/run.log`                                         |
+| `PERMISSION_DENIED` on GCS write                                 | Missing IAM binding                                                                     | Check VM service account has `storage.objectCreator`                                    |
+| DEPLOYMENT_STARTED not emitted within 60s                        | Heartbeat sidecar failed                                                                | Check vm-exec-with-gcs-tee.sh download from GCS                                         |
+| `Unknown VM prefix` in watchdog                                  | New launcher not registered                                                             | Add prefix to `VM_PREFIX_TO_BUCKET` in vm_zombie_watchdog.py                            |
+| VM invisible in deployment-ui/cockpit/Slack (no error at launch) | Ad hoc name doesn't match any `VM_PREFIX_TO_BUCKET` prefix — silent, not a loud failure | grep the registry BEFORE naming; reuse an existing launcher instead of hand-rolling one |
+| VM running >4h (zombie)                                          | Pipeline hung                                                                           | `gcloud compute instances delete {VM_NAME} --zone={ZONE} --quiet`                       |
+| Bucket name hardcoded (pre-B-011)                                | Old launcher style                                                                      | Refactor to `${PROJECT}` pattern per `launcher-script-ssot.md`                          |
+| SC2046 shellcheck warning                                        | Unquoted flag substitution                                                              | Use `EXTRA_FLAGS=()` array pattern                                                      |
 
 ---
 
