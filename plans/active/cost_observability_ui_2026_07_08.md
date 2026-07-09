@@ -414,3 +414,28 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
     `:5183` net **$12,593.31** matches the bq probe **$12,593.32** (1-cent rounding) — the fix is correct against the
     source. Corrected the codex's stale "promo exhausted ~2026-06-20" note (promo is **active**, ~$2.5k/30d). The other
     audit findings (SKU dim, spot-vs-on-demand, AWS net/invoice, usage units) remain tracked P2/P3.
+- 2026-07-09 — **Post-completion review of the AO fleet's work + 4 robustness fixes (checkpoint reconciliation).** The
+  two AO plans (`cost_obs_backend_sku_usage_enrichment` + `cost_obs_ui_unified_breakdown`) shipped all 19 tasks with
+  both QGs green + Playwright 14/14. Reviewed each independently against **real billing data** (not just the checkboxes)
+  — most is genuinely good (merged table, gross/credit bifurcation, SKU dim surfacing the hidden Coldline #1 driver,
+  bucket volume + class split, VM machine specs, spot/on-demand). But 3 features were **green-in-tests yet broken on
+  real GCP data** — the fixtures used mock SKU strings that don't match the live regional naming. Fixed all, verified
+  live:
+  - **Waste detection flagged 0 rows → now 8.** (a) Matchers were exact/`endswith` but real SKUs carry a regional suffix
+    (`Static Ip Charge in Japan`) → substring match. (b) Waste is cheap by nature, so the top-N-by-cost cap hid it →
+    flagged rows now bypass the cap (resource rows 50→58). (c) Orphaned-disk used a disk-name==VM-name heuristic
+    (false-positived data disks) → now the disk's real Compute `users` attachment via new
+    `vm_utils.list_unattached_disk_names`. **deployment-api@`5739728`**.
+  - **Bucket `$/GB` read total(ops-dominated)/GB → `$733/GB` nonsense; now storage-SKU cost / stored GB** (real
+    ~$0.006/GB). Same commit.
+  - **"Top storage buckets" leaf was blank** (storage only computed for the By-bucket dimension, but the leaf is fed by
+    the resource dimension) → storage now computed for bucket-KIND rows in any dimension. Same commit.
+  - **Waste amount showed the credit-masked net (`$-0.0`) → now gross** (the honest cost of the idle resource / what
+    you'll pay when the promo ends). **deployment-ui@`9a8d567`**.
+  - **Verify:** full backend QG (76s, incl. new regional-SKU / cap-bypass /
+    storage-cost-$/GB / leaf / real-attachment
+    tests) + full UI QG green; vitest 12/12; Playwright cost **14/14**. Live `:8004`: waste **0→8** flags (7 idle IPs
+    incl. the regional ones + 1 orphaned disk), `$/GB`
+    **25.50→0.0061**, resource-dim bucket storage **0→10** populated. Root-cause pattern for the reviewer's log: **green
+    tests ≠ works on real data** when fixtures don't mirror the live SKU naming — every fix here is now covered by a
+    test asserting the real regional strings.
