@@ -71,11 +71,14 @@ full `quality-gates.sh` runs for `unified-trading-library`. Both hit `/tmp` disk
       pytest invocation, instead of relying on the default `/tmp` tmpfs — the root partition has ~95G free vs `/tmp`'s
       2G, and this is a one-line env-var change with no other side effects (verified working via manual `TMPDIR=`
       override this session) (repo: unified-trading-pm). — unified-trading-pm@0e29e6d81
-- [ ] [INFRA] P3. Consider whether `/tmp` should be resized (a host/VM-image change, e.g. `mount -o remount,size=` or
+- [x] ✅ [INFRA] P3. Consider whether `/tmp` should be resized (a host/VM-image change, e.g. `mount -o remount,size=` or
       the underlying cloud instance's tmpfs config) given N-way concurrent slot QG runs are an expected steady state,
       not an edge case — lower priority than the TMPDIR redirect since that alone resolves the contention without
       needing a host-level change (repo: unified-trading-pm, infra decision — needs operator input on the VM's tmpfs
-      sizing options).
+      sizing options). — **Resolved: leave open, no host-level tmpfs resize** (operator decision via /blocked,
+      2026-07-08: the P2 `TMPDIR` redirect already resolves the practical contention without touching shared
+      host/VM-image config; a `mount -o remount,size=` affecting every slot on the shared VM is exactly the kind of
+      shared-infra/irreversible-adjacent change that should not be self-authorized by an agent).
 - [ ] [INFRA] P3. Consider a periodic `find /tmp/pytest-of-ubuntu -maxdepth 1 -mmin +60 -exec rm -rf {} +` cron (or
       equivalent) as a belt-and-suspenders cleanup for whichever stale scratch dirs the TMPDIR redirect above doesn't
       eliminate (e.g. from tools other than pytest that still default to `/tmp`) (repo: unified-trading-pm).
@@ -94,3 +97,8 @@ full `quality-gates.sh` runs for `unified-trading-library`. Both hit `/tmp` disk
   `quality-gates.sh` passes (warn-only pre-existing drift unrelated to this change). A caller-exported `TMPDIR` still
   wins (verified). P3 items (tmpfs resize, stale-dir cron) left open — operator-input / belt-and-suspenders, lower
   priority per the doc's own ordering.
+- **2026-07-08** — Tmpfs-resize P3 item closed by slot-2: operator answered the prior /blocked question with option A —
+  leave open, no host-level `/tmp` resize. The P2 `TMPDIR` redirect (unified-trading-pm@0e29e6d81) already resolves the
+  practical cross-slot contention; a shared-VM mount resize needing root is an irreversible-adjacent, shared-infra
+  change the operator wants to gate explicitly rather than have an agent self-authorize. No code change for this item.
+  Remaining open item: the stale-dir cron (P3, belt-and-suspenders).
