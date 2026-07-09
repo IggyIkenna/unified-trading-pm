@@ -173,81 +173,89 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 ### Phase A — done-API dirty gate (PATH 1)
 
-- [ ] [CODE] P0. **Done-gate in the done endpoint** — in `agent-orchestrator/server/routes/slots_worker.py` (done
-      handler, ~line 800s): before marking the task done, run `worktree_clean_check.check_slot_clean` over every repo in
-      the slot dir (after `restore_generated_artifacts`); if dirty → do NOT mark done; return a structured 409
+- [x] [CODE] P0. ✅ agent-orchestrator@5b07bd3 — **Done-gate in the done endpoint** — in
+      `agent-orchestrator/server/routes/slots_worker.py` (done handler, ~line 800s): before marking the task done, run
+      `worktree_clean_check.check_slot_clean` over every repo in the slot dir (after `restore_generated_artifacts`); if
+      dirty → do NOT mark done; return a structured 409
       `{dirty: [{repo, staged, unstaged, untracked}], required_action: "quickmerge-or-stash"}`; task stays `dispatched`.
       Idempotent re-call after cleanup accepts.
-- [ ] [CODE] P0. **Worker contract** — update `agent-orchestrator/agents/worker.md` (+ `server/prompts.py` render vars
-      if needed): done preconditions — push every touched repo via QG+quickmerge BEFORE `/done`; on 409 → important WIP
-      → quickmerge it; unimportant → slot-tagged `git stash push --include-untracked -m slot-<N>-…`, report the stash in
-      the retry payload; never delete/reset WIP.
-- [ ] [CODE] P0. **Boot prompt bans ask-permission turns** — observed (slot 12, 07:50Z): a freshly-spawned worker
-      finished its memory-housekeeping preamble and ENDED ITS TURN with _"should I proceed with STEP 0 … and then
-      /boot?"_ — an interactive Claude that ends a turn is inert, so the spawn is wasted until a kick lands. Harden the
-      worker boot prompt + `agents/worker.md`: NO human watches this pane — never end a turn with a question or
-      permission-ask; STEP-0 reads and the CLAUDE.md memory-reset are silent preamble, not discussion; the FIRST turn
-      must reach `/boot` (or arm the idle heartbeat loop when no task, as slot 4 correctly does) in the SAME turn.
-      Evidence gate — sampled fresh spawns reach `/boot` on turn 1 with zero permission-ask turns.
-- [ ] [CODE] P1. **Stash-notify** — done-retry payload carries `stashed: [{repo, stash_ref, files}]`; backend logs
-      `slot_stash_on_done` activity + fires a Slack notification (`server/notifications/`) with slot, task id, repo,
-      stash ref, file list — so every stash is visible and root-caused (target = zero stashes steady-state).
+- [x] [CODE] P0. ✅ agent-orchestrator@5b07bd3 — **Worker contract** — update `agent-orchestrator/agents/worker.md` (+
+      `server/prompts.py` render vars if needed): done preconditions — push every touched repo via QG+quickmerge BEFORE
+      `/done`; on 409 → important WIP → quickmerge it; unimportant → slot-tagged
+      `git stash push --include-untracked -m slot-<N>-…`, report the stash in the retry payload; never delete/reset WIP.
+- [x] [CODE] P0. ✅ agent-orchestrator@5b07bd3 — **Boot prompt bans ask-permission turns** — observed (slot 12, 07:50Z):
+      a freshly-spawned worker finished its memory-housekeeping preamble and ENDED ITS TURN with _"should I proceed with
+      STEP 0 … and then /boot?"_ — an interactive Claude that ends a turn is inert, so the spawn is wasted until a kick
+      lands. Harden the worker boot prompt + `agents/worker.md`: NO human watches this pane — never end a turn with a
+      question or permission-ask; STEP-0 reads and the CLAUDE.md memory-reset are silent preamble, not discussion; the
+      FIRST turn must reach `/boot` (or arm the idle heartbeat loop when no task, as slot 4 correctly does) in the SAME
+      turn. Evidence gate — sampled fresh spawns reach `/boot` on turn 1 with zero permission-ask turns.
+- [x] [CODE] P1. ✅ agent-orchestrator@5b07bd3 — **Stash-notify** — done-retry payload carries
+      `stashed: [{repo, stash_ref, files}]`; backend logs `slot_stash_on_done` activity + fires a Slack notification
+      (`server/notifications/`) with slot, task id, repo, stash ref, file list — so every stash is visible and
+      root-caused (target = zero stashes steady-state).
 
 ### Phase B — dead-worker resume (PATH 2)
 
-- [ ] [CODE] P0. **Dead+dirty+not-done classifier → resume-pending** — in `server/worker_liveness_watchdog.py`: when a
-      slot's session is dead (tmux gone / pane dead) with `current_task` not done AND the slot dir is dirty, mark the
-      slot resume-pending (persisted on SlotRow) instead of the plain killed→fresh path. Measured verdict only (session
-      liveness + task row), per async-wait discipline.
-- [ ] [CODE] P0. **Resume-respawn path** — AutoSpawn (or the watchdog respawn) spawns the resume-pending slot with
-      `resume_session_id = SlotRow.claude_session_id` (`tmux_spawn.spawn` already supports it — same cwd +
-      CLAUDE_CONFIG_DIR keyed by session name); task stays `dispatched_to` the slot; `resume_nudge` = "you died mid-task
-      <id>; your WIP is intact in the worktree — finish it, push via QG+quickmerge, then POST /done". **Skip
-      `resolve_dirty_state` entirely on this path** (`autospawn.py:1091-1112` gate becomes lifecycle-aware).
-- [ ] [CODE] P1. **Bound the resume loop** — max 2 resume attempts per death episode (counter on SlotRow, reset on task
-      done); on exhaustion fall back to Phase-C preserve + fresh spawn + requeue (mirrors the watchdog G2b single-resume
-      pattern, `worker_liveness_watchdog.py:297`).
-- [ ] [CODE] P1. **tmux_pruner respects resume-pending** — `server/tmux_pruner.py:225-228` currently requeues a dead
-      slot's task (`status=queued, dispatched_to=None`); it must leave a resume-pending slot's task dispatched (or
-      requeue pinned `target_slot=<N>, affinity=high` until attempts exhaust).
-- [ ] [CODE] P1. **Spawn success = SUBMITTED, not delivered** — `_boot_landed` (`server/tmux_spawn.py:763-776`)
-      additionally verifies the prompt left the input box (spinner/first-output present, or the input line no longer
-      holds the marker; optionally confirm the worker's `/boot` POST within T). Retry the submit (`C-m`) once before
-      failing the spawn. Without this, died-vs-working classification (Phase B trigger) is untrustworthy.
+- [x] [CODE] P0. ✅ agent-orchestrator@5b07bd3 — **Dead+dirty+not-done classifier → resume-pending** — in
+      `server/worker_liveness_watchdog.py`: when a slot's session is dead (tmux gone / pane dead) with `current_task`
+      not done AND the slot dir is dirty, mark the slot resume-pending (persisted on SlotRow) instead of the plain
+      killed→fresh path. Measured verdict only (session liveness + task row), per async-wait discipline.
+- [x] [CODE] P0. ✅ agent-orchestrator@5b07bd3 — **Resume-respawn path** — AutoSpawn (or the watchdog respawn) spawns
+      the resume-pending slot with `resume_session_id = SlotRow.claude_session_id` (`tmux_spawn.spawn` already supports
+      it — same cwd + CLAUDE_CONFIG_DIR keyed by session name); task stays `dispatched_to` the slot; `resume_nudge` =
+      "you died mid-task <id>; your WIP is intact in the worktree — finish it, push via QG+quickmerge, then POST /done".
+      **Skip `resolve_dirty_state` entirely on this path** (`autospawn.py:1091-1112` gate becomes lifecycle-aware).
+- [x] [CODE] P1. ✅ agent-orchestrator@5b07bd3 — **Bound the resume loop** — max 2 resume attempts per death episode
+      (counter on SlotRow, reset on task done); on exhaustion fall back to Phase-C preserve + fresh spawn + requeue
+      (mirrors the watchdog G2b single-resume pattern, `worker_liveness_watchdog.py:297`).
+- [x] [CODE] P1. ✅ agent-orchestrator@5b07bd3 — **tmux_pruner respects resume-pending** —
+      `server/tmux_pruner.py:225-228` currently requeues a dead slot's task (`status=queued, dispatched_to=None`); it
+      must leave a resume-pending slot's task dispatched (or requeue pinned `target_slot=<N>, affinity=high` until
+      attempts exhaust).
+- [x] [CODE] P1. ✅ agent-orchestrator@5b07bd3 — **Spawn success = SUBMITTED, not delivered** — `_boot_landed`
+      (`server/tmux_spawn.py:763-776`) additionally verifies the prompt left the input box (spinner/first-output
+      present, or the input line no longer holds the marker; optionally confirm the worker's `/boot` POST within T).
+      Retry the submit (`C-m`) once before failing the spawn. Without this, died-vs-working classification (Phase B
+      trigger) is untrustworthy.
 
 ### Phase B2 — wedged-ALIVE workers (the slot-3 zombie class; 2nd sweep findings §1.6-1.9)
 
-- [ ] [CODE] P0. **Dispatch-ACK contract** — a task handed out in a boot/heartbeat response records `offered_at`; if the
-      worker shows no ack/progress within T (progress event, spinner, or context growth), the dispatch is reconciled:
-      task auto-returns to `queued` (pinned `target_slot` per Phase B) + `slot_dispatch_unacked` activity. Kills the
-      zombie-dispatch class (slot 3: `dispatched` >1h, worker idle in-pane, zero progress events).
-- [ ] [CODE] P0. **Kick-failure escalation → kill + resume** — after K consecutive `worker_kick_failed` on a live
-      session (or dispatched-task-no-progress past T), stop kicking: kill the wedged session and respawn via the Phase-B
-      `--resume` path (context preserved). Fix `maybe_auto_respawn_stuck_slot` (`_respawn.py:141-266`): (a) it currently
-      SKIPS `status=working` slots — the exact zombie state; (b) when it fires it must `--resume` when a task is in
-      flight, not fresh-spawn.
-- [ ] [CODE] P1. **One verified-submit helper for every pane injection** — extract a shared
-      `submit_to_pane(session, text)` (send-keys `-l`, verify the input box cleared / spinner appeared, single retry)
-      and use it in `_kick_session` (`worker_liveness/__init__.py:220-232`), `tmux_spawn._submit`, and any messaging
-      path; also disambiguate `classify_pane`'s spinner regex vs past-tense `✻ Worked for Xs` (its own comment flags it)
-      so working/frozen/idle verdicts are truthful. Evidence gate — `worker_kick_failed` with `post_kick=frozen` drops
-      to ~0 in the activity stream.
-- [ ] [CODE] P1. **Liveness-signal integrity** — only worker-originated signals (`/boot`, `/heartbeat`, `/progress`,
-      `/done`) plus a GENUINE active-spinner observation may refresh `last_ping`; audit + fix the non-worker writers
-      (`assign_task_to_slot` dispatch bump, `_respawn.py:349`, spinner branch false-positives). Regression test — a
-      frozen-pane slot with a stale worker trips heartbeat-silence within the watchdog window.
-- [ ] [CODE] P1. **Worker messaging goes through the outbox, not raw tmux typing** — find the depositor(s) of the
-      unsubmitted input-box instructions (`check again`, `stop the loop` on slot 1, `check on the poll loop status` on
-      slot 4 — live 12:40Z survey; `file the CLAUDE.md fix as a plan todo`). Server-side audit (12:40Z) already clears
-      the server: the ONLY free-text pane typer is `_kick_session` (fixed strings) — `/api/slots/{id}/message` correctly
-      uses the outbox — so the depositors are OUTSIDE the server (main-agent Bash `tmux send-keys` / operator dashboard
-      terminals). Route them through the pending-messages outbox (`take_pending_messages`, drained at boot/heartbeat) or
-      the verified-submit helper; add the ban to `agents/main.md`; optionally add a pane-deposit detector
-      (frozen-with-text that matches no kick text → `pane_text_deposited` activity) so future depositors self-identify.
-      NOTE — an unsubmitted deposit is LOST OPERATOR INTENT (slot 1's `stop the loop` never executed), not just noise.
-- [ ] [CODE] P2. **Spawn-vs-respawn TOCTOU** — `autospawn_failed: tmux session orch-slot-4 already exists` — re-check
-      `has_session` inside the spawn (or serialize respawn ownership between kicker-respawn and AutoSpawn); treat an
-      existing live session as a benign skip, not a failure.
+- [x] [CODE] P0. ✅ agent-orchestrator@5b07bd3 — **Dispatch-ACK contract** — a task handed out in a boot/heartbeat
+      response records `offered_at`; if the worker shows no ack/progress within T (progress event, spinner, or context
+      growth), the dispatch is reconciled: task auto-returns to `queued` (pinned `target_slot` per Phase B) +
+      `slot_dispatch_unacked` activity. Kills the zombie-dispatch class (slot 3: `dispatched` >1h, worker idle in-pane,
+      zero progress events).
+- [x] [CODE] P0. ✅ agent-orchestrator@5b07bd3 — **Kick-failure escalation → kill + resume** — after K consecutive
+      `worker_kick_failed` on a live session (or dispatched-task-no-progress past T), stop kicking: kill the wedged
+      session and respawn via the Phase-B `--resume` path (context preserved). Fix `maybe_auto_respawn_stuck_slot`
+      (`_respawn.py:141-266`): (a) it currently SKIPS `status=working` slots — the exact zombie state; (b) when it fires
+      it must `--resume` when a task is in flight, not fresh-spawn.
+- [x] [CODE] P1. ✅ agent-orchestrator@5b07bd3 — **One verified-submit helper for every pane injection** — extract a
+      shared `submit_to_pane(session, text)` (send-keys `-l`, verify the input box cleared / spinner appeared, single
+      retry) and use it in `_kick_session` (`worker_liveness/__init__.py:220-232`), `tmux_spawn._submit`, and any
+      messaging path; also disambiguate `classify_pane`'s spinner regex vs past-tense `✻ Worked for Xs` (its own comment
+      flags it) so working/frozen/idle verdicts are truthful. Evidence gate — `worker_kick_failed` with
+      `post_kick=frozen` drops to ~0 in the activity stream.
+- [x] [CODE] P1. ✅ agent-orchestrator@5b07bd3 — **Liveness-signal integrity** — only worker-originated signals
+      (`/boot`, `/heartbeat`, `/progress`, `/done`) plus a GENUINE active-spinner observation may refresh `last_ping`;
+      audit + fix the non-worker writers (`assign_task_to_slot` dispatch bump, `_respawn.py:349`, spinner branch
+      false-positives). Regression test — a frozen-pane slot with a stale worker trips heartbeat-silence within the
+      watchdog window.
+- [x] [CODE] P1. ✅ agent-orchestrator@5b07bd3 — **Worker messaging goes through the outbox, not raw tmux typing** —
+      find the depositor(s) of the unsubmitted input-box instructions (`check again`, `stop the loop` on slot 1,
+      `check on the poll loop status` on slot 4 — live 12:40Z survey; `file the CLAUDE.md fix as a plan todo`).
+      Server-side audit (12:40Z) already clears the server: the ONLY free-text pane typer is `_kick_session` (fixed
+      strings) — `/api/slots/{id}/message` correctly uses the outbox — so the depositors are OUTSIDE the server
+      (main-agent Bash `tmux send-keys` / operator dashboard terminals). Route them through the pending-messages outbox
+      (`take_pending_messages`, drained at boot/heartbeat) or the verified-submit helper; add the ban to
+      `agents/main.md`; optionally add a pane-deposit detector (frozen-with-text that matches no kick text →
+      `pane_text_deposited` activity) so future depositors self-identify. NOTE — an unsubmitted deposit is LOST OPERATOR
+      INTENT (slot 1's `stop the loop` never executed), not just noise.
+- [x] [CODE] P2. ✅ agent-orchestrator@5b07bd3 — **Spawn-vs-respawn TOCTOU** —
+      `autospawn_failed: tmux session orch-slot-4 already exists` — re-check `has_session` inside the spawn (or
+      serialize respawn ownership between kicker-respawn and AutoSpawn); treat an existing live session as a benign
+      skip, not a failure.
 - [ ] [CODE] P1. **Context lifecycle for long-running agents (main + review)** — operator 2026-07-09: these sessions
       ideally run for days, which the model isn't designed for; today the only control is honor-system self-compact
       guidance (`agents/main.md` "run /compact at >~70%") while the backend's pressure signal (`derive_context_pressure`
@@ -285,22 +293,22 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 ### Phase C — preserve-on-handoff only + identity-correct orphan commit
 
-- [ ] [CODE] P0. **Lifecycle-gate the pre-spawn dirty resolution** — `autospawn.py` `_do_spawn`: run
-      `resolve_dirty_state` ONLY when the slot has no in-flight task (previous task done or none) — i.e. the
-      done→new-work handoff; the resume path (Phase B) bypasses it.
-- [ ] [CODE] P0. **Fix the orphan-WIP commit** — `server/worktree_clean_check/_orphan.py:97-163`: drop the
-      `-c user.name="agent-orchestrator (orphan-wip)"` override; commit with the slot clone's OWN worktree identity
-      (`<canon> [slot-N·host]` — stamped by setup; re-stamp defensively if absent) so attribution tracks the owning
-      slot; keep predecessor agent id + slot in the body and add an `Orphan-WIP: slot-<N>` trailer; add `--no-verify`
-      (preservation commit to `wip-preserve/` is not a QG boundary; FM2 wiped-index/mass-delete guard stays in code at
-      `_wiped_index.py`).
-- [ ] [CODE] P2. **Truthful quarantine detail** — `_resolve.py:133-142`: the blanket detail string
-      `"all dirty repos refused (FM2 wiped-index/mass-delete guard)"` masked the hook failure for days; surface the
-      first per-repo error line in the outcome `detail`, the `slot_dirty_state_resolved` activity, and the Slack
-      quarantine alert.
-- [ ] [CODE] P2. **Stop doomed slots eating spawn budget** — move a cheap dirty/branch pre-check into `_should_spawn`
-      (`autospawn.py:1507`) or exclude failed spawns from the budget so quarantined slots no longer starve clean idle
-      slots into `queue_satisfied` skips (`autospawn.py:1493-1528`).
+- [x] [CODE] P0. ✅ agent-orchestrator@5b07bd3 — **Lifecycle-gate the pre-spawn dirty resolution** — `autospawn.py`
+      `_do_spawn`: run `resolve_dirty_state` ONLY when the slot has no in-flight task (previous task done or none) —
+      i.e. the done→new-work handoff; the resume path (Phase B) bypasses it.
+- [x] [CODE] P0. ✅ agent-orchestrator@5b07bd3 — **Fix the orphan-WIP commit** —
+      `server/worktree_clean_check/_orphan.py:97-163`: drop the `-c user.name="agent-orchestrator (orphan-wip)"`
+      override; commit with the slot clone's OWN worktree identity (`<canon> [slot-N·host]` — stamped by setup; re-stamp
+      defensively if absent) so attribution tracks the owning slot; keep predecessor agent id + slot in the body and add
+      an `Orphan-WIP: slot-<N>` trailer; add `--no-verify` (preservation commit to `wip-preserve/` is not a QG boundary;
+      FM2 wiped-index/mass-delete guard stays in code at `_wiped_index.py`).
+- [x] [CODE] P2. ✅ agent-orchestrator@5b07bd3 — **Truthful quarantine detail** — `_resolve.py:133-142`: the blanket
+      detail string `"all dirty repos refused (FM2 wiped-index/mass-delete guard)"` masked the hook failure for days;
+      surface the first per-repo error line in the outcome `detail`, the `slot_dirty_state_resolved` activity, and the
+      Slack quarantine alert.
+- [x] [CODE] P2. ✅ agent-orchestrator@5b07bd3 — **Stop doomed slots eating spawn budget** — move a cheap dirty/branch
+      pre-check into `_should_spawn` (`autospawn.py:1507`) or exclude failed spawns from the budget so quarantined slots
+      no longer starve clean idle slots into `queue_satisfied` skips (`autospawn.py:1493-1528`).
 
 ### Phase D — slot commit identity, fleet-wide
 
@@ -352,6 +360,18 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 ## 7. Progress Log
 
+- 2026-07-09 ~15:15Z — **Phases A + B + B2 (6/7) + C SHIPPED**: `agent-orchestrator@5b07bd3` (quickmerge → LDR; QG
+  green, 1137 tests incl. 12 new lifecycle tests in `tests/test_task_lifecycle_done_gate_resume.py`). The commit itself
+  carries the fixed attribution `ikennaigboaka [slot-16·planning]` — first production proof of the Phase-D identity
+  chain. Notes: (a) B2 "pane-deposit detector" sub-item was optional — skipped (the main.md ban + the server-side audit
+  shipped); (b) the B2 context-lifecycle todo is the remaining open Phase-B2 item; (c) Phase-D todo "AO-side
+  clone/repair paths stamp identity" is satisfied BY DELEGATION — `server/worktree_setup.py` bootstrap/reset invoke
+  `setup-tab-worktrees.sh`, whose provision path now ends with `check-slot-commit-identity.sh --fix --slot N`. Live
+  findings folded in: the planning VM's GLOBAL `slotIdentity.name` was itself label-polluted ("ikennaigboaka
+  [slot-0·human-planning]") — the concat source of every mangled name on this host; the shared lib now SANITIZES canon
+  (strips " [label·host]") and adds `git config --global slotIdentity.host` as a host source for interactive shells (env
+  still wins for fleet processes); this host repaired (`slotIdentity.name=ikennaigboaka`, `slotIdentity.host=planning`).
+  Checker audit of this host: 419 repos, 117 identity-drifted (fix scheduled in VERIFY).
 - 2026-07-09 — Plan drafted from the live investigation (quarantine deadlock chain, resume gap, identity-hook stale
   derivation confirmed with file:line + activity-log evidence). Awaiting operator review → flip `status: active`.
 - 2026-07-09 13:46Z — Operator approved; `status: active`. Execution claimed SLOT 16: `POST /api/slots/16/pause`
