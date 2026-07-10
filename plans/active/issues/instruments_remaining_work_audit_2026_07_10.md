@@ -637,9 +637,9 @@ Tooling / infra / ML-training / strategy-research items that don't fit the above
 
 **UPDATE 2026-07-10**: all 15 genuinely-resolved docs below have now been re-verified a SECOND time and their `status:`
 frontmatter flipped for real (`unified-trading-pm@8f15f8233`). **One of the original 16 was NOT flipped —
-`bybit_spot_manifest_stray_captures_2026_07_07.md` is a real, still-open gap**, moved back into §2 MANIFEST_COVERAGE
+`bybit_spot_manifest_stray_captures_2026_07_07.md` is a real, still-open gap**, moved back into §2 MANIFEST*COVERAGE
 below: its checkboxes claimed the 53,785-row PERPETUAL relabel and 53,934-row spot-nonsense delete were done, citing
-only that the fix scripts were _shipped_ — a live production manifest read (2026-07-10) found the real row counts
+only that the fix scripts were \_shipped* — a live production manifest read (2026-07-10) found the real row counts
 byte-identical to the original 2026-07-07 diagnosis, and no pre-apply backup snapshot exists at either expected path,
 meaning `--apply` was never actually run. The checkboxes were marked done based on "script exists" not "script executed"
 — a real discrepancy the second verification pass caught before flipping it.
@@ -797,17 +797,69 @@ the source docs if this list is used for dispatch planning.
   HARD-RULE-adjacent risk, distinct from the expected/normal shared-dirty-tree contention this session's sub-agent brief
   already anticipated).
 
+- 2026-07-10 (later still): **`wf_60ecfd13-752` (P0 wave) COMPLETE — 6/6 agents returned, honest mixed outcome, no
+  false-done claims.**
+  1. **Turbo API 0/0 — mostly fixed.** Root cause was 2 distinct bugs: (a) the `/turbo` staleness gate read a
+     non-existent `meta.updated` attribute instead of `meta.last_modified`, so a frozen rollup blob (stale since
+     2026-07-05, rollup-worker Scheduler outage) never triggered on-demand fallback — already fixed pre-session by
+     `deployment-api@3847d6f`, now confirmed live; (b) SPARK-ETHEREUM stuck on a stale
+     `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` flag despite 7,405 real captured rows, + 5 LST venues with zero
+     `DEFI_VENUE_DATA_TYPE_CAPABILITIES` entries despite real captured data — fixed `unified-api-contracts@92b1d1a8`
+     with a 4-test regression class. New smaller finds, not yet fixed: PUFFER-ETHEREUM found=0 vs captured=21;
+     HYPERLIQUID/ASTER confirmed genuinely undeclared in `ALL_DEFI_VENUES` — filed as a new P1 (distinct CEFI/DEFI
+     axis-model design question).
+  2. **CeFi monotonicity alerting — fixed.** Two distinct findings: the "dark venue" claim was a stale rename artifact
+     (LIGHTER/PACIFICA/EXTENDED re-keyed to `*-ZKSYNC`/`*-SOLANA`/`*-STARKNET` 2026-06-25, new keys have unbroken
+     captures — no real outage); the OOM was real (`uts-prod-instruments-service-cefi-t1-recon` failed 100% of 11
+     straight days) and fixed by bumping 2cpu/4Gi→8cpu/16Gi, verified via a real `gcloud run jobs execute --wait`
+     success (`uts-prod-instruments-service-cefi-t1-recon-jt7w8`, 1m2.14s). Full alerting path shipped (UTL event
+     constant → UAC `DP-CATALOG-002` → `log_event()` → alerting-service notifier) across 6 repos. Deferred: generalizing
+     `_enforce_defi_monotonicity` into `venue_core.py` (real live-file conflict with a concurrent sibling workflow all
+     session).
+  3. **is-daily-enum-{prediction,sports} crash — STILL OPEN, no fix landed.** Real actionable lead found: the
+     already-landed UTL `exc_info` fix (`unified-trading-library@b7925334`) is present in the current UTL `:latest`
+     image but the DEPLOYED `instruments-service:latest` image's Dockerfile still pins an older UTL base digest — **this
+     is the same class of stale-deployed-image gap independently found by `wf_860fb2ae-54e` for `is-daily-enum-cefi`**
+     (pinned to a pre-`@LIN`/`@INV`-fix build). A local repro (`daily_is_enumeration.py --asset-group prediction`) was
+     still running in the background when the agent's dispatch window closed — no traceback captured yet, root cause not
+     fully confirmed.
+  4. **59-bug smoketest — substantial real progress, 9 todos flipped with commit-sha evidence** across
+     `unified-api-contracts@42ce2de3`, `instruments-service@9b0c1095`, `market-tick-data-service@f4a118be`,
+     `unified-trading-pm@185c7397d`. Real fixes: Polymarket order-book schema (`[[price,size]]`→`[{price,size}]`, was
+     crashing every real fetch), 7 DeFi venues flipped pipeline→live phase, Curve factory-pool undercount (49 vs real
+     2,372 pools — switched to Curve's combined "all" endpoint), SolBlaze dead-endpoint fix (live production path, not
+     dead code). Deliberately deferred: HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT registration (needs a quiet window — same
+     UAC registry files under continuous concurrent edit all session).
+  5. **Instruments Completion Tracker — honest partial progress.** Confirmed KALSHI-PERP contamination genuinely purged
+     (live read: 0 contaminated rows) — closed 1 real prerequisite. Explicitly recommends **waiting to re-measure Stage
+     3** until the concurrent sibling workflows quiesce (a mid-flight remeasure would capture a moving-target
+     denominator, not a real number).
+  6. **Layer-1 tradfi block — partial, correctly disciplined.** Task 3 verified done + flipped. Task 2 (orphan sweep)
+     unblocked + launched (nohup, PID 22320, ~850K objects swept and climbing at session end, ETA 1.5-2h, survives
+     independent of session). Tasks 4/6/10 re-audited and correctly LEFT UNFLIPPED (task 6 found a new 520-row CF-4 gap
+     from still-running pre-fix tarball VMs; task 10 confirmed 8 `tradfi-bf-*` VMs still running, fleet not drained).
+     **Task 11 (legacy-twin bucket deletes) deliberately NOT executed** — correctly identified that the dispatch
+     briefing's "pre-approved" framing didn't override `migration_verification_orphan_safety_2026_06_10.md`'s explicit
+     HARD-STOP requiring real operator sign-off for an irreversible delete; a briefing paraphrase is not that sign-off.
+
+  **Cross-cutting new finding**: the stale-deployed-image gap (item 3 above) affects BOTH `is-daily-enum-cefi` (per
+  `wf_860fb2ae-54e`'s CeFi durability check) and `is-daily-enum-{prediction,sports}` (per this workflow) — a single
+  `instruments-service` image rebuild + redeploy is a plausible one-shot fix for two separate open P0s. Investigating
+  next.
+
 ## Orchestration state — dispatched execution workflow
 
 `wf_1e191185-1c2` (`instruments-audit-decisions-execution`) — 8 parallel agents executing the 10 decisions above:
-OKX-SPOT venue + Kraken FI_/FF_ marker; COINBASE-CDE split + new adapter + live connector fix; DeFi 1.38M backlog apply;
+OKX-SPOT venue + Kraken FI*/FF* marker; COINBASE-CDE split + new adapter + live connector fix; DeFi 1.38M backlog apply;
 archetype registry CEFI cells; MVP scope (COINBASE trades-only) + D10 capabilities; UAC two-layer redesign; mvp_mode
 universal build (research-first); Coinbase bare-name migration dispatch. Script:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/instruments-audit-decisions-execution-wf_1e191185-1c2.js`
 
-`wf_60ecfd13-752` (`instruments-audit-p0-wave`, dispatched 2026-07-10, operator: "finish all fixes now") — the 6
-remaining Headline P0s not covered by either in-flight workflow: Turbo API 0/0 bug, CeFi monotonicity guard alerting
-(live incident), is-daily-enum cloud crash, the 59-bug smoketest master record (GMX V2/empty-feed protocols decided:
-accept documented-empty, don't build new coverage), the Instruments Completion Tracker (33/37 open, real partial
-progress expected honest outcome), and Layer-1 tradfi's `tradfi_v9_stage1_finish` block. Script:
+`wf_60ecfd13-752` (`instruments-audit-p0-wave`, dispatched 2026-07-10, operator: "finish all fixes now") — **COMPLETE**,
+see the Progress Log entry above for the real per-item verdict (2 fixed, 1 still open with a new actionable lead, 3
+partial/honestly-left-open). The 6 remaining Headline P0s not covered by either in-flight workflow: Turbo API 0/0 bug,
+CeFi monotonicity guard alerting (live incident), is-daily-enum cloud crash, the 59-bug smoketest master record (GMX
+V2/empty-feed protocols decided: accept documented-empty, don't build new coverage), the Instruments Completion Tracker
+(33/37 open, real partial progress expected honest outcome), and Layer-1 tradfi's `tradfi_v9_stage1_finish` block.
+Script:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/instruments-audit-p0-wave-wf_60ecfd13-752.js`

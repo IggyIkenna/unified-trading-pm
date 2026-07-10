@@ -185,21 +185,36 @@ drift_direction: advance-code
       `stale_output`. Generalize the per-AG staleness budget already added for the cefi false-degraded fix
       (`_AG_STALENESS_BUDGET_SEC` / `_budget_for`) into a per-(kind,AG) cadence budget, so each job is judged against
       its schedule, not a uniform 120 s.
-- [ ] [BACKEND] P2. **Coverage-expansion — verdict across ALL consolidator kinds, not just market-data.** Today
-      `/api/health/consolidator` covers ONLY the market-data bucket per AG (5 AGs). The full consolidator estate is ~25
-      jobs across kinds (instruments / features-delta-one / features-onchain / features-volatility / features-calendar /
-      features-sports / execution / strategy / gas-fees / ml-training-artifacts). For the deployments cross-link to
-      resolve for EVERY job it lists, the seam must cover every data-producing job. Decide scope (market-data-first,
-      then fan out) — flag to operator. **SEQUENCING (2026-07-10 review)**: until this lands, the deployments
-      job→manifest bridge resolves ONLY for the 5 market-data jobs — the other ~20 consolidator / enumerator / catalogue
-      jobs it lists get a DANGLING cross-link. Agree the interim contract with the deployments agent (bridge =
-      market-data-first; a job the seam doesn't yet cover renders "not-yet-covered", NOT an error).
+- [ ] [BACKEND] P1. **Coverage-expansion — DYNAMIC enumeration of ALL consolidators (operator-DECIDED 2026-07-10: all
+      25, NOT market-data-first).** Today `/api/health/consolidator` covers ONLY the 5 market-data buckets. The full
+      estate is ~25 data-producing consolidator jobs across kinds (instruments / features-delta-one / features-onchain /
+      features-volatility / features-calendar / features-sports / execution / strategy / gas-fees /
+      ml-training-artifacts) + enumerator (5) + catalogue. The endpoint MUST enumerate them **DYNAMICALLY from the live
+      job / bucket census — NEVER a hardcoded list** — so a NEW consolidator auto-appears with zero code change (hard
+      operator requirement). The `short-name → (kind,AG) → bucket` decode (join-key todo) is the resolver. This also
+      makes the deployments job→manifest bridge resolve for EVERY job it lists. INTERIM until it fully lands: bridge =
+      market-data-first; a not-yet-covered job renders "not-yet-covered", NOT an error.
 - [ ] [UI] P1. **Surface the production verdict on the consolidator page** — per (kind,AG), a `produced` /
       `fired-but-empty` / `stale-output` badge alongside the existing freshness + backlog. A red fired-but-empty /
       stale-output is the data-correctness signal deployments links here to confirm. `pw:L2` regression on the badge
       states.
 
-### Fan-in — which VMs feed the index (recommendation #4; contributor↔live-VM correlation)
+### Per-consolidator views, dynamic list + tooltips (operator-decided 2026-07-10)
+
+- [ ] [UI] P1. **One view per consolidator (25 today), driven by the DYNAMIC list — not just 5 per-AG cards.** Render a
+      view/card per (kind,AG) consolidator, GROUPED for scannability (by kind, or by AG) so 25 stays legible. The list
+      comes from the backend's dynamic enumeration (Coverage-expansion, above), so a new consolidator appears
+      automatically with NO UI change. `pw:L2`: a mocked 25-consolidator response renders all 25 grouped views.
+- [ ] [UI] P1. **Tooltips on EVERY metric — never leave the user to assume (hard operator requirement).** Each number
+      (index age / staleness budget, backlog pending/total, fan-in "fed by N · M stale", verdict
+      `produced`/`fired-but-empty`/`stale-output`) gets a hover tooltip stating what it means + how it's derived.
+      `pw:L2` on tooltip presence for the core metrics.
+- [ ] [DOCS] P2. **Update the consolidator/manifest docs — DEFERRED to AFTER the UI exercise (operator).** Codify the
+      per-consolidator view model + the dynamic-enumeration contract + the metric definitions (the tooltip copy) in
+      `codex/05-infrastructure/manifest-consolidator-ssot.md` + `codex/02-data/availability-manifest-and-data-status.md`
+      (+ the deployment-observability doc). Do it once the UI lands so docs match shipped reality, not a draft.
+
+### Fan-in — which VMs feed the index (✅ operator-AGREED 2026-07-10 — wire it; rec #4; contributor↔live-VM correlation)
 
 - [ ] [BACKEND] P2. **Contributor-VM fan-in from the shard filenames (EXACT, single-walk-cheap).** Each per-VM shard is
       `_index/per_vm/{instance}.parquet` → the filename IS the VM instance name; the SAME prefix list we already do for
@@ -278,3 +293,11 @@ drift_direction: advance-code
   passes kind+AG as hint only. **WS-3 seam UNBLOCKED.** (3) WS-2 (v2 histogram) still operator-undecided → stays
   deferred. (4) Denominator-freshness trust-annotation HANDED to Ikenna (data-status tab). (5) WS-3 prune (phantom/
   reprobe visibility, coverage-expansion scope, fan-in) still awaiting operator's keep/drop calls.
+- 2026-07-10 — More operator decisions. **Fan-in AGREED — wire it.** **Coverage = ALL 25 consolidators + the list must
+  be DYNAMIC** (live job/bucket census, never hardcoded; a new consolidator auto-appears) → coverage-expansion bumped
+  P2→P1 + reframed; added **[UI] 25 per-consolidator views** (grouped, dynamic) + **[UI] tooltips on every metric**
+  (hard requirement — don't let the user assume) + a **[DOCS] deferred** todo (update manifest-consolidator +
+  availability- manifest codex AFTER the UI lands). Downloaded a live index for operator inspection —
+  `instruments-store-cefi-prd/_index/availability_index.parquet` (2.8 MB, 86,977 rows × 41 cols; capture_status captured
+  64,227 / empty_confirmed 22,630 / attempted_failed 81 / expected_unattempted 39). Phantom-audit + reprobe-empty "do
+  the scripts already exist" investigation running (background) — findings + gap-scoping to follow.
