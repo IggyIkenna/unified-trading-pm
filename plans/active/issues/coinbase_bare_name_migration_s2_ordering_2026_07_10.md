@@ -87,13 +87,15 @@ within a single-repo, one-task-at-a-time worker session):
 
 - [x] [PLAN] P2. ✅ **Option A (recommended)** — gate S2's dispatch on S3 having landed first: add `depends_on: [S3]`
       semantics to the S2 todo (or simply reorder the plan body so S2 follows S3), then re-dispatch S2 standalone once
-      S3 is confirmed on LDR. (repo: unified-trading-pm) — **DONE 2026-07-10** — see Resolution section below. ~~- [ ]
-      [CODE] P2. **Option B** — combine S2 and S3 into one coordinated cross-repo shippable unit (a single task/commit
-      pair landing the UAC removal and the IS dead-code deletion together) so no intermediate broken state exists on
-      LDR. Higher coordination cost but matches the plan's own "no intermediate LDR state is data-incorrect" design goal
-      more literally. (repo: instruments-service, unified-api-contracts)~~ **NOT TAKEN 2026-07-10** — Option A (the
-      recommended, lower-coordination-cost choice) was implemented instead; see Resolution section below. Mutually
-      exclusive with A — struck to keep regen from ever dispatching this as a separate, now-redundant task.
+      S3 is confirmed on LDR. (repo: unified-trading-pm) — **DONE 2026-07-10** — see Resolution section below.
+- [x] **Option B — NOT TAKEN 2026-07-10.** Option A (the recommended, lower-coordination-cost choice) was implemented
+      instead; see Resolution section below. Mutually exclusive with A — checked off (not struck-through, to avoid a
+      Prettier markdown-reflow hazard where a `~~`-prefixed list item merges into the preceding bullet's paragraph) so
+      regen never dispatches this as a separate, now-redundant task. Original text: ~~[CODE] P2. combine S2 and S3 into
+      one coordinated cross-repo shippable unit (a single task/commit pair landing the UAC removal and the IS dead-code
+      deletion together) so no intermediate broken state exists on LDR. Higher coordination cost but matches the plan's
+      own "no intermediate LDR state is data-incorrect" design goal more literally. (repo: instruments-service,
+      unified-api-contracts)~~
 - [ ] [DESIGN] P3. Whichever option is chosen, add a short "verify before land" step to the plan's own template guidance
       for multi-repo DAG plans: when a step's gate says "no downstream regressions," actually run `quality-gates.sh`
       with the isolated diff BEFORE marking an ordering note as "safe" — this plan's S1 ordering note (single-file
