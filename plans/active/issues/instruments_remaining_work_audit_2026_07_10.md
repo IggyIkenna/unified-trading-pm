@@ -849,10 +849,45 @@ the source docs if this list is used for dispatch planning.
 
 ## Orchestration state — dispatched execution workflow
 
-`wf_1e191185-1c2` (`instruments-audit-decisions-execution`) — 8 parallel agents executing the 10 decisions above:
-OKX-SPOT venue + Kraken FI*/FF* marker; COINBASE-CDE split + new adapter + live connector fix; DeFi 1.38M backlog apply;
-archetype registry CEFI cells; MVP scope (COINBASE trades-only) + D10 capabilities; UAC two-layer redesign; mvp_mode
-universal build (research-first); Coinbase bare-name migration dispatch. Script:
+`wf_1e191185-1c2` (`instruments-audit-decisions-execution`) — **COMPLETE**, 8/8 agents returned. Real per-item verdict:
+
+- **OKX-SPOT + Kraken marker**: landed (`instruments-service@300b0767` for OKX-SPOT fold-invert; Kraken marker part was
+  mid-quickmerge waiting on a background QG run when the agent's window closed — verify it shipped, re-dispatch if not).
+- **DeFi backlog apply**: correctly did NOT execute the stale command — found the same 46× v1→v2 scale explosion this
+  doc's Progress Log already recorded; superseded by the operator decision + real launch this session (see above).
+- **Archetype registry CEFI cells**: DONE, `unified-api-contracts@7f20bdee`, two-sided-audit contradiction count 2→0,
+  17/17 new tests green. Caught + reverted an accidental write to a **different slot's** UI clone before contamination.
+  New tracked gap: UAC→UI archetype-capability sync would break the UI TS build (`VenueCategoryV2` not yet exported by
+  `enums.ts`) — filed as its own issue.
+- **Coinbase bare-name migration (S0-S7)**: 6 of 7 steps landed across `unified-trading-pm`/`instruments-service`/
+  `unified-api-contracts`/`market-tick-data-service`/`features-service`/`market-data-processing-service`/
+  `deployment-service`. Found + fixed 2 real bugs the plan's own migration table missed (would have silently zeroed
+  Coinbase's cefi EXPECTED set / misclassified a NautilusTrader-internal venue map as a rekey target). **S2 (dead
+  `elif COINBASE` branch removal) is code-complete + QG-verified locally but never landed** — blocked 5+ retries by
+  OTHER concurrent agents' unrelated dirty deps in `unified-api-contracts`/`unified-trading-library`. Needs a clean-tree
+  re-attempt. A new S2-ordering issue doc was also filed (`coinbase_bare_name_migration_s2_ordering_2026_07_10.md`).
+- **MVP scope + D10 capabilities**: both done. `DERIBIT-COMBO` added to `MVP_SCOPE["cefi"].venues` + `venue_data_types`
+  override + capability entry (was silently zero before). COINBASE trades-only cost control turned out to already exist
+  (`CeFiMvpRule.venue_data_types`, landed 2026-06-28) — no code change needed. D10's original finding was stale (already
+  fixed); the REAL gap was a third registry table (`DEFI_VENUE_DATA_TYPE_CAPABILITIES`) — fixed for
+  RADIANT-ETHEREUM/EULER_V2-ETHEREUM+ARBITRUM/VENUS-BSC+ETHEREUM/BENQI-AVALANCHE.
+- **Coinbase CDE split**: DONE, matches the resolution already recorded above (2 live API cross-checks + the silent
+  capture-gap independently reconfirmed via a live manifest read — 16,819 `COINBASE-FUTURES` rows are 100%
+  `batch_tardis`, zero `live_coinbase`, confirmed zero real rows captured live since ship).
+- **UAC two-layer redesign**: DONE, `unified-api-contracts@fa9cece5`. Live-reverified before fixing: the CME/ICE bug was
+  real (fixed via a new subtraction-only `VALID_DATA_TYPES_VENUE_EXCLUSIONS` table); the DeFi registry-drift claim was
+  refined on re-check — only 1 of 34 originally-flagged venues (`AAVE_V3-ETHEREUM` oracle_prices) was genuinely
+  mis-declared, the other 33 are a different bug (declared-but-never-captured) filed separately rather than papered
+  over. 196/196 new tests green.
+- **`mvp_mode` universal build**: both real fixes complete and tested (root cause was one level higher than filed —
+  `TickDataHandler.process()` parsed `--mvp-mode` but never read it, so NO asset group's batch path could ever reach
+  `mvp_mode=True`, not just TradFi's). **Blocked from shipping** — a concurrent sibling agent's unrelated COINBASE-CDE
+  work left `quality-gates.sh` intermittently red on unrelated tests during the shipping window. Needs a clean-tree
+  re-attempt to land.
+
+**Two real follow-ups needed**: (1) verify/re-ship the Coinbase-migration S2 dead-branch removal and the mvp_mode build
+— both are code-complete, just never got a clean QG window to quickmerge; (2) the Kraken FI\_/FF\_ marker fix's final
+shipping status is unconfirmed. Script:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/instruments-audit-decisions-execution-wf_1e191185-1c2.js`
 
 `wf_60ecfd13-752` (`instruments-audit-p0-wave`, dispatched 2026-07-10, operator: "finish all fixes now") — **COMPLETE**,
