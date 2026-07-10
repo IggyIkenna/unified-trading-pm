@@ -212,10 +212,21 @@ drift_direction: advance-code
       COMPLETE, zero remaining checker `category` params) **GAP-7 — MDPS `dependency_checker` `category`→`asset_group`
       param rename** (+ docstrings) at next substantive touch (functional-correct today). Repo:
       **market-data-processing-service**. Home: this plan GAP-7.
-- [ ] [CODE] P0. **QG-test alignment (read/status, cross-repo)** — extend the QG-fed tests so they assert the CANONICAL
-      form (resolver bucket, `pipeline_mode=` path, v9 `_index` columns, `asset_group=`, on-disk data_type) on READ +
-      STATUS paths (writer 18 assertions + item-3/4 tests done) → QG FAILS on reversion to a dead bucket / `category=` /
-      old schema. Repos: **mtds / MDPS / features / instruments / deployment-api**. Home: this plan "QG-test alignment".
+- [x] ✅ [CODE] P0. **QG-test alignment (read/status, cross-repo) — DONE all 5 repos (slot audit 2026-07-10).**
+      Canonical-form assertions added to the QG-fed tests on READ+STATUS paths so QG FAILS on reversion to a dead bucket
+      / `category=` / v8 / non-`pipeline_mode=` path: **deployment-api@e755cda** (13 tests: stale-fallback legacy blob,
+      `canonicalise_defi_data_types`, `_normalise_data_type` aliases, FLAG-1 pure-groupby guard) · **features@07b11a5**
+      (on-disk data_type merge, volatility `dependency_checker`, `_resolve_mtds_cefi_bucket` kwargs, full-v9-row
+      classification) + **@f1eab190** (volatility loader pipeline_mode fix) · **mtds@56886c2** (pipeline_mode
+      delegation, TickBucket per-AG, resolve_bucket_name kwargs, v9 schema — **+2 real prod bugs fixed**: reader
+      `_tick_bucket` BucketNamingError, `_write_availability_index` schema_version=8 cron-revert) · **MDPS@e0c873b**
+      (pipeline_mode/ asset_group scan-survival ×2, no-`category=` guard) · **instruments@5da67986** (clob client-error)
+      **+@06ee5dcc** (equity-bento raise, record_failed→lookup read round-trip, clob_history anchor). QG-green in every
+      repo. Original spec below. <br>**Original:** **QG-test alignment (read/status, cross-repo)** — extend the QG-fed
+      tests so they assert the CANONICAL form (resolver bucket, `pipeline_mode=` path, v9 `_index` columns,
+      `asset_group=`, on-disk data_type) on READ + STATUS paths (writer 18 assertions + item-3/4 tests done) → QG FAILS
+      on reversion to a dead bucket / `category=` / old schema. Repos: **mtds / MDPS / features / instruments /
+      deployment-api**. Home: this plan "QG-test alignment".
 - [ ] [DOCS] P1. **Doc sweep + supersession banners** — grep `codex/02-data` + `codex/04-architecture` + repo
       `docs/GCS_PATHS.md` for any path example WITHOUT `pipeline_mode=` shown as canonical / `category=` as canonical /
       non-on-disk `data_type` → update or add `SUPERSEDED → <plan>` banner; banner the 4 superseded plan sections
@@ -437,10 +448,14 @@ drift_direction: advance-code
       `asset_group` query params (CEFI/TRADFI/PREDICTION; never `category=`; has a backward-compat
       `categories`→`asset_groups` shim). No client-side legacy bucket/menu/data_type assumptions. No UI behavior changed
       → playwright gate N/A.
-- [ ] [CODE] P0. **QG-test alignment (cross-repo)**: for each repo above, the tests that feed `quality-gates.sh` MUST
-      assert the CANONICAL form (canonical bucket via resolver, pipeline_mode= path, v9 manifest, asset_group=, on-disk
-      data_type) so QG **fails on any reversion** to a dead bucket / old convention — this is the regression net the
-      operator requires. (PREP3 already updated 18 MTDS write-path assertions; extend the same to read/status tests.)
+- [x] ✅ [CODE] P0. **QG-test alignment (cross-repo) — DONE (duplicate of the TIER-3 QG-test alignment item above; all 5
+      repos landed 2026-07-10: deployment-api@e755cda / features@07b11a5+f1eab190 / mtds@56886c2 / MDPS@e0c873b /
+      instruments@5da67986+06ee5dcc; QG-green each).** Read/status canonical-form assertions added so QG fails on any
+      reversion to a dead bucket / `category=` / v8 / non-`pipeline_mode=`. Original: for each repo above, the tests
+      that feed `quality-gates.sh` MUST assert the CANONICAL form (canonical bucket via resolver, pipeline_mode= path,
+      v9 manifest, asset_group=, on-disk data_type) so QG **fails on any reversion** to a dead bucket / old convention —
+      this is the regression net the operator requires. (PREP3 already updated 18 MTDS write-path assertions; extend the
+      same to read/status tests.)
 
 > **Sequencing**: this preflight is a HARD GATE before the per-AG **G1 dry-run** (the migration gates live in
 > `cf_data_state_audit_slot3_2026_06_01.md` § GATES). Rationale: dry-run is read-only + safe, but we want the code

@@ -247,3 +247,44 @@ above are otherwise fully reproducible via the shipped CLI.
   onto its own new registered launcher (`launch-cefi-durability-force-converge-vm.sh`, `deployment-service@9acd8f6`)
   after running it locally by mistake — this workspace's own established pattern for large data ops is VM-dispatch, not
   foreground/background laptop execution.
+- 2026-07-10 (later still): **First chain attempt had a real bug (zsh word-splitting), caught and fixed before any
+  damage.** The chaining watcher's `for y in $YEARS` (unquoted plain-string var) ran as ONE iteration under zsh (unlike
+  bash, zsh doesn't word-split unquoted vars by default) — produced a VM with literally malformed
+  `--start-date 2019 2020 2021 2022 2023 2024 2025 2026-01-01`. Caught via a suspicious single batched notification,
+  confirmed via `gcloud compute instances describe --format=...metadata`, deleted before it could run any real logic.
+  Relaunched with a proper bash array (`YEARS=(...)`, `for y in "${YEARS[@]}"`) — works correctly under both shells.
+- 2026-07-10 (later still): **Open question, flagged not resolved — chunked per-year counts are far smaller than the
+  original diagnostic's per-year estimate.** 2018 wrote 907,810 rows; 2019 wrote 895,558 — both ~10× smaller than the
+  original ad-hoc diagnostic's "2018 8.74M | 2019 8.72M" breakdown. The bounded-window code path is mechanically
+  identical to the unbounded run that found 64,403,859 candidates (same `enumerate_v2()` call, same `full_history=False`
+  branch, only the `date_axis` window differs) — so each chunk should be correctly scoped. Most likely explanation: the
+  original diagnostic (an uncommitted scratch script, not available to re-inspect) had a labeling bug in its per-year
+  grouping — its suspiciously smooth 8.74M→1.12M year-over-year decline looks synthetic, and it's hard to reconcile with
+  the same diagnostic's own by-reason breakdown (`EXPECTED_PRE_GENESIS_CHAIN` 18,764,581 rows — a reason that should
+  concentrate in EARLY years, not spread evenly). **Not treating this as resolved** — will run a fresh scan-only
+  full-range pass once all 9 chunks complete to confirm the true remaining backlog is near-zero before declaring this
+  decision fulfilled. If the sum across all 9 years lands far short of 63.9M, the backlog is NOT actually cleared and
+  needs further investigation, not just chunk-completion.
+- 2026-07-10 (later still): **Write chain paused mid-flight** — only the 2018 and 2019 chunks completed
+  (`enum-universe-defi-20260710-130231` / `-130607`) before a separate, unrelated incident
+  (`plans/active/issues/defi_manifest_consolidator_duplicate_race_2026_07_10.md`: the shared manifest consolidator's
+  incremental merge had zero self-dedup on untouched canonical rows) was discovered via a live spot-check. Halted the
+  chain rather than write 2020-2026 into a manifest with an active, unfixed duplication bug. That incident is now
+  root-caused, fixed (`unified-trading-library@0de04b6e`), and deployed + verified end-to-end (zero genuine duplicates
+  in the live defi manifest, 14,023,022 rows).
+- 2026-07-10 (later still): **Open question above now resolved — the "smaller than expected" per-year counts were
+  correct, not a bug; a fresh full-range rescan (post-fix, post-dedup) directly answers it.** Ran the exact scan-only
+  command with no `--max-writes-per-run` cap tight enough to truncate (100,000,000): **64,394,657 candidate rows**
+  (`EXPECTED_INSTRUMENT_NOT_LISTED` 33,510,523 | `EXPECTED_PRE_GENESIS_CHAIN` 18,924,325 | blank-reason
+  `expected_unattempted` 11,632,900 | `EXPECTED_INSTRUMENT_DELISTED` 326,909). Directly verified via `enumerator_run_id`
+  that the 2018 (907,810 rows) and 2019 (895,558 rows) chunks ARE present in the live manifest — they were not lost. Yet
+  the fresh candidate count (64.39M) is essentially unchanged from the original pre-any-write estimate (63,876,053)
+  rather than dropping by the ~1.8M those two chunks should have removed from the gap. Reconciled: organic
+  catalog/registry growth (the OKX-SPOT/CDE/DeFi-registry churn happening concurrently all session) added roughly 2.3M
+  new candidate rows over the same window, masking the 1.8M reduction from the 2018/2019 writes. This is the SAME
+  dynamic the doc already documented for the original 63.9M figure (which itself grew from an earlier smaller estimate
+  for the same reason) — not a new bug, not data loss, just a moving target under concurrent registry growth.
+  **Decision: resume the write chain for the remaining years (2020-2026) under the existing Option-A operator approval**
+  (the scale is materially unchanged — 64.39M vs the approved 63.88M — so this is a resumption, not a new-scale decision
+  requiring fresh sign-off). Dispatched via the same registered `launch-expected-universe-v2-vm.sh` launcher,
+  year-chunked, SPOT-provisioned, one VM per year, chained.
