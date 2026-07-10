@@ -414,11 +414,16 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ### Hand off to the interactive UI session (LAST task)
 
-- [ ] [REVIEW] P3. **Hand off the UI half** — the UI plan `deployment_obs_ui_popover_health_2026_07_09.md` is LOCAL
-      (executed interactively, NOT AO-dispatched). Once the census + `DeploymentItem` contract + composite/service
-      health land, record the frozen contract sha (`<repo>@<sha>` + the new `DeploymentItem` field list) in that plan's
-      Progress Log and NOTIFY THE OPERATOR so the UI work can start here. Do NOT flip its status — a LOCAL plan is never
-      ingested.
+- [x] ✅ [REVIEW] P3. **Hand off the UI half** — already handed off + BUILT: the UI plan
+      `deployment_obs_ui_popover_health_2026_07_09.md` is DONE (all 6 todos, `pw:L2` green), built interactively against
+      the landed contract and now running against the real backend. **Frozen contract (2026-07-10)**: `DeploymentItem`
+      (`deployments_inventory.py`) — kind/umbrella(incl. `NONE`)/cloud/service/asset*group/status +
+      `composite_health_status` (VMs: dead|hung|disk-full|oom-risk|working|stalled|workload-dead|unknown; services:
+      serving|scaled-to-zero|dead|degraded) + Tier-0 fields (machine_type/zone/rows*\*/uptime_hours) +
+      ECS/Lambda/Cloud-Run structural fields + `counts_by_kind`; `DeploymentDetailResponse`
+      (`GET /deployments/{name}/detail`) — the D.1 vector + `host_metrics_window` (sparkline). Contract additions since
+      the UI's first build the UI could still adopt: service `composite_health_status` (now live-wired, @5149af19e) +
+      `host_metrics_window` for a real sparkline (@970bcdc). Operator notified via this session.
 
 ## Progress Log
 
