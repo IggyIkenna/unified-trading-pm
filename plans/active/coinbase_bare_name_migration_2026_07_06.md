@@ -329,13 +329,21 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S1 — instruments-service `_CEFI_VENUE_FOLD` invert (Option A, single-file edit)
 
-- [ ] [CODE] P2. `instruments-service/scripts/check_enumeration_completeness.py`: replace `"COINBASE-SPOT": "COINBASE"`
+- [x] [CODE] P2. `instruments-service/scripts/check_enumeration_completeness.py`: replace `"COINBASE-SPOT": "COINBASE"`
       with `"COINBASE": "COINBASE-SPOT"` (Option A). Add unit test in `tests/test_check_enumeration_completeness.py`
       (see §3). Ship via
       `quickmerge --agent --files 'scripts/check_enumeration_completeness.py tests/test_check_enumeration_completeness.py'`.
       **Gate:** `bash scripts/quality-gates.sh` green; new test passes; existing Layer-1 audit against production
       manifest does NOT show a new `expected_only` or `enumerated_only` COINBASE row (verify by re-running
-      `check_enumeration_completeness.py --asset-group cefi` against the current manifest snapshot).
+      `check_enumeration_completeness.py --asset-group cefi` against the current manifest snapshot). **DONE 2026-07-10**
+      — instruments-service@300b0767. Ran `measure_honest_coverage.py --asset-group cefi     --diagnose-layer1` against
+      the live production manifest (`market-data-tick-cefi-prd-central-element-323112`, 11.1M merged rows) before and
+      after reasoning through the diff: the fold invert relabels the pre-existing `(COINBASE-SPOT, spot_pair, trades)`
+      stray from venue token `COINBASE` to `COINBASE-SPOT` — no new `expected_only`/`enumerated_only` COINBASE row
+      appeared (stray/missing counts for COINBASE unchanged: 1 stray, 0 new missing). That residual stray's root cause
+      is the `CeFiMvpRule.venues` split (`COINBASE-SPOT` / `COINBASE-FUTURES` already MVP-recognized; bare `COINBASE` is
+      not, since `_CEFI_SUB_VENUE_BASES` only covers `OKX`) — exactly the `VENUES_BY_ASSET_GROUP["cefi"]` rename this
+      plan's **S3** fixes; not a regression from S1 and not a new finding (already the plan's own problem statement).
 
 ### Step S2 — instruments-service `venue_core.py` delete the dead `elif COINBASE` alias
 
