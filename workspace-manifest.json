@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 4,
         "large_file_count": 0,
-        "qg_red_reason": null,
-        "coverage_pct": 74.71
+        "coverage_pct": 74.72,
+        "warn_file_count": 4,
+        "qg_red_reason": null
       }
     },
     "deployment-api": {
@@ -907,7 +907,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -945,8 +945,8 @@
       "codebase_health": {
         "large_file_count": 0,
         "coverage_pct": 82.68,
-        "qg_red_reason": "ruff",
-        "warn_file_count": 5
+        "warn_file_count": 5,
+        "qg_red_reason": null
       }
     },
     "strategy-service": {
