@@ -113,12 +113,14 @@ source: deployment_observability_expansion_2026_07_08.md
       `google-cloud-artifact-registry 1.22.0`; no direct-dep needed (the `_gcp_sdk` boundary stays the only import
       seam). **Live-verified**: the census now returns 2 functions (`trigger-market-tick-cefi-job`,
       `trigger-instruments-job`, both running/python312). QG green (uniswap blocker resolved upstream).
-- [ ] [BACKEND] P2. **Object-delta cold census is slow (>45 s → degrades)** — with the str→numeric coercion landed
-      (@934f22f) `_batched_object_deltas` no longer errors, but its per-distinct-asset_group manifest reads exceed the
-      45 s per-provider census bound on a cold cycle (`object-delta census exceeded 45s — degraded to empty`), so the
-      composite-health `working`/`stalled` signal that reads `object_delta` degrades to `unknown` on cold cycles (warm
-      cache unaffected). Fix: parallelize the per-asset_group manifest reads (same fan-out as the cloud-run jobs N+1)
-      and/or cache the index reads across the census cycle.
+- [x] ✅ [BACKEND] P2. **Object-delta cold census is slow (>45 s → degrades)** — with the str→numeric coercion landed
+      (@934f22f) `_batched_object_deltas` no longer errored, but its per-distinct-asset_group manifest reads ran
+      serially in a dict comprehension; on a cold cycle their sum exceeded the 45 s per-provider census bound
+      (`object-delta census exceeded 45s — degraded to empty`), pushing the BATCH `working`/`stalled` composite to
+      `unknown`. — **deployment-api@6e8d5f1 (quickmerged)**. Parallelized the reads (`ThreadPoolExecutor`,
+      `_OBJECT_DELTA_WORKERS=8`) so the census is ~max(one read) not their sum; `object_delta_for_asset_group` already
+      catches its own errors so no per-ag read can crash the map, and the once-per-distinct-asset_group behaviour is
+      unchanged (existing tests green). Warm cache was always unaffected; this fixes the cold path.
 
 ### Kinds census (make the estate visible)
 
