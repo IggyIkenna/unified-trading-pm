@@ -316,17 +316,19 @@ Two focused items this pass; the multi-account/multi-org idea is **explicitly ou
       `..._buckets_and_windows_in_us_pacific` + `test_aws_facts_sql_stays_utc_no_timezone_conversion`; header `InfoTip`
       reworded (GCP Pacific-matched, AWS UTC-matched) with a pw:L2 assertion (`cost-observability.spec.ts` 16/16). Full
       backend + UI QG green.
-- [ ] 🟡 [BACKEND] P1. **GitHub real billing — provider SHIPPED, live data BLOCKED-CREDENTIALS.** `github_billing.py`
-      calls the Enhanced Billing usage report (`GET /users|organizations/{acct}/settings/billing/usage`), token from
-      Secret Manager via `get_secret_client` (`GH_BILLING_PAT` → `GH_PAT`), mapped per-day x product x repo x SKU to
-      `CostRecord` (cost=gross, credit=net−gross); `github_facts` tries real → falls back to the labelled dummy on any
-      failure (non-regressive). Config: `github_billing_account`/`_type`/`_secret`. - 🟡 **2026-07-10 —
-      deployment-api@`29a18c088`.** Unit-verified: mapping / window filter / 403→None / no-token→None / fallback /
-      exception-degrade (8 tests) + standalone smoke. **STILL BLOCKED-CREDENTIALS:** `IggyIkenna` is a **User** in no
-      orgs and the token in hand is a **fine-grained PAT without the "Plan" account permission** → **403** on every
-      billing endpoint, so the page renders the labelled dummy. Unblock = store a Plan-scoped token as Secret Manager
-      `GH_BILLING_PAT` (fine-grained **Account → Plan → Read-only**, or a classic PAT with `user` scope); then
-      live-verify + drop `is_placeholder` (a zero-code swap). Checkbox stays open until real GitHub $ render.
+- [x] ✅ [BACKEND+UI] P1. **GitHub real billing — LIVE.** `github_billing.py` calls the Enhanced Billing usage report
+      (`GET /users|organizations/{acct}/settings/billing/usage`), token from Secret Manager via `get_secret_client`,
+      mapped per-day x product x repo x SKU to `CostRecord` (cost=gross, credit=net−gross); `github_facts` tries real →
+      falls back to the labelled dummy on any failure (non-regressive). - ✅ **2026-07-10 — deployment-api@`29a18c088`**
+      (provider) + **@`c4549daa`** (real-token wiring + product prettify) + **deployment-ui@`89d5b276`** (dummy note /
+      footer gate on `is_placeholder`). Operator (Ikenna) minted a fine-grained PAT (**Account → Plan → Read-only**,
+      owner `IggyIkenna`), stored it as Secret Manager `github-billing-token` in `central-element-323112` with read for
+      `github-token-sa`; config default now points there. **Live-verified end-to-end:** real usage flows (30d **gross
+      $1,415.98 / credit −$98.29 / net $1,317.69**, GitHub Actions across 832 paid line items, `placeholder=False`, HTTP
+      200 on both month queries). Field names + `net=cost+credit` mapping confirmed against the live response; lowercase
+      products prettified (`actions`→`Actions`); RFC3339 `date` → day. UI: the "Dummy data" note becomes a "Live" note +
+      the source footer reads "GitHub — Enhanced Billing" for real data (both gate on `is_placeholder`, so the mock/pw
+      path keeps the dummy — 16/16). 10 unit tests + full backend & UI QG green.
 
 **DECISION — multi-account / multi-org is NOT an in-app selector (2026-07-10, operator).** New AWS/GCP accounts for
 Odum-Research (opened to harvest fresh cloud credits) will be **entirely separate** — separate org, project, BigQuery
@@ -610,3 +612,13 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
       code.
   - Both full QGs green (backend 123s / UI 18s); `strict-quickmerge` clean on both. **Deferred to next pass:** GitHub
     live-verify (operator provisions the Plan-scoped token) + the AWS CUR historical backfill go/no-go.
+- 2026-07-10 — **GitHub real billing is LIVE (token landed, verified end-to-end).** Operator (Ikenna) minted the
+  Plan-scoped fine-grained PAT (Account → Plan → Read-only, owner `IggyIkenna`), stored it as Secret Manager
+  `github-billing-token` in `central-element-323112` and granted read to `github-token-sa`. Pointed the config default
+  at that secret; live-verified the whole path: `github_facts` now returns **real** usage — 30d **gross $1,415.98,
+  credit −$98.29, net $1,317.69** (GitHub Actions, 832 paid line items across the repos, `placeholder=False`, HTTP 200
+  on both month queries). The live response confirmed the field names + `net=cost+credit` mapping; prettified lowercase
+  products (`actions`→`Actions`); RFC3339 `date`→day. UI dummy-note + source-footer now gate on `is_placeholder`
+  (mock/pw stays dummy → 16/16 green; real data shows a "Live" note + "GitHub — Enhanced Billing" footer). Shipped
+  deployment-api@`c4549daa` + deployment-ui@`89d5b276`; both full QGs green. **Only AWS CUR backfill go/no-go remains
+  open on this plan.**
