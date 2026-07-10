@@ -247,34 +247,34 @@ is operator-review-gated (A6) and can lag the worker cutover.
       `unified-trading-pm/agents/` + `ORCHESTRATOR_AGENTS_DIR`; Python-composed stub with STEP-0 boot-started heartbeat
       / STEP-1 reads / STEP-2 `/boot`; 428 read-confirmation gate; timers reconciled 180s↔300s + new `booting` status;
       verified caller list + fleet-safe rollout order). Evidence: §2.1 in this plan (PM commit below).
-- [ ] [CODE] P0. Implement the stub + refactor `server/prompts.py` + `server/role_registry.py`: STOP extracting/pasting
-      the `text` template; compose a per-role boot stub (dynamic vars + escalation vars + read-pointers). Keep var
-      injection. Point `AGENTS_DIR` (or its replacement) at the canonical PM-repo location. Update EVERY
-      `prompts.render*` call site — verified list (2026-07-10 plan audit; an un-migrated caller HARD-BREAKS post-cutover
-      because `_extract_template` raises on a template-less role file): `autospawn.py:1073/1075` (autospawn;
-      escalation + plan-health funnel through it), `routes/agents.py:93/135` (manual spawn), **`server.py:764`
-      (`spawn_with_account_bg` — the account-failover respawn; MISSED by the original list)**, and
+- [x] 2. ✅ [CODE] P0. Implement the stub + refactor `server/prompts.py` + `server/role_registry.py`: STOP
+      extracting/pasting the `text` template; compose a per-role boot stub (dynamic vars + escalation vars +
+      read-pointers). Keep var injection. Point `AGENTS_DIR` (or its replacement) at the canonical PM-repo location.
+      Update EVERY `prompts.render*` call site — verified list (2026-07-10 plan audit; an un-migrated caller HARD-BREAKS
+      post-cutover because `_extract_template` raises on a template-less role file): `autospawn.py:1073/1075`
+      (autospawn; escalation + plan-health funnel through it), `routes/agents.py:93/135` (manual spawn),
+      **`server.py:764` (`spawn_with_account_bg` — the account-failover respawn; MISSED by the original list)**, and
       **`main_agent_keeper.py:701` (main-agent spawn; MISSED)**. (`tmux_spawn.py` is the tmux layer — it never renders;
       mislabel removed.) While touching `server.py:764`, fix two pre-existing defects on that path: it calls
       `render("worker")` not `render_worker(assigned_role, …)` (failover respawns silently LOSE the craft-role block
       today) and passes the RETIRED `branch=tab/<op>/<slot>` var (`server.py:771`) — finding 2's staleness, live in
       code.
-- [ ] [CODE] P0. Add the `/boot` read-confirmation gate — a worker cannot proceed to dispatch until it confirms (via
-      `/boot`) it has READ its role file + RULES.md. Restores the in-context guarantee the paste gave for free.
+- [x] 3. ✅ [CODE] P0. Add the `/boot` read-confirmation gate — a worker cannot proceed to dispatch until it confirms
+      (via `/boot`) it has READ its role file + RULES.md. Restores the in-context guarantee the paste gave for free.
 - [ ] [CODE] P1. Diagnose-on-boot-timeout + alert-at-cap (`_auth_failover.check_spawn_heartbeat_timeouts`): on
       spawn-heartbeat timeout, CAPTURE the pane (liveness + tail) and classify WHY it hasn't booted (alive-but-slow /
       stuck at a startup prompt / crashed / mid-read) BEFORE the blind respawn; and page the operator when the 2-retry
       cap (`_SPAWN_HEARTBEAT_MAX_RETRIES`) is hit (today it goes silent). Depends on the boot-timer reconciliation (A1).
-- [ ] [CODE] P0. Rewrite the role/rules files into STANDALONE readable docs (worker.md, RULES.md, main/review/monitor +
-      craft + escalation): dynamic values referenced as "given in your boot message" (no inline `<SLOT_ID>`); keep the
-      "NEVER exit on your own / Start now: /boot" semantics but with the client-vs-server idle-loop question RESOLVED
-      (operator, 2026-07-10, cost-driven): **MINIMAL/NO client self-poll — DROP the aggressive every-60s client bash
-      poll; rely on server-owned liveness** (idle-lingering reclaim reaps idle workers in ~2 min + spawn-on-demand
-      within ~60s when work lands). A worker polling an empty queue burns Claude credits for nothing; the server already
-      reaps+respawns. Add the explicit "operate ONLY in your assigned `.tabs/<N>/` slot; root reads are read-only"
-      guardrail. Relocate to the canonical PM-repo path.
-- [ ] [CODE] P1. Stale-content fixes folded into the rewrite (so agents can't trip on stale info): RULES.md tab-branch →
-      Path-B (`git clone --reference` on `live-defi-rollout`, no tab branch); main.md backlog path (3×
+- [x] 4. ✅ [CODE] P0. Rewrite the role/rules files into STANDALONE readable docs (worker.md, RULES.md,
+      main/review/monitor + craft + escalation): dynamic values referenced as "given in your boot message" (no inline
+      `<SLOT_ID>`); keep the "NEVER exit on your own / Start now: /boot" semantics but with the client-vs-server
+      idle-loop question RESOLVED (operator, 2026-07-10, cost-driven): **MINIMAL/NO client self-poll — DROP the
+      aggressive every-60s client bash poll; rely on server-owned liveness** (idle-lingering reclaim reaps idle workers
+      in ~2 min + spawn-on-demand within ~60s when work lands). A worker polling an empty queue burns Claude credits for
+      nothing; the server already reaps+respawns. Add the explicit "operate ONLY in your assigned `.tabs/<N>/` slot;
+      root reads are read-only" guardrail. Relocate to the canonical PM-repo path.
+- [x] 5. ✅ [CODE] P1. Stale-content fixes folded into the rewrite (so agents can't trip on stale info): RULES.md
+      tab-branch → Path-B (`git clone --reference` on `live-defi-rollout`, no tab branch); main.md backlog path (3×
       `orchestrator/data/config/…` → `data/config/…`); `escalation_to` on `plan-health.md` + `data_pipeline_failure.md`
       (`cicd` → `operator`/`plan-reconciler` + `main`) — verify the dashboard AGENT TYPES panel renders right.
 - [ ] [CODE] P2. `main.md` dead Phase -2…14 phase-DAG removal (source epic says "provenance only"; fix the
@@ -285,9 +285,10 @@ is operator-review-gated (A6) and can lag the worker cutover.
       "server-side TODO" in `WORKER_SPAWN_PREREQUISITES.md:131-209` (Kicker shipped; add the Watchdog); repoint the 5
       archived/dead SSOT footers; fix the "~150/175 lines" RULES.md size claims; SUPERSEDED banner on
       `MAIN_AGENT_CUTOVER_REVIEW.md` + drop the `main.md:108-109` boot-step wiring to it.
-- [ ] [CODE] P1. Regression tests for the new mechanism (replaces the old "rendered template contains sentinel" test):
-      the boot stub composes per role + resolves the canonical path; role files are placeholder-free in their read-raw
-      sections; a spawned worker's `/boot` confirms it read its files. There is no extraction regex left to truncate.
+- [x] 6. ✅ [CODE] P1. Regression tests for the new mechanism (replaces the old "rendered template contains sentinel"
+      test): the boot stub composes per role + resolves the canonical path; role files are placeholder-free in their
+      read-raw sections; a spawned worker's `/boot` confirms it read its files. There is no extraction regex left to
+      truncate.
 
 ### Phase B — Runtime lifecycle hardening (server code)
 
@@ -307,7 +308,7 @@ is operator-review-gated (A6) and can lag the worker cutover.
 - [ ] [CODE] P2. `idle_blocker_inferred` dedup fix — give the inference a DEDICATED last-value field (or a
       time-throttle, e.g. log-on-change-or-hourly) so the shared-`last_msg` contention stops defeating the guard
       (`_git_alerts.py:95`).
-- [ ] [CODE] P2. `slot_released_prereq_blocked` no-op fix — skip the event when nothing is actually released
+- [x] 7. ✅ [CODE] P2. `slot_released_prereq_blocked` no-op fix — skip the event when nothing is actually released
       (`held_task is None and not had_session`); collapse the fleet-wide "everything blocked on X" case into ONE
       fleet-level signal instead of a per-slot hourly no-op (`worker_liveness_watchdog.py:1207-1245`).
 - [ ] [CODE] P3. autospawn quarantine log-throttle + verify the 2026-07-09 preserve-path fix holds (0 dirty-quarantine
@@ -319,15 +320,15 @@ is operator-review-gated (A6) and can lag the worker cutover.
 _Root cause (2026-07-10, operator screenshot): the FLEET table shows STALE plan/task/context/ping/message for
 idle+killed slots, and PLAN ≠ TASK on working slots (slot 7 = deployment task but shows a tradfi plan)._
 
-- [ ] [CODE] P1. Fix the PLAN column derivation (`server/routes/state.py:219-224`): derive `plan_ref` from
+- [x] 8. ✅ [CODE] P1. Fix the PLAN column derivation (`server/routes/state.py:219-224`): derive `plan_ref` from
       `slot.current_task` (join `TaskRow.task_id == slot.current_task`), NOT `dispatched_to == slot_id LIMIT 1`
       (unordered → picks a stale prior-dispatch task's plan). Guarantees PLAN always matches TASK and clears when idle.
       (Slot-7/8 mismatch = an orphaned tradfi/sports task still carrying `dispatched_to == slot`.)
-- [ ] [CODE] P1. Central `reset_slot_worker_state(slot)` helper: clear `current_task`, `last_msg`, `context_used_pct`→0,
-      and RELEASE the task's `dispatched_to`; call it from EVERY teardown path (`tmux_pruner`, the watchdog kills at
-      `worker_liveness_watchdog.py:1016/1361/1498/1593/1643`, autospawn idle). Today killed/idle slots retain stale
-      message/context/ping/plan (grep-confirmed: `last_msg`/`last_ping`/`context_used_pct` are never blanked on kill).
-      Non-alive slots then read as blank naturally.
+- [x] 9. ✅ [CODE] P1. Central `reset_slot_worker_state(slot)` helper: clear `current_task`, `last_msg`,
+      `context_used_pct`→0, and RELEASE the task's `dispatched_to`; call it from EVERY teardown path (`tmux_pruner`, the
+      watchdog kills at `worker_liveness_watchdog.py:1016/1361/1498/1593/1643`, autospawn idle). Today killed/idle slots
+      retain stale message/context/ping/plan (grep-confirmed: `last_msg`/`last_ping`/`context_used_pct` are never
+      blanked on kill). Non-alive slots then read as blank naturally.
 - [ ] [CODE] P1. STATUS column = computed lifecycle PHASE (backend-owned, per "backend populates"): surface the real
       phase — `pre-boot → booting → working → idle/blocked/done/paused/stale/killed` — adding the new
       `pre_boot`/`booting` states (fed by the boot-timer "boot-started" signal from A1). Backend computes the phase; the
@@ -399,3 +400,16 @@ idle+killed slots, and PLAN ≠ TASK on working slots (slot 7 = deployment task 
   it renders `render("worker")` (loses the craft-role block on failover respawn) and passes the RETIRED
   `branch=tab/<op>/<slot>` var (`server.py:771`) — folded into A2. (3) Kick-window task reordered to prefer
   settle-lengthening / state-delta over blanket success (blanket would mask a genuinely ignored kick).
+- **2026-07-10 ~09:40Z** — **CUTOVER SHIPPED.** PM: 15 rewritten role/RULES files landed at `unified-trading-pm/agents/`
+  — `unified-trading-pm@017c03799` (quickmerge, PR #899 auto-merging to main). AO: read-the-file boot mechanism —
+  `agent-orchestrator@5eaea2933` (quickmerge, QG green, 1152+ tests): prompts.py = composed stub (no extraction regex
+  remains), AGENTS_DIR → sibling PM clone (+ ORCHESTRATOR_AGENTS_DIR), /boot 428 read-confirmation gate
+  (ORCHESTRATOR_BOOT_READ_CONFIRM, rejects pre-upsert, logs boot_read_unconfirmed), AO agents/ templates DELETED,
+  frontmatter QG repointed at CI-safe tests/fixtures/agents, spawn_with_account_bg craft+tab-branch defects fixed. Phase
+  D shipped in same commit: PLAN column from current_task (+ stale-dispatch regression test), reset_slot_worker_state on
+  terminal teardowns (done-task-protected), display-blanking on kill sites, prereq-release no-op spam fix. Flipped todos
+  2-9. **A6 NOTE (operator review pending):** the rewritten main.md replaces the dead Phase DAG with a plan-driven
+  paragraph while PRESERVING the send-keys BAN + account-failover triggers; content is committed but only takes effect
+  at the next MAIN-agent recycle — operator can veto/adjust before then (diff: unified-trading-pm@017c03799
+  agents/main.md vs agent-orchestrator@041ea00 agents/main.md). Remaining: deploy (ff-pull root AO) + live e2e verify;
+  A3 boot-timeout diagnosis; Phase B remainder; Phase D booting-status + UI.
