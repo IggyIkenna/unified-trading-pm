@@ -109,9 +109,11 @@ drift_direction: advance-code
      now `age=120s status=ok`.
 - [x] 6. ✅ [UI] P2. **Poll cadence 15s→30s** — consolidation changes every 1–5 min, so 15s over-polled. —
      `deployment-ui@b00454b` (O5 test waits the new 30s 2nd-poll).
-- [ ] [REVIEW] P1. QG both repos green; **deploy deployment-api** (Cloud Build) so the live tab shows the real backlog +
-      the cefi fix, and cite `Evidence: cloudbuild=<id>` SUCCESS. Verify the live endpoint returns `pending_shard_count`
-      and cefi=ok.
+- [ ] [REVIEW] P1. **Local verify now; Cloud Build deploy DEFERRED (operator 2026-07-10 — local-dev-only until all
+      cockpit plans complete; operator is the sole viewer, local iteration is faster).** QG both repos green; run
+      deployment-api locally against live GCS + the UI against it, and verify the endpoint returns `pending_shard_count`
+      and cefi=`ok` live. Deploy (Cloud Build, `Evidence: cloudbuild=<id>` SUCCESS) happens at end-of-cockpit-plans, if
+      the promote pipeline hasn't already carried it.
 
 ## WS-2 — v2: truthful merged-per-tick histogram (DEFERRED — 🟡 UNDER DISCUSSION / nice-to-have)
 
@@ -153,15 +155,18 @@ drift_direction: advance-code
 
 ### Join key — reconcile with the deployments agent BEFORE building the seam (blocking)
 
-- [ ] [DESIGN] P1. **Agree the join key = the FULL Cloud Run job short-name (which encodes `{kind}-{asset_group}`), NOT
-      `asset_group` alone.** LIVE-VERIFIED
-      (`gcloud run jobs list --region asia-northeast1 --project central-element-323112`, 2026-07-10): the hand-off's
-      assumed example `prd-manifest-consolidator-cefi` does NOT exist. Real names are
-      `uts-prod-manifest-consolidator-{kind}-{asset_group}` and there are **~25 non-legacy consolidator jobs, MULTIPLE
-      per asset_group across kinds** (`market-data-cefi` AND `instruments-cefi` AND `features-delta-one-cefi` AND
-      `execution-cefi` …). So `asset_group` alone is ambiguous — the seam MUST key on `(kind, asset_group)` / the full
-      short-name. Enumerator jobs = `expected-universe-v2-{ag}` (5); catalogue = `lifecycle-catalogue-regen-{ag}` /
-      `-full-{ag}` / `instrument-catalogue-regen`. Reconcile 1:1, then both sides freeze the key.
+- [x] [DESIGN] P1. ✅ **AGREED (2026-07-10, with the deployments agent) — join key = the VERBATIM Cloud Run job
+      short-name** (`job.name.rsplit("/", 1)[-1]` from `JobsClient.list_jobs`, real e.g.
+      `uts-prod-manifest-consolidator-market-data-cefi`), NOT the `(kind, asset_group)` tuple. Rationale: it's the ONE
+      string both sides read verbatim, so neither derives it — the tuple would need two independent fuzzy
+      `{kind}-{asset_group}` parses (deployments' classifier is a suffix/substring match) → drift → silent missed joins;
+      and env-prefix / `-backfill` / `-v2` variants collide on the tuple but never on the name. **This page OWNS the
+      `short-name → (kind, asset_group) → partition/bucket` decode as SSOT**; deployments passes `kind` + `asset_group`
+      alongside as hint/validation only. Bare short-name is unique today (all `asia-northeast1`); region-qualify if
+      multi-region lands. (The agent's `prd-manifest-consolidator-cefi` example is illustrative — real names carry the
+      `uts-prod-` prefix + a `-{kind}-` segment my decode handles.) Enumerator jobs = `expected-universe-v2-{ag}` (5);
+      catalogue = `lifecycle-catalogue-regen-{ag}` / `-full-{ag}` / `instrument-catalogue-regen`. **WS-3 seam is
+      UNBLOCKED.**
 
 ### The seam + the verdict (this page owns)
 
@@ -217,12 +222,12 @@ drift_direction: advance-code
 
 ### Shipping gate (WS-3 — mirrors WS-1's closer)
 
-- [ ] [REVIEW] P1. **QG both repos green + deploy deployment-api + verify the seam resolves live.** After the seam +
-      fired-but-empty + stale-output + verdict badge land: `quality-gates.sh` green (deployment-api + deployment-ui +
-      any UTL helper), deploy deployment-api via Cloud Build citing `Evidence: cloudbuild=<id>` SUCCESS, and verify the
-      LIVE endpoint returns the verdict for a known job identity AND that the deployments detail popover's cross-link
-      resolves 1:1 (end-to-end handshake with `deployment_full_estate_cost_provenance_2026_07_09.md`'s job→manifest
-      bridge). No `- [x]` on any WS-3 build todo until this closes.
+- [ ] [REVIEW] P1. **QG both repos green + LOCAL verify the seam resolves live (Cloud Build deploy DEFERRED per operator
+      — local-dev-only for now).** After the seam + fired-but-empty + stale-output + verdict badge land:
+      `quality-gates.sh` green (deployment-api + deployment-ui + any UTL helper), run locally against live GCS, verify
+      the endpoint returns the verdict for a known job **short-name** AND that the deployments detail popover's
+      cross-link resolves 1:1 (end-to-end handshake with `deployment_full_estate_cost_provenance_2026_07_09.md`'s
+      job→manifest bridge). Deploy at end-of-cockpit-plans. No `- [x]` on any WS-3 build todo until this closes.
 
 ### Cross-tab placement notes (NOT this plan — captured so we don't lose them)
 
@@ -233,10 +238,9 @@ drift_direction: advance-code
 - **Denominator freshness has two facets, split by tab**: the _trust caveat on the coverage %_ ("denominator last
   computed Nh ago" / stale-warning) → **data-status tab** (owns coverage %); the _enumerator/catalogue JOB fired + on
   time_ → **deployments** (its Cloud Scheduler census). The _did-the-enumerator-actually-write-rows_ verdict IS in this
-  page's seam above (enumerator/catalogue are data-producing jobs). **⚠️ UNOWNED (2026-07-10 review)**: the data-status
-  trust-annotation has NO todo in any plan today — it needs a `- [ ]` in a data-status plan
-  (`data_status_tab_and_downloads_remediation_2026_06_16.md` or a new one), else it's lost on hand-off. NOT this plan to
-  build — flag it when passing notes to the data-status/deployments agents.
+  page's seam above (enumerator/catalogue are data-producing jobs). **→ HANDED to Ikenna / data-status tab
+  (2026-07-10)**: the trust-annotation (denominator-freshness caveat on the coverage %) is his to own on the data-status
+  tab; hand-off message delivered via operator. NOT this plan to build.
 - **Lambda run-time honesty (FYI from the hand-off)**: deployments is fixing `last_run_at = fn.last_modified` (deploy
   time, not invoke). The data-producing pipeline jobs are Cloud Run (GCP) + AWS Batch, NOT Lambda, so the seam likely
   never touches a Lambda run-time — but if it ever does, use CloudWatch `Invocations`, never deploy-time.
@@ -266,3 +270,11 @@ drift_direction: advance-code
   documented the **coverage-expansion sequencing** contract (bridge = market-data-first, ~20 dangling links interim →
   "not-yet-covered", not error). Also codified the operator principle: **cross-tab duplicate info is intentional for now
   (different axes) — keep both until the UIs are properly built, de-dupe later**.
+- 2026-07-10 — Operator decisions folded in. (1) **Local-dev-only for now** — deployment-api + UI run locally against
+  live GCS; Cloud Build deploy DEFERRED to end-of-cockpit-plans (operator is the sole viewer, local iteration is
+  faster). Both REVIEW gates (WS-1, WS-3) reframed to local verify. (2) **Join key AGREED** with the deployments agent =
+  the VERBATIM Cloud Run short-name (`job.name.rsplit("/",1)[-1]`), NOT the (kind,AG) tuple — one string read verbatim
+  both sides, no fuzzy-parse drift; this page owns the `short-name → (kind,AG) → partition` decode as SSOT, deployments
+  passes kind+AG as hint only. **WS-3 seam UNBLOCKED.** (3) WS-2 (v2 histogram) still operator-undecided → stays
+  deferred. (4) Denominator-freshness trust-annotation HANDED to Ikenna (data-status tab). (5) WS-3 prune (phantom/
+  reprobe visibility, coverage-expansion scope, fan-in) still awaiting operator's keep/drop calls.

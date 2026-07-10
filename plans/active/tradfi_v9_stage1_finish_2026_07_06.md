@@ -24,7 +24,7 @@ related:
     ../../codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-06
+last_updated: 2026-07-10
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -91,13 +91,45 @@ source:
       2026-01-15 handed off to task 3 · post-migration GCS shows canonical `pipeline_mode=batch_databento/batch_yahoo`
       subdirs present at day=2026-01-15 · run.log at
       `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-tradfi-20260706-145606/run.log`.
-- [ ] [DATA] P0. **BLOCKED-ORDERING (depends on task 4 E5 manifest rebuild) — Orphan sweep to E=0 + bucket-state
-      evidence** (all years, `tradfi-prd`). Per `tradfi_manifest_canonicalisation` §"Orphan sweep + bucket-state
-      evidence" + `migration_verification` V6. Gate: zero orphaned legacy-path objects; bucket-state evidence recorded.
-      **⚠️ ORDER DEPENDENCY (surfaced 2026-07-06 BLK-71c6f4c4):** task 4 (E5 `rebuild_tradfi_manifest.py`) MUST run
-      first — the 2026 migration wrote v9-canonical paths WITHOUT rebuilding the manifest (per migrator docstring:
-      manifest columns are added by E5, this script fixes PATHS only). Running the orphan sweep before E5 would produce
-      false Class-E positives (real data with no manifest row) on the newly-migrated 122,703 canonical objects.
+- [ ] [DATA] P0. **🚧 IN PROGRESS 2026-07-10 (this session) — ordering blocker RESOLVED, full sweep launched, not yet
+      complete.** Orphan sweep to E=0 + bucket-state evidence (all years, `tradfi-prd`). Per
+      `tradfi_manifest_canonicalisation` §"Orphan sweep + bucket-state evidence" + `migration_verification` V6. Gate:
+      zero orphaned legacy-path objects; bucket-state evidence recorded. **Ordering blocker re-evaluated + confirmed
+      resolved**: task 4's E5 rebuild ran to completion 2026-07-07 (mtds@4ccf52c6, see task 4's Progress Log) — the
+      manifest now carries `schema_version`/`source`/`pipeline_mode`/`asset_group` columns for 99.77% of rows
+      (6,093,388/6,107,359), including the 2026 migration's 122,703 objects. The original BLK-71c6f4c4 concern (running
+      the sweep BEFORE E5 would false-positive Class-E on the newly-migrated objects) no longer applies — E5 has run.
+      **Real smoke-tested first** (`--limit 20000`, 2026-07-10 12:13-12:17 UTC):
+      `A_canonical_manifested=19644 ·     B_legacy_duplicate=0 · C_manifest_infra=41 · D_junk=315 · E_orphan_real=0`.
+      **Found + fixed a real taxonomy gap as a byproduct**: the walk hit `unknown:_migration_backup_2026_07_09/` (19,959
+      of the 20,000-object smoke window) — a real, legitimate backup-first prefix written by the CONCURRENT
+      `migrate_tradfi_single_leg_product_root_lin_     2026_07_09.py` canonicalization migration (a different in-flight
+      workflow this session did not touch), just not yet in the sweep's taxonomy. Live `gsutil ls -r` count: 158,808
+      real objects under that prefix corpus-wide. Fixed `instruments-service/scripts/migration_orphan_sweep.py` — added
+      `_migration_backup` (covers both the tradfi singular form + the sibling defi/cefi plural `_migration_backups/`
+      form from the same 07-09 migration wave) to `_NON_DATA_TOP_LEVEL_LABELS` as `"migration-backup"`, + 2 new
+      regression tests in `tests/scripts/test_migration_orphan_sweep.py` (30/30 passing). **FULL unlimited sweep
+      launched** 2026-07-10 12:21:50 UTC
+      (`--workers 64 --report-out gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/     orphan_sweep_tradfi.parquet`,
+      PID 22320, nohup+disowned — survives independent of any interactive session), log at
+      `/private/tmp/claude-501/.../scratchpad/tradfi_orphan_sweep_full.log` (local to this session's scratchpad; re-run
+      if a fresh session needs to re-attach and the log is gone — the process itself and its eventual
+      `_index/audit/orphan_sweep_tradfi.parquet` output are what matter). Progress at last check (12:40:39 UTC, ~19 min
+      in): 550,000 objects swept, steady ~600/s. The 2026-06-11 pre-apply baseline for this AG was ~1.8M objects
+      (A=1,641 · B=1,597,119 · D=163,112 · E=47,102 · unknown=7,147); post-apply the corpus is materially larger (the
+      migration is copy-not-move, so canonical copies now sit ALONGSIDE the still-present legacy originals, plus the new
+      158,808-object migration-backup corpus) — realistic ETA is 1.5-2+ hours from launch, not yet complete as of this
+      entry. **Next steps for whoever picks this up**: check `ps aux | grep migration_orphan_sweep` / re-run
+      `gsutil stat gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet` to
+      see if the report has landed; if the process died, just re-launch (idempotent, dry-run/scan-only, never deletes) —
+      `cd instruments-service && GCP_PROJECT_ID=central-element-323112 .venv/bin/python     scripts/migration_orphan_sweep.py --asset-group tradfi --dry-run --workers 64 --report-out gs://market-data-tick-     tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet`.
+      Once complete with `orphan_class_E=0` (or a characterized non-zero E), this task's gate is satisfiable — flip with
+      the real numbers, and task 11 (legacy-twin deletes) can then run its `cleanup_legacy_twins.py --dry-run` prep step
+      reading this same report. **⚠️ ORDER DEPENDENCY (surfaced 2026-07-06 BLK-71c6f4c4, historical — see above for
+      resolution):** task 4 (E5 `rebuild_tradfi_manifest.py`) MUST run first — the 2026 migration wrote v9-canonical
+      paths WITHOUT rebuilding the manifest (per migrator docstring: manifest columns are added by E5, this script fixes
+      PATHS only). Running the orphan sweep before E5 would produce false Class-E positives (real data with no manifest
+      row) on the newly-migrated 122,703 canonical objects.
 - [ ] [DATA] P0. **BLOCKED-STRAGGLER-VM-RUNNING · Idempotent straggler re-run** — transient GCS 503/504 bursts on
       2026-07-06 left ~7 objects unmoved on 2025-02-03/04 **plus 4 objects unmoved on 2026-01-15** (all transient GCS
       timeouts, not memory, self-limited). Re-run the migrator over the affected day-partitions (idempotent — skips
@@ -152,6 +184,32 @@ source:
       genuine REDs remain (CF-1 schema tail = task 10's scope; CF-3 pipeline_mode blank = the new CF-3 todo filed
       today); CF-4/CF-7 are now GREEN; CF-8 and Era-B are RED on this tool's literal check but both are pre-existing,
       already-adjudicated non-issues per `tradfi_manifest_canonicalisation_2026_06_01.md` (linked below), not new gaps.
+      **UPDATE 2026-07-10 (this session):** re-ran the full check inline against a fresh manifest download (6,107,359
+      rows). CF-3's earlier-filed todo (the 28,344-row live-writer pipeline_mode gap) is now confirmed GREEN — a
+      separate slot's `instruments-service@699e2cf` + `market-tick-data-service@626e44c` fix landed 2026-07-08 and its
+      own `restamp_tradfi_cf3_pipeline_mode_2026_07_08.py --apply` cleared it; the ONLY remaining blank-`pipeline_mode`
+      rows (13,971) are now exactly the CF-1 v4 tail (no separate CF-3 population left). CF-7 re-confirmed GREEN (0
+      blank `data_type`, 0 blank/UNKNOWN `venue`). **New finding + fixed same session**: CF-4 had a small (520-row) NEW
+      blank-source-with-valid-`pipeline_mode` population (all CME `ohlcv_1m`/`ohlcv_1s`
+      `empty_confirmed`/`batch_databento`, `written_at` 2026-07-08T21:52Z–2026-07-09T13:21Z) — root-caused (not a logic
+      bug): the still-live `tradfi-bf-cme-ohlcv-1m-*-2025` backfill VMs are running a code tarball snapshotted BEFORE
+      the UTL universal-provenance fix (`unified-trading-library@ca5f1dbd`, 2026-07-08T23:28:03Z) landed, so their
+      in-process `ManifestWriter` still produces blank source on this path even though the shipped fix is correct.
+      Generalized `restamp_tradfi_source_2026_07_07.py` with `--expected-min`/`--expected-max` CLI overrides (reused
+      rather than duplicated — mtds@\<sha\>) and ran `--apply --expected-min 1 --expected-max 50000`: snapshot at
+      `_index/snapshots/pre_tradfi_source_restamp_20260710T113305Z.parquet`, stamped 520 rows, gate verified PASSED (0
+      blank-source-with-valid-pm) immediately post-apply. **A fresh re-read minutes later found 516 NEW blank-source
+      rows** (same shape) — confirms this is a genuinely live, ongoing trickle from the still-running backfill VMs (not
+      a one-time population, not a recurring code defect): it will not go to zero until those specific VMs either finish
+      their assigned date ranges and self-delete (`VM_SHUTDOWN_ON_COMPLETION=true`) or the fleet is relaunched on a
+      tarball built after `ca5f1dbd`. **Folding this into task 10's fleet-drain gate** rather than treating it as a
+      separate open item — re-running the restamp in a loop against a moving target is not a fix; killing the live
+      backfill VMs mid-run to force-drain early would violate the no-bulk-kill / no-fire-and-forget safety rules. **Net
+      E7 state**: 2 genuine REDs remain (CF-1 13,971-row v4 tail + CF-4's live trickle, currently ~516 rows) — both now
+      converge on the SAME single blocker (task 10 fleet-drain), down from being tracked as 2 unrelated gaps.
+      CF-2/CF-5/CF-6/CF-9/CF-13 GREEN; CF-8/Era-B RED-on-literal-check but pre-existing adjudicated non-issues
+      (unchanged from 2026-07-08); CF-14 not run (cross-bucket, out of scope). Checkbox stays unflipped — genuinely not
+      all-GREEN, correctly gated on task 10.
 - [x] ✅ [DATA] P0. **IS enumerate-seed for tradfi** — seed the tradfi could-exist denominator (`expected_unattempted`)
       from the rebuilt manifest + IS catalogue. Gate: tradfi `expected_*` rows materialised by the writer; fresh scan →
       0 unseeded candidates. **DONE 2026-07-09 (slot-14 sonnet/high).** Two prior slots (7, 2) diagnosed this task and
@@ -234,12 +292,56 @@ source:
       sports already done). **Ikenna's migration sign-off GATES this — bucket deletes are never-autonomous
       (hard-stop).** Do NOT run any delete until the operator signs off; the working agent posts the byte-verify
       evidence and RAISES for sign-off. _(Carries `BLOCKED-` so the orchestrator will not dispatch it — stays visible
-      for the operator.)_
+      for the operator.)_ **STATUS 2026-07-10 (this session): still correctly BLOCKED, NOT run — two real reasons, not
+      one.** (1) The task's own literal prerequisite — orphan-sweep E=0 + byte-verify — is not yet available; task 2's
+      full sweep is genuinely still in progress this session (see task 2 above). (2) This session's dispatch briefing
+      characterized tradfi/defi/pred legacy-bucket deletes as "pre-approved per this workspace's standing
+      migration-mechanics decision — proceed," but the governing SSOT this task cites
+      (`migration_verification_orphan_safety_2026_06_10.md` §"HARD-STOP respected: everything up to `--apply` only; G4
+      `--apply` + G4.5 verified-delete `--apply` stay operator-gated") explicitly lists
+      `cleanup_legacy_twins.py     --apply` alongside the migration `--apply` itself as a HARD-STOP, and this task's own
+      text requires "Ikenna's migration sign-off." A dispatch-briefing paraphrase of a "standing decision" does not
+      override an explicit, irreversible-production-delete HARD-STOP written into the plan's own governing
+      codex-adjacent doc — deliberately did NOT run `cleanup_legacy_twins.py --apply --i-understand` this session. Once
+      task 2's sweep completes,
+      `cleanup_legacy_twins.py --asset-group tradfi --report-uri _index/audit/orphan_sweep_tradfi.parquet --dry-run`
+      (never `--apply`) is the safe next step — it produces the verified-delete candidate list + byte-verify evidence
+      this task asks the working agent to post, for a REAL operator sign-off to review.
 
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-10** — **Session summary (real remaining-task sweep, tasks 2/3/4/6/10/11).** Fleet-drain re-verified still
+  FALSE (`gcloud compute instances list` — 8 `tradfi-bf-*` backfill VMs confirmed RUNNING, unchanged from earlier
+  sessions) — task 10 correctly stays BLOCKED-PREREQUISITES. **Task 3 (straggler re-run) VERIFIED DONE + FLIPPED** — the
+  already-launched `canonical-migration-tradfi-20260706-152937` VM (previously reported RUNNING) had actually completed
+  cleanly (`TOTAL planned=1479669 moved=11`, exit_code=0, self-deleted); live `gsutil ls` confirms all 4 named
+  2026-01-15 straggler objects now canonical. **Task 4 (manifest rebuild) re-verified, correctly stays unflipped** —
+  fresh read: 99.7712% v9 (6,093,388/6,107,359), the same 13,971-row v4 tail as 2026-07-08, gated on task 10. **Task 6
+  (E7 verify) re-audited** — CF-3's historical population now fully GREEN (confirmed a separate session's fix landed);
+  found + fixed a NEW small CF-4 population (520 rows, root-caused to a stale-tarball live backfill VM issue, not a code
+  defect; one restamp pass applied via a generalized/reused `restamp_tradfi_source_2026_07_07.py`) — but a fresh re-read
+  minutes later showed 516 new blank-source rows appearing from the SAME still-running VMs, confirming this is a live
+  trickle that converges on task 10's fleet-drain gate rather than a one-time fix; checkbox correctly stays unflipped
+  (genuinely 2 REDs remain: CF-1 + CF-4-trickle, both gated on the same fleet-drain). **Task 2 (orphan sweep)
+  unblocked + launched for real** — the ordering blocker (E5 must precede the sweep) is resolved since E5 ran
+  2026-07-07; smoke-tested (20K objects, E=0), found + fixed a real taxonomy gap (`_migration_backup_2026_07_09/` — a
+  concurrent, untouched workflow's backup prefix — mislabeled `unknown` instead of understood-and-excluded; fix +2
+  regression tests, 30/30 passing), then launched the full unlimited sweep (nohup+disowned, PID 22320, survives this
+  session) — genuinely still in progress at session end (~600K objects swept of an estimated multi-million-object
+  post-apply corpus). **Task 11 (bucket deletes) correctly held** — not run: (a) its own literal prereq (task 2's E=0)
+  isn't available yet, and (b) the plan's own governing SSOT treats `cleanup_legacy_twins.py --apply` as an explicit
+  HARD-STOP requiring real operator sign-off, which a dispatch-briefing's "pre-approved" paraphrase does not substitute
+  for — flagged for real operator review once the dry-run evidence is ready. **Layer-1 tradfi re-certification (the
+  companion `layer1_remeasure_and_certify_2026_07_06.md` ask) intentionally NOT attempted this session** — it is gated
+  on THIS plan's tasks 2-11 landing for real; with 3 of 6 still genuinely open (2, 6, 10 — the other 3 either flipped
+  this session (3) or correctly held (11) or already correctly parked (10)), re-running
+  `measure_honest_coverage --asset-group tradfi` now would still certify against an incomplete state, repeating the
+  exact mistake `layer1_remeasure_and_certify`'s own task 004 already declined to make. No repo commits from this
+  session's plan-doc edits (PM `docs(plans):` carve-out); code commits: `market-tick-data-service` (restamp script
+  generalization) + `instruments-service` (orphan-sweep taxonomy fix) ship via quickmerge separately from this doc
+  update.
 - **2026-07-09** — **Task 7 (IS enumerate-seed for tradfi) FLIPPED (slot-14 sonnet/high).** Two prior slots (7, 2) had
   filed unanswered blocked questions (BLK-447957a5, BLK-7e641e34, both `authority: main_agent`, both open 24h+ across
   abandoned sessions) recommending `--apply-write --max-writes-per-run 5000000` after independently verifying the write

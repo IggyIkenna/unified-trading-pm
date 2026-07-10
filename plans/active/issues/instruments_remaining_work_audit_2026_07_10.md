@@ -771,6 +771,32 @@ the source docs if this list is used for dispatch planning.
   execution as real code/data changes, not just recorded as resolved-in-principle. See Orchestration state below for the
   dispatched workflow(s).
 
+- **2026-07-10 (later still)**: **COINBASE-CDE split + new adapter + live connector fix SHIPPED** (the
+  COINBASE-FUTURES/#3-vs-#8 conflict's real fix, dispatched above). All 3 items landed real, live-verified code —
+  `unified-api-contracts@1cafb3c5` (registered `COINBASE-CDE` venue: `INSTRUMENT_TYPES_BY_VENUE={"FUTURE"}`,
+  `venue_adapter_keys.py` → `coinbase_cde`, `venue_mapping.py` native-REST routing + start date; rescoped
+  `COINBASE-FUTURES` to `{"PERPETUAL","SPOT_PAIR"}` INTX-only, dropping the phantom `FUTURE` and adding the real
+  previously-missing `SPOT_PAIR`), `instruments-service@94512ec3` (new `CoinbaseCdeReferenceDataAdapter` sourced from
+  Coinbase's public Advanced Trade REST, no-auth, live-verified: 99 real FUTURE instruments, real funding-rate
+  distinction between far-dated "nano perpetual" contracts and near-dated dated futures; wired into `factory.py`;
+  regenerated `expected_universe/cefi.json` golden), `market-tick-data-service@cdbbdb9b` (re-keyed
+  `coinbase_futures_ws.py` → `coinbase_cde_ws.py`, removed the fabricated `-INTX` symbol shape, live end-to-end
+  re-verified against `wss://advanced-trade-ws.coinbase.com` with a real captured cassette). The flagged silent
+  capture-gap inference is CONFIRMED: a live production manifest read
+  (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, 2026-07-10) shows the
+  pre-fix connector recorded ZERO real rows under any live pipeline_mode since it shipped (`mtds@fd436aea`, 2026-07-06)
+  — all 16,819 real `COINBASE-FUTURES` manifest rows are `batch_tardis`, versus real populated
+  `live_binance`/`live_bybit`/`live_deribit`/`live_hyperliquid`/`live_kraken`/`live_okx` pipeline_modes for the other
+  live-wired CeFi venues. Both `wsfeedconnector_phase35_gap_2026_07_06.md` and
+  `mtds_is_full_adapter_smoketest_findings_2026_07_07.md` updated with the full resolution in their own Progress Logs.
+  **Multi-agent note**: this dispatch hit repeated destructive `git reset --hard origin/live-defi-rollout` events on the
+  shared `unified-api-contracts` working tree from other concurrent sibling sessions mid-task (at least 3 separate
+  incidents, each discarding locally-committed-but-unpushed work, confirmed via `git reflog`) — all recovered by redoing
+  the edits from a fresh read each time and pushing immediately once committed; no data lost, but flagging the pattern
+  as worth a workspace-level look (an unattended `reset --hard` cycle against a SHARED branch is itself a
+  HARD-RULE-adjacent risk, distinct from the expected/normal shared-dirty-tree contention this session's sub-agent brief
+  already anticipated).
+
 ## Orchestration state — dispatched execution workflow
 
 `wf_1e191185-1c2` (`instruments-audit-decisions-execution`) — 8 parallel agents executing the 10 decisions above:

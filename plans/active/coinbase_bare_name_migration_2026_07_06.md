@@ -435,6 +435,30 @@ emit a small, expected residual — never a silent zeroing).
   regression, not just a test artifact. **S2 must land AFTER S3** (or be combined into the same cross-repo shippable
   unit as S3).
 
+  **🟡 CODE COMPLETE, BLOCKED ON QUICKMERGE 2026-07-10** (this dispatch) — the elif-branch deletion + docstring updates
+  - new regression test (`test_cefi_coinbase_spot_expected_set_survives_fold_inversion`, asserting COINBASE-SPOT's real
+    EXPECTED set is `{(spot_pair, trades)}` — `book_snapshot_5` correctly absent per operator decision #6's trades-only
+    MVP scoping) are all written and QG-verified in the local working tree
+    (`instruments_service/engine/orchestrator/venue_core.py`, `tests/unit/test_orchestrator_helpers.py`,
+    `tests/unit/scripts/test_check_enumeration_completeness.py`). A full `bash scripts/quality-gates.sh` run (now that
+    S3 is live) shows exactly 5 failures, ALL pre-existing/unrelated to this change (verified by inspection): the
+    in-flight OKX-SPOT venue-registration decision's own uncommitted fold-removal work (`test_cefi_venue_suffix_fold`,
+    `test_cefi_okx_spot_folds_to_okx`), stale golden fixtures reflecting mid-flight OKX-SPOT/CDE/DeFi registry churn
+    (`test_expected_matches_golden[cefi/defi]`), and the pre-existing `RADIANT-BSC` missing-adapter-key gap
+    (`test_every_canonical_venue_has_a_uac_entry`) — none touch COINBASE. `quickmerge.sh`'s STAGE 2 pre-flight audit
+    repeatedly failed on `unified-trading-library` and `unified-api-contracts` path-dependencies having uncommitted
+    changes — but every dirty file in both, across 5 consecutive retries over ~20 minutes, belonged to OTHER
+    concurrently-dispatched agents' unrelated in-flight work (OKX-SPOT venue registration, UAC data-type-validity
+    redesign, DeFi capability-registry additions, polymarket schema changes, mvp_mode research) — none of it is this
+    task's to commit (codex/08-workflows/ci-cd-flow.md's "dirty-deps" carve-out is for a repo the SAME agent owns
+    mid-edit, not for absorbing other agents' WIP under this agent's authorship). **Next agent/operator**: re-run the
+    exact quickmerge command below once UAC + UTL are clean; the code itself needs no further changes.
+
+  ```
+  cd instruments-service && bash scripts/quickmerge.sh "fix(orchestrator): delete dead elif-COINBASE alias branch in expand_cefi_tardis_endpoints" \
+    --agent --files 'instruments_service/engine/orchestrator/venue_core.py tests/unit/test_orchestrator_helpers.py tests/unit/scripts/test_check_enumeration_completeness.py'
+  ```
+
 ### Step S4 — IS data_engineering downstream ripple
 
 - [x] [CODE] P2. `instruments-service/`: audit each remaining bare-COINBASE hit (§2b) and re-key any lookups.
@@ -476,12 +500,27 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S6 — cross-repo ripple (features-service, MDPS, UTL, deployment-api, deployment-service)
 
-- [ ] [CODE] P3. `features-service/`, `market-data-processing-service/`, `unified-trading-library/`, `deployment-api/`,
+- [x] [CODE] P3. `features-service/`, `market-data-processing-service/`, `unified-trading-library/`, `deployment-api/`,
       `deployment-service/`: apply §2e. Each repo lands independently after S3 (UAC ships first). For the
       deployment-service shard-launch scripts (`scripts/vm/launch-cefi-{forward-poll,sharded-backfill}.sh`), coordinate
       with the deployment-service owner if COINBASE-shard VM naming needs to update — the shard name is data-plane
       observable. **Gate per repo:** QG green; mock-seeds emit COINBASE-SPOT; data_status_mock produces identical
-      counts.
+      counts. **DONE 2026-07-10** by slot 10 (data_engineering) — `features-service@9031de88`,
+      `market-data-processing-service@ce9e225b` + `@27bce460`, `deployment-service@35261416`. `deployment-api` audited,
+      already correct (no bare-COINBASE lookups found — `data_status_mock.py`/`venue_relaunch_estimate.py` already emit
+      `COINBASE-SPOT`; `reference_scope.py` / `rollup_cache.py` / `defi.py` `_VENUE_ALIASES` / `manifest.py`
+      bare-`COINBASE` references are intentional bare→canonical FOLD tables or descriptive comments, not migration
+      targets — left untouched). `deployment-service` VM shard-launch scripts audited: no bare-COINBASE literal found
+      (`launch-cefi-sharded-backfill-aws.sh` already uses `SYMBOLS_COINBASE_SPOT`). `unified-trading-library`
+      (`post_trade/settler.py:52` fee schedule, `config_interface/instrument.py:30` `Venue.COINBASE` enum value)
+      deliberately LEFT AS-IS per this plan's own "flag for the utl-owning slot" guidance — both dicts mirror the
+      bare-venue Nautilus/execution-service naming namespace (out-of-scope §2d), not the UAC CeFi registry; rekeying
+      would silently break the fee/enum lookup for COINBASE fills. Two unrelated pre-existing QG blockers surfaced +
+      fixed while shipping: (1) features-service pip-audit CVE-2026-49476/49477 on soupsieve 2.8.3 — bumped to 2.8.4;
+      (2) MDPS `test_dependency_checker_sports_prediction.py::test_prediction_uses_instrument_availability` asserted a
+      stale `instruments-store-prediction-` string against the UAC SSOT's abbreviated `instruments-store-pred-` token
+      (`gcs_paths.py`), plus 2 comments in `aggregation_rules.py`/`live_aggregator.py` false-positived the
+      no-backward-compat-shims keyword gate — test + comments fixed, no behavior change.
 
 ### Step S7 — execution-service follow-on (OUT-OF-SCOPE, filed as new plan)
 
@@ -537,6 +576,26 @@ is:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-10** — **S6 done** (slot-10, data_engineering) — `features-service@9031de88`,
+  `market-data-processing-service@ce9e225b` + `@27bce460`, `deployment-service@35261416`. Applied §2e: re-keyed the
+  bare-`COINBASE` entry in 4 mock-data/config sites (features-service + MDPS `CEFI_VENUES` seed sets, deployment-service
+  `shard_distribution.py` `spot_only_venues` default — the latter is a genuine correctness fix, not cosmetic: it's an
+  exact-string membership filter against combo venue values, so post-S3 the bare form would never match `COINBASE-SPOT`
+  combos and stop filtering them out of perpetuals-only Tardis subscriptions). Audited `deployment-api` (§2e list) and
+  found every named site already correct or an intentional bare→canonical FOLD table (`defi.py` `_VENUE_ALIASES`,
+  `manifest.py`, `rollup_cache.py` `DEFI_NON_PROTOCOL_VENUE_PREFIXES`, `reference_scope.py` comments) — no change
+  needed, left untouched. Left `unified-trading-library` (`settler.py` fee schedule, `Venue.COINBASE` enum) unchanged
+  per the plan's own "flag for the utl-owning slot" — both key off the bare-venue Nautilus/execution-service namespace
+  (§2d, out-of-scope), confirmed by tracing `ExecutionFillEvent` — a blind rekey would silently break the fee lookup for
+  COINBASE fills once real callers wire up. Surfaced + fixed 2 unrelated pre-existing QG blockers while shipping (not
+  this plan's scope, needed to reach QG-green): features-service pip-audit CVE-2026-49476/49477 (soupsieve 2.8.3→2.8.4);
+  MDPS's `test_dependency_checker_sports_prediction.py` had a stale assertion contradicting the UAC `gcs_paths.py`
+  SSOT's `pred`-abbreviated bucket token, plus 2 comments false-positived the no-backward-compat-shims keyword gate.
+  Workflow note: pre-committing before running `quickmerge.sh` skips its own commit step, so `quickmerge.sh` never
+  stamps the `Quickmerge:` trailer on the commit — `check_strict_quickmerge.py`'s pre-push guard then blocks the push
+  for any commit touching real source files. Recovered by resetting the (still-local, unpushed) commits and re-running
+  `quality-gates.sh` fresh against the uncommitted tree before each `quickmerge.sh --agent --files` call, letting the
+  tool own the commit + trailer. Worth a doc note for `agents/worker.md` if this recurs for other slots.
 - **2026-07-10** — **S3 done** (slot-6, data_engineering) — unified-api-contracts@42270f63. Applied the full §2a
   CEFI-MIGRATE set across all 13 UAC files (12 named in the plan + `venue_mapping.py` covering 3 line items).
   `bash scripts/quality-gates.sh` green, sentinel-verified at the committed SHA. Found + fixed 2 plan-authoring gaps

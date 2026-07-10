@@ -205,13 +205,18 @@ enough). The % is neither an upper nor lower bound of the real value.
 
 **Operator decision — agent RAISES via blocked-queue, operator answers later (do NOT guess):**
 
-- [ ] [DESIGN] P1. **BLOCKED-OPERATOR-DECISION — COINBASE / DERIBIT-COMBO MVP_SCOPE membership.** Bare `COINBASE` +
-      `DERIBIT-COMBO` still produce 0 EXPECTED because they are absent from `MVP_SCOPE["cefi"].venues` (which lists
-      COINBASE-SPOT/FUTURES, not bare COINBASE) — gate #3 zeroes them REGARDLESS of the `INSTRUMENT_TYPES_BY_VENUE` fix.
-      Decide: add bare `COINBASE` (+ a DERIBIT-COMBO membership call) to `MVP_SCOPE.venues`, or confirm intentionally
-      out-of-MVP. (BINANCE-DELIVERY correctly 0 — COIN-M not-MVP per the 06-27 decision #3.) Park the dependent rows
-      pending the answer. _(This line carries `BLOCKED-` so the orchestrator will not dispatch it — it stays visible for
-      the operator; the working 2a/2b agent surfaces it via the blocked-queue.)_
+- [x] ✅ [DESIGN] P1. **COINBASE / DERIBIT-COMBO MVP_SCOPE membership — RESOLVED 2026-07-10 (operator decision #6: "keep
+      both declared").** `DERIBIT-COMBO` added to `MVP_SCOPE["cefi"].venues` + a required `venue_data_types` override
+      ({trades, book_snapshot_5} — without it DERIBIT-COMBO would inherit bare DERIBIT's OPTION->{options_chain}
+      override, a phantom cell it cannot produce) + the matching `VENUE_DATA_TYPE_CAPABILITIES["DERIBIT-COMBO"]` entry —
+      dynamically verified `build_expected("cefi")` now yields `(DERIBIT-COMBO, options_chain, trades)`, previously
+      silently zero. The per-venue cost-control mechanism the operator recalled for COINBASE ALREADY EXISTS
+      (`CeFiMvpRule.venue_data_types` v11, 2026-06-28) and already scopes `COINBASE-FUTURES` (=Coinbase INTX) to
+      trades-only — zero code change needed there. Bare `COINBASE` was deliberately NOT added — a concurrently-shipping,
+      operator-approved migration (`coinbase_bare_name_migration_2026_07_06.md`, `unified-api-contracts@42270f63`)
+      retired bare `COINBASE` entirely in favor of the sole canonical `COINBASE-SPOT` (already declared + already
+      trades-only scoped); adding a dependency on the retired key would work against that migration. Shipped
+      `unified-api-contracts@5626079e`.
 
 - [ ] [DESIGN] P1. **BLOCKED-OPERATOR-DECISION — OKX-SPOT has ZERO EXPECTED tuples anywhere (denominator hole) — TRACKED
       IN FULL at `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`.** Surfaced 2026-07-08
