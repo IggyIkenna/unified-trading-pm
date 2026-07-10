@@ -104,13 +104,15 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ### 🟡 Runtime findings from the live P0 verification (2026-07-09 — capture, not yet fixed)
 
-- [ ] [BACKEND] P1. **`google-cloud-functions` missing from deployment-api's deps/lock** — the live CLOUD_FUNCTION
-      census fails `No module named 'google.cloud.functions_v2'` and honest-degrades to empty (0 functions shown; would
-      also break on a prod deploy of the new census code). deployment-service@fb217de added `google-cloud-functions` but
-      deployment-api's `pyproject.toml`/`uv.lock` (which pulls deployment-service editable) was never regenerated to
-      include it, and the QG's `uv sync` prunes it from the venv (grep `google-cloud-functions` in deployment-api
-      `uv.lock` = 0). Fix: add the dep to deployment-api (or re-export functions_v2 through the deployment-service
-      `_gcp_sdk` boundary that already declares it) + regenerate the lock; verify the live census returns the functions.
+- [x] ✅ [BACKEND] P1. **`google-cloud-functions` missing from deployment-api's deps/lock** — the live CLOUD_FUNCTION
+      census failed `No module named 'google.cloud.functions_v2'` and honest-degraded to empty (0 functions shown; would
+      also break a prod deploy of the new census code). deployment-service@fb217de added `google-cloud-functions` and
+      deployment-api uses `functions_v2` via its `_gcp_sdk` boundary, but deployment-api's `uv.lock` predated that
+      addition so `uv sync` pruned it. — **deployment-api@bc506c5 (quickmerged)**. Regenerated the lock (transitive
+      resolution from the deployment-service editable dep): adds `google-cloud-functions 1.24.0` +
+      `google-cloud-artifact-registry 1.22.0`; no direct-dep needed (the `_gcp_sdk` boundary stays the only import
+      seam). **Live-verified**: the census now returns 2 functions (`trigger-market-tick-cefi-job`,
+      `trigger-instruments-job`, both running/python312). QG green (uniswap blocker resolved upstream).
 - [ ] [BACKEND] P2. **Object-delta cold census is slow (>45 s → degrades)** — with the str→numeric coercion landed
       (@934f22f) `_batched_object_deltas` no longer errors, but its per-distinct-asset_group manifest reads exceed the
       45 s per-provider census bound on a cold cycle (`object-delta census exceeded 45s — degraded to empty`), so the
