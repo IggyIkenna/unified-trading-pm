@@ -3,27 +3,61 @@ doc_type: codex-ssot
 title: DeFi Instrument Pipeline
 summary: >-
   End-to-end DeFi instrument pipeline from instruments-service reference-data adapters (49 DeFi adapters:
-  lending/DEX/LST/vault/restaking/native-staking) through MTDS raw_tick_data → MDPS processed_candles →
-  features-onchain → strategy → execution; documents the canonical instrument_key registry, the PATH_REGISTRY GCS
-  path templates, the step-by-step add-an-instrument recipe, and the factory.py subgraph-prefix adapter
-  auto-registration mechanism.
+  lending/DEX/LST/vault/restaking/native-staking) through MTDS raw_tick_data → MDPS processed_candles → features-onchain
+  → strategy → execution; documents the canonical instrument_key registry, the PATH_REGISTRY GCS path templates, the
+  step-by-step add-an-instrument recipe, and the factory.py subgraph-prefix adapter auto-registration mechanism.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [defi, instruments, pipeline, mtds, mdps, features, execution]
-related: [defi-venue-protocol-catalogue.md, defi-data-pipeline.md, hive-schema-compatibility.md, partitioning.md, ../09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md]
+related:
+  [
+    defi-venue-protocol-catalogue.md,
+    defi-data-pipeline.md,
+    hive-schema-compatibility.md,
+    partitioning.md,
+    ../09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md,
+  ]
 created: 2026-04-03
-authoritative_for: [DeFi instrument pipeline stages (instruments-service adapters through execution), instruments-service factory.py subgraph-prefix adapter auto-registration]
-referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/defi-data-pipeline.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/venue-availability.md, plans/epics/defi_master.md]
+authoritative_for:
+  [
+    DeFi instrument pipeline stages (instruments-service adapters through execution),
+    instruments-service factory.py subgraph-prefix adapter auto-registration,
+  ]
+referenced_by:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/defi-data-pipeline.md,
+    codex/02-data/defi-data-types-catalog.md,
+    codex/02-data/venue-availability.md,
+    plans/epics/defi_master.md,
+  ]
 owner:
 last_reviewed: 2026-05-15
 code_refs:
 ---
 
 # DeFi Instrument Pipeline
+
+> **📌 CANONICAL PATH UPDATE (2026-07-10) — the `raw_tick_data/` path examples below show the pre-canonical shape.** The
+> fully-canonical DeFi raw-tick object path is
+> `raw_tick_data/by_date/day={date}/pipeline_mode={mode}/asset_group=defi/chain={chain}/venue={v}/instrument_type={it}/data_type={dt}/{key}.parquet`
+> — with the `pipeline_mode=` hive segment PRIMARY (left of `asset_group=`) and `asset_group=defi` (not the legacy
+> `category=`/no-key shape shown in the diagrams). SSOTs: [`pipeline-mode-partition.md`](pipeline-mode-partition.md)
+> (source-aware `{mode}_{source}[_{transport}]`; readers PREFIX-MATCH) +
+> [`per-asset-group-bucket-layouts.md`](per-asset-group-bucket-layouts.md) (per-AG canonical layout). Writers emit
+> canonical PRIMARY; the legacy shape coexists on disk until the per-AG canonical migration deletes it.
 
 ## Overview
 
