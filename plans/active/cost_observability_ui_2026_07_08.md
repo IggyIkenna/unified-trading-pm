@@ -260,9 +260,11 @@ on the resource table + the running backend endpoints (last-30d window).
 
 ### Structural
 
-- [ ] [BACKEND] P3. Only the **resource table** is wired; the cheaper **standard table** (`gcp_billing_export_v1_*`,
-      SKU/project) isn't. Fine while single-project, and SKU is reachable off the resource table anyway — revisit only
-      if per-project or query-cost matters.
+- [x] 🚫 [BACKEND] P3. **CLOSED — won't-do (operator, 2026-07-10).** Wire the cheaper **standard table**
+      (`gcp_billing_export_v1_*`, SKU/project). Its only driver was **per-project**, which is now moot: multi-account /
+      multi-org = **separate deployments per account** (the 2026-07-10 decision), NOT an in-app per-project view. SKU is
+      already reachable off the resource table (SKU dimension shipped), so the resource table stays the sole source and
+      the standard table is not needed.
 - [ ] [UI] P3. No **"other resources" leaf** — Cloud Run Jobs is ~$2.9k/30d (CPU $2,047 + Mem $882), bigger than any
       single VM, but only vm+bucket leaf tables exist; it surfaces only in the "By resource" breakdown.
 

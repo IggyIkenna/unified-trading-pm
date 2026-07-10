@@ -226,14 +226,42 @@ drift_direction: advance-code
       scale: shard stale + VM stopped = data frozen (expected); shard stale + VM still RUNNING = the VM is stalled and
       silently not flushing (a bug). `pw:L2` on the fan-in cell.
 
-### Dark data-correctness actors — decide whether they surface here (operator to prune)
+### Dark data-correctness actors — VISIBILITY only; detection ALREADY EXISTS (deep-audited 2026-07-10)
 
-- [ ] [DESIGN] P2. **Phantom-audit + reprobe-empty visibility — decide surface + build a read endpoint if in-scope.**
-      These are the "is the index HONEST" checks, Slack-only today (no endpoint): `dp-manifest-hygiene-full` (weekly
-      `0 8 * * 0`) finds **phantom rows** (index says `captured`, NO parquet on disk — the index lying about coverage;
-      `DP-MANIFEST-003/005`); `dp-reprobe-empty` (daily `0 9 * * *`) re-fetches wrongly-`empty_confirmed` cells and
-      flips proven-wrong ones back to `attempted_failed` (`DP-FETCH-006`). Surfacing needs a small endpoint reading
-      their last result (GCS sentinel / event log). Data-correctness signal → belongs on THIS page if surfaced at all.
+> **Confirmed: the phantom-audit + reprobe DETECTION already exists and is mature — the ONLY gap is that results aren't
+> queryable (Slack-only). So this is "wire a thin persist + read endpoint", NOT "build detection".** Phantom =
+> `dp-manifest-hygiene-full` (weekly `0 8 * * 0`) → `e2e-testing/scripts/audit/manifest_hygiene_daily.py --mode full` →
+> `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --dry-run` (~10 false-positive guards,
+> codex-canonical; `--apply` exists but the cron never passes it). Reprobe = `dp-reprobe-empty` (daily `0 9 * * *`) →
+> `e2e-testing/scripts/audit/reprobe_new_empty_confirmed.py --reclassify-apply` (proof-gated
+> `empty_confirmed → attempted_failed` auto-heal — **LIVE in prod**, capped 200/run + backup-before-write). Both
+> terminate at `log_event → PubSub → alerting-service → Slack`; NO Firestore/DB. The candidate-CSV + issue-doc outputs
+> target the PM git clone, which doesn't exist on the Cloud Run image → discarded on job exit.
+
+- [ ] [BACKEND] P2. **Persist a per-AG summary + read endpoint (phantom).** Write/overwrite a stable `latest.json` per
+      AG (phantom count + timestamp + triage-JSONL link) next to the existing `emit_dp_event` in the hygiene/reconcile
+      script. A real but UNWIRED artifact already exists to lean on —
+      `gs://central-element-323112-phantom-triage/     triage_{ag}_{ts}.jsonl` (written dry-run when phantoms > 0,
+      timestamp-suffixed, NO latest-pointer, ZERO consumers). Then a small deployment-api endpoint reads `latest.json`.
+      **Zero new detection logic.**
+- [ ] [BACKEND] P2. **Persist a per-AG summary + read endpoint (reprobe).** No artifact exists today (fully Slack-only)
+      → write a per-AG `latest.json` (disagreement counts + reclassified count + timestamp) in
+      `reprobe_new_empty_confirmed     .py`, same GCS-JSON pattern, same read endpoint. (The incidental
+      `error_reason=REPROBE_PROVED_FETCHABLE` + `.bak.parquet` manifest trace covers only the narrow proven subset — not
+      enough alone.)
+- [ ] [UI] P2. **Surface on the consolidator page** — per consolidator/AG: "last phantom audit: N phantoms (Xd ago)" +
+      "last reprobe: N disagreements / M reclassified", with HONEST staleness shown loudly (phantom is WEEKLY → the age
+      matters). Tooltip explains what a phantom / a reprobe-disagreement is. `pw:L2`.
+
+> **⚠️ Coverage-gap FINDINGS (data-correctness, OUTSIDE this UI plan — flagged to operator 2026-07-10; candidate issue
+> doc):** (1) reprobe's **tradfi + prediction** live-refetch hooks are unconditional STUBS (`reprobe_tradfi.py:75`,
+> `reprobe_prediction.py:71` — always `reached_source=False`) → those 2 AGs can NEVER self-heal a wrong
+> `empty_confirmed`. (2) phantom audit covers only 5 single-bucket-per-AG targets; DeFi **per-data-type buckets**
+> (lending-indices / lst-rates / oracle-prices / perp-funding / eigenlayer-rewards) need a `--manifest-bucket` override
+> the cron never passes → their phantoms are UNDETECTED; and the consolidator estate is ~20+ buckets vs the 5 audited.
+> (3) phantom cadence is WEEKLY (daily `changed` mode skips it) → up to 7 d stale. (4) 4-pillar findings persist only to
+> a stdout tail. These belong in a data-pipeline plan / issue doc, NOT this UI plan — but the UI MUST show the honest
+> cadence/coverage so a stale or narrow audit never reads as "all clear".
 
 ### Shipping gate (WS-3 — mirrors WS-1's closer)
 
@@ -301,3 +329,11 @@ drift_direction: advance-code
   `instruments-store-cefi-prd/_index/availability_index.parquet` (2.8 MB, 86,977 rows × 41 cols; capture_status captured
   64,227 / empty_confirmed 22,630 / attempted_failed 81 / expected_unattempted 39). Phantom-audit + reprobe-empty "do
   the scripts already exist" investigation running (background) — findings + gap-scoping to follow.
+- 2026-07-10 — Phantom/reprobe deep-audit DONE. **Detection ALREADY EXISTS + is mature** (phantom =
+  `reconcile_phantom_manifest_rows_all.py` via `dp-manifest-hygiene-full`; reprobe = `reprobe_new_empty_confirmed.py`
+  via `dp-reprobe-empty`, whose proof-gated auto-heal is LIVE in prod) — the gap is VISIBILITY only (both
+  Slack-terminal; phantom has ONE unwired GCS triage artifact, reprobe has none). Dark-actors section reframed "decide
+  whether to build" → 3 todos (persist per-AG `latest.json` + read endpoint + UI surfacing; ZERO new detection).
+  **Escalated 4 coverage-gap FINDINGS** (data-correctness, not this UI plan): tradfi/prediction reprobe hooks are STUBS
+  (can't self-heal wrong empties), DeFi per-data-type buckets unaudited, phantom covers 5 of ~20+ consolidator buckets,
+  weekly cadence → up-to-7d stale. Candidate issue doc pending operator decision.
