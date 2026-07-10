@@ -474,9 +474,18 @@ be fixed first if run on a VM.
       overlap 783) = the data-loss risk that keeps **E8 legacy-delete HARD-gated until the migration runs**. So E7 is
       GREEN-able only AFTER the gated E4 full-run + rebuild; the code side is ready (verified no defect introduced by
       E2/E5).
-- [ ] [CODE] P0. **E7-ROOT — 🔴 PHANTOM RECONCILER WIPES BUNDLE-ATOM CAPTURED CELLS (the PRIMARY E7 blocker; big finding
-      2026-07-10).** Root-cause diagnosis of the live `_index` found **ZERO**
-      `data_type=prediction_canonical_question_group` rows at `captured` — the phantom-manifest reconciler
+- [ ] [CODE] P0. **E7-ROOT — 🔴 PHANTOM RECONCILER BUNDLE-ATOM WIPE. ✅ STEP 1 (CODE FIX) LANDED 2026-07-10 —
+      `unified-trading-library@22d3984b` + `instruments-service@2674e6fd` (both QG-green).** The reconciler now EXEMPTS
+      manifest-only bundle atoms (new UTL SSOT
+      `MANIFEST_ONLY_BUNDLE_DATA_TYPES = {prediction_canonical_question_group}`, a strict subset of UAC
+      `BUNDLED_DATA_TYPES` — object-backed bundles options_chain/futures_chain/event_contract/sports stay in phantom
+      scope; invariant + regression tests prove bundle atoms survive while genuine per-object phantoms are still
+      demoted; rule-11 fleet-safety verified). **REMAINING (data-ops, in progress): STEP 2** fix rebuild
+      `_CANONICAL_PRED_RE` chain=/underlying= gap (mtds); **STEP 3** RESTORE the ~15,769 wiped cells via
+      `reconcile_phantom_manifest_rows_all.py --asset-group prediction --unphantom-only --apply` (safe-by-construction:
+      only flips attempted_failed→captured); **STEP 4** re-diagnose the v4 legacy rows + drive E7 CF-verify GREEN. Flip
+      THIS box only when E7 is GREEN. Original diagnosis below. <br>Root-cause diagnosis of the live `_index` found
+      **ZERO** `data_type=prediction_canonical_question_group` rows at `captured` — the phantom-manifest reconciler
       (`unified_trading_library/reconcile/manifest.py`, wrapper
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`) has a **bundle-atom blind spot**: it assumes
       `instrument_id` is a per-object path segment, but the v9 bundle atom's `instrument_id` is a SYNTHETIC
