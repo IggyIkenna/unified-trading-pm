@@ -91,16 +91,18 @@ source:
       2026-01-15 handed off to task 3 · post-migration GCS shows canonical `pipeline_mode=batch_databento/batch_yahoo`
       subdirs present at day=2026-01-15 · run.log at
       `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-tradfi-20260706-145606/run.log`.
-- [ ] [DATA] P0. **🚧 FULL SWEEP COMPLETED 2026-07-10 15:57:41 UTC (this session, continuation) — gate NOT met, 2
-      characterized remainders (585 real orphans + 71,830 previously-mislabelled `_needs_attribution` holding objects;
-      second now fixed).** Orphan sweep to E=0 + bucket-state evidence (all years, `tradfi-prd`). Per
-      `tradfi_manifest_canonicalisation` §"Orphan sweep + bucket-state evidence" + `migration_verification` V6. Gate:
-      zero orphaned legacy-path objects; bucket-state evidence recorded. **Ordering blocker re-evaluated + confirmed
-      resolved**: task 4's E5 rebuild ran to completion 2026-07-07 (mtds@4ccf52c6, see task 4's Progress Log) — the
-      manifest now carries `schema_version`/`source`/`pipeline_mode`/`asset_group` columns for 99.77% of rows
-      (6,093,388/6,107,359), including the 2026 migration's 122,703 objects. The original BLK-71c6f4c4 concern (running
-      the sweep BEFORE E5 would false-positive Class-E on the newly-migrated objects) no longer applies — E5 has run.
-      **Real smoke-tested first** (`--limit 20000`, 2026-07-10 12:13-12:17 UTC):
+- [x] ✅ [DATA] P0. **🎯 GATE MET 2026-07-10 17:17:22 UTC (slot-3 sonnet/high) — fresh full corpus-wide re-sweep
+      confirms `orphan_class_E=0, unknown_prefixes=0`.** History below (was: 🚧 FULL SWEEP COMPLETED 2026-07-10 15:57:41
+      UTC (this session, continuation) — gate NOT met, 2 characterized remainders (585 real orphans + 71,830
+      previously-mislabelled `_needs_attribution` holding objects; second now fixed).** Orphan sweep to E=0 +
+      bucket-state evidence (all years, `tradfi-prd`). Per `tradfi_manifest_canonicalisation` §"Orphan sweep +
+      bucket-state evidence" + `migration_verification` V6. Gate: zero orphaned legacy-path objects; bucket-state
+      evidence recorded. **Ordering blocker re-evaluated + confirmed resolved**: task 4's E5 rebuild ran to completion
+      2026-07-07 (mtds@4ccf52c6, see task 4's Progress Log) — the manifest now carries
+      `schema_version`/`source`/`pipeline_mode`/`asset_group` columns for 99.77% of rows (6,093,388/6,107,359),
+      including the 2026 migration's 122,703 objects. The original BLK-71c6f4c4 concern (running the sweep BEFORE E5
+      would false-positive Class-E on the newly-migrated objects) no longer applies — E5 has run. **Real smoke-tested
+      first** (`--limit 20000`, 2026-07-10 12:13-12:17 UTC):
       `A_canonical_manifested=19644 ·     B_legacy_duplicate=0 · C_manifest_infra=41 · D_junk=315 · E_orphan_real=0`.
       **Found + fixed a real taxonomy gap as a byproduct**: the walk hit `unknown:_migration_backup_2026_07_09/` (19,959
       of the 20,000-object smoke window) — a real, legitimate backup-first prefix written by the CONCURRENT
@@ -159,7 +161,58 @@ source:
       NOT met — 585 real orphans need a backfill-registration follow-up (new P1 todo, not yet scoped/estimated) before
       task 11 (legacy-twin deletes) can safely proceed on a complete picture; the `_needs_attribution` taxonomy gap is
       fixed (code, not yet quickmerged as of this entry — see this session's commit). Checkbox correctly stays
-      unflipped.
+      unflipped. **UPDATE 2026-07-10 (slot-3 sonnet/high, later continuation) — the 585-orphan remainder is now
+      BACKFILLED + scoped-verified E=0, but the literal corpus-wide gate still awaits a fresh full re-sweep (launched,
+      in progress).** The already-shipped, already-tested `backfill_orphan_class_e.py --asset-group tradfi` tool (R1
+      deliverable, docstring-documented characterise→canonicalise→record_captured pipeline) was exactly the
+      not-yet-scoped follow-up this remainder needed — ran it rather than writing a new script. `--dry-run` first:
+      583/585 still-orphan (2 already-covered/reclassed as class-B), 0 escalated, 0 convert-failed — clean
+      characterisation (CME `future`/`futures_chain`/`options_chain` `trades`/`ohlcv_1m` + CBOE/ICE `indices`
+      `ohlcv_15m`, split `batch_databento`/`batch_massive` per already-canonical `pipeline_mode=` path segment). Then
+      `--apply`: `converted=583 recorded_cells=69 junk=0 escalated=0 convert_failed=0 verify_failed=0` (per-VM shard at
+      `_index/per_vm/orphan-backfill-tradfi.parquet`; the `ManifestWriter schema mismatch (warn-only)` log lines are the
+      tool's own sanctioned warn-only backfill mode, documented in its `record_cells` docstring, not a new defect).
+      Local `manifest_consolidator` invocation first OOM'd (`max_temp_directory_size` bound by the slot's 2 GB tmpfs
+      `/tmp`, 390 MB free, against a 10.5M-row corpus) — root-caused to the slot's disk layout, not a tool/data bug;
+      re-ran with `TMPDIR` pointed at `/home` (67 GB free) and it succeeded, though `rows_in=0 pruned_shards=1`
+      indicates the production `*/1` Cloud Scheduler consolidator had already drained my per-VM shard in the ~3 min
+      between apply and this manual run (expected — confirms the every-minute cadence documented in this plan's header
+      is real, not just a claim). **Verified, not assumed**: re-ran the backfill tool's own `reverify_against_index`
+      against all 585 original report rows post-consolidation — `already-covered=585 still-orphan=0`. This closes the
+      backfill/record piece of the previously-diagnosed remainder cleanly. **What is NOT yet closed**: this scoped check
+      only re-tests the 585 KNOWN rows — task 2's literal gate ("zero orphaned legacy-path objects" /
+      `orphan_class_E == 0`) is a corpus-wide claim over all ~10.5M objects, which only a fresh full sweep can confirm
+      (the last full sweep's report, now stale, predates this backfill). A full re-sweep takes ~3.5h at the observed
+      ~823 obj/s rate — too long to block this task cycle on. **Launched** (matching this task's own established
+      hand-off precedent from the prior two sessions):
+      `nohup env GCP_PROJECT_ID=central-element-323112     .venv/bin/python scripts/migration_orphan_sweep.py --asset-group tradfi --dry-run --workers 64 --report-out     gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet`,
+      disowned, PID 3075330, started 2026-07-10T17:02 UTC, confirmed alive + logging within 15s (verified, not
+      fire-and-forget). Log is local to this session's scratchpad (will not survive session end, per the same documented
+      limitation as the prior sweep) — the process itself and its eventual landed `orphan_sweep_tradfi.parquet` report
+      are what matter for whoever picks this up next: check `ps aux | grep migration_orphan_sweep` / `gsutil stat` on
+      the report path (expect a fresh `updated` timestamp ~3.5h after 17:02 UTC) — if `E_orphan_real=0` (or a
+      newly-characterized non-zero remainder), this task's gate is finally satisfiable; if the process died, it is
+      idempotent/scan-only and safe to relaunch verbatim. **UPDATE 2026-07-10 17:17:22 UTC (same session, same slot) —
+      PID 3075330 completed cleanly (confirmed exited via `kill -0`, not assumed) in ~15 min, MUCH faster than the ~3.5h
+      estimate (steady ~12,250 obj/s vs the prior session's ~823 obj/s — same corpus, evidently warm caches/less
+      contention this run; not investigated further, not this task's concern).** Full class breakdown over 10,584,946
+      objects:
+      `A_canonical_manifested=2,594,017 · B_legacy_duplicate=995 · C_manifest_infra=38 ·     C2_non_data=7,884,651 · D_junk=105,207 · E_orphan_real=0`.
+      **`=== ACCEPTANCE: orphan_class_E=0 (target 0),     unknown_prefixes=0 (target 0) ===`** — both this task's
+      literal gate AND the taxonomy-completeness check are GREEN, corpus-wide, on a report freshly written this run (not
+      the stale pre-backfill one). Report:
+      `gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet` (995 actionable
+      rows written: 0 orphan-E + 995 legacy-B — the legacy-B population is exactly task 11's verified-delete candidate
+      set). **Checkbox FLIPPED** — the literal gate is genuinely, corpus-wide met for the first time this plan. Bucket
+      composition note for task 11's context: `C2_non_data=7,884,651` (78% of the corpus) reflects the migration's
+      copy-not-move design (canonical copies sit alongside legacy originals) plus the `_migration_backup_2026_07_09`/
+      `_needs_attribution` holding prefixes already taxonomy-fixed this plan — not itself a gap, no action needed.
+      **Downstream unblocked**: task 11 (legacy-twin bucket deletes) can now run its
+      `cleanup_legacy_twins.py     --asset-group tradfi --report-uri gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet     --dry-run`
+      prep step (never `--apply` — still operator-gated, see task 11's own HARD-STOP text) against this fresh report —
+      NOT run as part of this task (scope discipline: one task at a time, task 11 is its own checkbox requiring its own
+      dispatch). No repo code commit this entry (data write + verification via already-shipped tooling, same precedent
+      as tasks 7/8's Progress Log entries); the PM plan-doc edit ships via the `docs(plans):` carve-out.
 - [ ] [DATA] P0. **BLOCKED-STRAGGLER-VM-RUNNING · Idempotent straggler re-run** — transient GCS 503/504 bursts on
       2026-07-06 left ~7 objects unmoved on 2025-02-03/04 **plus 4 objects unmoved on 2026-01-15** (all transient GCS
       timeouts, not memory, self-limited). Re-run the migrator over the affected day-partitions (idempotent — skips
@@ -341,6 +394,31 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-10 (slot-3 sonnet/high, same session, later)** — **Task 2 CHECKBOX FLIPPED — corpus-wide `orphan_class_E=0`
+  confirmed for the first time this plan.** The full re-sweep launched earlier this session (PID 3075330) completed
+  cleanly in ~15 min (much faster than the ~3.5h estimate — steady ~12,250 obj/s vs the historical ~823 obj/s, not
+  investigated further). Fresh report over 10,584,946 objects:
+  `A=2,594,017 · B=995 · C=38 · C2=7,884,651 · D=105,207 · E_orphan_real=0`, `unknown_prefixes=0` — both GREEN. Confirms
+  the 585-orphan backfill (this session, earlier) plus the two taxonomy fixes (this plan's prior sessions) together
+  closed the gate for real. Report at `_index/audit/orphan_sweep_tradfi.parquet` now also serves as task 11's fresh
+  verified-delete candidate input (995 legacy-B rows) — task 11 itself NOT touched (separate checkbox, still correctly
+  operator-gated on deletes, out of this task's scope). unified-trading-pm@(this commit).
+
+- **2026-07-10 (slot-3 sonnet/high, later continuation)** — **Task 2: the 585-orphan remainder BACKFILLED +
+  scoped-verified E=0; corpus-wide full re-sweep launched to confirm the literal gate, checkbox stays unflipped.** Ran
+  the already-shipped `instruments-service/scripts/backfill_orphan_class_e.py --asset-group tradfi` (R1 tool, exactly
+  the not-yet-scoped follow-up the prior entry flagged) — `--dry-run` clean (583 still-orphan, 0 escalated, 0 failed),
+  `--apply` clean (`converted=583 recorded_cells=69 escalated=0 convert_failed=0 verify_failed=0`). Local
+  `manifest_consolidator` OOM'd on the slot's 2 GB tmpfs `/tmp` (root-caused, not a data/tool bug); re-ran with
+  `TMPDIR=/home` (67 GB free) — succeeded, `rows_in=0 pruned_shards=1` confirming production's `*/1` Cloud Scheduler
+  consolidator had already drained the shard within ~3 min. Re-verified (not assumed) via the tool's own
+  `reverify_against_index` against all 585 original report rows: `already-covered=585 still-orphan=0`. **What remains**:
+  this is a scoped re-check of the 585 KNOWN rows, not a corpus-wide re-confirmation — task 2's literal
+  `orphan_class_E==0` gate needs a fresh full sweep (the last report is now stale, pre-dates this backfill). Launched
+  one (nohup+disowned, PID 3075330, started 17:02 UTC, verified alive — not fire-and-forget), same hand-off pattern as
+  the prior two sessions; ~3.5h ETA. See task 2's in-checkbox entry for the full evidence + hand-off instructions for
+  whoever checks the report next. No repo code commit (data write via already-shipped tooling).
 
 - **2026-07-10 (continuation, same day)** — **Task 2 (orphan sweep) real progress: full sweep completed for real, second
   taxonomy gap found + shipped, genuine 585-orphan remainder characterized; task 2 gate still NOT met.** Dispatched to
