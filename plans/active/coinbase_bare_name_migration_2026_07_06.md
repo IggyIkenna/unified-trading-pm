@@ -435,6 +435,30 @@ emit a small, expected residual — never a silent zeroing).
   regression, not just a test artifact. **S2 must land AFTER S3** (or be combined into the same cross-repo shippable
   unit as S3).
 
+  **🟡 CODE COMPLETE, BLOCKED ON QUICKMERGE 2026-07-10** (this dispatch) — the elif-branch deletion + docstring updates
+  - new regression test (`test_cefi_coinbase_spot_expected_set_survives_fold_inversion`, asserting COINBASE-SPOT's real
+    EXPECTED set is `{(spot_pair, trades)}` — `book_snapshot_5` correctly absent per operator decision #6's trades-only
+    MVP scoping) are all written and QG-verified in the local working tree
+    (`instruments_service/engine/orchestrator/venue_core.py`, `tests/unit/test_orchestrator_helpers.py`,
+    `tests/unit/scripts/test_check_enumeration_completeness.py`). A full `bash scripts/quality-gates.sh` run (now that
+    S3 is live) shows exactly 5 failures, ALL pre-existing/unrelated to this change (verified by inspection): the
+    in-flight OKX-SPOT venue-registration decision's own uncommitted fold-removal work (`test_cefi_venue_suffix_fold`,
+    `test_cefi_okx_spot_folds_to_okx`), stale golden fixtures reflecting mid-flight OKX-SPOT/CDE/DeFi registry churn
+    (`test_expected_matches_golden[cefi/defi]`), and the pre-existing `RADIANT-BSC` missing-adapter-key gap
+    (`test_every_canonical_venue_has_a_uac_entry`) — none touch COINBASE. `quickmerge.sh`'s STAGE 2 pre-flight audit
+    repeatedly failed on `unified-trading-library` and `unified-api-contracts` path-dependencies having uncommitted
+    changes — but every dirty file in both, across 5 consecutive retries over ~20 minutes, belonged to OTHER
+    concurrently-dispatched agents' unrelated in-flight work (OKX-SPOT venue registration, UAC data-type-validity
+    redesign, DeFi capability-registry additions, polymarket schema changes, mvp_mode research) — none of it is this
+    task's to commit (codex/08-workflows/ci-cd-flow.md's "dirty-deps" carve-out is for a repo the SAME agent owns
+    mid-edit, not for absorbing other agents' WIP under this agent's authorship). **Next agent/operator**: re-run the
+    exact quickmerge command below once UAC + UTL are clean; the code itself needs no further changes.
+
+  ```
+  cd instruments-service && bash scripts/quickmerge.sh "fix(orchestrator): delete dead elif-COINBASE alias branch in expand_cefi_tardis_endpoints" \
+    --agent --files 'instruments_service/engine/orchestrator/venue_core.py tests/unit/test_orchestrator_helpers.py tests/unit/scripts/test_check_enumeration_completeness.py'
+  ```
+
 ### Step S4 — IS data_engineering downstream ripple
 
 - [x] [CODE] P2. `instruments-service/`: audit each remaining bare-COINBASE hit (§2b) and re-key any lookups.
