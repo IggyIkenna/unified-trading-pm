@@ -192,3 +192,55 @@ catastrophic if lost) · `trading-audit-records-*`/`audit-records`/`manual-audit
 **2026-07-10, plan created (autonomous mode, operator away ~3h).** Context as of plan creation captured above in
 "Already shipped" + "Parallel research already completed" — those sections are the handoff from the interactive portion
 of this session. Continuing from todo 3.
+
+**2026-07-10, cf_manifest_audit dry-run stalled → diagnosed → fixed.** The dry-run (task bcnybd5tw) showed a flat
+CPU-time metric across two checks (0:58.21 both times) — per async-wait discipline, flat = STALL, diagnosed instead of
+continuing to wait. Found the actual child process: a hung `gcloud storage cp` on
+`instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`. Root cause: `_cp()` in the
+ported script (faithfully copied from the original) has retry logic but **no timeout** on the subprocess call — a single
+hung `gcloud` invocation blocks the whole audit forever (`_ls_shallow()` already had a timeout, `_cp()` did not). Killed
+the hung process; the untracked `cf_manifest_audit.py` file was ALSO found gone from disk (workspace shows dirty-deps
+churn from other concurrent work in unified-trading-library — `git status` clean where an untracked file should have
+been, consistent with something wiping it). Recreated the file with a `_CP_TIMEOUT_SECONDS = 90` fix baked in, verified
+via `ps`/`pgrep` there's no dangling gcloud process, then smoke-tested against a real 7.2M-row production bucket
+(`market-data-tick-cefi-prd-central-element-323112`) with a hard `timeout 600` wrapper this time so a future hang
+self-terminates instead of blocking the loop. That test surfaced a SECOND real bug (findings-triage: in-file, fixed in
+the same commit) — CF-1's `schema_version` check compared an int against a string-typed pandas Series index
+(`dist.get(9, 0)` never matches `'9'`), so CF-1 silently always read RED regardless of actual data state. Fixed via
+`pd.to_numeric(..., errors="coerce")` before counting. Re-verified fix against the same real bucket.
+
+**2026-07-10, full 332-bucket emptiness scan completed + synthesized.** `bucket_scan_results.tsv` finished (332/332).
+Built `final_synthesis.py` encoding every finding from this session's research (classification script's
+ROLLED_BACK_ENV_ARTIFACT list, the 9-dead-DeFi-kinds finding, the risk/pnl/positions-store dead-scheme patterns, the
+football-\*/misc findings) and cross-referenced against real emptiness. Verdict counts: DEAD_CONFIRMED=150,
+UNCATEGORIZED=86, KEEP=39, NEVER_TOUCH=34, UNCLEAR_SPLIT_USAGE=18, SCRATCH_NEEDS_CONFIRM=5.
+
+**CRITICAL DECISION — deletion scope narrowed to empty-only.** Of the 150 DEAD_CONFIRMED (code-orphaned) buckets, 35
+actually **have real content** on a shallow listing — spot-checked several (`dex-pools-central-element-323112` has a
+`day=2022-11-01/` partition; `market-data-tick-cefi-central-element-323112` has real `backfill-logs/` — this is the
+confirmed pre-migration source with millions of historical tick rows; `football-raw-data-all-sources` has real
+per-provider data folders; `instruments-store-cefi` has real `instrument_availability/`; `gas-fees` has real
+`day=2024-05-15/` partitions). "No live code reads/writes it" is NOT the same safety bar as "safe to destroy" when the
+bucket holds years of real historical/legacy production data. **Decision: only buckets confirmed EMPTY (zero objects,
+proven via GCS's flat-namespace property — a shallow non-recursive `ls` at bucket root is provably complete since ANY
+object at ANY depth surfaces as a top-level prefix) get deleted autonomously. The 35 code-orphaned-but-non-empty buckets
+are flagged in the final report for operator review/archival decision, NOT deleted.** This is a deliberate narrowing of
+"confirmed DEAD → delete" from the pre-loop plan — logged per rule 12(f) (spec clarification within documented intent:
+"confirm empty before deleting" was already the established protocol all session, this just applies it consistently at
+scale rather than being overridden). Full list saved to `.../scratchpad/orphaned_but_has_data.txt` (35 buckets) and
+`.../scratchpad/delete_candidates_shallow_empty.txt` (115 buckets, confirmed-empty deletion queue).
+
+**2026-07-10, cf_manifest_audit shipped.** Function-size refactor (207L `audit()` → 14 per-CF-check helpers, all
+behavior-verified identical against real data before/after), bandit B602 fix (`_ls_shallow` shell=True → exec array), QG
+green. Shipped `unified_trading_library/cf_manifest_audit.py` — unified-trading-library@f0a2c4cc (dirty-deps carve-out
+direct push; two unrelated repos — unified-trading-library itself via manifest_consolidator.py/settler.py, and
+unified-api-contracts — had uncommitted changes from other concurrent work in this shared workspace). Two pre-existing
+failing tests (`test_event_sink_factory.py::TestGcpEventSink`) confirmed unrelated (pass in isolation, zero import
+relationship to the new module) — not blocking. Shipped the terraform command/args fix (both gcp+aws) —
+deployment-service@7890a14 (same dirty-deps carve-out). `terraform fmt -check` clean on both files.
+
+**2026-07-10, starting the 115-bucket deletion sweep.** Re-verifying each bucket's emptiness immediately before deletion
+(defense in depth beyond the scan) via a background sweep script, logging to `.../scratchpad/deletion_log.tsv`. Zero
+overlap confirmed between the 115-name delete list and every never-touch pattern (orchestrator-creds,
+pre-migration-snapshot, client-statements, terraform-state, deployment-state, audit-records, manual-audit,
+GCP-system-managed prefixes) before launching.
