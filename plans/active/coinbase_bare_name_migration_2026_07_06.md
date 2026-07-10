@@ -434,11 +434,14 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S7 — execution-service follow-on (OUT-OF-SCOPE, filed as new plan)
 
-- [ ] [PLAN] P3. File `plans/active/coinbase_bare_name_migration_execution_service_2026_XX_XX.md` with
+- [x] [PLAN] P3. File `plans/active/coinbase_bare_name_migration_execution_service_2026_XX_XX.md` with
       `assigned_role: backend-engineer` for the 12 execution-service callers listed in §2d. Depends on THIS plan.
       Include a note about whether the `execution_service/instruments/registry.py:178-179` bare-venue backward-compat
       resolver should be kept (Nautilus-driven) or removed after downstream users are cleaned. Filed by the operator or
-      whoever picks up the follow-on.
+      whoever picks up the follow-on. **DONE 2026-07-10** — filed
+      `plans/active/coinbase_bare_name_migration_execution_service_2026_07_10.md` (slot-8, data_engineering);
+      `status: draft`, `assigned_vm: NA`, `assigned_role: backend-engineer`,
+      `depends_on: [coinbase_bare_name_migration_2026_07_06]`.
 
 ## 5. Codex SSOTs consulted
 
@@ -483,6 +486,12 @@ is:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-10** — **S7 done** (slot-8, data_engineering). Filed
+  `plans/active/coinbase_bare_name_migration_execution_service_2026_07_10.md` — carries over the 12-file
+  execution-service enumeration from §2d verbatim plus the `registry.py:178-179` backward-compat-resolver decision (KEEP
+  the Nautilus-boundary map, decide the UAC-facing branch by audit at execution time). Filed as `status: draft`,
+  `assigned_vm: NA` (LOCAL track, default per CLAUDE.md), `depends_on: [coinbase_bare_name_migration_2026_07_06]` — do
+  not execute before S1-S6 of THIS plan land.
 - **2026-07-10** — **S4 flipped** by slot-11 (data_engineering, PM-only `docs(plans):` commit — no instruments-service
   code diff). Audited the §2b file list outside S1's `check_enumeration_completeness.py` and S2's `venue_core.py` (both
   in-flight under tasks 001/002 at the time): `cefi_per_venue_capture_summary.py`, `enumerate_expected_universe.py`,
@@ -494,7 +503,6 @@ is:
   parallel with prereqs reported as "met" — S4 happened to be safe to complete independent of S1/S3 landing order
   because its target files were already compliant, but that was a lucky audit outcome, not a guarantee; a future step in
   this DAG shape could be genuinely blocked by out-of-order dispatch.
-
 - **2026-07-06** — **Plan drafted** by slot-10 (data_engineering) as gap-016 of
   `wsfeedconnector_phase35_gap_2026_07_06`. Per BLK-22e5f8a5 answered by main: `assigned_vm: NA`, `status: draft`,
   `assigned_role: data_engineering`; execution-service callers documented as out-of-scope with a §7 follow-on task
