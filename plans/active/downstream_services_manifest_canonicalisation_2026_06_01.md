@@ -1,17 +1,26 @@
 ---
 doc_type: plan
-title: Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution) — audit-first, low-data single-walk
+title:
+  Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution) — audit-first,
+  low-data single-walk
 summary: >-
-  Per-service (not per-AG) manifest canonicalisation for the downstream data-pipeline services (MDPS,
-  features, strategy, execution) not covered by the per-AG walks: audit-first, low-data single-walk. Drives
-  the CF-1…CF-12 cross-service canonical-form checklist to QG-green BEFORE the migration run (CF-11 empty-vs-
-  failed write-path, E5 3-way manifest-rebuild decision tree, v9 re-emit). Coordinated under the
-  defi_manifest_canonicalisation MASTER.
+  Per-service (not per-AG) manifest canonicalisation for the downstream data-pipeline services (MDPS, features,
+  strategy, execution) not covered by the per-AG walks: audit-first, low-data single-walk. Drives the CF-1…CF-12
+  cross-service canonical-form checklist to QG-green BEFORE the migration run (CF-11 empty-vs- failed write-path, E5
+  3-way manifest-rebuild decision tree, v9 re-emit). Coordinated under the defi_manifest_canonicalisation MASTER.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
+repos:
+  [
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+    features-service,
+  ]
 scope: [engineer, admin]
 tags: [canonicalisation, manifest, single-walk, mdps, features, execution, audit, data-correctness]
 related: [plans/epics/features_and_ml_master.md, plans/epics/strategy_master.md, plans/epics/execution_master.md]
@@ -29,7 +38,11 @@ locked_since: 2026-06-01
 supersedes:
 superseded_by:
 depends_on:
-source: [defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — downstream uncovered), canonical_form_cross_service_audit_checklist.md (CF-1…CF-12)]
+source:
+  [
+    defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — downstream uncovered),
+    canonical_form_cross_service_audit_checklist.md (CF-1…CF-12),
+  ]
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 drift_direction: advance-code
 ---
@@ -85,7 +98,17 @@ drift_direction: advance-code
       (`orchestrator.py:1746`+`:2978-2993`); regression `tests/unit/test_is_adapter_fetch_failure_raises.py`
       (`e2e008f0`+ `f2ca5954`). Checkbox stays OPEN for the **tradfi** (databento ZERO-signal swallow
       `databento.py:826`, slot-6) + **prediction** (polymarket, slot-5) slices.
-- [ ] [CODE] P0. **E5 manifest-rebuild logic — CF-11 3-way decision tree**
+- [x] ✅ [CODE] P0. **E5 manifest-rebuild logic — CF-11 3-way decision tree — VERIFIED DONE across all 3 AGs (slot audit
+      2026-07-10).** All three rebuilds carry a dedicated CF-11 module implementing the full 3-way tree with per-script
+      unit tests: **prediction** `_rebuild_prediction_cf11.py`@`ed4e35e0` (within-bounds SRZ→`WithinBoundsSourceZero`
+      via market-lifecycle `created_at ≤ row_date < settlement`; prior-`_index` re-emit via `read_availability_index`;
+      part-(c) 41-SRZ reclassification baked into `_handle_srz_prediction_row`) +
+      `test_rebuild_prediction_manifest_cf11` @`77f1a613`; **tradfi** `_rebuild_tradfi_cf11.py`@`4ccf52c6`
+      (within-bounds via `is_non_trading_day(venue,date)` → `WithinBoundsTradfiSourceZero`) +
+      `test_rebuild_tradfi_manifest_cf11`@`750267d5`; **cefi** `_rebuild_cefi_cf11.py` @`aaeada9a`
+      (`WITHIN_BOUNDS_EMPTY_RECLASSIFIED`) + `test_rebuild_cefi_manifest_cf11`@`aaeada9a`. Parts (a)
+      within-bounds→`attempted_failed`, (b) prior-`_index` typed re-emit (status-preserved), (c) prediction 41-SRZ audit
+      — all shipped. Repo: **market-tick-data-service**. Original spec below. <br>**Original:**
       (`rebuild_{cefi,tradfi,prediction}_manifest.py`, mtds `scripts/`). Captured-atom rebuilds DONE; STILL OPEN — make
       the LOGIC canonical now so the migration-RUN session needs no script edits: (a) **within-bounds empty →
       `attempted_failed`** (not `SOURCE_RETURNED_ZERO`) — gate on in-universe (cefi venue+symbol / tradfi
@@ -233,10 +256,9 @@ drift_direction: advance-code
       five-slot asset-group split). **TODO (each non-defi AG slot, this plan):** confirm the MDPS candle-builder
       raw-tick read + features-onchain `data_loader` read resolve the `pipeline_mode=` path PRIMARY for the **non-defi**
       AGs too (cefi/tradfi/prediction) — i.e. they read via the pipeline_mode-aware MTDS reader /
-      `candidate_parquet_paths` / `manifest_reader_fallback`, NOT a direct `build*\*\_partition_path`that would miss
-      migrated data after the legacy delete. If any direct base-builder read remains, switch it to the
-      pipeline_mode-aware path (same fix as the writer). This is the only PREP3 residual before the per-AG
-      G3`--apply`→delete; the writer side + MTDS reader are done.
+      `candidate_parquet_paths` / `manifest_reader_fallback`, NOT a direct
+      `build*\*\_partition_path`that would miss     migrated data after the legacy delete. If any direct base-builder read remains, switch it to the     pipeline_mode-aware path (same fix as the writer). This is the only PREP3 residual before the per-AG     G3`--apply`→delete;
+      the writer side + MTDS reader are done.
 - [x] ✅ [CODE] P1. **tradfi reader residual CLOSED (slot-6 2026-06-03)** — audit found the features **volatility**
       (`volatility/engine/orchestrator.py`) + **cross_instrument** (`cross_instrument/engine/raw_data_loader.py`)
       readers resolved tradfi raw-tick via a direct `build_cefi_partition_path(...)` with NO `pipeline_mode=` → would
