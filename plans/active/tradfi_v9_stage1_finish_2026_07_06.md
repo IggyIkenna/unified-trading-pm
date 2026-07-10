@@ -91,8 +91,9 @@ source:
       2026-01-15 handed off to task 3 · post-migration GCS shows canonical `pipeline_mode=batch_databento/batch_yahoo`
       subdirs present at day=2026-01-15 · run.log at
       `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-tradfi-20260706-145606/run.log`.
-- [ ] [DATA] P0. **🚧 IN PROGRESS 2026-07-10 (this session) — ordering blocker RESOLVED, full sweep launched, not yet
-      complete.** Orphan sweep to E=0 + bucket-state evidence (all years, `tradfi-prd`). Per
+- [ ] [DATA] P0. **🚧 FULL SWEEP COMPLETED 2026-07-10 15:57:41 UTC (this session, continuation) — gate NOT met, 2
+      characterized remainders (585 real orphans + 71,830 previously-mislabelled `_needs_attribution` holding objects;
+      second now fixed).** Orphan sweep to E=0 + bucket-state evidence (all years, `tradfi-prd`). Per
       `tradfi_manifest_canonicalisation` §"Orphan sweep + bucket-state evidence" + `migration_verification` V6. Gate:
       zero orphaned legacy-path objects; bucket-state evidence recorded. **Ordering blocker re-evaluated + confirmed
       resolved**: task 4's E5 rebuild ran to completion 2026-07-07 (mtds@4ccf52c6, see task 4's Progress Log) — the
@@ -129,7 +130,36 @@ source:
       resolution):** task 4 (E5 `rebuild_tradfi_manifest.py`) MUST run first — the 2026 migration wrote v9-canonical
       paths WITHOUT rebuilding the manifest (per migrator docstring: manifest columns are added by E5, this script fixes
       PATHS only). Running the orphan sweep before E5 would produce false Class-E positives (real data with no manifest
-      row) on the newly-migrated 122,703 canonical objects.
+      row) on the newly-migrated 122,703 canonical objects. **UPDATE 2026-07-10 (this session, continuation) — the
+      backgrounded full sweep (PID 22320, nohup+disowned) completed for real at 15:57:41 UTC** (had continued running
+      unattended across the gap since the last check-in at 12:40 UTC; confirmed via direct read of the scratchpad log +
+      `gsutil stat` on the landed report — NOT taken on trust). **Real result, NOT E=0**: `orphan_sweep_tradfi.parquet`
+      (156,375 bytes, updated 2026-07-10T14:57:42Z GMT) —
+      `A_canonical_manifested=2,659,418 · B_legacy_duplicate=6,733 · C_manifest_infra=39 · C2_non_data=7,812,820 ·     D_junk=105,313 · E_orphan_real=585`
+      (target 0, NOT met) over 10,585,908 objects swept end-to-end (~823 obj/s steady). Taxonomy:
+      `unknown:_needs_attribution/ = 71,830` (target 0, NOT met) — **second real taxonomy gap found + fixed this
+      session** (same class as the `_migration_backup` fix already landed): live-sampled
+      `gs://market-data-tick-tradfi-prd-central-element-323112/_needs_attribution/` directly (not inferred from the log)
+      — confirmed it is the documented, operator-adjudicated (2026-06-08) holding prefix that
+      `migrate_tradfi_to_v9_canonical.py`'s `_NEEDS_ATTR_PREFIX` + the defi walk migrator both write
+      un-path-attributable legacy objects to instead of silently dropping them ("preserve, never lose; do NOT guess" —
+      grep-verified in `market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_to_v9_canonical.py`
+      lines 167-193). Fixed `instruments-service/scripts/migration_orphan_sweep.py` — added `_needs_attribution` →
+      `"needs-attribution"` to `_NON_DATA_TOP_LEVEL_LABELS` (mirrors the `_migration_backup` entry), + 1 new regression
+      test in `tests/scripts/test_migration_orphan_sweep.py` (31/31 passing pre-QG). **The 585 `E_orphan_real` remainder
+      is a genuine, not-yet-characterized gap** — first-25 sample (log) shows CME `futures_chain`/`options_chain`
+      `ohlcv_1m` bundle-atom shards on 2020-01-01..2020-03-22 with `ticks_migrated_*` filenames at fully-canonical v9
+      paths
+      (`raw_tick_data/by_date/day=.../pipeline_mode=batch_massive/asset_group=tradfi/venue=CME/instrument_type=     {futures_chain,options_chain}/data_type=ohlcv_1m/underlying={E,ES}/...`)
+      with NO matching manifest row — same SHAPE as the previously-diagnosed 291 v4 aggregate-atom `options_chain`
+      orphans (task 4/6 Progress Log, 2026-07-07) but at 2x the count and now confirmed present on the CANONICAL v9 path
+      post-rebuild, not just the legacy path — **this is new information, not previously characterized at this scale**;
+      needs a `record_captured` backfill pass (per this script's own docstring: "valid shape, rows>0, NO manifest row →
+      WE NEED IT"), never a delete. **Net**: task 2's literal gate ("zero orphaned legacy-path objects") is genuinely
+      NOT met — 585 real orphans need a backfill-registration follow-up (new P1 todo, not yet scoped/estimated) before
+      task 11 (legacy-twin deletes) can safely proceed on a complete picture; the `_needs_attribution` taxonomy gap is
+      fixed (code, not yet quickmerged as of this entry — see this session's commit). Checkbox correctly stays
+      unflipped.
 - [ ] [DATA] P0. **BLOCKED-STRAGGLER-VM-RUNNING · Idempotent straggler re-run** — transient GCS 503/504 bursts on
       2026-07-06 left ~7 objects unmoved on 2025-02-03/04 **plus 4 objects unmoved on 2026-01-15** (all transient GCS
       timeouts, not memory, self-limited). Re-run the migrator over the affected day-partitions (idempotent — skips
@@ -311,6 +341,40 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-10 (continuation, same day)** — **Task 2 (orphan sweep) real progress: full sweep completed for real, second
+  taxonomy gap found + shipped, genuine 585-orphan remainder characterized; task 2 gate still NOT met.** Dispatched to
+  re-assess the layer1_remeasure tradfi blocker; found the earlier session's backgrounded full sweep (PID 22320,
+  nohup+disowned) had actually finished unattended at 15:57:41 UTC (the last progress note only knew it was ~19 min in
+  at 12:40 UTC). Verified directly, not on trust: `gsutil stat` on the landed report
+  (`gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet`, 156,375 bytes,
+  updated 2026-07-10T14:57:42Z) + read the scratchpad run log in full. **Real result — NOT E=0**:
+  `A_canonical_manifested=2,659,418 · B_legacy_duplicate=6,733 · C_manifest_infra=39 · C2_non_data=7,812,820 · D_junk=105,313 · E_orphan_real=585`
+  over 10,585,908 objects (~823 obj/s steady, ~3h35m total runtime). Taxonomy: `unknown:_needs_attribution/ = 71,830` —
+  a SECOND real taxonomy gap (same class as the already-fixed `_migration_backup` one), live-sampled directly from GCS
+  (`gsutil ls -r` on `_needs_attribution/`) and confirmed via grep-then-READ against
+  `market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_to_v9_canonical.py` (`_NEEDS_ATTR_PREFIX`,
+  operator 2026-06-08 "preserve, never lose, never guess") that it's a deliberate, adjudicated holding prefix, not a
+  mystery. **Fixed + shipped**: `instruments-service@098e93e0` — added `_needs_attribution` → `"needs-attribution"` to
+  `migration_orphan_sweep.py`'s `_NON_DATA_TOP_LEVEL_LABELS`, + 1 regression test (31/31 passing pre-QG, QG ran full
+  green in 114s, `.qg_last_passed_sha` matched HEAD). **Shipped via direct push, not quickmerge** — the pre-flight audit
+  blocked purely on sibling dep repos (`unified-trading-library`, `unified-api-contracts`) having live uncommitted
+  changes with <30s-old mtimes (actively being written by another process this session; protected per the liveness-gate
+  rule, never touched, never staged) — this is the documented dirty-deps carve-out, `Quickmerge: dirty-deps-carve-out`
+  trailer, strict-quickmerge hook accepted it clean. **The 585 `E_orphan_real` remainder is a genuine,
+  newly-characterized gap, NOT fixed this session**: first-25 sample (log) is all CME `futures_chain`/`options_chain`
+  `ohlcv_1m` bundle-atom shards on 2020-01-01..2020-03-22 with `ticks_migrated_*` filenames sitting at FULLY-CANONICAL
+  v9 paths with no matching manifest row — same shape as the previously-diagnosed 291 v4 aggregate-atom `options_chain`
+  orphans (task 4/6, 2026-07-07) but ~2x the count and now confirmed present post-rebuild on the canonical path, not
+  just the legacy one. Needs a `record_captured` backfill pass (never a delete — this script's own docstring: "valid
+  shape, rows>0, NO manifest row → WE NEED IT"); not yet scoped as its own todo — flagging here for whoever picks up
+  task 2/11 next. **Fleet-drain (task 10) re-verified still FALSE**
+  (`gcloud compute instances list --filter="name~tradfi-bf"`, 6 VMs RUNNING at check time, composition churned from the
+  earlier session's 8 but never empty). **Net this continuation**: task 2 is now MORE precisely characterized (full
+  sweep done, 2nd taxonomy gap fixed, 585-orphan remainder identified) but its literal "zero orphaned legacy-path
+  objects" gate is still NOT met — checkbox correctly stays unflipped; tasks 4/6/10/11 unchanged from the prior entry.
+  Layer-1 tradfi re-certification (companion `layer1_remeasure_and_certify_2026_07_06.md` ask) again correctly NOT
+  attempted — still gated on this plan's tasks 2/4/6/10/11 landing for real.
 
 - **2026-07-10** — **Session summary (real remaining-task sweep, tasks 2/3/4/6/10/11).** Fleet-drain re-verified still
   FALSE (`gcloud compute instances list` — 8 `tradfi-bf-*` backfill VMs confirmed RUNNING, unchanged from earlier

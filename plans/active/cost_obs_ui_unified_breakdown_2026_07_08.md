@@ -164,3 +164,17 @@ source: cost_observability_ui_2026_07_08.md
       gross $1,430.97 == $1,430.97; credit −$98.42 == −$98.42 — exact to the cent. Confirms the mapping (`cost`=gross,
       `credit`=net−gross, net=cost+credit) and the `[start,end)` window slice. Context: June full-month net $1,441,
       July-to-date $221. The displayed GitHub figure is verified correct — no code change (provider already shipped).
+- [x] ✅ [UI] P3. **Cost page layout refresh + help guide** (operator review session 2026-07-10). Five folded UI
+      refinements on `/ops/costs`: (1) the breakdown header is now ONE row — title + dimension tabs + dimension note +
+      stats share a line (was two), reclaiming vertical space; (2) the per-column filter dropdowns moved INTO each
+      categorical column header, beside the sort label (was a separate row that covered data on vertical scroll) —
+      compact `<select>`s with `stopPropagation` so filtering never triggers the sort; (3) the "Cloud share" donut is
+      folded into the Total-spend card (its standalone panel removed) via a size-parameterised `CloudDonut`; (4) the top
+      is now 2 columns — a bigger daily chart on the left, all 4 KPI cards (total + 3 sources) stacked on the right —
+      and the per-card sparklines are dropped (the left chart already carries that trend; `Sparkline`/`mergeDaily`
+      deleted); (5) a **help-guide dialog** (`?` button in the top bar, reuses `ui/dialog`) with a short term→definition
+      guide to the page, every KPI, and every breakdown column — and the "recent days are provisional" note moved OUT of
+      the standing page banner INTO this guide. deployment-ui@`a9795f32`. tsc/ESLint/vitest (coverage 75.83%) + build
+      all green. pw:L2 ✓ (18/18) | regression: tests/smoke/cost-observability.spec.ts "help guide: opens from the top
+      bar, carries the moved provisional note, closes on Escape" (+ the existing per-column-filter case still green
+      against the relocated header dropdowns).

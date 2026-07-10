@@ -47,7 +47,7 @@ related:
     ../../codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-07
+last_updated: 2026-07-10
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only
@@ -257,6 +257,51 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 > Re-measuring against a mid-flight denominator would just have to be re-run once that workflow lands — **recommend
 > waiting for it to quiesce (git status clean / QG green / quickmerged) before re-dispatching this task**, rather than
 > burning a re-measure cycle on soon-invalid numbers.
+>
+> **🟡 RE-ASSESSED 2026-07-10 (later, 17:39 BST) — the specific 3-file live-edit condition above has CLOSED, but full
+> quiescence still does not hold; still recommend NOT remeasuring yet.** Verified directly (not re-trusting the prior
+> note): `venue_core.py` (last commit `is@e3f677d6`, 15:56), `factory.py` (`is@94512ec3`, 12:48), and
+> `check_enumeration_completeness.py` (`is@b90bc2d9`, 14:14) are all now **clean in the working tree and match
+> `origin/live-defi-rollout`** — the specific edit-in-flight this blocker cited has landed. Both dispatched sibling
+> workflows the blocker names are independently confirmed **COMPLETE** in
+> `instruments_remaining_work_audit_2026_07_10.md` (`wf_1e191185-1c2` 8/8 agents returned; `wf_60ecfd13-752` 6/6 agents
+> returned; a 2026-07-10-later follow-up pass in that doc re-verified via git history — not self-report — that all 3
+> previously "code-complete but unshipped" items (Coinbase S2 dead-branch removal, `mvp_mode` universal build, Kraken
+> marker) are now landed with clean working trees). **However `git status` on `instruments-service` is NOT clean right
+> now**: `scripts/migration_orphan_sweep.py` + 2 test files carry uncommitted edits (mtime 17:19, ~18 min old) matching
+> the still-in-flight **tradfi orphan sweep** (`wf_60ecfd13-752` item 6: background sweep PID 22320, ~850K objects, ETA
+> 1.5–2h at that session's end — PID not resolvable from this slot, so live/dead status can't be confirmed locally).
+> This edit is Stage-1/tradfi-scoped (GCS orphan-vs-legitimate-infra prefix labeling), not cefi/defi/prediction/sports
+> denominator logic, and tradfi's own Layer-1 was already excluded from any near-term remeasure via the pre-existing
+> `BLOCKED-PLAN2` gate (task 004) — so it does not newly block a cefi/defi/prediction/sports attempt on file-conflict
+> grounds. **But it does mean the tracker's own literal "git status clean" gating criterion is not yet satisfied**, and
+> — separately from the file-conflict question — a real backlog of denominator-authority changes has landed since the
+> 07-06 certification that the 73.61% (cefi) / 94.81% (defi) Snapshot numbers do not reflect at all: OKX-SPOT
+> fold-invert (`is@300b0767`), COINBASE-CDE venue split (`uac@1cafb3c5` + `is@94512ec3`), DERIBIT-COMBO added to
+> `MVP_SCOPE.venues` + D10 capability fixes (`uac`, per the audit doc's Orchestration state), the cefi writer
+> instrument_type-split fix (07-07), and the UAC two-layer data-type-validity redesign (`uac@fa9cece5`). Net: a fresh
+> remeasure right now would be **more honest than a file-conflict risk, but still premature** against the tracker's own
+> stated bar, and would not be a single-dispatch-safe action to launch unattended — **recommend the operator (or the
+> next dedicated Stage-3 dispatch) confirm the tradfi orphan sweep has actually finished + the tree is clean, then
+> re-run `measure_honest_coverage` for cefi/defi/prediction at minimum** (tradfi stays `BLOCKED-PLAN2` regardless). No
+> code touched, no measurement run, in reaching this assessment — verification was git-log/git-status/file-mtime only,
+> cross-checked against `issues/instruments_remaining_work_audit_2026_07_10.md`'s independently-verified Orchestration
+> state.
+>
+> **🟡 RE-CONFIRMED 2026-07-10 (17:43 BST, independent re-check) — quiescence STILL does not hold; evidence is now
+> stronger, not weaker.** Re-verified from scratch rather than trusting the 17:39 note: the 3 denominator-authority
+> files (`venue_core.py` `is@e3f677d6`, `factory.py` `is@94512ec3`, `check_enumeration_completeness.py` `is@b90bc2d9`)
+> are unchanged and still clean/matching `origin/live-defi-rollout` — that specific blocker remains closed. But
+> `instruments-service` `git status` is **actively dirty right now, not just stale-uncommitted**:
+> `scripts/migration_orphan_sweep.py` (mtime 17:41:59) and `tests/scripts/test_migration_orphan_sweep.py` (mtime
+> 17:42:07) are both **<120s old at time of this check (17:43:27)** — inside the workspace's own live-claim liveness
+> window (`per-tab-worktrees.md`: mtime<120s → PROTECT, do not touch) — plus a file rename in progress
+> (`scripts/defi_manifest_dedup_2026_07_10.py` deleted, `scripts/manifest_dedup_2026_07_10.py` added untracked). This is
+> a sibling agent editing live, this instant, not idle WIP from 18 minutes ago. Confirms the 17:39 assessment's
+> conclusion (still tradfi/orphan-sweep-scoped, does not newly block a cefi/defi/prediction attempt on file-conflict
+> grounds, but the tracker's own "clean tree" bar is not met) and upgrades its confidence — no code touched, no
+> `measure_honest_coverage` run, no files in `instruments-service` written. Not attempting the Stage-3 remeasure per the
+> dispatch's own explicit instruction not to when quiescence doesn't hold.
 
 - [ ] [SCRIPT] P0. Re-run `measure_honest_coverage` on the corrected catalogue + seeded manifests (**06-29 numbers are
       stale** — predate v12, the incremental-rollup switch, and the cefi 122-row ghost-dupe fix of 07-04)
@@ -376,6 +421,40 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-10 (later still, 17:43 BST)** — **Second independent re-assessment dispatch on this same tracker item —
+  re-verified from scratch, did not trust the 17:39 entry below at face value.** Re-confirmed: the 3 specific
+  denominator-authority files the original Stage-3 blocker named (`venue_core.py`, `factory.py`,
+  `check_enumeration_completeness.py`) remain clean/unchanged since 15:56/12:48/14:14 respectively — that blocker stays
+  closed. But `instruments-service`'s working tree is **actively dirty at the moment of this check, inside the
+  workspace's own <120s live-claim window** (`scripts/migration_orphan_sweep.py` mtime 17:41:59, one of its test files
+  mtime 17:42:07, checked at 17:43:27 — both <90s old), plus an in-progress file rename
+  (`defi_manifest_dedup_2026_07_10.py` → `manifest_dedup_2026_07_10.py`). This is a sibling agent editing live, right
+  now, not stale WIP — stronger, fresher evidence for the same conclusion the 17:39 entry reached (tradfi/orphan-sweep
+  scoped, doesn't block a cefi/defi/prediction attempt file-conflict-wise, but the tracker's own literal "clean tree"
+  criterion still isn't met). Per the dispatch's explicit instruction not to force a Stage-3 remeasure while quiescence
+  doesn't hold, **did not run `measure_honest_coverage`, did not touch `instruments-service` or any sibling repo's
+  code**, and did not flip any Stage 2/3/4/5 checkbox (nothing was re-measured). This item (the tracker itself) has no
+  single checkbox to flip — it is the coordinator doc, not a line item; the 33/37-open count is unchanged and remains
+  real. Only this doc was edited, committed directly to `unified-trading-pm` (pure `docs(plans):` change, PM-repo
+  direct- push carve-out — no quickmerge needed, no code repo touched).
+- **2026-07-10 (later, 17:39 BST)** — **Dispatched re-assessment of this tracker item itself (not a Stage-3 remeasure) —
+  verified real current state, no engineering executed.** Confirmed live: (1) `git status` on `instruments-service`
+  matches `origin/live-defi-rollout` for the 3 files the Stage-3 blocker cited as "actively rewriting" (`venue_core.py`
+  `is@e3f677d6`, `factory.py` `is@94512ec3`, `check_enumeration_completeness.py` `is@b90bc2d9`) — that specific
+  live-edit condition has closed. (2) Both sibling dispatched workflows the blocker names (`wf_1e191185-1c2`,
+  `wf_60ecfd13-752`) are independently confirmed COMPLETE in `issues/instruments_remaining_work_audit_2026_07_10.md`,
+  including a git-history-verified (not self-reported) follow-up pass confirming all previously "code-complete but
+  unshipped" items actually landed. (3) `git status` is nonetheless currently NOT clean — an ~18-min-old uncommitted
+  edit to `scripts/migration_orphan_sweep.py` + 2 test files, matching the still-in-flight tradfi orphan sweep (Stage 1,
+  tradfi already excluded from any near-term remeasure via the pre-existing `BLOCKED-PLAN2` gate) — so the tracker's own
+  literal "clean tree" bar is not yet met, even though the specific denominator-file conflict is resolved. (4) A real
+  backlog of cefi/defi denominator-authority changes (OKX-SPOT split, COINBASE-CDE split, DERIBIT-COMBO MVP_SCOPE
+  addition + D10 capability fixes, cefi writer instrument_type fix, UAC two-layer redesign) has landed since the 07-06
+  certification that the current 73.61%/94.81% Snapshot numbers do not reflect — the Stage-3 remeasure is now MORE
+  overdue than when the blocker was written, not less, but launching it unattended right now still isn't a clean
+  single-dispatch action per the tracker's own stated bar. Updated the Stage-3 header blockquote with the full
+  reasoning + evidence; no checkboxes flipped (nothing was actually (re)measured), no code touched in
+  `instruments-service` or any sibling repo. Full detail in the Stage-3 header note above this log.
 - **2026-07-07 (later same day, round 3)** — **🔴 P0 filed: `defi_turbo_api_hides_real_captured_data_2026_07_07.md`.**
   Chasing an operator hypothesis that AAVE_V3-ARBITRUM/POLYGON/EULER_V2/FLUID's `0/0` turbo readings might be a
   venue-naming mismatch: no naming mismatch was found (the write path produces the exact canonical strings), but a live
