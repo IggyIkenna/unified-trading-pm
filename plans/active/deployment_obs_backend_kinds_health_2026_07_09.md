@@ -332,13 +332,17 @@ source: deployment_observability_expansion_2026_07_08.md
       `test_detail_route_live_path_includes_d1_metrics`). QG green (sentinel 7c4265a, 78s). Rebased twice onto
       concurrent same-file landings (D.3 composite health `f5f6ff4`, AWS Lambda census `050d9a4`) — one duplicate-field
       artifact from an auto-merge in the test file's `_FakeEntry` dataclass, caught + fixed before shipping.
-- [ ] [INFRA] P2. **Persist a short D.1 rolling window** (last ~10 samples) on the registry entry — today only a single
-      most-recent sample is stored (overwritten each heartbeat tick), so `mem_slope` / "sustained idle" have no real
-      trend to plot and the new `/deployments/{id}/detail` endpoint (above) can only serve a point-in-time snapshot, not
-      a sparkline. Per the original D.2 STORE design (parent `deployment_observability_expansion_2026_07_08.md` D.2):
-      extend `DeploymentRegistryEntry` with a bounded ring-buffer field (`unified-trading-library`/`deployment-service`,
-      mirrors the "Enrich the heartbeat" todo's scope) + surface it on `DeploymentDetailResponse` (`deployment-api`,
-      additive — the current single-sample fields stay for back-compat).
+- [x] ✅ [INFRA] P2. **Persist a short D.1 rolling window** (last ~10 samples) on the registry entry — so `mem_slope` /
+      "sustained idle" have a trend to plot and `/detail` serves a sparkline, not a point. — **UTL already stored it**
+      (`HeartbeatDaemon._append_host_metrics_window` appends each D.1 sample to a bounded
+      `entry.metadata[HOST_METRICS_WINDOW_KEY]`, cap `DEFAULT_MEM_WINDOW_SIZE`=10 — found during the audit, no UTL
+      change needed) + **deployment-service@44f44afe9** (new `DeploymentRegistryEntry.host_metrics_window` +
+      `coerce_host_metrics_window`; `to_json`/`from_json` round-trip with legacy rows → `[]`;
+      `heartbeat_cli._entry_to_registry` extracts it from metadata and `_registry_to_entry` rounds it back so the
+      daemon's next tick appends instead of restarting) + **deployment-api@970bcdc** (surfaced on
+      `DeploymentDetailResponse` + `/detail`; corrected the model's now-stale "hasn't shipped" scope note). The
+      single-sample fields stay for back-compat (additive). Round-trip verified both directions at runtime; 3 new tests
+      (registry round-trip + legacy-default + /detail window). QG green both repos.
 - [x] ✅ [BACKEND] P2. **Alerts** on `oom-risk` (before the kill) + `stalled` (progress flatlines, heartbeat fresh) —
       wire into the existing alerts surface. — deployment-api@5e25dce. New `_persist_alert()` appends a JSONL row to the
       SAME shared GCS ledger (`unified-trading-cicd-events/cicd/alerts/{date}/alerts.jsonl`) agent-orchestrator's
