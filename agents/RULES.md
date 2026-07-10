@@ -145,28 +145,19 @@ released task back to slot N automatically. Override via the endpoint body when 
 
 ### Park a task (keep it but defer dispatch)
 
-```yaml
-- id: R-005
-  title: "[PARKED — prereq blocked] bucket_name_ssot dependency_checker migration"
-  priority: 999 # pushes to back of queue
-  prereqs:
-    conditions:
-      - utl-base-dependency-checker-migrated # define in conditions block; default false
-  brief: |
-    PARKED — see <plan ref> for prereq. Re-prioritise + flip the gate
-    when ready.
-```
-
-Then add the condition gate at the YAML top:
+Parking TUNES an already-derived entry — you never author a new one. On the task's existing entry in
+`data/config/backlog.yaml`, set:
 
 ```yaml
-conditions:
-  utl-base-dependency-checker-migrated: false
+priority: 999 # pushes to back of queue
+prereqs:
+  conditions:
+    - utl-base-dependency-checker-migrated # create it false via POST /api/prerequisites/<name> first
 ```
 
 Reload (`POST /api/backlog/reload`). The task stays at `priority: 999` (effectively never dispatched while
-higher-priority work exists) AND the false condition gates it as a second safety. To unpark: flip the condition + lower
-the priority.
+higher-priority work exists) AND the false condition gates it as a second safety. To unpark: flip the condition GREEN
+(`POST /api/prerequisites/<name>` `{value: true}`) + lower the priority.
 
 ### Delete a task (permanent removal)
 
@@ -180,10 +171,14 @@ activity event for the audit trail.
 
 ### Adding new conditions mid-cycle
 
-1. Add `<condition-name>: false` to the `conditions:` block in `data/config/backlog.yaml`.
-2. Add `prereqs.conditions: [<condition-name>]` to any task that should wait.
-3. `POST /api/backlog/reload`. New condition seeds `false` per the YAML default.
-4. Later: flip via `POST /api/conditions/<condition-name>` `{value: true, set_by: "main"}`.
+1. CREATE the condition via the API — `POST /api/prerequisites/<condition-name>` `{value: false, set_by: "main"}`. The
+   endpoint UPSERTS (an unknown name is created on first POST); there is no separate `/api/conditions` surface, and no
+   YAML edit is needed to bring a condition into existence.
+2. ATTACH it to a task: add `prereqs.conditions: [<condition-name>]` on the task's entry in `data/config/backlog.yaml`,
+   then `POST /api/backlog/reload`. This attachment is the ONE tuning that is still yaml-only — the regen does NOT yet
+   derive per-task `prereqs.conditions` from plan todos (plan-level ordering comes from `depends_on` + `gate_on_depends`
+   / `sequential` frontmatter instead), and the regen PRESERVES hand-tuned prereqs on derived entries.
+3. Later: flip it GREEN via the same `POST /api/prerequisites/<condition-name>` `{value: true, set_by: "main"}`.
 
 The dashboard's Conditions panel shows the toggle + `gates_queued` count. Reload is non-destructive — existing
 conditions keep their value; only NEW ones seed.
