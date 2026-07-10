@@ -676,6 +676,26 @@ the source docs if this list is used for dispatch planning.
 
 ## Progress Log
 
+- **2026-07-10 (later still) — sub-agent verification pass on 3 of the §0 headline P0s (Instruments Completion Tracker
+  dispatch).** (1) **Headline #6 / §2.1 Turbo API 0/0 bug**: partially re-verified — NOT reproducible today via the
+  exact function chain `/turbo` wraps (all 8 originally-flagged venues now show correct real coverage on a direct
+  prod-GCS call); root cause was never identified so this is "no longer reproducing," not "confirmed fixed" — a live
+  HTTP `/turbo` cross-check with cache cleared is the remaining confirming step. One smaller, different residual bug
+  found (`PUFFER-ETHEREUM` internal found/captured-count inconsistency). Detail in
+  `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`. (2) **Headline #3 / §1
+  is-daily-enum-{prediction,sports} exit(1)**: CONFIRMED still genuinely failing daily through 2026-07-09; new
+  diagnostic finding — the failing execution produces ZERO application-level log lines at all (not even the wrapper's
+  trivial startup line) across its full 15-min runtime, a stronger/different symptom than "exc_info swallowed," pointing
+  to either a Cloud Logging delivery gap or a silent hard-kill (OOM candidate: the still-open
+  `manifest_consolidator_dtype_at_source_fix` utf8-mistyped-numeric-columns finding would inflate in-memory footprint
+  for exactly these two large poisoned indexes). Detail in
+  `issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`. (3) **§2 MANIFEST_COVERAGE — KALSHI-PERP
+  contamination purge**: CONFIRMED fully resolved via live GCS read (0 KALSHI-PERP / 0 POLYMARKET-PERP rows in the cefi
+  manifest) — `prediction_capture_incident_remediation_2026_07_06.md` Phase 0 fully closed, and
+  `instruments_completion_tracker_2026_07_06.md` Stage 3's KALSHI-PERP prerequisite is cleared (a NEW, different blocker
+  now gates Stage 3 instead — a concurrently-running sibling workflow rewriting the cefi denominator files live). No
+  code changed in this pass — all 3 findings are read-only live verification (GCS reads, direct service-layer calls,
+  `gcloud logging`/`gcloud run` queries). `unified-trading-pm@c5828c496` + this commit.
 - 2026-07-10: Synthesized from a 4-shard parallel sweep of 83 real doc-index-derived candidate lines across
   `plans/active/**`; 62 docs kept as genuinely open non-backfill work across 7 categories, 16 excluded as
   resolved-but-not-flipped, 3 fragment lines flagged uncaptured. Read-only audit — no code or plan checkboxes changed.
