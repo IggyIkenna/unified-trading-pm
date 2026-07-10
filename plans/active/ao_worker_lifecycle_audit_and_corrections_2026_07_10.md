@@ -352,6 +352,33 @@ is operator-review-gated (A6) and can lag the worker cutover.
       flap counters + summary counts still record every attempt; the Slack path already had its own dedup. Test:
       test_repeat_spawn_failure_activity_log_throttled. (The plan's "454" figure undercounted: 525.)
 
+### Phase B2 — Blocked-wait lifecycle (added 2026-07-10 PM, operator-directed after the slot-9 incident)
+
+_Incident (2026-07-10 12:03-14:05Z, slot 9 / BLK-61ebf85f): a worker with a staged diff asked an operator-gated
+ship-vs-hold question. Main correctly partial-answered ("do the coordination half now; ship-vs-hold awaits operator") —
+but the partial answer CLOSED the blocked row (`answered_at` set, slot back to `working`), so NO surface tracked the
+still-pending operator half; the operator was chat-pinged once and never re-prompted. The worker then wait-looped ~2h
+while the kicker fought it: its pane carried unsubmitted planner text ("check on BLK-61ebf85f again in a bit"), which
+classifies FROZEN → "— proceed now" kick → tiny "still waiting, iteration N" turn → re-frozen ~90s later. **55 kicks in
+~100 min**, each a full model turn at 55% context. Recurring class per operator._
+
+- [ ] [CODE] P1. Pending-operator visibility: a partial answer must NOT close the pending half. Give /blocked answers an
+      explicit disposition (final vs partial-operator-pending): a partial answer delivers the interim guidance but keeps
+      an OPEN operator-pending surface (blocked row stays open with `authority: operator_pending`, or a linked follow-up
+      row) that shows in the dashboard blocked queue + re-alerts on an interval until the operator decides. Main's
+      rubric section in `agents/main.md` then instructs: partial answers use the pending disposition, never a plain
+      answer. (Root cause of the invisible 2h wait.)
+- [ ] [CODE] P1. Kick suppression for wait-looping workers: a slot whose heartbeats are FRESH and whose last_msg is
+      UNCHANGED across N kicks is waiting, not wedged — kicking it burns a turn per debounce window for nothing. Extend
+      the kicker: when `worker_alive` (recent ping) AND the same last_msg persists across ≥2 consecutive kicks with no
+      task-state delta, enter a per-slot kick backoff (e.g. 15 min) and log ONE `worker_wait_loop_detected` event
+      instead of kicking. Also add the new phantom-frozen shape to `classify_pane` tests: unsubmitted planner text (e.g.
+      "check on X again in a bit") left in the input box between turns — today it reads as frozen input.
+- [ ] [CODE] P2. Worker-side contract (agents/worker.md § blocked-wait): after asking a /blocked with nothing left on
+      `continue_on`, prescribe the SAME wait-quietly posture as idle (final heartbeat naming the blocked id, no 60s
+      self-poll loop, no planner text left in the input box) — the answer arrives as an outbox message which the server
+      can nudge-deliver. Keep the bounded-wait escalation workers (cicd/conflict-resolver 2-min) unchanged.
+
 ### Phase D — Fleet dashboard + slot-state correctness (backend-owned)
 
 _Root cause (2026-07-10, operator screenshot): the FLEET table shows STALE plan/task/context/ping/message for
