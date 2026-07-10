@@ -232,7 +232,9 @@ on the resource table + the running backend endpoints (last-30d window).
       green (backend pytest incl. a credit-netting test; vitest 911 + a pw:L2 derivation regression); live `:5183` net
       **$12,593.31** reconciles to the bq probe **$12,593.32**.
 - [x] ✅ [BACKEND] P2. **AWS shows unblended usage-only, not net / not invoice-total.** _(SHIPPED →
-      cost_obs_backend_sku_usage_enrichment@301ccfc — AWS net + invoice reconciliation)_ `aws_facts_sql` sums
+      **deployment-api@`f914cc4`** — AWS now reports net-of-credits with Tax/Fee/Credit line-items. NB the earlier
+      `301ccfc` net_unblended_cost + invoice-reconciliation attempt was **REVERTED** — that column is absent from this
+      CUR's crawler schema and silently zeroed the AWS tab; `f914cc4` is the live fix)_ `aws_facts_sql` sums
       `line_item_unblended_cost` and filters `line_item_type IN ('Usage','DiscountedUsage')` — excludes Tax / Credit /
       Fee / RIFee / SavingsPlan\* and ignores `line_item_net_unblended_cost`. So the AWS total (~$213/30d) is usage
       spend, not the AWS invoice. Decide net-of-discounts (`net_unblended_cost`) + a tax/fee line so it reconciles; at
@@ -655,3 +657,14 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
   (mock/pw stays dummy → 16/16 green; real data shows a "Live" note + "GitHub — Enhanced Billing" footer). Shipped
   deployment-api@`c4549daa` + deployment-ui@`89d5b276`; both full QGs green. **Only AWS CUR backfill go/no-go remains
   open on this plan.**
+- 2026-07-10 — **Verified the parallel-agent reconcile of this superseded plan (operator asked "check it was done
+  properly").** Another agent's `169b44b74` flipped this checkpoint 19→8 open (11 done items, each SHA-cited) and the
+  deployment `expansion` parent 35→11. Audited the 11 cost flips against the LIVE code + the children's evidence: 10 are
+  correct (SKU dim, spot/on-demand, zone, merged table, gross/credit split, bucket detail, resource+waste, dimension
+  columns, GitHub-live, stale-during-refetch — the last confirmed by the real `breakdown.dimension===dimension` gate at
+  `CostObservability.tsx:1645`; all cited SHAs resolve to real feature commits). **One defect fixed:** the AWS-not-net
+  flip cited `301ccfc` (the net_unblended_cost attempt that was **reverted** — that column is absent from the CUR and
+  zeroed the tab); repointed the evidence to the live fix `deployment-api@f914cc4` (net-of-credits + Tax/Fee/Credit).
+  The 8 remaining open items are all genuinely open (P3 + the P2 AWS backfill). My currency/GitHub/Pacific subsections
+  survived the parallel edit intact. Net: the cost reconcile is now correct. (The `expansion` reconcile + its
+  still-`active` status are the deployment cluster — operator is routing the overlap notes to that agent.)

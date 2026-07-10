@@ -66,6 +66,7 @@ source:
   ]
 assigned_role: data_engineering
 drift_direction: advance-code
+sequential: true
 ---
 
 # COINBASE bare-name UAC removal + downstream caller migration
@@ -168,21 +169,21 @@ Every UAC reference is one of these categories:
 
 ### 2c. market-tick-data-service (4 bare-COINBASE lines across 4 files; 1 DeFi-LST context)
 
-| File                                                                                  | Line        | Context                                                                                                              | Migration                                                                                          |
-| ------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `market_tick_data_service/market_interface/adapters/defi/lst_coinbase_adapter.py`     | 33, 34, 112 | LST adapter for cbETH — `self.venue = "COINBASE-ETHEREUM"` + comments referring to `LST_VENUE_TO_TOKENS["COINBASE"]` | **KEEP BARE** (DeFi LST context)                                                                   |
-| `market_tick_data_service/scripts/migrate_cefi_flat_to_v9_canonical.py`               | 38, 75      | migration script comment: bare `COINBASE` is drift for `COINBASE-SPOT`                                               | **KEEP** — historical migration script; already documents the CF-7 relabel                         |
-| `scripts/migrate_cefi_instrument_types.py`                                            | (grep)      | one-off migration                                                                                                    | **KEEP** — historical                                                                              |
-| `scripts/migrate_cefi_v2.py`                                                          | (grep)      | one-off migration                                                                                                    | **KEEP** — historical                                                                              |
-| `scripts/smoke_matrix.py`                                                             | (grep)      | smoke matrix printout                                                                                                | **RE-KEY** if a lookup; **KEEP** if a label                                                        |
-| `market_tick_data_service/engine/orchestrator/preflight.py`                           | (grep)      | possibly references venue set                                                                                        | **RE-KEY** to COINBASE-SPOT if a lookup                                                            |
-| `market_tick_data_service/engine/orchestrator/symbol_rules.py`                        | (grep)      | `_VENUE_INSTRUMENT_TYPE` engine map                                                                                  | **RE-KEY** if a lookup; **KEEP** if it's the pre-D2a legacy shape (verify against UAC's authority) |
-| `market_tick_data_service/engine/orchestrator/venue_fetch.py`                         | (grep)      | fetch dispatch                                                                                                       | **RE-KEY**                                                                                         |
-| `market_tick_data_service/engine/shard_memory_profile.py`                             | (grep)      | shard-memory profile (COINBASE known-heavy shard)                                                                    | **RE-KEY** to COINBASE-SPOT (this is the heavy-shard entry)                                        |
-| `configs/expected_start_dates.yaml`                                                   | (grep)      | YAML config                                                                                                          | **RE-KEY**                                                                                         |
-| `configs/venue_data_types.yaml`                                                       | (grep)      | YAML config                                                                                                          | **RE-KEY**                                                                                         |
-| `market_tick_data_service/live/connectors/{coinbase_book_ws.py, coinbase_spot_ws.py}` | (grep)      | live WS connectors (already register `COINBASE-SPOT`, so file names are cosmetic)                                    | **KEEP** (registers COINBASE-SPOT already — verify no bare `"COINBASE"` register call)             |
-| `market_tick_data_service/live/connectors/__init__.py`                                | (grep)      | connector registry                                                                                                   | **KEEP** (already registers COINBASE-SPOT — see gap-016 audit output)                              |
+| File                                                                                  | Line            | Context                                                                                                                                                               | Migration                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `market_tick_data_service/market_interface/adapters/defi/lst_coinbase_adapter.py`     | 33, 34, 112     | LST adapter for cbETH — `self.venue = "COINBASE-ETHEREUM"` + comments referring to `LST_VENUE_TO_TOKENS["COINBASE"]`                                                  | **KEEP BARE** (DeFi LST context)                                                                                                                                                                                                                                                                                               |
+| `market_tick_data_service/scripts/migrate_cefi_flat_to_v9_canonical.py`               | 38, 75          | migration script comment: bare `COINBASE` is drift for `COINBASE-SPOT`                                                                                                | **KEEP** — historical migration script; already documents the CF-7 relabel                                                                                                                                                                                                                                                     |
+| `scripts/migrate_cefi_instrument_types.py`                                            | 168, 186        | **AUDITED 2026-07-10**: already `COINBASE-SPOT` only — zero bare-COINBASE                                                                                             | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                                                                                |
+| `scripts/migrate_cefi_v2.py`                                                          | 95              | **AUDITED 2026-07-10**: already `COINBASE-SPOT` only (`_SPOT_DEFAULT_VENUES` frozenset) — zero bare-COINBASE                                                          | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                                                                                |
+| `scripts/smoke_matrix.py`                                                             | 77              | `_REPRESENTATIVE_SYMBOL["COINBASE"] = "BTC-USD"` — cell enumeration keys off UAC's `VENUES_BY_ASSET_GROUP["cefi"]`, which still emits bare `COINBASE` (S3 not landed) | **DONE 2026-07-10** — ADDED `"COINBASE-SPOT": "BTC-USD"` additively alongside the existing bare key (NOT a rename — renaming now would silently drop the representative symbol for the still-enumerated bare-COINBASE cell until S3 lands, the same class of regression slot-9 found for S2). Forward-compatible either order. |
+| `market_tick_data_service/engine/orchestrator/preflight.py`                           | 303, 502        | **AUDITED 2026-07-10**: already `COINBASE-SPOT` only — zero bare-COINBASE                                                                                             | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                                                                                |
+| `market_tick_data_service/engine/orchestrator/symbol_rules.py`                        | 155             | **AUDITED 2026-07-10**: already `COINBASE-SPOT` only — zero bare-COINBASE                                                                                             | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                                                                                |
+| `market_tick_data_service/engine/orchestrator/venue_fetch.py`                         | 284, 487        | **AUDITED 2026-07-10**: already `COINBASE-SPOT` only (comments) — zero bare-COINBASE                                                                                  | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                                                                                |
+| `market_tick_data_service/engine/shard_memory_profile.py`                             | 57, 60, 61, 162 | **AUDITED 2026-07-10**: already `COINBASE-SPOT` only — zero bare-COINBASE                                                                                             | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                                                                                |
+| `configs/expected_start_dates.yaml`                                                   | 127             | **market-tick-data-service:** section `venues:` map                                                                                                                   | **DONE 2026-07-10** — rekeyed `COINBASE` → `COINBASE-SPOT`. File also carries `instruments-service:`/`features-delta-one-service:` sections (lines 55, 248, 258) with their own bare-COINBASE entries — those belong to S4/S6 craft scope, left untouched here.                                                                |
+| `configs/venue_data_types.yaml`                                                       | 112             | asset-group-scoped `CEFI:` map, no live MTDS runtime consumer (confirmed via repo-wide grep — this file is unused dead config in-repo)                                | **DONE 2026-07-10** — rekeyed `COINBASE` → `COINBASE-SPOT` (zero regression risk, nothing reads this key today).                                                                                                                                                                                                               |
+| `market_tick_data_service/live/connectors/{coinbase_book_ws.py, coinbase_spot_ws.py}` | n/a             | live WS connectors (already register `COINBASE-SPOT`, so file names are cosmetic)                                                                                     | **AUDITED 2026-07-10** — confirmed no bare `"COINBASE"` register call. **NO CHANGE**                                                                                                                                                                                                                                           |
+| `market_tick_data_service/live/connectors/__init__.py`                                | n/a             | connector registry                                                                                                                                                    | **AUDITED 2026-07-10** — confirmed already registers COINBASE-SPOT only. **NO CHANGE**                                                                                                                                                                                                                                         |
 
 ### 2d. execution-service (12 bare-COINBASE lines across 12 files)
 
@@ -345,36 +346,9 @@ emit a small, expected residual — never a silent zeroing).
       not, since `_CEFI_SUB_VENUE_BASES` only covers `OKX`) — exactly the `VENUES_BY_ASSET_GROUP["cefi"]` rename this
       plan's **S3** fixes; not a regression from S1 and not a new finding (already the plan's own problem statement).
 
-### Step S2 — instruments-service `venue_core.py` delete the dead `elif COINBASE` alias
-
-> **🔴 BLOCKED — verified 2026-07-10 by slot 9 (data_engineering).** The "Ordering note" below is WRONG for the current
-> repo state and must NOT be executed until S3 has landed. See
-> `plans/active/issues/coinbase_bare_name_migration_s2_ordering_2026_07_10.md` for the full writeup + recommended
-> re-sequencing. Do not dispatch this todo again until that issue doc's decision is applied here.
-
-- [ ] [CODE] P2. `instruments-service/instruments_service/engine/orchestrator/venue_core.py`: delete lines 145-146
-      (`elif venue == "COINBASE": result.append("COINBASE-SPOT")`) — after S1 the fold handles residuals; this expansion
-      becomes dead code once UAC drops bare COINBASE (S3). Update the docstring lines 97/115/126/317 to remove the
-      COINBASE special case. Regression test: `test_expand_cefi_tardis_endpoints_no_bare_coinbase_input` — feeding
-      `["COINBASE-SPOT", "BINANCE-SPOT"]` produces `["COINBASE-SPOT", "BINANCE-SPOT"]` (passthrough). **Gate:** QG
-      green; test added; no downstream IS producer regressions in `tests/unit/`. **Depends on S3 landing first** (see
-      blocked-banner above) — verified 2026-07-10 that landing S2 before S3 fails this exact gate.
-
-  ~~Ordering note: S2 CAN land before S3 because it does not READ the UAC dict; it just deletes a runtime alias branch
-  that will still be exercised (by test callers) until S3 removes bare COINBASE from the input list. Safe to land now.~~
-  **DISPROVEN 2026-07-10**: `bash scripts/quality-gates.sh` run with the elif-branch deleted (S1/S3 not yet landed)
-  fails 2 existing tests —
-  `tests/unit/test_adapter_routing_uac_invariant.py::test_expanded_cefi_enumeration_fully_resolvable` (bare `COINBASE`
-  resolves to `NO_ADAPTER_YET`) and
-  `tests/unit/test_new_orchestrator.py::test_process_instruments_cefi_venues_available` (`COINBASE-SPOT` drops out of
-  the CEFI venue list). Root cause: UAC's `VENUES_BY_ASSET_GROUP["cefi"]` still emits bare `COINBASE` until S3 lands, so
-  deleting the alias branch makes IS's cefi venue producer emit an unmapped bare `COINBASE` — a real production
-  regression, not just a test artifact. **S2 must land AFTER S3** (or be combined into the same cross-repo shippable
-  unit as S3).
-
 ### Step S3 — UAC removal (the "gap-015" step, now un-blocked)
 
-- [ ] [CODE] P2. `unified-api-contracts/`: apply every CEFI ⇒ MIGRATE from §2a. Concrete file diff:
+- [x] [CODE] P2. `unified-api-contracts/`: apply every CEFI ⇒ MIGRATE from §2a. Concrete file diff:
   - `registry/venue_constants.py`: delete line 377 (`"COINBASE": {"SPOT_PAIR"}`) and its 8-line D2a comment (368-376).
     Delete `COINBASE-INTERNATIONAL` fold entry from `_CEFI_VENUE_FOLD` only if S1 already landed.
   - `registry/market_data_categories.py`: delete line 242 (`"COINBASE",`) from `VENUES_BY_ASSET_GROUP["cefi"]`; delete
@@ -411,6 +385,56 @@ emit a small, expected residual — never a silent zeroing).
   - `check_enumeration_completeness.py` audit against production manifest shows COINBASE cell counts UNCHANGED (fold
     from S1 does its job).
 
+  **DONE 2026-07-10** — unified-api-contracts@42270f63. Applied all 13 files (the 12 above + `venue_mapping.py` covering
+  3 separate line items). `bash scripts/quality-gates.sh` green (sentinel-verified at the committed SHA);
+  `grep -n '"COINBASE"' venue_constants.py` returns 0 hits. `COINBASE-INTERNATIONAL` fold entry left untouched (S1 had
+  already landed by the time this ran, but that entry is orthogonal to the Option-A invert and isn't touched by either
+  step). Two deviations from the plan's literal §2a/S3 table, both found while implementing and fixed inline per
+  findings-triage ("in your file → fix in same commit"):
+  1. `market_data_categories.py`'s `VENUES_BY_ASSET_GROUP["cefi"]` list and `venue_mapping.py`'s `venue_to_ccxt` dict
+     had NO pre-existing `"COINBASE-SPOT"` entry (unlike every other dict in §2a, where the `-SPOT` key already existed
+     as a duplicate) — a blind REMOVE per the table would have silently dropped Coinbase spot from the cefi venue
+     universe and the CCXT id map, a real EXPECTED-set zeroing the plan's own §1 warns against. RE-KEYED instead of
+     REMOVE in both places.
+  2. `external/nautilus/data_schemas.py`'s `EXCHANGE_NAME_MAP` was mislabeled in the table as a plain UAC RE-KEY target.
+     Its values are NautilusTrader venue names (canonical → Nautilus format per the module docstring), and Nautilus uses
+     bare `COINBASE` by convention (same as bare `BINANCE` in the same dict) — this is the same Nautilus-boundary
+     pattern the plan's own §2d execution-service table calls out as KEEP. Left bare with a clarifying comment; did not
+     rename. Also updated 3 downstream tests whose assertions hardcoded the pre-migration bare-COINBASE shape:
+     `tests/internal/unit/test_instrument_generator.py`, `tests/unit/test_venue_adapter_keys.py` (removed COINBASE from
+     `EXPECTED_SENTINEL_VENUES`, cefi now has zero adapter-key sentinels), `tests/unit/test_session_times.py`.
+
+### Step S2 — instruments-service `venue_core.py` delete the dead `elif COINBASE` alias
+
+> **✅ ORDERING FIXED 2026-07-10** — verified 2026-07-10 by slot 9 (data_engineering) that landing this step before S3
+> fails 2 regression tests (see the disproven ordering note below). Resolved via Option A of
+> `plans/active/issues/coinbase_bare_name_migration_s2_ordering_2026_07_10.md`: this plan's frontmatter now sets
+> `sequential: true`, and this S2 section was physically moved to AFTER the S3 section above (regen chains
+> `prereqs.completed_tasks` to the immediately-preceding unchecked todo in file order — S3, not S1). The dispatcher will
+> not offer S2 to a worker until S3's backlog task is `done`. Do not reorder S2 back above S3 without re-verifying this
+> gate.
+
+- [ ] [CODE] P2. `instruments-service/instruments_service/engine/orchestrator/venue_core.py`: delete lines 145-146
+      (`elif venue == "COINBASE": result.append("COINBASE-SPOT")`) — after S1 the fold handles residuals; this expansion
+      becomes dead code once UAC drops bare COINBASE (S3). Update the docstring lines 97/115/126/317 to remove the
+      COINBASE special case. Regression test: `test_expand_cefi_tardis_endpoints_no_bare_coinbase_input` — feeding
+      `["COINBASE-SPOT", "BINANCE-SPOT"]` produces `["COINBASE-SPOT", "BINANCE-SPOT"]` (passthrough). **Gate:** QG
+      green; test added; no downstream IS producer regressions in `tests/unit/`. **Depends on S3 landing first**
+      (machine-gated via `sequential: true` — see banner above) — verified 2026-07-10 that landing S2 before S3 fails
+      this exact gate.
+
+  ~~Ordering note: S2 CAN land before S3 because it does not READ the UAC dict; it just deletes a runtime alias branch
+  that will still be exercised (by test callers) until S3 removes bare COINBASE from the input list. Safe to land now.~~
+  **DISPROVEN 2026-07-10**: `bash scripts/quality-gates.sh` run with the elif-branch deleted (S1/S3 not yet landed)
+  fails 2 existing tests —
+  `tests/unit/test_adapter_routing_uac_invariant.py::test_expanded_cefi_enumeration_fully_resolvable` (bare `COINBASE`
+  resolves to `NO_ADAPTER_YET`) and
+  `tests/unit/test_new_orchestrator.py::test_process_instruments_cefi_venues_available` (`COINBASE-SPOT` drops out of
+  the CEFI venue list). Root cause: UAC's `VENUES_BY_ASSET_GROUP["cefi"]` still emits bare `COINBASE` until S3 lands, so
+  deleting the alias branch makes IS's cefi venue producer emit an unmapped bare `COINBASE` — a real production
+  regression, not just a test artifact. **S2 must land AFTER S3** (or be combined into the same cross-repo shippable
+  unit as S3).
+
 ### Step S4 — IS data_engineering downstream ripple
 
 - [x] [CODE] P2. `instruments-service/`: audit each remaining bare-COINBASE hit (§2b) and re-key any lookups.
@@ -430,13 +454,25 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S5 — MTDS data_engineering downstream ripple
 
-- [ ] [CODE] P2. `market-tick-data-service/`: apply §2c CEFI callers. Deep-audit
+- [x] [CODE] P2. `market-tick-data-service/`: apply §2c CEFI callers. Deep-audit
       `engine/orchestrator/{preflight,symbol_rules,venue_fetch}.py`, `engine/shard_memory_profile.py`, `configs/*.yaml`.
       Re-key any lookups to COINBASE-SPOT. Leave the `lst_coinbase_adapter.py` DeFi-LST references alone. **Gate:** MTDS
       QG green; smoke_matrix.py returns identical output for the (cefi, COINBASE-SPOT) row that it previously returned
       for (cefi, COINBASE); shard-launch scripts (`launch-cefi-*.sh` in deployment-service) still target the COINBASE
       shard (name may need to shift COINBASE → COINBASE-SPOT in the shard registry — coordinate with the
-      deployment-service step).
+      deployment-service step). **DONE 2026-07-10** — market-tick-data-service@b5f653a9. Deep-audit found the four
+      engine files (`preflight.py`, `symbol_rules.py`, `venue_fetch.py`, `shard_memory_profile.py`) already
+      writer-token-canonical (`COINBASE-SPOT` only, no bare COINBASE) — they operate on the WRITER-side token, which
+      migrated in the 2026-06-23 perp-gate change, distinct from UAC's EXPECTED-side `VENUES_BY_ASSET_GROUP` (still
+      bare, pending S3). Re-keyed `configs/venue_data_types.yaml:112` and `configs/expected_start_dates.yaml:127`
+      (market-tick-data-service section only — confirmed no live runtime consumer for the first file; the second is read
+      via UTL `DateValidator`'s cwd-search but MTDS's own code never calls it, so zero regression risk either way).
+      `scripts/smoke_matrix.py:77` got an ADDITIVE `COINBASE-SPOT` entry (kept bare `COINBASE` too) since its cell
+      enumeration reads live from UAC's `VENUES_BY_ASSET_GROUP["cefi"]`, which still emits bare `COINBASE` until S3
+      lands — a straight rename here would have reproduced the exact S2-ordering regression slot-9 found (silently
+      dropping the representative symbol for the still-enumerated cell). `bash scripts/quality-gates.sh` green at the
+      committed SHA (sentinel-verified); shipped via
+      `quickmerge --agent --files 'configs/expected_start_dates.yaml     configs/venue_data_types.yaml scripts/smoke_matrix.py'`.
 
 ### Step S6 — cross-repo ripple (features-service, MDPS, UTL, deployment-api, deployment-service)
 
@@ -501,6 +537,35 @@ is:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-10** — **S3 done** (slot-6, data_engineering) — unified-api-contracts@42270f63. Applied the full §2a
+  CEFI-MIGRATE set across all 13 UAC files (12 named in the plan + `venue_mapping.py` covering 3 line items).
+  `bash scripts/quality-gates.sh` green, sentinel-verified at the committed SHA. Found + fixed 2 plan-authoring gaps
+  inline (see the S3 todo's DONE note above for detail): (1) `VENUES_BY_ASSET_GROUP["cefi"]` and `venue_to_ccxt` had no
+  pre-existing `COINBASE-SPOT` duplicate, so RE-KEYED instead of the table's literal REMOVE (a blind REMOVE would have
+  silently zeroed Coinbase spot's EXPECTED set — exactly the class of regression this plan's §1 warns against); (2)
+  `external/nautilus/data_schemas.py`'s `EXCHANGE_NAME_MAP` kept bare `COINBASE` (Nautilus-boundary convention, same
+  pattern as the plan's own §2d execution-service KEEP entries) instead of the table's RE-KEY. Also fixed 3 downstream
+  tests whose assertions hardcoded the pre-migration bare-COINBASE shape. This unblocks S2 (now gated on S3 per the
+  `sequential: true` ordering fix below) and S6.
+- **2026-07-10** — **S5 done** (slot-7, data_engineering) — market-tick-data-service@b5f653a9. Deep-audited all §2c
+  files; the four engine files (`preflight.py`, `symbol_rules.py`, `venue_fetch.py`, `shard_memory_profile.py`) were
+  already `COINBASE-SPOT`-only (writer-side token, migrated separately in the 2026-06-23 perp-gate change — distinct
+  from UAC's still-bare EXPECTED-side `VENUES_BY_ASSET_GROUP`). Re-keyed the two `configs/*.yaml` files (confirmed zero
+  live MTDS runtime consumer, so zero regression risk). `scripts/smoke_matrix.py` got an ADDITIVE `"COINBASE-SPOT"`
+  entry (kept bare `"COINBASE"` too) rather than a rename, because its cell enumeration reads UAC's
+  `VENUES_BY_ASSET_GROUP["cefi"]` live and that dict still emits bare `COINBASE` until S3 lands — a straight rename
+  would have reproduced the exact S2-ordering regression slot-9 already found (this plan's §2c table + S5 todo updated
+  with confirmed line numbers). QG green (sentinel-verified at the committed SHA); shipped via quickmerge.
+- **2026-07-10** — **S2/S3 ordering fixed** (slot-3, PM-only `docs(plans):` commit — no service-repo code diff).
+  Implemented Option A of `plans/active/issues/coinbase_bare_name_migration_s2_ordering_2026_07_10.md` (slot 9's
+  verified finding that S2 fails 2 regression tests if dispatched before S3): added `sequential: true` to this plan's
+  frontmatter and physically reordered the body so the `### Step S3` section now precedes `### Step S2` —
+  `regen_backlog_from_plan.py`'s sequential-chain wiring links each remaining unchecked todo to its immediate file-order
+  predecessor, so the backlog now genuinely gates S2's dispatch on S3's task reaching `done` (previously only a
+  human-readable blocked-banner, not a machine gate — S1-S6 had zero real prereq wiring despite the documented DAG
+  dependency in §4). New todo order for the 4 still-open steps: S3 → S2 → S5 → S6. Updated S2's banner to reference this
+  fix; kept the disproven "safe to land before S3" ordering note struck through for history. Flipped the issue doc's
+  Option A checkbox + `status: resolved`. No code shipped (plan-file edit only); nothing to quickmerge.
 - **2026-07-10** — **S7 done** (slot-8, data_engineering). Filed
   `plans/active/coinbase_bare_name_migration_execution_service_2026_07_10.md` — carries over the 12-file
   execution-service enumeration from §2d verbatim plus the `registry.py:178-179` backward-compat-resolver decision (KEEP

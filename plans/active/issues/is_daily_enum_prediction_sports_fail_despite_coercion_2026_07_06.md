@@ -157,6 +157,35 @@ one.
 
 ## Progress log
 
+- **2026-07-10 (re-verification, sub-agent, instruments-completion-tracker sweep)** — **CONFIRMED still genuinely open,
+  failing daily through 2026-07-09** (`gcloud run jobs executions list` for both `is-daily-enum-prediction` and
+  `is-daily-enum-sports`: `failedCount=1` on every execution 07-06→07-09 inclusive; the 07-10 13:30 UTC run had not yet
+  fired at verification time). **New diagnostic detail that sharpens (does not replace) the "observability gap"
+  framing**: pulled the FULL Cloud Logging record for one execution's entire runtime window
+  (`is-daily-enum-prediction-85tst`, started 13:30:14 UTC, exit(1) at 13:45:46 UTC — ran **15 minutes**, not an instant
+  crash) via `gcloud logging read` with no severity filter, across every `logName` under that
+  `resource.labels.job_name`. Result: **zero application-level log lines of any kind** — not even the wrapper script's
+  own very first line (`"IS daily enumeration START ..."`, which `main()` logs via
+  `logging.basicConfig(stream=sys.stdout, ...)` before doing anything else, and the job sets `PYTHONUNBUFFERED=1`). Only
+  2 system-level log entries exist: `Container called exit(1)` at the two retry attempts. This is a STRONGER finding
+  than "the shard-isolation catch swallows exc_info" (that hypothesis implies SOME log lines exist, just without a
+  traceback) — the total absence of even the wrapper's trivial startup log line, after 15 real minutes of runtime,
+  points to either (a) a Cloud Logging delivery gap specific to this job's log driver (the container's stdout/stderr
+  genuinely isn't reaching the sink), or (b) a hard kill (SIGKILL/OOM) that occurs after logs are buffered but before
+  Cloud Run's log agent flushes them — the job runs on an 8Gi/4cpu Cloud Run Job
+  (`gcloud run jobs describe is-daily-enum-prediction`), and the wrapper invokes `python -m instruments_service ...` as
+  an inherited-stdio subprocess (`subprocess.run(cmd, check=False)`, no `stdout=`/`stderr=` capture), so a hard kill of
+  either the parent or child would silently drop everything not yet flushed to the log sink. **New candidate root cause
+  worth investigating before the exc_info fix**: the still-open
+  `manifest_consolidator_dtype_at_source_fix_2026_07_07.md` finding (numeric columns persisted as `utf8` instead of a
+  compact dtype in the canonical `_index`) would inflate in-memory footprint significantly for a multi-million-row
+  prediction/sports index once loaded into pandas — directly relevant here since these are exactly the two poisoned
+  indexes (sports 4.99M rows, prediction ~25K). Did NOT find an explicit "memory limit exceeded" system log line (only
+  checked this execution; not exhaustive), so OOM is a plausible-not-confirmed lead, same epistemic status as the
+  `cefi_monotonicity_guard` doc's `t1-recon` OOM hypothesis — same pattern, different job. No code changed this pass —
+  read-only `gcloud logging read` / `gcloud run jobs executions describe` / `gcloud run jobs describe` investigation
+  only. Suggested fix order updated: try the local `.venv` repro (item 4 in "what I tried") or add `exc_info=True` AND
+  memory-profile the run locally before assuming either fix alone will surface the real error.
 - 2026-07-06: Filed by the slot-2 perp-correction agent as a scope-correcting handoff (it went out of its lane debugging
   this; stopping and returning to the perp task). All attempts + the two infra changes above recorded so the
   capture-hardening owner can continue. Blocker = observability gap (exc_info).
