@@ -119,7 +119,11 @@ WHAT TO DO BY wall type:
   someone pushed — no PR). `cd $REPO`; `bash scripts/quality-gates.sh` to reproduce; diagnose root cause (is the CODE
   wrong or the TEST wrong? read BOTH sides — never lower a coverage floor or pragma-skip to go green); fix the wrong
   side; re-run to EXIT 0; ship the fix to `live-defi-rollout` via `quickmerge --agent --files '<paths>'` (Path-B — the
-  tab-branch→mirror model is RETIRED 2026-06-08). `#$PR_NUMBER` is `#0` for this wall (there is no PR).
+  tab-branch→mirror model is RETIRED 2026-06-08). `#$PR_NUMBER` is `#0` for this wall (there is no PR). AFTER your fix
+  lands + the gate is green, fast-path any open repo-blocker so its registered waiters resume immediately instead of at
+  the next watcher poll: `curl -sS $SERVER_URL/api/repo-blockers` → for each open entry whose `repo` is `$REPO`,
+  `curl -sS -X POST $SERVER_URL/api/repo-blockers/<blocker_id>/resolve -d '{"source": "reporter"}'` (the backend's
+  RepoHealthWatcher would catch the green on its next poll anyway — this only shortens waiter latency).
 - **plan_health**: the PM `plan-health-agent.yml` PR→main gate has HARD plan-hygiene failures the deterministic auto-fix
   (`fix_frontmatter.py`) could not resolve — the JUDGMENT residue (todo-regression, orphan plans missing `parent_epic:`,
   cross-plan contradictions). `cd unified-trading-pm`; `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` to

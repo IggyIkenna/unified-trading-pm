@@ -251,6 +251,39 @@ curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/blocked \
 Then keep working on `continue_on`. The operator answers in the dashboard; the answer comes back as a message on your
 next `/progress` call.
 
+### 4b) BLOCKED ON THE REPO, not your task — declare a repo-blocker (backend-owned wait)
+
+The recurring case: someone ELSE's commit turned a repo's quality gate RED, and your unrelated staged work can't ship
+under the green-tree rule. Do NOT handle this as a plain /blocked question, do NOT wait on main/review to relay "it's
+green again" (they flag once and forget), and do NOT poll QG/CI yourself. The BACKEND owns this wait end-to-end:
+
+1. VERIFY the red is pre-existing, not yours: stash/remove your diff, confirm byte-identical failures on a clean tree at
+   LDR HEAD, restore your diff.
+2. FILE the issue doc per § 4.5 (the fix todos it carries are how the fleet actually fixes the repo).
+3. DECLARE the blocker (idempotent — if one is already open for the repo you just join as a waiter):
+
+```bash
+curl -sS -X POST $SERVER_URL/api/repo-blockers \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "repo": "<the red repo>",
+    "kind": "qg_red",
+    "detail": "<what is red + your clean-tree evidence + the issue-doc path>",
+    "slot_id": '$SLOT_ID',
+    "task_id": "<task.id>"
+  }'
+```
+
+This dedupes per repo, fires the cicd (ldr_qg_failure) escalation for the fix, registers you as a WAITER, and suppresses
+liveness kicks on you while your heartbeats stay fresh. The backend's RepoHealthWatcher then polls the repo's CI state
+ITSELF and, the moment it reads green, sends you an outbox message ("<repo> is GREEN again — resume") and flips the
+`repo-<repo>-qg-green` condition.
+
+4. Then: if you have OTHER dispatchable work (a `continue_on`, another task), do that. Otherwise send ONE heartbeat
+   (`"waiting on repo-blocker RB-… (<repo> qg_red)"`) and WAIT QUIETLY — same posture as idle: no self-poll loop, no
+   planner text left in your input box. The green signal arrives as a message on your next /progress or /heartbeat — act
+   on it immediately (fresh-pull, re-run QG, ship via the normal flow).
+
 ### 4.5) FINDINGS CLOSURE (HARD RULE — codified 2026-06-10)
 
 If your task PRODUCES FINDINGS you are NOT fixing inline in this same task (an audit, review, consistency-check,

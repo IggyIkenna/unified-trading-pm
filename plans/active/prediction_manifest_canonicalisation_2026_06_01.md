@@ -486,12 +486,15 @@ be fixed first if run on a VM.
       `trades` rows → `captured`; bundle `captured` 0→10,769; total captured 24,870→35,688 (+10,818 exact); **ZERO
       captured→attempted_failed regressions** (verified before/after; `--unphantom-only` skips the forward pass). NB the
       phantom cohort was 10,769, NOT the ~15,769 first estimated (that conflated a SEPARATE 5,000-row KALSHI population
-      — see STEP 4b). **REMAINING: STEP 2** fix rebuild `_CANONICAL_PRED_RE` chain=/underlying= gap (mtds, ~3.3%
-      objects); **STEP 4** the safe cleanups (124 lowercase-`kalshi` byte-dup rows, 27,292 `batch` blank-`source`
-      backfill) + **STEP 4b NEW**: 5,000 KALSHI bundle rows at `attempted_failed[missing_available_at_envelope]`
-      (rebuild's available_at envelope resolution failed for Kalshi — separate from the phantom wipe; diagnose the
-      Kalshi envelope path) + re-diagnose the v4 legacy rows (now that captured bundle rows exist) + CF-1…CF-12 audit →
-      E7 GREEN. Flip THIS box only when E7 is GREEN. Original diagnosis below. <br>Root-cause diagnosis of the live
+      — see STEP 4b). **✅ ALL 3 CODE FIXES LANDED:** STEP 1 phantom-exempt (UTL@22d3984b + IS@2674e6fd); **STEP 2**
+      rebuild `_CANONICAL_PRED_RE` generalized to a hive-kv fallback (`mtds@0d9af7d9` — found 2 older-migration shapes,
+      293→0 unparseable / 17,412 objects); **STEP 4b** Kalshi `available_at` envelope now derives from `created_time`
+      (`mtds@74d57e26` — Kalshi parquets carry ONLY `created_time`, no ts_event/timestamp; +regression test).
+      **REMAINING (data-ops): STEP 3** ONE clean `rebuild_prediction_manifest.py` re-run on `pred-prd` (now resolves in
+      one pass: the 5,000 Kalshi envelope rows → captured, the 27,292 batch blank-`source` → stamped, the ~293
+      previously-unparseable objects → scanned); **STEP 4** targeted cleanups (delete 124 lowercase-`kalshi` byte-dup
+      rows; re-diagnose the v4 legacy rows — purge if superseded by the now-captured bundle) + CF-1…CF-12 audit → E7
+      GREEN. Flip THIS box only when E7 is GREEN. Original diagnosis below. <br>Root-cause diagnosis of the live
       `_index` found **ZERO** `data_type=prediction_canonical_question_group` rows at `captured` — the phantom-manifest
       reconciler (`unified_trading_library/reconcile/manifest.py`, wrapper
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`) has a **bundle-atom blind spot**: it assumes

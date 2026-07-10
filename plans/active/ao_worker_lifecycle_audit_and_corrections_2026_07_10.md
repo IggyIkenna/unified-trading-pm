@@ -368,16 +368,23 @@ classifies FROZEN → "— proceed now" kick → tiny "still waiting, iteration 
       row) that shows in the dashboard blocked queue + re-alerts on an interval until the operator decides. Main's
       rubric section in `agents/main.md` then instructs: partial answers use the pending disposition, never a plain
       answer. (Root cause of the invisible 2h wait.)
-- [ ] [CODE] P1. Kick suppression for wait-looping workers: a slot whose heartbeats are FRESH and whose last_msg is
-      UNCHANGED across N kicks is waiting, not wedged — kicking it burns a turn per debounce window for nothing. Extend
-      the kicker: when `worker_alive` (recent ping) AND the same last_msg persists across ≥2 consecutive kicks with no
-      task-state delta, enter a per-slot kick backoff (e.g. 15 min) and log ONE `worker_wait_loop_detected` event
-      instead of kicking. Also add the new phantom-frozen shape to `classify_pane` tests: unsubmitted planner text (e.g.
-      "check on X again in a bit") left in the input box between turns — today it reads as frozen input.
-- [ ] [CODE] P2. Worker-side contract (agents/worker.md § blocked-wait): after asking a /blocked with nothing left on
-      `continue_on`, prescribe the SAME wait-quietly posture as idle (final heartbeat naming the blocked id, no 60s
-      self-poll loop, no planner text left in the input box) — the answer arrives as an outbox message which the server
-      can nudge-deliver. Keep the bounded-wait escalation workers (cicd/conflict-resolver 2-min) unchanged.
+- [ ] [CODE] P2. (NARROWED 2026-07-10 PM — the repo-blocker waiter suppression in todo 20 covers the incident class;
+      remaining scope only) Generic wait-loop kick suppression for NON-blocker waits, plus the phantom-frozen
+      `classify_pane` shape: unsubmitted planner text (e.g. "check on X again in a bit") left in the input box between
+      turns reads as frozen input today.
+- [x] 20. ✅ [CODE] P1. Repo-blocker mechanism — the operator-designed backend-owned resolution of the recurring "agent
+      A shipped a commit that turned the repo QG red; agent B can't ship" wait (design principle: depend LEAST on an
+      agent relaying the green signal, MOST on the backend). Shipped: `repo_blockers` registry (`RepoBlockerRow`,
+      deduped per repo+kind, waiters JSON, green-condition `repo-<repo>-qg-green` flipped false-on-declare /
+      true-on-resolve); `POST/GET /api/repo-blockers` + `POST /{id}/resolve` (fixer fast-path); declare auto-fires the
+      `ldr_qg_failure` cicd escalation with the declarer's diagnosis as context; `RepoHealthWatcher` daemon (300s, env
+      `ORCHESTRATOR_REPO_HEALTH_INTERVAL_SECONDS`, zero-cost while no blocker open) polls `server.ci_status` per unique
+      repo and on green resolves + outbox-messages EVERY waiter — no agent relay anywhere on the path; kicker suppresses
+      kicks on fresh-ping waiters (slot-9 class: 55 kicks/100min); worker.md § 4b carries the declare-verify-file-wait
+      contract (wait-quietly posture, no self-poll; supersedes the separate blocked-wait-contract todo) and cicd.md's
+      ldr_qg_failure wall gained the fast-path resolve step. Tests: test_repo_blockers.py (6) + 2 kicker-suppression
+      cases. Evidence: agent-orchestrator@b46613d; worker.md §4b + cicd.md fast-path shipped in the same PM commit as
+      this flip.
 
 ### Phase D — Fleet dashboard + slot-state correctness (backend-owned)
 
