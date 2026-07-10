@@ -1,0 +1,50 @@
+{
+  "service": "data_pipeline_e2e_check_is",
+  "run_date": "2026-07-05",
+  "legs": ["force", "skip"],
+  "started_at": "2026-07-10T12:57:24.519142+00:00",
+  "finished_at": "2026-07-10T13:03:37.437461+00:00",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "ambiguous": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "shard_label": "CEFI/BINANCE-FUTURES/2026-07-05",
+      "leg": "force",
+      "status": "passed",
+      "reason": "ok",
+      "vm_name": "instr-backfill-cefi-pchk-0710125724-f-binance-futures",
+      "exit_status": 0,
+      "write_verified": true,
+      "parquet_count": 1,
+      "manifest_ok": true,
+      "manifest_status": "captured",
+      "skip_signal_found": false,
+      "skip_proof": "not_applicable",
+      "fingerprint_before": null,
+      "fingerprint_after": null,
+      "attempt_ts": "2026-07-10T12:57:24.519276+00:00",
+      "duration_sec": 185.48533
+    },
+    {
+      "shard_label": "CEFI/BINANCE-FUTURES/2026-07-05",
+      "leg": "skip",
+      "status": "passed",
+      "reason": "ok",
+      "vm_name": "instr-backfill-cefi-pchk-0710125724-s-binance-futures",
+      "exit_status": 0,
+      "write_verified": true,
+      "parquet_count": 1,
+      "manifest_ok": true,
+      "manifest_status": "captured",
+      "skip_signal_found": true,
+      "skip_proof": "genuine",
+      "fingerprint_before": "CJm9pouVyJUDEAE=:SSd69A==:2026-07-10T12:59:59.015000+00:00:47456",
+      "fingerprint_after": "CJm9pouVyJUDEAE=:SSd69A==:2026-07-10T12:59:59.015000+00:00:47456",
+      "attempt_ts": "2026-07-10T13:00:30.005227+00:00",
+      "duration_sec": 187.428963
+    }
+  ]
+}

@@ -781,3 +781,27 @@ alignment audit (per-repo canonical-form assertion gaps). Next tick applies thei
 
 **Operator-gated (NOT touched, by design):** Tier-4 migration RUN (per-AG G1 dry-run → `--apply` 1.9M-object walk → E8
 legacy delete), downstream C-walks (need input C-GREEN + first batch), post-walk CF audit, GAP-4 hard-assert (post-G3).
+
+## Progress Log — /autonomous continuation 2026-07-10 (Opus; operator: "everything done properly, don't care if it takes a year")
+
+**CF-11 IS write-path DONE** (flip above): prediction polymarket genuine bug fixed `instruments-service@5da67986` (bare
+`ClientError` → `RuntimeError` wrap; +2 regression tests); tradfi verified-compliant; codex drift `pm@48c87556b`.
+
+**QG-test alignment (P0, cross-repo) — sub-progress (flip the multi-repo checkbox only when ALL 5 land):**
+
+- **deployment-api ✅** `deployment-api@e755cda` — 4/4 gaps, 13 new tests (stale-fallback legacy blob,
+  `canonicalise_defi_data_types`, `_normalise_data_type` aliases, FLAG-1 pure-in-memory groupby guard). QG-green.
+- **features ✅** `features-service@07b11a5` — 4/5 gaps (on-disk data_type merge, volatility `dependency_checker`,
+  `_resolve_mtds_cefi_bucket` kwargs, full-v9-row manifest-window classification). QG-green.
+- **instruments-service** P0#1 done via CF-11 `5da67986`; gaps #2 (equity-bento raise) / #3 (record_failed→read
+  round-trip) / #4 (clob_history []-on-error anchor) OPEN.
+- **mtds / MDPS** — implementers in flight.
+
+- [ ] [CODE] P1. **features volatility `data_loader` read-path missing `pipeline_mode=` (REAL BUG, features QG-test
+      agent 2026-07-10).** `features_service/volatility/core/data_loader.py::load_options_chain_raw` /
+      `load_futures_chain_raw` build `processed_candles/by_date/day={d}/timeframe={tf}/data_type=options_chain/venue=…`
+      with **NO `pipeline_mode=` segment**, but MDPS WRITES chain candles WITH it (`config.py::get_processed_path`
+      inserts `pipeline_mode={pm}/` after `day=`, via `live_workers_chain.py`). Once chain candles migrate to
+      `pipeline_mode` partitions the volatility loader silently misses them → empty DataFrames (honest-absence-masked).
+      FIX: mirror `delta_one/app/core/data_loader.py::_build_blob_path` (pm-partitioned-first probe → bare fallback) +
+      regression test. Repo: **features-service** (PREP3 reader-residual class).

@@ -59,7 +59,7 @@ repos:
   unified-trading-api:
     count: 3
   unified-trading-library:
-    count: 5
+    count: 2
   unified-trading-pm:
     count: 319
   unified-trading-system-ui:
