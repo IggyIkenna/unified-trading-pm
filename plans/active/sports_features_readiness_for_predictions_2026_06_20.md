@@ -3,10 +3,10 @@ doc_type: plan
 title: Sports FSS feature-readiness on bucketed odds dataset (sports half of predictions e2e gate)
 summary:
   Sports half of the predictions e2e gate -- run features-sports-service over the bucketed ODDS_API dataset
-  (odds_horizon_bucket, T-24h..T-0) and prove the feature matrix is ML-ready (one row per fixture x bucket,
-  NaN only on honest-absence, >=95% non-NULL at the predictions-target buckets), clearing the Group-E ML gate
-  owned by predictions_master.
-status: active
+  (odds_horizon_bucket, T-24h..T-0) and prove the feature matrix is ML-ready (one row per fixture x bucket, NaN only on
+  honest-absence, >=95% non-NULL at the predictions-target buckets), clearing the Group-E ML gate owned by
+  predictions_master.
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -14,7 +14,7 @@ repos: [features-service]
 scope: [engineer, admin]
 tags: [sports, features, prediction, odds, ml, data-quality, footystats]
 related: [../epics/sports_master.md, ../epics/predictions_master.md]
-created: '2026-06-12'
+created: "2026-06-12"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -42,6 +42,9 @@ drift_direction: advance-code
 > ONLY the sports-side feature-store readiness that the predictions ML half consumes. The `[GATE]` that blocks
 > predictions Group E stays in the epic / predictions_master — listed below as a pointer for context, not re-owned here.
 
+> **Status-flip note (2026-07-10)**: both P0/P1 todos confirmed `[x]` with cited evidence (FSS run on the bucketed
+> dataset + ML-readiness verification, QG green). Flipped `status: active` → `complete`.
+
 ## Context
 
 The 288M legacy `venue=ODDS_API` rows are already in canonical MTDS bucketed shape (`odds_horizon_bucket`, 8 horizons
@@ -54,20 +57,20 @@ so that predictions ML training (owned in `predictions_master`) has a clean, ≥
 
 - [x] [SCRIPT] P1. Run features-sports-service (FSS) on the bucketed dataset — verify odds features populate (velocity,
       CLV, steam, late-money). Repo: features-sports-service. Was BLOCKED-ON the full bucket backfill (now complete per
-      epic 2026-05-23 — unblocked).
-      ✅ features-service@62de3d1d — fixed merge collision bug (_x/_y shadow of NaN-initialised ODDS_COLUMNS), added
-      batch steam detection (_compute_steam_features via Pinnacle T-24h→T-1h movement), removed 16 ghost columns
-      from ODDS_COLUMNS that were always-NaN (never computed), disabled WriteGate alignment check for sports (uses
-      available_at not timestamp; T-24h odds precede fixture date by design). FSS CLI now writes odds_features to GCS
-      for all 4 horizons. QG green (17397 tests passed). Validated: velocity 100% non-null, steam 100% non-null,
-      CLV/opening odds populated, WriteGate passes. Full backfill across 1813 dates dispatched next.
+      epic 2026-05-23 — unblocked). ✅ features-service@62de3d1d — fixed merge collision bug (_x/_y shadow of
+      NaN-initialised ODDS_COLUMNS), added batch steam detection (_compute_steam_features via Pinnacle T-24h→T-1h
+      movement), removed 16 ghost columns from ODDS_COLUMNS that were always-NaN (never computed), disabled WriteGate
+      alignment check for sports (uses available_at not timestamp; T-24h odds precede fixture date by design). FSS CLI
+      now writes odds_features to GCS for all 4 horizons. QG green (17397 tests passed). Validated: velocity 100%
+      non-null, steam 100% non-null, CLV/opening odds populated, WriteGate passes. Full backfill across 1813 dates
+      dispatched next.
 - [x] [SCRIPT] P1. Verify the feature matrix is ML-ready: one row per `(fixture × bucket)`, NaN only where
-      honest-absence. Repo: features-sports-service.
-      ✅ features-service@9b29b834 — ml_readiness_check.py: 3 invariant checks (shape/one-row-per-fixture×horizon,
-      NaN discipline/identity cols never NaN, ≥95% non-NULL at T-24h+T-1h); verify_date_range() aggregates across
-      date range with honest-absence separation (missing parquet = dates_missing, not dates_failed); CLI script
-      scripts/sports/verify_ml_readiness.py exits 0/1 on gate_met; 14 unit tests cloud-agnostic (mocked GCS);
-      QG green (CODEX_MAX_VIOLATIONS=0, schema provenance clean, no hardcoded IDs/buckets); strict-quickmerge clean.
+      honest-absence. Repo: features-sports-service. ✅ features-service@9b29b834 — ml_readiness_check.py: 3 invariant
+      checks (shape/one-row-per-fixture×horizon, NaN discipline/identity cols never NaN, ≥95% non-NULL at T-24h+T-1h);
+      verify_date_range() aggregates across date range with honest-absence separation (missing parquet = dates_missing,
+      not dates_failed); CLI script scripts/sports/verify_ml_readiness.py exits 0/1 on gate_met; 14 unit tests
+      cloud-agnostic (mocked GCS); QG green (CODEX_MAX_VIOLATIONS=0, schema provenance clean, no hardcoded IDs/buckets);
+      strict-quickmerge clean.
 
 > **Pointer — predictions ML gate (NOT owned here; owned by `predictions_master`)**: the `[GATE] P0` that blocks
 > predictions Group E until FSS produces ≥95% non-NULL features for the trained universe at the buckets predictions ML

@@ -9,7 +9,7 @@ summary:
   re-measure depends on it (a built-but-unwired handler must not read as a real coverage gap). The rest is Layer-2 and
   waits on the Stage-3 certification (Plan 4), enforced by the per-task PREREQ note. Source detail lives in
   instruments_foundation_completeness + data_completion_to_100_all_ag.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -186,8 +186,15 @@ source:
       catalogue-fallback / stale-catalog record_failed / zero-rows / canonical-partition write) + backfill launcher at
       `deployment-service/scripts/vm/launch-mtds-risk-params-backfill-vm.sh`. The plan-item cue "avoid the C5 unwired
       class" specifically calls for a **dispatcher-registration regression test** mirroring the 3 tests filed by the
-      systemic C5 audit (`test_deribit_options_chain_operation_registered`, `test_book_microstructure_operation*
-      registered`, `test_governance_proposals_operation_registered`) — that test was **MISSING** for     `collect-risk-params`. Added `test_risk_params_operation_registered`in    `tests/unit/test_lifecycle_events.py` (`market-tick-data-service@90cd3975`) — QG-green (SHA sentinel     `90cd39750362ab82b5e4010bbf098965630cdfc3`), quickmerge-landed on LDR, 7/7 tests pass in the lifecycle test file.     Gate part 1 ("`risk_params` captures") = handler wired + tested — met at code level. Gate part 2 ("the 193k EU     cells resolve to captured or honest-absence") is a runtime/manifest observation that flows from the daily DeFi     capture (`collect-risk-params`) or a backfill VM launch (`launch-mtds-risk-params-backfill-vm.sh`) — orthogonal     to code delivery. — `market-tick-data-service@90cd3975`.
+      systemic C5 audit (`test_deribit_options_chain_operation_registered`,
+      `test_book_microstructure_operation*     registered`, `test_governance_proposals_operation_registered`) — that
+      test was **MISSING** for `collect-risk-params`. Added `test_risk_params_operation_registered`in
+      `tests/unit/test_lifecycle_events.py` (`market-tick-data-service@90cd3975`) — QG-green (SHA sentinel
+      `90cd39750362ab82b5e4010bbf098965630cdfc3`), quickmerge-landed on LDR, 7/7 tests pass in the lifecycle test file.
+      Gate part 1 ("`risk_params` captures") = handler wired + tested — met at code level. Gate part 2 ("the 193k EU
+      cells resolve to captured or honest-absence") is a runtime/manifest observation that flows from the daily DeFi
+      capture (`collect-risk-params`) or a backfill VM launch (`launch-mtds-risk-params-backfill-vm.sh`) — orthogonal to
+      code delivery. — `market-tick-data-service@90cd3975`.
 - [x] ✅ [DATA] P1. **Reconcile the DEDUP-flagged folded-in tail** (from the merged `path_to_100pct` →
       `data_completion`) — **do NOT double-run.** **PREREQ: Plan 4.** Gate: the folded-in tail reconciled; no duplicate
       capture. — **DONE 2026-07-06 (Opus, slot-3)**. Two DEDUP-flagged items in
@@ -250,6 +257,8 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-10** — **Status-flip note**: all 9 todos confirmed `[x]` with cited evidence across both the early-run
+  handler-audit items and the foundation-sign-off / capture-to-100% items. Flipped `status: active` → `complete`.
 - **2026-07-06** — **✅ Task -008 DONE — cross-AG never-seeded backlog scan filed as issue** (Opus, slot-7,
   data_engineering). Scan-only per the item contract. Filed
   `plans/active/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md` with per-AG quantification + 7 actionable P0-P3

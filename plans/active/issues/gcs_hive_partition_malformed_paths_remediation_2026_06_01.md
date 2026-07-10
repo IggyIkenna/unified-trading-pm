@@ -1,8 +1,10 @@
 ---
 doc_type: issue
 title: GCS hive-partition malformed paths — TradFi day- empties + CeFi root-level real data
-summary: A read-only audit of all five `market-data-tick-{asset_group}-central-element-323112` buckets surfaced **two distinct path patterns that GCS/pyarrow/BigQuery hive-partition discovery cannot see** (...
-status: open
+summary:
+  A read-only audit of all five `market-data-tick-{asset_group}-central-element-323112` buckets surfaced **two distinct
+  path patterns that GCS/pyarrow/BigQuery hive-partition discovery cannot see** (...
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -18,9 +20,17 @@ related:
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 priority: P2
-source: [market-tick-data-service/docs/GCS_PATHS.md, market-tick-data-service/market_tick_data_service/scripts/_migrate_tradfi_hyphen_rewriter.py, market-tick-data-service/market_tick_data_service/engine/orchestrator.py, market-tick-data-service/market_tick_data_service/reader.py]
+source:
+  [
+    market-tick-data-service/docs/GCS_PATHS.md,
+    market-tick-data-service/market_tick_data_service/scripts/_migrate_tradfi_hyphen_rewriter.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator.py,
+    market-tick-data-service/market_tick_data_service/reader.py,
+  ]
 assigned_vm: NA
 resolved_by:
+  superseded by tradfi_manifest_canonicalisation_2026_06_01.md E7 (Pattern 1) +
+  cefi_manifest_canonicalisation_2026_06_01.md E2 (Pattern 2); recurrence guard PM@5d6d398e4
 locked_by: live-defi-rollout
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -32,6 +42,11 @@ last_updated: 2026-06-27
 ---
 
 # GCS hive-partition malformed paths — remediation
+
+> **Status-flip note (2026-07-10)**: frontmatter `status` flipped `open` → `superseded` — the doc-drift fix + recurrence
+> guard are genuinely `[x]` with cited evidence, and the 2 remaining `[ ]` data-remediation items are explicitly
+> SUPERSEDED-by-construction (tracked + will be closed by the per-AG v9 canonicalisation migrations' own E2/E7 steps,
+> per the banner immediately below) — not abandoned work, no action needed in this doc itself.
 
 > **🟦 SUPERSEDED-BY (slot-3 2026-06-02, operator cross-check)** — both GCS **data** remediations are now executed by
 > the per-AG v9 canonicalisation migration (NOT a separate run). **Verified current + correct on 2026-06-02** (not

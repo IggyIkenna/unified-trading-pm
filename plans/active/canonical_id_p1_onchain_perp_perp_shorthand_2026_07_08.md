@@ -10,7 +10,7 @@ summary: >-
   VENUE:PERPETUAL:BASE-QUOTE with the real per-venue settlement currency (confirmed live per venue) across
   instruments-service's 5 reference-data adapters, unified-api-contracts' ASTER normalize.py, and
   market-tick-data-service's live WS connectors + onchain-perp batch handler + catalog-reader fallback.
-status: active
+status: complete
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -194,6 +194,10 @@ Grepped the workspace for `:PERP:` construction sites (not just references) befo
 
 ## Progress Log
 
+- **2026-07-10** — **Status-flip note**: all 10 todos confirmed `[x]` with cited evidence; independently re-verified the
+  docs-follow-up todo's SHA trail against git history (instruments-service commit `975c70a9` — 7 min after `f7cf3ea5` —
+  confirmed the real SHAs replaced the `<PENDING-SHA>` placeholders on `live-defi-rollout`, resolving the apparent
+  "currently BLOCKED" note in the 2026-07-09 log entry). Flipped `status: active` → `complete`.
 - **2026-07-08** — Filed + implemented in the same pass. Confirmed real settlement currencies live for
   ASTER/PACIFICA-SOLANA/LIGHTER-ZKSYNC (HYPERLIQUID/EXTENDED-STARKNET were already confirmed USD earlier this session):
   ASTER via `fapi.asterdex.com/fapi/v1/exchangeInfo` (509 real perp symbols, 504 USDT / 3 USD1 / 2 bare "U" — used the

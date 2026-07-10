@@ -7,7 +7,7 @@ summary: >-
   (BINANCE-SPOT/-FUTURES, BYBIT(+SPOT/FUTURES), OKX(+SPOT/SWAP/FUTURES), DERIBIT, COINBASE-SPOT, UPBIT,
   KRAKEN-SPOT/-FUTURES). Batch mode (Tardis) produces a differently-shaped canonical id for the same real instrument. A
   direct live=batch determinism violation on this workspace's most heavily-traded CeFi venues.
-status: active
+status: complete
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -81,6 +81,9 @@ most of these (e.g. `BYBIT:PERPETUAL:BTC-USDT`).
 
 ## Progress Log
 
+- **2026-07-10** — **Status-flip note**: all 4 todos confirmed `[x]` with cited evidence (fix shipped, all 13 venues
+  verified converged against real GCS/API reads, consumer-impact check done, QG green). Flipped `status: active` →
+  `complete`.
 - **2026-07-08** — Filed from the canonical instrument-id audit's P0 finding #4. Root cause + affected venue list
   confirmed via direct code reads. No fix applied yet.
 - **2026-07-08** — **Fixed + shipped.** `instruments-service@8544273d67f2865151ce0aec8e03e2b51ba37397`

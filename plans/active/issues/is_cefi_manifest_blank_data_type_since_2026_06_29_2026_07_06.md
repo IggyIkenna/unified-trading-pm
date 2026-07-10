@@ -12,7 +12,7 @@ summary:
   are emitted. Any downstream consumer that filters by `capture_status=='captured' AND data_type=='instruments'` (the
   canonical honest-coverage query) will silently miss 10 days of cefi captures per venue (~260 shards), reading them as
   absent.
-status: open
+status: resolved
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -39,7 +39,12 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  instruments-service@46ba62b (writer fix) + @40bdfe1d (cefi backfill) + @523d427 (defi/tradfi backfill) + @9263c80 (QG
+  regression guard)
 ---
+
+> **Status-flip note (2026-07-10)**: all 4 todos confirmed `[x]` with cited evidence (writer fix + dry-run/apply
+> backfills + regression guard, all runtime-verified); flipped `status: open` → `resolved`.
 
 ## What I found
 
@@ -120,7 +125,8 @@ follow-ons:
 - [x] ✅ [CODE] P1. writers.py:239 — change the record_captured `data_type=""` argument to `data_type="instruments"` for
       the cefi/tradfi/defi non-sports path (matches `REFERENCE_DATA_TYPE` in migrate_instruments_store_v9.py). Add a
       unit test that asserts a fresh cefi captured row lands with `data_type='instruments'` (repo: instruments-service).
-      — instruments-service@46ba62b + regression tests at tests/unit/test_orchestrator_process.py:233 (cefi) & :275 (defi)
+      — instruments-service@46ba62b + regression tests at tests/unit/test_orchestrator_process.py:233 (cefi) & :275
+      (defi)
 - [x] ✅ [DATA] P1. One-off patch script shipped instruments-service@40bdfe1d as
       `scripts/backfill_cefi_blank_instruments_data_type_2026_07_06.py`. Contract: filter
       `date >= 2026-06-27 AND capture_status == 'captured' AND (data_type is null OR data_type == '') AND venue != ''`;
@@ -135,13 +141,14 @@ follow-ons:
       `instruments-store-tradfi-prd`) (repo: instruments-service). — **DONE 2026-07-06 (Opus, slot-5)**. Regression
       confirmed on both stores; mirror-script `scripts/backfill_defi_tradfi_blank_instruments_data_type_2026_07_06.py`
       shipped `instruments-service@523d427` with same contract as the cefi oneoff (dry-run default; `--apply --confirm`
-      mutates; captured-row-count safety gate; idempotent). Runtime results (2026-07-06 `--apply --confirm`):
-      **defi 536 blank captured rows → `data_type='instruments'` (28 venues, 10 dates)**; **tradfi 46 blank captured rows
-      → `data_type='instruments'` (7 venues, 10 dates)**. Post-run verify: 0 blank captured rows on 2026-06-27+ for both
+      mutates; captured-row-count safety gate; idempotent). Runtime results (2026-07-06 `--apply --confirm`): **defi 536
+      blank captured rows → `data_type='instruments'` (28 venues, 10 dates)**; **tradfi 46 blank captured rows →
+      `data_type='instruments'` (7 venues, 10 dates)**. Post-run verify: 0 blank captured rows on 2026-06-27+ for both
       buckets. Safety gate OK: captured row totals preserved (defi 170887; tradfi 11810). The writer fix `@46ba62b` +
-      periodic `migrate_instruments_store_v9` run drove the ongoing writes clean; this oneoff cleared the historical tail.
-- [x] ✅ [DATA] P2. Add a `quality-gates.sh` check (or extend an existing one) that asserts the writer's `record_captured`
-      calls for non-sports paths always stamp `data_type='instruments'` — grep-level check on `writers.py` that catches
-      a future regression at CI time (repo: instruments-service).
-      — instruments-service@9263c80 + scripts/qg/no_blank_instruments_data_type.sh in PM; QG STEP 5.86 added; grep-P
+      periodic `migrate_instruments_store_v9` run drove the ongoing writes clean; this oneoff cleared the historical
+      tail.
+- [x] ✅ [DATA] P2. Add a `quality-gates.sh` check (or extend an existing one) that asserts the writer's
+      `record_captured` calls for non-sports paths always stamp `data_type='instruments'` — grep-level check on
+      `writers.py` that catches a future regression at CI time (repo: instruments-service). —
+      instruments-service@9263c80 + scripts/qg/no_blank_instruments_data_type.sh in PM; QG STEP 5.86 added; grep-P
       lookbehind catches data_type="" keyword arg, excludes manifest_data_type= variable assignments; QG green.

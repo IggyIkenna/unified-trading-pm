@@ -1,15 +1,23 @@
 ---
 doc_type: plan
 title: MDPS — TradFi processed-candle passthrough + dependency-checker instrument_id fix
-summary: 'Close the TradFi MDPS gap: MDPS produces right-edge processed candles for TradFi ohlcv_1m (passthrough/normalization) so features-delta-one has an upstream, and fix the dependency-checker bug that looks up instrument_id when the manifest stores it blank for CME futures.'
-status: active
+summary:
+  "Close the TradFi MDPS gap: MDPS produces right-edge processed candles for TradFi ohlcv_1m (passthrough/normalization)
+  so features-delta-one has an upstream, and fix the dependency-checker bug that looks up instrument_id when the
+  manifest stores it blank for CME futures."
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data, features]
 repos: [market-data-processing-service]
 scope: [engineer, admin]
 tags: [tradfi, mdps, passthrough, ohlcv_1m, dependency-checker, cme, instrument-id, bar-edge]
-related: [./mdps_features_reduced_artifact_tracker_2026_06_28.md, ../active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md, ../epics/mtds_mdps_master.md]
+related:
+  [
+    ./mdps_features_reduced_artifact_tracker_2026_06_28.md,
+    ../active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md,
+    ../epics/mtds_mdps_master.md,
+  ]
 created: 2026-06-28
 parent_epic: mtds_mdps_master
 assigned_vm: planning
@@ -30,6 +38,9 @@ drift_direction: advance-code
 ---
 
 # MDPS — TradFi processed-candle passthrough + dependency-checker fix
+
+> **Status-flip note (2026-07-10)**: all 5 todos confirmed `[x]` with cited runtime evidence (passthrough adapter,
+> dependency-checker fix, tests, full-run verify, QG/quickmerge). Flipped `status: active` → `complete`.
 
 Per issue `features_delta_one_tradfi_mdps_dependency_gap_2026_06_24` (P0): TradFi has **no MDPS processed-candle
 layer**. MTDS writes `ohlcv_1m`/`ohlcv_1s` straight from Databento (no `trades`), while features-delta-one expects MDPS
@@ -54,37 +65,39 @@ book columns) and the same right-edge contract.
       canonical processed candles aligned to the shared schema (book columns null), **right-edge `t_close`** per the
       bar-edge convention (TradFi Databento open-edge alias already converted at MTDS ingestion — assert, don't
       re-shift). Resolve the `data_type=trades` vs `ohlcv_1m` naming mismatch in build-continuous. — Gate:
-      `process --TRADFI` over one CME ES day writes processed candles readable by features-delta-one.
-      — market-data-processing-service@cc63d1b: added `output_data_type: ClassVar[str | None] = None` to
+      `process --TRADFI` over one CME ES day writes processed candles readable by features-delta-one. —
+      market-data-processing-service@cc63d1b: added `output_data_type: ClassVar[str | None] = None` to
       `BaseCandleAdapter`; `TradfiTradesAdapter.output_data_type = "ohlcv_1m"`; OHLCV column delegation to
-      `TradfiOhlcvPassthroughAdapter`; `live_workers_chain.py` uses `_output_data_type` for GCS writes; 3 new
-      tests added; all 40 tests pass + ruff + basedpyright + QG green.
-- [x] ✅ [IMPLEMENT] P0. Fix `dependency_checker.py` to key on the manifest's actual `instrument_id` (blank-aware): match
-      on (venue, symbol) via the canonical instrument key, not a literal blank string. — Gate: the checker reports the
-      true candle count for CME:FUTURES:ES (non-zero where data exists); a unit test covers the blank-id case.
-      — features-service@34a5d4ff: `_count_candles_for_lookback` now falls back to `(venue, "")` key when
+      `TradfiOhlcvPassthroughAdapter`; `live_workers_chain.py` uses `_output_data_type` for GCS writes; 3 new tests
+      added; all 40 tests pass + ruff + basedpyright + QG green.
+- [x] ✅ [IMPLEMENT] P0. Fix `dependency_checker.py` to key on the manifest's actual `instrument_id` (blank-aware):
+      match on (venue, symbol) via the canonical instrument key, not a literal blank string. — Gate: the checker reports
+      the true candle count for CME:FUTURES:ES (non-zero where data exists); a unit test covers the blank-id case. —
+      features-service@34a5d4ff: `_count_candles_for_lookback` now falls back to `(venue, "")` key when
       `(venue, symbol)` not found; 2 new tests added covering blank-id credit + symbol-specific precedence; 22/22
       lookback tests pass + ruff + QG green.
 - [x] ✅ [TEST] P0. Tests: passthrough preserves OHLCV values + right-edge timestamps (1m bar at 00:01:00 covers
-      [00:00:00,00:01:00)); dependency-checker blank-id resolution. — Gate: tests pass in MDPS `quality-gates.sh`.
-      — MDPS 40/40 tests pass (3 new: output_data_type, ohlcv delegation, blank-id); features-service 22/22 pass;
-      both QGs green.
-- [x] ✅ [VERIFY] P0. Full-run: MDPS TradFi pass over a real CME ES month-slice on real infra, then run features-delta-one
-      `technical_indicators` against it and confirm it no longer fails "No upstream MDPS data". — Gate: named commands +
-      GCS paths + the feature group writing non-zero rows for ES.
-      — market-data-processing-service@7d630a3 (adjacent fix: subprocess-per-date child used legacy `process
-      --start-date` format; ServiceBootstrap requires `--operation process --mode batch`; also added start==end
-      sentinel in `_build_legacy_argv` to suppress subprocess recursion in children).
-      Evidence:
-        cmd: `GCP_PROJECT_ID=central-element-323112 PROTOCOL_DATA_SOURCE_BUCKET_TRADFI=market-data-tick-tradfi-prd-central-element-323112 MDPS_ASSET_GROUP=TRADFI MDPS_DATA_TYPES=ohlcv_1m MDPS_VENUES=CME SKIP_DEPENDENCY_CHECK=1 .venv/bin/python -m market_data_processing_service --operation process --mode batch --start-date 2025-12-01 --end-date 2025-12-01`
-        result: 122/130 shards OK, 2,402,430 candles written (8 failures: options_chain no-schema contract, pre-existing)
-        GCS: `gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2025-12-01/timeframe=1m/data_type=ohlcv_1m/venue=CME/underlying=ES/.parquet` → 3556 rows @ 6921.5 (ES price Dec-2025)
-        features dep check: `✅ Dependencies verified for 2025-12-01/TRADFI` — no "No upstream MDPS data" error
-        features write: BLOCKED by instruments-store-tradfi bucket having 0 instrument_availability dates (IS hasn't run for historical TradFi dates — separate pre-existing gap outside this plan's scope)
-- [x] ✅ [AGENT] P0. MDPS QG green; quickmerge `--agent --files`; flip the issue doc to `resolved` with the sha + evidence
-      in the SAME turn. — Gate: QG green; CI `quality-gates-v2` green; issue `status: resolved`.
-      — QG passed (18s, 152 gates); market-data-processing-service@7d630a3 shipped via quickmerge --agent; issue doc
-      flipped to `resolved_by: market-data-processing-service@cc63d1b + features-service@34a5d4ff + market-data-processing-service@7d630a3`
+      [00:00:00,00:01:00)); dependency-checker blank-id resolution. — Gate: tests pass in MDPS `quality-gates.sh`. —
+      MDPS 40/40 tests pass (3 new: output_data_type, ohlcv delegation, blank-id); features-service 22/22 pass; both QGs
+      green.
+- [x] ✅ [VERIFY] P0. Full-run: MDPS TradFi pass over a real CME ES month-slice on real infra, then run
+      features-delta-one `technical_indicators` against it and confirm it no longer fails "No upstream MDPS data". —
+      Gate: named commands + GCS paths + the feature group writing non-zero rows for ES. —
+      market-data-processing-service@7d630a3 (adjacent fix: subprocess-per-date child used legacy
+      `process     --start-date` format; ServiceBootstrap requires `--operation process --mode batch`; also added
+      start==end sentinel in `_build_legacy_argv` to suppress subprocess recursion in children). Evidence: cmd:
+      `GCP_PROJECT_ID=central-element-323112 PROTOCOL_DATA_SOURCE_BUCKET_TRADFI=market-data-tick-tradfi-prd-central-element-323112 MDPS_ASSET_GROUP=TRADFI MDPS_DATA_TYPES=ohlcv_1m MDPS_VENUES=CME SKIP_DEPENDENCY_CHECK=1 .venv/bin/python -m market_data_processing_service --operation process --mode batch --start-date 2025-12-01 --end-date 2025-12-01`
+      result: 122/130 shards OK, 2,402,430 candles written (8 failures: options_chain no-schema contract, pre-existing)
+      GCS:
+      `gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2025-12-01/timeframe=1m/data_type=ohlcv_1m/venue=CME/underlying=ES/.parquet`
+      → 3556 rows @ 6921.5 (ES price Dec-2025) features dep check: `✅ Dependencies verified for 2025-12-01/TRADFI` — no
+      "No upstream MDPS data" error features write: BLOCKED by instruments-store-tradfi bucket having 0
+      instrument_availability dates (IS hasn't run for historical TradFi dates — separate pre-existing gap outside this
+      plan's scope)
+- [x] ✅ [AGENT] P0. MDPS QG green; quickmerge `--agent --files`; flip the issue doc to `resolved` with the sha +
+      evidence in the SAME turn. — Gate: QG green; CI `quality-gates-v2` green; issue `status: resolved`. — QG passed
+      (18s, 152 gates); market-data-processing-service@7d630a3 shipped via quickmerge --agent; issue doc flipped to
+      `resolved_by: market-data-processing-service@cc63d1b + features-service@34a5d4ff + market-data-processing-service@7d630a3`
 
 ## Current-state delta (audited 2026-06-28)
 

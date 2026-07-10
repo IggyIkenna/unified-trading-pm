@@ -8,9 +8,11 @@ summary:
   covered by existing plan tasks — a 2,024,202-row blank-``source`` tail (CF-4) that needs a source-restamp pass, and
   4,903 blank-``data_type`` rows written by a bug in reconcile_phantom_manifest_rows_all.py (CF-7). Both are
   pre-existing manifest state; the rebuild does not clear either.
-status: open
+status: resolved
 nature: issue
 resolved_by:
+  market-tick-data-service@11e39000+restamp-apply-20260708T205809Z (CF-4) + @d9097aec (CF-7) +
+  instruments-service@699e2cf+market-tick-data-service@626e44c (CF-3) + instruments-service@4a02085 (ICE COMBO)
 asset_group: [tradfi]
 stage: [data]
 repos: [market-tick-data-service, instruments-service]
@@ -37,6 +39,10 @@ locked_since: 2026-05-21
 ---
 
 # TradFi manifest — CF-4 blank-source tail + CF-7 phantom-audit blank-data_type bug
+
+> **Status-flip note (2026-07-10)**: all todos (CF-4, CF-7, CF-3, ICE COMBO) confirmed `[x]` with cited runtime evidence
+> — including a self-corrected instance where a script-shipped-but-unexecuted checkbox was caught and the real `--apply`
+> subsequently run + gate-verified. Flipped `status: open` → `resolved`.
 
 > Filed 2026-07-07 by slot-7 opus/max after the E7 CF audit on `market-data-tick-tradfi-prd-central-element-323112` post
 > the v3 rebuild (mtds@`4ccf52c6`) — see `tradfi_v9_stage1_finish_2026_07_06.md` Progress Log for the full audit result.
