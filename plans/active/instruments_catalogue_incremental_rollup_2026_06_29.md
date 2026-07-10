@@ -9,7 +9,7 @@ summary:
   catalog.parquet (which already encodes all-time available_from + frozen available_to) + re-read only the trailing
   liveness window (~21 days), recompute §7.3 liveness for window instruments, freeze the untouched tail, upsert and
   promote. Prototype-measured ~0.9 min vs 137 min (~125x fewer day-dirs) with the monotonic guard passing."
-status: active
+status: complete
 nature: design
 asset_group: [cross-cutting]
 stage: [data]
@@ -338,6 +338,10 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
 
 ## Progress log
 
+- 2026-07-10: **Status-flip note** — 27 of 28 todos confirmed `[x]` with cited runtime evidence; the 1 remaining `[ ]`
+  (Phase 0's "bump timeout_seconds 3600→10800" interim band-aid) is explicitly operator-declined-optional per its own
+  inline note, not a real gap — the plan's own 2026-07-03 "closing" entry already declared "plan COMPLETE (every
+  checkbox flipped with evidence)" against the substantive scope. Flipped `status: active` → `complete`.
 - 2026-06-29: Plan created. Root cause confirmed (full-history re-aggregation, 2,618 tradfi day-dirs/run; 2026-06-27
   §7.3 commits the trigger, not the cause). Read-only prototype `scratchpad/incremental_prototype.py` measured ~0.9 min
   vs 137 min (~125× fewer day-dirs), merge monotonic-guard-clean. Three-agent audit captured schema, downstream blast

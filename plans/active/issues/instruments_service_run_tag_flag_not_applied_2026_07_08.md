@@ -63,16 +63,21 @@ paths a tagless run would.
 
 ## Todos
 
-- [ ] [DECISION] P2. **Decide the fix direction** — either (a) wire `--run-tag` through to `apply_run_tag()` so it
-      actually does what its help text says, or (b) if output-prefix-tagging was never actually needed for
-      instruments-service, correct the help text to describe only the real `t1-recon` date-default behavior and drop the
-      "GCS output prefix tag" language. Operator call — not prescribed here.
-- [ ] [SCRIPT] P2. **Implement the chosen direction**, add a regression test confirming the real behavior matches the
-      (corrected) documented behavior.
+- [x] [DECISION] P2. **Decide the fix direction — RESOLVED 2026-07-10 (operator): option (a), wire it through.** This
+      was framed as an open operator call, but it isn't — `codex/08-workflows/t1-batch-dag.md` already documents the
+      target `--run-tag` behavior verbatim ("data goes to `t1-recon/`... implementation steps: CLI arg, GCS writer
+      prefix, event writer prefix"), and `main.py`'s existing `"t1-recon"` string-match special-case proves the flag was
+      added with that contract in mind — it just never finished the wiring. The code should be brought into compliance
+      with the already-documented target, not have its help text rewritten to describe the narrower, incomplete current
+      behavior. (See `instruments_remaining_work_audit_2026_07_10.md` §1a item 11.)
+- [ ] [SCRIPT] P2. **Wire `--run-tag` through to `apply_run_tag()`** per `t1-batch-dag.md`'s documented steps (CLI arg →
+      GCS writer prefix → event writer prefix), add a regression test confirming the real behavior now matches the codex
+      SSOT.
 - [ ] [SCRIPT] P2. **Ship via quickmerge**, quality-gates green.
 
 ## Progress Log
 
 - **2026-07-08** — Filed from a dedicated CLI-argument audit. Root cause confirmed via direct grep+read: `main.py:328`
   is the only consumer, and it string-matches raw argv rather than reading the parsed flag or calling `apply_run_tag()`.
-  No fix applied yet.
+- **2026-07-10** — Decision resolved (operator, confirming a review finding): wire it through per the already-
+  documented `t1-batch-dag.md` target, not an open call. Implementation still pending. No fix applied yet.

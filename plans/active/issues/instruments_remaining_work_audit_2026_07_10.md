@@ -206,6 +206,111 @@ Real code fixes / features needed (not backfills, not pure doc drift).
 
 ---
 
+## 1a. CODE_PATH conflict + target-architecture review (2026-07-10)
+
+Operator asked whether the 14 CODE_PATH items conflict with each other or with the documented target architecture,
+before picking any up. Real review below — each item's real source doc + relevant codex SSOT, not a rubber stamp.
+
+**Top-level summary**: 2 real mutual conflicts found, 3 items diverge from (or are under-verified against) documented
+target state, 9 are clean. Look at the #3/#8 contradiction first (a live-vs-reference-data factual disagreement about a
+real venue, already shipped in both directions), then the #4/#5 sequencing risk.
+
+### P0
+
+**1. CeFi monotonicity guard alerting** — conflicts: none. Design: strongly aligned — extends the existing
+`DP-<CATEGORY>-<NNN>` alert registry (`codex/05-infrastructure/data-pipeline-alerts.md`), not a new mechanism. Proceed
+as proposed.
+
+**2. is-daily-enum-{prediction,sports} exit(1)** — conflicts: none. Design: aligned (`exc_info=True` is additive
+observability, doesn't touch the shard-isolation no-raise contract). Proceed — pure unblock, can't diagnose without it.
+
+**3. 59-bug MTDS + IS adapter smoke test** — conflicts: **with #8** (see below). Design: HUOBI/BITSTAMP venue-fix
+location and ETHENA's fabricated-value fix both align with SSOT. Proceed, but resolve #8 first for the COINBASE-FUTURES
+venue entry specifically.
+
+### P1
+
+**4. DeFi lending A_TOKEN/DEBT_TOKEN split** — conflicts: **with #5** — `issue_docs_remediation_sweep_2026_06_02.md` has
+an open, unchecked todo wiring VENUS/BENQI/RADIANT/EULER_V2 into strategy-service as usable lending legs, but #4's own
+findings (2026-07-07, a month later) say those same 4 protocols currently emit an invalid `InstrumentType` that will
+raise `UnknownInstrumentTypeError` the moment a real position needs P&L attribution. #5 predates #4's finding and hasn't
+been updated. Design: aligned with `instruments-service-as-ssot-for-mtds.md` + the strategy layer's own existing
+`is_supply`/`is_borrow` assumptions. **Recommendation: proceed on #4; flag #5's strategy-service todo as
+blocked-behind-#4, don't pick it up standalone.**
+
+**5. Issue-docs remediation sweep (12 items)** — conflicts: the #4 interaction above (only real one). The DEX
+pools/swaps rename is correctly `BLOCKED-DISCIPLINE` on the single-walk migration, not a divergence. Design: aligned.
+Proceed on the independent items; hold the lending-leg todo per #4.
+
+**6. DP alert-flood / 06:00-UTC TradFi OOM crash-loop** — conflicts: none (and its already-shipped fixes are a directly
+reusable template for #1's still-open `t1-recon` OOM diagnosis). Design: matches the sidecar-authoritative,
+no-fire-and-forget pattern in `deployment-observability.md`. Proceed as proposed.
+
+**7. Order-book imbalance computed in both MTDS and MDPS** — conflicts: none. Design: one of the cleanest matches in the
+list — "MTDS is market-data only" (CLAUDE.md always-on), `order_flow_imbalance` is a derived feature and belongs in
+MDPS, not MTDS. Proceed as proposed.
+
+**8. WSFeedConnector Phase-3.5 — 73 unregistered venues** — conflicts: **with #3** — #3's smoke test (2026-07-07) says
+COINBASE-FUTURES "genuinely has no FUTURE/OPTION/inverse product... verified 3 ways" and flags the registry's `FUTURE`
+entry as phantom; #8 shipped (2026-07-06, one day earlier, `mtds@fd436aea`) a live COINBASE-FUTURES connector explicitly
+built around both `PERPETUAL` and `FUTURE` being real, with 23 tests assuming `FUTURE` rows will arrive. Same-session,
+same-repo, opposite conclusions, neither cross-references the other. Plausibly both are locally true (static catalogue
+never captured a real FUTURE row vs. live parsing for a product that may exist but has never produced a trade) — but
+nobody has reconciled it, and it directly determines whether #3's proposed fix (remove `FUTURE` from the registry) would
+contradict #8's shipped connector. Design: the `BLOCKED-*` scaffold pattern itself is well-aligned with
+`external-data-always-available-rule.md`. **Recommendation: settle the COINBASE-FUTURES fact question first (a direct
+API check resolves it) before finalizing either doc's fix.**
+
+**RESOLVED 2026-07-10** — real dispatched investigation + independent verify pass, 2 live API cross-checks. Neither doc
+was simply right or wrong: `COINBASE-FUTURES` is wired (both reference-data and live) to Coinbase INTX, which genuinely
+has zero dated futures (#3 correct for this venue); real dated futures exist on Coinbase Derivatives Exchange (CDE, 99
+live contracts) — a completely separate, Tardis-uncovered Coinbase product #8's connector logic is actually built for,
+just filed under the wrong venue key. Real fix: split into `COINBASE-CDE` (new venue + new adapter, since Tardis has
+zero coverage) and scope `COINBASE-FUTURES` to INTX-only. Also found: #8's connector likely has a real,
+previously-uncaught silent capture-gap (subscribing INTX-shaped ids to an endpoint that will never recognize them) — not
+yet confirmed against production parquet. Full evidence in the Progress Log below. Dispatched for execution.
+
+**9. Infra capture wiring (AO Plan 6)** — conflicts: none (ASTER's book5/liquidations gap in #9 is narrower than and
+complementary to #8's general trades-key registration). Design: the self-block to avoid a 17,282-row over-seed is the
+data-pipeline-correctness HARD RULE in practice. Proceed as proposed — stay blocked until the 2 named prerequisites
+land.
+
+### P2
+
+**10. Fleet data-acquisition health sweep** — conflicts: none. Design: the proposed case-insensitive
+`_resolve_connector` fallback is a tolerant-reader workaround for a registry casing inconsistency (cefi uppercase,
+defi/prediction lowercase, no stated reason) rather than canonicalizing the casing itself. **RESOLVED 2026-07-10
+(operator): "don't paper over the inconsistency, fix properly."** Source doc updated
+(`fleet_data_acquisition_health_2026_06_21.md`) — the real fix is now canonicalizing every venue key in
+`WS_FEED_CONNECTOR_FACTORIES` (and every producer that keys into it) to one convention, UPPERCASE, matching this
+session's established canonical-instrument-id casing — not a runtime fallback. Not yet implemented.
+
+**11. `--run-tag` CLI flag doesn't do what its help text says** — conflicts: none. Design: **the issue doc frames this
+as a wide-open operator decision — it isn't.** `codex/08-workflows/t1-batch-dag.md` already documents the target
+`--run-tag` behavior verbatim, and instruments-service's own code already special-cases the exact `"t1-recon"` sentinel
+from that SSOT, just never implements the GCS-prefix redirection. **RESOLVED 2026-07-10 (operator: "agree").** Source
+doc updated (`instruments_service_run_tag_flag_not_applied_2026_07_08.md`) — option (a), wire it through. Not yet
+implemented.
+
+**12. TradFi `mvp_mode` dead fetch-time filter** — conflicts: none (soft note: #13 Phase 5 extends the same MVP registry
+with 3 KRX equities — no action needed as long as future wiring reads it live). Design: genuinely open — unlike #11, no
+SSOT pre-answers whether a fetch-time filter should exist. Proceed as proposed, decision is real.
+
+**13. Crypto-venue equity-perps + tokenized stocks Phase 2** — conflicts: none against other CODE_PATH items. Design:
+**authored 2026-06-20, before the 2026-07-08 one-canonical-builder decision** this whole audit doc's §5 tracks (the
+effort retiring ~48 DeFi adapters' ad hoc f-string `instrument_key` construction). **RESOLVED 2026-07-10 (operator:
+"update the doc to match canonical target").** Source doc updated
+(`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Phase 2, new step 2a) — `EQUITY_PERP`/ `TOKENIZED_EQUITY`
+`instrument_id` construction must route through the shared canonical builder (same `@LIN` convention as regular CeFi
+`PERPETUAL`), not a new ad hoc f-string. Not yet implemented.
+
+### P3
+
+**14. Prediction connection-pool hardening fix uncommitted** — conflicts: none. Design: no SSOT concern, pure ship-it
+item. Proceed whenever a quiet QG window is available.
+
+---
+
 ## 2. MANIFEST_COVERAGE
 
 Manifest correctness / denominator / honest-coverage work (excludes pure backfill/download).
@@ -243,6 +348,16 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
    heavily evidenced: orphan sweep (blocked on manifest rebuild ordering), straggler VM re-run, manifest rebuild 99.77%
    not 100% (13,971-row v4 tail + 42K blank-pipeline_mode gap), E7 CF-audit 2 genuine REDs, schema-tail restamp blocked
    on fleet-drain, operator-gated legacy-bucket deletes.
+
+7. **BYBIT-SPOT manifest — 135,444 anomalous rows, checkboxes claimed done but production is unchanged**
+   `plans/active/issues/bybit_spot_manifest_stray_captures_2026_07_07.md` **Moved back here 2026-07-10** — a second
+   verification pass (while flipping resolved-but-not-flipped docs) found this one's `[x]` todos cite only that the fix
+   scripts were _shipped_ (dry-run/--smoke/--apply modes exist), not that `--apply` actually ran. Live manifest read
+   (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, 2026-07-10) shows row
+   counts byte-identical to the original 2026-07-07 diagnosis: 81,659 EMPTY-instrument_type + 53,785
+   PERPETUAL-mislabeled rows, plus ~54K stray spot-nonsense-data_type rows (derivative_ticker/futures_chain/
+   options_chain/perp_funding/liquidations — none valid for a SPOT venue). No pre-apply backup snapshot exists at either
+   expected path. The real fix (relabel + delete) has never actually been executed against production.
 
 ### P1
 
@@ -520,11 +635,19 @@ Tooling / infra / ML-training / strategy-research items that don't fit the above
 
 ## Excluded (resolved-but-not-flipped, or superseded — verified across all 4 shards)
 
-These carry stale `status: open`/checkbox-inconsistent frontmatter but every real todo is `[x]` with cited evidence — no
-action needed beyond a frontmatter flip, which is itself a §4 hygiene item, not tracked individually here:
+**UPDATE 2026-07-10**: all 15 genuinely-resolved docs below have now been re-verified a SECOND time and their `status:`
+frontmatter flipped for real (`unified-trading-pm@8f15f8233`). **One of the original 16 was NOT flipped —
+`bybit_spot_manifest_stray_captures_2026_07_07.md` is a real, still-open gap**, moved back into §2 MANIFEST_COVERAGE
+below: its checkboxes claimed the 53,785-row PERPETUAL relabel and 53,934-row spot-nonsense delete were done, citing
+only that the fix scripts were _shipped_ — a live production manifest read (2026-07-10) found the real row counts
+byte-identical to the original 2026-07-07 diagnosis, and no pre-apply backup snapshot exists at either expected path,
+meaning `--apply` was never actually run. The checkboxes were marked done based on "script exists" not "script executed"
+— a real discrepancy the second verification pass caught before flipping it.
 
-- `plans/active/issues/bybit_spot_manifest_stray_captures_2026_07_07.md`
-- `plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md` (SUPERSEDED banner)
+The 15 genuinely resolved (flipped `unified-trading-pm@8f15f8233`):
+
+- `plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md` (flipped to `status: superseded` —
+  real, 2 unchecked items are tracked-to-closure inside other plans, not abandoned)
 - `plans/active/issues/is_cefi_manifest_blank_data_type_since_2026_06_29_2026_07_06.md`
 - `plans/active/issues/instruments_handler_pd_na_ambiguous_and_af_classification_2026_07_06.md`
 - `plans/active/issues/mtds_defi_catalog_reader_reads_dead_static_snapshot_path_2026_07_06.md`
@@ -535,7 +658,8 @@ action needed beyond a frontmatter flip, which is itself a §4 hygiene item, not
 - `plans/active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md`
 - `plans/active/foundation_gates_and_capture_to_100_2026_07_06.md`
 - `plans/active/mdps_features_full_month_benchmark_binance_2026_06_28.md`
-- `plans/active/instruments_catalogue_incremental_rollup_2026_06_29.md`
+- `plans/active/instruments_catalogue_incremental_rollup_2026_06_29.md` (1 residual `[ ]` is an operator-declined
+  optional band-aid, not real work)
 - `plans/active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md`
 - `plans/active/mdps_book_microstructure_precompute_columns_2026_06_28.md`
 - `plans/active/sports_features_readiness_for_predictions_2026_06_20.md`
@@ -555,3 +679,82 @@ the source docs if this list is used for dispatch planning.
 - 2026-07-10: Synthesized from a 4-shard parallel sweep of 83 real doc-index-derived candidate lines across
   `plans/active/**`; 62 docs kept as genuinely open non-backfill work across 7 categories, 16 excluded as
   resolved-but-not-flipped, 3 fragment lines flagged uncaptured. Read-only audit — no code or plan checkboxes changed.
+- 2026-07-10 (later): Added category definitions (§ Category definitions) and a full CODE_PATH conflict +
+  target-architecture review (§1a) per operator request. Re-verified and flipped 15 of the 16 excluded docs for real
+  (`unified-trading-pm@8f15f8233`); the 16th (`bybit_spot_manifest_stray_captures_2026_07_07.md`) was found to still be
+  genuinely open — its checkboxes claimed done but production data shows the fix was never actually applied — moved into
+  §2 MANIFEST_COVERAGE P0 instead of flipped. §1a found 2 real mutual conflicts (item #3/#8 COINBASE-FUTURES
+  contradiction, item #4/#5 sequencing risk) and 3 items diverging from documented target architecture (items #10, #11,
+  #13) among the 14 CODE_PATH items.
+- 2026-07-10 (later still): **COINBASE-FUTURES/#3-vs-#8 conflict RESOLVED with real, independently-verified evidence**
+  (2 live API cross-checks, both confirmed). Real determination: `COINBASE-FUTURES` is wired identically on BOTH the
+  reference-data (`instruments-service`) and live (`market-tick-data-service`) paths to Tardis `coinbase-international`
+  / native Coinbase INTX — which genuinely has ZERO dated futures (0 `FUTURE`/`OPTION` confirmed on 2 independent live
+  APIs: Tardis 273-symbol listing + Coinbase's own `api.international.coinbase.com` 301-instrument listing, both
+  `perpetual`/`spot` only). Item #3's "phantom FUTURE, verified 3 ways" claim is **confirmed correct** for this venue.
+  **But item #8's shipped live connector is not simply wrong either** — Coinbase Derivatives Exchange (CDE, the real
+  source of `FUTURE`-shaped contracts, e.g. `BIT-31JUL26-CDE` real dated expiry) is a genuinely real, currently-trading,
+  99-real-contract product family — confirmed live via
+  `api.coinbase.com/api/v3/brokerage/market/products? product_type=FUTURE` — but CDE is **not covered by Tardis at all,
+  under any name** (confirmed against the full 62-exchange Tardis registry) and is architecturally a completely separate
+  Coinbase product from INTX (own domain, own symbol shape, zero overlap — confirmed by paginating Coinbase's ENTIRE
+  Advanced Trade catalog, 1035 real products, zero contain `INTX`). **This is finding-type (3) from the original task
+  brief: a real venue-scope gap, not a phantom-type bug in either doc.** Real, previously-uncaught bug found as a
+  byproduct: item #8's connector's own code/tests assume a fabricated `BTC-PERP-INTX`-style symbol that Coinbase's
+  Advanced Trade WS will never emit (confirmed: zero `INTX` string anywhere in `instruments-service`, zero INTX products
+  in the 1035-product Advanced Trade catalog) — the live subscription path likely feeds this connector real INTX-shaped
+  ids (resolved from IS's canonical universe) against an endpoint that has never heard of them, a silent zero-row
+  capture-gap class this workspace's HARD RULE treats as review-blocking (not yet confirmed against real production
+  parquet — the one remaining unverified inference, honestly flagged as such by both the investigation and independent
+  verify passes). **Real fix, not yet implemented**: register `COINBASE-CDE` as its own venue key (real dated futures,
+  needs a brand-new reference-data adapter since Tardis has zero coverage — `api.coinbase.com`'s Advanced Trade REST is
+  a viable no-auth first-party source), re-key `coinbase_futures_ws.py` from `COINBASE-FUTURES` to `COINBASE-CDE` (the
+  parsing logic itself is real and correct, only its venue identity is wrong), and scope/rename the existing
+  `COINBASE-FUTURES` key to INTX-only (matching item #3's proposed fix — drop the phantom `FUTURE` type, add the real
+  missing `SPOT_PAIR`). Dispatched for execution, see below.
+- 2026-07-10 (later still): **12 operator decisions made**, closing every real `BLOCKED-OPERATOR-DECISION`/pending-call
+  item surfaced across this whole audit doc (not just §1a's CODE_PATH conflicts). Full record:
+  1. **OKX-SPOT venue registration**: Option A — declare its own cefi venue (matches BYBIT-SPOT precedent), remove the
+     `_CEFI_VENUE_FOLD` entry. (`cefi_layer1_denominator_gaps_2026_07_03.md`,
+     `instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`)
+  2. **DeFi expected_unattempted backlog**: approve the FULL 1,380,376-row apply in one run (99.95% is honest 2018-2019
+     pre-launch documentation, zero downloads triggered). (`defi_expected_unattempted_backlog_1m_2026_07_03.md`)
+  3. **COINBASE bare-name migration**: flip `coinbase_bare_name_migration_2026_07_06.md` from `draft` to `active`,
+     dispatch its full 7-step (S0-S7) plan now.
+  4. **UAC data-type-validity fragmentation**: approve the proposed two-layer redesign (real provably-wrong cell exists
+     today — CME/ICE share identical valid-data_types despite ICE having no real Databento coverage).
+     (`uac_data_type_validity_combinator_fragmentation_2026_07_07.md`)
+  5. **TradFi `mvp_mode` dead fetch-time filter**: **REVISED from the earlier §1a recommendation** — operator wants this
+     built for real, universally: every asset group should have a real `--mvp`-style fetch mode that pulls canonical MVP
+     instruments via the existing catalogue MVP tags/SSOT (real infrastructure already exists —
+     `unified_api_contracts/canonical/crosscutting/_mvp_scope_*.py`, `enumerate_expected_universe.py`'s MVP gate — but
+     is not consistently wired as a fetch-time filter everywhere). Needs real investigation into what MVP-tag SSOT
+     already exists before implementing, not a fresh design. (`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`)
+  6. **Bare COINBASE / DERIBIT-COMBO in MVP_SCOPE.venues**: keep both declared. **Additional real cost-control ask**:
+     COINBASE (INTX) should be reduced to `trades`-only data_type — operator notes book-snapshot-class data is
+     expensive/memory-intensive for this venue and recalls a possible existing mechanism for this kind of per-venue
+     data_type scoping — needs investigation before assuming a new mechanism is required.
+     (`cefi_layer1_denominator_gaps_2026_07_03.md`)
+  7. **ARCHETYPE_CAPABILITY_REGISTRY missing CEFI cells**: add the missing cells for `CARRY_BASIS_PERP_INV`/
+     `CARRY_STAKED_BASIS` × BYBIT/OKX/DERIBIT (registry catches up to the codex claim, not the reverse).
+     (`archetype_venue_universe_cefi_vs_registry_no_cefi_cells_2026_06_30.md`)
+  8. **Kraken FI\_/FF\_ contract-subtype collision**: reuse the existing `@LIN`/`@INV` marker convention (this session's
+     own canonicalization decision) rather than inventing a new contract-subtype field — 13 real (ticker, expiry) pairs
+     affected, the 2 most liquid (ETH/XBT). (`canonical_id_p0_kraken_futures_collision_2026_07_08.md`)
+  9. **6 DeFi venues declared `phase=live` with no backing capability**: add the missing capability-registry entries
+     (venues are intended live, close the registry gap rather than downgrade the label).
+     (`defi_code_codex_drift_2026_05_27.md`, item D10)
+  10. **Pyth Hermes jitoSOL pre-2023-10 backtest scope**: include it — no data-quality problem was flagged for that
+      window. (`defi_onchain_derivable_values_and_date_drift_2026_06_20.md`)
+
+  All 10 distinct decisions (covering 12 originally-listed BLOCKED items — some were duplicate/tied) dispatched for
+  execution as real code/data changes, not just recorded as resolved-in-principle. See Orchestration state below for the
+  dispatched workflow(s).
+
+## Orchestration state — dispatched execution workflow
+
+`wf_1e191185-1c2` (`instruments-audit-decisions-execution`) — 8 parallel agents executing the 10 decisions above:
+OKX-SPOT venue + Kraken FI_/FF_ marker; COINBASE-CDE split + new adapter + live connector fix; DeFi 1.38M backlog apply;
+archetype registry CEFI cells; MVP scope (COINBASE trades-only) + D10 capabilities; UAC two-layer redesign; mvp_mode
+universal build (research-first); Coinbase bare-name migration dispatch. Script:
+`/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/instruments-audit-decisions-execution-wf_1e191185-1c2.js`

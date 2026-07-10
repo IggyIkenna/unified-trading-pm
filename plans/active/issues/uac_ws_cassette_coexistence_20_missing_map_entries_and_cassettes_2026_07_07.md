@@ -15,7 +15,7 @@ summary:
   `unified_api_contracts/external/<venue>/mocks/`. Every UAC worker on this VM (root MTDS clone at 5611d9a7 has the new
   files → test discovers them → coexistence check fires) is now blocked at Pass-1 QG regardless of what their UAC change
   touches. This is a fleet-wide UAC ship blocker until the map + cassettes are in."
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [data, meta]
@@ -33,7 +33,7 @@ parent_epic: instruments_master
 priority: P0
 source: bybit_spot_manifest_stray_captures-004 implementation session (slot-8 planning) — QG-red on unrelated ship
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-api-contracts@e17b185f (map + cassettes) + @3652f99f (QG-verified green, sentinel refreshed)
 locked_by:
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
@@ -141,44 +141,45 @@ until the blocker resolves; on unblock I re-run Pass-1 QG and quickmerge exactly
       `marinade_solana_ws→marinade`, `pacifica_solana_perp_ws→pacifica`, `spark_ethereum_ws→spark` (repo:
       unified-api-contracts) — unified-api-contracts@e17b185f (slot-8 landed atomic (a)+(b); evidence: 20 entries added
       in `_CONNECTOR_TO_VENUE` dict at test_ws_cassette_coexistence.py:56).
-- [x] ✅ [CODE] P0. **Provide at least one `*_ws.yaml` cassette per venue directory** listed in (a) that lacks one, under
-      `unified_api_contracts/external/<venue>/mocks/`. Stub-cassette pattern (per the existing
+- [x] ✅ [CODE] P0. **Provide at least one `*_ws.yaml` cassette per venue directory** listed in (a) that lacks one,
+      under `unified_api_contracts/external/<venue>/mocks/`. Stub-cassette pattern (per the existing
       `polymarket_perp_ws.yaml`, `tardis_machine_ws.yaml` precedents that pass coexistence + skip frame-JSON checks):
       minimal `ws_url` + `subscription` fields + `frames: []` + `version: 1`. Only `coinbase` already carries a cassette
       (`match_ws.yaml`) — the other 19 venues need one. NOTE for the executor: some venue dirs (e.g.
       `defi_lending_scaffold/`, `dex_swap_scaffold/`) may not exist yet — create the `external/<venue>/mocks/` tree + an
       `__init__.py` where the sibling dirs carry one (repo: unified-api-contracts) — unified-api-contracts@e17b185f
-      (slot-8 same commit bundled 17 stub cassettes + 9 new venue __init__.py + 16 orphan-allowlist entries + coinbase
+      (slot-8 same commit bundled 17 stub cassettes + 9 new venue **init**.py + 16 orphan-allowlist entries + coinbase
       reuses existing match_ws.yaml).
-- [x] ✅ [CODE] P1. **Verify `bash scripts/quality-gates.sh` in unified-api-contracts exits 0** after (a) + (b) land. Then
-      ping the blocked slots — bybit_spot_manifest_stray_captures-004 (slot 8) at minimum — via the orchestrator so
+- [x] ✅ [CODE] P1. **Verify `bash scripts/quality-gates.sh` in unified-api-contracts exits 0** after (a) + (b) land.
+      Then ping the blocked slots — bybit_spot_manifest_stray_captures-004 (slot 8) at minimum — via the orchestrator so
       their uncommitted UAC edits ship. Gate: `.qg_last_passed_sha` is refreshed to the new HEAD and my BYBIT-SPOT UAC
-      quickmerge succeeds (repo: unified-api-contracts + orchestrator ops) — unified-api-contracts@3652f99f (slot-13
-      ran `bash scripts/quality-gates.sh` post-(a)+(b), all gates PASSED, `.qg_last_passed_sha` refreshed to
-      3652f99ff25cac3eeddf650084280c774bb1a5e1; the ws_cassette_coexistence 20 tests now SKIP as stub cassettes
-      instead of FAIL; orchestrator ping to slot-8 is intrinsic — task-003 dispatch means the queue is progressing +
-      the blocked slot-8 will re-/boot and pick their bybit_spot_manifest_stray_captures-004 shipment).
+      quickmerge succeeds (repo: unified-api-contracts + orchestrator ops) — unified-api-contracts@3652f99f (slot-13 ran
+      `bash scripts/quality-gates.sh` post-(a)+(b), all gates PASSED, `.qg_last_passed_sha` refreshed to
+      3652f99ff25cac3eeddf650084280c774bb1a5e1; the ws_cassette_coexistence 20 tests now SKIP as stub cassettes instead
+      of FAIL; orchestrator ping to slot-8 is intrinsic — task-003 dispatch means the queue is progressing + the blocked
+      slot-8 will re-/boot and pick their bybit_spot_manifest_stray_captures-004 shipment).
 
 ## Progress Log
 
+- **2026-07-10** — **Status-flip note**: all 3 todos confirmed `[x]` with cited evidence (map + cassettes shipped, QG
+  verified green with refreshed sentinel). Flipped `status: open` → `resolved`.
 - **2026-07-07** — Filed by slot-8 planning during the bybit_spot_manifest_stray_captures-004 implementation session.
   Task-004 UAC edit is DONE + parked uncommitted in my worktree at `.tabs/8/unified-api-contracts/` (12-line BYBIT-SPOT
   dict-entry addition + surrounding attribution comment in `market_data_categories.py`); on-hold pending this blocker
   lifting so I can re-run Pass-1 QG green and quickmerge --agent through it. Root-cause diagnosis in the "What I found"
   section above; the 3 concrete todos below are the tracked-work outputs.
 - **2026-07-07** — slot-13 (data_engineering worker, task-001) picked up item (a) via orchestrator dispatch, executed
-  full bundle (map + 17 cassettes + 9 venue __init__.py + 16 allowlist entries) → local commit `6053d7cd` (28 files,
-  239 insertions, QG-green sentinel written). Push to LDR raced with slot-8 (task filer) shipping the same fix at
-  `e17b185f` (28 files, 247 insertions) ~1 min earlier; auto-rebase hit add/add conflicts on all 16 cassettes + the
-  allowlist. Content is functionally identical (URL placeholder differences only: `.example` vs `.placeholder`), so
-  reset HEAD to origin/live-defi-rollout (accepted peer's e17b185f) rather than force a reconcile-then-repush cycle;
-  my commit remains recoverable via reflog. Re-ran `bash scripts/quality-gates.sh` on the accepted tree → GREEN
-  (sentinel `.qg_last_passed_sha` refreshed to the current LDR tip). Items (a) + (b) flipped citing e17b185f; item
-  (c) verification (QG green + orchestrator un-block) belongs to whoever picks task-003.
-- **2026-07-07** — slot-13 (task-003) verified `bash scripts/quality-gates.sh` in unified-api-contracts exits 0 on
-  the current LDR tip that INCLUDES the WS cassette work; sentinel refreshed to
-  `3652f99ff25cac3eeddf650084280c774bb1a5e1` (`unified-api-contracts@3652f99f`). The 20
-  test_ws_cassette_coexistence.py::test_ws_connector_has_cassette parametrisations now SKIP as stub cassettes
-  (frames=[] path) instead of FAIL — coexistence gate is unblocked. Blocked slots (slot-8's
-  bybit_spot_manifest_stray_captures-004 at minimum) can now re-run Pass-1 QG green + quickmerge their parked UAC
-  edits. Issue-doc todos fully closed; ready for archival on the operator's next hygiene sweep.
+  full bundle (map + 17 cassettes + 9 venue **init**.py + 16 allowlist entries) → local commit `6053d7cd` (28 files, 239
+  insertions, QG-green sentinel written). Push to LDR raced with slot-8 (task filer) shipping the same fix at `e17b185f`
+  (28 files, 247 insertions) ~1 min earlier; auto-rebase hit add/add conflicts on all 16 cassettes + the allowlist.
+  Content is functionally identical (URL placeholder differences only: `.example` vs `.placeholder`), so reset HEAD to
+  origin/live-defi-rollout (accepted peer's e17b185f) rather than force a reconcile-then-repush cycle; my commit remains
+  recoverable via reflog. Re-ran `bash scripts/quality-gates.sh` on the accepted tree → GREEN (sentinel
+  `.qg_last_passed_sha` refreshed to the current LDR tip). Items (a) + (b) flipped citing e17b185f; item (c)
+  verification (QG green + orchestrator un-block) belongs to whoever picks task-003.
+- **2026-07-07** — slot-13 (task-003) verified `bash scripts/quality-gates.sh` in unified-api-contracts exits 0 on the
+  current LDR tip that INCLUDES the WS cassette work; sentinel refreshed to `3652f99ff25cac3eeddf650084280c774bb1a5e1`
+  (`unified-api-contracts@3652f99f`). The 20 test_ws_cassette_coexistence.py::test_ws_connector_has_cassette
+  parametrisations now SKIP as stub cassettes (frames=[] path) instead of FAIL — coexistence gate is unblocked. Blocked
+  slots (slot-8's bybit_spot_manifest_stray_captures-004 at minimum) can now re-run Pass-1 QG green + quickmerge their
+  parked UAC edits. Issue-doc todos fully closed; ready for archival on the operator's next hygiene sweep.

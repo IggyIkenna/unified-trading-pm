@@ -18,7 +18,7 @@ summary: 'Migration plan for removing bare `COINBASE` from UAC''s cefi venue reg
   switch — includes an explicit `_CEFI_VENUE_FOLD` re-anchor step.
 
   '
-status: draft
+status: active
 nature: design
 asset_group: [cefi, cross-cutting]
 stage: [data]
@@ -45,13 +45,13 @@ related:
   ]
 created: 2026-07-06
 parent_epic: instruments_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 supersedes:
@@ -70,9 +70,10 @@ drift_direction: advance-code
 
 # COINBASE bare-name UAC removal + downstream caller migration
 
-> **STATUS: draft.** This plan is drafted per the operator-answered BLK-22e5f8a5 (2026-07-06): `assigned_vm: NA`,
-> `status: draft`, `assigned_role: data_engineering`. NOT auto-ingested by the orchestrator. Flip to `status: active` +
-> `assigned_vm: planning` when you want agent execution. The operator remains the single point of dispatch.
+> **STATUS: active.** Drafted per the operator-answered BLK-22e5f8a5 (2026-07-06). Dispatched for execution 2026-07-10
+> per operator decision #3 in `plans/active/issues/instruments_remaining_work_audit_2026_07_10.md` ("flip
+> `coinbase_bare_name_migration_2026_07_06.md` from `draft` to `active`, dispatch its full 7-step (S0-S7) plan now"):
+> `assigned_vm: planning`, `status: active`. Executing S0-S7 in order below.
 
 > **DOMAIN NOTE — bare `"COINBASE"` has TWO meanings in this workspace:**
 >
@@ -320,9 +321,11 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S0 (prep — this plan lands as `status: draft` first)
 
-- [ ] [DESIGN] P2. Land THIS plan as `status: draft` via `docs(plans):` commit (do NOT quickmerge; do NOT ingest).
+- [x] [DESIGN] P2. Land THIS plan as `status: draft` via `docs(plans):` commit (do NOT quickmerge; do NOT ingest).
       Operator reviews + flips to `status: active` + `assigned_vm: planning` if agent execution is desired. Gate: file
-      present on LDR HEAD; commit message starts with `docs(plans):`; no worker dispatched.
+      present on LDR HEAD; commit message starts with `docs(plans):`; no worker dispatched. **DONE 2026-07-10** —
+      operator decision #3 in `instruments_remaining_work_audit_2026_07_10.md` dispatched full execution; flipped
+      `status: draft` → `active`, `assigned_vm: NA` → `planning` this commit.
 
 ### Step S1 — instruments-service `_CEFI_VENUE_FOLD` invert (Option A, single-file edit)
 
