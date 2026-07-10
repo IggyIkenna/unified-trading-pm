@@ -96,10 +96,19 @@ within a single-repo, one-task-at-a-time worker session):
       deletion together) so no intermediate broken state exists on LDR. Higher coordination cost but matches the plan's
       own "no intermediate LDR state is data-incorrect" design goal more literally. (repo: instruments-service,
       unified-api-contracts)~~
-- [ ] [DESIGN] P3. Whichever option is chosen, add a short "verify before land" step to the plan's own template guidance
-      for multi-repo DAG plans: when a step's gate says "no downstream regressions," actually run `quality-gates.sh`
-      with the isolated diff BEFORE marking an ordering note as "safe" — this plan's S1 ordering note (single-file
-      `_CEFI_VENUE_FOLD` invert) may deserve the same spot-check before its own dispatch. (repo: unified-trading-pm)
+- [x] [DESIGN] P3. ✅ Whichever option is chosen, add a short "verify before land" step to the plan's own template
+      guidance for multi-repo DAG plans: when a step's gate says "no downstream regressions," actually run
+      `quality-gates.sh` with the isolated diff BEFORE marking an ordering note as "safe" — this plan's S1 ordering note
+      (single-file `_CEFI_VENUE_FOLD` invert) may deserve the same spot-check before its own dispatch. (repo:
+      unified-trading-pm) — **DONE 2026-07-10** — added a new bullet to `plans/active/task_template.md` §4
+      (AO-DISPATCHED plans — STRICT rules), right after the "Ordering" bullet: "Verify an 'Ordering note' before
+      asserting it's safe" — requires an isolated-diff QG run before writing "safe to land before M", and points authors
+      at `sequential: true` / explicit `prereqs.completed_tasks` as the actual dispatch-gate mechanism instead of a
+      human-readable blocked banner. Cites this issue doc + the S2/S3 case study as the worked example. NOTE: S1's own
+      ordering-note spot-check (mentioned in this todo's text) was already independently verified DONE on landing per
+      S1's Progress Log entry in `coinbase_bare_name_migration_2026_07_06.md` (ran
+      `measure_honest_coverage.py --diagnose-layer1` against the live production manifest before/after) — no outstanding
+      action there.
 
 ## Resolution
 

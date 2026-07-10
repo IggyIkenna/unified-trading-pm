@@ -129,6 +129,17 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   until it ships.]_ For **STRICT serial** (task N cannot start until N-1 is `done`), set `sequential: true` _[ROLLING
   OUT]_ or add explicit `prereqs.completed_tasks` _[ACTIVE NOW]_. Ordering controls DISPATCH order, not completion — the
   fleet runs tasks concurrently; a hard "finish-before" is a prereq, not ordering.
+- **Verify an "Ordering note" before asserting it's safe.** For multi-repo/multi-step DAG plans (audit→fix→verify,
+  migrations), a note claiming step N can land before step M is a CORRECTNESS CLAIM, not a convenience aside — don't
+  reason from the diff's code shape alone (e.g. "this branch doesn't read X" can still break at runtime if a live caller
+  feeds it X's current state). Before writing the note, actually make the ISOLATED step-N diff (with M not yet landed)
+  and run it through `bash scripts/quality-gates.sh`; only write "safe to land before M" if that run is green. If it
+  turns out unsafe, encode the REAL dependency as `sequential: true` or explicit `prereqs.completed_tasks` so the
+  backlog dispatcher enforces it — a human-readable "🔴 BLOCKED, don't dispatch" banner is NOT a dispatch gate; a worker
+  picking up the plan cold can still claim the blocked todo before ever reading the banner. Case study:
+  `coinbase_bare_name_migration_2026_07_06.md` Step S2's "safe before S3" note was disproven by an actual QG run — see
+  `plans/active/issues/coinbase_bare_name_migration_s2_ordering_2026_07_10.md` for the failure + the `sequential: true`
+  fix.
 - **Multi-role in one plan** — use per-task `[TAG]`s; the one owning agent reads the extra role boot prompt. _[ROLLING
   OUT: `[TAG]` per-task routing. Today role is the plan-level `assigned_role` for ALL tasks — keep one role per plan, or
   split, until it ships.]_
