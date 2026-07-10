@@ -77,8 +77,15 @@ import yaml
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
-#: The "grandfathered, intentional" per-line exemption marker.
+#: The "grandfathered, intentional" per-line exemption marker code.
 NOQA_MARKER: Final[str] = "noqa: qg-empty-fallback"
+
+#: A single "noqa" comment carrying multiple codes (space- and/or comma-separated
+#: after one prefix — e.g. combining a qg-os-environ exemption with this one on
+#: the same line) is a real, existing convention in this workspace — a plain
+#: `NOQA_MARKER in line` substring check misses it whenever another code sits
+#: between the prefix and this check's own code. Parse the full code list instead.
+_NOQA_CODES_PATTERN: Final[re.Pattern[str]] = re.compile(r"#\s*noqa:\s*([\w,\s-]+)")
 
 #: Mirrors the retired inline codex_rg pattern in base-service.sh/base-library.sh:
 #: `\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)` — either quote style
@@ -244,10 +251,24 @@ def find_empty_string_fallbacks(source_path: Path) -> list[tuple[int, str]]:
     for lineno, raw_line in enumerate(lines, start=1):
         if not _EMPTY_STR_PATTERN.search(raw_line):
             continue
-        if NOQA_MARKER in raw_line:
+        if _has_empty_fallback_noqa(raw_line):
             continue
         hits.append((lineno, raw_line.rstrip()))
     return hits
+
+
+def _has_empty_fallback_noqa(line: str) -> bool:
+    """Whether *line* carries a `qg-empty-fallback` code inside a `# noqa: ...` comment.
+
+    Handles both a single-code comment (`# noqa: qg-empty-fallback`) and a
+    multi-code one (`# noqa: qg-os-environ qg-empty-fallback`, or comma-separated)
+    — a plain substring check on ``NOQA_MARKER`` only matches the single-code form.
+    """
+    match = _NOQA_CODES_PATTERN.search(line)
+    if not match:
+        return False
+    codes = re.split(r"[,\s]+", match.group(1).strip())
+    return "qg-empty-fallback" in codes
 
 
 @dataclass(frozen=True)
