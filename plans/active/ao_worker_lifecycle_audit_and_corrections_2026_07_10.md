@@ -281,9 +281,16 @@ is operator-review-gated (A6) and can lag the worker cutover.
       tab-branch → Path-B (`git clone --reference` on `live-defi-rollout`, no tab branch); main.md backlog path (3×
       `orchestrator/data/config/…` → `data/config/…`); `escalation_to` on `plan-health.md` + `data_pipeline_failure.md`
       (`cicd` → `operator`/`plan-reconciler` + `main`) — verify the dashboard AGENT TYPES panel renders right.
-- [ ] [CODE] P2. `main.md` dead Phase -2…14 phase-DAG removal (source epic says "provenance only"; fix the
-      `plans/active/` → `plans/epics/` dir error). **[OPERATOR-REVIEW] — main.md is the main orchestrator's brain;
-      surface the proposed diff before committing.**
+- [x] 19. ✅ [CODE] P2. `main.md` phase-DAG removal + OPERATOR REVIEW DONE (2026-07-10) — unified-trading-pm@017c03799
+      (rewrite) + unified-trading-pm@8fdf17656 (review amendments). The operator reviewed the full old-vs-new diff
+      in-session and directed 3 amendments, applied same-day: (1) the DAG's provenance/anti-resurrection note is dropped
+      entirely — a fresh main agent derives priorities from active plans; teaching it history it never saw is noise; (2)
+      spawning is documented as BACKEND-owned (AutoSpawn + operator dashboard; endpoints in agent-orchestrator
+      `docs/SLOTS_AGENTS_AND_FLEET.md`, not the role file) — the "operator's gesture" framing predated AutoSpawn; (3)
+      backlog.yaml consistently framed as a DERIVED artifact (`PlanRegenLoop` every 30 min + `POST /api/backlog/regen`
+      on demand) — main authors PLAN todos, never yaml; the rewrite had carried over hand-authoring instructions
+      ("that's where you author", overnight step 4 author+reload) that contradicted the workspace never-hand-edit HARD
+      RULE. Goes live at the next main-agent recycle.
 - [x] 18. ✅ [CODE] P2. Doc-drift sweep — split across the two ships: draft→active on the 4 craft roles + backup-role
       refs removed + archived SSOT footers repointed + size claims dropped were all part of the
       unified-trading-pm@017c03799 agents/ rewrite (verified: `rg backup unified-trading-pm/agents/` clean, no
