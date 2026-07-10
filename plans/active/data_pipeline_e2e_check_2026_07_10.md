@@ -408,16 +408,29 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-          full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-          is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
-          already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
-          REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
-          `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-          `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-          (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-          full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-          the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-          pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+              is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
+              already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
+              REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
+              `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+
+- [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
+      before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
+      `RuntimeError: Event logging not initialized` — `setup_events()` was never called; fixed with the same proven
+      pattern `manifest_consolidator.py` uses. (b) a crashed leg silently vanished from the report instead of recording
+      an honest `failed` row — added `_leg_exception_result()`. (c) a live-leg nonzero exit code was being treated as
+      automatic failure even when the manifest showed real capture — now falls through to the manifest check regardless
+      of exit code, exit code is context not authority. Evidence: market-tick-data-service@81d72d29 (a+b),
+      market-tick-data-service@c4362cbf (c), both QG green, both shipped via the dirty-deps carve-out. **Also found**:
+      MTDS's force leg has a hard ordering dependency on IS's force leg for the same (asset_group, venue) having already
+      run (shared test-bucket `instrument_availability` index) — confirmed by contrast on the 2 re-pilot shards. Fixed
+      in the scratchpad driver: IS now runs to completion (barrier) before any MTDS job starts, preserving 40-way
+      concurrency within each phase.
 
 ## Verification (workspace-wide, before this plan is considered shippable)
 
@@ -704,3 +717,54 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   **Next**: 2 re-pilots in flight (ASTER book_snapshot_5 retest with the fix; BINANCE-FUTURES trades as a
   known-batch-servable control) to confirm the fix holds before launching the full 452-shard sweep. Building the
   aggregator (report.py-reading + honest-coverage cross-reference) in parallel while pilots run.
+
+- 2026-07-10 (autonomous session, continued further) — **The re-pilot itself surfaced 3 more real bugs**, each
+  root-caused and fixed via the same "read the actual VM run.log, don't guess" discipline, before committing to the full
+  sweep:
+
+  1. **`RuntimeError: Event logging not initialized`** crashed every single skip leg, deterministically (2/2 on the
+     re-pilot). `genuine_skip_proof()`/`read_prod_capture_status()` route through UTL code that emits diagnostic
+     lifecycle events via `log_event()`, which requires `setup_events()` to have run first in-process.
+     `pipeline_e2e_check.py` never called it. Same class of bug `manifest_consolidator.py`'s CLI hit and fixed
+     2026-04-29 (found the exact precedent + its proven-safe fix pattern: `contextlib.suppress(RuntimeError)` +
+     `MockEventSink`, diagnostic-only sink) — copied it exactly. Fixed: market-tick-data-service@81d72d29.
+
+  2. **Crashed legs were silently vanishing from the report** (a symptom that made bug #1 harder to see at first — the
+     report showed `total=2` instead of `total=3` with no indication a leg had crashed). `run_pipeline_check()`'s
+     per-leg exception handlers logged the error but never recorded a `ShardCheckResult` — exactly the kind of silent
+     gap the operator's "no exceptions... document every gap" instruction rules out. Added `_leg_exception_result()` so
+     a crashed leg always produces an honest `failed` row. Fixed in the same commit (market-tick-data-service@81d72d29).
+
+  3. **Live-leg nonzero exit code is not a reliable failure signal.** Confirmed via the ASTER re-pilot's own `run.log`:
+     the bounded `--max-duration-seconds=90` timer fired correctly, `ManifestWriter` wrote a real per-VM shard entry
+     (genuine capture happened), then the process exited 1 with no traceback surfaced in the log before the VM
+     self-deleted (root cause in the async-cancellation path not yet isolated — tracked, not blocking). Since this
+     pattern is deterministic and would hit **all 344** MTDS live-leg checks uniformly, it would have made the entire
+     live-leg matrix (todo 21) uninformative — every row reporting the same generic `vm_not_success` regardless of
+     whether capture actually worked. Fixed at the harness level: a nonzero exit (other than the already-handled
+     `no_ws_connector_registered` case) no longer short-circuits to `failed` — it falls through to the same manifest
+     check the zero-exit path uses, and only surfaces the exit-code context in the reason if the manifest ALSO shows no
+     capture. Manifest is ground truth; exit code is informative, not authoritative. Fixed:
+     market-tick-data-service@c4362cbf.
+
+  **A 4th finding is architectural, not a code bug — and would have silently invalidated most of the MTDS batch matrix
+  (todo 19) if not caught before the full sweep**: MTDS's batch/force leg reads the IS-populated
+  `instrument_availability/by_date/day=X/venue=Y/instruments.parquet` index from the SAME `-test-` bucket IS writes to
+  (this is the documented finding #2 asymmetry from earlier in this plan, not new) — but that means **MTDS's force leg
+  for venue V depends on IS's force leg for venue V having already run** in this same test-bucket cycle. Confirmed by
+  contrast on the 2 re-pilot shards: `BINANCE-FUTURES:trades` (whose IS counterpart was never separately force-run this
+  session) 404'd reading that exact object and failed with `SHARD_INCOMPLETE` — a test-setup-ordering artifact, not a
+  real adapter gap; `ASTER:book_snapshot_5` (whose IS counterpart WAS force-run in the very first pilot) failed for a
+  real, different, and more precise reason instead
+  (`StreamingParquetWriter pre-write validation failed: [missing_column] required column 'instrument_id'` — consistent
+  with, and a more precise mechanism for, the already-documented ASTER-REST-current-book-only gap). Without this
+  ordering, most of the 344 MTDS shards whose venue hadn't already had an IS force-leg run would have spuriously failed
+  with the SAME 404/`SHARD_INCOMPLETE` pattern, swarming the real findings. Fixed in the scratchpad driver (not a
+  tracked-repo change — driver.py is scratchpad-only tooling): restructured from one flat concurrent job list into two
+  sequential barriers — all 108 IS jobs run to completion first, then all 344 MTDS jobs start. Concurrency is preserved
+  within each phase (`ThreadPoolExecutor`, still 40 workers); only the IS→MTDS ordering is now a hard barrier.
+
+  **Launching the full 452-shard sweep next** (day=2026-07-09, concurrency=40, IS-then-MTDS ordering) now that 2 full
+  pilot cycles (original + re-pilot) have exercised and fixed every bug the tool itself had. Any further failures from
+  here are either genuine shard-level findings (the actual point of this smoke test) or the already-documented
+  architectural gaps the aggregator cross-references — not tooling bugs.
