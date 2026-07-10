@@ -89,7 +89,7 @@ UAC-internal.
   branch is KEPT but the per-repo toggle is **REVERSIBLE** — a breaking/major bump or operator decision routes that repo
   THROUGH staging. **Gates UNCHANGED on both paths** — SIT (re-homed onto a frozen LDR snapshot for direct repos) +
   `quality-gates-v2` + quickmerge-to-main (ONE gating v2, not two). SSOT (in-flight refactor):
-  `plans/active/cicd_retire_staging_branch_2026_06_27.md` → `codex/08-workflows/ci-cd-flow.md`.
+  `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` → `codex/08-workflows/ci-cd-flow.md`.
 - SSOTs: `codex/08-workflows/ci-cd-flow.md` (quickmerge / strict-quickmerge / LDR-is-SSOT / branch-protection /
   deployment flow) + `codex/05-infrastructure/per-tab-worktrees.md` (commit attribution).
 
