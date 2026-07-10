@@ -8,7 +8,7 @@ summary:
   to the leaf tables. Starts draft, released to active by the last task of
   cost_obs_backend_sku_usage_enrichment_2026_07_08 once the API contract exists. Every UI task carries a Playwright L2
   regression.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -36,6 +36,10 @@ source: cost_observability_ui_2026_07_08.md
 ---
 
 # Cost Observability — unified breakdown table + resource-detail columns (UI)
+
+> **✅ ARCHIVED 2026-07-10 — COMPLETE.** Every todo shipped (see the Progress Log below). Codex aligned
+> (`codex/05-infrastructure/billing-cost-observability.md`: label dimension + real GitHub provider). Moved to
+> `plans/archive/2026_07/`.
 
 > **AO-DISPATCHED UI plan — starts `draft` (NOT ingested).** Released to `active` by the LAST task of the backend plan
 > **`cost_obs_backend_sku_usage_enrichment_2026_07_08.md`**, so this agent only starts once the new `BreakdownRow`

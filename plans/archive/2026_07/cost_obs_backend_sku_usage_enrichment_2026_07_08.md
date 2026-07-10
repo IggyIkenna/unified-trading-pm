@@ -8,7 +8,7 @@ summary:
   orphaned-disk cost-waste, spot-vs-on-demand, VM machine specs from system_labels, and AWS invoice reconciliation.
   Feeds the UI half (cost_obs_ui_unified_breakdown_2026_07_08), which stays draft until this plan's last task releases
   it.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -37,6 +37,10 @@ source: cost_observability_ui_2026_07_08.md
 ---
 
 # Cost Observability — SKU/usage data foundation + breakdown enrichment (backend)
+
+> **✅ ARCHIVED 2026-07-10 — COMPLETE.** Every todo shipped (see the Progress Log below). Codex aligned
+> (`codex/05-infrastructure/billing-cost-observability.md`: label dimension + real GitHub provider). Moved to
+> `plans/archive/2026_07/`.
 
 > **AO-DISPATCHED backend plan.** The backend half of the operator-requested cost-breakdown enrichment. Full design
 > context, the live `bq` evidence, and the data-fidelity audit that motivated all of this live in the LOCAL parent plan

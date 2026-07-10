@@ -168,11 +168,11 @@ table/db/region/bucket are config (`GCP_BILLING_DATASET/RESOURCE_TABLE`, `AWS_CU
 
 **Endpoints** (`routes/costs.py`, mounted `/api`, auth + rate-limited):
 
-| Endpoint                    | Params                                                                                    | Returns                                                                                                     |
-| --------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `GET /api/costs/summary`    | `days`, `refresh`                                                                         | **net** total (+ `gross`/`credit`) + per-cloud net/gross/credit/deltas/daily sparkline + `provisional_days` |
-| `GET /api/costs/breakdown`  | `dimension=service\|resource\|bucket\|region\|day\|sku\|zone`, `cloud`, `days`, `refresh` | grouped rows — full field set above                                                                         |
-| `GET /api/costs/timeseries` | `days`, `cloud`, `refresh`                                                                | daily per-cloud series (stacked trend)                                                                      |
+| Endpoint                    | Params                                                                                                                                                                               | Returns                                                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `GET /api/costs/summary`    | `days`, `refresh`                                                                                                                                                                    | **net** total (+ `gross`/`credit`) + per-cloud net/gross/credit/deltas/daily sparkline + `provisional_days` |
+| `GET /api/costs/breakdown`  | `dimension=service\|resource\|bucket\|region\|day\|sku\|zone\|label`, `cloud`, `days`, `refresh`, `label_key` (`purpose\|category\|venue\|asset_group`, only when `dimension=label`) | grouped rows — full field set above                                                                         |
+| `GET /api/costs/timeseries` | `days`, `cloud`, `refresh`                                                                                                                                                           | daily per-cloud series (stacked trend)                                                                      |
 
 `cost_obs_backend_sku_usage_enrichment_2026_07_08.md` is now fully shipped — every field below has landed; the sibling
 UI plan (`cost_obs_ui_unified_breakdown_2026_07_08.md`) builds the breakdown-table UI against this contract.
@@ -196,6 +196,9 @@ applies (`None`/`""`/`0` when it doesn't):
 - `machine_type` / `vcpu` / `memory_gb` — VM rows only, parsed from the GCP billing `system_labels`
   (`compute.googleapis.com/machine_spec` / `cores` / `memory`, the latter MiB → GB) via `ANY_VALUE(...)` in
   `gcp_facts_sql` — **no Compute API call**. AWS has no machine-spec system_labels equivalent — left unset.
+- `labels` (`dict[str, str]`) — the business-label subset (`purpose`/`category`/`venue`/`asset_group`) extracted from
+  the GCP `labels` REPEATED field via `_label_col()` in `gcp_facts_sql`; backs the `label` breakdown dimension (grouped
+  by `labels[label_key]`, `"(unlabeled)"` when the key is absent). AWS/GitHub rows carry no business labels today.
 
 **AWS net + invoice reconciliation**: `aws_facts_sql` sums `line_item_net_unblended_cost` (net of RI/SP discounts, not
 list-price `line_item_unblended_cost`) and the line-item-type filter is now `('Usage', 'DiscountedUsage', 'Tax', 'Fee')`
@@ -203,11 +206,22 @@ list-price `line_item_unblended_cost`) and the line-item-type filter is now `('U
 
 A `zone` breakdown dimension slices by GCP `location.zone` / AWS `line_item_availability_zone` — finer than `region`.
 
+A `label` breakdown dimension groups by a chosen business label (`label_key` ∈ `purpose|category|venue|asset_group`) off
+the GCP `labels` map — spend by purpose / venue / asset_group; rows with no such label roll into `"(unlabeled)"`. Today
+`purpose` (~49%) and `category` (~24%) have useful coverage; `asset_group` is ~0.16% until launchers stamp it.
+
 - **UI**: `deployment-ui/src/pages/CostObservability.tsx` at route **`/ops/costs`** (Cockpit tile "Billing
-  (GitHub+GCP+AWS)") — KPI band → trend + donut → dimension breakdown → per-VM/per-bucket leaf tables → GitHub
-  placeholder. Recent days flagged **provisional** (GCP ~2-day reconcile; AWS re-trues month-end 6th–7th).
-- **GitHub**: a labelled **dummy** provider (`is_placeholder=true`) until a classic PAT with `user` scope exists —
-  swap-to-real is a provider change only.
+  (GitHub+GCP+AWS)") — a 2-column top (bigger daily trend chart on the left; the total-spend card with the cloud-share
+  donut folded in + the 3 per-cloud cards on the right), then the dimension breakdown table (per-column header-filter
+  dropdowns, click-to-sort, 100/page pagination, drag-resize), then per-VM/per-bucket leaf tables. A `?` help button
+  opens a quick-guide dialog. Recent days flagged **provisional** (GCP ~2-day reconcile; AWS re-trues month-end 6th–7th)
+  — that note now lives in the help guide (no standing page banner).
+- **GitHub**: **real** provider — `fetch_github_billing()` (`services/cost_observability/github_billing.py`) reads the
+  Enhanced Billing usage API (`GET /users|organizations/{account}/settings/billing/usage`) with a **Plan-scoped** token
+  from Secret Manager (`github_billing_secret`, default `github-billing-token`, then the shared `GH_PAT`); each usage
+  line item → `CostRecord` (`cost`=gross, `credit`=net−gross, so net=cost+credit). Falls back to the labelled **dummy**
+  (`is_placeholder=true`) only when no Plan-scoped token is reachable (every billing endpoint 403s without the `Plan`
+  permission). Verified 2026-07-10: backend net reconciles to the raw GitHub-API net to the cent ($1,332.55 / 30d).
 - The narrow self-reported `cost_summary`-blob pipeline (`routes/cost_daily.py`, `/api/costs/daily`) that previously
   backed this page is **retired/deleted**; the health-overview cost tile now reads `summarize(days=1)`.
 

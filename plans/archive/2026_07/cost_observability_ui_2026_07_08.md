@@ -40,6 +40,10 @@ source:
 
 # Cost Observability UI — comprehensive GCP + AWS billing breakdown on /ops/costs
 
+> **📦 ARCHIVED 2026-07-10.** Superseded (see below); all 7 deferred follow-ups migrated to
+> `plans/active/issues/cost_observability_deferred_followups_2026_07_10.md` (0 open todos remain here). Moved to
+> `plans/archive/2026_07/`.
+
 > **⏩ SUPERSEDED 2026-07-08 — the remaining build is now two AO-dispatched plans:**
 > **`cost_obs_backend_sku_usage_enrichment_2026_07_08.md`** (backend-engineer, active) +
 > **`cost_obs_ui_unified_breakdown_2026_07_08.md`** (ui-developer, draft-gated on the backend). **RETAINED as the
@@ -196,9 +200,10 @@ business-context fast-follow (asset_group via labels/tags), deliberately out of 
 
 ## Deferred / fast-follow (tracked — not v1)
 
-- [ ] [BACKEND] P3. _(fast-follow, operator-deferred 2026-07-08)_ Business-context enrichment — derive asset_group /
-      archetype from GCP `labels`/`system_labels` + AWS resource tags → a spend-by-strategy view (restores and
-      generalizes what the retired narrow page showed).
+- ➡️ **Migrated 2026-07-10 → issues/cost_observability_deferred_followups_2026_07_10.md** — [BACKEND] P3. _(fast-follow,
+  operator-deferred 2026-07-08)_ Business-context enrichment — derive asset_group / archetype from GCP
+  `labels`/`system_labels` + AWS resource tags → a spend-by-strategy view (restores and generalizes what the retired
+  narrow page showed).
 - [x] ✅ [BACKEND] P3. GitHub real billing — **NOW LIVE** (see the done `[BACKEND+UI] P1` in the "GitHub real billing"
       subsection below, deployment-api@29a18c088/@c4549daa; token in Secret Manager). Superseded the dummy provider with
       the Enhanced Billing API (`GET /organizations/{org}/settings/billing/usage` or the user endpoint) once a **classic
@@ -206,9 +211,10 @@ business-context fast-follow (asset_group via labels/tags), deliberately out of 
       "GitHub real billing & GCP Pacific-day alignment" subsection below; the token in hand is a fine-grained PAT
       **without** billing/`Plan` scope (403 on every billing endpoint), so still credential-blocked pending a
       Plan-scoped token.
-- [ ] [BACKEND] P3. Deployed AWS-credential cutover — wire the Athena reader to the keyless WIF role
-      (`_code_builds_aws.py` precedent) so the Cloud Run deployment reaches Athena without a static key. Local dev uses
-      the ambient profile; this is only needed at deploy time.
+- ➡️ **Migrated 2026-07-10 → issues/cost_observability_deferred_followups_2026_07_10.md** — [BACKEND] P3. Deployed
+  AWS-credential cutover — wire the Athena reader to the keyless WIF role (`_code_builds_aws.py` precedent) so the Cloud
+  Run deployment reaches Athena without a static key. Local dev uses the ambient profile; this is only needed at deploy
+  time.
 - [x] ✅ [UI] P3. _(found 2026-07-08 during the row-cap fix)_ Breakdown stale-during-refetch — _(SHIPPED →
       cost_obs_ui_unified_breakdown, stale-during-refetch fix)_ switching dimension+range quickly on the slow real
       backend briefly renders the previous fetch's rows under the new column header (e.g. service rows under a "Day"
@@ -239,8 +245,9 @@ on the resource table + the running backend endpoints (last-30d window).
       Fee / RIFee / SavingsPlan\* and ignores `line_item_net_unblended_cost`. So the AWS total (~$213/30d) is usage
       spend, not the AWS invoice. Decide net-of-discounts (`net_unblended_cost`) + a tax/fee line so it reconciles; at
       minimum label it "usage spend". (AWS is ~1.4% of total, so lower $ impact than the GCP item.)
-- [ ] [BACKEND] P3. **Provisional flag is trailing-2-days for BOTH clouds**, but AWS re-trues the whole current month
-      (6th–7th). Early-current-month AWS days render as final though they aren't — make the AWS cutoff month-aware.
+- ➡️ **Migrated 2026-07-10 → issues/cost_observability_deferred_followups_2026_07_10.md** — [BACKEND] P3. **Provisional
+  flag is trailing-2-days for BOTH clouds**, but AWS re-trues the whole current month (6th–7th). Early-current-month AWS
+  days render as final though they aren't — make the AWS cutoff month-aware.
 
 ### Granularity we HAVE but don't surface (near-zero extra query cost)
 
@@ -251,10 +258,13 @@ on the resource table + the running backend endpoints (last-30d window).
 - [x] ✅ [UI+BACKEND] P2. **Spot vs On-Demand (purchase option) split** _(SHIPPED → backend@947a48b + UI@5b99519)_ — GCP
       SKU exposes "Spot Preemptible E2…"; AWS has `pricing_purchase_option`. Directly validates the
       SPOT-VMs-for-backfill HARD RULE + quantifies the savings.
-- [ ] [UI+BACKEND] P3. **Credits/discounts as a first-class view** — we already fetch GCP credits; surface gross →
-      credits → net + the effective discount rate (how much promo/CUD/SUD is saving).
-- [ ] [BACKEND] P3. **Usage quantity + unit** (GCP `usage.amount/unit`; AWS `line_item_usage_amount/pricing_unit`) →
-      unit economics ($/GB-month, $/vCPU-hour), and GB-stored vs GB-egress for buckets.
+- ➡️ **Migrated 2026-07-10 → issues/cost_observability_deferred_followups_2026_07_10.md** — [UI+BACKEND] P3.
+  **Credits/discounts as a first-class view** — we already fetch GCP credits; surface gross → credits → net + the
+  effective discount rate (how much promo/CUD/SUD is saving).
+- ➡️ **Migrated 2026-07-10 → issues/cost_observability_deferred_followups_2026_07_10.md** — [BACKEND] P3. **Usage
+  quantity + unit** (GCP `usage.amount/unit`; AWS `line_item_usage_amount/pricing_unit`) → unit economics
+  ($/GB-month,
+  $/vCPU-hour), and GB-stored vs GB-egress for buckets.
 - [x] ✅ [BACKEND] P3. **Zone (GCP `location.zone`) / AZ (AWS `line_item_availability_zone`)** _(SHIPPED →
       backend@537af3d — zone dimension)_ — finer than region.
 
@@ -265,8 +275,9 @@ on the resource table + the running backend endpoints (last-30d window).
       multi-org = **separate deployments per account** (the 2026-07-10 decision), NOT an in-app per-project view. SKU is
       already reachable off the resource table (SKU dimension shipped), so the resource table stays the sole source and
       the standard table is not needed.
-- [ ] [UI] P3. No **"other resources" leaf** — Cloud Run Jobs is ~$2.9k/30d (CPU $2,047 + Mem $882), bigger than any
-      single VM, but only vm+bucket leaf tables exist; it surfaces only in the "By resource" breakdown.
+- ➡️ **Migrated 2026-07-10 → issues/cost_observability_deferred_followups_2026_07_10.md** — [UI] P3. No **"other
+  resources" leaf** — Cloud Run Jobs is ~$2.9k/30d (CPU $2,047 + Mem $882), bigger than any single VM, but only
+  vm+bucket leaf tables exist; it surfaces only in the "By resource" breakdown.
 
 ### Currency, AWS history & timezone reconciliation (2026-07-09) — UI vs operator-downloaded GCP/AWS console CSVs
 
@@ -310,14 +321,15 @@ CUR (2026-07-09). Operator decisions captured inline.
       re-denominated at the row's own rate); AWS/ GitHub + cross-cloud aggregates (grand total, trend/donut) stay USD,
       since no GBP figure exists. **deployment-ui@`6bc9139`** — 14 vitest + 16 pw (`USD⇄GBP toggle …` regression) + full
       UI QG green. Codex `billing-cost-observability.md` Currency bullet updated.
-- [ ] [BACKEND/INFRA] P2. **AWS Athena holds July-2026 only — investigate a CUR historical backfill.** Per-month probe:
-      `aws_billing.cur_uts_cost_usage` contains ONLY `2026-07` (gross $792.89) — the CUR delivery started in July, so
-      `/ops/costs` structurally cannot show any pre-July AWS spend. The operator's AWS CSV is Jan–Jun (Cost Explorer,
-      ~14mo retention; $8,584 gross), **zero temporal overlap** with the CUR. Also: AWS is **fully credited** — every
-      July day gross≈−credit → **net $0** (~$98/day gross visible). **Investigate** a backfill: CUR "include historical
-      data" on report re-creation, or a one-off Cost Explorer `GetCostAndUsage` import into a side table. If feasible →
-      backfill full-year AWS history; else document the AWS tab as **July-2026-onward** (operator: acceptable). Not a
-      code bug — a data-source coverage gap.
+- ➡️ **Migrated 2026-07-10 → issues/cost_observability_deferred_followups_2026_07_10.md** — [BACKEND/INFRA] P2. **AWS
+  Athena holds July-2026 only — investigate a CUR historical backfill.** Per-month probe:
+  `aws_billing.cur_uts_cost_usage` contains ONLY `2026-07` (gross $792.89) — the CUR delivery started in July, so
+  `/ops/costs` structurally cannot show any pre-July AWS spend. The operator's AWS CSV is Jan–Jun (Cost Explorer, ~14mo
+  retention; $8,584 gross), **zero temporal overlap** with the CUR. Also: AWS is **fully credited** — every July day
+  gross≈−credit → **net $0** (~$98/day gross visible). **Investigate** a backfill: CUR "include historical data" on
+  report re-creation, or a one-off Cost Explorer `GetCostAndUsage` import into a side table. If feasible → backfill
+  full-year AWS history; else document the AWS tab as **July-2026-onward** (operator: acceptable). Not a code bug — a
+  data-source coverage gap.
 - [x] ✅ [UI] P3. **Top-of-page tooltip: GCP console = Pacific day boundary, export = UTC.** Not a bug — it's why a
       console CSV won't tie to the penny. Same Jul3–9 window/currency: console gross £2,509.38 vs export(UTC) £2,708.12;
       re-windowing the export on Pacific midnight (07:00 UTC) → £2,549.07, within £40 (1.6%) of console (residual =
