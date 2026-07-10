@@ -347,15 +347,30 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S2 — instruments-service `venue_core.py` delete the dead `elif COINBASE` alias
 
+> **🔴 BLOCKED — verified 2026-07-10 by slot 9 (data_engineering).** The "Ordering note" below is WRONG for the current
+> repo state and must NOT be executed until S3 has landed. See
+> `plans/active/issues/coinbase_bare_name_migration_s2_ordering_2026_07_10.md` for the full writeup + recommended
+> re-sequencing. Do not dispatch this todo again until that issue doc's decision is applied here.
+
 - [ ] [CODE] P2. `instruments-service/instruments_service/engine/orchestrator/venue_core.py`: delete lines 145-146
       (`elif venue == "COINBASE": result.append("COINBASE-SPOT")`) — after S1 the fold handles residuals; this expansion
       becomes dead code once UAC drops bare COINBASE (S3). Update the docstring lines 97/115/126/317 to remove the
       COINBASE special case. Regression test: `test_expand_cefi_tardis_endpoints_no_bare_coinbase_input` — feeding
       `["COINBASE-SPOT", "BINANCE-SPOT"]` produces `["COINBASE-SPOT", "BINANCE-SPOT"]` (passthrough). **Gate:** QG
-      green; test added; no downstream IS producer regressions in `tests/unit/`.
+      green; test added; no downstream IS producer regressions in `tests/unit/`. **Depends on S3 landing first** (see
+      blocked-banner above) — verified 2026-07-10 that landing S2 before S3 fails this exact gate.
 
-  Ordering note: S2 CAN land before S3 because it does not READ the UAC dict; it just deletes a runtime alias branch
-  that will still be exercised (by test callers) until S3 removes bare COINBASE from the input list. Safe to land now.
+  ~~Ordering note: S2 CAN land before S3 because it does not READ the UAC dict; it just deletes a runtime alias branch
+  that will still be exercised (by test callers) until S3 removes bare COINBASE from the input list. Safe to land now.~~
+  **DISPROVEN 2026-07-10**: `bash scripts/quality-gates.sh` run with the elif-branch deleted (S1/S3 not yet landed)
+  fails 2 existing tests —
+  `tests/unit/test_adapter_routing_uac_invariant.py::test_expanded_cefi_enumeration_fully_resolvable` (bare `COINBASE`
+  resolves to `NO_ADAPTER_YET`) and
+  `tests/unit/test_new_orchestrator.py::test_process_instruments_cefi_venues_available` (`COINBASE-SPOT` drops out of
+  the CEFI venue list). Root cause: UAC's `VENUES_BY_ASSET_GROUP["cefi"]` still emits bare `COINBASE` until S3 lands, so
+  deleting the alias branch makes IS's cefi venue producer emit an unmapped bare `COINBASE` — a real production
+  regression, not just a test artifact. **S2 must land AFTER S3** (or be combined into the same cross-repo shippable
+  unit as S3).
 
 ### Step S3 — UAC removal (the "gap-015" step, now un-blocked)
 
