@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 82.31,
-        "qg_red_reason": null,
+        "large_file_count": 1,
         "warn_file_count": 15,
-        "large_file_count": 1
+        "coverage_pct": 82.27,
+        "qg_red_reason": null
       }
     },
     "deployment-service": {
@@ -756,10 +756,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "large_file_count": 5,
         "warn_file_count": 7,
         "coverage_pct": 90.61,
-        "large_file_count": 5,
-        "qg_red_reason": "ruff"
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -1235,7 +1235,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1259,9 +1259,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 20,
-        "coverage_pct": 89.72,
         "large_file_count": 5,
-        "qg_red_reason": null
+        "coverage_pct": 88.68,
+        "qg_red_reason": "ruff"
       }
     },
     "unified-trading-pm": {
@@ -1409,8 +1409,8 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 13,
-        "coverage_pct": 75.86,
         "warn_file_count": 7,
+        "coverage_pct": 75.83,
         "qg_red_reason": null
       }
     },
