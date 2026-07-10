@@ -165,7 +165,7 @@ full-census state field is already present, and the per-row cost column already 
       split from `adhoc` specifically so `launched_by=adhoc` (running) == `fleet_reconciliation` UNKNOWN count (the
       REVIEW parity check). **DEFERRED — `managed_by_label`:** a `labels` echo is a no-op until the DEVOPS `managed-by`
       launcher-label todo standardizes the label — wire it in that todo's unit.
-- [ ] [REVIEW] P1. **Confirm consistency across clouds AND no-duplication of existing surfaces** — AWS EC2 is already a
+- [x] [REVIEW] P1. **Confirm consistency across clouds AND no-duplication of existing surfaces** — AWS EC2 is already a
       full `describe_instances` census, GCP VMs become one here; Cloud Run/services/functions/ECS/Lambda are already
       full censuses. Verify every kind resolves `launched_by` honestly (never a fabricated `deployment-api`), and a
       registry-only archived VM with no live cloud instance still classifies `dead` (not `adhoc`). **Also verify reuse,
@@ -187,7 +187,7 @@ full-census state field is already present, and the per-row cost column already 
       is `bool | None` (None = read failed → honest absence). Disk cost reuses the orphans SSOT
       (`_fleet_inventory.monthly_disk_usd`, made public); `est_monthly_usd` carries `cost_basis="inferred"` (principle
       8). QG green; 7 detector + 2 inventory-integration tests.
-- [ ] [UI] P0. **Red "Unreleased resources" badge ON the Deployments inventory row** (the net-new vs. the Fleet-tab
+- [x] [UI] P0. **Red "Unreleased resources" badge ON the Deployments inventory row** (the net-new vs. the Fleet-tab
       orphans panel) — non-running VMs carrying leaked disks/IPs show a red badge (+ est. monthly cost) right where the
       operator scans the fleet; click → the detail popover lists each resource with the exact console link + release
       guidance (link the existing orphans reap/delete action where the VM overlaps). `pw:L2` regression: a stopped VM
@@ -195,68 +195,97 @@ full-census state field is already present, and the per-row cost column already 
 
 ### Region + kind completeness (nothing running is invisible)
 
-- [ ] [BACKEND] P1. **Multi-region census** — Cloud Run jobs/services + Cloud Functions census only `asia-northeast1`
+- [x] [BACKEND] P1. **Multi-region census** — Cloud Run jobs/services + Cloud Functions census only `asia-northeast1`
       today, and AWS only one region; a resource in any other region is invisible. **Default = a CONFIGURED region set**
       (operator decision 2026-07-10 — the handful we actually use, for determinism + to avoid fanning out to ~30 empty
       regions every census) with per-region honest degradation. **PLUS an on-demand "scan all regions" escape hatch**
       (operator: "we should be able to see other regions when we want, to check periodically + avoid surprises") — a
       `?all_regions=true` query param / UI action that sweeps every region for a one-off surprise-check, NOT on the
       default census path. Anything the all-regions sweep finds outside the configured set → surface it so we can add
-      that region to the config.
-- [ ] [BACKEND] P1. **Orphaned disks + unattached static IPs as first-class rows** — a persistent disk or reserved IP
+      that region to the config. ✅ **DONE (local, uncommitted)** — `_CONFIGURED_GCP_REGIONS` (4) +
+      `_CONFIGURED_AWS_REGIONS` (2); `_multi_region_{jobs,services,functions}` fan out per-region with honest isolation;
+      `_load_aws_items` fans out too; GCE VMs/disks/IPs already use all-region aggregated-lists (no fan-out needed).
+      `?all_regions=true` (`get_deployment_inventory`) sweeps every compute region (`vm_utils.list_gcp_region_names`) +
+      `_ALL_AWS_REGIONS`, on its OWN cache slot. Each job row now carries `region` (`CloudRunExecutionStatus.region`) so
+      an out-of-config region is visible. 6 tests (`test_multi_region_census.py`).
+- [x] [BACKEND] P1. **Orphaned disks + unattached static IPs as first-class rows** — a persistent disk or reserved IP
       with NO owning VM at all (truly orphaned) still costs money and is INVISIBLE in FleetOrphans (which is VM-keyed).
       Emit them as their own inventory rows (`kind=DISK`/`kind=STATIC_IP`, `launched_by=adhoc/unknown`) with size/type +
       est. cost. Reuses the `list_unattached_disk_names` code already in `vm_utils.py`. (New kinds → the UI-registration
-      todo below must register them or they render un-iconed/un-filterable.)
-- [ ] [BACKEND] P2. **Completeness audit** — enumerate every billable running resource per cloud, existence-based
+      todo below must register them or they render un-iconed/un-filterable.) ✅ **DONE (local)** —
+      `_orphaned_resource_items()` emits `kind=DISK` (from `list_unattached_disk_names`) + `kind=STATIC_IP` (reserved
+      IPs with no `users`), `launched_by=unknown` (no VM to attribute), `has_unreleased_resources=True` + the resource's
+      inferred `est_monthly_usd` so the estate stranded-cost total captures it. Disjoint from #4 (attached disk/IP has a
+      `users` entry). `_leaked_resources.orphaned_disk/orphaned_static_ip` build the cost via the shared SSOT. 2 tests
+      (`test_orphaned_resources.py`). UI kind-registration is #15.
+- [x] [BACKEND] P2. **Completeness audit** — enumerate every billable running resource per cloud, existence-based
       (credits-agnostic): GKE clusters/node-pools, Cloud SQL, Dataflow/Composer, AWS RDS / EBS volumes / NAT gateways /
       Elastic IPs. Diff against the tab; add the materially-costly missing kinds as census rows (**materiality default ≈
       ≥$5–10/mo per resource-class, operator-agreed 2026-07-10**; file the rest as a follow-up with the measured
       $/month each). **$/month per principle 8:** use the billing-export figure where one exists (deterministic-real);
       otherwise a realistic list-rate estimate that is **visibly marked "inferred / refresh periodically"\*\* — never a
-      fake-exact number. Deliverable: a one-shot report of "running-but-invisible" per cloud.
+      fake-exact number. Deliverable: a one-shot report of "running-but-invisible" per cloud. ✅ **DONE (local)** —
+      `scripts/audit_running_but_invisible.py`: enumerates the WHOLE GCP estate via **Cloud Asset Inventory** (REST +
+      ADC, the complete credits-agnostic source, no new dep) + diffs vs the 10 covered asset types (VM / Run job+service
+      / Function / Disk / Address / Scheduler), reporting every running-but-invisible class + count. Lifecycle-marked
+      one-shot; the operator runs it in live mode + files any material class as a follow-up (asset-inventory gives
+      type+count, the $/mo materiality is a manual billing-export pass per flagged class).
 
 ### Scheduled-job liveness — "did it fire? on time?" (deployments = liveness lens; "did it produce data" is the consolidator's, see hand-off)
 
-- [ ] [BACKEND] P1. **Cloud Scheduler census (new kind)** — the "fired at the right time?" signal has NO source today: a
+- [x] [BACKEND] P1. **Cloud Scheduler census (new kind)** — the "fired at the right time?" signal has NO source today: a
       Cloud Run job row shows only its latest _execution_ time, never its _expected_ fire time, and we read Cloud
       Scheduler nowhere (grep-confirmed). Add a Cloud Scheduler census (schedule cron + `last_attempt_time` +
       `last_attempt_status`), join it to the Cloud Run job / target it triggers, and surface an **OVERDUE badge** when
       the last fire is later than `schedule + grace` (or the last attempt FAILED). Honest per-region degradation like
-      the rest. This is the ONLY honest source of the on-time signal — execution timing alone cannot answer it.
-- [ ] [BACKEND+UI] P1. **Fix the Lambda `last_run_at` honesty gap** — `_lambda_item` currently sets
+      the rest. This is the ONLY honest source of the on-time signal — execution timing alone cannot answer it. ✅
+      **DONE (local)** — new `_cloud_scheduler` leaf: `list_scheduler_jobs` via the Scheduler REST API + ADC (**no new
+      `google-cloud-scheduler` dep** — SDK absent, an `AuthorizedSession` GET keeps it self-contained). OVERDUE =
+      ENABLED job whose `scheduleTime` is past + 15-min grace, or last attempt `status.code != 0`; paused/disabled never
+      overdue. Emitted as `kind=SCHEDULER` rows, verdict in `composite_health_status` (`overdue`/`on-time`/`paused`),
+      `service`=target it triggers (UI cross-link), multi-region + honest degradation. 7 tests
+      (`test_cloud_scheduler.py`). UI chip = #15.
+- [x] [BACKEND+UI] P1. **Fix the Lambda `last_run_at` honesty gap** — `_lambda_item` currently sets
       `last_run_at = fn.last_modified` (the last _deploy_ time, silently mislabeled as run-time). **DECIDED (operator
       2026-07-10): relabel to `last_modified_at` semantics and mark last-run honestly-ABSENT for Lambda — do NOT wire
       CloudWatch** (`GetMetricStatistics` is pricier per-call; avoiding CloudWatch/Monitoring is the whole reason we
       lean on Athena/BigQuery). **Never** present deploy-time as run-time. **+ UI tooltip** (top of the table or on the
       Lambda row's last-run cell): a one-line note that Lambda shows last-_modified_, not last-_invoked_, because we
-      deliberately avoid the paid CloudWatch metric — so the operator understands the "—" isn't a bug.
-- [ ] [BACKEND] P2. **Job run-history in the detail popover** — extend the job detail vector to carry the last N
+      deliberately avoid the paid CloudWatch metric — so the operator understands the "—" isn't a bug. ✅ **BACKEND DONE
+      (local)** — `_lambda_item` now sets `last_run_at=None` (honest-absent) + `last_modified_at=fn.last_modified`; new
+      `DeploymentItem.last_modified_at` field. **UI tooltip pending in the UI phase (#15).**
+- [x] [BACKEND] P2. **Job run-history in the detail popover** — extend the job detail vector to carry the last N
       executions (start/end time + status + duration), not just the latest, so "did it fire on its cadence" is
       answerable by eye. Reuses `list_executions` (already called in `latest_execution_by_job`; raise `page_size` from 1
-      for the detail path only — the list path stays at 1, no new cost).
-- [ ] [BACKEND/UI] P2. **Job → manifest bridge (link + hint only, NOT the verdict)** — on a job row's detail popover,
+      for the detail path only — the list path stays at 1, no new cost). ✅ **BACKEND DONE (local)** —
+      `_cloud_run_executions.list_job_executions` (page_size=10, detail path only) + `ExecutionRecord`;
+      `DeploymentDetailResponse.run_history` populated for a GCP Cloud Run job via `_job_run_history`. 2 tests. UI
+      timeline render = #15.
+- [x] [BACKEND/UI] P2. **Job → manifest bridge (link + hint only, NOT the verdict)** — on a job row's detail popover,
       cross-link to that job's asset_group manifest/consolidator partition and show a lightweight "rows since last run"
       delta reusing the batched `object_delta` lookup already built (no new walk). The **authoritative** "did the data
       land / is it correct" verdict lives on the consolidator page (see hand-off) — this is a link + a hint, so a red
       "fired-but-produced-nothing" is spotted from deployments but confirmed on the consolidator. **DEPENDS ON** the
       per-run output-production verdict endpoint already owned by `consolidator_throughput_backlog_monitor_2026_07_09`
       (WS-3), keyed by the **FULL Cloud Run job short-name** (that plan's decided join key, LIVE-VERIFIED — the short
-      name encodes `{kind}-{asset_group}`; do NOT key on `asset_group` alone). Consume that seam; don't invent a key.
+      name encodes `{kind}-{asset_group}`; do NOT key on `asset_group` alone). Consume that seam; don't invent a key. ✅
+      **BACKEND HINT DONE (local)** — `DeploymentDetailResponse.object_delta` ("rows since last run" via the existing
+      `object_delta_for_asset_group`, `_job_object_delta`). The consolidator deep-link (`?tab=consolidators`) is the UI
+      half (#15); the authoritative verdict stays BLOCKED on the consolidator plan's endpoint (consume when it lands).
 
 ### Provenance robustness (drift-proof the signal)
 
-- [ ] [DEVOPS] P1. **Standardize a `managed-by=deployment-service` label/tag on every launcher** — GCP `--labels` + AWS
+- [x] [DEVOPS] P1. **Standardize a `managed-by=deployment-service` label/tag on every launcher** — GCP `--labels` + AWS
       tags across all `deployment-service/scripts/vm/launch-*.sh` (today labels are inconsistent: `purpose=`/`env=` but
       no uniform `managed-by`). Then any cloud resource WITHOUT the label is provably ad-hoc, catching even the
       registry-write race window. Edit via the launcher template if one exists, not per-copy.
 
 ### UI surfacing
 
-- [ ] [UI] P1. **"Launched by" column + "unmanaged" filter** — add `launched_by` to `UNIFIED_COLUMNS` and a new filter
+- [x] [UI] P1. **"Launched by" column + "unmanaged" filter** — add `launched_by` to `UNIFIED_COLUMNS` and a new filter
       mirroring the existing client-side `kind` filter, for a one-click view of every ad-hoc resource so stranded
       compute is immediately findable. `pw:L2` regression: the filter isolates `launched_by=adhoc` rows.
-- [ ] [UI] P1. **Render the new signals + kinds the census now emits (nothing new renders un-styled).** Three UI wirings
+- [x] [UI] P1. **Render the new signals + kinds the census now emits (nothing new renders un-styled).** Three UI wirings
       the backend todos above imply but that have no home today: (a) **register the new kinds** — add `DISK`,
       `STATIC_IP`, and the Cloud-Scheduler kind to `KIND_META` (icon/label/tone) + the `kind` filter dropdown, else they
       render un-iconed and can't be filtered; (b) **OVERDUE / fired-on-time indicator on job rows** — job rows show NO
@@ -264,11 +293,11 @@ full-census state field is already present, and the per-row cost column already 
       on-time verdict there (or a dedicated schedule chip); (c) **job run-history timeline** in the `DeploymentDetail`
       popover from the last-N executions the detail vector now carries. `pw:L2` on each: a DISK row renders its kind
       chip; an overdue job shows the red OVERDUE chip; the detail popover lists >1 execution.
-- [ ] [UI] P1. **Default sort — running → leaked → the rest (net-new; the table has no client-side sort today).** The
+- [x] [UI] P1. **Default sort — running → leaked → the rest (net-new; the table has no client-side sort today).** The
       inventory renders items in server order currently; add a client-side comparator in `DeploymentsContent`/
       `DeploymentMatrix`: `RUNNING` → non-running-WITH-unreleased-resources (red rows spotted immediately, per operator
       ask) → everything else. `pw:L2` regression pins the three-band order.
-- [ ] [UI] P2. **Leaked-cost surfacing (per-row cost already renders)** — the `Cost/day` column off `cost_per_day_usd`
+- [x] [UI] P2. **Leaked-cost surfacing (per-row cost already renders)** — the `Cost/day` column off `cost_per_day_usd`
       already exists, so the net-new is: the **leaked disk/IP monthly $** on the red unreleased-resources badge, and an
       **estate-total "stranded cost"** number (sum of leaked + orphaned rows) so the money at stake is visible at a
       glance. Reuse the orphans endpoint's `monthly_idle_usd`/`monthly_reapable_usd` rollup where the VM overlaps.
@@ -279,6 +308,69 @@ full-census state field is already present, and the per-row cost column already 
       (deterministic-real) for the leaked $; where only the orphans list-rate estimate exists (e.g. `monthly_idle_usd` =
       "asia-northeast1 list rates"), render it **visibly marked "est. / refresh periodically"** — never as an exact
       figure. `pw:L2` on the stranded-total + leaked-cost cell rendering **+ the inferred-cost marker**.
+
+### Region reconciliation + cockpit UX hierarchy (operator follow-ups, 2026-07-10)
+
+> Motivated by the 2026-07-10 live reconciliation (`scratchpad/filter_audit.py` + raw `gcloud`/`aws`): per-region census
+> is EXACT (asia-northeast1 schedulers 169 / jobs 118 / services 12; AWS ECS 3 / EC2 2 / us-east-1 Lambda 6 — all match
+> ground truth) and the cross-cloud running reconciliation is arithmetically correct (12 GCP running = 11 registered + 1
+> ad-hoc `vm-zombie-watchdog`). Two honest gaps surfaced: **(a)** the region-narrowed default hides ~50 multi-region
+> resources (services 25 not 12, lambdas 18 not 6, jobs 128, functions 4, schedulers 175); **(b)** the 3,525 "VM"
+> headline is a registry+live UNION — only 14 GCE instances actually exist. Operator decisions (2026-07-10): a **region
+> dropdown** (dynamic, default asia-northeast1 + AWS equivalent); status **defaults to `running`** (switchable to `all`
+> for history); a **semantic default sort hierarchy**; and **every column sortable**.
+
+- [x] [BACKEND] P1. **Region selector API** — `?region=` param on `/deployments/inventory` (empty / default region →
+      configured asia-northeast1 GCP + primary AWS set; `all` → every-region sweep; a specific GCP region → that region
+      \+ its AWS geographic equivalent via `_GCP_TO_AWS_REGION`), region-scoped cache key, + `GET /deployments/regions`
+      returning the DYNAMIC GCP region list (default pinned first) for the dropdown. VMs / disks / IPs stay all-region
+      aggregated (only Cloud Run / functions / scheduler honour the scope — so a specific-region view still lists every
+      VM). The default region is byte-identical to today's configured census (no us-east-1 Lambda regression).
+- [x] [UI] P1. **Region dropdown** — a new `FilterSelect` populated dynamically from `/deployments/regions`, default
+      `asia-northeast1`, wired to the server-side `region` param (in the `load` deps). Makes the narrowing honest + the
+      other regions reachable from the cockpit (they are currently invisible — no region control exists).
+- [x] [UI] P1. **Status filter defaults to `running`** (live-first) — the dropdown AND the status chips must REFLECT the
+      active default (show `running` selected, not `all`); switching to `all` reveals the historical/completed rows.
+      Verify EVERY filter dropdown's displayed value mirrors its active filter (mode / cloud / status / asset-group /
+      kind / launched-by / region).
+- [x] [UI] P1. **Semantic default sort hierarchy** (net-new; replaces the running→leaked→rest sort) — primary STATUS
+      band (running / active above; completed / stale / stopped below); secondary KIND band (long-running first: VM →
+      Cloud Run / ECS services → then one-time / scheduled: Cloud Run jobs → schedulers → functions / lambdas → orphaned
+      disk / static-IP last); tertiary recency (last-run desc). This composite is the DEFAULT ordering.
+- [x] [UI] P1. **Every column sortable** — click any column header to sort by it (asc/desc toggle + a direction
+      indicator); an active column-sort overrides the default hierarchy, and clearing it returns to the hierarchy.
+      Per-column sort-key extractors (Mode / Kind / Target / Cloud / Launched-by / Service / Asset-group / Status /
+      Last-run / Progress / Cost / Exit / Resources / Health).
+- [x] [UI] P2. **`pw:L2` regression specs** — region dropdown present + default asia-northeast1 + a selection reloads;
+      status default `running` reflected in the dropdown + chips + switching to `all`; default hierarchy order (a
+      running VM sorts above a completed Cloud Run job); a column-header click re-sorts.
+- [x] [DATA] P1. **Reconciliation verdict recorded** — the per-region-exact result + the two honest gaps
+      (region-narrowing, VM registry-vs-live) captured in the Progress Log and surfaced to the operator. (2026-07-10)
+
+### Live-review fixes + polish (operator chat items, 2026-07-10)
+
+> The remaining items the operator raised in-session during live review — captured here as trackable todos (detail in
+> the Progress Log). All done + verified; both repos QG-GREEN + 16/16 pw:L2. **All uncommitted — awaiting go-ahead.**
+
+- [x] [UI] P1. **Service-health render crash fix (browser console errors)** — `compositeHealthLabel` did an unguarded
+      `HEALTH_META[h]` lookup and crashed all 14 Cloud Run / ECS service rows on the `ServiceHealth` verdicts (`serving`
+      / `scaled-to-zero` / `degraded`) the live inventory folds into `composite_health_status`. Fix: a defensive
+      `healthMeta` fallback (any unknown verdict → gray chip, never a white-screen — the durable cure, not a per-value
+      patch) + `HEALTH_META` extended with the service verdicts + `VmHealth | ServiceHealth` widening. Mock now
+      exercises a real `serving`+`degraded` service; `pw:L2` #D.3 guards it. (2026-07-10)
+- [x] [UI] P2. **In-page "quick guide" help** — `DeploymentsHelpButton` (HelpCircle next to Refresh) opens a modal
+      (reuses `ui/dialog`) explaining the page + every column + the launched-by / health chip legends, kept short and
+      scannable; emoji dots (no import cycle, clears the no-hardcoded-colours gate). `pw:L2` guard on open + legend
+      content. (2026-07-10)
+- [x] [UI] P1. **Filter option-gap fixes** — audited every filter (`scratchpad/filter_audit.py`): engine correct, but
+      Mode was missing `NONE` (187 infra rows incl. every scheduler) + `EXPERIMENT`, Status was missing `stopped` (48) +
+      `pending` (15), and a hardcoded URL whitelist silently rejected NONE/EXPERIMENT (snap-back). Fixed all three; the
+      whitelist now derives from `MODE_OPTIONS` (drift-proof). `pw:L2` guards Mode-sticks + Status-options. (2026-07-10)
+- [x] [BACKEND] P1. **AWS default region = Tokyo (ap-northeast-1)** — verified via `ec2 describe-instances` that the
+      planning VM (`agent-orchestrator-vm-1`, EIP 13.113.200.22) + the human-planning VM run in ap-northeast-1;
+      `_CONFIGURED_AWS_REGIONS` narrowed `("ap-northeast-1","us-east-1")` → `("ap-northeast-1",)` so the default mirrors
+      where the estate runs (2 EC2 + 3 ECS, no lambdas). us-east-1 Lambda estate reachable via a US-region pick or the
+      all-regions sweep. Live-verified. (2026-07-10)
 
 ## Progress Log
 
@@ -360,6 +452,99 @@ full-census state field is already present, and the per-row cost column already 
     `_compute_inventory` (two bounded aggregated_list reads) → `build_inventory` → both VM item builders. 7 detector + 2
     integration tests. **Next:** the red unreleased-resources UI badge (#5, pw:L2), then the remaining P1 backend
     (multi-region, orphaned first-class rows, Cloud Scheduler census) + the UI units.
+- 2026-07-10 — **PLAN COMPLETE (all 17 todos, LOCAL / uncommitted — awaiting operator live-review + go-ahead).** The
+  remaining P1/P2 backend (#6/#7/#9/#10/#11/#8/#12), the DEVOPS launcher label (#13), the whole UI phase
+  (#5/#14/#15/#16/#17), and the REVIEW (#3) all landed. Evidence:
+  - **Backend (deployment-api)** — **full QG GREEN** (`bash scripts/quality-gates.sh`, 133s; codex compliance 5/5 within
+    tolerance). All 8 WS-D items implemented; the only ratchet friction was one empty-list `.get("x", [])` fallback in
+    the scheduler/audit (fixed → `.get("x") or []`).
+  - **DEVOPS #13** — `managed-by=deployment-service` GCP `--labels` + AWS tag added CENTRALLY in the two shared launcher
+    libs (`launcher_common.sh` `lc_gcloud_create`, `aws_ec2_launch_lib.sh`) so all ~80 launchers inherit it, no per-copy
+    edit. Makes provenance drift-proof (a resource WITHOUT the label is provably ad-hoc).
+  - **UI (deployment-ui)** — **UI QG GREEN** (tsc + eslint + vitest + build, 20s) + **8/8 pw:L2 specs GREEN**
+    (`tests/smoke/deployments-wsd.spec.ts`). Delivered: Launched-by column + provenance chips + `launched_by` filter
+    (adhoc/unmanaged isolation) (#14); red leaked-resources badge with inferred-cost label (#5);
+    DISK/STATIC_IP/SCHEDULER kind chips + OVERDUE/on-time/paused health chips + Cloud-Scheduler chip (#15);
+    running→leaked→rest sort (#16); estate stranded-cost total marked "est./refresh" (#17); Lambda last-MODIFIED cell +
+    tooltip (#10 UI); the `DeploymentDetail` popover's run-history timeline + object-delta hint + `?tab=consolidators`
+    deep-link (#11/#12 UI) + unreleased-resources list. TS mirror + mock-api WS-D fixtures added.
+  - **REVIEW #3** — parity holds BY CONSTRUCTION: `launched_by=adhoc` (running) == `/api/fleet/reconciliation` UNKNOWN
+    (both compute `running − registered − CLOUD_RUN_JOBS − control-plane` via the SAME hoisted `is_control_plane_vm`
+    primitive reconciliation now imports); a registry-backed VM stays `deployment-api` even when the control plane shows
+    it `dead` (never fabricated adhoc); leaked-boot-disk defers to `/api/fleet/orphans` (`_leaked_resources` excludes
+    the boot disk — no re-detect). No duplicate surfaces built.
+  - **NOTHING COMMITTED** — all changes are in the slot-5 working tree across `deployment-api`, `deployment-service`,
+    `deployment-ui`. Next operator step: start deployment-api LIVE (`CLOUD_MOCK_MODE=false`, ADC) + deployment-ui →
+    review real values → ship on go-ahead.
+
+- 2026-07-10 — **LIVE-REVIEW FIX (still uncommitted): browser-console crash on service rows.** Operator's live review of
+  `:5184` surfaced a React render crash. Root cause: the live inventory folds VM + scheduler + **service** health
+  vocabularies into the single `composite_health_status` field, but `compositeHealthLabel` (Deployments.tsx) did an
+  **unguarded** `HEALTH_META[h]` lookup — the `ServiceHealth`-only verdicts `serving`/`scaled-to-zero`/`degraded` (14
+  live Cloud Run/ECS rows) weren't map keys → `undefined.label` → the whole list white-screened. tsc + pw:L2 were green
+  because the mock fixtures only ever put VM verdicts in that field (live-only shape, never exercised). Fix: (1) durable
+  — a `healthMeta()` helper with the same `?? gray-fallback` every other lens lookup
+  (`kindMeta`/`MODE_TONE`/`statusTone`/ `LaunchedByBadge`) already uses, so ANY future unknown verdict degrades to a
+  gray chip instead of crashing (not a per-value hardcode); (2) correctness — added the three known service verdicts to
+  `HEALTH_META` for proper colors + widened `composite_health_status` to `VmHealth | ServiceHealth`; (3) regression
+  guard — mock now tags a real `serving` + `degraded` service, new `#D.3` pw:L2 asserts they render. Verified: UI QG
+  GREEN (tsc/eslint/85 unit/build)
+  - **9/9** pw:L2. Files: `deployment-ui/src/pages/Deployments.tsx`, `src/api/deploymentApi.ts`, `src/lib/mock-api.ts`,
+    `tests/smoke/deployments-wsd.spec.ts`. Ships with the rest on go-ahead.
+
+- 2026-07-10 — **UX add (uncommitted): in-page "quick guide" help.** Operator asked for a short, readable explainer of
+  the page for non-authors. Added `deployment-ui/src/components/DeploymentsHelp.tsx` — a self-contained
+  `<DeploymentsHelpButton />` (HelpCircle) placed next to Refresh in the Deployments header; opens a modal (reusing the
+  existing `ui/dialog` primitive) with a scannable guide: one-line "what is this", every column's meaning, the
+  `launched_by` provenance legend (deployment-api / control-plane / adhoc / unknown), the health verdict legend grouped
+  by tone, and a "what to act on" list (stranded cost / adhoc / red health / overdue). Kept short on purpose; legends
+  use emoji dots (no import cycle, clears the no-hardcoded-colours gate). Regression spec added (help button opens →
+  legend content asserted). Verified: UI QG GREEN + **10/10** pw:L2. Files: `DeploymentsHelp.tsx` (new),
+  `src/pages/Deployments.tsx` (import + header button), `tests/smoke/deployments-wsd.spec.ts`.
+
+- 2026-07-10 — **LIVE-REVIEW FIX (uncommitted): Mode + Status filters had incomplete option lists.** Operator flagged
+  filters "not working." Audited every filter against live `:8005` (`scratchpad/filter_audit.py`): the filter ENGINE is
+  correct — every server-side invariant holds (cloud=GCP→all GCP, status=X→all X, umbrella=X→all X) and the cloud
+  partition is exact (GCP 3825 + AWS 11 = 3836). The bug was three option-list gaps: (1) **Mode** dropdown missing
+  `NONE` (187 rows = every scheduler + all services/functions/disk/ECS — the whole infra umbrella, unreachable by Mode)
+  and `EXPERIMENT` (2); (2) a **hardcoded URL whitelist** `["LIVE","BATCH","PAPER"].includes(urlMode)` that REJECTED
+  `NONE`/`EXPERIMENT` even if added (selection snapped back to "all") — the same drift class the operator warned about,
+  now derived from `MODE_OPTIONS` so it can't drift again; (3) **Status** dropdown missing `stopped` (48 = orphaned disk
+  - 42 stopped schedulers + 3 ECS) and `pending` (15). Fixed all three + 2 pw:L2 guards (Mode NONE/EXPERIMENT sticks;
+    Status stopped/pending present). cloud / launched_by / kind / asset_group / status-chips all verified complete. UI
+    QG GREEN + **12/12** pw:L2. Files: `deployment-ui/src/pages/Deployments.tsx`, `tests/smoke/deployments-wsd.spec.ts`.
+
+- 2026-07-10 — **Region reconciliation + cockpit UX hierarchy SHIPPED-LOCAL (uncommitted).** All six follow-up todos
+  above done + verified live on `:8005`/`:5184`; both repos QG-GREEN + **16/16** pw:L2.
+  - **Region selector (API)** — `?region=` on `/deployments/inventory` (`_normalize_region_scope` →
+    `_gcp_regions_for_scope` / `_aws_regions_for_scope`; default region byte-identical to the configured census;
+    specific region → that GCP region \+ `_GCP_TO_AWS_REGION` equivalent; `all` → sweep) + region-scoped cache key; new
+    `GET /deployments/regions` (43 dynamic GCP regions, default pinned). **Live proof**: asia-northeast1 → FN 2 / SVC 12
+    / SCHED 170; europe-west1 → FN 1 / SVC 4 / LAMBDA 8 (AWS eu-west-1 equiv); all → FN 4 / SVC 25 / JOB 129 / SCHED 176
+    / LAMBDA 18 — the ~50 previously invisible multi-region resources are now reachable.
+  - **Region dropdown (UI)** — dynamic `FilterSelect` from `/regions`, default asia-northeast1, server-side `region`
+    param.
+  - **Status default = running (UI)** — live-first; dropdown + chips reflect it via an explicit `all` sentinel (no
+    snap-back); the default view is now **122 running rows** (VM 12 = the real live instances) instead of 3,836, which
+    also cures the perceived filter lag (the table is unvirtualised — 30× fewer rows).
+  - **Semantic default sort + sortable columns (UI)** — `defaultHierarchyCmp` = STATUS band (running→completed) → KIND
+    band (VM → services → jobs → scheduled → functions/lambdas → orphaned) → recency; every non-Controls column header
+    click-sorts (asc → desc → back to hierarchy, with a ▲/▼ indicator), overriding the hierarchy.
+  - **Filter audit** — engine verified correct (`scratchpad/filter_audit.py`); the earlier Mode(NONE/EXPERIMENT) +
+    Status(stopped/pending) option gaps + the URL-whitelist drift were fixed; launched_by/kind/asset_group confirmed
+    working (the "slow" perception was the 3,836-row unvirtualised render, now mooted by the running default).
+  - Files: `deployment-api/deployment_api/routes/deployments_inventory.py`, `tests/unit/test_multi_region_census.py`;
+    `deployment-ui/src/pages/Deployments.tsx`, `src/api/deploymentApi.ts`, `src/lib/mock-api.ts`,
+    `src/pages/Deployments.test.tsx`, `tests/smoke/deployments-wsd.spec.ts`. **Still uncommitted — awaiting go-ahead.**
+
+- 2026-07-10 — **AWS default region → Tokyo (ap-northeast-1) [operator correction].** Verified via
+  `ec2 describe-instances` that BOTH orchestrator VMs run in ap-northeast-1: the planning VM `agent-orchestrator-vm-1`
+  (EIP 13.113.200.22, `i-0c9b283b31d6b5ca7`) + the human-planning VM `agent-orch-human-planning-vm`
+  (`i-0dd9812a96cdda5dc`). So `_CONFIGURED_AWS_REGIONS` narrowed from `("ap-northeast-1","us-east-1")` →
+  `("ap-northeast-1",)` — the Tokyo default now mirrors where the planning VM + AWS EC2/ECS actually run (default AWS
+  view = 2 EC2 + 3 ECS, no lambdas). The us-east-1 Lambda estate (6) is reachable via a US-region selection (GCP
+  us-central1/us-east1 → AWS us-east-1) or the all-regions sweep, not the Tokyo default. Live-verified + deployment-api
+  QG GREEN. Uncommitted.
 
 ### Hand-off to the consolidator-page agent (2026-07-10)
 
