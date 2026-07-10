@@ -148,3 +148,16 @@ consolidator+writer combined), ruff clean.
   stash-based before/after test run: the new regression test fails on the pre-fix code (reproduces 2 duplicate rows) and
   passes on the fix (collapses to 1). Full test suite green, ruff clean, pushed to `live-defi-rollout`. The fix lives in
   the shared consolidator, so it protects every asset group's bucket on its next 1-minute cycle, not just defi.
+- 2026-07-10 (later still): **Deployed to production and verified end-to-end against real live data — CLOSED.** The fix
+  required a real rollout, not just a merge: `market-tick-data-service` (the image the defi consolidator's Cloud Run job
+  runs) pins its `unified-trading-library` base image by digest (same class of staleness gap independently found and
+  fixed for `instruments-service` earlier this session). Rebuilt UTL (`:latest` digest `sha256:8be3bfd9...`), then used
+  the existing fleet tool (`unified-trading-pm/scripts/propagation/add-dockerfile-digest-arg.py`) to fan the fresh
+  digest out to all 16 dependent repos in one pass (not just MTDS — this closed the same latent staleness gap
+  fleet-wide). Rebuilt MTDS, force-updated the Cloud Run job (`gcloud run jobs update ... --image=...:latest`, since
+  Cloud Run Jobs pin a resolved digest at deploy time, not per-execution), then **executed the job for real**
+  (`uts-prod-manifest-consolidator-market-data-defi-4wk4k`, succeeded in 43.76s). Direct post-execution read of the live
+  `availability_index.parquet` (14,023,022 rows) confirms **zero genuine (identical-key-and-status) duplicate rows
+  remain**. Bonus: this same digest-staleness investigation also unblocked instruments-service's stuck LDR→main
+  promotion pipeline (all checks green, auto-merged) — the original `@LIN`/`@INV` CeFi catalog fix from earlier this
+  session can now finally reach production too.

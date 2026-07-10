@@ -88,9 +88,10 @@ source: cost_observability_ui_2026_07_08.md
       Reconciled onto the concurrently-landed gross/credit-columns commit (`f27e40f`) touching the same 4 files (stash +
       ff-pull + manual 3-way resolve, both features kept). tsc/ESLint/ vitest (914 passed) all green. pw:L2 ✓ |
       regression: tests/smoke/cost-observability.spec.ts ("By bucket shows
-      storage/class-split/$-per-GB columns formatted in GB, not bytes" — asserts the Storage cell reads "18,500 GB" not
-      a raw byte count, the class-split cell lists "Standard", the $/GB
-      cell suffixes "/GB", and all three columns disappear under "By resource").
+      storage/class-split/$-per-GB
+      columns formatted in GB, not bytes" — asserts the Storage cell reads "18,500 GB" not a raw byte count, the
+      class-split cell lists "Standard", the $/GB cell suffixes "/GB", and all three columns disappear under "By
+      resource").
 - [x] ✅ [UI] P2. **Resource / waste columns** (dimension = resource) — deployment-ui@`047494b`. Added
       `machine_type`/`vcpu`/`memory_gb` + `is_idle`/`waste_kind` to `CostBreakdownRow` (mirrors the backend's
       resource-dimension fields). `BreakdownPanel` renders, resource-dimension-only: a **Machine** column (e.g.
@@ -141,3 +142,25 @@ source: cost_observability_ui_2026_07_08.md
       rows never show under the new header while a slowed fetch is in flight) and "a stale slower response never
       clobbers a fresher one after a rapid dimension switch" (asserts a late-resolving stale response never overwrites a
       fresher one). Both verified to FAIL without the fix before being kept.
+- [x] ✅ [UI] P3. **Per-column dropdown filters + larger resize grip** (operator request 2026-07-10, follow-up to the
+      single search box, which only matched the pre-aggregated rows already shipped). Replaced the one search `<input>`
+      with a per-column filter row in the table header: one `<select>` per categorical column (Label/dimension, Detail,
+      Purchase, Storage class, Machine), each populated with the DISTINCT values PRESENT in the fetched rows (dynamic,
+      not a fixed list) via the same `sortValue` accessor the header sorts by — so a single ordered column model is the
+      SSOT for the header row, the filter row, and the colSpan maths (they can't drift). Filters AND-combine, gate on
+      `!stale` (no stale options leak during refetch), auto-drop a selection that no longer exists after a dimension
+      switch, and a "Clear filters (N)" button appears only when any are active. Also enlarged the breakdown resize grip
+      (6px→12px scoped `::-webkit-scrollbar` + a painted diagonal `::-webkit-resizer`, cyan-on-hover with a light-theme
+      override) so the drag handle is easy to see and grab — deployment-ui@`1b6531d`. tsc/ESLint/vitest (917 passed; 4
+      assertions tightened to `tbody`-scope now that distinct values also render as dropdown options) all green. pw:L2 ✓
+      (17/17) | regression: tests/smoke/cost-observability.spec.ts "By-label dimension: label-key selector + per-column
+      filter + pagination + resizable container" (selects a value in the dynamic Label dropdown → table narrows to the
+      matching row → Clear filters restores the paginated set). NOTE: this is client-side filtering of the cached,
+      pre-aggregated rows; richer server-side faceted filtering over a fuller cached fact set is entangled with the
+      deployment-api-wide caching redesign (Redis/DuckDB) and deferred to a dedicated session.
+- [x] ✅ [BACKEND] P3. **GitHub billing number-check** (operator "verify the github billing is actually correct",
+      2026-07-10). Reconciled `fetch_github_billing()` output against the raw GitHub Enhanced Billing API for the live
+      30-day window (same Secret-Manager token, never printed): records 1,469 == 1,469; **NET $1,332.55 == $1,332.55**;
+      gross $1,430.97 == $1,430.97; credit −$98.42 == −$98.42 — exact to the cent. Confirms the mapping (`cost`=gross,
+      `credit`=net−gross, net=cost+credit) and the `[start,end)` window slice. Context: June full-month net $1,441,
+      July-to-date $221. The displayed GitHub figure is verified correct — no code change (provider already shipped).
