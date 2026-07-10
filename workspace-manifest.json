@@ -726,7 +726,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -756,10 +756,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 5,
-        "qg_red_reason": null,
         "warn_file_count": 7,
-        "coverage_pct": 91.37
+        "coverage_pct": 90.61,
+        "large_file_count": 5,
+        "qg_red_reason": "ruff"
       }
     },
     "market-data-processing-service": {
@@ -877,10 +877,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "coverage_pct": 83.04,
-        "warn_file_count": 35,
-        "qg_red_reason": null
+        "warn_file_count": 34,
+        "coverage_pct": 83.07,
+        "large_file_count": 1,
+        "qg_red_reason": "pytest"
       }
     },
     "ml-service": {
@@ -1206,8 +1206,8 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 96.13,
-        "warn_file_count": 28,
+        "warn_file_count": 29,
+        "coverage_pct": 96.15,
         "large_file_count": 24,
         "qg_red_reason": null
       }
@@ -1258,10 +1258,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "large_file_count": 5,
         "warn_file_count": 20,
-        "coverage_pct": 89.76
+        "coverage_pct": 89.72,
+        "large_file_count": 5,
+        "qg_red_reason": null
       }
     },
     "unified-trading-pm": {
