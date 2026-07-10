@@ -758,3 +758,10 @@ OKX-SPOT venue + Kraken FI_/FF_ marker; COINBASE-CDE split + new adapter + live 
 archetype registry CEFI cells; MVP scope (COINBASE trades-only) + D10 capabilities; UAC two-layer redesign; mvp_mode
 universal build (research-first); Coinbase bare-name migration dispatch. Script:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/instruments-audit-decisions-execution-wf_1e191185-1c2.js`
+
+`wf_60ecfd13-752` (`instruments-audit-p0-wave`, dispatched 2026-07-10, operator: "finish all fixes now") — the 6
+remaining Headline P0s not covered by either in-flight workflow: Turbo API 0/0 bug, CeFi monotonicity guard alerting
+(live incident), is-daily-enum cloud crash, the 59-bug smoketest master record (GMX V2/empty-feed protocols decided:
+accept documented-empty, don't build new coverage), the Instruments Completion Tracker (33/37 open, real partial
+progress expected honest outcome), and Layer-1 tradfi's `tradfi_v9_stage1_finish` block. Script:
+`/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/instruments-audit-p0-wave-wf_60ecfd13-752.js`
