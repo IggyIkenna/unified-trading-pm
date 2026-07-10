@@ -362,8 +362,15 @@ source: deployment_observability_expansion_2026_07_08.md
       concurrently-shipped sibling census todos (CLOUD_FUNCTION `a025563`, ECS/Lambda field surfacing `e5f2ad4`) —
       genuine same-file conflict (both call sites append to `_compute_inventory`'s GCP branch), resolved by keeping both
       additions (no logical overlap).
-- [ ] [REVIEW] P2. Gate `/freshness` fetches to VM kinds only (services use error-rate health, not manifest freshness) —
-      the mock currently fetches freshness for all LIVE rows.
+- [x] ✅ [REVIEW] P2. Gate `/freshness` fetches to VM kinds only (services use error-rate health, not manifest
+      freshness) — the cockpit fetched `/deployments/{id}/freshness` for every LIVE-umbrella row. **Backend verified
+      correct** (in-scope): `compute_freshness` already returns `liveness_only` for `ShardResponsibilityKind.NONE`
+      (`deployment_freshness.py`), so a non-VM kind never gets a fabricated fresh/stale — no backend change needed. **UI
+      defensively gated** — **deployment-ui@e9b77ac (quickmerged)**: `Cockpit.tsx` now filters the freshness fetch to
+      `kind === "VM"` (only VMs are data producers with a manifest). tsc + eslint clean; the 2 existing cockpit
+      freshness specs stay green (no regression — LIVE rows are ~always VMs). Honest scope note: no dedicated
+      exclusion-regression was added — the in-app mock has no non-VM LIVE fixture and doesn't expose fetch-counting, so
+      the gate is validated as defensive (backend already covers the edge case) rather than via a new pw:L2.
 - [x] ✅ [BACKEND] P1. **Wire `stalled` + `workload-dead` into `_composite_health_status`** (`deployment-api`,
       `deployments_inventory.py`) — both prerequisite signals now exist: `object_delta` via
       `deployment_freshness.compute_freshness()` / `_object_delta_for_bucket()` (per-asset*group manifest lookup,
