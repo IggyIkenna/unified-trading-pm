@@ -101,38 +101,73 @@ cloud, invisible in the deployments tab:
   `codex/04-architecture/shard-level-failure-isolation.md`.
 - UI testing layers: `codex/06-coding-standards/ui-testing-layers.md`.
 
+## Existing surfaces to REUSE — audited 2026-07-10 (do NOT rebuild these)
+
+A live audit of the deployment-ui cockpit found **three already-built surfaces this plan overlaps**. Extend/reuse them;
+building parallel duplicates is review-blocking.
+
+1. **`FleetOrphans` (`GET /api/fleet/orphans`, `FleetOrphansContent`, Fleet tab)** — already renders stopped/terminated
+   VMs with **boot-disk GB + $/mo**, a **reap verdict** (`reap`/`keep_within_grace`/`keep_not_ephemeral`/
+   `keep_retained`/`keep_no_timestamp`), rollup cards (**Idle disk $/mo**, **Reclaimable $/mo**), and **bulk-reap
+   (dry-run first) + per-instance delete** (`POST /api/fleet/reap`, `DELETE /api/fleet/instances/{name}`). This ALREADY
+   covers most of the leaked-boot-disk cost catch. **Genuine gaps to target:** data disks / regional PDs (only the boot
+   disk today), **static IPs** (none), **truly-orphaned disks/IPs with no owning VM** (it's VM-keyed), and surfacing the
+   leak as a **red badge on the Deployments inventory row + the running→leaked→rest sort** (today it's a Fleet-tab-only
+   panel).
+2. **Fleet reconciliation (`GET /api/fleet/reconciliation`, FleetTab cards)** — already detects unmanaged VMs:
+   "**Unknown (running, unregistered)**" (= `launched_by=adhoc`) + "Expected-missing (registered, not running)",
+   unioning registry vs. live GCE cross-cloud. The full-census + `launched_by` work below must **reuse this union as the
+   provenance source**, not build a second one; the "unmanaged" filter must agree with reconciliation's `unknown` count.
+3. **Consolidators tab (`GET /api/health/consolidator`, `ConsolidatorsTab`)** — per-asset_group manifest-index freshness
+   / backlog / last-run already live in THIS cockpit. The job→manifest bridge deep-links here (`?tab=consolidators`); it
+   is also the local peer of the consolidator-page hand-off.
+
+**Contract note:** `DeploymentItem` is a **LOCAL deployment-api `BaseModel`** (`deployments_inventory.py`, marked
+`# CORRECT-LOCAL`), **not** a UAC type — new fields go on that model + its TS mirror
+`deployment-ui/src/api/ deploymentApi.ts`. `labels`, `health_status` (raw GCE `RUNNING`/`TERMINATED`), `boot_disk_name`,
+`region`, and `cost_per_day_usd` **already exist** on the item (so `managed_by_label` is a trivial `labels` read, the
+full-census state field is already present, and the per-row cost column already renders).
+
 ## Todos
 
 ### Full estate + `launched_by` provenance (see everything + who launched it)
 
 - [ ] [BACKEND] P0. **Full GCE VM census** — union the deployment registry with the live GCE aggregated-list so EVERY
       live GCE instance gets a row, not just registry-tracked ones. Un-registered instances become `unmanaged` rows
-      carrying their live GCE state (`RUNNING`/`STOPPED`/`TERMINATED`). Reuses `get_vm_instance_details` (already
-      fetched every census cycle — no new API call); the registry entry, when present, enriches the row
-      (task/mode/heartbeat/ D.1 metrics) exactly as today. Surfaces the 3 unmanaged VMs found 2026-07-09.
-- [ ] [BACKEND] P0. **`launched_by` provenance field** on `DeploymentItem` (UAC) — `deployment-api` when the resource
-      has a registry entry, else `adhoc`. Wire for GCE VMs + AWS EC2 (already full census — cross-ref the registry) +
-      Cloud Run jobs (registry-hint match) + services/functions. Optional `managed_by_label` echo once the launcher
-      label standardization (below) lands, so drift (label-present-but-no-registry, or vice-versa) is detectable.
-- [ ] [REVIEW] P1. **Confirm the full-census + provenance is consistent across clouds** — AWS EC2 is already a full
-      `describe_instances` census, GCP VMs become one here; Cloud Run/services/functions/ECS/Lambda are already full
-      censuses. Verify every kind resolves `launched_by` honestly (never a fabricated `deployment-api`), and a
-      registry-only archived VM with no live cloud instance still classifies `dead` (not `adhoc`).
+      carrying their live GCE state via the EXISTING `health_status` field (`RUNNING`/`STOPPED`/`TERMINATED`). Reuses
+      `get_vm_instance_details` (already fetched every census cycle — no new API call); the registry entry, when
+      present, enriches the row (task/mode/heartbeat/D.1 metrics) exactly as today. **Reuse the reconciliation union**
+      (`GET /api/fleet/reconciliation` already computes registry-vs-live "unknown"/"expected-missing") as the same
+      source — don't build a second union. Surfaces the 3 unmanaged VMs found 2026-07-09.
+- [ ] [BACKEND] P0. **`launched_by` provenance field** on the LOCAL `DeploymentItem` BaseModel (+ its TS mirror
+      `deployment-ui/src/api/deploymentApi.ts` — NOT UAC) — `deployment-api` when the resource has a registry entry,
+      else `adhoc`, sourced from the SAME registry-vs-live union reconciliation uses (a VM in reconciliation's `unknown`
+      set → `adhoc`). Wire for GCE VMs + AWS EC2 (already full census — cross-ref the registry) + Cloud Run jobs
+      (registry-hint match) + services/functions. `managed_by_label` is a trivial echo of the already-present `labels`
+      field once launcher-label standardization (below) lands, so drift (label-present-but-no-registry, or vice-versa)
+      is detectable.
+- [ ] [REVIEW] P1. **Confirm consistency across clouds AND no-duplication of existing surfaces** — AWS EC2 is already a
+      full `describe_instances` census, GCP VMs become one here; Cloud Run/services/functions/ECS/Lambda are already
+      full censuses. Verify every kind resolves `launched_by` honestly (never a fabricated `deployment-api`), and a
+      registry-only archived VM with no live cloud instance still classifies `dead` (not `adhoc`). **Also verify reuse,
+      not rebuild:** the census union == the reconciliation union (`/api/fleet/reconciliation` `unknown` count ==
+      Deployments `launched_by=adhoc` count), and leaked-boot-disk detection defers to `/api/fleet/orphans` rather than
+      re-detecting it (a discrepancy is a review-blocking bug, not a display quirk).
 
 ### 🔴 Leaked / unreleased resources on non-running VMs (the direct cost catch)
 
-- [ ] [BACKEND] P0. **Leaked-resource detection** — for any VM NOT in `RUNNING` state (terminated/stopped/dead), detect
-      attached-but-not-released resources: (a) persistent disks that still exist (boot + data disks — reuse
-      `get_disk_details`/`list_unattached_disk_names`), (b) reserved **static IPs** (a new `addresses.aggregated_list`
-      read). Surface `has_unreleased_resources: bool` +
-      `unreleased_resources: list[{type, name, size_gb, disk_type,     est_monthly_usd}]` on `DeploymentItem`. Honest
-      absence when the read fails (never a false "clean").
-- [ ] [UI] P0. **Red "Unreleased resources" column/badge** on non-running VMs listing the leaked disks/IPs (+ est.
-      monthly cost); click → the detail popover shows each resource with the exact console link + release guidance.
-      `pw:L2` regression: a stopped VM with a lingering disk shows the red badge; a cleanly-torn-down VM does not.
-- [ ] [UI] P0. **Sort order — running first, then leaked, then the rest.** Default cockpit ordering: `RUNNING` VMs →
-      non-running-WITH-unreleased-resources (the red rows, so they're spotted immediately) → everything else (clean
-      terminated/archived). `pw:L2` regression pins the three-band order.
+- [ ] [BACKEND] P0. **Leaked-resource detection — the gaps FleetOrphans does NOT cover.** The boot-disk-on-stopped-VM
+      leak + $/mo + reap is ALREADY done by `GET /api/fleet/orphans` (reuse it, don't re-detect boot disks). Add the
+      missing dimensions: (a) **data disks / regional PDs** still attached to a non-`RUNNING` VM (orphans shows boot
+      only — reuse `get_disk_details`/`list_unattached_disk_names`), (b) reserved **static IPs** (a new
+      `addresses.aggregated_list` read). Surface `has_unreleased_resources: bool` +
+      `unreleased_resources: list[{type, name, size_gb, disk_type, est_monthly_usd}]` on the local `DeploymentItem`.
+      Honest absence when the read fails (never a false "clean").
+- [ ] [UI] P0. **Red "Unreleased resources" badge ON the Deployments inventory row** (the net-new vs. the Fleet-tab
+      orphans panel) — non-running VMs carrying leaked disks/IPs show a red badge (+ est. monthly cost) right where the
+      operator scans the fleet; click → the detail popover lists each resource with the exact console link + release
+      guidance (link the existing orphans reap/delete action where the VM overlaps). `pw:L2` regression: a stopped VM
+      with a lingering disk shows the red badge; a cleanly-torn-down VM does not.
 
 ### Region + kind completeness (nothing running is invisible)
 
@@ -140,9 +175,10 @@ cloud, invisible in the deployments tab:
       today, and AWS only one region; a resource in any other region is invisible. Fan the censuses out across every
       region we actually use (discover dynamically, or a config'd region set) with per-region honest degradation.
 - [ ] [BACKEND] P1. **Orphaned disks + unattached static IPs as first-class rows** — a persistent disk or reserved IP
-      with NO owning VM at all (truly orphaned) still costs money and has no VM row to hang off. Emit them as their own
-      inventory rows (`kind=DISK`/`kind=STATIC_IP`, `launched_by=adhoc/unknown`) with size/type + est. cost. Reuses the
-      `list_unattached_disk_names` code already in `vm_utils.py`.
+      with NO owning VM at all (truly orphaned) still costs money and is INVISIBLE in FleetOrphans (which is VM-keyed).
+      Emit them as their own inventory rows (`kind=DISK`/`kind=STATIC_IP`, `launched_by=adhoc/unknown`) with size/type +
+      est. cost. Reuses the `list_unattached_disk_names` code already in `vm_utils.py`. (New kinds → the UI-registration
+      todo below must register them or they render un-iconed/un-filterable.)
 - [ ] [BACKEND] P2. **Completeness audit** — enumerate every billable running resource per cloud, existence-based
       (credits-agnostic): GKE clusters/node-pools, Cloud SQL, Dataflow/Composer, AWS RDS / EBS volumes / NAT gateways /
       Elastic IPs. Diff against the tab; add the materially-costly missing kinds as census rows (or file the rest as a
@@ -181,10 +217,26 @@ cloud, invisible in the deployments tab:
 
 ### UI surfacing
 
-- [ ] [UI] P1. **"Launched by" column + "unmanaged" filter** — a one-click view of every ad-hoc resource so stranded
+- [ ] [UI] P1. **"Launched by" column + "unmanaged" filter** — add `launched_by` to `UNIFIED_COLUMNS` and a new filter
+      mirroring the existing client-side `kind` filter, for a one-click view of every ad-hoc resource so stranded
       compute is immediately findable. `pw:L2` regression: the filter isolates `launched_by=adhoc` rows.
-- [ ] [UI] P2. **Per-row cost surfacing** — est. monthly $ for the resource + its leaked disks/IPs, and an estate-total
-      "stranded cost" number, so the money at stake is visible at a glance. `pw:L2` on the cost cell rendering.
+- [ ] [UI] P1. **Render the new signals + kinds the census now emits (nothing new renders un-styled).** Three UI wirings
+      the backend todos above imply but that have no home today: (a) **register the new kinds** — add `DISK`,
+      `STATIC_IP`, and the Cloud-Scheduler kind to `KIND_META` (icon/label/tone) + the `kind` filter dropdown, else they
+      render un-iconed and can't be filtered; (b) **OVERDUE / fired-on-time indicator on job rows** — job rows show NO
+      health chip today (the `Health` column is null for non-service/non-live-VM kinds), so slot the scheduled-job
+      on-time verdict there (or a dedicated schedule chip); (c) **job run-history timeline** in the `DeploymentDetail`
+      popover from the last-N executions the detail vector now carries. `pw:L2` on each: a DISK row renders its kind
+      chip; an overdue job shows the red OVERDUE chip; the detail popover lists >1 execution.
+- [ ] [UI] P1. **Default sort — running → leaked → the rest (net-new; the table has no client-side sort today).** The
+      inventory renders items in server order currently; add a client-side comparator in `DeploymentsContent`/
+      `DeploymentMatrix`: `RUNNING` → non-running-WITH-unreleased-resources (red rows spotted immediately, per operator
+      ask) → everything else. `pw:L2` regression pins the three-band order.
+- [ ] [UI] P2. **Leaked-cost surfacing (per-row cost already renders)** — the `Cost/day` column off `cost_per_day_usd`
+      already exists, so the net-new is: the **leaked disk/IP monthly $** on the red unreleased-resources badge, and an
+      **estate-total "stranded cost"** number (sum of leaked + orphaned rows) so the money at stake is visible at a
+      glance. Reuse the orphans endpoint's `monthly_idle_usd`/`monthly_reapable_usd` rollup where the VM overlaps.
+      `pw:L2` on the stranded-total + leaked-cost cell rendering.
 
 ## Progress Log
 
@@ -208,6 +260,21 @@ cloud, invisible in the deployments tab:
     Lambda `last_run_at` honesty fix, job run-history in detail popover, job→manifest bridge (link+hint only). The
     deployments page owns liveness (fired/healthy/on-time); "did the run produce the data" stays authoritative on the
     consolidator/manifest surface (hand-off below), linked not duplicated.
+- 2026-07-10 — **End-to-end audit vs. the live UI** (operator ask: "is the plan covered end-to-end, esp. the UI
+  surface"). Read the actual cockpit (`Cockpit.tsx`, `Deployments.tsx`, `FleetOrphans.tsx`) + the local `DeploymentItem`
+  BaseModel + TS mirror. Found + fixed the following gaps (edits above):
+  - **Overlap with FleetOrphans** (`/api/fleet/orphans`): boot-disk leak + $/mo + reap ALREADY exist. Reframed the
+    leaked-resource todos to target only the real gaps (data disks / static IPs / no-owner orphans / the red badge on
+    the inventory row) and reuse orphans for boot disks + cost + reap.
+  - **Overlap with Fleet reconciliation** (`/api/fleet/reconciliation`): "Unknown (running, unregistered)" already IS
+    adhoc detection. Full-census + `launched_by` now REUSE that union (+ a REVIEW parity check) instead of a 2nd union.
+  - **Missing UI todos** for the signals/kinds the census now emits: added a P1 UI todo to (a) register new kinds
+    (`DISK`/`STATIC_IP`/scheduler) in `KIND_META` + filter, (b) render the OVERDUE/on-time chip on job rows (which show
+    NO health chip today), (c) render the job run-history timeline in the detail popover. Made the running→leaked→rest
+    sort explicit as net-new (no client-side sort exists today).
+  - **Tightenings:** `DeploymentItem` is a LOCAL deployment-api BaseModel (NOT UAC); `labels`/`health_status`/
+    `boot_disk_name`/`region`/`cost_per_day_usd` already exist (so `managed_by_label` + per-row cost are near-free); the
+    Consolidators tab already lives in this cockpit (bridge deep-links `?tab=consolidators`).
 
 ### Hand-off to the consolidator-page agent (2026-07-10)
 
