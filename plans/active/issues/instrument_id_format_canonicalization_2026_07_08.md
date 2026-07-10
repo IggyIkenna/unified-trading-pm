@@ -1144,3 +1144,36 @@ direct, isolated `pytest`/`ruff`/`basedpyright` invocation (same underlying chec
 bug) — this is an operator-notification-worthy, cross-repo CI-integrity issue, not something fixed in this pass. Shipped
 via direct commit+push (`git-commit` skill) after `scripts/quickmerge.sh` correctly blocked on real dirty deps
 (`unified-trading-library`, `unified-api-contracts` — both mid-edit by other concurrent agents, not this session's).
+
+**UPDATE 2026-07-10 — item (1) root cause found: `instruments-service`'s prod Docker image has been stuck since
+2026-07-09, silently blocking every fix this session from ever reaching production.** Independently surfaced twice —
+once by `wf_860fb2ae-54e`'s own verification pass ("`is-daily-enum-cefi`'s deployed image is still pinned to build
+`330d9a4`/v0.88.0, pushed 2026-07-09T00:50:05Z — before all 3 fix commits landed"), once by the separate
+`instruments-audit-p0-wave` workflow's is-daily-enum-crash agent (UTL's already-landed `exc_info` fix present in
+`unified-trading-library:latest` but not in the deployed `instruments-service:latest`, whose Dockerfile pins an older
+UTL base digest). Root-caused directly: `gcloud builds list` shows the last SUCCESS for the `instruments-service-prod`
+trigger was `69c976a7` (2026-07-08T23:47Z, commit `330d9a4`); every build since — including today's `8304993d`
+(2026-07-10T00:06Z) — FAILED with
+`ImportError: cannot import name 'build_leg' from 'unified_api_contracts.internal.reference.canonical_id_builder'`
+(`build_leg` was added to UAC 2026-07-08 19:52, `7c0f45dd` — well before the failing build, but the Dockerfile's
+`ARG BASE_IMAGE_DIGEST` pins a specific `unified-trading-library` base-image digest that bundles UAC, and that pin
+(`sha256:9f01cf8e...`) predates `build_leg`). The Dockerfile's own comment says this digest is "Refreshed by the
+dependency-update fan-out (`update-dependency-version.yml`) on base-image republish" — checked: the last merged
+base-image-bump PR for this repo was `#70`, 2026-02-19. **The automated fan-out has been stalled for this repo for ~5
+months**, silently freezing every prod deploy at whatever UTL/UAC state existed then, while dozens of real fixes
+(including this whole session's `@LIN`/`@INV` canonicalization work) landed in source and never shipped. Flagged as its
+own operator-notification-worthy finding — the fan-out itself needs investigation, not just this one manual bump.
+
+**Fix (real, pushed, promotion pending)**: bumped `ARG BASE_IMAGE_DIGEST` to the current
+`unified-trading-library:latest` digest (`sha256:4a86bb9c...`) — `instruments-service@53367eba`, pushed directly to
+`live-defi-rollout` (dirty-deps carve-out; `unified-trading-library`/`unified-api-contracts` both had real concurrent
+uncommitted work blocking quickmerge's pre-flight audit). `instruments-service-prod`'s trigger fires on `main`, not
+`live-defi-rollout` — a manual `gcloud builds submit` doesn't carry the trigger's substitutions (attempted, failed with
+a malformed image tag as expected) — so verification waits on the next `ldr-to-main-promote` cycle (~15 min) to
+auto-fire a real build. **Not yet verified GREEN** — will re-check and record the real build result once the promotion
+lands, per this doc's own no-fire-and-forget discipline.
+
+**Important**: this image fix only stops FUTURE pollution once deployed — it does NOT retroactively fix the existing
+BYBIT (697)/KRAKEN-FUTURES (308 PERPETUAL + 31 FUTURE)/DERIBIT (6,857) old-format catalog rows. That still needs
+`scripts/cefi_durability_force_converge_2026_07_10.py` (written by `wf_860fb2ae-54e`, confirmed still UNTRACKED/never
+committed or run against the live corpus per its own verification pass) to actually execute. Picking that up next.
