@@ -301,10 +301,16 @@ source: deployment_observability_expansion_2026_07_08.md
       `ready is False` (Cloud Run, and takes priority over scale-to-zero config); `degraded` on partial capacity
       (`0<running<desired`), unknown ready-state, or error-rate over a v1 0.05 threshold (undocumented SLO in the plan,
       tune later); `serving` otherwise. 15 unit tests (`test_service_health_taxonomy.py`) pin every state + boundary
-      (threshold is `>` not `>=`, dead beats scaled-to-zero on priority). NOT yet wired to live inventory rows — the
-      `ECS_SERVICE`/`CLOUD_RUN_SERVICE` census this consumes (this plan's kinds-census todos, still unchecked) hasn't
-      landed, and `DeploymentKind` doesn't carry those kinds yet; these are the reusable status-derivation half, ready
-      for that census to call once it ships. QG green (sentinel eda5be5).
+      (threshold is `>` not `>=`, dead beats scaled-to-zero on priority). QG green (sentinel eda5be5). **⚠️ Classifier
+      shipped @eda5be5 but was NOT wired to live rows** — service rows carried only a binary `running`/`pending`
+      placeholder; the `serving`/`scaled-to-zero`/`dead`/`degraded` verdict never reached the cockpit (honesty gap found
+      2026-07-10). **NOW WIRED — deployment-api@5149af19e (2026-07-10, quickmerged)**: extracted both classifiers to a
+      shared `routes/_service_health.py` (a reverse import from `_aws_deployments` would have cycled), and
+      `_cloud_run_service_item` / `_ecs_service_item` now set `DeploymentItem.composite_health_status` from them. Added
+      `min_instance_count` to the Cloud Run census (`template.scaling.min_instance_count`) so an always-on service
+      (min>0) reads `serving` while an idle min-0 one reads `scaled-to-zero`. 5 new/extended wiring tests
+      (`test_build_inventory_wires_cloud_run_service_health_taxonomy` + composite assertions on the 3 ECS
+      running/scaled-to-zero/dead tests) prove the live row carries the sub-taxonomy, not a placeholder.
 - [x] ✅ [BACKEND] P2. **`/deployments/{id}/detail`** endpoint serving the rolling window (popover); the thin list
       carries only the composite + headline numbers. — deployment-api@7c4265a. `GET /deployments/{name}/detail` (path
       param is the wire `DeploymentItem.name` — VM/job/service name, not an orchestration `deployment_id`; distinct
