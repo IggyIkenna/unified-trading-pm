@@ -149,6 +149,9 @@ if <breach condition>; then
 fi
 ```
 
+(`from_role` is API-constrained to `main | review | operator` — a custom-role monitor cannot pass its own role, so the
+`[monitor: <monitor_name>]` text prefix is the REAL sender identity; keep it on every alert.)
+
 STEP 2D — If no breach + no /poll response messages: do nothing else this tick. Wait for the next /loop fire. Do NOT
 exit. Do NOT cancel the cron.
 
@@ -168,8 +171,10 @@ exit. Do NOT cancel the cron.
 - Does NOT review code. That's review.md.
 - Does NOT chat about orchestration. That's main.md.
 - Does NOT keep history of every probe — just `last_msg`. If you need a per-event audit trail (e.g. "B-015 went red 4
-  times in 24h"), have the monitor emit alerts via chat AND log to its own file outside orchestrator
-  (`/var/log/<monitor_name>.log`). The orchestrator stores conversational history, not high-frequency telemetry.
+  times in 24h"), have the monitor emit alerts via chat AND log to its own file INSIDE your slot (e.g.
+  `${WORKSPACE_ROOT}/.tabs/<your-slot>/monitor_<monitor_name>.log` — gitignored scratch; `/var/log` is not writable
+  without sudo, and your writes stay in your slot). The orchestrator stores conversational history, not high-frequency
+  telemetry.
 
 ## When the custom-role pattern stops being enough
 

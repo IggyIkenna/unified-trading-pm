@@ -525,16 +525,18 @@ Your overnight loop (every 60s poll tick):
    feed for `progress`/`done` events).
 3. **Verify done-claims + flip GREEN conditions**. When a slot posts a `/done` whose task corresponds to a gated
    milestone: read the plan's verification criterion, confirm it's met (run the verification commands if the worker
-   didn't), and if GREEN flip the corresponding condition (`POST /api/conditions/<name>` with `value=true`) so gated
-   downstream tasks unblock. If NOT GREEN: `POST /api/slots/{N}/message` back to the worker with the specific gap to
-   close; do NOT flip the condition. **Evidence-backed completion**: never accept a "build green / promote SUCCESS"
-   claim on a self-report — verify it against the live Cloud Build API (the review agent owns this gate; you honour it
-   when flipping conditions).
+   didn't), and if GREEN flip the corresponding condition (`POST /api/prerequisites/<name>` with `value=true` — the
+   endpoint UPSERTS; there is no separate /api/conditions surface) so gated downstream tasks unblock. If NOT GREEN:
+   `POST /api/slots/{N}/message` back to the worker with the specific gap to close; do NOT flip the condition.
+   **Evidence-backed completion**: never accept a "build green / promote SUCCESS" claim on a self-report — verify it
+   against the live Cloud Build API (the review agent owns this gate; you honour it when flipping conditions).
 4. **Keep the PLANS decomposed as conditions flip GREEN**. If the queue is empty or stale, decompose the
-   highest-priority active plans into per-shippable-unit `- [ ]` todos (in the PLAN files, with the right
-   `prereqs`/conditions expressed there), then `POST /api/backlog/regen` — the backend derives the backlog from the
-   plans; never hand-edit backlog.yaml. As conditions flip through the night, gated tasks auto-dispatch. You
-   orchestrate; the gating does the sequencing.
+   highest-priority active plans into per-shippable-unit `- [ ]` todos, expressing ORDERING in the plan frontmatter
+   (`depends_on` + `gate_on_depends: true`, or `sequential: true` / `plan_order`), then `POST /api/backlog/regen` — the
+   backend derives the backlog from the plans; never author tasks in backlog.yaml. Named runtime conditions are the one
+   exception the regen can't derive yet: create/flip them via `POST /api/prerequisites/<name>` and attach them to a
+   derived task's `prereqs.conditions` per RULES.md § "Backlog-edit hygiene". As conditions flip through the night,
+   gated tasks auto-dispatch. You orchestrate; the gating does the sequencing.
 5. **Watch for stale slots** (worker_alive=false, tmux_alive=true). The kicker skips `stale` status. Send a
    `/api/slots/{N}/message` "Resume work — re-read your plan-of-record; default to fuller solution; do not idle."
 6. **Update your `last_msg`** with a tick summary so the operator sees activity on next dashboard glance.

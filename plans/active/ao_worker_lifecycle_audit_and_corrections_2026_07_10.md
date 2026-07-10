@@ -531,3 +531,17 @@ in lieu of the plan's pw:L2 ask).
 fix, inert until the next main recycle; veto window open), and Phase C [VERIFY] (needs a ~24h soak for activity-log rate
 deltas: `worker_kick_failed`, `idle_blocker_inferred`, `autospawn_failed`, `boot_read_unconfirmed`, plus one observed
 teardown with 0 new orphans and a `pre_boot → booting → working` phase transition in the fleet table).
+
+### 2026-07-10 (slot-16, operator-directed) — full boot-prompt drift audit shipped
+
+All 15 `agents/*.md` audited against the DEPLOYED AO code (every endpoint / threshold / mechanism claim verified in
+`server/`). Shipped @unified-trading-pm@5020c08e after operator review of the uncommitted diffs: RULES.md + main.md
+cited a non-existent `POST /api/conditions/<name>` (real surface: `POST /api/prerequisites/{name}`, which UPSERTS);
+RULES.md §4 reframed API-first (conditions never need a YAML edit to exist; parking = tuning a derived entry; the
+per-task `prereqs.conditions` attachment documented as the one yaml-only tuning left — regen cannot derive it from plans
+yet, candidate future todo); main.md overnight step 4 ordering claim corrected to plan-frontmatter mechanisms
+(`depends_on`/`gate_on_depends`, `sequential`/`plan_order`); monitor.md gained the from_role-constraint note (the
+`[monitor: <name>]` prefix is the real identity) + a slot-local audit-log path replacing unwritable `/var/log`. Verified
+clean with no edits: worker.md, review.md, plan-health, plan-reconciler, cicd, conflict-resolver, data_pipeline_failure,
+and all 5 craft files. (Slot-discipline note: from this entry on, ALL PM work happens in the slot-16 clone — earlier
+same-day PM commits were made from the root clone, acknowledged as a violation.)

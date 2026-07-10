@@ -474,10 +474,26 @@ be fixed first if run on a VM.
       overlap 783) = the data-loss risk that keeps **E8 legacy-delete HARD-gated until the migration runs**. So E7 is
       GREEN-able only AFTER the gated E4 full-run + rebuild; the code side is ready (verified no defect introduced by
       E2/E5).
-- [ ] [CODE] P0. **E7-ROOT — 🔴 PHANTOM RECONCILER WIPES BUNDLE-ATOM CAPTURED CELLS (the PRIMARY E7 blocker; big finding
-      2026-07-10).** Root-cause diagnosis of the live `_index` found **ZERO**
-      `data_type=prediction_canonical_question_group` rows at `captured` — the phantom-manifest reconciler
-      (`unified_trading_library/reconcile/manifest.py`, wrapper
+- [ ] [CODE] P0. **E7-ROOT — 🔴 PHANTOM RECONCILER BUNDLE-ATOM WIPE. ✅ STEP 1 (CODE FIX) LANDED 2026-07-10 —
+      `unified-trading-library@22d3984b` + `instruments-service@2674e6fd` (both QG-green).** The reconciler now EXEMPTS
+      manifest-only bundle atoms (new UTL SSOT
+      `MANIFEST_ONLY_BUNDLE_DATA_TYPES = {prediction_canonical_question_group}`, a strict subset of UAC
+      `BUNDLED_DATA_TYPES` — object-backed bundles options_chain/futures_chain/event_contract/sports stay in phantom
+      scope; invariant + regression tests prove bundle atoms survive while genuine per-object phantoms are still
+      demoted; rule-11 fleet-safety verified). **✅ STEP 3 (RESTORE) DONE 2026-07-10** —
+      `reconcile_phantom_manifest_rows_all.py --asset-group prediction --unphantom-only --apply` (safe-by-construction,
+      dry-verified first) recovered **10,769 phantom-demoted bundle cells** (7,278 POLYMARKET + 3,491 KALSHI) +49 bonus
+      `trades` rows → `captured`; bundle `captured` 0→10,769; total captured 24,870→35,688 (+10,818 exact); **ZERO
+      captured→attempted_failed regressions** (verified before/after; `--unphantom-only` skips the forward pass). NB the
+      phantom cohort was 10,769, NOT the ~15,769 first estimated (that conflated a SEPARATE 5,000-row KALSHI population
+      — see STEP 4b). **REMAINING: STEP 2** fix rebuild `_CANONICAL_PRED_RE` chain=/underlying= gap (mtds, ~3.3%
+      objects); **STEP 4** the safe cleanups (124 lowercase-`kalshi` byte-dup rows, 27,292 `batch` blank-`source`
+      backfill) + **STEP 4b NEW**: 5,000 KALSHI bundle rows at `attempted_failed[missing_available_at_envelope]`
+      (rebuild's available_at envelope resolution failed for Kalshi — separate from the phantom wipe; diagnose the
+      Kalshi envelope path) + re-diagnose the v4 legacy rows (now that captured bundle rows exist) + CF-1…CF-12 audit →
+      E7 GREEN. Flip THIS box only when E7 is GREEN. Original diagnosis below. <br>Root-cause diagnosis of the live
+      `_index` found **ZERO** `data_type=prediction_canonical_question_group` rows at `captured` — the phantom-manifest
+      reconciler (`unified_trading_library/reconcile/manifest.py`, wrapper
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`) has a **bundle-atom blind spot**: it assumes
       `instrument_id` is a per-object path segment, but the v9 bundle atom's `instrument_id` is a SYNTHETIC
       `canonical_question_group` (no `data_type=prediction_canonical_question_group/` folder exists on disk — it's a
