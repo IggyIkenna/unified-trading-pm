@@ -113,18 +113,25 @@ cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
 - Same launcher, `--test-run`, scoped to MVP venues covering **both** IS + MTDS MVP scope. No separate force/skip split
   on this leg — `--mode live` already always forces.
 
-## 5. Write + print the report
+## 5. Write + present the report — do not just point at the file
 
-The script's `report.write_report()` emits a markdown + sibling JSON pair and prints the markdown path on exit:
+`report.write_report()` emits a markdown + sibling JSON pair; the script itself prints the **full rendered report**
+(pass/fail table + the bucket-path table below) to stdout on exit, not just the file path:
 
 ```
-Report: plans/audit/results/data_pipeline_e2e_check_mtds_<YYYY_MM_DD>.md
+wrote pipeline_e2e_check report to plans/audit/results/data_pipeline_e2e_check_mtds_<YYYY_MM_DD>.md
+
+<full markdown: frontmatter, summary, Results table, Bucket paths table, Failed/Ambiguous sections>
 ```
 
-- Confirm the printed path resolves and open it. Every shard cell must carry a force-verdict and a skip-verdict
-  **labeled `skip_proof: genuine (prod-captured)` or `skip_proof: ambiguous`**; every MVP venue must carry a
-  live-verdict. A cell with neither is not "skipped" — it's a gap, and belongs on the next tick (see step 6) or as a
-  flagged gap in the report.
+- **Relay this printed content directly to the operator in your response — do not say "done, see the report" and make
+  them go open the file.** The report's "Results" table gives per-shard pass/fail; its "Bucket paths" table (new, plan
+  todo — auto-generated, not hand-built) shows exactly which bucket the parquet write and the manifest write/read each
+  targeted, and flags with ⚠️ when they differ (this is how the real, load-bearing MTDS parquet/manifest bucket
+  asymmetry — plan finding #2 / todo 17 — becomes visible without re-deriving it from `run.log` by hand every time).
+- Every shard cell must carry a force-verdict and a skip-verdict **labeled `skip_proof: genuine (prod-captured)` or
+  `skip_proof: ambiguous`**; every MVP venue must carry a live-verdict. A cell with neither is not "skipped" — it's a
+  gap, and belongs on the next tick (see step 6) or as a flagged gap in the report.
 
 ## 6. Under `/autonomous` — loop, don't stop at "done, what's next"
 

@@ -95,17 +95,23 @@ cd instruments-service && python3 scripts/pipeline_e2e_check.py \
 - Same launcher, `--test-run`, scoped to MVP venues only. No separate force/skip split on this leg — `--mode live`
   already always forces (`_adapter.py:158`).
 
-## 5. Write + print the report
+## 5. Write + present the report — do not just point at the file
 
-The script's `report.write_report()` emits a markdown + sibling JSON pair and prints the markdown path on exit:
+`report.write_report()` emits a markdown + sibling JSON pair; the script itself prints the **full rendered report**
+(pass/fail table + the bucket-path table below) to stdout on exit, not just the file path:
 
 ```
-Report: plans/audit/results/data_pipeline_e2e_check_is_<YYYY_MM_DD>.md
+report written to plans/audit/results/data_pipeline_e2e_check_is_<YYYY_MM_DD>.md
+
+<full markdown: frontmatter, summary, Results table, Bucket paths table, Failed/Ambiguous sections>
 ```
 
-- Confirm the printed path resolves and open it. Every shard cell must carry a force-verdict and a skip-verdict; every
-  MVP venue must carry a live-verdict. A cell with neither is not "skipped" — it's a gap, and belongs on the next tick
-  (see step 6) or as a flagged gap in the report.
+- **Relay this printed content directly to the operator in your response — do not say "done, see the report" and make
+  them go open the file.** The report's "Bucket paths" table (auto-generated, not hand-built) shows exactly which bucket
+  the parquet write and the manifest write/read each targeted per shard/leg — for IS these should always match (fully
+  test-bucket self-contained, plan finding #2); a mismatch here would itself be a real finding, not expected behavior.
+- Every shard cell must carry a force-verdict and a skip-verdict; every MVP venue must carry a live-verdict. A cell with
+  neither is not "skipped" — it's a gap, and belongs on the next tick (see step 6) or as a flagged gap in the report.
 
 ## 6. Under `/autonomous` — loop, don't stop at "done, what's next"
 
