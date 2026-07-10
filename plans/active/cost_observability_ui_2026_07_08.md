@@ -267,11 +267,22 @@ CUR (2026-07-09). Operator decisions captured inline.
         `test_gcp_facts_sql_converts_gbp_to_usd_via_conversion_rate` added; 52/52 cost-obs tests + full backend QG green.
         Codex `billing-cost-observability.md` updated (Currency bullet). No UI change needed — the existing `usd()`/`$`
       is now correct. GBP tally view is the next todo (P2).
-- [ ] [UI] P2. **GBP view option for GCP (tally against the £ invoice).** Primary display stays USD everywhere; add an
-      option to also read GCP figures in **native GBP** so the operator can tie out to the GBP console/invoice. AWS
+- [x] ✅ [UI] P2. **GBP view option for GCP (tally against the £ invoice).** Primary display stays USD everywhere; add
+      an option to also read GCP figures in **native GBP** so the operator can tie out to the GBP console/invoice. AWS
       can't be GBP (no AWS-supplied rate — external FX only), so the GBP view is GCP-only-meaningful: thread
       `currency` + the native amount through the cost model and surface GCP's £ in a tooltip / secondary line (or a
-      USD⇄GBP control that only re-denominates GCP while AWS stays USD-labelled). Confirm exact UX at build time.
+      USD⇄GBP control that only re-denominates GCP while AWS stays USD-labelled). Confirm exact UX at build time. - ✅
+      **2026-07-10 — operator chose Option A (a USD⇄GBP toggle).** Backend threads native GBP end-to-end:
+      `gcp_facts_sql` also selects the raw pre-conversion `cost_native`/`credit_native` + `currency`; a `_NativeAcc`
+      DRYs the per-group native accumulation across every breakdown builder; `CloudSummary`/`BreakdownRow` expose
+      `currency` + `*_native` (mixed cross-cloud keys → USD so a by-day row never mislabels).
+      **deployment-api@`033967a`** (threading, +`test_native_currency_threads_gbp_for_gcp_tally`) + **@`a40f18a`**
+      (mixed-currency guard). Verified vs live BQ: GCP `gross_native` £2,251.65 (rate 0.756), AWS mirrors (rate 1.0).
+      UI: a header `USD/GBP` `Segmented` re-denominates GBP-native rows (GCP) to £ across KPI tiles + breakdown table
+      (incl. Other/Unattributed residual + the fraction hint) + leaf tables ($/GB and bucket component split
+      re-denominated at the row's own rate); AWS/ GitHub + cross-cloud aggregates (grand total, trend/donut) stay USD,
+      since no GBP figure exists. **deployment-ui@`6bc9139`** — 14 vitest + 16 pw (`USD⇄GBP toggle …` regression) + full
+      UI QG green. Codex `billing-cost-observability.md` Currency bullet updated.
 - [ ] [BACKEND/INFRA] P2. **AWS Athena holds July-2026 only — investigate a CUR historical backfill.** Per-month probe:
       `aws_billing.cur_uts_cost_usage` contains ONLY `2026-07` (gross $792.89) — the CUR delivery started in July, so
       `/ops/costs` structurally cannot show any pre-July AWS spend. The operator's AWS CSV is Jan–Jun (Cost Explorer,

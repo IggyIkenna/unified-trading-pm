@@ -65,9 +65,11 @@ request). Both are provisioned; the frontend just queries them.
   USD account / missing rate is a 1.0 no-op, applied **per source row** so each day's exact rate is used
   (`amount / rate` = USD-equivalent list price, verified to the penny vs the live export). This makes `/ops/costs`
   single-currency **USD**, matching the native-USD AWS CUR, so the cross-cloud total is dimensionally valid. NB the page
-  reports the **USD list-equivalent** (comparable to AWS), NOT the GBP invoice cash figure — a native-GBP view for
-  tallying the GCP invoice is a separate UI option. (AWS CUR is native USD, `line_item_currency_code=USD`, no conversion
-  column — GBP is not obtainable there without an external FX rate.)
+  reports the **USD list-equivalent** (comparable to AWS), NOT the GBP invoice cash figure. For the invoice tally, the
+  summary + breakdown responses ALSO carry `currency` + `*_native` figures (`cost_native`/`gross_native`/`credit_native`
+  — the raw pre-conversion GBP for GCP; == the USD values for USD-native clouds), powering the UI's **USD⇄GBP toggle**
+  (GCP → native £; AWS stays USD, since its CUR is native USD — `line_item_currency_code=USD`, no conversion column, so
+  GBP is not obtainable there without an external FX rate).
 
 ```sql
 -- per-service per-day (net of credits). NB cost/credits are GBP here — the /api/costs consumer
