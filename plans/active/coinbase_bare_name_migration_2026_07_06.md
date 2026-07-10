@@ -476,12 +476,27 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S6 — cross-repo ripple (features-service, MDPS, UTL, deployment-api, deployment-service)
 
-- [ ] [CODE] P3. `features-service/`, `market-data-processing-service/`, `unified-trading-library/`, `deployment-api/`,
+- [x] [CODE] P3. `features-service/`, `market-data-processing-service/`, `unified-trading-library/`, `deployment-api/`,
       `deployment-service/`: apply §2e. Each repo lands independently after S3 (UAC ships first). For the
       deployment-service shard-launch scripts (`scripts/vm/launch-cefi-{forward-poll,sharded-backfill}.sh`), coordinate
       with the deployment-service owner if COINBASE-shard VM naming needs to update — the shard name is data-plane
       observable. **Gate per repo:** QG green; mock-seeds emit COINBASE-SPOT; data_status_mock produces identical
-      counts.
+      counts. **DONE 2026-07-10** by slot 10 (data_engineering) — `features-service@9031de88`,
+      `market-data-processing-service@ce9e225b` + `@27bce460`, `deployment-service@35261416`. `deployment-api` audited,
+      already correct (no bare-COINBASE lookups found — `data_status_mock.py`/`venue_relaunch_estimate.py` already emit
+      `COINBASE-SPOT`; `reference_scope.py` / `rollup_cache.py` / `defi.py` `_VENUE_ALIASES` / `manifest.py`
+      bare-`COINBASE` references are intentional bare→canonical FOLD tables or descriptive comments, not migration
+      targets — left untouched). `deployment-service` VM shard-launch scripts audited: no bare-COINBASE literal found
+      (`launch-cefi-sharded-backfill-aws.sh` already uses `SYMBOLS_COINBASE_SPOT`). `unified-trading-library`
+      (`post_trade/settler.py:52` fee schedule, `config_interface/instrument.py:30` `Venue.COINBASE` enum value)
+      deliberately LEFT AS-IS per this plan's own "flag for the utl-owning slot" guidance — both dicts mirror the
+      bare-venue Nautilus/execution-service naming namespace (out-of-scope §2d), not the UAC CeFi registry; rekeying
+      would silently break the fee/enum lookup for COINBASE fills. Two unrelated pre-existing QG blockers surfaced +
+      fixed while shipping: (1) features-service pip-audit CVE-2026-49476/49477 on soupsieve 2.8.3 — bumped to 2.8.4;
+      (2) MDPS `test_dependency_checker_sports_prediction.py::test_prediction_uses_instrument_availability` asserted a
+      stale `instruments-store-prediction-` string against the UAC SSOT's abbreviated `instruments-store-pred-` token
+      (`gcs_paths.py`), plus 2 comments in `aggregation_rules.py`/`live_aggregator.py` false-positived the
+      no-backward-compat-shims keyword gate — test + comments fixed, no behavior change.
 
 ### Step S7 — execution-service follow-on (OUT-OF-SCOPE, filed as new plan)
 
@@ -537,6 +552,26 @@ is:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-10** — **S6 done** (slot-10, data_engineering) — `features-service@9031de88`,
+  `market-data-processing-service@ce9e225b` + `@27bce460`, `deployment-service@35261416`. Applied §2e: re-keyed the
+  bare-`COINBASE` entry in 4 mock-data/config sites (features-service + MDPS `CEFI_VENUES` seed sets, deployment-service
+  `shard_distribution.py` `spot_only_venues` default — the latter is a genuine correctness fix, not cosmetic: it's an
+  exact-string membership filter against combo venue values, so post-S3 the bare form would never match `COINBASE-SPOT`
+  combos and stop filtering them out of perpetuals-only Tardis subscriptions). Audited `deployment-api` (§2e list) and
+  found every named site already correct or an intentional bare→canonical FOLD table (`defi.py` `_VENUE_ALIASES`,
+  `manifest.py`, `rollup_cache.py` `DEFI_NON_PROTOCOL_VENUE_PREFIXES`, `reference_scope.py` comments) — no change
+  needed, left untouched. Left `unified-trading-library` (`settler.py` fee schedule, `Venue.COINBASE` enum) unchanged
+  per the plan's own "flag for the utl-owning slot" — both key off the bare-venue Nautilus/execution-service namespace
+  (§2d, out-of-scope), confirmed by tracing `ExecutionFillEvent` — a blind rekey would silently break the fee lookup for
+  COINBASE fills once real callers wire up. Surfaced + fixed 2 unrelated pre-existing QG blockers while shipping (not
+  this plan's scope, needed to reach QG-green): features-service pip-audit CVE-2026-49476/49477 (soupsieve 2.8.3→2.8.4);
+  MDPS's `test_dependency_checker_sports_prediction.py` had a stale assertion contradicting the UAC `gcs_paths.py`
+  SSOT's `pred`-abbreviated bucket token, plus 2 comments false-positived the no-backward-compat-shims keyword gate.
+  Workflow note: pre-committing before running `quickmerge.sh` skips its own commit step, so `quickmerge.sh` never
+  stamps the `Quickmerge:` trailer on the commit — `check_strict_quickmerge.py`'s pre-push guard then blocks the push
+  for any commit touching real source files. Recovered by resetting the (still-local, unpushed) commits and re-running
+  `quality-gates.sh` fresh against the uncommitted tree before each `quickmerge.sh --agent --files` call, letting the
+  tool own the commit + trailer. Worth a doc note for `agents/worker.md` if this recurs for other slots.
 - **2026-07-10** — **S3 done** (slot-6, data_engineering) — unified-api-contracts@42270f63. Applied the full §2a
   CEFI-MIGRATE set across all 13 UAC files (12 named in the plan + `venue_mapping.py` covering 3 line items).
   `bash scripts/quality-gates.sh` green, sentinel-verified at the committed SHA. Found + fixed 2 plan-authoring gaps
