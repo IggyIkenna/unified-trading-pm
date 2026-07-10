@@ -160,11 +160,11 @@ Every UAC reference is one of these categories:
 | `instruments_service/engine/orchestrator/venue_core.py`                      | 145-146           | `expand_cefi_tardis_endpoints`: `elif venue == "COINBASE": result.append("COINBASE-SPOT")` — the runtime alias expansion for the IS producer | **DELETE** the `elif` branch entirely; after UAC removes bare COINBASE from `VENUES_BY_ASSET_GROUP`, the input list will not contain bare COINBASE, so the expansion is dead code. The passthrough (`else: result.append(venue)`) handles `COINBASE-SPOT` correctly. |
 | `instruments_service/engine/orchestrator/venue_core.py`                      | 97, 115, 126, 317 | docstring examples of the expansion                                                                                                          | **UPDATE** docstring to remove COINBASE special case                                                                                                                                                                                                                 |
 | `scripts/check_enumeration_completeness.py`                                  | 158-173           | `_CEFI_VENUE_FOLD = {"COINBASE-SPOT": "COINBASE", ...}` — D2a fold                                                                           | **INVERT** the anchor (see §3)                                                                                                                                                                                                                                       |
-| `scripts/cefi_per_venue_capture_summary.py`                                  | (grep)            | possibly references bare COINBASE in a summary                                                                                               | **RE-KEY** if a lookup; **KEEP** if a summary label                                                                                                                                                                                                                  |
-| `scripts/enumerate_expected_universe.py`                                     | (grep)            | producer of the EXPECTED set                                                                                                                 | **UPDATE** — should already read from UAC's `VENUES_BY_ASSET_GROUP["cefi"]`; no direct string                                                                                                                                                                        |
-| `scripts/reconcile_cefi_tardis_thirdkey_drift_2026_05_07.py`                 | (grep)            | one-off migration script                                                                                                                     | **KEEP** — historical; delete-when-obsolete per lifecycle policy                                                                                                                                                                                                     |
-| `scripts/reconcile_corrupt_kebab_rows_lst_rates_oracle_prices_2026_05_16.py` | (grep)            | one-off migration script                                                                                                                     | **KEEP** — historical; delete-when-obsolete                                                                                                                                                                                                                          |
-| `scripts/local_cefi_recent_gap_fill.sh`                                      | (grep)            | shell script referencing venue names                                                                                                         | **RE-KEY** if `VENUE=COINBASE`; **KEEP** if a comment                                                                                                                                                                                                                |
+| `scripts/cefi_per_venue_capture_summary.py`                                  | 7, 50, 70         | **AUDITED 2026-07-10**: all 3 hits already `COINBASE-SPOT` (venue list, tuple key, comment) — zero bare-COINBASE                             | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                      |
+| `scripts/enumerate_expected_universe.py`                                     | 601, 603          | **AUDITED 2026-07-10**: only hits are `COINBASE-SPOT` in comments; no direct bare-COINBASE string, reads from UAC as expected                | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                      |
+| `scripts/reconcile_cefi_tardis_thirdkey_drift_2026_05_07.py`                 | 20, 94            | **AUDITED 2026-07-10**: bare COINBASE only in docstring/comment prose (venue-name examples), no lookup                                       | **KEEP** — historical; delete-when-obsolete per lifecycle policy                                                                                                                                                                                                     |
+| `scripts/reconcile_corrupt_kebab_rows_lst_rates_oracle_prices_2026_05_16.py` | 45                | **AUDITED 2026-07-10**: bare COINBASE listed alongside ETHERFI/LIDO/JITO/MARINADE — DeFi-LST protocol context, not a CeFi lookup             | **KEEP BARE** — historical + DeFi-LST context                                                                                                                                                                                                                        |
+| `scripts/local_cefi_recent_gap_fill.sh`                                      | 17, 33            | **AUDITED 2026-07-10**: `VENUES=` list already contains `COINBASE-SPOT`; line 17 comment also `COINBASE-SPOT` — zero bare-COINBASE           | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                      |
 
 ### 2c. market-tick-data-service (4 bare-COINBASE lines across 4 files; 1 DeFi-LST context)
 
@@ -390,12 +390,20 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S4 — IS data_engineering downstream ripple
 
-- [ ] [CODE] P2. `instruments-service/`: audit each remaining bare-COINBASE hit (§2b) and re-key any lookups.
+- [x] [CODE] P2. `instruments-service/`: audit each remaining bare-COINBASE hit (§2b) and re-key any lookups.
       `scripts/local_cefi_recent_gap_fill.sh`, `scripts/enumerate_expected_universe.py`,
       `scripts/cefi_per_venue_capture_summary.py` — if any read `VENUES_BY_ASSET_GROUP["cefi"]` and got bare COINBASE,
       they now get COINBASE-SPOT and pass through. Leave historical one-off migration scripts
       (`reconcile_*_2026_*_*.py`) as documentary; they will not re-run. **Gate:** QG green; audit script self-test still
-      passes; no runtime string errors.
+      passes; no runtime string errors. **DONE 2026-07-10 (slot-11)** — repo-wide grep sweep of `instruments-service`
+      (excluding S1's `check_enumeration_completeness.py` and S2's `venue_core.py`, both handled by parallel tasks
+      001/002) found **zero bare-COINBASE lookups requiring re-key**: all 3 named files already reference
+      `COINBASE-SPOT` exclusively (see §2b, updated with confirmed line numbers); the 2 historical
+      `reconcile_*_2026_*_*.py` scripts only mention bare COINBASE in documentary comments (one of them in DeFi-LST
+      protocol context alongside ETHERFI/LIDO/JITO/MARINADE — correctly stays bare per §2a). No code diff needed — this
+      step's target state was already met independent of S1/S3 landing order. Evidence:
+      `grep -rn 'COINBASE'     --include='*.py' --include='*.sh' --exclude-dir='.venv*' --exclude-dir=build --exclude-dir=htmlcov . | grep -v     'COINBASE-SPOT\|COINBASE-FUTURES\|COINBASE-INTERNATIONAL\|COINBASE-ETHEREUM' | grep -v '/tests/'`
+      returns only the S1/S2-owned files + the historical-comment hits above.
 
 ### Step S5 — MTDS data_engineering downstream ripple
 
@@ -466,6 +474,18 @@ is:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-10** — **S4 flipped** by slot-11 (data_engineering, PM-only `docs(plans):` commit — no instruments-service
+  code diff). Audited the §2b file list outside S1's `check_enumeration_completeness.py` and S2's `venue_core.py` (both
+  in-flight under tasks 001/002 at the time): `cefi_per_venue_capture_summary.py`, `enumerate_expected_universe.py`,
+  `local_cefi_recent_gap_fill.sh` already reference `COINBASE-SPOT` exclusively — zero bare-COINBASE lookups to re-key.
+  The 2 historical `reconcile_*_2026_*_*.py` scripts only carry bare COINBASE in documentary comments, correctly left
+  as-is. §2b table updated with confirmed line numbers replacing the `(grep)` placeholders. Note for future dispatch:
+  this plan's S1→S6 steps have a real internal dependency chain (documented in §4) but no
+  `depends_on`/`sequential: true` gating between the per-step backlog tasks, so S1-S6 dispatched to multiple slots in
+  parallel with prereqs reported as "met" — S4 happened to be safe to complete independent of S1/S3 landing order
+  because its target files were already compliant, but that was a lucky audit outcome, not a guarantee; a future step in
+  this DAG shape could be genuinely blocked by out-of-order dispatch.
 
 - **2026-07-06** — **Plan drafted** by slot-10 (data_engineering) as gap-016 of
   `wsfeedconnector_phase35_gap_2026_07_06`. Per BLK-22e5f8a5 answered by main: `assigned_vm: NA`, `status: draft`,
