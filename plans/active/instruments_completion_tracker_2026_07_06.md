@@ -47,7 +47,7 @@ related:
     ../../codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-07
+last_updated: 2026-07-10
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only
@@ -287,6 +287,21 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 > code touched, no measurement run, in reaching this assessment — verification was git-log/git-status/file-mtime only,
 > cross-checked against `issues/instruments_remaining_work_audit_2026_07_10.md`'s independently-verified Orchestration
 > state.
+>
+> **🟡 RE-CONFIRMED 2026-07-10 (17:43 BST, independent re-check) — quiescence STILL does not hold; evidence is now
+> stronger, not weaker.** Re-verified from scratch rather than trusting the 17:39 note: the 3 denominator-authority
+> files (`venue_core.py` `is@e3f677d6`, `factory.py` `is@94512ec3`, `check_enumeration_completeness.py` `is@b90bc2d9`)
+> are unchanged and still clean/matching `origin/live-defi-rollout` — that specific blocker remains closed. But
+> `instruments-service` `git status` is **actively dirty right now, not just stale-uncommitted**:
+> `scripts/migration_orphan_sweep.py` (mtime 17:41:59) and `tests/scripts/test_migration_orphan_sweep.py` (mtime
+> 17:42:07) are both **<120s old at time of this check (17:43:27)** — inside the workspace's own live-claim liveness
+> window (`per-tab-worktrees.md`: mtime<120s → PROTECT, do not touch) — plus a file rename in progress
+> (`scripts/defi_manifest_dedup_2026_07_10.py` deleted, `scripts/manifest_dedup_2026_07_10.py` added untracked). This is
+> a sibling agent editing live, this instant, not idle WIP from 18 minutes ago. Confirms the 17:39 assessment's
+> conclusion (still tradfi/orphan-sweep-scoped, does not newly block a cefi/defi/prediction attempt on file-conflict
+> grounds, but the tracker's own "clean tree" bar is not met) and upgrades its confidence — no code touched, no
+> `measure_honest_coverage` run, no files in `instruments-service` written. Not attempting the Stage-3 remeasure per the
+> dispatch's own explicit instruction not to when quiescence doesn't hold.
 
 - [ ] [SCRIPT] P0. Re-run `measure_honest_coverage` on the corrected catalogue + seeded manifests (**06-29 numbers are
       stale** — predate v12, the incremental-rollup switch, and the cefi 122-row ghost-dupe fix of 07-04)
@@ -406,6 +421,22 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-10 (later still, 17:43 BST)** — **Second independent re-assessment dispatch on this same tracker item —
+  re-verified from scratch, did not trust the 17:39 entry below at face value.** Re-confirmed: the 3 specific
+  denominator-authority files the original Stage-3 blocker named (`venue_core.py`, `factory.py`,
+  `check_enumeration_completeness.py`) remain clean/unchanged since 15:56/12:48/14:14 respectively — that blocker stays
+  closed. But `instruments-service`'s working tree is **actively dirty at the moment of this check, inside the
+  workspace's own <120s live-claim window** (`scripts/migration_orphan_sweep.py` mtime 17:41:59, one of its test files
+  mtime 17:42:07, checked at 17:43:27 — both <90s old), plus an in-progress file rename
+  (`defi_manifest_dedup_2026_07_10.py` → `manifest_dedup_2026_07_10.py`). This is a sibling agent editing live, right
+  now, not stale WIP — stronger, fresher evidence for the same conclusion the 17:39 entry reached (tradfi/orphan-sweep
+  scoped, doesn't block a cefi/defi/prediction attempt file-conflict-wise, but the tracker's own literal "clean tree"
+  criterion still isn't met). Per the dispatch's explicit instruction not to force a Stage-3 remeasure while quiescence
+  doesn't hold, **did not run `measure_honest_coverage`, did not touch `instruments-service` or any sibling repo's
+  code**, and did not flip any Stage 2/3/4/5 checkbox (nothing was re-measured). This item (the tracker itself) has no
+  single checkbox to flip — it is the coordinator doc, not a line item; the 33/37-open count is unchanged and remains
+  real. Only this doc was edited, committed directly to `unified-trading-pm` (pure `docs(plans):` change, PM-repo
+  direct- push carve-out — no quickmerge needed, no code repo touched).
 - **2026-07-10 (later, 17:39 BST)** — **Dispatched re-assessment of this tracker item itself (not a Stage-3 remeasure) —
   verified real current state, no engineering executed.** Confirmed live: (1) `git status` on `instruments-service`
   matches `origin/live-defi-rollout` for the 3 files the Stage-3 blocker cited as "actively rewriting" (`venue_core.py`
