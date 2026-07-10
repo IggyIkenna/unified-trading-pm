@@ -215,7 +215,10 @@ failure_modes:
       kind: scriptable,
       escalation: file_issue,
       status: verbose,
-      fires: "IS universe bare ticker (e.g. KALSHI KXMVE-26JAN) not rebuilt to connector form KALSHI:PREDICTION_MARKET:{ticker} -> WS 'unknown instrument; skipping' -> 0 capture (cefi/prediction live silent-empty, 2026-06-22)",
+      fires:
+        "IS universe bare ticker (e.g. KALSHI KXMVE-26JAN) not rebuilt to connector form
+        KALSHI:PREDICTION_MARKET:{ticker} -> WS 'unknown instrument; skipping' -> 0 capture (cefi/prediction live
+        silent-empty, 2026-06-22)",
     }
 
   # --- DP-VM (class C4) ---
@@ -318,7 +321,11 @@ failure_modes:
       kind: scriptable,
       escalation: auto_recover,
       status: verbose,
-      fires: "sports REST adapter (api_football/SFI/transfermarkt/footystats) hit a 429 and slept to the minute boundary — a throttled backfill now surfaces in #data-pipeline-alerts instead of silently stalling (the TM/FootyStats 6.5h-hang blind spot). Emitted from BaseSportsReferenceAdapter._get_with_retry; sha instruments-service base.py 2026-06-22",
+      fires:
+        "sports REST adapter (api_football/SFI/transfermarkt/footystats) hit a 429 and slept to the minute boundary — a
+        throttled backfill now surfaces in #data-pipeline-alerts instead of silently stalling (the TM/FootyStats
+        6.5h-hang blind spot). Emitted from BaseSportsReferenceAdapter._get_with_retry; sha instruments-service base.py
+        2026-06-22",
     }
 
   # --- DP-ENV (class C6) ---
@@ -446,6 +453,19 @@ failure_modes:
       escalation: page_operator,
       status: verbose,
       fires: "instrument catalogue for an AG not refreshed in 24h",
+    }
+  - {
+      id: DP-CATALOG-002,
+      category: CATALOG,
+      severity: CRITICAL,
+      event: CATALOGUE_SHRINK_BLOCKED,
+      detector: promote_catalogue/evaluate_monotonic_guard,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires:
+        "monotonic-guard rejected a catalogue promotion whose row count shrank vs. current canonical (previous good
+        catalogue kept)",
     }
   - {
       id: DP-WATCHER-001,
