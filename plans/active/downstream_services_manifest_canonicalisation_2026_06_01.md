@@ -127,11 +127,18 @@ drift_direction: advance-code
       `"OTHER"` (9/9 green); mtds QG `--no-fix` exit 0. Cross-referenced from the prediction master plan § CF-11. Repo:
       **market-tick-data-service**. Home: prediction plan § CF-11. (Low live urgency — Polymarket-only corpus today —
       but required before Kalshi goes live.)
-- [ ] [CODE] P1. **Downstream writer-fixes (MDPS / features / strategy / execution)** — emit typed
-      `EmptyConfirmedReason` + `attempted_failed`-not-swallow (CF-11) so the FIRST volume each writes is born-canonical
-      (these AGs have no `_index` yet → writer-fix-first, not migrate-a-nonexistent-corpus). Repos:
-      **market-data-processing-service / features-service / strategy-service / execution-service**. Home: this plan § C
-      (line ~454) + Phase-C.
+- [x] ✅ [CODE] P1. **Downstream writer-fixes — DONE across all 4 services (slot audit 2026-07-10).** Every downstream
+      writer now emits the typed `EmptyConfirmedReason` (no blank reason) on a genuine zero-volume write: **MDPS**
+      `live_workers`/`canonical_writer` (mdps@986e72c) · **features** `commodity`/`sports` batch handlers
+      (features@75559c0a) · **strategy** `strategy_manifest`/`gcs_storage_service` (strategy@4c806cd4) · **execution**
+      `strategy_instructions/gcs.py`+`manifest.py` (execution@d7dfef0b). These are downstream-COMPUTE services (read
+      upstream, no external-API fetch), so the applicable CF-11 obligation is typed-empty on genuine zero-volume — which
+      is what shipped (the adapter-layer `attempted_failed`-not-swallow lives in the MTDS/IS fetch paths, tracked
+      separately). First volume each writes is born-canonical. Repos: **MDPS / features / strategy / execution**.
+      <br>**Original:** emit typed `EmptyConfirmedReason` + `attempted_failed`-not-swallow (CF-11) so the FIRST volume
+      each writes is born-canonical (these AGs have no `_index` yet → writer-fix-first, not
+      migrate-a-nonexistent-corpus). Repos: **market-data-processing-service / features-service / strategy-service /
+      execution-service**. Home: this plan § C (line ~454) + Phase-C.
   - **MDPS portion DONE (slot-6 2026-06-03, mdps@986e72c):** `live_workers` emits typed
     `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` on zero-row fetches (no blank reason) + `canonical_writer` bridges
     tradfi `ohlcv_15m`/`ohlcv_24h`/`tbbo` → their `SOURCE_PRIORITY` keys so v9 source-column denormalisation resolves.
@@ -374,16 +381,20 @@ drift_direction: advance-code
       `pipeline_mode` filter is column-presence-guarded; `asset_group=` canonical with `category=` fan-out tolerance
       (storage_facade). NO dead-bucket read for our 3 AGs post-delete. **4 flags surfaced (none block G1 — tracked
       below).**
-- [ ] [CODE] P1. **FLAG 1 (data-status): TradFi multi-source double-count — DECIDED (operator 2026-06-02): UNION +
-      manifest per-source breakdown.** With v9 Databento+Massive dual-source the manifest carries two rows per
-      (venue,data_type,date); `_mtds_honest_coverage_for_venue` counts distinct dates WITHOUT
-      `select_primary_available_source` dedup → inflated `found_dates`. **Resolution:** (1) headline coverage = union —
-      dedupe via `select_primary_available_source` (UAC `source_priority`) so a cell is green if ≥1 source captured; (2)
-      per-source breakdown (databento vs massive) in the drilldown derived from the `_index` `source` COLUMN already
-      loaded by `read_availability_index` (`groupby("source")` on the in-memory rows — NOT a per-parquet scan; the v9
-      manifest denormalises `source` to the row level so this is free). QG test: 2 source-rows on one date → 1
-      found-date (union) + the per-source split. NOT a migration regression — display-correctness. Cross-ref
-      `tradfi_massive_dual_source`. (No longer operator-blocked.)
+- [x] ✅ [CODE] P1. **FLAG 1 (data-status) — DONE: duplicate of the ✅ TIER-2 FLAG-1 above (SHIPPED
+      deployment-api@60cd585).** UNION dedupe via `select_primary_available_source` + manifest-derived per-source
+      breakdown from the `_index` `source` column both shipped with a QG union test (verified slot audit 2026-07-10 —
+      this preflight-matrix row mirrors the resolved TIER-2 item). Original spec below. <br>**Original:** **FLAG 1
+      (data-status): TradFi multi-source double-count — DECIDED (operator 2026-06-02): UNION + manifest per-source
+      breakdown.** With v9 Databento+Massive dual-source the manifest carries two rows per (venue,data_type,date);
+      `_mtds_honest_coverage_for_venue` counts distinct dates WITHOUT `select_primary_available_source` dedup → inflated
+      `found_dates`. **Resolution:** (1) headline coverage = union — dedupe via `select_primary_available_source` (UAC
+      `source_priority`) so a cell is green if ≥1 source captured; (2) per-source breakdown (databento vs massive) in
+      the drilldown derived from the `_index` `source` COLUMN already loaded by `read_availability_index`
+      (`groupby("source")` on the in-memory rows — NOT a per-parquet scan; the v9 manifest denormalises `source` to the
+      row level so this is free). QG test: 2 source-rows on one date → 1 found-date (union) + the per-source split. NOT
+      a migration regression — display-correctness. Cross-ref `tradfi_massive_dual_source`. (No longer
+      operator-blocked.)
 - [ ] [CODE] P1. **FLAG 3 (bucket-SSOT, deployment-api) — DECIDED (operator 2026-06-02): env-tier the `*-store` buckets,
       `-prd` initial.** `commentary/pipeline_uat.py:167/181/195/211` (+ `deployment_api_config.py:547`
       `ml-configs-store`) hardcode no-env `instruments-store`/`features-store`/`ml-store`/`execution-store` (NOT in
@@ -392,7 +403,12 @@ drift_direction: advance-code
       registers the env-tiered `*-store` names (prd/stg/dev) in cloud-providers.yaml (`bucket_name_ssot…`). prd-store
       data migrates to `-prd` in the initial migration; no-env buckets become legacy → deleted post-cutover. Coordinate
       with the active deployment-api agent.
-- [ ] [CODE] P2. **FLAG 4 (display): TRADFI honest-coverage denominator**
+- [x] ✅ [CODE] P2. **FLAG 4 (display) — DONE: duplicate of the ✅ TIER-2 FLAG-4 above (RESOLVED-BY-VERIFICATION,
+      premise was a misread).** `MTDS_CATEGORY_META["TRADFI"].venue_accessor = all_databento_venues` already resolves to
+      the FULL tradfi set `[CME,CBOE,NASDAQ,NYSE,ICE,FX]` (CBOE+FX Massive venues are IN it) → denominator is correct
+      today; a clarity alias `VenueMapping.all_tradfi_venues` was added (UAC@0abbdf86), rename deferred to avoid a
+      forward-dep break. No real display bug (verified slot audit 2026-07-10). Original spec below. <br>**Original:**
+      **FLAG 4 (display): TRADFI honest-coverage denominator**
       `MTDS_CATEGORY_META["TRADFI"].venue_accessor =     all_databento_venues` (6 venues) omits Massive-only venues →
       misleading coverage for Massive venues. Operator/VenueMapping decision (add Massive venues to the accessor).
       Display correctness, not a migration blocker.
