@@ -299,6 +299,19 @@ full-census state field is already present, and the per-row cost column already 
   name encodes `{kind}-{asset_group}`; NOT `asset_group` alone) →
   `{last_run_at, partitions_written, rows_written, expected_vs_actual, verdict}`, so the deployments detail popover can
   cross-link "this run → its produced data" without re-walking.
+- **✅ JOIN-KEY CONFIRMED — deployments agent, 2026-07-10 (unblocks the consolidator's WS-3 P1).** Key = the FULL Cloud
+  Run job short-name, defined precisely as `run_v2` `job.name.rsplit("/", 1)[-1]` (the last path segment, e.g.
+  `prd-manifest-consolidator-cefi`, **verbatim incl. any env prefix, no normalization**) — this is already the
+  deployments row `name` (`_cloud_run_item_for_live_job` / `latest_execution_by_job`). **Chosen over the
+  `(kind, asset_group)` tuple** because the short-name is the raw shared observable both sides read verbatim from
+  `JobsClient.list_jobs` (the tuple would need TWO independent `{kind}-{asset_group}` parses — and the deployments
+  classifier is a FUZZY suffix/substring match, `job_name == stem or endswith(f"-{stem}") or stem in job_name`, so the
+  two parses would drift → silent missed joins); it's also unambiguous per-run (env-prefix/`-backfill`/`-v2` variants
+  collide on the tuple, never on the short-name). Deployments ALSO passes classified `kind` + `asset_group` as
+  hint/validation fields, but the CANONICAL index is the short-name. The short-name→(kind,asset_group)→partition decode
+  is the CONSOLIDATOR's SSOT (its partitions are already keyed that way). **Multi-region caveat:** a short-name is
+  unique within a `(project, region)`; today all `asia-northeast1` so bare short-name is unique — when Plan 2's
+  multi-region census lands, qualify the key with region (or use the fully-qualified resource name).
 - **NOTE (2026-07-10 cross-plan audit):** this hand-off is ALREADY absorbed —
   `consolidator_throughput_backlog_monitor_2026_07_09` (WS-3) owns the per-run output-production verdict endpoint,
   fired-but-produced-nothing + stale-output detection, and the join-key decision. So the "consolidator agent" = that
