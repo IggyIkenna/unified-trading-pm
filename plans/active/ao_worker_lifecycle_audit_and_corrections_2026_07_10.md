@@ -218,10 +218,13 @@ fold into the role-file rewrite (A4).
       stuck at a startup prompt / crashed / mid-read) BEFORE the blind respawn; and page the operator when the 2-retry
       cap (`_SPAWN_HEARTBEAT_MAX_RETRIES`) is hit (today it goes silent). Depends on the boot-timer reconciliation (A1).
 - [ ] [CODE] P0. Rewrite the role/rules files into STANDALONE readable docs (worker.md, RULES.md, main/review/monitor +
-      craft + escalation): dynamic values referenced as "given in your boot message" (no inline `<SLOT_ID>`); INCLUDE
-      the idle-loop resilience content (settle the client-vs-server idle-loop question here); add the explicit "operate
-      ONLY in your assigned `.tabs/<N>/` slot; root reads are read-only" guardrail. Relocate to the canonical PM-repo
-      path.
+      craft + escalation): dynamic values referenced as "given in your boot message" (no inline `<SLOT_ID>`); keep the
+      "NEVER exit on your own / Start now: /boot" semantics but with the client-vs-server idle-loop question RESOLVED
+      (operator, 2026-07-10, cost-driven): **MINIMAL/NO client self-poll — DROP the aggressive every-60s client bash
+      poll; rely on server-owned liveness** (idle-lingering reclaim reaps idle workers in ~2 min + spawn-on-demand
+      within ~60s when work lands). A worker polling an empty queue burns Claude credits for nothing; the server already
+      reaps+respawns. Add the explicit "operate ONLY in your assigned `.tabs/<N>/` slot; root reads are read-only"
+      guardrail. Relocate to the canonical PM-repo path.
 - [ ] [CODE] P1. Stale-content fixes folded into the rewrite (so agents can't trip on stale info): RULES.md tab-branch →
       Path-B (`git clone --reference` on `live-defi-rollout`, no tab branch); main.md backlog path (3×
       `orchestrator/data/config/…` → `data/config/…`); `escalation_to` on `plan-health.md` + `data_pipeline_failure.md`
@@ -293,3 +296,11 @@ fold into the role-file rewrite (A4).
   `/boot` on read-confirmation to preserve the in-context guarantee. No interim fence fix. Stale-content correctness
   kept first-class (agents must not trip on stale info). Phase A reworked around the cutover; estimate bumped
   (cross-repo refactor + file relocation + role-file rewrite).
+- **2026-07-10 ~06:30Z** — Operator Q on idle-worker economics. Confirmed against live config + state: AutoSpawn is
+  already gated on DISPATCHABLE (prereq-met) work (`_has_queued_work`, prereq_blocked_spawn_thrash 2026-06-30) — no work
+  ⇒ no spawn (14 idle slots currently `tmux_session=None`, zero idle credit burn). Idle-with-session workers reaped in
+  ~2 min (`watchdog_idle_session_ticks=2` × 60s watchdog); boot_grace 300s shields fresh spawns; AutoSpawn wakes a slot
+  within ~60s when work lands. Cadences: worker idle-poll 60s, kicker 45s, watchdog 60s, autospawn 60s/300s-cooldown.
+  DECISION (cost-driven): the cutover's role-file rewrite keeps the idle-loop SEMANTICS but drops the aggressive
+  every-60s client self-poll — server-owned liveness (reap+respawn-on-demand) is cheaper than a worker polling an empty
+  queue. Folded into the role-file-rewrite task.
