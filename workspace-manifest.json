@@ -425,7 +425,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -455,8 +455,8 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "warn_file_count": 17,
+        "qg_red_reason": "ruff",
         "large_file_count": 0,
         "coverage_pct": 84.29
       }
@@ -817,10 +817,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 1,
-        "coverage_pct": 88.44,
+        "warn_file_count": 6,
         "qg_red_reason": null,
-        "warn_file_count": 6
+        "large_file_count": 1,
+        "coverage_pct": 88.48
       }
     },
     "market-tick-data-service": {
@@ -1258,10 +1258,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "warn_file_count": 20,
         "qg_red_reason": null,
-        "coverage_pct": 88.65,
         "large_file_count": 5,
-        "warn_file_count": 20
+        "coverage_pct": 88.64
       }
     },
     "unified-trading-pm": {
