@@ -734,3 +734,36 @@ anytime (read-only); the migration walk per bucket follows its input going C-GRE
 
 - `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md` — the CF checklist this plan audits.
 - `codex/02-data/availability-manifest-and-data-status.md` — downstream canonical form + source propagation.
+
+## Progress Log — autonomous session 2026-07-10 (Opus, /autonomous; append-only handoff per AUTONOMOUS_AGENT_RULES rule 6)
+
+**Dispatch:** full stale-todo reconciliation (both this plan + prediction_manifest) + complete the non-gated code
+(QG-test alignment P0, doc sweep P1, CF-11 IS residual P0); leave ONLY the operator-gated Tier-4 migration RUN
+(irreversible 1.9M-object apply + legacy delete) for sign-off. Don't-touch zone respected (IS cefi adapters,
+`enumerate_expected_universe._enumerate_v2_prediction`).
+
+**Shipped so far (all pushed to LDR):**
+
+- **Stale-todo reconciliation — 5 flips (20→15 open), each SHA-evidence-backed** (pm@03bcd4398, @2f261560a, @ec20879ad):
+  E5 CF-11 3-way tree (all 3 AGs shipped: `_rebuild_{prediction@ed4e35e0,tradfi@4ccf52c6,cefi@aaeada9a}_cf11.py` +
+  tests) · Downstream writer-fixes ×2 entries (typed `EmptyConfirmedReason` across mdps@986e72c/features@75559c0a/
+  strategy@4c806cd4/execution@d7dfef0b) · FLAG-1 matrix-dup (=TIER-2 @60cd585) · FLAG-4 matrix-dup (resolved-by-verify).
+- **Doc sweep (P1) — codex SSOT path-example banners done** (pm@0f27bec55): added `pipeline_mode=` canonical-path
+  pointer banners to `defi-data-type-taxonomy.md` + `instrument-pipeline-defi.md` (both showed raw-tick paths without
+  the `pipeline_mode=` hive segment left of `asset_group=`). codex/04-architecture has only 2 minor _illustrative_
+  examples (not the layout SSOT) → not bannered; `category=`-as-canonical = 0 in 04-architecture. **Doc-sweep REMAINDER
+  (tracked, not deferred — folded into this dispatch):** the 10 repo `docs/GCS_PATHS.md` sweep + the 4
+  superseded-plan-section banners (tradfi_massive_dual_source / data_source_provenance /
+  pipeline_mode_partition_migration / bucket_name_ssot Phase-5) — pending a doc-sweep sub-agent wave.
+- **Prediction E8b** (pm@9cd15c77d): legacy `instruments-store-prediction` bucket decommission is GATED on migrating 139
+  legacy-only cells (92 instrument_availability + 47 market_lifecycle; CQGs BTC_UP_DOWN_HOURLY + GOLD_UP_DOWN_DAILY
+  exist ONLY in legacy — both still-valid canonical groups, so they migrate under the same names via the C0 walk).
+  Obsolete one-off `backfill_prediction_market_lifecycle_2026_01_07_to_05_23.py` deleted (canonical had 4,439
+  captured+manifest-verified gap-window lifecycle rows).
+
+**In flight (wave-1 read-only diagnosis sub-agents):** prediction-plan checkbox reconciliation (flip-list w/ SHA
+evidence) · CF-11 IS residual (tradfi databento + prediction polymarket swallow diagnosis + fix spec) · QG-test
+alignment audit (per-repo canonical-form assertion gaps). Next tick applies their results.
+
+**Operator-gated (NOT touched, by design):** Tier-4 migration RUN (per-AG G1 dry-run → `--apply` 1.9M-object walk → E8
+legacy delete), downstream C-walks (need input C-GREEN + first batch), post-walk CF audit, GAP-4 hard-assert (post-G3).
