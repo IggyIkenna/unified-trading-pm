@@ -1048,3 +1048,47 @@ live-GCS spot-checks across instruments-service, market-tick-data-service, and u
 old-format construction sites or stale doc examples, synthesized into one final honest status report (zero-trace /
 zero-trace-with-tracked-exceptions / not-yet-met — not just declared done). Script:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/final-zero-trace-verification-wf_50701260-a4e.js`
+
+**UPDATE 2026-07-10 — `wf_50701260-a4e` final-zero-trace-verification COMPLETE. Verdict: NOT YET MET.**
+
+Three parallel fresh sweeps (instruments-service, market-tick-data-service, unified-api-contracts) plus live GCS
+spot-checks found the original directive ("zero trace of the old formats in doc, data, or manifest") is **not yet met**
+— two real, currently-active production gaps, neither previously tracked:
+
+1. **`instruments-service` `prod/catalog.parquet` has not durably converged for CeFi derivatives.** Live GCS read shows
+   currently-active old-format `instrument_id` rows coexisting with `@LIN`/`@INV` rows for the same real instrument:
+   BYBIT 697 active old-format rows (~43%), KRAKEN-FUTURES 39 active old-format rows (some `available_to=2026-07-10`,
+   i.e. today), DERIBIT 6,836/270,836 active old-format rows (97.5% migrated, real tail). The "4 durability VMs
+   confirmed complete" close-out (2026-07-10) covered tradfi/defi/prediction(×2) only — no CeFi catalog-rewrite VM ever
+   ran, plausibly why the historical/self-refreshing catalog rollup was never force-converged for CeFi the way it was
+   for the other 3 asset groups.
+2. **MTDS's own live CeFi WS connectors (raw-tick construction layer) were never retrofitted.** `bybit_ws.py`,
+   `kraken_futures_ws.py`, `okx_ws.py`, `binance_futures_ws.py`, `deribit_ws.py` + sibling book-ticker connectors still
+   hardcode the pre-canonicalization shape. `LiveWebsocketRunner.record_tick()` does an exact-string lookup against the
+   now-canonical IS-resolved buffer keys — mismatches are silently dropped. Confirmed in production GCS as late as
+   `day=2026-06-27` (most recent CeFi raw-tick data found in any bucket checked).
+
+Smaller new gaps: `tardis_machine_ws.py` (opt-in live source, literal `"PERP"`, 3 sites); residual old shape in
+`live_hyperliquid` day=2026-06-29 despite the migration script targeting it (not root-caused); untracked builder
+bypasses in `tardis/combos.py` (Deribit batch combo legs), `deribit_combo_adapter.py:405` (combo top-level id), and
+MTDS's restaking/pool DeFi adapter family (`restaking_{jito,karak,symbiotic}_adapter.py` + siblings — a real coverage
+gap in the retrofit checklist itself); 2 stale doc sections (`CEFI_INSTRUMENTS.md` L208/256-259,
+`canonical-write-conventions.md`'s "no MTDS-side change needed for live" claim).
+
+Re-confirmed still-open, already-tracked (not new): OKX-SWAP/OKX-FUTURES 0% migrated; Prediction catalog
+raw_symbol/base_asset/underlying 100% NULL; `symbiotic.py:117` (checklist todo 1's DeFi-adapter backlog).
+
+Confirmed genuinely clean: live ccxt + batch Tardis paths, CME/CBOE combo legs, HYPERLIQUID/ASTER batch on-chain-perp,
+DeFi's 2 live connectors, Kalshi/Polymarket Prediction adapters, DeFi DEX-pool bare-pool_address design.
+
+The 5 tracked deferred exceptions remain as filed: `[[tradfi_cme_options_chain_legacy_layout_2026_07_10]]`,
+`[[defi_dexpool_second_writer_path_and_zero_capture_2026_07_10]]`,
+`[[mtds_prediction_migration_connection_pool_hardening_2026_07_10]]`,
+`[[defi_dead_storage_shape_b_cleanup_candidate_2026_07_10]]`, and the DEX-pool ghost-venue-merge follow-through (that
+one is effectively resolved — full remediation + independent re-verification already landed; listed for completeness).
+None of these cover the 2 new headline findings above.
+
+**Next real step**: this doc's scope needs 2 new tracked items — (a) a CeFi-specific catalog durability rewrite/verify
+pass for BYBIT/KRAKEN-FUTURES/DERIBIT (mirroring the tradfi/defi/prediction durability VMs), and (b) an MTDS
+live-CeFi-connector retrofit to build canonical `@LIN`/`@INV` keys at the raw-tick layer, matching the
+on-chain-perp/DeFi live connectors that already do this correctly. Both dispatched, see below.
