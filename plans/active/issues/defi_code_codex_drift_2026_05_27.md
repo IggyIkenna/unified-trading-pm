@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: DeFi pipeline — code↔codex drift (audit 2026-05-27)
-summary: Re-read the actual Python (MTDS / MDPS / UAC / features-service) on 2026-05-27 and cross-checked GCS, comparing against the codex SSOTs. **Comprehensive audit record (13 findings D1–D13, audit-resu...
+summary:
+  Re-read the actual Python (MTDS / MDPS / UAC / features-service) on 2026-05-27 and cross-checked GCS, comparing
+  against the codex SSOTs. **Comprehensive audit record (13 findings D1–D13, audit-resu...
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -20,11 +22,18 @@ related:
 created: 2026-05-27
 parent_epic: defi_master
 priority: P2
-source: [codex/02-data/defi-data-pipeline.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/02-data/defi-data-types-catalog.md]
+source:
+  [
+    codex/02-data/defi-data-pipeline.md,
+    codex/02-data/data-lineage-MTDS-features-ml.md,
+    codex/02-data/defi-data-types-catalog.md,
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
-master: defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §A writers + §F docs/SSOT close these drift items. Asset-group slot split, 2026-06-03)
+master:
+  defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §A writers + §F docs/SSOT
+  close these drift items. Asset-group slot split, 2026-06-03)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -98,11 +107,24 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       dead `DefiLendingIndicesAdapter` deleted + `app/adapters/__init__.py` comment fixed + bypass test moved to
       `BYPASS_TYPES` (MDPS@5c2b612) + epic DeFi-V note corrected (PM@e5742c656). All three sources now agree:
       lending_indices is bypass. QG green (ruff + basedpyright + `test_defi_bypass_routing` 41/41). — 2026-05-27.
-- [ ] [CODE] P2. D10 (generalized) — 6 venues `DEFI_VENUE_PHASE=live` with no `PROTOCOL_CAPABILITIES`/`SUBGRAPH_IDS`
-      (EULER_V2, VENUS, BENQI, RADIANT-ETH, MARGINFI, SOLEND): add backing OR downgrade/register. Confirm intent with
-      operator/Ikenna. **The 3 inverse venues (SOLAYER/PICASSO/CAMBRIAN: capability-without-venue) are RESOLVED — fully
-      removed 2026-06-02 (operator decision, no usable/decodable data source); UAC capabilities + IS adapters wiped.
-      SSOT: `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.**
+- [x] ✅ [CODE] P2. D10 (generalized) — **RESOLVED 2026-07-10 (operator decision #9: "add the missing
+      capability-registry entries, don't downgrade").** The original "no PROTOCOL_CAPABILITIES/SUBGRAPH_IDS" premise
+      (filed 2026-05-27) was already stale — `unified-api-contracts@cd65ff76` (2026-06-02) had already registered real
+      `PROTOCOL_CAPABILITIES`/`SUBGRAPH_IDS` for EULER_V2/VENUS/BENQI/RADIANT, and MARGINFI/SOLEND already had real
+      capability entries + real captured production data (verified against the prod availability manifest). The
+      GENUINELY missing registry was a third one, `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
+      (`unified_api_contracts/registry/defi_venue_capabilities.py` — the honest-coverage denominator's actual
+      per-(venue,data_type) capability gate) — added entries for RADIANT-ETHEREUM/EULER_V2-ETHEREUM/EULER_V2-ARBITRUM/
+      VENUS-BSC/VENUS-ETHEREUM/BENQI-AVALANCHE (real `PROTOCOL_LAUNCH_DATES`-sourced start dates, minimal real capture
+      surface). `DEFI_VENUE_PHASE` deliberately left `pipeline` for these 4 EVM protocols (NOT flipped to `live`) — the
+      prod manifest shows ZERO real captured rows for ANY of them, ever, and a live network probe found the EULER_V2
+      Goldsky subgraph ~38 days stale; the real root cause is an already-tracked orchestrator-wiring gap
+      (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md` P1), not a registry gap — flipping phase now would
+      recreate the phantom-capacity dishonest-coverage class the data-pipeline-correctness HARD RULE bans. Shipped
+      `unified-api-contracts@5626079e`. Full evidence trail in this doc's Progress Log. **The 3 inverse venues
+      (SOLAYER/PICASSO/CAMBRIAN: capability-without-venue) are RESOLVED — fully removed 2026-06-02 (operator decision,
+      no usable/decodable data source); UAC capabilities + IS adapters wiped. SSOT:
+      `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.**
 - [x] ✅ D14 — RESOLVED / REVERSED 2026-06-08. **This finding's premise is STALE — canonical is `dex_pool_state`, NOT
       `dex_pools`.** The operator-locked `codex/.../defi-canonical-naming-ssot.md` (2026-06-01) reversed the direction:
       `dex_pool_state`/`dex_pool_swaps` is canonical at EVERY surface (path + column + manifest + handler const). Live
@@ -114,22 +136,22 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       (`defi-dexpool-name`) pins the canonical name. (reversed per SSOT; verified end-to-end by the 2026-06-08 sweep.)
 - [ ] [CODE] P3. D15 — HYPERLIQUID + ASTER are `DEFI_VENUE_PHASE=pipeline` but `perp_funding_handler` actively collects
       them; reconcile the phase label (→ live, or confirm cefi-axis classification).
-- [x] ✅ [CODE] P3. D7 — **SHIPPED** MTDS@d3e02228 (`fix(mev): remove banned bloxroute relays + stale .bak from
-      mev_events_handler`): the 2 bloxroute URLs are gone from `mev_events_handler.py` `MEV_BOOST_RELAYS` (Flashbots /
-      agnostic / ultra_sound retained, comment cites this finding) and `mev_events_handler.py.bak` is deleted — verified
-      on `origin/live-defi-rollout`. Usage audit found **nil active downstream consumption** of bloxroute/`mev_events`
-      relay data (bloxroute already removed as the mempool feed; `sandwich_theoretical.py` is a theoretical-only tracer).
-      — 2026-06-09.
+- [x] ✅ [CODE] P3. D7 — **SHIPPED** MTDS@d3e02228
+      (`fix(mev): remove banned bloxroute relays + stale .bak from     mev_events_handler`): the 2 bloxroute URLs are
+      gone from `mev_events_handler.py` `MEV_BOOST_RELAYS` (Flashbots / agnostic / ultra_sound retained, comment cites
+      this finding) and `mev_events_handler.py.bak` is deleted — verified on `origin/live-defi-rollout`. Usage audit
+      found **nil active downstream consumption** of bloxroute/`mev_events` relay data (bloxroute already removed as the
+      mempool feed; `sandwich_theoretical.py` is a theoretical-only tracer). — 2026-06-09.
 - [x] ✅ [CODE] P3. D8 — **SHIPPED 2026-06-09** — Starknet `infura_compatible` RPC template removed from UAC
-      `_defi_chain_data.py` (UAC@8a117153, on LDR; no consumer referenced the key) + `gas_fee_handler.py` paid-RPC comment
-      de-Infura'd (MTDS@8fffc73b, on LDR). Infura is a removed provider (decommissioned workspace-wide 2026-05-22). The
-      pre-existing blockers that initially gated this (ci_incident Finding 5) were all remediated to ship it: (a) UAC
-      version-aligned to 0.3.0 across main/LDR/staging (operator-authorized admin); (b) UAC backward-compat shims driven
-      to **0** + 0 basedpyright baseline (deleted the `instruction.py` re-export stub, reworded 8 false-positive
-      docstrings/comments, genericized the `gcs_paths` project-id) + `fear_greed` stub cassette allowlisted; (c) the
-      `base-library.sh` SHA-sentinel gap (blocked all library agent-quickmerges) fixed (PM@091378337); (d) the diverged
-      MTDS slot reconciled — `01fda7ce` (migrator gas-fees+liquidations → defi coverage 6→8, rebuild `--bucket`) rebased
-      onto LDR + shipped, redundant test mappings dropped (LDR already had them).
+      `_defi_chain_data.py` (UAC@8a117153, on LDR; no consumer referenced the key) + `gas_fee_handler.py` paid-RPC
+      comment de-Infura'd (MTDS@8fffc73b, on LDR). Infura is a removed provider (decommissioned workspace-wide
+      2026-05-22). The pre-existing blockers that initially gated this (ci_incident Finding 5) were all remediated to
+      ship it: (a) UAC version-aligned to 0.3.0 across main/LDR/staging (operator-authorized admin); (b) UAC
+      backward-compat shims driven to **0** + 0 basedpyright baseline (deleted the `instruction.py` re-export stub,
+      reworded 8 false-positive docstrings/comments, genericized the `gcs_paths` project-id) + `fear_greed` stub
+      cassette allowlisted; (c) the `base-library.sh` SHA-sentinel gap (blocked all library agent-quickmerges) fixed
+      (PM@091378337); (d) the diverged MTDS slot reconciled — `01fda7ce` (migrator gas-fees+liquidations → defi coverage
+      6→8, rebuild `--bucket`) rebased onto LDR + shipped, redundant test mappings dropped (LDR already had them).
 - [x] [CODE] P3. **DECIDED 2026-05-27 → KEEP** D13 — `governance_proposals` is an intentional unregistered scaffold for
       the Phase-4B simulation harness (not wired in `cli/main.py`), so it is NOT an active parallel path vs
       `governance_events`. No change; documented in the catalog § "Additional data types".
