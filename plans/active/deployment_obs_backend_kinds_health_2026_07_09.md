@@ -113,12 +113,14 @@ source: deployment_observability_expansion_2026_07_08.md
       `google-cloud-artifact-registry 1.22.0`; no direct-dep needed (the `_gcp_sdk` boundary stays the only import
       seam). **Live-verified**: the census now returns 2 functions (`trigger-market-tick-cefi-job`,
       `trigger-instruments-job`, both running/python312). QG green (uniswap blocker resolved upstream).
-- [ ] [BACKEND] P2. **Object-delta cold census is slow (>45 s → degrades)** — with the str→numeric coercion landed
-      (@934f22f) `_batched_object_deltas` no longer errors, but its per-distinct-asset_group manifest reads exceed the
-      45 s per-provider census bound on a cold cycle (`object-delta census exceeded 45s — degraded to empty`), so the
-      composite-health `working`/`stalled` signal that reads `object_delta` degrades to `unknown` on cold cycles (warm
-      cache unaffected). Fix: parallelize the per-asset_group manifest reads (same fan-out as the cloud-run jobs N+1)
-      and/or cache the index reads across the census cycle.
+- [x] ✅ [BACKEND] P2. **Object-delta cold census is slow (>45 s → degrades)** — with the str→numeric coercion landed
+      (@934f22f) `_batched_object_deltas` no longer errored, but its per-distinct-asset_group manifest reads ran
+      serially in a dict comprehension; on a cold cycle their sum exceeded the 45 s per-provider census bound
+      (`object-delta census exceeded 45s — degraded to empty`), pushing the BATCH `working`/`stalled` composite to
+      `unknown`. — **deployment-api@6e8d5f1 (quickmerged)**. Parallelized the reads (`ThreadPoolExecutor`,
+      `_OBJECT_DELTA_WORKERS=8`) so the census is ~max(one read) not their sum; `object_delta_for_asset_group` already
+      catches its own errors so no per-ag read can crash the map, and the once-per-distinct-asset_group behaviour is
+      unchanged (existing tests green). Warm cache was always unaffected; this fixes the cold path.
 
 ### Kinds census (make the estate visible)
 
@@ -330,13 +332,17 @@ source: deployment_observability_expansion_2026_07_08.md
       `test_detail_route_live_path_includes_d1_metrics`). QG green (sentinel 7c4265a, 78s). Rebased twice onto
       concurrent same-file landings (D.3 composite health `f5f6ff4`, AWS Lambda census `050d9a4`) — one duplicate-field
       artifact from an auto-merge in the test file's `_FakeEntry` dataclass, caught + fixed before shipping.
-- [ ] [INFRA] P2. **Persist a short D.1 rolling window** (last ~10 samples) on the registry entry — today only a single
-      most-recent sample is stored (overwritten each heartbeat tick), so `mem_slope` / "sustained idle" have no real
-      trend to plot and the new `/deployments/{id}/detail` endpoint (above) can only serve a point-in-time snapshot, not
-      a sparkline. Per the original D.2 STORE design (parent `deployment_observability_expansion_2026_07_08.md` D.2):
-      extend `DeploymentRegistryEntry` with a bounded ring-buffer field (`unified-trading-library`/`deployment-service`,
-      mirrors the "Enrich the heartbeat" todo's scope) + surface it on `DeploymentDetailResponse` (`deployment-api`,
-      additive — the current single-sample fields stay for back-compat).
+- [x] ✅ [INFRA] P2. **Persist a short D.1 rolling window** (last ~10 samples) on the registry entry — so `mem_slope` /
+      "sustained idle" have a trend to plot and `/detail` serves a sparkline, not a point. — **UTL already stored it**
+      (`HeartbeatDaemon._append_host_metrics_window` appends each D.1 sample to a bounded
+      `entry.metadata[HOST_METRICS_WINDOW_KEY]`, cap `DEFAULT_MEM_WINDOW_SIZE`=10 — found during the audit, no UTL
+      change needed) + **deployment-service@44f44afe9** (new `DeploymentRegistryEntry.host_metrics_window` +
+      `coerce_host_metrics_window`; `to_json`/`from_json` round-trip with legacy rows → `[]`;
+      `heartbeat_cli._entry_to_registry` extracts it from metadata and `_registry_to_entry` rounds it back so the
+      daemon's next tick appends instead of restarting) + **deployment-api@970bcdc** (surfaced on
+      `DeploymentDetailResponse` + `/detail`; corrected the model's now-stale "hasn't shipped" scope note). The
+      single-sample fields stay for back-compat (additive). Round-trip verified both directions at runtime; 3 new tests
+      (registry round-trip + legacy-default + /detail window). QG green both repos.
 - [x] ✅ [BACKEND] P2. **Alerts** on `oom-risk` (before the kill) + `stalled` (progress flatlines, heartbeat fresh) —
       wire into the existing alerts surface. — deployment-api@5e25dce. New `_persist_alert()` appends a JSONL row to the
       SAME shared GCS ledger (`unified-trading-cicd-events/cicd/alerts/{date}/alerts.jsonl`) agent-orchestrator's
@@ -356,8 +362,15 @@ source: deployment_observability_expansion_2026_07_08.md
       concurrently-shipped sibling census todos (CLOUD_FUNCTION `a025563`, ECS/Lambda field surfacing `e5f2ad4`) —
       genuine same-file conflict (both call sites append to `_compute_inventory`'s GCP branch), resolved by keeping both
       additions (no logical overlap).
-- [ ] [REVIEW] P2. Gate `/freshness` fetches to VM kinds only (services use error-rate health, not manifest freshness) —
-      the mock currently fetches freshness for all LIVE rows.
+- [x] ✅ [REVIEW] P2. Gate `/freshness` fetches to VM kinds only (services use error-rate health, not manifest
+      freshness) — the cockpit fetched `/deployments/{id}/freshness` for every LIVE-umbrella row. **Backend verified
+      correct** (in-scope): `compute_freshness` already returns `liveness_only` for `ShardResponsibilityKind.NONE`
+      (`deployment_freshness.py`), so a non-VM kind never gets a fabricated fresh/stale — no backend change needed. **UI
+      defensively gated** — **deployment-ui@e9b77ac (quickmerged)**: `Cockpit.tsx` now filters the freshness fetch to
+      `kind === "VM"` (only VMs are data producers with a manifest). tsc + eslint clean; the 2 existing cockpit
+      freshness specs stay green (no regression — LIVE rows are ~always VMs). Honest scope note: no dedicated
+      exclusion-regression was added — the in-app mock has no non-VM LIVE fixture and doesn't expose fetch-counting, so
+      the gate is validated as defensive (backend already covers the edge case) rather than via a new pw:L2.
 - [x] ✅ [BACKEND] P1. **Wire `stalled` + `workload-dead` into `_composite_health_status`** (`deployment-api`,
       `deployments_inventory.py`) — both prerequisite signals now exist: `object_delta` via
       `deployment_freshness.compute_freshness()` / `_object_delta_for_bucket()` (per-asset*group manifest lookup,
@@ -385,27 +398,43 @@ source: deployment_observability_expansion_2026_07_08.md
       original `f5f6ff4` composite landed without since `object_delta` didn't exist yet. 10 new/updated unit tests
       (`test_composite_health_workload_dead*_`, `test*composite_health_stalled_for_batch*_`,     `test*composite_health_batch_working_when_object_delta_positive*_`,     `test*composite_health_live_umbrella_stalled*_`, `test*batched_object_deltas_calls_once_per_distinct_asset_group`,     `test_build_inventory_threads_object_deltas*\*`) + `health_consolidator`/`deployment_freshness`object-delta tests     moved to their new home. Landed through 2 real rebase cycles against concurrently-shipped sibling work on this     same hotspot file (CLOUD_RUN_SERVICE census`ab0c431`, ECS/Lambda field surfacing, the oom-risk/stalled alert     wiring `5e25dce`) — one import-ordering conflict, one `build_inventory`new-param conflict (kept both the     sibling's`cloud_run_services`param and my`object_deltas`
       param). QG green (sentinel 29f3be5, 119s).
-- [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals don't exist yet** — discovered while wiring the BATCH row above
-      (deployment-api@29f3be5). LIVE needs an expected-active-window calendar (market-hours-aware, so an
-      idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta` (rows-out-delta) tracker — grepped
-      the codebase, `     work_delta` doesn't exist anywhere today, it's a parent-doc spec concept only. Both `stalled`
-      branches stay honest `"unknown"` until one of these lands; not urgent (v1 shipped the one row — BATCH — with a
-      real signal), but should not be silently forgotten now that the oom-risk/stalled alert wiring
-      (deployment-api@5e25dce) is live and would otherwise start firing on the FIRST real signal any of these umbrellas
-      get.
-- [ ] [REVIEW] P3. **`deployments_inventory.py` is now 1000+ lines** (cap is 900; QG's file-size check is non-blocking
-      in this repo's config today but the file is a real hotspot — 4+ slots landed sibling D.3/kinds-census todos here
-      concurrently in one session). Consider splitting Cloud-Run-job census / composite-health / service- taxonomy into
-      sibling modules once this plan's todos stop actively converging on it (splitting mid-convergence risks more
-      cross-slot conflicts than it saves).
+- [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals — DEFERRED (scope decision 2026-07-10, needs new subsystems)**.
+      Discovered while wiring the BATCH row (deployment-api@29f3be5): LIVE `stalled` needs an expected-active-window
+      calendar (market-hours-aware, so an idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta`
+      (rows-out-delta) tracker (the D.1 rolling window @970bcdc samples `/proc` cpu/mem/disk, NOT `rows_out`, so it
+      would have to be extended to carry the counter history first). **Decision**: both are genuinely NEW subsystems — a
+      market calendar and a counter-history tracker — disproportionate to build for a P3 `stalled` refinement, so they
+      are DEFERRED to a future phase (tracked in the parent `deployment_observability_expansion_2026_07_08.md`). The
+      current **honest-`"unknown"` degradation is confirmed correct** as the v1: `_composite_health_status` returns
+      `"unknown"` for LIVE/PAPER `stalled` rather than guessing from a proxy (WS-D.0 principle 2), and the
+      oom-risk/`stalled` alert wiring (deployment-api@5e25dce) only fires on a REAL state, so nothing misfires while
+      these stay unknown. BATCH — the one umbrella with a real signal (`object_delta`) — is wired + shipped. This item
+      stays open (not a fake `[x]`) as an explicit, tracked deferral.
+- [x] ✅ [REVIEW] P3. **`deployments_inventory.py` hotspot — split into sibling modules** (cap 900; QG's file-size check
+      is non-blocking today but the file was a real hotspot). Now that the plan's todos stopped converging on it,
+      extracted the two lowest-coupling cohesive chunks the todo named: **service-taxonomy →
+      `routes/_service_health.py`** (95 lines, `serving/scaled-to-zero/dead/degraded` classifiers, shared with the AWS
+      row builder) and **composite-health → `routes/_vm_health.py`** (138 lines, `vm_status` +
+      `composite_health_status` + the D.3 thresholds). Both are leaf modules (no `deployments_inventory` import → no
+      cycle); public functions aliased back to the historical private names for existing call sites/tests. File **1503 →
+      1390 lines** (~233 lines of classifier logic now in their own modules). The Cloud-Run-job census — the third named
+      candidate — stays put: it's tightly interwoven with `build_inventory`'s VM loop and would need more untangling
+      than the split saves; the file-size check is non-blocking, so it's left as future hygiene. basedpyright 0 errors;
+      all inventory/health tests green. — **deployment-api@d5f179d (quickmerged)** (+ the earlier `_service_health.py`
+      extraction @5149af19e).
 
 ### Hand off to the interactive UI session (LAST task)
 
-- [ ] [REVIEW] P3. **Hand off the UI half** — the UI plan `deployment_obs_ui_popover_health_2026_07_09.md` is LOCAL
-      (executed interactively, NOT AO-dispatched). Once the census + `DeploymentItem` contract + composite/service
-      health land, record the frozen contract sha (`<repo>@<sha>` + the new `DeploymentItem` field list) in that plan's
-      Progress Log and NOTIFY THE OPERATOR so the UI work can start here. Do NOT flip its status — a LOCAL plan is never
-      ingested.
+- [x] ✅ [REVIEW] P3. **Hand off the UI half** — already handed off + BUILT: the UI plan
+      `deployment_obs_ui_popover_health_2026_07_09.md` is DONE (all 6 todos, `pw:L2` green), built interactively against
+      the landed contract and now running against the real backend. **Frozen contract (2026-07-10)**: `DeploymentItem`
+      (`deployments_inventory.py`) — kind/umbrella(incl. `NONE`)/cloud/service/asset*group/status +
+      `composite_health_status` (VMs: dead|hung|disk-full|oom-risk|working|stalled|workload-dead|unknown; services:
+      serving|scaled-to-zero|dead|degraded) + Tier-0 fields (machine_type/zone/rows*\*/uptime_hours) +
+      ECS/Lambda/Cloud-Run structural fields + `counts_by_kind`; `DeploymentDetailResponse`
+      (`GET /deployments/{name}/detail`) — the D.1 vector + `host_metrics_window` (sparkline). Contract additions since
+      the UI's first build the UI could still adopt: service `composite_health_status` (now live-wired, @5149af19e) +
+      `host_metrics_window` for a real sparkline (@970bcdc). Operator notified via this session.
 
 ## Progress Log
 

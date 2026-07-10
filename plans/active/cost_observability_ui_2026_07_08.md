@@ -185,7 +185,9 @@ business-context fast-follow (asset_group via labels/tags), deliberately out of 
       generalizes what the retired narrow page showed).
 - [ ] [BACKEND] P3. `BLOCKED-CREDENTIALS` GitHub real billing — replace the dummy provider with the Enhanced Billing API
       (`GET /organizations/{org}/settings/billing/usage` or the user endpoint) once a **classic PAT with `user` scope**
-      exists. Unblocks the moment the token lands.
+      exists. Unblocks the moment the token lands. → **2026-07-10** — re-tracked as a P1 in the "GitHub real billing &
+      GCP Pacific-day alignment" subsection below; the token in hand is a fine-grained PAT **without** billing/`Plan`
+      scope (403 on every billing endpoint), so still credential-blocked pending a Plan-scoped token.
 - [ ] [BACKEND] P3. Deployed AWS-credential cutover — wire the Athena reader to the keyless WIF role
       (`_code_builds_aws.py` precedent) so the Cloud Run deployment reaches Athena without a static key. Local dev uses
       the ambient profile; this is only needed at deploy time.
@@ -299,6 +301,42 @@ CUR (2026-07-09). Operator decisions captured inline.
       the new currency behaviour (USD everywhere; GCP GBP→USD at Google's daily rate; AWS native USD) and the
       UTC-vs-Pacific day-boundary caveat. pw:L2 regression added to `cost-observability.spec.ts` (hover reveals both the
       "converted at Google's own daily rate" and "US Pacific time" lines) — 15/15 pw + full UI QG green.
+
+### GitHub real billing & GCP Pacific-day alignment (2026-07-10 — operator)
+
+Two focused items this pass; the multi-account/multi-org idea is **explicitly out** (decision recorded below).
+
+- [ ] [BACKEND] P1. **GCP Pacific-day bucketing (GCP-only) — make BigQuery match the console.** The day mismatch is
+      **GCP only**: `gcp_facts_sql` buckets by `DATE(usage_start_time)` = **UTC**, but the GCP billing console/reports
+      group by **US Pacific** (empirically proven — re-windowing the export on Pacific midnight / 07:00 UTC moved Jul3–9
+      gross from ~8% off to **1.6%** off the console CSV). AWS needs **no change**: the CUR `line_item_usage_start_date`
+      and AWS Cost Explorer are **both UTC**, so AWS already ties out (Pacific-converting AWS would BREAK its match).
+      Fix: group + filter GCP on `DATE(usage_start_time, 'America/Los_Angeles')` (keep pruning on `_PARTITIONTIME`, pad
+      unchanged). Unit test asserting the Pacific TZ is in the SQL; reword the header TZ tooltip (GCP now
+      Pacific-matched, AWS UTC-matched).
+- [ ] [BACKEND] P1. **GitHub real billing — replace the dummy provider.** `github_facts` is a deterministic dummy
+      (`is_placeholder=True`). Wire the real GitHub billing API, token sourced through `DeploymentApiConfig` (**NEVER**
+      `os.getenv`), mapped to `CostRecord` (USD-native), placeholder banner removed. Personal-account billing
+      (`IggyIkenna` is a **User**, in no orgs) → the enhanced usage report
+      `GET /users/{username}/settings/billing/usage` (per-day × product × repo × SKU net $) is the target; legacy
+      `/settings/billing/{actions,packages,shared-storage}` are minutes/GB fallbacks. **BLOCKER (verified 2026-07-10):**
+      the token we have is a **fine-grained PAT without the "Plan" account permission** → **403 "Resource not
+      accessible"** on every billing endpoint. Needs a token with billing read (fine-grained **Account → Plan →
+      Read-only**, or a classic PAT with `user` scope). Build the provider + config wiring now; live-verify + drop
+      `is_placeholder` the moment a billing-scoped token lands.
+
+**DECISION — multi-account / multi-org is NOT an in-app selector (2026-07-10, operator).** New AWS/GCP accounts for
+Odum-Research (opened to harvest fresh cloud credits) will be **entirely separate** — separate org, project, BigQuery
+tables, **and** separate secrets / env vars / JWT tokens / gcloud CLI identities. That is far heavier than swapping a
+query table, so an in-app account/project dropdown is the wrong tool. **Chosen architecture: run the SAME code as a
+separate deployment (its own backend + VM + UI) per account/org** — simpler to operate and less error-prone. Therefore
+the earlier Tier-1 selector / Tier-2 multi-source-config / AWS cost-allocation-tag ideas are **dropped** (not built now
+or in the near future). The current shared-account tenant split (Odum vs the account owner in `427895769566`) is moot —
+Odum migrates to its own fresh accounts rather than splitting the legacy one.
+
+**Codex SSOTs:** `codex/05-infrastructure/billing-cost-observability.md` (exports + GitHub provider contract — update
+when the real provider lands), `codex/06-coding-standards/ui-testing-layers.md` (Playwright L2 gate),
+`codex/06-coding-standards/` (no `os.getenv` — GitHub token via config).
 
 ## Resource-detail enrichment + unified breakdown (operator-requested 2026-07-08)
 
@@ -542,3 +580,15 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
     force-push a shared branch for cosmetic text). Author label reads `[main·harsh_pc]` not `[slot-4·]` (same reason,
     pre-existing). The P1 GCP→USD conversion resumes tomorrow AM on top of this.
   - **unified-trading-pm@`eadf1c173`** — the currency / AWS-history / TZ plan follow-ups (added earlier this session).
+- 2026-07-10 — **Multi-account/project + GitHub-token + Pacific-TZ scoping → operator narrowed it (slot 4,
+  interactive).** Initial scoping read the whole cost-obs backend + probed CUR metadata: (1) the aggregation layer is
+  already account-agnostic (an in-app selector would be Tier-1 small); (2) **AWS can't separate the two tenants in one
+  account** — 159 CUR cols, **zero** cost-allocation-tag / cost-category cols; (3) **Pacific-vs-UTC is GCP-only** (AWS
+  CUR + Cost Explorer are both UTC); (4) GitHub real-billing needs a billing-scoped token. **Operator decisions
+  2026-07-10:** (1) fix GCP→Pacific now; (2/3) **drop the in-app multi-account/multi-org selector entirely** — future
+  Odum-Research accounts are wholly separate (org/project/BQ tables + secrets/env/JWT/gcloud identities), so each gets
+  its **own separate deployment (backend + VM + UI)** rather than a dropdown; stripped the Tier-1/Tier-2/tag items from
+  the plan; (4) **this pass = GitHub real billing + the GCP Pacific fix.** GitHub probe (verified): `IggyIkenna` is a
+  **User** in no orgs, and the token we hold is a **fine-grained PAT without the `Plan` permission** → **403** on every
+  billing endpoint — real GitHub $ needs a Plan-scoped token (operator credential ask). Code for GCP-Pacific + the
+  GitHub provider scaffold follows in this session; GitHub live-verify pends the token.
