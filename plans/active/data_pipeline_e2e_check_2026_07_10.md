@@ -388,6 +388,37 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       higher than batch (WS connection setup + the bounded wait) — needs operator sizing input; also blocked on knowing
       which real venues currently HAVE a registered connector (a quick, cheap enumeration — not yet done).
 
+- [x] 22. ✅ [DATA] P0. **Root-caused and fixed a systemic false-negative in the MTDS live-leg poller** — found via the
+      first real pilot run (`CEFI:ASTER:book_snapshot_5`), not guessed. `launch-mtds-live.sh` had no `--vm-name`
+      override (unlike `launch-mtds-backfill-vm.sh`, which does), so it always self-generated its VM name from
+      **local-time** `date(1)`, while `pipeline_e2e_check.py`'s poller predicted the name from **UTC**
+      (`datetime.now(UTC)`) — a guaranteed mismatch on any non-UTC host (confirmed: this host is BST/UTC+1, exactly a
+      1-hour offset matching the observed discrepancy between the predicted name `...-211208` and the real instance
+      `...-221209`). The poller then never found its predicted name, timed out immediately, and reported
+      `vm_not_success:vm_self_deleted_no_exit_status` — even though the real VM (confirmed via
+      `gcloud compute instances list`) had launched, run its full bounded `--max-duration-seconds` window, and was
+      correctly in `STOPPING` state. This would have produced a false failure on **every** MTDS live-leg row in the full
+      344-shard sweep, not just this one. Fixed: added `--vm-name` override to `launch-mtds-live.sh` (mirrors the
+      backfill launcher's `VM_NAME_OVERRIDE` pattern) + switched its internal `RUN_TS` to `date -u` (defense in depth);
+      `pipeline_e2e_check.py`'s `_run_live_leg`/`_run_live_leg_prod_unbounded` now pass `--vm-name {vm_name}` explicitly
+      so the poller's predicted name and the launcher's actual name are the same string, never two independently-derived
+      timestamps. Evidence: `deployment-service@b278d1c` (QG green, 62s), `market-tick-data-service@e2813e76` (QG green,
+      24s) — both shipped via the dirty-deps direct-push carve-out (unrelated foreign WIP in
+      unified-trading-library/unified-api-contracts blocked quickmerge's pre-flight audit). Re-pilot in progress to
+      confirm the live leg now reports a genuine verdict.
+
+      **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
+          full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+          is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
+          already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
+          REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
+          `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+          `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+          (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+          full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+          the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+          pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+
 ## Verification (workspace-wide, before this plan is considered shippable)
 
 1. `bash deployment-service/scripts/vm/launch-instruments-backfill-vm.sh --dry-run --asset-group CEFI --venues BINANCE-FUTURES --start 2026-07-01 --end 2026-07-01 --test-run`
@@ -654,3 +685,22 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   452-shard run, account for IS's own per-data-type cadence variability (some daily, some event-triggered — operator's
   own framing) in day selection, then build a high-external-concurrency driver and launch the full sweep. Journaling
   here continuously per the `/autonomous` contract in case of context compression during the 3-hour unattended window.
+
+- 2026-07-10 (autonomous session, continued) — **First 2 real pilots run** (concurrency driver + real shard enumeration
+  from prior entry): IS `CEFI:ASTER` — genuine 3/3 pass (force/skip/live all real, manifest-verified). MTDS
+  `CEFI:ASTER:book_snapshot_5` — genuine 3/3 fail. Root-caused both failure modes rather than accepting them at face
+  value (per the operator's "doesn't all have to work, but at least we know what does and what doesn't" — meaning a
+  failure must be diagnosed, not just recorded):
+  1. **Real tooling bug, now fixed** (todo 22 above): the live leg's VM-name prediction (UTC) never matched
+     `launch-mtds-live.sh`'s self-generated name (local time, no override) — a guaranteed mismatch on this non-UTC host,
+     producing a false `vm_self_deleted_no_exit_status` on a VM that actually ran correctly. Fixed in both repos,
+     shipped, re-pilot launched to confirm.
+  2. **Not a bug — a pre-existing, operator-confirmed (2026-06-22) architectural gap**: ASTER's REST API cannot serve
+     historical `book_snapshot_5` at all (current-book-only endpoint); `force`/`skip` legitimately can never produce
+     data for this exact (venue, data_type). Already in the UAC honest-coverage-reasons registry
+     (`EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`). Folded into the aggregator design (next) so the full-sweep report
+     doesn't misreport known gaps as new findings.
+
+  **Next**: 2 re-pilots in flight (ASTER book_snapshot_5 retest with the fix; BINANCE-FUTURES trades as a
+  known-batch-servable control) to confirm the fix holds before launching the full 452-shard sweep. Building the
+  aggregator (report.py-reading + honest-coverage cross-reference) in parallel while pilots run.
