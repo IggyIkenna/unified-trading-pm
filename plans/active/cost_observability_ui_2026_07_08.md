@@ -185,7 +185,8 @@ business-context fast-follow (asset_group via labels/tags), deliberately out of 
       generalizes what the retired narrow page showed).
 - [ ] [BACKEND] P3. `BLOCKED-CREDENTIALS` GitHub real billing — replace the dummy provider with the Enhanced Billing API
       (`GET /organizations/{org}/settings/billing/usage` or the user endpoint) once a **classic PAT with `user` scope**
-      exists. Unblocks the moment the token lands.
+      exists. Unblocks the moment the token lands. → **UNBLOCKED 2026-07-10** (operator has the token); re-tracked as a
+      P1 in the "Multi-account/project filtering …" subsection below.
 - [ ] [BACKEND] P3. Deployed AWS-credential cutover — wire the Athena reader to the keyless WIF role
       (`_code_builds_aws.py` precedent) so the Cloud Run deployment reaches Athena without a static key. Local dev uses
       the ambient profile; this is only needed at deploy time.
@@ -299,6 +300,73 @@ CUR (2026-07-09). Operator decisions captured inline.
       the new currency behaviour (USD everywhere; GCP GBP→USD at Google's daily rate; AWS native USD) and the
       UTC-vs-Pacific day-boundary caveat. pw:L2 regression added to `cost-observability.spec.ts` (hover reveals both the
       "converted at Google's own daily rate" and "US Pacific time" lines) — 15/15 pw + full UI QG green.
+
+### Multi-account/project filtering, GitHub real billing & Pacific-time alignment (2026-07-10 — operator)
+
+Operator (Harsh) wants the page to distinguish **who is spending**. One AWS account (`427895769566`) and the GCP billing
+account (`016B25-109840-AF2ACB`) are shared by **two independent tenants** — Odum (our org, since ~Mar 2026) and the
+account owner (since ~2025). GCP credits expired **2026-02-09**, so workloads shifted GCP→AWS wherever they can run.
+More AWS **and** GCP accounts are coming. Goal: a top-of-page **account/project selector** + an architecture that
+absorbs future accounts cheaply. Evidence = live reads of the code (`service.py:294` post-fetch filter pattern, the two
+SELECTs in `queries.py`, the single-scalar source config in `deployment_api_config.py:93-122`) + Athena
+`get-table-metadata` on the CUR (2026-07-10).
+
+**Blast-radius finding (verified against the code):** the aggregation layer is already account-agnostic —
+`_fetch_window` pulls one flat `CostRecord` list and every filter (e.g. `cloud`) is applied **post-fetch in memory**
+(`recs = [r for r in recs if r.cloud == cloud]`), every dimension is a one-line `_grouped(recs, key)`. The ONLY
+single-tenant assumptions are (a) the two SELECTs don't carry an account/project column, and (b) the source identifiers
+in config are **scalars**, not lists. So there are two cost tiers:
+
+- **Tier 1 — the dropdown itself is SMALL** (same shape as the USD/GBP toggle just shipped): add `project.id` (GCP) /
+  `line_item_usage_account_id` (AWS) to the two SELECTs → an `account`/`project` field on `CostRecord`/`BreakdownRow` →
+  a post-fetch `account=` filter + an `account`/`project` breakdown dimension → a route param → a header selector. **~1
+  day.** GCP-by-project works on data we already have (9 projects seen live); AWS-by-account shows one value today,
+  wired for the future.
+- **Tier 2 — a genuinely separate org / billing account is MEDIUM** (config scalars → a **list of sources**;
+  `_load_window` loops + concatenates records). **Key nuance:** a **new AWS linked account under the same org** or a
+  **new GCP project on the same billing account** flows into the EXISTING CUR/export automatically (consolidated billing
+  / billing-account-scoped export) — **zero config change**, it just appears as a new value in the dropdown. Tier 2 is
+  ONLY for a separate payer / separate billing account. **~1-2 days, only when actually needed.**
+
+- [ ] [BACKEND+UI] P1. **Account/project selector + dimension (Tier 1).** GCP: add `project.id AS project_id` +
+      `project.name` to `gcp_facts_sql` SELECT/GROUP BY; AWS: add `line_item_usage_account_id AS account_id`. New
+      `account`/`account_label` on `CostRecord` + `BreakdownRow`; map in `providers.py`. `service.py`: an `account=`
+      post-fetch filter (mirrors the `cloud` filter) + an `account`/`project` breakdown dimension via `_grouped`. Route
+      param on `/summary`, `/breakdown`, `/timeseries`. UI: a header selector (Segmented if ≤4 values, else a `select`)
+      threading `account`. GCP-by-project is meaningful immediately; AWS-by-account is future-ready.
+- [ ] [DECISION+INFRA] P1. **AWS single-account tenant separation is NOT natively possible — operator decision needed.**
+      `get-table-metadata` on `cur_uts_cost_usage` (2026-07-10): **159 columns, ZERO `resource_tags_*` and ZERO
+      `cost_category_*`** — no cost-allocation tags are activated. The only account dimensions are
+      `line_item_usage_account_id` / `bill_payer_account_id`, both = the single account `427895769566`. So Odum-vs-owner
+      spend **cannot be split from the CUR as it stands.** Options: **(a) separate AWS accounts** — the owner runs their
+      workloads in their own account under the org; `line_item_usage_account_id` then splits cleanly and the payer-level
+      CUR captures every linked account automatically (recommended — aligns with the "future new accounts" direction);
+      **(b) activate cost-allocation tags** + tag resources by owner — **going-forward only**, can't retro-split past
+      spend, needs a Billing-console activation + a crawler re-run to add `resource_tags_user_<key>` columns. GCP has no
+      such problem — it separates by **project** natively (Tier-1 covers it).
+- [ ] [BACKEND] P1. **GCP Pacific-day bucketing (GCP-only) — match the console.** The mismatch is **GCP only**:
+      `gcp_facts_sql` buckets by `DATE(usage_start_time)` = **UTC**, but the GCP billing console/reports group by **US
+      Pacific** (empirically proven — re-windowing the export on Pacific midnight / 07:00 UTC moved Jul3–9 gross from
+      ~8% off to **1.6%** off the console CSV). AWS needs **no change**: the CUR `line_item_usage_start_date` and AWS
+      Cost Explorer are **both UTC**, so AWS already ties out (Pacific-converting AWS would BREAK its match). Fix: group
+      GCP by `DATE(usage_start_time, 'America/Los_Angeles')` + shift the `usage_start_time` window to Pacific-midnight
+      UTC boundaries (keep padding the `_PARTITIONTIME` floor). Unit test asserting the Pacific date assignment; update
+      the header TZ tooltip (now "GCP matched to Pacific", not "we're UTC, console is Pacific").
+- [ ] [BACKEND] P1. **GitHub real billing — token now available (UNBLOCKS the Phase-Deferred item).** Replace the
+      deterministic dummy `github_facts` with a real read via the now-available token, sourced through
+      `DeploymentApiConfig` (**NEVER** `os.getenv`). Enhanced Billing
+      (`GET /organizations/{org}/settings/billing/usage`) or the per-product Actions/Packages/Storage endpoints; map to
+      `CostRecord` (USD-native), drop `is_placeholder`, remove the placeholder banner. Same normalized shape → a
+      provider-only change. Supersedes the Deferred `BLOCKED-CREDENTIALS GitHub real billing` item above.
+- [ ] [BACKEND] P2. **Multi-source config (Tier 2) — future separate orgs / billing accounts.** Turn the source scalars
+      (`gcp_billing_resource_table`, `aws_cur_{database,table,region}`, output bucket) into a **list of billing
+      sources**; `_load_window` iterates and concatenates. Additive — the flat-record merge in `_fetch_window` already
+      supports N sources. Do NOT build until a genuinely separate payer / billing account exists (new linked accounts /
+      projects under the current org/billing-account need no config change).
+
+**Codex SSOTs:** `codex/05-infrastructure/billing-cost-observability.md` (exports + source config — update with the
+account/project column + multi-source contract when Tier-1 lands), `codex/06-coding-standards/ui-testing-layers.md`
+(Playwright L2 gate), `codex/06-coding-standards/` (no `os.getenv` — GitHub token via config).
 
 ## Resource-detail enrichment + unified breakdown (operator-requested 2026-07-08)
 
@@ -542,3 +610,13 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
     force-push a shared branch for cosmetic text). Author label reads `[main·harsh_pc]` not `[slot-4·]` (same reason,
     pre-existing). The P1 GCP→USD conversion resumes tomorrow AM on top of this.
   - **unified-trading-pm@`eadf1c173`** — the currency / AWS-history / TZ plan follow-ups (added earlier this session).
+- 2026-07-10 — **Multi-account/project + GitHub-token + Pacific-TZ scoping (slot 4, interactive).** Operator wants a
+  top-of-page account/project selector (one AWS account + the GCP billing account are shared by Odum + the account
+  owner; more accounts coming), the GitHub token wired for real costs, and Pacific-aligned dates. Read the whole
+  cost-obs backend to ground the blast radius + probed the CUR metadata (`get-table-metadata`). Findings (new subsection
+  above): (1) the aggregation layer is already account-agnostic — the dropdown is **Tier-1 small** (add 1 column to each
+  SELECT + a post-fetch filter, ~1d), separate orgs/billing-accounts are **Tier-2 medium** (config-as-list), and new
+  linked accounts/projects under the existing org/billing-account cost nothing; (2) **AWS can't separate the two tenants
+  in one account** — 159 CUR cols, **zero** cost-allocation-tag / cost-category cols → operator decision (separate
+  accounts vs activate tags); GCP separates by **project** natively; (3) **Pacific-vs-UTC is GCP-only** (AWS CUR + Cost
+  Explorer are both UTC); (4) GitHub real-billing **unblocked** by the token. Plan-only this step — no code shipped.
