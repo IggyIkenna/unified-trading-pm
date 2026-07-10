@@ -35,7 +35,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by: "unified-trading-pm@<pending-sha> — see Resolution section below"
+resolved_by: "unified-trading-pm@6e8a48424 — see Resolution section below"
 audited_scope: single-step-verification
 ---
 
