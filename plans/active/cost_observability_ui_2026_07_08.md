@@ -249,7 +249,7 @@ faithfully mirrors its sources — every GCP per-service figure matches the `bq`
 **source-level, not UI math**. Evidence = live `bq` probes on the resource table + `SHOW COLUMNS`/Athena probes on the
 CUR (2026-07-09). Operator decisions captured inline.
 
-- [ ] [BACKEND+UI] P1. **GCP is billed in GBP but the UI prints `$` — convert to USD everywhere.** The BQ export's
+- [x] ✅ [BACKEND+UI] P1. **GCP is billed in GBP but the UI prints `$` — convert to USD everywhere.** The BQ export's
       `currency` column = **`GBP`** on all 1.79M rows (last 60d); the pipeline selects `cost` raw with no FX and the
       frontend `usd()` hardcodes `$`, so every GCP figure is a **pound value wearing a dollar sign** (the "GCP
       $12,593/30d" is really £12,593). Proven 3 independent ways: (a) `currency='GBP'`, zero USD rows; (b)
@@ -260,11 +260,29 @@ CUR (2026-07-09). Operator decisions captured inline.
       currency_conversion_rate))`and     the credit line divides the`UNNEST(credits)`sum by the same outer-row`currency_conversion_rate`; usage amounts     untouched; AWS/GitHub paths unchanged. Verified: Jul3–9 gross £2,708.12 → **$3,581.93** (rate 0.756), flows     per-service (Cloud Run £1,264.84→$1,672.96). Whole page becomes genuinely USD → the `$`label +`usd()`become     correct and the cross-cloud total valid. Add a unit test asserting the`/rate`split; update    `codex/05-infrastructure/billing-cost-observability.md`
       (GCP GBP-native, USD at query time). NB reports the **USD list-equivalent** (comparable to AWS), NOT the GBP
       invoice cash figure.
-- [ ] [UI] P2. **GBP view option for GCP (tally against the £ invoice).** Primary display stays USD everywhere; add an
-      option to also read GCP figures in **native GBP** so the operator can tie out to the GBP console/invoice. AWS
+      - ✅ **2026-07-10 — deployment-api@`782c988`.** `gcp_facts_sql` now divides both `cost` and each row's credit sum
+        by `IFNULL(NULLIF(currency_conversion_rate, 0), 1)` (per-source-row, guarded no-op for a USD account); usage
+        untouched. Verified vs live BQ for the current window to the penny: backend GCP gross **$2,978.18** =
+        `SUM(cost/rate)`, credit **−$1,719.36**, net **$1,258.82** (usd_per_gbp = 1.3227). Unit test
+        `test_gcp_facts_sql_converts_gbp_to_usd_via_conversion_rate` added; 52/52 cost-obs tests + full backend QG green.
+        Codex `billing-cost-observability.md` updated (Currency bullet). No UI change needed — the existing `usd()`/`$`
+      is now correct. GBP tally view is the next todo (P2).
+- [x] ✅ [UI] P2. **GBP view option for GCP (tally against the £ invoice).** Primary display stays USD everywhere; add
+      an option to also read GCP figures in **native GBP** so the operator can tie out to the GBP console/invoice. AWS
       can't be GBP (no AWS-supplied rate — external FX only), so the GBP view is GCP-only-meaningful: thread
       `currency` + the native amount through the cost model and surface GCP's £ in a tooltip / secondary line (or a
-      USD⇄GBP control that only re-denominates GCP while AWS stays USD-labelled). Confirm exact UX at build time.
+      USD⇄GBP control that only re-denominates GCP while AWS stays USD-labelled). Confirm exact UX at build time. - ✅
+      **2026-07-10 — operator chose Option A (a USD⇄GBP toggle).** Backend threads native GBP end-to-end:
+      `gcp_facts_sql` also selects the raw pre-conversion `cost_native`/`credit_native` + `currency`; a `_NativeAcc`
+      DRYs the per-group native accumulation across every breakdown builder; `CloudSummary`/`BreakdownRow` expose
+      `currency` + `*_native` (mixed cross-cloud keys → USD so a by-day row never mislabels).
+      **deployment-api@`033967a`** (threading, +`test_native_currency_threads_gbp_for_gcp_tally`) + **@`a40f18a`**
+      (mixed-currency guard). Verified vs live BQ: GCP `gross_native` £2,251.65 (rate 0.756), AWS mirrors (rate 1.0).
+      UI: a header `USD/GBP` `Segmented` re-denominates GBP-native rows (GCP) to £ across KPI tiles + breakdown table
+      (incl. Other/Unattributed residual + the fraction hint) + leaf tables ($/GB and bucket component split
+      re-denominated at the row's own rate); AWS/ GitHub + cross-cloud aggregates (grand total, trend/donut) stay USD,
+      since no GBP figure exists. **deployment-ui@`6bc9139`** — 14 vitest + 16 pw (`USD⇄GBP toggle …` regression) + full
+      UI QG green. Codex `billing-cost-observability.md` Currency bullet updated.
 - [ ] [BACKEND/INFRA] P2. **AWS Athena holds July-2026 only — investigate a CUR historical backfill.** Per-month probe:
       `aws_billing.cur_uts_cost_usage` contains ONLY `2026-07` (gross $792.89) — the CUR delivery started in July, so
       `/ops/costs` structurally cannot show any pre-July AWS spend. The operator's AWS CSV is Jan–Jun (Cost Explorer,
@@ -273,10 +291,14 @@ CUR (2026-07-09). Operator decisions captured inline.
       data" on report re-creation, or a one-off Cost Explorer `GetCostAndUsage` import into a side table. If feasible →
       backfill full-year AWS history; else document the AWS tab as **July-2026-onward** (operator: acceptable). Not a
       code bug — a data-source coverage gap.
-- [ ] [UI] P3. **Top-of-page tooltip: GCP console = Pacific day boundary, export = UTC.** Not a bug — it's why a console
-      CSV won't tie to the penny. Same Jul3–9 window/currency: console gross £2,509.38 vs export(UTC) £2,708.12;
+- [x] ✅ [UI] P3. **Top-of-page tooltip: GCP console = Pacific day boundary, export = UTC.** Not a bug — it's why a
+      console CSV won't tie to the penny. Same Jul3–9 window/currency: console gross £2,509.38 vs export(UTC) £2,708.12;
       re-windowing the export on Pacific midnight (07:00 UTC) → £2,549.07, within £40 (1.6%) of console (residual =
-      late-arriving recent-day data). Add a one-line tooltip so operators don't chase the ~8% phantom gap.
+      late-arriving recent-day data). Add a one-line tooltip so operators don't chase the ~8% phantom gap. - ✅
+      **2026-07-10 — deployment-ui@`95370af`.** Header `InfoTip` (`data-testid="cost-currency-tz-note"`) covering both
+      the new currency behaviour (USD everywhere; GCP GBP→USD at Google's daily rate; AWS native USD) and the
+      UTC-vs-Pacific day-boundary caveat. pw:L2 regression added to `cost-observability.spec.ts` (hover reveals both the
+      "converted at Google's own daily rate" and "US Pacific time" lines) — 15/15 pw + full UI QG green.
 
 ## Resource-detail enrichment + unified breakdown (operator-requested 2026-07-08)
 

@@ -104,13 +104,15 @@ source: deployment_observability_expansion_2026_07_08.md
 
 ### 🟡 Runtime findings from the live P0 verification (2026-07-09 — capture, not yet fixed)
 
-- [ ] [BACKEND] P1. **`google-cloud-functions` missing from deployment-api's deps/lock** — the live CLOUD_FUNCTION
-      census fails `No module named 'google.cloud.functions_v2'` and honest-degrades to empty (0 functions shown; would
-      also break on a prod deploy of the new census code). deployment-service@fb217de added `google-cloud-functions` but
-      deployment-api's `pyproject.toml`/`uv.lock` (which pulls deployment-service editable) was never regenerated to
-      include it, and the QG's `uv sync` prunes it from the venv (grep `google-cloud-functions` in deployment-api
-      `uv.lock` = 0). Fix: add the dep to deployment-api (or re-export functions_v2 through the deployment-service
-      `_gcp_sdk` boundary that already declares it) + regenerate the lock; verify the live census returns the functions.
+- [x] ✅ [BACKEND] P1. **`google-cloud-functions` missing from deployment-api's deps/lock** — the live CLOUD_FUNCTION
+      census failed `No module named 'google.cloud.functions_v2'` and honest-degraded to empty (0 functions shown; would
+      also break a prod deploy of the new census code). deployment-service@fb217de added `google-cloud-functions` and
+      deployment-api uses `functions_v2` via its `_gcp_sdk` boundary, but deployment-api's `uv.lock` predated that
+      addition so `uv sync` pruned it. — **deployment-api@bc506c5 (quickmerged)**. Regenerated the lock (transitive
+      resolution from the deployment-service editable dep): adds `google-cloud-functions 1.24.0` +
+      `google-cloud-artifact-registry 1.22.0`; no direct-dep needed (the `_gcp_sdk` boundary stays the only import
+      seam). **Live-verified**: the census now returns 2 functions (`trigger-market-tick-cefi-job`,
+      `trigger-instruments-job`, both running/python312). QG green (uniswap blocker resolved upstream).
 - [ ] [BACKEND] P2. **Object-delta cold census is slow (>45 s → degrades)** — with the str→numeric coercion landed
       (@934f22f) `_batched_object_deltas` no longer errors, but its per-distinct-asset_group manifest reads exceed the
       45 s per-provider census bound on a cold cycle (`object-delta census exceeded 45s — degraded to empty`), so the
@@ -301,10 +303,16 @@ source: deployment_observability_expansion_2026_07_08.md
       `ready is False` (Cloud Run, and takes priority over scale-to-zero config); `degraded` on partial capacity
       (`0<running<desired`), unknown ready-state, or error-rate over a v1 0.05 threshold (undocumented SLO in the plan,
       tune later); `serving` otherwise. 15 unit tests (`test_service_health_taxonomy.py`) pin every state + boundary
-      (threshold is `>` not `>=`, dead beats scaled-to-zero on priority). NOT yet wired to live inventory rows — the
-      `ECS_SERVICE`/`CLOUD_RUN_SERVICE` census this consumes (this plan's kinds-census todos, still unchecked) hasn't
-      landed, and `DeploymentKind` doesn't carry those kinds yet; these are the reusable status-derivation half, ready
-      for that census to call once it ships. QG green (sentinel eda5be5).
+      (threshold is `>` not `>=`, dead beats scaled-to-zero on priority). QG green (sentinel eda5be5). **⚠️ Classifier
+      shipped @eda5be5 but was NOT wired to live rows** — service rows carried only a binary `running`/`pending`
+      placeholder; the `serving`/`scaled-to-zero`/`dead`/`degraded` verdict never reached the cockpit (honesty gap found
+      2026-07-10). **NOW WIRED — deployment-api@5149af19e (2026-07-10, quickmerged)**: extracted both classifiers to a
+      shared `routes/_service_health.py` (a reverse import from `_aws_deployments` would have cycled), and
+      `_cloud_run_service_item` / `_ecs_service_item` now set `DeploymentItem.composite_health_status` from them. Added
+      `min_instance_count` to the Cloud Run census (`template.scaling.min_instance_count`) so an always-on service
+      (min>0) reads `serving` while an idle min-0 one reads `scaled-to-zero`. 5 new/extended wiring tests
+      (`test_build_inventory_wires_cloud_run_service_health_taxonomy` + composite assertions on the 3 ECS
+      running/scaled-to-zero/dead tests) prove the live row carries the sub-taxonomy, not a placeholder.
 - [x] ✅ [BACKEND] P2. **`/deployments/{id}/detail`** endpoint serving the rolling window (popover); the thin list
       carries only the composite + headline numbers. — deployment-api@7c4265a. `GET /deployments/{name}/detail` (path
       param is the wire `DeploymentItem.name` — VM/job/service name, not an orchestration `deployment_id`; distinct
