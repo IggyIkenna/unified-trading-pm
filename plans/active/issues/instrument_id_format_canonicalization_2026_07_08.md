@@ -1015,3 +1015,24 @@ the PRD bucket regardless of source bucket):
 
 Shipped via quickmerge: `instruments-service` (fix + test + remediation script + docs). Real per-venue before/after
 counts also recorded in `instruments-service/docs/DEFI_INSTRUMENTS.md` § "Legacy GCS naming audit" → "Finding 1".
+
+**UPDATE 2026-07-10 — all 4 durability VMs confirmed complete, real exit_code=0, self-deleted overnight.** Checked real
+GCS-streamed `run.log` content for each (not inferring from VM absence alone):
+
+- `canonical-migration-tradfi-20260709-160919`: DONE in 7500.6s (~2h5m).
+  `{'source_missing': 26691, 'already_canonical': 10184, 'moved+rewritten': 87149, 'rewritten_in_place': 34784, 'error': 4}`
+  — 4 errors out of ~158,812 real objects.
+- `canonical-migration-defi-20260709-161510`: DONE in 11737.7s (~3h16m). 357,169/357,169 objects (100%),
+  411,224,609/477,014,901 rows touched,
+  `{'skipped_empty_or_missing_cols': 259927, 'unchanged_already_correct_or_unresolvable': 32793, 'rewritten': 64449}`.
+- `canonical-migration-prediction-...-shard4c`: DONE in 14913.2s (~4h9m). KALSHI migrated=494,766/error=0; POLYMARKET
+  migrated=529,862/error=8 (out of 92.9M rows). Verify samples 30/30 OK both venues.
+- `canonical-migration-prediction-...-shard5b`: DONE in 5910.5s (~1h38m). POLYMARKET migrated=399,491/error=0. Verify
+  30/30 OK.
+
+No local migration processes remain running. Both instances-service and unified-api-contracts local HEAD exactly match
+`origin/live-defi-rollout`; market-tick-data-service and unified-trading-pm were a few routine promote/backmerge commits
+behind (unrelated fleet CI, pulled clean). One real, already-known finding remains uncommitted in
+market-tick-data-service (`migrate_prediction_instrument_id_wrap_2026_07_09.py`'s connection-pool hardening — see the
+"Deferred, unshipped" note in the `wf_118d8268-18c` completion update above). This confirms the whole point of moving to
+VMs: all 4 ran to completion unattended, independent of the operator's laptop or this session.
