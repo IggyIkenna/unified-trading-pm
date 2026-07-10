@@ -616,3 +616,41 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   **Genuinely done**: no partial states, no silent scope-narrowing. The one deliberately-not-fully-automated item is
   todo 17's PROD-manifest-cleanup decision (3 real phantom rows from this session's own test runs) — flagged for the
   operator per the workspace's "never unilaterally delete real captured state" precedent, not left ambiguous.
+
+- 2026-07-10 (autonomous session, full-coverage phase) — **Operator directive**: run the FULL comprehensive matrix —
+  every real shard (108 IS + 344 MTDS, all 5 asset groups), both `force`+`skip` AND `live`, "no exceptions... doesn't
+  all have to work, but at least we know what does and what doesn't" — maximally parallelized to target sub-2-hours
+  total. This is a genuinely different scope than todos 1-17 (which proved the tool on 1 shard); operator explicitly
+  invoked `/autonomous` for the remainder ("no laziness... keep going on anything you can do properly").
+
+  **Critical course-correction found before spending any real infra time on it** (operator's own prompt raised this,
+  proven by a dedicated research investigation, not assumed): the live-leg verification I'd just written checked for a
+  GCS parquet object under the same `raw_tick_data/by_date/.../pipeline_mode=live_*/...` hive shape the batch legs use.
+  **This is wrong and would have spuriously failed every real live run.** Confirmed via direct code read:
+  `LiveWebsocketRunner._make_default_sink()` (`websocket_runner.py`) unconditionally returns `LiveEventFacadeSink`,
+  which publishes to Pub/Sub only — `LiveWebsocketTickSink` (the class that WOULD write that parquet shape) is never
+  constructed by any real caller; it's dead code in production. The warm-GCS tier (Pub/Sub → Cloud Storage subscription)
+  and cold-GCS daily-compaction job are real infra that exist but don't durably/queryably work yet (the compactor's
+  `warm_files` list is a hardcoded no-op stub — `deployment_service/jobs/live_event_log_compactor.py`). BigQuery
+  external tables aren't even created (`create_bq_external_tables` defaults `false`, no override found). **The one real,
+  durable, currently-wired artifact is the MTDS availability manifest** (`MTDSShardManifestRecorder.record_captured()`,
+  the same `ManifestWriter` batch uses, fires after every non-empty window flush). Fixed `_run_live_leg` to verify via
+  `verify_manifest_row` against that manifest instead of a nonexistent parquet check — market-tick-data-service (this
+  fix, shipping next). Also added a cheap, VM-free pre-flight check (`_ws_connector_registered()`) so a
+  genuinely-unregistered venue (Phase 3.5 rollout is ~89% populated — 96/108 registered venues, confirmed via
+  `register_all()` + `WS_FEED_CONNECTOR_FACTORIES`) is honestly labeled `skipped`/`no_ws_connector_registered` without
+  wasting a real VM launch. Also fixed the live-leg's `pipeline_mode` derivation — it was reusing the BATCH-oriented
+  `derive_pipeline_mode_for_row` (never returns a `live_*` value on fresh derivation); now uses
+  `live_pipeline_mode_for_venue(..., mode=Mode.LIVE)` directly.
+
+  **Real scope discovery** (from the actual UAC registries, not estimated): IS = 108 real `(asset_group, venue)` shards;
+  MTDS = 344 real `(asset_group, venue, data_type)` shards via `get_expected_data_types_for_venue()` (NOT the raw
+  cross-product, which overcounts ~6×). GCE quota checked and confirmed NOT a bottleneck (50k+ CPU limit, 60k
+  preemptible-CPU limit vs. ~40 in use) — the real constraints are (a) the tool's own sequential-per-process
+  architecture, requiring external orchestration for genuine concurrency, and (b) real per-vendor API rate limits
+  (Tardis, Databento, DeFi RPCs, sports odds, Kalshi/Polymarket) if hammered too hard at once.
+
+  **In progress next**: ship this live-leg fix, pilot on 2-3 real shards (all 3 legs) before committing to the full
+  452-shard run, account for IS's own per-data-type cadence variability (some daily, some event-triggered — operator's
+  own framing) in day selection, then build a high-external-concurrency driver and launch the full sweep. Journaling
+  here continuously per the `/autonomous` contract in case of context compression during the 3-hour unattended window.
