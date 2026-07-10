@@ -280,10 +280,14 @@ CUR (2026-07-09). Operator decisions captured inline.
       data" on report re-creation, or a one-off Cost Explorer `GetCostAndUsage` import into a side table. If feasible →
       backfill full-year AWS history; else document the AWS tab as **July-2026-onward** (operator: acceptable). Not a
       code bug — a data-source coverage gap.
-- [ ] [UI] P3. **Top-of-page tooltip: GCP console = Pacific day boundary, export = UTC.** Not a bug — it's why a console
-      CSV won't tie to the penny. Same Jul3–9 window/currency: console gross £2,509.38 vs export(UTC) £2,708.12;
+- [x] ✅ [UI] P3. **Top-of-page tooltip: GCP console = Pacific day boundary, export = UTC.** Not a bug — it's why a
+      console CSV won't tie to the penny. Same Jul3–9 window/currency: console gross £2,509.38 vs export(UTC) £2,708.12;
       re-windowing the export on Pacific midnight (07:00 UTC) → £2,549.07, within £40 (1.6%) of console (residual =
-      late-arriving recent-day data). Add a one-line tooltip so operators don't chase the ~8% phantom gap.
+      late-arriving recent-day data). Add a one-line tooltip so operators don't chase the ~8% phantom gap. - ✅
+      **2026-07-10 — deployment-ui@`95370af`.** Header `InfoTip` (`data-testid="cost-currency-tz-note"`) covering both
+      the new currency behaviour (USD everywhere; GCP GBP→USD at Google's daily rate; AWS native USD) and the
+      UTC-vs-Pacific day-boundary caveat. pw:L2 regression added to `cost-observability.spec.ts` (hover reveals both the
+      "converted at Google's own daily rate" and "US Pacific time" lines) — 15/15 pw + full UI QG green.
 
 ## Resource-detail enrichment + unified breakdown (operator-requested 2026-07-08)
 
