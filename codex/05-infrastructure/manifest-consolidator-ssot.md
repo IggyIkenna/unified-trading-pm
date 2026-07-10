@@ -287,6 +287,32 @@ for bandwidth." Recommend the consolidation since:
 (cefi/defi/tradfi/sports/prediction) and the Cloud Run Job takes a list of buckets to consolidate sequentially within
 one container invocation. Owner: slot 5 to design + apply.
 
+## Coverage exemptions — `-test-` buckets are exempt by design (2026-07-10)
+
+**`-test-` buckets are NOT wired to the consolidator scheduler on either cloud, deliberately.** GCP:
+`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`'s `manifest_consolidator_buckets` /
+`manifest_consolidator_buckets_extended` locals are hardcoded `for_each` map literals (built from
+`local.deployment_env_short` ∈ `{dev,stg,prod}` or flat legacy literals) — zero `-test-` entries exist anywhere in the
+file. AWS mirrors this gap via EventBridge Rules. The `-test-` buckets themselves ARE provisioned (27
+`google_storage_bucket` resources in `main.tf`, e.g. `instruments-store-cefi-test-${var.project_id}`) — nothing else is
+missing except a scheduler binding.
+
+**Decided (not extending): document-exempt, per the real end-to-end `/data-pipeline-check-{is,mtds}` smoke-check tool**
+(`data_pipeline_e2e_check_2026_07_10.md` todo 15) hitting `ManifestConsolidatorStaleError` against `-test-` buckets
+during real-VM runs. Extending the scheduler would be mechanical (IAM is already project-wide — `unified_trading_sa` has
+`roles/storage.objectAdmin` at the project level, so no new IAM; the Cloud Run Job + Scheduler resources are already
+generic `for_each` blocks) — but it's the wrong direction given this doc's own Coverage-gap section above is actively
+trying to REDUCE cron count (10 → 5) for cost/complexity reasons. Adding ~10 more permanent `*/1 * * * *` Cloud Run +
+Scheduler pairs for buckets that only see occasional smoke-check traffic (never continuous production writes) moves the
+wrong way.
+
+**The actual mitigation**: `MANIFEST_ALLOW_STALE_FALLBACK=true` — an opt-in env var / VM-metadata key (wired through
+`deployment-service/scripts/vm/setup-data-pipeline-vm.sh` + both `launch-{instruments,mtds}-backfill-vm.sh` launchers,
+plus the `/data-pipeline-check-{is,mtds}` scripts' own local reads) that bypasses `ManifestConsolidatorStaleError` for
+these buckets — a safe, bounded workaround since test buckets are always small. If a `-test-` bucket's real-world
+traffic ever grows past "occasional smoke-check," re-open this as a real scheduler-extension todo rather than widening
+the fallback's scope.
+
 ## Operational invariants (HARD RULES)
 
 1. **Cloud Run is canonical**. No agent re-launches the legacy VM. No agent reintroduces
