@@ -394,9 +394,22 @@ classifies FROZEN → "— proceed now" kick → tiny "still waiting, iteration 
       a task-less idle slot with a live tmux session (that state belongs to the idle reclaim); (b) diagnose WHY those
       sessions lingered for HOURS instead of being reaped by the 2-tick idle reclaim (slots 1/2/3/4 repeatedly
       re-tripped the alarm 12:33-16:30Z — either the reclaim isn't firing, its ticks reset on each alarm/kick, or
-      something respawns idle workers into a queue with zero dispatchable work, burning spawn cycles). Investigation was
-      in flight at session end — start from the activity timeline of slot 2 on 2026-07-10 (worker_polling_dead
-      13:57/15:25/15:57/16:30).
+      something respawns idle workers into a queue with zero dispatchable work, burning spawn cycles). DIAGNOSIS
+      COMPLETE (2026-07-10 ~16:45Z, slot-2 timeline): the slots are the ESCALATION/PLAN-HEALTH dispatch pool — 8
+      escalation + 7 plan-health dispatches landed on slot 2 alone 13:05-16:30 (all legitimate: the cicd agents resolved
+      ~10 real ldr_qg_failure walls today, mostly 1 attempt, resolution=qg_v2_green — the firefighting fleet is
+      HEALTHY). The waste is the AFTERMATH of each one-shot: (a) the finished worker's session lingers at the prompt
+      with its own final planner text ("exit cleanly, no next task" / "go idle" / "wait for the next dispatch") — the
+      kicker reads that ghost text as FROZEN and burns kick-turns on a FINISHED worker; (b) the idle-reclaim's 300s
+      boot-grace plus the 300s polling-dead threshold guarantee the FALSE alarm always fires before the reclaim can reap
+      a short-lived one-shot (alarm at silence +300s; reclaim earliest at spawn +300s + 2 ticks); (c) at least some
+      kick-escalation respawns boot a GENERIC worker into a queue with ZERO dispatchable work (11 slot_boot + 11
+      boot_read_unconfirmed on slot 2 with no dispatchable task all afternoon) — the auto-respawn path does NOT consult
+      the AutoSpawn dispatchable-work gate. Fixes: exempt task-less idle+live-session slots from polling_dead/idle_stale
+      (the reclaim owns them); start idle-reclaim ticks at IDLE-TRANSITION time, not spawn time, for finished one-shots;
+      gate the kick-escalation respawn on `_has_queued_work` (same fail-closed gate as AutoSpawn); teach `classify_pane`
+      the finished-one-shot ghost-text shape (same phantom-frozen family as the narrowed suppression todo above — fix
+      together).
 
 ### Phase D — Fleet dashboard + slot-state correctness (backend-owned)
 
