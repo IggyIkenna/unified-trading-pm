@@ -66,6 +66,7 @@ source:
   ]
 assigned_role: data_engineering
 drift_direction: advance-code
+sequential: true
 ---
 
 # COINBASE bare-name UAC removal + downstream caller migration
@@ -345,33 +346,6 @@ emit a small, expected residual — never a silent zeroing).
       not, since `_CEFI_SUB_VENUE_BASES` only covers `OKX`) — exactly the `VENUES_BY_ASSET_GROUP["cefi"]` rename this
       plan's **S3** fixes; not a regression from S1 and not a new finding (already the plan's own problem statement).
 
-### Step S2 — instruments-service `venue_core.py` delete the dead `elif COINBASE` alias
-
-> **🔴 BLOCKED — verified 2026-07-10 by slot 9 (data_engineering).** The "Ordering note" below is WRONG for the current
-> repo state and must NOT be executed until S3 has landed. See
-> `plans/active/issues/coinbase_bare_name_migration_s2_ordering_2026_07_10.md` for the full writeup + recommended
-> re-sequencing. Do not dispatch this todo again until that issue doc's decision is applied here.
-
-- [ ] [CODE] P2. `instruments-service/instruments_service/engine/orchestrator/venue_core.py`: delete lines 145-146
-      (`elif venue == "COINBASE": result.append("COINBASE-SPOT")`) — after S1 the fold handles residuals; this expansion
-      becomes dead code once UAC drops bare COINBASE (S3). Update the docstring lines 97/115/126/317 to remove the
-      COINBASE special case. Regression test: `test_expand_cefi_tardis_endpoints_no_bare_coinbase_input` — feeding
-      `["COINBASE-SPOT", "BINANCE-SPOT"]` produces `["COINBASE-SPOT", "BINANCE-SPOT"]` (passthrough). **Gate:** QG
-      green; test added; no downstream IS producer regressions in `tests/unit/`. **Depends on S3 landing first** (see
-      blocked-banner above) — verified 2026-07-10 that landing S2 before S3 fails this exact gate.
-
-  ~~Ordering note: S2 CAN land before S3 because it does not READ the UAC dict; it just deletes a runtime alias branch
-  that will still be exercised (by test callers) until S3 removes bare COINBASE from the input list. Safe to land now.~~
-  **DISPROVEN 2026-07-10**: `bash scripts/quality-gates.sh` run with the elif-branch deleted (S1/S3 not yet landed)
-  fails 2 existing tests —
-  `tests/unit/test_adapter_routing_uac_invariant.py::test_expanded_cefi_enumeration_fully_resolvable` (bare `COINBASE`
-  resolves to `NO_ADAPTER_YET`) and
-  `tests/unit/test_new_orchestrator.py::test_process_instruments_cefi_venues_available` (`COINBASE-SPOT` drops out of
-  the CEFI venue list). Root cause: UAC's `VENUES_BY_ASSET_GROUP["cefi"]` still emits bare `COINBASE` until S3 lands, so
-  deleting the alias branch makes IS's cefi venue producer emit an unmapped bare `COINBASE` — a real production
-  regression, not just a test artifact. **S2 must land AFTER S3** (or be combined into the same cross-repo shippable
-  unit as S3).
-
 ### Step S3 — UAC removal (the "gap-015" step, now un-blocked)
 
 - [ ] [CODE] P2. `unified-api-contracts/`: apply every CEFI ⇒ MIGRATE from §2a. Concrete file diff:
@@ -410,6 +384,37 @@ emit a small, expected residual — never a silent zeroing).
   - `"COINBASE" not in VENUES_BY_ASSET_GROUP["cefi"]` at runtime (add a UAC unit test).
   - `check_enumeration_completeness.py` audit against production manifest shows COINBASE cell counts UNCHANGED (fold
     from S1 does its job).
+
+### Step S2 — instruments-service `venue_core.py` delete the dead `elif COINBASE` alias
+
+> **✅ ORDERING FIXED 2026-07-10** — verified 2026-07-10 by slot 9 (data_engineering) that landing this step before S3
+> fails 2 regression tests (see the disproven ordering note below). Resolved via Option A of
+> `plans/active/issues/coinbase_bare_name_migration_s2_ordering_2026_07_10.md`: this plan's frontmatter now sets
+> `sequential: true`, and this S2 section was physically moved to AFTER the S3 section above (regen chains
+> `prereqs.completed_tasks` to the immediately-preceding unchecked todo in file order — S3, not S1). The dispatcher will
+> not offer S2 to a worker until S3's backlog task is `done`. Do not reorder S2 back above S3 without re-verifying this
+> gate.
+
+- [ ] [CODE] P2. `instruments-service/instruments_service/engine/orchestrator/venue_core.py`: delete lines 145-146
+      (`elif venue == "COINBASE": result.append("COINBASE-SPOT")`) — after S1 the fold handles residuals; this expansion
+      becomes dead code once UAC drops bare COINBASE (S3). Update the docstring lines 97/115/126/317 to remove the
+      COINBASE special case. Regression test: `test_expand_cefi_tardis_endpoints_no_bare_coinbase_input` — feeding
+      `["COINBASE-SPOT", "BINANCE-SPOT"]` produces `["COINBASE-SPOT", "BINANCE-SPOT"]` (passthrough). **Gate:** QG
+      green; test added; no downstream IS producer regressions in `tests/unit/`. **Depends on S3 landing first**
+      (machine-gated via `sequential: true` — see banner above) — verified 2026-07-10 that landing S2 before S3 fails
+      this exact gate.
+
+  ~~Ordering note: S2 CAN land before S3 because it does not READ the UAC dict; it just deletes a runtime alias branch
+  that will still be exercised (by test callers) until S3 removes bare COINBASE from the input list. Safe to land now.~~
+  **DISPROVEN 2026-07-10**: `bash scripts/quality-gates.sh` run with the elif-branch deleted (S1/S3 not yet landed)
+  fails 2 existing tests —
+  `tests/unit/test_adapter_routing_uac_invariant.py::test_expanded_cefi_enumeration_fully_resolvable` (bare `COINBASE`
+  resolves to `NO_ADAPTER_YET`) and
+  `tests/unit/test_new_orchestrator.py::test_process_instruments_cefi_venues_available` (`COINBASE-SPOT` drops out of
+  the CEFI venue list). Root cause: UAC's `VENUES_BY_ASSET_GROUP["cefi"]` still emits bare `COINBASE` until S3 lands, so
+  deleting the alias branch makes IS's cefi venue producer emit an unmapped bare `COINBASE` — a real production
+  regression, not just a test artifact. **S2 must land AFTER S3** (or be combined into the same cross-repo shippable
+  unit as S3).
 
 ### Step S4 — IS data_engineering downstream ripple
 
@@ -501,6 +506,16 @@ is:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-10** — **S2/S3 ordering fixed** (slot-3, PM-only `docs(plans):` commit — no service-repo code diff).
+  Implemented Option A of `plans/active/issues/coinbase_bare_name_migration_s2_ordering_2026_07_10.md` (slot 9's
+  verified finding that S2 fails 2 regression tests if dispatched before S3): added `sequential: true` to this plan's
+  frontmatter and physically reordered the body so the `### Step S3` section now precedes `### Step S2` —
+  `regen_backlog_from_plan.py`'s sequential-chain wiring links each remaining unchecked todo to its immediate file-order
+  predecessor, so the backlog now genuinely gates S2's dispatch on S3's task reaching `done` (previously only a
+  human-readable blocked-banner, not a machine gate — S1-S6 had zero real prereq wiring despite the documented DAG
+  dependency in §4). New todo order for the 4 still-open steps: S3 → S2 → S5 → S6. Updated S2's banner to reference this
+  fix; kept the disproven "safe to land before S3" ordering note struck through for history. Flipped the issue doc's
+  Option A checkbox + `status: resolved`. No code shipped (plan-file edit only); nothing to quickmerge.
 - **2026-07-10** — **S7 done** (slot-8, data_engineering). Filed
   `plans/active/coinbase_bare_name_migration_execution_service_2026_07_10.md` — carries over the 12-file
   execution-service enumeration from §2d verbatim plus the `registry.py:178-179` backward-compat-resolver decision (KEEP

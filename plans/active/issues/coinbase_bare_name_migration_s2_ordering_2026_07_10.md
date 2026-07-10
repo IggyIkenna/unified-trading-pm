@@ -14,7 +14,7 @@ summary: |
   `COINBASE-SPOT` — a real production regression (not just a test artifact), and it fails 2 existing regression
   tests. Reverted the change (repo left clean, nothing shipped) and annotated the plan's S2 section with a blocked
   banner. Filing this for the operator/main-agent re-sequencing decision.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -35,7 +35,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: "unified-trading-pm@<pending-sha> — see Resolution section below"
 audited_scope: single-step-verification
 ---
 
@@ -85,14 +85,45 @@ instrument-fetch venue list would have silently dropped `COINBASE-SPOT` fetches 
 Pick one (operator / main-agent call — this is a plan re-sequencing decision, not a code fix I can make unilaterally
 within a single-repo, one-task-at-a-time worker session):
 
-- [ ] [PLAN] P2. **Option A (recommended)** — gate S2's dispatch on S3 having landed first: add `depends_on: [S3]`
+- [x] [PLAN] P2. ✅ **Option A (recommended)** — gate S2's dispatch on S3 having landed first: add `depends_on: [S3]`
       semantics to the S2 todo (or simply reorder the plan body so S2 follows S3), then re-dispatch S2 standalone once
-      S3 is confirmed on LDR. (repo: unified-trading-pm)
-- [ ] [CODE] P2. **Option B** — combine S2 and S3 into one coordinated cross-repo shippable unit (a single task/commit
+      S3 is confirmed on LDR. (repo: unified-trading-pm) — **DONE 2026-07-10** — see Resolution section below. ~~- [ ]
+      [CODE] P2. **Option B** — combine S2 and S3 into one coordinated cross-repo shippable unit (a single task/commit
       pair landing the UAC removal and the IS dead-code deletion together) so no intermediate broken state exists on
       LDR. Higher coordination cost but matches the plan's own "no intermediate LDR state is data-incorrect" design goal
-      more literally. (repo: instruments-service, unified-api-contracts)
+      more literally. (repo: instruments-service, unified-api-contracts)~~ **NOT TAKEN 2026-07-10** — Option A (the
+      recommended, lower-coordination-cost choice) was implemented instead; see Resolution section below. Mutually
+      exclusive with A — struck to keep regen from ever dispatching this as a separate, now-redundant task.
 - [ ] [DESIGN] P3. Whichever option is chosen, add a short "verify before land" step to the plan's own template guidance
       for multi-repo DAG plans: when a step's gate says "no downstream regressions," actually run `quality-gates.sh`
       with the isolated diff BEFORE marking an ordering note as "safe" — this plan's S1 ordering note (single-file
       `_CEFI_VENUE_FOLD` invert) may deserve the same spot-check before its own dispatch. (repo: unified-trading-pm)
+
+## Resolution
+
+Implemented Option A in `coinbase_bare_name_migration_2026_07_06.md` (unified-trading-pm, plan-file-only edit — no
+service-repo code diff):
+
+1. Added `sequential: true` to the plan's frontmatter. Per `regen_backlog_from_plan.py`'s `_wire_sequential_prereqs`,
+   this auto-chains every remaining unchecked todo's `prereqs.completed_tasks` to its immediate predecessor by
+   `plan_order` (file order among the plan's own still-open todos) — re-derived every regen tick, so it self-heals
+   around future inserts/reorders. This is the ONLY mechanism available for genuine intra-plan dispatch gating today
+   (plain `plan_order` is a tie-break, not a gate; cross-plan `depends_on`/`gate_on_depends` only gates one whole PLAN
+   on another PLAN, not one todo on a sibling todo in the SAME plan).
+2. Physically moved the `### Step S3` section to appear BEFORE `### Step S2` in the plan body (`sequential: true` chains
+   by file-order position, so the direction of the swap matters — S3 must sit earlier than S2 for the auto-chain to make
+   S2 wait on S3, not the reverse).
+3. Updated S2's banner from a human-readable "🔴 BLOCKED, don't re-dispatch" note to document the machine gate now in
+   place; kept the disproven "safe before S3" ordering note struck through for history.
+4. As a consequence, the plan's other 2 remaining open steps (S5, S6) are now also chained into the same strict-serial
+   order (S3 → S2 → S5 → S6) — a stronger fix than the narrow S2-on-S3 gate this issue asked for, but it directly closes
+   the gap the plan's own 2026-07-10 S4 Progress Log entry flagged: "this plan's S1→S6 steps have a real internal
+   dependency chain … but no `depends_on`/`sequential: true` gating between the per-step backlog tasks … S4 happened to
+   be safe … but that was a lucky audit outcome, not a guarantee." `sequential: true` is documented in
+   `regen_backlog_from_plan.py` as intended precisely "for audit→fix→verify / migration plans" — this plan is exactly
+   that shape.
+5. Option B (combine S2+S3 into one cross-repo shippable unit) was NOT taken — struck through above as mutually
+   exclusive with A, so regen never surfaces it as a live, redundant alternative task.
+6. The P3 DESIGN todo (add a "verify before land" step to the plan-authoring template guidance) is left open as a
+   separate, smaller follow-on — not required to close THIS ordering bug, but a reasonable process improvement the next
+   dispatch can pick up independently.
