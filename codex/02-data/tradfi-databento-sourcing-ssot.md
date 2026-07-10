@@ -2,8 +2,9 @@
 doc_type: codex-ssot
 title: TradFi Databento Sourcing — Subscription Universe + Billing-Safety SSOT
 summary:
-  Databento sourcing SSOT — exactly 3 subscribed datasets (GLBX.MDP3/DBEQ.BASIC/XCBF.PITCH), a fail-closed schema+lookback
-  allowlist so metered PAYG never fires silently, databento-first SOURCE_PRIORITY, and write-stamped source provenance.
+  Databento sourcing SSOT — exactly 3 subscribed datasets (GLBX.MDP3/DBEQ.BASIC/XCBF.PITCH), a fail-closed
+  schema+lookback allowlist so metered PAYG never fires silently, databento-first SOURCE_PRIORITY, and write-stamped
+  source provenance.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,28 @@ stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [tradfi, databento, cost, data-correctness, pipeline-mode, ssot-audit]
-related: [codex/02-data/tradfi-data-types-catalog.md, codex/04-architecture/tradfi-batch-live.md, codex/02-data/availability-manifest-and-data-status.md, codex/02-data/pipeline-mode-partition.md]
+related:
+  [
+    codex/02-data/tradfi-data-types-catalog.md,
+    codex/04-architecture/tradfi-batch-live.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/pipeline-mode-partition.md,
+  ]
 created: 2026-06-18
-authoritative_for: [Databento 3-dataset subscription universe and billing-safety allowlist, TradFi Databento source provenance write-stamping]
-referenced_by: [codex/02-data/tradfi-data-types-catalog.md, codex/04-architecture/tradfi-batch-live.md, plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md, plans/audit/instructions/tradfi_master_audit_instructions.md, plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md, plans/epics/tradfi_master.md]
+authoritative_for:
+  [
+    Databento 3-dataset subscription universe and billing-safety allowlist,
+    TradFi Databento source provenance write-stamping,
+  ]
+referenced_by:
+  [
+    codex/02-data/tradfi-data-types-catalog.md,
+    codex/04-architecture/tradfi-batch-live.md,
+    plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
+    plans/audit/instructions/tradfi_master_audit_instructions.md,
+    plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md,
+    plans/epics/tradfi_master.md,
+  ]
 owner:
 last_reviewed: 2026-06-25
 code_refs:
@@ -206,6 +225,18 @@ the fix):
     `DatabentoSubscriptionError` BEFORE the vendor is hit. The breach is classified as the `DATABENTO_ENTITLEMENT`
     venue-error (403/entitlement, FAIL no-retry — **NOT** 402/PAYG), emits `ADAPTER_FETCH_FAILED`, and re-raises as
     `RuntimeError` so the per-venue `_fetch_one` handler records `attempted_failed` (shard isolation preserved).
+
+    > **⚠️ CODE CORRECTION (2026-07-10, CF-11 IS audit).** The above describes the intent, but the **current** code
+    > distinguishes two cases: (a) a **transient in-universe vendor fetch failure** (`BentoError` / network on the real
+    > `timeseries.get_range`) DOES classify → log → **re-raise as `RuntimeError` → `attempted_failed`** (correct,
+    > mirrors cefi); (b) a **`DatabentoSubscriptionError` entitlement breach** (an off-allowlist dataset / too-old
+    > window) is a **permanent pre-request** condition and is **caught + dataset-level ISOLATED** in `get_instruments`
+    > (`adapter.py` `DatabentoSubscriptionError` handlers `continue` / empty-batch), **NOT** re-raised per-instrument —
+    > deliberate shard isolation from the 2026-06-18 3-dataset subscription cutover (regression test
+    > `tests/unit/test_databento_tardis_adapter.py`). This masks nothing today: `TRADFI_DATABENTO_INSTRUMENTS` /
+    > `TRADFI_TICKER_UNIVERSE` carry **zero** off-allowlist entries (ICE/IFEU/IFUS dropped; IBIT/ETHA moved to
+    > in-allowlist `DBEQ.BASIC`). So the sentence above should read: transient in-universe failure → `attempted_failed`;
+    > permanent entitlement breach → dataset-isolated (filtered from the universe, not a per-cell failure).
 
 The DEFINITION-schema symbology path (`databento_symbology.py`) is L0/free and unaffected.
 

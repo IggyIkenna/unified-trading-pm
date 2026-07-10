@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: DeFi Data-Type Taxonomy
 summary: >-
-  Canonical per-(venue, data_type) ↔ adapter ↔ handler ↔ cluster-validation matrix for DeFi — data-type
-  families (lending/DEX/aggregator/LST/vault/restaking+LRT/perp/native-staking/governance/bridge/MEV), per-family
-  shard keys and schema fields, the bundled cluster-validation registry map, and per-protocol capture status
-  (✅/◐/✗); wins over the catalogue + venue docs on disagreement.
+  Canonical per-(venue, data_type) ↔ adapter ↔ handler ↔ cluster-validation matrix for DeFi — data-type families
+  (lending/DEX/aggregator/LST/vault/restaking+LRT/perp/native-staking/governance/bridge/MEV), per-family shard keys and
+  schema fields, the bundled cluster-validation registry map, and per-protocol capture status (✅/◐/✗); wins over the
+  catalogue + venue docs on disagreement.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,25 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, data-quality, manifest, features, catalogue, cefi, data-pipeline]
-related: [defi-venue-protocol-catalogue.md, defi-data-types-catalog.md, availability-manifest-and-data-status.md, honest-absence-downstream-handling.md]
+related:
+  [
+    defi-venue-protocol-catalogue.md,
+    defi-data-types-catalog.md,
+    availability-manifest-and-data-status.md,
+    honest-absence-downstream-handling.md,
+  ]
 created: 2026-05-10
 authoritative_for: [DeFi per-(venue, data_type) capture matrix, DeFi bundled cluster-validation registry map]
-referenced_by: [codex/02-data/README.md, codex/02-data/defi-canonical-naming-ssot.md, codex/02-data/defi-data-pipeline.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/defi-venue-protocol-catalogue.md, codex/04-architecture/amm-slippage-simulation.md, codex/05-infrastructure/chain-rpc-mev-tenderly.md]
+referenced_by:
+  [
+    codex/02-data/README.md,
+    codex/02-data/defi-canonical-naming-ssot.md,
+    codex/02-data/defi-data-pipeline.md,
+    codex/02-data/defi-data-types-catalog.md,
+    codex/02-data/defi-venue-protocol-catalogue.md,
+    codex/04-architecture/amm-slippage-simulation.md,
+    codex/05-infrastructure/chain-rpc-mev-tenderly.md,
+  ]
 owner:
 last_reviewed: 2026-05-15
 code_refs:
@@ -33,10 +48,10 @@ code_refs:
 > Three DeFi codex docs form an overlapping set. **This doc — `defi-data-type-taxonomy.md` — is the canonical
 > per-(venue, data_type, cluster-validation, canonical-schema) matrix.** The other two reference it:
 >
-> | Doc                                                                      | Role                                                                                    |
-> | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-> | [`defi-venue-protocol-catalogue.md`](./defi-venue-protocol-catalogue.md) | Per-protocol status legend + per-venue PRODUCTION-DEV-PLANNED tracking                  |
-> | [`defi-data-types-catalog.md`](./defi-data-types-catalog.md)             | Per-data_type capture overview + GCS path convention                                    |
+> | Doc                                                                      | Role                                                                                 |
+> | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+> | [`defi-venue-protocol-catalogue.md`](./defi-venue-protocol-catalogue.md) | Per-protocol status legend + per-venue PRODUCTION-DEV-PLANNED tracking               |
+> | [`defi-data-types-catalog.md`](./defi-data-types-catalog.md)             | Per-data_type capture overview + GCS path convention                                 |
 > | **`defi-data-type-taxonomy.md`** (this doc)                              | **Canonical per-(venue, data_type) ↔ adapter ↔ handler ↔ cluster-validation matrix** |
 >
 > When the three disagree, this doc + the UAC registries (`defi_venues.py` + `defi_venue_capabilities.py` +
@@ -155,6 +170,13 @@ gs://{tick-defi-bucket}/raw_tick_data/by_date/day={date}/category=defi/
 
 Per the workspace asset-group vocabulary rule, new writes use `asset_group=defi` (canonical hive key); legacy
 `category=defi` preserved on disk without re-keying. Readers try canonical first, fall back to legacy.
+
+> **📌 CANONICAL PATH UPDATE (2026-07-10) — the fully-canonical raw path also carries a `pipeline_mode=` hive segment
+> LEFT of `asset_group=`**: `…/day={date}/pipeline_mode={mode}/asset_group=defi/venue=…/data_type=…/ticks.parquet` (the
+> example above predates the source-aware `pipeline_mode` partition). SSOT:
+> [`pipeline-mode-partition.md`](pipeline-mode-partition.md) (source-aware `{mode}_{source}[_{transport}]`; readers
+> PREFIX-MATCH). Writers emit it PRIMARY; the legacy no-`pipeline_mode=` shape coexists on disk until the per-AG
+> canonical migration deletes it.
 
 ## Cluster validation matrix
 

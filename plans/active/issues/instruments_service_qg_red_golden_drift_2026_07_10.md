@@ -20,7 +20,7 @@ summary: |
   `94512ec3`'s golden was regenerated against a dirty, not-yet-pushed local UAC state (the in-flight OKX-SPOT
   venue-registration work) rather than what's actually on LDR. This blocks EVERY instruments-service QG run
   workspace-wide until resolved, independent of the COINBASE work.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi, defi]
 stage: [data]
@@ -42,7 +42,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: instruments-service@aa897b08, instruments-service@7048ae7e, unified-api-contracts@0ab1074a
 audited_scope: single-repo-qg-run
 ---
 
@@ -90,25 +90,32 @@ explicit MVP-exclusion decision + a `_build_defi_venues()` filter update, mirror
 ## Recommended decision
 
 - [x] [CODE] P1. ✅ Determine whether the real UAC OKX-SPOT/DERIBIT-COMBO/COINBASE-CDE registration work referenced by
-      slot 3's plan annotation is imminent — instruments-service@2b0a-pending (this task's own S2 commit). It landed for
-      real within the hour (UAC commits including
-      `f0032d17 fix(defi,cefi): D10 defi lending capability entries +     DERIBIT-COMBO test coverage` and further
-      OKX-SPOT/COINBASE-CDE registrations, confirmed via `unified_api_contracts.registry.market_data_categories` import
-      — `build_expected('cefi')` now legitimately returns 80 tuples including COINBASE-CDE/DERIBIT-COMBO/OKX-SPOT).
-      Regenerated `cefi.json` golden against the now-current UAC state (76→80 tuples) as part of
-      `coinbase_bare_name_migration-002`; `test_expected_matches_golden[cefi]` passes clean. Bare `OKX`/`BYBIT`
-      `spot_pair` still coexist alongside `OKX-SPOT`/`BYBIT-SPOT` in UAC (dual registration, transitional) — see the new
-      item below for the fold-alignment side-effect this causes. (repo: instruments-service)
-- [ ] [CODE] P2. New finding (surfaced while verifying the above):
-      `tests/unit/scripts/test_check_enumeration_completeness.py::TestCompletenessMetrics::test_missing_instrument_type_column_yields_empty_enumerated`
-      now fails — `len(result.missing_tuples) == 78` vs `len(expected) == 80`. Root cause: the S1 `_CEFI_VENUE_FOLD`
-      alignment step collapses 2 tuples during fold (bare `OKX`+`OKX-SPOT` and bare `BYBIT`+`BYBIT-SPOT` pairs, both now
-      dual-registered in UAC's cefi venue list, fold to the same aligned EXPECTED cell), so raw EXPECTED (80) and
-      aligned EXPECTED (78) diverge — the test hardcodes an assumption that they're always equal. Confirmed
-      pre-existing/unrelated to COINBASE on a clean stash-reset tree. Fix: either update the test to compare against the
-      ALIGNED count (not raw `_build_expected_tuples`), or decide whether `_CEFI_VENUE_FOLD` should also fold bare
-      `OKX`→`OKX-SPOT` and bare `BYBIT`→`BYBIT-SPOT` now that those venues are in the same dual-registration state
-      COINBASE was in before S1. (repo: instruments-service)
+      slot 3's plan annotation is imminent — it landed for real (`unified-api-contracts@1cafb3c5` registers
+      COINBASE-CDE + declares OKX-SPOT its own cefi venue "Option A, 2026-07-10 operator decision"; `f0032d17` adds
+      DERIBIT-COMBO test coverage). A concurrent commit (`instruments-service@53b1247a`) regenerated `cefi.json` to 80
+      tuples against UAC state that still carried the dual-registration side-effect described below — that WAS the
+      "launder the phantom bare-venue tuples back in" anti-pattern the fixture's own docstring warns against, not the
+      correct final state. Completed Option A instead of accepting the dual-registration: removed the now-redundant
+      `SPOT_PAIR` from bare `OKX`/`BYBIT` in UAC's `INSTRUMENT_TYPES_BY_VENUE` (`unified-api-contracts@0ab1074a`) since
+      `OKX-SPOT`/`BYBIT-SPOT` now carry that capability as their own distinct venues, and removed `"OKX-SPOT": "OKX"`
+      from instruments-service's `_CEFI_VENUE_FOLD` (`instruments-service@c0f5529c`) so `OKX-SPOT` compares directly
+      against its own EXPECTED entry instead of folding into bare OKX. Regenerated `cefi.json` back to the correct 76
+      tuples (`instruments-service@aa897b08`) — no dual registration, no fold-alignment collapse, item 2 below resolved
+      as a side effect (verified `test_missing_instrument_type_column_yields_empty_enumerated` passes clean).
+      `quality-gates.sh`: ALL PASSED on both repos. (repo: instruments-service, unified-api-contracts)
+- [x] [CODE] P2. ✅ Resolved as a side effect of item 1's Option-A completion above — with the bare-OKX/BYBIT
+      `SPOT_PAIR` dual-registration removed entirely (not just aligned-around), there are no more collapsing fold pairs,
+      so raw EXPECTED and aligned EXPECTED no longer diverge.
+      `test_missing_instrument_type_column_yields_empty_enumerated` passes clean at `instruments-service@aa897b08`. No
+      separate test/behavior change needed. (repo: instruments-service) **Addendum (slot-3, verifying this item):**
+      confirmed passing independently; also caught + fixed a residual STEP 5.101 empty-string-fallback ratchet
+      regression surfaced by the same fast-moving window — a concurrent commit had annotated 4 of 5 needed
+      `# noqa: qg-empty-fallback` sites in `reconcile_phantom_manifest_rows_all.py` but missed line 237 (`raw_venue`),
+      leaving the ratchet 1-over baseline (369>368). Fixed + shipped `instruments-service@7048ae7e`, `quality-gates.sh`
+      ALL PASSED. Also independently re-derived the same TID251/cefi-golden-drift diagnosis as
+      `instruments-service@aa897b08`/`23d53f69` while investigating — those landed first, kept as-is via conflict
+      resolution rather than duplicating. Baseline ratcheted down (`no_empty_string_fallback_baseline.yaml`
+      instruments-service: 369→368) same commit as this plan flip. (repo: instruments-service, unified-trading-pm)
 - [x] [CODE] P1. ✅ Decide MVP scope for the 7 new UAC DeFi lending venues from `unified-api-contracts@42ce2de3`
       (VENUS-BSC/VENUS-ETHEREUM/BENQI-AVALANCHE/RADIANT-ARBITRUM/RADIANT-BSC/RADIANT-ETHEREUM/EULER_V2-ETHEREUM) —
       instruments-service@9b0c1095
@@ -122,7 +129,14 @@ explicit MVP-exclusion decision + a `_build_defi_venues()` filter update, mirror
       (`.venv/bin/python -m pytest     tests/unit/scripts/test_expected_universe_golden.py -k defi` → 2 passed;
       `tests/unit/test_orchestrator_helpers.py     -k drift_guard` → 1 passed). No further code change needed for this
       item. (repo: instruments-service)
-- [ ] [DESIGN] P3. Consider whether golden-fixture regeneration commits should assert
-      `git -C     <path-dep-repo> status --porcelain` is empty for every UAC/UTL path-dependency before writing the
-      fixture — would have caught `94512ec3`'s dirty-local-UAC-state golden before it shipped. (repo:
-      unified-trading-pm)
+- [x] [DESIGN] P3. ✅ Decision: YES — added the assertion. Confirmed `unified-api-contracts` and
+      `unified-trading-library` are both **editable path-dependencies** (`instruments-service/pyproject.toml`
+      `tool.uv.sources` → `../unified-api-contracts`, `../unified-trading-library`), so `build_expected()` reads
+      whatever is on disk in the sibling clones at import time — uncommitted local state included. This is exactly the
+      mechanism behind `94512ec3`'s phantom-tuple golden. Implemented `instruments-service@23d53f69`: new
+      `scripts/regenerate_expected_universe_golden.py` runs `git -C <path> status --porcelain` against both path-deps
+      and refuses to write the fixture (loud `SystemExit` listing the dirty files) unless clean or `--allow-dirty` is
+      passed explicitly; the test docstring's regeneration recipe now points at this script instead of the raw inline
+      `python -c` one-liner. Verified both the clean-pass and dirty-refuse paths locally before shipping.
+      `quality-gates.sh`: ALL PASSED (`.qg_last_passed_sha=23d53f69660b3b9fc8b7e1b8c0619f614fbdd0e1` == HEAD). (repo:
+      instruments-service)

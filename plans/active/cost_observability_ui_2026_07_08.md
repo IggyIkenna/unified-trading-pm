@@ -418,6 +418,39 @@ not sourced elsewhere.** Confirm exact field/label names at implementation time 
 **Codex SSOTs:** `codex/05-infrastructure/billing-cost-observability.md` (exports + net/gross/credit contract),
 `codex/06-coding-standards/ui-testing-layers.md` (Playwright L2 gate).
 
+### Breakdown UX: By-label dimension, per-tab filter, pagination & resizable table (2026-07-10 — operator)
+
+Operator asked to make the breakdown tabs navigable (resource/bucket have 300+ rows) + a business-context "By label"
+view. Built + shipped on the running local stack for fast feedback.
+
+- [x] ✅ [BACKEND+UI] P2. **"By label" breakdown dimension (GCP business labels).** `gcp_facts_sql` extracts the
+      resource-level `labels` (purpose/category/venue/asset_group) → `CostRecord.labels`; a `label` dimension groups by
+      a `label_key` route param (GCP-only; AWS/GitHub → "(unlabeled)"). UI: a "By label" dimension + a
+      purpose/category/venue/asset_group sub-selector. **Coverage caveat (live probe): `asset_group` tags only ~0.16% of
+      spend; `purpose` (49%) + `category` (24%, layer×asset-group) are the useful axes now.** - ✅
+      **deployment-api@`9a6b5d2c`** + **deployment-ui@`881a4880`**. Live-verified: purpose → manifest-consolidator
+      $3.7k, market-data-raw $945, … category → instruments-defi / market-data-tradfi / execution-defi splits.
+- [x] ✅ [UI] P2. **Per-tab search filter.** A search box filters the already-loaded breakdown rows client-side (label +
+      detail substring, no re-query) — makes the 300+-row resource/bucket tabs navigable; roll-up rows hide while
+      filtering; a "No X match" empty state. deployment-ui@`881a4880`.
+- [x] ✅ [UI+BACKEND] P2. **Pagination (100/page).** Backend `_BREAKDOWN_LIMIT` 100→1000 so all groups return
+      (bucket=338); UI paginates 100/page with Prev/Next + "showing X–Y of Z". "Other"/"Unattributed" roll-ups render
+      only on the last page. Cap test updated to exceed the new limit. deployment-api@`9a6b5d2c` +
+      deployment-ui@`881a4880`.
+- [x] ✅ [UI] P2. **Resizable breakdown container.** `resize-y` handle — drag the bottom edge to make the table taller /
+      shorter (420px default, min 160, max 85vh). deployment-ui@`881a4880`.
+
+**Sort mechanism (operator Q — answered, no change):** sorting is **100% client-side** (`useSort` re-orders the loaded
+rows in a `useMemo`; no API call). BigQuery/Athena are queried at most **once per date-window** (in-memory cache), so
+switching dimensions + sorting all derive from that cache — a "Refresh" is the only re-query.
+
+**Deferred (operator to evaluate first):** `asset_group` / launcher-labeling enrichment for full business-context
+coverage — only if the By-label view proves valuable. Probe: labels already in the export (`purpose` 56k rows, `venue`
+23k, `managed-by` 19k, `category`), but `asset_group` is ~unpopulated.
+
+**Codex SSOTs:** `codex/05-infrastructure/billing-cost-observability.md`,
+`codex/06-coding-standards/ui-testing-layers.md`.
+
 ## Progress Log
 
 _(Session findings go here — agent memory writes are BANNED. Append dated notes as work proceeds.)_
@@ -670,3 +703,14 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
   The 8 remaining open items are all genuinely open (P3 + the P2 AWS backfill). My currency/GitHub/Pacific subsections
   survived the parallel edit intact. Net: the cost reconcile is now correct. (The `expansion` reconcile + its
   still-`active` status are the deployment cluster — operator is routing the overlap notes to that agent.)
+- 2026-07-10 — **Breakdown UX shipped: By-label dimension + filter + pagination + resizable table (local-first, batched
+  per operator).** Operator wanted navigable breakdown tabs + a business-context view; ran the slot-4 local stack (api
+  :8004 + ui :5183, `DISABLE_AUTH=true`, real data) for fast feedback, built all four, gated, quickmerged.
+  **deployment-api@`9a6b5d2c`** (label dimension: extract purpose/category/venue/asset_group labels →
+  `CostRecord.labels` → `label` dim + `label_key` param; `_BREAKDOWN_LIMIT` 100→1000 for pagination; 3 tests) +
+  **deployment-ui@`881a4880`** (By-label dim + label-key sub-selector, per-tab client-side filter, 100/page pagination,
+  `resize-y` container; pw:L2 regression 17/17; mock >100-row label fixture; vitest labelKey-arg fixes). Both full QGs
+  green (backend 129s / UI 21s); UI quickmerge auto-reconciled a parallel `launched_by` push cleanly. Live-verified via
+  the UI proxy: By-label/purpose → manifest-consolidator $3.7k etc., bucket dim now returns all 338 rows. Answered the
+  operator's sort Q (client-side, no BQ/Athena re-query). **`asset_group` enrichment parked** — operator evaluating the
+  By-label view's value first.
