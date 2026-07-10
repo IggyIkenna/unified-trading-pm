@@ -247,6 +247,25 @@ the entire date's capture (schema mismatch, uncaught).
   text in the KALSHI-PERP remediation plan needs this endpoint-shape correction before implementation (also tracked
   there).
 
+## 3a. Operator decisions — structurally-empty / do-not-integrate DeFi coverage gaps (2026-07-10)
+
+Added retroactively (2026-07-10 doc-integrity pass) — the 2026-07-10 flip commit's own todos and Progress Log entry both
+said "see new § 3a below/above" but no such section was ever written, leaving both cross-references pointing at nothing.
+The operator decisions themselves were real (recorded only as Progress Log prose); this section is the dedicated home
+the todos already promised.
+
+- **IDLE / JITORESTAKING / SYMBIOTIC / KARAK yield data — accept structurally empty.** DefiLlama's `/pools` dataset has
+  zero rows for these 4 protocols (confirmed, not a code defect — see P2/P3 list above: `vault_idle_adapter.py:32`,
+  `restaking_jito_adapter.py:38`). Operator decision: do not chase an alternate feed; accept the gap as
+  permanent/structural. **This explicitly does NOT waive** the separately-tracked fabricated vault-address bugs (Karak
+  3/3 addresses have zero deployed bytecode, Symbiotic 2/4 addresses likewise) — those remain open P1 findings
+  regardless of the DefiLlama-emptiness decision; a fabricated address is a correctness bug independent of whether the
+  resulting query would return rows.
+- **GMX V2 coverage — do not integrate.** GMX V2 holds effectively all of GMX's real current on-chain liquidity (the
+  only V1 vault currently captured is largely abandoned), but the operator decided NOT to integrate V2 this pass. GMX
+  capture stays scoped to the V1 vault; the real V2 coverage gap remains open (P1 above), tracked as a known, accepted
+  gap rather than a silently-missed one.
+
 ## 4. Open questions (not fully resolved by this pass)
 
 1. Root cause of the 273 mistagged `venue=DERIBIT`/`instrument_type=COMBO` rows — unidentified.
@@ -264,9 +283,20 @@ the entire date's capture (schema mismatch, uncaught).
 ## Todos
 
 - [x] [TRIAGE] P0. Work through the P0 list above — HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT venue registration
-      **DEFERRED** (see Progress Log 2026-07-10 — the UAC registry files it touches were under continuous concurrent
-      edit from 3 sibling workflows all session; not attempted to avoid collision, still genuinely open); ETHENA
-      fabricated oracle_prices/apy **not attempted** (outside this session's dispatched scope); OKX options wiring + 5
+      **BLOCKED-OPERATOR-DECISION, re-triaged 2026-07-10** (see Progress Log — a fresh dispatch re-checked this and
+      found the UAC registry files were git-clean, NOT under live concurrent edit as this session's earlier note
+      claimed; the REAL blocker is worse — an SSOT contradiction: `unified-api-contracts@181b5311`, one day earlier
+      (2026-07-09), deliberately REMOVED huobi/bitstamp/htx from `venue_mapping.py` + `provider_api_versions.yaml` +
+      `venue_tokens.py` + `instrument_validation.py` under the commit message "remove never-captured huobi/bitstamp/htx
+      venues from registry + instrument universe" — the direct opposite conclusion this P0 finding reaches. Re-reading
+      that diff: the removed entries were orphaned Tardis-slug mappings for venues that were never declared in
+      `VENUES_BY_ASSET_GROUP["cefi"]` (so "never-captured" is literally true of that dead code) — this does NOT prove
+      the venues themselves are unviable, only that the old half-registration was dead. Neither this doc's original
+      2026-07-07 finding nor `instruments_remaining_work_audit_2026_07_10.md`'s "Design: aligned with SSOT, Proceed"
+      verdict (§ "3. 59-bug MTDS + IS adapter smoke test") was written with knowledge of 181b5311 — this is a genuinely
+      new discovery, not a re-litigation. Per the workspace's SSOT- contradiction HARD RULE, re-adding the venues was
+      NOT attempted unilaterally this pass — escalated to the operator instead (see Progress Log for the A/B/C
+      framing)); ETHENA fabricated oracle_prices/apy **fixed** — see the new todo below; OKX options wiring + 5
       lending-protocol invalid-enum fixes tracked in [[defi_lending_atoken_debttoken_instrument_split_2026_07_07]] as
       designed.
 - [x] [FIX] P0. DERIBIT live-WS dash-count misclassification — **already fixed by a concurrent sibling workflow**,
@@ -277,6 +307,15 @@ the entire date's capture (schema mismatch, uncaught).
       `PolymarketBookLevel` schema, `bids`/`asks: list[PolymarketBookLevel]`) + `market-tick-data-service@f4a118be`
       (both Polymarket adapter consumers + normalize.py + 4 tests updated to the real object shape). Root cause
       confirmed: real CLOB API returns `[{"price":...,"size":...}]`, not `[[price,size]]`.
+- [ ] [FIX] P0. ETHENA fabricated `oracle_prices`/`apy` placeholders — **code fix complete, tested, QG-green, but NOT
+      YET SHIPPED** (see Progress Log 2026-07-10).
+      `market-tick-data-service/market_tick_data_service/market_interface/     adapters/defi/ethena_adapter.py` now
+      calls the real AAVE V3 Oracle via RPC (+ DefiLlama Coins API fallback) for `oracle_prices` and reuses the real
+      DefiLlama-yields fetch for `current_apy`, with 10 new regression tests
+      (`tests/unit/market_interface/adapters/defi/test_ethena_adapter.py`) guarding against the old fabricated
+      constants. Blocked at the quickmerge ship step by live sibling-agent WIP in `unified-trading-library` +
+      `unified-api-contracts` (dirty ~8+ min straight through this dispatch, not forced per the dirty-dep HARD RULE) —
+      diff sits uncommitted, ready to ship; next dispatch should retry `quickmerge.sh` first.
 - [ ] [VERIFY] P1. Root-cause the 273 mistagged DERIBIT/COMBO rows (open question #1) — not attempted this session (out
       of dispatched scope).
 - [x] [FIX] P1. OKX/BYBIT margin-type mislabeling — **already fixed by a concurrent sibling workflow**,
@@ -377,3 +416,48 @@ the entire date's capture (schema mismatch, uncaught).
   2026-07-06) through the fix — a genuine, confirmed silent capture-gap (all 16,819 real COINBASE-FUTURES manifest rows
   are `batch_tardis`; contrast `live_binance` 4,080 real rows + 5 other real `live_*` CeFi pipeline_modes that DO exist
   in production).
+- **2026-07-10 (separate dispatch, "master record" fresh-context follow-up)** — Re-verified this whole doc against
+  current code before touching anything (per-SHA verification: all previously-claimed commits confirmed real and
+  matching their claimed content). Two real outcomes this pass:
+  - **ETHENA fabricated `oracle_prices`/`apy` placeholders — code fix complete + QG-green, BUT NOT YET SHIPPED (blocked,
+    see below).** Root cause confirmed unchanged from the original finding:
+    `market_tick_data_service/market_interface/adapters/defi/ethena_adapter.py` — `_fetch_oracle_prices` returned a
+    hardcoded `price_usd: 1.0` and `_fetch_current_apy` returned a hardcoded `apy: 0.0`, both tagged with real-looking
+    source strings despite no real fetch ever happening. Fix: `_fetch_oracle_prices` now calls the REAL AAVE V3 Oracle
+    (`getAssetPrice`, address `0x54586bE62E3c3580375aE3723C145253060Ca0C2`) via the same RPC pattern already proven live
+    elsewhere in this codebase (`aave_positions.py` / `lst_lido_adapter.py`) — live-verified 2026-07-10 against a public
+    Ethereum RPC (sUSDe priced 1.2376 USD, USDe priced 0.9991 USD; independently cross-confirmed against DefiLlama's
+    Coins API, which agreed to 3 decimal places), with a DefiLlama Coins API fallback (never a fabricated constant) if
+    the RPC path is unavailable. `_fetch_current_apy` now reuses the already-real `_fetch_yields_defillama` fetch
+    (live-verified real apy=3.95% for the `ethena-usde` sUSDe pool) instead of a fabricated 0.0; returns `[]` (honest
+    empty, per the workspace's silent-placeholder HARD RULE) when no real source is reachable, in both methods. 10 new
+    regression tests added (`tests/unit/market_interface/adapters/defi/test_ethena_adapter.py`) asserting the new
+    real-source behavior AND explicitly guarding against the old fabricated constants (`price_usd != 1.0`,
+    `apy != 0.0`). Full `quality-gates.sh` run green (10/10 new tests pass; verified via `.venv/bin/python -m pytest`
+    directly after discovering the base-service.sh gate's own printed "[3/6] TESTS" pytest summary is actually a
+    SEPARATE small "PM integration test" sanity check, not the real ~5638-item MTDS suite — the real suite runs silently
+    redirected to a temp log, confirmed executed via the zero-test-silent-pass guard + exit 0). **Blocked at ship**:
+    `quickmerge.sh`'s pre-flight audit refuses because `unified-trading-library`
+    (`unified_trading_library/post_trade/settler.py` modified + `cf_manifest_audit.py` untracked) and
+    `unified-api-contracts` (`tests/unit/test_cme_options_universe.py` +
+    `unified_api_contracts/registry/tradfi_instrument_universe.py` modified) both have uncommitted sibling-agent WIP —
+    confirmed LIVE (not stale-abandoned) via two separate polls totalling ~8 minutes wait, dirty state unchanged
+    throughout. Per the dirty-dependency-tree HARD RULE this was NOT forced and the foreign files were NOT touched. The
+    diff itself (`ethena_adapter.py` + the new test file) sits uncommitted, ready to ship the moment those two dep repos
+    clear — next dispatch/session should retry `quickmerge.sh` first before re-diagnosing.
+  - **HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT venue registration — re-triaged, found a real SSOT contradiction, NOT
+    attempted (escalating, not forcing).** The original "deferred — concurrent edit" note turned out to be stale: the 4
+    target UAC registry files were git-clean at the start of this dispatch. But `unified-api-contracts@181b5311`
+    (2026-07-09, "fix(cefi): remove never-captured huobi/bitstamp/htx venues from registry + instrument universe") — one
+    day before this session even started — deliberately removed huobi/bitstamp/htx from `venue_mapping.py`,
+    `provider_api_versions.yaml`, `venue_tokens.py`, and `instrument_validation.py`, reaching the OPPOSITE conclusion to
+    this doc's P0 finding. Neither this doc's original 2026-07-07 finding nor
+    `instruments_remaining_work_audit_2026_07_10.md`'s "Design: aligned with SSOT, Proceed" verdict for this item was
+    written with knowledge of 181b5311 (checked both — neither mentions it) — this is a genuinely new discovery, not a
+    re-litigation of an already-settled question. Reading 181b5311's diff: every removed entry was an orphaned
+    Tardis-slug mapping-table row for a venue that was NEVER declared in `VENUES_BY_ASSET_GROUP["cefi"]` — so
+    "never-captured" is literally true of that specific dead code, but does NOT by itself prove the venues are unviable
+    (a half-registered venue with a live Tardis archive underneath is a different fact pattern than a genuinely-dead
+    venue). Per the SSOT-contradiction HARD RULE, did not unilaterally re-reverse a same-week peer commit — escalating
+    to the operator instead (see this dispatch's final report for the A/B/C framing). Still a real, open P0 gap either
+    way.
