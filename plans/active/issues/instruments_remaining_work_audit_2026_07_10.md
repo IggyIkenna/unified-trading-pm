@@ -270,17 +270,18 @@ land.
 
 **10. Fleet data-acquisition health sweep** — conflicts: none. Design: the proposed case-insensitive
 `_resolve_connector` fallback is a tolerant-reader workaround for a registry casing inconsistency (cefi uppercase,
-defi/prediction lowercase, no stated reason) rather than canonicalizing the casing itself — diverges slightly from this
-workspace's broader instinct toward canonicalization over tolerant fallback. Not a hard violation. **Recommendation:
-needs a design call — accept the fallback as permanent, or use this as the trigger to canonicalize venue-key casing
-across the registry (cleaner, larger).**
+defi/prediction lowercase, no stated reason) rather than canonicalizing the casing itself. **RESOLVED 2026-07-10
+(operator): "don't paper over the inconsistency, fix properly."** Source doc updated
+(`fleet_data_acquisition_health_2026_06_21.md`) — the real fix is now canonicalizing every venue key in
+`WS_FEED_CONNECTOR_FACTORIES` (and every producer that keys into it) to one convention, UPPERCASE, matching this
+session's established canonical-instrument-id casing — not a runtime fallback. Not yet implemented.
 
 **11. `--run-tag` CLI flag doesn't do what its help text says** — conflicts: none. Design: **the issue doc frames this
 as a wide-open operator decision — it isn't.** `codex/08-workflows/t1-batch-dag.md` already documents the target
 `--run-tag` behavior verbatim, and instruments-service's own code already special-cases the exact `"t1-recon"` sentinel
-from that SSOT, just never implements the GCS-prefix redirection. **Recommendation: proceed with wiring it through (not
-deleting/re-describing it) — that's the option that brings the code into compliance with the already-documented target;
-the issue doc is missing the cross-reference.**
+from that SSOT, just never implements the GCS-prefix redirection. **RESOLVED 2026-07-10 (operator: "agree").** Source
+doc updated (`instruments_service_run_tag_flag_not_applied_2026_07_08.md`) — option (a), wire it through. Not yet
+implemented.
 
 **12. TradFi `mvp_mode` dead fetch-time filter** — conflicts: none (soft note: #13 Phase 5 extends the same MVP registry
 with 3 KRX equities — no action needed as long as future wiring reads it live). Design: genuinely open — unlike #11, no
@@ -288,10 +289,11 @@ SSOT pre-answers whether a fetch-time filter should exist. Proceed as proposed, 
 
 **13. Crypto-venue equity-perps + tokenized stocks Phase 2** — conflicts: none against other CODE_PATH items. Design:
 **authored 2026-06-20, before the 2026-07-08 one-canonical-builder decision** this whole audit doc's §5 tracks (the
-effort retiring ~48 DeFi adapters' ad hoc f-string `instrument_key` construction). Implementing Phase 2 as originally
-written — without checking whether the new `EQUITY_PERP`/`TOKENIZED_EQUITY` ids should route through the shared
-canonical builder — would add a fresh instance of exactly the pattern being retired elsewhere. **Recommendation:
-re-check Phase 2's instrument-id construction against the canonical builder before implementing.**
+effort retiring ~48 DeFi adapters' ad hoc f-string `instrument_key` construction). **RESOLVED 2026-07-10 (operator:
+"update the doc to match canonical target").** Source doc updated
+(`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Phase 2, new step 2a) — `EQUITY_PERP`/ `TOKENIZED_EQUITY`
+`instrument_id` construction must route through the shared canonical builder (same `@LIN` convention as regular CeFi
+`PERPETUAL`), not a new ad hoc f-string. Not yet implemented.
 
 ### P3
 

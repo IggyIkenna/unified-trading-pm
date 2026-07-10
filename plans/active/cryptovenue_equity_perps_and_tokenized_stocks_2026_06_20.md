@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Crypto-venue single-stock perps + tokenized stocks (Binance/OKX/Bybit) — equity basis/dispersion arb
-summary: Add canonical universe coverage for crypto-venue single-stock perpetuals and tokenized stocks (Binance/OKX/Bybit), enabling equity basis/dispersion arb cross-venue.
+summary:
+  Add canonical universe coverage for crypto-venue single-stock perpetuals and tokenized stocks (Binance/OKX/Bybit),
+  enabling equity basis/dispersion arb cross-venue.
 status: active
 nature: process
 asset_group: [cefi, defi]
@@ -89,7 +91,21 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
      Override to `InstrumentType.EQUITY_PERP` when the base ∈
      `LINKED_EQUITY_PERP_BASES`/`STANDALONE_EQUITY_PERP_SYMBOLS` (UAC `crypto_equity_link.tracks_equity()` / the
      base-universe). Mirror the existing OPTION special-case in `_passes_asset_filter` / the type path. Tokenized-equity
-     venues (Bybit `AAPLX`) → `InstrumentType.TOKENIZED_EQUITY`.
+     venues (Bybit `AAPLX`) → `InstrumentType.TOKENIZED_EQUITY`. 2a. **UPDATED 2026-07-10 (operator, aligning with the
+     canonical-instrument-id decision) — `instrument_id`/ `instrument_key` construction for EQUITY_PERP/TOKENIZED_EQUITY
+     MUST route through the shared canonical builder
+     (`unified_api_contracts.internal.reference.canonical_id_builder.build_instrument_id`, or the venue's own
+     `_build_canonical_perpetual_key`-family helper in `tardis/parsing.py` if one already exists for the venue), the
+     SAME mechanism `instrument_id_format_canonicalization_2026_07_08.md`'s effort wired in for regular
+     `PERPETUAL`/`FUTURE`/`OPTION` this session — NOT a new ad hoc f-string. This plan section predates that decision
+     (filed 2026-06-20, canonical-builder decision made 2026-07-08) and, implemented as originally written, would add a
+     fresh instance of exactly the ad hoc-construction pattern that decision is retiring elsewhere (cf.
+     `canonical_id_builder_retrofit_checklist_2026_07_08.md`'s ~48-DeFi-adapter backlog of the same class). Since these
+     ARE linear-margined perpetual contracts economically, they should carry the same `@LIN` margin marker convention as
+     every other CeFi PERPETUAL — confirm with the venue's already-wired builder (Binance/OKX/Bybit are all landed as of
+     this session) rather than reinventing margin-type resolution for this new `InstrumentType` value. Add this as an
+     explicit acceptance check in step 3's unit tests below (assert the real target shape, e.g.
+     `BINANCE-FUTURES:PERPETUAL:META-USDT@LIN`, not just that the type stamps EQUITY_PERP).
   3. Unit tests: METAUSDT/NVDAUSDT(Binance) + META-USDT-SWAP(OKX) pass the filter AND stamp EQUITY_PERP; SPCXUSDT →
      EQUITY_PERP (standalone); a crypto perp (BTCUSDT) still stamps PERPETUAL (no regression); AAPLX(Bybit) →
      TOKENIZED_EQUITY. Then `bash scripts/quality-gates.sh` green.
