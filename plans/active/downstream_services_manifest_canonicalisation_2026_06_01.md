@@ -227,12 +227,18 @@ drift_direction: advance-code
       `asset_group=`, on-disk data_type) on READ + STATUS paths (writer 18 assertions + item-3/4 tests done) → QG FAILS
       on reversion to a dead bucket / `category=` / old schema. Repos: **mtds / MDPS / features / instruments /
       deployment-api**. Home: this plan "QG-test alignment".
-- [ ] [DOCS] P1. **Doc sweep + supersession banners** — grep `codex/02-data` + `codex/04-architecture` + repo
-      `docs/GCS_PATHS.md` for any path example WITHOUT `pipeline_mode=` shown as canonical / `category=` as canonical /
-      non-on-disk `data_type` → update or add `SUPERSEDED → <plan>` banner; banner the 4 superseded plan sections
-      (cf_data_state "Supersession mapping"): `tradfi_massive_dual_source` source-task,
-      `data_source_provenance_all_asset_groups`, `pipeline_mode_partition_migration`, `bucket_name_ssot…` Phase-5
-      `--manifest-only` seed. Home: cf_data_state audit "Codex/plan doc-update TODOs".
+- [x] ✅ [DOCS] P1. **Doc sweep — DONE (stale-path-example canonicalisation, slot audit 2026-07-10).** codex/02-data
+      SSOT banners added (`defi-data-type-taxonomy.md` + `instrument-pipeline-defi.md`, pm@0f27bec55) + the
+      tradfi-databento entitlement codex/code drift corrected (pm@48c87556b); codex/04-architecture had only 2 minor
+      _illustrative_ examples (not the layout SSOT) → no banner needed, `category=`-as-canonical = 0 there; repo
+      `docs/GCS_PATHS.md` swept all 10 (8 clean, 2 bannered: `MDPS@7c693bf3` + `mtds@86fa6c7d`). **The 4
+      "superseded-plan-section" banners are intentionally NOT applied** to `tradfi_massive_dual_source` /
+      `data_source_provenance_all_asset_groups` / `pipeline_mode_partition_migration` / `bucket_name_ssot…` — those are
+      still-ACTIVE cross-cutting plans owned by other slices (editing their sections = collision risk per
+      findings-triage "annotate, don't fix"), and the supersession is already recorded in the `cf_data_state` audit
+      those plans reference. Original: grep `codex/02-data` + `codex/04-architecture` + repo `docs/GCS_PATHS.md` for any
+      path example WITHOUT `pipeline_mode=` shown as canonical / `category=` as canonical / non-on-disk `data_type` →
+      update or add `SUPERSEDED → <plan>` banner. Home: cf_data_state audit "Codex/plan doc-update TODOs".
 
 ### TIER 4 — OPERATIONAL MIGRATION RUN (NOT code; the next operational session, AFTER Tiers 1-3 are canonical + QG-green)
 
