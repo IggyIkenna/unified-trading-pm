@@ -413,3 +413,17 @@ idle+killed slots, and PLAN ≠ TASK on working slots (slot 7 = deployment task 
   at the next MAIN-agent recycle — operator can veto/adjust before then (diff: unified-trading-pm@017c03799
   agents/main.md vs agent-orchestrator@041ea00 agents/main.md). Remaining: deploy (ff-pull root AO) + live e2e verify;
   A3 boot-timeout diagnosis; Phase B remainder; Phase D booting-status + UI.
+- **2026-07-10 ~11:45Z** — **LIVE E2E VERIFIED (deployed server + real worker).** Deploy: root AO ff-pulled to
+  `5eaea29`, WatchFiles reload clean (14 loops supervised, no tracebacks), AO `agents/` gone from disk. Evidence chain:
+  (1) deployed `/api/spawn/preview` composes the stub with absolute canonical PM paths; (2) `/boot` WITHOUT `read_files`
+  → **HTTP 428** with the exact missing list + self-correcting hint (`boot_read_unconfirmed` logged); (3) `/boot` WITH
+  `read_files` → **HTTP 200** (basename match); (4) REAL worker spawned on slot 14 (`slot_spawned` 11:41:04Z): pre-spawn
+  dirty-state resolver inherited 1 dirty repo (sibling-plan preserve path working), worker followed the stub — `/boot`
+  with correct `read_files` FIRST TRY at 11:41:12Z (no 428 between spawn and boot), then the rewritten worker.md's
+  prescribed final idle heartbeat ("idle, no dispatchable work") and waiting quietly — the cost-driven no-busy-poll
+  decision observed live in the pane ("heartbeat and wait quietly rather than busy-polling"). Boot-timer interplay
+  confirmed: /boot landed well inside the 180s spawn-heartbeat window. **Reap + blank-row (Phase D) verified live
+  11:50Z:** the idle worker was reaped ~5 min post-spawn (boot-grace 300s honored, then idle-lingering reclaim) and slot
+  14's row read `status=idle, current_task=None, last_msg=None, context_pct=0, tmux=None` — the reset_slot_worker_state
+  blank-row behavior, observed in production. (Side observation: the kicker kicked the quietly-idle worker at 11:46:26
+  just before reclaim — expected under current tuning; the Phase B kick-window item stays open.)
