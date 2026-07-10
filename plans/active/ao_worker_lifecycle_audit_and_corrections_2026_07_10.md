@@ -262,14 +262,37 @@ fold into the role-file rewrite (A4).
       failures since restart); add a spawn-attempt failure-log throttle/backoff so a recurring quarantine can't spam 454
       failure-logs, and confirm the quarantine `detail` string names the real error (not the FM2/FM8 red herring).
 
+### Phase D — Fleet dashboard + slot-state correctness (backend-owned)
+
+_Root cause (2026-07-10, operator screenshot): the FLEET table shows STALE plan/task/context/ping/message for
+idle+killed slots, and PLAN ≠ TASK on working slots (slot 7 = deployment task but shows a tradfi plan)._
+
+- [ ] [CODE] P1. Fix the PLAN column derivation (`server/routes/state.py:219-224`): derive `plan_ref` from
+      `slot.current_task` (join `TaskRow.task_id == slot.current_task`), NOT `dispatched_to == slot_id LIMIT 1`
+      (unordered → picks a stale prior-dispatch task's plan). Guarantees PLAN always matches TASK and clears when idle.
+      (Slot-7/8 mismatch = an orphaned tradfi/sports task still carrying `dispatched_to == slot`.)
+- [ ] [CODE] P1. Central `reset_slot_worker_state(slot)` helper: clear `current_task`, `last_msg`, `context_used_pct`→0,
+      and RELEASE the task's `dispatched_to`; call it from EVERY teardown path (`tmux_pruner`, the watchdog kills at
+      `worker_liveness_watchdog.py:1016/1361/1498/1593/1643`, autospawn idle). Today killed/idle slots retain stale
+      message/context/ping/plan (grep-confirmed: `last_msg`/`last_ping`/`context_used_pct` are never blanked on kill).
+      Non-alive slots then read as blank naturally.
+- [ ] [CODE] P1. STATUS column = computed lifecycle PHASE (backend-owned, per "backend populates"): surface the real
+      phase — `pre-boot → booting → working → idle/blocked/done/paused/stale/killed` — adding the new
+      `pre_boot`/`booting` states (fed by the boot-timer "boot-started" signal from A1). Backend computes the phase; the
+      dashboard renders it. (Today the enum is flat: idle/working/dispatched/blocked/done/stale/paused/killed.)
+- [ ] [UI] P2. Dashboard belt-and-suspenders (`dashboard/src/layout.tsx`): for non-alive slots (killed /
+      idle-no-session) dim/blank CONTEXT · PING · LAST MESSAGE · PLAN · TASK so a dead row can never read as live even
+      if a backend field lags. `[UI]` + a `pw:L2` regression spec on the FLEET table.
+
 ### Phase C — Verify
 
 - [ ] [VERIFY] P1. Live verification with evidence per fix: a freshly-spawned worker's `/boot` confirms it read its role
       file + RULES.md (in-context), the boot stub carries the correct per-session + escalation vars, and it operates
       only in its slot; no extraction/paste step remains; teardown reap leaves 0 new orphans after a kill;
       `idle_blocker_inferred` / `slot_released_prereq_blocked` / `worker_kick_failed` rates drop in the activity log;
-      dashboard escalation_to renders correctly. Cite `agent-orchestrator@<sha>` + `unified-trading-pm@<sha>` (relocated
-      files) + activity-log deltas.
+      dashboard escalation_to renders correctly; the FLEET table shows PLAN==TASK on working slots, blank
+      context/ping/message on killed+idle slots, and the lifecycle phase in STATUS. Cite `agent-orchestrator@<sha>` +
+      `unified-trading-pm@<sha>` (relocated files) + activity-log deltas.
 
 ## 4. Codex SSOTs (read before touching each area — plan↔codex drift is review-blocking)
 
@@ -304,3 +327,10 @@ fold into the role-file rewrite (A4).
   DECISION (cost-driven): the cutover's role-file rewrite keeps the idle-loop SEMANTICS but drops the aggressive
   every-60s client self-poll — server-owned liveness (reap+respawn-on-demand) is cheaper than a worker polling an empty
   queue. Folded into the role-file-rewrite task.
+- **2026-07-10 ~06:45Z** — Operator flagged FLEET-table data-correctness (screenshot): PLAN ≠ TASK on working slots
+  (slot 7 = deployment task but tradfi plan), and killed/idle slots retain stale plan/context/ping/message. Root-caused:
+  (1) PLAN joins `dispatched_to == slot_id LIMIT 1` (unordered) → picks a stale prior-dispatch task, should join
+  `current_task`; (2) teardown never blanks `last_msg`/`last_ping`/`context_used_pct` nor always releases the task's
+  `dispatched_to`; (3) STATUS is a flat enum with no pre-boot/booting phase. Added **Phase D — fleet dashboard +
+  slot-state correctness (backend-owned)**: fix PLAN derivation, a central `reset_slot_worker_state` on every teardown,
+  a computed lifecycle-phase STATUS, and a UI blank-dead-rows guard.
