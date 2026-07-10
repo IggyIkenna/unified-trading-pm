@@ -386,6 +386,18 @@ classifies FROZEN → "— proceed now" kick → tiny "still waiting, iteration 
       cases. Evidence: agent-orchestrator@b46613d; worker.md §4b + cicd.md fast-path shipped in the same PM commit as
       this flip.
 
+- [ ] [CODE] P2. `worker_polling_dead` false alarms on PRESCRIBED-idle workers (found 2026-07-10 PM, 15 events that
+      day): every event was an IDLE slot (`task=None`, queue holding only a prereq-blocked task — "idle: 1 task(s)
+      blocked on footystats-mp-complete") tripping health.py's 300s heartbeat-silence alarm. Under the read-the-file
+      contract an idle worker sends ONE final heartbeat and waits quietly, so >300s silence is the DESIGNED posture, not
+      death — the alarm predates the no-busy-poll cutover. Fix BOTH halves: (a) health.py must not fire polling-dead for
+      a task-less idle slot with a live tmux session (that state belongs to the idle reclaim); (b) diagnose WHY those
+      sessions lingered for HOURS instead of being reaped by the 2-tick idle reclaim (slots 1/2/3/4 repeatedly
+      re-tripped the alarm 12:33-16:30Z — either the reclaim isn't firing, its ticks reset on each alarm/kick, or
+      something respawns idle workers into a queue with zero dispatchable work, burning spawn cycles). Investigation was
+      in flight at session end — start from the activity timeline of slot 2 on 2026-07-10 (worker_polling_dead
+      13:57/15:25/15:57/16:30).
+
 ### Phase D — Fleet dashboard + slot-state correctness (backend-owned)
 
 _Root cause (2026-07-10, operator screenshot): the FLEET table shows STALE plan/task/context/ping/message for
@@ -552,3 +564,19 @@ yet, candidate future todo); main.md overnight step 4 ordering claim corrected t
 clean with no edits: worker.md, review.md, plan-health, plan-reconciler, cicd, conflict-resolver, data_pipeline_failure,
 and all 5 craft files. (Slot-discipline note: from this entry on, ALL PM work happens in the slot-16 clone — earlier
 same-day PM commits were made from the root clone, acknowledged as a violation.)
+
+### 2026-07-10 (slot-16, late PM) — slot-9 incident closed live + repo-blocker mechanism shipped
+
+- **Slot-9 resolution (operator decision, delivered via outbox)**: told slot 9 the golden-drift fixes had shipped
+  (-002@047df6906/-003@23d53f69/-004@7048ae7e) → it re-ran full QG (green), shipped the slot-3-reconciled S2 diff, and
+  /done'd `coinbase_bare_name_migration-002` @ instruments-service@db33ded7. Total limbo: ~2h; root causes recorded in
+  the Phase B2 narrative above.
+- **Repo-blocker mechanism SHIPPED + DEPLOYED** (todo 20): agent-orchestrator@b46613d (registry + routes +
+  RepoHealthWatcher + kicker waiter-suppression; `/api/repo-blockers` verified serving live, watcher zero-cost while
+  empty) + unified-trading-pm@b56110c87 (worker.md § 4b contract, cicd.md fast-path resolve, this plan's flip). Root PM
+  propagation verified — agents booting from now on read the new contract.
+- **New finding while verifying**: the `worker_polling_dead` false-alarm class on prescribed-idle workers + the
+  lingering-idle-session mystery — filed as the new Phase B2 P2 todo above (investigation notes included there so
+  nothing rides on session memory).
+- Quickmerge gotcha worth remembering: a `+` inside a conventional-commit scope (`docs(agents+plans):`) fails the
+  conventional-pre-commit hook with a misleading "commit failed" — scope must be a plain word.
