@@ -88,6 +88,13 @@ cloud, invisible in the deployments tab:
    `capture_status`/object-counts already answer — so deployments **links** to it, never re-derives it (that would
    duplicate the manifest SSOT and break the single-walk HARD RULE). See the consolidator-page hand-off in the Progress
    Log.
+8. **Cost numbers are labeled by provenance — real vs inferred (operator decision 2026-07-10).** A cost is either
+   **deterministic-real** (from the billing exports — BigQuery `billing_export` / AWS CUR-Athena, the reason we avoid
+   the pricier CloudWatch/Monitoring pulls) or **inferred** (a list-rate estimate, e.g. the orphans endpoint's
+   `monthly_disk_usd` computed at "asia-northeast1 list rates"). Every displayed $ must (a) use realistic rates, and (b)
+   when it can't be deterministically real, be **visibly marked "estimated / inferred" + "refresh periodically"** —
+   never presented as an exact figure. Prefer the billing-export value when one exists for the resource; fall back to a
+   clearly-labeled list-rate estimate otherwise.
 
 ## Codex SSOTs (READ before touching each area — plan↔codex drift is review-blocking)
 
@@ -172,8 +179,13 @@ full-census state field is already present, and the per-row cost column already 
 ### Region + kind completeness (nothing running is invisible)
 
 - [ ] [BACKEND] P1. **Multi-region census** — Cloud Run jobs/services + Cloud Functions census only `asia-northeast1`
-      today, and AWS only one region; a resource in any other region is invisible. Fan the censuses out across every
-      region we actually use (discover dynamically, or a config'd region set) with per-region honest degradation.
+      today, and AWS only one region; a resource in any other region is invisible. **Default = a CONFIGURED region set**
+      (operator decision 2026-07-10 — the handful we actually use, for determinism + to avoid fanning out to ~30 empty
+      regions every census) with per-region honest degradation. **PLUS an on-demand "scan all regions" escape hatch**
+      (operator: "we should be able to see other regions when we want, to check periodically + avoid surprises") — a
+      `?all_regions=true` query param / UI action that sweeps every region for a one-off surprise-check, NOT on the
+      default census path. Anything the all-regions sweep finds outside the configured set → surface it so we can add
+      that region to the config.
 - [ ] [BACKEND] P1. **Orphaned disks + unattached static IPs as first-class rows** — a persistent disk or reserved IP
       with NO owning VM at all (truly orphaned) still costs money and is INVISIBLE in FleetOrphans (which is VM-keyed).
       Emit them as their own inventory rows (`kind=DISK`/`kind=STATIC_IP`, `launched_by=adhoc/unknown`) with size/type +
@@ -181,8 +193,11 @@ full-census state field is already present, and the per-row cost column already 
       todo below must register them or they render un-iconed/un-filterable.)
 - [ ] [BACKEND] P2. **Completeness audit** — enumerate every billable running resource per cloud, existence-based
       (credits-agnostic): GKE clusters/node-pools, Cloud SQL, Dataflow/Composer, AWS RDS / EBS volumes / NAT gateways /
-      Elastic IPs. Diff against the tab; add the materially-costly missing kinds as census rows (or file the rest as a
-      follow-up with the measured $/month each). Deliverable: a one-shot report of "running-but-invisible" per cloud.
+      Elastic IPs. Diff against the tab; add the materially-costly missing kinds as census rows (**materiality default ≈
+      ≥$5–10/mo per resource-class, operator-agreed 2026-07-10**; file the rest as a follow-up with the measured
+      $/month each). **$/month per principle 8:** use the billing-export figure where one exists (deterministic-real);
+      otherwise a realistic list-rate estimate that is **visibly marked "inferred / refresh periodically"\*\* — never a
+      fake-exact number. Deliverable: a one-shot report of "running-but-invisible" per cloud.
 
 ### Scheduled-job liveness — "did it fire? on time?" (deployments = liveness lens; "did it produce data" is the consolidator's, see hand-off)
 
@@ -192,10 +207,13 @@ full-census state field is already present, and the per-row cost column already 
       `last_attempt_status`), join it to the Cloud Run job / target it triggers, and surface an **OVERDUE badge** when
       the last fire is later than `schedule + grace` (or the last attempt FAILED). Honest per-region degradation like
       the rest. This is the ONLY honest source of the on-time signal — execution timing alone cannot answer it.
-- [ ] [BACKEND] P1. **Fix the Lambda `last_run_at` honesty gap** — `_lambda_item` currently sets
-      `last_run_at = fn.last_modified` (the last _deploy_ time, silently mislabeled as run-time). Relabel to
-      `last_modified_at` semantics; the real last-invocation needs CloudWatch (`GetMetricStatistics` Invocations) — wire
-      it or mark last-run honestly-absent for Lambda. **Never** present deploy-time as run-time.
+- [ ] [BACKEND+UI] P1. **Fix the Lambda `last_run_at` honesty gap** — `_lambda_item` currently sets
+      `last_run_at = fn.last_modified` (the last _deploy_ time, silently mislabeled as run-time). **DECIDED (operator
+      2026-07-10): relabel to `last_modified_at` semantics and mark last-run honestly-ABSENT for Lambda — do NOT wire
+      CloudWatch** (`GetMetricStatistics` is pricier per-call; avoiding CloudWatch/Monitoring is the whole reason we
+      lean on Athena/BigQuery). **Never** present deploy-time as run-time. **+ UI tooltip** (top of the table or on the
+      Lambda row's last-run cell): a one-line note that Lambda shows last-_modified_, not last-_invoked_, because we
+      deliberately avoid the paid CloudWatch metric — so the operator understands the "—" isn't a bug.
 - [ ] [BACKEND] P2. **Job run-history in the detail popover** — extend the job detail vector to carry the last N
       executions (start/end time + status + duration), not just the latest, so "did it fire on its cadence" is
       answerable by eye. Reuses `list_executions` (already called in `latest_execution_by_job`; raise `page_size` from 1
@@ -240,7 +258,10 @@ full-census state field is already present, and the per-row cost column already 
       **Overlap (2026-07-10 cross-plan audit):** the Cost tab (`cost_obs_ui_unified_breakdown_2026_07_08`, shipped)
       already surfaces "idle-IP and orphaned-disk cost-waste" from the billing exports — REUSE that computation as the $
       source, don't re-derive. Division of labour: the Cost tab owns the $ breakdown/analytics; the Deployments row owns
-      the operational red badge + reap action. `pw:L2` on the stranded-total + leaked-cost cell rendering.
+      the operational red badge + reap action. **Cost provenance (principle 8):** prefer the billing-export figure
+      (deterministic-real) for the leaked $; where only the orphans list-rate estimate exists (e.g. `monthly_idle_usd` =
+      "asia-northeast1 list rates"), render it **visibly marked "est. / refresh periodically"** — never as an exact
+      figure. `pw:L2` on the stranded-total + leaked-cost cell rendering **+ the inferred-cost marker**.
 
 ## Progress Log
 
@@ -279,6 +300,19 @@ full-census state field is already present, and the per-row cost column already 
   - **Tightenings:** `DeploymentItem` is a LOCAL deployment-api BaseModel (NOT UAC); `labels`/`health_status`/
     `boot_disk_name`/`region`/`cost_per_day_usd` already exist (so `managed_by_label` + per-row cost are near-free); the
     Consolidators tab already lives in this cockpit (bridge deep-links `?tab=consolidators`).
+- 2026-07-10 — **Three implementation decisions resolved with the operator** (folded into the todos + principle 8):
+  1. **Lambda last-run** → relabel to `last_modified_at` + honest-ABSENT last-run; **no CloudWatch** (pricier per-call —
+     the reason we lean on Athena/BigQuery), **+ a UI tooltip** so the operator knows Lambda shows last-modified not
+     last-invoked (the "—" isn't a bug).
+  2. **Multi-region** → default = a CONFIGURED region set, **+ an on-demand `?all_regions=true` "scan all regions"
+     escape hatch** for periodic surprise-checks (findings outside the config → surface so we can add the region).
+  3. **Cost numbers** → new **principle 8**: realistic rates; billing-export (deterministic-real) preferred; where only
+     a list-rate estimate exists it must be **visibly marked "inferred / refresh periodically"**, never fake-exact.
+     Completeness-audit materiality default ≈ ≥$5–10/mo per resource-class.
+- 2026-07-10 — **Join key CONFIRMED to the consolidator agent (unblocks their WS-3 P1):** full Cloud Run job short-name
+  (`job.name.rsplit("/",1)[-1]`, verbatim), NOT the `(kind, asset_group)` tuple — the raw shared observable both sides
+  read from `JobsClient.list_jobs` (the tuple needs two independent fuzzy parses that drift → missed joins). Recorded in
+  the hand-off seam bullet below.
 
 ### Hand-off to the consolidator-page agent (2026-07-10)
 
