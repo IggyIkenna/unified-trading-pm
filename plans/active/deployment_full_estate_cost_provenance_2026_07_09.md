@@ -175,13 +175,18 @@ full-census state field is already present, and the per-row cost column already 
 
 ### 🔴 Leaked / unreleased resources on non-running VMs (the direct cost catch)
 
-- [ ] [BACKEND] P0. **Leaked-resource detection — the gaps FleetOrphans does NOT cover.** The boot-disk-on-stopped-VM
+- [x] [BACKEND] P0. **Leaked-resource detection — the gaps FleetOrphans does NOT cover.** The boot-disk-on-stopped-VM
       leak + $/mo + reap is ALREADY done by `GET /api/fleet/orphans` (reuse it, don't re-detect boot disks). Add the
       missing dimensions: (a) **data disks / regional PDs** still attached to a non-`RUNNING` VM (orphans shows boot
       only — reuse `get_disk_details`/`list_unattached_disk_names`), (b) reserved **static IPs** (a new
       `addresses.aggregated_list` read). Surface `has_unreleased_resources: bool` +
       `unreleased_resources: list[{type, name, size_gb, disk_type, est_monthly_usd}]` on the local `DeploymentItem`.
-      Honest absence when the read fails (never a false "clean").
+      Honest absence when the read fails (never a false "clean"). ✅ **DONE** deployment-api@3da415d6 — new
+      `_leaked_resources` leaf (`detect_unreleased_resources`): DATA disks (boot excluded, reuses `get_disk_details`) +
+      VM-attributable static IPs (new `vm_utils.list_reserved_addresses`, regional + global). `has_unreleased_resources`
+      is `bool | None` (None = read failed → honest absence). Disk cost reuses the orphans SSOT
+      (`_fleet_inventory.monthly_disk_usd`, made public); `est_monthly_usd` carries `cost_basis="inferred"` (principle
+      8). QG green; 7 detector + 2 inventory-integration tests.
 - [ ] [UI] P0. **Red "Unreleased resources" badge ON the Deployments inventory row** (the net-new vs. the Fleet-tab
       orphans panel) — non-running VMs carrying leaked disks/IPs show a red badge (+ est. monthly cost) right where the
       operator scans the fleet; click → the detail popover lists each resource with the exact console link + release
@@ -343,8 +348,18 @@ full-census state field is already present, and the per-row cost column already 
     `unknown`, never a fabricated `deployment-api` (no AWS registry until the DEVOPS `managed-by` label lands).
     `managed_by_label` deferred to that DEVOPS todo (a `labels` echo is a no-op until the label is standardized).
   - Tests added: `test_build_inventory_full_estate_surfaces_unmanaged_vms`, `…_no_unmanaged_rows_without_a_real_join`,
-    `…_launched_by_provenance_for_cloud_run_jobs`. **Next:** the REVIEW P1 cross-cloud consistency + parity check, then
-    the leaked/unreleased-resource detection (P0).
+    `…_launched_by_provenance_for_cloud_run_jobs`.
+- 2026-07-10 — **Leaked/unreleased-resource detection (P0) landed** (deployment-api@3da415d6, QG green): new
+  `_leaked_resources` leaf — `detect_unreleased_resources()` flags DATA disks (boot excluded, reuses `get_disk_details`)
+  - VM-attributable static IPs (new `vm_utils.list_reserved_addresses`, regional + global `aggregated_list`) on a
+    non-`RUNNING` VM. `DeploymentItem` gains `has_unreleased_resources` (`bool | None`; None = read failed → honest
+    absence, never a false "clean") + `unreleased_resources`. Disk cost reuses the ONE orphans SSOT
+    (`_fleet_inventory.monthly_disk_usd`, made public — no drift); each item's `est_monthly_usd` carries
+    `cost_basis="inferred"` (principle 8), never a billing figure. `get_vm_instance_details` now also returns
+    `attached_disk_names` (all attached, reusing the instance list — no new API call). Wired through
+    `_compute_inventory` (two bounded aggregated_list reads) → `build_inventory` → both VM item builders. 7 detector + 2
+    integration tests. **Next:** the red unreleased-resources UI badge (#5, pw:L2), then the remaining P1 backend
+    (multi-region, orphaned first-class rows, Cloud Scheduler census) + the UI units.
 
 ### Hand-off to the consolidator-page agent (2026-07-10)
 
