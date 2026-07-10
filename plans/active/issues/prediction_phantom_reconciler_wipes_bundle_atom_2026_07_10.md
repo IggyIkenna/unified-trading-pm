@@ -37,12 +37,14 @@ created: 2026-07-10
 parent_epic: mtds_mdps_master
 priority: P0
 assigned_vm:
-owner:
 resolved_by:
 locked_by:
 source:
   - /autonomous prediction _index residual root-cause diagnosis 2026-07-10 (read-only, live prod GCS
     central-element-323112)
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Phantom reconciler wipes prediction bundle-atom captured cells (bundle-atom blind spot)
