@@ -2,14 +2,18 @@
 doc_type: plan
 title: Full-estate deployment visibility — unmanaged VMs, launched-by provenance, leaked-resource + cost catch
 summary:
-  Extend the deployment cockpit from "our managed fleet" to the WHOLE cloud estate — every VM / Cloud Run / Lambda / ECS
-  / disk / IP that is running or recently ran, across every region, whether or not deployment-api launched it. Add a
-  `launched_by` provenance column (deployment-api vs ad-hoc) so agent/operator ad-hoc launches are findable and can be
-  pulled into the stack; flag any non-running VM that still holds unreleased disks / static IPs (leaked cost) in red and
-  sort those directly after the running VMs; and audit for completeness so nothing billable-and-running (even under
-  credits) is invisible. Motivated by a live diff finding 3 running GCE VMs invisible in the cockpit today (incl. a
-  16-day-old zombie-watchdog). Builds on the census + composite-health plan
-  (deployment_obs_backend_kinds_health_2026_07_09).
+  Extend the deployment cockpit from "our managed fleet" to the WHOLE cloud estate — every compute unit (VM / Cloud Run
+  job & service / Lambda / ECS / Cloud Function) that is running or recently ran, across every region, whether or not
+  deployment-api launched it. Disks / static IPs are NOT first-class rows — the estate is near-stateless (real state is
+  in GCS/S3, backfill VMs are disposable), so storage surfaces ONLY as a leaked-cost overlay — a red badge on a
+  non-running VM that never released it, or a standalone orphaned row when no VM owns it. Add a `launched_by` provenance
+  column (deployment-api vs ad-hoc) so agent/operator ad-hoc launches are findable and can be pulled into the stack;
+  flag leaked disks/IPs in red and sort those rows directly after the running VMs; add scheduled-job liveness (did it
+  fire? on time? — a Cloud Scheduler census) with a cross-link to the consolidator/manifest surface for the
+  authoritative "did it produce the data" verdict (deployments = liveness lens, consolidator = data-correctness lens);
+  and audit for completeness so nothing billable-and-running (even under credits) is invisible. Motivated by a live diff
+  finding 3 running GCE VMs invisible in the cockpit today (incl. a 16-day-old zombie-watchdog). Builds on the census +
+  composite-health plan (deployment_obs_backend_kinds_health_2026_07_09).
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -74,6 +78,16 @@ cloud, invisible in the deployments tab:
    fetched; add region fan-out, not per-request re-walks.
 5. **Leaked ≠ dead.** A `dead`/`terminated`/`stopped` VM is only a RED cost problem if it still holds unreleased
    resources (disk / static IP). A cleanly-torn-down VM is fine and stays low-priority.
+6. **Disks/IPs are a leaked-cost OVERLAY, never a first-class inventory dimension.** The estate is near-stateless (real
+   state lives in GCS/S3; backfill VMs are disposable), so a disk/IP healthily attached to a running VM is noise and is
+   NEVER shown as its own row. Storage surfaces ONLY when it's a leak: unreleased on a non-running VM (red badge) or
+   orphaned with no owner (standalone row). Do **not** build an "all disks" table.
+7. **Liveness here, data-correctness on the consolidator.** The deployments page answers "did it fire / is it healthy /
+   did it fire ON TIME" (a control-plane liveness lens). "Did the run produce the data it was designed for" is a
+   data-correctness question that stays authoritative on the manifest/consolidator surface — the same question
+   `capture_status`/object-counts already answer — so deployments **links** to it, never re-derives it (that would
+   duplicate the manifest SSOT and break the single-walk HARD RULE). See the consolidator-page hand-off in the Progress
+   Log.
 
 ## Codex SSOTs (READ before touching each area — plan↔codex drift is review-blocking)
 
@@ -134,6 +148,30 @@ cloud, invisible in the deployments tab:
       Elastic IPs. Diff against the tab; add the materially-costly missing kinds as census rows (or file the rest as a
       follow-up with the measured $/month each). Deliverable: a one-shot report of "running-but-invisible" per cloud.
 
+### Scheduled-job liveness — "did it fire? on time?" (deployments = liveness lens; "did it produce data" is the consolidator's, see hand-off)
+
+- [ ] [BACKEND] P1. **Cloud Scheduler census (new kind)** — the "fired at the right time?" signal has NO source today: a
+      Cloud Run job row shows only its latest _execution_ time, never its _expected_ fire time, and we read Cloud
+      Scheduler nowhere (grep-confirmed). Add a Cloud Scheduler census (schedule cron + `last_attempt_time` +
+      `last_attempt_status`), join it to the Cloud Run job / target it triggers, and surface an **OVERDUE badge** when
+      the last fire is later than `schedule + grace` (or the last attempt FAILED). Honest per-region degradation like
+      the rest. This is the ONLY honest source of the on-time signal — execution timing alone cannot answer it.
+- [ ] [BACKEND] P1. **Fix the Lambda `last_run_at` honesty gap** — `_lambda_item` currently sets
+      `last_run_at = fn.last_modified` (the last _deploy_ time, silently mislabeled as run-time). Relabel to
+      `last_modified_at` semantics; the real last-invocation needs CloudWatch (`GetMetricStatistics` Invocations) — wire
+      it or mark last-run honestly-absent for Lambda. **Never** present deploy-time as run-time.
+- [ ] [BACKEND] P2. **Job run-history in the detail popover** — extend the job detail vector to carry the last N
+      executions (start/end time + status + duration), not just the latest, so "did it fire on its cadence" is
+      answerable by eye. Reuses `list_executions` (already called in `latest_execution_by_job`; raise `page_size` from 1
+      for the detail path only — the list path stays at 1, no new cost).
+- [ ] [BACKEND/UI] P2. **Job → manifest bridge (link + hint only, NOT the verdict)** — on a job row's detail popover,
+      cross-link to that job's asset_group manifest/consolidator partition and show a lightweight "rows since last run"
+      delta reusing the batched `object_delta` lookup already built (no new walk). The **authoritative** "did the data
+      land / is it correct" verdict lives on the consolidator page (see hand-off) — this is a link + a hint, so a red
+      "fired-but-produced-nothing" is spotted from deployments but confirmed on the consolidator. **DEPENDS ON** the
+      consolidator agent exposing a per-job/per-asset_group "last run → partitions+rows written" surface keyed by the
+      same job identity.
+
 ### Provenance robustness (drift-proof the signal)
 
 - [ ] [DEVOPS] P1. **Standardize a `managed-by=deployment-service` label/tag on every launcher** — GCP `--labels` + AWS
@@ -157,3 +195,35 @@ cloud, invisible in the deployments tab:
   `list_unattached_disk_names`/`get_disk_details` already exist in `vm_utils.py` (idle-disk catch half-built); region
   coverage gap confirmed (Cloud Run/Functions/AWS single-region). Depends on
   `deployment_obs_backend_kinds_health_2026_07_09` (the census + `DeploymentItem` contract it extends).
+- 2026-07-10 — Operator design pass, two decisions folded in (principles 6 + 7, summary tightened, todos added):
+  - **Disks/IPs = leaked-only overlay** (principle 6). Traced today's row builders: a healthily-attached disk is NEVER
+    shown; storage appears only as a red badge on a non-running VM or a standalone orphaned row. The "all disks/IPs"
+    reading of the old summary was over-broad and is removed.
+  - **Scheduled-job semantics split by question type** (principle 7). Traced what a job row carries today
+    (`_cloud_run_item_for_live_job`, `_cloud_run_executions.latest_execution_by_job`): name/kind/umbrella/service/
+    asset_group + latest-execution `status` + `last_run_at` + synth `exit_code` + log link — i.e. only the LATEST run,
+    no schedule, no output linkage. Lambda is weaker: `_lambda_item.last_run_at = fn.last_modified` (deploy time, NOT
+    last invoke — an honesty gap now a todo). Grep-confirmed we read Cloud Scheduler NOWHERE, so "fired at the right
+    time?" has no source → new Cloud Scheduler census todo. Added todos: Cloud Scheduler census (on-time/OVERDUE),
+    Lambda `last_run_at` honesty fix, job run-history in detail popover, job→manifest bridge (link+hint only). The
+    deployments page owns liveness (fired/healthy/on-time); "did the run produce the data" stays authoritative on the
+    consolidator/manifest surface (hand-off below), linked not duplicated.
+
+### Hand-off to the consolidator-page agent (2026-07-10)
+
+> Deliver this to whoever owns the consolidator/manifest page + plan. It defines the OTHER half of the split above — the
+> data-correctness verdict this deployments plan deliberately does NOT re-derive, plus the seam it must expose so the
+> deployments detail popover can link to it. Verbatim message is in the chat that produced this entry.
+
+- **What the deployments page will do (so you don't duplicate it):** liveness only — every job/service/VM's existence,
+  current status, latest-execution result + `last_run_at`, provenance (`launched_by`), leaked-resource flags, and (new)
+  a Cloud-Scheduler-driven "fired on time / OVERDUE" badge. It will NOT walk buckets to verify a run's output.
+- **What the consolidator page should own (the gap to audit + fill):** the authoritative per-run **"did this scheduled/
+  consolidator run produce the data it was designed for"** verdict — for each run of each job, which partitions/rows it
+  should have written vs. what actually landed (`capture_status`/object counts), fired-but-produced-nothing detection,
+  and stale-output detection. This is the same manifest SSOT you already own; the ask is to make it **per-job/per-run**
+  and **queryable**.
+- **The seam the deployments page needs from you:** expose a lightweight lookup keyed by the SAME job identity (short
+  Cloud Run job name / asset_group) → `{last_run_at, partitions_written, rows_written, expected_vs_actual, verdict}`, so
+  the deployments detail popover can cross-link "this run → its produced data" without re-walking. Agree the join key
+  with this plan (Cloud Run job short-name ∪ asset_group) before building.
