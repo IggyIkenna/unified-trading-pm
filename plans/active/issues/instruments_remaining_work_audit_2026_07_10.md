@@ -885,9 +885,17 @@ the source docs if this list is used for dispatch planning.
   work left `quality-gates.sh` intermittently red on unrelated tests during the shipping window. Needs a clean-tree
   re-attempt to land.
 
-**Two real follow-ups needed**: (1) verify/re-ship the Coinbase-migration S2 dead-branch removal and the mvp_mode build
-— both are code-complete, just never got a clean QG window to quickmerge; (2) the Kraken FI\_/FF\_ marker fix's final
-shipping status is unconfirmed. Script:
+**Follow-up verification, 2026-07-10 (later): all 3 previously-open items confirmed SHIPPED** — re-checked directly
+against git history (not re-trusting the earlier "code-complete, blocked" self-report): (1) Coinbase-migration S2
+dead-branch removal landed as `instruments-service@db33ded7` (slot 9, reconciled with a concurrent slot-3 attempt per
+operator direction — see `plans/active/coinbase_bare_name_migration_2026_07_06.md` line ~424 for the full ship
+narrative); (2) `mvp_mode` universal build landed as `market-tick-data-service@e7581b8b` (committed 2026-07-10
+16:32:27+01:00, root-caused one level higher than filed — `TickDataHandler.process()` parsed `--mvp-mode` but never read
+it, blocking every asset group's batch path, not just TradFi's); (3) Kraken FI*/FF* marker fix confirmed shipped in both
+consumers — `instruments-service@c2d3fbbc` (`_KRAKEN_FUTURES_PREFIXES` in
+`reference_data/adapters/cefi/tardis/parsing.py`, 2026-07-09) and `market-tick-data-service@20dc1be8`
+(`kraken_futures_book_ticker_ws.py`, 2026-07-10) — both files clean in the working tree, no uncommitted drift. No
+re-shipping action needed for any of the three. Script:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/instruments-audit-decisions-execution-wf_1e191185-1c2.js`
 
 `wf_60ecfd13-752` (`instruments-audit-p0-wave`, dispatched 2026-07-10, operator: "finish all fixes now") — **COMPLETE**,
