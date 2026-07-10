@@ -709,9 +709,12 @@ anytime (read-only); the migration walk per bucket follows its input going C-GRE
       reasons + `available_at`). Small corpus → likely local, fast.
 - [ ] [DATA] P1. **execution** C-walk: ONE bundled walk for execution-record/ledger `_index` debt (same set). Small
       corpus → likely local, fast.
-- [ ] [CODE] P1. Writer fixes (all four): emit typed `EmptyConfirmedReason` + `attempted_failed`-not-swallow (CF-11) so
-      future writes are canonical (the corpus is small precisely because little has run — fix the writer before volume
-      arrives).
+- [x] ✅ [CODE] P1. Writer fixes (all four) — DONE (duplicate of the ✅ TIER-1 writer-fixes item above; slot audit
+      2026-07-10). Typed `EmptyConfirmedReason` shipped across MDPS@986e72c / features@75559c0a / strategy@4c806cd4 /
+      execution@d7dfef0b so future writes are born-canonical (the adapter-layer `attempted_failed`-not-swallow is the
+      MTDS/IS fetch-path obligation, tracked in § CF-11). Original: emit typed `EmptyConfirmedReason` +
+      `attempted_failed`-not-swallow (CF-11) so future writes are canonical (the corpus is small precisely because
+      little has run — fix the writer before volume arrives).
 
 ### Verify + handoff
 
