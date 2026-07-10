@@ -797,8 +797,13 @@ legacy delete), downstream C-walks (need input C-GREEN + first batch), post-walk
   round-trip) / #4 (clob_history []-on-error anchor) OPEN.
 - **mtds / MDPS** — implementers in flight.
 
-- [ ] [CODE] P1. **features volatility `data_loader` read-path missing `pipeline_mode=` (REAL BUG, features QG-test
-      agent 2026-07-10).** `features_service/volatility/core/data_loader.py::load_options_chain_raw` /
+- [x] ✅ [CODE] P1. **DONE `features-service@f1eab190` (2026-07-10)** —
+      `load_options_chain_raw`/`load_futures_chain_raw` now probe the `pipeline_mode=`-partitioned chain-candle path
+      FIRST (via `_candidate_chain_blob_paths` + `derive_pipeline_mode_for_row(venue, ag, "book_snapshot_5")`, mirroring
+      `delta_one._build_blob_path` + `volatility/engine/orchestrator._list_chain_files`) then bare fallback; 6
+      regression tests (pm-first probe + bare fallback for options & futures + DEFI onchain_rpc derivation); QG-green.
+      Original: **features volatility `data_loader` read-path missing `pipeline_mode=` (REAL BUG, features QG-test agent
+      2026-07-10).** `features_service/volatility/core/data_loader.py::load_options_chain_raw` /
       `load_futures_chain_raw` build `processed_candles/by_date/day={d}/timeframe={tf}/data_type=options_chain/venue=…`
       with **NO `pipeline_mode=` segment**, but MDPS WRITES chain candles WITH it (`config.py::get_processed_path`
       inserts `pipeline_mode={pm}/` after `day=`, via `live_workers_chain.py`). Once chain candles migrate to
