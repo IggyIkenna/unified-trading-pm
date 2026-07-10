@@ -58,11 +58,22 @@ request). Both are provisioned; the frontend just queries them.
   2026-07-08, mostly `PROMOTION`) — an earlier "exhausted ~2026-06-20" note was **wrong**; `cost` is the pre-credit
   usage/list cost, net is real spend. The `/api/costs` consumer sums **net** (`_net(r)=cost+credit`) across every view
   and surfaces `gross`+`credit` on the summary for the "you pay = gross - credits" headline.
+- **Currency: this account bills in GBP** (the export's `currency` column = `GBP` on every row — verified 2026-07-09:
+  1.79M rows, zero USD, `currency_conversion_rate` 0.74–0.76). So `cost`/`credits` are **pound** amounts. The
+  `/api/costs` consumer **converts to USD at query time**: `gcp_facts_sql` divides both `cost` and each row's credit sum
+  by `currency_conversion_rate` (the USD→account-currency rate GCP billed at), guarded `IFNULL(NULLIF(rate,0),1)` so a
+  USD account / missing rate is a 1.0 no-op, applied **per source row** so each day's exact rate is used
+  (`amount / rate` = USD-equivalent list price, verified to the penny vs the live export). This makes `/ops/costs`
+  single-currency **USD**, matching the native-USD AWS CUR, so the cross-cloud total is dimensionally valid. NB the page
+  reports the **USD list-equivalent** (comparable to AWS), NOT the GBP invoice cash figure — a native-GBP view for
+  tallying the GCP invoice is a separate UI option. (AWS CUR is native USD, `line_item_currency_code=USD`, no conversion
+  column — GBP is not obtainable there without an external FX rate.)
 
 ```sql
--- per-service per-day (net of credits)
+-- per-service per-day (net of credits). NB cost/credits are GBP here — the /api/costs consumer
+-- divides each by currency_conversion_rate for USD (see the Currency bullet above).
 SELECT FORMAT_DATE('%Y-%m-%d', DATE(usage_start_time)) AS day, service.description AS service,
-       ROUND(SUM(cost) + SUM((SELECT IFNULL(SUM(c.amount),0) FROM UNNEST(credits) c)),2) AS net_cost
+       ROUND(SUM(cost) + SUM((SELECT IFNULL(SUM(c.amount),0) FROM UNNEST(credits) c)),2) AS net_cost_gbp
 FROM `central-element-323112.billing_export.gcp_billing_export_v1_016B25_109840_AF2ACB`
 GROUP BY 1,2 ORDER BY 1 DESC,3 DESC;
 -- per-bucket / per-VM: use the *_resource_v1 table, GROUP BY resource.name

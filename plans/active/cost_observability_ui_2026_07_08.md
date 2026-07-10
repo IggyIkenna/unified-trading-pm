@@ -249,7 +249,7 @@ faithfully mirrors its sources — every GCP per-service figure matches the `bq`
 **source-level, not UI math**. Evidence = live `bq` probes on the resource table + `SHOW COLUMNS`/Athena probes on the
 CUR (2026-07-09). Operator decisions captured inline.
 
-- [ ] [BACKEND+UI] P1. **GCP is billed in GBP but the UI prints `$` — convert to USD everywhere.** The BQ export's
+- [x] ✅ [BACKEND+UI] P1. **GCP is billed in GBP but the UI prints `$` — convert to USD everywhere.** The BQ export's
       `currency` column = **`GBP`** on all 1.79M rows (last 60d); the pipeline selects `cost` raw with no FX and the
       frontend `usd()` hardcodes `$`, so every GCP figure is a **pound value wearing a dollar sign** (the "GCP
       $12,593/30d" is really £12,593). Proven 3 independent ways: (a) `currency='GBP'`, zero USD rows; (b)
@@ -260,6 +260,13 @@ CUR (2026-07-09). Operator decisions captured inline.
       currency_conversion_rate))`and     the credit line divides the`UNNEST(credits)`sum by the same outer-row`currency_conversion_rate`; usage amounts     untouched; AWS/GitHub paths unchanged. Verified: Jul3–9 gross £2,708.12 → **$3,581.93** (rate 0.756), flows     per-service (Cloud Run £1,264.84→$1,672.96). Whole page becomes genuinely USD → the `$`label +`usd()`become     correct and the cross-cloud total valid. Add a unit test asserting the`/rate`split; update    `codex/05-infrastructure/billing-cost-observability.md`
       (GCP GBP-native, USD at query time). NB reports the **USD list-equivalent** (comparable to AWS), NOT the GBP
       invoice cash figure.
+      - ✅ **2026-07-10 — deployment-api@`782c988`.** `gcp_facts_sql` now divides both `cost` and each row's credit sum
+        by `IFNULL(NULLIF(currency_conversion_rate, 0), 1)` (per-source-row, guarded no-op for a USD account); usage
+        untouched. Verified vs live BQ for the current window to the penny: backend GCP gross **$2,978.18** =
+        `SUM(cost/rate)`, credit **−$1,719.36**, net **$1,258.82** (usd_per_gbp = 1.3227). Unit test
+        `test_gcp_facts_sql_converts_gbp_to_usd_via_conversion_rate` added; 52/52 cost-obs tests + full backend QG green.
+        Codex `billing-cost-observability.md` updated (Currency bullet). No UI change needed — the existing `usd()`/`$`
+      is now correct. GBP tally view is the next todo (P2).
 - [ ] [UI] P2. **GBP view option for GCP (tally against the £ invoice).** Primary display stays USD everywhere; add an
       option to also read GCP figures in **native GBP** so the operator can tie out to the GBP console/invoice. AWS
       can't be GBP (no AWS-supplied rate — external FX only), so the GBP view is GCP-only-meaningful: thread
