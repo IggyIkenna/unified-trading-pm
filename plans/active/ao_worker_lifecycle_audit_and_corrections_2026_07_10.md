@@ -261,10 +261,14 @@ is operator-review-gated (A6) and can lag the worker cutover.
       code.
 - [x] 3. ✅ [CODE] P0. Add the `/boot` read-confirmation gate — a worker cannot proceed to dispatch until it confirms
       (via `/boot`) it has READ its role file + RULES.md. Restores the in-context guarantee the paste gave for free.
-- [ ] [CODE] P1. Diagnose-on-boot-timeout + alert-at-cap (`_auth_failover.check_spawn_heartbeat_timeouts`): on
-      spawn-heartbeat timeout, CAPTURE the pane (liveness + tail) and classify WHY it hasn't booted (alive-but-slow /
-      stuck at a startup prompt / crashed / mid-read) BEFORE the blind respawn; and page the operator when the 2-retry
-      cap (`_SPAWN_HEARTBEAT_MAX_RETRIES`) is hit (today it goes silent). Depends on the boot-timer reconciliation (A1).
+- [x] 10. ✅ [CODE] P1. Diagnose-on-boot-timeout + alert-at-cap — agent-orchestrator@3f1d0ef09.
+      `_diagnose_unbooted_pane` captures liveness + classification + an 8-line pane tail BEFORE any respawn; an
+      actively-WORKING pane skips the kill without burning a retry (`spawn_heartbeat_timeout_pane_working`; the kicker's
+      spinner pass refreshes last_ping); the diagnosis rides on every `spawn_heartbeat_retry` event; at the 2-retry cap
+      a ONE-TIME latched `spawn_retry_cap_reached` event + `notify_spawn_failed` Slack page fire with the pane tail
+      (latch cleared on a post-spawn heartbeat). Tests: test_spawn_heartbeat_liveness.py (6, incl. cap-dedup +
+      pane-working-skip + latch-clear; hermetic tmux — a live orch-slot-7 flipped a run mid-QG). A1 boot-timer
+      dependency was satisfied 2026-07-10 by the cutover.
 - [x] 4. ✅ [CODE] P0. Rewrite the role/rules files into STANDALONE readable docs (worker.md, RULES.md,
       main/review/monitor + craft + escalation): dynamic values referenced as "given in your boot message" (no inline
       `<SLOT_ID>`); keep the "NEVER exit on your own / Start now: /boot" semantics but with the client-vs-server
@@ -280,11 +284,15 @@ is operator-review-gated (A6) and can lag the worker cutover.
 - [ ] [CODE] P2. `main.md` dead Phase -2…14 phase-DAG removal (source epic says "provenance only"; fix the
       `plans/active/` → `plans/epics/` dir error). **[OPERATOR-REVIEW] — main.md is the main orchestrator's brain;
       surface the proposed diff before committing.**
-- [ ] [CODE] P2. Doc-drift sweep: `status: draft`→`active` on the 4 wired craft roles (or a `doc_type: agent-role`
-      carve-out); remove the deprecated/nonexistent `backup`-role refs in `monitor.md:48,54,185`; refresh the stale
-      "server-side TODO" in `WORKER_SPAWN_PREREQUISITES.md:131-209` (Kicker shipped; add the Watchdog); repoint the 5
-      archived/dead SSOT footers; fix the "~150/175 lines" RULES.md size claims; SUPERSEDED banner on
-      `MAIN_AGENT_CUTOVER_REVIEW.md` + drop the `main.md:108-109` boot-step wiring to it.
+- [x] 18. ✅ [CODE] P2. Doc-drift sweep — split across the two ships: draft→active on the 4 craft roles + backup-role
+      refs removed + archived SSOT footers repointed + size claims dropped were all part of the
+      unified-trading-pm@017c03799 agents/ rewrite (verified: `rg backup unified-trading-pm/agents/` clean, no
+      CUTOVER_REVIEW wiring in the rewritten main.md). agent-orchestrator@3f1d0ef09 finishes it:
+      `WORKER_SPAWN_PREREQUISITES.md` Kicker section gets a SHIPPED-historical banner naming the current package layout
+      (Kicker + Watchdog + spawn-heartbeat watchdog) and the post-cutover contract drift (no busy-poll, task-less idle
+      never kicked); `MAIN_AGENT_CUTOVER_REVIEW.md` gets the 🔴 SUPERSEDED banner (living runbook = PM agents/main.md);
+      `/api/spawn/preview` drops the retired `branch=tab/…` var (routes/agents.py:100 — the last live producer of
+      finding-2 staleness).
 - [x] 6. ✅ [CODE] P1. Regression tests for the new mechanism (replaces the old "rendered template contains sentinel"
       test): the boot stub composes per role + resolves the canonical path; role files are placeholder-free in their
       read-raw sections; a spawned worker's `/boot` confirms it read its files. There is no extraction regex left to
@@ -292,28 +300,50 @@ is operator-review-gated (A6) and can lag the worker cutover.
 
 ### Phase B — Runtime lifecycle hardening (server code)
 
-- [ ] [CODE] P1. Teardown reaping — make `tmux_spawn.kill_session` (or the reclaim/prune callers) reap the worker's
-      background/child processes (pane process-group) before/with `tmux kill-session`, so background jobs don't reparent
-      to the orchestrator cgroup. Include a one-time sweep of the existing 10-17-day orphans. Guard against killing
-      shared/host processes (scope to the pane's pgid only).
-- [ ] [CODE] P1. Kick-window fix (`worker_kick_failed` artifact, operator-approved): prefer lengthening the 2s post-kick
-      settle OR a state-delta check (did `last_ping`/task status advance?) over blanket-treating
-      `submit_verified=True + post_kick=idle` as success — the blanket rule would mask a genuinely ignored kick
-      (keystroke submitted, worker never acted). (Ordering per 2026-07-10 plan audit.)
-- [ ] [CODE] P1. Spawn-gate fallback hardening (REWRITTEN per 2026-07-10 plan audit — the dispatchable-work gate already
-      exists, do NOT re-implement it): diagnose the slot-2/3 spawns-into-blocked-queue against the raw-count fallback at
-      `autospawn.py:1476-1494` (backlog/prereq read failure → gate counts prereq-BLOCKED tasks as work); harden it —
-      fail-closed for spawn purposes on a transient read failure (skip this tick; next tick retries in 60s) + a loud
-      `spawn_gate_fallback_engaged` activity-log event so a bypass is visible, never silent.
-- [ ] [CODE] P2. `idle_blocker_inferred` dedup fix — give the inference a DEDICATED last-value field (or a
-      time-throttle, e.g. log-on-change-or-hourly) so the shared-`last_msg` contention stops defeating the guard
-      (`_git_alerts.py:95`).
+- [x] 11. ✅ [CODE] P1. Teardown reaping — agent-orchestrator@3f1d0ef09. `kill_session` now reaps the pane's DESCENDANT
+      process tree before `tmux kill-session` (single choke point — every reclaim/prune/respawn caller funnels through
+      it): one atomic ps snapshot → strict-descendants BFS from the pane pids → SIGTERM → 0.5s grace → SIGKILL
+      survivors; guards = descendants-of-THIS-pane only, never the orchestrator or its ancestor chain, never pid 0/1;
+      best-effort (reap failure never blocks the session kill). Tests: test_pane_tree_reap.py (10 — tree math,
+      cycle-safety, protected-set, reap-before-kill ordering). ONE-TIME SWEEP DONE (host action, 2026-07-10 ~12:1xZ):
+      the 4 known orphans (tm_vm_monitor 12d, understat_monitor 11d, wait_and_reclass 11d, slot-1 gcloud monitor 17d) +
+      their sleep children TERM'd and verified gone; scan also found + killed a 5th — a dead slot-3 worker's
+      `idle_heartbeat.sh` (2.4d) still curl-POSTing `/api/slots/3/heartbeat` every 60s, i.e. FAKING LIVENESS for the
+      current slot-3 occupant; the live tmux server (pid 3988487, retains the first spawn's cmdline) was
+      identity-checked and untouched. Post-sweep scan: 0 remaining `.sh` orphans reparented to init.
+- [x] 12. ✅ [CODE] P1. Kick-window fix — agent-orchestrator@3f1d0ef09. Both operator-preferred variants, not the
+      blanket rule: (1) verification is an attempt-bounded re-poll (5 × 2s ≈ 10s window) instead of one 2s snapshot; (2)
+      a heartbeat STATE-DELTA — `last_ping` advancing past its pre-kick value — counts as success even if the spinner
+      was missed between polls (fast-turn case); a genuinely ignored kick (no spinner AND no ping advance) still logs
+      `worker_kick_failed` + escalates. PLUS the live-confirmed root fix: a task-less IDLE slot is never kicked at all
+      (the quiet prompt IS the read-the-file contract — slot 14 was kicked at 11:46:26Z while waiting quietly as
+      prescribed); an idle-STATUS slot still holding a task stays kickable; the idle-kick text drops the retired "poll
+      /heartbeat for your next task" busy-poll phrasing. Events carry `ping_advanced` + `verify_window_s`. Tests:
+      test_worker_liveness.py 35 green (taskless-idle-skip, idle-with-task-kick, ping-advance-success,
+      no-advance-failure-escalates).
+- [x] 13. ✅ [CODE] P1. Spawn-gate fallback hardening — agent-orchestrator@3f1d0ef09. The raw-count fallback at the old
+      autospawn.py:1476-1494 is GONE: a backlog/prereq read failure now fails CLOSED for spawn purposes — the tick skips
+      worker spawning only (resume pass + escalation drain unaffected; next tick retries in 60s) and logs a loud
+      `spawn_gate_fallback_engaged` activity event (`backlog_read_ok`/`prereqs_read_ok`/`action=fail_closed_skip_tick`).
+      The gate is never again consulted with degraded inputs, so prereq-BLOCKED tasks can no longer masquerade as
+      spawnable work (the slot-2/3 spawn-into-blocked-queue churn). Test: test_tick_fails_closed_on_gate_read_failure
+      (asserts gate not consulted, no spawn, one engaged event).
+- [x] 14. ✅ [CODE] P2. `idle_blocker_inferred` dedup — agent-orchestrator@3f1d0ef09. Dedicated per-kicker last-value
+      memory `_last_idle_blocker: dict[slot, (summary, ts)]` with log-on-CHANGE-or-hourly semantics; `slot.last_msg`
+      keeps being refreshed for the dashboard but heartbeat contention on that shared field no longer re-fires the event
+      (the old guard compared against last_msg — `_git_alerts.py:95`). Tests: TestIdleBlockerDedup (fires-once +
+      dedups-despite-last_msg-overwrite + hourly still-blocked re-fire).
 - [x] 7. ✅ [CODE] P2. `slot_released_prereq_blocked` no-op fix — skip the event when nothing is actually released
       (`held_task is None and not had_session`); collapse the fleet-wide "everything blocked on X" case into ONE
       fleet-level signal instead of a per-slot hourly no-op (`worker_liveness_watchdog.py:1207-1245`).
-- [ ] [CODE] P3. autospawn quarantine log-throttle + verify the 2026-07-09 preserve-path fix holds (0 dirty-quarantine
-      failures since restart); add a spawn-attempt failure-log throttle/backoff so a recurring quarantine can't spam 454
-      failure-logs, and confirm the quarantine `detail` string names the real error (not the FM2/FM8 red herring).
+- [x] 15. ✅ [CODE] P3. Quarantine log-throttle + preserve-path VERIFIED — agent-orchestrator@3f1d0ef09. (a) VERIFIED
+      against the live activity log (data/state/state.db, read-only): 525 `autospawn_failed` rows on 2026-07-09 alone,
+      ALL `dirty-state quarantined (FM2/FM8)`, last at 15:21:32Z — and ZERO since, so the 2026-07-09 preserve-path fix
+      holds (>21h clean). (b) The FM2/FM8 red herring is fixed: the error string now carries `outcome.detail` (the
+      resolver's truthful per-repo reason), not just the resolver tag. (c) `autospawn_failed` activity rows are
+      throttled per slot with log-on-change-or-hourly semantics (`_last_failure_logged`, re-armed on a clean spawn);
+      flap counters + summary counts still record every attempt; the Slack path already had its own dedup. Test:
+      test_repeat_spawn_failure_activity_log_throttled. (The plan's "454" figure undercounted: 525.)
 
 ### Phase D — Fleet dashboard + slot-state correctness (backend-owned)
 
@@ -329,13 +359,22 @@ idle+killed slots, and PLAN ≠ TASK on working slots (slot 7 = deployment task 
       watchdog kills at `worker_liveness_watchdog.py:1016/1361/1498/1593/1643`, autospawn idle). Today killed/idle slots
       retain stale message/context/ping/plan (grep-confirmed: `last_msg`/`last_ping`/`context_used_pct` are never
       blanked on kill). Non-alive slots then read as blank naturally.
-- [ ] [CODE] P1. STATUS column = computed lifecycle PHASE (backend-owned, per "backend populates"): surface the real
-      phase — `pre-boot → booting → working → idle/blocked/done/paused/stale/killed` — adding the new
-      `pre_boot`/`booting` states (fed by the boot-timer "boot-started" signal from A1). Backend computes the phase; the
-      dashboard renders it. (Today the enum is flat: idle/working/dispatched/blocked/done/stale/paused/killed.)
-- [ ] [UI] P2. Dashboard belt-and-suspenders (`dashboard/src/layout.tsx`): for non-alive slots (killed /
-      idle-no-session) dim/blank CONTEXT · PING · LAST MESSAGE · PLAN · TASK so a dead row can never read as live even
-      if a backend field lags. `[UI]` + a `pw:L2` regression spec on the FLEET table.
+- [x] 16. ✅ [CODE] P1. STATUS = computed lifecycle PHASE — agent-orchestrator@3f1d0ef09. Backend-computed `phase` field
+      on SlotView (no stored-enum migration): a LIVE session (tmux_alive) with no post-spawn ping reads `pre_boot`;
+      STEP-0's "boot-started (reading role files)" heartbeat message still current reads `booting`; everything else
+      mirrors status, terminal states never overridden — derived entirely from the boot contract's own signals
+      (last_spawned_at/last_ping ordering + the prescribed STEP-0 message). StatusBadge renders the phase (tooltip shows
+      the underlying status). Tests: test_slot_phase.py (6 — incl. stale-pre-spawn-ping and dead-session guards). The
+      stored enum stays flat; the operator-visible column now shows
+      `pre_boot → booting → working → idle/blocked/paused/stale/killed`.
+- [x] 17. ✅ [UI] P2. Dashboard dead-row blanking — agent-orchestrator@3f1d0ef09. `slotRowIsDead()` (killed, or idle
+      with neither tmux_alive nor worker_alive) blanks TASK · PLAN · LAST MESSAGE · CONTEXT · PING and dims the row
+      (opacity 0.55), so a dead row can never read as live even when a backend field lags; prescribed wait-quietly idle
+      (worker still heartbeating) and mid-boot (tmux alive, worker silent) rows are explicitly NOT blanked. Regression
+      spec: layout.test.ts `slotRowIsDead` describe-block (5 cases) — this dashboard has NO Playwright harness
+      (vitest+tsc only, per its package.json), so the cited regression spec is the vitest suite (84 green) +
+      `npm run build` clean; pw:L2 does not exist in this repo's toolchain. `[UI]` gates satisfied: tsc --noEmit clean,
+      vitest 84/84, prettier clean, vite build clean.
 
 ### Phase C — Verify
 
@@ -427,3 +466,34 @@ idle+killed slots, and PLAN ≠ TASK on working slots (slot 7 = deployment task 
   14's row read `status=idle, current_task=None, last_msg=None, context_pct=0, tmux=None` — the reset_slot_worker_state
   blank-row behavior, observed in production. (Side observation: the kicker kicked the quietly-idle worker at 11:46:26
   just before reclaim — expected under current tuning; the Phase B kick-window item stays open.)
+
+### 2026-07-10 (slot-16 session, continued) — Phase A3 + B + D hardening shipped in one QG-green batch
+
+**Ship**: `agent-orchestrator@3f1d0ef09` (quickmerge, landed on LDR; strict-quickmerge clean vs 5eaea2933; pytest 1180
+passed / 1 skipped, dashboard vitest 84/84, tsc + vite build + prettier clean). Todos 10-18 flipped above with per-item
+evidence. Deployed to the root AO clone by ff-pull (WatchFiles reload) immediately after this flip.
+
+**Host actions (not in any commit)**:
+
+- Orphan sweep: the 4 known 11-17-day orphan monitors + their sleep children TERM'd + verified gone; found + killed a
+  FIFTH orphan the audit missed — a dead slot-3 worker's `idle_heartbeat.sh` (2.4 days old, from scratchpad session
+  3bb4d28e) still curl-POSTing `/api/slots/3/heartbeat` with "idle, polling" every 60s, i.e. injecting FAKE liveness
+  into whatever occupies slot 3 (would mask a dead worker from the watchdog — exactly the polluted-liveness class the
+  ao_task_lifecycle plan fought). Identity-verified every pid via /proc cmdline before TERM; the tmux server (pid
+  3988487 — ps shows it under the first spawn's cmdline, easy to misread as an orphan) was verified via
+  `tmux display-message '#{pid}'` and untouched.
+- Live-DB verification (read-only): 525 `autospawn_failed` on 2026-07-09 (all the generic FM2/FM8 string, confirming
+  both the spam volume and the red-herring detail), latest 15:21:32Z, ZERO since → the 2026-07-09 preserve-path fix
+  holds; recorded in todo 15.
+
+**Session-learned gotchas**: (1) `_diagnose_unbooted_pane` initially read the HOST's real tmux in tests — a live
+`orch-slot-7` spawned mid-QG and flipped the healthy-retry test's pane diagnosis to "working"; every
+`check_spawn_heartbeat_timeouts` test now patches `has_session` explicitly (hermetic tmux). (2) The kick-verify loop is
+attempt-bounded (5×2s), not wall-clock-deadline — a monotonic deadline under patched `time.sleep` hot-spins in tests.
+(3) This dashboard has no Playwright harness; its `[UI]` regression layer is vitest + tsc + vite build (noted in todo 17
+in lieu of the plan's pw:L2 ask).
+
+**Still open**: main.md phase-DAG removal ([OPERATOR-REVIEW] — the rewritten main.md at PM@017c03799 already carries the
+fix, inert until the next main recycle; veto window open), and Phase C [VERIFY] (needs a ~24h soak for activity-log rate
+deltas: `worker_kick_failed`, `idle_blocker_inferred`, `autospawn_failed`, `boot_read_unconfirmed`, plus one observed
+teardown with 0 new orphans and a `pre_boot → booting → working` phase transition in the fleet table).

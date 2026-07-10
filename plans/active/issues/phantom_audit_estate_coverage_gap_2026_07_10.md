@@ -88,23 +88,33 @@ the asymmetry — the **instruments** manifests for cefi/defi/tradfi (only _spor
 A phantom = a manifest row with `capture_status=captured` but **no parquet on disk** → the index is _lying about
 coverage_. It's the highest-severity data-lie because every downstream reader (data-status %, strategy, features) trusts
 the index. Leaving most of the estate un-audited means such a lie in those buckets is silent until someone reads a
-missing file at runtime. The consolidator estate is ~20-25 consolidated buckets (per
-`codex/05-infrastructure/manifest-consolidator-ssot.md`); the audit walks 5.
+missing file at runtime.
 
-## Evidence (verified 2026-07-10, live `gcloud storage`)
+## The numbers (full estate enumeration, verified 2026-07-10 live)
 
-Un-audited buckets confirmed to hold a consolidated manifest **with captured rows**:
+A `gcloud storage` sweep of all 332 project buckets found **47 that carry a consolidated
+`_index/availability_index.parquet`**. The phantom audit walks **exactly 5** (the prd env-resolved targets of
+`_BUCKET_KIND_MAP`, confirmed via `resolve_bucket_name`):
 
-| Bucket (NOT audited)                                | index size | last consolidated | note                                                                    |
-| --------------------------------------------------- | ---------- | ----------------- | ----------------------------------------------------------------------- |
-| `instruments-store-cefi-prd-central-element-323112` | 2.8 MB     | 2026-07-10        | **86,977 rows, 64,227 `captured`** — flagship: large, active, unchecked |
-| `gas-fees-central-element-323112`                   | 318 KB     | 2026-07-10        | DeFi onchain, freshly consolidated                                      |
-| `lending-indices-central-element-323112`            | 313 KB     | 2026-05-30        | DeFi onchain                                                            |
-| `oracle-prices-central-element-323112`              | 224 KB     | 2026-06-01        | DeFi onchain                                                            |
+- ✅ AUDITED (5): `market-data-tick-cefi-prd`, `market-data-tick-defi-prd`, `market-data-tick-tradfi-prd`,
+  `instruments-store-sports-prd`, `market-data-tick-pred-prd`.
 
-(instruments-cefi is the concrete proof — its capture_status distribution was inspected directly: captured 64,227 /
-empty_confirmed 22,630 / attempted_failed 81 / expected_unattempted 39. A phantom among those 64,227 captured cells
-would never be caught by the current cron.)
+→ **The other 42 consolidated manifests are NEVER phantom-checked.** Grouped (all `…-central-element-323112`):
+
+| Category                                     | Un-audited buckets                                                                                                                                                                   | why it's real data                                                                                       |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| **DeFi onchain per-data-type**               | `dex-pools`(+`-prd`), `dex-swaps`(+`-prd`), `evm-defi`(+`-prd`), `solana-defi`(+`-prd`), `gas-fees`, `lending-indices`, `lst-rates`, `oracle-prices`, `perp-funding`, `liquidations` | raw DeFi market data; `gas-fees` re-consolidated 2026-07-10                                              |
+| **Instruments (non-sports AGs)**             | `instruments-store-cefi`(+`-prd`), `-defi`(+`-prd`), `-tradfi`(+`-prd`), `-prediction`, `-pred-prd`                                                                                  | reference-data catalogues; **`instruments-store-cefi-prd` = 86,977 rows / 64,227 `captured`** (flagship) |
+| **Sports MARKET-DATA**                       | `market-data-tick-sports`(+`-prd`)                                                                                                                                                   | only sports _instruments_ are audited, never sports _market-data_                                        |
+| **Features**                                 | `features-delta-one-cefi`(+`-test`), `-defi`, `-tradfi`, `features-mtf-cefi`, `features-onchain-defi`(+`-prd`), `features-sports-prd`                                                | computed feature manifests                                                                               |
+| **Strategy / ML**                            | `strategy-store-cefi`, `ml-models-store`                                                                                                                                             | (phantom semantics differ — lower priority, confirm applicability)                                       |
+| **Legacy/non-prd variants of AUDITED kinds** | `market-data-tick-cefi`, `-cefi-test`, `-defi`, `-tradfi`, `market-data-tick-prediction`                                                                                             | the audit only hits the `-prd` variant; these siblings hold manifests too                                |
+| **Unexpected (worth a look)**                | `alerting-service`, `commodity-signals-batch`                                                                                                                                        | not obvious manifest owners — flag why they carry an `_index`                                            |
+
+Flagship proof: `instruments-store-cefi-prd` capture_status = captured 64,227 / empty_confirmed 22,630 /
+attempted_failed 81 / expected_unattempted 39 (inspected directly). A phantom among those 64,227 captured cells is never
+caught by the current cron. Note the asymmetry the map bakes in: for cefi/defi/tradfi it audits _market-data_ but not
+_instruments_; for sports it audits _instruments_ but not _market-data_.
 
 ## Suggested fix (data-pipeline owner to scope)
 

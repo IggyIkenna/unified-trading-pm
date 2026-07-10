@@ -34,7 +34,9 @@ locked_since: 2026-07-03
 resolved_by:
 ---
 
-> **🔴 2026-07-10 SUPERSEDING FINDING — the approved 1,380,376-row apply is STALE, DO NOT RUN THE ORIGINAL COMMAND.**
+> **🟢 2026-07-10 RESOLVED — fresh operator decision made at the real v2 scale (Option A, full 63,876,053-row apply,
+> LAUNCHED as `expected-universe-v2-defi-20260710-132150`). The original 1,380,376-row command below is STALE, DO NOT
+> RUN IT** — see the "Corrected + approved command" in the "2026-07-10 re-verification" section for the real command.
 > The v1 (venue-grain) enumerator that produced the reviewed/approved 1,380,376 figure was **retired 2026-07-06**
 > (`plans/active/issues/v1_enumerator_dispatch_not_deletable_2026_07_06.md`). v2 (per-instrument grain) is now the ONLY
 > enumerator, and it requires `--catalog-path` (missing from the original command below — it will hard-fail with
@@ -110,14 +112,13 @@ The enumerator's halt message is explicit: "Increase `--max-writes-per-run` afte
       potentially actionable "remaining to download" rows. Even spread across data_types (~80k each); top venues BEEFY
       96k / BALANCER 86k / PANCAKESWAP_V3 64k. (First attempt hit a transient consolidator read race — 404 on a replaced
       `\_index` generation — retry succeeded; not a defect.)
-- [ ] [INFRA] P1. **BLOCKED-OPERATOR-DECISION (RE-OPENED 2026-07-10)** — the 2026-07-03 operator approval was for the v1
-      (venue-grain) 1,380,376-row figure; v1 is retired and that command no longer runs. The real v2 (per-instrument
-      grain) backlog is **63,876,053 rows** with a different composition (82% honest-absence `empty_confirmed`, but
-      **18% / 11,459,259 rows are `expected_unattempted`** — the genuine "remaining to download" denominator — spread
-      evenly across 2018-2026, not concentrated in 684 recent cells as previously characterized). Needs a **fresh**
-      operator decision at the real scale before any `--apply-write`. See "2026-07-10 re-verification" section for the
-      full breakdown + the corrected command (adds the now-mandatory `--catalog-path`). NOT executed — zero manifest
-      writes performed by this investigation.
+- [x] ✅ [INFRA] P1. **RESOLVED 2026-07-10 (operator, fresh review at real v2 scale): Option A — apply the full
+      63,876,053 rows in one run**, same "honest by default" principle as the original 2026-07-03 decision, now at the
+      real scale. See "2026-07-10 re-verification" section for the full breakdown + the corrected command. **Execution
+      LAUNCHED** — `expected-universe-v2-defi-20260710-132150` (SPOT-provisioned, via the registered
+      `launch-expected-universe-v2-vm.sh` launcher). Two real launcher bugs found + fixed on the way (see Progress log):
+      the launcher wasn't SPOT-provisioned by default, and its `VM_TASK=expected-universe-v2` had no dispatch branch in
+      the shared VM startup script at all — every prior invocation of this launcher would have crashed the same way.
 - [x] ✅ [VERIFY] P2. Check the other AGs for the same never-applied backlog (tradfi/cefi/prediction scan-only counts).
       — 2026-07-10 real scan-only runs (all zero-write): **tradfi** catalog 1,098,236 instruments, backlog >5,000,001
       (halted at the 5M safety cap, true count unquantified — same v1→v2 explosion pattern as defi). **cefi** catalog
@@ -190,23 +191,24 @@ ALL data_types (documented legacy behavior, not a crash) — adds a matrix entry
 `unified_api_contracts.registry.market_data_categories` to suppress; contributes at most tens of thousands of rows, not
 a material driver of the 63.9M total (the grain change is).
 
-**Corrected command** (once a fresh operator decision picks a number/slice — NOT run by this investigation):
+**Corrected + approved command** (Option A, operator-approved 2026-07-10, real v2 scale — dispatched via the registered
+`launch-expected-universe-v2-vm.sh` launcher, SPOT-provisioned):
 
 ```bash
+bash deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh defi --apply-write 70000000
+
+# equivalent to (VM entrypoint):
 cd instruments-service
-MANIFEST_PER_VM_SHARDS=true VM_NAME=enum-universe-defi-$(date +%s) \
+MANIFEST_PER_VM_SHARDS=true VM_NAME=expected-universe-v2-defi-<ts> \
 GCP_PROJECT_ID=central-element-323112 \
 python scripts/enumerate_expected_universe.py \
-    --asset-group defi \
+    --asset-group defi --enumerator-version v2 \
     --catalog-path gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet \
-    --apply-write --max-writes-per-run <cap ≥ true count, per fresh operator decision>
+    --apply-write --max-writes-per-run 70000000
 ```
 
-**OPERATOR DECISION REQUIRED (Ikenna) — fresh review, real v2 scale**: A (apply the full 63,876,053 in one run — same
-"honest by default" principle as the original decision, now at the real scale); B (apply only the 52.4M
-`empty_confirmed` honest-absence rows first — zero denominator/coverage-% impact, defer the 11.46M
-`expected_unattempted` rows, which DO move the coverage-% number, to a separate reviewed slice); C (chunk by year/venue
-via `--start-date`/`--end-date`, idempotent, safe to split); Other. Not proceeding without this.
+**OPERATOR DECISION (Ikenna) — fresh review, real v2 scale, RESOLVED 2026-07-10**: Option A selected — apply the full
+63,876,053 rows in one run. **LAUNCHED**: `expected-universe-v2-defi-20260710-132150`.
 
 Diagnostic script (read-only, zero writes, reuses the production enumerator functions verbatim) was run from the
 scratchpad and is not part of any repo — available on request if the count needs independent reproduction; the commands
@@ -216,6 +218,13 @@ above are otherwise fully reproducible via the shipped CLI.
 
 - 2026-07-03: Issue filed from the incremental-catalogue plan's Phase 4 verification; pre-existence proven via the
   `--end-date 2026-06-29` bounded re-run. Operator notified in-session.
+- 2026-07-10 (git-integrity note): a first pass at this "RESOLVED" update was shipped as `unified-trading-pm` PR #900
+  (merged `254bf17e`, confirmed via `gh pr view`) but the merge commit's tree for THIS file did not actually contain the
+  change — re-diffed `254bf17e:<this path>` against current HEAD, both matched the pre-PR content, no trace of the PR's
+  diff anywhere in this file's `git log`. Re-applying the same content now (this entry + the 3 edits above). Not
+  root-caused (plausibly a concurrent same-file merge on the very high-traffic `main`/LDR pipeline silently dropping a
+  hunk) — flagging as a real, separate git/CI-integrity concern worth a dedicated look, distinct from the
+  already-flagged `git reset --hard` incidents in the sibling canonicalization doc.
 - 2026-07-10: Dispatched to execute the approved 1,380,376-row apply. Found the command stale (v1 retired 2026-07-06, v2
   now requires `--catalog-path`); re-quantified the real v2 backlog at 63,876,053 (46× approved figure) with a
   materially different composition (11.46M genuine `expected_unattempted` spread across all years, not 684 recent
@@ -223,3 +232,18 @@ above are otherwise fully reproducible via the shipped CLI.
   cefi show the identical v1→v2 explosion pattern (both >5,000,001 uncapped); prediction's v2 enumerator crashes
   outright on a tz-naive/tz-aware comparison bug (new finding, not previously filed). P1 apply re-flagged
   BLOCKED-OPERATOR-DECISION pending a fresh review at the real scale.
+- 2026-07-10 (later still): **Real launch attempts found 3 more bugs, all fixed, before landing on a working strategy.**
+  (1) `launch-expected-universe-v2-vm.sh`'s `VM_TASK=expected-universe-v2` had NO dispatch branch in the shared VM
+  startup script — every invocation crashed immediately (`--operation: invalid choice`); fixed
+  (`deployment-service@c2f4c0f`). (2) The launcher wasn't SPOT-provisioned by default; fixed
+  (`deployment-service@c30b78d`). (3) Even after both fixes, a real one-shot 70M-max-writes run on `e2-standard-16`
+  (64GB) **still OOM-killed** — it successfully generated and uploaded the full 64,403,859-row candidate report, then
+  got `Killed` (no traceback, classic OOM signature) during the actual manifest-write phase. Machine size alone doesn't
+  fix this — the write path itself needs a bounded window. **Real fix**: added `ENUM_START_DATE`/`ENUM_END_DATE` env-var
+  chunking to the launcher (`deployment-service@659dfe0`) and dispatched the full apply as 9 sequential per-year VM runs
+  (2018-2026, chained via a singleton-lock-respecting background watcher, each ~7-9M rows — well within a single
+  `e2-standard-4` machine). First chunk (2018) launched as `expected-universe-v2-defi-20260710-135435`; remaining 8
+  years auto-chain on completion. Also moved `cefi_durability_force_converge_2026_07_10.py` off local/laptop execution
+  onto its own new registered launcher (`launch-cefi-durability-force-converge-vm.sh`, `deployment-service@9acd8f6`)
+  after running it locally by mistake — this workspace's own established pattern for large data ops is VM-dispatch, not
+  foreground/background laptop execution.

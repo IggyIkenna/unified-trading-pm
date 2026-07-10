@@ -1,17 +1,26 @@
 ---
 doc_type: plan
-title: Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution) — audit-first, low-data single-walk
+title:
+  Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution) — audit-first,
+  low-data single-walk
 summary: >-
-  Per-service (not per-AG) manifest canonicalisation for the downstream data-pipeline services (MDPS,
-  features, strategy, execution) not covered by the per-AG walks: audit-first, low-data single-walk. Drives
-  the CF-1…CF-12 cross-service canonical-form checklist to QG-green BEFORE the migration run (CF-11 empty-vs-
-  failed write-path, E5 3-way manifest-rebuild decision tree, v9 re-emit). Coordinated under the
-  defi_manifest_canonicalisation MASTER.
+  Per-service (not per-AG) manifest canonicalisation for the downstream data-pipeline services (MDPS, features,
+  strategy, execution) not covered by the per-AG walks: audit-first, low-data single-walk. Drives the CF-1…CF-12
+  cross-service canonical-form checklist to QG-green BEFORE the migration run (CF-11 empty-vs- failed write-path, E5
+  3-way manifest-rebuild decision tree, v9 re-emit). Coordinated under the defi_manifest_canonicalisation MASTER.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
+repos:
+  [
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+    features-service,
+  ]
 scope: [engineer, admin]
 tags: [canonicalisation, manifest, single-walk, mdps, features, execution, audit, data-correctness]
 related: [plans/epics/features_and_ml_master.md, plans/epics/strategy_master.md, plans/epics/execution_master.md]
@@ -29,7 +38,11 @@ locked_since: 2026-06-01
 supersedes:
 superseded_by:
 depends_on:
-source: [defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — downstream uncovered), canonical_form_cross_service_audit_checklist.md (CF-1…CF-12)]
+source:
+  [
+    defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — downstream uncovered),
+    canonical_form_cross_service_audit_checklist.md (CF-1…CF-12),
+  ]
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 drift_direction: advance-code
 ---
@@ -85,7 +98,17 @@ drift_direction: advance-code
       (`orchestrator.py:1746`+`:2978-2993`); regression `tests/unit/test_is_adapter_fetch_failure_raises.py`
       (`e2e008f0`+ `f2ca5954`). Checkbox stays OPEN for the **tradfi** (databento ZERO-signal swallow
       `databento.py:826`, slot-6) + **prediction** (polymarket, slot-5) slices.
-- [ ] [CODE] P0. **E5 manifest-rebuild logic — CF-11 3-way decision tree**
+- [x] ✅ [CODE] P0. **E5 manifest-rebuild logic — CF-11 3-way decision tree — VERIFIED DONE across all 3 AGs (slot audit
+      2026-07-10).** All three rebuilds carry a dedicated CF-11 module implementing the full 3-way tree with per-script
+      unit tests: **prediction** `_rebuild_prediction_cf11.py`@`ed4e35e0` (within-bounds SRZ→`WithinBoundsSourceZero`
+      via market-lifecycle `created_at ≤ row_date < settlement`; prior-`_index` re-emit via `read_availability_index`;
+      part-(c) 41-SRZ reclassification baked into `_handle_srz_prediction_row`) +
+      `test_rebuild_prediction_manifest_cf11` @`77f1a613`; **tradfi** `_rebuild_tradfi_cf11.py`@`4ccf52c6`
+      (within-bounds via `is_non_trading_day(venue,date)` → `WithinBoundsTradfiSourceZero`) +
+      `test_rebuild_tradfi_manifest_cf11`@`750267d5`; **cefi** `_rebuild_cefi_cf11.py` @`aaeada9a`
+      (`WITHIN_BOUNDS_EMPTY_RECLASSIFIED`) + `test_rebuild_cefi_manifest_cf11`@`aaeada9a`. Parts (a)
+      within-bounds→`attempted_failed`, (b) prior-`_index` typed re-emit (status-preserved), (c) prediction 41-SRZ audit
+      — all shipped. Repo: **market-tick-data-service**. Original spec below. <br>**Original:**
       (`rebuild_{cefi,tradfi,prediction}_manifest.py`, mtds `scripts/`). Captured-atom rebuilds DONE; STILL OPEN — make
       the LOGIC canonical now so the migration-RUN session needs no script edits: (a) **within-bounds empty →
       `attempted_failed`** (not `SOURCE_RETURNED_ZERO`) — gate on in-universe (cefi venue+symbol / tradfi
@@ -104,11 +127,18 @@ drift_direction: advance-code
       `"OTHER"` (9/9 green); mtds QG `--no-fix` exit 0. Cross-referenced from the prediction master plan § CF-11. Repo:
       **market-tick-data-service**. Home: prediction plan § CF-11. (Low live urgency — Polymarket-only corpus today —
       but required before Kalshi goes live.)
-- [ ] [CODE] P1. **Downstream writer-fixes (MDPS / features / strategy / execution)** — emit typed
-      `EmptyConfirmedReason` + `attempted_failed`-not-swallow (CF-11) so the FIRST volume each writes is born-canonical
-      (these AGs have no `_index` yet → writer-fix-first, not migrate-a-nonexistent-corpus). Repos:
-      **market-data-processing-service / features-service / strategy-service / execution-service**. Home: this plan § C
-      (line ~454) + Phase-C.
+- [x] ✅ [CODE] P1. **Downstream writer-fixes — DONE across all 4 services (slot audit 2026-07-10).** Every downstream
+      writer now emits the typed `EmptyConfirmedReason` (no blank reason) on a genuine zero-volume write: **MDPS**
+      `live_workers`/`canonical_writer` (mdps@986e72c) · **features** `commodity`/`sports` batch handlers
+      (features@75559c0a) · **strategy** `strategy_manifest`/`gcs_storage_service` (strategy@4c806cd4) · **execution**
+      `strategy_instructions/gcs.py`+`manifest.py` (execution@d7dfef0b). These are downstream-COMPUTE services (read
+      upstream, no external-API fetch), so the applicable CF-11 obligation is typed-empty on genuine zero-volume — which
+      is what shipped (the adapter-layer `attempted_failed`-not-swallow lives in the MTDS/IS fetch paths, tracked
+      separately). First volume each writes is born-canonical. Repos: **MDPS / features / strategy / execution**.
+      <br>**Original:** emit typed `EmptyConfirmedReason` + `attempted_failed`-not-swallow (CF-11) so the FIRST volume
+      each writes is born-canonical (these AGs have no `_index` yet → writer-fix-first, not
+      migrate-a-nonexistent-corpus). Repos: **market-data-processing-service / features-service / strategy-service /
+      execution-service**. Home: this plan § C (line ~454) + Phase-C.
   - **MDPS portion DONE (slot-6 2026-06-03, mdps@986e72c):** `live_workers` emits typed
     `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` on zero-row fetches (no blank reason) + `canonical_writer` bridges
     tradfi `ohlcv_15m`/`ohlcv_24h`/`tbbo` → their `SOURCE_PRIORITY` keys so v9 source-column denormalisation resolves.
@@ -233,10 +263,9 @@ drift_direction: advance-code
       five-slot asset-group split). **TODO (each non-defi AG slot, this plan):** confirm the MDPS candle-builder
       raw-tick read + features-onchain `data_loader` read resolve the `pipeline_mode=` path PRIMARY for the **non-defi**
       AGs too (cefi/tradfi/prediction) — i.e. they read via the pipeline_mode-aware MTDS reader /
-      `candidate_parquet_paths` / `manifest_reader_fallback`, NOT a direct `build*\*\_partition_path`that would miss
-      migrated data after the legacy delete. If any direct base-builder read remains, switch it to the
-      pipeline_mode-aware path (same fix as the writer). This is the only PREP3 residual before the per-AG
-      G3`--apply`→delete; the writer side + MTDS reader are done.
+      `candidate_parquet_paths` / `manifest_reader_fallback`, NOT a direct
+      `build*\*\_partition_path`that would miss     migrated data after the legacy delete. If any direct base-builder read remains, switch it to the     pipeline_mode-aware path (same fix as the writer). This is the only PREP3 residual before the per-AG     G3`--apply`→delete;
+      the writer side + MTDS reader are done.
 - [x] ✅ [CODE] P1. **tradfi reader residual CLOSED (slot-6 2026-06-03)** — audit found the features **volatility**
       (`volatility/engine/orchestrator.py`) + **cross_instrument** (`cross_instrument/engine/raw_data_loader.py`)
       readers resolved tradfi raw-tick via a direct `build_cefi_partition_path(...)` with NO `pipeline_mode=` → would
@@ -352,16 +381,20 @@ drift_direction: advance-code
       `pipeline_mode` filter is column-presence-guarded; `asset_group=` canonical with `category=` fan-out tolerance
       (storage_facade). NO dead-bucket read for our 3 AGs post-delete. **4 flags surfaced (none block G1 — tracked
       below).**
-- [ ] [CODE] P1. **FLAG 1 (data-status): TradFi multi-source double-count — DECIDED (operator 2026-06-02): UNION +
-      manifest per-source breakdown.** With v9 Databento+Massive dual-source the manifest carries two rows per
-      (venue,data_type,date); `_mtds_honest_coverage_for_venue` counts distinct dates WITHOUT
-      `select_primary_available_source` dedup → inflated `found_dates`. **Resolution:** (1) headline coverage = union —
-      dedupe via `select_primary_available_source` (UAC `source_priority`) so a cell is green if ≥1 source captured; (2)
-      per-source breakdown (databento vs massive) in the drilldown derived from the `_index` `source` COLUMN already
-      loaded by `read_availability_index` (`groupby("source")` on the in-memory rows — NOT a per-parquet scan; the v9
-      manifest denormalises `source` to the row level so this is free). QG test: 2 source-rows on one date → 1
-      found-date (union) + the per-source split. NOT a migration regression — display-correctness. Cross-ref
-      `tradfi_massive_dual_source`. (No longer operator-blocked.)
+- [x] ✅ [CODE] P1. **FLAG 1 (data-status) — DONE: duplicate of the ✅ TIER-2 FLAG-1 above (SHIPPED
+      deployment-api@60cd585).** UNION dedupe via `select_primary_available_source` + manifest-derived per-source
+      breakdown from the `_index` `source` column both shipped with a QG union test (verified slot audit 2026-07-10 —
+      this preflight-matrix row mirrors the resolved TIER-2 item). Original spec below. <br>**Original:** **FLAG 1
+      (data-status): TradFi multi-source double-count — DECIDED (operator 2026-06-02): UNION + manifest per-source
+      breakdown.** With v9 Databento+Massive dual-source the manifest carries two rows per (venue,data_type,date);
+      `_mtds_honest_coverage_for_venue` counts distinct dates WITHOUT `select_primary_available_source` dedup → inflated
+      `found_dates`. **Resolution:** (1) headline coverage = union — dedupe via `select_primary_available_source` (UAC
+      `source_priority`) so a cell is green if ≥1 source captured; (2) per-source breakdown (databento vs massive) in
+      the drilldown derived from the `_index` `source` COLUMN already loaded by `read_availability_index`
+      (`groupby("source")` on the in-memory rows — NOT a per-parquet scan; the v9 manifest denormalises `source` to the
+      row level so this is free). QG test: 2 source-rows on one date → 1 found-date (union) + the per-source split. NOT
+      a migration regression — display-correctness. Cross-ref `tradfi_massive_dual_source`. (No longer
+      operator-blocked.)
 - [ ] [CODE] P1. **FLAG 3 (bucket-SSOT, deployment-api) — DECIDED (operator 2026-06-02): env-tier the `*-store` buckets,
       `-prd` initial.** `commentary/pipeline_uat.py:167/181/195/211` (+ `deployment_api_config.py:547`
       `ml-configs-store`) hardcode no-env `instruments-store`/`features-store`/`ml-store`/`execution-store` (NOT in
@@ -370,7 +403,12 @@ drift_direction: advance-code
       registers the env-tiered `*-store` names (prd/stg/dev) in cloud-providers.yaml (`bucket_name_ssot…`). prd-store
       data migrates to `-prd` in the initial migration; no-env buckets become legacy → deleted post-cutover. Coordinate
       with the active deployment-api agent.
-- [ ] [CODE] P2. **FLAG 4 (display): TRADFI honest-coverage denominator**
+- [x] ✅ [CODE] P2. **FLAG 4 (display) — DONE: duplicate of the ✅ TIER-2 FLAG-4 above (RESOLVED-BY-VERIFICATION,
+      premise was a misread).** `MTDS_CATEGORY_META["TRADFI"].venue_accessor = all_databento_venues` already resolves to
+      the FULL tradfi set `[CME,CBOE,NASDAQ,NYSE,ICE,FX]` (CBOE+FX Massive venues are IN it) → denominator is correct
+      today; a clarity alias `VenueMapping.all_tradfi_venues` was added (UAC@0abbdf86), rename deferred to avoid a
+      forward-dep break. No real display bug (verified slot audit 2026-07-10). Original spec below. <br>**Original:**
+      **FLAG 4 (display): TRADFI honest-coverage denominator**
       `MTDS_CATEGORY_META["TRADFI"].venue_accessor =     all_databento_venues` (6 venues) omits Massive-only venues →
       misleading coverage for Massive venues. Operator/VenueMapping decision (add Massive venues to the accessor).
       Display correctness, not a migration blocker.
@@ -671,9 +709,12 @@ anytime (read-only); the migration walk per bucket follows its input going C-GRE
       reasons + `available_at`). Small corpus → likely local, fast.
 - [ ] [DATA] P1. **execution** C-walk: ONE bundled walk for execution-record/ledger `_index` debt (same set). Small
       corpus → likely local, fast.
-- [ ] [CODE] P1. Writer fixes (all four): emit typed `EmptyConfirmedReason` + `attempted_failed`-not-swallow (CF-11) so
-      future writes are canonical (the corpus is small precisely because little has run — fix the writer before volume
-      arrives).
+- [x] ✅ [CODE] P1. Writer fixes (all four) — DONE (duplicate of the ✅ TIER-1 writer-fixes item above; slot audit
+      2026-07-10). Typed `EmptyConfirmedReason` shipped across MDPS@986e72c / features@75559c0a / strategy@4c806cd4 /
+      execution@d7dfef0b so future writes are born-canonical (the adapter-layer `attempted_failed`-not-swallow is the
+      MTDS/IS fetch-path obligation, tracked in § CF-11). Original: emit typed `EmptyConfirmedReason` +
+      `attempted_failed`-not-swallow (CF-11) so future writes are canonical (the corpus is small precisely because
+      little has run — fix the writer before volume arrives).
 
 ### Verify + handoff
 

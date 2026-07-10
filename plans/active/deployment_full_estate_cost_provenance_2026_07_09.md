@@ -139,20 +139,32 @@ full-census state field is already present, and the per-row cost column already 
 
 ### Full estate + `launched_by` provenance (see everything + who launched it)
 
-- [ ] [BACKEND] P0. **Full GCE VM census** — union the deployment registry with the live GCE aggregated-list so EVERY
+- [x] [BACKEND] P0. **Full GCE VM census** — union the deployment registry with the live GCE aggregated-list so EVERY
       live GCE instance gets a row, not just registry-tracked ones. Un-registered instances become `unmanaged` rows
       carrying their live GCE state via the EXISTING `health_status` field (`RUNNING`/`STOPPED`/`TERMINATED`). Reuses
       `get_vm_instance_details` (already fetched every census cycle — no new API call); the registry entry, when
       present, enriches the row (task/mode/heartbeat/D.1 metrics) exactly as today. **Reuse the reconciliation union**
       (`GET /api/fleet/reconciliation` already computes registry-vs-live "unknown"/"expected-missing") as the same
-      source — don't build a second union. Surfaces the 3 unmanaged VMs found 2026-07-09.
-- [ ] [BACKEND] P0. **`launched_by` provenance field** on the LOCAL `DeploymentItem` BaseModel (+ its TS mirror
+      source — don't build a second union. Surfaces the 3 unmanaged VMs found 2026-07-09. ✅ **DONE**
+      deployment-api@2e0418d — `build_inventory` unions the registry with the live GCE aggregated-list
+      (`_unmanaged_vm_item`; `health_status` carries the raw status, `uptime_hours` from the creation timestamp),
+      reusing the same union `fleet_reconciliation` computes (`is_control_plane_vm` hoisted here as the one primitive).
+      QG green; unit tests `test_build_inventory_full_estate_surfaces_unmanaged_vms` +
+      `…_no_unmanaged_rows_without_a_real_join`.
+- [x] [BACKEND] P0. **`launched_by` provenance field** on the LOCAL `DeploymentItem` BaseModel (+ its TS mirror
       `deployment-ui/src/api/deploymentApi.ts` — NOT UAC) — `deployment-api` when the resource has a registry entry,
       else `adhoc`, sourced from the SAME registry-vs-live union reconciliation uses (a VM in reconciliation's `unknown`
       set → `adhoc`). Wire for GCE VMs + AWS EC2 (already full census — cross-ref the registry) + Cloud Run jobs
       (registry-hint match) + services/functions. `managed_by_label` is a trivial echo of the already-present `labels`
       field once launcher-label standardization (below) lands, so drift (label-present-but-no-registry, or vice-versa)
-      is detectable.
+      is detectable. ✅ **DONE (launched_by)** deployment-api@2e0418d + deployment-ui@bec8b31 (TS mirror) — wired across
+      GCE VMs, Cloud Run jobs/services/functions + the AWS census. **Refinement (honesty HARD RULE):** the field carries
+      FOUR honest values, not two — `deployment-api` / `control-plane` (managed infra with no registry entry:
+      control-plane VMs, Cloud Run services, Cloud Functions, AWS ECS/Lambda) / `adhoc` (reconciliation's UNKNOWN set) /
+      `unknown` (AWS EC2/Batch — no registry/tag signal yet, never a fabricated `deployment-api`). `control-plane` is
+      split from `adhoc` specifically so `launched_by=adhoc` (running) == `fleet_reconciliation` UNKNOWN count (the
+      REVIEW parity check). **DEFERRED — `managed_by_label`:** a `labels` echo is a no-op until the DEVOPS `managed-by`
+      launcher-label todo standardizes the label — wire it in that todo's unit.
 - [ ] [REVIEW] P1. **Confirm consistency across clouds AND no-duplication of existing surfaces** — AWS EC2 is already a
       full `describe_instances` census, GCP VMs become one here; Cloud Run/services/functions/ECS/Lambda are already
       full censuses. Verify every kind resolves `launched_by` honestly (never a fabricated `deployment-api`), and a
@@ -313,6 +325,26 @@ full-census state field is already present, and the per-row cost column already 
   (`job.name.rsplit("/",1)[-1]`, verbatim), NOT the `(kind, asset_group)` tuple — the raw shared observable both sides
   read from `JobsClient.list_jobs` (the tuple needs two independent fuzzy parses that drift → missed joins). Recorded in
   the hand-off seam bullet below.
+- 2026-07-10 — **Implementation started — first two P0 backend todos landed** (deployment-api@2e0418d,
+  deployment-ui@bec8b31, both on `live-defi-rollout` via quickmerge, QG green):
+  - **Full GCE estate census** — `build_inventory` now unions the deployment registry with the live GCE aggregated-list
+    (`vm_details_by_name`): every live instance with no registry entry becomes an `unmanaged` row (`_unmanaged_vm_item`)
+    carrying raw GCE state via `health_status`, machine_type/zone/labels/boot-disk, and `uptime_hours` from the instance
+    creation timestamp (a 16-day zombie reads its true age). Reuses the SAME (registry vs live-GCE) union
+    `fleet_reconciliation` computes — `is_control_plane_vm` is hoisted into `deployments_inventory` as the ONE union
+    primitive and reconciliation imports it (the duplicate `_CONTROL_PLANE_PREFIXES`/`_is_control_plane` removed).
+    `None`/`{}` add no unmanaged rows, so existing callers/tests stay byte-identical.
+  - **`launched_by` provenance** — new field on the LOCAL `DeploymentItem` BaseModel + TS mirror. Implemented with FOUR
+    honest values rather than the two the todo sketched, and the deviation is deliberate (honesty HARD RULE):
+    `deployment-api` (registry entry / registered Cloud Run job), `control-plane` (managed infra with no registry entry
+    — control-plane VMs, Cloud Run services, Cloud Functions, AWS ECS/Lambda), `adhoc` (reconciliation's UNKNOWN set),
+    `unknown` (AWS EC2/Batch — no registry/tag signal yet). `control-plane` is split from `adhoc` precisely so
+    `launched_by=adhoc` (running) equals `fleet_reconciliation`'s UNKNOWN count (the REVIEW P1 parity check); AWS is
+    `unknown`, never a fabricated `deployment-api` (no AWS registry until the DEVOPS `managed-by` label lands).
+    `managed_by_label` deferred to that DEVOPS todo (a `labels` echo is a no-op until the label is standardized).
+  - Tests added: `test_build_inventory_full_estate_surfaces_unmanaged_vms`, `…_no_unmanaged_rows_without_a_real_join`,
+    `…_launched_by_provenance_for_cloud_run_jobs`. **Next:** the REVIEW P1 cross-cloud consistency + parity check, then
+    the leaked/unreleased-resource detection (P0).
 
 ### Hand-off to the consolidator-page agent (2026-07-10)
 
