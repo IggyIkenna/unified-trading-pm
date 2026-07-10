@@ -152,9 +152,14 @@ Full audit report retained in the session; all HIGH/CRITICAL findings independen
     fast-responder window (worker responds + returns idle inside the 2s post-kick snapshot; every event
     `submit_verified=True`). The 773/24h was the pre-restart storm.
 
-11. **DISCUSS — proactive-spawn vs spawn-on-demand.** With the queue drained to 1 blocked task, slots still get spawned
-    (slot 2 @ 05:04, slot 3 @ 01:03) then reaped. Reaping WORKS — so the "reap task-less workers" idea is really "don't
-    proactively spawn when nothing is dispatchable." Kills the churn at the source.
+11. **MED — AutoSpawn spawn-gate BYPASS via the raw-count fallback (reconciled 2026-07-10 audit).** The
+    dispatchable-work gate ALREADY EXISTS (`_has_queued_work`, prereq-aware, prereq_blocked_spawn_thrash 2026-06-30) —
+    yet slots still got spawned into a 1-blocked-task queue (slot 2 @ 05:04, slot 3 @ 01:03) then reaped. Verified
+    mechanism (`autospawn.py:1476-1494`): if EITHER the backlog read OR the prerequisites read throws, the gate passes
+    `None` and falls back to the RAW queued count — which counts prereq-BLOCKED tasks as work. With a queue of exactly 1
+    blocked task, any transient read failure spawns a worker that parks and gets reaped. Fix = diagnose + harden the
+    fallback (make it fail-closed for spawn purposes, or at minimum log loudly when it engages), NOT re-adding a gate
+    that exists.
 
 12. **DORMANT — autospawn dirty-state-quarantine log spam + resolution latency.** Pre-restart: 454 "dirty-state
     quarantined — not spawning over it" failure-logs in one morning (cooldown-bounded, dedup-alerted — not runaway), but
@@ -209,8 +214,16 @@ fold into the role-file rewrite (A4).
       design note appended here + the file-move list + the module/caller list to refactor.
 - [ ] [CODE] P0. Implement the stub + refactor `server/prompts.py` + `server/role_registry.py`: STOP extracting/pasting
       the `text` template; compose a per-role boot stub (dynamic vars + escalation vars + read-pointers). Keep var
-      injection. Point `AGENTS_DIR` (or its replacement) at the canonical PM-repo location. Update every spawn caller
-      (`autospawn.py`, `tmux_spawn.py`, manual `/api/agents/spawn`, escalation, plan-health dispatch).
+      injection. Point `AGENTS_DIR` (or its replacement) at the canonical PM-repo location. Update EVERY
+      `prompts.render*` call site — verified list (2026-07-10 plan audit; an un-migrated caller HARD-BREAKS post-cutover
+      because `_extract_template` raises on a template-less role file): `autospawn.py:1073/1075` (autospawn;
+      escalation + plan-health funnel through it), `routes/agents.py:93/135` (manual spawn), **`server.py:764`
+      (`spawn_with_account_bg` — the account-failover respawn; MISSED by the original list)**, and
+      **`main_agent_keeper.py:701` (main-agent spawn; MISSED)**. (`tmux_spawn.py` is the tmux layer — it never renders;
+      mislabel removed.) While touching `server.py:764`, fix two pre-existing defects on that path: it calls
+      `render("worker")` not `render_worker(assigned_role, …)` (failover respawns silently LOSE the craft-role block
+      today) and passes the RETIRED `branch=tab/<op>/<slot>` var (`server.py:771`) — finding 2's staleness, live in
+      code.
 - [ ] [CODE] P0. Add the `/boot` read-confirmation gate — a worker cannot proceed to dispatch until it confirms (via
       `/boot`) it has READ its role file + RULES.md. Restores the in-context guarantee the paste gave for free.
 - [ ] [CODE] P1. Diagnose-on-boot-timeout + alert-at-cap (`_auth_failover.check_spawn_heartbeat_timeouts`): on
@@ -247,11 +260,15 @@ fold into the role-file rewrite (A4).
       background/child processes (pane process-group) before/with `tmux kill-session`, so background jobs don't reparent
       to the orchestrator cgroup. Include a one-time sweep of the existing 10-17-day orphans. Guard against killing
       shared/host processes (scope to the pane's pgid only).
-- [ ] [CODE] P1. Kick-window fix (`worker_kick_failed` artifact, operator-approved): treat `submit_verified=True` +
-      `post_kick=idle` on a finished/idle worker as SUCCESS (or lengthen the 2s post-kick settle) so a fast responder
-      isn't logged as a kick failure.
-- [ ] [CODE] P1. Spawn-on-demand (operator-approved): gate proactive AutoSpawn on "≥1 dispatchable (prereqs-met) task
-      exists (or an affinity/handoff reason)"; don't spawn a worker into an empty/fully-blocked queue only to reap it.
+- [ ] [CODE] P1. Kick-window fix (`worker_kick_failed` artifact, operator-approved): prefer lengthening the 2s post-kick
+      settle OR a state-delta check (did `last_ping`/task status advance?) over blanket-treating
+      `submit_verified=True + post_kick=idle` as success — the blanket rule would mask a genuinely ignored kick
+      (keystroke submitted, worker never acted). (Ordering per 2026-07-10 plan audit.)
+- [ ] [CODE] P1. Spawn-gate fallback hardening (REWRITTEN per 2026-07-10 plan audit — the dispatchable-work gate already
+      exists, do NOT re-implement it): diagnose the slot-2/3 spawns-into-blocked-queue against the raw-count fallback at
+      `autospawn.py:1476-1494` (backlog/prereq read failure → gate counts prereq-BLOCKED tasks as work); harden it —
+      fail-closed for spawn purposes on a transient read failure (skip this tick; next tick retries in 60s) + a loud
+      `spawn_gate_fallback_engaged` activity-log event so a bypass is visible, never silent.
 - [ ] [CODE] P2. `idle_blocker_inferred` dedup fix — give the inference a DEDICATED last-value field (or a
       time-throttle, e.g. log-on-change-or-hourly) so the shared-`last_msg` contention stops defeating the guard
       (`_git_alerts.py:95`).
@@ -334,3 +351,15 @@ idle+killed slots, and PLAN ≠ TASK on working slots (slot 7 = deployment task 
   `dispatched_to`; (3) STATUS is a flat enum with no pre-boot/booting phase. Added **Phase D — fleet dashboard +
   slot-state correctness (backend-owned)**: fix PLAN derivation, a central `reset_slot_worker_state` on every teardown,
   a computed lifecycle-phase STATUS, and a UI blank-dead-rows guard.
+- **2026-07-10 ~07:05Z** — Independent plan audit (second agent) verified every checkable finding against the code
+  (reproduced the fence-regex capture to the character) and flagged 2 defects + 1 minor; all re-verified by me and
+  AMENDED: (1) the Phase B "spawn-on-demand" task ordered work that already exists — the gate is real
+  (`_has_queued_work`, prereq-aware); the actual bug is the RAW-COUNT FALLBACK at `autospawn.py:1476-1494` (backlog/
+  prereq read failure → prereq-blocked tasks count as work → the observed slot-2/3 churn). Task rewritten as
+  diagnose+harden-the-fallback (fail-closed + loud event); finding 11 reconciled. (2) The A2 caller list missed two
+  render call sites that would HARD-BREAK post-cutover (`_extract_template` raises on template-less files):
+  `server.py:764` (`spawn_with_account_bg` failover respawn) + `main_agent_keeper.py:701` (main spawn); added, and
+  `tmux_spawn.py` removed (tmux layer, never renders). My re-verification also found a BONUS defect on `server.py:764`:
+  it renders `render("worker")` (loses the craft-role block on failover respawn) and passes the RETIRED
+  `branch=tab/<op>/<slot>` var (`server.py:771`) — folded into A2. (3) Kick-window task reordered to prefer
+  settle-lengthening / state-delta over blanket success (blanket would mask a genuinely ignored kick).
