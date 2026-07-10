@@ -348,7 +348,7 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S3 — UAC removal (the "gap-015" step, now un-blocked)
 
-- [ ] [CODE] P2. `unified-api-contracts/`: apply every CEFI ⇒ MIGRATE from §2a. Concrete file diff:
+- [x] [CODE] P2. `unified-api-contracts/`: apply every CEFI ⇒ MIGRATE from §2a. Concrete file diff:
   - `registry/venue_constants.py`: delete line 377 (`"COINBASE": {"SPOT_PAIR"}`) and its 8-line D2a comment (368-376).
     Delete `COINBASE-INTERNATIONAL` fold entry from `_CEFI_VENUE_FOLD` only if S1 already landed.
   - `registry/market_data_categories.py`: delete line 242 (`"COINBASE",`) from `VENUES_BY_ASSET_GROUP["cefi"]`; delete
@@ -384,6 +384,25 @@ emit a small, expected residual — never a silent zeroing).
   - `"COINBASE" not in VENUES_BY_ASSET_GROUP["cefi"]` at runtime (add a UAC unit test).
   - `check_enumeration_completeness.py` audit against production manifest shows COINBASE cell counts UNCHANGED (fold
     from S1 does its job).
+
+  **DONE 2026-07-10** — unified-api-contracts@42270f63. Applied all 13 files (the 12 above + `venue_mapping.py` covering
+  3 separate line items). `bash scripts/quality-gates.sh` green (sentinel-verified at the committed SHA);
+  `grep -n '"COINBASE"' venue_constants.py` returns 0 hits. `COINBASE-INTERNATIONAL` fold entry left untouched (S1 had
+  already landed by the time this ran, but that entry is orthogonal to the Option-A invert and isn't touched by either
+  step). Two deviations from the plan's literal §2a/S3 table, both found while implementing and fixed inline per
+  findings-triage ("in your file → fix in same commit"):
+  1. `market_data_categories.py`'s `VENUES_BY_ASSET_GROUP["cefi"]` list and `venue_mapping.py`'s `venue_to_ccxt` dict
+     had NO pre-existing `"COINBASE-SPOT"` entry (unlike every other dict in §2a, where the `-SPOT` key already existed
+     as a duplicate) — a blind REMOVE per the table would have silently dropped Coinbase spot from the cefi venue
+     universe and the CCXT id map, a real EXPECTED-set zeroing the plan's own §1 warns against. RE-KEYED instead of
+     REMOVE in both places.
+  2. `external/nautilus/data_schemas.py`'s `EXCHANGE_NAME_MAP` was mislabeled in the table as a plain UAC RE-KEY target.
+     Its values are NautilusTrader venue names (canonical → Nautilus format per the module docstring), and Nautilus uses
+     bare `COINBASE` by convention (same as bare `BINANCE` in the same dict) — this is the same Nautilus-boundary
+     pattern the plan's own §2d execution-service table calls out as KEEP. Left bare with a clarifying comment; did not
+     rename. Also updated 3 downstream tests whose assertions hardcoded the pre-migration bare-COINBASE shape:
+     `tests/internal/unit/test_instrument_generator.py`, `tests/unit/test_venue_adapter_keys.py` (removed COINBASE from
+     `EXPECTED_SENTINEL_VENUES`, cefi now has zero adapter-key sentinels), `tests/unit/test_session_times.py`.
 
 ### Step S2 — instruments-service `venue_core.py` delete the dead `elif COINBASE` alias
 
@@ -518,6 +537,16 @@ is:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-10** — **S3 done** (slot-6, data_engineering) — unified-api-contracts@42270f63. Applied the full §2a
+  CEFI-MIGRATE set across all 13 UAC files (12 named in the plan + `venue_mapping.py` covering 3 line items).
+  `bash scripts/quality-gates.sh` green, sentinel-verified at the committed SHA. Found + fixed 2 plan-authoring gaps
+  inline (see the S3 todo's DONE note above for detail): (1) `VENUES_BY_ASSET_GROUP["cefi"]` and `venue_to_ccxt` had no
+  pre-existing `COINBASE-SPOT` duplicate, so RE-KEYED instead of the table's literal REMOVE (a blind REMOVE would have
+  silently zeroed Coinbase spot's EXPECTED set — exactly the class of regression this plan's §1 warns against); (2)
+  `external/nautilus/data_schemas.py`'s `EXCHANGE_NAME_MAP` kept bare `COINBASE` (Nautilus-boundary convention, same
+  pattern as the plan's own §2d execution-service KEEP entries) instead of the table's RE-KEY. Also fixed 3 downstream
+  tests whose assertions hardcoded the pre-migration bare-COINBASE shape. This unblocks S2 (now gated on S3 per the
+  `sequential: true` ordering fix below) and S6.
 - **2026-07-10** — **S5 done** (slot-7, data_engineering) — market-tick-data-service@b5f653a9. Deep-audited all §2c
   files; the four engine files (`preflight.py`, `symbol_rules.py`, `venue_fetch.py`, `shard_memory_profile.py`) were
   already `COINBASE-SPOT`-only (writer-side token, migrated separately in the 2026-06-23 perp-gate change — distinct
