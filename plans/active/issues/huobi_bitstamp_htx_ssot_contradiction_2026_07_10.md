@@ -69,6 +69,21 @@ underneath it is a different fact pattern from a genuinely-dead venue with no re
 finding's claim ("real captured data exists for these venues") has not been independently re-verified against live
 Tardis/GCS data in this pass — that verification is the natural first step before either side is acted on further.
 
+## 2026-07-10 (later) — partial verification, does not fully settle it
+
+Read the LIVE cefi `availability_index.parquet` directly (14M+ row canonical): **zero rows exist for HUOBI-SPOT,
+HUOBI-FUTURES, BITSTAMP-SPOT, HTX-SPOT, or any HUOBI/BITSTAMP/HTX-prefixed venue string** — a case-insensitive scan of
+the entire `venue` column found no matches at all. This is consistent with "never fetched" and does directly contradict
+a literal reading of "real captured data exists for them" (our own manifest has none). It does **not** settle whether
+Tardis (the vendor) has a real, fetchable archive underneath — the codebase's own `venue_mapping.py` already carries a
+Tardis-slug entry for `("HUOBI-FUTURES","PERPETUAL"): "huobi-dm"` (flagged elsewhere in the smoketest doc as pointing to
+the wrong sub-market, not as nonexistent), which implies SOME real Tardis exchange archive exists for at least Huobi
+futures — just possibly the wrong slug. Confirming whether Tardis actually has a fetchable, non-empty archive for these
+3 venues needs a live Tardis API/catalog check, which this pass did not have credentials/time to make. **Leaning
+evidence: closer to Option B (181b5311 was likely correct that nothing is captured), but the "genuinely available on
+Tardis vs not" question is still open** — recommend whoever picks this up start with a live Tardis exchange-catalog
+lookup for `huobi`/`huobi-dm`/`bitstamp` before deciding.
+
 ## Options
 
 **A — Verify smoketest's "real captured data" claim directly, then decide.** Read the live manifest/Tardis archive for
