@@ -750,3 +750,11 @@ the source docs if this list is used for dispatch planning.
   All 10 distinct decisions (covering 12 originally-listed BLOCKED items — some were duplicate/tied) dispatched for
   execution as real code/data changes, not just recorded as resolved-in-principle. See Orchestration state below for the
   dispatched workflow(s).
+
+## Orchestration state — dispatched execution workflow
+
+`wf_1e191185-1c2` (`instruments-audit-decisions-execution`) — 8 parallel agents executing the 10 decisions above:
+OKX-SPOT venue + Kraken FI_/FF_ marker; COINBASE-CDE split + new adapter + live connector fix; DeFi 1.38M backlog apply;
+archetype registry CEFI cells; MVP scope (COINBASE trades-only) + D10 capabilities; UAC two-layer redesign; mvp_mode
+universal build (research-first); Coinbase bare-name migration dispatch. Script:
+`/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/instruments-audit-decisions-execution-wf_1e191185-1c2.js`
