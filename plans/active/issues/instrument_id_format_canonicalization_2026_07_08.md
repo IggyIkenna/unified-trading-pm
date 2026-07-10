@@ -1092,3 +1092,10 @@ None of these cover the 2 new headline findings above.
 pass for BYBIT/KRAKEN-FUTURES/DERIBIT (mirroring the tradfi/defi/prediction durability VMs), and (b) an MTDS
 live-CeFi-connector retrofit to build canonical `@LIN`/`@INV` keys at the raw-tick layer, matching the
 on-chain-perp/DeFi live connectors that already do this correctly. Both dispatched, see below.
+
+**UPDATE 2026-07-10 — dispatched `wf_860fb2ae-54e`** — `cefi-durability-and-live-connector-retrofit` — the 2 fixes
+above, in parallel, then verified: (1) real root-cause diagnosis + force-convergence of the CeFi catalog for
+BYBIT/KRAKEN-FUTURES/DERIBIT, proving durability across a real regen cycle this time, not just a one-time rewrite; (2)
+retrofit of MTDS's 5 primary + 4 book-ticker live CeFi WS connectors to the canonical shape, including a real check of
+whether `record_tick()`'s exact-string buffer lookup is actually silently dropping live ticks right now. Script:
+`/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/cefi-durability-and-live-connector-retrofit-wf_860fb2ae-54e.js`
