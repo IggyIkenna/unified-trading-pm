@@ -121,7 +121,14 @@ explicit MVP-exclusion decision + a `_build_defi_venues()` filter update, mirror
       (`.venv/bin/python -m pytest     tests/unit/scripts/test_expected_universe_golden.py -k defi` → 2 passed;
       `tests/unit/test_orchestrator_helpers.py     -k drift_guard` → 1 passed). No further code change needed for this
       item. (repo: instruments-service)
-- [ ] [DESIGN] P3. Consider whether golden-fixture regeneration commits should assert
-      `git -C     <path-dep-repo> status --porcelain` is empty for every UAC/UTL path-dependency before writing the
-      fixture — would have caught `94512ec3`'s dirty-local-UAC-state golden before it shipped. (repo:
-      unified-trading-pm)
+- [x] [DESIGN] P3. ✅ Decision: YES — added the assertion. Confirmed `unified-api-contracts` and
+      `unified-trading-library` are both **editable path-dependencies** (`instruments-service/pyproject.toml`
+      `tool.uv.sources` → `../unified-api-contracts`, `../unified-trading-library`), so `build_expected()` reads
+      whatever is on disk in the sibling clones at import time — uncommitted local state included. This is exactly the
+      mechanism behind `94512ec3`'s phantom-tuple golden. Implemented `instruments-service@23d53f69`: new
+      `scripts/regenerate_expected_universe_golden.py` runs `git -C <path> status --porcelain` against both path-deps
+      and refuses to write the fixture (loud `SystemExit` listing the dirty files) unless clean or `--allow-dirty` is
+      passed explicitly; the test docstring's regeneration recipe now points at this script instead of the raw inline
+      `python -c` one-liner. Verified both the clean-pass and dirty-refuse paths locally before shipping.
+      `quality-gates.sh`: ALL PASSED (`.qg_last_passed_sha=23d53f69660b3b9fc8b7e1b8c0619f614fbdd0e1` == HEAD). (repo:
+      instruments-service)
