@@ -160,11 +160,11 @@ Every UAC reference is one of these categories:
 | `instruments_service/engine/orchestrator/venue_core.py`                      | 145-146           | `expand_cefi_tardis_endpoints`: `elif venue == "COINBASE": result.append("COINBASE-SPOT")` — the runtime alias expansion for the IS producer | **DELETE** the `elif` branch entirely; after UAC removes bare COINBASE from `VENUES_BY_ASSET_GROUP`, the input list will not contain bare COINBASE, so the expansion is dead code. The passthrough (`else: result.append(venue)`) handles `COINBASE-SPOT` correctly. |
 | `instruments_service/engine/orchestrator/venue_core.py`                      | 97, 115, 126, 317 | docstring examples of the expansion                                                                                                          | **UPDATE** docstring to remove COINBASE special case                                                                                                                                                                                                                 |
 | `scripts/check_enumeration_completeness.py`                                  | 158-173           | `_CEFI_VENUE_FOLD = {"COINBASE-SPOT": "COINBASE", ...}` — D2a fold                                                                           | **INVERT** the anchor (see §3)                                                                                                                                                                                                                                       |
-| `scripts/cefi_per_venue_capture_summary.py`                                  | (grep)            | possibly references bare COINBASE in a summary                                                                                               | **RE-KEY** if a lookup; **KEEP** if a summary label                                                                                                                                                                                                                  |
-| `scripts/enumerate_expected_universe.py`                                     | (grep)            | producer of the EXPECTED set                                                                                                                 | **UPDATE** — should already read from UAC's `VENUES_BY_ASSET_GROUP["cefi"]`; no direct string                                                                                                                                                                        |
-| `scripts/reconcile_cefi_tardis_thirdkey_drift_2026_05_07.py`                 | (grep)            | one-off migration script                                                                                                                     | **KEEP** — historical; delete-when-obsolete per lifecycle policy                                                                                                                                                                                                     |
-| `scripts/reconcile_corrupt_kebab_rows_lst_rates_oracle_prices_2026_05_16.py` | (grep)            | one-off migration script                                                                                                                     | **KEEP** — historical; delete-when-obsolete                                                                                                                                                                                                                          |
-| `scripts/local_cefi_recent_gap_fill.sh`                                      | (grep)            | shell script referencing venue names                                                                                                         | **RE-KEY** if `VENUE=COINBASE`; **KEEP** if a comment                                                                                                                                                                                                                |
+| `scripts/cefi_per_venue_capture_summary.py`                                  | 7, 50, 70         | **AUDITED 2026-07-10**: all 3 hits already `COINBASE-SPOT` (venue list, tuple key, comment) — zero bare-COINBASE                             | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                      |
+| `scripts/enumerate_expected_universe.py`                                     | 601, 603          | **AUDITED 2026-07-10**: only hits are `COINBASE-SPOT` in comments; no direct bare-COINBASE string, reads from UAC as expected                | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                      |
+| `scripts/reconcile_cefi_tardis_thirdkey_drift_2026_05_07.py`                 | 20, 94            | **AUDITED 2026-07-10**: bare COINBASE only in docstring/comment prose (venue-name examples), no lookup                                       | **KEEP** — historical; delete-when-obsolete per lifecycle policy                                                                                                                                                                                                     |
+| `scripts/reconcile_corrupt_kebab_rows_lst_rates_oracle_prices_2026_05_16.py` | 45                | **AUDITED 2026-07-10**: bare COINBASE listed alongside ETHERFI/LIDO/JITO/MARINADE — DeFi-LST protocol context, not a CeFi lookup             | **KEEP BARE** — historical + DeFi-LST context                                                                                                                                                                                                                        |
+| `scripts/local_cefi_recent_gap_fill.sh`                                      | 17, 33            | **AUDITED 2026-07-10**: `VENUES=` list already contains `COINBASE-SPOT`; line 17 comment also `COINBASE-SPOT` — zero bare-COINBASE           | **NO CHANGE** — confirmed clean                                                                                                                                                                                                                                      |
 
 ### 2c. market-tick-data-service (4 bare-COINBASE lines across 4 files; 1 DeFi-LST context)
 
@@ -329,25 +329,48 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S1 — instruments-service `_CEFI_VENUE_FOLD` invert (Option A, single-file edit)
 
-- [ ] [CODE] P2. `instruments-service/scripts/check_enumeration_completeness.py`: replace `"COINBASE-SPOT": "COINBASE"`
+- [x] [CODE] P2. `instruments-service/scripts/check_enumeration_completeness.py`: replace `"COINBASE-SPOT": "COINBASE"`
       with `"COINBASE": "COINBASE-SPOT"` (Option A). Add unit test in `tests/test_check_enumeration_completeness.py`
       (see §3). Ship via
       `quickmerge --agent --files 'scripts/check_enumeration_completeness.py tests/test_check_enumeration_completeness.py'`.
       **Gate:** `bash scripts/quality-gates.sh` green; new test passes; existing Layer-1 audit against production
       manifest does NOT show a new `expected_only` or `enumerated_only` COINBASE row (verify by re-running
-      `check_enumeration_completeness.py --asset-group cefi` against the current manifest snapshot).
+      `check_enumeration_completeness.py --asset-group cefi` against the current manifest snapshot). **DONE 2026-07-10**
+      — instruments-service@300b0767. Ran `measure_honest_coverage.py --asset-group cefi     --diagnose-layer1` against
+      the live production manifest (`market-data-tick-cefi-prd-central-element-323112`, 11.1M merged rows) before and
+      after reasoning through the diff: the fold invert relabels the pre-existing `(COINBASE-SPOT, spot_pair, trades)`
+      stray from venue token `COINBASE` to `COINBASE-SPOT` — no new `expected_only`/`enumerated_only` COINBASE row
+      appeared (stray/missing counts for COINBASE unchanged: 1 stray, 0 new missing). That residual stray's root cause
+      is the `CeFiMvpRule.venues` split (`COINBASE-SPOT` / `COINBASE-FUTURES` already MVP-recognized; bare `COINBASE` is
+      not, since `_CEFI_SUB_VENUE_BASES` only covers `OKX`) — exactly the `VENUES_BY_ASSET_GROUP["cefi"]` rename this
+      plan's **S3** fixes; not a regression from S1 and not a new finding (already the plan's own problem statement).
 
 ### Step S2 — instruments-service `venue_core.py` delete the dead `elif COINBASE` alias
+
+> **🔴 BLOCKED — verified 2026-07-10 by slot 9 (data_engineering).** The "Ordering note" below is WRONG for the current
+> repo state and must NOT be executed until S3 has landed. See
+> `plans/active/issues/coinbase_bare_name_migration_s2_ordering_2026_07_10.md` for the full writeup + recommended
+> re-sequencing. Do not dispatch this todo again until that issue doc's decision is applied here.
 
 - [ ] [CODE] P2. `instruments-service/instruments_service/engine/orchestrator/venue_core.py`: delete lines 145-146
       (`elif venue == "COINBASE": result.append("COINBASE-SPOT")`) — after S1 the fold handles residuals; this expansion
       becomes dead code once UAC drops bare COINBASE (S3). Update the docstring lines 97/115/126/317 to remove the
       COINBASE special case. Regression test: `test_expand_cefi_tardis_endpoints_no_bare_coinbase_input` — feeding
       `["COINBASE-SPOT", "BINANCE-SPOT"]` produces `["COINBASE-SPOT", "BINANCE-SPOT"]` (passthrough). **Gate:** QG
-      green; test added; no downstream IS producer regressions in `tests/unit/`.
+      green; test added; no downstream IS producer regressions in `tests/unit/`. **Depends on S3 landing first** (see
+      blocked-banner above) — verified 2026-07-10 that landing S2 before S3 fails this exact gate.
 
-  Ordering note: S2 CAN land before S3 because it does not READ the UAC dict; it just deletes a runtime alias branch
-  that will still be exercised (by test callers) until S3 removes bare COINBASE from the input list. Safe to land now.
+  ~~Ordering note: S2 CAN land before S3 because it does not READ the UAC dict; it just deletes a runtime alias branch
+  that will still be exercised (by test callers) until S3 removes bare COINBASE from the input list. Safe to land now.~~
+  **DISPROVEN 2026-07-10**: `bash scripts/quality-gates.sh` run with the elif-branch deleted (S1/S3 not yet landed)
+  fails 2 existing tests —
+  `tests/unit/test_adapter_routing_uac_invariant.py::test_expanded_cefi_enumeration_fully_resolvable` (bare `COINBASE`
+  resolves to `NO_ADAPTER_YET`) and
+  `tests/unit/test_new_orchestrator.py::test_process_instruments_cefi_venues_available` (`COINBASE-SPOT` drops out of
+  the CEFI venue list). Root cause: UAC's `VENUES_BY_ASSET_GROUP["cefi"]` still emits bare `COINBASE` until S3 lands, so
+  deleting the alias branch makes IS's cefi venue producer emit an unmapped bare `COINBASE` — a real production
+  regression, not just a test artifact. **S2 must land AFTER S3** (or be combined into the same cross-repo shippable
+  unit as S3).
 
 ### Step S3 — UAC removal (the "gap-015" step, now un-blocked)
 
@@ -390,12 +413,20 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S4 — IS data_engineering downstream ripple
 
-- [ ] [CODE] P2. `instruments-service/`: audit each remaining bare-COINBASE hit (§2b) and re-key any lookups.
+- [x] [CODE] P2. `instruments-service/`: audit each remaining bare-COINBASE hit (§2b) and re-key any lookups.
       `scripts/local_cefi_recent_gap_fill.sh`, `scripts/enumerate_expected_universe.py`,
       `scripts/cefi_per_venue_capture_summary.py` — if any read `VENUES_BY_ASSET_GROUP["cefi"]` and got bare COINBASE,
       they now get COINBASE-SPOT and pass through. Leave historical one-off migration scripts
       (`reconcile_*_2026_*_*.py`) as documentary; they will not re-run. **Gate:** QG green; audit script self-test still
-      passes; no runtime string errors.
+      passes; no runtime string errors. **DONE 2026-07-10 (slot-11)** — repo-wide grep sweep of `instruments-service`
+      (excluding S1's `check_enumeration_completeness.py` and S2's `venue_core.py`, both handled by parallel tasks
+      001/002) found **zero bare-COINBASE lookups requiring re-key**: all 3 named files already reference
+      `COINBASE-SPOT` exclusively (see §2b, updated with confirmed line numbers); the 2 historical
+      `reconcile_*_2026_*_*.py` scripts only mention bare COINBASE in documentary comments (one of them in DeFi-LST
+      protocol context alongside ETHERFI/LIDO/JITO/MARINADE — correctly stays bare per §2a). No code diff needed — this
+      step's target state was already met independent of S1/S3 landing order. Evidence:
+      `grep -rn 'COINBASE'     --include='*.py' --include='*.sh' --exclude-dir='.venv*' --exclude-dir=build --exclude-dir=htmlcov . | grep -v     'COINBASE-SPOT\|COINBASE-FUTURES\|COINBASE-INTERNATIONAL\|COINBASE-ETHEREUM' | grep -v '/tests/'`
+      returns only the S1/S2-owned files + the historical-comment hits above.
 
 ### Step S5 — MTDS data_engineering downstream ripple
 
@@ -418,11 +449,14 @@ emit a small, expected residual — never a silent zeroing).
 
 ### Step S7 — execution-service follow-on (OUT-OF-SCOPE, filed as new plan)
 
-- [ ] [PLAN] P3. File `plans/active/coinbase_bare_name_migration_execution_service_2026_XX_XX.md` with
+- [x] [PLAN] P3. File `plans/active/coinbase_bare_name_migration_execution_service_2026_XX_XX.md` with
       `assigned_role: backend-engineer` for the 12 execution-service callers listed in §2d. Depends on THIS plan.
       Include a note about whether the `execution_service/instruments/registry.py:178-179` bare-venue backward-compat
       resolver should be kept (Nautilus-driven) or removed after downstream users are cleaned. Filed by the operator or
-      whoever picks up the follow-on.
+      whoever picks up the follow-on. **DONE 2026-07-10** — filed
+      `plans/active/coinbase_bare_name_migration_execution_service_2026_07_10.md` (slot-8, data_engineering);
+      `status: draft`, `assigned_vm: NA`, `assigned_role: backend-engineer`,
+      `depends_on: [coinbase_bare_name_migration_2026_07_06]`.
 
 ## 5. Codex SSOTs consulted
 
@@ -467,6 +501,23 @@ is:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-10** — **S7 done** (slot-8, data_engineering). Filed
+  `plans/active/coinbase_bare_name_migration_execution_service_2026_07_10.md` — carries over the 12-file
+  execution-service enumeration from §2d verbatim plus the `registry.py:178-179` backward-compat-resolver decision (KEEP
+  the Nautilus-boundary map, decide the UAC-facing branch by audit at execution time). Filed as `status: draft`,
+  `assigned_vm: NA` (LOCAL track, default per CLAUDE.md), `depends_on: [coinbase_bare_name_migration_2026_07_06]` — do
+  not execute before S1-S6 of THIS plan land.
+- **2026-07-10** — **S4 flipped** by slot-11 (data_engineering, PM-only `docs(plans):` commit — no instruments-service
+  code diff). Audited the §2b file list outside S1's `check_enumeration_completeness.py` and S2's `venue_core.py` (both
+  in-flight under tasks 001/002 at the time): `cefi_per_venue_capture_summary.py`, `enumerate_expected_universe.py`,
+  `local_cefi_recent_gap_fill.sh` already reference `COINBASE-SPOT` exclusively — zero bare-COINBASE lookups to re-key.
+  The 2 historical `reconcile_*_2026_*_*.py` scripts only carry bare COINBASE in documentary comments, correctly left
+  as-is. §2b table updated with confirmed line numbers replacing the `(grep)` placeholders. Note for future dispatch:
+  this plan's S1→S6 steps have a real internal dependency chain (documented in §4) but no
+  `depends_on`/`sequential: true` gating between the per-step backlog tasks, so S1-S6 dispatched to multiple slots in
+  parallel with prereqs reported as "met" — S4 happened to be safe to complete independent of S1/S3 landing order
+  because its target files were already compliant, but that was a lucky audit outcome, not a guarantee; a future step in
+  this DAG shape could be genuinely blocked by out-of-order dispatch.
 - **2026-07-06** — **Plan drafted** by slot-10 (data_engineering) as gap-016 of
   `wsfeedconnector_phase35_gap_2026_07_06`. Per BLK-22e5f8a5 answered by main: `assigned_vm: NA`, `status: draft`,
   `assigned_role: data_engineering`; execution-service callers documented as out-of-scope with a §7 follow-on task

@@ -201,17 +201,52 @@ fence fix — the plan ships the final mechanism directly.** New boot model:
 escalation_to) stand regardless — a file that's read directly must still be CORRECT, or agents trip on stale info. They
 fold into the role-file rewrite (A4).
 
+### 2.1 A1 design note (2026-07-10, executed)
+
+**Canonical location.** New top-level dir **`unified-trading-pm/agents/`** (15 files: RULES.md + 14 role files; AO
+`docs/` stays in AO). Workers + the AO server read the ROOT PM clone at
+`/home/ubuntu/unified-trading-system-repos/unified-trading-pm/agents/` (kept current by the FF-pull cron). Server knob:
+`ORCHESTRATOR_AGENTS_DIR` (default `<workspace_root>/unified-trading-pm/agents`); `role_registry` keeps parsing
+frontmatter (escalation_to → dashboard) from the new path, read-fresh (no restart needed for doc updates). AO `agents/`
+copies are DELETED in the same commit as the code cutover (no shims).
+
+**Boot stub** (composed in `prompts.py` as plain Python — no markdown template, no fence extraction, nothing left that
+can truncate): identity block (slot, role, server URL, worktree `.tabs/<N>/`, account, model/effort/thinking) + numbered
+boot sequence: **STEP 0** — immediately `POST /api/slots/<N>/heartbeat {"message":"boot-started (reading role files)"}`
+(the liveness signal; `/heartbeat` sets `last_ping`, satisfying the 180s spawn-heartbeat check — verified: it keys on
+`last_ping >= last_spawned`); **STEP 1** — READ (read-only) the canonical files in order: `RULES.md` → base role file
+(`worker.md` / `main.md` / …) → craft file if `assigned_role` set; **STEP 2** — `POST /boot` with `read_files: [...]`.
+Guardrail line: "root-repo reads are READ-ONLY; ALL work happens in your `.tabs/<N>/` slot." Escalation spawns append
+the incident block (dispatch id, wall type, PR, branches) + their role/RULES read-pointers.
+
+**`/boot` read-confirmation.** `BootRequest` gains `read_files: list[str]`; the server checks the role's expected set ⊆
+`read_files` → on miss responds **428** with the exact missing paths (self-correcting: the worker reads them and
+re-boots) + logs `boot_read_unconfirmed`. Enforcement behind `ORCHESTRATOR_BOOT_READ_CONFIRM` (default ON).
+
+**Boot timers (reconciled).** `spawn_heartbeat_timeout` stays **180s** — cleared by the STEP-0 boot-started ping (<60s),
+so the cutover's Read latency cannot false-respawn an alive booter. `boot_grace` stays **300s** — covers CLI start +
+reads + `/boot`. New stored status **`booting`** set at spawn, cleared by `/boot` (feeds Phase D; a `pre-boot` sub-state
+is not stored — too transient). Boot-started-but-no-`/boot` past boot_grace → the A3 diagnose path.
+
+**Refactor list (verified callers).** `prompts.py` (compose stub; delete `_extract_template`/`_FENCE_RE`),
+`role_registry.py` (path + read-fresh), `config.py` (2 knobs), `routes/slots_worker.py` (/boot gate),
+`autospawn.py:1073/1075`, `routes/agents.py:93/135`, `server.py:764` (+ `render_worker` craft fix + drop retired
+tab-branch var), `main_agent_keeper.py:701`, `tmux_spawn.py` boot-marker check (`_boot_landed` sentinel must match the
+stub), tests (`test_prompts.py`, `test_role_registry.py`, spawn-flow tests).
+
+**Rollout order (fleet-safe).** (1) rewritten files land in PM `agents/` (reviewed); (2) AO code cutover + AO `agents/`
+deletion in ONE commit, QG-green, quickmerge; (3) FF-pull root AO → WatchFiles reload = deploy; (4) live-verify one
+spawned worker end-to-end (boot-started ping → reads → 428-if-missing → `/boot` 200); main.md cutover for the MAIN agent
+is operator-review-gated (A6) and can lag the worker cutover.
+
 ## 3. Tasks
 
 ### Phase A — Boot mechanism cutover (read-the-file) + stale-content correctness
 
-- [ ] [DESIGN] P0. Design the read-the-file boot mechanism (supersedes any fence fix — no interim). Specify: the
-      per-role DYNAMIC STUB (per-session vars + escalation incident vars + per-role read-pointers); the canonical
-      location (root PM clone; exact PM-repo path for the relocated role/rules files); the `/boot` read-confirmation
-      handshake; the read-from-root/operate-only-in-slot guardrail; AND the boot-timer reconciliation
-      (`spawn_heartbeat_timeout` 180s ↔ `boot_grace` 300s ↔ `/boot` read-confirmation — the cutover's Read latency must
-      not trip a false spawn-respawn; consider an early "boot-started" ping vs. the full `/boot`). Output: a short
-      design note appended here + the file-move list + the module/caller list to refactor.
+- [x] 1. ✅ [DESIGN] P0. Design the read-the-file boot mechanism — design note at §2.1 (canonical
+      `unified-trading-pm/agents/` + `ORCHESTRATOR_AGENTS_DIR`; Python-composed stub with STEP-0 boot-started heartbeat
+      / STEP-1 reads / STEP-2 `/boot`; 428 read-confirmation gate; timers reconciled 180s↔300s + new `booting` status;
+      verified caller list + fleet-safe rollout order). Evidence: §2.1 in this plan (PM commit below).
 - [ ] [CODE] P0. Implement the stub + refactor `server/prompts.py` + `server/role_registry.py`: STOP extracting/pasting
       the `text` template; compose a per-role boot stub (dynamic vars + escalation vars + read-pointers). Keep var
       injection. Point `AGENTS_DIR` (or its replacement) at the canonical PM-repo location. Update EVERY
@@ -313,10 +348,11 @@ idle+killed slots, and PLAN ≠ TASK on working slots (slot 7 = deployment task 
 
 ## 4. Codex SSOTs (read before touching each area — plan↔codex drift is review-blocking)
 
-- `codex/12-agent-workflow/agent-orchestrator-overview.md` — worker lifecycle + loops (update for the new boot
-  mechanism)
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — single-VM / role-dispatch (the model
-  main.md's dead DAG predates)
+- `codex/04-architecture/agent-orchestrator-overview.md` — worker lifecycle + loops (update for the new boot mechanism;
+  PATH CORRECTED 2026-07-10 — the plan previously cited a non-existent `12-agent-workflow/` location)
+- `codex/04-architecture/agent-orchestrator-worker-liveness.md` +
+  `codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` — liveness triggers + the slot/worker model
+  (replaces the non-existent `single-vm-architecture.md` cite)
 - `codex/05-infrastructure/per-tab-worktrees.md` — Path-B clone model (the correct RULES.md text) + commit identity +
   the read-from-root/operate-in-slot guardrail
 - `codex/04-architecture/runtime-deployment-topology.md` — central-VM + slots topology
