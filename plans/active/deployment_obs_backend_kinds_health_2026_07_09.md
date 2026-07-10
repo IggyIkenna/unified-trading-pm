@@ -398,19 +398,30 @@ source: deployment_observability_expansion_2026_07_08.md
       original `f5f6ff4` composite landed without since `object_delta` didn't exist yet. 10 new/updated unit tests
       (`test_composite_health_workload_dead*_`, `test*composite_health_stalled_for_batch*_`,     `test*composite_health_batch_working_when_object_delta_positive*_`,     `test*composite_health_live_umbrella_stalled*_`, `test*batched_object_deltas_calls_once_per_distinct_asset_group`,     `test_build_inventory_threads_object_deltas*\*`) + `health_consolidator`/`deployment_freshness`object-delta tests     moved to their new home. Landed through 2 real rebase cycles against concurrently-shipped sibling work on this     same hotspot file (CLOUD_RUN_SERVICE census`ab0c431`, ECS/Lambda field surfacing, the oom-risk/stalled alert     wiring `5e25dce`) — one import-ordering conflict, one `build_inventory`new-param conflict (kept both the     sibling's`cloud_run_services`param and my`object_deltas`
       param). QG green (sentinel 29f3be5, 119s).
-- [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals don't exist yet** — discovered while wiring the BATCH row above
-      (deployment-api@29f3be5). LIVE needs an expected-active-window calendar (market-hours-aware, so an
-      idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta` (rows-out-delta) tracker — grepped
-      the codebase, `     work_delta` doesn't exist anywhere today, it's a parent-doc spec concept only. Both `stalled`
-      branches stay honest `"unknown"` until one of these lands; not urgent (v1 shipped the one row — BATCH — with a
-      real signal), but should not be silently forgotten now that the oom-risk/stalled alert wiring
-      (deployment-api@5e25dce) is live and would otherwise start firing on the FIRST real signal any of these umbrellas
-      get.
-- [ ] [REVIEW] P3. **`deployments_inventory.py` is now 1000+ lines** (cap is 900; QG's file-size check is non-blocking
-      in this repo's config today but the file is a real hotspot — 4+ slots landed sibling D.3/kinds-census todos here
-      concurrently in one session). Consider splitting Cloud-Run-job census / composite-health / service- taxonomy into
-      sibling modules once this plan's todos stop actively converging on it (splitting mid-convergence risks more
-      cross-slot conflicts than it saves).
+- [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals — DEFERRED (scope decision 2026-07-10, needs new subsystems)**.
+      Discovered while wiring the BATCH row (deployment-api@29f3be5): LIVE `stalled` needs an expected-active-window
+      calendar (market-hours-aware, so an idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta`
+      (rows-out-delta) tracker (the D.1 rolling window @970bcdc samples `/proc` cpu/mem/disk, NOT `rows_out`, so it
+      would have to be extended to carry the counter history first). **Decision**: both are genuinely NEW subsystems — a
+      market calendar and a counter-history tracker — disproportionate to build for a P3 `stalled` refinement, so they
+      are DEFERRED to a future phase (tracked in the parent `deployment_observability_expansion_2026_07_08.md`). The
+      current **honest-`"unknown"` degradation is confirmed correct** as the v1: `_composite_health_status` returns
+      `"unknown"` for LIVE/PAPER `stalled` rather than guessing from a proxy (WS-D.0 principle 2), and the
+      oom-risk/`stalled` alert wiring (deployment-api@5e25dce) only fires on a REAL state, so nothing misfires while
+      these stay unknown. BATCH — the one umbrella with a real signal (`object_delta`) — is wired + shipped. This item
+      stays open (not a fake `[x]`) as an explicit, tracked deferral.
+- [x] ✅ [REVIEW] P3. **`deployments_inventory.py` hotspot — split into sibling modules** (cap 900; QG's file-size check
+      is non-blocking today but the file was a real hotspot). Now that the plan's todos stopped converging on it,
+      extracted the two lowest-coupling cohesive chunks the todo named: **service-taxonomy →
+      `routes/_service_health.py`** (95 lines, `serving/scaled-to-zero/dead/degraded` classifiers, shared with the AWS
+      row builder) and **composite-health → `routes/_vm_health.py`** (138 lines, `vm_status` +
+      `composite_health_status` + the D.3 thresholds). Both are leaf modules (no `deployments_inventory` import → no
+      cycle); public functions aliased back to the historical private names for existing call sites/tests. File **1503 →
+      1390 lines** (~233 lines of classifier logic now in their own modules). The Cloud-Run-job census — the third named
+      candidate — stays put: it's tightly interwoven with `build_inventory`'s VM loop and would need more untangling
+      than the split saves; the file-size check is non-blocking, so it's left as future hygiene. basedpyright 0 errors;
+      all inventory/health tests green. — **deployment-api@d5f179d (quickmerged)** (+ the earlier `_service_health.py`
+      extraction @5149af19e).
 
 ### Hand off to the interactive UI session (LAST task)
 
