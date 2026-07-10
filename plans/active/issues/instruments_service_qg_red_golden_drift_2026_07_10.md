@@ -94,11 +94,19 @@ explicit MVP-exclusion decision + a `_build_defi_venues()` filter update, mirror
       stalled or was abandoned, revert `instruments-service@94512ec3`'s golden hunk (5 phantom tuples) back to match
       actual UAC state, OR regenerate against the current true UAC HEAD. (repo: instruments-service,
       unified-api-contracts)
-- [ ] [CODE] P1. Decide MVP scope for the 7 new UAC DeFi lending venues from `unified-api-contracts@42ce2de3`
-      (VENUS-BSC/VENUS-ETHEREUM/BENQI-AVALANCHE/RADIANT-ARBITRUM/RADIANT-BSC/RADIANT-ETHEREUM/EULER_V2-ETHEREUM): if IS
-      should fetch them, update `_build_defi_venues()` + regenerate the `defi.json` golden; if intentionally
-      out-of-scope (no adapter yet), add them to an MVP-exclusion filter (mirroring existing DeFi exclusion patterns) so
-      the drift-guard test documents the exclusion instead of failing red. (repo: instruments-service)
+- [x] [CODE] P1. ✅ Decide MVP scope for the 7 new UAC DeFi lending venues from `unified-api-contracts@42ce2de3`
+      (VENUS-BSC/VENUS-ETHEREUM/BENQI-AVALANCHE/RADIANT-ARBITRUM/RADIANT-BSC/RADIANT-ETHEREUM/EULER_V2-ETHEREUM) —
+      instruments-service@9b0c1095
+      (`fix(defi): wire VENUS/BENQI/RADIANT/EULER_V2 orchestrator, fix Curve/Balancer     undercount`, landed by slot-3
+      2026-07-10 12:57:31, already on LDR HEAD when this task was picked up) decided IN-SCOPE: added all 7 to
+      `_STATIC_DEFI_VENUES` in `instruments_service/engine/orchestrator/defi.py` (the underlying adapters —
+      venus.py/benqi.py/radiant.py/euler_v2.py — were already functional, just never requested by
+      `_build_defi_venues()`) and regenerated the `defi.json` golden fixture. Verified on a clean LDR-HEAD checkout
+      (`instruments-service@53367eba`): `test_expected_matches_golden[defi]` and
+      `test_defi_set_equals_uac_denominator_drift_guard` both pass
+      (`.venv/bin/python -m pytest     tests/unit/scripts/test_expected_universe_golden.py -k defi` → 2 passed;
+      `tests/unit/test_orchestrator_helpers.py     -k drift_guard` → 1 passed). No further code change needed for this
+      item. (repo: instruments-service)
 - [ ] [DESIGN] P3. Consider whether golden-fixture regeneration commits should assert
       `git -C     <path-dep-repo> status --porcelain` is empty for every UAC/UTL path-dependency before writing the
       fixture — would have caught `94512ec3`'s dirty-local-UAC-state golden before it shipped. (repo:
