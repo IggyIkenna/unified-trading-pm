@@ -10,7 +10,7 @@ summary:
   have had zero captured data of any kind since 2026-06-26 (11 days), each preceded by a partial capture immediately
   before going silent — the signature of an adapter breaking mid-fetch. The default script output hides this (truncates
   to top-40-by-severity, never prints its own total_thin counter of 1,007 catalogue-wide thin-day collapses)."
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data, meta]
@@ -31,6 +31,8 @@ source:
   cefi_cumulative_drawdown_guard_2026_06_27.py against production GCS via instruments-service/.venv + GCP ADC"
 assigned_vm: NA
 resolved_by:
+  instruments-service@0db619d5 + deployment-service tofu apply (terraform/gcp/cefi_drawdown_guard_scheduler.tf,
+  terraform/gcp/audit03_cron_provisioning.tf) 2026-07-10
 locked_by:
 execution_scope: local-only
 model_tier: sonnet-doable
@@ -158,25 +160,73 @@ CeFi venues, 64,096 captured cells:
         iterate `DATA_PIPELINE_ALERT_RULES` generically (no hardcoded event allowlist found).
 - [x] [INFRA] P2. Scheduled `cefi_cumulative_drawdown_guard_2026_06_27.py` for real recurring execution — new
       `deployment-service/terraform/gcp/cefi_drawdown_guard_scheduler.tf` (Cloud Run Job, 1cpu/2Gi, + Cloud Scheduler
-      `0 7 * * *` UTC, mirroring `honest_coverage_scheduler.tf`'s module+http_target pattern). **`tofu     apply` still
-      pending** (this is a brand-new resource, not yet live — same "pending operator execution" class as the other
-      `tofu apply` items already tracked elsewhere in this workspace).
-- [ ] [CODE] P2. Cross-cutting: extract DeFi's `_enforce_defi_monotonicity`
+      `0 7 * * *` UTC, mirroring `honest_coverage_scheduler.tf`'s module+http_target pattern). **RESOLVED 2026-07-10 —
+      `tofu apply` run for real, scoped + verified.** Terraform code was committed earlier today (`4dd8d53`) but never
+      applied; ran a SCOPED `tofu apply` (init against the real prod backend — `terraform/state/prod`, project
+      `central-element-323112` — targeting only `module.instruments_cefi_t1_recon_job` +
+      `module.cefi_drawdown_guard_job` + `google_cloud_scheduler_job.cefi_drawdown_guard_daily`, explicitly avoiding the
+      unrelated dirty `cf_manifest_audit_scheduler.tf` files per this todo's own caveat). Plan: 1 import (adopts the
+      already-live OOM-fixed `uts-prod-instruments-service-cefi-t1-recon` job, converging Terraform to the real
+      8cpu/16Gi spec — confirmed post-apply via `gcloud run jobs describe` still shows 8cpu/16Gi, no revert), 1 in-place
+      update (labels + args-list-form normalize, matching every other job in this file), 2 creates (the new
+      drawdown-guard Cloud Run Job + its Cloud Scheduler). Post-apply `tofu plan` on the same 3 targets shows **"No
+      changes" (zero drift)**. Live-verified beyond the apply: manually executed the new job
+      (`gcloud run jobs execute uts-prod-cefi-drawdown-guard-daily --wait`) — real production run
+      `uts-prod-cefi-drawdown-guard-daily-p47fs` **completed successfully in 43.99s**.
+      `gcloud scheduler jobs describe     uts-prod-cefi-drawdown-guard-daily` confirms `state=ENABLED`,
+      `schedule=0 7 * * *`.
+- [x] [CODE] P2. Cross-cutting: extract DeFi's `_enforce_defi_monotonicity`
       (`instruments_service/engine/orchestrator/defi.py:119-156,187-225`) into an asset-group-parameterized shared
-      helper in `venue_core.py`, called from the shared `process_fetch.py:169-179` chokepoint, scoped to
-      `_VENUE_GRAIN_ASSET_GROUP_TOKENS` (CEFI/TRADFI — DeFi keeps its existing bespoke caller; Sports/Prediction don't
-      get this, their manifest grain isn't venue-count-shaped). Neither CeFi nor TradFi has a dedicated orchestrator
-      file today — they run the fully shared path — so this is a single insertion point, not five per-asset-group
-      copies. **Caveat:** the threshold _policy_ must be a per-asset-group parameter, not a verbatim copy of DeFi's
-      strict never-regress-below-all-time-max rule — CeFi delistings and TradFi contract expiries are real, expected
-      decreases in _today's active count_ (though never in _instruments-ever-seen_), and a blind DeFi-style block would
-      permanently false-block the first legitimate CeFi delisting. **DEFERRED 2026-07-10 — live-file conflict.**
-      `defi.py` and `venue_core.py` (the exact two files this item touches) were both under active, continuous edit by a
-      concurrent parallel session this whole session (`solblaze.py` mtime 88s, `drift.py` 189s — a live multi-file
-      CeFi-durability/DeFi-adapter workflow per this session's own multi-agent-safety briefing). Per the workspace's
-      file-liveness rule, did not touch either file. Next agent: re-check liveness before picking this up.
+      helper in `venue_core.py`, called from the shared `process_fetch.py:169-179` chokepoint, scoped to CEFI/TRADFI
+      (DeFi keeps its existing bespoke caller; Sports/Prediction don't get this, their manifest grain isn't
+      venue-count-shaped). **RESOLVED 2026-07-10 — `instruments-service@0db619d5`.** Re-checked liveness immediately
+      before editing (per this todo's own instruction): `defi.py` mtime was 17,967s old, `venue_core.py` 7,530s old —
+      both long past the 120s threshold, `git status` showed neither dirty. Implemented:
+      `venue_core._get_manifest_high_watermarks(asset_group)` +
+      `venue_core._enforce_monotonicity(records, hwm, *,     block_on_regression, min_ratio)` — the generalized,
+      asset-group-parameterized pair. `defi.py`'s `_get_defi_manifest_high_watermarks()` /
+      `_enforce_defi_monotonicity()` now thin-wrap these (`block_on_regression=True, min_ratio=1.0` — DeFi's exact
+      original strict policy, unchanged; existing DeFi tests pass unmodified). `process_fetch.py`'s shared non-DeFi
+      branch (the real "always fetch fresh" chokepoint every CEFI/TRADFI capture run — batch AND live, not gated by mode
+      like DeFi's own check) now calls the generalized helper per-asset-group with
+      `block_on_regression=False, min_ratio=_CEFI_TRADFI_THIN_COLLAPSE_RATIO` (0.5 — same thin-day-collapse ratio as
+      `cefi_cumulative_drawdown_guard_2026_06_27.py`, so "collapse" means the same thing everywhere in this codebase) —
+      **detect-only, never blocks the write**, per this todo's own caveat that CeFi delistings / TradFi expiries are
+      legitimate today's-active-count decreases unlike DeFi's immutable-contract invariant. New tests (all passing):
+      `TestEnforceMonotonicityGeneralized` + `TestGetManifestHighWatermarksGeneralized` (unit-level parameterization
+      checks, incl. a delisting-tolerance case and a DeFi-policy-parity case) plus one `process_instruments`-level
+      integration test (`test_cefi_venue_collapse_is_detected_but_not_blocked`) proving a LIGHTER-ZKSYNC-shaped 213→1
+      collapse is logged at ERROR but the record is still written. `quality-gates.sh --no-fix` green (sentinel matched
+      HEAD). Shipped via **direct push carve-out (dirty-deps)** — `unified-trading-library` (`post_trade/settler.py`,
+      `cf_manifest_audit.py`) and `unified-api-contracts` (`test_cme_options_universe.py`,
+      `tradfi_instrument_universe.py`) both had live-then-stale uncommitted changes from a concurrent sibling session
+      blocking quickmerge's pre-flight dep-cleanliness audit; per workspace policy this is a documented carve-out
+      (WARN-only `check_strict_quickmerge.py`, confirmed non-blocking) rather than committing unrelated/unverified
+      foreign code on their behalf.
 
 ## Progress Log
+
+- **2026-07-10 (session 2) — both remaining tails closed for real; issue fully resolved.** Re-verified every material
+  claim in the earlier 2026-07-10 entry against live code/commits/infra myself before touching anything (all checked out
+  — `CATALOGUE_SHRINK_BLOCKED` alerting chain end-to-end, the dark-venue rename diagnosis re-confirmed live against GCS
+  today showing `LIGHTER-ZKSYNC`/`PACIFICA-SOLANA`/`EXTENDED-STARKNET` current through 2026-07-10, the OOM fix live at
+  8cpu/16Gi). Then executed the two concrete next steps:
+  1. **Terraform activation** — scoped `tofu apply` (real prod backend, 3 targeted resources, zero drift on post-apply
+     plan) + a live `gcloud run jobs execute --wait` smoke test of the new drawdown-guard job (43.99s, success). See the
+     Todos section above for full command/evidence detail.
+  2. **Todo 6 (DeFi-monotonicity-helper generalization)** — re-checked file liveness immediately before editing (both
+     `defi.py`/`venue_core.py` long past the 120s threshold, git-clean), implemented the asset-group-parameterized
+     shared helper (`venue_core._enforce_monotonicity` / `_get_manifest_high_watermarks`), wired a non-blocking
+     CeFi/TradFi thin-collapse detector into `process_fetch.py`'s shared chokepoint, added unit + integration tests, ran
+     `quality-gates.sh --no-fix` green, and shipped via a **direct-push dirty-deps carve-out**
+     (`instruments-service@0db619d5`) after `unified-trading-library`/`unified-api-contracts` had unrelated
+     live-then-stale uncommitted WIP blocking quickmerge's pre-flight audit (waited ~150s for the sibling session's
+     edits to go stale before concluding it was safe to treat as a genuine dirty-deps block, not a live conflict on
+     files I was editing).
+  - **Repos touched this session**: `instruments-service` (`0db619d5`), `deployment-service` (terraform apply only — no
+    new commit, the `.tf` code was already committed as `4dd8d53` in the earlier session), `unified-trading-pm` (this
+    doc).
+  - Both todos in this doc are now `[x]` — no open items remain.
 
 - **2026-07-10 — full resolution, all real evidence against production GCP/GCS.** Real ADC admin access used throughout;
   no destructive ops.
