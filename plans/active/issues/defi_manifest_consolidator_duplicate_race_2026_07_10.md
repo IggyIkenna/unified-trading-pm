@@ -124,12 +124,17 @@ consolidator+writer combined), ruff clean.
 - [x] ✅ [DESIGN] P1. **Root-caused and fixed 2026-07-10** — `unified-trading-library@0de04b6e`. See "Root cause — FOUND
       AND FIXED" above. The original shard-delete-timing hypothesis was investigated and ruled out; the real gap was the
       incremental merge's survivors-side non-dedup, proven with a before/after-verified regression test.
-- [ ] [VERIFY] P2. Check whether cefi/tradfi/prediction/sports ALSO accumulated duplicates from this same gap (the fix
-      now prevents further accumulation everywhere, but existing duplicates in those buckets — if any — still need the
-      same scan-and-dedup treatment `defi_manifest_dedup_2026_07_10.py` did for defi).
-- [ ] [DATA] P2. Once the other asset groups are scanned, generalize `defi_manifest_dedup_2026_07_10.py` into a
-      per-asset-group tool (or confirm it's not needed if the fix prevents re-accumulation fast enough that existing
-      counts are negligible).
+- [x] ✅ [VERIFY] P2. **Done 2026-07-10.** Scanned all 5 asset groups with the correct per-schema grain (not defi's
+      hardcoded columns — an early naive pass on sports' columns produced a false-positive ~1.79M "duplicates" that
+      correct grain detection ruled out). Real genuine-duplicate counts found: cefi 0, defi 0 (already clean), sports 0,
+      tradfi 346 rows / 173 groups, prediction 6,284 rows / 3,142 groups. Both cleaned in production.
+- [x] ✅ [DATA] P2. **Done 2026-07-10.** Generalized `defi_manifest_dedup_2026_07_10.py` →
+      `manifest_dedup_2026_07_10.py` (`--asset-group` flag, auto-detected grain key per manifest schema). Rewritten a
+      second time from pandas to DuckDB after the defi backlog-resume merge grew the canonical to 27M+ rows and pandas
+      groupby/drop_duplicates repeatedly stalled/OOM'd for 20+ minutes on this host; DuckDB does the same work in under
+      4 minutes. Also fixed a NULL-vs-empty-string false-negative (61,372 rows) — the pandas version normalized NaN but
+      not `""`, missing genuine duplicates written by two different producers using different "not applicable"
+      representations for the same optional dimension.
 
 ## Progress Log
 
@@ -161,3 +166,27 @@ consolidator+writer combined), ruff clean.
   remain**. Bonus: this same digest-staleness investigation also unblocked instruments-service's stuck LDR→main
   promotion pipeline (all checks green, auto-merged) — the original `@LIN`/`@INV` CeFi catalog fix from earlier this
   session can now finally reach production too.
+- 2026-07-10 (much later — second, self-caused incident and fix, same day): **The defi backlog-resume write
+  (`defi_expected_unattempted_backlog_1m_2026_07_03.md`, 2020-2026 year-chunks landing as 7 per-VM shards, ~18.7M rows
+  in one window) exposed a real scaling regression in the fix above.** The `survivors` CTE's window-function self-dedup
+  ran `row_number() OVER (PARTITION BY ...)` over the ENTIRE untouched-canonical set every cycle — fine at the ~14M-row
+  scale it shipped at, but once defi's canonical grew past ~14M rows in one window (becoming the largest canonical of
+  any asset group — cefi 7.2M / tradfi 5M / sports 1.8M all kept succeeding fine) the consolidator Cloud Run job started
+  SIGKILL-ing (OOM) every single cycle, even after two escalating memory bumps (16Gi→32Gi container, then
+  `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` 8GB→24GB — the DuckDB budget is a hardcoded-default env var, unrelated to container
+  size, so the first bump alone did nothing). The job silently stopped merging entirely for ~2 hours (canonical mtime
+  frozen) before being caught. **Root cause + fix**: split `survivors` into `survivors_clean` (unique-key rows, cheap
+  ANTI JOIN passthrough — the overwhelming majority) and `survivors_deduped` (only rows whose key actually recurs — the
+  window function's working set shrinks from O(canonical) to O(genuine-duplicate-rows), at or near zero in steady
+  state). Verified locally against the real production bucket (27.46M rows, 9 shards): completed in 252s at ~10.5GB peak
+  (was repeatedly SIGKILL'd before). Shipped `unified-trading-library@800af156` (dirty-deps carve-out direct push —
+  quickmerge blocked purely by a sibling's live, currently-being-edited untracked file failing an unrelated
+  codex-compliance check; that file was not touched). Fanned the new digest to all 18 fleet Dockerfiles, rebuilt MTDS,
+  force-updated the Cloud Run job, executed it for real, resumed the scheduler. **Separately found and fixed while
+  investigating**: 27,908 residual duplicate rows in the post-merge defi manifest, caused by a NULL-vs-empty-string
+  false-negative in the dedup tooling (not the consolidator fix itself) — see the P2 items above. **Verified stable**:
+  post-fix, the real 9-shard backlog (already in flight when the fix landed) completed cleanly in one more
+  local-triggered cycle (178s, 9.86GB peak, pruned all 7 shards), and subsequent scheduler-triggered cycles against the
+  now-trivial (0-shard) steady state ran clean with no further SIGKILLs. Final state: defi canonical 27,445,013 rows,
+  zero genuine duplicates (verified against the correct wide grain key, not the narrow ad-hoc key that gives false
+  positives). CLOSED.
