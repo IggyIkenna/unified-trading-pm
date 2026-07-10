@@ -261,6 +261,15 @@ contradict #8's shipped connector. Design: the `BLOCKED-*` scaffold pattern itse
 `external-data-always-available-rule.md`. **Recommendation: settle the COINBASE-FUTURES fact question first (a direct
 API check resolves it) before finalizing either doc's fix.**
 
+**RESOLVED 2026-07-10** — real dispatched investigation + independent verify pass, 2 live API cross-checks. Neither doc
+was simply right or wrong: `COINBASE-FUTURES` is wired (both reference-data and live) to Coinbase INTX, which genuinely
+has zero dated futures (#3 correct for this venue); real dated futures exist on Coinbase Derivatives Exchange (CDE, 99
+live contracts) — a completely separate, Tardis-uncovered Coinbase product #8's connector logic is actually built for,
+just filed under the wrong venue key. Real fix: split into `COINBASE-CDE` (new venue + new adapter, since Tardis has
+zero coverage) and scope `COINBASE-FUTURES` to INTX-only. Also found: #8's connector likely has a real,
+previously-uncaught silent capture-gap (subscribing INTX-shaped ids to an endpoint that will never recognize them) — not
+yet confirmed against production parquet. Full evidence in the Progress Log below. Dispatched for execution.
+
 **9. Infra capture wiring (AO Plan 6)** — conflicts: none (ASTER's book5/liquidations gap in #9 is narrower than and
 complementary to #8's general trades-key registration). Design: the self-block to avoid a 17,282-row over-seed is the
 data-pipeline-correctness HARD RULE in practice. Proceed as proposed — stay blocked until the 2 named prerequisites
@@ -677,3 +686,67 @@ the source docs if this list is used for dispatch planning.
   §2 MANIFEST_COVERAGE P0 instead of flipped. §1a found 2 real mutual conflicts (item #3/#8 COINBASE-FUTURES
   contradiction, item #4/#5 sequencing risk) and 3 items diverging from documented target architecture (items #10, #11,
   #13) among the 14 CODE_PATH items.
+- 2026-07-10 (later still): **COINBASE-FUTURES/#3-vs-#8 conflict RESOLVED with real, independently-verified evidence**
+  (2 live API cross-checks, both confirmed). Real determination: `COINBASE-FUTURES` is wired identically on BOTH the
+  reference-data (`instruments-service`) and live (`market-tick-data-service`) paths to Tardis `coinbase-international`
+  / native Coinbase INTX — which genuinely has ZERO dated futures (0 `FUTURE`/`OPTION` confirmed on 2 independent live
+  APIs: Tardis 273-symbol listing + Coinbase's own `api.international.coinbase.com` 301-instrument listing, both
+  `perpetual`/`spot` only). Item #3's "phantom FUTURE, verified 3 ways" claim is **confirmed correct** for this venue.
+  **But item #8's shipped live connector is not simply wrong either** — Coinbase Derivatives Exchange (CDE, the real
+  source of `FUTURE`-shaped contracts, e.g. `BIT-31JUL26-CDE` real dated expiry) is a genuinely real, currently-trading,
+  99-real-contract product family — confirmed live via
+  `api.coinbase.com/api/v3/brokerage/market/products? product_type=FUTURE` — but CDE is **not covered by Tardis at all,
+  under any name** (confirmed against the full 62-exchange Tardis registry) and is architecturally a completely separate
+  Coinbase product from INTX (own domain, own symbol shape, zero overlap — confirmed by paginating Coinbase's ENTIRE
+  Advanced Trade catalog, 1035 real products, zero contain `INTX`). **This is finding-type (3) from the original task
+  brief: a real venue-scope gap, not a phantom-type bug in either doc.** Real, previously-uncaught bug found as a
+  byproduct: item #8's connector's own code/tests assume a fabricated `BTC-PERP-INTX`-style symbol that Coinbase's
+  Advanced Trade WS will never emit (confirmed: zero `INTX` string anywhere in `instruments-service`, zero INTX products
+  in the 1035-product Advanced Trade catalog) — the live subscription path likely feeds this connector real INTX-shaped
+  ids (resolved from IS's canonical universe) against an endpoint that has never heard of them, a silent zero-row
+  capture-gap class this workspace's HARD RULE treats as review-blocking (not yet confirmed against real production
+  parquet — the one remaining unverified inference, honestly flagged as such by both the investigation and independent
+  verify passes). **Real fix, not yet implemented**: register `COINBASE-CDE` as its own venue key (real dated futures,
+  needs a brand-new reference-data adapter since Tardis has zero coverage — `api.coinbase.com`'s Advanced Trade REST is
+  a viable no-auth first-party source), re-key `coinbase_futures_ws.py` from `COINBASE-FUTURES` to `COINBASE-CDE` (the
+  parsing logic itself is real and correct, only its venue identity is wrong), and scope/rename the existing
+  `COINBASE-FUTURES` key to INTX-only (matching item #3's proposed fix — drop the phantom `FUTURE` type, add the real
+  missing `SPOT_PAIR`). Dispatched for execution, see below.
+- 2026-07-10 (later still): **12 operator decisions made**, closing every real `BLOCKED-OPERATOR-DECISION`/pending-call
+  item surfaced across this whole audit doc (not just §1a's CODE_PATH conflicts). Full record:
+  1. **OKX-SPOT venue registration**: Option A — declare its own cefi venue (matches BYBIT-SPOT precedent), remove the
+     `_CEFI_VENUE_FOLD` entry. (`cefi_layer1_denominator_gaps_2026_07_03.md`,
+     `instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`)
+  2. **DeFi expected_unattempted backlog**: approve the FULL 1,380,376-row apply in one run (99.95% is honest 2018-2019
+     pre-launch documentation, zero downloads triggered). (`defi_expected_unattempted_backlog_1m_2026_07_03.md`)
+  3. **COINBASE bare-name migration**: flip `coinbase_bare_name_migration_2026_07_06.md` from `draft` to `active`,
+     dispatch its full 7-step (S0-S7) plan now.
+  4. **UAC data-type-validity fragmentation**: approve the proposed two-layer redesign (real provably-wrong cell exists
+     today — CME/ICE share identical valid-data_types despite ICE having no real Databento coverage).
+     (`uac_data_type_validity_combinator_fragmentation_2026_07_07.md`)
+  5. **TradFi `mvp_mode` dead fetch-time filter**: **REVISED from the earlier §1a recommendation** — operator wants this
+     built for real, universally: every asset group should have a real `--mvp`-style fetch mode that pulls canonical MVP
+     instruments via the existing catalogue MVP tags/SSOT (real infrastructure already exists —
+     `unified_api_contracts/canonical/crosscutting/_mvp_scope_*.py`, `enumerate_expected_universe.py`'s MVP gate — but
+     is not consistently wired as a fetch-time filter everywhere). Needs real investigation into what MVP-tag SSOT
+     already exists before implementing, not a fresh design. (`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`)
+  6. **Bare COINBASE / DERIBIT-COMBO in MVP_SCOPE.venues**: keep both declared. **Additional real cost-control ask**:
+     COINBASE (INTX) should be reduced to `trades`-only data_type — operator notes book-snapshot-class data is
+     expensive/memory-intensive for this venue and recalls a possible existing mechanism for this kind of per-venue
+     data_type scoping — needs investigation before assuming a new mechanism is required.
+     (`cefi_layer1_denominator_gaps_2026_07_03.md`)
+  7. **ARCHETYPE_CAPABILITY_REGISTRY missing CEFI cells**: add the missing cells for `CARRY_BASIS_PERP_INV`/
+     `CARRY_STAKED_BASIS` × BYBIT/OKX/DERIBIT (registry catches up to the codex claim, not the reverse).
+     (`archetype_venue_universe_cefi_vs_registry_no_cefi_cells_2026_06_30.md`)
+  8. **Kraken FI\_/FF\_ contract-subtype collision**: reuse the existing `@LIN`/`@INV` marker convention (this session's
+     own canonicalization decision) rather than inventing a new contract-subtype field — 13 real (ticker, expiry) pairs
+     affected, the 2 most liquid (ETH/XBT). (`canonical_id_p0_kraken_futures_collision_2026_07_08.md`)
+  9. **6 DeFi venues declared `phase=live` with no backing capability**: add the missing capability-registry entries
+     (venues are intended live, close the registry gap rather than downgrade the label).
+     (`defi_code_codex_drift_2026_05_27.md`, item D10)
+  10. **Pyth Hermes jitoSOL pre-2023-10 backtest scope**: include it — no data-quality problem was flagged for that
+      window. (`defi_onchain_derivable_values_and_date_drift_2026_06_20.md`)
+
+  All 10 distinct decisions (covering 12 originally-listed BLOCKED items — some were duplicate/tied) dispatched for
+  execution as real code/data changes, not just recorded as resolved-in-principle. See Orchestration state below for the
+  dispatched workflow(s).
