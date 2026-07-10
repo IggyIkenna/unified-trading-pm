@@ -414,14 +414,31 @@ emit a small, expected residual — never a silent zeroing).
 > not offer S2 to a worker until S3's backlog task is `done`. Do not reorder S2 back above S3 without re-verifying this
 > gate.
 
-- [ ] [CODE] P2. `instruments-service/instruments_service/engine/orchestrator/venue_core.py`: delete lines 145-146
+- [x] [CODE] P2. ✅ `instruments-service/instruments_service/engine/orchestrator/venue_core.py`: delete lines 145-146
       (`elif venue == "COINBASE": result.append("COINBASE-SPOT")`) — after S1 the fold handles residuals; this expansion
       becomes dead code once UAC drops bare COINBASE (S3). Update the docstring lines 97/115/126/317 to remove the
       COINBASE special case. Regression test: `test_expand_cefi_tardis_endpoints_no_bare_coinbase_input` — feeding
       `["COINBASE-SPOT", "BINANCE-SPOT"]` produces `["COINBASE-SPOT", "BINANCE-SPOT"]` (passthrough). **Gate:** QG
       green; test added; no downstream IS producer regressions in `tests/unit/`. **Depends on S3 landing first**
       (machine-gated via `sequential: true` — see banner above) — verified 2026-07-10 that landing S2 before S3 fails
-      this exact gate.
+      this exact gate. **DONE 2026-07-10 — instruments-service@db33ded7** (slot 9, data_engineering). Shipped once S3
+      genuinely landed on LDR (verified bare `COINBASE` fully absent from
+      `unified_api_contracts.registry.market_data_categories.VENUES_BY_ASSET_GROUP["cefi"]`). Ship path per RULES.md §2:
+      staged uncommitted, `bash scripts/quality-gates.sh` Pass-1 stamped the sentinel against the pre-commit HEAD, then
+      `quickmerge --agent --files` created the commit (with the `Quickmerge:` trailer) + pushed — a first attempt that
+      manually pre-committed before Pass-1 tripped `check_strict_quickmerge.py` (soft-reset + redo fixed it). Full
+      `bash scripts/quality-gates.sh` run: `✅ ALL QUALITY GATES PASSED`, 0 `FAILED` lines, real exit code 0 (verified
+      directly, not through a piped `tail`). 3 tests total: `test_expand_cefi_tardis_endpoints_no_bare_coinbase_input`,
+      `test_expand_cefi_tardis_endpoints_okx_still_splits`, and
+      `test_cefi_coinbase_spot_expected_set_survives_fold_inversion` (the third one reconstructs — from an independently
+      verified UAC `execution_fidelity` trades-only override, not from direct file access — the same regression this
+      plan's earlier "CODE COMPLETE, BLOCKED" banner below described from a concurrent slot-3 attempt on a different
+      host; the two attempts were reconciled per operator direction rather than both shipping). The `cefi.json` golden
+      needed no change in the final commit — a separate concurrent fix (`instruments-service@aa897b08`) had already
+      corrected it to the true UAC state, including the `COINBASE-SPOT` entry this step's fix depends on. See
+      `plans/active/issues/instruments_service_qg_red_golden_drift_2026_07_10.md` for the full cross-repo QG-red
+      investigation this step surfaced (unrelated, fleet-wide, now resolved) and `BLK-61ebf85f` for the operator's final
+      ship sign-off.
 
   ~~Ordering note: S2 CAN land before S3 because it does not READ the UAC dict; it just deletes a runtime alias branch
   that will still be exercised (by test callers) until S3 removes bare COINBASE from the input list. Safe to land now.~~
@@ -434,6 +451,10 @@ emit a small, expected residual — never a silent zeroing).
   deleting the alias branch makes IS's cefi venue producer emit an unmapped bare `COINBASE` — a real production
   regression, not just a test artifact. **S2 must land AFTER S3** (or be combined into the same cross-repo shippable
   unit as S3).
+
+  **✅ SUPERSEDED 2026-07-10** — this slot-3 attempt (a different host, "laptop", never pushed) was reconciled with slot
+  9's independent attempt per operator direction; slot 9's version shipped as `instruments-service@db33ded7` above. Left
+  below for the historical record of the dirty-deps quickmerge investigation.
 
   **🟡 CODE COMPLETE, BLOCKED ON QUICKMERGE 2026-07-10** (this dispatch) — the elif-branch deletion + docstring updates
   - new regression test (`test_cefi_coinbase_spot_expected_set_survives_fold_inversion`, asserting COINBASE-SPOT's real
