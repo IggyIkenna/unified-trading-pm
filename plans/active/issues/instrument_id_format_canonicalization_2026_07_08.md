@@ -1036,3 +1036,15 @@ behind (unrelated fleet CI, pulled clean). One real, already-known finding remai
 market-tick-data-service (`migrate_prediction_instrument_id_wrap_2026_07_09.py`'s connection-pool hardening — see the
 "Deferred, unshipped" note in the `wf_118d8268-18c` completion update above). This confirms the whole point of moving to
 VMs: all 4 ran to completion unattended, independent of the operator's laptop or this session.
+
+**UPDATE 2026-07-10 — 4 tracked follow-up issues filed** (`unified-trading-pm@ab3b1fed5`):
+[[tradfi_cme_options_chain_legacy_layout_2026_07_10]], [[defi_dexpool_second_writer_path_and_zero_capture_2026_07_10]],
+[[mtds_prediction_migration_connection_pool_hardening_2026_07_10]],
+[[defi_dead_storage_shape_b_cleanup_candidate_2026_07_10]] — every real gap surfaced-but-deliberately-deferred during
+this effort now has a durable tracked record, not just a paragraph buried in this doc's Progress Log.
+
+**UPDATE 2026-07-10 — dispatched `wf_50701260-a4e`** — `final-zero-trace-verification` — the closing pass: real grep +
+live-GCS spot-checks across instruments-service, market-tick-data-service, and unified-api-contracts for any remaining
+old-format construction sites or stale doc examples, synthesized into one final honest status report (zero-trace /
+zero-trace-with-tracked-exceptions / not-yet-met — not just declared done). Script:
+`/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3-unified-trading-pm/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/final-zero-trace-verification-wf_50701260-a4e.js`
