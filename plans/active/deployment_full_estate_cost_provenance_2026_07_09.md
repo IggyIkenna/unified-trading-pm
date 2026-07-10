@@ -205,8 +205,9 @@ full-census state field is already present, and the per-row cost column already 
       delta reusing the batched `object_delta` lookup already built (no new walk). The **authoritative** "did the data
       land / is it correct" verdict lives on the consolidator page (see hand-off) — this is a link + a hint, so a red
       "fired-but-produced-nothing" is spotted from deployments but confirmed on the consolidator. **DEPENDS ON** the
-      consolidator agent exposing a per-job/per-asset_group "last run → partitions+rows written" surface keyed by the
-      same job identity.
+      per-run output-production verdict endpoint already owned by `consolidator_throughput_backlog_monitor_2026_07_09`
+      (WS-3), keyed by the **FULL Cloud Run job short-name** (that plan's decided join key, LIVE-VERIFIED — the short
+      name encodes `{kind}-{asset_group}`; do NOT key on `asset_group` alone). Consume that seam; don't invent a key.
 
 ### Provenance robustness (drift-proof the signal)
 
@@ -236,7 +237,10 @@ full-census state field is already present, and the per-row cost column already 
       already exists, so the net-new is: the **leaked disk/IP monthly $** on the red unreleased-resources badge, and an
       **estate-total "stranded cost"** number (sum of leaked + orphaned rows) so the money at stake is visible at a
       glance. Reuse the orphans endpoint's `monthly_idle_usd`/`monthly_reapable_usd` rollup where the VM overlaps.
-      `pw:L2` on the stranded-total + leaked-cost cell rendering.
+      **Overlap (2026-07-10 cross-plan audit):** the Cost tab (`cost_obs_ui_unified_breakdown_2026_07_08`, shipped)
+      already surfaces "idle-IP and orphaned-disk cost-waste" from the billing exports — REUSE that computation as the $
+      source, don't re-derive. Division of labour: the Cost tab owns the $ breakdown/analytics; the Deployments row owns
+      the operational red badge + reap action. `pw:L2` on the stranded-total + leaked-cost cell rendering.
 
 ## Progress Log
 
@@ -290,7 +294,12 @@ full-census state field is already present, and the per-row cost column already 
   should have written vs. what actually landed (`capture_status`/object counts), fired-but-produced-nothing detection,
   and stale-output detection. This is the same manifest SSOT you already own; the ask is to make it **per-job/per-run**
   and **queryable**.
-- **The seam the deployments page needs from you:** expose a lightweight lookup keyed by the SAME job identity (short
-  Cloud Run job name / asset_group) → `{last_run_at, partitions_written, rows_written, expected_vs_actual, verdict}`, so
-  the deployments detail popover can cross-link "this run → its produced data" without re-walking. Agree the join key
-  with this plan (Cloud Run job short-name ∪ asset_group) before building.
+- **The seam the deployments page needs from you:** expose a lightweight lookup keyed by the **FULL Cloud Run job
+  short-name** (already the decided join key in `consolidator_throughput_backlog_monitor_2026_07_09` WS-3 — the short
+  name encodes `{kind}-{asset_group}`; NOT `asset_group` alone) →
+  `{last_run_at, partitions_written, rows_written, expected_vs_actual, verdict}`, so the deployments detail popover can
+  cross-link "this run → its produced data" without re-walking.
+- **NOTE (2026-07-10 cross-plan audit):** this hand-off is ALREADY absorbed —
+  `consolidator_throughput_backlog_monitor_2026_07_09` (WS-3) owns the per-run output-production verdict endpoint,
+  fired-but-produced-nothing + stale-output detection, and the join-key decision. So the "consolidator agent" = that
+  plan; this is coordination, not a fresh ask. Plan 2's only job is to CONSUME the seam.
