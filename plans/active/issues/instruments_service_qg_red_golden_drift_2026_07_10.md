@@ -20,7 +20,7 @@ summary: |
   `94512ec3`'s golden was regenerated against a dirty, not-yet-pushed local UAC state (the in-flight OKX-SPOT
   venue-registration work) rather than what's actually on LDR. This blocks EVERY instruments-service QG run
   workspace-wide until resolved, independent of the COINBASE work.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi, defi]
 stage: [data]
@@ -42,7 +42,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: instruments-service@aa897b08, instruments-service@7048ae7e, unified-api-contracts@0ab1074a
 audited_scope: single-repo-qg-run
 ---
 
@@ -107,7 +107,15 @@ explicit MVP-exclusion decision + a `_build_defi_venues()` filter update, mirror
       `SPOT_PAIR` dual-registration removed entirely (not just aligned-around), there are no more collapsing fold pairs,
       so raw EXPECTED and aligned EXPECTED no longer diverge.
       `test_missing_instrument_type_column_yields_empty_enumerated` passes clean at `instruments-service@aa897b08`. No
-      separate test/behavior change needed. (repo: instruments-service)
+      separate test/behavior change needed. (repo: instruments-service) **Addendum (slot-3, verifying this item):**
+      confirmed passing independently; also caught + fixed a residual STEP 5.101 empty-string-fallback ratchet
+      regression surfaced by the same fast-moving window — a concurrent commit had annotated 4 of 5 needed
+      `# noqa: qg-empty-fallback` sites in `reconcile_phantom_manifest_rows_all.py` but missed line 237 (`raw_venue`),
+      leaving the ratchet 1-over baseline (369>368). Fixed + shipped `instruments-service@7048ae7e`, `quality-gates.sh`
+      ALL PASSED. Also independently re-derived the same TID251/cefi-golden-drift diagnosis as
+      `instruments-service@aa897b08`/`23d53f69` while investigating — those landed first, kept as-is via conflict
+      resolution rather than duplicating. Baseline ratcheted down (`no_empty_string_fallback_baseline.yaml`
+      instruments-service: 369→368) same commit as this plan flip. (repo: instruments-service, unified-trading-pm)
 - [x] [CODE] P1. ✅ Decide MVP scope for the 7 new UAC DeFi lending venues from `unified-api-contracts@42ce2de3`
       (VENUS-BSC/VENUS-ETHEREUM/BENQI-AVALANCHE/RADIANT-ARBITRUM/RADIANT-BSC/RADIANT-ETHEREUM/EULER_V2-ETHEREUM) —
       instruments-service@9b0c1095
