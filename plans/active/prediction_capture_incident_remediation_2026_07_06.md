@@ -159,19 +159,19 @@ orchestrator-dispatched).
 > venues). Slot-2 executes Phases 0–3 + 5 and flags the 4da6fe8 author on the PR; Phase 4 (prod cutover) waits on
 > Ikenna's access answer. No UAC venue-list change — the venues stay declared.
 >
-> **New evidence (2026-07-07, live probe, updates the Phase 1/4 auth assumption)**: a fresh, unauthenticated
-> read-only `GET` against the **prod** margin host `https://external-api.kalshi.com/trade-api/v2/margin/markets`
-> (not the demo host) returned **HTTP 200 with no auth headers sent** — 16 real crypto perp tickers
+> **New evidence (2026-07-07, live probe, updates the Phase 1/4 auth assumption)**: a fresh, unauthenticated read-only
+> `GET` against the **prod** margin host `https://external-api.kalshi.com/trade-api/v2/margin/markets` (not the demo
+> host) returned **HTTP 200 with no auth headers sent** — 16 real crypto perp tickers
 > (`KXBTCPERP`/`KXETHPERP`/`KXSOLPERP`/... ). `.../margin/markets/KXBTCPERP/orderbook` and
 > `.../margin/trades?ticker=KXBTCPERP` also returned 200, real live depth and trades timestamped seconds before the
-> probe. This contradicts the assumption baked into Phase 1/4 that the margin API needs RSA-PSS auth
-> "rolling out member by member" — **market-data reads (listing/detail/orderbook/trades) appear to be public on
-> prod right now, no enrollment or credentials required.** Order-placement endpoints were NOT tested (not needed
-> for market data) and may still require auth/enrollment — this finding is about reads only. If confirmed, Phase 1's
-> RSA-PSS extraction may only be needed for POLYMARKET-PERP (not yet probed) or for a future
-> order-execution path, and Phase 4's `BLOCKED-OPERATOR-DECISION` may not gate the market-data repoint at all —
-> re-verify with a second independent probe before removing the auth path from Phase 1/2, since one probe could
-> be catching a temporarily-open endpoint or a Kalshi-side auth rollout gap.
+> probe. This contradicts the assumption baked into Phase 1/4 that the margin API needs RSA-PSS auth "rolling out member
+> by member" — **market-data reads (listing/detail/orderbook/trades) appear to be public on prod right now, no
+> enrollment or credentials required.** Order-placement endpoints were NOT tested (not needed for market data) and may
+> still require auth/enrollment — this finding is about reads only. If confirmed, Phase 1's RSA-PSS extraction may only
+> be needed for POLYMARKET-PERP (not yet probed) or for a future order-execution path, and Phase 4's
+> `BLOCKED-OPERATOR-DECISION` may not gate the market-data repoint at all — re-verify with a second independent probe
+> before removing the auth path from Phase 1/2, since one probe could be catching a temporarily-open endpoint or a
+> Kalshi-side auth rollout gap.
 
 ### Phase 0 — stop contamination + purge (NOW, no access needed) — SEQUENTIAL (guard ships before purge)
 
@@ -200,12 +200,12 @@ orchestrator-dispatched).
       with the prediction store's canonical copies. (The "are these captured correctly anywhere?" question is Phase 3's
       `[VERIFY]`.) Gate: cefi catalogue has 0 `KALSHI-PERP` rows; row-count drop == 25,473; no other venue touched. ✅
       MET.
-- [ ] [DATA] P1. Manifest cells: the cefi `_index/availability_index.parquet` still carries **9 `KALSHI-PERP` cells**
-      (`capture_status=captured`, 2000 each, days 06-27→07-05) — they persisted through the consolidator (derived from
-      manifest shards, not by_date presence). The guard'd cefi enum records `KALSHI-PERP` as honest-empty on its next
-      run, which should flip these captured→empty (self-heal). Gate: after the next `is-daily-enum-cefi` run (13:30 UTC
-      or a manual trigger), 0 `KALSHI-PERP` `captured` cells remain in the cefi index (empty/absent cells are correct —
-      venue declared, feed empty pending repoint); if not self-healed, delete the cells explicitly.
+- [x] [DATA] P1. ✅ Manifest cells: the cefi `_index/availability_index.parquet` self-healed — **VERIFIED 2026-07-10**
+      (live read via `unified_trading_library.cloud_interface.factory.get_storage_client().download_bytes(...)` against
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, 7,219,598 rows): **0
+      `KALSHI-PERP` rows and 0 `POLYMARKET-PERP` rows** remain. The guarded `is-daily-enum-cefi` runs self-healed the 9
+      lingering `captured` cells to honest-empty/absent as predicted. Gate MET — Phase 0 fully closed (all 4 todos now
+      done).
 
 ### Phase 1 — foundation: config-drive host + shared RSA-PSS auth (no access needed) — PARALLEL
 
@@ -261,6 +261,15 @@ orchestrator-dispatched).
 
 ## Progress log
 
+- **2026-07-10 — Phase 0 CLOSED for real (sub-agent verification pass, part of the instruments-completion-tracker
+  sweep).** The one remaining Phase 0 todo (self-heal of the 9 lingering `KALSHI-PERP` `captured` manifest cells) was
+  verified live rather than assumed: read
+  `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` directly (7,219,598 rows,
+  via `unified_trading_library.cloud_interface.factory.get_storage_client().download_bytes`) — **0 `KALSHI-PERP` rows, 0
+  `POLYMARKET-PERP` rows**. The guarded `is-daily-enum-cefi` runs did self-heal as predicted. Downstream effect:
+  `instruments_completion_tracker_2026_07_06.md` Stage 3's KALSHI-PERP-purge prerequisite is now cleared (see that
+  tracker's Progress Log for the current Stage-3 blocker, which has shifted to a different, in-flight cause). No code
+  changed — read-only GCS verification only.
 - 2026-07-06: Plan carved out of the issue doc per operator direction ("issue doc = the issue; implementation items = a
   plan that references it"). Workstream A shipped items back-referenced with their quickmerge shas
   (UTL@6c090bb/@1651340, IS@4979429); the incremental-catalogue merge-key fix that preceded them is IS@dc378b6. Repo
@@ -342,13 +351,12 @@ orchestrator-dispatched).
   `execution_scope: orchestrator-agent`: `is_daily_enum_capture_heal_2026_07_07.md` (exc_info → diagnose → fix →
   backfill, one sequential thread) and `manifest_consolidator_dtype_at_source_fix_2026_07_07.md` (independent, different
   repo). The 3 residual todos here are now superseded by those plans — removed from this list to avoid duplication.
-- 2026-07-07: **Answered the operator's MVP-scope question for KALSHI-PERP ("can we even get instruments/tick data
-  with our keys, or should it come out of MVP") — verified live, don't remove.** Confirmed via a fresh read-only
-  probe against the PROD margin host (`https://external-api.kalshi.com/trade-api/v2/margin/markets` +
-  `/orderbook` + `/trades`) that market-data reads return real data (16 live perp tickers, real orderbook, trades
-  seconds-fresh) with no auth headers sent at all — contradicting the Phase 1/4 assumption that this API needs
-  RSA-PSS signing rolling out member-by-member. Added a callout under Workstream B's root-cause box with the full
-  evidence; flagged (not yet confirmed with a second independent probe) that Phase 4's `BLOCKED-OPERATOR-DECISION`
-  may not actually gate the market-data half of the repoint. Order-placement endpoints untested — reads-only
-  finding. No code changed; Workstream B's Phase 0-5 structure stands, this just updates the auth assumption
-  feeding Phase 1/2/4.
+- 2026-07-07: **Answered the operator's MVP-scope question for KALSHI-PERP ("can we even get instruments/tick data with
+  our keys, or should it come out of MVP") — verified live, don't remove.** Confirmed via a fresh read-only probe
+  against the PROD margin host (`https://external-api.kalshi.com/trade-api/v2/margin/markets` + `/orderbook` +
+  `/trades`) that market-data reads return real data (16 live perp tickers, real orderbook, trades seconds-fresh) with
+  no auth headers sent at all — contradicting the Phase 1/4 assumption that this API needs RSA-PSS signing rolling out
+  member-by-member. Added a callout under Workstream B's root-cause box with the full evidence; flagged (not yet
+  confirmed with a second independent probe) that Phase 4's `BLOCKED-OPERATOR-DECISION` may not actually gate the
+  market-data half of the repoint. Order-placement endpoints untested — reads-only finding. No code changed; Workstream
+  B's Phase 0-5 structure stands, this just updates the auth assumption feeding Phase 1/2/4.

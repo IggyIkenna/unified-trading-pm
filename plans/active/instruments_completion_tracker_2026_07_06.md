@@ -237,11 +237,26 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 
 ## Stage 3 — Re-measure + certify Layer-1
 
-> **⛔ PREREQUISITE (added 2026-07-06):** the cefi re-measure is GATED on the **KALSHI-PERP contamination purge** —
-> 25,473 fake `KALSHI-PERP` `PERPETUAL` rows (Kalshi _event contracts_ mis-emitted by the wrong-host `kalshi_perp`
-> adapter, `is@4da6fe8`) must be purged from the cefi catalogue first, or the Layer-2 cefi numbers are polluted. Owned
-> by `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md` **Phase 0** (slot-2 + the 4da6fe8 author) — NOT
-> this tracker's work; Stage 3 just waits on it. (POLYMARKET-PERP is clean, 0 rows.)
+> **✅ PREREQUISITE CLEARED (2026-07-10, verified live) — was ⛔ blocking, added 2026-07-06.** The cefi re-measure was
+> GATED on the **KALSHI-PERP contamination purge** — 25,473 fake `KALSHI-PERP` `PERPETUAL` rows (Kalshi _event
+> contracts_ mis-emitted by the wrong-host `kalshi_perp` adapter, `is@4da6fe8`). Owned by
+> `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md` Phase 0 (→
+> `plans/active/prediction_capture_incident_remediation_2026_07_06.md` Workstream B Phase 0). **Verified 2026-07-10**
+> (live GCS read, not assumed):
+> `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (7,219,598 rows) has **0
+> `KALSHI-PERP` rows, 0 `POLYMARKET-PERP` rows** — the guarded `is-daily-enum-cefi` runs self-healed the last lingering
+> 9 `captured` cells as Phase 0's own doc predicted. This specific prerequisite is CLOSED.
+>
+> **⛔ NEW BLOCKER (found 2026-07-10, replaces the above):** re-measuring RIGHT NOW would still produce a
+> soon-to-be-stale number — a concurrently-running sibling workflow (the "instruments-audit-decisions-execution"
+> dispatch, see `issues/instruments_remaining_work_audit_2026_07_10.md` Orchestration state) is actively rewriting the
+> exact cefi denominator-authority files this re-measure depends on
+> (`instruments_service/engine/orchestrator/venue_core.py`, `instruments_service/reference_data/factory.py`,
+> `scripts/check_enumeration_completeness.py` — all mtime <10 min at time of writing, i.e. genuinely live, not stale
+> WIP) implementing the OKX-SPOT venue split + Kraken FI_/FF_ marker + other operator-decided denominator changes.
+> Re-measuring against a mid-flight denominator would just have to be re-run once that workflow lands — **recommend
+> waiting for it to quiesce (git status clean / QG green / quickmerged) before re-dispatching this task**, rather than
+> burning a re-measure cycle on soon-invalid numbers.
 
 - [ ] [SCRIPT] P0. Re-run `measure_honest_coverage` on the corrected catalogue + seeded manifests (**06-29 numbers are
       stale** — predate v12, the incremental-rollup switch, and the cefi 122-row ghost-dupe fix of 07-04)
@@ -345,9 +360,11 @@ reconciling + signing off, not redoing.)_
   (Deribit MVP = `options_chain` only), so DERIBIT-COMBO stays `{OPTION}` in `INSTRUMENT_TYPES_BY_VENUE` — the
   provisional is now final, **no code change beyond it**. D2a fully closed; nothing further to wire for Deribit combo in
   the denominator.
-- **KALSHI-PERP contamination purge (25,473 fake rows)** — **Stage-3 re-measure prerequisite**; owned by
-  `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md` Phase 0 (slot-2 / 4da6fe8 author), NOT this
-  tracker. Stop-emit at source + purge the `venue=KALSHI-PERP` cefi cells. POLYMARKET-PERP clean.
+- **✅ KALSHI-PERP contamination purge (25,473 fake rows) — RESOLVED, verified live 2026-07-10.** Owned by
+  `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md` Phase 0 (→
+  `prediction_capture_incident_remediation_2026_07_06.md` Workstream B). Live GCS read confirms 0 `KALSHI-PERP` / 0
+  `POLYMARKET-PERP` rows in the cefi manifest — the guard + purge + self-heal all held. **This prerequisite no longer
+  blocks Stage 3** — see the new Stage-3 header note for the current (different) blocker.
 - **KALSHI-PERP / POLYMARKET-PERP real capture** — BLOCKED-CREDENTIALS: real perps live on the auth'd margin API (Kalshi
   member-rollout; Polymarket beta), not the events host. **Venues STAY declared in the cefi denominator (D2 unchanged)**
   but read as credentials-gated honest-absence until the Phase-4 prod cutover.
