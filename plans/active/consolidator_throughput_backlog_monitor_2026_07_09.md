@@ -253,15 +253,21 @@ drift_direction: advance-code
       "last reprobe: N disagreements / M reclassified", with HONEST staleness shown loudly (phantom is WEEKLY → the age
       matters). Tooltip explains what a phantom / a reprobe-disagreement is. `pw:L2`.
 
-> **⚠️ Coverage-gap FINDINGS (data-correctness, OUTSIDE this UI plan — flagged to operator 2026-07-10; candidate issue
-> doc):** (1) reprobe's **tradfi + prediction** live-refetch hooks are unconditional STUBS (`reprobe_tradfi.py:75`,
-> `reprobe_prediction.py:71` — always `reached_source=False`) → those 2 AGs can NEVER self-heal a wrong
-> `empty_confirmed`. (2) phantom audit covers only 5 single-bucket-per-AG targets; DeFi **per-data-type buckets**
-> (lending-indices / lst-rates / oracle-prices / perp-funding / eigenlayer-rewards) need a `--manifest-bucket` override
-> the cron never passes → their phantoms are UNDETECTED; and the consolidator estate is ~20+ buckets vs the 5 audited.
-> (3) phantom cadence is WEEKLY (daily `changed` mode skips it) → up to 7 d stale. (4) 4-pillar findings persist only to
-> a stdout tail. These belong in a data-pipeline plan / issue doc, NOT this UI plan — but the UI MUST show the honest
-> cadence/coverage so a stale or narrow audit never reads as "all clear".
+> **✅ Coverage-gap FINDINGS — VERIFIED 2026-07-10 (operator asked to verify before filing; done by reading source +
+> live `gcloud`). Outcome: ONE genuine gap FILED, two downgraded to by-design:**
+>
+> - **FILED → `issues/phantom_audit_estate_coverage_gap_2026_07_10.md`** (data-pipeline scope, for Ikenna): phantom
+>   audit walks only 5 hardcoded buckets (`_BUCKET_KIND_MAP` — market-data-{cefi,defi,tradfi} + instruments-sports +
+>   market-data-tick-prediction); the cron never passes `--manifest-bucket`, so the rest of the estate —
+>   instruments-{cefi,defi,tradfi} (VERIFIED: the 86,977-row / 64,227-`captured` cefi index I downloaded), market-data-
+>   sports, gas-fees, lending-indices, oracle-prices, features/execution/… — is NEVER phantom-checked. Real
+>   data-correctness coverage gap.
+> - **WITHDRAWN (verified by-design, NOT bugs)**: (a) tradfi/prediction reprobe hooks never auto-heal — TRUE
+>   (`reprobe_tradfi.py:75` / `reprobe_prediction.py:71` always `reached_source=False`), but deliberate (batch sources)
+>   AND the cells are still DETECTED via the oracle (`ORACLE_EXPECTS_DATA`, `reprobe_new_empty_confirmed.py:247-250`);
+>   (b) weekly phantom cadence — a deliberate cost tradeoff (full GCS walks; daily index-only checks still run).
+> - **UI implication (kept)**: the panel MUST show HONEST cadence + coverage so a narrow/weekly audit never reads as a
+>   false "all clear".
 
 ### Shipping gate (WS-3 — mirrors WS-1's closer)
 
@@ -337,3 +343,10 @@ drift_direction: advance-code
   **Escalated 4 coverage-gap FINDINGS** (data-correctness, not this UI plan): tradfi/prediction reprobe hooks are STUBS
   (can't self-heal wrong empties), DeFi per-data-type buckets unaudited, phantom covers 5 of ~20+ consolidator buckets,
   weekly cadence → up-to-7d stale. Candidate issue doc pending operator decision.
+- 2026-07-10 — VERIFIED the phantom/reprobe gap-findings MYSELF (operator: verify before filing, don't delegate) — read
+  the source + live `gcloud`. Outcome: tradfi/prediction reprobe-stub finding **WITHDRAWN** (mechanically true but
+  deliberate design — oracle still detects via `ORACLE_EXPECTS_DATA`, `reprobe_new_empty_confirmed.py:247-250`);
+  weekly-cadence **WITHDRAWN** (deliberate cost tradeoff); phantom **ESTATE-COVERAGE gap CONFIRMED + FILED** →
+  `issues/phantom_audit_estate_coverage_gap_2026_07_10.md` (`_BUCKET_KIND_MAP` walks only 5 buckets, cron never passes
+  `--manifest-bucket` → instruments-{cefi,defi,tradfi} incl. the verified 86,977-row cefi index, gas-fees /
+  lending-indices / oracle-prices, features/execution/… never phantom-checked). For Ikenna (data pipeline).
