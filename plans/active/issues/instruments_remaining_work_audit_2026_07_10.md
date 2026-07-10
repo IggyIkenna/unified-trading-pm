@@ -87,6 +87,24 @@ locked_since:
 
 # Instruments remaining-work audit (2026-07-10)
 
+## Category definitions
+
+- **CODE_PATH** — a real fix/feature needed in application code: adapter logic, orchestrator wiring, error handling, a
+  missing construction/capture path. Excludes anything whose only remaining action is running a backfill.
+- **MANIFEST_COVERAGE** — capture_status / denominator / honest-coverage correctness for the availability manifest,
+  across one or more asset groups. Includes coverage-reporting bugs (a wrong number surfaced to a human), not just
+  manifest-write bugs.
+- **SSOT** — a real contradiction between two sources that are each individually treated as authoritative (codex vs.
+  registry, doc vs. code, two registries) needing a decision about which one wins, not just a mechanical sync.
+- **DOCS_RECONCILIATION** — a doc that is stale/wrong relative to the real current code or data state, with no
+  accompanying code change needed — pure doc drift.
+- **INSTRUMENT_ID_CANONICALIZATION** — instrument_id/symbol format work. Split into 5a (already exhaustively tracked
+  inside `instrument_id_format_canonicalization_2026_07_08.md` — not re-listed here) and 5b (genuinely separate
+  canonicalization work that doc does not track).
+- **GCS_BUCKET_MIGRATION** — a real change to bucket naming, GCS object layout/path, or storage-tier migration.
+- **OTHER** — genuine remaining work that doesn't cleanly fit the 6 buckets above (still real, still tracked, not a
+  catch-all for vague items).
+
 ## 0. Headline P0s (read this if nothing else)
 
 1. **Turbo API silently reports 0/0 for DeFi venues with real captured data** (deployment-api read-path bug hiding
