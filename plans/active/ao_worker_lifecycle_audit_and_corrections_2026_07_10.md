@@ -185,6 +185,12 @@ fence fix — the plan ships the final mechanism directly.** New boot model:
 - **Preserve the in-context guarantee** — the paste gave "content is in context" for free; reading does not. Gate the
   existing `/boot` handshake on read-confirmation: a worker cannot proceed to dispatch until it confirms it has read its
   role file + RULES.md.
+- **Reconcile the three boot timers.** A spawn-heartbeat watchdog already exists (`SPAWN_HEARTBEAT_TIMEOUT_SECONDS`,
+  default 180s → kill+respawn on no `/boot`|`/heartbeat`, 2 retries; `_auth_failover.check_spawn_heartbeat_timeouts`)
+  alongside `boot_grace_seconds` (300s, added 2026-07-09). The cutover ADDS boot latency (the worker must `Read` its
+  role file + RULES.md before `/boot`), which risks tripping the 180s as a FALSE respawn of an alive-but-slow booter.
+  Split the signal — an early lightweight "boot-started" ping for the 180s liveness check vs. the full read-confirmed
+  `/boot` as the dispatch gate — and align 180s ↔ 300s.
 
 **Orthogonal (still first-class):** the stale-content fixes (RULES.md tab-branch, main.md path + dead-DAG,
 escalation_to) stand regardless — a file that's read directly must still be CORRECT, or agents trip on stale info. They
@@ -197,14 +203,20 @@ fold into the role-file rewrite (A4).
 - [ ] [DESIGN] P0. Design the read-the-file boot mechanism (supersedes any fence fix — no interim). Specify: the
       per-role DYNAMIC STUB (per-session vars + escalation incident vars + per-role read-pointers); the canonical
       location (root PM clone; exact PM-repo path for the relocated role/rules files); the `/boot` read-confirmation
-      handshake; the read-from-root/operate-only-in-slot guardrail. Output: a short design note appended here + the
-      file-move list + the module/caller list to refactor.
+      handshake; the read-from-root/operate-only-in-slot guardrail; AND the boot-timer reconciliation
+      (`spawn_heartbeat_timeout` 180s ↔ `boot_grace` 300s ↔ `/boot` read-confirmation — the cutover's Read latency must
+      not trip a false spawn-respawn; consider an early "boot-started" ping vs. the full `/boot`). Output: a short
+      design note appended here + the file-move list + the module/caller list to refactor.
 - [ ] [CODE] P0. Implement the stub + refactor `server/prompts.py` + `server/role_registry.py`: STOP extracting/pasting
       the `text` template; compose a per-role boot stub (dynamic vars + escalation vars + read-pointers). Keep var
       injection. Point `AGENTS_DIR` (or its replacement) at the canonical PM-repo location. Update every spawn caller
       (`autospawn.py`, `tmux_spawn.py`, manual `/api/agents/spawn`, escalation, plan-health dispatch).
 - [ ] [CODE] P0. Add the `/boot` read-confirmation gate — a worker cannot proceed to dispatch until it confirms (via
       `/boot`) it has READ its role file + RULES.md. Restores the in-context guarantee the paste gave for free.
+- [ ] [CODE] P1. Diagnose-on-boot-timeout + alert-at-cap (`_auth_failover.check_spawn_heartbeat_timeouts`): on
+      spawn-heartbeat timeout, CAPTURE the pane (liveness + tail) and classify WHY it hasn't booted (alive-but-slow /
+      stuck at a startup prompt / crashed / mid-read) BEFORE the blind respawn; and page the operator when the 2-retry
+      cap (`_SPAWN_HEARTBEAT_MAX_RETRIES`) is hit (today it goes silent). Depends on the boot-timer reconciliation (A1).
 - [ ] [CODE] P0. Rewrite the role/rules files into STANDALONE readable docs (worker.md, RULES.md, main/review/monitor +
       craft + escalation): dynamic values referenced as "given in your boot message" (no inline `<SLOT_ID>`); INCLUDE
       the idle-loop resilience content (settle the client-vs-server idle-loop question here); add the explicit "operate
