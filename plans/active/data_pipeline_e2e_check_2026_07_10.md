@@ -225,9 +225,16 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       `rg "pipeline_e2e_check" instruments-service/scripts/quality-gates.sh market-tick-data-service/scripts/quality-gates.sh`
       → 0 hits in both (confirmed during both services' real QG runs this session).
 
-- [ ] 13. [DATA] P2. (New, surfaced this session) `get_write_bucket_name('market_data', 'prediction')` has no yaml-SSOT
-      entry — pre-existing, unrelated to this plan's core scope, needs its own investigation into whether prediction's
-      market-data bucket needs the same "flat kind" special-case IS's prediction-bucket resolution already has.
+- [x] 13. ✅ [DATA] P2. `get_write_bucket_name('market_data', 'prediction')` had no yaml-SSOT entry —
+      unified-trading-library@886630c1 — evidence: prediction market-data is a dedicated flat yaml kind
+      (`market-data-tick-prediction`, resolving to the short `pred` token), not a key in the per-asset_group
+      `market-data` dict (CEFI/DEFI/TRADFI/SPORTS only). Both `get_bucket_name`/`get_write_bucket_name` now special-case
+      it, mirroring the pattern IS's `resolve_instruments_store_kind()` and MTDS's `reader.py::_tick_bucket()` already
+      apply locally. `get_write_bucket_name` stays PROD-only for prediction even under `IS_TEST_RUN` — confirmed via a
+      real `gcloud storage buckets describe` that `market-data-tick-pred-test-central-element-323112` does not exist, so
+      routing to it would resolve to a bucket that doesn't exist. 2 new regression tests
+      (`TestGetBucketName`/`TestGetWriteBucketName` in `test_cloud_constants.py`) + functional verification (`gcloud`
+      confirmed no test bucket; `get_bucket_name`/`get_write_bucket_name` both resolve correctly now, no crash).
 
 - [x] 14. ✅ [DATA] P1. Re-run `market-tick-data-service/scripts/pipeline_e2e_check.py --legs force,skip` against a real
       MVP shard/day post-`tardis_adapter.py` fix to confirm the CEFI Tardis force-leg genuinely writes to the TEST
@@ -259,44 +266,58 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       "zero-row capture is still a pass" design, not a masked bug, confirmed by reading the function); skip leg
       `passed`, `skip_proof: genuine`.
 
-- [ ] 15. [INFRA] P2. (New, surfaced this session) The `instruments-store-cefi-test-*` / equivalent TEST buckets'
-      manifest consolidator is not scheduled/running (real `ManifestConsolidatorStaleError` hit twice on real runs) —
-      the `MANIFEST_ALLOW_STALE_FALLBACK=true` escape hatch this session wired through is a safe workaround for small
-      test buckets, not a fix to the root scheduling gap. Needs its own follow-up: extend whatever Cloud Scheduler/Cloud
-      Run Job drives the PROD consolidator to also cover `-test-` buckets, or explicitly document that test buckets are
-      consolidator-exempt by design.
+- [x] 15. ✅ [INFRA] P2. The `instruments-store-cefi-test-*` / equivalent TEST buckets' manifest consolidator gap —
+      unified-trading-pm PR #916 (748f1c8e) — evidence: investigated the actual scheduling mechanism
+      (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`'s hardcoded `for_each` map literals — zero
+      `-test-` entries anywhere; AWS mirrors the same gap via EventBridge Rules). Decided **document-exempt, not
+      extend**: extending would be mechanical (IAM is already project-wide, no new IAM needed; the Cloud Run Job +
+      Scheduler are already generic `for_each` blocks) but the wrong direction — this doc's own Coverage-gap section is
+      actively trying to REDUCE cron count (10→5) for cost/complexity, and adding ~10 more permanent `*/1 * * * *` Cloud
+      Run+Scheduler pairs for buckets that only see occasional smoke-check traffic moves the wrong way. Added a
+      "Coverage exemptions" section to `codex/05-infrastructure/manifest-consolidator-ssot.md` documenting the
+      decision + the real mitigation (`MANIFEST_ALLOW_STALE_FALLBACK=true`, already wired this session).
 
-- [ ] 16. [SCRIPT] P2. (New, surfaced this session) MTDS has no `--mode live`-capable, test-bucket-routed, auto-shutdown
-      launcher — `launch-mtds-backfill-vm.sh` is batch-only; the real live launcher (`launch-mtds-live.sh`) writes PROD
-      and never terminates. `market-tick-data-service/scripts/pipeline_e2e_check.py` currently defaults its live leg to
-      a documented, safe no-op (`--allow-live-prod-writes` opts in to the real risk). A dedicated MTDS live-smoke
-      launcher is a real, separate follow-up.
+- [x] 16. ✅ [SCRIPT] P2. MTDS had no `--mode live`-capable, test-bucket-routed, auto-shutdown launcher —
+      deployment-service@20ab27ac + market-tick-data-service@408ec7e9 — evidence: extended `launch-mtds-live.sh`
+      in-place (lower risk than a new script — same reasoning that made backfill's `--test-run` an in-place extension)
+      with `--test-run` (sets `IS_TEST_RUN=true,MANIFEST_ALLOW_STALE_FALLBACK=true`, flips
+      `VM_SHUTDOWN_ON_COMPLETION=true`, uses a distinct `mtds-live-smoke-` VM-name prefix that never collides with the
+      real per-shard `mtds-live-{ag}-*` singleton lock) and `--max-duration-seconds N` (threaded through
+      `setup-data-pipeline-vm.sh` to a new MTDS CLI flag). `WebsocketStreamingHandler.run()` now spawns a
+      stop-after-N-seconds background task calling `runner.request_stop()` — the live WS producer actually terminates
+      instead of running forever. Also made the handler's own bucket resolution `IS_TEST_RUN`-aware (was hardcoded PROD,
+      independent of `get_tick_data_bucket()` — a related gap this session's `state.bucket` investigation surfaced but
+      todo 17 didn't originally name). Registered `mtds-live-smoke-` in both `vm_zombie_watchdog.py`'s
+      `VM_PREFIX_TO_BUCKET` and `launcher_registry.py` (parity guard test passes). Dry-run verified:
+      `launch-mtds-live.sh --test-run --max-duration-seconds 120` produces VM name
+      `mtds-live-smoke-cefi-binance-futures-trades-<ts>`. 6 new/updated unit tests
+      (`test_websocket_streaming_handler.py`) pin both changes; `TickDataHandler`'s own live launcher (`Phase 15`
+      operational gate) is not yet operationally launched in production per its own docstring, so this is genuinely
+      lower-risk than the batch-path fix.
 
-- [ ] 17. [DATA] P1. (New, surfaced this session, real infra finding — flagged, not silently routed around) **Every
-      `--test-run` MTDS backfill plants a real, phantom "captured" manifest row in PROD's manifest index for whatever
-      shard/day is under test.** Root cause (confirmed via a real VM's `run.log`, not inferred): the orchestrator's
-      per-VM manifest finalize (`engine/orchestrator/__init__.py`'s
-      `_bucket =     get_tick_data_bucket(_config, asset_group=...)` feeding `_DateRunState.bucket` ->
-      `manifest_finalize.py`'s `catalogue_bucket=state.bucket`) resolves via the SAME PROD-only bucket function finding
-      #2 already documented as ignoring `IS_TEST_RUN` for the freshness-READ path — but this call site feeds a manifest
-      WRITE, not a read. Confirmed on two independent real runs
-      (`mtds-backfill-cefi-pipelinecheck-20260710-{144945,154430,154908}` at minimum): each wrote a per-VM manifest
-      shard to `market-data-tick-cefi-prd-central-element-323112/_index/per_vm/<vm-name>.parquet` claiming
-      `date=2026-07-05 venues=1 shards=1 total_records=2084208 complete=True` for CEFI/BINANCE-FUTURES — a REAL claim
-      now sitting in PROD's manifest, even though the actual parquet data for these runs lives ONLY in the `-test-`
-      bucket. **Risk**: a future genuine PROD backfill attempt for this exact shard/day could see this phantom "already
-      captured" claim and silently skip re-fetching real data — this is squarely the honest-absence /
-      data-pipeline-correctness class of risk this workspace treats as a hard-rule heartbeat concern, not a cosmetic
-      gap. Per this same session's precedent with the `tardis_adapter.py` PROD-write incident (real data written, left
-      in place rather than unilaterally deleted — see Progress Log), the phantom per-VM manifest shards created by this
-      session's runs were NOT unilaterally deleted/reverted here either; this is an operator-facing decision (likely via
-      the existing `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`-style tooling, or a dedicated
-      test-run-manifest-quarantine mechanism). **Needs a real fix**: either (a) route
-      `_DateRunState.bucket`/`get_tick_data_bucket()` through the test-aware resolver when `IS_TEST_RUN=true` (the same
-      fix already applied to the parquet-write path in `tardis_adapter.py`), or (b) skip the manifest-write step
-      entirely under `--test-run` (the parquet write + this smoke tool's own `verify_write`/`object_signature` checks
-      may be sufficient proof without a manifest row at all). **NOTIFY OPERATOR** — this is a real, currently-live PROD
-      manifest-state concern, not a routine follow-up to silently queue.
+- [x] 17. ✅ [DATA] P1. **Root-caused and fixed** — every `--test-run` MTDS backfill was planting a real, phantom
+      "captured" manifest row (AND, a fuller call-graph investigation found, the actual parquet payload for every venue
+      that doesn't self-persist internally) in PROD, not just the manifest — market-tick-data-service@73d88332 +
+      @408ec7e9. `get_tick_data_bucket()` gained an opt-in `test_aware: bool = False` kwarg (default False, so every
+      existing caller — the freshness-read pre-check, `pipeline_e2e_check.py`'s own PROD-verification read, the
+      migration script — keeps its exact current behavior, confirmed via the full call-graph:
+      `_resolve_freshness_bucket()` calls the function independently, never reads `state.bucket`, so the fix is
+      structurally unreachable from that deliberately-PROD-only path). `process_ticks()`'s two call sites (main path +
+      the non-trading-day sentinel path — a SECOND manifest-write call site the original finding's line-644-only wording
+      didn't name) now pass `test_aware=True`. Prediction stays PROD-only even under `test_aware=True` (no `-test-`
+      sibling exists yet — todo 13, now also fixed). The equivalent live-path bucket resolution in
+      `websocket_streaming_handler.py` (todo 16) got the same treatment. 4 new unit tests pin the exact contract in
+      `test_get_tick_data_bucket_canonical.py`; the existing ~30 mocked orchestrator tests + the full 5631-test MTDS
+      unit suite pass unchanged (no `autospec` on any existing mock, confirmed). **Phantom rows created during this
+      session's own investigation runs were left in place** — deleting real PROD manifest state unilaterally would
+      itself be a risky, hard-to-reverse action; this is an operator-facing cleanup decision (likely via
+      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`-style tooling), flagged here rather than
+      silently actioned. **NOTIFY OPERATOR**: PROD's manifest for CEFI/BINANCE-FUTURES/2026-07-05 currently has 3 real
+      phantom per-VM shard entries from this session's `--test-run` VMs
+      (`mtds-backfill-cefi-pipelinecheck-20260710-{144945,154430,154908}`) claiming
+      `total_records=2084208     complete=True` — genuinely fixed going forward (no new phantom rows from any
+      `--test-run` after market-tick-data-service@73d88332), but these 3 existing rows are still there and need an
+      explicit operator decision on cleanup.
 
 ## Verification (workspace-wide, before this plan is considered shippable)
 
@@ -477,3 +498,52 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   silently dropped) — 13 (prediction bucket-naming gap), 15 (test-bucket manifest-consolidator scheduling gap), 16 (no
   MTDS live-smoke launcher), 17 (PROD-manifest-pollution from test runs, the most significant of the four,
   operator-notify-worthy). Nothing left in a partial/DEFERRED state within this plan's own scope.
+
+- 2026-07-10 (autonomous session, follow-up round — operator asked to fix todos 13/15/16/17) — **All 4 follow-ups
+  resolved**, each shipped separately with real verification (see individual todo evidence above for full detail):
+
+  - **Todo 13** (prediction bucket-naming gap) — unified-trading-library@886630c1. `get_bucket_name`/
+    `get_write_bucket_name` now special-case prediction's dedicated flat yaml kind, mirroring IS's existing pattern.
+    `get_write_bucket_name` deliberately stays PROD-only for prediction under `IS_TEST_RUN` (confirmed via a real
+    `gcloud storage buckets describe` that no `-test-` sibling bucket is provisioned).
+  - **Todo 15** (consolidator scheduling gap) — unified-trading-pm PR #916 (748f1c8e), document-only. Investigated the
+    real Terraform scheduling mechanism and decided `document-exempt` over `extend` — extending is mechanically easy but
+    works against this same doc's own cron-count-reduction goal for buckets that only see occasional smoke-check
+    traffic. `MANIFEST_ALLOW_STALE_FALLBACK=true` (already wired) is the real, intentional mitigation.
+  - **Todo 16** (no MTDS live-smoke launcher) — deployment-service@20ab27ac + market-tick-data-service@408ec7e9.
+    Extended `launch-mtds-live.sh` in-place with `--test-run`/`--max-duration-seconds` rather than a new script;
+    `WebsocketStreamingHandler` now bounds the live run and routes its bucket resolution through `IS_TEST_RUN` (a
+    related gap on the live path, alongside the batch-path fix in todo 17). Registered the new `mtds-live-smoke-` prefix
+    in both VM registries (parity guard test passes). Dry-run verified.
+  - **Todo 17** (PROD manifest pollution, the most significant) — market-tick-data-service@73d88332 + @408ec7e9.
+    Root-caused via a full call-graph investigation (not just the one call site originally named): `state.bucket` is the
+    write target for the manifest AND the actual parquet payload for every venue that doesn't self-persist internally,
+    plus a second manifest-write call site (the non-trading-day sentinel path) the original finding didn't name. Fixed
+    with an opt-in `test_aware` kwarg on `get_tick_data_bucket()` — default `False`, so every deliberately-PROD-only
+    caller (the freshness-read pre-check, this plan's own PROD-verification read) is byte-for-byte unaffected; only
+    `process_ticks()`'s write-path call sites opt in. Verified via the full 5631-test MTDS unit suite (zero regressions)
+    plus 4 new tests pinning the exact contract.
+
+  **Investigation method**: dispatched 4 parallel read-only investigation agents (one per todo) before writing any fix,
+  given todo 17 in particular touches a live production code path used by every real MTDS batch run — the call-graph
+  investigation surfaced 2 things the original finding's wording had missed (the actual-data-write leak beyond just the
+  manifest; the second non-trading-day manifest-write call site), both folded into the fix.
+
+  **Multi-agent safety, same recurring pattern**: every one of these 6 ship commits landed while
+  `unified-trading-library`/`unified-api-contracts` had the SAME sibling session's live WIP present
+  (`post_trade/settler.py`/`cf_manifest_audit.py`/`manifest_consolidator.py` in UTL;
+  `test_cme_options_universe.py`/`tradfi_instrument_universe.py` in UAC) — confirmed settled via mtime (>120s stale, no
+  active process) before each `git stash push -u -- <named files>` / quickmerge / `git stash pop` cycle, restored
+  byte-identical immediately after every single ship. One borderline case (mtime ~100s, just under the 120s threshold)
+  was NOT stashed immediately — waited an additional polling cycle until genuinely settled first.
+
+  **Also shipped alongside these 4 fixes**: an auto-generated "Bucket paths" table in every `pipeline_e2e_check.py`
+  report (unified-trading-library@886630c1, instruments-service@e4acfea0, market-tick-data-service@73d88332/f0995491)
+  showing which bucket each parquet write and manifest write/read actually targeted per shard/leg — flags with ⚠️ when
+  they differ, so the exact asymmetry this session spent most of its time chasing is visible in every future report
+  without re-deriving it from `run.log` by hand. Both SKILL.md files updated to relay the full printed report (not just
+  its file path) to the operator automatically.
+
+  **Genuinely done**: no partial states, no silent scope-narrowing. The one deliberately-not-fully-automated item is
+  todo 17's PROD-manifest-cleanup decision (3 real phantom rows from this session's own test runs) — flagged for the
+  operator per the workspace's "never unilaterally delete real captured state" precedent, not left ambiguous.
