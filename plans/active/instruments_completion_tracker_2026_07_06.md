@@ -257,6 +257,36 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 > Re-measuring against a mid-flight denominator would just have to be re-run once that workflow lands — **recommend
 > waiting for it to quiesce (git status clean / QG green / quickmerged) before re-dispatching this task**, rather than
 > burning a re-measure cycle on soon-invalid numbers.
+>
+> **🟡 RE-ASSESSED 2026-07-10 (later, 17:39 BST) — the specific 3-file live-edit condition above has CLOSED, but full
+> quiescence still does not hold; still recommend NOT remeasuring yet.** Verified directly (not re-trusting the prior
+> note): `venue_core.py` (last commit `is@e3f677d6`, 15:56), `factory.py` (`is@94512ec3`, 12:48), and
+> `check_enumeration_completeness.py` (`is@b90bc2d9`, 14:14) are all now **clean in the working tree and match
+> `origin/live-defi-rollout`** — the specific edit-in-flight this blocker cited has landed. Both dispatched sibling
+> workflows the blocker names are independently confirmed **COMPLETE** in
+> `instruments_remaining_work_audit_2026_07_10.md` (`wf_1e191185-1c2` 8/8 agents returned; `wf_60ecfd13-752` 6/6 agents
+> returned; a 2026-07-10-later follow-up pass in that doc re-verified via git history — not self-report — that all 3
+> previously "code-complete but unshipped" items (Coinbase S2 dead-branch removal, `mvp_mode` universal build, Kraken
+> marker) are now landed with clean working trees). **However `git status` on `instruments-service` is NOT clean right
+> now**: `scripts/migration_orphan_sweep.py` + 2 test files carry uncommitted edits (mtime 17:19, ~18 min old) matching
+> the still-in-flight **tradfi orphan sweep** (`wf_60ecfd13-752` item 6: background sweep PID 22320, ~850K objects, ETA
+> 1.5–2h at that session's end — PID not resolvable from this slot, so live/dead status can't be confirmed locally).
+> This edit is Stage-1/tradfi-scoped (GCS orphan-vs-legitimate-infra prefix labeling), not cefi/defi/prediction/sports
+> denominator logic, and tradfi's own Layer-1 was already excluded from any near-term remeasure via the pre-existing
+> `BLOCKED-PLAN2` gate (task 004) — so it does not newly block a cefi/defi/prediction/sports attempt on file-conflict
+> grounds. **But it does mean the tracker's own literal "git status clean" gating criterion is not yet satisfied**, and
+> — separately from the file-conflict question — a real backlog of denominator-authority changes has landed since the
+> 07-06 certification that the 73.61% (cefi) / 94.81% (defi) Snapshot numbers do not reflect at all: OKX-SPOT
+> fold-invert (`is@300b0767`), COINBASE-CDE venue split (`uac@1cafb3c5` + `is@94512ec3`), DERIBIT-COMBO added to
+> `MVP_SCOPE.venues` + D10 capability fixes (`uac`, per the audit doc's Orchestration state), the cefi writer
+> instrument_type-split fix (07-07), and the UAC two-layer data-type-validity redesign (`uac@fa9cece5`). Net: a fresh
+> remeasure right now would be **more honest than a file-conflict risk, but still premature** against the tracker's own
+> stated bar, and would not be a single-dispatch-safe action to launch unattended — **recommend the operator (or the
+> next dedicated Stage-3 dispatch) confirm the tradfi orphan sweep has actually finished + the tree is clean, then
+> re-run `measure_honest_coverage` for cefi/defi/prediction at minimum** (tradfi stays `BLOCKED-PLAN2` regardless). No
+> code touched, no measurement run, in reaching this assessment — verification was git-log/git-status/file-mtime only,
+> cross-checked against `issues/instruments_remaining_work_audit_2026_07_10.md`'s independently-verified Orchestration
+> state.
 
 - [ ] [SCRIPT] P0. Re-run `measure_honest_coverage` on the corrected catalogue + seeded manifests (**06-29 numbers are
       stale** — predate v12, the incremental-rollup switch, and the cefi 122-row ghost-dupe fix of 07-04)
@@ -376,6 +406,24 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-10 (later, 17:39 BST)** — **Dispatched re-assessment of this tracker item itself (not a Stage-3 remeasure) —
+  verified real current state, no engineering executed.** Confirmed live: (1) `git status` on `instruments-service`
+  matches `origin/live-defi-rollout` for the 3 files the Stage-3 blocker cited as "actively rewriting" (`venue_core.py`
+  `is@e3f677d6`, `factory.py` `is@94512ec3`, `check_enumeration_completeness.py` `is@b90bc2d9`) — that specific
+  live-edit condition has closed. (2) Both sibling dispatched workflows the blocker names (`wf_1e191185-1c2`,
+  `wf_60ecfd13-752`) are independently confirmed COMPLETE in `issues/instruments_remaining_work_audit_2026_07_10.md`,
+  including a git-history-verified (not self-reported) follow-up pass confirming all previously "code-complete but
+  unshipped" items actually landed. (3) `git status` is nonetheless currently NOT clean — an ~18-min-old uncommitted
+  edit to `scripts/migration_orphan_sweep.py` + 2 test files, matching the still-in-flight tradfi orphan sweep (Stage 1,
+  tradfi already excluded from any near-term remeasure via the pre-existing `BLOCKED-PLAN2` gate) — so the tracker's own
+  literal "clean tree" bar is not yet met, even though the specific denominator-file conflict is resolved. (4) A real
+  backlog of cefi/defi denominator-authority changes (OKX-SPOT split, COINBASE-CDE split, DERIBIT-COMBO MVP_SCOPE
+  addition + D10 capability fixes, cefi writer instrument_type fix, UAC two-layer redesign) has landed since the 07-06
+  certification that the current 73.61%/94.81% Snapshot numbers do not reflect — the Stage-3 remeasure is now MORE
+  overdue than when the blocker was written, not less, but launching it unattended right now still isn't a clean
+  single-dispatch action per the tracker's own stated bar. Updated the Stage-3 header blockquote with the full
+  reasoning + evidence; no checkboxes flipped (nothing was actually (re)measured), no code touched in
+  `instruments-service` or any sibling repo. Full detail in the Stage-3 header note above this log.
 - **2026-07-07 (later same day, round 3)** — **🔴 P0 filed: `defi_turbo_api_hides_real_captured_data_2026_07_07.md`.**
   Chasing an operator hypothesis that AAVE_V3-ARBITRUM/POLYGON/EULER_V2/FLUID's `0/0` turbo readings might be a
   venue-naming mismatch: no naming mismatch was found (the write path produces the exact canonical strings), but a live
