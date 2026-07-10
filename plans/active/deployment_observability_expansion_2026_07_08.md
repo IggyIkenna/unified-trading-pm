@@ -119,51 +119,43 @@ daemon reads structured-progress-when-present, else the log-scrape) means it rol
 - [x] 1. ✅ [UI] P0. Collapse the 3 mode tabs + tiles + nav into one unified all-modes Deployments table (Mode =
      filter); kill the bad columns — `deployment-ui@50a6947` + QG green (915 vitest, pw smoke).
 
-## WS-B — Census the compute kinds the backend ignores (make the mock real)
+## WS-B — Census the compute kinds the backend ignores (make the mock real) ✅ COMPLETE
 
-- [ ] [BACKEND] P1. Add `CLOUD_RUN_SERVICE` to the census — `run_v2.ServicesClient` list + ready-state + revision +
-      region. New `DeploymentKind` value in UAC. **Mode = "—"** (a service has no live/batch/paper phase; the `Kind`
-      badge/filter carries "this is a service" — see Open-Q1). No PLATFORM/INFRA mode.
-- [ ] [BACKEND] P1. Add `ECS_SERVICE` census — ECS list-services/describe-services across the prod clusters
-      (uts-defi-prod, unified-trading-prod) → **desiredCount + runningCount** + task-def revision; `cloud=AWS`. Always
-      emit the row even at 0 running tasks (state derives from desired-vs-running — see Open-Q7 + WS-D service-health
-      sub-taxonomy).
-- [ ] [BACKEND] P1. Make the Cloud Run **jobs** census DYNAMIC — list live jobs instead of the hardcoded
-      `CLOUD_RUN_JOBS` name-registry, so off-pattern jobs stop hiding (keep the registry only for classification hints,
-      not as the allow-list). Run the exact registry-vs-live diff first to quantify the current hidden set.
-- [ ] [BACKEND] P2. Add `LAMBDA` census — existence + config via `list_functions` (`cloud=AWS`). NOTE: invocation/error
-      stats are CloudWatch-only (no host/cgroup on Lambda) — the ONE scoped exception to WS-D.0-#4; default to
-      existence-only and add a CloudWatch call ONLY if Lambda health proves worth it. Lower priority (portal/auth
-      infra).
-- [ ] [BACKEND] P2. Add `CLOUD_FUNCTION` (gen2) census — `functions list`; note gen2 = Cloud Run underneath.
-- [ ] [BACKEND] P1. Extend `DeploymentKind` (UAC) + the inventory route's kind counts + filters to the 6 kinds; keep
-      honest degradation (a census failure for one kind never blocks the others).
+> **✅ WS-B EXTRACTED + COMPLETE** in `deployment_obs_backend_kinds_health_2026_07_09` (Plan 1, backend). Boxes mirrored
+> here 2026-07-10 (cross-plan audit) — Plan 1 carries the per-item shas/evidence.
 
-## WS-C — Richer per-target data + drill-down
+- [x] ✅ [BACKEND] P1. Add `CLOUD_RUN_SERVICE` to the census (list + ready-state + revision + region; Mode "—"). — done
+      in Plan 1.
+- [x] ✅ [BACKEND] P1. Add `ECS_SERVICE` census (desiredCount + runningCount + task-def revision, always-emit). — done
+      in Plan 1.
+- [x] ✅ [BACKEND] P1. Make the Cloud Run **jobs** census DYNAMIC (list live jobs, registry = hints only). — done in
+      Plan 1.
+- [x] ✅ [BACKEND] P2. Add `LAMBDA` census (existence + config; CloudWatch deferred). — done in Plan 1.
+- [x] ✅ [BACKEND] P2. Add `CLOUD_FUNCTION` (gen2) census. — done in Plan 1.
+- [x] ✅ [BACKEND] P1. Extend `DeploymentKind` + inventory kind counts/filters to the 6 kinds (honest degradation). —
+      done in Plan 1.
 
-- [ ] [BACKEND] P1. Surface the **Tier-0 free wins** already fetched-and-discarded: the GCE aggregated-list returns
-      machine_type/zone/labels/boot-disk but the inventory uses only `.keys()`
-      (`deployments_inventory.py:_load_gcp_vm_entries`) — keep the values. The registry entry already carries
-      `rows_in/rows_error/events_emitted/uptime_hours/machine_type/zone/health_status` — surface them (today only
-      `rows_out` → captured_progress is exposed).
-- [ ] [DATA] P2. Cost-per-target join (see WS-E) → `cost_per_day_usd` on each item.
-- [ ] [BACKEND] P2. Utilisation (cpu/mem/disk per target) — sourced from WS-D **edge-push** (VM `/proc`, Cloud Run
-      cgroup), NOT a Cloud Monitoring / CloudWatch pull (see WS-D.0 principle 4). Owned by WS-D; listed here for the
-      WS-C column/drill-down wiring.
+## WS-C — Richer per-target data + drill-down (mostly ✅ COMPLETE)
+
+> Backend rich-fields done in Plan 1; UI popover/console/kind-filter done in
+> `deployment_obs_ui_popover_health_2026_07_09` (UI-popover). Two items remain OPEN (below): cost-per-target
+> (WS-E/cost-plan-owned) and the P3 error-count drill-down.
+
+- [x] ✅ [BACKEND] P1. Surface the **Tier-0 free wins** (machine_type/zone/labels/boot-disk/rows_in/error/uptime already
+      fetched). — done in Plan 1.
+- [ ] [DATA] P2. Cost-per-target join (see WS-E) → `cost_per_day_usd` on each item. **OPEN — cost-plan-owned** (the
+      field renders; the billing-export JOIN is tracked in `cost_observability_ui_2026_07_08` / its successors).
+- [x] ✅ [BACKEND] P2. Utilisation (cpu/mem/disk per target) from WS-D edge-push. — done in Plan 1 (UI Resources columns
+      in UI-popover).
 - [ ] [BACKEND] P3. Recent error count / last log line — from the EXISTING teed GCS log / Cloud Logging (drill-down
-      only); no new CloudWatch dependency.
-- [ ] [UI] P1. **Name-click detail popover** (right-side panel) — table row shows current/last stats; clicking the
-      target NAME opens a popover with the deep fields (cpu/mem/disk sparklines + timeline, req/min, p99, invocations,
-      revision, running_tasks, rows in/out/error, object-delta breakdown, owning consolidator, absolute used/total GB).
-      Flat table stays scannable; deep detail lives here. (Mock stores these fields already; wire the panel.)
-- [ ] [UI] P1. **Console deep-link** in the popover — "Open in GCP/AWS console →" built from the target's identity: GCE
-      `compute/instancesDetail/zones/{zone}/instances/{name}?project=…`, EC2 `ec2/home?region={r}#InstanceDetails:{id}`,
-      plus Cloud Run service/job, ECS cluster/service, Lambda function URLs. Pure URL construction from fields already
-      fetched (zone/region/id) — no new API call.
-- [ ] [UI] P2. **Kind filter** dropdown next to Mode/Cloud/Status (isolate services vs jobs vs VMs). This is how a user
-      finds always-on services (they have Mode="—") — see Open-Q1.
-- [ ] [REVIEW] P2. Extend `DeploymentItem` in UAC/backend to the mock's optional rich-field shape (already in the UI
-      type) so the wire contract matches — one SSOT, no client-only fields.
+      only); no new CloudWatch dependency. **OPEN — P3 nice-to-have, not yet built.**
+- [x] ✅ [UI] P1. **Name-click detail popover** (deep fields: sparklines + timeline + rows/object-delta + owning
+      consolidator). — done in UI-popover (`WorkHealthCard`).
+- [x] ✅ [UI] P1. **Console deep-link** in the popover (GCE/EC2/Cloud Run/ECS/Lambda URLs from fetched fields). — done
+      in UI-popover (`consoleUrl()`).
+- [x] ✅ [UI] P2. **Kind filter** dropdown (isolate services vs jobs vs VMs). — done in UI-popover.
+- [x] ✅ [REVIEW] P2. Rich-field shape on the wire contract — landed on the LOCAL `DeploymentItem` BaseModel (NOT UAC;
+      it's `# CORRECT-LOCAL`), so the UI type + wire match. — done in Plan 1.
 
 ## WS-D — VM / job WORK-health (not just liveness): capture → store → API → UI
 
@@ -255,49 +247,41 @@ uses ready-state + revision health in place of desired/running.
 
 ### D.5 Todos
 
-- [ ] [INFRA] P0. **Enrich the heartbeat** — the daemon loop samples the D.1 vector from `/proc` (psutil or raw, no new
-      dep) + `mem_slope` from a rolling window; stamp onto the registry entry each tick.
-- [ ] [INFRA] P0. **Workload-PID liveness** — shell passes `CMD_PID`; daemon includes
-      `workload_alive = kill -0 CMD_PID`. Kills the OOM-false-alive without the exit-file race.
-- [ ] [INFRA] P1. **`parse_counters` tail-read fix** — seek-to-end / read last ~64 KB, not `read_text()` on a multi-GB
-      log every tick (existing per-VM I/O waste at scale).
-- [ ] [BACKEND] P1. **Object-delta = manifest lookup** (authoritative write-truth) — extend `/freshness` to an
-      object-count-delta per shard off the manifest the consolidator maintains; NO new bucket walk.
-- [ ] [BACKEND] P1. **Hang detection = control-plane existence + stale heartbeat** (NOT Cloud Monitoring) — reuse the
-      `aggregated_list` / EC2 / Run-execution lists already fetched.
-- [ ] [BACKEND] P1. **Composite health status** (D.3) replacing `_vm_status` — VM 7-state + the per-lifecycle-class
-      `stalled` threshold table (Open-Q3).
-- [ ] [BACKEND] P1. **Service-health sub-taxonomy** (D.3) — `serving`/`scaled-to-zero`/`dead`/`degraded` from ECS
-      desired-vs-running (and Cloud Run ready-state/revision); services always emit a row (Open-Q7). Read-only in v1 (no
-      controls — Open-Q8).
-- [ ] [BACKEND] P2. **`/deployments/{id}/detail`** endpoint serving the rolling window (drill-down); the thin list
-      carries the composite + headline numbers.
-- [ ] [UI] P1. **Health column = composite** — chip text = exact state, colour = 3-tier severity (Open-Q2); deep metrics
-      move to the name-click popover (WS-C), not an inline drill-down. Controls column stays VM-only; services render
-      read-only (Open-Q8).
-- [ ] [BACKEND] P2. **Alerts** on `oom-risk` (before the kill) + `stalled` (progress flatlines, heartbeat fresh) — wire
-      into the existing alerts surface.
+- [x] ✅ [INFRA] P0. **Enrich the heartbeat** — D.1 `/proc` vector + `mem_slope` stamped per tick. — done in Plan 1.
+- [x] ✅ [INFRA] P0. **Workload-PID liveness** — `workload_alive = kill -0 CMD_PID`. — done in Plan 1.
+- [x] ✅ [INFRA] P1. **`parse_counters` tail-read fix** — seek-to-tail (last ~64 KB). — done in Plan 1.
+- [x] ✅ [BACKEND] P1. **Object-delta = manifest lookup** (authoritative write-truth, no new walk). — done in Plan 1.
+- [x] ✅ [BACKEND] P1. **Hang detection = control-plane existence + stale heartbeat**. — done in Plan 1.
+- [x] ✅ [BACKEND] P1. **Composite health status** (D.3, VM 7-state + `stalled` threshold table). — done in Plan 1.
+- [x] ✅ [BACKEND] P1. **Service-health sub-taxonomy** (D.3, `serving`/`scaled-to-zero`/`dead`/`degraded`). — done in
+      Plan 1.
+- [x] ✅ [BACKEND] P2. **`/deployments/{id}/detail`** endpoint serving the rolling window. — done in Plan 1.
+- [x] ✅ [UI] P1. **Health column = composite** (chip text = state, colour = 3-tier severity). — done in UI-popover.
+- [x] ✅ [BACKEND] P2. **Alerts** on `oom-risk` + `stalled` wired into the alert ledger. — done in Plan 1
+      (deployment-api@5e25dce, slot 15).
 - [ ] [OPERATOR] P2. Decide Cloud-Run-job live cpu/mem — **(b)** bucket-truth + exit-137 now (rec), or **(a)** a cgroup
-      self-sampler in the job base image later (still no Monitoring).
+      self-sampler later. **OPEN — (b) effectively adopted** (LIVE/PAPER `stalled` deferred with bucket-truth as v1);
+      formal operator sign-off outstanding.
 
 ## WS-E — Cost-per-target (reuse the billing work)
 
 - [ ] [DATA] P2. Join BigQuery billing-export (GCP) + AWS CUR by resource-id/labels → `$/day` per VM / Cloud Run / ECS /
       Lambda. Coordinate with `cost_observability_ui_2026_07_08.md` (the /ops/costs page) so the per-target cost + the
-      aggregate cost page share ONE query path.
+      aggregate cost page share ONE query path. **OPEN — cost-plan-owned:** the aggregate /ops/costs page + breakdown
+      SHIPPED (`cost_obs_ui_unified_breakdown_2026_07_08`, done); the per-target `$/day`-on-each-inventory-row join is
+      the remaining slice (feeds the `cost_per_day_usd` column). Track under the cost cluster, not here.
 
 ## WS-F — Mock→real cutover + polish
 
-- [ ] [UI] P2. Commit the richer-estate mock (currently uncommitted) once the shape is agreed, so the mock is the
-      committed contract the backend targets.
-- [ ] [UI] P3. Decide the standalone `/deployments` route — keep (deep-linkable) vs fold entirely into the cockpit tab.
-      (Rec: keep.)
-- [ ] [UI] P3. EXPERIMENT badge label — keep `batch·exp` vs plain `batch`. (Rec: keep.)
-- [ ] [REVIEW] P1. When the real census lands, gate `/freshness` fetches to VM kinds only (services use error-rate
-      health, not manifest freshness) — the mock currently fetches freshness for all LIVE rows.
-- [ ] [DESIGN] P3. **Service controls (deferred, Open-Q8)** — scale-to-zero / restart affordances for Cloud Run / ECS
-      services behind a safety design: confirmation modal + audit log + role check. NOT v1 (v1 services are read-only).
-      Its own phase; high blast radius on prod.
+- [ ] [UI] P2. Commit the richer-estate mock once the shape is agreed. **OPEN — now largely MOOT** (the real census + UI
+      landed via Plan 1 + UI-popover; the mock is no longer the contract). Close on next touch.
+- [ ] [UI] P3. Decide the standalone `/deployments` route — keep vs fold. **OPEN — "keep" effectively chosen** (the
+      standalone `Deployments()` route still ships alongside the cockpit tab); flip when formally confirmed.
+- [x] ✅ [UI] P3. EXPERIMENT badge label — kept as `batch·exp` (`ModeBadge` renders it). — done in UI-popover.
+- [x] ✅ [REVIEW] P1. Gate `/freshness` fetches to VM kinds only (services use error-rate health). — done
+      (deployment-ui@e9b77ac; `Cockpit.tsx` + `Deployments.tsx` filter `kind === "VM"`).
+- [ ] [DESIGN] P3. **Service controls (deferred, Open-Q8)** — scale-to-zero / restart affordances behind a safety
+      design. **OPEN — deliberately deferred** (NOT v1; own phase, high blast radius).
 
 ## WS-H — Structured progress reporting (retire the log-scrape) — LAST PHASE, nice-to-have
 
@@ -363,6 +347,18 @@ uses ready-state + revision health in place of desired/running.
   `DeploymentItem` contract (`depends_on` documents the ordering); it's visual-iteration-heavy so best built here
   against the mock. Cost-per-target (WS-E), typed structured-progress (WS-H), and deferred service-controls (WS-F)
   remain here for later phases.
+- 2026-07-09 — **All 8 open questions RESOLVED with the operator** (see the Open-questions section for each decision).
+  Net: Q1 no PLATFORM/INFRA mode (Kind carries services, Mode="—"); Q2 keep 7 states + 3-tier severity colour; Q3
+  per-lifecycle-class `stalled` table; Q5 thin list + `/deployments/{id}/detail`; Q6 mock = inline contract, rest in
+- 2026-07-10 — **Reconciled the parent's boxes with the shipped children (cross-plan audit).** This tracker had 35
+  "open" todos while the extracted work was already `- [x]` DONE in the children — a false-progress hazard. Verified
+  each against the children and mirrored: **WS-B (all 6), WS-C rich-fields/popover/console/kind-filter/rich-contract,
+  WS-D.5 heartbeat/PID/parse_counters/object-delta/hang/composite/service-health/`/detail`/Health-column/alerts, and
+  WS-F EXPERIMENT-badge + `/freshness`-gating are DONE** (in `deployment_obs_backend_kinds_health_2026_07_09` (Plan 1)
+  - `deployment_obs_ui_popover_health_2026_07_09` (UI-popover) — those carry the shas). **Open count 35 → 11**, and the
+    remaining 11 are honestly future/deferred: cost-per-target join (WS-E, cost-plan-owned), P3 error-count drill-down,
+    the operator cpu/mem decision (b-adopted), mock-commit (moot), standalone-route (keep), service-controls (Open-Q8),
+    and the 4 WS-H structured-progress items (LAST PHASE, deferred). No work was lost — only the tracker made honest.
 - 2026-07-09 — **All 8 open questions RESOLVED with the operator** (see the Open-questions section for each decision).
   Net: Q1 no PLATFORM/INFRA mode (Kind carries services, Mode="—"); Q2 keep 7 states + 3-tier severity colour; Q3
   per-lifecycle-class `stalled` table; Q5 thin list + `/deployments/{id}/detail`; Q6 mock = inline contract, rest in

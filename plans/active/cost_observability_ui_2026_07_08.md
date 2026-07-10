@@ -178,24 +178,42 @@ business-context fast-follow (asset_group via labels/tags), deliberately out of 
       `bq` / Athena queries; screenshot). Then the post-phase codex audit — update `billing-cost-observability.md` with
       the UI consumer + `/api/costs` contract.
 
+> **🔄 SUPERSEDED + RECONCILED 2026-07-10 (cross-plan audit).** `status: superseded` →
+> `[cost_obs_backend_sku_usage_enrichment_2026_07_08, cost_obs_ui_unified_breakdown_2026_07_08]` (both COMPLETE). This
+> doc had **20 open** todos while the work had already shipped in the successors — a false-progress hazard. **11 were
+> verified done + flipped** above with the successor sha. The **8 boxes still open** are the genuine residual, and
+> split:
+>
+> - **Real-but-deferred (3):** `183` business-context spend-by-strategy view · `191` AWS-credential WIF cutover
+>   (deploy-time only) · `288` AWS Athena CUR historical backfill (P2 investigation).
+> - **Low-value nice-to-haves (5):** `221` AWS provisional-flag month-aware · `232` credits-first-class-view
+>   (gross/credit/net already shipped; only the effective-discount-rate residual) · `234` usage quantity+unit · `240`
+>   cheaper standard table (explicitly "revisit only if needed") · `243` "other resources" leaf.
+>
+> **Open question for the operator:** migrate the 3 real ones to a small `plans/active/issues/` fast-follow doc (and
+> drop the 5 nice-to-haves), or leave them parked here under this banner? Not decided unilaterally — where residual work
+> lives is your call.
+
 ## Deferred / fast-follow (tracked — not v1)
 
 - [ ] [BACKEND] P3. _(fast-follow, operator-deferred 2026-07-08)_ Business-context enrichment — derive asset_group /
       archetype from GCP `labels`/`system_labels` + AWS resource tags → a spend-by-strategy view (restores and
       generalizes what the retired narrow page showed).
-- [ ] [BACKEND] P3. `BLOCKED-CREDENTIALS` GitHub real billing — replace the dummy provider with the Enhanced Billing API
-      (`GET /organizations/{org}/settings/billing/usage` or the user endpoint) once a **classic PAT with `user` scope**
-      exists. Unblocks the moment the token lands. → **2026-07-10** — re-tracked as a P1 in the "GitHub real billing &
-      GCP Pacific-day alignment" subsection below; the token in hand is a fine-grained PAT **without** billing/`Plan`
-      scope (403 on every billing endpoint), so still credential-blocked pending a Plan-scoped token.
+- [x] ✅ [BACKEND] P3. GitHub real billing — **NOW LIVE** (see the done `[BACKEND+UI] P1` in the "GitHub real billing"
+      subsection below, deployment-api@29a18c088/@c4549daa; token in Secret Manager). Superseded the dummy provider with
+      the Enhanced Billing API (`GET /organizations/{org}/settings/billing/usage` or the user endpoint) once a **classic
+      PAT with `user` scope** exists. Unblocks the moment the token lands. → **2026-07-10** — re-tracked as a P1 in the
+      "GitHub real billing & GCP Pacific-day alignment" subsection below; the token in hand is a fine-grained PAT
+      **without** billing/`Plan` scope (403 on every billing endpoint), so still credential-blocked pending a
+      Plan-scoped token.
 - [ ] [BACKEND] P3. Deployed AWS-credential cutover — wire the Athena reader to the keyless WIF role
       (`_code_builds_aws.py` precedent) so the Cloud Run deployment reaches Athena without a static key. Local dev uses
       the ambient profile; this is only needed at deploy time.
-- [ ] [UI] P3. _(found 2026-07-08 during the row-cap fix)_ Breakdown stale-during-refetch — switching dimension+range
-      quickly on the slow real backend briefly renders the previous fetch's rows under the new column header (e.g.
-      service rows under a "Day" header). Gate the table body on `breakdown.dimension === dimension` (+ matching days),
-      or skeleton the panel while `loadBreakdown` is in flight. Pre-existing; cosmetic-only (self-corrects on fetch
-      completion).
+- [x] ✅ [UI] P3. _(found 2026-07-08 during the row-cap fix)_ Breakdown stale-during-refetch — _(SHIPPED →
+      cost_obs_ui_unified_breakdown, stale-during-refetch fix)_ switching dimension+range quickly on the slow real
+      backend briefly renders the previous fetch's rows under the new column header (e.g. service rows under a "Day"
+      header). Gate the table body on `breakdown.dimension === dimension` (+ matching days), or skeleton the panel while
+      `loadBreakdown` is in flight. Pre-existing; cosmetic-only (self-corrects on fetch completion).
 
 ## Data-fidelity audit findings (2026-07-08) — UI vs BigQuery/Athena source
 
@@ -213,7 +231,8 @@ on the resource table + the running backend endpoints (last-30d window).
       have none). Corrected the codex note. **deployment-api@`f10b0914`** + **deployment-ui@`0f653068`** — both full QGs
       green (backend pytest incl. a credit-netting test; vitest 911 + a pw:L2 derivation regression); live `:5183` net
       **$12,593.31** reconciles to the bq probe **$12,593.32**.
-- [ ] [BACKEND] P2. **AWS shows unblended usage-only, not net / not invoice-total.** `aws_facts_sql` sums
+- [x] ✅ [BACKEND] P2. **AWS shows unblended usage-only, not net / not invoice-total.** _(SHIPPED →
+      cost_obs_backend_sku_usage_enrichment@301ccfc — AWS net + invoice reconciliation)_ `aws_facts_sql` sums
       `line_item_unblended_cost` and filters `line_item_type IN ('Usage','DiscountedUsage')` — excludes Tax / Credit /
       Fee / RIFee / SavingsPlan\* and ignores `line_item_net_unblended_cost`. So the AWS total (~$213/30d) is usage
       spend, not the AWS invoice. Decide net-of-discounts (`net_unblended_cost`) + a tax/fee line so it reconciles; at
@@ -223,17 +242,19 @@ on the resource table + the running backend endpoints (last-30d window).
 
 ### Granularity we HAVE but don't surface (near-zero extra query cost)
 
-- [ ] [UI+BACKEND] P2. **SKU (GCP) / usage_type (AWS) breakdown dimension** — highest-value add. The #1 GCP line item is
-      "Regional Coldline Class A Operations **$2,870/30d**", invisible today inside "Cloud Storage"; SKU is the "why is
-      this service expensive" axis. Resource table already carries `sku.description`; AWS has `line_item_usage_type`.
-      Add as a 6th breakdown dimension.
-- [ ] [UI+BACKEND] P2. **Spot vs On-Demand (purchase option) split** — GCP SKU exposes "Spot Preemptible E2…"; AWS has
-      `pricing_purchase_option`. Directly validates the SPOT-VMs-for-backfill HARD RULE + quantifies the savings.
+- [x] ✅ [UI+BACKEND] P2. **SKU (GCP) / usage_type (AWS) breakdown dimension** _(SHIPPED → backend@9b4e59d +
+      UI@0d33ef0)_ — highest-value add. The #1 GCP line item is "Regional Coldline Class A Operations **$2,870/30d**",
+      invisible today inside "Cloud Storage"; SKU is the "why is this service expensive" axis. Resource table already
+      carries `sku.description`; AWS has `line_item_usage_type`. Add as a 6th breakdown dimension.
+- [x] ✅ [UI+BACKEND] P2. **Spot vs On-Demand (purchase option) split** _(SHIPPED → backend@947a48b + UI@5b99519)_ — GCP
+      SKU exposes "Spot Preemptible E2…"; AWS has `pricing_purchase_option`. Directly validates the
+      SPOT-VMs-for-backfill HARD RULE + quantifies the savings.
 - [ ] [UI+BACKEND] P3. **Credits/discounts as a first-class view** — we already fetch GCP credits; surface gross →
       credits → net + the effective discount rate (how much promo/CUD/SUD is saving).
 - [ ] [BACKEND] P3. **Usage quantity + unit** (GCP `usage.amount/unit`; AWS `line_item_usage_amount/pricing_unit`) →
       unit economics ($/GB-month, $/vCPU-hour), and GB-stored vs GB-egress for buckets.
-- [ ] [BACKEND] P3. **Zone (GCP `location.zone`) / AZ (AWS `line_item_availability_zone`)** — finer than region.
+- [x] ✅ [BACKEND] P3. **Zone (GCP `location.zone`) / AZ (AWS `line_item_availability_zone`)** _(SHIPPED →
+      backend@537af3d — zone dimension)_ — finer than region.
 
 ### Structural
 
@@ -353,39 +374,42 @@ currently drops; same enrichment as the audit's "SKU dimension" finding) and gro
 Monitoring / CloudWatch (extra API cost + an IAM grant we don't have); anything not in the billing export is dropped,
 not sourced elsewhere.** Confirm exact field/label names at implementation time (grep-then-read).
 
-- [ ] [UI] P2. **Merge the breakdown bars + table into one table.** Today `BreakdownPanel` renders the same rows twice —
-      a top-12 bar chart (left) and a sortable table (right), duplicating label + cost. Collapse to ONE scrollable,
-      sortable table with an inline proportional **bar-in-cell that carries the cost value** (bar width = cost / max),
-      dropping the separate bars column. Keep the sticky header + 400px scroll region; this frees horizontal space for
-      the detail columns below and removes the duplication.
-- [ ] [BACKEND+UI] P2. **Gross / credits / net split per breakdown row (bifurcation).** Answers the operator Q — yes,
-      the data supports it: `credit` is per-`CostRecord` at (day, service, resource, region) granularity, _finer_ than
-      any breakdown group, so gross = Σcost, credit = Σcredit, net = Σ(cost+credit) reconcile for every dimension. Add
-      `gross` + `credit` to `BreakdownRow` (currently net-only) and populate in `_grouped` / `_by_resource` / `_by_day`;
-      render net as primary with gross + credit columns, shown only where credit ≠ 0 (GCP). Pushes the KPI-band
-      treatment down into the table.
-- [ ] [BACKEND+UI] P2. **Bucket detail columns** (dimension = bucket): total stored **GB** + a **storage-class split**
-      (Standard / Nearline / Coldline / Archive) + derived **$/GB** per bucket — **all from the billing export itself,
-      no Cloud Monitoring / CloudWatch** (operator: don't pay to query stats we already have). Pull `sku.description` +
-      `usage.amount_in_pricing_units` (unit `gibibyte month`) on the storage SKUs, group by `resource.name`, convert
-      GiB-month → avg GB over the window; show **GB, not raw bytes**. AWS analog = CUR `line_item_usage_amount` on the
-      S3 storage usage-types. **Dropped (not billable → absent from BQ/Athena, per operator's "if not in BQ, drop it"):
-      the soft-delete / noncurrent split (verified — no soft-delete SKU in the export) + object count (only Class-A/B
-      _operations_ counts are billed, not object totals).**
-- [ ] [BACKEND+UI] P2. **Resource detail + waste flags** (dimension = resource): machine type (e.g. `e2-highmem-16` →
-      **16 vCPU · 128 GB**) per VM from the billing `system_labels` (`compute.googleapis.com/machine_spec`, + `cores` /
-      `memory`) — no Compute API. Plus the **cost-waste the operator actually wants** (their case: a static IP billed
-      unused for ~4 months): **idle static-IP cost** — the `Static Ip Charge` SKU is a reserved IP billed while NOT
-      attached (distinct from `External IP Charge on a Standard VM` = in-use), keyed by `resource.name` (verified live:
-      `harsh-static-ip` $5.95, `deployment-dashboard-ip` $3.35, `grafana` $2.24 …); and **orphaned-disk cost** —
-      `… PD Capacity` SKUs keyed by disk `resource.name`, flag disks with no matching running VM (verified:
-      `ikenna-windows-tokyo-restored` SSD **$68.62/30d**). AWS analog = idle Elastic-IP + unattached-EBS usage-types in
-      the CUR. **All billing-native.** (Dropped, per operator: the live IP _address_ / current disk from the Compute API
-      — they want the _cost of idle resources_, not network config, and not running-VM detail.)
-- [ ] [UI] P3. **Dimension-aware columns + leaf tables.** Merged table = label · [bar+cost] · net (· gross · credit) ·
-      share by default; add bucket columns when `dimension=bucket` / VM columns when `dimension=resource` (vm rows).
-      Apply the same detail columns to the `LeafPanel` "Top compute instances" / "Top storage buckets" tables (their
-      natural home too). Detail columns scroll horizontally on narrow widths. `[UI]` gate: `pw:L2` + a cited spec.
+- [x] ✅ [UI] P2. **Merge the breakdown bars + table into one table.** _(SHIPPED → cost_obs_ui_unified_breakdown@88c4b70
+      et al.)_ Today `BreakdownPanel` renders the same rows twice — a top-12 bar chart (left) and a sortable table
+      (right), duplicating label + cost. Collapse to ONE scrollable, sortable table with an inline proportional
+      **bar-in-cell that carries the cost value** (bar width = cost / max), dropping the separate bars column. Keep the
+      sticky header + 400px scroll region; this frees horizontal space for the detail columns below and removes the
+      duplication.
+- [x] ✅ [BACKEND+UI] P2. **Gross / credits / net split per breakdown row (bifurcation).** _(SHIPPED → backend@a6bd1f8 +
+      UI@f27e40f)_ Answers the operator Q — yes, the data supports it: `credit` is per-`CostRecord` at (day, service,
+      resource, region) granularity, _finer_ than any breakdown group, so gross = Σcost, credit = Σcredit, net =
+      Σ(cost+credit) reconcile for every dimension. Add `gross` + `credit` to `BreakdownRow` (currently net-only) and
+      populate in `_grouped` / `_by_resource` / `_by_day`; render net as primary with gross + credit columns, shown only
+      where credit ≠ 0 (GCP). Pushes the KPI-band treatment down into the table.
+- [x] ✅ [BACKEND+UI] P2. **Bucket detail columns** _(SHIPPED → backend@171a61c + UI)_ (dimension = bucket): total
+      stored **GB** + a **storage-class split** (Standard / Nearline / Coldline / Archive) + derived **$/GB** per bucket
+      — **all from the billing export itself, no Cloud Monitoring / CloudWatch** (operator: don't pay to query stats we
+      already have). Pull `sku.description` + `usage.amount_in_pricing_units` (unit `gibibyte month`) on the storage
+      SKUs, group by `resource.name`, convert GiB-month → avg GB over the window; show **GB, not raw bytes**. AWS analog
+      = CUR `line_item_usage_amount` on the S3 storage usage-types. **Dropped (not billable → absent from BQ/Athena, per
+      operator's "if not in BQ, drop it"): the soft-delete / noncurrent split (verified — no soft-delete SKU in the
+      export) + object count (only Class-A/B _operations_ counts are billed, not object totals).**
+- [x] ✅ [BACKEND+UI] P2. **Resource detail + waste flags** _(SHIPPED → backend@8d8802f idle-IP/orphaned-disk
+      cost-waste + UI@047494b)_ (dimension = resource): machine type (e.g. `e2-highmem-16` → **16 vCPU · 128 GB**) per
+      VM from the billing `system_labels` (`compute.googleapis.com/machine_spec`, + `cores` / `memory`) — no Compute
+      API. Plus the **cost-waste the operator actually wants** (their case: a static IP billed unused for ~4 months):
+      **idle static-IP cost** — the `Static Ip Charge` SKU is a reserved IP billed while NOT attached (distinct from
+      `External IP Charge on a Standard VM` = in-use), keyed by `resource.name` (verified live: `harsh-static-ip` $5.95,
+      `deployment-dashboard-ip` $3.35, `grafana` $2.24 …); and **orphaned-disk cost** — `… PD Capacity` SKUs keyed by
+      disk `resource.name`, flag disks with no matching running VM (verified: `ikenna-windows-tokyo-restored` SSD
+      **$68.62/30d**). AWS analog = idle Elastic-IP + unattached-EBS usage-types in the CUR. **All billing-native.**
+      (Dropped, per operator: the live IP _address_ / current disk from the Compute API — they want the _cost of idle
+      resources_, not network config, and not running-VM detail.)
+- [x] ✅ [UI] P3. **Dimension-aware columns + leaf tables.** _(SHIPPED → UI@88c4b70)_ Merged table = label · [bar+cost]
+      · net (· gross · credit) · share by default; add bucket columns when `dimension=bucket` / VM columns when
+      `dimension=resource` (vm rows). Apply the same detail columns to the `LeafPanel` "Top compute instances" / "Top
+      storage buckets" tables (their natural home too). Detail columns scroll horizontally on narrow widths. `[UI]`
+      gate: `pw:L2` + a cited spec.
 
 **Codex SSOTs:** `codex/05-infrastructure/billing-cost-observability.md` (exports + net/gross/credit contract),
 `codex/06-coding-standards/ui-testing-layers.md` (Playwright L2 gate).
@@ -393,6 +417,15 @@ not sourced elsewhere.** Confirm exact field/label names at implementation time 
 ## Progress Log
 
 _(Session findings go here — agent memory writes are BANNED. Append dated notes as work proceeds.)_
+
+- 2026-07-10 — **Reconciled against the successors (cross-plan audit).** This `superseded` plan showed 20 open todos
+  while its successors (`cost_obs_backend_sku_usage_enrichment` 11/0, `cost_obs_ui_unified_breakdown` 8/0) had already
+  shipped the work. Verified each open todo against the successor done-items and **flipped 11 with the successor sha**
+  (SKU dimension, spot/on-demand, gross/credit/net bifurcation, bucket detail, resource+waste incl.
+  idle-IP/orphaned-disk cost, zone, AWS net/invoice, merge-bars-table, dimension-aware leaf tables, stale-refetch fix,
+  GitHub billing → LIVE). **Open 20 → 8**, all genuine residual (3 real-deferred + 5 nice-to-have — see the banner above
+  the Deferred section). No work lost; the tracker made honest. Residual home = an open operator question (issue-doc vs
+  park here).
 
 - 2026-07-08 — Plan authored (slot 4). Backends verified live earlier this session: GCP BQ resource-level export + AWS
   CUR/Athena (`cur_uts_cost_usage` created via a manual crawler run, real per-service/resource/bucket queries returned
