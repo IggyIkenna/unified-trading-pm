@@ -88,6 +88,37 @@ engine.
   launch).
 - Tracked as a **human-driven** PM plan (`assigned_vm: NA`), not agent-orchestrator-dispatched.
 
+## Scope correction (2026-07-10, operator-flagged) — read this before trusting todos 1-17 as "coverage"
+
+Todos 1-17 below build and prove the **tool** works (real VMs, real GCS writes, real skip/force mechanics, the
+bucket-routing bugs found + fixed) — but every one of those real-VM proofs so far ran against exactly **ONE shard per
+service**: `CEFI/BINANCE-FUTURES/2026-07-05`. That is a mechanism proof, not a coverage audit. It does **NOT** mean "the
+pipeline is verified" for any other asset_group, venue, or data_type, and it does **NOT** cover the live leg for either
+service (IS's live leg was never actually launched; MTDS's live leg had no working test-bucket-routed launcher until
+todo 16 built one — still not exercised for real).
+
+**What "100%" actually requires** (operator's own framing): for **every real shard** (not a synthetic/invented one) —
+across **all 5 asset groups** — prove BOTH (a) `--force` genuinely re-downloads via the real adapter (catches
+orphaned/broken adapters, bad writes), and (b) skip-if-fresh genuinely fires when data already exists (catches bad reads
+/ broken freshness checks) — for BOTH batch and live modes. One day of data per shard is enough (smoke test, not a
+historical backfill) — but it must be a day where that shard actually has real data, so the force-leg has something
+genuine to prove against.
+
+**Real scope, computed directly from the UAC venue/data-type registries (not estimated)**:
+
+| Service                  | Real shard count | Basis                                                                                                                                           |
+| ------------------------ | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| instruments-service      | **108**          | `(asset_group, venue)` — `VENUES_BY_ASSET_GROUP`: cefi=26, defi=64, tradfi=8, sports=8, prediction=2                                            |
+| market-tick-data-service | **344**          | `(asset_group, venue, data_type)` — `get_expected_data_types_for_venue()` per real venue: cefi=95, defi=153, tradfi=23, sports=69, prediction=4 |
+
+**Real per-shard timing, measured from actual runs this session** (force+skip only, batch — live adds more): IS ≈ 6.2
+min/shard, MTDS ≈ 9.7 min/shard. Legs currently run **sequentially**, not in parallel. A literal full batch-only sweep
+is ≈ 11.2 hours (IS: 108 × 6.2 min) + ≈ 55.6 hours / 2.3 days (MTDS: 344 × 9.7 min) ≈ **2.75 days combined**, before
+adding the live leg for either service. This is real GCE VM time (SPOT-priced, cheap per-hour, but non-trivial in
+aggregate) and real vendor-API bandwidth (Tardis etc.) across hundreds of real downloads — a genuine multi-day,
+real-infra undertaking, not something to run unilaterally in the background without the operator's explicit
+sizing/pacing input. See todos 18-21 below for the tracked remaining scope.
+
 ## Verified ground truth (read directly from code, not inferred)
 
 1. **Test-bucket routing already exists — no new code needed for it.**
@@ -184,7 +215,8 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       (real VM `instr-backfill-cefi-pchk-0710125724-f-binance-futures`, `EXIT_STATUS=0`, 687 real BINANCE-FUTURES
       instrument records written to the TEST bucket, manifest `captured`), skip leg `passed` with `skip_proof: genuine`
       (real VM `...-s-binance-futures`, `EXIT_STATUS=0`, skip-signal log line found, object fingerprint unchanged). Gate
-      met in full.
+      met in full — **as scoped**: this proves the SCRIPT/MECHANISM works on one real shard, not full coverage. See
+      "Scope correction" above + todo 18/20 for the actual 108-shard matrix, not yet run.
 
 - [x] 6. ✅ [BACKEND] P0. `market-tick-data-service/scripts/pipeline_e2e_check.py` — market-tick-data-service@b4c0bec5 —
       evidence: real VM run (day=2026-07-05, CEFI/BINANCE-FUTURES/trades) correctly (a) sampled a real PROD-captured
@@ -194,7 +226,8 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       adapter/download path end-to-end. **One leg of this Gate is NOT met as originally scoped**: that force-run landed
       in the PROD bucket, not the TEST bucket, due to a real bug now fixed (see Progress Log finding #8) —
       re-verification against a real VM post-fix is the one item **not completed** in this session; flagged honestly
-      below rather than claimed done.
+      below rather than claimed done. **This is the SCRIPT working on one real shard (CEFI/BINANCE-FUTURES) — not the
+      344-shard, 5-asset-group coverage matrix.** See "Scope correction" above + todo 19/21, not yet run.
 
 - [x] 7. ✅ [DATA] P1. IS/MTDS read-bucket asymmetry verified live (not just by reading code) — evidence in Progress
       Log: IS's skip-leg fired `skip_proof: genuine` self-contained against the TEST bucket (todo 5); MTDS's skip-leg
@@ -219,7 +252,8 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       `mtds-backfill-cefi-pipelinecheck-*`, force-leg genuinely downloaded 2,084,208 real Tardis rows (proves the
       adapter path); report at `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_05.md` (`status: fail` —
       honestly reflects the PROD-bucket-write bug found + fixed this session, not yet re-verified clean end-to-end
-      post-fix, see Progress Log).
+      post-fix, see Progress Log). **"Real MVP shards" here means ONE real shard, verified twice (before/after the
+      bucket-routing fix) — not the MVP or full shard set.** See "Scope correction" above.
 
 - [x] 12. ✅ [REVIEW] P2. Neither script referenced by its service's `quality-gates.sh` — verified via
       `rg "pipeline_e2e_check" instruments-service/scripts/quality-gates.sh market-tick-data-service/scripts/quality-gates.sh`
@@ -318,6 +352,41 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       `total_records=2084208     complete=True` — genuinely fixed going forward (no new phantom rows from any
       `--test-run` after market-tick-data-service@73d88332), but these 3 existing rows are still there and need an
       explicit operator decision on cleanup.
+
+- [ ] 18. [DATA] P0. **Full IS batch matrix — 108 real shards × force+skip, all 5 asset groups.** Not started. Run
+      `instruments-service/scripts/pipeline_e2e_check.py` for every real `(asset_group, venue)` pair (cefi=26, defi=64,
+      tradfi=8, sports=8, prediction=2), one representative real-data day per shard (a day where that venue genuinely
+      has PROD data, sampled at runtime — never hardcoded), both legs. Goal: catch any orphaned/broken adapter, bad
+      read/write, or missing CLI control per the operator's own framing — a shard that can't force-refetch or can't
+      skip-if-fresh is a real finding, not a shrug. Gate: a single consolidated report (or per-AG reports) showing
+      `total=216` (108×2) with an honest per-shard pass/fail/ambiguous breakdown — no shard silently skipped. Est. ≈
+      11.2 hours sequential (108 × ~6.2 min/shard) — needs operator pacing input (run continuously vs. chunked per-AG
+      vs. parallelized across independent VMs) before launching; NOT started without that input.
+
+- [ ] 19. [DATA] P0. **Full MTDS batch matrix — 344 real shards × force+skip, all 5 asset groups.** Not started. Same
+      shape as todo 18, but `(asset_group, venue, data_type)` via `get_expected_data_types_for_venue()`'s real registry
+      (cefi=95, defi=153, tradfi=23, sports=69, prediction=4) — never the raw venue×data_type cross-product (which
+      overcounts ~6× since not every venue supports every data_type for its asset_group). Gate: consolidated report
+      showing `total=688` (344×2) with honest per-shard verdicts, including the new Bucket-paths table per cell so any
+      parquet/manifest-bucket asymmetry (todo 17's class of bug) is caught for every venue, not just CeFi-Tardis. Est. ≈
+      55.6 hours / 2.3 days sequential (344 × ~9.7 min/shard) — needs operator pacing input before launching.
+
+- [ ] 20. [DATA] P1. **IS live-leg matrix — real shards, real launch.** Not started; the current report's live-leg
+      column has never been genuinely exercised (`_adapter.py` always-forces under `--mode live`, but no real IS live VM
+      has actually been launched by this tool). Scope: real shards across MVP venues at minimum (full 108 if resourced)
+      — confirm the live leg genuinely writes to the TEST bucket and produces a real manifest row, not just a documented
+      assumption that `--mode live` behaves like `--force`.
+
+- [ ] 21. [DATA] P1. **MTDS live-leg matrix — real shards, real launch, now actually possible.** Not started. Todo 16
+      built the first real test-bucket-routed, bounded, auto-shutdown MTDS live launcher
+      (`launch-mtds-live.sh --test-run --max-duration-seconds`) — before this session it was a documented, unexercised
+      no-op. This todo is to actually USE it: run a real bounded live smoke check per real shard (or per MVP venue at
+      minimum) and confirm (a) the WS connector for that venue is registered (`WS_FEED_CONNECTOR_FACTORIES` — Phase 3.5
+      rollout is NOT fully populated yet per `websocket_streaming_handler.py`'s own docstring, so some real venues will
+      genuinely fail with `NotImplementedError` — that's an honest finding, not a bug in this check), (b) the bucket
+      routes to `-test-`, (c) the bounded stop actually fires and the VM self-deletes. Est. per-shard cost similar to or
+      higher than batch (WS connection setup + the bounded wait) — needs operator sizing input; also blocked on knowing
+      which real venues currently HAVE a registered connector (a quick, cheap enumeration — not yet done).
 
 ## Verification (workspace-wide, before this plan is considered shippable)
 
