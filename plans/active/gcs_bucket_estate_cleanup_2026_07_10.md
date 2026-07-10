@@ -343,6 +343,62 @@ env-split/env-mismatch variants of already-KEEP-classified kinds, e.g. extra `-d
 None. Everything that could be finished within the "confirm real evidence before acting" standard was finished;
 everything else is flagged above with the specific reason it wasn't force-decided.
 
+## 5b. Post-completion regression found + fixed during final CI sanity check
+
+After this plan's Final Report (§4-5) was written and the two shipped PRs went green, a routine final `gh run list`
+sanity check on unified-trading-library found a FAILURE that wasn't visible when the report was written. Root-caused and
+fixed in full; documenting since it materially changes the "genuinely blocked: none" claim's honesty bar (it wasn't
+blocked, but it also wasn't actually fully done at report-write time).
+
+**What broke**: the `deployment-service/configs/cloud-providers.yaml` kind removals (dex-swaps, evm-defi, solana-defi,
+lending-indices, oracle-prices, liquidations, pnl-store-defi, positions-store-defi, risk-store-defi, features-mtf
+PREDICTION/SPORTS) were correct on the SSOT itself, but I missed two downstream consumers that needed the identical
+edit:
+
+1. **`unified-trading-library/tests/fixtures/cloud-providers.yaml`** — a checked-in FULL MIRROR of the real yaml, kept
+   so this repo's tests run standalone without a sibling `deployment-service` checkout (wired via `tests/conftest.py`
+   setting `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` process-wide, before pytest collection). I edited the real yaml but
+   never this mirror, which caused a genuine collection-vs-execution split: pytest collection (which runs before any
+   test's `monkeypatch` fixtures fire) built `test_every_yaml_cell_resolves`'s parametrize list against the STALE
+   fixture (conftest's early env-var default was still active), while the test body itself explicitly
+   `monkeypatch.delenv`'d that override to test against the REAL yaml — so cases like `dex-swaps` got parametrized at
+   collection time but then failed with `BucketNamingError: Unknown kind 'dex-swaps'` at execution time. 29 tests failed
+   this way (`test_bucket_naming_cell_sweep.py` + `test_bucket_naming.py`, both static hardcoded tables and the dynamic
+   sweep). Fixed by mirroring the exact same kind removals into the fixture yaml, then trimming the two hardcoded
+   parametrize tables (`test_flat_kind_resolves_correct_prefix`, `_DEFI_PURPOSE_BUCKETS_SHIPPED_2026_05_08`) to match.
+   Full suite re-run: 264/264 passed.
+2. **`deployment-service/deployment_service/cli/utils/manifest_reader.py`'s `_EXTRA_BUCKET_KINDS`** — a genuinely MISSED
+   live caller the original code-search didn't surface. `_resolve_all_buckets()` iterates this dict with an UNGUARDED
+   `resolve_bucket_name()` call per kind, and `resolve_all_buckets()` is the public method "used by the deployment-API
+   data-status route to feed canonical buckets into `compute_coverage_for_bucket`" (per its own docstring) — i.e. a LIVE
+   production endpoint. With 6 of its 11 listed kinds removed from the yaml, every `market-tick-data-service`/`defi`
+   data-status call would have started raising `BucketNamingError` on the first dead kind. Fixed by trimming the same 6
+   entries from `_EXTRA_BUCKET_KINDS`; verified `resolve_all_buckets()` end-to-end against the real yaml post-fix
+   (`ManifestReader().resolve_all_buckets("market-tick-data-service", "defi")` → 6 valid bucket names, no exception).
+3. Also found + fixed: `deployment-service/scripts/aws/setup-defi-buckets.sh` hardcoded a 10-bucket `BUCKETS` array
+   (bash strings, not `resolve_bucket_name()`) that still listed the 6 dead kinds by name — if ever run with `--apply`
+   it would silently recreate the exact orphaned buckets this plan just deleted. Trimmed to the 4 surviving kinds
+   (dex-pools, eigenlayer-rewards, events, config-store).
+4. Separately (unrelated to the yaml edit, but caught by the same final QG pass): `cf_manifest_audit.py` had a CI-only
+   "lint-codex" regression (deep import `config_interface.cloud_config` → should be top-level `config_interface`; a
+   false-positive print()-in-docstring match from prose explaining the no-bare-print convention, reworded not
+   code-changed). Full `quality-gates.sh` (not `--no-fix`) now green end-to-end (`✅ ALL QUALITY GATES PASSED`).
+
+**Lesson for future bucket/config SSOT edits**: `cloud-providers.yaml` has at least 4 copies in this workspace
+(deployment-service canonical, unified-trading-pm mirror, unified-trading-library test fixture, unified-api-contracts
+packaged fallback) plus at least one hardcoded-string shadow (`setup-defi-buckets.sh`) and one dict-shadow
+(`manifest_reader.py::_EXTRA_BUCKET_KINDS`). A kind-removal edit needs `rg -l '<kind>'` across the FULL workspace, not
+just `resolve_bucket_name(kind=...)` call-sites, before it can be called complete.
+
+**Ship status as of this entry**: fixes are made, verified (full `quality-gates.sh` green on unified-trading-library;
+`resolve_all_buckets()` end-to-end verified on deployment-service), but NOT YET SHIPPED — blocked on quickmerge's
+pre-flight dependency-cleanliness gate: `unified-api-contracts` has a LIVE concurrent-agent WIP (mtime actively
+advancing, ~20s old on last check — `tests/unit/test_cme_options_universe.py` +
+`unified_api_contracts/registry/tradfi_instrument_universe.py`), which blocks unified-trading-library's quickmerge
+(cascades to unified-api-contracts), which in turn blocks deployment-service's quickmerge (depends on both). Per the
+liveness-gated inherited-dirty-WIP rule, this is PROTECT (not inherit) — waiting for it to settle naturally rather than
+touching another agent's in-progress work. Will retry quickmerge once that repo's working tree goes clean.
+
 ## 6. Model-tier note (repeating from frontmatter, since it matters for how much to trust this)
 
 Per `AUTONOMOUS_AGENT_RULES.md`'s self-check, a long cross-repo autonomous loop like this one normally routes to
