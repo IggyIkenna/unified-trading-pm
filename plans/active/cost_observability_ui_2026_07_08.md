@@ -306,24 +306,29 @@ CUR (2026-07-09). Operator decisions captured inline.
 
 Two focused items this pass; the multi-account/multi-org idea is **explicitly out** (decision recorded below).
 
-- [ ] [BACKEND] P1. **GCP Pacific-day bucketing (GCP-only) — make BigQuery match the console.** The day mismatch is
-      **GCP only**: `gcp_facts_sql` buckets by `DATE(usage_start_time)` = **UTC**, but the GCP billing console/reports
-      group by **US Pacific** (empirically proven — re-windowing the export on Pacific midnight / 07:00 UTC moved Jul3–9
-      gross from ~8% off to **1.6%** off the console CSV). AWS needs **no change**: the CUR `line_item_usage_start_date`
-      and AWS Cost Explorer are **both UTC**, so AWS already ties out (Pacific-converting AWS would BREAK its match).
-      Fix: group + filter GCP on `DATE(usage_start_time, 'America/Los_Angeles')` (keep pruning on `_PARTITIONTIME`, pad
-      unchanged). Unit test asserting the Pacific TZ is in the SQL; reword the header TZ tooltip (GCP now
-      Pacific-matched, AWS UTC-matched).
-- [ ] [BACKEND] P1. **GitHub real billing — replace the dummy provider.** `github_facts` is a deterministic dummy
-      (`is_placeholder=True`). Wire the real GitHub billing API, token sourced through `DeploymentApiConfig` (**NEVER**
-      `os.getenv`), mapped to `CostRecord` (USD-native), placeholder banner removed. Personal-account billing
-      (`IggyIkenna` is a **User**, in no orgs) → the enhanced usage report
-      `GET /users/{username}/settings/billing/usage` (per-day × product × repo × SKU net $) is the target; legacy
-      `/settings/billing/{actions,packages,shared-storage}` are minutes/GB fallbacks. **BLOCKER (verified 2026-07-10):**
-      the token we have is a **fine-grained PAT without the "Plan" account permission** → **403 "Resource not
-      accessible"** on every billing endpoint. Needs a token with billing read (fine-grained **Account → Plan →
-      Read-only**, or a classic PAT with `user` scope). Build the provider + config wiring now; live-verify + drop
-      `is_placeholder` the moment a billing-scoped token lands.
+- [x] ✅ [BACKEND] P1. **GCP Pacific-day bucketing (GCP-only) — make BigQuery match the console.** The day mismatch was
+      **GCP only**: `gcp_facts_sql` bucketed by `DATE(usage_start_time)` = UTC, but the GCP billing console groups by
+      **US Pacific**. AWS needs no change (CUR + Cost Explorer are both UTC). Fix: group + filter GCP on
+      `DATE(usage_start_time, 'America/Los_Angeles')` (pruning still on `_PARTITIONTIME`). - ✅ **2026-07-10 —
+      deployment-api@`29a18c088`** + **deployment-ui@`4e14b450`** (tooltip). Verified vs live BQ: Pacific brings the
+      Jul3-9 window gross **£2,959.65 → £2,800.60** (−5.4%, toward the console's Pacific convention; exact tie-out
+      drifts as both the export and the CSV keep accruing late rows). Unit tests:
+      `..._buckets_and_windows_in_us_pacific` + `test_aws_facts_sql_stays_utc_no_timezone_conversion`; header `InfoTip`
+      reworded (GCP Pacific-matched, AWS UTC-matched) with a pw:L2 assertion (`cost-observability.spec.ts` 16/16). Full
+      backend + UI QG green.
+- [x] ✅ [BACKEND+UI] P1. **GitHub real billing — LIVE.** `github_billing.py` calls the Enhanced Billing usage report
+      (`GET /users|organizations/{acct}/settings/billing/usage`), token from Secret Manager via `get_secret_client`,
+      mapped per-day x product x repo x SKU to `CostRecord` (cost=gross, credit=net−gross); `github_facts` tries real →
+      falls back to the labelled dummy on any failure (non-regressive). - ✅ **2026-07-10 — deployment-api@`29a18c088`**
+      (provider) + **@`c4549daa`** (real-token wiring + product prettify) + **deployment-ui@`89d5b276`** (dummy note /
+      footer gate on `is_placeholder`). Operator (Ikenna) minted a fine-grained PAT (**Account → Plan → Read-only**,
+      owner `IggyIkenna`), stored it as Secret Manager `github-billing-token` in `central-element-323112` with read for
+      `github-token-sa`; config default now points there. **Live-verified end-to-end:** real usage flows (30d **gross
+      $1,415.98 / credit −$98.29 / net $1,317.69**, GitHub Actions across 832 paid line items, `placeholder=False`, HTTP
+      200 on both month queries). Field names + `net=cost+credit` mapping confirmed against the live response; lowercase
+      products prettified (`actions`→`Actions`); RFC3339 `date` → day. UI: the "Dummy data" note becomes a "Live" note +
+      the source footer reads "GitHub — Enhanced Billing" for real data (both gate on `is_placeholder`, so the mock/pw
+      path keeps the dummy — 16/16). 10 unit tests + full backend & UI QG green.
 
 **DECISION — multi-account / multi-org is NOT an in-app selector (2026-07-10, operator).** New AWS/GCP accounts for
 Odum-Research (opened to harvest fresh cloud credits) will be **entirely separate** — separate org, project, BigQuery
@@ -592,3 +597,28 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
   **User** in no orgs, and the token we hold is a **fine-grained PAT without the `Plan` permission** → **403** on every
   billing endpoint — real GitHub $ needs a Plan-scoped token (operator credential ask). Code for GCP-Pacific + the
   GitHub provider scaffold follows in this session; GitHub live-verify pends the token.
+- 2026-07-10 — **SHIPPED: GCP Pacific-day bucketing + real GitHub billing provider (slot 4, batched per operator).**
+  Operator asked to batch the work + push once at the end rather than per-item git rituals. Both backend items built,
+  gated, and quickmerged.
+  - **GCP Pacific TZ — deployment-api@`29a18c088` + deployment-ui@`4e14b450`.** `gcp_facts_sql` buckets + windows on
+    `DATE(usage_start_time, 'America/Los_Angeles')`; AWS untouched (both sides UTC). Verified vs live BQ (Jul3-9 gross
+    £2,959.65 UTC → £2,800.60 Pacific, −5.4% toward the console). Header `InfoTip` reworded; pw:L2 16/16.
+  - **GitHub real billing — deployment-api@`29a18c088` (same commit).** New
+    `services/cost_observability/github_billing.py` (Enhanced Billing usage report → CostRecord; token via
+    `get_secret_client`, `GH_BILLING_PAT`→`GH_PAT`); `github_facts` real-or-dummy orchestrator (non-regressive
+    fallback). 8 new unit tests (mapping/window/403/no-token/fallback/degrade)
+    - standalone smoke. **Live data BLOCKED-CREDENTIALS** — the in-hand fine-grained PAT lacks the `Plan` scope (403),
+      so the page still renders the dummy; provisioning a Plan-scoped `GH_BILLING_PAT` secret flips it to real with zero
+      code.
+  - Both full QGs green (backend 123s / UI 18s); `strict-quickmerge` clean on both. **Deferred to next pass:** GitHub
+    live-verify (operator provisions the Plan-scoped token) + the AWS CUR historical backfill go/no-go.
+- 2026-07-10 — **GitHub real billing is LIVE (token landed, verified end-to-end).** Operator (Ikenna) minted the
+  Plan-scoped fine-grained PAT (Account → Plan → Read-only, owner `IggyIkenna`), stored it as Secret Manager
+  `github-billing-token` in `central-element-323112` and granted read to `github-token-sa`. Pointed the config default
+  at that secret; live-verified the whole path: `github_facts` now returns **real** usage — 30d **gross $1,415.98,
+  credit −$98.29, net $1,317.69** (GitHub Actions, 832 paid line items across the repos, `placeholder=False`, HTTP 200
+  on both month queries). The live response confirmed the field names + `net=cost+credit` mapping; prettified lowercase
+  products (`actions`→`Actions`); RFC3339 `date`→day. UI dummy-note + source-footer now gate on `is_placeholder`
+  (mock/pw stays dummy → 16/16 green; real data shows a "Live" note + "GitHub — Enhanced Billing" footer). Shipped
+  deployment-api@`c4549daa` + deployment-ui@`89d5b276`; both full QGs green. **Only AWS CUR backfill go/no-go remains
+  open on this plan.**

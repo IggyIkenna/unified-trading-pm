@@ -6,8 +6,11 @@ summary:
   (per-VM shards written since the last consolidated-index run, i.e. not yet absorbed) and a live throughput view of
   shards absorbed per tick. v1 is cheap + no consolidator change (backend backlog field from a single shard-prefix list
   + a client-accumulated session sparkline that INFERS merged/tick from backlog deltas). v2 (the truthful
-  merged-per-tick histogram, sourced by instrumenting the consolidator job) is DEFERRED + still under discussion. LOCAL
-  plan — built interactively in this slot.
+  merged-per-tick histogram, sourced by instrumenting the consolidator job) is DEFERRED + still under discussion. WS-3
+  (2026-07-10) folds in the deployments-page split — this page owns the DATA-CORRECTNESS lens, the per-run "did the run
+  PRODUCE its expected data" verdict (fired-but-empty + stale-output) + a job-identity-keyed lookup seam the deployments
+  detail popover cross-links to (deployments owns liveness/fired-on-time). LOCAL plan — built interactively in this
+  slot.
 status: active
 nature: design
 asset_group: [cross-cutting]
@@ -15,9 +18,9 @@ stage: [meta]
 repos: [deployment-ui, deployment-api, unified-trading-library]
 scope: [engineer]
 tags: [deployment-observability, cockpit, consolidator, manifest, backlog, throughput, deployment-ui]
-related: [deployment_observability_expansion_2026_07_08.md]
+related: [deployment_observability_expansion_2026_07_08.md, deployment_full_estate_cost_provenance_2026_07_09.md]
 created: "2026-07-09"
-last_updated: "2026-07-09"
+last_updated: "2026-07-10"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -41,6 +44,13 @@ drift_direction: advance-code
 > Consolidators-tab live-monitor rewrite (`deployment-ui@9476927`). Operator feedback: the index-age/budget bar is a
 > low-value "countdown to next consolidation"; the real questions are **is the consolidator keeping up (backlog)** and
 > **how much is it absorbing per tick (throughput)**.
+>
+> **Scope grew 2026-07-10 (WS-3)**: agreed a clean split with the deployments page
+> (`deployment_full_estate_cost_provenance_2026_07_09.md`, principles 6+7 + its hand-off). **Deployments = liveness**
+> ("exists / healthy / fired / fired ON TIME" + a new Cloud Scheduler OVERDUE badge). **This page = data-correctness**
+> ("did the run PRODUCE the data it was designed for") + the job-identity lookup seam deployments cross-links to. A job
+> can exit 0 and write nothing — that "fired ≠ produced" gap is exactly what this lens owns; deployments LINKS to the
+> verdict, never re-derives it (that would duplicate the manifest SSOT + break the single-walk HARD RULE).
 
 ## Design decisions (captured 2026-07-09)
 
@@ -124,9 +134,100 @@ drift_direction: advance-code
 - [ ] [BACKEND] P3. **Endpoint history** — `/api/health/consolidator` (or a `/consolidator/{ag}/history`) returns the
       last N runs; the UI swaps the inferred sparkline for the real merged/tick histogram (drop the "inferred" caption).
 
+## WS-3 — data-correctness lens: per-run "did it PRODUCE its data" verdict + deployments cross-link seam (NEW 2026-07-10)
+
+> **The other half of the deployments-page split** (`deployment_full_estate_cost_provenance_2026_07_09.md` principles
+> 6+7 + its 2026-07-10 hand-off). Deployments = **liveness** ("does it exist, is it healthy, did it fire, did it fire ON
+> TIME" — incl. a new Cloud Scheduler OVERDUE badge). This page = **data-correctness** ("did that run PRODUCE the data
+> it was designed to"). Deployments LINKS to this verdict, never re-derives it (duplicating the manifest SSOT + breaking
+> single-walk). A job can exit 0 and write nothing — "fired" ≠ "produced"; that fired-but-empty case is the gap only
+> this lens catches.
+
+### Join key — reconcile with the deployments agent BEFORE building the seam (blocking)
+
+- [ ] [DESIGN] P1. **Agree the join key = the FULL Cloud Run job short-name (which encodes `{kind}-{asset_group}`), NOT
+      `asset_group` alone.** LIVE-VERIFIED
+      (`gcloud run jobs list --region asia-northeast1 --project central-element-323112`, 2026-07-10): the hand-off's
+      assumed example `prd-manifest-consolidator-cefi` does NOT exist. Real names are
+      `uts-prod-manifest-consolidator-{kind}-{asset_group}` and there are **~25 non-legacy consolidator jobs, MULTIPLE
+      per asset_group across kinds** (`market-data-cefi` AND `instruments-cefi` AND `features-delta-one-cefi` AND
+      `execution-cefi` …). So `asset_group` alone is ambiguous — the seam MUST key on `(kind, asset_group)` / the full
+      short-name. Enumerator jobs = `expected-universe-v2-{ag}` (5); catalogue = `lifecycle-catalogue-regen-{ag}` /
+      `-full-{ag}` / `instrument-catalogue-regen`. Reconcile 1:1, then both sides freeze the key.
+
+### The seam + the verdict (this page owns)
+
+- [ ] [BACKEND] P1. **Per-run output-production verdict endpoint (the seam deployments links to)** — a lightweight
+      lookup keyed by the agreed job identity →
+      `{last_run_at, partitions_written, rows_written, expected_vs_actual,     verdict}`,
+      `verdict ∈ {produced, fired_but_empty, stale_output, ok}`. Scope = the **data-producing** scheduled jobs only
+      (consolidator per (kind,AG), enumerator per AG, catalogue per AG) — NOT the watchers/audits (they write no
+      pipeline data → liveness is their whole story). SINGLE-WALK-SAFE: reuse the consolidated-index blob metadata + the
+      per-VM prefix list already fetched (`per_vm_shard_backlog`); NEVER a whole-corpus walk.
+- [ ] [BACKEND] P1. **Fired-but-produced-nothing detection** — a run whose Scheduler/execution says it fired (exit 0)
+      but `rows_written ≈ 0` while backlog > 0 → `fired_but_empty`. Reuse the index row-count delta
+      (`object_delta_for_asset_group`, already built) across the run window. This is the silent failure a liveness-only
+      view shows as "succeeded".
+- [ ] [BACKEND] P1. **Stale-output detection** — newest output partition older than the job's OWN cadence →
+      `stale_output`. Generalize the per-AG staleness budget already added for the cefi false-degraded fix
+      (`_AG_STALENESS_BUDGET_SEC` / `_budget_for`) into a per-(kind,AG) cadence budget, so each job is judged against
+      its schedule, not a uniform 120 s.
+- [ ] [BACKEND] P2. **Coverage-expansion — verdict across ALL consolidator kinds, not just market-data.** Today
+      `/api/health/consolidator` covers ONLY the market-data bucket per AG (5 AGs). The full consolidator estate is ~25
+      jobs across kinds (instruments / features-delta-one / features-onchain / features-volatility / features-calendar /
+      features-sports / execution / strategy / gas-fees / ml-training-artifacts). For the deployments cross-link to
+      resolve for EVERY job it lists, the seam must cover every data-producing job. Decide scope (market-data-first,
+      then fan out) — flag to operator.
+- [ ] [UI] P1. **Surface the production verdict on the consolidator page** — per (kind,AG), a `produced` /
+      `fired-but-empty` / `stale-output` badge alongside the existing freshness + backlog. A red fired-but-empty /
+      stale-output is the data-correctness signal deployments links here to confirm. `pw:L2` regression on the badge
+      states.
+
+### Fan-in — which VMs feed the index (recommendation #4; contributor↔live-VM correlation)
+
+- [ ] [BACKEND] P2. **Contributor-VM fan-in from the shard filenames (EXACT, single-walk-cheap).** Each per-VM shard is
+      `_index/per_vm/{instance}.parquet` → the filename IS the VM instance name; the SAME prefix list we already do for
+      backlog yields, per (kind,AG), EXACT: N contributor VMs, WHICH VMs, and each VM's last-flush age (shard
+      `last_modified`). Return `contributor_count` + `stale_contributor_count` (last flush > cadence). DEFER per-VM
+      `rows_written` (needs a shard content-read → breaks single-walk; blob-size proxy is too rough).
+- [ ] [UI] P2. **Fan-in headline + drill.** Card headline "fed by N VMs · M stale (>{cadence})"; drill lists contributor
+      VM names + last-flush age, each **cross-linked to the Fleet/Deployments row**. The correlation that matters at
+      scale: shard stale + VM stopped = data frozen (expected); shard stale + VM still RUNNING = the VM is stalled and
+      silently not flushing (a bug). `pw:L2` on the fan-in cell.
+
+### Dark data-correctness actors — decide whether they surface here (operator to prune)
+
+- [ ] [DESIGN] P2. **Phantom-audit + reprobe-empty visibility — decide surface + build a read endpoint if in-scope.**
+      These are the "is the index HONEST" checks, Slack-only today (no endpoint): `dp-manifest-hygiene-full` (weekly
+      `0 8 * * 0`) finds **phantom rows** (index says `captured`, NO parquet on disk — the index lying about coverage;
+      `DP-MANIFEST-003/005`); `dp-reprobe-empty` (daily `0 9 * * *`) re-fetches wrongly-`empty_confirmed` cells and
+      flips proven-wrong ones back to `attempted_failed` (`DP-FETCH-006`). Surfacing needs a small endpoint reading
+      their last result (GCS sentinel / event log). Data-correctness signal → belongs on THIS page if surfaced at all.
+
+### Cross-tab placement notes (NOT this plan — captured so we don't lose them)
+
+- **Denominator freshness has two facets, split by tab**: the _trust caveat on the coverage %_ ("denominator last
+  computed Nh ago" / stale-warning) → **data-status tab** (owns coverage %); the _enumerator/catalogue JOB fired + on
+  time_ → **deployments** (its Cloud Scheduler census). The _did-the-enumerator-actually-write-rows_ verdict IS in this
+  page's seam above (enumerator/catalogue are data-producing jobs).
+- **Lambda run-time honesty (FYI from the hand-off)**: deployments is fixing `last_run_at = fn.last_modified` (deploy
+  time, not invoke). The data-producing pipeline jobs are Cloud Run (GCP) + AWS Batch, NOT Lambda, so the seam likely
+  never touches a Lambda run-time — but if it ever does, use CloudWatch `Invocations`, never deploy-time.
+
 ## Progress Log
 
 - 2026-07-09 — Plan created (LOCAL). Verified: `BlobMetadata.last_modified` is available per blob → true backlog is a
   single-list computation (single-walk-safe). Consolidator runs every 1 min per-AG (Cloud Run Job + Scheduler). v1 needs
   ZERO consolidator change. v2 store/cost analysis captured; v2 deferred as nice-to-have pending the GCS-vs-Firestore +
   AWS-mirror-scope decision.
+- 2026-07-10 — WS-3 added from the deployments-page split hand-off
+  (`deployment_full_estate_cost_provenance_2026_07_09.md` principles 6+7 + its 2026-07-10 hand-off). Agreed lens split:
+  deployments = liveness / fired-on-time (+ a new Cloud Scheduler OVERDUE census); this page = data-correctness /
+  produced-vs-expected + the job-identity lookup seam deployments cross-links to. **LIVE-VERIFIED the join key**
+  (`gcloud run jobs list --region asia-northeast1`, 2026-07-10): the hand-off's example `prd-manifest-consolidator-cefi`
+  does not exist — real = `uts-prod-manifest-consolidator-{kind}-{asset_group}`, ~25 non-legacy consolidator jobs,
+  MULTIPLE per AG across kinds → the join key must be the full short-name / (kind,AG), NOT asset_group alone. Flag back
+  to the deployments agent. Also captured: fan-in from shard filenames (#4, exact + single-walk), phantom/reprobe
+  visibility decision (#5, needs an endpoint), coverage-expansion beyond market-data (current endpoint covers only 5
+  market-data buckets vs ~25 jobs), and the denominator-freshness cross-tab split. Awaiting operator review to prune
+  scope.
