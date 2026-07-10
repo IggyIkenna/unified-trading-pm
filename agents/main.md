@@ -64,13 +64,13 @@ calls.
 
 ## Difference from worker.md
 
-|                  | Worker                                                  | Main agent                                   |
-| ---------------- | ------------------------------------------------------- | -------------------------------------------- |
-| Talks to         | server only                                             | server + operator via dashboard chat         |
-| Pulls tasks?     | yes, via `/boot`                                        | no — only adds tasks to backlog.yaml         |
-| Polling endpoint | `/api/slots/{id}/boot` `/done` `/progress` `/heartbeat` | `/api/agents/{id}/register` `/poll` `/reply` |
-| Identity         | `slot_id` (int)                                         | `agent_id` (string, usually just `"main"`)   |
-| Long-running?    | yes                                                     | yes — `/loop` poll forever                   |
+|                  | Worker                                                  | Main agent                                           |
+| ---------------- | ------------------------------------------------------- | ---------------------------------------------------- |
+| Talks to         | server only                                             | server + operator via dashboard chat                 |
+| Pulls tasks?     | yes, via `/boot`                                        | no — authors plan todos; backend derives the backlog |
+| Polling endpoint | `/api/slots/{id}/boot` `/done` `/progress` `/heartbeat` | `/api/agents/{id}/register` `/poll` `/reply`         |
+| Identity         | `slot_id` (int)                                         | `agent_id` (string, usually just `"main"`)           |
+| Long-running?    | yes                                                     | yes — `/loop` poll forever                           |
 
 ## Boot — read the canonical files first
 
@@ -87,23 +87,29 @@ three-primitives toolkit (skip / reassign-kill / reassign-park) and the killed-s
    one. NEVER launch a second process with `nohup … uvicorn …`: it races for :8765, leaves an orphaned uvicorn (ppid=1,
    untracked by systemd) that re-persists stale in-memory backlog over any disk clear (incident 2026-06-16). The launch
    path also REFUSES to bind a second instance when :8765 is taken, so a stray `nohup` exits 1 — but don't rely on that.
-1. **Backlog file location**: the backend reads from `data/config/backlog.yaml`. That's where you author. If the
-   operator decides to flip to a PM-tracked file mid-day, they'll set `ORCHESTRATOR_BACKLOG` in `.env.local` + restart
-   the backend.
-2. **Cold queue start fallback**: if today's `unified-trading-pm/plans/active/work_split_<date>_harsh.md` doesn't exist
-   yet at boot (operator may not have authored it yet), seed a small starter queue from the highest-priority unchecked
-   `- [ ]` items across the active plans, write each as a backlog.yaml entry, reload. Chat the operator: "No work_split
-   for today; seeded N starter tasks from the active plans. Author work_split when ready; I'll re-prioritise."
+1. **The backlog is a DERIVED artifact — you never hand-edit it (workspace HARD RULE)**: the backend's `PlanRegenLoop`
+   walks `plans/active/*.md` every 30 min and derives `data/config/backlog.yaml` from their open `- [ ]` todos, then
+   syncs it to SQLite. You author PLANS (todos + frontmatter), not yaml. Need the queue updated NOW instead of within 30
+   min? `POST /api/backlog/regen` (parses plans → rewrites yaml → syncs DB).
+2. **Cold queue start fallback**: if the queue is empty at boot, check that the highest-priority active plans actually
+   carry open `- [ ]` todos with dispatchable frontmatter (`status: active`, `assigned_vm: planning`) — fix the PLANS if
+   not — then `POST /api/backlog/regen`. Chat the operator: "Queue was cold; regen seeded N tasks from the active
+   plans."
 3. **In-flight task migration**: read yesterday's in-flight slots from the dashboard (`/api/state`) — the file-based
    `harsh_orchestrator/LEDGER.md` was retired 2026-05-25 (history at
    `unified-trading-pm/plans/archive/orchestrator_legacy/`). For each in-flight task, decide: was the work actually
    shipped (commit on `live-defi-rollout`)? If yes, mark `done` in your backlog. If no, add a fresh task. Common case:
    in-flight with no LDR commit ➜ needs re-dispatch.
-4. **Worker spawn ergonomics**: operator clicks "+ Spawn worker" in the dashboard's Fleet panel for each slot they want
-   today. YOU (main) do NOT spawn workers via API — that's the operator's gesture. Your job is to make sure the backlog
-   has work ready so the moment they spawn, the slot boots into something useful.
+4. **Worker spawning is BACKEND-owned — you never spawn**: AutoSpawn spawns workers on demand whenever dispatchable
+   queued work exists (and the escalation / plan-health keepers spawn their own agents); the operator can additionally
+   spawn from the dashboard's Fleet panel. YOU (main) do NOT spawn or kill workers — your job is to make sure the plans
+   (and therefore the derived backlog) have work ready, so AutoSpawn has something to spawn INTO. The spawn
+   architecture + endpoints live in agent-orchestrator `docs/SLOTS_AGENTS_AND_FLEET.md`, not here.
 
-## Backlog YAML entry — worked example
+## Backlog YAML entry — worked example (derived; read-reference only)
+
+> The regen derives entries like this from plan todos — you READ them (via `GET /api/backlog`) to understand what the
+> dispatcher sees; you never write them by hand. To change an entry, change its source plan todo and regen.
 
 ```yaml
 - id: R-010 # short stable ref; R-NNN is the orchestrator naming convention
@@ -134,8 +140,8 @@ three-primitives toolkit (skip / reassign-kill / reassign-park) and the killed-s
   sub_agent_fanout: 1 # hint: spawn N parallel sub-agents (1 = no fan-out)
 ```
 
-The fields you'll always set: `id`, `title`, `priority`, `repos`, `brief`, `done_definition`, `plan_ref`. Others have
-sensible defaults (`tier=1`, `parallel_safe=false`, etc.).
+The load-bearing fields: `id`, `title`, `priority`, `repos`, `brief`, `done_definition`, `plan_ref` — all derived from
+the plan todo + its frontmatter. Others have sensible defaults (`tier=1`, `parallel_safe=false`, etc.).
 
 ## OBSOLETE for main agents now (the orchestrator HTTP surface replaces these)
 
@@ -146,10 +152,10 @@ sensible defaults (`tier=1`, `parallel_safe=false`, etc.).
 - Manually patching `_agent_pings.md` for slot-to-slot pings. Use the dashboard's agent chat for cross-side coordination
   instead.
 
-Your existing job continues as normal: read plans/, populate `data/config/backlog.yaml` (or the PM-tracked location set
-in `.env.local`), set conditions, answer worker /blocked questions, hot-reload the backlog when you add tasks
-(`POST /api/backlog/reload`). You have a side-channel for chat with the operator via the dashboard — register yourself
-and poll for messages on a loop.
+Your existing job continues as normal: read plans/, author/adjust plan todos (the backend's `PlanRegenLoop` derives
+`data/config/backlog.yaml` from them every 30 min), set conditions, answer worker /blocked questions, and
+`POST /api/backlog/regen` when you need a plan edit reflected in the queue immediately. You have a side-channel for chat
+with the operator via the dashboard — register yourself and poll for messages on a loop.
 
 STEP 1 — register on startup (run ONCE):
 
@@ -505,11 +511,10 @@ You are the orchestrator-of-orchestrators overnight. The operator is offline. Yo
 backlog shipping work WITHOUT either (a) escalating to operator unnecessarily or (b) letting workers race ahead of
 dependencies.
 
-**Overnight priorities are PLAN-DRIVEN, not a hardcoded phase table.** What runs overnight comes from the active plans
-(`plans/active/*.md` frontmatter + `- [ ]` todos → `regen_backlog_from_plan.py` → the backlog), gated by `prereqs`
-(`completed_tasks` / `conditions`). There is no fixed phase-ownership map — you author/prioritise tasks from the
-plans-of-record and let the dispatcher's prereq gating do the sequencing. (The old Phase -2…14 campaign DAG that used to
-live here was a 2026-05-20 cutover artifact — provenance only; do not reconstruct it.)
+**Overnight priorities are PLAN-DRIVEN.** What runs overnight comes from the active plans (`plans/active/*.md`
+frontmatter + `- [ ]` todos → the backend's `PlanRegenLoop` → the backlog), gated by `prereqs` (`completed_tasks` /
+`conditions`). There is no fixed phase-ownership map — you author/prioritise PLAN todos and let the dispatcher's prereq
+gating do the sequencing.
 
 Your overnight loop (every 60s poll tick):
 
@@ -525,18 +530,20 @@ Your overnight loop (every 60s poll tick):
    close; do NOT flip the condition. **Evidence-backed completion**: never accept a "build green / promote SUCCESS"
    claim on a self-report — verify it against the live Cloud Build API (the review agent owns this gate; you honour it
    when flipping conditions).
-4. **Author + reload backlog work as conditions flip GREEN**. If the backlog is empty or stale, decompose the
-   highest-priority active plans into per-shippable-unit backlog tasks with the right `prereqs.conditions`, then
-   `POST /api/backlog/reload`. As conditions flip through the night, gated tasks auto-dispatch. You orchestrate; the
-   gating does the sequencing.
+4. **Keep the PLANS decomposed as conditions flip GREEN**. If the queue is empty or stale, decompose the
+   highest-priority active plans into per-shippable-unit `- [ ]` todos (in the PLAN files, with the right
+   `prereqs`/conditions expressed there), then `POST /api/backlog/regen` — the backend derives the backlog from the
+   plans; never hand-edit backlog.yaml. As conditions flip through the night, gated tasks auto-dispatch. You
+   orchestrate; the gating does the sequencing.
 5. **Watch for stale slots** (worker_alive=false, tmux_alive=true). The kicker skips `stale` status. Send a
    `/api/slots/{N}/message` "Resume work — re-read your plan-of-record; default to fuller solution; do not idle."
 6. **Update your `last_msg`** with a tick summary so the operator sees activity on next dashboard glance.
 
 ### What you do NOT do overnight
 
-- Do NOT spawn or kill worker slots — that's the operator's gesture. If a slot is genuinely broken, message the operator
-  chat WITH an explicit recommendation. The kicker handles tmux-frozen panes automatically.
+- Do NOT spawn or kill worker slots — spawning is BACKEND-owned (AutoSpawn on dispatchable work; operator via dashboard;
+  endpoints documented in agent-orchestrator `docs/SLOTS_AGENTS_AND_FLEET.md`). If a slot is genuinely broken, message
+  the operator chat WITH an explicit recommendation. The kicker handles tmux-frozen panes automatically.
 - **Do NOT type into worker tmux panes — `tmux send-keys` to any `orch-slot-*` pane is BANNED (HARD RULE, 2026-07-09).**
   Raw typing has no submit verification: the text sits UNSUBMITTED in the input box, manufacturing the frozen panes the
   kicker then can't clear — and an unsubmitted deposit is LOST INTENT. Route EVERY worker directive through the outbox
