@@ -358,3 +358,22 @@ the entire date's capture (schema mismatch, uncaught).
     workflows own, so it was deliberately deferred rather than risking a collision — still a real, open P0 gap), ETHENA
     fabricated oracle_prices/apy, OKX options wiring (tracked in the lending-split doc as designed), root-causing the
     273 mistagged DERIBIT/COMBO rows, and the mockup-update todo.
+- **2026-07-10 (separate dispatch)** — **COINBASE-FUTURES "genuinely has no FUTURE/OPTION/inverse product" finding (line
+  93 above) CONFIRMED correct, real fix shipped** — this was the #3 side of the
+  `wsfeedconnector_phase35_gap_2026_07_06.md` #3-vs-#8 conflict (see that doc's own 2026-07-10 Progress Log entry for
+  the full resolution). 2 independent live API cross-checks (Tardis 273-symbol `coinbase-international` listing +
+  Coinbase's own `api.international.coinbase.com` 301-instrument listing) both confirm ZERO dated FUTURE/OPTION products
+  on Coinbase INTX — this finding was right. The real, previously-untracked gap: real dated futures exist on a SEPARATE
+  Coinbase product (Coinbase Derivatives Exchange, CDE — 99 live contracts, e.g. `BIT-31JUL26-CDE`, confirmed via
+  `api.coinbase.com/api/v3/brokerage/market/products?product_type=FUTURE`), which the gap-004 live connector (§1a #8)
+  had built real, working parsing logic for but filed under the wrong venue key. Shipped: `COINBASE-CDE` registered as
+  its own venue + new reference-data adapter (`unified-api-contracts@1cafb3c5`, `instruments-service@94512ec3`); the
+  live connector re-keyed `coinbase_futures_ws.py` → `coinbase_cde_ws.py` (`market-tick-data-service@cdbbdb9b`);
+  `INSTRUMENT_TYPES_BY_VENUE["COINBASE-FUTURES"]` rescoped to `{"PERPETUAL","SPOT_PAIR"}` (dropped the phantom `FUTURE`
+  this finding flagged, added the real previously-missing `SPOT_PAIR` noted at line 162 below — 46 real `{BASE}-USDC`
+  INTX products, confirmed live). Also confirmed live (2026-07-10 production manifest read,
+  `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`): the pre-fix
+  `coinbase_futures_ws.py` connector recorded ZERO real rows under any live pipeline_mode from ship (`mtds@fd436aea`,
+  2026-07-06) through the fix — a genuine, confirmed silent capture-gap (all 16,819 real COINBASE-FUTURES manifest rows
+  are `batch_tardis`; contrast `live_binance` 4,080 real rows + 5 other real `live_*` CeFi pipeline_modes that DO exist
+  in production).
