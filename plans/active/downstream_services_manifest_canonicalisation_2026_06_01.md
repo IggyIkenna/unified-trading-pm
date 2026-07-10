@@ -87,7 +87,21 @@ drift_direction: advance-code
 
 ### TIER 1 — CODE-to-canonical, P0/P1 (MUST be canonical + QG-green BEFORE the migration RUN)
 
-- [ ] [CODE] P0. **CF-11 write-path — instruments-service residual** (MTDS already compliant). Verify the IS
+- [x] ✅ [CODE] P0. **CF-11 write-path — instruments-service residual — DONE all 3 slices (slot audit 2026-07-10).**
+      **PREDICTION (polymarket)**: was a GENUINE bug — `polymarket/adapter.py` (gamma `_fetch_page`) + `clob.py`
+      (`_fetch_all_raw_clob_markets`) re-raised the BARE `aiohttp.ClientError`/`ClientResponseError` (4xx/429/5xx),
+      which `_fetch_one_venue`'s except-ladder does NOT catch → propagated uncaught through the caller's
+      `asyncio.gather` (no `return_exceptions=True`) → crashed the whole multi-venue batch instead of landing
+      `attempted_failed`. FIXED: wrapped as `raise RuntimeError(...) from exc` (mirrors cefi `aster.py`) → caught →
+      `attempted_failed` + `ADAPTER_FETCH_FAILED` emitted. **instruments-service@5da67986** (QG green; +2 regression
+      tests `test_fetch_page_client_error`/`test_fetch_all_raw_clob_markets_client_error_raises` assert
+      `RuntimeError`+chained cause; updated 3 sibling `test_betfair_polymarket_adapter` assertions). **TRADFI
+      (databento)**: VERIFIED-COMPLIANT, no code change — the plan's `databento.py:826` ref is stale (pre-`354ab43f`
+      split); the current `adapter.py` genuine-failure sites classify → log → re-raise `RuntimeError` (mirrors cefi);
+      the `DatabentoSubscriptionError` swallow is a deliberate PERMANENT pre-request entitlement guard
+      (dataset-isolated, not a masked fetch failure; regression `test_databento_tardis_adapter.py`; zero off-allowlist
+      entries today). Codex drift on this fixed (pm@48c87556b). **CEFI**: already closed (below). Original spec below.
+      <br>**Original:** **CF-11 write-path — instruments-service residual** (MTDS already compliant). Verify the IS
       reference-data fetch paths for cefi/tradfi/prediction `record_failed` (→ `attempted_failed`, via
       `classify_venue_error()`/ `ADAPTER_FETCH_FAILED`) on a genuine API error (timeout/5xx/429/auth) for an in-universe
       instrument within coverage — NOT `record_empty`/`return []`. Grep `instruments-service` reference adapters for
