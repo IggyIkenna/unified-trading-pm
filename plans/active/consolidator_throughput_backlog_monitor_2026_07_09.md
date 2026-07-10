@@ -119,6 +119,14 @@ drift_direction: advance-code
 > lists + reads every shard). Recording that per run gives an exact, durable histogram — replacing v1's inferred,
 > session-only view. Deferred because it edits the consolidator job code and **redeploys ~10-20 Cloud Run Jobs + the AWS
 > Batch mirror** — a data-correctness-critical-path change whose real cost is blast radius + rollout care, not dollars.
+>
+> **⚠️ Overlap with the parent's WS-H (2026-07-10 review)**: `deployment_observability_expansion_2026_07_08.md` WS-H
+> builds a general structured-progress spine — a `report_progress({...})` helper riding the UTL **event facade** + a
+> typed per-workload progress contract + a "manifest cross-check per typed metric (`shards_saved` vs object count)".
+> That is the SAME per-run-job-metrics sink WS-2 needs. **WS-2 must RIDE WS-H's spine, not build a parallel
+> GCS/Firestore store** — if WS-H ships the event-facade spine, WS-2's `{ts, shards_merged, …}` record becomes one typed
+> progress event on it; the bespoke store below is the FALLBACK only if WS-H stays deferred. So the store-decision todo
+> is contingent on WS-H's outcome — coordinate before building either.
 
 - [ ] [DESIGN] P3. **Store decision — OPEN.** GCS/S3 rolling history object (recommended: zero new IAM, each job writes
       its own cloud's bucket it already has objectAdmin on, reuses the endpoint read path; ~$2-4.50/mo GCS Class-A) vs
@@ -177,7 +185,10 @@ drift_direction: advance-code
       jobs across kinds (instruments / features-delta-one / features-onchain / features-volatility / features-calendar /
       features-sports / execution / strategy / gas-fees / ml-training-artifacts). For the deployments cross-link to
       resolve for EVERY job it lists, the seam must cover every data-producing job. Decide scope (market-data-first,
-      then fan out) — flag to operator.
+      then fan out) — flag to operator. **SEQUENCING (2026-07-10 review)**: until this lands, the deployments
+      job→manifest bridge resolves ONLY for the 5 market-data jobs — the other ~20 consolidator / enumerator / catalogue
+      jobs it lists get a DANGLING cross-link. Agree the interim contract with the deployments agent (bridge =
+      market-data-first; a job the seam doesn't yet cover renders "not-yet-covered", NOT an error).
 - [ ] [UI] P1. **Surface the production verdict on the consolidator page** — per (kind,AG), a `produced` /
       `fired-but-empty` / `stale-output` badge alongside the existing freshness + backlog. A red fired-but-empty /
       stale-output is the data-correctness signal deployments links here to confirm. `pw:L2` regression on the badge
@@ -204,12 +215,28 @@ drift_direction: advance-code
       flips proven-wrong ones back to `attempted_failed` (`DP-FETCH-006`). Surfacing needs a small endpoint reading
       their last result (GCS sentinel / event log). Data-correctness signal → belongs on THIS page if surfaced at all.
 
+### Shipping gate (WS-3 — mirrors WS-1's closer)
+
+- [ ] [REVIEW] P1. **QG both repos green + deploy deployment-api + verify the seam resolves live.** After the seam +
+      fired-but-empty + stale-output + verdict badge land: `quality-gates.sh` green (deployment-api + deployment-ui +
+      any UTL helper), deploy deployment-api via Cloud Build citing `Evidence: cloudbuild=<id>` SUCCESS, and verify the
+      LIVE endpoint returns the verdict for a known job identity AND that the deployments detail popover's cross-link
+      resolves 1:1 (end-to-end handshake with `deployment_full_estate_cost_provenance_2026_07_09.md`'s job→manifest
+      bridge). No `- [x]` on any WS-3 build todo until this closes.
+
 ### Cross-tab placement notes (NOT this plan — captured so we don't lose them)
 
+- **Duplicate info across the two UIs is INTENTIONAL for now (operator, 2026-07-10)** — where the deployments page and
+  this page (or the data-status tab) show the same underlying signal, they're almost always different AXES of it
+  (liveness vs produced-vs-expected; coverage-trust vs rows-written-verdict). KEEP both while the UIs are being built;
+  de-dupe only once they're properly built. Do NOT collapse a cross-tab overlap prematurely.
 - **Denominator freshness has two facets, split by tab**: the _trust caveat on the coverage %_ ("denominator last
   computed Nh ago" / stale-warning) → **data-status tab** (owns coverage %); the _enumerator/catalogue JOB fired + on
   time_ → **deployments** (its Cloud Scheduler census). The _did-the-enumerator-actually-write-rows_ verdict IS in this
-  page's seam above (enumerator/catalogue are data-producing jobs).
+  page's seam above (enumerator/catalogue are data-producing jobs). **⚠️ UNOWNED (2026-07-10 review)**: the data-status
+  trust-annotation has NO todo in any plan today — it needs a `- [ ]` in a data-status plan
+  (`data_status_tab_and_downloads_remediation_2026_06_16.md` or a new one), else it's lost on hand-off. NOT this plan to
+  build — flag it when passing notes to the data-status/deployments agents.
 - **Lambda run-time honesty (FYI from the hand-off)**: deployments is fixing `last_run_at = fn.last_modified` (deploy
   time, not invoke). The data-producing pipeline jobs are Cloud Run (GCP) + AWS Batch, NOT Lambda, so the seam likely
   never touches a Lambda run-time — but if it ever does, use CloudWatch `Invocations`, never deploy-time.
@@ -231,3 +258,11 @@ drift_direction: advance-code
   visibility decision (#5, needs an endpoint), coverage-expansion beyond market-data (current endpoint covers only 5
   market-data buckets vs ~25 jobs), and the denominator-freshness cross-tab split. Awaiting operator review to prune
   scope.
+- 2026-07-10 — Cross-plan review gap-fixes (operator asked to close gaps in THIS plan; notes for other plans passed
+  separately). Fixed the 4 gaps found reviewing the 8-plan UI-enhancement cluster: (5) added a **WS-3 shipping gate**
+  `[REVIEW]` closer (QG + deploy + live seam/cross-link verify) — WS-3 had none vs WS-1's; (6) flagged **WS-2 duplicates
+  the parent's WS-H** structured-progress spine → WS-2 must RIDE the event-facade spine, bespoke store is fallback-only;
+  (7) noted the **denominator-freshness data-status annotation is UNOWNED** (needs a todo in a data-status plan); (8)
+  documented the **coverage-expansion sequencing** contract (bridge = market-data-first, ~20 dangling links interim →
+  "not-yet-covered", not error). Also codified the operator principle: **cross-tab duplicate info is intentional for now
+  (different axes) — keep both until the UIs are properly built, de-dupe later**.
