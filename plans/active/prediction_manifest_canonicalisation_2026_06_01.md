@@ -520,10 +520,15 @@ be fixed first if run on a VM.
       `plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`. Repos:
       **unified-trading-library / instruments-service / market-tick-data-service**.
 - [ ] [DATA] P0. E8 Hand C-GREEN to `bucket_name_ssot…` L6 → delete legacy `market-data-tick-prediction` + stale
-      pred-prd `category=` paths (single source of truth).
+      pred-prd `category=` paths (single source of truth). **✅ OPERATOR AUTHORISED the E8 delete 2026-07-10 (this
+      /autonomous session)** — the prior human-only hard-stop is lifted. **Still DATA-SAFETY-gated (not skippable):**
+      execute the irreversible delete ONLY after (1) E7 CF-GREEN with **0 legacy-only cells verified** (the ~2,039
+      legacy-only tick cells fully migrated to canonical `pred-prd` — deleting before that = data loss, the plan's core
+      thesis), (2) a fresh `_index` snapshot, (3) fleet drain. Sequence it as the genuine LAST step after E7 GREEN.
 - [ ] [DATA] P0. E8b **NEW (slot audit 2026-07-10): legacy `instruments-store-prediction` bucket decommission — GATED on
-      migrating 139 legacy-only cells first (data-loss risk).** Read-only subset audit (2026-07-10, ADC
-      central-element-323112) found the legacy reference-data store
+      migrating 139 legacy-only cells first (data-loss risk). ✅ OPERATOR AUTHORISED the delete 2026-07-10 (same session
+      as E8) — still DATA-SAFETY-gated on migrating/reconciling the 139 legacy-only cells + a snapshot first.**
+      Read-only subset audit (2026-07-10, ADC central-element-323112) found the legacy reference-data store
       `instruments-store-prediction-central-element-323112` is **NOT a subset** of canonical
       `instruments-store-pred-prd-…`: **92 legacy-only `instrument_availability` cells + 47 legacy-only
       `market_lifecycle` cells** (`(cqg,day)` keys, range 2025-03-27 → 2026-05-21), of which CQGs
