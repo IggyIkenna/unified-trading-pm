@@ -206,6 +206,100 @@ Real code fixes / features needed (not backfills, not pure doc drift).
 
 ---
 
+## 1a. CODE_PATH conflict + target-architecture review (2026-07-10)
+
+Operator asked whether the 14 CODE_PATH items conflict with each other or with the documented target architecture,
+before picking any up. Real review below — each item's real source doc + relevant codex SSOT, not a rubber stamp.
+
+**Top-level summary**: 2 real mutual conflicts found, 3 items diverge from (or are under-verified against) documented
+target state, 9 are clean. Look at the #3/#8 contradiction first (a live-vs-reference-data factual disagreement about a
+real venue, already shipped in both directions), then the #4/#5 sequencing risk.
+
+### P0
+
+**1. CeFi monotonicity guard alerting** — conflicts: none. Design: strongly aligned — extends the existing
+`DP-<CATEGORY>-<NNN>` alert registry (`codex/05-infrastructure/data-pipeline-alerts.md`), not a new mechanism. Proceed
+as proposed.
+
+**2. is-daily-enum-{prediction,sports} exit(1)** — conflicts: none. Design: aligned (`exc_info=True` is additive
+observability, doesn't touch the shard-isolation no-raise contract). Proceed — pure unblock, can't diagnose without it.
+
+**3. 59-bug MTDS + IS adapter smoke test** — conflicts: **with #8** (see below). Design: HUOBI/BITSTAMP venue-fix
+location and ETHENA's fabricated-value fix both align with SSOT. Proceed, but resolve #8 first for the COINBASE-FUTURES
+venue entry specifically.
+
+### P1
+
+**4. DeFi lending A_TOKEN/DEBT_TOKEN split** — conflicts: **with #5** — `issue_docs_remediation_sweep_2026_06_02.md` has
+an open, unchecked todo wiring VENUS/BENQI/RADIANT/EULER_V2 into strategy-service as usable lending legs, but #4's own
+findings (2026-07-07, a month later) say those same 4 protocols currently emit an invalid `InstrumentType` that will
+raise `UnknownInstrumentTypeError` the moment a real position needs P&L attribution. #5 predates #4's finding and hasn't
+been updated. Design: aligned with `instruments-service-as-ssot-for-mtds.md` + the strategy layer's own existing
+`is_supply`/`is_borrow` assumptions. **Recommendation: proceed on #4; flag #5's strategy-service todo as
+blocked-behind-#4, don't pick it up standalone.**
+
+**5. Issue-docs remediation sweep (12 items)** — conflicts: the #4 interaction above (only real one). The DEX
+pools/swaps rename is correctly `BLOCKED-DISCIPLINE` on the single-walk migration, not a divergence. Design: aligned.
+Proceed on the independent items; hold the lending-leg todo per #4.
+
+**6. DP alert-flood / 06:00-UTC TradFi OOM crash-loop** — conflicts: none (and its already-shipped fixes are a directly
+reusable template for #1's still-open `t1-recon` OOM diagnosis). Design: matches the sidecar-authoritative,
+no-fire-and-forget pattern in `deployment-observability.md`. Proceed as proposed.
+
+**7. Order-book imbalance computed in both MTDS and MDPS** — conflicts: none. Design: one of the cleanest matches in the
+list — "MTDS is market-data only" (CLAUDE.md always-on), `order_flow_imbalance` is a derived feature and belongs in
+MDPS, not MTDS. Proceed as proposed.
+
+**8. WSFeedConnector Phase-3.5 — 73 unregistered venues** — conflicts: **with #3** — #3's smoke test (2026-07-07) says
+COINBASE-FUTURES "genuinely has no FUTURE/OPTION/inverse product... verified 3 ways" and flags the registry's `FUTURE`
+entry as phantom; #8 shipped (2026-07-06, one day earlier, `mtds@fd436aea`) a live COINBASE-FUTURES connector explicitly
+built around both `PERPETUAL` and `FUTURE` being real, with 23 tests assuming `FUTURE` rows will arrive. Same-session,
+same-repo, opposite conclusions, neither cross-references the other. Plausibly both are locally true (static catalogue
+never captured a real FUTURE row vs. live parsing for a product that may exist but has never produced a trade) — but
+nobody has reconciled it, and it directly determines whether #3's proposed fix (remove `FUTURE` from the registry) would
+contradict #8's shipped connector. Design: the `BLOCKED-*` scaffold pattern itself is well-aligned with
+`external-data-always-available-rule.md`. **Recommendation: settle the COINBASE-FUTURES fact question first (a direct
+API check resolves it) before finalizing either doc's fix.**
+
+**9. Infra capture wiring (AO Plan 6)** — conflicts: none (ASTER's book5/liquidations gap in #9 is narrower than and
+complementary to #8's general trades-key registration). Design: the self-block to avoid a 17,282-row over-seed is the
+data-pipeline-correctness HARD RULE in practice. Proceed as proposed — stay blocked until the 2 named prerequisites
+land.
+
+### P2
+
+**10. Fleet data-acquisition health sweep** — conflicts: none. Design: the proposed case-insensitive
+`_resolve_connector` fallback is a tolerant-reader workaround for a registry casing inconsistency (cefi uppercase,
+defi/prediction lowercase, no stated reason) rather than canonicalizing the casing itself — diverges slightly from this
+workspace's broader instinct toward canonicalization over tolerant fallback. Not a hard violation. **Recommendation:
+needs a design call — accept the fallback as permanent, or use this as the trigger to canonicalize venue-key casing
+across the registry (cleaner, larger).**
+
+**11. `--run-tag` CLI flag doesn't do what its help text says** — conflicts: none. Design: **the issue doc frames this
+as a wide-open operator decision — it isn't.** `codex/08-workflows/t1-batch-dag.md` already documents the target
+`--run-tag` behavior verbatim, and instruments-service's own code already special-cases the exact `"t1-recon"` sentinel
+from that SSOT, just never implements the GCS-prefix redirection. **Recommendation: proceed with wiring it through (not
+deleting/re-describing it) — that's the option that brings the code into compliance with the already-documented target;
+the issue doc is missing the cross-reference.**
+
+**12. TradFi `mvp_mode` dead fetch-time filter** — conflicts: none (soft note: #13 Phase 5 extends the same MVP registry
+with 3 KRX equities — no action needed as long as future wiring reads it live). Design: genuinely open — unlike #11, no
+SSOT pre-answers whether a fetch-time filter should exist. Proceed as proposed, decision is real.
+
+**13. Crypto-venue equity-perps + tokenized stocks Phase 2** — conflicts: none against other CODE_PATH items. Design:
+**authored 2026-06-20, before the 2026-07-08 one-canonical-builder decision** this whole audit doc's §5 tracks (the
+effort retiring ~48 DeFi adapters' ad hoc f-string `instrument_key` construction). Implementing Phase 2 as originally
+written — without checking whether the new `EQUITY_PERP`/`TOKENIZED_EQUITY` ids should route through the shared
+canonical builder — would add a fresh instance of exactly the pattern being retired elsewhere. **Recommendation:
+re-check Phase 2's instrument-id construction against the canonical builder before implementing.**
+
+### P3
+
+**14. Prediction connection-pool hardening fix uncommitted** — conflicts: none. Design: no SSOT concern, pure ship-it
+item. Proceed whenever a quiet QG window is available.
+
+---
+
 ## 2. MANIFEST_COVERAGE
 
 Manifest correctness / denominator / honest-coverage work (excludes pure backfill/download).
@@ -243,6 +337,16 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
    heavily evidenced: orphan sweep (blocked on manifest rebuild ordering), straggler VM re-run, manifest rebuild 99.77%
    not 100% (13,971-row v4 tail + 42K blank-pipeline_mode gap), E7 CF-audit 2 genuine REDs, schema-tail restamp blocked
    on fleet-drain, operator-gated legacy-bucket deletes.
+
+7. **BYBIT-SPOT manifest — 135,444 anomalous rows, checkboxes claimed done but production is unchanged**
+   `plans/active/issues/bybit_spot_manifest_stray_captures_2026_07_07.md` **Moved back here 2026-07-10** — a second
+   verification pass (while flipping resolved-but-not-flipped docs) found this one's `[x]` todos cite only that the fix
+   scripts were _shipped_ (dry-run/--smoke/--apply modes exist), not that `--apply` actually ran. Live manifest read
+   (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, 2026-07-10) shows row
+   counts byte-identical to the original 2026-07-07 diagnosis: 81,659 EMPTY-instrument_type + 53,785
+   PERPETUAL-mislabeled rows, plus ~54K stray spot-nonsense-data_type rows (derivative_ticker/futures_chain/
+   options_chain/perp_funding/liquidations — none valid for a SPOT venue). No pre-apply backup snapshot exists at either
+   expected path. The real fix (relabel + delete) has never actually been executed against production.
 
 ### P1
 
@@ -520,11 +624,19 @@ Tooling / infra / ML-training / strategy-research items that don't fit the above
 
 ## Excluded (resolved-but-not-flipped, or superseded — verified across all 4 shards)
 
-These carry stale `status: open`/checkbox-inconsistent frontmatter but every real todo is `[x]` with cited evidence — no
-action needed beyond a frontmatter flip, which is itself a §4 hygiene item, not tracked individually here:
+**UPDATE 2026-07-10**: all 15 genuinely-resolved docs below have now been re-verified a SECOND time and their `status:`
+frontmatter flipped for real (`unified-trading-pm@8f15f8233`). **One of the original 16 was NOT flipped —
+`bybit_spot_manifest_stray_captures_2026_07_07.md` is a real, still-open gap**, moved back into §2 MANIFEST_COVERAGE
+below: its checkboxes claimed the 53,785-row PERPETUAL relabel and 53,934-row spot-nonsense delete were done, citing
+only that the fix scripts were _shipped_ — a live production manifest read (2026-07-10) found the real row counts
+byte-identical to the original 2026-07-07 diagnosis, and no pre-apply backup snapshot exists at either expected path,
+meaning `--apply` was never actually run. The checkboxes were marked done based on "script exists" not "script executed"
+— a real discrepancy the second verification pass caught before flipping it.
 
-- `plans/active/issues/bybit_spot_manifest_stray_captures_2026_07_07.md`
-- `plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md` (SUPERSEDED banner)
+The 15 genuinely resolved (flipped `unified-trading-pm@8f15f8233`):
+
+- `plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md` (flipped to `status: superseded` —
+  real, 2 unchecked items are tracked-to-closure inside other plans, not abandoned)
 - `plans/active/issues/is_cefi_manifest_blank_data_type_since_2026_06_29_2026_07_06.md`
 - `plans/active/issues/instruments_handler_pd_na_ambiguous_and_af_classification_2026_07_06.md`
 - `plans/active/issues/mtds_defi_catalog_reader_reads_dead_static_snapshot_path_2026_07_06.md`
@@ -535,7 +647,8 @@ action needed beyond a frontmatter flip, which is itself a §4 hygiene item, not
 - `plans/active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md`
 - `plans/active/foundation_gates_and_capture_to_100_2026_07_06.md`
 - `plans/active/mdps_features_full_month_benchmark_binance_2026_06_28.md`
-- `plans/active/instruments_catalogue_incremental_rollup_2026_06_29.md`
+- `plans/active/instruments_catalogue_incremental_rollup_2026_06_29.md` (1 residual `[ ]` is an operator-declined
+  optional band-aid, not real work)
 - `plans/active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md`
 - `plans/active/mdps_book_microstructure_precompute_columns_2026_06_28.md`
 - `plans/active/sports_features_readiness_for_predictions_2026_06_20.md`
@@ -555,3 +668,10 @@ the source docs if this list is used for dispatch planning.
 - 2026-07-10: Synthesized from a 4-shard parallel sweep of 83 real doc-index-derived candidate lines across
   `plans/active/**`; 62 docs kept as genuinely open non-backfill work across 7 categories, 16 excluded as
   resolved-but-not-flipped, 3 fragment lines flagged uncaptured. Read-only audit — no code or plan checkboxes changed.
+- 2026-07-10 (later): Added category definitions (§ Category definitions) and a full CODE_PATH conflict +
+  target-architecture review (§1a) per operator request. Re-verified and flipped 15 of the 16 excluded docs for real
+  (`unified-trading-pm@8f15f8233`); the 16th (`bybit_spot_manifest_stray_captures_2026_07_07.md`) was found to still be
+  genuinely open — its checkboxes claimed done but production data shows the fix was never actually applied — moved into
+  §2 MANIFEST_COVERAGE P0 instead of flipped. §1a found 2 real mutual conflicts (item #3/#8 COINBASE-FUTURES
+  contradiction, item #4/#5 sequencing risk) and 3 items diverging from documented target architecture (items #10, #11,
+  #13) among the 14 CODE_PATH items.
