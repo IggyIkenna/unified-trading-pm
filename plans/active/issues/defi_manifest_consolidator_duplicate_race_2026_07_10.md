@@ -72,28 +72,44 @@ resolved_by:
   `enum-reseed-defi-gas-20260622-113817` (13,416), + smaller. **This predates the current session by ~2 months** — the
   vast majority (≈2.85M of 4.63M) comes from runs dated 2026-05-07 through 2026-07-08, well before today.
 
-## Root-cause hypothesis (NOT fixed here — needs its own investigation)
+## Root cause — FOUND AND FIXED 2026-07-10
 
-`launch-expected-universe-v2-vm.sh`-style runs write to a per-VM shard (`_index/per_vm/<vm-name>.parquet`), and a
-separate consolidator process later merges the shard into the main `_index/availability_index.parquet`, then
-(apparently) deletes the shard — confirmed live: the shard for `expected-universe-v2-defi-20260710-140018` (my session's
-2018 chunk) existed at 13:57 (found + correctly present-set-augmented by a verification scan) but was GONE by 14:35, and
-its data WAS present in the main index by then (2 rows, not 1 — i.e. the merge succeeded but so did a second independent
-write). A second enumerator run targeting the same window, landing after the shard was gone but seemingly before (or
-without correctly reading) the merged row, recomputed and rewrote the identical candidates. The `_build_present_set()`
-function itself does not filter by `capture_status` (correct — it should treat every already-written row as "present"
-regardless of status), so the bug is not there; it's somewhere in the shard-lifecycle / manifest-read timing around
-consolidation. The recurring daily Cloud Scheduler job (`expected-universe-v2-<ag>-daily`, `codex` runbook: "RECURRING
-daily 01:30 UTC") landing on this same race for ~2 months is the most likely explanation for the ~2.85M pre-existing
-duplicates.
+**Real root cause**: `unified-trading-library/unified_trading_library/manifest_consolidator.py`'s INCREMENTAL merge path
+(`_duckdb_merge_payload`, the production steady-state — full rebuilds are cold-bucket/`--force` only). Every cycle
+splits the canonical into `survivors` (rows whose key is NOT touched by the current cycle's incoming shards) and
+`contested` (rows whose key IS touched). `contested` rows correctly go through a window-dedup
+(`PARTITION BY <dedup key> ORDER BY attempted_at/written_at DESC`, last-write-wins). **`survivors` did not** — the code
+streamed them through byte-for-byte unchanged (the module's own docstring: "stream the unchanged canonical straight
+through"). This means: **any duplicate that ever ends up in the canonical, by any mechanism, for any reason, persists
+forever** — incremental cycles only ever re-examine keys the _current_ cycle's shards touch; they never re-verify the
+untouched 99.9% of the canonical against itself. Confirmed directly: the
+`(ALCHEMY, ARBITRUM, gas_fees, 2018-01-01, empty_confirmed)` duplicate pair had **byte-identical values AND types on
+every single dedup-key column** (checked directly against the pre-dedup backup) — proving the two rows were never part
+of the same cycle's contested-key comparison (if they had been, the _already-correct_ contested-row dedup logic would
+have collapsed them). This is a structural gap in the incremental path itself, not a narrow timing race in shard pruning
+— the original "shard-delete-before-merge" hypothesis was investigated and **ruled out**: `_write_consolidated` already
+has a documented, tested lost-update-race fix (`manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md`) that
+re-reads the canonical fresh on every CAS-retry attempt.
 
-## Fix shipped (dedup only — NOT the root cause)
+**Fix**: `unified-trading-library@0de04b6e` — apply the SAME window-dedup already used for `contested` rows to
+`survivors` too. Every incremental cycle is now self-healing against pre-existing duplicates (from ANY cause), not just
+preventive against new ones. New regression test
+(`test_consolidate_incremental_self_dedups_untouched_canonical_duplicates`) reproduces the real scenario end-to-end and
+was verified, via a stash-based before/after run, to **FAIL against the pre-fix code** (found 2 rows) and **PASS against
+the fix** (collapses to 1) — not just inline reasoning. Full existing suite green (39 consolidator + 473
+consolidator+writer combined), ruff clean.
 
-`instruments-service/scripts/defi_manifest_dedup_2026_07_10.py` — one-off, backup-first (full pre-dedup manifest
-snapshot to `_migration_backup/defi_manifest_dedup_2026_07_10/`), verify-after, with an explicit safety check (asserts
-the count of legitimate multi-`capture_status` key-groups is UNCHANGED before writing — refuses to touch anything that
-isn't a byte-identical duplicate). Removes exactly the 1,789,793 genuine-duplicate rows, keeping the latest `written_at`
-copy per `(key, capture_status)` group.
+## Fix shipped
+
+1. **Cleanup** — `instruments-service/scripts/defi_manifest_dedup_2026_07_10.py`, one-off, backup-first (full pre-dedup
+   manifest snapshot to `_migration_backup/defi_manifest_dedup_2026_07_10/`), verify-after, explicit safety check
+   (asserts the count of legitimate multi-`capture_status` key-groups is UNCHANGED before writing). Removed the
+   1,789,793 genuine-duplicate rows already present. **Applied to production.**
+2. **Root-cause fix** — `unified-trading-library@0de04b6e`, the consolidator's survivors-side self-dedup above.
+   **Shipped, tested, pushed to `live-defi-rollout`.** The next scheduled consolidator cycle for any bucket (runs every
+   1 minute per `manifest_consolidator_scheduler.tf`) will pick this up automatically and begin self-healing any further
+   duplication, including in cefi/tradfi/prediction/sports (the fix is asset-group-agnostic — it's in the shared
+   consolidator, not a defi-specific script).
 
 ## Todos
 
@@ -105,19 +121,30 @@ copy per `(key, capture_status)` group.
       1,789,793). Backup verified (463,952,531 bytes) at
       `gs://market-data-tick-defi-prd-central-element-323112/_migration_backup/defi_manifest_dedup_2026_07_10/availability_index_pre_dedup_20260710-143528.parquet`
       before the write. Safety check (legitimate multi-status groups unchanged at 525,276) held throughout.
-- [ ] [DESIGN] P1. **Root-cause the consolidator race** — read `manifest_consolidator_ssot.md`'s actual merge
-      implementation, confirm whether shard-delete happens before or atomically with the main-index write, and whether
-      there's a read-time race for a manifest load that starts while a merge is in flight. This is what actually needs
-      fixing — the dedup script only cleans up symptoms, and the daily scheduled job will keep recreating duplicates
-      until this lands.
-- [ ] [VERIFY] P2. Check whether the SAME race affects other asset groups (cefi/tradfi/prediction/sports) — this session
-      found the identical `--start-date`/`--end-date`-bounded code path is shared across all asset groups, so the race
-      is plausibly universal, not defi-specific. Not yet checked.
-- [ ] [DATA] P2. Once root-caused and fixed, consider whether the daily Cloud Scheduler job's history should be audited
-      for the same pattern in cefi/tradfi/prediction/sports.
+- [x] ✅ [DESIGN] P1. **Root-caused and fixed 2026-07-10** — `unified-trading-library@0de04b6e`. See "Root cause — FOUND
+      AND FIXED" above. The original shard-delete-timing hypothesis was investigated and ruled out; the real gap was the
+      incremental merge's survivors-side non-dedup, proven with a before/after-verified regression test.
+- [ ] [VERIFY] P2. Check whether cefi/tradfi/prediction/sports ALSO accumulated duplicates from this same gap (the fix
+      now prevents further accumulation everywhere, but existing duplicates in those buckets — if any — still need the
+      same scan-and-dedup treatment `defi_manifest_dedup_2026_07_10.py` did for defi).
+- [ ] [DATA] P2. Once the other asset groups are scanned, generalize `defi_manifest_dedup_2026_07_10.py` into a
+      per-asset-group tool (or confirm it's not needed if the fix prevents re-accumulation fast enough that existing
+      counts are negligible).
 
 ## Progress Log
 
 - 2026-07-10: Filed. Real evidence gathered via direct GCS parquet reads (not inferred). Dedup script written, dry-run
   confirmed 1,789,793 genuine duplicates + a safety check that the 525,276 legitimate state-transition groups are
   unaffected. `--apply` run in progress.
+- 2026-07-10 (later, operator: "actually fix the problem though URGENTLY"): **Root-caused and fixed.** Dispatched a
+  focused read of `unified_trading_library/manifest_consolidator.py`'s exact merge/delete/lock/CAS-retry logic (not
+  secondhand — read the SQL directly). The original "shard-delete-before-merge race" hypothesis was investigated in code
+  and ruled out (the CAS-retry path already re-reads the canonical fresh on every attempt, closing that class of race
+  per its own 2026-07-08 fix). Direct evidence instead pinpointed the real gap: the incremental merge's `survivors` CTE
+  streams untouched canonical rows through with ZERO self-deduplication — confirmed via the pre-dedup backup that the
+  original duplicate pair's dedup-key columns were byte-identical in both value and type, meaning they were never
+  compared against each other by any cycle. Fixed (`unified-trading-library@0de04b6e`) by applying the same window-dedup
+  already used for contested rows to survivors. Verified the fix is real (not a plausible-sounding no-op) via a
+  stash-based before/after test run: the new regression test fails on the pre-fix code (reproduces 2 duplicate rows) and
+  passes on the fix (collapses to 1). Full test suite green, ruff clean, pushed to `live-defi-rollout`. The fix lives in
+  the shared consolidator, so it protects every asset group's bucket on its next 1-minute cycle, not just defi.
