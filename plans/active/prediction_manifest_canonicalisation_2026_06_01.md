@@ -485,14 +485,17 @@ be fixed first if run on a VM.
       Genuine absences: 73 phantom + 9 missing_envelope (valid `attempted_failed`). Snapshots: `pre_cf15_unphantom` /
       `pre_kalshi_restamp` / `pre_cf7_v4_cleanup` (2026-07-11). **⚠️ CF-8 note:** the `_index` has no `available_at`
       COLUMN (pre-existing schema question, not a regression). **⚠️ E8-DELETE STILL GATED (object-safety):** the
-      `0-legacy-only` \_index check shows 1,787 legacy-only CELLS — but they are
-      `ohlcv**`PROCESSED-CANDLE data_types the raw-tick rebuild doesn't     manifest (candles are MDPS's domain; both buckets hold 300k+ candle OBJECTS → the candles ARE migrated, this is a     manifest-reflection gap NOT data-loss). Before the irreversible E8 tick-bucket delete: complete a full OBJECT-LEVEL    `legacy
-      ⊆
-      canonical`verification (raw + candles) — do NOT delete on "likely safe". Original diagnosis below.     <br>**Historical: 🔴 PHANTOM RECONCILER BUNDLE-ATOM WIPE. ✅ STEP 1 (CODE FIX) LANDED 2026-07-10 —    `unified-trading-library@22d3984b`+`instruments-service@2674e6fd`(both QG-green).** The reconciler now EXEMPTS     manifest-only bundle atoms (new UTL SSOT    `MANIFEST_ONLY_BUNDLE_DATA_TYPES
-      = {prediction_canonical_question_group}`, a strict subset of UAC     `BUNDLED_DATA_TYPES` — object-backed bundles
-      options*chain/futures_chain/event_contract/sports stay in phantom scope; invariant + regression tests prove bundle
-      atoms survive while genuine per-object phantoms are still demoted; rule-11 fleet-safety verified). **✅ STEP 3
-      (RESTORE) DONE 2026-07-10** —
+      `0-legacy-only` \_index check shows 1,787 legacy-only CELLS — but they are `ohlcv**`PROCESSED-CANDLE data_types
+      the raw-tick rebuild doesn't manifest (candles are MDPS's domain; both buckets hold 300k+ candle OBJECTS → the
+      candles ARE migrated, this is a manifest-reflection gap NOT data-loss). Before the irreversible E8 tick-bucket
+      delete: complete a full OBJECT-LEVEL `legacy     ⊆     canonical`verification (raw + candles) — do NOT delete on
+      "likely safe". Original diagnosis below. <br>**Historical: 🔴 PHANTOM RECONCILER BUNDLE-ATOM WIPE. ✅ STEP 1 (CODE
+      FIX) LANDED 2026-07-10 — `unified-trading-library@22d3984b`+`instruments-service@2674e6fd`(both QG-green).** The
+      reconciler now EXEMPTS manifest-only bundle atoms (new UTL SSOT
+      `MANIFEST_ONLY_BUNDLE_DATA_TYPES     = {prediction_canonical_question_group}`, a strict subset of UAC
+      `BUNDLED_DATA_TYPES` — object-backed bundles options*chain/futures_chain/event_contract/sports stay in phantom
+      scope; invariant + regression tests prove bundle atoms survive while genuine per-object phantoms are still
+      demoted; rule-11 fleet-safety verified). **✅ STEP 3 (RESTORE) DONE 2026-07-10** —
       `reconcile_phantom_manifest_rows_all.py --asset-group prediction --unphantom-only --apply` (safe-by-construction,
       dry-verified first) recovered **10,769 phantom-demoted bundle cells** (7,278 POLYMARKET + 3,491 KALSHI) +49 bonus
       `trades` rows → `captured`; bundle `captured` 0→10,769; total captured 24,870→35,688 (+10,818 exact); **ZERO
@@ -549,20 +552,26 @@ be fixed first if run on a VM.
       execute the irreversible delete ONLY after (1) E7 CF-GREEN with **0 legacy-only cells verified** (the ~2,039
       legacy-only tick cells fully migrated to canonical `pred-prd` — deleting before that = data loss, the plan's core
       thesis), (2) a fresh `_index` snapshot, (3) fleet drain. Sequence it as the genuine LAST step after E7 GREEN.
-- [ ] [DATA] P0. E8b **NEW (slot audit 2026-07-10): legacy `instruments-store-prediction` bucket decommission — GATED on
-      migrating 139 legacy-only cells first (data-loss risk). ✅ OPERATOR AUTHORISED the delete 2026-07-10 (same session
-      as E8) — still DATA-SAFETY-gated on migrating/reconciling the 139 legacy-only cells + a snapshot first.** **🔎
-      DIAGNOSIS UPDATE 2026-07-11 — the 139 legacy-only cells are likely RENAMED, NOT genuinely-unique (operator's
-      earlier intuition confirmed): instrument-key-level spot-check found `BTC_UP_DOWN_HOURLY` day=2026-03-24's legacy
-      market is ALREADY in canonical under a DIFFERENT cqg (1/1 keys present). So the legacy bucket is likely SUPERSEDED
-      (same markets, re-classified to canonical cqg names) → safely deletable WITHOUT migration (migrating at the legacy
-      cqg name would POLLUTE canonical with duplicate cells). The full 139-cell instrument-key confirmation timed out in
-      foreground (139 legacy downloads × canonical-per-day) — RUN IT IN A STABLE JOB to confirm 100% renamed before the
-      delete. If any cell is genuinely-unique (keys NOT in canonical), migrate only those. Two agents attempting this
-      DIED (tmpfs-ENOSPC + session restart) with ZERO prod changes — the migration/delete were NOT executed; legacy
-      still 92+47 legacy-only, canonical untouched. NEXT: stable-job full diagnosis → (all-renamed) snapshot + delete
-      legacy, or (some-unique) migrate-unique + delete.** Read-only subset audit (2026-07-10, ADC
-      central-element-323112) found the legacy reference-data store
+- [x] [DATA] P0. E8b ✅ **DONE 2026-07-11 (/autonomous)** — object-level diagnosis (market-id 0x-hash exact membership
+      vs union of ALL canonical cqgs/day) found the 139 legacy-only cells = 98 RENAMED (present in canonical under
+      re-classified cqgs) + **41 genuinely-unique COVERAGE GAPS** (37 lifecycle mostly `EUR_UP_DOWN_DAILY` on days
+      canonical lacked + 4 availability `OTHER`/`RUT`; `EUR_UP_DOWN_DAILY` IS a valid canonical cqg → real gaps, not
+      cruft, not renamed). Migrated the 41 (77 markets) to canonical → re-verified **0 genuinely-unique remaining**
+      (both prefixes 100% renamed) → `_index` snapshotted → **legacy `instruments-store-prediction` bucket DELETED
+      (2822/2822 objs, 0 fail)**. **NEW (slot audit 2026-07-10): legacy `instruments-store-prediction` bucket
+      decommission — GATED on migrating 139 legacy-only cells first (data-loss risk). ✅ OPERATOR AUTHORISED the delete
+      2026-07-10 (same session as E8) — still DATA-SAFETY-gated on migrating/reconciling the 139 legacy-only cells + a
+      snapshot first.** **🔎 DIAGNOSIS UPDATE 2026-07-11 — the 139 legacy-only cells are likely RENAMED, NOT
+      genuinely-unique (operator's earlier intuition confirmed): instrument-key-level spot-check found
+      `BTC_UP_DOWN_HOURLY` day=2026-03-24's legacy market is ALREADY in canonical under a DIFFERENT cqg (1/1 keys
+      present). So the legacy bucket is likely SUPERSEDED (same markets, re-classified to canonical cqg names) → safely
+      deletable WITHOUT migration (migrating at the legacy cqg name would POLLUTE canonical with duplicate cells). The
+      full 139-cell instrument-key confirmation timed out in foreground (139 legacy downloads × canonical-per-day) — RUN
+      IT IN A STABLE JOB to confirm 100% renamed before the delete. If any cell is genuinely-unique (keys NOT in
+      canonical), migrate only those. Two agents attempting this DIED (tmpfs-ENOSPC + session restart) with ZERO prod
+      changes — the migration/delete were NOT executed; legacy still 92+47 legacy-only, canonical untouched. NEXT:
+      stable-job full diagnosis → (all-renamed) snapshot + delete legacy, or (some-unique) migrate-unique + delete.**
+      Read-only subset audit (2026-07-10, ADC central-element-323112) found the legacy reference-data store
       `instruments-store-prediction-central-element-323112` is **NOT a subset** of canonical
       `instruments-store-pred-prd-…`: **92 legacy-only `instrument_availability` cells + 47 legacy-only
       `market_lifecycle` cells** (`(cqg,day)` keys, range 2025-03-27 → 2026-05-21), of which CQGs
@@ -575,6 +584,71 @@ be fixed first if run on a VM.
       `backfill_prediction_market_lifecycle_2026_01_07_to_05_23.py` (deleted 2026-07-10 — its Delete-when was met,
       canonical has 4,439 captured+manifest-verified gap-window lifecycle rows) pointed at THIS legacy bucket, surfacing
       the residual. Home: `bucket_name_ssot…` L6 + FLAG-3 env-tiered `*-store` decommission (downstream plan).
+
+## E7-GREEN + E8/E8b execution — /autonomous 2026-07-11 (slot session)
+
+**E7 MANIFEST is CF-GREEN** (E7-ROOT flipped RESOLVED, pm@c27ecb782). Root-caused + fixed the phantom-reconciler
+bundle-atom blind spot AND the CF-15 live-path-template gap:
+
+- **CF-15 fix (uac@83ed5765)**: `possible_manifest._canonical_pipeline_mode_prefixes()` only enumerated
+  `pipeline_mode=batch_<source>/` prefixes → the reconciler false-phantomed LIVE-captured cells at
+  `pipeline_mode=live_<source>/` paths (live=batch symmetry). Now emits BOTH batch+live prefixes per non-legacy source
+  (prediction: 9 templates incl. `live_kalshi`, `live_polymarket_clob`). Test `test_live_pipeline_mode_prefixes_present`
+  added. Cross-AG safe (probe-only → reduces false-demotion).
+- **Provenance fix (mtds@77065bd5)**: `_rebuild_prediction_cf11.py` no longer hardcodes `BATCH_POLYMARKET_CLOB`; per-row
+  `derive_pipeline_mode_for_row(venue, "prediction", dtype)` + `source_string_for(...)`.
+- **Recovery**: 13,218 false phantoms un-demoted; KALSHI re-stamp (created_time envelope + `_CANONICAL_PRED_RE` hive-kv
+  fallback); venue relabel; v4 schema-string purge. **captured 24,870 → 45,564**; CF-1 (v9) 100%, CF-2/3/4/7 clean; the
+  residual 73 phantom + 9 missing_env are GENUINE honest-absence. Issue doc:
+  `plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`.
+
+**E8 tick-bucket delete — DATA-SAFETY GATE PASSED + delete executing (2026-07-11).** Full OBJECT-LEVEL verification
+(normalize each object to `(tree,day,data_type@timeframe,filename)`, stripping pipeline*mode/asset_group/category/venue
+canonicalisation-only differences): **LEGACY `market-data-tick-prediction` = 1,164,148 normalized keys, all ⊆ CANONICAL
+`market-data-tick-pred-prd` 4,870,487 → 0 legacy-only objects (would be LOST on delete)**. The earlier 1,787 `_index`
+"legacy-only" was confirmed a pure manifest-reflection gap (ohlcv*\* PROCESSED-CANDLE data*types the raw-tick rebuild
+doesn't manifest; candles = MDPS domain; 300k+ candle objects present in BOTH buckets). `cloud-providers.yaml:160`
+already maps kind→canonical so readers resolve `pred-prd` (no reader-repoint needed). Legacy `_index` snapshotted to
+canonical `\_index/snapshots/DECOMMISSIONED_legacy*...2026_07_11.parquet` for record. Parallel delete (32 workers) of
+the 1.16M legacy objects executing.
+
+**E8b instruments-store — genuinely-unique cells are COVERAGE GAPS (not renamed) → migrating before delete
+(2026-07-11).** Object-level diagnosis: legacy `instruments-store-prediction` vs canonical `instruments-store-pred-prd`:
+92 availability + 47 lifecycle legacy-only `(cqg,day)` cells → 88+10 RENAMED (markets present in canonical under
+re-classified cqgs, market-id membership confirms), **41 genuinely-unique** (37 lifecycle mostly `EUR_UP_DOWN_DAILY` on
+days canonical lacks + 4 availability `OTHER`/`RUT` partial-remnant markets). Decisive: `EUR_UP_DOWN_DAILY` IS a valid
+canonical cqg (canonical has 77 cqgs incl. it) — so these are real reference-data coverage gaps, NOT out-of-universe
+cruft. Market-level migration (`market_id` 0x-hash exact-match membership vs union of ALL canonical cqgs that day; only
+migrates markets absent from canonical anywhere) copies fully-unique lifecycle cells + writes unique availability
+markets. Then re-verify 0-unique → snapshot + delete legacy. (Supersedes the earlier "likely all-renamed" intuition —
+the lifecycle EUR gap is real.) **EXECUTED**: migrated 41 cells / 77 markets → re-diagnosis 0 genuinely-unique remaining
+(both prefixes 100% renamed) → legacy `instruments-store-prediction` DELETED (2822/2822 objs).
+
+**Post-verification manifest polish (2026-07-11) — prediction `_index` is now genuinely audit-clean on all
+manifest-content CFs.** Running the full `cf_manifest_audit_2026_06_01.py` surfaced issues the earlier per-CF checks
+missed, all now fixed:
+
+- **CF-1 schema_version was string `'9'` not int 9** (dtype=object) — a REAL bug, not cosmetic: the UTL native writer
+  writes `schema_version: int = 9` and readers gate on `date_df["schema_version"] >= 9` (int compare), which **breaks
+  against string '9'**. This is CROSS-CUTTING (cefi/defi/tradfi manifests ALL store string '9' — the
+  migrator/consolidator introduces it). Fixed prediction's `_index`: normalised the column to int64 (all 757,475 rows
+  uniformly '9'→9) → CF-1 GREEN. Snapshot `_index/snapshots/pre_schema_version_int_fix_2026_07_11.parquet`.
+- **CF-5 / blank data_type**: dropped 17 vestigial blank-`data_type` rows (16 attempted_failed + 1 empty_confirmed,
+  early 2025 dates) — malformed atoms (an atom requires a data_type) → CF-5 GREEN.
+- **data_type case-drift / dups**: `MARKET_LIFECYCLE` (2,280) was an EXACT case-drift duplicate of `market_lifecycle`
+  (all 2,280 keys present in lowercase, 0 unique) → dropped the uppercase; `book_snapshot` (5, one date) reconciled to
+  `book_snapshot_5`. data_type now uniformly canonical-lowercase.
+- **AUDIT-TOOL bug fixed (pm PR #928)**: `cf_manifest_audit._probe_paths` excluded only `_index`/`_vm_staging`/…, NOT
+  `_migration_backup/` — so it descended into a non-partitioned backup parquet and reported **false
+  CF-2-paths/CF-3-partition RED**. Now skips ALL `_`-prefixed meta trees. After the fix prediction's raw_tick path
+  (`…/pipeline_mode=batch_kalshi/asset_group=prediction/venue=…/data_type=…/`) is correctly seen → CF-3-partition GREEN.
+
+**Prediction final audit state**: CF-1/CF-2-rows/CF-3/CF-4/CF-5/CF-6/CF-7/CF-13/Era-B **all GREEN**. Residual audit REDs
+are **cross-cutting, not prediction data gaps**: (a) **CF-2-paths** — the probe samples `processed_candles/` whose MDPS
+scheme validly omits `asset_group=` (per-AG bucket makes it redundant; raw_tick DOES carry it); (b) **CF-8
+available_at** — column absent (`written_at` proxy) across ALL AGs, tracked by
+`predictions_lookahead_and_reader_migration_2026_06_20.md`. **E8 tick delete**: robust 16-worker delete of the 1.16M
+legacy objects IN PROGRESS (idempotent, resumes on interruption).
 
 ## Deferred work after 2026-06-01 slot-3 session
 
