@@ -408,16 +408,16 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-                      full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-                      is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
-                      already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
-                      REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
-                      `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-                      `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-                      (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-                      full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-                      the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-                      pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                          full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                          is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
+                          already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
+                          REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
+                          `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                          `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                          (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                          full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                          the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                          pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -836,3 +836,32 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   file). Did not restart the in-flight MTDS phase a second time to avoid re-spending the ~24 shards' worth of
   already-valid, manifest-fix-covered results; any shard that hit the pre-retry-fix `launcher_script_nonzero_rc=1` will
   be identified from the final aggregate and re-run individually if time allows, rather than re-running the whole batch.
+
+  **The retry fix itself (#2 above) had a real, distinct bug — found within the hour, from the sweep's own next slice of
+  data, not guessed**: at ~120/344 MTDS shards done, EVERY skip leg (120/120) was failing with
+  `launcher_script_nonzero_rc=1` — 100%, unlike force's mixed pass/fail pattern, inconsistent with "generic transient
+  flakiness the retry should smooth over." Checked directly:
+  `gcloud compute instances describe mtds-backfill-defi-pipelinecheck-20260711-133925` showed the VM genuinely `RUNNING`
+  — the FIRST launcher attempt had actually succeeded server-side (`gcloud compute instances create` completed), but the
+  launcher script's own post-create polling/verification step timed out client-side and returned nonzero anyway. The
+  retry fix then blindly retried with the SAME `--vm-name`, colliding with "already exists" on every subsequent attempt
+  — retrying never helped this failure mode, it just burned 2 extra attempts every time. Fixed: before each retry, check
+  real VM presence via `aggregated_list_instances`; if the VM already exists, stop retrying immediately and treat the
+  launch as successful (fall through to normal `EXIT_STATUS` polling) instead of reporting a false failure. Evidence:
+  unified-trading-library@d24fcbae (QG green — one flaky, pre-existing, unrelated test failure on the first run,
+  `test_flush_all_drains_multiple_writers_across_buckets`, confirmed to pass in isolation before re-running the full
+  gate clean). Also live for the running sweep without a restart, same editable-install mechanism.
+
+  **The sweep's background process itself died between turns** (host/session boundary, not a code bug — no matching
+  `pipeline_e2e_check.py`/`driver.py` processes remained, though 233/344 MTDS jobs had already completed and persisted
+  real results by then). Resumed rather than restarted: diffed `mtds_shards.json` against `SWEEP_MANIFEST.json`'s
+  completed job IDs, built a 111-shard remaining list, and re-launched a driver run scoped to only those — no re-spend
+  of the 233 already-valid results. One VM from an in-flight-when-killed job was still `RUNNING` independently on GCE
+  (expected — VM lifecycle doesn't depend on the local harness process staying alive; it will self-delete on its own
+  completion per `VM_SHUTDOWN_ON_COMPLETION=true`), not a leak requiring cleanup.
+
+  **Pattern across all 6 real bugs this session's sweep-scale runs surfaced (not the earlier single-pilot bugs)**: every
+  one was found by refusing to accept a "checker reports X" result at face value — reading the actual GCS run.log, the
+  actual manifest parquet contents, or the actual GCE instance state before concluding whether X was a genuine finding
+  or an artifact of the checker itself. Slower per-bug, but it's why the tool is now trustworthy enough to produce a
+  final report that means something.
