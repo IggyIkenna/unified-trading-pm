@@ -112,3 +112,74 @@ coverage gap.
   `source=polymarket_clob` via the now-fixed `_stamp_producer_source`. Idempotent but heavy (rewrites the whole ~700K
   honest-absence corpus); a surgical direct-writer targeting just this filter is cheaper. (The 639,991 `live_*`
   blank-source rows are EXEMPT by design — producer-source is never back-stamped for live/replay pipeline_modes.)
+
+## Update 2026-07-11 — E7 CF-verify final residual cleanup: steps 1-3 confirmed landed; Class A+C purged; NEW sibling gap found in Class B
+
+> Read-only-then-targeted-write pass against the live prod `_index` (`market-data-tick-pred-prd-central-element-323112`,
+> snapshotted first to `_index/snapshots/pre_final_cleanup_2026_07_11.parquet` and again to
+> `_index/snapshots/pre_class_a_c_delete_20260711T064016Z.parquet` before any write). Scripts:
+> `instruments-service/scripts/{snapshot,diagnose,purge}_prediction_index_*_2026_07_11.py`,
+> `instruments-service/scripts/diagnose_class_b_object_existence_2026_07_11.py` (lifecycle: oneoff, delete after this
+> cleanup's gate is confirmed GREEN).
+
+**Remediation steps 1-3 above are CONFIRMED LANDED**: the bundle-atom reconciler exemption
+(`MANIFEST_ONLY_BUNDLE_DATA_TYPES` in `unified_trading_library/reconcile/manifest.py`) is live and the prediction
+manifest rebuild re-ran — the `_index` now holds **17,329 captured v9 `prediction_canonical_question_group` bundle
+rows** (KALSHI 10,040 @ `source=kalshi`, POLYMARKET 7,289 @ `source=polymarket_clob`). The "zero captured v9 bundle rows
+anywhere" finding from 2026-07-10 no longer holds.
+
+**Class A (schema_version=4/5 legacy per-instrument rows) — RE-DIAGNOSED AND PURGED.** With the bundle now restored,
+re-verified: **100% (6,760/6,760)** of the v4/v5 POLYMARKET `trades`/`prediction_trades` blank-`source` `captured` rows
+have a same-date captured v9 POLYMARKET bundle row — fully superseded. Deleted via
+`purge_prediction_index_final_residuals_2026_07_11.py --apply` (stop-on-surprise re-verified supersession + row-count
+range immediately before delete; snapshot-then-write; post-delete gate confirmed 0 residual + captured count dropped by
+exactly 6,760 + attempted_failed unchanged). This resolves remediation step 4's "re-evaluate the schema_version=4/5
+legacy rows" for the 6,760/9,174 in this predicate (the remaining ~2,414 non-`captured` v4/v5-family rows, if any, were
+not in scope of this delete — see gate numbers below).
+
+**124 lowercase `venue="kalshi"` duplicate rows — PURGED** (safe-to-execute-NOW cleanup, unblocked). Re-verified 100%
+exact-key match (date/data_type/capture_status/pipeline_mode/source/error_reason/underlying/instrument_type) against
+canonical `venue="KALSHI"` rows, 0 `captured` among them, before delete. Same script/run as Class A above (single
+combined write). `_index` now: 0 lowercase `kalshi` rows, 160,865 canonical `KALSHI` rows unchanged.
+
+**NEW FINDING (Class B / the 13,292 phantom rows) — the `--unphantom-only` safe-recovery pass found 0 recoverable rows,
+but sampled read-only verification shows this is NOT proof of genuine absence — it is a SIBLING gap to this file's root
+cause, in the phantom-audit's OWN path-template registry.** `--unphantom-only --apply` (safe-by-construction,
+phantom→captured only) ran clean and recovered 0/13,292 — confirmed via direct object-existence sampling (4 rows sampled
+from each of the 4 (venue, data_type) phantom groups): **in 3 of 4 groups sampled, the EXACT `instrument_id` + `date`
+HAS a real parquet object on GCS** — but only under `pipeline_mode=live_kalshi` / `pipeline_mode=live_polymarket_clob`,
+a shape **NOT present** in `unified_api_contracts.canonical_path_templates('prediction')` (which only enumerates
+`batch_kalshi` / `batch_polymarket_clob` / `batch_polymarket_gamma_api` / the legacy bare/`category=` shapes). Example
+verified 1:1 match: manifest phantom row
+`(date=2026-06-23, venue=KALSHI, data_type=book_snapshot_5, instrument_id=KALSHI:PREDICTION_MARKET:KXNASDAQ100-26JUN26H1600-B30750)`
+↔ GCS object
+`raw_tick_data/by_date/day=2026-06-23/pipeline_mode=live_kalshi/asset_group=prediction/venue=KALSHI/instrument_type=prediction_market/data_type=book_snapshot_5/KALSHI:PREDICTION_MARKET:KXNASDAQ100-26JUN26H1600-B30750.parquet`.
+**This means the task's working assumption ("whatever stays attempted_failed is genuine honest-absence") is UNVERIFIED
+and likely wrong for a large fraction of the 13,292** — the true genuine-vs-recoverable split cannot be established
+until the registry gap is closed. Per CLAUDE.md's data-correctness/cross-repo/SSOT-contradiction big-finding rule this
+is escalated to the operator (see the task's final report) rather than silently accepted as "fine, honest absence."
+
+Separately (same sampling pass), a **provenance-mislabeling bug**: all 11,988 KALSHI-venue phantom rows carry
+`pipeline_mode=batch_polymarket_clob` / `source=polymarket_clob` — POLYMARKET's provenance stamped on KALSHI rows
+(`written_at` clustered at 2026-07-11T05:59-06:00Z, i.e. the just-completed rebuild). This does NOT affect the phantom
+audit's own path probing (it tries every template regardless of the row's own `pipeline_mode` value) so it did not
+change the Class-B recovery result above, but it is a live CF-4/CF-26 violation (wrong-vendor stamp, not a blank one —
+so it passes the practical `audit_canonical_form.py` CF-4 check while still being wrong) that should be root-caused in
+the rebuild writer (`market_tick_data_service/scripts/rebuild_prediction_manifest.py`) separately.
+
+**Remediation for the new finding (not executed — out of scope for a residual-cleanup pass, requires the same rule-11
+cross-AG regression rigor as the original bundle-atom fix)**:
+
+5. **[CODE, P1] Add `pipeline_mode=live_kalshi` / `live_polymarket_clob` / `live_polymarket_gamma_api` prefix shapes**
+   to the prediction entries in `unified_api_contracts.registry.possible_manifest` (CF-15 SSOT,
+   `canonical_path_templates`) so the phantom-audit's `--unphantom-only` pass can actually distinguish
+   genuinely-batch-absent from batch-absent-but-live-captured. **HARD (rule 11, same as remediation step 1)**: verify
+   this does not weaken phantom detection for other AGs before shipping (the registry is shared cross-AG); confirm
+   whether a BATCH manifest row should legitimately be satisfied by LIVE-only evidence (semantics question — a BATCH row
+   tracks BATCH backfill completeness specifically; unioning it with LIVE evidence may misrepresent BATCH-path health
+   per-se, even though CF-12 batch=live symmetry says the CELL has data either way). Re-run `--unphantom-only --apply`
+   after landing; whatever remains attempted_failed AFTER that is the first defensible "genuine honest-absence" number
+   for Class B.
+6. **[CODE, P2] Root-cause the KALSHI→`batch_polymarket_clob`/`polymarket_clob` provenance mislabel** in
+   `rebuild_prediction_manifest.py`'s writer (a stale/carried-over loop variable is the leading hypothesis given the
+   clustered `written_at`); fix at the write site, not via a manifest patch.
