@@ -340,8 +340,11 @@ env-split/env-mismatch variants of already-KEEP-classified kinds, e.g. extra `-d
 
 ## 5. Genuinely blocked
 
-None. Everything that could be finished within the "confirm real evidence before acting" standard was finished;
-everything else is flagged above with the specific reason it wasn't force-decided.
+One item, surfaced after this section was first written — see §5b's closing status for the full account: shipping the
+§5b regression fix is blocked on `unified-api-contracts`'s working tree, which carries substantial uncommitted,
+unrelated work from what looks like a different concurrent workstream (not mine, not abandoned — see §5b). Everything
+else that could be finished within the "confirm real evidence before acting" standard was finished; everything else is
+flagged above with the specific reason it wasn't force-decided.
 
 ## 5b. Post-completion regression found + fixed during final CI sanity check
 
@@ -390,14 +393,28 @@ packaged fallback) plus at least one hardcoded-string shadow (`setup-defi-bucket
 (`manifest_reader.py::_EXTRA_BUCKET_KINDS`). A kind-removal edit needs `rg -l '<kind>'` across the FULL workspace, not
 just `resolve_bucket_name(kind=...)` call-sites, before it can be called complete.
 
-**Ship status as of this entry**: fixes are made, verified (full `quality-gates.sh` green on unified-trading-library;
-`resolve_all_buckets()` end-to-end verified on deployment-service), but NOT YET SHIPPED — blocked on quickmerge's
-pre-flight dependency-cleanliness gate: `unified-api-contracts` has a LIVE concurrent-agent WIP (mtime actively
-advancing, ~20s old on last check — `tests/unit/test_cme_options_universe.py` +
-`unified_api_contracts/registry/tradfi_instrument_universe.py`), which blocks unified-trading-library's quickmerge
-(cascades to unified-api-contracts), which in turn blocks deployment-service's quickmerge (depends on both). Per the
-liveness-gated inherited-dirty-WIP rule, this is PROTECT (not inherit) — waiting for it to settle naturally rather than
-touching another agent's in-progress work. Will retry quickmerge once that repo's working tree goes clean.
+**Ship status — final for this session**: fixes are made and verified (full `quality-gates.sh` green on
+unified-trading-library — `✅ ALL QUALITY GATES PASSED`; `resolve_all_buckets()` end-to-end verified on
+deployment-service against the real yaml), but **NOT SHIPPED** — blocked on quickmerge's pre-flight
+dependency-cleanliness gate. `unified-api-contracts` (`tests/unit/test_cme_options_universe.py` +
+`unified_api_contracts/registry/tradfi_instrument_universe.py`, +144/-51 lines) blocks unified-trading-library's
+quickmerge (cascades to unified-api-contracts), which in turn blocks deployment-service's quickmerge (depends on both).
+This was first checked while the diff's mtime was actively advancing (genuinely live, re-confirmed twice ~20s and ~40s
+apart) — correctly PROTECTed rather than touched. On a later check the mtime had gone static for 12+ hours, which by the
+letter of the liveness rule (`<120s` → PROTECT) would read as a dead/inheritable claim. It was NOT inherited anyway: the
+diff content is substantial, coherent, well-commented engineering (a real MVP-scope-derivation refactor deriving
+`MVP_CME_EXCHANGE_CODES` from a canonical SSOT) explicitly tied to issue doc
+`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08` / `mvp_universal_fetch_mode` — and this same session independently
+observed matching uncommitted changes to that exact issue doc plus a new sibling
+(`mvp_mode_live_streaming_flag_unreachable_2026_07_10.md`) in this PM repo's `plans/active/issues/`, strongly indicating
+a real, separate, in-flight workstream (another slot/agent) rather than abandoned WIP. A 12h-stale mtime on one pair of
+files doesn't prove that workstream is dead — it may simply not have touched those exact two files recently while
+working elsewhere. Given the stakes of wrongly hijacking someone else's unreviewed, unrelated, substantial cross-repo
+change under my own commit authorship, this was judged higher-risk than leaving my own fix unshipped one more cycle.
+**Not resolved this session** — this is the one genuinely open item (§5). Next step for whoever picks this up: check
+`cd unified-api-contracts && git status` — if clean (that workstream shipped or was abandoned + cleaned up), just retry
+`bash scripts/quickmerge.sh` in unified-trading-library then deployment-service with the same commands logged above; if
+still dirty, coordinate with whoever owns the tradfi-MVP-scope work rather than overriding it.
 
 ## 6. Model-tier note (repeating from frontmatter, since it matters for how much to trust this)
 
