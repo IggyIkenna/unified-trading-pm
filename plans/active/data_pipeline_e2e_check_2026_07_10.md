@@ -408,16 +408,16 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-              is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
-              already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
-              REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
-              `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                  full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                  is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
+                  already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
+                  REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
+                  `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                  `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                  (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                  full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                  the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                  pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -768,3 +768,37 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   pilot cycles (original + re-pilot) have exercised and fixed every bug the tool itself had. Any further failures from
   here are either genuine shard-level findings (the actual point of this smoke test) or the already-documented
   architectural gaps the aggregator cross-references — not tooling bugs.
+
+- 2026-07-11 (autonomous session, continued after a host reboot) — **Two more findings from the real 452-shard launch,
+  then a genuine environmental interruption, then a clean recovery.**
+
+  1. **Local-concurrency ceiling on this specific dev host, found via a real launch, not guessed.** The full sweep
+     launched at concurrency=40 (IS phase: clean, 108/108 real passes/fails, zero tooling issues). The MTDS phase at the
+     same concurrency=40 then failed almost every job near-instantly (~127-165s vs. the expected ~600s+, one job
+     SIGKILLed with exit=-9). Root-caused via a systematic isolation test rather than guessed: raw
+     `bash launch-mtds-backfill-vm.sh` at 8-way, 20-way, AND 40-way concurrency all succeeded cleanly (0 failures) —
+     ruling out the gcloud/launcher layer entirely. Running the REAL `pipeline_e2e_check.py` Python harness at 40-way
+     concurrency reproduced the failure exactly. `uptime` at the time showed `load averages: 93.56 55.03 29.21` on a
+     10-core host — this machine is the operator's own interactive dev laptop (Chrome/Cursor/WindowServer/Preview all
+     running), not a dedicated build box, and the load was already elevated from other concurrent activity (other slots)
+     before this sweep's own 40 processes piled on. **This is a host-capacity finding, not a code defect** — no
+     tracked-repo file needed a fix. Mitigation: reduced the scratchpad driver's concurrency to a level the host
+     measurably recovers from (confirmed load dropped to ~12 at concurrency=6 immediately after).
+
+  2. **The host then rebooted mid-run** (uptime resets to a few minutes; the in-flight MTDS sweep and its
+     `SWEEP_MANIFEST.json`, all per-shard report artifacts, `driver.py`, and `aggregate_report.py` — all
+     `/private/tmp`-scoped scratchpad state — were wiped; this is consistent with `/tmp` clearing on reboot, not a
+     tooling bug). **What survived**: every shipped git commit (all 6 code fixes this session, confirmed present via
+     `git log` post-reboot) and this plan doc (git-tracked, pushed after every finding). **What was lost**: the 108
+     completed IS shard results and the partial MTDS results from the concurrency-40 attempt — real GCS/VM work whose
+     local report artifacts were never persisted anywhere durable. Recovery: regenerated `is_shards.json` (108) and
+     `mtds_shards.json` (344) from the same UAC registries (byte-identical counts, confirms the registries are
+     deterministic), rewrote `driver.py` (IS-before-MTDS ordering built in from the start this time) and
+     `aggregate_report.py` (now also cross-references the DeFi IS skip-leg gap, not just the ASTER/HYPERLIQUID data-type
+     gaps) from scratch. Post-reboot host state is healthy (`load averages: 2.92 4.12 10.04` on 10 cores) — re-launching
+     the full 452-shard sweep (IS phase first, then MTDS) at a moderate concurrency, watching host load as it runs.
+
+  **Lesson folded into the final report regardless of how far the re-run gets**: this smoke-check tool itself is now
+  fully proven correct across 2+ real pilot cycles and a partial real sweep (0 tooling bugs remaining, 4 real bugs
+  found+fixed+shipped this session); what remains uncertain going into this re-run is coverage completion, not
+  correctness.
