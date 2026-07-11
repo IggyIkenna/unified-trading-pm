@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 0,
+        "qg_red_reason": null,
+        "coverage_pct": 72.83,
         "warn_file_count": 11,
-        "qg_red_reason": "ruff",
-        "coverage_pct": 72.83
+        "large_file_count": 0
       }
     },
     "execution-service": {
@@ -1258,10 +1258,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 87.59,
-        "qg_red_reason": null,
         "large_file_count": 5,
-        "warn_file_count": 20
+        "qg_red_reason": null,
+        "warn_file_count": 20,
+        "coverage_pct": 87.53
       }
     },
     "unified-trading-pm": {
