@@ -658,14 +658,29 @@ available_at** — column absent (`written_at` proxy) across ALL AGs, tracked by
 1.16M legacy objects COMPLETE (verified `remaining=0`, 0 fail). Empty bucket shell remains (SA lacks
 `storage.buckets.delete`) — admin/L6 residual only.
 
-**Two minor residual follow-ups (data-safe, tracked):**
+**Residual follow-ups:**
 
-- **Empty legacy bucket SHELL removal** — `market-data-tick-prediction-central-element-323112` holds 0 objects but the
-  shell itself needs `storage.buckets.delete` (admin, `bucket_name_ssot…` L6). Harmless empty shell; no data.
-- **IS `_index` reconsolidation** — the E8b migration wrote 77 genuinely-unique markets to canonical
-  `instruments-store-pred-prd` OBJECTS (`instrument_availability/` + `market_lifecycle/` trees, data preserved) but the
-  `_index/availability_index.parquet` manifest does not yet reflect them. Low impact (77 settled historical markets,
-  mostly EUR forex lifecycle); reconsolidate the IS `_index` (or let the scheduled consolidator pick them up).
+- **⛔ Empty legacy bucket SHELL removal — BLOCKED-CREDENTIALS (needs operator/admin).** Both legacy prediction buckets
+  (`market-data-tick-prediction` + `instruments-store-prediction`) hold **0 objects** (data fully decommissioned), but
+  the empty shells need `storage.buckets.delete`. The only credential in this env is `unified-trading-sa`, which has
+  `objects.delete` (used to empty them) but NOT `buckets.delete`/`getIamPolicy`, and cannot impersonate any admin SA (no
+  `serviceAccounts.getAccessToken`; `cloudstorage@` disabled). Remediation (admin identity):
+  `gcloud storage buckets delete gs://market-data-tick-prediction-central-element-323112` +
+  `…gs://instruments-store-prediction-central-element-323112` — OR grant `unified-trading-sa` `roles/storage.admin` on
+  them and an agent finishes it.
+- **✅ IS `_index` reconciliation — DONE 2026-07-11 + surfaced a systematic finding.** Reconciling the canonical
+  `instruments-store-pred-prd/_index/availability_index.parquet` against the OBJECTS revealed a **540-cell object↔index
+  divergence** — far larger than the E8b migration's 41 cells: **38 lifecycle + 502 availability cells present as legit
+  canonical OBJECTS but absent from the `_index`**, almost all `venue=POLYMARKET` where the `_index` carried only
+  `KALSHI` (or nothing) for that (date,cqg). Sampled the missing objects — real Polymarket instrument-availability
+  records (25/6/19-market cells, proper schema), NOT stale. Since the `_index` already carries POLYMARKET rows for other
+  cells (a gap, not a deliberate exclusion) and the objects are the data SSOT, reconciled the `_index` to the objects
+  (snapshot `_index/snapshots/pre_is_index_recon_2026_07_11.parquet`): **+540 rows (25,738→26,278), re-verified 0
+  object-cells missing**, and normalised the IS `_index` `schema_version` string→int64 (same cross-cutting bug as the
+  tick manifest — see the findings issue doc). **Root-cause FINDING (flagged, NOT fixed here):** the enumeration-derived
+  `_index` builder systematically under-indexes Polymarket instrument-availability; the fix sits in the IS enumeration
+  (`enumerate_expected_universe.py::_enumerate_v2_prediction` — operator-declared DON'T-TOUCH), so the reconciliation is
+  an interim correctness patch and the enumeration gap is a finding for the IS owner.
 
 ## Deferred work after 2026-06-01 slot-3 session
 
