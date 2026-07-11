@@ -408,16 +408,16 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-                  full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-                  is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
-                  already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
-                  REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
-                  `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-                  `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-                  (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-                  full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-                  the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-                  pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                      full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                      is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
+                      already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
+                      REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
+                      `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                      `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                      (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                      full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                      the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                      pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -802,3 +802,37 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   fully proven correct across 2+ real pilot cycles and a partial real sweep (0 tooling bugs remaining, 4 real bugs
   found+fixed+shipped this session); what remains uncertain going into this re-run is coverage completion, not
   correctness.
+
+- 2026-07-11 (autonomous session, continued) — **The real IS-then-MTDS sweep itself surfaced 2 more real bugs, both
+  found from genuine sweep-scale data, not guessable from a single pilot.** IS phase completed cleanly at concurrency=20
+  (108/108, zero tooling issues, results valid). MTDS phase then showed a NEW, previously-unseen 100%-failure-rate
+  pattern on the force leg: `manifest_status_invalid:no_matching_row` despite genuine, real capture (verified directly —
+  e.g. `CEFI:COINBASE-SPOT:trades` wrote 578,121 real rows; the per-VM manifest shard parquet on the TEST bucket shows
+  the exact matching row, `instrument_id=BTC-USD capture_status=captured`; the SAME row is confirmed ABSENT on PROD,
+  exactly as `--test-run` should behave).
+
+  1. **Root cause**: `_run_batch_leg` verified the manifest against `_prod_bucket(...)`, per a comment documenting an
+     EARLIER bug (this same session's todo 17) where the manifest write itself ignored `IS_TEST_RUN` and always landed
+     on PROD. That bug was fixed the same session (`get_tick_data_bucket(test_aware=True)`,
+     market-tick-data-service@73d88332) — the write now correctly follows the parquet onto the TEST bucket — but the
+     VERIFIER was never updated to match, so it kept checking the now-stale PROD location. A genuine "fixed A, broke the
+     thing checking A" sequencing gap within this same session's own work. Fixed: verify against the same TEST bucket
+     the parquet write lands on. Evidence: market-tick-data-service@b76fec33 (QG green).
+
+  2. **A second, independent pattern**: `vm_not_success:launcher_script_nonzero_rc=1` — the launcher script itself
+     exiting nonzero before any VM is created, hitting a meaningful (not 100%, but not negligible) fraction of launches.
+     Investigated directly: an isolated, single-shot reproduction of the EXACT failing command (same venue, same day,
+     same flags) succeeded cleanly every time — ruling out a deterministic argument/logic bug. This is classic transient
+     cloud-API flakiness under sustained concurrent load (consistent with the earlier concurrency-ceiling finding, just
+     a milder manifestation at a "safe" concurrency than the 40-way meltdown). Fixed at the root: `launch_vm_and_wait`'s
+     launcher-script invocation now retries up to 3 total attempts (5s backoff) on a nonzero exit — safe to retry
+     because the launcher only issues `gcloud compute instances create` before returning (no VM exists yet on a nonzero
+     exit, so a retry is idempotent; a genuine name collision would surface as an unambiguous "already exists" error,
+     not a silent double-launch). Evidence: unified-trading-library@c5d717c2 (QG green, shipped via full quickmerge — no
+     dirty deps this time).
+
+  Both fixes are LIVE for the currently-running sweep without a restart (`unified-trading-library` is an editable path
+  dependency for both service repos — confirmed via direct import that MTDS's `.venv` resolves the just-edited source
+  file). Did not restart the in-flight MTDS phase a second time to avoid re-spending the ~24 shards' worth of
+  already-valid, manifest-fix-covered results; any shard that hit the pre-retry-fix `launcher_script_nonzero_rc=1` will
+  be identified from the final aggregate and re-run individually if time allows, rather than re-running the whole batch.
