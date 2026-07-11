@@ -79,8 +79,18 @@ def _probe_paths(bucket: str, depth: int = 6) -> list[str]:
     for _ in range(depth):
         kids = _ls_shallow(cur)
         seen = kids or seen
+        # Skip ALL meta trees, not just a hardcoded few: any leaf whose final path
+        # segment starts with "_" (``_index``/``_vm_staging``/``_migration_backup``/
+        # ``_backups``/…) or is a known non-"_" meta dir. Data partitions
+        # (``by_date``/``day=``/``pipeline_mode=``/``asset_group=``/…) never start with
+        # "_", so this cannot skip real data — but it stops the probe descending into a
+        # non-partitioned backup parquet and falsely reporting CF-2-paths/CF-3-partition RED.
         data_kids = [
-            k for k in kids if not k.rstrip("/").endswith(("_index", "_vm_staging", "backfill-logs", "snapshots"))
+            k
+            for k in kids
+            if not (
+                (_seg := k.rstrip("/").rsplit("/", 1)[-1]).startswith("_") or _seg in ("backfill-logs", "snapshots")
+            )
         ]
         if not data_kids:
             break
@@ -187,7 +197,9 @@ def audit(canonical: str, legacy: str | None) -> tuple[int, dict[str, str]]:
         canonical_states = {"captured", "empty_confirmed", "attempted_failed", "expected_unattempted"}
         noncanon = statuses - canonical_states
         results["CF-6"] = "GREEN" if not noncanon else "RED"
-        print(f"CF-6 expected_unattempted/4-state  [{results['CF-6']}]  EU rows={eu:,}  noncanonical-states={sorted(noncanon)}")
+        print(
+            f"CF-6 expected_unattempted/4-state  [{results['CF-6']}]  EU rows={eu:,}  noncanonical-states={sorted(noncanon)}"
+        )
     else:
         results["CF-6"] = "RED"
         print("CF-6 4-state  [RED]  capture_status column ABSENT")
@@ -230,7 +242,9 @@ def audit(canonical: str, legacy: str | None) -> tuple[int, dict[str, str]]:
     if "data_type" in cols:
         era_a = int(df["data_type"].astype(str).isin(ERA_A_CHAIN_DATA_TYPES).sum())
         results["Era-B"] = "GREEN" if era_a == 0 else "RED"
-        print(f"Era-B chain data_type  [{results['Era-B']}]  data_type in {{options_chain,futures_chain}} rows={era_a:,} (must be 0)")
+        print(
+            f"Era-B chain data_type  [{results['Era-B']}]  data_type in {{options_chain,futures_chain}} rows={era_a:,} (must be 0)"
+        )
     else:
         results["Era-B"] = "SKIP(no data_type col)"
         print("Era-B chain data_type  [SKIP]  data_type column ABSENT")
