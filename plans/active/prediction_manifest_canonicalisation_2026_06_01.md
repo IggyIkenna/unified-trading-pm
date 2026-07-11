@@ -474,13 +474,25 @@ be fixed first if run on a VM.
       overlap 783) = the data-loss risk that keeps **E8 legacy-delete HARD-gated until the migration runs**. So E7 is
       GREEN-able only AFTER the gated E4 full-run + rebuild; the code side is ready (verified no defect introduced by
       E2/E5).
-- [ ] [CODE] P0. **E7-ROOT — 🔴 PHANTOM RECONCILER BUNDLE-ATOM WIPE. ✅ STEP 1 (CODE FIX) LANDED 2026-07-10 —
-      `unified-trading-library@22d3984b` + `instruments-service@2674e6fd` (both QG-green).** The reconciler now EXEMPTS
-      manifest-only bundle atoms (new UTL SSOT
-      `MANIFEST_ONLY_BUNDLE_DATA_TYPES = {prediction_canonical_question_group}`, a strict subset of UAC
-      `BUNDLED_DATA_TYPES` — object-backed bundles options*chain/futures_chain/event_contract/sports stay in phantom
-      scope; invariant + regression tests prove bundle atoms survive while genuine per-object phantoms are still
-      demoted; rule-11 fleet-safety verified). **✅ STEP 3 (RESTORE) DONE 2026-07-10** —
+- [x] ✅ [CODE] P0. **E7-ROOT — RESOLVED 2026-07-11: prediction \_index MANIFEST is CF-GREEN.** Final chain (all this
+      session): **CF-15 fix** `uac@83ed5765` (`possible_manifest._canonical_pipeline_mode_prefixes` now emits
+      `pipeline_mode=live_<source>` prefixes too — the batch-only templates false-phantomed live-captured cells;
+      cross-AG-safe probe-only) → **`--unphantom-only --apply`** recovered **13,218 of 13,292** false phantoms (74
+      genuine absence remain) → **KALSHI re-stamp** (11,932 rows `source=polymarket_clob`→`kalshi`, `pipeline_mode`→
+      `live_kalshi`; objects verified at live*kalshi) → **venue relabel** (189 blank/UNKNOWN→POLYMARKET, objects
+      verified) → **purge 1 stray v4**. **Verified CF-state: CF-1 v9=100% · CF-2 asset_group=prediction 100% · CF-3
+      pipeline_mode 0-blank · CF-4 source 0-blank + 0 wrong-vendor · CF-7 venue 0-drift · captured 24,870→45,564.**
+      Genuine absences: 73 phantom + 9 missing_envelope (valid `attempted_failed`). Snapshots: `pre_cf15_unphantom` /
+      `pre_kalshi_restamp` / `pre_cf7_v4_cleanup` (2026-07-11). **⚠️ CF-8 note:** the `_index` has no `available_at`
+      COLUMN (pre-existing schema question, not a regression). **⚠️ E8-DELETE STILL GATED (object-safety):** the
+      `0-legacy-only` \_index check shows 1,787 legacy-only CELLS — but they are
+      `ohlcv**`PROCESSED-CANDLE data_types the raw-tick rebuild doesn't     manifest (candles are MDPS's domain; both buckets hold 300k+ candle OBJECTS → the candles ARE migrated, this is a     manifest-reflection gap NOT data-loss). Before the irreversible E8 tick-bucket delete: complete a full OBJECT-LEVEL    `legacy
+      ⊆
+      canonical`verification (raw + candles) — do NOT delete on "likely safe". Original diagnosis below.     <br>**Historical: 🔴 PHANTOM RECONCILER BUNDLE-ATOM WIPE. ✅ STEP 1 (CODE FIX) LANDED 2026-07-10 —    `unified-trading-library@22d3984b`+`instruments-service@2674e6fd`(both QG-green).** The reconciler now EXEMPTS     manifest-only bundle atoms (new UTL SSOT    `MANIFEST_ONLY_BUNDLE_DATA_TYPES
+      = {prediction_canonical_question_group}`, a strict subset of UAC     `BUNDLED_DATA_TYPES` — object-backed bundles
+      options*chain/futures_chain/event_contract/sports stay in phantom scope; invariant + regression tests prove bundle
+      atoms survive while genuine per-object phantoms are still demoted; rule-11 fleet-safety verified). **✅ STEP 3
+      (RESTORE) DONE 2026-07-10** —
       `reconcile_phantom_manifest_rows_all.py --asset-group prediction --unphantom-only --apply` (safe-by-construction,
       dry-verified first) recovered **10,769 phantom-demoted bundle cells** (7,278 POLYMARKET + 3,491 KALSHI) +49 bonus
       `trades` rows → `captured`; bundle `captured` 0→10,769; total captured 24,870→35,688 (+10,818 exact); **ZERO
@@ -502,9 +514,35 @@ be fixed first if run on a VM.
       **unparseable 293→0** (regex fix); **bundle rows 0 phantom** (phantom-exempt holds); **whole-index captured
       32,546→39,106 (UP, no captured→failed regression)**; blank-source 27,292→6,760. **STEP 4 (final cleanup,
       2026-07-11): ✅ (a) 6,760 v4 POLYMARKET `trades`/`prediction_trades` captured rows PURGED** — verified 100%
-      superseded by same-date captured v9 bundles (snapshots `pre_final_cleanup_2026_07_11` +
-      `pre_class_a_c_delete*…`); ✅ **(c) 124     lowercase-`kalshi`byte-dup rows PURGED** (verified exact-dup, 0 captured); **🔴 (b) 13,292 phantom rows = FALSE     phantoms, BLOCKED on a NEW cross-AG finding.** Their objects DO exist on GCS but under`pipeline_mode=live_kalshi`/     `live_polymarket_clob`paths ABSENT from`canonical_path_templates('prediction')`(CF-15 gap) → the reconciler can't     resolve them → false phantom; PLUS the rebuild's CF-11 re-emit stamps all 11,988 KALSHI honest-absence rows with    `polymarket_clob`(wrong venue) — both entangled with the prediction **live-vs-batch pipeline_mode** model (a shared     registry + live=batch-spine change needing rule-11 cross-AG rigor; NOT rushed). Documented in    `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`(pm@754844a29) + 4 lifecycle:oneoff scripts    `instruments-service@ff58d155`. **E7 is NOT CF-GREEN** — blocked on (b) [+2 pre-existing micro-residual rows].     **E8 stays data-safety-blocked on E7-GREEN** (operator-authorised, but don't delete against an incomplete manifest).     Flip THIS box only when E7 is GREEN. Original diagnosis below. Original diagnosis below. <br>Root-cause     diagnosis of the live `\_index`found **ZERO**`data_type=prediction_canonical_question_group`rows at`captured` —     the phantom-manifest reconciler (`unified_trading_library/reconcile/manifest.py`, wrapper     `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`) has a **bundle-atom blind spot**: it assumes     `instrument_id`is a per-object path segment, but the v9 bundle atom's`instrument_id`is a SYNTHETIC    `canonical_question_group`(no`data_type=prediction_canonical_question_group/`folder exists on disk — it's a     manifest-only cluster-validated atom), so it demotes **100%** of bundle rows → **~15,769 legit captured cells     (7,278 POLYMARKET + 8,491 KALSHI) wiped to`attempted_failed[phantom_captured_no_parquet_at_canonical_path]`.**     FIX (ordered, blast-radius-gated): (1) make the reconciler bundle-aware — EXEMPT manifest-only bundle-atom     data_types from the object-existence check (mirror the `schema_version=4`skip; **rule-11 HARD: this runs against     ALL AGs — verify cefi/tradfi/sports/defi per-object phantom detection is unweakened + add a regression test**);     (2) fix the rebuild`\_CANONICAL_PRED_RE` `chain=/underlying=`older-layout gap; (3) re-run    `rebuild_prediction_manifest.py`→ cells restored; (4) THEN re-diagnose the schema_version=4/5 legacy rows (do NOT     purge before this — they may be the only surviving evidence). This falsifies the earlier "v4 rows superseded by v9     capture" hypothesis. **Safe-now cleanups (independent):** delete 124 lowercase`venue="kalshi"`byte-dup rows;     backfill`source`on 27,292 pre-fix batch rows via a rebuild CF-11 re-emit. FULL diagnosis + ordered remediation:    `plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`.
-      Repos: **unified-trading-library / instruments-service / market-tick-data-service**.
+      superseded by same-date captured v9 bundles (snapshots `pre_final_cleanup_2026_07_11` + `pre_class_a_c_delete*…`);
+      ✅ **(c) 124 lowercase-`kalshi`byte-dup rows PURGED** (verified exact-dup, 0 captured); **🔴 (b) 13,292 phantom
+      rows = FALSE phantoms, BLOCKED on a NEW cross-AG finding.** Their objects DO exist on GCS but
+      under`pipeline_mode=live_kalshi`/ `live_polymarket_clob`paths ABSENT
+      from`canonical_path_templates('prediction')`(CF-15 gap) → the reconciler can't resolve them → false phantom; PLUS
+      the rebuild's CF-11 re-emit stamps all 11,988 KALSHI honest-absence rows with `polymarket_clob`(wrong venue) —
+      both entangled with the prediction **live-vs-batch pipeline_mode** model (a shared registry + live=batch-spine
+      change needing rule-11 cross-AG rigor; NOT rushed). Documented in
+      `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`(pm@754844a29) + 4 lifecycle:oneoff scripts
+      `instruments-service@ff58d155`. **E7 is NOT CF-GREEN** — blocked on (b) [+2 pre-existing micro-residual rows].
+      **E8 stays data-safety-blocked on E7-GREEN** (operator-authorised, but don't delete against an incomplete
+      manifest). Flip THIS box only when E7 is GREEN. Original diagnosis below. Original diagnosis below. <br>Root-cause
+      diagnosis of the live `\_index`found **ZERO**`data_type=prediction_canonical_question_group`rows at`captured` —
+      the phantom-manifest reconciler (`unified_trading_library/reconcile/manifest.py`, wrapper
+      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`) has a **bundle-atom blind spot**: it assumes
+      `instrument_id`is a per-object path segment, but the v9 bundle atom's`instrument_id`is a SYNTHETIC
+      `canonical_question_group`(no`data_type=prediction_canonical_question_group/`folder exists on disk — it's a
+      manifest-only cluster-validated atom), so it demotes **100%** of bundle rows → **~15,769 legit captured cells
+      (7,278 POLYMARKET + 8,491 KALSHI) wiped to`attempted_failed[phantom_captured_no_parquet_at_canonical_path]`.** FIX
+      (ordered, blast-radius-gated): (1) make the reconciler bundle-aware — EXEMPT manifest-only bundle-atom data_types
+      from the object-existence check (mirror the `schema_version=4`skip; **rule-11 HARD: this runs against ALL AGs —
+      verify cefi/tradfi/sports/defi per-object phantom detection is unweakened + add a regression test**); (2) fix the
+      rebuild`\_CANONICAL_PRED_RE` `chain=/underlying=`older-layout gap; (3) re-run `rebuild_prediction_manifest.py`→
+      cells restored; (4) THEN re-diagnose the schema_version=4/5 legacy rows (do NOT purge before this — they may be
+      the only surviving evidence). This falsifies the earlier "v4 rows superseded by v9 capture" hypothesis. **Safe-now
+      cleanups (independent):** delete 124 lowercase`venue="kalshi"`byte-dup rows; backfill`source`on 27,292 pre-fix
+      batch rows via a rebuild CF-11 re-emit. FULL diagnosis + ordered remediation:
+      `plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`. Repos:
+      **unified-trading-library / instruments-service / market-tick-data-service**.
 - [ ] [DATA] P0. E8 Hand C-GREEN to `bucket_name_ssot…` L6 → delete legacy `market-data-tick-prediction` + stale
       pred-prd `category=` paths (single source of truth). **✅ OPERATOR AUTHORISED the E8 delete 2026-07-10 (this
       /autonomous session)** — the prior human-only hard-stop is lifted. **Still DATA-SAFETY-gated (not skippable):**
