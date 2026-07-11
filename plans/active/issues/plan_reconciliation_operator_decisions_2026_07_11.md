@@ -30,6 +30,8 @@ source:
   cursor-configs/skills/plan-reconcile/SKILL.md; findings archive in session scratchpad findings.json"
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Plans-corpus contradiction audit — operator decision queue + reconciliation log
