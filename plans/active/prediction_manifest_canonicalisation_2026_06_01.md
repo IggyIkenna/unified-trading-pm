@@ -495,15 +495,19 @@ be fixed first if run on a VM.
       per-venue loop → a full rebuild would mis-stamp every Kalshi bundle cell as `polymarket_clob` (contradicting UAC
       venue-disambiguation SSOT). FIXED `mtds@3397e7ae` (per-venue `derive_pipeline_mode_for_row(venue,…)` inside the
       loop; +regression test verifying KALSHI→batch_kalshi/kalshi, POLYMARKET→batch_polymarket_clob). **REMAINING
-      (data-ops): STEP 3** the clean `rebuild_prediction_manifest.py` re-run on `pred-prd` — RE-RUNNING now with all 4
-      code fixes (scoped-verify confirmed envelope+capture work; snapshot at
-      `_index/snapshots/pre_rebuild_rerun_2026_07_10.parquet`) → resolves in one pass: 5,000 Kalshi envelope rows →
-      captured (kalshi-stamped), 27,292 batch blank-`source` → stamped, ~293 unparseable objects → scanned; **STEP 4**
-      targeted cleanups (delete 124 lowercase-`kalshi` byte-dup rows; re-diagnose the v4 legacy rows — purge if
-      superseded by the now-captured bundle) + CF-1…CF-12 audit → E7 GREEN. Flip THIS box only when E7 is GREEN.
-      Original diagnosis below. <br>Root-cause diagnosis of the live `_index` found **ZERO**
-      `data_type=prediction_canonical_question_group` rows at `captured` — the phantom-manifest reconciler
-      (`unified_trading_library/reconcile/manifest.py`, wrapper
+      (data-ops): ✅ STEP 3 REBUILD RE-RUN DONE + VERIFIED (2026-07-11, 4.76M objects scanned, elapsed 5.9h, TMPDIR on
+      disk after a 1st-attempt tmpfs-ENOSPC crash that wrote NO shard = no prod change; consolidated via cron).**
+      Verified consolidated `_index`: **KALSHI captured bundles 10,040 @ 100% source=kalshi** + **POLYMARKET 7,289 @
+      100% polymarket_clob** (venue fix holds); **`missing_available_at_envelope` 5,000→9** (Kalshi created_time fix);
+      **unparseable 293→0** (regex fix); **bundle rows 0 phantom** (phantom-exempt holds); **whole-index captured
+      32,546→39,106 (UP, no captured→failed regression)**; blank-source 27,292→6,760. **STEP 4 REMAINING (final E7
+      residuals):** (a) **6,759 v4 POLYMARKET `trades`/`prediction_trades` captured rows w/ blank source** — the
+      pre-canonical per-object rows; NOW re-diagnosable (v9 bundles ARE captured) → purge if superseded per-date; (b)
+      **13,292 phantom rows** (v9, KALSHI-heavy `book_snapshot_5`/`trades`) → determine false (objects exist →
+      unphantom) vs genuine; (c) delete 124 lowercase-`kalshi` byte-dup rows; (d) the 9 genuine envelope failures; then
+      CF-1…CF-12 audit → E7 GREEN. Flip THIS box only when E7 is GREEN. Original diagnosis below. <br>Root-cause
+      diagnosis of the live `_index` found **ZERO** `data_type=prediction_canonical_question_group` rows at `captured` —
+      the phantom-manifest reconciler (`unified_trading_library/reconcile/manifest.py`, wrapper
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`) has a **bundle-atom blind spot**: it assumes
       `instrument_id` is a per-object path segment, but the v9 bundle atom's `instrument_id` is a SYNTHETIC
       `canonical_question_group` (no `data_type=prediction_canonical_question_group/` folder exists on disk — it's a
