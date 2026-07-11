@@ -513,8 +513,18 @@ be fixed first if run on a VM.
       thesis), (2) a fresh `_index` snapshot, (3) fleet drain. Sequence it as the genuine LAST step after E7 GREEN.
 - [ ] [DATA] P0. E8b **NEW (slot audit 2026-07-10): legacy `instruments-store-prediction` bucket decommission — GATED on
       migrating 139 legacy-only cells first (data-loss risk). ✅ OPERATOR AUTHORISED the delete 2026-07-10 (same session
-      as E8) — still DATA-SAFETY-gated on migrating/reconciling the 139 legacy-only cells + a snapshot first.**
-      Read-only subset audit (2026-07-10, ADC central-element-323112) found the legacy reference-data store
+      as E8) — still DATA-SAFETY-gated on migrating/reconciling the 139 legacy-only cells + a snapshot first.** **🔎
+      DIAGNOSIS UPDATE 2026-07-11 — the 139 legacy-only cells are likely RENAMED, NOT genuinely-unique (operator's
+      earlier intuition confirmed): instrument-key-level spot-check found `BTC_UP_DOWN_HOURLY` day=2026-03-24's legacy
+      market is ALREADY in canonical under a DIFFERENT cqg (1/1 keys present). So the legacy bucket is likely SUPERSEDED
+      (same markets, re-classified to canonical cqg names) → safely deletable WITHOUT migration (migrating at the legacy
+      cqg name would POLLUTE canonical with duplicate cells). The full 139-cell instrument-key confirmation timed out in
+      foreground (139 legacy downloads × canonical-per-day) — RUN IT IN A STABLE JOB to confirm 100% renamed before the
+      delete. If any cell is genuinely-unique (keys NOT in canonical), migrate only those. Two agents attempting this
+      DIED (tmpfs-ENOSPC + session restart) with ZERO prod changes — the migration/delete were NOT executed; legacy
+      still 92+47 legacy-only, canonical untouched. NEXT: stable-job full diagnosis → (all-renamed) snapshot + delete
+      legacy, or (some-unique) migrate-unique + delete.** Read-only subset audit (2026-07-10, ADC
+      central-element-323112) found the legacy reference-data store
       `instruments-store-prediction-central-element-323112` is **NOT a subset** of canonical
       `instruments-store-pred-prd-…`: **92 legacy-only `instrument_availability` cells + 47 legacy-only
       `market_lifecycle` cells** (`(cqg,day)` keys, range 2025-03-27 → 2026-05-21), of which CQGs
