@@ -546,12 +546,19 @@ be fixed first if run on a VM.
       batch rows via a rebuild CF-11 re-emit. FULL diagnosis + ordered remediation:
       `plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`. Repos:
       **unified-trading-library / instruments-service / market-tick-data-service**.
-- [ ] [DATA] P0. E8 Hand C-GREEN to `bucket_name_ssot…` L6 → delete legacy `market-data-tick-prediction` + stale
-      pred-prd `category=` paths (single source of truth). **✅ OPERATOR AUTHORISED the E8 delete 2026-07-10 (this
-      /autonomous session)** — the prior human-only hard-stop is lifted. **Still DATA-SAFETY-gated (not skippable):**
-      execute the irreversible delete ONLY after (1) E7 CF-GREEN with **0 legacy-only cells verified** (the ~2,039
-      legacy-only tick cells fully migrated to canonical `pred-prd` — deleting before that = data loss, the plan's core
-      thesis), (2) a fresh `_index` snapshot, (3) fleet drain. Sequence it as the genuine LAST step after E7 GREEN.
+- [x] [DATA] P0. E8 ✅ **DATA-DECOMMISSION DONE 2026-07-11 (/autonomous)** — object-level data-safety gate PASSED
+      (LEGACY `market-data-tick-prediction` 1,164,148 normalised keys all ⊆ CANONICAL `pred-prd` 4,870,487 → **0
+      legacy-only objects**; the earlier 1,787 `_index` legacy-only confirmed a manifest-reflection gap for ohlcv*\*
+      candle data_types, both buckets carry 300k+ candle objects). `_index` snapshotted to canonical
+      `\_index/snapshots/DECOMMISSIONED_legacy*...2026_07_11.parquet`; `cloud-providers.yaml:160`already maps     kind→canonical so readers resolve`pred-prd`(no reader-repoint needed). **ALL 1,164,148 legacy objects DELETED     (verified`remaining=0`).** Empty bucket SHELL remains (SA lacks `storage.buckets.delete`— 403); the shell removal     is the only residual admin step for`bucket_name_ssot…`
+      L6. Handoff to L6 is now shell-only, not data.
+- [ ] [DATA] P0. E8 (superseded — data done above) Hand C-GREEN to `bucket_name_ssot…` L6 → delete legacy
+      `market-data-tick-prediction` + stale pred-prd `category=` paths (single source of truth). **✅ OPERATOR
+      AUTHORISED the E8 delete 2026-07-10 (this /autonomous session)** — the prior human-only hard-stop is lifted.
+      **Still DATA-SAFETY-gated (not skippable):** execute the irreversible delete ONLY after (1) E7 CF-GREEN with **0
+      legacy-only cells verified** (the ~2,039 legacy-only tick cells fully migrated to canonical `pred-prd` — deleting
+      before that = data loss, the plan's core thesis), (2) a fresh `_index` snapshot, (3) fleet drain. Sequence it as
+      the genuine LAST step after E7 GREEN.
 - [x] [DATA] P0. E8b ✅ **DONE 2026-07-11 (/autonomous)** — object-level diagnosis (market-id 0x-hash exact membership
       vs union of ALL canonical cqgs/day) found the 139 legacy-only cells = 98 RENAMED (present in canonical under
       re-classified cqgs) + **41 genuinely-unique COVERAGE GAPS** (37 lifecycle mostly `EUR_UP_DOWN_DAILY` on days
@@ -647,8 +654,18 @@ missed, all now fixed:
 are **cross-cutting, not prediction data gaps**: (a) **CF-2-paths** — the probe samples `processed_candles/` whose MDPS
 scheme validly omits `asset_group=` (per-AG bucket makes it redundant; raw_tick DOES carry it); (b) **CF-8
 available_at** — column absent (`written_at` proxy) across ALL AGs, tracked by
-`predictions_lookahead_and_reader_migration_2026_06_20.md`. **E8 tick delete**: robust 16-worker delete of the 1.16M
-legacy objects IN PROGRESS (idempotent, resumes on interruption).
+`predictions_lookahead_and_reader_migration_2026_06_20.md`. **E8 tick delete DONE**: robust 16-worker delete of the
+1.16M legacy objects COMPLETE (verified `remaining=0`, 0 fail). Empty bucket shell remains (SA lacks
+`storage.buckets.delete`) — admin/L6 residual only.
+
+**Two minor residual follow-ups (data-safe, tracked):**
+
+- **Empty legacy bucket SHELL removal** — `market-data-tick-prediction-central-element-323112` holds 0 objects but the
+  shell itself needs `storage.buckets.delete` (admin, `bucket_name_ssot…` L6). Harmless empty shell; no data.
+- **IS `_index` reconsolidation** — the E8b migration wrote 77 genuinely-unique markets to canonical
+  `instruments-store-pred-prd` OBJECTS (`instrument_availability/` + `market_lifecycle/` trees, data preserved) but the
+  `_index/availability_index.parquet` manifest does not yet reflect them. Low impact (77 settled historical markets,
+  mostly EUR forex lifecycle); reconsolidate the IS `_index` (or let the scheduled consolidator pick them up).
 
 ## Deferred work after 2026-06-01 slot-3 session
 
