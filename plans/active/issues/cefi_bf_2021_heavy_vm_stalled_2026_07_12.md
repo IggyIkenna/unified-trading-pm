@@ -25,7 +25,7 @@ execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-12
+last_updated: 2026-07-12 (P1 item closed)
 locked_by:
 resolved_by:
 ---
@@ -71,5 +71,11 @@ set in the `mvp_backfill_cefi_tick_v10_2026_06_27.md` G4 gate. VM lifecycle tria
 
 ## Open actions
 
-- [ ] [INFRA] P1. Terminate + relaunch the BINANCE-FUTURES 2021 heavy shard (see recommendation 1).
+- [x] ✅ [INFRA] P1. Terminate + relaunch the BINANCE-FUTURES 2021 heavy shard (see recommendation 1). —
+      deployment-service (VM ops, no code diff): terminated `cefi-binance-futures-2021-heavy-20260703-105623`
+      (re-verified stalled at termination time — serial output still dead since 2026-07-05T00:00:18Z, still zero per_vm
+      manifest shards); relaunched via
+      `ONLY="BINANCE-FUTURES:2021:heavy" FORCE=1 MACHINE_TYPE_HEAVY=e2-highmem-16     bash scripts/vm/launch-cefi-sharded-backfill.sh`
+      (exit 0, "All 1 VMs launched") → `cefi-binance-futures-2021-heavy-20260712-041346`, SPOT, e2-highmem-16, RUNNING,
+      active serial output (gsutil scopes firing every ~60s) confirmed at T+~13min — 2026-07-12T04:27Z.
 - [ ] [INFRA] P2. Root-cause the zero-serial-output stall before/while terminating (see recommendation 2).
