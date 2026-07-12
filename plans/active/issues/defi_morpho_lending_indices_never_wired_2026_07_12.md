@@ -263,21 +263,51 @@ catches it. `quality-gates.sh` green (sentinel verified for `21d8cb3`), quickmer
 republished the tarball itself: `create-code-tarballs.sh --include alerting-service` — confirmed
 `alerting-service-code.manifest.json` now reads `commit_sha=4b3aad7181cb782c1ea41677fa1e720765aad88f` (current HEAD).
 
-- [ ] [INFRA] P1. Add a CI/quickmerge-triggered auto-republish (or a pre-launch freshness check in the launcher scripts)
-      so tarball staleness — for ANY repo, not just the ones this audit happened to check — can't silently recur.
-      Candidate shapes: (a) a `live-defi-rollout` push-triggered GHA/Cloud Build step per repo that calls
+- [x] ✅ [INFRA] P1. Add a CI/quickmerge-triggered auto-republish (or a pre-launch freshness check in the launcher
+      scripts) so tarball staleness — for ANY repo, not just the ones this audit happened to check — can't silently
+      recur. Candidate shapes: (a) a `live-defi-rollout` push-triggered GHA/Cloud Build step per repo that calls
       `create-code-tarballs.sh --include <repo>` automatically (mirrors the `ldr-to-main-promote` push-triggered pattern
       already in use elsewhere), or (b) a pre-launch precondition in every `launch-*.sh` that compares the target
       tarball's `.manifest.json` `commit_sha` against `git rev-parse origin/live-defi-rollout` for that repo and
       refuses/warns on mismatch (composes with the existing `[INFRA] P2` GCS-publish-race todo above — both are "is the
-      artifact this VM is about to fetch actually current" checks and could share one precondition helper). Not
-      attempted inline — this is genuine design work (push-trigger plumbing or a new launcher precondition helper), out
-      of scope for an audit-and-fix-what's-stale dispatch. (repo: `deployment-service`)
-- [ ] [INFRA] P3. Delete the orphaned `market-tick-data-service-code.tar.gz` / `.manifest.json` pair from
+      artifact this VM is about to fetch actually current" checks and could share one precondition helper). (repo:
+      `deployment-service`) — **Done 2026-07-12 (slot-6, infra). `deployment-service@7ae9013`.** Shipped candidate (b)
+      as a reusable shared helper `lc_verify_tarball_freshness` in `scripts/vm/lib/launcher_common.sh` (+ its SSOT
+      repo→tarball-name mapper `lc_tarball_name_for_repo`, the one special case being `market-tick-data-service` →
+      `mtds-code`). For each repo the VM will fetch, it reads the floating `gs://<bucket>/code/<tarball>.manifest.json`
+      `commit_sha` and compares against the workspace clone's current git SHA (or `origin/<ref>` when
+      `LC_TARBALL_FRESHNESS_FETCH=true`), acting per `LC_TARBALL_FRESHNESS`: `off` | `warn` (default — loud WARNING +
+      exact `create-code-tarballs.sh --include <repo>` remedy, never blocks) | `enforce` (refuses the launch, rc=1) |
+      `auto` (republishes the stale repo(s), re-verifies, continues). Missing/unreadable manifest is treated as stale;
+      git/gsutil absence is a warn-and-skip so a tooling gap never blocks a launch. Wired into the exact incident
+      launcher `launch-mtds-lending-indices-backfill-vm.sh` (sources the lib + calls the guard for
+      mtds-code/UAC/UTL/deployment-service before the `gcloud create`, skipped in `--dry-run`). This catches staleness
+      one step EARLIER than the existing VM-side `TARBALL_EXPECTED_SHA` gate in `setup-data-pipeline-vm.sh` — before the
+      VM boots and burns SPOT compute. 7 new unit tests in `tests/unit/test_vm_launcher_scripts.py`
+      (`TestTarballFreshnessGuard`): name-mapping, off short-circuit, fresh-passes, stale-warn-doesn't-block,
+      stale-enforce-blocks, missing-manifest-enforce-blocks, incident-launcher-wiring. Full `quality-gates.sh` green
+      (sentinel verified for 7ae9013); quickmerge landed on `live-defi-rollout`. Fleet-wide rollout to the other ~153
+      launchers is left as the mechanical follow-up below (the design work — the helper — is done here).
+- [ ] [INFRA] P2. Roll the `lc_verify_tarball_freshness` pre-launch guard out across the remaining `launch-*.sh` fleet
+      (only `launch-mtds-lending-indices-backfill-vm.sh` is wired so far). Each launcher sources
+      `lib/launcher_common.sh` and calls the guard with the repos its VM fetches (derivable from its `VM_SERVICE` +
+      asset-group), before the `gcloud create`. Mechanical follow-up to the P1 above — the helper + reference wiring
+      already exist. Consider a QG guard analogous to `TestDurableLogStreamerCoverage` that asserts every
+      tarball-fetching launcher wires the freshness check. (repo: `deployment-service`)
+- [x] ✅ [INFRA] P3. Delete the orphaned `market-tick-data-service-code.tar.gz` / `.manifest.json` pair from
       `gs://deployment-scripts-central-element-323112/code/` — confirmed zero launcher references (`mtds-code.tar.gz` is
       the only name `create-code-tarballs.sh` ever produces for this repo); the orphan cost this audit an extra
       verification step to rule out as a live risk and will do the same to the next person who audits this bucket. Low
-      priority, zero urgency (no runtime consumer). (repo: `deployment-service`)
+      priority, zero urgency (no runtime consumer). (repo: `deployment-service`) — **RESOLVED-INVALID 2026-07-12
+      (slot-3, infra): NOT deleted — the premise is false.** The pair is NOT orphaned: it is legitimately re-produced by
+      `create-code-tarballs.sh` on every `--asset-group`/`--all` run (MTDS is a bare name in every category array →
+      `MERGED_EXTRA_REPOS` → the `tarball_name="${repo}-code"` derivation at `create-code-tarballs.sh:332`, distinct
+      from the CORE `market-tick-data-service:mtds-code` mapping), it has a live code consumer
+      (`deployment-api/deployment_api/services/tarball_staleness.py:114-160`, `_ASSET_GROUP_TARBALLS` for all 5 asset
+      groups), and the object's own manifest shows it was regenerated **2026-07-12T13:01:00Z** — after the "orphaned"
+      audit conclusion. Deleting it would be ineffective (rebuilt on the next tarball build) and would transiently break
+      the staleness checker's bundle read (missing tarball → whole bundle reads stale → spurious Cloud Build refresh
+      once that Phase-2 module is wired). See correction section below.
 
 ### SECOND bug found + fixed: MorphoAdapter.fetch_markets() GraphQL query was malformed — 2026-07-12T11:15Z (data_engineering slot-3)
 
@@ -650,3 +680,56 @@ whoever next has main/operator authority should treat this as settled: action th
 recommendation directly on the backlog entry rather than waiting for another blocked-question to land, since none filed
 against this task_id can survive to be read. Absent that action, expect this task to keep bouncing roughly every 5-10
 minutes for another ~9h.
+
+### CORRECTION: the `[INFRA] P3` "delete orphaned market-tick-data-service-code.tar.gz" premise is FALSE — the pair is NOT orphaned, deletion correctly NOT performed — 2026-07-12T~13:10Z (infra slot-3)
+
+Picked up the `[INFRA] P3. Delete the orphaned market-tick-data-service-code.tar.gz / .manifest.json pair` todo. Per the
+"look before you delete — if what you find contradicts how it was described, surface it rather than proceeding" rule,
+verified the orphan status independently BEFORE deleting. It is **not orphaned**, and deleting it would be both
+ineffective and mildly harmful. Deletion NOT performed; checkbox flipped `RESOLVED-INVALID`.
+
+**Evidence (three independent confirmations):**
+
+1. **Actively re-produced by `create-code-tarballs.sh`.** The `[INFRA] P0` cross-repo audit above (slot-4, 12:20Z)
+   concluded "orphaned / `mtds-code.tar.gz` is the only name create-code-tarballs.sh ever produces for this repo" from a
+   `grep -n "market-tick-data-service-code" scripts/vm/create-code-tarballs.sh` → 0 hits plus reading only the CORE
+   `market-tick-data-service:mtds-code` mapping (line 212). That grep was fooled by **runtime name construction**: MTDS
+   appears as a **bare name** in every category array (`CEFI_REPOS`/`TRADFI_REPOS`/`DEFI_REPOS`/`SPORTS_REPOS`/
+   `PREDICTION_REPOS`/`ML_TRAINING_REPOS`/`ALL_SERVICE_REPOS`, `create-code-tarballs.sh:61-115`). Those bare names merge
+   into `MERGED_EXTRA_REPOS` and iterate at `create-code-tarballs.sh:331-333`, where the name is **derived**
+   `tarball_name="${repo}-code"` → `market-tick-data-service-code`. So every `--asset-group X` / `--all` /
+   `--include market-tick-data-service` run produces BOTH `mtds-code.tar.gz` (CORE mapping) and
+   `market-tick-data-service-code.tar.gz` (category-array derivation) — byte-identical copies of the same repo tarred
+   under two names. This is a textbook grep-then-conclude miss (CLAUDE.md: "0 hits ≠ missing — features are
+   runtime-resolved; READ the candidate consumer").
+2. **Live code consumer in deployment-api.**
+   `deployment-api/deployment_api/services/tarball_staleness.py:114,127,141,150,160` — `_ASSET_GROUP_TARBALLS` lists
+   `market-tick-data-service-code.tar.gz` as the expected MTDS tarball for **all 5** asset groups (its docstring: bundle
+   membership mirrors `create-code-tarballs.sh`'s per-asset_group repo lists — which it correctly does, because the
+   category arrays DO derive that name). The module is Phase-2-pending (not yet wired into a route), so deleting the
+   object has no runtime effect _today_, but leaves a landmine: once wired, `compute_bundle_oldest_mtime` treats a
+   missing tarball as "stale by definition" → every bundle reads stale → spurious Cloud Build refresh triggers.
+3. **Regenerated after the "orphaned" audit.** The object's own manifest
+   (`gsutil cat .../code/market-tick-data-service-code.manifest.json`) reads
+   `tarball_name: market-tick-data-service-code`, `created_by: create-code-tarballs.sh`,
+   `created_at: 2026-07-12T13:01:00Z`, `commit_sha: 016816ef…` — i.e. it was rebuilt fresh ~40 min after slot-4's 12:20Z
+   "orphaned" conclusion, byte-identical (crc32c `Uec6dw==`, 2805873 bytes) to the current `mtds-code.tar.gz`. Deleting
+   it would simply be undone by the next tarball build.
+
+**Why deletion is the wrong action, not just a no-op:** it is ineffective (rebuilt on next build) AND it transiently
+breaks the staleness checker's bundle read in the window before rebuild. The only way to _permanently_ remove the
+`market-tick-data-service-code.tar.gz` name would be a coordinated design change (see new todo below), not a GCS delete.
+
+**Not fixed inline — captured as a properly-scoped follow-up (design decision, out of a P3 GCS-delete scope):**
+
+- [ ] [INFRA] P3. Decide + (if approved) implement de-duplication of the MTDS dual-name tarball production. Today
+      `create-code-tarballs.sh` emits both `mtds-code.tar.gz` (CORE alias) and `market-tick-data-service-code.tar.gz`
+      (category-array `${repo}-code` derivation) for the same repo — two byte-identical objects. Options: (a) drop MTDS
+      from the category arrays since CORE always covers it (must confirm which name the tarball-fetching VMs actually
+      pull in `setup-data-pipeline-vm.sh` before removing either); (b) special-case MTDS in the derivation to reuse the
+      `mtds-code` alias; (c) leave as-is and instead fix `deployment-api/.../tarball_staleness.py` to reference
+      `mtds-code.tar.gz` in `_ASSET_GROUP_TARBALLS` (aligning to CORE) so the `market-tick-data-service-code.tar.gz`
+      name has no consumer and CAN be retired. Any option requires lockstep changes across `create-code-tarballs.sh`,
+      `tarball_staleness.py` (+ its `_bundle_for` ordering tests), and a check of the VM fetch path — genuine design
+      work, operator/main to decide before implementing. Cosmetic/efficiency only (one redundant ~2.8 MB tarball per
+      build); zero correctness urgency. (repo: `deployment-service` + `deployment-api`)
