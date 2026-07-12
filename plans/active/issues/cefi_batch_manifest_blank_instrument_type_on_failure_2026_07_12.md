@@ -278,3 +278,17 @@ rather than assuming a stale reference still applies: `BLK-d6a8795a`, same ask (
 explicitly flagging this is the 7th occurrence of the same thrash and that two earlier identical asks went unactioned.
 `skip-current-task`'d — nothing in-craft until the sibling operator decision lands or the condition is actually wired
 (not just re-requested).
+
+### 2026-07-12 — 8th re-dispatch (slot-5, plan-health role, boot resume), gate still unmet, wiring re-escalated again
+
+Re-dispatched an 8th time (slot-12 → slot-6 → slot-8 → slot-9 → slot-11 → slot-4 → slot-5). Independently re-verified
+via direct `GET /api/state` + `git log origin/live-defi-rollout` on `market-tick-data-service`: sibling
+`tardis_concurrent_ip_lockout_2026_07_12.md` todo #1 (`BLK-f1417674`, the a/b/c operator decision) is still
+`answered_at: null`; only the already-flipped 403-code-274 hygiene fix (`market-tick-data-service@31934527`) has landed,
+no lock/mutex/proxy commit. Condition `tardis-concurrent-ip-lock-fix-landed` still `value: false`, `gates_queued: 0` —
+the wiring gap persists. Confirmed `BLK-d6a8795a` (filed for the 7th occurrence) is no longer in the live
+`blocked_queue` (11 entries, none referencing this task) — same silent-pruning-without-action pattern as the two before
+it. Filed a fresh wiring escalation: `BLK-c8842409`, same ask (attach
+`prereqs.conditions: [tardis-concurrent-ip-lock-fix-landed]` to this backlog entry + `POST /api/backlog/reload`),
+flagging this as the 8th occurrence for main/operator visibility. `skip-current-task`'d — nothing in-craft until the
+sibling operator decision lands or the condition is actually wired.
