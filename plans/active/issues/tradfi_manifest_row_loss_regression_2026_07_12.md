@@ -343,16 +343,44 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
       hasty, untested change to its merge SQL is its own data-correctness risk; the fix needs a considered design (see
       "Proposed fix" below), a real regression test per the `0de04b6e`/`800af156` precedent, and a careful
       multi-asset-group rollout, not a rushed patch.
-- [ ] [DATA] P0. **Implement + test + deploy the fix** for the root cause above (repo: unified-trading-library, the
-      shared consolidator — NOT market-tick-data-service, which only vendors it). See "Proposed fix" in the "Root cause
-      CONFIRMED" section below for the concrete design starting point. MUST ship a regression test that fails on pre-fix
-      code and passes post-fix (same bar as `0de04b6e`'s
-      `test_consolidate_incremental_self_dedups_untouched_canonical_duplicates`), and MUST verify the fix doesn't
-      regress the `0de04b6e`/`800af156` genuine-duplicate cleanup or the failed→captured state-machine transition that
-      `source`'s exclusion from the dedup key exists to support (see `_writer_io.py`'s
-      `_OPTIONAL_DEDUP_DIMS_NULL_NORMALIZE` docstring). Fan the fix to all 5 asset groups' Cloud Run jobs per the
-      `0de04b6e` rollout precedent (rebuild MTDS, force-update each `uts-prod-manifest-consolidator-market-data-*` job —
-      `:latest` doesn't auto-propagate to a running job, confirmed in the sibling defi issue doc).
+- [x] ✅ [DATA] P0. **Implement + test the fix** for the root cause above (repo: unified-trading-library, the shared
+      consolidator — NOT market-tick-data-service, which only vendors it). **DONE 2026-07-12 (slot-2)** —
+      `unified-trading-library@cf2e196b`. See "Proposed fix" in the "Root cause CONFIRMED" section below for the design;
+      implemented exactly as scoped there — do NOT widen the dedup key (adding `source` back would break the
+      failed→captured state-machine transition `_writer_io.py`'s `_OPTIONAL_DEDUP_DIMS_NULL_NORMALIZE` docstring
+      documents depending on `source`'s exclusion). Instead, special-cased the COLLAPSE decision: a new
+      `count(DISTINCT source) FILTER (WHERE capture_status = 'captured') OVER (PARTITION BY <dedup key>)` window
+      (`captured_distinct_sources`) makes the row_number() tiebreak prefer the larger `row_count` over recency **only**
+      when a group's `captured` rows disagree on `source` — every other composition (single captured row,
+      captured-vs-non-captured, same-source captured duplicates with differing row_count) is unchanged, because
+      `captured_distinct_sources <= 1` degrades the new CASE to NULL for every row in the group, falling straight
+      through to the original recency-only `order_by`. Applied uniformly to all 3 window-dedup sites that share
+      `order_by` (incremental survivors self-dedup, incremental contested/winners, full-rebuild). Degrades to the
+      original order_by entirely when `capture_status`/`row_count`/`source` aren't in the merged schema (pre-v9
+      manifests), so every pre-existing test is provably unaffected. 2 new regression tests — one fails on pre-fix code
+      and passes post-fix (mirrors the `0de04b6e` precedent,
+      `test_consolidate_keeps_real_capture_over_later_empty_cross_source_duplicate`), one locks in that same-source
+      duplicates still resolve by recency, unchanged
+      (`test_consolidate_same_source_captured_duplicates_still_prefer_recency`). Full existing suite green (45/45,
+      including a concurrent P2 row-count-alert addition from slot-5 landed in the same file — merged cleanly, no
+      conflict). `quality-gates.sh` green (135s). **Deploy/rollout is NOT part of this checkbox** — split into the new
+      todo directly below per the evidence-backed-deploy HARD RULE (a `- [x]` deploy claim needs a real
+      `Evidence: cloudbuild=<id>`, which this turn does not have): the library fix is merged to LDR but the Cloud Run
+      Jobs that actually run it (`uts-prod-manifest-consolidator-market-data-*`) are still executing the PRE-FIX image
+      until that image is rebuilt and the jobs are refreshed.
+- [ ] [INFRA] P0. **Deploy the fix** — fan `unified-trading-library@cf2e196b` to all 5 asset groups' Cloud Run jobs per
+      the `0de04b6e` rollout precedent (see `d3c36842`'s rollout in the Progress Log above: a downstream commit in
+      `market-tick-data-service` — even a no-op vendoring bump — is needed to trigger THAT repo's own Cloud Build, since
+      `unified-trading-library` is an editable-path dependency baked in at MTDS's image-build time, not something a
+      library-only merge auto-rebuilds). Steps: (1) land a market-tick-data-service commit that picks up the new UTL
+      source (rebuild trigger); (2) confirm the Cloud Build for `market-tick-data-service:latest` succeeds — cite
+      `Evidence: cloudbuild=<id>` per the deploy-evidence HARD RULE; (3) force-refresh each
+      `uts-prod-manifest-consolidator-market-data-{cefi,defi,tradfi,sports,prediction}` Cloud Run Job (confirm whether
+      each job's config pins `:latest` — picks up automatically on next `*/1 * * * *` tick — or a fixed image digest,
+      which needs an explicit `gcloud run jobs update`); (4) spot-check one post-deploy tradfi consolidator execution
+      log to confirm the new code path is live (e.g. a `captured_distinct_sources` reference or simply that a known
+      cross-source duplicate pair no longer flips on the next cycle). Repo: market-tick-data-service (rebuild trigger) +
+      deployment-service/infra (Cloud Run job refresh).
 - [ ] [DATA] P0. Restore the 1,017,024 missing rows — either replay them from
       `_index/snapshots/pre_tradfi_source_restamp_20260710T113305Z.parquet` (targeted re-add of exactly the missing
       keys, verified via the same key-set diff this issue doc used) or via a fresh full E5 rebuild once the root cause
@@ -396,6 +424,27 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-12** — slot-2 (sonnet/high, data_engineering), dispatched to `tradfi_manifest_row_loss_regression-008`
+  ("Implement + test + deploy the fix"). Implemented + shipped the CODE portion — `unified-trading-library@cf2e196b`.
+  Design: special-case the collapse decision (not the dedup key) — a new
+  `count(DISTINCT source) FILTER (WHERE capture_status = 'captured') OVER (PARTITION BY <dedup key>)` window
+  (`captured_distinct_sources`) makes the row_number() tiebreak prefer the larger `row_count` over recency **only** when
+  a group's `captured` rows genuinely disagree on `source`; validated the design empirically first in a standalone
+  DuckDB script (5 scenarios: the confirmed bad pair, a single-captured-row control, retry-succeeds,
+  captured-then-later-failed-retry, and same-source-different-row_count) before touching production SQL, confirming the
+  new logic changes ONLY the first scenario's outcome. Applied to all 3 window-dedup call sites sharing `order_by`
+  (survivors self-dedup, contested/winners, full-rebuild). 2 new regression tests
+  (`test_consolidate_keeps_real_capture_over_later_empty_cross_source_duplicate` — proven to fail on pre-fix code via a
+  `git stash` round-trip, same bar as `0de04b6e` — and
+  `test_consolidate_same_source_captured_duplicates_still_prefer_recency`, a control locking in the fix does NOT
+  over-broaden). Full suite green (45/45, including slot-5's concurrent P2 row-count-alert addition which landed in the
+  same file mid-session — merged cleanly via `git pull --rebase --autostash`, re-ran QG on the new HEAD, both changes
+  coexist with no conflict). `quality-gates.sh` green (135s), shipped via `quickmerge --agent`. **Split the todo in
+  two** rather than flip the original P0 as fully done: the checkbox above now covers only implement+test (closed), and
+  a NEW `[INFRA] P0` todo covers the actual multi-asset-group Cloud Run deploy/rollout (NOT done this turn — the library
+  fix is on LDR but the `uts-prod-manifest-consolidator-market-data-*` jobs are still running the pre-fix image; a real
+  deploy claim needs a real `cloudbuild=<id>` per the evidence-backed-deploy HARD RULE, which this session doesn't
+  have). No code change to market-tick-data-service or any deploy action taken — that's the new todo's scope.
 - **2026-07-12** — slot-8 (sonnet/high, data_engineering), dispatched to `tradfi_manifest_row_loss_regression-004` (P1,
   orphan-sweep re-run). Task text explicitly gates on restoration ("-003", dispatched to slot-4, not done at dispatch
   time) and the fix ("Implement + test + deploy the fix" P0, unassigned, not done). Filed BLK-5145398b asking whether to
