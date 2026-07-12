@@ -807,11 +807,11 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       5.92** `check_no_category_kwarg_at_manifest_write.py` (PM@60a27debe) bans any regression; the existing
       tradfi-source ratchet was updated to read `asset_group=` (else the rename would silently disable it).
       Event-payload observability dict keys kept as `category` for dashboard stability (write \_param* only).
-- [ ] [CODE] P1. **features-service: ban `category=defi` in on-disk GCS path reads**: **GATED ON DEFI MIGRATION —
-      VERIFIED STILL-REQUIRED 2026-06-04 (slot-4)**, NOT sports. Corrected file paths (files live in the `onchain/`
-      subtree, not `delta_one/app/*`): `features_service/onchain/adapters/mtds_canonical_reader.py` (`_legacy_twin()` at
-      L71-72 + the candidate builder L82-123) explicitly builds the legacy `category=defi/` twin alongside the canonical
-      `asset_group=defi/` for backward-compatible reads of un-migrated on-disk data;
+- [ ] [CODE] P1. **BLOCKED-PREREQUISITES · features-service: ban `category=defi` in on-disk GCS path reads**: **GATED ON
+      DEFI MIGRATION — VERIFIED STILL-REQUIRED 2026-06-04 (slot-4)**, NOT sports. Corrected file paths (files live in
+      the `onchain/` subtree, not `delta_one/app/*`): `features_service/onchain/adapters/mtds_canonical_reader.py`
+      (`_legacy_twin()` at L71-72 + the candidate builder L82-123) explicitly builds the legacy `category=defi/` twin
+      alongside the canonical `asset_group=defi/` for backward-compatible reads of un-migrated on-disk data;
       `features_service/onchain/app/calculators/eigen_rewards_calculator.py:53-54` lists both the canonical
       `asset_group=defi/` and legacy `category=defi/` suffixes. `ErrorCategory.*` (e.g. eigen L205) is the unrelated
       error-classification enum — leave alone. **STAYS GATED**: `defi_manifest_canonicalisation_2026_06_01.md` still has
@@ -849,7 +849,24 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       entirely, and is 263 lines vs. a real fleet-scale backlog — almost certainly a retired LEDGER-era artifact, not
       the live file `agent-orchestrator/data/config/backlog.yaml` RULES.md §4 describes). Confirms slot-2/slot-6's
       conclusion: this attachment is genuinely main/operator-scope from a worker slot, not merely unattempted. Did NOT
-      touch `features-service` code. Calling `/skip-current-task`.
+      touch `features-service` code. Calling `/skip-current-task`. **ROOT-CAUSED + FIXED 2026-07-12 (slot-14, 7th
+      consecutive re-dispatch) — added the missing `BLOCKED-*` taxonomy token to this checkbox's own first line.** Read
+      `agent-orchestrator/server/regen_backlog_from_plan.py` directly:
+      `_UNCHECKED_RE = re.compile(r"^\s*-\s+\[ \]\s+(.+)$")` captures ONLY the single physical `- [ ]` line as the
+      dispatch-matched `description` — none of this todo's wrapped continuation lines (where every prior slot's "STILL
+      GATED"/"RE-VERIFIED" notes live) are ever read by `_parse_open_todos` or `task_still_dispatchable`. This
+      checkbox's first line said `**GATED ON DEFI MIGRATION —`, which does not match `_NON_DISPATCHABLE_RE`
+      (`BLOCKED-[A-Z]` / stretch-optional only) — so it was NEVER excluded, unlike `BLOCKED-STRAGGLER-VM-RUNNING` /
+      `BLOCKED-PREREQUISITES` markers elsewhere in this same plan that the already-shipped
+      `backlog_blocked_marker_stale_brief_redispatch_2026_07_08` fix (agent-orchestrator@3995384) correctly filters.
+      Distinct root cause from that resolved issue (that one was a reconcile-race on an already-taxonomy-compliant
+      marker; this one is a marker that was never taxonomy-compliant in the first place — 6 prior slots verified the
+      gate condition itself was correctly still-blocking, but none had traced why the skip wasn't sticking). Fix: this
+      checkbox's first line now reads `**BLOCKED-PREREQUISITES · features-service: ...`, matching the exact convention
+      already used successfully elsewhere in this plan (e.g. the straggler-VM checkbox above). No `agent-orchestrator`
+      code change needed — the existing (already-shipped) mechanism now applies correctly once the marker vocabulary
+      matches. Did NOT touch `features-service` code (still correctly gated on defi C0). unified-trading-pm@(this
+      commit). Calling `/skip-current-task`.
 - [x] ✅ [CODE] P0. **Upstream pre-flight data-check audit + batch=live symmetry (ALL sports services)** — AUDIT
       COMPLETE 2026-06-02. Per-service table below; gaps captured as P1/P2 todos beneath. Every service either VERIFIED
       GREEN or has a tracked gap-todo. Evidence: this slot, reading code in-repo (grep-then-read across 5 services).
