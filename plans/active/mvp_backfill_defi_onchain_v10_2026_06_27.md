@@ -208,13 +208,20 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       output exactly), zone `asia-northeast1-c`, SPOT, window 2023-01-01→2026-07-12, status `RUNNING` at launch.
       **Gate:** ORCA/RAYDIUM/KAMINO dex_pool_state attempted_failed=0 AND expected_unattempted=0 post-genesis — verify
       once the VM completes (see G2).
-- [ ] [SCRIPT] P2. `dex_pool_swaps` for ORCA/RAYDIUM has NO existing data source — new finding, not absorbed into the P1
-      todo above. Neither `SolanaDefiHandler`/`_solana_defi_fetch.py` (dex_pool_state only, via REST pool-list
+- [x] ✅ [SCRIPT] P2. `dex_pool_swaps` for ORCA/RAYDIUM has NO existing data source — new finding, not absorbed into the
+      P1 todo above. Neither `SolanaDefiHandler`/`_solana_defi_fetch.py` (dex_pool_state only, via REST pool-list
       snapshots) nor `DexSwapsHandler` (`get_subgraph_id(protocol, "SOLANA")` is always `None` for these venues — no
       Solana routing at all) produce individual swap events for Solana AMMs. Building a swap-level Solana indexer
       (on-chain tx parsing via Alchemy/Helius, or a Jupiter-aggregator trade-history adapter) is new capability, not a
-      VM launch — scope it as its own plan/todo before attempting the `dex_pool_swaps` half of this Gate. Repo:
-      `market-tick-data-service`.
+      VM launch — **scoped 2026-07-12 (slot-2)** as its own follow-up doc rather than attempted inline:
+      `issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`. Also confirmed the ORCA/RAYDIUM live WS connectors
+      (`orca_defi_ws.py`/`raydium_defi_ws.py`) are Jupiter price-quote pollers, not swap-event capture — a 3rd ruled-out
+      path beyond the two this todo already named. The scoping doc identifies a reusable precedent already in this
+      codebase (`build_drift_v2_sig_index.py`'s Helius sig-index walk pattern, generalizable to ORCA's
+      `whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc` / Raydium's `675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8` program
+      addresses, both already registered in UAC) plus the missing 2nd stage (per-tx fetch + AMM instruction decode)
+      needed to actually extract swap records — filed as a `[DESIGN] P3` follow-up todo in that doc, not urgent since
+      `dex_pool_swaps` coverage for every OTHER defi venue is unaffected. Repo: `market-tick-data-service`.
 
 ### G2 — verify honest-complete
 
