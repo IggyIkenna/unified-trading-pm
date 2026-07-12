@@ -34,7 +34,7 @@ referenced_by:
     codex/05-infrastructure/agent-orchestrator-deploy.md,
   ]
 owner:
-last_reviewed: 2026-06-27
+last_reviewed: 2026-07-12
 code_refs:
 author: ikenna-claude-subagent
 ---
@@ -261,12 +261,21 @@ secret inventory, V2 out-of-scope).
 
 Two paths today (AWS is primary; GCP retained for cloud-agnostic re-spin):
 
-| Target                      | Script                                                              | Cloud                   |
-| --------------------------- | ------------------------------------------------------------------- | ----------------------- |
-| Epic VM launch              | `deployment-service/scripts/vm/launch-epic-vm-aws.sh`               | AWS                     |
-| Epic VM launch              | `deployment-service/scripts/vm/launch-epic-vm.sh`                   | GCP                     |
-| Per-VM bootstrap            | `agent-orchestrator/scripts/bootstrap_vm.sh` (CLOUD_PROVIDER aware) | both                    |
-| Central API VM systemd unit | `agent-orchestrator/scripts/install-orchestrator-service.sh`        | AWS (EC2 13.113.200.22) |
+| Target                                                 | Script                                                                  | Cloud                   |
+| ------------------------------------------------------ | ----------------------------------------------------------------------- | ----------------------- |
+| Epic VM launch                                         | `deployment-service/scripts/vm/launch-epic-vm-aws.sh`                   | AWS                     |
+| Epic VM launch                                         | `deployment-service/scripts/vm/launch-epic-vm.sh`                       | GCP                     |
+| Per-VM bootstrap                                       | `agent-orchestrator/scripts/bootstrap_vm.sh` (CLOUD_PROVIDER aware)     | both                    |
+| Central API VM systemd unit                            | `agent-orchestrator/scripts/install-orchestrator-service.sh`            | AWS (EC2 13.113.200.22) |
+| **Continuous deploy (code updates, added 2026-07-12)** | `agent-orchestrator/scripts/ao-self-pull.sh` (root cron `*/15 * * * *`) | both                    |
+
+**Production deploy mechanism (added 2026-07-12)**: once a VM is bootstrapped, `scripts/ao-self-pull.sh` is what keeps
+its running checkout current — a root cron every ~15 min FF-pulls the systemd-run orchestrator checkout from
+`origin/live-defi-rollout` and `systemctl restart orchestrator` only when HEAD moves (closing the deploy-currency gap: a
+VM could otherwise silently run stale server code). Shipped `agent-orchestrator@589b711`; hardened `@d16d737` (restarts
+when the running process predates the checkout HEAD — stale-process self-heal) + `@5462959` (deduped Slack wedge alert
+when the self-pull is dirty/diverged AND drifted, so a silent deploy-currency wedge can't hide). Full SSOT:
+[`../12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](../12-agent-workflow/agent-orchestrator-single-vm-architecture.md).
 
 Historical Cloud Run deploy script `deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh` is retained in
 the repo (referenced in `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers") for re-spin

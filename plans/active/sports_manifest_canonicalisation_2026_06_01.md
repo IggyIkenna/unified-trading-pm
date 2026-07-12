@@ -2514,3 +2514,130 @@ morpho-task blocked-question pattern, this one has NOT vanished across the inter
 via direct `GET /api/state` read). `skip-current-task`'d. Whoever picks this up next: check `BLK-f2bb67c2.answered_at`
 first — if still null and no E3/E4 VM exists, this cheap precondition check (no full audit re-run) is sufficient; only
 re-run the actual `cf_manifest_audit_2026_06_01.py` once an E3/E4 VM has actually executed.
+
+## E8 re-run 2026-07-12 (operator-ordered, live index) — stale-snapshot hypothesis test
+
+> **Operator-ordered re-run** (read-only audit agent), specifically to test whether the 2026-06-27 E8 RED history (MTDS
+> 361,839 rows / CF-1 string-typed `schema_version`) was an artifact of a stale/under-consolidated snapshot read, per
+> the 2026-07-12 evidence note above this section (finding-144,
+> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2).
+
+**Tooling + pre-flight verification** (before running anything):
+
+- Tool: `unified-trading-pm/plans/audit/results/cf_manifest_audit_2026_06_01.py` — read the source first and confirmed
+  it is the FIXED version already carrying the `_probe_paths` backup-descent + `_`-prefixed-tree-skip fixes from the
+  2026-07-11/12 cross-cutting issue doc (lines 74-109: skips any leaf whose final segment starts with `_` or is a known
+  non-`_` meta dir, and prefers a `by_date`/`=`-bearing child over an arbitrary first non-meta child) — no stale copy in
+  use.
+  - CF-1 check (`_check_cf1_schema_version`, lines 129-143) already compares on the **string form** of `schema_version`
+    (`.astype(str) == str(9)`), the fix for the dtype-lookup bug that caused the 2026-06-27 runs'
+    false-RED-by-int-key-miss failure mode described in the tool's own docstring.
+- `utl@b5ab0c01` ("raise instead of silently returning empty when per-VM shards exist but all unreadable") confirmed
+  present: `git merge-base --is-ancestor b5ab0c01 HEAD` → true on this clone's `unified-trading-library` (HEAD
+  `ca6cdccd`, branch `live-defi-rollout`). Note: this audit script does NOT go through that UTL manifest-reader code
+  path at all — it pulls `_index/availability_index.parquet` directly via `gcloud storage cp` + `pandas.read_parquet`,
+  bypassing the reader entirely — so the b5ab0c01 fix affects the CONSOLIDATOR's own health (crash-loop → stale index),
+  not this audit tool's read path. Confirmed as a pre-flight sanity check per the task, not because the audit script
+  depends on it.
+- **Freshness check** (`gcloud storage ls -L`) run immediately before the audit: both surfaces'
+  `_index/availability_index.parquet` blobs show `Update Time: 2026-07-12T21:54:42Z` (MTDS) / `2026-07-12T21:54:43Z`
+  (IS) — i.e. written **<1 minute** before this read (current time 21:55:22Z). This is a genuinely live,
+  just-consolidated index, not a stale snapshot.
+- Executed from the owning repos' `.venv` (read-only, no writes/no VM launches):
+  `market-tick-data-service/.venv/bin/python` for the MTDS surface, `instruments-service/.venv/bin/python` for the IS
+  surface, both against `gcloud` project `central-element-323112`.
+
+### Surface 1 — `market-data-tick-sports-prd-central-element-323112` (+ `--legacy market-data-tick-sports-central-element-323112`)
+
+Rows: **1,797,861** (identical to the ninth run ~13h earlier — no new scheduler writes landed in the interim)
+
+| CF                    | Status   | Numbers                                                                                                                                                                                                               |
+| --------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CF-1 schema_version   | ✅ GREEN | v9=1,797,861/1,797,861 (100.0%), int dtype — `dist: {9: 1,797,861}`                                                                                                                                                   |
+| CF-2 asset_group      | ✅ GREEN | `asset_group` col present, no `category` col                                                                                                                                                                          |
+| CF-2-paths            | 🔴 RED   | no `asset_group=` hive segment in GCS path — known sports false-negative (column-based, not path-based); E4 migration scope                                                                                           |
+| CF-3 pipeline_mode    | ✅ GREEN | 100% populated (1,797,861/1,797,861); dist batch_api_football 1,401,703 · batch_odds_api 223,709 · batch_mdps_odds_horizon_bucket 109,638 · batch_footystats 42,004 · batch_polymarket_clob 20,785 · live_odds_api 22 |
+| CF-3-partition        | 🔴 RED   | no `pipeline_mode=` segment in GCS path — same false-negative                                                                                                                                                         |
+| CF-4 source           | ✅ GREEN | 0/1,797,861 blank                                                                                                                                                                                                     |
+| CF-5 typed reason     | ✅ GREEN | 0/1,270,737 blank; dist EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE 606,772 · EXPECTED_PAUSED_LEAGUE 459,967 · SOURCE_RETURNED_ZERO 203,998 (typed, not blanket)                                                            |
+| CF-6 4-state          | ✅ GREEN | EU=0; capture_status {empty_confirmed 1,270,737; captured 414,682; attempted_failed 112,442}; no non-canonical states                                                                                                 |
+| CF-8 available_at     | 🔴 RED   | column ABSENT (write-time proxy `written_at` present) — E4 gate, unchanged                                                                                                                                            |
+| CF-9 env bucket       | ✅ GREEN | `-prd-` confirmed                                                                                                                                                                                                     |
+| CF-13 pm source-aware | ✅ GREEN | 100% (1,797,861/1,797,861)                                                                                                                                                                                            |
+| Era-B                 | ✅ GREEN | 0 options_chain/futures_chain rows                                                                                                                                                                                    |
+| L6-legacy-only        | 🔴 RED   | 140 cells (legacy captured 32,755, canonical 36,837, overlap 32,615) — all 2020-06/08-xx `ODDS_API/ODDS` — unchanged from ninth run                                                                                   |
+
+Summary: `RED — ['CF-2-paths', 'CF-3-partition', 'CF-8', 'L6-legacy-only']` — **identical 4 RED checks and identical
+numbers to the 2026-07-12 09:xx ninth run.**
+
+### Surface 2 — `instruments-store-sports-prd-central-element-323112` (+ `--legacy instruments-store-sports-central-element-323112`)
+
+Rows: **4,914,288** (+80 vs ninth run's 4,914,208 — ~13h of live trickle-writes; E3 drain still has NOT happened)
+
+| CF                    | Status                 | Numbers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CF-1 schema_version   | ✅ GREEN               | v9=4,914,288/4,914,288 (100.0%), int dtype — `dist: {9: 4,914,288}`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| CF-2 asset_group      | ✅ GREEN               | `asset_group` col present                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| CF-2-paths            | 🔴 RED                 | no hive segment at all in sampled path (`availability_index/instruments-service.parquet` — reference-data store, not hive-keyed); known false-negative, E4 scope                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| CF-3 pipeline_mode    | 🔴 RED                 | 19,274 blank (0.4%) of 4,914,288 — vs ninth run's 19,340 blank (0.4%) — 66-row improvement from live trickle, essentially static                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| CF-3-partition        | 🔴 RED                 | no `pipeline_mode=` segment in path — E4 scope                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| CF-4 source           | 🔴 RED                 | 796,523 blank (16.2%) — vs ninth run's 797,657 (16.2%) — 1,134-row improvement, essentially static                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| CF-5 typed reason     | ✅ GREEN               | 0/3,617,828 blank; dist EXPECTED_NO_PROVIDER_COVERAGE 1,845,770 · EXPECTED_NO_FIXTURE 1,335,099 · SOURCE_RETURNED_ZERO 102,273 · …                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| CF-6 4-state          | ✅ GREEN               | EU=725,414; captured=567,213; attempted_failed=3,833; no non-canonical states                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| CF-8 available_at     | 🔴 RED (small regress) | non-null=3,508,551/4,914,288 (71.4%) — vs ninth run's 3,540,805/4,914,208 (72.1%) — **absolute non-null count DROPPED by 32,254** despite +80 total rows; consistent with the consolidator row-count oscillation pattern seen throughout this doc (not investigated further — read-only mandate)                                                                                                                                                                                                                                                                                       |
+| CF-9 env bucket       | ✅ GREEN               | `-prd-` confirmed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| CF-13 pm source-aware | ✅ GREEN               | 100% of populated rows (4,895,014/4,895,014)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Era-B                 | ✅ GREEN               | 0 options_chain/futures_chain rows                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| L6-legacy-only        | 🔴 RED (NEW datapoint) | 1,855 cells (legacy captured 41,939, canonical 52,585, overlap 40,084) — sample: 2018 `FIXTURES` rows with blank venue in legacy vs populated venue in canonical (looks like a venue-normalisation cell-key mismatch, same class as the 2026-06-27 case-drift finding). **The ninth run (2026-07-12 slot-9) did not diff IS against legacy at all** — this is the first IS-vs-legacy L6 result recorded since the seventh-run patch closed it GREEN at 0 cells on 2026-06-29. Flagging as new data for the operator/next touch; not root-caused or fixed under this read-only mandate. |
+
+Summary: `RED — ['CF-2-paths', 'CF-3', 'CF-3-partition', 'CF-4', 'CF-8', 'L6-legacy-only']`
+
+### Stale-snapshot hypothesis: CONFIRMED for the specific 2026-06-27 findings under test
+
+The two headline claims from the 2026-06-27 (slot-7/slot-4/slot-6) E8 runs do **not** reproduce against the live index:
+
+- **MTDS row count**: 2026-06-27 runs read 361,839 rows; this re-run (and the prior 2026-07-12 ninth run) reads
+  **1,797,861 rows** — a ~5x larger, current corpus. The 361,839-row reads were of an under-consolidated/stale snapshot,
+  not the live corpus.
+- **CF-1 schema_version typing**: 2026-06-27 runs found IS storing `schema_version` as **string '9'** (100% RED, MTDS
+  was already GREEN even then). Live read today shows **both surfaces 100% int 9 (GREEN)**. Two contributing factors,
+  both consistent with the stale-snapshot framing: (1) the CF-1 dtype fix landed in code at
+  `instruments-service@2456135` on 2026-06-27 and was confirmed GREEN by the seventh run on 2026-06-29 — i.e. the
+  underlying string/int bug was real and has since been fixed; (2) the 2026-06-27 slot-7/slot-4/slot-6 runs were very
+  likely also reading a smaller/staler `_index` snapshot (consistent with the 5x row-count gap above), which is the
+  hypothesis this re-run was ordered to test.
+
+This matches finding-144 (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2) and the
+2026-07-12 evidence note recorded earlier in this section.
+
+### E8 verdict: NOT all-GREEN — remaining RED checks are real/current, not stale-snapshot artifacts (checkbox NOT flipped; orchestrator owns gate state)
+
+The stale-snapshot hypothesis is **confirmed** for the specific CF-1/row-count findings under test, but C-GREEN criteria
+are **not** met on the live index — 6 real, current gaps remain, verified fresh (<1-minute-old index, see freshness
+check above), so these are not read-staleness:
+
+1. **CF-8 available_at** (both surfaces) — MTDS column absent; IS 71.4% populated (down slightly from 72.1%) — E4
+   VM-apply gate, unchanged in kind since the ninth run.
+2. **CF-2-paths / CF-3-partition** (both surfaces) — known sports false-negative (data lives in `_index` columns, not
+   GCS hive path segments) — E4 migration-walk scope, unchanged.
+3. **IS CF-3/CF-4** — 19,274 / 796,523 blank respectively — same live write-path gap flagged in the ninth run,
+   essentially static (small improvement, not resolution) over the last ~13h.
+4. **MTDS L6-legacy-only** — 140 cells, unchanged from ninth run — legacy bucket still has cells canonical is missing;
+   data-loss gate still fails.
+5. **IS L6-legacy-only (new datapoint)** — 1,855 cells — not covered by the ninth run; first IS-vs-legacy check since
+   the 2026-06-29 patch closed it GREEN.
+
+**Conclusion for the operator**: re-litigating the 2026-06-27 E8 RED history is unnecessary — those specific findings
+(361,839-row snapshot, IS CF-1 string-typed) are superseded by (a) the CF-1 code fix (`instruments-service@2456135`) and
+(b) reading the live, fully-consolidated index (1.79M/4.91M rows, both <1 min fresh at read time) rather than a
+stale/partial one. However, **E8 remains genuinely BLOCKED on the live data-state**, for reasons unrelated to snapshot
+staleness: the same 4-5 blocker classes the ninth run already identified (CF-8, the two known path-probe
+false-negatives, IS CF-3/CF-4 write-path gap, MTDS L6-legacy-only) are essentially unchanged in degree 13h later —
+confirming this is a stable, real operational gap (E3 drain + E4 VM apply still not run), not audit flakiness — plus one
+new datapoint (IS L6-legacy-only, 1,855 cells) that the ninth run didn't check. Per plan convention, this entry does not
+flip the E8 checkbox or any gate state — that is the orchestrator's call.
+
+**Tooling used**: `unified-trading-pm/plans/audit/results/cf_manifest_audit_2026_06_01.py` (unmodified, already carrying
+the 2026-07-11/12 `_probe_paths` fixes — verified by reading the source before running), executed from
+`market-tick-data-service/.venv` (MTDS surface) and `instruments-service/.venv` (IS surface), read-only, `gcloud`
+project `central-element-323112`. No writes, no VM launches, no checkbox/gate-state changes.

@@ -2,9 +2,10 @@
 doc_type: codex-ssot
 title: Shard-Level Failure Isolation (SSOT)
 summary:
-  A failed shard must not kill the batch — log + record_failed + continue (no raise in per-shard loops);
-  covers the per-tier shard-atom matrix, the 4-pillar write-gate, and the 3-category (honest-absence /
-  upstream-timestamp-bias / malformed-field) empty-output decision tree.
+  A failed shard must not kill the batch — log + record_failed + continue (no raise in per-shard loops); covers the
+  per-tier shard-atom matrix, the 4-pillar write-gate, and references the 4-category (honest-absence /
+  upstream-timestamp-bias / malformed-field / zero-activity-bar) empty-output decision tree — corrected 2026-07-12 (was
+  3-category, finding 346); taxonomy SSOT is 06-coding-standards/validation-and-errors.md.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,16 +13,41 @@ stage: [meta]
 repos: [deployment-service, deployment-ui, execution-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: [manifest, data-correctness, backfill, data-status, ssot]
-related: [../02-data/availability-manifest-and-data-status.md, ../05-infrastructure/deployment-clusters-live-vs-batch.md, ../06-coding-standards/validation-and-errors.md]
+related:
+  [
+    ../02-data/availability-manifest-and-data-status.md,
+    ../05-infrastructure/deployment-clusters-live-vs-batch.md,
+    ../06-coding-standards/validation-and-errors.md,
+  ]
 created: 2026-03-27
-authoritative_for: [shard-level failure isolation rule (no-raise per-shard loop + record_failed continuation), three-category empty-output decision tree]
-referenced_by: [codex/02-data/defi-venue-protocol-catalogue.md, codex/02-data/prediction-schema-paths.md, codex/02-data/shard-granularity-cefi.md, codex/02-data/sports-adapter-dependency-order.md, codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/service-contract-audit-template.md, codex/04-architecture/service-framework.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md]
+authoritative_for: [shard-level failure isolation rule (no-raise per-shard loop + record_failed continuation)]
+referenced_by:
+  [
+    codex/02-data/defi-venue-protocol-catalogue.md,
+    codex/02-data/prediction-schema-paths.md,
+    codex/02-data/shard-granularity-cefi.md,
+    codex/02-data/sports-adapter-dependency-order.md,
+    codex/02-data/sports-scheduling-and-sharding.md,
+    codex/04-architecture/service-contract-audit-template.md,
+    codex/04-architecture/service-framework.md,
+    codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+  ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-07-12
 code_refs:
 ---
 
 # Shard-Level Failure Isolation (SSOT)
+
+<!-- EMPTY_OUTPUT_CATEGORY_CORRECTION_2026_07_12 -->
+
+> **Category-count correction (2026-07-12, finding 346)** — this doc previously claimed a **3-category** empty-output
+> decision tree (was: honest-absence / upstream-timestamp-bias / malformed-field only, matching
+> `authoritative_for: [... three-category empty-output decision tree]`). The taxonomy SSOT is
+> [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md) §1, which documents
+> **4 categories** (adds **D. zero-activity-bar**, catalog-aware, operator directive 2026-05-07). Corrected below; this
+> doc's `authoritative_for` no longer claims the decision-tree count — that authority lives solely in
+> `validation-and-errors.md`.
 
 <!-- MULTI_AXIS_CORRECTION_2026_05_06 -->
 
@@ -77,8 +103,9 @@ disk. NO silent NaN placeholder rows.
 | **3. Schema matches contract**                    | Required columns + types match UAC schema declaration. Existing `ParquetSchemaEnforcer`.                                                                                                     | `record_failed(SchemaMismatchError)`.                                |
 | **4. Cluster coverage ≥ expected** (BUNDLED only) | For `data_type ∈ BUNDLED_DATA_TYPES`, `expected_root_clusters` + `cluster_extractor` MANDATORY (UTL guard raises `MissingClusterValidationError` if absent; QG STEP 5.64 statically checks). | `record_failed(ClusterCoverageError(missing, observed))`.            |
 
-**Empty result decision tree (3 categories — NO 4th, NO silent NaN placeholders)**: every empty-result condition
-resolves to one of:
+**Empty result decision tree (4 categories — was 3 prior to 2026-07-12 finding 346, NO silent NaN placeholders; taxonomy
+SSOT is [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md) §1, NOT this
+doc)**: every empty-result condition resolves to one of:
 
 - **A. Honest absence** — source returned 0 ticks for the requested window → `record_empty(row_key, attempted_at)`.
 - **B. Upstream timestamp bias** — source returned ticks; ALL fall outside the requested day after `interval_idx` filter
@@ -88,6 +115,11 @@ resolves to one of:
 - **C. Mid-process malformed fields** — rows in window but downstream calc dropped due to NaN/malformed source fields →
   `record_failed(MalformedTickFieldError(field, n_dropped, sample_values))`. Data-quality bug; sample values surface for
   triage.
+- **D. Zero-activity bar** (was missing from this doc; per validation-and-errors.md §1) — source returned 0 BUT
+  instruments-service catalog says the instrument was ALIVE on the day AND day falls within venue market hours →
+  `record_captured` with carry-forward zero-activity bars (O=H=L=C=prior_LTP, volume=0, trade_count=0). Distinct from
+  path A: captures "tradeable but illiquid," not "missing." See `validation-and-errors.md` §1 for the full reason
+  taxonomy + catalog-aware write-gate detail.
 
 The `_create_empty_output()` placeholder method is BANNED from `base_adapter` and equivalents (writegate Phase 2.A
 deletes it across MDPS' 37 callsites).
@@ -261,7 +293,8 @@ progress + STOPPED/FAILED at exit; events stream to
 - `MULTI_WORKER_WITHOUT_SHARD_ISOLATION` (UTL guard fired)
 - `ADAPTER_FETCH_FAILED` (canonical per-shard failure event with classified error)
 - `DATA_ALIGNMENT_VIOLATION` (timestamp-alignment-gate fired — per `06-coding-standards/validation-and-errors.md` §5)
-- `UPSTREAM_TIMESTAMP_BIAS` (path B in three-category empty-output decision)
+- `UPSTREAM_TIMESTAMP_BIAS` (path B in the four-category empty-output decision — was "three-category" prior to
+  2026-07-12 finding 346; taxonomy SSOT `validation-and-errors.md` §1)
 - `WRITE_GATE_FAILED` (any of the 4 pillars failed)
 
 ---
@@ -274,7 +307,8 @@ progress + STOPPED/FAILED at exit; events stream to
   [`05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md)
 - **deployment-service shard alignment + GCS path templates**:
   [`deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md`](../../../deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md)
-- **Three-category empty-output decision**:
+- **Four-category empty-output decision (taxonomy SSOT — was documented as three-category in this doc until 2026-07-12
+  finding 346; corrected above)**:
   [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md)
 - **Cluster validation + 4-pillar write-gate**:
   [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md)

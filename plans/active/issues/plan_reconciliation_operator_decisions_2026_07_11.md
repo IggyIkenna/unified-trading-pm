@@ -3712,6 +3712,17 @@ tracked in the Progress Log.
 
 ## Progress Log (append-only)
 
+- 2026-07-12 (LEFTOVER QUEUE CLOSED, final Q&A round): operator ruled all 4 remaining items. (1) codex finding 346 FIXED
+  — shard-level-failure-isolation.md synced to the 4-category taxonomy, validation-and-errors.md §1 named SSOT. (2)
+  Three sync edits applied: CLAUDE.md URDI "phantom" label RETIRED (module verified load-bearing in 6+ adapters);
+  manifest-consolidator-ssot.md 120s-blanket corrected to per-AG budgets (cefi=86400s per deployment-api@90ace9f);
+  ao-self-pull.sh documented in both AO codex docs. (3) Template-gap ruled two-track-stands: data_eng_role_vertical
+  pilot execution_scope corrected to local-only (validated). (4) E8 re-run EXECUTED live: stale-snapshot hypothesis
+  CONFIRMED for the 2026-06-27 claims (rows ~5x understated; CF-1 GREEN live both surfaces) but walk NOT C-GREEN — real
+  remaining gaps (CF-8, IS CF-3 19,274/CF-4 796,523 blanks, L6 legacy-only MTDS 140 + IS 1,855 NEW) pinned on the
+  never-run E3 drain + E4 apply; full verdict tables appended to the sports canonicalisation plan. RECONCILIATION
+  DISPATCH COMPLETE — no open items remain in this issue doc's queue beyond the tracked [ ] todos above.
+
 - 2026-07-12 (FINAL WAVE COMPLETE): all 17 afix2 chunks processed — 191 findings across 161 original-auto-fix pairs:
   applied or verified-already-done in full; every edit evidence-re-verified (git shas, artifact reads, live manifest
   probes); notable closes: 8 stale-open issue docs flipped resolved with verified shas; 4 impossible-date-ordering
