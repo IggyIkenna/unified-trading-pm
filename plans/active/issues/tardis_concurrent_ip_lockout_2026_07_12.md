@@ -302,3 +302,17 @@ residual acquisition-handoff race only yields a single **tagged** code=274 403 (
 bash/gcloud lease could not be runtime-verified here and the on-VM enablement smoke-test is deferred to a real VM launch
 — tracked as the new `[INFRA] P2` follow-up (race-free CAS + on-VM smoke-test) above. The lease is DEFAULT-OFF, so
 nothing changes until that smoke-test passes and an operator enables it.
+
+### 2026-07-12 — todo #1 duplicate escalation reconciled (slot-2 infra, opus)
+
+Slot-2 was independently dispatched the todo-#1 operator-decision backlog task (`tardis_concurrent_ip_lockout-001`).
+Before escalating I grounded the a/b/c decision in the actual code surface — added the "Engineering grounding" section
+above (`MAX_CONCURRENT=15` fan-out, 403 absent from the Tardis retry set, code-274 not distinguished from
+honest-absence, Secret-Manager key → option (b) = zero code, per-option effort estimates + the 403-code-274 hygiene fix)
+— committed `unified-trading-pm@77fb77f44`, then escalated the same decision as **BLK-f1417674** (recommendation: pursue
+free (b) in parallel + authorize (a) stopgap + (c) durable follow-up + the hygiene fix under any path). This was a
+**duplicate** of the sibling **BLK-58aea31d**; the operator's "proceed now → option (a)" ruling on that sibling resolves
+BLK-f1417674 identically. Todo #1 was already flipped `[x]` and option (a) shipped by slot-7 (mtds@a9f1b52b +
+deployment-service@c33f681), and the 403-code-274 hygiene fix I'd recommended landed as mtds@31934527 — so slot-2 built
+no duplicate code. `tardis-concurrent-ip-lock-fix-landed` condition flipped true by main; remaining open items are the
+`[INFRA] P2` race-free-CAS + on-VM smoke-test and the `[DATA] P1` post-fix G4 re-run (both gated appropriately).
