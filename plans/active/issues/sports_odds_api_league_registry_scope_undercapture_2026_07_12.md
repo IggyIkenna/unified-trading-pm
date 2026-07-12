@@ -18,13 +18,13 @@ summary:
   numeric-vs-canonical league_id OVER-capture outside the canonical set; this is ODDS_API UNDER-capture of leagues
   genuinely INSIDE the catalog but outside the adapter's own narrower iteration scope) -- different provider, different
   mechanism, opposite direction."
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer, admin]
-tags: [sports, odds_api, adapter-bugs, under-capture, league-registry, smoke-test, data-correctness]
+tags: [sports, odds_api, intentional-scope, league-registry, smoke-test, data-correctness]
 related:
   [
     ../data_pipeline_e2e_check_2026_07_10.md,
@@ -36,7 +36,7 @@ parent_epic: sports_master
 priority: P2
 source: [pipeline_e2e_check SPORTS re-verification, day=2026-06-24 (real PROD-captured day), real VM run.log evidence]
 assigned_vm: NA
-resolved_by:
+resolved_by: operator-decision-2026-07-12
 locked_by:
 execution_scope: local-only
 estimate_class: infra
@@ -119,20 +119,23 @@ that intersection produces a clean, error-free empty result indistinguishable fr
 distinction between "no games" and "games exist but this adapter's scope excludes them" is currently invisible in both
 the manifest (sentinel rows look identical either way) and the logs (debug-level only).
 
-## Not yet determined
+## Resolution — operator confirmed intentional
 
-- Whether this narrow scope is an intentional, already-decided MVP/tier restriction (in which case this is a
-  documentation/observability gap — promote the debug log to a real classified skip reason, not silence) or a genuine
-  coverage bug (leagues that should be captured are being dropped). Needs an operator read on whether
-  `tier<=2 PREDICTION` is the intended full ODDS_API scope.
-- The actual size of the gap — how many catalog leagues have real fixtures on a typical day but fall outside this
-  three-way filter. Not quantified in this pass.
-- Whether `sports_league_id_out_of_universe_overcapture_2026_06_24.md`'s already-in-flight canonicalization work
-  (locked, `execution_scope: orchestrator-agent`) touches this same registry/scope boundary — worth a cross-check before
-  scoping a fix, to avoid two agents editing the same league-registry code concurrently.
+Operator confirmed (2026-07-12): the `tier<=2 AND PREDICTION` scope is the INTENDED full ODDS_API league universe ("~30+
+prediction-relevant leagues"), not an accidental narrowing. This is NOT a coverage bug — closing as
+`resolved`/working-as-intended, not a fix-needed finding.
+
+The one still-real, smaller observation from the original investigation stands as a minor, non-blocking observability
+note (not re-opened as a P2 bug): the debug-level `"No fixtures for %s on %s -- skipping"` log
+(`odds_api_adapter.py:89`) makes "no games that day" and "league outside intentional scope" indistinguishable from the
+log/manifest alone. If this ever becomes confusing in practice, promoting it to a structured, classified skip reason
+(rather than silent debug) would be a cheap follow-up — not tracked as a todo here since it's cosmetic, not a
+correctness issue.
 
 ## Progress log
 
 - 2026-07-12: Filed from the `data_pipeline_e2e_check_2026_07_10.md` SPORTS fixture-day re-verification. Root cause
   traced to file:line via a real re-fetch against a PROD-confirmed captured day, not guessed from the checker's
-  abstracted reason string. No fix attempted — diagnosis handoff only.
+  abstracted reason string.
+- 2026-07-12: Operator confirmed the league scope is intentional (~30+ prediction leagues) — closed as
+  resolved/working-as-intended, no fix needed.
