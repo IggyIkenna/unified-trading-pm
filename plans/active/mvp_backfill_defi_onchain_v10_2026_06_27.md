@@ -1294,3 +1294,26 @@ re-running the full investigation a 3rd time — nothing has changed since 2026-
 investigation would surface. **Flagging the pattern**: this AO item has now boomeranged back into the queue 3× in ~36h
 without an operator answer reaching the blocked-question queue; if this repeats, the dispatcher may need
 `prereqs.conditions` gating on this task until the operator ruling lands, rather than continued re-dispatch.
+
+### 2026-07-12 (slot 7) — 4th re-dispatch; re-verified byte-identical state; applied the recurring-redispatch mitigation
+
+Slot 7 (data_engineering) picked up `mvp_backfill_defi_onchain_v10-001` (the reopened G1.5 todo). Cheaply re-verified
+live state before touching anything: `google.cloud.storage` `blob.exists()` against
+`gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index.parquet` — still **False**;
+`_index/drift_v2_sig_index_parts/` = 6,293 objects, `_index/drift_v2_sig_index_parts_b/` = 876 objects, both unchanged;
+availability-manifest DRIFT `perp_funding` capture_status distribution — `expected_unattempted=51,301`,
+`empty_confirmed=19,096`, `attempted_failed=39`, `captured=8` — byte-identical to the 2026-07-12 slot-4 finding. Zero
+state drift across 3 consecutive prior dispatches; confirmed nothing new to fix in code and no value in re-running the
+investigation a 4th time.
+
+**Mitigation applied** (the fix flagged as needed above): rather than re-filing an identical `/blocked` that a 5th slot
+would just re-confirm again, created the gating condition `drift_perp_funding_helius_throughput_ruled=false` via
+`POST /api/prerequisites/` and filed `/blocked` (`BLK-fc4ab4e6`, recommendation: Option B — launch more parallel-walker
+VM segments) with an explicit ask for main/operator to attach
+`prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` to this backlog task (`data/config/backlog.yaml` +
+`POST /api/backlog/reload`) — that attachment step edits the orchestrator's live root-clone config, outside a
+worker-slot's scope, so it's left for main/operator per RULES.md §4. Then called `/skip-current-task` so slot 7 stops
+re-grabbing this exact dead-end (other slots remain eligible until the condition flips or the backlog task is gated).
+**Still genuinely blocked on the same operator ruling** (todo 3 in
+`defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`) — no code or plan-of-record change was possible beyond this
+Progress Log entry.
