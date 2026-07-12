@@ -722,17 +722,25 @@ breaks the staleness checker's bundle read in the window before rebuild. The onl
 
 **Not fixed inline — captured as a properly-scoped follow-up (design decision, out of a P3 GCS-delete scope):**
 
-- [ ] [INFRA] P3. Decide + (if approved) implement de-duplication of the MTDS dual-name tarball production. Today
-      `create-code-tarballs.sh` emits both `mtds-code.tar.gz` (CORE alias) and `market-tick-data-service-code.tar.gz`
-      (category-array `${repo}-code` derivation) for the same repo — two byte-identical objects. Options: (a) drop MTDS
-      from the category arrays since CORE always covers it (must confirm which name the tarball-fetching VMs actually
-      pull in `setup-data-pipeline-vm.sh` before removing either); (b) special-case MTDS in the derivation to reuse the
-      `mtds-code` alias; (c) leave as-is and instead fix `deployment-api/.../tarball_staleness.py` to reference
-      `mtds-code.tar.gz` in `_ASSET_GROUP_TARBALLS` (aligning to CORE) so the `market-tick-data-service-code.tar.gz`
-      name has no consumer and CAN be retired. Any option requires lockstep changes across `create-code-tarballs.sh`,
-      `tarball_staleness.py` (+ its `_bundle_for` ordering tests), and a check of the VM fetch path — genuine design
-      work, operator/main to decide before implementing. Cosmetic/efficiency only (one redundant ~2.8 MB tarball per
-      build); zero correctness urgency. (repo: `deployment-service` + `deployment-api`)
+- [x] ✅ [INFRA] P3. Decide + (if approved) implement de-duplication of the MTDS dual-name tarball production. — **Done
+      2026-07-12 (slot-5, infra).** Decided **option (a)**, confirmed safe first: grepped every `launch-*.sh` +
+      `setup-data-pipeline-vm.sh` in `deployment-service/scripts/vm/` for `market-tick-data-service-code` — **0 hits,
+      every launcher exclusively fetches `mtds-code.tar.gz`** — so dropping MTDS from the category arrays has zero VM
+      fetch-path impact. Root cause was a literal bug: the `MERGED_EXTRA_REPOS` de-dup guard (`create-code-tarballs.sh`
+      line ~192) excluded `unified-api-contracts`/`unified-trading-library` (both CORE-mapped) but its own comment
+      ("MTDS is handled there") was never implemented for `market-tick-data-service` — so the bare MTDS name in every
+      category array fell through to the `${repo}-code` derivation and produced a second, byte-identical tarball every
+      build. Fixed the guard (`deployment-service@617dea7`) — verified via `--dry-run --asset-group DEFI` and
+      `--dry-run --all`: only `mtds-code.tar.gz` produced, zero `market-tick-data-service-code.tar.gz` occurrences.
+      Paired with **option (c)** in lockstep: removed the now-redundant `market-tick-data-service-code.tar.gz` entry
+      from all 5 `_ASSET_GROUP_TARBALLS` groups in `deployment-api/.../tarball_staleness.py` (`deployment-api@3bdca82`)
+      — `mtds-code.tar.gz` via `_CORE_TARBALLS` already covers MTDS staleness for every asset_group, so no coverage
+      lost; existing `_bundle_for` tests use generic invariants (subset/dedup/`len > 4`), none hardcode the removed
+      name, no test changes needed. `quality-gates.sh` green on both repos (sentinels verified for `617dea7`/`3bdca82`);
+      both quickmerge-landed on `live-defi-rollout`. Did NOT delete the orphaned `market-tick-data-service-code.tar.gz`
+      GCS objects already published under the old bug — no runtime consumer references that name anymore after this fix,
+      so they'll simply stop being refreshed and age out; a GCS delete was already ruled out as the wrong move by the
+      `[INFRA] P3` "delete orphaned tarball" todo above (RESOLVED-INVALID entry, ~13:10Z) for the same object.
 
 ### Re-check #13 — unchanged (VM at 2023-10-25, ~34min pre-genesis); NOT re-litigating — 2026-07-12T14:01Z (data_engineering slot-12, resumed)
 
