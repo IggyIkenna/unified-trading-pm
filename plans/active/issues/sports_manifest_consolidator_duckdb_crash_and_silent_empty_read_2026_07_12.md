@@ -132,11 +132,28 @@ this session to isolate the exact branch (`_read_and_merge_per_vm_shards` return
       `market-tick-data-service` image) — if still crash-looping, check Cloud Monitoring memory metrics for the job
       during the 07:35-07:46 UTC window on 2026-07-12 to confirm/refute the OOM hypothesis; bump memory limit or add
       shard-count throttling if confirmed. (repo: market-tick-data-service / deployment infra)
-- [ ] [SCRIPT] P0. Root-cause + fix the silent-empty-read path in `read_availability_index`
+- [x] ✅ [SCRIPT] P0. Root-cause + fix the silent-empty-read path in `read_availability_index`
       (`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`) so a stale-consolidator +
       failed/empty per-VM-merge case always raises `ManifestConsolidatorStaleError` (or another loud, typed error)
       instead of returning `len(df)==0` silently. Add a regression test simulating stale-consolidated + unreadable
-      per-VM shards. (repo: unified-trading-library)
+      per-VM shards. (repo: unified-trading-library). **DONE 2026-07-12 (slot-3)** — `unified-trading-library@b5ab0c01`.
+      Root cause: `_read_and_merge_per_vm_shards` collapses "no per-VM shards exist at all" and "shards exist but every
+      single one failed to list/download/parse" into the same `None` return; the caller (`read_availability_index` /
+      `_read_availability_index_slim`) then falls through the self-shard fallback to a silent `return _empty` when the
+      self-shard is also absent — exactly reproducing the production incident (stale consolidator + real per-VM shards
+      from other VMs + this VM having no self-shard → 0 rows returned while the raw blob had 4.9M). Fix: extracted the
+      shared "stale consolidated" branch into a new `_read_slow_path()` helper that reuses the already-computed
+      `shards_exist` flag (from `_per_vm_shards_exist`) as the authoritative signal — when shards are KNOWN to exist but
+      both the merge and self-shard read come back empty, raises `ManifestConsolidatorStaleError` via a new
+      `_raise_shards_exist_but_unreadable()` helper instead of silently returning empty; a genuinely-empty bucket
+      (`shards_exist=False`) still legitimately returns empty, unchanged. The extraction also fixed a `ruff C901`
+      complexity violation the inline fix first introduced (`read_availability_index` was 27 > 26) and de-duplicated the
+      same branch between the full and slim read paths. 2 new regression tests in
+      `tests/unit/test_manifest_writer_per_vm.py` (`test_reader_raises_when_shards_exist_but_all_unreadable` — proven to
+      fail on pre-fix code via a `git stash` round-trip (`DID NOT RAISE`), matching the workspace's regression-test bar
+      — and `test_reader_returns_self_shard_when_other_shards_all_unreadable`, a control confirming the legitimate
+      self-shard recovery path is unaffected). Full `quality-gates.sh` green (140s), 43/43 tests passing in the affected
+      files.
 - [ ] [DATA] P1. Once (1) and (2) are fixed and the consolidator has run cleanly for several consecutive minutes, re-run
       the full 6-source gate check for `sports_p2_history_reference_and_odds_2015_to_present` item #6 and flip its
       checkbox if all sources show `pending_fetch == 0` (or only genuine non-covered/window-closed residual). (repo:
@@ -152,3 +169,14 @@ returning 0 rows across 3 independent fresh-process calls during this window; ra
 confirmed 4,914,272 real rows (no data loss — read-path bug only). Did not attempt to fix the consolidator or the UTL
 read-path bug myself this session (out of scope for the sports_p2 VERIFY task + genuine cross-repo infra fix); flagging
 for operator review + a dedicated follow-up dispatch.
+
+### 2026-07-12 — slot-3 (sonnet/high): closed the read-path fix todo
+
+`unified-trading-library@b5ab0c01` — see the flipped checkbox above for the full readout. Root-caused via direct code
+read (not inference): `_read_and_merge_per_vm_shards` returns `None` both when no shards exist AND when every shard
+fails to list/download/parse, and the caller's final self-shard fallback silently returned an empty DataFrame when that
+also came back `None` — exactly reproducing this issue's observed 0-rows-while-4.9M-real-rows-exist state. Fixed by
+reusing the already-computed `shards_exist` flag to raise `ManifestConsolidatorStaleError` instead of falling through to
+empty, only when shards are confirmed to exist elsewhere. 2 new regression tests, one proven to fail on pre-fix code.
+Did NOT touch todo 1 (consolidator health/OOM) or todo 3 (sports_p2 re-gate) — separate scope; this was dispatched
+specifically as the read-path fix task.
