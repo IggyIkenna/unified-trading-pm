@@ -1333,3 +1333,35 @@ other slot working instruments-service, not just this plan).
 **Not blocked by CREDENTIALS/UPSTREAM.** Genuinely blocked on the operator decision for `BLK-afc672cf` (6 tuples);
 continuing other scoped work (FORCE=1 relaunch verification, remaining un-investigated tuples: COINBASE-CDE,
 COINBASE-FUTURES/spot_pair, BYBIT-SPOT stray captures) while waiting.
+
+---
+
+### G4 Session Continuation — 2026-07-12T09:00–09:15Z (data_engineering slot-2, correction)
+
+**`FORCE=1` alone did NOT fix the futile-skip problem — verified via VM metadata, not just log-reading this time.**
+`gcloud compute instances describe cefi-bitget-futures-2025-heavy-20260712-085949 --format='json(metadata)'` showed
+`VM_FORCE=false` despite `FORCE=1` on the launcher invocation — the launcher script has TWO different env vars with
+confusingly similar names: `FORCE` (line 65, only bypasses the launcher's OWN singleton-lock duplicate-launch guard) vs
+`VM_FORCE` (line 381, the one that actually reaches `meta+=",VM_FORCE=${VM_FORCE:-false}"` and propagates to the capture
+CLI's skip-existing bypass). The `FORCE=1` relaunch was **exactly as futile as the original** (confirmed via the same
+VM's run.log still showing `"all requested data_types fully covered ... skipping"`).
+
+**Terminated the 12 futile VMs** (`gcloud compute instances delete`, all confirmed mine via name match, none belonged to
+other slots) and **relaunched with `VM_FORCE=true`** (dropping the 2023 BITGET-FUTURES shards this time too —
+BITGET-FUTURES's actual `venue_launch_dates.py` entry is `2024-11-08`, so 2023 is genuinely pre-launch and would produce
+nothing regardless of any force flag; the launcher's own `_venue_years()` table saying BITGET starts 2023 is itself
+slightly wrong/optimistic, not filed separately since it only wastes one cheap no-op shard, not a correctness issue).
+Verified via VM metadata this time (not just log-reading) that `VM_FORCE=true` actually propagated. Checked `run.log`
+after ~5min: real Tardis fetches now firing (`Tardis streaming success: 12685 rows...`,
+`StreamingParquetWriter: uploaded .../instrument_type=perpetual/data_type=trades/OPUSDT.parquet...` etc.) — genuine data
+capture confirmed, though as of this check it's still working through PERPETUAL-itype symbols alphabetically and hasn't
+reached FUTURE-itype symbols in the catalogue yet (re-fetches the WHOLE venue catalogue since VM_FORCE bypasses
+skip-existing for everything, not just the new itype — accepted cost, no narrower option exists given the
+(venue,data_type)-grain skip check). 12 VMs RUNNING as of 09:15Z; will need a later check-in (T+30-60min, these are
+multi-year full-catalogue re-fetches, slower than the original skip-heavy run) to confirm FUTURE-itype rows land and
+re-verify Layer-1.
+
+**Session note**: two consecutive launch mistakes on the same backfill (T+10min "RUNNING" ≠ verified capture; then
+`FORCE=1` ≠ `VM_FORCE=true`) — both caught by actually reading VM logs/metadata rather than trusting VM status alone.
+Worth internalizing for future waves in this plan: **"VMs RUNNING" is necessary but not sufficient — always spot-check
+at least one VM's run.log for real fetch/write activity before counting a backfill as launched successfully.**
