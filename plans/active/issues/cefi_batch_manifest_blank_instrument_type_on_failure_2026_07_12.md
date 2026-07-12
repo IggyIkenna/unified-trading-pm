@@ -250,6 +250,20 @@ session's claim) — the escalation was documented as intent but never actually 
 entry + `POST /api/backlog/reload`. `skip-current-task`'d again — still nothing in-craft until the sibling operator
 decision (`BLK-f1417674`) is answered and/or the condition is actually wired.
 
+### 2026-07-12 — 9th re-dispatch (slot-10 data_engineering), thrash continues, fresh wiring escalation filed
+
+Re-dispatched a 9th time (slot-12 → slot-6 → slot-8 → slot-9 → slot-11 → slot-4 → slot-5 → slot-10). Independently
+re-verified via direct `GET /api/state`: sibling `tardis_concurrent_ip_lockout_2026_07_12.md` root decision
+(`BLK-f1417674`, the a/b/c/D operator decision) is still `answered_at: null`; condition
+`tardis-concurrent-ip-lock-fix-landed` still `value: false`, `gates_queued: 0` — the wiring gap persists across all 8
+prior sessions. Confirmed none of the four prior wiring-escalation blocked-questions (`BLK-e047b522`, `BLK-adcf07fa`,
+`BLK-d6a8795a`, `BLK-c8842409`) currently appear in the live `blocked_queue` (11 entries checked, none reference this
+task) — same silent-pruning-without-action pattern as every prior occurrence. Filed a fresh escalation: `BLK-1ed7c791`,
+same ask (attach `prereqs.conditions: [tardis-concurrent-ip-lock-fix-landed]` to this backlog entry +
+`POST /api/backlog/reload`, recommendation A), explicitly citing this as the 9th occurrence and naming all four prior
+vanished asks for main/operator visibility. `skip-current-task`'d — nothing in-craft until the sibling operator decision
+lands or the condition is actually wired (not just re-requested).
+
 ### 2026-07-12 — 6th re-dispatch (slot-11 data_engineering), thrash confirmed again, no duplicate blocked filed
 
 Re-dispatched a 6th time (slot-12 → slot-6 → slot-8 → slot-9 → slot-11), same unmet gate. Independently re-verified via
