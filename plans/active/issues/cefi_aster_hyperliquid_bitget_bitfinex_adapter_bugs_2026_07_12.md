@@ -185,6 +185,25 @@ traced to the exact call site — `rg "Invalid comparison between dtype"` or a s
 the caught/logged message, not a full traceback, since this is caught via the shard-level isolation wrapper per
 `codex/04-architecture/shard-level-failure-isolation.md`) would be the next step.
 
+**RESOLVED 2026-07-12 (slot-3)**: root cause found via local reproduction (a synthetic-parquet harness mirroring
+`tests/unit/test_tardis_resolve_symbols_date_boundary.py`'s mock strategy, then a real `pandas==2.3.3` interactive
+check) — NOT a fresh instance of the raw-Series-vs-`date` bug R5-fix-1 already fixed (2026-06-16). The shared call site
+(`tardis_symbol_resolution.py::_resolve_symbols`'s GCS path, both `_catalogue_symbols_for_venue_date` and its
+`_resolve_symbols_from_by_date_snapshot` fallback) DOES apply `.dt.date` before comparing to the Python `date` target —
+but pandas' `.dt.date` accessor has a genuine gotcha: when EVERY value in the source Series is `NaT` (an all-null
+`available_to_datetime` column — the common shape for a perp-only venue's snapshot, since perpetuals never carry an
+expiry), `.dt.date` does NOT drop the `datetime64[ns]` dtype the way it does for a mixed valid/NaT column — it silently
+returns another `datetime64[ns]`-dtype Series, so the subsequent `<=`/`>=` against the bare `date` scalar raises the
+exact byte-identical `TypeError`. BITGET-FUTURES and BITFINEX-FUTURES both hit it because they're perp-heavy venues
+whose by_date snapshot's `available_to_datetime` column is realistically all-NaT. Fix:
+`market-tick-data-service@2cd02409155adb54d9aeea85dbc462c2855aad87` replaces the `.dt.date <=/>= target` pattern at both
+call sites with two new NaT-safe helpers (`_series_date_le`/`_series_date_ge`) that compare the raw `datetime64[ns]`
+Series directly against a `pd.Timestamp` bound (tz-matched, exclusive-next-midnight for the upper bound) — a comparison
+that is well-typed for any dtype, all-NaT included, while preserving identical day-only-granularity boundary semantics.
+5 new regression tests cover the exact type-mismatch case directly (an all-NaT `available_to_datetime` column, both via
+`_resolve_symbols` end-to-end and via the two helpers in isolation) plus the tz-aware fixture the pre-existing R5-fix-1
+tests already covered (kept green). Real VM re-verification for BOTH venues below.
+
 ## Not yet investigated
 
 The full sweep found ~135 total MTDS force-leg `no_parquet_under` failures across many more venues/data_types than
@@ -216,3 +235,36 @@ DEFI venues, remaining TradFi data_types beyond the already-fixed `--source` gap
   Finding 2) written up under Finding 1 above. `quality-gates.sh --no-fix` green before commit; shipped via
   `quickmerge --agent` scoped to the one file; all 3 verification VMs self-deleted cleanly (exit_code=0), no lingering
   compute.
+- 2026-07-13 (slot-3): **Finding 3 RESOLVED + shipped** —
+  `market-tick-data-service@2cd02409155adb54d9aeea85dbc462c2855aad87`
+  (`fix(mtds): NaT-safe date comparison in Tardis CeFi symbol resolution — fixes BITGET-FUTURES + BITFINEX-FUTURES datetime64-vs-date TypeError`).
+  Root cause: pandas `.dt.date` does not drop `datetime64[ns]` dtype when a Series is ALL-`NaT` (see the RESOLVED note
+  under Finding 3 above for the full mechanism) — a genuinely different bug than R5-fix-1 (2026-06-16) despite the
+  byte-identical error text, since both call sites already used the `.dt.date` pattern R5-fix-1 introduced. Fixed both
+  GCS-path call sites in `tardis_symbol_resolution.py` (`_catalogue_symbols_for_venue_date` +
+  `_resolve_symbols_from_by_date_snapshot`) with two new NaT-safe helpers comparing directly against a tz-matched
+  `pd.Timestamp` bound instead of `.dt.date`. 5 new regression tests added directly covering the all-NaT type-mismatch
+  case (`tests/unit/test_tardis_resolve_symbols_date_boundary.py` `TestResolveDateBoundaryAllNatColumn` +
+  `TestSeriesDateHelpersAllNat`, `tests/unit/test_tardis_catalogue_lifecycle_universe.py`
+  `test_all_nat_available_to_no_type_error`); all 21 tests in the file family green, plus the full 213-test
+  tardis-marked suite green. `quality-gates.sh --no-fix` green before commit (re-run once after an unrelated agent's
+  fast-forward pull moved HEAD mid-gate, to refresh the `.qg_last_passed_sha` sentinel); shipped via
+  `quickmerge --agent` scoped to the 3 touched files (foreign concurrent WIP in
+  `databento_base_client.py`/`databento_fetch.py`/`umi_tick_provider.py` in the same repo left untouched throughout, per
+  multi-agent safety rules). **Real VM re-verification, BOTH venues, SAME shared-code-path change, day=2026-07-09**
+  (matching the original failure day) — tarball built from an isolated `git worktree` at the fix commit (avoiding the
+  same repo's foreign concurrent WIP) and pinned via `MTDS_TARBALL_SHA` metadata (a mutable "latest" tarball race with a
+  DIFFERENT concurrent agent's rebuild was directly observed and sidestepped this way — confirmed via each VM's own
+  `manifest: sha=2cd02409155a` boot-log line): VM `mtds-backfill-cefi-verifybitget-20260712-230433` (BITGET-FUTURES) and
+  VM `mtds-backfill-cefi-verifybitfinex-20260712-230433` (BITFINEX-FUTURES), both `--test-run --force`, no
+  `--instrument-ids` (mirrors the real failure — neither venue has a `smoke_matrix._REPRESENTATIVE_SYMBOL` entry, so the
+  GCS by_date-snapshot path that hits this exact bug is the one genuinely exercised). Both full run.logs (2916 + 345
+  lines) grepped for zero hits on `Invalid comparison between dtype` and zero hits on
+  `unexpected error (shard isolated)` — CONFIRMED ABSENT on both. Both `_resolve_symbols` calls now resolve the FULL
+  per-venue universe (hundreds of BITGET-FUTURES symbols, dozens of BITFINEX-FUTURES symbols) instead of crashing before
+  a single Tardis request; `TardisAdapter.download_batch` completes normally for both (`0 records ... SHARD_INCOMPLETE`,
+  NOT a venue-level crash); both VMs exit `DEPLOYMENT_COMPLETED ... exit_code=0` and self-delete cleanly, no lingering
+  compute. The `0 records` outcome itself is a SEPARATE, pre-existing, already-instrumented issue — every per-symbol
+  fetch failed with `Tardis HTTP 403 code=274 concurrent-IP-lock` (the single-concurrent-IP Tardis key lease contended
+  by other VMs on this shared host at test time; `tardis_concurrency_lease.py` exists specifically to manage this) — out
+  of scope for this fix and not chased further here.
