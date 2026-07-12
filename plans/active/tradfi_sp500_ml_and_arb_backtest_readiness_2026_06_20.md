@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: TradFi S&P ML + price-arb backtest readiness (ES feature runs + data-clean slice)
-summary: Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and prediction strategies.
+summary:
+  Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
+  prediction strategies.
 status: active
 nature: process
 asset_group: [tradfi]
@@ -9,8 +11,14 @@ stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
 tags: [tradfi, sp500, ml, backtest, features, es, vix, arb]
-related: [../epics/tradfi_master.md, ./tradfi_manifest_canonicalisation_2026_06_01.md, ./tradfi_massive_dual_source_2026_05_28.md, ../active/master_to_live_defi_2026_05_23.md]
-created: '2026-06-12'
+related:
+  [
+    ../epics/tradfi_master.md,
+    ./tradfi_manifest_canonicalisation_2026_06_01.md,
+    ./tradfi_massive_dual_source_2026_05_28.md,
+    ../active/master_to_live_defi_2026_05_23.md,
+  ]
+created: "2026-06-12"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -73,7 +81,7 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       ohlcv_1s. Issue doc: `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`. Also
       found: MTDS manifest stores `instrument_id=''` (blank) for CME rows → lookback validation never matches
       `("CME", "ES")` key (dependency_checker.py bug, same issue doc). — features-service@259569d9 | Fix A (bypass
-      _acquire_candles for TRADFI roll-sensitive groups) + Fix B (root extraction via rsplit colon) + Fix C
+      \_acquire_candles for TRADFI roll-sensitive groups) + Fix B (root extraction via rsplit colon) + Fix C
       (data_type=ohlcv_1m). MDPS process VM launched for 2020-01-01→2026-06-23 (`mdps-backfill-tradfi-20260624-065912`).
       **Sequencing**: process → build-continuous → features (3 VMs in order). See todos below for build-continuous +
       features VM steps.
@@ -125,9 +133,18 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       (^VIX) is NOT in TRADFI IS catalog (only CME venue). CLAUDE.md: VIX 15m sourced from Barchart preload + Yahoo
       rolling 60d. Wiring `compute_vix_features()` requires: (1) add VIX IS entry or a special-case static instrument,
       (2) add a Yahoo/Barchart VIX OHLCV load path to `data_loader.py`, (3) add `"realized_vol_vix"` or `"vix"` to
-      `FEATURE_GROUPS`, (4) dispatch in `feature_group_service._calculate_features`. Blocked on operator decision: route
-      VIX through existing Barchart/Yahoo MTDS path or add a new VIX-specific data source. Status:
-      **BLOCKED-OPERATOR-DECISION**. (Provenance: slot-23 investigation 2026-06-24.)
+      `FEATURE_GROUPS`, (4) dispatch in `feature_group_service._calculate_features`. (was: "Blocked on operator
+      decision: route VIX through existing Barchart/Yahoo MTDS path or add a new VIX-specific data source. Status:
+      **BLOCKED-OPERATOR-DECISION**.") **RESOLVED by prior operator ruling 2026-06-23** — VIX cash index DELETED
+      entirely; VIX exposure = VX futures via XCBF.PITCH. See tradfi_multisource_backfill_2026_06_22.md §VIX. Synced per
+      plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 304). (Provenance: slot-23
+      investigation 2026-06-24.)
+- [ ] [AGENT] P2. **Live sub-todo under the resolved VIX ruling above** — steps (1)/(2) in the item above now target the
+      existing VX futures_chain IS entry (CBOE venue, XCBF.PITCH, already captured per
+      `tradfi_multisource_backfill_2026_06_22.md`) instead of a VIX cash-index IS entry / Yahoo-Barchart VIX-index OHLCV
+      path (no such series exists — it was deleted 2026-06-23): derive VIX-equivalent features from VX futures OHLCV.
+      Steps (3)/(4) (add `"vix"`/`"realized_vol_vix"` to `FEATURE_GROUPS` + dispatch in
+      `feature_group_service._calculate_features`) are unchanged and still open.
 
 ## P3 — S&P ML + arb backtest exploration (gated on data-clean above)
 

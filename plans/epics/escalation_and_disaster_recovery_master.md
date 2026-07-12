@@ -26,6 +26,11 @@ locked_by: NA
 locked_since: NA
 ---
 
+> **⏸️ PAUSED per operator decision 2026-06-26** (frontmatter stays `status: active` only because the epic schema has no
+> `paused` value — this banner is the operative state) — deferred to next quarter together with W7/W8/W9 (message broker
+> dependency) per agent_operating_framework_master.md:62-66 re-scope. Todos remain valid but MUST NOT be dispatched
+> until un-paused. Synced per plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 338).
+
 # Escalation & Disaster Recovery Master (L4)
 
 **Owns**: the one path every agent role takes when it cannot self-resolve — and the self-healing substrate that keeps

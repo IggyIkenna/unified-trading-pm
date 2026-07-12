@@ -82,6 +82,15 @@ below.
 > matching mode. See WS-G for the live design decisions. This note is a pointer — NOT a wholesale supersede of this
 > epic's other scope.
 
+> **Fleet-description supersede notice (2026-07-11):** The multi-VM / 9-epic-VM fleet description used throughout this
+> epic — including the **Owns** section above and the `assigned_vm: vm-orchestrator` frontmatter — is SUPERSEDED by the
+> single-VM role-based dispatch architecture (2026-06-27): ONE central orchestrator VM (id `planning`) with N slot
+> workers, dispatch by role/skill, no per-epic VMs. SSOT:
+> `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (see also the workspace `CLAUDE.md` system-map
+> summary). The historical multi-VM / 9-epic-VM text below (incl. "Owns", "Why this epic exists", and the assigned-VM
+> frontmatter) is KEPT for context only — it does NOT describe the current architecture. Finding + adversarial
+> verification trail: `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 349).
+
 ## Why this epic exists
 
 Today's orchestrator runs ONE VM, ONE main agent, ONE backlog. It scaled to ~11 slots but hits recurring failure modes:

@@ -74,17 +74,22 @@ order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_
 
 ### 🔴 2026-07-08 canonical instrument_id — live≠batch findings
 
-**status**: 🔴 NEW — from
+**status**: ✅ RESOLVED (2026-07-11 reconciliation) — from
 [`canonical_instrument_id_audit_2026_07_08`](../audit/results/canonical_instrument_id_audit_2026_07_08.md) (owned
 primarily by `instruments_master`, cross-referenced here since these 2 findings are direct live=batch determinism
-violations). Not a new epic — operator decision 2026-07-08 to track under existing epics.
+violations). Not a new epic — operator decision 2026-07-08 to track under existing epics. Synced per
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (findings 18/19/337/363).
 
-- [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)
-  — the CCXT live adapter stores bare ccxt-native symbols; batch (Tardis) produces a differently-shaped canonical id for
-  the same real instrument, across 13 major CeFi venues.
-- [`canonical_id_p0_strategy_reconciliation_2026_07_08`](../active/canonical_id_p0_strategy_reconciliation_2026_07_08.md)
-  — depends on the plan above; live position reconciliation is silently defeated for every CCXT venue because the
-  canonical-vs-raw string comparison never matches.
+- [x] [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)
+      — (RESOLVED) the CCXT live adapter stored bare ccxt-native symbols; batch (Tardis) produced a differently-shaped
+      canonical id for the same real instrument, across 13 major CeFi venues. Fixed + shipped
+      `instruments-service@8544273d67f2865151ce0aec8e03e2b51ba37397` — all 13 canonical CeFi venues verified converged
+      live=batch (status: complete, 2026-07-10).
+- [x] [`canonical_id_p0_strategy_reconciliation_2026_07_08`](../active/canonical_id_p0_strategy_reconciliation_2026_07_08.md)
+      — (RESOLVED) depended on the plan above; live position reconciliation was silently defeated for every CCXT venue
+      because the canonical-vs-raw string comparison never matched. Fixed + shipped (all 7 todos)
+      `strategy-service@0c407b57e1aa92afb430fc818f91abeb7b186c13` +
+      `deployment-api@c8eeee2e67910c3cb9ba7375eb01a288ae90c248` (status: complete, 2026-07-08).
 
 ## P1 — important; post-current-gate
 

@@ -11,6 +11,25 @@ name: epics-readme
 
 # Epics — SSOT for the planning-orchestrator layer
 
+> **🟡 STALE-CONTENT BANNER — 2026-07-11** (adversarially-verified reconciliation findings 308/309, see
+> [`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`](../active/issues/plan_reconciliation_operator_decisions_2026_07_11.md)):
+>
+> **(a) The "20 epics in 5 tiers" table below is INCOMPLETE.** At least two live epics are missing from it:
+> [`agent_operating_framework_master.md`](agent_operating_framework_master.md) (`status: active`, `tier: L5`,
+> `priority: P0`, `created: 2026-06-24`) and
+> [`escalation_and_disaster_recovery_master.md`](escalation_and_disaster_recovery_master.md) (`created: 2026-06-25`).
+> Regenerating the table to be a true closed registry is a **parked operator decision** — do not treat the table as
+> exhaustive until it is regenerated.
+>
+> **(b) The epic-owns-VM model is SUPERSEDED.** The `assigned_vm: vm-<id>` epic-frontmatter field (below) and the "VM
+> topology (10 VMs serving 20 epics)" section (below) describe a per-epic VM-ownership model that no longer governs
+> dispatch. It is superseded by: (i) operator-locked decision **D2** in
+> [`agent_operating_framework_master.md:129`](agent_operating_framework_master.md) (2026-06-24) — _"`assigned_vm` is a
+> mandatory **per-plan** field; epic-to-VM delegation is DROPPED for matching"_; and (ii) the single-VM,
+> role-based-dispatch architecture (2026-06-27; central `planning` VM + role dispatch, no per-epic VMs) per
+> `cursor-configs/CLAUDE.md` and `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. The epic-level
+> `assigned_vm`/VM-topology content below is retained for archaeology only — do not dispatch or match against it.
+
 **This file is the SSOT** for what epics are, how they relate to audits + active plans, how they map to VMs, and the
 canonical frontmatter schema. Pointers from `CLAUDE.md`, `codex/11-project-management/`, and `plans/PLAN_FORMAT.md` all
 land here. Update this file when the workflow evolves; codex docs are pointers, not parallel SSOTs.
@@ -90,6 +109,7 @@ type: epic
 tier: L0|L1|L2|L3|L4|L5 # which layer this epic sits in (see registry below)
 status: active|paused|cancelled # NEVER "complete" — epics are everlasting
 priority: P0|P1|P2|P3 # rolls up to cutover master scoring
+# > SUPERSEDED — see top banner (D2, 2026-06-24: assigned_vm is per-plan, not per-epic; epic-to-VM delegation dropped)
 assigned_vm: vm-<id> # registry-resolved VM that owns this epic
 parent: master_to_live_defi_2026_05_23 # always the cutover master (until cutover ships)
 created: YYYY-MM-DD
@@ -188,6 +208,8 @@ priority blocks, workers cannot self-direct.
 
 **Cutover master (NOT an epic)**: `plans/active/master_to_live_defi_2026_05_23.md` is a dated, one-shot plan tracking
 the May-23 live DeFi rollout across all 20 epics. Archives after cutover. Not in `plans/epics/`.
+
+> SUPERSEDED — see top banner (single-VM, role-based-dispatch architecture, 2026-06-27; no per-epic VMs)
 
 ## VM topology (10 VMs serving 20 epics)
 

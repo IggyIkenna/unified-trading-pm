@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Predictions synthetic OTHER canonical-question-group bucket + deployment-ui 3-level drilldown
-summary: Build the synthetic OTHER canonical-question-group catch-all bucket end-to-end and add the 3-level drilldown panel to deployment-ui for predictions data.
+summary:
+  Build the synthetic OTHER canonical-question-group catch-all bucket end-to-end and add the 3-level drilldown panel to
+  deployment-ui for predictions data.
 status: active
 nature: process
 asset_group: [prediction]
@@ -9,8 +11,13 @@ stage: [meta]
 repos: [deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [prediction, ui, drilldown, synthetic-bucket, canonical-question-group, deployment-ui, data-status]
-related: [../epics/predictions_master.md, ./prediction_manifest_canonicalisation_2026_06_01.md, ../epics/infrastructure_master.md]
-created: '2026-06-12'
+related:
+  [
+    ../epics/predictions_master.md,
+    ./prediction_manifest_canonicalisation_2026_06_01.md,
+    ../epics/infrastructure_master.md,
+  ]
+created: "2026-06-12"
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -94,10 +101,14 @@ after each backfill VM run and recurring patterns promoted to first-class groups
       renders as
       `(venue=POLYMARKET, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)` per
       CLAUDE.md per-asset-group shard-key matrix. No "out of scope" badge. `OTHER` bucket visible alongside curated
-      groups. `[UI]` — playwright gate before ticking. > **[BLOCKED-PLAYWRIGHT 2026-06-24 slot-21]**: PREREQUISITE
-      (3-level hierarchy above) not yet ticked; this VERIFY > cannot run until: (1) 3-level hierarchy code ships + pw:L2
-      ✓ on a UI-capable slot; (2) re-walk confirms rendering. > Assign to a local/laptop slot with a running
-      deployment-ui dev server.
+      groups. `[UI]` — playwright gate before ticking. > **[BLOCKED-PLAYWRIGHT 2026-06-24 slot-21 — synced
+      2026-07-11]**: PREREQUISITE (3-level hierarchy above) IS now ticked — deployment-ui@319075e, see the P0 item above
+      (was: "not yet ticked"); condition (1) code-ships is satisfied, but pw:L2 ✓ on a UI-capable slot is still
+      outstanding per that same item's own
+      `[BLOCKED-PLAYWRIGHT] fleet VM has no dev server; pw:L2 gate pending UI-capable slot` note. This VERIFY still
+      cannot run until: pw:L2 ✓ on a UI-capable slot for the 3-level hierarchy item; then re-walk confirms rendering. >
+      Assign to a local/laptop slot with a running deployment-ui dev server. Synced per
+      plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 239).
 - [x] ✅ [VERIFY] P0. Predictions timeline / panel VERIFY gate: Phase-1 timeline check + after-Phase-1 re-walk that
       POLYMARKET no longer renders "out of scope" in deployment-ui (the badge driven by UAC
       `VENUE_DATA_TYPE_CAPABILITIES` vs the live manifest data_type). This is the operator-facing acceptance gate for

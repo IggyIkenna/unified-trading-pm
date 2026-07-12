@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Sports P1a — golden-window API-Football to 100% (fixtures + enrichment + core)
-summary: Drive all API-Football data_types to 100% honest coverage on the golden window (2025-09-01..2025-11-30) for the 94-league universe.
+summary:
+  Drive all API-Football data_types to 100% honest coverage on the golden window (2025-09-01..2025-11-30) for the
+  94-league universe.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -9,7 +11,12 @@ stage: [data]
 repos: [deployment-service, instruments-service]
 scope: [engineer, admin]
 tags: [sports, api-football, golden-window, backfill, honest-coverage, data-ingestion]
-related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, plans/active/data_completion_to_100_all_ag_2026_06_21.md, plans/active/sports_manifest_canonicalisation_2026_06_01.md]
+related:
+  [
+    plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
+    plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    plans/active/sports_manifest_canonicalisation_2026_06_01.md,
+  ]
 created: 2026-06-27
 parent_epic: sports_master
 assigned_vm: planning
@@ -23,15 +30,20 @@ locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
 superseded_by:
-depends_on: [sports_p0_spot_vm_launchers_2026_06_27, sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27, sports_fixtures_schema_split_completion_2026_06_20]
+depends_on:
+  [
+    sports_p0_spot_vm_launchers_2026_06_27,
+    sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27,
+    sports_fixtures_schema_split_completion_2026_06_20,
+  ]
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
 > **✅ FIXTURES BACKFILL COMPLETE** — `af-backfill-20260627-182057` SPOT asia-northeast1-c, 18:20–18:32 UTC 2026-06-27,
-> 2903/2904 shards resolved via re-fetch. 1 residual (A_LEAGUE/2025-09-01, off-season) fixed via reconcile script.
-> Gate ALL PASS: attempted_failed=0, unattempted=0, blank_reason=0 on golden window.
+> 2903/2904 shards resolved via re-fetch. 1 residual (A_LEAGUE/2025-09-01, off-season) fixed via reconcile script. Gate
+> ALL PASS: attempted_failed=0, unattempted=0, blank_reason=0 on golden window.
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Golden window = **2025-09-01
 > .. 2025-11-30**, 94-league universe. This plan drives ALL **API-Football** `data_types` to 100% honest coverage on the
@@ -77,47 +89,48 @@ P1c, MTDS). XG/XG_SHOTS are understat (→ P1b).
 - [x] [VERIFY] P0. **Confirm FIXTURES = 100% on the window** for all 94 leagues. Run the completeness audit; any
       residual no-match cell must carry `EXPECTED_NO_FIXTURE` (not blank/`SOURCE_RETURNED_ZERO`). **Gate**:
       `read_availability_index` window-scoped query → `(api_football, FIXTURES)` has 0
-      `expected_unattempted_pending_fetch` and 0 blank-reason empties across the 94 leagues × 91 days.
-      ✅ Gate conditions PASS (0 unattempted, 0 blank-reason empties) — see Progress Log for full audit output.
-      ⚠️ FINDING: 2904 `FIXTURES_FETCH_FAILED` shards discovered across 33 leagues × 88 dates (written 2026-06-25).
-      FIXTURES NOT at 100% — new todo added below for re-fetch.
+      `expected_unattempted_pending_fetch` and 0 blank-reason empties across the 94 leagues × 91 days. ✅ Gate
+      conditions PASS (0 unattempted, 0 blank-reason empties) — see Progress Log for full audit output. ⚠️ FINDING: 2904
+      `FIXTURES_FETCH_FAILED` shards discovered across 33 leagues × 88 dates (written 2026-06-25). FIXTURES NOT at 100%
+      — new todo added below for re-fetch.
 - [x] [DATA] P0. **Re-fetch 2904 FIXTURES_FETCH_FAILED shards** across all 33 registered leagues × 88 dates on the
-      golden window (2025-09-01..2025-11-30). All failures written 2026-06-25 (single-batch systemic failure).
-      Run: `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURES 2025-09-01 2025-11-30`
-      (singleton-locked; use `--force` if a stale lock exists from the 2026-06-25 run).
-      **Gate**: window `(api_football, FIXTURES)` `attempted_failed` → 0; all 33 registered leagues have
-      `capture_status ∈ {captured, empty_confirmed}` only; VM STARTED/STOPPED events emitted.
-      ✅ VM `af-backfill-20260627-182057` rc=0 (18:20–18:32 UTC 2026-06-27); 2903 shards resolved via re-fetch.
-      Residual 1: A_LEAGUE/2025-09-01 — off-season (A_LEAGUE runs Oct–May; Sep 2025 between seasons);
-      `emit_empty_gaps_for_entity` skips leagues with empty fixture calendar → stale entry not overwritten by VM.
-      Fixed via targeted reconcile script `fix_a_league_fixtures_2025_09_01_20260627.py` (same pattern as
-      `reclassify_oos_sports_expected_unattempted_2026_06_24.py`; snapshot saved to `_index/snapshots/`).
-      Gate ALL PASS: attempted_failed=0, unattempted=0, blank_reason=0; A_LEAGUE/2025-09-01 → empty_confirmed/EXPECTED_NO_FIXTURE.
+      golden window (2025-09-01..2025-11-30). All failures written 2026-06-25 (single-batch systemic failure). Run:
+      `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURES 2025-09-01 2025-11-30`
+      (singleton-locked; use `--force` if a stale lock exists from the 2026-06-25 run). **Gate**: window
+      `(api_football, FIXTURES)` `attempted_failed` → 0; all 33 registered leagues have
+      `capture_status ∈ {captured, empty_confirmed}` only; VM STARTED/STOPPED events emitted. ✅ VM
+      `af-backfill-20260627-182057` rc=0 (18:20–18:32 UTC 2026-06-27); 2903 shards resolved via re-fetch. Residual 1:
+      A_LEAGUE/2025-09-01 — off-season (A_LEAGUE runs Oct–May; Sep 2025 between seasons); `emit_empty_gaps_for_entity`
+      skips leagues with empty fixture calendar → stale entry not overwritten by VM. Fixed via targeted reconcile script
+      `fix_a_league_fixtures_2025_09_01_20260627.py` (same pattern as
+      `reclassify_oos_sports_expected_unattempted_2026_06_24.py`; snapshot saved to `_index/snapshots/`). Gate ALL PASS:
+      attempted_failed=0, unattempted=0, blank_reason=0; A_LEAGUE/2025-09-01 → empty_confirmed/EXPECTED_NO_FIXTURE.
 - [x] [DATA] P0. **Backfill the enrichment gap** (`FIXTURE_LINEUPS`, `FIXTURE_EVENTS`, `FIXTURE_STATS`, `PLAYER_STATS`)
       for the window, gap-fill only (skip-existing). Relabel residual blank-reason empties to the correct typed reason
       via the season/coverage calendar (`EXPECTED_NO_FIXTURE` / `EXPECTED_NO_PROVIDER_COVERAGE` / `EXPECTED_PRE_*`);
       these enrichment `data_types` start `2020-06-06` (`DATA_TYPE_COVERAGE_START`) so the whole window is in-coverage.
       Use the AF backfill launcher per entity (singleton-serialised). **Gate**: window query → each enrichment
       `data_type` has 0 `expected_unattempted_pending_fetch` AND 0 blank-reason empty; every non-captured cell carries a
-      typed `EXPECTED_*` reason; VM run.log `exit_code=0` + STARTED/STOPPED events.
-      ✅ All 4 enrichment VMs completed rc=0 (2026-06-27); gate PASS: unattempted=0, blank_reason=0 for all 4 types;
-      manifest consolidated (2.6M rows). See Progress Log 2026-06-27 for full counts + 3 phantom_captured findings.
+      typed `EXPECTED_*` reason; VM run.log `exit_code=0` + STARTED/STOPPED events. ✅ All 4 enrichment VMs completed
+      rc=0 (2026-06-27); gate PASS: unattempted=0, blank_reason=0 for all 4 types; manifest consolidated (2.6M rows).
+      See Progress Log 2026-06-27 for full counts + 3 phantom_captured findings.
 - [x] [DATA] P0. **Re-fetch the ~90 INJURIES real failures** (`ApiFootballResponseError`) on the window via
       `--recovery-fixture-ids` or an entity-scoped re-run; genuine post-retry failures stay `attempted_failed` only with
       a `FetchEvidence`-backed error, never masked as empty. **Gate**: window `INJURIES` `attempted_failed` → 0 (or each
-      residual carries proven `FetchEvidence`); no placeholder `record_captured`.
-      ✅ Entity re-run VM af-backfill-20260627-172215 rc=0 (2026-06-27); gate PASS: unattempted=0.
-      Residual 91 attempted_failed: 90 `ApiFootballResponseError` (proven FetchEvidence — genuine API errors),
-      1 `phantom_captured_no_parquet_at_canonical_path`. No placeholders. Gate condition met.
+      residual carries proven `FetchEvidence`); no placeholder `record_captured`. ✅ Entity re-run VM
+      af-backfill-20260627-172215 rc=0 (2026-06-27); gate PASS: unattempted=0. Residual 91 attempted_failed: 90
+      `ApiFootballResponseError` (proven FetchEvidence — genuine API errors), 1
+      `phantom_captured_no_parquet_at_canonical_path`. No placeholders. Gate condition met.
 - [x] [VERIFY] P0. **Verify STANDINGS + TEAMS = 100%** on the window (core entities; date-invariant TEAMS via the FLAT
-      layout). **Gate**: window query → both at 100% honest coverage; phantom dry-run ≈ 0 (P0 #5 unblocked it).
-      ✅ 2026-06-27: STANDINGS (3094 captured + 5551 EXPECTED_NO_PROVIDER_COVERAGE, unattempted=0, blank_reason=0);
-      TEAMS (3094 captured = 100%, unattempted=0); phantom dry-run = 0 for both. Gate PASS.
+      layout). **Gate**: window query → both at 100% honest coverage; phantom dry-run ≈ 0 (P0 #5 unblocked it). ✅
+      2026-06-27: STANDINGS (3094 captured + 5551 EXPECTED_NO_PROVIDER_COVERAGE, unattempted=0, blank_reason=0); TEAMS
+      (3094 captured = 100%, unattempted=0); phantom dry-run = 0 for both. Gate PASS.
 - [x] ✅ [DATA] P1. **No-blank-reason invariant** across ALL AF data_types on the window. **Gate**: the canonical sports
       `_index` window slice has ZERO `capture_status=empty_confirmed` rows with blank/null `error_reason` for any
-      api_football data_type. — **VERIFIED 2026-06-28T19:34Z** (slot-6): `reconcile_sports_blank_empty_reason_2026_06_24.py`
-      dry-run on full 5,946,569-row sports index → `blank_before=0`, `blank_after=0`. Gate PASS: 0 blank-reason
-      empty_confirmed rows in entire sports _index (window + all other dates). No apply needed.
+      api_football data_type. — **VERIFIED 2026-06-28T19:34Z** (slot-6):
+      `reconcile_sports_blank_empty_reason_2026_06_24.py` dry-run on full 5,946,569-row sports index → `blank_before=0`,
+      `blank_after=0`. Gate PASS: 0 blank-reason empty_confirmed rows in entire sports \_index (window + all other
+      dates). No apply needed.
 
 **Full-execution criterion**:
 
@@ -127,6 +140,13 @@ P1c, MTDS). XG/XG_SHOTS are understat (→ P1b).
     `read_availability_index` query on `instruments-store-sports-prd-central-element-323112`.
   - **Verification**: window query output pasted into the Progress Log — `pending_fetch=0`, `blank_reason=0`,
     `attempted_failed=0` (or evidence-backed) per data_type.
+  - **Reconciliation note (2026-07-11)**: "100% honest coverage" here = 100% honestly-CLASSIFIED cells
+    (`pending_fetch=0`, `blank_reason=0` — every gate in this plan measures classification, not presence). It is NOT a
+    data-present claim: measured data-present enrichment on the same window remains partial (PLAYER_STATS 21% / MATCHES
+    35% / INJURIES 37% per `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` open P0
+    "94-league enrichment backfill", which stays the authoritative tracker for closing the presence gap; XG/XG_SHOTS are
+    understat-scope → P1b). Synced per `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`
+    (finding 269).
 
 ## Success criteria
 
@@ -143,82 +163,82 @@ P1c, MTDS). XG/XG_SHOTS are understat (→ P1b).
 
 ### 2026-06-27 — FIXTURES verify audit (slot 6)
 
-Script: `instruments-service/scripts/run_fixture_completeness_audit_2026_06_25.py --start-date 2025-09-01 --end-date 2025-11-30`
+Script:
+`instruments-service/scripts/run_fixture_completeness_audit_2026_06_25.py --start-date 2025-09-01 --end-date 2025-11-30`
 Index: `instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`
 
-**Window totals (FIXTURES, 2025-09-01..2025-11-30):**
-| capture_status | count | error_reason |
-|---|---|---|
-| `empty_confirmed` | 4909 | `EXPECTED_NO_FIXTURE`: 4736, `SOURCE_RETURNED_ZERO`: 173 |
-| `attempted_failed` | 2904 | `FIXTURES_FETCH_FAILED` (all written 2026-06-25) |
-| `captured` | 2338 | (blank — correct) |
+**Window totals (FIXTURES, 2025-09-01..2025-11-30):** | capture_status | count | error_reason | |---|---|---| |
+`empty_confirmed` | 4909 | `EXPECTED_NO_FIXTURE`: 4736, `SOURCE_RETURNED_ZERO`: 173 | | `attempted_failed` | 2904 |
+`FIXTURES_FETCH_FAILED` (all written 2026-06-25) | | `captured` | 2338 | (blank — correct) |
 
 **Gate check:**
+
 - Gate 1 (`expected_unattempted_pending_fetch == 0`): ✅ PASS — all 10151 shards have terminal status
 - Gate 2 (blank-reason `empty_confirmed == 0`): ✅ PASS — all `empty_confirmed` have typed reasons
 
 **Finding — FIXTURES not at 100%:**
+
 - 2904 `FIXTURES_FETCH_FAILED` shards across ALL 33 registered leagues × 88 dates of the window
 - Written 2026-06-25 (single-batch systemic failure from prior run)
-- 173 `SOURCE_RETURNED_ZERO` rows are all OUTSIDE the 33-league registered universe (cup competitions etc.) — not blocking
+- 173 `SOURCE_RETURNED_ZERO` rows are all OUTSIDE the 33-league registered universe (cup competitions etc.) — not
+  blocking
 - UAC universe (`get_all_league_ids`) = 33 leagues; all present in window
 - New P0 re-fetch todo added above
 
 ### 2026-06-27 — Enrichment gap backfill (slot 6)
 
 Launched 4 entity VMs sequentially (singleton-locked per API-Football rate-limit contract):
+
 - `af-backfill-20260627-160833` FIXTURE_LINEUPS 2025-09-01..2025-11-30 → rc=0 (7871 manifest entries, 94 new)
 - `af-backfill-20260627-162057` FIXTURE_EVENTS 2025-09-01..2025-11-30 → rc=0 (7871 entries, 94 new)
 - `af-backfill-20260627-164119` FIXTURE_STATS 2025-09-01..2025-11-30 → rc=0 (8151 entries, 94 new)
 - `af-backfill-20260627-165420` PLAYER_STATS 2025-09-01..2025-11-30 → rc=0 (8151 entries, 94 new)
 - Manifest rescan: `sports-manifest-rescan-20260627-170930` → rc=0 (2,594,563 rows consolidated)
 
-**Gate check (availability index post-rescan):**
-| data_type | captured | empty_confirmed | attempted_failed | unattempted | blank_reason | Gate |
-|---|---|---|---|---|---|---|
-| FIXTURE_LINEUPS | 24 | 8585 | 1 | 0 | 0 | ✅ PASS |
-| FIXTURE_EVENTS | 24 | 8586 | 0 | 0 | 0 | ✅ PASS |
-| FIXTURE_STATS | 4 | 8607 | 1 | 0 | 0 | ✅ PASS |
-| PLAYER_STATS | 6 | 8609 | 1 | 0 | 0 | ✅ PASS |
+**Gate check (availability index post-rescan):** | data_type | captured | empty_confirmed | attempted_failed |
+unattempted | blank_reason | Gate | |---|---|---|---|---|---|---| | FIXTURE_LINEUPS | 24 | 8585 | 1 | 0 | 0 | ✅ PASS |
+| FIXTURE_EVENTS | 24 | 8586 | 0 | 0 | 0 | ✅ PASS | | FIXTURE_STATS | 4 | 8607 | 1 | 0 | 0 | ✅ PASS | | PLAYER_STATS |
+6 | 8609 | 1 | 0 | 0 | ✅ PASS |
 
-Empty reasons: `EXPECTED_NO_FIXTURE` (majority), `EXPECTED_NO_PROVIDER_COVERAGE`, `SOURCE_RETURNED_ZERO` (43-50 rows each).
+Empty reasons: `EXPECTED_NO_FIXTURE` (majority), `EXPECTED_NO_PROVIDER_COVERAGE`, `SOURCE_RETURNED_ZERO` (43-50 rows
+each).
 
 **Finding — 3 phantom_captured failures (pre-existing, outside scope):**
+
 - FIXTURE_LINEUPS, FIXTURE_STATS, PLAYER_STATS each have 1 `attempted_failed` row with
-  `error_reason=phantom_captured_no_parquet_at_canonical_path`. These are pre-existing phantom
-  captures (manifest says captured but canonical GCS path has no parquet). Not blocking the gate;
-  tracked in the index as failures. The phantom audit tooling should re-classify these.
+  `error_reason=phantom_captured_no_parquet_at_canonical_path`. These are pre-existing phantom captures (manifest says
+  captured but canonical GCS path has no parquet). Not blocking the gate; tracked in the index as failures. The phantom
+  audit tooling should re-classify these.
 
 ### 2026-06-27 — INJURIES re-fetch (slot 6)
 
-VM: `af-backfill-20260627-172215` INJURIES 2025-09-01..2025-11-30 → rc=0 (8524 manifest entries, 470 new).
-Manifest rescan: `sports-manifest-rescan-20260627-172738` → rc=0 (2,594,563 rows).
+VM: `af-backfill-20260627-172215` INJURIES 2025-09-01..2025-11-30 → rc=0 (8524 manifest entries, 470 new). Manifest
+rescan: `sports-manifest-rescan-20260627-172738` → rc=0 (2,594,563 rows).
 
-**Gate check post-rescan:**
-| capture_status | count |
-|---|---|
-| empty_confirmed | 7653 |
-| captured | 871 |
-| attempted_failed | 91 |
+**Gate check post-rescan:** | capture_status | count | |---|---| | empty_confirmed | 7653 | | captured | 871 | |
+attempted_failed | 91 |
 
 Failed reasons: `ApiFootballResponseError` ×90 (proven FetchEvidence — genuine persistent API errors),
-`phantom_captured_no_parquet_at_canonical_path` ×1. No placeholders, no blank reasons.
-Gate: `attempted_failed → 0 or each carries FetchEvidence` ✅ PASS (all carry specific error_reason).
+`phantom_captured_no_parquet_at_canonical_path` ×1. No placeholders, no blank reasons. Gate:
+`attempted_failed → 0 or each carries FetchEvidence` ✅ PASS (all carry specific error_reason).
 
 ### 2026-06-27 — STANDINGS + TEAMS verify (slot 6)
 
 Queried `instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`:
 
 **STANDINGS (2025-09-01..2025-11-30):** 8645 total rows
+
 - `captured`: 3094
 - `empty_confirmed`: 5551 (`EXPECTED_NO_PROVIDER_COVERAGE`: 5551)
 - Gate: unattempted=0 ✅, blank_reason=0 ✅
 
 **TEAMS (2025-09-01..2025-11-30):** 3094 total rows
+
 - `captured`: 3094 (100%)
 - Gate: unattempted=0 ✅, blank_reason=0 ✅
 
 **Phantom dry-run** (`reconcile_phantom_manifest_rows.py --dry-run --data-types STANDINGS,TEAMS`):
+
 - STANDINGS: 0 phantoms / 121,148 real rows (0.0%)
 - TEAMS: 0 phantoms / 103,138 real rows (0.0%)
 - Total to flip: 0 ✅
@@ -227,26 +247,27 @@ Both STANDINGS and TEAMS at 100% honest coverage on the golden window.
 
 ### 2026-06-27 — FIXTURES re-fetch + residual fix (slot 6)
 
-VM: `af-backfill-20260627-182057` SPOT asia-northeast1-c, 18:20–18:32 UTC → rc=0. Re-fetched 2903/2904 FIXTURES_FETCH_FAILED shards.
+VM: `af-backfill-20260627-182057` SPOT asia-northeast1-c, 18:20–18:32 UTC → rc=0. Re-fetched 2903/2904
+FIXTURES_FETCH_FAILED shards.
 
 **Residual 1 shard: A_LEAGUE/2025-09-01 (root cause + fix)**
 
 Root cause: `emit_empty_gaps_for_entity` in `sports_reference_core.py` line 125-126 calls
-`get_league_fixture_calendar(league, date, date)` and skips the emit when the calendar returns empty.
-A_LEAGUE (Australian A-League) is off-season in September 2025 (season runs Oct–May). The API returned 0 fixtures
-for A_LEAGUE on 2025-09-01; `_write_fixtures_per_league` skipped it (empty df); `emit_empty_gaps` skipped it
-(calendar empty). The stale `FIXTURES_FETCH_FAILED` from 2026-06-25 was never overwritten by the VM.
+`get_league_fixture_calendar(league, date, date)` and skips the emit when the calendar returns empty. A_LEAGUE
+(Australian A-League) is off-season in September 2025 (season runs Oct–May). The API returned 0 fixtures for A_LEAGUE on
+2025-09-01; `_write_fixtures_per_league` skipped it (empty df); `emit_empty_gaps` skipped it (calendar empty). The stale
+`FIXTURES_FETCH_FAILED` from 2026-06-25 was never overwritten by the VM.
 
-Fix: `instruments-service/scripts/fix_a_league_fixtures_2025_09_01_20260627.py` (one-off reconcile script,
-same pattern as `reclassify_oos_sports_expected_unattempted_2026_06_24.py`). Snapshot saved to
+Fix: `instruments-service/scripts/fix_a_league_fixtures_2025_09_01_20260627.py` (one-off reconcile script, same pattern
+as `reclassify_oos_sports_expected_unattempted_2026_06_24.py`). Snapshot saved to
 `instruments-store-sports-prd-central-element-323112/_index/snapshots/pre_fix_a_league_fixtures_20260627T185435Z.parquet`.
 
-**Gate check post-fix (prd index: instruments-store-sports-prd-central-element-323112):**
-| data_type | captured | empty_confirmed | attempted_failed | unattempted | blank_reason | Gate |
-|---|---|---|---|---|---|---|
-| FIXTURES | 2338 | 7813 | 0 | 0 | 0 | ✅ PASS |
+**Gate check post-fix (prd index: instruments-store-sports-prd-central-element-323112):** | data_type | captured |
+empty_confirmed | attempted_failed | unattempted | blank_reason | Gate | |---|---|---|---|---|---|---| | FIXTURES | 2338
+| 7813 | 0 | 0 | 0 | ✅ PASS |
 
-A_LEAGUE/2025-09-01: `empty_confirmed` / `EXPECTED_NO_FIXTURE` ✅. All 33 registered leagues at `{captured, empty_confirmed}`.
+A_LEAGUE/2025-09-01: `empty_confirmed` / `EXPECTED_NO_FIXTURE` ✅. All 33 registered leagues at
+`{captured, empty_confirmed}`.
 
 ## References
 

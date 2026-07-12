@@ -464,7 +464,11 @@ new epic, per operator decision to use the existing fixed 20-epic registry.
   — DONE, `instruments-service@4b4185b6` — 24 adapters (23 named + 1 the audit missed) fixed.
 - ✅
   [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)
-  — DONE, `instruments-service@8544273d` — all 13 canonical CeFi venues verified converged live=batch.
+  — DONE, `instruments-service@8544273d` — all 13 canonical CeFi venues verified converged live=batch. Caveat
+  (2026-07-11): the DONE verdict covered the builder/adapter layer; MTDS live WS connectors were retrofitted separately
+  after silently dropping mismatched ticks in prod (fixed 2026-07-10 — see
+  `plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md` §MTDS-WS). Synced per
+  `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 93).
 - [`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08`](../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
   — P1, real `InstrumentLeg`/`COMBO` infrastructure exists (proven for CME), just not wired up for CBOE/VX spreads.
 
