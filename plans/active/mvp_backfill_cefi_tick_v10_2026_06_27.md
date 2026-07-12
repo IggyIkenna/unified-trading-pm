@@ -252,8 +252,17 @@ BLOCKED.
       running `--apply` at this size. Snapshot-first, mirror
       `instruments-service/scripts/purge_deribit_option_per_strike_trades_book5_2026_07_12.py` (add a `--bucket`
       override or extend it) against `market-data-tick-cefi-central-element-323112`.
-- [ ] [TEST] P2. Regression-assert the Deribit options capture grain is CHAIN-LEVEL (options_chain/book snapshots at
-      chain grain; no per-strike rows can re-enter — writer-side guard or test).
+- [x] ✅ [TEST] P2. Regression-assert the Deribit options capture grain is CHAIN-LEVEL (options_chain/book snapshots at
+      chain grain; no per-strike rows can re-enter — writer-side guard or test). — market-tick-data-service@361ed90f.
+      Found a REAL gap (not just missing test coverage): `TardisAdapter.download_batch()`'s Deribit option-symbol strip
+      in `tardis_batch_download.py` only fired when `bulk_data_types` (options_chain/futures_chain) rode along in the
+      SAME call — a bare `data_types=["trades"]`/`["book_snapshot_5"]` request let per-strike OPTION symbols straight
+      into the per-symbol fetch loop (exactly the class of leak the ~1,048-row purge in `instruments-service@6986e8e4`
+      just cleaned up). Fixed: the OPTION strip (reusing the canonical `TardisAdapter._OPTION_SYMBOL_RE`) is now
+      UNCONDITIONAL for any Deribit per-symbol request; the unrelated dated-future strip stays gated on
+      `bulk_data_types` exactly as before (out of scope — dated futures ARE legitimately captured via per-symbol
+      trades/book5 per this plan's G3). 4 new regression tests; verified 3/4 genuinely fail against the pre-fix code
+      (git-stash checked) and pass post-fix. Full `quality-gates.sh` green.
 
 ---
 
