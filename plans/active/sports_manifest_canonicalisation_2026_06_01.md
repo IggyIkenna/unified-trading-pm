@@ -818,7 +818,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       40 open todos incl. `[DATA] P0 C0 path+bucket canonicalisation (the foundational migration) — RUN ON A VM` (the
       defi C0 walk has NOT run → legacy `category=defi/` parquets are still on disk → removing the twin now would break
       defi reads). Removal is a clean one-shot once defi C0 reaches C-GREEN. **DEFERRED** — named successor:
-      `defi_manifest_canonicalisation_2026_06_01.md` § C0/C-GREEN; not a sports-track blocker.
+      `defi_manifest_canonicalisation_2026_06_01.md` § C0/C-GREEN; not a sports-track blocker. **RE-VERIFIED 2026-07-12
+      (slot-11) — STILL GATED, dispatcher priority-only logic keeps ignoring this marker (same known class as the tradfi
+      plan's task-10 dispatcher-mismatch, `tradfi_v9_stage1_finish_2026_07_06.md`).** Checked
+      `defi_manifest_canonicalisation_2026_06_01.md` line 1299 directly: C0
+      (`path + bucket canonicalisation... RUN ON     A VM`) is still `- [ ]` unchecked (23 open todos total in that plan
+      as of this check). Making this code change now would remove the legacy `category=defi/` twin while un-migrated
+      defi data still lives ONLY at that legacy path on disk — a real regression, not a false gate. Did NOT touch
+      `features-service` code this dispatch. Skipping back to the dispatcher rather than forcing the change.
 - [x] ✅ [CODE] P0. **Upstream pre-flight data-check audit + batch=live symmetry (ALL sports services)** — AUDIT
       COMPLETE 2026-06-02. Per-service table below; gaps captured as P1/P2 todos beneath. Every service either VERIFIED
       GREEN or has a tracked gap-todo. Evidence: this slot, reading code in-repo (grep-then-read across 5 services).
