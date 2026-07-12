@@ -2,10 +2,10 @@
 doc_type: plan
 title: Sports pipeline to 100% — golden-window-first (sports automation coordinator)
 summary:
-  Read-only coordinator (execution_scope local-only, not ingested) for the 10-child sports-to-100% DAG --
-  drive the 2025-09-01..11-30 golden window to 100% across all 8 sources x data_types over the 94-league
-  universe first (R1 zero expected-missing, R2 ML-ready features, R5 alerts-zero), prove the honest-coverage
-  recipe, then expand to 2015->present + daily-forward (R3) + catalogue daily rollup (R4).
+  Read-only coordinator (execution_scope local-only, not ingested) for the 10-child sports-to-100% DAG -- drive the
+  2025-09-01..11-30 golden window to 100% across all 8 sources x data_types over the 94-league universe first (R1 zero
+  expected-missing, R2 ML-ready features, R5 alerts-zero), prove the honest-coverage recipe, then expand to
+  2015->present + daily-forward (R3) + catalogue daily rollup (R4).
 status: active
 nature: process
 asset_group: [sports]
@@ -40,36 +40,31 @@ assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
- the 10 dispatchable children (this coordinator's DAG) ---
-  - plans/active/sports_p0_spot_vm_launchers_2026_06_27.md
-  - plans/active/sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md
-  - plans/active/sports_p1_golden_window_apifootball_2026_06_27.md
-  - plans/active/sports_p1_golden_window_reference_sources_2026_06_27.md
-  - plans/active/sports_p1_golden_window_mtds_odds_2026_06_27.md
-  - plans/active/sports_p1_golden_window_features_2026_06_27.md
-  - plans/active/sports_p1_golden_window_e2e_gate_2026_06_27.md
-  - plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md
-  - plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md
-  - plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md
-  - plans/active/sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md
-  # --- existing plans this set LEANS ON / re-homes from (do not duplicate) ---
-  - plans/active/sports_manifest_canonicalisation_2026_06_01.md
-  - plans/active/sports_reference_backfill_oom_2026_06_22.md
-  - plans/active/instruments_foundation_completeness_2026_06_24.md
-  - plans/active/data_completion_to_100_all_ag_2026_06_21.md
-  - plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md
-  - plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md
-summary: | #      | Requirement                                                                                                        | Definition of done                                                   ...
-nature: process
-asset_group: cross-asset
-stage: [meta]
-repos: []
-scope: [engineer, admin]
-tags: []
-related: []
-created: 2026-06-27
-depends_on: []
-last_updated: 2026-06-27
+the 10 dispatchable children (this coordinator's DAG) ---
+
+- plans/active/sports_p0_spot_vm_launchers_2026_06_27.md
+- plans/active/sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md
+- plans/active/sports_p1_golden_window_apifootball_2026_06_27.md
+- plans/active/sports_p1_golden_window_reference_sources_2026_06_27.md
+- plans/active/sports_p1_golden_window_mtds_odds_2026_06_27.md
+- plans/active/sports_p1_golden_window_features_2026_06_27.md
+- plans/active/sports_p1_golden_window_e2e_gate_2026_06_27.md
+- plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md
+- plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md
+- plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md
+- plans/active/sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md
+
+# --- existing plans this set LEANS ON / re-homes from (do not duplicate) ---
+
+- plans/active/sports_manifest_canonicalisation_2026_06_01.md
+- plans/active/sports_reference_backfill_oom_2026_06_22.md
+- plans/active/instruments_foundation_completeness_2026_06_24.md
+- plans/active/data_completion_to_100_all_ag_2026_06_21.md
+- plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md
+- plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md summary: | # | Requirement |
+  Definition of done ... nature: process asset_group: cross-asset stage: [meta] repos: [] scope: [engineer, admin] tags:
+  [] related: [] created: 2026-06-27 depends_on: [] last_updated: 2026-06-27
+
 ---
 
 > **🟢 COORDINATOR (read-only map). This file is `execution_scope: local-only` — the orchestrator does NOT ingest it.**
@@ -158,18 +153,18 @@ the body `## Dependencies` note (the orchestrator gates dispatch via task-level 
 
 ## Child-plan status (flip as they land — this is the burn-down)
 
-| Plan                                       | Phase | R-covers | depends_on  | status         |
-| ------------------------------------------ | ----- | -------- | ----------- | -------------- |
-| P0 sourcing+honest-coverage correctness    | 0     | R1,R5    | —           | ⬜ not started |
-| P1a golden-window apifootball              | 1     | R1       | P0          | ⬜ not started |
-| P1b golden-window reference sources        | 1     | R1,R3    | P0          | ⬜ not started |
-| P1c golden-window MTDS odds                | 1     | R1,R5    | P0          | ⬜ not started |
-| P1d golden-window features                 | 1     | R2       | P1a,P1b,P1c | ⬜ not started |
-| P1e golden-window e2e gate                 | 1     | R4,R5    | P1a-d       | 🟡 partial — catalogue ✅ alerts=0 ✅ IS/MTDS 0/0/0 ✅; BLOCKED on P1d (features manifest empty; re-audit when P1d done) |
-| P2a AF history 2015→present                | 2     | R1       | P1e         | ⬜ not started |
-| P2b reference+odds history 2015→present    | 2     | R1,R3    | P1e         | ⬜ not started |
-| P2c features history                       | 2     | R2       | P2a,P2b     | ⬜ not started |
-| P2d daily-forward + catalogue + final gate | 2     | R3,R4,R5 | P2a,P2b,P2c | 🟡 partial — R4 ✅ (catalogue daily COMPLETED x5, catalog.parquet <24h) · R5 ✅ (alerts=0 across 2 sweeps, _index <180min) · R3-daily ✅ (scheduler RUNNING, TIER-1 fired); R1/R2/R3-history BLOCKED P2a/P2b/P2c not started; STAMP DONE deferred until P2a+P2b+P2c+task004 pass |
+| Plan                                       | Phase | R-covers | depends_on  | status                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------ | ----- | -------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0 sourcing+honest-coverage correctness    | 0     | R1,R5    | —           | ⬜ not started                                                                                                                                                                                                                                                                          |
+| P1a golden-window apifootball              | 1     | R1       | P0          | ⬜ not started                                                                                                                                                                                                                                                                          |
+| P1b golden-window reference sources        | 1     | R1,R3    | P0          | ⬜ not started                                                                                                                                                                                                                                                                          |
+| P1c golden-window MTDS odds                | 1     | R1,R5    | P0          | ⬜ not started                                                                                                                                                                                                                                                                          |
+| P1d golden-window features                 | 1     | R2       | P1a,P1b,P1c | ✅ complete — deployment-service@e887f1b, features@774645dc, features-service@58b5e9f1 (ML-readiness 95.3% on 2026-07-12), features-service@192d74ce (was: ⬜ not started)                                                                                                              |
+| P1e golden-window e2e gate                 | 1     | R4,R5    | P1a-d       | ✅ GREEN (2026-07-12) — features re-audit PASSED 0/0/0/0, see `sports_p1_golden_window_e2e_gate_2026_06_27.md` Todo 1/Todo 4 entries; PHASE-2 UNBLOCKED (was: 🟡 partial — catalogue ✅ alerts=0 ✅ IS/MTDS 0/0/0 ✅; BLOCKED on P1d (features manifest empty; re-audit when P1d done)) |
+| P2a AF history 2015→present                | 2     | R1       | P1e         | ⬜ not started                                                                                                                                                                                                                                                                          |
+| P2b reference+odds history 2015→present    | 2     | R1,R3    | P1e         | ⬜ not started                                                                                                                                                                                                                                                                          |
+| P2c features history                       | 2     | R2       | P2a,P2b     | ⬜ not started                                                                                                                                                                                                                                                                          |
+| P2d daily-forward + catalogue + final gate | 2     | R3,R4,R5 | P2a,P2b,P2c | 🟡 partial — R4 ✅ (catalogue daily COMPLETED x5, catalog.parquet <24h) · R5 ✅ (alerts=0 across 2 sweeps, \_index <180min) · R3-daily ✅ (scheduler RUNNING, TIER-1 fired); R1/R2/R3-history BLOCKED P2a/P2b/P2c not started; STAMP DONE deferred until P2a+P2b+P2c+task004 pass       |
 
 ## Re-homed-work inventory (the "fold the dependencies back in" map)
 

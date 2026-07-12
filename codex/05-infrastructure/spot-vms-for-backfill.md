@@ -21,12 +21,25 @@ related:
   ]
 created: 2026-06-27
 authoritative_for: [Spot-VM provisioning standard for backfill launchers]
-referenced_by: [codex/05-infrastructure/vm-launcher-runbook.md, codex/05-infrastructure/vm-tarball-deployment.md, plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md]
+referenced_by:
+  [
+    codex/05-infrastructure/vm-launcher-runbook.md,
+    codex/05-infrastructure/vm-tarball-deployment.md,
+    plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
+  ]
 owner:
 last_reviewed: 2026-06-27
 code_refs:
 type: infrastructure
-execution: {owner: deployment-platform, cadence: per VM-launcher add/change, verifier: rg -L 'provisioning-model=SPOT' deployment-service/scripts/vm/launch-*backfill*.sh (every backfill launcher must match), last_executed: 2026-06-27 (fleet-wide conversion)}
+execution:
+  {
+    owner: deployment-platform,
+    cadence: per VM-launcher add/change,
+    verifier:
+      rg -L 'provisioning-model=SPOT' deployment-service/scripts/vm/launch-*backfill*.sh (every backfill launcher must
+      match),
+    last_executed: 2026-06-27 (fleet-wide conversion),
+  }
 ---
 
 # Spot VMs for Backfill — the provisioning standard
@@ -100,6 +113,11 @@ process:
   on-demand under `--mode live`** regardless of `ON_DEMAND`.
 
 Classification is by purpose, never by a blanket pattern. When adding a launcher, decide backfill-vs-live first.
+
+**Named exception (operator ruling 2026-07-12, plan-reconciliation finding 357)**: the sports-scheduler runs on SPOT
+deliberately (`sports_p0_spot_vm_launchers`, shipped) — its idempotent re-poll makes preemption cheap. This is a single
+named carve-out, not a general licence for pollers; any OTHER forward/cron/poll launcher still defaults on-demand per
+the classification above unless it earns its own named exception here.
 
 ## Coverage (2026-06-27 fleet-wide conversion)
 

@@ -86,9 +86,10 @@ Fixes applied:
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 ```
 
-**Type**: `feat`, `fix`, `chore`, `refactor`, `docs`, `style`, `test`, `perf`, `ci`, `plan(<plan-name>)` **Scope**:
-component name, module, or area (e.g. `trading-nav`, `service-tabs`, `promote`) **Title**: imperative verb, no period —
-"add X", "fix Y", "update Z"
+**Type**: `feat`, `fix`, `chore`, `refactor`, `docs`, `style`, `test`, `perf`, `ci`, `docs(plans)` (plan flips —
+**`plan(<name>)` is hook-rejected**, corrected 2026-07-12 per plan-reconciliation finding D) **Scope**: component name,
+module, or area (e.g. `trading-nav`, `service-tabs`, `promote`) **Title**: imperative verb, no period — "add X", "fix
+Y", "update Z"
 
 Follow the workspace conventional-commits rule: `feat!:` for breaking changes (post-1.0.0 only — pre-1.0.0 it's a MINOR
 bump per the semver-agent override). **Never bump versions manually** — the semver-agent does it on merge to main.
@@ -202,11 +203,13 @@ agent picks it up." If your push above completed a plan todo:
    →
    - [x] [SCRIPT] P0. Description... (<repo>@<sha> + brief evidence)
    ```
-2. Commit the plan flip as a SEPARATE commit in PM with `plan(...)` prefix referencing the work commits:
+2. Commit the plan flip as a SEPARATE commit in PM with the `docs(plans):` prefix referencing the work commits
+   (`plan(...)` is hook-rejected — CLAUDE.md + SUB_AGENT_MANDATORY_RULES are the SSOT; this file previously said
+   `plan(...)`, corrected 2026-07-12):
 
    ```bash
    git commit -m "$(cat <<'EOF'
-   plan(<plan-name>): flip <Phase>.<Tier> checkboxes (<one-line summary>)
+   docs(plans): flip <plan-name> <Phase>.<Tier> checkboxes (<one-line summary>)
 
    * <repo>@<sha> — <one-line>
    * <repo>@<sha> — <one-line>
@@ -295,7 +298,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 **Plan-flip commit (PM repo, after the work commit is pushed):**
 
 ```
-plan(writegate_honest_coverage_endtoend_2026_05_06): flip Phase 3.B checkboxes (features-sports reconciler shipped)
+docs(plans): flip writegate_honest_coverage_endtoend_2026_05_06 Phase 3.B checkboxes (features-sports reconciler shipped)
 
 * features-sports-service@f123069 — NEW scripts/features_sports_reconcile_available_at.py 462 lines + 9 tests
 * PM@896c9bc5 — codify HARD RULE for same-logical-unit plan-flip cadence
@@ -341,7 +344,7 @@ cd unified-trading-pm
 # edit plans/active/<plan>.plan.md: - [ ] → - [x] with sha + evidence
 git add plans/active/<plan>.plan.md
 git commit -m "$(cat <<'EOF'
-plan(<plan-name>): flip <Phase>.<Tier> checkboxes (<summary>)
+docs(plans): flip <plan-name> <Phase>.<Tier> checkboxes (<summary>)
 
 * <repo>@<sha> — <one-line>
 

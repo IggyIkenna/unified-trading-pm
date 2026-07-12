@@ -1,7 +1,15 @@
 ---
 doc_type: issue
-title: TERMINATED VMs orphan their boot disks forever — completion path stops instead of deleting, and nothing reaps stopped instances
-summary: '127 stopped (TERMINATED) GCE VMs had accumulated in central-element-323112, each billing its 50GB boot disk (~$330/mo total) with zero compute value. Two leaks: (1) the shared completion trap + inline-heredoc startup template ended VMs with `shutdown -h` (STOP, keeps the disk) instead of self-deleting; (2) externally-stopped VMs (fleet drain, hang-then-stop, manual stop) never run any completion handler, and the zombie-watchdog only reaped RUNNING zombies — never TERMINATED instances. Resolved: deleted the 127 orphans, fixed both completion paths to self-delete, and added a TERMINATED-reaper second pass to the watchdog.'
+title:
+  TERMINATED VMs orphan their boot disks forever — completion path stops instead of deleting, and nothing reaps stopped
+  instances
+summary:
+  "127 stopped (TERMINATED) GCE VMs had accumulated in central-element-323112, each billing its 50GB boot disk (~$330/mo
+  total) with zero compute value. Two leaks: (1) the shared completion trap + inline-heredoc startup template ended VMs
+  with `shutdown -h` (STOP, keeps the disk) instead of self-deleting; (2) externally-stopped VMs (fleet drain,
+  hang-then-stop, manual stop) never run any completion handler, and the zombie-watchdog only reaped RUNNING zombies —
+  never TERMINATED instances. Resolved: deleted the 127 orphans, fixed both completion paths to self-delete, and added a
+  TERMINATED-reaper second pass to the watchdog."
 status: resolved
 nature: record
 asset_group: [meta]
@@ -9,7 +17,12 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [vm-lifecycle, zombie-watchdog, cost, boot-disk, orphan, self-delete, reaper, infrastructure, resolved]
-related: [../../../codex/05-infrastructure/deployment-observability.md, ../../../codex/05-infrastructure/vm-tarball-deployment.md, ../../../codex/05-infrastructure/spot-vms-for-backfill.md]
+related:
+  [
+    ../../../codex/05-infrastructure/deployment-observability.md,
+    ../../../codex/05-infrastructure/vm-tarball-deployment.md,
+    ../../../codex/05-infrastructure/spot-vms-for-backfill.md,
+  ]
 created: 2026-06-30
 parent_epic: infrastructure_master
 priority: P2
@@ -101,6 +114,11 @@ stopped by drain / hang / manual that no completion handler can catch.
 The currently-running `vm-zombie-watchdog-20260623` is on the **pre-`738637c`** code. The reaper activates only once the
 watchdog runs fresh code: automatically if its cron re-downloads code tarballs each cycle, otherwise on a relaunch via
 `launch-vm-zombie-watchdog.sh`. Confirm which, and relaunch if it bakes code in, so the reaper actually starts running.
+
+> **SAFETY (operator ruling 2026-07-12, finding 83, per
+> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2):** launch with `--dry-run` FIRST,
+> review the would-reap list, only then arm — the launcher defaults `dry_run=false` and this watchdog previously reaped
+> LIVE backfill VMs (that's this doc's own incident). Liveness-check code fix has NOT shipped (grep-verified).
 
 > **Distinct from** `plans/ai/vm_deployment_registry_reaper_and_ssot_2026_04_21.plan.md`, which reaps stale
 > `/api/vm-deployments` **registry JSON blobs** in GCS — a different artifact from the GCE **instances + disks** this

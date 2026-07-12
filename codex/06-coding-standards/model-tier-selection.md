@@ -16,7 +16,12 @@ tags: [model-tier, orchestrator, role-registry, escalation, model-tier-selection
 related: [../04-architecture/role-registry.md, ../12-agent-workflow/local-slot-host-symmetric-worker-model.md]
 created: 2026-05-12
 authoritative_for: [model-tier selection (Sonnet vs Opus), thinking-effort tier selection]
-referenced_by: [codex/04-architecture/role-registry.md, codex/12-agent-workflow/work-philosophy.md, plans/active/issues/human_led_audit_pool_2026_05_21.md]
+referenced_by:
+  [
+    codex/04-architecture/role-registry.md,
+    codex/12-agent-workflow/work-philosophy.md,
+    plans/active/issues/human_led_audit_pool_2026_05_21.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -218,6 +223,14 @@ ACTION FOR NEXT RUN: Use Sonnet 4.6 for this task.
 In Claude Code: /model claude-sonnet-4-6
 Continuing now...
 ```
+
+### `/autonomous` carve-out (operator ruling 2026-07-12)
+
+Under an `/autonomous` dispatch (`cursor-configs/AUTONOMOUS_AGENT_RULES.md`), a Sonnet agent detecting
+opus-required-shaped work does **NOT** hard-stop: it flags the mismatch in the plan's Progress Log, proceeds
+decide-and-document, and the operator reviews at report time. This is the ONE exception to the Step 3 HARD STOP above —
+the HARD STOP remains in force for **interactive / non-autonomous sessions** (a Sonnet agent outside `/autonomous` still
+stops per Step 3). Ruling: `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 row `10010`.
 
 ### Step 4 — sub-agent spawning: always set `model` explicitly
 

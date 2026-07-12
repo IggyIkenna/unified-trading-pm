@@ -3712,6 +3712,17 @@ tracked in the Progress Log.
 
 ## Progress Log (append-only)
 
+- 2026-07-12 (rulings batch 4): P1e gate formally GREEN (re-audit PASS 0/0/0/0; gate doc + coordinator table + P2a/P2b
+  ran-ahead notes applied — 246/247). Registry regenerated: 23 epics / 6 tiers, 4 superseded excluded, regen-script todo
+  filed (339). Orchestrator census regenerated: 8 live children, was 'zero active' (216/323; NB the named populator
+  script has a hardcoded stale macOS path — documented inline). Watchdog: 3 evidenced prevention todos flipped in
+  ao_fleet_stall (218 — NB corrected pair mapping), dry-run safety xref added (83). AO deploy-model claims corrected in
+  BOTH AO plans per VM-verified AUTO-PULL-LIVE verdict; DEPLOY todo split (224). git-commit skill prefix fixed to
+  docs(plans): (finding D). Codex edits (authorized): /autonomous model-tier carve-out (10010), sports-scheduler SPOT
+  carve-out (357), NEW agent-orchestrator-single-vm-architecture.md SSOT + SUPERSEDED banner on the multi-vm doc
+  (codex-gap). Epic 'paused' status added to docspec + schema doc; escalation epic flipped to paused, validator-verified
+  corpus-wide (schema ruling). AO repo: ao-self-pull allowlist + combined -u stash fix SHIPPED
+  agent-orchestrator@5bf8ce5 (incident i interim fix; latent stash-orphan bug also fixed).
 - 2026-07-12 (rulings batch 3 + LIVE INCIDENTS): TradFi G4 3-file correction applied (128: catalogue banner ->
   DONE-with-cleanup-tracked; migration_verification L719 split; RESUME-runbook owning todo added to
   tradfi_v9_stage1_finish, sequenced after fleet-drain). SIT-blocking P1 todo + gate caveat in cicd_mvp (78). BYBIT-SPOT

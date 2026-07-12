@@ -122,8 +122,9 @@ implementation; the codex SSOTs are the architectural truth.
 | [`codex/12-agent-workflow/orchestrator-safety-mechanisms.md`](../../codex/12-agent-workflow/orchestrator-safety-mechanisms.md)                 | Stuck-agent detection + auto-respawn + Auth failover (non-blocking) + Telegram alerts framework + Git staleness ping + Fresh-spawn dirty-commit               |
 | [`codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`](../../codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md) | r3 auth architecture (long-lived `setup-token` via `CLAUDE_CODE_OAUTH_TOKEN`); supersedes the `.credentials.json` swap that caused the 2026-05-21 cascade     |
 
-Registry SSOT: [`../../orchestrator_vm_registry.yaml`](../../orchestrator_vm_registry.yaml) — 10 VMs × 19 epics × 4
-accounts.
+Registry SSOT: [`../../orchestrator_vm_registry.yaml`](../../orchestrator_vm_registry.yaml) — 10 VMs × 4 accounts; epic
+count is NOT hardcoded here — see [`epics/README.md`](README.md) registry, regenerated 2026-07-12 (plan-reconciliation
+finding 339) for the true, current epic count.
 
 ## Operator decisions captured
 
@@ -189,10 +190,43 @@ Implementation work is owned by the assigned active plans below. Status as of 20
 
 ## Assigned active plans
 
-_All originally-assigned sub-plans are now archived (last-touched 2026-05-22 via supersession). Remaining non-archived
-orchestrator work lives in the Phase 6/9/11 rows of the table above + the audit-pool issue doc linked under
-[Composition with other epics](#composition-with-other-epics). Auto-populated by
-`scripts/plans/populate_epic_bodies_2026_05_21.py` (next regeneration will surface zero active plans here)._
+_Regenerated 2026-07-12 per operator ruling, plan-reconciliation findings 216/323 (see
+[`plan_reconciliation_operator_decisions_2026_07_11.md`](../active/issues/plan_reconciliation_operator_decisions_2026_07_11.md)
+§A2). (was: "All originally-assigned sub-plans are now archived... zero active children" — that claim was stale; 8
+active `parent_epic: orchestrator_master` children exist as of this regeneration.)_
+
+_The named populator `scripts/plans/populate_epic_bodies_2026_05_21.py` exists but is non-functional in the current
+workspace layout — it hardcodes `WORKSPACE = Path("/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1")` (a
+stale macOS per-tab path), so on this host it globs zero plans and reports every epic file "missing." Ran it `--dry-run`
+to confirm (0 plans scanned, all 19 epics skipped as missing) rather than trust its claimed output. Census below
+computed manually via `rg -l '^parent_epic: orchestrator_master' plans/active/ plans/active/issues/`._
+
+- **P0 · active** — [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 Cutover
+  Master — Live DeFi Trading by 2026-05-23
+- **P0 · active** —
+  [`ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09`](../active/ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09.md)
+  — AO task lifecycle — done-gate, dead-worker resume, preserve-on-handoff + fleet-wide slot commit identity
+- **P0 · active** —
+  [`ao_worker_lifecycle_audit_and_corrections_2026_07_10`](../active/ao_worker_lifecycle_audit_and_corrections_2026_07_10.md)
+  — AO worker lifecycle — read-the-file boot cutover + stale-content correctness + runtime hardening (2026-07-10 audit)
+- **P0 · active** —
+  [`ao_dispatch_correctness_regen_reconcile_2026_07_07`](../active/ao_dispatch_correctness_regen_reconcile_2026_07_07.md)
+  — AO dispatch correctness — regen reconcile, dynamic role boot-prompts, model capability chain
+- **P0 · active** — [`work_split_2026_05_22_ikenna`](../active/work_split_2026_05_22_ikenna.md) — Ikenna work-split
+  2026-05-22 — 8-hour autonomous run (200 AI-days queued)
+- **P0 · open (issue)** —
+  [`ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07`](../active/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md)
+  — AO fleet stalled idle with ready tasks — backlog tier/role frozen (regen no-propagate) + no craft filter +
+  slot_skips thrash
+- **P1 · open (issue)** —
+  [`ao_operator_message_silent_drop_no_reply_ack_2026_07_08`](../active/issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md)
+  — Operator→agent chat messages are silently dropped — delivery marked on POLL (drain), not on REPLY, no reply-ack, no
+  redelivery
+- **P2 · open (issue)** —
+  [`autospawn_should_spawn_no_revive_pinned_opus_slot_2026_06_29`](../active/issues/autospawn_should_spawn_no_revive_pinned_opus_slot_2026_06_29.md)
+  — AutoSpawn — `_should_spawn` does not revive a live-idle slot pinned to a higher-tier (opus) task
+
+Orchestrator work also lives in the Phase 6/9/11 rows of the table above.
 
 ## P0 — must complete before next foundation gate
 

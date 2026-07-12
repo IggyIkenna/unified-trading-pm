@@ -72,6 +72,10 @@ drift_direction: advance-code
 > golden-window recipe to ALL non-AF reference sources + MTDS odds across their full coverage windows — the R1/R3 "all
 > these sources backfilled to zero-missing". **PREREQ: P1e GREEN.** One agent, `data_engineering` (Sonnet/high).
 > Season-aware smart-skip within each source's `coverage_start`.
+>
+> **NOTE 2026-07-12**: P1e formally flipped GREEN today after the features re-audit (0/0/0/0). The 2026-06-27→07-09
+> Phase-2 work ran AHEAD of the formal flip (gate was PARTIAL at the time) — retroactively covered by P1d's evidence +
+> today's audit per operator verify-first ruling (findings 246/247).
 
 # Sports P2b — reference + odds history to zero-missing
 

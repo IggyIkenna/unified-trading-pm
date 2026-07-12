@@ -4,7 +4,7 @@ title: Escalation & Disaster Recovery Master (L4)
 summary:
   Role-agnostic escalation pipeline (blocked → Slack → human-resolve → UI) + the self-healing/auto-recovery substrate
   every agent role escalates through; 95% self-resolve, the rest escalate cleanly.
-status: active
+status: paused
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -26,10 +26,10 @@ locked_by: NA
 locked_since: NA
 ---
 
-> **⏸️ PAUSED per operator decision 2026-06-26** (frontmatter stays `status: active` only because the epic schema has no
-> `paused` value — this banner is the operative state) — deferred to next quarter together with W7/W8/W9 (message broker
-> dependency) per agent_operating_framework_master.md:62-66 re-scope. Todos remain valid but MUST NOT be dispatched
-> until un-paused. Synced per plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 338).
+> **⏸️ PAUSED per operator decision 2026-06-26** (frontmatter `status: paused` — epic schema gained the `paused` value
+> 2026-07-12 per operator ruling) — deferred to next quarter together with W7/W8/W9 (message broker dependency) per
+> agent_operating_framework_master.md:62-66 re-scope. Todos remain valid but MUST NOT be dispatched until un-paused.
+> Synced per plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 338).
 
 # Escalation & Disaster Recovery Master (L4)
 

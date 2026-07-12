@@ -359,8 +359,8 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       a PURE `_needs_respawn(session_tier, task_tier, *, at_boundary) -> bool` — model any-change, effort `|Δidx|>1`,
       thinking `on↔off` flip; mid-task fires on INCREASE only, boundary fires on any change. — ✅ DONE ao@f52d3cc4 (new
       `server/model_tier.py` CONSOLIDATES the two drifting `_MODEL_RANK` copies into ONE SSOT; `needs_respawn` +
-      `model_supports_effort` + effort ladder; 9 tests + 236 regression. thinking `on↔off` gated to Haiku only (inert
-      on adaptive models); mid-task = model-upgrade only.)
+      `model_supports_effort` + effort ladder; 9 tests + 236 regression. thinking `on↔off` gated to Haiku only (inert on
+      adaptive models); mid-task = model-upgrade only.)
 - [x] [BACKEND] P0. Mid-task UPGRADE trigger (liveness tick): a working slot whose `current_task` tier now EXCEEDS the
       session tier → kill + respawn `--resume` at the higher tier (immediate, debounced by the respawn cooldown; timing
       A). A mid-task decrease is ignored — the over-powered worker finishes its task. — ✅ DONE ao@a21ca9e9
@@ -480,11 +480,19 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       (no effort compare). — ✅ DONE across ao@f52d3cc4 (model_tier: haiku-effort-omit / fable rank / `needs_respawn`
       matrix, 9), ao@a21ca9e9 (watchdog realign, 8), ao@4d93a751 (effort field, 3) — ~20 tests, every batch
       full-QG-green.
-- [ ] [INFRA] P1. **DEPLOY (operator-authorized VM agent)** — deploy the whole plan (Phases 2–7) per the **§ Deployment
-      runbook** below: disable service → stop backend → pull code → **update the `claude` binary to ≥ 2.1.170** (fable +
-      effort) → DB migration (idempotent `SlotRow.last_role` at startup) → enable service → start backend + verify →
-      redeploy the UI. Execute IN ORDER; verify each step. The claude-binary update is step 4 (do it in the sequence,
-      not early — a bare upgrade before the backend can drive the flags gains nothing).
+- [x] [INFRA] P1. **DEPLOY (operator-authorized VM agent)** — deploy the whole plan (Phases 2–7) per the **§ Deployment
+      runbook** below: disable service → stop backend → pull code → DB migration (idempotent `SlotRow.last_role` at
+      startup) → enable service → start backend + verify. **RESOLVED 2026-07-12 (§A2 finding 224, verification COMPLETE,
+      verdict AUTO-PULL LIVE)**: deploy-currency automation pre-existed — `scripts/ao-self-pull.sh`
+      (agent-orchestrator@589b711, hardened d16d737 + 5462959) runs as a 15-min root cron (sudo crontab confirmed) doing
+      FF-pull + `systemctl restart` on HEAD change (log evidence to 2026-06-16), which also idempotently applies the
+      `SlotRow.last_role` migration on restart — no manual disable/stop/pull/enable/start interruption needed; verified
+      on the VM (crontab + logs). (was: this todo bundled the code-pull/restart/migration half with the claude-binary
+      update + UI redeploy below — now split; the code/restart/migration half is DONE.)
+- [ ] [INFRA] P1. **DEPLOY — remaining manual steps (narrowed 2026-07-12, split from the todo above)**: **update the
+      `claude` binary to ≥ 2.1.170** (fable + effort — a separate binary upgrade, NOT covered by ao-self-pull.sh's
+      git-pull + restart) → redeploy the UI (Firebase/Firestore dashboard) per the § Deployment runbook below. Verify
+      each step.
 
 ---
 
@@ -568,11 +576,17 @@ resume Phase 3 (+ 6/7) without re-discovering it.
 
 ### Environment + deploy boundary (HARD — don't break it)
 
-- **Do NOT restart / VM-side `git pull` agent-orchestrator until deploy.** The server runs
+- **CORRECTED 2026-07-12 (see the resolved DEPLOY todo above)**: the assertion below that AO code is "NOT auto-pulled"
+  was WRONG. Ground truth (VM-verified): the installed systemd unit runs uvicorn WITHOUT `--reload`; deploy-currency is
+  instead handled by `scripts/ao-self-pull.sh` (agent-orchestrator@589b711, hardened d16d737 + 5462959) — a 15-min root
+  cron (sudo crontab confirmed) that FF-pulls + `systemctl restart`s on HEAD change (log evidence to 2026-06-16), which
+  also idempotently applies the `SlotRow.last_role` migration. SSOT: `plans/epics/orchestrator_master.md` (ao-self-pull
+  section, ~L409-414). Original text kept below for provenance, now superseded:
+- ~~**Do NOT restart / VM-side `git pull` agent-orchestrator until deploy.** The server runs
   `uvicorn ... --reload --reload-dir server` (PID was 199450), so pulling AO code on the VM HOT-RELOADS it into the live
   fleet. `pm-pull-ff.sh` (systemd `pm-pull.timer`, ~5 min) pulls the **PM repo ONLY** — AO code is NOT auto-pulled,
   which is why LDR ships are safe. Deploy = a deliberate VM-side pull of agent-orchestrator (`--reload` picks it up;
-  `bootstrap.py` idempotently adds `SlotRow.last_role`).
+  `bootstrap.py` idempotently adds `SlotRow.last_role`).~~
 - VM: `ssh agent-orchestrator-vm` (13.113.200.22, ubuntu, `~/.ssh/agent-orchestrator-key`); server localhost-only
   `127.0.0.1:8765`.
 - **Test fast**: `cd agent-orchestrator && .venv/bin/python -m pytest tests/<file> -q`. **Full gate before quickmerge**:

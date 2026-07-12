@@ -118,16 +118,30 @@ drift_direction: advance-code
 
 ## Prevention (the fix-so-it-doesn't-recur todos)
 
-- [ ] [CODE] P0. **regen must propagate tier/role changes to existing queued tasks** — when a plan's
+- [x] [CODE] P0. **regen must propagate tier/role changes to existing queued tasks** — when a plan's
       `model_tier`/`thinking_tier`/`assigned_role` changes, update the matching `backlog.yaml` tasks (match by
       `plan_ref` + brief) instead of skip-on-dedup. Or add an explicit `POST /api/backlog/retier-from-plans` refresh op.
-      This is the PRIMARY gap — without it, every plan retier is silently inert on in-flight work.
-- [ ] [CODE] P0. **Add an `assigned_role` craft filter to `pick_next_task`** — a task whose `assigned_role` has no
+      This is the PRIMARY gap — without it, every plan retier is silently inert on in-flight work. —
+      agent-orchestrator@ff6100ad + agent-orchestrator@c6a31ed6 (RC-1 reconcile, Phase 2 Batch A+B:
+      `_reconcile_task_fields` brief-matches queued/blocked/dispatched tasks and updates
+      model/effort/thinking/assigned_role/priority in place — "auto-heals the frozen opus/max backlog on the next tick")
+      per ../ao_dispatch_correctness_regen_reconcile_2026_07_07.md Progress Log (2026-07-07 entries); flipped 2026-07-12
+      per operator ruling (finding 218, plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md §A2).
+- [x] [CODE] P0. **Add an `assigned_role` craft filter to `pick_next_task`** — a task whose `assigned_role` has no
       matching-craft idle slot should NOT be dispatched to a mismatched slot (leave it queued, like the model-tier
-      gate). Kills the dispatch→skip→re-dispatch craft-mismatch thrash (6× in one day on one task).
-- [ ] [CODE] P1. **`slot_skips` hygiene** — expire skips after N hours, and/or clear a task's skips when its plan
+      gate). Kills the dispatch→skip→re-dispatch craft-mismatch thrash (6× in one day on one task). —
+      agent-orchestrator@f976b6e4 (RC-2 dynamic craft routing + stickiness, Phase 4: per-task role from `[TAG]`,
+      `SlotRow.last_role`, "ADOPT, don't refuse" HARD RULE replacing the worker-level role-refusal →
+      `/skip-current-task` path — kills the craft-mismatch thrash via dynamic boot-load rather than a queue-side filter,
+      same effect) per ../ao_dispatch_correctness_regen_reconcile_2026_07_07.md Progress Log; flipped 2026-07-12 per
+      operator ruling (finding 218).
+- [x] [CODE] P1. **`slot_skips` hygiene** — expire skips after N hours, and/or clear a task's skips when its plan
       changes (tier/role/brief) or a prereq lands, and/or scope craft-mismatch skips so a re-home clears them. Persisted
-      per-slot skips inheriting across respawns is the starvation multiplier.
+      per-slot skips inheriting across respawns is the starvation multiplier. — agent-orchestrator@07035aba (RC-3, Phase
+      5: `slot_skip_ttl_hours` TTL expiry default 24h + regen-prune clears on GC'd/cancelled tasks +
+      `clear_slot_skips_for_task` primitive for plan-change clears + `/unskip-task`/`/clear-skips` APIs) per
+      ../ao_dispatch_correctness_regen_reconcile_2026_07_07.md Progress Log; flipped 2026-07-12 per operator ruling
+      (finding 218).
 - [ ] [CODE] P1. **AutoSpawn should not spawn the whole tick at the top task's tier when the queue is mixed-tier** —
       spawn per-task-tier (or at least don't force Opus for a queue that is 29/30 Sonnet). Ref `_top_queued_task_params`
       "known limitation".
