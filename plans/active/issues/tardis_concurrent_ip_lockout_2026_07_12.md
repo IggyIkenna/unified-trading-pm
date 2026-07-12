@@ -202,14 +202,30 @@ Tardis download path) — preserves the parallel-VM wall-clock the plan relies o
       acquisition is write-then-read-back verify (not atomic CAS) — removes STEADY-STATE contention (the 74.9% problem)
       but leaves a rare acquisition-handoff race that yields a single tagged code=274 403 (re-run), not corruption.
       (repo: deployment-service, market-tick-data-service)
-- [ ] [INFRA] P2. Harden option (a) to be race-free + enable it: (1) add a UTL generation-CAS conditional-write
-      primitive (`if_generation_match`) to `cloud_interface` (the only sanctioned home — `google.cloud` is QG-banned in
-      service repos) and switch `TardisConcurrencyLease` acquire/steal to atomic CAS, closing the handoff race; (2)
-      on-VM enablement smoke-test — launch ONE cefi backfill VM with `TARDIS_CONCURRENCY_LEASE=1` +
-      `TARDIS_CONCURRENCY_LEASE_BUCKET=<control bucket>`, confirm acquire/renew/release in the run log + the control
-      object lifecycle, then a 2-VM run to confirm serialization + no leaked lock on preemption. (gcloud is unavailable
-      in the agent slot, so this needs a real VM launch.) Only after this smoke-test should waves be run with the lease
-      enabled. (repo: unified-trading-library, deployment-service, market-tick-data-service)
+- [x] [INFRA] P2. ✅ **Part (1) — race-free atomic CAS: DONE.** — unified-trading-library@b010c7ad +
+      market-tick-data-service@7b8144ff (2026-07-12, slot-9 infra, opus). Added generation-precondition
+      (compare-and-set) primitives to the UTL `cloud_interface` `StorageClient` — the sanctioned home
+      (`google.cloud`/`boto3` are QG-banned in service repos): `download_bytes_with_generation` (one GET returns
+      content + generation consistently, no metadata+download race), `conditional_upload_bytes`
+      /`conditional_delete_blob` (both keyed on `if_generation_match`), plus `BlobMetadata.generation` and the URI
+      wrappers `gcs_read_object_with_generation` / `gcs_conditional_put` / `gcs_conditional_delete`. GCS implements them
+      natively via `if_generation_match`; `LocalStorageProvider` emulates generations via `mtime_ns` (10 new UTL unit
+      tests); AWS/S3 inherits the `NotImplementedError` base (no generation-match). Switched `TardisConcurrencyLease`
+      acquire/steal/renew/release from write-then-read-back-verify to atomic CAS: every write conditions on the exact
+      object generation the free/expiry decision was based on, so only ONE of N racing VMs wins any handoff — the
+      residual acquisition-handoff race (two VMs briefly both holding the key) is CLOSED; renew CAS drops the lease if
+      the generation was stolen; release CAS no-ops instead of clobbering a new holder. Lease stays DEFAULT-OFF +
+      fail-open + SPOT-safe. Lease tests rewritten with a generation-aware fake covering lost-CAS-handoff /
+      stolen-generation-renew / stale-generation-release. **Evidence:** UTL `quality-gates.sh` green (124s, 10 new CAS
+      tests pass); market-tick-data-service `quality-gates.sh` green (`✅ ALL QUALITY GATES PASSED`); both landed on
+      live-defi-rollout via `quickmerge --agent`. (repo: unified-trading-library, market-tick-data-service)
+- [ ] [INFRA] P2. **Part (2) — on-VM enablement smoke-test (BLOCKED: needs a real VM launch; gcloud is unavailable in
+      the agent slot).** Now that part (1) is landed and DEFAULT-OFF, launch ONE cefi backfill VM with
+      `TARDIS_CONCURRENCY_LEASE=1` + `TARDIS_CONCURRENCY_LEASE_BUCKET=<control bucket>`, confirm acquire/renew/release
+      in the run log + the GCS control-object lifecycle (create → renew bumps generation → delete on release), then a
+      2-VM run to confirm serialization + no leaked lock on preemption (a stolen-after-TTL lease + CAS renew/release
+      no-op). Only after this smoke-test passes should waves be run with the lease enabled. (repo: deployment-service,
+      market-tick-data-service)
 - [x] [DATA] P1. ✅ **Direction-independent 403-code-274 error_reason hygiene fix (done under ANY of a/b/c — did NOT
       require the operator decision).** — market-tick-data-service@31934527 (2026-07-12, slot-7 infra).
       `TardisHTTPError` now (i) parses a 403 response body for `code == 274` + `retryAfterSeconds` (attributes
@@ -316,3 +332,28 @@ BLK-f1417674 identically. Todo #1 was already flipped `[x]` and option (a) shipp
 deployment-service@c33f681), and the 403-code-274 hygiene fix I'd recommended landed as mtds@31934527 — so slot-2 built
 no duplicate code. `tardis-concurrent-ip-lock-fix-landed` condition flipped true by main; remaining open items are the
 `[INFRA] P2` race-free-CAS + on-VM smoke-test and the `[DATA] P1` post-fix G4 re-run (both gated appropriately).
+
+### 2026-07-12 — `[INFRA] P2` part (1) race-free CAS SHIPPED (slot-9 infra, opus)
+
+Dispatched `tardis_concurrent_ip_lockout-003` ("Harden option (a) to be race-free + enable it: (1) add a UTL
+generation-CAS conditional-write"). Built the generation-CAS primitive the earlier session found missing (the reason the
+stopgap shipped as write-then-read-back rather than atomic CAS), then switched the lease to it:
+
+- **unified-trading-library@b010c7ad** — added `download_bytes_with_generation`, `conditional_upload_bytes`,
+  `conditional_delete_blob` (`if_generation_match`) to the `cloud_interface` `StorageClient` ABC +
+  `BlobMetadata.generation`
+  - URI wrappers (`gcs_read_object_with_generation` / `gcs_conditional_put` / `gcs_conditional_delete`). GCS: native
+    `if_generation_match`; Local: `mtime_ns`-emulated generations (10 new unit tests); AWS: inherits the base
+    `NotImplementedError` (S3 has no generation-match — the Tardis control bucket is GCS). This is the sanctioned UTL
+    home since `google.cloud`/`boto3` are QG-banned in service repos. UTL `quality-gates.sh` green (124s).
+- **market-tick-data-service@7b8144ff** — `TardisConcurrencyLease` acquire/steal/renew/release now go through atomic
+  CAS: read `(payload, generation)`, and if the lease is free write conditioned on that exact generation (0 =
+  create-if-absent). Only one of N racing VMs can win a handoff; a lost CAS returns cleanly (caller yields + re-polls);
+  a stale renew/release no-ops instead of clobbering the new holder — the residual acquisition-handoff race is CLOSED.
+  DEFAULT-OFF + fail-open + SPOT-safe unchanged. Lease tests rewritten with a generation-aware fake (lost-CAS-handoff /
+  stolen-generation-renew / stale-generation-release). MTDS `quality-gates.sh` green (`✅ ALL QUALITY GATES PASSED`).
+
+Both landed on live-defi-rollout via `quickmerge --agent`. **Part (2) — the on-VM enablement smoke-test — remains OPEN
+and BLOCKED**: it needs a real cefi backfill VM launch with the lease env vars set (gcloud is unavailable in the agent
+slot, per the earlier session's note), so it is split out as its own `[INFRA] P2` todo above. The lease is still
+DEFAULT-OFF, so nothing changes in the fleet until that smoke-test passes and an operator opts in.
