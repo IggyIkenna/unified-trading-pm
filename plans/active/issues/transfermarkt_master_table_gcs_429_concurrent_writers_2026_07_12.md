@@ -82,11 +82,14 @@ data loss this run.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Add a one-line concurrency-safety note to `_fetch_transfermarkt_data`'s master-table write helper (or
-      wherever `Transfermarkt master/<entity>: N rows written` is logged from) documenting that these 3 tables are NOT
-      per-VM sharded and should not be written from more than one concurrent process — grep
+- [x] ✅ [SCRIPT] P2. Add a one-line concurrency-safety note to `_fetch_transfermarkt_data`'s master-table write helper
+      (or wherever `Transfermarkt master/<entity>: N rows written` is logged from) documenting that these 3 tables are
+      NOT per-VM sharded and should not be written from more than one concurrent process — grep
       `instruments-service/instruments_service/reference_data/adapters/sports/adapters/transfermarkt.py` for the write
-      call sites. (repo: instruments-service)
+      call sites. (repo: instruments-service) — instruments-service@7b79bb8a: added concurrency note to
+      `_write_master_append`'s docstring in `instruments_service/engine/orchestrator/transfermarkt.py` (the actual
+      shared write helper for all 3 master-table entities; the reference_data/adapters path named in the todo doesn't
+      exist — the function lives under `engine/orchestrator/`).
 - [ ] [INFRA] P3. Consider whether the backlog/dispatcher should detect + prevent fanning out the same one-off
       backfill/closer script to multiple slots concurrently for the same residual (this session had 3 slots
       independently pick up `sports_daily_enum_residual_closer_2026_07_12.py` against the identical TM residual —
