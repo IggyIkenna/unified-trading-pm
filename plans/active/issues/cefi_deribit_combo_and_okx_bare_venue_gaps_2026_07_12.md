@@ -451,71 +451,71 @@ next session for another full VERIFY-then-fix cycle, not just the two known item
       deployment-service)
 
       **🚧 PARTIAL PROGRESS 2026-07-12 (slot-5, data_engineering)** — dispatched for this exact todo. Rebuilt the
-                              mtds-code tarball (`create-code-tarballs.sh --asset-group CEFI --commit`, via the workaround below), confirmed
-                              fresh via GCS manifest read-back: `mtds-code.manifest.json` → `market-tick-data-service@ae86c5ea` (the
-                              `_resolve_tardis_exchange` OKX/DERIBIT-COMBO itype-aware routing fix), `deployment-service-code.manifest.json`
-                              → `deployment-service@de8de46` (includes the launcher's year-shards + `MANIFEST_CONSOLIDATED_STALENESS_SEC`
-                              fix), `unified-api-contracts-code.manifest.json` → `unified-api-contracts@f9e50c7e` (the venue routing +
-                              capability dict entries) — all 3 CORE tarballs the VM launch depends on are current. **Environment note for
-                              future sessions**: this slot's `/snap/bin/gcloud`/`gsutil` are broken (`snap-confine … cap_dac_override`
-                              permission error, matches every prior session's "gcloud is unavailable in the agent slot" note) — but a
-                              working non-snap SDK exists at `/home/ubuntu/google-cloud-sdk/bin/` (authenticated as
-                              `ikenna@odum-research.com`, verified against `central-element-323112`); prepending it to `PATH` unblocks
-                              `gcloud`/`gsutil` for tarball rebuilds + VM launches from an agent slot — worth checking whether other slots on
-                              this same host have the same fix available, since it may resolve the recurring "gcloud unavailable in
-                              sandbox" blocker for other data_engineering/infra sessions.
+                                  mtds-code tarball (`create-code-tarballs.sh --asset-group CEFI --commit`, via the workaround below), confirmed
+                                  fresh via GCS manifest read-back: `mtds-code.manifest.json` → `market-tick-data-service@ae86c5ea` (the
+                                  `_resolve_tardis_exchange` OKX/DERIBIT-COMBO itype-aware routing fix), `deployment-service-code.manifest.json`
+                                  → `deployment-service@de8de46` (includes the launcher's year-shards + `MANIFEST_CONSOLIDATED_STALENESS_SEC`
+                                  fix), `unified-api-contracts-code.manifest.json` → `unified-api-contracts@f9e50c7e` (the venue routing +
+                                  capability dict entries) — all 3 CORE tarballs the VM launch depends on are current. **Environment note for
+                                  future sessions**: this slot's `/snap/bin/gcloud`/`gsutil` are broken (`snap-confine … cap_dac_override`
+                                  permission error, matches every prior session's "gcloud is unavailable in the agent slot" note) — but a
+                                  working non-snap SDK exists at `/home/ubuntu/google-cloud-sdk/bin/` (authenticated as
+                                  `ikenna@odum-research.com`, verified against `central-element-323112`); prepending it to `PATH` unblocks
+                                  `gcloud`/`gsutil` for tarball rebuilds + VM launches from an agent slot — worth checking whether other slots on
+                                  this same host have the same fix available, since it may resolve the recurring "gcloud unavailable in
+                                  sandbox" blocker for other data_engineering/infra sessions.
 
-                              **Did NOT launch the VMs.** Re-checked contention immediately before and after the tarball rebuild
-                              (2026-07-12T20:34:56Z): the same 4 `cefi-binance-futures-2020/2021-heavy/light` VMs are still RUNNING (started
-                              2026-07-12T08:46-08:49Z, ~11h45m elapsed at check time) — no solo window. Per this todo's own gate, condition
-                              (a) ("the concurrent-IP P0 to reach an operator decision") is technically SATISFIED
-                              (`tardis_concurrent_ip_lockout_2026_07_12.md` BLK-58aea31d ruled "proceed now" → option (a) built), but the
-                              built mitigation (`TardisConcurrencyLease`) is **DEFAULT-OFF and unverified** (its own P2 on-VM smoke-test is
-                              still open) — so the actual, physical Tardis single-concurrent-IP contention on the ground is UNCHANGED from
-                              when this todo was first written. Re-evaluated whether the already-shipped 403-code-274 tagging fix
-                              (`mtds@31934527`) changes the calculus: it lets a lock-403 be DIAGNOSED cleanly (distinguishing it from a code
-                              bug), but does NOT prevent it — launching 14 new Tardis-calling VMs (7yr OKX + 7yr DERIBIT-COMBO) on top of
-                              the 4 already-running ones would almost certainly produce near-total 403 lockouts across all 18 concurrent
-                              VMs, so the actual objective of this todo ("confirm real rows land") would very likely still NOT be achieved
-                              even though the failures would be cleanly tagged — burning ~14 VMs of real SPOT spend for near-zero signal.
-                              Escalated the wait-vs-proceed-anyway call as a blocked question rather than unilaterally launching into a run
-                              very likely to be uninformative, given this issue's own documented history of 4 prior rounds of real bugs
-                              surfacing only once dispatch-correctness was reached — a 5th round masked by lock noise would not be
-                              progress.
+                                  **Did NOT launch the VMs.** Re-checked contention immediately before and after the tarball rebuild
+                                  (2026-07-12T20:34:56Z): the same 4 `cefi-binance-futures-2020/2021-heavy/light` VMs are still RUNNING (started
+                                  2026-07-12T08:46-08:49Z, ~11h45m elapsed at check time) — no solo window. Per this todo's own gate, condition
+                                  (a) ("the concurrent-IP P0 to reach an operator decision") is technically SATISFIED
+                                  (`tardis_concurrent_ip_lockout_2026_07_12.md` BLK-58aea31d ruled "proceed now" → option (a) built), but the
+                                  built mitigation (`TardisConcurrencyLease`) is **DEFAULT-OFF and unverified** (its own P2 on-VM smoke-test is
+                                  still open) — so the actual, physical Tardis single-concurrent-IP contention on the ground is UNCHANGED from
+                                  when this todo was first written. Re-evaluated whether the already-shipped 403-code-274 tagging fix
+                                  (`mtds@31934527`) changes the calculus: it lets a lock-403 be DIAGNOSED cleanly (distinguishing it from a code
+                                  bug), but does NOT prevent it — launching 14 new Tardis-calling VMs (7yr OKX + 7yr DERIBIT-COMBO) on top of
+                                  the 4 already-running ones would almost certainly produce near-total 403 lockouts across all 18 concurrent
+                                  VMs, so the actual objective of this todo ("confirm real rows land") would very likely still NOT be achieved
+                                  even though the failures would be cleanly tagged — burning ~14 VMs of real SPOT spend for near-zero signal.
+                                  Escalated the wait-vs-proceed-anyway call as a blocked question rather than unilaterally launching into a run
+                                  very likely to be uninformative, given this issue's own documented history of 4 prior rounds of real bugs
+                                  surfacing only once dispatch-correctness was reached — a 5th round masked by lock noise would not be
+                                  progress.
 
-                          **Update (data_engineering slot-2, 2026-07-12T21:44-21:56Z) — proceeded anyway (per the sibling
-                          COINBASE-FUTURES VERIFY's empirical result: contention causes retriable 403s, not a hard block) and got a clean,
-                          informative signal — the "burn 14 VMs for near-zero signal" fear did NOT materialize.** Rebuilt/confirmed the
-                          mtds tarball fresh (`c7065850`, matches HEAD), launched all 14 VMs (7yr OKX + 7yr DERIBIT-COMBO) via
-                          `/snap/google-cloud-cli/current/bin/gcloud` (a second working non-snap-wrapper path, alongside slot-9's
-                          `/home/ubuntu/google-cloud-sdk/bin/` — both resolve the recurring sandbox `gcloud` blocker). **Dispatch is
-                          confirmed fully correct on both venues** — `venues=['OKX']`/`['DERIBIT-COMBO']` resolve to the right exchanges
-                          (`okex-options`, `deribit`), no `ManifestConsolidatorStaleError`, no `OKXAdapter` fallback, no UAC
-                          capability-drop — all 4 sub-bugs (A-D) hold. **But found 2 NEW, distinct, real bugs 5 rounds deep, neither a
-                          regression of A-D:**
+                              **Update (data_engineering slot-2, 2026-07-12T21:44-21:56Z) — proceeded anyway (per the sibling
+                              COINBASE-FUTURES VERIFY's empirical result: contention causes retriable 403s, not a hard block) and got a clean,
+                              informative signal — the "burn 14 VMs for near-zero signal" fear did NOT materialize.** Rebuilt/confirmed the
+                              mtds tarball fresh (`c7065850`, matches HEAD), launched all 14 VMs (7yr OKX + 7yr DERIBIT-COMBO) via
+                              `/snap/google-cloud-cli/current/bin/gcloud` (a second working non-snap-wrapper path, alongside slot-9's
+                              `/home/ubuntu/google-cloud-sdk/bin/` — both resolve the recurring sandbox `gcloud` blocker). **Dispatch is
+                              confirmed fully correct on both venues** — `venues=['OKX']`/`['DERIBIT-COMBO']` resolve to the right exchanges
+                              (`okex-options`, `deribit`), no `ManifestConsolidatorStaleError`, no `OKXAdapter` fallback, no UAC
+                              capability-drop — all 4 sub-bugs (A-D) hold. **But found 2 NEW, distinct, real bugs 5 rounds deep, neither a
+                              regression of A-D:**
 
-                          1. **OKX bulk options_chain OOM/disk-full**: `Tardis stream processing failed ... [Errno 28] No space left on
-                             device` after 180s of streaming. The launcher's own comment already flags Deribit-style options_chain as
-                             disk-heavy ("thousands of strikes/expiries per underlying"); OKX's real options universe apparently exceeds
-                             the `e2-standard-4` disk allotment this launcher provisions. Needs either a bigger disk/machine type for OKX
-                             specifically, or a streaming-chunked write instead of buffering the full stream to `/tmp` first.
-                          2. **DERIBIT-COMBO bulk stream succeeds but yields 0 rows after combo-filtering — confirmed systemic across 2
-                             years (2026-01-01 AND 2025-01-01, both identical)**: `Tardis streaming success: 58830627 rows` /
-                             `79819431 rows` (real, massive successful fetches — 2.6-3.9GB), immediately followed by
-                             `TardisAdapter: bulk deribit/OPTIONS/options_chain parquet empty after streaming` →
-                             `download_batch: deribit <date> — 0 records`. The bulk grouped-'OPTIONS' fetch pulls Deribit's FULL option
-                             chain (bare options + combos mixed, Tardis doesn't separate them at the transport level) — whatever
-                             downstream step is supposed to isolate `type=='combo'` rows for the DERIBIT-COMBO canonical_venue (mirroring
-                             the per-symbol path's `_classify_row_instrument_type` combo handling, per this issue's earlier Bug-D-adjacent
-                             work) is either not wired into the BULK path at all, or is filtering everything out incorrectly. This is a
-                             DIFFERENT code path from the per-symbol fix already shipped (`market-tick-data-service@1bc4e000`/`7dbd19f4`)
-                             — those only cover `_run_per_symbol_batch`, not `_download_bulk`.
+                              1. **OKX bulk options_chain OOM/disk-full**: `Tardis stream processing failed ... [Errno 28] No space left on
+                                 device` after 180s of streaming. The launcher's own comment already flags Deribit-style options_chain as
+                                 disk-heavy ("thousands of strikes/expiries per underlying"); OKX's real options universe apparently exceeds
+                                 the `e2-standard-4` disk allotment this launcher provisions. Needs either a bigger disk/machine type for OKX
+                                 specifically, or a streaming-chunked write instead of buffering the full stream to `/tmp` first.
+                              2. **DERIBIT-COMBO bulk stream succeeds but yields 0 rows after combo-filtering — confirmed systemic across 2
+                                 years (2026-01-01 AND 2025-01-01, both identical)**: `Tardis streaming success: 58830627 rows` /
+                                 `79819431 rows` (real, massive successful fetches — 2.6-3.9GB), immediately followed by
+                                 `TardisAdapter: bulk deribit/OPTIONS/options_chain parquet empty after streaming` →
+                                 `download_batch: deribit <date> — 0 records`. The bulk grouped-'OPTIONS' fetch pulls Deribit's FULL option
+                                 chain (bare options + combos mixed, Tardis doesn't separate them at the transport level) — whatever
+                                 downstream step is supposed to isolate `type=='combo'` rows for the DERIBIT-COMBO canonical_venue (mirroring
+                                 the per-symbol path's `_classify_row_instrument_type` combo handling, per this issue's earlier Bug-D-adjacent
+                                 work) is either not wired into the BULK path at all, or is filtering everything out incorrectly. This is a
+                                 DIFFERENT code path from the per-symbol fix already shipped (`market-tick-data-service@1bc4e000`/`7dbd19f4`)
+                                 — those only cover `_run_per_symbol_batch`, not `_download_bulk`.
 
-                          **Killed all 14 VMs** once both patterns were confirmed reproducible (2 years each) — no further relaunch could
-                          produce a real row for either without landing these fixes first. Filed as new follow-up todos below rather than
-                          attempting a 6th round of fixes this session (context-constrained). **Net: dispatch-correctness (A-D) is now
-                          FULLY VERIFIED live** — the remaining blockers are two new, narrowly-scoped, well-evidenced bugs in the bulk
-                          download path specifically, not a regression of anything already fixed.
+                              **Killed all 14 VMs** once both patterns were confirmed reproducible (2 years each) — no further relaunch could
+                              produce a real row for either without landing these fixes first. Filed as new follow-up todos below rather than
+                              attempting a 6th round of fixes this session (context-constrained). **Net: dispatch-correctness (A-D) is now
+                              FULLY VERIFIED live** — the remaining blockers are two new, narrowly-scoped, well-evidenced bugs in the bulk
+                              download path specifically, not a regression of anything already fixed.
 
 ## New follow-up todos (slot-2, 2026-07-12T21:56Z — round 5 findings)
 
@@ -630,3 +630,39 @@ next session for another full VERIFY-then-fix cycle, not just the two known item
       pandas/numpy equivalent, and avoid `to_dict("records")` entirely (iterate via itertuples or vectorized column ops
       instead). Verify against a real large-chain day (OKX 2026-01-01 is a known reproducer) before/after timing. (repo:
       market-tick-data-service)
+
+**Corroborating + new finding (slot-11, 2026-07-12T22:56-23:14Z)** — independently ran the same VERIFY (solo
+`--venue OKX --year 2024` + `--venue DERIBIT-COMBO --year 2024`, tarball rebuilt to `market-tick-data-service@a1179cd3`
+— the settlement-dims/instrument_id-passthrough fix above, layered on `b8211f09`). **Reproduces slot-2's OKX finding
+exactly**: 2024-01-01 stream succeeded (91,769,424 rows), post-stream classify never completed after 17+ min CPU-bound
+(`Rl`, 111-121% CPU, stable ~32% RSS — same not-stalled, not-OOM signature slot-2 found), killed with 0 rows landed —
+consistent with the same `.map()`/`to_dict("records")` bottleneck, no new root cause needed.
+
+**DERIBIT-COMBO's failure mode is DIFFERENT and NOT the OKX perf bug** (confirms slot-2's line 617 prediction that its
+much-smaller combo-only row count wouldn't hit the same wall — it didn't): 2024-01-01's 39,226,083-row stream succeeded
+and its classify/filter pass completed FAST (44s, not 17+ min) via the `_filter_bulk_rows_for_deribit_split` combo
+isolation — correctly produced 0 captured rows for that specific date. Verified this 0 is very likely **honest absence,
+not a bug**: (1) directly tested `_filter_bulk_rows_for_deribit_split`/`is_deribit_combo_symbol_shape` against 10 real
+combo instrument IDs actually listed on 2024-01-01 (`BTC-CBUT-12JAN24-...`, `BTC-CCOND-2JAN24-...`, pulled live from
+`api.tardis.dev/v1/exchanges/deribit`) — all correctly isolated as combo, confirming the filter logic itself is sound;
+(2) 203 combo instruments were genuinely LISTED that day, but "listed" ≠ "traded" for a niche multi-leg spread product,
+so zero actual trade rows for one specific date is plausible. **But then hit a genuine NEW bug**: moving to day 2
+(2024-01-02), the process was **OOM-killed** (`rc=137`) while resolving the next date's instrument catalog (RSS climbed
+to ~84% of the e2-standard-4's 15GB before the kill) — confirmed via `gcloud compute instances get-serial-port-output` +
+SSH `ps aux`/`free -h`, not a stream-processing hang. VM self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true` before a
+deeper live diagnosis was possible. Both test VMs (`opt-okx-2024`, `opt-deribit-combo-2024`) killed/self-deleted — did
+not let either run the full 365-day year. **Net: dispatch + routing + Tardis stream fetch are fully proven correct for
+both venues with real 2024 data; the settlement-dims/instrument_id code fix (`a1179cd3`) is directly verified correct;
+but NEITHER venue landed a captured row in this session** — OKX blocked by the already-filed P2 perf bug above,
+DERIBIT-COMBO blocked by a new OOM follow-up below. `[VERIFY]` remains open.
+
+## New follow-up todo (slot-11, 2026-07-12T23:14Z — DERIBIT-COMBO per-date catalog OOM)
+
+- [ ] [CODE] P2. `opt-deribit-combo-2024`'s process was OOM-killed (`rc=137`) while resolving day 2's instrument
+      catalog, after day 1 completed normally (RSS climbed to ~84% of 15GB on an e2-standard-4 before the kill). Likely
+      candidates: the per-date catalog reload path re-loading the full multi-hundred-thousand-row cefi/defi/ tradfi
+      catalogues (`cefi_catalog_reader`/`defi_catalog_reader`/`tradfi_catalog_reader`, ~1.6M rows combined per the
+      run.log) without releasing the prior date's frame, or a leak in the `Tier-3 per-instrument sentinel fan-out` step.
+      Profile a real multi-day DERIBIT-COMBO run (2+ consecutive dates) with memory tracing to find the retained object;
+      either fix the leak or bump `MACHINE_TYPE` for `launch-targeted-options-chain-backfill.sh`'s DERIBIT-COMBO shards
+      specifically. (repo: market-tick-data-service, deployment-service)
