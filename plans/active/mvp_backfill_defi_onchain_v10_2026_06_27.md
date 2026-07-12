@@ -1871,3 +1871,18 @@ accept the gap), (2) main attaches `prereqs.conditions: [drift_perp_funding_heli
 `POST /api/backlog/reload`, or (3) main parks the task (`priority: 999`) so the dispatcher stops re-offering it every
 cycle. Recommended main take action (2) or (3) immediately regardless of when the operator rules on (1), since those two
 are mechanical and would stop the thrash on their own. Calling `/skip-current-task`.
+
+### 2026-07-12 (slot 4, 2nd session) — 20th consecutive re-dispatch of `mvp_backfill_defi_onchain_v10-001`; unchanged; skip
+
+Slot 4 (data_engineering) picked this up again on `/boot`. Cheap re-check only via API (no GCS/manifest re-scan — 8+
+prior dispatches already confirmed byte-identical state since 2026-07-11): `GET /api/state` confirms
+`prerequisites.drift_perp_funding_helius_throughput_ruled` is still
+`{value: False, set_by: slot7-data_engineering, set_at: 2026-07-12T03:34:55Z, gates_queued: 0}` — still never attached.
+`GET /api/backlog?limit=500` confirms this task (`status: dispatched, dispatched_to: 4, priority: 999`) still carries no
+`prereqs`/`prereqs.conditions` field. No operator ruling has landed on todo 3 of
+`defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. Slot 8's direct escalation to `main` (message id 939, naming
+the thrash + 3 concrete unblock paths) appears not yet actioned. Not filing a 5th duplicate `/blocked` or re-pinging
+main (would just add a 2nd duplicate escalation with zero new information). Calling `/skip-current-task`; unblocking
+this still requires either the operator ruling on todo 3, or main attaching
+`prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` / parking the task (main/operator scope per RULES.md
+§4, not a worker-slot edit).
