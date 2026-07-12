@@ -2,10 +2,10 @@
 doc_type: epic
 title: Plan hygiene — continuous format + integrity + alignment enforcement
 summary:
-  L5 epic owning continuous plan-corpus hygiene — the check scripts (todo-regression, frontmatter,
-  line-caps, codex-refs, archive-candidates, estimate-sanity, superseded-in-active), run_hygiene_sweep.sh
-  + active-plan-inventory regen, the 05:00 UTC Cloud Run cron, pre-push hooks, and the codex-alignment
-  audit that catches semantic plan↔codex drift.
+  L5 epic owning continuous plan-corpus hygiene — the check scripts (todo-regression, frontmatter, line-caps,
+  codex-refs, archive-candidates, estimate-sanity, superseded-in-active), run_hygiene_sweep.sh + active-plan-inventory
+  regen, the 05:00 UTC Cloud Run cron, pre-push hooks, and the codex-alignment audit that catches semantic plan↔codex
+  drift.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -92,7 +92,14 @@ removes the manual cost and catches regressions before they compound.
 
 - [x] ✅ [SCRIPT] P1. Add `run_hygiene_sweep.sh` to planning-VM cron: `0 5 * * *` UTC. Implemented as Cloud Run Job
       `uts-prod-plan-hygiene-sweep` + Cloud Scheduler. Failures append `## [hygiene-cron]` notification to both
-      orchestrator inboxes. (deployment-service@5f4eb6b + PM@a85f151e9)
+      orchestrator inboxes. (deployment-service@5f4eb6b + PM@a85f151e9) **⚠️ 2026-07-11 correction**: the job silently
+      failed exit(1)/zero-stdout for 8 consecutive days (2026-06-12→2026-06-19), dying BEFORE its own
+      `## [hygiene-cron]` failure-notification path could fire — so the notification claim above was never proven under
+      a real failure. It self-recovered and has run green daily 2026-06-20→2026-07-11 (verified via
+      `gcloud run jobs executions list`, asia-northeast1): current monitoring IS operational, but the
+      failure-notification path remains unverified. Retirement in favour of the central-VM reconciler is tracked in
+      `plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`. Synced per
+      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 227).
 - [x] ✅ [SCRIPT] P2. Added as `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` (adjacent to
       `orphan_ping_audit_scheduler.tf`). Entrypoint: `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`. Reuses
       `t1_batch_sa` + `GH_PAT` IAM binding. (deployment-service@5f4eb6b)

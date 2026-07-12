@@ -885,8 +885,12 @@ _4 active plans declare `parent_epic: features_and_ml_master` in their frontmatt
 
 ### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — features/ML cluster
 
-**status**: 🟠 ACTIVE — QG sweep for features-service + ml-service + ml-inference-service + ml-training-service. All
-ruff clean; run full `bash scripts/quality-gates.sh` to surface STEP violations. PREREQ: MTDS QG green. [vm: vm-ml]
+**status**: ✅ COMPLETE (synced 2026-07-11; was: 🟠 ACTIVE — QG sweep for features-service + ml-service +
+ml-inference-service + ml-training-service. All ruff clean; run full `bash scripts/quality-gates.sh` to surface STEP
+violations. PREREQ: MTDS QG green. [vm: vm-ml]) — plan frontmatter is `status: complete`; all 4 assigned repo todos
+(features-service, ml-service, ml-inference-service, ml-training-service) are checked `[x] ✅` QG-green
+(ml-inference-service + ml-training-service N/A: consolidated into ml-service per `workspace-manifest.json`). Synced per
+plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 54).
 
 ### [`features_repo_consolidation_2026_05_08`](../archive/features_repo_consolidation_2026_05_08.plan.md)
 

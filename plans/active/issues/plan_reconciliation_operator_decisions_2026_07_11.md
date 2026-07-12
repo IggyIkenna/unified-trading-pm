@@ -3665,6 +3665,16 @@ is wrong; recommend updating git-commit SKILL.md to `docs(plans):` (matches the 
 
 ## Progress Log (append-only)
 
+- 2026-07-11 (P0 batch): all 13 P0 auto-fix pairs applied + committed (this commit). Highlights: batch_live_symmetry P0
+  section synced to complete child plans (18/19/337/363); epics/README registry+VM-model banner (308/309); orchestrator
+  single-VM supersede notice (349); escalation epic PAUSED per 2026-06-26 deferral (338); plan_hygiene cron claim
+  corrected to HISTORICAL outage + current-green per live gcloud check (227 — fixer refused the original stale wording,
+  re-verified); instruments MTDS-WS caveat (93); defi Lighter/Extended/Pacifica -> CeFi per UAC mvp_scope.py decision
+  log (37 — direction flip vs the planned fix, evidence-backed); features qg-sweep synced (54); v10 perp_funding IN-MVP
+  ruling applied + 424 DRIFT cells reopened (43); sp500_ml VIX ruling applied (304); predictions intra-doc note fixed
+  (239); sports P1a honest-coverage claim clarified as classification-not-presence (269); github_billing issue CLOSED
+  with evidence chain (48 — secret-describe IAM-blocked, cent-exact reconciliation
+  - code-read accepted as hard evidence).
 - 2026-07-11: audit workflow completed (245 agents, 23.2M tokens; survived one /tmp-full kill + three host-process exits
   via journal resume). Findings archive: session scratchpad `findings.json` (+ backup in session dir). This doc created
   with full decision queue + auto-fix queue.

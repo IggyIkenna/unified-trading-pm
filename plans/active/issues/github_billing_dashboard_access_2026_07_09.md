@@ -9,7 +9,7 @@ summary: >-
   secret; then a small deployment-api change swaps the dummy github_facts provider to the enhanced-billing
   /users/{owner}/settings/billing/usage endpoint (itemised per-day / per-product / per-repo, gross/discount/net —
   matches the GCP/AWS shape the page already renders). Recommend a dedicated token, NOT extending GH_PAT.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -27,6 +27,10 @@ source:
   - "github_actions_billing_wall_2026_06_11.md — P3 telemetry todo, blocked-on-decision awaiting a Plan:read PAT"
 assigned_vm: NA
 resolved_by:
+  "deployment-api@29a18c0 + @c4549da (real Enhanced-Billing provider wired to Secret Manager github-billing-token via
+  get_secret_client(); dummy only on missing-token/403) + cent-exact live-API reconciliation 2026-07-10
+  (cost_obs_ui_unified_breakdown_2026_07_08.md:165-169, net $1,332.55 == $1,332.55, 1,469 records) + operator PAT mint
+  recorded in archive/2026_07/cost_observability_ui_2026_07_08.md:696-698"
 locked_by:
 depends_on: []
 ---
@@ -145,14 +149,27 @@ Net: one dedicated, read-only, minimal token is the safe and clean choice.
 
 ## Resolution checklist
 
-- [ ] [OPERATOR] P2. Ikenna mints the fine-grained PAT (Account → "Plan" → Read, resource owner `IggyIkenna`) and hands
-      it over.
-- [ ] [INFRA] P2. Token stored in Secret Manager as `github-billing-token` (project `central-element-323112`) +
-      deployment-api SA granted `secretmanager.secretAccessor`.
-- [ ] [BACKEND] P2. `deployment-api` `github_facts()` swapped from the dummy provider to
+- [x] [OPERATOR] P2. Ikenna mints the fine-grained PAT (Account → "Plan" → Read, resource owner `IggyIkenna`) and hands
+      it over. — DONE 2026-07-10 per archive/2026_07/cost_observability_ui_2026_07_08.md:696-698 (PAT minted, stored,
+      read granted to `github-token-sa`).
+- [x] [INFRA] P2. Token stored in Secret Manager as `github-billing-token` (project `central-element-323112`) +
+      deployment-api SA granted `secretmanager.secretAccessor`. — DONE per same record; literal
+      `gcloud secrets     describe` re-check 2026-07-11 was IAM-blocked for the audit session SA
+      (`secretmanager.secrets.get` denied for `unified-trading-sa@…`), but the cent-exact live-API reconciliation below
+      is only possible with the secret live.
+- [x] [BACKEND] P2. `deployment-api` `github_facts()` swapped from the dummy provider to
       `GET /users/IggyIkenna/settings/billing/usage`; map line items → `CostRecord` (day/product/repo, net→cost,
-      gross→gross, discount→credit); drop `is_placeholder=True`.
-- [ ] [UI] P2. Remove the "Dummy data" panel note + "pending PAT" source-footer once real data flows.
+      gross→gross, discount→credit); drop `is_placeholder=True`. — DONE: verified 2026-07-11 by direct code read of
+      `deployment_api/services/cost_observability/github_billing.py` (real provider, `get_secret_client()`, dummy only
+      on missing-token/403) + `deployment_api_config.py:133-134` (`github_billing_secret = "github-billing-token"`);
+      commits deployment-api@29a18c0 + @c4549da verified in-repo.
+- [x] [UI] P2. Remove the "Dummy data" panel note + "pending PAT" source-footer once real data flows. — DONE per
+      cost_obs_ui_unified_breakdown_2026_07_08.md:165-169 (GitHub billing number-check verified correct, real data
+      rendering).
+
+**Close-out (2026-07-11 reconciliation)**: this issue was completed 2026-07-10 but the doc was never flipped — classic
+unflipped-checkbox drift. Closed per the plans-corpus contradiction audit,
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 48).
 
 ---
 

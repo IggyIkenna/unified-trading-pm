@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: MVP backfill — DeFi all on-chain data_types (SPOT-only, per-protocol genesis, reconcile-then-fill)
-summary: Backfill all DeFi on-chain data_types (dex_pool_swaps/state, lending_indices, lst_rates, perp_funding, oracle_prices) for the v10 DeFi MVP scope on SPOT VMs, respecting per-protocol genesis.
+summary:
+  Backfill all DeFi on-chain data_types (dex_pool_swaps/state, lending_indices, lst_rates, perp_funding, oracle_prices)
+  for the v10 DeFi MVP scope on SPOT VMs, respecting per-protocol genesis.
 status: active
 nature: process
 asset_group: [defi]
@@ -9,7 +11,13 @@ stage: [data]
 repos: [deployment-service, market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [mvp, backfill, defi, on-chain, dex, lending, lst, perp-funding, oracle, spot-vm, v10]
-related: [plans/active/mvp_catalogue_finalization_v10_2026_06_27.md, plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md, plans/active/defi_manifest_canonicalisation_2026_06_01.md, plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md]
+related:
+  [
+    plans/active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
+    plans/active/defi_manifest_canonicalisation_2026_06_01.md,
+    plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md,
+  ]
 created: 2026-06-27
 parent_epic: defi_master
 assigned_vm: planning
@@ -61,12 +69,12 @@ drift_direction: advance-code
 >
 > **🟢 DEFI PHANTOM RECONCILE — APPLY COMPLETE ✅ 2026-06-28T21:35Z** — **219,632 phantoms flipped** to
 > `attempted_failed` (0 unphantomed). Real captures after flip: 2,383,852. Manifest: 9,802,111 rows written.
-> MVP-critical flipped: **dex_pool_swaps=20,586; perp_funding=140**. Non-MVP: swaps_ohlcv_*×7=177,931;
-> gas_fees=12,249; liquidations=8,509; derivative_ticker=145; trades=42; vault_share_price=30. Top venues:
-> UNISWAP_V4=69,573, UNISWAP_V3=42,807, BALANCER=31,967. Triage JSONL:
+> MVP-critical flipped: **dex_pool_swaps=20,586; perp_funding=140**. Non-MVP: swaps*ohlcv*\*×7=177,931; gas_fees=12,249;
+> liquidations=8,509; derivative_ticker=145; trades=42; vault_share_price=30. Top venues: UNISWAP_V4=69,573,
+> UNISWAP_V3=42,807, BALANCER=31,967. Triage JSONL:
 > `gs://central-element-323112-phantom-triage/triage_defi_20260628_203239.jsonl`. Running VMs will now pick up
-> newly-visible dex_pool_swaps (20,586) and perp_funding (140) gaps as forward-scan progresses.
-> **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
+> newly-visible dex_pool_swaps (20,586) and perp_funding (140) gaps as forward-scan progresses. **Use per-data_type
+> launchers (not unified `--asset-group DEFI` form).**
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
 > plan REFERENCES it. **DeFi v10 = MVP-tag-all today** (`defi_mvp_tag_all_2026_06_26`): data_types
@@ -142,7 +150,7 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       VM=mtds-pyth-archive-20260627-221636 RUNNING 34.84.64.217 (2022-11-01→2023-09-30); Hermes window (2023-10-01+)
       covered by forward collect cascade
 
-### G1.5 — solana-drift stall intervention (RESOLVED — out of MVP scope, provisional)
+### G1.5 — solana-drift stall intervention (RESOLVED 2026-06-29 provisional → REOPENED 2026-07-11, IN MVP SCOPE)
 
 - [x] ✅ [OPERATOR] P0. Solana-drift backfill performance stall — decide intervention path: Consolidated sig index
       `drift_v2_sig_index.parquet` missing → VM uses 7169-part fallback → ~2-3h/day. At 527-day range this takes 44+
@@ -154,17 +162,24 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       signature-streaming approach (Helius streaming API instead of batch resolve). New VM after code fix.
       **Recommended: Option A** — building consolidated index is straightforward and unblocks the stall without
       sacrificing DRIFT data. 2025-01-11 still processing; partial data for 2025-01-09 and 2025-01-10 already captured
-      (2,177,357 rows combined). Repo: `market-tick-data-service`, `instruments-service`.
-      **✅ RESOLVED 2026-06-29 — OUT OF MVP SCOPE (provisional, pending Ikenna confirm).** Per UAC SSOT
-      `is_mvp()`, DRIFT `perp_funding` is NOT MVP: the defi rule's `instrument_types` axis = `{POOL, DEX_POOL, LST,
-      LENDING}` (no `PERPETUAL`), so every `perp_funding` cell evaluates `is_mvp()=False` under both defi AND cefi
-      (cefi captures funding via `funding_rate`/`derivative_ticker`). Operator decision: do NOT build the sig index, do
-      NOT download — none of A/B/C executed. DRIFT VM already gone (SPOT, terminated); only 3 dates of genuine data
-      (2025-01-09/10/11). Three-way SSOT contradiction (is_mvp vs capability registries vs this plan) + follow-up code
-      fix (registry reconciliation + `measure_honest_coverage` to respect `is_mvp()`) tracked in
-      `plans/active/issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. **Reopen if Ikenna rules
-      perp_funding IS in scope** (Option 2 in the issue doc → add `PERPETUAL` to the defi rule + Helius plan upgrade for
-      the 429 ceiling).
+      (2,177,357 rows combined). Repo: `market-tick-data-service`, `instruments-service`. **2026-06-29 (provisional,
+      SUPERSEDED) — OUT OF MVP SCOPE.** Per UAC SSOT `is_mvp()` at the time, DRIFT `perp_funding` was NOT MVP: the defi
+      rule's `instrument_types` axis = `{POOL, DEX_POOL, LST, LENDING}` (no `PERPETUAL`), so every `perp_funding` cell
+      evaluated `is_mvp()=False` under both defi AND cefi (cefi captures funding via
+      `funding_rate`/`derivative_ticker`). Operator decision at the time: do NOT build the sig index, do NOT download —
+      none of A/B/C executed. DRIFT VM already gone (SPOT, terminated); only 3 dates of genuine data (2025-01-09/10/11).
+      Three-way SSOT contradiction (is_mvp vs capability registries vs this plan) tracked in
+      `plans/active/issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. **2026-07-11 — IN MVP SCOPE per
+      operator ruling Option 2 (UAC v13, `unified-api-contracts@89b16943` — see
+      `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`).** The broader DeFi-MVP-framing ruling ("keep all as
+      MVP") landed `DeFiMvpRule` v13 adding `PERPETUAL` to the defi rule's `instrument_types`, so
+      `is_mvp("defi", "DRIFT-SOLANA", "PERPETUAL", "perp_funding")` now evaluates `True` — the 2026-06-29 provisional
+      out-of-scope call above is superseded. Synced per
+      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 43).
+  - [ ] [SCRIPT] P0. Backfill the 424 DRIFT perp_funding cells — reopened by ruling. Blocked on the unresolved 429-burst
+        Helius rate-limit ceiling + the never-built consolidated `drift_v2_sig_index.parquet` (Option A above) before a
+        backfill VM can be re-launched. Repos: `market-tick-data-service`, `deployment-service`. Tracks
+        `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` todo 3.
 
 ### G2 — verify honest-complete
 
@@ -567,13 +582,16 @@ Still STABLE (no OOM, no crash).
 
 **VM roster (22:15 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 22:06). No preemptions. Disk 47G free (85%).
 
-**DRIFT (mtds-solana-drift-backfill):** Serial port gsutil heartbeat active (22:14–22:15 UTC; every ~60s). No Jan/Feb 2026 parquets in GCS — all dates continuing `SOURCE_RETURNED_ZERO`. Operator review still pending.
+**DRIFT (mtds-solana-drift-backfill):** Serial port gsutil heartbeat active (22:14–22:15 UTC; every ~60s). No Jan/Feb
+2026 parquets in GCS — all dates continuing `SOURCE_RETURNED_ZERO`. Operator review still pending.
 
 **DEX-pools:** 2025-05-08 @ 22:15 (was 2025-04-29 at 21:58 → 9 dates/17 min ≈ 1.9 min/date). GMX captured.
 
-**Lending-indices:** 2023-05-03 @ 22:15 (was 2023-04-25 at 21:57 → 8 dates/18 min ≈ 2.3 min/date). AAVE_V3 mix of captured/empty_confirmed.
+**Lending-indices:** 2023-05-03 @ 22:15 (was 2023-04-25 at 21:57 → 8 dates/18 min ≈ 2.3 min/date). AAVE_V3 mix of
+captured/empty_confirmed.
 
-**LST-rates:** 2022-01-08/09 @ 22:15 (was 2021-12-01 at 21:02 → 38 days/73 min ≈ 1.9 min/date). ANKR + ROCKETPOOL captured. ETA to complete range: ~52 hrs → ~2026-07-01 00:00 UTC.
+**LST-rates:** 2022-01-08/09 @ 22:15 (was 2021-12-01 at 21:02 → 38 days/73 min ≈ 1.9 min/date). ANKR + ROCKETPOOL
+captured. ETA to complete range: ~52 hrs → ~2026-07-01 00:00 UTC.
 
 **Perp-funding:** Shard consumed. Last confirmed 2024-04-05 at 21:57.
 
@@ -581,15 +599,24 @@ Still STABLE (no OOM, no crash).
 
 ### 21:57 UTC check — DRIFT Jan 2026 all SOURCE_RETURNED_ZERO (no parquets); dex-pools 2025-04-29; lending-indices 2023-04-25; perp-funding 2024-04-05 (2026-06-28 21:57 UTC)
 
-**VM roster (21:57 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 21:36; next fire ~22:06). No preemptions. Disk 47G free (85%).
+**VM roster (21:57 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 21:36; next fire ~22:06). No preemptions. Disk 47G
+free (85%).
 
-**DRIFT (mtds-solana-drift-backfill):** No Jan 2026 GCS folders exist at all. DRIFT is recording all post-Dec-25 dates as `empty_confirmed SOURCE_RETURNED_ZERO` — no parquets written for Dec 26-31 or Jan 2026. This extends the 429-burst anomaly: the VM is recording empty responses for dates when DRIFT was actively trading. **Operator verification urgently needed**: are Helius API calls for these dates returning 0 signatures (implying a Helius data gap or wrong endpoint) or is the adapter silently swallowing 429 errors as 0-row responses?
+**DRIFT (mtds-solana-drift-backfill):** No Jan 2026 GCS folders exist at all. DRIFT is recording all post-Dec-25 dates
+as `empty_confirmed SOURCE_RETURNED_ZERO` — no parquets written for Dec 26-31 or Jan 2026. This extends the 429-burst
+anomaly: the VM is recording empty responses for dates when DRIFT was actively trading. **Operator verification urgently
+needed**: are Helius API calls for these dates returning 0 signatures (implying a Helius data gap or wrong endpoint) or
+is the adapter silently swallowing 429 errors as 0-row responses?
 
-**DEX-pools (mtds-dex-pools-backfill):** At 2025-04-29 as of 21:58. Was at 2025-04-19 at 21:41 → 10 dates in 17 min ≈ 1.7 min/date. GMX captured. Advancing through April 2025.
+**DEX-pools (mtds-dex-pools-backfill):** At 2025-04-29 as of 21:58. Was at 2025-04-19 at 21:41 → 10 dates in 17 min ≈
+1.7 min/date. GMX captured. Advancing through April 2025.
 
-**Lending-indices (mtds-lending-indices-20260628-021507):** At 2023-04-25 as of 21:57. Was at 2023-04-18 at 21:41 → 7 dates in 16 min ≈ 2.3 min/date. COMPOUND_V3 still empty_confirmed (schema mismatch non-ETHEREUM). Rate consistent.
+**Lending-indices (mtds-lending-indices-20260628-021507):** At 2023-04-25 as of 21:57. Was at 2023-04-18 at 21:41 → 7
+dates in 16 min ≈ 2.3 min/date. COMPOUND_V3 still empty_confirmed (schema mismatch non-ETHEREUM). Rate consistent.
 
-**Perp-funding (mtds-perp-funding-backfill):** At 2024-04-05. POLYMARKET_PERP + KALSHI_PERP showing empty_confirmed (pre-launch; correct honest absence). HYPERLIQUID captured rows likely in prior shard batch already consumed. Was at 2024-03-29 at 20:44 UTC → 7 dates in 73 min ≈ 10.4 min/date.
+**Perp-funding (mtds-perp-funding-backfill):** At 2024-04-05. POLYMARKET_PERP + KALSHI_PERP showing empty_confirmed
+(pre-launch; correct honest absence). HYPERLIQUID captured rows likely in prior shard batch already consumed. Was at
+2024-03-29 at 20:44 UTC → 7 dates in 73 min ≈ 10.4 min/date.
 
 **DEX-swaps, LST-rates:** Shards consumed. Last confirmed: dex-swaps@2023-03-18 (20:11), lst-rates@2021-12-01 (21:02).
 
@@ -597,43 +624,68 @@ Still STABLE (no OOM, no crash).
 
 **VM roster (21:41 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 21:36). No preemptions.
 
-**DRIFT (mtds-solana-drift-backfill):** Shard captured! At **2026-01-05** `empty_confirmed` `SOURCE_RETURNED_ZERO` @ 21:30 UTC. **DRIFT has now processed through all of December 2025 and is in January 2026.** GCS check: only Dec 23 + Dec 25 parquets exist; Dec 24, Dec 26-31, and Jan 1-5 all produced `empty_confirmed SOURCE_RETURNED_ZERO` (no parquets). This is consistent with the 429-burst anomaly: Helius returning 0 signatures for those dates (either genuine quiet days OR 429s causing 0-row responses). **Updated 429-burst anomaly assessment**: Dec 24 was flipped from phantom→attempted_failed by the reconcile apply (✅ correct — gap is now visible). Dec 26-31 are `empty_confirmed` in the manifest — operator should verify these dates had no DRIFT Solana activity vs. 429-induced empty response. See 🔴 header banner.
+**DRIFT (mtds-solana-drift-backfill):** Shard captured! At **2026-01-05** `empty_confirmed` `SOURCE_RETURNED_ZERO` @
+21:30 UTC. **DRIFT has now processed through all of December 2025 and is in January 2026.** GCS check: only Dec 23 + Dec
+25 parquets exist; Dec 24, Dec 26-31, and Jan 1-5 all produced `empty_confirmed SOURCE_RETURNED_ZERO` (no parquets).
+This is consistent with the 429-burst anomaly: Helius returning 0 signatures for those dates (either genuine quiet days
+OR 429s causing 0-row responses). **Updated 429-burst anomaly assessment**: Dec 24 was flipped from
+phantom→attempted_failed by the reconcile apply (✅ correct — gap is now visible). Dec 26-31 are `empty_confirmed` in
+the manifest — operator should verify these dates had no DRIFT Solana activity vs. 429-induced empty response. See 🔴
+header banner.
 
-**DEX-pools (mtds-dex-pools-backfill):** At 2025-04-19 as of 21:41. Shard: 16,946 rows, 2025-04-15→2025-04-19 (23 dates since 2025-03-27 at 21:02 = ~1.7 min/date). GMX active. Progress through April 2025.
+**DEX-pools (mtds-dex-pools-backfill):** At 2025-04-19 as of 21:41. Shard: 16,946 rows, 2025-04-15→2025-04-19 (23 dates
+since 2025-03-27 at 21:02 = ~1.7 min/date). GMX active. Progress through April 2025.
 
-**Lending-indices (mtds-lending-indices-20260628-021507):** At 2023-04-18 as of 21:41. Shard: 64 rows; AAVE_V3=58 captured, COMPOUND_V3=5 empty_confirmed (non-ETHEREUM schema gap), SPARK=1 captured. Progress: 38 days in 90 min from 2023-03-11 → ~2.4 min/date. ETA still ~2026-06-30 22:00 UTC.
+**Lending-indices (mtds-lending-indices-20260628-021507):** At 2023-04-18 as of 21:41. Shard: 64 rows; AAVE_V3=58
+captured, COMPOUND_V3=5 empty_confirmed (non-ETHEREUM schema gap), SPARK=1 captured. Progress: 38 days in 90 min from
+2023-03-11 → ~2.4 min/date. ETA still ~2026-06-30 22:00 UTC.
 
-**DEX-swaps, LST-rates, Perp-funding:** Shards consumed (consolidator). Last confirmed: dex-swaps@2023-03-18 (20:11), lst-rates@2021-12-01 (21:02), perp-funding@2024-03-29 (20:44).
+**DEX-swaps, LST-rates, Perp-funding:** Shards consumed (consolidator). Last confirmed: dex-swaps@2023-03-18 (20:11),
+lst-rates@2021-12-01 (21:02), perp-funding@2024-03-29 (20:44).
 
 **Disk:** 49G free (84%). Stable.
 
 ### 21:35 UTC — PHANTOM APPLY COMPLETE ✅; watchdog 6/6 RUNNING (2026-06-28 21:35 UTC)
 
 **Phantom reconcile apply (bj755413o) DONE at 21:35:53 UTC (exit_code=0):**
+
 - **219,632 phantoms flipped** `captured→attempted_failed` (0 unphantomed; idempotent run confirmed)
 - Real captures after flip: 2,383,852 (+28,105 vs dry-run at 20:00 = G1 VMs filled 28k rows in ~22 hrs)
-- Manifest written: 9,802,111 rows to `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`
-- MVP-critical newly-visible gaps: **dex_pool_swaps=20,586** (DEX-swaps VM will pick up); **perp_funding=140** (perp-funding VM will pick up)
-- Non-MVP flipped: swaps_ohlcv_*×7=177,931; gas_fees=12,249; liquidations=8,509; derivative_ticker=145; trades=42; vault_share_price=30
+- Manifest written: 9,802,111 rows to
+  `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`
+- MVP-critical newly-visible gaps: **dex_pool_swaps=20,586** (DEX-swaps VM will pick up); **perp_funding=140**
+  (perp-funding VM will pick up)
+- Non-MVP flipped: swaps*ohlcv*\*×7=177,931; gas_fees=12,249; liquidations=8,509; derivative_ticker=145; trades=42;
+  vault_share_price=30
 - Top venues: UNISWAP_V4=69,573; UNISWAP_V3=42,807; BALANCER=31,967; SUSHISWAP_V3=15,579; PANCAKESWAP_V3=13,283
 
 **VM roster (21:36 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 21:36 UTC). No preemptions.
 
 ### 21:02 UTC check — phantom apply KILLED+retried (bj755413o); dex-pools 2025-03-27; lst-rates 2021-12-01; DRIFT active (2026-06-28 21:02 UTC)
 
-**VM roster (21:02 UTC):** All 6 G1 VMs RUNNING (serial port confirms DRIFT+lending-indices active gsutil at 21:02; watchdog last confirmed 20:36).
+**VM roster (21:02 UTC):** All 6 G1 VMs RUNNING (serial port confirms DRIFT+lending-indices active gsutil at 21:02;
+watchdog last confirmed 20:36).
 
-**Phantom apply:** First attempt (b928s6k05) was KILLED at ~21:02 UTC (~30 min into run, before listing completed). Output was empty — no partial manifest writes (script is read-then-batch-write; the write only happens after full audit). Idempotent retry (bj755413o) launched immediately at 21:02 UTC. ETA ~21:37 UTC.
+**Phantom apply:** First attempt (b928s6k05) was KILLED at ~21:02 UTC (~30 min into run, before listing completed).
+Output was empty — no partial manifest writes (script is read-then-batch-write; the write only happens after full
+audit). Idempotent retry (bj755413o) launched immediately at 21:02 UTC. ETA ~21:37 UTC.
 
-**DRIFT (mtds-solana-drift-backfill):** gsutil heartbeat every 60s at 21:00–21:03 UTC. Currently processing post-Dec-29 dates. GCS check: still only Dec 23 + Dec 25 parquets exist for December (Dec 24 absent = 429-burst anomaly, flagged 🔴 for operator).
+**DRIFT (mtds-solana-drift-backfill):** gsutil heartbeat every 60s at 21:00–21:03 UTC. Currently processing post-Dec-29
+dates. GCS check: still only Dec 23 + Dec 25 parquets exist for December (Dec 24 absent = 429-burst anomaly, flagged 🔴
+for operator).
 
-**DEX-pools (mtds-dex-pools-backfill):** At 2025-03-27 as of 21:02. Shard: 40,062 rows covering 2025-03-16→2025-03-27 (11 dates in ~18 min since 20:44 reading → ~1.6 min/date). Progress well past 2023-09-23 mark.
+**DEX-pools (mtds-dex-pools-backfill):** At 2025-03-27 as of 21:02. Shard: 40,062 rows covering 2025-03-16→2025-03-27
+(11 dates in ~18 min since 20:44 reading → ~1.6 min/date). Progress well past 2023-09-23 mark.
 
-**LST-rates (mtds-lst-rates-20260628-002136):** At 2021-12-01 as of 21:02 (was 2021-11-04 at 20:12 UTC → 27 dates in 50 min = ~1.85 min/date). 3 rows: LIDO/ROCKETPOOL/ANKR captured. Estimated remaining: ~2021-12-01 to ~2026-06 = ~54 months at ~1 month/hr → ETA **~2026-06-30 21:00 UTC**.
+**LST-rates (mtds-lst-rates-20260628-002136):** At 2021-12-01 as of 21:02 (was 2021-11-04 at 20:12 UTC → 27 dates in 50
+min = ~1.85 min/date). 3 rows: LIDO/ROCKETPOOL/ANKR captured. Estimated remaining: ~2021-12-01 to ~2026-06 = ~54 months
+at ~1 month/hr → ETA **~2026-06-30 21:00 UTC**.
 
-**DEX-swaps, Perp-funding:** Shards consumed (last readings: dex-swaps@2023-03-18 at 20:11, perp-funding@2024-03-29 at 20:44).
+**DEX-swaps, Perp-funding:** Shards consumed (last readings: dex-swaps@2023-03-18 at 20:11, perp-funding@2024-03-29 at
+20:44).
 
-**Lending-indices:** Serial port active (gsutil every 60s). Was at 2023-03-11 at 20:11. ETA ~50 hrs from that reading → ~2026-06-30 22:00 UTC.
+**Lending-indices:** Serial port active (gsutil every 60s). Was at 2023-03-11 at 20:11. ETA ~50 hrs from that reading →
+~2026-06-30 22:00 UTC.
 
 **Disk:** 49G free (84%). Stable.
 
@@ -641,19 +693,27 @@ Still STABLE (no OOM, no crash).
 
 **VM roster (20:44 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 20:36 UTC). No preemptions.
 
-**Phantom apply (b928s6k05):** Still in GCS listing phase (0-byte output file, ~9 min elapsed since 20:32 launch). ETA remains ~21:07 UTC (listing 1.8M prefixes at ~1,091/sec = ~27 min, then row updates). No action needed.
+**Phantom apply (b928s6k05):** Still in GCS listing phase (0-byte output file, ~9 min elapsed since 20:32 launch). ETA
+remains ~21:07 UTC (listing 1.8M prefixes at ~1,091/sec = ~27 min, then row updates). No action needed.
 
-**DRIFT (mtds-solana-drift-backfill):** Active — gsutil shard uploads every ~60s confirmed via serial port (20:37–20:41 UTC). Currently processing post-Dec-29 dates. GCS audit: only `day=2025-12-23` and `day=2025-12-25` parquets exist in December (Dec 24 parquet ABSENT). Dec 24 absence is the 429-burst anomaly data quality concern (flagged 🔴 in header — operator decision pending). Jan 9-15 parquets exist (processed earlier in the run). VM healthy and advancing.
+**DRIFT (mtds-solana-drift-backfill):** Active — gsutil shard uploads every ~60s confirmed via serial port (20:37–20:41
+UTC). Currently processing post-Dec-29 dates. GCS audit: only `day=2025-12-23` and `day=2025-12-25` parquets exist in
+December (Dec 24 parquet ABSENT). Dec 24 absence is the 429-burst anomaly data quality concern (flagged 🔴 in header —
+operator decision pending). Jan 9-15 parquets exist (processed earlier in the run). VM healthy and advancing.
 
-**DEX-pools (mtds-dex-pools-backfill):** At 2025-03-16/17 as of 20:44 UTC. Shard: 6,656 rows, venues: UNISWAP_V3=3,816, BALANCER=1,760, PANCAKESWAP_V3=646, SUSHISWAP_V3=176, CAMELOT_V3=112, AERODROME_V3=90, CURVE=42. Latest write: GMX 2025-03-17 captured. Progress well past 2023-09-23 mark (~21% at 05:37).
+**DEX-pools (mtds-dex-pools-backfill):** At 2025-03-16/17 as of 20:44 UTC. Shard: 6,656 rows, venues: UNISWAP_V3=3,816,
+BALANCER=1,760, PANCAKESWAP_V3=646, SUSHISWAP_V3=176, CAMELOT_V3=112, AERODROME_V3=90, CURVE=42. Latest write: GMX
+2025-03-17 captured. Progress well past 2023-09-23 mark (~21% at 05:37).
 
 **DEX-swaps (mtds-dex-swaps-backfill):** Shard consumed by consolidator. Was at 2023-03-18 at 20:11.
 
-**Perp-funding (mtds-perp-funding-backfill):** At 2024-03-29 HYPERLIQUID captured @ 20:44 UTC. Rate: ~4 dates/32 min from 2024-03-25 reading at 20:12. HYPERLIQUID active. Shard: 1 row.
+**Perp-funding (mtds-perp-funding-backfill):** At 2024-03-29 HYPERLIQUID captured @ 20:44 UTC. Rate: ~4 dates/32 min
+from 2024-03-25 reading at 20:12. HYPERLIQUID active. Shard: 1 row.
 
 **LST-rates (mtds-lst-rates-20260628-002136):** Shard consumed. Was at 2021-11-04 at 20:12.
 
-**Lending-indices (mtds-lending-indices-20260628-021507):** Active — gsutil shard uploads every ~60s via serial port. Was at 2023-03-11 at 20:11. ETA unchanged: ~50 hrs from 20:11 → ~2026-06-30 22:00 UTC.
+**Lending-indices (mtds-lending-indices-20260628-021507):** Active — gsutil shard uploads every ~60s via serial port.
+Was at 2023-03-11 at 20:11. ETA unchanged: ~50 hrs from 20:11 → ~2026-06-30 22:00 UTC.
 
 **Disk:** 49G free (84% usage). Stable post-cleanup.
 
@@ -661,52 +721,53 @@ Still STABLE (no OOM, no crash).
 
 **VM roster (20:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
 
-**DRIFT — 2025-12-28 batch ~25,534 @ 20:14 UTC (HTTP 429 rate-limit errors, actively retrying):** MAJOR REVISION to prior ETA.
-Dec 24 (60,586 batches) COMPLETED between 19:47 and 20:14 UTC — only 27 min vs estimated 7.4 hrs. Likely explanation:
-multi-threaded batch resolution (16 workers) gives ~16× the per-warning rate, so actual throughput >> 84 batch/min in the log.
-Dec 25/26/27 processed and completed (fast — small or empty sig windows). Dec 28 now in progress at batch ~25,534.
-Dec 28 sig volume TBD (if comparable to Dec 24's 60,586 batches, ETA ~ETA_TBD). Helius 429 rate-limit errors are
-normal — the VM retries each and continues. **Overall DRIFT ETA revised downward: completion before Jun 29 03:11 UTC is
-likely; actual rate ~1,000-1,400 batch/min effective.** Dec 29-Jun 28 remaining after Dec 28 = ~181 dates TBD.
+**DRIFT — 2025-12-28 batch ~25,534 @ 20:14 UTC (HTTP 429 rate-limit errors, actively retrying):** MAJOR REVISION to
+prior ETA. Dec 24 (60,586 batches) COMPLETED between 19:47 and 20:14 UTC — only 27 min vs estimated 7.4 hrs. Likely
+explanation: multi-threaded batch resolution (16 workers) gives ~16× the per-warning rate, so actual throughput >> 84
+batch/min in the log. Dec 25/26/27 processed and completed (fast — small or empty sig windows). Dec 28 now in progress
+at batch ~25,534. Dec 28 sig volume TBD (if comparable to Dec 24's 60,586 batches, ETA ~ETA_TBD). Helius 429 rate-limit
+errors are normal — the VM retries each and continues. **Overall DRIFT ETA revised downward: completion before Jun 29
+03:11 UTC is likely; actual rate ~1,000-1,400 batch/min effective.** Dec 29-Jun 28 remaining after Dec 28 = ~181 dates
+TBD.
 
-**lending-indices 021507 — 2023-03-11 @ 20:11 UTC:** 123 shard entries (7 new), 46,810 total records.
-AAVE V3: ETHEREUM=3,072 (first confirmed ETH active date: 2023-01-27 ✅), ARBITRUM=14,635, POLYGON=18,828,
-AVALANCHE=10,273. BASE/LINEA/BSC=0 (not deployed yet). COMPOUND_V3_OPTIMISM schema mismatch persists (all 3 strategies
-fail — pre-schema-migration subgraph). Rate: ~2.5 min/date; ~1,205 dates remaining ≈ **50 hrs** (ETA ~2026-06-30 22:00 UTC).
+**lending-indices 021507 — 2023-03-11 @ 20:11 UTC:** 123 shard entries (7 new), 46,810 total records. AAVE V3:
+ETHEREUM=3,072 (first confirmed ETH active date: 2023-01-27 ✅), ARBITRUM=14,635, POLYGON=18,828, AVALANCHE=10,273.
+BASE/LINEA/BSC=0 (not deployed yet). COMPOUND_V3_OPTIMISM schema mismatch persists (all 3 strategies fail —
+pre-schema-migration subgraph). Rate: ~2.5 min/date; ~1,205 dates remaining ≈ **50 hrs** (ETA ~2026-06-30 22:00 UTC).
 
-**DEX-pools — 3,310 shard entries @ 20:14 UTC:** Processing active; 832 records for latest date
-(uniswap_v3 ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON active; pancakeswap/sushiswap/aerodrome/camelot/balancer present).
-Solana venues (orca/raydium/phoenix) skipped as expected. Progress past 2023-09-23 (~21% at 05:37 check).
+**DEX-pools — 3,310 shard entries @ 20:14 UTC:** Processing active; 832 records for latest date (uniswap_v3
+ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON active; pancakeswap/sushiswap/aerodrome/camelot/balancer present). Solana venues
+(orca/raydium/phoenix) skipped as expected. Progress past 2023-09-23 (~21% at 05:37 check).
 
-**DEX-swaps — 2023-03-18 @ 20:11 UTC:** 30,345 UNISWAP_V3 ETHEREUM swap rows written; 1 shard entry. Normal
-progression from 2023-01-27 at 05:37 check.
+**DEX-swaps — 2023-03-18 @ 20:11 UTC:** 30,345 UNISWAP_V3 ETHEREUM swap rows written; 1 shard entry. Normal progression
+from 2023-01-27 at 05:37 check.
 
 **LST-rates — 2021-11-04 @ 20:12 UTC:** 2 shard entries; LIDO ETHEREUM + ANKR ETHEREUM (1 row each). Pre-genesis for
 most tokens; early-date coverage expected to be sparse.
 
-**Perp-funding — 2024-03-25 @ 20:12 UTC:** 7 shard entries, 3,152 records. HYPERLIQUID active; POLYMARKET perp
-recording EXPECTED_PRE_VENUE_LAUNCH (launch 2026-04-21) — correct honest-absence encoding.
+**Perp-funding — 2024-03-25 @ 20:12 UTC:** 7 shard entries, 3,152 records. HYPERLIQUID active; POLYMARKET perp recording
+EXPECTED_PRE_VENUE_LAUNCH (launch 2026-04-21) — correct honest-absence encoding.
 
 **Disk:** 16G free (recovered from 2.0G via /tmp cleanup: removed stale IS-index parquets, sports-audit parquets,
 regen-ldr-plans dirs — all from prior session runs, no open handles). Stable.
 
-**Phantom dry-run (bapes9tp0):** In-progress — started 20:00 UTC (~17 min elapsed, prior run took ~35 min).
-Output will land when complete. Apply mode needed after to flip 219,529 phantom "captured" rows → "attempted_failed".
+**Phantom dry-run (bapes9tp0):** In-progress — started 20:00 UTC (~17 min elapsed, prior run took ~35 min). Output will
+land when complete. Apply mode needed after to flip 219,529 phantom "captured" rows → "attempted_failed".
 
 ### 19:47 UTC check — DRIFT 2025-12-24 ~38% (batch ~23,098/60,586); lending-indices ~2023-02-27; both uploaders died 19:07; disk 917MB (2026-06-28 19:47 UTC)
 
 **VM roster (19:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
 
-**DRIFT 2025-12-24 — uploader died again (19:07:08 UTC):** Log stale 40 min (523,501 bytes).
-Dec 24 parquet NOT in GCS → app still processing (not done, not crashed). Same recurring uploader-thread-death
-pattern. Estimated progress at 19:47: elapsed 274 min × 84.3 batch/min = **~23,098 batches (~38.1%)**.
-Remaining ~37,488 batches / 84.3 = 445 min (~7.4 hrs). ETA **~03:11 UTC 2026-06-29**.
+**DRIFT 2025-12-24 — uploader died again (19:07:08 UTC):** Log stale 40 min (523,501 bytes). Dec 24 parquet NOT in GCS →
+app still processing (not done, not crashed). Same recurring uploader-thread-death pattern. Estimated progress at 19:47:
+elapsed 274 min × 84.3 batch/min = **~23,098 batches (~38.1%)**. Remaining ~37,488 batches / 84.3 = 445 min (~7.4 hrs).
+ETA **~03:11 UTC 2026-06-29**.
 
-**lending-indices 021507 — uploader died simultaneously (19:07:33 UTC):** Log also stale 40 min (9.9MB,
-+356KB since last check — was active until uploader died). Last visible completion: 2023-02-10 @
-19:06:48 UTC. At 19:47: +40 min / 2.4 min/date ≈ +17 dates → **~2023-02-27**. ~1,215 dates remain
-@ 2.4 min/date = ~49 hrs. ETA ~**2026-06-30 20:30 UTC**. Pattern note: both DRIFT + lending-indices
-uploaders died at same moment (19:07) — likely GCS auth token refresh cycle on both VMs simultaneously.
+**lending-indices 021507 — uploader died simultaneously (19:07:33 UTC):** Log also stale 40 min (9.9MB, +356KB since
+last check — was active until uploader died). Last visible completion: 2023-02-10 @ 19:06:48 UTC. At 19:47: +40 min /
+2.4 min/date ≈ +17 dates → **~2023-02-27**. ~1,215 dates remain @ 2.4 min/date = ~49 hrs. ETA ~**2026-06-30 20:30 UTC**.
+Pattern note: both DRIFT + lending-indices uploaders died at same moment (19:07) — likely GCS auth token refresh cycle
+on both VMs simultaneously.
 
 **Disk 917MB** (down 11MB from 928MB; stable trend).
 
@@ -714,16 +775,14 @@ uploaders died at same moment (19:07) — likely GCS auth token refresh cycle on
 
 **VM roster (19:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
 
-**DRIFT 2025-12-24:** Log updated 19:03:08 UTC (uploader healthy; 523KB). Last error:
-504@batch=19,039 @ 18:58:46 UTC. Progress at 19:17: elapsed 244 min × 84.3 batch/min =
-**~20,569 batches / 60,586 (~34%)**. Remaining: ~41,017 batches @ 84.3/min = ~487 min (~8.1 hrs).
-ETA **~03:20 UTC 2026-06-29**.
+**DRIFT 2025-12-24:** Log updated 19:03:08 UTC (uploader healthy; 523KB). Last error: 504@batch=19,039 @ 18:58:46 UTC.
+Progress at 19:17: elapsed 244 min × 84.3 batch/min = **~20,569 batches / 60,586 (~34%)**. Remaining: ~41,017 batches @
+84.3/min = ~487 min (~8.1 hrs). ETA **~03:20 UTC 2026-06-29**.
 
-**lending-indices 021507 — ~2023-02-15 @ 19:17 UTC:** Rate settling at ~2.4 min/date (faster than
-earlier 2.67 estimate). Completions observed 18:38–18:59: 2023-01-30 → 2023-02-08 (10 dates in 21.5 min).
-`aave_v3_ETHEREUM` consistently active (218–332 rows/date). COMPOUND_V3 non-ETHEREUM still 0 (schema
-issue persists). ~1,224 dates remain @ 2.4 min/date = **~49 hrs** — ETA revised to
-**~2026-06-30 20:00 UTC** (vs prior Jul-01 01:00 estimate).
+**lending-indices 021507 — ~2023-02-15 @ 19:17 UTC:** Rate settling at ~2.4 min/date (faster than earlier 2.67
+estimate). Completions observed 18:38–18:59: 2023-01-30 → 2023-02-08 (10 dates in 21.5 min). `aave_v3_ETHEREUM`
+consistently active (218–332 rows/date). COMPOUND_V3 non-ETHEREUM still 0 (schema issue persists). ~1,224 dates remain @
+2.4 min/date = **~49 hrs** — ETA revised to **~2026-06-30 20:00 UTC** (vs prior Jul-01 01:00 estimate).
 
 **Disk 928MB** (down 52MB from 980MB). Above 600MB threshold; no action needed.
 
@@ -732,21 +791,19 @@ issue persists). ~1,224 dates remain @ 2.4 min/date = **~49 hrs** — ETA revise
 **VM roster (18:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
 
 **DRIFT 2025-12-24:** Log uploaded 18:29 UTC (uploader healthy; 518KB). Last error: 502@batch=16,036 @ 18:21 UTC.
-Calculated progress: 195 min × 85.3 batch/min = **~16,634 batches / 60,586 (~27.4%)**. ETA **~03:23 UTC
-2026-06-29** (~8.4 hrs). Silent running between error reports is normal.
+Calculated progress: 195 min × 85.3 batch/min = **~16,634 batches / 60,586 (~27.4%)**. ETA **~03:23 UTC 2026-06-29**
+(~8.4 hrs). Silent running between error reports is normal.
 
 **lending-indices 021507 — 2023-01-27 DONE @ 18:28:34 UTC — aave_v3_ETHEREUM=283 CONFIRMED ✅:**
-`{'aave_v3_ETHEREUM': 283, 'aave_v3_ARBITRUM': 11385, 'aave_v3_OPTIMISM': 0, 'aave_v3_POLYGON': 6656,
-'aave_v3_AVALANCHE': 1954, 'aave_v3_BASE': 0, 'aave_v3_LINEA': 0, 'aave_v3_BSC': 0, 'spark_ETHEREUM': 0,
-'compound_v3_ETHEREUM': 2, 'compound_v3_ARBITRUM': 0, 'compound_v3_BASE': 0, 'compound_v3_OPTIMISM': 0}`.
+`{'aave_v3_ETHEREUM': 283, 'aave_v3_ARBITRUM': 11385, 'aave_v3_OPTIMISM': 0, 'aave_v3_POLYGON': 6656, 'aave_v3_AVALANCHE': 1954, 'aave_v3_BASE': 0, 'aave_v3_LINEA': 0, 'aave_v3_BSC': 0, 'spark_ETHEREUM': 0, 'compound_v3_ETHEREUM': 2, 'compound_v3_ARBITRUM': 0, 'compound_v3_BASE': 0, 'compound_v3_OPTIMISM': 0}`.
 AAVE V3 ETHEREUM genesis ~Jan 27, 2023 validated — 283 rows on first active date.
 
-**⚠️ FINDING — COMPOUND_V3 schema errors for non-ETHEREUM chains:** ARBITRUM/BASE/OPTIMISM all
-returning 0 rows with schema-mismatch errors: `Type 'DailyMarketAccounting' has no field 'supplyApr'`
-etc. Three schema strategies tried (compound_v3_custom / compound_v3_flat / messari_lending), all fail
-→ writes 0 rows. COMPOUND_V3_ETHEREUM works (2 rows). Historical subgraph schema evolved; early-date
-queries fail. Operator triage needed: empty_confirmed vs attempted_failed for these chains pre-schema-migration.
-**Not actioned in this monitoring session — flagged for operator review.**
+**⚠️ FINDING — COMPOUND_V3 schema errors for non-ETHEREUM chains:** ARBITRUM/BASE/OPTIMISM all returning 0 rows with
+schema-mismatch errors: `Type 'DailyMarketAccounting' has no field 'supplyApr'` etc. Three schema strategies tried
+(compound_v3_custom / compound_v3_flat / messari_lending), all fail → writes 0 rows. COMPOUND_V3_ETHEREUM works (2
+rows). Historical subgraph schema evolved; early-date queries fail. Operator triage needed: empty_confirmed vs
+attempted_failed for these chains pre-schema-migration. **Not actioned in this monitoring session — flagged for operator
+review.**
 
 **Disk 980MB ✅** (stable, down 6MB from 986MB).
 
@@ -754,13 +811,13 @@ queries fail. Operator triage needed: empty_confirmed vs attempted_failed for th
 
 **VM roster (18:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
 
-**DRIFT 2025-12-24:** Cluster of 4 HTTP errors 17:45–18:02 (batches 13,155/14,073/14,390/14,472), then
-502@batch=16,036 (18:21). Rate 85.3 batch/min (slight dip). At 188 min: ~16,036/60,586 (~26.5%).
-ETA **~03:23 UTC 2026-06-29** (~8.7 hrs). Error cluster normal — processing continued.
+**DRIFT 2025-12-24:** Cluster of 4 HTTP errors 17:45–18:02 (batches 13,155/14,073/14,390/14,472), then 502@batch=16,036
+(18:21). Rate 85.3 batch/min (slight dip). At 188 min: ~16,036/60,586 (~26.5%). ETA **~03:23 UTC 2026-06-29** (~8.7
+hrs). Error cluster normal — processing continued.
 
-**lending-indices 021507 — 2023-01-25 @ 18:23 UTC:** `aave_v3_ETHEREUM=0` still — AAVE V3 Ethereum activation
-expected ~Jan 27, 2023. First non-zero ETHEREUM rows imminent (within ~2 dates). COMPOUND_V3 all 0.
-~2.67 min/date; ~1,245 dates remaining ≈ **55 hrs** (ETA ~2026-07-01 01:00 UTC).
+**lending-indices 021507 — 2023-01-25 @ 18:23 UTC:** `aave_v3_ETHEREUM=0` still — AAVE V3 Ethereum activation expected
+~Jan 27, 2023. First non-zero ETHEREUM rows imminent (within ~2 dates). COMPOUND_V3 all 0. ~2.67 min/date; ~1,245 dates
+remaining ≈ **55 hrs** (ETA ~2026-07-01 01:00 UTC).
 
 **Disk 986MB ✅** — RECOVERED from 865MB (git gc/repack freed ~121MB on other slots). Concern resolved.
 
@@ -768,12 +825,12 @@ expected ~Jan 27, 2023. First non-zero ETHEREUM rows imminent (within ~2 dates).
 
 **VM roster (17:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
 
-**DRIFT 2025-12-24:** 504@batch=13,155 (17:45, 151 min). Rate 86.8 batch/min consistent. At 153 min:
-~13,329/60,586 (~22%). ETA **~03:11 UTC 2026-06-29** (~9.1 hrs). No anomalies.
+**DRIFT 2025-12-24:** 504@batch=13,155 (17:45, 151 min). Rate 86.8 batch/min consistent. At 153 min: ~13,329/60,586
+(~22%). ETA **~03:11 UTC 2026-06-29** (~9.1 hrs). No anomalies.
 
 **lending-indices 021507 — 2023-01-13 @ 17:51 UTC:** `aave_v3_ETHEREUM=0` still (expected; Ethereum markets not
-activated until late Jan 2023). COMPOUND_V3 chains all 0 (Arbitrum/Base/Optimism V3 not yet deployed Jan 2023).
-~2.67 min/date; ~1,257 dates remaining ≈ **56 hrs** (ETA ~2026-07-01 01:00 UTC).
+activated until late Jan 2023). COMPOUND_V3 chains all 0 (Arbitrum/Base/Optimism V3 not yet deployed Jan 2023). ~2.67
+min/date; ~1,257 dates remaining ≈ **56 hrs** (ETA ~2026-07-01 01:00 UTC).
 
 **Disk 865MB** — decline rate slowing: 127→60→48 MB/30min. May stabilize before 500MB. Will act at <600MB.
 
@@ -784,38 +841,39 @@ activated until late Jan 2023). COMPOUND_V3 chains all 0 (Arbitrum/Base/Optimism
 **DRIFT 2025-12-24:** 502@batch=9,722 (17:05, 111 min elapsed). Rate 87.3 batch/min. At 123 min: ~10,763/60,586 (~18%).
 ETA **~03:07 UTC 2026-06-29** (~9.5 hrs remaining). Progress is steady — no anomalies.
 
-**lending-indices 021507 — 2023-01-01 @ 17:19 UTC:** Just crossed into 2023. `aave_v3_ETHEREUM=0` — now understood
-as expected: AAVE V3 Ethereum protocol did not have active markets until early 2023 (launched Jan 2023, not Mar 2022).
-The 291-day zero streak from 2022-03-16 is `empty_confirmed`, not a data gap. First non-zero ETHEREUM rows expected
-~2023-01-27 (AAVE V3 Ethereum activation date). ~2.46 min/date; ~1,270 dates remaining ≈ **52 hrs** (ETA ~2026-06-30 21:00 UTC).
+**lending-indices 021507 — 2023-01-01 @ 17:19 UTC:** Just crossed into 2023. `aave_v3_ETHEREUM=0` — now understood as
+expected: AAVE V3 Ethereum protocol did not have active markets until early 2023 (launched Jan 2023, not Mar 2022). The
+291-day zero streak from 2022-03-16 is `empty_confirmed`, not a data gap. First non-zero ETHEREUM rows expected
+~2023-01-27 (AAVE V3 Ethereum activation date). ~2.46 min/date; ~1,270 dates remaining ≈ **52 hrs** (ETA ~2026-06-30
+21:00 UTC).
 
-**Disk:** 913MB — decline slowed to ~60MB/30min (was 130MB). At this rate hits 500MB ~20:47 UTC.
-DRIFT finishes ~03:07 UTC Jun 29 — disk could be critical before then. Will act at <600MB.
+**Disk:** 913MB — decline slowed to ~60MB/30min (was 130MB). At this rate hits 500MB ~20:47 UTC. DRIFT finishes ~03:07
+UTC Jun 29 — disk could be critical before then. Will act at <600MB.
 
 ### 16:47 UTC check — DRIFT 2025-12-24 ~13% (batch ~8,072/60,586); lending-indices 2022-12-19; disk 973MB ⚠️ (2026-06-28 16:47 UTC)
 
 **VM roster (16:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
 
-**DRIFT 2025-12-24:** Silent since 15:52 (batch=3,360) — expected. At 93 min elapsed: ~8,072/60,586 batches (~13%).
-Rate 86.8 batch/min sustained. ETA **~03:11 UTC 2026-06-29** (~10.4 hrs remaining).
+**DRIFT 2025-12-24:** Silent since 15:52 (batch=3,360) — expected. At 93 min elapsed: ~8,072/60,586 batches (~13%). Rate
+86.8 batch/min sustained. ETA **~03:11 UTC 2026-06-29** (~10.4 hrs remaining).
 
-**lending-indices 021507 — 2022-12-19 @ 16:47 UTC:** 278 days post-genesis. `aave_v3_ETHEREUM=0` persists.
-~2.46 min/date (back to normal); ~1,283 dates remaining ≈ **53 hrs** (ETA ~2026-06-30 21:00 UTC).
+**lending-indices 021507 — 2022-12-19 @ 16:47 UTC:** 278 days post-genesis. `aave_v3_ETHEREUM=0` persists. ~2.46
+min/date (back to normal); ~1,283 dates remaining ≈ **53 hrs** (ETA ~2026-06-30 21:00 UTC).
 
-**⚠️ Disk 973MB** (sub-1GB) — declining ~130-155MB/hr from other-slot git activity. No large /tmp files to clean.
-At current rate hits 500MB ~20:00 UTC. DRIFT Dec 24 completes ~03:11 UTC Jun 29 — disk will be critical before then.
-Will clean stale /tmp files if available; may need operator awareness if drops below 500MB.
+**⚠️ Disk 973MB** (sub-1GB) — declining ~130-155MB/hr from other-slot git activity. No large /tmp files to clean. At
+current rate hits 500MB ~20:00 UTC. DRIFT Dec 24 completes ~03:11 UTC Jun 29 — disk will be critical before then. Will
+clean stale /tmp files if available; may need operator awareness if drops below 500MB.
 
 ### 16:17 UTC check — DRIFT 2025-12-24 ~9% (batch ~5,459/60,586, ETA ~03:11 UTC Jun29); lending-indices 2022-12-06 (2026-06-28 16:17 UTC)
 
 **VM roster (16:17 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.1G (stable — decline stopped).
 
 **DRIFT 2025-12-24:** 502@batch=3,360 (15:52, 38.7 min elapsed). Rate 86.8 batch/min (consistent). At 63 min:
-~5,459/60,586 batches (~9%). ETA **~03:11 UTC 2026-06-29** (~635 min remaining / ~10.6 hrs).
-Dec 24 is 3.52× larger than Dec 23 (60,586 vs 17,207 batches) — confirms Christmas Eve 2025 volume spike.
+~5,459/60,586 batches (~9%). ETA **~03:11 UTC 2026-06-29** (~635 min remaining / ~10.6 hrs). Dec 24 is 3.52× larger than
+Dec 23 (60,586 vs 17,207 batches) — confirms Christmas Eve 2025 volume spike.
 
-**lending-indices 021507 — 2022-12-06 @ 16:15 UTC:** 265 days post-genesis. `aave_v3_ETHEREUM=0` persists.
-~3.0 min/date (avg); ~1,296 dates remaining ≈ **65 hrs** (ETA ~2026-07-01 09:00 UTC).
+**lending-indices 021507 — 2022-12-06 @ 16:15 UTC:** 265 days post-genesis. `aave_v3_ETHEREUM=0` persists. ~3.0 min/date
+(avg); ~1,296 dates remaining ≈ **65 hrs** (ETA ~2026-07-01 09:00 UTC).
 
 ### 15:47 UTC check — DRIFT 2025-12-24 started (6.06M sigs — 3.5× outlier, ETA 03:00 UTC); lending-indices 2022-11-27 (2026-06-28 15:47 UTC)
 
@@ -824,100 +882,108 @@ Dec 24 is 3.52× larger than Dec 23 (60,586 vs 17,207 batches) — confirms Chri
 **DRIFT 2025-12-23 confirmed:** 15:13:26 UTC — 1,720,013 rows, 200 min. Rate 86 batch/min (17,207 batches).
 
 **⚠️ DRIFT 2025-12-24 — VOLUME OUTLIER: 6,058,565 sigs** (6.06M vs Dec 23's 1.72M — 3.5×). Christmas Eve 2025 spike.
-60,586 batches @ 86 batch/min → **~705 min (~11.75 hrs)**. ETA: **~03:00 UTC 2026-06-29**.
-No 502/504s yet (started 15:13:47). Dec 24 parquet not in GCS — confirmed still processing.
-**Impact on overall timeline**: if Dec 25-31 have similar or higher volumes, Christmas week alone = 5-7× longer than
-Jan 9-14 avg (121 min each). DRIFT completion could extend significantly past original operator stall decision point.
-OPERATOR DECISION on options A/B/C remains pending — but context now richer (Jan-Dec gap was fast; Dec 23+ is heavy).
+60,586 batches @ 86 batch/min → **~705 min (~11.75 hrs)**. ETA: **~03:00 UTC 2026-06-29**. No 502/504s yet (started
+15:13:47). Dec 24 parquet not in GCS — confirmed still processing. **Impact on overall timeline**: if Dec 25-31 have
+similar or higher volumes, Christmas week alone = 5-7× longer than Jan 9-14 avg (121 min each). DRIFT completion could
+extend significantly past original operator stall decision point. OPERATOR DECISION on options A/B/C remains pending —
+but context now richer (Jan-Dec gap was fast; Dec 23+ is heavy).
 
-**lending-indices 021507 — 2022-11-27 @ 15:43 UTC:** 256 days post-genesis. `aave_v3_ETHEREUM=0` persists.
-~2.5 min/date (avg recent); ~1,308 dates remaining ≈ **55 hrs** (ETA ~2026-06-30 22:00 UTC).
+**lending-indices 021507 — 2022-11-27 @ 15:43 UTC:** 256 days post-genesis. `aave_v3_ETHEREUM=0` persists. ~2.5 min/date
+(avg recent); ~1,308 dates remaining ≈ **55 hrs** (ETA ~2026-06-30 22:00 UTC).
 
-**Disk:** 1.1G free — declining from 1.5G at 13:47 (~0.1G/30min). No /tmp parquets to clean.
-Will flag operator if drops below 500MB.
+**Disk:** 1.1G free — declining from 1.5G at 13:47 (~0.1G/30min). No /tmp parquets to clean. Will flag operator if drops
+below 500MB.
 
 ### 15:17 UTC check — DRIFT 2025-12-23 ✅ DONE (~15:14 UTC); Dec 24 started; lending-indices 2022-11-16 (2026-06-28 15:17 UTC)
 
 **VM roster (15:17 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.2G stable.
 
 **DRIFT 2025-12-23 COMPLETE** — GCS parquet confirmed at 15:17 check; log uploader at 15:13 (490,816 bytes) captured
-content through batch=13,962 (14:36), then silent (success). Last 502 at batch=13,962; completion log line just
-missed the 15:13 upload window — will appear on next upload. Duration ~202 min from 11:53 start; 1,720,513 rows (est).
-Rate: 85.2 batch/min (17,207 batches / 202 min) — most consistent date yet.
-**2025-12-23 is date 344 of ~527.** 2025-12-24 now loading; Dec 24 sig count TBD at next check.
+content through batch=13,962 (14:36), then silent (success). Last 502 at batch=13,962; completion log line just missed
+the 15:13 upload window — will appear on next upload. Duration ~202 min from 11:53 start; 1,720,513 rows (est). Rate:
+85.2 batch/min (17,207 batches / 202 min) — most consistent date yet. **2025-12-23 is date 344 of ~527.** 2025-12-24 now
+loading; Dec 24 sig count TBD at next check.
 
-**lending-indices 021507 — 2022-11-16 @ 15:10 UTC:** 245 days post-genesis. `aave_v3_ETHEREUM=0` persists.
-~2.4 min/date; ~1,319 dates remaining ≈ **53 hrs** (ETA ~2026-06-30 20:00 UTC).
+**lending-indices 021507 — 2022-11-16 @ 15:10 UTC:** 245 days post-genesis. `aave_v3_ETHEREUM=0` persists. ~2.4
+min/date; ~1,319 dates remaining ≈ **53 hrs** (ETA ~2026-06-30 20:00 UTC).
 
 ### 14:47 UTC check — DRIFT 2025-12-23 ~87% (batch ~14,910/17,207, ETA 15:14); lending-indices 2022-11-04 (2026-06-28 14:47 UTC)
 
 **VM roster (14:47 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.2G.
 
-**DRIFT 2025-12-23:** 502@batch=13,962 (14:36). Rate 85.7 batch/min sustained. At 174 min elapsed:
-~14,910/17,207 (~87%). ETA **~15:14 UTC** (~27 min). Total 5 HTTP errors on this date — all normal skips.
+**DRIFT 2025-12-23:** 502@batch=13,962 (14:36). Rate 85.7 batch/min sustained. At 174 min elapsed: ~14,910/17,207
+(~87%). ETA **~15:14 UTC** (~27 min). Total 5 HTTP errors on this date — all normal skips.
 
 **lending-indices 021507 — 2022-11-04 @ 14:40 UTC:** 233 days post-genesis. `aave_v3_ETHEREUM=0` persists.
-ARBITRUM=3,835 / POLYGON=11,092 / AVALANCHE=2,927 (growing). ~2.31 min/date; ~1,331 dates remaining ≈ **51 hrs**
-(ETA ~2026-06-30 18:00 UTC).
+ARBITRUM=3,835 / POLYGON=11,092 / AVALANCHE=2,927 (growing). ~2.31 min/date; ~1,331 dates remaining ≈ **51 hrs** (ETA
+~2026-06-30 18:00 UTC).
 
 ### 14:17 UTC check — DRIFT 2025-12-23 ~71% (batch ~12,240/17,207, ETA 15:15); lending-indices 2022-10-22 (2026-06-28 14:17 UTC)
 
 **VM roster (14:17 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.3G stable.
 
-**DRIFT 2025-12-23:** 502@batch=11,567 (14:09). Rate 85.1 batch/min confirmed. At 144 min elapsed: ~12,240/17,207 (~71%).
-ETA **~15:15 UTC** (~58 min). Consistent across all checks: 84-85 batch/min sustained.
+**DRIFT 2025-12-23:** 502@batch=11,567 (14:09). Rate 85.1 batch/min confirmed. At 144 min elapsed: ~12,240/17,207
+(~71%). ETA **~15:15 UTC** (~58 min). Consistent across all checks: 84-85 batch/min sustained.
 
-**lending-indices 021507 — 2022-10-22 @ 14:10 UTC:** 220 days post-genesis. `aave_v3_ETHEREUM=0` persists.
-~2.46 min/date; ~1,344 dates remaining ≈ **55 hrs** (ETA ~2026-06-30 21:00 UTC).
+**lending-indices 021507 — 2022-10-22 @ 14:10 UTC:** 220 days post-genesis. `aave_v3_ETHEREUM=0` persists. ~2.46
+min/date; ~1,344 dates remaining ≈ **55 hrs** (ETA ~2026-06-30 21:00 UTC).
 
 ### 13:47 UTC check — DRIFT 2025-12-23 ~56% (silent since 13:04); lending-indices 2022-10-09 (2026-06-28 13:47 UTC)
 
 **VM roster (13:47 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.3G.
 
-**DRIFT 2025-12-23:** Last 502/504 at batch=5,966 (13:04). Silent since — expected. At 114 min elapsed:
-~9,576/17,207 batches (~56%). Rate consistent at ~84 batch/min. ETA ~15:17 UTC (~90 min remaining).
+**DRIFT 2025-12-23:** Last 502/504 at batch=5,966 (13:04). Silent since — expected. At 114 min elapsed: ~9,576/17,207
+batches (~56%). Rate consistent at ~84 batch/min. ETA ~15:17 UTC (~90 min remaining).
 
-**lending-indices 021507 — 2022-10-09 @ 13:38 UTC:** 207 days post-genesis. `aave_v3_ETHEREUM=0` persists
-(longest gap so far). ARBITRUM=1,007 / POLYGON=10,132 / AVALANCHE=678 rows — active on other chains.
-~2.31 min/date; ~1,356 dates remaining ≈ **52 hrs** (ETA ~2026-06-30 18:00 UTC).
+**lending-indices 021507 — 2022-10-09 @ 13:38 UTC:** 207 days post-genesis. `aave_v3_ETHEREUM=0` persists (longest gap
+so far). ARBITRUM=1,007 / POLYGON=10,132 / AVALANCHE=678 rows — active on other chains. ~2.31 min/date; ~1,356 dates
+remaining ≈ **52 hrs** (ETA ~2026-06-30 18:00 UTC).
 
 ### 13:17 UTC check — DRIFT 2025-12-23 ~40% (batch ~6,972/17,207); lending-indices 2022-09-26 (2026-06-28 13:17 UTC)
 
 **VM roster (13:17 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.5G stable.
 
-**DRIFT 2025-12-23:** Warnings: 502@batch=5,519 (12:58), 504@batch=5,966 (13:04). Rate steady ~84 batch/min.
-At 83 min elapsed → ~6,972/17,207 batches (~40%). ETA ~15:17 UTC (~120 min remaining). Silent between errors — healthy.
+**DRIFT 2025-12-23:** Warnings: 502@batch=5,519 (12:58), 504@batch=5,966 (13:04). Rate steady ~84 batch/min. At 83 min
+elapsed → ~6,972/17,207 batches (~40%). ETA ~15:17 UTC (~120 min remaining). Silent between errors — healthy.
 
-**lending-indices 021507 — 2022-09-26 @ 13:08 UTC:** 194 days post-genesis. `aave_v3_ETHEREUM=0` persists.
-~2.36 min/date consistent; ~1,370 dates remaining ≈ **54 hrs** (ETA ~2026-06-30 19:00 UTC).
+**lending-indices 021507 — 2022-09-26 @ 13:08 UTC:** 194 days post-genesis. `aave_v3_ETHEREUM=0` persists. ~2.36
+min/date consistent; ~1,370 dates remaining ≈ **54 hrs** (ETA ~2026-06-30 19:00 UTC).
 
 ### 12:47 UTC check — DRIFT 2025-12-23 ~26% (batch ~4,563/17,207); lending-indices 2022-09-12 (2026-06-28 12:47 UTC)
 
 **VM roster (12:47 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.5G.
 
 **DRIFT 2025-12-23:** 1,720,713 sigs / 17,207 batches. Warnings: 504@batch=1,215 (12:07), 504@batch=1,259 (12:08),
-502@batch=2,028 (12:17). At 84.5 batch/min, ~54 min elapsed → ~4,563 batches done (~26%). ETA ~15:17 UTC (~150 min).
-Dec 23 is largest date yet (1.72M sigs vs Jan 9's 1.21M). Processing normally post each HTTP error (silent on success).
+502@batch=2,028 (12:17). At 84.5 batch/min, ~54 min elapsed → ~4,563 batches done (~26%). ETA ~15:17 UTC (~150 min). Dec
+23 is largest date yet (1.72M sigs vs Jan 9's 1.21M). Processing normally post each HTTP error (silent on success).
 
-**lending-indices 021507 — 2022-09-12 @ 12:35 UTC:** 180 days post-genesis. `aave_v3_ETHEREUM=0` persists.
-~2.36 min/date; ~1,384 dates remaining ≈ **54 hrs** (ETA ~2026-06-30 19:00 UTC).
+**lending-indices 021507 — 2022-09-12 @ 12:35 UTC:** 180 days post-genesis. `aave_v3_ETHEREUM=0` persists. ~2.36
+min/date; ~1,384 dates remaining ≈ **54 hrs** (ETA ~2026-06-30 19:00 UTC).
 
 ### 12:17 UTC check — DRIFT 2025-12-23 started (1.72M sigs!); 343/~527 dates done; stall revised (2026-06-28 12:17 UTC)
 
 **VM roster (12:17 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.6G (recovered).
 
 **DRIFT — MAJOR UPDATE — stall projection revised:**
+
 - 2025-01-14 ✅ DONE at 11:50:26 UTC — 816,966 rows, 104 min.
 - 2025-01-15 ✅ DONE at 11:50:34 UTC — **846 rows, 8 seconds** (tiny sig window).
-- **2025-01-16 through 2025-12-22 — all 0 sigs — burned through in ~3 min total** (~341 dates, 0 sigs each → `empty_confirmed`). ManifestWriter shows 343 total entries at 2025-12-22.
-- **2025-12-23 now processing** (loaded at 11:53 UTC): **1,720,713 sigs** = 17,207 batches. At 80 batch/min → ~215 min. ETA ~**15:28 UTC**.
+- **2025-01-16 through 2025-12-22 — all 0 sigs — burned through in ~3 min total** (~341 dates, 0 sigs each →
+  `empty_confirmed`). ManifestWriter shows 343 total entries at 2025-12-22.
+- **2025-12-23 now processing** (loaded at 11:53 UTC): **1,720,713 sigs** = 17,207 batches. At 80 batch/min → ~215 min.
+  ETA ~**15:28 UTC**.
 
-**Revised stall assessment:** The orchestrator's 44-day estimate assumed all ~520 remaining dates at 121 min avg. That was wrong — the parts sig index has dense coverage only for Jan 9-15, 2025 (done) and Dec 23, 2025 onwards (now loading). The ~341-date Jan-16→Dec-22 gap returned 0 sigs in seconds each. **True remaining: ~184 dates (Dec 23 → Jun 28) with unknown sig density per date.** Dec 23 is the heaviest date seen (1.72M sigs > Jan 9's 1.21M). OPERATOR DECISION on options A/B/C still open — but VM is now past the worst gap.
+**Revised stall assessment:** The orchestrator's 44-day estimate assumed all ~520 remaining dates at 121 min avg. That
+was wrong — the parts sig index has dense coverage only for Jan 9-15, 2025 (done) and Dec 23, 2025 onwards (now
+loading). The ~341-date Jan-16→Dec-22 gap returned 0 sigs in seconds each. **True remaining: ~184 dates (Dec 23 →
+Jun 28) with unknown sig density per date.** Dec 23 is the heaviest date seen (1.72M sigs > Jan 9's 1.21M). OPERATOR
+DECISION on options A/B/C still open — but VM is now past the worst gap.
 
-**Dates completed:** 6 with data (Jan 9–14) + 1 tiny (Jan 15, 846 rows) + ~341 empty (Jan 16–Dec 22) = **343 total** of ~527.
+**Dates completed:** 6 with data (Jan 9–14) + 1 tiny (Jan 15, 846 rows) + ~341 empty (Jan 16–Dec 22) = **343 total** of
+~527.
 
-**lending-indices 021507 — 2022-08-29 @ 12:02 UTC:** 166 days post-genesis, `aave_v3_ETHEREUM=0` persists.
-~2.4 min/date; ~1,398 dates remaining ≈ **56 hrs** (ETA ~2026-06-30 20:00 UTC). SPARK/COMPOUND_V3 all 0.
+**lending-indices 021507 — 2022-08-29 @ 12:02 UTC:** 166 days post-genesis, `aave_v3_ETHEREUM=0` persists. ~2.4
+min/date; ~1,398 dates remaining ≈ **56 hrs** (ETA ~2026-06-30 20:00 UTC). SPARK/COMPOUND_V3 all 0.
 
 ### 11:47 UTC check — DRIFT 2025-01-14 ~99% (parquet imminent); lending-indices 2022-08-15; disk 889MB (2026-06-28 11:47 UTC)
 
@@ -928,39 +994,42 @@ Dec 23 is largest date yet (1.72M sigs vs Jan 9's 1.21M). Processing normally po
 again (last GCS write 11:28:52, 102,792 bytes — app healthy, heartbeats flowing). Completion expected within minutes.
 Dates done: **6 of ~527** (Jan 9–14). Running duration per date: 147/122/97/92/150/~102 min.
 
-**lending-indices 021507 — 2022-08-15 @ 11:28 UTC:** 152 days post-genesis. `aave_v3_ETHEREUM=0` persists.
-~2.3 min/date rate; ~1,414 dates remaining ≈ **38 hrs** (ETA ~2026-06-30 01:00 UTC). SPARK/COMPOUND_V3 all 0.
+**lending-indices 021507 — 2022-08-15 @ 11:28 UTC:** 152 days post-genesis. `aave_v3_ETHEREUM=0` persists. ~2.3 min/date
+rate; ~1,414 dates remaining ≈ **38 hrs** (ETA ~2026-06-30 01:00 UTC). SPARK/COMPOUND_V3 all 0.
 
-**⚠️ Disk 889MB (down from 1.9G):** Tab 14 repo newly initialized at 3.2G (another slot's clone). 889MB still safe;
-no /tmp parquets to clean. Will flag if drops below 500MB.
+**⚠️ Disk 889MB (down from 1.9G):** Tab 14 repo newly initialized at 3.2G (another slot's clone). 889MB still safe; no
+/tmp parquets to clean. Will flag if drops below 500MB.
 
 ### 11:17 UTC check — DRIFT 2025-01-14 ~69%; lending-indices 2022-08-01 (138d ETH gap) (2026-06-28 11:17 UTC)
 
 **VM roster (11:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
 
-**DRIFT 2025-01-14:** Processing silently since 10:06:33 (batch=18 was first 502 — silent on success after).
-817,166 sigs / 8,172 batches. At 71 min elapsed @ ~80 batch/min ≈ 5,680 batches (69%). Est completion ~11:48 UTC.
-Log uploader intermittent again: last GCS update 10:56:51 UTC (20 min gap); file grew 94,408→98,600 bytes, heartbeats
-flowing — Python app healthy. Pattern consistent with prior 09:50–10:24 gap (uploader restarts itself eventually).
+**DRIFT 2025-01-14:** Processing silently since 10:06:33 (batch=18 was first 502 — silent on success after). 817,166
+sigs / 8,172 batches. At 71 min elapsed @ ~80 batch/min ≈ 5,680 batches (69%). Est completion ~11:48 UTC. Log uploader
+intermittent again: last GCS update 10:56:51 UTC (20 min gap); file grew 94,408→98,600 bytes, heartbeats flowing —
+Python app healthy. Pattern consistent with prior 09:50–10:24 gap (uploader restarts itself eventually).
 
-**lending-indices 021507 — 2022-08-01 @ 10:55 UTC:** 139th day post-genesis. `aave_v3_ETHEREUM=0` still.
-10:50:57 (8,062 rows), 10:53:17 (6,618 rows), 10:55:39 (8,839 rows) = ~2.3 min/date recent rate.
-~1,427 dates remaining (2022-08-01 → 2026-06-28) ≈ **38 hrs** → ETA ~2026-06-30 01:00 UTC. Disk: 1.9G stable.
+**lending-indices 021507 — 2022-08-01 @ 10:55 UTC:** 139th day post-genesis. `aave_v3_ETHEREUM=0` still. 10:50:57 (8,062
+rows), 10:53:17 (6,618 rows), 10:55:39 (8,839 rows) = ~2.3 min/date recent rate. ~1,427 dates remaining (2022-08-01 →
+2026-06-28) ≈ **38 hrs** → ETA ~2026-06-30 01:00 UTC. Disk: 1.9G stable.
 
 ### 10:47 UTC check — DRIFT 2025-01-13 ✅ DONE (1,215,491 rows); 2025-01-14 started; lending-indices 2022-07-19 (2026-06-28 10:47 UTC)
 
 **VM roster (10:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
 
 **DRIFT 2025-01-13 COMPLETE at 10:06:16 UTC — 1,215,491 rows, 150 min duration.**
-- 2025-01-14 started at 10:06:18 UTC; 817,166 sigs (8,172 batches). First 502 at batch=18.
-- Expected completion: ~11:48 UTC (~102 min @ 80 batch/min). Rate tracking: Jan 9=147m, 10=122m, 11=97m, 12=92m, 13=150m.
-- Log uploader gap 09:50–10:24 UTC (34 min) — uploader recovered; Python app was healthy throughout.
-- Dates completed so far: **5 of ~527** (Jan 9–13). Remaining ~522 dates × 121 min avg = ~44 days ETA. **Operator decision
-  on DRIFT stall still pending (options A/B/C from orchestrator banner).**
 
-**lending-indices 021507 — 2022-07-19 @ 10:24 UTC: 199 dates complete:**
-`aave_v3_ETHEREUM=0` still (now at 2022-07-19 = 125 days post-genesis). `aave_v3_OPTIMISM` had 8 rows on one date
-(2022-07-??) then back to 0 — extremely sparse early OPTIMISM data. Rate: ~1.92 min/date; ~1,440 dates remaining ≈ **46 hrs** (ETA ~2026-06-30 09:00 UTC). `aave_v3_BASE=0, spark_ETHEREUM=0, compound_v3_*=0` — all not yet deployed in mid-2022.
+- 2025-01-14 started at 10:06:18 UTC; 817,166 sigs (8,172 batches). First 502 at batch=18.
+- Expected completion: ~11:48 UTC (~102 min @ 80 batch/min). Rate tracking: Jan 9=147m, 10=122m, 11=97m, 12=92m,
+  13=150m.
+- Log uploader gap 09:50–10:24 UTC (34 min) — uploader recovered; Python app was healthy throughout.
+- Dates completed so far: **5 of ~527** (Jan 9–13). Remaining ~522 dates × 121 min avg = ~44 days ETA. **Operator
+  decision on DRIFT stall still pending (options A/B/C from orchestrator banner).**
+
+**lending-indices 021507 — 2022-07-19 @ 10:24 UTC: 199 dates complete:** `aave_v3_ETHEREUM=0` still (now at 2022-07-19 =
+125 days post-genesis). `aave_v3_OPTIMISM` had 8 rows on one date (2022-07-??) then back to 0 — extremely sparse early
+OPTIMISM data. Rate: ~1.92 min/date; ~1,440 dates remaining ≈ **46 hrs** (ETA ~2026-06-30 09:00 UTC).
+`aave_v3_BASE=0, spark_ETHEREUM=0, compound_v3_*=0` — all not yet deployed in mid-2022.
 
 **Disk:** 2.0G stable.
 
@@ -969,65 +1038,64 @@ flowing — Python app healthy. Pattern consistent with prior 09:50–10:24 gap 
 **VM roster (10:17 UTC):** All 6 G1 VMs RUNNING per `gcloud compute instances list`. No preemptions.
 
 **⚠️ DRIFT log upload stall — investigating:** GCS `run.log` last updated 09:50:49 UTC (27 min stale). Log uploader
-interval=60s so should have uploaded at 09:51, 09:52… but creation+update time both 09:50:49. Two scenarios:
-(A) Uploader loop died but Python app still processing — parquet write will land when 2025-01-13 completes.
-(B) Python application crashed at ~09:50 — VM is RUNNING but idle; 2025-01-13 will never complete.
-**Evidence check:** No 2025-01-13 parquet in GCS yet (checked at 10:17 — `CommandException: no objects`). Expected
-completion ~10:05 UTC (7,366 batches at 09:06 + 58.6 min @ 80 batch/min). Now 12 min past expected, no file.
-Monitoring only — will confirm at 10:47 UTC check. If no parquet by 10:47 → **NOTIFY OPERATOR of likely crash.**
+interval=60s so should have uploaded at 09:51, 09:52… but creation+update time both 09:50:49. Two scenarios: (A)
+Uploader loop died but Python app still processing — parquet write will land when 2025-01-13 completes. (B) Python
+application crashed at ~09:50 — VM is RUNNING but idle; 2025-01-13 will never complete. **Evidence check:** No
+2025-01-13 parquet in GCS yet (checked at 10:17 — `CommandException: no objects`). Expected completion ~10:05 UTC (7,366
+batches at 09:06 + 58.6 min @ 80 batch/min). Now 12 min past expected, no file. Monitoring only — will confirm at 10:47
+UTC check. If no parquet by 10:47 → **NOTIFY OPERATOR of likely crash.**
 
-**lending-indices 021507 — 2022-07-04 @ 09:49 UTC: 6,299 records:**
-POLYGON=3339, AVALANCHE=2131, ARBITRUM=829. `aave_v3_ETHEREUM=0` — **110 days post-genesis**.
-`aave_v3_OPTIMISM=0` persistent. New: `compound_v3` all 0 (Compound V3 not deployed on these chains in mid-2022).
-`spark_ETHEREUM=0` (not deployed until later). Rate: 2.5 min/date; ~1,454 dates remaining ≈ ~60 hrs. Disk: 1.9G stable.
+**lending-indices 021507 — 2022-07-04 @ 09:49 UTC: 6,299 records:** POLYGON=3339, AVALANCHE=2131, ARBITRUM=829.
+`aave_v3_ETHEREUM=0` — **110 days post-genesis**. `aave_v3_OPTIMISM=0` persistent. New: `compound_v3` all 0 (Compound V3
+not deployed on these chains in mid-2022). `spark_ETHEREUM=0` (not deployed until later). Rate: 2.5 min/date; ~1,454
+dates remaining ≈ ~60 hrs. Disk: 1.9G stable.
 
 ### 09:47 UTC check — DRIFT 2025-01-13 ~89%; lending-indices 2022-07-02 (108d ETH gap) (2026-06-28 09:47 UTC)
 
 **VM roster (09:34 UTC watchdog + direct 09:47 UTC):** All 6 G1 VMs RUNNING, no preemptions.
 
 **DRIFT 2025-01-13:** Log silent since 09:06 (batch 7,366) — expected (success = no log). At 09:47: ~10,769/12,157
-batches (89%). Est. completion ~10:04 UTC (~17 min). Projected duration ~148 min (matches Jan 9 at 147 min).
-Per-date avg now: 147/122/97/92/148 = ~121 min avg → 520+ remaining dates → confirms orchestrator 44+ day stall.
+batches (89%). Est. completion ~10:04 UTC (~17 min). Projected duration ~148 min (matches Jan 9 at 147 min). Per-date
+avg now: 147/122/97/92/148 = ~121 min avg → 520+ remaining dates → confirms orchestrator 44+ day stall.
 
-**lending-indices 021507 — 2022-07-02 @ 09:44 UTC: 4,545 records:**
-POLYGON=2393, AVALANCHE=1434, ARBITRUM=718. `aave_v3_ETHEREUM=0` — **108 days post-genesis**.
-`aave_v3_OPTIMISM=0` also persistent. Rate: 2.31 min/date; ~1,456 dates remaining ≈ 56 hrs. Disk: 1.9G.
+**lending-indices 021507 — 2022-07-02 @ 09:44 UTC: 4,545 records:** POLYGON=2393, AVALANCHE=1434, ARBITRUM=718.
+`aave_v3_ETHEREUM=0` — **108 days post-genesis**. `aave_v3_OPTIMISM=0` also persistent. Rate: 2.31 min/date; ~1,456
+dates remaining ≈ 56 hrs. Disk: 1.9G.
 
 ### 09:16 UTC check — DRIFT 2025-01-13 67%; lending-indices 2022-06-19 (95d ETH gap) (2026-06-28 09:16 UTC)
 
 **VM roster (09:04 UTC watchdog + direct 09:16 UTC):** All 6 G1 VMs RUNNING, no preemptions.
 
-**DRIFT 2025-01-13:** Batch 7,366/12,157 at 09:06 UTC (HTTP 502, `continue`). At 09:16: ~8,196 done (67%).
-Rate: ~83 batches/min. Remaining: ~3,961 batches ≈ 48 min. Est. completion ~10:04 UTC.
+**DRIFT 2025-01-13:** Batch 7,366/12,157 at 09:06 UTC (HTTP 502, `continue`). At 09:16: ~8,196 done (67%). Rate: ~83
+batches/min. Remaining: ~3,961 batches ≈ 48 min. Est. completion ~10:04 UTC.
 
-**lending-indices 021507 — 2022-06-19 @ 09:14 UTC: 9,518 records:**
-POLYGON=5108, AVALANCHE=3127, ARBITRUM=1283. `aave_v3_ETHEREUM=0` — **95 days post-genesis**. Confirmed gap.
-ManifestWriter: 81 total entries (growing). Rate: 2.38 min/date; ~1,469 dates remaining ≈ 58 hrs. Disk: 1.9G.
+**lending-indices 021507 — 2022-06-19 @ 09:14 UTC: 9,518 records:** POLYGON=5108, AVALANCHE=3127, ARBITRUM=1283.
+`aave_v3_ETHEREUM=0` — **95 days post-genesis**. Confirmed gap. ManifestWriter: 81 total entries (growing). Rate: 2.38
+min/date; ~1,469 dates remaining ≈ 58 hrs. Disk: 1.9G.
 
 ### 08:45 UTC check — DRIFT 2025-01-13 45%; lending-indices 2022-06-06; AAVE-ETH 82d gap (2026-06-28 08:45 UTC)
 
 **VM roster (08:34 UTC watchdog + direct 08:45 UTC):** All 6 G1 VMs RUNNING, no preemptions.
 
-**DRIFT 2025-01-13:** HTTP 502 at batch 4,120 (08:27 UTC, `continue`). At 08:45: ~5,574/12,157 batches (45%).
-Rate: ~80 batches/min. Est. completion ~10:07 UTC (~82 min remaining). VM healthy.
+**DRIFT 2025-01-13:** HTTP 502 at batch 4,120 (08:27 UTC, `continue`). At 08:45: ~5,574/12,157 batches (45%). Rate: ~80
+batches/min. Est. completion ~10:07 UTC (~82 min remaining). VM healthy.
 
-**lending-indices 021507 — 2022-06-06 @ 08:43 UTC: 14,193 records:**
-POLYGON=9388, AVALANCHE=3199, ARBITRUM=1606. `aave_v3_ETHEREUM=0` — **82 days post-genesis** (2022-03-16).
-Definitively confirmed data gap: either IS-derived genesis for ETH V3 markets is much later, or subgraph returns 0.
-Will surface as `attempted_failed[UPSTREAM_SUBGRAPH_ZERO]` in G2 gate. Rate: 2.38 min/date; ~1,482 dates left ≈ 59 hrs.
-Disk: 2.0G stable.
+**lending-indices 021507 — 2022-06-06 @ 08:43 UTC: 14,193 records:** POLYGON=9388, AVALANCHE=3199, ARBITRUM=1606.
+`aave_v3_ETHEREUM=0` — **82 days post-genesis** (2022-03-16). Definitively confirmed data gap: either IS-derived genesis
+for ETH V3 markets is much later, or subgraph returns 0. Will surface as `attempted_failed[UPSTREAM_SUBGRAPH_ZERO]` in
+G2 gate. Rate: 2.38 min/date; ~1,482 dates left ≈ 59 hrs. Disk: 2.0G stable.
 
 ### 08:13 UTC check — DRIFT 2025-01-13 24%; lending-indices AAVE-ETH zero confirmed; disk 2G (2026-06-28 08:13 UTC)
 
 **VM roster (08:04 UTC watchdog + direct 08:13 UTC):** All 6 G1 VMs RUNNING, no preemptions.
 
-**DRIFT 2025-01-13:** 37 min elapsed since 07:36 start, ~24% done (~2,923/12,157 batches). No 502s visible yet.
-Est. completion ~10:10 UTC. Operator decision on stall still pending.
+**DRIFT 2025-01-13:** 37 min elapsed since 07:36 start, ~24% done (~2,923/12,157 batches). No 502s visible yet. Est.
+completion ~10:10 UTC. Operator decision on stall still pending.
 
-**lending-indices 021507 — 2022-05-24 @ 08:12 UTC: 4,969 records:**
-POLYGON=2395, AVALANCHE=1645, ARBITRUM=929. **`aave_v3_ETHEREUM=0` — NOW 69 DAYS POST-GENESIS (2022-03-16).**
-Upgraded from "flag" to **confirmed data gap** for G2 investigation. Likely cause: IS-derived genesis for ETH AAVE V3
-markets is much later than 2022-03-16, OR subgraph returning 0 rows. Rate: 2.33 min/date; ~1,495 dates remaining ≈ 58 hrs.
+**lending-indices 021507 — 2022-05-24 @ 08:12 UTC: 4,969 records:** POLYGON=2395, AVALANCHE=1645, ARBITRUM=929.
+**`aave_v3_ETHEREUM=0` — NOW 69 DAYS POST-GENESIS (2022-03-16).** Upgraded from "flag" to **confirmed data gap** for G2
+investigation. Likely cause: IS-derived genesis for ETH AAVE V3 markets is much later than 2022-03-16, OR subgraph
+returning 0 rows. Rate: 2.33 min/date; ~1,495 dates remaining ≈ 58 hrs.
 
 **Disk:** 2.0G free — stable (recovered post git-pack from 287MB critical earlier).
 
@@ -1035,26 +1103,27 @@ markets is much later than 2022-03-16, OR subgraph returning 0 rows. Rate: 2.33 
 
 **VM roster (07:34 UTC watchdog + direct 07:40 UTC):** All 6 G1 VMs RUNNING, no preemptions.
 
-**DRIFT 2025-01-12 COMPLETED at 07:36 UTC:** 722,084 rows, 92 min. Trend: 147→122→97→92 min.
-**DRIFT 2025-01-13 started 07:36 UTC: 1,215,691 sigs** — SPIKE (up from 722k). 12,157 batches @ 79/min = ~154 min.
-Est. completion ~10:10 UTC. Validates orchestrator stall concern: volumes NOT monotonically decreasing.
+**DRIFT 2025-01-12 COMPLETED at 07:36 UTC:** 722,084 rows, 92 min. Trend: 147→122→97→92 min. **DRIFT 2025-01-13 started
+07:36 UTC: 1,215,691 sigs** — SPIKE (up from 722k). 12,157 batches @ 79/min = ~154 min. Est. completion ~10:10 UTC.
+Validates orchestrator stall concern: volumes NOT monotonically decreasing.
 
-**lending-indices 021507 — 2022-05-09 @ 07:37 UTC: 14,349 records:**
-POLYGON=6160, AVALANCHE=4365, ARBITRUM=3824. `aave_v3_ETHEREUM=0` persisting (7.5 weeks post-genesis 2022-03-16).
-Increasing concern for G2 — may be subgraph data gap or later IS-derived genesis. Rate: 2.33 min/date.
+**lending-indices 021507 — 2022-05-09 @ 07:37 UTC: 14,349 records:** POLYGON=6160, AVALANCHE=4365, ARBITRUM=3824.
+`aave_v3_ETHEREUM=0` persisting (7.5 weeks post-genesis 2022-03-16). Increasing concern for G2 — may be subgraph data
+gap or later IS-derived genesis. Rate: 2.33 min/date.
 
-**⚠️ DISK CRITICAL: 287MB free** (was 779MB at 07:08 — lost 492MB in 32 min from other-slot git fetches).
-ms-playwright cache=1.9G, per-tab PM repos=1.4-1.5G each. Cannot clear safely without operator. Monitor closely.
+**⚠️ DISK CRITICAL: 287MB free** (was 779MB at 07:08 — lost 492MB in 32 min from other-slot git fetches). ms-playwright
+cache=1.9G, per-tab PM repos=1.4-1.5G each. Cannot clear safely without operator. Monitor closely.
 
 ### 09:02 UTC check — CeFi 18 running / TradFi 93.97% / DRIFT 2025-01-13 ~154min ETA (2026-06-28 09:02 UTC)
 
 **VM roster:** All 6 G1 VMs RUNNING, no preemptions.
 
-**DRIFT 2025-01-13:** ETA ~10:10 UTC (12,157 batches, confirmed from 07:40 analysis). 1,215,691 sigs spike vs 722k on 2025-01-12.
+**DRIFT 2025-01-13:** ETA ~10:10 UTC (12,157 batches, confirmed from 07:40 analysis). 1,215,691 sigs spike vs 722k on
+2025-01-12.
 
-**TradFi:** 714,985 captured (93.97%), ~45 VMs running, +1,133 since prior check.
-**CeFi:** 18/24 wave-1 running (6 completed). Disk 745MB — launcher fix still BLOCKED-DISK.
-Confirmed disk pattern: other-slot git fetches draining space. Disk at 745MB at time of this check.
+**TradFi:** 714,985 captured (93.97%), ~45 VMs running, +1,133 since prior check. **CeFi:** 18/24 wave-1 running (6
+completed). Disk 745MB — launcher fix still BLOCKED-DISK. Confirmed disk pattern: other-slot git fetches draining space.
+Disk at 745MB at time of this check.
 
 ### 07:08 UTC check — DRIFT 2025-01-12 ~70%; lending-indices 2022-04-26; disk 779MB (2026-06-28 07:08 UTC)
 
@@ -1063,8 +1132,8 @@ Confirmed disk pattern: other-slot git fetches draining space. Disk at 745MB at 
 **DRIFT 2025-01-12:** Log silent since 06:27 (batch 1,804) — expected (success = no log). At 07:08: estimated batch
 ~5,043/7,223 (70%). Est. completion ~07:35 UTC. VM RUNNING confirmed.
 
-**lending-indices 021507:** At 2022-04-26 @ 07:06 UTC (2.33 min/date). Still processing compound_v3 venues (all 0
-rows — pre-genesis for Compound V3 chains, expected). AAVE V3 multi-chain data continuing.
+**lending-indices 021507:** At 2022-04-26 @ 07:06 UTC (2.33 min/date). Still processing compound_v3 venues (all 0 rows —
+pre-genesis for Compound V3 chains, expected). AAVE V3 multi-chain data continuing.
 
 **Disk:** 779MB free (down 71MB from 850MB at 06:34; normal git ops). Monitoring for further pressure.
 
@@ -1073,30 +1142,30 @@ rows — pre-genesis for Compound V3 chains, expected). AAVE V3 multi-chain data
 **VM roster (06:03+06:33 UTC watchdog + direct 06:34 UTC):** All 6 G1 VMs RUNNING, no preemptions.
 
 **DRIFT 2025-01-11 COMPLETED at 06:04 UTC:** 760,205 rows, 97 min. Per-date trend: 147→122→97 min (declining volumes).
-**DRIFT 2025-01-12 in progress (started 06:04 UTC):** 722,284 sigs, 7,223 batches. 2× HTTP 502 at batch 1332/1804.
-At 06:34: ~2,370 done (33%). Est. completion ~07:35 UTC. Stall flag pending operator decision; slot-11 monitoring only.
+**DRIFT 2025-01-12 in progress (started 06:04 UTC):** 722,284 sigs, 7,223 batches. 2× HTTP 502 at batch 1332/1804. At
+06:34: ~2,370 done (33%). Est. completion ~07:35 UTC. Stall flag pending operator decision; slot-11 monitoring only.
 
 **lending-indices 021507 — 2022-04-11 @ 06:31 UTC: 4,320 records:**
 `aave_v3_POLYGON=3746, aave_v3_AVALANCHE=378, aave_v3_ARBITRUM=196`. `aave_v3_ETHEREUM=0` at 2022-04-11 (26 days past
-genesis 2022-03-16) — may be later IS-derived genesis or subgraph data gap. Flag for G2 gate investigation.
-Rate: 2.56 min/date; ~1,641 dates remaining ≈ 70 hrs.
+genesis 2022-03-16) — may be later IS-derived genesis or subgraph data gap. Flag for G2 gate investigation. Rate: 2.56
+min/date; ~1,641 dates remaining ≈ 70 hrs.
 
-**DISK ALERT (06:34 UTC):** Host disk hit 100% (290G). Freed ~850MB by deleting stale /tmp/*.parquet files (avail_idx*,
-avail_tradfi, cefi_cat, lending_idx, tmp* — all 3+ hrs old). ENOSPC caused one plan-file truncation (recovered from
-git @ 5109aa084). Current free: 850MB — sufficient for ongoing work but monitoring.
+**DISK ALERT (06:34 UTC):** Host disk hit 100% (290G). Freed ~850MB by deleting stale /tmp/_.parquet files (avail_idx_,
+avail_tradfi, cefi_cat, lending_idx, tmp\* — all 3+ hrs old). ENOSPC caused one plan-file truncation (recovered from git
+@ 5109aa084). Current free: 850MB — sufficient for ongoing work but monitoring.
 
 ### 06:01 UTC check — DRIFT 2025-01-11 ~89%; lending-indices 2022-03-28; STALL flag noted (2026-06-28 06:01 UTC)
 
 **VM roster (05:33 UTC watchdog + 06:01 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
 
-**DRIFT 2025-01-11:** At batch 6,832/7,607 (89%) @ 05:54 UTC. 5× HTTP 502 (all `continue`). Completion est.
-~06:04 UTC. NOTE: Orchestrator flagged 🔴 PERFORMANCE STALL at 05:37 UTC (527-day range @ 2-3h/date → 44+ days).
-OPERATOR DECISION REQUIRED (options A/B/C in banner). Slot-11 monitoring only; not taking autonomous action.
-Observed per-date trend: 2025-01-09=147min, 2025-01-10=122min, 2025-01-11=~97min (declining sig volumes may shorten later dates).
+**DRIFT 2025-01-11:** At batch 6,832/7,607 (89%) @ 05:54 UTC. 5× HTTP 502 (all `continue`). Completion est. ~06:04 UTC.
+NOTE: Orchestrator flagged 🔴 PERFORMANCE STALL at 05:37 UTC (527-day range @ 2-3h/date → 44+ days). OPERATOR DECISION
+REQUIRED (options A/B/C in banner). Slot-11 monitoring only; not taking autonomous action. Observed per-date trend:
+2025-01-09=147min, 2025-01-10=122min, 2025-01-11=~97min (declining sig volumes may shorten later dates).
 
 **lending-indices 021507 — 2022-03-28 @ 05:59 UTC: 1,910 records:**
-`aave_v3_POLYGON=1508, aave_v3_AVALANCHE=230, aave_v3_ARBITRUM=172` — data flowing. Ethereum 0 rows at genesis
-boundary (expected: sparse near genesis). VM stable.
+`aave_v3_POLYGON=1508, aave_v3_AVALANCHE=230, aave_v3_ARBITRUM=172` — data flowing. Ethereum 0 rows at genesis boundary
+(expected: sparse near genesis). VM stable.
 
 ### 06:01 UTC check — DRIFT 2025-01-11 imminently done; lending-indices 2022-03-28 (2026-06-28 06:01 UTC)
 
@@ -1107,7 +1176,8 @@ boundary (expected: sparse near genesis). VM stable.
 
 **lending-indices 021507 — 2022-03-28 @ 05:59 UTC: 1,910 records:**
 `aave_v3_POLYGON=1508, aave_v3_AVALANCHE=230, aave_v3_ARBITRUM=172` — multi-chain AAVE V3 data flowing well.
-`aave_v3_ETHEREUM=0` (some dates near genesis show 0, expected per rate-update sparsity). ManifestWriter: 39 total entries.
+`aave_v3_ETHEREUM=0` (some dates near genesis show 0, expected per rate-update sparsity). ManifestWriter: 39 total
+entries.
 
 ### 05:29 UTC check — FIRST REAL lending-indices ROWS; DRIFT 2025-01-11 63% (2026-06-28 05:29 UTC)
 
@@ -1159,31 +1229,31 @@ pre-genesis for 2022-02-06).
 
 **VM roster (07:32 UTC):** 5/6 G1 VMs still RUNNING (1 pyth-archive TERMINATED 2026-06-28 00:52 UTC):
 
-| VM | STATUS |
-|---|---|
-| `mtds-dex-pools-backfill` | RUNNING 34.180.72.4 (dex_pool_state) |
-| `mtds-dex-swaps-backfill` | RUNNING 136.110.123.43 (dex_pool_swaps) |
+| VM                                     | STATUS                                                  |
+| -------------------------------------- | ------------------------------------------------------- |
+| `mtds-dex-pools-backfill`              | RUNNING 34.180.72.4 (dex_pool_state)                    |
+| `mtds-dex-swaps-backfill`              | RUNNING 136.110.123.43 (dex_pool_swaps)                 |
 | `mtds-lending-indices-20260628-021507` | RUNNING 34.180.65.195 (lending_indices, ON-DEMAND 32GB) |
-| `mtds-lst-rates-20260628-002136` | RUNNING 34.104.175.119 (lst_rates) |
-| `mtds-perp-funding-backfill` | RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID) |
-| `mtds-solana-drift-backfill` | RUNNING 136.110.117.136 (perp_funding/DRIFT) |
+| `mtds-lst-rates-20260628-002136`       | RUNNING 34.104.175.119 (lst_rates)                      |
+| `mtds-perp-funding-backfill`           | RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)        |
+| `mtds-solana-drift-backfill`           | RUNNING 136.110.117.136 (perp_funding/DRIFT)            |
 
-**Coverage measurement** (`python scripts/measure_honest_coverage.py --asset-group defi`, 07:34 UTC):
-Manifest: `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (10,782,809 rows,
-updated 07:33 UTC). Overall: **57.95%** (2,519,678 / 4,347,816 reachable)
+**Coverage measurement** (`python scripts/measure_honest_coverage.py --asset-group defi`, 07:34 UTC): Manifest:
+`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (10,782,809 rows, updated
+07:33 UTC). Overall: **57.95%** (2,519,678 / 4,347,816 reachable)
 
-| data_type | coverage | captured | attempted_failed | expected_unattempted | gate |
-|---|---|---|---|---|---|
-| dex_pool_state | 80.29% | 1,527,721 | 783 | 374,350 | FAIL |
-| dex_pool_swaps | 30.40% | 315,988 | 20,638 | 702,882 | FAIL |
-| lst_rates | 85.65% | 14,979 | 847 | 1,662 | FAIL |
-| lending_indices | 40.83% | 52,126 | 30 | 75,525 | FAIL |
-| perp_funding | 31.89% | 442 | 179 | 765 | FAIL |
-| oracle_prices | 84.77% | 18,147 | 873 | 2,387 | FAIL |
+| data_type       | coverage | captured  | attempted_failed | expected_unattempted | gate |
+| --------------- | -------- | --------- | ---------------- | -------------------- | ---- |
+| dex_pool_state  | 80.29%   | 1,527,721 | 783              | 374,350              | FAIL |
+| dex_pool_swaps  | 30.40%   | 315,988   | 20,638           | 702,882              | FAIL |
+| lst_rates       | 85.65%   | 14,979    | 847              | 1,662                | FAIL |
+| lending_indices | 40.83%   | 52,126    | 30               | 75,525               | FAIL |
+| perp_funding    | 31.89%   | 442       | 179              | 765                  | FAIL |
+| oracle_prices   | 84.77%   | 18,147    | 873              | 2,387                | FAIL |
 
-**G2 GATE STATUS: FAIL** — all 6 data_types have non-zero attempted_failed or expected_unattempted. Root cause:
-VMs are still processing — coverage is improving vs G0.2 baseline (dex_pool_state 58.62%→80.29%, lending_indices
-29.67%→40.83%, perp_funding 37.19%→31.89%* [perp_funding denominator grew post-phantom apply]).
+**G2 GATE STATUS: FAIL** — all 6 data_types have non-zero attempted_failed or expected_unattempted. Root cause: VMs are
+still processing — coverage is improving vs G0.2 baseline (dex_pool_state 58.62%→80.29%, lending_indices 29.67%→40.83%,
+perp_funding 37.19%→31.89%\* [perp_funding denominator grew post-phantom apply]).
 
 **Phantom reconcile dry-run:** Failed with `ChunkedEncodingError` (GCS network error downloading 10.7M-row index
 parquet). Prior apply completed 2026-06-28T21:35Z (219,632 phantoms flipped). Re-run after all VMs complete.
