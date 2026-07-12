@@ -120,7 +120,12 @@ the zero-rows pattern was confirmed, to stop burning SPOT spend on a guaranteed-
 
 - [ ] [CODE] P1. Wire LIGHTER-ZKSYNC/PACIFICA-SOLANA/EXTENDED-STARKNET into `OnchainPerpBatchHandler` (see
       recommendation 1). (repo: market-tick-data-service)
-- [ ] [CODE] P2. Log/raise on silently-dropped `--venues` entries in `OnchainPerpBatchHandler` (see recommendation 2).
-      (repo: market-tick-data-service)
+- [x] ✅ [CODE] P2. Log/raise on silently-dropped `--venues` entries in `OnchainPerpBatchHandler` (see recommendation
+      2). (repo: market-tick-data-service) — `market-tick-data-service@4f62bd7e`. Extracted `_resolve_venues()`: any
+      `--venues` token not in `_VENUE_SOURCE` is now logged as a `WARNING` naming the dropped venue(s) before the
+      supported subset is returned, so a mis-targeted launch (e.g. `LIGHTER-ZKSYNC`) surfaces immediately instead of
+      only being discoverable by grepping run.log for `venues=[]`. 2 new unit tests
+      (`test_resolve_venues_drops_unsupported_and_warns`, `test_resolve_venues_all_supported_no_warning`).
+      quality-gates.sh green (899/900 lines, under the file-size cap after a ruff reformat).
 - [ ] [VERIFY] P1. Re-launch the 3-venue backfill after the code fix lands and confirm real rows write (see
       recommendation 3). (repo: deployment-service)
