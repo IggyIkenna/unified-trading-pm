@@ -4,14 +4,22 @@ title: Runtime + Deployment Topology — Per-Service Behavior, Pipeline Layers, 
 summary:
   The merged runtime + deployment topology SSOT — the canonical 7-layer pipeline execution order (reference → raw →
   processing → features → ML → strategy/execution → post-trade), repo naming categories, the UI→API→service chain, the
-  live-vs-batch transport matrix (Redis Stream inner-loop cascade vs PubSub fan-out vs GCS), co-location policy,
-  data lineage (one authoritative producer per dataset), and per-service sharding dimensions. Machine SSOT is
+  live-vs-batch transport matrix (Redis Stream inner-loop cascade vs PubSub fan-out vs GCS), co-location policy, data
+  lineage (one authoritative producer per dataset), and per-service sharding dimensions. Machine SSOT is
   configs/runtime-topology.yaml.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+  ]
 scope: [engineer, admin]
 tags: [infrastructure, deployment, pipeline, mdps, mtds, observability, ui]
 related:
@@ -29,9 +37,19 @@ authoritative_for:
     live-vs-batch transport decision matrix,
     per-service sharding dimensions,
   ]
-referenced_by: [codex/04-architecture/README.md, codex/04-architecture/TOPOLOGY-DAG.md, codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/client-isolation-sla-and-runtime-profiles.md, codex/04-architecture/commercial-service-families.md, codex/04-architecture/execution-modes-and-chain-resolution.md, codex/04-architecture/role-registry.md]
+referenced_by:
+  [
+    codex/04-architecture/README.md,
+    codex/04-architecture/TOPOLOGY-DAG.md,
+    codex/04-architecture/agent-orchestrator-overview.md,
+    codex/04-architecture/batch-live-architecture.md,
+    codex/04-architecture/client-isolation-sla-and-runtime-profiles.md,
+    codex/04-architecture/commercial-service-families.md,
+    codex/04-architecture/execution-modes-and-chain-resolution.md,
+    codex/04-architecture/role-registry.md,
+  ]
 owner:
-last_reviewed: 2026-06-25
+last_reviewed: 2026-07-12
 code_refs:
 ---
 
@@ -567,6 +585,14 @@ disabled — `deployment-api-main-deploy` is the sole main-push trigger.)
 
 SSOT for the deploy build context details: `deployment-api/cloudbuild.yaml` step comments. The Cloud Build SA
 (`<project-number>@cloudbuild.gserviceaccount.com`) has `roles/run.admin` + `serviceAccountUser` on the runtime SA.
+
+**agent-orchestrator — self-pull deploy (added 2026-07-12)**: unlike the Cloud-Build-triggered services above,
+agent-orchestrator's central + epic VMs are long-lived systemd services (not container-redeployed on push). Currency is
+kept by `scripts/ao-self-pull.sh`, a root cron every ~15 min that FF-pulls the running checkout from
+`origin/live-defi-rollout` and `systemctl restart orchestrator` only when HEAD moves (or when the running process
+predates HEAD — stale-process self-heal). Shipped `agent-orchestrator@589b711`; hardened `@d16d737` + `@5462959` (wedge
+alert on a silently-drifted deploy). Full SSOT: `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`;
+service overview: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ---
 

@@ -308,14 +308,15 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
 ## System map + workspace configs
 
 Repo map: events→UTL · schemas→UAC · cloud→unified-cloud-interface · market data→MTDS · execution→execution-service ·
-reference data→instruments-service (`URDI` phantom) · UI→`unified-trading-system-ui` (incl. DART) + `deployment-ui`
-(devops + launch consoles; `user-management-ui` ARCHIVED) · orchestration→`agent-orchestrator` (uvicorn :8765).
-**deployment-api** = single deploy/launch+subscriptions backend for both UIs. **Architecture**: Central orchestrator VM
-(id `planning`, EIP 13.113.200.22) with N slot workers, role-based dispatch (no per-epic VMs; single-VM architecture
-2026-06-27). Human-planning VM (`i-0dd9812a96cdda5dc`, interactive only) for operator work. Workspace configs canonical
-in `unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict
-basedpyright). Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json`
-→ `cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) →
+reference data→instruments-service (URDI is a live internal module — "phantom" label retired 2026-07-12; no NEW URDI
+refs in docs) · UI→`unified-trading-system-ui` (incl. DART) + `deployment-ui` (devops + launch consoles;
+`user-management-ui` ARCHIVED) · orchestration→`agent-orchestrator` (uvicorn :8765). **deployment-api** = single
+deploy/launch+subscriptions backend for both UIs. **Architecture**: Central orchestrator VM (id `planning`, EIP
+13.113.200.22) with N slot workers, role-based dispatch (no per-epic VMs; single-VM architecture 2026-06-27).
+Human-planning VM (`i-0dd9812a96cdda5dc`, interactive only) for operator work. Workspace configs canonical in
+`unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
+Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` →
+`cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) →
 `codex/05-infrastructure/claude-code-settings-symlink.md`. Analysis:
 `rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal

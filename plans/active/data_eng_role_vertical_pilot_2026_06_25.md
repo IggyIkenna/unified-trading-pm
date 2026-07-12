@@ -20,7 +20,7 @@ related:
 created: 2026-06-25
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
-execution_scope: orchestrator-agent # flagged 2026-07-12, finding id 9, §A2 B-queue ruling: task_template.md:50-51 defines only two valid (assigned_vm, execution_scope) pairs -- (NA, local-only) and (planning, orchestrator-agent) -- and this plan's (NA, orchestrator-agent) matches neither. No hard evidence (sha/artifact) resolves which side is stale: assigned_vm: NA is confirmed current per the body's 2026-07-12 historical-dispatch-note (finding 8), but execution_scope: orchestrator-agent may reflect the role-based (not VM-pinned) dispatch direction line 339 of agent_operating_framework_master.md describes ("dispatch key assigned_vm -> (role,domain)"), a third state task_template.md has not yet been updated to define. NOT auto-corrected -- annotation only, needs an operator/template ruling.
+execution_scope: local-only # was: orchestrator-agent — OPERATOR RULING 2026-07-12 (final Q&A, finding 9): the two-track model stands; this plan is not AO-dispatched (assigned_vm: NA), so (NA, local-only) is the valid pairing. Prior flag annotation superseded by the ruling.
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3

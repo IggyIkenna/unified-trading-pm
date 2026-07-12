@@ -35,7 +35,7 @@ referenced_by:
     plans/epics/mtds_mdps_master.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-07-12
 code_refs:
 ---
 
@@ -372,13 +372,18 @@ item) + the engine invariant in `manifest_master_audit_instructions.md` (h2/h3/h
 - `codex/02-data/data-pipeline-correctness-hard-rule.md` — slot-freeze protocol if consolidator goes silent for >120s.
 - `codex/05-infrastructure/per-tab-worktrees.md` — per-VM shard discipline for tab worktrees writing to manifests.
 - **Feed-SLA registry (2026-06-20)** — consolidator staleness is one feed in
-  `codex/03-observability/data-feed-sla-registry.md`. The `MANIFEST_CONSOLIDATED_STALENESS_SEC` threshold (default 120
-  s) follows the same criticality semantics as every other `critical` feed in `ALL_FRESHNESS_CONTRACTS`: a breach
-  loud-fails by default (`ManifestConsolidatorStaleError` / `CONSOLIDATOR_DOWN`), recovery is tracked via the
-  autonomous-recovery matrix, and the alert routing uses the same `CRITICAL` → PagerDuty + Telegram channel path. The
-  registry-keyed `refetch_action` pattern does NOT apply to the consolidator (it is infrastructure, not a data source,
-  and has its own watchdog); but its staleness semantics are intentionally aligned so the operator sees one consistent
-  freshness model across all feeds and infra components.
+  `codex/03-observability/data-feed-sla-registry.md`. **Corrected 2026-07-12 (finding 205)** — was: a single blanket
+  `MANIFEST_CONSOLIDATED_STALENESS_SEC` (120s) → CRITICAL rule applied uniformly to every asset_group. **Superseded** by
+  a shipped per-AG override: `deployment-api@90ace9f` (`deployment_api/routes/health_consolidator.py`) added
+  `_AG_STALENESS_BUDGET_SEC: dict[str, int] = {"cefi": 86400}` + `_budget_for(asset_group, default)`, wired into both
+  `get_consolidator_health()` and `consolidator_posture()`. Root cause: cefi market-tick is a DAILY batch whose
+  consolidator effectively runs only ~every 5 min (index age climbing 174→228s between runs), so the uniform 120s budget
+  false-flagged it `degraded` ~60% of the time. Fix: cefi now gets an **86400s** budget (matching its launchers' own
+  `MANIFEST_CONSOLIDATED_STALENESS_SEC` override); every OTHER asset_group keeps the **120s** default. Only the per-AG
+  BUDGET changed — the escalation path is unchanged: beyond its budget a breach still loud-fails
+  (`ManifestConsolidatorStaleError` / `CONSOLIDATOR_DOWN`), recovery is tracked via the autonomous-recovery matrix, and
+  alert routing still uses the same `CRITICAL` → PagerDuty + Telegram channel path. The registry-keyed `refetch_action`
+  pattern does NOT apply to the consolidator (it is infrastructure, not a data source, and has its own watchdog).
 
 ## Verification recipe
 

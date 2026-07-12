@@ -1738,3 +1738,17 @@ terminating them; that would destroy real, in-progress work. Next session should
 naturally complete (they are making genuine progress, will finish eventually) before attempting the 3 pending VERIFY
 todos, or (2) accept the residual 403-retry risk and attempt a VERIFY anyway now that the concurrent-IP lease exists
 (even DEFAULT-OFF) — either is more honest than assuming a termination shortcut that isn't warranted.
+
+**Addendum 4 — 2026-07-12T21:44Z: COINBASE-FUTURES/spot_pair VERIFY DONE (slot-3) — option (2) above was correct.**
+`data_engineering slot-3` attempted the VERIFY despite the still-active BF VMs and **succeeded cleanly**: launched
+`cefi-coinbase-futures-2026-heavy-20260712-212050`, hit + fixed two real infra gotchas en route (a broken `gcloud` snap
+wrapper silently no-op'ing the launcher's backgrounded VM-create call — confirmed zero real VMs on the first
+"successful" launch; and a stale code tarball pinned to the pre-fix commit), then confirmed via direct per-VM shard
+query: **4 real `capture_status=captured` rows** for (COINBASE-FUTURES, SPOT_PAIR) — `BTC-USDC`/`ETH-USDC` ×
+`{trades, book_snapshot_5}`, correctly landing under `instrument_type=spot_pair` GCS paths (structurally impossible
+pre-fix). Full detail: `issues/coinbase_futures_spot_pair_zero_attempts_2026_07_12.md` (now `status: resolved`). **This
+disproves my own earlier caution** — a VERIFY attempt CAN succeed cleanly even with other cefi VMs actively running (the
+concurrent-IP lockout causes retriable 403s, not a hard block); "wait for a solo window" was overly conservative. Only 2
+of the 3 pending VERIFY todos remain (DERIBIT-COMBO, bare-OKX options_chain) — attempting them now using slot-3's proven
+methodology (launch → monitor run.log → query the per-VM shard directly with row-group pushdown, not a full-corpus walk)
+rather than continuing to wait.
