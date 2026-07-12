@@ -1687,3 +1687,23 @@ issue doc, gated on either the concurrent-IP P0 resolving or a genuinely solo la
 actually lands real rows; that is the correct, honest state (code-complete ≠ operationally-verified, per this plan's own
 completion discipline). **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** for the code work (all 4 bugs shipped,
 QG-green, tested); the VERIFY step IS deliberately blocked, pending the P0 concurrent-IP finding above.
+
+**Addendum 2 — 2026-07-12T20:45Z: COINBASE-FUTURES/spot_pair diagnosed further, catalogue-gap hypothesis disproved.**
+Re-checked the still-open solo-VM window (unchanged — same 4 `cefi-binance-futures-2020/2021` VMs still RUNNING; did not
+launch anything). Picked up a different, non-blocked P2 thread instead: the earlier-session hypothesis that
+COINBASE-FUTURES's `spot_pair` Layer-1 gap was an instruments-service catalogue-population gap. Two direct read-only
+queries (IS catalogue + a row-group-pushdown manifest query, no VM launch) DISPROVE it: the catalogue has 19 real
+`SPOT_PAIR` rows (16 `mvp=True`), but the cefi manifest has **zero rows of any `capture_status`** for
+`(COINBASE-FUTURES, SPOT_PAIR)` — a stronger, more specific finding than "missing from Layer-1." Also ruled out both
+UAC-declaration hypotheses (`INSTRUMENT_TYPES_BY_VENUE`/`VENUE_DATA_TYPE_CAPABILITIES` are both correctly declared). The
+real bug is in the runtime symbol-resolution/dispatch path, not yet traced (needs a live VM + run.log inspection,
+time-boxed out of this session). Filed `issues/coinbase_futures_spot_pair_zero_attempts_2026_07_12.md` (P2,
+data_engineering) with the ruled-out hypotheses documented so the next session doesn't re-check them.
+
+**Session close (2026-07-12T20:45Z):** this session shipped 7 commits (2 deployment-service, 2 market-tick-data-service,
+1 unified-api-contracts, 2 unified-trading-pm docs) closing all 4 sub-bugs (A/B/C/D) blocking the DERIBIT-COMBO/OKX
+options_chain Layer-1 tuples, and narrowed the COINBASE-FUTURES/spot_pair gap from "unconfirmed hypothesis" to
+"catalogue is fine, manifest shows zero attempts, bug is in runtime dispatch." G4 remains ❌ NOT MET. Genuinely
+actionable next steps for a future session: (1) the VERIFY todo above once a solo window opens or the lease's P2
+hardening lands; (2) the `coinbase_futures_spot_pair_zero_attempts_2026_07_12.md` runtime trace; (3) the 6
+`BLK-afc672cf`-gated tuples remain a pure operator decision, no worker action possible.
