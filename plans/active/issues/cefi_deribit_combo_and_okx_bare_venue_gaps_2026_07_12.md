@@ -207,6 +207,74 @@ slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only ven
       Left unchecked — genuine remaining scope; whoever picks this up next should start by grepping how `venue` reaches
       `_route_tardis` for an `options_chain` `VM_DATA_TYPES` request specifically.
 
+**🚧 FURTHER PROGRESS on todo 1 (2026-07-12, slot-11)** — dispatched specifically for this todo (data_engineering
+craft). Picked up after slot-3's routing-entry work landed (`unified-api-contracts@84ce5929`, the reconciled merge of my
+independent identical entry + slot-3's). Traced + fixed the THREE remaining gaps slot-3's note correctly flagged as
+open, all shipped:
+
+1. **The `_resolve_canonical_venue` collapse (slot-3 flagged, I fixed)**: `tardis_to_venue` is a 1:1 reverse map, so
+   `_resolve_canonical_venue("deribit")` (called from `_stream_finalise_chain_bulk`, `finalise_and_write_cefi_shards`,
+   `finalise_and_write_cefi_shards_streaming`) always re-derives `"DERIBIT"`, never `"DERIBIT-COMBO"` — every downstream
+   manifest write / row-classification call would have silently attributed DERIBIT-COMBO shards to bare DERIBIT. Fixed
+   by threading an explicit `canonical_venue: str | None = None` override through the whole bulk-download call chain
+   (`download_batch` → `_download_bulk` → `_stream_finalise_chain_bulk` / `_download_futures_per_instrument` →
+   `finalise_and_write_cefi_shards[_streaming]` → `_resolve_canonical_venue`), defaulting to `None` (byte-identical
+   behaviour for every other venue — every 1:1 venue's `canonical_venue` param is simply never passed). The actual
+   caller fix is one line: `umi_tick_provider.py::_route_tardis` now passes `canonical_venue=venue_upper` (the venue it
+   already resolved before deriving the Tardis exchange slug) into `download_batch`.
+   `market-tick-data-service@7dbd19f4`.
+2. **Row misclassification (found independently, not in slot-3's note)**: `TardisAdapter._classify_row_instrument_type`
+   had no branch for combo symbol shapes at all — `BTC-CS-28AUG26-72000_76000` / `BTC-FS-11JUL26_PERP` match neither the
+   OPTION regex (`-\d+-[CP]$`) nor the dated-FUTURE regex, so every DERIBIT-COMBO row would have silently fallen through
+   to the venue-level `PERPETUAL` default — a NEW correctness bug (wrong instrument_type on capture), not just a missing
+   feature. Fixed: `venue=="DERIBIT-COMBO"` now classifies unconditionally as `OPTION` (matches UAC's own
+   `INSTRUMENT_TYPES_BY_VENUE["DERIBIT-COMBO"] = {"OPTION"}` declaration, so rows correctly roll into the
+   `options_chain` bundle — the exact target Layer-1 tuple). Same commit (`7dbd19f4`).
+3. **Dispatch-gate exclusion (found via live verification, NOT visible from static code reading or mocked unit tests)**:
+   `umi_tick_provider.py::_TARDIS_CEFI_VENUES = frozenset(_VM.tardis_to_venue.values())` — since `tardis_to_venue` is
+   1:1 and "deribit" is already claimed by "DERIBIT", `"DERIBIT-COMBO"` can never appear as one of its VALUES.
+   `fetch_tick_data_for_venue("DERIBIT-COMBO", ...)` therefore fell through EVERY venue-type branch (not lighter, not
+   FX/KRX, not databento/massive, not prediction) and hit the generic fallback, logging "no download_batch support" —
+   `_route_tardis` (and therefore items 1+2 above) was **completely unreachable** for this venue without this fix. Only
+   found by actually running a live capture attempt end-to-end (see verification below) — a code review or mocked unit
+   test with `_TARDIS_CEFI_VENUES` patched in (as my own first regression test did) would NOT have caught this. Fixed:
+   `_TARDIS_CEFI_VENUES = frozenset(_VM.tardis_to_venue.values()) | frozenset({"DERIBIT-COMBO"})`.
+   `market-tick-data-service@1bc4e000`.
+
+**Real end-to-end verification performed** (not just unit tests — a live Tardis API call from this session, using the
+`tardis-api-key` secret, writing to no real state since it failed before any GCS write):
+`fetch_tick_data_for_venue(venue="DERIBIT-COMBO", date="2026-07-10", data_types=["options_chain"])` now reaches the
+IDENTICAL execution point as the same call for bare `"DERIBIT"` — both log
+`"bulk download deribit/options_chain using grouped 'OPTIONS' symbol"` and both fail with the SAME `Tardis HTTP 403` on
+the `datasets.tardis.dev` bulk-CSV endpoint. Confirmed via a direct control test (same date, same key, venue=DERIBIT)
+that this 403 is **NOT specific to DERIBIT-COMBO or caused by any of the 3 fixes above** — it reproduces identically for
+bare DERIBIT, a venue this codebase's existing tests/history confirm has working production capture. This strongly
+suggests the `tardis-api-key` Secret Manager credential available in this sandbox lacks bulk-CSV-dataset entitlement (or
+this sandbox's network egress isn't allowlisted for `datasets.tardis.dev`, vs. `api.tardis.dev` metadata which DID
+succeed) — an environment-specific constraint, not a pipeline defect. Also live-confirmed via the Tardis instruments
+metadata endpoint (which DID succeed): 424 real `type=='combo'` symbols exist for `deribit` on 2026-07-10 (e.g.
+`BTC-CS-28AUG26-72000_76000`, `BTC-FS-11JUL26_PERP` — the exact shapes coded for in fix #2 above), confirming the target
+data genuinely exists and would be captured once a working Tardis credential runs this same code path.
+
+**Genuinely still open** (did not attempt — needs either a working Tardis production credential or a real production VM
+launch to close):
+
+- **The actual backfill re-run** (todo 3 in this doc / the original "re-run the cefi backfill for DERIBIT-COMBO" ask):
+  blocked by the credential/network constraint above — I could not get past the Tardis bulk-CSV 403 in this sandbox to
+  prove real rows land in GCS. Needs either (a) confirmation the PRODUCTION Tardis credential has bulk-CSV entitlement
+  (if yes, a normal `VENUES="DERIBIT-COMBO" DATA_TYPES=options_chain bash launch-cefi-sharded-backfill.sh` run should
+  now work end-to-end with all 3 fixes above in place), or (b) a credential ask if production also lacks entitlement.
+- **Slot-3's catalogue venue-field nuance** (`build_instrument_catalogue.py::_incremental_merge_keys` docstring ~L2458,
+  "venue FIELD carries era-specific raw spelling DERIBIT-COMBO vs DERIBIT for the SAME instrument_id"): I did NOT
+  independently trace this either — it's a comment describing a PAST incident in the INCREMENTAL MERGE'S full historical
+  catalogue table (which is why `venue` is excluded from that merge's identity key), not necessarily proof that the
+  CURRENT `instrument_availability/by_date/day=X/venue=Y/instruments.parquet` per-date snapshot (the thing
+  `_catalogue_symbols_for_venue_date` actually reads, a DIFFERENT write path than the merge) is mistagged today. The
+  live adapter (`DeribitComboReferenceDataAdapter.venue` property, `instruments-service`) DOES correctly return
+  `"DERIBIT-COMBO"` per direct code read + its own docstring. Whoever runs the actual backfill (above) will get a
+  definitive, empirical answer for free: if the catalogue-driven symbol resolution comes back empty for a RECENT date
+  despite this code path being correct, that's the signal this nuance is real and needs its own fix.
+
 **Ship-blocker note (2026-07-12, slot-3) — RESOLVED, shipped**: `unified-api-contracts@f0dc61a2` (supersedes the earlier
 local-only `3547fdae` after a rebase — see below). Filed repo-blocker `RB-8dc395c9` for the
 `databento_classifier.py: 906 > 900 MAX_FILE_LINES` failure. **Correction**: that check IS included in the gate's output
