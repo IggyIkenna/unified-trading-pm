@@ -8,7 +8,7 @@ summary:
   gs://market-data-tick-cefi-prd-central-element-323112/_index/per_vm/ for this VM. This is a stalled/zombie backfill VM
   blocking the BINANCE-FUTURES 2021 shard from ever completing, which keeps BINANCE-FUTURES af>0 in the cefi G4 gate
   (mvp_backfill_cefi_tick_v10_2026_06_27.md).
-status: open
+status: resolved
 nature: record
 asset_group: [cefi]
 stage: [data]
@@ -25,9 +25,9 @@ execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-12 (P1 item closed)
+last_updated: 2026-07-12 (P1 + P2 items closed)
 locked_by:
-resolved_by:
+resolved_by: deployment-service@14a0787
 ---
 
 # cefi-binance-futures-2021-heavy SPOT VM stalled 9 days — infra triage
@@ -69,6 +69,48 @@ set in the `mvp_backfill_cefi_tick_v10_2026_06_27.md` G4 gate. VM lifecycle tria
    disk/logs should be inspected via serial console dump or `gcloud compute ssh` before termination if diagnosis is
    wanted, since termination destroys the evidence.
 
+## Root cause (P2)
+
+By the time this task picked up, item 1 had already terminated + deleted the old VM (`--delete-disks=all`), so live
+serial-console / SSH forensics were no longer possible. The evidence trail survived anyway: the heartbeat daemon's
+GCS-tee'd `run.log` uploads independently of the VM/disk, at
+`gs://deployment-scripts-central-element-323112/vm-logs/cefi-binance-futures-2021-heavy-20260703-105623/run.log` (12.77
+MiB, last-modified 2026-07-12T04:12:33Z — survived termination).
+
+That log shows the REAL Tardis worker producing normal per-symbol `StreamingParquetWriter: uploaded ...` progress lines
+every 10-30s (peak_rss ~22GB) for BINANCE-FUTURES/2021-07-01/book_snapshot_5, right up to **2026-07-04T15:14:33Z**
+(`canonical shard binance-futures/zilusdt — 610286 rows`). After that timestamp there is **no further worker output at
+all** — no next-symbol request line, no traceback, no OOM signal — for the remaining 7+ days until termination. Every
+line after 15:14:33Z is a `PIPELINE_HEARTBEAT ... source=vm-life-emitter` marker, printed exactly once every 60s,
+unbroken, all the way to 2026-07-12T04:12:21Z.
+
+**Why the stall watchdog never fired**: `vm-exec-with-gcs-tee.sh`'s per-VM stall watchdog (`STALL_TIMEOUT_SEC=1800`)
+kills the workload if `LOCAL_LOG` hasn't grown in 30 min — UNLESS the launcher sets `STALL_PROGRESS_REGEX`, in which
+case the timer only resets on a genuine progress-marker line (see the wrapper's own 2026-06-19 SFI/gas-fees incident
+comments — this is a previously-diagnosed failure class). `launch-cefi-sharded-backfill.sh` never set
+`STALL_PROGRESS_REGEX` (unlike `launch-mdps-sharded-backfill.sh` / `launch-sfi-backfill-vm.sh` /
+`launch-mtds-gas-fees-backfill-vm.sh`, which all do). Meanwhile `setup-data-pipeline-vm.sh` (BUG1b, 2026-06-22) wires a
+`vm-life-emitter` loop (`while true; echo PIPELINE_HEARTBEAT; sleep 60`) into the **same** tee'd command whose output
+feeds the **same** `LOCAL_LOG` the watchdog measures. Result: the heartbeat's own bytes reset the stall timer every
+single poll, forever — the watchdog literally could not distinguish "worker alive and progressing" from "worker frozen,
+only the liveness heartbeat is still ticking." The VM sat `RUNNING` for 9 days because nothing ever told it to stop.
+
+The underlying freeze itself (why the Tardis worker produced zero further output — no request line even logged before it
+— after finishing `zilusdt`) could not be further diagnosed: no traceback/exception/OOM message exists anywhere in the
+surviving log, and the VM + boot disk (the only place a `py-spy`/proc-stack dump could have come from) were already
+deleted by item 1 before this task could inspect them live — termination destroys the evidence, exactly as
+recommendation 2 warned. Plausible mechanisms consistent with a silent, exception-free freeze immediately after a shard
+finalize (blocking connection-pool checkout, hung auth-token refresh, deadlocked thread-pool join) are listed for
+reference but unconfirmed.
+
+**Fix shipped**: `launch-cefi-sharded-backfill.sh` now sets `STALL_PROGRESS_REGEX=uploaded` — the
+`StreamingParquetWriter`/`StreamingShardFinalizer` "uploaded" marker fires on every per-shard GCS finalize across both
+the heavy per-symbol-streaming path (`tardis_cefi_shards.py`) and the light/DERIBIT bulk chain-glob path
+(`tardis_bulk_download.py`), verified present in both, so it's a safe universal per-shard progress marker for every
+venue/group this launcher spawns. Confirmed via `DRY_RUN=1` smoke (heavy + light metadata both carry
+`STALL_PROGRESS_REGEX=uploaded`). A future genuine hang on any CeFi sharded-backfill VM now trips the existing 30-min
+watchdog (kill + `py-spy`/proc-stack dump + `DEPLOYMENT_FAILED` + self-delete) instead of running silently for days.
+
 ## Open actions
 
 - [x] ✅ [INFRA] P1. Terminate + relaunch the BINANCE-FUTURES 2021 heavy shard (see recommendation 1). —
@@ -78,4 +120,8 @@ set in the `mvp_backfill_cefi_tick_v10_2026_06_27.md` G4 gate. VM lifecycle tria
       `ONLY="BINANCE-FUTURES:2021:heavy" FORCE=1 MACHINE_TYPE_HEAVY=e2-highmem-16     bash scripts/vm/launch-cefi-sharded-backfill.sh`
       (exit 0, "All 1 VMs launched") → `cefi-binance-futures-2021-heavy-20260712-041346`, SPOT, e2-highmem-16, RUNNING,
       active serial output (gsutil scopes firing every ~60s) confirmed at T+~13min — 2026-07-12T04:27Z.
-- [ ] [INFRA] P2. Root-cause the zero-serial-output stall before/while terminating (see recommendation 2).
+- [x] ✅ [INFRA] P2. Root-cause the zero-serial-output stall before/while terminating (see recommendation 2). —
+      deployment-service@14a0787: root-caused via the surviving GCS run.log (see "Root cause (P2)" above) —
+      `vm-life-emitter`'s 60s heartbeat defeated the size-based stall watchdog because the launcher never set
+      `STALL_PROGRESS_REGEX`. Shipped `STALL_PROGRESS_REGEX=uploaded` in `launch-cefi-sharded-backfill.sh` so future
+      hangs on any CeFi sharded-backfill venue/group trip the existing 30-min watchdog instead of running silently.
