@@ -18,7 +18,7 @@ summary:
   because the adapter was never built to request it. This is a genuine open question: is the registry entry aspirational
   (adapter incomplete, should be built) or wrong (registry should only declare ohlcv_24h for KRX, matching what the
   adapter's docstring says: 'venue=KRX, source=yahoo, data_type=ohlcv_24h')?"
-status: open
+status: resolved
 nature: notes
 asset_group: [tradfi]
 stage: [data]
@@ -36,7 +36,7 @@ parent_epic: infrastructure_master
 priority: P3
 source: [pipeline_e2e_check todo-25 triage, real VM run.log evidence + direct code read, 2026-07-12]
 assigned_vm: NA
-resolved_by:
+resolved_by: operator-decision-2026-07-12
 locked_by:
 execution_scope: local-only
 estimate_class: research
@@ -85,8 +85,26 @@ explicitly declares these as expected coverage. Two ways to resolve, genuinely r
 
 Not resolved here — flagging for an operator/architecture decision rather than guessing at product intent.
 
+## Resolution — option 2 chosen (registry narrowed)
+
+Operator decision (2026-07-12): option 2 — Yahoo doesn't reliably serve intraday granularity over long historical
+backfill windows, so build-the-adapter (option 1) was rejected. Narrowed `expected_coverage.py`'s KRX entry to
+`["ohlcv_24h"]`. Shipped `unified-api-contracts@a2751f36`.
+
+**Follow-on discovery during implementation**: KRX is ALSO hardcoded as a TradFi "equity-basis" MVP venue
+(`_mvp_scope_predicate.py`'s equity-basis carve-out, alongside NASDAQ/NYSE/ARCA/AMEX/BATS) whose MVP data_type was the
+shared `rule.data_types = {"ohlcv_1m"}` — i.e. the MVP layer would have kept claiming KRX ohlcv_1m is business-critical
+(for Binance tradfi-perp basis tracking) even after `expected_coverage.py` stopped expecting it, a real cross-registry
+inconsistency the original open question didn't anticipate. Operator confirmed: drop KRX ohlcv_1m from MVP too, so KRX's
+equity-basis carve-out now checks `ohlcv_24h` specifically (separately from the US-listed venues, which keep
+`rule.data_types`/ohlcv_1m). Same commit (`unified-api-contracts@a2751f36`) — both registries narrowed in lockstep, plus
+`test_krx_basis_cells_are_mvp`/`_tradfi_mvp_equity_cells` updated to match.
+
 ## Progress log
 
 - 2026-07-12: Filed after fixing the mechanical silent-mislabeling bug (`market-tick-data-service@e128c5bc`) and
   confirming, via real VM run.log evidence, that the ohlcv_1m/ohlcv_15m portion of KRX's declared expected coverage is
   genuinely unreachable by the current adapter — not a bug to fix blindly, a registry-vs-capability decision to make.
+- 2026-07-12: Operator chose option 2 (narrow the registry). Shipped `unified-api-contracts@a2751f36` — both
+  `expected_coverage.py` and the MVP scope's equity-basis carve-out narrowed to ohlcv_24h for KRX, keeping the two
+  registries in sync (the MVP-layer inconsistency was found and closed in the same pass, not left as a new gap).
