@@ -338,10 +338,21 @@ above) before it ships, and confirmation it doesn't regress the `0de04b6e` genui
 - [ ] [DATA] P1. Re-run task 2's orphan-sweep (`migration_orphan_sweep.py --asset-group tradfi`) after the restoration
       to re-confirm `orphan_class_E=0` still holds — the 2026-07-10T17:17Z GREEN certification may not survive against
       the current (or restored) manifest state (repo: instruments-service).
-- [ ] [DATA] P2. Add a row-count sanity check (delta vs. the last known-good snapshot, alert on any drop >0.1%) to
+- [x] ✅ [DATA] P2. Add a row-count sanity check (delta vs. the last known-good snapshot, alert on any drop >0.1%) to
       whichever job writes `_index/availability_index.parquet`, so a future regression of this class is caught
       immediately rather than 2 days later by an unrelated task's re-verification (repo: market-tick-data-service or
-      unified-trading-library, wherever the writer/consolidator lives).
+      unified-trading-library, wherever the writer/consolidator lives). **DONE 2026-07-12 (slot-5)** —
+      `unified-trading-library@52d5921a`. Added `_check_row_count_regression()` in `manifest_consolidator.py`, called
+      from `_duckdb_merge_payload()` right after `rows_out` is computed, comparing against the pre-merge canonical row
+      count (`canon_rows` — the last known-good snapshot). Emits a new `MANIFEST_ROW_COUNT_REGRESSION` event (ERROR
+      severity, same alert-sink path as `MANIFEST_CONSOLIDATION_FAILED`) plus a `logger.critical` line whenever the drop
+      exceeds 0.1% of the pre-merge canonical; `canon_rows == 0` (cold bucket, no baseline) is skipped. Pure
+      observability — never blocks or alters the write, so an undiagnosed data-loss bug can't be turned into a
+      stale-manifest availability outage. 4 new unit tests in `tests/unit/test_manifest_consolidator.py` (3 pure-logic
+      on the helper + 1 end-to-end via `consolidate()` reproducing a >99% synthetic drop and asserting the alert fires
+      alongside the normal `MANIFEST_CONSOLIDATED` success event, write still lands). Full `quality-gates.sh` green
+      (6378 passed; 2 unrelated pre-existing flaky failures — `test_pipeline_heartbeat_timer` cadence timing and
+      `test_streaming_writer` FD-lifecycle — confirmed pass in isolation, not touched by this diff).
 - [ ] [INFRA] P2. Enable GCS Data Access audit logging (`storage.googleapis.com` data-write, at minimum, project-wide or
       on the `*-prd-central-element-323112` market-data buckets) — this investigation found it is currently OFF
       project-wide (confirmed: `cloudaudit.googleapis.com/data_access` has zero `storage.googleapis.com` entries, only
@@ -355,6 +366,15 @@ above) before it ships, and confirmation it doesn't regress the `0de04b6e` genui
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-12** — slot-5 (sonnet/high, data_engineering). Closed the P2 row-count sanity-check todo —
+  `unified-trading-library@52d5921a`. New `_check_row_count_regression()` helper wired into `_duckdb_merge_payload()`
+  (right after `rows_out` is computed): compares the merged output against `canon_rows` (the pre-merge canonical, i.e.
+  the last known-good snapshot) and emits `MANIFEST_ROW_COUNT_REGRESSION` (severity ERROR, same alert-sink path as
+  `MANIFEST_CONSOLIDATION_FAILED`) whenever the drop exceeds 0.1% — pure observability, does not block/alter the write.
+  Deliberately did NOT touch the still-open root-cause/restore/ orphan-sweep-rerun P0 todos above (out of scope for this
+  P2; this is the detection guard so a future regression of this exact class surfaces immediately instead of via an
+  unrelated task's manual re-verification days later). 4 new unit tests (3 pure-logic on the helper, 1 end-to-end via
+  `consolidate()`); full `quality-gates.sh` green.
 - **2026-07-12** — slot-7 (sonnet/high, data_engineering). Closed the root-cause todo, EMPIRICALLY (not inferred).
   Downloaded the real pre-loss snapshot + then-current live index and ran the consolidator's own dedup key
   (`_BASE_DEDUP_COLS` + present `_OPTIONAL_DEDUP_COLS`) against the pre-loss snapshot in DuckDB: it collapses 1,023,968
