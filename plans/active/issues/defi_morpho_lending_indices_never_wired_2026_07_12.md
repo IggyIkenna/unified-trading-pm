@@ -500,3 +500,31 @@ precondition; per re-check #6's own recommendation, whoever owns backlog tuning 
 worker per `RULES.md` §4) should consider parking this task (lower priority + a
 `consolidator-fresh-and-vm-complete`-style condition) rather than continuing ~5-10 min redispatch cycles that can't
 produce a different outcome for at least another ~2h.
+
+### Re-check #8 — still healthy, still pre-genesis, consolidator still stale; escalating the redispatch-cycle itself — 2026-07-12T12:21Z (data_engineering slot-11)
+
+Re-dispatched to the same `[SCRIPT] P2. Re-run G2 gate` todo (8th dispatch overall), only ~3 min after re-check #7
+(12:17Z). Verified rather than trusted the prior re-check, cheaply:
+
+- **VM roster**: `mtds-lending-indices-20260712-112557` still the only instance, `STATUS=RUNNING`.
+- **Real-progress check** (`run.log` tail direct from GCS): active writes for `date=2023-04-14`, forward progress from
+  re-check #7's `2023-04-02` observation ~4 min earlier (~12 days/4 min — same ~1.9-3 days/min pace every prior re-check
+  observed). No `Unknown lending protocol` / no `uniqueKey`-GraphQL errors — both fixes still holding.
+- **Manifest freshness**: consolidated `_index/availability_index.parquet` `Update time` **still**
+  `Fri, 10 Jul 2026 21:42:30 GMT` — byte-identical to all 7 prior re-checks. Cross-checked
+  `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md` directly: latest entry (the pipeline_e2e_check
+  corroboration, 2026-07-12) confirms no new fix has landed since the lock-TTL change (~2.5-3x kill-frequency reduction,
+  NOT a full fix) — the residual ~5-6min kill pattern is still open and unresolved.
+- **Verdict unchanged**: gate still cannot be usefully re-run — backfill hasn't reached genesis (2024-01-01, still
+  realistically 2+h out at observed pace) and the consolidated index would still be stale even if it had.
+
+**Escalating the redispatch-cycle itself, not just the underlying finding.** Eight dispatches (slot-3×2, slot-9,
+slot-12, slot-7, slot-8, plan-health-slot-5, slot-11) have now spent agent turns re-confirming the IDENTICAL
+precondition inside a single ~50-minute window (11:30Z→12:21Z), with re-checks #6 and #7 already recommending
+main/operator park this task — no parking action has landed yet. Filed `/blocked` recommending main/operator apply a
+`target_slot_timeout_seconds`-style delay or a `consolidator-fresh-and-vm-complete` condition so this stops consuming
+fleet turns for the ~2h+ remaining until genesis, rather than another worker re-running this exact 3-step check in
+another 5-10 minutes for the ninth time.
+
+`skip-current-task`'d — same call as the seven prior dispatches. Whoever next has authority over backlog tuning should
+action the parking recommendation rather than let this keep bouncing.
