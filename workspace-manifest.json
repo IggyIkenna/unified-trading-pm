@@ -880,9 +880,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 36,
-        "coverage_pct": 83.07,
         "large_file_count": 0,
+        "warn_file_count": 37,
+        "coverage_pct": 83.08,
         "qg_red_reason": null
       }
     },
@@ -1262,10 +1262,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "coverage_pct": 87.52,
         "large_file_count": 5,
-        "warn_file_count": 20
+        "warn_file_count": 20,
+        "coverage_pct": 87.51,
+        "qg_red_reason": null
       }
     },
     "unified-trading-pm": {
@@ -1446,7 +1446,7 @@
       ],
       "completion_path": "infrastructure",
       "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 — absorbed into strategy-service dep.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": null,
       "bypass_audit_path": null,
       "testing_level": "e2e",
@@ -1471,9 +1471,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "large_file_count": 0,
+        "warn_file_count": 0,
         "coverage_pct": 99.02,
-        "qg_red_reason": "ruff",
-        "warn_file_count": 0
+        "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN"
     },
