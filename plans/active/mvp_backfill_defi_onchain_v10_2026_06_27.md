@@ -1262,3 +1262,22 @@ parquet). Prior apply completed 2026-06-28T21:35Z (219,632 phantoms flipped). Re
 
 **ETA to re-verify:** lending-indices ~2026-06-30 22:00 UTC; lst-rates ~2026-07-01 00:00 UTC (the two slowest VMs).
 Re-dispatch G2 verification after ~2026-07-01 00:00 UTC when all VMs are TERMINATED.
+
+### G1.5 DRIFT perp_funding backfill — picked up + partially resolved, real blocker confirmed (2026-07-11)
+
+Slot 3 (data_engineering) picked up the reopened todo. Live manifest no longer matches the plan's "424 cells" framing:
+`captured=8`, `attempted_failed=39` (stale), `expected_unattempted=51,301` across 41 `instrument_id`s. Found + fixed a
+second, independent bug causing most of that inflation: DRIFT SPOT markets (e.g. `DRIFT-SOLANA:SPOT:BSOL`) were wrongly
+expecting `perp_funding` (SPOT instruments cannot have a funding rate) due to a capability-declaration leak in
+`unified-api-contracts` (`_defi.py`'s `drift` entry bundles `PERPETUAL`+`SPOT_PAIR` with one shared `data_types` list).
+Fixed via `VALID_DATA_TYPES_VENUE_EXCLUSIONS` — shipped `unified-api-contracts@b7cf3106` + 4 regression tests.
+
+**The actual DRIFT-perp backfill remains blocked** — confirmed real, not a code issue: the consolidated
+`_index/drift_v2_sig_index.parquet` still doesn't exist; existing parts cover 2025-12-23→2026-05-29 (Builder #1) and
+2024-10-31→2025-01-15 (Builder #2), leaving an **~11-month unindexed gap**. Drift's S3 historical archive only covers
+pre-2025-01-08 (V1→V2 migration); past that, closing the gap requires walking Solana signatures via Helius RPC — the
+same rate-limit path that hit the 429-burst wall documented above. This is a genuine Helius API plan/throughput ceiling
+(the builder already retries with backoff), not something fixable in code. Filed operator decision as todo 3 in
+`plans/active/issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` (Helius plan upgrade vs. more parallel-
+walker VMs vs. accept the gap) and posted `/blocked` on AO item `mvp_backfill_defi_onchain_v10-010` rather than
+launching another VM that would likely re-hit the same ceiling without an operator call on cost/approach first.

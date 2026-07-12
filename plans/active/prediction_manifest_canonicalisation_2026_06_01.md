@@ -546,12 +546,20 @@ be fixed first if run on a VM.
       batch rows via a rebuild CF-11 re-emit. FULL diagnosis + ordered remediation:
       `plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`. Repos:
       **unified-trading-library / instruments-service / market-tick-data-service**.
-- [x] [DATA] P0. E8 ✅ **DATA-DECOMMISSION DONE 2026-07-11 (/autonomous)** — object-level data-safety gate PASSED
-      (LEGACY `market-data-tick-prediction` 1,164,148 normalised keys all ⊆ CANONICAL `pred-prd` 4,870,487 → **0
-      legacy-only objects**; the earlier 1,787 `_index` legacy-only confirmed a manifest-reflection gap for ohlcv*\*
-      candle data_types, both buckets carry 300k+ candle objects). `_index` snapshotted to canonical
-      `\_index/snapshots/DECOMMISSIONED_legacy*...2026_07_11.parquet`; `cloud-providers.yaml:160`already maps     kind→canonical so readers resolve`pred-prd`(no reader-repoint needed). **ALL 1,164,148 legacy objects DELETED     (verified`remaining=0`).** Empty bucket SHELL remains (SA lacks `storage.buckets.delete`— 403); the shell removal     is the only residual admin step for`bucket_name_ssot…`
-      L6. Handoff to L6 is now shell-only, not data.
+- [ ] [DATA] P0. E8 ⚠️ **PARTIAL — CORRECTION 2026-07-12: the "DATA-DECOMMISSION DONE" claim below was WRONG. VERSIONING
+      is enabled on the legacy buckets, so the 1,164,148 `delete_blob` calls only removed the LIVE versions — they
+      became NONCURRENT versions, not gone.** `list_blobs`/`gcloud ls` show live-only (=0), which is why it looked
+      empty; version-aware count 2026-07-12: `market-data-tick-prediction` LIVE=0 / **ALL_VERSIONS=2,592,066**;
+      `instruments-store-prediction` LIVE=0 / **ALL_VERSIONS=28,017**. So the DATA IS STILL PRESENT (noncurrent, still
+      billed, recoverable) and `gcloud storage buckets delete` fails "Bucket is not empty". **What IS validly done:**
+      the object-level data-safety GATE passed (LIVE legacy 1,164,148 ⊆ CANONICAL `pred-prd` 4,870,487, 0 legacy-only)
+      and the manifest/E7 work is complete + unaffected. **What REMAINS:** to truly decommission, delete ALL noncurrent
+      versions (by generation) then the shell — data-safe (noncurrent = superseded earlier writes of objects whose live
+      state is ⊆ canonical; `_index` versions are legacy index history superseded by canonical) but IRREVERSIBLE and
+      2.6M-object-scale, so a deliberate eyes-open op, not a rushed sweep. **COORDINATION: a second operator agent is
+      actively on the tick bucket — do NOT race it with parallel version deletes.** _(Original — now-falsified — claim
+      retained for audit: "ALL 1,164,148 legacy objects DELETED (verified remaining=0)" — that `remaining=0` counted
+      LIVE versions only.)_
 - [ ] [DATA] P0. E8 (superseded — data done above) Hand C-GREEN to `bucket_name_ssot…` L6 → delete legacy
       `market-data-tick-prediction` + stale pred-prd `category=` paths (single source of truth). **✅ OPERATOR
       AUTHORISED the E8 delete 2026-07-10 (this /autonomous session)** — the prior human-only hard-stop is lifted.
@@ -564,23 +572,25 @@ be fixed first if run on a VM.
       re-classified cqgs) + **41 genuinely-unique COVERAGE GAPS** (37 lifecycle mostly `EUR_UP_DOWN_DAILY` on days
       canonical lacked + 4 availability `OTHER`/`RUT`; `EUR_UP_DOWN_DAILY` IS a valid canonical cqg → real gaps, not
       cruft, not renamed). Migrated the 41 (77 markets) to canonical → re-verified **0 genuinely-unique remaining**
-      (both prefixes 100% renamed) → `_index` snapshotted → **legacy `instruments-store-prediction` bucket DELETED
-      (2822/2822 objs, 0 fail)**. **NEW (slot audit 2026-07-10): legacy `instruments-store-prediction` bucket
-      decommission — GATED on migrating 139 legacy-only cells first (data-loss risk). ✅ OPERATOR AUTHORISED the delete
-      2026-07-10 (same session as E8) — still DATA-SAFETY-gated on migrating/reconciling the 139 legacy-only cells + a
-      snapshot first.** **🔎 DIAGNOSIS UPDATE 2026-07-11 — the 139 legacy-only cells are likely RENAMED, NOT
-      genuinely-unique (operator's earlier intuition confirmed): instrument-key-level spot-check found
-      `BTC_UP_DOWN_HOURLY` day=2026-03-24's legacy market is ALREADY in canonical under a DIFFERENT cqg (1/1 keys
-      present). So the legacy bucket is likely SUPERSEDED (same markets, re-classified to canonical cqg names) → safely
-      deletable WITHOUT migration (migrating at the legacy cqg name would POLLUTE canonical with duplicate cells). The
-      full 139-cell instrument-key confirmation timed out in foreground (139 legacy downloads × canonical-per-day) — RUN
-      IT IN A STABLE JOB to confirm 100% renamed before the delete. If any cell is genuinely-unique (keys NOT in
-      canonical), migrate only those. Two agents attempting this DIED (tmpfs-ENOSPC + session restart) with ZERO prod
-      changes — the migration/delete were NOT executed; legacy still 92+47 legacy-only, canonical untouched. NEXT:
-      stable-job full diagnosis → (all-renamed) snapshot + delete legacy, or (some-unique) migrate-unique + delete.**
-      Read-only subset audit (2026-07-10, ADC central-element-323112) found the legacy reference-data store
-      `instruments-store-prediction-central-element-323112` is **NOT a subset** of canonical
-      `instruments-store-pred-prd-…`: **92 legacy-only `instrument_availability` cells + 47 legacy-only
+      (both prefixes 100% renamed) → `_index` snapshotted → **legacy `instruments-store-prediction` LIVE objects deleted
+      (2822/2822)** — but ⚠️ **CORRECTION 2026-07-12: VERSIONING is enabled, so this only removed live versions;
+      version-aware count shows ALL_VERSIONS=28,017 noncurrent versions REMAIN (bucket not empty, data still present).
+      The migration of the 41 unique cells IS valid; the legacy-bucket delete is NOT complete.** **NEW (slot audit
+      2026-07-10): legacy `instruments-store-prediction` bucket decommission — GATED on migrating 139 legacy-only cells
+      first (data-loss risk). ✅ OPERATOR AUTHORISED the delete 2026-07-10 (same session as E8) — still
+      DATA-SAFETY-gated on migrating/reconciling the 139 legacy-only cells + a snapshot first.** **🔎 DIAGNOSIS UPDATE
+      2026-07-11 — the 139 legacy-only cells are likely RENAMED, NOT genuinely-unique (operator's earlier intuition
+      confirmed): instrument-key-level spot-check found `BTC_UP_DOWN_HOURLY` day=2026-03-24's legacy market is ALREADY
+      in canonical under a DIFFERENT cqg (1/1 keys present). So the legacy bucket is likely SUPERSEDED (same markets,
+      re-classified to canonical cqg names) → safely deletable WITHOUT migration (migrating at the legacy cqg name would
+      POLLUTE canonical with duplicate cells). The full 139-cell instrument-key confirmation timed out in foreground
+      (139 legacy downloads × canonical-per-day) — RUN IT IN A STABLE JOB to confirm 100% renamed before the delete. If
+      any cell is genuinely-unique (keys NOT in canonical), migrate only those. Two agents attempting this DIED
+      (tmpfs-ENOSPC + session restart) with ZERO prod changes — the migration/delete were NOT executed; legacy still
+      92+47 legacy-only, canonical untouched. NEXT: stable-job full diagnosis → (all-renamed) snapshot + delete legacy,
+      or (some-unique) migrate-unique + delete.** Read-only subset audit (2026-07-10, ADC central-element-323112) found
+      the legacy reference-data store `instruments-store-prediction-central-element-323112` is **NOT a subset** of
+      canonical `instruments-store-pred-prd-…`: **92 legacy-only `instrument_availability` cells + 47 legacy-only
       `market_lifecycle` cells** (`(cqg,day)` keys, range 2025-03-27 → 2026-05-21), of which CQGs
       **`BTC_UP_DOWN_HOURLY`** and **`GOLD_UP_DOWN_DAILY`** exist **ONLY in legacy** (absent from canonical entirely).
       Legacy also carries `_backups/` (43) + its own `_index/` (4). So deleting the legacy instruments-store bucket now
@@ -629,7 +639,9 @@ cruft. Market-level migration (`market_id` 0x-hash exact-match membership vs uni
 migrates markets absent from canonical anywhere) copies fully-unique lifecycle cells + writes unique availability
 markets. Then re-verify 0-unique → snapshot + delete legacy. (Supersedes the earlier "likely all-renamed" intuition —
 the lifecycle EUR gap is real.) **EXECUTED**: migrated 41 cells / 77 markets → re-diagnosis 0 genuinely-unique remaining
-(both prefixes 100% renamed) → legacy `instruments-store-prediction` DELETED (2822/2822 objs).
+(both prefixes 100% renamed) → legacy `instruments-store-prediction` LIVE objects deleted (2822/2822) — ⚠️ CORRECTION
+2026-07-12: versioning enabled, 28,017 noncurrent versions REMAIN; the bucket-delete is NOT complete (the cell migration
+itself is valid).
 
 **Post-verification manifest polish (2026-07-11) — prediction `_index` is now genuinely audit-clean on all
 manifest-content CFs.** Running the full `cf_manifest_audit_2026_06_01.py` surfaced issues the earlier per-CF checks
@@ -654,17 +666,19 @@ missed, all now fixed:
 are **cross-cutting, not prediction data gaps**: (a) **CF-2-paths** — the probe samples `processed_candles/` whose MDPS
 scheme validly omits `asset_group=` (per-AG bucket makes it redundant; raw_tick DOES carry it); (b) **CF-8
 available_at** — column absent (`written_at` proxy) across ALL AGs, tracked by
-`predictions_lookahead_and_reader_migration_2026_06_20.md`. **E8 tick delete DONE**: robust 16-worker delete of the
-1.16M legacy objects COMPLETE (verified `remaining=0`, 0 fail). Empty bucket shell remains (SA lacks
-`storage.buckets.delete`) — admin/L6 residual only.
+`predictions_lookahead_and_reader_migration_2026_06_20.md`. **E8 tick delete — ⚠️ CORRECTION 2026-07-12: only LIVE
+versions deleted.** The 16-worker delete removed the 1.16M LIVE objects (`remaining=0` was LIVE-only), but **VERSIONING
+is enabled** so they became NONCURRENT versions; version-aware count: tick `ALL_VERSIONS=2,592,066`, IS-store
+`ALL_VERSIONS=28,017`. Buckets NOT empty; data still present. See the E8 checkbox correction above.
 
 **Residual follow-ups:**
 
-- **⛔ Empty legacy bucket SHELL removal — BLOCKED-CREDENTIALS (needs operator/admin).** Both legacy prediction buckets
-  (`market-data-tick-prediction` + `instruments-store-prediction`) hold **0 objects** (data fully decommissioned), but
-  the empty shells need `storage.buckets.delete`. The only credential in this env is `unified-trading-sa`, which has
-  `objects.delete` (used to empty them) but NOT `buckets.delete`/`getIamPolicy`, and cannot impersonate any admin SA (no
-  `serviceAccounts.getAccessToken`; `cloudstorage@` disabled). Remediation (admin identity):
+- **⛔ Legacy bucket removal — NOT an empty-shell op after all (versioning).** Both legacy prediction buckets still hold
+  their data as NONCURRENT versions (2.59M + 28k). Truly decommissioning = deleting ALL versions (by generation, admin-
+  or `objects.delete`-capable) then the shell. Data-safe (noncurrent = superseded earlier writes of live objects
+  verified ⊆ canonical) but IRREVERSIBLE + 2.6M-scale → deliberate op. The shell delete separately needs
+  `storage.buckets.delete` which `unified-trading-sa` lacks (`objects.delete` only, no `buckets.delete`/`getIamPolicy`,
+  no admin-SA impersonation — `serviceAccounts.getAccessToken`; `cloudstorage@` disabled). Remediation (admin identity):
   `gcloud storage buckets delete gs://market-data-tick-prediction-central-element-323112` +
   `…gs://instruments-store-prediction-central-element-323112` — OR grant `unified-trading-sa` `roles/storage.admin` on
   them and an agent finishes it.
