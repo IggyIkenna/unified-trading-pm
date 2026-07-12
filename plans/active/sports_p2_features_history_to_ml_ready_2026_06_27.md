@@ -117,6 +117,62 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-12 — slot 5 (25th dispatch — regen wiped the 24th-dispatch gate; re-applied + tightened)
+
+**Todo 1 (compute features 2015→present) — still BLOCKED-PREREQ; structural gate re-applied after a silent regen-loss**
+
+Re-verified upstream state via non-snap gcloud (`ikenna@odum-research.com`, `central-element-323112`) + a fresh
+`instruments-store-sports-prd` `availability_index.parquet` download (4.9M rows):
+
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9** — Todo 9 (enrichment) remains
+  BLOCKED-OPERATOR-DECISION/tracker-only per the standing operator ruling (MUST NOT gate agent tasks on its EU→0).
+  Effectively complete for this task's purposes.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **5/7** — **Understat now ✅** (new since
+  slot-6's 2026-07-08 check): data-verified via the IS availability index — Understat `XG` eu=15, `XG_SHOTS` eu=15 (down
+  from 13,796+384), both effectively zero-missing. **Footystats M+P still NOT done**: `MATCHES` eu=5,733, `PREDICTIONS`
+  eu=44,255 (source=footystats only, cross-checked against `api_football`/`odds_api` ODDS rows to avoid the cross-source
+  miscount risk). Todo 7 (full-history verify) still pending on footystats. **0 backfill VMs running** in
+  `asia-northeast1-c` (checked `us-backfill*`/`fs-backfill*`/`fss-backfill*` name patterns — none active).
+- Features bucket `gs://features-sports-prd-central-element-323112/sports_features/by_date/`: still **92 unique dates**
+  (P1 golden window only) — Todo 1 full-history compute has NOT run.
+
+**Root cause of the 25th dispatch**: slot-6's 2026-07-08 structural fix (gating backlog tasks `-005`/`-007` on
+`understat-vm-xg-complete` + `footystats-mp-complete`) was silently lost. The live
+`agent-orchestrator/data/config/backlog.yaml` was regenerated at some point after 2026-07-08 and this plan's derived
+task IDs shifted from `-005`/`-007` to `-001`/`-002` (new IDs, since Todo 2 — already `[x]` — is no longer emitted as a
+backlog row) — the regen did not carry the hand-tuned `prereqs.prerequisites` onto the new IDs (RULES.md §4's "regen
+PRESERVES hand-tuned prereqs on derived entries" holds for an unchanged ID, not a renumbered one). Confirmed via
+`grep sports_p2_features_history_to_ml_ready` on the live backlog.yaml: `prereqs.prerequisites: []` on both `-001` and
+`-002`, while the top-level `prerequisites:` dict still carried `understat-vm-xg-complete: false` /
+`footystats-mp-complete: false` from the 24th dispatch — orphaned, no task referencing either. This explains why the
+gate silently stopped working without any operator action reverting it.
+
+**Actions taken (sanctioned tuning, RULES.md §4 — not a new-task hand-add, not agent-orchestrator code)**:
+
+1. `POST /api/prerequisites/understat-vm-xg-complete {value: true}` — flipped true, data-verified (EU≈15 both Understat
+   data_types, matches the plan's Todo 4 ✅).
+2. Re-attached `prereqs.prerequisites: [footystats-mp-complete]` to both `sports_p2_features_history_to_ml_ready-001`
+   and `-002` in the live backlog.yaml (footystats-mp-complete condition itself left `false` — still genuinely unmet).
+   `POST /api/backlog/reload` confirmed (`total_tasks: 14`). Verified via
+   `GET /api/backlog/sports_p2_features_history_to_ml_ready-001/blockers` →
+   `"prerequisite footystats-mp-complete not set"` — the gate is live.
+
+**What I did NOT do**: did not launch the footystats M+P backfill VM myself — VM launches are `infra` craft, not
+`data_engineering` (`agents/data_engineering.md` `does_not`), consistent with every prior dispatch on this task. Did not
+launch features compute — gate genuinely unmet (`--skip-existing` would still lock in `UPSTREAM_MISSING` for the ~50k
+footystats eu rows; a second full-history pass afterward is the exact cost this plan's `depends_on` edge exists to
+avoid). Did not re-litigate the "wait vs proceed" question — 6+ prior BLKs already exhausted that; not filing a 26th.
+
+**Operator/main-agent action still needed to unblock**: launch the footystats M+P SPOT VM
+(`bash deployment-service/scripts/vm/launch-footystats-backfill-vm.sh 2019-01-01 <today>`, per P2b's own Todo 5), then
+flip `footystats-mp-complete` true once footystats eu→0
+(`POST /api/prerequisites/footystats-mp-complete {value: true}`). With the gate now correctly attached, this task will
+NOT re-dispatch until that happens — no further churn expected unless another backlog regen drops it again (worth a
+1-line note to whoever owns `regen_backlog_from_plan.py`: hand-tuned `prereqs` on a derived task should carry forward by
+`plan_ref` + `plan_order` identity, not raw task ID, so a renumber doesn't silently drop tuning).
+
+Checkbox NOT flipped (Todo 1 gate genuinely unmet). Task released via `/skip-current-task`.
+
 ### 2026-07-08 — slot 6 (24th dispatch — STRUCTURAL FIX: backlog prereq gates finally added)
 
 **Todo 3 (features manifest clean) — BLOCKED-PREREQ, state unchanged; root-caused the churn itself this dispatch**
