@@ -190,7 +190,44 @@ Tardis download path) — preserves the parallel-VM wall-clock the plan relies o
       startup script or `tardis_batch_download.py` before any `datasets.tardis.dev` call, released on completion/
       preemption (must handle SPOT preemption not leaking the lock — a TTL-based lease, not a plain object-exists
       check). (repo: deployment-service, market-tick-data-service)
-- [ ] [DATA] P1. Once the lock contention is resolved (any path above), RE-RUN this plan's G4 verification from a clean
-      slate — every prior session's `attempted_failed` count in this plan's Progress Log should be treated as
-      upper-bound noise until re-measured post-fix, not a genuine per-venue gap census. (repo: instruments-service,
-      e2e-testing)
+- [ ] [DATA] P1. **Direction-independent 403-code-274 error_reason hygiene fix (do this under ANY of a/b/c — does NOT
+      require the operator decision).** Teach `market-tick-data-service/.../clients/tardis_base_client.py` to (i) parse
+      a 403 response body for `code == 274` + `retryAfterSeconds`, (ii) tag the manifest `error_reason` distinctly (e.g.
+      `Tardis 403 code=274 concurrent-IP-lock` — KEEP the literal `403` substring so the existing
+      `error_reason CONTAINS '403'` audit query still matches), and (iii) optionally honour `retryAfterSeconds` as a
+      backoff (NOTE: adding 403 to `retry_status_codes` alone does NOT serialise — 15 VMs all retrying still contend, so
+      this is a hygiene/observability fix, not a substitute for a/b/c). This separates lock-403s from genuine
+      honest-absence in the manifest and DIRECTLY de-noises the todo below's re-measurement. ≈30-60 min. (repo:
+      market-tick-data-service)
+- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION (gated on todo #1 + todo #2 above — do NOT run pre-fix).** Once the lock
+      contention is resolved (any path above), RE-RUN this plan's G4 verification from a clean slate — every prior
+      session's `attempted_failed` count in this plan's Progress Log should be treated as upper-bound noise until
+      re-measured post-fix, not a genuine per-venue gap census. **Verified 2026-07-12 (data_engineering slot-3): gate
+      UNMET — todos #1/#2 both open, no lock/mutex/proxy/403-274 fix in git; a pre-fix re-run would only reproduce the
+      known 403-noise. Escalated as BLK-12b5a8b0 (recommend: park this todo, priority 999 + false prereq, until the fix
+      lands so it stops being prematurely dispatched).** (repo: instruments-service, e2e-testing)
+
+## Verification log
+
+### 2026-07-12 — G4 re-run gate check (data_engineering slot-3)
+
+Dispatched the `[DATA] P1` "RE-RUN G4 verification from a clean slate" todo. Before running anything, checked whether
+the gate ("Once the lock contention is resolved (any path above)") was actually met:
+
+- **Todo #1 (operator decision a/b/c): OPEN** — still `- [ ]`; no operator ruling on this lockout exists (the
+  `plan_reconciliation_operator_decisions_2026_07_11.md` Tardis entries are all about the SEPARATE, already-resolved
+  billing gate `cefi_tardis_historical_blocked_credentials_2026_06_21.md`, not the concurrent-IP lock).
+- **Todo #2 (implement chosen fix): OPEN** — no lock/mutex/GCS-lease/proxy/403-code-274 commit in
+  `market-tick-data-service` or `deployment-service` git log since 2026-07-10.
+- **Code confirms the aggravator is still live**: `tardis_base_client.py`
+  `retry_status_codes = (429, 500, 502, 503, 504)` (403 absent, line ~138) and the 403 handler (~line 431) still only
+  logs a generic warning — it does not parse `code == 274` / `retryAfterSeconds`, so concurrent-lock 403s continue to
+  land in the manifest as `attempted_failed` rows indistinguishable from genuine unavailability.
+
+**Verdict: gate UNMET.** A pre-fix G4 re-run would only reproduce the same 403-lockout-dominated `attempted_failed`
+counts (74.9% of cefi af per the live query above) that todo #3 itself says to treat as upper-bound noise — so it would
+be actively misleading and a wasted ~35M-row manifest re-scan. Escalated the premature-dispatch + unmet-gate as a
+blocked question (BLK-12b5a8b0) with recommendation (A) the operator makes the todo-#1 decision. Promoted the
+direction-independent 403-code-274 error_reason hygiene fix (previously only prose in "Engineering grounding") to an
+explicit tracked `[DATA]` todo above, since it de-noises exactly the measurement this task needs and is correct under
+any a/b/c choice. Did NOT flip the G4 todo (it is not done) and did NOT run a pre-fix measurement.
