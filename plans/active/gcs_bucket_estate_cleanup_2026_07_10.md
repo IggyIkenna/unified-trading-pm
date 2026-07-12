@@ -621,6 +621,58 @@ Per plan-hygiene discipline, flipped the stale unchecked `C0`/`C0b`–`C0f` todo
 `defi_manifest_canonicalisation_2026_06_01.md` to reflect this reality, citing the VM run as evidence (that plan's own
 checklist was never updated when the work landed — exactly the ambiguity that caused this session's initial wrong read).
 
+## 5g. Football buckets investigated — no established destination, left untouched
+
+Read `unified-trading-pm/scripts/sports/migrate_sports_gcs_to_hive.py` in full. Confirmed it does NOT cover 2 of the 3
+remaining buckets at all: `football-backtest-results` and `football-ml-models-and-predictions` have no corresponding
+migrate-function or destination anywhere in the script. It covers `football-mapped-consolidated`'s `mapping/` subfolder
+only (already confirmed migrated in §5e) — its `odds/`, `odds_consolidated/`, and `parquet_backup/` subfolders are
+untouched by this script too.
+
+Sampled content directly: `football-backtest-results` (455 objects, 43 MiB) holds real ARBITRAGE BACKTEST OUTPUT
+(`arbitrage/consolidated/`, `arbitrage/h2h/league_*/season_*/` — derived analysis results, not source data).
+`football-mapped-consolidated`'s `odds/`/`odds_consolidated/` hold real per-league odds parquets (`103.parquet`,
+`106.parquet`, ...) — genuinely ambiguous whether this is superseded by the live odds pipeline
+(`market-data-tick-sports-*`) or holds unique historical detail; guessing wrong risks silently treating real betting
+data as redundant. `parquet_backup/` is very likely a parquet-converted backup of already-migrated CSV source data, but
+not independently confirmed.
+
+**Left all 3 untouched — no established canonical destination or migration plan exists for them**, unlike the DeFi case
+(§5f) where a real, tested, already-executed migration existed. This isn't "genuinely blocked" in the rule-1 sense (no
+physical impossibility) — it's "no documented record of intent to decide from" (rule 2's own bar for autonomous
+decision-making), plus the adjacent migration script's own explicit "WAIT: Do not execute until user says 'go'" signals
+real operator sensitivity to this domain generally. Documented rather than guessed. Genuinely open — flagged in the
+final report below.
+
+## 5h. ml_source_bucket resolver fix — "ensure future code lines up" (2026-07-12)
+
+Operator's closing instruction on the whole round: "properly audit and figure out and then do migration to canonical
+ensuring future code will line up wrt all these buckets." The DeFi buckets (§5f) and football buckets (§5g) needed no
+code changes (writers already resolve correctly, or no destination exists to code against). The one place code genuinely
+needed to change: `ml-models-store`.
+
+Traced the REAL training write path (`ml_service/training/ml/model_registry.py` → `Settings(MLTrainingConfig)` →
+`unified_trading_library.config_interface.ml_config.MLTrainingConfig.ml_source_bucket`) — found it resolves via
+`self.ml_source_bucket_template.format(project_id=...)`, a flat string template (`"ml-models-store-{project_id}"`, no
+env tier), NOT the canonical `resolve_bucket_name(kind="ml-models-store")` resolver. This exactly explains the §5e
+finding: 38 real trained-model objects sitting in the flat `ml-models-store-central-element-323112` bucket while the
+canonical `ml-models-store-prd-central-element-323112` sat empty. The field's own comment already flagged this as known
+tech debt ("consolidate to resolver in follow-up sweep") — this ships that follow-up.
+
+Fixed in BOTH copies of the identical pattern (UTL's `MLTrainingConfig` — the one the real writer actually uses — and
+ml-service's own separate `InferenceConfig`, which doesn't inherit from the UTL class and had the exact same bug
+independently): `ml_source_bucket` now calls `get_write_bucket_name("ml_models")` (the domain was already registered in
+UTL's `_DOMAIN_TO_YAML_KIND`, so this was a 1-line resolver call away, not new plumbing) by default, preserving the
+`ML_GCS_BUCKET_TEMPLATE`/`ML_SOURCE_BUCKET_TEMPLATE` env-var override as an explicit escape hatch (grepped
+workspace-wide: unused in any terraform/deployment config today, but not removed). Verified against real env both ways
+(resolver path → `ml-models-store-prd-central-element-323112`; override path → still honored when explicitly set). Full
+`quality-gates.sh` green on both repos; UTL's 485 existing config tests + ml-service's full training+inference suite
+(2230 passed, 1 pre-existing unrelated flaky cache-timing test confirmed passing in isolation) all pass unchanged.
+Shipped in dependency order per rule 8: `unified-trading-library@f853fc87` first, then `ml-service@7a90b84a`.
+
+**Net effect**: new model training runs will now correctly land in the canonical env-tiered bucket going forward — the
+drift that produced the 38-object flat-bucket orphan (already migrated forward in §5e) cannot recur.
+
 ## 6. Model-tier note (repeating from frontmatter, since it matters for how much to trust this)
 
 Per `AUTONOMOUS_AGENT_RULES.md`'s self-check, a long cross-repo autonomous loop like this one normally routes to

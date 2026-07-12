@@ -219,3 +219,16 @@ and Phase 4 waits on Ikenna's access answer.
   `max(available_from)` frozen at 06-27 → pulled the thread). Root cause chain verified end-to-end; UTL coercion fix
   written + verified on the poisoned prod frame; legacy consolidator cron paused; local healing capture + UTL quickmerge
   in flight (evidence appended when green). Operator notified in-session.
+
+- 2026-07-12 (corroborating evidence, real venue — NOT the KALSHI-PERP/POLYMARKET-PERP CEFI scaffolds, which are a
+  separate, already-resolved gap): re-verifying `data_pipeline_e2e_check_2026_07_10.md` todo 25's real PREDICTION/KALSHI
+  MTDS shards for day=2026-07-09 (well past this doc's originally-documented 07-01→07-06 window), a real force-leg VM
+  run (`mtds-backfill-prediction-pipelinecheck-20260712-095703`/`-095704`) hit, for BOTH `book_snapshot_5` and `trades`:
+  `WARNING KalshiAdapter: no Kalshi tickers found in market_lifecycle for 2026-07-09 — IS may not have enumerated this date yet; run IS backfill if needed`
+  → `SHARD_INCOMPLETE ... expected 1 venues, wrote 0, missing: ['KALSHI']`. This is the REAL Kalshi prediction venue's
+  market_lifecycle enumeration (the `is-daily-enum-prediction` cron this doc's summary names), not the CEFI KALSHI-PERP
+  scaffold. Suggests the "backfill of the missed days" this doc's summary flags as still-remaining has not covered
+  2026-07-09, or the underlying daily enum is still not reliably populating recent days. Not independently re-verified
+  against the IS-side bucket/manifest in this pass (out of scope for the MTDS shard triage this evidence was gathered
+  during) — flagging here per the "add corroborating evidence to the existing open doc" rule rather than filing a
+  duplicate.
