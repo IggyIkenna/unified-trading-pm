@@ -322,3 +322,96 @@ it currently blocks basic IS reference-data capture for OKX entirely (confirmed 
 (trades/book_snapshot_5/derivative_ticker/liquidations, day=2026-07-09) also failed with
 `WARNING No active venues for date=2026-07-09 asset_groups=['CEFI']` — consistent with IS never having populated an OKX
 catalogue entry for that day, since MTDS's venue-activity check reads off IS's own catalogue.
+
+## Real end-to-end VERIFY attempt (slot-2, 2026-07-12, ~19:00-19:57Z) — TWO MORE code-level bugs found, launches killed
+
+Picked this issue back up to actually run the item-3 VERIFY (re-launch + confirm real rows) now that both `[CODE]` todos
+above show ✅. Found the earlier code fixes (routing entries, `_TARDIS_CEFI_VENUES` union, `_resolve_tardis_exchange`
+call-site fix, `_route_tardis`'s `canonical_venue` threading) were necessary but NOT sufficient — three additional,
+independent bugs sat between "code is fixed" and "a real VM captures a row." Fixed the first two, found + precisely
+diagnosed (but did NOT fix) the third and fourth:
+
+**Bug A (FIXED, shipped `deployment-service@a1454a6` + `market-tick-data-service@7c4e6354`)** — First launch of both
+venues (per this issue's item-3/item-VERIFY-LIGHTER instructions) showed `venues=[]` for EVERY date on BOTH OKX and
+DERIBIT-COMBO (`WARNING No active venues for date=... asset_groups=['CEFI']`), despite
+`launch-targeted-options-chain- backfill.sh` correctly passing `VM_VENUE=OKX` / `VM_VENUE=DERIBIT-COMBO`. Root cause,
+one layer EARLIER than every fix above: `market_tick_data_service.engine.orchestrator.get_venues_for_asset_groups()`'s
+CEFI branch only derives candidate venues from `_VENUE_MAPPING.tardis_to_venue.values()` (a 1:1 exchange-slug→venue
+reverse map) + `all_cefi_onchain_clob_venues` — and bare `"OKX"` / `"DERIBIT-COMBO"` structurally CANNOT appear in that
+1:1 map (OKX spans 4 Tardis exchange slugs; DERIBIT-COMBO shares the `"deribit"` slug already claimed by bare DERIBIT),
+even though both are real, declared venues in UAC's `VENUES_BY_ASSET_GROUP["cefi"]`. So
+`_build_active_venues_for_date`'s `venue_filter=["OKX"]`/`["DERIBIT-COMBO"]` intersected against a candidate set that
+never contained them → `active_venues=[]` → the whole day short-circuits before `_route_tardis`/the itype-aware exchange
+resolution is ever reached. Fix: explicitly add `"OKX"` + `"DERIBIT-COMBO"` to the CEFI branch's venue list
+(`market-tick-data-service@7c4e6354`, 1 regression test). VMs self-completed with `venues=[]`→fixed dispatch confirmed,
+but then hit Bug B.
+
+**Bug B (FIXED, shipped `deployment-service@467be0c`)** — After Bug A's fix, the relaunch reached real dispatch but 100%
+of shards failed at VM bootstrap with `ManifestConsolidatorStaleError` (rc=1, 0 rows, VM self-deleted within ~2 min):
+`assert_consolidator_healthy()`'s default 120s freshness budget on the consolidated `_index/availability_index.parquet`
+blob is regularly exceeded by the real Cloud Run consolidator cadence for the large cefi bucket — confirmed live (blob
+updated at 19:41:45Z, already 298s stale again by 19:46:43Z, a ~5min+ real cadence vs. the 120s check budget).
+`launch-targeted-options-chain-backfill.sh` was the ONE outlier among ~20 cefi/ large-bucket launchers missing
+`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` (every other one — `launch-cefi-sharded-backfill.sh`,
+`launch-cefi-hl-aster-historical-backfill.sh`, etc. — already sets it). Fix: added the same 86400s budget to this
+launcher's VM metadata (`deployment-service@467be0c`).
+
+**Bug C (FOUND, NOT fixed — OKX)**: with A+B fixed, OKX's relaunch reached the real per-symbol fetch attempt for the
+first time, and immediately hit:
+`WARNING Venue OKX: no download_batch support: 'OKXAdapter' object has no attribute 'download_batch'`. Bare `"OKX"`
+resolves to a DIFFERENT adapter class (`OKXAdapter`, live-only, no batch/historical support) than the Tardis-routed
+batch path that `_resolve_tardis_exchange`/`_route_tardis` (this issue's earlier fixes) target — i.e. there is a
+venue→adapter-CLASS dispatch decision upstream of `_route_tardis` in
+`market_tick_data_service/adapters/umi_tick_provider.py` that never sends bare `"OKX"` down the Tardis branch at all.
+**Compounding gap, same venue**: independently confirmed `unified_api_contracts/registry/market_data_categories.py`'s
+`VENUE_DATA_TYPE_CAPABILITIES["OKX"]` (~line 1192) declares
+`{"trades", "book_snapshot_5", "derivative_ticker", "liquidations"}` — **no `"options_chain"` key at all** — so even
+with the adapter-class routing fixed, a preflight capability check would still drop the request. Both gaps need to close
+together: (1) add `"options_chain": "2020-02-01"` to `VENUE_DATA_TYPE_CAPABILITIES["OKX"]`, (2) make the
+venue→adapter-class dispatch in `umi_tick_provider.py` route bare `"OKX"` (or specifically OKX
+options_chain/futures_chain requests) to the Tardis adapter path instead of `OKXAdapter`. The VM got OOM-killed
+(`rc=137`, "Killed") after ~2min stuck on date=2026-01-01 before reaching the 2nd date — worth checking for a
+retry-loop/leak on this specific failure mode, not just the missing route.
+
+**Bug D (FOUND, NOT fixed — DERIBIT-COMBO)**: with A+B fixed, DERIBIT-COMBO's relaunch reached the preflight capability
+check and logged:
+`INFO Pre-flight: venue=DERIBIT-COMBO date=2026-01-01 — dropping data_types not supported per UAC: ['options_chain']` →
+`TardisAdapter.download_batch: deribit 2026-01-01 — 0 records (0 bulk, 0 per-symbol data types)` for every date.
+Confirmed via direct read of `market_data_categories.py`'s `VENUE_DATA_TYPE_CAPABILITIES` dict: **`"DERIBIT-COMBO"` has
+NO entry at all** (bare `"DERIBIT"` has a full entry incl. `"options_chain": "2019-03-30"`, but the dict was never
+extended for the COMBO variant despite `INSTRUMENT_TYPES_BY_VENUE["DERIBIT-COMBO"] = {"OPTION"}` already being
+declared). Fix: add a `"DERIBIT-COMBO": {"options_chain": "<start-date>"}` entry (start-date TBD — Deribit combo/spread
+instruments are a newer product than bare options; do NOT just copy DERIBIT's 2019-03-30 without checking when Tardis's
+`type=='combo'` symbols actually start).
+
+**All 14 VMs killed** (`gcloud compute instances delete`, 2026-07-12T19:57Z — OKX's had already self-deleted per the
+OOM-kill; DERIBIT-COMBO's were still RUNNING and deleted directly) once Bugs C/D were confirmed — no code fix can make
+either venue capture a single real row without landing C and/or D first, so further VM time would only burn SPOT spend
+on a guaranteed-zero outcome.
+
+**Net assessment**: this issue has now survived 4 independent, real, code-level bugs across ~7 sessions/slots
+(venue-drop silent-fail → wrong exchange resolution → wrong canonical-venue propagation → row misclassification →
+dispatch-gate exclusion → [this session] missing venue-candidate derivation → missing consolidator-staleness budget →
+wrong adapter-class routing → missing capability declaration). This is strong evidence the remaining Bugs C/D are _also_
+real and worth fixing, but Layer-1 closure for these 2 tuples should NOT be assumed "one more fix away" — budget the
+next session for another full VERIFY-then-fix cycle, not just the two known items.
+
+## New follow-up todos (this session)
+
+- [ ] [CODE] P1. OKX options_chain: add `"options_chain": "2020-02-01"` (confirm the real Tardis okex-options
+      `availableSince` before hardcoding) to `VENUE_DATA_TYPE_CAPABILITIES["OKX"]` in
+      `unified_api_contracts/registry/market_data_categories.py` AND fix the venue→adapter-class dispatch in
+      `market_tick_data_service/adapters/umi_tick_provider.py` so bare `"OKX"` options_chain/futures_chain requests
+      route to the Tardis batch path instead of `OKXAdapter` (which has no `download_batch`). Investigate the rc=137
+      OOM-kill after ~2min on a single date before assuming a clean fix resolves it — may indicate a separate retry/leak
+      issue on this failure path. (repo: unified-api-contracts, market-tick-data-service)
+- [ ] [CODE] P1. DERIBIT-COMBO: add a `"DERIBIT-COMBO": {"options_chain": "<verified-start-date>"}` entry to
+      `VENUE_DATA_TYPE_CAPABILITIES` in `unified_api_contracts/registry/market_data_categories.py` (verify the real
+      Tardis `type=='combo'` earliest-available date first — do not copy bare DERIBIT's 2019-03-30 without checking).
+      (repo: unified-api-contracts)
+- [ ] [VERIFY] P1. Once both land: rebuild the mtds-code tarball (`create-code-tarballs.sh --asset-group CEFI` —
+      mandatory stale-tarball gotcha, bit every prior VERIFY attempt on this issue), relaunch both venues via
+      `launch-targeted-options-chain-backfill.sh --venue OKX --commit` / `--venue DERIBIT-COMBO --commit`, and confirm
+      real rows land (check run.log for actual `TardisAdapter.download_batch: ... N records` with N>0, not just
+      `venues=[...]` correctness — this session's VERIFY got that far twice already and still found zero-row bugs
+      further downstream both times). (repo: deployment-service)
