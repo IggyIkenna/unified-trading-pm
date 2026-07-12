@@ -181,6 +181,22 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
         backfill VM can be re-launched. Repos: `market-tick-data-service`, `deployment-service`. Tracks
         `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` todo 3.
 
+### G1.6 — Solana DEX-pool venues (ORCA/RAYDIUM/KAMINO) never backfilled (found during G2 2026-07-12)
+
+- [ ] [SCRIPT] P1. Launch a dedicated Solana dex-pool backfill VM for ORCA/RAYDIUM/KAMINO (`dex_pool_state` +
+      `dex_pool_swaps`) — analogous to the dedicated `mtds-solana-drift-backfill` VM G1 launched for DRIFT perp_funding.
+      Root cause (confirmed 2026-07-12): the original `mtds-dex-pools-backfill`/`mtds-dex-swaps-backfill` G1 VMs
+      explicitly SKIPPED these 3 Solana venues ("Solana venues (orca/raydium/phoenix) skipped as expected." — this plan,
+      G1 dex-pools launch log) and no follow-up VM was ever launched to cover them, unlike DRIFT. Capture code + UAC
+      MVP-scope declarations both confirm these ARE in-scope (`dex_pools_handler.py` `_collect_solana_dex()` routes
+      `fetch_orca`/`fetch_raydium`/`fetch_kamino_vault`;
+      `unified-api-contracts/registry/capability_declarations/     _defi.py:665-687` declares them; `mvp_scope.py` v13 =
+      all 57 IS-producible defi venues are MVP). Current honest coverage (2026-07-12): ORCA/RAYDIUM/KAMINO all show
+      `captured=0` with large `expected_unattempted` (dex_pool_state: ORCA eu=208,405, RAYDIUM eu=92,573, KAMINO
+      eu=105,005; dex_pool_swaps: ORCA eu=208,392, RAYDIUM eu=92,605). Repos: `deployment-service` (launcher),
+      `market-tick-data-service` (Solana DEX adapters already exist, no new code expected). **Gate:**
+      ORCA/RAYDIUM/KAMINO dex_pool_state + dex_pool_swaps attempted_failed=0 AND expected_unattempted=0 post-genesis.
+
 ### G2 — verify honest-complete
 
 - [ ] [SCRIPT] P0. Final defi MVP verification: all 6 data_types attempted_failed=0 AND expected_unattempted=0
@@ -1334,3 +1350,78 @@ questions already sit in the queue for this exact task (`BLK-ab48a164`, `BLK-a85
 `POST /api/backlog/reload`, or rule directly on todo 3 in `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`) so
 the redispatch churn stops. Calling `/skip-current-task` next — no code or plan-of-record change is possible from a
 worker slot beyond this Progress Log entry and the escalation.
+
+### G2 verification run #2 — GATE FAILS, new Solana dex-pool gap found (2026-07-12 03:48 UTC, slot 3)
+
+Picked up `mvp_backfill_defi_onchain_v10-002` (the G2 final-verification todo). Fresh-pulled all repos, confirmed VM
+roster via `gcloud compute instances list --filter="name~mtds"` (using the working `~/google-cloud-sdk/bin/gcloud` — the
+snap `gcloud` is broken in this sandbox: `snap-confine ... cap_dac_override not found`):
+
+| VM                                                  | STATUS                                                                                                                                                                                          |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mtds-dex-swaps-backfill`                           | RUNNING — actively writing (day=2024-11-21 of 2023-01-01→2026-06-27 range at 03:33 UTC; real progress, not stalled)                                                                             |
+| `mtds-perp-funding-backfill`                        | RUNNING — processing 2026-06-05 (near "today", i.e. in daily forward-catchup phase of its 2023-11-01→today window)                                                                              |
+| `mtds-dex-pools-backfill`                           | ✅ COMPLETED exit_code=0 (2026-06-29 14:07 UTC)                                                                                                                                                 |
+| `mtds-lending-indices-*` (latest `20260701-022550`) | ✅ COMPLETED exit_code=0 (2026-07-01 02:29 UTC)                                                                                                                                                 |
+| `mtds-lst-rates-*` (latest `20260630-003055`)       | ✅ COMPLETED exit_code=0 (2026-06-30 00:34 UTC)                                                                                                                                                 |
+| `mtds-pyth-archive-*`                               | ✅ COMPLETED (2026-06-28, prior run)                                                                                                                                                            |
+| `mtds-solana-drift-backfill`                        | gone — terminated mid-run (no EXIT_STATUS; last log lines are HTTP 429 spam on 2025-12-23→2026-03-06 batch resolve) — this is the already-tracked, condition-gated DRIFT blocker above, not new |
+
+**Pre-check finding (caveat on all numbers below):** the DEFI bucket's manifest consolidator
+(`uts-prod-manifest-consolidator-market-data-defi`) is **~30h stale** — `_index/availability_index.parquet`
+`Update time = 2026-07-10T21:42:30Z` vs now 2026-07-12T03:37Z, exceeding `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400s`
+(confirmed both from `gsutil stat` and from the still-running VMs' own `ManifestConsolidatorStaleError` log spam). This
+is a **pre-existing, already-tracked, actively-being-worked issue**
+(`plans/active/issues/defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`, updated today) — root cause
+(code-verified by a sub-agent): scheduler-triggered consolidator executions get SIGKILLed mid-merge, which bypasses the
+`finally:`-block lock release (`unified_trading_library/manifest_consolidator.py:692-694`), so subsequent ticks take the
+fresh-lock fast-skip path (`:416-432`) which reports `success=True` **without** calling `_touch_canonical_mtime`
+(`:885-958`) — explaining "executions succeed every ~1min but the blob mtime never moves." A partial fix already landed
+(lock TTL 90s→300s) but a residual kill source is still open. Not re-filing — already tracked. **Net effect on this
+verification**: the consolidated index used below reflects state as of ~2026-07-10T21:42Z, undercounting ~30h of the two
+still-running VMs' progress (per-VM shards ARE current; only the merged view is behind).
+
+**Coverage measurement** (`python scripts/measure_honest_coverage.py --asset-group defi`, 03:48 UTC, 27,446,015-row
+primary manifest merged with 594-row secondary → 24,698,596 deduped rows). Layer-1 completeness 86.2% (12 UAC-expected
+tuples missing from the writer side, 171 stray writer tuples UAC doesn't sanction — pre-existing definitional gap, not
+re-investigated here). Aggregated across all venues per MVP data_type:
+
+| data_type       | captured  | attempted_failed | expected_unattempted | gate |
+| --------------- | --------- | ---------------- | -------------------- | ---- |
+| dex_pool_state  | 1,560,561 | 770              | 1,814,837            | FAIL |
+| dex_pool_swaps  | 639,489   | 21,122           | 3,883,609            | FAIL |
+| lst_rates       | 14,979    | 851              | 11,993               | FAIL |
+| lending_indices | 120,885   | 54               | 569,084              | FAIL |
+| perp_funding    | 2,538     | 214              | 76,873               | FAIL |
+| oracle_prices   | 18,147    | 873              | 200,179              | FAIL |
+
+**G2 GATE STATUS: FAIL (checkbox NOT flipped)** — all 6 data_types still have non-zero attempted_failed and/or
+expected_unattempted. Two of six backfill VMs are still actively in-flight (dex_pool_swaps ~mid-range; perp_funding
+near-caught-up), so the gate cannot pass yet on that basis alone. Root-cause breakdown of the `expected_unattempted`
+mass, cross-checked against existing issue docs (via a research sub-agent, to avoid duplicate filing):
+
+- **ORCA / RAYDIUM / KAMINO (dex_pool_state + dex_pool_swaps), captured=0 despite real code + in-scope MVP declaration —
+  NEW finding, filed as G1.6 above.** The original G1 dex-pools/dex-swaps VMs explicitly skipped these 3 Solana venues
+  and no follow-up VM (analogous to the DRIFT one) was ever launched.
+- **UNISWAP_V2 / UNISWAP_V4 / TRADER_JOE_V2 / VELODROME_V2** — already tracked, open, P2:
+  `defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md` (zero forward-capture code; awaiting operator scope
+  confirmation). TRADER_JOE_V2 + VELODROME_V2 show `captured=0` in today's numbers, consistent with that doc.
+- **DRIFT perp_funding** — already tracked + condition-gated (`drift_perp_funding_helius_throughput_ruled=false`), see
+  the two Progress Log entries directly above. Not re-investigated.
+- **FLUID lending_indices** — already tracked, open, P0: `mtds_is_full_adapter_smoketest_findings_2026_07_07.md`
+  (adapter's revert-data guard never fires; 100% broken in practice).
+- **MORPHO lending_indices, captured=0** — a prior issue doc
+  (`defi_lending_atoken_debttoken_instrument_split_ 2026_07_07.md`) reported 465 real captured rows as of 2026-07-07,
+  which conflicts with today's captured=0 reading. Flagging as a loose thread (manifest-recording gap vs. genuine
+  regression) — **not yet root-caused**, needs a follow-up check before it's actioned.
+- **LIGHTER / EXTENDED (perp_funding / oracle_prices)** — correctly CeFi per v10 decision #4 (not a defi MVP gap); their
+  own real capture bugs are already tracked in `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
+
+**Not re-run this dispatch** (deferred — VMs still in-flight so a full hygiene/phantom pass would be premature and
+expensive against the stale consolidator): `manifest_hygiene_daily.py --mode full`,
+`reconcile_phantom_manifest_rows_all.py --dry-run`. Re-run once dex_pool_swaps + perp_funding VMs terminate and the
+consolidator issue above is resolved (or at least caught up).
+
+**Next re-dispatch should**: (1) check dex_pool_swaps/perp_funding VM completion, (2) check whether G1.6 (Solana
+dex-pool backfill VM) has been launched, (3) re-run `measure_honest_coverage.py`, (4) quick-verify the MORPHO
+discrepancy, before attempting the full G2 gate again.
