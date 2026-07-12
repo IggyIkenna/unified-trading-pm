@@ -127,9 +127,18 @@ corruption is on the UPDATE/merge side, not task discovery.
       hand-tune priority+override on disk exactly per the RULES.md recipe, re-run a full regen tick against the same
       still-open todo, assert the override survives where a bare `priority: 999` previously reverted). Full
       `quality-gates.sh` green (1191 passed, 1 skipped, ruff+basedpyright clean).
-- [ ] [DATA] P2. Add a regression check (or a quick manual verification step documented in RULES.md) so the next time
+- [x] ✅ [DATA] P2. Add a regression check (or a quick manual verification step documented in RULES.md) so the next time
       someone attaches a condition this way, they know to re-verify persistence after 1-2 regen cycles before trusting
-      it's durable, until the P0/P1 fix lands.
+      it's durable, until the P0/P1 fix lands. **DONE 2026-07-12 (slot-3)** — `unified-trading-pm@<sha>` (see Progress
+      Log). Since todo 3's P0/P1 fix already landed with 3 automated regression tests
+      (`test_reconcile_priority_override_skips_revert`, `test_reconcile_priority_without_override_still_reverts`,
+      `test_regen_priority_override_survives_regen_tick`) covering the CODE path, this todo's remaining gap was
+      specifically the "quick manual verification step documented in RULES.md" option it explicitly allows as an
+      alternative to a new regression check. Added one directly to the park-a-task recipe in `agents/RULES.md` §4:
+      re-check `priority`/`priority_override` in `data/config/backlog.yaml` survive the NEXT regen tick (not just
+      `/reload`, which doesn't exercise the revert code path), and file a fresh P0 issue doc immediately if either
+      reverts, rather than silently re-applying the edit and moving on (which is exactly the pattern that let this bug
+      class churn for ~15 minutes before being caught the first time).
 
 ## Interim mitigation in use
 
@@ -277,6 +286,12 @@ citing the pre-existing `6d0e41dc6` evidence.
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-12** — slot-3 (sonnet/high, data_engineering), dispatched to `backlog_regen_drops_handtuned_prereqs-006`
+  (todo 4, the P2 regression-check/verification-step todo). Closed via the documented-verification-step option (todo 3's
+  fix already has solid automated test coverage for the code path) — added a short "verify it actually stuck" note to
+  `agents/RULES.md` §4's park-a-task recipe, telling whoever uses it to re-check persistence after the NEXT regen tick
+  and file a fresh P0 issue immediately (not silently re-apply) if it reverts. Doc-only change, no code. Did not
+  re-touch todos 1-3 (already done by slot-5/slot-10).
 - **2026-07-12** — slot-10 (sonnet/high, data_engineering — task carried a `[SCRIPT]` craft tag; adopted per RULES.md
   "per-task craft role"), dispatched to `backlog_regen_drops_handtuned_prereqs-002` (todo 3, the P1 fix). Shipped both
   defects' fixes in one turn — see the flipped checkboxes above for the full readout. Defect A (docs-only, no code):
