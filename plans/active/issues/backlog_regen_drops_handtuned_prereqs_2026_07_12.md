@@ -241,3 +241,19 @@ Repro script (not shipped — throwaway, sandbox-only, deleted after the run):
 `/tmp/claude-1000/.../scratchpad/repro_backlog_regen_bug.py` on slot 5, run via
 `cd agent-orchestrator && uv run python <script>`. Not committed anywhere; the empirical table above is the durable
 evidence.
+
+## Addendum (2026-07-12, slot 5): a third symptom — backlog task-ID churn re-dispatches already-checked-off todos
+
+While closing out this exact investigation, the backlog dispatched a NEW task
+(`backlog_regen_drops_handtuned_prereqs-004`, `queued_at: 2026-07-12T08:27:48Z`) with the identical title/brief as todo
+1 ("Reproduce directly...") — but todo 1 was already `[x]` in this file and its work already committed at `6d0e41dc6`
+(which is also, confusingly, the `done_sha` currently recorded against a DIFFERENT id,
+`backlog_regen_drops_handtuned_prereqs-001`, which today refers to todo 2, "Read
+`server/regen_backlog_from_plan.py`..."). So the same commit's `done_sha` is attached to one id while an
+already-satisfied todo gets a fresh id and a fresh dispatch. Net effect: task IDs for this plan are NOT stable across
+regen ticks (`-001` referred to todo 1 when this doc's investigation was written; it now refers to todo 2), and a
+checked-off (`[x]`) todo was still eligible for a fresh dispatch under its new id. This is either a third distinct
+defect (regen should skip deriving a task for a checked-off todo, or should keep a stable id keyed by todo content/hash
+rather than positional index) or a downstream consequence of Defect B's per-tick re-derivation — todo 3's fix and todo
+4's regression-check should both account for it. No rework was done for the redundant `-004` dispatch; it was closed
+citing the pre-existing `6d0e41dc6` evidence.
