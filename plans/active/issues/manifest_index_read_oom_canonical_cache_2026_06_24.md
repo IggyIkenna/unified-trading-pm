@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: Manifest _index read OOMs multi-day batch backfills — un-evicted _CANONICAL_CACHE + slow per-VM fan-in merge
-summary: DeFi MTDS batch backfills (`--mode batch` over a multi-day range) OOM-die (exit_code=137 / SIGKILL) on `e2-standard-4` (16GB) — confirmed across EVERY data_type (collect-dex-pools/dex-swaps/lending...
+summary:
+  DeFi MTDS batch backfills (`--mode batch` over a multi-day range) OOM-die (exit_code=137 / SIGKILL) on `e2-standard-4`
+  (16GB) — confirmed across EVERY data_type (collect-dex-pools/dex-swaps/lending...
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -13,7 +15,12 @@ related: []
 created: 2026-06-24
 parent_epic: manifest_master
 priority: P2
-source: [plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md, unified-trading-library/unified_trading_library/manifest_writer/_read_index.py, unified-trading-library/unified_trading_library/manifest_writer/_state.py]
+source:
+  [
+    plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md,
+    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_state.py,
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -68,4 +75,6 @@ Memory-bound the manifest-index cache WITHOUT losing the sports warm-cache optim
   the result regardless, so A/B is the durable fix.
 
 Cross-cutting (touches the LIVE cefi/sports/tradfi manifest path) → validate carefully; NOT blocking the DeFi backfill
-(highmem unblocks it). Owner: a UTL/manifest slot. parent epic: mtds_mdps_master.
+(highmem unblocks it). Owner: a UTL/manifest slot. parent epic: manifest_master (corrected 2026-07-12 per operator
+ruling, finding 134 — frontmatter was right; charter match: manifest machinery → manifest_master; was written as
+"mtds_mdps_master" — that was the error, not the frontmatter).

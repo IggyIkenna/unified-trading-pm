@@ -103,9 +103,17 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — strategy-service cluster
 
-**status**: 🟠 ACTIVE — QG sweep for strategy-service (11 ruff errors, **SURFACE ONLY — LOGIC FREEZE in effect**). Only
-ruff/pyright surface fixes. No changes to `engine/strategies/v2/`, `engine/allocator/`, collateral, liquidation,
-cross-venue transfer. Resume full logic fixes after `🟢 STRATEGY-LOGIC UNFREEZE` ping lands. [vm: vm-trading-core]
+**status**: 🟠 ACTIVE — QG sweep for strategy-service (11 ruff errors). [vm: vm-trading-core]
+
+> **🟢 LOGIC FREEZE LIFTED 2026-07-12** (operator ruling, plan-reconciliation Q&A findings 286/292 — see
+> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2). Full logic changes to
+> `engine/strategies/v2/`, `engine/allocator/`, collateral, liquidation, cross-venue transfer are permitted again under
+> normal QG/ship discipline. Historical freeze text: (was: "🟠 ACTIVE — QG sweep for strategy-service (11 ruff errors,
+> SURFACE ONLY — LOGIC FREEZE in effect). Only ruff/pyright surface fixes. No changes to `engine/strategies/v2/`,
+> `engine/allocator/`, collateral, liquidation, cross-venue transfer. Resume full logic fixes after 🟢 STRATEGY-LOGIC
+> UNFREEZE ping lands."). Retroactively ratified under this ruling: funding_dispersion.py (strategy-service@6b285fad) +
+> the USDC-collateral down-size branch (strategy-service@6e9164b1). Previously freeze-gated items (e.g.
+> capability-wizard F27) are dispatchable.
 
 ### [`defi_recursive_borrow_archetypes_2026_05_10`](../active/defi_recursive_borrow_archetypes_2026_05_10.md)
 
@@ -143,8 +151,9 @@ DEFERRED-POST-CUTOVER · **estimate**: 12 cal AI-days (class: infra)
       engine") with a guard that returns a typed "archetype not in rollout" error against an explicit
       `SUPPORTED_ARCHETYPES` allowlist; fix the stale "53"→55 docstring/count. Supersedes the per-archetype
       `ARBITRAGE_CROSS_DOMAIN_EVENT` note in `config_grid_archetype_extend`. Repo: strategy-service. **NB**: respect the
-      active strategy-service LOGIC-FREEZE — this lives in `factory.py`/registry, not `engine/strategies/v2/`; land
-      after confirming the freeze does not cover the factory, else hold for the `🟢 STRATEGY-LOGIC UNFREEZE` ping.
+      active strategy-service LOGIC-FREEZE (lifted 2026-07-12 — see banner) — this lives in `factory.py`/registry, not
+      `engine/strategies/v2/`; land after confirming the freeze does not cover the factory, else hold for the
+      `🟢 STRATEGY-LOGIC UNFREEZE` ping (lifted 2026-07-12 — see banner).
 
 ### [`compute_optimization_mock_data_2026_05_13`](../active/compute_optimization_mock_data_2026_05_13.md)
 

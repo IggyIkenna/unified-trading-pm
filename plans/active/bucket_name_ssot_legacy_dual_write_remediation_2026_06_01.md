@@ -2,19 +2,32 @@
 doc_type: plan
 title: Legacy non-canonical tick-bucket dual-write remediation (drain → code-fix → migrate → decommission)
 summary: >-
-  Eliminates legacy flat tick-buckets (market-data-tick-<group>-<pid>) still receiving live writes alongside
-  canonical -<group>-<env>-<pid>: fixes the write-path resolver root causes (MTDS orchestrator malformed
-  domain, prediction launcher token, MDPS default), drains + pauses legacy consolidator crons, migrates
-  historical data into canonical with an authoritative v9 manifest, then decommissions. Invariant: delete a
-  legacy bucket only after canonical provably holds ALL its data (one single-walk per _index).
+  Eliminates legacy flat tick-buckets (market-data-tick-<group>-<pid>) still receiving live writes alongside canonical
+  -<group>-<env>-<pid>: fixes the write-path resolver root causes (MTDS orchestrator malformed domain, prediction
+  launcher token, MDPS default), drains + pauses legacy consolidator crons, migrates historical data into canonical with
+  an authoritative v9 manifest, then decommissions. Invariant: delete a legacy bucket only after canonical provably
+  holds ALL its data (one single-walk per _index).
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, e2e-testing, market-data-processing-service, market-tick-data-service, ml-service, unified-api-contracts]
+repos:
+  [
+    deployment-service,
+    e2e-testing,
+    market-data-processing-service,
+    market-tick-data-service,
+    ml-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [canonicalisation, migration, single-walk, manifest, pipeline-mode, data-correctness, infrastructure]
-related: [solana_defi_legacy_migration_2026_05_27.md, pipeline_mode_implementation_2026_05_28.md, defi_manifest_canonicalisation_2026_06_01.md]
+related:
+  [
+    solana_defi_legacy_migration_2026_05_27.md,
+    pipeline_mode_implementation_2026_05_28.md,
+    defi_manifest_canonicalisation_2026_06_01.md,
+  ]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA
@@ -29,16 +42,24 @@ locked_since: 2026-06-01
 supersedes:
 superseded_by:
 depends_on:
-source: [GCS audit 2026-06-01 (legacy flat `market-data-tick-<group>-<pid>` buckets receiving live writes alongside canonical `-<group>-<env>-<pid>`), root-cause discovery agent 2026-06-01 (RC1 MTDS orchestrator malformed domain; RC2 prediction launcher token; RC4 MDPS default; instruments-store drift), reopens archived `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` (residual runtime drift not caught at archival)]
+source:
+  [
+    GCS audit 2026-06-01 (legacy flat `market-data-tick-<group>-<pid>` buckets receiving live writes alongside canonical
+    `-<group>-<env>-<pid>`),
+    root-cause discovery agent 2026-06-01 (RC1 MTDS orchestrator malformed domain; RC2 prediction launcher token; RC4
+    MDPS default; instruments-store drift),
+    reopens archived `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` (residual runtime drift not
+    caught at archival),
+  ]
 model_tier: opus-required
 thinking_tier: high
-estimate_calibration_note: 'Infra (0.8×): root cause is a small set of code edits (1 MTDS callsite is the dominant
+estimate_calibration_note: "Infra (0.8×): root cause is a small set of code edits (1 MTDS callsite is the dominant
 
   live-write bug) + a deterministic GCS legacy→canonical merge. Bulk of the cost is the
 
   drain-recipe sequencing + per-bucket manifest merge/dedup + verification, not net-new surface.
 
-  '
+  "
 drift_direction: advance-code
 ---
 
@@ -402,8 +423,11 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
 
 ## Out of scope
 
-- `strategy-store` / `execution-store` / `features-delta-one` flat names — yaml deliberately keeps these flat (env-split
-  rolled back); NOT drift.
+- `strategy-store` / `execution-store` / `features-delta-one` flat names (was: yaml deliberately keeps these flat
+  (env-split rolled back); NOT drift). **Corrected 2026-07-12 (operator ruling, plan-reconciliation finding 353)**:
+  these three are NOT permanent exemptions — `bucket_env_split_rollout_2026_06.md` (operator directive 2026-06-09) is
+  the AUTHORITY for their naming end-state; they migrate to env-split naming on that plan's schedule. This plan defers
+  to it. See `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2.
 - On-disk `pipeline_mode=` partition — separate named successor (`pipeline_mode_partition_migration_*`).
 
 ## Relocate canonical cloud-providers.yaml OUT of deployment-service → UAC (operator-confirmed 2026-06-10)

@@ -51,15 +51,20 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 **status**: 🟠 ACTIVE — QG sweep for execution-service (20 ruff errors) + trading-agent-service (ruff clean). Run
 `bash scripts/quality-gates.sh` exit 0 in each. PREREQ: UTL QG green. [vm: vm-trading-core]
 
+- [ ] [CODE] P1. **G12 (execution-side) — emit per-incident recon-freeze signals** that the alerting-service publisher
+      (owned in `observability_master`) consumes: symbol-scoped for symbol breaks, account-wide for account-level SEV0s.
+      In-scope for May-23. Repo: execution-service. From
+      `archive/issues/recon_freeze_armed_never_published_2026_05_27.md`. **Escalated P2→P0 2026-07-12 by operator
+      ruling** (plan-reconciliation Q&A finding 367): subscriber code confirmed absent in execution-service; live orders
+      currently NEVER blocked by recon-freeze state — safety gap on the passed May-23 critical path; alerting-service
+      twin already shipped P0. See plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md §A2.
+
 ## P2 — opportunistic / post-cutover (slot 7 dispatch 2026-06-01)
 
 - [ ] [CODE] P2. **F-32 — size-based MEV auto-escalation (post-cutover).** Operator decision 2026-06-01: MEV mode is
       **directive-driven** for May-23 (F-32 closed for the cutover). Post-cutover, add size-based auto-escalation of MEV
       protection. Repo: execution-service. From `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`.
-- [ ] [CODE] P1. **G12 (execution-side) — emit per-incident recon-freeze signals** that the alerting-service publisher
-      (owned in `observability_master`) consumes: symbol-scoped for symbol breaks, account-wide for account-level SEV0s.
-      In-scope for May-23. Repo: execution-service. From
-      `archive/issues/recon_freeze_armed_never_published_2026_05_27.md`.
+- G12 escalated to P0 2026-07-12 (see P0 section).
 
 ## Assigned active plans
 

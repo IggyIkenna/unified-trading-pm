@@ -114,13 +114,17 @@ source:
       Deribit's real live `public/get_combos` API (89 real BTC combos / 32 unique legs, 88 real ETH combos / 30 unique
       legs). Real before/after: `DERIBIT:BTC-PERPETUAL` → `DERIBIT:PERPETUAL:BTC-PERPETUAL`. Full evidence:
       `instruments_docs_audit_outstanding_items_2026_07_08.md` finding A2.
-- [ ] [DATA] P2. **Fix the real `/`-delimiter bug in Betfair's sports adapter** — `betfair.py:279`
+- [x] [DATA] P2. **Fix the real `/`-delimiter bug in Betfair's sports adapter** — `betfair.py:279`
       (`_build_runner_record`) builds `instrument_key = f"{market_id}/{selection_id}"`, using `/` instead of the
       workspace's `:`-delimited convention (confirmed in `instruments-service/docs/SPORTS_INSTRUMENTS.md`'s "Known gaps"
       section as "the audit's most degenerate raw-passthrough found"). Sports keeps its own ID scheme (not forced into
       `VENUE:TYPE:SYMBOL` — operator decision), so this does NOT route through `build_canonical_instrument_id`; it just
       needs its own delimiter fix (`f"{market_id}:{selection_id}"`) plus a check for any downstream consumer that
-      currently splits on `/`.
+      currently splits on `/`. **CLOSED BY-DESIGN 2026-07-12** (operator ruling, plan-reconciliation finding 341, see
+      `active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2): `/` is Betfair's documented native id
+      convention — canonical ids for Betfair KEEP the `/` delimiter; downstream consumers must treat it as venue-native,
+      not normalise. Zero production Betfair rows exist today (dormant path); if Betfair activates, builders adopt this
+      convention as-is.
 - [ ] [DATA] P1. **Fix the real "no VENUE:TYPE: wrap at all" gap in both Prediction adapters** — Kalshi
       (`kalshi.py:799`, `instrument_key=ticker`) and Polymarket (`polymarket/parsing.py:139`,
       `instrument_key=condition_id`) both store the BARE raw provider id as `instrument_key` with zero structure — not

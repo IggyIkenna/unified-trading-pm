@@ -1,12 +1,14 @@
 ---
 doc_type: plan
-title: DeFi pipeline E2E + coverage validation (full-batch / per-handler / Phase-D historical carry tracer / backfill final-state)
+title:
+  DeFi pipeline E2E + coverage validation (full-batch / per-handler / Phase-D historical carry tracer / backfill
+  final-state)
 summary: >-
-  End-to-end validation of the DeFi pipeline (features-onchain → strategy → execution) before the live
-  cutover gate: run the full batch, verify each of the 11 registered DEFI handlers produces real (non-NaN)
-  GCS coverage, confirm the Stage-4 historical carry tracer emits honest non-NaN output across all 7
-  archetypes over 2022→today, and confirm the Lighter/Pacifica historical-replay backfill VMs reach their
-  final captured state. Includes SolidlyCL CL-pool matcher golden-swap ground-truth.
+  End-to-end validation of the DeFi pipeline (features-onchain → strategy → execution) before the live cutover gate: run
+  the full batch, verify each of the 11 registered DEFI handlers produces real (non-NaN) GCS coverage, confirm the
+  Stage-4 historical carry tracer emits honest non-NaN output across all 7 archetypes over 2022→today, and confirm the
+  Lighter/Pacifica historical-replay backfill VMs reach their final captured state. Includes SolidlyCL CL-pool matcher
+  golden-swap ground-truth.
 status: active
 nature: process
 asset_group: [cefi, defi]
@@ -15,7 +17,7 @@ repos: [execution-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: [defi, pipeline, features, strategy, execution, verification, honest-coverage, backfill]
 related: [../epics/defi_master.md, ./defi_manifest_canonicalisation_2026_06_01.md, ./master_to_live_defi_2026_05_23.md]
-created: '2026-06-12'
+created: "2026-06-12"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -63,17 +65,22 @@ remaining lower-priority half.
       smoke_matrix with --all-handlers; COVERAGE_FEATURE_GROUPS covers all 11 registered DEFI handlers (macro_sentiment,
       lending_rates, lst_yields, onchain_perps, utilization, rewards, risk_params, flash_loan_availability,
       health_factor, liquidation_events, rate_impact); dry-run matrix: 11 PASS 0 FAIL; QG green
-- [x] [VERIFY] P0. **Phase-D gate — full Stage-4 historical carry tracer** over 2022-01-01..today across all 7
+- [ ] [VERIFY] P0. **Phase-D gate — full Stage-4 historical carry tracer** over 2022-01-01..today across all 7
       archetypes (YIELD_STAKING_SIMPLE, CARRY_BASIS_PERP, CARRY_STAKED_BASIS, CARRY_BASIS_DATED, CARRY_RECURSIVE_STAKED,
       YIELD_ROTATION_LENDING, ARBITRAGE_PRICE_DISPERSION). Sample 10 random days from the 4-year window; for each day
       the `comparison.parquet` must have: (a) non-empty `realised_apy_bps` for ≥5 of 7 archetypes (CARRY_BASIS_DATED +
       ARBITRAGE_PRICE_DISPERSION may be empty pre-databento-coverage / pre-Pacifica-launch dates — honest absence, not a
       bug); (b) non-empty `flow_of_funds_legs` for the winning slot of each archetype; (c) NO silent NaN-only days
       (every day shows either real data or a manifest-recorded `record_expected_empty(reason=...)`). Depends on the
-      per-archetype backfill completion + the Phase-A gate clean + the features-onchain Docker rebuild. ✅ —
-      strategy-service@971b7217 | scripts/phase_d_gate.py: 3-assertion gate (silent NaN / ≥5 archetypes / fof_legs) + 22
-      unit tests all pass; run with --seed 42 shows 10/10 SKIP_NO_DATA (backfill not yet reached — expected per plan
-      dependency note); rc=0
+      per-archetype backfill completion + the Phase-A gate clean + the features-onchain Docker rebuild. REOPENED
+      2026-07-12 by operator ruling (plan-reconciliation finding 46): prior ✅ covered gate LOGIC only (22 tests, rc=0);
+      the data outcome was 10/10 SKIP_NO_DATA — Success Criteria (≥5/7 archetypes non-empty, 2022→today) never met.
+      (was: checked ✅ — strategy-service@971b7217 | scripts/phase_d_gate.py: 3-assertion gate (silent NaN / ≥5
+      archetypes / fof_legs) + 22 unit tests all pass; run with --seed 42 shows 10/10 SKIP_NO_DATA (backfill not yet
+      reached — expected per plan dependency note); rc=0) — see §A2 finding 46.
+- [ ] [SCRIPT] P1. Re-run scripts/phase_d_gate.py against real 2022→today data once the DeFi backfill reaches full
+      coverage; re-check the P0 above ONLY when ≥5/7 archetypes are non-empty on sampled days per Success Criteria
+      (~L99).
 - [x] ✅ [VERIFY] P0. **Final-state verification of the Lighter + Pacifica historical backfill VMs** —
       `cefi-lighter-zksync-ohlcv-20260507-024226` + `cefi-pacifica-solana-ohlcv-20260507-024226`. The manifest should
       show `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards. Verify via a `gcloud storage ls` count of

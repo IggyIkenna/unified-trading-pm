@@ -3712,6 +3712,17 @@ tracked in the Progress Log.
 
 ## Progress Log (append-only)
 
+- 2026-07-12 (rulings batch 2): applied per §A2 — LOGIC FREEZE lifted in strategy_master (286/292; NB the freeze's
+  UNFREEZE-ping channel \_agent_pings.md was retired 2026-07-04, so the epic banner + this ledger ARE the lift record);
+  G12 -> P0 in execution_master (367); Fireblocks OUT in defi_master (376); Tardis pair closed/unblocked (228+27); cefi
+  F2 Change-B collapsed after code verification PROVED fix live at is@4f5faae8 (149); M-C2 Progress Log corrected to the
+  DOWNGRADE verdict (171); pm_scripts_typecheck claim narrowed + todo bumped P3->P1 (87); Betfair '/' formalised
+  by-design (341); Massive Phase-4b P0->P2 (305); bucket flat-names defer to env-split authority (353); harsh_pc framing
+  retired (74); manifest-cache parent epic fixed to manifest_master (134/132); Phase-D gate checkbox REOPENED +
+  real-data re-run todo (46). Verifications completed: P1d COMPLETE but P1e formal re-audit missing -> re-audit
+  dispatched (246/247); TradFi G4 apply DONE (GCS re-verified) but Stage-1 close-out open + RESUME runbook untracked ->
+  corrections + owning todo in flight (128); EULER_V2 'never polled' CONFIRMED + NEW stalled-upstream blocker (~38 days
+  behind) -> doc reconciliation in flight (113).
 - 2026-07-11 (P0 batch): all 13 P0 auto-fix pairs applied + committed (this commit). Highlights: batch_live_symmetry P0
   section synced to complete child plans (18/19/337/363); epics/README registry+VM-model banner (308/309); orchestrator
   single-VM supersede notice (349); escalation epic PAUSED per 2026-06-26 deferral (338); plan_hygiene cron claim

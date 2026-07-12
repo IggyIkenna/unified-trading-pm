@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: TradFi dual-source — Massive alongside Databento with co-mingled source column
-summary: Add Massive (formerly Polygon.io) as a second TradFi OHLCV source alongside Databento, disambiguated via a source column.
+summary:
+  Add Massive (formerly Polygon.io) as a second TradFi OHLCV source alongside Databento, disambiguated via a source
+  column.
 status: active
 nature: process
 asset_group: [tradfi]
@@ -27,11 +29,11 @@ depends_on:
 source:
 assigned_role: data-pipeline-engineer
 drift_direction: advance-code
-completion_gates: {code: C5, deployment: D3, business: B4}
+completion_gates: { code: C5, deployment: D3, business: B4 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
 ---
 
 # TradFi dual-source — Massive alongside Databento
@@ -41,9 +43,9 @@ repo_gates:
 Adds Massive (formerly Polygon.io, rebranded 2025-10-30) as a second TradFi data source alongside Databento. Both
 vendors cover any (symbol, data*type) in the TradFi cell of the MVP coverage matrix; they co-mingle on the existing hive
 prefix `day=…/asset_group=tradfi/venue=…/` and disambiguate via a new `source` column written into every TradFi
-parquet + recorded in the manifest. Lands the deferred `multi_source_priority_merge_2026*\*`work that
-the`SOURCE_PRIORITY` module docstring already names as the prerequisite for any TradFi cell to legitimately list two
-sources.
+parquet + recorded in the manifest. Lands the deferred
+`multi_source_priority_merge_2026*\*`work that the`SOURCE_PRIORITY` module docstring already names as the prerequisite
+for any TradFi cell to legitimately list two sources.
 
 **Operator decisions captured (2026-05-28 chat)**:
 
@@ -53,8 +55,7 @@ sources.
    `("tradfi", "ohlcv_15m"): ["databento", "yahoo", "barchart"]`). No change to the VX cell required.
 4. **Scope**: batch / historical REST first. Live / WebSocket connector deferred — operator stated "not too worried
    about live yet".
-5. **Tier**: Massive billed at delayed-OK tier — Stocks Starter $29 + Options Starter $29 + Indices Starter
-   $29 +
+5. **Tier**: Massive billed at delayed-OK tier — Stocks Starter $29 + Options Starter $29 + Indices Starter $29 +
    Futures $199 ≈ $290/mo. Pricing TBC at signup; ping operator if real-time required for any cell.
 
 ## Status snapshot
@@ -269,13 +270,18 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 > Databento on-disk shape. This defeats the operator's core requirement (consumers can't tell the source). **Must land
 > BEFORE the paid backfill.**
 
-- [ ] [MTDS] P0. Rebuild `MassiveTradfiRestConnector` to emit the SAME canonical columns/dtypes `tradfi_shared` writes
+> **Priority downgraded P0→P2 2026-07-12** (operator ruling, plan-reconciliation finding 305, §A2 of
+> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`): Databento is PRIMARY
+> (codex/02-data/tradfi-databento-sourcing-ssot.md); Massive remains a documented fallback — no rebuild urgency. (was:
+> P0)
+
+- [ ] [MTDS] P2. Rebuild `MassiveTradfiRestConnector` to emit the SAME canonical columns/dtypes `tradfi_shared` writes
       for Databento (per data_type), and route its output through `tradfi_shared.finalise_tradfi_rows_and_path` /
       `write_tradfi_shard` — OR define a shared canonical `TRADFI_ROW_COLUMNS` contract in UAC/UTL and conform BOTH
       adapters to it. Repo: market-tick-data-service (+ unified-api-contracts if a shared row schema).
-- [ ] [MTDS] P0. Wire `MassiveTradfiRestConnector` into the TradFi adapter orchestrator/factory so it is actually
+- [ ] [MTDS] P2. Wire `MassiveTradfiRestConnector` into the TradFi adapter orchestrator/factory so it is actually
       reachable in the collect path (today it is dead code outside tests). Repo: market-tick-data-service.
-- [ ] [TEST] P0. Cross-source row-schema PARITY test: same instrument + window from databento vs massive → identical
+- [ ] [TEST] P2. Cross-source row-schema PARITY test: same instrument + window from databento vs massive → identical
       column set + dtypes per data_type (trades/tbbo/ohlcv_1m/ohlcv_15m + Era-B options/futures chain). This is the
       regression guard for "consumers don't care about source". Repo: market-tick-data-service.
 - [ ] [MTDS] P1. Add retry/backoff/rate-limit handling to `_get`/`_get_paginated` (429 is classified but never retried)
