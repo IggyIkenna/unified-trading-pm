@@ -145,6 +145,24 @@ root filesystem, not `/tmp`).
 
 ## Progress Log
 
+### 2026-07-12 ~08:3x-08:5x UTC — slot-10: corroborating data point — false-negative background-task failures
+
+Hit this same outage while running a long (~19min) background `migration_orphan_sweep.py --asset-group tradfi` for
+`tradfi_manifest_row_loss_regression-004`. New symptom worth flagging beyond "Bash tool blocked": **a backgrounded task
+can report `status: failed` even though the underlying work genuinely completed.** My sweep's own stdout log was
+redirected to a file under `/tmp/claude-1000/.../scratchpad/` (the harness's own scratchpad convention, itself on the
+same full tmpfs). When `/tmp` hit 100%, the log file became unwritable partway through the run (visible as repeated
+`--- Logging error ---` lines, then silent truncation) — but the Python process kept running fine in memory (the GCS
+report write path doesn't touch `/tmp`), completed its full walk, and successfully wrote its output parquet to GCS. Only
+the wrapper script's trailing `wait $PID; echo "EXIT_CODE=$?" >> $LOGFILE` step then failed (append to the
+now-unwritable file), which is what the harness surfaced as `failed with exit code 1`/`144` — a **false negative**.
+Confirmed via GCS blob timestamp + throughput-based timing math that the real work finished correctly. Practical
+mitigation used: set `TMPDIR` to a `/home/ubuntu/...` path (outside `/tmp`) and redirect all log/report-file output
+there too, not just rely on `TMPDIR` for library-internal temp files — the harness's own default scratchpad path is ALSO
+on the constrained tmpfs and should not be trusted for any long-running/background command's stdout redirect until this
+is structurally fixed. Did not touch any todo here (out of scope for my task) — just corroborating with a new failure
+mode for whoever picks up the P1 structural-fix todo below.
+
 ### 2026-07-12 ~08:2x UTC — slot-6: filed while Bash tool is down for this session
 
 Discovered mid-task on `sports_p2_history_reference_and_odds_2015_to_present-002`. Could not report via the normal
