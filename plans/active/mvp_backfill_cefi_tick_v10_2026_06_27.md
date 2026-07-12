@@ -1278,3 +1278,58 @@ causes (DERIBIT-COMBO wiring gap + OKX options_chain routing gap — both confir
 denominator errors), 1 new unconfirmed lead logged for next session. Layer-1 71.05%→79.5% today. **Gate remains NOT
 MET** — every remaining blocking item is either already tracked in an open issue doc, or documented here as a precise,
 actionable lead. No genuine BLOCKED-CREDENTIALS/OPERATOR/UPSTREAM condition this session.
+
+---
+
+### G4 Session Continuation — 2026-07-12T08:35–09:05Z (data_engineering slot-2, same-day continuation #2)
+
+**Golden-fixture P0 blocker resolved.** My earlier BITFINEX-FUTURES fix (`unified-api-contracts@5b57c2b2`) correctly
+narrowed the cefi EXPECTED denominator 76→73 tuples but left `instruments-service`'s checked-in
+`tests/unit/scripts/goldens/expected_universe/cefi.json` golden stale, breaking `quality-gates.sh`
+`test_expected_universe_golden.py[cefi]` **repo-wide for every slot touching instruments-service** — two other slots
+independently hit + filed this (`instruments_service_cefi_golden_bitfinex_futures_drift_2026_07_12.md`,
+`instruments_service_bitfinex_futures_golden_drift_2026_07_12.md`, now superseded/duplicate). Regenerated via
+`scripts/regenerate_expected_universe_golden.py` (UAC+UTL sibling clones clean), scoped strictly to `cefi.json` (the
+regen script touches all 5 domain goldens at once; reverted defi/tradfi/sports/prediction since only cefi was actually
+failing — full golden suite still 14/14 green with just cefi.json changed). My own commit converged byte-identical with
+another slot's concurrent fix (`instruments-service@0393f690`) and was correctly dropped by quickmerge's not-behind gate
+rather than double-shipped. Both issue docs updated to `status: resolved`.
+
+**Filed a new P1 finding + escalated to operator (`BLK-afc672cf`)**: traced the 4 remaining `book_snapshot_5`-only
+tuples (ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC/PACIFICA-SOLANA) via a sub-agent code read — NOT a silent-failure bug as
+my earlier lead speculated. `OnchainPerpBatchHandler._LIVE_ONLY_DATA_TYPES`
+(`market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py:196-201`) DELIBERATELY excludes these 6
+(venue,data_type) pairs from batch capture (REST sources are current-state-only, no historical range) AND deliberately
+writes ZERO manifest rows for them (code comment: "never an empty_confirmed cell — the honest model is 'live-only', not
+'impossible'"). This structurally conflicts with Layer-1's requirement that every EXPECTED tuple have ≥1 manifest row of
+ANY status — these 6 tuples can **never** satisfy Layer-1 as currently coded, meaning `denominator_complete=True` is
+mathematically unreachable for cefi while both pieces stay as-is. Filed
+`issues/cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md` with two resolution options
+(denominator-correction vs typed-empty-row retrofit) and escalated via `/blocked` (recommendation: option B, typed-
+empty retrofit, to stay consistent with every other honest-absence precedent in this codebase) — **NOT implementing
+either unilaterally**, this is an MVP-scope decision.
+
+**T+10min VM "RUNNING" was NOT sufficient verification — the BITGET-FUTURES/KRAKEN-FUTURES backfill from the prior entry
+captured ZERO new rows.** Checked `run.log` for the completed VMs: every single shard-day logged
+`"Pre-flight: venue=<V> date=<D> — all requested data_types fully covered (atoms ⊆ captured), skipping"` →
+`SHARD_INCOMPLETE ... wrote 0` → `0 venues ok, 0 total records`. **Root cause: the skip-existing pre-flight check
+operates at (venue, data_type) grain, not (venue, instrument_type, data_type)** — since `perpetual`-itype
+trades/book5/derivative_ticker were ALREADY captured for BITGET-FUTURES/KRAKEN-FUTURES on every requested date, the
+pre-flight sees the (venue, data_type) pair as "fully covered" and skips the whole day without ever attempting the NEW
+`future`-itype instruments specifically. This is a genuine, generalizable gap in the skip-existing granularity (worth
+its own follow-up finding if it recurs elsewhere — every "add a new instrument_type to an already-captured venue"
+backfill will hit this same futile-skip unless `FORCE=1` is used) — **not filed as a separate issue doc this session**
+since the immediate fix (relaunch with `FORCE=1`) is well-understood and already the documented workaround pattern used
+throughout this plan's history for exactly this shape of problem.
+
+**Relaunched with `FORCE=1`** (same `ONLY=` scoping as before: 8 BITGET-FUTURES shards all data types + 6 KRAKEN-FUTURES
+shards derivative_ticker-only) — in-flight, T+10min verification pending next check-in.
+
+**Gate verdict:** ❌ **NOT MET** — Layer-1 still 79.5% (15 missing; the BITGET-FUTURES/KRAKEN-FUTURES backfill from the
+prior entry produced 0 real rows, now relaunching with FORCE=1). One P1 architecture-contradiction finding escalated to
+operator (blocking 6 of 15 tuples forever without a decision). One P0 repo-wide QG blocker resolved (unblocks every
+other slot working instruments-service, not just this plan).
+
+**Not blocked by CREDENTIALS/UPSTREAM.** Genuinely blocked on the operator decision for `BLK-afc672cf` (6 tuples);
+continuing other scoped work (FORCE=1 relaunch verification, remaining un-investigated tuples: COINBASE-CDE,
+COINBASE-FUTURES/spot_pair, BYBIT-SPOT stray captures) while waiting.
