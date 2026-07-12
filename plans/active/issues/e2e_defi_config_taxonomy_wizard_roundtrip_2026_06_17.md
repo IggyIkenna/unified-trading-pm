@@ -96,9 +96,14 @@ materially incomplete against that bar, for ALL archetypes, not just these.
 
 ### Drift collateral answer (operator's concrete question)
 
-- **YES — Drift accepts the spot/LST as collateral** (collateralized short IS possible on drift): USDC(0), SOL(0.05),
-  **mSOL(0.10 `# PLACEHOLDER`)**, JitoSOL(0.10) — `venue_collateral.py:112-125`. NOT stables-only. (mSOL haircut is the
-  held placeholder — must be re-probed before go-live, `PLACEHOLDER_HAIRCUTS_PENDING_GO_LIVE:268-273`.)
+- **YES — Drift accepts the spot/LST as collateral** (collateralized short IS possible on drift): USDC(0), SOL(0.15),
+  mSOL(0.20), JitoSOL(0.20) — `venue_collateral.py:119-151` (real on-chain `initialAssetWeight`, probed 2026-06-17,
+  `unified-api-contracts@bc455499`). NOT stables-only. _(was: "USDC(0), SOL(0.05), mSOL(0.10 `# PLACEHOLDER`),
+  JitoSOL(0.10)" per `venue_collateral.py:112-125` — corrected 2026-07-12, plan-reconciliation finding 296, §A2 B-queue
+  ruling: superseded by the F28 live-probe documented in
+  `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md:187-188`; these are now real on-chain values,
+  not placeholders — the "held placeholder — must be re-probed" note + `PLACEHOLDER_HAIRCUTS_PENDING_GO_LIVE` reference
+  immediately below are themselves stale for these three rows.)_
 - **Aster = stables-only** (USDC/USDT; all LSTs `accepted=False`) — confirms the operator's example. **Hyperliquid =
   USDC-only** too. Bybit(stETH 0.10 PLACEHOLDER)/OKX(wstETH 0.10)/Deribit(stETH 0.075) accept some LSTs.
 

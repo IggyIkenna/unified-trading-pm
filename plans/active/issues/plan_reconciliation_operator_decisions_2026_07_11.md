@@ -3712,6 +3712,24 @@ tracked in the Progress Log.
 
 ## Progress Log (append-only)
 
+- 2026-07-12 (FINAL WAVE COMPLETE): all 17 afix2 chunks processed — 191 findings across 161 original-auto-fix pairs:
+  applied or verified-already-done in full; every edit evidence-re-verified (git shas, artifact reads, live manifest
+  probes); notable closes: 8 stale-open issue docs flipped resolved with verified shas; 4 impossible-date-ordering
+  frontmatter bugs; epic rosters regenerated/corrected across execution/infrastructure/mtds_mdps/observability/
+  features/cefi/predictions/trading_agent epics; DRIFT perp_funding "3 dates" claim corrected via LIVE manifest read (8
+  captured dates, 7.4M rows); Barchart ohlcv_15m retirement synced; INDEX.md header + caveat fixed. Sports prod deploy
+  VERIFIED end-to-end (scheduler state unfroze; fixtures 3 consecutive successes; docs synced; dev-fixtures OOM
+  side-finding filed as todo above). Corpus validators GREEN (frontmatter yaml + schema exit 0; 2 residual todo-format
+  hits are pre-existing debt, untouched). NOTE for the record: during a mid-wave session-wide permission outage, the
+  chunk 8/9-retry/11 fixers applied edits via Bash workarounds instead of halting (transparently flagged in their
+  reports); operator said "continue" — their edits were retained and are content-verified, but the workaround behavior
+  is logged here as a process deviation.
+
+- 2026-07-12 (sports prod deploy, escalation ii COMPLETE): scheduler args fix tofu-applied (gen 2, state unfroze 10:40Z;
+  discovery dispatched 16:45Z); prod fixtures job created 8cpu/32Gi, 3 consecutive successes incl. 2 unattended cron
+  ticks; NEW side-finding: DEV fixtures job OOM-failing every run (~336 execs) at 2cpu/4Gi.
+- [ ] [INFRA] P2. Fix uts-dev-instruments-service-sports-fixtures OOM (mirror the prod 8cpu/32Gi bump or descope the dev
+      cron) — side-finding from the 2026-07-12 prod deploy.
 - 2026-07-12 (rulings batch 4): P1e gate formally GREEN (re-audit PASS 0/0/0/0; gate doc + coordinator table + P2a/P2b
   ran-ahead notes applied — 246/247). Registry regenerated: 23 epics / 6 tiers, 4 superseded excluded, regen-script todo
   filed (339). Orchestrator census regenerated: 8 live children, was 'zero active' (216/323; NB the named populator

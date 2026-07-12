@@ -1,12 +1,14 @@
 ---
 doc_type: plan
-title: Capability wizard + manifest — strategy/venue/instrument/execution/risk capability SSOT, strategy prospectus generator, walkthrough wizard UI
+title:
+  Capability wizard + manifest — strategy/venue/instrument/execution/risk capability SSOT, strategy prospectus
+  generator, walkthrough wizard UI
 summary: >-
-  Builds a machine-generated capability manifest (SSOT of every edge the system supports), a per-strategy
-  prospectus generator (mechanics/decision-logic/exposures/fund-flow/risk/backtest), and a progressive
-  walkthrough wizard UI where each dropdown IS the availability answer. Four use cases: visibility,
-  end-to-end parameterization, two-sided code audit (logical vs unbuilt dead-ends), client-lite configurator.
-  Manifest exporter is a new PM openapi-family generator; static capability stays separate from runtime data-status.
+  Builds a machine-generated capability manifest (SSOT of every edge the system supports), a per-strategy prospectus
+  generator (mechanics/decision-logic/exposures/fund-flow/risk/backtest), and a progressive walkthrough wizard UI where
+  each dropdown IS the availability answer. Four use cases: visibility, end-to-end parameterization, two-sided code
+  audit (logical vs unbuilt dead-ends), client-lite configurator. Manifest exporter is a new PM openapi-family
+  generator; static capability stays separate from runtime data-status.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -14,7 +16,13 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]
 tags: [strategy, ui, catalogue, registry, ssot-audit, execution, docspec, verification]
-related: [plans/epics/strategy_master.md, plans/epics/deployment_and_user_management_master.md, plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md, plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md]
+related:
+  [
+    plans/epics/strategy_master.md,
+    plans/epics/deployment_and_user_management_master.md,
+    plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
+  ]
 created: 2026-06-11
 parent_epic: strategy_master
 assigned_vm: NA
@@ -29,7 +37,11 @@ locked_since: 2026-06-11
 supersedes:
 superseded_by:
 depends_on:
-source: ['operator direction 2026-06-11 (capability-wizard discussion — ikenna + harsh; session covered availability Q&A, walkthrough chaining, collateral/fees/sim-assumption gaps, prospectus generation, two-sided codex audit)']
+source:
+  [
+    "operator direction 2026-06-11 (capability-wizard discussion — ikenna + harsh; session covered availability Q&A,
+    walkthrough chaining, collateral/fees/sim-assumption gaps, prospectus generation, two-sided codex audit)",
+  ]
 drift_direction: advance-code
 ---
 
@@ -514,7 +526,7 @@ actually exists (which data_types missing, over which timeframes) via the existi
       standalone CI clone — enforced on LDR-drain builds where both repos checked out) + node/edge/cell count assertions
       (563/2325/24752). Part (b): full sweep of all 18 STRATEGY_ARCHETYPES_V2 × every matrix venue with available_algos
       → asserts wizard `getVenuesForArchetype` never marks a matrix-available venue `not_available`. Runs in CI via
-      `pnpm test:ci` (vitest include glob covers tests/unit/**). Verified TODAY: 53/53 (parity+output) → 138/138 with
+      `pnpm test:ci` (vitest include glob covers tests/unit/\*\*). Verified TODAY: 53/53 (parity+output) → 138/138 with
       graph suite; hashes byte-identical. | regression: tests/unit/wizard/parity-gates.test.ts
 - [x] ✅ [VERIFY] P1. PM QG step: two-sided audit (prospectus vs codex) runs as a gate — NEW contradictions fail
       (existing findings baselined). — PM@d581ce0 | QG green | baseline: 1 contradiction (CARRY_BASIS_PERP_INV/CEFI) + 2
@@ -577,7 +589,7 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       cells/51 archetypes → 3/archetype deterministic sample (150 configs, two-runs-identical) → compiled + smoke-run
       via the EXISTING V2BatchHarness (batch=live). On-host: 60 PASS / 7 PARAMS_REQUIRED / 83 typed DEAD_END (no
       uncaught crash). Surfaced real bugs by EXECUTION: **F47** UNBUILDABLE_SLOT (9 venues matrix-AVAILABLE but rejected
-      by the v2 slot-token registry) + **F48** NO_V2_ENGINE (22 VOL__/MARKET_MAKING__ matrix-reachable but no registered
+      by the v2 slot-token registry) + **F48** NO_V2_ENGINE (22 VOL**/MARKET_MAKING** matrix-reachable but no registered
       v2 engine) — filed (PM@6d3e6aa68 PR#314); fix = successor matrix↔engine-alignment plan (strategy-service LOGIC
       FREEZE).
 - [x] ✅ [DESIGN] P2. **Manifest as MCP server + conversational wizard agent** — tools: `query_manifest`, `data_status`
@@ -653,16 +665,16 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       (batch=live HARD RULE) with the honest data-availability precheck (on-host verdict PRECHECK_UNAVAILABLE —
       expected, no cloud data) + 3 smoke tests. Under strategy-service + e2e-testing QG (both green).
 - [x] ✅ [DESIGN] P3. **Jurisdiction overlay** — investor entity/jurisdiction filters venues/instruments at Stage A
-      (client_isolation_and_governance restrictions), so a config can never include a venue the investor cannot legally
+      (client*isolation_and_governance restrictions), so a config can never include a venue the investor cannot legally
       touch. — DONE 2026-06-13 (W8, registry layer) — unified-api-contracts@2c399a1
       (`architecture_v2/jurisdiction_overlay.py`: `Jurisdiction` StrEnum {UK_FCA,US_CFTC,CAYMAN,EU_MICA,
-      RETAIL_RESTRICTED,UNKNOWN} + `JurisdictionVenuePolicy` + `JURISDICTION_VENUE_POLICIES` +
-      `allowed_venues_for_     jurisdiction()`/`is_venue_allowed()`). Seeded ONLY documented restrictions, each cited in
-      source_note (US_CFTC BLOCKED for binance/bybit/okx/deribit/hyperliquid; permissionless DEXes + uncertain MiCA
-      pairings → UNKNOWN+needs_legal_review — NO fabricated legal claims). **CONSERVATIVE-DEFAULT (compliance
-      fail-safe): any unmodelled/UNKNOWN (venue,jurisdiction) pair returns BLOCKED+needs_legal_review, never silently
-      allowed.** 19 tests, basedpyright 0, QG green. uts-ui Stage-A jurisdiction-filter surface = follow-on consumer
-      (noted in gap tracker).
+      RETAIL_RESTRICTED,UNKNOWN} + `JurisdictionVenuePolicy` + `JURISDICTION_VENUE_POLICIES` + `allowed_venues_for*
+      jurisdiction()`/`is_venue_allowed()`). Seeded ONLY documented restrictions, each cited in source_note (US_CFTC
+      BLOCKED for binance/bybit/okx/deribit/hyperliquid; permissionless DEXes + uncertain MiCA pairings →
+      UNKNOWN+needs_legal_review — NO fabricated legal claims). **CONSERVATIVE-DEFAULT (compliance fail-safe): any
+      unmodelled/UNKNOWN (venue,jurisdiction) pair returns BLOCKED+needs_legal_review, never silently allowed.** 19
+      tests, basedpyright 0, QG green. uts-ui Stage-A jurisdiction-filter surface = follow-on consumer (noted in gap
+      tracker).
 
 ## Success criteria
 
@@ -1054,3 +1066,17 @@ for every agent on this plan:
   — the durable fix is a manifest-bundle-sync automation (every generate-unified-openapi.sh run should also refresh the
   two UI bundles
   - the parity gate guards it); tracked as the F14/F25 follow-on. Net: all UI bundles == UAC, all gates green.
+- 2026-07-12 — **RECONCILIATION CORRECTION (doc-reconciliation pass, finding 291, §A2 B-queue ruling —
+  `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`).** F27 (strategy-service/UAC venue-id case
+  mismatch — `accepted_perp_collateral('deribit')` always returning `[]`) was fixed **2026-06-15, one day after** this
+  plan's last F27 mentions above (dated 2026-06-12/13) were written: `unified-api-contracts@c0b2d0e` (verified via
+  `git show --stat c0b2d0e` — "fix(collateral): case-insensitive venue lookups in venue_collateral accessors (F27)")
+  normalises both sides of the lookup to `.upper()` in `venue_collateral.py`'s `accepted_perp_collateral` /
+  `venue_accepts_collateral` / `get_collateral_haircut` / `get_accepted_collateral` accessors —
+  `accepted_perp_collateral('deribit')` now returns `['BTC','ETH','USDC','stETH']` (was `[]`), fixed at the source so it
+  protects ALL callers, not just `staked_basis`. (was: this plan's above entries present F27 as an open,
+  LOGIC-FREEZE-gated, "owner fix recommended" blocker with no resolution noted — that framing is now stale; the fix
+  predates `carry_staked_basis_funding_scan_experiment_2026_06_16`'s "batch == live" production-path claim by one day,
+  so that sibling plan's claim is correct as written and needs no correction.) The strategy-service LOGIC FREEZE itself
+  was separately lifted 2026-07-12 (see `epics/strategy_master.md` banner, findings 286/292) — unrelated timing
+  coincidence, noted for completeness.

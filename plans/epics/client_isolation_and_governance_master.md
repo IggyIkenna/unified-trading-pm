@@ -31,6 +31,7 @@ related_plans:
     ../active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md,
     ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
     ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    ../active/uac_coverage_90pct_2026_06_10.md,
   ]
 last_updated: 2026-07-08
 locked_by: live-defi-rollout
@@ -122,10 +123,14 @@ _(no plans currently assigned at this priority — per_client_isolation archived
       `ShardCapacityEvent.SPAWN_NEW_SHARD` + auto-launches next shard VM. **MIGRATED FROM:**
       `per_client_isolation_and_venue_fanout_topology_2026_05_20`. Target: 2026-05-28. Create active plan
       `auto_shard_supervisor_signal_2026_05_28.md` when picking up.
-- [ ] [AGENT] P2. **Phase E.3 — Intra-client RebalanceCoordinator**: intra-client multi-portfolio + intra-client
+- [x] ✅ [AGENT] P2. **Phase E.3 — Intra-client RebalanceCoordinator**: intra-client multi-portfolio + intra-client
       multi-wallet ONLY; cross-client fund movement is NEVER in scope (HARD RULE). **MIGRATED FROM:**
-      `per_client_isolation_and_venue_fanout_topology_2026_05_20`. Target: 2026-06-01. Create active plan
-      `intra_client_rebalance_coordinator_2026_06_01.md` when picking up.
+      `per_client_isolation_and_venue_fanout_topology_2026_05_20`. Target: 2026-06-01. SHIPPED — corrected 2026-07-12,
+      doc-reconciliation finding 10009, §A2 B-queue ruling (was: unchecked, "Create active plan
+      `intra_client_rebalance_coordinator_2026_06_01.md` when picking up"): built + unit-tested
+      `strategy-service@1450019e` (2026-06-23) and wired into the live transfer-emit loop `strategy-service@171758fe`
+      (2026-06-24) — both commits verified present — per `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+      (task-082/task-090, 2026-06-23/24).
 - [ ] [NOTE] Sub-account transfers for non-Binance/OKX venues: `subaccount_transfers_phase_2_2026_06_01.md` (to be
       created). Migrated from same source plan.
 
@@ -137,6 +142,13 @@ _(no plans currently assigned at this priority — per_client_isolation archived
       minimal stub). Operator decision 2026-06-01: full type, single SSOT for per-client config (KMS refs, venue creds
       shape, isolation policy, portfolio/wallet topology). Replace ad-hoc per-service client-config shapes with this
       type. Repo: unified-api-contracts (+ downstream consumers: strategy-service, execution-service).
+
+### [`uac_coverage_90pct_2026_06_10`](../active/uac_coverage_90pct_2026_06_10.md)
+
+**Sync 2026-07-12** (finding 34, §A2 B-queue ruling): declares `parent_epic: client_isolation_and_governance_master` +
+`status: active` + P1, but was absent from this epic's `related_plans` + P1 section — now registered (was: unlisted).
+Near-complete: all coverage-work todos done (combined statement coverage 92.53%, branch 56.63%); only the final PM
+`quality-gates.sh` confirm-and-flip todo remains open.
 
 ### [`per_client_isolation_and_venue_fanout_topology_2026_05_20`](../archive/2026_05/per_client_isolation_and_venue_fanout_topology_2026_05_20.md)
 

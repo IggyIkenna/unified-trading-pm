@@ -1,8 +1,10 @@
 ---
 doc_type: issue
 title: monitoring-deadman cron crashes in run_lifecycle log_event (DP_ZOMBIE_WATCHDOG_DOWN root)
-summary: 'The `uts-prod-monitoring-deadman` Cloud Run job (cron `*/…`) is FAILING every run (recent executions X/X, 0/1 complete). Traceback:'
-status: open
+summary:
+  "The `uts-prod-monitoring-deadman` Cloud Run job (cron `*/…`) is FAILING every run (recent executions X/X, 0/1
+  complete). Traceback:"
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -20,12 +22,14 @@ priority: P2
 source: [alerts.log Slack triage 2026-06-23 (DP_ZOMBIE_WATCHDOG_DOWN + DP_CRON_DID_NOT_FIRE deadman)]
 assigned_vm:
 resolved_by:
+  dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md open-work item 1 (deployment-api rebuild, cloudbuild 0c9af143
+  SUCCESS), verified 2026-06-23 ~22:00Z
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-12
 ---
 
 > **✅ CODE FIX SHIPPED 2026-06-23 — deployment-service@`9b32ea5`.** Root cause confirmed via Cloud Logging: the deadman
@@ -33,8 +37,11 @@ last_updated: 2026-06-27
 > `RuntimeError("Event logging not initialized")`. The deadman is the OUT-OF-BAND watcher (its docstring forbids
 > `log_event`/PubSub; GCP-native execution-absence alerting is its bedrock), and its sibling out-of-band monitors use no
 > `run_lifecycle` — so the fix REMOVES `run_lifecycle` + honors the documented "never raises, exits 0 always" contract.
-> **Live verification (deadman execution 1/1 green) is BLOCKED on `deployment-api:latest` rebuilding** —
-> deployment-service LDR is 170 commits ahead of `main` and the image rebuilds on `main`. Tracked in
+> **✅ Live verification DONE + VERIFIED 2026-06-23 ~22:00Z** (was: "BLOCKED on `deployment-api:latest` rebuilding" —
+> corrected 2026-07-12, finding id 181, §A2 B-queue ruling): `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md`
+> "Open work" item 1 (line ~104) records the rebuild landing (Cloud Build `0c9af143` SUCCESS, image CLONES
+> deployment-service@live-defi-rollout so the "170 commits ahead of main" concern never mattered) and the deadman
+> re-pinned + executed: **deadman 1/1 GREEN (exit 0, was exit 1 every run)**. Full triage in
 > `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` (the full #data-pipeline-alerts flood triage — real-vs-false
 > per class + the remaining monitor + data fixes).
 

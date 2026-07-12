@@ -16,7 +16,7 @@ related:
   [
     ../archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md,
     ../archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md,
-    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
   ]
 created: 2026-05-21
 name: dart_and_promote_master
@@ -30,7 +30,7 @@ related_plans:
   [
     ../archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md,
     ../archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md,
-    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
   ]
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
@@ -43,6 +43,11 @@ locked_since: 2026-05-21
 lifecycle state machine + `MinimalCandidateManifest` (UAC) + Firebase `execution-full` enforcement.
 
 **Assigned VM**: `vm-operator-ops` (co-located with `deployment_and_user_management_master`).
+
+**Corrected 2026-07-12** (finding 10008, §A2 B-queue ruling): the `related`/`related_plans` frontmatter path for the
+global-ledger discovery plan was `../active/global_ledger_pnl_attribution_discovery_2026_05_21.md` (404s — that plan
+archived 2026-05-23; confirmed on disk only under `../archive/2026_05/`) — corrected to
+`../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md`.
 
 ## Scope inherited from `strategy_and_dart_master_SUPERSEDED_2026_05_21` (split 2026-05-21)
 
@@ -68,9 +73,12 @@ Strategy archetype + portfolio_allocator + risk/position/pnl scope went to [`str
 
 ## UI Verification Contract (HARD RULE — codified 2026-05-23)
 
-All active plans under this epic that touch any UI repo (`unified-trading-system-ui`, `deployment-ui`,
-`user-management-ui`) MUST pass the playwright verification gate before any todo is ticked ✅ done. Per
-`plans/PLAN_FORMAT.md` § 9 and `codex/06-coding-standards/ui-testing-layers.md` § "Plan-Level Enforcement":
+All active plans under this epic that touch any UI repo (`unified-trading-system-ui`, `deployment-ui` — was: also
+`user-management-ui`; ARCHIVED 2026-05, folded into `unified-trading-system-ui` per
+`codex/04-architecture/runtime-deployment-topology.md` + CLAUDE.md's system map; corrected 2026-07-12, findings 310/386,
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling) MUST pass the playwright
+verification gate before any todo is ticked ✅ done. Per `plans/PLAN_FORMAT.md` § 9 and
+`codex/06-coding-standards/ui-testing-layers.md` § "Plan-Level Enforcement":
 
 - **`[UI]` tag**: every UI-touching todo MUST use `[AGENT][UI]` or `[HUMAN][UI]` (not bare `[AGENT]`).
 - **pw:L2 ✓**: `npx playwright test --project=chromium tests/smoke/` exits 0 before tick.

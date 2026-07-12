@@ -3,9 +3,10 @@ doc_type: epic
 title: Strategy Master (L2)
 summary: >-
   L2 everlasting epic owning strategy-service post-2026-05-19 consolidation (engine + portfolio_allocator + risk +
-  position + pnl + 53 archetype engines), per-client subprocess isolation, and archetype lifecycle; inherits the
-  strategy side of the split strategy_and_dart_master umbrella (v2 factory cutover, shadow deployment registry/ledger,
-  capability gaps, cross-domain alpha).
+  position + pnl + 59 archetype engines (was: 53 — see 2026-07-12 count-drift note in "Scope inherited" below)),
+  per-client subprocess isolation, and archetype lifecycle; inherits the strategy side of the split
+  strategy_and_dart_master umbrella (v2 factory cutover, shadow deployment registry/ledger, capability gaps,
+  cross-domain alpha).
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -54,8 +55,8 @@ locked_since: 2026-05-21
 
 # Strategy Master (L2)
 
-**Owns**: strategy-service post-consolidation 2026-05-19 (engine + portfolio_allocator + risk + position + pnl + 53
-archetype engines); per-client subprocess isolation; archetype lifecycle.
+**Owns**: strategy-service post-consolidation 2026-05-19 (engine + portfolio_allocator + risk + position + pnl + 59
+(was: 53) archetype engines); per-client subprocess isolation; archetype lifecycle.
 
 **Assigned VM**: `vm-trading-core` (co-located with `execution_master` + `trading_agent_master`).
 
@@ -69,7 +70,13 @@ strategy side**:
   roll, IM/Trading allocator split).
 - **Cross-domain alpha + strategy lifecycle visibility** — UAC schemas + UTL SLA engine + DataQualityScorer +
   cross-domain calc + DeFi alpha features + execution cost prediction.
-- **53 archetypes** per `codex/09-strategy/architecture-v2/archetypes/` — closed-set strategy taxonomy.
+- **59 archetypes** (was: 53) per `codex/09-strategy/architecture-v2/archetypes/` — NOT a fixed constant: the count is a
+  live code figure that grew 53→55→57→58→59 between 2026-06-01 and 2026-06-22 as new archetypes landed (verified against
+  `unified-api-contracts` `StrategyArchetype` enum on `live-defi-rollout` HEAD as of 2026-07-12 — 59 members, docstring
+  self-declares "59 archetypes"; last addition `TSMOM_BTC_CTA` @61ac3ad2 2026-06-22). Only 28 engines are implemented
+  for the May-23 rollout subset (F-34 below, operator decision 2026-06-01) — taxonomy-count and implemented-engine-count
+  are different numbers, do not conflate. [Doc-reconciliation 2026-07-12, findings 287/290/294/333/295, §A2 B-queue
+  ruling — `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`.]
 - **Portfolio allocator** + risk_rules + position-balance-monitor + pnl-attribution (consolidated into strategy-service
   2026-05-19).
 
@@ -98,6 +105,20 @@ archaeology: [`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](strategy_and_
 
 _8 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+> **🟡 STALE INDEX (annotated 2026-07-12)** — (was: "8 active plans", unchanged since the script last ran 2026-05-21). A
+> `parent_epic: strategy_master` frontmatter grep on 2026-07-12 returns **9** files, of which the following declare
+> `parent_epic: strategy_master` but are NOT reflected anywhere in the P0/P1/P2 sections below:
+> `capability_wizard_and_manifest_2026_06_11` (created 2026-06-11),
+> `carry_staked_basis_funding_scan_experiment_2026_06_16` (2026-06-16), `v2_engine_venue_buildout_2026_06_15`
+> (2026-06-15), `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17` (2026-06-17) — all real active
+> plans with open P1-P3 todos. (The remaining 5 of the 9 frontmatter hits are `active/issues/*` docs, not P0-P3
+> dispatchable plans.) Separately, of the 8 plans that ARE itemized below, 4 (`strategy_archetype_taxonomy_2026_05_12`,
+> `strategy_repo_consolidation_2026_05_19`, `config_grid_archetype_extend_2026_05_20`,
+> `defi_recursive_borrow_archetypes_post_cutover_2026_06_01`) are already ✅ ARCHIVED — the "8 active" headline
+> undercounts new plans and overcounts archived ones simultaneously. Durable fix is re-running
+> `scripts/plans/populate_epic_bodies_2026_05_21.py`; not run as part of this doc-reconciliation pass (out of the
+> named-files edit scope). [Doc-reconciliation 2026-07-12, findings 288/298/335, same pass as the Scope § note above.]
 
 ## P0 — must complete before next foundation gate
 
@@ -147,13 +168,20 @@ DEFERRED-POST-CUTOVER · **estimate**: 12 cal AI-days (class: infra)
       this todo tracks the strategy-side reconciliation decision. Repo: codex (via codex_vs_repo_docs owner).
 - [ ] [CODE] P1. **F-34 — add `SUPPORTED_ARCHETYPES` allowlist + typed-error guard + fix docstring.** Operator decision
       2026-06-01: the 28 implemented archetype engines are the intended May-23 rollout subset (NOT a regression vs the
-      55-member `StrategyArchetype` enum). In `factory.py`, replace the bare `KeyError` ("every enum value must have an
-      engine") with a guard that returns a typed "archetype not in rollout" error against an explicit
-      `SUPPORTED_ARCHETYPES` allowlist; fix the stale "53"→55 docstring/count. Supersedes the per-archetype
-      `ARBITRAGE_CROSS_DOMAIN_EVENT` note in `config_grid_archetype_extend`. Repo: strategy-service. **NB**: respect the
-      active strategy-service LOGIC-FREEZE (lifted 2026-07-12 — see banner) — this lives in `factory.py`/registry, not
-      `engine/strategies/v2/`; land after confirming the freeze does not cover the factory, else hold for the
-      `🟢 STRATEGY-LOGIC UNFREEZE` ping (lifted 2026-07-12 — see banner).
+      (was: 55-member) `StrategyArchetype` enum — stale as of 2026-06-01; the enum grew to 57 by 2026-06-11 and is
+      59-member as of 2026-07-12, see "Scope inherited" § count-drift note above). In `factory.py`, replace the bare
+      `KeyError` ("every enum value must have an engine") with a guard that returns a typed "archetype not in rollout"
+      error against an explicit `SUPPORTED_ARCHETYPES` allowlist; fix the stale docstring/count against the CURRENT enum
+      size at land-time (59 as of 2026-07-12, not "53"→55 — the number keeps moving; prefer citing
+      `len(StrategyArchetype)` over a hardcoded literal, per `capability_wizard_analysis_findings_2026_06_11.md` F9
+      remedy). Supersedes the per-archetype `ARBITRAGE_CROSS_DOMAIN_EVENT` note in `config_grid_archetype_extend`. Repo:
+      strategy-service. **NB**: respect the active strategy-service LOGIC-FREEZE (lifted 2026-07-12 — see banner) — this
+      lives in `factory.py`/registry, not `engine/strategies/v2/`; land after confirming the freeze does not cover the
+      factory, else hold for the `🟢 STRATEGY-LOGIC UNFREEZE` ping (lifted 2026-07-12 — see banner). **VERIFIED STILL
+      OPEN 2026-07-12**: `strategy-service/strategy_service/engine/strategies/v2/factory.py` still raises a bare
+      `KeyError` at the "no engine registered" branch (no `SUPPORTED_ARCHETYPES` allowlist in the engine registry) —
+      this todo has not been implemented; checkbox correctly remains unflipped. (2026-07-12 doc-reconciliation, same
+      pass as the Scope § note above.)
 
 ### [`compute_optimization_mock_data_2026_05_13`](../active/compute_optimization_mock_data_2026_05_13.md)
 

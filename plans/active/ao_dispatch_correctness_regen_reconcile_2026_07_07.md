@@ -724,6 +724,16 @@ independent flags, so `--resume <id> --model opus` continues on a higher model).
   real doc is `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`, not the stale
   `12-agent-workflow/...single-vm-architecture.md` in this plan's refs). **Operator note**: Phase 4's stickiness =
   DEFAULT makes fleet parallelism ≈ active-plan count (a deliberate shift, §F) — worth a glance before deploying it.
+- **2026-07-12 — correction (finding 352, §A2 B-queue ruling).** The 2026-07-07 note directly above ("Phase 6 (codex
+  SSOT: real doc is `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`, not the stale
+  `12-agent-workflow/...single-vm-architecture.md` in this plan's refs)") is itself now outdated: operator ruling
+  2026-07-12 (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` `codex-gap` row) created
+  `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` as the live SSOT for dispatch/regen/topology.
+  The '## Codex SSOTs' header above (line 265, citing `agent-orchestrator-single-vm-architecture.md` — dispatch + regen
+  - ingestion contract) was therefore CORRECT all along and needs no edit;
+    `agent-orchestrator-backlog-state-alignment.md` (cited in this plan's frontmatter `related:`) covers the narrower
+    backlog↔state.db alignment topic and is not a substitute. (Was: this 2026-07-07 entry called the header's cite
+    "stale" — that call does not hold as of 2026-07-12.)
 - **2026-07-07** — ✅ **Phase 5 SHIPPED** (`ao@07035aba`, LDR; staging-first drain → v2-gated). RC-3 slot_skips hygiene:
   a per-(slot,task) skip now EXPIRES after `slot_skip_ttl_hours` (default 24h, config, 0=disable) so a stale
   craft-mismatch / prereq-park skip can't starve dispatch across worker respawns; regen prune clears slot_skips for

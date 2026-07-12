@@ -26,7 +26,7 @@ related_plans:
 cadence: daily-cron + on-demand
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-last_updated: 2026-05-23
+last_updated: 2026-07-12 # was 2026-05-23 — stale vs newer body entries; corrected 2026-07-12 (finding 326, §A2 B-queue ruling)
 ---
 
 # Plan Hygiene Master
@@ -44,13 +44,13 @@ removes the manual cost and catches regressions before they compound.
 > **[DONE 2026-05-22]** Group D audit: all referenced docs verified; `assigned_vm` + `tier` added to required epic
 > frontmatter in `plan-hygiene.md` (was missing vs CLAUDE.md).
 
-| Doc                                                            | Owns                                                                                          |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `codex/11-project-management/plan-hygiene.md`                  | Scripts, runbook, cron — canonical SSOT for hygiene tooling; required frontmatter field lists |
-| `codex/11-project-management/active-plan-inventory-tracker.md` | Active plan inventory regenerator (`regenerate_active_plan_inventory.py`); orphan check       |
-| `codex/11-project-management/issue-doc-lifecycle.md`           | Issue doc state machine; archive trigger conditions                                           |
-| `plans/epics/README.md`                                        | Epic-flow SSOT — 19 epics × 5 tiers × 10-VM topology                                          |
-| `plans/PLAN_FORMAT.md`                                         | Plan format; Cursor checkboxes; required todo syntax                                          |
+| Doc                                                            | Owns                                                                                                                                                                                                            |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codex/11-project-management/plan-hygiene.md`                  | Scripts, runbook, cron — canonical SSOT for hygiene tooling; required frontmatter field lists                                                                                                                   |
+| `codex/11-project-management/active-plan-inventory-tracker.md` | Active plan inventory regenerator (`regenerate_active_plan_inventory.py`); orphan check                                                                                                                         |
+| `codex/11-project-management/issue-doc-lifecycle.md`           | Issue doc state machine; archive trigger conditions                                                                                                                                                             |
+| `plans/epics/README.md`                                        | Epic-flow SSOT — 23 epics × 6 tiers (registry regenerated 2026-07-12; was: "19 epics × 5 tiers × 10-VM topology" — the 10-VM model is SUPERSEDED by single-VM role dispatch; finding 10004, §A2 B-queue ruling) |
+| `plans/PLAN_FORMAT.md`                                         | Plan format; Cursor checkboxes; required todo syntax                                                                                                                                                            |
 
 ---
 

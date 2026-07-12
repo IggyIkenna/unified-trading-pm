@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: quickmerge silently no-ops on a new-file-only ship (untracked --files invisible to the "nothing to merge" guard)
-summary: '`scripts/quickmerge.sh:1175` short-circuits with **`No differences from main — nothing to merge`** when the unit being shipped is composed **entirely of NEW (untracked) files**:'
+summary:
+  "`scripts/quickmerge.sh:1175` short-circuits with **`No differences from main — nothing to merge`** when the unit
+  being shipped is composed **entirely of NEW (untracked) files**:"
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -13,7 +15,11 @@ related: []
 created: 2026-06-23
 parent_epic: infrastructure_master
 priority: P1
-source: ['scripts/quickmerge.sh:1175', 'data_completion_to_100_all_ag_2026_06_21.md (B2 IntraClientRebalanceCoordinator ship, 2026-06-23)']
+source:
+  [
+    "scripts/quickmerge.sh:1175",
+    "data_completion_to_100_all_ag_2026_06_21.md (B2 IntraClientRebalanceCoordinator ship, 2026-06-23)",
+  ]
 assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
@@ -68,3 +74,15 @@ guard (quickmerge already re-asserts `--files` scope on the commit-retry). Add a
 `quickmerge --agent --files <newfile>` must produce a commit. Owner: whoever owns `cicd_quality_gates_2026_06_18.md`
 (the structured-quickmerge / QUICKMERGE_BLOCKED contract lives there). Low-risk 1-liner but it changes fleet-wide ship
 behaviour, so it wants a deliberate test, not a hot-patch under time pressure.
+
+> **[2026-07-12 correction, finding 348, §A2 B-queue**
+> (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`)**]**: the "Owner" pointer above is doubly
+> dead — `cicd_quality_gates_2026_06_18.md` was superseded 2026-06-24 into `cicd_consolidated_remaining_2026_06_24.md`,
+> which was itself superseded 2026-06-30 by `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` (verified via
+> both docs' own `status: superseded` / `superseded_by` frontmatter). `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`,
+> which declares itself the sole current SSOT for the pipeline/quickmerge area, does not mention this bug (grep for
+> "untracked"/"1175" returns zero hits there). Re-verified 2026-07-12: the underlying bug is still live — current
+> `scripts/quickmerge.sh` line ~1188 still gates only on `git diff origin/main` (untracked-blind), unchanged. This P1
+> bug is therefore untracked by any live plan; not reassigned here (picking a new owner is an operator/triage call, out
+> of this chunk's file scope) — flagging so the next triage pass routes it (candidate:
+> `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`, since it claims exclusive current SSOT status for this exact contract).

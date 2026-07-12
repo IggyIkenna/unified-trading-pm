@@ -24,7 +24,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-last_updated: 2026-06-27
+last_updated: 2026-07-12 # (was: 2026-06-27) 2026-07-12 finding-263 §A2 B-queue ruling: Progress Log has dated entries through 2026-07-12 (slot 4, Todo 3 ML-ready verify) — frontmatter was never bumped
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
@@ -108,22 +108,18 @@ ML-ready = one row per `(fixture × bucket)`; NaN ONLY where honest-absence (the
       (59s) + full `tests/sports/unit/` suite (2845 passed, 1 pre-existing skip, 686s). Re-run on
       2025-09-01..2025-11-30: **instruments-service 91/91, MTDS 91/91, MDPS 91/91, features-sports-service 91/91 —
       OVERALL 91/91 dates fully complete (100%)**. 2. **Non-null coverage** (`verify_ml_readiness.py`, the purpose-built
-      ODDS_COLUMNS non-null checker cross-referenced from `sports_features_readiness_for_predictions_2026_06_20.md`
+      ODDS*COLUMNS non-null checker cross-referenced from `sports_features_readiness_for_predictions_2026_06_20.md`
       P1-002, absorbed into this plan): 91 dates checked, aggregate **95.3% non-NULL at target horizons (T-24h/T-1h)** —
       clears the ≥95% bar. Per-date strict gate: 74/91 pass; 17 dip below 95%, concentrated on low-fixture-count days
       (e.g. 2025-09-02: 1 fixture). Sampled proof (Sep 2, Sep 17, Sep 25): 100% of the NaN on every failing date is in
-      columns matching `WRITE_GATE_CONFIG.sparse_columns["odds_features"]` (`velocity_`, `acceleration_`,
-      `clv_`/`sharp_`, `steam_`, `exchange_price_`, `delta_prob_`, `move_direction_agreement_`/`move_sign_consistency_`,
-      `odds_movement_`) — the same columns `features-service@192d74ce`/`774645dc` already documented+exempted as
-      structurally sparse (require 2-3+ odds snapshots / multiple bookmakers; absent for single-fixture or low-liquidity
-      days). Honest-absence, not a calculator skip. No further backfill needed —
-      `sports_p2_features_history_to_ml_ready-001` (full 2015→present) is a separate, much larger scope and was NOT a
-      real blocker for this golden-window verify (the 2026-06-29 park note conflated the two); superseded by the direct
-      re-run above.
+      columns matching `WRITE_GATE_CONFIG.sparse_columns["odds_features"]`
+      (`velocity*`, `acceleration*`,     `clv*`/`sharp*`, `steam*`, `exchange*price*`, `delta*prob*`, `move*direction_agreement*`/`move*sign_consistency*`,     `odds*movement*`) — the same columns `features-service@192d74ce`/`774645dc`already documented+exempted as     structurally sparse (require 2-3+ odds snapshots / multiple bookmakers; absent for single-fixture or low-liquidity     days). Honest-absence, not a calculator skip. No further backfill needed —    `sports_p2_features_history_to_ml_ready-001`
+      (full 2015→present) is a separate, much larger scope and was NOT a real blocker for this golden-window verify (the
+      2026-06-29 park note conflated the two); superseded by the direct re-run above.
 - [x] [DATA] P1. **Feature manifest clean on the window** — 0 blank-reason empties, 0 un-evidenced `attempted_failed` in
       the features manifest slice. **Gate**: window query on the features manifest mirrors the IS/MTDS cleanliness.
-      ✅ 4. features-service@192d74ce (2026-07-03): WriteGate sparse_columns fix for odds_features
-      (acceleration_/delta_prob_/ exchange_price_/move_direction_agreement_/move_sign_consistency_/odds_movement_); 12
+      ✅ 4. features-service@192d74ce (2026-07-03): WriteGate sparse*columns fix for odds_features
+      (acceleration*/delta*prob*/ exchange*price*/move*direction_agreement*/move*sign_consistency*/odds*movement*); 12
       failed dates re-run → all captured; derived_features 91/91, fixture_features 91/91, odds_features 91/91; 0
       blank-reason + 0 un-evidenced attempted_failed; mirrors MTDS odds cleanliness (82 captured dates in MTDS → 91
       captured in FSS after fix).

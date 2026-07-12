@@ -48,7 +48,7 @@ related_plans:
     ../archive/2026_05/d0_orchestrator_migration_2026_05_20.md,
     ../active/issues/human_led_audit_pool_2026_05_21.md,
   ]
-last_updated: 2026-05-21
+last_updated: 2026-07-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 external_references:
@@ -74,6 +74,11 @@ fresh-spawn dirty-commit, git staleness alerts).
 This epic was promoted from the active plan `orchestrator_v07_multi_vm_topology_2026_05_21.md` per the epic
 consolidation. Detailed design moved to codex SSOTs; implementation phases continue as the assigned active plans listed
 below.
+
+> **Sync 2026-07-12** (finding 325, §A2 B-queue ruling): frontmatter `last_updated` was 2026-05-21 while the body
+> already carried dated entries through 2026-07-12 (e.g. the `auth_failed` cooldown fix DONE 2026-06-10 —
+> `agent-orchestrator@68116f7`, plus later notices below) — bumped `last_updated` to 2026-07-12 (was: 2026-05-21) to
+> match the doc's own latest content.
 
 > **Partial-supersede notice (VM-assignment scope — 2026-06-25):** The `assigned_vm:` mandatory frontmatter rule
 > (introduced by the v07 plan) and the strict per-plan VM matching (fail-closed dispatch, D1–D6) are now owned and

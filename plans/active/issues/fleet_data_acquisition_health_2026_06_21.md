@@ -27,7 +27,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-10 # (was: 2026-06-27 -- corrected 2026-07-12, finding 81, §A2 B-queue ruling: table row 2's "Fix" cell carries a 2026-07-10-dated operator revision that postdated the recorded last_updated)
 ---
 
 # Fleet data-acquisition health — 2026-06-21 (operator-requested)

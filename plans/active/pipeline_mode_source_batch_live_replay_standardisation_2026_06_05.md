@@ -1,12 +1,24 @@
 ---
 doc_type: plan
-title: pipeline_mode standardisation — source-aware live, batch→live continuity, replay/recovery mode, reader precedence + live-readiness gates
-summary: Standardise pipeline_mode to source-aware live/batch/replay schema across all repos, gating all v9 manifest --apply runs on Phase 0 completion.
+title:
+  pipeline_mode standardisation — source-aware live, batch→live continuity, replay/recovery mode, reader precedence +
+  live-readiness gates
+summary:
+  Standardise pipeline_mode to source-aware live/batch/replay schema across all repos, gating all v9 manifest --apply
+  runs on Phase 0 completion.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: [pipeline-mode, source-aware, batch, live, replay, standardisation, manifest, data-pipeline]
 related: []
@@ -25,10 +37,14 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
-- {audit 2026-06-05 (5-agent fan-out: UAC/UTL model + MTDS/IS writers + downstream readers + cross-AG migrators + 4 doc layers; load-bearing claims operator-verified)}
-- data_source_provenance_all_asset_groups_2026_06_01.md (source column + SOURCE_PRIORITY)
-- pipeline_mode_partition_migration_2026_06_01.md (pipeline_mode= path key)
-- batch_live_reconciliation_service_audit_2026_05_27.md (the reconciliation service + Phase-12 live>batch rule)
+  - {
+      audit 2026-06-05 (5-agent fan-out:
+        UAC/UTL model + MTDS/IS writers + downstream readers + cross-AG migrators + 4 doc layers; load-bearing claims
+        operator-verified),
+    }
+  - data_source_provenance_all_asset_groups_2026_06_01.md (source column + SOURCE_PRIORITY)
+  - pipeline_mode_partition_migration_2026_06_01.md (pipeline_mode= path key)
+  - batch_live_reconciliation_service_audit_2026_05_27.md (the reconciliation service + Phase-12 live>batch rule)
 assigned_role: infra-engineer
 drift_direction: advance-code
 ratified: 2026-06-05 (operator — all 6 decisions + refinements)
@@ -340,10 +356,15 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       rest DRAFT. 11 tests assert completeness + batch-floor + stated facts only (uncertain flags free to change on
       ratify). **REMAINING: per-source live/replay RATIFY (operator/domain), then they become load-bearing.** Repo:
       unified-api-contracts.
-- [ ] [DESIGN] P0. **M3 — per-shard available-sources registry in UAC** + the M2×M3 "possible-when" guardrail API
+- [x] ✅ [DESIGN] P0. **M3 — per-shard available-sources registry in UAC** + the M2×M3 "possible-when" guardrail API
       (`could_exist(shard, mode)`); extends the ⑥ existence-guard + ⑦ could-exist denominator to the mode axis. Repo:
-      unified-api-contracts (+ consumers IS/MTDS/features/deployment-api).
-- [ ] [CODE] P0. **M4 — mode-contextual precedence** — `select_for_mode(consumer_mode, available_modes)`: live-mode
+      unified-api-contracts (+ consumers IS/MTDS/features/deployment-api). **[2026-07-12 correction] DONE** (was:
+      `- [ ]` open — stale relative to this doc's own GATE-0 log): `unified-api-contracts@d56b9cc2` ("feat(registry):
+      per-shard source availability + could_exist(shard,mode) guardrail (GATE-0 M3)", sha verified present on
+      `live-defi-rollout` + `main` via read-only `git log`/`git branch --contains`) + the M2/M3-REFINEMENT follow-up
+      `unified-api-contracts@a56a7fc2`. See "### Success criteria (GATE 0 met)" below. Corrected per plan-reconciliation
+      finding 169, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
+- [x] ✅ [CODE] P0. **M4 — mode-contextual precedence** — `select_for_mode(consumer_mode, available_modes)`: live-mode
       `live>replay>batch`, batch-mode `batch>replay>live` (replay always middle). A config on the consumer. Repos: UAC
       (resolver) + batch-live-reconciliation-service + features/strategy readers. **NOTE 2026-06-07 (slot-7)**: the
       **data-status CONSUMER** does NOT need full `select_for_mode` — it unions MODE-AGNOSTICALLY (answers "available
@@ -351,9 +372,13 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       (live>replay>batch) IS now applied in the data-status union** (`deployment-api@46e3d57`): the M5 status-union
       decides the capture_status (captured wins regardless of mode); M4 only picks the REPRESENTATIVE row
       (source/error_reason/pipeline_mode) among rows sharing that status — never changes the outcome (`live_websocket`
-      treated as live). The REMAINING-OPEN M4 piece is the **live read-path resolver** `select_for_mode` in
-      batch-live-reconciliation-service (live-side track) — picks which mode's VALUE a live/batch reader CONSUMES.
-- [ ] [CODE] P0. **M5 — data status = UNION + pipeline_mode drilldown** — deployment-api/UI extend the 4-state counts
+      treated as live). **[2026-07-12 correction] DONE** (was: framed as having a REMAINING-OPEN live read-path resolver
+      piece — stale): `unified-api-contracts@7441a692` ("feat(registry): mode-contextual precedence select_for_mode
+      (GATE-0 M4)") + `batch-live-reconciliation-service@0e17d7ee` ("feat(engine): live read-path mode resolver via UAC
+      select_for_mode (GATE-0 M4)") — both shas verified present on `live-defi-rollout` + `main`. Corrected per
+      plan-reconciliation finding 169, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2
+      B-queue ruling.
+- [x] ✅ [CODE] P0. **M5 — data status = UNION + pipeline_mode drilldown** — deployment-api/UI extend the 4-state counts
       with a pipeline_mode dimension (one union view + per-mode breakdown + deltas). Repos: deployment-api +
       unified-trading-system-ui. **PARTIAL 2026-06-07 (slot-7) — CONSUMER SHIPPED**: `deployment-api@4dd2575`
       (`data_status_union.union_reduce_to_cells` UNION read path — ≥1 source/mode captured ⇒ cell captured, cell-grain
@@ -361,9 +386,14 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       filter + group_by axes + top-level summary; QG-green, `test_data_status_union.py` +
       `test_data_status_drilldown_provenance.py`) + `deployment-ui@0dc40eb` (`HierarchicalShardDrilldown` renders the
       breakdown + 4-state; UI **[BLOCKED-PLAYWRIGHT]** — pw:L2 pending, regression:
-      `src/components/HierarchicalShardDrilldown.test.tsx`). **Remaining**: the `cadence` dimension (M5b) +
-      **unified-trading-system-ui** parity. Landed on LDR via tab-mirror; LDR→staging dep-tier-gated on
-      deployment-service STAGING_GREEN (not bypassed).
+      `src/components/HierarchicalShardDrilldown.test.tsx`). ~~**Remaining**: the `cadence` dimension (M5b) +
+      **unified-trading-system-ui** parity.~~ **[2026-07-12 correction] REMAINING SCOPE NOW DONE** (was: open `- [ ]`
+      pending cadence + UI parity — stale relative to this doc's own GATE-0 log): M5b `deployment-api@66e8562d`
+      ("feat(data-status): cadence dimension in the manifest union/drilldown (GATE-0 M5b)"); M5c `deployment-ui@687d4ce`
+      (pw:L2 ✓, "GATE-0 M5c"); M5d `unified-trading-system-ui@41b1567c` (pw:L2 ✓ 31/31 smoke, "GATE-0 M5d") — all 3 shas
+      verified present on `live-defi-rollout` + `main`. Landed on LDR via tab-mirror; LDR→staging dep-tier-gated on
+      deployment-service STAGING_GREEN (not bypassed). Corrected per plan-reconciliation finding 169,
+      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 - [ ] [CODE] P0. **M6 — capability-driven startup gate** — per shard, from M2×M3: replay-capable → autostart replay over
       `[batch-cutoff → now]`; else live-required → assert live already running; else wait/refuse/configured-gap. Repos:
       batch-live-reconciliation-service + strategy (live-flip gate) + MTDS (startup).
@@ -375,7 +405,7 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       batch source disagrees with its pipeline_mode (`batch_databento` + `source="massive"`), wired into record_captured
       / record_captured_from_counts / add(); gated on an explicit (caller-provided) source so auto-stamped single-source
       cells are unaffected (they're correct-by-construction). +tests. Repo: unified-trading-library.
-- [ ] [CODE] P0. **M1-BREAKING — migrate `live_websocket` objects/writers/readers → `live_<source>`** (next tranche,
+- [x] ✅ [CODE] P0. **M1-BREAKING — migrate `live_websocket` objects/writers/readers → `live_<source>`** (next tranche,
       GATED on the M1/M2 foundation UAC@8cafb758+6cd08c89 + the C-TRANSPORT tranche uac@cc69b123/utl@d0745bde — the
       source-aware `live_<source>`/`replay_<source>` members, the `transport` column + accessor, and the C-#6
       cross-check now all exist; do NOT start before downstream readers handle the new members). This is the DATA-side
@@ -384,7 +414,17 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       transitional `LIVE_WEBSOCKET` alias is removed once no object references it. Fixes the live multi-source PATH
       COLLISION (#5). Repos: UTL (`derive_pipeline_mode_for_row` for live/replay) + market-tick-data-service (live +
       replay write paths) + market-data-processing-service + features-service (mode-aware union read) +
-      batch-live-reconciliation-service.
+      batch-live-reconciliation-service. **[2026-07-12 correction] DONE** (was: framed "next tranche"/not-started —
+      stale relative to this doc's own GATE-0 log): 0 `live_websocket` writers fleet-wide, readers source-aware,
+      `LIVE_WEBSOCKET` alias removed (`rg "live_websocket|LIVE_WEBSOCKET" --type py` = 0 fleet-wide). Shipped:
+      `execution-service@04218fbc` + `batch-live-reconciliation-service@3bad2fe` + `deployment-api@aa18d8ae` +
+      `market-data-processing-service@30e7672` + `market-tick-data-service@84a15cc` +
+      `unified-trading-library@2afb22bd` + `unified-api-contracts@28bd50e` (LIVE_WEBSOCKET member deleted) +
+      `system-integration-tests@ec46de8` (live leg un-skipped, green) — spot-checked shas (execution-service@04218fbc,
+      unified-api-contracts@28bd50e) verified present on `live-defi-rollout` + `main` via read-only
+      `git log`/`git     branch --contains`. See "### Success criteria (GATE 0 met)" below. Corrected per
+      plan-reconciliation finding 168, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2
+      B-queue ruling.
 - [ ] [CODE] P0. **T+1 batch/live reconciliation + `live` TTL** (next tranche, GATED on M4 precedence + M1-breaking live
       writers). The batch-live-reconciliation-service confirms batch≈live within a tolerance, then a TTL clears the
       now-redundant `live` cells (long-lived `replay` stays where batch never existed). Config knobs (sensible defaults,
@@ -409,12 +449,8 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       replay. **Post-ratify**: a SECOND pass once M1–M8 land, so the docs match the new contract (no stale
       "pipeline*mode==source" / "live_websocket" / "live=batch ⇒ identical path" claims). Repo: unified-trading-pm (+
       codex). Owner: slot-6 can drive the audit; per-repo doc deltas to owners. **PARTIAL 2026-06-07 — pm@9120464fe**:
-      codex `02-data/pipeline-mode-partition.md` reconciled to the `{mode}*{source}[_{transport}]` form (documents
-      replay_<source> + the transport suffix-vs-column rule + the hyperliquid vendor split; DELETED the stale "Don't use
-      replay_*" / "replay writes to live_websocket" lines). **REMAINING**: the other codex docs
-      (`availability-manifest-and-data-status.md`, `pipeline-mode-and-batch-live-reconciliation.md`— still
-      has`BATCH_HYPERLIQUID_REST`/`hyperliquid_rest`refs — `honest-absence-downstream-handling.md`,
-      `external-data-always-available-rule.md`) + CLAUDE.md + per-AG plans + `SUB_AGENT_MANDATORY_RULES.md`.
+      codex `02-data/pipeline-mode-partition.md` reconciled to the
+      `{mode}*{source}[_{transport}]` form (documents     replay_<source> + the transport suffix-vs-column rule + the hyperliquid vendor split; DELETED the stale "Don't use     replay_*" / "replay writes to live_websocket" lines). **REMAINING**: the other codex docs     (`availability-manifest-and-data-status.md`, `pipeline-mode-and-batch-live-reconciliation.md`— still     has`BATCH_HYPERLIQUID_REST`/`hyperliquid_rest`refs — `honest-absence-downstream-handling.md`,     `external-data-always-available-rule.md`) + CLAUDE.md + per-AG plans + `SUB_AGENT_MANDATORY_RULES.md`.
 - [ ] [CODE] P1. **UI reference-data registry regen** — `lib/registry/ui-reference-data.json` still lists the stale
       `batch_hyperliquid_rest` PipelineMode value. It is GENERATED from UAC (`generate_ui_reference_data.py` →
       `uac-registry-sync.yml`), so regenerate from the now-fixed UAC SSOT (uac@cc69b123) rather than hand-edit. **GATED
@@ -608,12 +644,10 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   forward+backward-compatible fix the deployment-api/BLRS readers need. **Execution waves (all NON-breaking until Wave
   3; alias coexists)**: W1 consumers in parallel (mtds·mdps·execution·deployment-api·BLRS) migrate every in-repo ref →
   writers stamp source-aware via the helper (GCS path segment + manifest row derive from the SAME value), readers
-  string-prefix-match, tests → concrete `live*<source>`member (cefi→LIVE_BINANCE/venue, tradfi→LIVE_DATABENTO,
-  defi→LIVE_ONCHAIN_RPC/LIVE_SOLANA_RPC), each QG-green + quickmerge. W2 UTL (resolver
-  source-aware +`close_candle_writer`pipeline_mode REQUIRED + tests/docstrings) — after W1 so MDPS already passes
-  explicit. W3 UAC delete the`LIVE_WEBSOCKET`member + the internal`if mode is PipelineMode.LIVE_WEBSOCKET`special-cases
-  in`source_string_for`/`transport_of` + UAC tests (breaking → SIT cascade). W4 un-skip the SIT live leg + verify green.
-  THEN M5c/d UI cadence drilldown (Node22/pw:L2).
+  string-prefix-match, tests → concrete
+  `live*<source>`member (cefi→LIVE_BINANCE/venue, tradfi→LIVE_DATABENTO, defi→LIVE_ONCHAIN_RPC/LIVE_SOLANA_RPC), each QG-green + quickmerge. W2 UTL (resolver source-aware +`close_candle_writer`pipeline_mode REQUIRED + tests/docstrings) — after W1 so MDPS already passes explicit. W3 UAC delete the`LIVE_WEBSOCKET`member + the internal`if
+  mode is PipelineMode.LIVE_WEBSOCKET`special-cases in`source_string_for`/`transport_of` + UAC tests (breaking → SIT
+  cascade). W4 un-skip the SIT live leg + verify green. THEN M5c/d UI cadence drilldown (Node22/pw:L2).
 - **2026-06-16 (tick 5) — FINDING (a) FIXED (the tick-1 serializer drop).** Confirmed + fixed the
   `_writer_io._records_to_dataframe:340` v6–v9 column drop. **Diagnosis (write-path trace):** the runtime live+batch
   path (`record_*` → `write()`/`flush()` → `_write_to_gcs()` → `_records_to_dataframe()`), the per-VM shard write
@@ -656,49 +690,20 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
 - **2026-06-16 (tick 7) — M2/M3-REFINEMENT SHIPPED (resolves tick-1 finding (b)).** `modes_for(source, data_type)`
   landed in **unified-api-contracts@a56a7fc2** (`canonical/crosscutting/source_priority.py`), DERIVED from the EXISTING
   per-operation `SourceCapability.operations` (registry/capability*declarations) — NOT a parallel registry: a
-  `ws*<data_type>`op ⇒`LIVE`, a REST op ⇒ `BATCH`, and `REPLAY`is the live-gap-fill tier (M4) so it drops WITH
-  live.`could_exist`now composes`modes_for(source, data_type)`instead of the coarse`modes_for_source`, fixing the M3
-  over-approximation. **Surgically scoped (the key design decision):** the refinement ONLY narrows the LIVE/REPLAY axis
-  for sources that are BOTH live-capable AND use the ws/REST op convention (the CeFi venues + hyperliquid — exactly
-  where the bug lived); every other source (tardis/yahoo/sports = no LIVE; databento/massive vendor feeds + chain RPCs +
-  internal services = LIVE-but-no-ws-convention) returns the coarse `modes_for_source`set UNCHANGED → **zero
-  regression** (verified:`tardis`ohlcv_1m +`databento`trades-replay stay coarse; no ohlcv-style false-zeroing). Contract
-  verified vs the live registry + locked by tests:`modes_for("hyperliquid","trades")⊇{LIVE}`,
-  `modes_for("hyperliquid", "funding_rates")=={BATCH}`(no ws funding
-  op),`could_exist("cefi","funding_rates",Mode.LIVE)==False`(no CeFi venue declares
-  a`ws_funding\*`op),`could_exist("cefi","trades",Mode.LIVE)==True`. Tests:
-  `test_source_mode_capability.py`(+8`modes_for`cases incl. never-widens + batch-only-unchanged +
-  non-ws-unchanged) +`test_shard_source_availability.py`(+3 per-data_type`could_exist`cases).`modes_for_source`KEPT for
-  the coarse callers (the capability matrix, the replay-capable set). Cycle note:`modes_for`lazy-imports the
-  static`CAPABILITY_DECLARATIONS`(registry↔crosscutting would cycle at module level). **No downstream consumer
-  of`could_exist`yet** (it is brand-new M3) → no per-data_type-assumption breakage. Codex aligned
-  (target→LANDED):`codex/02-data/pipeline-mode-partition.md`+`pipeline-mode-and-batch-live-reconciliation.md`. UAC QG
-  green (`--no-fix`); `Quickmerge: agent`trailer; landed on LDR, ancestor-verified; Tier-C drain promotes LDR→staging
-  ≤30min, v2-gated. Shipped via a throwaway worktree off`origin/live-defi-rollout` because the slot PM clone carried a
-  live coordinator session's uncommitted plan WIP (3 files) — never stomped/bundled it.
+  `ws*<data_type>`op ⇒`LIVE`, a REST op ⇒ `BATCH`, and `REPLAY`is the live-gap-fill tier (M4) so it drops WITH live.`could_exist`now composes`modes_for(source,
+  data_type)`instead of the coarse`modes_for_source`, fixing the M3 over-approximation. **Surgically scoped (the key design decision):** the refinement ONLY narrows the LIVE/REPLAY axis for sources that are BOTH live-capable AND use the ws/REST op convention (the CeFi venues + hyperliquid — exactly where the bug lived); every other source (tardis/yahoo/sports = no LIVE; databento/massive vendor feeds + chain RPCs + internal services = LIVE-but-no-ws-convention) returns the coarse `modes_for_source`set UNCHANGED → **zero regression** (verified:`tardis`ohlcv_1m +`databento`trades-replay stay coarse; no ohlcv-style false-zeroing). Contract verified vs the live registry + locked by tests:`modes_for("hyperliquid","trades")⊇{LIVE}`, `modes_for("hyperliquid",
+  "funding_rates")=={BATCH}`(no ws funding op),`could_exist("cefi","funding_rates",Mode.LIVE)==False`(no CeFi venue declares a`ws_funding\*`op),`could_exist("cefi","trades",Mode.LIVE)==True`. Tests: `test_source_mode_capability.py`(+8`modes_for`cases incl. never-widens + batch-only-unchanged + non-ws-unchanged) +`test_shard_source_availability.py`(+3 per-data_type`could_exist`cases).`modes_for_source`KEPT for the coarse callers (the capability matrix, the replay-capable set). Cycle note:`modes_for`lazy-imports the static`CAPABILITY_DECLARATIONS`(registry↔crosscutting would cycle at module level). **No downstream consumer of`could_exist`yet** (it is brand-new M3) → no per-data_type-assumption breakage. Codex aligned (target→LANDED):`codex/02-data/pipeline-mode-partition.md`+`pipeline-mode-and-batch-live-reconciliation.md`. UAC QG green (`--no-fix`); `Quickmerge:
+  agent`trailer; landed on LDR, ancestor-verified; Tier-C drain promotes LDR→staging ≤30min, v2-gated. Shipped via a throwaway worktree off`origin/live-defi-rollout`
+  because the slot PM clone carried a live coordinator session's uncommitted plan WIP (3 files) — never stomped/bundled
+  it.
 - **2026-06-16 (tick 5) — WAVE 1 (M1-BREAKING consumers) shipping.** Fanned out parallel sub-agents (one per consumer
-  repo). **Shipped + grep-clean + QG-green**: execution-service@04218fbc (data_sink →
+  repo). **Shipped + grep-clean + QG-green**: execution-service@04218fbc (data*sink →
   `live_pipeline_mode_for_venue(self.asset_group,venue,data_type)`), batch-live-reconciliation-service@3bad2fe (stage0
-  `_is_live_mode` STRING-prefix `startswith("live_")` + split-string legacy regression), deployment-api@aa18d8ae
-  (readers `pipeline_mode.strip().lower().startswith("live")` — FIXES the exact-match bug that DROPPED all
-  `live_<source>` rows; legacy + live_<source> regressions). **mtds + mdps**: the first spawn attempts hit transient
-  server rate-limits mid-run; I finished mtds DIRECTLY (the dead agent's writer edits were correct — GCS-path segment +
-  all 3 manifest call sites + backfill all derive from ONE
-  `self._live_pipeline_mode = live_pipeline_mode_for_venue(asset_group,venue,data_type)` resolved per-shard in
-  `__init__`, fail-loud; Protocol/impl `record_*` defaults made REQUIRED; log event names
-  `MTDS_LIVE_WEBSOCKET_*`→`MTDS_LIVE_WS_*` to clear the uppercase grep token, verified 0 external consumers); fixed 2
-  recorder tests the dead agent left inconsistent with its own required-kwarg change. mdps migrated by a respawn
-  (live_aggregator path+manifest both from the helper; `live_workers.py:190`→`is_live(pm)`); it correctly did NOT stomp
-  concurrent foreign UAC/UTL WIP that drained (UAC@6c74eaf could-exist + UTL@d3324e90 v6-v9 serializer — both unrelated
-  to live_websocket, both beneficial) → re-QG'ing mdps against current UAC before shipping. mtds+mdps QGs re-running,
-  then quickmerge. **FINDING (captured — sports-plan test-hermeticity, fixed to unblock GATE-0 mtds shipping)**: mtds QG
-  surfaced 7 PRE-EXISTING failing sports unit tests (`test_sports_v9_canonical_path` /
-  `test_orchestrator_per_data_type_sentinel` / `test_sports_odds_available_at`) — `process_ticks()` runs the
-  `_check_sports_v9_columns` preflight against a SEEDED GCS emulator manifest that CI injects (`base-service.sh`: "CI
-  injects emulators via env") but a hermetic local run lacks; CI-GREEN, order-flaky, fail on clean LDR (NOT my change);
-  the guard's OWN coverage lives in `test_sports_v9_preflight_guard.py`. Fix: a scoped `autouse` fixture in each of the
-  3 files stubs the incidental guard to a no-op → emulator-free + order-independent (test-only, no prod-code change; 132
-  tests green after). Belongs to `sports_manifest_canonicalisation_2026_06_01`; done here to unblock the mtds QG gate.
+  `_is_live_mode` STRING-prefix
+  `startswith("live*")`+ split-string legacy regression), deployment-api@aa18d8ae (readers`pipeline*mode.strip().lower().startswith("live")`— FIXES the exact-match bug that DROPPED all`live*<source>`rows; legacy + live_<source> regressions). **mtds + mdps**: the first spawn attempts hit transient server rate-limits mid-run; I finished mtds DIRECTLY (the dead agent's writer edits were correct — GCS-path segment + all 3 manifest call sites + backfill all derive from ONE`self._live_pipeline_mode
+  =
+  live_pipeline_mode_for_venue(asset_group,venue,data_type)`resolved per-shard in`**init**`, fail-loud; Protocol/impl `record\_\_`defaults made REQUIRED; log event names`MTDS*LIVE_WEBSOCKET*_`→`MTDS*LIVE_WS*\*`to clear the uppercase grep token, verified 0 external consumers); fixed 2 recorder tests the dead agent left inconsistent with its own required-kwarg change. mdps migrated by a respawn (live_aggregator path+manifest both from the helper;`live_workers.py:190`→`is_live(pm)`); it correctly did NOT stomp concurrent foreign UAC/UTL WIP that drained (UAC@6c74eaf could-exist + UTL@d3324e90 v6-v9 serializer — both unrelated to live_websocket, both beneficial) → re-QG'ing mdps against current UAC before shipping. mtds+mdps QGs re-running, then quickmerge. **FINDING (captured — sports-plan test-hermeticity, fixed to unblock GATE-0 mtds shipping)**: mtds QG surfaced 7 PRE-EXISTING failing sports unit tests (`test_sports_v9_canonical_path`/`test_orchestrator_per_data_type_sentinel`/`test_sports_odds_available_at`) — `process_ticks()`runs the`\_check_sports_v9_columns` preflight against a SEEDED GCS emulator manifest that CI injects (`base-service.sh`: "CI injects emulators via env") but a hermetic local run lacks; CI-GREEN, order-flaky, fail on clean LDR (NOT my change); the guard's OWN coverage lives in `test_sports_v9_preflight_guard.py`. Fix: a scoped `autouse`fixture in each of the 3 files stubs the incidental guard to a no-op → emulator-free + order-independent (test-only, no prod-code change; 132 tests green after). Belongs to`sports_manifest_canonicalisation_2026_06_01`;
+  done here to unblock the mtds QG gate.
 - [ ] [TEST] P2. **DEFERRED-followup** — make the broader sports `process_ticks` unit suite emulator-independent
       fleet-wide (the 3 files were stubbed here; audit other `process_ticks`-calling sports unit tests in mtds for the
       same `_check_sports_v9_columns` seeded-emulator dependency). Provenance: GATE-0 tick-5 sports-hermeticity finding.
@@ -808,11 +813,9 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
 - [ ] [CICD] P1. **SYSTEMIC: extend the stale-FAILING ci_status self-heal to the SIT-gate precondition (the same fix I
       shipped for the Tier-C drain Tier-A gate).** `sit-gate.yml`/`lock-staging` hard-blocks when any pending
       repo`s ci_status==FAILING, even when that status is STALE vs the repo`s current LDR HEAD (no v2 run for
-      HEAD`s sha) — a fixed-on-LDR repo permanently jams the SIT → the breaking lock never releases → ALL breaking promotions stall fleet-wide. Fix: in the SIT-readiness precondition, when a repo is FAILING but has NO quality-gates-v2 run for its current LDR HEAD, re-dispatch v2 on its LDR HEAD (refresh) instead of hard-blocking (mirror `ldr-to-staging-promote.yml`s tick-10 self-heal). Repo: unified-trading-pm (`.github/workflows/sit-gate.yml` +
-      the precondition script that prints "not all pending repos SIT-ready"). Provenance: GATE-0 tick-11 (the FA jam).
-      Parent: this plan / cicd hardening. **SCOPE NOTE (consolidation 2026-06-30)**: this is CICD-infra scope, not
-      pipeline_mode — belongs to `cicd_retire_staging_branch_2026_06_27` / cicd-hardening; tracked here only because it
-      surfaced during GATE-0. Migrate to the cicd plan on next cicd touch.
+      HEAD`s sha) — a fixed-on-LDR repo permanently jams the SIT → the breaking lock never releases → ALL breaking promotions stall fleet-wide. Fix: in the SIT-readiness precondition, when a repo is FAILING but has NO quality-gates-v2 run for its current LDR HEAD, re-dispatch v2 on its LDR HEAD (refresh) instead of hard-blocking (mirror `ldr-to-staging-promote.yml`s tick-10 self-heal). Repo: unified-trading-pm (`.github/workflows/sit-gate.yml`+     the precondition script that prints "not all pending repos SIT-ready"). Provenance: GATE-0 tick-11 (the FA jam).     Parent: this plan / cicd hardening. **SCOPE NOTE (consolidation 2026-06-30)**: this is CICD-infra scope, not     pipeline_mode — belongs to`cicd_retire_staging_branch_2026_06_27`
+      / cicd-hardening; tracked here only because it surfaced during GATE-0. Migrate to the cicd plan on next cicd
+      touch.
 
 - **2026-06-17 (tick 12) — BLRS fix reached LDR+staging but NOT main; root cause = bug-#11 stale `staging_commits`
   pointer (systemic).** Operator Q: "did it get to main?" Measured answer: NO — fix on LDR✅ staging✅ main✗

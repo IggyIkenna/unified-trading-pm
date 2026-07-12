@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Workspace-wide git stash pile audit + cleanup — per-host runbook
-summary: Runbook for auditing and clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
+summary:
+  Runbook for auditing and clearing git stash piles across all workspace repos on any host, with archive-first
+  conservative tooling.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -24,7 +26,11 @@ locked_since: 2026-06-03
 supersedes:
 superseded_by:
 depends_on:
-source: [plans/active/issues/shared_stash_pile_archive_cleanup_2026_06_01.md, 'git stash list across all repos on the planning host (59 stashes / 16 repos, 2026-06-03)']
+source:
+  [
+    plans/active/issues/shared_stash_pile_archive_cleanup_2026_06_01.md,
+    "git stash list across all repos on the planning host (59 stashes / 16 repos, 2026-06-03)",
+  ]
 assigned_role: infra-engineer
 drift_direction: advance-code
 ---
@@ -75,15 +81,25 @@ each runs the audit.
 Per stash, compute: index, sha, **branch-of-origin** (parsed from `WIP on <branch>` / `On <branch>`), **age** (stash
 commit date), file count, `.py` count, and a class:
 
-| Class                                | Mechanical test                                                                                                                                                | Action                                                                                                  |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **empty**                            | `git stash show --stat <ref>` lists 0 files                                                                                                                    | **auto-drop**                                                                                           |
-| **redundant**                        | stash's tree diffed against the repo base (`origin/live-defi-rollout`, or `origin/main` for agent-orchestrator) has **no net change** — content already merged | **auto-drop**                                                                                           |
-| **foreign-park / autostash residue** | label matches `foreign-*` / autostash pattern **AND** tree is already an ancestor of base (no unique content)                                                  | **auto-drop**                                                                                           |
-| **genuine-WIP**                      | net diff vs base exists and is not attributable to an empty/redundant/park class                                                                               | **surface in report → owner confirms** (drop, or inherit-and-commit onto its own `tab/<op>/<N>` branch) |
+| Class                                | Mechanical test                                                                                                                                                | Action                                                                                                                         |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **empty**                            | `git stash show --stat <ref>` lists 0 files                                                                                                                    | **auto-drop**                                                                                                                  |
+| **redundant**                        | stash's tree diffed against the repo base (`origin/live-defi-rollout`, or `origin/main` for agent-orchestrator) has **no net change** — content already merged | **auto-drop**                                                                                                                  |
+| **foreign-park / autostash residue** | label matches `foreign-*` / autostash pattern **AND** tree is already an ancestor of base (no unique content)                                                  | **auto-drop**                                                                                                                  |
+| **genuine-WIP**                      | net diff vs base exists and is not attributable to an empty/redundant/park class                                                                               | **surface in report → owner confirms** (drop, or inherit-and-commit onto its own `tab/<op>/<N>` branch — see STALE note below) |
 
 > **Conservative scope chosen 2026-06-03:** even genuine WIP from an apparently-dead local session is **surfaced, not
 > auto-inherited**. The owner (or operator) decides drop-vs-inherit. The script never auto-commits another slot's WIP.
+
+> **[doc-reconciliation 2026-07-12, finding 72, §A2 B-queue ruling] STALE BRANCH MODEL** (was: "inherit-and-commit onto
+> its own `tab/<op>/<N>` branch" as a live target above and at Phase 4 below): `cursor-configs/CLAUDE.md` states the
+> `tab/<op>/N` model is **RETIRED** — "any such instruction is STALE" (Multi-agent safety § per-slot worktrees). Current
+> model (Path-B, per `codex/05-infrastructure/per-tab-worktrees.md`): each slot is a `git clone --reference` with its
+> own `.git`, checked out directly on `live-defi-rollout` — there is no per-tab branch to inherit onto. Genuine-WIP
+> inheritance today means committing directly onto the slot's own LDR checkout (liveness-gated per the HARD RULE: dead
+> claim → inherit + commit; live claim / mtime <120s → PROTECT), not creating a `tab/<op>/<N>` ref. This plan's Phase 4
+> owner-review step was never reconciled to the post-2026-06-27 topology — annotation only, no phase rewrite performed
+> in this pass.
 
 ## Phases
 
@@ -113,6 +129,17 @@ commit date), file count, `.py` count, and a class:
 Each host owner runs the identical script locally and commits its report. Cold-start context for the worker: read
 `SUB_AGENT_MANDATORY_RULES.md`; the script is dry-run by default; never `--apply` without eyeballing the dry-run first;
 surface — do not auto-drop — genuine WIP.
+
+> **[doc-reconciliation 2026-07-12, finding 73, §A2 B-queue ruling] STALE DISPATCH TARGETS** (was: the 10 named
+> per-epic-VM owners below, unannotated): `cursor-configs/CLAUDE.md` system map states the per-epic-VM topology was
+> retired — "N slot workers, role-based dispatch (no per-epic VMs; single-VM architecture 2026-06-27)" — the same date
+> this plan's `last_updated` shows, meaning this fan-out was never reconciled to the new topology. `vm-defi` / `vm-cefi`
+> / `vm-tradfi` / `vm-sports` / `vm-prediction` / `vm-ml` / `vm-trading-core` / `vm-operator-ops` / `vm-cross-cutting` /
+> `vm-orchestrator` are not real dispatch targets under the current central-orchestrator + role-based-dispatch model
+> (`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`). A dispatcher should instead run the sweep
+> per SLOT on the current fleet (per-slot worktrees, `codex/05-infrastructure/per-tab- worktrees.md`), not per named
+> epic VM. Annotation only — the todo list below is left as-is (no re-targeting performed in this pass; re-scoping the
+> fan-out is a judgment call, not a mechanical sync).
 
 - [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-defi**; commit report. — owner: vm-defi
 - [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-cefi**; commit report. — owner: vm-cefi

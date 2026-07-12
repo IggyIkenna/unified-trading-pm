@@ -188,10 +188,11 @@ Run Job image). Fixed:
    above. Removed `_dispatch_cloud` as genuinely dead code (confirmed zero call sites) — it was never wired into
    `_dispatch_services`, which had its own divergent, buggy inline implementation instead.
 
-**Verified against real production infra (not just unit tests)**: instantiated the fixed `SportsTriggerScheduler` with
-`backend="cloud"` and the real `cloud_run_config`, and called `_check_reference()` directly against the real GCS state
-file (`gs://deployment-scripts-central-element-323112/sports_scheduler_state/scheduler.json`) and the real Cloud Run
-Jobs API. Result:
+**Verified against real production infra (not just unit tests)** (was: verified in-process only — deploy step was
+outstanding until 2026-07-12): instantiated the fixed `SportsTriggerScheduler` with `backend="cloud"` and the real
+`cloud_run_config`, and called `_check_reference()` directly against the real GCS state file
+(`gs://deployment-scripts-central-element-323112/sports_scheduler_state/scheduler.json`) and the real Cloud Run Jobs
+API. Result:
 
 ```
 === BEFORE ===
@@ -224,3 +225,23 @@ season-boundary services) and item 3 above (re-narrow `is-daily-enum-sports` onc
 reliable over a real season boundary) were NOT done in this pass — this fix's scope was specifically the zero-dispatch
 bug. A real ml-service Cloud Run Job also still needs provisioning for the `inference_pre_match` trigger to work
 end-to-end.
+
+## Resolution completed 2026-07-12
+
+The 2026-07-08 resolution above fixed the code (CLI backend/workspace-root wiring, Terraform `args`, config repoint) and
+verified it **in-process only** — a direct `_check_reference()` call against real infra, not an actual `tofu apply`
+followed by a real Cloud Scheduler cron tick. The Terraform change
+(`deployment-service/terraform/gcp/sports_scheduler_cron.tf`) was committed (`deployment-service@bb880b6`) but never
+applied, so the fix never reached the running Cloud Run Job — the scheduler stayed on its stale generation-1 container
+and ~1150 no-op 5-minute-cadence executions followed between 2026-07-08 and 2026-07-12.
+
+**2026-07-12 (operator-authorized prod deploy — escalation ii, see
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §Progress Log "sports prod deploy, escalation
+ii COMPLETE")**: the args fix was applied via a targeted single-resource OpenTofu plan (generation 2,
+`lastUpdated 2026-07-12T10:38:43Z`). The scheduler's GCS state file
+(`gs://deployment-scripts-central-element-323112/sports_scheduler_state/scheduler.json`) advanced past its
+2026-06-27/07-08 freeze — `last_run.reference` flipped 2026-07-12T10:40:44Z on the first post-apply tick;
+`last_run.discovery` dispatched 2026-07-12T16:45:37Z. Crons are now succeeding.
+
+Status **remains `resolved`** — this addendum corrects the original Resolution section's overclaim: (was: verified
+in-process only — deploy step was outstanding until 2026-07-12).

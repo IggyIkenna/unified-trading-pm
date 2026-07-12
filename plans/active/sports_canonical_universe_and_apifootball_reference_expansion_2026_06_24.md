@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Sports canonical universe + API-Football reference expansion (curate, don't over-capture)
-summary: Curate the sports canonical trading universe (94 leagues) and expand the API-Football reference universe to ~300 leagues to eliminate out-of-universe over-capture in instruments-service.
+summary:
+  Curate the sports canonical trading universe (94 leagues) and expand the API-Football reference universe to ~300
+  leagues to eliminate out-of-universe over-capture in instruments-service.
 status: active
 nature: process
 asset_group: [sports]
@@ -292,13 +294,27 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
 **[C] API-FOOTBALL FIXTURES backfill SINCE 2015 (94 leagues)** — needs [A] season-window for efficiency; ~35-50k
 incremental calls no-force for 2019+, scaling modestly for 2015-2018. Unblocks [D]. (api_football genesis = 2015.)
 
-- [ ] [DATA] P0. Fixtures backfill 2015→present, 94 leagues, no-force, season-window-gated.
+- [x] ✅ [DATA] P0. Fixtures backfill 2015→present, 94 leagues, no-force, season-window-gated. (was: unchecked)
+      **[2026-07-12 — finding 257, §A2 B-queue ruling]** COMPLETED elsewhere — this exact scope was picked up + shipped
+      in `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` Todo 4 (its own References section frames itself
+      as "94 only here", disclaiming just the ~300-league expansion part of this doc): FIXTURES backfilled + verified
+      2018→present, gate PASSED with audit evidence (instruments-service@97ccf8d:
+      `run_fixture_completeness_audit_2026_06_25.py` → 0 pending-fetch, 0 blank-reason, depth 100.10%). 2015-2017 is now
+      a confirmed subscription floor (`SOURCE_COVERAGE_START["api_football"] = date(2018,1,1)`, UAC-shipped, was
+      `date(2015,1,1)`), typed `EXPECTED_PRE_SOURCE_COVERAGE_START` — honest absence, not a gap. Do NOT re-dispatch this
+      todo (scarce 6M API-Football call budget).
 
 **[D] ENRICHMENT backfill SINCE 2015** — needs [C] (fixtures first) + uses results to refresh [A]'s availability map.
 The big quota sink (~4 calls/fixture: lineups/stats/events/players) + downstream (weather/footystats/understat/SFI per
 eligibility + season/transfer windows).
 
 - [ ] [DATA] P1. Enrichment backfill 2015→present for the 94 leagues, then annotate per-(league,entity) availability.
+      **[2026-07-12 note — finding 257, §A2 B-queue ruling]** A nominal counterpart of this item is checked `[x]` in
+      `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` (Todo 5, "Backfill enrichment + core
+      2020-06→present"), but that checkbox represents LAUNCH not gate-passed — its own defined gate was still FAILING as
+      of that plan's most recent Progress Log entry (2026-07-06 session 19: Total EU 415,064, "Gate: FAILS"). The real
+      enrichment-completion tracker there is its Todo 9 (BLOCKED-OPERATOR-DECISION, correctly unflipped). Do not treat
+      either as evidence this [D] item is done; check `sports_p2_history...` Todo 9 status before dispatching.
 
 **SEQUENCING:** [A]+[B] now in parallel (code vs data-layer, independent) → [C] once [A] season-window lands → [D] after
 [C]. Biggest single unblock = [B] (resolves dual-SoT + stamps) and [A] (correct+cheap backfills) — both start now.
@@ -452,6 +468,22 @@ materialized.
   re-enable gate**: the write-gate SHIPPED (`instruments-service@0345ffc`); re-enable after the VM tarball is rebuilt
   from clean LDR (`create-code-tarballs.sh`) so relaunched VMs carry the gate. Re-enable with
   `gcloud scheduler jobs resume <job> --location=asia-northeast1`. Tracked by Execution-sequence P0 (tarball+relaunch).
+  **[2026-07-12 correction — finding 255, §A2 B-queue ruling]** RESOLVED — per the Execution-sequence P0 item above
+  (`both crons resumed 2026-06-25`, tarball `a4b1bd032d9c`, write-gate `0345ffc` ancestor), both crons were ENABLED on
+  2026-06-25. (Was: this bullet, unedited since, still framed them as PAUSED awaiting the same gate that already
+  shipped + was already used to re-enable them.) Current live state: `uts-prod-sports-scheduler-cron` ENABLED (`*/5`)
+  - `uts-prod-sports-fixtures-noon-t1-schedule` ENABLED (noon daily) — do not attempt to "re-enable" an already-running
+    cron off this bullet's stale framing. **[2026-07-12 deploy outcome — operator-authorized prod deploy, escalation ii;
+    see `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §Progress Log "sports prod deploy,
+    escalation ii COMPLETE"]** Despite "ENABLED since 2026-06-25" above, both crons were **silently inert** for the
+    entire window from resume (2026-06-25) until 2026-07-12: `uts-prod-sports-scheduler`'s Cloud Run Job fired every 5
+    minutes but never dispatched (a scheduler local-backend/args bug — the Terraform fix `deployment-service@bb880b6`
+    was committed but never `tofu apply`'d, so the job ran on a stale generation-1 container); the fixtures job
+    (`uts-prod-instruments-service-sports-fixtures`) did not exist in prod at all (NOT_FOUND for all 4 schedules). Both
+    fixed + verified 2026-07-12: scheduler args applied via a targeted single-resource OpenTofu plan (generation 2,
+    state file unfroze); fixtures job CREATED via gcloud (mirroring dev, corrected to 8cpu/32Gi after an OOM at
+    2cpu/4Gi), 3 consecutive successes incl. real unattended cron ticks. The FIXTURES freshness gap tracked elsewhere in
+    this plan should start closing now that the 4 daily fixture-job runs are live.
 - **PAUSED instruments-sports consolidator** (`uts-prod-manifest-consolidator-instruments-sports-cron`, was `*/1`) —
   paused 2026-06-24 so it can't re-merge the numeric-laden `_legacy_seed.parquet` shard back into the freshly
   canonicalized consolidated `_index`. **Re-enable gate**: resume ONLY after P0b (seed-canonicalize) is done. Resume:

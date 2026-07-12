@@ -38,7 +38,7 @@ created: 2026-05-07
 name: sports_master
 tier: L0
 priority: P1
-assigned_vm: vm-sports
+assigned_vm: vm-sports # epic-level ownership label (legacy per-VM convention, retained workspace-wide across ALL epics/*.md as of 2026-07-12; distinct from PLAN `assigned_vm` which is {planning, NA}-only post-2026-06-27 -- annotated 2026-07-12, finding 262, §A2 B-queue ruling, no value change -- workspace-wide epic-schema migration is out of scope here)
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
@@ -1364,9 +1364,11 @@ clean re-run (<0.5% phantom rate, no blanket-flip).
 
 ### [`sports_features_readiness_for_predictions_2026_06_20`](../active/sports_features_readiness_for_predictions_2026_06_20.md)
 
-**status**: active · **estimate**: 1.2 cal AI-days (class: infra). Sports-side feeder for the predictions e2e gate: run
-FSS on the bucketed odds dataset + verify the ML-ready feature matrix (≥95% non-NULL at predictions-target buckets). The
-predictions Group-E ML walk-forward gate itself stays owned by `predictions_master`.
+**status**: ✅ complete (was: active — corrected 2026-07-12, finding ids 260/275, §A2 B-queue ruling; the plan's own
+frontmatter reads `status: complete` with a body "Status-flip note (2026-07-10): both P0/P1 todos confirmed `[x]`") ·
+**estimate**: 1.2 cal AI-days (class: infra). Sports-side feeder for the predictions e2e gate: run FSS on the bucketed
+odds dataset + verify the ML-ready feature matrix (≥95% non-NULL at predictions-target buckets). The predictions Group-E
+ML walk-forward gate itself stays owned by `predictions_master`.
 
 ### [`d2_uac_continuity_2026_05_20`](../active/d2_uac_continuity_2026_05_20.md)
 

@@ -10,7 +10,7 @@ summary:
   within minutes — causing 60+ spurious OSError ENOSPC test failures (files that have nothing to do with the change
   under review) and, once, blocking even the harness's own Bash-tool output capture (which also lives under /tmp) until
   manually cleared. Hit twice in one session while shipping manifest_record_expected_empty_blank_source-007 (slot 8)."
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -24,11 +24,14 @@ priority: P2
 source: [manifest_record_expected_empty_blank_source-007]
 assigned_vm: planning
 resolved_by:
+  "unified-trading-pm@0e29e6d81 (P2 TMPDIR redirect) + two closing 2026-07-08 Progress Log entries for the P3 items
+  (tmpfs-resize: operator decision, left as-is; stale-dir cron: scripts/dev/cleanup-stale-qg-tmp.sh + installer). Cron
+  registration itself is left to the operator to run once per host — not a blocker on this doc's own scope."
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-08
+last_updated: 2026-07-12
 ---
 
 ## What I found
@@ -116,3 +119,5 @@ full `quality-gates.sh` runs for `unified-trading-library`. Both hit `/tmp` disk
   `pytest-of-ubuntu` dir at the default 60-min threshold, correctly matches it with `--min-age 0`. Cron **registration**
   (writing to the operator's crontab) is left to the operator to run once per host — a shared-host crontab write is the
   same category of change flagged in the prior item as not-self-authorized.
+- **Sync 2026-07-12** (finding 85, §A2 B-queue ruling): all three Recommended-decision todos above are checked with
+  shipped evidence; frontmatter flipped `status: open` → `resolved` (was: open).

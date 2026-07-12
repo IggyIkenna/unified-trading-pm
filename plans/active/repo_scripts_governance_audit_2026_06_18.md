@@ -1,12 +1,22 @@
 ---
 doc_type: plan
 title: Repo scripts/ governance — ruff-lint pass + deprecate/delete audit + strict-quickmerge carve scope (D16)
-summary: Govern the scripts/ directories across repos — add ruff-lint pass, audit for deprecation/deletion, and define the strict-quickmerge carve scope for D16.
+summary:
+  Govern the scripts/ directories across repos — add ruff-lint pass, audit for deprecation/deletion, and define the
+  strict-quickmerge carve scope for D16.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [client-reporting-api, deployment-service, e2e-testing, features-service, instruments-service, market-tick-data-service]
+repos:
+  [
+    client-reporting-api,
+    deployment-service,
+    e2e-testing,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: [scripts, governance, ruff, lint, audit, deprecation, quickmerge, ci-cd, D16]
 related: []
@@ -24,7 +34,11 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source: [operator decision 2026-06-18 (CI/CD drift audit D16 follow-up), plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md § D16]
+source:
+  [
+    operator decision 2026-06-18 (CI/CD drift audit D16 follow-up),
+    plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md § D16,
+  ]
 assigned_role: infra-engineer
 drift_direction: correct-codex
 ---
@@ -114,8 +128,14 @@ a verdict). Heaviest:
   ```
   # Epic: <epic-slug>                       # owning epic — validated vs plans/epics/ registry (required, ALL scripts)
   # Lifecycle: permanent|campaign|oneoff    # required, ALL
-  # Delete-when: <concrete completion condition>   # required for campaign/oneoff; permanent omits it
+  # Delete-when: <concrete completion condition> | NA   # REQUIRED + PRESENT on ALL scripts; NA for permanent
   ```
+
+  (was: "`# Delete-when: <concrete completion condition>   # required for campaign/oneoff; permanent omits it`" —
+  corrected 2026-07-12, doc-reconciliation finding 71, §A2 B-queue ruling: operator correction 2026-06-22 made
+  `Delete-when` mandatory-and-present on every script, `NA` for `permanent`, so the fleet stays greppable via
+  `grep -rL '^# Delete-when:'`; see `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" (the enforced SSOT)
+  and `plans/active/scripts_lifecycle_marker_rollout_2026_06_18.md`.)
 
   Closed `Lifecycle` set mirrors the VM `lifecycle_class` spirit: **`permanent`** ≈ LONG_LIVED (`setup.sh`, dev tooling;
   template-managed scripts like `setup.sh`/`quality-gates.sh`/`quickmerge.sh` are auto-permanent — PM-sourced); whereas

@@ -38,8 +38,12 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: trading_agent_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_0 active plans declare `parent_epic: trading_agent_master` in their frontmatter (was: stale auto-gen count of "1" — the
+only plan declaring it, `trading_agent_service_architecture_unlock_2026_05_22`, is `status: complete` /
+`✅ ARCHIVED 2026-05-23`, see P0 below). Workers pick up in priority order (P0 first) once a new child plan is filed.
+Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`. **Sync 2026-07-12** (finding 334, §A2 B-queue
+ruling): corrected the count so a dispatcher scanning epic summaries doesn't read "1 active" as live work when the epic
+currently has zero._
 
 ## P0 — must complete before next foundation gate
 

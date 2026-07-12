@@ -50,8 +50,13 @@ drift_direction: advance-code
 
 ## Scope + coverage clips (the "zero expected-missing" definition)
 
-- **FIXTURES**: `coverage_start = 2015-01-01` → backfill 2015→present, all 94 leagues, season-aware (off-season →
-  `EXPECTED_PRE_SEASON`/`POST_SEASON`; no-match day → `EXPECTED_NO_FIXTURE`).
+- **FIXTURES**: `coverage_start = 2018-01-01` (was: `2015-01-01`) → backfill 2018→present, all 94 leagues, season-aware
+  (off-season → `EXPECTED_PRE_SEASON`/`POST_SEASON`; no-match day → `EXPECTED_NO_FIXTURE`). **[2026-07-12 correction —
+  finding 248, §A2 B-queue ruling]** This Scope header originally stated `coverage_start = 2015-01-01` (matching the
+  plan's title "2015→present"), but Todo 2's diagnosis (this same session, below) shipped
+  `SOURCE_COVERAGE_START["api_football"] = date(2018, 1, 1)` (was `date(2015, 1, 1)`) as a confirmed subscription-floor
+  verdict — 2015-2017 cells are typed `EXPECTED_PRE_SOURCE_COVERAGE_START` (honest absence forever), not a live backfill
+  target. The actual backfill Todo below was updated to "2018→present" at the time; this header was not, until now.
 - **Enrichment** (`FIXTURE_EVENTS`/`LINEUPS`/`STATS`, `PLAYER_STATS`): `DATA_TYPE_COVERAGE_START = 2020-06-06` →
   pre-2020-06 cells are `EXPECTED_PRE_SOURCE_COVERAGE_START` (honest absence, NOT fetched, NOT missing); 2020-06→present
   backfilled.
@@ -117,7 +122,13 @@ drift_direction: advance-code
       rate-limited, 54s sleep). Entities sequenced: FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS (2020-06-06) → INJURIES
       (2021-01-01) → STANDINGS (2018-01-01). Full gate (pending_fetch == 0) is a running-process gate: the background
       coordinator runs to completion; re-run after FIXTURES backfill (Todo 4) fills 2020→2024 fixture dates for full
-      enrichment coverage.
+      enrichment coverage. **[2026-07-12 annotation — finding 250, §A2 B-queue ruling]** This `[x]` represents
+      "enrichment+core backfill LAUNCHED", not "gate met" — the coordinator-based gate this item itself defines
+      (`pending_fetch == 0` per data_type) was still FAILING as of the most recent Progress Log entry (2026-07-06,
+      session 19: Total EU 415,064, "Gate: FAILS — same structural blocker as sessions 15–18"; operator-answered
+      BLK-b37df00d = accept partial + park). The real completion tracker is Todo 9 below
+      (`[ ] ... BLOCKED-OPERATOR-DECISION`, correctly left unflipped) — do not treat this checkbox as evidence the
+      enrichment/core backfill is complete.
 - [x] ✅ [VERIFY] P1. **Full-history AF cleanliness (FIXTURES).** **Gate**:
       `run_fixture_completeness_audit_2026_06_25.py` over 2018→present reports 0 pending-fetch + 0 blank-reason + 0
       un-evidenced failed. — instruments-service@97ccf8d. Audit (00:21 UTC 2026-06-29): Total captured=77,755 /

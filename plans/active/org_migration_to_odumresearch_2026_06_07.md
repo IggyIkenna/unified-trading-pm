@@ -1,12 +1,22 @@
 ---
 doc_type: plan
 title: GitHub Org Migration — IggyIkenna → OdumResearch (fleet-wide, incl. GCP/AWS/deploy)
-summary: Fleet-wide migration of all repos from IggyIkenna GitHub org to OdumResearch — including GCP/AWS trust configuration, Cloud Build triggers, Workload Identity Federation, and deploy pipelines.
-status: active
+summary:
+  Fleet-wide migration of all repos from IggyIkenna GitHub org to OdumResearch — including GCP/AWS trust configuration,
+  Cloud Build triggers, Workload Identity Federation, and deploy pipelines.
+status: paused
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, deployment-service, e2e-testing, execution-service, features-service, fund-administration-service]
+repos:
+  [
+    agent-orchestrator,
+    deployment-service,
+    e2e-testing,
+    execution-service,
+    features-service,
+    fund-administration-service,
+  ]
 scope: [engineer, admin]
 tags: [github-org, migration, odumresearch, infrastructure, cloud-build, wif, deploy]
 related: []
@@ -18,15 +28,15 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
-last_updated: 2026-06-27
+last_updated: 2026-07-12
 locked_by: live-defi-rollout
 locked_since: 2026-06-07
 supersedes:
 superseded_by:
 depends_on: []
 source:
-- operator-decision-2026-06-07 (do the org migration; org name = OdumResearch; everything moves)
-- {read-only pre-audit 2026-06-07 (3 parallel agents: 'cloud-trust, deploy/VM, github-config)'}
+  - operator-decision-2026-06-07 (do the org migration; org name = OdumResearch; everything moves)
+  - { read-only pre-audit 2026-06-07 (3 parallel agents: "cloud-trust, deploy/VM, github-config)" }
 drift_direction: advance-code
 ---
 
@@ -41,6 +51,11 @@ drift_direction: advance-code
 > once) are real but **nice-to-have, not unblock**. **Decision pending operator:** still want the org for those, or keep
 > everything under `IggyIkenna`/Pro (which now fully supports fleet rulesets)? This plan stays as the blueprint if/when
 > the org is wanted; it is no longer urgent.
+>
+> **Sync 2026-07-12** (finding 79, §A2 B-queue ruling): frontmatter `status: active` → `paused` (was: active) — 0/27
+> todos executed since the 2026-06-07 pending-operator-decision note above (no Progress Log entry since), matching the
+> `paused` = "deliberately deferred by operator decision; not dispatched until un-paused" semantic
+> (`codex/11-project-management/doc-frontmatter-schema.md`). Un-pause when the operator rules on org-vs-stay-on-Pro.
 >
 > **Original operator decision (2026-06-07):** move ALL repos to a GitHub **Team org `OdumResearch`** for: org-level
 > rulesets, org-level secrets, team access (Harsh as member), bus-factor, and (was) unlocking AO branch protection.

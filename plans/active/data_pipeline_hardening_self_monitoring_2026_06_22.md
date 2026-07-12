@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Data-Pipeline Hardening + Self-Monitoring (anti silent-misclassification)
-summary: Harden all data-pipeline adapters against silent misclassification with FetchEvidence gates, per-adapter guards, daily summaries, and self-monitoring alerts across all 5 asset groups.
+summary:
+  Harden all data-pipeline adapters against silent misclassification with FetchEvidence gates, per-adapter guards, daily
+  summaries, and self-monitoring alerts across all 5 asset groups.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -9,7 +11,20 @@ stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
 scope: [engineer, admin]
 tags: [data-pipeline, hardening, monitoring, silent-failure, fetch-evidence, alerts, anti-misclassification]
-related: [data_feed_sla_registry_and_active_self_healing_2026_06_19.md, alert_quality_overhaul_2026_06_18.md, deployment_ui_monitoring_pane_2026_06_19.md, vm_launcher_durable_log_observability_2026_06_19.md, data_completion_to_100_all_ag_2026_06_21.md, cross_ag_shard_4pillar_validation_harness_2026_06_19.md, audit_criteria_automation_2026_06_08.md, issues/fleet_data_acquisition_health_2026_06_21.md, issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19.md, issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md, issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md]
+related:
+  [
+    data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
+    alert_quality_overhaul_2026_06_18.md,
+    deployment_ui_monitoring_pane_2026_06_19.md,
+    vm_launcher_durable_log_observability_2026_06_19.md,
+    data_completion_to_100_all_ag_2026_06_21.md,
+    cross_ag_shard_4pillar_validation_harness_2026_06_19.md,
+    audit_criteria_automation_2026_06_08.md,
+    issues/fleet_data_acquisition_health_2026_06_21.md,
+    issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19.md,
+    issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md,
+    issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md,
+  ]
 created: 2026-06-22
 parent_epic: observability_master
 assigned_vm: NA
@@ -300,24 +315,31 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       env-short `-prd-` writers → stale-read → false honest-absence → zero-capture; the defi-6% class) — filed as the P1
       todo below; the defi lane already fixed one (`mtds@059df5f`, live IS-universe reader). —
       **market-tick-data-service**
-- [~] [CODE] P1. **Fix the 8 C6 reader-bucket-env bugs** the parity check found — **7 of 8 SHIPPED on origin/LDR**
-  (`market-tick-data-service@fbac3a9`, swept in via the peer's keystone-threading quickmerge): all sites aligned to
-  `resolve_bucket_name(cloud=..., kind="instruments-store", asset_group=...)` (env-short `-prd-`, the IS writers'
-  bucket). DONE: `engine/orchestrator/__init__.py:445/447/449/451` (`_register_all_catalog_readers` — 4 AG catalog
-  readers, F4 expected-universe path; `get_bucket_name("instruments",ag)` was env-LESS Group-A
-  `instruments-store-{ag}-{pid}` → confirmed genuine bug, fixed) + `cli/handlers/_instruments_metadata.py:218/442/518`
-  (3 defi reads — the EXACT CLAUDE.md-documented defi-6% bug). Test `test_instruments_metadata_loader.py` updated to
-  assert the env-short bucket (the prior 2 assertions encoded the bug — diagnosed test-wrong-not-code-wrong). Live-probe
-  verified: `resolve_bucket_name(kind="instruments-store", asset_group="defi")` → `instruments-store-defi-prd-{pid}` (vs
-  the OLD env-less `instruments-store-defi-{pid}`). **8th site — `live/websocket_runner.py` `_read_is_parquet_sync`
-  (`build_bucket("instruments",…)`) — DEFERRED to the live MTDS-threading lane** (`data_completion_to_100_all_ag`): the
-  file carries a large in-flight `fetch_evidence`-threading refactor the peer is actively committing (fbac3a9/26202e1);
-  a clean local QG sentinel is also blocked by an environmental semver version-alignment lag (PM clone 11 behind
-  origin/main; `--skip-version-alignment` is human-only). Fix is fully prepared + validated (helper
-  `_instruments_store_bucket(ag)` mirroring the prediction reader; ruff/basedpyright-baseline/31-tests green; method
-  ≤50L) — the threading lane lands it on its next clean window. Parity check is **warn-only** so the 1 remaining site
-  does NOT redden the fleet; flip to hard-block when the 8th lands. Provenance: bucket-parity check
-  `wip-preserve@32e8b6e`. — **market-tick-data-service**
+- [x] ✅ [CODE] P1. **Fix the 8 C6 reader-bucket-env bugs** the parity check found — **8 of 8 SHIPPED on origin/LDR**
+      [doc-reconciliation 2026-07-12, finding 194, §A2 B-queue ruling] (was: "[~] ... 7 of 8 SHIPPED" — the 8th site,
+      `live/websocket_runner.py` `_read_is_parquet_sync`, is confirmed SHIPPED per the later `[x]` entry below at
+      `market-tick-data-service@059df5f`; re-verified via `git log`/`git show origin/live-defi-rollout` in this pass —
+      commit present on `live-defi-rollout`, and current HEAD `websocket_runner.py:513-516` calls
+      `_instruments_store_bucket`, confirming the fix landed) (`market-tick-data-service@fbac3a9`, swept in via the
+      peer's keystone-threading quickmerge): all sites aligned to
+      `resolve_bucket_name(cloud=..., kind="instruments-store", asset_group=...)` (env-short `-prd-`, the IS writers'
+      bucket). DONE: `engine/orchestrator/__init__.py:445/447/449/451` (`_register_all_catalog_readers` — 4 AG catalog
+      readers, F4 expected-universe path; `get_bucket_name("instruments",ag)` was env-LESS Group-A
+      `instruments-store-{ag}-{pid}` → confirmed genuine bug, fixed) +
+      `cli/handlers/_instruments_metadata.py:218/442/518` (3 defi reads — the EXACT CLAUDE.md-documented defi-6% bug).
+      Test `test_instruments_metadata_loader.py` updated to assert the env-short bucket (the prior 2 assertions encoded
+      the bug — diagnosed test-wrong-not-code-wrong). Live-probe verified:
+      `resolve_bucket_name(kind="instruments-store", asset_group="defi")` → `instruments-store-defi-prd-{pid}` (vs the
+      OLD env-less `instruments-store-defi-{pid}`). **8th site — `live/websocket_runner.py` `_read_is_parquet_sync`
+      (`build_bucket("instruments",…)`) — was: "DEFERRED to the live MTDS-threading lane"; now SHIPPED, see the `[x]`
+      entry below (`mtds@059df5f`)** (`data_completion_to_100_all_ag`): at the time of this diagnosis the file carried a
+      large in-flight `fetch_evidence`-threading refactor the peer was actively committing (fbac3a9/26202e1); a clean
+      local QG sentinel was also blocked by an environmental semver version-alignment lag (PM clone 11 behind
+      origin/main; `--skip-version-alignment` is human-only). Fix was fully prepared + validated (helper
+      `_instruments_store_bucket(ag)` mirroring the prediction reader; ruff/basedpyright-baseline/31-tests green; method
+      ≤50L) — landed on the threading lane's next clean window (see below). Parity check is **warn-only** so the fleet
+      was never reddened by the interim gap. Provenance: bucket-parity check `wip-preserve@32e8b6e`. —
+      **market-tick-data-service**
 - [ ] [SCRIPT] P2. Close the `audit_criteria_automation` honest-SKIPs: wire CF-10 (phantom) and CF-14 (catalogue ⊇
       present-set) from SKIP to real checks inside `cf_manifest_audit_all.py`. — **market-tick-data-service**
 - [ ] [SCRIPT] P2. **v9-readiness gate** in the daily digest: surface `schema_version` distribution per AG (target
@@ -361,30 +383,13 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       (per-venue backfill-vs-scope decision; operator HARD RULE = NO flat clip).** — the 2026-06-22 triage (divergence
       CSV + measured first-capture cross-ref) split the post-coverage*start residual into two REAL classes, all
       historical (≤2025-11-18, 0 in operational window): **(a) data_type NAME-DRIFT (~5–6k cells)** —
-      AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope (`\_DEFI_LENDING*\*\_PAIRS`) expects
-      `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/ `lending_indices`but the manifest
-      CAPTURED`liquidations`/`rate_indices`/`utilization`(legacy `liquidations_handler.py`still exists
-      alongside`liquidation_events_handler.py`; MORPHO subgraph emits `rate_indices`/`utilization`not the AAVE-style
-      names). The data EXISTS under a different data_type name → diagnose both sides + reconcile (either retire the
-      legacy handler/data_type names → the canonical scope, or correct the oracle scope to the names the handlers
-      actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real gaps (~7k cells)** — venues with ZERO captured rows
-      for ANY scoped data_type: STARGATE/ACROSS`bridge_events`, PYTH `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX
-      `perp_funding`, FLUID lending, AAVE `governance_events`, ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL
-      `staking_yields`— the adapter never ran a historical backfill, OR the data_type is out-of-MVP-archetype scope
-      (bridge/mev/governance/flash-loan are NOT in the carry_staked_basis/arbitrage_price_dispersion data needs).
-      Decision per venue: real-MVP-need → defi MTDS historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN
-      launch dates); out-of-MVP → move to `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED`or trim
-      the oracle scope. Candidate CSV: `plans/audit/results/divergence_2026-06-22.csv` (filter
-      classification=DIVERGENT_EMPTY). — **unified-api-contracts, market-tick-data-service** **RE-VERIFIED AGAIN
-      2026-06-22 resume-run** (fresh`detect_manifest_divergence.py     --asset-group     defi`on live prod `\_index`,
-      2,436,439 cells): **DIVERGENT_EMPTY = 13,760 EXACTLY (stable — auto-flip reclassifier holding it, not growing);
-      max date 2025-11-18; ZERO in the operational window (≥2025-11-19) — all historical, NOT blocking.** Breakdown
-      re-confirmed = the two classes (name-drift-suspect lending + never-collected/out-of-MVP). **Sub-finding (refines
-      class-a):** the `dex_pool_swaps`DIVERGENT_EMPTY cells (UNISWAP_V3 350 / BALANCER 355 / CURVE 43) are NOT
-      name-drift —`dex_pool_swaps` IS actively captured (4,392 OK_CAPTURED cells), so these are genuine date-specific
-      historical swap gaps on those venues → resolve via per-venue historical DEX-swaps backfill (PER-CHAIN launch
-      dates), not an oracle rename. Stays the tracked per-venue backfill-vs-scope campaign (operator HARD RULE: NO flat
-      clip).
+      AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
+      (`\_DEFI_LENDING*\*\_PAIRS`) expects     `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/ `lending_indices`but the manifest     CAPTURED`liquidations`/`rate_indices`/`utilization`(legacy `liquidations_handler.py`still exists     alongside`liquidation_events_handler.py`; MORPHO subgraph emits `rate_indices`/`utilization`not the AAVE-style     names). The data EXISTS under a different data_type name → diagnose both sides + reconcile (either retire the     legacy handler/data_type names → the canonical scope, or correct the oracle scope to the names the handlers     actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real gaps (~7k cells)** — venues with ZERO captured rows     for ANY scoped data_type: STARGATE/ACROSS`bridge_events`, PYTH `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX     `perp_funding`, FLUID lending, AAVE `governance_events`, ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL     `staking_yields`— the adapter never ran a historical backfill, OR the data_type is out-of-MVP-archetype scope     (bridge/mev/governance/flash-loan are NOT in the carry_staked_basis/arbitrage_price_dispersion data needs).     Decision per venue: real-MVP-need → defi MTDS historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN     launch dates); out-of-MVP → move to `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED`or trim     the oracle scope. Candidate CSV: `plans/audit/results/divergence_2026-06-22.csv` (filter     classification=DIVERGENT_EMPTY). — **unified-api-contracts, market-tick-data-service** **RE-VERIFIED AGAIN     2026-06-22 resume-run** (fresh`detect_manifest_divergence.py
+      --asset-group
+      defi`on live prod `\_index`,     2,436,439 cells): **DIVERGENT_EMPTY = 13,760 EXACTLY (stable — auto-flip reclassifier holding it, not growing);     max date 2025-11-18; ZERO in the operational window (≥2025-11-19) — all historical, NOT blocking.** Breakdown     re-confirmed = the two classes (name-drift-suspect lending + never-collected/out-of-MVP). **Sub-finding (refines     class-a):** the `dex_pool_swaps`DIVERGENT_EMPTY cells (UNISWAP_V3 350 / BALANCER 355 / CURVE 43) are NOT     name-drift —`dex_pool_swaps`
+      IS actively captured (4,392 OK_CAPTURED cells), so these are genuine date-specific historical swap gaps on those
+      venues → resolve via per-venue historical DEX-swaps backfill (PER-CHAIN launch dates), not an oracle rename. Stays
+      the tracked per-venue backfill-vs-scope campaign (operator HARD RULE: NO flat clip).
 - [x] ✅ [CODE] P2. **`reprobe_defi.py` chain-blind false-disagreement bug (C2)** — DONE `e2e-testing@4cfbbf1` (QG
       --no-fix exit 0, sentinel==HEAD, 20 dp_audit tests green incl. 3 new; dirty-deps direct-LDR carve-out —
       strategy-service had live PEER WIP at quickmerge time). Threaded `chain` through the shared `ReprobeHook`
@@ -723,21 +728,9 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   `(OSError,ValueError,KeyError,RuntimeError)`) — origin had 0 broad-excepts so the gate counted these as violations;
   the narrow set keeps the keystone-safe "any failure → disqualifying signal → record*failed" intent; (e) fixed import
   alias for the relocated `make_live_window_evidence` (size sub-agent renamed
-  `_make_live_window_evidence`→`make*…`during the helper extraction) in the new`test_cefi_keystone_fetch_evidence.py`;
-  (f) updated 4 stale `instruments-store-defi-\*`bucket literals (env-less→env-short`-prd-`) in
-  `test_instruments_metadata_loader.py`to match the C6 reader fix the threading applied (the defi-6% stale-read class
-  —`\_instruments_metadata.py`×3 +`orchestrator/**init**.py`×4 catalog readers now use`resolve_bucket_name`, env-short).
-  **GREP-PROOF**: `check_source_returned_zero_needs_fetch_evidence.py`= 0 unproven callsites for BOTH MTDS and IS. **AGs
-  now raise-free / ready for VM re-ship**: defi, tradfi, cefi, prediction (MTDS handlers all threaded), extended
-  (umi), + sports/defi on IS (peer`c4687fc`). **Findings**: (1) the adapter-contract-call baseline warned on
-  websocket_runner (11→8) + lending_indices (6→5) — both FALSE POSITIVES (the 6 websocket calls MOVED into the new
-  `\_ws_window_helpers.py`, not in the per-file baseline; the lending "6th" was a `record_zero_rows`literal in a COMMENT
-  the threading reworded) — QG still EXIT=0 so warn-only; left baseline untouched (no masking). (2) Left dirty +
-  UNSHIPPED (NOT keystone — belong to other lanes, deliberately excluded from the
-  commit):`scripts/run_polymarket_v9_rewalk.sh`(one-off,
-  predictions_master) +`scripts/migrate_onchain_perp_canonical_instrument_id.py` (one-off migration, 0 fetch_evidence).
-  **Per-AG reprobe hooks / rate-events / heartbeat (the OTHER half of each per-AG dispatch item) remain the per-AG
-  agents' job** — this run completed the keystone THREADING half only.
+  `_make_live_window_evidence`→`make*…`during the helper extraction) in the new`test_cefi_keystone_fetch_evidence.py`; (f) updated 4 stale `instruments-store-defi-\*`bucket literals (env-less→env-short`-prd-`) in `test_instruments_metadata_loader.py`to match the C6 reader fix the threading applied (the defi-6% stale-read class —`\_instruments_metadata.py`×3 +`orchestrator/**init**.py`×4 catalog readers now use`resolve_bucket_name`, env-short). **GREP-PROOF**: `check_source_returned_zero_needs_fetch_evidence.py`= 0 unproven callsites for BOTH MTDS and IS. **AGs now raise-free / ready for VM re-ship**: defi, tradfi, cefi, prediction (MTDS handlers all threaded), extended (umi), + sports/defi on IS (peer`c4687fc`). **Findings**: (1) the adapter-contract-call baseline warned on websocket_runner (11→8) + lending_indices (6→5) — both FALSE POSITIVES (the 6 websocket calls MOVED into the new `\_ws_window_helpers.py`, not in the per-file baseline; the lending "6th" was a `record_zero_rows`literal in a COMMENT the threading reworded) — QG still EXIT=0 so warn-only; left baseline untouched (no masking). (2) Left dirty + UNSHIPPED (NOT keystone — belong to other lanes, deliberately excluded from the commit):`scripts/run_polymarket_v9_rewalk.sh`(one-off, predictions_master) +`scripts/migrate_onchain_perp_canonical_instrument_id.py`
+  (one-off migration, 0 fetch_evidence). **Per-AG reprobe hooks / rate-events / heartbeat (the OTHER half of each per-AG
+  dispatch item) remain the per-AG agents' job** — this run completed the keystone THREADING half only.
 - **2026-06-22 C6 READER-BUCKET-ENV FIXES (Phase 3, slot-6·human-planning, Opus 4.8)** — operator "fix pls" the 8 C6
   reader-bucket-env bugs the new parity check surfaced (the defi-6% stale-read class). **Restored + RAN
   `check_reader_writer_bucket_parity.py`** (from `wip-preserve/mtds-qg-5.90-5.91-bucket-parity-20260622`) → confirmed
@@ -938,7 +931,7 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   WIRING is correct (monitors→`lifecycle-events`, subscriber→`lifecycle-events-sub`); only the running consumer was
   missing. (2) the **daily-audit crons** (digest/hygiene/reprobe — which detect the 12.5k tradfi `attempted_failed` +
   misclassified empties) were **never applied** (terraform on origin but image-var unapplied). (3) the real-time
-  monitors only catch VM _crashes_ — and tradfi-bf VMs \*succeed\* (exit 0) — so nothing to fire on. (4) **No autonomous
+  monitors only catch VM *crashes* — and tradfi-bf VMs \*succeed\* (exit 0) — so nothing to fire on. (4) **No autonomous
   wave-launcher** — the 8-VM tradfi-bf wave was MANUAL; no cron fires waves → backfill stalls at ~68% honest coverage,
   never reaches 100% on its own. **Operator /autonomous mandate: deploy all 3\*_ — (A) the alerting-service consumer
   (Cloud Run subscriber on `lifecycle-events`), (B) the daily-audit crons (on the built `e2e-audit:latest` image), (C) a
@@ -1067,21 +1060,9 @@ items:
   - **✅ RE-ACCRUAL VERIFIED + DURABLE SELF-HEAL PROVEN ON LIVE DATA (2026-06-22 ~23:08Z resume-run,
     slot·human-planning, Opus 4.8):** ran the prompt's "VERIFY no re-accrual after a consolidator tick" check.
     **Re-accrual IS occurring as predicted**: the consolidated defi `_index` had **30,236 blank/NULL `asset_group` rows
-    among captured** (UNISWAP*V3/V4/V2 + BALANCER/CURVE/SUSHI `swaps_ohlcv*_`, source `onchain_subgraph`/`onchain_rpc`,
-    `attempted_at` up to 23:05Z = minutes-fresh) because the **pre-v9`mdps-defi-2025-20260622-074035` VM is STILL
-    RUNNING** (`purpose=mdps-sharded-backfill`, year 2025, launched 07:41Z ~15.5h ago — a LEGITIMATE bounded backfill,
-    NOT a zombie, so NOT stopped) and keeps appending column-less rows, AND the SCHEDULED Cloud Run consolidator
-    (`uts-prod-manifest-consolidator-execution-defi`, last ran 23:07Z) is on the OLD image (the UTL@7b2306c3 self-heal
-    is on LDR but the consolidator image rebuild is **gated by the same fleet-wide GitHub Actions outage** as items
-    3/5). **Durable fix proven**: ran the FIXED consolidator from the workspace UTL (7b2306c3 IS ancestor of HEAD —
-    `\_asset_group_for_market_data_bucket`COALESCE at`manifest_consolidator.py:1289`) `--force`against
-    live`market-data-tick-defi-prd-…`→ success, 4,108,810 rows out, 6.3s → **BLANK now 0 / 100%`asset_group=defi`
-    verified by re-read**. Also healed tradfi (12→0, 6.81M rows) for completeness; cefi/sports/prediction already 0.
-    **All 5 AG consolidated indexes now 0 blank`asset_group`.** **Bounded residual (self-healing, no action owed):**
-    between now and (a) the backfill VM finishing OR (b) the consolidator image rebuilding from `main`(Actions-gated —
-    unblocks with items 3/5), the scheduled consolidator will re-blank defi each`_/1`cycle from the running VM's new
-    shards; once the image carries 7b2306c3 it self-heals every cycle with no manual run. The manual`--force` run above
-    keeps coverage honest in the interim. — unified-trading-library
+    among captured** (UNISWAP*V3/V4/V2 + BALANCER/CURVE/SUSHI
+    `swaps_ohlcv*_`, source `onchain_subgraph`/`onchain_rpc`, `attempted_at` up to 23:05Z = minutes-fresh) because the **pre-v9`mdps-defi-2025-20260622-074035` VM is STILL RUNNING** (`purpose=mdps-sharded-backfill`, year 2025, launched 07:41Z ~15.5h ago — a LEGITIMATE bounded backfill, NOT a zombie, so NOT stopped) and keeps appending column-less rows, AND the SCHEDULED Cloud Run consolidator (`uts-prod-manifest-consolidator-execution-defi`, last ran 23:07Z) is on the OLD image (the UTL@7b2306c3 self-heal is on LDR but the consolidator image rebuild is **gated by the same fleet-wide GitHub Actions outage** as items 3/5). **Durable fix proven**: ran the FIXED consolidator from the workspace UTL (7b2306c3 IS ancestor of HEAD — `\_asset_group_for_market_data_bucket`COALESCE at`manifest_consolidator.py:1289`) `--force`against live`market-data-tick-defi-prd-…`→ success, 4,108,810 rows out, 6.3s → **BLANK now 0 / 100%`asset_group=defi` verified by re-read**. Also healed tradfi (12→0, 6.81M rows) for completeness; cefi/sports/prediction already 0. **All 5 AG consolidated indexes now 0 blank`asset_group`.** **Bounded residual (self-healing, no action owed):** between now and (a) the backfill VM finishing OR (b) the consolidator image rebuilding from `main`(Actions-gated — unblocks with items 3/5), the scheduled consolidator will re-blank defi each`_/1`cycle from the running VM's new shards; once the image carries 7b2306c3 it self-heals every cycle with no manual run. The manual`--force`
+    run above keeps coverage honest in the interim. — unified-trading-library
 
 - **2026-06-22 unfillable-cell reclassification (slot-0·human-planning, Opus 4.8)** — operator: "class unfillable or
   mass-enter as empty*confirmed with reason." Investigated the tradfi `expected_unattempted` by venue + the databento
@@ -1513,9 +1494,9 @@ dispatch prompts.
       env-short) as a generic gate. — market-tick-data-service
 - [x] ✅ [CODE] P1. DONE mtds@477de66. **429-aware key-pool rotation** + `DP_KEY_POOL_EXHAUSTED` alert (TheGraph 9-key
       currently degrades silently to unauth). — market-tick-data-service
-- [x] ✅ [DOC] P1. DONE codex/15-runbooks/incidents/rb*data_001.md. \*\*`RB-DATA-*`DR runbook** — the
-      consolidator→MTDS→features cascade with RTO/RPO + auto-vs-human scope (none of the 22`rb\*\*` runbooks is
-      data-pipeline). — unified-trading-pm
+- [x] ✅ [DOC] P1. DONE codex/15-runbooks/incidents/rb*data_001.md.
+      \*\*`RB-DATA-*`DR runbook** — the     consolidator→MTDS→features cascade with RTO/RPO + auto-vs-human scope (none of the 22`rb\*\*`
+      runbooks is data-pipeline). — unified-trading-pm
 - [ ] [CODE] P2. Flip `data-pipeline-alerts.registry.yaml` modes `verbose`→`active` as each `escalation:` tier is wired
       to plumbing. — unified-trading-pm
 - [ ] [INFRA] P1. **Ship the dp-audit OOM-fix + image-default terraform**
@@ -2082,12 +2063,21 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
       — diagnosis refined 2026-06-23: there is NO `alerting-slack-webhook-url` secret, but
       `alerting-telegram-bot-token` + `alerting-telegram-chat-id` DO exist → the generic path's PRIMARY is Telegram; the
       Slack-fallback secret only fires when Telegram is unconfigured (my local test lacked Telegram → hit the miss; in
-      prod the generic path uses Telegram). So this is NOT a missing-secret blocker. The real refinement: routine DP
-      telemetry (`DP_FLEET_MONITOR_RUN_STARTED`/ `_COMPLETED`) should NOT fall through to the generic INCIDENT path at
-      all — they should mirror to #data-pipeline-alerts as INFO only (or be suppressed), not page Telegram. Add a
-      DP-telemetry routing rule so only genuine DP*\* findings (DP_VM_STALL / DP_EVENT_LOOP_STARVED / CONSOLIDATOR_DOWN)
-      reach the incident path. DP*\* ALERTS already work via the data-pipeline mirror
-      (`DATA_PIPELINE_ALERTS_SLACK_WEBHOOK`). Non-fatal (per-message isolation skips it). (alerting-service)
+      prod the generic path uses Telegram). ~~So this is NOT a missing-secret blocker.~~ **[doc-reconciliation
+      2026-07-12, finding 191, §A2 B-queue ruling] STALE PREMISE (was: "in prod the generic path uses Telegram" as the
+      current-state claim above)** — the same-day P1 item below (alerting-service@`1be4fe0`, 2026-06-23 10:10:40Z,
+      verified via `git log`/`git show` on `live-defi-rollout`) shipped Slack-only delivery: `send_telegram` was removed
+      and `router.py`'s `_deliver_to_channels` now treats any `"telegram"` channel name as an alias that delivers via
+      Slack only (confirmed on current HEAD, `router.py:775-777`, comment "2026-06-23; Telegram RETIRED"). Telegram is
+      no longer a live transport in prod, generic-path included. The underlying ask — a DP-telemetry routing rule so
+      routine `DP_FLEET_MONITOR_RUN_STARTED`/`_COMPLETED` don't fall through to the generic INCIDENT path at all — is
+      still open/unshipped (no evidence found of it landing) and stays unchecked; only the Telegram-primary diagnosis is
+      stale. The real refinement: routine DP telemetry (`DP_FLEET_MONITOR_RUN_STARTED`/ `_COMPLETED`) should NOT fall
+      through to the generic INCIDENT path at all — they should mirror to #data-pipeline-alerts as INFO only (or be
+      suppressed), not page Telegram/Slack via the incident path. Add a DP-telemetry routing rule so only genuine DP*\*
+      findings (DP_VM_STALL / DP_EVENT_LOOP_STARVED / CONSOLIDATOR_DOWN) reach the incident path. DP*\* ALERTS already
+      work via the data-pipeline mirror (`DATA_PIPELINE_ALERTS_SLACK_WEBHOOK`). Non-fatal (per-message isolation skips
+      it). (alerting-service)
 - [x] ✅ [DEPLOY] P0. **Both images rebuilt + redeployed — fixes are LIVE (2026-06-23 01:43Z)** — (a) `deployment-api`
       rebuilt (Cloud Build 6928db5) + the 3 dp-monitor jobs
       (`uts-prod-dp-{heartbeat-watcher,exit-code-monitor,meta-watchers}`) re-resolved to the fresh digest (watcher

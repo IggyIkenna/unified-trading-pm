@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: MVP Phase 4 — reconciliation closeout (align codex + plans to canonical v10, resolve flagged items)
-summary: Reconcile codex + every active plan to the canonical MVP v10 scope + the budget constraints, resolve the remaining flagged items (MANIFEST_ALLOW_STALE_FALLBACK, a163/G1.2, Kalshi launcher, HL/ASTER docs), and archive superseded plans.
+summary:
+  Reconcile codex + every active plan to the canonical MVP v10 scope + the budget constraints, resolve the remaining
+  flagged items (MANIFEST_ALLOW_STALE_FALLBACK, a163/G1.2, Kalshi launcher, HL/ASTER docs), and archive superseded
+  plans.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -9,7 +12,12 @@ stage: [meta]
 repos: [unified-trading-pm, deployment-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [mvp, reconciliation, codex-alignment, v10, closeout, plan-hygiene, honest-coverage]
-related: [plans/active/mvp_catalogue_finalization_v10_2026_06_27.md, plans/active/instruments_foundation_completeness_2026_06_24.md, plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md]
+related:
+  [
+    plans/active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    plans/active/instruments_foundation_completeness_2026_06_24.md,
+    plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+  ]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: planning
@@ -23,7 +31,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
 superseded_by:
-depends_on: [mvp_catalogue_finalization_v10_2026_06_27, mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27, mvp_backfill_cefi_tick_v10_2026_06_27, mvp_backfill_defi_onchain_v10_2026_06_27]
+depends_on:
+  [
+    mvp_catalogue_finalization_v10_2026_06_27,
+    mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27,
+    mvp_backfill_cefi_tick_v10_2026_06_27,
+    mvp_backfill_defi_onchain_v10_2026_06_27,
+  ]
 source:
 assigned_role: data_engineering
 drift_direction: correct-codex
@@ -44,7 +58,12 @@ drift_direction: correct-codex
 - `codex/05-infrastructure/manifest-consolidator-ssot.md` — MANIFEST_ALLOW_STALE_FALLBACK escape-hatch contract.
 - `codex/02-data/honest-absence-downstream-handling.md` — HL/ASTER + DERIBIT-COMBO honest-absence; reason taxonomy.
 - `codex/02-data/mvp-scope-canonical.md` § Prediction — Kalshi IN MVP; data_types trades / cqg / market_lifecycle.
-- `plans/PLAN_FORMAT.md` + `plans/epics/README.md` — archival 5-step ritual; plan-hygiene QG.
+- `plans/PLAN_FORMAT.md` — Archive Criteria gate table + Plan Locking mechanics (NOT the 5-step archival ritual sequence
+  itself); `plans/epics/README.md` — epic-reorg "Migration discipline" (a distinct 6-step list for reorganising epics,
+  not plan archival). The 5-step ritual (migrate DEFERRED → banner → codex-alignment check → update CLAUDE.md/codex →
+  clear lock) is stated in `cursor-configs/CLAUDE.md` § Plans authoring discipline — neither file cited previously
+  actually enumerates it. Plan-hygiene QG. _(Corrected 2026-07-12, finding 383, §A2 B-queue ruling: the prior citation
+  pointed readers at PLAN_FORMAT.md + epics/README.md for the ritual sequence; verified neither file contains it.)_
 
 ## The 7 v10 decisions every plan must agree with (the reconciliation target)
 

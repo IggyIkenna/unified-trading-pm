@@ -21,7 +21,7 @@ related:
     ../../codex/09-strategy/operational/paper-batch-live-reconciliation.md,
   ]
 created: 2026-07-08
-last_updated: 2026-07-08
+last_updated: 2026-07-10 # (was: 2026-07-08 -- corrected 2026-07-12, finding 24, §A2 B-queue ruling: Progress Log records a 2026-07-10 status-flip active->complete that postdated the recorded last_updated)
 parent_epic: batch_live_symmetry_master
 assigned_vm: NA
 execution_scope: local-only

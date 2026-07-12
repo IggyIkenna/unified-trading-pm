@@ -14,7 +14,8 @@ tags: [execution, defi, quality-gates, escalation, live-trading]
 related:
   [
     ../active/execution_fidelity_tiers_uac_governed_2026_06_28.md,
-    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    ../active/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md,
   ]
 created: 2026-05-21
 name: execution_master
@@ -27,7 +28,8 @@ codex_ssots:
 related_plans:
   [
     ../active/execution_fidelity_tiers_uac_governed_2026_06_28.md,
-    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    ../active/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md,
   ]
 last_updated: 2026-07-12 # was 2026-05-21 (stale vs 2026-07-12 body edits, line 57) — see body "Assigned active plans" note
 locked_by: live-defi-rollout
@@ -68,12 +70,22 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_1 active plan declares `parent_epic: execution_master` in its frontmatter:_
+_2 docs declare `parent_epic: execution_master` in their frontmatter (1 active plan + 1 open issue doc):_
 
 - [`execution_fidelity_tiers_uac_governed_2026_06_28.md`](../active/execution_fidelity_tiers_uac_governed_2026_06_28.md)
   — status: active, parent_epic: execution_master (its own frontmatter L14; also listed in this epic's `related`/
-  `related_plans` fields, L16/L29).
+  `related_plans` fields).
+- [`execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`](../active/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md)
+  — status: open, parent_epic: execution_master (its own frontmatter L18); 1 unchecked P2 todo (aiohttp-CVE remediation
+  gated behind an adapter-layer mock migration). Now listed in this epic's `related`/`related_plans` too.
 
 **Corrected 2026-07-12** (was: _"no other active plans currently declare `parent_epic: execution_master`. Audit-pool
-wrapper plans for this epic land here as they are dispatched."_) — findings 51/53/316,
-`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.
+wrapper plans for this epic land here as they are dispatched."_) — findings 51/53/316 (§A2 "50 reclassified" blanket
+ruling, applied prior session) + finding 52 (§A2 B-queue ruling) — both in
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`.
+
+**Also corrected 2026-07-12** (finding 312, §A2 B-queue ruling): the `related`/`related_plans` frontmatter path for the
+global-ledger discovery plan was `../active/global_ledger_pnl_attribution_discovery_2026_05_21.md` (404s — that plan
+archived 2026-05-23; confirmed on disk only under `../archive/2026_05/`) — corrected to
+`../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md`, matching
+`epics/global_ledger_pnl_attribution_master.md`'s citation.

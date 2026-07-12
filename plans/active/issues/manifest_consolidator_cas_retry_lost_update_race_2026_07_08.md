@@ -26,7 +26,7 @@ summary:
   correct 'one read-merge-write cycle per attempt' — exactly the pattern `_write_consolidated` is missing.
   Cross-cutting: this is a bucket-level race in the shared consolidator, not specific to sports/understat — any
   asset_group bucket with overlapping consolidation cycles (busy multi-slot / multi-VM write days) is exposed."
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -43,13 +43,19 @@ parent_epic: sports_master
 priority: P0
 source: [plans/active/issues/manifest_record_expected_empty_blank_source_2026_07_08.md]
 assigned_vm: planning
-resolved_by:
+resolved_by: "unified-trading-library@75e59a89 + @84528344 — see Recommended decision todos below"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-08
+last_updated: 2026-07-12
 ---
+
+> **(2026-07-12, finding 271, §A2 B-queue ruling)**: frontmatter `status` synced `open` → `resolved` (was: `open`) — all
+> 4 "Recommended decision" todos are checked `[x]` with shipped commits (`unified-trading-library@75e59a89`,
+> `@84528344`) and the final re-verification pass states "CAS-retry lost-update race confirmed fixed at both the code
+> level and the sports bucket's data level." The tradfi 34%-duplicate finding surfaced in the P2 audit item is
+> explicitly deferred to `tradfi_v9_stage1_finish_2026_07_06.md` (task 4/6), not blocking this doc's own closure.
 
 ## What I found
 
@@ -165,7 +171,7 @@ not have.
       duplicates from before the fix landed stay in the canonical until a full window-dedup runs. Ran
       `python -m unified_trading_library.manifest_consolidator --bucket     instruments-store-sports-prd-central-element-323112 --force`
       (single cycle, `memory_limit=8GB` default, 11.7s): `rows_in=4,981,844 rows_out=4,899,088 dedup_dropped=82,756`.
-      Re-ran the reproduction against the raw canonical post-rebuild: understat XG/XG_SHOTS big-5 duplicate dedup-key
+      Re-ran the reproduction against the raw canonical post-rebuild: understat XG/XG*SHOTS big-5 duplicate dedup-key
       groups dropped **7,565 → 5**; all 5 remaining are a DIFFERENT, unrelated bug (producer `instrument_type`
       population inconsistency on XG_SHOTS 2024-12-14 — both rows are already-resolved `captured` states, not the
       stale-seed-vs-typed-row CAS-race pattern), filed separately at
@@ -175,7 +181,7 @@ not have.
       `sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md`: post-fix + post-rebuild,
       `read_availability_index()` shows understat XG `pending_fetch=190`, XG_SHOTS `pending_fetch=2,065` (both
       blank-`error_reason`) — byte-identical to slot-4's 2026-07-08 22:5x UTC manually-deduped count already recorded in
-      that plan. **Gate state UNCHANGED (still NOT MET)** — the CAS race never affected the _true_ pending count
+      that plan. **Gate state UNCHANGED (still NOT MET)** — the CAS race never affected the \_true* pending count
       (slot-4's manual last-write-wins dedup already computed it correctly); the fix+rebuild means the raw canonical now
       matches that count natively, but item #4 remains blocked on its own pre-existing, unrelated prerequisite
       (`plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md`'s blank-reason typing-pass todo) —

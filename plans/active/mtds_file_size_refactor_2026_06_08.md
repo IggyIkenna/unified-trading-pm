@@ -1,12 +1,21 @@
 ---
 doc_type: plan
 title: MTDS/MDPS tech-debt & coverage — file-size splits + polars seam + coverage/QG residuals (survivor M-2)
-summary: Deferred MTDS/MDPS tech-debt plan — split 15 pre-existing >900-line source files, apply pandas-to-polars adapter seam, and clear QG residuals after per-AG data migrations complete.
+summary:
+  Deferred MTDS/MDPS tech-debt plan — split 15 pre-existing >900-line source files, apply pandas-to-polars adapter seam,
+  and clear QG residuals after per-AG data migrations complete.
 status: paused
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]
+repos:
+  [
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: [tech-debt, refactor, file-size, mtds, mdps, polars, quality-gates, deferred]
 related: []
@@ -18,13 +27,17 @@ priority: P3
 estimate_class: refactor
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-06-26
+last_updated: 2026-07-12
 locked_by: live-defi-rollout
 locked_since: 2026-06-08
 supersedes:
 superseded_by:
 depends_on: []
-source: ['master_data_canonicalisation_migration_catalogue_2026_06_07.md (MTDS-QG P2 — Option A, operator 2026-06-08)', 'market-tick-data-service quality-gates.sh file-size gate (MAX_FILE_LINES=900, hard-fail, no baseline)']
+source:
+  [
+    "master_data_canonicalisation_migration_catalogue_2026_06_07.md (MTDS-QG P2 — Option A, operator 2026-06-08)",
+    "market-tick-data-service quality-gates.sh file-size gate (MAX_FILE_LINES=900, hard-fail, no baseline)",
+  ]
 drift_direction: advance-code
 ---
 
@@ -34,9 +47,13 @@ drift_direction: advance-code
 > pandas→polars adapter seam + coverage/QG residuals) and is already self-gated behind the per-AG data migration. The
 > operator deprioritised it — it does NOT block instruments/MTDS data correctness or the backfill-to-100% path. The
 > folded residuals stay captured here so nothing is lost; pick it up when the MTDS commit-quality-boundary
-> (`.qg_last_passed_sha`) actually needs restoring. **NOTE the live blocker is elsewhere:** the issue
-> `issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md` (which blocks ALL MTDS ships) is a
-> SEPARATE doc and is NOT deferred by this — it stays a live blocker.
+> (`.qg_last_passed_sha`) actually needs restoring. **NOTE the live blocker is elsewhere (was: "stays a live blocker" —
+> corrected 2026-07-12, finding 186, §A2 B-queue ruling):** the issue
+> `issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md` (which blocked ALL MTDS ships) was a
+> SEPARATE doc and was NOT deferred by this — but that blocker is now RESOLVED (2026-06-30, QG green + Cloud Build
+> SUCCESS, archived at `../archive/issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md`),
+> confirmed by a subsequent green-QG MTDS ship landing 2026-07-06 (`market-tick-data-service@f4dab8f9`, full
+> `quality-gates.sh` exit 0). No live MTDS-ship blocker remains from that issue as of this correction.
 
 > **🟢 ENGINE-INTERNAL POLARS LAZY CHAIN SHIPPED 2026-06-29** — the engine portion of the parked "pandas→polars adapter
 > seam" (the Polars→Pandas→Polars internal aggregation chain in `_aggregate_from_15s_polars`) has been un-deferred and
@@ -147,7 +164,9 @@ byte-identical output before/after).
 ### Live issue docs this survivor tracks (referenced, NOT folded — they are active blockers with their own lifecycle)
 
 - `issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md` — pre-existing hardcoded-URL +
-  `record_empty`-string debt elevated to ERROR by the qg-base ratchet; **blocks ALL MTDS LDR→staging ships** until
-  baselined or remediated. The file-size/coverage work here lands behind this gate.
+  `record_empty`-string debt elevated to ERROR by the qg-base ratchet; **RESOLVED 2026-06-30 (was: "blocks ALL MTDS
+  LDR→staging ships" — corrected 2026-07-12, finding 186, §A2 B-queue ruling)** — QG green + Cloud Build SUCCESS, now
+  archived (`../archive/issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md`); no longer gates the
+  file-size/coverage work here.
 - `issues/mtds_cefi_mvp_gate_and_thegraph_shard_test_fleet_red_2026_06_23.md` — cefi MVP-gate + thegraph 9-key shard
   test reds on LDR (mostly resolved; 1 residual aster perp-funding red on the cefi owner's track).

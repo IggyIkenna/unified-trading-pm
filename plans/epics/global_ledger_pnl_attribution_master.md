@@ -75,8 +75,15 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_2 active plans declare `parent_epic: global_ledger_pnl_attribution_master`. Workers pick up in priority order (P0
-first)._
+**Corrected 2026-07-12** (was: _"2 active plans declare `parent_epic: global_ledger_pnl_attribution_master`. Workers
+pick up in priority order (P0 first)."_) — finding 315,
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling: 0 of the 2 plans listed
+below are actually active — both `global_ledger_pnl_attribution_discovery_2026_05_21` and
+`global_ledger_pnl_attribution_migration_2026_06_01` are ✅ ARCHIVED / `status: complete` (verified in their own
+frontmatter). The actual current active child is
+[`global_ledger_epic_reaudit_2026_07_12`](../active/global_ledger_epic_reaudit_2026_07_12.md) (status: active,
+`parent_epic: global_ledger_pnl_attribution_master`, created 2026-07-12 per finding-366 operator ruling — full epic
+re-audit, not yet reflected in the priority blocks below).
 
 ### P0 — Discovery + target-state spec
 
@@ -144,9 +151,12 @@ _(none yet — defined post-migration ship)_
 ## VM assignment notes
 
 Epic runs on **`vm-trading-core`** co-located with `execution_master` + `strategy_master` + `trading_agent_master` (per
-`README.md` § "19 epics in 5 tiers"). Bulk of implementation lands in execution-service + strategy-service code, which
-is the trading-core service trio. UAC schema PRs route through `client_isolation_and_governance_master` review per its
-UAC-schema ownership.
+`README.md` § "23 epics in 6 tiers" — was: § "19 epics in 5 tiers"; corrected 2026-07-12, finding 10003, §A2 B-queue
+ruling, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`. NB the per-epic VM-topology model
+this line references is itself SUPERSEDED per `README.md`'s own top banner — single-VM role-based dispatch since
+2026-06-27; this citation is retained only to name the co-located service trio). Bulk of implementation lands in
+execution-service + strategy-service code, which is the trading-core service trio. UAC schema PRs route through
+`client_isolation_and_governance_master` review per its UAC-schema ownership.
 
 **Anticipated net-new VM prefixes** (discovery Phase 8 confirmed ABSORB-into-existing for all):
 

@@ -1,8 +1,11 @@
 ---
 doc_type: issue
 title: AutoSpawn — _should_spawn does not revive a live-idle slot pinned to a higher-tier (opus) task
-summary: The model-tier dispatch fix upgrades a slot's spawn model to its affinity-pinned task's tier, but only when the slot actually (re)spawns. A live-but-idle Sonnet slot that is an opus task's affinity target is never killed, so it never self-upgrades and the opus task can starve queued even with idle fleet headroom.
-status: open
+summary:
+  The model-tier dispatch fix upgrades a slot's spawn model to its affinity-pinned task's tier, but only when the slot
+  actually (re)spawns. A live-but-idle Sonnet slot that is an opus task's affinity target is never killed, so it never
+  self-upgrades and the opus task can starve queued even with idle fleet headroom.
+status: resolved
 nature: record
 asset_group: [meta]
 stage: [meta]
@@ -13,18 +16,27 @@ related: [../../codex/04-architecture/agent-orchestrator-autospawn.md, ../../cod
 created: 2026-06-29
 parent_epic: orchestrator_master
 priority: P2
-source: [operator request 2026-06-29, ../../codex/04-architecture/agent-orchestrator-autospawn.md, session 2026-06-28/29 opus-routing fix]
+source:
+  [
+    operator request 2026-06-29,
+    ../../codex/04-architecture/agent-orchestrator-autospawn.md,
+    session 2026-06-28/29 opus-routing fix,
+  ]
 assigned_vm: planning
-resolved_by:
+resolved_by: "agent-orchestrator@826a496 — see Fix section below"
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: backend-engineer
 model_tier: opus-required
 thinking_tier: high
 drift_direction: advance-code
-last_updated: 2026-06-29
+last_updated: 2026-07-12
 depends_on: []
 ---
+
+> **(2026-07-12, finding 219, §A2 B-queue ruling)**: frontmatter `status` synced `open` → `resolved` (was: `open`) —
+> this doc's single Fix todo is checked `[x]` with commit `agent-orchestrator@826a496`, 9 unit tests, and an integration
+> assertion, and the Notes section frames it as closing "the residual starvation edge" with nothing else outstanding.
 
 # AutoSpawn — `_should_spawn` doesn't revive a live-idle slot pinned to an opus task
 

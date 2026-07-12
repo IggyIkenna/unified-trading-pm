@@ -1856,9 +1856,16 @@ there; no new todo needed beyond the cross-ref.
       dry-run sample-inspect 2026-06-07. parent_epic: mtds_mdps_master.
 - [ ] [DATA] P1. **cefi `instruments-store` `_index` v8→v9 single-walk** (CF-1/3/4/8 RED + 40% null `capture_status` +
       blank `data_type` + 23 legacy-only cells; cf-audit ① above). Owner = the **cefi slice** of
-      `instruments_manifest_canonicalisation_2026_06_01.md`; `--apply` **GATED on coordinator G0** (source-aware
-      pipeline_mode). Re-run `cf_manifest_audit instruments-store-cefi-prd-…` post-walk → all-CF GREEN. Provenance:
-      slot-3 G1 cf-audit 2026-06-07. parent_epic: mtds_mdps_master.
+      `instruments_manifest_canonicalisation_2026_06_01.md` (was: cited as live owner — **[2026-07-12 correction]**:
+      that doc is ✅ ARCHIVED 2026-06-26, folded into `instruments_mtds_subset_consistency_remediation_2026_06_17.md`
+      survivor I-2 — retarget the owner pointer there. That successor doc reports cefi's instruments-store v9 migration
+      as "fully migrated" / legacy-delete DONE at a fleet level (its lines ~185/452/608/1524), but does NOT visibly
+      re-confirm the specific CF-1/3/4/8 + null `capture_status` + blank `data_type` residuals this todo names —
+      checkbox NOT flipped without that direct re-verification; re-audit against the successor before treating this as
+      done. Corrected per plan-reconciliation finding 150,
+      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.); `--apply` **GATED
+      on coordinator G0** (source-aware pipeline_mode). Re-run `cf_manifest_audit instruments-store-cefi-prd-…`
+      post-walk → all-CF GREEN. Provenance: slot-3 G1 cf-audit 2026-06-07. parent_epic: mtds_mdps_master.
 
 ## Proposed fixes for the deferred-with-reason CODE items (slot-3 spec, 2026-06-08)
 

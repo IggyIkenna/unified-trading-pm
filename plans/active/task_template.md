@@ -90,7 +90,7 @@ assigned_role: <default craft — data_engineering | infra | backend-engineer | 
 drift_direction: advance-code
 depends_on: # optional — upstream plan slugs (documents ordering + gates archival)
 # gate_on_depends: true    # optional — machine-hold this plan's tasks until depends_on tasks are done
-# sequential: true         # optional — STRICT serial: task N waits for N-1 done  [ROLLING OUT — see §4]
+# sequential: true         # optional — STRICT serial: task N waits for N-1 done — SHIPPED (was: "[ROLLING OUT — see §4]" — corrected 2026-07-12, doc-reconciliation finding 380, §A2 B-queue ruling: ao@ff6100ad shipped `_wire_sequential_prereqs` + `plan_order` with tests, and 3+ production plans/issues already set `sequential: true` in frontmatter, e.g. active/issues/v1_enumerator_dispatch_not_deletable_2026_07_06.md)
 ---
 ```
 
@@ -124,10 +124,11 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   backlog); the phase's LAST todo finalises the next phase's todos and flips it `draft`→`active`. _[ACTIVE NOW: draft =
   not ingested; active→draft prunes queued tasks.]_ Distinct from `depends_on` + `gate_on_depends: true`, which INGEST
   the downstream and machine-hold it until upstream is done — use that when the downstream is already finalised.
-- **Ordering** — tasks dispatch by `(tier, priority, plan_order)`, so same-priority tasks run in file order. _[ROLLING
-  OUT: `plan_order`. Today same-priority tasks fall back to creation order — use P-levels or explicit prereqs for order
-  until it ships.]_ For **STRICT serial** (task N cannot start until N-1 is `done`), set `sequential: true` _[ROLLING
-  OUT]_ or add explicit `prereqs.completed_tasks` _[ACTIVE NOW]_. Ordering controls DISPATCH order, not completion — the
+- **Ordering** — tasks dispatch by `(tier, priority, plan_order)`, so same-priority tasks run in file order. _[SHIPPED:
+  `plan_order` (was: "[ROLLING OUT ... use P-levels or explicit prereqs for order until it ships.]" — corrected
+  2026-07-12, doc-reconciliation finding 380, §A2 B-queue ruling: ao@ff6100ad, see §4 frontmatter note above for
+  evidence).]_ For **STRICT serial** (task N cannot start until N-1 is `done`), set `sequential: true` _[SHIPPED — see
+  §4]_ or add explicit `prereqs.completed_tasks` _[ACTIVE NOW]_. Ordering controls DISPATCH order, not completion — the
   fleet runs tasks concurrently; a hard "finish-before" is a prereq, not ordering.
 - **Verify an "Ordering note" before asserting it's safe.** For multi-repo/multi-step DAG plans (audit→fix→verify,
   migrations), a note claiming step N can land before step M is a CORRECTNESS CLAIM, not a convenience aside — don't

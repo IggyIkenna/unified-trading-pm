@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: MDPS+features reduced-artifact tracker — feature-complete candle as the portable unit
-summary: Coordination tracker for the MDPS+features work that makes the processed candle a self-contained, no-look-ahead, MVP-scoped artifact (ticks stay on GCP; candles+features are what move) and smoke-tests honest coverage per AG×venue×data_type.
+summary:
+  Coordination tracker for the MDPS+features work that makes the processed candle a self-contained, no-look-ahead,
+  MVP-scoped artifact (ticks stay on GCP; candles+features are what move) and smoke-tests honest coverage per
+  AG×venue×data_type.
 status: draft
 nature: design
 asset_group: [cefi, defi, tradfi, sports, prediction, cross-cutting]
@@ -9,7 +12,13 @@ stage: [data, features, backtest, execution, meta]
 repos: [market-data-processing-service, features-service, unified-api-contracts, execution-service, e2e-testing]
 scope: [engineer, admin]
 tags: [mdps, features, reduced-data, candle, no-look-ahead, mvp, honest-coverage, smoke-test, cost, polars, egress]
-related: [../epics/mtds_mdps_master.md, ../epics/features_and_ml_master.md, ../epics/batch_live_symmetry_master.md, ../epics/execution_master.md]
+related:
+  [
+    ../epics/mtds_mdps_master.md,
+    ../epics/features_and_ml_master.md,
+    ../epics/batch_live_symmetry_master.md,
+    ../epics/execution_master.md,
+  ]
 created: 2026-06-28
 parent_epic: mtds_mdps_master
 assigned_vm: planning
@@ -35,6 +44,21 @@ drift_direction: advance-code
 new governing concepts. The actual work lives in the nine dispatched mini-plans below, each small + role-homogeneous +
 one-agent-sized per `plans/PLAN_FORMAT.md` ("plans, not phases"). All born `status: draft`; flip the batch to `active`
 together to green-light dispatch.
+
+> **Corrected 2026-07-12 (plan-reconciliation findings 183, 188, 189, 190; §A2 B-queue ruling)** — the "all born
+> `status: draft`, flip the batch together" framing above is stale for at least 4 of the 9 mini-plans, which
+> independently progressed past this gate and reached `status: complete` on real shipped infra, with no trace of a
+> coordinated batch-flip ever happening here (this tracker's own `status:` — see frontmatter — was never updated): Plan
+> 1 `mdps_book_microstructure_precompute_columns` (complete 2026-07-10, market-data-processing-service@a90669be +
+> unified-api-contracts@40e318aa), Plan 5 `tradfi_mdps_passthrough_dependency_gap` (complete 2026-07-10,
+> market-data-processing-service@cc63d1b), Plan 7 `mdps_features_full_month_benchmark_binance` (complete 2026-07-10),
+> Plan 8 `mdps_polars_engine_cost_sharpening` (complete 2026-07-12, market-data-processing-service@c7e0437 + 4 more
+> commits). Plans 2/3/4/6/9 are NOT verified by this pass — their draft/dispatch status in the table below is left
+> as-is. (was: "All born `status: draft`; flip the batch to `active` together to green-light dispatch" presented above
+> as still-accurate for all nine mini-plans as of this tracker's own `last_updated: 2026-06-28`.) See each named
+> mini-plan's own frontmatter `status:` + "Status-flip note" for the underlying evidence. This tracker's own
+> `status: draft` / "not dispatched" framing is left unchanged here — that call is for whoever owns closing this
+> tracker, not this pass.
 
 ## The thesis (operator framing 2026-06-28)
 

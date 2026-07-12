@@ -349,10 +349,14 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
    walk, pipeline_mode/source riders, post-walk verify, E3 writer-drain confirm, E4 dry+full VM run, E7 CF-audit, E8
    legacy-bucket delete handoff, cross-AG v2-enumerator rollout, QG import-pattern gate finding.
 
-6. **tradfi_v9_stage1_finish — AO Plan 2** `plans/active/tradfi_v9_stage1_finish_2026_07_06.md` 6 of 11 unchecked,
-   heavily evidenced: orphan sweep (blocked on manifest rebuild ordering), straggler VM re-run, manifest rebuild 99.77%
-   not 100% (13,971-row v4 tail + 42K blank-pipeline_mode gap), E7 CF-audit 2 genuine REDs, schema-tail restamp blocked
-   on fleet-drain, operator-gated legacy-bucket deletes.
+6. **tradfi_v9_stage1_finish — AO Plan 2** `plans/active/tradfi_v9_stage1_finish_2026_07_06.md` was: 6 of 11 unchecked
+   incl. orphan sweep (blocked on manifest rebuild ordering) — corrected 2026-07-12, finding 107, §A2 B-queue ruling:
+   this entry was authored earlier the same 2026-07-10 day than the plan's own task-2 orphan-sweep gate-flip (🎯 GATE
+   MET 2026-07-10 17:17:22 UTC, `orphan_class_E=0`, checkbox flipped). As of 2026-07-12 the plan shows **5 of 11
+   unchecked** (manifest rebuild, E7 verify, schema-tail restamp, legacy-bucket deletes, scheduler-resume runbook);
+   orphan sweep is no longer open and is no longer blocked on manifest-rebuild ordering. Remaining open items: manifest
+   rebuild 99.77% not 100% (13,971-row v4 tail + 42K blank-pipeline_mode gap), E7 CF-audit 2 genuine REDs, schema-tail
+   restamp blocked on fleet-drain, operator-gated legacy-bucket deletes.
 
 7. **BYBIT-SPOT manifest — 135,444 anomalous rows, checkboxes claimed done but production is unchanged**
    `plans/active/issues/bybit_spot_manifest_stray_captures_2026_07_07.md` **Moved back here 2026-07-10** — a second
@@ -463,9 +467,13 @@ Cross-doc / cross-registry contradiction, drift, or design-authority gaps.
    green). 1 DESIGN todo open: `BLOCKED-OPERATOR-DECISION` — keep the interim permanent 2-tuple bare-BYBIT phantom, vs.
    declare `OKX-SPOT` its own venue and remove the `_CEFI_VENUE_FOLD` entry.
 
-7. **COINBASE bare-name UAC removal + downstream caller migration** (`status: draft`, not dispatched)
+7. **COINBASE bare-name UAC removal + downstream caller migration** (was: `status: draft`, not dispatched, all steps
+   unchecked — corrected 2026-07-12, finding 105, §A2 B-queue ruling: this §3 entry was never back-edited after the
+   flip; see this doc's own Progress Log, operator decision #3 and the Orchestration-state / Follow-up-verification
+   entries below, which already document the dispatch + completion)
    `plans/active/coinbase_bare_name_migration_2026_07_06.md` Full 7-step (S0–S7) multi-repo migration plan (44 UAC + 5
-   IS + 4 MTDS + cross-repo callers) awaiting operator flip to `active`; all steps unchecked.
+   IS + 4 MTDS + cross-repo callers). **Now `status: active`, dispatched for execution 2026-07-10, all S0–S7 steps
+   `[x]`** (per the plan's own frontmatter + banner as of 2026-07-12).
 
 ---
 
