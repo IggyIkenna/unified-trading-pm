@@ -199,7 +199,7 @@ Candidates:
       `_index/per_vm/type-understat-eu-1783833750.parquet` (consolidator merges next cycle). QG green
       (instruments-service@24e9be6e, sentinel-verified). **Part (b) split into its own todo below — still open.** (repo:
       instruments-service)
-- [ ] [CODE] P3. **Durable writer fix (part (b), split out 2026-07-12).** The daily forward-poll enum
+- [x] [CODE] P3. **Durable writer fix (part (b), split out 2026-07-12).** The daily forward-poll enum
       (`instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_sports`, its per-day source-rule gate
       `is_expected_for_source`) is season/transfer-window-aware but NOT matchday-aware — it doesn't check whether a
       fixture is actually scheduled on a given (league, date) before seeding `expected_unattempted`. This is why the
@@ -216,9 +216,52 @@ Candidates:
       a quick patch; scope this as its own plan/design task rather than folding into a P2/P3 script todo. NOT a
       data-correctness blocker today (part (a)'s typing script + the operator's acceptable-residual ruling already keep
       the gate green) — this is the structural fix that would make the class of residual zero going forward. (repo:
-      instruments-service)
+      instruments-service) ✅ — 2026-07-12 (slot-10): instruments-service@d87266f1. Implemented the "Recommended shape"
+      exactly as scoped here, scoped to UNDERSTAT ONLY (the confirmed bug — footystats/weather/SFI/TM residuals are
+      league-coverage-only masks, not per-date matchday gaps, so extending them is still out of scope). Closed the
+      single-walk cost risk by bounding the fixture-index build to `_MATCHDAY_INDEX_MAX_DAYS=30` days AND building it
+      LAZILY (only on the first day that actually reaches the in-scope understat branch, memoized per call) — a
+      full-history/backfill date_axis never triggers the GCS read and falls back to the pre-existing non-matchday-aware
+      behaviour, so the typing script keeps covering that path. 3 new unit tests
+      (`tests/unit/scripts/test_enumerate_expected_universe_v2.py`): no-fixture-day → `EXPECTED_NO_FIXTURE`, fixture-day
+      → falls through to `expected_unattempted`, and a bound-enforcement test asserting the fixture-index builder is
+      never invoked for a >30-day window. Found + fixed 2 pre-existing tests in the same session that broke because they
+      exercised the understat/XG path with a small date_axis and (after this change) made a REAL live GCS call —
+      `test_sports_enumerator_skips_league_outside_entity_coverage` (in the file's own words, "no GCS — pure functions")
+      now monkeypatches `_build_understat_fixture_index`;
+      `test_sports_enumerator_emits_per_source_pre_coverage_and_skips_per_league` needed no test change once the build
+      went lazy (its date is pre-coverage-start, so the matchday branch is never reached). Full `quality-gates.sh` green
+      (sentinel-verified against HEAD `d87266f1`); shipped via quickmerge.
 
 ## Progress Log
+
+### 2026-07-12 (slot-10, `data_engineering`) — part (b) durable writer fix shipped: matchday-aware understat seeding at the enumerator
+
+Closed the last open todo in this issue doc. `instruments-service@d87266f1` makes `_enumerate_v2_sports` matchday-aware
+for understat: when a covered league (EPL/Bundesliga/La_Liga/Ligue_1/Serie_A) has genuinely no scheduled fixture on a
+given day, the enumerator now yields `EXPECTED_NO_FIXTURE` directly instead of seeding a blank-reason
+`expected_unattempted` row that the one-off typing script (part (a)) would otherwise have to mop up every ~24h.
+
+Deliberately scoped narrower than the todo's own "shared across ALL sports data_types" scope-risk note: the fix only
+activates for `source == "understat"` — footystats/weather/SFI/TM keep their existing (already-fixed) league-coverage
+masks, since their residuals were never per-date matchday gaps. Closed the single-walk cost concern (the todo's stated
+reason this needed "its own design pass, not a quick patch") two ways: (1) `_MATCHDAY_INDEX_MAX_DAYS=30` hard bound —
+above that the fixture-index build is skipped entirely and behavior falls back to pre-existing (typing-script-covered);
+(2) the build is LAZY + memoized per enumerator call — only triggered the first time a day actually reaches the in-scope
+understat branch, so pure pre-source-coverage or non-understat calls never pay the GCS cost at all. This combination
+means a full-history/backfill enumeration run (the actual cause of the original 2026-06-28 regression) is completely
+unaffected by this change — only the small daily forward-poll window gets the new behavior.
+
+Added 3 unit tests + fixed 2 pre-existing ones that started making a real live GCS call once the understat branch became
+reachable with a mocked/unmocked builder (caught by `quality-gates.sh`'s full pytest run, which blocks real sockets —
+`pytest_socket.SocketConnectBlockedError`, itself a `RuntimeError` not an `OSError`, so it wasn't silently swallowed by
+the builder's own defensive `except` clause in that run; a second direct `pytest -k` invocation without socket-blocking
+silently made the real call and only surfaced as an assertion failure against live production data, confirming the fix's
+classification is correct in production too). Full `quality-gates.sh` green (sentinel
+`d87266f1f4f458365587557c4fe427db7f1a159d`); shipped via quickmerge. All todos in this issue doc are now closed — the
+daily-regression root cause (why fresh non-typed eu rows kept appearing) is fixed at the writer for the confirmed
+offender (understat); footystats/weather/SFI/TM stay on the existing typing-script mop-up pattern, which is already
+holding their gates green.
 
 ### 2026-07-12 (slot-10, `data_engineering`) — matchday-aware understat typing script built + applied live; part (b) split into its own todo
 
