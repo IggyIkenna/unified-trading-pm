@@ -113,14 +113,20 @@ below) puts a bucket into routinely.
 
 ## Recommended decision
 
-- [ ] [CODE] P1. **Add a staleness guard to `reconcile_phantom_manifest_rows_all.py` before its bulk write-back** --
-      either (a) call `read_availability_index()` (which already enforces `MANIFEST_CONSOLIDATED_STALENESS_SEC`) instead
-      of a raw `pd.read_parquet` for the base read, refusing/warning on stale input the same way the reader does, or (b)
-      re-read + re-merge any per-VM shards written since the initial read immediately before
-      `Uploading reconciled     manifest`, mirroring the `_write_consolidated()` fix's "one read-merge-write cycle per
-      attempt" pattern. Add a regression test simulating a per-VM shard write landing between the reconciler's read and
-      its write, asserting the final canonical still contains that shard's rows (repo: instruments-service or
-      unified-trading-library, wherever the shared read/write helper should live).
+- [x] [CODE] P1. ✅ **Add a staleness guard to `reconcile_phantom_manifest_rows_all.py` before its bulk write-back** --
+      implemented option (b) via a new shared helper. Added
+      `unified_trading_library.manifest_writer.merge_canonical_with_outstanding_shards(client, bucket, index_blob=None)`
+      — reads the canonical blob fresh + merges every outstanding `_index/per_vm/` shard (no cache, no staleness gate;
+      distinct from `read_availability_index()`, which is the cached hot-path reader). Both the reconciler's initial
+      read AND a fresh re-read immediately before `Uploading reconciled manifest` now go through this helper.
+      Phantom/unphantom row sets are relocated onto the freshly re-merged frame by identity key
+      (`_row_identity_cols`/`_relocate_indices_by_identity`, mirroring `_merge_shard_frames`'s dedup key) before the
+      flip is applied, since positional indices don't survive a re-merge. Regression test
+      (`test_write_back_preserves_shard_written_during_audit`) simulates a per-VM shard write landing mid-audit (via a
+      wrapped `_audit_generic`) and asserts the final canonical still contains that shard's row AND the genuine phantom
+      is still correctly flipped. 4 new UTL unit tests cover the helper directly (canonical+shard merge, canonical-only,
+      custom `index_blob` override, empty-when-nothing-exists). Full `quality-gates.sh` green on both repos. (repo:
+      unified-trading-library@737a52be, instruments-service@0f7bd460)
 - [ ] [DATA] P2. **Audit other "read full manifest -> patch -> full re-upload" scripts** in instruments-service /
       unified-trading-library for the same pattern (grep for `to_parquet` writes to `_index/availability_index.parquet`
       paths outside `manifest_consolidator.py` / `manifest_writer/`) -- enumerate and either fix or document as
@@ -137,3 +143,12 @@ below) puts a bucket into routinely.
 - **2026-07-12 (slot-9, data_engineering)** -- Filed while closing `sports_p2_history_reference_and_odds` item #5. See
   "What I found" for the full timeline + recovery. No code fix attempted in this session (out of this task's craft scope
   / time budget) -- filed with concrete, actionable todos for a future dispatch.
+- **2026-07-12 (slot-7, data_engineering)** -- Item 1 closed. Shipped `unified-trading-library@737a52be` (new
+  `merge_canonical_with_outstanding_shards` helper + 4 unit tests, full `quality-gates.sh` green) then
+  `instruments-service@0f7bd460` (reconciler wired to the helper on both the initial read and pre-write re-merge,
+  identity-key relocation, regression test). While shipping, hit + root-caused an unrelated repo-wide
+  instruments-service QG-red (`instruments_service_cefi_golden_bitfinex_futures_drift_2026_07_12.md`, consolidated with
+  a concurrent slot-6 duplicate filing) and a separate pre-existing hardcoded-project-ID lint violation (fixed
+  trivially, `instruments-service@7c186174`) -- both blocked `quickmerge --agent`'s green-sentinel requirement for this
+  repo and were resolved before shipping. Items 2 and 3 remain open (P2, different craft scope/repo) -- not actioned
+  this session.
