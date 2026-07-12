@@ -27,7 +27,7 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-06-30
+last_updated: 2026-07-12
 locked_by: live-defi-rollout
 locked_since: 2026-06-30
 supersedes:
@@ -65,19 +65,49 @@ drift_direction: advance-code
 ## The MVP gate set (the ONLY gates on LDR→main)
 
 1. **SIT-green** — the cross-repo SIT suite validated this repo's LDR tree (`full-workspace-sit` on the promoted
-   content). ⚠️ 2026-07-12: SIT-green is NOT currently an enforced required check on the promote PR (verified incident
-   2026-07-07/08 — promotes proceeded with SIT red). Operator ruling (plan-reconciliation finding 78): make it BLOCKING
-   — see new P1 todo. (Ruling recorded in `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`
-   §A2.)
+   content). ✅ 2026-07-12 (finding 78): SIT-green is now an ENFORCED required check on every `ldr_main` repo's LDR→main
+   promote PR — closes the 2026-07-07/08 incident gap (a promote proceeded while SIT was red because the per-repo
+   breaking-change SIT gate only ever consulted SIT for a BREAKING/unknown delta; a non-breaking delta, the common case,
+   never checked SIT at all). See the DONE P1 todo below for the mechanism + fleet proof.
 2. **quality-gates-v2** — the required check on the promote PR (per-repo correctness).
 3. **quickmerge-provenance** — only quickmerge'd content reaches main (already enforced on the LDR side).
 
 Plus the trivial mechanics that are not "gates": content-differs, don't-promote-a-RED-repo (Tier-A), runaway-breaker.
 
-- [ ] [INFRA] P1. Wire SIT-green as a REQUIRED status check on the LDR→main promote PR (branch-protection/ruleset + the
-      promote workflow's check reporting) so a red/missing SIT blocks auto-merge fleet-wide. Blast-radius rule applies
-      (AUTONOMOUS_AGENT_RULES rule 11): prove the whole fleet passes the check BEFORE enabling. Operator ruling
-      2026-07-12, finding 78.
+- [x] [INFRA] P1. ✅ Wired `sit-gate/fleet-green` as a REQUIRED status check on the LDR→main promote PR for all 23
+      `ldr_main` repos — PM@`199f72bbd` (feature) → `fc5d717e0` (PAT-for-statuses fix) → `69f3f4cad` (set -e guard fix)
+      → `2d81a138e` (htmlUrl→url field fix), all merged to main. **Mechanism**: `ldr-to-main-promote-fleet.yml` computes
+      a FLEET-SHARED signal each tick (was the last COMPLETED `full-workspace-sit.yml` run on `system-integration-tests`
+      green?) and POSTS it unconditionally as a commit status (context `sit-gate/fleet-green`) on every promote-PR head,
+      regardless of the per-repo breaking/non-breaking classification (closing the exact gap the incident found);
+      fail-closed on any read gap/error. `pin_branch_protection_rulesets.py` requires this context on the
+      `require-quality-gates` ruleset for every repo with `promotion_model=ldr_main` ONLY — never for
+      `unified-trading-pm` / `system-integration-tests` (their main-bound path is a different workflow that never posts
+      this status; requiring it there would deadlock them permanently). Fleet-shared (not a per-repo SIT-tree
+      fingerprint) so it can never discriminate against e2e-testing / ibkr-gateway-infra (structurally never
+      SIT-tree-stamped, by design) the way a per-repo requirement would. **Rule-11 blast-radius proof (done BEFORE
+      enabling)**: last 50 `full-workspace-sit` runs (2026-07-08→07-12) all green (48 success / 2 cancelled / 0 failed);
+      pulled the exact in-script SIT-gate verdict live via a `workflow_dispatch --ref live-defi-rollout` dry-run across
+      the whole fleet first. **Two live-canary bugs found + fixed before rollout** (via `only_repo=` scoped non-dry-run
+      dispatches, not guesswork): (1) a bare `X=$(gh run list …)` followed by a separate `$?` capture aborted the WHOLE
+      promoter job under `set -euo     pipefail` when the read failed (job conclusion=failure, run `29212085588`) —
+      fixed to `if ! X=$(cmd) || [ -z     "$X" ]; then …; fi` (assignment-as-if-condition is `set -e`-exempt; verified
+      with a local `bash -c` repro first); (2) `gh run list --json htmlUrl` is not a valid field (the field is `url`) —
+      was silently forcing the signal to fail-closed every tick regardless of SIT's real state; also found + fixed (same
+      commit) that the App token 403s on `statuses` POSTs ("Resource not accessible by integration") — switched to the
+      PAT (`GH_PAT_FOR_ARM`), the already-proven-working credential for every other cross-repo write in this script;
+      applied the same fix to the pre-existing (advisory, silently-broken) `semver-agent/label-check` POST while in the
+      file. **Closing self-check (rule 11)**: ruleset applied to 2 consumer repos first (`market-tick-data-service`,
+      `deployment-service`) as a canary — confirmed `sit-gate/fleet-green=success` + `semver-agent/label-check=success`
+      actually posted on real promote-PR heads (verified via `commits/{sha}/status` API), then confirmed a real green
+      promote PR **actually merged to main** through the new required check (`market-tick-data-service` PR #533 →
+      main@`bbf73dad8984`, 2026-07-12T22:55:08Z). Rolled to the remaining 21 repos
+      (`pin_branch_protection_rulesets.py --apply`, 21/21 applied, 0 failures); re-ran the dry-run → 0 drift
+      (idempotent). **Fleet-wide real-run confirmation**: a subsequent full (unscoped) dispatch posted the status on all
+      4 repos with a content delta that tick and 2 promoted clean through the new gate
+      (`unified-api-contracts`→main@`4bd30f6d31b3`, `deployment-service`→main@`b25920aa9304`, both
+      2026-07-12T22:58:07Z); the other 3 blocked for pre-existing, unrelated reasons (provenance / Tier-A ci_status, not
+      this gate). Operator ruling 2026-07-12, finding 78.
 
 ## OUT OF SCOPE (the complexity we are removing — this is what was blocking)
 
@@ -244,6 +274,26 @@ Phase 1:
 
 ## Progress Log
 
+- 2026-07-12 (finding 78 — SIT-fleet-green wired as a REQUIRED check, MVP gate-set item #1 now enforced): Read the
+  current shape (`ldr-to-main-promote-fleet.yml`'s existing in-script SIT gate only consults SIT for a BREAKING/unknown
+  delta — the 2026-07-07/08 incident's root cause, since a non-breaking delta never checked SIT at all). Built the fleet
+  proof table BEFORE touching anything (rule 11): 23 `ldr_main` repos, 21 in `sit_cross_repo_validated_repos`
+  (e2e-testing / ibkr-gateway-infra structurally excluded by design, not a gap); last 50 `full-workspace-sit` runs all
+  green (48 success / 2 cancelled / 0 failed); confirmed via a live `workflow_dispatch --ref live-defi-rollout` dry-run
+  that the design (a FLEET-SHARED "was the last completed SIT run green" signal, not a per-repo tree fingerprint) cannot
+  discriminate against the 2 uncovered repos the way the existing per-repo gate does. Implemented:
+  `ldr-to-main-promote-fleet.yml` posts `sit-gate/fleet-green` unconditionally on every promote-PR head;
+  `pin_branch_protection_rulesets.py` requires it on `ldr_main` repos' `require-quality-gates` ruleset only (also fixed
+  a pre-existing naming-drift gap — `require-quality-gates-main` — and extended the script's hardcoded REPOS list from
+  17 to the full 25, closing a real drift the investigation surfaced). **Two bugs found only by live canary dispatch,
+  not code review**: a `set -e`-killing bare assignment (job conclusion=failure on run `29212085588`) and a wrong
+  `gh run list --json` field name (`htmlUrl` → `url`) that silently forced fail-closed every tick — both fixed and
+  re-verified live before any ruleset change. Canaried on 2 consumer repos (market-tick-data-service,
+  deployment-service) — confirmed the status posts green on real promote-PR heads AND a real PR merges through the new
+  required check (market-tick-data-service #533 → main, 2026-07-12T22:55:08Z) — before rolling to the remaining 21 (0
+  failures, dry-run re-check shows 0 drift). Fleet-wide unscoped dispatch afterward promoted 2 more repos clean through
+  the gate. Total: 4 PM commits (`199f72bbd`→`fc5d717e0`→`69f3f4cad`→`2d81a138e`), all merged to main same session. MVP
+  gate-set item #1 (SIT-green) is now actually enforced, matching items #2/#3.
 - 2026-07-03 (overnight-alert sweep — self-clone T0 false-red FIXED, image-gate credential gap filed): Root-caused all
   four 2026-07-03 ci-failures alert families. (1) UTL "FAILING on main" + Overnight-T0 + dead-man-switch = ONE bug:
   agent-audit.yml self-referencing `dep_repos` + the dep-clone retry `rm -rf` deleting the job's own workspace (see new
