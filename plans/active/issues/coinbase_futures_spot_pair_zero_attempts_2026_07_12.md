@@ -185,11 +185,28 @@ running, matching this session's and the prior session's launch commands.
       `force=True` genuinely no-ops the venue-level skip-existing preflight (read `_run_preflight_availability_check`
       directly) — the prior session's `VM_FORCE=true` wasn't silently failing to apply either. (repo:
       market-tick-data-service)
-- [ ] [SCRIPT] P2. Trace `download_batch`'s per-symbol dispatch loop (`_run_per_symbol_batch` →
-      `_emit_per_symbol_manifest` in `tardis_batch_download.py`) directly — via temporary logging or a live VM run.log
-      inspection at the ACTUAL dispatch point, not more static reading of the resolution layer (already proven correct).
-      Check hypotheses 1/2 above (an itype-partition point inside `download_batch` itself, or a symbol-shape assumption
-      specific to `-USDC` suffixed spot symbols). (repo: market-tick-data-service)
+- [x] ✅ [SCRIPT] P2. Trace `download_batch`'s per-symbol dispatch loop (`_run_per_symbol_batch` →
+      `_emit_per_symbol_manifest` in `tardis_batch_download.py`) directly — root cause found ONE LEVEL UP from the
+      dispatch loop itself: `_classify_row_instrument_type` (`tardis_adapter.py:314`), called at task-construction time
+      inside `_run_per_symbol_batch` to build each `PerSymbolTask.row_key["instrument_type"]`. Confirmed hypothesis 2
+      (symbol-shape assumption) — its venue-level SPOT_PAIR whitelist only covered pure-spot venues
+      (BINANCE-SPOT/BYBIT-SPOT/OKX-SPOT/COINBASE-SPOT/UPBIT/BITFINEX-SPOT/BITGET-SPOT/KRAKEN-SPOT); COINBASE-FUTURES is
+      MIXED (401 PERPETUAL + 19 SPOT_PAIR per the live catalogue) so it couldn't join that blanket set, and every
+      SPOT_PAIR symbol (`BTC-USDC` etc.) fell through to the venue-agnostic PERPETUAL default — misclassifying every
+      COINBASE-FUTURES SPOT_PAIR manifest row as `instrument_type=PERPETUAL`, which exactly explains "zero rows of any
+      capture_status" for the real (COINBASE-FUTURES, SPOT_PAIR) tuple (its captures were silently landing under the
+      PERPETUAL bucket instead). Confirmed via live GCS catalogue query: PERPETUAL raw_symbols end `-PERP` (e.g.
+      `BTC-PERP`), SPOT_PAIR raw_symbols end `-USDC` (e.g. `BTC-USDC`) — clean, unambiguous shape split. Fixed with a
+      symbol-shape branch (`venue_u == "COINBASE-FUTURES" and s.endswith("-USDC")` → `SPOT_PAIR`) placed before the
+      venue whitelist, verified NOT to regress the 401 real `-PERP` symbols (added a sibling regression test). 2
+      regression tests added to `tests/unit/test_tardis_batch_download_failure_instrument_type.py`; full
+      `quality-gates.sh` green (115s); shipped market-tick-data-service@8be30c8c. Hypothesis 1 (an itype-partition
+      inside `download_batch` itself) was NOT the bug — no such partition exists for this venue; do not re-check it.
+      (repo: market-tick-data-service) **Addendum (data_engineering slot-6, same session window):** independently traced
+      the same root cause and landed an equivalent fix; on push, discovered slot-3's 8be30c8c already shipped the
+      identical `_classify_row_instrument_type` change. Rebased onto it, dropped the now-redundant code change, and kept
+      a complementary classifier-level regression test (direct `_classify_row_instrument_type` assertions, distinct test
+      layer from slot-3's `_run_per_symbol_batch` row_key tests) — shipped market-tick-data-service@c7065850.
 - [ ] [VERIFY] P2. Once a fix lands, launch
       `ONLY="COINBASE-FUTURES:2026:heavy" VM_FORCE=true FORCE=1     TARDIS_KEY_CHECK=0 bash launch-cefi-sharded-backfill.sh`
       (see launcher note above) and confirm real SPOT_PAIR manifest rows land (query the manifest with a

@@ -1707,3 +1707,34 @@ options_chain Layer-1 tuples, and narrowed the COINBASE-FUTURES/spot_pair gap fr
 actionable next steps for a future session: (1) the VERIFY todo above once a solo window opens or the lease's P2
 hardening lands; (2) the `coinbase_futures_spot_pair_zero_attempts_2026_07_12.md` runtime trace; (3) the 6
 `BLK-afc672cf`-gated tuples remain a pure operator decision, no worker action possible.
+
+**Addendum 3 — 2026-07-12T21:15Z: COINBASE-FUTURES/spot_pair CODE FIX LANDED (3-way parallel convergence).** Continued
+the runtime trace past the checkpoint above: read `download_batch`'s per-symbol dispatch loop directly and found the
+root cause one level up, at task-construction time — `_classify_row_instrument_type` (`tardis_adapter.py:314`) had no
+rule for COINBASE-FUTURES's mixed PERPETUAL (`-PERP`)/SPOT_PAIR (`-USDC`) symbol shapes, so every SPOT_PAIR fetch
+attempt succeeded but got silently written under `instrument_type=PERPETUAL` — confirmed by direct manifest query
+(`BTC-USDC`/`ETH-USDC` rows exist, `capture_status=captured`, `instrument_type=PERPETUAL`). **Two other slots (slot-3,
+slot-6) independently found and fixed the identical bug in the same session window** — reconciled via rebase (kept
+slot-3's landed code fix `market-tick-data-service@8be30c8c` since it was equivalent and pushed first; my own duplicate
+code change and slot-6's duplicate classifier test were both discarded as redundant once discovered, no functional
+loss). Final state: code fix + 2 layers of regression tests (failure-path integration + direct classifier unit) all
+shipped and green. Only the `[VERIFY]` todo (an actual VM relaunch confirming real SPOT_PAIR rows land under the correct
+itype) remains open — deferred again this session for the same reason as the DERIBIT-COMBO/OKX VERIFY: the same 4
+`cefi-binance-futures-2020/2021` VMs are still RUNNING (many hours now — increasingly looks like the already-filed
+`cefi_bf_2021_heavy_vm_stalled_2026_07_12.md` zombie pattern, not active work), so a relaunch now risks the same Tardis
+concurrent-IP false-negative.
+
+**This session in full:** 3 of the plan's known Layer-1 gaps now have shipped, tested code fixes (DERIBIT-COMBO,
+bare-OKX, COINBASE-FUTURES/spot_pair) — none yet VERIFIED with real captured rows, all correctly left as open `[VERIFY]`
+todos rather than assumed-closed. G4 remains ❌ NOT MET (honest state — code-complete ≠ operationally-verified).
+
+**Correction (21:22Z):** re-checked the 4 `cefi-binance-futures-2020/2021-heavy/light` VMs' run.log directly before
+recommending termination — they are **NOT stalled/zombie**, contrary to this entry's earlier assumption. Fresh log lines
+(21:20-21:21Z, matching wall-clock) show genuine active progress: real Tardis streaming calls, real manifest shard
+writes (`per-VM shard updated ... 201 new`), and even a live 403-lockout-and-successful-retry visible in the same log
+window (`Tardis HTTP 403` on one symbol immediately followed by `Tardis streaming success: 4134712 rows` on the next).
+Their multi-hour uptime is just the real cost of a 2020/2021 "heavy" year shard, not a stall — do NOT recommend
+terminating them; that would destroy real, in-progress work. Next session should instead: (1) wait for these VMs to
+naturally complete (they are making genuine progress, will finish eventually) before attempting the 3 pending VERIFY
+todos, or (2) accept the residual 403-retry risk and attempt a VERIFY anyway now that the concurrent-IP lease exists
+(even DEFAULT-OFF) — either is more honest than assuming a termination shortcut that isn't warranted.
