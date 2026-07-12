@@ -110,7 +110,31 @@ root filesystem, not `/tmp`).
 
 - [ ] [INFRA] P0. Clear stale/completed subagent-transcript files under `/tmp/claude-1000/*/tasks/` and `*/subagents/`
       fleet-wide to restore free space on the `/tmp` tmpfs; confirm via `df -h /tmp` that usage drops well below 100%.
-      (repo: agent-orchestrator / host-level, not a per-repo code change)
+      **🚧 PARTIAL PROGRESS 2026-07-12 (slot-3)** — hit this exact outage independently (same symptom, same window)
+      while shipping unrelated work; here's the safe methodology + a concrete data point. **Root cause confirmed, not
+      just hypothesized**: `du -sh /tmp/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-3/*/` (this
+      recovered briefly mid-outage — /tmp usage fluctuates as other slots' processes free small amounts) showed MY OWN
+      slot's 215M was almost entirely (202M) ONE directory whose UUID (`409e287a-5e7e-4218-ac5c-98c6c80cd528`) did
+      **NOT** match my active session's UUID — i.e. a leftover directory from a PRIOR, already-terminated session that
+      ran in this same slot before mine started. `stat -c %Y` confirmed its mtime was **~3.3 days old** (well past any
+      live-session window — CLAUDE.md's liveness gate is mtime <120s counts as live; this was 287,524s old), and its
+      contents were 3 abandoned analysis parquets (`sports_index{,2,3}.parquet`, ~71M/66M/66M) under `scratchpad/` from
+      a past investigation that never got cleaned up post-session. Verified this was safe (not another slot's data, not
+      live) via **both** signals — directory UUID mismatched my own active session AND mtime was days stale — before
+      removing it: `rm -rf` that ONE directory brought `/tmp` from **100% (0MB free) → 50% (1.1G free)** immediately,
+      and my own Bash tool recovered fully. **Safe methodology for any slot hitting this**: (1)
+      `du -sh /tmp/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-<YOUR-N>/*/` — ONLY ever look inside your
+      OWN `--tabs-<N>` directory, never another slot's; (2) for each subdirectory found, compare its UUID against your
+      own active session's UUID (visible in every ENOSPC error message's path) — anything DIFFERENT is a prior session
+      in the same slot; (3) `stat -c %Y <dir>` vs `date +%s` — only remove if the gap is large (hours+, not
+      seconds/minutes — a live concurrent session in the SAME slot should not exist, but confirm staleness anyway); (4)
+      `rm -rf` only that specific stale-session directory, never the whole `--tabs-<N>` tree (which would delete your
+      OWN active session's task-output cache too). **Not fully closed**: I only cleared MY OWN slot's stale entry (202M
+      of the ~2GB problem) — the doc's own table shows `tabs-9`(109M)/`tabs-5`(121M)/ the unscoped
+      `.../unified-trading-system-repos/`(409M, largest) are still unaddressed and belong to other slots I correctly did
+      not touch. Leaving unchecked since the fleet-wide clear isn't done — but the mechanism + a working, safe
+      methodology is now proven, not just hypothesized. Whoever owns those other slots should apply the same per-slot
+      self-check.
 - [ ] [INFRA] P1. Add a structural fix so this can't recur: either grow the `/tmp` tmpfs size, add scheduled pruning of
       old subagent transcripts, or repoint `CLAUDE_CODE_TMPDIR` to the root filesystem (51G free) instead of the 2GB
       tmpfs. (repo: agent-orchestrator, wherever slot/session bootstrap config lives)
