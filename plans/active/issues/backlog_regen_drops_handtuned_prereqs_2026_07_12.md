@@ -105,13 +105,28 @@ corruption is on the UPDATE/merge side, not task discovery.
       task entry, trigger `POST /api/backlog/regen` (not just `/reload`) and separately wait out one natural
       `PlanRegenLoop` cycle, and diff the entry before/after each to isolate which code path drops the fields. — done
       2026-07-12 by slot 5, see "Investigation results" below.
-- [ ] [SCRIPT] P0. Read `server/regen_backlog_from_plan.py` (and whatever calls it on a timer) to find the
+- [x] [SCRIPT] P0. Read `server/regen_backlog_from_plan.py` (and whatever calls it on a timer) to find the
       merge/preserve logic for already-derived entries; identify why `prereqs.conditions` and `priority` aren't in the
-      preserved set despite RULES.md §4 documenting that they are.
-- [ ] [SCRIPT] P1. Fix: extend the preserved-field set to include hand-tuned `prereqs.conditions` and `priority`
+      preserved set despite RULES.md §4 documenting that they are. **DONE 2026-07-12 by slot 5** — fully answered by the
+      "Investigation results" section below (two independent defects isolated + empirically confirmed); flipping this
+      checkbox now (slot 10) since the answer was already written but the box was left unchecked.
+- [x] [SCRIPT] P1. Fix: extend the preserved-field set to include hand-tuned `prereqs.conditions` and `priority`
       overrides on already-derived task rows, OR (if the current design intentionally treats these as fully plan-derived
       and the RULES.md claim is simply stale/wrong) correct RULES.md §4 to describe the actual supported mechanism and
-      point main-agent/operator at that instead.
+      point main-agent/operator at that instead. **DONE 2026-07-12 (slot-10)** — both defects fixed per the
+      "Recommendation for todo 3" section below. Defect A (docs): `unified-trading-pm@f1585fb59` corrects RULES.md §4's
+      `prereqs.conditions` → `prereqs.prerequisites` (the real field) in both the "park a task" recipe and the "adding
+      new conditions" step 2, plus the `prereqs.conditions` reference in § "Prerequisites vs blocked-questions". Defect
+      B (code, approach (a) — the correctness-recommended option): `agent-orchestrator@8dd5763` adds
+      `BacklogTask.priority_override: bool = False` (a real, declared schema field — round-trips normally, no special
+      pydantic config needed) and makes `_reconcile_task_fields()` skip the priority-revert branch when it's `True`.
+      RULES.md's park-a-task recipe now documents setting `priority_override: true` in the SAME yaml edit as
+      `priority: 999`. 3 new tests: `test_reconcile_priority_override_skips_revert` (direct unit test — override set →
+      no revert), `test_reconcile_priority_without_override_still_reverts` (control — confirms default behavior is
+      unchanged, drift still reconciles), `test_regen_priority_override_survives_regen_tick` (end-to-end via `regen()` —
+      hand-tune priority+override on disk exactly per the RULES.md recipe, re-run a full regen tick against the same
+      still-open todo, assert the override survives where a bare `priority: 999` previously reverted). Full
+      `quality-gates.sh` green (1191 passed, 1 skipped, ruff+basedpyright clean).
 - [ ] [DATA] P2. Add a regression check (or a quick manual verification step documented in RULES.md) so the next time
       someone attaches a condition this way, they know to re-verify persistence after 1-2 regen cycles before trusting
       it's durable, until the P0/P1 fix lands.
@@ -257,3 +272,23 @@ defect (regen should skip deriving a task for a checked-off todo, or should keep
 rather than positional index) or a downstream consequence of Defect B's per-tick re-derivation — todo 3's fix and todo
 4's regression-check should both account for it. No rework was done for the redundant `-004` dispatch; it was closed
 citing the pre-existing `6d0e41dc6` evidence.
+
+## Progress Log
+
+<!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-12** — slot-10 (sonnet/high, data_engineering — task carried a `[SCRIPT]` craft tag; adopted per RULES.md
+  "per-task craft role"), dispatched to `backlog_regen_drops_handtuned_prereqs-002` (todo 3, the P1 fix). Shipped both
+  defects' fixes in one turn — see the flipped checkboxes above for the full readout. Defect A (docs-only, no code):
+  `unified-trading-pm@f1585fb59` corrects RULES.md §4's stale `prereqs.conditions` field name to the real
+  `prereqs.prerequisites` in 3 places (park-a-task recipe, adding-conditions step 2, § "Prerequisites vs
+  blocked-questions"). Defect B (code): `agent-orchestrator@8dd5763` adds `BacklogTask.priority_override: bool` + makes
+  `_reconcile_task_fields()` respect it (approach (a) from the "Recommendation for todo 3" section — the
+  correctness-recommended option over the priority=999-as-magic-sentinel alternative). Also flipped todo 2's checkbox
+  (the "read the code, find the merge/preserve logic" investigation) — it was already fully and correctly answered by
+  slot 5's "Investigation results" section but the box itself was left unchecked; crediting slot 5's work, not mine.
+  Needed a `uv sync` first (agent-orchestrator's `.venv` didn't exist yet in this slot clone) before `quality-gates.sh`
+  could resolve ruff/basedpyright/pytest — incidental `uv.lock` drift from that sync (dropped version pins on 2 editable
+  local packages + a cosmetic extras-list reordering) was restored, not shipped, since it wasn't part of this fix. Full
+  `quality-gates.sh` green (1191 passed, 1 skipped, ruff+basedpyright clean, ~20s). Did not touch todo 4 (P2
+  regression-check/verification-step todo) — separate backlog task, out of scope for this dispatch.
