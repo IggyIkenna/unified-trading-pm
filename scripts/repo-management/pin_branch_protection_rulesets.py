@@ -58,6 +58,22 @@ ORG = "IggyIkenna"
 WORKFLOW_REF_DEFAULT = "live-defi-rollout"
 STAGING_LOCK_CONTEXT = "check-staging-lock"  # BARE job name (direct job, not a reusable-wf call — see docstring)
 
+# SIT-fleet-green required check (operator ruling 2026-07-12, finding 78; plan
+# cicd_mvp_ldr_to_main_pipeline_2026_06_30.md). Posted by ldr-to-main-promote-fleet.yml on every
+# LDR->main promote PR head, UNCONDITIONALLY (not gated on breaking-ness) — a red or missing status
+# now blocks auto-merge fleet-wide, closing the 2026-07-07/08 gap where a promote sailed through
+# while cross-repo SIT was red. Required ONLY for ldr_main repos (the ones the fleet promoter
+# manages and therefore the only ones that ever get this status posted) — NEVER added to a
+# non-ldr_main repo's ruleset (unified-trading-pm / system-integration-tests), whose main-bound
+# path is a different workflow that does not post this context; requiring it there would deadlock
+# every merge to their main with a permanently-missing check.
+SIT_FLEET_CONTEXT = "sit-gate/fleet-green"
+# Both ruleset names are seen live across the fleet (naming drift — some repos were provisioned as
+# "require-quality-gates", others as "require-quality-gates-main"; functionally identical, both
+# target=branch/main). Match either so every ldr_main repo is actually reachable, not just the
+# majority-name ones.
+MAIN_QG_RULESET_NAMES = ("require-quality-gates", "require-quality-gates-main")
+
 # semver-agent stamps the post-QG `chore(release)` bump by DIRECT-PUSHing to `staging` (as the
 # admin GH_PAT, after quality-gates-v2 already passed pre-SIT). The staging required-checks would
 # reject a direct push (no PR / no check run on the pushed commit), so the bump bot must BYPASS.
@@ -73,25 +89,56 @@ STAGING_BYPASS_RULESET = "require-staging-lock-check"
 
 # Repos that carry the two managed rulesets. Keep in sync with
 # verify_branch_protection_check_names.py.
+# Extended 2026-07-12 (SIT-fleet-green rollout, finding 78) to the FULL workspace-manifest repo set
+# (25 = the 23 ldr_main repos + unified-trading-pm + system-integration-tests) — the prior 17-repo
+# list predates several repos (agent-orchestrator, e2e-testing, features-service,
+# fund-administration-service, greeks-service, ml-service, unified-trading-api,
+# unified-trading-system-ui) that already carry the SAME managed ruleset live (verified via
+# `gh api repos/<repo>/rulesets` 2026-07-12) but were never added here — a pre-existing drift gap,
+# not something this change introduces. `unified-trading-pm` / `system-integration-tests` are the
+# only non-ldr_main repos and get NO SIT context (see ldr_main_repos() below).
 REPOS = [
+    "agent-orchestrator",
     "alerting-service",
     "batch-live-reconciliation-service",
     "client-reporting-api",
     "deployment-api",
     "deployment-service",
     "deployment-ui",
+    "e2e-testing",
     "execution-service",
+    "features-service",
+    "fund-administration-service",
+    "greeks-service",
     "ibkr-gateway-infra",
     "instruments-service",
     "market-data-processing-service",
     "market-tick-data-service",
+    "ml-service",
     "strategy-service",
     "system-integration-tests",
     "trading-agent-service",
     "unified-api-contracts",
+    "unified-trading-api",
     "unified-trading-library",
     "unified-trading-pm",
+    "unified-trading-system-ui",
 ]
+
+
+def ldr_main_repos(manifest_path: str = "workspace-manifest.json") -> set[str]:
+    """Repos with promotion_model == "ldr_main" in the manifest — the ONLY repos whose LDR->main
+    promote PR head ever receives the sit-gate/fleet-green status (posted by
+    ldr-to-main-promote-fleet.yml). Read fresh each run (no hardcoded duplicate list) so a manifest
+    opt-in/opt-out is picked up automatically on the next --apply."""
+    try:
+        with open(manifest_path) as f:
+            m = json.load(f)
+    except OSError:
+        return set()
+    repos = m.get("repositories", {})
+    return {r for r, v in repos.items() if not r.startswith("_") and v.get("promotion_model") == "ldr_main"}
+
 
 # (workflow file, reusable-job suffix appended to the job's display name)
 QG_WORKFLOW_CANDIDATES = [
@@ -140,11 +187,15 @@ def derive_qg_context(repo: str, ref: str) -> tuple[str | None, bool]:
 
 
 def get_ruleset(repo: str, name: str) -> dict | None:
+    """Return the ruleset matching `name`, or — for the main QG ruleset — any name in
+    MAIN_QG_RULESET_NAMES (naming drift: some repos are provisioned as "require-quality-gates",
+    others as "require-quality-gates-main"; both target=branch/main, functionally identical)."""
+    names = MAIN_QG_RULESET_NAMES if name == "require-quality-gates" else (name,)
     r = gh(["api", f"repos/{ORG}/{repo}/rulesets"])
     if r.returncode != 0:
         return None
     for rs in json.loads(r.stdout):
-        if rs.get("name") == name and rs.get("target") == "branch":
+        if rs.get("name") in names and rs.get("target") == "branch":
             d = gh(["api", f"repos/{ORG}/{repo}/rulesets/{rs['id']}"])
             if d.returncode == 0:
                 return json.loads(d.stdout)
@@ -259,6 +310,7 @@ def main() -> int:
     args = ap.parse_args()
 
     repos = [args.repo] if args.repo else REPOS
+    ldr_main = ldr_main_repos()
     # (repo, ruleset, cur_contexts, desired_contexts, desired_bypass|None)
     planned: list[tuple[str, dict, list[str], list[str], list[dict] | None]] = []
     classic_planned: list[str] = []  # repos whose staging classic enforce_admins must be disabled
@@ -284,8 +336,13 @@ def main() -> int:
         # `derive_codebuild_context` is retained for that future PR-head gate. SSOTs:
         # ci_pipeline_self_healing_gaps_2026_06_11.md §Gap5 + github_actions_billing_wall_2026_06_11.md.
         staging_ctx = [qg, STAGING_LOCK_CONTEXT]
+        # SIT-fleet-green (finding 78): required on the MAIN ruleset ONLY for ldr_main repos — the
+        # only repos ldr-to-main-promote-fleet.yml ever posts this status for. A non-ldr_main repo
+        # (unified-trading-pm / system-integration-tests) gets [qg] unchanged; adding the SIT
+        # context there would require a status nothing ever posts → permanent block.
+        main_ctx = [qg, SIT_FLEET_CONTEXT] if repo in ldr_main else [qg]
         targets = [
-            ("require-quality-gates", [qg]),
+            ("require-quality-gates", main_ctx),
             ("require-staging-lock-check", staging_ctx),
         ]
         for rsname, desired in targets:
