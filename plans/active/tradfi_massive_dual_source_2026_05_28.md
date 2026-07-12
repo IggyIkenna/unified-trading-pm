@@ -53,6 +53,10 @@ for any TradFi cell to legitimately list two sources.
 2. **Coverage policy**: Massive and Databento each allowed for any (symbol, data_type) — no vendor lock-in per cell.
 3. **VX futures (CFE)**: Massive does NOT cover CFE. Keep existing pattern (Yahoo + Barchart as already wired in
    `("tradfi", "ohlcv_15m"): ["databento", "yahoo", "barchart"]`). No change to the VX cell required.
+   > **Correction 2026-07-12** (finding 375, §A2 B-queue ruling): Barchart was RETIRED 2026-06-24 — VIX 15m now sources
+   > from VX futures via Databento XCBF.PITCH. Ground-truth UAC priority is now
+   > `("tradfi", "ohlcv_15m"): ["databento", "massive", "yahoo"]` (was: `["databento", "yahoo", "barchart"]`). SSOT:
+   > `codex/02-data/tradfi-databento-sourcing-ssot.md`.
 4. **Scope**: batch / historical REST first. Live / WebSocket connector deferred — operator stated "not too worried
    about live yet".
 5. **Tier**: Massive billed at delayed-OK tier — Stocks Starter $29 + Options Starter $29 + Indices Starter $29 +
@@ -449,8 +453,9 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
   won't suffice. Named successor: same as above.
 - **Sportradar / sports vendor dual-sourcing** — this plan is TradFi-scoped. Sports + Prediction get their own follow-up
   plans under `epics/sports_master.md` + `epics/predictions_master.md` if dual-sourcing wanted there.
-- **CFE VIX futures (VX) primary coverage** — operator chose to keep Yahoo + Barchart layering. If CFE-direct ever
-  becomes desired, named successor: `tradfi_cfe_vx_futures_<YYYY_MM_DD>.md`.
+- **CFE VIX futures (VX) primary coverage** — operator chose to keep Yahoo + Barchart layering (was: Barchart RETIRED
+  2026-06-24; VIX 15m now via Databento XCBF.PITCH — see correction 2026-07-12 above). If CFE-direct ever becomes
+  desired, named successor: `tradfi_cfe_vx_futures_<YYYY_MM_DD>.md`.
 
 ## Dependencies + ordering
 

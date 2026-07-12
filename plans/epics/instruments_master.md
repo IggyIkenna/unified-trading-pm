@@ -4,7 +4,8 @@ title: Instruments Live — Master Activation Plan
 summary:
   L1 epic owning instruments-service reference-data activation — catalogue completeness, IS↔MTDS canonical-form
   single-walk (CF-1…CF-12), tradfi/DeFi-LST universe lockdown, incremental catalogue rollup, and the
-  INSTRUMENT_CACHE_REFRESH_TRIGGER publish side; live work runs through survivors I-1/I-2/I-3.
+  INSTRUMENT_CACHE_REFRESH_TRIGGER publish side; live work runs through survivors I-1/I-2 (I-3 complete 2026-07-10, was
+  listed as an open survivor -- annotated 2026-07-12, finding 125, §A2 B-queue ruling).
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -32,7 +33,7 @@ created: 2026-05-08
 name: instruments_master
 tier: L1
 priority: P0
-assigned_vm: vm-cefi
+assigned_vm: vm-cefi # epic-level ownership label (legacy per-VM convention, retained workspace-wide across ALL epics/*.md as of 2026-07-12; distinct from PLAN `assigned_vm` which is {planning, NA}-only post-2026-06-27 -- annotated 2026-07-12, finding 123, §A2 B-queue ruling, no value change -- workspace-wide epic-schema migration is out of scope here)
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
@@ -59,6 +60,9 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
 
+<!-- 2026-07-12 doc-reconciliation sync (findings 96/101/106/111/117/123/125, §A2 B-queue ruling): epic-body staleness
+     annotated in place below (was: unannotated) — see body markers for each finding's correction. -->
+
 # Instruments Live — Master Activation Plan
 
 > **🔵 CONSOLIDATION 2026-06-26 — live instruments work now runs through 2 themed survivors.** Per the operator's
@@ -78,7 +82,11 @@ locked_since: 2026-05-08
 >   [`instruments_catalogue_incremental_rollup_2026_06_29`](../active/instruments_catalogue_incremental_rollup_2026_06_29.md)**
 >   — incremental (trailing-window + frozen-tail) catalogue rollup replacing the full-history re-aggregation that now
 >   exceeds the Cloud-Run 3600s task timeout (2026-06-29 `DP_CATALOG_NOT_RUNNING`); prototype-measured ~0.9 min vs 137
->   min. Successor to `proper_instrument_catalogue_lifecycle_rollup` (the full-rebuild originator).
+>   min. Successor to `proper_instrument_catalogue_lifecycle_rollup` (the full-rebuild originator). **2026-07-12
+>   correction (was: presented below as a live/open survivor; finding 125, §A2 B-queue ruling): I-3 flipped
+>   `status: active` → `complete` on 2026-07-10 (27 of 28 todos confirmed `[x]` with cited runtime evidence, per its own
+>   Progress Log) — no longer an open workstream; retained here only as historical routing context for pre-2026-07-10
+>   work.**
 >
 > Newly archived under `../archive/2026_06/`: the 3 above sources + `instruments_backfill_phase3` (DONE/SUPERSEDED). The
 > Phase A-Z activation content below is retained as historical design intent.
@@ -423,22 +431,37 @@ Full-execution verification (per "Plans Run To Actual Completion" HARD RULE):
 _3 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
+> **2026-07-12 correction (was: "3 active plans" above, uncorrected since the 2026-05-21 auto-populate run; findings
+> 101/106/111/117, §A2 B-queue ruling):** the auto-populated count/roster below is stale and was never re-run after
+> 2026-05-21. As of 2026-07-12, `rg -l '^parent_epic: instruments_master' active/*.md` (excluding `active/issues/`) plus
+> a `status: active` filter shows **15** active plans declaring this `parent_epic` (vs. the 3 listed below) — including,
+> among others, `coinbase_bare_name_migration_2026_07_06`, `tradfi_v9_stage1_finish_2026_07_06`,
+> `instruments_completion_tracker_2026_07_06`, `layer1_remeasure_and_certify_2026_07_06`, and
+> `mvp_catalogue_finalization_v10_2026_06_27` — none of which are listed in the roster below. This is an annotation, not
+> a re-run of the auto-populate script (out of scope for this fix); re-running
+> `scripts/plans/populate_epic_bodies_2026_05_21.py` is the correct follow-up to regenerate the roster itself.
+
 ## P0 — must complete before next foundation gate
 
 ### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — instruments-service cluster
 
-**status**: 🟠 ACTIVE — QG sweep for instruments-service (32 ruff errors). `bash scripts/quality-gates.sh` exit 0.
-PREREQ: UTL QG green (vm-cross-cutting). See plan for full dep-chain. [vm: vm-cefi]
+**status**: 🟠 ACTIVE (was: — the plan itself carries `status: complete`; corrected 2026-07-12, finding 96, §A2 B-queue
+ruling; this child plan lives under `archive/2026_05/` and its own frontmatter shows it already shipped) — QG sweep for
+instruments-service (32 ruff errors). `bash scripts/quality-gates.sh` exit 0. PREREQ: UTL QG green (vm-cross-cutting).
+See plan for full dep-chain. [vm: vm-cefi]
 
 ### [`instruments_foundation_completeness_2026_06_24`](../active/instruments_foundation_completeness_2026_06_24.md) — survivor **I-1**
 
 **status**: 🟠 ACTIVE (52 open) — gated rebuild every asset group + the folded foundation/catalogue/tradfi-universe/
-DeFi-LST residuals. The live home for instruments-foundation work post-consolidation. [vm: vm-cross-cutting]
+DeFi-LST residuals. The live home for instruments-foundation work post-consolidation. [vm: vm-cross-cutting] (label
+stale — the child plan's own frontmatter carries no `assigned_vm` field at all; annotated 2026-07-12, finding 123, §A2
+B-queue ruling)
 
 ### [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md) — survivor **I-2**
 
 **status**: 🟠 ACTIVE (60 open) — IS↔MTDS canonical-form single-walk (CF-1…CF-12) + IS audit-finding code remediation.
-The live home for the instruments I/O canonicalisation + consistency surface. [vm: vm-cross-cutting]
+The live home for the instruments I/O canonicalisation + consistency surface. [vm: vm-cross-cutting] (label stale — same
+as above; finding 123, §A2 B-queue ruling)
 
 ### 🔴 2026-07-08 canonical instrument_id audit + remediation
 

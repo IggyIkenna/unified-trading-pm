@@ -49,10 +49,16 @@ related_plans:
     ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md,
     ../active/regime_clustering_structure_allocator_2026_05_29.md,
   ]
-last_updated: 2026-05-21
+last_updated: 2026-07-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
+
+> **Frontmatter correction (2026-07-12)**: `last_updated:` (was: 2026-05-21) — corrected to today, both because this doc
+> is being edited today (findings #57/#58/#313 roster + coordinator-link fixes above) and because the pre-edit value
+> already predated multiple dated body sections (e.g. "Tier-violation cleanup (slot 7, 2026-06-01 ...)" at what was line
+> 211). Finding #317, plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2
+> B-queue ruling.
 
 # ML + Features Master (umbrella)
 
@@ -786,7 +792,17 @@ respectively).
 ## `available_at` + lookahead-bias coordination (2026-05-08 audit)
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md).
+> [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+> (was: linked `../active/...` — that path does not exist; the plan's own frontmatter is `status: complete` and it lives
+> under `archive/2026_05/`, matching how `defi_master.md` already links it with a "Do NOT dispatch from here" note).
+> **Coordinator-status correction (2026-07-12)**: per the coordinator's own "Chain link status" table, Phase 0 (link 0,
+> MDPS bar boundary) is COVERED/shipped and Phase 1 (link 1, per-asset-group adapter stamping) is PARTIAL ~90%, but
+> Phase 4 (link 4, UAC `FEATURE_REQUIRED_INPUTS` expansion) is PARTIAL ~59 of ~90 with the remaining ~31 migrated per
+> the coordinator's own "Deferred work — migrated to" table as "Pending UAC data_type registration + consolidation
+> (defi/sports track)" — no successor plan named — and Tab 12 wire-in (link 6) migrated to
+> `features_repo_consolidation_2026_05_08` Phase 5.c (itself archived). The two open P0 todos below are still real open
+> work; only the "Coordinator Phase 4"/"Phase 0" gating language and the dead link were stale. Finding #313,
+> plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 > Audit 2026-05-08 confirmed: UTL
 > `assert_no_lookahead_for_feature_group(feature_group, inputs_df: pl.DataFrame, target_ts)` already takes target_ts and
 > gracefully no-ops when feature_group absent / df empty / column missing
@@ -878,10 +894,24 @@ respectively).
 
 ## Assigned active plans
 
-_4 active plans declare `parent_epic: features_and_ml_master` in their frontmatter. Workers pick up in priority order
-(P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_3 active plans declare `parent_epic: features_and_ml_master` in their frontmatter (was: 4 — stale count; corrected
+2026-07-12). Workers pick up in priority order (P0 first). Auto-populated by
+`scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+> **Roster correction (2026-07-12)**: the auto-populated roster below had drifted from `active/*.md` frontmatter —
+> live-grep on 2026-07-12 shows exactly 3 `status: active` plans declaring `parent_epic: features_and_ml_master`:
+> `features_service_e2e_pipeline_test_2026_05_26` (P0), `bigquery_feature_ml_compute_engine_option_2026_06_08` (P2),
+> `colocated_feature_pipeline_in_memory_handoff_2026_06_21` (P3) — none of which appeared anywhere in this roster before
+> this correction. Added below in their frontmatter priority sections. Findings #57/#58, plan-reconciliation
+> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 
 ## P0 — must complete before next foundation gate
+
+### [`features_service_e2e_pipeline_test_2026_05_26`](../active/features_service_e2e_pipeline_test_2026_05_26.md)
+
+**status**: active · **estimate**: 6 cal AI-days (class: brand-new) — added 2026-07-12 (was: missing from roster;
+finding #57). Features-service e2e pipeline test (read → calculate → write → read-back) on real GCS data. Carries a
+stale (channel-retired) `ROLLOUT-AGENT HOLD` banner — see the plan's own 2026-07-12 annotation before dispatching.
 
 ### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — features/ML cluster
 
@@ -908,6 +938,11 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
+### [`bigquery_feature_ml_compute_engine_option_2026_06_08`](../active/bigquery_feature_ml_compute_engine_option_2026_06_08.md)
+
+**status**: active · **estimate**: 4.2 cal AI-days (class: design) — added 2026-07-12 (was: missing from roster; finding
+#58). BigQuery as an optional feature/ML compute engine over the hive-partitioned GCS corpus.
+
 ### [`features_service_qg_cleanup_2026_05_11`](../active/features_service_qg_cleanup_2026_05_11.md)
 
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor)
@@ -919,7 +954,11 @@ _(no plans currently assigned at this priority)_
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`colocated_feature_pipeline_in_memory_handoff_2026_06_21`](../active/colocated_feature_pipeline_in_memory_handoff_2026_06_21.md)
+
+**status**: active · **estimate**: 3.0 cal AI-days (class: design) — added 2026-07-12 (was: missing from roster; finding
+#58). Colocated feature pipeline — in-memory DAG handoff, parquet consolidation, read-time pruning, basedpyright
+strictness restore.
 
 ## Archived plans
 

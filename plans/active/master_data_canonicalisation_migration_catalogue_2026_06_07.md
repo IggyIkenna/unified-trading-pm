@@ -2146,6 +2146,13 @@ speed-note (both deferred optimisations, non-blocking).
   `manifest_migration_SUPERSEDED_2026_05_21` — do NOT reference; the live epic is `epics/manifest_master.md`.
 - Re-run the sweep at every gate promotion (a new active plan touching the data layer with no registry row here is
   review-blocking).
+- **Sync 2026-07-12** (finding 131, §A2 B-queue ruling):
+  `plans/active/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md` (`parent_epic: manifest_master`, status:
+  open, created 2026-06-24 — after this sweep) had no registry row here despite being in-theme (cross-cutting
+  manifest-read/backfill defect); no re-sweep ran at the intervening G4 gate-promotion (2026-06-29). Registered now: it
+  is separately and correctly tracked as open/ACTIVE/KEEP in
+  `plans/active/issues/plan_issue_epic_consolidation_2026_06_30.md:217` (A1.8), so no orphan work is lost — this is an
+  index-completeness correction only, not a new action item.
 
 ## Master coordination todos (this plan's OWN work — pure coordination, no execution)
 

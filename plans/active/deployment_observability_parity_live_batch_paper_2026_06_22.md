@@ -133,9 +133,17 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 - [x] [UI] P0. ✅ A **Deployments** page at `/deployments` mirroring RepoCi grade: umbrella tabs (**Live / Batch /
       Paper**), each a matrix of VMs+Cloud-Run-jobs (status badge, last-run, exit_code, progress, cloud icon GCP/AWS),
       drill-down to per-target detail. Reuse `DeploymentHistory` + `VmEventsTimeline` + `StreamingLogsPanel`. `[UI]` +
-      `pw:L2 ✓` + regression spec. — **deployment-ui** — deployment-ui@051c255 | pw:L2 ✓ | regression:
-      tests/smoke/deployments-page.spec.ts (`src/pages/Deployments.tsx` umbrella tabs Live/Batch/Paper + status-tone
-      matrix + GCP/AWS cloud badges + VM/Cloud-Run kind icon + exit-137 highlight + per-umbrella summary header;
+      `pw:L2 ✓` + regression spec. — **deployment-ui** — deployment-ui@051c255 | pw:L2 ✓ | regression: >
+      **[doc-reconciliation 2026-07-12, finding 196, §A2 B-queue ruling] SUPERSEDED UI SHAPE** (was: this
+      umbrella-tabs > design, current at the time, deployment-ui@051c255):
+      `active/deployment_observability_expansion_2026_07_08.md` > (created 2026-07-08) later collapsed the
+      Live/Batch/Paper tabs into ONE flat all-modes table (Mode is a filter, > not tabs) — "3 cockpit tabs + 3 health
+      tiles + 3 nav entries consolidated" — shipped at > `deployment-ui@50a6947`, confirmed on `live-defi-rollout` and
+      postdating `051c255` (`git log --oneline     > 051c255..50a6947`, re-verified in this pass). The checkbox below
+      stays `[x]` (051c255 genuinely shipped at the > time) but the tab architecture it describes is no longer the
+      current `/deployments` shape — read the expansion > plan for the current UI. tests/smoke/deployments-page.spec.ts
+      (`src/pages/Deployments.tsx` umbrella tabs Live/Batch/Paper + status-tone matrix + GCP/AWS cloud badges +
+      VM/Cloud-Run kind icon + exit-137 highlight + per-umbrella summary header;
       `getDeploymentInventory`/`getUmbrellaSummary` in `src/api/deploymentApi.ts`; route+nav in App.tsx/Header.tsx;
       mock-api handlers; 6 vitest + 4 pw specs; tsc 0 / eslint 0-warn / vitest 883 / pw 265/265 smoke / build 0)
 - [x] [UI] P0. ✅ Per-target detail (VM or Cloud Run job): live log tail + event timeline + exit_code + the durable

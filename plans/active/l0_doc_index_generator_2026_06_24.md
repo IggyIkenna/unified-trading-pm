@@ -54,13 +54,15 @@ drift_direction: advance-code
 - **Output is CONSUMER-SIDE LOCAL + gitignored** (`/DOC_INDEX.generated.md`, C2) — deterministic (sorted, no timestamps,
   repo-root-relative → byte-identical across hosts), so every host regenerates its own copy with **zero git contention**
   (no committed fleet-shared index = no multi-writer hotspot).
-- **FF-cron auto-regen — written, landing PENDING.** The regen call (guarded, `timeout 60`-bounded, `|| true`,
-  `--stale-check`) is authored for the end of `scripts/dev/slot-cron-ff-pull.sh`. But it can't be edited in place on the
-  MAIN clone: the crontab's FF-pull line has a **self-bootstrap** step that `mv`s origin's `slot-cron-ff-pull.sh` over
-  the local copy **every 5 min** (so the cron always runs the latest script) — overwriting any local edit, HEAD never
-  moves. So the hook must reach origin first: land it via a **slot clone** (the `mv` targets only the main clone), OR
-  use a **standalone cron line** (`*/5 … gen_doc_index.py --stale-check`) — operator's pick. Until then, run the
-  generator on-demand.
+- **FF-cron auto-regen — ✅ SHIPPED fleet-wide 2026-07-04, pm@b4d75366d** (was: "written, landing PENDING" — corrected
+  2026-07-12, finding id 6, §A2 B-queue ruling; verified by `git blame -L 570,585 -- scripts/dev/slot-cron-ff-pull.sh`,
+  which attributes the current fleet-loop
+  `for _pm_clone in "${_ws_root}/unified-trading-pm" "${_ws_root}"/.tabs/*/unified-trading-pm; do … gen_doc_index.py --stale-check … done`
+  block, lines 577-581, to commit b4d75366d2 dated 2026-07-04 11:18:36 +0530 — matching the epic's W4 claim exactly).
+  The regen call (guarded, `timeout 60`-bounded, `|| true`, `--stale-check`) now runs at the end of
+  `scripts/dev/slot-cron-ff-pull.sh` **across every PM clone (main + every `.tabs/*` slot), including dirty trees** —
+  landed via the slot-clone route (not a standalone cron line) once the self-bootstrap `mv`-overwrite constraint below
+  was worked around.
 - **`scripts/docs/test_gen_doc_index.py`** — determinism + smoke tests (3, green).
 
 ## Grep examples (what the L0 map buys)
@@ -119,3 +121,8 @@ rg 'doc_type=plan .*assigned_vm=vm-defi'   DOC_INDEX.generated.md   # defi plans
   main clone's copy every 5 min (NOT the operator, NOT a linter), so an in-place edit there is force-overwritten; the
   hook must reach origin via a slot clone, OR be a standalone cron line (operator's pick). Content/coverage deferred to
   the silent-window full rollout.
+- 2026-07-12 (doc-reconciliation autofix, finding id 6, §A2 B-queue ruling): **FF-cron auto-regen PENDING item above is
+  stale** — the hook landed 2026-06-25 (commit `634c22f33f`, initial single-clone version) and was widened to the
+  current fleet-wide (main + every `.tabs/*` slot clone, incl. dirty trees) loop by `b4d75366d2` on 2026-07-04, per
+  `git blame -L 570,585 -- scripts/dev/slot-cron-ff-pull.sh`. Matches `agent_operating_framework_master.md`'s W4 claim.
+  See the corrected "Shipped" bullet above.

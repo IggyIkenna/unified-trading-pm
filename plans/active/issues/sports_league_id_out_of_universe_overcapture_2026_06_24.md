@@ -1,26 +1,47 @@
 ---
 doc_type: issue
-title: Sports manifest is not a numeric-vs-canonical schema split — it is a cross-provider OUT-OF-UNIVERSE over-capture (1.68M of 4.6M rows are for leagues outside our 94/101-league canonical set)
-summary: The operator framed the sports `_index` problem as "every data_type has 12–48% rows keyed by **numeric** API-Football league_id; the rest canonical; the numeric rows are legacy duplicates of canoni...
-status: open
+title:
+  Sports manifest is not a numeric-vs-canonical schema split — it is a cross-provider OUT-OF-UNIVERSE over-capture
+  (1.68M of 4.6M rows are for leagues outside our 94/101-league canonical set)
+summary:
+  The operator framed the sports `_index` problem as "every data_type has 12–48% rows keyed by **numeric** API-Football
+  league_id; the rest canonical; the numeric rows are legacy duplicates of canoni...
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [sports, manifest, data-correctness, honest-coverage, instruments, uac, canonicalisation, data-quality]
-related: [plans/active/issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md, plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md]
+related:
+  [
+    plans/active/issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md,
+    plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md,
+  ]
 created: 2026-06-24
 parent_epic: sports_master
 priority: P1
-source: ['instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet (live read 2026-06-24 06:44 UTC)', unified_api_contracts.sports.LEAGUE_REGISTRY (101 leagues) / get_expected_leagues_for_source("api_football") (94), 'instruments_service/engine/orchestrator/sports_reference_core.py::_fetch_injuries (per-league capture groupby)', 'instruments_service/engine/orchestrator/sports.py::_canonical_league_id (passes unknown numerics/slugs through)']
+source:
+  [
+    "instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet (live read 2026-06-24 06:44
+    UTC)",
+    unified_api_contracts.sports.LEAGUE_REGISTRY (101 leagues) / get_expected_leagues_for_source("api_football") (94),
+    "instruments_service/engine/orchestrator/sports_reference_core.py::_fetch_injuries (per-league capture groupby)",
+    "instruments_service/engine/orchestrator/sports.py::_canonical_league_id (passes unknown numerics/slugs through)",
+  ]
 assigned_vm:
 resolved_by:
+  "2026-07-12 doc-reconciliation fixer, finding 252 & §A2 B-queue ruling — operator-gated DROP decision (item 4) was
+  made (DROP) + executed: instruments-service@acfd5ac (write-path universe gate, item 1) + G1 wipe (item 4), post-wipe
+  IS index 2,898,902 rows canonical-only. See body annotation +
+  sports_p2_history_apifootball_2015_to_present_2026_06_27.md Todo 1 for full evidence. NOTE: recommendation item 2
+  (in-universe numeric/suffixed re-key+dedup) completion is NOT separately confirmed by this evidence — re-verify before
+  treating as fully closed."
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-12
 ---
 
 ## What I found
@@ -94,3 +115,23 @@ slug + 95,299 suffixed + 288 hash + 58,299 blank): **DROP from the manifest** (r
 our 94-league trading universe; keeping them distorts coverage) **vs KEEP** (mark honestly, exclude from the coverage
 denominator). Recommend DROP after a snapshot, contingent on confirming no downstream consumer (features-sports /
 strategy) reads out-of-universe leagues.
+
+## RESOLVED 2026-07-12 — finding 252, §A2 B-queue ruling
+
+(Was: `status: open`, `resolved_by:` blank, unedited since 2026-06-27 — this issue read as an open, undecided
+operator-gated question.)
+
+The operator-gated decision above (item 4) was **DECIDED: DROP** + **EXECUTED**, and item 1 (write-path gate) shipped
+alongside it, both in `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` Todo 1 (session 2026-06-27→28):
+
+- **Write-path gate (item 1)** — `instruments-service@acfd5ac` ("fix(sports): add canonical write-universe gate to all
+  per-league write paths (G1)") — gates `footystats.py` / `process_write.py` / `sfi.py` / `sports_fixtures.py` /
+  `understat.py` per-league write loops to the canonical universe, matching this issue's exact recommendation.
+- **DROP execution (item 4, G1 wipe)** — `delete_noncanonical_sports_leagues_2026_06_25.py --apply` removed 1,515
+  non-canonical `league_id`s (~3.05M rows) after a snapshot
+  (`_index/snapshots/pre_noncanonical_leagues_delete_index_20260628_19343*/`
+  - `pre_noncanonical_delete_seed_*`); post-wipe IS index = 2,898,902 rows, canonical-only (19:42 UTC 2026-06-28).
+
+**Not separately confirmed by this evidence**: item 2 (in-universe numeric/suffixed re-key + dedup migration for the
+215,881 numeric + 302,790 suffixed in-universe rows) — re-verify its status before treating the full recommendation set
+as shipped; only items 1 and 4 (the operator-gated crux of this issue) are confirmed here.

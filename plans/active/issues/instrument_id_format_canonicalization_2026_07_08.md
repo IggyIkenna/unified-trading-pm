@@ -70,7 +70,11 @@ locked_since:
 > current-real vs target-canonical side by side, same pattern already applied to the A_TOKEN/DEBT_TOKEN decision.
 > Actually migrating is staged, future work — this doc scopes it, it doesn't execute it.
 
-## The 6 real divergences found, and their target canonical format
+## The 8 real divergences found, and their target canonical format
+
+> _(was: "The 6 real divergences found" -- corrected 2026-07-12, finding 97, §A2 B-queue ruling: findings 7-8 were added
+> later per this doc's own Progress Log, bringing the real count to 8; the body enumeration below was already correctly
+> numbered 1-8, only this header's count had lagged.)_
 
 All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` asset groups), 2026-07-08.
 

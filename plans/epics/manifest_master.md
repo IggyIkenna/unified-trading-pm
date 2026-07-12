@@ -104,6 +104,13 @@ Full archaeology: [`manifest_evolution_SUPERSEDED_2026_05_21.md`](manifest_evolu
 
 - **Upstream gates**: `instruments_master` (IS→MTDS contract; archive-metadata fields on `InstrumentRecord`),
   `mtds_mdps_master` (writer code axis — MTDS handlers consume IS catalogue)
+  > **[2026-07-12 correction, finding 322, §A2 B-queue]**: `manifest_evolution_SUPERSEDED_2026_05_21.md`'s supersession
+  > banner claims "IS↔MTDS contract enforcement" (incl. its folded child
+  > `plans/audit/is_mtds_contract_audit_2026_05_20.md`) "continues" in this epic, but that child plan's own frontmatter
+  > still declares `parent_epic: manifest_evolution_SUPERSEDED_2026_05_21` (never re-homed here) and it does not appear
+  > in this epic's "Assigned active plans" section — it is orphaned between the "upstream gate owned by
+  > instruments_master" framing above and the dead epic's promise. Not fixed here (re-homing the child plan's
+  > frontmatter is out of this chunk's file scope).
 - **Downstream consumers**: All L0 asset-group epics (defi/cefi/tradfi/sports/predictions read manifest for data
   completeness gates); `features_and_ml_master` (features `available_at` lookahead-bias guard reads manifest)
 - **Co-located VM**: `defi_master` (manifest backfill priority work)

@@ -155,7 +155,13 @@ source:
       taxonomy gap #2 fixed, genuine 585-row remainder newly characterized) but its literal gate is still not met; tasks
       4/6/10/11 unchanged. **Certifying tradfi Layer-1 now would still certify against an incomplete state** — correctly
       declined again this session. See `tradfi_v9_stage1_finish_2026_07_06.md` task 2 + Progress Log 2026-07-10 entries
-      for full detail.
+      for full detail. **2026-07-12 forward-pointer (finding 126, §A2 B-queue ruling):** this "RE-CHECKED AGAIN" entry's
+      "NOT E=0: 585 real orphans" verdict was current as of 15:57:41 UTC that session but was superseded ~80 min later
+      the SAME day — `tradfi_v9_stage1_finish_2026_07_06.md`'s task 2 shows **🎯 GATE MET 2026-07-10 17:17:22 UTC: fresh
+      full corpus-wide re-sweep confirms `orphan_class_E=0, unknown_prefixes=0`**, checkbox flipped, after the 585-row
+      remainder was backfilled. This doc's own orphan-sweep sub-task (task 2 of Plan-2) is therefore closed; the overall
+      `BLOCKED-PLAN2` verdict below still holds independently on the other open Plan-2 tasks (manifest rebuild, E7
+      verify, schema restamp) — was not re-derived here, no re-certification action needed on this basis alone.
 - [x] ✅ [VERIFY] P0. **Certify prediction Layer-1** — post the KALSHI-PERP purge, record the fresh prediction
       denominator + %. Gate: prediction number recorded; no fake KALSHI-PERP rows in the measure. **CERTIFIED 2026-07-06
       15:27 UTC: prediction Layer-1 = 66.67% (present 4 / expected 6; 2 missing tuples; 17 stray).** Direction ✓ — 66.67

@@ -99,6 +99,15 @@ list as part of Phase 2's design checkpoint**, this table is a starting hypothes
 
 ### Phase 1 — Audit (no doc writing yet)
 
+> **Phase 1 redirect note (2026-07-12, findings 371/390, §A2 B-queue ruling)**: these 6 todos were never executed as
+> literally written below — per the Progress Log's 2026-07-08 "(later)" entry, the operator expanded the ask into a
+> separate, broader effort (audit every service + GCS + manifest, not just cross-check these docs), which ran as
+> [[canonical_instrument_id_audit_2026_07_08]] (`plans/audit/results/`); this plan's `depends_on` now points at that
+> audit doc, and Phase 1 here is satisfied by its findings rather than a literal re-derivation of each bullet.
+> Checkboxes below are intentionally left unchecked `[ ]` as the historical record of the original phase scope, not open
+> work — `status: complete` (frontmatter) stands; no checkbox flip made here (no hard evidence that each bullet was
+> executed verbatim, only that the audit's broader findings supersede them).
+
 - [ ] [DATA] P0. **Read all 18 existing docs in full** (was: 17 — see title correction) (not just the intros already
       skimmed) and extract every concrete claim: venue lists per AG, instrument_id format examples, MVP-universe scope
       statements, adapter-count claims. Produce a claims inventory (a working scratch file, not a committed doc) — this

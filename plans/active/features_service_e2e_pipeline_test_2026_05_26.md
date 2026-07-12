@@ -2,11 +2,11 @@
 doc_type: plan
 title: Features-service end-to-end pipeline test (read → calculate → write → read-back) on real GCS data
 summary: >-
-  Stands up a repeatable real-data end-to-end test of the full features-service pipeline per family
-  (discover v8 manifest → read GCS inputs → calculate → write parquet + manifest row → read-back & assert).
-  Fixes the WRITE blocker (write_daily_partition string-index-out-of-range writing 0 rows), backfills a
-  lookback-sized input window so calculators can be exercised across instruments, and validates each family
-  against real GCS — writing to -test buckets so prod feature output is untouched.
+  Stands up a repeatable real-data end-to-end test of the full features-service pipeline per family (discover v8
+  manifest → read GCS inputs → calculate → write parquet + manifest row → read-back & assert). Fixes the WRITE blocker
+  (write_daily_partition string-index-out-of-range writing 0 rows), backfills a lookback-sized input window so
+  calculators can be exercised across instruments, and validates each family against real GCS — writing to -test buckets
+  so prod feature output is untouched.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -14,7 +14,11 @@ stage: [meta]
 repos: [features-service, market-data-processing-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: [features, manifest, verification, smoke-test, backfill, mdps, data-pipeline]
-related: [plans/active/features_input_manifest_migration_2026_05_25.md, plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md]
+related:
+  [
+    plans/active/features_input_manifest_migration_2026_05_25.md,
+    plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md,
+  ]
 created: 2026-05-25
 parent_epic: features_and_ml_master
 assigned_vm: NA
@@ -23,14 +27,14 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
-last_updated: 2026-05-25
+last_updated: 2026-06-03
 locked_by: live-defi-rollout
 locked_since: 2026-05-25
 supersedes:
 superseded_by:
 depends_on:
 source:
-estimate_calibration_note: 'brand-new (1.0×): a repeatable e2e harness driving read→calc→write→read-back per
+estimate_calibration_note: "brand-new (1.0×): a repeatable e2e harness driving read→calc→write→read-back per
 
   family does not exist yet (smoke_matrix is existence-only). The one bug fix
 
@@ -38,13 +42,28 @@ estimate_calibration_note: 'brand-new (1.0×): a repeatable e2e harness driving 
 
   validation runs across families.
 
-  '
+  "
 drift_direction: advance-code
 ---
+
+> **Frontmatter correction (2026-07-12)**: `last_updated:` (was: 2026-05-25) — corrected to 2026-06-03, the date of the
+> most recent dated session heading in this doc's own body
+> (`## 2026-06-03 — Scope narrowed to 2 strategies + Track-2 fixes shipped`, line 577 pre-edit). The old value predated
+> over a week of substantive body updates and would mislead staleness-based triage tooling. Finding #56,
+> plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 
 > **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working this plan end-to-end. **Do
 > NOT auto-assign / auto-fix / push to LDR** any item here. See `plans/active/_agent_pings.md`. Banner removed by
 > harsh-side when released.
+>
+> **⚠ STALE-BANNER ANNOTATION (2026-07-12, finding #55)**: the release channel named above
+> (`plans/active/_agent_pings.md`) was RETIRED 2026-07-04 per that file's own header ("this ping-ledger channel is
+> decommissioned... AO agents are explicitly forbidden from polling this file") — there is no live mechanism left by
+> which harsh-side can lift this banner through the named channel. The plan body meanwhile carries dated session content
+> through 2026-06-03 and 6 open Track-1 P0/P1/P2 todos (see "Open Track-1 todos" below), unaddressed since. Flagging
+> only — NOT lifting the hold, which is an operator-only call — but any agent reading this plan should treat the named
+> release channel as dead and escalate to the operator before either auto-dispatching the open todos or continuing to
+> sit on them indefinitely. (was: banner carried no staleness note, unremoved since 2026-05-26.)
 
 ## Goal
 
@@ -448,11 +467,10 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
       **Confirmed by re-run** — mtf now computes all 38 instruments + reaches clean shutdown, no event crash.
 - [x] ✅ [P1] **multi_timeframe: `get_output_bucket` ignores the sink override** (write-side twin of the
       get*input_bucket bug) → wrote 36 manifest entries to **prod** `features-mtf-cefi-central-element-323112` instead
-      of `-test`. mtf's writer path doesn't honor `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way
-      delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED**
-      features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per
-      asset_group via`get_data_sink(bucket=...,     routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket`
-      uses the same resolver so parquet + manifest share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
+      of `-test`. mtf's writer path doesn't honor
+      `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way     delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED**     features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per     asset_group via`get_data_sink(bucket=...,
+      routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket` uses the same resolver so parquet + manifest
+      share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
 - [x] ✅ [AGENT] P2. **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`,
       `tf_rr_*`) + `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no
       source). Diagnose whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance:

@@ -1,7 +1,11 @@
 ---
 doc_type: issue
 title: TradFi expected_unattempted not draining — source-axis EU drift from the un-re-enumerated databento-first flip
-summary: The tradfi `expected_unattempted` (EU) is dead-flat at **1,084,542** while a multi-VM CME/NYSE/NASDAQ databento backfill campaign burns compute. **Root cause = the EU seeds were materialised under ...
+summary:
+  The tradfi `expected_unattempted` (EU) was dead-flat at **1,084,542** while a multi-VM CME/NYSE/NASDAQ databento
+  backfill campaign burns compute. **Root cause = the EU seeds were materialised under ... UPDATE (2026-06-24, same
+  session) — operator-approved purges drove EU 1,084,542 → 336,061 (massive purge) → 1,349 (MVP-gated, durable); 1
+  re-enumeration todo remains open (see Progress Log).
 status: open
 nature: process
 asset_group: [tradfi]
@@ -13,7 +17,15 @@ related: [instruments_catalogue_incremental_rollup_2026_06_29]
 created: 2026-06-24
 parent_epic: tradfi_master
 priority: P2
-source: ['live manifest gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet (read 2026-06-24 19:49Z)', 'instruments-service/scripts/enumerate_expected_universe.py (_seed_pipeline_source_transport, L300-330)', 'deployment-service/scripts/wave_launcher.py (NEEDS_WORK, L106)', 'live VM run.log gs://deployment-scripts-central-element-323112/vm-logs/tradfi-bf-cme-ohlcv-1m-gc-2025-20260624-114619/run.log']
+source:
+  [
+    "live manifest gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet (read
+    2026-06-24 19:49Z)",
+    "instruments-service/scripts/enumerate_expected_universe.py (_seed_pipeline_source_transport, L300-330)",
+    "deployment-service/scripts/wave_launcher.py (NEEDS_WORK, L106)",
+    "live VM run.log
+    gs://deployment-scripts-central-element-323112/vm-logs/tradfi-bf-cme-ohlcv-1m-gc-2025-20260624-114619/run.log",
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -27,11 +39,16 @@ last_updated: 2026-06-27
 
 ## What I found (root cause — PROVEN with cell-level evidence)
 
-The tradfi `expected_unattempted` (EU) is dead-flat at **1,084,542** while a multi-VM CME/NYSE/NASDAQ databento backfill
-campaign burns compute. **Root cause = the EU seeds were materialised under the OLD `SOURCE_PRIORITY[0] = massive`, and
-the 2026-06-24 databento-first flip was never followed by a re-enumeration — so the seeds' `source`/ `pipeline_mode` key
-no longer matches the `source=databento` rows the campaign actually captures. The two are disjoint manifest row-keys, so
-databento captures can never reconcile (drain) the massive seeds.**
+> _(Update note added 2026-07-12, finding 307, §A2 B-queue ruling: this section describes the problem AS FILED
+> 2026-06-24. The same session's Progress Log below records the EU journey 1,084,542 → 336,061 (massive purge) → 1,349
+> (MVP-gated, durable) via 3 of 4 operator-approved fix steps — the historical diagnosis below is left intact, not
+> rewritten; see Progress Log for current state and the 1 remaining open re-enumeration todo.)_
+
+The tradfi `expected_unattempted` (EU) was dead-flat at **1,084,542** while a multi-VM CME/NYSE/NASDAQ databento
+backfill campaign burns compute. **Root cause = the EU seeds were materialised under the OLD
+`SOURCE_PRIORITY[0] = massive`, and the 2026-06-24 databento-first flip was never followed by a re-enumeration — so the
+seeds' `source`/ `pipeline_mode` key no longer matches the `source=databento` rows the campaign actually captures. The
+two are disjoint manifest row-keys, so databento captures can never reconcile (drain) the massive seeds.**
 
 This is precisely the failure the enumerator's own docstring warns against
 (`enumerate_expected_universe.py::_seed_pipeline_source_transport`, L304-309):
@@ -124,11 +141,11 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
   data_types); its 70,665 "captured" cells are row_count=0 sentinels (no real data); consolidator is INCREMENTAL
   (canon=current `_index` + anti-join changed shards) so a one-time canon purge STICKS (no per_vm shard / legacy_seed
   carries massive; enumerator now seeds databento). **Purge (race-free):** paused
-  `uts-prod-manifest-consolidator-market-data-tradfi-cron` → snapshot `_index/snapshots/pre_massive_purge_2026-06-24.parquet`
-  → pyarrow-filtered `source!=massive` (schema-preserving, 41 cols) → uploaded → resumed cron. **Result: 6,671,520 →
-  2,692,994 rows (dropped 3,978,526 massive); EU 1,084,542 → 336,061 (all databento, the REAL drainable gap);
-  captured 732k→662,722; massive remaining = 0.** Durability watcher confirming massive stays 0 across a consolidator
-  tick.
+  `uts-prod-manifest-consolidator-market-data-tradfi-cron` → snapshot
+  `_index/snapshots/pre_massive_purge_2026-06-24.parquet` → pyarrow-filtered `source!=massive` (schema-preserving, 41
+  cols) → uploaded → resumed cron. **Result: 6,671,520 → 2,692,994 rows (dropped 3,978,526 massive); EU 1,084,542 →
+  336,061 (all databento, the REAL drainable gap); captured 732k→662,722; massive remaining = 0.** Durability watcher
+  confirming massive stays 0 across a consolidator tick.
 - 2026-06-24 — **OPERATOR APPROVED all 4 fix steps; EXECUTED 3 of 4 + collapsed EU to MVP.**
   - **#1 MVP-gate the tradfi EU enumerator (CODE)** → DONE: IS `6c893be` (`_tradfi_entry_in_mvp_universe` mirrors cefi,
     gate at top of `_enumerate_v2_tradfi`; + tradfi bundle-mvp propagation in `_rollup_bundle_grain`), QG-green 79s, 3
@@ -142,11 +159,11 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
   - **#4 source-resolve the wave-launcher gap (CODE)** → DONE: deployment-service `096298bd` (logical-cell groupby — a
     cell is a gap only if NO source captured), QG-green 80s, 5 tests. Deployed via rebuilt DS tarball.
 - [ ] [SCRIPT] P1. **#2 Re-run the expected-universe-v2 tradfi enumerator (MVP-gated tarball, databento)** to seed MVP
-  databento EU for the cells not yet seeded (ohlcv_1m/trades/tbbo MVP gaps + the new KRX/equities/options universe) —
-  AFTER the in-flight IS instruments backfill + catalogue-regen (fresh catalogue carries the new universe + mvp tags).
-  Run via `launch-expected-universe-v2-vm.sh --asset-group tradfi` (fresh tarball) OR the Cloud Run job once its image
-  rebuilds on 6c893be's promotion. Verify the MVP EU drains as the campaign captures.
+      databento EU for the cells not yet seeded (ohlcv_1m/trades/tbbo MVP gaps + the new KRX/equities/options universe)
+      — AFTER the in-flight IS instruments backfill + catalogue-regen (fresh catalogue carries the new universe + mvp
+      tags). Run via `launch-expected-universe-v2-vm.sh --asset-group tradfi` (fresh tarball) OR the Cloud Run job once
+      its image rebuilds on 6c893be's promotion. Verify the MVP EU drains as the campaign captures.
 - [ ] [SCRIPT] P2. **Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive.**
-  Decide keep-vs-purge: barchart was the OLD VIX-15m CSV source (now Databento VX futures); its captured rows MAY hold
-  real historical VIX data. Scoped OUT of the massive purge pending operator call. Provenance: surfaced during the
-  2026-06-24 massive purge.
+      Decide keep-vs-purge: barchart was the OLD VIX-15m CSV source (now Databento VX futures); its captured rows MAY
+      hold real historical VIX data. Scoped OUT of the massive purge pending operator call. Provenance: surfaced during
+      the 2026-06-24 massive purge.

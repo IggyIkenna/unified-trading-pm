@@ -505,10 +505,16 @@ Listed so nobody re-opens them: these were written in the docs as open problems 
 A large parallel fix wave landed after this doc was filed. Cross-referencing against real shipped commits:
 
 - **A2 (Deribit combo `:TYPE:` missing)** — folded into and shipped as part of the unified canonical-id-builder work;
-  `build_leg()` now exists in `canonical_id_builder.py`. **Still needs**: the actual retrofit of
-  `deribit_combo_adapter.py:310` to call it — tracked as its own todo in
-  `canonical_id_builder_retrofit_checklist_2026_07_08.md` todo 5, not yet executed. Downgrading from "NEW" to "tracked,
-  unexecuted."
+  `build_leg()` now exists in `canonical_id_builder.py`. ✅ **DONE 2026-07-12 correction** (was: "Still needs: the
+  actual retrofit of `deribit_combo_adapter.py:310` to call it — tracked as its own todo in
+  `canonical_id_builder_retrofit_checklist_2026_07_08.md` todo 5, not yet executed. Downgrading from 'NEW' to 'tracked,
+  unexecuted.'") — the retrofit shipped `instruments-service@ca2f44e5` (2026-07-09 00:50 UTC, on `live-defi-rollout`,
+  verified via `git log`/`git show`): `_build_legs` now routes through `build_leg()` with a new
+  `_classify_deribit_leg_instrument_type()` classifier verified against Deribit's real live `public/get_combos` API;
+  commit message cites both "checklist todo 4/5" and "this doc's A2/G2" by name.
+  `canonical_id_builder_retrofit_checklist_2026_07_08.md` todo 5 is checked `[x]` DONE with this same commit. Finding
+  #124, plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue
+  ruling.
 - **B1 infra** — the shared builder itself (`build_canonical_instrument_id`, `build_leg`, `passthrough=True`) shipped in
   full (`unified-api-contracts`, this session), with one live retrofit (`deribit_options_adapter.py`) proven. The
   ~59-adapter retrofit itself is still the open work — `canonical_id_builder_retrofit_checklist_2026_07_08.md` is

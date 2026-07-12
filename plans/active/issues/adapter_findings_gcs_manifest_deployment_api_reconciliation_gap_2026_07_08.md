@@ -157,7 +157,12 @@ canonicalization step. Confirmed via direct reads of `prod/catalog.parquet` (bot
   with a real currency (`ETH-USD`).
 - AAVE_V3-OPTIMISM has a second, misspelled venue-token duplicate (`AAVEV3-OPTIMISM`, missing the underscore) carrying 4
   real rows invisible to anything querying the correctly-spelled prefix — a live example of what happens with no shared,
-  enforced ID-construction path.
+  enforced ID-construction path. **✅ FIXED — 2026-07-12 correction** (was: no fix note; this bullet read as still
+  live): retired the same session by a concurrent sibling agent (DeFi venue-token naming cleanup), confirmed via a fresh
+  re-query of `prod/catalog.parquet` — 0 ghost rows, 16 rows correctly under `AAVE_V3-OPTIMISM`. See
+  `canonical_id_builder_retrofit_checklist_2026_07_08.md`'s corresponding todo (checked `[x]`, flagged there as "stale
+  by the time this plan was filed — the parallel work wasn't visible to the agent that wrote it"). Finding #127,
+  plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 
 **Net**: `canonical_id_builder.py` reads as the intended SSOT but isn't reachable from almost anywhere real capture
 happens — it's aspirational documentation of a convention the codebase mostly doesn't follow, not a live invariant. Real

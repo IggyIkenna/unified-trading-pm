@@ -187,10 +187,14 @@ until C is GREEN"). ONE bundled single-walk per bucket → canonical target form
 - `defi_manifest…` `F1–F4` codex docs · `data_source_provenance…` generalise QG STEP 5.64 + codex.
 
 **Newly-exposed gaps to FILE (no current owner)**: (1) **`prediction_manifest_canonicalisation`** — prediction canonical
-is the least-complete; highest decommission data-loss risk. (2) **cefi 838-cell gap-fill** owner. (3) per-asset_group
-data layouts differ (defi=`dex_pools/lending_indices/lst_rates`, sports=`processed/`, cefi `raw_tick_data` lacks
-`by_date/`) → any data-copy must be layout-aware (the original migration script was tradfi-shaped → would have missed
-defi entirely).
+is the least-complete; highest decommission data-loss risk. (2) ~~**cefi 838-cell gap-fill** owner~~ — ALREADY OWNED
+(was: listed as "no current owner" — corrected 2026-07-12, doc-reconciliation finding 178, §A2 B-queue ruling: this same
+doc's own L3 section above already says cefi is "✅ FILED + BUILT... Owns the cefi `_index` rebuild", and
+`cefi_manifest_canonicalisation_2026_06_01.md`'s ONE bundled walk explicitly folds in "AND the 838-cell gap-fill; do NOT
+open a second walk" — the 838-cell framing itself was a stale coarse PRIOR the child plan's own 2026-06-01 data-state
+finding superseded with a full re-canonicalisation). (3) per-asset_group data layouts differ
+(defi=`dex_pools/lending_indices/lst_rates`, sports=`processed/`, cefi `raw_tick_data` lacks `by_date/`) → any data-copy
+must be layout-aware (the original migration script was tradfi-shaped → would have missed defi entirely).
 
 ---
 
@@ -371,6 +375,11 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
       carries the MDPS canonical-bucket fix (`market-data-processing-service@61900a3`); T+10min verify each writes ONLY
       to the canonical `-prd-`/`-pred-prd-` bucket (`_index` mtime advances on canonical, NOT the flat legacy name).
       NOTE: same pinned-tarball-prune blocker applies — resolve tarball persistence first.
+  > **Naming-collision note (2026-07-12):** the `sports-scheduler` named here is the **MDPS `mdps-backfill`-family
+  > writer VM** (drained in Phase 3 above) — it is NOT the deployment-service Cloud Run Job `uts-prod-sports-scheduler`
+  > (the `SportsTriggerScheduler` cron, fixed + tofu-applied 2026-07-12; see
+  > `plans/active/issues/sports_trigger_scheduler_cloud_dispatch_broken_2026_07_08.md`). Same name, different
+  > repo/target — don't conflate the two when tracking relaunch/deploy status.
 
 ## Phase 6 — Verify (P0)
 
@@ -391,11 +400,15 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
 - [ ] [SCRIPT] P0. **L6 decommission — gated PER asset_group on its L3 plan reporting C-GREEN** (legacy-only CELLS = 0 +
       canonical v9). L3 owners: defi=`defi_manifest_canonicalisation` §C ·
       prediction=`prediction_manifest_canonicalisation_2026_06_01` · cefi=`cefi_manifest_canonicalisation_2026_06_01` ·
-      tradfi=`tradfi_massive_dual_source` re-walk (v9+partition, master CONFLICT-2) · sports=verify-only. For each AG,
-      after its L3 is C-GREEN + a short soak: empty + delete the legacy flat + tier-first + long-form tick bucket (and
-      the instruments-store legacy buckets per the adjacent drift), GCP + AWS. Canonical `-prd-`/`-pred-prd-` becomes
-      the sole SSOT. Record in `_index/snapshots/decommission_2026_06_0X.md`. **Do NOT delete an AG's legacy bucket
-      while its L3 plan is open** — prediction/cefi hold legacy-only history.
+      tradfi=`tradfi_manifest_canonicalisation_2026_06_01` (v9+partition single-walk; C-source rider absorbed
+      `tradfi_massive_dual_source` Task -031 — was: "`tradfi_massive_dual_source` re-walk (v9+partition, master
+      CONFLICT-2)" — corrected 2026-07-12, doc-reconciliation finding 177, §A2 B-queue ruling:
+      `tradfi_massive_dual_source_2026_05_28.md`'s own owner table (L504) says its Task -031 manifest re-consolidation
+      "MIGRATED" to `tradfi_manifest_canonicalisation_2026_06_01.md`, matching this same doc's L3 section above) ·
+      sports=verify-only. For each AG, after its L3 is C-GREEN + a short soak: empty + delete the legacy flat +
+      tier-first + long-form tick bucket (and the instruments-store legacy buckets per the adjacent drift), GCP + AWS.
+      Canonical `-prd-`/`-pred-prd-` becomes the sole SSOT. Record in `_index/snapshots/decommission_2026_06_0X.md`.
+      **Do NOT delete an AG's legacy bucket while its L3 plan is open** — prediction/cefi hold legacy-only history.
 - [ ] [SCRIPT] P0. **Version-aware + orphan-aware delete (slot/Harsh bucket-state verification 2026-06-02).** Two gaps
       the per-bucket delete must handle, surfaced by reading live bucket state: (1) the canonical `-prd` buckets were
       pre-seeded by a PARTIAL env-split copy in legacy FORM (live-object: defi ~43% / cefi ~65% / tradfi ~93% of legacy;

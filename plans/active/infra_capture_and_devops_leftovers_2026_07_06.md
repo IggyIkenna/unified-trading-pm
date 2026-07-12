@@ -77,11 +77,20 @@ source:
       LDR — (a) `instruments-service/scripts/expected_universe.py` has zero `get_venue_data_type_start_date` awareness
       on LDR (cefi-007 impl is done on slot 5, 126/126 green, but has NOT been quickmerged yet); (b) UAC
       `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only lists
-      trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations. Proceeding without both = the exact
-      17,282-row over-seed the plan warns against (data-correctness violation). PARKED + task /skip-current-task'd per
-      main-agent directive. Unblocking actions (operator, per BLK-26ed6571 answer): (1) ship cefi-007 to LDR; (2) update
-      UAC ASTER capabilities to include book_snapshot_5 + liquidations. Both this task 001 and Plan 6 task 004 (Deribit
-      options_chain runner? — see BLK-26ed6571 reference to "cefi-004") will unblock on the same two merges.
+      trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations (**stale as of 2026-07-07 08:10 UTC —
+      corrected 2026-07-12, finding id 114, §A2 B-queue ruling**: `unified-api-contracts@3652f99f`, verified via
+      `git log`/`git show` on `live-defi-rollout`, added `book_snapshot_5` + `liquidations` to
+      `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` (`start_date=2026-06-23`), landing ~2h after this 06:31 UTC status check.
+      Current tree confirms both keys present. The (a) prereq — `enumerate_expected_universe.py` per-(venue,dt)
+      `start_date` gate, `instruments-service@4a8cff75` (cefi_layer1_denominator_gaps-007) — also landed on LDR
+      2026-07-07 06:34 UTC, ~concurrently with this status check. Both prereqs this task names now appear met; the
+      connector launch + `live_aster` row-landing verification itself was NOT re-checked here and the checkbox is NOT
+      flipped on that basis alone — next picker-upper should re-verify and flip if confirmed). Proceeding without both =
+      the exact 17,282-row over-seed the plan warns against (data-correctness violation). PARKED + task
+      /skip-current-task'd per main-agent directive. Unblocking actions (operator, per BLK-26ed6571 answer): (1) ship
+      cefi-007 to LDR; (2) update UAC ASTER capabilities to include book_snapshot_5 + liquidations. Both this task 001
+      and Plan 6 task 004 (Deribit options_chain runner? — see BLK-26ed6571 reference to "cefi-004") will unblock on the
+      same two merges.
 - [x] ✅ [DATA] P1. **Deribit `options_chain` live runner** — wire a live cron/VM to run
       `--operation deribit-options-chain` (the handler `mtds@9ecd1e29e` is **live/replay only — no backfill**,
       `process()` collects `date.today()`), so it captures BTC/ETH `options_chain` daily → then feeds Plan 4's
@@ -118,17 +127,17 @@ source:
 - [x] ✅ [DATA] P1. **Test-fleet image builds from current code** — the base-image local-build strategy + GCP build per
       service (`test_fleet_image_builds_from_current_code`) so the fleet images track HEAD. Gate: images build from
       current code; canonical build invocation documented. — **DONE 2026-07-07 (slot-12 data_engineering,
-      unified-trading-pm@3aafae3)**. Gate #2 SATISFIED: canonical local + GCP + AWS build-invocation snippets
-      captured in `plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md` § "Canonical build invocation"
-      (drawn from the 2026-06-17 canary findings + verified against LDR `unified-trading-library/cloudbuild.yaml` +
-      `instruments-service/Dockerfile` — Pattern-A base + service recipes with PROJECT_ID / BASE_IMAGE_DIGEST /
+      unified-trading-pm@3aafae3)**. Gate #2 SATISFIED: canonical local + GCP + AWS build-invocation snippets captured
+      in `plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md` § "Canonical build invocation" (drawn
+      from the 2026-06-17 canary findings + verified against LDR `unified-trading-library/cloudbuild.yaml` +
+      `instruments-service/Dockerfile` — Pattern-A base + service recipes with PROJECT*ID / BASE_IMAGE_DIGEST /
       `--platform linux/amd64` + gcloud/aws trigger-run commands), Phase 0 #3 + #4 in that plan flipped in the same
       commit. Gate #1 (images build from current code) STATE at LDR tip: 10/18 image repos build LOCALLY (UTL base + UAC
       wheel + 6 Pattern-A services + 3 Pattern-B-simple with 2-sibling context + `unified-trading-system-ui`); 7/8
       GCP-parity repos build GREEN on AWS CodeBuild (Phase 3 complete 2026-06-19); UI (`deployment-ui`) resolved as a
       dispatch to `deployment-api` (no standalone image). GCP-authoritative service builds (Phase 2 #2) remain
       **BLOCKED-CREDENTIALS** on `cloudbuild.builds.editor` grant — tracked in
-      `plans/active/issues/operator_iam_permission_parity_2026_06_18.md` (unchanged by this task) and NOT within data_
+      `plans/active/issues/operator_iam_permission_parity_2026_06_18.md` (unchanged by this task) and NOT within data*
       engineering craft scope. Follow-on tracked in the parent plan (unchanged).
 
 ## Credential / operator-gated (visible, not auto-dispatched — scaffold + park)
@@ -151,9 +160,9 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
-- **2026-07-07** — **Task 006 Test-fleet image builds — summary checkbox FLIPPED ✅** (slot-12 data_engineering,
-  unified-trading-pm@`3aafae3`, this commit). Gate #2 ("canonical build invocation documented") satisfied by
-  capturing the canonical local + GCP + AWS build-invocation snippets in a new § "Canonical build invocation" section of
+- **2026-07-07** — **Task 006 Test-fleet image builds — summary checkbox FLIPPED ✅** (slot-12 data*engineering,
+  unified-trading-pm@`3aafae3`, this commit). Gate #2 ("canonical build invocation documented") satisfied by capturing
+  the canonical local + GCP + AWS build-invocation snippets in a new § "Canonical build invocation" section of
   `plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md`, drawn from the 2026-06-17 canary findings +
   verified against LDR (`unified-trading-library/cloudbuild.yaml` + `instruments-service/Dockerfile`). Includes
   Pattern-A base + service recipes with PROJECT_ID / BASE_IMAGE_DIGEST / `--platform linux/amd64`, live
@@ -164,7 +173,7 @@ source:
   current code") STATE at LDR tip: 10/18 image repos build locally + 7/8 GCP-parity repos build GREEN on AWS (Phase 3
   done 2026-06-19); GCP-authoritative service builds (Phase 2 #2) remain **BLOCKED-CREDENTIALS** on
   `cloudbuild.builds.editor` — tracked in `plans/active/issues/operator_iam_permission_parity_2026_06_18.md` (unchanged
-  by this task) and outside data_ engineering craft scope. Docs-only; no repo-code changes.
+  by this task) and outside data* engineering craft scope. Docs-only; no repo-code changes.
 - **2026-07-07** — **Task 002 Deribit options_chain daily runner shipped** by slot-3 (`deployment-service@e18d585`).
   Handler had NO cron/VM wiring — `--operation deribit-options-chain` had never been invoked in prod → zero rows in
   `pipeline_mode=live_deribit/…/data_type=options_chain/day=…` (D5/A18 "options_chain uncaptured" root cause). Fix
@@ -214,7 +223,8 @@ source:
   `instruments-service/scripts/expected_universe.py` has zero `get_venue_data_type_start_date` awareness — the
   enumerator does NOT honour per-(venue, data_type) `start_date` yet (cefi-007 impl done on slot 5, 126/126 green, but
   not yet quickmerged to LDR per main-agent answer); (b) UAC `market_data_categories.py`
-  `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` currently
+  `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` currently (as of this 2026-07-07 check; **now stale — see the "Capture wiring"
+  task 001 annotation above for the 2026-07-12 correction, finding id 114**)
   `{trades: 2023-07-22, derivative_ticker: 2023-07-22, perp_funding: 2023-07-22}` — NO `book_snapshot_5`, NO
   `liquidations` entries. Launching the connector now would seed EXPECTED tuples for ASTER book5+liquidations from the
   venue-level 2023-07-22 start with no start_date carve-out → the exact 17,282-row over-seed the plan explicitly warns

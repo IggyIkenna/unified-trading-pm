@@ -146,12 +146,17 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 ## 📊 Snapshot (2026-07-06)
 
 - **Certified Layer-1 (denominator) — cefi + defi + sports + prediction CERTIFIED 2026-07-06; tradfi BLOCKED-PLAN2:**
-  cefi **73.61** (72 expected / 53 present / 19 missing / 87 stray; `is@03cfd0f`, task 002) · defi **94.81** (77
-  expected / 73 present / 4 missing / 128 stray; `is@681f50a` post-D1 seeding, denominator SHRANK 108→77 via
-  `is@3bb7acd` defi lending grain roll-up 2026-07-03; task 003) · **sports 30.77** (26 expected / 8 present / 18 missing
-  all BETFAIR odds / 24 stray; `is@ebfd11d`; task 006 side-measurement) · **prediction 66.67** (6 expected / 4 present /
-  2 missing MARKET*LIFECYCLE / 17 stray; `is@6716f55` post-KALSHI-PERP-purge, denominator unchanged vs stale — purge was
-  cefi-side not prediction-side; task 005) · tradfi 51.43 [06-29 stale — 🚧 BLOCKED-PLAN2 pending
+  cefi **73.61** (72 expected / 53 present / 19 missing / 87 stray; `is@03cfd0f`, task 002) — **superseded 2026-07-07
+  08:54 UTC by a newer re-measure: cefi Layer-1 = 72.60% (present 53 / expected 73, denominator +1 tuple post-uac@
+  3652f99f ASTER book_snapshot_5 live-wire flip), `denominator_status=INCOMPLETE`, 20 missing / 87 stray — see
+  `plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md:200,786,790`. Corrected 2026-07-12 (finding 362, §A2
+  B-queue ruling); this Snapshot header was never bumped to the fresher number (the generic Stage-3 blockquotes below
+  note the 73.61%/94.81% snapshot "does not reflect" later changes, but never cited the specific 72.60% figure).** ·
+  defi **94.81** (77 expected / 73 present / 4 missing / 128 stray; `is@681f50a` post-D1 seeding, denominator SHRANK
+  108→77 via `is@3bb7acd` defi lending grain roll-up 2026-07-03; task 003) · **sports 30.77** (26 expected / 8 present /
+  18 missing all BETFAIR odds / 24 stray; `is@ebfd11d`; task 006 side-measurement) · **prediction 66.67** (6 expected /
+  4 present / 2 missing MARKET*LIFECYCLE / 17 stray; `is@6716f55` post-KALSHI-PERP-purge, denominator unchanged vs stale
+  — purge was cefi-side not prediction-side; task 005) · tradfi 51.43 [06-29 stale — 🚧 BLOCKED-PLAN2 pending
   `tradfi_v9_stage1_finish` tasks 2-11]. *(Upper bounds where UAC under-specifies.)\_
 - **Layer-2 lower bounds (capture) — fresh certified 2026-07-06 except tradfi:** cefi **33.28** [fresh `is@03cfd0f`;
   captured 2,891,774 / reachable 8,689,530; total 11,125,247; down from 37.86 stale as D2a expansion grew the
@@ -172,10 +177,15 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
       **REASSESSED 2026-07-06**:
   - [x] **merge `path_to_100pct` → `data_completion` = ✅ ALREADY DONE** (superseded + archived 2026-06-30;
         `data_completion` § "Folded-in from `path_to_100pct`"; only the DEDUP residual remains = the Stage-5 item).
-  - [ ] **flip `instruments_catalogue_incremental_rollup` → completed = ⛔ DO NOT FLIP** — its lone open item is a LIVE
-        issue, not moot: the operator-declined tradfi catalogue-scheduler band-aid **re-triggered 2026-07-03** (tradfi
-        `prod/catalog.parquet` stale since 2026-06-29, daily `lifecycle_catalogue_scheduler` runs killed at 3600s
-        timeout). Flipping would bury it → operator decision needed (re-enable band-aid vs. ship Phase-3 incremental).
+  - [x] **flip `instruments_catalogue_incremental_rollup` → completed** — was: `⛔ DO NOT FLIP` (its lone open item was
+        framed as a LIVE issue: the operator-declined tradfi catalogue-scheduler band-aid re-triggered 2026-07-03,
+        tradfi `prod/catalog.parquet` stale since 2026-06-29, daily `lifecycle_catalogue_scheduler` runs killed at 3600s
+        timeout). **Corrected 2026-07-12 (finding 361, §A2 B-queue ruling): already moot — the plan's own Progress Log
+        shows the exact 3600s-timeout issue was root-caused + shipped 2026-07-03 and fully remediated by 2026-07-04**
+        (weekly-full timeout raised to 21600s, verified green), and the plan itself flipped `status: active` →
+        `complete` on 2026-07-10 (27 of 28 todos confirmed `[x]` with cited runtime evidence, 1 remaining `[ ]` non-
+        blocking). This tracker's directive was never reconciled against that shipped fix; no further operator decision
+        needed on this item.
   - [ ] **archive `mvp_catalogue_finalization_v10`** (0-open, done) + **fold `instruments_mtds_subset` cefi items →
         foundation** (60 open, ⚖️ REVIEW) — both `locked_by: live-defi-rollout` → **operator unlock/sign-off REQUIRED**
         (HARD RULE: locked-plan archival is never-autonomous; §F.4 ⚖️). _(Do before engineering so you don't work a plan

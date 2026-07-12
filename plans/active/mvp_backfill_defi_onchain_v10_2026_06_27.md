@@ -167,8 +167,12 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       rule's `instrument_types` axis = `{POOL, DEX_POOL, LST, LENDING}` (no `PERPETUAL`), so every `perp_funding` cell
       evaluated `is_mvp()=False` under both defi AND cefi (cefi captures funding via
       `funding_rate`/`derivative_ticker`). Operator decision at the time: do NOT build the sig index, do NOT download —
-      none of A/B/C executed. DRIFT VM already gone (SPOT, terminated); only 3 dates of genuine data (2025-01-09/10/11).
-      Three-way SSOT contradiction (is_mvp vs capability registries vs this plan) tracked in
+      none of A/B/C executed. DRIFT VM already gone (SPOT, terminated); 8 dates of genuine `captured` data confirmed
+      live in the availability manifest as of 2026-07-12 (2025-01-09 through 2025-01-15, plus 2025-12-23; 7,412,962
+      rows) — corrected 2026-07-12, doc-reconciliation finding 42, §A2 B-queue ruling (was: "only 3 dates of genuine
+      data (2025-01-09/10/11)", contradicted by this same doc's own 2026-06-28 Progress Log entries recording
+      2025-01-12/13 and 2025-12-23 completions, since confirmed still `captured` in the live manifest, not overwritten
+      or reverted). Three-way SSOT contradiction (is_mvp vs capability registries vs this plan) tracked in
       `plans/active/issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. **2026-07-11 — IN MVP SCOPE per
       operator ruling Option 2 (UAC v13, `unified-api-contracts@89b16943` — see
       `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`).** The broader DeFi-MVP-framing ruling ("keep all as

@@ -46,8 +46,10 @@ locked_since: 2026-05-21
 
 **Owns**: per-service batch=live audit; reconciliation; codifies CLAUDE.md HARD RULE 'Batch = Live'
 
-**Status**: stub created 2026-05-21 by `migrate_epics_2026_05_21.py`. Operator fills body with P0/P1/P2/P3 priority
-blocks listing all assigned active plans.
+**Status**: populated (was: "stub created 2026-05-21 by `migrate_epics_2026_05_21.py`. Operator fills body with
+P0/P1/P2/P3 priority blocks listing all assigned active plans." — left in place after fill, corrected 2026-07-12,
+finding id 311, §A2 B-queue ruling). Body below (P0 findings, codex SSOT table, DELTA banners, archived-plan summaries)
+is populated as of `last_updated: 2026-07-08`; this line is no longer describing an empty stub.
 
 See [`README.md`](README.md) for the canonical epic frontmatter schema + body structure.
 
@@ -69,6 +71,14 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 _2 active plans declare `parent_epic: batch_live_symmetry_master` in their frontmatter. Workers pick up in priority
 order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+**Count corrected 2026-07-12** (was: "2 active plans" — finding id 14, §A2 B-queue ruling): the count above is stale
+regen drift, not re-run since. A repo grep for `^parent_epic: batch_live_symmetry_master` combined with each hit's
+`status:` finds **4** `status: active` plans under `plans/active/`
+(`citadel_paper_batch_live_reconciliation_2026_06_19`, `features_no_lookahead_reaggregation_guard_2026_06_28`,
+`honest_coverage_smoke_harness_2026_06_28`, `pipeline_mode_partition_migration_2026_06_01`) — none of which are named in
+this epic's body — plus 2 `status: complete` plans and 3 open/blocked issue docs also declaring this `parent_epic`.
+Re-run `scripts/plans/populate_epic_bodies_2026_05_21.py` to refresh the count and body list.
 
 ## P0 — must complete before next foundation gate
 

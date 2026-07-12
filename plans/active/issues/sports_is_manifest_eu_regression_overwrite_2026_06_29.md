@@ -27,8 +27,8 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
-locked_since: 2026-05-21
+last_updated: 2026-07-12 # (was: 2026-06-27 -- corrected 2026-07-12, finding 266, §A2 B-queue ruling: predated created: 2026-06-29, an impossible ordering; realigned to the doc's own latest evidenced Progress Log entries, dated 2026-07-12)
+locked_since: 2026-06-29 # (was: 2026-05-21 -- corrected 2026-07-12, finding 266, §A2 B-queue ruling: predated created: 2026-06-29, an impossible ordering -- a lock cannot start before the doc existed; realigned to created, the earliest defensible date)
 ---
 
 ## What I found
@@ -124,7 +124,7 @@ Candidates:
 - [x] [SCRIPT] P1. Re-run type_weather_eu_no_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed.
       (repo: instruments-service) ✅ — 2026-06-29T05:37: applied. 144,072 WEATHER eu rows re-typed →
       empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE). Per-VM shard written:
-      gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/type-weather-eu-20260629.parquet.
+      gs://instruments-store-sports-prd-central-element-323112/\_index/per_vm/type-weather-eu-20260629.parquet.
       Consolidator merges next cycle.
 - [x] [SCRIPT] P1. Re-run type_sfi_eu_no_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo:
       instruments-service) ✅ — 2026-06-29T05:37: applied. 137,011 SFI eu rows re-typed →

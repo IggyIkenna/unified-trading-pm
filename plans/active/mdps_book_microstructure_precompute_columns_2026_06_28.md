@@ -6,7 +6,7 @@ summary:
   columns, so the bar is self-contained for the ~100 microstructure features (no book ticks needed downstream).
 status: complete
 nature: process
-asset_group: [cefi, prediction, cross-cutting]
+asset_group: [cefi, defi, cross-cutting] # (was: [cefi, prediction, cross-cutting]) — corrected 2026-07-12, plan-reconciliation finding 185, §A2 B-queue ruling
 stage: [data, features]
 repos: [market-data-processing-service, unified-api-contracts]
 scope: [engineer, admin]
@@ -47,7 +47,10 @@ Today MDPS treats `book_snapshot_5` as **LOCF — keep the last snapshot in the 
 ARCHITECTURE.md "Book: LOCF + sampling, 15 samples per 15s"). That draws a chart but is **not** enough to reconstruct
 the ~100 microstructure features downstream — so a plain candle still implicitly depends on book ticks. This plan makes
 the bar self-contained: shift from _last-snapshot_ to **intra-bar distributional summaries** baked as candle columns,
-populated for CeFi + prediction (which have L5 book), null for TradFi/DeFi/Sports (which don't).
+populated for CeFi + DeFi (Hyperliquid via `DefiBookSnapshotAdapter`), null for TradFi/Sports (which don't have L5
+book). _(was: "populated for CeFi + prediction ... null for TradFi/DeFi/Sports" — corrected 2026-07-12, finding 185, §A2
+B-queue ruling: no prediction `book_snapshot_5` adapter exists; DeFi/Hyperliquid is the actual implemented target, not
+prediction.)_
 
 **Execution model:** Opus / thinking high — touches the UAC candle schema (SSOT) + a downstream consumer contract +
 schema version bump (cross-repo blast radius). Sonnet for the per-stat aggregation impl once the column set is fixed.
@@ -74,17 +77,14 @@ samples) and MUST respect the right-edge `t_close` convention (no sample past th
       formula; cross-linked from the candle-schema doc. ✅ unified-api-contracts@199e83e7 — book_summary_spec.py: 25
       columns (spread×5, mid×4, microprice×2, imbalance×4, depth×10); ASCII-only TW formulas; cross-linked from
       candle_schema.py. QG green (448s).
-- [x] [SPEC] P1. (opus) Extend the processed-candle schema (`schemas/output_schemas.py` PROCESSED_CANDLE_SCHEMA + UAC
+- [x] [SPEC] P1. (opus) Extend the processed-candle schema (`schemas/output_schemas.py` PROCESSED*CANDLE_SCHEMA + UAC
       schema provenance) with the new nullable columns; **bump the schema version** (currently v9) and record the bump
       in the manifest schema-version contract. — Gate: schema validates; `basedpyright` clean; the version bump is
       reflected in the manifest writer so new rows carry the new `schema_version`. ✅
-      market-data-processing-service@73054e5 — added 25 nullable `book_*` columns to PROCESSED_CANDLE_SCHEMA via
-      `*_book_summary_column_schemas()` sourced from UAC `BOOK_SUMMARY_COLUMNS` SSOT (spread×5, mid×4, microprice×2,
-      imbalance×4, depth×10); scoped via `applies_to={"book_snapshot_5"}`; bumped `PROCESSED_CANDLE_SCHEMA_VERSION`
-      1.0→1.1; documented schema-version policy (candle parquet self-describes via this constant; UTL
-      `MANIFEST_SCHEMA_VERSION=9` is the independent availability-index version and unchanged for an additive-nullable
-      candle extension). basedpyright clean (0 errors); schema imports + validates (58 total cols, 25 book + 1
-      pre-existing HFT book col).
+      market-data-processing-service@73054e5 — added 25 nullable
+      `book*_`columns to PROCESSED_CANDLE_SCHEMA via    `_\_book_summary_column_schemas()`sourced from UAC`BOOK_SUMMARY_COLUMNS`SSOT (spread×5, mid×4, microprice×2,     imbalance×4, depth×10); scoped via`applies_to={"book_snapshot_5"}`; bumped `PROCESSED_CANDLE_SCHEMA_VERSION`     1.0→1.1; documented schema-version policy (candle parquet self-describes via this constant; UTL     `MANIFEST_SCHEMA_VERSION=9`
+      is the independent availability-index version and unchanged for an additive-nullable candle extension).
+      basedpyright clean (0 errors); schema imports + validates (58 total cols, 25 book + 1 pre-existing HFT book col).
 - [x] [IMPLEMENT] P1. Implement intra-bar summary aggregation in `CefiBookSnapshotAdapter` (and the prediction book path
       that extends it): consume the ~15 intra-bar samples, emit the columns, time-weighted, right-edge-safe. Keep the
       existing mid/spread LOCF columns for back-compat ONLY if a downstream still reads them; otherwise delete per
@@ -98,10 +98,11 @@ samples) and MUST respect the right-edge `t_close` convention (no sample past th
       `interval_idx = floor((t_sample - t_day_start) / T)`. Null rules: n=0 → NULL all; n=1 → TW-mean = only value,
       TW-std + sign-persist = NaN; microprice NaN if L0 total volume = 0; tilt NaN if mid = 0. Smoke-test on 60s of
       synthetic ticks (1s cadence, 15s bars) produces 4 non-null bars with spread_bps_tw_mean = 9.995 (expected
-      0.1/100.05*10000), mid_close = 100.05, imbalance_close ≈ 0.145 (= (75-56)/(75+56)). basedpyright clean; 66 unit
+      0.1/100.05\*10000), mid_close = 100.05, imbalance_close ≈ 0.145 (= (75-56)/(75+56)). basedpyright clean; 66 unit
       tests pass (book_snapshot + hft_features + schema_robustness); MDPS + UAC `quality-gates.sh` GREEN. **Finding
-      (logged, not fixed here):** plan summary names "CeFi + prediction" but reality is "CeFi + DeFi (Hyperliquid via
-      DefiBookSnapshotAdapter)" — no prediction `book_snapshot_5` adapter exists. Schema's
+      (fixed 2026-07-12, plan-reconciliation finding 185):** plan summary previously named "CeFi + prediction" but
+      reality is "CeFi + DeFi (Hyperliquid via DefiBookSnapshotAdapter)" — no prediction `book_snapshot_5` adapter
+      exists; frontmatter `asset_group` + intro prose corrected above (was: "logged, not fixed here"). Schema's
       `applies_to={"book_snapshot_5"}` correctly scopes the columns by data_type regardless. The [VERIFY] todo should
       test on a real DeFi/Hyperliquid shard as well as BINANCE-FUTURES.
 - [x] [TEST] P1. Unit + property tests: time-weighting correctness (a synthetic book stream with known spread profile
@@ -123,10 +124,10 @@ samples) and MUST respect the right-edge `t_close` convention (no sample past th
       Actual Completion" — name the command + GCS path + observed column stats. ✅
       market-data-processing-service@54cc99d — BINANCE-FUTURES BTCUSDT perpetual 2020-02-19; 7,615 candles written (✅1
       ❌0); GCS bucket `market-data-tick-cefi-test-central-element-323112`; 7 parquets (15s + 1m + 5m + 15m + 1h + 4h +
-      1d). Assertions: (a) all 25 book_* columns present (15s: 5760 rows; 1m: 1440 rows) ✓; (b)
+      1d). Assertions: (a) all 25 book\_\* columns present (15s: 5760 rows; 1m: 1440 rows) ✓; (b)
       book_spread_bps_tw_mean > 0 for all bars with data (5758/5758 at 15s; 1438/1438 at 1m) ✓; (c)
-      book_imbalance_tw_mean ∈ [-1,1] at both timeframes ✓; (d) book___close columns present and finite where source
-      data exists ✓; (e) 2 NULL bars (zero-snapshot) both timeframes ✓. Root-cause fix shipped: 25 book__ columns were
+      book_imbalance_tw_mean ∈ [-1,1] at both timeframes ✓; (d) book**\_close columns present and finite where source
+      data exists ✓; (e) 2 NULL bars (zero-snapshot) both timeframes ✓. Root-cause fix shipped: 25 book** columns were
       absent from COLUMN_AGG_RULES → silently dropped by Polars group_by_dynamic.agg() for 1m+ timeframes; added with
       correct semantics (TW-mean→mean, max→max, min→min, close→last, open→first) + CANONICAL_OUTPUT_COLUMN_ORDER. QG
       green (152s).
@@ -135,7 +136,7 @@ samples) and MUST respect the right-edge `t_close` convention (no sample past th
       fields) + market-data-processing-service@73054e5 (schema) + @a90669be (impl) + @2bfcbaca (tests) — all shipped via
       `bash scripts/quickmerge.sh "msg" --agent --files <paths>`; per-ship local `quality-gates.sh` GREEN (UAC 235s;
       MDPS 222s most recent); CI `quality-gates-v2` runs on `live-defi-rollout` SUCCESS on both repos most-recent
-      (verified via `gh run list --branch live-defi-rollout`). Tier-C `ldr-to-staging-promote` drains every */15 min
+      (verified via `gh run list --branch live-defi-rollout`). Tier-C `ldr-to-staging-promote` drains every \*/15 min
       with v2-gated auto-merge on the promote PR.
 
 ## Current-state delta (audited 2026-06-28)

@@ -1,12 +1,22 @@
 ---
 doc_type: issue
 title: Fleet dep-infra blockers — aiohttp CVE-2026-34993 vs vcrpy deadlock + deployment-service pyproject duplicate-key
-summary: The aiohttp `<3.14` cap is LIFTED. **17 of 18 declaring repos bumped to `aiohttp>=3.14.1,<4.0.0`** + `vcrpy>=8.2.1` (canonical SSOT in `workspace-constraints.toml` + `canonical-dependency-manifest....
+summary:
+  The aiohttp `<3.14` cap is LIFTED. **17 of 18 declaring repos bumped to `aiohttp>=3.14.1,<4.0.0`** + `vcrpy>=8.2.1`
+  (canonical SSOT in `workspace-constraints.toml` + `canonical-dependency-manifest....
 status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [client-reporting-api, deployment-api, deployment-service, execution-service, features-service, market-tick-data-service]
+repos:
+  [
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    execution-service,
+    features-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: [quality-gates, infrastructure, cve, verification, refactor]
 related:
@@ -17,7 +27,12 @@ related:
 created: 2026-06-03
 parent_epic: infrastructure_master
 priority: P2
-source: [features-service quality-gates.sh pip-audit (CVE-2026-34993), unified-api-contracts quality-gates.sh (64 vcrpy AttributeError on aiohttp 3.14.0), deployment-api uv lock --upgrade-package aiohttp (deployment-service pyproject TOML parse error)]
+source:
+  [
+    features-service quality-gates.sh pip-audit (CVE-2026-34993),
+    unified-api-contracts quality-gates.sh (64 vcrpy AttributeError on aiohttp 3.14.0),
+    deployment-api uv lock --upgrade-package aiohttp (deployment-service pyproject TOML parse error),
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -31,11 +46,11 @@ last_updated: 2026-06-27
 
 The aiohttp `<3.14` cap is LIFTED. **17 of 18 declaring repos bumped to `aiohttp>=3.14.1,<4.0.0`** + `vcrpy>=8.2.1`
 (canonical SSOT in `workspace-constraints.toml` + `canonical-dependency-manifest.json`); all shipped to
-`live-defi-rollout` 2026-06-23 and drained to staging (quality-gates-v2 green in-image). vcrpy 8.2.1 rewrote `MockStream`
-so it no longer needs the removed `AsyncStreamReaderMixin` (verified: UAC's 649-cassette suite green on 3.14.1 with the
-conftest shim removed). The **11 aiohttp cookie CVEs** (CVE-2026-34993/47265/50269/54273–54280) + GHSA-rpj2 (vcrpy YAML,
-also fixed by 8.2.1) are closed for the 17 repos; the 11 aiohttp `--ignore-vuln` entries are RETAINED only for the
-holdout below.
+`live-defi-rollout` 2026-06-23 and drained to staging (quality-gates-v2 green in-image). vcrpy 8.2.1 rewrote
+`MockStream` so it no longer needs the removed `AsyncStreamReaderMixin` (verified: UAC's 649-cassette suite green on
+3.14.1 with the conftest shim removed). The **11 aiohttp cookie CVEs** (CVE-2026-34993/47265/50269/54273–54280) +
+GHSA-rpj2 (vcrpy YAML, also fixed by 8.2.1) are closed for the 17 repos; the 11 aiohttp `--ignore-vuln` entries are
+RETAINED only for the holdout below.
 
 **Holdout — execution-service** stays on aiohttp 3.13.5 via `[tool.uv] override-dependencies` (mirrors the
 requests/betfair precedent — its `[project]` dep + canonical say `>=3.14.1` so alignment passes; the override forces the
@@ -190,13 +205,21 @@ base), wired in the VCR repos' test bootstrap (conftest/sitecustomize). Once the
       is now green); `--ignore-vuln CVE-2026-34993/47265` stays in the QG bases (covers the non-exploitable CVE).
       Recorded as a KNOWN EXCEPTION in `cursor-configs/CLAUDE.md`.
 - [ ] [DEPS] P2. **Lift the `<3.14` cap + bump fleet to `aiohttp>=3.14` + drop the two `--ignore-vuln` flags — ONLY when
-      vcrpy ships an aiohttp-3.14-compatible release** (track [vcrpy#995](https://github.com/kevin1024/vcrpy/issues/995)
-      / >8.1.1). Steps: bump `workspace-constraints.toml` → regen `canonical-dependency-manifest.json` → set all 18
-      repos → `uv lock --upgrade-package aiohttp` + `uv lock --upgrade-package vcrpy` per repo → remove
+      vcrpy ships an aiohttp-3.14-compatible release** (was: this framing is stale, see the 2026-07-12 note below)
+      (track [vcrpy#995](https://github.com/kevin1024/vcrpy/issues/995) / >8.1.1). Steps: bump
+      `workspace-constraints.toml` → regen `canonical-dependency-manifest.json` → set all 18 repos →
+      `uv lock --upgrade-package aiohttp` + `uv lock --upgrade-package vcrpy` per repo → remove
       `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` from `base-service.sh` + `base-library.sh` → re-QG +
       update the `cursor-configs/CLAUDE.md` known-exception. Verifier: `pip-audit` clean with NO aiohttp ignores + all
       VCR cassette tests green on aiohttp 3.14. Owner: `cicd_contract_hardening_2026_06_01.md` (parent_epic:
-      infrastructure_master) — NOTE: there is no `cicd/dep-security` epic; the earlier successor todos misnamed it.
+      infrastructure_master) — NOTE: there is no `cicd/dep-security` epic; the earlier successor todos misnamed it. >
+      **(2026-07-12, finding 80, §A2 B-queue ruling)**: this item's "ONLY when vcrpy ships..." framing is stale — > per
+      the `## ✅ RESOLVED 2026-06-23` banner above, vcrpy 8.2.1 already shipped an aiohttp-3.14-compatible > release and
+      17/18 repos are already bumped to `aiohttp>=3.14.1` with the ignore-vuln flags dropped for them. > The only
+      remaining scope of this item is the **execution-service holdout** (still pinned to 3.13.5 via >
+      `[tool.uv] override-dependencies`, retaining both ignore-vulns) — tracked by >
+      `execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`. Left unchecked (not flipped) because >
+      that holdout migration has not shipped yet.
 - [x] ✅ [DEPS] P2. **Fix deployment-service uv blockers (2a duplicate `[tool.uv.sources.unified-api-contracts]` key +
       2b corrupt `cbor2` lock entry) — DONE 2026-06-04 (slot-4)** — deployment-service@3899a5d. Removed the duplicate
       `[tool.uv.sources.unified-api-contracts]` stanza (2a) — that re-exposed 2b: the lock had a dangling

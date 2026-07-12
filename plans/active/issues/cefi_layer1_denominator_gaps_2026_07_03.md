@@ -40,7 +40,7 @@ thinking_tier: high
 estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-07-06
+last_updated: 2026-07-10 # (was: 2026-07-06 -- corrected 2026-07-12, finding 63, §A2 B-queue ruling: body carries a 2026-07-10-dated entry, line ~208, operator decision #6, that postdated the recorded last_updated)
 supersedes:
 superseded_by:
 depends_on:
@@ -755,8 +755,8 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   example from the "capability not declared" comment inside `get_expected_instruments_for_venue`. Encountered 20
   pre-existing WS-cassette `_CONNECTOR_TO_VENUE`-map failures on the initial QG (unrelated to ASTER — connectors added
   without their test-registry entry, blocking sentinel refresh fleet-wide); peer landed `unified-api-contracts@e17b185f`
-  ("fix(tests): add 20 _CONNECTOR_TO_VENUE map entries + 17 stub *_ws.yaml cassettes ...") during my investigation, tree
-  went RED→GREEN, my commit auto-rebased to `3652f99f`, sentinel written on the re-run, quickmerge shipped. Filed
+  ("fix(tests): add 20 \_CONNECTOR_TO_VENUE map entries + 17 stub \*\_ws.yaml cassettes ...") during my investigation,
+  tree went RED→GREEN, my commit auto-rebased to `3652f99f`, sentinel written on the re-run, quickmerge shipped. Filed
   nothing new — peer commit's message calls out "unblocks fleet-wide UAC ships" so the finding is already owned.
   UNBLOCKS -004 (2f LIGHTER/EXTENDED/PACIFICA — each still needs its own capability entry + start_date, they were never
   seeded because their capability entry was empty before D2b; -007 gate handles the date discipline uniformly). UNBLOCKS

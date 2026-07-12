@@ -891,8 +891,12 @@ features predict.
   `settlement_time`. MTDS adapters MUST gate on lifecycle bounds.
 - **Cluster validation per `(canonical_question_group, day)`**: HOURLY → 24 clusters expected; DAILY → 1; ELECTION → 1
   over its window. Cluster gate at `record_captured` per CLAUDE.md "Cluster validation MANDATORY".
-- **Temporary state**: UAC `PREDICTION_GROUPS = {}` empty registry until taxonomy seeded — CLAUDE.md "Temporary state"
-  rule applies; this plan IS the named successor.
+- **Temporary state — SEEDED** (was: UAC `PREDICTION_GROUPS = {}` empty registry until taxonomy seeded — CLAUDE.md
+  "Temporary state" rule applies; this plan IS the named successor — corrected 2026-07-12, finding 245, §A2 B-queue
+  ruling: `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`): registry already seeded (incl.
+  `OTHER` special-case) at `unified-api-contracts@306923a` per the P0 child plan
+  `predictions_other_bucket_and_ui_drilldown_2026_06_20` — no longer the empty `{}` placeholder; the CLAUDE.md
+  "Temporary state" rule no longer applies here.
 
 ## Assigned active plans
 
@@ -937,6 +941,15 @@ _(no plans currently assigned at this priority — P1 items live within the P0 c
 
 _(the prediction sentinel fan-out for empty CQG rows is tracked as a P2 todo inside
 [`predictions_other_bucket_and_ui_drilldown_2026_06_20`](../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md).)_
+
+> **🟡 STALE INDEX (annotated 2026-07-12, finding 232, §A2 B-queue ruling)** — (was: the paragraph above presented as
+> the entirety of P2 work).
+> [`prediction_venue_perps_and_live_clob_depth_2026_06_20`](../active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md)
+> (Kalshi + Polymarket perps + live CLOB depth/quotes + funding/basis/dispersion arb; ~8 AI-days, class: brand-new;
+> `status: active`, created 2026-06-20) declares `parent_epic: predictions_master` + `priority: P2` in its own
+> frontmatter but is absent from every P0/P1/P2 section in this epic and from the epic's own `related`/`related_plans`
+> frontmatter list. Durable fix is re-running `scripts/plans/populate_epic_bodies_2026_05_21.py` (out of scope for this
+> doc-reconciliation pass — named-files-only edit).
 
 ## Archived plans
 

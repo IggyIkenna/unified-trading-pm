@@ -49,7 +49,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-last_updated: 2026-07-06
+last_updated: 2026-07-10 # (was: 2026-07-06 -- corrected 2026-07-12, finding 373, §A2 B-queue ruling: Progress Log carries a substantive 2026-07-10 Phase-0-closure entry, live-GCS-verified, that postdated the recorded last_updated)
 locked_by: live-defi-rollout
 locked_since: 2026-07-06
 depends_on: []

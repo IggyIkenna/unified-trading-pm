@@ -171,7 +171,11 @@ CeFi: ml-continuous + arbitrage-funding-rate + defi-carry-family (perp hedge leg
 - TradFi (CME / CBOE / NYSE / NASDAQ) → see `tradfi_master.md`.
 - DeFi DEX perps (Hyperliquid / Aster / Lighter / Extended / Pacifica) → see `defi_master.md`. Note: Lighter / Extended
   / Pacifica were originally scoped under `cefi_venue_universe_expansion` as "DEX perps" but they're DeFi by
-  asset_group.
+  asset_group. **[2026-07-12 correction, finding 29, §A2 B-queue]** (was: listed as DeFi above with no reclassification
+  note) — Lighter (LIGHTER-ZKSYNC) / Extended (EXTENDED-STARKNET) / Pacifica (PACIFICA-SOLANA) have since been
+  RECLASSIFIED CeFi per `codex/02-data/mvp-scope-canonical.md` § CeFi (they are canonical CeFi venues there) and
+  `mvp_backfill_cefi_tick_v10_2026_06_27.md:105-109` ("Any older cefi plan that … lists … LIGHTER/EXTENDED/PACIFICA as
+  DeFi, is stale and SUBORDINATE").
 - Sports / Predictions → see `sports_master.md` / `predictions_master.md`.
 - Cross-cutting concerns (writegate, shard-granularity, data-status, instruments+MTDS infra) → see master plan + the
   named cross-cutting plans.
@@ -650,6 +654,12 @@ genuine gaps; per-cluster triage of the 2,223 phantom residual.
 **status**: active · **estimate**: 12 cal AI-days (class: brand-new). Second live CeFi archetype —
 `ML_DIRECTIONAL_CONTINUOUS` continuous prediction signal on real capital across OKX + Binance + Bybit ≥7 days, full live
 loop + model lifecycle + alerting + kill-switches + DART override + backtest fidelity.
+
+### [`mvp_backfill_cefi_tick_v10_2026_06_27`](../active/mvp_backfill_cefi_tick_v10_2026_06_27.md)
+
+**status**: active · **estimate**: 6.4 cal AI-days (class: infra). Backfill CeFi `trades` + `book_snapshot_5` for the
+v10 perp-gated MVP universe and Deribit BTC/ETH options as `options_chain` ONLY (the big cost saver), on SPOT VMs,
+majors-first, reconcile-then-fill. [2026-07-12 correction, finding 31, §A2 B-queue] (was: missing from this P0 roster)
 
 ## P1 — important; post-current-gate
 

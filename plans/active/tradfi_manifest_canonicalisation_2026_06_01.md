@@ -1,12 +1,21 @@
 ---
 doc_type: plan
 title: TradFi manifest + data canonicalisation (v9 + pipeline_mode partition single-walk) — L3 owner for tradfi
-summary: Canonicalise the TradFi manifest to schema v9 and apply pipeline_mode partitioning via a single-walk consolidation.
+summary:
+  Canonicalise the TradFi manifest to schema v9 and apply pipeline_mode partitioning via a single-walk consolidation.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, features-service, instruments-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [manifest, canonicalisation, v9, pipeline-mode, tradfi, consolidation]
 related: []
@@ -25,9 +34,9 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-- {defi_manifest_canonicalisation_2026_06_01.md §MASTER CONFLICT-2 (tradfi NOT L3-green: v9 + partition owe a walk)}
-- tradfi_massive_dual_source_2026_05_28.md (source col + v8→v9 constant shipped; re-consolidation BLOCKED on drain)
-- {_index comparison 2026-06-01 (tradfi DATA ~complete: 'overlap 12,944/12,948 → only 4 legacy-only cells)'}
+  - { defi_manifest_canonicalisation_2026_06_01.md §MASTER CONFLICT-2 (tradfi NOT L3-green: v9 + partition owe a walk) }
+  - tradfi_massive_dual_source_2026_05_28.md (source col + v8→v9 constant shipped; re-consolidation BLOCKED on drain)
+  - { _index comparison 2026-06-01 (tradfi DATA ~complete: "overlap 12,944/12,948 → only 4 legacy-only cells)" }
 assigned_role: data-pipeline-engineer
 drift_direction: advance-code
 umbrella: true
@@ -45,15 +54,9 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
-> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware `{mode}*{source}[_{transport}]`model +
-> doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the
-> settled contract lives in codex
-> `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/tradfi-batch-live.md`;
-> this plan REFERENCES it; tradfi is also the home of the massive/polygon-vs-databento cost-swap + databento/massive
-> replay-capability confirmed UAC@8079b884) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate
-> UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The
-> migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank) BEFORE apply.
-> Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode).
+> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
+> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the settled contract lives in codex `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/tradfi-batch-live.md`; this plan REFERENCES it; tradfi is also the home of the massive/polygon-vs-databento cost-swap + databento/massive replay-capability confirmed UAC@8079b884) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
+> BEFORE apply. Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode).
 
 > **🔴 P0 GATE (operator 2026-06-05) — supersedes the "7/7 criteria ready, only operator-gated" readiness call below for
 > the `--apply`.** The tradfi v9 `--apply` is BLOCKED until
@@ -343,8 +346,14 @@ VM.
       types built manually (UAC builder rejects futures_chain/options_chain); pipeline_mode via
       `derive_pipeline_mode_for_row` (batch=live identical). 12 unit tests green (ruff+basedpyright clean). The 71
       legacy-only cells ride `--also-legacy`. DRY-BY-DEFAULT + `--apply`. Source/v9 columns added by E5 rebuild (next).
-- [ ] [DATA] P0. E3 Confirm tradfi writer drained; snapshot `tradfi-prd/_index` (pre-migration drain per tradfi_massive
-      -029).
+- [x] ✅ [DATA] P0. E3 Confirm tradfi writer drained; snapshot `tradfi-prd/_index` (pre-migration drain per
+      tradfi_massive -029). **[2026-07-12 correction] DONE** (was: unchecked — stale vs this same doc's own line ~1370
+      claim + the coordinator SSOT): `master_data_canonicalisation_migration_catalogue_2026_06_07.md` §"Pre-migration
+      drain — EXECUTED 2026-06-08" confirms BOTH halves of this item for tradfi specifically — writer-drain (0 data
+      writers; GCP schedulers paused, AWS EventBridge rules disabled fleet-wide) AND the snapshot
+      (`_index/snapshots/pre_migration_2026_06_08.parquet` written in `market-data-tick-tradfi-prd-…` +
+      `instruments-store-tradfi-prd-…` among the 10 buckets). Corrected per plan-reconciliation finding 164,
+      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (144k index rows — modest; no fire-and-forget).
   - **DRY-RUN SCOPING DONE (slot-6 2026-06-03 — sharding/perf scoped, NO apply; full-VM run stays operator-gated):**
     - **Migrator** `migrate_tradfi_to_v9_canonical.py --dry-run` (real GCS `tradfi-prd`): **5,305,520 objects** planned,
@@ -500,12 +509,9 @@ VM.
       footystats/understat/etc. correctly excluded (not URDI-consumed); tardis preserves per-exchange partial-success
       isolation (raises only if all-fail-empty). +12 regression tests + 7 old-contract tests updated to assert raise; IS
       QG exit 0. ORIGINAL: (slot-6 discovery 2026-06-03, surfaced by the tradfi Databento state-threading fix
-      instruments-service@bd1456aa). The `\_fetch*_`→ classify+emit`ADAPTER_FETCH_FAILED`+`return     []`(no re-raise)
-      pattern that silently shrank the tradfi universe almost certainly exists in other IS reference-data adapters (cefi
-      tardis/exchange, defi, sports) → same A8 false-complete on a fetch error. Audit
-      each`reference_data/adapters/_/`fetch path; apply the same fix (re-raise a`\_fetch_one`-classifiable exception so
-      the venue lands in `failed[]`→`attempted_failed`); don't cache `[]` from a failed fetch. Repo:
-      instruments-service. parent_epic: mtds_mdps_master.
+      instruments-service@bd1456aa). The `\_fetch*_`→ classify+emit`ADAPTER_FETCH_FAILED`+`return
+      []`(no re-raise)     pattern that silently shrank the tradfi universe almost certainly exists in other IS reference-data adapters (cefi     tardis/exchange, defi, sports) → same A8 false-complete on a fetch error. Audit     each`reference_data/adapters/_/`fetch path; apply the same fix (re-raise a`\_fetch_one`-classifiable exception so     the venue lands in `failed[]`→`attempted_failed`); don't cache `[]`
+      from a failed fetch. Repo: instruments-service. parent_epic: mtds_mdps_master.
 
 - [x] ✅ [CODE] P2. **SSOT-cleanliness — SHIPPED slot-6 2026-06-03 (UAC@0abbdf86 + mtds@ce0a7d7a).** fold
       `pipeline_mode` into UAC `build_tradfi_partition_path` (remove the MTDS mirror divergence)** (slot-6

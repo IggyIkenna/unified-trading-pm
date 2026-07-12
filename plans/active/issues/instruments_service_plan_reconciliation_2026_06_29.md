@@ -155,7 +155,14 @@ Citations are file:line or plan/commit.
 - **A19 `LANDED`** — **Certified Layer-1 (06-29):** cefi 65.91 | defi 69.44 | tradfi 51.43 | sports 30.77 | prediction
   66.67. **Layer-2 lower bounds:** cefi 37.86 | defi 57.55 | tradfi 88.81 | sports 100.00 | prediction 20.56. These
   **supersede ALL earlier coverage figures** (incl. cefi 11.68% stale-bucket and the 74.55% interim). **Conflicts:**
-  plans citing other coverage numbers as current (stale-number).
+  plans citing other coverage numbers as current (stale-number). **Corrected 2026-07-12 (was: this A19 entry itself now
+  the stale artifact; finding 345, §A2 B-queue ruling): these 06-29 figures were themselves superseded by the 2026-07-03
+  UAC/writer reconciliation (cefi 65.91→79.55) and then by the 2026-07-06 15:01 UTC re-certification in
+  `plans/active/layer1_remeasure_and_certify_2026_07_06.md:98` (cefi 73.61, defi 94.81, tradfi 51.43 [BLOCKED-PLAN2],
+  sports 30.77, prediction 66.67), which explicitly labels the intervening 79.55 number "stale (06-29)". cefi was
+  re-measured again 2026-07-07 08:54 UTC to 72.60% — see
+  `plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md:200`. Treat `layer1_remeasure_and_certify_2026_07_06`
+  (+ its 07-07 cefi update) as the current Layer-1 certification, not this A19 entry.**
 
 ### Domain 4 — Stale-source flags
 

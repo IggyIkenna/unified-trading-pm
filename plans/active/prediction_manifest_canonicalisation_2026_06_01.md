@@ -43,7 +43,10 @@ source:
 assigned_role: data-pipeline-engineer
 drift_direction: correct-codex
 umbrella: true
-master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
+master:
+  master_data_canonicalisation_migration_catalogue_2026_06_07.md (cross-plan canonical-SSOT coordinator; was
+  defi_manifest_canonicalisation_2026_06_01.md, superseded 2026-06-07 - see body §MASTER banner; 2026-07-12 correction,
+  plan-reconciliation finding 159, plan_reconciliation_operator_decisions_2026_07_11.md A2 B-queue ruling)
 ---
 
 # Prediction manifest + data canonicalisation (L3 owner for prediction)
@@ -68,11 +71,15 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > producer). **Dry-runs (migrator + manifest-rebuild) are NOT gated** — only the irreversible `--apply`. Depends on
 > `instruments_manifest_canonicalisation`. Cross-ref: defi master coordinator §MASTER.
 
-> **⏸️ E4 DRY-RUN DONE 2026-06-03 (VM auto-deleted) — full-run AWAITING OPERATOR REVIEW.** The dry migration planned
-> **1,897,691** object moves (0 copied) cleanly (exit 0) — see the E4 todo for the per-phase breakdown + verified
-> transforms. **The next step is the IRREVERSIBLE-DIRECTION FULL run (`… full`/`--apply`, the live 1.9M write) — do NOT
-> fire it without operator sign-off on the dry plan.** E8 legacy-delete stays separately gated (post-E7-GREEN + shared
-> fleet drain with slot-2).
+> **✅ E4 FULL-VM `--apply` RAN 2026-06-29 (verified slot audit 2026-07-10)** (was: "⏸️ E4 DRY-RUN DONE 2026-06-03 —
+> full-run AWAITING OPERATOR REVIEW ... do NOT fire it without operator sign-off" — stale). **[2026-07-12 > > >
+> correction]**: the operator authorised + the full apply already executed —
+> `canonical-migration-prediction-20260629-053038` rc=0 (500,128 objects, `processed_candles/by_date`); do NOT
+> re-request authorization or re-fire E4. The dry run (2026-06-03, 1,897,691 planned object moves, 0 copied) preceded it
+> cleanly. **Residual**: the object copy ran but the manifest rewrite is INCOMPLETE — tracked as OPEN in E7 (see the E7
+> todo below); E8 legacy-delete stays separately gated (post-E7-GREEN + shared fleet drain with slot-2). Corrected per
+> plan-reconciliation finding 158, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2
+> B-queue ruling.
 
 ## Slot-5 Prediction master orchestrator — owned + attached plans/issues
 
@@ -107,11 +114,16 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > debt shows → fix fully in-walk (scope is a prior, not a ceiling). SSOT:
 > `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md`.
 
-> **MASTER**: `defi_manifest_canonicalisation_2026_06_01.md` §MASTER (L3, prediction lane). This plan is the prediction
-> analogue of `defi_manifest`'s §C single-walk. **Single-walk discipline (HARD RULE)**: one bundled walk on the
-> prediction `_index` — bundle every transform (env-split, `asset_group=`, `pipeline_mode=` partition, v9, **`source`
-> stamp** = the data-source API, typed empty-reason). Do NOT open a second walk; `pipeline_mode_partition_migration` +
-> `data_source_provenance` ride THIS walk.
+> ~~**MASTER**: `defi_manifest_canonicalisation_2026_06_01.md` §MASTER (L3, prediction lane).~~ (was: named as MASTER —
+> **[2026-07-12 correction]**: `defi_manifest_canonicalisation_2026_06_01.md` itself carries an explicit 2026-06-07
+> banner demoting its own §MASTER to "DeFi EXECUTOR only" — the cross-plan/cross-AG coordinator role moved UP to
+> `master_data_canonicalisation_migration_catalogue_2026_06_07.md`, which is what this doc's own body (line ~51 above)
+> and its later "master coordinator" citations already correctly point to. Corrected per plan-reconciliation finding
+> 159, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.) This plan is the
+> prediction analogue of `defi_manifest`'s §C single-walk. **Single-walk discipline (HARD RULE)**: one bundled walk on
+> the prediction `_index` — bundle every transform (env-split, `asset_group=`, `pipeline_mode=` partition, v9,
+> **`source` stamp** = the data-source API, typed empty-reason). Do NOT open a second walk;
+> `pipeline_mode_partition_migration` + `data_source_provenance` ride THIS walk.
 
 ## Why this exists — prediction is the LEAST-complete canonical (decommission data-loss risk)
 
@@ -449,17 +461,26 @@ be fixed first if run on a VM.
       cells: list an ACTUAL legacy question_group object, confirm whether the canonical layout uses the SEGMENT vs the
       filename, and confirm the canonical READER resolves whichever my migrator produces. If the segment is required,
       extend the migrator's prediction path build for that data_type. (raw_tick/trades/ohlcv = unaffected.)
-- [ ] [DATA] P0. E7 Verify — **OPEN: the post-`--apply` `_index` is NOT yet CF-GREEN (MEASURED residual, slot audit
-      2026-07-10 on the live 760,300-row `pred-prd/_index`).** The E4 apply ran 2026-06-29 but the manifest rewrite is
-      incomplete: **(1) CF-1 — 9,174 rows still `schema_version=4`** (POLYMARKET `trades`/`prediction_trades`,
-      2025-03-14→2026-04-14) — LIKELY the pre-canonical per-instrument `trades` rows the cqg-bundle rebuild SUPERSEDES
-      (`_rebuild_prediction_cf11.py` skips blank-iid legacy rows) → **diagnose: purge-superseded vs v9-rewrite before
-      any prod write**; **(2) CF-4 — `source` blank on 676,458/760,300 (89%), incl. 37% of `captured` rows** — vs the
-      HARD zero-blank bar; **(3) CF-7 — venue drift persists: 21 `UNKNOWN` + 168 blank + 124 lowercase `kalshi` + 18
-      blank `data_type`** (the migrator's `_cf7_normalise` did not fully apply). RESOLUTION (autonomous, idempotent,
-      next wave): diagnose the 9,174-row root cause, then re-run the manifest rebuild / CF-7 normalise over the residual
-      shards to reach CF-GREEN — this is post-apply manifest cleanup on infra we have admin for (NOT the irreversible
-      legacy-delete, which stays E8-gated). Original verify text below. <br>**Original:** E7 Verify:
+- [x] ✅ [DATA] P0. E7 Verify — ~~**OPEN: the post-`--apply` `_index` is NOT yet CF-GREEN (MEASURED residual, slot audit
+      2026-07-10 on the live 760,300-row `pred-prd/_index`).**~~ (was: unchecked/open — **[2026-07-12 correction]**:
+      superseded by this same plan's own E7-ROOT item (below) + the later dedicated section "## E7-GREEN + E8/E8b
+      execution — /autonomous 2026-07-11", which reports "**E7 MANIFEST is CF-GREEN**" — `pm@c27ecb782` (sha verified
+      present on `live-defi-rollout` + `main` via read-only `git log`; commit subject: "prediction E7-ROOT RESOLVED —
+      \_index MANIFEST CF-GREEN"). Verified CF-state (2026-07-11): CF-1 v9=100% · CF-2 asset_group=prediction 100% ·
+      CF-3 pipeline_mode 0-blank · CF-4 source 0-blank + 0 wrong-vendor · CF-7 venue 0-drift. NOTE: an intermediate
+      same-day narrative deeper in the E7-ROOT entry ("E7 is NOT CF-GREEN — blocked on (b)") is superseded mid-session
+      history, not the current state — the CF-15 fix + unphantom-apply that followed it resolved (b). Corrected per
+      plan-reconciliation finding 160, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2
+      B-queue ruling.) The E4 apply ran 2026-06-29 but the manifest rewrite is incomplete: **(1) CF-1 — 9,174 rows still
+      `schema_version=4`** (POLYMARKET `trades`/`prediction_trades`, 2025-03-14→2026-04-14) — LIKELY the pre-canonical
+      per-instrument `trades` rows the cqg-bundle rebuild SUPERSEDES (`_rebuild_prediction_cf11.py` skips blank-iid
+      legacy rows) → **diagnose: purge-superseded vs v9-rewrite before any prod write**; **(2) CF-4 — `source` blank on
+      676,458/760,300 (89%), incl. 37% of `captured` rows** — vs the HARD zero-blank bar; **(3) CF-7 — venue drift
+      persists: 21 `UNKNOWN` + 168 blank + 124 lowercase `kalshi` + 18 blank `data_type`** (the migrator's
+      `_cf7_normalise` did not fully apply). RESOLUTION (autonomous, idempotent, next wave): diagnose the 9,174-row root
+      cause, then re-run the manifest rebuild / CF-7 normalise over the residual shards to reach CF-GREEN — this is
+      post-apply manifest cleanup on infra we have admin for (NOT the irreversible legacy-delete, which stays E8-gated).
+      Original verify text below. <br>**Original:** E7 Verify:
       `cf_manifest_audit_2026_06_01.py market-data-tick-pred-prd-…` → CF-1…CF-12 GREEN on data-state (v9, source
       populated, pipeline_mode, asset_group, available_at, 0 legacy-only). Flip the CF-coverage rows in
       `predictions_master_audit_instructions.md`. **[PRE-RUN BASELINE — slot-5 ran the audit 2026-06-03 on the current

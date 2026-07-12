@@ -3,10 +3,10 @@ doc_type: plan
 title: Sports reference backfill OOM (TM/SFI/FootyStats per-league skip-check)
 summary:
   Fix the exit_code=137 OOM in the TM/SFI/FootyStats sports reference backfills -- the per-league skip-check
-  (_should_skip_date_for_per_league) re-read the 6.5 GB pandas availability index once per expected league
-  (55-93x/date) under the 60s cache TTL; refactor to a single index read + in-memory per-league status map,
-  plus a column-pruned slim read in UTL to cut peak decode memory.
-status: active
+  (_should_skip_date_for_per_league) re-read the 6.5 GB pandas availability index once per expected league (55-93x/date)
+  under the 60s cache TTL; refactor to a single index read + in-memory per-league status map, plus a column-pruned slim
+  read in UTL to cut peak decode memory.
+status: complete # (was: active) 2026-07-12 finding-281 §A2 B-queue ruling: both P1+P2 todos [x] w/ verified-commit evidence, no open items
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -26,7 +26,7 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
-last_updated: 2026-06-27
+last_updated: 2026-07-12 # (was: 2026-06-27)
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 supersedes:
@@ -74,7 +74,7 @@ attempted_failed rows from prior runs).
 ## Follow-up (DEFERRED — not blocking the OOM fix)
 
 - [x] [SCRIPT] P2. **DONE** Column-prune slim reads via `read_availability_index(columns=[...])` —
-      `unified-trading-library@39eccc9c`. Adds `_INDEX_SLIM_CACHE`, `_backfill_slim`,
-      `_read_availability_index_slim`, `_read_parquet_columns_safe` (ArrowInvalid fallback), and
-      15-test regression suite. Peak decode memory reduced from ~6.5 GB to requested columns only.
-      QG: 1 failed → 0 failed (6354 passed, 87.59% coverage). Evidence: `tests/unit/test_manifest_read_index_slim.py`.
+      `unified-trading-library@39eccc9c`. Adds `_INDEX_SLIM_CACHE`, `_backfill_slim`, `_read_availability_index_slim`,
+      `_read_parquet_columns_safe` (ArrowInvalid fallback), and 15-test regression suite. Peak decode memory reduced
+      from ~6.5 GB to requested columns only. QG: 1 failed → 0 failed (6354 passed, 87.59% coverage). Evidence:
+      `tests/unit/test_manifest_read_index_slim.py`.

@@ -28,7 +28,7 @@ priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
-last_updated: 2026-05-11
+last_updated: 2026-07-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
 supersedes:
@@ -61,6 +61,12 @@ model_tier: opus-required
 thinking_tier: max
 drift_direction: advance-code
 ---
+
+> **Frontmatter `last_updated` corrected 2026-07-12** (was: `2026-05-11` — findings id 215 + id 368, §A2 B-queue
+> ruling): the field was stale by ~2 months against the doc's own body (Group H "added 2026-05-20",
+> 2026-06-15/2026-07-04 dated targets, auto-inventory rows referencing plans created through 2026-07-08/09) and against
+> `git log` on this file in `unified-trading-pm` (last commit touching this path: 2026-07-10). Set to today's edit date;
+> re-bump on next substantive edit.
 
 > 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level packages, NO module renames in any of the 4
 > repos until Phase 7 archive lands. Internal bugfixes + test work + plan-flip backfills continue.
@@ -114,15 +120,15 @@ This plan is the **umbrella of epics**. Per operator direction 2026-05-08, six s
 master plans (less indirection); only `cross_cutting` remains as a standalone epic. Each May-23 deliverable now lives in
 its master plan's `## May-23 deliverable` section.
 
-| May-23 deliverable                      | Lives in master § "May-23 deliverable"                                                                               | Scope                | Live/Batch | Archived epic (archaeology)                                                                           |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------- | ---------- | ----------------------------------------------------------------------------------------------------- |
-| Live DeFi rollout (carry archetypes)    | [`defi_master`](../epics/defi_master.md#may-23-deliverable-folded-from-live_defi_rollout_may_23_2026epic-2026-05-08) | LIVE on real wallet  | Live       | [`archive/live_defi_rollout_may_23_2026.epic.md`](../archive/live_defi_rollout_may_23_2026.epic.md)   |
-| CeFi ML                                 | [`cefi_master`](../epics/cefi_master.md)                                                                             | LIVE on real capital | Live       | [`archive/cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md)                       |
-| S&P prediction (CME)                    | [`tradfi_master`](../epics/tradfi_master.md) (deliverable A)                                                         | BATCH ML only        | Batch      | [`archive/sp_prediction_may_23_2026.epic.md`](../archive/sp_prediction_may_23_2026.epic.md)           |
-| Price arbitrage (CME futures + ETFs)    | [`tradfi_master`](../epics/tradfi_master.md) (deliverable B)                                                         | BACKTEST only        | Batch      | [`archive/price_arbitrage_may_23_2026.epic.md`](../archive/price_arbitrage_may_23_2026.epic.md)       |
-| Sports ML                               | [`sports_master`](../epics/sports_master.md)                                                                         | BACKTEST only        | Batch      | [`archive/sports_ml_may_23_2026.epic.md`](../archive/sports_ml_may_23_2026.epic.md)                   |
-| Prediction markets                      | [`predictions_master`](../epics/predictions_master.md)                                                               | BACKTEST only        | Batch      | [`archive/prediction_markets_may_23_2026.epic.md`](../archive/prediction_markets_may_23_2026.epic.md) |
-| Cross-cutting (catalogue / IDs / infra) | [`epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md)      | Workspace-wide       | Both       | (still active — workspace-wide concerns spanning all domains; explicitly NOT folded)                  |
+| May-23 deliverable                      | Lives in master § "May-23 deliverable"                                                                               | Scope                | Live/Batch | Archived epic (archaeology)                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Live DeFi rollout (carry archetypes)    | [`defi_master`](../epics/defi_master.md#may-23-deliverable-folded-from-live_defi_rollout_may_23_2026epic-2026-05-08) | LIVE on real wallet  | Live       | [`archive/live_defi_rollout_may_23_2026.epic.md`](../archive/live_defi_rollout_may_23_2026.epic.md)                                                                                                                                                                                                                                                                                                                        |
+| CeFi ML                                 | [`cefi_master`](../epics/cefi_master.md)                                                                             | LIVE on real capital | Live       | [`archive/cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md)                                                                                                                                                                                                                                                                                                                                            |
+| S&P prediction (CME)                    | [`tradfi_master`](../epics/tradfi_master.md) (deliverable A)                                                         | BATCH ML only        | Batch      | [`archive/sp_prediction_may_23_2026.epic.md`](../archive/sp_prediction_may_23_2026.epic.md)                                                                                                                                                                                                                                                                                                                                |
+| Price arbitrage (CME futures + ETFs)    | [`tradfi_master`](../epics/tradfi_master.md) (deliverable B)                                                         | BACKTEST only        | Batch      | [`archive/price_arbitrage_may_23_2026.epic.md`](../archive/price_arbitrage_may_23_2026.epic.md)                                                                                                                                                                                                                                                                                                                            |
+| Sports ML                               | [`sports_master`](../epics/sports_master.md)                                                                         | BACKTEST only        | Batch      | [`archive/sports_ml_may_23_2026.epic.md`](../archive/sports_ml_may_23_2026.epic.md)                                                                                                                                                                                                                                                                                                                                        |
+| Prediction markets                      | [`predictions_master`](../epics/predictions_master.md)                                                               | BACKTEST only        | Batch      | [`archive/prediction_markets_may_23_2026.epic.md`](../archive/prediction_markets_may_23_2026.epic.md)                                                                                                                                                                                                                                                                                                                      |
+| Cross-cutting (catalogue / IDs / infra) | [`epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md)      | Workspace-wide       | Both       | **SUPERSEDED 2026-05-21** (was: "still active — workspace-wide concerns spanning all domains; explicitly NOT folded" — corrected 2026-07-12, finding id 214, §A2 B-queue ruling): the epic's own frontmatter/banner (`status: superseded`) shows its 5 deliverables absorbed into `client_isolation_and_governance_master` + `infrastructure_master` + `observability_master`; kept as archaeology only, no new work there |
 
 Read [`plans/epics/README.md`](../epics/README.md) for the layer model + lifecycle. Each master plan enumerates its
 sub-plans; this master plan retains the cross-master readiness checklist + audit + Q&A below.
@@ -329,9 +335,9 @@ OKX only); `ARBITRAGE_PRICE_DISPERSION` uses all 6 for cross-venue funding sprea
 Stream E correction 2026-05-07. TradFi / Sports / Prediction stay batch-only this cycle — but their ML readiness ladders
 progress in parallel so the \_next* archetypes after DeFi launch quickly.
 
-**Cloud-parity goal (concurrent with live trading goal).** Full AWS↔GCP parity by May 23: DeFi-relevant data migrated
-to AWS (with prior cost analysis), data status working on AWS, batch backfill with `--force` working on AWS, backtests /
-ML / strategy examples runnable on AWS, **and** a live trading deployment + monitoring instance running on AWS — so the
+**Cloud-parity goal (concurrent with live trading goal).** Full AWS↔GCP parity by May 23: DeFi-relevant data migrated to
+AWS (with prior cost analysis), data status working on AWS, batch backfill with `--force` working on AWS, backtests / ML
+/ strategy examples runnable on AWS, **and** a live trading deployment + monitoring instance running on AWS — so the
 team can seamlessly switch any deployment between AWS-live / AWS-batch / GCP-live / GCP-batch. _Not every byte gets
 migrated_ (waste of API quota when GCS already has it) — only what's needed for the DeFi proof.
 
@@ -420,11 +426,11 @@ Drift between any of (codex doc, sub-plan, code) is a review-blocking failure.
 ## Plan ↔ Doc ↔ Code drift audit
 
 This is the deliverable that ties the audit to action. For each high-leverage change area, flag whether the codex SSOT,
-the corresponding sub-plan, and the code agree. **Items marked ⚠ are pre-existing drift to resolve as part of this
-plan, before agents start writing code in the affected area.**
+the corresponding sub-plan, and the code agree. **Items marked ⚠ are pre-existing drift to resolve as part of this plan,
+before agents start writing code in the affected area.**
 
-| Area                                                            | Codex SSOT                                                                                                                                                  | Sub-plans                                                                                                                                                                                                              | Drift status                                                                                              | Resolve via                                                                                                                                                               |
-| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Area                                                            | Codex SSOT                                                                                                                                                  | Sub-plans                                                                                                                                                                                                              | Drift status                                                                                             | Resolve via                                                                                                                                                               |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Manifest schema (v6)                                            | `02-data/availability-manifest-and-data-status.md` (current)                                                                                                | `manifest_schema_v6_quote_margin_combo_2026_04_23`, `availability_manifest_v4_and_data_status_2026_04_13`                                                                                                              | ⚠ Confirmed — `availability_manifest_v4_…` is the only stale active plan; self-tagged superseded         | Archive the v4 plan via work-stream G; doc already canonical v6 with v4/v5 hive-key fallback                                                                              |
 | Shard granularity propagation                                   | `02-data/availability-manifest-and-data-status.md` (multi-axis correction post-2026-05-06)                                                                  | `shard_granularity_ssot_propagation_2026_05_06.HANDOVER`, `writegate_honest_coverage_endtoend_2026_05_06`, `data_status_multi_axis_shard_propagation_2026_05_06`                                                       | ⚠ Confirmed — `writegate_…` declared umbrella; other two are children but not yet `parent:`-tagged       | Re-tag children with `parent: writegate_honest_coverage_endtoend_2026_05_06` (work-stream G); surface only umbrella                                                       |
 | Cloud-agnostic VM/build                                         | `04-architecture/cloud-agnostic-migration.md`                                                                                                               | (no active plan — work-stream D is the new one)                                                                                                                                                                        | ⚠ Doc partially describes target; VM launchers GCP-only in code                                          | Add VM-launcher parity appendix to the doc; new plan for AWS launchers                                                                                                    |
@@ -505,7 +511,7 @@ v6) · `defi_pipeline_extension_followups_2026_05_03` (`status: complete`) ·
 | Plans missing `name` field                      |    11 |
 | Plans missing `last_updated` (95%)              |   140 |
 | `superseded_by` set but plan still in `active/` |    18 |
-| Filename ↔ `name` field mismatch               |     1 |
+| Filename ↔ `name` field mismatch                |     1 |
 | YAML errors                                     |     2 |
 
 **Action:** workspace-wide one-shot backfill script — populate `last_updated` from `git log` mtime, infer `asset_group`
@@ -515,14 +521,14 @@ from filename + body, populate `locked_by: live-defi-rollout` for any that are m
 
 | Service                   | Active plans touching it |
 | ------------------------- | -----------------------: |
-| instruments-service       |                **35** ⚠ |
-| deployment-service        |                    16 ⚠ |
-| strategy-service          |                    16 ⚠ |
-| deployment-api            |                    16 ⚠ |
-| unified-trading-system-ui |                    12 ⚠ |
-| execution-service         |                    12 ⚠ |
-| deployment-ui             |                    12 ⚠ |
-| market-tick-data-service  |                    10 ⚠ |
+| instruments-service       |                 **35** ⚠ |
+| deployment-service        |                     16 ⚠ |
+| strategy-service          |                     16 ⚠ |
+| deployment-api            |                     16 ⚠ |
+| unified-trading-system-ui |                     12 ⚠ |
+| execution-service         |                     12 ⚠ |
+| deployment-ui             |                     12 ⚠ |
+| market-tick-data-service  |                     10 ⚠ |
 
 Eight services with >5 active plans = real overlap risk. The `instruments-service` 35-plan count is the clearest
 consolidation target post-cutover.
@@ -1045,11 +1051,11 @@ per-target upgrade path.
         paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped execution-service@a39294603 + PM@77810ca6 2026-05-15**
 
 - **Item 21 (Reconciliation suite)**:
-  - [x] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔
-        paper ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3);
-        codify per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than
-        batch-vs-live since same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity);
-        closed-set failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
+  - [x] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔ paper
+        ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3); codify
+        per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than batch-vs-live
+        since same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity); closed-set
+        failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
         paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped batch-live-reconciliation-service@48f12ce 2026-05-15**
 
 - **Item 22 (Trading guardrails)** — composes with `alerting_service_live_rules_2026_05_07`:

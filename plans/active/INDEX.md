@@ -1,7 +1,9 @@
 # Active Plans Index
 
-**Last Updated:** 2026-05-08 (live-pipeline activation triple — features-repo consolidation + live-pipeline + GCS
-migration bundle)
+**Last Updated:** 2026-07-12 (was: "2026-05-08 (live-pipeline activation triple — features-repo consolidation +
+live-pipeline + GCS migration bundle)" — corrected 2026-07-12, doc-reconciliation finding 4, §A2 B-queue ruling: the
+header timestamp was never refreshed as later entries were added, e.g. `prediction_capture_incident_remediation`
+2026-07-06 and the is-daily-enum entry 2026-07-07, below)
 
 This is the canonical index of all active plans. Plans are organized by domain.
 
@@ -9,7 +11,10 @@ This is the canonical index of all active plans. Plans are organized by domain.
 
 ## Cross-cutting SSOT (priority — data plane + agents)
 
-**Read first** when touching venue routing, buckets, or market-data category maps:
+**Read first** when touching venue routing, buckets, or market-data category maps (note — corrected 2026-07-12,
+doc-reconciliation finding 3, §A2 B-queue ruling: several bullets below are inline-tagged **(ARCHIVED)** and link into
+`archive/2026_05/` — those are historical context only, NOT current priority guidance; treat only the non-ARCHIVED
+bullets as live "read first" material):
 
 - [live_pipeline_mtds_mdps_features_2026_05_08.md](../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md) —
   **Live (websocket-streaming) pipeline activation** for MTDS / MDPS / consolidated features-service across all 5

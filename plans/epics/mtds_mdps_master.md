@@ -152,6 +152,19 @@ locked_since: 2026-05-20
 > `issues/mtds_cefi_mvp_gate_…`. **The Phase -2…14 migration coordination below is HISTORICAL** (the May bucket-symmetry
 >
 > - v8 backfill window); read it for provenance, not as live work.
+>
+> **[2026-07-12 correction]**: the "live MTDS/MDPS work now runs through 2 themed survivors" claim above (was: presented
+> as exhaustive) is stale — it does not cover the still-active, still-shipping manifest-canonicalisation family
+> (`cefi_manifest_canonicalisation_2026_06_01`, `defi_manifest_canonicalisation_2026_06_01`,
+> `prediction_manifest_canonicalisation_2026_06_01`, `tradfi_manifest_canonicalisation_2026_06_01`,
+> `downstream_services_manifest_canonicalisation_2026_06_01`,
+> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`, `solana_defi_legacy_migration_2026_05_27`), none
+> of which were archived or folded into M-1/M-2, and one of which
+> (`downstream_services_manifest_canonicalisation_2026_06_01`, CF-11) shipped new work as late as 2026-07-10. These
+> plans remain independently live under this epic (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`
+> specifically: P0, GATE-0 done, Phase 1/2 --apply still pending); see the "Assigned active plans" roster-completeness
+> correction below. Corrected per plan-reconciliation findings 166/170,
+> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 
 > **Operator directive 2026-05-20 round 5**: "EVERYTHING needs to be in writing contained within PM active plans which
 > can reference issues and audits, but I should be able to go to an orchestrator with the problem and use ALL the PM
@@ -713,6 +726,18 @@ layer**, not a re-statement of the work.
 _33 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter (verified 2026-06-30). Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
+> **[2026-07-12 correction]**: the roster body below is a stale 2026-06-30-or-earlier auto-populated snapshot (was:
+> presented as exhaustive) — it does NOT list several `status: active`, `parent_epic: mtds_mdps_master` plans confirmed
+> live as of this correction (frontmatter re-verified 2026-07-12): `cefi_manifest_canonicalisation_2026_06_01` (P0),
+> `defi_manifest_canonicalisation_2026_06_01` (P0, umbrella), `prediction_manifest_canonicalisation_2026_06_01` (P0),
+> `tradfi_manifest_canonicalisation_2026_06_01` (P0),
+> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` (P0),
+> `downstream_services_manifest_canonicalisation_2026_06_01` (P1), `solana_defi_legacy_migration_2026_05_27` (P1),
+> `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01` (P0) [2026-07-12 correction, finding 355, §A2 B-queue]
+> (was: not listed in this missing-plans enumeration). The auto-population script has not been re-run against these;
+> treat the roster below as incomplete until it is. Corrected per plan-reconciliation findings 152/154/161/163/167/174,
+> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
+
 ## P0 — must complete before next foundation gate
 
 ### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — MTDS/MDPS cluster
@@ -734,9 +759,13 @@ MTDS adapters preflight + batch-live parity
 ### [`live_pipeline_mtds_mdps_features_2026_05_08`](../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
 
 **status**: ✅ ARCHIVED (was: "active" — stale). **[2026-07-12 correction]**: this plan's own frontmatter reads
-`status: complete` (and `parent_epic: mtds_mdps_master`, correctly owned here). Corrected per plan-reconciliation
-finding 329, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket
-ruling.
+`status: complete`; its ownership fields read `epic: epic-deployment` / `parent: master_to_live_defi_2026_05_23` — it
+carries **no** `parent_epic: mtds_mdps_master` field at all (was: an earlier 2026-07-12 pass here mis-stated this
+parenthetical as "and `parent_epic: mtds_mdps_master`, correctly owned here" — that claim does not match the archive
+file's actual frontmatter, re-verified directly 2026-07-12; its presence in this epic's roster is a legacy manual
+listing, not a frontmatter-declared ownership match). Corrected per plan-reconciliation findings 140/329,
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling /
+B-queue ruling.
 
 ## P1 — important; post-current-gate
 
@@ -806,7 +835,10 @@ cal AI-days (class: design)
 
 ### [`mtds_per_instrument_download_api_2026_04_24`](../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: design)
+**status**: ✅ ARCHIVED (was: "active" — stale). **[2026-07-12 correction]**: this plan's own frontmatter reads
+`status: complete` — it is archived/complete, not active. Corrected per plan-reconciliation finding 141,
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling. · **estimate**: 4.8 cal
+AI-days (class: design)
 
 ### [`scratch_codefreeze_phase4_mtds_fanout_2026_05_12`](../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md)
 
@@ -916,7 +948,16 @@ AI-days (class: infra)
       path to GCS + manifest entries for METEORA-SOLANA/PHOENIX-SOLANA/JUPITER-SOLANA/LIFINITY-SOLANA (backfill script
       exists but APPLY mode raises warning until MTDS receives new venue coverage); (b) MTDS Solana perp DEX source
       wiring for all 4 venues: DRIFT (Drift S3 historical archive), MANGO V4, ZETA, FLASH REST APIs — emit
-      `perp_funding` parquets. Referenced issue `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md` was never
-      created. **PARTIAL DONE (slot-6 2026-05-23)**: MDPS scanner `_DEFI_DEX_VENUE_SEGMENTS` now includes ORCA-SOLANA
-      and RAYDIUM-SOLANA venue path segments (MDPS@305677e). Current on-disk data is `dex_pools` (pool state snapshots),
-      not `dex_swaps` events — MTDS Solana swap-event backfill is still needed before MDPS can produce candles.
+      `perp_funding` parquets. (was: "Drift S3 historical archive" framed as the intended DRIFT source — **[2026-07-12
+      correction]**: `solana_defi_legacy_migration_2026_05_27.md`'s Bug-D/Bug-D-followup investigation (slot-1
+      2026-05-29) confirms BOTH Drift S3 archives are dead ends — V1 ends 2025-01-08, V2 bucket
+      `drift-historical-data-v2` confirmed via `ListObjectsV2` to end 2025-01-07 with no further `market/*` keys — and
+      ships a Helius-based replacement instead (Option 2: persistent sig→blockTime index via
+      `build_drift_v2_sig_index.py`; handler `_backfill_drift_helius_date`; shipped `mtds@0e92e49a` + `mtds@9a840e01`,
+      tests green 2026-05-29). Retarget this backlog item's DRIFT source to the Helius path, not the S3 archive.
+      Corrected per plan-reconciliation finding 173,
+      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.) Referenced issue
+      `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md` was never created. **PARTIAL DONE (slot-6
+      2026-05-23)**: MDPS scanner `_DEFI_DEX_VENUE_SEGMENTS` now includes ORCA-SOLANA and RAYDIUM-SOLANA venue path
+      segments (MDPS@305677e). Current on-disk data is `dex_pools` (pool state snapshots), not `dex_swaps` events — MTDS
+      Solana swap-event backfill is still needed before MDPS can produce candles.

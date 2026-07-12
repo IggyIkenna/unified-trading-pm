@@ -13,14 +13,18 @@ summary:
   orchestrator and the files were later wiped by a tree-clean before anyone acted on the cefi finding. The Cloud Run
   cron path masks the bug (its output dir is ephemeral container FS, discarded on job exit), so the gap only bites on
   operator/agent-driven local runs."
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [e2e-testing, unified-trading-pm]
 scope: [engineer, admin]
 tags: [data-pipeline, observability, self-healing, escalation, audit, ci-cd, git-hygiene]
-related: [../data_pipeline_hardening_self_monitoring_2026_06_22.md, manifest_hygiene_red_2026_07_03.md]
+related:
+  [../data_pipeline_hardening_self_monitoring_2026_06_22.md, manifest_hygiene_red_2026_07_06.md] # (was: manifest_hygiene_red_2026_07_03.md — dangling; that file was WIPED by a tree-clean before ever being
+  # committed (this is literally the bug this doc describes, see "Background" below) so it never existed in git
+  # history. manifest_hygiene_red_2026_07_06.md is the actual re-filed successor escalation for the same stranded
+  # cefi finding (see Todos item 3 below). Sync 2026-07-12, finding 391, §A2 B-queue ruling.
 created: 2026-07-06
 parent_epic: observability_master
 priority: P2
@@ -32,13 +36,17 @@ source:
     "deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf",
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: "unified-trading-pm@ad1fa6bc2 — see terminal VERIFY todo below"
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-06
+last_updated: 2026-07-12
 ---
+
+> **(2026-07-12, finding 212, §A2 B-queue ruling)**: frontmatter `status` synced `open` → `resolved` (was: `open`) — all
+> 4 todos are checked `[x]` including the terminal VERIFY step, which cites a live re-run confirming clean `git status`
+> and successful PlanRegenLoop ingestion at `unified-trading-pm@ad1fa6bc2`.
 
 # Audit escalation artifacts are written into the PM tree but never committed → local runs strand RED findings
 
@@ -102,7 +110,7 @@ The design **intends these artifacts to be committed**, but nothing commits them
 
 1. **Issue doc is ingestion-intended.** `_dp_common.file_escalation_issue()` writes to `plans/active/issues/` precisely
    so the orchestrator's **PlanRegenLoop → backlog → AutoSpawn** picks it up — the in-code comment
-   ([_dp_common.py](../../../../e2e-testing/scripts/audit/_dp_common.py), ~L114-117) says a filed issue "is only
+   ([\_dp_common.py](../../../../e2e-testing/scripts/audit/_dp_common.py), ~L114-117) says a filed issue "is only
    ingested … when it declares an explicit `assigned_vm`" and must therefore carry one. Ingestion requires the file to
    be **committed and pushed**. It never is.
 2. **Candidate CSVs are commit-eligible by design.** `.gitignore` line 138 `*.csv` ignores all CSVs, but line 140
@@ -181,22 +189,22 @@ unaddressed.
 
 ## Todos
 
-- [x] ✅ [CODE] P2. Fix the escalation-commit loop in `e2e-testing/scripts/audit/{manifest_hygiene_daily.py,_dp_common.py}`
-      — chose Option A (script commits via sanctioned `docs(plans):` path on local runs, no-op in container). New
-      `_commit_and_push_pm_artifacts()` helper in `_dp_common.py` detects a real PM clone via `<pm_root>/.git`, stages
-      the issue doc + candidate CSVs, commits with the `docs(plans):` prefix (strict-quickmerge carve-out for
-      plans-only), and pushes to `live-defi-rollout`. `file_escalation_issue()` now invokes it (skipped when
-      `issues_dir` is a test override). Ephemeral container FS (no `.git` under `/app/unified-trading-pm/`) stays a
-      no-op so the Cloud Run cron path is unchanged. Best-effort — a git failure logs a warning but never sinks the
-      audit run. 6 new unit tests cover the no-git, has-git, missing-artifact, idempotent-noop, subprocess-error, and
-      test-override paths. — e2e-testing@694ff4c
+- [x] ✅ [CODE] P2. Fix the escalation-commit loop in
+      `e2e-testing/scripts/audit/{manifest_hygiene_daily.py,_dp_common.py}` — chose Option A (script commits via
+      sanctioned `docs(plans):` path on local runs, no-op in container). New `_commit_and_push_pm_artifacts()` helper in
+      `_dp_common.py` detects a real PM clone via `<pm_root>/.git`, stages the issue doc + candidate CSVs, commits with
+      the `docs(plans):` prefix (strict-quickmerge carve-out for plans-only), and pushes to `live-defi-rollout`.
+      `file_escalation_issue()` now invokes it (skipped when `issues_dir` is a test override). Ephemeral container FS
+      (no `.git` under `/app/unified-trading-pm/`) stays a no-op so the Cloud Run cron path is unchanged. Best-effort —
+      a git failure logs a warning but never sinks the audit run. 6 new unit tests cover the no-git, has-git,
+      missing-artifact, idempotent-noop, subprocess-error, and test-override paths. — e2e-testing@694ff4c
 - [x] ✅ [CODE] P2. Fix the artifact-size/gitignore mismatch — keep the 18 MB `divergence_*.csv` out of git history —
       chose "narrow the whitelist" (Option A): appended `plans/audit/results/divergence_*.csv` after the
       `!plans/audit/results/*.csv` whitelist in `unified-trading-pm/.gitignore`. Verified with `git check-ignore`:
       `divergence_2026-07-06.csv` → ignored (last-match line 146); `manifest_hygiene_cefi_*.csv` → still committable
       (last-match line 140 whitelist). Divergence CLI (`unified-trading-library/scripts/detect_manifest_divergence.py`)
-      unchanged — the file still lands at the same path for local inspection, just not in git history.
-      — unified-trading-pm@2d6fe63
+      unchanged — the file still lands at the same path for local inspection, just not in git history. —
+      unified-trading-pm@2d6fe63
 - [x] ✅ [DATA] P1. Re-run the cefi audit (`--mode full --asset-group cefi`) and file/ingest a fresh escalation so the
       stranded 2026-07-03 RED finding (20,282 DIVERGENT_EMPTY / non-v9 / phantom / 4-pillar) actually gets triaged in
       `market-tick-data-service`. — unified-trading-pm@460682f91 (slot-13, 2026-07-06). Evidence: audit ran 15:07-15:17
@@ -209,9 +217,10 @@ unaddressed.
       `divergence_2026-07-06.csv` diagnostic was NOT committed — it is regeneratable and item #2 owns the gitignore
       narrowing. Audit ran BEFORE item #1's commit-and-push helper (694ff4c) reached this slot; a repeat run with the
       new helper is covered by item #4 (VERIFY).
-- [x] ✅ [VERIFY] P2. Confirm a fresh full run leaves `git status` clean in the PM clone and the escalation is ingested by
-      PlanRegenLoop (no dirty untracked artifacts). — unified-trading-pm@ad1fa6bc2. Evidence: ran
-      `manifest_hygiene_daily.py --mode changed --asset-group cefi` (slot-3, 2026-07-06 19:35 UTC); `_commit_and_push_pm_artifacts()`
-      committed issue doc + candidate CSV at ad1fa6bc2 and pushed to LDR; `git status` in PM clone: clean (empty). Gitignore
-      also verified: `divergence_*.csv` → ignored (line 146); candidate CSVs → committable. PlanRegenLoop ingestion:
-      `manifest_hygiene_red_2026_07_06.md` at ad1fa6bc2 carries `assigned_vm: planning` → will be ingested on next PlanRegenLoop tick.
+- [x] ✅ [VERIFY] P2. Confirm a fresh full run leaves `git status` clean in the PM clone and the escalation is ingested
+      by PlanRegenLoop (no dirty untracked artifacts). — unified-trading-pm@ad1fa6bc2. Evidence: ran
+      `manifest_hygiene_daily.py --mode changed --asset-group cefi` (slot-3, 2026-07-06 19:35 UTC);
+      `_commit_and_push_pm_artifacts()` committed issue doc + candidate CSV at ad1fa6bc2 and pushed to LDR; `git status`
+      in PM clone: clean (empty). Gitignore also verified: `divergence_*.csv` → ignored (line 146); candidate CSVs →
+      committable. PlanRegenLoop ingestion: `manifest_hygiene_red_2026_07_06.md` at ad1fa6bc2 carries
+      `assigned_vm: planning` → will be ingested on next PlanRegenLoop tick.

@@ -1,12 +1,22 @@
 ---
 doc_type: plan
 title: Solana DeFi legacy→canonical migration (Kamino/Solend lending + Kamino/Orca/Raydium pools)
-summary: Migrate Solana DeFi (Kamino/Solend lending + Kamino/Orca/Raydium pools) from legacy prefixes to canonical dedicated split buckets, coordinated with the DeFi C0 single-walk.
+summary:
+  Migrate Solana DeFi (Kamino/Solend lending + Kamino/Orca/Raydium pools) from legacy prefixes to canonical dedicated
+  split buckets, coordinated with the DeFi C0 single-walk.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
-repos: [alerting-service, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    alerting-service,
+    deployment-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [defi, solana, migration, canonical, legacy, kamino, solend, orca, raydium, manifest]
 related: []
@@ -24,10 +34,15 @@ locked_since: 2026-05-27
 supersedes:
 superseded_by:
 depends_on:
-source: [issues/defi_code_codex_drift_2026_05_27.md (D2), GCS audit 2026-05-27 (legacy defi-prd prefixes vs dedicated split buckets)]
+source:
+  [
+    issues/defi_code_codex_drift_2026_05_27.md (D2),
+    GCS audit 2026-05-27 (legacy defi-prd prefixes vs dedicated split buckets),
+  ]
 assigned_role: data-pipeline-engineer
 drift_direction: correct-codex
-master: defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — asset-group slot split, slot-2, 2026-06-03)
+master:
+  defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — asset-group slot split, slot-2, 2026-06-03)
 ---
 
 # Solana DeFi legacy→canonical migration
@@ -90,8 +105,8 @@ master: defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator
 - **Schema drift** (legacy ≠ EVM canonical contracts):
   - Solana lending: `apy, supply_apy, reward_apy, tvl_usd, market_id` (APY-snapshot) ≠ UAC `lending`/`lending_position`
     (`borrow_rate/supply_rate` or `supply_index/borrow_index`).
-  - Solana dex*pools (Kamino): `vault_address, vault_type, token*\*\_mint/symbol, status`(vault metadata) ≠
-    UAC`pool/dex_pool_state` (`price, sqrt_price_x96, liquidity`).
+  - Solana dex*pools (Kamino): `vault_address, vault_type, token*\*\_mint/symbol,
+    status`(vault metadata) ≠ UAC`pool/dex_pool_state` (`price, sqrt_price_x96, liquidity`).
   - `timestamp` dtype drift (legacy int64 vs canonical string / ts[ns,UTC]).
 - **Live collection gap**: legacy Solana collection **stopped 2026-04-14**; canonical buckets never received Solana →
   Solana DeFi is currently NOT collected anywhere going forward. (Composes with `defi_code_codex_drift` D10 — SOLEND/
@@ -144,8 +159,16 @@ master: defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator
   2026-05-28**: deleted 1,200 date-prefix parquets (MARINADE 2023-01-01→2026-04-14); pruned 64,373 stale manifest rows
   from defi-prd `_index/availability_index.parquet` (1,633,780→1,569,407 rows). Canonical
   `lst-rates-central-element-323112` confirmed superset (dates 2020-01-01→2026-05-19, MARINADE 902 rows).
-  **`lending_indices/` + `dex_pools/` deferred**: Gate 2 migration has NOT completed (canonical buckets show 0 SOLANA
-  rows — Gate 3 cannot be verified yet). Re-run this gate after Gate 2 migration VM completes and Gate 3 is verified.
+  ~~**`lending_indices/` + `dex_pools/` deferred**: Gate 2 migration has NOT completed (canonical buckets show 0 SOLANA
+  rows — Gate 3 cannot be verified yet).~~ (was: framed as blocked on Gate 2/3 — **[2026-07-12 correction]**: this same
+  doc's own Gate 3 item above is ✅ DONE 2026-05-30 (MTDS@86d0113) with concrete non-zero SOLANA counts —
+  lending-indices 2,811 rows, dex-pools 1,555 rows, all `captured` — so the stated blocking premise ("0 SOLANA rows /
+  Gate 3 unverifiable") no longer holds; this Gate-4 note was never updated after Gate 3 landed. The blocker is resolved
+  — this deferred delete step is unblocked for execution, but NOT independently confirmed as EXECUTED here (no
+  delete-run evidence found for these 2 prefixes specifically; only `lst_rates/` above cites a concrete delete run).
+  Re-verify current bucket/manifest state before running the delete. Corrected per plan-reconciliation finding 172,
+  `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.) Re-run this gate after
+  Gate 2 migration VM completes and Gate 3 is verified.
 - [x] ✅ [SCRIPT] P0. **Gate 7 — migrate ALL bad-bucket Solana data → canonical split buckets (operator directive
       2026-05-28: "migrate the old bad buckets too")**: in addition to Gate 2 (which sources from `defi-prd/{type}/…`
       legacy historical), this gate migrates the **2823 wrong-bucket parquets** (actual count; plan estimated 72) the
