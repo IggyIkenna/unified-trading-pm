@@ -118,8 +118,23 @@ the zero-rows pattern was confirmed, to stop burning SPOT spend on a guaranteed-
 
 ## Open actions
 
-- [ ] [CODE] P1. Wire LIGHTER-ZKSYNC/PACIFICA-SOLANA/EXTENDED-STARKNET into `OnchainPerpBatchHandler` (see
-      recommendation 1). (repo: market-tick-data-service)
+- [x] ✅ [CODE] P1. Wire PACIFICA-SOLANA/EXTENDED-STARKNET into `OnchainPerpBatchHandler` (see recommendation 1). (repo:
+      market-tick-data-service) — `market-tick-data-service@356457c2`, `unified-api-contracts@d6a7caf1`. **Scope note:
+      LIGHTER-ZKSYNC deliberately NOT wired** (see the new P2 follow-up todo below) — investigation during
+      implementation found its REST endpoints structurally can't serve this handler's data_types, so wiring it in as
+      originally recommended would have produced zero benefit while looking fixed. PACIFICA-SOLANA and EXTENDED-STARKNET
+      added to `_VENUE_SOURCE`/`_VENUE_PIPELINE_MODE`/`_VENUE_CHAIN`/`_VENUE_LAUNCH`, dispatching to
+      `adapters/_umi_pacifica.py`/`adapters/_umi_extended.py` via a per-symbol prefetch cache (one REST call per symbol
+      serves every data_type — avoids the 2-3x re-fetch a naive per-shard call would cost at backfill scale).
+      `book_snapshot_5` excluded from the batch universe for both (their `/book`/`/orderbook` endpoints are
+      current-snapshot-only, no historical range param — same limitation as ASTER's book). Added
+      `PipelineMode.BATCH_PACIFICA` + `SOURCE_PRIORITY`/capability registration in UAC (BATCH_EXTENDED already existed).
+      Split the handler into 3 files (`onchain_perp_batch_handler.py` + `_onchain_perp_batch_symbols.py` +
+      `_onchain_perp_batch_umi.py`) to stay under the 900-line codex ratchet. 12 new/updated unit tests (captured-shard
+      provenance, book-exclusion, prefetch caching + per-symbol failure isolation, catalogue-universe symbol mapping) —
+      39/39 pass. quality-gates.sh green on both repos. Merged cleanly with slot-11's `_resolve_venues()`
+      loud-drop-logging (`market-tick-data-service@4f62bd7e`) — one test assertion updated since PACIFICA-SOLANA is no
+      longer a "dropped" venue.
 - [x] ✅ [CODE] P2. Log/raise on silently-dropped `--venues` entries in `OnchainPerpBatchHandler` (see recommendation
       2). (repo: market-tick-data-service) — `market-tick-data-service@4f62bd7e`. Extracted `_resolve_venues()`: any
       `--venues` token not in `_VENUE_SOURCE` is now logged as a `WARNING` naming the dropped venue(s) before the
@@ -127,5 +142,23 @@ the zero-rows pattern was confirmed, to stop burning SPOT spend on a guaranteed-
       only being discoverable by grepping run.log for `venues=[]`. 2 new unit tests
       (`test_resolve_venues_drops_unsupported_and_warns`, `test_resolve_venues_all_supported_no_warning`).
       quality-gates.sh green (899/900 lines, under the file-size cap after a ruff reformat).
-- [ ] [VERIFY] P1. Re-launch the 3-venue backfill after the code fix lands and confirm real rows write (see
-      recommendation 3). (repo: deployment-service)
+- [ ] [CODE] P2. Wire LIGHTER-ZKSYNC into `OnchainPerpBatchHandler` via a Tardis-integrated fetch path (repo:
+      market-tick-data-service). Deferred from the P1 item above — genuinely different shape of work, not a same-pattern
+      extension: - `/recentTrades` (trades) and `/orderBookOrders` (book) on Lighter's own REST are BOTH
+      current-snapshot-only (no historical start/end params) — structurally can't serve a backfill day that isn't
+      "today", unlike Pacifica's `/trades/history` (cursor-paginated) and Extended's `/info/markets/{symbol}/trades`
+      (cursor-paginated). - `derivative_ticker` (funding) has NO native-REST source in `adapters/_umi_lighter.py` at all
+      — it's Tardis-only, and only from 2026-04-17 (`pipeline_mode_resolver._VENUE_OVERRIDES["LIGHTER"]` — note that key
+      is currently DEAD due to a `LIGHTER` vs `LIGHTER_ZKSYNC` normalization mismatch, confirmed 2026-07-07, left as-is
+      per prior operator triage). - Net effect: naively adding LIGHTER-ZKSYNC to the P1 item's allowlist would exclude
+      every one of its default data_types from the batch universe (trades/book live-only, derivative_ticker
+      unimplemented here) — 0 shards touched, same silent-zero outcome as the original bug, just relocated. - Correct
+      fix needs date-branching dispatch mirroring `umi_tick_provider._route_lighter` (REST pre-2026-04-17 — though REST
+      doesn't actually cover historical trades/book either, so pre-2026-04-17 LIGHTER-ZKSYNC may have NO viable batch
+      source for trades/book at all — needs a design decision) + a `TardisAdapter.download_batch` integration for
+      derivative_ticker post-2026-04-17. Recommend routing this as its own scoped plan/task rather than a quick handler
+      patch.
+- [ ] [VERIFY] P1. Re-launch the PACIFICA-SOLANA/EXTENDED-STARKNET backfill now that the code fix has landed and confirm
+      real rows write (see recommendation 3) — check run.log for `venues=['PACIFICA-SOLANA']` /
+      `venues=['EXTENDED-STARKNET']` and `rows_written > 0`, not just VM RUNNING status. LIGHTER-ZKSYNC stays excluded
+      from this re-launch until the new P2 CODE todo above lands. (repo: deployment-service)
