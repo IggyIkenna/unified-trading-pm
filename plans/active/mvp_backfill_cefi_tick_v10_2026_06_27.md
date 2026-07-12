@@ -1657,3 +1657,33 @@ read on whether real rows land, per that issue's own operator-decision gate.
 **Gate verdict:** ❌ NOT MET (unchanged by this entry — these 2 Layer-1 tuples remain absent; no coverage re-run this
 session, see prior entry's numbers). **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** for the work done — Bugs A/B were
 fixed + shipped this session; Bugs C/D are scoped, evidenced, and filed as tracked todos for the next pass.
+
+**Addendum — 2026-07-12T20:10Z: Bugs C/D also fixed + shipped this same session.** Continued past the checkpoint above
+rather than stopping at "found but not fixed": both remaining sub-bugs closed cleanly with real Tardis metadata
+verification, not guesswork.
+
+- **Bug C (OKX) — both halves closed**: `unified-api-contracts@9a766e29` adds
+  `VENUE_DATA_TYPE_CAPABILITIES["OKX"] ["options_chain"] = "2020-02-01"` (start date verified live via
+  `api.tardis.dev/v1/exchanges/okex-options` — 247,540 real symbols); `market-tick-data-service@ae86c5ea` adds `"OKX"`
+  to `_TARDIS_CEFI_VENUES` (same structural gap as DERIBIT-COMBO's earlier fix — bare OKX spans 4 Tardis exchange slugs,
+  can never appear in the 1:1 `tardis_to_venue.values()` reverse map). 2 new regression tests confirm dispatch now
+  resolves to `okex-options`.
+- **Bug D (DERIBIT-COMBO) — closed, with a merge-conflict catch**: same `unified-api-contracts@9a766e29` commit adds
+  `"options_chain"` to the EXISTING `VENUE_DATA_TYPE_CAPABILITIES["DERIBIT-COMBO"]` entry (an
+  operator-2026-07-10-decision entry already existed for `trades`/`book_snapshot_5` serving a different Layer-1 purpose
+  — my first attempt created a duplicate dict key, caught by ruff F601 before shipping, then correctly merged into the
+  existing entry). Start date **2022-08-23**, verified live via `api.tardis.dev/v1/exchanges/deribit` (Deribit's
+  `type=='combo'` — 68,721 real symbols — only goes back to 2022-08-23, NOT bare DERIBIT's 2019-03-30 as this issue's
+  own earlier "Recommended fix" section had guessed).
+
+**VERIFY deliberately deferred, not attempted**: 4 other cefi VMs (`cefi-binance-futures-2020/2021-heavy/light`) were
+actively RUNNING when all 4 sub-bugs finished shipping. Per `issues/tardis_concurrent_ip_lockout_2026_07_12.md` (P0,
+filed by another slot this session — Tardis academic key allows only ONE concurrent IP; 74.9% of ALL cefi
+`attempted_failed` rows fleet-wide are 403 lockouts, not genuine absence), launching into that contention now would
+almost certainly produce a misleading false-negative rather than a clean read. Left as an open `[VERIFY]` todo in the
+issue doc, gated on either the concurrent-IP P0 resolving or a genuinely solo launch window.
+
+**Gate verdict (unchanged):** ❌ NOT MET — Layer-1 tuples for these 2 venues remain formally absent until VERIFY
+actually lands real rows; that is the correct, honest state (code-complete ≠ operationally-verified, per this plan's own
+completion discipline). **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** for the code work (all 4 bugs shipped,
+QG-green, tested); the VERIFY step IS deliberately blocked, pending the P0 concurrent-IP finding above.

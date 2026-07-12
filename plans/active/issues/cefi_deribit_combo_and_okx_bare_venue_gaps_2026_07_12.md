@@ -398,20 +398,54 @@ next session for another full VERIFY-then-fix cycle, not just the two known item
 
 ## New follow-up todos (this session)
 
-- [ ] [CODE] P1. OKX options_chain: add `"options_chain": "2020-02-01"` (confirm the real Tardis okex-options
-      `availableSince` before hardcoding) to `VENUE_DATA_TYPE_CAPABILITIES["OKX"]` in
-      `unified_api_contracts/registry/market_data_categories.py` AND fix the venue→adapter-class dispatch in
-      `market_tick_data_service/adapters/umi_tick_provider.py` so bare `"OKX"` options_chain/futures_chain requests
-      route to the Tardis batch path instead of `OKXAdapter` (which has no `download_batch`). Investigate the rc=137
-      OOM-kill after ~2min on a single date before assuming a clean fix resolves it — may indicate a separate retry/leak
-      issue on this failure path. (repo: unified-api-contracts, market-tick-data-service)
-- [ ] [CODE] P1. DERIBIT-COMBO: add a `"DERIBIT-COMBO": {"options_chain": "<verified-start-date>"}` entry to
-      `VENUE_DATA_TYPE_CAPABILITIES` in `unified_api_contracts/registry/market_data_categories.py` (verify the real
-      Tardis `type=='combo'` earliest-available date first — do not copy bare DERIBIT's 2019-03-30 without checking).
-      (repo: unified-api-contracts)
-- [ ] [VERIFY] P1. Once both land: rebuild the mtds-code tarball (`create-code-tarballs.sh --asset-group CEFI` —
-      mandatory stale-tarball gotcha, bit every prior VERIFY attempt on this issue), relaunch both venues via
+- [x] ✅ [CODE] P1. OKX options_chain: add `"options_chain": "2020-02-01"` to `VENUE_DATA_TYPE_CAPABILITIES["OKX"]` AND
+      fix the venue→adapter-class dispatch so bare `"OKX"` routes to the Tardis batch path instead of `OKXAdapter`.
+      (repo: unified-api-contracts, market-tick-data-service) — **`unified-api-contracts@9a766e29`** (capability entry,
+      start date verified live via `api.tardis.dev/v1/exchanges/okex-options` this session — 247,540 real option
+      symbols, `availableSince: 2020-02-01`, matches this doc's earlier finding) +
+      **`market-tick-data-service@ae86c5ea`** (added `"OKX"` to `_TARDIS_CEFI_VENUES`'s union — same structural gap as
+      DERIBIT-COMBO's earlier fix: bare OKX spans 4 Tardis exchange slugs so it can never appear in the 1:1
+      `tardis_to_venue.values()` map; without explicit membership, `fetch_tick_data_for_venue` fell through to the
+      generic `get_market_adapter` fallback → `OKXAdapter` → `AttributeError`). `_resolve_tardis_exchange`'s existing
+      itype-aware routing (slot-15's earlier fix) now correctly resolves to `okex-options` once this dispatch path is
+      actually reachable — verified via 2 new regression tests (`test_okx_in_tardis_cefi_venues`,
+      `test_okx_dispatches_through_real_venue_set`, the latter asserting `exchange == "okex-options"` end-to-end).
+      **rc=137 OOM-kill NOT separately investigated** — plausibly just the VM getting stuck on the (now-fixed)
+      `OKXAdapter` AttributeError path across many instrument-symbol retry attempts before the day-loop's own timeout;
+      re-check if it recurs after this fix in a real VERIFY run.
+- [x] ✅ [CODE] P1. DERIBIT-COMBO: add an `"options_chain"` key to `VENUE_DATA_TYPE_CAPABILITIES["DERIBIT-COMBO"]` in
+      `unified_api_contracts/registry/market_data_categories.py`. (repo: unified-api-contracts) —
+      **`unified-api-contracts@9a766e29`**. **Found + reconciled a MERGE CONFLICT with prior work**: an existing
+      `"DERIBIT-COMBO": {"trades": "2019-01-01", "book_snapshot_5": "2019-01-01"}` entry already existed (operator
+      2026-07-10 decision #6, `cefi_layer1_denominator_gaps_2026_07_03.md`) serving a DIFFERENT purpose (Layer-1
+      bundle-grain EXPECTED-denominator computation, per its own comment) — my first attempt created a duplicate dict
+      key (ruff F601, caught by QG) before I found and merged into the existing entry instead of introducing a second
+      one. Start date verified live via `api.tardis.dev/v1/exchanges/deribit` this session: Deribit's `type=='combo'`
+      symbols (68,721 confirmed live) only go back to **2022-08-23**, NOT bare DERIBIT's 2019-03-30 as originally
+      guessed in this doc's earlier "Recommended fix" section — combo/spread products launched years after bare options
+      did. 3 new regression tests, incl. one asserting the two venues' start dates deliberately differ. **🔧 FOLLOW-UP
+      CORRECTION 2026-07-12 (slot-3)** — dispatched independently for this same todo; found
+      `unified-api-contracts@9a766e29` already landed on rebase (identical `options_chain: "2022-08-23"` verified via
+      the same live Tardis lookup — two slots independently confirmed the same date). Additionally corrected the sibling
+      `trades`/`book_snapshot_5` entries in the SAME `DERIBIT-COMBO` dict block, which were still on the original
+      unverified `2019-01-01` placeholder (predates the operator 2026-07-10 decision #6 entry, never checked against
+      real combo-type availability) — moved both to the same verified `2022-08-23` for internal consistency. Also
+      corrected `venue_launch_dates.py`'s `CEFI_VENUE_LAUNCH_DATES["DERIBIT-COMBO"]`, which carried the identical
+      unverified `2019-01-01` value (undercounting the pre-launch window by ~3.5 years). 1 additional regression test
+      (`get_expected_data_types_for_venue("DERIBIT-COMBO")` includes `options_chain`). Shipped
+      **`unified-api-contracts@f9e50c7e`**, full `quality-gates.sh` green (239s), sentinel-verified quickmerge.
+- [ ] [VERIFY] P1. Rebuild the mtds-code tarball (`create-code-tarballs.sh --asset-group CEFI` — mandatory stale-tarball
+      gotcha, bit every prior VERIFY attempt on this issue), relaunch both venues via
       `launch-targeted-options-chain-backfill.sh --venue OKX --commit` / `--venue DERIBIT-COMBO --commit`, and confirm
       real rows land (check run.log for actual `TardisAdapter.download_batch: ... N records` with N>0, not just
       `venues=[...]` correctness — this session's VERIFY got that far twice already and still found zero-row bugs
-      further downstream both times). (repo: deployment-service)
+      further downstream both times, so don't declare victory on dispatch-correctness alone). **DELIBERATELY NOT
+      ATTEMPTED THIS SESSION** — 4 other cefi VMs (`cefi-binance-futures-2020/2021-heavy/light`) were actively RUNNING
+      at the point all 4 sub-bugs (A/B/C/D) finished shipping, and per
+      `issues/tardis_concurrent_ip_lockout_2026_07_12.md` (P0, filed by another slot this same session — the Tardis
+      academic key allows only ONE concurrent IP, and 74.9% of ALL cefi `attempted_failed` rows fleet-wide are 403
+      lockouts, not genuine unavailability), launching into that contention would almost certainly produce a
+      **misleading false-negative** (a 403 lockout masquerading as "the fix didn't work") rather than a clean read. Wait
+      for either (a) the concurrent-IP P0 to reach an operator decision, or (b) a genuinely solo window (zero other cefi
+      VMs running) before attempting this VERIFY — do not launch into contention just to close this todo. (repo:
+      deployment-service)
