@@ -516,6 +516,24 @@ approve / defer per category rather than per-venue.
   `bet_delta` on the Hyperliquid on-chain-CLOB precedent; Sportsbook via REST fixture poll on the `odds_api_ws.py`
   precedent).
 
+  **Corroborating PROD-asymmetry evidence (2026-07-12, `data_pipeline_e2e_check_2026_07_10.md` SPORTS fixture-day
+  investigation)**: queried PROD's real SPORTS availability index directly. The bare `BETFAIR` umbrella venue has **zero
+  captured rows in the entire index, ever** — not stale, never populated — while its 3 sub-venues
+  (`BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU`) each have thousands of captured days (7,687–8,384). This is NOT
+  evidence the BLOCKED-CREDENTIALS gate is partially lifted for the sub-venues — both real Betfair-specific producer
+  paths (this connector, batch `betfair_adapter.py`) remain gated for all 4 keys symmetrically, confirmed by reading
+  `_stream_inner()` (`betfair_ws.py:170`, warns + yields zero for all 4) and `_auth_headers()`
+  (`market_interface/adapters/sports/betfair_adapter.py:120`, raises `ValueError` pre-auth for all 4). The sub-venues'
+  data comes entirely from a DIFFERENT, already-credentialed pipeline —
+  `market_interface/adapters/sports/odds_api_adapter.py:87-88,111` lists `betfair_ex_uk`/`betfair_ex_eu`/`betfair_sb_uk`
+  as 3 of Odds API's own aggregated bookmaker keys, tagging each fanned-out record `"venue": bm_key` (line 698). Odds
+  API only ever models Betfair as these 3 regional products — no bookmaker key exists that could produce a row tagged
+  bare `"BETFAIR"`. Net: the sub-venues "working" is a side effect of the Odds API credential, unrelated to whether this
+  gap's own Betfair-specific connector is unblocked — bare `BETFAIR`'s reference-data identity
+  (`venue_adapter_keys.py:173`, IS-owned) remains genuinely, structurally unreachable until this gap's credentials land.
+  No new issue filed — this note closes the "why do 3 of 4 keys look alive in PROD" ambiguity this doc's own Progress
+  Log didn't yet address.
+
 - **2026-07-07** — **gap-004 shipped (COINBASE-FUTURES WSFeedConnector build)** by slot-4. Coinbase Derivatives (INTX
   perps + weekly / monthly cash-settled CDE dated contracts) stream through the Advanced Trade WS at
   `wss://advanced-trade-ws.coinbase.com` — a DIFFERENT endpoint from the existing COINBASE-SPOT connector (Coinbase
