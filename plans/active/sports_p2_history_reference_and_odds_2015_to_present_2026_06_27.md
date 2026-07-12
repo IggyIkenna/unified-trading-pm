@@ -273,6 +273,29 @@ singleton-lock namespace → may run concurrently.
       targeted re-fetch (same pattern as understat's closer script); (c) transfermarkt VM completion gets
       verified/re-launched if needed; (d) THEN this item re-verifies clean across all 6 sources.
 
+      **2026-07-12 later (slot-3) — TM VM confirmed completed clean, but the cited 1,364/938 "pending_fetch" figure
+              does not correspond to any manifest capture_status breakdown I can find; flagging the metric provenance gap
+              rather than guessing.** `tm-backfill-20260708-205809`'s run.log confirms `exit_code=0`,
+              `DEPLOYMENT_COMPLETED`, self-deleted per its own `VM_SHUTDOWN_ON_COMPLETION=true` — it genuinely ran to
+              completion (not abandoned mid-run). However, a fresh direct manifest read just now
+              (`instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`) shows: venue
+              `TRANSFERMARKT` (uppercase) = 92 rows total, ALL `attempted_failed`, blank `data_type`, dated 2014-2026 — looks
+              like a distinct/legacy population, not the `PLAYER_VALUES` residual described above. Venue `transfermarkt`
+              (lowercase) has NO `PLAYER_VALUES` rows at all in this manifest — only `odds`-family data_types
+              (trades/outcomes/markets/etc., all `empty_confirmed`, unrelated to player-value backfill). **Neither venue
+              casing shows an `expected_unattempted` count anywhere near 1,364 or 938.** This means the "pending_fetch"
+              metric prior sessions computed for this gate is NOT a simple `capture_status` groupby on this manifest —
+              it's very likely a DERIVED comparison (e.g. against a separately-computed instrument-catalogue "could-exist"
+              set, or a different bucket/table entirely — the run.log's own "Transfermarkt master/player_values: 5784 rows
+              written" line references a `master` table, not a manifest shard) that I did not have the closer script's own
+              audit tooling checked into the repo to reproduce confidently in the time I spent looking. Rather than report a
+              wrong number or a false "still 1,364" claim, flagging this metric-provenance gap explicitly: **whoever
+              continues this item should first find/re-derive exactly how the cited pending_fetch numbers were computed
+              (grep prior slots' actual audit commands, not just their headline numbers) before trusting either "still
+              broken" or "now fixed."** Did NOT touch item #6's checkbox (still correctly gated on footystats/open_meteo/SFI
+              regardless of TM's true state) or re-launch any VM (would be premature without first resolving the metric
+              question). No code change.
+
 **Full-execution criterion**:
 
 - ✅ Every non-AF reference source + odds-api reads zero-expected-missing across its coverage window, manifest-verified.
