@@ -178,26 +178,65 @@ Candidates:
       `expected_unattempted` for a league outside a source's coverage in the first place (matching the "materialised by
       the WRITER, never re-derived" SSOT), rather than relying on one-off typing sweeps that need re-running every few
       days. Full detail + exact residual numbers: sports_p2 plan Progress Log, item #4/#5/#7, entry dated 2026-07-08.
-- [ ] [SCRIPT] P2. **Root-cause writer fix + typing script still open; the BLOCKING operator-call portion is now
-      RESOLVED (2026-07-12).** Diagnose + close understat XG/XG_SHOTS blank-reason `expected_unattempted` residual —
-      same daily-forward-poll bug family, NOT previously covered by the residual list above. Confirmed 2026-07-08
-      (slot-2): rows carry a BLANK `error_reason` and `attempted_at` in the daily enum's write window, not the backfill
-      driver's. **Ruled out** as a season-range gap: re-ran `understat_bulk_backfill.py --end 2026` live — zero change
-      (proves the driver's own fixture-derived date enumeration never contains these dates). **UPDATE 2026-07-12
-      (slot-10)**: the residual shrank 6,093→30 over 4 days with zero code shipped against it, and re-verification
-      showed the survivors are a small (~30-row), always-≤3-day-old trailing edge, evenly spread across the big-5,
-      consistent with the July off-season (no fixtures) rather than a capture defect. **Operator ruled this residual
-      shape ACCEPTABLE** (answered `BLK-77e8cce7`, option A) — the `understat-vm-xg-complete` gate is flipped green on
-      this state (see sibling plan `understat_local_backfill_completion_2026_07_06.md` Progress Log 2026-07-12) without
-      waiting on the typing script. **Still open, now P2 (non-blocking)**: (a) build
-      `type_understat_eu_no_provider_coverage.py` (per-league MATCHDAY-aware, analogous to the weather/SFI scripts) so
-      the residual is explicitly typed `EXPECTED_NO_FIXTURE` instead of blank-reason; (b) the deeper root-cause writer
-      fix — the daily forward-poll enum should never materialise `expected_unattempted` for off-coverage/off-season
-      dates in the first place (matching the "materialised by the WRITER, never re-derived" SSOT) — is the durable fix
-      that would make this class of residual structurally zero instead of a tolerated small edge. (repo:
+- [x] [SCRIPT] P2. **Root-cause writer fix + typing script — part (a) DONE (2026-07-12, slot-10).** Diagnose + close
+      understat XG/XG_SHOTS blank-reason `expected_unattempted` residual — same daily-forward-poll bug family, NOT
+      previously covered by the residual list above. Confirmed 2026-07-08 (slot-2): rows carry a BLANK `error_reason`
+      and `attempted_at` in the daily enum's write window, not the backfill driver's. **Ruled out** as a season-range
+      gap: re-ran `understat_bulk_backfill.py --end 2026` live — zero change (proves the driver's own fixture-derived
+      date enumeration never contains these dates). **2026-07-12 (slot-10, earlier this session)**: the residual shrank
+      6,093→30 over 4 days with zero code shipped against it, and re-verification showed the survivors are a small
+      (~30-row), always-≤3-day-old trailing edge, evenly spread across the big-5, consistent with the July off-season
+      (no fixtures) rather than a capture defect. **Operator ruled this residual shape ACCEPTABLE** (answered
+      `BLK-77e8cce7`, option A) — the `understat-vm-xg-complete` gate is flipped green on this state (see sibling plan
+      `understat_local_backfill_completion_2026_07_06.md` Progress Log 2026-07-12) without waiting on the typing script.
+      **Part (a) shipped this session** — `type_understat_eu_no_provider_coverage.py` (instruments-service@24e9be6e):
+      matchday-aware, mirrors `reconcile_sports_blank_empty_reason_2026_06_24.py`'s fixture-index pattern (per-day
+      api_football FIXTURES parquets → `(canonical_league, day)` has-fixture set) rather than the weather/SFI scripts'
+      simpler league-coverage-only mask, since understat's big-5 leagues ARE covered — the gap is per-DATE (no
+      matchday), not per-league. Dry-run + `--apply` both run live against the production manifest: 30/30 candidate rows
+      had zero matching fixtures in the 3-day window (2026-07-10→2026-07-12, 5 leagues) → all 30 typed
+      `empty_confirmed(EXPECTED_NO_FIXTURE)`, written as per-VM shard
+      `_index/per_vm/type-understat-eu-1783833750.parquet` (consolidator merges next cycle). QG green
+      (instruments-service@24e9be6e, sentinel-verified). **Part (b) split into its own todo below — still open.** (repo:
+      instruments-service)
+- [ ] [CODE] P3. **Durable writer fix (part (b), split out 2026-07-12).** The daily forward-poll enum
+      (`instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_sports`, its per-day source-rule gate
+      `is_expected_for_source`) is season/transfer-window-aware but NOT matchday-aware — it doesn't check whether a
+      fixture is actually scheduled on a given (league, date) before seeding `expected_unattempted`. This is why the
+      understat XG/XG_SHOTS off-season residual (part (a) above) keeps re-materialising every ~24h and needs the one-off
+      typing script to mop it up repeatedly, instead of never being written blank in the first place (violates
+      "expected_unattempted materialised by the WRITER, never re-derived" — the writer should already know a date has no
+      fixture). Recommended shape: extend `is_expected_for_source` (or add a fixture-existence check alongside it,
+      reusing the `(canonical_league, day)` fixture-index pattern from
+      `reconcile_sports_blank_empty_reason_2026_06_24.py` / this session's `type_understat_eu_no_provider_coverage.py`)
+      so a covered league with genuinely no fixture that day yields `EXPECTED_NO_FIXTURE` directly from the enumerator,
+      not a blank `expected_unattempted` seed. **Scope risk**: `_enumerate_v2_sports` is shared across ALL sports
+      data_types (footystats/weather/SFI/TM too, not just understat) — a fixture-index lookup per (league, day) during
+      full-history enumeration is a cost/perf consideration (single-walk discipline) that needs its own design pass, not
+      a quick patch; scope this as its own plan/design task rather than folding into a P2/P3 script todo. NOT a
+      data-correctness blocker today (part (a)'s typing script + the operator's acceptable-residual ruling already keep
+      the gate green) — this is the structural fix that would make the class of residual zero going forward. (repo:
       instruments-service)
 
 ## Progress Log
+
+### 2026-07-12 (slot-10, `data_engineering`) — matchday-aware understat typing script built + applied live; part (b) split into its own todo
+
+Built `type_understat_eu_no_provider_coverage.py` (instruments-service@24e9be6e), closing part (a) of the P2 todo above.
+Reused the `(canonical_league, day)` fixture-index pattern from `reconcile_sports_blank_empty_reason_2026_06_24.py`
+(per-day api_football FIXTURES parquets, `af_league_id` → canonical league via `get_league_by_api_football_id`) rather
+than the weather/SFI scripts' league-coverage-only mask — understat's big-5 ARE covered, so a coverage-only mask would
+never fire; the gap here is per-DATE (no scheduled matchday). Dry-run then `--apply` both run live: 30/30 candidate rows
+(XG+XG_SHOTS, 5 leagues, 2026-07-10→2026-07-12) had zero fixtures in the built index → all 30 typed
+`empty_confirmed(EXPECTED_NO_FIXTURE)`, written as per-VM shard `_index/per_vm/type-understat-eu-1783833750.parquet`
+(consolidator merges next cycle). QG green on instruments-service (full `quality-gates.sh`, sentinel-verified against
+HEAD `24e9be6e`) before shipping via quickmerge.
+
+Split part (b) (the deeper writer fix — making `_enumerate_v2_sports`/`is_expected_for_source` matchday-aware so the
+residual never re-materialises) into its own P3 todo, since it touches the shared sports enumerator across ALL
+data_types (not just understat) and needs its own design/cost pass (fixture-index lookup cost during full-history
+enumeration) rather than folding into this already-long-lived P2 item. Not a correctness blocker today — the operator's
+prior acceptable-residual ruling + this typing script both hold the gate green.
 
 ### 2026-07-12 (slot-10, `data_engineering`) — operator ruled the understat EU residual acceptable; gate flipped; driver deleted
 
