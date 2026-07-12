@@ -480,6 +480,92 @@ own issue doc — [[eigenlayer_manifest_availability_index_collision_2026_07_12]
 the original issue doc) remains genuinely open, now with a documented reason not to take the seemingly-obvious next step
 without operator input.
 
+## 5d. Corrected the collision finding + fully resolved gas-fees/lst-rates (2026-07-12, operator-directed)
+
+**§5c/§5b's caution was well-placed but the eigenlayer-collision claim itself was wrong.** Re-verifying
+`_scan_eigenlayer()`'s actual body found it never calls `_write_availability_index()` — read-only, always was.
+Downloaded and inspected the real 482MB/27.4M-row availability index directly: healthy, comprehensive, real data (dozens
+of venues/data_types), never at risk. Corrected [[eigenlayer_manifest_availability_index_collision_2026_07_12]] in place
+(status → resolved) rather than leaving the wrong claim standing.
+
+**gas-fees/lst-rates fully fixed** (`market-tick-data-service@8b730664`): the real fix needed to be more than "point at
+the shared bucket" — captures span MULTIPLE venues per data_type (data_type lives only as a parquet column, never a GCS
+path segment), so raw blob-listing could never have worked regardless of which bucket it targeted. Added
+`_scan_via_availability_index()`, which reads the canonical index (`unified_trading_library.read_availability_index()`)
+and filters by the real `data_type` column — read-only, zero write/collision risk by construction. Verified against
+production: 49,575 real gas_fees rows + 222,836 real lst_rates rows (back to 2018-01-01) — this data was always there,
+just invisible to every scanner shape tried before this. Deleted the now-fully-dead
+`_scan_gas_fees`/`_scan_flat_date_bucket` (zero remaining callers), fixed both affected test files (49 tests), full
+`quality-gates.sh` green.
+
+Live-verifying the fix surfaced one more, smaller, separate finding: `read_availability_index()` raised
+`ManifestConsolidatorStaleError` for this exact bucket (consolidator reporting stale past its 120s default threshold,
+per-VM shards exist). Handled safely (caught, honest "empty" fallback, logged reason — did NOT force
+`MANIFEST_ALLOW_STALE_FALLBACK=true`, which risks a 12+GB OOM on this bucket's scale). Whether this means the
+consolidator Cloud Run Job is actually behind/down, or the 120s threshold is just tighter than this bucket's real
+cadence, is unresolved — flagged in the issue doc for an ops look, not urgent, not blocking.
+
+`e2e-testing/scripts/defi/staked_basis_funding_scan.py`'s `_lst_bucket()` reader is **still unfixed** — its assumed path
+shape (`day=.../asset_group=defi/venue=.../chain=.../instrument_type=lst/data_type=lst_rates/`) doesn't match what was
+actually found in the shared bucket during this investigation and wasn't independently verified — flagged, not guessed
+at.
+
+## 5e. Deleted the 5 scratch buckets; ml-store + orphaned-data-bucket migration (operator-directed, 2026-07-12)
+
+Operator confirmed the 5 scratch buckets (`data-job-config`, `ml_jobs_ikenova`, `staging-bucket-general`,
+`summary-stats`, `temp-bucket-general`) were safe to delete outright. Deleted (contents + buckets), verified gone.
+Bucket count: 231 → 226.
+
+**ml-configs-store/ml-models-store/ml-predictions-store (18 buckets)**: counted objects in all 18 — 17 are completely
+empty (all of ml-configs-store, all of ml-predictions-store, and 5 of 6 ml-models-store variants). Only
+`ml-models-store-central-element-323112` (the FLAT, non-canonical form) has real data: 38 objects, real trained LightGBM
+model artifacts (`.joblib`) + a `model_registry/manifest.json`. Migrated all 38 objects to the canonical env-tiered
+target `ml-models-store-prd-central-element-323112` (verified 38/38). **Did NOT delete the flat bucket** — confirmed
+`ml-service/ml_service/inference/config.py:135` has a hardcoded default (`"ml-models-store-{project_id}"`, the flat
+form) that overrides the resolver, meaning new model writes will keep landing in the flat bucket regardless of this
+migration. This is the same bug class as gas-fees/lst-rates (config default bypassing `resolve_bucket_name()`), but
+touches live ml-service training/inference config — a bigger, riskier change than anything else fixed this session.
+**Not fixed, flagged for a dedicated follow-up.**
+
+**35-orphaned-bucket re-investigation**: the original scratch file listing the 35 buckets was lost between sessions
+(different session ID). Re-derived via a research agent using the same dead-kind patterns documented in §3 of this plan.
+Found 23 buckets confirmed orphaned-with-data (not 35 — most of the remainder were already empty), totaling ~131.8 GB /
+~1.06M objects. Full findings (per-bucket object count, size, content sample, migration-status verdict) are in the
+agent's report, summarized here by verdict:
+
+- **Migrated (2 small, low-risk ones, done this session)**: `features-delta-one-cefi-test` (315 objects, 470 MiB → the
+  canonical `features-delta-one-cefi` bucket, which was otherwise empty of real day= data) and
+  `pnl-attribution-central-element-323112` (1 file, 13.6 KB → newly-created canonical
+  `pnl-attribution-store-central-element-323112`, confirmed via
+  `unified_trading_library/config_interface/paths/ registry.py`'s
+  `bucket_template="pnl-attribution-store-{project_id}"`).
+- **"Already migrated" candidates, NOT deleted this session** (moderate-high confidence per the agent, not independently
+  re-verified by me): `oracle-prices-central-element-323112` (flat) + `oracle-prices-prd-...` (Chainlink/Pyth feeds
+  confirmed live in the shared bucket, pre-migration continuity unconfirmed), `football-raw-data-all-sources-...`
+  (matching migrated data found in `instruments-store-sports-...`), `features-onchain-defi-prd-...` (date range falls
+  inside the canonical sibling's range).
+- **"Needs migration" candidates, NOT migrated this session** (~90GB combined, real unique data, no canonical copy
+  found): `lending-indices-central-element-323112` + `-prd` (30.7 GiB combined, `-prd` has continuous
+  2022-03-12→2026-05-28 history — the single highest-value bucket found), `dex-pools-` + `-prd` (18.7 GiB combined),
+  `gas-fees-central-element-323112` flat (9.2 GiB), `solana-defi-` + `-prd` (near-exact duplicate pair, 1.47 GiB each),
+  `liquidations-central-element-323112` (342 MiB), `lst-rates-central-element-323112` flat (296 MiB),
+  `lst-rates-prd-...` (238 MiB, has an unresolved `_needs_attribution/` quarantine subfolder).
+- **"Unclear", NOT touched**: `dex-swaps-` + `-prd` (60.5 GiB combined, too large for a full diff in the time
+  available), `evm-defi-` + `-prd` (near-exact duplicate pair, 2.1 GiB each, no confirmed destination),
+  `football-mapped-consolidated-...` (mapping/ subset confirmed migrated, odds/ subfolders not confirmed),
+  `football-backtest-results-...`, `football-ml-models-and-predictions-...` (neither referenced by the sports
+  Hive-migration script).
+
+**Deliberately stopped short of bulk-migrating the ~90GB "needs migration" set into the live production
+`market-data-tick-defi-prd` bucket, and deliberately did not touch anything football-related.** Reasons: (1) the DeFi
+historical buckets would need a genuine path-collision check against the live bucket's existing data before any bulk
+copy — several already show a `_migration/column_union.json` marker suggesting a prior schema-reconciliation attempt
+that never completed, worth understanding before repeating; (2)
+`unified-trading-pm/scripts/sports/ migrate_sports_gcs_to_hive.py`'s own docstring says "WAIT: Do not execute until user
+says 'go'" — an explicit, deliberate human gate already in the codebase that shouldn't be worked around; (3) the scale
+(tens of thousands to hundreds of thousands of objects per bucket) makes a wrong move expensive to detect and reverse.
+Reported findings to operator for an explicit decision before proceeding further.
+
 ## 6. Model-tier note (repeating from frontmatter, since it matters for how much to trust this)
 
 Per `AUTONOMOUS_AGENT_RULES.md`'s self-check, a long cross-repo autonomous loop like this one normally routes to
