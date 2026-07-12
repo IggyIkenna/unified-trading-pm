@@ -408,16 +408,16 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-                          full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-                          is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
-                          already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
-                          REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
-                          `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-                          `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-                          (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-                          full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-                          the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-                          pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                              is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
+                              already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
+                              REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
+                              `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -865,3 +865,26 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   actual manifest parquet contents, or the actual GCE instance state before concluding whether X was a genuine finding
   or an artifact of the checker itself. Slower per-bug, but it's why the tool is now trustworthy enough to produce a
   final report that means something.
+
+- 2026-07-11 (autonomous session, continued) — **The host rebooted a SECOND time** (uptime counter dropped, confirmed
+  not a false read), wiping the ENTIRE `/private/tmp`-scoped scratchpad again — this time including the 233/344 MTDS
+  results that had already been resumed once, plus the previously-thought-safe 108 IS results, plus the driver/
+  aggregator scripts themselves. Same root cause as the first incident (`/tmp` is not reboot-persistent); this is now a
+  confirmed-recurring pattern on this host, not a one-off.
+
+  **What survived (as before)**: every shipped git commit — all 9 real bug fixes this session, all pushed — and this
+  plan doc. **What was lost (as before)**: all in-progress sweep RESULTS (raw shard-check data), not any code or
+  decision record.
+
+  **Fix applied this time, not just a recovery**: moved the sweep's working directory off `/private/tmp` entirely, onto
+  persistent disk — `market-tick-data-service/_pipeline_e2e_check_sweep/` (gitignored, not `scripts/` since it's
+  throwaway working data, not a lifecycle-marked permanent script). Regenerated `is_shards.json` (108) /
+  `mtds_shards.json` (344) from the same UAC registries (byte-identical counts both times now — 3rd confirmation the
+  registries are deterministic), rewrote `driver.py`/`aggregate_report.py` verbatim at the new location. A THIRD reboot
+  will no longer cost a full data loss — `SWEEP_MANIFEST.json` and every per-shard report now live on the same disk as
+  the git checkouts, so a resume (the same diff-manifest-against-shard-list approach already proven this session)
+  becomes the only recovery step needed, not a full regenerate-and-restart.
+
+  Re-launched the full 452-shard sweep (IS then MTDS, concurrency=20) from a clean manifest at the new location — fully
+  re-running IS this time too (it was wiped along with MTDS), now with all 6 of this session's real tooling fixes
+  already baked in from the first job.
