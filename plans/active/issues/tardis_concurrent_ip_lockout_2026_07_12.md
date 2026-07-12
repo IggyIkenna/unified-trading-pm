@@ -430,3 +430,31 @@ That first fully-enabled wave is itself the natural in-situ 2+VM serialization c
 serialises waves ~20-80× slower — option (a) is the stopgap, option (c) centralized proxy remains the throughput-
 preserving endgame). Recommend the operator run that first enabled wave on a small venue/year slice and confirm the
 staggered "Tardis lease ACQUIRED by <vm>" ordering in the per-VM logs before enabling it fleet-wide.
+
+### 2026-07-13 — fresh corroboration from an unrelated CeFi futures/derivatives triage pass (still no lease enabled)
+
+Redoing a lost triage pass on `data_pipeline_e2e_check_2026_07_10.md` todo 25's CeFi futures/derivatives cluster
+(DERIBIT, DERIBIT-COMBO, OKX, OKX-SPOT, KRAKEN-FUTURES, BYBIT, BINANCE-DELIVERY). Two independent, real confirmations
+this exact gate is still live and still the dominant confound for this venue cluster specifically:
+
+1. **`CEFI:DERIBIT:liquidations`'s original 2026-07-09 sweep failure** (`manifest_status_invalid:attempted_failed`) —
+   pulled the real run.log (`mtds-backfill-cefi-pipelinecheck-20260712-041757`, a clean single-shard run, no VM-name
+   collision): `Tardis streaming request: exchange=deribit, symbol=BTC-PERPETUAL, data_type=liquidations` →
+   `Tardis HTTP 403` → `SHARD_INCOMPLETE ... missing: ['DERIBIT']`. Byte-for-byte the same signature this doc's own
+   summary already cites DERIBIT hitting 98.1% of the time. Not a new finding, just a fresh, independently-pulled
+   confirmation — no code action needed, corroborating only.
+2. **A live, real-time reproduction while THIS session's own diagnostic VMs were running** (2026-07-12T23:30-23:50Z):
+   launched fresh, clean (post-VM-name-collision-fix, post-candidate-venue-fix) solo re-verification VMs for
+   `DERIBIT-COMBO`/`KRAKEN-FUTURES`/`OKX-SPOT` (`trades`/`book_snapshot_5`/`derivative_ticker`, one venue per VM, no
+   self-inflicted concurrency beyond the 5-7 launched sequentially by this session's own driver). **Every single
+   per-symbol Tardis request across all 3 venues hit `code=274 concurrent-IP-lock`** (856/856 for OKX-SPOT `trades`,
+   646/646 for KRAKEN-FUTURES `trades`, 542/542 for DERIBIT-COMBO `trades` — 0 successes across ~2,044 real requests) —
+   confirmed via `gcloud compute instances list` that the SAME 4 production `cefi-binance-futures-2020/2021-heavy/light`
+   VMs (started 2026-07-12T08:46-08:49Z) were still RUNNING throughout, holding the real single-concurrent-IP lock for
+   their entire ~15+ hour lifetime so far. **This means a whole class of "genuine failure" venue-level findings from
+   this session's own fresh re-verification attempts (DERIBIT-COMBO/KRAKEN-FUTURES/OKX-SPOT's regular data_types) are
+   themselves inconclusive, not clean reads** — cross-referenced in detail onto
+   `cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`'s DERIBIT-COMBO section. Reinforces the existing
+   recommendation: a trustworthy per-venue verdict for this whole cluster needs either the fleet-wide lease enablement
+   or a genuine solo window (the 4 production VMs finishing/being paused) — re-running into contention just produces
+   more of the same 403-dominated noise, not new signal.

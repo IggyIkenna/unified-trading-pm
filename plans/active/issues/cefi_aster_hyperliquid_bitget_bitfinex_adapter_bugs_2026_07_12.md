@@ -268,3 +268,20 @@ DEFI venues, remaining TradFi data_types beyond the already-fixed `--source` gap
   fetch failed with `Tardis HTTP 403 code=274 concurrent-IP-lock` (the single-concurrent-IP Tardis key lease contended
   by other VMs on this shared host at test time; `tardis_concurrency_lease.py` exists specifically to manage this) — out
   of scope for this fix and not chased further here.
+- 2026-07-13 (fresh CeFi futures/derivatives triage pass, unrelated session) — **A 5th venue hitting the identical
+  `2cd02409` bug, found and confirmed FIXED via a fresh real-VM run — `BINANCE-DELIVERY`.** While triaging
+  `data_pipeline_e2e_check_2026_07_10.md` todo 25's CeFi futures/derivatives cluster,
+  `CEFI:BINANCE-DELIVERY:perp_funding`'s original 2026-07-09 sweep failure (`no_parquet_under`) traced to a
+  reverify-directory run.log from BEFORE this fix (`mtds-backfill-cefi-pipelinecheck-20260712-101535`, 2026-07-12 10:18
+  UTC — the fix landed 22:43 UTC the same day): byte-identical
+  `ERROR Venue BINANCE-DELIVERY: unexpected error (shard isolated): Invalid comparison between dtype=datetime64[ns] and date`.
+  BINANCE-DELIVERY is a perp-only venue (no dated-futures product), so its `available_to_datetime` catalogue column is
+  realistically all-`NaT` — the exact shape this fix's `_series_date_le`/`_series_date_ge` helpers target. **Re-ran
+  fresh post-fix** (`mtds-backfill-cefi-pipelinecheck-20260712-234345-091bad`, tarball pinned to a commit already
+  including `2cd02409`): the crash is GONE — the run now reaches
+  `TardisAdapter.download_batch: binance-delivery 2026-07-09 — 0 records (0 bulk, 1 per-symbol data types)` and proceeds
+  into real per-symbol Tardis requests (`binance-delivery/xrpusd_261225/…`, `solusd_260925/…`, etc.), which then hit the
+  SAME, separate, already-tracked `Tardis HTTP 403 code=274 concurrent-IP-lock` contention this doc's Finding 3
+  verification hit (see `tardis_concurrent_ip_lockout_2026_07_12.md`) — not the fixed bug recurring. **BINANCE-DELIVERY
+  confirmed resolved by the existing general fix, no new code needed** — the 0-records outcome is contention noise,
+  cross-referenced onto the P0 lockout doc rather than re-diagnosed here.
