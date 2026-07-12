@@ -46,9 +46,14 @@ source:
 
 # TradFi v9 Stage-1 finish — post-apply chain (AO Plan 2)
 
-> **🔴 2026-07-12: manifest lost 1,017,024 rows between 2026-07-10 and 2026-07-12, root cause unidentified — see
+> **🔴 2026-07-12: manifest lost 1,017,024 rows on 2026-07-10. Root cause EMPIRICALLY CONFIRMED (slot-7)** — the
+> manifest-consolidator's `unified-trading-library@0de04b6e` survivors-dedup applied last-write-wins to pre-existing
+> duplicate-key rows for the first time; a real subset (blank-`instrument_id` cross-vendor-source collisions) are NOT
+> true duplicates, confirmed via direct row sampling (a real `row_count=42` row silently dropped in favor of an empty
+> `row_count=0` row). **SHARED code, runs for every asset group** — fix is scoped as its own P0 todo (design +
+> regression test needed before shipping to a 5-AG-wide script). See
 > `plans/active/issues/tradfi_manifest_row_loss_regression_2026_07_12.md`. Do NOT re-run task 4's E5 rebuild or task
-> 11's dry-run prep until this is resolved.**
+> 11's dry-run prep, and do NOT restore the missing rows, until the fix lands.**
 >
 > **🤖 AO PLAN 2 of the instruments-completion set.** Dispatched to the agent-orchestrator (`assigned_vm: planning`,
 > role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** Coordinator =
@@ -309,7 +314,26 @@ source:
       converge on the SAME single blocker (task 10 fleet-drain), down from being tracked as 2 unrelated gaps.
       CF-2/CF-5/CF-6/CF-9/CF-13 GREEN; CF-8/Era-B RED-on-literal-check but pre-existing adjudicated non-issues
       (unchanged from 2026-07-08); CF-14 not run (cross-bucket, out of scope). Checkbox stays unflipped — genuinely not
-      all-GREEN, correctly gated on task 10.
+      all-GREEN, correctly gated on task 10. **UPDATE 2026-07-12 (slot-11 sonnet/high) - checkbox now blocked on
+      something bigger than task 10 as well.** Re-ran the full CF-1..CF-14 audit inline (same UTL-storage-client
+      workaround, gcloud/gsutil still broken in-slot). Results corroborate the SAME 2 genuine REDs as every prior
+      session (CF-1 13,971-row v4 tail; CF-3/CF-4 blank-pipeline_mode/source populations at 13,971/13,999 rows - the
+      CF-4 live-trickle count is now essentially static, not growing) - but this audit ran against a manifest that had
+      ALREADY lost about 1.02M rows for an unrelated reason, which slot-8 discovered independently the same session
+      while dispatched to task 4. Fleet-drain re-confirmed still FALSE (8 tradfi-bf-* VMs RUNNING via direct Compute
+      API). Investigated slot-8's finding in parallel and found a statistically strong candidate mechanism
+      (unified-trading-library@0de04b6e's survivors-dedup, predicted-loss match within 0.6%), but a deploy-timeline
+      check I ran raised a real complication (the image at the loss window's start predates that commit); while
+      reconciling that, **slot-7 independently landed a stronger, empirical confirmation of the SAME mechanism** -
+      direct row-sampling proof (a real captured row silently dropped in favor of an empty one from a different vendor
+      source) - which supersedes my statistical approach. See
+      plans/active/issues/tradfi_manifest_row_loss_regression_2026_07_12.md ("Root cause CONFIRMED" section, slot-7) for
+      the full empirical evidence and proposed fix; my own deploy-timeline data was not needed once the direct row-level
+      proof landed, so it isn't carried into the issue doc. **This checkbox stays unflipped for the SAME two reasons
+      task 4 now carries**: not just task 10's fleet-drain, but a confirmed (not just candidate) data-correctness
+      regression in the shared consolidator that calls the whole audited manifest's completeness into question until the
+      fix (its own P0 todo - design + regression test needed for a 5-asset-group-wide script, not yet implemented) lands
+      and the missing rows are restored. No repo code commit this entry (audit + investigation only).
 - [x] ✅ [DATA] P0. **IS enumerate-seed for tradfi** — seed the tradfi could-exist denominator (`expected_unattempted`)
       from the rebuilt manifest + IS catalogue. Gate: tradfi `expected_*` rows materialised by the writer; fresh scan →
       0 unseeded candidates. **DONE 2026-07-09 (slot-14 sonnet/high).** Two prior slots (7, 2) diagnosed this task and
@@ -411,6 +435,31 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-12 (slot-11 sonnet/high)** — **Task 6 (E7 verify) re-dispatch: re-audit corroborates prior REDs (no new
+  drift on the CF checks themselves); independently investigated slot-8's P0 row-loss finding in parallel with slot-7,
+  whose empirical confirmation superseded my own statistical approach.** Dispatched to task 6. Full CF-1..CF-14 re-run
+  inline (UTL storage client workaround) matched slot-8's manifest read exactly (5,088,405 rows) and reproduced the same
+  2 genuine REDs the last 3 sessions found (CF-1 13,971-row v4 tail; CF-3/CF-4 blank-pipeline_mode/source, now
+  essentially static at 13,971/13,999 rows, not growing further). Fleet-drain re-confirmed FALSE (8 `tradfi-bf-*` VMs
+  RUNNING). **Then investigated slot-8's "root cause not yet identified" gap**: found a pre-write backup artifact
+  narrowing the loss window to ~4h39m and ruling out `manifest_dedup_2026_07_10.py` as the cause; found
+  `unified-trading-library@0de04b6e`'s survivors-dedup as a statistically strong candidate (predicted-loss match within
+  0.6% of the observed loss, via grouping the pre-loss snapshot by grain key). Started writing this up as a confirmed
+  root cause, then ran a deploy-timeline check (Cloud Run execution image history) that complicated it — the image
+  running at the loss window's start predates that commit by ~21h, so a single-commit causal story didn't hold cleanly.
+  **While reconciling that gap, slot-7 (working the SAME issue doc concurrently, in a separate session) landed a
+  stronger, empirical confirmation of the identical mechanism** — downloaded the real pre-loss/current snapshots, ran
+  the consolidator's own dedup key against them in DuckDB (predicted loss within 0.5%), and directly sampled dropped-row
+  pairs proving genuine data loss (a real `captured` row with actual data silently dropped in favor of an empty row from
+  a different vendor source). This is materially stronger evidence than my statistical correlation (direct proof vs.
+  inference), so I deferred to it rather than push my own competing writeup — reverted my draft issue-doc edits and left
+  slot-7's landed version as the SSOT (see `plans/active/issues/tradfi_manifest_row_loss_regression_2026_07_12.md`,
+  "Root cause CONFIRMED" section). Updated only this plan's own task 6 entry + header banner to correctly credit the
+  empirical confirmation. Task 6 checkbox stays unflipped — correctly, now doubly-gated (task 10 fleet-drain + the
+  confirmed consolidator-bug, whose fix is its own not-yet-implemented P0 todo). No repo code commit this entry (audit +
+  investigation only; the consolidator fix needs a design review + regression test before shipping to a
+  5-asset-group-wide script, per slot-7's own correctly cautious scoping).
 
 - **2026-07-12 (slot-8 sonnet/high)** — **🔴 BIG FINDING, not fixed this session: tradfi manifest lost 1,017,024
   distinct rows between 2026-07-10T11:33Z and 2026-07-12T03:34Z.** Dispatched to task 4 (E5 rebuild); re-verified
