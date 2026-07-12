@@ -826,6 +826,9 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       as of this check). Making this code change now would remove the legacy `category=defi/` twin while un-migrated
       defi data still lives ONLY at that legacy path on disk — a real regression, not a false gate. Did NOT touch
       `features-service` code this dispatch. Skipping back to the dispatcher rather than forcing the change.
+      **RE-VERIFIED 2026-07-12 (slot-10) — STILL GATED**, same dispatcher-mismatch class as slot-11 flagged.
+      `defi_manifest_canonicalisation_2026_06_01.md:1299` C0 (`path + bucket canonicalisation... RUN ON A VM`) is still
+      `- [ ]` unchecked. Did NOT touch `features-service` code; calling `/skip-current-task` back to the dispatcher.
 - [x] ✅ [CODE] P0. **Upstream pre-flight data-check audit + batch=live symmetry (ALL sports services)** — AUDIT
       COMPLETE 2026-06-02. Per-service table below; gaps captured as P1/P2 todos beneath. Every service either VERIFIED
       GREEN or has a tracked gap-todo. Evidence: this slot, reading code in-repo (grep-then-read across 5 services).
