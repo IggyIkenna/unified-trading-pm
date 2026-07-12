@@ -608,3 +608,45 @@ identical recommendation) by adding a `prereqs.conditions` gate to this backlog 
 has now exhausted every slot for this task_id (in which case no further action may be needed until an operator manually
 re-enables it), and (3) once the VM reaches `COMPLETE` (~1.4h+ out) AND the consolidator resumes (tracked in
 `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`), run the actual G2 gate commands from the parent plan.
+
+### Re-check #12 — confirmed `BLK-c7e188e2` also vanished; NOT re-filing a 4th parking blocked-question (proven dead for this task_id); recomputed full-window ETA — 2026-07-12T12:47Z (data_engineering slot-4)
+
+12th dispatch on this exact todo. Fresh-pulled all repos (clean). Verified rather than trusted:
+
+- **VM roster**: `mtds-lending-indices-20260712-112557` still the only instance, `STATUS=RUNNING`
+  (`~/google-cloud-sdk/bin/gcloud` — plain `/snap/bin/gcloud` still fails `snap-confine`/`cap_dac_override` in this slot
+  too, confirming the working-binary note yet again).
+- **Real-progress check** (`run.log` tail direct from GCS): active writes for `date=2023-05-31`, forward progress from
+  re-check #11's `2023-05-15` observation ~9 min earlier (~16 days/9 min ≈ same ~1.8-2.3 days/min pace every prior
+  re-check observed). No `Unknown lending protocol` / no `uniqueKey`-GraphQL errors — both fixes still holding. Per-VM
+  shard fresh (`Update time: 2026-07-12T12:45:53Z`).
+- **Consolidator staleness — confirmed still unresolved**: consolidated `_index/availability_index.parquet`
+  `Update time` **still** `Fri, 10 Jul 2026 21:42:30 GMT` — byte-identical to all 9 prior re-checks (#4-#11), now the
+  10th consecutive confirmation. The VM's own log surfaces `ManifestConsolidatorStaleError` on every cycle (140556.9s
+  stale at this check), correctly refusing the per-VM-shard whole-bucket merge fallback.
+- **Checked `GET /api/state.blocked_queue` before deciding whether to re-file**: confirmed `BLK-c7e188e2` (re-check
+  #11's filing) is ALSO gone — same fate as `BLK-0c06a5c6` and `BLK-66f6516d`. The only entry that survived across all
+  12 dispatches is `BLK-1ffbd75b` (filed 11:10Z by slot-3, still `answered_at: null` at this check, ~97 min unanswered)
+  — and it survived specifically because it's attached to a **different** task_id (`…-003`, the tarball-staleness
+  finding) that was never itself `skip-current-task`'d. This is decisive confirmation of re-check #11's root-cause
+  diagnosis: a blocked-question filed against task_id `…-001` (this G2-gate-rerun todo) cannot outlive that same
+  dispatch's own `skip-current-task` call, no matter how many times it's refiled.
+- **Deliberately NOT filing a 4th parking blocked-question against this task_id** — three consecutive attempts
+  (`BLK-0c06a5c6`, `BLK-66f6516d`, `BLK-c7e188e2`) already proved the mechanism cannot work here; a fourth identical
+  attempt would just be re-confirming an already-falsified hypothesis and burning another agent turn. Workers have no
+  `backlog.yaml` write access (confirmed by re-check #11), so there is no worker-side lever left to actually park this
+  task — it requires main/operator to act on the fully-documented recommendation already sitting in this doc (add
+  `prereqs.conditions` or `priority: 999` to the `…-001` backlog entry directly).
+- **Recomputed ETA using the full window, not just genesis** (prior re-checks estimated only "time to genesis", which
+  understates how long until the G2 gate is actually re-runnable): at the observed ~2 days/min pace, genesis
+  (2024-01-01) is **~1.8h out** from the `2023-05-31` position, but the full backfill window (through 2026-07-12) is
+  **~9.5h out** from VM start (~11:26Z) — i.e. realistically **~20:00Z** before the VM itself reaches `COMPLETE`, on top
+  of whatever time the consolidator separately needs to resume. The G2 gate cannot be usefully re-run before then
+  regardless of dispatch cadence.
+
+**Verdict unchanged**: gate still cannot be usefully re-run. `skip-current-task`'d — 12th dispatch to bounce on the
+identical precondition. Given the full-window ETA (~9.5h, not ~1.8h) and the now-triple-confirmed dead parking channel,
+whoever next has main/operator authority should treat this as settled: action the `prereqs.conditions`/`priority: 999`
+recommendation directly on the backlog entry rather than waiting for another blocked-question to land, since none filed
+against this task_id can survive to be read. Absent that action, expect this task to keep bouncing roughly every 5-10
+minutes for another ~9h.
