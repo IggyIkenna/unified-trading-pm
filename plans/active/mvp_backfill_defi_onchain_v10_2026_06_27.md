@@ -183,19 +183,38 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 
 ### G1.6 — Solana DEX-pool venues (ORCA/RAYDIUM/KAMINO) never backfilled (found during G2 2026-07-12)
 
-- [ ] [SCRIPT] P1. Launch a dedicated Solana dex-pool backfill VM for ORCA/RAYDIUM/KAMINO (`dex_pool_state` +
-      `dex_pool_swaps`) — analogous to the dedicated `mtds-solana-drift-backfill` VM G1 launched for DRIFT perp_funding.
-      Root cause (confirmed 2026-07-12): the original `mtds-dex-pools-backfill`/`mtds-dex-swaps-backfill` G1 VMs
-      explicitly SKIPPED these 3 Solana venues ("Solana venues (orca/raydium/phoenix) skipped as expected." — this plan,
-      G1 dex-pools launch log) and no follow-up VM was ever launched to cover them, unlike DRIFT. Capture code + UAC
-      MVP-scope declarations both confirm these ARE in-scope (`dex_pools_handler.py` `_collect_solana_dex()` routes
-      `fetch_orca`/`fetch_raydium`/`fetch_kamino_vault`;
-      `unified-api-contracts/registry/capability_declarations/     _defi.py:665-687` declares them; `mvp_scope.py` v13 =
-      all 57 IS-producible defi venues are MVP). Current honest coverage (2026-07-12): ORCA/RAYDIUM/KAMINO all show
-      `captured=0` with large `expected_unattempted` (dex_pool_state: ORCA eu=208,405, RAYDIUM eu=92,573, KAMINO
-      eu=105,005; dex_pool_swaps: ORCA eu=208,392, RAYDIUM eu=92,605). Repos: `deployment-service` (launcher),
-      `market-tick-data-service` (Solana DEX adapters already exist, no new code expected). **Gate:**
-      ORCA/RAYDIUM/KAMINO dex_pool_state + dex_pool_swaps attempted_failed=0 AND expected_unattempted=0 post-genesis.
+- [x] ✅ [SCRIPT] P1. Launch a dedicated Solana dex-pool backfill VM for ORCA/RAYDIUM/KAMINO (`dex_pool_state`) —
+      analogous to the dedicated `mtds-solana-drift-backfill` VM G1 launched for DRIFT perp_funding. Root cause
+      (confirmed 2026-07-12): the original `mtds-dex-pools-backfill`/`mtds-dex-swaps-backfill` G1 VMs explicitly SKIPPED
+      these 3 Solana venues ("Solana venues (orca/raydium/phoenix) skipped as expected." — this plan, G1 dex-pools
+      launch log). **Deeper root cause (2026-07-12, this todo):** it's not just that no follow-up VM was launched —
+      `DexPoolsHandler`/`DexSwapsHandler` resolve protocol→chain via UAC `get_supported_chains_for_protocol()`, a
+      `SUBGRAPH_IDS`-only lookup; ORCA/RAYDIUM/KAMINO have no subgraph (REST-API venues) so it returns `[]` and the
+      per-protocol loop `continue`s — `_collect_solana_dex()` (which DOES route
+      `fetch_orca`/`fetch_raydium`/`fetch_kamino_vault`) is dead code from that call site, never reached. The working,
+      already-shipped path is `SolanaDefiHandler` (`--operation collect-solana-defi`, `VM_TASK=solana-defi-backfill`),
+      which hardcodes its own protocol list and carries the forward-only-honest write gate
+      (`_filter_rows_to_target_day`, incident `solana_defi_fake_history_snapshot_2026_06_17.md`): ORCA/RAYDIUM/KAMINO's
+      REST endpoints expose only the CURRENT pool/vault set (no historical endpoint), so a historical backfill date's
+      now-snapshot rows are dropped and recorded as honest absence (`record_zero_rows` →
+      `EXPECTED_PRE_VENUE_LAUNCH`/`SOURCE_RETURNED_ZERO`) instead of being falsely back-dated as `captured` — this still
+      resolves every IS-seeded `expected_unattempted` cell (the Gate below) even though genuine `captured` rows only
+      land for the day the VM actually runs (today), the same accepted shape as DRIFT/marginfi/solend's Solana legs.
+      **Shipped:** `deployment-service@8f5592c` — new launcher `scripts/vm/launch-mtds-solana-defi-backfill-vm.sh`
+      (`VM_TASK=solana-defi-backfill`, `VM_SOLANA_PROTOCOLS=kamino;orca;raydium`) + wired the pre-registered
+      `mtds-solana-defi-backfill` `launcher_registry.py` slot (previously `None`) to it. **Launched:** VM
+      `mtds-solana-defi-backfill` created via the Python `compute_v1` client (gcloud CLI unavailable in this agent-slot
+      sandbox — snap-confine fails under the container's `no_new_privs`; the API call mirrors the launcher's `--dry-run`
+      output exactly), zone `asia-northeast1-c`, SPOT, window 2023-01-01→2026-07-12, status `RUNNING` at launch.
+      **Gate:** ORCA/RAYDIUM/KAMINO dex_pool_state attempted_failed=0 AND expected_unattempted=0 post-genesis — verify
+      once the VM completes (see G2).
+- [ ] [SCRIPT] P2. `dex_pool_swaps` for ORCA/RAYDIUM has NO existing data source — new finding, not absorbed into the P1
+      todo above. Neither `SolanaDefiHandler`/`_solana_defi_fetch.py` (dex_pool_state only, via REST pool-list
+      snapshots) nor `DexSwapsHandler` (`get_subgraph_id(protocol, "SOLANA")` is always `None` for these venues — no
+      Solana routing at all) produce individual swap events for Solana AMMs. Building a swap-level Solana indexer
+      (on-chain tx parsing via Alchemy/Helius, or a Jupiter-aggregator trade-history adapter) is new capability, not a
+      VM launch — scope it as its own plan/todo before attempting the `dex_pool_swaps` half of this Gate. Repo:
+      `market-tick-data-service`.
 
 ### G2 — verify honest-complete
 
@@ -211,6 +230,22 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 ---
 
 ## Progress Log
+
+### G1.6 — Solana dex_pool_state (ORCA/RAYDIUM/KAMINO) dedicated VM launched (2026-07-12, slot 10)
+
+Root-caused why these 3 venues never got a fill: `DexPoolsHandler`/`DexSwapsHandler` resolve chains via UAC
+`get_supported_chains_for_protocol()` (SUBGRAPH_IDS-only) which returns `[]` for these REST-API venues — the
+per-protocol loop skips them entirely, so the existing `_collect_solana_dex()` routing is unreachable dead code from
+that call site. Shipped `deployment-service@8f5592c`: new launcher `launch-mtds-solana-defi-backfill-vm.sh` targeting
+the already-working `SolanaDefiHandler` (`--operation collect-solana-defi`), wired into the pre-registered (previously
+`None`) `mtds-solana-defi-backfill` `launcher_registry.py` slot. Launched VM `mtds-solana-defi-backfill` (zone
+`asia-northeast1-c`, SPOT, `VM_SOLANA_PROTOCOLS=kamino;orca;raydium`, window 2023-01-01→2026-07-12) via the Python
+`compute_v1` client — `gcloud` CLI is unavailable in this agent-slot sandbox (snap-confine fails under the container's
+`no_new_privs`), so the instance-create call was issued directly against the Compute API mirroring the launcher's
+`--dry-run` output. Status `RUNNING` at launch; boot serial console confirmed normal OS boot. **New finding filed as its
+own P2 todo** (not absorbed into this task): `dex_pool_swaps` for ORCA/RAYDIUM has no existing data source anywhere in
+the codebase — building one is new capability (a Solana swap-event indexer), out of scope for a launcher task.
+**Follow-up needed:** verify VM reaches the dex_pool_state Gate once it completes its historical pass (folds into G2).
 
 ### G0.2 — Gap report (2026-06-27 21:51 UTC)
 
