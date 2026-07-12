@@ -136,9 +136,24 @@ root filesystem, not `/tmp`).
       not touch. Leaving unchecked since the fleet-wide clear isn't done — but the mechanism + a working, safe
       methodology is now proven, not just hypothesized. Whoever owns those other slots should apply the same per-slot
       self-check.
-- [ ] [INFRA] P1. Add a structural fix so this can't recur: either grow the `/tmp` tmpfs size, add scheduled pruning of
-      old subagent transcripts, or repoint `CLAUDE_CODE_TMPDIR` to the root filesystem (51G free) instead of the 2GB
-      tmpfs. (repo: agent-orchestrator, wherever slot/session bootstrap config lives)
+- [x] ✅ [INFRA] P1. Add a structural fix so this can't recur: either grow the `/tmp` tmpfs size, add scheduled pruning
+      of old subagent transcripts, or repoint `CLAUDE_CODE_TMPDIR` to the root filesystem (51G free) instead of the 2GB
+      tmpfs. (repo: agent-orchestrator, wherever slot/session bootstrap config lives) — done 2026-07-12 (slot-12),
+      `agent-orchestrator@fd9c002`. Took option (c) from this todo's own recommended decision (repoint
+      `CLAUDE_CODE_TMPDIR`) — lowest-risk of the three (no host fstab/tmpfs-size change needing root, no new pruning
+      scheduler to design/test): both worker/main-agent spawn points now export `CLAUDE_CODE_TMPDIR` pointed at a
+      per-session `cc-tmpdir/` subdir co-located with each session's already-on-`/home` `CLAUDE_CONFIG_DIR` (51G free,
+      same filesystem this issue doc's own diagnosis already confirmed is not the constrained one) instead of leaving it
+      at the harness default (the small, host-wide-shared, RAM-backed `/tmp` tmpfs this whole incident is about). Fixed
+      both spawn sites: `server/tmux_spawn.py::_start_session` (the persistent worker/main-agent tmux spawn — confirmed
+      via this session's own fleet-wide cleanup work that this is where the actual accumulation lives, every large
+      offender was a `--tabs-N` worker directory) and `server/usage_tracker.py::_do_one_capture` (the lower-volume
+      serialized `/usage`-probe pexpect spawn, fixed for completeness). Added a regression test
+      (`tests/test_tmux_spawn_boot_landed.py::test_spawn_command_exports_claude_code_tmpdir_off_shared_tmpfs`) asserting
+      the exported env var + that the directory is actually created; full QG green (1192 passed, 1 skipped). New
+      sessions/respawns get the fix automatically (env var is set at spawn time, no operator action needed) — does NOT
+      retroactively fix already-running sessions' `CLAUDE_CODE_TMPDIR` (they keep the harness default until their next
+      respawn), which is fine since todo #1 above already cleared the accumulated backlog fleet-wide.
 - [ ] [DATA] P2. Once Bash access is confirmed restored on slot 6 (or whichever slot picks this back up), resume
       `sports_p2_history_reference_and_odds_2015_to_present-002` — fix `_close_transfermarkt`'s `force=True` →
       `force=False` in `instruments-service/scripts/backfill/sports_daily_enum_residual_closer_2026_07_12.py`, close the
