@@ -46,6 +46,10 @@ source:
 
 # TradFi v9 Stage-1 finish — post-apply chain (AO Plan 2)
 
+> **🔴 2026-07-12: manifest lost 1,017,024 rows between 2026-07-10 and 2026-07-12, root cause unidentified — see
+> `plans/active/issues/tradfi_manifest_row_loss_regression_2026_07_12.md`. Do NOT re-run task 4's E5 rebuild or task
+> 11's dry-run prep until this is resolved.**
+>
 > **🤖 AO PLAN 2 of the instruments-completion set.** Dispatched to the agent-orchestrator (`assigned_vm: planning`,
 > role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** Coordinator =
 > `instruments_completion_tracker_2026_07_06.md` (Stage 1). Runs in **parallel** with Plan 1 (cefi) — no `depends_on`;
@@ -242,7 +246,20 @@ source:
       gap while verifying: the CF-4 source-restamp checkbox in the linked issue doc was flipped ✅ on 2026-07-07 without
       the `--apply` ever being run — corrected and actually applied today (see Progress Log). Not flipping this checkbox
       is intentional, matching this same task's 2026-07-07 precedent ("checkbox is INTENTIONALLY NOT FLIPPED because the
-      plan's 100%-v9 gate cannot be verified").
+      plan's 100%-v9 gate cannot be verified"). **🔴 UPDATE 2026-07-12 (slot-8 sonnet/high) — re-verification surfaced a
+      NEW, more serious blocker: the manifest lost 1,017,024 distinct rows (corpus-wide, all major venues, 2019-2026)
+      between the 2026-07-10T11:33Z snapshot and a fresh 2026-07-12T03:34Z read (6,107,337→5,088,405 total rows;
+      13,971-row v4 tail unchanged, so the loss is entirely from previously-`schema_version=9` `captured`/
+      `empty_confirmed` rows).** Fleet-drain re-confirmed still FALSE (8 `tradfi-bf-*` VMs RUNNING via direct Compute
+      API — `gcloud` broken in-slot). Ruled out `cleanup_legacy_twins.py` as the cause (grep-verified: it only reads the
+      manifest and deletes GCS blobs, no write path to `_index/availability_index.parquet`) and ruled out a benign
+      natural-key dedup (distinct-key count dropped by the same ~1.02M, confirmed via direct key-set diff, not just
+      duplicate collapse). Root cause NOT identified — needs Cloud Logging access this slot lacks (`gcloud` broken).
+      Filed as a P0 big-finding issue doc: `plans/active/issues/tradfi_manifest_row_loss_regression_2026_07_12.md`.
+      **This checkbox stays unflipped for a more serious reason than before** — not just "waiting on task 10's
+      fleet-drain" but "the manifest this task would certify against is actively losing rows for an unidentified
+      reason." Do NOT re-run the E5 rebuild until the issue doc's P0 todos (identify writer, root-cause, restore) are
+      resolved — re-running now risks masking or compounding the regression.
 - [x] ✅ [DATA] P1. **E6 CF-7 relabel — DIAGNOSIS COMPLETE 2026-07-07 slot-7 opus/max.** All 5,541 CF-7 rows (4,903
       blank data_type + 638 blank/UNKNOWN venue) are the SAME class of manifest row: aggregate-level phantom markers
       with capture_status=attempted_failed, error_reason=phantom_captured_no_parquet_at_canonical, blank
@@ -394,6 +411,21 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-12 (slot-8 sonnet/high)** — **🔴 BIG FINDING, not fixed this session: tradfi manifest lost 1,017,024
+  distinct rows between 2026-07-10T11:33Z and 2026-07-12T03:34Z.** Dispatched to task 4 (E5 rebuild); re-verified
+  fleet-drain (still FALSE, 8 `tradfi-bf-*` VMs RUNNING, confirmed via direct Compute API since `gcloud` is broken
+  in-slot) and re-read the manifest expecting the same static 13,971-row v4 tail the last 3 sessions found. Instead
+  found the corpus itself had shrunk: 6,107,337→5,088,405 total rows (v4 tail unchanged at 13,971; the loss is entirely
+  `captured`/`empty_confirmed` rows that were previously `schema_version=9`). Confirmed via direct key-set diff (not
+  just aggregate counts) that 1,017,024 keys present 2026-07-10 are gone, spanning every major venue
+  (CME/NYSE/NASDAQ/CBOE/KRX/YAHOO_FINANCE/ICE/FX) and dates 2019-2026 — broad corpus-wide, not one bad shard. Ruled out
+  `cleanup_legacy_twins.py` (grep-verified no manifest-write path) and ruled out benign dedup (distinct-key count
+  dropped by the same ~1.02M). Root cause NOT identified (needs Cloud Logging this slot lacks). Filed
+  `plans/active/issues/tradfi_manifest_row_loss_regression_2026_07_12.md` (P0, 4 todos: identify writer, root-cause,
+  restore the 1M rows, add a row-count regression guard). Task 4 checkbox stays unflipped — now blocked on this new
+  finding, not just task 10's fleet-drain. No repo code commit this entry (issue doc + plan-doc edit ship via the PM
+  `docs(plans):` carve-out).
 
 - **2026-07-10 (slot-3 sonnet/high, same session, later)** — **Task 2 CHECKBOX FLIPPED — corpus-wide `orphan_class_E=0`
   confirmed for the first time this plan.** The full re-sweep launched earlier this session (PID 3075330) completed
