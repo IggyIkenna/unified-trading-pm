@@ -1239,3 +1239,42 @@ phantom-reconcile/hygiene re-run — same time-budget constraint as the prior en
 **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM.** One code fix shipped + verified, two backfills launched + pending
 T+10min verification, one new cross-repo finding filed. Layer-1 has now moved 71.05%→79.5% across this and the prior
 same-day session.
+
+---
+
+### G4 Session Close-out — 2026-07-12T08:10–08:30Z (data_engineering slot-2, session end)
+
+**T+10min VM verification (HARD RULE — no fire-and-forget):** all 14 BITGET-FUTURES/KRAKEN-FUTURES shards confirmed
+RUNNING/STAGING via `gcloud compute instances list` at 08:07Z (~5min after launch): 8×BITGET-FUTURES (2023-2026,
+heavy+light) + 6×KRAKEN-FUTURES (2021-2026, light-only). **Real infra bug found + fixed en route**: bare `gcloud` on
+this host resolves to a broken snap wrapper (`snap-confine: cap_dac_override` missing) that fails EVERY call silently,
+with the launcher's `| tail -1` masking the failure as a plausible-looking log line — the FIRST launch attempt (pre-fix)
+created **zero real VMs** despite reporting "Launching cefi-bitget-futures-..." for all 9 shards before being
+interrupted. Fixed for this session via `PATH="/snap/google-cloud-cli/current/bin:$PATH"` prefix (matches the same
+workaround noted in the 2026-07-03T10:20Z entry above — this is a recurring host-level issue, not session-specific;
+worth a permanent fix in the launcher scripts or shell profile, not filed as a new issue doc since already implicitly
+tracked by the recurrence).
+
+**New lead (not confirmed, not filed as issue doc — a pointer for the next session): the 4 remaining
+book_snapshot_5-only gaps** (ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC/PACIFICA-SOLANA) are likely NOT a source limitation
+— `market_tick_data_service/adapters/_umi_extended.py::fetch_extended_rest` unconditionally calls
+`_fetch_extended_book_for_symbol` for every symbol (real `/orderbook` REST endpoint, no data_types gate), so book data
+IS being requested. But `_onchain_perp_batch_umi.py::prefetch_umi_symbol_frames` calls `fetch_extended_rest`/
+`fetch_pacifica_rest` WITHOUT passing `failed_per_instrument` (the kwargs dict only sets `date`/`instrument_ids`/
+`writer`/`max_instruments`, and for PACIFICA additionally `data_types` — never `failed_per_instrument`) — so any
+`/orderbook` HTTP failure inside `_fetch_extended_book_for_symbol` hits `if failed_per_instrument is not None:` and is
+silently dropped (no attempted_failed record, no captured row). If `/orderbook` happens to fail more often than
+`/trades`/`/candles`/`/funding` for these venues (plausible — different endpoint, different reliability), that alone
+would explain zero manifest rows for book_snapshot_5 while trades/derivative_ticker succeed. **Needs**: (1) confirm
+`/orderbook` is actually failing (check a VM's run.log for `Extended /orderbook.*HTTP` or exception WARNING lines), (2)
+if confirmed, wire `failed_per_instrument` through `prefetch_umi_symbol_frames`'s kwargs (same fix shape for all 4
+venues' book_snapshot_5, since LIGHTER-ZKSYNC/ASTER likely have the analogous gap in their own fetch functions — not
+checked this session). This is a genuine correctness bug class (silent-empty on failure) if confirmed, not a denominator
+or wiring issue — would go through the normal findings-triage path once verified.
+
+**Session totals**: 1 code fix shipped (`unified-api-contracts@5b57c2b2`), 14 VMs launched + T+10min verified RUNNING, 1
+real infra bug found+worked-around (gcloud PATH), 1 issue doc filed + refined twice with precise live-verified root
+causes (DERIBIT-COMBO wiring gap + OKX options_chain routing gap — both confirmed real data blocked by code gaps, not
+denominator errors), 1 new unconfirmed lead logged for next session. Layer-1 71.05%→79.5% today. **Gate remains NOT
+MET** — every remaining blocking item is either already tracked in an open issue doc, or documented here as a precise,
+actionable lead. No genuine BLOCKED-CREDENTIALS/OPERATOR/UPSTREAM condition this session.
