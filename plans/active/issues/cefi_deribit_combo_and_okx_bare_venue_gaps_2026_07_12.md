@@ -164,7 +164,28 @@ slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only ven
       catalogue rows `venue=DERIBIT-COMBO`; check whether an empty resolved symbol list (pre-catalogue-tracking dates)
       still writes a manifest row or needs `deribit_combo_adapter.py`'s `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`
       classification to fire instead; re-run the cefi backfill for `DERIBIT-COMBO`. (repo: unified-api-contracts,
-      instruments-service, market-tick-data-service)
+      instruments-service, market-tick-data-service). **🚧 PARTIAL PROGRESS 2026-07-12 (slot-3)** —
+      `unified-api-contracts@3547fdae` (committed locally, NOT YET PUSHED — see note below) adds the
+      `("DERIBIT-COMBO", "OPTION"): "deribit"` dict entry + 2 regression tests. **Important correction to this todo's
+      own premise**: empirically confirmed (not assumed) that `get_tardis_exchange_for_venue("DERIBIT-COMBO")` ALREADY
+      returns `"deribit"` — via `_get_suffixed_tardis_match`'s generic base-venue fallback
+      (`return self._get_direct_tardis_match(base_venue)`), which catches ANY `"X-<suffix>"` venue whose base `X` has a
+      direct `tardis_to_venue` entry, regardless of the suffix's semantic meaning. This was true BEFORE my dict-entry
+      addition too — so **exchange-name resolution was never actually the blocker for DERIBIT-COMBO**, contradicting
+      this todo's framing ("zero routing entry ... has no way to map"). The real remaining gaps are exactly the OTHER
+      two items this todo already lists and I did NOT resolve: (a) filtering the Tardis fetch to `type=='combo'` symbols
+      only (not yet touched — no code found that distinguishes combo from bare-Deribit symbols at the fetch layer), and
+      (b) whether `build_instrument_catalogue.py` currently tags catalogue rows `venue=DERIBIT-COMBO` — found a directly
+      relevant comment (`_incremental_merge_keys` docstring, `build_instrument_catalogue.py` ~L2458) stating the `venue`
+      FIELD carries "era-specific raw spelling (`DERIBIT-COMBO` in old rows vs `DERIBIT` in the window for the SAME
+      `instrument_id`)" — i.e. CURRENT/recent catalogue ingestion normalizes combo instruments to `venue=DERIBIT`, not
+      `DERIBIT-COMBO`. If true end-to-end, a venue-field-keyed catalogue lookup for `DERIBIT-COMBO` on RECENT dates
+      would find nothing regardless of exchange routing — the closure likely needs querying catalogue rows under
+      `venue=DERIBIT` and filtering to combo instrument_ids by pattern (Tardis combo symbols look like
+      `BTC-CS-28AUG26-72000_76000` / `BTC-FS-11JUL26_PERP` — distinctive `-CS-`/`-FS-` infixes) rather than relying on a
+      `venue=DERIBIT-COMBO` catalogue tag. NOT independently confirmed by tracing the full catalogue-write code path
+      (only the comment) — flagging as the next investigation step, not a verified fact. Did not attempt the backfill
+      re-run (blocked on the above being resolved first). Left unchecked — genuine remaining scope.
 - [ ] [SCRIPT] P2. Trace `get_tardis_exchange_for_venue`'s current return value for venue="OKX" (likely `okex` or
       `okex-swap`, not checked this session) and make the options_chain/futures_chain bulk-download exchange resolution
       instrument-type-aware (either an explicit override at the `_route_tardis` call site in `umi_tick_provider.py`, or
@@ -172,4 +193,27 @@ slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only ven
       options_chain requests; add `("OKX", "OPTION"): "okex-options"` to `venue_instrument_type_to_tardis`; re-run the
       cefi backfill for OKX options_chain (mirror `launch-targeted-options-chain-backfill.sh --venue OKX`, extending
       that launcher which currently hardcodes DERIBIT only). (repo: unified-api-contracts, market-tick-data-service,
-      deployment-service)
+      deployment-service). **🚧 PARTIAL PROGRESS 2026-07-12 (slot-3)** — traced + confirmed empirically:
+      `get_tardis_exchange_for_venue("OKX")` (bare, no suffix) returns `None` — OKX genuinely has NO working exchange
+      resolution today for an un-suffixed venue string, because it maps to 4 different exchanges
+      (`okex`/`okex-swap`/`okex-futures`/`okex-options`) and this function is venue-only. Added the
+      `("OKX", "OPTION"): "okex-options"` dict entry + regression tests. Confirmed the entry IS reachable via a suffixed
+      lookup (`get_tardis_exchange_for_venue("OKX-OPTIONS")` → `"okex-options"`, via `_get_suffixed_tardis_match`'s
+      `suffix_to_type` translation) — but did NOT trace whether `_route_tardis`'s actual call site
+      (`umi_tick_provider.py:334`, `_VM.get_tardis_exchange_for_venue(venue_upper) or venue.lower()`) is ever invoked
+      with a suffixed venue string like `"OKX-OPTIONS"` for a real options_chain request, or only ever with bare `"OKX"`
+      (from `VM_VENUE=OKX` launcher convention) — that's the open question this todo already correctly identifies as the
+      call-site-awareness gap. Did not modify `_route_tardis` or the launcher script, and did not re-run the backfill.
+      Left unchecked — genuine remaining scope; whoever picks this up next should start by grepping how `venue` reaches
+      `_route_tardis` for an `options_chain` `VM_DATA_TYPES` request specifically.
+
+**Ship-blocker note (2026-07-12, slot-3)**: `unified-api-contracts@3547fdae` is committed locally but NOT pushed —
+`unified-api-contracts`'s `quality-gates.sh` has a genuine, PRE-EXISTING, unrelated hard failure
+(`unified_api_contracts/external/databento/databento_classifier.py`: 906 lines > the flat, non-ratcheted
+`MAX_FILE_LINES=900` cap), confirmed via a clean-tree `git stash` test (fails identically with my diff stashed out).
+This blocks the `quality-gates.sh` sentinel `quickmerge --agent` requires, for ANY change to this repo right now, not
+just mine. Whoever next has Bash access to this repo should either (a) trim `databento_classifier.py` under 900 lines
+(recent history shows a prior similar refactor,
+`766201a3 refactor(databento): extract combo + option dispatch helpers... 331L→154L`, so there's precedent for this kind
+of split), or (b) confirm this is already tracked elsewhere and just push my commit once green. My local commit is safe
+(not lost) either way.
