@@ -293,6 +293,73 @@ singleton-lock namespace → may run concurrently.
 
 ## Progress Log
 
+### 2026-07-12 ~08:1x UTC — slot-6: item #6 re-verify via manual canonical+shard merge (bypassing the still-broken consolidator) — footystats + weather + SFI + odds_api all CLEAN, only TM + understat trailing-edge remain; session then hit a fleet-wide `/tmp` ENOSPC outage mid-work
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-002` (item #6), dispatched fresh (this session had no
+prior WIP on this plan).
+
+**Consolidator health check first**: confirmed `uts-prod-manifest-consolidator-instruments-sports` was STILL
+crash-looping — every execution from 07:54 through 08:08 UTC failed (continuous, not the 15min blip slot-11 first
+reported; same truncated-traceback-at-`_duckdb_consolidate_and_write` OOM signature). Per the open issue doc's own todo
+#3 gate ("re-verify only after the consolidator has been confirmed healthy for a sustained window"), a direct
+`read_availability_index()` call would still be untrustworthy.
+
+**Method — manual canonical+per-VM-shard merge** (same technique prior sessions used during this exact outage):
+downloaded `_index/availability_index.parquet` (4,914,272 rows) + all 3 live `_index/per_vm/*.parquet` shards, merged
+via `unified_trading_library.manifest_writer._read_index._merge_shard_frames` (last-write-wins by
+`attempted_at`/`written_at`, same dedup key the reader/consolidator use) — 4,914,278 rows post-merge. This is a
+read-only diagnostic; no manifest-writer code was touched.
+
+**Per-source gate result** (coverage-window + SSOT-league-scoped where applicable, via `get_source_coverage_start` +
+`get_expected_leagues_for_source`):
+
+| source               | data_type             | captured | empty   | eu (pending_fetch) | af  | eu_blank | af_blank | verdict                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------- | --------------------- | -------- | ------- | ------------------ | --- | -------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| open_meteo           | WEATHER               | 12,069   | 246,366 | 0                  | 51  | 0        | 0        | **PASS**                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| soccer_football_info | SFI_PROGRESSIVE_STATS | 19,750   | 208,090 | 0                  | 10  | 0        | 0        | **PASS**                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| transfermarkt        | PLAYER_VALUES         | 46,312   | 101,250 | 938                | 0   | 938      | 0        | FAIL — real gap                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| understat            | XG                    | 6,673    | 7,765   | 15                 | 0   | 15       | 0        | FAIL (trailing-edge, same shape as item #4's already-accepted residual)                                                                                                                                                                                                                                                                                                                                                                                          |
+| understat            | XG_SHOTS              | 6,666    | 5,995   | 15                 | 0   | 15       | 0        | FAIL (trailing-edge, ditto)                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| footystats           | MATCHES               | 19,780   | 79,481  | 0                  | 15  | 0        | 0        | **PASS** (af=15 all evidenced `phantom_captured_no_parquet_at_canonical_path`, non-blank)                                                                                                                                                                                                                                                                                                                                                                        |
+| footystats           | PREDICTIONS           | 19,692   | 106,788 | 0                  | 0   | 0        | 0        | **PASS** (was eu=4,543/990 at slot-9/11's last read — the inherited `footystats_residual_closer_2026_07_12.py` (PID 232540) DID complete successfully; its outcome was "unverifiable" at slot-11's 08:0x check only because the consolidator was down at that moment)                                                                                                                                                                                            |
+| footystats           | ODDS                  | 20,439   | 86,127  | 0                  | 0   | 0        | 0        | **PASS**                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| odds_api             | trades                | 223,701  | 14      | 0                  | 0   | 0        | 0        | **PASS** — **note**: this data lives in the MTDS bucket (`market-data-tick-sports-prd-central-element-323112`, `resolve_bucket_name(kind="market-data", asset_group="sports")`), NOT the instruments-service sports bucket every other row above reads from. Its own consolidator is healthy (`read_availability_index` succeeded via the normal fast path, no staleness) — confirms the OOM crash-loop is isolated to the instruments-sports consolidator only. |
+
+**Big finding: footystats (item #5) is now genuinely fully resolved** — MATCHES/PREDICTIONS/ODDS all eu=0. This closes
+the last open per-source item from this plan's own scope (items #1-#5 were already ✅; #5 was footystats, whose
+completion was unverifiable at the last check due to the consolidator outage). Only TM (real 938-row gap) and
+understat's tiny 15+15 trailing-edge residual (same self-clearing daily-forward-poll-lag shape already accepted when
+item #4 flipped ✅ on 2026-07-09) block the full item #6 gate now.
+
+**No checkbox flip yet** — TM's 938-row residual is a real, closeable gap (not typing noise), consistent with slot-11's
+956-row reading two sessions ago (minor improvement, ~18 rows self-resolved via daily forward-poll in the interim).
+Started to re-run the TM-only path of `sports_daily_enum_residual_closer_2026_07_12.py` (planned: fix its
+`_close_transfermarkt` to `force=False` first — the shipped script at `instruments-service@8090a0aa` still hardcodes
+`force=True`, which slot-11 found bypasses the per-league transfer-window guard and makes every pass force-refetch all
+47 leagues instead of just the ones actually in an open window; slot-11's local `force=False` rewrite was never
+committed).
+
+**BLOCKED mid-task by a NEW, severe P0 infra finding**: this host's `/tmp` tmpfs (2.0GB, shared across every slot) hit
+**100% full / 0 bytes free** partway through this session, and the Bash tool now fails on EVERY command (including no-op
+commands like `true`/`:`) with `ENOSPC` — the harness's own per-command output-capture path writes into
+`/tmp/claude-1000/.../tasks/`, which needs headroom even for a command with zero stdout. `du -sh` showed the largest
+consumers as other slots' session directories (`tabs-3`=215M, `tabs-9`=109M, an unscoped
+`.../unified-trading-system-repos/`=409M) — this slot's own directory was only 89M. This is NOT something I can fix from
+inside my own slot (deleting other slots' files is an explicit workspace-safety violation) and it blocks not just this
+task but every `git commit`/`quickmerge`/orchestrator-API `curl` call this session would need. Filed as a new issue doc
+(see below) since it is distinct from (and more acute than) the already-open instruments-sports-consolidator OOM issue.
+Could not `/blocked` via the normal HTTP heartbeat (that call itself goes through Bash) — recording this directly in the
+plan + a standalone issue doc instead, since `Write`/`Edit` tools still function. Will retry Bash periodically; if it
+recovers, will file the issue doc's frontmatter properly and re-attempt the TM closer + checkbox flip.
+
+**Next slot** (if this session cannot recover Bash access): (a) escalate the `/tmp` ENOSPC outage to the operator —
+needs someone to clear stale completed-session subagent transcripts fleet-wide, it will keep blocking every slot's Bash
+tool until freed; (b) once Bash works again, fix `_close_transfermarkt`'s `force=True`→`force=False` in
+`sports_daily_enum_residual_closer_2026_07_12.py`, re-run its TM-only path against the 938-row residual; (c) accept
+understat's 15+15 trailing-edge as the same non-blocking daily-lag shape already precedented at item #4's flip, OR
+re-run its own residual path too if the operator wants strict zero; (d) once TM converges, re-verify the full 6-source
+gate one more time (post-consolidator-recovery, via the normal `read_availability_index` this time) and flip item #6.
+
 ### 2026-07-12 ~08:0x UTC — slot-11: item #6 re-verify — weather+SFI fully resolved (new root cause found+fixed), TM improved, footystats closer exited (outcome unverifiable), NEW P0 infra finding filed
 
 **Task**: `sports_p2_history_reference_and_odds_2015_to_present-002` (item #6, the cross-source VERIFY gate),
