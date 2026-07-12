@@ -183,19 +183,33 @@ Tardis download path) — preserves the parallel-VM wall-clock the plan relies o
 
 ## Todos
 
-- [ ] [INFRA] P0. Operator decision: which of (a) serialize / (b) Tardis plan upgrade / (c) centralized proxy — or
-      accept slower serialized waves as a stopgap while (c) is built. (repo: deployment-service,
+- [x] [INFRA] P0. ✅ Operator decision (BLK-58aea31d): operator ruled **"proceed now"** → build option **(a)** the
+      GCS-lease serialize stopgap (2026-07-12, slot-7 infra). (b) Tardis plan upgrade + (c) centralized proxy remain the
+      doc's longer-term recommendation — (a) coexists as the interim stopgap. (repo: deployment-service,
       market-tick-data-service)
-- [ ] [INFRA] P1. Once decided: implement the chosen fix. If (a) stopgap: a GCS-object-lease mutex acquired in the VM
-      startup script or `tardis_batch_download.py` before any `datasets.tardis.dev` call, released on completion/
-      preemption (must handle SPOT preemption not leaking the lock — a TTL-based lease, not a plain object-exists
-      check). (repo: deployment-service, market-tick-data-service) — **BLOCKED-OPERATOR-DECISION on todo #1
-      (BLK-58aea31d, slot-7 infra 2026-07-12): "implement the chosen fix" but NO a/b/c choice is recorded anywhere; the
-      issue itself flags this as an operator judgment call (`model_tier: opus-required`) NOT to attempt unilaterally.
-      Engineering finding: option (a) is NOT the budgeted 1-2h — UTL exposes only `gcs_copy/delete/describe_object` (no
-      generation-CAS conditional write), so a correct SPOT-safe TTL-lease mutex needs a NEW UTL cloud-interface
-      primitive (direct `google.cloud` is QG-banned in service repos); option (b) needs ZERO code and would moot
-      (a)/(c). Do NOT build fleet-serializing infra until the operator rules.**
+- [x] [INFRA] P1. ✅ Implemented option **(a)**: a **DEFAULT-OFF** workspace-wide GCS TTL-lease mutex so only ONE
+      Tardis-calling VM holds the single-concurrent-IP key at a time. — market-tick-data-service@a9f1b52b +
+      deployment-service@c33f681 (2026-07-12, slot-7 infra). `TardisConcurrencyLease`
+      (`clients/tardis_concurrency_lease.py`) acquires a process-wide lease over one GCS control object before the first
+      KEYED `datasets.tardis.dev` call (free/day-1 no-auth fetches don't use the key → stay parallel), wired into
+      `tardis_csv_transport` (streaming + legacy) via a thread-executor acquire (event loop not blocked). Config flags
+      in `service_config.py`; launcher/startup-script pass `TARDIS_CONCURRENCY_LEASE` + `..._BUCKET` opt-in only.
+      **Safety:** DEFAULT-OFF (no-op unless enabled + a control bucket is set — zero fleet-behaviour change until an
+      operator opts in; enabling serialises waves ~20-80x); **fail-open** (acquire blocks ≤ max_wait then proceeds
+      WITHOUT the lock → a stuck/leaked lease can never deadlock the fleet); **SPOT-safe** (TTL + background renewer; a
+      preempted holder's lease expires and the next VM steals it). 11 unit tests (`test_tardis_concurrency_lease.py`,
+      mocked storage). **Known limitation (tracked, see follow-up todo):** UTL has no generation-CAS write, so
+      acquisition is write-then-read-back verify (not atomic CAS) — removes STEADY-STATE contention (the 74.9% problem)
+      but leaves a rare acquisition-handoff race that yields a single tagged code=274 403 (re-run), not corruption.
+      (repo: deployment-service, market-tick-data-service)
+- [ ] [INFRA] P2. Harden option (a) to be race-free + enable it: (1) add a UTL generation-CAS conditional-write
+      primitive (`if_generation_match`) to `cloud_interface` (the only sanctioned home — `google.cloud` is QG-banned in
+      service repos) and switch `TardisConcurrencyLease` acquire/steal to atomic CAS, closing the handoff race; (2)
+      on-VM enablement smoke-test — launch ONE cefi backfill VM with `TARDIS_CONCURRENCY_LEASE=1` +
+      `TARDIS_CONCURRENCY_LEASE_BUCKET=<control bucket>`, confirm acquire/renew/release in the run log + the control
+      object lifecycle, then a 2-VM run to confirm serialization + no leaked lock on preemption. (gcloud is unavailable
+      in the agent slot, so this needs a real VM launch.) Only after this smoke-test should waves be run with the lease
+      enabled. (repo: unified-trading-library, deployment-service, market-tick-data-service)
 - [x] [DATA] P1. ✅ **Direction-independent 403-code-274 error_reason hygiene fix (done under ANY of a/b/c — did NOT
       require the operator decision).** — market-tick-data-service@31934527 (2026-07-12, slot-7 infra).
       `TardisHTTPError` now (i) parses a 403 response body for `code == 274` + `retryAfterSeconds` (attributes
@@ -265,3 +279,26 @@ week). Left todo #2 unchecked/blocked. While blocked, shipped the direction-inde
 hygiene fix (the `[DATA] P1` todo above) — market-tick-data-service@31934527, QG-green, landed on live-defi-rollout —
 which is safe and correct under any a/b/c choice and de-noises the G4 re-measurement. Did NOT build any
 mutex/serialization.
+
+### 2026-07-12 — operator ruled "proceed now" → built option (a) (slot-7 infra)
+
+Operator answered BLK-58aea31d with **"proceed now"** → implemented option (a), the GCS-lease serialize stopgap, as a
+**DEFAULT-OFF** capability:
+
+- **market-tick-data-service@a9f1b52b** — `TardisConcurrencyLease` (`clients/tardis_concurrency_lease.py`): a
+  workspace-wide TTL lease over one GCS control object, acquired process-wide before the first KEYED
+  `datasets.tardis.dev` call (free/day-1 no-auth fetches stay parallel), wired into `tardis_csv_transport` (streaming +
+  legacy) via a thread-executor acquire. Config flags in `service_config.py`. **DEFAULT-OFF + fail-open + SPOT-safe**
+  (TTL
+  - background renewer). 11 unit tests (mocked storage) + the full MTDS QG green.
+- **deployment-service@c33f681** — `launch-cefi-sharded-backfill.sh` (opt-in stamp) + `setup-data-pipeline-vm.sh` (env
+  export) pass `TARDIS_CONCURRENCY_LEASE` + `..._BUCKET`; unstamped by default so waves stay parallel until an operator
+  opts in. deployment-service QG green.
+
+**Chose the write-then-read-back-verify lease (not atomic CAS)** because UTL exposes no generation-precondition write
+and adding one to the multi-backend abstraction + the cross-repo dep-ordering was out of proportion for a stopgap; the
+residual acquisition-handoff race only yields a single **tagged** code=274 403 (re-run), not corruption, and the shipped
+403-tagging makes even those visible. **gcloud is unavailable in the agent slot** (snap-confine broken), so a
+bash/gcloud lease could not be runtime-verified here and the on-VM enablement smoke-test is deferred to a real VM launch
+— tracked as the new `[INFRA] P2` follow-up (race-free CAS + on-VM smoke-test) above. The lease is DEFAULT-OFF, so
+nothing changes until that smoke-test passes and an operator enables it.
