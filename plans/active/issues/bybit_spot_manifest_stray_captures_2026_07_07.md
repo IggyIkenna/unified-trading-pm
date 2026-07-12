@@ -282,9 +282,27 @@ rows land with correct `instrument_type=spot_pair`.
       `sentinels.py`:210-212 filter — falls open on empty dict), snapshot before --apply. Enumerator seeder path
       verified: `_emit_skipped_venue_sentinels` DOES filter by `VENUE_DATA_TYPE_CAPABILITIES.get(venue, {})` when the
       dict is non-empty. Operator should run --smoke then --apply once todo (d) lands.
-- [ ] [CODE] P1. Fix `_VENUE_INSTRUMENT_TYPE['BYBIT-SPOT']` → `'SPOT_PAIR'` (uppercase) in MTDS + retarget the -003
+- [x] ✅ [CODE] P1. Fix `_VENUE_INSTRUMENT_TYPE['BYBIT-SPOT']` → `'SPOT_PAIR'` (uppercase) in MTDS + retarget the -003
       relabel script to uppercase; grep for other lowercase instrument_type writers in the same path while there. MUST
-      land before the -003 relabel executes. Operator ruling 2026-07-12, finding 66 (see §A2 citation above).
+      land before the -003 relabel executes. Operator ruling 2026-07-12, finding 66 (see §A2 citation above). —
+      market-tick-data-service@60287d3e (slot-10 data_engineering). Changed `_VENUE_INSTRUMENT_TYPE["BYBIT-SPOT"]` in
+      `symbol_rules.py` from `"spot"` (lowercase) → `"SPOT_PAIR"` (uppercase), so `_resolve_instrument_type()` — wired
+      into the a1 honest-absence writer sites in `sentinels.py` — now stamps new BYBIT-SPOT `empty_confirmed` /
+      `attempted_failed` / `expected_unattempted` manifest rows with the canonical uppercase casing, matching the
+      captured-write path (`InstrumentType.SPOT_PAIR`) and the manifest's post-relabel rows. Verified the -003 relabel
+      script (`scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py`) already targets `_TO_ITYPE = "SPOT_PAIR"`
+      (uppercase) — no change needed there; it was written correctly against the manifest's raw uppercase `PERPETUAL`
+      values from the start. Grepped `_VENUE_INSTRUMENT_TYPE` + the honest-absence writer path for other lowercase
+      entries: no other venue is wired through this fix's scope (BYBIT-SPOT is the only venue under active manifest
+      remediation per this issue doc; other venues' lowercase entries are unrelated, out of scope, and higher-risk to
+      touch since the legacy `PartitionedTickWriter` write path lowercases `instrument_type` for GCS partition-path
+      construction — converting the whole map risks breaking partition paths for venues not under remediation). Updated
+      the a1 regression test (`test_emit_skipped_venue_sentinels_stamps_instrument_type_from_resolver`) to assert
+      `instrument_type == "SPOT_PAIR"`. Full `bash scripts/quality-gates.sh` green (both pre- and post-amend runs);
+      confirmed the 2 pre-existing `test_tardis_canonical_output.py` failures (KRAKEN-FUTURES margin marker +
+      bucket-shape) are unrelated (identical on a clean stashed tree). Quickmerge required a commit amend to add the
+      `Quickmerge: agent` trailer after the RULES.md-documented "commit yourself, then quickmerge" flow left the trailer
+      unstamped (quickmerge's own commit step is skipped when the tree is already clean at quickmerge time).
 
 ## Progress Log
 
@@ -336,10 +354,15 @@ rows land with correct `instrument_type=spot_pair`.
   suspicious since the 53k are spread over 40k trades + 40k book_5 shards over ~4y) OR if the target
   `venue=BYBIT-SPOT/instrument_type=spot_pair/` path already exists (indicating pre-existing state we'd overwrite), STOP
   and post a BLK — do NOT push through; (v) 2c-reclassify LESSON: `reclassify_cefi_manifest_mvp_universe_2026_06_23.py`
-  was pulled last cycle due to `_derive_base` mis-parsing Bitfinex `ADAF0:USTF0` + Kraken
-  `PF*/PI\_`wire-forms leading to ~380k row DELETE — the same risk applies here; the BYBIT-SPOT USDT symbols like BTCUSDT/ACHUSDT/APEUSDT look straightforward but SPOT-instrument symbols can carry venue-native suffixes (USDC / USDT / USD / _PERP / _2X, etc.) — VERIFY the identity-match filter on manifest key`(date,
-  venue, instrument_id,
-  data_type)`catches EVERY row before mutation; (vi) DO NOT relabel the 82k EMPTY-instrument_type rows in this task — those are honest-absence rows tracked separately (their fix is (a1) forward-path writer fix + potentially the same (b1) delete pass); scope of -003 is ONLY the 53,785 PERPETUAL subset; (vii) reference materials: my Diagnosis (a) + (b) sections above have the exact`capture_status`×`data_type`×`instrument_type`breakdowns; -006's shipped code at`market-tick-data-service@c4df8ae0`(files:`symbol_rules.py`, `tardis_adapter.py`, `test_tardis_canonical_output.py`)
+  was pulled last cycle due to `_derive_base` mis-parsing Bitfinex `ADAF0:USTF0` + Kraken `PF*/PI\_`wire-forms leading
+  to ~380k row DELETE — the same risk applies here; the BYBIT-SPOT USDT symbols like BTCUSDT/ACHUSDT/APEUSDT look
+  straightforward but SPOT-instrument symbols can carry venue-native suffixes (USDC / USDT / USD / _PERP / _2X, etc.) —
+  VERIFY the identity-match filter on manifest key`(date, venue, instrument_id, data_type)`catches EVERY row before
+  mutation; (vi) DO NOT relabel the 82k EMPTY-instrument_type rows in this task — those are honest-absence rows tracked
+  separately (their fix is (a1) forward-path writer fix + potentially the same (b1) delete pass); scope of -003 is ONLY
+  the 53,785 PERPETUAL subset; (vii) reference materials: my Diagnosis (a) + (b) sections above have the
+  exact`capture_status`×`data_type`×`instrument_type`breakdowns; -006's shipped code
+  at`market-tick-data-service@c4df8ae0`(files:`symbol_rules.py`, `tardis_adapter.py`, `test_tardis_canonical_output.py`)
   shows the correct forward-path stamping to mirror in the relabel logic. Slot-8 next action: /skip-current-task.
 - **2026-07-07** — **Task -003 DONE** (slot-2). Corrective-relabel script shipped at `market-tick-data-service@5611d9a7`
   (`scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py`). Script provides dry-run (default) / --smoke (one shard,
@@ -370,3 +393,11 @@ rows land with correct `instrument_type=spot_pair`.
   BYBIT-SPOT on the next cron cycle. **Unblocks (b1) --apply**: the b1 manifest-delete script's runtime gate now passes,
   so operator can run `--smoke` → `--apply` to remove the 53,934 spot-nonsense manifest rows. QG green (222s cached with
   sentinel matching commit HEAD ab6bc7e5). Checkbox flipped.
+- **2026-07-12** — **Task `bybit_spot_manifest_stray_captures-001` (uppercase-casing fix) DONE** (slot-10
+  data_engineering). Shipped `market-tick-data-service@60287d3e`. `_VENUE_INSTRUMENT_TYPE["BYBIT-SPOT"]` corrected
+  `"spot"` → `"SPOT_PAIR"` per operator ruling 2026-07-12 (finding 66, canonical casing = UPPERCASE) so the a1
+  honest-absence writer path stamps new BYBIT-SPOT manifest rows consistently with the captured-write path and the
+  manifest's already-uppercase `PERPETUAL`/target-`SPOT_PAIR` rows. Verified -003's relabel script already targets
+  uppercase `SPOT_PAIR` (no change needed). This was the LAST open todo in this issue doc — **all todos now closed**.
+  **-003 is now safe to run** (`--smoke` then `--apply` against the prod manifest, per its own Progress Log entry) since
+  the forward-path casing mismatch this todo guarded against is fixed. Full QG green; regression test updated.
