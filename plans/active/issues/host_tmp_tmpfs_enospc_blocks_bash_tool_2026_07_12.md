@@ -170,7 +170,13 @@ root filesystem, not `/tmp`).
       surfaced that slot-7's didn't (`unified-trading-pm@195dff738`,
       `plans/active/issues/transfermarkt_master_table_gcs_429_concurrent_writers_2026_07_12.md`): 3 slots (6/8/9)
       concurrently running the same closer script hit GCS 429 rate limits on transfermarkt's shared non-sharded master
-      reference tables (retried successfully, no data loss, P2/P3 follow-up todos filed).
+      reference tables (retried successfully, no data loss, P2/P3 follow-up todos filed). **Slot-8's independent run**
+      (this session, concurrent with slot-6/slot-7): ran the TM-only closer against real prod GCS
+      (`VM_NAME=slot8-tm-residual-closer-20260712`), converging the same residual to 0 via genuine per-league RapidAPI
+      fetches (165 new manifest rows written, `PASS COMPLETE: transfermarkt=4 dates, 0 raised`) — one of the three
+      concurrent closer runs slot-6's 429 finding above refers to. Full record + a timing note on slot-7's table (the
+      187-row gap was a real fetch this session closed, not a stale-duplicate read artifact) in
+      `plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md`'s own Progress Log.
 
 ## Progress Log
 
