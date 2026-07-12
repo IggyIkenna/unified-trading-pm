@@ -1616,3 +1616,44 @@ operator decision lands on `tardis_concurrent_ip_lockout_2026_07_12.md`.
 reproduction + manifest-wide quantification, not speculation); the concurrent-IP finding in particular is the kind of
 big, cross-cutting, data-correctness-adjacent finding the findings-triage HARD RULE requires notifying the operator
 about — escalating now rather than continuing to relaunch VMs into the same lockout.
+
+---
+
+### DERIBIT-COMBO + OKX options_chain VERIFY attempt — 2026-07-12T19:00-19:57Z (slot-2, data_engineering)
+
+Picked up `issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`'s item-3 VERIFY (both `[CODE]` todos showed
+✅ from prior sessions) to actually launch + confirm real rows for the 2 remaining Layer-1 tuples this issue covers.
+Found + fixed **2 more real code-level bugs** sitting between "the routing code is fixed" and "a VM captures a row",
+then found (but did not fix) **2 further bugs** — full detail + exact line references in the issue doc, summary here:
+
+1. **Bug A (FIXED, shipped `deployment-service@a1454a6` + `market-tick-data-service@7c4e6354`)** —
+   `get_venues_for_asset_groups()`'s CEFI branch structurally could never derive bare `"OKX"`/`"DERIBIT-COMBO"` as
+   candidate venues (both span/collide in the 1:1 `tardis_to_venue` reverse map), so `_build_active_venues_for_date`
+   returned `[]` for every date regardless of any downstream routing fix — both venues logged `No active venues` on 100%
+   of dates. Also registered the previously-unregistered `opt-okx-` VM prefix in `vm_zombie_watchdog.py` +
+   `launcher_registry.py` (was invisible to deployment-ui/cockpit/Slack monitoring).
+2. **Bug B (FIXED, shipped `deployment-service@467be0c`)** — with A fixed, both venues then failed 100% of shards at VM
+   bootstrap with `ManifestConsolidatorStaleError` (rc=1, self-deleted in ~2min) — the launcher was the one outlier
+   among ~20 cefi backfill launchers missing `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` (the real Cloud Run
+   consolidator cadence for this bucket regularly exceeds the 120s default check budget).
+3. **Bug C (FOUND, not fixed) — OKX**: with A+B fixed, real dispatch reached the fetch layer and hit
+   `'OKXAdapter' object has no attribute 'download_batch'` (wrong adapter-CLASS routing, a layer upstream of the
+   already-fixed `_resolve_tardis_exchange`) — compounded by `VENUE_DATA_TYPE_CAPABILITIES["OKX"]` in UAC never
+   declaring an `"options_chain"` key at all. VM also got OOM-killed (rc=137) after ~2min on a single date.
+4. **Bug D (FOUND, not fixed) — DERIBIT-COMBO**: `VENUE_DATA_TYPE_CAPABILITIES` has NO entry for `"DERIBIT-COMBO"` at
+   all, so the preflight silently drops `options_chain` (the only requested data_type) before any Tardis call —
+   `TardisAdapter.download_batch: deribit ... — 0 records` on every date.
+
+**All 14 VMs killed** (2026-07-12T19:57Z) once C/D were confirmed — no further relaunch could produce a real row without
+landing those first, and continuing would only burn SPOT spend. 2 new `[CODE]` + 1 `[VERIFY]` todo filed in the issue
+doc for the next pass.
+
+**Important cross-reference**: this session's bugs (A-D) are all pre-Tardis-network-call gaps (venue-candidate
+derivation, consolidator-freshness budget, adapter-class routing, UAC capability declarations) — genuinely independent
+of, and NOT explained by, the concurrent-IP Tardis 403 lockout finding immediately above this entry. But that finding
+means even once C/D land, a solo/serialized relaunch (not concurrent with other cefi waves) may be needed to get a clean
+read on whether real rows land, per that issue's own operator-decision gate.
+
+**Gate verdict:** ❌ NOT MET (unchanged by this entry — these 2 Layer-1 tuples remain absent; no coverage re-run this
+session, see prior entry's numbers). **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** for the work done — Bugs A/B were
+fixed + shipped this session; Bugs C/D are scoped, evidenced, and filed as tracked todos for the next pass.
