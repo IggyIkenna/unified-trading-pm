@@ -276,3 +276,22 @@ serial throughput (~85-90 sig-pages/min, one VM) is impractical without either (
 RPS, or (b) launching several more parallel-walker VM segments (`--before-sig` / `--parts-prefix`) to divide the gap —
 both are cost/infra tradeoffs an operator needs to weigh, not something this agent can decide or execute unilaterally.
 Filed as a `/blocked` on the AO todo rather than guessing.
+
+### 2026-07-12 — re-dispatched to AO item `mvp_backfill_defi_onchain_v10-010`; re-confirmed unchanged, re-filed /blocked
+
+Slot 4 (data_engineering) picked up the reopened AO todo again (the 2026-07-11 `/blocked` had cleared without an
+operator ruling landing). Re-verified live state before re-investigating from scratch, to avoid duplicate work:
+
+- `_index/drift_v2_sig_index.parquet` (consolidated) — confirmed **still does not exist** (`google.cloud.storage`
+  `blob.exists()` check against
+  `gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index.parquet`).
+- `_index/drift_v2_sig_index_parts/` (6,293 parts) and `_index/drift_v2_sig_index_parts_b/` (876 parts) both still
+  present, unconsolidated — the ~11-month unindexed gap (2025-01-15 → 2025-12-23) is unchanged.
+- DRIFT `perp_funding` manifest capture_status distribution (direct parquet filter on
+  `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`, `data_type=perp_funding`,
+  `venue` contains `DRIFT`): `expected_unattempted=51,301`, `empty_confirmed=19,096`, `attempted_failed=39`,
+  `captured=8` — identical to the 2026-07-11 finding. No forward progress has occurred; nothing new to fix in code.
+
+Re-filed `/blocked` on `mvp_backfill_defi_onchain_v10-010` citing this doc + todo "Decide the DRIFT V2 sig-index Helius
+throughput path" (options a/b/c above) rather than re-running the same investigation, since the underlying blocker is
+still the same Helius plan/throughput cost decision only the operator can make.
