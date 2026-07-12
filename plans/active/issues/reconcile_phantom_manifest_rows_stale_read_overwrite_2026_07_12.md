@@ -127,6 +127,7 @@ below) puts a bucket into routinely.
       is still correctly flipped. 4 new UTL unit tests cover the helper directly (canonical+shard merge, canonical-only,
       custom `index_blob` override, empty-when-nothing-exists). Full `quality-gates.sh` green on both repos. (repo:
       unified-trading-library@737a52be, instruments-service@0f7bd460)
+<<<<<<< HEAD
 - [x] [DATA] P2. ✅ **Audited other "read full manifest -> patch -> full re-upload" scripts** in instruments-service /
       unified-trading-library. Full enumeration + disposition:
 
@@ -242,6 +243,18 @@ below) puts a bucket into routinely.
       ~10 `uts-prod-manifest-consolidator-*` Cloud Run jobs AND `uts-prod-consolidator-liveness-watchdog`. Until this
       ships, the alerting gap remains live in the currently-deployed images even though the source fix has landed.
       (repo: deployment-service)
+=======
+- [ ] [DATA] P2. **Audit other "read full manifest -> patch -> full re-upload" scripts** in instruments-service /
+      unified-trading-library for the same pattern (grep for `to_parquet` writes to `_index/availability_index.parquet`
+      paths outside `manifest_consolidator.py` / `manifest_writer/`) -- enumerate and either fix or document as
+      "read-only / dry-run-safe only" (repo: instruments-service).
+- [ ] [INFRA] P2. **Investigate why the sports bucket's manifest consolidator Cloud Run Job went stale for 20+ minutes**
+      (canonical `availability_index.parquet` stuck at generation `2026-07-12T07:03:42Z` with per-VM shards outstanding,
+      confirmed via repeated GCS mtime polling through at least 07:26) despite the documented `*/1 * * * *` Cloud
+      Scheduler cadence -- check Cloud Run Job execution logs / Cloud Scheduler trigger history for this window; rule
+      out a stuck/OOM'd execution vs. a scheduler-side gap (repo: deployment-service, or wherever the consolidator job's
+      infra lives).
+>>>>>>> origin/main
 
 ## Progress Log
 
@@ -257,6 +270,7 @@ below) puts a bucket into routinely.
   trivially, `instruments-service@7c186174`) -- both blocked `quickmerge --agent`'s green-sentinel requirement for this
   repo and were resolved before shipping. Items 2 and 3 remain open (P2, different craft scope/repo) -- not actioned
   this session.
+<<<<<<< HEAD
 - **2026-07-12 (slot-7, data_engineering)** -- Item 2 closed. Research-agent audit enumerated ~50 sites across both
   repos sharing the read-once-write-back pattern. Fixed the highest-risk/actively-reused ones: UTL's
   `manifest_writer/_maintenance.py` (`purge_venue_before_date`, `rebuild_manifest`, `emit_migration_manifest_updates`,
@@ -291,3 +305,5 @@ below) puts a bucket into routinely.
   `STATUS_OK`, masking real outages rather than just dropping an alert. 4 new regression tests, full `quality-gates.sh`
   green, shipped `unified-trading-library@bf6fb9c3`. Filed the image-rebuild + ~10-job redeploy as its own new P2 todo
   (deployment-service) since landing the source fix doesn't reach production until those Cloud Run jobs redeploy.
+=======
+>>>>>>> origin/main

@@ -108,6 +108,7 @@ root filesystem, not `/tmp`).
 
 ## Todos
 
+<<<<<<< HEAD
 - [x] ✅ [INFRA] P0. Clear stale/completed subagent-transcript files under `/tmp/claude-1000/*/tasks/` and
       `*/subagents/` fleet-wide to restore free space on the `/tmp` tmpfs; confirm via `df -h /tmp` that usage drops
       well below 100%. — done 2026-07-12 (slot-12). **🚧 PARTIAL PROGRESS 2026-07-12 (slot-3)** — hit this exact outage
@@ -124,6 +125,23 @@ root filesystem, not `/tmp`).
       — directory UUID mismatched my own active session AND mtime was days stale — before removing it: `rm -rf` that ONE
       directory brought `/tmp` from **100% (0MB free) → 50% (1.1G free)** immediately, and my own Bash tool recovered
       fully. **Safe methodology for any slot hitting this**: (1)
+=======
+- [ ] [INFRA] P0. Clear stale/completed subagent-transcript files under `/tmp/claude-1000/*/tasks/` and `*/subagents/`
+      fleet-wide to restore free space on the `/tmp` tmpfs; confirm via `df -h /tmp` that usage drops well below 100%.
+      **🚧 PARTIAL PROGRESS 2026-07-12 (slot-3)** — hit this exact outage independently (same symptom, same window)
+      while shipping unrelated work; here's the safe methodology + a concrete data point. **Root cause confirmed, not
+      just hypothesized**: `du -sh /tmp/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-3/*/` (this
+      recovered briefly mid-outage — /tmp usage fluctuates as other slots' processes free small amounts) showed MY OWN
+      slot's 215M was almost entirely (202M) ONE directory whose UUID (`409e287a-5e7e-4218-ac5c-98c6c80cd528`) did
+      **NOT** match my active session's UUID — i.e. a leftover directory from a PRIOR, already-terminated session that
+      ran in this same slot before mine started. `stat -c %Y` confirmed its mtime was **~3.3 days old** (well past any
+      live-session window — CLAUDE.md's liveness gate is mtime <120s counts as live; this was 287,524s old), and its
+      contents were 3 abandoned analysis parquets (`sports_index{,2,3}.parquet`, ~71M/66M/66M) under `scratchpad/` from
+      a past investigation that never got cleaned up post-session. Verified this was safe (not another slot's data, not
+      live) via **both** signals — directory UUID mismatched my own active session AND mtime was days stale — before
+      removing it: `rm -rf` that ONE directory brought `/tmp` from **100% (0MB free) → 50% (1.1G free)** immediately,
+      and my own Bash tool recovered fully. **Safe methodology for any slot hitting this**: (1)
+>>>>>>> origin/main
       `du -sh /tmp/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-<YOUR-N>/*/` — ONLY ever look inside your
       OWN `--tabs-<N>` directory, never another slot's; (2) for each subdirectory found, compare its UUID against your
       own active session's UUID (visible in every ENOSPC error message's path) — anything DIFFERENT is a prior session
@@ -136,6 +154,7 @@ root filesystem, not `/tmp`).
       not touch. Leaving unchecked since the fleet-wide clear isn't done — but the mechanism + a working, safe
       methodology is now proven, not just hypothesized. Whoever owns those other slots should apply the same per-slot
       self-check.
+<<<<<<< HEAD
 - [x] ✅ [INFRA] P1. Add a structural fix so this can't recur: either grow the `/tmp` tmpfs size, add scheduled pruning
       of old subagent transcripts, or repoint `CLAUDE_CODE_TMPDIR` to the root filesystem (51G free) instead of the 2GB
       tmpfs. (repo: agent-orchestrator, wherever slot/session bootstrap config lives) — done 2026-07-12 (slot-12),
@@ -154,6 +173,11 @@ root filesystem, not `/tmp`).
       sessions/respawns get the fix automatically (env var is set at spawn time, no operator action needed) — does NOT
       retroactively fix already-running sessions' `CLAUDE_CODE_TMPDIR` (they keep the harness default until their next
       respawn), which is fine since todo #1 above already cleared the accumulated backlog fleet-wide.
+=======
+- [ ] [INFRA] P1. Add a structural fix so this can't recur: either grow the `/tmp` tmpfs size, add scheduled pruning of
+      old subagent transcripts, or repoint `CLAUDE_CODE_TMPDIR` to the root filesystem (51G free) instead of the 2GB
+      tmpfs. (repo: agent-orchestrator, wherever slot/session bootstrap config lives)
+>>>>>>> origin/main
 - [ ] [DATA] P2. Once Bash access is confirmed restored on slot 6 (or whichever slot picks this back up), resume
       `sports_p2_history_reference_and_odds_2015_to_present-002` — fix `_close_transfermarkt`'s `force=True` →
       `force=False` in `instruments-service/scripts/backfill/sports_daily_enum_residual_closer_2026_07_12.py`, close the
@@ -161,6 +185,7 @@ root filesystem, not `/tmp`).
 
 ## Progress Log
 
+<<<<<<< HEAD
 ### 2026-07-12 ~09:3x UTC — slot-12: fleet-wide clear complete, `/tmp` 88%→20% used
 
 Picked up the P0 todo as an infra task. Extended slot-3's per-slot self-check into a genuinely fleet-wide sweep, staying
@@ -192,6 +217,8 @@ free)**. Well below the 100% ENOSPC threshold, with ample headroom.
 Flipped todo #1 above. Todo #2 (P1 structural fix) and #3 (P2, resume the sports backfill) remain open for whoever picks
 this issue doc back up next.
 
+=======
+>>>>>>> origin/main
 ### 2026-07-12 ~08:3x-08:5x UTC — slot-10: corroborating data point — false-negative background-task failures
 
 Hit this same outage while running a long (~19min) background `migration_orphan_sweep.py --asset-group tradfi` for

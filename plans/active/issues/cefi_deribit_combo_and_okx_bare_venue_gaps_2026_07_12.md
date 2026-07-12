@@ -186,7 +186,11 @@ slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only ven
       `venue=DERIBIT-COMBO` catalogue tag. NOT independently confirmed by tracing the full catalogue-write code path
       (only the comment) — flagging as the next investigation step, not a verified fact. Did not attempt the backfill
       re-run (blocked on the above being resolved first). Left unchecked — genuine remaining scope.
+<<<<<<< HEAD
 - [x] ✅ [SCRIPT] P2. Trace `get_tardis_exchange_for_venue`'s current return value for venue="OKX" (likely `okex` or
+=======
+- [ ] [SCRIPT] P2. Trace `get_tardis_exchange_for_venue`'s current return value for venue="OKX" (likely `okex` or
+>>>>>>> origin/main
       `okex-swap`, not checked this session) and make the options_chain/futures_chain bulk-download exchange resolution
       instrument-type-aware (either an explicit override at the `_route_tardis` call site in `umi_tick_provider.py`, or
       extend `get_tardis_exchange_for_venue` to accept an optional itype param) so OKX resolves to `okex-options` for
@@ -205,6 +209,7 @@ slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only ven
       (from `VM_VENUE=OKX` launcher convention) — that's the open question this todo already correctly identifies as the
       call-site-awareness gap. Did not modify `_route_tardis` or the launcher script, and did not re-run the backfill.
       Left unchecked — genuine remaining scope; whoever picks this up next should start by grepping how `venue` reaches
+<<<<<<< HEAD
       `_route_tardis` for an `options_chain` `VM_DATA_TYPES` request specifically. **✅ CLOSED 2026-07-12 (slot-15)** —
       confirmed the call-site gap slot-3 flagged: `_route_tardis` (renamed call chain, was `umi_tick_provider.py:334`)
       called `_VM.get_tardis_exchange_for_venue(venue_upper)` with the BARE venue only (`VM_VENUE=OKX` launcher
@@ -293,6 +298,9 @@ launch to close):
   `"DERIBIT-COMBO"` per direct code read + its own docstring. Whoever runs the actual backfill (above) will get a
   definitive, empirical answer for free: if the catalogue-driven symbol resolution comes back empty for a RECENT date
   despite this code path being correct, that's the signal this nuance is real and needs its own fix.
+=======
+      `_route_tardis` for an `options_chain` `VM_DATA_TYPES` request specifically.
+>>>>>>> origin/main
 
 **Ship-blocker note (2026-07-12, slot-3) — RESOLVED, shipped**: `unified-api-contracts@f0dc61a2` (supersedes the earlier
 local-only `3547fdae` after a rebase — see below). Filed repo-blocker `RB-8dc395c9` for the
