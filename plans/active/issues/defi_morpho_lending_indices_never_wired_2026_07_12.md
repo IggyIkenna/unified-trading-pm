@@ -240,3 +240,27 @@ synchronously).
 `describe`/`ssh`/`stop`/`delete`/`create` from this slot — the earlier "gcloud CLI unavailable, snap-confine" notes in
 this doc (and the G1.6 precedent they cite) may have been a slot-specific/transient sandbox issue rather than a fleet
 constant; worth a quick recheck next time before assuming the Python `compute_v1` client workaround is needed.
+
+### Third-launch verification verdict — 2026-07-12T11:30Z (data_engineering slot-3)
+
+**Both fixes confirmed working at runtime.** Polled `mtds-lending-indices-20260712-112557`'s live log through several
+dates: NO `Unknown lending protocol: morpho` warnings (deploy-staleness fix holds) and NO
+`Cannot query field "uniqueKey"` errors (GraphQL schema fix holds) — `fetch_markets()` is now successfully returning
+real market IDs (`0xf78b7d...`, `0xf69eb7...`, dozens more observed) and the per-market `download_market_data()` loop is
+running cleanly through 2023-01-01 → 2023-01-03 so far.
+
+**Still 0 rows written at every market/date observed so far** — but this reads as HONEST pre-launch emptiness, not a
+third bug: `_convert_market_to_instrument` in `morpho_adapter.py` hardcodes
+`"available_from_datetime": "2024-01-01T00:00:00Z"` for every Morpho instrument, i.e. the code's own contract says no
+real Morpho Blue data should exist before 2024-01-01 (Morpho Blue mainnet postdates 2023-01-01). The run is still
+working through the 2023 portion of the 2023-01-01→2026-07-12 window (~1 date per ~20s observed, so 2024-01-01 is still
+roughly 1-2h out) — did not poll further, per the async-wait / no-multi-hour-poll discipline (same call slot-12 made on
+the first launch). No errors of any kind at this point, so the "0 rows" is the pipeline correctly returning
+`Fetched 0 rate snapshots from The Graph` for genuinely pre-launch dates, not a swallowed failure.
+
+**Left running unattended** (SPOT VM, idempotent, no further action needed from this dispatch). Whoever next picks up
+the `[SCRIPT] P2. Re-run G2 gate` todo below should: (1) confirm the VM reached `COMPLETE`/terminated cleanly, (2)
+spot-check the manifest for `(venue=MORPHO, data_type=lending_indices, capture_status=captured)` rows dated ≥2024-01-01
+to confirm real (not just honest-empty) data landed, THEN (3) run the actual G2 gate command. Checkbox for that todo
+stays unflipped — `skip-current-task`'d rather than poll-wait further on a multi-hour run, consistent with the precedent
+set earlier in this doc.
