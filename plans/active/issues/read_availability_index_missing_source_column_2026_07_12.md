@@ -87,12 +87,19 @@ silently blanked, on a perfectly healthy, fresh consolidator.
 
 ## Recommended decision
 
-- [ ] [CODE] P1. Add `"source"` to `read_availability_index()`'s `_V8_COLUMNS` list (and the slim-read equivalent in
+- [x] ✅ [CODE] P1. Add `"source"` to `read_availability_index()`'s `_V8_COLUMNS` list (and the slim-read equivalent in
       `_read_availability_index_slim`, if it has its own column enumeration) in
       `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`, with the same
       backfill-to-`""`-for-legacy-rows treatment the other pre-existing columns get. Add a regression test asserting a
       full read surfaces real `source` values matching a raw-parquet read of the same fixture data. (repo:
-      unified-trading-library)
+      unified-trading-library) — unified-trading-library@a45066a9. `_read_availability_index_slim` has no hardcoded
+      column enumeration (`_backfill_slim` genericly backfills whatever `columns` the caller requests), so it already
+      surfaced `source` correctly — no change needed there, locked in by a regression test. Also found + fixed
+      `transport` and `cadence` (same `_V8_COLUMNS` list, same root cause — v9 columns the writer stamps on every row
+      but the full-schema reader never enumerated) since they're the identical defect in the exact list this todo
+      touches. 3 new regression tests in `tests/unit/test_manifest_read_index_source_column.py`: full read surfaces real
+      values (not blanked), legacy parquet backfills to `""`, slim read already passes values through. Full
+      `quality-gates.sh` green (6400+ tests).
 - [ ] [DATA] P2. Grep for other callers that rely on `df.get("source", ...)`-with-default patterns downstream of
       `read_availability_index()` (as opposed to reading the raw parquet directly) — any such site has been silently
       getting `source=""` and may have masked-wrong behavior worth auditing once the column is restored. (repo:
@@ -106,3 +113,15 @@ Found incidentally while re-verifying the 6-source full-history gate (see that p
 methodology). Not fixed inline — this is a `unified-trading-library` core-reader change with broad blast radius (every
 service reading the manifest via the normal fast path), warranting its own scoped dispatch + full regression coverage
 rather than a same-session drive-by patch during an unrelated VERIFY task.
+
+### 2026-07-12 ~11:45 UTC — slot-7 (data_engineering): item #1 shipped
+
+Added `"source"` to `_V8_COLUMNS` in `_read_index.py`. While in the list, discovered `"transport"` and `"cadence"` (both
+v9, same file, same defect: written by every row per `_writer_io.py`/`_rows.py` `_ROW_KEY_COLUMNS` but never enumerated
+by the full-schema reader) — fixed both in the same commit per the findings-triage "in your file" rule. Confirmed the
+slim-read path (`_read_availability_index_slim` / `_backfill_slim`) needed NO change — it has no hardcoded column
+enumeration, so it already passed `source`/`transport`/`cadence` through correctly when requested; locked that in with a
+regression test rather than leaving it unverified. 3 new tests added. Full `quality-gates.sh` green — one unrelated
+flaky test (`test_5000_sequential_writers_do_not_leak_fds`, an FD-count test, passed in isolation on retry) is noted,
+not a regression from this change. Shipped `unified-trading-library@a45066a9` via quickmerge. Item #2 (grep for
+downstream `df.get("source", ...)`-style callers) remains open — separate backlog task.
