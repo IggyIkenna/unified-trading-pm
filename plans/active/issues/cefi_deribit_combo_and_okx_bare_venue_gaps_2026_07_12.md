@@ -1,18 +1,20 @@
 ---
 doc_type: issue
 title:
-  DERIBIT-COMBO trades capture is unwired (no Tardis routing entry); bare OKX/options_chain Layer-1 tuple needs a
-  live-check
+  DERIBIT-COMBO and OKX options_chain trades are real Tardis data with no working capture route (routing/exchange-
+  resolution gaps, not denominator errors)
 summary:
   'Found 2026-07-12 while investigating the mvp_backfill_cefi_tick_v10 G4 Layer-1 gate. Two of the 15 remaining missing
-  Layer-1 tuples for cefi are (DERIBIT-COMBO, options_chain, trades) and (OKX, options_chain, trades). Neither is
-  fixable by a plain backfill VM launch. DERIBIT-COMBO has ZERO manifest rows of any capture_status ever (confirmed via
-  instruments-service/scripts/relabel_deribit_combo_historical_to_empty_2026_06_27.py --dry-run) because
-  venue_mapping.py venue_instrument_type_to_tardis has no (DERIBIT-COMBO, *) entry at all — MTDS TardisAdapter cannot
-  resolve a Tardis exchange slug for it, so a launch would either silently resolve zero symbols or error before ever
-  attempting a fetch. Bare "OKX" is explicitly documented in venue_constants.py:327-335 as NOT a real capture venue
-  (data lands under OKX-SPOT/OKX-SWAP/OKX-FUTURES) — this looks like the same phantom-denominator class already fixed
-  today for BITFINEX-FUTURES/FUTURE (unified-api-contracts@5b57c2b2), but was not verified this session.'
+  Layer-1 tuples for cefi are (DERIBIT-COMBO, options_chain, trades) and (OKX, options_chain, trades). Both are
+  confirmed-real Tardis data (deribit exchange has a distinct type==combo with 68,720 symbols; okex-options exchange has
+  247,539 real option symbols since 2020-02-01) but neither has a working capture path: DERIBIT-COMBO has zero
+  venue_instrument_type_to_tardis routing entry at all (confirmed zero manifest rows ever, via
+  instruments-service/scripts/relabel_deribit_combo_historical_to_empty_2026_06_27.py --dry-run); OKX options/futures
+  chain resolution goes through VenueMapping.get_tardis_exchange_for_venue, which is venue-only (not instrument-type
+  aware) and so cannot select okex-options over okex/okex-swap/okex-futures — DERIBIT is the only venue where this
+  coincidentally works today (all its itypes map to one exchange, "deribit"). Neither is fixable by a plain backfill VM
+  launch or a denominator correction (unlike the BITFINEX-FUTURES fix shipped today, unified-api-contracts@5b57c2b2) —
+  both need real capture-routing code changes.'
 status: open
 nature: notes
 asset_group: [cefi]
@@ -99,49 +101,74 @@ relaunch will NOT close:
    becomes "present" in Layer-1's ENUMERATED matrix (any capture_status counts, per
    `check_enumeration_completeness.py::_build_enumerated_tuples` docstring: "across all 4 capture_status states").
 
-### 2. `(OKX, options_chain, trades)` — likely a phantom denominator tuple, needs the same live-check BITFINEX-FUTURES got
+### 2. `(OKX, options_chain, trades)` — UPDATE 2026-07-12T08:20Z: confirmed REAL data exists; this is a wiring gap, not a phantom tuple
 
-- `unified_api_contracts/registry/market_data_categories.py:327-335` (comment, verbatim): "OKX is captured under
-  canonical SUB-VENUE names in the platform (OKX-SPOT / OKX-SWAP / OKX-FUTURES — like BINANCE-SPOT / BINANCE-FUTURES),
-  NOT the bare `OKX` token. Declaring the sub-venues here makes `is_mvp("cefi", "OKX-SPOT", …)` etc. — the bare `OKX`
-  caller still resolves (`mvp_instrument_universe_gap_audit` back-compat)."
-- This is the exact same shape of bug just fixed for `BITFINEX-FUTURES` (a whole-venue/itype declared in the EXPECTED
-  builder without checking whether real captured data can ever land under that exact venue string). Given bare `OKX` is
-  explicitly NOT where captures land, `(OKX, options_chain, trades)` is very likely never closable by backfill — but has
-  NOT been independently verified this session (time-boxed; the BITFINEX-FUTURES fix consumed the session's
-  live-Tardis-check budget). Needs the same treatment: trace which UAC dict is actually emitting this EXPECTED tuple for
-  bare `OKX` (grep `"OKX"` across `venue_constants.py` / `market_data_categories.py` / `_mvp_scope_rules.py` for an
-  `options_chain`/OPTION-itype declaration under the bare token — NOT `OKX-SPOT`/ `OKX-SWAP`/`OKX-FUTURES`), confirm via
-  live Tardis metadata whether `okex`/`okex-options` (if it exists as a Tardis exchange) actually serves options data,
-  then either fix the denominator (drop the phantom tuple, mirroring the BITFINEX-FUTURES precedent) or wire the correct
-  sub-venue routing if OKX DOES offer options via Tardis under a different canonical venue string than the current
-  EXPECTED-builder emits.
+- `unified_api_contracts/registry/venue_constants.py:387` declares `"OKX": {"PERPETUAL", "FUTURE", "OPTION"}` and
+  `market_data_categories.py:885` `FUTURE_BUNDLE_VENUES["cefi"] = frozenset({"DERIBIT", "OKX"})` — OKX's `OPTION` leaf
+  rolls up to the `options_chain` bundle grain the same way DERIBIT's does (comment at `market_data_categories.py:948`).
+  This is an intentional declaration, not accidental — contradicts my initial phantom-tuple hypothesis.
+- **Live-checked** `api.tardis.dev/v1/exchanges` — `okex-options` IS a real, distinct Tardis exchange ("OKX Options"),
+  separate from `okex`/`okex-swap`/`okex-futures`. Confirmed 247,539 real option symbols (e.g.
+  `BTC-USD-260711-54000-C`), `availableSince: 2020-02-01`. **So real OKX options data genuinely exists on Tardis — this
+  is NOT the BITFINEX-FUTURES phantom-tuple pattern.**
+- **Root cause: the capture ROUTING is missing, not the data.** `venue_mapping.py::venue_instrument_type_to_tardis` has
+  `("OKX","SPOT_PAIR"):"okex"`, `("OKX","PERPETUAL"):"okex-swap"`, `("OKX","FUTURE"):"okex-futures"` but **no
+  `("OKX","OPTION")` entry at all**. Worse: even adding that entry may not be sufficient — traced the actual
+  options_chain/futures_chain bulk-download call path
+  (`market_tick_data_service/adapters/umi_tick_provider.py::_route_tardis` →
+  `VenueMapping.get_tardis_exchange_for_venue(venue_upper)` → `tardis_batch_download.py::download_batch(exchange=...)`)
+  and `get_tardis_exchange_for_venue()` takes ONLY the venue string, **not instrument_type** — it returns a single fixed
+  exchange per venue, not itype-scoped. DERIBIT's options_chain capture only works today because DERIBIT's
+  `SPOT_PAIR`/`PERPETUAL`/`FUTURE`/`OPTION` ALL map to the same single Tardis exchange `"deribit"` (so the venue-only
+  lookup happens to be correct for every itype including options). OKX's real itype→exchange split
+  (`okex`/`okex-swap`/`okex-futures`/`okex-options` — FOUR different exchanges) breaks that coincidence: whatever
+  `get_tardis_exchange_for_venue("OKX")` currently resolves to (likely `okex-swap` or `okex`, not checked this session)
+  is wrong for an `options_chain` bulk request. Grepped `market_tick_data_service/adapters/umi_tick_provider.py` for
+  `options_chain` — zero hits, confirming there is no chain-type-aware exchange override at the CeFi routing entry point
+  today; `launch-targeted-options-chain-backfill.sh` (the only production caller of the options_chain path) hardcodes
+  `VM_VENUE=DERIBIT` only, never OKX.
+- **This needs a real code change** (make the options_chain/futures_chain exchange resolution itype-aware — e.g. an
+  explicit `("OKX","OPTION"):"okex-options"` routing entry PLUS a call-site fix so `_route_tardis` (or whatever handles
+  `VM_DATA_TYPES=options_chain`) actually consults it instead of the venue-only `get_tardis_exchange_for_venue`), not a
+  denominator fix and not a plain backfill relaunch. Same complexity class as the DERIBIT-COMBO gap above — deferred to
+  a dedicated session.
 
 ## Why it matters
 
-Both tuples block the `mvp_backfill_cefi_tick_v10` plan's G4 gate (`denominator_complete == True` required). Neither is
-fixable by the "launch a VM" playbook the rest of the plan's remaining gaps use — (1) needs real cross-repo code wiring
-before any capture attempt is even possible, and (2) is very likely a denominator bug masquerading as a capture gap
-(same root-cause class as the BITFINEX-FUTURES fix shipped today, `unified-api-contracts@5b57c2b2`).
+Both tuples block the `mvp_backfill_cefi_tick_v10` plan's G4 gate (`denominator_complete == True` required). **Neither
+is a denominator error and neither is fixable by the "launch a VM" playbook** the rest of the plan's remaining gaps use
+— both DERIBIT-COMBO and OKX options genuinely exist on Tardis (confirmed via live exchange metadata this session), but
+the capture-routing code has no path to reach either: DERIBIT-COMBO has zero Tardis exchange mapping at all, and OKX's
+options/futures-chain routing is venue-only (not instrument-type-aware), so it silently resolves to the wrong exchange
+slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only venue where this coincidentally works today
+(all its itypes map to the single `"deribit"` exchange).
 
 ## Recommended decision
 
-- Todo 1 (DERIBIT-COMBO wiring): route to `data_engineering` — needs the venue_mapping.py routing entry + a catalogue
-  tagging check, both squarely pipeline-code work. Verify via `api.tardis.dev/v1/exchanges/deribit` first (dead-simple
-  curl check, ~2 min) before writing any code, in case Tardis's `deribit` exchange doesn't distinguish combo instruments
-  at all (in which case this becomes ANOTHER denominator-correction case, not a wiring fix).
-- Todo 2 (bare-OKX verification): route to `data_engineering` — same live-check pattern as this session's
-  BITFINEX-FUTURES fix (grep the EXPECTED-emitting dict, curl the Tardis exchange metadata, fix-or-confirm).
+- Todo 1 (DERIBIT-COMBO wiring): route to `data_engineering` — add the `venue_instrument_type_to_tardis` routing entry
+  (`venue_mapping.py`, confirmed real: Tardis's `deribit` exchange has a distinct `type=='combo'` with 68,720 symbols)
+  - verify `build_instrument_catalogue.py` tags catalogue rows `venue=DERIBIT-COMBO` for combos specifically.
+- Todo 2 (OKX options/futures-chain routing): route to `data_engineering` — needs
+  `VenueMapping.get_tardis_exchange_for_venue` (or its `_route_tardis` call site in
+  `market_tick_data_service/adapters/umi_tick_provider.py`) to become instrument-type-aware for chain-type
+  (`options_chain`/`futures_chain`) requests specifically, so OKX resolves to `okex-options`/`okex-futures` instead of
+  whatever the venue-only lookup currently returns. Confirmed real: `okex-options` Tardis exchange has 247,539 real
+  option symbols since 2020-02-01.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Curl `api.tardis.dev/v1/exchanges/deribit` and confirm whether Tardis's `deribit` exchange exposes
-      combo/multi-leg instrument IDs distinct from single-leg options. If yes: add the `venue_instrument_type_to_tardis`
-      routing entry (`venue_mapping.py`) + verify `build_instrument_catalogue.py` tags combo rows with
-      `venue=DERIBIT-COMBO`, then re-run the cefi backfill for `DERIBIT-COMBO`. If no: file a denominator-correction fix
-      instead (mirror `unified-api-contracts@5b57c2b2`). (repo: unified-api-contracts, instruments-service,
-      market-tick-data-service)
-- [ ] [SCRIPT] P2. Trace which UAC dict emits the bare-`OKX`/`options_chain`/`trades` Layer-1 EXPECTED tuple (NOT
-      OKX-SPOT/OKX-SWAP/OKX-FUTURES); confirm via live Tardis metadata whether it is real or phantom; fix the
-      denominator (mirror the BITFINEX-FUTURES precedent, `unified-api-contracts@5b57c2b2`) if phantom. (repo:
-      unified-api-contracts)
+- [ ] [SCRIPT] P2. Add `("DERIBIT-COMBO", "OPTION"): "deribit"` (or correct itype key) to
+      `venue_mapping.py::venue_instrument_type_to_tardis`, filtered to Tardis `type=='combo'` symbols only (not
+      duplicating bare DERIBIT's option/future/perpetual/spot capture); verify `build_instrument_catalogue.py` tags
+      catalogue rows `venue=DERIBIT-COMBO`; check whether an empty resolved symbol list (pre-catalogue-tracking dates)
+      still writes a manifest row or needs `deribit_combo_adapter.py`'s `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`
+      classification to fire instead; re-run the cefi backfill for `DERIBIT-COMBO`. (repo: unified-api-contracts,
+      instruments-service, market-tick-data-service)
+- [ ] [SCRIPT] P2. Trace `get_tardis_exchange_for_venue`'s current return value for venue="OKX" (likely `okex` or
+      `okex-swap`, not checked this session) and make the options_chain/futures_chain bulk-download exchange resolution
+      instrument-type-aware (either an explicit override at the `_route_tardis` call site in `umi_tick_provider.py`, or
+      extend `get_tardis_exchange_for_venue` to accept an optional itype param) so OKX resolves to `okex-options` for
+      options_chain requests; add `("OKX", "OPTION"): "okex-options"` to `venue_instrument_type_to_tardis`; re-run the
+      cefi backfill for OKX options_chain (mirror `launch-targeted-options-chain-backfill.sh --venue OKX`, extending
+      that launcher which currently hardcodes DERIBIT only). (repo: unified-api-contracts, market-tick-data-service,
+      deployment-service)
