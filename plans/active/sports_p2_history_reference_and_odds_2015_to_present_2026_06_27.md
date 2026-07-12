@@ -218,7 +218,38 @@ singleton-lock namespace → may run concurrently.
       task's scope pending operator review. **Gate still NOT MET** — no checkbox flip. **Post-VM step** (next slot to
       pick this up): wait for `tm-backfill-20260708-205809` TERMINATED + consolidator merge (≤1 min), re-query
       `(transfermarkt, PLAYER_VALUES) pending_fetch`; if 0 (or only the window-closed baseline), TM is fully resolved
-      and the remaining blockers are understat XG_SHOTS + footystats MATCHES/PREDICTIONS only.
+      and the remaining blockers are understat XG_SHOTS + footystats MATCHES/PREDICTIONS only. **RE-VERIFIED 2026-07-12
+      (slot-10, `data_engineering`) — item #4 now holds, item #5 actively being worked live, two other sources
+      regressed.** Fresh live-manifest read (single-parquet, no whole-corpus walk; `_index/availability_index.parquet`
+      updated 2026-07-12T03:34:41Z, 4,914,208 rows) per source: **understat (item #4)**: now genuinely resolved — big-5
+      `attempted_failed=0`, `expected_unattempted` down to just 30 (15 XG + 15 XG_SHOTS), all dated within the last 3
+      days (rolling forward-poll trailing edge, off-season no-fixture dates), consistent with item #4's own ✅
+      2026-07-09 flip holding (full detail + the operator-escalation on this exact trailing-edge shape: sibling plan
+      `understat_local_backfill_completion_2026_07_06.md`, this session's other entry, `BLK-77e8cce7`). **footystats
+      (item #5)**: still FAILS, essentially byte-identical to 2026-07-08 — MATCHES `expected_unattempted=5,733` (was
+      5,641), PREDICTIONS `expected_unattempted=44,255` (was 44,163), ODDS `expected_unattempted=1,264` (unchanged
+      exactly). This matches the footystats issue doc's own finding: all 3 CODE fixes
+      (`instruments-service@1af6c92`/`@78636dd`/`@e951813`) shipped 2026-07-08 and stop the gap from growing further,
+      but do NOT retroactively backfill the already-seeded historical rows — that requires todo #4 in
+      `plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md` (re-run typing pass + re-dispatch a
+      footystats backfill VM), which is now unblocked (all 3 code-fix prereqs are shipped) and **is currently being
+      worked live by slot-6** (`sports_p2_history_reference_and_odds_2015_to_present-001`, dispatched 2026-07-12
+      03:29:15 UTC, fresh progress at 03:36:07 UTC — 5 min old at verification time). **Did not duplicate slot-6's
+      in-flight work.** **New finding, this item's own gate, not item #4/#5's**: open_meteo `expected_unattempted` grew
+      264→**724** and SFI `soccer_football_info` grew 264→**724** since 2026-07-08 — this is the exact write-loss
+      symptom flagged as a hypothesis (not yet acted on) in the 2026-07-09 ~02:1x UTC slot-4 Progress Log entry below
+      (dropped `.write()` calls in the calendar-guard early-return paths, same bug class as understat's item #4 root
+      cause, `instruments-service@920b303` fixed the callsites but did not retroactively re-touch already-dropped
+      writes) — untouched by this session, flagging for the next slot since it's a THIRD source now failing this item's
+      own full-gate criterion, independent of items #4/#5. transfermarkt `expected_unattempted=1,364` — **unchanged to
+      the row from 2026-07-08** despite `tm-backfill-20260708-205809` having been launched specifically to close this
+      exact window (2025-12-10→2026-07-08); did not verify VM completion status this session (out of time budget) — next
+      slot should check `gcloud compute instances describe tm-backfill-20260708-205809` / its GCS run.log before
+      re-launching, since an identical unchanged count could mean either the VM never actually ran to completion or its
+      run touched different rows than the ones still counted. **Gate still NOT MET, no checkbox flip.** Un-block
+      sequence: (a) slot-6 finishes footystats item #5 (in progress); (b) open_meteo/SFI write-loss regrowth gets a
+      targeted re-fetch (same pattern as understat's closer script); (c) transfermarkt VM completion gets
+      verified/re-launched if needed; (d) THEN this item re-verifies clean across all 6 sources.
 
 **Full-execution criterion**:
 
@@ -239,6 +270,21 @@ singleton-lock namespace → may run concurrently.
 - **Feeds**: P2c (features history). Runs concurrently with P2a.
 
 ## Progress Log
+
+### 2026-07-12 ~03:4x UTC — slot-10: item #6 re-verified — item #4 holds, item #5 live on slot-6, open_meteo/SFI regressed, TM unchanged
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-002` (item #6, the cross-source VERIFY gate),
+auto-dispatched despite item #5 (footystats) still open — same "prereqs not machine-encoded" pattern this plan's
+Progress Log has repeatedly documented.
+
+Fresh live-manifest read (single-parquet, `_index/availability_index.parquet` updated 2026-07-12T03:34:41Z, 4,914,208
+rows — no whole-corpus walk) per source, full detail in the item #6 checkbox note above. Summary: understat (item #4)
+now genuinely resolved (30-row rolling trailing edge, not a backlog); footystats (item #5) still fails and is currently
+being worked live by slot-6 (fresh progress 03:36:07 UTC) — did not duplicate; open_meteo and SFI both regressed 264→724
+(the write-loss-bug regrowth flagged as a hypothesis below, now confirmed happening); transfermarkt unchanged at 1,364
+despite a VM launched specifically to close it — VM completion unverified this session, flagged for the next slot. **No
+checkbox flip — gate still not met.** No code shipped this session; plan-doc update only, via the sibling
+`unified-trading-pm` worktree.
 
 ### 2026-07-09 ~02:1x UTC — slot-4: item #1 re-verified against the write-loss bug (holds) + likely explanation found for item #6's "daily lag" residual
 
