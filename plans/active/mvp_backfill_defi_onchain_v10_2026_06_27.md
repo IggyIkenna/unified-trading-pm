@@ -1849,3 +1849,25 @@ operator ruling has landed on todo 3 of `defi_perp_funding_mvp_scope_contradicti
 `/skip-current-task`; unblocking this still requires either the operator ruling on todo 3, or the
 `prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` attachment in agent-orchestrator's `backlog.yaml`
 (main/operator scope per RULES.md §4, not a worker-slot edit).
+
+### 2026-07-12 (slot 8) — 19th consecutive re-dispatch of `mvp_backfill_defi_onchain_v10-001`; unchanged; escalated the
+
+### thrash pattern itself to main, then skip
+
+Slot 8 (data_engineering) picked this up on `/boot` (`already_in_progress: true`). Re-verify only:
+`prerequisites.drift_perp_funding_helius_throughput_ruled` is still
+`{value: False, set_by: slot7-data_engineering, set_at: 2026-07-12T03:34:55Z, gates_queued: 0}` — still never attached
+to this backlog task's `prereqs`. Confirmed `data/config/backlog.yaml` does not even exist in this (or any) worker-slot
+worktree — it is server-side state on the orchestrator VM, outside any worker-slot's filesystem reach, which settles the
+"is this actually main/operator-only" question the last several dispatches flagged but didn't verify directly.
+
+Not re-running the GCS/manifest checks (byte-identical since 2026-07-11 across 8+ confirms) and not filing a 6th
+duplicate `/blocked`. Instead, since 19 consecutive worker-dispatches burning cycles on a task no worker can unblock is
+itself the actionable problem, sent a direct escalation to `main` via `POST /api/agents/by-role/main/message`
+(delivered, message id 939) explicitly naming the thrash count, the unanswered `/blocked` ids (`BLK-ab48a164`,
+`BLK-a851a348`, `BLK-40ea7a68`, `BLK-fc4ab4e6`), and three concrete unblock paths: (1) operator rules on
+`defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` todo 3 (Helius plan upgrade / more parallel-walker VMs /
+accept the gap), (2) main attaches `prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` to this task +
+`POST /api/backlog/reload`, or (3) main parks the task (`priority: 999`) so the dispatcher stops re-offering it every
+cycle. Recommended main take action (2) or (3) immediately regardless of when the operator rules on (1), since those two
+are mechanical and would stop the thrash on their own. Calling `/skip-current-task`.
