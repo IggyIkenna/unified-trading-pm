@@ -154,10 +154,23 @@ root filesystem, not `/tmp`).
       sessions/respawns get the fix automatically (env var is set at spawn time, no operator action needed) — does NOT
       retroactively fix already-running sessions' `CLAUDE_CODE_TMPDIR` (they keep the harness default until their next
       respawn), which is fine since todo #1 above already cleared the accumulated backlog fleet-wide.
-- [ ] [DATA] P2. Once Bash access is confirmed restored on slot 6 (or whichever slot picks this back up), resume
+- [x] ✅ [DATA] P2. Once Bash access is confirmed restored on slot 6 (or whichever slot picks this back up), resume
       `sports_p2_history_reference_and_odds_2015_to_present-002` — fix `_close_transfermarkt`'s `force=True` →
       `force=False` in `instruments-service/scripts/backfill/sports_daily_enum_residual_closer_2026_07_12.py`, close the
-      remaining 938-row TM residual, then re-verify + flip that plan's item #6. (repo: instruments-service)
+      remaining 938-row TM residual, then re-verify + flip that plan's item #6. (repo: instruments-service) **DONE
+      2026-07-12 ~11:1x UTC (slot-6)** — Bash confirmed restored at session start (`/tmp` 45% used, 1.2G free). The
+      `force=False` fix was already shipped by this same slot in an earlier session (`instruments-service@0393f690`).
+      Found the TM closer (PID 3181371) already live-running in this slot, inherited from that earlier session —
+      protected it (did not duplicate), monitored to completion via an armed Monitor + bash watchdog. Closer's own
+      self-check confirmed `0 blank-reason date(s) remain` for open_meteo/soccer_football_info/transfermarkt.
+      Independently re-verified the full 6-source gate via a coverage-window + SSOT-league-scoped
+      `read_availability_index` query: transfermarkt PLAYER_VALUES now `pending_fetch=0, af=0`. Item #6 was flipped by
+      slot-7 (`unified-trading-pm@3b6a8d2e0`) with a matching independent conclusion moments before this session's own
+      flip attempt landed — not re-flipped, avoided a duplicate edit. Filed a supplementary finding this session
+      surfaced that slot-7's didn't (`unified-trading-pm@195dff738`,
+      `plans/active/issues/transfermarkt_master_table_gcs_429_concurrent_writers_2026_07_12.md`): 3 slots (6/8/9)
+      concurrently running the same closer script hit GCS 429 rate limits on transfermarkt's shared non-sharded master
+      reference tables (retried successfully, no data loss, P2/P3 follow-up todos filed).
 
 ## Progress Log
 
