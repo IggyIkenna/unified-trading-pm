@@ -131,12 +131,43 @@ this session to isolate the exact branch (`_read_and_merge_per_vm_shards` return
 - [ ] [INFRA] P0. Confirm current health of `uts-prod-manifest-consolidator-instruments-sports` (Cloud Run job,
       `market-tick-data-service` image) — if still crash-looping, check Cloud Monitoring memory metrics for the job
       during the 07:35-07:46 UTC window on 2026-07-12 to confirm/refute the OOM hypothesis; bump memory limit or add
-      shard-count throttling if confirmed. (repo: market-tick-data-service / deployment infra)
-- [ ] [SCRIPT] P0. Root-cause + fix the silent-empty-read path in `read_availability_index`
+      shard-count throttling if confirmed. (repo: market-tick-data-service / deployment infra). **STILL RED as of
+      2026-07-12T08:08Z (slot-3)** — re-checked while investigating a premature dispatch of todo 3 (which explicitly
+      gates on this todo being done). ⚠️ Methodology correction:
+      `gcloud run jobs executions list     --format="table(...,status.conditions[0].type)"` prints `Completed` for BOTH
+      successful and failed executions (that field is the condition TYPE, not its STATUS) — misreading this made the job
+      look recovered at first glance. The real signal is `status.conditions[0].status` + `.message`; a direct
+      `executions describe` on the most recent finished execution (`...-gqmrr`, completed 08:06:34Z) shows
+      `status: 'False', reason: NonZeroExitCode, message: "...failed with exit code: 1..."`. Cloud Logging for
+      08:00-08:08Z shows the SAME truncated OOM-signature traceback
+      (`manifest_consolidator.py:587 _duckdb_consolidate_and_write` → `Container called exit(1)`) on every single
+      execution, one per minute, unchanged from the original 07:46Z filing — **22+ minutes and counting, not recovering
+      on its own**. The canonical blob's `updated` timestamp is still frozen at `2026-07-12T07:30:46.756Z` (age 2215s+
+      at check time) — confirms zero forward progress despite the job "completing" (exiting, not succeeding) every
+      cycle. This todo remains open and P0; not attempted the actual OOM fix (memory bump / shard throttling) this turn
+      — out of scope for the read-path-fix task I was dispatched to, and genuinely INFRA craft, not data_engineering.
+- [x] ✅ [SCRIPT] P0. Root-cause + fix the silent-empty-read path in `read_availability_index`
       (`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`) so a stale-consolidator +
       failed/empty per-VM-merge case always raises `ManifestConsolidatorStaleError` (or another loud, typed error)
       instead of returning `len(df)==0` silently. Add a regression test simulating stale-consolidated + unreadable
-      per-VM shards. (repo: unified-trading-library)
+      per-VM shards. (repo: unified-trading-library). **DONE 2026-07-12 (slot-3)** — `unified-trading-library@b5ab0c01`.
+      Root cause: `_read_and_merge_per_vm_shards` collapses "no per-VM shards exist at all" and "shards exist but every
+      single one failed to list/download/parse" into the same `None` return; the caller (`read_availability_index` /
+      `_read_availability_index_slim`) then falls through the self-shard fallback to a silent `return _empty` when the
+      self-shard is also absent — exactly reproducing the production incident (stale consolidator + real per-VM shards
+      from other VMs + this VM having no self-shard → 0 rows returned while the raw blob had 4.9M). Fix: extracted the
+      shared "stale consolidated" branch into a new `_read_slow_path()` helper that reuses the already-computed
+      `shards_exist` flag (from `_per_vm_shards_exist`) as the authoritative signal — when shards are KNOWN to exist but
+      both the merge and self-shard read come back empty, raises `ManifestConsolidatorStaleError` via a new
+      `_raise_shards_exist_but_unreadable()` helper instead of silently returning empty; a genuinely-empty bucket
+      (`shards_exist=False`) still legitimately returns empty, unchanged. The extraction also fixed a `ruff C901`
+      complexity violation the inline fix first introduced (`read_availability_index` was 27 > 26) and de-duplicated the
+      same branch between the full and slim read paths. 2 new regression tests in
+      `tests/unit/test_manifest_writer_per_vm.py` (`test_reader_raises_when_shards_exist_but_all_unreadable` — proven to
+      fail on pre-fix code via a `git stash` round-trip (`DID NOT RAISE`), matching the workspace's regression-test bar
+      — and `test_reader_returns_self_shard_when_other_shards_all_unreadable`, a control confirming the legitimate
+      self-shard recovery path is unaffected). Full `quality-gates.sh` green (140s), 43/43 tests passing in the affected
+      files.
 - [ ] [DATA] P1. Once (1) and (2) are fixed and the consolidator has run cleanly for several consecutive minutes, re-run
       the full 6-source gate check for `sports_p2_history_reference_and_odds_2015_to_present` item #6 and flip its
       checkbox if all sources show `pending_fetch == 0` (or only genuine non-covered/window-closed residual). (repo:
@@ -152,3 +183,57 @@ returning 0 rows across 3 independent fresh-process calls during this window; ra
 confirmed 4,914,272 real rows (no data loss — read-path bug only). Did not attempt to fix the consolidator or the UTL
 read-path bug myself this session (out of scope for the sports_p2 VERIFY task + genuine cross-repo infra fix); flagging
 for operator review + a dedicated follow-up dispatch.
+
+### 2026-07-12 — slot-3 (sonnet/high): closed the read-path fix todo
+
+`unified-trading-library@b5ab0c01` — see the flipped checkbox above for the full readout. Root-caused via direct code
+read (not inference): `_read_and_merge_per_vm_shards` returns `None` both when no shards exist AND when every shard
+fails to list/download/parse, and the caller's final self-shard fallback silently returned an empty DataFrame when that
+also came back `None` — exactly reproducing this issue's observed 0-rows-while-4.9M-real-rows-exist state. Fixed by
+reusing the already-computed `shards_exist` flag to raise `ManifestConsolidatorStaleError` instead of falling through to
+empty, only when shards are confirmed to exist elsewhere. 2 new regression tests, one proven to fail on pre-fix code.
+Did NOT touch todo 1 (consolidator health/OOM) or todo 3 (sports_p2 re-gate) — separate scope; this was dispatched
+specifically as the read-path fix task.
+
+### 2026-07-12T08:08Z — slot-3: declined premature dispatch of todo 3, corrected todo 1's status
+
+Immediately after `/done` on the read-path fix, the dispatcher offered this same doc's todo 3 ("re-run the full 6-source
+gate... once (1) and (2) are fixed and consolidator has run cleanly for several consecutive minutes") — but todo 1
+(consolidator health/OOM) is still unchecked. Independently re-verified rather than trusting the todo's stale text:
+`gcloud run jobs executions list` at first glance looked recovered (`TYPE=Completed` on 8 consecutive executions,
+08:00-08:07Z) — but that field is the condition TYPE, not STATUS, and is `Completed` on BOTH success and failure. A
+direct `executions describe` + Cloud Logging read confirms the job is STILL crash-looping (exit code 1, same
+OOM-signature traceback, every single execution in that window; canonical blob frozen at `2026-07-12T07:30:46.756Z`,
+unchanged for 22+ minutes). See the corrected note on todo 1 above. Did NOT run the gate re-check (todo 3's own
+prerequisite is genuinely unmet) — `skip-current-task`'d it rather than force a premature/unverifiable re-gate, matching
+the exact pattern this doc's sibling `tradfi_manifest_row_loss_regression` issue already established for mis-dispatched
+gated todos. Flagging for main/operator: todo 3's backlog entry likely needs a `prereqs.completed_tasks` gate on todo
+1's backlog id so it stops dispatching until the consolidator is actually confirmed healthy — not hand-editing
+`backlog.yaml` myself per the workspace rule.
+
+### 2026-07-12T08:14Z — slot-11: 2nd premature dispatch of todo 3, re-verified via Cloud Run API directly (not gcloud CLI)
+
+Dispatched todo 3 again (task id `sports_manifest_consolidator_duckdb_crash_and_silent_empty_read-003`) despite todo 1
+still being open — this is the SECOND occurrence of the same premature-dispatch pattern slot-3 flagged at 08:08Z; the
+backlog prereq gate was not added between then and now. `gcloud` CLI is unavailable in this sandbox (snap-confine
+capability error), so verified independently via the `google-cloud-run` Python client (`run_v2.ExecutionsClient`)
+against `central-element-323112` using ADC — same underlying API slot-3 used, different tool:
+
+- Listed the 10 most recent executions of `uts-prod-manifest-consolidator-instruments-sports` (08:04:05Z–08:13:05Z
+  window): **9/9 completed executions show `succeeded_count=0, failed_count=1`** (10th still running at check time).
+  Pulled full `conditions[]` on execution `...-75gth` (completed 08:13:26Z) directly, not just `conditions[0]`:
+  `type=Completed state=CONDITION_FAILED reason=0 message="...failed with exit code: 1..."` — confirms the job is still
+  crash-looping, unchanged from both prior checks (07:46Z, 08:08Z).
+- `gcsfs.GCSFileSystem().info('instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet')`
+  → `updated: 2026-07-12T07:30:46.756Z` — byte-identical timestamp to both the original 07:46Z filing and slot-3's
+  08:08Z re-check. **Zero forward progress for 43+ minutes and counting.**
+
+Todo 3's prerequisite ("once (1) and (2) are fixed and the consolidator has run cleanly for several consecutive
+minutes") remains definitively unmet — todo 1 is untouched (still `[ ]`), and the consolidator has produced zero
+successful executions in the observed window. Declining to force the gate re-check; this is genuinely INFRA craft (Cloud
+Run job memory/config change), not data_engineering, matching slot-3's precedent. `skip-current-task`'ing with a reason
+citing this entry. **Escalating to main/operator as a repeat occurrence**: the backlog fix slot-3 recommended
+(`prereqs.completed_tasks` gate on todo 3's backlog entry, keyed to todo 1's backlog id) still has not been applied —
+without it, this task will keep re-dispatching to whichever data_engineering slot boots next and burning a boot cycle
+each time. Recommend either (a) apply the structural prereq gate now, or (b) park todo 3's backlog entry
+(`priority: 999` + a false gating condition per RULES.md § "Park a task") until todo 1 is manually confirmed done.
