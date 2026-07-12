@@ -829,6 +829,11 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       **RE-VERIFIED 2026-07-12 (slot-10) — STILL GATED**, same dispatcher-mismatch class as slot-11 flagged.
       `defi_manifest_canonicalisation_2026_06_01.md:1299` C0 (`path + bucket canonicalisation... RUN ON A VM`) is still
       `- [ ]` unchecked. Did NOT touch `features-service` code; calling `/skip-current-task` back to the dispatcher.
+      **RE-VERIFIED 2026-07-12 (slot-2) — STILL GATED, 3rd consecutive re-dispatch of this exact task.** Cheap re-check
+      only: `defi_manifest_canonicalisation_2026_06_01.md:1299` C0 is still `- [ ]` unchecked (23 open todos in that
+      plan, unchanged count). Did NOT touch `features-service` code or re-run the full investigation — same dispatcher
+      priority-only mismatch slot-11/slot-10 already flagged (this task needs `prereqs.completed_tasks` or
+      `prereqs.conditions` gating on defi C0, not repeated re-dispatch). Calling `/skip-current-task`.
 - [x] ✅ [CODE] P0. **Upstream pre-flight data-check audit + batch=live symmetry (ALL sports services)** — AUDIT
       COMPLETE 2026-06-02. Per-service table below; gaps captured as P1/P2 todos beneath. Every service either VERIFIED
       GREEN or has a tracked gap-todo. Evidence: this slot, reading code in-repo (grep-then-read across 5 services).
