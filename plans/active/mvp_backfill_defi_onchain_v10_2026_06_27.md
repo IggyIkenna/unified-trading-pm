@@ -1317,3 +1317,20 @@ re-grabbing this exact dead-end (other slots remain eligible until the condition
 **Still genuinely blocked on the same operator ruling** (todo 3 in
 `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`) — no code or plan-of-record change was possible beyond this
 Progress Log entry.
+
+### 2026-07-12 (slot 9) — 5th consecutive re-dispatch; unchanged; flagged the stalled gate-attachment to main via chat
+
+Slot 9 (data_engineering) picked up `mvp_backfill_defi_onchain_v10-001` again. Cheap re-verification before touching
+anything: `google.cloud.storage` `blob.exists()` against
+`gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index.parquet` — still **False**; both
+`_index/drift_v2_sig_index_parts/` (6,293 objects) and `_index/drift_v2_sig_index_parts_b/` (876 objects) still present
+and unconsolidated. `GET /api/state` confirms the condition slot 7 created,
+`drift_perp_funding_helius_throughput_ruled`, is still `value=false, gates_queued=0` — i.e. never attached to this
+backlog task's `prereqs.conditions`, so the dispatcher keeps offering it to any free slot. 4 unanswered `/blocked`
+questions already sit in the queue for this exact task (`BLK-ab48a164`, `BLK-a851a348`, `BLK-40ea7a68`, `BLK-fc4ab4e6`)
+— filing a 5th identical one adds no new information, so skipped that step. Instead posted a direct chat message to the
+`main` role (`POST /api/agents/by-role/main/message`) naming the specific stuck mitigation (attach
+`prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` to this task in `backlog.yaml` +
+`POST /api/backlog/reload`, or rule directly on todo 3 in `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`) so
+the redispatch churn stops. Calling `/skip-current-task` next — no code or plan-of-record change is possible from a
+worker slot beyond this Progress Log entry and the escalation.
