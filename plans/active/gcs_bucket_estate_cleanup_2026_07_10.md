@@ -673,6 +673,61 @@ Shipped in dependency order per rule 8: `unified-trading-library@f853fc87` first
 **Net effect**: new model training runs will now correctly land in the canonical env-tiered bucket going forward — the
 drift that produced the 38-object flat-bucket orphan (already migrated forward in §5e) cannot recur.
 
+## 5i. Legacy DeFi bucket deletion — operator said "delet legacy buckets if data is migrated" (2026-07-12)
+
+Operator authorization, verbatim: "delet legacy buckets if data is migrated." Began executing against the §5f-confirmed
+migration (`migrate_defi_full_v9_canonical.py`, VM `canonical-migration-defi-20260618-180603`, rc=0) — but a
+re-verification pass while wiring `manifest_reader.py`'s `_EXTRA_BUCKET_KINDS` surfaced a **factual correction to §5f**
+that changes which buckets are actually safe to delete.
+
+**Correction to §5f's migration-destination model.** Read `_migrate_defi_walk.py` directly:
+`base = f"{stem}-{project_id}"` (the FLAT, no-suffix bucket) is the migration's SOURCE;
+`base_prd = f"{stem}-prd-{project_id}"` is its DESTINATION — the migration writes v9-canonical data INTO each kind's own
+dedicated `-prd` bucket, NOT into the shared `market-data-tick-defi-prd` bucket as §5f assumed. This means for kinds
+`cloud-providers.yaml` still resolves (`dex-pools`, `lst-rates`, `perp-funding` — see the "real reader" comments already
+in that file: strategy-service's `canonical_dex_pool_provider.py` for dex-pools,
+`e2e-testing/staked_basis_funding_scan.py` for lst-rates, genuine live data for perp-funding), the `-prd` bucket **is
+the live canonical production bucket**, not a redundant legacy copy — deleting it would have been a real regression.
+Caught this **before** it happened: the deletion script was running in the background and had not yet reached these 3
+buckets when the contradiction surfaced; stopped it (`TaskStop`), corrected the list, resumed.
+
+**Corrected deletion set** (14 buckets, flat pre-migration sources + fully-retired kinds' `-prd` destinations):
+`evm-defi` + `evm-defi-prd`, `solana-defi` + `solana-defi-prd`, `liquidations`, `lst-rates` (flat only — `lst-rates-prd`
+stays, live), `oracle-prices` + `oracle-prices-prd`, `perp-funding` (flat only — `perp-funding-prd` stays, live),
+`gas-fees` + `gas-fees-prd` (confirmed 0 bytes), `dex-pools` (flat only — `dex-pools-prd` stays, live), `dex-swaps` +
+`dex-swaps-prd`. `pnl-attribution` (already deleted earlier this round) dropped from the list. **Explicitly withheld**:
+`dex-pools-prd`, `lst-rates-prd`, `perp-funding-prd` (live, real callers — do not delete, ever, without a separate
+finding that those callers have moved off).
+
+**Second deferral, same day**: `lending-indices` + `lending-indices-prd` were also in the original candidate set (kind
+fully retired from `cloud-providers.yaml`, data type confirmed present in the shared bucket's historical partitions via
+targeted `gcloud storage ls` spot-checks at 2020/2021/2022/2023/2025/2026-06 — redundant, safe by the same logic as
+gas-fees/oracle-prices/dex-swaps). Held back anyway: a live GCE VM, `mtds-lending-indices-20260712-112557`
+(`VM_OPERATION=collect-lending-indices`, `VM_LENDING_PROTOCOLS=morpho`, launched today), is actively running. Traced it
+to `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` (operator-authorized 2026-06-27, locked, active) — today's
+VM is that plan's follow-up for `[[defi_morpho_lending_indices_never_wired_2026_07_12]]` (Morpho was never wired into
+`lending_indices_handler.py`'s default protocol list; this VM is the fix landing). Its bucket target wasn't
+independently confirmed (near-certainly resolves `kind="tick-data"` → the shared bucket, since `kind="lending-indices"`
+was already unreachable before this VM launched), but touching either legacy `lending-indices` bucket while that VM is
+live isn't worth the risk for 2 buckets out of 16. **Revisit once that VM completes** (`VM_SHUTDOWN_ON_COMPLETION=true`
+— check `gcloud compute instances describe mtds-lending-indices-20260712-112557` for existence/state).
+
+**Related discovery, not an incident**: while spot-checking the shared bucket's date coverage, found NO `day=`
+partitions after `2026-06-27` in `market-data-tick-defi-prd`'s `raw_tick_data/by_date/` tree — and the same cutoff in
+the "live" per-kind buckets (`dex-pools-prd`/`lst-rates-prd` stop at `2026-05-28`, `perp-funding-prd` at `2026-06-09`).
+Initially read as a possible live-capture outage; traced to `mvp_backfill_defi_onchain_v10_2026_06_27.md` instead —
+`2026-06-27` is that plan's deliberate backfill-window end date (created that day, gap-fill VMs launched with explicit
+`...→2026-06-27` end dates), not a broken pipeline. **Worth an operator note, not a new issue doc**: 2 of that plan's
+VMs (`mtds-dex-swaps-backfill`, `mtds-perp-funding-backfill`) have been `RUNNING` continuously since 2026-06-27 — 15
+days as of this writing. That plan is actively owned (today's Morpho follow-up VM proves it's being worked), so no
+action taken here beyond this note — but worth someone confirming those 2 long-running VMs are still making real
+progress, not stuck.
+
+**Execution**: ran the corrected 14-bucket script via `gcloud storage rm -r` + `buckets delete`, each with a post-delete
+existence check logged. In progress at time of writing — see the script/log at
+`/private/tmp/claude-501/.../scratchpad/delete_legacy_defi.sh` (session-scoped, not committed). Will flip
+`defi_manifest_canonicalisation_2026_06_01.md`'s `C0f` todo once the run confirms all 14 gone.
+
 ## 6. Model-tier note (repeating from frontmatter, since it matters for how much to trust this)
 
 Per `AUTONOMOUS_AGENT_RULES.md`'s self-check, a long cross-repo autonomous loop like this one normally routes to

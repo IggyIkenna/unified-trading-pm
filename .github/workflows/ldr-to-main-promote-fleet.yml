@@ -143,6 +143,46 @@ jobs:
           )
           echo "SIT-covered repos (gate trusts SIT for these only): ${SIT_COVERED:-<none>}"
 
+          # ── SIT-fleet-green required check (operator ruling 2026-07-12, finding 78) ──────────
+          # Rule 11 (AUTONOMOUS_AGENT_RULES) blast-radius fix for the 2026-07-07/08 incident: a
+          # promote sailed through while the cross-repo SIT suite was RED, because the existing
+          # per-repo SIT gate (part 2, below) only consults SIT for a BREAKING/unknown delta — a
+          # non-breaking delta (the common case) never checks SIT at all, so a genuinely red SIT
+          # run never blocked anything. Fix: compute a FLEET-SHARED signal ONCE per tick — was the
+          # last COMPLETED full-workspace-sit.yml run green? — and POST it as a commit status on
+          # EVERY promote PR head this tick, unconditionally (not gated on breaking-ness). Fleet
+          # protection then REQUIRES this context (pin_branch_protection_rulesets.py), so a red or
+          # MISSING status blocks auto-merge fleet-wide — closing the exact gap the incident found.
+          # Fleet-shared (not a per-repo tree fingerprint) so it can NEVER discriminate against a
+          # repo SIT structurally never stamps (e2e-testing / ibkr-gateway-infra) — same signal,
+          # same requirement, for every ldr_main repo. Fail-CLOSED on any read gap (no runs / API
+          # error / in-progress-only) — a BLOCKING gate must not fail-open on doubt.
+          SIT_FLEET_CONTEXT="sit-gate/fleet-green"
+          SIT_LAST_RUN_JSON=$(gh run list --repo "$OWNER/system-integration-tests" \
+            --workflow full-workspace-sit.yml --limit 10 \
+            --json status,conclusion,createdAt,htmlUrl 2>/dev/null || echo "[]")
+          SIT_FLEET_LINE=$(SIT_LAST_RUN_JSON="$SIT_LAST_RUN_JSON" python3 - <<'PYEOF'
+          import json
+          import os
+
+          raw = os.environ.get("SIT_LAST_RUN_JSON", "[]")
+          try:
+              runs = json.loads(raw) if raw else []
+          except json.JSONDecodeError:
+              runs = []
+          completed = [r for r in runs if r.get("status") == "completed"]
+          if not completed:
+              print("failure\tno completed full-workspace-sit run in last 10 — fail-closed\t")
+          else:
+              r = completed[0]
+              state = "success" if r.get("conclusion") == "success" else "failure"
+              desc = f"full-workspace-sit @ {r.get('createdAt', '?')} conclusion={r.get('conclusion', '?')}"[:140]
+              print(f"{state}\t{desc}\t{r.get('htmlUrl', '')}")
+          PYEOF
+          )
+          IFS=$'\t' read -r SIT_FLEET_STATE SIT_FLEET_DESC SIT_FLEET_URL <<< "$SIT_FLEET_LINE"
+          echo "SIT fleet-green signal: state=$SIT_FLEET_STATE desc=\"$SIT_FLEET_DESC\" (context=$SIT_FLEET_CONTEXT) url=$SIT_FLEET_URL"
+
           # Topological order (T0 first) — promote deps before dependents.
           REPOS=$(python3 - <<'PYEOF'
           import json
@@ -421,6 +461,27 @@ jobs:
               return 0
             fi
             echo "CONTENT GATE PASS $REPO: LDR and main trees differ"
+
+            # ── SIT-fleet-green required check: POST the commit status (unconditional) ──────────
+            # Posted on EVERY repo reaching this point, regardless of breaking/non-breaking — the
+            # gap that let the 2026-07-07/08 incident through. Uses the PAT, not the App token: the
+            # App token has no verified `statuses:write` (probed empirically — the existing
+            # label-check status POST below silently no-ops with it, confirmed by zero statuses on
+            # a real promoted repo's LDR head); the PAT already does real writes elsewhere (ref
+            # create, auto-merge arm) so it is the proven-working credential for this POST too.
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  DRY-RUN: would POST commit status $SIT_FLEET_CONTEXT=$SIT_FLEET_STATE on $REPO@${LDR_SHA:0:12}"
+            else
+              if GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/$REPO/statuses/$LDR_SHA" \
+                   --field state="$SIT_FLEET_STATE" \
+                   --field context="$SIT_FLEET_CONTEXT" \
+                   --field description="$SIT_FLEET_DESC" \
+                   ${SIT_FLEET_URL:+--field target_url="$SIT_FLEET_URL"} >/dev/null 2>&1; then
+                echo "  ✅ posted $SIT_FLEET_CONTEXT=$SIT_FLEET_STATE on $REPO@${LDR_SHA:0:12}"
+              else
+                echo "::warning::SIT-fleet-green status POST FAILED for $REPO@${LDR_SHA:0:12} — required check will show missing (fail-closed by GitHub default, not a silent bypass)"
+              fi
+            fi
 
             # ── SIT gate part 2 (LDR→main): cross-repo breaking-change gate (WS-L SIT-rehome) ──
             # v2 is PER-repo, not cross-repo SIT — so a breaking main..LDR delta must be validated by

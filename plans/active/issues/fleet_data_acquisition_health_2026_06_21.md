@@ -27,7 +27,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-10 # (was: 2026-06-27 -- corrected 2026-07-12, finding 81, §A2 B-queue ruling: table row 2's "Fix" cell carries a 2026-07-10-dated operator revision that postdated the recorded last_updated)
+last_updated: 2026-07-12 # (was: 2026-07-10 -- finding-77 removal execution attempt STOPPED this session: conflicts with uac@3652f99f VENUE_DATA_TYPE_CAPABILITIES for 3 of 4 targeted pairs; see STOP annotation + BLOCKED-OPERATOR-DECISION todo)
 ---
 
 # Fleet data-acquisition health — 2026-06-21 (operator-requested)
@@ -128,9 +128,64 @@ primary; mirrors the pre-existing `aster`-in-`derivative_ticker` registration). 
 > book/liq SOURCE_PRIORITY registration"), aster + hyperliquid do not actually serve `book_snapshot` or `liquidations`
 > for cefi — the `trades`/`ohlcv_1m`/`derivative_ticker` registrations are unaffected by this ruling.
 
-- [ ] [CODE] P2. Remove aster + hyperliquid from SOURCE_PRIORITY for cefi book_snapshot/liquidations in UAC (venue
-      serves neither; 17,282 wrongly-seeded rows were purged 2026-07-03 — removal prevents re-seeding). Repo:
-      unified-api-contracts.
+> **STOP — RULING CONTRADICTED BY uac@3652f99f (verified 2026-07-12, execution attempt this session).** The ruling's
+> premise ("aster + hyperliquid do not actually serve book_snapshot or liquidations") predates
+> `unified-api-contracts@3652f99f` (2026-07-07, `feat(uac): ASTER book_snapshot_5 + liquidations live-wire capability`),
+> which is AFTER the 2026-06-29 `honest_coverage_uac_writer_matrix_reconciliation` finding the ruling cites as its
+> factual basis. Direct code inspection of the CURRENT `unified-api-contracts` tree
+> (`unified_api_contracts/registry/market_data_categories.py`) shows 3 of the 4 targeted `(venue, data_type)` pairs
+> contradict the "serves neither" premise:
+>
+> - **(ASTER, book_snapshot_5)** — CONTRADICTS removal.
+>   `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]["book_snapshot_5"] = "2026-06-23"`, documented as a real live-only feed via
+>   `aster_book_liq_ws.py` (Binance-Futures-compatible WS, `depth5@100ms`). The MVP seeder test
+>   `test_aster_book_snapshot_5_and_liquidations_seeded` (`tests/unit/test_mtds_venue_coverage.py`, also landed in
+>   3652f99f) actively asserts non-empty seed instruments for this pair. Removing the SOURCE_PRIORITY entry while this
+>   capability + seed stay live would re-create the exact `MissingSourceError` (bug#8) this doc's own cefi-lane fix was
+>   written to close — a regression, not a fix.
+> - **(ASTER, liquidations)** — CONTRADICTS removal. Same `aster_book_liq_ws.py` connector (`!forceOrder@arr`), same
+>   `"2026-06-23"` start_date, confirmed real (seed stays empty by design — venue-level fallback, not because the feed
+>   is fake).
+> - **(HYPERLIQUID, book_snapshot_5)** — CONTRADICTS removal, independent of 3652f99f timing. HYPERLIQUID has carried
+>   `"book_snapshot_5": "2023-04-15"` (S3 `hyperliquid-archive/market_data/`) since before this issue doc's own bug#8
+>   fix; the capability table's own in-file comment for HYPERLIQUID never claimed book_snapshot absence.
+> - **(HYPERLIQUID, liquidations)** — CONSISTENT with removal. `VENUE_DATA_TYPE_CAPABILITIES["HYPERLIQUID"]` has no
+>   `liquidations` key; the in-file comment is explicit: "liquidations is out of scope (Hyperliquid does not publish a
+>   liquidations feed — no S3 prefix, no Tardis channel)."
+>
+> **Verdict: did not ship.** Executing the ruling as literally scoped (all 4 pairs) would put `SOURCE_PRIORITY` out of
+> sync with `VENUE_DATA_TYPE_CAPABILITIES` + its own regression test for 3 of 4 pairs, and would reintroduce bug#8
+> (`MissingSourceError`) for real, wired ASTER live traffic the moment the cefi book/liq live VMs write. No code change
+> made in `unified-api-contracts`. Blast-radius pre-audit (for whichever way this resolves): `SOURCE_PRIORITY` /
+> `VENUE_DATA_TYPE_CAPABILITIES` are read by `_source_priority_provenance.py` (`has_source_priority` /
+> `_resolve_and_validate_source` → `MissingSourceError` gate), `_mvp_scope_rules.py` + `market_data_categories.py`
+> (`get_expected_instruments_for_venue` seeders), `shard_source_availability.py`, `era_b_legacy_purge.py`,
+> `possible_manifest.py`, `data_type_capability.py`, plus cross-repo in market-tick-data-service:
+> `engine/orchestrator/{venue_fetch,manifest_finalize,preflight,symbol_rules,partitioned_writer}.py` and several CLI
+> handlers/scripts. Any resolution must re-run `test_mtds_venue_coverage.py`, `test_source_priority.py`,
+> `test_shard_source_availability.py`, `test_era_b_purge.py` for the affected pairs.
+>
+> **Escalation to operator (structured options):**
+>
+> Should finding-77's SOURCE_PRIORITY removal proceed given `VENUE_DATA_TYPE_CAPABILITIES` now documents real ASTER
+> book_snapshot_5/liquidations feeds (uac@3652f99f, 2026-07-07) and a pre-existing real HYPERLIQUID book_snapshot_5 feed
+> (S3-archived since 2023-04-15)?
+>
+> A: **Narrow the ruling to just `(HYPERLIQUID, liquidations)`** — the only one of the 4 pairs where "serves neither" is
+> still true today; leave `(ASTER, book_snapshot_5)`, `(ASTER, liquidations)`, `(HYPERLIQUID, book_snapshot_5)`
+> registered as-is (they match a real, tested, wired capability). **[WORKER REC]** B: **Execute finding-77 exactly as
+> scoped** (remove all 4 pairs) — accept that this reopens bug#8 (`MissingSourceError`) for ASTER live book/liq traffic
+> and that `test_aster_book_snapshot_5_and_liquidations_seeded` will need to be reverted back toward
+> `test_aster_book_snapshot_5_is_empty` (i.e., partially undo uac@3652f99f). C: **Re-verify against live data first** —
+> before removing anything, confirm from real capture logs whether the cefi-live book/liq VMs for ASTER (and HYPERLIQUID
+> book_snapshot_5) are actually receiving non-empty ticks today; let that observation (not either doc's prose) settle
+> which pairs are genuinely dead. Other: operator can type a custom answer.
+
+- [ ] [CODE] P2. **BLOCKED-OPERATOR-DECISION (2026-07-12, this session).** Remove aster + hyperliquid from
+      SOURCE_PRIORITY for cefi book_snapshot/liquidations in UAC — ruling as literally scoped conflicts with
+      `VENUE_DATA_TYPE_CAPABILITIES` (uac@3652f99f) + its own regression test for 3 of the 4 targeted pairs; see the
+      STOP annotation above for the pair-by-pair verdict + escalation options. Awaiting operator ruling on options A/B/C
+      before any `unified-api-contracts` change ships. Repo: unified-api-contracts.
 
 **Correction to issue `live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` §2 (STALE PREMISE):** that doc says the
 cefi download "STRIPS HL/ASTER (they're defi in VENUE_TO_ASSET_GROUP)." **Verified 2026-06-21: `VENUE_TO_ASSET_GROUP`

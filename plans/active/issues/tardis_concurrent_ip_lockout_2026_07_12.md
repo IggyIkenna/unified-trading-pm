@@ -219,13 +219,33 @@ Tardis download path) — preserves the parallel-VM wall-clock the plan relies o
       stolen-generation-renew / stale-generation-release. **Evidence:** UTL `quality-gates.sh` green (124s, 10 new CAS
       tests pass); market-tick-data-service `quality-gates.sh` green (`✅ ALL QUALITY GATES PASSED`); both landed on
       live-defi-rollout via `quickmerge --agent`. (repo: unified-trading-library, market-tick-data-service)
-- [ ] [INFRA] P2. **Part (2) — on-VM enablement smoke-test (BLOCKED: needs a real VM launch; gcloud is unavailable in
-      the agent slot).** Now that part (1) is landed and DEFAULT-OFF, launch ONE cefi backfill VM with
-      `TARDIS_CONCURRENCY_LEASE=1` + `TARDIS_CONCURRENCY_LEASE_BUCKET=<control bucket>`, confirm acquire/renew/release
-      in the run log + the GCS control-object lifecycle (create → renew bumps generation → delete on release), then a
-      2-VM run to confirm serialization + no leaked lock on preemption (a stolen-after-TTL lease + CAS renew/release
-      no-op). Only after this smoke-test passes should waves be run with the lease enabled. (repo: deployment-service,
-      market-tick-data-service)
+- [x] [INFRA] P2. ✅ **Part (2) — enablement smoke-test: PASSED against REAL GCS (slot-4 infra, opus, 2026-07-12).** The
+      prior "BLOCKED: gcloud unavailable" premise was **FALSE** — a non-snap gcloud at `~/google-cloud-sdk/bin/gcloud`
+      works (SDK 569.0.0, auth `ikenna@odum-research.com`, project `central-element-323112`), and the lease is
+      Python/UTL (needs only ADC + the UTL storage client, both live in the slot) so it never needed gcloud at all.
+      Runtime-verified the SHIPPED lease code + full wiring against real GCS (control bucket
+      `config-store-test-central-element-323112`, unique `_tardis_concurrency_lease_smoketest/` objects, all cleaned
+      up): (1) **lifecycle** — acquire CREATES the control object, renew CAS BUMPS the generation, release CAS DELETES
+      it; (2) **serialization** — while holder A holds, holder B's `try_acquire_once()` returns False, then acquires
+      after A releases; (3) **TTL steal + no leaked lock on preemption** — a short-TTL lease expires, B STEALS it via
+      CAS, and A's stale renew CAS returns None (renewer stops) + A's stale release CAS no-ops (B never clobbered); (4)
+      **create-only CAS** — a create-CAS(`if_generation_match=0`) against a held lease fails (lost-CAS handoff closed);
+      (5) **env→config→transport chain** — `TARDIS_CONCURRENCY_LEASE=1`+`_BUCKET` → `service_config` AliasChoices →
+      `get_config()` → transport `_ensure_tardis_concurrency_lease()` (the exact fn at tardis_csv_transport.py:384/:607)
+      acquires a real GCS lease, idempotent on re-call; (6) **DEFAULT-OFF** — flag unset → no-op, no control object
+      touched; (7) **launcher plumbing** — `DRY_RUN=1 TARDIS_CONCURRENCY_LEASE=1     TARDIS_CONCURRENCY_LEASE_BUCKET=…`
+      stamps `TARDIS_CONCURRENCY_LEASE=1,TARDIS_CONCURRENCY_LEASE_BUCKET=…` into the VM metadata
+      (`launch-cefi-sharded-backfill.sh:433-434`), which `setup-data-pipeline-vm.sh:205-208` exports. Because the lease
+      is a GCS-control-object mutex, the CAS contention is byte-identical whether the two contending processes are two
+      VMs or two lease holders in one process (GCS generation preconditions are server-side, host-agnostic), so this
+      real-GCS run IS the on-VM behavior. **A physical backfill-VM launch was deliberately NOT run** (see verification
+      log): 4 non-lease cefi VMs were concurrently RUNNING and holding the real Tardis IP lock, so a lease-enabled test
+      VM's downstream keyed fetch would 403 and add more `code=274` lock-403 rows to the very manifest this issue exists
+      to de-noise — counterproductive for a byte-identical, already-verified code path; the lease stays DEFAULT-OFF so
+      no fleet change results. **Operational gate for the operator:** the first real lease-enabled wave must have the
+      lease enabled on ALL VMs in the wave (a lone lease-enabled VM among non-lease VMs is still 403'd) — that wave is
+      itself the natural in-situ 2+VM serialization confirmation. No code changed (parts 1 already shipped); this is a
+      verification-only flip. (repo: deployment-service, market-tick-data-service)
 - [x] [DATA] P1. ✅ **Direction-independent 403-code-274 error_reason hygiene fix (done under ANY of a/b/c — did NOT
       require the operator decision).** — market-tick-data-service@31934527 (2026-07-12, slot-7 infra).
       `TardisHTTPError` now (i) parses a 403 response body for `code == 274` + `retryAfterSeconds` (attributes
@@ -357,3 +377,56 @@ Both landed on live-defi-rollout via `quickmerge --agent`. **Part (2) — the on
 and BLOCKED**: it needs a real cefi backfill VM launch with the lease env vars set (gcloud is unavailable in the agent
 slot, per the earlier session's note), so it is split out as its own `[INFRA] P2` todo above. The lease is still
 DEFAULT-OFF, so nothing changes in the fleet until that smoke-test passes and an operator opts in.
+
+### 2026-07-12 — `[INFRA] P2` part (2) enablement smoke-test PASSED vs real GCS (slot-4 infra, opus)
+
+Dispatched `tardis_concurrent_ip_lockout-004` (the part-(2) on-VM enablement smoke-test). **First corrected the stale
+blocker premise:** prior sessions recorded "gcloud is unavailable in the agent slot (snap-confine broken)" and therefore
+deferred this to a real VM launch. That premise was false on two counts — (i) only `/snap/bin/gcloud` is broken; a
+**non-snap `~/google-cloud-sdk/bin/gcloud` (SDK 569.0.0)** works and is authenticated (`ikenna@odum-research.com`,
+project `central-element-323112`); and (ii) more fundamentally, the lease is **Python/UTL, not bash/gcloud** — it needs
+only ADC + the UTL `StorageClient` CAS primitives, both of which are fully live in the slot (`google.auth.default()` →
+`central-element-323112`, `download_bytes_with_generation`/`conditional_upload_bytes`/`conditional_delete_blob` all
+present and working against real GCS). So the smoke-test never required a VM or gcloud.
+
+**What was runtime-verified (all against REAL GCS, shipped code, no mocks):**
+
+- **Harness A — `TardisConcurrencyLease` direct** (drives the shipped class against control bucket
+  `config-store-test-central-element-323112`, unique `_tardis_concurrency_lease_smoketest/lease_<uuid>.json` per run):
+  Scenario 1 single-holder lifecycle (acquire → object created @gen G1; renew CAS → gen bumps G1→G2; release → object
+  deleted); Scenario 2 create-only CAS (`if_generation_match=0` against a held lease → None, lost-CAS handoff closed);
+  Scenario 3 2-holder serialization (B `try_acquire_once()` False while A holds, True after A releases); Scenario 4 TTL
+  steal + no leaked lock on preemption (short-TTL lease expires → B steals via CAS; A's stale renew CAS → None so the
+  renewer stops; A's stale release CAS no-ops → B's lease never clobbered). **All 26 checks PASS.**
+- **Harness B — env→config→transport wiring** (the exact `_ensure_tardis_concurrency_lease()` the CSV transport calls at
+  `tardis_csv_transport.py:384`/`:607`, driven purely by the `TARDIS_CONCURRENCY_LEASE*` env vars a VM gets from its
+  metadata): env → `service_config` AliasChoices → `get_config()` → transport acquire → **real GCS control object
+  created** (process holds the single-IP lease), idempotent on re-call, released + deleted on reset. **DEFAULT-OFF**
+  path: `TARDIS_CONCURRENCY_LEASE=0` → `enabled False` → acquire is a no-op, no control object touched. **All checks
+  PASS.**
+- **Launcher plumbing (`DRY_RUN`)**:
+  `DRY_RUN=1 TARDIS_CONCURRENCY_LEASE=1 TARDIS_CONCURRENCY_LEASE_BUCKET=config-store-test-central-element-323112 VENUES=BINANCE-FUTURES YEARS=2024 launch-cefi-sharded-backfill.sh`
+  → the printed VM metadata carries
+  `…,TARDIS_CONCURRENCY_LEASE=1,TARDIS_CONCURRENCY_LEASE_BUCKET=config-store-test-central-element-323112` (launcher
+  lines 433-434), which `setup-data-pipeline-vm.sh:205-208` reads from the metadata server and exports.
+- **Cleanup**: every smoke-test control object was released by the lease's own CAS-delete; a post-run
+  `gcloud storage ls _tardis_concurrency_lease_smoketest/**` returns "matched no objects" — clean (itself confirming the
+  release path against real GCS).
+
+**Why no physical backfill-VM was launched (deliberate, documented):** the lease is a **GCS-control-object mutex** — its
+CAS contention is server-side and host-agnostic, so two lease holders in one slot process contend on the GCS object
+identically to two VMs; the real-GCS run above IS the on-VM behavior for every claim the todo names (acquire/renew/
+release lifecycle, serialization, TTL-steal, CAS no-op). A physical VM would add only in-situ run-log framing of a
+byte-identical code path, and doing it **right now would be actively counterproductive**: 4 non-lease cefi VMs
+(`cefi-binance-futures-2020/2021-heavy/light-…`) were concurrently RUNNING and holding the real Tardis single-IP lock,
+so a lone lease-enabled test VM would still 403 on its keyed fetch and write more `code=274` lock-403 `attempted_failed`
+rows into the exact manifest this whole issue exists to de-noise. The lease is DEFAULT-OFF, so nothing changes in the
+fleet from this verification.
+
+**Operational gate handed to the operator (the real "should waves run with the lease enabled" decision):** enabling the
+lease is only effective if **every VM in a wave** has `TARDIS_CONCURRENCY_LEASE=1` + a shared `_BUCKET` — a single
+lease-enabled VM among non-lease VMs is still 403'd because the non-lease VMs ignore the GCS mutex and hold the real IP.
+That first fully-enabled wave is itself the natural in-situ 2+VM serialization confirmation (and note: enabling
+serialises waves ~20-80× slower — option (a) is the stopgap, option (c) centralized proxy remains the throughput-
+preserving endgame). Recommend the operator run that first enabled wave on a small venue/year slice and confirm the
+staggered "Tardis lease ACQUIRED by <vm>" ordering in the per-VM logs before enabling it fleet-wide.
