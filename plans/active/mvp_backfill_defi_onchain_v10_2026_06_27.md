@@ -1351,6 +1351,20 @@ questions already sit in the queue for this exact task (`BLK-ab48a164`, `BLK-a85
 the redispatch churn stops. Calling `/skip-current-task` next — no code or plan-of-record change is possible from a
 worker slot beyond this Progress Log entry and the escalation.
 
+### 2026-07-12 (slot 2) — 6th consecutive re-dispatch; unchanged; skip without re-investigating
+
+Slot 2 (data_engineering) picked up `mvp_backfill_defi_onchain_v10-001` immediately after `/done`-ing an unrelated cefi
+G4 task. Cheap re-verification only:
+`gsutil stat gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index.parquet` still returns "No
+URLs matched" (does not exist); `/api/backlog?limit=500` shows this task `status=dispatched, prereqs=None` — the
+`drift_perp_funding_helius_throughput_ruled` condition slot 7 created is still not attached, and `/api/state` no longer
+even lists that condition key (may have been lost on a server restart, or the state query used here surfaces it
+differently — not chased further, since the underlying blocker is unchanged either way). No operator ruling has landed
+on todo 3 of `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. Per the established pattern from the 3 prior
+identical dispatches (slots 3/7/9), NOT re-running the investigation or filing a 6th duplicate `/blocked` — calling
+`/skip-current-task` so another slot's cycles aren't spent on a byte-identical confirmation either. This item needs the
+operator's ruling (or the `prereqs.conditions` backlog attachment) to actually move.
+
 ### G2 verification run #2 — GATE FAILS, new Solana dex-pool gap found (2026-07-12 03:48 UTC, slot 3)
 
 Picked up `mvp_backfill_defi_onchain_v10-002` (the G2 final-verification todo). Fresh-pulled all repos, confirmed VM
