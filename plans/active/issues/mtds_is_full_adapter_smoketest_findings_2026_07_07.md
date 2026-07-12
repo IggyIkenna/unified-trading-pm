@@ -331,7 +331,14 @@ the todos already promised.
       (`defi.py` `_build_defi_venues()` + golden-fixture regen): `instruments-service@9b0c1095`. 7 venues flipped
       pipeline→live: RADIANT-ARBITRUM/BSC/ ETHEREUM, VENUS-BSC/ETHEREUM, BENQI-AVALANCHE, EULER_V2-ETHEREUM
       (EULER_V2-ARBITRUM stays pipeline — adapter is Ethereum-only). Both QG-verified full-suite green modulo
-      pre-existing concurrent-sibling failures (COINBASE-CDE, OKX-SPOT — confirmed unrelated to this diff).
+      pre-existing concurrent-sibling failures (COINBASE-CDE, OKX-SPOT — confirmed unrelated to this diff). **Scope
+      clarification (2026-07-12, §A2 finding 113):** this fix covers the instruments-service reference-data catalog only
+      (`_build_defi_venues()` + `DEFI_VENUE_PHASE` — making the venues known to IS's catalog) — it does NOT mean MTDS
+      market-data capture (tick/lending-index/liquidation polling) is happening for them. For EULER_V2-ETHEREUM
+      specifically, MTDS capture was never actually polled — zero captured rows ever. See the still-open capture-gap
+      todos in `defi_turbo_api_hides_real_captured_data_2026_07_07.md` (todo 2: capability `mtds_operations` handler
+      mismatch, zero-rows-ever capability-gate entries, and a newly-discovered ~38-day-stalled upstream Goldsky
+      subgraph).
 - [x] [FIX] P1. Curve's factory-pool undercount + Curve/Balancer 3rd-token drop — fixed, `instruments-service@9b0c1095`.
       Curve: switched `main`-only registry to Curve's own combined `all` endpoint (live-verified 2026-07-10: main=49 vs
       all=2372 pools on Ethereum, a 48x undercount — worse than the original ~94% estimate; all 7 configured chains

@@ -3712,6 +3712,24 @@ tracked in the Progress Log.
 
 ## Progress Log (append-only)
 
+- 2026-07-12 (rulings batch 3 + LIVE INCIDENTS): TradFi G4 3-file correction applied (128: catalogue banner ->
+  DONE-with-cleanup-tracked; migration_verification L719 split; RESUME-runbook owning todo added to
+  tradfi_v9_stage1_finish, sequenced after fleet-drain). SIT-blocking P1 todo + gate caveat in cicd_mvp (78). BYBIT-SPOT
+  UPPERCASE corrective todo, must land before -003 relabel (66). Recon plan headline corrected: Phases 0-1,3-11; eps=0
+  scoped to paper<->batch (15/365/17). EULER_V2 two-doc reconciliation applied per code verification (113). Deribit
+  purge + chain-grain todos filed in mvp_backfill_cefi_tick (30). P1e features re-audit EXECUTED: PASS 0/0/0/0 -> gate
+  GREEN application in flight (246/247). TWO LIVE INCIDENTS found + operator-ruled: (i) AO ao-self-pull
+  dirty-gate-jammed ~37h (regen-ldr-plans-\* dir written into repo tree); orchestrator was 4 commits stale -> service
+  RESTARTED 2026-07-12 10:30:27Z (HTTP 200, HEAD fd9c002 loaded); interim allowlist + generator fix + wedge-alert
+  hardening = open todos below; (ii) BOTH prod sports crons silently inert (fixtures job NOT_FOUND in prod; scheduler
+  job generation-1 container, fix bb880b6 never applied) -> operator authorized deploy, infra agent dispatched.
+- [ ] [CODE] P1. AO: fix the regen-ldr-plans-\* generator to write under tempfile.gettempdir() (it litters the AO repo
+      tree AND /tmp — same class as the 2026-07-10 /tmp-full incident); interim: add the dir pattern to ao-self-pull.sh
+      AO_RUNTIME_CHURN_PATHS allowlist. Repo: agent-orchestrator. (Incident i above.)
+- [ ] [CODE] P2. AO: harden ao-self-pull.sh wedge alert to also fire when the RUNNING process is stale N ticks while the
+      checkout is current (today it only alerts on checkout behind>=10). Repo: agent-orchestrator. (Incident i.)
+- [ ] [DOCS] P2. Codex stub: ao-self-pull.sh is the production AO deploy mechanism but is absent from
+      agent-orchestrator-overview.md / runtime-deployment-topology.md (codex edit — operator-gated, queue for next Q&A).
 - 2026-07-12 (rulings batch 2): applied per §A2 — LOGIC FREEZE lifted in strategy_master (286/292; NB the freeze's
   UNFREEZE-ping channel \_agent_pings.md was retired 2026-07-04, so the epic banner + this ledger ARE the lift record);
   G12 -> P0 in execution_master (367); Fireblocks OUT in defi_master (376); Tardis pair closed/unblocked (228+27); cefi

@@ -40,7 +40,7 @@ thinking_tier: high
 estimate_class: research
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-07-10
+last_updated: 2026-07-12
 supersedes:
 superseded_by:
 depends_on:
@@ -213,14 +213,52 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       (not zero-volume placeholders) — commercially low-materiality per row count, but real.
       `DEFI_VENUE_DATA_TYPE_CAPABILITIES` entries added for all 6 (PUFFER's pre-existing entry had the WRONG data_type
       declared — `staking_yields`/`oracle_prices`, 0 captured rows — `lst_rates` added alongside).
-- [ ] [CODE] P1. Fix the stale `defi_venues.py` phase-dict comment/state for `EULER_V2-ARBITRUM`/`EULER_V2-ETHEREUM` —
-      it still says "no UAC subgraph_id registered" but real Goldsky subgraph IDs were verified GREEN 2026-06-02, after
+- [x] [CODE] P1. **SPLIT 2026-07-12 (§A2 finding 113) — ETHEREUM half DONE.** Original combined todo text (kept for
+      context): "Fix the stale `defi_venues.py` phase-dict comment/state for `EULER_V2-ARBITRUM`/`EULER_V2-ETHEREUM` —
+      it still says 'no UAC subgraph_id registered' but real Goldsky subgraph IDs were verified GREEN 2026-06-02, after
       that comment was written. The phase should likely flip once someone confirms whether the subgraph is actually
       being polled (it currently isn't — see next todo) — don't flip the label without also landing the capture wiring,
-      or the dashboard will just report a different kind of wrong number.
-- [ ] [CODE] P2. Decide whether to actually wire EULER_V2 capture given real subgraph infra now exists (verified working
-      2026-06-02, never actually polled) — this is a "finish what's already 90% built" case, same class as the RENZO
-      finding in the tracker's unregistered-handler-audit item.
+      or the dashboard will just report a different kind of wrong number." **ETHEREUM resolved**: verified real —
+      `defi_venues.py` phase flipped pipeline→live for EULER_V2-ETHEREUM with an accurate comment
+      (`unified-api-contracts@42ce2de3`, 2026-07-10; IS reference-catalog side `instruments-service@9b0c1095`, both
+      code-verified). This is reference-data-catalog wiring only, NOT MTDS market-data capture — MTDS was never actually
+      polled for EULER_V2 (see the reworded capture-gap todo below, which stays fully open). The ARBITRUM half of the
+      original todo was still wrong as of this split and is spun out as its own open todo immediately below (the fix
+      needed there is NOT "confirm polling then flip," per the original text — see why).
+- [ ] [CODE] P1. **New 2026-07-12 (§A2 finding 113), split from the todo above.** `EULER_V2-ARBITRUM`'s
+      `defi_venues.py:457` phase-dict comment is STILL factually wrong:
+      `# EULER_V2-ARBITRUM + FLUID-ARBITRUM: no UAC     subgraph_id registered → 0 captured rows.` — but real Goldsky
+      `SUBGRAPH_IDS` have been registered for EULER_V2-ARBITRUM and verified GREEN since 2026-06-02
+      (`capability_declarations/_defi.py:211-221`). The real reason EULER_V2-ARBITRUM stays `pipeline` (unlike
+      EULER_V2-ETHEREUM, now `live`) has nothing to do with subgraph registration: the instruments-service `euler_v2.py`
+      reference-data adapter is Ethereum-only. Fix: correct the ARBITRUM comment to state that real reason, mirroring
+      the accurate ETHEREUM comment already in the file (`defi_venues.py:525-527`: "EULER_V2-ARBITRUM stays pipeline:
+      euler_v2.py's adapter only supports ETHEREUM (\_DEFAULT_CHAIN, single flat \_MVP_MARKETS list, no per-chain
+      dict)") instead of repeating the stale no-subgraph-id claim.
+- [ ] [CODE] P2. **REWORDED 2026-07-12 (§A2 finding 113) — three concrete gaps, not a single open decision.** Original
+      todo text (kept for context): "Decide whether to actually wire EULER_V2 capture given real subgraph infra now
+      exists (verified working 2026-06-02, never actually polled) — this is a 'finish what's already 90% built' case,
+      same class as the RENZO finding in the tracker's unregistered-handler-audit item." Code-verified breakdown of what
+      "wire it" actually requires: 1. **Capability `mtds_operations` mismatch** — the `euler_v2` `_ProtocolCapability`
+      declares `mtds_operations=["collect-lending-indices", "collect-liquidations"]`
+      (`capability_declarations/_defi.py:476`), but neither MTDS's `LendingIndicesHandler` nor `LiquidationsHandler`
+      references `euler`/`EULER_V2` anywhere — the real EULER_V2 collector lives under the `collect-evm-defi` CLI
+      operation (`market_tick_data_service/cli/handlers/evm_defi_handler.py` / `evm_defi_collectors.py`, wired via
+      `cli/main.py`'s `"collect-evm-defi": EvmDefiHandler` mapping). Fix: either repoint the capability's
+      `mtds_operations` to `collect-evm-defi`, or add real EULER_V2 handling to the lending/liquidations handler
+      defaults — whichever matches how the collector is actually meant to be invoked. 2. **Capability-gate entries exist
+      but zero rows ever captured** — `EULER_V2-ETHEREUM`/`EULER_V2-ARBITRUM` DO have
+      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` entries (`defi_venue_capabilities.py:155-156`, `lending_indices` only), added
+      incidentally in `unified-api-contracts@92b1d1a8` alongside the RADIANT-ETHEREUM/VENUS/BENQI D10 capability
+      backfill — but that same commit's own comment confirms "the prod manifest shows ZERO real
+      captured/attempted_failed rows for ANY data_type on ANY of these 4 venues, ever"
+      (`defi_venue_capabilities.py:        139-140`). The capability-gate declaration existing does not mean capture has
+      ever run. 3. **NEW — stalled upstream subgraph (~38 days behind), found 2026-07-10.** The same `92b1d1a8` comment
+      block records a live probe: "the EULER_V2 Goldsky subgraph IS reachable but its indexed HEAD is ~271K blocks (~38
+      days) behind current Ethereum mainnet — a dead/stalled upstream that should be re-verified before any future phase
+      flip to 'live'" (`defi_venue_capabilities.py:150-153`). Any capture wiring landed before this is re-verified as
+      caught-up would produce results that are stale by construction — re-check the subgraph's sync lag BEFORE wiring
+      gap 1 above, not after.
 - [ ] [VERIFY] P3. Resolve which "Plasma" chain UAC's `FLUID-PLASMA`/`AAVE-PLASMA` placeholders are meant to refer to
       (the 2025 Tether-backed Plasma L1, or the unrelated pre-2020 Polygon Plasma bridge) before doing anything else
       with those two entries — UAC's own maintainers have this flagged unresolved.

@@ -222,8 +222,11 @@ BLOCKED.
 
 - [ ] [SCRIPT] P0. Final cefi MVP verification: across the v10 perp-gated MVP universe, attempted_failed=0 AND
       expected_unattempted=0 for trades+book5+funding; Deribit OPTION present as options_chain ONLY (0 per-strike
-      trades/book5 cells); every absence typed honest (pre-venue-launch / expiry-window / deferred-no-source). Repos:
-      `instruments-service`, `e2e-testing`. **Run:** `python scripts/measure_honest_coverage.py --asset-group cefi`;
+      trades/book5 cells — **per-strike pre-v10 artifacts: resolution = PURGE (todos below) per operator ruling
+      2026-07-12 (finding 30, `issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2); after the purge G4
+      counts them zero by construction.**); every absence typed honest (pre-venue-launch / expiry-window /
+      deferred-no-source). Repos: `instruments-service`, `e2e-testing`. **Run:**
+      `python scripts/measure_honest_coverage.py --asset-group cefi`;
       `python3 e2e-testing/scripts/audit/manifest_hygiene_daily.py --asset-group cefi --mode full`;
       `python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`. **Gate (BOTH layers):**
       (Layer-2) both failure buckets zero; 0 phantom; 401-class cells re-attempted (attempted_failed not empty); AND
@@ -231,6 +234,11 @@ BLOCKED.
       coverage.json — Layer-1 currently 79.55% with 9 real holes + the denominator-gap work in
       `issues/cefi_layer1_denominator_gaps_2026_07_03.md`, so G4 cannot close before that lands. Verdict to Progress
       Log. **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A.
+- [ ] [DATA] P1. PURGE the ~536 pre-v10 Deribit per-strike trades/book5 manifest rows (snapshot-first: write a pre-purge
+      `_index` snapshot, then delete; count-verified before/after) — operator ruling 2026-07-12, plan-reconciliation
+      finding 30: delete rather than scope-exclude.
+- [ ] [TEST] P2. Regression-assert the Deribit options capture grain is CHAIN-LEVEL (options_chain/book snapshots at
+      chain grain; no per-strike rows can re-enter — writer-side guard or test).
 
 ---
 
