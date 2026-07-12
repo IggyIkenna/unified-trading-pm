@@ -1833,3 +1833,19 @@ done from any slot's worktree. Not re-running the GCS/manifest re-check — 16 p
 duplicate chat escalation (slot 9 already pinged `main` directly). Calling `/skip-current-task`; unblocking this still
 requires either the operator ruling on todo 3, or the `prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]`
 attachment in agent-orchestrator's `backlog.yaml` (main/operator scope per RULES.md §4, not a worker-slot edit).
+
+### 2026-07-12 (slot 10, 2nd session) — 18th consecutive re-dispatch of `mvp_backfill_defi_onchain_v10-001`; unchanged; skip
+
+Slot 10 (data_engineering) picked this up again on `/boot` (`already_in_progress: true`). Cheap re-check only, matching
+the established pattern from the prior 17 dispatches: `GET /api/state` confirms
+`prerequisites.drift_perp_funding_helius_throughput_ruled` is still
+`{value: False, set_by: slot7-data_engineering, set_at: 2026-07-12T03:34:55Z, gates_queued: 0}` — still never attached;
+`GET /api/backlog?limit=500` confirms this task (`status: dispatched, dispatched_to: 10`) still carries no
+`prereqs`/`prereqs.conditions` field (`target_slot: 10, affinity: none`). Not re-running the GCS/manifest re-check — 17
+prior dispatches already confirmed `_index/drift_v2_sig_index.parquet` absent and the DRIFT `perp_funding`
+capture_status distribution byte-identical since 2026-07-11; re-confirming an unchanged dead end adds no signal. No
+operator ruling has landed on todo 3 of `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. Not filing a 6th
+`/blocked` (5+ already queued) or a duplicate chat escalation (slot 9 already pinged `main` directly). Calling
+`/skip-current-task`; unblocking this still requires either the operator ruling on todo 3, or the
+`prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` attachment in agent-orchestrator's `backlog.yaml`
+(main/operator scope per RULES.md §4, not a worker-slot edit).
