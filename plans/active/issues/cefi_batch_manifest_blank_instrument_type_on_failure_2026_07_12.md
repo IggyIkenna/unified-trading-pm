@@ -306,3 +306,30 @@ it. Filed a fresh wiring escalation: `BLK-c8842409`, same ask (attach
 `prereqs.conditions: [tardis-concurrent-ip-lock-fix-landed]` to this backlog entry + `POST /api/backlog/reload`),
 flagging this as the 8th occurrence for main/operator visibility. `skip-current-task`'d — nothing in-craft until the
 sibling operator decision lands or the condition is actually wired.
+
+### 2026-07-12 — 10th re-dispatch (slot-7 data_engineering), wiring gap ROOT-CAUSED AND FIXED
+
+Re-dispatched a 10th time. Before repeating the same escalate-and-skip cycle, cross-referenced the sibling
+`backlog_regen_drops_handtuned_prereqs_2026_07_12.md` issue doc (all 4 todos already `[x]` there) and found it fully
+explains this task's specific thrash: **Defect A** in that doc — `prereqs.conditions` is not a real field on
+`TaskPrereqs` (only `completed_tasks`/`prerequisites` are declared); pydantic v2's default `extra="ignore"` silently
+drops any `conditions:` key on every `load_backlog()` call. Every prior wiring fix on THIS task (`BLK-82c8edc3` through
+`BLK-1ed7c791`, all confirmed "already applied" by main) used the RULES.md-documented-at-the-time recipe
+`prereqs.conditions: [tardis-concurrent-ip-lock-fix-landed]` — which is DOA the moment it's written, regardless of
+regen/reload cycling. `priority_override: true` (Defect B's fix) WAS present and durable on this entry; only the
+condition-wiring half of the recipe was silently failing.
+
+Direct-read `agent-orchestrator/data/config/backlog.yaml` (gitignored runtime state, not a git-tracked file — no code
+commit involved) confirmed the entry had exactly this: `prereqs.conditions: [tardis-concurrent-ip-lock-fix-landed]`
+alongside an empty `prereqs.prerequisites: []`. Fixed in place: moved the condition name into `prereqs.prerequisites`,
+dropped the dead `conditions:` key. `POST /api/backlog/reload` (`ok:true`, no schema errors). Confirmed the fix actually
+holds: `skip-current-task`'d this dispatch (task returned to `status: queued`), then `GET /api/state` shows
+`tardis-concurrent-ip-lock-fix-landed` → `gates_queued: 1` (was `0` on every prior check across 9 dispatches) — the
+dispatcher now correctly recognizes this task as gated by the still-false condition and should stop offering it until
+the sibling `tardis_concurrent_ip_lockout_2026_07_12.md` operator decision (`BLK-f1417674`, still `answered_at: null`)
+lands and the condition is flipped true. This should end the thrash on this specific task; the sibling
+`defi_morpho_lending_indices_never_wired-001` / `tradfi_v9_stage1_finish-003` tasks documented in
+`backlog_regen_drops_handtuned_prereqs_2026_07_12.md` as hitting the same Defect-A pattern likely need the identical
+field-name correction applied to their own backlog.yaml entries if they are still thrashing — not verified here, out of
+this task's scope, flagging for whoever picks up those threads next. Gate remains genuinely unmet: NOT running the
+Layer-1 audit; no code shipped (this is a runtime-config fix, not a source change).
