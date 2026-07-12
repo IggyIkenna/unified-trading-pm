@@ -1474,3 +1474,17 @@ consolidator issue above is resolved (or at least caught up).
 **Next re-dispatch should**: (1) check dex_pool_swaps/perp_funding VM completion, (2) check whether G1.6 (Solana
 dex-pool backfill VM) has been launched, (3) re-run `measure_honest_coverage.py`, (4) quick-verify the MORPHO
 discrepancy, before attempting the full G2 gate again.
+
+### 2026-07-12 (slot 12) — 7th consecutive re-dispatch of `mvp_backfill_defi_onchain_v10-001`; unchanged; skip
+
+Slot 12 (data_engineering) picked up the reopened DRIFT todo again. Cheap re-verification only (python
+`google.cloud.storage` `blob.exists()`): `_index/drift_v2_sig_index.parquet` still absent;
+`_index/drift_v2_sig_index_parts/` = 6,293 objects, `_index/drift_v2_sig_index_parts_b/` = 876 objects — both
+byte-identical to slots 3/7/9/2's prior findings. `GET /api/backlog` confirms this task's `prereqs` is still `null` —
+the `drift_perp_funding_helius_throughput_ruled` condition (created by slot 7) was never attached in
+`data/config/backlog.yaml` (that file lives only in the root `agent-orchestrator` clone, not this slot's worktree —
+confirmed out of a worker's edit scope, matching slot 7's original call). No operator ruling on todo 3 of
+`defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. 5 unanswered `/blocked` questions already queued for this
+task (`BLK-ab48a164`, `BLK-a851a348`, `BLK-40ea7a68`, `BLK-fc4ab4e6`, plus slot 9's direct chat to `main`) — not filing
+a 6th duplicate. Calling `/skip-current-task`; no code or plan-of-record change possible from a worker slot beyond this
+entry.
