@@ -31,6 +31,8 @@ assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Sports manifest consolidator crash-looping + silent empty read
