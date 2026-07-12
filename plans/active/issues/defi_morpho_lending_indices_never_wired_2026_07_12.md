@@ -365,3 +365,43 @@ Not investigated further / not fixed this dispatch (separate P1, out of this tas
 should repeat the same 3-step check: (1) VM shard date vs 2024-01-01, (2) consolidator freshness vs
 `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`'s resolution status, (3) once both clear, run the G2 gate
 commands from the parent plan.
+
+### Re-check #6 — still healthy, still pre-genesis, consolidator still unresolved (now actively blocking DEFI ingestion fleet-wide) — 2026-07-12T12:12Z (plan-health slot-5)
+
+Re-dispatched to the same `[SCRIPT] P2. Re-run G2 gate` todo (6th dispatch overall: slot-3×2, slot-9, slot-12, slot-7,
+slot-5). Fresh-pulled all repos (clean). Verified rather than trusted the prior re-check:
+
+- **VM roster** (`~/google-cloud-sdk/bin/gcloud compute instances list --filter="name~mtds-lending-indices"` — the
+  `~/google-cloud-sdk/bin/gcloud` binary works fine here too, corroborating slot-9/slot-7's note that the plain
+  `/snap/bin/gcloud` snap-confine failure is not fleet-wide): `mtds-lending-indices-20260712-112557` still the only
+  instance, `STATUS=RUNNING`.
+- **Real-progress check** (`gsutil cat .../vm-logs/mtds-lending-indices-20260712-112557/run.log` tail), current time
+  ~2026-07-12T12:12Z: active writes for `date=2023-03-25` (both chains being worked), forward progress from slot-3's
+  `2023-03-17` observation ~5 min earlier (~8 days of window / 5 min ≈ same ~1.6-1.9 days/min pace every prior re-check
+  observed). No `Unknown lending protocol` / no `uniqueKey`-GraphQL errors anywhere in the tail. At the observed pace,
+  genesis (2024-01-01, ~282 days out from 2023-03-25) is realistically **~2.5-3h out**.
+- **Manifest freshness**: per-VM shard (`_index/per_vm/mtds-lending-indices-20260712-112557.parquet`) fresh,
+  `Update time: 2026-07-12T12:12:24Z` (confirms write path alive). Consolidated `_index/availability_index.parquet`
+  **still** `Update time: 2026-07-10T21:42:30Z` — byte-identical to every prior re-check in this doc, now ~38.5h stale
+  by wall clock (the "~63h" figure in re-check #5 appears to have been a miscalculation, not a further-worsening trend —
+  the underlying timestamp itself has not moved since 2026-07-10T21:42:30Z across all 6 dispatches).
+- **Consolidator staleness — confirmed still unresolved and now more severe than previously captured in THIS doc**:
+  cross-checked `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`'s latest entry (2026-07-12, from an
+  unrelated `data_pipeline_e2e_check` full-sweep session) — the same stale index is now DOCUMENTED as actively causing
+  **153 of 344 MTDS DEFI shards' force-leg VMs to self-delete with `rc=78`** on an OOM preflight check (mtime-staleness
+  budget 86400s, observed 113812s stale at that check) before ever starting their fetch workload. This is a materially
+  worse, fleet-wide-confirmed severity than "the G2 gate reads a stale index" — it is actively blocking DEFI MTDS
+  ingestion broadly, not just this gate. Not this task's craft scope to fix (separate P1, already tracked in the
+  consolidator doc) — flagging the corroboration here since it directly explains why re-checks #4-#6 all found the
+  identical unchanged timestamp: the consolidator is not completing successful runs at all, not just running slowly.
+- **Verdict unchanged from re-checks #4-#5**: the G2 gate for `lending_indices` still cannot be usefully re-run — (1)
+  the backfill hasn't reached genesis so real captured MORPHO rows can't exist yet (~2.5-3h out), and (2)
+  `measure_honest_coverage.py` would read the same stale consolidated index every prior run hit even if it had.
+
+`skip-current-task`'d — same call as the five prior dispatches on this exact todo. Whoever picks this up next should
+repeat the same 3-step check: (1) VM shard date vs 2024-01-01, (2) consolidator freshness vs
+`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`'s resolution status, (3) once both clear, run the G2 gate
+commands from the parent plan. Given the ~2.5-3h ETA to genesis alone (before the full window even completes), this todo
+likely needs at least one more re-check cycle after a longer gap than the ~5-10 min cadence prior dispatches used —
+consider a dispatch with a `target_slot_timeout_seconds` delay or simply expect this to keep bouncing back to `queued`
+for a few more hours until real progress is possible.
