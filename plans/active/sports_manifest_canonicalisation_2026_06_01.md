@@ -840,7 +840,16 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `features-service` code or re-run the full investigation — identical dispatcher priority-only mismatch already
       flagged by slot-4/slot-11/slot-10/slot-2 (needs `prereqs.completed_tasks`/`prereqs.conditions` gating on defi C0
       in `backlog.yaml`, a main/operator-scope edit per `RULES.md` §4, not repeated worker re-dispatch). Calling
-      `/skip-current-task`.
+      `/skip-current-task`. **RE-VERIFIED 2026-07-12 (slot-4, 6th consecutive re-dispatch) — STILL GATED.** Cheap
+      re-check only: `defi_manifest_canonicalisation_2026_06_01.md:1299` C0 is still `- [ ]` unchecked (23 open todos in
+      that plan, unchanged count). Attempted the structural fix (attach `prereqs.conditions` to this backlog task)
+      myself this dispatch rather than just re-skipping — could not locate the live `backlog.yaml` the running
+      orchestrator server actually reads from this slot (the only `backlog.yaml` found on this host,
+      `unified-trading-pm/harsh_orchestrator/backlog.yaml`, is stale — last modified 2026-06-21, predates this task's ID
+      entirely, and is 263 lines vs. a real fleet-scale backlog — almost certainly a retired LEDGER-era artifact, not
+      the live file `agent-orchestrator/data/config/backlog.yaml` RULES.md §4 describes). Confirms slot-2/slot-6's
+      conclusion: this attachment is genuinely main/operator-scope from a worker slot, not merely unattempted. Did NOT
+      touch `features-service` code. Calling `/skip-current-task`.
 - [x] ✅ [CODE] P0. **Upstream pre-flight data-check audit + batch=live symmetry (ALL sports services)** — AUDIT
       COMPLETE 2026-06-02. Per-service table below; gaps captured as P1/P2 todos beneath. Every service either VERIFIED
       GREEN or has a tracked gap-todo. Evidence: this slot, reading code in-repo (grep-then-read across 5 services).
