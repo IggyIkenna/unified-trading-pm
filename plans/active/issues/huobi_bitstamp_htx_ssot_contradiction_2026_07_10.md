@@ -4,13 +4,24 @@ title:
   HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT — SSOT contradiction between a P0 registration finding and a same-week removal
   commit
 summary:
-  "mtds_is_full_adapter_smoketest_findings_2026_07_07.md's P0 list calls for registering HUOBI-SPOT/HUOBI-FUTURES/
-  BITSTAMP-SPOT into the CeFi venue universe (real captured data exists, they are just never fetched). One day before
-  this session started, unified-api-contracts@181b5311 (2026-07-09) deliberately REMOVED huobi/bitstamp/htx from
-  venue_mapping.py/provider_api_versions.yaml/venue_tokens.py/instrument_validation.py under the opposite reasoning
-  ('never-captured'). Neither doc was written with knowledge of the other. Operator decision needed before either side
-  is touched again."
-status: open
+  "RESOLVED 2026-07-12: operator decided Option B — huobi/bitstamp/htx should be entirely removed, no further
+  investigation needed. 181b5311's removal stands as correct; the smoketest P0 finding is closed as stale. Swept for
+  remaining references beyond 181b5311's original 4 files: removed a dangling pyproject.toml coverage-exclusion pointing
+  at a bitstamp schema module that no longer exists, and 2 stale 'source: huobi'/'source: bitstamp' entries in
+  ui-reference-data.json (both the root and openapi/ copies) that were still claiming supports_live/supports_batch
+  despite the underlying registry no longer defining them — those two were genuinely still-live remnants, not just
+  historical mentions. Left untouched (confirmed out-of-scope, not venue references): the 'HT' token symbol in
+  test_cefi_universe_coverage.py's retired-top-100-coin survivorship-bias test (Huobi Token the ASSET, unrelated to
+  Huobi the VENUE), docs/schema_health.svg (cosmetic-only diagram, no production consumption, would need a real
+  pytest-integration run to regenerate correctly rather than a naive re-run that defaults every OTHER provider's status
+  to unverified), and defillama/tardis mock fixtures (unrelated external ground-truth data — DeFiLlama's real protocol
+  list and Tardis's real vendor exchange catalog, not our own venue registration). Original problem statement below for
+  context: mtds_is_full_adapter_smoketest_findings_2026_07_07.md's P0 list called for registering
+  HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT into the CeFi venue universe (claimed real captured data exists, just never
+  fetched); one day before this session started, unified-api-contracts@181b5311 (2026-07-09) had deliberately removed
+  huobi/bitstamp/htx from venue_mapping.py/provider_api_versions.yaml/venue_tokens.py/instrument_validation.py under the
+  opposite reasoning ('never-captured'); neither doc had known of the other."
+status: resolved
 nature: record
 asset_group: [cefi]
 stage: [data]
@@ -34,10 +45,10 @@ estimate_calibrated_ai_days: 0.36
 assigned_role: data-pipeline-engineer
 drift_direction: unknown
 depends_on: []
-last_updated: 2026-07-10
+last_updated: 2026-07-12
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: "unified-api-contracts@62e0855c7a0d7823f6807549e97f41280e539a33 — see Resolution section below"
 ---
 
 # HUOBI/BITSTAMP/HTX — two same-week decisions reached opposite conclusions
@@ -107,3 +118,41 @@ deprioritized) not visible in either commit's message.
   doc's P0 list). Per the SSOT-contradiction HARD RULE, did not unilaterally re-reverse a same-week peer commit — filed
   this issue doc and escalating to the operator rather than forcing either direction. Still a real, open P0 gap either
   way it resolves.
+
+## Resolution (2026-07-12)
+
+Operator decision: **Option B** — huobi/bitstamp/htx should be entirely removed from everything. 181b5311's removal
+stands; the smoketest P0 finding (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md`) is stale and should be
+treated as closed/superseded on this item.
+
+Swept every repo (`unified-api-contracts`, `market-tick-data-service`, `instruments-service`, `unified-trading-library`,
+`deployment-service`) for remaining huobi/bitstamp/htx references beyond 181b5311's original 4 files:
+
+- **Removed**: a dangling `pyproject.toml` coverage-exclusion entry pointing at
+  `unified_api_contracts/external/bitstamp/schemas.py`, a module that no longer exists on disk (already deleted, the
+  pyproject.toml reference was just never cleaned up).
+- **Removed**: 2 stale `capability_declarations` registry entries (`"source": "huobi"`, `"source": "bitstamp"`, both
+  still claiming `"supports_live": true, "supports_batch": true"`) in the checked-in generated `ui-reference-data.json`
+  and `openapi/ui-reference-data.json` — no Python source anywhere in `unified_api_contracts` still defines these as
+  registry sources, confirming the generated file was simply stale relative to 181b5311's removal rather than reflecting
+  a still-live registration. Applied as a targeted text-level edit (not a full regeneration) to avoid an unrelated
+  ~2000-line reformatting diff from `json.dumps`'s default array-wrapping behavior differing from the original
+  generator's compact-array style.
+- Shipped as `unified-api-contracts@62e0855c7a0d7823f6807549e97f41280e539a33`.
+
+**Confirmed out of scope, left untouched**:
+
+- `tests/test_cefi_universe_coverage.py`'s `"HT"` entry — this is Huobi Token, a real historical top-100 cryptocurrency
+  ASSET used in a survivorship-bias-freedom test (`_RETIRED_TOP100`), unrelated to Huobi the VENUE. Removing it would
+  weaken the bias-freedom guarantee the test exists to provide.
+- `docs/schema_health.svg` — cosmetic-only health-status diagram with zero production consumption. A naive YAML-only
+  regeneration defaults every OTHER provider's status to "yellow/unverified" (loses real historical "verified" dates for
+  unrelated providers) since it isn't backed by an actual pytest-integration run in this pass — left for the next real
+  `scripts/update_schema_health_svg.py` run with real test data, which will drop huobi/bitstamp naturally as a side
+  effect.
+- `unified_api_contracts/external/defillama/mocks/*.yaml`, `unified_api_contracts/external/tardis/mocks/exchanges.yaml`
+  — unrelated external ground-truth mock fixtures (DeFiLlama's real protocol/TVL list which happens to include an entity
+  named "HTX", and Tardis's real vendor exchange catalog which genuinely does support huobi/bitstamp as exchanges) —
+  these describe the real external world accurately and aren't part of our own venue registration.
+- `scripts/canary/orphan-decisions.yaml`, `tests/cassette_orphan_allowlist.yaml` — historical decision/comment records
+  already documenting these as orphaned/deleted; nothing further to action.

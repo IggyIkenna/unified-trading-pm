@@ -66,7 +66,7 @@ thinking_tier: medium
 estimate_class: research
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-07-10
+last_updated: 2026-07-12
 supersedes:
 superseded_by:
 depends_on:
@@ -224,9 +224,14 @@ as proposed.
 **2. is-daily-enum-{prediction,sports} exit(1)** — conflicts: none. Design: aligned (`exc_info=True` is additive
 observability, doesn't touch the shard-isolation no-raise contract). Proceed — pure unblock, can't diagnose without it.
 
-**3. 59-bug MTDS + IS adapter smoke test** — conflicts: **with #8** (see below). Design: HUOBI/BITSTAMP venue-fix
-location and ETHENA's fabricated-value fix both align with SSOT. Proceed, but resolve #8 first for the COINBASE-FUTURES
-venue entry specifically.
+**3. 59-bug MTDS + IS adapter smoke test** — conflicts: **with #8** (see below). Design: ETHENA's fabricated-value fix
+aligns with SSOT, proceed. **HUOBI/BITSTAMP venue-fix verdict SUPERSEDED 2026-07-12** — this "aligned with SSOT,
+Proceed" call was written without knowledge of `unified-api-contracts@181b5311` (2026-07-09), a same-week peer commit
+that deliberately removed huobi/bitstamp/htx for the opposite reason. Filed as its own SSOT-contradiction issue
+(`plans/active/issues/huobi_bitstamp_htx_ssot_contradiction_2026_07_10.md`); operator resolved it 2026-07-12 in favor of
+181b5311 — huobi/bitstamp/htx registration should NOT proceed, remove entirely instead (done,
+`unified-api-contracts@62e0855c`). Resolve #8 first for the COINBASE-FUTURES venue entry specifically (unaffected by
+this correction).
 
 ### P1
 
@@ -829,7 +834,9 @@ the source docs if this list is used for dispatch planning.
      crashing every real fetch), 7 DeFi venues flipped pipeline→live phase, Curve factory-pool undercount (49 vs real
      2,372 pools — switched to Curve's combined "all" endpoint), SolBlaze dead-endpoint fix (live production path, not
      dead code). Deliberately deferred: HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT registration (needs a quiet window — same
-     UAC registry files under continuous concurrent edit all session).
+     UAC registry files under continuous concurrent edit all session). **Superseded 2026-07-12**: this was never a
+     "needs a quiet window" deferral — it was a real SSOT contradiction with a same-week peer commit, resolved by the
+     operator against registration. See `huobi_bitstamp_htx_ssot_contradiction_2026_07_10.md`'s Resolution section.
   5. **Instruments Completion Tracker — honest partial progress.** Confirmed KALSHI-PERP contamination genuinely purged
      (live read: 0 contaminated rows) — closed 1 real prerequisite. Explicitly recommends **waiting to re-measure Stage
      3** until the concurrent sibling workflows quiesce (a mid-flight remeasure would capture a moving-target

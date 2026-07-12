@@ -59,7 +59,7 @@ thinking_tier: medium
 estimate_class: research
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 7.2
-last_updated: 2026-07-07
+last_updated: 2026-07-12
 supersedes:
 superseded_by:
 depends_on:
@@ -282,14 +282,19 @@ the todos already promised.
 
 ## Todos
 
-- [x] [TRIAGE] P0. Work through the P0 list above — HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT venue registration
-      **BLOCKED-OPERATOR-DECISION, re-triaged 2026-07-10** (see Progress Log — a fresh dispatch re-checked this and
-      found the UAC registry files were git-clean, NOT under live concurrent edit as this session's earlier note
-      claimed; the REAL blocker is worse — an SSOT contradiction: `unified-api-contracts@181b5311`, one day earlier
-      (2026-07-09), deliberately REMOVED huobi/bitstamp/htx from `venue_mapping.py` + `provider_api_versions.yaml` +
-      `venue_tokens.py` + `instrument_validation.py` under the commit message "remove never-captured huobi/bitstamp/htx
-      venues from registry + instrument universe" — the direct opposite conclusion this P0 finding reaches. Re-reading
-      that diff: the removed entries were orphaned Tardis-slug mappings for venues that were never declared in
+- [x] [TRIAGE] P0. Work through the P0 list above — HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT venue registration **RESOLVED
+      2026-07-12 — operator decided against this finding.** This P0 item is stale/superseded: the operator confirmed
+      `unified-api-contracts@181b5311`'s removal is correct and huobi/bitstamp/htx should be entirely removed, not
+      registered. See `plans/active/issues/huobi_bitstamp_htx_ssot_contradiction_2026_07_10.md`'s Resolution section for
+      the full sweep (a dangling pyproject.toml module reference + 2 stale UI capability-registry entries were also
+      cleaned up, `unified-api-contracts@62e0855c`). Prior history below, kept for context. **BLOCKED-OPERATOR-DECISION,
+      re-triaged 2026-07-10** (see Progress Log — a fresh dispatch re-checked this and found the UAC registry files were
+      git-clean, NOT under live concurrent edit as this session's earlier note claimed; the REAL blocker is worse — an
+      SSOT contradiction: `unified-api-contracts@181b5311`, one day earlier (2026-07-09), deliberately REMOVED
+      huobi/bitstamp/htx from `venue_mapping.py` + `provider_api_versions.yaml` + `venue_tokens.py` +
+      `instrument_validation.py` under the commit message "remove never-captured huobi/bitstamp/htx venues from
+      registry + instrument universe" — the direct opposite conclusion this P0 finding reaches. Re-reading that diff:
+      the removed entries were orphaned Tardis-slug mappings for venues that were never declared in
       `VENUES_BY_ASSET_GROUP["cefi"]` (so "never-captured" is literally true of that dead code) — this does NOT prove
       the venues themselves are unviable, only that the old half-registration was dead. Neither this doc's original
       2026-07-07 finding nor `instruments_remaining_work_audit_2026_07_10.md`'s "Design: aligned with SSOT, Proceed"
