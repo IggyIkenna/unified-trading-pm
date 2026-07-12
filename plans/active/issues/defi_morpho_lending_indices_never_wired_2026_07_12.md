@@ -733,3 +733,21 @@ breaks the staleness checker's bundle read in the window before rebuild. The onl
       `tarball_staleness.py` (+ its `_bundle_for` ordering tests), and a check of the VM fetch path — genuine design
       work, operator/main to decide before implementing. Cosmetic/efficiency only (one redundant ~2.8 MB tarball per
       build); zero correctness urgency. (repo: `deployment-service` + `deployment-api`)
+
+### Re-check #13 — unchanged (VM at 2023-10-25, ~34min pre-genesis); NOT re-litigating — 2026-07-12T14:01Z (data_engineering slot-12, resumed)
+
+13th dispatch on the `[SCRIPT] P2. Re-run G2 gate` todo (server RESUMED slot-12's in-progress pin, not a fresh queue
+pickup). Cheap live-verify only (no full re-litigation — re-checks #4-#12 already established the precondition
+exhaustively): VM `mtds-lending-indices-20260712-112557` still `RUNNING`, `run.log` tail at `date=2023-10-25` (forward
+progress, both chains), only honest `parquet not found — falling back` INFO lines, **no** `Unknown lending protocol` /
+`uniqueKey`-GraphQL errors — both fixes still holding. Genesis (2024-01-01) ~34 min out at observed pace; full window
+(→2026-07-12) completes ~20:00Z. Gate still cannot be usefully re-run (backfill pre-genesis → zero captured MORPHO rows
+possible; consolidator separately still stale).
+
+**This is settled — STOP re-dispatching to workers until main/operator acts.** Worker-side levers are exhausted:
+checkbox-flip is impossible honestly (false-progress), and `/blocked` against this task_id is proven dead (3 consecutive
+parking blocked-questions — `BLK-0c06a5c6`/`BLK-66f6516d`/`BLK-c7e188e2` — each vanished on the filer's own
+`skip-current-task`, root-caused in re-check #11). Deliberately did **not** file a 4th dead blocked-question or add more
+essay bloat. **Required action is main/operator-only**: gate this `…-001` backlog entry with a `prereqs.conditions`
+(e.g. `consolidator-fresh-and-vm-complete`) so it stops bouncing for the ~6h until the VM completes AND the consolidator
+(`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`) resumes. `skip-current-task`'d.
