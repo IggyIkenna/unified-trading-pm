@@ -157,3 +157,86 @@ than trusting). Findings:
   scope for a data_engineering G2-gate task).
 - G2 re-run itself still NOT done — the new VM needs to run to completion first (same as before, just now against the
   correctly-scoped run). Checkbox stays unflipped; `skip-current-task`'d rather than poll-wait on a multi-hour VM run.
+
+### CORRECTION: the 105600 VM was ALSO not producing real data — deeper root cause found — 2026-07-12T11:08Z (data_engineering slot-3)
+
+**Slot-12's "real Morpho ETHEREUM data landing" claim above (line ~144-146) does not hold up.** Re-checked
+`mtds-lending-indices-20260712-105600`'s live log directly (SSH, `/tmp/vm-exec-7043.log`) at day=2024-03-20 (well past
+the 2023-03-24 date slot-12 cited): **932/932 (venue=MORPHO, chain∈{ETHEREUM,BASE}) day-chain pairs logged
+`WARNING Unknown lending protocol: morpho` and wrote 0 rows — zero nonzero writes anywhere in the log.** The "Wrote
+`<N>` rows" line slot-12 quoted used a literal `<N>` placeholder in their note, not an actual observed row count — in
+hindsight that's the tell that the row count was never actually checked as nonzero.
+
+**Real root cause (supersedes the "launch/publish race on the startup script" diagnosis above):** SSH'd into the VM and
+found the DEPLOYED package at `/home/ikennaigboaka/workspace/mtds/` has NO `lending_indices_morpho.py` at all, and
+`lending_indices_handler.py`'s `_DEFAULT_PROTOCOLS` list on-disk is the OLD 6-protocol list (no `"morpho"`) — file
+`Modify` timestamp **2026-07-08 20:26:27Z**, four days before today's wiring commit
+(`market-tick-data-service@4c340f93`, 2026-07-12T10:40:25Z). This is not a few-minutes launch/publish race — the
+`mtds-code.tar.gz` object at `gs://deployment-scripts-central-element-323112/code/` had **not been republished since
+2026-07-08** despite multiple mtds commits landing in between. Every mtds-dependent VM launched in that 4-day window
+(any asset group — CEFI/DEFI/SPORTS/TRADFI backfills all pull the same `mtds-code.tar.gz`) ran stale code for anything
+shipped after 2026-07-08, silently — this is broader than the Morpho item alone. Filing as a new P0 finding below
+because of that fleet-wide blast radius; NOT auto-investigated further here (out of this task's scope to audit every
+other VM launched in the window).
+
+**Fix applied this dispatch:** confirmed the tarball got republished (coincidentally or via some other process) at
+**2026-07-12T11:00:51Z**, `gs://.../code/mtds-code.manifest.json` now shows `commit_sha=60287d3e` (current HEAD,
+includes `4c340f93`). Stopped + deleted the stale `mtds-lending-indices-20260712-105600` VM (confirmed zero-yield, no
+point letting it keep burning SPOT compute for hours). Relaunched `mtds-lending-indices-20260712-110841` (same window
+2023-01-01→2026-07-12, `--lending-protocols morpho`, SPOT, e2-standard-4) via the standard
+`launch-mtds-lending-indices-backfill-vm.sh` launcher — **note: the plain `gcloud` binary
+(`/snap/google-cloud-cli/current/bin/gcloud`) worked fine for `describe`/`ssh`/`stop`/`delete`/`create` from this
+slot**, contradicting the "gcloud CLI unavailable, snap-confine" note in earlier entries above — worth revisiting
+whether that was a slot-specific/transient sandbox issue rather than a fleet-wide gcloud outage. Post-launch
+verification (deployed-file check + first-write outcome) in progress; see next log entry for the verdict.
+
+- [ ] [INFRA] P0. Audit whether OTHER code tarballs (`unified-api-contracts-code`, `unified-trading-library-code`,
+      per-service tarballs for CEFI/TRADFI/SPORTS) are similarly stale relative to their repos' current
+      `live-defi-rollout` HEAD, and whether ANY VM launched between 2026-07-08 and 2026-07-12 silently ran pre-fix code
+      as a result (checking each tarball's `.manifest.json` `created_at`/`commit_sha` against `git log -1` for the
+      corresponding repo is the fast check). If stale tarballs are found, republish via
+      `create-code-tarballs.sh --asset-group <group>` for the affected group(s) BEFORE trusting any of their recent
+      backfill "done" claims. Recommend also adding a CI/quickmerge-triggered auto-republish (or a pre-launch freshness
+      check in the launcher scripts) so this class of silent staleness can't recur — same remediation shape as the
+      existing `[INFRA] P2` startup-script race todo above, but for the code tarball itself, and higher severity (P0)
+      because it can silently invalidate ANY backfill VM's output, not just morpho lending-indices. (repo:
+      `deployment-service`)
+
+**NOTIFYING OPERATOR** per the data-correctness big-finding rule — this contradicts a previous "done"/"verified" claim
+in this same doc and has fleet-wide (not just morpho) blast radius. Filed as blocked-question `BLK-1ffbd75b`
+(can_continue=true, not actually blocking — work continued below).
+
+### SECOND bug found + fixed: MorphoAdapter.fetch_markets() GraphQL query was malformed — 2026-07-12T11:15Z (data_engineering slot-3)
+
+Relaunched VM (`mtds-lending-indices-20260712-110841`, fresh tarball) STILL produced zero rows — but for a genuinely
+DIFFERENT reason this time: live log showed `✅ MorphoAdapter initialized`, `Fetching Morpho markets for ETHEREUM`, then
+`ERROR Morpho API error: 400 — {"errors":[{"message":"Cannot query field \"uniqueKey\" on type \"Market\"."...}` on
+every single date/chain. Confirmed via LIVE schema introspection against `blue-api.morpho.org/graphql`
+(`{ __type(name: "Market") { fields { name } } }`) that the `Market` type has **no `uniqueKey` field** — the real
+identifier field is `marketId`. `market_tick_data_service/market_interface/adapters/defi/morpho_adapter.py`'s
+`_MARKETS_QUERY` (and `_convert_market_to_instrument`'s `market["uniqueKey"]` access) used the wrong field name, so
+`fetch_markets()` — the method `_collect_morpho_lending` calls when no IS-seeded market snapshot exists for a date — has
+been 400ing on every call since the adapter was written; today's wiring fix correctly reached this code path but the
+code path itself was broken underneath it.
+
+**Also found:** the existing unit tests (`test_defi_adapters_boost_2.py::test_fetch_markets_api_success` +
+`test_fetch_markets_filters_non_mvp_tokens`) mocked `uniqueKey` too — i.e. the test suite was validating against the
+SAME wrong field name as the bug, so it never caught this. Classic mock-matches-the-bug anti-pattern.
+
+**Fix shipped:** `market-tick-data-service@591b020e` — renamed `uniqueKey`→`marketId` in the query + the parser, updated
+the two test mocks to match the live-verified schema, all Morpho-tagged unit tests green (25 passed), full
+`quality-gates.sh` green (sentinel verified for 591b020e), quickmerge landed on `live-defi-rollout`.
+
+**Redeployed:** republished `mtds-code.tar.gz` via `create-code-tarballs.sh --asset-group DEFI`
+(`mtds-code.manifest.json` now `commit_sha=591b020e`, confirmed). Stopped+deleted the now-superseded
+`mtds-lending-indices-20260712-110841`, launched `mtds-lending-indices-20260712-112557` (same window, `--force` to
+bypass the singleton lock since the prior VM's deletion hadn't yet deregistered) — this is the THIRD VM launch for this
+todo (105600 → deploy-staleness; 110841 → GraphQL-schema bug; 112557 → both fixed). Verification of real nonzero writes
+in progress; see next entry for the verdict. If this VM also comes back clean, the remaining
+`[SCRIPT] P2. Re-run G2 gate` todo can proceed once this backfill completes (still hours away — not polled
+synchronously).
+
+**gcloud CLI note:** the plain `/snap/google-cloud-cli/current/bin/gcloud` binary worked without issue for
+`describe`/`ssh`/`stop`/`delete`/`create` from this slot — the earlier "gcloud CLI unavailable, snap-confine" notes in
+this doc (and the G1.6 precedent they cite) may have been a slot-specific/transient sandbox issue rather than a fleet
+constant; worth a quick recheck next time before assuming the Python `compute_v1` client workaround is needed.
