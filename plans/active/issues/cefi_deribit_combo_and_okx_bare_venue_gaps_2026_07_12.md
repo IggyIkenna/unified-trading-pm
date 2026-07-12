@@ -186,7 +186,7 @@ slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only ven
       `venue=DERIBIT-COMBO` catalogue tag. NOT independently confirmed by tracing the full catalogue-write code path
       (only the comment) — flagging as the next investigation step, not a verified fact. Did not attempt the backfill
       re-run (blocked on the above being resolved first). Left unchecked — genuine remaining scope.
-- [ ] [SCRIPT] P2. Trace `get_tardis_exchange_for_venue`'s current return value for venue="OKX" (likely `okex` or
+- [x] ✅ [SCRIPT] P2. Trace `get_tardis_exchange_for_venue`'s current return value for venue="OKX" (likely `okex` or
       `okex-swap`, not checked this session) and make the options_chain/futures_chain bulk-download exchange resolution
       instrument-type-aware (either an explicit override at the `_route_tardis` call site in `umi_tick_provider.py`, or
       extend `get_tardis_exchange_for_venue` to accept an optional itype param) so OKX resolves to `okex-options` for
@@ -205,7 +205,26 @@ slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only ven
       (from `VM_VENUE=OKX` launcher convention) — that's the open question this todo already correctly identifies as the
       call-site-awareness gap. Did not modify `_route_tardis` or the launcher script, and did not re-run the backfill.
       Left unchecked — genuine remaining scope; whoever picks this up next should start by grepping how `venue` reaches
-      `_route_tardis` for an `options_chain` `VM_DATA_TYPES` request specifically.
+      `_route_tardis` for an `options_chain` `VM_DATA_TYPES` request specifically. **✅ CLOSED 2026-07-12 (slot-15)** —
+      confirmed the call-site gap slot-3 flagged: `_route_tardis` (renamed call chain, was `umi_tick_provider.py:334`)
+      called `_VM.get_tardis_exchange_for_venue(venue_upper)` with the BARE venue only (`VM_VENUE=OKX` launcher
+      convention, never a suffixed string) — so the `("OKX","OPTION")` dict entry slot-3 added was genuinely unreachable
+      from a real options_chain request; `exchange` fell back to the venue-only lookup (`None` for bare OKX) or the
+      wrong exchange for other bare-venue lookups. Added `_resolve_tardis_exchange()` in `umi_tick_provider.py`: for
+      `data_types` containing `options_chain`/ `futures_chain`, it now looks up `f"{venue_upper}-OPTIONS"` /
+      `f"{venue_upper}-FUTURES"` (reaching the itype-specific dict entry via `_get_suffixed_tardis_match`) before
+      falling back to the plain venue-only lookup — so OKX resolves to `okex-options` for a real options_chain request.
+      Verified DERIBIT (whose itype resolution also now routes through this path) still resolves to `deribit`
+      (regression guard test). 5 new unit tests (`TestResolveTardisExchange`, `test_umi_tick_provider_routes.py`).
+      Extended `launch-targeted-options-chain-backfill.sh` with OKX year-shards (2020-2026, BTC;ETH) now that the
+      routing is reachable. **Did NOT launch the actual backfill VMs** — this session's `gcloud` is non-functional
+      (snap-confine `cap_dac_override` permission error, sandboxed dev environment) —
+      `bash     launch-targeted-options-chain-backfill.sh --venue OKX --commit` still needs to be run from an
+      environment with working GCP credentials to actually capture the data; the code path is proven correct via unit
+      tests only, not a live Tardis fetch. Shipped: market-tick-data-service@b03e39de (the routing fix + regression
+      tests) and deployment-service@3ba736f (the launcher's OKX year-shards). Operator/next-slot: run
+      `bash     deployment-service/scripts/vm/launch-targeted-options-chain-backfill.sh --venue OKX --commit` from an
+      environment with working `gcloud` credentials to actually capture the data.
 
 **🚧 FURTHER PROGRESS on todo 1 (2026-07-12, slot-11)** — dispatched specifically for this todo (data_engineering
 craft). Picked up after slot-3's routing-entry work landed (`unified-api-contracts@84ce5929`, the reconciled merge of my
