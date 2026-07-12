@@ -1726,7 +1726,15 @@ concurrent-IP false-negative.
 
 **This session in full:** 3 of the plan's known Layer-1 gaps now have shipped, tested code fixes (DERIBIT-COMBO,
 bare-OKX, COINBASE-FUTURES/spot_pair) — none yet VERIFIED with real captured rows, all correctly left as open `[VERIFY]`
-todos rather than assumed-closed. G4 remains ❌ NOT MET (honest state — code-complete ≠ operationally-verified). Next
-session should prioritize: (1) checking whether the 4 stalled-looking BF VMs can be safely terminated (infra craft) to
-open a genuine solo VERIFY window for all 3 pending VERIFY todos at once; (2) if not, coordinate with whoever holds the
-Tardis lease's `[INFRA] P2` hardening work.
+todos rather than assumed-closed. G4 remains ❌ NOT MET (honest state — code-complete ≠ operationally-verified).
+
+**Correction (21:22Z):** re-checked the 4 `cefi-binance-futures-2020/2021-heavy/light` VMs' run.log directly before
+recommending termination — they are **NOT stalled/zombie**, contrary to this entry's earlier assumption. Fresh log lines
+(21:20-21:21Z, matching wall-clock) show genuine active progress: real Tardis streaming calls, real manifest shard
+writes (`per-VM shard updated ... 201 new`), and even a live 403-lockout-and-successful-retry visible in the same log
+window (`Tardis HTTP 403` on one symbol immediately followed by `Tardis streaming success: 4134712 rows` on the next).
+Their multi-hour uptime is just the real cost of a 2020/2021 "heavy" year shard, not a stall — do NOT recommend
+terminating them; that would destroy real, in-progress work. Next session should instead: (1) wait for these VMs to
+naturally complete (they are making genuine progress, will finish eventually) before attempting the 3 pending VERIFY
+todos, or (2) accept the residual 403-retry risk and attempt a VERIFY anyway now that the concurrent-IP lease exists
+(even DEFAULT-OFF) — either is more honest than assuming a termination shortcut that isn't warranted.
