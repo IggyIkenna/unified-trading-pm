@@ -12,7 +12,7 @@ summary: |
   byte-identical on a clean `git stash`-reset tree (my own unrelated sports-script diff stashed out) — this is a
   pre-existing repo-wide QG-red, not caused by any in-flight sports work. Blocks `quickmerge --agent` for the entire
   instruments-service repo until fixed.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -31,8 +31,8 @@ priority: P0
 source: slot-6 data_engineering, discovered while shipping a fix to
   sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md item #6 (unrelated sports backfill script)
 assigned_vm: planning
-resolved_by:
-locked_by: live-defi-rollout
+resolved_by: instruments-service@0393f690
+locked_by:
 audited_scope: single-repo-qg-run
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -103,12 +103,12 @@ the class of cross-cutting data-correctness break that freezes downstream shippi
       (~line 434) from `{"PERPETUAL", "FUTURE"}` to `{"PERPETUAL"}`. This is a legitimate, evidenced UAC-side
       correctness fix, NOT an accidental regression — same intentional-removal class as the OKX/BYBIT bare-SPOT_PAIR
       precedent. (repo: unified-api-contracts)
-- [ ] [CODE] P0. Regenerate `instruments-service/tests/unit/scripts/goldens/expected_universe/cefi.json` to 73 tuples
-      via `.venv/bin/python scripts/regenerate_expected_universe_golden.py` (requires both `unified-api-contracts` and
-      `unified-trading-library` sibling clones `git status --porcelain`-clean — the script refuses otherwise). Confirm
-      `.venv/bin/python -m pytest tests/unit/scripts/test_expected_universe_golden.py -k cefi` passes, then re-run full
-      `quality-gates.sh` to re-establish the green sentinel. Pure fixture regen — no source-code change expected (repo:
-      instruments-service).
+- [x] [CODE] P0. ✅ Regenerated `instruments-service/tests/unit/scripts/goldens/expected_universe/cefi.json` to 73
+      tuples — instruments-service@0393f690 (landed same-window as my own independent fix, slot-2 data_engineering,
+      which converged to byte-identical content and was dropped as empty by quickmerge's not-behind gate). Verified
+      `.venv/bin/python -m pytest tests/unit/scripts/test_expected_universe_golden.py -k cefi` passes (14/14 total
+      golden tests green) and full `quality-gates.sh` exits 0 (unrelated pre-existing adapter-contract-baseline WARN,
+      see `lint_sweep_774602ea8_regression_audit_2026_05_20.md`, does not block). (repo: instruments-service)
 
 ## Progress Log
 
@@ -130,3 +130,18 @@ marking mine `superseded_by` this doc (filed first) to avoid two open docs track
 (already quality-gates.sh green independently), then will regenerate this golden fixture (todo #2) since both UAC and
 UTL sibling clones will be clean at that point, then re-verify instruments-service goes green before shipping my own
 reconciler fix.
+
+### 2026-07-12T08:47Z (slot-2, data_engineering) — resolved: regenerated + verified, converged with a concurrent fix
+
+Independently ran `scripts/regenerate_expected_universe_golden.py` (both UAC + UTL sibling clones confirmed clean first)
+— it touched all 5 domain goldens (cefi/defi/tradfi/sports/prediction) because the script regenerates everything at
+once, but only `cefi.json` was actually failing its own golden test beforehand; reverted the other 4 back to their
+committed state (`git restore`) to avoid shipping unverified drift outside this issue's scope — full
+`test_expected_universe_golden.py` suite (14 tests) still passed 14/14 with only cefi.json changed, confirming the other
+4 were already correct and needed no touch. Committed + ran `bash scripts/quickmerge.sh --agent` — quickmerge's STAGE
+0.4 not-behind gate found `instruments-service@0393f690` had ALREADY landed (another slot's bundled sports+golden-regen
+fix, pushed moments earlier) with byte-identical `cefi.json` content, so my own commit converged to zero delta and was
+correctly dropped rather than double-shipped. Verified post-pull:
+`grep tuple_count tests/unit/scripts/goldens/expected_universe/cefi.json` → 73; no `BITFINEX-FUTURES.*future` rows
+remain; full `quality-gates.sh` exits 0 (the adapter-contract-baseline WARN is pre-existing/unrelated, tracked in
+`lint_sweep_774602ea8_regression_audit_2026_05_20.md`). Both todos closed. Marking `status: resolved`.
