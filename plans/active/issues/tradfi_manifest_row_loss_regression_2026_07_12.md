@@ -133,6 +133,80 @@ another slot's in-flight session. This needs either (a) an operator/main-agent c
 2026-07-10T11:33Z–2026-07-12T03:34Z, or (b) checking other active slots' sessions/commits for any manifest-editing
 script run against tradfi in that window.
 
+## Writer identified (2026-07-12, slot-7)
+
+**Cloud Logging was a dead end** — confirmed GCS Data Access audit logs are NOT enabled for `central-element-323112`
+(`gcloud logging read` against `cloudaudit.googleapis.com%2Fdata_access` filtered to any `storage.googleapis.com`
+resource, unrestricted by time, returns zero rows; the only `data_access` entries present are BigQuery
+`jobservice`/`InsertJob` calls from the billing-export pipeline). This is a project-level gap, not a slot-access gap —
+even an operator with full Cloud Logging access would find nothing here without first enabling Data Access audit logs
+for the storage service (a separate, forward-looking fix — see new P2 todo below).
+
+**Identified instead via Cloud Scheduler + Cloud Run Jobs configuration + GCS object custom metadata**:
+
+- The canonical object carries consolidator-stamped custom metadata on every write — `consolidator_run_at` /
+  `consolidator_content_write_at` (both `2026-07-12T03:57:00.156735+00:00` on the freshest read at investigation time) —
+  which is the consolidator's own provenance marker (`unified_trading_library/manifest_consolidator.py`, keys
+  `_CONSOLIDATOR_RUN_AT_KEY` / `_CONSOLIDATOR_CONTENT_WRITE_AT_KEY`).
+- **Writer = Cloud Run Job `uts-prod-manifest-consolidator-market-data-tradfi`** (project `central-element-323112`,
+  region `asia-northeast1`), triggered every 1 minute continuously (`*/1 * * * *`, state `ENABLED`) by Cloud Scheduler
+  job `uts-prod-manifest-consolidator-market-data-tradfi-cron` via
+  `uts-prod-batch-sa@central-element-323112.iam.gserviceaccount.com`. Command:
+  `python -m unified_trading_library.manifest_consolidator --bucket market-data-tick-tradfi-prd-central-element-323112`,
+  image `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/market-tick-data-service:latest`.
+  Confirmed this is the ONLY configured writer of this bucket's `_index/availability_index.parquet` — no other Cloud
+  Scheduler/Cloud Run job in the project targets this bucket/path (checked the full `gcloud scheduler jobs list`
+  - `gcloud run jobs list` output for anything else tradfi/market-data-adjacent).
+- Cloud Run execution history for this job (`gcloud run jobs executions list`) shows **zero failed executions inside the
+  loss window** (2026-07-10T11:33Z–2026-07-12T03:34Z, sampled) — every execution in the fetched range reports
+  `Execution completed successfully` (32–67s typical duration). So if the loss happened via this job, it happened inside
+  a "successful" merge cycle, not a crash/partial-write — rules out "job died mid-write" as the mechanism. (Note:
+  execution-history retention doesn't cover the full window contiguously — earliest execution reliably fetched
+  inside-window starts 2026-07-11T11:10Z, so the first ~23.5h of the window, 2026-07-10T11:33Z–2026-07-11T11:10Z, is not
+  independently confirmed failure-free from this source alone.)
+- **This is a continuously-running incremental writer** (1-cycle-per-minute, merge/anti-join/prune every time), not a
+  one-shot job — so there is no single "the commit that wrote it" the way there would be for a one-off script. Instead,
+  the exact _code_ running during the loss window changed multiple times, because
+  `unified_trading_library/manifest_consolidator.py` (the shared script every asset group's consolidator job runs) was
+  under active, rapid bug-fixing this exact week:
+  - `unified-trading-library@0de04b6e` — fixed the incremental merge's `survivors` CTE streaming pre-existing canonical
+    rows through with **zero self-dedup** (any duplicate that ever entered the canonical, by any mechanism, persisted
+    forever). Real, confirmed data-correctness bug in this exact script. Landed/deployed 2026-07-10 per
+    `defi_manifest_consolidator_duplicate_race_2026_07_10.md`. Its own P2 cleanup pass found tradfi's genuine-duplicate
+    count was only 346 rows / 173 groups (cleaned 2026-07-10) — far too small to explain a 1,018,932-row loss, so this
+    specific bug is not the cause, but it establishes this script had at least one other real correctness gap fixed
+    inside the loss window.
+  - `unified-trading-library@800af156` — follow-on fix for a scaling regression in the `0de04b6e` fix itself (the
+    survivors-side self-dedup window function ran over the ENTIRE untouched canonical every cycle, OOM-killing the defi
+    job once its canonical passed ~14M rows). Also landed 2026-07-10. Tradfi's canonical (~5-6M rows) is well under that
+    threshold, and no failed tradfi executions were observed in-window (see above), so this is a weaker lead for tradfi
+    specifically, but it's the same script, same window.
+  - `unified-trading-library@d3c36842` ("fix(consolidator): widen lock TTL 90s->300s") — landed 2026-07-12T02:37:49Z
+    UTC, pulled into `market-tick-data-service@a1361fc9` (02:52:57Z), built+pushed as image tag `20e854c`/`0.92.0`/
+    `latest` at **2026-07-12T03:01:48Z** (Artifact Registry `createTime`) — i.e. deployed ~33 min BEFORE the issue doc's
+    03:34Z read that showed the loss already present, so this specific fix's deploy cannot be the ORIGINATING cause (the
+    loss predates it), though the bug it fixes — the old 90s TTL being shorter than real cycle durations — was actively
+    occurring in production throughout 2026-07-11 per the commit's own cited evidence (93-121s observed cycles for the
+    sibling defi cron that day). **However**, per the fix author's own conclusion (same day,
+    `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md` summary): "no data corruption risk; the canonical
+    write's CAS already protects against that" — i.e. this lock race is documented as causing wasted concurrent merges /
+    SIGKILLs, not row loss. Tradfi's own observed cycle durations (32-67s, sampled post-fix) are comfortably under even
+    the old 90s TTL, which weakens (but doesn't rule out — no pre-fix tradfi cycle-duration samples were captured) this
+    as tradfi's mechanism specifically.
+  - Sample of a 200K-row missing-key set (from the original evidence table above): `written_at` values are original
+    (mostly 2026-07-07), consistent with an INCREMENTAL merge cycle dropping pre-existing `survivors` rows rather than a
+    full rebuild — i.e. whatever dropped the rows did so via this same incremental survivors/contested/prune code path,
+    not a competing tool.
+
+**Bottom line for this todo**: the script is `unified_trading_library/manifest_consolidator.py`; the job is Cloud Run
+Job `uts-prod-manifest-consolidator-market-data-tradfi` (Cloud Scheduler-triggered, `*/1 * * * *`); there is no single
+smoking-gun commit — the loss occurred across some subset of this job's continuous 1-minute cycles during the window,
+running whichever consolidator revision was live at each moment, several of which had real, confirmed correctness or
+scaling bugs in the SAME merge/prune code path this week. Pinning the exact cycle(s)/commit(s) actually responsible (vs.
+merely being deployed during the window) is the next todo below — it needs either finer-grained row-count snapshots than
+exist, or a direct code read of `_duckdb_merge_payload`'s survivors/contested/prune SQL to find a bug that can drop
+`survivors` rows outright (as opposed to the already-fixed no-dedup / OOM bugs above).
+
 ## Why it matters
 
 - This is the SAME manifest every other checkbox in `tradfi_v9_stage1_finish_2026_07_06.md` certified against: task 2's
@@ -151,10 +225,9 @@ script run against tradfi in that window.
 
 ## Recommended decision
 
-1. **Operator/main-agent: identify the writer.** Check Cloud Logging / Cloud Run revision history for
-   `market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` writes in the window
-   2026-07-10T11:33Z–2026-07-12T03:34Z (this slot cannot — `gcloud` broken). Cross-check whether another slot ran a
-   manifest-editing script against tradfi in that window (dedup attempt, consolidator code change, etc).
+1. ~~Operator/main-agent: identify the writer.~~ **DONE 2026-07-12 (slot-7)** — see "Writer identified" above. Writer =
+   Cloud Run Job `uts-prod-manifest-consolidator-market-data-tradfi` running
+   `unified_trading_library.manifest_consolidator`; no single commit pinned as the exact cause yet (next todo).
 2. **Do NOT run task 4 (E5 rebuild) again until root-caused** — re-running the rebuild on top of an already-lossy index
    could either mask the bug (re-adding the missing rows and hiding the regression) or compound it if the same bug is
    triggered by the rebuild itself.
@@ -166,13 +239,23 @@ script run against tradfi in that window.
 
 ## Todos
 
-- [ ] [DATA] P0. Identify the exact script/job/commit that wrote `_index/availability_index.parquet` for
-      `market-data-tick-tradfi-prd-central-element-323112` between 2026-07-10T11:33Z and 2026-07-12T03:34Z (repo:
-      unified-trading-pm / operator — needs Cloud Logging access this slot lacks).
-- [ ] [DATA] P0. Once the writer is identified, root-cause why it dropped 1,017,024 distinct manifest rows
-      (`captured`=-705,881, `empty_confirmed`=-314,620) while leaving the 13,971-row v4 tail untouched, and fix the
-      underlying script/consolidator bug (repo: market-tick-data-service or instruments-service, whichever owns the
-      identified writer).
+- [x] ✅ [DATA] P0. Identify the exact script/job/commit that wrote `_index/availability_index.parquet` for
+      `market-data-tick-tradfi-prd-central-element-323112` between 2026-07-10T11:33Z and 2026-07-12T03:34Z. **Done
+      2026-07-12 by slot-7.** See "Writer identified" below — Cloud Logging turned out unnecessary; identified via Cloud
+      Scheduler/Cloud Run Jobs config + GCS object custom metadata instead. `gcloud` IS usable in-slot via the non-snap
+      SDK at `/home/ubuntu/google-cloud-sdk/bin/gcloud` (the snap `gcloud`/`gsutil` are broken by snap-confine as prior
+      sessions found, but this alternate install has working ADC and was not tried before).
+- [ ] [DATA] P0. Root-cause why the identified writer (`unified_trading_library/manifest_consolidator.py`'s
+      `_duckdb_merge_payload` incremental merge, run by Cloud Run Job
+      `uts-prod-manifest-consolidator-market-data-tradfi`) dropped 1,017,024 distinct manifest rows
+      (`captured`=-705,881, `empty_confirmed`=-314,620) while leaving the 13,971-row v4 tail untouched, and fix the bug
+      (repo: unified-trading-library, the shared consolidator — NOT market-tick-data-service, which only vendors it).
+      Start from the `survivors`/`contested`/prune SQL in `_duckdb_merge_payload` — 3 real bugs in this exact code path
+      were found+fixed this same week (`0de04b6e` no-dedup-on-survivors, `800af156` OOM-scaling regression in that fix,
+      `d3c36842` lock-TTL race) but none is yet CONFIRMED to explain outright row loss (as opposed to duplication or
+      wasted-compute); the mechanism suggested by the "Writer identified" evidence (old `written_at` preserved on
+      survivors, so a full rebuild is ruled out) is a bug in the survivors ANTI JOIN or the post-merge prune step
+      incorrectly excluding/deleting rows it shouldn't. See "Writer identified" section above for the full lead list.
 - [ ] [DATA] P0. Restore the 1,017,024 missing rows — either replay them from
       `_index/snapshots/pre_tradfi_source_restamp_20260710T113305Z.parquet` (targeted re-add of exactly the missing
       keys, verified via the same key-set diff this issue doc used) or via a fresh full E5 rebuild once the root cause
@@ -184,11 +267,36 @@ script run against tradfi in that window.
       whichever job writes `_index/availability_index.parquet`, so a future regression of this class is caught
       immediately rather than 2 days later by an unrelated task's re-verification (repo: market-tick-data-service or
       unified-trading-library, wherever the writer/consolidator lives).
+- [ ] [INFRA] P2. Enable GCS Data Access audit logging (`storage.googleapis.com` data-write, at minimum, project-wide or
+      on the `*-prd-central-element-323112` market-data buckets) — this investigation found it is currently OFF
+      project-wide (confirmed: `cloudaudit.googleapis.com/data_access` has zero `storage.googleapis.com` entries, only
+      BigQuery). Its absence is why this todo had to be solved via Cloud Scheduler/Cloud Run config + object custom
+      metadata instead of a direct "who wrote this object and when" log query — much slower and less precise than Cloud
+      Logging would have been, and won't work for any writer that doesn't self-stamp custom metadata like the
+      consolidator does (repo: unified-trading-pm or deployment-service, wherever project audit-log config is IaC'd;
+      needs an operator/main-agent decision on log-volume cost tradeoff before enabling broadly).
 
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-12** — slot-7 (sonnet/high, data_engineering). Closed todo 1 (writer identification). Cloud Logging was a
+  dead end (GCS Data Access audit logs off project-wide, confirmed via direct query) but `gcloud` DOES work in-slot via
+  the non-snap SDK at `/home/ubuntu/google-cloud-sdk/bin/gcloud` (contrary to slot-8's finding that `gcloud` is broken
+  here — that's true only of the snap install; ADC + this alternate binary work fine). Identified the writer via Cloud
+  Scheduler (`uts-prod-manifest-consolidator-market-data-tradfi-cron`, `*/1 * * * *`) → Cloud Run Job
+  `uts-prod-manifest-consolidator-market-data-tradfi` → `unified_trading_library.manifest_consolidator` (running from
+  `market-tick-data-service:latest`), corroborated by the canonical object's own `consolidator_run_at`/
+  `consolidator_content_write_at` custom metadata. Confirmed via `gcloud run jobs executions list` that no executions
+  failed inside the (partially-sampled) loss window — the loss happened inside "successful" merge cycles, not a crash.
+  Traced 3 real bug-fix commits landing in this exact script this same week (`unified-trading-library@0de04b6e`,
+  `@800af156`, `@d3c36842`) as leads for the next todo, cross-referencing 2 sibling issue docs
+  (`defi_manifest_consolidator_duplicate_race_2026_07_10.md`,
+  `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`) filed by slot-3 on the same script. None of the 3 is
+  yet CONFIRMED as the row-loss mechanism (details + full reasoning in "Writer identified" above) — root-causing which
+  one (or a 4th, undiscovered bug) is the next todo, not done here. Added a new P2 todo (enable GCS Data Access audit
+  logging — found it's off project-wide, which is why this had to be solved indirectly). No code change — this is a
+  data-state finding; issue doc itself ships via the PM `docs(plans):` carve-out.
 - **2026-07-12** — Filed by slot-8 (sonnet/high), dispatched to `tradfi_v9_stage1_finish` task 4. Full characterization
   above; root cause NOT yet identified (needs Cloud Logging access this slot lacks). No code change — this is a
   data-state finding, no repo commit for this entry (issue doc itself ships via the PM `docs(plans):` carve-out).
