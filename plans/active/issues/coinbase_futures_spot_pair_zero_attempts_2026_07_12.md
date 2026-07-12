@@ -15,7 +15,7 @@ summary:
   PERPETUAL-only before _resolve_symbols/_catalogue_symbols_for_venue_date is ever reached, or those functions ARE
   reached but silently drop SPOT_PAIR) — needs a dedicated code trace, not attempted this session (time-boxed after the
   cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md thread)."
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -36,7 +36,7 @@ priority: P2
 source:
   mvp_backfill_cefi_tick_v10_2026_06_27.md G4 re-verification, 2026-07-12T20:15-20:45Z session (data_engineering slot-2)
 assigned_vm: planning
-resolved_by:
+resolved_by: data_engineering slot-3, 2026-07-12T21:44Z — market-tick-data-service@8be30c8c + live VM verification
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
@@ -207,8 +207,31 @@ running, matching this session's and the prior session's launch commands.
       identical `_classify_row_instrument_type` change. Rebased onto it, dropped the now-redundant code change, and kept
       a complementary classifier-level regression test (direct `_classify_row_instrument_type` assertions, distinct test
       layer from slot-3's `_run_per_symbol_batch` row_key tests) — shipped market-tick-data-service@c7065850.
-- [ ] [VERIFY] P2. Once a fix lands, launch
+- [x] ✅ [VERIFY] P2. Once a fix lands, launch
       `ONLY="COINBASE-FUTURES:2026:heavy" VM_FORCE=true FORCE=1     TARDIS_KEY_CHECK=0 bash launch-cefi-sharded-backfill.sh`
       (see launcher note above) and confirm real SPOT_PAIR manifest rows land (query the manifest with a
       row-group-pushdown filter, not the full-download approach that timed out once in this session). (repo:
-      deployment-service)
+      deployment-service) — **Verified (data_engineering slot-3, 2026-07-12T21:13-21:44Z).** Launched
+      `cefi-coinbase-futures-2026-heavy-20260712-212050` (SPOT, e2-highmem-16). **Real infra bug hit + fixed en route**:
+      bare `gcloud` on this host resolves to a broken snap wrapper (`snap-confine: cap_dac_override` missing) that fails
+      every call silently — the launcher's backgrounded `gcloud compute instances create ... &` never checks the child's
+      exit code, so the first launch attempt reported "All 1 VMs launched" while creating ZERO real VMs (confirmed via
+      `gcloud compute operations list` — no matching insert op). Fixed via the documented workaround
+      (`PATH="/snap/google-cloud-cli/current/bin:$PATH"`, per `mvp_backfill_cefi_tick_v10_2026_06_27.md`'s prior
+      2026-07-03/07-06 sightings of the same host bug). Second launch also caught + fixed a STALE code tarball (the mtds
+      tarball manifest was pinned to the pre-fix commit `a0504bbe`) — deleted that VM before it could run pre-fix code,
+      republished via `create-code-tarballs.sh --include market-tick-data-service` (manifest confirmed @ fix SHA
+      `8be30c8c`), then relaunched clean. Monitored `run.log` (`gs://deployment-scripts-.../vm-logs/<vm>/run.log`) end
+      to end — real Tardis captures for `BTC-USDC`/`ETH-USDC` landed under the CORRECT
+      `instrument_type=spot_pair/data_type=trades/BTC-USDC.parquet` GCS path within seconds of day 2026-01-01 starting
+      (structurally impossible pre-fix, since the classifier hardcoded every COINBASE-FUTURES symbol to
+      `instrument_type=PERPETUAL`). Waited for day 2026-01-01's full per-symbol batch (~800 shards, all instrument
+      types/data_types) to complete so the per-date manifest finalize (`_write_date_manifest`) ran — confirmed
+      `Manifest updated: date=2026-01-01 venues=1 shards=346 total_records=48815321 complete=True` in the run.log, then
+      queried the per-VM shard directly
+      (`market-data-tick-cefi-prd-central-element-323112/_index/per_vm/<vm-name>.parquet`, row-group-pushdown filter,
+      not a full-corpus walk) and got **4 real `capture_status=captured` rows** for (COINBASE-FUTURES, SPOT_PAIR):
+      `BTC-USDC`/`ETH-USDC` × `{trades, book_snapshot_5}` — `BTC-USDC book_snapshot_5` 393,387 rows,
+      `ETH-USDC     book_snapshot_5` 164,301 rows, `BTC-USDC trades` 192 rows, `ETH-USDC trades` 94 rows. Deleted the VM
+      immediately after confirming (day 2026-01-01 complete; no need to run the full 2026-01-01→2026-05-22 range for
+      this diagnostic). Bug fully closed: catalogue → resolution → dispatch → GCS write → manifest all now agree.
