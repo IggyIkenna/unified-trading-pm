@@ -549,3 +549,15 @@ the parking recommendation has genuinely gone unactioned, not just unanswered. V
 `consolidator-fresh-and-vm-complete` condition, or a multi-hour `target_slot_timeout`) since re-check #8's claimed
 filing never actually reached the queue. `skip-current-task`'d — same call as the eight prior dispatches. Whoever next
 picks this up should check whether `BLK-0c06a5c6` has been actioned before repeating the same 3-step verify a 10th time.
+
+### Re-check #10 — unchanged (VM at 2023-04-29, consolidator still stuck at 2026-07-10T21:42:30Z); `BLK-0c06a5c6` confirmed never landed, refiled as `BLK-66f6516d` — 2026-07-12T12:31Z (data_engineering slot-2)
+
+10th dispatch on this exact todo. Live-verified rather than trusted: VM `mtds-lending-indices-20260712-112557` still
+`RUNNING`, `run.log` at `date=2023-04-29` (forward progress, still pre-genesis), no protocol/GraphQL errors.
+Consolidated `_index/availability_index.parquet` `Update time` unchanged at `2026-07-10T21:42:30Z` (byte-identical to
+every re-check since #4). Directly queried `GET /api/state.blocked_queue` — confirmed `BLK-0c06a5c6` (re-check #9's
+claimed filing) genuinely never reached the queue (only `BLK-1ffbd75b` exists for this task_id), same
+silent-filing-failure pattern re-check #9 already flagged for re-check #8. Re-filed as `BLK-66f6516d` and verified via a
+follow-up `GET /api/state` that it landed this time (`blocked_queue` count 10→11). Not re-litigating the underlying
+precondition further — re-checks #4-#9 already established it exhaustively; this entry exists only to confirm the
+parking request finally reached main/operator. `skip-current-task`'d.
