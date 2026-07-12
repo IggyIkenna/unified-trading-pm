@@ -1520,3 +1520,99 @@ session). 6 tuples remain structurally BLOCKED-OPERATOR-DECISION pending `BLK-af
 identified genuine gap (COINBASE-FUTURES/spot_pair) — all backed by live Tardis-metadata verification before launch, not
 speculative relaunches. Continuing to monitor; next check-in should re-run Layer-1 once the 20 in-flight VMs have had
 time to complete.
+
+---
+
+### G4 Re-Verification Run #4 — 2026-07-12T13:15–13:35Z (GATE NOT MET — data_engineering slot-2, major new finding)
+
+**Coverage (merged) — `measure_honest_coverage.py --asset-group cefi`, 2026-07-12T13:20Z:**
+
+| metric                 |     count | vs 2026-07-12T12:08Z | note                       |
+| ---------------------- | --------: | -------------------: | -------------------------- |
+| captured               | 2,137,071 |              +23,221 |                            |
+| attempted_failed       |     1,756 |                  -10 | requires 0 — NOT MET       |
+| expected_unattempted   |   646,863 |                    0 | requires 0 — NOT MET       |
+| coverage_pct (Layer-2) |     76.72 |                    — |                            |
+| Layer-1 completeness   |     83.56 |              +2.74pp | 12 missing tuples (was 14) |
+
+**Verified prior session's 19-VM wave (COINBASE-FUTURES/DERIBIT-COMBO/OKX/BYBIT-SPOT, launched ~12:16Z):** 18 of 19
+already self-completed by this check (`gcloud compute instances list`); only `cefi-bybit-spot-2025-heavy` still RUNNING
+(~1h uptime) + the carried-over `cefi-bitget-futures-2024-heavy` (~4h10m). **BYBIT-SPOT closed real gaps** (Layer-1
+14→12, KRAKEN-FUTURES/BITGET-FUTURES partial progress from the prior session confirmed landed). But **DERIBIT-COMBO,
+bare-OKX, and COINBASE-FUTURES/spot_pair are STILL missing from Layer-1** despite their VMs having run to completion —
+investigated why with 3 parallel sub-agents rather than assuming "still in progress":
+
+1. **DERIBIT-COMBO + bare-OKX**: NOT a new bug — the prior session's launch ran on stale code. The actual fixes
+   (`market-tick-data-service@1bc4e000` — union `_TARDIS_CEFI_VENUES` with `{"DERIBIT-COMBO"}`, unblocking dispatch
+   entirely; `@7dbd19f4` — thread `canonical_venue` through the bulk-download chain + fix
+   `_classify_row_instrument_type` combo-symbol misclassification; `@b03e39de` — itype-aware
+   `_resolve_tardis_exchange()` for options_chain/futures_chain) all shipped AFTER the 12:16Z launch, by other slots
+   working the sibling issue doc `cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`. This session's fresh-pull
+   (13:18Z) has them. Re-launch needed, not further code investigation.
+2. **COINBASE-FUTURES/spot_pair**: DIFFERENT root cause — NOT a routing bug (COINBASE-FUTURES has exactly one Tardis
+   exchange, `coinbase-international`, covering both PERPETUAL and SPOT_PAIR, so there's no itype-vs-exchange split to
+   lose). Sub-agent traced it to a likely instruments-service catalogue gap: the venue-wide symbol resolution
+   (`_resolve_symbols`) pulls ALL `raw_symbol` rows tagged `venue=COINBASE-FUTURES` from IS's catalogue regardless of
+   requested data_type, so if IS's catalogue never populated/MVP-passed the 19 real SPOT_PAIR symbols for
+   `coinbase-international`, a plain trades backfill would only ever see the already-captured PERPETUAL symbols and
+   silently produce zero new rows either way (not even attempted_failed). Needs a direct IS catalogue query to confirm —
+   not attempted this session (time-boxed); flagged as a follow-up in the blocking items below.
+
+**MAJOR FINDING — Tardis academic key allows only ONE concurrent IP; 74.9% of ALL cefi attempted_failed rows are HTTP
+403 lockouts, not genuine data unavailability.** While investigating why DERIBIT-COMBO's real-fix-verification kept
+hitting `Tardis HTTP 403` even in a working-network sandbox, reproduced the SAME 403 live from THIS session
+(`datasets.tardis.dev`) and read the actual response body:
+`{"code": 274, "message": "This Data API key is already active from another IP address. Use one API key from one IP address at a time.", "retryAfterSeconds": 893}`.
+A live manifest query confirms this is not a one-off: **1,290,959 of 1,724,206 (74.9%) attempted_failed rows across the
+ENTIRE cefi prd manifest carry a 403 error_reason** — DERIBIT 98.1%, BITFINEX 99.0%, BINANCE 97.6%, COINBASE 96.3%,
+BITGET-FUTURES 95.3%, OKEX-SWAP 91.6%. This plan has repeatedly launched 20-80+ concurrent SPOT VMs per wave across its
+whole multi-week history, each calling Tardis directly from its own IP — structurally guaranteed to lock all but one VM
+out for the duration of every overlapping wave. **This means most of this plan's attempted_failed accumulation across
+EVERY prior G4 verification run in this Progress Log is very likely self-inflicted concurrency noise, not a genuine
+per-venue data census** — filed `issues/tardis_concurrent_ip_lockout_2026_07_12.md` (P0, NOTIFY-OPERATOR,
+`assigned_role: infra`, `model_tier: opus-required` — the real fix is architectural: serialize Tardis calls, get a
+multi-IP Tardis plan, or build a centralized fetch proxy; none of these are a plain code fix a worker should implement
+unilaterally).
+
+**Second finding — systemic blank-`instrument_type` on Tardis per-symbol batch FAILURES (not just BITGET-FUTURES).**
+Investigating BITGET-FUTURES's 3 still-missing `future`-itype Layer-1 tuples (book5/derivative_ticker/trades) found
+41,027/4,063/40,845/75,466 `attempted_failed` rows with BLANK `instrument_type` — meaning even once real capture
+attempts happen, Layer-1 can never see them as evidence for the `future`-itype tuple specifically. Code-traced (sub-
+agent): `tardis_batch_download.py::_run_per_symbol_batch`'s `PerSymbolTask.row_key` never includes `instrument_type`
+(only derived post-fetch, from the parsed response, so unavailable on any failure path) — this is the GENERIC per-symbol
+fan-out for every CeFi/Tardis venue via `download_batch`, so the blast radius is fleet-wide, not
+BITGET-FUTURES-specific. A follow-up fixability check confirmed a cheap fix exists (a pure pre-fetch classifier,
+`TardisAdapter._classify_row_instrument_type`, already used elsewhere in the same file, just needs threading into the
+row_key) — small, same-session-sized, but not attempted this session (discovered late in the session; not started
+mid-way through to avoid a half-shipped change). Filed
+`issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md` (P1, `assigned_role: data_engineering`,
+fully scoped fix shape included for the next session).
+
+**Gate verdict:** ❌ **NOT MET** — Layer-1 83.56% (12 missing, was 14); Layer-2 af=1,756/eu=646,863 essentially
+unchanged. 2 VMs still RUNNING (bybit-spot tail shard, bitget-futures carried-over). **Two new P0/P1 issue docs filed
+this session materially change how every prior session's numbers in this Progress Log should be read** — the
+concurrent-IP lockout in particular means this plan cannot reliably close G4 by "launch more VMs" alone until an
+operator decision lands on `tardis_concurrent_ip_lockout_2026_07_12.md`.
+
+**Blocking items remaining (ordered by impact):**
+
+1. **`tardis_concurrent_ip_lockout_2026_07_12.md` — operator decision required (P0)** — until resolved, every multi-VM
+   wave in this plan self-defeats via Tardis 403 lockouts on all-but-one concurrent VM.
+2. **`cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md` — data_engineering fix (P1)** — small, fully
+   scoped; blocks accurate Layer-1 signal for any venue with per-symbol capture failures.
+3. **`BLK-afc672cf` operator decision** — still gates 6 of the 12 Layer-1 tuples (ASTER/EXTENDED-STARKNET/
+   LIGHTER-ZKSYNC×2/PACIFICA-SOLANA/COINBASE-CDE book5 — live-only data types structurally excluded from batch capture,
+   conflicting with Layer-1's "every EXPECTED tuple needs ≥1 manifest row" requirement).
+4. **Re-launch DERIBIT-COMBO + bare-OKX backfills** on the now-fresh-pulled fix-containing code (both fixes confirmed
+   present in this session's checkout) — blocked on todo 1 (concurrent-IP) actually being resolved first, or accept
+   serialized/slow relaunch as an interim workaround.
+5. **COINBASE-FUTURES/spot_pair catalogue gap** — needs a direct instruments-service catalogue query to confirm whether
+   SPOT_PAIR symbols are populated for `venue=COINBASE-FUTURES`; not yet filed as its own issue doc (partial diagnosis
+   only).
+6. **BITGET-FUTURES VM (4h+ uptime)** — still working through the full-catalogue `VM_FORCE=true` re-fetch; will very
+   likely keep hitting the 403 lockout per finding above; check again once todo 1 has a resolution path.
+
+**Not blocked by CREDENTIALS/UPSTREAM.** Two new P0/P1 issue docs filed with full root-cause evidence (live API
+reproduction + manifest-wide quantification, not speculation); the concurrent-IP finding in particular is the kind of
+big, cross-cutting, data-correctness-adjacent finding the findings-triage HARD RULE requires notifying the operator
+about — escalating now rather than continuing to relaunch VMs into the same lockout.
