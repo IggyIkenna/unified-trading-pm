@@ -115,6 +115,18 @@ trades + book_snapshot_5 + derivative_ticker" for lighter) now captures it for r
 also be able to serve `book_snapshot_5` for LIGHTER-ZKSYNC (a genuine backfill fix, not a denominator/contradiction
 issue) — NOT verified this session (time-boxed; flagging as a concrete next check).
 
+**UPDATE 2026-07-12T09:20Z — a 7th tuple in the same class found: `(COINBASE-CDE, future, trades)`.** Confirmed via
+code: `market_tick_data_service/live/connectors/coinbase_cde_ws.py` is the ONLY capture path for this venue — a LIVE
+WebSocket connector, no batch/historical adapter exists at all. UAC's own comment
+(`venue_constants.py`/`market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["COINBASE-CDE"]`) explicitly says
+"Live-only for now: Tardis has ZERO coverage of this venue under any name... only the re-keyed coinbase_cde_ws.py live
+connector... captures real data." Start date is honestly floored to `2026-07-10` (venue registration date, no fabricated
+pre-registration history) — same "no backfill possible, live-only" shape as the 6 DEX-venue tuples above, just a CEX
+case this time. Not yet verified whether the live connector is actually deployed/running (if it's simply not deployed
+yet, that's a separate, unrelated deployment gap, not this architecture contradiction) — but if it IS running, this
+tuple faces the exact same mathematical-unreachability problem and should be covered by whichever resolution (a) or (b)
+below gets picked, generalized to "live-only across ALL asset classes", not just the onchain-perp handler specifically.
+
 ## Recommended decision (operator/architecture call — NOT mine to make unilaterally)
 
 Two structurally different resolutions, each with real tradeoffs:
