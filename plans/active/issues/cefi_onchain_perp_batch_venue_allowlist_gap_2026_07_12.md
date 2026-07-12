@@ -209,7 +209,27 @@ the zero-rows pattern was confirmed, to stop burning SPOT spend on a guaranteed-
       its own scoped plan/task rather than folding into this issue doc further. - Once landed: re-launch PACIFICA-SOLANA
       only via `VENUES="PACIFICA-SOLANA"       bash scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` and
       re-verify real rows per the same method as item 3 above (remember to rebuild the code tarball via
-      `create-code-tarballs.sh` first — see the stale-tarball note on item 3).
+      `create-code-tarballs.sh` first — see the stale-tarball note on item 3). **Update (slot-2, 2026-07-12, parallel
+      session): part of (b) has SHIPPED — `market-tick-data-service@c98c8856`.** Independently re-diagnosed the same 429
+      gap (dual-dispatch on this task) and found it's actually worse than "no backoff":
+      `_fetch_pacifica_trades_for_coin` / `_fetch_pacifica_funding_for_coin` had **zero `failed_per_instrument` wiring
+      at all** (only `_fetch_pacifica_book_for_coin` recorded failures) — a 429 on trades/funding was silently
+      indistinguishable from honest-absence in the manifest, the same failure CLASS as the venue-allowlist bug this
+      whole issue doc is about, just one layer deeper. Confirmed via direct `curl` that Pacifica has real current
+      trading volume (live BTC trades returned), so the observed 0-row streak was never genuine absence. Fix: wired
+      `get_with_429_retry` (already used by `fetch_pacifica_candles`) into trades/book/funding, and added
+      `failed_per_instrument.record()` to trades/funding matching the book/Extended pattern — 2 new regression tests,
+      `quality-gates.sh` green, shipped + re-verified end-to-end (killed stale VMs, rebuilt tarball, relaunched
+      RUN_TS=20260712-055837). **Result confirms recommendation (c)'s concern**: even with retry+backoff (2s/4s/8s) AND
+      running only ONE VM solo (isolating for concurrency), every symbol on `/trades/history` still hit sustained
+      `HTTP 429` continuously across ~4 minutes of observation — this is NOT a short burst backoff can ride out, it's a
+      sustained ceiling. Killed the retrying VMs rather than let them burn SPOT spend for hours with no realistic chance
+      of landing rows. **What's still open**: (a) skip the unconditional `/book` call when `book_snapshot_5` isn't
+      requested (not done — book now _also_ retries, spending more of the budget, not less); the (c) design decision
+      (reduced scope / Tardis-style delegation / accept honest near-total failure) is now better-evidenced but still
+      unresolved. Silent-failure risk (the P1-severity part) is closed; remaining risk is P2 (data
+      completeness/coverage, not correctness) — recommend downgrading this todo's priority to P2 once (a) lands, since a
+      429 is now always a loud, correctly-recorded `record_failed`, never a silent zero.
 - [ ] [VERIFY] P2. Re-launch LIGHTER-ZKSYNC derivative_ticker now that the Tardis-delegated code fix has landed
       (`market-tick-data-service@57493789`) and confirm real rows write for 2026-04-17+ — check run.log for
       `venues=['LIGHTER-ZKSYNC']` and the delegated-Tardis-call log line, then verify via the manifest (Tardis
