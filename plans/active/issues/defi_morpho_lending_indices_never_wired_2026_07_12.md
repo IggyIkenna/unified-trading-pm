@@ -76,17 +76,18 @@ the class of gap the plan's "Definition of 100%" section calls out.
 
 ## Recommended decision
 
-1. **[CODE] P1.** Wire `morpho_adapter.MorphoAdapter` into `lending_indices_handler.py`'s protocol dispatch — add
-   `"morpho"` to `_DEFAULT_PROTOCOLS` (line 171) and add the branch that instantiates `MorphoAdapter` + calls
-   `download_market_data()` per (instrument, date), following the existing `kamino_lending`/`solend`/`marginfi`
-   Solana-protocol branch pattern at lines 406-410 as the template (Morpho is EVM/Ethereum-first per
-   `chain: str = "ETHEREUM"` default, so it likely needs its own non-Solana branch, not that exact one — check how
-   `aave_v3`/`spark`/`compound_v3` EVM protocols are dispatched instead). (repo: `market-tick-data-service`)
-2. **[SCRIPT] P1.** Once wired, launch a MORPHO-scoped lending_indices backfill (either a dedicated
-   `--lending-protocols morpho` VM, analogous to the G1.6 ORCA/RAYDIUM/KAMINO dedicated-VM precedent, or fold into the
-   next full lending-indices re-run once the handler fix ships). SPOT VM per the fleet default. (repo:
-   `deployment-service`)
-3. Re-run this plan's G2 gate for `lending_indices` after the backfill completes.
+- [ ] [CODE] P1. Wire `morpho_adapter.MorphoAdapter` into `lending_indices_handler.py`'s protocol dispatch — add
+      `"morpho"` to `_DEFAULT_PROTOCOLS` (line 171) and add the branch that instantiates `MorphoAdapter` + calls
+      `download_market_data()` per (instrument, date), following the existing `kamino_lending`/`solend`/`marginfi`
+      Solana-protocol branch pattern at lines 406-410 as the template (Morpho is EVM/Ethereum-first per
+      `chain: str = "ETHEREUM"` default, so it likely needs its own non-Solana branch, not that exact one — check how
+      `aave_v3`/`spark`/`compound_v3` EVM protocols are dispatched instead). (repo: `market-tick-data-service`)
+- [ ] [SCRIPT] P1. Once wired, launch a MORPHO-scoped lending_indices backfill (either a dedicated
+      `--lending-protocols morpho` VM, analogous to the G1.6 ORCA/RAYDIUM/KAMINO dedicated-VM precedent, or fold into
+      the next full lending-indices re-run once the handler fix ships). SPOT VM per the fleet default. (repo:
+      `deployment-service`)
+- [ ] [SCRIPT] P2. Re-run this plan's (`mvp_backfill_defi_onchain_v10_2026_06_27.md`) G2 gate for `lending_indices`
+      after the backfill completes. (repo: `instruments-service`)
 
 Not attempted inline in this dispatch — this is new capability wiring (verify the EVM dispatch integration point, not
 just adding a protocol string to a list), consistent with how the G1.6 dex_pool_swaps Solana-indexer finding was scoped

@@ -1681,3 +1681,47 @@ held), but the primary blocker for getting a REAL coverage reading (the stuck co
 longer-running. Nothing productive left to do from a worker slot beyond this confirmation until either the consolidator
 resumes, the two VMs complete, or MORPHO's scope is decided — re-dispatch checklist from run #3 carried forward
 unchanged.
+
+### G2 verification run #5 — both remaining VMs confirmed live + progressing, consolidator still frozen, MORPHO issue-doc checkbox gap fixed (2026-07-12 10:01-10:07 UTC, slot 10)
+
+Picked up `mvp_backfill_defi_onchain_v10-002` immediately after shipping G1.6 (Solana dex-pool VM launch). Cheap
+re-check only, using the working `~/google-cloud-sdk/bin/gcloud`/`gsutil` (snap binaries still broken in this sandbox —
+same `snap-confine`/`cap_dac_override` issue every prior slot hit):
+
+1. **VM roster** (`gcloud compute instances list --filter="name~mtds" --zones=asia-northeast1-c`): both remaining
+   in-flight VMs still `RUNNING` — `mtds-dex-swaps-backfill`, `mtds-perp-funding-backfill`.
+2. **Real-progress check (per-VM shard mtime + run.log tail, not just heartbeat)**, current time 2026-07-12T10:05:53Z:
+   - `mtds-dex-swaps-backfill`: shard `Update time: 2026-07-12 10:01:51 GMT` (~4 min old); run.log shows active writes
+     for `day=2024-11-29` (UNISWAP_V3 BASE + OPTIMISM swap rows) — forward progress from run #3/#4's
+     `2024-11-21`/`2024-11-28→29` observations, consistent single-day-per-several-minutes pace, not stalled.
+   - `mtds-perp-funding-backfill`: shard `Update time: 2026-07-12 10:01:51 GMT` (~4 min old); run.log actively writing
+     GMX funding rows for `date=2026-05-28→2026-05-29` — continued forward progress past run #4's `2025-03-01`
+     observation, now within ~6 weeks of "today" (2026-07-12) in its forward catch-up phase. The run #3 stall-fix (hard
+     VM reset) is holding; no re-stall.
+3. **Consolidator staleness — unchanged, now ~60h stale**: `availability_index.parquet` blob `Update time` still pinned
+   at `2026-07-10T21:42:30Z` — byte-identical timestamp to run #2 (03:48 UTC), run #3 (09:45 UTC), and run #4 (09:53
+   UTC). Both VMs' own run.logs show live `ManifestConsolidatorStaleError` traces confirming they see the same stale
+   snapshot. Did NOT re-run `measure_honest_coverage.py` / hygiene / phantom-reconcile — all three would return the same
+   frozen numbers already recorded in run #3/#4 (no new information), matching the established reasoning from both prior
+   runs. Still tracked, unresolved: `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`.
+4. **MORPHO issue-doc compliance gap found + fixed**: `defi_morpho_lending_indices_never_wired_2026_07_12.md`'s
+   "Recommended decision" section (filed by run #3) listed its 2 fix items as a plain numbered list
+   (`1. **[CODE] P1.** ...`), not `- [ ]` checkboxes — per RULES.md § 4.5(b) findings-closure, only checkbox-formatted
+   items get derived into dispatchable backlog tasks by `PlanRegenLoop`. Converted both items to `- [ ] [CODE] P1. ...`
+   / `- [ ] [SCRIPT] P1. ...` (plus a new `- [ ] [SCRIPT] P2.` re-verify-gate step) so the fix actually reaches the
+   backlog instead of sitting inert as prose. This was silently blocking MORPHO (~562K of the `lending_indices`
+   `expected_unattempted` mass) from ever getting picked up by another slot.
+
+**G2 GATE STATUS: FAIL (checkbox NOT flipped)** — unchanged verdict from runs #2-#4: 2 of 6 backfill VMs still genuinely
+in-flight (both confirmed making real forward progress, not stalled), the verification tool itself still can't see
+current state (consolidator frozen ~60h), and MORPHO `lending_indices` needs the now-properly-tracked adapter-wiring fix
+before that data_type can even be launched. **Net forward progress this dispatch**: confirmed both remaining VMs are
+healthy and advancing (no new stall to fix, unlike run #3), and closed a real closure-compliance gap that would have
+left the MORPHO fix undiscoverable by the backlog dispatcher.
+
+**Next re-dispatch should**: (1) re-check both VMs' shard mtimes/dates for continued forward progress (dex-swaps should
+be well past 2024-11-29; perp-funding should be closing in on or past "today"), (2) watch
+`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md` for the consolidator resuming — once it does, re-run
+`measure_honest_coverage.py` for the first REAL (non-frozen) reading since run #1, (3) check whether the now-checkbox-ed
+MORPHO fix items have been picked up/shipped by another slot, (4) if both VMs have since TERMINATED AND the consolidator
+has caught up, attempt the full G2 gate (coverage + hygiene + phantom-reconcile) for real.
