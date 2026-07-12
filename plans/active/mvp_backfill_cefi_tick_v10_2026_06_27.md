@@ -1158,3 +1158,84 @@ eu=646,863; phantom-reconcile + manifest-hygiene did not complete this session (
 
 **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM.** Verification is complete for this run within its time budget; every
 finding is filed as a tracked, actionable issue doc per findings-closure discipline.
+
+---
+
+### G4 Re-Verification Run #2 — 2026-07-12T07:20–08:05Z (GATE NOT MET — data_engineering slot-2, same-day continuation)
+
+**Re-ran `measure_honest_coverage.py --asset-group cefi` (merged) at 07:25Z** — Layer-1 already improved since the
+07:20Z checkpoint above, confirming another slot's fix for `cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`
+landed in the interim (market-tick-data-service@356457c2/57493789/4f62bd7e/c98c8856/1ccd1817/3db2e92d, all
+2026-07-12T04:56–06:04Z — wired LIGHTER-ZKSYNC/PACIFICA-SOLANA/EXTENDED-STARKNET into `OnchainPerpBatchHandler`):
+**Layer-1 71.05%→76.32% (22→18 missing tuples)**. 4 SPOT VMs confirmed RUNNING for EXTENDED-STARKNET backfill
+(`cefi-extended-starknet-{2025,2026}-20260712-{053413,055837}`) at time of check.
+
+**Investigated the 7-tuple future-itype gap (BITFINEX-FUTURES/BITGET-FUTURES/KRAKEN-FUTURES)** — dispatched a
+sub-agent + independently verified via live Tardis metadata (`api.tardis.dev/v1/exchanges/<slug>`):
+
+- `bitfinex-derivatives` → `availableSymbols` type set = `{perpetual}` ONLY. **Confirmed denominator bug**: the D2a
+  itype-gate fold (2026-07-06) declared `FUTURE` for BITFINEX-FUTURES generically without a live-data check (unlike the
+  COINBASE-FUTURES/#3-vs-#8 audit, 1cafb3c5, 2026-07-10, which got one).
+- `bitget-futures` → type set = `{future, perpetual}`. Denominator correct — genuine capture gap.
+- `cryptofacilities` (KRAKEN-FUTURES's Tardis slug) → type set = `{future, perpetual}`. Denominator correct — genuine
+  capture gap (only `derivative_ticker` missing; `trades`/`book_snapshot_5` already captured for `future`).
+
+**Fixed + shipped `unified-api-contracts@5b57c2b2`** (QG-green, `--agent` quickmerge, landed on live-defi-rollout,
+verified `git rev-list --count HEAD ^origin/live-defi-rollout` = 0): dropped the phantom
+`("BITFINEX-FUTURES", "FUTURE")` tuple from `INSTRUMENT_TYPES_BY_VENUE` (`venue_constants.py`) and the matching Tardis
+routing entry (`venue_mapping.py`). **Verified impact**: Layer-1 EXPECTED 76→73 tuples, missing 18→15, completeness
+76.32%→**79.5%**.
+
+**Launched targeted backfill** for the 2 confirmed real gaps
+(`deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`, `TARDIS_KEY_CHECK=0` bypass — key independently
+re-verified valid via direct Secret Manager + Tardis API-key-info call, same false-abort pattern as the
+2026-07-03T10:20Z entry above, PATH lacks `/snap/google-cloud-cli/current/bin`):
+`ONLY="BITGET-FUTURES:{2023..2026}:{heavy,light} KRAKEN-FUTURES:{2021..2026}:light"` — 8 BITGET-FUTURES shards
+(trades+book5+derivative_ticker, all years) + 6 KRAKEN-FUTURES shards (derivative_ticker-only, light group, since
+trades/book5 already captured for `future`). SPOT VMs, `VM_SHUTDOWN_ON_COMPLETION=true`. T+10min verification pending
+(next progress update).
+
+**DERIBIT-COMBO/options_chain/trades investigated, NOT fixable by relaunch**:
+`relabel_deribit_combo_historical_to_empty_2026_06_27.py --dry-run` (instruments-service) found **0 rows to relabel** —
+the manifest has ZERO rows of any capture_status for DERIBIT-COMBO, ever (not "wrongly typed", genuinely never
+attempted). The script's own note confirms: closing this tuple needs the instruments-service pipeline to actually
+attempt/classify DERIBIT-COMBO for at least one shard (the adapter
+`instruments_service/reference_data/adapters/cefi/deribit_combo_adapter.py` is coded to auto-classify historical dates
+as `empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]` on a real attempt, not to be retroactively relabeled).
+Also spot-checked `venue_adapter_keys.py`: `DERIBIT-COMBO→"deribit_combo"` is a LIVE-only adapter key; the comment says
+historical/batch DERIBIT-COMBO combo instruments should route via the TARDIS adapter (base exchange "deribit"), but
+`venue_mapping.py`'s `venue_instrument_type_to_tardis` has NO `DERIBIT-COMBO` entry at all — so even a plain
+`launch-cefi-sharded-backfill.sh VENUES=DERIBIT-COMBO` run would not resolve to a valid Tardis exchange slug. **This
+needs real cross-repo wiring (UAC routing entry + instruments-service catalogue tagging + MTDS symbol resolution), not a
+launch or a relabel** — filed as a new finding below rather than attempted inline (out of the "quick win" scope this
+session budgeted for).
+
+**OKX (bare venue)/options_chain/trades**: `venue_constants.py:327-335` explicitly documents bare `OKX` is NOT a real
+capture venue (data is captured under OKX-SPOT/OKX-SWAP/OKX-FUTURES); the comment says a bare-OKX caller "still
+resolves" via `mvp_instrument_universe_gap_audit` for back-compat. This looks like the SAME class of stray-denominator
+issue as the BITFINEX-FUTURES fix above (a phantom EXPECTED cell), not a backfill target — needs the same live-check
+treatment before deciding fix-denominator vs investigate-catalogue-tag. Not resolved this session (time-boxed); tracked
+in the new finding below.
+
+**Gate verdict:** ❌ **NOT MET** — Layer-1 79.5% (15 missing, was 18); Layer-2 af/eu unchanged this pass (no
+phantom-reconcile/hygiene re-run — same time-budget constraint as the prior entry); 2 backfill launches in-flight.
+
+**Blocking items remaining (ordered by impact):**
+
+1. **DERIBIT-COMBO + OKX(bare) denominator/wiring gaps** (2 tuples) — needs cross-repo investigation+fix (UAC routing +
+   IS catalogue + MTDS resolution for DERIBIT-COMBO; live-check + likely denominator fix for bare OKX). Filed:
+   `issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`.
+2. **BITGET-FUTURES + KRAKEN-FUTURES backfill** — launched this session, verify T+10min + re-run Layer-1 to confirm
+   closure (4 of the remaining 15 tuples).
+3. **ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC/PACIFICA-SOLANA book_snapshot_5** (4 tuples) — likely a genuine
+   source-limitation (on-chain perp DEXes typically don't expose L2 depth via the same REST the trades/funding use); not
+   investigated this session — needs the same live-source-capability check pattern used for BITFINEX-FUTURES.
+4. **BYBIT-SPOT stray-capture remediation** (`bybit_spot_manifest_stray_captures_2026_07_07.md`) — still open (2
+   tuples).
+5. **COINBASE-CDE/COINBASE-FUTURES(spot_pair)** (2 tuples) — not investigated this session.
+6. **`cefi_bf_2021_heavy_vm_stalled_2026_07_12.md`** — still open, infra-role, keeps BINANCE-FUTURES af>0.
+7. **Phantom reconcile + manifest hygiene** — still not re-run (time-budget constraint 2 sessions running).
+
+**Not blocked by CREDENTIALS/OPERATOR/UPSTREAM.** One code fix shipped + verified, two backfills launched + pending
+T+10min verification, one new cross-repo finding filed. Layer-1 has now moved 71.05%→79.5% across this and the prior
+same-day session.
