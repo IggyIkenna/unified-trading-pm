@@ -98,11 +98,6 @@ even ATTEMPTED, despite:
   there is no itype-vs-exchange routing split to lose (ruling out the exact bug class that hit OKX/DERIBIT-COMBO in the
   sibling issue doc).
 
-**Not yet traced (genuine remaining scope, not attempted this session — time-boxed):** WHY the symbol resolution path
-(`market_tick_data_service/market_interface/adapters/tradfi/tardis_symbol_resolution.py::_catalogue_symbols_for_venue_date`
-/ `_resolve_symbols_from_by_date_snapshot` / `_resolve_symbols`) never surfaces these 16 mvp=True SPOT_PAIR symbols for
-ANY date in 2026 for a `VENUES="COINBASE-FUTURES"` batch request.
-
 **Two UAC-declaration hypotheses CHECKED and RULED OUT this session** (both were the fastest, cheapest checks — the
 exact class of gap that blocked DERIBIT-COMBO/OKX in the sibling issue doc, so worth eliminating first):
 
@@ -113,24 +108,49 @@ exact class of gap that blocked DERIBIT-COMBO/OKX in the sibling issue doc, so w
   `VENUE_DATA_TYPE_CAPABILITIES["COINBASE-FUTURES"] = {"trades": "2024-10-31", ...}` — **`trades` IS declared** (venue-
   level, not itype-scoped, so this check passes regardless of PERPETUAL vs SPOT_PAIR). Not a missing-capability bug.
 
-So the bug is genuinely in the RUNTIME resolution/dispatch path, not a UAC declaration gap — both easy wins are
-eliminated. Remaining candidate hypotheses, neither confirmed:
+**Symbol resolution itself CHECKED and RULED OUT this session too** — called `_catalogue_symbols_for_venue_date`
+directly (no VM needed, same GCS catalogue read as Step 1 above, run locally):
 
-1. Something upstream of symbol resolution scopes the requested `instrument_type`(s) for a
-   `VENUES="COINBASE-FUTURES" DATA_TYPES=trades` batch call to PERPETUAL only, so `_resolve_symbols` (or its callers)
-   never even reach the SPOT_PAIR rows in the (correctly-populated, correctly-declared) catalogue — check whether the
-   launcher/handler passes an implicit `instrument_type` filter, or whether `download_batch`'s dispatch keys off
-   `_VENUE_SOURCE`/similar mappings that are PERPETUAL-specific for this venue.
-2. `_resolve_symbols` IS reached with the full symbol set (401 PERPETUAL + 16-19 SPOT_PAIR) but something downstream
-   partitions/filters by `instrument_type` per data_type request (e.g. a `data_type` → `instrument_type` compatibility
-   check that silently excludes SPOT_PAIR for `trades` on this venue specifically) before any fetch/manifest-write
-   happens.
+```python
+>>> _catalogue_symbols_for_venue_date("COINBASE-FUTURES", "2026-06-01")
+# INFO catalogue-lifecycle universe for COINBASE-FUTURES on 2026-06-01 = 284 symbols
+# includes: AAVE-USDC, ADA-USDC, AVAX-USDC, BTC-USDC, DOGE-USDC, ETH-USDC, HBAR-USDC,
+#           HYPE-USDC, LINK-USDC, LTC-USDC, PAXG-USDC, SOL-USDC, SUI-USDC, TAO-USDC,
+#           XLM-USDC, XRP-USDC  (all 16 mvp=True SPOT_PAIR symbols, present)
+```
 
-Whoever picks this up next should trace the actual runtime call path for a `VENUES="COINBASE-FUTURES"` launch (not just
-read the resolution functions in isolation, and not more UAC-declaration greps — both are now eliminated) — this
-session's sibling issue doc (`cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`) repeatedly found that static
-code reading undersold the actual bug count; live VM verification (with run.log inspection at the actual dispatch point,
-e.g. temporary logging around `_resolve_symbols`'s call sites) surfaced bugs a code read alone missed.
+The function returns exactly the expected 284-symbol mixed PERPETUAL+SPOT_PAIR universe, correctly including every
+mvp=True SPOT_PAIR symbol. **This is a strong, direct proof the symbol-resolution layer is NOT the bug** — do not
+re-trace `_catalogue_symbols_for_venue_date`/`_resolve_symbols_from_by_date_snapshot`, they work correctly.
+
+**Also checked: `force=True`'s scope.** `_run_preflight_availability_check(state, bucket, force)` is a full no-op when
+`force=True` (confirmed by reading the function — `if force: return` is its first line), and `VM_FORCE=true` metadata
+correctly threads to the CLI `--force` flag (`setup-data-pipeline-vm.sh:1204/1293/1510`). So the prior session's
+`VM_FORCE=true` launch genuinely DID bypass the venue-level captured-atom skip-existing check — that mechanism is not
+silently failing to apply.
+
+**So the bug is narrowed to a specific, small window: AFTER symbol resolution correctly returns all 284 symbols
+(including all 16 SPOT_PAIR), and AFTER the venue-level skip-existing check is confirmed bypassed by force=True, but
+BEFORE any manifest row (of any capture_status) gets written for the 16 SPOT_PAIR symbols specifically.** That window is
+inside `download_batch` → the actual per-symbol fetch dispatch / Tardis bulk-vs-per-symbol branching /
+`_run_per_symbol_batch` → `_emit_per_symbol_manifest`. Two candidate hypotheses for THAT narrower window, neither
+confirmed:
+
+1. A per-`instrument_type` partition/filter inside `download_batch` itself (not `_resolve_symbols`) that splits the
+   284-symbol list by itype for some OTHER reason (e.g. bulk-vs-per-symbol routing, or a Deribit-style
+   option/future-stripping step generalized incorrectly to this venue) and silently drops the SPOT_PAIR partition.
+2. A silent exception/early-return specific to symbols whose `raw_symbol` shape doesn't match what the per-symbol fetch
+   loop expects (COINBASE-FUTURES's SPOT_PAIR symbols are `XXX-USDC`, distinct in shape from its PERPETUAL symbols) —
+   worth checking whether `_run_per_symbol_batch` or its Tardis-request-URL construction has any symbol-shape assumption
+   that would fail closed (no manifest write, no exception surfaced) specifically for `-USDC` suffixed symbols.
+
+Whoever picks this up next should trace `download_batch`'s actual per-symbol dispatch loop directly (temporary logging
+around the itype-partition point, or a live VM run.log inspection at the `_run_per_symbol_batch`/
+`_emit_per_symbol_manifest` call sites) — NOT the resolution functions in isolation (`_resolve_symbols`,
+`_catalogue_symbols_for_venue_date`) and NOT more UAC-declaration greps, both already eliminated with hard evidence this
+session. This session's sibling issue doc (`cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`) repeatedly found
+that static code reading undersold the actual bug count; live verification surfaced bugs a code read alone missed — the
+same discipline applies here.
 
 ## Why it matters
 
@@ -142,21 +162,36 @@ sibling doc but not yet proven.
 
 ## Recommended decision
 
-Route to `data_engineering` — both UAC-declaration hypotheses are already ruled out (see above), so go straight to a
-live VM launch + run.log inspection at the actual dispatch point (NOT static code reading alone — see the "why it
-matters" note above). Once the code fix (if any) lands, launch a scoped
-`ONLY="COINBASE-FUTURES:2026:heavy" VM_FORCE=true` VM and confirm real `SPOT_PAIR` rows land (any `capture_status`,
-matching this doc's own diagnostic method — a manifest row-group-pushdown query, not a full 263MB download).
+Route to `data_engineering` — all 3 easy-win hypotheses (2 UAC declarations + symbol resolution) are already ruled out
+with hard evidence, so go straight to tracing `download_batch`'s per-symbol dispatch loop (temporary logging or a live
+VM run.log inspection at the actual dispatch point — NOT more static reading of the already-eliminated resolution
+functions). Once the code fix (if any) lands, launch a scoped `ONLY="COINBASE-FUTURES:2026:heavy" VM_FORCE=true` VM and
+confirm real `SPOT_PAIR` rows land (any `capture_status`, matching this doc's own diagnostic method — a manifest
+row-group-pushdown query, not a full 263MB download).
+
+**Launcher note for whoever launches the diagnostic VM**: `launch-cefi-sharded-backfill.sh` refuses to launch while
+other `cefi-*-heavy/light` VMs are running in the zone (a real singleton-lock safety check, not a bug) — use `FORCE=1`
+(the harmless lock-bypass flag, distinct from `VM_FORCE`) alongside `VM_FORCE=true` when other cefi VMs are already
+running, matching this session's and the prior session's launch commands.
 
 ## Todos
 
 - [x] ✅ [SCRIPT] P2. Check `INSTRUMENT_TYPES_BY_VENUE["COINBASE-FUTURES"]` includes `"SPOT_PAIR"` and
       `VENUE_DATA_TYPE_CAPABILITIES["COINBASE-FUTURES"]` declares `"trades"` — both checked this session, both already
       correctly declared (see "What I found" above). Not the bug; do not re-check. (repo: unified-api-contracts)
-- [ ] [SCRIPT] P2. Trace why `_resolve_symbols`'s catalogue-lifecycle path never surfaces COINBASE-FUTURES's 16 mvp=True
-      SPOT_PAIR symbols for a `VENUES="COINBASE-FUTURES" DATA_TYPES=trades` batch request — via a live VM launch +
-      run.log inspection, not static reading alone (hypotheses 1/2 above). (repo: market-tick-data-service)
+- [x] ✅ [SCRIPT] P2. Check whether `_catalogue_symbols_for_venue_date`/`_resolve_symbols` actually surface the 16
+      mvp=True SPOT_PAIR symbols — called directly this session (no VM needed), confirmed all 16 ARE returned correctly
+      (284-symbol mixed universe for 2026-06-01). NOT the bug; do not re-trace the resolution layer. Also confirmed
+      `force=True` genuinely no-ops the venue-level skip-existing preflight (read `_run_preflight_availability_check`
+      directly) — the prior session's `VM_FORCE=true` wasn't silently failing to apply either. (repo:
+      market-tick-data-service)
+- [ ] [SCRIPT] P2. Trace `download_batch`'s per-symbol dispatch loop (`_run_per_symbol_batch` →
+      `_emit_per_symbol_manifest` in `tardis_batch_download.py`) directly — via temporary logging or a live VM run.log
+      inspection at the ACTUAL dispatch point, not more static reading of the resolution layer (already proven correct).
+      Check hypotheses 1/2 above (an itype-partition point inside `download_batch` itself, or a symbol-shape assumption
+      specific to `-USDC` suffixed spot symbols). (repo: market-tick-data-service)
 - [ ] [VERIFY] P2. Once a fix lands, launch
-      `ONLY="COINBASE-FUTURES:2026:heavy" VM_FORCE=true     bash launch-cefi-sharded-backfill.sh` and confirm real
-      SPOT_PAIR manifest rows land (query the manifest with a row-group-pushdown filter, not the full-download approach
-      that timed out once in this session). (repo: deployment-service)
+      `ONLY="COINBASE-FUTURES:2026:heavy" VM_FORCE=true FORCE=1     TARDIS_KEY_CHECK=0 bash launch-cefi-sharded-backfill.sh`
+      (see launcher note above) and confirm real SPOT_PAIR manifest rows land (query the manifest with a
+      row-group-pushdown filter, not the full-download approach that timed out once in this session). (repo:
+      deployment-service)
