@@ -271,6 +271,28 @@ observation rather than the most recent `written_at`. This needs a real regressi
 above) before it ships, and confirmation it doesn't regress the `0de04b6e` genuine-dup cleanup or introduce a new
 `800af156`-class scaling regression.
 
+**Corroborating evidence (2026-07-12, slot-8) — corpus-wide orphan-sweep against the still-lossy (pre-restoration,
+pre-fix) manifest supports the "row-dedup collapse, not object loss" mechanism.** Ran a full unlimited
+`migration_orphan_sweep.py --asset-group tradfi` (10,584,913 objects walked, 18m49s, report at
+`_index/audit/orphan_sweep_tradfi_20260712_prerestoration.parquet` — deliberately a distinct path from the real
+post-restoration report so it can't be mistaken for that gate's certification) directly against the CURRENT manifest
+(still missing the ~1.02M rows — restoration/fix todos below are still open). Result:
+`A_canonical_manifested=2,594,017 · B_legacy_duplicate=995 · C_manifest_infra=41 · C2_non_data=7,884,651 · D_junk=105,207 · E_orphan_real=2`
+— i.e. **essentially zero corpus-wide orphans despite the manifest missing 705,881 `captured`-status rows.** The 2
+flagged E objects are both 2026-07-10 CBOE/VIX-futures (`ohlcv_1m`/`ohlcv_1s`), i.e. live-writer trickle at the
+loss-window boundary, not part of the ~1M-row population. If the loss were real GCS objects losing ALL manifest
+coverage, this sweep (which walks every physical object and checks for ANY matching manifest cell) should have found
+hundreds of thousands of Class-E orphans — it found 2. This is consistent with (does not independently prove, but
+corroborates) the root-cause finding above: the collapsed rows are a manifest-row-level last-write-wins dedup between
+two SOURCES describing the SAME `(date, venue, data_type, underlying)` cell, so the physical objects generally still
+resolve to `A_canonical_manifested` via whichever row survived the collapse (or a same-cell sibling row) — the loss is
+real (a specific source's provenance/row_count got silently dropped, per the `row_count=42` vs `row_count=0` sample
+above) but does not manifest as GCS-orphaned data at this sweep's per-cell granularity. Evidence this run is NOT a
+substitute for task 2's real gate re-confirmation: it ran BEFORE the restore and BEFORE the fix todos below, per a
+direct operator override of BLK-5145398b (main's answer to that blocked question was to hold task 2's re-run until after
+restoration, adding `prereqs.completed_tasks:[tradfi_manifest_row_loss_regression-003]` to the backlog entry — that gate
+stays in place for future dispatch; this one run proceeded ahead of it under the operator's explicit "proceed now").
+
 ## Why it matters
 
 - This is the SAME manifest every other checkbox in `tradfi_v9_stage1_finish_2026_07_06.md` certified against: task 2's
@@ -337,7 +359,15 @@ above) before it ships, and confirmation it doesn't regress the `0de04b6e` genui
       is fixed and confirmed non-recurring (repo: market-tick-data-service).
 - [ ] [DATA] P1. Re-run task 2's orphan-sweep (`migration_orphan_sweep.py --asset-group tradfi`) after the restoration
       to re-confirm `orphan_class_E=0` still holds — the 2026-07-10T17:17Z GREEN certification may not survive against
-      the current (or restored) manifest state (repo: instruments-service).
+      the current (or restored) manifest state (repo: instruments-service). **🚧 PRE-RESTORATION BASELINE RUN DONE
+      2026-07-12 (slot-8, via direct operator override of BLK-5145398b — see "Corroborating evidence" in "Root cause
+      CONFIRMED" above for the full readout): `orphan_class_E=2` (target 0), both explainable as loss-window-boundary
+      live-writer trickle, not the ~1.02M-row loss. Left UNCHECKED — this run is NOT the gate the todo asks for (it ran
+      before restoration AND before the fix), just corroborating evidence for root-cause. The real gate re-confirmation
+      still needs a fresh run after both the "Implement + test + deploy the fix" and "Restore the missing rows" todos
+      below are done; `prereqs.completed_tasks:[tradfi_manifest_row_loss_regression-003]` is already wired into the
+      backlog entry for that dispatch. Given E=2 pre-restoration, the post-restoration re-run is expected to be a fast
+      confirmation, not a new investigation.**
 - [x] ✅ [DATA] P2. Add a row-count sanity check (delta vs. the last known-good snapshot, alert on any drop >0.1%) to
       whichever job writes `_index/availability_index.parquet`, so a future regression of this class is caught
       immediately rather than 2 days later by an unrelated task's re-verification (repo: market-tick-data-service or
@@ -366,6 +396,23 @@ above) before it ships, and confirmation it doesn't regress the `0de04b6e` genui
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-12** — slot-8 (sonnet/high, data_engineering), dispatched to `tradfi_manifest_row_loss_regression-004` (P1,
+  orphan-sweep re-run). Task text explicitly gates on restoration ("-003", dispatched to slot-4, not done at dispatch
+  time) and the fix ("Implement + test + deploy the fix" P0, unassigned, not done). Filed BLK-5145398b asking whether to
+  hold (recommended: attach `prereqs.completed_tasks` so this task stops mis-dispatching early) or run anyway as a
+  pre-restoration baseline. Main answered "hold" (option B, added the prereqs gate to the backlog entry) — but the
+  operator directly said "proceed now" in-session BEFORE that answer arrived, so ran the sweep under that override
+  rather than kill an in-flight corpus walk on a race between two valid signals. Full unlimited sweep (`--workers 64`,
+  10,584,913 objects, 18m49s @ ~10.5-11.6k objs/s) against the current (still ~1.02M rows short, pre-fix) manifest:
+  `orphan_class_E=2` (target 0) — both flagged objects are 2026-07-10 CBOE/VIX-futures trickle, not the known loss
+  population. Report written to a distinctly-named path
+  (`_index/audit/orphan_sweep_tradfi_20260712_prerestoration.parquet`) so it can't be mistaken for the real
+  post-restoration/post-fix certification. Added this as corroborating evidence to the "Root cause CONFIRMED" section
+  (near-zero orphans despite ~1M missing manifest rows is consistent with slot-7's row-dedup-collapse mechanism, not
+  object-level data loss). **Did NOT flip this task's checkbox** — the literal gate (re-run after restoration) is not
+  yet met; left a 🚧 partial-progress note instead so this doesn't read as false-complete. `prereqs.completed_tasks` now
+  correctly gates any future dispatch of this task on `-003`. No code change — issue doc ships via the PM `docs(plans):`
+  carve-out.
 - **2026-07-12** — slot-5 (sonnet/high, data_engineering). Closed the P2 row-count sanity-check todo —
   `unified-trading-library@52d5921a`. New `_check_row_count_regression()` helper wired into `_duckdb_merge_payload()`
   (right after `rows_out` is computed): compares the merged output against `canon_rows` (the pre-merge canonical, i.e.
