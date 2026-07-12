@@ -263,16 +263,37 @@ catches it. `quality-gates.sh` green (sentinel verified for `21d8cb3`), quickmer
 republished the tarball itself: `create-code-tarballs.sh --include alerting-service` — confirmed
 `alerting-service-code.manifest.json` now reads `commit_sha=4b3aad7181cb782c1ea41677fa1e720765aad88f` (current HEAD).
 
-- [ ] [INFRA] P1. Add a CI/quickmerge-triggered auto-republish (or a pre-launch freshness check in the launcher scripts)
-      so tarball staleness — for ANY repo, not just the ones this audit happened to check — can't silently recur.
-      Candidate shapes: (a) a `live-defi-rollout` push-triggered GHA/Cloud Build step per repo that calls
+- [x] ✅ [INFRA] P1. Add a CI/quickmerge-triggered auto-republish (or a pre-launch freshness check in the launcher
+      scripts) so tarball staleness — for ANY repo, not just the ones this audit happened to check — can't silently
+      recur. Candidate shapes: (a) a `live-defi-rollout` push-triggered GHA/Cloud Build step per repo that calls
       `create-code-tarballs.sh --include <repo>` automatically (mirrors the `ldr-to-main-promote` push-triggered pattern
       already in use elsewhere), or (b) a pre-launch precondition in every `launch-*.sh` that compares the target
       tarball's `.manifest.json` `commit_sha` against `git rev-parse origin/live-defi-rollout` for that repo and
       refuses/warns on mismatch (composes with the existing `[INFRA] P2` GCS-publish-race todo above — both are "is the
-      artifact this VM is about to fetch actually current" checks and could share one precondition helper). Not
-      attempted inline — this is genuine design work (push-trigger plumbing or a new launcher precondition helper), out
-      of scope for an audit-and-fix-what's-stale dispatch. (repo: `deployment-service`)
+      artifact this VM is about to fetch actually current" checks and could share one precondition helper). (repo:
+      `deployment-service`) — **Done 2026-07-12 (slot-6, infra). `deployment-service@7ae9013`.** Shipped candidate (b)
+      as a reusable shared helper `lc_verify_tarball_freshness` in `scripts/vm/lib/launcher_common.sh` (+ its SSOT
+      repo→tarball-name mapper `lc_tarball_name_for_repo`, the one special case being `market-tick-data-service` →
+      `mtds-code`). For each repo the VM will fetch, it reads the floating `gs://<bucket>/code/<tarball>.manifest.json`
+      `commit_sha` and compares against the workspace clone's current git SHA (or `origin/<ref>` when
+      `LC_TARBALL_FRESHNESS_FETCH=true`), acting per `LC_TARBALL_FRESHNESS`: `off` | `warn` (default — loud WARNING +
+      exact `create-code-tarballs.sh --include <repo>` remedy, never blocks) | `enforce` (refuses the launch, rc=1) |
+      `auto` (republishes the stale repo(s), re-verifies, continues). Missing/unreadable manifest is treated as stale;
+      git/gsutil absence is a warn-and-skip so a tooling gap never blocks a launch. Wired into the exact incident
+      launcher `launch-mtds-lending-indices-backfill-vm.sh` (sources the lib + calls the guard for
+      mtds-code/UAC/UTL/deployment-service before the `gcloud create`, skipped in `--dry-run`). This catches staleness
+      one step EARLIER than the existing VM-side `TARBALL_EXPECTED_SHA` gate in `setup-data-pipeline-vm.sh` — before the
+      VM boots and burns SPOT compute. 7 new unit tests in `tests/unit/test_vm_launcher_scripts.py`
+      (`TestTarballFreshnessGuard`): name-mapping, off short-circuit, fresh-passes, stale-warn-doesn't-block,
+      stale-enforce-blocks, missing-manifest-enforce-blocks, incident-launcher-wiring. Full `quality-gates.sh` green
+      (sentinel verified for 7ae9013); quickmerge landed on `live-defi-rollout`. Fleet-wide rollout to the other ~153
+      launchers is left as the mechanical follow-up below (the design work — the helper — is done here).
+- [ ] [INFRA] P2. Roll the `lc_verify_tarball_freshness` pre-launch guard out across the remaining `launch-*.sh` fleet
+      (only `launch-mtds-lending-indices-backfill-vm.sh` is wired so far). Each launcher sources
+      `lib/launcher_common.sh` and calls the guard with the repos its VM fetches (derivable from its `VM_SERVICE` +
+      asset-group), before the `gcloud create`. Mechanical follow-up to the P1 above — the helper + reference wiring
+      already exist. Consider a QG guard analogous to `TestDurableLogStreamerCoverage` that asserts every
+      tarball-fetching launcher wires the freshness check. (repo: `deployment-service`)
 - [x] ✅ [INFRA] P3. Delete the orphaned `market-tick-data-service-code.tar.gz` / `.manifest.json` pair from
       `gs://deployment-scripts-central-element-323112/code/` — confirmed zero launcher references (`mtds-code.tar.gz` is
       the only name `create-code-tarballs.sh` ever produces for this repo); the orphan cost this audit an extra
