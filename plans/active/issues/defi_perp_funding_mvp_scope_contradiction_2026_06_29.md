@@ -174,6 +174,18 @@ and the v10 G2 perp_funding gate are valid.
 - [ ] [SCRIPT] P2. If Option 1/3: confirm Hyperliquid perp funding is captured via cefi
       `funding_rate`/`derivative_ticker` and is not silently dropped by removing defi `perp_funding`. Repo:
       `market-tick-data-service`.
+- [x] [SCRIPT] P1. Fix the DRIFT SPOT_PAIR `perp_funding` leak (bundled `_PERPS` instrument_types with no
+      per-instrument_type data_types split) via `VALID_DATA_TYPES_VENUE_EXCLUSIONS`; add regression tests. Repo:
+      `unified-api-contracts`. ✅ — `unified-api-contracts@b7cf3106` (2026-07-11).
+- [ ] [OPERATOR] P0. Decide the DRIFT V2 sig-index Helius throughput path: (a) upgrade the Helius API plan for higher
+      RPS, (b) launch N more parallel-walker VM segments (`build_drift_v2_sig_index.py --before-sig`) to divide the
+      ~11-month unindexed gap (2025-01-15 → 2025-12-23), or (c) accept the gap and mark those dates
+      `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]`-equivalent out-of-reach, closing the AO item without full coverage.
+      Blocks the actual DRIFT perp_funding backfill VM re-launch (AO item `mvp_backfill_defi_onchain_v10-010`).
+- [ ] [SCRIPT] P2. Once the operator rules on the todo above: re-run the DeFi expected-universe enumerator
+      (`instruments-service/scripts/enumerate_expected_universe.py`) so the manifest's `expected_unattempted` grid picks
+      up the SPOT-leak fix (currently only stops NEW wrong rows; existing 51,301-row snapshot is stale until
+      re-enumerated). Repo: `instruments-service`.
 
 ## Codex SSOTs
 
@@ -224,3 +236,43 @@ filed to track is closed.
   the Helius-ceiling / sig-index work is picked up, worth a fresh explicit confirm that "in MVP scope" (now true) also
   means "worth spending the backfill effort now" — those are two different questions this doc's Option 1/2/3 only
   partially separates.
+
+### 2026-07-11 — picked up AO item `mvp_backfill_defi_onchain_v10-010`; found + fixed a second, separate bug; the real
+
+### backfill is genuinely blocked on a Helius infra/cost decision
+
+Slot 3 (data_engineering) picked up the reopened AO todo "Backfill the 424 DRIFT perp_funding cells." Live-state
+investigation found the plan's "424" figure is now stale — the current availability manifest
+(`_index/availability_index.parquet`) shows DRIFT `perp_funding`: `captured=8`, `attempted_failed=39` (stale
+`attempted_at=2026-05-31`, error `drift_v2_sig_index.parquet missing`), and **`expected_unattempted=51,301`** across 41
+distinct `instrument_id`s.
+
+**New bug found + FIXED (shipped `unified-api-contracts@b7cf3106`):** most of those 41 instrument_ids are DRIFT SPOT
+markets (`DRIFT-SOLANA:SPOT:BSOL`, `:USDE`, `:PYUSD`, `:JITOSOL`, `:LBTC`, `:CBBTC`, `:BONK`, `:PYTH`, `:DRIFT`,
+`:EURC`, `:SUSDE`, `:WBTC`, `:JUP`, ...) — SPOT instruments structurally cannot have a funding rate. Root cause:
+`unified_api_contracts/registry/capability_declarations/_defi.py`'s `drift` entry bundles `instrument_types=_PERPS`
+(`[PERPETUAL, SPOT_PAIR]`) with a single `data_types=["perp_funding","oracle_prices"]` list applied to both types — the
+`_ProtocolCapability` schema has no per-instrument_type data_types split, so
+`valid_data_types_for_venue_instrument_type` (`market_data_categories.py:1121-1123`) returns the full `perp_funding`
+grant for DRIFT SPOT markets too. Fixed via the existing `VALID_DATA_TYPES_VENUE_EXCLUSIONS` mechanism (same pattern as
+the prior ICE `futures_chain`/`ohlcv_1s` fix): added `("defi", "DRIFT", "spot_pair"): frozenset({"perp_funding"})`, kept
+`oracle_prices` (legitimately applies to SPOT). 4 new regression tests in
+`tests/test_valid_data_types_by_instrument_type.py`. This will shrink the `expected_unattempted` count once the manifest
+is next re-enumerated (not yet re-run — enumeration is a separate, scheduled process; this fix only stops NEW rows from
+being seeded wrong).
+
+**What's still genuinely blocked (todo 3, unchanged) — this IS an operator decision, not something fixable in code:**
+confirmed via GCS row-group inspection that the consolidated `_index/drift_v2_sig_index.parquet` still does not exist.
+Two partial part-sets exist from the prior stalled effort: `_index/drift_v2_sig_index_parts/` (6,293 parts, Builder #1
+walking HEAD backwards, covers blockTime range **2025-12-23 → 2026-05-29**) and `_index/drift_v2_sig_index_parts_b/`
+(876 parts, Builder #2 parallel walker, covers **2024-10-31 → 2025-01-15**). There is a genuine **~11-month unindexed
+gap (2025-01-15 → 2025-12-23)** neither builder ever walked. Also confirmed: Drift's public S3 historical archive
+(`_backfill_drift_s3_date` in `market-tick-data-service`) only covers up to 2025-01-07/08 (V1→V2 migration) — past that
+date the ONLY path to historical funding data is walking Solana tx signatures via Helius RPC `getSignaturesForAddress`,
+which is exactly what hit the 429-burst rate-limit wall documented in G1.5 above. This is a real Helius API
+plan/throughput ceiling, not a retry/backoff code bug (the builder script `build_drift_v2_sig_index.py` already retries
+with backoff, 5 attempts, up to ~30s, before giving up per page). Closing an 11-month gap at the previously-observed
+serial throughput (~85-90 sig-pages/min, one VM) is impractical without either (a) a paid Helius plan upgrade for higher
+RPS, or (b) launching several more parallel-walker VM segments (`--before-sig` / `--parts-prefix`) to divide the gap —
+both are cost/infra tradeoffs an operator needs to weigh, not something this agent can decide or execute unilaterally.
+Filed as a `/blocked` on the AO todo rather than guessing.
