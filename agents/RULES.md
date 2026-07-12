@@ -150,14 +150,21 @@ Parking TUNES an already-derived entry — you never author a new one. On the ta
 
 ```yaml
 priority: 999 # pushes to back of queue
+priority_override: true # REQUIRED — stops regen()/PlanRegenLoop from reverting priority to the plan-derived value
 prereqs:
-  conditions:
+  prerequisites:
     - utl-base-dependency-checker-migrated # create it false via POST /api/prerequisites/<name> first
 ```
 
 Reload (`POST /api/backlog/reload`). The task stays at `priority: 999` (effectively never dispatched while
-higher-priority work exists) AND the false condition gates it as a second safety. To unpark: flip the condition GREEN
-(`POST /api/prerequisites/<name>` `{value: true}`) + lower the priority.
+higher-priority work exists) AND the false condition gates it as a second safety. **`priority_override: true` is
+mandatory** — without it, the next `regen()` tick (manual `POST /api/backlog/regen` OR any natural `PlanRegenLoop`
+cycle, which fires every few minutes) reverts `priority` back to the plan's P-tag-derived value, silently un-parking the
+task within minutes (2026-07-12 incident, fixed in `_reconcile_task_fields`). `POST /api/backlog/reload` alone does
+NOT call `regen()` and therefore never reverts `priority` — but relying on reload-only is fragile since any other
+regen path still fires on its own schedule. To unpark: flip the condition GREEN (`POST /api/prerequisites/<name>`
+`{value: true}`) + lower `priority` + clear `priority_override` (delete the key or set `false`) so the task tracks its
+plan-derived priority again.
 
 ### Delete a task (permanent removal)
 
@@ -174,10 +181,12 @@ activity event for the audit trail.
 1. CREATE the condition via the API — `POST /api/prerequisites/<condition-name>` `{value: false, set_by: "main"}`. The
    endpoint UPSERTS (an unknown name is created on first POST); there is no separate `/api/conditions` surface, and no
    YAML edit is needed to bring a condition into existence.
-2. ATTACH it to a task: add `prereqs.conditions: [<condition-name>]` on the task's entry in `data/config/backlog.yaml`,
-   then `POST /api/backlog/reload`. This attachment is the ONE tuning that is still yaml-only — the regen does NOT yet
-   derive per-task `prereqs.conditions` from plan todos (plan-level ordering comes from `depends_on` + `gate_on_depends`
-   / `sequential` frontmatter instead), and the regen PRESERVES hand-tuned prereqs on derived entries.
+2. ATTACH it to a task: add `prereqs.prerequisites: [<condition-name>]` (NOT `prereqs.conditions` — that key does not
+   exist on the `TaskPrereqs` schema and is silently dropped by pydantic on every load, verified 2026-07-12) on the
+   task's entry in `data/config/backlog.yaml`, then `POST /api/backlog/reload`. This attachment is the ONE tuning that
+   is still yaml-only — the regen does NOT yet derive per-task `prereqs.prerequisites` from plan todos (plan-level
+   ordering comes from `depends_on` + `gate_on_depends` / `sequential` frontmatter instead). `prereqs.prerequisites` is
+   a real, declared model field, so it round-trips normally on every load/save — nothing special needs to preserve it.
 3. Later: flip it GREEN via the same `POST /api/prerequisites/<condition-name>` `{value: true, set_by: "main"}`.
 
 The dashboard's Conditions panel shows the toggle + `gates_queued` count. Reload is non-destructive — existing
