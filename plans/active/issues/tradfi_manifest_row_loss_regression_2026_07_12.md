@@ -368,12 +368,49 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
       `Evidence: cloudbuild=<id>`, which this turn does not have): the library fix is merged to LDR but the Cloud Run
       Jobs that actually run it (`uts-prod-manifest-consolidator-market-data-*`) are still executing the PRE-FIX image
       until that image is rebuilt and the jobs are refreshed.
-- [ ] [INFRA] P0. **Deploy the fix** — fan `unified-trading-library@cf2e196b` to all 5 asset groups' Cloud Run jobs per
-      the `0de04b6e` rollout precedent (see `d3c36842`'s rollout in the Progress Log above: a downstream commit in
-      `market-tick-data-service` — even a no-op vendoring bump — is needed to trigger THAT repo's own Cloud Build, since
-      `unified-trading-library` is an editable-path dependency baked in at MTDS's image-build time, not something a
-      library-only merge auto-rebuilds). Steps: (1) land a market-tick-data-service commit that picks up the new UTL
-      source (rebuild trigger); (2) confirm the Cloud Build for `market-tick-data-service:latest` succeeds — cite
+
+      **SECOND, INDEPENDENT root cause + fix found (2026-07-12, slot-4)** —
+          `unified-trading-library@2ba20527`. The cross-source-collision mechanism above is real but does NOT explain the
+          full loss pattern by itself: sampling 2000 of the missing 8-column-key rows found their (source-excluded)
+          consolidator-key group was **absent from the live index entirely** — not collapsed to a single surviving
+          sibling row, which cross-source collision alone would produce. Root-caused a second, separate bug via the
+          non-snap `gcloud` (Cloud Logging IS usable in this slot; GCS Data Access audit logs for `storage.googleapis.com`
+          are OFF project-wide though — confirmed zero entries, only BigQuery/IAM — see the new P2 todo below):
+          `_get_canonical_mtime()` (used to decide `canonical_present` / incremental-vs-full-rebuild) swallowed **any**
+          exception from `blob.reload()` — not just a genuine NotFound/404 — via
+          `with contextlib.suppress(Exception): reload()`, then fell through to reading a never-reloaded blob's empty
+          `.metadata`/`.updated` defaults, returning `None` for a canonical that GENUINELY EXISTS. The caller
+          (`consolidate()`) reads `canonical_mtime is None` as "cold bucket" and runs a FULL REBUILD with
+          `canonical_present=False`, which skips downloading the real canonical entirely and writes back ONLY the
+          current cycle's shards — silently discarding every row whose backing per-VM shard had already been pruned
+          (shards are deleted once "settled" into canon; a row with no shard backup is unrecoverable from that cycle's
+          inputs). This explains the 3.37M rows in the live index still carrying `written_at=2026-07-07` (reconstructed
+          from not-yet-pruned shards, original timestamp preserved) alongside the ~1.02M genuinely gone (their shards had
+          already been pruned by the time the bad cycle ran) — a pattern cross-source collision alone doesn't produce
+          (collision collapses a group to ONE surviving row; this bug removes the group with no survivor at all). Could
+          not obtain a Cloud Logging line confirming the exact cycle this fired on — this Cloud Run job's own
+          `logger.warning`/`logger.exception` calls don't reach Cloud Logging as `textPayload` (confirmed: the ONLY
+          `textPayload` this job ever emits is `"Container called exit(0)."` — a separate observability gap, not filed as
+          its own todo here since it's out of this doc's scope, but worth a future audit of whether Cloud Run's Python
+          logging handler is wired to stdout for this job family). Fix: only a genuine not-found (`FileNotFoundError`/
+          `NotFound`/`Forbidden`/`404`) now returns `None`; any other exception propagates to `consolidate()`'s existing
+          top-level handler, which already fails the cycle safely (log + `MANIFEST_CONSOLIDATION_FAILED` ERROR-severity
+          alert + no write) instead of truncating the canonical. Also fixed an adjacent test-isolation bug found while
+          adding regression tests: `get_project_id()` is `@lru_cache(maxsize=1)` but `clear_client_caches()` never reset
+          it, so `test_event_sink_factory.py::TestGcpEventSink` flaked under the full `quality-gates.sh` xdist run
+          depending on worker test order (passed in isolation) — `clear_client_caches()` now clears it too. 2 new
+          regression tests for the mtime-probe fix + 1 for the cache-clear fix; full `quality-gates.sh` green (127s, after
+          the cache-clear fix — the pre-existing flake reproduced deterministically 3x before being root-caused and
+          fixed, not waved off).
+
+- [ ] [INFRA] P0. **Deploy the fix(es)** — fan **both** `unified-trading-library@cf2e196b` (cross-source dedup
+      collision) **and** `unified-trading-library@2ba20527` (mtime-probe-failure → accidental full-rebuild) to all 5
+      asset groups' Cloud Run jobs per the `0de04b6e` rollout precedent (see `d3c36842`'s rollout in the Progress Log
+      above: a downstream commit in `market-tick-data-service` — even a no-op vendoring bump — is needed to trigger THAT
+      repo's own Cloud Build, since `unified-trading-library` is an editable-path dependency baked in at MTDS's
+      image-build time, not something a library-only merge auto-rebuilds). Both fixes are already on LDR in sequence, so
+      one deploy cycle picks up both. Steps: (1) land a market-tick-data-service commit that picks up the new UTL source
+      (rebuild trigger); (2) confirm the Cloud Build for `market-tick-data-service:latest` succeeds — cite
       `Evidence: cloudbuild=<id>` per the deploy-evidence HARD RULE; (3) force-refresh each
       `uts-prod-manifest-consolidator-market-data-{cefi,defi,tradfi,sports,prediction}` Cloud Run Job (confirm whether
       each job's config pins `:latest` — picks up automatically on next `*/1 * * * *` tick — or a fixed image digest,
@@ -423,6 +460,26 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-12** — slot-4 (sonnet/high, data_engineering), dispatched to `tradfi_manifest_row_loss_regression-003`
+  ("Restore the 1,017,024 missing rows"). Did NOT touch the restore (still genuinely gated on root-cause per this doc's
+  own "Recommended decision" #2). Instead found and shipped a SECOND, independent root cause — see the note appended to
+  todo 3 above for the full mechanism. Summary: sampled 2000 missing rows and found their (source-excluded) dedup-key
+  group was completely ABSENT from the live index, not collapsed to one surviving row — a pattern the already-shipped
+  cross-source-dedup fix (`cf2e196b`, slot-2) doesn't produce (that mechanism collapses a group to 1 survivor; it
+  doesn't erase a group with zero survivors). Traced to `_get_canonical_mtime()` swallowing ANY `blob.reload()`
+  exception (not just genuine not-found) and falling through to a never-reloaded blob's empty defaults →
+  `canonical_mtime=None` → caller treats a bucket with a REAL canonical as cold → full-rebuild-from- shards-only that
+  never reads the canonical, discarding every row whose backing shard was already pruned. Fixed:
+  `unified-trading-library@2ba20527` (only a genuine not-found now returns `None`; anything else propagates to
+  `consolidate()`'s existing safe top-level handler — log + alert + no write, retried next cycle). Also fixed an
+  adjacent `get_project_id()` `@lru_cache` test-isolation bug found while adding regression tests (confirmed
+  deterministic — reproduced 3x — before fixing, not assumed). Full `quality-gates.sh` green (127s) after both fixes.
+  Flipped todo 4 (deploy) to reference both commits since one deploy cycle picks up both; did NOT flip todo 3 (already
+  ✅ from slot-2/7) since it's a different checkbox's claim — appended my finding to it instead so the deploy step and
+  any future reader knows there were two independent bugs, not one. GCS Data Access audit logging confirmed OFF
+  project-wide (only BigQuery/IAM) while investigating todo 1 — corroborates the existing P2 todo below rather than
+  duplicating it.
 
 - **2026-07-12** — slot-2 (sonnet/high, data_engineering), dispatched to `tradfi_manifest_row_loss_regression-008`
   ("Implement + test + deploy the fix"). Implemented + shipped the CODE portion — `unified-trading-library@cf2e196b`.
