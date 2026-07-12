@@ -142,22 +142,27 @@ the zero-rows pattern was confirmed, to stop burning SPOT spend on a guaranteed-
       only being discoverable by grepping run.log for `venues=[]`. 2 new unit tests
       (`test_resolve_venues_drops_unsupported_and_warns`, `test_resolve_venues_all_supported_no_warning`).
       quality-gates.sh green (899/900 lines, under the file-size cap after a ruff reformat).
-- [ ] [CODE] P2. Wire LIGHTER-ZKSYNC into `OnchainPerpBatchHandler` via a Tardis-integrated fetch path (repo:
-      market-tick-data-service). Deferred from the P1 item above — genuinely different shape of work, not a same-pattern
-      extension: - `/recentTrades` (trades) and `/orderBookOrders` (book) on Lighter's own REST are BOTH
-      current-snapshot-only (no historical start/end params) — structurally can't serve a backfill day that isn't
-      "today", unlike Pacifica's `/trades/history` (cursor-paginated) and Extended's `/info/markets/{symbol}/trades`
-      (cursor-paginated). - `derivative_ticker` (funding) has NO native-REST source in `adapters/_umi_lighter.py` at all
-      — it's Tardis-only, and only from 2026-04-17 (`pipeline_mode_resolver._VENUE_OVERRIDES["LIGHTER"]` — note that key
-      is currently DEAD due to a `LIGHTER` vs `LIGHTER_ZKSYNC` normalization mismatch, confirmed 2026-07-07, left as-is
-      per prior operator triage). - Net effect: naively adding LIGHTER-ZKSYNC to the P1 item's allowlist would exclude
-      every one of its default data_types from the batch universe (trades/book live-only, derivative_ticker
-      unimplemented here) — 0 shards touched, same silent-zero outcome as the original bug, just relocated. - Correct
-      fix needs date-branching dispatch mirroring `umi_tick_provider._route_lighter` (REST pre-2026-04-17 — though REST
-      doesn't actually cover historical trades/book either, so pre-2026-04-17 LIGHTER-ZKSYNC may have NO viable batch
-      source for trades/book at all — needs a design decision) + a `TardisAdapter.download_batch` integration for
-      derivative_ticker post-2026-04-17. Recommend routing this as its own scoped plan/task rather than a quick handler
-      patch.
+- [x] ✅ [CODE] P2. Wire LIGHTER-ZKSYNC into `OnchainPerpBatchHandler` via a Tardis-integrated fetch path (repo:
+      market-tick-data-service) — `market-tick-data-service@57493789`. **Design decision resolved**: trades/book stay
+      excluded (added to `_LIVE_ONLY_DATA_TYPES`, same as originally deferred — Lighter's REST is snapshot-only for
+      both, no historical range param, no viable batch source at any date; captured going forward by the live WS
+      connector). Only `derivative_ticker` is wired, and ONLY via delegation — the whole (venue, day) leg is handed to
+      the existing, already-tested `umi_tick_provider.fetch_tick_data_for_venue` → `_route_lighter` →
+      `TardisAdapter.download_batch` call (Tardis coverage 2026-04-17+; no code change to that path, just a new caller).
+      This was necessary because `download_batch` self-writes the canonical parquet AND self-records its own manifest
+      rows (`pipeline_mode=BATCH_TARDIS`) in one call for every requested symbol — it cannot fit the handler's normal
+      per-(data_type,symbol)-shard "return rows, handler writes+records" contract without a double manifest write, so
+      the new `_onchain_perp_batch_lighter.py` stage module calls it ONCE per (venue, day) — not once per symbol/shard —
+      and skips the handler's own manifest write for that leg entirely. Days before 2026-04-17 record
+      `EXPECTED_PRE_SOURCE_COVERAGE_START` honest absence per symbol with NO network call (no viable source exists that
+      far back for any data_type — resolves the "needs a design decision" question from the original deferral: there is
+      none). `_process_venue` was split (`_process_umi_or_native_venue` moved to `_onchain_perp_batch_umi.py`) to stay
+      under the 900-line codex ratchet after the new dispatch branch. 14 new/updated unit tests (pre-coverage no-network
+      absence, post-coverage single delegated call across N symbols — not N calls, top-level-failure per-symbol
+      attempted_failed, no-op when derivative_ticker isn't requested, symbol-mapping, `_resolve_venues` no longer drops
+      LIGHTER-ZKSYNC, `_process_venue` routing wiring) — all pass. quality-gates.sh green (890/900 handler lines).
+      **VERIFY re-launch is a separate follow-up** (this issue doc's item-4 VERIFY explicitly excluded LIGHTER-ZKSYNC
+      pending this fix — file a new `[VERIFY]` todo when ready to re-launch and confirm real rows land for 2026-04-17+).
 - [x] ✅ [VERIFY] P1. Re-launch the PACIFICA-SOLANA/EXTENDED-STARKNET backfill now that the code fix has landed and
       confirm real rows write (see recommendation 3). (repo: deployment-service) — **PARTIAL: EXTENDED-STARKNET
       verified, PACIFICA-SOLANA blocked by a NEW bug (see follow-up todo below).** - First launch
@@ -205,3 +210,11 @@ the zero-rows pattern was confirmed, to stop burning SPOT spend on a guaranteed-
       only via `VENUES="PACIFICA-SOLANA"       bash scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` and
       re-verify real rows per the same method as item 3 above (remember to rebuild the code tarball via
       `create-code-tarballs.sh` first — see the stale-tarball note on item 3).
+- [ ] [VERIFY] P2. Re-launch LIGHTER-ZKSYNC derivative_ticker now that the Tardis-delegated code fix has landed
+      (`market-tick-data-service@57493789`) and confirm real rows write for 2026-04-17+ — check run.log for
+      `venues=['LIGHTER-ZKSYNC']` and the delegated-Tardis-call log line, then verify via the manifest (Tardis
+      self-records under `pipeline_mode=BATCH_TARDIS`, NOT this handler's own manifest write — see the item-3 CODE note
+      above) that rows actually landed, not just VM RUNNING status. Rebuild the code tarball via
+      `create-code-tarballs.sh` first (see the stale-tarball gotcha on item 3/4). Dates before 2026-04-17 should show
+      `EXPECTED_PRE_SOURCE_COVERAGE_START` honest-absence rows with no fetch attempt — spot-check one such date's
+      manifest row to confirm the no-network-call path also behaves as coded. (repo: deployment-service)
