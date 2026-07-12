@@ -271,6 +271,47 @@ singleton-lock namespace → may run concurrently.
 
 ## Progress Log
 
+### 2026-07-12 ~05:3x UTC — slot-9: item #5 — inherited closer stalled on footystats API timeouts, BLOCKED-UPSTREAM-OUTAGE filed (BLK-99a8414c)
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-001` (item #5, footystats history → zero-missing).
+
+**Found live inherited WIP on boot**: slot-6 had already shipped `instruments-service@e54ffc2a`
+(`scripts/backfill/footystats_residual_closer_2026_07_12.py`) — the todo #4 closer from
+`plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md`, all 3 of whose CODE-fix prereqs (todos
+#1/#2/#6) were already shipped. Its typing pass had already run (03:58:04 UTC): 45,544 out-of-subscription rows typed
+`EXPECTED_NO_PROVIDER_COVERAGE` (PREDICTIONS=39,566, MATCHES=5,703, ODDS=275), cutting the raw `source=footystats`
+residual sharply (live baseline read this session: MATCHES eu=30, PREDICTIONS eu=4,543, ODDS eu=990 — down from the
+pre-session 5,733/44,255/1,264). The closer's own SSOT-expected-league-scoped residual was only 282 distinct dates to
+force-refetch (MATCHES=3, PREDICTIONS=282, ODDS=72).
+
+**Did not duplicate** — the closer was running as a live local process (PID 232540, started 03:57:52 UTC, in slot-6's
+worktree). Armed two background watchdogs (a completion-waiter + a 10-min progress-heartbeat sender) instead of
+re-running or touching it, per the inherited-live-WIP PROTECT rule.
+
+**Stall diagnosed** (per the async-wait "flat = STALL → diagnose" rule): the closer successfully wrote PREDICTIONS rows
+for 8 dates (2019-01-01 through 2019-01-10) between 03:58:33–04:04:38 UTC, then **zero successful writes since** —
+confirmed flat across two separate ~8-min foreground observation windows (05:11→05:19 and 05:21→05:29 UTC), while
+`TimeoutError` count kept climbing (176→212→246) and `RAISED` (fully-failed-date) count stayed at 0 throughout. Read
+`instruments_service/reference_data/adapters/sports/adapters/footystats.py`'s base class
+(`adapters/sports/adapters/base.py`) — confirms a class-level per-minute rate-window lock +
+`retry_with_backoff`/429-aware sleep already exists specifically for this scenario, which is why RAISED never fires (the
+adapter keeps absorbing failures) but also why nothing is completing. A separate `footystats-fwd-20260712-060000`
+forward-poll VM has been running against the same `footystats-api-key` since ~05:00:03 UTC (gcloud `creationTimestamp`),
+which postdates the stall's onset (04:04:38 UTC) but may be compounding it since.
+
+**Did NOT run an independent connectivity probe** — it would share the same `footystats-api-key` quota as the stalled
+closer and risk making recovery slower, not diagnose it cleanly.
+
+**Filed `/blocked` (`BLK-99a8414c`)**: genuine judgment call (keep waiting vs. flag upstream-outage vs. operator
+directly intervenes on slot-6's process, which this slot has no scope to touch) — recommended option B (mark
+BLOCKED-UPSTREAM-OUTAGE here, keep monitoring, no process changes), `can_continue: true`.
+
+**No checkbox flip — gate still not met, closer still in flight.** Next: once the closer either recovers (new "rows
+written" log lines) or finishes (PID 232540 exits, watched via the armed watchdogs), re-verify `(footystats, MATCHES)` +
+`(footystats, PREDICTIONS)` + `(footystats, ODDS)` `pending_fetch == 0` within the SSOT-expected leagues and flip item
+#5. If the stall persists much longer with continued zero recovery, escalate further per the operator's answer to
+BLK-99a8414c.
+
 ### 2026-07-12 ~03:4x UTC — slot-10: item #6 re-verified — item #4 holds, item #5 live on slot-6, open_meteo/SFI regressed, TM unchanged
 
 **Task**: `sports_p2_history_reference_and_odds_2015_to_present-002` (item #6, the cross-source VERIFY gate),
