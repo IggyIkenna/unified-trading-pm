@@ -34,7 +34,7 @@ parent_epic: instruments_master
 source: [autonomous session, 2026-07-10, discovered while verifying the consolidator scaling fix deploy]
 assigned_vm: NA
 execution_scope: local-only
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.6
@@ -172,3 +172,27 @@ future shard drop.
   `uts-prod-manifest-consolidator-*-cron` jobs (cefi, tradfi, sports, prediction, ml-training, gas-fees, etc.) if their
   own execution histories show cycle durations approaching or exceeding the (now-fixed) 300s TTL headroom — same latent
   bug, not yet fixed there.
+
+## Corroborating downstream-impact evidence (2026-07-12, from the pipeline_e2e_check full sweep session)
+
+A real 452-shard `data_pipeline_e2e_check` full sweep (unrelated task, `data_pipeline_e2e_check_2026_07_10.md`)
+independently confirms this consolidator is STILL not completing reliably as of 2026-07-12T06:54:34Z:
+`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` last updated
+**2026-07-10T21:42:30Z — ~34 hours stale**, well past the 86400s (24h) budget every MTDS VM bootstrap checks before
+starting its Python workload (`vm-setup.log`'s own "OOM preflight" step). This is real, quantified DOWNSTREAM IMPACT
+this issue doc didn't yet capture: **153 of 344 MTDS DEFI shards' force-leg VMs in the sweep hit this exact preflight
+check and self-deleted with `rc=78` before ever starting the actual fetch/download workload** —
+
+```
+2026-07-12 05:19:20 OOM preflight: checking gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet mtime against budget 86400s
+2026-07-12 05:19:22 OOM preflight FAIL: ... is 113812s stale (budget 86400s) — exiting 78 to skip Python startup; EXIT trap will self-delete VM.
+2026-07-12 05:19:22   Diagnosis: manifest-consolidator for asset_group=defi is degraded. Reader would fall back to merging per-VM shards -> OOM at startup. Fix consolidator + relaunch.
+```
+
+This confirms the residual kill pattern (post-TTL-fix, ~5-6min apart) is still frequent/severe enough that the
+consolidator is not accumulating enough successful complete runs to keep the index within its freshness budget — this is
+not just "wasted compute on a retry," it is actively blocking EVERY DEFI MTDS VM (smoke-test AND real production
+backfills alike, since the preflight check has no test/smoke exemption) from starting its workload at all while the
+index stays this stale. Raises the urgency of the residual-kill-pattern follow-up above from "smaller residual problem"
+to "actively blocking all DEFI MTDS ingestion right now." No fix attempted here — this is out of scope for the sweep
+session; flagging with real evidence for whoever picks up the residual-kill investigation next.
