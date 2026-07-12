@@ -158,8 +158,30 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
 - [ ] [DESIGN] P1. Operator decision: resolution (a) denominator-correction vs (b) typed-empty-row retrofit for the 6
       live-only tuples (ASTER/liquidations, PACIFICA-SOLANA/EXTENDED-STARKNET/LIGHTER-ZKSYNC book_snapshot_5,
       LIGHTER-ZKSYNC/trades). (repo: unified-trading-pm, for the decision; implementation repo depends on the choice)
-- [ ] [SCRIPT] P2. Check whether LIGHTER-ZKSYNC's post-2026-04-17 Tardis-routed capture path (the one that resolved
+- [x] [SCRIPT] P2. Check whether LIGHTER-ZKSYNC's post-2026-04-17 Tardis-routed capture path (the one that resolved
       `trades` today) can also serve `book_snapshot_5` — if so this ONE tuple may be a genuine backfill fix independent
-      of the (a)/(b) decision above, narrowing the live-only set to 5 tuples. (repo: market-tick-data-service)
+      of the (a)/(b) decision above, narrowing the live-only set to 5 tuples. (repo: market-tick-data-service) **DONE
+      2026-07-12 (slot-10) — answer is NO, does not narrow the set.** Confirmed via 3 independent sources, all
+      consistent: (1) `_onchain_perp_batch_lighter.py`'s module docstring, explicit and unambiguous — "LIGHTER-ZKSYNC's
+      own REST (`/recentTrades`, `/orderBookOrders`) is snapshot-only... so `trades`/`book_snapshot_5` are excluded from
+      the batch universe entirely... `derivative_ticker` (funding) has NO native-REST source at all — its only batch
+      source is Tardis" — i.e. Tardis's coverage for this venue is `derivative_ticker` ONLY, never
+      `trades`/`book_snapshot_5`. (2) The commit that actually wired Tardis for this venue
+      (`market-tick-data-service@57493789`, "wire LIGHTER-ZKSYNC derivative_ticker into OnchainPerpBatchHandler via
+      Tardis") says so explicitly in its own message: "trades/book_snapshot_5 stay excluded (live-WS-only, no historical
+      REST source)" — it only ever touched `derivative_ticker`. (3) Direct manifest read
+      (`market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`): **zero rows of any
+      capture_status** for LIGHTER-ZKSYNC × `{trades, book_snapshot_5}` — both are equally, symmetrically absent, no
+      partial/historical coverage for either. So `book_snapshot_5` stays in the live-only set; the live-only tuple count
+      is still 6, not narrowed to 5. **Separately, could NOT resolve the `trades`-dropped-off-the-missing-list puzzle
+      the issue doc flagged** (its own framing already correctly hedged this as unverified) — `57493789` never touches
+      `trades` at all per its diff/message, and `instruments-service/scripts/check_enumeration_completeness.py` has no
+      LIGHTER-ZKSYNC-specific carve-out either, so whatever changed `trades`'s Layer-1 missing-status is neither of the
+      2 places I checked. Since `trades` has zero manifest rows (same as `book_snapshot_5`, confirmed above), it's NOT
+      because of new captured data — likely a denominator-side change from a different, not-yet-identified commit
+      ("etc." in the original finding). Leaving this genuinely unresolved rather than guessing; does not affect the P1
+      operator decision (both `trades` and `book_snapshot_5` for LIGHTER-ZKSYNC are still in the 6-tuple live-only set
+      either way, since this todo's actual question — can Tardis serve `book_snapshot_5` — is answered). No code change
+      — investigation only; issue doc ships via the PM `docs(plans):` carve-out.
 - [ ] [SCRIPT] P3. Once (a) or (b) is decided and implemented, re-run `measure_honest_coverage.py --asset-group cefi` to
       confirm Layer-1 tuple count drops accordingly. (repo: instruments-service)
