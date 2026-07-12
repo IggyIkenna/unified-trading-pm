@@ -210,3 +210,30 @@ the exact pattern this doc's sibling `tradfi_manifest_row_loss_regression` issue
 gated todos. Flagging for main/operator: todo 3's backlog entry likely needs a `prereqs.completed_tasks` gate on todo
 1's backlog id so it stops dispatching until the consolidator is actually confirmed healthy — not hand-editing
 `backlog.yaml` myself per the workspace rule.
+
+### 2026-07-12T08:14Z — slot-11: 2nd premature dispatch of todo 3, re-verified via Cloud Run API directly (not gcloud CLI)
+
+Dispatched todo 3 again (task id `sports_manifest_consolidator_duckdb_crash_and_silent_empty_read-003`) despite todo 1
+still being open — this is the SECOND occurrence of the same premature-dispatch pattern slot-3 flagged at 08:08Z; the
+backlog prereq gate was not added between then and now. `gcloud` CLI is unavailable in this sandbox (snap-confine
+capability error), so verified independently via the `google-cloud-run` Python client (`run_v2.ExecutionsClient`)
+against `central-element-323112` using ADC — same underlying API slot-3 used, different tool:
+
+- Listed the 10 most recent executions of `uts-prod-manifest-consolidator-instruments-sports` (08:04:05Z–08:13:05Z
+  window): **9/9 completed executions show `succeeded_count=0, failed_count=1`** (10th still running at check time).
+  Pulled full `conditions[]` on execution `...-75gth` (completed 08:13:26Z) directly, not just `conditions[0]`:
+  `type=Completed state=CONDITION_FAILED reason=0 message="...failed with exit code: 1..."` — confirms the job is still
+  crash-looping, unchanged from both prior checks (07:46Z, 08:08Z).
+- `gcsfs.GCSFileSystem().info('instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet')`
+  → `updated: 2026-07-12T07:30:46.756Z` — byte-identical timestamp to both the original 07:46Z filing and slot-3's
+  08:08Z re-check. **Zero forward progress for 43+ minutes and counting.**
+
+Todo 3's prerequisite ("once (1) and (2) are fixed and the consolidator has run cleanly for several consecutive
+minutes") remains definitively unmet — todo 1 is untouched (still `[ ]`), and the consolidator has produced zero
+successful executions in the observed window. Declining to force the gate re-check; this is genuinely INFRA craft (Cloud
+Run job memory/config change), not data_engineering, matching slot-3's precedent. `skip-current-task`'ing with a reason
+citing this entry. **Escalating to main/operator as a repeat occurrence**: the backlog fix slot-3 recommended
+(`prereqs.completed_tasks` gate on todo 3's backlog entry, keyed to todo 1's backlog id) still has not been applied —
+without it, this task will keep re-dispatching to whichever data_engineering slot boots next and burning a boot cycle
+each time. Recommend either (a) apply the structural prereq gate now, or (b) park todo 3's backlog entry
+(`priority: 999` + a false gating condition per RULES.md § "Park a task") until todo 1 is manually confirmed done.
