@@ -1206,10 +1206,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 96.21,
         "qg_red_reason": null,
-        "large_file_count": 24,
-        "warn_file_count": 29
+        "coverage_pct": 96.21,
+        "large_file_count": 25,
+        "warn_file_count": 28
       }
     },
     "unified-trading-library": {
@@ -1258,10 +1258,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 20,
         "qg_red_reason": null,
+        "coverage_pct": 87.52,
         "large_file_count": 5,
-        "coverage_pct": 87.61
+        "warn_file_count": 20
       }
     },
     "unified-trading-pm": {
