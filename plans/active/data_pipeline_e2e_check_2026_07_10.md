@@ -414,16 +414,17 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-                                              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-                                              is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
-                                              already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
-                                              REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
-                                              `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-                                              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-                                              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-                                              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-                                              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-                                              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+          full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+          is NOT a tooling bug or an adapter regression.
+          `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
+          under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
+          `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
+          sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+          `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+          (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+          full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+          the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+          pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -633,7 +634,6 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
 
 - 2026-07-10 (autonomous session, follow-up round — operator asked to fix todos 13/15/16/17) — **All 4 follow-ups
   resolved**, each shipped separately with real verification (see individual todo evidence above for full detail):
-
   - **Todo 13** (prediction bucket-naming gap) — unified-trading-library@886630c1. `get_bucket_name`/
     `get_write_bucket_name` now special-case prediction's dedicated flat yaml kind, mirroring IS's existing pattern.
     `get_write_bucket_name` deliberately stays PROD-only for prediction under `IS_TEST_RUN` (confirmed via a real
@@ -740,7 +740,6 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
 - 2026-07-10 (autonomous session, continued further) — **The re-pilot itself surfaced 3 more real bugs**, each
   root-caused and fixed via the same "read the actual VM run.log, don't guess" discipline, before committing to the full
   sweep:
-
   1. **`RuntimeError: Event logging not initialized`** crashed every single skip leg, deterministically (2/2 on the
      re-pilot). `genuine_skip_proof()`/`read_prod_capture_status()` route through UTL code that emits diagnostic
      lifecycle events via `log_event()`, which requires `setup_events()` to have run first in-process.
@@ -790,7 +789,6 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
 
 - 2026-07-11 (autonomous session, continued after a host reboot) — **Two more findings from the real 452-shard launch,
   then a genuine environmental interruption, then a clean recovery.**
-
   1. **Local-concurrency ceiling on this specific dev host, found via a real launch, not guessed.** The full sweep
      launched at concurrency=40 (IS phase: clean, 108/108 real passes/fails, zero tooling issues). The MTDS phase at the
      same concurrency=40 then failed almost every job near-instantly (~127-165s vs. the expected ~600s+, one job
@@ -829,7 +827,6 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   e.g. `CEFI:COINBASE-SPOT:trades` wrote 578,121 real rows; the per-VM manifest shard parquet on the TEST bucket shows
   the exact matching row, `instrument_id=BTC-USD capture_status=captured`; the SAME row is confirmed ABSENT on PROD,
   exactly as `--test-run` should behave).
-
   1. **Root cause**: `_run_batch_leg` verified the manifest against `_prod_bucket(...)`, per a comment documenting an
      EARLIER bug (this same session's todo 17) where the manifest write itself ignored `IS_TEST_RUN` and always landed
      on PROD. That bug was fixed the same session (`get_tick_data_bucket(test_aware=True)`,
@@ -1003,7 +1000,6 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   their own data_types failed = strongest signal for a venue-level, not data_type-level, cause), then sampled REAL VM
   `run.log`s (not the checker's abstracted reason string) for each pattern cluster. Found 6 distinct, concrete results —
   every one grounded in real log evidence, not guessed:
-
   1. **Real bug in this checker itself**: TradFi OHLCV downloads (CBOE/CME/NYSE/NASDAQ/YAHOO_FINANCE, ~17 shards)
      genuinely never attempted a fetch —
      `ValueError: --source databento|massive is REQUIRED for a TradFi OHLCV download`, a real, intentional production
@@ -1058,8 +1054,115 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   from 697 → 645 (this triage round resolved 52 leg-results as documented-not-a-bug). The remaining 645 are the rest of
   todo 25's scope — not further triaged this round beyond the 4 venues sampled above.
 
-- [ ] 26. [DATA] P3. **Design a fixture-aware day-selection mechanism for the SPORTS asset_group** so a future sweep can
+- [x] 26. [DATA] P3. **Design a fixture-aware day-selection mechanism for the SPORTS asset_group** so a future sweep can
       meaningfully test SPORTS coverage (this session's single fixed day, 2026-07-09, had zero scheduled fixtures for
-      every tested league/venue — an honest but uninformative result). Needs: a way to pick, per league, a historical
-      day with confirmed real fixtures (rather than one day for the whole 452-shard sweep) — not started this session,
-      flagged by the operator as a real gap in the smoke test's own design, not a target-system issue.
+      every tested league/venue — an honest but uninformative result). Built + ran (see Progress Log): queried PROD's
+      real SPORTS availability index directly for the most recent `capture_status=captured` day per venue
+      (`_pipeline_e2e_check_sweep/sports_day_picker.py`), then re-ran force-legs against those real days instead of the
+      single global sweep day. **This genuinely worked** — it turned SPORTS from "honest but uninformative empty" into
+      real, informative signal: ODDS_API's force-leg now reached its actual fetch code (surfacing a real bug, see
+      Progress Log) instead of the generic "no active venues" the single-day sweep produced. Not built as a permanent,
+      reusable script wired into the main sweep driver (this was an ad-hoc one-off re-verification, not a shipped
+      feature) — a future full re-sweep would need to port this day-picking logic in properly.
+
+- 2026-07-12 (autonomous session continuation — SPORTS fixture-day re-verification + parallel sub-agent triage dispatch,
+  todo 26 + continuing todo 25) — Per the operator's "fix it with sub-agents" + `/autonomous` directives, dispatched 4
+  parallel sub-agents to triage distinct (asset_group, venue) clusters from the 645 remaining untriaged failures (CEFI
+  spot venues, CEFI futures/derivatives venues, PREDICTION+TradFi FX/KRX, IS DEFI reference-data), while directly
+  building and running the SPORTS todo-26 deliverable myself. Real, verified results across both threads:
+
+  **SPORTS fixture-day re-verification (todo 26)**: picked real PROD-captured days per venue (`2026-06-20` for 6 venues,
+  `2026-06-24` for ODDS_API; bare `BETFAIR` excluded — zero captured rows ever, see below) and re-ran MTDS + IS
+  force-legs. Two genuine, real findings surfaced (not honest-empty this time):
+  1. **New real bug — ODDS_API silently under-fetches**: force-refetching `SPORTS:ODDS_API:*` against a real
+     PROD-captured day still returned `rows=0`/`credits_used=0` — i.e. the adapter never even called the vendor API.
+     Root-caused: `_fetch_all_leagues` only iterates `get_prediction_leagues()` (tier≤2 AND classification==PREDICTION
+     AND has an `odds_api_name` mapping) — any league with real fixtures in IS's own broader catalog but outside that
+     narrow intersection is silently skipped at debug-log level, no error, no partial-failure signal. Filed:
+     `plans/active/issues/sports_odds_api_league_registry_scope_undercapture_2026_07_12.md`.
+  2. **Checker-design insight, not a new bug — 6 of 8 canonical SPORTS venues aren't independently fetchable**:
+     PINNACLE/FANDUEL/DRAFTKINGS/BETFAIR_EX_UK/BETFAIR_EX_EU/BETFAIR_SB_UK all returned `WARNING No active venues` when
+     force-refetched by name — confirmed via `odds_api_adapter.py`'s own `_HISTORICAL_BOOKMAKERS` list: these are
+     ODDS_API's aggregated bookmaker-fanout OUTPUT tags, not independently-triggerable MTDS venue shards. Only
+     `ODDS_API` (the real adapter) and bare `BETFAIR` (separately, its own credential-gated adapter) are real input
+     shard keys. Stopped the re-verification batch early once this was confirmed (all 55 remaining MTDS jobs would have
+     failed identically) to avoid wasting VM cost on guaranteed-duplicate results.
+  3. **Corroborating evidence added to an existing doc**: bare `BETFAIR` has zero captured rows in PROD's entire history
+     (vs. its 3 sub-venues' 7,687–8,384 captured days each) — confirmed this is the SAME already-documented
+     BLOCKED-CREDENTIALS gap (`wsfeedconnector_phase35_gap_2026_07_06.md` gap-009), not a new issue; added a note
+     explaining the PROD-visible asymmetry (siblings populated via ODDS_API's side-channel, unrelated to whether bare
+     BETFAIR's own connector is unblocked).
+
+  **TradFi Databento re-verification (following up the earlier `--source` fix)**: re-ran all 12 previously-fixed TradFi
+  OHLCV shards for real. The fix genuinely worked (DatabentoAdapter now engages), but exposed 2 further layers:
+  - **Checker-side over-broadening**: the original `--source databento` forcing was too broad — narrowed to a precise
+    allowlist (`_TRADFI_DATABENTO_VENUES` = CME/NYSE/NASDAQ/CBOE/ARCA/BATS, `_TRADFI_DATABENTO_OHLCV_TYPES` =
+    ohlcv_1s/ohlcv_1m only) after confirming ICE (registered but zero real Databento instrument rows — Yahoo-DXY-only)
+    and YAHOO_FINANCE (not a Databento venue at all) and ohlcv_15m/24h (Databento doesn't serve coarser bars) were all
+    silent no-ops under the old blanket rule. Also fixed the checker's own write-path prediction
+    (`_pipeline_mode_segment`) to pass the same `source=` override `derive_pipeline_mode_for_row` expects, keeping
+    prefix-prediction in sync with the real writer. Shipped: `market-tick-data-service@0dd8eaba` (picked up into a
+    concurrent agent's commit in the same shared tree — verified content-correct before moving on).
+  - **New real finding — CME/CBOE/NYSE/NASDAQ ohlcv_1m/1s genuinely reach the live Databento SDK and return a clean
+    0-row success, no error anywhere**: dispatched a focused trace that eliminated every local guard (billing/lookback
+    allowlist, schema allowlist, instrument-preflight, IS_TEST_RUN, exception-handling branches) file:line by file:line
+    — none fired. The real `timeseries.get_range()` call executed and returned zero rows, identically across all 4
+    venues simultaneously, pointing at one systemic live-API-level cause (entitlement edge vs. symbol-resolution
+    failure) neither confirmable from static code alone. Filed:
+    `plans/active/issues/tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md`, with a concrete live-diagnostic
+    recommendation (`symbology.resolve(...)`) for whoever picks this up.
+
+  **Sub-agent triage results** (dispatched via the `Agent` tool, `SUB_AGENT_MANDATORY_RULES.md` injected at each spawn):
+  - **IS DEFI reference-data (12 venues assigned)** — fully resolved, 12/12 explained: **9 real bugs fixed and
+    individually re-verified** (`VENUS-BSC/ETHEREUM`, `RADIANT-ARBITRUM/BSC/ETHEREUM`, `BENQI-AVALANCHE`,
+    `EULER_V2-ETHEREUM`, `MARGINFI-SOLANA`, `SOLEND-SOLANA` — one shared root cause: UAC's
+    `instrument_validation.py::_DEFI_VENUE_PREFIXES` frozenset was a hand-maintained literal disconnected from the SSOT
+    registry, rejecting correctly-fetched instruments at schema validation as "unknown venue." Shipped
+    `unified-api-contracts@0250892d`, all 9 force-legs re-run post-fix and confirmed `status=passed` against real VMs).
+    **3 confirmed as already-documented architectural gaps**, reconfirmed with fresh live evidence (`GMX-AVALANCHE`
+    long-tail-pool filter, `UNISWAP_V3-BASE` known subgraph-indexer outage, and `UNISWAP_V3-OPTIMISM` — **new**, same
+    failure signature, not previously documented as affected). Findings appended to
+    `mtds_is_full_adapter_smoketest_findings_2026_07_07.md` (not duplicated): `unified-trading-pm@89f836cd4`.
+  - **CEFI futures/derivatives + PREDICTION/TradFi FX/KRX (2 agents)** — both agents completed real, shipped work but
+    their **final structured summaries were lost** to a ~7-hour session interruption before they could report back
+    (confirmed via `TaskOutput`: both task IDs no longer resolve in the harness). Recovered their actual work directly
+    from git history + uncommitted working-tree state rather than treat it as silently dropped:
+    - **PREDICTION/FX/KRX agent**: real, well-diagnosed mechanical fix — `umi_tick_provider.py`'s FX/KRX Yahoo dispatch
+      branches ignored the requested `data_types` entirely, always writing rows hardcoded `data_type=ohlcv_24h` (root
+      cause of ALL 9 KRX data_types failing in the original sweep, not just the genuinely-Yahoo-unservable ones). Also
+      fixed a wrong `_REPRESENTATIVE_SYMBOL['FX']` in `smoke_matrix.py` that was causing a false
+      `manifest_status_invalid` on real, correctly-captured FX data. 3 new regression tests. Shipped
+      `market-tick-data-service@e128c5bc`. Follow-on: filed
+      `plans/active/issues/krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md` (genuine open question — 2 of
+      KRX's 3 declared expected data_types, ohlcv_1m/15m, are structurally unreachable by the only adapter that exists;
+      needs an operator/architecture call on whether to build intraday Yahoo fetch or narrow the registry) and
+      corroborated a real, still-live KALSHI prediction-universe gap onto
+      `prediction_universe_capture_dead_since_07_01_2026_07_06.md`. **Also independently found and filed**
+      `plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md` — a real, high-priority tooling bug (this
+      checker's own batch-leg VM naming collided across concurrent same-asset_group launches under real concurrency,
+      silently causing one shard's checker process to read a DIFFERENT shard's VM execution and report its result —
+      reproduced twice independently this session). **Fixed** after recovering the finding: added a 6-hex
+      `sha256(venue:data_type)` slug to the VM name (`_vm_name()`), staying under GCE's 63-char limit. Shipped
+      `market-tick-data-service@a79ccaf9`. This is a load-bearing finding for THIS ENTIRE PLAN — any earlier-session
+      "genuine failure" result run under concurrency could theoretically have been a collision artifact rather than the
+      shard's own true result; not retroactively re-audited (out of scope for this session's remaining time), flagged
+      here explicitly rather than silently assumed clean.
+    - **CEFI futures/derivatives agent**: shipped `unified-api-contracts@f0dc61a2` (DERIBIT-COMBO + OKX options Tardis
+      routing scaffolding — cross-referenced into the already-open
+      `cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`, which itself was extensively updated with a full
+      resolution trail, corroborating another concurrent agent's near-identical fix) and `instruments-service@300c6d27`
+      (`--fix-frozen-expiry` DERIBIT remediation tooling — orphaned from a doc trail, no corresponding plan/issue entry
+      found; flagged here rather than silently left unexplained). Also shipped `market-tick-data-service@ac595df7`
+      (chain-bundle `options_chain`/`futures_chain` sampling fallback was using a per-symbol ticker instead of the real
+      underlying root, causing a false "0 active dated futures" on BINANCE-FUTURES). No final tally of this agent's full
+      originally-assigned scope is available (its structured summary never arrived) — what's captured here is only
+      what's independently recoverable from git, not a claim of complete coverage for its assigned venue cluster.
+
+  **Net effect on todo 25's "genuine untriaged" count**: no clean re-run of the aggregator was done this round (the
+  underlying VM-name-collision bug just fixed means the last aggregator snapshot's counts are not fully trustworthy
+  pending a clean re-sweep anyway) — reporting concrete, individually-verified results instead of a
+  possibly-collision-corrupted aggregate number. 9 DEFI venues + 2 FX/KRX mechanism fixes + 1 chain-sampling fix + 2
+  routing scaffolds are confirmed fixed and shipped; 3 DEFI + 2 CeFi (GMX/UNISWAP_V3) gaps reconfirmed as
+  known/architectural; 2 new real bugs found and filed (ODDS_API league-scope, TradFi Databento silent-zero); 1 new
+  high-priority tooling bug found and fixed (VM-name collision); 1 new open architecture question filed (KRX
+  registry-vs-adapter).
