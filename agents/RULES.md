@@ -160,6 +160,13 @@ Reload (`POST /api/backlog/reload`). The task stays at `priority: 999` (effectiv
 higher-priority work exists) AND the false condition gates it as a second safety. To unpark: flip the condition GREEN
 (`POST /api/prerequisites/<name>` `{value: true}`) + lower the priority + clear `priority_override`.
 
+**Verify it actually stuck**: this exact recipe was silently reverted by every regen tick before
+`agent-orchestrator@8dd5763` fixed it (`backlog_regen_drops_handtuned_prereqs_2026_07_12.md`). Re-check the entry in
+`data/config/backlog.yaml` after the next `PlanRegenLoop` tick or `POST /api/backlog/regen` (not just `/reload`, which
+doesn't exercise the revert path) — `priority` should still read `999` and `priority_override: true` should still be
+present. If either reverted, that's a regression of the same bug class: file a fresh P0 issue doc immediately, don't
+just re-apply the edit and move on.
+
 ### Delete a task (permanent removal)
 
 ```bash
