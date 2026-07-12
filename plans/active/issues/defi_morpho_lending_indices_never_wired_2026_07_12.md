@@ -405,3 +405,25 @@ commands from the parent plan. Given the ~2.5-3h ETA to genesis alone (before th
 likely needs at least one more re-check cycle after a longer gap than the ~5-10 min cadence prior dispatches used —
 consider a dispatch with a `target_slot_timeout_seconds` delay or simply expect this to keep bouncing back to `queued`
 for a few more hours until real progress is possible.
+
+### Re-check #7 — still healthy, still pre-genesis, consolidator still unresolved — 2026-07-12T12:17Z (data_engineering slot-8)
+
+Re-dispatched to the same `[SCRIPT] P2. Re-run G2 gate` todo (7th dispatch overall). Fresh-pulled all repos (clean).
+Verified rather than trusted the prior re-check:
+
+- **VM roster**: `mtds-lending-indices-20260712-112557` still the only instance, `STATUS=RUNNING`.
+- **Real-progress check** (`run.log` tail): active writes for `date=2023-04-02`, forward progress from re-check #6's
+  `2023-03-25` observation ~5 min earlier (~8 days/5 min, same pace every prior re-check observed). No
+  `Unknown lending protocol` / no `uniqueKey`-GraphQL errors.
+- **Manifest freshness**: per-VM shard fresh (`Update time: 2026-07-12T12:17:00Z`). Consolidated
+  `_index/availability_index.parquet` **still** `Update time: 2026-07-10T21:42:30Z` — byte-identical to all 6 prior
+  re-checks. Cross-checked `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`: still open, no new fix landed
+  since re-check #6's read.
+- **Verdict unchanged**: gate still cannot be usefully re-run — backfill hasn't reached genesis (~2-2.5h out at observed
+  pace) and the consolidated index would still be stale even if it had.
+
+`skip-current-task`'d — same call as the six prior dispatches. This todo has now bounced 7 times on an unchanged
+precondition; per re-check #6's own recommendation, whoever owns backlog tuning (main agent/operator, not a craft-scoped
+worker per `RULES.md` §4) should consider parking this task (lower priority + a
+`consolidator-fresh-and-vm-complete`-style condition) rather than continuing ~5-10 min redispatch cycles that can't
+produce a different outcome for at least another ~2h.
