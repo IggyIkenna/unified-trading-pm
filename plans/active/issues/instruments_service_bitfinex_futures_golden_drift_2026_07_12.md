@@ -19,16 +19,17 @@ summary: |
   instruments-service `quality-gates.sh` run (and therefore every quickmerge --agent ship) workspace-wide until fixed —
   hit while shipping an unrelated P1 fix (`reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12`), confirmed
   byte-identical on a `git stash`-clean tree with that unrelated diff removed.
-status: open
+status: superseded
 nature: notes
 asset_group: [cefi]
 stage: [data]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer]
-tags: [honest-coverage, golden-fixture, qg-red, cross-repo, bitfinex, cefi]
+tags: [honest-coverage, golden-fixture, qg-red, cross-repo, bitfinex, cefi, duplicate]
 related:
   [
     instruments_service_qg_red_golden_drift_2026_07_10.md,
+    instruments_service_cefi_golden_bitfinex_futures_drift_2026_07_12.md,
     ../reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12.md,
   ]
 created: 2026-07-12
@@ -45,8 +46,15 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+superseded_by: instruments_service_cefi_golden_bitfinex_futures_drift_2026_07_12.md
 audited_scope: single-repo-qg-run
 ---
+
+> **DUPLICATE — superseded by
+> [`instruments_service_cefi_golden_bitfinex_futures_drift_2026_07_12.md`](instruments_service_cefi_golden_bitfinex_futures_drift_2026_07_12.md)**,
+> filed first (slot-6) for the identical drift. This doc's root-cause finding (`unified-api-contracts@5b57c2b2`) has
+> been merged into that doc's Todos. Kept for the investigation record; do not action the todo below separately — track
+> the fix via the superseding doc.
 
 # instruments-service cefi golden drift — BITFINEX-FUTURES FUTURE itype removed same-day, golden not regenerated
 
@@ -109,15 +117,9 @@ repo-wide ship-blocker in the meantime.
 
 ## Recommended decision
 
-- [ ] [CODE] P1. Regenerate `instruments-service/tests/unit/scripts/goldens/expected_universe/cefi.json` via
-      `.venv/bin/python scripts/regenerate_expected_universe_golden.py` (from a clean instruments-service checkout, with
-      BOTH `unified-api-contracts` and `unified-trading-library` sibling clones `git status --porcelain`-clean — the
-      script refuses otherwise). Confirm
-      `.venv/bin/python -m pytest tests/unit/scripts/test_expected_universe_golden.py -k cefi` passes clean afterward,
-      then `bash scripts/quality-gates.sh` full run ALL PASSED before shipping. This is a pure fixture regeneration — no
-      source-code change expected, since `5b57c2b2` is the correct, evidenced upstream fix and the removed 3-tuple set
-      (`BITFINEX-FUTURES`/`future`/{`trades`,`book_snapshot_5`,`derivative_ticker`}) is exactly what should now
-      disappear from the golden. (repo: instruments-service)
+SUPERSEDED — tracked as the (now-closed root-cause, open fix) todo #2 in
+`instruments_service_cefi_golden_bitfinex_futures_drift_2026_07_12.md`. Not re-listed as an actionable checkbox here to
+avoid a duplicate backlog-derived task.
 
 ## Progress Log
 

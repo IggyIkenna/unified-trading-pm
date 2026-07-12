@@ -95,16 +95,20 @@ the class of cross-cutting data-correctness break that freezes downstream shippi
 
 ## Todos
 
-- [ ] [CODE] P0. Bisect + root-cause why `build_expected('cefi')` no longer produces the 3 BITFINEX-FUTURES tuples
-      (`future`/`book_snapshot_5`, `future`/`derivative_ticker`, `future`/`trades`) that the current 76-tuple golden
-      (`instruments-service@aa897b08`) still expects. Check recent commits touching `VENUES_BY_ASSET_GROUP["cefi"]` /
-      `VENUE_DATA_TYPE_CAPABILITIES["BITFINEX-FUTURES"]` in unified-api-contracts, and any instruments-service
-      `_build_cefi_venues()`-equivalent producer change. (repo: instruments-service, unified-api-contracts)
-- [ ] [CODE] P0. Once root cause is determined: either regenerate
-      `tests/unit/scripts/goldens/expected_universe/cefi.json` to 73 tuples (if the removal is
-      production-verified-intentional, mirroring the OKX/BYBIT precedent), or restore BITFINEX-FUTURES to the
-      producer/registry (if accidental). Re-run full `quality-gates.sh` to re-establish a green sentinel. (repo:
-      instruments-service)
+- [x] [CODE] P0. ✅ Root-caused (slot-7, data_engineering):
+      `unified-api-contracts@5b57c2b2 fix(registry): drop     phantom BITFINEX-FUTURES FUTURE itype (cefi G4 Layer-1)`,
+      landed 2026-07-12, removed the `("BITFINEX-FUTURES", "FUTURE")` Tardis-exchange mapping in `venue_mapping.py`
+      (~line 828, inline comment cites "live Tardis metadata confirms bitfinex-derivatives serves perpetual only, zero
+      FUTURE-typed instruments") and narrowed `venue_constants.INSTRUMENT_TYPES_BY_VENUE["BITFINEX-FUTURES"]`
+      (~line 434) from `{"PERPETUAL", "FUTURE"}` to `{"PERPETUAL"}`. This is a legitimate, evidenced UAC-side
+      correctness fix, NOT an accidental regression — same intentional-removal class as the OKX/BYBIT bare-SPOT_PAIR
+      precedent. (repo: unified-api-contracts)
+- [ ] [CODE] P0. Regenerate `instruments-service/tests/unit/scripts/goldens/expected_universe/cefi.json` to 73 tuples
+      via `.venv/bin/python scripts/regenerate_expected_universe_golden.py` (requires both `unified-api-contracts` and
+      `unified-trading-library` sibling clones `git status --porcelain`-clean — the script refuses otherwise). Confirm
+      `.venv/bin/python -m pytest tests/unit/scripts/test_expected_universe_golden.py -k cefi` passes, then re-run full
+      `quality-gates.sh` to re-establish the green sentinel. Pure fixture regen — no source-code change expected (repo:
+      instruments-service).
 
 ## Progress Log
 
@@ -115,3 +119,14 @@ Discovered while trying to ship an unrelated 1-line sports backfill fix. Confirm
 session (out of scope for the sports task + this repo's Bash tool access was intermittently broken by a concurrent
 fleet-wide `/tmp` ENOSPC outage — see `plans/active/issues/host_tmp_tmpfs_enospc_blocks_bash_tool_2026_07_12.md`).
 Declaring a repo-blocker so my own unrelated sports-script fix doesn't get stuck waiting on this indefinitely.
+
+### 2026-07-12 (slot-7, data_engineering) — root-caused independently, consolidating duplicate filing
+
+Hit the identical failure shipping an unrelated reconciler fix
+(`reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12`); filed a duplicate issue doc
+(`instruments_service_bitfinex_futures_golden_drift_2026_07_12.md`) before discovering this one already existed —
+marking mine `superseded_by` this doc (filed first) to avoid two open docs tracking the same drift. Root-caused via
+`git log`/`grep` on `unified-api-contracts` (see todo #1 above, now closed). Proceeding to ship my own UTL change first
+(already quality-gates.sh green independently), then will regenerate this golden fixture (todo #2) since both UAC and
+UTL sibling clones will be clean at that point, then re-verify instruments-service goes green before shipping my own
+reconciler fix.
