@@ -1651,3 +1651,33 @@ consolidator catches up (watch `defi_consolidator_scheduler_sigkill_unresolved_2
 `measure_honest_coverage.py` for a real reading, (4) MORPHO stays out of the G2 gate until
 `defi_morpho_lending_indices_never_wired_2026_07_12.md` todo 1-2 ship — either scope it out of THIS gate pass with an
 explicit operator note, or pick up the fix.
+
+### G2 verification run #4 — no stall, still blocked on the same stale consolidator (2026-07-12 ~09:53-09:56 UTC, slot 7)
+
+Picked up `mvp_backfill_defi_onchain_v10-002` immediately after closing out an unrelated reconciler-staleness task.
+Cheap re-check only, using the working `~/google-cloud-sdk/bin/gcloud`/`gsutil` binaries (the snap versions are broken
+in this sandbox — same `snap-confine`/`cap_dac_override` issue prior slots hit):
+
+1. **VM roster** (`gcloud compute instances list --filter="name~mtds" --zones=asia-northeast1-c`): both remaining
+   in-flight VMs still `RUNNING` — `mtds-dex-swaps-backfill`, `mtds-perp-funding-backfill`.
+2. **Real-progress check (not just heartbeat)** — per-VM manifest shard mtimes, both FRESH as of this check:
+   - `mtds-perp-funding-backfill`: shard `Update time: 2026-07-12 09:54:55 GMT`; run.log shows it actively writing GMX
+     funding rows for `date=2025-03-01` (up from the post-restart `2024-04-08` observed in run #3 at 09:47 UTC — genuine
+     continued forward progress after the stall fix, not re-stalled).
+   - `mtds-dex-swaps-backfill`: shard `Update time: 2026-07-12 09:47:47 GMT` (~7 min old at check time) — run.log tail
+     showed only heartbeat lines (no per-date log lines in the last 10), but the shard mtime confirms real writes are
+     still landing, so this is NOT a repeat of the perp-funding stall pattern.
+3. **Consolidator staleness — unchanged, now worse**: `availability_index.parquet` blob `Update time` still pinned at
+   `2026-07-10T21:42:30Z` — same exact timestamp as run #2 (03:48 UTC) and run #3 (09:45 UTC), now **~37h stale**.
+   Confirms `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`'s fix has not yet landed / taken effect. Did
+   NOT re-run `measure_honest_coverage.py` — it reads this same frozen snapshot, so a re-run would return the
+   byte-identical numbers already recorded in run #3 (no new information, matching run #3's own reasoning for the same
+   skip).
+4. MORPHO scoping decision (`defi_morpho_lending_indices_never_wired_2026_07_12.md`) still unresolved — not actioned
+   this dispatch (separate craft-scope fix, not a quick check).
+
+**G2 GATE STATUS: FAIL (checkbox NOT flipped)** — unchanged from run #3. No new stall found (good — the run #3 fix
+held), but the primary blocker for getting a REAL coverage reading (the stuck consolidator) is unchanged and now
+longer-running. Nothing productive left to do from a worker slot beyond this confirmation until either the consolidator
+resumes, the two VMs complete, or MORPHO's scope is decided — re-dispatch checklist from run #3 carried forward
+unchanged.
