@@ -206,6 +206,34 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
       still unmet, so deleting now would violate the documented delete-when contract. Leaving in place until (a)-(d)
       resolve, consistent with "do not leave it in the tree" applying only once its job — and the gate — are actually
       done. This checkbox marker filters -007 from priority-only regen dispatch until an operator clears it.
+      **RE-VERIFIED 2026-07-12 (slot-10, `data_engineering`) — residual shrank 200×, still nonzero, BLOCKED-OPERATOR
+      escalated.** Fresh live-manifest read (`.venv/bin/python /tmp/verify_understat_gate.py` against
+      `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, 4,914,208 rows,
+      updated 2026-07-12T03:34:41Z — single-parquet read, no whole-corpus walk): no `understat_bulk_backfill.py` process
+      running; big-5 `attempted_failed=0` for both XG and XG_SHOTS (holds); big-5 `expected_unattempted` is now **30**
+      (15 XG + 15 XG_SHOTS) — down from 6,093 four days ago, a ~200× drop with **zero code shipped against this
+      residual** (confirmed: `type_understat_eu_no_provider_coverage.py`, the typing script the 2026-07-08 note said was
+      "not yet built," still does not exist anywhere in `instruments-service` — `find . -iname '*eu_no_provider*'`
+      returns only the pre-existing weather/SFI scripts). Root cause unchanged (same daily forward-poll enum, still
+      unfixed at the writer): pulled the 30 rows directly — **100% of them are dated 2026-07-10 / 2026-07-11 /
+      2026-07-12 only** (`attempted_at` timestamps 01:30:5x UTC same-day, i.e. yesterday's/today's forward-poll write),
+      spread evenly across all 5 big-5 leagues and both data_types. The old 2018-2026 historical backlog is now
+      completely gone; only the enum's **trailing 3-day edge** remains, which is consistent with European big-5 leagues'
+      summer off-season (no July fixtures) — these are very likely legitimate `EXPECTED_NO_FIXTURE` dates that the
+      still-missing typing script would confirm, not a capture failure. This is new information directly bearing on the
+      open **operator call** flagged 2026-07-08 ("whether a justified nonzero residual should even count as a gate
+      failure"): the residual is no longer a stale multi-year backlog, it is a small, self-renewing, always-≤3-day-old
+      edge that literally cannot reach exactly 0 without either (a) the root-cause writer fix (stop materializing
+      blank-reason `expected_unattempted` for off-coverage/off-season leagues at write time) or (b) the typing script
+      running continuously (once-daily, keeping pace with the enum). **Did not flip the gate or delete the driver** —
+      that remains the explicit prior main-agent ruling (DO NOT expand scope, DO NOT flip the gate) and this task's own
+      scope is the deletion, not the gate policy call. Filed a fresh `/blocked` (see Progress Log) surfacing the updated
+      numbers + asking the operator to rule on (b): is a same-day/previous-day-only, single-digit-per-league residual an
+      acceptable non-failure state for this gate, or does it require the typing script to land first regardless of size.
+      Un-block sequence unchanged in shape: (a) operator rules on the residual-acceptability question; (b) if ruled
+      acceptable, -005 re-verifies + flips `understat-vm-xg-complete` on this state; if ruled NOT acceptable, the typing
+      script (tracked in `sports_is_manifest_eu_regression_overwrite_2026_06_29.md`, repo instruments-service) lands
+      first; (c) -006 documents final totals; (d) THEN -007 re-dispatches and deletes the driver.
 
 ## 4. Definition of DONE
 
@@ -367,4 +395,21 @@ shots; the 6 parked sports tasks are unblocked; issue-doc Progress Log updated; 
   the corrected blocker + revised un-block sequence (see above) rather than re-parking with the stale 2026-07-06
   rationale (the "driver still running, don't delete" concern no longer applies; the actual gate-green precondition
   does). Did not delete the script — its lifecycle marker's literal precondition (gate green) remains unmet. No code
+  shipped this session; plan-doc update only, via the sibling `unified-trading-pm` worktree.
+- 2026-07-12 (slot-10, `data_engineering`, 6th auto-dispatch — this session): re-dispatched to the driver-deletion task.
+  Re-verified live state fresh rather than trusting the 2026-07-08 in-checkbox numbers (`/tmp/verify_understat_gate.py`
+  against the current manifest, updated 2026-07-12T03:34:41Z): no driver process running; big-5 `attempted_failed=0`
+  holds for XG+XG_SHOTS; big-5 `expected_unattempted` dropped from 6,093 → **30** (15 XG + 15 XG_SHOTS) over 4 days with
+  **no code shipped against it** — `type_understat_eu_no_provider_coverage.py` still does not exist in
+  `instruments-service`. Inspected the 30 residual rows directly: 100% dated 2026-07-10 through 2026-07-12 (a rolling
+  ≤3-day trailing edge written by the same daily forward-poll enum at ~01:30 UTC each day), evenly spread across all 5
+  big-5 leagues — consistent with big-5 European leagues' July off-season (no fixtures), i.e. very likely legitimate
+  no-fixture dates the (still-unbuilt) typing script would confirm, not a capture defect. This is new information
+  bearing directly on the operator call flagged 2026-07-08 ("does a justified nonzero residual count as a gate failure")
+  — the residual is no longer a multi-year historical backlog, it's a small always-fresh edge that structurally cannot
+  reach literal 0 without either the root-cause writer fix or a continuously-run typing script. Did NOT flip the gate or
+  delete the driver (out of this task's scope; the standing main-agent ruling is DO NOT expand scope / DO NOT flip the
+  gate). Filed a fresh `/blocked` surfacing the updated numbers and asking the operator to rule on
+  residual-acceptability now that the shape of the problem has changed this much, rather than silently re-parking a 6th
+  time on the stale 2026-07-08 framing. Updated -007's checkbox with the fresh verification + the escalation. No code
   shipped this session; plan-doc update only, via the sibling `unified-trading-pm` worktree.
