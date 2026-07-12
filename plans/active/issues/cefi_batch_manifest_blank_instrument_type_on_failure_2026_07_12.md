@@ -213,3 +213,23 @@ unanswered — confirmed via direct `GET /api/state` read, not trusted from a pr
 audit now would reproduce the same 403-lockout-dominated noise the sibling doc's own verification log already identified
 as misleading pre-fix. Not filing a duplicate blocked-question (`BLK-f1417674` already covers it and remains live).
 `skip-current-task`'d — nothing in-craft to do until the sibling operator decision lands.
+
+### 2026-07-12 — P3 re-dispatch + thrash root-cause (data_engineering slot-6)
+
+This `[DATA] P3` task (`cefi_batch_manifest_blank_instrument_type_on_failure-003`) was **re-dispatched to slot-6 despite
+slot-12 already skipping it** for an unchanged gate — confirming a re-dispatch thrash loop (slot-12 → slot-6).
+Re-verified the gate independently: sibling `tardis_concurrent_ip_lockout_2026_07_12.md` todo #1 (operator a/b/c
+decision) and todo #2 (implement fix) are both still `- [ ]`; git log on both
+`market-tick-data-service`/`deployment-service` shows no lock/mutex/proxy/403-code-274 commit. The root operator
+decision is live and unanswered as blocked question on task `tardis_concurrent_ip_lockout-001` (created
+2026-07-12T13:45Z, `answered_at: null` — confirmed via direct `GET /api/state`). So the gate is **UNMET**; running the
+Layer-1 audit now would reproduce the 74.9% 403-lockout noise the sibling doc itself flags as misleading pre-fix.
+
+**Thrash root cause (systemic, now escalated):** the prerequisite condition `tardis-concurrent-ip-lock-fix-landed`
+already exists (created by slot-3, value `false`) but **gates 0 tasks** (`gates_queued: 0` in `/api/state`) — it was
+never wired to this P3 backlog entry, so the dispatcher keeps offering the task even though its gate is a live false
+condition. Attaching a backlog `prereqs.conditions` is main/operator-owned tuning (yaml-only per RULES/worker.md § 4),
+not a data_engineering worker action, so I escalated the wiring request as a blocked question (recommend: attach
+`tardis-concurrent-ip-lock-fix-landed` to `cefi_batch_manifest_blank_instrument_type_on_failure-003` + set
+`priority: 999` so it stops re-dispatching until the lockout fix lands and the condition flips green).
+`skip-current-task`'d — no in-craft work until the sibling operator decision lands and the condition is wired + flipped.
