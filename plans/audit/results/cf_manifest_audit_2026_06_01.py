@@ -89,12 +89,20 @@ def _probe_paths(bucket: str, depth: int = 6) -> list[str]:
             k
             for k in kids
             if not (
-                (_seg := k.rstrip("/").rsplit("/", 1)[-1]).startswith("_") or _seg in ("backfill-logs", "snapshots")
+                (_seg := k.rstrip("/").rsplit("/", 1)[-1]).startswith("_")
+                or _seg in ("backfill-logs", "snapshots", "configs", "databento-batch-registry")
             )
         ]
         if not data_kids:
             break
-        nxt = data_kids[0]
+        # Prefer the canonical `by_date` root or an already-hive-partitioned child
+        # (contains "=") over an arbitrary first non-meta child — a bucket can have other
+        # top-level non-partitioned trees (registries, config dumps) that aren't caught by
+        # the name-based exclusion above; found live via `configs/patches/*.py` descending
+        # all the way to a leaf .py file and falsely reporting CF-2-paths/CF-3-partition RED
+        # (tradfi-prd, 2026-07-12).
+        preferred = [k for k in data_kids if (_seg := k.rstrip("/").rsplit("/", 1)[-1]) == "by_date" or "=" in _seg]
+        nxt = (preferred or data_kids)[0]
         if nxt.endswith(".parquet"):
             break
         cur = nxt + "/"
@@ -118,6 +126,23 @@ def _cells(df: pd.DataFrame) -> set[tuple[str, ...]]:
     return set(map(tuple, cap[cols].astype(str).itertuples(index=False, name=None)))
 
 
+def _check_cf1_schema_version(df: pd.DataFrame, n: int) -> str:
+    """CF-1: schema_version == 9 (data-state). `schema_version` is stored as an object/string
+    column on-disk (values "9"/"4"), so a `dist.get(CANONICAL_SCHEMA_VERSION, 0)` int-key lookup
+    never matched and always returned 0 — silently reporting CF-1 as 0/n RED regardless of the
+    real distribution. Compare on the string form so this holds whether the column is int- or
+    str-typed."""
+    if "schema_version" not in df.columns:
+        print("CF-1 schema_version  [RED]  column ABSENT")
+        return "RED"
+    dist = df["schema_version"].value_counts(dropna=False)
+    v9 = int((df["schema_version"].astype(str) == str(CANONICAL_SCHEMA_VERSION)).sum())
+    status = "GREEN" if v9 == n else "RED"
+    print(f"CF-1 schema_version  [{status}]  v9={v9:,}/{n:,} ({_pct(v9, n)})")
+    print("     dist:", dict(dist.head(8)))
+    return status
+
+
 def audit(canonical: str, legacy: str | None) -> tuple[int, dict[str, str]]:
     """Run the CF-1…CF-14 data-state audit on `canonical`. Returns (exit_code, results) where
     results maps CF id → status ('GREEN'/'RED'/'SKIP(...)'/'GREEN(...)'). exit_code 0 = readable,
@@ -134,15 +159,7 @@ def audit(canonical: str, legacy: str | None) -> tuple[int, dict[str, str]]:
     print(f"rows: {n:,}\ncolumns: {sorted(cols)}\n", flush=True)
 
     # CF-1 schema_version == 9 (data-state)
-    if "schema_version" in cols:
-        dist = df["schema_version"].value_counts(dropna=False)
-        v9 = int(dist.get(CANONICAL_SCHEMA_VERSION, 0))
-        results["CF-1"] = "GREEN" if v9 == n else "RED"
-        print(f"CF-1 schema_version  [{results['CF-1']}]  v9={v9:,}/{n:,} ({_pct(v9, n)})")
-        print("     dist:", dict(dist.head(8)))
-    else:
-        results["CF-1"] = "RED"
-        print("CF-1 schema_version  [RED]  column ABSENT")
+    results["CF-1"] = _check_cf1_schema_version(df, n)
 
     # CF-2 asset_group not category (rows)
     has_cat = "category" in cols
