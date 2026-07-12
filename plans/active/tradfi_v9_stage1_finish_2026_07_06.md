@@ -46,14 +46,19 @@ source:
 
 # TradFi v9 Stage-1 finish — post-apply chain (AO Plan 2)
 
-> **🔴 2026-07-12: manifest lost 1,017,024 rows on 2026-07-10. Root cause EMPIRICALLY CONFIRMED (slot-7)** — the
-> manifest-consolidator's `unified-trading-library@0de04b6e` survivors-dedup applied last-write-wins to pre-existing
-> duplicate-key rows for the first time; a real subset (blank-`instrument_id` cross-vendor-source collisions) are NOT
-> true duplicates, confirmed via direct row sampling (a real `row_count=42` row silently dropped in favor of an empty
-> `row_count=0` row). **SHARED code, runs for every asset group** — fix is scoped as its own P0 todo (design +
-> regression test needed before shipping to a 5-AG-wide script). See
-> `plans/active/issues/tradfi_manifest_row_loss_regression_2026_07_12.md`. Do NOT re-run task 4's E5 rebuild or task
-> 11's dry-run prep, and do NOT restore the missing rows, until the fix lands.\*\*
+> **🟢 2026-07-12: the 1,017,024-row manifest loss (found 2026-07-10) is RESOLVED + VERIFIED DURABLE (slot-11
+> re-confirmation).** Root cause: the manifest-consolidator's `unified-trading-library@0de04b6e` survivors-dedup applied
+> last-write-wins to pre-existing duplicate-key rows for the first time; a real subset (blank-`instrument_id`
+> cross-vendor-source collisions) were NOT true duplicates. Fix (`@cf2e196b` + a second independent root-cause fix
+> `@2ba20527`) is deployed to all 5 asset groups' consolidator Cloud Run jobs
+> (`Evidence: cloudbuild=ee78c203-bc43-442f-8761-bfd3b2e10db2` SUCCESS) and the missing rows are restored
+> (`market-tick-data-service@6993ea39`) — a fresh read-only dry-run re-check this session confirms **0 corrections
+> remain outstanding** and the live consolidator is now self-correcting new collisions on its own. See
+> `plans/active/issues/tradfi_manifest_row_loss_regression_2026_07_12.md` for the full trail (one P1 follow-up —
+> re-confirm task 2's orphan-sweep — still open there). **Task 4's checkbox now reverts to being gated SOLELY by task
+> 10's pre-existing fleet-drain blocker** (unrelated to this regression) — do not re-run task 4's E5 rebuild (no value:
+> already ran to completion 2026-07-07, and the only remaining gap is the v4 tail, which needs fleet-drain + a re-stamp,
+> not a second rebuild).
 >
 > **🤖 AO PLAN 2 of the instruments-completion set.** Dispatched to the agent-orchestrator (`assigned_vm: planning`,
 > role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** Coordinator =
@@ -274,72 +279,99 @@ source:
       **This checkbox stays unflipped for a more serious reason than before** — not just "waiting on task 10's
       fleet-drain" but "the manifest this task would certify against is actively losing rows for an unidentified
       reason." Do NOT re-run the E5 rebuild until the issue doc's P0 todos (identify writer, root-cause, restore) are
-      resolved — re-running now risks masking or compounding the regression.
+      resolved — re-running now risks masking or compounding the regression. **🟢 UPDATE 2026-07-12 (slot-11
+      sonnet/high) — the row-loss regression is now CONFIRMED RESOLVED and DURABLE; the sole remaining blocker reverts
+      to the pre-existing task 10 fleet-drain gate.** The issue doc's P0 chain (identify writer → root-cause →
+      implement + test fix → deploy → restore) all show `[x]` DONE as of this session
+      (`unified-trading-library@cf2e196b` + `@2ba20527`, deployed via
+      `Evidence: cloudbuild=ee78c203-bc43-442f-8761-bfd3b2e10db2` SUCCESS, restored via
+      `market-tick-data-service@6993ea39`). Independently re-verified rather than trusting the prior sessions' claims:
+      re-ran `scripts/tradfi_manifest_row_loss_restore_2026_07_12.py` in its default dry-run mode (no `--apply`, safe
+      read-only re-download + diff against the pre-loss snapshot) — result **0 value-correction UPDATEs, 0 fully-missing
+      INSERTs** (down from the original 138,589/0), i.e. nothing left to restore; the tool's own "STOP-ON-SURPRISE"
+      guard fired only because 0 sits outside its hard-coded [20000,400000] expected range for the original bug — the
+      good kind of surprise. The 138,608 rows it now classifies as "anomalies" are cases where the LIVE consolidator has
+      already resolved a `massive`/`databento` collision correctly on its own since the restore — direct evidence the
+      deployed fix (`cf2e196b`) is genuinely active in production, not just merged. Fresh manifest read (this session):
+      `total=5,088,423 · schema_version=9=5,074,452 · v4_tail=13,971 · pct_v9=99.7254%` — row count matches slot-3's
+      post-restore verification exactly (no further regression since), and the v4-tail count is byte-identical to every
+      prior session back to 2026-07-08 (untouched, as expected — that population was never part of the row-loss bug).
+      Re-confirmed fleet-drain state fresh via the non-snap `gcloud` SDK (`/home/ubuntu/google-cloud-sdk/bin/gcloud`,
+      works in this slot — the snap `gcloud` is broken as documented): 7
+      `tradfi-bf-cme-ohlcv-1m-{cl,es,gc,hg,ng,nq,si}-2025-*` VMs still `RUNNING`, launched 2026-07-12T09:00-09:02Z
+      (fleet is cycling, not draining — consistent with every prior session's finding). **Net: this checkbox correctly
+      stays unflipped, but for the SAME single reason every session before the row-loss regression found — task 10's
+      fleet-drain, nothing more.** Did NOT re-run the full E5 rebuild itself (no value in it: E5 already ran to
+      completion 2026-07-07, and the remaining gap is the v4 tail, which only clears via fleet-drain + a schema re-stamp
+      — task 10's scope, not a second E5 run) and did NOT run the issue doc's still-open P1 orphan-sweep re-confirmation
+      todo (a separate, heavier, ~15-30min corpus-wide operation, out of this task's literal scope — left for that
+      todo's own dispatch). No repo code commit this entry (read-only verification only, same precedent as the
+      audit-only entries above).
 
       **UPDATE 2026-07-12T09:05Z (slot-3) — the row-loss blocker is now RESOLVED; one gate metric changed materially,
-                                          re-verified fresh, checkbox still correctly unflipped.** All four P0 todos in the row-loss issue doc are now
-                                          done: writer identified, root cause confirmed (two independent bugs — cross-source dedup collision `cf2e196b`
-                                          + spurious-full-rebuild `2ba20527`), both fixes deployed to all 5 asset groups + confirmed live
-                                          (`cloudbuild=ee78c203-bc43-442f-8761-bfd3b2e10db2`), and the 138,589 affected rows restored + independently
-                                          verified (spot-check + corpus-wide aggregate delta, exact match) — see
-                                          `plans/active/issues/tradfi_manifest_row_loss_regression_2026_07_12.md` for the full trail. Fresh read just now
-                                          (2026-07-12T09:05Z): **5,088,423 total rows, 5,074,452 v9 (99.725%), 13,971 v4 (unchanged — still exactly the
-                                          known tail), 13,971 blank `pipeline_mode`** — the blank-`pipeline_mode` count now EXACTLY matches the v4-tail
-                                          count (was 42,315 with a 28,344-row non-tail component on 2026-07-08 — that separate CF-3 live-writer gap
-                                          appears to have been closed independently since; not verified further, out of this todo's scope). **Did NOT
-                                          re-run the E5 rebuild this turn** — `rebuild_tradfi_manifest.py` is a full-corpus GCS scan designed for
-                                          dedicated sharded VM launches (per its own docstring's per-year-VM usage pattern), not an ad hoc single-slot
-                                          invocation; running it inline here would be a multi-hour, resource-heavy operation without the proper
-                                          VM-launcher tracking (STARTED/progress/STOPPED events) this workspace's HARD RULE requires for VM launches.
-                                          The literal gate ("100% schema_version=9") genuinely still isn't met — the only remaining gap is the SAME
-                                          13,971-row v4 tail this task's history already correctly scoped to task 10 (the schema-tail re-stamp), not
-                                          something this checkbox's own rebuild step can fix by re-running. **Big finding worth flagging for task 10**:
-                                          independently checked fleet-drain status just now (`gcloud compute instances list --filter="name~'tradfi-bf-'"`)
-                                          — **zero `tradfi-bf-*` VMs are currently running**, a first across every prior check in this doc (all previous
-                                          reads found 5-8 VMs still active). If this drain is genuine and sustained (not just a momentary gap between
-                                          backfill waves), task 10's "quiet window, post fleet-drain" precondition may now be satisfiable — that's task
-                                          10's call to re-verify + act on, not folded into this checkbox. Left unflipped; the E5-rebuild-itself work is
-                                          done (per the 2026-07-08 note), and the row-loss blocker is now resolved, but the literal 100%-v9 gate remains
-                                          genuinely unmet pending task 10.
+                                              re-verified fresh, checkbox still correctly unflipped.** All four P0 todos in the row-loss issue doc are now
+                                              done: writer identified, root cause confirmed (two independent bugs — cross-source dedup collision `cf2e196b`
+                                              + spurious-full-rebuild `2ba20527`), both fixes deployed to all 5 asset groups + confirmed live
+                                              (`cloudbuild=ee78c203-bc43-442f-8761-bfd3b2e10db2`), and the 138,589 affected rows restored + independently
+                                              verified (spot-check + corpus-wide aggregate delta, exact match) — see
+                                              `plans/active/issues/tradfi_manifest_row_loss_regression_2026_07_12.md` for the full trail. Fresh read just now
+                                              (2026-07-12T09:05Z): **5,088,423 total rows, 5,074,452 v9 (99.725%), 13,971 v4 (unchanged — still exactly the
+                                              known tail), 13,971 blank `pipeline_mode`** — the blank-`pipeline_mode` count now EXACTLY matches the v4-tail
+                                              count (was 42,315 with a 28,344-row non-tail component on 2026-07-08 — that separate CF-3 live-writer gap
+                                              appears to have been closed independently since; not verified further, out of this todo's scope). **Did NOT
+                                              re-run the E5 rebuild this turn** — `rebuild_tradfi_manifest.py` is a full-corpus GCS scan designed for
+                                              dedicated sharded VM launches (per its own docstring's per-year-VM usage pattern), not an ad hoc single-slot
+                                              invocation; running it inline here would be a multi-hour, resource-heavy operation without the proper
+                                              VM-launcher tracking (STARTED/progress/STOPPED events) this workspace's HARD RULE requires for VM launches.
+                                              The literal gate ("100% schema_version=9") genuinely still isn't met — the only remaining gap is the SAME
+                                              13,971-row v4 tail this task's history already correctly scoped to task 10 (the schema-tail re-stamp), not
+                                              something this checkbox's own rebuild step can fix by re-running. **Big finding worth flagging for task 10**:
+                                              independently checked fleet-drain status just now (`gcloud compute instances list --filter="name~'tradfi-bf-'"`)
+                                              — **zero `tradfi-bf-*` VMs are currently running**, a first across every prior check in this doc (all previous
+                                              reads found 5-8 VMs still active). If this drain is genuine and sustained (not just a momentary gap between
+                                              backfill waves), task 10's "quiet window, post fleet-drain" precondition may now be satisfiable — that's task
+                                              10's call to re-verify + act on, not folded into this checkbox. Left unflipped; the E5-rebuild-itself work is
+                                              done (per the 2026-07-08 note), and the row-loss blocker is now resolved, but the literal 100%-v9 gate remains
+                                              genuinely unmet pending task 10.
 
-                                          **UPDATE 2026-07-12T09:08Z (slot-10) — re-dispatched to this same task ~3 min later; slot-3's "zero VMs" was
-                                          the momentary gap it flagged as a risk, not a sustained drain.** Fresh manifest read (via the non-snap
-                                          `gcloud`/UTL storage client, `last_modified=2026-07-12T09:08:01Z`): **byte-identical to slot-3's 09:05Z
-                                          numbers** — 5,088,423 total, 5,074,452 v9 (99.725%), 13,971 v4 tail, 13,971 blank `pipeline_mode` (exact
-                                          match, nothing drifted). Fleet-drain re-checked (`gcloud compute instances list --filter="name~'tradfi-bf-'"`,
-                                          non-snap SDK): **8 `tradfi-bf-*` VMs RUNNING**, all launched 09:00-09:02 UTC — i.e. a fresh backfill wave
-                                          started right around/after slot-3's zero-VM snapshot. Confirms this doc's own caveat: that reading was the
-                                          gap BETWEEN waves, not a genuine drain. Task 10's precondition is still unmet. Did NOT re-run the E5 rebuild
-                                          (same VM-launcher HARD RULE reasoning as slot-3 — this script is a full-corpus scan meant for dedicated
-                                          sharded VM launches, not an ad hoc single-slot invocation) and did NOT touch task 10 (separate checkbox, its
-                                          own precondition unmet anyway, out of this task's scope). Nothing in this task's own gate is actionable from
-                                          here without either (a) task 10 landing first or (b) a genuinely sustained fleet-drain window — neither is
-                                          under this checkbox's control. `skip-current-task`'d to free the slot rather than poll-wait on an external
-                                          state this task can't move. No repo code commit (read-only verification; the PM plan-doc edit ships via the
-                                          `docs(plans):` carve-out).
+                                              **UPDATE 2026-07-12T09:08Z (slot-10) — re-dispatched to this same task ~3 min later; slot-3's "zero VMs" was
+                                              the momentary gap it flagged as a risk, not a sustained drain.** Fresh manifest read (via the non-snap
+                                              `gcloud`/UTL storage client, `last_modified=2026-07-12T09:08:01Z`): **byte-identical to slot-3's 09:05Z
+                                              numbers** — 5,088,423 total, 5,074,452 v9 (99.725%), 13,971 v4 tail, 13,971 blank `pipeline_mode` (exact
+                                              match, nothing drifted). Fleet-drain re-checked (`gcloud compute instances list --filter="name~'tradfi-bf-'"`,
+                                              non-snap SDK): **8 `tradfi-bf-*` VMs RUNNING**, all launched 09:00-09:02 UTC — i.e. a fresh backfill wave
+                                              started right around/after slot-3's zero-VM snapshot. Confirms this doc's own caveat: that reading was the
+                                              gap BETWEEN waves, not a genuine drain. Task 10's precondition is still unmet. Did NOT re-run the E5 rebuild
+                                              (same VM-launcher HARD RULE reasoning as slot-3 — this script is a full-corpus scan meant for dedicated
+                                              sharded VM launches, not an ad hoc single-slot invocation) and did NOT touch task 10 (separate checkbox, its
+                                              own precondition unmet anyway, out of this task's scope). Nothing in this task's own gate is actionable from
+                                              here without either (a) task 10 landing first or (b) a genuinely sustained fleet-drain window — neither is
+                                              under this checkbox's control. `skip-current-task`'d to free the slot rather than poll-wait on an external
+                                              state this task can't move. No repo code commit (read-only verification; the PM plan-doc edit ships via the
+                                              `docs(plans):` carve-out).
 
-                  **UPDATE 2026-07-12 (slot-12 sonnet/medium) — re-dispatched, fleet-drain re-checked, still unmet.** Fresh-pulled
-                  all touched repos to LDR tip. Re-checked `tradfi-bf-*` fleet state directly via `google.cloud.compute_v1`
-                  (`gcloud`/`gsutil` both broken in-slot per the same snap-confine issue every prior session hit): **7 VMs still
-                  RUNNING** in `asia-northeast1-c` (`cl/es/gc/hg/ng/nq/si-2025`, all launched 09:00-09:02Z — same wave slot-10
-                  found at 8 VMs minutes earlier; one has since finished, 7 remain). Task 10's "quiet window, post fleet-drain"
-                  precondition is genuinely still unmet, so this task's literal gate (100% `schema_version=9`, blocked on the same
-                  13,971-row v4 tail) is not actionable from here — same conclusion as slot-3 and slot-10's back-to-back checks
-                  minutes before this one; nothing new on the manifest-stats side (their 09:05Z/09:08Z reads were byte-identical,
-                  no reason to expect drift in this short a window, did not re-read to avoid redundant full-corpus work). Did NOT
-                  re-run the E5 rebuild (same VM-launcher HARD RULE reasoning as slot-3/slot-10 — full-corpus GCS scan meant for
-                  dedicated sharded VM launches, not an ad hoc single-slot invocation). `skip-current-task`'d to free the slot
-                  rather than poll-wait on an external state (task 10's fleet-drain) this task can't move. No repo code commit
-                  this entry (read-only re-verification).
+                      **UPDATE 2026-07-12 (slot-12 sonnet/medium) — re-dispatched, fleet-drain re-checked, still unmet.** Fresh-pulled
+                      all touched repos to LDR tip. Re-checked `tradfi-bf-*` fleet state directly via `google.cloud.compute_v1`
+                      (`gcloud`/`gsutil` both broken in-slot per the same snap-confine issue every prior session hit): **7 VMs still
+                      RUNNING** in `asia-northeast1-c` (`cl/es/gc/hg/ng/nq/si-2025`, all launched 09:00-09:02Z — same wave slot-10
+                      found at 8 VMs minutes earlier; one has since finished, 7 remain). Task 10's "quiet window, post fleet-drain"
+                      precondition is genuinely still unmet, so this task's literal gate (100% `schema_version=9`, blocked on the same
+                      13,971-row v4 tail) is not actionable from here — same conclusion as slot-3 and slot-10's back-to-back checks
+                      minutes before this one; nothing new on the manifest-stats side (their 09:05Z/09:08Z reads were byte-identical,
+                      no reason to expect drift in this short a window, did not re-read to avoid redundant full-corpus work). Did NOT
+                      re-run the E5 rebuild (same VM-launcher HARD RULE reasoning as slot-3/slot-10 — full-corpus GCS scan meant for
+                      dedicated sharded VM launches, not an ad hoc single-slot invocation). `skip-current-task`'d to free the slot
+                      rather than poll-wait on an external state (task 10's fleet-drain) this task can't move. No repo code commit
+                      this entry (read-only re-verification).
 
-                  **UPDATE 2026-07-12 (slot-9 sonnet/high) — re-dispatched, fleet-drain re-checked, still unmet, no drift.**
-                  Fresh-pulled all touched repos to LDR tip. Re-checked `tradfi-bf-*` fleet state via the non-snap
-                  `/home/ubuntu/google-cloud-sdk/bin/gcloud`: **the same 7 VMs slot-12 found are still RUNNING**
-                  (`cl/es/gc/hg/ng/nq/si-2025`, unchanged creation timestamps 09:00-09:02Z) — no new wave, no completions since
-                  slot-12's check. Task 10's fleet-drain precondition remains unmet; this task's literal gate is still not
-                  actionable from here. Did not re-read the manifest (byte-identical on 3 consecutive prior checks, no reason
-                  to expect drift). Did NOT re-run the E5 rebuild (same VM-launcher HARD RULE reasoning). `skip-current-task`'d
-                  to free the slot. No repo code commit this entry (read-only re-verification).
+                      **UPDATE 2026-07-12 (slot-9 sonnet/high) — re-dispatched, fleet-drain re-checked, still unmet, no drift.**
+                      Fresh-pulled all touched repos to LDR tip. Re-checked `tradfi-bf-*` fleet state via the non-snap
+                      `/home/ubuntu/google-cloud-sdk/bin/gcloud`: **the same 7 VMs slot-12 found are still RUNNING**
+                      (`cl/es/gc/hg/ng/nq/si-2025`, unchanged creation timestamps 09:00-09:02Z) — no new wave, no completions since
+                      slot-12's check. Task 10's fleet-drain precondition remains unmet; this task's literal gate is still not
+                      actionable from here. Did not re-read the manifest (byte-identical on 3 consecutive prior checks, no reason
+                      to expect drift). Did NOT re-run the E5 rebuild (same VM-launcher HARD RULE reasoning). `skip-current-task`'d
+                      to free the slot. No repo code commit this entry (read-only re-verification).
 
 - [x] ✅ [DATA] P1. **E6 CF-7 relabel — DIAGNOSIS COMPLETE 2026-07-07 slot-7 opus/max.** All 5,541 CF-7 rows (4,903
       blank data_type + 638 blank/UNKNOWN venue) are the SAME class of manifest row: aggregate-level phantom markers
@@ -574,6 +606,27 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-12 (slot-11 sonnet/high, data_engineering craft)** — **Dispatched to task 4 (E5 manifest rebuild);
+  independently re-verified the row-loss regression is resolved and durable rather than trusting prior sessions' claims,
+  then confirmed the checkbox correctly reverts to being gated solely by task 10's fleet-drain.** Ran
+  `market-tick-data-service/scripts/tradfi_manifest_row_loss_restore_2026_07_12.py` in its default dry-run mode
+  (read-only — fresh re-download of the live index + the pre-loss snapshot, diff, no write): **0 value-correction
+  UPDATEs, 0 fully-missing INSERTs** — nothing left to restore; 138,608 rows now classify as "anomalies" because the
+  live consolidator has already self-corrected new `massive`/`databento` collisions since the restore, direct evidence
+  the deployed fix (`unified-trading-library@cf2e196b`) is genuinely active in production. Fresh manifest read (DuckDB
+  against the same downloaded snapshot):
+  `total=5,088,423 · schema_version=9=5,074,452 · v4_tail=13,971 · pct_v9=99.7254%` — row count matches slot-3's
+  post-restore verification exactly (no further regression), v4-tail byte-identical to every prior session back to
+  2026-07-08. Re-confirmed fleet-drain state fresh via the non-snap `gcloud` SDK: 7
+  `tradfi-bf-cme-ohlcv-1m-{cl,es,gc,hg,ng,nq,si}-2025-*` VMs still `RUNNING` (launched 2026-07-12T09:00-09:02Z, same VMs
+  slot-10 found ~15-30 min prior — fleet is cycling, not draining). Updated the header banner from 🔴 (active
+  regression) to 🟢 (resolved + verified) and appended the finding to task 4's own entry. Did NOT re-run the E5 rebuild
+  (no value — already ran to completion 2026-07-07; the only remaining gap is the v4 tail, which clears via
+  fleet-drain + re-stamp, task 10's scope, not a second rebuild) and did NOT run the issue doc's still-open P1
+  orphan-sweep re-confirmation todo (heavier, separate operation, left for its own dispatch). Checkbox correctly stays
+  unflipped. No repo code commit this entry (read-only verification only); this plan-doc edit ships via the
+  `docs(plans):` carve-out.
 
 - **2026-07-12 (slot-10 sonnet/high, infra craft)** — **Dispatched to the last open todo (RESUME runbook, task -003);
   re-verified its own precondition fresh, confirmed still unmet, did NOT execute the runbook.** This task's own text is
