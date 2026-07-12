@@ -1281,3 +1281,16 @@ same rate-limit path that hit the 429-burst wall documented above. This is a gen
 `plans/active/issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` (Helius plan upgrade vs. more parallel-
 walker VMs vs. accept the gap) and posted `/blocked` on AO item `mvp_backfill_defi_onchain_v10-010` rather than
 launching another VM that would likely re-hit the same ceiling without an operator call on cost/approach first.
+
+### 2026-07-12 (later) — 3rd re-dispatch to slot 3; re-confirmed unchanged, re-filed /blocked (BLK-40ea7a68)
+
+Re-dispatched to slot 3 again (same day as slot 4's 2026-07-12 re-confirmation above). Live-checked
+`_index/drift_v2_sig_index.parquet` directly via GCS blob existence — still does not exist; both part-sets (`_parts/`
+6,293 files, `_parts_b/` 876 files) still unconsolidated; the ~11-month gap (2025-01-15 → 2025-12-23) is unchanged. No
+operator ruling has landed on `plans/active/issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` todo 3
+("Decide the DRIFT V2 sig-index Helius throughput path: (a) Helius plan upgrade, (b) more parallel-walker VMs, (c)
+accept the gap"). Re-filed `/blocked` (`BLK-40ea7a68`, recommendation: (b) more parallel-walker VMs) rather than
+re-running the full investigation a 3rd time — nothing has changed since 2026-07-11/2026-07-12 that a fresh
+investigation would surface. **Flagging the pattern**: this AO item has now boomeranged back into the queue 3× in ~36h
+without an operator answer reaching the blocked-question queue; if this repeats, the dispatcher may need
+`prereqs.conditions` gating on this task until the operator ruling lands, rather than continued re-dispatch.
