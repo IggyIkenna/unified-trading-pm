@@ -200,3 +200,16 @@ never-recaptured subset, which is why it is gated rather than dropped.
 No code shipped for this decision by design — the deliverable is the decision itself plus the gated P3 follow-up; the
 `## What I found` counts (BITGET-FUTURES 41,027 / 4,063 / 40,845 / 75,466) remain the scale reference for the future
 audit.
+
+## P3 gate re-check — 2026-07-12T14:12Z (data_engineering slot-12)
+
+Dispatched to the `[DATA] P3` "GATED on the P1-corrected cefi backfill re-capture sweep (which itself is gated on the
+sibling `tardis_concurrent_ip_lockout_2026_07_12.md` lockout fix)" todo. Checked the gate before attempting anything:
+`tardis_concurrent_ip_lockout_2026_07_12.md`'s own todo #1 (operator decision a/serialize vs b/plan-upgrade vs
+c/centralized-proxy) is still `- [ ]` open, and todo #2 (implement chosen fix) is still `- [ ]` open — confirmed no
+lock/mutex/proxy/403-code-274 commit landed (git log unchanged since the 2026-07-12 slot-3 check in that doc). A live
+`/blocked` (`BLK-f1417674`, task `tardis_concurrent_ip_lockout-001`) already carries this exact operator decision and is
+unanswered — confirmed via direct `GET /api/state` read, not trusted from a prior note. Running the Layer-1 completeness
+audit now would reproduce the same 403-lockout-dominated noise the sibling doc's own verification log already identified
+as misleading pre-fix. Not filing a duplicate blocked-question (`BLK-f1417674` already covers it and remains live).
+`skip-current-task`'d — nothing in-craft to do until the sibling operator decision lands.
