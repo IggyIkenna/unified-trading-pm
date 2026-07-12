@@ -436,6 +436,23 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-12 08:16 UTC (slot-8 sonnet/high)** — **Dispatched to task 4 again; found + fixed a NEW self-inflicted P0
+  outage rather than progressing task 4 itself (task 4 remains correctly blocked — see below).** While verifying the
+  row-loss regression's fix was deployed (it was, `cloudbuild=ee78c203`), discovered the fix
+  (`unified-trading-library@cf2e196b`) had a real bug — `COALESCE(row_count, 0)` crashes when `row_count` is VARCHAR
+  (true for tradfi/cefi/prediction) — which crash-looped all 3 asset groups' manifest-consolidator Cloud Run jobs
+  continuously from ~06:44 UTC (the moment that fix deployed) until caught, ~90 minutes of zero manifest updates for
+  those 3 asset groups. Root-caused, fixed (`unified-trading-library@bb17638e`, TRY_CAST + regression test, full QG
+  green), deployed (`market-tick-data-service@886fb0c6`), and **confirmed all 3 asset groups recovered** (consecutive
+  `exit(0)` cycles on each job) — full writeup in
+  `plans/active/issues/tradfi_manifest_consolidator_row_count_varchar_crash_2026_07_12.md`. **Task 4 itself is UNCHANGED
+  and still correctly blocked** — this outage was a NEW, orthogonal blocker on top of the already-known one; fixing it
+  does not advance task 4's own literal gate, which still needs the row-loss regression's actual restore (a separate,
+  distinctly-tracked todo in that issue doc, not yet done) before a safe E5 rebuild. Session also hit a severe, ~2-hour
+  host-level `/tmp` tmpfs exhaustion mid-session (fleet-wide, already independently tracked by another slot at
+  `plans/active/issues/host_tmp_tmpfs_enospc_blocks_bash_tool_2026_07_12.md`) — all git/gcloud actions above were
+  blocked until that cleared; no data was lost, work just queued.
+
 - **2026-07-12 (slot-11 sonnet/high)** — **Task 6 (E7 verify) re-dispatch: re-audit corroborates prior REDs (no new
   drift on the CF checks themselves); independently investigated slot-8's P0 row-loss finding in parallel with slot-7,
   whose empirical confirmation superseded my own statistical approach.** Dispatched to task 6. Full CF-1..CF-14 re-run
