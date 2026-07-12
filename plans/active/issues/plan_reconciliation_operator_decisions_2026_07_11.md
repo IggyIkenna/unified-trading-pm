@@ -3712,6 +3712,60 @@ tracked in the Progress Log.
 
 ## Progress Log (append-only)
 
+- 2026-07-12 (dev sports-fixtures OOM todo CLOSED — mirrored, not descoped): confirmed dev is genuinely consumed, not
+  dead weight — `uts-dev-{sports,features,instruments,cefi}-*-t1-schedule` Cloud Scheduler entries (4x/day: midnight,
+  6am, noon, 6pm, matching prod's cadence exactly) are ENABLED and firing every 6h in the SAME `central-element-323112`
+  project as prod (dev is a same-project `uts-dev-` prefix tier for pre-prod batch/cron validation, not a
+  separate-GCP-project tier like deployment-ui's dev/staging/prod split).
+  `gcloud run jobs executions list --job=uts-dev-instruments-service-sports-fixtures`: 338/338 executions failed since
+  job creation (2026-04-19), 100% failure rate, never once succeeded. **Root-caused past the operator's OOM framing**:
+  Cloud Logging showed `Container called exit(2)` (a clean argparse exit), never `Container terminated on signal 9`
+  (prod's actual pre-fix OOM signature) — so the dev job was NOT OOM-killed at all. `gcloud run jobs describe` diff vs
+  `uts-prod-instruments-service-sports-fixtures` showed dev's baked-in container args used a stale `--category=SPORTS`
+  flag; grepped `instruments-service` CLI (`unified_trading_library/service_cli.py:347` calls strict
+  `parser.parse_args()`, and `--asset-group` — not `--category` — is the only registered filter flag,
+  `unified_trading_library/service_framework/... `) confirms an unrecognized flag under strict `parse_args()` always
+  hits argparse's `sys.exit(2)` path before any app code (incl. the memory-heavy fetch loop) ever runs — matching the
+  observed exit(2) signature exactly and explaining why raw cpu/mem alone would not have fixed it. Also
+  `instruments_service/cli/instruments_handler.py:126-128`: `asset_groups = cli_asset_groups or ["ALL"]` — even if the
+  stale flag hadn't crashed the parse, dropping `--asset-group=SPORTS` would have silently widened the run to ALL asset
+  groups (CEFI+DEFI+TRADFI+SPORTS+PREDICTION), which IS a real OOM risk at small cpu/mem (the exact all-AG workload
+  `terraform/gcp/t1_batch_scheduler.tf:41-45` documents as having OOM'd prod at 8cpu/32Gi previously). Env var also
+  drifted (dev: `ENVIRONMENT=dev`, prod: `DEPLOYMENT_ENV=prod`) but was inert — `bucket_naming.py:128-140` falls back
+  `DEPLOYMENT_ENV` → `ENVIRONMENT` → `prod` default, so dev was already resolving `dev` correctly via the fallback;
+  fixed anyway for exact prod-shape parity. **Fix applied**
+  (`gcloud run jobs update uts-dev-instruments-service-sports-fixtures --region=asia-northeast1`): cpu 2→8, memory
+  4Gi→32Gi, args `--category=SPORTS`→`--asset-group=SPORTS` (mirrors prod's exact 5-arg list), env `ENVIRONMENT=dev`→
+  `DEPLOYMENT_ENV=dev` (mirrors prod's exact 4-var set, same GCP_PROJECT_ID/GCS_LOCATION/PYTHONUNBUFFERED).
+  **Verified**: `gcloud run jobs execute uts-dev-instruments-service-sports-fixtures --region=asia-northeast1 --wait` →
+  execution `uts-dev-instruments-service-sports-fixtures-xchgv` completed successfully in 3m26.46s, `succeededCount: 1`,
+  `status.conditions[].type=Completed status=True` — first success in the job's history (post-fix spec re-`describe`d to
+  confirm args/env/resources landed as intended). Evidence: gcp_project=central-element-323112,
+  execution=uts-dev-instruments-service-sports-fixtures-xchgv, region=asia-northeast1.
+
+- 2026-07-12 (finding 366 — global-ledger epic full re-audit COMPLETE): executed per §A2 ruling ("FULL RE-AUDIT of
+  global_ledger epic... authored as HUMAN plan") via `plans/active/global_ledger_epic_reaudit_2026_07_12.md`.
+  Claim-by-claim re-audit of `plans/epics/global_ledger_pnl_attribution_master.md` (10 claims + 2
+  epic-internal-consistency bugs; full verdict table in that plan's Progress Log). Headline: the epic's claimed
+  "Migration plan 0/27, Phase 7/8 DEFERRED-POST-CUTOVER" is CONTRADICTED-BY-CODE — real, tested
+  InstructionLedger/PricingLedger/TransferLedger GCS writers + a paper-mode PassiveLedger synthesiser have SHIPPED, but
+  through a SEPARATE plan (`plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`, parented under
+  `batch_live_symmetry_master`, not this epic), not through the frozen migration plan (which correctly stays 0/27
+  untouched). The live (non-paper) PassiveLedger per-event divergence-check listener is genuinely still unshipped
+  (forward-carried as a new epic P3 todo). `EventType` enum is now 39 (not 37) at HEAD. VM-prefix claims BACKED (1
+  cosmetic naming correction: `batch-live-recon-`, not `batch-live-recon-cron-`). greeks-service@b0b702d P2 item
+  re-verified BACKED, no regression. All 4 codex SSOT docs exist/current (contradicts the epic's "DEFERRED-POST-CUTOVER"
+  framing); one codex-internal stale sub-claim found (`global-ledger-architecture.md` still calls
+  `build_attribution_rows()` a "stub") and flagged CODEX-GATED (not edited — operator-gated, new todo filed in the
+  re-audit plan for a follow-up session). **GOVERNANCE-GATE FINDING escalated to operator (not adjudicated)**: no
+  explicit operator-ack record was found for the discovery plan's 3 gated decisions (Phase 3 late-arriving-data / Phase
+  5 greeks-home / Phase 6 TreasuryLedger split) despite the Citadel plan's shipped code making de-facto choices on all 3
+  axes — read as a cross-plan visibility gap (two plans, two epics, one gated ledger-taxonomy surface, no closing
+  cross-reference) rather than proven unauthorized action, but exactly the pattern the operator asked this audit to
+  surface. Epic synced in place (`last_updated` bumped to 2026-07-12, all STALE/CONTRADICTED-BY-CODE claims corrected
+  with "(was: …)" + evidence citations) — commit pending via the orchestrator (this agent runs no git commands per its
+  instructions).
+
 - 2026-07-12 (LEFTOVER QUEUE CLOSED, final Q&A round): operator ruled all 4 remaining items. (1) codex finding 346 FIXED
   — shard-level-failure-isolation.md synced to the 4-category taxonomy, validation-and-errors.md §1 named SSOT. (2)
   Three sync edits applied: CLAUDE.md URDI "phantom" label RETIRED (module verified load-bearing in 6+ adapters);
@@ -3739,8 +3793,10 @@ tracked in the Progress Log.
 - 2026-07-12 (sports prod deploy, escalation ii COMPLETE): scheduler args fix tofu-applied (gen 2, state unfroze 10:40Z;
   discovery dispatched 16:45Z); prod fixtures job created 8cpu/32Gi, 3 consecutive successes incl. 2 unattended cron
   ticks; NEW side-finding: DEV fixtures job OOM-failing every run (~336 execs) at 2cpu/4Gi.
-- [ ] [INFRA] P2. Fix uts-dev-instruments-service-sports-fixtures OOM (mirror the prod 8cpu/32Gi bump or descope the dev
-      cron) — side-finding from the 2026-07-12 prod deploy.
+- [x] [INFRA] P2. Fix uts-dev-instruments-service-sports-fixtures OOM (mirror the prod 8cpu/32Gi bump or descope the dev
+      cron) — side-finding from the 2026-07-12 prod deploy. — gcloud@central-element-323112 2026-07-12 + evidence below
+      (MIRRORED, not descoped: real consumed dev tier, not dead weight — root cause was a stale `--category=SPORTS` arg,
+      not raw OOM; both fixed).
 - 2026-07-12 (rulings batch 4): P1e gate formally GREEN (re-audit PASS 0/0/0/0; gate doc + coordinator table + P2a/P2b
   ran-ahead notes applied — 246/247). Registry regenerated: 23 epics / 6 tiers, 4 superseded excluded, regen-script todo
   filed (339). Orchestrator census regenerated: 8 live children, was 'zero active' (216/323; NB the named populator
