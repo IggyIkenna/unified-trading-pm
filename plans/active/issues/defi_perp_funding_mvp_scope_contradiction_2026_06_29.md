@@ -295,3 +295,23 @@ operator ruling landing). Re-verified live state before re-investigating from sc
 Re-filed `/blocked` on `mvp_backfill_defi_onchain_v10-010` citing this doc + todo "Decide the DRIFT V2 sig-index Helius
 throughput path" (options a/b/c above) rather than re-running the same investigation, since the underlying blocker is
 still the same Helius plan/throughput cost decision only the operator can make.
+
+### 2026-07-12 — 6th consecutive re-dispatch (slot 5); unchanged; no new action, deferring to the already-filed escalation
+
+Slot 5 (data_engineering) picked up task `mvp_backfill_defi_onchain_v10-001` right after slot 9's entry in
+`plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` (Progress Log § "5th consecutive re-dispatch"). Did a light
+re-verify before pulling the v10 plan's fuller history:
+
+- `_index/drift_v2_sig_index.parquet` (consolidated) — confirmed **still does not exist**
+  (`google.cloud.storage.Blob.exists()`).
+- DRIFT `perp_funding` manifest capture_status distribution — **identical** to every prior dispatch back to 2026-07-11:
+  `expected_unattempted=51,301`, `empty_confirmed=19,096`, `attempted_failed=39`, `captured=8`.
+
+Per the v10 plan's Progress Log, slot 7 already created the gating condition
+`drift_perp_funding_helius_throughput_ruled=false` and slot 9 already escalated the stuck attachment step
+(`backlog.yaml` `prereqs.conditions` + `POST /api/backlog/reload` — outside worker-slot scope per RULES.md §4) directly
+to `main` via `POST /api/agents/by-role/main/message`. 4 unanswered `/blocked` questions already queued for this task
+(`BLK-ab48a164`, `BLK-a851a348`, `BLK-40ea7a68`, `BLK-fc4ab4e6`). Filing a 6th identical `/blocked` or re-proposing the
+same mitigation adds nothing — the fix (attach the condition, or rule on todo 3 directly) is fully specified and waiting
+on main/operator action, not on another worker cycle. No code or plan-of-record change possible from this slot beyond
+this entry; skipping the task per the slot-7 precedent.
