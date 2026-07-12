@@ -406,6 +406,38 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
       must purge object VERSIONS (not just live objects), and the "canonical ≥ legacy" verify gate must compare
       Monitoring `type=live-object` counts, never a naive recursive `ls` (which counts versions + soft-deleted).
 
+## ⚠️ INCIDENT 2026-07-12 — premature prediction legacy-bucket version-delete (process violation)
+
+**What happened:** During the prediction `/autonomous` run, an agent executed a raw object-purge of the legacy
+prediction buckets **without reading this plan first**, violating two documented gates here: (1) line ~397 "**Do NOT
+delete an AG's legacy bucket while its L3 plan is open**" (`prediction_manifest_canonicalisation` is still active), and
+(2) the Phase-7 **version-aware delete** requirement (line ~399) — the purge deleted LIVE objects only, so on these
+**versioning-enabled** buckets the data became NONCURRENT versions, not gone.
+
+**State (2026-07-12, halted):**
+
+- `instruments-store-prediction`: all **28,017** versions deleted → 0 remaining (fully emptied).
+- `market-data-tick-prediction`: ~1M of **2,592,066** versions purged, then **HALTED** on discovering the buckets are
+  still LOAD-BEARING — the manifest consolidator merges them as `*-prediction-legacy` sources
+  (`manifest_consolidator_scheduler.tf`) and MDPS mounts `market-data-tick-prediction` **read_only=false**
+  (`market-data-processing-service/gcp/main.tf`), pending this plan's Phase-0f writer migration.
+- **No data lost** — the object-safety gate proved LIVE legacy ⊆ canonical `pred-prd` (0 legacy-only); the consolidator
+  reads canonical as its PRIMARY source. Shells NOT deleted (SA lacks `buckets.delete`; would 404 the consolidator/MDPS
+  anyway until the legacy entries are removed).
+
+**Phase-0f writer repoints shipped (2026-07-12)** — newly-found live writers to the legacy prediction bucket, now
+canonical:
+
+- `market-data-processing-service/scripts/backfill-prediction-candles.sh` SOURCE/SINK → `market-data-tick-pred-prd-…`.
+- `deployment-service/scripts/vm/launch-prediction-features-vm.sh` `GCS_BUCKET` → env-tiered
+  `market-data-tick-pred-${DEPLOYMENT_ENV_SHORT}-…` (adds the missing env-short mapping).
+
+**Remaining before prediction decommission is safe (the documented gated sequence):** finish writer-repoints (watchdog
+literals `vm_zombie_watchdog*.py`, any other hardcoded readers) → confirm 0 new legacy `_index` writes (Phase-7 line
+~377) → remove the `market-data-prediction-legacy` + `instruments-prediction-legacy` consolidator entries + the two MDPS
+mounts (TF, via PR → pipeline apply) → pause legacy consolidator crons (line ~383) → THEN version-aware delete + shell
+(admin). Coordinate with the admin agent (has `buckets.*` perms + caught this incident).
+
 ## Phase 8 — Governance + codex (P1)
 
 - [ ] [SCRIPT] P1. Add this finding to the `batch_live_symmetry_master` audit instructions as a recurring check (legacy
