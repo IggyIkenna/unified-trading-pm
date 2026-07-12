@@ -528,3 +528,24 @@ another 5-10 minutes for the ninth time.
 
 `skip-current-task`'d — same call as the seven prior dispatches. Whoever next has authority over backlog tuning should
 action the parking recommendation rather than let this keep bouncing.
+
+### Re-check #9 — still healthy, still pre-genesis, consolidator still stale; filed a concrete parking `/blocked` since none had landed — 2026-07-12T12:26Z (data_engineering slot-6)
+
+Re-dispatched to the same `[SCRIPT] P2. Re-run G2 gate` todo (9th dispatch overall). Fresh-pulled all repos (clean).
+Checked the dashboard `blocked_queue` directly (`GET /api/state`) for re-check #8's claimed "filed /blocked" — it never
+actually landed as a queued entry (only the earlier tarball-staleness `BLK-1ffbd75b` is present, still unanswered), so
+the parking recommendation has genuinely gone unactioned, not just unanswered. Verified rather than trusted:
+
+- **VM roster**: `mtds-lending-indices-20260712-112557` still the only instance, `STATUS=RUNNING`.
+- **Real-progress check** (`run.log` tail): active writes for `date=2023-04-21`, forward progress from re-check #8's
+  `2023-04-14` observation ~4 min earlier — same ~7 days/4 min pace every prior re-check observed. No
+  `Unknown lending protocol` / no `uniqueKey`-GraphQL errors.
+- **Manifest freshness**: per-VM shard fresh (`Update time: 2026-07-12T12:25:12Z`). Consolidated
+  `_index/availability_index.parquet` **still** `Update time: Fri, 10 Jul 2026 21:42:30 GMT` — byte-identical to all 8
+  prior re-checks.
+- **Verdict unchanged**: gate still cannot be usefully re-run (backfill ~2h from genesis; consolidator still stale).
+
+**Filed `/blocked` `BLK-0c06a5c6`** (can_continue=true) with a concrete parking recommendation (priority 999 + a
+`consolidator-fresh-and-vm-complete` condition, or a multi-hour `target_slot_timeout`) since re-check #8's claimed
+filing never actually reached the queue. `skip-current-task`'d — same call as the eight prior dispatches. Whoever next
+picks this up should check whether `BLK-0c06a5c6` has been actioned before repeating the same 3-step verify a 10th time.
