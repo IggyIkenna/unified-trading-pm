@@ -288,12 +288,29 @@ republished the tarball itself: `create-code-tarballs.sh --include alerting-serv
       stale-enforce-blocks, missing-manifest-enforce-blocks, incident-launcher-wiring. Full `quality-gates.sh` green
       (sentinel verified for 7ae9013); quickmerge landed on `live-defi-rollout`. Fleet-wide rollout to the other ~153
       launchers is left as the mechanical follow-up below (the design work — the helper — is done here).
-- [ ] [INFRA] P2. Roll the `lc_verify_tarball_freshness` pre-launch guard out across the remaining `launch-*.sh` fleet
-      (only `launch-mtds-lending-indices-backfill-vm.sh` is wired so far). Each launcher sources
+- [x] ✅ [INFRA] P2. Roll the `lc_verify_tarball_freshness` pre-launch guard out across the remaining `launch-*.sh`
+      fleet (only `launch-mtds-lending-indices-backfill-vm.sh` is wired so far). Each launcher sources
       `lib/launcher_common.sh` and calls the guard with the repos its VM fetches (derivable from its `VM_SERVICE` +
       asset-group), before the `gcloud create`. Mechanical follow-up to the P1 above — the helper + reference wiring
       already exist. Consider a QG guard analogous to `TestDurableLogStreamerCoverage` that asserts every
-      tarball-fetching launcher wires the freshness check. (repo: `deployment-service`)
+      tarball-fetching launcher wires the freshness check. (repo: `deployment-service`) — **Done 2026-07-12 (slot-10,
+      infra).** `deployment-service@b5bd336`. Wired all 107 remaining tarball-fetching launchers (100% of the non-AWS
+      fleet — every `launch-*.sh` whose `gcloud` metadata carries a GCS `startup-script-url=`, including the 2 bespoke
+      consolidated-live launchers that fetch tarballs via their own `setup-*-consolidated-vm.sh`, not just the generic
+      `setup-data-pipeline-vm.sh` dispatcher). Each launcher now sources `lib/launcher_common.sh` (where missing) and
+      calls `lc_verify_tarball_freshness "$CODE_BUCKET" <repos...>` before its `gcloud create`/ `lc_gcloud_create`
+      invocation, scoped per-launcher to the repos its `VM_SERVICE` metadata actually needs (mapped from the same
+      `SERVICE_TARBALLS`/`MTDS_DEPENDENT_SERVICES` table `setup-data-pipeline-vm.sh` uses) plus the always-required core
+      (`unified-api-contracts`, `unified-trading-library`, `deployment-service`); a handful of non-standard `VM_SERVICE`
+      values (one-off cutover/drill launchers: `dr`, `chaos`, `wallet_treasury`, `qg_snapshot`, `client_reporting`) fall
+      back to core-only since they aren't in the service→repo table. Applied via a one-shot scratchpad transform script
+      (not committed) + manual fix for the one launcher (`launch-honest-coverage-vm.sh`) that builds its `gcloud`
+      invocation as a bash array rather than a direct call. Verified `bash -n` clean on all 108 wired launchers, no
+      trailing whitespace, guard token present in every one. Added `TestTarballFreshnessGuardCoverage` to
+      `tests/unit/test_vm_launcher_scripts.py` (mirrors `TestDurableLogStreamerCoverage`'s pattern exactly — same
+      whitelist-with-reason structure, self-test sentinel, GCP-only/`-aws.sh`-excluded scoping) so a future
+      tarball-fetching launcher that forgets the guard fails CI. Full `quality-gates.sh` green (sentinel verified for
+      `b5bd336`); quickmerge landed on `live-defi-rollout`.
 - [x] ✅ [INFRA] P3. Delete the orphaned `market-tick-data-service-code.tar.gz` / `.manifest.json` pair from
       `gs://deployment-scripts-central-element-323112/code/` — confirmed zero launcher references (`mtds-code.tar.gz` is
       the only name `create-code-tarballs.sh` ever produces for this repo); the orphan cost this audit an extra
