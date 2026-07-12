@@ -158,7 +158,50 @@ the zero-rows pattern was confirmed, to stop burning SPOT spend on a guaranteed-
       source for trades/book at all — needs a design decision) + a `TardisAdapter.download_batch` integration for
       derivative_ticker post-2026-04-17. Recommend routing this as its own scoped plan/task rather than a quick handler
       patch.
-- [ ] [VERIFY] P1. Re-launch the PACIFICA-SOLANA/EXTENDED-STARKNET backfill now that the code fix has landed and confirm
-      real rows write (see recommendation 3) — check run.log for `venues=['PACIFICA-SOLANA']` /
-      `venues=['EXTENDED-STARKNET']` and `rows_written > 0`, not just VM RUNNING status. LIGHTER-ZKSYNC stays excluded
-      from this re-launch until the new P2 CODE todo above lands. (repo: deployment-service)
+- [x] ✅ [VERIFY] P1. Re-launch the PACIFICA-SOLANA/EXTENDED-STARKNET backfill now that the code fix has landed and
+      confirm real rows write (see recommendation 3). (repo: deployment-service) — **PARTIAL: EXTENDED-STARKNET
+      verified, PACIFICA-SOLANA blocked by a NEW bug (see follow-up todo below).** - First launch
+      (RUN_TS=20260712-052416) still showed `venues=[]` for both venues — root cause: the VM code tarball
+      (`gs://deployment-scripts-central-element-323112/code/mtds-code.tar.gz`) was built 2026-07-12T05:00:54Z from
+      `market-tick-data-service@4f62bd7e` (the P2 warning-log fix), one commit BEHIND the actual P1 venue-wiring fix
+      `356457c2` — a stale-tarball gotcha (`codex/05-infrastructure/vm-tarball-deployment.md`), not a code regression.
+      Killed the 5 stale-code VMs, rebuilt+reuploaded the tarball via `create-code-tarballs.sh` (now
+      `mtds-code.tar.gz@356457c2`), relaunched (RUN_TS=20260712-053413). - **EXTENDED-STARKNET: VERIFIED.**
+      `venues=['EXTENDED-STARKNET']` correct on all 3 shards; `cefi-extended-starknet-2026-20260712-053413` captured
+      **1464 real rows** for 2026-01-01 (trades + derivative_ticker). 2024/2025 shards showed 0 rows for their first ~9
+      days (2024-10-01→09, 2025-01-01→09) — plausibly early-listing honest absence, not re-verified further within this
+      session. - **PACIFICA-SOLANA: BLOCKED — new bug found, not the original allowlist gap.**
+      `venues=['PACIFICA-SOLANA']` is correct (drop-fix confirmed working) but **0 rows across every date tested**
+      (2025-06-01→09, 2026-01-01→13). Killed both PACIFICA-SOLANA VMs before they burned further SPOT spend on
+      guaranteed-zero days — see the new follow-up todo below for root cause + recommended fix.
+- [ ] [CODE] P1. `> **NOTIFY-OPERATOR class finding (data-correctness, silent failure).**` PACIFICA-SOLANA historical
+      backfill via `fetch_pacifica_rest`'s `/trades/history` cursor-walk cannot reach dates more than ~1-2 days in the
+      past — structurally similar to the LIGHTER-ZKSYNC deferral above, discovered 2026-07-12 during the item-3 VERIFY
+      re-launch. (repo: market-tick-data-service) - Root cause (confirmed via direct API probe against
+      `api.pacifica.fi`, not just VM logs): `/trades/history` cursor pagination for a busy symbol (BTC) only covers ~1-2
+      hours of trade volume per 1000-row page, and the endpoint starts returning `HTTP 429` after ~13 rapid sequential
+      calls with **no delay/backoff between pages**. Reaching PACIFICA-SOLANA's UAC `VENUE_DATA_TYPE_CAPABILITIES`
+      start_date (2025-06-01, ~13 months back from today 2026-07-12) would require many thousands of paginated calls per
+      coin per day — mathematically unreachable within the observed rate limit ceiling. -
+      `_fetch_pacifica_trades_for_coin` / `_fetch_pacifica_book_for_coin` in `_umi_pacifica.py` do NOT use the
+      `get_with_429_retry` backoff helper that's already imported in the same file (line 25) and used elsewhere
+      (`fetch_pacifica_candles`, line ~407) — a 429 on `/trades/history` just logs at `logger.debug` (invisible at
+      normal INFO log level) and breaks the cursor walk immediately with zero rows, no retry. The `/book` 429s (visible
+      at WARNING) are a red herring — book_snapshot_5 is already excluded from the batch universe, but
+      `fetch_pacifica_rest` calls `_fetch_pacifica_book_for_coin` unconditionally for every coin regardless of the
+      caller's `data_types` filter (`onchain_perp_batch_handler.py` only excludes it from the OUTPUT, not from the
+      underlying fetch — wastes a request + risks burning through the rate-limit budget before trades even finishes). -
+      Confirmed via VM run.log: `cefi-pacifica-solana-2025-20260712-053413` / `-2026-...` produced 0 rows across every
+      one of the first ~9-13 days tested (2025-06-01→09, 2026-01-01→13), with
+      `WARNING Pacifica /book <coin>:       HTTP 429` on nearly every chunk — consistent with the rate-limit ceiling,
+      not honest absence. - **Recommended fix — needs a design decision (same as LIGHTER-ZKSYNC), NOT a quick patch:**
+      (a) skip the `/book` call entirely when `book_snapshot_5` isn't in the caller's requested `data_types` (stops
+      wasting rate-limit budget on excluded output); (b) wire `get_with_429_retry` into the trades cursor-walk with an
+      inter-page delay; (c) even with (a)+(b), verify whether Pacifica's actual retention/rate-limit envelope makes a
+      13-month historical backfill reachable AT ALL within a practical VM lifetime — if not, PACIFICA-SOLANA's
+      historical depth may need the same Tardis-integrated/date-branching approach recommended for LIGHTER-ZKSYNC above,
+      or a reduced backfill scope (e.g., last N days only, honest-absence-classify the rest). Recommend routing this as
+      its own scoped plan/task rather than folding into this issue doc further. - Once landed: re-launch PACIFICA-SOLANA
+      only via `VENUES="PACIFICA-SOLANA"       bash scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` and
+      re-verify real rows per the same method as item 3 above (remember to rebuild the code tarball via
+      `create-code-tarballs.sh` first — see the stale-tarball note on item 3).
