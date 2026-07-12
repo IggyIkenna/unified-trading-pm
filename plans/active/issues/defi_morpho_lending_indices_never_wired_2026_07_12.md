@@ -329,3 +329,39 @@ picks this up next should: (1) re-check the VM's shard date for continued forwar
 check whether the consolidator has resumed (would materially change whether `measure_honest_coverage.py` gives a real
 reading), (3) once BOTH the VM shows `captured` rows dated ≥2024-01-01 AND the consolidator is fresh, run the actual G2
 gate commands from the parent plan's G2 section.
+
+### Re-check #5 — still healthy, still pre-genesis, consolidator still unresolved — 2026-07-12T12:07Z (data_engineering slot-3)
+
+Re-dispatched to the same `[SCRIPT] P2. Re-run G2 gate` todo (5th dispatch overall: slot-3×2, slot-9, slot-12, slot-7).
+Fresh-pulled all repos (clean). Verified rather than trusted the prior re-check:
+
+- **VM roster** (`gcloud compute instances list --filter="name~mtds-lending-indices"`, using
+  `~/google-cloud-sdk/bin/gcloud` — confirms slot-9/slot-7's note that the plain `/snap/bin/gcloud` snap-confine issue
+  is NOT fleet-wide, this binary works fine): `mtds-lending-indices-20260712-112557` still the only instance,
+  `STATUS=RUNNING`.
+- **Real-progress check**
+  (`gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260712-112557/run.log`
+  tail, not just heartbeat), current time ~2026-07-12T12:07Z: active writes for `date=2023-03-17` (both ETHEREUM and
+  BASE chains), forward progress from slot-7's `2023-02-25→26` observation ~10 min earlier — roughly ~19 days of window
+  progressed in ~10 min wall-clock (~1.9 days/min). No `Unknown lending protocol` / no `uniqueKey`-GraphQL errors
+  anywhere in the tail; manifest writer confirms live per-VM shard updates (`151 total entries` at time of check). At
+  the observed pace, genesis (2024-01-01, ~290 days out from 2023-03-17) is realistically **~2.5h out**, and the full
+  window (through 2026-07-12) considerably longer — still correctly not polled synchronously per the async-wait
+  discipline every prior dispatch on this todo has applied.
+- **Consolidator staleness — confirmed still unresolved**: `gsutil stat` on both objects — consolidated
+  `_index/availability_index.parquet` `Update time` is STILL `2026-07-10T21:42:30Z` (byte-identical to every prior
+  re-check, now ~63h stale), while the VM's own per-VM shard
+  (`_index/per_vm/mtds-lending-indices-20260712-112557.parquet`) is fresh (`Update time: 2026-07-12T12:07:49Z`,
+  confirming the write path is alive and the staleness is consolidator-side only). Cross-checked
+  `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`: this is a KNOWN, separately-tracked P1 (soft-lock TTL
+  fix landed and reduced kill frequency ~2.5-3x, but a residual lower-frequency kill pattern is explicitly still
+  unresolved) — confirms this isn't a new regression, just the same open blocker persisting.
+- **Verdict unchanged from re-check #4**: the G2 gate for `lending_indices` still cannot be usefully re-run — (1) the
+  backfill hasn't reached genesis so real captured MORPHO rows can't exist yet, and (2) `measure_honest_coverage.py`
+  would read the same stale consolidated index every prior run hit even if it had.
+
+Not investigated further / not fixed this dispatch (separate P1, out of this task's craft scope — same call as re-check
+#4). `skip-current-task`'d — same call as the four prior dispatches on this exact todo. Whoever picks this up next
+should repeat the same 3-step check: (1) VM shard date vs 2024-01-01, (2) consolidator freshness vs
+`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`'s resolution status, (3) once both clear, run the G2 gate
+commands from the parent plan.
