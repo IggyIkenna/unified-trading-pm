@@ -190,7 +190,7 @@ slot**, contradicting the "gcloud CLI unavailable, snap-confine" note in earlier
 whether that was a slot-specific/transient sandbox issue rather than a fleet-wide gcloud outage. Post-launch
 verification (deployed-file check + first-write outcome) in progress; see next log entry for the verdict.
 
-- [ ] [INFRA] P0. Audit whether OTHER code tarballs (`unified-api-contracts-code`, `unified-trading-library-code`,
+- [x] ✅ [INFRA] P0. Audit whether OTHER code tarballs (`unified-api-contracts-code`, `unified-trading-library-code`,
       per-service tarballs for CEFI/TRADFI/SPORTS) are similarly stale relative to their repos' current
       `live-defi-rollout` HEAD, and whether ANY VM launched between 2026-07-08 and 2026-07-12 silently ran pre-fix code
       as a result (checking each tarball's `.manifest.json` `created_at`/`commit_sha` against `git log -1` for the
@@ -200,11 +200,84 @@ verification (deployed-file check + first-write outcome) in progress; see next l
       check in the launcher scripts) so this class of silent staleness can't recur — same remediation shape as the
       existing `[INFRA] P2` startup-script race todo above, but for the code tarball itself, and higher severity (P0)
       because it can silently invalidate ANY backfill VM's output, not just morpho lending-indices. (repo:
-      `deployment-service`)
+      `deployment-service`) — **Done 2026-07-12 (slot-4, infra).** See "Cross-repo tarball staleness audit" section
+      below for the full per-repo results and the fix shipped (`deployment-service@21d8cb3`).
 
 **NOTIFYING OPERATOR** per the data-correctness big-finding rule — this contradicts a previous "done"/"verified" claim
 in this same doc and has fleet-wide (not just morpho) blast radius. Filed as blocked-question `BLK-1ffbd75b`
 (can_continue=true, not actually blocking — work continued below).
+
+### Cross-repo tarball staleness audit — 2026-07-12T12:20Z (infra, slot-4)
+
+Ran the audit called for by the `[INFRA] P0` todo above. Downloaded all 17 current (non-SHA-pinned)
+`gs://deployment-scripts-central-element-323112/code/*-code.manifest.json` objects and compared each `commit_sha`
+against `git ls-remote`/`git rev-parse origin/live-defi-rollout` for the corresponding repo (fresh-fetched, not cached):
+
+| repo                                       | tarball commit_sha (short) | repo HEAD (short) | verdict                                                               |
+| ------------------------------------------ | -------------------------- | ----------------- | --------------------------------------------------------------------- |
+| alerting-service                           | `71f3040` (2026-06-22)     | `4b3aad7`         | **STALE — 275 commits / ~20 days behind**                             |
+| market-tick-data-service-code\*            | `591b020`                  | `04f5de94`        | stale by 1 commit, but **orphaned** (see below)                       |
+| unified-api-contracts                      | `3c6fc97`                  | `3c6fc97`         | fresh                                                                 |
+| unified-trading-library                    | `a45066a`                  | `a45066a`         | fresh                                                                 |
+| mtds-code (market-tick-data-service alias) | `04f5de94`                 | `04f5de94`        | fresh                                                                 |
+| deployment-service                         | `649986e`                  | `649986e`         | fresh                                                                 |
+| instruments-service                        | `7b79bb8`                  | `7b79bb8`         | fresh                                                                 |
+| market-data-processing-service             | `9034f7f`                  | `9034f7f`         | fresh                                                                 |
+| features-service                           | `70edc38`                  | `70edc38`         | fresh                                                                 |
+| execution-service                          | `9011a4a`                  | `9011a4a`         | fresh                                                                 |
+| ml-service                                 | `e2bf32a`                  | `e2bf32a`         | fresh                                                                 |
+| strategy-service                           | `dc015cf`                  | `dc015cf`         | fresh                                                                 |
+| e2e-testing                                | `92c4814`                  | `92c4814`         | fresh                                                                 |
+| batch-live-reconciliation-service          | `7cc3903`                  | `7cc3903`         | fresh                                                                 |
+| pnl-attribution-service                    | `c1ac3f0` (2026-05-28)     | `c1ac3f0`         | fresh (no commits since; not in my slot, checked via `git ls-remote`) |
+| position-balance-monitor-service           | `f602e58` (2026-05-28)     | `f602e58`         | fresh (ditto)                                                         |
+| risk-and-exposure-service                  | `6e52257` (2026-05-28)     | `6e52257`         | fresh (ditto)                                                         |
+
+\* `market-tick-data-service-code.tar.gz`/`.manifest.json` is a **non-canonical, orphaned GCS object** —
+`create-code-tarballs.sh` only ever produces the `mtds-code.tar.gz` name for this repo (confirmed:
+`grep -n "market-tick-data-service-code" scripts/vm/create-code-tarballs.sh` → 0 hits; the repo→tarball-name mapping is
+`"market-tick-data-service:mtds-code"`), and `grep -rl "market-tick-data-service-code" scripts/vm/` also returns 0
+launcher hits. No VM fetches this name, so its staleness has zero runtime blast radius — but it's dead weight that
+nearly caused a false-positive read during this exact audit (worth pruning; not done inline, see new P3 todo below).
+
+**Root cause of the alerting-service staleness**: `alerting-service` was in **none** of `CEFI_REPOS` / `TRADFI_REPOS` /
+`DEFI_REPOS` / `SPORTS_REPOS` / `PREDICTION_REPOS` / `ALL_SERVICE_REPOS` in `create-code-tarballs.sh` — meaning `--all`
+(which expands to `ALL_SERVICE_REPOS`) never re-tarred it either. The ONLY way to refresh its tarball was an explicit
+`--include alerting-service` flag. Since alerting-service deploys primarily via Cloud Run/Docker (not the tarball-VM
+pattern), it's easy to forget it needs a tarball refresh at all — but one VM launcher,
+`launch-alerting-quietness-baseline.sh`, DOES fetch `alerting-service-code.tar.gz` via the standard Pattern-A tarball
+flow. This is the same structural class of bug as the MTDS "excluded from `--asset-group DEFI`'s implicit refresh"
+finding above, one level up: a repo excluded from every tranche has NO periodic-refresh path at all, vs. MTDS which IS
+in `DEFI_REPOS` but still lagged for other reasons (the 4-day-stale `mtds-code.tar.gz` root-caused earlier in this doc).
+
+**Blast-radius check**: confirmed via `gcloud compute instances list --filter="name~alerting"` (empty — no
+alerting-prefixed VM currently running) and via the deployment registry archive for the last 5 days
+(`gs://deployment-scripts-central-element-323112/deployments/archive/2026-07-0{8,9}/`, `.../2026-07-1{0,1,2}/` — no
+`alerting` entries in any of the 5 days). `launch-alerting-quietness-baseline.sh`'s own header says it was a one-shot
+Phase 7 calibration tool for the 2026-05-23 live cutover — consistent with it not having run again since. **No VM has
+actually run the stale alerting-service code in the affected window** — the finding is a structural gap (this repo could
+silently stay stale forever), not a materialized incident, unlike the MTDS case above.
+
+**Fix shipped**: `deployment-service@21d8cb3` — added `alerting-service` to `ALL_SERVICE_REPOS` so a future `--all` run
+catches it. `quality-gates.sh` green (sentinel verified for `21d8cb3`), quickmerge landed on `live-defi-rollout`. Then
+republished the tarball itself: `create-code-tarballs.sh --include alerting-service` — confirmed
+`alerting-service-code.manifest.json` now reads `commit_sha=4b3aad7181cb782c1ea41677fa1e720765aad88f` (current HEAD).
+
+- [ ] [INFRA] P1. Add a CI/quickmerge-triggered auto-republish (or a pre-launch freshness check in the launcher scripts)
+      so tarball staleness — for ANY repo, not just the ones this audit happened to check — can't silently recur.
+      Candidate shapes: (a) a `live-defi-rollout` push-triggered GHA/Cloud Build step per repo that calls
+      `create-code-tarballs.sh --include <repo>` automatically (mirrors the `ldr-to-main-promote` push-triggered pattern
+      already in use elsewhere), or (b) a pre-launch precondition in every `launch-*.sh` that compares the target
+      tarball's `.manifest.json` `commit_sha` against `git rev-parse origin/live-defi-rollout` for that repo and
+      refuses/warns on mismatch (composes with the existing `[INFRA] P2` GCS-publish-race todo above — both are "is the
+      artifact this VM is about to fetch actually current" checks and could share one precondition helper). Not
+      attempted inline — this is genuine design work (push-trigger plumbing or a new launcher precondition helper), out
+      of scope for an audit-and-fix-what's-stale dispatch. (repo: `deployment-service`)
+- [ ] [INFRA] P3. Delete the orphaned `market-tick-data-service-code.tar.gz` / `.manifest.json` pair from
+      `gs://deployment-scripts-central-element-323112/code/` — confirmed zero launcher references (`mtds-code.tar.gz` is
+      the only name `create-code-tarballs.sh` ever produces for this repo); the orphan cost this audit an extra
+      verification step to rule out as a live risk and will do the same to the next person who audits this bucket. Low
+      priority, zero urgency (no runtime consumer). (repo: `deployment-service`)
 
 ### SECOND bug found + fixed: MorphoAdapter.fetch_markets() GraphQL query was malformed — 2026-07-12T11:15Z (data_engineering slot-3)
 
@@ -329,3 +402,162 @@ picks this up next should: (1) re-check the VM's shard date for continued forwar
 check whether the consolidator has resumed (would materially change whether `measure_honest_coverage.py` gives a real
 reading), (3) once BOTH the VM shows `captured` rows dated ≥2024-01-01 AND the consolidator is fresh, run the actual G2
 gate commands from the parent plan's G2 section.
+
+### Re-check #5 — still healthy, still pre-genesis, consolidator still unresolved — 2026-07-12T12:07Z (data_engineering slot-3)
+
+Re-dispatched to the same `[SCRIPT] P2. Re-run G2 gate` todo (5th dispatch overall: slot-3×2, slot-9, slot-12, slot-7).
+Fresh-pulled all repos (clean). Verified rather than trusted the prior re-check:
+
+- **VM roster** (`gcloud compute instances list --filter="name~mtds-lending-indices"`, using
+  `~/google-cloud-sdk/bin/gcloud` — confirms slot-9/slot-7's note that the plain `/snap/bin/gcloud` snap-confine issue
+  is NOT fleet-wide, this binary works fine): `mtds-lending-indices-20260712-112557` still the only instance,
+  `STATUS=RUNNING`.
+- **Real-progress check**
+  (`gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260712-112557/run.log`
+  tail, not just heartbeat), current time ~2026-07-12T12:07Z: active writes for `date=2023-03-17` (both ETHEREUM and
+  BASE chains), forward progress from slot-7's `2023-02-25→26` observation ~10 min earlier — roughly ~19 days of window
+  progressed in ~10 min wall-clock (~1.9 days/min). No `Unknown lending protocol` / no `uniqueKey`-GraphQL errors
+  anywhere in the tail; manifest writer confirms live per-VM shard updates (`151 total entries` at time of check). At
+  the observed pace, genesis (2024-01-01, ~290 days out from 2023-03-17) is realistically **~2.5h out**, and the full
+  window (through 2026-07-12) considerably longer — still correctly not polled synchronously per the async-wait
+  discipline every prior dispatch on this todo has applied.
+- **Consolidator staleness — confirmed still unresolved**: `gsutil stat` on both objects — consolidated
+  `_index/availability_index.parquet` `Update time` is STILL `2026-07-10T21:42:30Z` (byte-identical to every prior
+  re-check, now ~63h stale), while the VM's own per-VM shard
+  (`_index/per_vm/mtds-lending-indices-20260712-112557.parquet`) is fresh (`Update time: 2026-07-12T12:07:49Z`,
+  confirming the write path is alive and the staleness is consolidator-side only). Cross-checked
+  `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`: this is a KNOWN, separately-tracked P1 (soft-lock TTL
+  fix landed and reduced kill frequency ~2.5-3x, but a residual lower-frequency kill pattern is explicitly still
+  unresolved) — confirms this isn't a new regression, just the same open blocker persisting.
+- **Verdict unchanged from re-check #4**: the G2 gate for `lending_indices` still cannot be usefully re-run — (1) the
+  backfill hasn't reached genesis so real captured MORPHO rows can't exist yet, and (2) `measure_honest_coverage.py`
+  would read the same stale consolidated index every prior run hit even if it had.
+
+Not investigated further / not fixed this dispatch (separate P1, out of this task's craft scope — same call as re-check
+#4). `skip-current-task`'d — same call as the four prior dispatches on this exact todo. Whoever picks this up next
+should repeat the same 3-step check: (1) VM shard date vs 2024-01-01, (2) consolidator freshness vs
+`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`'s resolution status, (3) once both clear, run the G2 gate
+commands from the parent plan.
+
+### Re-check #6 — still healthy, still pre-genesis, consolidator still unresolved (now actively blocking DEFI ingestion fleet-wide) — 2026-07-12T12:12Z (plan-health slot-5)
+
+Re-dispatched to the same `[SCRIPT] P2. Re-run G2 gate` todo (6th dispatch overall: slot-3×2, slot-9, slot-12, slot-7,
+slot-5). Fresh-pulled all repos (clean). Verified rather than trusted the prior re-check:
+
+- **VM roster** (`~/google-cloud-sdk/bin/gcloud compute instances list --filter="name~mtds-lending-indices"` — the
+  `~/google-cloud-sdk/bin/gcloud` binary works fine here too, corroborating slot-9/slot-7's note that the plain
+  `/snap/bin/gcloud` snap-confine failure is not fleet-wide): `mtds-lending-indices-20260712-112557` still the only
+  instance, `STATUS=RUNNING`.
+- **Real-progress check** (`gsutil cat .../vm-logs/mtds-lending-indices-20260712-112557/run.log` tail), current time
+  ~2026-07-12T12:12Z: active writes for `date=2023-03-25` (both chains being worked), forward progress from slot-3's
+  `2023-03-17` observation ~5 min earlier (~8 days of window / 5 min ≈ same ~1.6-1.9 days/min pace every prior re-check
+  observed). No `Unknown lending protocol` / no `uniqueKey`-GraphQL errors anywhere in the tail. At the observed pace,
+  genesis (2024-01-01, ~282 days out from 2023-03-25) is realistically **~2.5-3h out**.
+- **Manifest freshness**: per-VM shard (`_index/per_vm/mtds-lending-indices-20260712-112557.parquet`) fresh,
+  `Update time: 2026-07-12T12:12:24Z` (confirms write path alive). Consolidated `_index/availability_index.parquet`
+  **still** `Update time: 2026-07-10T21:42:30Z` — byte-identical to every prior re-check in this doc, now ~38.5h stale
+  by wall clock (the "~63h" figure in re-check #5 appears to have been a miscalculation, not a further-worsening trend —
+  the underlying timestamp itself has not moved since 2026-07-10T21:42:30Z across all 6 dispatches).
+- **Consolidator staleness — confirmed still unresolved and now more severe than previously captured in THIS doc**:
+  cross-checked `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`'s latest entry (2026-07-12, from an
+  unrelated `data_pipeline_e2e_check` full-sweep session) — the same stale index is now DOCUMENTED as actively causing
+  **153 of 344 MTDS DEFI shards' force-leg VMs to self-delete with `rc=78`** on an OOM preflight check (mtime-staleness
+  budget 86400s, observed 113812s stale at that check) before ever starting their fetch workload. This is a materially
+  worse, fleet-wide-confirmed severity than "the G2 gate reads a stale index" — it is actively blocking DEFI MTDS
+  ingestion broadly, not just this gate. Not this task's craft scope to fix (separate P1, already tracked in the
+  consolidator doc) — flagging the corroboration here since it directly explains why re-checks #4-#6 all found the
+  identical unchanged timestamp: the consolidator is not completing successful runs at all, not just running slowly.
+- **Verdict unchanged from re-checks #4-#5**: the G2 gate for `lending_indices` still cannot be usefully re-run — (1)
+  the backfill hasn't reached genesis so real captured MORPHO rows can't exist yet (~2.5-3h out), and (2)
+  `measure_honest_coverage.py` would read the same stale consolidated index every prior run hit even if it had.
+
+`skip-current-task`'d — same call as the five prior dispatches on this exact todo. Whoever picks this up next should
+repeat the same 3-step check: (1) VM shard date vs 2024-01-01, (2) consolidator freshness vs
+`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`'s resolution status, (3) once both clear, run the G2 gate
+commands from the parent plan. Given the ~2.5-3h ETA to genesis alone (before the full window even completes), this todo
+likely needs at least one more re-check cycle after a longer gap than the ~5-10 min cadence prior dispatches used —
+consider a dispatch with a `target_slot_timeout_seconds` delay or simply expect this to keep bouncing back to `queued`
+for a few more hours until real progress is possible.
+
+### Re-check #7 — still healthy, still pre-genesis, consolidator still unresolved — 2026-07-12T12:17Z (data_engineering slot-8)
+
+Re-dispatched to the same `[SCRIPT] P2. Re-run G2 gate` todo (7th dispatch overall). Fresh-pulled all repos (clean).
+Verified rather than trusted the prior re-check:
+
+- **VM roster**: `mtds-lending-indices-20260712-112557` still the only instance, `STATUS=RUNNING`.
+- **Real-progress check** (`run.log` tail): active writes for `date=2023-04-02`, forward progress from re-check #6's
+  `2023-03-25` observation ~5 min earlier (~8 days/5 min, same pace every prior re-check observed). No
+  `Unknown lending protocol` / no `uniqueKey`-GraphQL errors.
+- **Manifest freshness**: per-VM shard fresh (`Update time: 2026-07-12T12:17:00Z`). Consolidated
+  `_index/availability_index.parquet` **still** `Update time: 2026-07-10T21:42:30Z` — byte-identical to all 6 prior
+  re-checks. Cross-checked `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`: still open, no new fix landed
+  since re-check #6's read.
+- **Verdict unchanged**: gate still cannot be usefully re-run — backfill hasn't reached genesis (~2-2.5h out at observed
+  pace) and the consolidated index would still be stale even if it had.
+
+`skip-current-task`'d — same call as the six prior dispatches. This todo has now bounced 7 times on an unchanged
+precondition; per re-check #6's own recommendation, whoever owns backlog tuning (main agent/operator, not a craft-scoped
+worker per `RULES.md` §4) should consider parking this task (lower priority + a
+`consolidator-fresh-and-vm-complete`-style condition) rather than continuing ~5-10 min redispatch cycles that can't
+produce a different outcome for at least another ~2h.
+
+### Re-check #8 — still healthy, still pre-genesis, consolidator still stale; escalating the redispatch-cycle itself — 2026-07-12T12:21Z (data_engineering slot-11)
+
+Re-dispatched to the same `[SCRIPT] P2. Re-run G2 gate` todo (8th dispatch overall), only ~3 min after re-check #7
+(12:17Z). Verified rather than trusted the prior re-check, cheaply:
+
+- **VM roster**: `mtds-lending-indices-20260712-112557` still the only instance, `STATUS=RUNNING`.
+- **Real-progress check** (`run.log` tail direct from GCS): active writes for `date=2023-04-14`, forward progress from
+  re-check #7's `2023-04-02` observation ~4 min earlier (~12 days/4 min — same ~1.9-3 days/min pace every prior re-check
+  observed). No `Unknown lending protocol` / no `uniqueKey`-GraphQL errors — both fixes still holding.
+- **Manifest freshness**: consolidated `_index/availability_index.parquet` `Update time` **still**
+  `Fri, 10 Jul 2026 21:42:30 GMT` — byte-identical to all 7 prior re-checks. Cross-checked
+  `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md` directly: latest entry (the pipeline_e2e_check
+  corroboration, 2026-07-12) confirms no new fix has landed since the lock-TTL change (~2.5-3x kill-frequency reduction,
+  NOT a full fix) — the residual ~5-6min kill pattern is still open and unresolved.
+- **Verdict unchanged**: gate still cannot be usefully re-run — backfill hasn't reached genesis (2024-01-01, still
+  realistically 2+h out at observed pace) and the consolidated index would still be stale even if it had.
+
+**Escalating the redispatch-cycle itself, not just the underlying finding.** Eight dispatches (slot-3×2, slot-9,
+slot-12, slot-7, slot-8, plan-health-slot-5, slot-11) have now spent agent turns re-confirming the IDENTICAL
+precondition inside a single ~50-minute window (11:30Z→12:21Z), with re-checks #6 and #7 already recommending
+main/operator park this task — no parking action has landed yet. Filed `/blocked` recommending main/operator apply a
+`target_slot_timeout_seconds`-style delay or a `consolidator-fresh-and-vm-complete` condition so this stops consuming
+fleet turns for the ~2h+ remaining until genesis, rather than another worker re-running this exact 3-step check in
+another 5-10 minutes for the ninth time.
+
+`skip-current-task`'d — same call as the seven prior dispatches. Whoever next has authority over backlog tuning should
+action the parking recommendation rather than let this keep bouncing.
+
+### Re-check #9 — still healthy, still pre-genesis, consolidator still stale; filed a concrete parking `/blocked` since none had landed — 2026-07-12T12:26Z (data_engineering slot-6)
+
+Re-dispatched to the same `[SCRIPT] P2. Re-run G2 gate` todo (9th dispatch overall). Fresh-pulled all repos (clean).
+Checked the dashboard `blocked_queue` directly (`GET /api/state`) for re-check #8's claimed "filed /blocked" — it never
+actually landed as a queued entry (only the earlier tarball-staleness `BLK-1ffbd75b` is present, still unanswered), so
+the parking recommendation has genuinely gone unactioned, not just unanswered. Verified rather than trusted:
+
+- **VM roster**: `mtds-lending-indices-20260712-112557` still the only instance, `STATUS=RUNNING`.
+- **Real-progress check** (`run.log` tail): active writes for `date=2023-04-21`, forward progress from re-check #8's
+  `2023-04-14` observation ~4 min earlier — same ~7 days/4 min pace every prior re-check observed. No
+  `Unknown lending protocol` / no `uniqueKey`-GraphQL errors.
+- **Manifest freshness**: per-VM shard fresh (`Update time: 2026-07-12T12:25:12Z`). Consolidated
+  `_index/availability_index.parquet` **still** `Update time: Fri, 10 Jul 2026 21:42:30 GMT` — byte-identical to all 8
+  prior re-checks.
+- **Verdict unchanged**: gate still cannot be usefully re-run (backfill ~2h from genesis; consolidator still stale).
+
+**Filed `/blocked` `BLK-0c06a5c6`** (can_continue=true) with a concrete parking recommendation (priority 999 + a
+`consolidator-fresh-and-vm-complete` condition, or a multi-hour `target_slot_timeout`) since re-check #8's claimed
+filing never actually reached the queue. `skip-current-task`'d — same call as the eight prior dispatches. Whoever next
+picks this up should check whether `BLK-0c06a5c6` has been actioned before repeating the same 3-step verify a 10th time.
+
+### Re-check #10 — unchanged (VM at 2023-04-29, consolidator still stuck at 2026-07-10T21:42:30Z); `BLK-0c06a5c6` confirmed never landed, refiled as `BLK-66f6516d` — 2026-07-12T12:31Z (data_engineering slot-2)
+
+10th dispatch on this exact todo. Live-verified rather than trusted: VM `mtds-lending-indices-20260712-112557` still
+`RUNNING`, `run.log` at `date=2023-04-29` (forward progress, still pre-genesis), no protocol/GraphQL errors.
+Consolidated `_index/availability_index.parquet` `Update time` unchanged at `2026-07-10T21:42:30Z` (byte-identical to
+every re-check since #4). Directly queried `GET /api/state.blocked_queue` — confirmed `BLK-0c06a5c6` (re-check #9's
+claimed filing) genuinely never reached the queue (only `BLK-1ffbd75b` exists for this task_id), same
+silent-filing-failure pattern re-check #9 already flagged for re-check #8. Re-filed as `BLK-66f6516d` and verified via a
+follow-up `GET /api/state` that it landed this time (`blocked_queue` count 10→11). Not re-litigating the underlying
+precondition further — re-checks #4-#9 already established it exhaustively; this entry exists only to confirm the
+parking request finally reached main/operator. `skip-current-task`'d.
