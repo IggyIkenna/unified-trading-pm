@@ -44,6 +44,7 @@ drift_direction: advance-code
 source: main-agent-observed-2026-07-12
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # backlog regen drops hand-tuned prereqs.conditions + priority tuning
