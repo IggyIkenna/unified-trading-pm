@@ -249,3 +249,16 @@ session's claim) — the escalation was documented as intent but never actually 
 `BLK-e047b522`, requesting `prereqs.conditions: [tardis-concurrent-ip-lock-fix-landed]` be attached to this backlog
 entry + `POST /api/backlog/reload`. `skip-current-task`'d again — still nothing in-craft until the sibling operator
 decision (`BLK-f1417674`) is answered and/or the condition is actually wired.
+
+### 2026-07-12 — 6th re-dispatch (slot-11 data_engineering), thrash confirmed again, no duplicate blocked filed
+
+Re-dispatched a 6th time (slot-12 → slot-6 → slot-8 → slot-9 → slot-11), same unmet gate. Independently re-verified via
+direct `GET /api/state` + `git log origin/live-defi-rollout` on both `market-tick-data-service` and
+`deployment-service`: sibling `tardis_concurrent_ip_lockout_2026_07_12.md` todo #1 (a/b/c operator decision,
+`BLK-58aea31d`, successor to `BLK-f1417674`) and todo #2 (implement chosen fix) are both still `- [ ]`; only the
+direction-independent 403-code-274 hygiene fix has landed (`market-tick-data-service@31934527`) — that is a separate,
+already-flipped `[DATA] P1` todo in the sibling doc, not the a/b/c serialize/upgrade/proxy decision this P3 todo is
+gated on. Condition `tardis-concurrent-ip-lock-fix-landed` still `value: false`, `gates_queued: 0` — still not wired to
+this backlog entry. A live blocked-question for exactly this wiring ask already exists and is unanswered
+(`BLK-adcf07fa`, filed by slot-9, options A/B, recommendation A) — did NOT file a duplicate. `skip-current-task`'d —
+nothing in-craft until the sibling operator decision lands (or `BLK-adcf07fa` is answered and the condition gets wired).
