@@ -1072,3 +1072,89 @@ MVP scope also includes `funding_rate`, `liquidations`, `futures_chain`, and `op
 **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** — verification is complete for this run. Layer-1 denominator work is in
 an open P1 issue doc → the correct next-action-owner is the agent picking up that issue doc. Progress vs 2026-07-03 is
 substantial (af -99.7%; 0 phantoms), but Layer-1 gate remains structural blocker for closure.
+
+---
+
+### G4 Re-Verification Run — 2026-07-12T03:25–04:15Z (GATE NOT MET — data_engineering slot-2)
+
+**Scripts run:**
+
+1. `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/measure_honest_coverage.py --asset-group cefi --output-path /tmp/g4_verify_20260712/coverage_merged.json`
+   (instruments-service, merged view)
+2. `reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run` +
+   `manifest_hygiene_daily.py --asset-group cefi --mode full` (e2e-testing) — **both DID NOT COMPLETE within this
+   session's time budget** (~15 min; phantom-listing alone was still at ~130K/392K unique GCS prefixes after several
+   minutes) — killed to reclaim host memory (subprocess RSS approached ~17-24GB). Not re-attempted this session; re-run
+   on a future pass.
+
+**Coverage (merged) — 2026-07-12T03:28Z:**
+
+| metric                 |     count | note                                                                |
+| ---------------------- | --------: | ------------------------------------------------------------------- |
+| captured               | 2,113,850 |                                                                     |
+| attempted_failed       |     1,755 | requires 0 — NOT MET                                                |
+| expected_unattempted   |   646,863 | requires 0 — NOT MET                                                |
+| empty_confirmed        |   479,246 |                                                                     |
+| coverage_pct (Layer-2) |     76.52 |                                                                     |
+| Layer-1 completeness   |     71.05 | requires 100% + `denominator_complete=True` — NOT MET               |
+| Layer-1 missing tuples |        22 | (was 19-22 across the 07-03/07-06 runs — essentially unchanged net) |
+
+**Layer-1 status confirms the 2026-07-06/07-08 denominator-spine work (2a-2f, C2, ASTER wire, BYBIT-SPOT code-fix,
+KALSHI purge) landed cleanly** — `cefi_layer1_denominator_gaps_2026_07_03.md`'s critical spine is fully flipped as of
+2026-07-08 (only its OKX-SPOT hole remains open as **P1-cleanup, not P0-blocker** per that doc's 2026-07-08 status
+update). The 22 remaining Layer-1 holes this run are genuinely NEW capture gaps, not stale denominator-authority bugs:
+
+- **3 whole venues at 0 present** (9 tuples): LIGHTER-ZKSYNC, PACIFICA-SOLANA, EXTENDED-STARKNET — declared in UAC (D2b,
+  2026-07-06) with real `start_date`s, but **no backfill VM had ever been launched for them**.
+- **Future-itype gaps** (7 tuples): BITFINEX-FUTURES/BITGET-FUTURES/KRAKEN-FUTURES each missing 1-3 of {book5,
+  derivative_ticker, trades} for `instrument_type=future`.
+- **New-venue single tuples** (6): BYBIT-SPOT (2 — the -006 forward-path fix landed but the corrective-relabel is still
+  open in `bybit_spot_manifest_stray_captures_2026_07_07.md`), COINBASE-CDE, COINBASE-FUTURES spot_pair, DERIBIT-COMBO
+  options_chain (operator-approved 2026-07-10, capability landed, capture never launched), OKX options_chain, ASTER
+  perpetual book5 (live-wire pending propagation).
+
+**Action taken — attempted to close the 3 whole-venue gaps, uncovered a real code bug instead:**
+
+1. Found `market_tick_data_service`'s `umi_tick_provider.py` + `adapters/_umi_{lighter,pacifica,extended}.py` already
+   implement REST fetch for these 3 venues (used today by `perp_funding_handler.py`'s separate code path). Extended
+   `deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` to also target them via
+   `--operation collect-onchain-perp-batch` (the same op HL/ASTER use) — shipped **`deployment-service@dfe2784`**
+   (QG-green). Launched 8 SPOT VMs (year-sharded per venue's UAC start_date).
+2. **All 8 VMs produced ZERO rows, silently.** `OnchainPerpBatchHandler`'s `_VENUE_SOURCE` (+
+   `_VENUE_PIPELINE_MODE`/`_VENUE_CHAIN`/`_VENUE_LAUNCH`) dicts are hardcoded to exactly `{"HYPERLIQUID", "ASTER"}` —
+   `venues = [v for v in venues if v in _VENUE_SOURCE]` silently drops any other venue, so `--venues LIGHTER-ZKSYNC`
+   resolved to `venues=[]` every single day for the VM's whole life, with the day-loop still logging
+   `PROGRESS: chunk=N/365` as if it succeeded. Confirmed via run.log:
+   `OnchainPerpBatch complete for <date>: 0 rows across venues=[] data_types=[...]`. **No VM re-launch can fix this — it
+   needs a code change.** Terminated all 3 remaining RUNNING VMs (`gcloud compute instances delete`) to stop burning
+   SPOT spend on a guaranteed-empty loop.
+3. Filed **`issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`** (P1, NOTIFY-OPERATOR class — silent
+   data-correctness failure) with the fix (wire the 3 venues into `OnchainPerpBatchHandler` using the already-existing
+   `_umi_*` adapters, following the HL/ASTER dispatch pattern) + a hardening todo (log/raise on silently-dropped
+   `--venues` entries so this failure mode can't repeat unnoticed). The launcher extension (`dfe2784`) is still
+   correct/forward-compatible and needs no further change once the handler fix lands.
+
+**Also found + filed:** `cefi-binance-futures-2021-heavy` SPOT VM (from the 2026-06-28 wave-2/reprobe) has now been
+RUNNING **9 days** (created 2026-07-03T10:57Z) with serial console output frozen since 2026-07-05T00:00Z and zero per_vm
+shard ever written — same VM flagged 6 days ago (2026-07-06T22:32Z entry above) as infra-triage, still unresolved. Filed
+**`issues/cefi_bf_2021_heavy_vm_stalled_2026_07_12.md`** (P1, `assigned_role: infra` — terminate + relaunch the shard;
+root-cause the stall).
+
+**Gate verdict:** ❌ **NOT MET** — Layer-1 71.05% (22 missing, `denominator_complete=False`); Layer-2 af=1,755 /
+eu=646,863; phantom-reconcile + manifest-hygiene did not complete this session (re-run needed).
+
+**Blocking items (ordered by impact):**
+
+1. **`cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`** — code fix required before LIGHTER-ZKSYNC/
+   PACIFICA-SOLANA/EXTENDED-STARKNET (9 of 22 Layer-1 tuples) can ever close via backfill.
+2. **Future-itype gaps** (BITFINEX-FUTURES/BITGET-FUTURES/KRAKEN-FUTURES, 7 tuples) — not investigated this run; likely
+   needs a targeted `future`-scoped relaunch, root cause TBD.
+3. **`cefi_bf_2021_heavy_vm_stalled_2026_07_12.md`** — infra-role VM triage, keeps BINANCE-FUTURES af>0.
+4. **BYBIT-SPOT stray-capture remediation** (`bybit_spot_manifest_stray_captures_2026_07_07.md`) — still open, gates the
+   BYBIT-SPOT Layer-1 tuples.
+5. **DERIBIT-COMBO / OKX options_chain / ASTER book5** — capability declared/landed, capture not yet launched or still
+   propagating; no launch attempted this run (time-boxed).
+6. **Phantom reconcile + manifest hygiene** — did not complete within this session; re-run on a future pass.
+
+**Not blocked by CREDENTIALS/OPERATOR/UPSTREAM.** Verification is complete for this run within its time budget; every
+finding is filed as a tracked, actionable issue doc per findings-closure discipline.
