@@ -129,8 +129,8 @@ corruption is on the UPDATE/merge side, not task discovery.
       `quality-gates.sh` green (1191 passed, 1 skipped, ruff+basedpyright clean).
 - [x] ✅ [DATA] P2. Add a regression check (or a quick manual verification step documented in RULES.md) so the next time
       someone attaches a condition this way, they know to re-verify persistence after 1-2 regen cycles before trusting
-      it's durable, until the P0/P1 fix lands. **DONE 2026-07-12 (slot-3)** — `unified-trading-pm@<sha>` (see Progress
-      Log). Since todo 3's P0/P1 fix already landed with 3 automated regression tests
+      it's durable, until the P0/P1 fix lands. **DONE 2026-07-12 (slot-3)** — `unified-trading-pm@39c9854ea` (see
+      Progress Log). Since todo 3's P0/P1 fix already landed with 3 automated regression tests
       (`test_reconcile_priority_override_skips_revert`, `test_reconcile_priority_without_override_still_reverts`,
       `test_regen_priority_override_survives_regen_tick`) covering the CODE path, this todo's remaining gap was
       specifically the "quick manual verification step documented in RULES.md" option it explicitly allows as an
