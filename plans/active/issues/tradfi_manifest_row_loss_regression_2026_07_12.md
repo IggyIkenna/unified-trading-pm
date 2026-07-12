@@ -370,38 +370,38 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
       until that image is rebuilt and the jobs are refreshed.
 
       **SECOND, INDEPENDENT root cause + fix found (2026-07-12, slot-4)** —
-                  `unified-trading-library@2ba20527`. The cross-source-collision mechanism above is real but does NOT explain the
-                  full loss pattern by itself: sampling 2000 of the missing 8-column-key rows found their (source-excluded)
-                  consolidator-key group was **absent from the live index entirely** — not collapsed to a single surviving
-                  sibling row, which cross-source collision alone would produce. Root-caused a second, separate bug via the
-                  non-snap `gcloud` (Cloud Logging IS usable in this slot; GCS Data Access audit logs for `storage.googleapis.com`
-                  are OFF project-wide though — confirmed zero entries, only BigQuery/IAM — see the new P2 todo below):
-                  `_get_canonical_mtime()` (used to decide `canonical_present` / incremental-vs-full-rebuild) swallowed **any**
-                  exception from `blob.reload()` — not just a genuine NotFound/404 — via
-                  `with contextlib.suppress(Exception): reload()`, then fell through to reading a never-reloaded blob's empty
-                  `.metadata`/`.updated` defaults, returning `None` for a canonical that GENUINELY EXISTS. The caller
-                  (`consolidate()`) reads `canonical_mtime is None` as "cold bucket" and runs a FULL REBUILD with
-                  `canonical_present=False`, which skips downloading the real canonical entirely and writes back ONLY the
-                  current cycle's shards — silently discarding every row whose backing per-VM shard had already been pruned
-                  (shards are deleted once "settled" into canon; a row with no shard backup is unrecoverable from that cycle's
-                  inputs). This explains the 3.37M rows in the live index still carrying `written_at=2026-07-07` (reconstructed
-                  from not-yet-pruned shards, original timestamp preserved) alongside the ~1.02M genuinely gone (their shards had
-                  already been pruned by the time the bad cycle ran) — a pattern cross-source collision alone doesn't produce
-                  (collision collapses a group to ONE surviving row; this bug removes the group with no survivor at all). Could
-                  not obtain a Cloud Logging line confirming the exact cycle this fired on — this Cloud Run job's own
-                  `logger.warning`/`logger.exception` calls don't reach Cloud Logging as `textPayload` (confirmed: the ONLY
-                  `textPayload` this job ever emits is `"Container called exit(0)."` — a separate observability gap, not filed as
-                  its own todo here since it's out of this doc's scope, but worth a future audit of whether Cloud Run's Python
-                  logging handler is wired to stdout for this job family). Fix: only a genuine not-found (`FileNotFoundError`/
-                  `NotFound`/`Forbidden`/`404`) now returns `None`; any other exception propagates to `consolidate()`'s existing
-                  top-level handler, which already fails the cycle safely (log + `MANIFEST_CONSOLIDATION_FAILED` ERROR-severity
-                  alert + no write) instead of truncating the canonical. Also fixed an adjacent test-isolation bug found while
-                  adding regression tests: `get_project_id()` is `@lru_cache(maxsize=1)` but `clear_client_caches()` never reset
-                  it, so `test_event_sink_factory.py::TestGcpEventSink` flaked under the full `quality-gates.sh` xdist run
-                  depending on worker test order (passed in isolation) — `clear_client_caches()` now clears it too. 2 new
-                  regression tests for the mtime-probe fix + 1 for the cache-clear fix; full `quality-gates.sh` green (127s, after
-                  the cache-clear fix — the pre-existing flake reproduced deterministically 3x before being root-caused and
-                  fixed, not waved off).
+                      `unified-trading-library@2ba20527`. The cross-source-collision mechanism above is real but does NOT explain the
+                      full loss pattern by itself: sampling 2000 of the missing 8-column-key rows found their (source-excluded)
+                      consolidator-key group was **absent from the live index entirely** — not collapsed to a single surviving
+                      sibling row, which cross-source collision alone would produce. Root-caused a second, separate bug via the
+                      non-snap `gcloud` (Cloud Logging IS usable in this slot; GCS Data Access audit logs for `storage.googleapis.com`
+                      are OFF project-wide though — confirmed zero entries, only BigQuery/IAM — see the new P2 todo below):
+                      `_get_canonical_mtime()` (used to decide `canonical_present` / incremental-vs-full-rebuild) swallowed **any**
+                      exception from `blob.reload()` — not just a genuine NotFound/404 — via
+                      `with contextlib.suppress(Exception): reload()`, then fell through to reading a never-reloaded blob's empty
+                      `.metadata`/`.updated` defaults, returning `None` for a canonical that GENUINELY EXISTS. The caller
+                      (`consolidate()`) reads `canonical_mtime is None` as "cold bucket" and runs a FULL REBUILD with
+                      `canonical_present=False`, which skips downloading the real canonical entirely and writes back ONLY the
+                      current cycle's shards — silently discarding every row whose backing per-VM shard had already been pruned
+                      (shards are deleted once "settled" into canon; a row with no shard backup is unrecoverable from that cycle's
+                      inputs). This explains the 3.37M rows in the live index still carrying `written_at=2026-07-07` (reconstructed
+                      from not-yet-pruned shards, original timestamp preserved) alongside the ~1.02M genuinely gone (their shards had
+                      already been pruned by the time the bad cycle ran) — a pattern cross-source collision alone doesn't produce
+                      (collision collapses a group to ONE surviving row; this bug removes the group with no survivor at all). Could
+                      not obtain a Cloud Logging line confirming the exact cycle this fired on — this Cloud Run job's own
+                      `logger.warning`/`logger.exception` calls don't reach Cloud Logging as `textPayload` (confirmed: the ONLY
+                      `textPayload` this job ever emits is `"Container called exit(0)."` — a separate observability gap, not filed as
+                      its own todo here since it's out of this doc's scope, but worth a future audit of whether Cloud Run's Python
+                      logging handler is wired to stdout for this job family). Fix: only a genuine not-found (`FileNotFoundError`/
+                      `NotFound`/`Forbidden`/`404`) now returns `None`; any other exception propagates to `consolidate()`'s existing
+                      top-level handler, which already fails the cycle safely (log + `MANIFEST_CONSOLIDATION_FAILED` ERROR-severity
+                      alert + no write) instead of truncating the canonical. Also fixed an adjacent test-isolation bug found while
+                      adding regression tests: `get_project_id()` is `@lru_cache(maxsize=1)` but `clear_client_caches()` never reset
+                      it, so `test_event_sink_factory.py::TestGcpEventSink` flaked under the full `quality-gates.sh` xdist run
+                      depending on worker test order (passed in isolation) — `clear_client_caches()` now clears it too. 2 new
+                      regression tests for the mtime-probe fix + 1 for the cache-clear fix; full `quality-gates.sh` green (127s, after
+                      the cache-clear fix — the pre-existing flake reproduced deterministically 3x before being root-caused and
+                      fixed, not waved off).
 
 - [ ] [INFRA] P0. **Deploy the fix(es)** — fan **both** `unified-trading-library@cf2e196b` (cross-source dedup
       collision) **and** `unified-trading-library@2ba20527` (mtime-probe-failure → accidental full-rebuild) to all 5
@@ -431,22 +431,22 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
       operator-judgment call.
 
       **Scope-narrowing finding (2026-07-12, slot-8), read-only dry-run, no writes**: applying the SAME tiebreak
-              logic as the fix (`cf2e196b` — prefer higher `row_count` when a dedup-key group's `captured` rows disagree on
-              `source`) to the pre-loss snapshot and diffing against the live index shows the popular "1,017,024 missing
-              rows" framing overstates the actionable scope: **zero key groups are entirely absent from the live index**
-              (every one of the 5,083,369 corrected-distinct keys has SOME row in live — consistent with the orphan-sweep's
-              `E=2` finding above) — i.e. no evidence tradfi actually hit the second root-cause's "spurious full rebuild
-              drops a whole shard" failure mode, only the cross-source-collision one. Of those, **140,291 keys have a
-              VALUE-mismatched surviving row** (wrong `source`/`row_count` won), and **139,566 of those are a strict
-              regression** (live's `row_count` is lower than the correct pick's — the bug's exact signature: the
-              `row_count=0`/empty-source row won over the real captured data). **The actual restore is a targeted ~140K-row
-              UPDATE of existing keys' `source`/`row_count`/`written_at`/etc. fields, not a ~1M-row INSERT** — this is a much
-              smaller, safer, more precisely-scoped operation than the todo's headline number implies. Dry-run script (no
-              writes) at `/tmp/.../scratchpad/tradfi_manifest_restore_dryrun.py` (session-local, not committed — one-off
-              analysis, promote to a real repo script if this pattern recurs for another asset group). **Sequencing**: per
-              BLK-fab395c9 (main-confirmed), this write must NOT happen until the "Deploy the fix(es)" todo above is done and
-              the live Cloud Run job is confirmed running post-fix code — otherwise even a correct restore risks silent
-              re-corruption by the still-live pre-fix job on its next ~1-minute cycle.
+                  logic as the fix (`cf2e196b` — prefer higher `row_count` when a dedup-key group's `captured` rows disagree on
+                  `source`) to the pre-loss snapshot and diffing against the live index shows the popular "1,017,024 missing
+                  rows" framing overstates the actionable scope: **zero key groups are entirely absent from the live index**
+                  (every one of the 5,083,369 corrected-distinct keys has SOME row in live — consistent with the orphan-sweep's
+                  `E=2` finding above) — i.e. no evidence tradfi actually hit the second root-cause's "spurious full rebuild
+                  drops a whole shard" failure mode, only the cross-source-collision one. Of those, **140,291 keys have a
+                  VALUE-mismatched surviving row** (wrong `source`/`row_count` won), and **139,566 of those are a strict
+                  regression** (live's `row_count` is lower than the correct pick's — the bug's exact signature: the
+                  `row_count=0`/empty-source row won over the real captured data). **The actual restore is a targeted ~140K-row
+                  UPDATE of existing keys' `source`/`row_count`/`written_at`/etc. fields, not a ~1M-row INSERT** — this is a much
+                  smaller, safer, more precisely-scoped operation than the todo's headline number implies. Dry-run script (no
+                  writes) at `/tmp/.../scratchpad/tradfi_manifest_restore_dryrun.py` (session-local, not committed — one-off
+                  analysis, promote to a real repo script if this pattern recurs for another asset group). **Sequencing**: per
+                  BLK-fab395c9 (main-confirmed), this write must NOT happen until the "Deploy the fix(es)" todo above is done and
+                  the live Cloud Run job is confirmed running post-fix code — otherwise even a correct restore risks silent
+                  re-corruption by the still-live pre-fix job on its next ~1-minute cycle.
 
 - [ ] [DATA] P1. Re-run task 2's orphan-sweep (`migration_orphan_sweep.py --asset-group tradfi`) after the restoration
       to re-confirm `orphan_class_E=0` still holds — the 2026-07-10T17:17Z GREEN certification may not survive against
@@ -486,6 +486,26 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-12** — slot-7 (sonnet/high, data_engineering), dispatched to `tradfi_manifest_row_loss_regression-004` (P1,
+  orphan-sweep re-run "after the restoration"). Did NOT run the sweep — independently re-verified the live tradfi
+  manifest (`market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, fresh read via UTL
+  `get_storage_client()`, `last_modified=2026-07-12T05:57:00Z`) is still **5,088,410 rows** (`captured=1,620,806`), i.e.
+  essentially unchanged from slot-8's pre-restoration baseline reading (5,088,405 rows) 40+ min earlier — **restoration
+  has NOT happened**, confirming the SAME false-completion on backlog task `-003` that this doc already flagged
+  (BLK-5a10e96a) is still uncorrected: `-003` reads `status=done, done_sha=2ba20527` in the backlog even though
+  `2ba20527` is the second root-cause fix commit, not a restoration, and the plan's own checkbox for that todo is still
+  `- [ ]`. Separately confirmed deploy task `-010` ("Deploy the fix(es)") is still `status=queued`, undispatched — so
+  per BLK-fab395c9's sequencing (deploy must land before restore), nothing in the real chain has advanced since slot-8's
+  last report. Because `-003`'s stale done-status satisfies whatever gate the dispatcher checks, it handed `-004` to me
+  anyway (`dispatch_reason: "prereqs met"`) despite slot-8's prior BLK-5145398b having gotten a "hold" ruling from main
+  with an instruction to add a prereqs gate — that gate either isn't wired to this task or doesn't check real restore
+  state, since the exact same premature dispatch recurred. Filed BLK-e5b34942 flagging the recurrence and asking
+  main/operator to correct `-003`'s backlog status (it is a confirmed false-completion, not a judgment call) rather than
+  let every slot that picks up `-004` re-derive this same investigation. Did not touch the sweep, the restore, or the
+  deploy — out of scope for this todo and would either duplicate slot-8's existing pre-restoration baseline (E=2) or
+  jump the deploy-before-restore sequencing rule. `skip-current-task`'d `-004` per the blocked answer's `continue_on` to
+  free the slot for other dispatchable work. No code change — issue doc ships via the PM `docs(plans):` carve-out.
 
 - **2026-07-12** — slot-8 (sonnet/high, data_engineering), dispatched to `tradfi_manifest_row_loss_regression-004`.
   Found + escalated a false-completion on `-003` (see the note on the "Restore" todo above): backlog showed
