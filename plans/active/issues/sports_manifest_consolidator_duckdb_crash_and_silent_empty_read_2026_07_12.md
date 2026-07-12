@@ -128,24 +128,31 @@ this session to isolate the exact branch (`_read_and_merge_per_vm_shards` return
 
 ## Todos
 
-- [ ] [INFRA] P0. Confirm current health of `uts-prod-manifest-consolidator-instruments-sports` (Cloud Run job,
+- [x] ✅ [INFRA] P0. Confirm current health of `uts-prod-manifest-consolidator-instruments-sports` (Cloud Run job,
       `market-tick-data-service` image) — if still crash-looping, check Cloud Monitoring memory metrics for the job
       during the 07:35-07:46 UTC window on 2026-07-12 to confirm/refute the OOM hypothesis; bump memory limit or add
-      shard-count throttling if confirmed. (repo: market-tick-data-service / deployment infra). **STILL RED as of
-      2026-07-12T08:08Z (slot-3)** — re-checked while investigating a premature dispatch of todo 3 (which explicitly
-      gates on this todo being done). ⚠️ Methodology correction:
-      `gcloud run jobs executions list     --format="table(...,status.conditions[0].type)"` prints `Completed` for BOTH
-      successful and failed executions (that field is the condition TYPE, not its STATUS) — misreading this made the job
-      look recovered at first glance. The real signal is `status.conditions[0].status` + `.message`; a direct
-      `executions describe` on the most recent finished execution (`...-gqmrr`, completed 08:06:34Z) shows
-      `status: 'False', reason: NonZeroExitCode, message: "...failed with exit code: 1..."`. Cloud Logging for
-      08:00-08:08Z shows the SAME truncated OOM-signature traceback
-      (`manifest_consolidator.py:587 _duckdb_consolidate_and_write` → `Container called exit(1)`) on every single
-      execution, one per minute, unchanged from the original 07:46Z filing — **22+ minutes and counting, not recovering
-      on its own**. The canonical blob's `updated` timestamp is still frozen at `2026-07-12T07:30:46.756Z` (age 2215s+
-      at check time) — confirms zero forward progress despite the job "completing" (exiting, not succeeding) every
-      cycle. This todo remains open and P0; not attempted the actual OOM fix (memory bump / shard throttling) this turn
-      — out of scope for the read-path-fix task I was dispatched to, and genuinely INFRA craft, not data_engineering.
+      shard-count throttling if confirmed. (repo: market-tick-data-service / deployment infra). **RECOVERED — confirmed
+      2026-07-12T08:19Z (slot-12)**. `gcloud run jobs executions list` (via `/home/ubuntu/google-cloud-sdk/bin/gcloud`,
+      reading `status.conditions[0].status` not the `.type` field that caused the earlier 08:08Z misread) shows 5
+      consecutive **successful** executions (08:14:47Z, 08:15:05Z, 08:16:05Z, 08:17:05Z, 08:18:05Z-running) — the first
+      clean run right after the last observed failure at 08:13:05Z (matching slot-11's 08:14Z re-check, which still saw
+      it red through that point). Canonical blob `_index/availability_index.parquet` `update_time` confirmed via
+      `gcloud storage objects describe` = `2026-07-12T08:18:41Z` (age ~15s at check time, `consolidator_run_at` custom
+      metadata matches) — forward progress restored, no longer frozen at `07:30:46.756Z`. **OOM hypothesis REFUTED, not
+      confirmed**: pulled `run.googleapis.com/container/memory/utilizations` (Cloud Monitoring API, DELTA/DISTRIBUTION,
+      per-minute samples) for the full 07:35:00Z-08:14:00Z crash window — mean utilization never exceeded ~0.031 (3.1%
+      of the container's memory limit) at any sampled minute, including the minutes immediately preceding each observed
+      failure. An OOM-kill would be expected to show utilization approaching 1.0 in the sample(s) right before the
+      crash; none of the ~30 datapoints in this window come close. **No memory bump or shard-throttling applied** — the
+      recommended mitigation was explicitly conditional on confirming OOM, and the data does not support it. The job
+      self-recovered without manual intervention; the actual root cause of the transient non-zero exits (line 587
+      `_duckdb_consolidate_and_write`, consistently truncated traceback across every failure, two independent filing
+      sessions) is NOT fully isolated — repeated Cloud Logging read attempts this session hit local sandbox issues (see
+      Progress Log) before a full stack trace could be pulled. Most plausible alternative to OOM given the original
+      filing's context (concurrent cross-slot shard writers) is DuckDB file-lock contention on the merge target, not
+      memory exhaustion — a hypothesis, not a confirmed root cause. Candidate follow-up if the crash-loop recurs: the
+      traceback being truncated identically across every failure in two separate incident windows is itself unusual and
+      worth a container stdout/stderr flush-on-exit check, independent of the underlying error.
 - [x] ✅ [SCRIPT] P0. Root-cause + fix the silent-empty-read path in `read_availability_index`
       (`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`) so a stale-consolidator +
       failed/empty per-VM-merge case always raises `ManifestConsolidatorStaleError` (or another loud, typed error)
@@ -237,3 +244,22 @@ citing this entry. **Escalating to main/operator as a repeat occurrence**: the b
 without it, this task will keep re-dispatching to whichever data_engineering slot boots next and burning a boot cycle
 each time. Recommend either (a) apply the structural prereq gate now, or (b) park todo 3's backlog entry
 (`priority: 999` + a false gating condition per RULES.md § "Park a task") until todo 1 is manually confirmed done.
+
+### 2026-07-12T08:19Z — slot-12: closed todo 1 (consolidator confirmed recovered, OOM refuted)
+
+Dispatched todo 1 directly (`sports_manifest_consolidator_duckdb_crash_and_silent_empty_read-001`). Confirmed the job
+had turned around moments after slot-11's 08:14Z last-red check: 5 consecutive successful executions since 08:14:47Z,
+canonical blob `update_time` advancing to `2026-07-12T08:18:41Z` (fresh). Per the todo's explicit ask, pulled Cloud
+Monitoring `container/memory/utilizations` for the full 07:35-08:14Z crash window before closing — mean utilization
+stayed under ~3.1% throughout, which **refutes** rather than confirms the OOM hypothesis every prior filing carried
+forward as the leading theory. Did not apply a memory bump or shard-throttling since the data doesn't support the
+premise; flipped the checkbox with findings + the refuted-not-confirmed distinction spelled out (see checkbox note) so
+nobody downstream treats "OOM" as settled fact. Root cause of the actual non-zero exit remains open — flagged as a
+candidate follow-up, not re-opening this todo for it since the todo's own scope (confirm health + OOM check) is
+satisfied.
+
+**Environment note**: this session's sandbox hit a shared-host `/tmp` tmpfs (2.0GB, 100% full) intermittently breaking
+every Bash tool call with ENOSPC for a stretch (~10 consecutive failures) before self-clearing enough to let
+`gcloud`/`curl` calls through again. Root disk (`/`, 51G avail) was never the constraint — only the tmpfs backing
+per-session Bash output capture. Not investigated further (shared across all 12 slots; no safe way to clean another
+slot's session dir from here) — flagging in case other slots hit the same symptom around this timestamp.
