@@ -3819,11 +3819,27 @@ tracked in the Progress Log.
   RESTARTED 2026-07-12 10:30:27Z (HTTP 200, HEAD fd9c002 loaded); interim allowlist + generator fix + wedge-alert
   hardening = open todos below; (ii) BOTH prod sports crons silently inert (fixtures job NOT_FOUND in prod; scheduler
   job generation-1 container, fix bb880b6 never applied) -> operator authorized deploy, infra agent dispatched.
-- [ ] [CODE] P1. AO: fix the regen-ldr-plans-\* generator to write under tempfile.gettempdir() (it litters the AO repo
+- [x] [CODE] P1. AO: fix the regen-ldr-plans-\* generator to write under tempfile.gettempdir() (it litters the AO repo
       tree AND /tmp — same class as the 2026-07-10 /tmp-full incident); interim: add the dir pattern to ao-self-pull.sh
-      AO_RUNTIME_CHURN_PATHS allowlist. Repo: agent-orchestrator. (Incident i above.)
-- [ ] [CODE] P2. AO: harden ao-self-pull.sh wedge alert to also fire when the RUNNING process is stale N ticks while the
-      checkout is current (today it only alerts on checkout behind>=10). Repo: agent-orchestrator. (Incident i.)
+      AO_RUNTIME_CHURN_PATHS allowlist. Repo: agent-orchestrator. (Incident i above.) — agent-orchestrator@fc9ac53b.
+      Root cause: `tempfile.mkdtemp(prefix=...)` (no explicit `dir=`) inherits `tempfile.gettempdir()`'s OWN fallback
+      chain, which silently substitutes the process CWD (== the systemd service's repo checkout) when every real temp
+      location is full/unwritable — exactly the observed incident. Added `_safe_tempdir_base()` (refuses the
+      CWD-fallback, degrades to the PM working tree instead), `_sweep_orphan_snapshots()` (reclaims dirs orphaned by a
+      hard-killed process — the /tmp-littering half), and a `try/finally` around snapshot creation (immediate cleanup on
+      a mid-failure, not deferred to the next call). 5 new regression tests added
+      (tests/test_regen_backlog_from_plan.py); quality-gates.sh green (1204 passed, ruff+basedpyright clean). The
+      interim ao-self-pull.sh allowlist entry (5bf8ce5) STAYS as defense-in-depth; comment updated to note the root fix
+      landed.
+- [x] [CODE] P2. AO: harden ao-self-pull.sh wedge alert to also fire when the RUNNING process is stale N ticks while the
+      checkout is current (today it only alerts on checkout behind>=10). Repo: agent-orchestrator. (Incident i.) —
+      agent-orchestrator@fc9ac53b. Added a per-tick counter (state file, same /tmp convention as `AO_WEDGE_STATE`) that
+      fires a deduped Slack alert (shared `_post_wedge_slack_alert` — same webhook path, separate dedup statefile so it
+      never suppresses/is suppressed by the drift-based alert) once the stale-process self-heal hasn't resolved the
+      process<->HEAD gap for >=3 consecutive ticks (`AO_STALE_PROCESS_ALERT_TICKS`, default 3). Verified via `bash -n` +
+      a scratch-repo dry run (fake `systemctl`/`curl`): no alert on ticks 1-2, alert fires at tick 3, dedup suppresses
+      tick 4, tick-counter clears once the self-heal actually resolves the staleness, and the pre-existing drift-based
+      `_alert_wedge` still fires independently on a separate dirty+12-behind scenario (no cross-suppression).
 - [ ] [DOCS] P2. Codex stub: ao-self-pull.sh is the production AO deploy mechanism but is absent from
       agent-orchestrator-overview.md / runtime-deployment-topology.md (codex edit — operator-gated, queue for next Q&A).
 - 2026-07-12 (rulings batch 2): applied per §A2 — LOGIC FREEZE lifted in strategy_master (286/292; NB the freeze's
