@@ -1561,3 +1561,93 @@ Calling `/skip-current-task`; no code or plan-of-record change is possible from 
 slots now confirm the identical blocker — this needs either the operator ruling on todo 3, or the
 `prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` attachment in agent-orchestrator's `backlog.yaml`,
 both outside worker-slot scope).
+
+### G2 verification run #3 — found + fixed a stalled VM, found a NEW capture gap (MORPHO), gate still FAILS (2026-07-12 09:33-09:50 UTC, slot 3, resumed session)
+
+Resumed `mvp_backfill_defi_onchain_v10-002` (the same G2 task from run #2 earlier today — same slot). Fresh-pulled all
+repos clean. Worked the "Next re-dispatch should" list from run #2:
+
+**1) VM roster re-check** (`gcloud compute instances list --filter="name~mtds"`, zone `asia-northeast1-c`):
+
+| VM                           | Status at 09:33 UTC                                                                                                                                                                                                                                                                                                              |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mtds-dex-swaps-backfill`    | RUNNING, actively writing — day=2024-11-28→2024-11-29 (real forward progress, not stalled)                                                                                                                                                                                                                                       |
+| `mtds-perp-funding-backfill` | RUNNING per `gcloud`, but **STALLED** — see finding below                                                                                                                                                                                                                                                                        |
+| `mtds-solana-defi-backfill`  | Gone — **confirmed COMPLETED** (`EXIT_STATUS=0`, self-deleted 2026-07-12T05:09:46Z after a clean full pass 2023-01-01→2026-07-12; per-day rows for ORCA/RAYDIUM/KAMINO correctly dropped as honest absence for every day except the run day, per its by-design forward-only-honest gate — this closes out G1.6's VM-launch todo) |
+
+**2) NEW finding — `mtds-perp-funding-backfill` was silently stalled for 10h+.** `run.log`/heartbeat blob showed
+liveness pings every 60s continuing normally, but the per-VM manifest shard
+(`_index/per_vm/mtds-perp-funding-backfill.parquet`) had not been touched since **2026-07-11 23:09:20 UTC** — 10h24m of
+zero forward progress at time of discovery, despite the heartbeat looking "alive." SSH diagnosis
+(`gcloud compute ssh ... --tunnel-through-iap`) confirmed: main collector process (pid 7692) `State: S (sleeping)`,
+`wchan: ep_poll`, 83 threads, and `ss -tnp` showed 9 sockets in `CLOSE-WAIT` (peer closed, our side never did) alongside
+a handful of live `ESTAB` connections — consistent with the "Unclosed client session" / "Unclosed connector" errors
+logged right at the moment progress stopped (last real log line: Lighter market_stats fetch for 2026-06-05, then
+silence). This reads as a genuine asyncio/aiohttp connection-leak deadlock, not a slow-but-alive process — the liveness
+heartbeat (a separate `while true; sleep 60` shell loop, not the Python process itself) would never have caught this;
+only checking the manifest-shard mtime did.
+
+**Fix applied**: `gcloud compute instances reset mtds-perp-funding-backfill --zone=asia-northeast1-c` — a hard reset
+(not a graceful process kill, which risked triggering the wrapper's `VM_SHUTDOWN_ON_COMPLETION=true` self-delete path).
+This is the same SPOT-preemption recovery path the fleet already relies on (idempotent, re-runnable startup-script), not
+a bespoke action. Verified via SSH: fresh boot (`uptime -s` = 09:42:26), new collector PID (6103, replacing the
+stuck 7692) started 09:44. **Risk noted before acting**: a sub-agent check of
+`PerpFundingHandler`/`ManifestFreshnessCache` confirmed the skip-if-fresh freshness check depends on the same stale
+consolidated index (see finding 3) — when that raises `ManifestConsolidatorStaleError`, the exception is swallowed and
+the skip-cache stays empty, so a restart risked a slow full re-fetch of the whole `2023-11-01→2026-06-27` range instead
+of a fast resume. **Observed outcome was much better than the worst case**: by 09:47 UTC (3 min post-restart) the VM had
+already advanced from `2023-11-01` to `2024-04-08` (its own per-VM shard already held 653 historical entries from before
+the stall, so the per-VM-shard fallback path is still finding real skip-worthy history) — real forward progress, not a
+cold-start re-fetch. Will need to re-catch-up past `2026-06-05` (where it stalled) to resume genuinely new work; not
+verified further this dispatch (no busy-polling a multi-hour catch-up).
+
+**3) Manifest consolidator still stale, now worse**: `availability_index.parquet` blob `Update time` unchanged at
+`2026-07-10T21:42:30Z` — **now ~36h stale** (was ~30h at run #2, 03:48 UTC). Confirmed already comprehensively tracked
+in `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md` (which itself was updated today with corroborating
+evidence that 153/344 MTDS DEFI force-leg VMs in an unrelated sweep self-deleted on this exact stale-index preflight).
+Not re-investigated or re-filed here.
+
+**4) Re-ran `measure_honest_coverage.py --asset-group defi`** (09:45-09:47 UTC) expecting fresh numbers post-G1.6 +
+post-restart — **numbers came back byte-identical to run #2** (same `blob.updated=2026-07-10T21:42:30Z` pinned primary
+manifest). This is expected given finding 3 — the coverage tool reads the same frozen consolidated snapshot, so it
+cannot see either VM's real-time progress. Confirms `manifest_hygiene_daily.py --mode full` /
+`reconcile_phantom_manifest_rows_all.py --dry-run` would be equally uninformative right now — not run, matching run #2's
+same call.
+
+| data_type       | captured  | attempted_failed | expected_unattempted | gate |
+| --------------- | --------- | ---------------- | -------------------- | ---- |
+| dex_pool_state  | 1,560,561 | 770              | 1,814,837            | FAIL |
+| dex_pool_swaps  | 639,489   | 21,122           | 3,883,609            | FAIL |
+| lending_indices | 120,885   | 54               | 569,084              | FAIL |
+| lst_rates       | 14,979    | 851              | 11,993               | FAIL |
+| perp_funding    | 2,538     | 214              | 76,873               | FAIL |
+| oracle_prices   | 18,147    | 873              | 200,179              | FAIL |
+
+**5) Quick-verified the MORPHO discrepancy flagged as a loose thread in run #2 — root-caused, NOT a manifest-recording
+gap, IS a real, new capture gap.** The "465 real rows" cited in run #2 (from
+`defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`) turned out to be **instrument-catalog** rows (465
+`LENDING_MARKET` instrument definitions in instruments-service), not manifest capture rows — no contradiction, just two
+different docs discussing two different tables. The manifest's `captured=0` for MORPHO `lending_indices` is genuinely
+correct: confirmed via direct parquet query (0 `captured`/`attempted_failed`, all 564,126 cells
+`expected_unattempted`/`empty_confirmed`) AND a GCS blob-glob search for any MORPHO lending_indices parquet anywhere in
+the bucket (0 matches). **Root cause**: `lending_indices_handler.py:171`'s `_DEFAULT_PROTOCOLS` list
+(`aave_v3`/`spark`/`compound_v3`/`kamino_lending`/`solend`/`marginfi`) never included `morpho`, and no launcher
+overrides it — despite a complete, apparently-finished 519-line `MorphoAdapter` (`download_market_data()`, built
+explicitly to serve MTDS history downloads) sitting unimported by any handler. Same dead-code-from-launch shape as
+G1.6's ORCA/RAYDIUM/KAMINO finding. Filed as its own issue doc (new capability wiring, not attempted inline, same
+scoping call as G1.6's dex_pool_swaps-Solana-indexer follow-up):
+`issues/defi_morpho_lending_indices_never_wired_2026_07_12.md`.
+
+**G2 GATE STATUS: FAIL (checkbox NOT flipped)** — same verdict as run #2, for overlapping-but-different reasons: 2 of 6
+backfill VMs still genuinely in-flight (dex_pool_swaps mid-range; perp_funding mid-catch-up post-restart), the
+verification tool itself can't see current state (stale consolidator), and there's now a confirmed NEW gap (MORPHO
+lending_indices) requiring a code change before it can even be launched. **Net forward progress this dispatch**: fixed a
+real 10h+ stall (would have sat frozen indefinitely otherwise — the heartbeat alone would never have surfaced it),
+confirmed G1.6 fully resolved, and converted a "loose thread" into a scoped, actionable fix.
+
+**Next re-dispatch should**: (1) re-check `mtds-perp-funding-backfill` has caught back up past 2026-06-05 and is making
+genuine new-date progress (not stuck again), (2) re-check `mtds-dex-swaps-backfill` completion, (3) once the
+consolidator catches up (watch `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md` for resolution), re-run
+`measure_honest_coverage.py` for a real reading, (4) MORPHO stays out of the G2 gate until
+`defi_morpho_lending_indices_never_wired_2026_07_12.md` todo 1-2 ship — either scope it out of THIS gate pass with an
+explicit operator note, or pick up the fix.
