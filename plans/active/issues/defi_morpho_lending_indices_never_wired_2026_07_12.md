@@ -88,10 +88,18 @@ the class of gap the plan's "Definition of 100%" section calls out.
       whole-deployment Messari-cascade in `_query_and_parse`; extracted into a new `lending_indices_morpho.py` stage
       module (same split pattern as `_subgraph`/`_rpc`/`_parsers`) to stay under the file/method-size ratchet.
       quality-gates.sh green (SHA sentinel verified for 4c340f93); quickmerge landed on live-defi-rollout.
-- [ ] [SCRIPT] P1. Once wired, launch a MORPHO-scoped lending_indices backfill (either a dedicated
+- [x] ✅ [SCRIPT] P1. Once wired, launch a MORPHO-scoped lending_indices backfill (either a dedicated
       `--lending-protocols morpho` VM, analogous to the G1.6 ORCA/RAYDIUM/KAMINO dedicated-VM precedent, or fold into
       the next full lending-indices re-run once the handler fix ships). SPOT VM per the fleet default. (repo:
-      `deployment-service`)
+      `deployment-service`) — **Done 2026-07-12 (slot 7).** Shipped `deployment-service@93c0c07`: added
+      `--lending-protocols` passthrough to `launch-mtds-lending-indices-backfill-vm.sh` (→ `VM_LENDING_PROTOCOLS`
+      metadata → `--lending-protocols` CLI arg in `setup-data-pipeline-vm.sh`'s generic dispatch), analogous to
+      `VM_SOLANA_PROTOCOLS`. Waited for `market-tick-data-service@4c340f93` (item above, slot 3) to land, then launched
+      dedicated VM `mtds-lending-indices-20260712-104450` (zone `asia-northeast1-c`, SPOT, `--lending-protocols morpho`,
+      window 2023-01-01→2026-07-12) via the Python `compute_v1` client — `gcloud` CLI is unavailable in this agent-slot
+      sandbox (snap-confine/`cap_dac_override`, same failure as the G1.6 precedent), so the instance-create call was
+      issued directly against the Compute API mirroring the launcher's `--dry-run` output. Verified post-launch:
+      `status=RUNNING`, `machine_type=e2-standard-4`, `provisioning_model=SPOT`.
 - [ ] [SCRIPT] P2. Re-run this plan's (`mvp_backfill_defi_onchain_v10_2026_06_27.md`) G2 gate for `lending_indices`
       after the backfill completes. (repo: `instruments-service`)
 
