@@ -10,11 +10,11 @@ summary: >-
   log). All observed occurrences were transparently retried (max_retries=3) and succeeded on the next write a moment
   later — no confirmed data loss this session — but this is a latent risk if retries are ever exhausted or if
   concurrency increases further.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
-repos: [instruments-service]
+repos: [instruments-service, agent-orchestrator]
 scope: [engineer, admin]
 tags: [infrastructure, gcs, rate-limit, sports, transfermarkt, concurrent-writers]
 related: [plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md]
@@ -23,7 +23,7 @@ parent_epic: sports_master
 priority: P2
 source: [slot-6, sports_p2_history_reference_and_odds_2015_to_present-002]
 assigned_vm: planning
-resolved_by:
+resolved_by: instruments-service@7b79bb8a, agent-orchestrator@5d35b4c
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -90,10 +90,20 @@ data loss this run.
       `_write_master_append`'s docstring in `instruments_service/engine/orchestrator/transfermarkt.py` (the actual
       shared write helper for all 3 master-table entities; the reference_data/adapters path named in the todo doesn't
       exist — the function lives under `engine/orchestrator/`).
-- [ ] [INFRA] P3. Consider whether the backlog/dispatcher should detect + prevent fanning out the same one-off
+- [x] ✅ [INFRA] P3. Consider whether the backlog/dispatcher should detect + prevent fanning out the same one-off
       backfill/closer script to multiple slots concurrently for the same residual (this session had 3 slots
       independently pick up `sports_daily_enum_residual_closer_2026_07_12.py` against the identical TM residual —
-      redundant work, and the root cause of this issue's 429s). (repo: agent-orchestrator)
+      redundant work, and the root cause of this issue's 429s). (repo: agent-orchestrator) — agent-orchestrator@5d35b4c:
+      yes, via the EXISTING (but structurally dead) `collision_group` mutex. Investigated `server/dispatch.py`'s
+      per-repo/collision-group guards — they already exist (`_repos_collide` + `task.collision_group in active_groups`)
+      but `regen_backlog_from_plan.py` hard-coded `repos=[]`/`collision_group=None` on every auto-derived task, so the
+      guard was a no-op for all normally-dispatched work; a blanket per-repo fix was explicitly rejected 2026-05-18 as
+      too restrictive for the fleet's real parallelism. Shipped a targeted fix instead: `regen_backlog_from_plan.py` now
+      derives `collision_group="script:<name>"` when a todo's brief names a `.py`/`.sh` script file, so two todos naming
+      the SAME script become mutually exclusive via the existing dispatch guard (scoped to the script name, not the repo
+      — other work in the same repo still parallelizes freely). Hand-set `collision_group` values are preserved across
+      regen ticks. 9 new unit tests (derivation, reconcile-preserves-hand-tune, end-to-end regen). `quality-gates.sh`
+      green (1199 passed, basedpyright clean); shipped via quickmerge.
 
 ## Progress Log
 
@@ -104,3 +114,17 @@ Found while monitoring my own slot's TM residual closer to completion for
 successfully within ~1s), so not blocking the item #6 gate flip — filing per the findings-closure hard rule since I'm
 not fixing this inline (out of this VERIFY task's scope). transfermarkt PLAYER_VALUES manifest gate itself is now
 confirmed clean (`pending_fetch=0`, `af=0`) independent of this master-table finding.
+
+### 2026-07-12 13:5x UTC — slot-8 (infra): closed todo #2, resolved
+
+Investigated `agent-orchestrator/server/dispatch.py`'s existing collision guards before building anything new —
+`_repos_collide` + `task.collision_group in active_groups` already exist, but `regen_backlog_from_plan.py` hard-coded
+`repos=[]` / `collision_group=None` on every plan-derived task, so both guards were structurally dead for all normal
+dispatch. Populating `repos` from plan frontmatter was considered and rejected: `dispatch.py`'s own comment records that
+blanket per-repo blocking was explicitly loosened 2026-05-18 as too restrictive for the fleet's actual parallelism
+pattern (multiple slots legitimately work the same repo on different files concurrently), so reintroducing it would
+regress a deliberate prior decision. Shipped the narrower fix instead: auto-derive `collision_group="script:<name>"`
+from a `.py`/`.sh` filename named in the todo's own brief text — this closes exactly the incident's shape (two todos
+naming the identical one-off script become mutually exclusive) without touching repo-level parallelism at all.
+`agent-orchestrator@5d35b4c`, quality-gates.sh green (1199 passed, basedpyright clean), 9 new tests. All todos in this
+issue doc are now closed → `status: resolved`.
