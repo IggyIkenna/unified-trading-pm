@@ -150,14 +150,15 @@ Parking TUNES an already-derived entry — you never author a new one. On the ta
 
 ```yaml
 priority: 999 # pushes to back of queue
+priority_override: true # REQUIRED alongside priority: — else the next regen tick reverts it to the plan-derived value
 prereqs:
-  conditions:
+  prerequisites:
     - utl-base-dependency-checker-migrated # create it false via POST /api/prerequisites/<name> first
 ```
 
 Reload (`POST /api/backlog/reload`). The task stays at `priority: 999` (effectively never dispatched while
 higher-priority work exists) AND the false condition gates it as a second safety. To unpark: flip the condition GREEN
-(`POST /api/prerequisites/<name>` `{value: true}`) + lower the priority.
+(`POST /api/prerequisites/<name>` `{value: true}`) + lower the priority + clear `priority_override`.
 
 ### Delete a task (permanent removal)
 
@@ -174,10 +175,13 @@ activity event for the audit trail.
 1. CREATE the condition via the API — `POST /api/prerequisites/<condition-name>` `{value: false, set_by: "main"}`. The
    endpoint UPSERTS (an unknown name is created on first POST); there is no separate `/api/conditions` surface, and no
    YAML edit is needed to bring a condition into existence.
-2. ATTACH it to a task: add `prereqs.conditions: [<condition-name>]` on the task's entry in `data/config/backlog.yaml`,
+2. ATTACH it to a task: add `prereqs.prerequisites: [<condition-name>]` (NOT `prereqs.conditions` — that field doesn't
+   exist on `TaskPrereqs`; it's silently dropped by pydantic on every load, per
+   `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` Defect A) on the task's entry in `data/config/backlog.yaml`,
    then `POST /api/backlog/reload`. This attachment is the ONE tuning that is still yaml-only — the regen does NOT yet
-   derive per-task `prereqs.conditions` from plan todos (plan-level ordering comes from `depends_on` + `gate_on_depends`
-   / `sequential` frontmatter instead), and the regen PRESERVES hand-tuned prereqs on derived entries.
+   derive per-task `prereqs.prerequisites` from plan todos (plan-level ordering comes from `depends_on` +
+   `gate_on_depends` / `sequential` frontmatter instead), and `prereqs.prerequisites` round-trips normally (a real,
+   declared schema field) so the regen preserves it with no special-casing needed.
 3. Later: flip it GREEN via the same `POST /api/prerequisites/<condition-name>` `{value: true, set_by: "main"}`.
 
 The dashboard's Conditions panel shows the toggle + `gates_queued` count. Reload is non-destructive — existing
@@ -189,10 +193,10 @@ conditions keep their value; only NEW ones seed.
 
 Two very different mechanisms exist. Conflating them is the most common agent mistake:
 
-**Prerequisite / dependency** (`task.prereqs.completed_tasks` / `task.prereqs.conditions`): A task gated by EARLIER
+**Prerequisite / dependency** (`task.prereqs.completed_tasks` / `task.prereqs.prerequisites`): A task gated by EARLIER
 tasks (e.g. tasks 6–10 need tasks 1–5 done) is a **prerequisite** — the dispatcher handles it automatically. The gated
 task stays `status=queued` and the dispatcher simply won't pick it until the prereqs are met (all listed
-`completed_tasks` must be `done`; all listed `conditions` must be `true`). **DO NOT** post a blocked-question asking
+`completed_tasks` must be `done`; all listed `prerequisites` must be `true`). **DO NOT** post a blocked-question asking
 "can I start on task 7 before task 5 is done?" — just wait. The server gates it for you.
 
 **Blocked-question** (`POST /api/slots/<N>/blocked`): A genuine judgment call where YOU need a human or the main agent
