@@ -416,6 +416,70 @@ change under my own commit authorship, this was judged higher-risk than leaving 
 `bash scripts/quickmerge.sh` in unified-trading-library then deployment-service with the same commands logged above; if
 still dirty, coordinate with whoever owns the tradfi-MVP-scope work rather than overriding it.
 
+## 5c. Ship blocker resolved + missing-bucket sweep (2026-07-12 follow-up, operator-driven)
+
+**§5b's ship blocker resolved itself**: on the next check `unified-api-contracts` was clean (that workstream shipped or
+was cleaned up elsewhere) — retried the logged quickmerge commands and both landed: `unified-trading-library@3936f745`
+(fixture yaml + `_DEFI_PURPOSE_BUCKETS_SHIPPED_2026_05_08` table fixes) + `@6d998df5` (cf_manifest_audit.py lint fixes),
+`deployment-service@e2f909e0` (`setup-defi-buckets.sh` + `manifest_reader.py::_EXTRA_BUCKET_KINDS` trims). CI green on
+both (`quality-gates-v2` success for UTL's commit; deployment-service's LDR push doesn't trigger v2 by this repo's own
+workflow config — `push:[main]`/`pull_request:[main,staging]`/`workflow_dispatch` only, confirmed by reading
+`.github/workflows/quality-gates-v2.yml`, not a stall).
+
+**Operator then asked "any buckets in code that need to be created?"** — the INVERSE check this plan never ran (it
+checked for buckets that exist-but-are-code-dead, never for kinds that code expects but don't physically exist). Ran
+`resolve_bucket_name()` for every (gcp, kind, asset_group) cell in the real yaml against both `DEPLOYMENT_ENV=prod` and
+`=test`, diffed the 89 unique resolved names against a fresh live bucket list (218). Found 16 gaps:
+
+- **2 real production gaps with live, non-mock writers**: `execution-store-sports-{pid}` (written by
+  `execution-service/.../live_execution_handler.py`'s `_get_or_create_live_sink()` for `asset_group=sports`, real path
+  when `CLOUD_MOCK_MODE` is not set) and `position-store-sports-prd-{pid}` (written by
+  `strategy-service/.../venue_balance_tracker.py:76`'s EOD snapshot, real call path, not test-only). GCS does not
+  auto-create buckets on write — any real invocation of either path would have 404'd.
+- **3 already-known** (`gas-fees-prd`/`gas-fees-test`/`lst-rates-test`) — the exact buckets from
+  [[gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10]], deliberately NOT recreated (recreating an empty bucket the
+  real writer doesn't write to fixes nothing).
+- **11 test-tier gaps** — confirmed this project genuinely hosts a `-test-` tier (23 other `-test-` buckets already
+  exist here), so these are real partial-provisioning gaps, just lower-urgency (only affect E2E/test runs).
+
+Operator said "create and fix them all." **Created the 13 unambiguous buckets** (2 prod + 11 test) via direct
+`gcloud storage buckets create` — NOT `setup-buckets.py` (that script turned out to read a stale, different naming
+scheme from `bucket_config.yaml`'s own `infrastructure_buckets` list, logging literal unsubstituted `{category_lower}`
+template placeholders and pre-env-tier names like `gas-fees-{pid}` — using it would have created buckets under names the
+real `resolve_bucket_name()` resolver doesn't even produce). Matched settings to an existing real sibling bucket via
+`gcloud storage buckets describe` (STANDARD class, `uniform-bucket-level-access`, `ASIA-NORTHEAST1` — confirmed no
+versioning/lifecycle/labels are actually applied in practice despite `bucket_config.yaml`'s stated
+`bucket_settings.gcp`, so matched reality not the possibly-aspirational doc). Bucket count 218→231, independently
+re-verified. All 13 re-confirmed to resolve via `resolve_bucket_name()` to the exact names created.
+
+**"Fix them all" for gas-fees/lst-rates led to a bigger, separate finding — handled carefully, not rushed.**
+Investigating whether `data_manifest_handler.py`'s gas-fees scan feeds a live coverage report (the open question from
+the original issue doc) found: (a) YES — its docstring states "the deployment UI reads this manifest to power the Data
+ETL status page"; (b) its `_build_operations_dict()` calls `resolve_bucket_name(kind=...)` for
+`dex-swaps`/`lending-indices`/`liquidations`/`oracle-prices` **unconditionally, uncaught** — all 4 kinds deleted from
+`cloud-providers.yaml` on 2026-07-10, so this handler has been **crashing on every `process()` call** since that commit,
+never writing the manifest. This was a genuinely missed live caller from the original 2026-07-10 sweep (same bug class
+as `manifest_reader.py::_EXTRA_BUCKET_KINDS`, caught in §5b, but a second, separate instance in a different repo the
+original code-search didn't surface).
+
+Fixed the crash: removed the 4 dead-kind operations from `OPERATIONS` + `_build_operations_dict()`, updated the matching
+unit test (`test_data_manifest_handler_coverage.py`, 9→5 expected scanners), verified `_build_operations_dict()` runs
+clean end-to-end against the real yaml (no exception, 5 ops). Full `quality-gates.sh` green. Shipped
+`market-tick-data-service@20e854ca`.
+
+**Deliberately did NOT fix gas-fees/lst-rates' bucket target in this handler.** The natural-looking fix (point them at
+the same shared `tick-data`/`defi` bucket `_scan_eigenlayer` already uses) would have added 2 more direct
+`storage.upload_bytes()` overwriters of `_index/availability_index.parquet` — which turned out to be the **exact literal
+path** of UTL `ManifestWriter._INDEX_PATH`, the canonical consolidated availability index that real DeFi tick-data
+writers populate via `MANIFEST_PER_VM_SHARDS=true` + an async consolidator daemon specifically so individual writers
+never race that path directly. `_scan_eigenlayer` is **already** doing this raw overwrite today (pre-existing, not
+introduced by this session) — compounding it with 2 more callers under the banner of "fixing" gas-fees/lst-rates would
+have made a real, separate data-integrity risk worse while claiming to fix an under-reporting bug. Wrote this up as its
+own issue doc — [[eigenlayer_manifest_availability_index_collision_2026_07_12]] — rather than guess-fixing a mechanism
+(per-VM-shard CAS semantics) not fully understood in the time available. gas-fees/lst-rates architecture question (from
+the original issue doc) remains genuinely open, now with a documented reason not to take the seemingly-obvious next step
+without operator input.
+
 ## 6. Model-tier note (repeating from frontmatter, since it matters for how much to trust this)
 
 Per `AUTONOMOUS_AGENT_RULES.md`'s self-check, a long cross-repo autonomous loop like this one normally routes to
