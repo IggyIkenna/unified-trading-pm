@@ -290,3 +290,42 @@ mtime-fresh, on `2023-02-18` (still pre-genesis honest-empty period), no `Unknow
 correctly refused a duplicate). Not polled further — same async-wait discipline slot-3 and slot-12 both applied; this is
 a multi-hour run. `skip-current-task`'d — the `[SCRIPT] P2. Re-run G2 gate` todo below is still correctly unflipped and
 should go to whoever picks this up once the VM has had time to reach ≥2024-01-01 and complete.
+
+### Re-check #4 — still healthy, still pre-genesis, gate blocked on both VM completion AND consolidator staleness — 2026-07-12T11:59Z (data_engineering slot-7)
+
+Picked up the same `[SCRIPT] P2. Re-run G2 gate` re-dispatch. Fresh-pulled all repos (clean). Verified rather than
+trusted the prior "still running" claims:
+
+- **VM roster** (`~/google-cloud-sdk/bin/gcloud compute instances list --filter="name~mtds-lending-indices"`):
+  `mtds-lending-indices-20260712-112557` still the only instance, `STATUS=RUNNING`. (Note: the plain `/snap/bin/gcloud`
+  still fails with the `snap-confine`/`cap_dac_override` error in this slot too — the `~/google-cloud-sdk/bin/gcloud`
+  binary is the one that actually works; confirms slot-9's suspicion that the "snap gcloud unavailable" note was a
+  snap-specific, not fleet-wide, issue.)
+- **Real-progress check** (GCS `run.log` tail, not just heartbeat), current time 2026-07-12T11:59Z: log object
+  `Update time: 2026-07-12T11:57:06Z` (~2 min old, fresh) — active writes for `date=2023-02-25→2023-02-26`, forward
+  progress from slot-3's `2023-02-18` observation ~35 min earlier. No `Unknown lending protocol` / no
+  `uniqueKey`-GraphQL errors in the tail. Per-VM manifest shard
+  (`_index/per_vm/mtds-lending-indices-20260712-112557.parquet`) `Update time: 2026-07-12T11:59:20Z` — fresh, confirming
+  the manifest-write path is alive.
+- **Consolidator staleness — still unresolved, now ~63h stale**: consolidated `availability_index.parquet` `Update time`
+  still pinned at `2026-07-10T21:42:30Z` — byte-identical to every prior re-check in this doc and in the parent plan's
+  G2 runs #2-#5. The VM's own log shows the same `ManifestConsolidatorStaleError` trace on every collection cycle (falls
+  back to per-VM shards, refuses the whole-bucket merge — correct, expected behavior per
+  `codex/02-data/availability-manifest-and-data-status.md`, not a bug). Tracked separately:
+  `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`.
+- **Verdict**: the backfill is genuinely healthy and progressing (no stall, no new error), but is still ~56 days into a
+  ~1,288-day window (2023-01-01→2026-07-12) — at the observed ~33s/pre-genesis-day pace this is realistically many hours
+  from reaching 2024-01-01 (Morpho Blue mainnet genesis, per `morpho_adapter.py`'s own `available_from_datetime`
+  contract), let alone completing the full window. **The G2 gate for `lending_indices` cannot be usefully re-run yet for
+  two independent reasons**: (1) the backfill hasn't reached genesis, so real captured rows can't exist yet regardless
+  of the fix's correctness, and (2) even if it had, `measure_honest_coverage.py` would read the same ~63h-stale
+  consolidated index every prior run hit, not the VM's live per-shard state.
+
+**Not investigated further / not fixed this dispatch** (out of this task's scope, per the craft-scoping rule): the
+consolidator staleness is a separate P0-tracked infra issue, not something a G2-gate re-verification task should absorb.
+
+`skip-current-task`'d — same call as the three prior dispatches on this exact todo (slot-3, slot-9, slot-12). Whoever
+picks this up next should: (1) re-check the VM's shard date for continued forward progress toward/past 2024-01-01, (2)
+check whether the consolidator has resumed (would materially change whether `measure_honest_coverage.py` gives a real
+reading), (3) once BOTH the VM shows `captured` rows dated ≥2024-01-01 AND the consolidator is fresh, run the actual G2
+gate commands from the parent plan's G2 section.
