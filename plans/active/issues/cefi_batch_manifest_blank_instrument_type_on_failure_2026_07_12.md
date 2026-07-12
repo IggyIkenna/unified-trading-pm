@@ -262,3 +262,19 @@ gated on. Condition `tardis-concurrent-ip-lock-fix-landed` still `value: false`,
 this backlog entry. A live blocked-question for exactly this wiring ask already exists and is unanswered
 (`BLK-adcf07fa`, filed by slot-9, options A/B, recommendation A) — did NOT file a duplicate. `skip-current-task`'d —
 nothing in-craft until the sibling operator decision lands (or `BLK-adcf07fa` is answered and the condition gets wired).
+
+### 2026-07-12 — 7th re-dispatch (slot-4 data_engineering), thrash continues, prior wiring escalations vanished unresolved
+
+Re-dispatched a 7th time (slot-12 → slot-6 → slot-8 → slot-9 → slot-11 → slot-4). Independently re-verified via direct
+`GET /api/state`: sibling `tardis_concurrent_ip_lockout_2026_07_12.md` todo #1 (`BLK-f1417674`) is still
+`answered_at: null`; condition `tardis-concurrent-ip-lock-fix-landed` still `value: false`, `gates_queued: 0` — the
+wiring gap from every prior session remains unfixed. Notably, neither `BLK-e047b522` (slot-8) nor `BLK-adcf07fa`
+(slot-9) — the two prior wiring-escalation blocked-questions the last two sessions confirmed as live and unanswered —
+appear in the current `blocked_queue` (11 entries, none referencing this task's wiring ask). They were not answered with
+the recommended fix (the condition is still unwired), so either they expired/were pruned without action, or some other
+resolution path removed them silently. Since no live blocked-question currently covers the wiring ask, filed a fresh one
+rather than assuming a stale reference still applies: `BLK-d6a8795a`, same ask (attach
+`prereqs.conditions: [tardis-concurrent-ip-lock-fix-landed]` to this backlog entry + `POST /api/backlog/reload`),
+explicitly flagging this is the 7th occurrence of the same thrash and that two earlier identical asks went unactioned.
+`skip-current-task`'d — nothing in-craft until the sibling operator decision lands or the condition is actually wired
+(not just re-requested).
