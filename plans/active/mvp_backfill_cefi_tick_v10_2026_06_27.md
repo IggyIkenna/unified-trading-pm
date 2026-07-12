@@ -1424,3 +1424,99 @@ re-verify Layer-1.
 `FORCE=1` ≠ `VM_FORCE=true`) — both caught by actually reading VM logs/metadata rather than trusting VM status alone.
 Worth internalizing for future waves in this plan: **"VMs RUNNING" is necessary but not sufficient — always spot-check
 at least one VM's run.log for real fetch/write activity before counting a backfill as launched successfully.**
+
+---
+
+### G4 Re-Verification Run #3 — 2026-07-12T12:06–12:16Z (GATE NOT MET — data_engineering slot-2, new session, resumed in-progress task)
+
+**Bootstrap note**: `instruments-service/.venv` did not exist in this slot (never built this session) — `uv sync`
+completed cleanly in ~seconds (disk had 194G free, no BLOCKED-DISK condition this time).
+
+**Coverage (merged) — `measure_honest_coverage.py --asset-group cefi`, 2026-07-12T12:08Z:**
+
+| metric                 |     count | vs 2026-07-12T07:25Z (prior session) | note                 |
+| ---------------------- | --------: | -----------------------------------: | -------------------- |
+| captured               | 2,136,273 |                                    — |                      |
+| attempted_failed       |     1,766 |                                  +11 | requires 0 — NOT MET |
+| expected_unattempted   |   646,863 |                                    0 | requires 0 — NOT MET |
+| coverage_pct (Layer-2) |     76.71 |                                    — |                      |
+| Layer-1 completeness   |     80.82 |                              +1.32pp | 15→14 missing tuples |
+
+**KRAKEN-FUTURES closed to 100%** (6/6) — confirms the prior session's `VM_FORCE=true` BITGET-FUTURES/KRAKEN-FUTURES
+relaunch landed real `future`-itype rows for KRAKEN-FUTURES. **BITGET-FUTURES still 50%** (3/6 —
+book5/derivative_ticker/ trades for `future` itype still missing) — its VM
+(`cefi-bitget-futures-2024-heavy-20260712-090713`) is still RUNNING (3h5m uptime at check time, `VM_FORCE=true`
+re-fetches the WHOLE catalogue so it's still working through PERPETUAL-itype symbols per serial-console gsutil cadence,
+not yet reached FUTURE-itype) — left running, no action needed, will re-verify next pass.
+
+**Reconciled remaining 14 Layer-1 missing tuples against the two open cross-repo findings from the prior same-day
+session — 7 are BLOCKED-OPERATOR-DECISION (not actionable by a worker):** re-read
+`issues/cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md` in full — it precisely covers ASTER
+book_snapshot_5, EXTENDED-STARKNET book_snapshot_5, LIGHTER-ZKSYNC book_snapshot_5, LIGHTER-ZKSYNC trades,
+PACIFICA-SOLANA book_snapshot_5, and (per its 09:20Z update) COINBASE-CDE/future/trades — 6 tuples, confirmed
+structurally unreachable (the capture handler deliberately writes zero manifest rows for live-only REST endpoints) until
+the operator picks resolution (a) denominator-correction or (b) typed-empty-row retrofit. Already escalated via
+`/blocked` by a prior session (`BLK-afc672cf`); both todos in that issue doc are correctly tagged
+`BLOCKED-OPERATOR-DECISION` so they won't re-dispatch. **Left untouched this session — genuinely not actionable.**
+
+**Investigated + acted on the remaining 8 (non-blocked) missing tuples:**
+
+1. **BITGET-FUTURES ×3** (book5/derivative_ticker/trades, `future` itype) — VM already in-flight from prior session,
+   left running (see above).
+2. **BYBIT-SPOT ×2** (book5/trades, `spot_pair` itype) — read `issues/bybit_spot_manifest_stray_captures_2026_07_07.md`:
+   ALL its todos are now closed (last one, the uppercase-casing fix, shipped 2026-07-12 by slot-10,
+   `market-tick-data-service@60287d3e`) and `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` now has real start dates
+   (2021-12-04). The stray-capture purge (`-003`, still pending `--smoke`/`--apply`) targets OLD mistagged
+   `instrument_type=""` rows and is orthogonal to this gap — Layer-1's missing tuples mean ZERO rows of ANY status exist
+   yet for `spot_pair`. **Launched a genuine backfill**: `VENUES="BYBIT-SPOT"` (no YEARS override → full 2021-2026
+   range), `VM_FORCE=true` (bypasses the venue-level skip-existing false-positive from already-captured PERPETUAL rows),
+   `TARDIS_KEY_CHECK=0` (same false-abort PATH issue as every prior session — `gcloud` resolves to the broken snap
+   wrapper without `/snap/google-cloud-cli/current/bin` prepended). 6 SPOT VMs launched
+   (`cefi-bybit-spot-{2021..2026}-heavy-20260712-121327`).
+3. **COINBASE-FUTURES/spot_pair/trades** — NOT investigated in any prior session. Checked UAC: `venue_mapping.py` maps
+   `("COINBASE-FUTURES","SPOT_PAIR") → "coinbase-international"` (a real Tardis exchange slug, not a phantom/stray
+   mapping like the BITFINEX-FUTURES fix). Confirmed live via `api.tardis.dev/v1/exchanges/coinbase-international`: 19
+   real `spot` symbols, `availableSince: 2026-05-22`. **Genuine backfill-able gap, not a denominator issue.** Launched
+   `ONLY="COINBASE-FUTURES:2026:heavy" VM_FORCE=true` (1 VM; `cefi-coinbase-futures-2026-heavy-20260712-121158` — only
+   2026 is in-range since the venue's spot product launched 2026-05-22).
+4. **DERIBIT-COMBO/options_chain/trades** — prior session found this needs cross-repo UAC routing + zero prior capture
+   attempts. Confirmed the routing fix already landed and is in this session's fresh-pulled checkout:
+   `unified-api-contracts@f0dc61a2` ("add DERIBIT-COMBO and OKX options Tardis routing entries", merged from two
+   independent concurrent slot fixes per the issue doc's Progress Log). **Launched the first-ever capture attempt**:
+   `VENUES="DERIBIT-COMBO"` (full default year range, filtered internally to 2025-2026 by the venue's actual start
+   date), `VM_FORCE=true`. 2 SPOT VMs launched (`cefi-deribit-combo-{2025,2026}-heavy-20260712-121327`).
+5. **OKX (bare)/options_chain/trades** — same `f0dc61a2` routing fix covers the bare-OKX Tardis mapping too (the issue
+   doc's own Progress Log confirms this is also a real, currently-broken IS/MTDS capture path, not just a theoretical
+   denominator artifact — a live VM run.log showed `ADAPTER_ERROR: No Tardis exchange mapping for canonical venue 'OKX'`
+   blocking IS reference-data capture entirely as of 2026-07-09, now fixed by the same commit). **Launched the
+   first-ever capture attempt**: `VENUES="OKX"` (full default range). 6 SPOT VMs launched
+   (`cefi-okx-{2021..2026}-heavy-20260712-121327`).
+
+**T+~7min verification (no-fire-and-forget HARD RULE):** all 19 new VMs (1 COINBASE-FUTURES + 6 DERIBIT-COMBO + 6 OKX +
+6 BYBIT-SPOT) confirmed RUNNING via `gcloud compute instances list`. Spot-checked
+`cefi-coinbase-futures-2026-heavy-20260712-121158`'s `run.log`: genuine Tardis streaming + GCS upload activity for
+`day=2026-01-01`, multiple real PERPETUAL symbols written (not a silent futile-skip — learned that lesson the hard way
+last session). Singleton-lock bypassed with `FORCE=1` (the harmless lock-only flag, not `VM_FORCE`) since another slot's
+unrelated BINANCE-FUTURES VMs (`*-084547`, not mine, left untouched) were already running in the same zone.
+
+**Gate verdict:** ❌ **NOT MET** — Layer-1 80.82% (14 missing tuples, was 15 at the prior session's close); Layer-2
+af=1,766/eu=646,863 unchanged (phantom-reconcile + manifest-hygiene not re-run this pass — same time-budget pattern as
+prior sessions, still owed a fresh run). 20 VMs now RUNNING across this plan (19 new + 1 carried over from the prior
+session). 6 tuples remain structurally BLOCKED-OPERATOR-DECISION pending `BLK-afc672cf`.
+
+**Blocking items remaining (ordered by impact):**
+
+1. **`BLK-afc672cf` operator decision** — gates 6 of the 14 tuples forever until resolved; already escalated, no further
+   worker action possible.
+2. **19 newly-launched VMs** (COINBASE-FUTURES/DERIBIT-COMBO/OKX/BYBIT-SPOT) — need T+30-60min+ completion check (these
+   are `VM_FORCE=true` full-catalogue re-fetches or brand-new venues with unknown symbol counts, so no reliable ETA yet)
+   - a Layer-1 re-verification once they land.
+3. **BITGET-FUTURES VM** (carried over, 3h+ uptime) — still working through the catalogue; check again next pass.
+4. **Phantom reconcile + manifest hygiene** — still not re-run since 2026-07-12T03:25Z (killed for host-memory pressure
+   that session); genuinely owed a fresh pass once VM waves quiet down.
+
+**Not blocked by CREDENTIALS/UPSTREAM.** 3 previously-never-attempted (venue, itype, data_type) combinations
+(DERIBIT-COMBO, bare-OKX, BYBIT-SPOT/spot_pair) got their first-ever real capture attempt this session, plus one newly
+identified genuine gap (COINBASE-FUTURES/spot_pair) — all backed by live Tardis-metadata verification before launch, not
+speculative relaunches. Continuing to monitor; next check-in should re-run Layer-1 once the 20 in-flight VMs have had
+time to complete.
