@@ -232,37 +232,75 @@ the zero-rows pattern was confirmed, to stop burning SPOT spend on a guaranteed-
       429 is now always a loud, correctly-recorded `record_failed`, never a silent zero.
 
       **Update (slot-4, 2026-07-12): (a) has SHIPPED — `market-tick-data-service@1ccd1817`.** Gated the `/book` call
-          behind the same `data_types` check already used for funding (`_want_book = data_types is None or
-          "book_snapshot_5" in data_types`) — `fetch_pacifica_rest` no longer fires `/book` at all when the caller excludes
-          it (which `_batch_data_types_for_venue` already does for PACIFICA-SOLANA), so book no longer competes with trades
-          for the shared rate-limit budget. 2 new regression tests (skip when unrequested, fires when requested — 39/39
-          pass), `quality-gates.sh` green. **Direct API probe against `api.pacifica.fi`** (from this session's sandbox
-          network, NOT the GCP VM network slot-2's sustained-429 finding was observed on) showed 68 sequential
-          `/trades/history` calls for BTC succeeding before the first 429 (vs. ~13 when book was interleaved), and a full
-          day's ~20-25 page walk completing cleanly using the already-shipped retry/backoff. This is directionally
-          consistent with (a) meaningfully helping, but **is not a substitute for slot-2's real-VM-network methodology** —
-          network-level throttling (shared egress IP, concurrent multi-symbol load) may behave differently on an actual
-          backfill VM than from this sandbox. Per (c) above and slot-2's own recommendation, downgrading this class of
-          remaining risk to P2 (data completeness, not silent-failure correctness — every 429 is now a loud
-          `record_failed`, never a silent zero, regardless of whether the walk ultimately reaches full 13-month depth).
-          **Follow-up VERIFY filed below** — could not launch/monitor a real VM to close the loop myself this session
-          (`gcloud` is non-functional in this sandbox: `snap-confine` capability error, unrelated to this task).
+              behind the same `data_types` check already used for funding (`_want_book = data_types is None or
+              "book_snapshot_5" in data_types`) — `fetch_pacifica_rest` no longer fires `/book` at all when the caller excludes
+              it (which `_batch_data_types_for_venue` already does for PACIFICA-SOLANA), so book no longer competes with trades
+              for the shared rate-limit budget. 2 new regression tests (skip when unrequested, fires when requested — 39/39
+              pass), `quality-gates.sh` green. **Direct API probe against `api.pacifica.fi`** (from this session's sandbox
+              network, NOT the GCP VM network slot-2's sustained-429 finding was observed on) showed 68 sequential
+              `/trades/history` calls for BTC succeeding before the first 429 (vs. ~13 when book was interleaved), and a full
+              day's ~20-25 page walk completing cleanly using the already-shipped retry/backoff. This is directionally
+              consistent with (a) meaningfully helping, but **is not a substitute for slot-2's real-VM-network methodology** —
+              network-level throttling (shared egress IP, concurrent multi-symbol load) may behave differently on an actual
+              backfill VM than from this sandbox. Per (c) above and slot-2's own recommendation, downgrading this class of
+              remaining risk to P2 (data completeness, not silent-failure correctness — every 429 is now a loud
+              `record_failed`, never a silent zero, regardless of whether the walk ultimately reaches full 13-month depth).
+              **Follow-up VERIFY filed below** — could not launch/monitor a real VM to close the loop myself this session
+              (`gcloud` is non-functional in this sandbox: `snap-confine` capability error, unrelated to this task).
 
-- [ ] [VERIFY] P2. Re-launch PACIFICA-SOLANA solo (isolating for concurrency, matching slot-2's `RUN_TS=20260712-055837`
-      methodology) now that the `/book`-skip fix has landed (`market-tick-data-service@1ccd1817`) and confirm whether
-      real historical rows now write, or whether the sustained-429 ceiling persists even with book removed from the
-      budget. (repo: deployment-service) - Rebuild the code tarball via `create-code-tarballs.sh` first (stale-tarball
-      gotcha, see item 3/4 above) — `mtds-code.tar.gz` must be built from `market-tick-data-service@1ccd1817` or
-      later. - Launch via `VENUES="PACIFICA-SOLANA" bash scripts/vm/launch-cefi-hl-aster-historical-backfill.sh`, check
-      run.log for `venues=['PACIFICA-SOLANA']` and `rows_written > 0` across several sample dates spanning the
-      2025-06-01 start_date to today, not just VM RUNNING status. - **If rows still don't land** (sustained-429 ceiling
-      persists even with book removed): the (c) design decision is confirmed unresolved — this becomes its own scoped
-      plan for either a reduced backfill scope (last-N-days + honest-absence-classify the rest) or a
-      Tardis-integrated/date-branching approach mirroring the LIGHTER-ZKSYNC fix (`market-tick-data-service@57493789`).
-      Do not re-attempt a naive full-history relaunch without one of those design changes — it will burn SPOT spend on a
-      repeat of the same ceiling. - **If rows DO land**: flip this todo, re-run `measure_honest_coverage.py` Layer-1 for
-      PACIFICA-SOLANA to confirm `present_tuples` moves off 0, and note the G4 gate implication in
-      `mvp_backfill_cefi_tick_v10_2026_06_27.md`.
+- [x] ✅ [VERIFY] P2. Re-launch PACIFICA-SOLANA solo (isolating for concurrency, matching slot-2's
+      `RUN_TS=20260712-055837` methodology) now that the `/book`-skip fix has landed
+      (`market-tick-data-service@1ccd1817`) and confirm whether real historical rows now write, or whether the
+      sustained-429 ceiling persists even with book removed from the budget. (repo: deployment-service) — **NEGATIVE
+      RESULT: sustained-429 ceiling CONFIRMED to persist even with `/book` removed from the budget.** (slot-2,
+      2026-07-12) - Rebuilt the code tarball first (stale-tarball gotcha per item 3/4): `create-code-tarballs.sh` run
+      from a clean tree at `market-tick-data-service@1ccd1817`; verified the re-uploaded `mtds-code.manifest.json` pins
+      `commit_sha=1ccd1817f30843625ef5efaf90d0894655a7d9bb` before launching. - Launched
+      `VENUES="PACIFICA-SOLANA" MAX_CONCURRENT=1 bash scripts/vm/launch-cefi-hl-aster-historical-backfill.sh`
+      (RUN_TS=20260712-062528) — solo (no other venues sharing the run), 2 year-shard VMs
+      (`cefi-pacifica-solana-2025-20260712-062528` covering 2025-06-01→2025-12-31,
+      `cefi-pacifica-solana-2026-20260712-062528` covering 2026-01-01→today). Both reached RUNNING within the 60s
+      no-fire-and-forget window. - `venues=['PACIFICA-SOLANA']` confirmed correct (drop-fix still working) and the
+      `/book` call is confirmed skipped
+      (`excluding PACIFICA-SOLANA/book_snapshot_5 from batch universe (live-only) —     not attempted` on both shards) —
+      the (a) fix from `1ccd1817` is live on these VMs. - **But every single `/trades/history` AND
+      `/funding_rate/history` call across 5 sampled symbols per shard (BNB, BTC, DOGE, ETH, FARTCOIN) returned
+      `HTTP 429`, with zero rows written, over ~5 minutes of continuous real-VM observation on both shards in parallel**
+      — this is the same GCP-VM-network sustained-ceiling pattern slot-2 found in the prior session
+      (`market-tick-data-service@c98c8856`), now re-confirmed AFTER the book-skip fix specifically intended to relieve
+      it. The `get_with_429_retry` backoff (2s/4s/8s) is firing (visible in the ~20-30s gap between consecutive symbol
+      attempts) but every retry still exhausts to 429 — book removal freed some rate-limit budget (per slot-4's
+      sandbox-network probe: 68 calls before first 429 vs ~13 with book interleaved) but evidently not enough to clear
+      whatever ceiling the shared GCP static egress IP is hitting on Pacifica's side. - Killed both VMs immediately
+      after the decisive negative signal (`gcloud compute instances delete` on both, 2026-07-12T06:3xZ) to stop burning
+      SPOT spend on a run with no realistic chance of landing rows, per the same practice as the prior session. - **(c)
+      design decision is now CONFIRMED unresolved, not just suspected** — see the new follow-up section below. Did NOT
+      re-run `measure_honest_coverage.py` Layer-1 (no rows landed, so `present_tuples` for PACIFICA-SOLANA is unchanged
+      at 0 — re-running would show nothing new) and did NOT touch the G4 gate note in
+      `mvp_backfill_cefi_tick_v10_2026_06_27.md` (gate implication is unchanged: still blocked on PACIFICA-SOLANA).
+
+## Follow-up: PACIFICA-SOLANA historical depth — design decision required (NOT auto-dispatchable)
+
+Both code-level fixes for this venue are now shipped and verified working as coded (venue-drop fix, 429 retry/backoff,
+`failed_per_instrument` recording, `/book`-skip) — remaining risk is entirely **data completeness** (P2), not
+**silent-failure correctness** (the original P1 is fully closed: every 429 is now a loud, correctly-recorded
+`record_failed`, never a silent zero). What's left needs a human/main judgment call between three concrete options, not
+another code patch attempt — do not dispatch this as a plain `[CODE]` backlog item without that decision first:
+
+1. **Reduced backfill scope**: only backfill the last N days (honest-absence-classify everything older) — cheapest, but
+   leaves most of the 2025-06-01→today Layer-1 denominator gap permanently unfilled for PACIFICA-SOLANA.
+2. **Tardis-integrated/date-branching delegation** mirroring the LIGHTER-ZKSYNC fix
+   (`market-tick-data-service@57493789`) — check whether Tardis has PACIFICA-SOLANA coverage at all before assuming this
+   is viable; if it does, this is the most complete fix.
+3. **Accept the near-total historical gap as honest absence** for this venue/date-range combination if neither (1) nor
+   (2) is worth the engineering cost relative to PACIFICA-SOLANA's share of the cefi universe.
+
+Recommend routing this as its own scoped plan once the operator/main agent picks a direction — file
+`plans/active/<slug>.md` (or a `plans/active/issues/` decision note first if the option needs more investigation, e.g.
+confirming Tardis PACIFICA-SOLANA coverage) rather than folding further attempts into this issue doc. Do not re-attempt
+a naive full-history relaunch without one of these design changes landing first — it will only repeat the same ceiling
+and burn SPOT spend for nothing.
+
 - [ ] [VERIFY] P2. Re-launch LIGHTER-ZKSYNC derivative_ticker now that the Tardis-delegated code fix has landed
       (`market-tick-data-service@57493789`) and confirm real rows write for 2026-04-17+ — check run.log for
       `venues=['LIGHTER-ZKSYNC']` and the delegated-Tardis-call log line, then verify via the manifest (Tardis
