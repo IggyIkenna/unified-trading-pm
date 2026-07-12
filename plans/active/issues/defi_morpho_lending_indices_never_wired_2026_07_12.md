@@ -190,7 +190,7 @@ slot**, contradicting the "gcloud CLI unavailable, snap-confine" note in earlier
 whether that was a slot-specific/transient sandbox issue rather than a fleet-wide gcloud outage. Post-launch
 verification (deployed-file check + first-write outcome) in progress; see next log entry for the verdict.
 
-- [ ] [INFRA] P0. Audit whether OTHER code tarballs (`unified-api-contracts-code`, `unified-trading-library-code`,
+- [x] ✅ [INFRA] P0. Audit whether OTHER code tarballs (`unified-api-contracts-code`, `unified-trading-library-code`,
       per-service tarballs for CEFI/TRADFI/SPORTS) are similarly stale relative to their repos' current
       `live-defi-rollout` HEAD, and whether ANY VM launched between 2026-07-08 and 2026-07-12 silently ran pre-fix code
       as a result (checking each tarball's `.manifest.json` `created_at`/`commit_sha` against `git log -1` for the
@@ -200,11 +200,84 @@ verification (deployed-file check + first-write outcome) in progress; see next l
       check in the launcher scripts) so this class of silent staleness can't recur — same remediation shape as the
       existing `[INFRA] P2` startup-script race todo above, but for the code tarball itself, and higher severity (P0)
       because it can silently invalidate ANY backfill VM's output, not just morpho lending-indices. (repo:
-      `deployment-service`)
+      `deployment-service`) — **Done 2026-07-12 (slot-4, infra).** See "Cross-repo tarball staleness audit" section
+      below for the full per-repo results and the fix shipped (`deployment-service@21d8cb3`).
 
 **NOTIFYING OPERATOR** per the data-correctness big-finding rule — this contradicts a previous "done"/"verified" claim
 in this same doc and has fleet-wide (not just morpho) blast radius. Filed as blocked-question `BLK-1ffbd75b`
 (can_continue=true, not actually blocking — work continued below).
+
+### Cross-repo tarball staleness audit — 2026-07-12T12:20Z (infra, slot-4)
+
+Ran the audit called for by the `[INFRA] P0` todo above. Downloaded all 17 current (non-SHA-pinned)
+`gs://deployment-scripts-central-element-323112/code/*-code.manifest.json` objects and compared each `commit_sha`
+against `git ls-remote`/`git rev-parse origin/live-defi-rollout` for the corresponding repo (fresh-fetched, not cached):
+
+| repo                                       | tarball commit_sha (short) | repo HEAD (short) | verdict                                                               |
+| ------------------------------------------ | -------------------------- | ----------------- | --------------------------------------------------------------------- |
+| alerting-service                           | `71f3040` (2026-06-22)     | `4b3aad7`         | **STALE — 275 commits / ~20 days behind**                             |
+| market-tick-data-service-code\*            | `591b020`                  | `04f5de94`        | stale by 1 commit, but **orphaned** (see below)                       |
+| unified-api-contracts                      | `3c6fc97`                  | `3c6fc97`         | fresh                                                                 |
+| unified-trading-library                    | `a45066a`                  | `a45066a`         | fresh                                                                 |
+| mtds-code (market-tick-data-service alias) | `04f5de94`                 | `04f5de94`        | fresh                                                                 |
+| deployment-service                         | `649986e`                  | `649986e`         | fresh                                                                 |
+| instruments-service                        | `7b79bb8`                  | `7b79bb8`         | fresh                                                                 |
+| market-data-processing-service             | `9034f7f`                  | `9034f7f`         | fresh                                                                 |
+| features-service                           | `70edc38`                  | `70edc38`         | fresh                                                                 |
+| execution-service                          | `9011a4a`                  | `9011a4a`         | fresh                                                                 |
+| ml-service                                 | `e2bf32a`                  | `e2bf32a`         | fresh                                                                 |
+| strategy-service                           | `dc015cf`                  | `dc015cf`         | fresh                                                                 |
+| e2e-testing                                | `92c4814`                  | `92c4814`         | fresh                                                                 |
+| batch-live-reconciliation-service          | `7cc3903`                  | `7cc3903`         | fresh                                                                 |
+| pnl-attribution-service                    | `c1ac3f0` (2026-05-28)     | `c1ac3f0`         | fresh (no commits since; not in my slot, checked via `git ls-remote`) |
+| position-balance-monitor-service           | `f602e58` (2026-05-28)     | `f602e58`         | fresh (ditto)                                                         |
+| risk-and-exposure-service                  | `6e52257` (2026-05-28)     | `6e52257`         | fresh (ditto)                                                         |
+
+\* `market-tick-data-service-code.tar.gz`/`.manifest.json` is a **non-canonical, orphaned GCS object** —
+`create-code-tarballs.sh` only ever produces the `mtds-code.tar.gz` name for this repo (confirmed:
+`grep -n "market-tick-data-service-code" scripts/vm/create-code-tarballs.sh` → 0 hits; the repo→tarball-name mapping is
+`"market-tick-data-service:mtds-code"`), and `grep -rl "market-tick-data-service-code" scripts/vm/` also returns 0
+launcher hits. No VM fetches this name, so its staleness has zero runtime blast radius — but it's dead weight that
+nearly caused a false-positive read during this exact audit (worth pruning; not done inline, see new P3 todo below).
+
+**Root cause of the alerting-service staleness**: `alerting-service` was in **none** of `CEFI_REPOS` / `TRADFI_REPOS` /
+`DEFI_REPOS` / `SPORTS_REPOS` / `PREDICTION_REPOS` / `ALL_SERVICE_REPOS` in `create-code-tarballs.sh` — meaning `--all`
+(which expands to `ALL_SERVICE_REPOS`) never re-tarred it either. The ONLY way to refresh its tarball was an explicit
+`--include alerting-service` flag. Since alerting-service deploys primarily via Cloud Run/Docker (not the tarball-VM
+pattern), it's easy to forget it needs a tarball refresh at all — but one VM launcher,
+`launch-alerting-quietness-baseline.sh`, DOES fetch `alerting-service-code.tar.gz` via the standard Pattern-A tarball
+flow. This is the same structural class of bug as the MTDS "excluded from `--asset-group DEFI`'s implicit refresh"
+finding above, one level up: a repo excluded from every tranche has NO periodic-refresh path at all, vs. MTDS which IS
+in `DEFI_REPOS` but still lagged for other reasons (the 4-day-stale `mtds-code.tar.gz` root-caused earlier in this doc).
+
+**Blast-radius check**: confirmed via `gcloud compute instances list --filter="name~alerting"` (empty — no
+alerting-prefixed VM currently running) and via the deployment registry archive for the last 5 days
+(`gs://deployment-scripts-central-element-323112/deployments/archive/2026-07-0{8,9}/`, `.../2026-07-1{0,1,2}/` — no
+`alerting` entries in any of the 5 days). `launch-alerting-quietness-baseline.sh`'s own header says it was a one-shot
+Phase 7 calibration tool for the 2026-05-23 live cutover — consistent with it not having run again since. **No VM has
+actually run the stale alerting-service code in the affected window** — the finding is a structural gap (this repo could
+silently stay stale forever), not a materialized incident, unlike the MTDS case above.
+
+**Fix shipped**: `deployment-service@21d8cb3` — added `alerting-service` to `ALL_SERVICE_REPOS` so a future `--all` run
+catches it. `quality-gates.sh` green (sentinel verified for `21d8cb3`), quickmerge landed on `live-defi-rollout`. Then
+republished the tarball itself: `create-code-tarballs.sh --include alerting-service` — confirmed
+`alerting-service-code.manifest.json` now reads `commit_sha=4b3aad7181cb782c1ea41677fa1e720765aad88f` (current HEAD).
+
+- [ ] [INFRA] P1. Add a CI/quickmerge-triggered auto-republish (or a pre-launch freshness check in the launcher scripts)
+      so tarball staleness — for ANY repo, not just the ones this audit happened to check — can't silently recur.
+      Candidate shapes: (a) a `live-defi-rollout` push-triggered GHA/Cloud Build step per repo that calls
+      `create-code-tarballs.sh --include <repo>` automatically (mirrors the `ldr-to-main-promote` push-triggered pattern
+      already in use elsewhere), or (b) a pre-launch precondition in every `launch-*.sh` that compares the target
+      tarball's `.manifest.json` `commit_sha` against `git rev-parse origin/live-defi-rollout` for that repo and
+      refuses/warns on mismatch (composes with the existing `[INFRA] P2` GCS-publish-race todo above — both are "is the
+      artifact this VM is about to fetch actually current" checks and could share one precondition helper). Not
+      attempted inline — this is genuine design work (push-trigger plumbing or a new launcher precondition helper), out
+      of scope for an audit-and-fix-what's-stale dispatch. (repo: `deployment-service`)
+- [ ] [INFRA] P3. Delete the orphaned `market-tick-data-service-code.tar.gz` / `.manifest.json` pair from
+      `gs://deployment-scripts-central-element-323112/code/` — confirmed zero launcher references (`mtds-code.tar.gz` is
+      the only name `create-code-tarballs.sh` ever produces for this repo); the orphan cost this audit an extra
+      verification step to rule out as a live risk and will do the same to the next person who audits this bucket. Low
+      priority, zero urgency (no runtime consumer). (repo: `deployment-service`)
 
 ### SECOND bug found + fixed: MorphoAdapter.fetch_markets() GraphQL query was malformed — 2026-07-12T11:15Z (data_engineering slot-3)
 
