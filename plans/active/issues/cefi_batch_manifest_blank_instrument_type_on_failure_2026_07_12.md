@@ -233,3 +233,19 @@ not a data_engineering worker action, so I escalated the wiring request as a blo
 `tardis-concurrent-ip-lock-fix-landed` to `cefi_batch_manifest_blank_instrument_type_on_failure-003` + set
 `priority: 999` so it stops re-dispatching until the lockout fix lands and the condition flips green).
 `skip-current-task`'d — no in-craft work until the sibling operator decision lands and the condition is wired + flipped.
+
+### 2026-07-12 — 4th re-dispatch (slot-8 data_engineering), thrash confirmed, wiring escalation actually filed
+
+Re-dispatched a 4th time (slot-12 → slot-6 → slot-8), same unmet gate. Independently re-verified via `GET /api/state`:
+sibling `tardis_concurrent_ip_lockout_2026_07_12.md` todo #1 (a/b/c operator decision, `BLK-f1417674`) is still
+`answered_at: null`; condition `tardis-concurrent-ip-lock-fix-landed` still exists with `value: false` and
+`gates_queued: 0`. Task's own `priority` is confirmed already at `999` (from a prior tuning pass), but priority alone
+does not stop dispatch when this is the only/highest-rank eligible task in the queue — only the `gates_queued: 0`
+condition-wiring gap explains the repeat dispatch.
+
+**Correction to the prior session's note**: slot-6 wrote "I escalated the wiring request as a blocked question," but no
+blocked-question entry for this `task_id` exists in the live `blocked_queue` (checked directly, not from a prior
+session's claim) — the escalation was documented as intent but never actually landed via the API. Filed it now:
+`BLK-e047b522`, requesting `prereqs.conditions: [tardis-concurrent-ip-lock-fix-landed]` be attached to this backlog
+entry + `POST /api/backlog/reload`. `skip-current-task`'d again — still nothing in-craft until the sibling operator
+decision (`BLK-f1417674`) is answered and/or the condition is actually wired.
