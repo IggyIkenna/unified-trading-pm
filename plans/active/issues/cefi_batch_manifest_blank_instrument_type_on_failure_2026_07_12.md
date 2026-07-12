@@ -124,8 +124,171 @@ finding) — this is a self-contained, in-craft code fix.
       combo-symbol failure asserts `"OPTION"` (proving the resolved-canonical-venue path, not the raw Tardis exchange
       slug, drives classification). quality-gates.sh green (10/10 targeted tests + full suite pass,
       sentinel=91ac1caa63ef67188b702cb195f15fa45576b05d).
-- [ ] [DATA] P2. After the fix lands, re-classify or leave-as-legacy the existing blank-`instrument_type`
+- [x] ✅ [DATA] P2. After the fix lands, re-classify or leave-as-legacy the existing blank-`instrument_type`
       `attempted_failed` rows already in the manifest (this doc's BITGET-FUTURES numbers plus whatever other venues
       carry the same pattern) — decide whether a one-time backfill re-tag (matching `instrument_id` against the same
       classifier) is worth it or whether they should just age out as new attempts supersede them. (repo:
-      instruments-service)
+      instruments-service) — **DECISION: leave-as-legacy now; defer any active re-tag to a gated post-recapture audit.
+      Full reasoning + evidence in "## P2 Decision" below.** The todo's assumed "age out as new attempts supersede them"
+      mechanism is DISPROVEN (manifest dedup keys a populated `instrument_type` distinct from blank/None, so a post-P1
+      successor never collapses the legacy blank row), but active re-tag is NOT worth building now — the residual rows
+      become harmless Layer-1 strays once re-capture lands, and no canonical low-risk tool re-tags `attempted_failed`
+      rows. (decision-only, no code — recorded 2026-07-12 by slot-11 data_engineering)
+- [ ] [DATA] P3. GATED on the P1-corrected cefi backfill re-capture sweep (which itself is gated on the sibling
+      `tardis_concurrent_ip_lockout_2026_07_12.md` lockout fix): run a Layer-1 completeness audit over the affected
+      Tardis/cefi venues. ONLY if it shows residual blank-`instrument_type` `attempted_failed` rows for (venue,
+      instrument_type, data_type) triples that genuinely never re-captured (delisted / permanent gap) — and are
+      therefore real Layer-1 holes rather than harmless strays — build a scoped, consolidator-coordinated reconciler
+      re-tag for exactly those rows. Do NOT in-place-mutate the consolidated `_index/availability_index.parquet` (breaks
+      the write-time CAS + consolidator-coordination contract; see `## P2 Decision`). (repo: instruments-service)
+
+## P2 Decision (2026-07-12, slot-11 data_engineering)
+
+**Decision: leave the existing blank-`instrument_type` `attempted_failed` rows as legacy for now; do NOT build a
+one-time re-tag backfill. Defer a scoped re-tag to a GATED post-recapture Layer-1 audit (new P3 todo above).**
+
+Prerequisite check: P1 (`-001`) landed while this was being decided — `market-tick-data-service@91ac1caa` threads
+`instrument_type` into every `PerSymbolTask.row_key` (success AND failure paths), so from now on the writer stops
+producing blank-itype rows. The decision below therefore governs only the pre-91ac1caa legacy rows.
+
+Three independent lines of evidence drove the call:
+
+1. **The todo's assumed "age out as new attempts supersede them" is mechanically IMPOSSIBLE.** The manifest reader and
+   consolidator dedup on `(date, venue, data_type, service_name)` + present optional dims (which include both
+   `instrument_id` and `instrument_type`). Their key-normaliser collapses `""` and `None` to a single NULL sentinel but
+   keeps any _populated_ value distinct —
+   `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:725-732` (`_dedup_key_series`),
+   mirrored in `manifest_consolidator._dedup_key_sql`. P1 classifies BITGET-FUTURES perps as the populated string
+   `"PERPETUAL"`, so a post-P1 successor row carries `instrument_type="PERPETUAL"` while the legacy row carries
+   `instrument_type=""` → **different dedup keys → they never collapse → the legacy blank row survives forever**
+   alongside its successor. (Contrast the one case that DOES age out: a successor written with `instrument_type=None`
+   dedups against a blank predecessor — the understat regression in
+   `tests/unit/test_manifest_writer_per_vm.py::test_reader_dedups_optional_dim_null_vs_empty_string`. That does not
+   apply here because the CeFi successor itype is a populated value, not None.)
+
+2. **Post-recapture the residual blank rows are harmless Layer-1 STRAYS, not holes.** Per
+   `codex/02-data/honest-coverage-model.md`, Layer-1 completeness = `|EXPECTED ∩ ENUMERATED| / |EXPECTED|`;
+   `missing_tuples = EXPECTED − ENUMERATED` are holes, whereas a tuple present in ENUMERATED but absent from EXPECTED is
+   a **stray** — "logged as a Layer-1 warning, not a hole." Once the P1-corrected pipeline re-captures the affected
+   `(venue, PERPETUAL, data_type)` triples, EXPECTED is satisfied by real `captured` rows and the leftover
+   `(venue, ""/blank, data_type)` `attempted_failed` rows fall into ENUMERATED-only → they downgrade from Layer-1 holes
+   to logged strays and stop blocking completeness. So the completeness signal self-heals on re-capture without any
+   mutation.
+
+3. **There is no canonical, low-risk tool to re-tag `attempted_failed` rows, and the obvious cheap paths don't work.**
+   - `ManifestWriter` exposes no bulk-mutate API _by design_ — manifest mutation goes through
+     `record_captured`/`record_empty`/`record_failed` to preserve write-time CAS + consolidator coordination (documented
+     in `market-tick-data-service/scripts/cleanup_kraken_spot_empty_confirmed.py`). In-place editing the consolidated
+     `_index/availability_index.parquet` (the sports XG one-off `reclassify_xg_blank_league_phantoms.py` did this) races
+     the consolidator daemon and can be reverted on the next consolidation.
+   - The canonical bulk-mutation path, the phantom-audit reconciler
+     (`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`), **skips `attempted_failed` rows by design**
+     — it only touches `captured`/`empty_confirmed` phantoms — so it will not re-tag these.
+   - Re-emitting via `record_failed` with the correct `instrument_type` writes a NEW row with a populated-itype dedup
+     key (newer `attempted_at`) — it does not remove the blank row; it just adds a sibling. So it fails to clean up.
+   - A correct re-tag would therefore require _new_ code: a consolidator-coordinated reconciler extended to re-tag
+     `attempted_failed` rows (with a captured-wins collision guard so a re-tagged failed row can never mask a real
+     capture on the same key). That is disproportionate to the benefit given (2).
+
+**Net:** the correctness cost of leaving these rows is bounded (harmless strays after re-capture), while an eager re-tag
+is genuinely risky (prod manifest mutation, consolidator coordination, no existing tool) — so the right sequencing is
+writer-fix (P1 ✅) → lockout-fix (sibling issue) → re-capture sweep → Layer-1 audit → **conditional** scoped re-tag only
+for triples that provably never re-capture. That conditional work is tracked as the P3 todo above; it stays a real
+Layer-1 concern (blank `instrument_type` is a genuine hole per honest-coverage-model.md) for exactly the
+never-recaptured subset, which is why it is gated rather than dropped.
+
+No code shipped for this decision by design — the deliverable is the decision itself plus the gated P3 follow-up; the
+`## What I found` counts (BITGET-FUTURES 41,027 / 4,063 / 40,845 / 75,466) remain the scale reference for the future
+audit.
+
+## P3 gate re-check — 2026-07-12T14:12Z (data_engineering slot-12)
+
+Dispatched to the `[DATA] P3` "GATED on the P1-corrected cefi backfill re-capture sweep (which itself is gated on the
+sibling `tardis_concurrent_ip_lockout_2026_07_12.md` lockout fix)" todo. Checked the gate before attempting anything:
+`tardis_concurrent_ip_lockout_2026_07_12.md`'s own todo #1 (operator decision a/serialize vs b/plan-upgrade vs
+c/centralized-proxy) is still `- [ ]` open, and todo #2 (implement chosen fix) is still `- [ ]` open — confirmed no
+lock/mutex/proxy/403-code-274 commit landed (git log unchanged since the 2026-07-12 slot-3 check in that doc). A live
+`/blocked` (`BLK-f1417674`, task `tardis_concurrent_ip_lockout-001`) already carries this exact operator decision and is
+unanswered — confirmed via direct `GET /api/state` read, not trusted from a prior note. Running the Layer-1 completeness
+audit now would reproduce the same 403-lockout-dominated noise the sibling doc's own verification log already identified
+as misleading pre-fix. Not filing a duplicate blocked-question (`BLK-f1417674` already covers it and remains live).
+`skip-current-task`'d — nothing in-craft to do until the sibling operator decision lands.
+
+### 2026-07-12 — P3 re-dispatch + thrash root-cause (data_engineering slot-6)
+
+This `[DATA] P3` task (`cefi_batch_manifest_blank_instrument_type_on_failure-003`) was **re-dispatched to slot-6 despite
+slot-12 already skipping it** for an unchanged gate — confirming a re-dispatch thrash loop (slot-12 → slot-6).
+Re-verified the gate independently: sibling `tardis_concurrent_ip_lockout_2026_07_12.md` todo #1 (operator a/b/c
+decision) and todo #2 (implement fix) are both still `- [ ]`; git log on both
+`market-tick-data-service`/`deployment-service` shows no lock/mutex/proxy/403-code-274 commit. The root operator
+decision is live and unanswered as blocked question on task `tardis_concurrent_ip_lockout-001` (created
+2026-07-12T13:45Z, `answered_at: null` — confirmed via direct `GET /api/state`). So the gate is **UNMET**; running the
+Layer-1 audit now would reproduce the 74.9% 403-lockout noise the sibling doc itself flags as misleading pre-fix.
+
+**Thrash root cause (systemic, now escalated):** the prerequisite condition `tardis-concurrent-ip-lock-fix-landed`
+already exists (created by slot-3, value `false`) but **gates 0 tasks** (`gates_queued: 0` in `/api/state`) — it was
+never wired to this P3 backlog entry, so the dispatcher keeps offering the task even though its gate is a live false
+condition. Attaching a backlog `prereqs.conditions` is main/operator-owned tuning (yaml-only per RULES/worker.md § 4),
+not a data_engineering worker action, so I escalated the wiring request as a blocked question (recommend: attach
+`tardis-concurrent-ip-lock-fix-landed` to `cefi_batch_manifest_blank_instrument_type_on_failure-003` + set
+`priority: 999` so it stops re-dispatching until the lockout fix lands and the condition flips green).
+`skip-current-task`'d — no in-craft work until the sibling operator decision lands and the condition is wired + flipped.
+
+### 2026-07-12 — 4th re-dispatch (slot-8 data_engineering), thrash confirmed, wiring escalation actually filed
+
+Re-dispatched a 4th time (slot-12 → slot-6 → slot-8), same unmet gate. Independently re-verified via `GET /api/state`:
+sibling `tardis_concurrent_ip_lockout_2026_07_12.md` todo #1 (a/b/c operator decision, `BLK-f1417674`) is still
+`answered_at: null`; condition `tardis-concurrent-ip-lock-fix-landed` still exists with `value: false` and
+`gates_queued: 0`. Task's own `priority` is confirmed already at `999` (from a prior tuning pass), but priority alone
+does not stop dispatch when this is the only/highest-rank eligible task in the queue — only the `gates_queued: 0`
+condition-wiring gap explains the repeat dispatch.
+
+**Correction to the prior session's note**: slot-6 wrote "I escalated the wiring request as a blocked question," but no
+blocked-question entry for this `task_id` exists in the live `blocked_queue` (checked directly, not from a prior
+session's claim) — the escalation was documented as intent but never actually landed via the API. Filed it now:
+`BLK-e047b522`, requesting `prereqs.conditions: [tardis-concurrent-ip-lock-fix-landed]` be attached to this backlog
+entry + `POST /api/backlog/reload`. `skip-current-task`'d again — still nothing in-craft until the sibling operator
+decision (`BLK-f1417674`) is answered and/or the condition is actually wired.
+
+### 2026-07-12 — 6th re-dispatch (slot-11 data_engineering), thrash confirmed again, no duplicate blocked filed
+
+Re-dispatched a 6th time (slot-12 → slot-6 → slot-8 → slot-9 → slot-11), same unmet gate. Independently re-verified via
+direct `GET /api/state` + `git log origin/live-defi-rollout` on both `market-tick-data-service` and
+`deployment-service`: sibling `tardis_concurrent_ip_lockout_2026_07_12.md` todo #1 (a/b/c operator decision,
+`BLK-58aea31d`, successor to `BLK-f1417674`) and todo #2 (implement chosen fix) are both still `- [ ]`; only the
+direction-independent 403-code-274 hygiene fix has landed (`market-tick-data-service@31934527`) — that is a separate,
+already-flipped `[DATA] P1` todo in the sibling doc, not the a/b/c serialize/upgrade/proxy decision this P3 todo is
+gated on. Condition `tardis-concurrent-ip-lock-fix-landed` still `value: false`, `gates_queued: 0` — still not wired to
+this backlog entry. A live blocked-question for exactly this wiring ask already exists and is unanswered
+(`BLK-adcf07fa`, filed by slot-9, options A/B, recommendation A) — did NOT file a duplicate. `skip-current-task`'d —
+nothing in-craft until the sibling operator decision lands (or `BLK-adcf07fa` is answered and the condition gets wired).
+
+### 2026-07-12 — 7th re-dispatch (slot-4 data_engineering), thrash continues, prior wiring escalations vanished unresolved
+
+Re-dispatched a 7th time (slot-12 → slot-6 → slot-8 → slot-9 → slot-11 → slot-4). Independently re-verified via direct
+`GET /api/state`: sibling `tardis_concurrent_ip_lockout_2026_07_12.md` todo #1 (`BLK-f1417674`) is still
+`answered_at: null`; condition `tardis-concurrent-ip-lock-fix-landed` still `value: false`, `gates_queued: 0` — the
+wiring gap from every prior session remains unfixed. Notably, neither `BLK-e047b522` (slot-8) nor `BLK-adcf07fa`
+(slot-9) — the two prior wiring-escalation blocked-questions the last two sessions confirmed as live and unanswered —
+appear in the current `blocked_queue` (11 entries, none referencing this task's wiring ask). They were not answered with
+the recommended fix (the condition is still unwired), so either they expired/were pruned without action, or some other
+resolution path removed them silently. Since no live blocked-question currently covers the wiring ask, filed a fresh one
+rather than assuming a stale reference still applies: `BLK-d6a8795a`, same ask (attach
+`prereqs.conditions: [tardis-concurrent-ip-lock-fix-landed]` to this backlog entry + `POST /api/backlog/reload`),
+explicitly flagging this is the 7th occurrence of the same thrash and that two earlier identical asks went unactioned.
+`skip-current-task`'d — nothing in-craft until the sibling operator decision lands or the condition is actually wired
+(not just re-requested).
+
+### 2026-07-12 — 8th re-dispatch (slot-5, plan-health role, boot resume), gate still unmet, wiring re-escalated again
+
+Re-dispatched an 8th time (slot-12 → slot-6 → slot-8 → slot-9 → slot-11 → slot-4 → slot-5). Independently re-verified
+via direct `GET /api/state` + `git log origin/live-defi-rollout` on `market-tick-data-service`: sibling
+`tardis_concurrent_ip_lockout_2026_07_12.md` todo #1 (`BLK-f1417674`, the a/b/c operator decision) is still
+`answered_at: null`; only the already-flipped 403-code-274 hygiene fix (`market-tick-data-service@31934527`) has landed,
+no lock/mutex/proxy commit. Condition `tardis-concurrent-ip-lock-fix-landed` still `value: false`, `gates_queued: 0` —
+the wiring gap persists. Confirmed `BLK-d6a8795a` (filed for the 7th occurrence) is no longer in the live
+`blocked_queue` (11 entries, none referencing this task) — same silent-pruning-without-action pattern as the two before
+it. Filed a fresh wiring escalation: `BLK-c8842409`, same ask (attach
+`prereqs.conditions: [tardis-concurrent-ip-lock-fix-landed]` to this backlog entry + `POST /api/backlog/reload`),
+flagging this as the 8th occurrence for main/operator visibility. `skip-current-task`'d — nothing in-craft until the
+sibling operator decision lands or the condition is actually wired.

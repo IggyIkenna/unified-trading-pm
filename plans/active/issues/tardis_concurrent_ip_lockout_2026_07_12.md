@@ -189,8 +189,79 @@ Tardis download path) — preserves the parallel-VM wall-clock the plan relies o
 - [ ] [INFRA] P1. Once decided: implement the chosen fix. If (a) stopgap: a GCS-object-lease mutex acquired in the VM
       startup script or `tardis_batch_download.py` before any `datasets.tardis.dev` call, released on completion/
       preemption (must handle SPOT preemption not leaking the lock — a TTL-based lease, not a plain object-exists
-      check). (repo: deployment-service, market-tick-data-service)
-- [ ] [DATA] P1. Once the lock contention is resolved (any path above), RE-RUN this plan's G4 verification from a clean
-      slate — every prior session's `attempted_failed` count in this plan's Progress Log should be treated as
-      upper-bound noise until re-measured post-fix, not a genuine per-venue gap census. (repo: instruments-service,
-      e2e-testing)
+      check). (repo: deployment-service, market-tick-data-service) — **BLOCKED-OPERATOR-DECISION on todo #1
+      (BLK-58aea31d, slot-7 infra 2026-07-12): "implement the chosen fix" but NO a/b/c choice is recorded anywhere; the
+      issue itself flags this as an operator judgment call (`model_tier: opus-required`) NOT to attempt unilaterally.
+      Engineering finding: option (a) is NOT the budgeted 1-2h — UTL exposes only `gcs_copy/delete/describe_object` (no
+      generation-CAS conditional write), so a correct SPOT-safe TTL-lease mutex needs a NEW UTL cloud-interface
+      primitive (direct `google.cloud` is QG-banned in service repos); option (b) needs ZERO code and would moot
+      (a)/(c). Do NOT build fleet-serializing infra until the operator rules.**
+- [x] [DATA] P1. ✅ **Direction-independent 403-code-274 error_reason hygiene fix (done under ANY of a/b/c — did NOT
+      require the operator decision).** — market-tick-data-service@31934527 (2026-07-12, slot-7 infra).
+      `TardisHTTPError` now (i) parses a 403 response body for `code == 274` + `retryAfterSeconds` (attributes
+      `concurrent_ip_lock` / `tardis_code` / `retry_after_seconds`); (ii) appends a STABLE `code=274 concurrent-IP-lock`
+      marker to the message so `_classify_tardis_error` emits `Tardis HTTP 403 code=274 concurrent-IP-lock` into the
+      manifest `error_reason` (`classify_venue_error` is exact-match → the tag passes through unclassified; KEEPS the
+      `403` substring so the `error_reason CONTAINS '403'` audit query still matches). `async_iter_bytes` (streaming) +
+      `_fetch_tardis_bytes` (legacy) now pass the 403 body through. (iii) `retryAfterSeconds` is CAPTURED as an
+      attribute but intentionally NOT slept-on — a 403 stays a terminal fetch-failure; blindly honouring the ~15-min
+      backoff with N concurrent VMs would re-contend on the same lock and risk stall-watchdog kills (serialization is
+      the a/b/c fix, not this). Unit tests:
+      `test_tardis_stream_client.py::TestAsyncIterBytes::test_403_code_274_tagged_as_concurrent_ip_lock` +
+      `TestTardisHTTPErrorConcurrentIPLock` (4 cases). This separates lock-403s from genuine honest-absence and DIRECTLY
+      de-noises the G4 re-measurement below. (repo: market-tick-data-service)
+- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION (gated on todo #1 + todo #2 above — do NOT run pre-fix).** Once the lock
+      contention is resolved (any path above), RE-RUN this plan's G4 verification from a clean slate — every prior
+      session's `attempted_failed` count in this plan's Progress Log should be treated as upper-bound noise until
+      re-measured post-fix, not a genuine per-venue gap census. **Verified 2026-07-12 (data_engineering slot-3): gate
+      UNMET — todos #1/#2 both open, no lock/mutex/proxy/403-274 fix in git; a pre-fix re-run would only reproduce the
+      known 403-noise. Escalated as BLK-12b5a8b0 (recommend: park this todo, priority 999 + false prereq, until the fix
+      lands so it stops being prematurely dispatched).** (repo: instruments-service, e2e-testing)
+
+## Verification log
+
+### 2026-07-12 — G4 re-run gate check (data_engineering slot-3)
+
+Dispatched the `[DATA] P1` "RE-RUN G4 verification from a clean slate" todo. Before running anything, checked whether
+the gate ("Once the lock contention is resolved (any path above)") was actually met:
+
+- **Todo #1 (operator decision a/b/c): OPEN** — still `- [ ]`; no operator ruling on this lockout exists (the
+  `plan_reconciliation_operator_decisions_2026_07_11.md` Tardis entries are all about the SEPARATE, already-resolved
+  billing gate `cefi_tardis_historical_blocked_credentials_2026_06_21.md`, not the concurrent-IP lock).
+- **Todo #2 (implement chosen fix): OPEN** — no lock/mutex/GCS-lease/proxy/403-code-274 commit in
+  `market-tick-data-service` or `deployment-service` git log since 2026-07-10.
+- **Code confirms the aggravator is still live**: `tardis_base_client.py`
+  `retry_status_codes = (429, 500, 502, 503, 504)` (403 absent, line ~138) and the 403 handler (~line 431) still only
+  logs a generic warning — it does not parse `code == 274` / `retryAfterSeconds`, so concurrent-lock 403s continue to
+  land in the manifest as `attempted_failed` rows indistinguishable from genuine unavailability.
+
+**Verdict: gate UNMET.** A pre-fix G4 re-run would only reproduce the same 403-lockout-dominated `attempted_failed`
+counts (74.9% of cefi af per the live query above) that todo #3 itself says to treat as upper-bound noise — so it would
+be actively misleading and a wasted ~35M-row manifest re-scan. Escalated the premature-dispatch + unmet-gate as a
+blocked question (BLK-12b5a8b0) with recommendation (A) the operator makes the todo-#1 decision. Promoted the
+direction-independent 403-code-274 error_reason hygiene fix (previously only prose in "Engineering grounding") to an
+explicit tracked `[DATA]` todo above, since it de-noises exactly the measurement this task needs and is correct under
+any a/b/c choice. Did NOT flip the G4 todo (it is not done) and did NOT run a pre-fix measurement.
+
+### 2026-07-12 — todo #2 (implement chosen fix) dispatched to slot-7 infra
+
+Dispatched `tardis_concurrent_ip_lockout-002` ("Once decided: implement the chosen fix. If (a) stopgap: a
+GCS-object-lease mutex…"). Confirmed the gate is UNMET and the fix cannot be built unilaterally:
+
+- **No a/b/c decision exists.** Backlog `-001` (operator decision) is `dispatched` with `assigned_slot: null`, no
+  `notes`/`resolution`; no operator messages to slot-7; no ruling anywhere in this doc or the plans corpus. Todo #2
+  literally says "implement the **chosen** fix" — nothing is chosen.
+- **The issue itself forbids a unilateral pick** — "operator judgment call — not a plain code fix … flagging as
+  `assigned_role: infra`, `model_tier: opus-required` (architecture decision) rather than attempting unilaterally."
+- **Engineering finding (raises the cost of option (a) above the plan's 1-2h estimate):** UTL's cloud-interface exposes
+  only `gcs_copy_object` / `gcs_delete_object` / `gcs_describe_object` — there is NO generation-precondition (CAS)
+  conditional-write primitive. A correct SPOT-preemption-safe TTL-lease mutex requires atomic compare-and-set, so option
+  (a) needs a NEW UTL primitive first (direct `google.cloud`/`boto3` is QG-banned in service repos) — a cross-repo
+  build, not a same-session stopgap. Option (b) (Tardis plan upgrade) needs zero code and would moot (a)/(c) entirely.
+
+**Actions:** escalated the a/b/c decision as **BLK-58aea31d** (recommendation: pursue the free (b) upgrade in parallel
+AND build (c) as the throughput-preserving endgame; only build the serializing (a) stopgap if G4 must unblock this
+week). Left todo #2 unchecked/blocked. While blocked, shipped the direction-independent 403-code-274 error_reason
+hygiene fix (the `[DATA] P1` todo above) — market-tick-data-service@31934527, QG-green, landed on live-defi-rollout —
+which is safe and correct under any a/b/c choice and de-noises the G4 re-measurement. Did NOT build any
+mutex/serialization.

@@ -288,12 +288,29 @@ republished the tarball itself: `create-code-tarballs.sh --include alerting-serv
       stale-enforce-blocks, missing-manifest-enforce-blocks, incident-launcher-wiring. Full `quality-gates.sh` green
       (sentinel verified for 7ae9013); quickmerge landed on `live-defi-rollout`. Fleet-wide rollout to the other ~153
       launchers is left as the mechanical follow-up below (the design work — the helper — is done here).
-- [ ] [INFRA] P2. Roll the `lc_verify_tarball_freshness` pre-launch guard out across the remaining `launch-*.sh` fleet
-      (only `launch-mtds-lending-indices-backfill-vm.sh` is wired so far). Each launcher sources
+- [x] ✅ [INFRA] P2. Roll the `lc_verify_tarball_freshness` pre-launch guard out across the remaining `launch-*.sh`
+      fleet (only `launch-mtds-lending-indices-backfill-vm.sh` is wired so far). Each launcher sources
       `lib/launcher_common.sh` and calls the guard with the repos its VM fetches (derivable from its `VM_SERVICE` +
       asset-group), before the `gcloud create`. Mechanical follow-up to the P1 above — the helper + reference wiring
       already exist. Consider a QG guard analogous to `TestDurableLogStreamerCoverage` that asserts every
-      tarball-fetching launcher wires the freshness check. (repo: `deployment-service`)
+      tarball-fetching launcher wires the freshness check. (repo: `deployment-service`) — **Done 2026-07-12 (slot-10,
+      infra).** `deployment-service@b5bd336`. Wired all 107 remaining tarball-fetching launchers (100% of the non-AWS
+      fleet — every `launch-*.sh` whose `gcloud` metadata carries a GCS `startup-script-url=`, including the 2 bespoke
+      consolidated-live launchers that fetch tarballs via their own `setup-*-consolidated-vm.sh`, not just the generic
+      `setup-data-pipeline-vm.sh` dispatcher). Each launcher now sources `lib/launcher_common.sh` (where missing) and
+      calls `lc_verify_tarball_freshness "$CODE_BUCKET" <repos...>` before its `gcloud create`/ `lc_gcloud_create`
+      invocation, scoped per-launcher to the repos its `VM_SERVICE` metadata actually needs (mapped from the same
+      `SERVICE_TARBALLS`/`MTDS_DEPENDENT_SERVICES` table `setup-data-pipeline-vm.sh` uses) plus the always-required core
+      (`unified-api-contracts`, `unified-trading-library`, `deployment-service`); a handful of non-standard `VM_SERVICE`
+      values (one-off cutover/drill launchers: `dr`, `chaos`, `wallet_treasury`, `qg_snapshot`, `client_reporting`) fall
+      back to core-only since they aren't in the service→repo table. Applied via a one-shot scratchpad transform script
+      (not committed) + manual fix for the one launcher (`launch-honest-coverage-vm.sh`) that builds its `gcloud`
+      invocation as a bash array rather than a direct call. Verified `bash -n` clean on all 108 wired launchers, no
+      trailing whitespace, guard token present in every one. Added `TestTarballFreshnessGuardCoverage` to
+      `tests/unit/test_vm_launcher_scripts.py` (mirrors `TestDurableLogStreamerCoverage`'s pattern exactly — same
+      whitelist-with-reason structure, self-test sentinel, GCP-only/`-aws.sh`-excluded scoping) so a future
+      tarball-fetching launcher that forgets the guard fails CI. Full `quality-gates.sh` green (sentinel verified for
+      `b5bd336`); quickmerge landed on `live-defi-rollout`.
 - [x] ✅ [INFRA] P3. Delete the orphaned `market-tick-data-service-code.tar.gz` / `.manifest.json` pair from
       `gs://deployment-scripts-central-element-323112/code/` — confirmed zero launcher references (`mtds-code.tar.gz` is
       the only name `create-code-tarballs.sh` ever produces for this repo); the orphan cost this audit an extra
@@ -722,14 +739,40 @@ breaks the staleness checker's bundle read in the window before rebuild. The onl
 
 **Not fixed inline — captured as a properly-scoped follow-up (design decision, out of a P3 GCS-delete scope):**
 
-- [ ] [INFRA] P3. Decide + (if approved) implement de-duplication of the MTDS dual-name tarball production. Today
-      `create-code-tarballs.sh` emits both `mtds-code.tar.gz` (CORE alias) and `market-tick-data-service-code.tar.gz`
-      (category-array `${repo}-code` derivation) for the same repo — two byte-identical objects. Options: (a) drop MTDS
-      from the category arrays since CORE always covers it (must confirm which name the tarball-fetching VMs actually
-      pull in `setup-data-pipeline-vm.sh` before removing either); (b) special-case MTDS in the derivation to reuse the
-      `mtds-code` alias; (c) leave as-is and instead fix `deployment-api/.../tarball_staleness.py` to reference
-      `mtds-code.tar.gz` in `_ASSET_GROUP_TARBALLS` (aligning to CORE) so the `market-tick-data-service-code.tar.gz`
-      name has no consumer and CAN be retired. Any option requires lockstep changes across `create-code-tarballs.sh`,
-      `tarball_staleness.py` (+ its `_bundle_for` ordering tests), and a check of the VM fetch path — genuine design
-      work, operator/main to decide before implementing. Cosmetic/efficiency only (one redundant ~2.8 MB tarball per
-      build); zero correctness urgency. (repo: `deployment-service` + `deployment-api`)
+- [x] ✅ [INFRA] P3. Decide + (if approved) implement de-duplication of the MTDS dual-name tarball production. — **Done
+      2026-07-12 (slot-5, infra).** Decided **option (a)**, confirmed safe first: grepped every `launch-*.sh` +
+      `setup-data-pipeline-vm.sh` in `deployment-service/scripts/vm/` for `market-tick-data-service-code` — **0 hits,
+      every launcher exclusively fetches `mtds-code.tar.gz`** — so dropping MTDS from the category arrays has zero VM
+      fetch-path impact. Root cause was a literal bug: the `MERGED_EXTRA_REPOS` de-dup guard (`create-code-tarballs.sh`
+      line ~192) excluded `unified-api-contracts`/`unified-trading-library` (both CORE-mapped) but its own comment
+      ("MTDS is handled there") was never implemented for `market-tick-data-service` — so the bare MTDS name in every
+      category array fell through to the `${repo}-code` derivation and produced a second, byte-identical tarball every
+      build. Fixed the guard (`deployment-service@617dea7`) — verified via `--dry-run --asset-group DEFI` and
+      `--dry-run --all`: only `mtds-code.tar.gz` produced, zero `market-tick-data-service-code.tar.gz` occurrences.
+      Paired with **option (c)** in lockstep: removed the now-redundant `market-tick-data-service-code.tar.gz` entry
+      from all 5 `_ASSET_GROUP_TARBALLS` groups in `deployment-api/.../tarball_staleness.py` (`deployment-api@3bdca82`)
+      — `mtds-code.tar.gz` via `_CORE_TARBALLS` already covers MTDS staleness for every asset_group, so no coverage
+      lost; existing `_bundle_for` tests use generic invariants (subset/dedup/`len > 4`), none hardcode the removed
+      name, no test changes needed. `quality-gates.sh` green on both repos (sentinels verified for `617dea7`/`3bdca82`);
+      both quickmerge-landed on `live-defi-rollout`. Did NOT delete the orphaned `market-tick-data-service-code.tar.gz`
+      GCS objects already published under the old bug — no runtime consumer references that name anymore after this fix,
+      so they'll simply stop being refreshed and age out; a GCS delete was already ruled out as the wrong move by the
+      `[INFRA] P3` "delete orphaned tarball" todo above (RESOLVED-INVALID entry, ~13:10Z) for the same object.
+
+### Re-check #13 — unchanged (VM at 2023-10-25, ~34min pre-genesis); NOT re-litigating — 2026-07-12T14:01Z (data_engineering slot-12, resumed)
+
+13th dispatch on the `[SCRIPT] P2. Re-run G2 gate` todo (server RESUMED slot-12's in-progress pin, not a fresh queue
+pickup). Cheap live-verify only (no full re-litigation — re-checks #4-#12 already established the precondition
+exhaustively): VM `mtds-lending-indices-20260712-112557` still `RUNNING`, `run.log` tail at `date=2023-10-25` (forward
+progress, both chains), only honest `parquet not found — falling back` INFO lines, **no** `Unknown lending protocol` /
+`uniqueKey`-GraphQL errors — both fixes still holding. Genesis (2024-01-01) ~34 min out at observed pace; full window
+(→2026-07-12) completes ~20:00Z. Gate still cannot be usefully re-run (backfill pre-genesis → zero captured MORPHO rows
+possible; consolidator separately still stale).
+
+**This is settled — STOP re-dispatching to workers until main/operator acts.** Worker-side levers are exhausted:
+checkbox-flip is impossible honestly (false-progress), and `/blocked` against this task_id is proven dead (3 consecutive
+parking blocked-questions — `BLK-0c06a5c6`/`BLK-66f6516d`/`BLK-c7e188e2` — each vanished on the filer's own
+`skip-current-task`, root-caused in re-check #11). Deliberately did **not** file a 4th dead blocked-question or add more
+essay bloat. **Required action is main/operator-only**: gate this `…-001` backlog entry with a `prereqs.conditions`
+(e.g. `consolidator-fresh-and-vm-complete`) so it stops bouncing for the ~6h until the VM completes AND the consolidator
+(`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`) resumes. `skip-current-task`'d.
