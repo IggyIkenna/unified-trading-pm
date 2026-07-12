@@ -247,6 +247,26 @@ own P2 todo** (not absorbed into this task): `dex_pool_swaps` for ORCA/RAYDIUM h
 the codebase — building one is new capability (a Solana swap-event indexer), out of scope for a launcher task.
 **Follow-up needed:** verify VM reaches the dex_pool_state Gate once it completes its historical pass (folds into G2).
 
+**First-launch self-delete + fix (2026-07-12, same session):** the first `mtds-solana-defi-backfill` instance
+self-deleted ~2 min after boot (`SETUP_EXIT_STATUS=78`). Root cause: my launcher didn't set `VM_OPERATION` metadata,
+which defaults to `"download"`; `setup-data-pipeline-vm.sh`'s generic OOM preflight (~L867) treats ANY
+`market_tick_data_service` VM with `VM_OPERATION=="download"` as a bulk manifest-merge job and self-deletes if the
+asset_group's consolidated `availability_index.parquet` is stale past its budget — it was, at 110,737s vs the 86,400s
+(24h) budget (the `defi` manifest-consolidator is currently running behind; a separate, pre-existing operational lag,
+not caused by this task — worth an operator glance if it persists). This is a false positive for
+`VM_TASK=solana-defi-backfill`: its branch hardcodes `--operation collect-solana-defi` regardless of the `VM_OPERATION`
+metadata value, and that operation never reads the consolidated index (small per-date REST fetches, no OOM risk). Fixed
+in `deployment-service@ee8b311`: launcher now declares `VM_OPERATION=collect-solana-defi` explicitly so the preflight's
+`=="download"` check evaluates false and skips, matching what the branch actually runs. **Same latent gap exists in
+`launch-mtds-solana-drift-backfill-vm.sh`** (its `VM_TASK=solana-drift-backfill` branch has the identical
+unset-VM_OPERATION exposure) — not fixed here (different file, not currently firing), flagging for a future small
+cleanup pass. Relaunched `mtds-solana-defi-backfill` after the fix: startup script completed normally this time (past
+the point of the prior self-delete, code deployed, deps installed, `google-startup-scripts.service` finished with the
+actual backfill python process detached and running in the background), heartbeat blob
+`gs://deployment-scripts-central-element-323112/vm-heartbeat/mtds-solana-defi-backfill.txt` shows a fresh `starting`
+state. VM confirmed running past its prior failure point; full completion (days-long historical pass) left for a later
+progress check per the async-wait-discipline SSOT (no busy-polling a long-running backfill).
+
 ### G0.2 — Gap report (2026-06-27 21:51 UTC)
 
 Script: `python scripts/measure_honest_coverage.py --asset-group defi --output-path /tmp/defi_coverage.json` Manifest:
