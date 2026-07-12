@@ -139,30 +139,52 @@ singleton-lock namespace → may run concurrently.
       `plans/active/issues/manifest_atexit_drain_races_asyncio_shutdown_2026_07_09.md` (both filed with follow-up todos
       — weather gate re-verification, a QG lint for the write-loss anti-pattern, the deeper atexit/asyncio race fix in
       unified-trading-library — none of which block this item's gate).
-- [ ] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
+- [x] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
       removal reversed 2026-06-27 (#6 REVERSED, operator decision) — footystats ODDS are pre-match snapshot reference
       data that stays in IS; see sports_p0 task 003. **Gate**: `(footystats, PREDICTIONS)` + `(footystats, MATCHES)` +
-      `(footystats, ODDS)` `pending_fetch == 0` within window; 0 blank-reason; ODDS parquets present in GCS.
-      **BLOCKED-PREREQUISITES (2026-07-08, slot-7)**: VM `fs-backfill-20260706-161335` TERMINATED cleanly (`exit_code=0`
-      confirmed via GCS run.log, completed 2026-07-07 23:46 UTC, processed through end-cutoff 2026-07-05). **Ran a
-      typing pass** (`type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py --apply`,
-      instruments-service@4368f38, dynamic "≥1 captured row = covered" logic) to clear 432 genuinely non-covered-league
-      rows (119, AUSTRALIA_CUP, COPA_LIBERTADORES, etc.) — down from the stale-looking 44,454/5,782 pre-typing snapshot.
-      **Gate still FAILS on real gaps** (re-verified 2026-07-08 20:10 UTC, shard-merged read): MATCHES
-      `pending_fetch=5,641` — 96% concentrated in 4 REGULAR leagues (CHILE_PRIMERA=1,459, K_LEAGUE_1=1,451,
-      LIGA_MX=1,291, ARGENTINA_PRIMERA=1,228), i.e. near-total-history gaps for leagues nominally "covered" (≥1 captured
-      row exists) — looks like a footystats MATCHES fetch bug specific to these 4 leagues, not a config/typing issue.
-      PREDICTIONS `pending_fetch=44,163` — 93% concentrated in continental/cup competitions (UECL=2,303, UEL=2,302,
-      UCL=2,297, SWISS_CUP=2,279, COPA_ARGENTINA=2,277, CHILE_PRIMERA_B=2,277, LIGA_EXPANSION_MX=2,275,
-      JLEAGUE_CUP=2,069, TURKIYE_KUPASI=2,063, TACA_DE_PORTUGAL=2,061, +37 more), each missing ~75-85% of its full
-      2019-2026 date range — the pattern (near-uniform per-league residual spanning the FULL history, not a recent tail)
-      looks like a fixture-calendar-awareness gap: cup competitions don't play every day, and the PREDICTIONS
-      orchestrator likely never resolves a no-fixture-that-day cup date to `empty_confirmed(EXPECTED_NO_FIXTURE)`,
-      leaving the enum's blanket eu placeholder untouched forever (same shape as the understat over-broad-404 fix, but
-      unaddressed for footystats). ODDS `pending_fetch=1,264` (not yet root-caused this session). **This is a CODE gap,
-      not closeable by re-running the same backfill VM or a typing script** — recommend filing a dedicated follow-up
-      plan/issue for footystats MATCHES (4-league fetch bug) + PREDICTIONS (fixture-calendar honest-absence) before the
-      next VM launch, else a re-run will reproduce the same residual. **FILED 2026-07-08 (slot-14)**:
+      `(footystats, ODDS)` `pending_fetch == 0` within window; 0 blank-reason; ODDS parquets present in GCS. ✅ —
+      2026-07-12 (slot-9, data_engineering). Closed via `footystats_matches_predictions_fetch_gaps_2026_07_08.md`'s todo
+      #4 (all 3 CODE-fix prereqs — todos #1/#2/#6 — already shipped by slots 8/13/6): instruments-service@e54ffc2a's
+      `footystats_residual_closer_2026_07_12.py`, run FOUR times to reach zero-missing (inherited from slot-6 plus 3
+      more passes this session to close residuals a stale-manifest read kept re-exposing — full detail + the
+      manifest-tooling bug this surfaced in
+      `plans/active/issues/reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12.md`). Also ran
+      `scripts/reconcile_phantom_manifest_rows_all.py --unphantom-only` for MATCHES (6/21 flipped back to `captured`, 15
+      genuinely failed) and a full forward phantom scan across MATCHES+PREDICTIONS+ODDS (2 genuine phantoms found and
+      fixed, confirming ODDS/PREDICTIONS parquets are NOT widely phantom). **Final gate, independently verified via
+      manual canonical+per-VM-shard merge** (`_merge_shard_frames`, same dedup logic the reader/consolidator use — NOT
+      trusting a single `read_availability_index()` call, since the manifest consolidator was found stuck 20+ min
+      mid-session): MATCHES `expected_unattempted=0` (within the 46 SSOT-expected leagues), `attempted_failed=15` (all
+      `phantom_captured_no_parquet_at_canonical_path`, evidenced, non-blank); PREDICTIONS `expected_unattempted=0`,
+      `attempted_failed=0`; ODDS `expected_unattempted=0`, `attempted_failed=0`. 0 blank-reason across all three. ODDS
+      parquets confirmed present via the reconciler's full-corpus phantom scan (0 additional ODDS phantoms beyond the 2
+      already-fixed MATCHES rows). **No new code shipped this session** (the closer script was already shipped by
+      slot-6; this session's work was data-only backfill execution + verification) — filed
+      `plans/active/issues/reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12.md` (P1, 3 actionable todos)
+      for a genuinely new manifest-tooling bug discovered while verifying (a second, separate write path with the same
+      lost-update-race class already fixed once in the consolidator itself, plus the consolidator's own 20+-minute
+      staleness this session). `BLK-99a8414c` (the earlier stall block) self-resolved when the inherited closer's first
+      pass completed cleanly. **BLOCKED-PREREQUISITES (2026-07-08, slot-7) [historical, resolved above]**: VM
+      `fs-backfill-20260706-161335` TERMINATED cleanly (`exit_code=0` confirmed via GCS run.log, completed 2026-07-07
+      23:46 UTC, processed through end-cutoff 2026-07-05). **Ran a typing pass**
+      (`type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py --apply`, instruments-service@4368f38,
+      dynamic "≥1 captured row = covered" logic) to clear 432 genuinely non-covered-league rows (119, AUSTRALIA_CUP,
+      COPA_LIBERTADORES, etc.) — down from the stale-looking 44,454/5,782 pre-typing snapshot. **Gate still FAILS on
+      real gaps** (re-verified 2026-07-08 20:10 UTC, shard-merged read): MATCHES `pending_fetch=5,641` — 96%
+      concentrated in 4 REGULAR leagues (CHILE_PRIMERA=1,459, K_LEAGUE_1=1,451, LIGA_MX=1,291, ARGENTINA_PRIMERA=1,228),
+      i.e. near-total-history gaps for leagues nominally "covered" (≥1 captured row exists) — looks like a footystats
+      MATCHES fetch bug specific to these 4 leagues, not a config/typing issue. PREDICTIONS `pending_fetch=44,163` — 93%
+      concentrated in continental/cup competitions (UECL=2,303, UEL=2,302, UCL=2,297, SWISS_CUP=2,279,
+      COPA_ARGENTINA=2,277, CHILE_PRIMERA_B=2,277, LIGA_EXPANSION_MX=2,275, JLEAGUE_CUP=2,069, TURKIYE_KUPASI=2,063,
+      TACA_DE_PORTUGAL=2,061, +37 more), each missing ~75-85% of its full 2019-2026 date range — the pattern
+      (near-uniform per-league residual spanning the FULL history, not a recent tail) looks like a
+      fixture-calendar-awareness gap: cup competitions don't play every day, and the PREDICTIONS orchestrator likely
+      never resolves a no-fixture-that-day cup date to `empty_confirmed(EXPECTED_NO_FIXTURE)`, leaving the enum's
+      blanket eu placeholder untouched forever (same shape as the understat over-broad-404 fix, but unaddressed for
+      footystats). ODDS `pending_fetch=1,264` (not yet root-caused this session). **This is a CODE gap, not closeable by
+      re-running the same backfill VM or a typing script** — recommend filing a dedicated follow-up plan/issue for
+      footystats MATCHES (4-league fetch bug) + PREDICTIONS (fixture-calendar honest-absence) before the next VM launch,
+      else a re-run will reproduce the same residual. **FILED 2026-07-08 (slot-14)**:
       `plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md` — 4 actionable todos (MATCHES fix,
       PREDICTIONS fixture-calendar fix, ODDS root-cause, re-verify-and-flip) so a future data_engineering dispatch can
       execute without re-diagnosing.
