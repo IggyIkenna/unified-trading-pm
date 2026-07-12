@@ -408,16 +408,16 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-                                  full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-                                  is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
-                                  already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
-                                  REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
-                                  `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-                                  `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-                                  (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-                                  full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-                                  the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-                                  pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                                      full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                                      is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
+                                      already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
+                                      REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
+                                      `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                                      `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                                      (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                                      full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                                      the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                                      pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -911,3 +911,24 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   entire asset_group category via the launcher's own singleton lock, and the failure signature
   (`launcher_script_nonzero_rc=1`) looks identical to the transient-flakiness class already fixed, costing real
   diagnostic time to tell apart.
+
+  **After deleting the orphaned VM, skip legs STILL failed 100%** (52/53 checked, all `launcher_script_nonzero_rc=1`) —
+  this exposed the REAL, structural root cause, not just a leftover-VM symptom: `launch-mtds-backfill-vm.sh`'s own
+  singleton lock filters `name~"^mtds-backfill-${category}-"`, which matches ANY VM whose name starts with that prefix —
+  including every one of MY sweep's own concurrently-running force-leg smoke VMs (all sharing the
+  `mtds-backfill-cefi-pipelinecheck-*` name pattern my harness generates). At concurrency=20, several CEFI force-leg VMs
+  are essentially always running at once across different shards' jobs; any shard's skip-leg (non-forced) launch sees
+  ONE of those other jobs' VMs and aborts — a design collision between the launcher's real, intentional safety feature
+  (per-category singleton lock, comment: "Prevents Tardis per-IP thundering-herd" for concurrent REAL multi-day
+  production backfills) and the smoke-test sweep's need for genuine cross-shard concurrency. Confirmed via a direct
+  manual reproduction of the exact failing command:
+  `WARN: MTDS backfill VM already running for CEFI: <some other job's VM>. Use --force to bypass. Aborting.`
+
+  Fixed at the root, mirroring an ALREADY-established pattern in this same session's own work (`launch-mtds-live.sh`'s
+  `--test-run` gets a distinct VM-name prefix, exempting it from ITS OWN singleton lock): exempted `--test-run` launches
+  from `launch-mtds-backfill-vm.sh`'s category lock entirely (`if ! $FORCE && ! $TEST_RUN`) — test-run launches are
+  tiny, single-day, test-bucket-only fetches, not the multi-day production volume the lock exists to protect against.
+  Evidence: deployment-service@fd7aa2b8 (QG green, clean quickmerge). Being a bash script (not an editable-install
+  Python module), this fix is live immediately for every subsequent subprocess launch with no restart needed — confirmed
+  via a dry-run reproduction against the exact failing shard's command while the real sweep's own VMs were still running
+  under the OLD lock, showing the new code correctly bypasses it.
