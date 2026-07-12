@@ -109,11 +109,21 @@ finding) — this is a self-contained, in-craft code fix.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Thread `instrument_type` through `_run_per_symbol_batch`'s `PerSymbolTask.row_key` via
+- [x] ✅ [SCRIPT] P1. Thread `instrument_type` through `_run_per_symbol_batch`'s `PerSymbolTask.row_key` via
       `TardisAdapter._classify_row_instrument_type(sym, canonical_venue)` (pre-fetch, pure classifier — no I/O), so BOTH
       success and failure manifest writes carry a real instrument_type. Add a regression test for the failure path
       specifically (a mocked per-symbol exception should still produce a correctly-classified `instrument_type` in the
-      resulting `attempted_failed` row). (repo: market-tick-data-service)
+      resulting `attempted_failed` row). (repo: market-tick-data-service) — market-tick-data-service@91ac1caa.
+      `download_batch` now resolves `canonical_venue` via `self._resolve_canonical_venue(exchange, canonical_venue)`
+      before calling `_run_per_symbol_batch` (so DERIBIT-COMBO doesn't collapse onto bare DERIBIT), and
+      `_run_per_symbol_batch` adds
+      `"instrument_type": TardisAdapter._classify_row_instrument_type(sym,     canonical_venue).value` to every
+      `PerSymbolTask.row_key`. Two regression tests added in
+      `tests/unit/test_tardis_batch_download_failure_instrument_type.py`: a mocked per-symbol failure on BITGET-FUTURES
+      asserts `record_failed`'s `row_key["instrument_type"] == "PERPETUAL"` (not blank), and a DERIBIT-COMBO
+      combo-symbol failure asserts `"OPTION"` (proving the resolved-canonical-venue path, not the raw Tardis exchange
+      slug, drives classification). quality-gates.sh green (10/10 targeted tests + full suite pass,
+      sentinel=91ac1caa63ef67188b702cb195f15fa45576b05d).
 - [ ] [DATA] P2. After the fix lands, re-classify or leave-as-legacy the existing blank-`instrument_type`
       `attempted_failed` rows already in the manifest (this doc's BITGET-FUTURES numbers plus whatever other venues
       carry the same pattern) — decide whether a one-time backfill re-tag (matching `instrument_id` against the same
