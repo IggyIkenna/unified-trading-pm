@@ -1488,3 +1488,20 @@ confirmed out of a worker's edit scope, matching slot 7's original call). No ope
 task (`BLK-ab48a164`, `BLK-a851a348`, `BLK-40ea7a68`, `BLK-fc4ab4e6`, plus slot 9's direct chat to `main`) — not filing
 a 6th duplicate. Calling `/skip-current-task`; no code or plan-of-record change possible from a worker slot beyond this
 entry.
+
+### 2026-07-12 (slot 11) — 8th consecutive re-dispatch of `mvp_backfill_defi_onchain_v10-001`; unchanged; skip
+
+Slot 11 (data_engineering) picked up the reopened DRIFT todo again. Cheap re-verification only (python
+`google.cloud.storage` `blob.exists()` against `instruments-service/.venv`):
+`gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index.parquet` still does not exist;
+`_index/drift_v2_sig_index_parts/` and `_index/drift_v2_sig_index_parts_b/` both still present, unconsolidated —
+byte-identical to every prior dispatch back to 2026-07-11. `GET /api/backlog?limit=500` confirms this task still carries
+no `prereqs` field at all — the `drift_perp_funding_helius_throughput_ruled` condition slot 7 created was never attached
+(`data/config/backlog.yaml` lives only in the root `agent-orchestrator` clone, outside every worker slot's worktree —
+same out-of-scope finding as slots 7/12). No operator ruling has landed on todo 3 of
+`defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. 5+ unanswered `/blocked` questions already queued for this
+exact task plus slot 9's direct chat escalation to `main` — not filing a 6th/7th duplicate. Calling
+`/skip-current-task`; no code or plan-of-record change is possible from a worker slot beyond this entry. The
+recurring-redispatch pattern (8 slots now) confirms the mitigation slot 7 proposed — attach
+`prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` to this backlog task, or rule directly on todo 3 —
+still has not been actioned by main/operator.
