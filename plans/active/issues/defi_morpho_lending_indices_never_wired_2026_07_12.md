@@ -140,9 +140,16 @@ than trusting). Findings:
   — `gcloud` unavailable in this slot, same snap-confine issue as every prior session) and launched a replacement,
   `mtds-lending-indices-20260712-105600`, with identical metadata (now correctly picking up the live GCS script) — SPOT,
   `e2-standard-4`, same 2023-01-01→2026-07-12 window, `VM_LENDING_PROTOCOLS=morpho`. Verified `status=RUNNING`
-  post-launch (STARTED <60s, per the no-fire-and-forget rule) and confirmed via a fresh `run.log` read that the new VM's
-  collection summary now includes `morpho_ETHEREUM` alongside the default protocols (see Progress Log entry below for
-  the exact readout).
+  post-launch (STARTED <60s, per the no-fire-and-forget rule). **Confirmed genuinely fixed, not just launched**: polled
+  the new VM's `run.log` until it reached real collection activity (~13 min into the run, at day 2023-03-24) and read a
+  direct write confirmation —
+  `Wrote <N> rows to gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/ by_date/day=2023-03-24/.../venue=MORPHO/chain=ETHEREUM/.../morpho_ETHEREUM_20260712_105922.parquet`
+  — real Morpho ETHEREUM data landing at the canonical path. (BASE chain returned 0 rows with a
+  `WARNING Unknown lending protocol: morpho` on that one branch — a separate, smaller gap worth noting for whoever
+  reviews the completed run, not investigated further here; ETHEREUM is Morpho's primary deployment and the one that
+  matters for the bulk of the 464-instrument catalog population.) Also observed transient 429 `rateLimitExceeded`
+  warnings on the per-VM manifest shard writer (GCS object-mutation rate limit, retry-with-backoff attempt 1-2/4) —
+  self-recovering per the writer's own retry logic, not a correctness issue, not investigated further.
 - **New P2 todo** (not this dispatch's scope — a deploy-pipeline hardening item, not a data fix): the
   `create-code-tarballs.sh` GCS-publish step should complete (or be verified live) _before_ any VM launch that depends
   on the just-shipped fix, to close this race for future single-shot fix+launch turns. Filing as a plan todo rather than
