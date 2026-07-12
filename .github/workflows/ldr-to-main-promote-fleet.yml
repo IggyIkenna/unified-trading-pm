@@ -162,13 +162,18 @@ jobs:
           # read of system-integration-tests' run list came back empty — App perms/installation
           # don't reliably cover cross-repo Actions reads here; the PAT already does every other
           # cross-repo write in this script and is the proven-working credential fleet-wide).
+          # `if ! X=$(...)` (not a bare assignment) — under `set -e` a bare
+          # `SIT_LAST_RUN_JSON=$(cmd)` with a failing `cmd` aborts the WHOLE job immediately
+          # (command-substitution exit status propagates to the assignment); an `if` condition is
+          # exempt from `set -e` by POSIX/bash semantics, so wrapping the assignment itself in the
+          # `if` condition is required, not just a style choice. (Caught live: the first version of
+          # this fix used a bare assignment + a separate `$?` capture on the next line — the run
+          # never reached that line, job conclusion=failure, 2026-07-12 canary dispatch.)
           SIT_RUN_LIST_ERR="$(mktemp)"
-          SIT_LAST_RUN_JSON=$(GH_TOKEN="$GH_PAT_FOR_ARM" gh run list --repo "$OWNER/system-integration-tests" \
+          if ! SIT_LAST_RUN_JSON=$(GH_TOKEN="$GH_PAT_FOR_ARM" gh run list --repo "$OWNER/system-integration-tests" \
             --workflow full-workspace-sit.yml --limit 10 \
-            --json status,conclusion,createdAt,htmlUrl 2>"$SIT_RUN_LIST_ERR")
-          SIT_RUN_LIST_RC=$?
-          if [ "$SIT_RUN_LIST_RC" -ne 0 ] || [ -z "$SIT_LAST_RUN_JSON" ]; then
-            echo "::warning::SIT fleet-green: gh run list failed (rc=$SIT_RUN_LIST_RC) — $(cat "$SIT_RUN_LIST_ERR" | tr '\n' ' ' | cut -c1-300)"
+            --json status,conclusion,createdAt,htmlUrl 2>"$SIT_RUN_LIST_ERR") || [ -z "$SIT_LAST_RUN_JSON" ]; then
+            echo "::warning::SIT fleet-green: gh run list failed/empty — $(tr '\n' ' ' < "$SIT_RUN_LIST_ERR" | cut -c1-300)"
             SIT_LAST_RUN_JSON="[]"
           fi
           rm -f "$SIT_RUN_LIST_ERR"
