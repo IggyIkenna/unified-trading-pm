@@ -153,7 +153,7 @@ against the live tradfi bucket — it wrote a fresh consolidated index successfu
       were repeatedly hitting a canonical state written by a PRE-fix cycle; the first POST-fix successful write breaks
       that cycle). Not a second bug in the `TRY_CAST` fix itself — no further code change needed, matches the tradfi
       pattern exactly.
-- [ ] [DATA] P2. Once deployed + confirmed, re-verify whether the restore smoke-test shard (19 rows,
+- [x] [DATA] P2. Once deployed + confirmed, re-verify whether the restore smoke-test shard (19 rows,
       `_index/per_vm/local-2135637-ebee.parquet`, tradfi bucket) actually merged correctly — an anomaly was observed
       where a real production consolidate() cycle succeeded (rows_out increased by 11, consistent with unrelated
       live-writer trickle) but the specific corrected key (`2020-01-07/CME/ohlcv_1m/underlying=RR`) still showed the
@@ -162,7 +162,18 @@ against the live tradfi bucket — it wrote a fresh consolidated index successfu
       tiebreak against pre-existing canonical rows for changed keys, so this may be a `changed_paths`
       cutoff/mtime-eventual-consistency timing issue rather than a logic bug — needs a clean re-test post-deploy before
       trusting the shard-based restore approach for the full 138,608-row restore in the row-loss regression's own
-      restore todo.
+      restore todo. **DONE 2026-07-12 (slot-10) — confirmed transient, not a logic bug; the merge is correct and
+      stable.** Direct manifest read (`last_modified=2026-07-12T09:18:59Z`): the flagged key
+      (`2020-01-07/CME/ohlcv_1m/underlying=RR`) now shows the CORRECTED row
+      (`source=databento, row_count=7,     capture_status=captured`) — the pre-correction `massive/row_count=0` value is
+      gone. Corroborated corpus-wide: `source='massive' AND row_count=0 AND capture_status='captured'` = **0** (target
+      0, matches the earlier corpus-wide restore verification from the row-loss regression's own restore todo),
+      `source='databento' AND     capture_status='captured'` = 856,984 (unchanged from the last known-good count).
+      Confirms the author's own hypothesis — the anomaly was a `changed_paths`/eventual-consistency timing artifact of
+      checking too soon after a single cycle, not a bug in the contested-merge SQL. The shard-based restore approach is
+      trustworthy for the full-scale restore (already independently completed and verified via a different method — see
+      `tradfi_manifest_row_loss_regression_2026_07_12.md`'s restore todo). No code change — read-only re-verification;
+      issue doc ships via the PM `docs(plans):` carve-out.
 
 ## Progress Log
 
