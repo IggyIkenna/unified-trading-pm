@@ -73,12 +73,22 @@ relaunch will NOT close:
 
 **Recommended fix** (not attempted this session — genuine cross-repo wiring, out of "quick win" scope):
 
-1. Add `("DERIBIT-COMBO", "OPTION"): "deribit"` (or the correct itype key the code path expects) to
-   `venue_mapping.py::venue_instrument_type_to_tardis`, mirroring how `DERIBIT`'s own OPTION leaf resolves — but
-   scoped/filtered so it only requests COMBO-shaped instruments (not duplicating bare DERIBIT's OPTION capture). Needs a
-   look at whether Tardis's `deribit` exchange actually distinguishes combo instrument IDs from single-leg option IDs in
-   its symbol list (likely yes — Deribit combo instrument IDs have a distinct shape, e.g. multi-leg `_COMBO` suffixes) —
-   verify via `api.tardis.dev/v1/exchanges/deribit` `availableSymbols` before wiring.
+1. **UPDATE 2026-07-12T08:10Z — verified via live Tardis metadata**: `api.tardis.dev/v1/exchanges/deribit`
+   `availableSymbols` DOES distinguish combo instruments — `type=='combo'` is a distinct 4th type alongside
+   `option`/`future`/`perpetual`/`spot` (68,720 combo symbols confirmed live, e.g. `BTC-CS-28AUG26-72000_76000` (call
+   spread), `BTC-FS-11JUL26_PERP` (future spread)). **This resolves the ambiguity below in favour of a wiring fix, not a
+   denominator correction** — add `("DERIBIT-COMBO", "OPTION"): "deribit"` (or the correct itype key the code path
+   expects) to `venue_mapping.py::venue_instrument_type_to_tardis`, then filter the Tardis fetch to `type=='combo'`
+   symbols only (not duplicating bare DERIBIT's `option`/`future`/`perpetual`/`spot` capture). **Remaining open
+   question**: this only wires the TICK-DATA (trades) capture path. The INSTRUMENT CATALOGUE side (which combo symbols
+   existed on which historical date) is separately gated by `deribit_combo_adapter.py`'s documented limitation —
+   Deribit's `public/get_combos` REST only returns CURRENTLY-LIVE combos, no historical-combo-existed-on-date-X endpoint
+   exists. So `_catalogue_symbols_for_venue_date("DERIBIT-COMBO", <historical date>)` will likely resolve to an EMPTY
+   symbol list for any date before the catalogue started recording combos live — need to check whether an empty resolved
+   symbol list still writes a manifest row for that shard-day, or silently produces nothing (if the latter, the Layer-1
+   tuple would still show "missing" even after the routing fix, and the correct closure is letting
+   `deribit_combo_adapter.py`'s own `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` classification fire on those dates, same
+   target state as `relabel_deribit_combo_historical_to_empty_2026_06_27.py`).
 2. Confirm `instruments-service`'s catalogue-building step (`scripts/build_instrument_catalogue.py`) actually tags
    catalogue rows with `venue=DERIBIT-COMBO` for combo instruments (distinct from bare `DERIBIT`) — the
    `_catalogue_symbols_for_venue_date` MTDS resolution path filters the catalogue by exact `venue` string, so if the
