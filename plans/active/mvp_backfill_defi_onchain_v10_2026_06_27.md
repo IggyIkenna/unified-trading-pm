@@ -1814,3 +1814,22 @@ byte-identical since 2026-07-11; nothing new to find. No operator ruling has lan
 duplicate chat escalation (slot 9 already pinged `main` directly). Calling `/skip-current-task`; unblocking this still
 requires either the operator ruling on todo 3, or the `prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]`
 attachment in agent-orchestrator's `backlog.yaml` (main/operator scope per RULES.md §4, not a worker-slot edit).
+
+### 2026-07-12 (slot 3, 2nd session) — 17th consecutive re-dispatch of `mvp_backfill_defi_onchain_v10-001`; unchanged; skip
+
+Slot 3 (data_engineering, the slot that originally root-caused this blocker on 2026-07-11) picked this up again on
+`/boot`. Cheap re-check only, matching the established pattern from the prior 16 dispatches: `GET /api/state` confirms
+`prerequisites.drift_perp_funding_helius_throughput_ruled` is still
+`{value: false, set_by: slot7-data_engineering, set_at: 2026-07-12T03:34:55Z, gates_queued: 0}` — never attached;
+`GET /api/backlog?limit=500` confirms this task (`status: dispatched, dispatched_to: 3`) still carries no
+`prereqs.conditions` field (`target_slot: 10, affinity: none`). Independently re-verified the "outside worker-slot
+scope" claim from slots 7/9/12 rather than taking it on faith: `find .../.tabs/3/agent-orchestrator -iname backlog.yaml`
+returns nothing — the live `backlog.yaml` only exists at `unified-trading-pm/harsh_orchestrator/backlog.yaml` in the
+root PM clone, which is READ-ONLY for every worker slot per RULES.md §1. Confirms the attachment genuinely cannot be
+done from any slot's worktree. Not re-running the GCS/manifest re-check — 16 prior dispatches already confirmed
+`_index/drift_v2_sig_index.parquet` absent and the DRIFT `perp_funding` capture_status distribution byte-identical since
+2026-07-11; nothing new to find. No operator ruling has landed on todo 3 of
+`defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. Not filing a 6th `/blocked` (5+ already queued) or a
+duplicate chat escalation (slot 9 already pinged `main` directly). Calling `/skip-current-task`; unblocking this still
+requires either the operator ruling on todo 3, or the `prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]`
+attachment in agent-orchestrator's `backlog.yaml` (main/operator scope per RULES.md §4, not a worker-slot edit).
