@@ -76,12 +76,18 @@ the class of gap the plan's "Definition of 100%" section calls out.
 
 ## Recommended decision
 
-- [ ] [CODE] P1. Wire `morpho_adapter.MorphoAdapter` into `lending_indices_handler.py`'s protocol dispatch — add
+- [x] ✅ [CODE] P1. Wire `morpho_adapter.MorphoAdapter` into `lending_indices_handler.py`'s protocol dispatch — add
       `"morpho"` to `_DEFAULT_PROTOCOLS` (line 171) and add the branch that instantiates `MorphoAdapter` + calls
       `download_market_data()` per (instrument, date), following the existing `kamino_lending`/`solend`/`marginfi`
       Solana-protocol branch pattern at lines 406-410 as the template (Morpho is EVM/Ethereum-first per
       `chain: str = "ETHEREUM"` default, so it likely needs its own non-Solana branch, not that exact one — check how
-      `aave_v3`/`spark`/`compound_v3` EVM protocols are dispatched instead). (repo: `market-tick-data-service`)
+      `aave_v3`/`spark`/`compound_v3` EVM protocols are dispatched instead). (repo: `market-tick-data-service`) —
+      market-tick-data-service@4c340f93. Added a dedicated per-market `_collect_morpho_lending` collector (IS-seeded
+      instruments-store-defi market list via `pool_address`, `MorphoAdapter.fetch_markets()` live-API fallback) since
+      Morpho's per-market `marketHourlySnapshots` query doesn't fit the generic aave_v3/spark/compound_v3
+      whole-deployment Messari-cascade in `_query_and_parse`; extracted into a new `lending_indices_morpho.py` stage
+      module (same split pattern as `_subgraph`/`_rpc`/`_parsers`) to stay under the file/method-size ratchet.
+      quality-gates.sh green (SHA sentinel verified for 4c340f93); quickmerge landed on live-defi-rollout.
 - [ ] [SCRIPT] P1. Once wired, launch a MORPHO-scoped lending_indices backfill (either a dedicated
       `--lending-protocols morpho` VM, analogous to the G1.6 ORCA/RAYDIUM/KAMINO dedicated-VM precedent, or fold into
       the next full lending-indices re-run once the handler fix ships). SPOT VM per the fleet default. (repo:
