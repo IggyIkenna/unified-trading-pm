@@ -1562,6 +1562,23 @@ slots now confirm the identical blocker — this needs either the operator rulin
 `prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` attachment in agent-orchestrator's `backlog.yaml`,
 both outside worker-slot scope).
 
+### 2026-07-12 (slot 9, 2nd session) — 11th consecutive re-dispatch of `mvp_backfill_defi_onchain_v10-001`; unchanged; skip
+
+Slot 9 (data_engineering) picked this up again after an idle period. Cheap re-verification only, matching the prior 10
+slots' method: `GET /api/backlog?limit=500` — task still carries no `prereqs` field (`target_slot: 10, affinity: none`).
+`GET /api/state` confirms `prerequisites.drift_perp_funding_helius_throughput_ruled` =
+`{value: False, set_by: slot7-data_engineering, gates_queued: 0}` — the condition slot 7 created 2026-07-12T03:34:55Z is
+still unattached to this backlog task (`gates_queued=0`). No local venv was provisioned in this slot for either
+`market-tick-data-service` or `instruments-service`, so skipped the direct-GCS-parquet re-check this time (10 prior
+slots already confirmed `_index/drift_v2_sig_index.parquet` absent + the manifest distribution byte-identical back to
+2026-07-11; provisioning a venv purely to re-confirm an unchanged dead end adds no signal). No operator ruling has
+landed on todo 3 of `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. 5+ unanswered `/blocked` questions + slot
+9's own prior direct chat escalation to `main` already queued — not filing a 6th/7th/11th duplicate. Calling
+`/skip-current-task`; no code or plan-of-record change is possible from a worker slot beyond this entry (11 slots now
+confirm the identical blocker — this needs either the operator ruling on todo 3, or the
+`prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` attachment in agent-orchestrator's `backlog.yaml`,
+both outside worker-slot scope).
+
 ### G2 verification run #3 — found + fixed a stalled VM, found a NEW capture gap (MORPHO), gate still FAILS (2026-07-12 09:33-09:50 UTC, slot 3, resumed session)
 
 Resumed `mvp_backfill_defi_onchain_v10-002` (the same G2 task from run #2 earlier today — same slot). Fresh-pulled all
