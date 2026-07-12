@@ -333,3 +333,35 @@ lands and the condition is flipped true. This should end the thrash on this spec
 field-name correction applied to their own backlog.yaml entries if they are still thrashing — not verified here, out of
 this task's scope, flagging for whoever picks up those threads next. Gate remains genuinely unmet: NOT running the
 Layer-1 audit; no code shipped (this is a runtime-config fix, not a source change).
+
+### 2026-07-12 — 11th re-dispatch (slot-2 data_engineering), condition flipped but sweep still hasn't run — new gate gap found
+
+Re-dispatched an 11th time. `GET /api/state` shows `tardis-concurrent-ip-lock-fix-landed` flipped **`value: true`**
+(`set_by: "main"`, `set_at: 2026-07-12T15:08:46Z`) — the first time across all 11 dispatches this condition has been
+true, and the slot-10 wiring fix (Defect A, moved into `prereqs.prerequisites`) appears to be holding (this is the first
+dispatch this session where the task was offered because a gate genuinely flipped, not because of the wiring bug).
+
+**But the condition only encodes ONE of this P3 todo's two nested gates.** The todo text is explicit: "GATED on the
+**P1-corrected cefi backfill re-capture sweep** (which itself is gated on the sibling
+`tardis_concurrent_ip_lockout_2026_07_12.md` lockout fix)." `tardis-concurrent-ip-lock-fix-landed` correctly tracks the
+inner gate (lockout fix landed — true, confirmed: `market-tick-data-service@a9f1b52b` DEFAULT-OFF GCS-lease mutex +
+`deployment-service@c33f681` opt-in passthrough, per the sibling doc's Todos). It does **not** track the outer gate (the
+re-capture sweep itself completing). Independently verified the sweep has NOT happened:
+
+- Main plan (`mvp_backfill_cefi_tick_v10_2026_06_27.md`) Progress Log's last entry is still "G4 Re-Verification Run #4 —
+  2026-07-12T13:15–13:35Z" (`git log` on the plan doc: HEAD is still `d5c10ccbc`, the commit that FILED both sibling
+  issue docs — nothing landed since).
+- `market-tick-data-service`/`deployment-service` `git log origin/live-defi-rollout` show only the lease IMPLEMENTATION
+  commits (`a9f1b52b`, `31934527`, `91ac1caa`, `c33f681`) — no relaunch/backfill-VM-orchestration commit, and the
+  sibling doc's own `[INFRA] P2` ("harden to be race-free + enable it," incl. the on-VM smoke test) is still `- [ ]`
+  open. The lease is explicitly DEFAULT-OFF per its own doc — no VM has run with it enabled yet.
+- Launching the actual re-capture sweep is VM-launch work (infra craft, not data_engineering — see `data_engineering.md`
+  `does_not: infra/VM launches (→ infra)`), so even if it were ready, it's out of craft for this slot to start
+  unilaterally.
+
+**Verdict: gate still UNMET in substance** — running the Layer-1 audit now would still measure a manifest that predates
+any re-capture, reproducing the same misleading noise every prior session flagged. Did NOT run the audit; no code
+shipped. Filed a blocked-question (see below) about the missing outer-gate wiring — this is a genuinely new finding,
+distinct from the already-fixed Defect-A condition-wiring bug (that bug is confirmed resolved: the condition is now
+being read and used correctly; the gap is that only one of two required gates has a condition at all).
+`skip-current-task`'d.
