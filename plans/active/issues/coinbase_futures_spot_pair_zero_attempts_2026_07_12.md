@@ -202,7 +202,11 @@ running, matching this session's and the prior session's launch commands.
       regression tests added to `tests/unit/test_tardis_batch_download_failure_instrument_type.py`; full
       `quality-gates.sh` green (115s); shipped market-tick-data-service@8be30c8c. Hypothesis 1 (an itype-partition
       inside `download_batch` itself) was NOT the bug — no such partition exists for this venue; do not re-check it.
-      (repo: market-tick-data-service)
+      (repo: market-tick-data-service) **Addendum (data_engineering slot-6, same session window):** independently traced
+      the same root cause and landed an equivalent fix; on push, discovered slot-3's 8be30c8c already shipped the
+      identical `_classify_row_instrument_type` change. Rebased onto it, dropped the now-redundant code change, and kept
+      a complementary classifier-level regression test (direct `_classify_row_instrument_type` assertions, distinct test
+      layer from slot-3's `_run_per_symbol_batch` row_key tests) — shipped market-tick-data-service@c7065850.
 - [ ] [VERIFY] P2. Once a fix lands, launch
       `ONLY="COINBASE-FUTURES:2026:heavy" VM_FORCE=true FORCE=1     TARDIS_KEY_CHECK=0 bash launch-cefi-sharded-backfill.sh`
       (see launcher note above) and confirm real SPOT_PAIR manifest rows land (query the manifest with a
