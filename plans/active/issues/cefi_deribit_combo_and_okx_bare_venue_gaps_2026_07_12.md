@@ -31,7 +31,6 @@ related:
     ../../../codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-12
-author: data_engineering (slot-2)
 parent_epic: cefi_master
 priority: P2
 source: mvp_backfill_cefi_tick_v10_2026_06_27.md G4 re-verification, 2026-07-12T07:20-08:05Z session
@@ -42,6 +41,8 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 model_tier: sonnet-doable
 thinking_tier: high
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
