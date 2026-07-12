@@ -155,9 +155,10 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
 
 ## Todos
 
-- [ ] [DESIGN] P1. Operator decision: resolution (a) denominator-correction vs (b) typed-empty-row retrofit for the 6
-      live-only tuples (ASTER/liquidations, PACIFICA-SOLANA/EXTENDED-STARKNET/LIGHTER-ZKSYNC book_snapshot_5,
-      LIGHTER-ZKSYNC/trades). (repo: unified-trading-pm, for the decision; implementation repo depends on the choice)
+- [ ] [DESIGN] P1. **BLOCKED-OPERATOR-DECISION** · Operator decision: resolution (a) denominator-correction vs (b)
+      typed-empty-row retrofit for the 6 live-only tuples (ASTER/liquidations,
+      PACIFICA-SOLANA/EXTENDED-STARKNET/LIGHTER-ZKSYNC book_snapshot_5, LIGHTER-ZKSYNC/trades). (repo:
+      unified-trading-pm, for the decision; implementation repo depends on the choice)
 - [x] [SCRIPT] P2. Check whether LIGHTER-ZKSYNC's post-2026-04-17 Tardis-routed capture path (the one that resolved
       `trades` today) can also serve `book_snapshot_5` — if so this ONE tuple may be a genuine backfill fix independent
       of the (a)/(b) decision above, narrowing the live-only set to 5 tuples. (repo: market-tick-data-service) **DONE
@@ -183,5 +184,17 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
       operator decision (both `trades` and `book_snapshot_5` for LIGHTER-ZKSYNC are still in the 6-tuple live-only set
       either way, since this todo's actual question — can Tardis serve `book_snapshot_5` — is answered). No code change
       — investigation only; issue doc ships via the PM `docs(plans):` carve-out.
-- [ ] [SCRIPT] P3. Once (a) or (b) is decided and implemented, re-run `measure_honest_coverage.py --asset-group cefi` to
-      confirm Layer-1 tuple count drops accordingly. (repo: instruments-service)
+- [ ] [SCRIPT] P3. **BLOCKED-OPERATOR-DECISION** · Once (a) or (b) is decided and implemented, re-run
+      `measure_honest_coverage.py --asset-group cefi` to confirm Layer-1 tuple count drops accordingly. (repo:
+      instruments-service)
+
+## Progress Log
+
+- **2026-07-12 (slot-14 sonnet/high)** — Dispatched to the P3 todo; it's structurally gated on the P1 operator-decision
+  todo above, which was still unresolved and undispatchable-but-unmarked (neither todo's first physical line carried a
+  `BLOCKED-*` taxonomy token, so both were normal dispatch candidates despite being genuinely non-actionable by a worker
+  — same taxonomy-gap class just fixed today in `plans/active/sports_manifest_canonicalisation_2026_06_01.md`). Added
+  `BLOCKED-OPERATOR-DECISION` to both the P1 and P3 checkboxes' first lines so neither gets dispatched to a worker again
+  until the operator actually decides (a) vs (b). Raised the decision itself via `/blocked` (options + recommendation
+  per RULES.md's escalation format) rather than silently re-skipping. Did not implement (a) or (b) myself — that's the
+  operator's call per this doc's own "Recommended decision" section. unified-trading-pm@(this commit).
