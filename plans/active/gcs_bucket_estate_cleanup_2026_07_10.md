@@ -723,10 +723,28 @@ days as of this writing. That plan is actively owned (today's Morpho follow-up V
 action taken here beyond this note — but worth someone confirming those 2 long-running VMs are still making real
 progress, not stuck.
 
-**Execution**: ran the corrected 14-bucket script via `gcloud storage rm -r` + `buckets delete`, each with a post-delete
-existence check logged. In progress at time of writing — see the script/log at
-`/private/tmp/claude-501/.../scratchpad/delete_legacy_defi.sh` (session-scoped, not committed). Will flip
-`defi_manifest_canonicalisation_2026_06_01.md`'s `C0f` todo once the run confirms all 14 gone.
+**Execution — COMPLETE.** Ran the corrected 14-bucket script via `gcloud storage rm -r` + `buckets delete`, each with a
+post-delete existence check logged (script/log session-scoped at
+`/private/tmp/claude-501/.../scratchpad/delete_legacy_defi.sh`, not committed). 13/14 succeeded on the first pass;
+`gas-fees-central-element-323112` came back `STILL EXISTS` — root cause: `uts-prod-manifest-consolidator-gas-fees-cron`
+(Cloud Scheduler, `asia-northeast1`) was still `ENABLED` on a `*/1 * * * *` (every-minute) schedule, re-writing
+`_index/availability_index.parquet` + `_index/per_vm/_legacy_seed.parquet` into the bucket faster than the delete could
+land — a leftover per-bucket consolidator job from before the shared-bucket architecture, orphaned once `gas-fees` was
+retired from `cloud-providers.yaml` (its sibling `uts-prod-mtds-collect-gas-fees-cron` collection job was already
+`PAUSED`, consistent with the retirement, but the consolidator cron wasn't). Checked the other 8 retired kinds
+(`oracle-prices`/`dex-swaps`/`liquidations`/`evm-defi`/`solana-defi`/`lending-indices`/`dex-pools`-flat/`lst-rates`-flat/
+`perp-funding`-flat) for the same per-kind consolidator-cron pattern — none exist, this was a `gas-fees`-only leftover,
+not systemic. **Paused** (not deleted — reversible) `uts-prod-manifest-consolidator-gas-fees-cron`, retried, confirmed
+gone. Final sweep confirmed **all 14 target buckets deleted**, and confirmed the 5 withheld/deferred buckets
+(`dex-pools-prd`, `lst-rates-prd`, `perp-funding-prd`, `lending-indices`, `lending-indices-prd`) are still present as
+intended. Bucket count: 242 (332 at the start of the whole `gcs_bucket_estate_cleanup_2026_07_10` effort; the
+intermediate count immediately before this round's 14 deletions wasn't independently recorded).
+
+Flipped `defi_manifest_canonicalisation_2026_06_01.md`'s `C0f` todo to `[x]` (see that plan). `lending-indices` +
+`lending-indices-prd` remain the one open item — revisit once `mtds-lending-indices-20260712-112557` completes
+(`VM_SHUTDOWN_ON_COMPLETION=true`; check for its absence from `gcloud compute instances list` as the completion signal),
+confirm its actual write target (expected: shared bucket via `kind="tick-data"`, not either legacy `lending-indices`
+bucket), then delete those 2 if still safe.
 
 ## 6. Model-tier note (repeating from frontmatter, since it matters for how much to trust this)
 
