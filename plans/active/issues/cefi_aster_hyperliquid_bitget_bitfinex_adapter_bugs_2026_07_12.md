@@ -77,6 +77,80 @@ empty/malformed dataframe for an unrecognized symbol instead of a clean "not fou
 instrument-id sampling picking a symbol ASTER doesn't actually support. Re-testing with a real, PROD-verified-live ASTER
 symbol (not the smoke_matrix fallback) would distinguish these.
 
+**RESOLVED 2026-07-12 (slot-3) — genuine adapter bug, confirmed + fixed, NOT a fallback-symbol artifact.** Traced the
+actual write path: the smoke check's VM name (`mtds-backfill-cefi-pipelinecheck-*`, `asset_group=CEFI`) routes ASTER
+through `market_tick_data_service/adapters/umi_tick_provider.py`'s inline REST fetchers
+(`_fetch_aster_coin`/`_fetch_aster_agg_trades`) — NOT the class-based `AsterAdapter` in
+`market_interface/adapters/onchain_perps/aster_adapter.py` (that class is only reachable via the separate
+`onchain_perp_batch_handler.py` CLI). `_fetch_aster_agg_trades`'s `trades` row dict (and `_fetch_aster_coin`'s
+`derivative_ticker` funding/premiumIndex row dicts) never included an `instrument_id` key — confirmed via `git blame`/
+history back to the function's introduction (pre-2026-06-11 refactor) — while every sibling REST-adapter producer in the
+SAME file (PACIFICA-SOLANA OHLCV, LIGHTER, EXTENDED, HYPERLIQUID via `hyperliquid_s3.py`, FX/VIX) DOES stamp
+`instrument_id`. `StreamingParquetWriter._run_pre_write_checks` calls `validate_instrument_id_column(df)`
+UNCONDITIONALLY on every `write_chunk()` (no `expected_venue`/`expected_instrument_type` — just presence + non-null), so
+this was a 100%-deterministic failure on ANY non-empty ASTER `trades`/`derivative_ticker` write, regardless of which
+symbol (valid or fallback) triggered it — the exact same root-cause class HYPERLIQUID hit and was fixed for on
+2026-04-22 (`hyperliquid_s3.py`'s own docstring cites the identical error signature + fix pattern).
+
+**Fix**: stamp `"instrument_id": symbol` (+ `"instrument_type": "perpetual"`) on all 3 ASTER REST row-dict producers in
+`umi_tick_provider.py` (funding-rate rows, premiumIndex row, aggTrades trade rows), mirroring the proven HYPERLIQUID
+convention (bare canonical `symbol` as `instrument_id` — no `partition_path=` is passed to this writer, so only
+presence/non-null is checked, not the `VENUE:TYPE:SYMBOL` prefix format). Shipped
+`market-tick-data-service@99ac3d648ef8ce84954a317ded04746804d79618`
+(`fix(mtds): stamp instrument_id/instrument_type on ASTER REST trades+funding rows`), `quality-gates.sh --no-fix` green
+before commit, quickmerged `--agent` scoped to the one file.
+
+**Real VM re-verification (proves the fix, not just the diagnosis)** — same VM launcher, same fallback symbol/day the
+original bug reproduced on
+(`--venues ASTER --data-types trades --start 2026-07-09 --end 2026-07-09 --instrument-ids BTC --force --test-run`),
+tarball rebuilt from a clean worktree at the fix commit before each run:
+
+- **Before fix** (VM `mtds-backfill-cefi-pipelinecheck-20260712-222538-03d933`, tarball at pre-fix HEAD):
+  `ERROR Venue ASTER: adapter error: StreamingParquetWriter pre-write validation failed: [missing_column] required column 'instrument_id' missing from dataframe`
+  — byte-identical to the original Finding 1 signature. Reproduced on demand, confirming the bug before touching code.
+- **After fix** (VM `mtds-backfill-cefi-pipelinecheck-20260712-224403-03d933`, tarball rebuilt at `99ac3d64` from a
+  clean `git worktree` — the live worktree was dirty with two other agents' concurrent Finding-2/3 WIP, so the tarball
+  was built from a throwaway clean checkout instead of forcing `--allow-dirty-tarball`): the `missing_column`
+  `instrument_id` error is GONE. In its place: `derivative_ticker` (the sibling data_type stamped by the SAME 3-producer
+  fix) wrote 3 REAL rows successfully —
+  `StreamingParquetWriter: uploaded .../data_type=derivative_ticker/BTCUSDT.parquet (3 rows, 1 chunks, 0.0 MB)` —
+  direct, positive proof the fix's mechanism works end-to-end (instrument_id populated, write succeeds). `trades` itself
+  produced 0 rows this run because the ONE real BTCUSDT tick ASTER returned for the fallback symbol fell outside
+  2026-07-09 (`UpstreamTimestampBiasError: observed_range=[2026-07-12..2026-07-12], n_ticks_seen=1`) — an unrelated,
+  pre-existing day-alignment guard hitting a data-availability/liquidity limitation of the SMOKE-MATRIX FALLBACK symbol
+  on THIS specific day, not the fixed bug.
+- **Real-symbol, real-day cross-check** (day=2026-01-03, a day `read_availability_index` confirms ASTER `trades`
+  genuinely captured PROD data on): passing the bare coin `APR` (25 real ticks observed, real trade volume) still hit a
+  (different, pre-existing) `UpstreamTimestampBiasError` — some ticks legitimately spill past midnight into 2026-01-04,
+  tripping the day-partition-alignment guard. Passing the checker's OWN genuine-PROD-sample value verbatim (the full
+  canonical `instrument_id` string `ASTER:PERPETUAL:APR-USDT@LIN`) produced a SILENT 0-row/0-error outcome — see the two
+  new follow-on findings logged below. Across all 3 real VM runs (2 symbols, 2 days), the ORIGINAL
+  `missing_column instrument_id` error never reproduced again post-fix — conclusive.
+
+**Verdict on the original open question**: genuine, 100%-reproducing ASTER adapter bug (proven via code history + direct
+before/after VM reproduction), NOT a smoke-check fallback-symbol artifact — the missing-`instrument_id` failure was
+orthogonal to symbol validity; a real, valid, high-volume symbol/day pairing surfaces different (pre-existing,
+unrelated) day-alignment issues instead, never the fixed bug.
+
+**Two new, out-of-scope follow-on findings surfaced while chasing an end-to-end `trades: passed` proof** (not fixed here
+— flagging for a future pass, same file family):
+
+1. `scripts/pipeline_e2e_check.py::sample_live_instrument()` passes the full canonical `instrument_id`
+   (`VENUE:TYPE:SYMBOL@LIN`) verbatim as `--instrument-ids` whenever a genuine PROD-captured row exists (vs the
+   `smoke_matrix` fallback path, which correctly passes a bare representative coin). ASTER's (and likely
+   HYPERLIQUID's/other bare-coin-list REST venues') `_fetch_aster_rest` blindly appends `USDT` to whatever string it's
+   given (`f"{coin}USDT"` when it doesn't already end in USDT/USDC/USD) with no VENUE:TYPE: prefix stripping — so a full
+   canonical instrument_id becomes a garbage exchange symbol, the REST call 400s, and the failure is swallowed at
+   `logger.debug` (invisible at INFO) — a completely silent 0-row/0-error/0-failed outcome
+   (`0 venues ok, 0 failed, 0 skipped, 0 total records`), never surfaced to the checker's `no_parquet_under` reason
+   string. Verified live: VM `mtds-backfill-cefi-pipelinecheck-20260712-225444-03d933`,
+   `--instrument-ids ASTER:PERPETUAL:APR-USDT@LIN` → silent no-op.
+2. Even with a correctly-formatted bare-coin symbol on a real high-volume day (`APR`, 2026-01-03, 25 real ticks),
+   `_fetch_aster_agg_trades` let at least one tick spill past the requested day's midnight boundary, tripping
+   `UpstreamTimestampBiasError: observed_range=[2026-01-03..2026-01-04]` (VM
+   `mtds-manual-aster-trades-verify-20260712-230013`) — a different-mechanism sibling of Finding 2's HYPERLIQUID
+   epoch-timestamp bug, worth a dedicated look at the `end_ms` exclusivity boundary in that pagination loop.
+
 ## Finding 2 — HYPERLIQUID `trades`: ticks land at Unix epoch
 
 VM `mtds-backfill-cefi-pipelinecheck-20260712-043606`:
@@ -111,6 +185,25 @@ traced to the exact call site — `rg "Invalid comparison between dtype"` or a s
 the caught/logged message, not a full traceback, since this is caught via the shard-level isolation wrapper per
 `codex/04-architecture/shard-level-failure-isolation.md`) would be the next step.
 
+**RESOLVED 2026-07-12 (slot-3)**: root cause found via local reproduction (a synthetic-parquet harness mirroring
+`tests/unit/test_tardis_resolve_symbols_date_boundary.py`'s mock strategy, then a real `pandas==2.3.3` interactive
+check) — NOT a fresh instance of the raw-Series-vs-`date` bug R5-fix-1 already fixed (2026-06-16). The shared call site
+(`tardis_symbol_resolution.py::_resolve_symbols`'s GCS path, both `_catalogue_symbols_for_venue_date` and its
+`_resolve_symbols_from_by_date_snapshot` fallback) DOES apply `.dt.date` before comparing to the Python `date` target —
+but pandas' `.dt.date` accessor has a genuine gotcha: when EVERY value in the source Series is `NaT` (an all-null
+`available_to_datetime` column — the common shape for a perp-only venue's snapshot, since perpetuals never carry an
+expiry), `.dt.date` does NOT drop the `datetime64[ns]` dtype the way it does for a mixed valid/NaT column — it silently
+returns another `datetime64[ns]`-dtype Series, so the subsequent `<=`/`>=` against the bare `date` scalar raises the
+exact byte-identical `TypeError`. BITGET-FUTURES and BITFINEX-FUTURES both hit it because they're perp-heavy venues
+whose by_date snapshot's `available_to_datetime` column is realistically all-NaT. Fix:
+`market-tick-data-service@2cd02409155adb54d9aeea85dbc462c2855aad87` replaces the `.dt.date <=/>= target` pattern at both
+call sites with two new NaT-safe helpers (`_series_date_le`/`_series_date_ge`) that compare the raw `datetime64[ns]`
+Series directly against a `pd.Timestamp` bound (tz-matched, exclusive-next-midnight for the upper bound) — a comparison
+that is well-typed for any dtype, all-NaT included, while preserving identical day-only-granularity boundary semantics.
+5 new regression tests cover the exact type-mismatch case directly (an all-NaT `available_to_datetime` column, both via
+`_resolve_symbols` end-to-end and via the two helpers in isolation) plus the tz-aware fixture the pre-existing R5-fix-1
+tests already covered (kept green). Real VM re-verification for BOTH venues below.
+
 ## Not yet investigated
 
 The full sweep found ~135 total MTDS force-leg `no_parquet_under` failures across many more venues/data_types than
@@ -125,3 +218,53 @@ DEFI venues, remaining TradFi data_types beyond the already-fixed `--source` gap
 - 2026-07-12: Filed from a real 452-shard `pipeline_e2e_check` sweep's failure-breakdown analysis. 3 real, distinct bugs
   found via actual VM run.log sampling (not guessed from the checker's abstracted reason string). No fix attempted here
   — this doc exists to hand off the diagnosis, not resolve it in this session.
+- 2026-07-12 (slot-3): **Finding 1 RESOLVED + shipped** —
+  `market-tick-data-service@99ac3d648ef8ce84954a317ded04746804d79618` stamps `instrument_id`/`instrument_type` on all 3
+  ASTER REST row-dict producers in `umi_tick_provider.py`
+  (`fix(mtds): stamp instrument_id/instrument_type on ASTER REST trades+funding rows`). Confirmed genuine adapter bug
+  (not fallback-symbol artifact) via code-history inspection (every sibling producer in the same file stamps
+  `instrument_id`; ASTER's 3 never did, since the function's introduction) + 3 independent real VM runs proving
+  before→after: (1) VM `mtds-backfill-cefi-pipelinecheck-20260712-222538-03d933` reproduced the exact original
+  `missing_column instrument_id` error pre-fix; (2) VM `mtds-backfill-cefi-pipelinecheck-20260712-224403-03d933` (SAME
+  symbol/day, tarball rebuilt at the fix commit via a clean `git worktree` to avoid 2 other agents' concurrent dirty WIP
+  in the same repo) shows that error GONE, with the sibling `derivative_ticker` data_type writing 3 real rows with
+  `instrument_id` populated as direct proof; (3) VM `mtds-manual-aster-trades-verify-20260712-230013` (real
+  PROD-verified day=2026-01-03 + real symbol `APR`, 25 real ticks) again never reproduces the fixed bug, surfacing only
+  unrelated day-boundary issues instead. Full before/after run.log evidence + 2 new out-of-scope follow-on findings
+  (checker instrument-id-format mismatch for bare-coin REST venues; an ASTER day-boundary off-by-one distinct from
+  Finding 2) written up under Finding 1 above. `quality-gates.sh --no-fix` green before commit; shipped via
+  `quickmerge --agent` scoped to the one file; all 3 verification VMs self-deleted cleanly (exit_code=0), no lingering
+  compute.
+- 2026-07-13 (slot-3): **Finding 3 RESOLVED + shipped** —
+  `market-tick-data-service@2cd02409155adb54d9aeea85dbc462c2855aad87`
+  (`fix(mtds): NaT-safe date comparison in Tardis CeFi symbol resolution — fixes BITGET-FUTURES + BITFINEX-FUTURES datetime64-vs-date TypeError`).
+  Root cause: pandas `.dt.date` does not drop `datetime64[ns]` dtype when a Series is ALL-`NaT` (see the RESOLVED note
+  under Finding 3 above for the full mechanism) — a genuinely different bug than R5-fix-1 (2026-06-16) despite the
+  byte-identical error text, since both call sites already used the `.dt.date` pattern R5-fix-1 introduced. Fixed both
+  GCS-path call sites in `tardis_symbol_resolution.py` (`_catalogue_symbols_for_venue_date` +
+  `_resolve_symbols_from_by_date_snapshot`) with two new NaT-safe helpers comparing directly against a tz-matched
+  `pd.Timestamp` bound instead of `.dt.date`. 5 new regression tests added directly covering the all-NaT type-mismatch
+  case (`tests/unit/test_tardis_resolve_symbols_date_boundary.py` `TestResolveDateBoundaryAllNatColumn` +
+  `TestSeriesDateHelpersAllNat`, `tests/unit/test_tardis_catalogue_lifecycle_universe.py`
+  `test_all_nat_available_to_no_type_error`); all 21 tests in the file family green, plus the full 213-test
+  tardis-marked suite green. `quality-gates.sh --no-fix` green before commit (re-run once after an unrelated agent's
+  fast-forward pull moved HEAD mid-gate, to refresh the `.qg_last_passed_sha` sentinel); shipped via
+  `quickmerge --agent` scoped to the 3 touched files (foreign concurrent WIP in
+  `databento_base_client.py`/`databento_fetch.py`/`umi_tick_provider.py` in the same repo left untouched throughout, per
+  multi-agent safety rules). **Real VM re-verification, BOTH venues, SAME shared-code-path change, day=2026-07-09**
+  (matching the original failure day) — tarball built from an isolated `git worktree` at the fix commit (avoiding the
+  same repo's foreign concurrent WIP) and pinned via `MTDS_TARBALL_SHA` metadata (a mutable "latest" tarball race with a
+  DIFFERENT concurrent agent's rebuild was directly observed and sidestepped this way — confirmed via each VM's own
+  `manifest: sha=2cd02409155a` boot-log line): VM `mtds-backfill-cefi-verifybitget-20260712-230433` (BITGET-FUTURES) and
+  VM `mtds-backfill-cefi-verifybitfinex-20260712-230433` (BITFINEX-FUTURES), both `--test-run --force`, no
+  `--instrument-ids` (mirrors the real failure — neither venue has a `smoke_matrix._REPRESENTATIVE_SYMBOL` entry, so the
+  GCS by_date-snapshot path that hits this exact bug is the one genuinely exercised). Both full run.logs (2916 + 345
+  lines) grepped for zero hits on `Invalid comparison between dtype` and zero hits on
+  `unexpected error (shard isolated)` — CONFIRMED ABSENT on both. Both `_resolve_symbols` calls now resolve the FULL
+  per-venue universe (hundreds of BITGET-FUTURES symbols, dozens of BITFINEX-FUTURES symbols) instead of crashing before
+  a single Tardis request; `TardisAdapter.download_batch` completes normally for both (`0 records ... SHARD_INCOMPLETE`,
+  NOT a venue-level crash); both VMs exit `DEPLOYMENT_COMPLETED ... exit_code=0` and self-delete cleanly, no lingering
+  compute. The `0 records` outcome itself is a SEPARATE, pre-existing, already-instrumented issue — every per-symbol
+  fetch failed with `Tardis HTTP 403 code=274 concurrent-IP-lock` (the single-concurrent-IP Tardis key lease contended
+  by other VMs on this shared host at test time; `tardis_concurrency_lease.py` exists specifically to manage this) — out
+  of scope for this fix and not chased further here.
