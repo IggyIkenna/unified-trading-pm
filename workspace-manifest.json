@@ -877,10 +877,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "warn_file_count": 36,
+        "coverage_pct": 83.07,
         "large_file_count": 0,
-        "coverage_pct": 83.04
+        "qg_red_reason": null
       }
     },
     "ml-service": {
