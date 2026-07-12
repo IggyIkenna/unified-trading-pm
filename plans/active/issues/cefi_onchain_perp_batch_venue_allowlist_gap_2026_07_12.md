@@ -232,21 +232,21 @@ the zero-rows pattern was confirmed, to stop burning SPOT spend on a guaranteed-
       429 is now always a loud, correctly-recorded `record_failed`, never a silent zero.
 
       **Update (slot-4, 2026-07-12): (a) has SHIPPED — `market-tick-data-service@1ccd1817`.** Gated the `/book` call
-                  behind the same `data_types` check already used for funding (`_want_book = data_types is None or
-                  "book_snapshot_5" in data_types`) — `fetch_pacifica_rest` no longer fires `/book` at all when the caller excludes
-                  it (which `_batch_data_types_for_venue` already does for PACIFICA-SOLANA), so book no longer competes with trades
-                  for the shared rate-limit budget. 2 new regression tests (skip when unrequested, fires when requested — 39/39
-                  pass), `quality-gates.sh` green. **Direct API probe against `api.pacifica.fi`** (from this session's sandbox
-                  network, NOT the GCP VM network slot-2's sustained-429 finding was observed on) showed 68 sequential
-                  `/trades/history` calls for BTC succeeding before the first 429 (vs. ~13 when book was interleaved), and a full
-                  day's ~20-25 page walk completing cleanly using the already-shipped retry/backoff. This is directionally
-                  consistent with (a) meaningfully helping, but **is not a substitute for slot-2's real-VM-network methodology** —
-                  network-level throttling (shared egress IP, concurrent multi-symbol load) may behave differently on an actual
-                  backfill VM than from this sandbox. Per (c) above and slot-2's own recommendation, downgrading this class of
-                  remaining risk to P2 (data completeness, not silent-failure correctness — every 429 is now a loud
-                  `record_failed`, never a silent zero, regardless of whether the walk ultimately reaches full 13-month depth).
-                  **Follow-up VERIFY filed below** — could not launch/monitor a real VM to close the loop myself this session
-                  (`gcloud` is non-functional in this sandbox: `snap-confine` capability error, unrelated to this task).
+                      behind the same `data_types` check already used for funding (`_want_book = data_types is None or
+                      "book_snapshot_5" in data_types`) — `fetch_pacifica_rest` no longer fires `/book` at all when the caller excludes
+                      it (which `_batch_data_types_for_venue` already does for PACIFICA-SOLANA), so book no longer competes with trades
+                      for the shared rate-limit budget. 2 new regression tests (skip when unrequested, fires when requested — 39/39
+                      pass), `quality-gates.sh` green. **Direct API probe against `api.pacifica.fi`** (from this session's sandbox
+                      network, NOT the GCP VM network slot-2's sustained-429 finding was observed on) showed 68 sequential
+                      `/trades/history` calls for BTC succeeding before the first 429 (vs. ~13 when book was interleaved), and a full
+                      day's ~20-25 page walk completing cleanly using the already-shipped retry/backoff. This is directionally
+                      consistent with (a) meaningfully helping, but **is not a substitute for slot-2's real-VM-network methodology** —
+                      network-level throttling (shared egress IP, concurrent multi-symbol load) may behave differently on an actual
+                      backfill VM than from this sandbox. Per (c) above and slot-2's own recommendation, downgrading this class of
+                      remaining risk to P2 (data completeness, not silent-failure correctness — every 429 is now a loud
+                      `record_failed`, never a silent zero, regardless of whether the walk ultimately reaches full 13-month depth).
+                      **Follow-up VERIFY filed below** — could not launch/monitor a real VM to close the loop myself this session
+                      (`gcloud` is non-functional in this sandbox: `snap-confine` capability error, unrelated to this task).
 
 - [x] ✅ [VERIFY] P2. Re-launch PACIFICA-SOLANA solo (isolating for concurrency, matching slot-2's
       `RUN_TS=20260712-055837` methodology) now that the `/book`-skip fix has landed
@@ -313,79 +313,92 @@ and burn SPOT spend for nothing.
       during this verify, neither related to the original allowlist-gap fix.**
 
       > **NOTIFY-OPERATOR class finding (data-correctness + credentials).** Real LIGHTER-ZKSYNC `derivative_ticker`
-          > rows cannot land via Tardis today regardless of further code changes — the production `tardis-api-key` only
-          > has free-tier access for the `lighter` exchange. See the two new follow-up todos below.
+              > rows cannot land via Tardis today regardless of further code changes — the production `tardis-api-key` only
+              > has free-tier access for the `lighter` exchange. See the two new follow-up todos below.
 
-          - Rebuilt the code tarball first (stale-tarball gotcha per item 3/4): `create-code-tarballs.sh` confirmed
-            `mtds-code.manifest.json` pinned `commit_sha=57493789...` before the first launch.
-          - **First launch found a THIRD bug** (in addition to the two below): `VENUES="LIGHTER-ZKSYNC"` year-sharded
-            launch (`RUN_TS=20260712-061257`, 3 shards) showed `venues=['LIGHTER-ZKSYNC']` correctly dispatched (no more
-            silent drop) but every single day logged `WARNING OnchainPerpBatch: record_empty failed for
-            LIGHTER-ZKSYNC/derivative_ticker/...: Manifest write passed source='lighter' which is not a registered source
-            for asset_group='cefi' data_type='derivative_ticker'` — `_VENUE_SOURCE["LIGHTER-ZKSYNC"]` was `"lighter"`,
-            which UAC's `SOURCE_PRIORITY` for `(cefi, derivative_ticker)` does not recognize (only
-            `tardis`/`aster`/`hyperliquid`/`extended`/`pacifica`). **Fixed + shipped**:
-            `market-tick-data-service@3db2e92d` changes it to `"tardis"` (matches `PipelineMode.BATCH_TARDIS` + the
-            module's own docstring claim this venue is Tardis-sourced) + added a regression test asserting every
-            `_VENUE_SOURCE` entry is UAC-registered. Killed the 3 stale-code VMs, rebuilt the tarball
-            (`mtds-code.manifest.json` now pins `commit_sha=3db2e92d...`), relaunched (`RUN_TS=20260712-063220`) — confirmed
-            clean: no more `record_empty failed` warnings, `venues=['LIGHTER-ZKSYNC']` still correct.
-          - Manifest query (`read_availability_index`, targeted single-bucket read, no whole-corpus walk) confirms the fix:
-            **2026-04-15 and 2026-04-16 both show 167/167 symbols with `capture_status=empty_confirmed`,
-            `reason=EXPECTED_PRE_SOURCE_COVERAGE_START`, `source=tardis`, `pipeline_mode=batch_tardis`** — the
-            pre-coverage honest-absence path (recommendation 3's original ask) now works exactly as coded.
-          - Killed the 3 year-sharded VMs after confirming the above (no point burning SPOT waiting ~50min for the natural
-            day-loop to reach 2026-04-17) and launched one narrow hand-crafted VM
-            (`cefi-lighter-zksync-verify-20260712-063811`, same metadata contract as the launcher's `launch_shard`
-            function, `VM_START_DATE=2026-04-15 VM_END_DATE=2026-04-19`) to directly observe the coverage-start boundary.
-          - **2026-04-17 chunk found bug #4 (this item's actual "real rows" blocker)**: every one of the ~40 sampled
-            symbols hit `ERROR Tardis HTTP 400 error (streaming path)` before the
-            `derivative_ticker for 2026-04-17 delegated to TardisAdapter.download_batch (167 symbols requested)` log line
-            fired — 0 rows, 0 manifest rows written for 2026-04-17 through 2026-04-19 (confirmed via the same manifest
-            query). Direct API probe (`curl https://datasets.tardis.dev/v1/lighter/derivative_ticker/2026/04/17/207.csv.gz`)
-            returned the real cause: `{"code": 140, "message": "Requested dataset is not available for '2026-04-17'. Data
-            for '207' is available since '2026-06-24'."}`. Querying
-            `https://api.tardis.dev/v1/exchanges/lighter` confirms **`TARDIS_COVERAGE_START = "2026-04-17"` in
-            `_onchain_perp_batch_lighter.py` is the EARLIEST of 222 per-symbol `availableSince` dates, not a venue-wide
-            date** — the full spread ranges `2026-04-17` → `2026-07-06` (170/222 symbols available by 04-17, the rest
-            staggered out to 3 months later). Any symbol requested before its own `availableSince` gets Tardis's
-            code=140 400, which the existing `tardis_csv_transport.py` streaming path (correctly) treats as a hard
-            FETCH FAILURE (only 404 is honest-absence today), NOT as the deterministic honest-absence it actually is.
-          - **Bug #5 (separate, found while isolating #4)**: confirmed via direct probe that even a symbol genuinely
-            listed since exactly `2026-04-17` (market_id `"0"`) still 401s on that date —
-            `{"code": 10, "message": "For unauthorized requests, only historical CSV market datasets for the first day of
-            each month are available (dataset for '2026-04-17' has been requested)."}`. Confirmed the free-tier boundary
-            directly: `2026-05-01` (1st-of-month) → **HTTP 200, real funding-rate rows**; `2026-05-02` (2nd-of-month) →
-            HTTP 401 same message. **The production `tardis-api-key` secret (GCP Secret Manager,
-            `central-element-323112`) does not have full historical-data entitlement for the `lighter` exchange** — only
-            1st-of-month preview days are servable. This is a credential/plan-tier gap, not a code bug: no code fix can
-            make non-1st-of-month LIGHTER-ZKSYNC `derivative_ticker` rows land until the Tardis subscription is
-            upgraded (or the scope is redefined to 1st-of-month sampling only).
-          - Terminated the boundary-verify VM (`VM_SHUTDOWN_ON_COMPLETION=true` + SPOT `DELETE` already auto-cleaned it up
-            once its 5-day range completed).
-          - **Net for this item**: recommendation 3's core ask (dispatch fix + pre-coverage honest-absence) is fully
-            verified working. "Confirm real rows write for 2026-04-17+" could NOT be satisfied — not because of a defect
-            in the LIGHTER-ZKSYNC wiring itself, but because of two independent, newly-discovered blockers (bugs #4 and
-            #5 below) that sit upstream of it. (repo: deployment-service, market-tick-data-service)
+              - Rebuilt the code tarball first (stale-tarball gotcha per item 3/4): `create-code-tarballs.sh` confirmed
+                `mtds-code.manifest.json` pinned `commit_sha=57493789...` before the first launch.
+              - **First launch found a THIRD bug** (in addition to the two below): `VENUES="LIGHTER-ZKSYNC"` year-sharded
+                launch (`RUN_TS=20260712-061257`, 3 shards) showed `venues=['LIGHTER-ZKSYNC']` correctly dispatched (no more
+                silent drop) but every single day logged `WARNING OnchainPerpBatch: record_empty failed for
+                LIGHTER-ZKSYNC/derivative_ticker/...: Manifest write passed source='lighter' which is not a registered source
+                for asset_group='cefi' data_type='derivative_ticker'` — `_VENUE_SOURCE["LIGHTER-ZKSYNC"]` was `"lighter"`,
+                which UAC's `SOURCE_PRIORITY` for `(cefi, derivative_ticker)` does not recognize (only
+                `tardis`/`aster`/`hyperliquid`/`extended`/`pacifica`). **Fixed + shipped**:
+                `market-tick-data-service@3db2e92d` changes it to `"tardis"` (matches `PipelineMode.BATCH_TARDIS` + the
+                module's own docstring claim this venue is Tardis-sourced) + added a regression test asserting every
+                `_VENUE_SOURCE` entry is UAC-registered. Killed the 3 stale-code VMs, rebuilt the tarball
+                (`mtds-code.manifest.json` now pins `commit_sha=3db2e92d...`), relaunched (`RUN_TS=20260712-063220`) — confirmed
+                clean: no more `record_empty failed` warnings, `venues=['LIGHTER-ZKSYNC']` still correct.
+              - Manifest query (`read_availability_index`, targeted single-bucket read, no whole-corpus walk) confirms the fix:
+                **2026-04-15 and 2026-04-16 both show 167/167 symbols with `capture_status=empty_confirmed`,
+                `reason=EXPECTED_PRE_SOURCE_COVERAGE_START`, `source=tardis`, `pipeline_mode=batch_tardis`** — the
+                pre-coverage honest-absence path (recommendation 3's original ask) now works exactly as coded.
+              - Killed the 3 year-sharded VMs after confirming the above (no point burning SPOT waiting ~50min for the natural
+                day-loop to reach 2026-04-17) and launched one narrow hand-crafted VM
+                (`cefi-lighter-zksync-verify-20260712-063811`, same metadata contract as the launcher's `launch_shard`
+                function, `VM_START_DATE=2026-04-15 VM_END_DATE=2026-04-19`) to directly observe the coverage-start boundary.
+              - **2026-04-17 chunk found bug #4 (this item's actual "real rows" blocker)**: every one of the ~40 sampled
+                symbols hit `ERROR Tardis HTTP 400 error (streaming path)` before the
+                `derivative_ticker for 2026-04-17 delegated to TardisAdapter.download_batch (167 symbols requested)` log line
+                fired — 0 rows, 0 manifest rows written for 2026-04-17 through 2026-04-19 (confirmed via the same manifest
+                query). Direct API probe (`curl https://datasets.tardis.dev/v1/lighter/derivative_ticker/2026/04/17/207.csv.gz`)
+                returned the real cause: `{"code": 140, "message": "Requested dataset is not available for '2026-04-17'. Data
+                for '207' is available since '2026-06-24'."}`. Querying
+                `https://api.tardis.dev/v1/exchanges/lighter` confirms **`TARDIS_COVERAGE_START = "2026-04-17"` in
+                `_onchain_perp_batch_lighter.py` is the EARLIEST of 222 per-symbol `availableSince` dates, not a venue-wide
+                date** — the full spread ranges `2026-04-17` → `2026-07-06` (170/222 symbols available by 04-17, the rest
+                staggered out to 3 months later). Any symbol requested before its own `availableSince` gets Tardis's
+                code=140 400, which the existing `tardis_csv_transport.py` streaming path (correctly) treats as a hard
+                FETCH FAILURE (only 404 is honest-absence today), NOT as the deterministic honest-absence it actually is.
+              - **Bug #5 (separate, found while isolating #4)**: confirmed via direct probe that even a symbol genuinely
+                listed since exactly `2026-04-17` (market_id `"0"`) still 401s on that date —
+                `{"code": 10, "message": "For unauthorized requests, only historical CSV market datasets for the first day of
+                each month are available (dataset for '2026-04-17' has been requested)."}`. Confirmed the free-tier boundary
+                directly: `2026-05-01` (1st-of-month) → **HTTP 200, real funding-rate rows**; `2026-05-02` (2nd-of-month) →
+                HTTP 401 same message. **The production `tardis-api-key` secret (GCP Secret Manager,
+                `central-element-323112`) does not have full historical-data entitlement for the `lighter` exchange** — only
+                1st-of-month preview days are servable. This is a credential/plan-tier gap, not a code bug: no code fix can
+                make non-1st-of-month LIGHTER-ZKSYNC `derivative_ticker` rows land until the Tardis subscription is
+                upgraded (or the scope is redefined to 1st-of-month sampling only).
+              - Terminated the boundary-verify VM (`VM_SHUTDOWN_ON_COMPLETION=true` + SPOT `DELETE` already auto-cleaned it up
+                once its 5-day range completed).
+              - **Net for this item**: recommendation 3's core ask (dispatch fix + pre-coverage honest-absence) is fully
+                verified working. "Confirm real rows write for 2026-04-17+" could NOT be satisfied — not because of a defect
+                in the LIGHTER-ZKSYNC wiring itself, but because of two independent, newly-discovered blockers (bugs #4 and
+                #5 below) that sit upstream of it. (repo: deployment-service, market-tick-data-service)
 
-- [ ] [CODE] P2. `TARDIS_COVERAGE_START` in `_onchain_perp_batch_lighter.py` is a single global date (`"2026-04-17"`)
+- [x] ✅ [CODE] P2. `TARDIS_COVERAGE_START` in `_onchain_perp_batch_lighter.py` is a single global date (`"2026-04-17"`)
       but Tardis's real per-symbol `availableSince` for the `lighter` exchange spans `2026-04-17` through `2026-07-06`
       across its 222 symbols (confirmed via `GET https://api.tardis.dev/v1/exchanges/lighter` —
-      `datasets.symbols[].availableSince`). Any symbol requested before ITS OWN `availableSince` gets Tardis's
-      structured
-      `{"code": 140, "message": "Requested dataset is not available for '<date>'. Data for '<symbol>' is     available since '<real-date>'."}`
-      400 response, which `tardis_csv_transport.py`'s streaming path currently treats as a hard FETCH FAILURE (only HTTP
-      404 is honest-absence today; see the CF-11 2026-06-10 comment at that call site) — this misclassifies a fully
-      deterministic "not listed yet" condition as an outage/error on every re-run for every not-yet-listed symbol.
-      (repo: market-tick-data-service) - **Needs a design decision, not a quick patch** (same class as the LIGHTER
-      trades/book deferral and the PACIFICA-SOLANA rate-limit follow-up above): (a) fetch + cache per-symbol
-      `availableSince` from the exchange-info endpoint and gate individually before ever calling `download_batch` (extra
-      API call + cache invalidation to design), or (b) parse the `code: 140` 400 response body and treat it as honest
-      absence (stamp the real `availableSince` the message reports, similar in spirit to the existing 404 path) —
-      narrower blast radius since it only special-cases this one documented Tardis error code rather than adding a new
-      per-symbol metadata fetch, but needs care that no OTHER 400 causes (a genuinely malformed request) get silently
-      swallowed by the same branch. Recommend routing as its own scoped todo/plan once decided rather than folding
-      further attempts into this issue doc.
+      `datasets.symbols[].availableSince`). Any symbol requested before ITS OWN `availableSince` got Tardis's structured
+      `{"code": 140, ...}` 400 response, which `tardis_csv_transport.py`'s streaming path treats as a hard FETCH FAILURE
+      (only HTTP 404 is honest-absence today; see the CF-11 2026-06-10 comment at that call site) — this misclassified a
+      fully deterministic "not listed yet" condition as an outage/error on every re-run for every not-yet-listed symbol.
+      (repo: market-tick-data-service) — `market-tick-data-service@3f1b5246`. **Design decision resolved: took option
+      (a)** (fetch + cache per-symbol `availableSince` and gate individually BEFORE ever calling `download_batch`), not
+      option (b) (parsing the `code: 140` 400 body) — (a) reuses already-built, already-tested infra
+      (`TardisAdapter.fetch_exchange_instruments()`, 1-hour process cache, previously unused by any CeFi/onchain caller)
+      instead of touching the shared `tardis_csv_transport.py` streaming path that every other Tardis venue also goes
+      through, and it means a not-yet-listed symbol is never even requested (no 400 to happen at all), vs. (b) which
+      would still spend a wasted round-trip per not-yet-listed symbol every re-run. New
+      `_split_symbols_by_availability()` resolves each requested native symbol's Tardis market_id (process-cached
+      `/orderBookDetails` lookup, avoids doubling the network cost `_route_lighter` already pays when the fetch
+      proceeds) and checks membership against the day's available-symbol set from `fetch_exchange_instruments`; splits
+      into `available` (forwarded to `download_batch`) vs `not_yet_available` (recorded
+      `EXPECTED_PRE_SOURCE_COVERAGE_START`, same reason code as the existing pre-2026-04-17 gate, no network call for
+      those symbols). Fails OPEN (treats all symbols as available) on an unreadable exchange-info response or empty
+      market_id map, so a real Tardis/Lighter outage still surfaces as `attempted_failed` on the subsequent fetch
+      attempt rather than being silently misrecorded as permanent honest absence. 5 new unit tests (per-symbol split by
+      market_id, fail-open on unreadable exchange-info, fail-open on empty market_id map, not-yet-listed symbols get
+      honest absence while available symbols still fetch, all-unavailable skips the Tardis call entirely) — 12/12 pass
+      in the module's test file; full repo suite (5795 tests) shows zero regressions (10 pre-existing failures are
+      network-gated Kalshi/Polymarket/macro "Live" integration tests, unrelated to this file). `quality-gates.sh` green
+      (ruff, basedpyright, file-size). **Scope note**: `tardis_csv_transport.py`'s 400-vs-404 classification (option
+      (b)) is UNCHANGED — this fix avoids the 400 for LIGHTER-ZKSYNC entirely rather than reclassifying it, so a genuine
+      `code: 140` on some OTHER Tardis venue/caller not yet gated this way would still hit the existing hard-failure
+      path; not addressed here (out of scope for this todo, no other caller currently hits it per the investigation
+      above).
 - [ ] [BLOCKED-CREDENTIALS] P1. The production `tardis-api-key` secret (GCP Secret Manager project
       `central-element-323112`) only has free-tier/preview entitlement for the `lighter` exchange's historical CSV
       datasets — confirmed via direct probe: `2026-05-01` (1st-of-month) → HTTP 200 with real rows;

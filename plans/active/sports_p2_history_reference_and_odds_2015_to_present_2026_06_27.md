@@ -271,6 +271,71 @@ singleton-lock namespace → may run concurrently.
 
 ## Progress Log
 
+### 2026-07-12 ~08:0x UTC — slot-11: item #6 re-verify — weather+SFI fully resolved (new root cause found+fixed), TM improved, footystats closer exited (outcome unverifiable), NEW P0 infra finding filed
+
+**Task**: `sports_p2_history_reference_and_odds_2015_to_present-002` (item #6, the cross-source VERIFY gate),
+re-dispatched after slot-10's 03:47 UTC re-verify (which found item #4 holding, item #5 live on slot-6, open_meteo/SFI
+regressed 264→724, TM unchanged at 1,364 despite its VM completing).
+
+**TM VM completion confirmed**: `tm-backfill-20260708-205809` GCS run.log shows clean completion, `exit_code=0`,
+2026-07-08 21:55:22 UTC — this had never been verified in prior sessions (slot-10 flagged it as unverified).
+
+**New root cause found — same bug class as understat's item #4, now confirmed on 3 more sources**: drilled into the
+open_meteo/SFI 264→724 regrowth and the TM 1,364 residual by `written_at` — all three sources' blank-`error_reason`
+`expected_unattempted` rows share IDENTICAL `written_at` timestamps clustered at ~01:30 UTC daily (e.g. TM:
+`2026-07-10T01:30:53Z`, `2026-07-11T01:30:55Z`, `2026-07-12T01:30:56Z`; open_meteo/SFI: the exact same three
+timestamps). This is the v2 sports enumerator (the same LEAGUE-GRAIN bug root-caused for understat 2026-07-08) running
+once daily and seeding bare `expected_unattempted` rows with no reason for open_meteo, soccer_football_info, AND
+transfermarkt simultaneously — not previously diagnosed for these three sources specifically.
+
+**Fix shipped**: `instruments-service@8090a0aa` (`scripts/backfill/sports_daily_enum_residual_closer_2026_07_12.py`) —
+force-refetches the exact residual dates per source via the real per-date capture path (`_fetch_weather_data` /
+`_fetch_sfi_data` / `_fetch_transfermarkt_data`), mirroring `understat_eu_residual_closer_2026_07_08.py`. Ran it:
+weather resolved fast (season-window/no-fixture-venue guard is cheap), SFI/TM slower (real per-league API calls).
+Residual after the force-refetch pass converged to **non-covered-league blanks only** (confirmed via a dry-run of the
+existing `type_weather_eu_no_provider_coverage` / `type_sfi_eu_no_provider_coverage` scripts — 322 / 328 rows
+respectively, exactly the same "82 unique leagues, only the most recent 4 days" shape as the 2026-07-08 precedent).
+Applied both typing scripts (the SFI script hung ~15min on a raw `gcsfs` full-parquet read under host contention from
+concurrent closers — killed it and re-ran the identical mask/write logic via `read_availability_index` instead, ~10s).
+**Gate result: open_meteo `pending_fetch=0` ✅, soccer_football_info `pending_fetch=0` ✅** (both confirmed via a live
+re-read before the consolidator outage below started).
+
+**TM**: the closer's `force=True` call bypassed `_fetch_transfermarkt_data`'s own per-league transfer-window guard
+(which requires `not force`), so the first pass forced a real fetch for all 47 leagues × 34 dates — extremely slow
+against a flaky third-party API (~200+ retryable 502s). Killed it after 38min, rewrote with `force=False` (the
+per-league guard still correctly resolves out-of-window leagues without an API call, in-window leagues still get a real
+fetch) — much more targeted. `pending_fetch` dropped 1,364 → 956 across two passes, but a THIRD of the dates were lost
+mid-run to the manifest-consolidator outage (below) raising `ManifestConsolidatorStaleError` — not a bug in this closer,
+an infra failure. **TM gate NOT yet met** (956 remaining per the last-good consolidated read, itself now ~19min stale).
+
+**Footystats (item #5)**: slot-6's `footystats_residual_closer_2026_07_12.py` (PID 232540) — which slot-9's ~05:3x UTC
+entry diagnosed as stalled on rate-limit `TimeoutError`s since 04:04 UTC (BLK-99a8414c, BLOCKED-UPSTREAM-OUTAGE) — has
+now EXITED (confirmed via `kill -0`), but its final outcome (recovered-and-completed vs. crashed) is **unverifiable
+right now** because of the consolidator outage below; the last-good consolidated read (pre-outage, 07:30 UTC) still
+shows MATCHES eu=30, PREDICTIONS eu=4,543, ODDS eu=990 — unchanged from slot-9's cited baseline, so if it did recover,
+that progress hasn't reached the canonical index yet.
+
+**NEW P0 finding, this session — manifest consolidator crash-looping + a silent-empty-read bug**: while running the
+above, `uts-prod-manifest-consolidator-instruments-sports` (Cloud Run) started crash-looping — 5+ consecutive exit-1
+failures, one per minute, traceback truncated mid-frame at `manifest_consolidator.py:587 _duckdb_consolidate_and_write`
+(consistent with an OOM-kill, not independently confirmed via Cloud Monitoring). Consolidated blob stuck at
+`2026-07-12T07:30:46Z`, 19+ min stale at time of writing, not recovering (a prior ~2min blip at 07:26-07:28 UTC DID
+self-heal, this one has not). **Separately and more urgently**: `read_availability_index()` started silently returning
+`len(df)==0` (full 37-col schema, not a schema issue) across 3+ independent fresh-process calls during the outage, while
+a raw `gcsfs` read of the exact same blob correctly returned 4,914,272 rows — a silent-placeholder read-path bug, not
+data loss. Filed `plans/active/issues/sports_manifest_consolidator_duckdb_crash_and_silent_empty_read_2026_07_12.md`
+(P0, 3 actionable todos: fix/investigate the consolidator OOM, fix the silent-empty-read path in
+`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`, re-verify this gate once both are
+resolved). Escalated via `/blocked` (`BLK-ade0adfd`), `can_continue: true`.
+
+**Gate NOT MET, no checkbox flip** — 2 of 6 sources now genuinely clean (open_meteo, SFI — up from 0 clean at session
+start); understat still holds (✅ prior session); TM improved but unverified-complete; footystats outcome unverifiable;
+odds_api unaffected (still PASS). **Next slot**: (a) confirm the manifest consolidator has recovered (see issue doc)
+before trusting ANY further gate read on this bucket; (b) once healthy, re-verify TM (rerun
+`sports_daily_enum_residual_closer_2026_07_12.py`'s TM-only path or a fresh dry-run of the same residual query — very
+few dates should remain) and footystats (check slot-6's closer's actual final log / re-run its typing pass if still
+short); (c) then re-verify the full 6-source gate and flip if clean.
+
 ### 2026-07-12 ~05:3x UTC — slot-9: item #5 — inherited closer stalled on footystats API timeouts, BLOCKED-UPSTREAM-OUTAGE filed (BLK-99a8414c)
 
 **Task**: `sports_p2_history_reference_and_odds_2015_to_present-001` (item #5, footystats history → zero-missing).

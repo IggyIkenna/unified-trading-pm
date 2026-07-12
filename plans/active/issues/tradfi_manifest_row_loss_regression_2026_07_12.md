@@ -370,38 +370,38 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
       until that image is rebuilt and the jobs are refreshed.
 
       **SECOND, INDEPENDENT root cause + fix found (2026-07-12, slot-4)** —
-                                  `unified-trading-library@2ba20527`. The cross-source-collision mechanism above is real but does NOT explain the
-                                  full loss pattern by itself: sampling 2000 of the missing 8-column-key rows found their (source-excluded)
-                                  consolidator-key group was **absent from the live index entirely** — not collapsed to a single surviving
-                                  sibling row, which cross-source collision alone would produce. Root-caused a second, separate bug via the
-                                  non-snap `gcloud` (Cloud Logging IS usable in this slot; GCS Data Access audit logs for `storage.googleapis.com`
-                                  are OFF project-wide though — confirmed zero entries, only BigQuery/IAM — see the new P2 todo below):
-                                  `_get_canonical_mtime()` (used to decide `canonical_present` / incremental-vs-full-rebuild) swallowed **any**
-                                  exception from `blob.reload()` — not just a genuine NotFound/404 — via
-                                  `with contextlib.suppress(Exception): reload()`, then fell through to reading a never-reloaded blob's empty
-                                  `.metadata`/`.updated` defaults, returning `None` for a canonical that GENUINELY EXISTS. The caller
-                                  (`consolidate()`) reads `canonical_mtime is None` as "cold bucket" and runs a FULL REBUILD with
-                                  `canonical_present=False`, which skips downloading the real canonical entirely and writes back ONLY the
-                                  current cycle's shards — silently discarding every row whose backing per-VM shard had already been pruned
-                                  (shards are deleted once "settled" into canon; a row with no shard backup is unrecoverable from that cycle's
-                                  inputs). This explains the 3.37M rows in the live index still carrying `written_at=2026-07-07` (reconstructed
-                                  from not-yet-pruned shards, original timestamp preserved) alongside the ~1.02M genuinely gone (their shards had
-                                  already been pruned by the time the bad cycle ran) — a pattern cross-source collision alone doesn't produce
-                                  (collision collapses a group to ONE surviving row; this bug removes the group with no survivor at all). Could
-                                  not obtain a Cloud Logging line confirming the exact cycle this fired on — this Cloud Run job's own
-                                  `logger.warning`/`logger.exception` calls don't reach Cloud Logging as `textPayload` (confirmed: the ONLY
-                                  `textPayload` this job ever emits is `"Container called exit(0)."` — a separate observability gap, not filed as
-                                  its own todo here since it's out of this doc's scope, but worth a future audit of whether Cloud Run's Python
-                                  logging handler is wired to stdout for this job family). Fix: only a genuine not-found (`FileNotFoundError`/
-                                  `NotFound`/`Forbidden`/`404`) now returns `None`; any other exception propagates to `consolidate()`'s existing
-                                  top-level handler, which already fails the cycle safely (log + `MANIFEST_CONSOLIDATION_FAILED` ERROR-severity
-                                  alert + no write) instead of truncating the canonical. Also fixed an adjacent test-isolation bug found while
-                                  adding regression tests: `get_project_id()` is `@lru_cache(maxsize=1)` but `clear_client_caches()` never reset
-                                  it, so `test_event_sink_factory.py::TestGcpEventSink` flaked under the full `quality-gates.sh` xdist run
-                                  depending on worker test order (passed in isolation) — `clear_client_caches()` now clears it too. 2 new
-                                  regression tests for the mtime-probe fix + 1 for the cache-clear fix; full `quality-gates.sh` green (127s, after
-                                  the cache-clear fix — the pre-existing flake reproduced deterministically 3x before being root-caused and
-                                  fixed, not waved off).
+                                      `unified-trading-library@2ba20527`. The cross-source-collision mechanism above is real but does NOT explain the
+                                      full loss pattern by itself: sampling 2000 of the missing 8-column-key rows found their (source-excluded)
+                                      consolidator-key group was **absent from the live index entirely** — not collapsed to a single surviving
+                                      sibling row, which cross-source collision alone would produce. Root-caused a second, separate bug via the
+                                      non-snap `gcloud` (Cloud Logging IS usable in this slot; GCS Data Access audit logs for `storage.googleapis.com`
+                                      are OFF project-wide though — confirmed zero entries, only BigQuery/IAM — see the new P2 todo below):
+                                      `_get_canonical_mtime()` (used to decide `canonical_present` / incremental-vs-full-rebuild) swallowed **any**
+                                      exception from `blob.reload()` — not just a genuine NotFound/404 — via
+                                      `with contextlib.suppress(Exception): reload()`, then fell through to reading a never-reloaded blob's empty
+                                      `.metadata`/`.updated` defaults, returning `None` for a canonical that GENUINELY EXISTS. The caller
+                                      (`consolidate()`) reads `canonical_mtime is None` as "cold bucket" and runs a FULL REBUILD with
+                                      `canonical_present=False`, which skips downloading the real canonical entirely and writes back ONLY the
+                                      current cycle's shards — silently discarding every row whose backing per-VM shard had already been pruned
+                                      (shards are deleted once "settled" into canon; a row with no shard backup is unrecoverable from that cycle's
+                                      inputs). This explains the 3.37M rows in the live index still carrying `written_at=2026-07-07` (reconstructed
+                                      from not-yet-pruned shards, original timestamp preserved) alongside the ~1.02M genuinely gone (their shards had
+                                      already been pruned by the time the bad cycle ran) — a pattern cross-source collision alone doesn't produce
+                                      (collision collapses a group to ONE surviving row; this bug removes the group with no survivor at all). Could
+                                      not obtain a Cloud Logging line confirming the exact cycle this fired on — this Cloud Run job's own
+                                      `logger.warning`/`logger.exception` calls don't reach Cloud Logging as `textPayload` (confirmed: the ONLY
+                                      `textPayload` this job ever emits is `"Container called exit(0)."` — a separate observability gap, not filed as
+                                      its own todo here since it's out of this doc's scope, but worth a future audit of whether Cloud Run's Python
+                                      logging handler is wired to stdout for this job family). Fix: only a genuine not-found (`FileNotFoundError`/
+                                      `NotFound`/`Forbidden`/`404`) now returns `None`; any other exception propagates to `consolidate()`'s existing
+                                      top-level handler, which already fails the cycle safely (log + `MANIFEST_CONSOLIDATION_FAILED` ERROR-severity
+                                      alert + no write) instead of truncating the canonical. Also fixed an adjacent test-isolation bug found while
+                                      adding regression tests: `get_project_id()` is `@lru_cache(maxsize=1)` but `clear_client_caches()` never reset
+                                      it, so `test_event_sink_factory.py::TestGcpEventSink` flaked under the full `quality-gates.sh` xdist run
+                                      depending on worker test order (passed in isolation) — `clear_client_caches()` now clears it too. 2 new
+                                      regression tests for the mtime-probe fix + 1 for the cache-clear fix; full `quality-gates.sh` green (127s, after
+                                      the cache-clear fix — the pre-existing flake reproduced deterministically 3x before being root-caused and
+                                      fixed, not waved off).
 
 - [x] ✅ [INFRA] P0. **Deploy the fix(es)** — fan **both** `unified-trading-library@cf2e196b` (cross-source dedup
       collision) **and** `unified-trading-library@2ba20527` (mtime-probe-failure → accidental full-rebuild) to all 5
@@ -437,35 +437,55 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
       merged to a branch. Repo: market-tick-data-service (`44f0e1ae`) + unified-trading-library (deploy infra, no code
       change this todo). **Sequencing note**: per BLK-fab395c9, the restore todo below was gated on this deploy landing
       AND being confirmed live — both conditions are now satisfied.
-- [ ] [DATA] P0. Restore the 1,017,024 missing rows — either replay them from
+- [x] ✅ [DATA] P0. Restore the 1,017,024 missing rows — either replay them from
       `_index/snapshots/pre_tradfi_source_restamp_20260710T113305Z.parquet` (targeted re-add of exactly the missing
       keys, verified via the same key-set diff this issue doc used) or via a fresh full E5 rebuild once the root cause
-      is fixed and confirmed non-recurring (repo: market-tick-data-service). **⚠️ FALSE-COMPLETION FLAGGED 2026-07-12
-      (slot-8):** backlog task `tradfi_manifest_row_loss_regression-003` (this exact todo) was marked
-      `status=done, dispatched_to=4, done_sha=2ba20527` — but `2ba20527` is slot-4's _second root-cause_ commit (the
-      `_get_canonical_mtime()` fix, already correctly credited above), NOT a restoration, and this checkbox was never
-      flipped. Verified directly: live manifest is still 5,088,410 rows (`captured`=1,620,806) — essentially unchanged
-      from the pre-restoration reading 40 min earlier. **No restoration has actually happened.** Escalated as
-      BLK-5a10e96a; main confirmed this is a genuine false-completion (commit-push-flip HARD RULE territory), not an
-      operator-judgment call.
+      is fixed and confirmed non-recurring (repo: market-tick-data-service). **DONE 2026-07-12 (slot-3)** —
+      `market-tick-data-service@6993ea39` (`scripts/tradfi_manifest_row_loss_restore_2026_07_12.py`). Independently
+      re-verified the deploy-before-restore gate first (both directly via `gcloud run jobs executions describe`, sorted
+      by `~metadata.creationTimestamp` — the latest completed tradfi consolidator execution was already on digest
+      `sha256:d3df48a8...`, confirmed containing both `cf2e196b` and `2ba20527`), then ran a fresh dry-run (all analysis
+      in DuckDB, out-of-core — a first pandas-only version of this script was OOM-killed on this shared host loading +
+      copying the ~6.1M-row snapshot repeatedly). Result matched slot-8's prior read-only dry-run closely: **138,589
+      value-correction UPDATEs, 0 fully-missing INSERTs, 0 anomalies** (the small drift from slot-8's 139,566 is the
+      live ~1-minute writer trickle self-healing a handful of keys in between — confirmed directly: 19 keys were
+      excluded as anomalies because their live row had ALREADY flipped from the old `massive`/empty pick to the correct
+      `databento` pick by the live consolidator on its own, proving the deployed fix is genuinely active). Applied:
+      snapshotted the pre-restore live index to `_index/snapshots/pre_tradfi_manifest_restore_20260712T073147Z.parquet`,
+      CAS-wrote the patched index (`if_generation_match`, succeeded on attempt 1 — no concurrent-cycle conflict), row
+      count unchanged at 5,088,423 (pure value-correction, 0 inserts, confirming slot-8's "0 missing groups" finding,
+      not slot-4's contradicting sample). **Verified two ways**: (1) a targeted spot-check of a known
+      cross-source-collision key (`CHD`/2024-08-08/NYSE/ohlcv_1m) — pre-write showed the wrong `massive`/`row_count=0`
+      survivor, post-write shows the correct `databento`/`row_count=539` row, byte-identical to the pre-loss snapshot's
+      real captured row; (2) a corpus-wide aggregate: `source='massive' AND row_count=0 AND capture_status='captured'`
+      count dropped by exactly 138,589 (758,567 → 619,978) while `source='databento' AND capture_status='captured'` rose
+      by exactly 138,589 (718,395 → 856,984) — an exact match to the applied correction count, with total row count
+      unchanged. Did NOT run the heavier full post-write re-verification pass (the script's own `--apply` verify step) —
+      it was OOM-risking the shared host a second time (44GB+ resident, host down to 602MB free, swap climbing to 10GB)
+      and was killed; the two verifications above are direct, cheaper, and conclusive. **⚠️ FALSE-COMPLETION FLAGGED
+      2026-07-12 (slot-8, historical):** backlog task `tradfi_manifest_row_loss_regression-003` (this exact todo) was
+      previously marked `status=done, dispatched_to=4, done_sha=2ba20527` — but `2ba20527` is slot-4's _second
+      root-cause_ commit (the `_get_canonical_mtime()` fix, already correctly credited above), NOT a restoration.
+      Escalated as BLK-5a10e96a at the time; main confirmed genuine false-completion. That state is now superseded — the
+      restore has genuinely happened, verified per above.
 
       **Scope-narrowing finding (2026-07-12, slot-8), read-only dry-run, no writes**: applying the SAME tiebreak
-                              logic as the fix (`cf2e196b` — prefer higher `row_count` when a dedup-key group's `captured` rows disagree on
-                              `source`) to the pre-loss snapshot and diffing against the live index shows the popular "1,017,024 missing
-                              rows" framing overstates the actionable scope: **zero key groups are entirely absent from the live index**
-                              (every one of the 5,083,369 corrected-distinct keys has SOME row in live — consistent with the orphan-sweep's
-                              `E=2` finding above) — i.e. no evidence tradfi actually hit the second root-cause's "spurious full rebuild
-                              drops a whole shard" failure mode, only the cross-source-collision one. Of those, **140,291 keys have a
-                              VALUE-mismatched surviving row** (wrong `source`/`row_count` won), and **139,566 of those are a strict
-                              regression** (live's `row_count` is lower than the correct pick's — the bug's exact signature: the
-                              `row_count=0`/empty-source row won over the real captured data). **The actual restore is a targeted ~140K-row
-                              UPDATE of existing keys' `source`/`row_count`/`written_at`/etc. fields, not a ~1M-row INSERT** — this is a much
-                              smaller, safer, more precisely-scoped operation than the todo's headline number implies. Dry-run script (no
-                              writes) at `/tmp/.../scratchpad/tradfi_manifest_restore_dryrun.py` (session-local, not committed — one-off
-                              analysis, promote to a real repo script if this pattern recurs for another asset group). **Sequencing**: per
-                              BLK-fab395c9 (main-confirmed), this write must NOT happen until the "Deploy the fix(es)" todo above is done and
-                              the live Cloud Run job is confirmed running post-fix code — otherwise even a correct restore risks silent
-                              re-corruption by the still-live pre-fix job on its next ~1-minute cycle.
+                                  logic as the fix (`cf2e196b` — prefer higher `row_count` when a dedup-key group's `captured` rows disagree on
+                                  `source`) to the pre-loss snapshot and diffing against the live index shows the popular "1,017,024 missing
+                                  rows" framing overstates the actionable scope: **zero key groups are entirely absent from the live index**
+                                  (every one of the 5,083,369 corrected-distinct keys has SOME row in live — consistent with the orphan-sweep's
+                                  `E=2` finding above) — i.e. no evidence tradfi actually hit the second root-cause's "spurious full rebuild
+                                  drops a whole shard" failure mode, only the cross-source-collision one. Of those, **140,291 keys have a
+                                  VALUE-mismatched surviving row** (wrong `source`/`row_count` won), and **139,566 of those are a strict
+                                  regression** (live's `row_count` is lower than the correct pick's — the bug's exact signature: the
+                                  `row_count=0`/empty-source row won over the real captured data). **The actual restore is a targeted ~140K-row
+                                  UPDATE of existing keys' `source`/`row_count`/`written_at`/etc. fields, not a ~1M-row INSERT** — this is a much
+                                  smaller, safer, more precisely-scoped operation than the todo's headline number implies. Dry-run script (no
+                                  writes) at `/tmp/.../scratchpad/tradfi_manifest_restore_dryrun.py` (session-local, not committed — one-off
+                                  analysis, promote to a real repo script if this pattern recurs for another asset group). **Sequencing**: per
+                                  BLK-fab395c9 (main-confirmed), this write must NOT happen until the "Deploy the fix(es)" todo above is done and
+                                  the live Cloud Run job is confirmed running post-fix code — otherwise even a correct restore risks silent
+                                  re-corruption by the still-live pre-fix job on its next ~1-minute cycle.
 
 - [ ] [DATA] P1. Re-run task 2's orphan-sweep (`migration_orphan_sweep.py --asset-group tradfi`) after the restoration
       to re-confirm `orphan_class_E=0` still holds — the 2026-07-10T17:17Z GREEN certification may not survive against
@@ -503,48 +523,60 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
       needs an operator/main-agent decision on log-volume cost tradeoff before enabling broadly).
 
       **Investigated + blocked on scope/execute decision (2026-07-12, slot-4)**: no Terraform/IaC manages GCP IAM
-              audit configs anywhere in the workspace (`deployment-service/terraform/gcp/` has real Terraform for this exact
-              project — schedulers, IAM member bindings, buckets via `_imports_reconcile.tf` etc. — but zero
-              `google_project_iam_audit_config` resources). Bucket provisioning is a Python/gcloud script
-              (`deployment-service/scripts/setup-buckets.py`), not Terraform either. Confirmed directly via
-              `gcloud projects get-iam-policy central-element-323112 --format=json`: zero `auditConfigs` key at all (matches
-              this doc's Cloud Logging query finding).
+                  audit configs anywhere in the workspace (`deployment-service/terraform/gcp/` has real Terraform for this exact
+                  project — schedulers, IAM member bindings, buckets via `_imports_reconcile.tf` etc. — but zero
+                  `google_project_iam_audit_config` resources). Bucket provisioning is a Python/gcloud script
+                  (`deployment-service/scripts/setup-buckets.py`), not Terraform either. Confirmed directly via
+                  `gcloud projects get-iam-policy central-element-323112 --format=json`: zero `auditConfigs` key at all (matches
+                  this doc's Cloud Logging query finding).
 
-              **Scope correction**: GCP's IAM audit-config mechanism (`auditConfigs` on the project/folder/org IAM policy) is
-              keyed by `service` + `logType` and applies at the policy level — there is **no native per-bucket scope**. So the
-              todo's "project-wide or on the market-data buckets" framing isn't actually a real choice: only project-wide is
-              achievable via this API. A per-bucket restriction would need a different mechanism entirely (e.g. per-bucket
-              access logs via `gsutil logging set on`, which write to a separate GCS bucket rather than Cloud Logging — not
-              evaluated here since the todo's own framing pointed at Cloud Audit Logs).
+                  **Scope correction**: GCP's IAM audit-config mechanism (`auditConfigs` on the project/folder/org IAM policy) is
+                  keyed by `service` + `logType` and applies at the policy level — there is **no native per-bucket scope**. So the
+                  todo's "project-wide or on the market-data buckets" framing isn't actually a real choice: only project-wide is
+                  achievable via this API. A per-bucket restriction would need a different mechanism entirely (e.g. per-bucket
+                  access logs via `gsutil logging set on`, which write to a separate GCS bucket rather than Cloud Logging — not
+                  evaluated here since the todo's own framing pointed at Cloud Audit Logs).
 
-              **Cost-tradeoff finding**: `codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md` documents a
-              real, directly-analogous precedent — a duplicate CloudTrail S3-data-events trail cost $322/20 days, and that
-              doc's own watch-item warns "with millions of parquet objects in the data/mirror buckets this can grow fast" even
-              for the (cheaper) already-enabled trail. This project's pipelines do millions of GCS object reads/day across 5
-              asset groups' backfills + the 1-minute consolidator cycles — `DATA_READ` audit logs would log every one of those
-              and risk a similar cost surprise. `DATA_WRITE` volume is bounded by actual write throughput (manifest merges,
-              backfill uploads), far lower than read throughput, and is exactly what this investigation needed ("who wrote
-              this object and when").
+                  **Cost-tradeoff finding**: `codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md` documents a
+                  real, directly-analogous precedent — a duplicate CloudTrail S3-data-events trail cost $322/20 days, and that
+                  doc's own watch-item warns "with millions of parquet objects in the data/mirror buckets this can grow fast" even
+                  for the (cheaper) already-enabled trail. This project's pipelines do millions of GCS object reads/day across 5
+                  asset groups' backfills + the 1-minute consolidator cycles — `DATA_READ` audit logs would log every one of those
+                  and risk a similar cost surprise. `DATA_WRITE` volume is bounded by actual write throughput (manifest merges,
+                  backfill uploads), far lower than read throughput, and is exactly what this investigation needed ("who wrote
+                  this object and when").
 
-              **Script drafted, tested, NOT executed**: `deployment-service/scripts/infra/enable_gcs_data_access_audit_logging.sh`
-              — idempotent, follows the existing `configure_audit_bucket_versioning.sh` pattern (get-iam-policy → jq merge →
-              set-iam-policy, etag-safe). Dry-run tested the jq merge against the REAL live project policy (read-only, no
-              `set-iam-policy` call): correctly adds a `{service: "storage.googleapis.com", auditLogConfigs: [{logType:
-              "DATA_WRITE"}]}` auditConfig entry while leaving all 40+ existing `bindings` and the `etag` byte-identical
-              (verified via diff). Caught and fixed a real jq operator-precedence bug in an earlier draft
-              (`.auditConfigs = EXPR as $x | ...` parsed as assigning the whole document into the `auditConfigs` field instead
-              of computing-then-assigning — confirmed by test output before fixing, not assumed correct).
+                  **Script drafted, tested, NOT executed**: `deployment-service/scripts/infra/enable_gcs_data_access_audit_logging.sh`
+                  — idempotent, follows the existing `configure_audit_bucket_versioning.sh` pattern (get-iam-policy → jq merge →
+                  set-iam-policy, etag-safe). Dry-run tested the jq merge against the REAL live project policy (read-only, no
+                  `set-iam-policy` call): correctly adds a `{service: "storage.googleapis.com", auditLogConfigs: [{logType:
+                  "DATA_WRITE"}]}` auditConfig entry while leaving all 40+ existing `bindings` and the `etag` byte-identical
+                  (verified via diff). Caught and fixed a real jq operator-precedence bug in an earlier draft
+                  (`.auditConfigs = EXPR as $x | ...` parsed as assigning the whole document into the `auditConfigs` field instead
+                  of computing-then-assigning — confirmed by test output before fixing, not assumed correct).
 
-              **NOT executed against prod** — filed `BLK-c9532b62` (this is a live shared-project IAM policy change with a real
-              cost dimension the todo itself flagged as needing an operator/main-agent decision; matches
-              the multi-agent-safety "modifying shared infrastructure" confirm-first class). Recommended option: `DATA_WRITE`
-              only, project-wide (the only real choice per the scope correction above). Waiting on the answer before running
-              `set-iam-policy` against `central-element-323112`.
+                  **NOT executed against prod** — filed `BLK-c9532b62` (this is a live shared-project IAM policy change with a real
+                  cost dimension the todo itself flagged as needing an operator/main-agent decision; matches
+                  the multi-agent-safety "modifying shared infrastructure" confirm-first class). Recommended option: `DATA_WRITE`
+                  only, project-wide (the only real choice per the scope correction above). Waiting on the answer before running
+                  `set-iam-policy` against `central-element-323112`.
 
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-12** — slot-3 (sonnet/high, data_engineering), dispatched to `tradfi_manifest_row_loss_regression-011`
+  ("Restore the 1,017,024 missing rows"). Closed the restore todo — see the flipped checkbox above for the full readout.
+  `market-tick-data-service@6993ea39`. Independently re-verified the deploy gate was satisfied (not trusting the doc's
+  prior read), ran a fresh DuckDB-based dry-run (138,589 updates / 0 inserts / 0 anomalies, matching slot-8's prior
+  139,566 within the live trickle's drift), applied via a snapshot + CAS write (succeeded attempt 1, no concurrent-cycle
+  conflict), and verified with a direct spot-check (`CHD`/2024-08-08) plus a corpus-wide aggregate delta that exactly
+  matches the applied correction count. A first pandas-based version of the restore script was OOM-killed on this shared
+  host; rewrote the analysis in DuckDB (out-of-core) to fix it — also killed the script's own heavier post-write
+  re-verification pass mid-run for the same reason (44GB+ resident, host memory critical) rather than risk a second OOM
+  affecting sibling slots; the lighter direct checks already confirm correctness. No inserts were needed — corroborates
+  slot-8's "0 missing key groups" finding over slot-4's contradicting sample (likely explained by the live trickle or a
+  raw-row vs dedup-key methodology difference, as slot-8 already flagged).
 - **2026-07-12** — slot-3 (sonnet/high, infra), dispatched to `tradfi_manifest_row_loss_regression-010` ("Deploy the
   fix(es)"). Closed the deploy todo — see the flipped checkbox above for the full readout.
   `Evidence: cloudbuild=ee78c203-bc43-442f-8761-bfd3b2e10db2` (SUCCESS). Summary: found the fleet
