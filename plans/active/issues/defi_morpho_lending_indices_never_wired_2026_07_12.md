@@ -264,3 +264,68 @@ spot-check the manifest for `(venue=MORPHO, data_type=lending_indices, capture_s
 to confirm real (not just honest-empty) data landed, THEN (3) run the actual G2 gate command. Checkbox for that todo
 stays unflipped — `skip-current-task`'d rather than poll-wait further on a multi-hour run, consistent with the precedent
 set earlier in this doc.
+
+### Independent convergent fix + companion bug in the live connector — 2026-07-12T11:52Z (data_engineering slot-9)
+
+Picked up the same `[SCRIPT] P2. Re-run G2 gate` re-dispatch. Independently root-caused the identical
+`uniqueKey`→`marketId` schema drift (live introspection against `blue-api.morpho.org/graphql` confirmed `Market` has no
+`uniqueKey`) and a local 1-day smoke run (`--start-date 2025-06-01 --end-date 2025-06-01 --lending-protocols morpho`,
+`GCP_PROJECT_ID=central-element-323112`) wrote **325 real rows** to
+`gs://.../venue=MORPHO/chain=ETHEREUM/.../lending_indices/morpho_ETHEREUM_20260712_112655.parquet` before
+`market-tick-data-service@591b020e` (slot-3's fix, landed first) was pulled in by my fresh-pull — good convergent
+validation from two independent slots on the same bug.
+
+**Distinct addition this dispatch**: `market_tick_data_service/live/connectors/morpho_defi_ws.py` (the LIVE WebSocket
+connector, separate from the batch `lending_indices_handler`/`morpho_adapter.py` path slot-3 fixed) duplicated the exact
+same broken `_MARKETS_QUERY` shape (`uniqueKey` instead of `marketId`) — not caught by slot-3's fix since it's a
+different call site. Fixed + updated the two mock fixtures in `test_morpho_defi_ws_connector.py` that encoded the stale
+field name (same mock-matches-the-bug pattern slot-3 flagged for the batch-path tests). Shipped
+`market-tick-data-service@04f5de94`, full `quality-gates.sh` green (sentinel verified), quickmerge landed on
+`live-defi-rollout`. Also re-ran `create-code-tarballs.sh` (no-op relative to the batch VM — the live connector doesn't
+run on `mtds-lending-indices-*` VMs — but keeps `mtds-code.tar.gz` current for anything else depending on it).
+
+**VM status re-checked** (`mtds-lending-indices-20260712-112557`, slot-3's third launch): still `RUNNING`, log
+mtime-fresh, on `2023-02-18` (still pre-genesis honest-empty period), no `Unknown lending protocol` / no
+`uniqueKey`-GraphQL errors — same clean verdict slot-3 recorded. Did not relaunch (the launcher's singleton lock
+correctly refused a duplicate). Not polled further — same async-wait discipline slot-3 and slot-12 both applied; this is
+a multi-hour run. `skip-current-task`'d — the `[SCRIPT] P2. Re-run G2 gate` todo below is still correctly unflipped and
+should go to whoever picks this up once the VM has had time to reach ≥2024-01-01 and complete.
+
+### Re-check #4 — still healthy, still pre-genesis, gate blocked on both VM completion AND consolidator staleness — 2026-07-12T11:59Z (data_engineering slot-7)
+
+Picked up the same `[SCRIPT] P2. Re-run G2 gate` re-dispatch. Fresh-pulled all repos (clean). Verified rather than
+trusted the prior "still running" claims:
+
+- **VM roster** (`~/google-cloud-sdk/bin/gcloud compute instances list --filter="name~mtds-lending-indices"`):
+  `mtds-lending-indices-20260712-112557` still the only instance, `STATUS=RUNNING`. (Note: the plain `/snap/bin/gcloud`
+  still fails with the `snap-confine`/`cap_dac_override` error in this slot too — the `~/google-cloud-sdk/bin/gcloud`
+  binary is the one that actually works; confirms slot-9's suspicion that the "snap gcloud unavailable" note was a
+  snap-specific, not fleet-wide, issue.)
+- **Real-progress check** (GCS `run.log` tail, not just heartbeat), current time 2026-07-12T11:59Z: log object
+  `Update time: 2026-07-12T11:57:06Z` (~2 min old, fresh) — active writes for `date=2023-02-25→2023-02-26`, forward
+  progress from slot-3's `2023-02-18` observation ~35 min earlier. No `Unknown lending protocol` / no
+  `uniqueKey`-GraphQL errors in the tail. Per-VM manifest shard
+  (`_index/per_vm/mtds-lending-indices-20260712-112557.parquet`) `Update time: 2026-07-12T11:59:20Z` — fresh, confirming
+  the manifest-write path is alive.
+- **Consolidator staleness — still unresolved, now ~63h stale**: consolidated `availability_index.parquet` `Update time`
+  still pinned at `2026-07-10T21:42:30Z` — byte-identical to every prior re-check in this doc and in the parent plan's
+  G2 runs #2-#5. The VM's own log shows the same `ManifestConsolidatorStaleError` trace on every collection cycle (falls
+  back to per-VM shards, refuses the whole-bucket merge — correct, expected behavior per
+  `codex/02-data/availability-manifest-and-data-status.md`, not a bug). Tracked separately:
+  `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`.
+- **Verdict**: the backfill is genuinely healthy and progressing (no stall, no new error), but is still ~56 days into a
+  ~1,288-day window (2023-01-01→2026-07-12) — at the observed ~33s/pre-genesis-day pace this is realistically many hours
+  from reaching 2024-01-01 (Morpho Blue mainnet genesis, per `morpho_adapter.py`'s own `available_from_datetime`
+  contract), let alone completing the full window. **The G2 gate for `lending_indices` cannot be usefully re-run yet for
+  two independent reasons**: (1) the backfill hasn't reached genesis, so real captured rows can't exist yet regardless
+  of the fix's correctness, and (2) even if it had, `measure_honest_coverage.py` would read the same ~63h-stale
+  consolidated index every prior run hit, not the VM's live per-shard state.
+
+**Not investigated further / not fixed this dispatch** (out of this task's scope, per the craft-scoping rule): the
+consolidator staleness is a separate P0-tracked infra issue, not something a G2-gate re-verification task should absorb.
+
+`skip-current-task`'d — same call as the three prior dispatches on this exact todo (slot-3, slot-9, slot-12). Whoever
+picks this up next should: (1) re-check the VM's shard date for continued forward progress toward/past 2024-01-01, (2)
+check whether the consolidator has resumed (would materially change whether `measure_honest_coverage.py` gives a real
+reading), (3) once BOTH the VM shows `captured` rows dated ≥2024-01-01 AND the consolidator is fresh, run the actual G2
+gate commands from the parent plan's G2 section.
