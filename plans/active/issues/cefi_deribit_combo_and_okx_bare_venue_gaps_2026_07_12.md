@@ -165,7 +165,7 @@ slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only ven
       still writes a manifest row or needs `deribit_combo_adapter.py`'s `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`
       classification to fire instead; re-run the cefi backfill for `DERIBIT-COMBO`. (repo: unified-api-contracts,
       instruments-service, market-tick-data-service). **🚧 PARTIAL PROGRESS 2026-07-12 (slot-3)** —
-      `unified-api-contracts@3547fdae` (committed locally, NOT YET PUSHED — see note below) adds the
+      `unified-api-contracts@f0dc61a2` (shipped — see the ship-blocker note below for the full trail) adds the
       `("DERIBIT-COMBO", "OPTION"): "deribit"` dict entry + 2 regression tests. **Important correction to this todo's
       own premise**: empirically confirmed (not assumed) that `get_tardis_exchange_for_venue("DERIBIT-COMBO")` ALREADY
       returns `"deribit"` — via `_get_suffixed_tardis_match`'s generic base-venue fallback
@@ -207,13 +207,18 @@ slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only ven
       Left unchecked — genuine remaining scope; whoever picks this up next should start by grepping how `venue` reaches
       `_route_tardis` for an `options_chain` `VM_DATA_TYPES` request specifically.
 
-**Ship-blocker note (2026-07-12, slot-3)**: `unified-api-contracts@3547fdae` is committed locally but NOT pushed —
-`unified-api-contracts`'s `quality-gates.sh` has a genuine, PRE-EXISTING, unrelated hard failure
-(`unified_api_contracts/external/databento/databento_classifier.py`: 906 lines > the flat, non-ratcheted
-`MAX_FILE_LINES=900` cap), confirmed via a clean-tree `git stash` test (fails identically with my diff stashed out).
-This blocks the `quality-gates.sh` sentinel `quickmerge --agent` requires, for ANY change to this repo right now, not
-just mine. Whoever next has Bash access to this repo should either (a) trim `databento_classifier.py` under 900 lines
-(recent history shows a prior similar refactor,
-`766201a3 refactor(databento): extract combo + option dispatch helpers... 331L→154L`, so there's precedent for this kind
-of split), or (b) confirm this is already tracked elsewhere and just push my commit once green. My local commit is safe
-(not lost) either way.
+**Ship-blocker note (2026-07-12, slot-3) — RESOLVED, shipped**: `unified-api-contracts@f0dc61a2` (supersedes the earlier
+local-only `3547fdae` after a rebase — see below). Filed repo-blocker `RB-8dc395c9` for the
+`databento_classifier.py: 906 > 900 MAX_FILE_LINES` failure. **Correction**: that check IS included in the gate's output
+as `❌` but does NOT actually fail the script's overall exit code — a full `quality-gates.sh` run with this exact
+violation present still printed `✅ ALL QUALITY GATES PASSED` and wrote the sentinel; the `❌` styling is
+visual-severity only for this specific check, not a hard blocker. The repo-health watcher's "green" signal was correct;
+my initial read (treating `❌` as always-blocking) was the miscalibration, not the watcher. **Real conflict while
+shipping**: `unified-api-contracts@84ce5929` (slot-11) landed a near-identical `("DERIBIT-COMBO", "OPTION"): "deribit"`
+entry independently in the same window (with a valuable extra insight: a reverse-lookup ambiguity risk in
+`tardis_adapter.py`'s `_resolve_canonical_venue`, since `tardis_to_venue["deribit"]` is a 1:1 map already claimed by
+"DERIBIT" — callers must pass `canonical_venue="DERIBIT-COMBO"` explicitly, never re-derive it from the exchange slug).
+Reconciled via `git pull --rebase`, merged both comments into one entry (no duplicate dict key), kept my OKX entry
+(which slot-11 didn't add) and my 5 regression tests (2 test-name overlaps with slot-11's own new tests exist across
+different classes — harmless, no pytest collision, left as-is). Post-merge: 71/71 tests passing, full `quality-gates.sh`
+green (236s), shipped via `quickmerge --agent`.
