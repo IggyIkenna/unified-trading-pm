@@ -32,7 +32,7 @@ related:
   ]
 created: 2026-07-12
 parent_epic: cefi_master
-priority: P2
+priority: P1
 source: mvp_backfill_cefi_tick_v10_2026_06_27.md G4 re-verification, 2026-07-12T07:20-08:05Z session
 assigned_vm: planning
 resolved_by:
@@ -309,3 +309,16 @@ Reconciled via `git pull --rebase`, merged both comments into one entry (no dupl
 (which slot-11 didn't add) and my 5 regression tests (2 test-name overlaps with slot-11's own new tests exist across
 different classes — harmless, no pytest collision, left as-is). Post-merge: 71/71 tests passing, full `quality-gates.sh`
 green (236s), shipped via `quickmerge --agent`.
+
+**Corroborating evidence for the open "bare OKX call-site" question (2026-07-12, unrelated pipeline_e2e_check full sweep
+session)**: this answers the exact open question above — YES, `_route_tardis` genuinely IS invoked with a bare `"OKX"`
+string for a real, unrelated IS reference-data backfill (`VM_VENUE=OKX`, no data_type suffix — the IS shard atom is
+`(asset_group, venue, day)` only, no per-data-type routing at the IS layer). Real VM run.log:
+`ERROR URDI[OKX]: ADAPTER_ERROR (permanent): No Tardis exchange mapping for canonical venue 'OKX'. Add a mapping in VenueMapping.tardis_to_venue or venue_instrument_type_to_tardis for this venue.`
+→ cascades to `URDI returned zero records for date=2026-07-09 asset_groups=['CEFI']` → the whole IS OKX backfill fails,
+not just options/futures chain resolution. So the bare-venue gap isn't a theoretical MTDS-options-chain-only edge case —
+it currently blocks basic IS reference-data capture for OKX entirely (confirmed on a real VM,
+`instr-backfill-cefi-pchk-0712023903-f-okx`, day=2026-07-09). Downstream, MTDS's OWN OKX shards
+(trades/book_snapshot_5/derivative_ticker/liquidations, day=2026-07-09) also failed with
+`WARNING No active venues for date=2026-07-09 asset_groups=['CEFI']` — consistent with IS never having populated an OKX
+catalogue entry for that day, since MTDS's venue-activity check reads off IS's own catalogue.
