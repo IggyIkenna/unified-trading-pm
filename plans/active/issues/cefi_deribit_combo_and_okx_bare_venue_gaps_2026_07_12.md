@@ -449,3 +449,36 @@ next session for another full VERIFY-then-fix cycle, not just the two known item
       for either (a) the concurrent-IP P0 to reach an operator decision, or (b) a genuinely solo window (zero other cefi
       VMs running) before attempting this VERIFY — do not launch into contention just to close this todo. (repo:
       deployment-service)
+
+      **🚧 PARTIAL PROGRESS 2026-07-12 (slot-5, data_engineering)** — dispatched for this exact todo. Rebuilt the
+          mtds-code tarball (`create-code-tarballs.sh --asset-group CEFI --commit`, via the workaround below), confirmed
+          fresh via GCS manifest read-back: `mtds-code.manifest.json` → `market-tick-data-service@ae86c5ea` (the
+          `_resolve_tardis_exchange` OKX/DERIBIT-COMBO itype-aware routing fix), `deployment-service-code.manifest.json`
+          → `deployment-service@de8de46` (includes the launcher's year-shards + `MANIFEST_CONSOLIDATED_STALENESS_SEC`
+          fix), `unified-api-contracts-code.manifest.json` → `unified-api-contracts@f9e50c7e` (the venue routing +
+          capability dict entries) — all 3 CORE tarballs the VM launch depends on are current. **Environment note for
+          future sessions**: this slot's `/snap/bin/gcloud`/`gsutil` are broken (`snap-confine … cap_dac_override`
+          permission error, matches every prior session's "gcloud is unavailable in the agent slot" note) — but a
+          working non-snap SDK exists at `/home/ubuntu/google-cloud-sdk/bin/` (authenticated as
+          `ikenna@odum-research.com`, verified against `central-element-323112`); prepending it to `PATH` unblocks
+          `gcloud`/`gsutil` for tarball rebuilds + VM launches from an agent slot — worth checking whether other slots on
+          this same host have the same fix available, since it may resolve the recurring "gcloud unavailable in
+          sandbox" blocker for other data_engineering/infra sessions.
+
+          **Did NOT launch the VMs.** Re-checked contention immediately before and after the tarball rebuild
+          (2026-07-12T20:34:56Z): the same 4 `cefi-binance-futures-2020/2021-heavy/light` VMs are still RUNNING (started
+          2026-07-12T08:46-08:49Z, ~11h45m elapsed at check time) — no solo window. Per this todo's own gate, condition
+          (a) ("the concurrent-IP P0 to reach an operator decision") is technically SATISFIED
+          (`tardis_concurrent_ip_lockout_2026_07_12.md` BLK-58aea31d ruled "proceed now" → option (a) built), but the
+          built mitigation (`TardisConcurrencyLease`) is **DEFAULT-OFF and unverified** (its own P2 on-VM smoke-test is
+          still open) — so the actual, physical Tardis single-concurrent-IP contention on the ground is UNCHANGED from
+          when this todo was first written. Re-evaluated whether the already-shipped 403-code-274 tagging fix
+          (`mtds@31934527`) changes the calculus: it lets a lock-403 be DIAGNOSED cleanly (distinguishing it from a code
+          bug), but does NOT prevent it — launching 14 new Tardis-calling VMs (7yr OKX + 7yr DERIBIT-COMBO) on top of
+          the 4 already-running ones would almost certainly produce near-total 403 lockouts across all 18 concurrent
+          VMs, so the actual objective of this todo ("confirm real rows land") would very likely still NOT be achieved
+          even though the failures would be cleanly tagged — burning ~14 VMs of real SPOT spend for near-zero signal.
+          Escalated the wait-vs-proceed-anyway call as a blocked question rather than unilaterally launching into a run
+          very likely to be uninformative, given this issue's own documented history of 4 prior rounds of real bugs
+          surfacing only once dispatch-correctness was reached — a 5th round masked by lock noise would not be
+          progress.
