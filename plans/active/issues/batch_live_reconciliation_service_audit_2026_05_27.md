@@ -1,12 +1,22 @@
 ---
 doc_type: issue
 title: Batch-Live Reconciliation Service (BLRS) — Repo Audit, Codex↔Code Drift, Cross-Repo Responsibility Map
-summary: BLRS is a **T+1 nightly batch-vs-live reconciliation orchestrator**. It runs a sequential multi-stage DAG that, for the prior trading day, compares the _batch replay_ of the pipeline against what a...
+summary:
+  BLRS is a **T+1 nightly batch-vs-live reconciliation orchestrator**. It runs a sequential multi-stage DAG that, for
+  the prior trading day, compares the _batch replay_ of the pipeline against what a...
 status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, execution-service, instruments-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-service,
+    execution-service,
+    instruments-service,
+  ]
 scope: [engineer, admin]
 tags: [reconciliation, ssot-audit, strategy, execution, audit, escalation]
 related:
@@ -19,7 +29,17 @@ related:
 created: 2026-05-27
 parent_epic: batch_live_symmetry_master
 priority: P2
-source: [batch-live-reconciliation-service/, unified-trading-pm/codex/04-architecture/reconciliation-resolution.md, unified-trading-pm/codex/04-architecture/reconciliation-age-tracking.md, unified-trading-pm/codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md, unified-trading-pm/codex/15-runbooks/position-reconciliation-deploy-gate.md, unified-trading-pm/codex/04-architecture/paper-vs-live-execution-seam.md, unified-trading-pm/codex/04-architecture/separation-of-concerns.md, unified-trading-pm/codex/04-architecture/data-flow-map.md]
+source:
+  [
+    batch-live-reconciliation-service/,
+    unified-trading-pm/codex/04-architecture/reconciliation-resolution.md,
+    unified-trading-pm/codex/04-architecture/reconciliation-age-tracking.md,
+    unified-trading-pm/codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    unified-trading-pm/codex/15-runbooks/position-reconciliation-deploy-gate.md,
+    unified-trading-pm/codex/04-architecture/paper-vs-live-execution-seam.md,
+    unified-trading-pm/codex/04-architecture/separation-of-concerns.md,
+    unified-trading-pm/codex/04-architecture/data-flow-map.md,
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -243,7 +263,7 @@ source** (matching-engine simulated vs real venue), which is exactly what stage3
 | `04-architecture/reconciliation-age-tracking.md`                             | 2026-05-23    | **12 reconciliation dimensions**, age fields, 3-band escalation ladder (5/15/30 min), 7 immediate-SEV0 overrides, recon-freeze, **BLRS recovery_verifier callback + check_oldest_age.py**. |
 | `09-strategy/operational/batch-live-reconciliation-threshold-calibration.md` | (none)        | UAC `RECON_GREEN_THRESHOLDS` SSOT, 3 gates (bps/drawdown/fill), pre-soak smoke criteria, 7-day soak procedure, **`SOAK_MODE` env**, `threshold_distribution` analysis cmd.                 |
 | `15-runbooks/position-reconciliation-deploy-gate.md`                         | 2026-05-12    | Pre/post-deploy `/positions` snapshot gate (owned by deployment-service + execution-service; resolves _via_ BLRS resolution API).                                                          |
-| `04-architecture/paper-vs-live-execution-seam.md`                            | 2026-05-10    | 3-way recon (batch↔paper↔live) marked **DEFERRED design-only (pvl-p21a)**; per-pair thresholds + alert/auto-pause/auto-demote routing future.                                            |
+| `04-architecture/paper-vs-live-execution-seam.md`                            | 2026-05-10    | 3-way recon (batch↔paper↔live) marked **DEFERRED design-only (pvl-p21a)**; per-pair thresholds + alert/auto-pause/auto-demote routing future.                                              |
 | `04-architecture/separation-of-concerns.md`                                  | 2026-05-17    | PBMS consumer matrix: **BLRS reads PBMS query API, writes nothing**.                                                                                                                       |
 | `04-architecture/data-flow-map.md`                                           | 2026-05-20    | Recon writer→`recon-{P}/`→reader `trading-analytics-api`→`trading-analytics-ui`.                                                                                                           |
 | `04-architecture/scenario-outcome-assertions.md`                             | 2026-05-18    | `RECONCILIATION_FLAGGED` outcome category.                                                                                                                                                 |
@@ -261,12 +281,12 @@ the stages use per-stage tolerances.
 | --- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | 1   | **3-way recon stages**                                                       | "5 stages; **no** `paper_live_recon`/`batch_paper_recon`; 3-way DEFERRED (pvl-p21a)"                                                                 | `stage3b_paper_live_recon.py` + `stage3c_batch_paper_recon.py` **exist & run**, with per-pair thresholds + `AUTO_DEMOTE_TO_PAPER` routing                                                                                                                                                                                                                                       | **CODE is right** — 3-way is shipped                            | ✅ auto: un-defer in `paper-vs-live-execution-seam.md` + `reconciliation-resolution.md` (§7.1-1) |
 | 2   | **Continuous 12-dim age tracking + recovery_verifier + check_oldest_age.py** | BLRS owns live continuous reconciliation across 12 dims, registers Incident-Gateway `recovery_verifier.py`, runs daily `scripts/check_oldest_age.py` | **None in BLRS.** BLRS is T+1 batch only. Live recon IS built — in strategy-service/`position/` (`reconciliation_engine.py`, `position_drift_monitor.py`, deviation lifecycle, age fields), execution-service (`recon_freeze`, yield/funding recon), alerting-service (`recovery_verifier.py`, age-band rules). Only 2 of 12 dims (POSITIONS, FEES) actually populated anywhere | **MISATTRIBUTED** — codex assigns to BLRS what 3 other repos do | ❓ operator: D1 — formally reassign in codex (recommend A) — see § 9.1                           |
-| 3   | **PBMS canonical baseline**                                                  | BLRS reads positions via standalone **PBMS query API** as canonical batch↔live baseline                                                             | No position-query call at all; reads GCS event archives. **PBMS repo no longer exists — merged into strategy-service/position 2026-05-20** (`workspace-manifest.json:231`); query API is now position/`api/routes/{pnl_series,positions_health}` + `/reconciliation/snapshots/history`                                                                                          | **DRIFT + stale repo** — codex (2026-05-17) predates the merge  | ❓ operator: D2 — call strategy-service/position API, or ratify event reads — see § 9.2          |
+| 3   | **PBMS canonical baseline**                                                  | BLRS reads positions via standalone **PBMS query API** as canonical batch↔live baseline                                                              | No position-query call at all; reads GCS event archives. **PBMS repo no longer exists — merged into strategy-service/position 2026-05-20** (`workspace-manifest.json:231`); query API is now position/`api/routes/{pnl_series,positions_health}` + `/reconciliation/snapshots/history`                                                                                          | **DRIFT + stale repo** — codex (2026-05-17) predates the merge  | ❓ operator: D2 — call strategy-service/position API, or ratify event reads — see § 9.2          |
 | 4   | **Resolution API backing**                                                   | `GET /breaks` lists real breaks; resolutions persisted (GCS)                                                                                         | 3 hardcoded mock breaks; in-memory resolution dict                                                                                                                                                                                                                                                                                                                              | **CODE incomplete** (acceptable pre-activation)                 | ✅ auto: track as P1 gap; wire to Stage-5 summaries before prod activation (§7.1-4)              |
 | 5   | **SOAK_MODE**                                                                | orchestrator `SOAK_MODE=os.getenv("BLR_SOAK_MODE",...)` suppresses CRITICAL during 7-day soak                                                        | not implemented (and `os.getenv` would violate rules)                                                                                                                                                                                                                                                                                                                           | **CODEX spec unbuilt**                                          | ✅ auto: implement via `ReconConfig` flag (not env); track P2 (§7.1-2)                           |
 | 6   | **threshold_distribution analysis**                                          | `python3 -m batch_live_recon.analysis.threshold_distribution ...`                                                                                    | module absent; package is `batch_live_reconciliation_service` not `batch_live_recon`                                                                                                                                                                                                                                                                                            | **CODEX wrong name + unbuilt**                                  | ✅ auto: fix doc module path; track build as P2 (§7.1-3)                                         |
 | 7   | **Drawdown + fill-rate gates**                                               | `RECON_GREEN_THRESHOLDS` has bps_delta **+ drawdown_pct + fill_rate_min**; drawdown "measured by `stage4_risk_recon.py`"                             | only slippage/bps read by orchestrator; **no `stage4_risk_recon.py`**; drawdown gate unimplemented                                                                                                                                                                                                                                                                              | **CODE partial**                                                | ❓ operator-lite: D3 — are drawdown/fill gates in May-23 scope?                                  |
-| 8   | **stage1 latency delta**                                                     | latency Δ is a real ML recon metric                                                                                                                  | hardcoded `0.0` (TODO: timestamp compare)                                                                                                                                                                                                                                                                                                                                       | **CODE stub**                                                   | ✅ auto: track P2 implement-or-remove (§7.1-5)                                                   |
+| 8   | **stage1 latency delta**                                                     | latency Δ is a real ML recon metric                                                                                                                  | **DONE** (was: hardcoded `0.0` / TODO — corrected 2026-07-12, finding ids 20/21/364, §A2 "50 reclassified" blanket ruling: now a real median \|batch−live\| `metadata.inference_duration_ms` over matched keys + a `latency_samples` gate; shipped BLRS@07222f6 2026-05-27, 2 unit tests, QG green — see §6 G2)                                                                 | **DONE** (was: CODE stub)                                       | ✅ done — see §6 G2, BLRS@07222f6 (was: §7.1-5 track P2)                                         |
 | 9   | **stage4 agent dispatch**                                                    | agent analysis dispatched to `trading-agent-service`                                                                                                 | writes markdown only ("Phase 6")                                                                                                                                                                                                                                                                                                                                                | **CODE stub** (matches codex "future")                          | ✅ auto: track P2 (§7.1-6)                                                                       |
 | 10  | **data-flow-map reader/UI names**                                            | reader=`trading-analytics-api`, UI=`trading-analytics-ui`                                                                                            | those repos don't exist in workspace; recon UI hooks are in `unified-trading-system-ui`, API surface in `unified-trading-api`                                                                                                                                                                                                                                                   | **CODEX stale repo names**                                      | ✅ auto: fix `data-flow-map.md` (not BLRS-owned; low-pri) (§7.1-7)                               |
 | 11  | **prod status**                                                              | "NEVER executed in prod; pending F-21"                                                                                                               | consistent — cron exists but staging only                                                                                                                                                                                                                                                                                                                                       | aligned                                                         | none                                                                                             |
@@ -405,21 +425,32 @@ leave). The strategy-service surface is the more complete one and is real today;
     > (`recon_freeze_armed_never_published_2026_05_27.md`). The bounded BLRS code gaps (G2/G4/G5) are being
     > self-completed.
 
-- **D2 — Canonical position baseline: query strategy-service/position vs ratify event archives. → ROUTED TO IKENNA.**
-  PBMS is no longer a repo (merged into strategy-service/position 2026-05-20), so codex's "PBMS query API" now means
-  `position/api/routes/{pnl_series,positions_health}` + `/reconciliation/snapshots/history`. Either:
+> **CORRECTION (2026-07-12, finding ids 20/21/364 + 25, §A2 "50 reclassified" blanket ruling):** D2/D3/D4 immediately
+> below are stale — they still read as open "❓ Needs operator input" / "ROUTED TO IKENNA" questions, but the top-of-doc
+> "🟦 OPERATOR DECISION LEDGER" banner (dated 2026-06-01, i.e. AFTER this section's original 2026-05-27 framing —
+> matches D1 immediately above, which was already corrected in place) already rules all three FINAL: D2 = option (A)
+> query the strategy-service/position API; D3 = build all three gates (drawdown + fill-rate + bps) now; D4 = resolution
+> route moves to `/t1-recon/...`, live recon stays on strategy-service/position. `batch_live_symmetry_master.md` (the
+> epic) already reflects these as settled single-option `[ ]` action items dispatched 2026-06-01 — this doc's §7.2 was
+> simply never pruned after the banner landed. Original per-item framing (options A/B/C) kept below for
+> provenance/context only — treat as historical, not open.
+
+- **D2 — Canonical position baseline: query strategy-service/position vs ratify event archives. → ✅ SEE BANNER —
+  DECIDED FINAL 2026-06-01.** PBMS is no longer a repo (merged into strategy-service/position 2026-05-20), so codex's
+  "PBMS query API" now means `position/api/routes/{pnl_series,positions_health}` + `/reconciliation/snapshots/history`.
+  Either:
   - **(A)** BLRS calls the strategy-service/position query API for the canonical position baseline (codex-intent, real
     endpoints exist today, stronger correctness — a T+1 audit grounded on the canonical ledger).
   - **(B)** Ratify GCS event-archive reads as sufficient for a T+1 audit and amend the codex consumer matrix + the stale
     standalone-PBMS reference. _Lower effort; weaker canonical guarantee._
-- **D4 — (new) Two `/reconciliation/resolve` APIs. → ROUTED TO IKENNA.** BLRS (mock) and strategy-service/position
-  (real) both serve `POST /reconciliation/resolve` (§ 5.5). Options: (A) BLRS drops its resolution API and the UI uses
-  strategy-service/position for live + a distinct BLRS path (e.g. `/t1-recon/breaks`) for batch; (B) namespace BLRS's
-  routes under a `/t1/` prefix; (C) leave both (accept the collision, document which UI hook calls which). Recommend (A)
-  or (B) before any UI wiring lands.
-- **D3 — Are the drawdown_pct + fill_rate_min green gates in May-23 scope? → ROUTED TO IKENNA.** UAC
-  `RECON_GREEN_THRESHOLDS` defines all three gates; only bps/slippage is wired. Build the drawdown + fill-rate gates now
-  (needs a risk-recon step), or formally defer to post-cutover with a named successor.
+- **D4 — (new) Two `/reconciliation/resolve` APIs. → ✅ SEE BANNER — DECIDED FINAL 2026-06-01.** BLRS (mock) and
+  strategy-service/position (real) both serve `POST /reconciliation/resolve` (§ 5.5). Options: (A) BLRS drops its
+  resolution API and the UI uses strategy-service/position for live + a distinct BLRS path (e.g. `/t1-recon/breaks`) for
+  batch; (B) namespace BLRS's routes under a `/t1/` prefix; (C) leave both (accept the collision, document which UI hook
+  calls which). Recommend (A) or (B) before any UI wiring lands.
+- **D3 — Are the drawdown_pct + fill_rate_min green gates in May-23 scope? → ✅ SEE BANNER — DECIDED FINAL 2026-06-01.**
+  UAC `RECON_GREEN_THRESHOLDS` defines all three gates; only bps/slippage is wired. Build the drawdown + fill-rate gates
+  now (needs a risk-recon step), or formally defer to post-cutover with a named successor.
 
 ---
 

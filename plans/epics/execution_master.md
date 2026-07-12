@@ -29,7 +29,7 @@ related_plans:
     ../active/execution_fidelity_tiers_uac_governed_2026_06_28.md,
     ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
   ]
-last_updated: 2026-05-21
+last_updated: 2026-07-12 # was 2026-05-21 (stale vs 2026-07-12 body edits, line 57) — see body "Assigned active plans" note
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -68,5 +68,12 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_(no other active plans currently declare `parent_epic: execution_master`. Audit-pool wrapper plans for this epic land
-here as they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_
+_1 active plan declares `parent_epic: execution_master` in its frontmatter:_
+
+- [`execution_fidelity_tiers_uac_governed_2026_06_28.md`](../active/execution_fidelity_tiers_uac_governed_2026_06_28.md)
+  — status: active, parent_epic: execution_master (its own frontmatter L14; also listed in this epic's `related`/
+  `related_plans` fields, L16/L29).
+
+**Corrected 2026-07-12** (was: _"no other active plans currently declare `parent_epic: execution_master`. Audit-pool
+wrapper plans for this epic land here as they are dispatched."_) — findings 51/53/316,
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.

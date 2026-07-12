@@ -157,16 +157,18 @@ done
 > **Recomputed from the registered plans' checkboxes + the cross-cutting A–H verdict + the per-AG `--apply` (G4) ticks —
 > NOT hand-maintained divergent state.** Refresh at each gate promotion (re-read the WAVE checkboxes §below, the A–H
 > verdict table, and the per-AG `G4 --apply` checkboxes; or run `regenerate_active_plan_inventory.py`). **As of
-> 2026-06-16.**
+> 2026-07-12** (was: "As of 2026-06-16" with every G4 cell frozen at 🟡(gated) — stale; the board was never refreshed
+> across 4 gate promotions already recorded lower in this same doc. Refreshed per plan-reconciliation finding 129,
+> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling).
 
-| asset_group       | G0 C-PATH + pmode | G1 catalogue+enum | G2 per-AG ①–⑫ audit | G3 UNION UI | G4 `--apply` | G5 backfill→100% |
-| ----------------- | :---------------: | :---------------: | :-----------------: | :---------: | :----------: | :--------------: |
-| **defi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |  🟡 (gated)  |        🔴        |
-| **cefi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |  🟡 (gated)  |        🔴        |
-| **tradfi**        |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |  🟡 (gated)  |        🔴        |
-| **sports**        |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |  🟡 (gated)  |        🔴        |
-| **prediction**    |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |  🟡 (gated)  |        🔴        |
-| **cross-cutting** |        🟢         |        🟢         |      🟢 (A–H)       |     🟢      |     n/a      |       n/a        |
+| asset_group       | G0 C-PATH + pmode | G1 catalogue+enum | G2 per-AG ①–⑫ audit | G3 UNION UI |                          G4 `--apply`                          | G5 backfill→100% |
+| ----------------- | :---------------: | :---------------: | :-----------------: | :---------: | :------------------------------------------------------------: | :--------------: |
+| **defi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |                    🟢 (applied 2026-06-29)                     |        🔴        |
+| **cefi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |                    🟢 (applied 2026-06-29)                     |        🔴        |
+| **tradfi**        |        🟢         |     🟢 (dry)      |         🟡          |     🟢      | 🟢 (applied 2026-07-06, post-apply cleanup tracked separately) |        🔴        |
+| **sports**        |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |                    🟢 (applied 2026-06-29)                     |        🔴        |
+| **prediction**    |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |                    🟢 (applied 2026-06-29)                     |        🔴        |
+| **cross-cutting** |        🟢         |        🟢         |      🟢 (A–H)       |     🟢      |                              n/a                               |       n/a        |
 
 **Cell basis (the registered evidence each column reads):**
 
@@ -181,9 +183,15 @@ done
   the per-AG ①–⑫ dry-run audits are owned by each per-AG plan (in progress / gated on that AG's IS backfill).
 - **G3** 🟢 — `deployment-api` UNION view (`union_reduce_to_cells`, F/H rows; 21 tests green); could-exist denominator
   over the 4-state union. Serves all AGs.
-- **G4** 🟡 (gated) — every per-AG `G4 --apply` checkbox is open `[ ]`; the irreversible single-walk is the operator
-  HARD-STOP (agents prepare dry-run-green + STOP). Rollback snapshots `pre_migration_2026_06_08.parquet` staged.
-- **G5** 🔴 — backfills→100% + cost-swap (WAVE 5) start only after G4 `--apply`.
+- **G4** 🟢 all 5 AGs (updated 2026-07-12, was: "🟡 (gated) — every per-AG `G4 --apply` checkbox is open `[ ]`" — stale,
+  superseded by the WAVE checklist below: defi/cefi/sports/prediction `--apply` ✅ COMPLETE 2026-06-29; TradFi `--apply`
+  DONE 2020-2026 span, 7 VMs, exit_code=0 fatal=0, completed 2026-07-06, GCS re-verified 2026-07-12 — see the plan
+  banner + finding-128 note on the TradFi WAVE checkbox below; TradFi post-apply cleanup (manifest 100%-v9, CF-audit,
+  legacy-twin deletes, RESUME runbook) is tracked separately in `tradfi_v9_stage1_finish_2026_07_06.md` +
+  `instruments_completion_tracker_2026_07_06.md`, not gating this G4 cell). Rollback snapshots
+  `pre_migration_2026_06_08.parquet` staged (retained; irreversible walk already executed for all 5 AGs).
+- **G5** 🔴 — backfills→100% + cost-swap (WAVE 5) start only after G4 `--apply`. (G4 is now green all 5 AGs per above —
+  G5 itself is unevidenced by this refresh and left unchanged.)
 
 ## 🟢 Dispatch waves (live — who owns what NOW)
 

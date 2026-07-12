@@ -1,12 +1,22 @@
 ---
 doc_type: plan
 title: Codex-vs-repo-docs SSOT audit + consolidation (all active repos)
-summary: Audit and consolidate all active repo docs/ folders against codex/ SSOT, removing duplication and migrating unique content into codex.
+summary:
+  Audit and consolidate all active repo docs/ folders against codex/ SSOT, removing duplication and migrating unique
+  content into codex.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: [audit, documentation, ssot, codex, consolidation, deduplication]
 related: []
@@ -24,7 +34,12 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source: [unified-trading-pm/codex/06-coding-standards/documentation-standards.md, unified-trading-pm/codex/00-SSOT-INDEX.md, unified-trading-pm/plans/active/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md]
+source:
+  [
+    unified-trading-pm/codex/06-coding-standards/documentation-standards.md,
+    unified-trading-pm/codex/00-SSOT-INDEX.md,
+    unified-trading-pm/plans/active/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
+  ]
 assigned_role: review
 drift_direction: correct-codex
 model_tier: opus-required
@@ -191,8 +206,18 @@ deployment-service@`9627260`; instruments-service@`8bea654`+`9ecc4b2`; execution
 market-data-processing-service@`89161dc`; strategy-service@`80d298fe`; e2e-testing@`0de5471`;
 unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
 
-- [ ] [DOCS] P2. **Follow-up: URDI still in instruments-service CODE** — docs URDI refs fixed, but code still uses URDI
-      symbols (`URDI` is a phantom name per CLAUDE.md). Audit + rename in instruments-service.
+- [ ] [DOCS] P2. **No NEW URDI refs in instruments-service (was: "Audit + rename in instruments-service" — corrected
+      2026-07-12, finding 369, §A2 "50 reclassified" blanket ruling)**: `urdi_reference_provider.py` is grep-confirmed
+      LOAD-BEARING — imported by `instruments_service/engine/orchestrator/__init__.py` +
+      `reference_data/utils/defi_utils.py` + 6 production adapters (cefi/hyperliquid.py, cefi/deribit_combo_adapter.py,
+      cefi/tardis/adapter.py, prediction/kalshi.py, defi/aave_v3.py, tradfi/databento/adapter.py) — NOT a phantom name
+      to rename away. `instruments_mtds_subset_consistency_remediation_2026_06_17.md` (line 1855-1857) independently
+      reached the same correction 16 days later ("`rg URDI` → 0 hits is wrong; `urdi_reference_provider.py` is the LIVE
+      fetch spine"). Guard going forward: no NEW URDI refs (grep-based CI guard), not a blanket rename of the existing
+      load-bearing module. Original text preserved: "Follow-up: URDI still in instruments-service CODE — docs URDI refs
+      fixed, but code still uses URDI symbols (`URDI` is a phantom name per CLAUDE.md). Audit + rename in
+      instruments-service." (Note: `cursor-configs/CLAUDE.md`'s system-map "URDI phantom" note is also stale per this
+      finding but is out of scope for this edit — not named in this chunk.)
 - [ ] [DOCS] P2. **AUDIT-03 F-45 codex update** (from `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`):
       code wins — events GCS path keys on `instance_id`; `correlation_id` is a column, NOT a path key. Update the codex
       doc(s) that say correlation_id is a path key to match the implemented `instance_id` path semantics.

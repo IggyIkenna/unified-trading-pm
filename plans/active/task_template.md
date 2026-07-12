@@ -68,7 +68,7 @@ of track — flip to `active` to dispatch.
 doc_type: plan
 title: <concise — what this plan achieves>
 summary: <2–4 lines; NO ": " colon-space in unquoted text — use an em-dash —>
-status: active # active | draft (NOT ingested) | done | blocked
+status: active # draft (NOT ingested) | active | blocked | paused | complete | cancelled | superseded (was: "active | draft (NOT ingested) | done | blocked" — corrected 2026-07-12, doc-reconciliation autofix finding 382, plan_reconciliation_operator_decisions_2026_07_11.md §A2 "50 reclassified" blanket ruling; PLAN_FORMAT.md:86 + scripts/docs/docspec.py:59 are the enforced enum, which has no "done" value)
 nature: process # process | design
 asset_group: [<group>] # e.g. [defi] [tradfi] [meta]
 stage: [<stage>] # e.g. [data] [meta]

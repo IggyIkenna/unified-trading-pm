@@ -2,10 +2,12 @@
 doc_type: epic
 title: Sports Master — asset_group umbrella
 summary: >-
-  L0 asset-group umbrella epic for the sports data pipeline (API-Football fixtures + 11 bookmaker odds combos):
-  coordinates the golden-window-first drive to 100% coverage, canonical universe expansion, odds bookmaker enumeration,
-  fixtures schema split, phantom recon, and the A3 mega-audit remediation (25,652 MISSING_EXPECTED cells across all
-  bookmaker × odds_snapshot/odds_movement combos).
+  L0 asset-group umbrella epic for the sports data pipeline (API-Football fixtures + odds bookmaker coverage, now scoped
+  to the 3 active direct-adapter venues ODDS_API/PINNACLE/BETFAIR — was: "11 bookmaker odds combos", corrected
+  2026-07-12 per finding id 279, §A2 "50 reclassified" blanket ruling; the historical 11-combo mega-audit denominator
+  below is retained as a dated record, not current scope): coordinates the golden-window-first drive to 100% coverage,
+  canonical universe expansion, odds bookmaker enumeration, fixtures schema split, phantom recon, and the A3 mega-audit
+  remediation (25,652 MISSING_EXPECTED cells across all bookmaker × odds_snapshot/odds_movement combos).
 status: active
 nature: process
 asset_group: [sports]
@@ -59,7 +61,7 @@ related_plans:
     ../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md,
     ../active/trading_agent_service_architecture_unlock_2026_05_22.md,
   ]
-last_updated: 2026-06-24
+last_updated: 2026-07-12 # was: 2026-06-24, stale vs 2026-06-27/2026-07-08 body edits — corrected per finding id 279
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -96,6 +98,18 @@ locked_since: 2026-05-07
 > **Scope MUST cover every bookmaker × data_type — no asset_group skipped, no deadline-driven cutbacks** (operator
 > directive 2026-05-20). Closed-set deferral only via `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` /
 > `BLOCKED-UPSTREAM-OUTAGE` with operator ack.
+>
+> **CORRECTION (2026-07-12, finding ids 331/332, §A2 "50 reclassified" blanket ruling):** this "ALL 11 bookmaker" banner
+> is a frozen 2026-05-20 snapshot and is stale on scope — it predates BOTH the 2026-05-12 operator deferral
+> (BET365/DRAFTKINGS/FANDUEL DEFERRED-INDEFINITELY from direct-adapter backfill work, 8 days _before_ this banner was
+> written) and the 2026-07-08 operator decision that fully DELETED the 14 scraper adapters
+> (`execution-service@29a888a8d`, "retire the 14 bookmaker scrapers" — see "Scrapers retired 2026-07-08" below).
+> **Was:** implies live P0 backfill scope = 11 bookmakers incl. BET365/DRAFTKINGS/FANDUEL direct adapters. **Now:**
+> direct-adapter backfill scope = BET365 excluded entirely (no live venue-key); DRAFTKINGS/FANDUEL direct-scraper
+> adapters excluded (code deleted, 2026-07-08) but the venue keys themselves ARE live via ODDS_API fan-out (see
+> "Scrapers DEFERRED-INDEFINITELY" section correction below, finding id 372) — so backfill for DRAFTKINGS/FANDUEL odds
+> runs through the `ODDS_API` capture path, not a standalone adapter. No `no asset_group skipped` scope was actually
+> cut; the 3 scrapers were reclassified out of the direct-adapter model, not dropped from coverage.
 
 > **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
 >
@@ -237,6 +251,17 @@ The 14 UK/EU scraper bookmakers (`bet365`, `bet888sport`, `betfred`, `betvictor`
 participate in any pre-cutover work; sports_master scope is now anchored on the **3 remaining-active sports venues**:
 `ODDS_API` (multi-bookmaker aggregator, raw tick data), `PINNACLE` (sharp benchmark), `BETFAIR` (exchange / lay
 liquidity).
+
+> **CORRECTION (2026-07-12, finding id 372, §A2 "50 reclassified" blanket ruling):** this deferral covers
+> DRAFTKINGS/FANDUEL's own _direct_ browser-stub adapters only (still deferred/deleted, see "Scrapers retired
+> 2026-07-08" below) — it does NOT mean the venue keys are absent from UAC. `DRAFTKINGS` + `FANDUEL` were RE-ADDED to
+> `VENUES_BY_ASSET_GROUP["sports"]` on 2026-05-21 (`unified-api-contracts@19fbd924`, "fix(oracle): correct \_SPORTS
+> data*types — ODDS/trades, BETFAIR sub-venues, remove BET365 — mega-audit R2", verified on `live-defi-rollout`) as
+> ODDS_API-fanout-sourced sub-venue keys, inline comment "US bookmaker via ODDS_API fan-out (manifest-confirmed)" —
+> distinct from the retired direct-scraper adapters. Live today: `VENUES_BY_ASSET_GROUP["sports"]` =
+> `[ODDS_API, PINNACLE, BETFAIR, BETFAIR_SB_UK, BETFAIR_EX_UK, BETFAIR_EX_EU, DRAFTKINGS, FANDUEL]` (was: framed above
+> as exactly 3 venues — that framing describes the \_execution/direct-adapter* universe, not the full MTDS venue-key
+> registry).
 
 Shipped 2026-05-12:
 
@@ -830,10 +855,9 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
   - **MATCHES (footystats) — PARTIAL FIELD-MAPPING.** `normalize_footystats_match`
     (`unified_api_contracts/external/footystats/normalize.py:26-114`): populates ~25 CanonicalFixture fields but
     hardcodes 15+ to `None` (referee, halftime goals, shots*on_target, fouls, yellow/red cards, shots_blocked, offsides,
-    passes_total/accuracy) **despite the FootyStatsMatch source dataclass carrying** `team_a*_`/ `team*b*_`for
-    shots_on_target / yellow_cards / red_cards / fouls (verified via`rg` on schemas.py). Source-to-canonical
-    name-mapping miss (`team_a`→`home`, `team_b`→`away`). Smaller scope than full flatten; just rewire the field
-    assignments. **Follow-up #3 below.**
+    passes_total/accuracy) **despite the FootyStatsMatch source dataclass carrying**
+    `team_a*_`/ `team*b*_`for shots_on_target / yellow_cards / red_cards / fouls (verified via`rg` on schemas.py). Source-to-canonical name-mapping miss (`team_a`→`home`, `team_b`→`away`).
+    Smaller scope than full flatten; just rewire the field assignments. **Follow-up #3 below.**
 - [x] [SCRIPT] P1. **Follow-up #1 — STANDINGS flatten.** UAC `normalize_api_football_standing` rewrite to unpack the
       nested `league.standings: [[...]]` array into per-(league, team, season, position) row records with full stats
       subobjects (all/home/away each have played/win/draw/lose/goals/goalsAgainst/goalDifference/points). Same migration
@@ -1203,10 +1227,10 @@ ikenna-sports-re-audit-sp-5-10-12 slot 8 sub-agent):
       removed \_MANIFOLD/\_SHARPAPI). Bidirectional capability⇄adapter drift-guard test added.]** ~~17 caps declared vs
       15 execution classes present. Reconcile.~~
 - [x] ✅ [SCRIPT] **P2**. **SP-12(f) — shard-level isolation**. **[DONE — execution-service@dbab41a0e 2026-06-05:
-      ALREADY per-adapter — `concurrent_executor._execute_single` wraps each venue's `place_bet()` in its own
-      try/except + records the failure (not swallowed); `asyncio.gather` returns one result per venue without aborting
-      the batch. Per-adapter isolation regression tests added.]** ~~Orchestrator-level catch preserves isolation but
-      per-adapter not enforced. Tighten.~~
+      ALREADY per-adapter — `concurrent_executor._execute_single` wraps each venue's `place_bet()` in its own try/except
+      + records the failure (not swallowed); `asyncio.gather` returns one result per venue without aborting the batch.
+      Per-adapter isolation regression tests added.]** ~~Orchestrator-level catch preserves isolation but per-adapter
+      not enforced. Tighten.~~
 
 Already GREEN (re-audit closed): SP-1/SP-2/SP-3 case-folding (cross_asset_group Phase 1D), SP-4 data-type-namespace note
 (cross_asset_group Phase 1D), SP-6 KNOWN_COVERAGE_GAPS (folded to sports phantom-recon plan), SP-7 launch-dates
@@ -1289,10 +1313,8 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
       denominate against). — **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1`
       (~365/yr) and `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written
       at trigger dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
-      `\_sports_trigger_dates_for*{window,league}`helpers (union of`get_reference_refresh_dates`across leagues, clipped)
-      reading from the UAC`LEAGUE_REGISTRY`(no GCS I/O, so it works before the IS write-path lands — coverage shows 0%
-      until then, correctly).`TEAMS`→`global_trigger_date`, `PLAYER_VALUES`→`per_league_trigger_date`. 8 tests incl. the
-      trigger-date≪daily-calendar invariant. QG exit 0.
+      `\_sports_trigger_dates_for*{window,league}`helpers (union of`get_reference_refresh_dates`across leagues, clipped)     reading from the UAC`LEAGUE_REGISTRY`(no GCS I/O, so it works before the IS write-path lands — coverage shows 0%     until then, correctly).`TEAMS`→`global_trigger_date`, `PLAYER_VALUES`→`per_league_trigger_date`.
+      8 tests incl. the trigger-date≪daily-calendar invariant. QG exit 0.
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
 
 ## Assigned active plans
@@ -1330,12 +1352,15 @@ lookahead-bias split (UAC schema + UTL join already shipped): per-league announc
 `announced_at` backfill, one-shot `migrate_fixtures_split.py`, writegate same-day coordination, HT/ET/PEN +
 score-distinction write-path population, deferred pre-features-extractor follow-up.
 
-### [`sports_phantom_recon_and_coverage_windows_2026_06_20`](../active/sports_phantom_recon_and_coverage_windows_2026_06_20.md)
+### [`sports_phantom_recon_and_coverage_windows_2026_06_20`](../archive/2026_06/sports_phantom_recon_and_coverage_windows_2026_06_20.md)
 
-**status**: active · **estimate**: 2.4 cal AI-days (class: research). Diagnose SFI_STANDINGS 100%-failed + open-meteo
-silence; reconcile api-football (2015-vs-2018) + understat (2014-vs-2015) `SOURCE_COVERAGE_START` via the
-`DATA_TYPE_COVERAGE_START` override pattern; footystats-scoped recon + drain-wait + clean re-run (<0.5% phantom rate, no
-blanket-flip).
+**status**: ✅ COMPLETE / ARCHIVED (was: listed "active" with a dead `../active/` link — corrected 2026-07-12, finding
+id 251, §A2 "50 reclassified" blanket ruling; the plan's own frontmatter reads `status: complete` and it now lives at
+`plans/archive/2026_06/`, with all 6 todos checked `[x]` matching what this table previously listed as outstanding). No
+longer a P0 "must complete before next foundation gate" item. **estimate**: 2.4 cal AI-days (class: research). Diagnose
+SFI_STANDINGS 100%-failed + open-meteo silence; reconcile api-football (2015-vs-2018) + understat (2014-vs-2015)
+`SOURCE_COVERAGE_START` via the `DATA_TYPE_COVERAGE_START` override pattern; footystats-scoped recon + drain-wait +
+clean re-run (<0.5% phantom rate, no blanket-flip).
 
 ### [`sports_features_readiness_for_predictions_2026_06_20`](../active/sports_features_readiness_for_predictions_2026_06_20.md)
 

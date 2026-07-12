@@ -1,16 +1,16 @@
 ---
 doc_type: plan
 title:
-  Consolidate instruments-service's 17 docs into 7 — one setup guide, one adapter-architecture guide, one doc per asset
-  group
+  Consolidate instruments-service's 18 docs into 7 (was 17 — see Progress Log 2026-07-12 correction) — one setup guide,
+  one adapter-architecture guide, one doc per asset group
 summary:
-  "instruments-service/docs/ has 17 markdown files (6,529 lines) with heavy overlap — COMMAND_FLOW_ANALYSIS.md,
-  COMMAND_FLOW_DIAGRAM.md, and VENUE_ADAPTERS.md all describe the same adapter architecture; DEFI_GUIDE.md duplicates
-  DEFI_INSTRUMENTS.md; CORPORATE_ACTIONS.md is TradFi-only content living outside TRADFI_INSTRUMENTS.md. Operator wants
-  this collapsed to 7 docs (1 setup guide, 1 adapter code-structure guide, 5 asset-group docs), each asset-group doc
-  carrying an explicit MVP-universe section (MVP universe is NOT all instruments captured — it's the subset actually
-  used for market-tick-data download once things are wired end-to-end), and cross-linked to this session's real
-  findings: the instruments-definitions drilldown mockup
+  "instruments-service/docs/ has 18 markdown files (was: 17 — see title correction) (6,529 lines) with heavy overlap —
+  COMMAND_FLOW_ANALYSIS.md, COMMAND_FLOW_DIAGRAM.md, and VENUE_ADAPTERS.md all describe the same adapter architecture;
+  DEFI_GUIDE.md duplicates DEFI_INSTRUMENTS.md; CORPORATE_ACTIONS.md is TradFi-only content living outside
+  TRADFI_INSTRUMENTS.md. Operator wants this collapsed to 7 docs (1 setup guide, 1 adapter code-structure guide, 5
+  asset-group docs), each asset-group doc carrying an explicit MVP-universe section (MVP universe is NOT all instruments
+  captured — it's the subset actually used for market-tick-data download once things are wired end-to-end), and
+  cross-linked to this session's real findings: the instruments-definitions drilldown mockup
   (https://claude.ai/code/artifact/e2824e52-3a51-43e0-b4b1-933bee469f9d) and the instrument_id canonicalization decision
   doc. Before writing anything, audit the existing docs against real code, the mockup, and UAC for deviations — several
   are already known to be stale (docs describe a single-margin-type Deribit, a pre-A_TOKEN/ DEBT_TOKEN lending model,
@@ -58,12 +58,14 @@ source:
 ---
 
 > **Read-before-write discipline (operator-mandated)**: Phase 1 is a pure audit — no doc gets touched until every claim
-> in the 17 existing docs has been checked against real code / the mockup / UAC and every deviation is logged. Phase 2
-> is a design checkpoint with the operator before any prose gets written. Phases 3-4 are the actual rewrite + cutover.
+> in the 18 existing docs (was: 17 — see title correction) has been checked against real code / the mockup / UAC and
+> every deviation is logged. Phase 2 is a design checkpoint with the operator before any prose gets written. Phases 3-4
+> are the actual rewrite + cutover.
 
 ## The 5 sources this plan reconciles
 
-1. **The 17 existing docs** (`instruments-service/docs/*.md` + `docs/specs/*.md`) — what's currently documented.
+1. **The 18 existing docs** (was: 17 — see title correction) (`instruments-service/docs/*.md` + `docs/specs/*.md`) —
+   what's currently documented.
 2. **The mockup** (https://claude.ai/code/artifact/e2824e52-3a51-43e0-b4b1-933bee469f9d) — real venues/instrument_ids/
    bugs verified this session, per asset group.
 3. **The real code** — instruments-service adapters, `canonical_id_builder.py`, MVP-scope constants.
@@ -97,10 +99,10 @@ list as part of Phase 2's design checkpoint**, this table is a starting hypothes
 
 ### Phase 1 — Audit (no doc writing yet)
 
-- [ ] [DATA] P0. **Read all 17 existing docs in full** (not just the intros already skimmed) and extract every concrete
-      claim: venue lists per AG, instrument_id format examples, MVP-universe scope statements, adapter-count claims.
-      Produce a claims inventory (a working scratch file, not a committed doc) — this is the input to every later
-      cross-check.
+- [ ] [DATA] P0. **Read all 18 existing docs in full** (was: 17 — see title correction) (not just the intros already
+      skimmed) and extract every concrete claim: venue lists per AG, instrument_id format examples, MVP-universe scope
+      statements, adapter-count claims. Produce a claims inventory (a working scratch file, not a committed doc) — this
+      is the input to every later cross-check.
 - [ ] [DATA] P0. **Cross-check every instrument_id-format claim against real code** — `canonical_id_builder.py`, the
       per-venue adapters already read this session (yearn.py/beefy.py/karak.py/pendle.py/renzo.py/idle.py and the CeFi
       ones), and a real GCS `prod/catalog.parquet` read per asset group where not already covered this session. Flag
@@ -230,3 +232,9 @@ list as part of Phase 2's design checkpoint**, this table is a starting hypothes
   cross-repo grep for the 14 retired docs (not 10-12 as originally guessed) found 3 real hits, 2 updated
   (`plans/epics/instruments_master.md`, `codex/POST_PLAN_REALITY_2026_05_06.md`), 1 left alone (an archived plan —
   archives aren't updated). All 4 phases complete; plan status flipped to `complete`.
+- **2026-07-12 (doc-reconciliation correction, finding 118, §A2 "50 reclassified" blanket ruling)** — This plan's
+  title/summary/Phase-1 references to "17" existing docs were wrong throughout; real starting count was **18**, per
+  `epics/instruments_master.md`'s own correction ("18→7 docs (real count was 18, not 17)") and independently derivable
+  from this plan's own Target-7-doc-structure table above: 6 pre-existing top-level `docs/*.md` (ARCHITECTURE,
+  POLYMARKET_PREDICTION, CEFI/DEFI/TRADFI/SPORTS_INSTRUMENTS) + 12 `docs/specs/*.md` = 18. Corrected inline above (was:
+  17); this Progress Log's earlier "17" mentions are left as the historical record of what was believed at filing time.

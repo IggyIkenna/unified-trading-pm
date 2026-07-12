@@ -1,19 +1,28 @@
 ---
 doc_type: issue
-title: 'Perp funding data-semantics + cadence: registry inconsistency, funding_timestamp one-settlement offset, no historical cadence tracker'
-summary: Three related correctness gaps in how perp **funding** is annualised and time-stamped across the workspace, found while building a `carry_staked_basis` funding-carry analysis that reads `data_type=...
+title:
+  "Perp funding data-semantics + cadence: registry inconsistency, funding_timestamp one-settlement offset, no historical
+  cadence tracker"
+summary:
+  Three related correctness gaps in how perp **funding** is annualised and time-stamped across the workspace, found
+  while building a `carry_staked_basis` funding-carry analysis that reads `data_type=...
 status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, e2e-testing, execution-service, features-service, instruments-service, market-tick-data-service]
+repos:
+  [deployment-service, e2e-testing, execution-service, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [data-correctness, cefi, defi, uac, mtds, backfill, deribit, data-pipeline]
 related: []
 created: 2026-06-16
 parent_epic: mtds_mdps_master
 priority: P1
-source: [2026-06-16 carry_staked_basis funding-carry scan (e2e-testing/scripts/defi/staked_basis_funding_scan.py) — empirical exchange-API spot-checks vs GCS derivative_ticker]
+source:
+  [
+    2026-06-16 carry_staked_basis funding-carry scan (e2e-testing/scripts/defi/staked_basis_funding_scan.py) — empirical
+    exchange-API spot-checks vs GCS derivative_ticker,
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -47,9 +56,18 @@ Two SSOTs encode per-venue funding cadence and they **disagree**:
 | ----------- | -------------------------------------------------------------------------- | --------------- | -------------------------- | ----------------------------- |
 | Binance     | `fapi/v1/fundingRate` `fundingTime` spacing = 28 800 s                     | 8h (3/day)      | 8h ✅                      | 3.0 ✅                        |
 | **Aster**   | `fapi.asterdex.com/fapi/v1/fundingRate` `fundingTime` spacing = 28 800 s   | **8h (3/day)**  | 8h ✅                      | **24.0 ❌ (8× over)**         |
-| **Deribit** | `public/get_funding_rate_history` returns **hourly** rows w/ `interest_1h` | **1h (24/day)** | 1h ✅                      | **3.0 ❌ (8× under)**         |
+| **Deribit** | `public/get_funding_rate_history` returns **hourly** rows w/ `interest_1h` | **1h (24/day)** | 8h ✅ [^1]                 | **3.0 ❌ (8× under)**         |
 | Hyperliquid | `info fundingHistory` spacing = 3 600 s                                    | 1h (24/day)     | 1h ✅                      | 24.0 ✅                       |
 | OKX         | `funding-rate-history` `fundingTime` spacing = 28 800 s                    | 8h (3/day)      | 8h ✅                      | 3.0 ✅                        |
+
+[^1]:
+    **Corrected 2026-07-12** (doc-reconciliation finding 176, §A2 "50 reclassified" blanket ruling; was: `1h ✅`). This
+    table records the state as originally probed 2026-06-16; this doc's own later, dated resolution (todos below,
+    "CONFIRMED 2026-06-17") found UAC's stored Deribit `derivative_ticker.funding_rate` figure is the **8h** aggregate
+    (`interest_8h`), not the per-hour rate, so `FUNDING_CADENCE_SECONDS["deribit"]` was corrected `1h → 8h` to match
+    what's actually stored (the prior 1h value over-stated Deribit APY 8×). The "True cadence" column is unchanged —
+    Deribit's underlying settlement mechanics remain hourly; only the UAC registry value (which must match the stored
+    figure, not the raw settlement frequency) was corrected.
 
 So **`perp_funding_cadence` (UAC) is correct; `FUNDING_PERIODS_PER_DAY` (UTL) is wrong for Aster (8× over-states) and
 Deribit (8× under-states).** Any consumer of `FUNDING_PERIODS_PER_DAY` mis-annualises Aster/Deribit funding by 8×.
@@ -154,14 +172,12 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
       collect** (a `--cefi-operations trades` op or a dedicated handler) that runs aggTrades on the trades genesis floor
       independent of the funding floor — reusing `_write_aster_trades` (already trades-genesis-agnostic). **Repo:
       market-tick-data-service.** **⚠️ Do not execute this until GAP 4 below is resolved** — as currently scoped this
-      todo would backfill 2021-08-30→2023-07-22 as if it were native ASTER trading activity, which GAP 4 flags as
-      likely Binance-proxied / pre-venue-launch, not honest ASTER-native coverage.
+      todo would backfill 2021-08-30→2023-07-22 as if it were native ASTER trading activity, which GAP 4 flags as likely
+      Binance-proxied / pre-venue-launch, not honest ASTER-native coverage.
 - [x] ✅ [DATA] P3. **Aster OHLCV→cefi write = N/A (resolved by operator principle 2026-06-17).** OPERATOR PRINCIPLE:
-      OHLCV (open/high/low/close/volume) is a first-class data_type for **TradFi**; on **CeFi** we store `ohlcv_*`
-      directly **ONLY for a TRADES-LESS venue** (where OHLCV is the only data the source provides). **When a venue has
-      `trades` — as Aster does — we DERIVE candles from `trades` and do NOT store cefi `ohlcv_*`.** So the Aster OHLCV
-      leg is correctly not wired: Aster's candles come from its (now-canonicalized) `trades`. The `fetch_klines` +
-      `normalize_aster_kline` scaffolds stay available (cross-check use), but no `_write_aster_ohlcv` is added for Aster.
+      OHLCV (open/high/low/close/volume) is a first-class data*type for **TradFi**; on **CeFi** we store
+      `ohlcv*\_`     directly **ONLY for a TRADES-LESS venue** (where OHLCV is the only data the source provides). **When a venue has     `trades`— as Aster does — we DERIVE candles from`trades`and do NOT store cefi`ohlcv\_\_`.** So the Aster OHLCV     leg is correctly not wired: Aster's candles come from its (now-canonicalized) `trades`. The `fetch_klines`+    `normalize_aster_kline`scaffolds stay available (cross-check use), but no`\_write_aster_ohlcv`
+      is added for Aster.
 - [ ] [DATA] P3. **Latent capability: cefi `ohlcv_*` direct-write for a TRADES-LESS cefi venue** (NOT Aster). Today the
       cefi path builder hard-rejects `ohlcv_*` (`tardis_shared.py:73`), so a future OHLCV-only cefi venue (no trades
       endpoint) could not be wired. IF/WHEN such a venue is onboarded: relax the cefi `_LEGAL_DATA_TYPES` to admit
@@ -231,49 +247,51 @@ production is ready to produce real canonical Aster data.** Three findings/gaps 
 **e2e ↔ production parity (CONFIRMED):**
 
 - e2e harness `e2e-testing/scripts/defi/staked_basis_funding_scan.py::_fetch_aster_funding` pulls
-  `https://fapi.asterdex.com/fapi/v1/fundingRate?symbol=…` (paginated, no-auth, 8h cadence) → `{day: mean per-cycle
-  rate}`. It does NOT canonicalize — it builds an in-memory `FundingPoint` for the carry-rank snapshot only.
+  `https://fapi.asterdex.com/fapi/v1/fundingRate?symbol=…` (paginated, no-auth, 8h cadence) →
+  `{day: mean per-cycle rate}`. It does NOT canonicalize — it builds an in-memory `FundingPoint` for the carry-rank
+  snapshot only.
 - Production `_perp_funding_hl_aster._fetch_aster_funding` hits the **SAME** `{ASTER_API_URL}/fapi/v1/fundingRate`
-  endpoint, then `_write_aster_derivative_ticker` maps each settlement record `fundingRate`/`markPrice`/`fundingTime`
-  → `AsterMarkPrice`+`AsterFundingRate` → `normalize_aster_derivative_ticker` → `CanonicalDerivativeTicker` →
+  endpoint, then `_write_aster_derivative_ticker` maps each settlement record `fundingRate`/`markPrice`/`fundingTime` →
+  `AsterMarkPrice`+`AsterFundingRate` → `normalize_aster_derivative_ticker` → `CanonicalDerivativeTicker` →
   `data_type=derivative_ticker` at `asset_group=cefi`, `venue=ASTER`, `source=aster`, source-aware
   `batch_aster`/`live_aster`. Same raw API, same fields, same UAC normalizer — production produces the canonical shape
   the e2e harness's proven fetch reads.
 
-**Test result (credential-free, mtds `.venv`):** `pytest tests/unit/test_perp_funding_handler.py
-tests/unit/test_perp_funding_normalization.py -k aster` → **7 passed / 58s**. Covers `_collect_aster` →
-`_write_aster_derivative_ticker` + `_write_aster_trades` (mocked fetch), funding_rate column presence, and
-Hyperliquid/Aster same-sign convention.
+**Test result (credential-free, mtds `.venv`):**
+`pytest tests/unit/test_perp_funding_handler.py tests/unit/test_perp_funding_normalization.py -k aster` → **7 passed /
+58s**. Covers `_collect_aster` → `_write_aster_derivative_ticker` + `_write_aster_trades` (mocked fetch), funding_rate
+column presence, and Hyperliquid/Aster same-sign convention.
 
 **Live API → canonical end-to-end (network, real fetch):** fetched 3 live `BTCUSDT` funding records + ran each through
 `normalize_aster_derivative_ticker` → valid `CanonicalDerivativeTicker` (`instrument_key=ASTER:PERPETUAL:BTCUSDT`,
-`venue=ASTER`, `funding_rate` preserved incl. negative sign, `funding_timestamp` set). Live `fundingTime` spacing
-16:00 → 00:00 → 08:00 UTC = **8h confirmed** → matches UAC `perp_funding_cadence["aster"] = 8*3600` and handler
+`venue=ASTER`, `funding_rate` preserved incl. negative sign, `funding_timestamp` set). Live `fundingTime` spacing 16:00
+→ 00:00 → 08:00 UTC = **8h confirmed** → matches UAC `perp_funding_cadence["aster"] = 8*3600` and handler
 `_LIVE_VENUE_INTERVAL_S["ASTER"]=28800`. Annualisation will be correct.
 
 **GAP 1 — `mark_price` is NULL from this endpoint (P2, data-completeness).** The live `/fapi/v1/fundingRate` records
-return `"markPrice": null` (verified live 2026-06-17). So `_write_aster_derivative_ticker` writes
-`mark_price=None` — the derivative_ticker carries funding but NO mark. The carry strategy reads `funding_rate` (present)
-so this does not block the funding leg, but if any consumer needs Aster mark on the derivative_ticker shard it must be
-sourced from `/fapi/v1/premiumIndex` (Binance-Futures-compatible, carries `markPrice`). Handler docstring/comments
-assume `markPrice` "rides the fundingRate record" — TRUE on Binance, but Aster returns null. **Todo (P2):** source mark
-from `premiumIndex` in `_collect_aster` (or accept funding-only derivative_ticker for G5).
+return `"markPrice": null` (verified live 2026-06-17). So `_write_aster_derivative_ticker` writes `mark_price=None` —
+the derivative_ticker carries funding but NO mark. The carry strategy reads `funding_rate` (present) so this does not
+block the funding leg, but if any consumer needs Aster mark on the derivative_ticker shard it must be sourced from
+`/fapi/v1/premiumIndex` (Binance-Futures-compatible, carries `markPrice`). Handler docstring/comments assume `markPrice`
+"rides the fundingRate record" — TRUE on Binance, but Aster returns null. **Todo (P2):** source mark from `premiumIndex`
+in `_collect_aster` (or accept funding-only derivative_ticker for G5).
 
 **GAP 2 — genesis date disagrees across 3 sources (P1) — ✅ RESOLVED 2026-06-17 (operator-confirmed `2023-07-22`).**
-Was: handler `_ASTER_FUNDING_START_DATE = "2024-09-25"`; UAC `market_data_categories.py` Aster `perp_funding: "2024-10-01"`;
-operator stated `2023-07-22`. The live API returns rows back to `2022-01-01T00:00:00Z` (oldest queryable), but those
-very-early rows are a flat `0.00010000` placeholder (synthetic pre-launch backfill, not real settlements). **Operator
-confirmed 2026-06-17: genesis = `2023-07-22`** (the Astherus pre-rebrand venue). **IMPORTANT — pre-2024 Aster funding is
-BINANCE-PROXIED**: Astherus (pre-rebrand) mirrored Binance funding, so the 2023-07-22 → ~2024 window is _imported_
-Binance funding, NOT Aster-native settlements. Label `source` honestly (it is proxied, not native Aster) and treat the
-flat-`0.00010000` pre-2023-07-22 rows as pre-launch (`EXPECTED_PRE_VENUE_LAUNCH`). Reconciled to ONE value across every
-source: handler `_ASTER_FUNDING_START_DATE = "2023-07-22"`; UAC `market_data_categories.py` Aster trades/
-derivative_ticker/perp_funding `= "2023-07-22"`; UAC `venue_launch_dates.py` ASTER (CeFi + DeFi dicts) `= "2023-07-22"`;
-UAC `venue_mapping.py` `venue_start_dates["ASTER"] = "2023-07-22"`; UAC `_cefi.py` Aster `coverage_start` all data_types
-`= 2023-07-22`; MTDS + PM + deployment-service `expected_start_dates.yaml` ASTER `derivative_ticker = "2023-07-22"`; PM +
-deployment-service `data-catalogue.market-tick-data-service.yaml` ASTER `start_date = "2023-07-22"`; IS
-`adapters/cefi/aster.py` `_ASTER_LAUNCH_DATE` (reads `get_instrument_discovery_start` → now 2023-07-22). Shipped:
-mtds + unified-api-contracts + instruments-service + unified-trading-pm (this issue's commit set).
+Was: handler `_ASTER_FUNDING_START_DATE = "2024-09-25"`; UAC `market_data_categories.py` Aster
+`perp_funding: "2024-10-01"`; operator stated `2023-07-22`. The live API returns rows back to `2022-01-01T00:00:00Z`
+(oldest queryable), but those very-early rows are a flat `0.00010000` placeholder (synthetic pre-launch backfill, not
+real settlements). **Operator confirmed 2026-06-17: genesis = `2023-07-22`** (the Astherus pre-rebrand venue).
+**IMPORTANT — pre-2024 Aster funding is BINANCE-PROXIED**: Astherus (pre-rebrand) mirrored Binance funding, so the
+2023-07-22 → ~2024 window is _imported_ Binance funding, NOT Aster-native settlements. Label `source` honestly (it is
+proxied, not native Aster) and treat the flat-`0.00010000` pre-2023-07-22 rows as pre-launch
+(`EXPECTED_PRE_VENUE_LAUNCH`). Reconciled to ONE value across every source: handler
+`_ASTER_FUNDING_START_DATE = "2023-07-22"`; UAC `market_data_categories.py` Aster trades/ derivative_ticker/perp_funding
+`= "2023-07-22"`; UAC `venue_launch_dates.py` ASTER (CeFi + DeFi dicts) `= "2023-07-22"`; UAC `venue_mapping.py`
+`venue_start_dates["ASTER"] = "2023-07-22"`; UAC `_cefi.py` Aster `coverage_start` all data_types `= 2023-07-22`; MTDS +
+PM + deployment-service `expected_start_dates.yaml` ASTER `derivative_ticker = "2023-07-22"`; PM + deployment-service
+`data-catalogue.market-tick-data-service.yaml` ASTER `start_date = "2023-07-22"`; IS `adapters/cefi/aster.py`
+`_ASTER_LAUNCH_DATE` (reads `get_instrument_discovery_start` → now 2023-07-22). Shipped: mtds + unified-api-contracts +
+instruments-service + unified-trading-pm (this issue's commit set).
 
 **GAP 3 — Aster DATA absent in GCS by design (NOT a code gap).** The backfill VM is drain-gated at G5; no GCS data yet
 is expected. The code path is verified-ready; running it at G5 will produce real canonical `derivative_ticker` (+
@@ -284,33 +302,32 @@ UAC normalizer; tests pass; live API→canonical proven end-to-end; cadence (8h)
 produce real canonical Aster funding data at G5. Two non-blocking gaps to resolve before/at backfill: (P2) mark_price
 null → premiumIndex, (P1) reconcile the genesis date to a single operator-confirmed value.
 
-**GAP 4 — the GAP-2 genesis sweep to 2023-07-22 never touched the `trades` entry in `expected_start_dates.yaml`; it
-now disagrees with UAC (P1, data-correctness) — found 2026-07-07 during an unrelated ASTER/CEFI audit.**
-`market-tick-data-service/configs/expected_start_dates.yaml` still carries `ASTER: "2021-08-30"` for `trades` in
-three places (the instruments-service CEFI block, the MTDS CEFI venues block, and the `data_type_start_dates`
-block), annotated in its own comment as *"earliest aggTrades observed (BTCUSDT); trades-only; pre-launch data may
-be proxy/aggregated."* GAP 2's resolution (above) swept UAC's `market_data_categories.py` `trades` /
-`derivative_ticker` / `perp_funding` for ASTER all to `2023-07-22`, and named `expected_start_dates.yaml`'s
-`derivative_ticker` entry specifically as one of the files it touched — but never mentions `trades`, and the
-`trades` entry in that same file was left at `2021-08-30`. This was a deliberate carve-out, not solely an
-oversight: line 151-156 above already plans a standalone backfill of exactly this 2021-08-30→2023-07-22 window,
-under the (currently unstated) assumption that 2021-08-30 is a usable trades floor.
+**GAP 4 — the GAP-2 genesis sweep to 2023-07-22 never touched the `trades` entry in `expected_start_dates.yaml`; it now
+disagrees with UAC (P1, data-correctness) — found 2026-07-07 during an unrelated ASTER/CEFI audit.**
+`market-tick-data-service/configs/expected_start_dates.yaml` still carries `ASTER: "2021-08-30"` for `trades` in three
+places (the instruments-service CEFI block, the MTDS CEFI venues block, and the `data_type_start_dates` block),
+annotated in its own comment as _"earliest aggTrades observed (BTCUSDT); trades-only; pre-launch data may be
+proxy/aggregated."_ GAP 2's resolution (above) swept UAC's `market_data_categories.py` `trades` / `derivative_ticker` /
+`perp_funding` for ASTER all to `2023-07-22`, and named `expected_start_dates.yaml`'s `derivative_ticker` entry
+specifically as one of the files it touched — but never mentions `trades`, and the `trades` entry in that same file was
+left at `2021-08-30`. This was a deliberate carve-out, not solely an oversight: line 151-156 above already plans a
+standalone backfill of exactly this 2021-08-30→2023-07-22 window, under the (currently unstated) assumption that
+2021-08-30 is a usable trades floor.
 
-Recommendation: **2023-07-22 should win for any coverage %, missing-days, or backfill-target calculation** — the
-same logic already applied to funding (a confirmed flat placeholder before real launch) likely applies to trades
-too, and this file's own `aggTrades` endpoint has only ~30-day rolling depth, meaning whatever produced the
-2021-08-30 observation came from a different (archival/vendor) source than the live Astherus-native path — it is
-not native ASTER liquidity in the sense a coverage panel implies. The 2021-08-30 bytes are legitimate to keep
-archived, but only with an honest `source=` label (proxied/pre-launch), consistent with the "label source honestly"
-directive already applied to the funding leg — never counted as native ASTER coverage. Because this file's own
-header states it is "used to accurately calculate completion percentages," the current `trades: 2021-08-30` entry
-is live-risk, not just stale documentation: anything reading it today would treat the ~23-month gap as
-expected-and-missing ASTER trades days, contradicting `venue_launch_dates.py`'s `EXPECTED_PRE_VENUE_LAUNCH` clipping
-for the exact same venue and window.
+Recommendation: **2023-07-22 should win for any coverage %, missing-days, or backfill-target calculation** — the same
+logic already applied to funding (a confirmed flat placeholder before real launch) likely applies to trades too, and
+this file's own `aggTrades` endpoint has only ~30-day rolling depth, meaning whatever produced the 2021-08-30
+observation came from a different (archival/vendor) source than the live Astherus-native path — it is not native ASTER
+liquidity in the sense a coverage panel implies. The 2021-08-30 bytes are legitimate to keep archived, but only with an
+honest `source=` label (proxied/pre-launch), consistent with the "label source honestly" directive already applied to
+the funding leg — never counted as native ASTER coverage. Because this file's own header states it is "used to
+accurately calculate completion percentages," the current `trades: 2021-08-30` entry is live-risk, not just stale
+documentation: anything reading it today would treat the ~23-month gap as expected-and-missing ASTER trades days,
+contradicting `venue_launch_dates.py`'s `EXPECTED_PRE_VENUE_LAUNCH` clipping for the exact same venue and window.
 
 - [ ] [DATA] P1. Reconcile `expected_start_dates.yaml`'s `trades: 2021-08-30` entries for ASTER (all 3 locations)
-      against UAC's swept `2023-07-22` — either move the floor to 2023-07-22 to match, or, if the pre-2023-07-22
-      bytes are kept, add an explicit `source=` / proxy annotation so no coverage calculation treats that window as
-      honest native ASTER trades coverage. **Do this before executing the pre-funding-genesis trades backfill todo
-      above**, or the backfill will write real archived bytes labeled as native ASTER coverage for a period before
-      the venue is confirmed to have existed. **Repo: market-tick-data-service + unified-api-contracts.**
+      against UAC's swept `2023-07-22` — either move the floor to 2023-07-22 to match, or, if the pre-2023-07-22 bytes
+      are kept, add an explicit `source=` / proxy annotation so no coverage calculation treats that window as honest
+      native ASTER trades coverage. **Do this before executing the pre-funding-genesis trades backfill todo above**, or
+      the backfill will write real archived bytes labeled as native ASTER coverage for a period before the venue is
+      confirmed to have existed. **Repo: market-tick-data-service + unified-api-contracts.**

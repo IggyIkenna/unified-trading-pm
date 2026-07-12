@@ -136,7 +136,17 @@ approve / defer per category rather than per-venue.
       migration, not a drop). Regression tests added: `test_bybit_bare_alias_registered` +
       `test_okx_bare_alias_registered`. Closes ~26 of 104 cefi `blocked-not-registered` smoke-matrix cells (BYBIT ~13 +
       OKX ~13).
-- [ ] [CODE] P2. **COINBASE bare-name UAC removal + downstream migration** — **BLOCKED-BY-D2a** (BLK-9d69f223 resolved
+- [x] ✅ [CODE] P2. **COINBASE bare-name UAC removal + downstream migration** — **DONE 2026-07-10** (was:
+      **BLOCKED-BY-D2a**, see original blocker text below, kept for provenance) — **CORRECTION (2026-07-12, finding id
+      98, §A2 "50 reclassified" blanket ruling):** landed via
+      `unified-api-contracts@42270f63a6aa3c5595df6232f5ccb68a5d5faf35` (2026-07-10, "feat(registry): migrate bare
+      COINBASE cefi venue key to COINBASE-SPOT", verified on `live-defi-rollout`), executing the
+      `coinbase_bare_name_migration_2026_07_06.md` plan drafted below. Bare `COINBASE` removed from
+      `VENUES_BY_ASSET_GROUP["cefi"]` + re-keyed to `COINBASE-SPOT`; the D2a `_CEFI_VENUE_FOLD` regression this task's
+      blocker warned about was guarded against explicitly (comment at `market_data_categories.py:261-270`). Remaining
+      bare-`COINBASE` references in UAC (verified via grep 2026-07-12) are all the intentionally-KEPT DeFi-LST
+      cbETH-issuer key (`_defi_lst.py`, `lst.py`, `expected_coverage.py:281`, `venue_launch_dates.py:236`) per the
+      migration plan's explicit KEEP-BARE carve-out — not a residual gap. Original blocker text (BLK-9d69f223 resolved
       2026-07-06 by main after slot-4 escalation): the D2a naming reconciliation `uac@e76d874a` (shipped 2026-07-06
       18:26 by Harsh, `feat(registry): cefi INSTRUMENT_TYPES_BY_VENUE completes the 10 declared venues     (D2a)`)
       EXPLICITLY requires bare `COINBASE` to REMAIN in `VENUES_BY_ASSET_GROUP` + `INSTRUMENT_TYPES_BY_VENUE` — bare

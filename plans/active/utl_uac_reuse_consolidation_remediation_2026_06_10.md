@@ -1,16 +1,25 @@
 ---
 doc_type: plan
 title: UTL/UAC reuse consolidation — kill local reimplementations, strongest-combination merge
-summary: Kill local reimplementations of UTL/UAC utilities across all services and replace with the canonical strongest-combination merge.
+summary:
+  Kill local reimplementations of UTL/UAC utilities across all services and replace with the canonical
+  strongest-combination merge.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]
 tags: [utl, uac, consolidation, refactor, deduplication, remediation]
-related: [plans/epics/infrastructure_master.md, plans/epics/strategy_master.md, plans/epics/features_and_ml_master.md, plans/epics/execution_master.md, plans/epics/orchestrator_master.md]
-created: '2026-06-10'
+related:
+  [
+    plans/epics/infrastructure_master.md,
+    plans/epics/strategy_master.md,
+    plans/epics/features_and_ml_master.md,
+    plans/epics/execution_master.md,
+    plans/epics/orchestrator_master.md,
+  ]
+created: "2026-06-10"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -18,7 +27,7 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 7.2
-last_updated: 2026-06-27
+last_updated: 2026-07-12
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 supersedes:
@@ -47,6 +56,12 @@ preserve the residual; where the lib lacks a load-bearing local control, **exten
 **Clean repos (audit found nothing actionable — do not touch):** market-data-processing-service, trading-agent-service,
 fund-administration-service, ibkr-gateway-infra, batch-live-reconciliation-service, greeks-service (math is correctly
 local; one trivial LOW stub only).
+
+> **Frontmatter correction (2026-07-12)**: `repos:` (was: included `batch-live-reconciliation-service`) dropped it per
+> `PLAN_FORMAT.md`'s definition of `repos:` as "list of repos this touches" — this doc's own settled verdict above is
+> "do not touch," and a full-doc grep confirms zero Phase todos reference it anywhere else. Finding #64,
+> plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified"
+> blanket ruling.
 
 ---
 
@@ -352,28 +367,22 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       (tmux*spawn/autospawn forward ambient `WORKSPACE_ROOT`/ `UNIFIED_TRADING_WORKSPACE_ROOT` verbatim to a spawned
       worker — NOT orchestrator config). All `noqa`-documented. SHAs: W1 `86abf79` · W2 `2fe6266` · W3
       `b955bb5`/`2aa92af`/`f1cec7f` · W4 `2eb63b5`/`0d74f2f`/`fb94fca` · W5 `3a055cf`/`6c2fbba`. Migrated: migrate **107
-      distinct env-var names / 151 `os.environ.get` call-sites** (measured 2026-06-22:
-      `rg     '(?:os\.getenv|os\.environ\.get)\("([A-Z*]+)"'     server/`) onto typed `OrchestratorConfig`fields.
-      **Operator 2026-06-22 escalated this from DEFERRED → DO-IT-ROBUSTLY**: "SSOT deviation + wrong values avoidable by
-      type safety are NOT zero behaviour changes — for AO to be the reliable beast it must be robust." So this is a
-      deliberate **reliability upgrade**, not churn: a malformed/out-of-range knob now **fails loud at config-load**
-      (typed + bounded fields) instead of silently degrading to a default deep in a loop. **Test-semantics solved** (the
-      original deferral reason):`OrchestratorConfig` reads **os.environ only** (`env_file=None`— parity with the old
-      `os.environ.get`, no stray-`.env`pollution),`get_config()`is a **reset-able** singleton, and a conftest autouse
-      `reset_config()`fixture rebuilds it per test so`monkeypatch.setenv`works unchanged. All reads **deferred** to
-      call/construction time (the watchdog's import-frozen module constants move into`**init**`/use-site). Blank/unset →
-      default; genuine garbage → loud. Repo: agent-orchestrator. **Waves** (each: QG-green → quickmerge → journal):
+      distinct env-var names / 151 `os.environ.get` call-sites** (measured 2026-06-22: `rg
+      '(?:os\.getenv|os\.environ\.get)\("([A-Z*]+)"'
+      server/`) onto typed `OrchestratorConfig`fields.     **Operator 2026-06-22 escalated this from DEFERRED → DO-IT-ROBUSTLY**: "SSOT deviation + wrong values avoidable by     type safety are NOT zero behaviour changes — for AO to be the reliable beast it must be robust." So this is a     deliberate **reliability upgrade**, not churn: a malformed/out-of-range knob now **fails loud at config-load**     (typed + bounded fields) instead of silently degrading to a default deep in a loop. **Test-semantics solved** (the     original deferral reason):`OrchestratorConfig` reads **os.environ only** (`env_file=None`— parity with the old     `os.environ.get`, no stray-`.env`pollution),`get_config()`is a **reset-able** singleton, and a conftest autouse     `reset_config()`fixture rebuilds it per test so`monkeypatch.setenv`works unchanged. All reads **deferred** to     call/construction time (the watchdog's import-frozen module constants move into`**init**`/use-site).
+      Blank/unset → default; genuine garbage → loud. Repo: agent-orchestrator. **Waves** (each: QG-green → quickmerge →
+      journal):
   - [x] ✅ **Wave 1 — foundation + config.py resolver group** (`agent-orchestrator@86abf79`, QG 853✓ +6 tests
         2026-06-22): `env_file=None` + `reset_config()` + conftest autouse reset; migrated mode / db_path / state_json /
         backlog / accounts / backends / claude_accounts_dir / server_url / operator / vm_id / review_slots /
         main_loop_seconds / review_loop_seconds / fleet_worker_cap onto typed fields; fail-loud on bad MODE / non-int /
         ≤0 loop-seconds; deleted `_positive_int_env`. Proved the mechanism (170 monkeypatched-resolver tests green).
   - [x] ✅ _*Wave 2 — `worker_liveness_watchdog.py` (16 WATCHDOG*\* + 4 CONTEXT_BURN_\*) + `worker_liveness/__init__.py`
-        (4)** (`agent-orchestrator@2fe6266`, QG ✓ 2026-06-22): 24 knobs onto typed+bounded fields (gt=0 intervals, ge=0
-        caps, le=100 pct); shared `BoolEnvFalse` (blank→False, `{1,true,yes,on}` parity); import-frozen module constants
-        now sourced from `get_config()` (names kept for the 71 use-sites + tests that import them); the lenient
-        `try/except`-on-bad LIVENESS read is now fail-loud; deleted the orphaned `DEFAULT_INTERVAL_SECONDS` + dropped
-        the dead `_WATCHDOG_ENABLED_ENV`/`import os`. +5 config-bounds/BoolEnvFalse tests.
+        (4)\*\* (`agent-orchestrator@2fe6266`, QG ✓ 2026-06-22): 24 knobs onto typed+bounded fields (gt=0 intervals,
+        ge=0 caps, le=100 pct); shared `BoolEnvFalse` (blank→False, `{1,true,yes,on}` parity); import-frozen module
+        constants now sourced from `get_config()` (names kept for the 71 use-sites + tests that import them); the
+        lenient `try/except`-on-bad LIVENESS read is now fail-loud; deleted the orphaned `DEFAULT_INTERVAL_SECONDS` +
+        dropped the dead `_WATCHDOG_ENABLED_ENV`/`import os`. +5 config-bounds/BoolEnvFalse tests.
   - [x] ✅ **Wave 3 — daemon/loop tunables** (3a+3b+3c all shipped 2026-06-22):
     - [x] ✅ **3a — autospawn.py** (`agent-orchestrator@b955bb5`, QG ✓): interval/cooldown/enabled/five-hour+weekly
           pct-ceilings/review-heartbeat-override onto typed fields; pct ceilings bounded 0..100; deleted `_env_pct` + 2

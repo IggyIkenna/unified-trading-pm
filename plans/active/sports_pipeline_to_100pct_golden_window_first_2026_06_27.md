@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-06-27
 parent_epic: sports_master
-assigned_vm: planning
+assigned_vm: NA # corrected 2026-07-12, was: planning (invalid pairing w/ execution_scope: local-only per task_template.md's two valid tracks — finding 265)
 execution_scope: local-only
 priority: P0
 estimate_class: design
@@ -61,17 +61,22 @@ the 10 dispatchable children (this coordinator's DAG) ---
 - plans/active/instruments_foundation_completeness_2026_06_24.md
 - plans/active/data_completion_to_100_all_ag_2026_06_21.md
 - plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md
-- plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md summary: | # | Requirement |
-  Definition of done ... nature: process asset_group: cross-asset stage: [meta] repos: [] scope: [engineer, admin] tags:
-  [] related: [] created: 2026-06-27 depends_on: [] last_updated: 2026-06-27
+- plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md
+
+_(Corrected 2026-07-12: removed a corrupted duplicate mid-body YAML-like block that had been appended to this bullet —
+merge/paste debris, dead body text per `scripts/docs/docspec.py`'s `parse_frontmatter` (only the region between the
+FIRST two `---` markers at the top of the file is parsed as YAML); the debris's `asset_group: cross-asset` / `repos: []`
+/ `tags: []` conflicted with the real frontmatter's `asset_group: [sports]`. Finding 264,
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.)_
 
 ---
 
 > **🟢 COORDINATOR (read-only map). This file is `execution_scope: local-only` — the orchestrator does NOT ingest it.**
-> All dispatchable work lives in the 10 child plans listed in `related_plans` (each `assigned_vm: NA` +
-> `assigned_role` + `execution_scope: orchestrator-agent`, `status: active` — role-based dispatch, no epic VM). This doc
-> is the DAG + R1–R5 map + re-homed-work inventory + operator runbook. Update it (flip the child-status table) as
-> children land; it is the R1–R5 burn-down tracker.
+> All dispatchable work lives in the 10 child plans listed in `related_plans` (each `assigned_vm: planning` +
+> `assigned_role` + `execution_scope: orchestrator-agent`, `status: active` — role-based dispatch, no epic VM; corrected
+> 2026-07-12, was: `assigned_vm: NA` — finding 261, grep-verified 11/11 children actually carry
+> `assigned_vm: planning`). This doc is the DAG + R1–R5 map + re-homed-work inventory + operator runbook. Update it
+> (flip the child-status table) as children land; it is the R1–R5 burn-down tracker.
 
 # Sports pipeline to 100% — golden-window-first
 
@@ -200,7 +205,10 @@ on being shipped).
   `sports_p0_spot_vm_launchers_2026_06_27.md` (Phase 0), which makes SPOT the forced default in the sports launchers
   (currently NONE support it). Safe because backfills are idempotent/skip-existing (a reclaimed VM relaunches + resumes)
   and the monitors are made preemption-aware so a reclaim is NOT a false `DP_VM_GONE_NO_CAPTURE` (preserves R5).
-- **Role-based dispatch — NO epic VM (single-VM architecture, 2026-06-27).** Each child carries `assigned_vm: NA` +
+- **Role-based dispatch — NO epic VM (single-VM architecture, 2026-06-27).** Each child carries `assigned_vm: planning`
+  (corrected 2026-07-12, was: `assigned_vm: NA` — grep-verified 11/11 children carry `assigned_vm: planning`, e.g.
+  `sports_p1_golden_window_features_2026_06_27.md:15`; finding 261,
+  `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling) +
   `assigned_role` (data_engineering / infra) + `execution_scope: orchestrator-agent` — the central orchestrator
   dispatches them **by ROLE, not VM** (epic VMs deprecated per CLAUDE.md; there is no `vm-sports` to start).
   `status: active` (already set) = the green-light; they ingest on the next role-based regen tick.

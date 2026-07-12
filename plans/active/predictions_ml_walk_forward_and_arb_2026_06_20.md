@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Predictions ML Model 2A walk-forward + arb_calculator (sports_predictions_e2e predictions half)
-summary: Run Model 2A walk-forward validation (AUC gate) and ship the FSS arb_calculator — the predictions-ML half of the sports_predictions_e2e milestone.
+summary:
+  Run Model 2A walk-forward validation (AUC gate) and ship the FSS arb_calculator — the predictions-ML half of the
+  sports_predictions_e2e milestone.
 status: active
 nature: process
 asset_group: [prediction, sports]
@@ -10,7 +12,7 @@ repos: [features-service, ml-service]
 scope: [engineer, admin]
 tags: [prediction, ml, walk-forward, arb-calculator, model-2a, auc, sports, feature-service]
 related: [../epics/predictions_master.md, ../epics/sports_master.md]
-created: '2026-06-12'
+created: "2026-06-12"
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -52,10 +54,14 @@ downstream of the sports-half FSS feature production (the Group E gate).
 
 - [ ] [SCRIPT] P0. Run ml-training Model 2A walk-forward against the Group-D-validated feature matrix. (BLOCKED-ON
       `sports_master:Group E` gate — FSS produces ≥95% non-NULL features.)
-- [x] ✅ [ANALYSIS] P0. Acceptance metrics — log-loss, calibration, AUC for win/draw/loss; threshold per the
-      consolidated plan bar. (BLOCKED-ON the walk-forward run above.) — ml-service@f3faf64 |
+- [x] ✅ [ANALYSIS] P0. Acceptance-metrics computation code + unit tests (was: ticked as fully done — corrected
+      2026-07-12, finding 241, §A2 "50 reclassified" blanket ruling). — ml-service@f3faf64 |
       `backtest_v2/acceptance_metrics.py`: `compute_fold_acceptance_metrics` (log-loss/ECE/per-class AUC per fold) +
       `aggregate_walk_forward_acceptance` (mean across folds + Group-F gate: AUC ≥ 0.55 AND ECE ≤ 5%); 18 unit tests.
+      Code + tests only — NOT yet run against real walk-forward output.
+- [ ] [ANALYSIS] P0. Run the acceptance-metrics computation above against the real walk-forward output (BLOCKED-ON line
+      53's walk-forward run, itself BLOCKED-ON `sports_master:Group E` gate — `plans/epics/sports_master.md` line 598,
+      still unchecked as of that epic's last_updated 2026-06-24).
 - [x] ✅ [SCRIPT] P0. Training-config sanity check: feature columns match the FSS schema, label leakage absent,
       walk-forward window correct. — ml-service@872acbb | Fixed: (1) `SPORTS_MODEL_2A_GRID.feature_groups` corrected
       from 15 invalid calculator-level names to `["derived_features","odds_features"]` (the two valid GCS path groups);

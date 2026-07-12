@@ -29,7 +29,11 @@ locked_since: 2026-05-21
 
 # Deployment And User Management Master
 
-**Owns**: deployment-api + deployment-ui + user-management-service + user-management-ui
+**Owns**: deployment-api + deployment-ui (was: also user-management-service + user-management-ui — dropped 2026-07-12:
+both ARCHIVED per `codex/DEPRECATED_UIS_NOTICE.md` + `codex/05-infrastructure/ui-functionality-requirements.md` ("User
+Management | user-management-ui | archived") + CLAUDE.md's system map ("`user-management-ui` ARCHIVED"); no
+`user-management-service` repo exists in the workspace. Findings #314/#385, plan-reconciliation
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.)
 
 **Status**: stub created 2026-05-21 by `migrate_epics_2026_05_21.py`. Operator fills body with P0/P1/P2/P3 priority
 blocks listing all assigned active plans.
@@ -38,9 +42,10 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## UI Verification Contract (HARD RULE — codified 2026-05-23)
 
-All active plans under this epic that touch any UI repo (`deployment-ui`, `user-management-ui`,
-`unified-trading-system-ui`) MUST pass the playwright verification gate before any todo is ticked ✅ done. Per
-`plans/PLAN_FORMAT.md` § 9 and `codex/06-coding-standards/ui-testing-layers.md` § "Plan-Level Enforcement":
+All active plans under this epic that touch any UI repo (`deployment-ui`, `unified-trading-system-ui` — was: also
+`user-management-ui`, ARCHIVED, see "Owns" note above, corrected 2026-07-12) MUST pass the playwright verification gate
+before any todo is ticked ✅ done. Per `plans/PLAN_FORMAT.md` § 9 and `codex/06-coding-standards/ui-testing-layers.md` §
+"Plan-Level Enforcement":
 
 - **`[UI]` tag**: every UI-touching todo MUST use `[AGENT][UI]` or `[HUMAN][UI]` (not bare `[AGENT]`).
 - **pw:L2 ✓**: `npx playwright test --project=chromium tests/smoke/` exits 0 before tick.
@@ -69,18 +74,33 @@ Key deployment/user-management UI surfaces and their required layers:
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
+_2 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+> **Corrected 2026-07-12 (was: banner + P0/P2 blocks below showed 0 active plans, unrun since the two plans below were
+> created)** — manually resynced against a live grep of `plans/active/*.md` `parent_epic:` frontmatter (the populator
+> script's own `WORKSPACE` path is hardcoded to a different host and scans all 19 epics at once, out of scope for this
+> single-file reconciliation pass; the entries below reproduce its documented output format). Finding #314,
+> plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified"
+> blanket ruling.
 
 ## P0 — must complete before next foundation gate
 
-_(no plans currently assigned at this priority)_
+### [`data_status_tab_and_downloads_remediation_2026_06_16`](../active/data_status_tab_and_downloads_remediation_2026_06_16.md)
+
+**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) · **title**: Data-status tab + instruments download
+remediation (deployment-api / deployment-ui / CeFi universe)
 
 ## P1 — important; post-current-gate
 
 _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
+
+### [`test_fleet_image_builds_from_current_code_2026_06_17`](../active/test_fleet_image_builds_from_current_code_2026_06_17.md)
+
+**status**: active · **estimate**: 4.8 cal AI-days (class: research) · **title**: Test fleet image builds from current
+code — local (amd64) → GCP → AWS, base-first, no-deploy
 
 ### [`gap_2_4_d_deployment_api_reader_repoint_2026_05_22`](../archive/2026_05/gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md)
 

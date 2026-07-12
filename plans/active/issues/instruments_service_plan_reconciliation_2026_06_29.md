@@ -91,6 +91,15 @@ Citations are file:line or plan/commit.
   only. The "push the split INTO UAC / drop bare forms" approach was **REJECTED** (cross-service breaking via UTL
   `Venue` enum). _(registry FINAL Decision A.)_ **Conflicts:** plans proposing to add `OKX-SWAP`/`COINBASE-SPOT` to UAC
   or drop bare `OKX`/`COINBASE`.
+  - **CORRECTION (2026-07-12, finding id 98, §A2 "50 reclassified" blanket ruling):** the bare-`COINBASE` half of this
+    REJECTED ruling was superseded by a later 'main' directive + the executed
+    `coinbase_bare_name_migration_2026_07_06.md` plan (was: "bare COINBASE KEPT, drop-bare-forms REJECTED" — now: bare
+    `COINBASE` was safely RE-KEYED to `COINBASE-SPOT` in `VENUES_BY_ASSET_GROUP["cefi"]`, landed
+    unified-api-contracts@42270f63 2026-07-10, "feat(registry): migrate bare COINBASE cefi venue key to COINBASE-SPOT",
+    on `live-defi-rollout`). The migration explicitly guarded against the exact `_CEFI_VENUE_FOLD` cross-service
+    regression A3 warned about (see `market_data_categories.py:261-270` comment). **Bare `OKX` was NOT touched** — it is
+    still KEPT alongside a new `OKX-SPOT` entry (2026-07-10), so A3's OKX half stands as originally written; only the
+    COINBASE half is corrected here.
 - **A4 `LANDED`** — **sports = TWO registries, EXEMPT from set-equality.** IS owns reference-data providers
   (API*FOOTBALL/FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SOCCER_FOOTBALL_INFO/OPEN_METEO); UAC sports = MTDS **odds** venues
   (ODDS_API/PINNACLE/BETFAIR\*/DRAFTKINGS/FANDUEL). Do **NOT** merge. *(registry Decision C.)\_ **Conflicts:** plans
@@ -954,8 +963,8 @@ urgency (ohlcv non-MVP) but a real honest-absence violation; recommend the ~10-l
   foundation plan. C5 (Deribit "G1 COMPLETE"): pulled LIVE `coverage.json` 2026-06-30 → CONFIRMED FALSE — Deribit
   OPTION/options_chain captured=0 eu=437,692 (only a degenerate captured=1 bundle shard; codex:280 calls captured≈1 a
   Layer-1 hole); "VMs gone = complete" masked a silent-zero → data-correctness re-backfill needed. Live run also
-  corrects C4 (Layer-1 14.88%→65.91%) and quantifies C2 (118 stray tuples incl. exact ASTER book5/liquidations). C4/C5
-  ⏸ AWAITING IKENNA. Kept LOCAL/unpushed per operator.
+  corrects C4 (Layer-1 14.88%→65.91%) and quantifies C2 (118 stray tuples incl. exact ASTER book5/liquidations). C4/C5 ⏸
+  AWAITING IKENNA. Kept LOCAL/unpushed per operator.
 - **2026-06-30** — **C6-C9 walked (remaining cefi-MVP contradictions); cefi index C1-C9 COMPLETE.** C6 (retired
   `VENUE_FETCH_FAILED`): code-confirmed retired from emission (sentinels.py) but 482,518 historical rows preserved in
   live cefi manifest (0 `UNCLASSIFIED` rows) → task valid, MINOR relabel-only. C7 (A19 65.91% as done-bar):

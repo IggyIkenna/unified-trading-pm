@@ -16,13 +16,12 @@ This is the canonical index of all active plans. Plans are organized by domain.
   asset_groups ahead of the 2026-05-23 DeFi cutover. Topology: MTDS standalone cluster (websocket-pool concerns
   isolated), MDPS+features-asset-scoped colocated per asset_group, features-cross-cutting standalone flavor of same
   image. Cascade: MTDS → MDPS → features-service via Redis Streams (CANDLE_BOUNDARY_CROSSED → CANDLE_COMPUTED →
-  FEATURES_COMPUTED) with UTC midnight alignment end-to-end so batch ↔ live reconciliation is a
-  `GROUP BY pipeline_mode` over the same manifest. Live gap semantics extend the 4-category empty-output tree with
-  stale-not-missing wiring via ServiceEmissionPolicy.PUBLISHED_DEGRADED. Replay subsystem covers intraday- restart gap
-  windows with smooth handoff to live at the next aligned boundary. Health-API extension + alerting-service tier-up +
-  circuit breakers wired to strategy-service. Instrument-cache-delta hot-reload pattern (mirrors ApiKeyReloader; NOT a
-  new dedicated stream). 15 phases, ~10d wall-clock. Pre-reqs: features_repo_consolidation Phase 7 +
-  gcs_migration_bundle Phase 9.
+  FEATURES_COMPUTED) with UTC midnight alignment end-to-end so batch ↔ live reconciliation is a `GROUP BY pipeline_mode`
+  over the same manifest. Live gap semantics extend the 4-category empty-output tree with stale-not-missing wiring via
+  ServiceEmissionPolicy.PUBLISHED_DEGRADED. Replay subsystem covers intraday- restart gap windows with smooth handoff to
+  live at the next aligned boundary. Health-API extension + alerting-service tier-up + circuit breakers wired to
+  strategy-service. Instrument-cache-delta hot-reload pattern (mirrors ApiKeyReloader; NOT a new dedicated stream). 15
+  phases, ~10d wall-clock. Pre-reqs: features_repo_consolidation Phase 7 + gcs_migration_bundle Phase 9.
 
 - [features_repo_consolidation_2026_05_08.md](features_repo_consolidation_2026_05_08.md) — **Pre-requisite for
   live-pipeline.** Merge 8 separate `features-*-service` repos (calendar / commodity / cross-instrument / delta-one /
@@ -187,8 +186,12 @@ reference + examples for testing any DeFi strategy
 - prediction_capture_incident_remediation_2026_07_06.md — Remediation for the 07-01→07-06 prediction-capture outage: (A)
   capture-path dtype hardening (UTL Int64/bool/float coercion shipped; residuals split out, see below) + (B)
   KALSHI/POLYMARKET-PERP adapter correction (wrong Kalshi host → fake PERPETUAL contamination of cefi — guard + purge
-  DONE; demo-first repoint gated on the pre-existing `prediction_venue_perps_and_live_clob_depth` plan's ownership; prod
-  cutover gated on access). References issue `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`.
+  DONE (guard+purge); demo-first repoint (Phase 1-3, no access needed) is PARALLEL/unblocked; prod cutover (Phase 4)
+  gated on operator access — corrected 2026-07-12, finding id 2, §A2 "50 reclassified" blanket ruling (was: "demo-first
+  repoint gated on the pre-existing `prediction_venue_perps_and_live_clob_depth` plan's ownership" — unsupported;
+  Workstream B's own header + Phase 0-3 in `prediction_capture_incident_remediation_2026_07_06.md`, and the sibling plan
+  itself, contain no ownership-gating statement anywhere in their bodies)). References issue
+  `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`.
 - **is-daily-enum capture heal + consolidator fix — AO-ready (2026-07-07; born draft):**
   is_daily_enum_capture_heal_2026_07_07.md (exc_info fix → real diagnosis → fix → backfill; one sequential thread) +
   manifest_consolidator_dtype_at_source_fix_2026_07_07.md (independent, different repo — parallel). Both split from

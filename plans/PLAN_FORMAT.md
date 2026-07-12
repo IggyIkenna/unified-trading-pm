@@ -624,17 +624,28 @@ Plans that are infra/deployment type always enforce their D-gates regardless of 
 
 ## Structural Order (MANDATORY)
 
+> **Corrected 2026-07-12** (doc-reconciliation autofix, finding 381, `plan_reconciliation_operator_decisions_2026_07_11.md`
+> §A2 "50 reclassified" blanket ruling): this section previously described the `todos:`-in-frontmatter-YAML mechanism,
+> which only matches the **Legacy schema (pre-2026-05-21)** above — the doc's own canonical Active-plan/wrapper-plan
+> schema (§ "YAML Frontmatter Schema (Canonical SSOT)", lines 78–118) has no `todos:` frontmatter field, and the actual
+> mechanism is body-markdown `- [ ]`/`- [x]` checkboxes per the "Cursor-Friendly Todo Checkboxes (MANDATORY)" section
+> below — matching real practice and what `regen_backlog_from_plan.py` ingests. (was: "ALL todos and completion gates
+> MUST appear in the frontmatter YAML block.")
+
 Plans MUST follow this section order:
 
-1. **Frontmatter** (name, overview, type, status, completion_gates, depends_on, todos with checkboxes)
-2. **Notes / Context** (architecture, mermaid diagrams, references)
+1. **Frontmatter** (canonical fields per "YAML Frontmatter Schema (Canonical SSOT)" above — `doc_type`, `title`,
+   `status`, `parent_epic`, `assigned_vm`, etc.)
+2. **Notes / Context** (architecture, mermaid diagrams, references, and the todos themselves as body-markdown
+   checkboxes — see "Cursor-Friendly Todo Checkboxes (MANDATORY)" below)
 
 **Why:** The conflict-resolution-agent reads `head -250` per plan. If todos are buried after
 250 lines of notes, the agent cannot see them during conflict resolution. Keep actionable
-content at the top.
+content (including the todo checkboxes) near the top.
 
-**Rule:** ALL todos and completion gates MUST appear in the frontmatter YAML block. Notes,
-architecture context, Mermaid diagrams, and references go AFTER the closing `---` of frontmatter.
+**Rule:** Todos are body-markdown `- [ ]`/`- [x]` checkboxes (per "Cursor-Friendly Todo Checkboxes (MANDATORY)"),
+kept near the top of the doc, NOT inside the frontmatter YAML block. The frontmatter carries the plan's declared
+metadata (status, gates, ownership) per the canonical schema above.
 
 ---
 
