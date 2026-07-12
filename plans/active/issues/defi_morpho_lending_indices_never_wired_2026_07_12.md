@@ -561,3 +561,50 @@ silent-filing-failure pattern re-check #9 already flagged for re-check #8. Re-fi
 follow-up `GET /api/state` that it landed this time (`blocked_queue` count 10→11). Not re-litigating the underlying
 precondition further — re-checks #4-#9 already established it exhaustively; this entry exists only to confirm the
 parking request finally reached main/operator. `skip-current-task`'d.
+
+### Re-check #11 — unchanged (VM at 2023-05-15); root-caused WHY parking requests keep vanishing (blocked-queue entries die with their dispatch); refiled as `BLK-c7e188e2` and confirmed it survives — 2026-07-12T12:38Z (data_engineering slot-10)
+
+11th dispatch on this exact todo. Live-verified rather than trusted: VM `mtds-lending-indices-20260712-112557` still
+`RUNNING` (`asia-northeast1-c`), `run.log` tail at `date=2023-05-15` (forward progress from re-check #10's `2023-04-29`
+observation ~7 min earlier — same ~2.3 days/min pace every prior re-check observed, no `Unknown lending protocol` / no
+`uniqueKey`-GraphQL errors). Per-VM shard fresh (`Update time: 2026-07-12T12:37:57Z`). Consolidated
+`_index/availability_index.parquet` **still** `Update time: Fri, 10 Jul 2026 21:42:30 GMT` — byte-identical to all 8
+prior re-checks (#4-#10), now the 9th consecutive confirmation of the identical timestamp. At the observed pace, genesis
+(2024-01-01, ~231 days out from 2023-05-15) is realistically **~1.4h out**.
+
+**Checked `GET /api/state.blocked_queue` directly before re-filing** (per re-check #9/#10's precedent of verifying
+rather than trusting a "filed" claim): confirmed `BLK-66f6516d` (re-check #10's filing) is ALSO absent from the current
+queue — same fate as `BLK-0c06a5c6`. Only `BLK-1ffbd75b` (the original tarball-staleness finding, filed 11:10Z, still
+unanswered) persisted across all these skip cycles.
+
+**Root-caused the vanishing pattern** (read `agent-orchestrator/server/routes/slots_ops.py`'s `skip-current-task`
+handler): a blocked-question record appears to be scoped to its originating dispatch/task-row lifecycle, not durable
+independent of it. Every dispatch on this todo ends in `skip-current-task` (correctly — none can usefully proceed), and
+`skip-current-task` mutates the task row (`release_task_to_queue` / orphan-and-delete path) each time. The net effect:
+any blocked-question filed during dispatch N is gone by the time dispatch N+1 checks the queue, because dispatch N's
+`skip-current-task` call already ran before N+1 started. This is NOT a filing bug — the `POST /api/slots/.../blocked`
+call itself succeeds and the record does land (confirmed this dispatch: `blocked_queue` count 10→11 immediately after
+filing) — it just doesn't survive the very next `skip-current-task` on this same todo. **This means the parking
+mechanism as used by re-checks #6, #9, #10 structurally cannot work for a todo that gets skip-current-task'd every
+single dispatch** — by design, skip clears exactly the state a park recommendation needs to persist through.
+
+**Filed `BLK-c7e188e2`** with the same parking recommendation PLUS this root-cause explanation, so whoever reads it
+(before I skip and it potentially vanishes again) has the full picture in one place, and flagged the structural gap
+itself as worth fixing (a parking recommendation should probably survive the filer's own skip, or route through a
+mechanism that isn't a per-dispatch blocked-question). Workers have no `backlog.yaml` write access (root-clone hand-edit
+is explicitly banned — `agent-orchestrator/data/config/backlog.yaml` lives outside every slot's worktree and isn't even
+present as a git-tracked file inside `.tabs/<slot>/agent-orchestrator/`), so a `prereqs.conditions` gate can only be
+added by main/operator, not by any craft worker no matter how many times this bounces.
+
+**Practical note for the fleet**: this task has now been dispatched to slot-3(×2), slot-9, slot-12, slot-7, slot-8,
+plan-health-slot-5, slot-11, slot-6, slot-2, and slot-10 — likely covering most/all active slots' one-time
+`skip-current-task` exclusion (`slot_skips` is per-(slot,task) and permanent per the handler's own docstring, with no
+self-service unskip). If so, this dispatch storm may self-terminate simply because every slot has now exhausted its skip
+on this exact task_id — worth checking `slot_skips` row count for this task_id before assuming another park mechanism is
+still needed.
+
+`skip-current-task`'d. Whoever next has main/operator authority should: (1) action `BLK-c7e188e2` (or its predecessors'
+identical recommendation) by adding a `prereqs.conditions` gate to this backlog entry, (2) verify whether `slot_skips`
+has now exhausted every slot for this task_id (in which case no further action may be needed until an operator manually
+re-enables it), and (3) once the VM reaches `COMPLETE` (~1.4h+ out) AND the consolidator resumes (tracked in
+`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`), run the actual G2 gate commands from the parent plan.
