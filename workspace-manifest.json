@@ -533,7 +533,8 @@
         "large_file_count": 0,
         "coverage_pct": 85.39,
         "warn_file_count": 11
-      }
+      },
+      "ldr_ci_status": "GREEN"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -594,7 +595,8 @@
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 0
-      }
+      },
+      "ldr_ci_status": "GREEN"
     },
     "greeks-service": {
       "promotion_model": "ldr_main",
@@ -653,7 +655,8 @@
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 0
-      }
+      },
+      "ldr_ci_status": "GREEN"
     },
     "ibkr-gateway-infra": {
       "promotion_model": "ldr_main",
@@ -947,7 +950,8 @@
         "coverage_pct": 82.68,
         "warn_file_count": 5,
         "qg_red_reason": null
-      }
+      },
+      "ldr_ci_status": "GREEN"
     },
     "strategy-service": {
       "promotion_model": "ldr_main",
@@ -1344,7 +1348,8 @@
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 5
-      }
+      },
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-system-ui": {
       "promotion_model": "ldr_main",
@@ -1383,7 +1388,8 @@
         "qg_red_reason": null,
         "large_file_count": 33,
         "warn_file_count": 38
-      }
+      },
+      "ldr_ci_status": "GREEN"
     },
     "deployment-ui": {
       "promotion_model": "ldr_main",
@@ -1468,7 +1474,8 @@
         "coverage_pct": 99.02,
         "qg_red_reason": "ruff",
         "warn_file_count": 0
-      }
+      },
+      "ldr_ci_status": "GREEN"
     },
     "agent-orchestrator": {
       "promotion_model": "ldr_main",
@@ -1507,7 +1514,8 @@
         "warn_file_count": 6,
         "coverage_pct": null,
         "qg_red_reason": null
-      }
+      },
+      "ldr_ci_status": "GREEN"
     }
   },
   "topologicalOrder": {
