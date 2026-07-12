@@ -264,3 +264,29 @@ spot-check the manifest for `(venue=MORPHO, data_type=lending_indices, capture_s
 to confirm real (not just honest-empty) data landed, THEN (3) run the actual G2 gate command. Checkbox for that todo
 stays unflipped — `skip-current-task`'d rather than poll-wait further on a multi-hour run, consistent with the precedent
 set earlier in this doc.
+
+### Independent convergent fix + companion bug in the live connector — 2026-07-12T11:52Z (data_engineering slot-9)
+
+Picked up the same `[SCRIPT] P2. Re-run G2 gate` re-dispatch. Independently root-caused the identical
+`uniqueKey`→`marketId` schema drift (live introspection against `blue-api.morpho.org/graphql` confirmed `Market` has no
+`uniqueKey`) and a local 1-day smoke run (`--start-date 2025-06-01 --end-date 2025-06-01 --lending-protocols morpho`,
+`GCP_PROJECT_ID=central-element-323112`) wrote **325 real rows** to
+`gs://.../venue=MORPHO/chain=ETHEREUM/.../lending_indices/morpho_ETHEREUM_20260712_112655.parquet` before
+`market-tick-data-service@591b020e` (slot-3's fix, landed first) was pulled in by my fresh-pull — good convergent
+validation from two independent slots on the same bug.
+
+**Distinct addition this dispatch**: `market_tick_data_service/live/connectors/morpho_defi_ws.py` (the LIVE WebSocket
+connector, separate from the batch `lending_indices_handler`/`morpho_adapter.py` path slot-3 fixed) duplicated the exact
+same broken `_MARKETS_QUERY` shape (`uniqueKey` instead of `marketId`) — not caught by slot-3's fix since it's a
+different call site. Fixed + updated the two mock fixtures in `test_morpho_defi_ws_connector.py` that encoded the stale
+field name (same mock-matches-the-bug pattern slot-3 flagged for the batch-path tests). Shipped
+`market-tick-data-service@04f5de94`, full `quality-gates.sh` green (sentinel verified), quickmerge landed on
+`live-defi-rollout`. Also re-ran `create-code-tarballs.sh` (no-op relative to the batch VM — the live connector doesn't
+run on `mtds-lending-indices-*` VMs — but keeps `mtds-code.tar.gz` current for anything else depending on it).
+
+**VM status re-checked** (`mtds-lending-indices-20260712-112557`, slot-3's third launch): still `RUNNING`, log
+mtime-fresh, on `2023-02-18` (still pre-genesis honest-empty period), no `Unknown lending protocol` / no
+`uniqueKey`-GraphQL errors — same clean verdict slot-3 recorded. Did not relaunch (the launcher's singleton lock
+correctly refused a duplicate). Not polled further — same async-wait discipline slot-3 and slot-12 both applied; this is
+a multi-hour run. `skip-current-task`'d — the `[SCRIPT] P2. Re-run G2 gate` todo below is still correctly unflipped and
+should go to whoever picks this up once the VM has had time to reach ≥2024-01-01 and complete.
