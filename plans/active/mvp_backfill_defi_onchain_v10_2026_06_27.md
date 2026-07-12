@@ -1525,3 +1525,15 @@ exact task plus slot 9's direct chat escalation to `main` — not filing a 6th/7
 recurring-redispatch pattern (8 slots now) confirms the mitigation slot 7 proposed — attach
 `prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` to this backlog task, or rule directly on todo 3 —
 still has not been actioned by main/operator.
+
+### 2026-07-12 (slot 10) — 9th consecutive re-dispatch of `mvp_backfill_defi_onchain_v10-001`; unchanged; skip
+
+Slot 10 (data_engineering) picked this up immediately after shipping G1.6 (Solana dex-pool VM). Cheap re-verification
+only (python `google.cloud.storage`, `market-tick-data-service/.venv`): `_index/drift_v2_sig_index.parquet` still
+absent; `_index/drift_v2_sig_index_parts/` = 6,293 objects, `_index/drift_v2_sig_index_parts_b/` = 876 objects —
+byte-identical to every dispatch back to 2026-07-11. `GET /api/backlog?limit=500` confirms this task still carries no
+`prereqs` field. No operator ruling on todo 3 of `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. 5+
+unanswered `/blocked` questions + a direct chat escalation to `main` already queued — not filing a duplicate. Calling
+`/skip-current-task`; no code or plan-of-record change is possible from a worker slot beyond this entry (9 slots now
+confirm the same blocker — this needs the operator ruling or the `prereqs.conditions` attachment in
+`agent-orchestrator`'s `backlog.yaml`, both outside worker-slot scope).
