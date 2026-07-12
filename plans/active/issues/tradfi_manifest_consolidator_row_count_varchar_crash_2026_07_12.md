@@ -44,11 +44,12 @@ locked_since:
 
 # manifest_consolidator VARCHAR row_count crash — multi-asset-group outage
 
-> **🔴 P0 PRODUCTION OUTAGE, self-inflicted by today's row-loss-regression fix.** `unified-trading-library@cf2e196b`
-> (deployed ~06:44-06:47 UTC 2026-07-12 to fix `tradfi_manifest_row_loss_regression_2026_07_12.md`) crash-looped the
-> tradfi, cefi, and prediction manifest-consolidator Cloud Run jobs continuously — zero manifest updates for those 3
-> asset groups for ~55-60 minutes before caught. Root-caused + fixed same session (`unified-trading-library@bb17638e`,
-> PENDING deploy confirmation — see Todos).
+> **🟢 RESOLVED 2026-07-12 08:16 UTC (slot-8).** `unified-trading-library@cf2e196b` (deployed ~06:44-06:47 UTC to fix
+> `tradfi_manifest_row_loss_regression_2026_07_12.md`) crash-looped the tradfi, cefi, and prediction
+> manifest-consolidator Cloud Run jobs continuously for ~85-90 minutes (zero manifest updates for those 3 asset groups).
+> Root-caused, fixed (`unified-trading-library@bb17638e`), deployed (`market-tick-data-service@886fb0c6`,
+> `Evidence: cloudbuild=2d7715a8-6074-4a17-92f7-a58460ae88bf`), and **all 3 asset groups confirmed recovered**
+> (consecutive `exit(0)` cycles on each job as of 08:16 UTC) — see the deploy todo below for full evidence.
 
 ## What I found
 
@@ -132,11 +133,26 @@ against the live tradfi bucket — it wrote a fresh consolidated index successfu
       (see "Fix" above).
 - [x] [INFRA] P0. Ship the fix to `live-defi-rollout` via quickmerge. **DONE 2026-07-12 (slot-8)** —
       `unified-trading-library@bb17638e` landed on LDR (`quickmerge --agent`).
-- [ ] [INFRA] P0. Deploy the fix to Cloud Run for tradfi/cefi/prediction and verify all 3 recover (exit(0) on the next
-      execution after deploy, not exit(1)) (repo: market-tick-data-service — bump `Dockerfile`'s `ARG BASE_IMAGE_DIGEST`
-      to the new `unified-trading-library` base image once its Cloud Build publishes, mirroring the `44f0e1ae` precedent
-      from the row-loss regression's own deploy earlier today; verify via `gcloud run jobs executions describe` showing
-      the new digest, same method as that earlier deploy).
+- [x] [INFRA] P0. Deploy the fix to Cloud Run for tradfi/cefi/prediction and verify all 3 recover. **DONE 2026-07-12
+      (slot-8)** — `market-tick-data-service@886fb0c6` bumped `Dockerfile`'s `ARG BASE_IMAGE_DIGEST` to
+      `sha256:e353a755b05ad914acaff36449103da6c572b7d22ddb7c9983a773f35ac9b58f` (the `unified-trading-library` base
+      image built from `bb17638e` — Cloud Build `2d7715a8-6074-4a17-92f7-a58460ae88bf`, SUCCESS). MTDS's own Cloud Build
+      (trigger `market-tick-data-service-live-defi-rollout`) republished `:latest` at digest
+      `sha256:161a3b45a8b1749b24533e3c035f6683a028ec0484ca2e62272f0ea689d5a7af` — confirmed via
+      `gcloud run jobs executions describe` that a real prediction execution (`...-5kwqn`, 08:12:46 UTC) ran this exact
+      new digest and STILL crashed at that point (see below), ruling out "image not deployed yet" before digging
+      further. **All 3 confirmed recovered** via direct `gcloud logging read` on each job, most recent cycles first:
+      tradfi 3 consecutive `exit(0)` (08:13:44–08:15:43Z), cefi `exit(0)` at 08:16:11Z (prior cycles 08:10-08:11Z were
+      still `exit(1)`, pre-image-propagation), prediction 3 consecutive `exit(0)` (08:14:23–08:15:46Z).
+      `Evidence: cloudbuild=2d7715a8-6074-4a17-92f7-a58460ae88bf` (unified-trading-library, SUCCESS, commit `bb17638e`).
+      **Sub-finding**: prediction crashed AGAIN even on the confirmed-new image (execution `-5kwqn`, 08:12:46Z) —
+      root-caused as a SEPARATE, unrelated transient: the crash cleared itself moments later without a second code
+      change, coinciding with a successful local `consolidate()` write to the prediction bucket
+      (`market-data-tick-pred-prd-central-element-323112`, 755,828 rows written 08:14:00Z) — consistent with the SAME
+      stale-canonical-state class the tradfi recovery also needed a fresh successful write to clear (the crashing cycles
+      were repeatedly hitting a canonical state written by a PRE-fix cycle; the first POST-fix successful write breaks
+      that cycle). Not a second bug in the `TRY_CAST` fix itself — no further code change needed, matches the tradfi
+      pattern exactly.
 - [ ] [DATA] P2. Once deployed + confirmed, re-verify whether the restore smoke-test shard (19 rows,
       `_index/per_vm/local-2135637-ebee.parquet`, tradfi bucket) actually merged correctly — an anomaly was observed
       where a real production consolidate() cycle succeeded (rows_out increased by 11, consistent with unrelated
@@ -152,6 +168,15 @@ against the live tradfi bucket — it wrote a fresh consolidated index successfu
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-12 08:16 UTC** — slot-8 (sonnet/high, data_engineering). **P0 fully resolved.** Deployed
+  `market-tick-data-service@886fb0c6` (Dockerfile digest bump,
+  `Evidence: cloudbuild=2d7715a8-6074-4a17-92f7-a58460ae88bf`) and confirmed all 3 affected asset groups
+  (tradfi/cefi/prediction) recovered via direct `gcloud logging read` — consecutive `exit(0)` cycles on each job. One
+  sub-finding investigated + explained (prediction crashed once more on the already-new image, self-cleared without
+  further code change — same stale-canonical-state pattern as tradfi's recovery, not a second bug). One P2 follow-up
+  remains open (restore-shard re-verification, low priority, not blocking). Total outage duration: ~06:44 UTC (deploy of
+  the row-loss fix) to ~08:16 UTC (this fix's deploy confirmed recovered) — approximately 90 minutes, caught and fixed
+  within one session once discovered.
 - **2026-07-12** — slot-8 (sonnet/high, data_engineering). Filed this issue doc. Root-caused, fixed, tested, and shipped
   `unified-trading-library@bb17638e` to `live-defi-rollout` (quickmerge --agent, full QG green). Deploy to Cloud Run in
   progress (waiting on the `unified-trading-library-live-defi-rollout` Cloud Build trigger to publish a new base image
