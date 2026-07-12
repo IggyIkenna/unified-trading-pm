@@ -149,6 +149,38 @@ wall-clock throughput, but it's real net-new infrastructure, not a same-session 
 could be a quick stopgap (a shared GCS-lease mutex is maybe a 1-2 hour build) if the operator wants to unblock G4 sooner
 at the cost of wave wall-clock time.
 
+## Engineering grounding (infra, slot-2, 2026-07-12)
+
+Grounding the operator decision in the actual code surface (all paths workspace-relative to `.tabs/<slot>/`):
+
+- **Launch fan-out is real and default-15.** `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` defaults
+  `MAX_CONCURRENT=15` (line 66) and the plan's Progress Log shows operators driving it to 20-80+ via `VENUES`/`ONLY`.
+  Every VM provisions its own external IP (`--provisioning-model=SPOT` at line 432, no `--no-address`) and calls
+  `datasets.tardis.dev` directly — so against a single-concurrent-IP key, at most ONE VM per wave can hold the Tardis
+  lock at any instant; the other 14-79 get code-274 403 for the full overlap. The issue's 74.9% figure is the direct
+  consequence.
+- **403 is NOT retried and code-274 is NOT distinguished** — the root aggravator.
+  `market-tick-data-service/.../clients/tardis_base_client.py` sets `retry_status_codes = (429, 500, 502, 503, 504)`
+  (line 138) — 403 is absent — and the 403 handler (line 431) only logs "Check API key access / subscription plan",
+  never parsing the `code: 274` / `retryAfterSeconds` body. So a concurrent-lock 403 is recorded as a terminal
+  `attempted_failed` row **indistinguishable from genuine data-unavailability**. This is exactly why todo #3 must treat
+  every prior af count as noise.
+- **Complementary near-zero-cost mitigation (direction-independent, recommended under ALL of a/b/c):** teach
+  `tardis_base_client.py` to recognise a 403 whose body carries `code == 274`, honour `retryAfterSeconds` as a backoff,
+  and tag the manifest `error_reason` distinctly (e.g. `Tardis 403 code=274 concurrent-IP-lock`) so lock-403s are
+  visibly separated from honest-absence in the manifest. This does NOT by itself serialise anything (15 VMs all retrying
+  still contend on one lock), so it is a hygiene/observability fix, not a substitute for a/b/c — but it makes every
+  option's data cleaner and directly de-noises todo #3's re-measurement.
+- **Cross-check on option (b):** the key is loaded from Secret Manager (`config.py` lines 34-77: `tardis-api-key` /
+  `tardis-api-key-full`) — a plan upgrade that lifts the single-IP ceiling would require zero code change (just a new
+  secret value), which is why (b), if procurement grants it, is the cleanest and could moot (a)/(c).
+
+**Effort estimates (infra craft):** (a) GCS-lease TTL mutex ≈ 1-2 h build (must be TTL-leased, not object-exists, so a
+SPOT preemption can't leak the lock); (b) 0 engineering (procurement email + secret swap); (c) centralized fetch proxy ≈
+2-3 net-new-service-days (Cloud Run or dedicated always-on VM with a fixed egress IP, plus a client redirect in the
+Tardis download path) — preserves the parallel-VM wall-clock the plan relies on. The 403-code-274 hygiene fix above is ≈
+30-60 min and is additive to whichever path is chosen.
+
 ## Todos
 
 - [ ] [INFRA] P0. Operator decision: which of (a) serialize / (b) Tardis plan upgrade / (c) centralized proxy — or
