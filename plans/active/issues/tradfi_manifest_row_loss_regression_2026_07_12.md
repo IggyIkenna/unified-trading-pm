@@ -207,6 +207,70 @@ merely being deployed during the window) is the next todo below — it needs eit
 exist, or a direct code read of `_duckdb_merge_payload`'s survivors/contested/prune SQL to find a bug that can drop
 `survivors` rows outright (as opposed to the already-fixed no-dedup / OOM bugs above).
 
+## Root cause CONFIRMED (2026-07-12, slot-7)
+
+**Empirical test, not inference**: downloaded both real snapshots
+(`_index/snapshots/pre_tradfi_source_restamp_20260710T113305Z.parquet`, 6,107,337 rows, and the then-current live
+`_index/availability_index.parquet`) and ran the CONSOLIDATOR'S OWN dedup key (`_BASE_DEDUP_COLS` =
+`date, venue, data_type, service_name` + every `_OPTIONAL_DEDUP_COLS` column present in the schema — confirmed
+`instrument_id` and all 12 optional dims ARE present in both snapshots' schemas, so this isn't a missing-column issue)
+directly against the pre-loss snapshot in DuckDB (same NULL/''-sentinel normalization as `_dedup_key_sql`):
+
+```
+total_rows = 6,107,337
+distinct_groups (under the exact production dedup key) = 5,083,369
+excess (rows that collapse if last-write-wins dedup is applied once) = 1,023,968
+```
+
+**This matches the observed loss almost exactly**: `1,023,968` vs. the issue doc's directly-measured `1,018,932` (0.5%
+apart — the residual is explained by the ~5,036 genuinely-new keys the issue doc found written after 2026-07-10, which
+this static single-snapshot test can't net out). `distinct_groups (5,083,369) + new keys added (5,036) = 5,088,405` —
+**the EXACT observed post-loss row count**. This is not a coincidence; the mechanism is confirmed.
+
+**Why it happened NOW, not earlier**: these ~1.02M duplicate-key rows had been sitting in the canonical for weeks
+(sampled pairs show `written_at` as far back as 2026-06-28) — harmlessly, because `survivors` (canonical rows untouched
+by the current cycle's shards) previously streamed through with ZERO dedup. `unified-trading-library@0de04b6e`
+(2026-07-10) changed that — it added a self-dedup pass to `survivors` for the first time, explicitly to fix a DIFFERENT,
+genuinely-benign duplicate class (see `defi_manifest_consolidator_duplicate_race_2026_07_10.md`). The very same cycle
+that started correctly cleaning up TRUE duplicates also, for the first time, ran its last-write-wins window-dedup over
+this much larger pre-existing duplicate-key population — and for a real fraction of it, the "duplicates" are NOT true
+duplicates.
+
+**Direct proof the collapsed rows are NOT true duplicates** (sampled 6 `capture_status='captured'` duplicate-key pairs):
+every sampled pair is **CME/ohlcv_1m, same date, same `underlying`, BOTH rows with BLANK `instrument_id`**, but one row
+has `source=databento` (real data — `row_count=42`, `written_at=2026-06-28`) and the other has `source=massive`
+(`row_count=0`, `written_at=2026-07-07`, i.e. written LATER). The dedup key does not include `source` (deliberately —
+`manifest_writer/_writer_io.py`'s `_OPTIONAL_DEDUP_DIMS_NULL_NORMALIZE` docstring: "Provenance cols (`source`/
+`pipeline_mode`/`transport`/`cadence`) are DELIBERATELY absent: excluded from the dedup key... the failed→captured state
+machine relies on their `""` wildcard"). So when `instrument_id` is blank (this shard type apparently doesn't populate
+per-contract IDs) and two DIFFERENT vendors both write a `captured` row for the same coarse slot, the last-write-wins
+window-dedup silently keeps whichever wrote LATER and drops the other — even when the dropped row has real data
+(`row_count=42`) and the kept row does not (`row_count=0`). This is genuine, confirmed data loss, not a
+duplicate-cleanup false-positive.
+
+**Quantified breakdown of the 1,023,968-row excess** (all duplicate groups are pairs — `1,023,968` groups, `2,047,936`
+rows):
+
+- **785,748 rows** (≈38%) sit in groups where BOTH rows have blank `instrument_id` — the key falls back to coarser
+  fields, the exact failure mode demonstrated above. Of these, a confirmed **86,896 rows** are provable cross-source
+  collisions (multiple distinct `source` values within the blank-`instrument_id` group) — the rest may be same-source
+  repeat-writes (lower risk, but still worth the same fix since the key can't tell them apart today).
+- **1,262,188 rows** (≈62%) sit in groups where both rows share the SAME real (non-blank) `instrument_id` — genuinely
+  same-instrument duplicate writes. This portion is closer to the DEFI precedent's "true duplicate" class and MAY be
+  legitimate to collapse — not yet individually verified row-by-row, so treat as lower-confidence-safe rather than
+  confirmed-safe.
+
+**Proposed fix** (for the next todo, not implemented here — needs design review + tests before shipping to a shared,
+5-asset-group-wide script): do NOT blindly widen the dedup key by adding `source` back in (that would break the
+failed→captured state-machine transition the writer's docstring documents depending on `source`'s exclusion). Instead,
+special-case the COLLAPSE decision, not the GROUPING key: when a duplicate-key group's rows disagree on
+`capture_status='captured'` AND on `source` (i.e. multiple DIFFERENT vendors both genuinely captured data for the same
+slot), do not last-write-wins collapse them — either keep all such rows (accept the key is too coarse to fully dedup
+this case, prioritize not losing data) or merge them into one row that preserves the max `row_count` / most complete
+observation rather than the most recent `written_at`. This needs a real regression test (mirroring the pair sampled
+above) before it ships, and confirmation it doesn't regress the `0de04b6e` genuine-dup cleanup or introduce a new
+`800af156`-class scaling regression.
+
 ## Why it matters
 
 - This is the SAME manifest every other checkbox in `tradfi_v9_stage1_finish_2026_07_06.md` certified against: task 2's
@@ -245,17 +309,28 @@ exist, or a direct code read of `_duckdb_merge_payload`'s survivors/contested/pr
       Scheduler/Cloud Run Jobs config + GCS object custom metadata instead. `gcloud` IS usable in-slot via the non-snap
       SDK at `/home/ubuntu/google-cloud-sdk/bin/gcloud` (the snap `gcloud`/`gsutil` are broken by snap-confine as prior
       sessions found, but this alternate install has working ADC and was not tried before).
-- [ ] [DATA] P0. Root-cause why the identified writer (`unified_trading_library/manifest_consolidator.py`'s
-      `_duckdb_merge_payload` incremental merge, run by Cloud Run Job
-      `uts-prod-manifest-consolidator-market-data-tradfi`) dropped 1,017,024 distinct manifest rows
-      (`captured`=-705,881, `empty_confirmed`=-314,620) while leaving the 13,971-row v4 tail untouched, and fix the bug
-      (repo: unified-trading-library, the shared consolidator — NOT market-tick-data-service, which only vendors it).
-      Start from the `survivors`/`contested`/prune SQL in `_duckdb_merge_payload` — 3 real bugs in this exact code path
-      were found+fixed this same week (`0de04b6e` no-dedup-on-survivors, `800af156` OOM-scaling regression in that fix,
-      `d3c36842` lock-TTL race) but none is yet CONFIRMED to explain outright row loss (as opposed to duplication or
-      wasted-compute); the mechanism suggested by the "Writer identified" evidence (old `written_at` preserved on
-      survivors, so a full rebuild is ruled out) is a bug in the survivors ANTI JOIN or the post-merge prune step
-      incorrectly excluding/deleting rows it shouldn't. See "Writer identified" section above for the full lead list.
+- [x] ✅ [DATA] P0. Root-cause why the identified writer dropped 1,017,024 distinct manifest rows. **DONE 2026-07-12 by
+      slot-7, empirically confirmed (not inferred) — see "Root cause CONFIRMED" below.** Mechanism: the consolidator's
+      dedup key (`_BASE_DEDUP_COLS` + present `_OPTIONAL_DEDUP_COLS`, deliberately excluding `source`/`pipeline_mode`/
+      `transport`/`cadence`) is too coarse for a real subset of tradfi rows whose `instrument_id` is blank — two
+      DIFFERENT vendor sources (`databento` vs `massive`) capturing the "same" `(date, venue, data_type, underlying)`
+      slot collide onto one dedup-key group. `unified-trading-library@0de04b6e` (2026-07-10) applied last-write-wins
+      window-dedup to `survivors` for the FIRST time (previously survivors streamed through with zero dedup) — this is
+      what triggered the loss, collapsing ~1.02M pre-existing duplicate-key rows that had coexisted harmlessly for
+      weeks. Splitting the FIX into its own todo below (P0) — this script is shared across all 5 asset groups and a
+      hasty, untested change to its merge SQL is its own data-correctness risk; the fix needs a considered design (see
+      "Proposed fix" below), a real regression test per the `0de04b6e`/`800af156` precedent, and a careful
+      multi-asset-group rollout, not a rushed patch.
+- [ ] [DATA] P0. **Implement + test + deploy the fix** for the root cause above (repo: unified-trading-library, the
+      shared consolidator — NOT market-tick-data-service, which only vendors it). See "Proposed fix" in the "Root cause
+      CONFIRMED" section below for the concrete design starting point. MUST ship a regression test that fails on pre-fix
+      code and passes post-fix (same bar as `0de04b6e`'s
+      `test_consolidate_incremental_self_dedups_untouched_canonical_duplicates`), and MUST verify the fix doesn't
+      regress the `0de04b6e`/`800af156` genuine-duplicate cleanup or the failed→captured state-machine transition that
+      `source`'s exclusion from the dedup key exists to support (see `_writer_io.py`'s
+      `_OPTIONAL_DEDUP_DIMS_NULL_NORMALIZE` docstring). Fan the fix to all 5 asset groups' Cloud Run jobs per the
+      `0de04b6e` rollout precedent (rebuild MTDS, force-update each `uts-prod-manifest-consolidator-market-data-*` job —
+      `:latest` doesn't auto-propagate to a running job, confirmed in the sibling defi issue doc).
 - [ ] [DATA] P0. Restore the 1,017,024 missing rows — either replay them from
       `_index/snapshots/pre_tradfi_source_restamp_20260710T113305Z.parquet` (targeted re-add of exactly the missing
       keys, verified via the same key-set diff this issue doc used) or via a fresh full E5 rebuild once the root cause
@@ -280,6 +355,24 @@ exist, or a direct code read of `_duckdb_merge_payload`'s survivors/contested/pr
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-12** — slot-7 (sonnet/high, data_engineering). Closed the root-cause todo, EMPIRICALLY (not inferred).
+  Downloaded the real pre-loss snapshot + then-current live index and ran the consolidator's own dedup key
+  (`_BASE_DEDUP_COLS` + present `_OPTIONAL_DEDUP_COLS`) against the pre-loss snapshot in DuckDB: it collapses 1,023,968
+  excess rows — within 0.5% of the observed 1,018,932-row loss, and `distinct_groups + new-keys-added` lands on the
+  EXACT observed post-loss row count (5,088,405). Mechanism: `unified-trading-library@0de04b6e` (2026-07-10) applied
+  last-write-wins window-dedup to `survivors` for the first time; a real subset of tradfi's pre-existing duplicate-key
+  rows are NOT true duplicates but blank-`instrument_id` cross-vendor-source collisions (`databento` vs `massive`,
+  confirmed via direct row sampling — one side has real data `row_count=42`, the other `row_count=0`, and the dedup key
+  can't tell them apart because `source` is deliberately excluded from it). Quantified the 1,023,968-row excess: 785,748
+  rows in blank-`instrument_id` groups (the confirmed-bad case, 86,896 of those provably cross-source), 1,262,188 rows
+  in same-real-`instrument_id` groups (lower-confidence-safe, not yet individually verified). Wrote a concrete proposed
+  fix (don't widen the dedup key — special-case the collapse decision when `capture_status='captured'` rows disagree on
+  `source`) but did NOT implement it — this is a shared script across all 5 asset groups and a rushed, untested change
+  to its merge SQL carries its own correctness risk; split "implement + test + deploy the fix" into its own P0 todo with
+  the design guidance attached so the next agent doesn't have to re-derive this. Downloaded snapshots to
+  `/home/ubuntu/tmp_slot7_manifest_check/` (outside the repo and outside `/tmp`, which is a small shared tmpfs that hit
+  ENOSPC on first attempt), analysis done via UTL's own `.venv` (duckdb 1.5.3 + pyarrow already present), cleaned up
+  after. No code change — issue doc ships via the PM `docs(plans):` carve-out.
 - **2026-07-12** — slot-7 (sonnet/high, data_engineering). Closed todo 1 (writer identification). Cloud Logging was a
   dead end (GCS Data Access audit logs off project-wide, confirmed via direct query) but `gcloud` DOES work in-slot via
   the non-snap SDK at `/home/ubuntu/google-cloud-sdk/bin/gcloud` (contrary to slot-8's finding that `gcloud` is broken
