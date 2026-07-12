@@ -414,16 +414,16 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-                                          full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-                                          is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
-                                          already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
-                                          REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
-                                          `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-                                          `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-                                          (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-                                          full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-                                          the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-                                          pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                                              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                                              is NOT a tooling bug or an adapter regression. `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`
+                                              already documents this exact case under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible
+                                              REST exposes only a CURRENT-book `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch
+                                              `book_snapshot_5` can never be sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                                              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                                              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                                              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                                              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                                              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -996,3 +996,70 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   honest-no-data-that-day. This is real, substantive follow-up work — a full per-venue investigation is beyond one
   session's remaining time after the tooling work above, and is exactly the kind of "no exceptions... document every
   gap" finding the operator asked for, not glossed over.
+
+- 2026-07-12 (autonomous session, operator-directed triage round) — **Operator asked for a deeper breakdown of the 291
+  genuine failures, distinguishing expected-vs-unexpected-empty and code-bugs-vs-actual-absence, and to flag
+  ambiguity.** Grouped the 135 MTDS force-leg `no_parquet_under` failures by data_type and by venue (venues where ALL
+  their own data_types failed = strongest signal for a venue-level, not data_type-level, cause), then sampled REAL VM
+  `run.log`s (not the checker's abstracted reason string) for each pattern cluster. Found 6 distinct, concrete results —
+  every one grounded in real log evidence, not guessed:
+
+  1. **Real bug in this checker itself**: TradFi OHLCV downloads (CBOE/CME/NYSE/NASDAQ/YAHOO_FINANCE, ~17 shards)
+     genuinely never attempted a fetch —
+     `ValueError: --source databento|massive is REQUIRED for a TradFi OHLCV download`, a real, intentional production
+     guard this checker never satisfied. **Fixed**: added `--source` pass-through to `launch-mtds-backfill-vm.sh` (the
+     setup-script side already existed) and wired `pipeline_e2e_check.py` to pass `--source databento` for TradFi OHLCV
+     shards (databento is SOURCE_PRIORITY[0] for every affected data_type; FX exempt, Yahoo-routed). Evidence:
+     deployment-service@29561c4, market-tick-data-service@42a55bc.
+
+  2. **Honest absence, not a bug**: all 8 SPORTS venues (~50+ shard-instances) show
+     `WARNING No active venues for date=2026-07-09` / `0 rows` — genuinely no fixtures scheduled for these leagues that
+     specific day (sports is fixture-driven, not calendar-driven). Correct behavior, but reveals a real smoke-test
+     DESIGN gap: a single fixed sweep day can't meaningfully test SPORTS coverage at all — flagged, not fixed (see new
+     todo 26 below).
+
+  3. **Real, previously-unknown production gap — OKX has zero reference data**: IS's error is explicit —
+     `No Tardis exchange mapping for canonical venue 'OKX'`. Found this is ALREADY being actively investigated by
+     another agent (`plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`, filed the SAME day)
+     — that doc had root-caused the exact mechanism (`get_tardis_exchange_for_venue("OKX")` returns `None` for a bare,
+     un-suffixed venue string) and explicitly flagged an open question: does any real call site ever invoke it with a
+     bare `"OKX"`? Answered it directly with real evidence (this sweep's own IS backfill attempt) — corroborated onto
+     that doc, bumped its priority P2→P1 given the confirmed blast radius (blocks basic IS reference-data capture
+     entirely, not just options/futures-chain resolution as the doc originally scoped).
+
+  4. **Two ambiguous venues resolved — NOT bugs**: KALSHI-PERP and POLYMARKET-PERP both failed with a generic
+     `URDI returned zero records`. Operator asked me to dig into the adapter code directly rather than guess. Found:
+     both adapters are intentional, honest-empty SCAFFOLDS —
+     `instruments_service/reference_data/adapters/cefi/ {kalshi,polymarket}_perp.py`'s own docstrings say explicitly
+     "endpoint + auth unverified... Return honest-empty; no network call" and cite
+     `BLOCKED-CREDENTIALS: {kalshi,polymarket}-perp-api-key`. Both venues' real coverage-start dates
+     (`coverage_starts.py`: Kalshi 2026-05-29, Polymarket 2026-04-21) predate the sweep day, so this wasn't a "too new"
+     issue — it's a deliberate, already-documented placeholder awaiting real API credentials (matching this workspace's
+     own `codex`-documented "build the scaffold anyway, mark BLOCKED-CREDENTIALS" hard rule). Added both to the
+     aggregator's known-gaps table (venue-wide, not per-data_type, since the whole adapter is a scaffold).
+
+  5. **3 new, real, distinct CeFi adapter bugs** filed as a new consolidated issue doc
+     (`plans/active/issues/cefi_aster_hyperliquid_bitget_bitfinex_adapter_bugs_2026_07_12.md`), found by noticing these
+     venues failed across ALL their own data_types (not the single-data_type pattern the documented ASTER
+     `book_snapshot_5` gap predicts):
+     - **ASTER `trades`** also fails (not just `book_snapshot_5`) —
+       `StreamingParquetWriter... missing_column: instrument_id`. Broader than the previously-documented
+       REST-limitation-only gap; not yet determined whether this is a genuine ASTER regression or an artifact of this
+       smoke check's fallback instrument-id sampling picking a symbol ASTER doesn't actually support.
+     - **HYPERLIQUID `trades`** — `UpstreamTimestampBiasError`: 24 real ticks received but every timestamp parsed to
+       Unix epoch (1970-01-01). A genuine timestamp/units-parsing bug, distinct from the already-documented HL
+       under-capture and liquidations-misclassification issues.
+     - **BITGET-FUTURES + BITFINEX-FUTURES** — byte-identical error
+       `Invalid comparison between dtype=datetime64[ns] and date` on both venues, strongly suggesting one shared buggy
+       normalization/filter code path affecting both. No fixes attempted for any of these 3 — diagnosis handoff only,
+       per the operator's own choice to file rather than attempt fixes in this session.
+
+  **Aggregator re-run with the KALSHI-PERP/POLYMARKET-PERP reclassification**: genuine, still-untriaged failures dropped
+  from 697 → 645 (this triage round resolved 52 leg-results as documented-not-a-bug). The remaining 645 are the rest of
+  todo 25's scope — not further triaged this round beyond the 4 venues sampled above.
+
+- [ ] 26. [DATA] P3. **Design a fixture-aware day-selection mechanism for the SPORTS asset_group** so a future sweep can
+      meaningfully test SPORTS coverage (this session's single fixed day, 2026-07-09, had zero scheduled fixtures for
+      every tested league/venue — an honest but uninformative result). Needs: a way to pick, per league, a historical
+      day with confirmed real fixtures (rather than one day for the whole 452-shard sweep) — not started this session,
+      flagged by the operator as a real gap in the smoke test's own design, not a target-system issue.
