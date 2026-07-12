@@ -4,7 +4,7 @@ title: Escalation & Disaster Recovery Master (L4)
 summary:
   Role-agnostic escalation pipeline (blocked → Slack → human-resolve → UI) + the self-healing/auto-recovery substrate
   every agent role escalates through; 95% self-resolve, the rest escalate cleanly.
-status: active
+status: paused
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -26,10 +26,10 @@ locked_by: NA
 locked_since: NA
 ---
 
-> **⏸️ PAUSED per operator decision 2026-06-26** (frontmatter stays `status: active` only because the epic schema has no
-> `paused` value — this banner is the operative state) — deferred to next quarter together with W7/W8/W9 (message broker
-> dependency) per agent_operating_framework_master.md:62-66 re-scope. Todos remain valid but MUST NOT be dispatched
-> until un-paused. Synced per plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 338).
+> **⏸️ PAUSED per operator decision 2026-06-26** (frontmatter `status: paused` — epic schema gained the `paused` value
+> 2026-07-12 per operator ruling) — deferred to next quarter together with W7/W8/W9 (message broker dependency) per
+> agent_operating_framework_master.md:62-66 re-scope. Todos remain valid but MUST NOT be dispatched until un-paused.
+> Synced per plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 338).
 
 # Escalation & Disaster Recovery Master (L4)
 
@@ -84,11 +84,11 @@ auto-recovery matrix. This epic only routes to a human for the **`manual_unkill`
 
 ## Workstream registry (child plans)
 
-| WS  | Child plan                           | Scope                                                                                                                                    | Depends                                        | Priority | Status   |
-| --- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------- | -------- |
-| E1  | `escalation_pipeline_mvp_2026_06_25` | Generalize `/blocked` → role-agnostic escalation record + `open/in-progress/resolved` state + scoped Slack link + close the 3 gaps       | `agent_operating_framework_master` W9 (broker) | P1       | proposed |
-| E2  | _(future)_ slack-interactive-resolve | Real Slack app (Block Kit action buttons / `/resolve` slash) so a human answers in Slack without the dashboard hop                       | E1                                             | P2       | deferred |
-| E3  | _(future)_ dr-runbook-registry       | Disaster-recovery runbooks (owner/cadence/verifier/last_executed) wired to the auto-recovery matrix for non-self-healing failure classes | E1                                             | P2       | deferred |
+| WS  | Child plan                           | Scope                                                                                                                                    | Depends                                        | Priority | Status                                                                                                                                                                                                                                    |
+| --- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1  | `escalation_pipeline_mvp_2026_06_25` | Generalize `/blocked` → role-agnostic escalation record + `open/in-progress/resolved` state + scoped Slack link + close the 3 gaps       | `agent_operating_framework_master` W9 (broker) | P1       | paused (was: proposed — corrected 2026-07-12, doc-reconciliation autofix finding 50, `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling, cascading the epic's own 2026-06-26 pause banner above) |
+| E2  | _(future)_ slack-interactive-resolve | Real Slack app (Block Kit action buttons / `/resolve` slash) so a human answers in Slack without the dashboard hop                       | E1                                             | P2       | deferred                                                                                                                                                                                                                                  |
+| E3  | _(future)_ dr-runbook-registry       | Disaster-recovery runbooks (owner/cadence/verifier/last_executed) wired to the auto-recovery matrix for non-self-healing failure classes | E1                                             | P2       | deferred                                                                                                                                                                                                                                  |
 
 ## Composition with other epics
 

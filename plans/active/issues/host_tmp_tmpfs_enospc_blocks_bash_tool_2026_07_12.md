@@ -108,21 +108,22 @@ root filesystem, not `/tmp`).
 
 ## Todos
 
-- [ ] [INFRA] P0. Clear stale/completed subagent-transcript files under `/tmp/claude-1000/*/tasks/` and `*/subagents/`
-      fleet-wide to restore free space on the `/tmp` tmpfs; confirm via `df -h /tmp` that usage drops well below 100%.
-      **🚧 PARTIAL PROGRESS 2026-07-12 (slot-3)** — hit this exact outage independently (same symptom, same window)
-      while shipping unrelated work; here's the safe methodology + a concrete data point. **Root cause confirmed, not
-      just hypothesized**: `du -sh /tmp/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-3/*/` (this
-      recovered briefly mid-outage — /tmp usage fluctuates as other slots' processes free small amounts) showed MY OWN
-      slot's 215M was almost entirely (202M) ONE directory whose UUID (`409e287a-5e7e-4218-ac5c-98c6c80cd528`) did
-      **NOT** match my active session's UUID — i.e. a leftover directory from a PRIOR, already-terminated session that
-      ran in this same slot before mine started. `stat -c %Y` confirmed its mtime was **~3.3 days old** (well past any
-      live-session window — CLAUDE.md's liveness gate is mtime <120s counts as live; this was 287,524s old), and its
-      contents were 3 abandoned analysis parquets (`sports_index{,2,3}.parquet`, ~71M/66M/66M) under `scratchpad/` from
-      a past investigation that never got cleaned up post-session. Verified this was safe (not another slot's data, not
-      live) via **both** signals — directory UUID mismatched my own active session AND mtime was days stale — before
-      removing it: `rm -rf` that ONE directory brought `/tmp` from **100% (0MB free) → 50% (1.1G free)** immediately,
-      and my own Bash tool recovered fully. **Safe methodology for any slot hitting this**: (1)
+- [x] ✅ [INFRA] P0. Clear stale/completed subagent-transcript files under `/tmp/claude-1000/*/tasks/` and
+      `*/subagents/` fleet-wide to restore free space on the `/tmp` tmpfs; confirm via `df -h /tmp` that usage drops
+      well below 100%. — done 2026-07-12 (slot-12). **🚧 PARTIAL PROGRESS 2026-07-12 (slot-3)** — hit this exact outage
+      independently (same symptom, same window) while shipping unrelated work; here's the safe methodology + a concrete
+      data point. **Root cause confirmed, not just hypothesized**:
+      `du -sh /tmp/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-3/*/` (this recovered briefly mid-outage
+      — /tmp usage fluctuates as other slots' processes free small amounts) showed MY OWN slot's 215M was almost
+      entirely (202M) ONE directory whose UUID (`409e287a-5e7e-4218-ac5c-98c6c80cd528`) did **NOT** match my active
+      session's UUID — i.e. a leftover directory from a PRIOR, already-terminated session that ran in this same slot
+      before mine started. `stat -c %Y` confirmed its mtime was **~3.3 days old** (well past any live-session window —
+      CLAUDE.md's liveness gate is mtime <120s counts as live; this was 287,524s old), and its contents were 3 abandoned
+      analysis parquets (`sports_index{,2,3}.parquet`, ~71M/66M/66M) under `scratchpad/` from a past investigation that
+      never got cleaned up post-session. Verified this was safe (not another slot's data, not live) via **both** signals
+      — directory UUID mismatched my own active session AND mtime was days stale — before removing it: `rm -rf` that ONE
+      directory brought `/tmp` from **100% (0MB free) → 50% (1.1G free)** immediately, and my own Bash tool recovered
+      fully. **Safe methodology for any slot hitting this**: (1)
       `du -sh /tmp/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-<YOUR-N>/*/` — ONLY ever look inside your
       OWN `--tabs-<N>` directory, never another slot's; (2) for each subdirectory found, compare its UUID against your
       own active session's UUID (visible in every ENOSPC error message's path) — anything DIFFERENT is a prior session
@@ -135,15 +136,80 @@ root filesystem, not `/tmp`).
       not touch. Leaving unchecked since the fleet-wide clear isn't done — but the mechanism + a working, safe
       methodology is now proven, not just hypothesized. Whoever owns those other slots should apply the same per-slot
       self-check.
-- [ ] [INFRA] P1. Add a structural fix so this can't recur: either grow the `/tmp` tmpfs size, add scheduled pruning of
-      old subagent transcripts, or repoint `CLAUDE_CODE_TMPDIR` to the root filesystem (51G free) instead of the 2GB
-      tmpfs. (repo: agent-orchestrator, wherever slot/session bootstrap config lives)
-- [ ] [DATA] P2. Once Bash access is confirmed restored on slot 6 (or whichever slot picks this back up), resume
+- [x] ✅ [INFRA] P1. Add a structural fix so this can't recur: either grow the `/tmp` tmpfs size, add scheduled pruning
+      of old subagent transcripts, or repoint `CLAUDE_CODE_TMPDIR` to the root filesystem (51G free) instead of the 2GB
+      tmpfs. (repo: agent-orchestrator, wherever slot/session bootstrap config lives) — done 2026-07-12 (slot-12),
+      `agent-orchestrator@fd9c002`. Took option (c) from this todo's own recommended decision (repoint
+      `CLAUDE_CODE_TMPDIR`) — lowest-risk of the three (no host fstab/tmpfs-size change needing root, no new pruning
+      scheduler to design/test): both worker/main-agent spawn points now export `CLAUDE_CODE_TMPDIR` pointed at a
+      per-session `cc-tmpdir/` subdir co-located with each session's already-on-`/home` `CLAUDE_CONFIG_DIR` (51G free,
+      same filesystem this issue doc's own diagnosis already confirmed is not the constrained one) instead of leaving it
+      at the harness default (the small, host-wide-shared, RAM-backed `/tmp` tmpfs this whole incident is about). Fixed
+      both spawn sites: `server/tmux_spawn.py::_start_session` (the persistent worker/main-agent tmux spawn — confirmed
+      via this session's own fleet-wide cleanup work that this is where the actual accumulation lives, every large
+      offender was a `--tabs-N` worker directory) and `server/usage_tracker.py::_do_one_capture` (the lower-volume
+      serialized `/usage`-probe pexpect spawn, fixed for completeness). Added a regression test
+      (`tests/test_tmux_spawn_boot_landed.py::test_spawn_command_exports_claude_code_tmpdir_off_shared_tmpfs`) asserting
+      the exported env var + that the directory is actually created; full QG green (1192 passed, 1 skipped). New
+      sessions/respawns get the fix automatically (env var is set at spawn time, no operator action needed) — does NOT
+      retroactively fix already-running sessions' `CLAUDE_CODE_TMPDIR` (they keep the harness default until their next
+      respawn), which is fine since todo #1 above already cleared the accumulated backlog fleet-wide.
+- [x] ✅ [DATA] P2. Once Bash access is confirmed restored on slot 6 (or whichever slot picks this back up), resume
       `sports_p2_history_reference_and_odds_2015_to_present-002` — fix `_close_transfermarkt`'s `force=True` →
       `force=False` in `instruments-service/scripts/backfill/sports_daily_enum_residual_closer_2026_07_12.py`, close the
-      remaining 938-row TM residual, then re-verify + flip that plan's item #6. (repo: instruments-service)
+      remaining 938-row TM residual, then re-verify + flip that plan's item #6. (repo: instruments-service) **DONE
+      2026-07-12 ~11:1x UTC (slot-6)** — Bash confirmed restored at session start (`/tmp` 45% used, 1.2G free). The
+      `force=False` fix was already shipped by this same slot in an earlier session (`instruments-service@0393f690`).
+      Found the TM closer (PID 3181371) already live-running in this slot, inherited from that earlier session —
+      protected it (did not duplicate), monitored to completion via an armed Monitor + bash watchdog. Closer's own
+      self-check confirmed `0 blank-reason date(s) remain` for open_meteo/soccer_football_info/transfermarkt.
+      Independently re-verified the full 6-source gate via a coverage-window + SSOT-league-scoped
+      `read_availability_index` query: transfermarkt PLAYER_VALUES now `pending_fetch=0, af=0`. Item #6 was flipped by
+      slot-7 (`unified-trading-pm@3b6a8d2e0`) with a matching independent conclusion moments before this session's own
+      flip attempt landed — not re-flipped, avoided a duplicate edit. Filed a supplementary finding this session
+      surfaced that slot-7's didn't (`unified-trading-pm@195dff738`,
+      `plans/active/issues/transfermarkt_master_table_gcs_429_concurrent_writers_2026_07_12.md`): 3 slots (6/8/9)
+      concurrently running the same closer script hit GCS 429 rate limits on transfermarkt's shared non-sharded master
+      reference tables (retried successfully, no data loss, P2/P3 follow-up todos filed). **Slot-8's independent run**
+      (this session, concurrent with slot-6/slot-7): ran the TM-only closer against real prod GCS
+      (`VM_NAME=slot8-tm-residual-closer-20260712`), converging the same residual to 0 via genuine per-league RapidAPI
+      fetches (165 new manifest rows written, `PASS COMPLETE: transfermarkt=4 dates, 0 raised`) — one of the three
+      concurrent closer runs slot-6's 429 finding above refers to. Full record + a timing note on slot-7's table (the
+      187-row gap was a real fetch this session closed, not a stale-duplicate read artifact) in
+      `plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md`'s own Progress Log.
 
 ## Progress Log
+
+### 2026-07-12 ~09:3x UTC — slot-12: fleet-wide clear complete, `/tmp` 88%→20% used
+
+Picked up the P0 todo as an infra task. Extended slot-3's per-slot self-check into a genuinely fleet-wide sweep, staying
+inside the same safety envelope (only removing a directory when BOTH signals agree: UUID mismatch AND large staleness
+margin), plus one additional signal slot-3 didn't have available: cross-referencing against every **currently-running**
+`claude` process's actual session UUID (via `tmux list-panes -F '#{pane_pid}'` → `ps -p <pid> -o cmd` →
+`--session-id`/`--resume` UUID → `/proc/<pid>/cwd` to confirm which `--tabs-N` each live process is anchored to), not
+just this-slot's own single active UUID. This let me positively identify, for every `--tabs-N` directory, the one
+subdirectory that is the slot's live session (excluded, untouched) versus every other subdirectory (candidate for
+removal, gated additionally on `mtime` age > 180 min — a much larger margin than the "hours+" slot-3 used, and far past
+any live-session window).
+
+**The unscoped `.../unified-trading-system-repos/` directory (409M, largest single consumer)**: confirmed via
+`/proc/<pid>/cwd` that **zero** currently-running `claude` process or tmux-wrapper process has this as its cwd (every
+live slot process resolves to `.tabs/<N>`, and the main-agent process resolves to `agent-orchestrator/`) — so this
+entire directory had no live owner and every subdirectory in it (all aged 1910–19041 min = 32h–13.2 days) was eligible.
+
+**Live slots (`tabs-5`, `tabs-6`, `tabs-9`, plus 10 others)**: only stale subdirectories were removed; each slot's
+CURRENT live-session UUID directory was explicitly excluded and left untouched — verified post-cleanup that all live
+tmux panes (`orch-slot-5`, `orch-slot-6`, `orch-slot-9`, checked directly) are still alive (`pane_dead=0`) and slot-9's
+own live-session directory (107M, actively growing) is intact.
+
+**Dead slots (`tabs-3`, `tabs-16`)**: no live tmux session or process found for either (slot-3's old PID had already
+exited by the time I checked), so no exclusion needed — all stale entries cleared.
+
+**Result**: 7,851 stale session directories removed, ~660MB freed. `df -h /tmp`: **88% used (266M free) → 20% used (1.7G
+free)**. Well below the 100% ENOSPC threshold, with ample headroom.
+
+Flipped todo #1 above. Todo #2 (P1 structural fix) and #3 (P2, resume the sports backfill) remain open for whoever picks
+this issue doc back up next.
 
 ### 2026-07-12 ~08:3x-08:5x UTC — slot-10: corroborating data point — false-negative background-task failures
 

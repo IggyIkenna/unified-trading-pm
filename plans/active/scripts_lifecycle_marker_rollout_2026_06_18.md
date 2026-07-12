@@ -1,12 +1,24 @@
 ---
 doc_type: plan
-title: Scripts lifecycle-marker rollout — stamp every script's frontmatter (orchestrator-dispatched, per-repo) — AO fleet-test plan
-summary: Stamp the 3-line lifecycle marker onto every script/ file across all repos so usage can be tracked and scripts can be pruned later; serves as the live AO fleet-test plan.
+title:
+  Scripts lifecycle-marker rollout — stamp every script's frontmatter (orchestrator-dispatched, per-repo) — AO
+  fleet-test plan
+summary:
+  Stamp the 3-line lifecycle marker onto every script/ file across all repos so usage can be tracked and scripts can be
+  pruned later; serves as the live AO fleet-test plan.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: [scripts, lifecycle-marker, frontmatter, fleet-test, orchestrator, stamp, audit, infrastructure]
 related: []
@@ -24,7 +36,15 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source: [operator decision 2026-06-18 — roll out the lifecycle frontmatter to track usage + prune later (no deletes now), 'operator decision 2026-06-22 — Delete-when is MANDATORY-PRESENT (NA for permanent) so every script is greppable; marker becomes QG-ENFORCED (last item, after all repos stamped); reassigned to harsh_pc as the live AO fleet-test plan', convention SSOT codex/06-coding-standards/script-homes.md § "Lifecycle marker", fleet characterization plans/audit/results/repo_scripts_characterization_2026_06_18.md]
+source:
+  [
+    operator decision 2026-06-18 — roll out the lifecycle frontmatter to track usage + prune later (no deletes now),
+    "operator decision 2026-06-22 — Delete-when is MANDATORY-PRESENT (NA for permanent) so every script is greppable;
+    marker becomes QG-ENFORCED (last item, after all repos stamped); reassigned to harsh_pc as the live AO fleet-test
+    plan",
+    convention SSOT codex/06-coding-standards/script-homes.md § "Lifecycle marker",
+    fleet characterization plans/audit/results/repo_scripts_characterization_2026_06_18.md,
+  ]
 assigned_role: infra-engineer
 drift_direction: correct-codex
 ---
@@ -40,6 +60,10 @@ drift_direction: correct-codex
 > local orchestrator backend (running as `harsh_pc`, STANDALONE) ingests it via the reconciler and dispatches a worker
 > per repo. The per-repo todos are independent (different repos, never the same file) → safe to parallelize, and the
 > work is low-risk (additive comments, no QG run) — an ideal exercise of the worker-spawn loop.
+>
+> **(SUPERSEDED 2026-07-12 per operator ruling, plan-reconciliation finding 74: harsh_pc/standalone dispatch retired
+> with the 2026-06-27 single-VM architecture — assigned_vm ∈ {planning, NA} only; frontmatter NA stands, plan is not
+> auto-dispatched.)**
 >
 > **⚠️ CONVENTION CORRECTION (operator 2026-06-22) — read before stamping:** all **3 fields are MANDATORY and PRESENT**
 > on every script. `Epic:` and `Lifecycle:` always carry a value. `Delete-when:` is the only field whose _value_ is

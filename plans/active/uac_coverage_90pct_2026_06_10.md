@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: UAC quality-gates coverage → 90% (stub omit + logic tests + branch coverage)
-summary: Raise UAC test coverage to 90% by expanding stub omit exclusions, adding logic tests, and covering branch edge-cases.
+summary:
+  Raise UAC test coverage to 90% by expanding stub omit exclusions, adding logic tests, and covering branch edge-cases.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -9,7 +10,8 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [uac, coverage, testing, quality-gates, branch-coverage]
-related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md]
+related:
+  [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md]
 created: 2026-06-10
 parent_epic: client_isolation_and_governance_master
 assigned_vm: NA
@@ -31,12 +33,21 @@ drift_direction: advance-code
 
 # UAC quality-gates coverage → 90%
 
+> **🟡 SUPERSEDED BY LATER WORK (correction 2026-07-12, finding 32, §A2 "50 reclassified" blanket ruling)**: this plan's
+> internal 89.82%-vs-"≥90%" dispute (Context below vs. the Phase 3/closing-table figures) is moot — a subsequent Phase 5
+> (not tracked in this plan) raised the UAC coverage gate again, **90 → 94, on 2026-06-20**, and combined coverage
+> actually reached **94.62%**. Verified live: `codex/06-coding-standards/quality-gates.md` line 505-506 ("UAC special
+> target — 94% combined (raised 90→94 2026-06-20, Phase 5 tests + `gcp/protocols.py` omit reaching 94.62%)") and
+> `unified-api-contracts/pyproject.toml` line 364 (`fail_under = 94`, not 90). Neither of this plan's two disputed
+> numbers (89.82% or "≥90%") reflects current reality — treat this plan as historical; do not use it to reason about
+> current UAC coverage gate status.
+
 ## Context
 
 UAC statement coverage was **86.66%** (stale Jan 2026 baseline) against a gate of 83%. Fresh measurement (2026-06-10):
 **89.82% combined** (statement 92.53%, branch 56.63%) after Phase 2 + Phase 3 tests + Phase 4 omit expansion. Gate
 raised to **90%** via `fail_under=90`. Plan: three levers (operator acked 2026-06-10) — stub omit, logic tests, branch
-edge-cases.
+edge-cases. (Superseded — see banner above: gate later raised again to 94, reaching 94.62%.)
 
 Three levers identified (operator acked 2026-06-10):
 

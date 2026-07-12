@@ -247,11 +247,14 @@ code-fix task). A data_engineering slot with a full session budget should:
   reading the live manifest once and finding 990/1,264 (78%) of ODDS `pending_fetch` rows correlate 1:1 with a MATCHES
   `empty_confirmed` row for the same (date, league) — ODDS was missing the same per-league fixture-calendar completion
   loop PREDICTIONS got in todo #2; fixed with the identical `_captured_leagues` pattern. `instruments-service@e951813`,
-  4 new regression tests, full `quality-gates.sh` green, shipped via quickmerge --agent. **This was the last open todo
-  in this doc** — all 7 todos are now `- [x]`. Todo #4 (re-verify + re-dispatch the footystats backfill VM) can now
-  genuinely proceed: all CODE fixes (todos #1, #2, #6) are shipped and todo #7's data cleanup is done, so the next
-  dispatch of todo #4 should re-run the typing pass and confirm `pending_fetch == 0` for `(footystats, MATCHES)` +
-  `(footystats, PREDICTIONS)` + `(footystats, ODDS)` before re-dispatching a backfill VM.
+  4 new regression tests, full `quality-gates.sh` green, shipped via quickmerge --agent. **Correction (2026-07-12,
+  doc-reconciliation finding 256, §A2 "50 reclassified" blanket ruling; was: "This was the last open todo in this doc —
+  all 7 todos are now `- [x]`."):** that overclaimed — 5 of the 6 checklist items in this doc are `- [x]`; todo #4
+  (re-verify + re-dispatch the footystats backfill VM) remains `- [ ]` BLOCKED-PREREQUISITES below, matching this doc's
+  own frontmatter `status: open`. What IS true: todo #4 can now genuinely proceed — all CODE fixes (todos #1, #2, #6)
+  are shipped and todo #7's data cleanup is done, so the next dispatch of todo #4 should re-run the typing pass and
+  confirm `pending_fetch == 0` for `(footystats, MATCHES)` + `(footystats, PREDICTIONS)` + `(footystats, ODDS)` before
+  re-dispatching a backfill VM.
 - **2026-07-08** — Todo #7 (reconcile the 20 footystats ODDS `attempted_failed`/phantom rows) FLIPPED (slot-12
   sonnet/high). Data-only fix, no code change — see the todo's own entry above for the full breakdown. Ran
   `scripts/reconcile_phantom_manifest_rows_all.py --asset-group sports --data-types ODDS --unphantom-only` (dry-run

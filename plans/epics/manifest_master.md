@@ -112,61 +112,39 @@ Full archaeology: [`manifest_evolution_SUPERSEDED_2026_05_21.md`](manifest_evolu
 
 ## Assigned active plans
 
-_7 active plans declare `parent_epic: manifest_master` in their frontmatter (verified 2026-06-30). Workers pick up in
-priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_2 active plans declare `parent_epic: manifest_master` in their frontmatter (verified 2026-07-12 against
+`plans/active/*.md` top-level frontmatter — the same scan scope as `scripts/plans/populate_epic_bodies_2026_05_21.py`;
+the script itself could not be re-run in place, it has a hardcoded macOS workspace path, so this refresh reproduces its
+scan logic by hand). Was: "7 active plans... verified 2026-06-30" with every P0-P3 entry below shown ✅ ARCHIVED —
+stale; the 6 archived-since-2026-05-21/23 entries previously listed here have been removed from the live roster (each
+plan's own file, at `plans/archive/2026_05/...` or `plans/archive/...plan.md`, remains the historical record; only
+`bucket_name_ssot_canonicalisation_2026_05_10` is additionally duplicated in the "Archived plans" section below,
+unchanged). Corrected per plan-reconciliation finding 130,
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling. Note: a
+broader grep for `parent_epic:.*manifest_master` also matches per-todo-item inline tags inside AG-specific
+canonicalisation plans whose own document-level frontmatter `parent_epic` is `mtds_mdps_master` (e.g.
+`defi_manifest_canonicalisation_2026_06_01.md`) — those are NOT document-level manifest_master children and are
+correctly excluded here. Workers pick up in priority order (P0 first)._
 
 ## P0 — must complete before next foundation gate
 
-### [`d3_manifest_v8_finish_2026_05_20`](../archive/2026_05/d3_manifest_v8_finish_2026_05_20.md)
+### [`master_data_canonicalisation_migration_catalogue_2026_06_07`](../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — Phases 1-3 done (100% v8 dist confirmed); Phase 4 BLOCKED-OPERATOR-DECISION (765
-DIVERGENT_EMPTY → D4 resolution) · **estimate**: 2.4 cal AI-days (class: infra) **title**: D3 — Manifest v8 finish +
-reason-enum wiring + divergence-detector
+**status**: active · **estimate**: 3.6 cal AI-days (class: design) · **title**: MASTER COORDINATOR — data + manifest +
+schema migration + IS catalogue + pipeline_mode standardisation
 
-### [`d5_features_missing_data_downgrade_2026_05_20`](../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md)
+### [`migration_verification_orphan_safety_2026_06_10`](../active/migration_verification_orphan_safety_2026_06_10.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — Phases 0-1 done; P1 ml-service item DEFERRED → `ml_service_hardening_2026_06_01.md`
-
-### [`expected_unattempted_propagation_chain_2026_05_12`](../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 — runtime propagation code complete (Phases 0-5 shipped); production validation
-pending Phase 3 MTDS run window per `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`
-
-### [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 — Phases 1-7 done; Phase 8 DEFERRED-writegate-6.x (2026-06-15 date-gate) ·
-**estimate**: 4.8 cal AI-days (class: infra)
-
-### [`honest_coverage_formula_consolidation_2026_05_19`](../archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — All 26 todos done. `compute_honest_coverage` consolidated + UTL published +
-MDPS/IS/deployment-api migrated. Tier-3 sentinel propagation →
-`expected_unattempted_validation_pending_phase3_2026_05_19.md`. Baseline script → `master_to_live_defi_2026_05_23.md`
-Group H. · **estimate**: 2.4 cal AI-days (class: refactor)
-
-### [`manifest_schema_final_gate_2026_05_09`](../archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 0-9 + schema code complete (v8 writer-path shipped). Phases 10-13 require
-operator GCS VM execution (backfill runs, paper-trade smoke, live cutover). · **estimate**: 2.1 cal AI-days (class:
-design)
+**status**: active · **estimate**: 6.6 cal AI-days (class: design) · **title**: Migration verification & orphan-safety
+harness (CF-15…CF-21)
 
 ## P1 — important; post-current-gate
 
-### [`manifest_cross_asset_rescan_design_2026_05_08`](../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 2.4 cal AI-days (class: infra)
+_(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-### [`bucket_name_ssot_canonicalisation_2026_05_10`](../archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 0a/0b/0c/0e/L1/L2-non-service complete. 13 service-code legacy delegate rows
-remain DEFERRED (BLOCKED-PHASE-2.6 or BLOCKED-UTL-MIGRATION). · **estimate**: 10.0 cal AI-days (class: refactor)
-
-### [`gate_3_phantom_audit_runbook_2026_05_13`](../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 — Gate 3 FIRED 2026-05-17; 0 phantoms all 5 asset_groups · **estimate**: 0.8 cal
-AI-days (class: infra)
+_(no plans currently assigned at this priority)_
 
 ## P3 — backlog; revisit quarterly
 
@@ -190,12 +168,23 @@ _(no plans currently assigned at this priority)_
 
 ## Deferred work — migrated from archived plans
 
-- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/wave2_polymarket_record_captured_from_counts_2026_05_09.md Phase 4** —
-      Design and land a successor plan for full `ManifestWriter.add` deletion: that method was soft-deprecated in the
-      wave-2 plan (Phase 3 swapped all call sites to `record_captured` / `record_empty`), but the method body was not
-      deleted because the plan lacked a dedicated "deletion + 1-cycle deprecation" successor. Successor plan should:
-      grep workspace for any remaining `.add(` call sites → confirm 0 remaining callers → delete `ManifestWriter.add` →
-      update codex `availability-manifest-and-data-status.md` to mark the method removed.
+- [ ] [AGENT] P2. **[2026-07-12 correction]** `ManifestWriter.add` is a LIVE, actively-extended write path, NOT
+      dead/soft-deprecated code awaiting a grep-confirm-then-delete (was: "Design and land a successor plan for full
+      `ManifestWriter.add` deletion: that method was soft-deprecated in the wave-2 plan (Phase 3 swapped all call sites
+      to `record_captured`/`record_empty`)... grep workspace for any remaining `.add(` call sites → confirm 0 remaining
+      callers → delete `ManifestWriter.add`" — false premise). Re-verified 2026-07-12: 4 live non-test call sites in
+      market-tick-data-service — `market_tick_data_service/scripts/_rebuild_sports_write.py:187`,
+      `market_tick_data_service/scripts/_rebuild_cefi_cf11.py:184`,
+      `market_tick_data_service/cli/handlers/_defi_manifest.py:474`,
+      `market_tick_data_service/scripts/rebuild_defi_manifest.py:478` — and this exact last call site was actively
+      enhanced as recently as M-COORD-5 (mtds@f80c50f1, per
+      `active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`: writer.add(...) now passes
+      asset_group=defi + the source-aware pipeline_mode/source/transport). **MIGRATED FROM:
+      plans/archive/wave2_polymarket_record_captured_from_counts_2026_05_09.md Phase 4.** Corrected todo: any future
+      deletion of `ManifestWriter.add` must first migrate these 4 live call sites to `record_captured`/`record_empty` —
+      do not merely grep-confirm zero callers, there are non-zero callers today. Corrected per plan-reconciliation
+      finding 137, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified"
+      blanket ruling.
 
 > **MIGRATED FROM:** `bucket_name_ssot_canonicalisation_2026_05_10.md` (archived 2026-05-23) — bucket naming SSOT
 > complete for DeFi/CeFi/core paths; remaining items are env-tiered migration + prediction bucket + workspace audit.

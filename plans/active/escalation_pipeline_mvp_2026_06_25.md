@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: Escalation pipeline MVP (role-agnostic, stateful, scoped-link)
-summary: Generalize the worker /blocked loop into a role-agnostic escalation record with open/in-progress/resolved state and a scoped Slack link — closing the three gaps between today's blocked loop and the one-alert/one-link/pre-researched-options vision.
+summary:
+  Generalize the worker /blocked loop into a role-agnostic escalation record with open/in-progress/resolved state and a
+  scoped Slack link — closing the three gaps between today's blocked loop and the
+  one-alert/one-link/pre-researched-options vision.
 status: active
 nature: design
 asset_group: [cross-cutting]
@@ -30,6 +33,13 @@ drift_direction: advance-code
 
 # Escalation pipeline MVP (role-agnostic, stateful, scoped-link)
 
+> **⏸️ PAUSED per operator decision 2026-06-26** — the parent epic `escalation_and_disaster_recovery_master` carries a
+> pause banner deferring this whole workstream (together with W7/W8/W9 message-broker dependency) to next quarter per
+> `agent_operating_framework_master.md:62-66` re-scope. This child plan's own frontmatter `status: active` was never
+> cascaded from that ruling — treat it as paused, not dispatchable, until un-paused. Todos remain valid. Corrected
+> 2026-07-12 — doc-reconciliation autofix finding 50, `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50
+> reclassified" blanket ruling (same finding 338 sync as the epic banner).
+
 > **E1** of `escalation_and_disaster_recovery_master` — the first child plan. Generalizes the existing worker `/blocked`
 > loop (built end-to-end) into a **role-agnostic, stateful, scoped-link** escalation pipeline that every role uses
 > identically. Depends on the message broker (`role_registry_schema_and_broker_mvp`, W9) for the reply path. Built
@@ -40,7 +50,7 @@ drift_direction: advance-code
 The blocked loop is built but role-blind and operator-secondary (scout audit, 2026-06-25). Three gaps separate it from
 the operator's vision (one alert → one scoped link → pre-researched options → always-visible/filterable):
 
-1. **Scoped link**: the Slack alert deep-links to `/#blocked` — the *whole* queue, not the one question. The human
+1. **Scoped link**: the Slack alert deep-links to `/#blocked` — the _whole_ queue, not the one question. The human
    hunts.
 2. **No alert state**: there is no `open / in-progress / resolved` lifecycle to filter on, and no "I'm on it"
    intermediate, so two operators can collide on the same alert.
@@ -53,13 +63,14 @@ runtime: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ## Locked design (operator, 2026-06-25)
 
-- **Additive over `BlockedRow`**: a generalized escalation record `{ id, role, domain, question, options[],
-  recommendation, severity, state }` — existing `/blocked` rows map onto it; no rewrite, no behavior loss.
-- **State machine**: `open → in-progress (claimed) → resolved`. Resolved rows stay browsable + filterable (so people
-  see what others already resolved). The `claim` ("I'm on it") prevents collisions — implementable as a Slack reaction
-  hack OR a UI button (MVP: UI button; Slack-reaction is a fast-follow).
+- **Additive over `BlockedRow`**: a generalized escalation record
+  `{ id, role, domain, question, options[], recommendation, severity, state }` — existing `/blocked` rows map onto it;
+  no rewrite, no behavior loss.
+- **State machine**: `open → in-progress (claimed) → resolved`. Resolved rows stay browsable + filterable (so people see
+  what others already resolved). The `claim` ("I'm on it") prevents collisions — implementable as a Slack reaction hack
+  OR a UI button (MVP: UI button; Slack-reaction is a fast-follow).
 - **Scoped link**: the Slack alert links to `/escalation/{id}` (one question + its options), not the queue.
-- **Human-primary, agent-assisted**: the main agent stays first-responder for *agent-answerable* questions; the human is
+- **Human-primary, agent-assisted**: the main agent stays first-responder for _agent-answerable_ questions; the human is
   primary for `operator-decision` / `BLOCKED-CREDENTIALS` / `manual_unkill`. The reply routes back via the broker.
 - **No new Slack OAuth app** in the MVP (that's E2). Keep the one-way webhook; the interactivity is the scoped link +
   the dashboard/UI resolve surface.
@@ -70,8 +81,8 @@ runtime: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 - [ ] [CODE] P1. Escalation record generalizing `BlockedRow` (`role`, `domain`, `severity`, `state` added; `/blocked`
       back-compat shim). **Gate**: existing blocked tests green; new fields persisted + readable.
-- [ ] [CODE] P1. State machine `open → in-progress → resolved` + a `claim` transition (`POST /api/escalation/{id}/claim`).
-      **Gate**: state transitions unit-tested; double-claim is rejected.
+- [ ] [CODE] P1. State machine `open → in-progress → resolved` + a `claim` transition
+      (`POST /api/escalation/{id}/claim`). **Gate**: state transitions unit-tested; double-claim is rejected.
 
 ### Phase 1 — Scoped Slack link + reply routing [depends: P0]
 
@@ -90,7 +101,8 @@ runtime: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 - Any role can post an escalation record `{ role, domain, options[], recommendation }`; the existing `/blocked` path
   still works (back-compat).
-- The Slack alert opens a **scoped** single-question page; answering routes back to the originating agent via the broker.
+- The Slack alert opens a **scoped** single-question page; answering routes back to the originating agent via the
+  broker.
 - The deployment-ui tab shows `open / in-progress / resolved` with a working filter and a `claim` ("I'm on it")
   transition; resolved escalations stay browsable. UI change is `pw:L2`-gated.
 

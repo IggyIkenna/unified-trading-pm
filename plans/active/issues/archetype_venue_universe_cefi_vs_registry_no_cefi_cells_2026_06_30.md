@@ -101,3 +101,20 @@ predates this fix (UI `coverage.ts` last synced 2026-06-22 15:58 vs UAC manifest
 17:48 same day) — a separate cross-repo rename gap, not touched here. Needs its own issue/plan (rename
 `VenueAssetGroupV2` → `VenueCategoryV2` in UI enums.ts + add `CROSS_CATEGORY` + re-sync coverage.ts + UI typecheck)
 before the sync script can be safely re-run.
+
+**Second discovered-but-out-of-scope contradiction (2026-07-12, finding #299)** — the shipped leg-spec registry
+(`unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_leg_spec_seeds.py:78-86 _STAKED_HEDGE_VENUES`,
+verified on-disk) still lists `binance` as a CeFi hedge venue
+(`hyperliquid, gmx_v2, drift, binance, bybit, deribit, okx`) for the `CARRY_STAKED_BASIS`-family structure builder,
+while the flat-registry fix above (2026-07-10, this same resolution) deliberately limits the `CARRY_STAKED_BASIS` CEFI
+cell to `[deribit, bybit, okx]` — matching `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`'s
+venue-acceptance table (re-verified 2026-05-20, confirmed on re-read), which explicitly states BINANCE accepts "none —
+cross-collateral feature retired — 0 rows" for this archetype's LST-collateral hedge leg, and whose `venue_universe`
+frontmatter omits binance entirely. **The leg-spec's binance inclusion is the stale outlier.** **Needs its own CODE
+fix** (not a doc-only fix — out of scope for this plans-doc reconciliation pass, and NOT auto-applied here):
+`_STAKED_HEDGE_VENUES` is a single shared tuple consumed once (`archetype_leg_spec_seeds.py:237`) by the shared
+CARRY_STAKED_BASIS-family builder, so a blind `binance` removal must first confirm which archetypes in that family (e.g.
+`CARRY_BASIS_PERP_INV`, registry cell `[hyperliquid, bybit]`) actually need it before narrowing the shared tuple —
+verify per-archetype before editing. Tracked as a follow-up todo, target repo: unified-api-contracts. Finding #299,
+plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified"
+blanket ruling.

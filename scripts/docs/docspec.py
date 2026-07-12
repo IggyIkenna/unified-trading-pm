@@ -57,7 +57,7 @@ IMPLEMENTATION_STATUS = frozenset({"design", "code-shipped", "stub", "active", "
 
 STATUS_BY_TYPE: dict[str, frozenset[str] | None] = {
     "plan": frozenset({"draft", "active", "blocked", "paused", "complete", "superseded", "cancelled"}),
-    "epic": frozenset({"active", "complete", "superseded"}),
+    "epic": frozenset({"active", "paused", "complete", "superseded"}),
     "issue": frozenset({"open", "blocked", "resolved", "false-positive", "superseded"}),
     "audit-result": frozenset({"pass", "partial", "fail"}),
     "audit-instruction": frozenset({"active", "retired"}),

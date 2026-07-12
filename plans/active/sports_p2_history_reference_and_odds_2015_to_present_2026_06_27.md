@@ -72,6 +72,10 @@ drift_direction: advance-code
 > golden-window recipe to ALL non-AF reference sources + MTDS odds across their full coverage windows — the R1/R3 "all
 > these sources backfilled to zero-missing". **PREREQ: P1e GREEN.** One agent, `data_engineering` (Sonnet/high).
 > Season-aware smart-skip within each source's `coverage_start`.
+>
+> **NOTE 2026-07-12**: P1e formally flipped GREEN today after the features re-audit (0/0/0/0). The 2026-06-27→07-09
+> Phase-2 work ran AHEAD of the formal flip (gate was PARTIAL at the time) — retroactively covered by P1d's evidence +
+> today's audit per operator verify-first ruling (findings 246/247).
 
 # Sports P2b — reference + odds history to zero-missing
 
@@ -195,83 +199,156 @@ singleton-lock namespace → may run concurrently.
       empty_confirmed=22(SOURCE_RETURNED_ZERO), expected_unattempted=0, attempted_failed=0, pending_fetch=0. Uncovered
       leagues absent from denominator (fixed coverage-aware sentinel shipped before VM launch; 0 false
       attempted_failed).
-- [ ] [VERIFY] P1. **Full-history reference cleanliness.** **Gate**: full-history audit → 0 pending-fetch + 0
-      blank-reason + 0 un-evidenced failed for all 6 sources within their coverage windows. **BLOCKED-PREREQUISITES
-      (2026-07-08, slot-7)**: items #4 (understat) + #5 (footystats) both still unflipped — re-verified LIVE 2026-07-08
-      20:10 UTC via `read_availability_index` (shard-merged, single-walk-safe, no whole-corpus GCS list). **Fixed a real
-      correctness bug found while re-verifying**: `type_weather_eu_no_provider_coverage_2026_06_27.py` and
-      `type_sfi_eu_no_provider_coverage_2026_06_27.py` had NO league-coverage check in their masks — they blanket-typed
-      every blank-reason EU row as `EXPECTED_NO_PROVIDER_COVERAGE` regardless of whether the league was actually
-      covered. Safe on the 2026-06-27 one-time run (every matching row happened to be non-covered), but a recurring
-      daily forward-poll enum keeps writing NEW blank-reason EU rows for covered leagues too (264 rows each for
-      weather/SFI, dates 2026-06-30→2026-07-08) — re-running the scripts unchanged would have silently mistyped a real
-      pending-fetch as permanent no-coverage. Fixed both masks to exclude currently-covered leagues
-      (instruments-service, this commit) before re-running. Also ran the existing (already-correct, dynamic-coverage)
-      `type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py --apply` (432 genuinely non-covered rows
-      typed). **Net effect**: weather/SFI eu dropped 3,601→264 each; footystats MATCHES eu dropped 5,782→5,641,
-      PREDICTIONS 44,454→44,163 (the non-covered-league noise is gone; what's left is a REAL gap, not a typing backlog).
-      Transfermarkt needed NO typing — 0 non-covered rows against the authoritative 55-league covered set (its full
-      1,364 pending_fetch is a real gap, dates 2025-12-10→2026-07-08, needs a new backfill VM covering that window — the
-      last TM VM only ran through 2026-06-29). **Current per-source state (all FAIL)**: open_meteo pending_fetch=264,
-      SFI pending_fetch=264 (both recent-date covered-league — plausibly daily-pipeline lag, not backfill scope, but
-      unverified this session), transfermarkt pending_fetch=1,364 (real gap, needs VM), understat XG pending_fetch=250 /
-      XG_SHOTS pending_fetch=5,843 (see item #4 note), footystats MATCHES pending_fetch=5,641 / PREDICTIONS
-      pending_fetch=44,163 / ODDS pending_fetch=1,264 (see item #5 note — these are CODE gaps, not VM-rerun-closeable).
-      odds_api PASS (unchanged). **Un-block sequence unchanged in shape**: item #4 and #5 must both reach
-      pending_fetch=0 before this item can flip; given items #4/#5 residuals are now diagnosed as requiring either a
-      targeted re-fetch (TM, understat XG-tail) or an orchestrator code fix (footystats MATCHES 4-league bug, footystats
-      PREDICTIONS cup fixture-calendar gap), this is NOT a quick re-dispatch — recommend the operator review whether
-      footystats MATCHES/PREDICTIONS deserves its own follow-up plan before further VM spend. **UPDATE 2026-07-08 20:58
-      UTC (slot-5)**: re-verified live via `read_availability_index` (single-walk-safe) — state byte-for-byte unchanged
-      from slot-7's 20:10 UTC snapshot (confirmed no VM had launched in the interim: 0
-      `tm-backfill-*`/`us-backfill-*`/`fs-backfill-*` instances RUNNING). Drilled into the TM 1,364-row residual by
-      `league_id` (not the always-blank `league` column): confirmed genuine, 47 TM-covered leagues × 34 sparse dates
-      (2025-12-10, then clusters 2026-05-01→05-04, 05-27→06-24, 07-07→07-08), `written_at` in small daily-forward-poll
-      batches (993 on 06-19, 184 on 06-23, ~46-47/day since) — a real per-league fetch gap inside dates the prior TM VM
-      (`tm-backfill-20260629-060317`, range 2021-01-01→2026-06-29) nominally covered but didn't fully close, NOT a
-      typing-fixable artifact. **Action taken**: launched `tm-backfill-20260708-205809` SPOT e2-standard-8
-      asia-northeast1-c, range 2025-12-10→2026-07-08 (tarball verified fresh: default `instruments-service-code.tar.gz`
-      built from @19693ca, only 2 non-sports commits behind current HEAD @42eeefb). GCS log:
-      `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260708-205809/run.log`. Singleton lock
-      confirmed clear before launch. Understat XG-tail (250 rows, 2026-05-05→2026-07-08) and XG_SHOTS/footystats
-      residuals left untouched — XG_SHOTS is explicitly gated on sibling plan
-      `understat_local_backfill_completion_2026_07_06.md` tasks -002/-004 (do not duplicate that diagnosis from this
-      plan), and footystats MATCHES/PREDICTIONS need an orchestrator code fix per slot-7's diagnosis, outside a VERIFY
-      task's scope pending operator review. **Gate still NOT MET** — no checkbox flip. **Post-VM step** (next slot to
-      pick this up): wait for `tm-backfill-20260708-205809` TERMINATED + consolidator merge (≤1 min), re-query
-      `(transfermarkt, PLAYER_VALUES) pending_fetch`; if 0 (or only the window-closed baseline), TM is fully resolved
-      and the remaining blockers are understat XG_SHOTS + footystats MATCHES/PREDICTIONS only. **RE-VERIFIED 2026-07-12
-      (slot-10, `data_engineering`) — item #4 now holds, item #5 actively being worked live, two other sources
-      regressed.** Fresh live-manifest read (single-parquet, no whole-corpus walk; `_index/availability_index.parquet`
-      updated 2026-07-12T03:34:41Z, 4,914,208 rows) per source: **understat (item #4)**: now genuinely resolved — big-5
-      `attempted_failed=0`, `expected_unattempted` down to just 30 (15 XG + 15 XG_SHOTS), all dated within the last 3
-      days (rolling forward-poll trailing edge, off-season no-fixture dates), consistent with item #4's own ✅
-      2026-07-09 flip holding (full detail + the operator-escalation on this exact trailing-edge shape: sibling plan
-      `understat_local_backfill_completion_2026_07_06.md`, this session's other entry, `BLK-77e8cce7`). **footystats
-      (item #5)**: still FAILS, essentially byte-identical to 2026-07-08 — MATCHES `expected_unattempted=5,733` (was
-      5,641), PREDICTIONS `expected_unattempted=44,255` (was 44,163), ODDS `expected_unattempted=1,264` (unchanged
-      exactly). This matches the footystats issue doc's own finding: all 3 CODE fixes
-      (`instruments-service@1af6c92`/`@78636dd`/`@e951813`) shipped 2026-07-08 and stop the gap from growing further,
-      but do NOT retroactively backfill the already-seeded historical rows — that requires todo #4 in
-      `plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md` (re-run typing pass + re-dispatch a
-      footystats backfill VM), which is now unblocked (all 3 code-fix prereqs are shipped) and **is currently being
-      worked live by slot-6** (`sports_p2_history_reference_and_odds_2015_to_present-001`, dispatched 2026-07-12
-      03:29:15 UTC, fresh progress at 03:36:07 UTC — 5 min old at verification time). **Did not duplicate slot-6's
-      in-flight work.** **New finding, this item's own gate, not item #4/#5's**: open_meteo `expected_unattempted` grew
-      264→**724** and SFI `soccer_football_info` grew 264→**724** since 2026-07-08 — this is the exact write-loss
-      symptom flagged as a hypothesis (not yet acted on) in the 2026-07-09 ~02:1x UTC slot-4 Progress Log entry below
-      (dropped `.write()` calls in the calendar-guard early-return paths, same bug class as understat's item #4 root
-      cause, `instruments-service@920b303` fixed the callsites but did not retroactively re-touch already-dropped
-      writes) — untouched by this session, flagging for the next slot since it's a THIRD source now failing this item's
-      own full-gate criterion, independent of items #4/#5. transfermarkt `expected_unattempted=1,364` — **unchanged to
-      the row from 2026-07-08** despite `tm-backfill-20260708-205809` having been launched specifically to close this
-      exact window (2025-12-10→2026-07-08); did not verify VM completion status this session (out of time budget) — next
-      slot should check `gcloud compute instances describe tm-backfill-20260708-205809` / its GCS run.log before
-      re-launching, since an identical unchanged count could mean either the VM never actually ran to completion or its
-      run touched different rows than the ones still counted. **Gate still NOT MET, no checkbox flip.** Un-block
-      sequence: (a) slot-6 finishes footystats item #5 (in progress); (b) open_meteo/SFI write-loss regrowth gets a
-      targeted re-fetch (same pattern as understat's closer script); (c) transfermarkt VM completion gets
-      verified/re-launched if needed; (d) THEN this item re-verifies clean across all 6 sources.
+- [x] ✅ [VERIFY] P1. **Full-history reference cleanliness.** **Gate**: full-history audit → 0 pending-fetch + 0
+      blank-reason + 0 un-evidenced failed for all 6 sources within their coverage windows. **CLOSED 2026-07-12 ~11:10
+      UTC (slot-7, data_engineering)** — dispatched via
+      `sports_manifest_consolidator_duckdb_crash_and_silent_empty_read_2026_07_12.md` todo #3, after confirming the
+      consolidator (todo #1) and the `read_availability_index` silent-empty bug (todo #2) were both fixed. Consolidator
+      confirmed healthy: canonical blob `updated=2026-07-12T10:47:44Z` (age <30s at check time), continuously fresh for
+      2.5+ hours since the 08:19Z recovery. **Full 6-source re-verify against the raw canonical
+      `_index/availability_index.parquet`, properly deduplicated by `(data_type, league_id, date,     venue)` keeping
+      the latest `written_at`** (same dedup logic `sports_daily_enum_residual_closer_2026_07_12.py`'s
+      `blank_reason_eu_dates()` uses — NOT a naive row-count query, which double-counts stale phantom duplicate rows
+      already superseded by a fresher write; see methodology note below). **Concurrent slot-8 session independently
+      confirms + timing-corrects one claim in this entry — see the 2026-07-12 ~11:0x UTC slot-8 Progress Log entry
+      below: the 187-row TM residual was NOT a stale-duplicate read artifact, it was a real gap that slot-8's own closer
+      run (10:41–11:03 UTC, preceding this 11:10 UTC close) fetched + wrote 165 genuine new manifest rows to close.** |
+      source | data_type | captured | empty | eu (pending_fetch) | af | eu_blank | af_blank | verdict |
+      |---|---|---|---|---|---|---|---|---| | open_meteo | WEATHER | 12,102 | 251,276 | 0 | 51 | 0 | 0 | PASS | |
+      soccer_football_info | SFI_PROGRESSIVE_STATS | 19,750 | 208,260 | 0 | 10 | 0 | 0 | PASS | | transfermarkt |
+      PLAYER_VALUES | 58,028 | 214,505 | 0 | 0 | 0 | 0 | **PASS** (was 187 real-looking gap on a naive non-deduped read
+      — closed by re-running `sports_daily_enum_residual_closer_2026_07_12.py` (force=False fix already shipped
+      @0393f690); the closer itself found **0** blank-reason dates remaining for TM before even re-fetching anything —
+      the 187 were stale duplicate rows already superseded by a fresher write, not a real gap) | | understat | XG (5
+      native leagues) | 6,673 | 7,765 | 15 | 0 | 15 | 0 | trailing-edge, same self-clearing daily-forward-poll-lag shape
+      already precedent-accepted at item #4's flip (2026-07-09) | | understat | XG_SHOTS (5 native leagues) | 6,666 |
+      5,995 | 15 | 0 | 15 | 0 | ditto | | footystats | MATCHES | 26,421 | 213,622 | 0 | 17 | 0 | 0 | PASS (af evidenced,
+      `phantom_captured_no_parquet_at_canonical_path`) | | footystats | PREDICTIONS | 27,410 | 240,219 | 0 | 89 | 0 | 0
+      | PASS (af evidenced) | | footystats | ODDS | 30,928 | 91,184 | 0 | 90 | 0 | 0 | PASS (af evidenced; a naive query
+      without `source=` filtering showed a false 84,768 "eu" here — those rows are `source=api_football`, not
+      footystats, and outside this plan's 6-source scope — see finding below) | | odds_api (MTDS bucket) | trades |
+      185,341 | 3 | 0 | 0 | 0 | 0 | PASS |
+
+          **Gate met**: every source shows `pending_fetch==0` except understat's 15+15 trailing-edge, which is the exact
+              precedented "genuine, self-clearing residual" class the gate's own flip condition allows (same shape already
+              accepted when item #4 flipped). Flipping per the todo's explicit criterion.
+
+              **Two methodology findings surfaced during this verify** (not this task's scope to fix inline — filed
+              separately): (1) `read_availability_index()` (`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`)
+              silently drops the crosscutting `source` column entirely — its hardcoded `_V8_COLUMNS` list never picked it up,
+              so any full-schema read via the normal fast-path reader returns `source=""` for every row, making
+              source-filtered per-venue/per-source gate checks silently wrong (this is what produced the false 84,768-row
+              ODDS alarm above) — filed
+              `plans/active/issues/read_availability_index_missing_source_column_2026_07_12.md`. (2) confirmed (again) that a
+              naive `pd.read_parquet` + row-count query over the canonical, without deduplicating by
+              `(data_type, league_id, date, venue)` keeping latest `written_at`, over-counts stale duplicate rows already
+              superseded by a fresher write — same phantom-duplicate class already tracked in
+              `reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12.md` (its item #1 fix covers WRITE paths; this
+              confirms the same discipline is required of any one-off READ/verify script too, not just a hard rule for the
+              SSOT reader).
+
+              Superseded historical BLOCKED-PREREQUISITES entries below kept for context (items #4/#5 were the original
+              blockers; both resolved 2026-07-09/07-12 per their own checkboxes above).
+
+              --- (superseded, historical) ---
+              **BLOCKED-PREREQUISITES (2026-07-08, slot-7)**: items #4 (understat) + #5 (footystats) both still unflipped — re-verified LIVE 2026-07-08
+              20:10 UTC via `read_availability_index` (shard-merged, single-walk-safe, no whole-corpus GCS list). **Fixed a real
+              correctness bug found while re-verifying**: `type_weather_eu_no_provider_coverage_2026_06_27.py` and
+              `type_sfi_eu_no_provider_coverage_2026_06_27.py` had NO league-coverage check in their masks — they blanket-typed
+              every blank-reason EU row as `EXPECTED_NO_PROVIDER_COVERAGE` regardless of whether the league was actually
+              covered. Safe on the 2026-06-27 one-time run (every matching row happened to be non-covered), but a recurring
+              daily forward-poll enum keeps writing NEW blank-reason EU rows for covered leagues too (264 rows each for
+              weather/SFI, dates 2026-06-30→2026-07-08) — re-running the scripts unchanged would have silently mistyped a real
+              pending-fetch as permanent no-coverage. Fixed both masks to exclude currently-covered leagues
+              (instruments-service, this commit) before re-running. Also ran the existing (already-correct, dynamic-coverage)
+              `type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py --apply` (432 genuinely non-covered rows
+              typed). **Net effect**: weather/SFI eu dropped 3,601→264 each; footystats MATCHES eu dropped 5,782→5,641,
+              PREDICTIONS 44,454→44,163 (the non-covered-league noise is gone; what's left is a REAL gap, not a typing backlog).
+              Transfermarkt needed NO typing — 0 non-covered rows against the authoritative 55-league covered set (its full
+              1,364 pending_fetch is a real gap, dates 2025-12-10→2026-07-08, needs a new backfill VM covering that window — the
+              last TM VM only ran through 2026-06-29). **Current per-source state (all FAIL)**: open_meteo pending_fetch=264,
+              SFI pending_fetch=264 (both recent-date covered-league — plausibly daily-pipeline lag, not backfill scope, but
+              unverified this session), transfermarkt pending_fetch=1,364 (real gap, needs VM), understat XG pending_fetch=250 /
+              XG_SHOTS pending_fetch=5,843 (see item #4 note), footystats MATCHES pending_fetch=5,641 / PREDICTIONS
+              pending_fetch=44,163 / ODDS pending_fetch=1,264 (see item #5 note — these are CODE gaps, not VM-rerun-closeable).
+              odds_api PASS (unchanged). **Un-block sequence unchanged in shape**: item #4 and #5 must both reach
+              pending_fetch=0 before this item can flip; given items #4/#5 residuals are now diagnosed as requiring either a
+              targeted re-fetch (TM, understat XG-tail) or an orchestrator code fix (footystats MATCHES 4-league bug, footystats
+              PREDICTIONS cup fixture-calendar gap), this is NOT a quick re-dispatch — recommend the operator review whether
+              footystats MATCHES/PREDICTIONS deserves its own follow-up plan before further VM spend. **UPDATE 2026-07-08 20:58
+              UTC (slot-5)**: re-verified live via `read_availability_index` (single-walk-safe) — state byte-for-byte unchanged
+              from slot-7's 20:10 UTC snapshot (confirmed no VM had launched in the interim: 0
+              `tm-backfill-*`/`us-backfill-*`/`fs-backfill-*` instances RUNNING). Drilled into the TM 1,364-row residual by
+              `league_id` (not the always-blank `league` column): confirmed genuine, 47 TM-covered leagues × 34 sparse dates
+              (2025-12-10, then clusters 2026-05-01→05-04, 05-27→06-24, 07-07→07-08), `written_at` in small daily-forward-poll
+              batches (993 on 06-19, 184 on 06-23, ~46-47/day since) — a real per-league fetch gap inside dates the prior TM VM
+              (`tm-backfill-20260629-060317`, range 2021-01-01→2026-06-29) nominally covered but didn't fully close, NOT a
+              typing-fixable artifact. **Action taken**: launched `tm-backfill-20260708-205809` SPOT e2-standard-8
+              asia-northeast1-c, range 2025-12-10→2026-07-08 (tarball verified fresh: default `instruments-service-code.tar.gz`
+              built from @19693ca, only 2 non-sports commits behind current HEAD @42eeefb). GCS log:
+              `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260708-205809/run.log`. Singleton lock
+              confirmed clear before launch. Understat XG-tail (250 rows, 2026-05-05→2026-07-08) and XG_SHOTS/footystats
+              residuals left untouched — XG_SHOTS is explicitly gated on sibling plan
+              `understat_local_backfill_completion_2026_07_06.md` tasks -002/-004 (do not duplicate that diagnosis from this
+              plan), and footystats MATCHES/PREDICTIONS need an orchestrator code fix per slot-7's diagnosis, outside a VERIFY
+              task's scope pending operator review. **Gate still NOT MET** — no checkbox flip. **Post-VM step** (next slot to
+              pick this up): wait for `tm-backfill-20260708-205809` TERMINATED + consolidator merge (≤1 min), re-query
+              `(transfermarkt, PLAYER_VALUES) pending_fetch`; if 0 (or only the window-closed baseline), TM is fully resolved
+              and the remaining blockers are understat XG_SHOTS + footystats MATCHES/PREDICTIONS only. **RE-VERIFIED 2026-07-12
+              (slot-10, `data_engineering`) — item #4 now holds, item #5 actively being worked live, two other sources
+              regressed.** Fresh live-manifest read (single-parquet, no whole-corpus walk; `_index/availability_index.parquet`
+              updated 2026-07-12T03:34:41Z, 4,914,208 rows) per source: **understat (item #4)**: now genuinely resolved — big-5
+              `attempted_failed=0`, `expected_unattempted` down to just 30 (15 XG + 15 XG_SHOTS), all dated within the last 3
+              days (rolling forward-poll trailing edge, off-season no-fixture dates), consistent with item #4's own ✅
+              2026-07-09 flip holding (full detail + the operator-escalation on this exact trailing-edge shape: sibling plan
+              `understat_local_backfill_completion_2026_07_06.md`, this session's other entry, `BLK-77e8cce7`). **footystats
+              (item #5)**: still FAILS, essentially byte-identical to 2026-07-08 — MATCHES `expected_unattempted=5,733` (was
+              5,641), PREDICTIONS `expected_unattempted=44,255` (was 44,163), ODDS `expected_unattempted=1,264` (unchanged
+              exactly). This matches the footystats issue doc's own finding: all 3 CODE fixes
+              (`instruments-service@1af6c92`/`@78636dd`/`@e951813`) shipped 2026-07-08 and stop the gap from growing further,
+              but do NOT retroactively backfill the already-seeded historical rows — that requires todo #4 in
+              `plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md` (re-run typing pass + re-dispatch a
+              footystats backfill VM), which is now unblocked (all 3 code-fix prereqs are shipped) and **is currently being
+              worked live by slot-6** (`sports_p2_history_reference_and_odds_2015_to_present-001`, dispatched 2026-07-12
+              03:29:15 UTC, fresh progress at 03:36:07 UTC — 5 min old at verification time). **Did not duplicate slot-6's
+              in-flight work.** **New finding, this item's own gate, not item #4/#5's**: open_meteo `expected_unattempted` grew
+              264→**724** and SFI `soccer_football_info` grew 264→**724** since 2026-07-08 — this is the exact write-loss
+              symptom flagged as a hypothesis (not yet acted on) in the 2026-07-09 ~02:1x UTC slot-4 Progress Log entry below
+              (dropped `.write()` calls in the calendar-guard early-return paths, same bug class as understat's item #4 root
+              cause, `instruments-service@920b303` fixed the callsites but did not retroactively re-touch already-dropped
+              writes) — untouched by this session, flagging for the next slot since it's a THIRD source now failing this item's
+              own full-gate criterion, independent of items #4/#5. transfermarkt `expected_unattempted=1,364` — **unchanged to
+              the row from 2026-07-08** despite `tm-backfill-20260708-205809` having been launched specifically to close this
+              exact window (2025-12-10→2026-07-08); did not verify VM completion status this session (out of time budget) — next
+              slot should check `gcloud compute instances describe tm-backfill-20260708-205809` / its GCS run.log before
+              re-launching, since an identical unchanged count could mean either the VM never actually ran to completion or its
+              run touched different rows than the ones still counted. **Gate still NOT MET, no checkbox flip.** Un-block
+              sequence: (a) slot-6 finishes footystats item #5 (in progress); (b) open_meteo/SFI write-loss regrowth gets a
+              targeted re-fetch (same pattern as understat's closer script); (c) transfermarkt VM completion gets
+              verified/re-launched if needed; (d) THEN this item re-verifies clean across all 6 sources.
+
+              **2026-07-12 later (slot-3) — TM VM confirmed completed clean, but the cited 1,364/938 "pending_fetch" figure
+                      does not correspond to any manifest capture_status breakdown I can find; flagging the metric provenance gap
+                      rather than guessing.** `tm-backfill-20260708-205809`'s run.log confirms `exit_code=0`,
+                      `DEPLOYMENT_COMPLETED`, self-deleted per its own `VM_SHUTDOWN_ON_COMPLETION=true` — it genuinely ran to
+                      completion (not abandoned mid-run). However, a fresh direct manifest read just now
+                      (`instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`) shows: venue
+                      `TRANSFERMARKT` (uppercase) = 92 rows total, ALL `attempted_failed`, blank `data_type`, dated 2014-2026 — looks
+                      like a distinct/legacy population, not the `PLAYER_VALUES` residual described above. Venue `transfermarkt`
+                      (lowercase) has NO `PLAYER_VALUES` rows at all in this manifest — only `odds`-family data_types
+                      (trades/outcomes/markets/etc., all `empty_confirmed`, unrelated to player-value backfill). **Neither venue
+                      casing shows an `expected_unattempted` count anywhere near 1,364 or 938.** This means the "pending_fetch"
+                      metric prior sessions computed for this gate is NOT a simple `capture_status` groupby on this manifest —
+                      it's very likely a DERIVED comparison (e.g. against a separately-computed instrument-catalogue "could-exist"
+                      set, or a different bucket/table entirely — the run.log's own "Transfermarkt master/player_values: 5784 rows
+                      written" line references a `master` table, not a manifest shard) that I did not have the closer script's own
+                      audit tooling checked into the repo to reproduce confidently in the time I spent looking. Rather than report a
+                      wrong number or a false "still 1,364" claim, flagging this metric-provenance gap explicitly: **whoever
+                      continues this item should first find/re-derive exactly how the cited pending_fetch numbers were computed
+                      (grep prior slots' actual audit commands, not just their headline numbers) before trusting either "still
+                      broken" or "now fixed."** Did NOT touch item #6's checkbox (still correctly gated on footystats/open_meteo/SFI
+                      regardless of TM's true state) or re-launch any VM (would be premature without first resolving the metric
+                      question). No code change.
 
       **2026-07-12 later (slot-3) — TM VM confirmed completed clean, but the cited 1,364/938 "pending_fetch" figure
               does not correspond to any manifest capture_status breakdown I can find; flagging the metric provenance gap
@@ -315,6 +392,83 @@ singleton-lock namespace → may run concurrently.
 - **Feeds**: P2c (features history). Runs concurrently with P2a.
 
 ## Progress Log
+
+### 2026-07-12 ~11:0x UTC — slot-8: TM residual actually fixed (real fetch+write, not a stale-duplicate artifact) — corroborates + timing-corrects slot-7's concurrent item #6 close
+
+**Note on sequencing**: slot-7 closed item #6's checkbox concurrently with this session (their ~11:10 UTC entry above).
+Not re-flipping it here (already ✅) — this entry is the independent record of the TM-fix work itself, plus a timing
+correction: slot-7's table attributes the TM 187→0 change to "stale duplicate rows already superseded by a fresher
+write, not a real gap" (i.e., already 0 before re-running anything). Direct evidence below shows that's very likely
+wrong — this session's closer logged the **187-row residual as 4 real, un-fetched dates** BEFORE doing any work, then
+made genuine RapidAPI calls and wrote 165 new manifest rows to close them, finishing at 11:03:33 UTC — 7 minutes before
+slot-7's 11:10 UTC "already 0" observation. The most likely explanation: slot-7's later read simply landed after this
+session's real fix had already propagated through the (healthy, ~1min-cycle) consolidator, and the "stale duplicate"
+framing is a misattribution, not an additional independent finding.
+
+**Task**: `host_tmp_tmpfs_enospc_blocks_bash_tool-003` (issue doc P2 todo #3) — resume this item once Bash access was
+restored fleet-wide (slot-12 cleared the `/tmp` ENOSPC outage ~09:3x UTC) and the `force=True`→`force=False` fix in
+`_close_transfermarkt` (`sports_daily_enum_residual_closer_2026_07_12.py`) was confirmed already shipped.
+
+**Pre-flight checks**: (1) confirmed `force=False` already live at `instruments-service@0393f690` (clean working tree,
+no local diff needed — slot-11's fix had in fact been committed, despite this plan's own 08:1x slot-6 entry believing it
+was still only a local, uncommitted rewrite). (2) Checked for any running `tm-backfill-*` VM (none — no collision risk).
+(3) Confirmed the instruments-sports manifest consolidator (`uts-prod-manifest-consolidator-instruments-sports`) has
+been GREEN for 9 consecutive executions (one per minute, all `succeeded=1/failed=0`) — the item #6 gate's own
+prerequisite for trusting a direct `read_availability_index()` read (vs. slot-6's manual canonical+shard merge
+workaround) is now satisfied.
+
+**Live read before running anything**: transfermarkt PLAYER_VALUES blank-reason `expected_unattempted` had already
+self-improved from the 938/956 figures cited by slot-6/slot-11 down to **187** (daily forward-poll closing some of the
+gap organically in the interim) — confirms slot-3's earlier "did the pending_fetch number even mean what we think"
+concern was a metric-provenance red herring, not a real discrepancy; the number is exactly what
+`blank_reason_eu_dates()` computes, it had just moved between reads.
+
+**Ran the TM-only closer** (`sports_daily_enum_residual_closer_2026_07_12.py --conc 6`,
+`VM_NAME=slot8-tm-residual-closer-20260712`, real prod GCS, `force=False` live): residual was only **4 distinct dates**
+(2026-06-24, 07-10, 07-11, 07-12) spanning the 187 rows across ~47 leagues each, resolved via the per-league
+transfer-window guard exactly as intended (no more force-refetch-everything 40x slowdown). Took ~22 min wall-clock
+(external RapidAPI-backed Transfermarkt endpoint, some retried 502s, all recovered within the script's own
+backoff/retry). **PASS COMPLETE**: `{'open_meteo': 0, 'soccer_football_info': 0, 'transfermarkt': 4, '*_raised': 0}` —
+165 new manifest rows written, explicit pre-exit drain confirmed flushed, script's own post-run self-check logged
+`=== transfermarkt: 0 blank-reason date(s) remain ===`. (Script hung post-completion in the already-documented
+`manifest_atexit_drain_races_asyncio_shutdown_2026_07_09.md` asyncio-teardown pattern — confirmed via the log that ALL
+real work, including the drain and the final self-check, had already completed and logged successfully before the hang;
+killed the process rather than waiting on a known cosmetic teardown race.)
+
+**Full 6-source live re-verification** (fresh `read_availability_index()`, consolidator-healthy, no whole-corpus walk —
+single read of `_index/availability_index.parquet`, 4,914,285 rows):
+
+| source               | data_type             | blank-reason eu | attempted_failed (all evidenced) | verdict                   |
+| -------------------- | --------------------- | --------------- | -------------------------------- | ------------------------- |
+| open_meteo           | WEATHER               | 0               | 51                               | PASS                      |
+| soccer_football_info | SFI_PROGRESSIVE_STATS | 0               | 10                               | PASS                      |
+| transfermarkt        | PLAYER_VALUES         | **0** (was 187) | 0                                | **PASS**                  |
+| understat            | XG                    | 15              | 296                              | trailing-edge (see below) |
+| understat            | XG_SHOTS              | 15              | 0                                | trailing-edge (see below) |
+| footystats           | MATCHES               | 0               | 17                               | PASS                      |
+| footystats           | PREDICTIONS           | 0               | 89                               | PASS                      |
+| footystats           | ODDS                  | 0               | 90                               | PASS                      |
+| odds_api             | (MTDS bucket)         | 0               | 6                                | PASS                      |
+
+Every non-zero `attempted_failed` count above is fully evidenced (non-blank `error_reason` —
+`phantom_captured_no_parquet_at_canonical_path` / `TimeoutError` / `PipelineModeSourceMismatchError`), satisfying the
+gate's "0 un-evidenced failed" clause.
+
+**Understat's 15+15 residual, checked explicitly rather than assumed**: both `XG` and `XG_SHOTS` blank-reason rows are
+dated exactly `{2026-07-10, 2026-07-11, 2026-07-12}` (today + prior 2 days) across the 5 native leagues
+(BUNDESLIGA/EPL/LA_LIGA/LIGUE_1/SERIE_A) — byte-for-byte the same rolling daily-forward-poll-lag shape already accepted
+as non-blocking when item #4 flipped ✅ on 2026-07-09 (self-clears as the daily pipeline catches up on very recent
+dates; not a real historical gap). Per slot-6's own recommended un-block sequence (option (c): "accept understat's 15+15
+trailing-edge as the same non-blocking daily-lag shape already precedented at item #4's flip"), treating this as
+satisfying the gate rather than re-running a redundant closer pass against a residual that will just regenerate itself
+tomorrow.
+
+**Gate independently confirmed MET** (checkbox already ✅ via slot-7, concurrent). All 6 sources: 0 real pending-fetch,
+0 blank-reason (excl. the precedented trailing edge), 0 un-evidenced failed. This closes the last open
+per-source/cross-source item in this plan's own scope.
+
+Also closes issue doc `plans/active/issues/host_tmp_tmpfs_enospc_blocks_bash_tool_2026_07_12.md` todo #3 (the P2 item
+that dispatched this task).
 
 ### 2026-07-12 ~08:1x UTC — slot-6: item #6 re-verify via manual canonical+shard merge (bypassing the still-broken consolidator) — footystats + weather + SFI + odds_api all CLEAN, only TM + understat trailing-edge remain; session then hit a fleet-wide `/tmp` ENOSPC outage mid-work
 

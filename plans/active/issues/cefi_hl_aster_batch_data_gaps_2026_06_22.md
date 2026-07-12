@@ -1,19 +1,31 @@
 ---
 doc_type: issue
 title: CeFi HL/ASTER batch data gaps — day-bleed rejection, HL trades under-capture, ASTER/liq misclassification
-summary: 'Per-data_type manifest breakdown (consolidated index + live per-VM shards):'
+summary: "Per-data_type manifest breakdown (consolidated index + live per-VM shards):"
 status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, deployment-api, deployment-service, features-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    alerting-service,
+    deployment-api,
+    deployment-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer, admin]
 tags: [cefi, backfill, manifest, data-correctness, mtds, honest-coverage, data-status, catalogue]
 related: [mvp_backfill_cefi_tick_v10_2026_06_27, cefi_universe_capture_rule_2026_06_23.md]
 created: 2026-06-22
 parent_epic: mtds_mdps_master
 priority: P2
-source: [cefi manifest audit 2026-06-22 (per-data_type breakdown via consolidated + per-VM shards), cefi-hyperliquid-2024-resume / cefi-aster-* run.log runtime evidence]
+source:
+  [
+    cefi manifest audit 2026-06-22 (per-data_type breakdown via consolidated + per-VM shards),
+    cefi-hyperliquid-2024-resume / cefi-aster-* run.log runtime evidence,
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -423,7 +435,9 @@ to today (a hardcoded date goes stale tomorrow).
       EMPTY `venue_data_types` because they're absent from the registry (the SSOT for per-venue batch data_types).
       Provenance: cefi full-catalogue CSV export 2026-06-23.
 - [ ] [MTDS] P2. **MTDS run for all cefi/Tardis venues** — since-genesis batch + live, full catalogue-driven universe.
-      (Tardis batch billing gate LIFTED — operator paid; access confirmed unlimited.) Year×data_type×venue shard.
+      (Tardis batch billing gate LIFTED — operator paid; access confirmed unlimited — confirmed by operator ruling
+      2026-07-12, finding 228, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2.)
+      Year×data_type×venue shard.
 - [ ] [MTDS] P2. **Empty/failed re-analysis**: classify which existing `empty_confirmed`/`attempted_failed` cells were
       caused by the prior SMALL (≤33) instrument catalogue vs genuine absence → re-fetch the catalogue-caused ones now
       that the full universe is known.
@@ -761,20 +775,21 @@ empty-quote venue-killer fix) on LDR.
 
 ## Manifest consolidator FROZE (cefi market-data index stuck @ 2026-06-23T20:07) — diagnosis + fixes (2026-06-24)
 
-**Root cause (diagnosed 2026-06-24)**: the cefi market-data consolidator (`uts-prod-manifest-consolidator-market-data-cefi`
-Cloud Run job, `*/1` cron, `python -m unified_trading_library.manifest_consolidator --bucket market-data-tick-cefi-prd-…`)
-stopped writing `_index/availability_index.parquet` after 20:07:21 despite 148/149 per-VM shards being FRESH (06:41
-mtimes, 683MB) — every cycle since acquires the lock, early-returns in ~40s, exits 0 WITHOUT writing. NOT OOM (clean
-exit 0), NOT the lock alone, NOT timeout (1800s budget). The incremental changed-shard cutoff (the
-`consolidator_content_write_at` marker / `_is_lock_fresh` sibling-skip path, manifest_consolidator.py:330-441) is
-mis-skipping the fresh shards. The 16.6M out-of-window Deribit bloat (canonical 18.6M rows) is the SECOND-order amplifier
-(makes the eventual full merge heavy → the original 16Gi OOM). Engine itself is sound (DuckDB memory-bounded +
-incremental + per-VM sharded — the operator's "do we need Rust/DB" question: already a streaming DB merge, scales fine
-ONCE the canonical is kept lean).
+**Root cause (diagnosed 2026-06-24)**: the cefi market-data consolidator
+(`uts-prod-manifest-consolidator-market-data-cefi` Cloud Run job, `*/1` cron,
+`python -m unified_trading_library.manifest_consolidator --bucket market-data-tick-cefi-prd-…`) stopped writing
+`_index/availability_index.parquet` after 20:07:21 despite 148/149 per-VM shards being FRESH (06:41 mtimes, 683MB) —
+every cycle since acquires the lock, early-returns in ~40s, exits 0 WITHOUT writing. NOT OOM (clean exit 0), NOT the
+lock alone, NOT timeout (1800s budget). The incremental changed-shard cutoff (the `consolidator_content_write_at` marker
+/ `_is_lock_fresh` sibling-skip path, manifest_consolidator.py:330-441) is mis-skipping the fresh shards. The 16.6M
+out-of-window Deribit bloat (canonical 18.6M rows) is the SECOND-order amplifier (makes the eventual full merge heavy →
+the original 16Gi OOM). Engine itself is sound (DuckDB memory-bounded + incremental + per-VM sharded — the operator's
+"do we need Rust/DB" question: already a streaming DB merge, scales fine ONCE the canonical is kept lean).
 
-**Immediate unstick (2026-06-24)**: paused the `*/1` market-data-cefi scheduler (stop churn), bumped job 16Gi→**32Gi/cpu8**,
-cleared the orphaned lock, ran one execution with **`--force`** (full rebuild, bypasses the broken incremental cutoff —
-exec `hqm6m`). Args temporarily carry `--force`; REVERT after the write confirms + RESUME the scheduler.
+**Immediate unstick (2026-06-24)**: paused the `*/1` market-data-cefi scheduler (stop churn), bumped job
+16Gi→**32Gi/cpu8**, cleared the orphaned lock, ran one execution with **`--force`** (full rebuild, bypasses the broken
+incremental cutoff — exec `hqm6m`). Args temporarily carry `--force`; REVERT after the write confirms + RESUME the
+scheduler.
 
 - [ ] [INFRA] P0. **unified-trading-library** — FIX the recurring incremental no-op: the consolidator must NOT freeze
       when fresh per-VM shards exist. Diagnose whether `consolidator_content_write_at` marker advanced past the shards
@@ -783,10 +798,10 @@ exec `hqm6m`). Args temporarily carry `--force`; REVERT after the write confirms
 - [ ] [INFRA] P0. **market-data-tick-cefi bucket + enumerator** — PURGE the out-of-window over-seeding. MEASURED on the
       fresh full-rebuild index 2026-06-24 (gcsfs read): index is **48.0M rows / 1.02 GiB**; **45.0M empty_confirmed
       (93.8%)** of which **44.2M `EXPECTED_INSTRUMENT_NOT_LISTED`** — DERIBIT 36.3M, OKX-FUTURES 2.3M, BINANCE-FUTURES
-      2.2M, BYBIT 1.2M, KRAKEN-FUTURES 1.0M, … and **43.9M carry BLANK instrument_type** (the over-seed signature:
-      dated options/futures emitted for every day across their range, not clipped to listing window). captured=2.09M
-      (+60% from the 1.31M 2026-06-21 start — backfill IS expanding real coverage). **ORDER MATTERS (the canonical purge
-      alone is FUTILE — the `--force */5` cron re-merges the per-VM shards every 5 min → re-bloats):** (1) FIX the
+      2.2M, BYBIT 1.2M, KRAKEN-FUTURES 1.0M, … and **43.9M carry BLANK instrument_type** (the over-seed signature: dated
+      options/futures emitted for every day across their range, not clipped to listing window). captured=2.09M (+60%
+      from the 1.31M 2026-06-21 start — backfill IS expanding real coverage). **ORDER MATTERS (the canonical purge alone
+      is FUTILE — the `--force */5` cron re-merges the per-VM shards every 5 min → re-bloats):** (1) FIX the
       enumerator/writer to clip dated-instrument seeding to `[available_from,available_to]` so new shards stop emitting
       blank-instrument_type NOT_LISTED outside the window; (2) purge the existing cells from the **per-VM shards**
       (`_index/per_vm/*.parquet`) not just the canonical — then the next rebuild produces a lean ~3.8M-row/~100MB index;
@@ -794,30 +809,33 @@ exec `hqm6m`). Args temporarily carry `--force`; REVERT after the write confirms
       (Prior worker `a19169b2` died on rate-limit — redo, idempotent.) Seeding source to fix: grep who emits
       `EXPECTED_INSTRUMENT_NOT_LISTED` with no instrument_type (IS `enumerate_expected_universe.py` / MTDS capture
       preflight). COORDINATE with the out_of_window/dated-instrument work (other agent overlap).
-  - [x] ✅ **(1) CLIP SHIPPED — mtds@7b18433b** (QG-green, on LDR; Tier-C drain → staging): `cefi_catalog_reader._iter_not_yet_listed`
-        skips `_DATED_INSTRUMENT_TYPES={FUTURE,OPTION}` in pre-listing seeding (a dated option listing months out is
-        not-in-universe, not honest-absence). Persistent PERPETUAL/SPOT_PAIR/EQUITY_PERP still seeded; active-window
-        capture (`_yield_for_date`) unchanged. Regression `test_dated_instruments_not_pre_listing_seeded` (16/16 pass).
+  - [x] ✅ **(1) CLIP SHIPPED — mtds@7b18433b** (QG-green, on LDR; Tier-C drain → staging):
+        `cefi_catalog_reader._iter_not_yet_listed` skips `_DATED_INSTRUMENT_TYPES={FUTURE,OPTION}` in pre-listing
+        seeding (a dated option listing months out is not-in-universe, not honest-absence). Persistent
+        PERPETUAL/SPOT_PAIR/EQUITY_PERP still seeded; active-window capture (`_yield_for_date`) unchanged. Regression
+        `test_dated_instruments_not_pre_listing_seeded` (16/16 pass).
   - [x] ✅ **(1b) DEPLOY clip to fleet (2026-06-24)** — operator chose RELAUNCH-now. Rebuilt cefi tarball
         (`mtds-code.tar.gz` @08:34, clip mtds@7b18433b) → stopped all 120 pre-clip backfill VMs (do-not-disturb
-        hyperliquid/extended + live `mtds-live-cefi-*` excluded) → relaunched via `FORCE=1 launch-cefi-sharded-backfill.sh`
-        so new VMs boot the clip tarball + emit LEAN shards. Bloat emission halted at the source.
-  - [x] ✅ **(2) PURGE DONE (2026-06-24)**: confirmed `--force` AND incremental both OOM (signal 9) at the 32Gi Cloud Run
-        ceiling on the 1GB canonical (cpu max 8, ~32Gi mem cap → no RAM fix). Stopped fleet → snapshot canonical to
-        `_index/snapshots/pre_purge_dated_not_listed.parquet` → parallel-purged 142 static shards (drop `empty_confirmed`
-        ∧ `EXPECTED_INSTRUMENT_NOT_LISTED` ∧ instrument_id `:OPTION:`/`:FUTURE:`): **49.7M→7.8M rows (dropped 41.9M),
-        683MB→117MB** → deleted bloated canonical → cold `--force` rebuild from lean shards: **canonical 1.02GB→137MB,
-        clean exit, no OOM**. Purge script: `scratchpad/purge_dated_not_listed.py` (streaming, idempotent, snapshot-first).
+        hyperliquid/extended + live `mtds-live-cefi-*` excluded) → relaunched via
+        `FORCE=1 launch-cefi-sharded-backfill.sh` so new VMs boot the clip tarball + emit LEAN shards. Bloat emission
+        halted at the source.
+  - [x] ✅ **(2) PURGE DONE (2026-06-24)**: confirmed `--force` AND incremental both OOM (signal 9) at the 32Gi Cloud
+        Run ceiling on the 1GB canonical (cpu max 8, ~32Gi mem cap → no RAM fix). Stopped fleet → snapshot canonical to
+        `_index/snapshots/pre_purge_dated_not_listed.parquet` → parallel-purged 142 static shards (drop
+        `empty_confirmed` ∧ `EXPECTED_INSTRUMENT_NOT_LISTED` ∧ instrument_id `:OPTION:`/`:FUTURE:`): **49.7M→7.8M rows
+        (dropped 41.9M), 683MB→117MB** → deleted bloated canonical → cold `--force` rebuild from lean shards:
+        **canonical 1.02GB→137MB, clean exit, no OOM**. Purge script: `scratchpad/purge_dated_not_listed.py` (streaming,
+        idempotent, snapshot-first).
 - [x] ✅ [INFRA] P1. **consolidator reverted (2026-06-24)** — args back to incremental (`--force` removed), memory
       32Gi→**16Gi/cpu4** (lean=cheap), scheduler resumed `*/5` ENABLED. Steady-state: `*/5` incremental merges new lean
       shards onto the lean 137MB canonical (O(changed-shards) memory, no OOM).
 - [ ] [INFRA] P2. **deployment-service** — deadman/consolidator-watchdog AUTO-ESCALATE safety net (operator idea
       2026-06-24): on the OOM signature (terminal exit 137/signal-9 in the persisted run.log AND index mtime did not
-      advance), re-run the consolidator job at the next tier of a machine-size REGISTRY `[16Gi/cpu4→32Gi/cpu8→64Gi/cpu16]`
-      via `gcloud run jobs update --memory --cpu` then execute, capped at the top tier (top-tier OOM → page, no infinite
-      loop). Mirrors VM `lifecycle_class` + autonomous-recovery-matrix `auto_cooldown`. NOTE: this is the safety net
-      UNDER the bounded-canonical design (the purge), NOT a substitute — Cloud Run "autoscaling" is parallelism not RAM,
-      so it can't bump per-execution memory.
+      advance), re-run the consolidator job at the next tier of a machine-size REGISTRY
+      `[16Gi/cpu4→32Gi/cpu8→64Gi/cpu16]` via `gcloud run jobs update --memory --cpu` then execute, capped at the top
+      tier (top-tier OOM → page, no infinite loop). Mirrors VM `lifecycle_class` + autonomous-recovery-matrix
+      `auto_cooldown`. NOTE: this is the safety net UNDER the bounded-canonical design (the purge), NOT a substitute —
+      Cloud Run "autoscaling" is parallelism not RAM, so it can't bump per-execution memory.
 
 ## CEFI data-completion RESIDUAL follow-ups (operator dispatch 2026-06-24, /autonomous)
 
@@ -828,35 +846,38 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
       passed clean when the clip shipped (mtds@7b18433b through `quality-gates.sh --no-fix`) — not blocking
       (isolation-order-dependent at worst, not product bugs). (2) The tardis-fallback refactor is ALREADY in shipped
       code — `_resolve_symbols_from_by_date_snapshot` at `tardis_symbol_resolution.py:587` (mtds@4bbebb8), so the 200L
-      cap + QG size gate pass. Stash `tardis-fallback-refactor-followup-2026-06-23` is a stale duplicate (left, harmless).
-- [x] ✅ [MTDS] P1. **unified-api-contracts + market-tick-data-service** — coin-margin (inverse) perp capture: Deribit is
-      ALWAYS inverse; default linear; capture inverse where MORE liquid (operator 2026-06-23). Add the inverse venues
+      cap + QG size gate pass. Stash `tardis-fallback-refactor-followup-2026-06-23` is a stale duplicate (left,
+      harmless).
+- [x] ✅ [MTDS] P1. **unified-api-contracts + market-tick-data-service** — coin-margin (inverse) perp capture: Deribit
+      is ALWAYS inverse; default linear; capture inverse where MORE liquid (operator 2026-06-23). Add the inverse venues
       (binance-delivery / bybit-inverse / okx-coin-margin) to the MVP capture universe + carry a `margin_type`
       (linear/inverse) field through the catalogue → manifest, and a live-liquidity spot-check to pick the more-liquid
-      side per base. SSOT spec: `cefi_universe_capture_rule_2026_06_23.md` § coin-margin.
-      — uac@a8712016 | instruments-service@4838738 | Part 1: BINANCE-DELIVERY added to UAC venue registries + IS venue
-      allow-list + catalogue enumeration; Part 2: `margin_type` field added to catalogue (CATALOG_COLUMNS + _extract_meta
-      + build_catalogue_dataframe); Part 3: deterministic default shipped (BINANCE-DELIVERY PERPETUALs/FUTUREs in MVP
+      side per base. SSOT spec: `cefi_universe_capture_rule_2026_06_23.md` § coin-margin. — uac@a8712016 |
+      instruments-service@4838738 | Part 1: BINANCE-DELIVERY added to UAC venue registries + IS venue allow-list +
+      catalogue enumeration; Part 2: `margin_type` field added to catalogue (CATALOG_COLUMNS + \_extract_meta +
+      build_catalogue_dataframe); Part 3: deterministic default shipped (BINANCE-DELIVERY PERPETUALs/FUTUREs in MVP
       scope via base-membership; live-liquidity spot-check TODO scaffolded in mvp_scope.py).
-- [x] ✅ [INFRA] P1. **deployment-service** — wire BYBIT-SPOT + COINBASE-FUTURES into LIVE + DAILY cefi capture.
-      Added both venues to `EXPECTED_COVERAGE_BY_ASSET_GROUP['cefi']` (`_CEFI` dict) in UAC
+- [x] ✅ [INFRA] P1. **deployment-service** — wire BYBIT-SPOT + COINBASE-FUTURES into LIVE + DAILY cefi capture. Added
+      both venues to `EXPECTED_COVERAGE_BY_ASSET_GROUP['cefi']` (`_CEFI` dict) in UAC
       `unified_api_contracts/registry/expected_coverage.py` — the single SSOT consumed by both the live forward-poll
       (`launch-cefi-forward-poll.sh` → MTDS CLI `--asset-group CEFI`) and the daily cron VM (which downloads and runs
       the forward-poll launcher). BYBIT-SPOT gets `["trades","book_snapshot_5"]` (mirrors COINBASE-SPOT/BINANCE-SPOT);
       COINBASE-FUTURES gets `["trades","book_snapshot_5","derivative_ticker","liquidations","futures_chain"]` (mirrors
-      BINANCE-FUTURES/BYBIT). Comment in `launch-cefi-forward-poll.sh` updated to list the expanded venue set.
-      — unified-api-contracts@dab85df4 | deployment-service@e34096d | QG green (UAC 222s)
+      BINANCE-FUTURES/BYBIT). Comment in `launch-cefi-forward-poll.sh` updated to list the expanded venue set. —
+      unified-api-contracts@dab85df4 | deployment-service@e34096d | QG green (UAC 222s)
 - [x] ✅ [FEATURES] P2. **features-service / market-data-processing-service** — features MVP-universe config: the
-      delta_one/MDPS features pipeline needs its OWN MVP universe config (separate from MTDS capture) — same
-      perp-gated CEFI_BASE_ASSET_UNIVERSE for price/funding features, BUT roll/spread/volatility features + certain
-      defi-onchain features span a WIDER set (operator 2026-06-23). Define the features universe config + wire it so
-      features compute over the right per-family universe, not the raw MTDS capture universe.
-      — unified-api-contracts@b10e8d6e (FeatureFamilyUniverseConfig + FEATURE_FAMILY_UNIVERSE_REGISTRY in UAC) | features-service@d11dd57f (mvp_universe_filter.py wired in delta_one batch_handler, 34 tests) | QG green
+      delta_one/MDPS features pipeline needs its OWN MVP universe config (separate from MTDS capture) — same perp-gated
+      CEFI_BASE_ASSET_UNIVERSE for price/funding features, BUT roll/spread/volatility features + certain defi-onchain
+      features span a WIDER set (operator 2026-06-23). Define the features universe config + wire it so features compute
+      over the right per-family universe, not the raw MTDS capture universe. — unified-api-contracts@b10e8d6e
+      (FeatureFamilyUniverseConfig + FEATURE_FAMILY_UNIVERSE_REGISTRY in UAC) | features-service@d11dd57f
+      (mvp_universe_filter.py wired in delta_one batch_handler, 34 tests) | QG green
 - [x] ✅ [DOCS] P2. **unified-trading-pm** — codex doc the cefi data-pipeline contracts that shipped this cycle: (1) the
       two-layer IS-full-enumeration vs MTDS-MVP-filter + perp-gate (from `cefi_universe_capture_rule_2026_06_23.md`)
-      into `codex/02-data/`, and (2) the dated-instrument NOT_LISTED clip + consolidator bloat/OOM-at-Cloud-Run-ceiling
-      + purge lesson into `codex/05-infrastructure/manifest-consolidator-ssot.md` (so the next bloat is diagnosed fast).
-      — unified-trading-pm@b889f6392 | codex/02-data/cefi-capture-universe.md + codex/05-infrastructure/manifest-consolidator-ssot.md
+      into `codex/02-data/`, and (2) the dated-instrument NOT_LISTED clip + consolidator
+      bloat/OOM-at-Cloud-Run-ceiling + purge lesson into `codex/05-infrastructure/manifest-consolidator-ssot.md` (so the
+      next bloat is diagnosed fast). — unified-trading-pm@b889f6392 | codex/02-data/cefi-capture-universe.md +
+      codex/05-infrastructure/manifest-consolidator-ssot.md
 
 ## DP_VM_GONE_NO_CAPTURE false-positive triage (operator 2026-06-24)
 
@@ -872,81 +893,87 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
       the MTDS idempotent-skip line (`all requested data_types fully covered` / `atoms ⊆ captured`) → classified
       HONEST_ABSENCE not SILENT, so resumed/idempotent backfill VMs no longer false-positive `DP_VM_GONE_NO_CAPTURE`.
       Regression test `test_no_capture_reason_mtds_idempotent_preflight_skip` (6/6 classifier tests pass).
-- [ ] [INFRA] P1. **FLAG (foreign, not cefi)**: deployment-service local QG is RED in clones carrying an in-flight foreign
-      change — new `scripts/vm/launch-mtds-{flash-loan-events,liquidation-events,position-data,risk-params}-backfill-vm.sh`
-      + `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET prefixes WITHOUT matching `launcher_registry.py` entries →
+- [ ] [INFRA] P1. **FLAG (foreign, not cefi)**: deployment-service local QG is RED in clones carrying an in-flight
+      foreign change — new
+      `scripts/vm/launch-mtds-{flash-loan-events,liquidation-events,position-data,risk-params}-backfill-vm.sh` +
+      `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET prefixes WITHOUT matching `launcher_registry.py` entries →
       `test_every_watchdog_prefix_has_a_registry_entry` fails. Uncommitted (not on LDR), so not an LDR breakage; the
       owning agent must wire the launcher_registry entries before shipping. Not cefi-scoped.
 
 ## DP_VM_STALL / DP_EVENT_LOOP_STARVED / DP_CRON_DID_NOT_FIRE flood triage (operator 2026-06-24, 2nd pass)
 
-All VERIFIED false positives (175/177 VMs healthy; consolidator healthy). The ~15-alert DP_VM_STALL flood
-was the DEPLOYED monitor over-flagging healthy *resuming* VMs (relaunched on the clip → resume idempotently →
-captured stays FLAT while skipping already-captured dates → old `captured_flat`-alone-stalls logic fired). The
-on-main revision (`7b070fb`, sidecar-authoritative) narrows it: running the CURRENT code locally = **2/177 stalled**,
-not a flood. The deployed image either lagged the revision or the flood was transient.
+All VERIFIED false positives (175/177 VMs healthy; consolidator healthy). The ~15-alert DP*VM_STALL flood was the
+DEPLOYED monitor over-flagging healthy \_resuming* VMs (relaunched on the clip → resume idempotently → captured stays
+FLAT while skipping already-captured dates → old `captured_flat`-alone-stalls logic fired). The on-main revision
+(`7b070fb`, sidecar-authoritative) narrows it: running the CURRENT code locally = **2/177 stalled**, not a flood. The
+deployed image either lagged the revision or the flood was transient.
 
 - [x] ✅ **DP_CRON_DID_NOT_FIRE (consolidator) = FALSE POSITIVE** — consolidator healthy: index fresh (14:46+),
       executions Completed=True, scheduler ENABLED `*/5`. The deadman falsely reports it (the per-AG sticky key).
-- [x] ✅ [INFRA] P1. **Both residual false-positive classes FIXED + SHIPPED — deployment-service@eae68d8** (2026-06-24):
-      1. ✅ **Slow-but-alive long-fetch → false DP_VM_STALL**: `classify_vm_liveness` hung-worker STALL (the
-         `run_log_age > run_log_stall_minutes` branches) now gated on `_pipeline_heartbeat_stale(pipeline_heartbeat_age_min,
-         run_log_stall_minutes)` — a FRESH `PIPELINE_HEARTBEAT` (60s worker-life marker, emitted independent of chunk
-         boundaries) PROVES the worker loop is alive, so a slow single fetch (deribit options_chain, fresh heartbeat but
-         a >90m-old last *progress* line) stays ALIVE. Genuine hangs (heartbeat ALSO stale) still STALL.
-      2. ✅ **Old-tarball VM → false DP_EVENT_LOOP_STARVED**: the no-sidecar+no-run.log branch now returns ALIVE when the
-         per-VM captured count is CLIMBING (`not captured_flat`) — a pre-sidecar-tarball VM (cefi-extended-2025-resume)
-         capturing without instrumentation is alive; only TOTAL silence (no heartbeat + no log + captured flat) starves.
-      +5 regression tests (147 monitor tests pass). Local `--mode heartbeat` dry-run confirms the 2 VMs now ALIVE.
+- [x] ✅ [INFRA] P1. **Both residual false-positive classes FIXED + SHIPPED — deployment-service@eae68d8**
+      (2026-06-24): 1. ✅ **Slow-but-alive long-fetch → false DP_VM_STALL**: `classify_vm_liveness` hung-worker STALL
+      (the `run_log_age > run_log_stall_minutes` branches) now gated on
+      `_pipeline_heartbeat_stale(pipeline_heartbeat_age_min,        run_log_stall_minutes)` — a FRESH
+      `PIPELINE_HEARTBEAT` (60s worker-life marker, emitted independent of chunk boundaries) PROVES the worker loop is
+      alive, so a slow single fetch (deribit options*chain, fresh heartbeat but a >90m-old last \_progress* line) stays
+      ALIVE. Genuine hangs (heartbeat ALSO stale) still STALL. 2. ✅ **Old-tarball VM → false DP_EVENT_LOOP_STARVED**:
+      the no-sidecar+no-run.log branch now returns ALIVE when the per-VM captured count is CLIMBING
+      (`not captured_flat`) — a pre-sidecar-tarball VM (cefi-extended-2025-resume) capturing without instrumentation is
+      alive; only TOTAL silence (no heartbeat + no log + captured flat) starves. +5 regression tests (147 monitor tests
+      pass). Local `--mode heartbeat` dry-run confirms the 2 VMs now ALIVE.
 - [x] ✅ [INFRA] P1. **DEPLOYED the monitor fix to the running jobs (2026-06-24)**: `eae68d8` reached main via the
       staging→main force-sync (PR #266 resolved — main was stale on the monitor files from an admin force-sync; relaxed
-      protection → force-pushed staging tip → restored). The `deployment-api:latest` image had NO auto-build trigger (the
-      cloudbuild "auto on main" comment is stale; it builds manually via `deploy-shared.sh`), so I verified the existing
-      `consolidator-key4-fix` image (`4aedfc98`, built from the `cd51cf2` tree — contains the fix, 3 `_pipeline_heartbeat_stale`
-      hits in the installed file) and **re-tagged `:latest` → 4aedfc98 + updated all 3 monitor jobs** to it. Ran
-      `uts-prod-dp-heartbeat-watcher`: Completed/succeeded=1/**0 false alerts** on the 154 cefi VMs. Fix is LIVE.
+      protection → force-pushed staging tip → restored). The `deployment-api:latest` image had NO auto-build trigger
+      (the cloudbuild "auto on main" comment is stale; it builds manually via `deploy-shared.sh`), so I verified the
+      existing `consolidator-key4-fix` image (`4aedfc98`, built from the `cd51cf2` tree — contains the fix, 3
+      `_pipeline_heartbeat_stale` hits in the installed file) and **re-tagged `:latest` → 4aedfc98 + updated all 3
+      monitor jobs** to it. Ran `uts-prod-dp-heartbeat-watcher`: Completed/succeeded=1/**0 false alerts** on the 154
+      cefi VMs. Fix is LIVE.
 
 ## CeFi empty_confirmed over-seeding — pre-listing NOT_LISTED denominator poison (operator 2026-06-24)
 
-**Finding** (consolidated v9 _index 2026-06-24 19:36): cefi captured GREW 1.31M→**2.66M (doubled)** since 2026-06-21 and
-attempted_failed DROPPED 802k→662k — but honest-cov FELL 33.9%→21.4% because `empty_confirmed` EXPLODED 1.28M→**9.09M**.
-Diagnosis: **7.6M of the 9.09M empties = `EXPECTED_INSTRUMENT_NOT_LISTED`**, all `written_at` 2026-06-23/24 (the running
-backfill VMs), all PERPETUAL pre-listing cells (e.g. `BINANCE-FUTURES:PERPETUAL:PIPPIN-USDT | 2020-01-01` — PIPPIN listed
-2025). These were NEVER queried (a genuinely-empty *listed* cell yields `SOURCE_RETURNED_ZERO`); they are **out-of-universe**
-and poison the coverage denominator. Excluding them, real honest-cov ≈ 2.66M / 4.8M ≈ **~55%**. Root cause:
-`CeFiCatalogReader.list_not_yet_listed` → `_iter_not_yet_listed` emitted a cell per (current instrument × every pre-listing
-day × data_type); the earlier dated-only clip (`_DATED_INSTRUMENT_TYPES`) wrongly assumed PERPETUAL/SPOT_PAIR were "small
-count". Genuine honest absence is only the 1.27M `SOURCE_RETURNED_ZERO`.
+**Finding** (consolidated v9 \_index 2026-06-24 19:36): cefi captured GREW 1.31M→**2.66M (doubled)** since 2026-06-21
+and attempted*failed DROPPED 802k→662k — but honest-cov FELL 33.9%→21.4% because `empty_confirmed` EXPLODED
+1.28M→**9.09M**. Diagnosis: **7.6M of the 9.09M empties = `EXPECTED_INSTRUMENT_NOT_LISTED`**, all `written_at`
+2026-06-23/24 (the running backfill VMs), all PERPETUAL pre-listing cells (e.g.
+`BINANCE-FUTURES:PERPETUAL:PIPPIN-USDT | 2020-01-01` — PIPPIN listed 2025). These were NEVER queried (a genuinely-empty
+\_listed* cell yields `SOURCE_RETURNED_ZERO`); they are **out-of-universe** and poison the coverage denominator.
+Excluding them, real honest-cov ≈ 2.66M / 4.8M ≈ **~55%**. Root cause: `CeFiCatalogReader.list_not_yet_listed` →
+`_iter_not_yet_listed` emitted a cell per (current instrument × every pre-listing day × data_type); the earlier
+dated-only clip (`_DATED_INSTRUMENT_TYPES`) wrongly assumed PERPETUAL/SPOT_PAIR were "small count". Genuine honest
+absence is only the 1.27M `SOURCE_RETURNED_ZERO`.
 
-- [x] ✅ [SCRIPT] P0. **CODE FIX — retire pre-listing seeding (mtds@9ff01bc1)**: `list_not_yet_listed` now
-      yields nothing (out-of-universe); deleted `_iter_not_yet_listed` + `_DATED_INSTRUMENT_TYPES`; updated
+- [x] ✅ [SCRIPT] P0. **CODE FIX — retire pre-listing seeding (mtds@9ff01bc1)**: `list_not_yet_listed` now yields
+      nothing (out-of-universe); deleted `_iter_not_yet_listed` + `_DATED_INSTRUMENT_TYPES`; updated
       `test_cefi_pre_listing_not_listed.py` (asserts ZERO NOT_LISTED end-to-end) — 30 affected tests pass, basedpyright
       clean, QG green (106s). Landed on LDR; Tier-C drain promotes to staging ≤15min.
 - [x] ✅ [SCRIPT] P0. **PURGED 8.5M `EXPECTED_INSTRUMENT_NOT_LISTED` cells** (2026-06-24, hard cutover, snapshot
-      `_index/snapshots/pre_notlisted_purge_2026_06_24.parquet`): filtered `empty_confirmed + EXPECTED_INSTRUMENT_NOT_LISTED`
-      out of the consolidated index (12.86M → 5.02M rows) + all 41 per-VM shards (parallel). **honest-cov measured 21.4% →
-      55.5%** (captured 2.79M / denom 5.02M). Holds (fleet deleted, shards clean → consolidator stays clean).
+      `_index/snapshots/pre_notlisted_purge_2026_06_24.parquet`): filtered
+      `empty_confirmed + EXPECTED_INSTRUMENT_NOT_LISTED` out of the consolidated index (12.86M → 5.02M rows) + all 41
+      per-VM shards (parallel). **honest-cov measured 21.4% → 55.5%** (captured 2.79M / denom 5.02M). Holds (fleet
+      deleted, shards clean → consolidator stays clean).
 - [x] ✅ [INFRA] P1. **Hard cutover — deleted old fleet + relaunched on fixed code** (operator-directed 2026-06-24):
-      rebuilt the VM tarball (`create-code-tarballs.sh`, clean=true, MTDS verified `_iter_not_yet_listed` removed) → deleted
-      the 103-VM `085745` backfill fleet (live `mtds-live-cefi-*` + `instr-backfill-cefi-*` VMs PRESERVED) → purged → relaunched
-      `launch-cefi-sharded-backfill.sh` as run-id `20260624-211958` on the fixed tarball (resume idempotent, no NOT_LISTED
-      re-seed). Verifying T+10min capturing-without-re-seeding.
+      rebuilt the VM tarball (`create-code-tarballs.sh`, clean=true, MTDS verified `_iter_not_yet_listed` removed) →
+      deleted the 103-VM `085745` backfill fleet (live `mtds-live-cefi-*` + `instr-backfill-cefi-*` VMs PRESERVED) →
+      purged → relaunched `launch-cefi-sharded-backfill.sh` as run-id `20260624-211958` on the fixed tarball (resume
+      idempotent, no NOT_LISTED re-seed). Verifying T+10min capturing-without-re-seeding.
 - [ ] [SCRIPT] P2. **Cleanup inert pre-listing plumbing** (mtds `orchestrator/sentinels.py` + `__init__.py`): with the
-      source retired, `catalog_list_not_yet_listed_cefi` always returns empty → `cefi_pre_listing_by_venue` is always `{}`
-      and the `record_expected_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` write loop never fires. The threaded param + write
-      block are now dead — remove them across the ~6 call sites for a clean break (non-urgent; harmless while inert).
+      source retired, `catalog_list_not_yet_listed_cefi` always returns empty → `cefi_pre_listing_by_venue` is always
+      `{}` and the `record_expected_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` write loop never fires. The threaded param +
+      write block are now dead — remove them across the ~6 call sites for a clean break (non-urgent; harmless while
+      inert).
 - [ ] [SCRIPT] P2. **Real zero-capture gaps (separate from the optic)**: `perp_funding`=0 captured (core to carry
-      archetype), `futures_chain`=223, `options_chain`=3, `ohlcv_1m`=738 — these aren't Tardis-tick types; diagnose their
-      source/handler.
+      archetype), `futures_chain`=223, `options_chain`=3, `ohlcv_1m`=738 — these aren't Tardis-tick types; diagnose
+      their source/handler.
 
 ## CeFi attempted_failed + expected_unattempted audit (operator 2026-06-24, post-purge index 5.02M rows)
 
 `expected_unattempted` = **0** (CLEAN — no bogus seeding; the only over-seeding was the now-retired NOT_LISTED path).
-`attempted_failed` = **674,334**, classified: ~620k **retryable transients** (`VENUE_FETCH_FAILED` 560k + `Tardis HTTP
-500/503` 49k + `Connection timeout`/`payload not completed` 11k — real instruments, valid in-window dates; the relaunched
-fleet re-attempts) + **~33k genuine code bugs** (below) + `Tardis HTTP 400` 20k (possibly-systematic bad-request, needs a
-look). Failing instruments are IN-UNIVERSE (e.g. `KRAKEN-FUTURES:FUTURE:FI_LTCUSD_220429` on 2022-04-20, within its
-2022-04-29 expiry) — NOT bogus-universe.
+`attempted_failed` = **674,334**, classified: ~620k **retryable transients** (`VENUE_FETCH_FAILED` 560k +
+`Tardis HTTP 500/503` 49k + `Connection timeout`/`payload not completed` 11k — real instruments, valid in-window dates;
+the relaunched fleet re-attempts) + **~33k genuine code bugs** (below) + `Tardis HTTP 400` 20k (possibly-systematic
+bad-request, needs a look). Failing instruments are IN-UNIVERSE (e.g. `KRAKEN-FUTURES:FUTURE:FI_LTCUSD_220429` on
+2022-04-20, within its 2022-04-29 expiry) — NOT bogus-universe.
 
 - [x] ✅ [SCRIPT] P1. **FIXED — FUTURE expiry-parse (32k Kraken/non-Deribit dated futures)** (`tardis_shared.py`): added
       `_parse_numeric_futures_expiry()` — extracts the trailing date stamp (8-digit `YYYYMMDD` `FF_XBTUSD20251226`, or
@@ -958,11 +985,12 @@ look). Failing instruments are IN-UNIVERSE (e.g. `KRAKEN-FUTURES:FUTURE:FI_LTCUS
       comment noting the prior wrong-kwargs bug). The 206 `attempted_failed` are HISTORICAL — the relaunch on current
       code won't reproduce them (they re-process correctly).
 - [ ] [SCRIPT] P1. **`Tardis HTTP 400` (20k) is LARGELY SYSTEMATIC — out-of-window + out-of-universe (operator's
-      restriction concern, CONFIRMED)**: samples are (a) **post-expiry fetches** — `CRYPTOFACILITIES:FF_ETHUSD_250228` on
-      2025-03-01 (after 2025-02-28 expiry), `BYBIT:BTC-21APR23` on 2023-04-22 (after expiry) → instrument delisted → 400;
-      (b) **deprecated venue / non-curated instruments** — `OKEX` (old OKX name), `ATOM`/`USDC-TRY` (NOT in the
-      BTC/ETH/x-coin curated universe). The active-window gate `_cefi_is_active_on_date` DOES clip `available_to`, so the
-      post-expiry attempts mean the **IS catalog is missing/wrong `available_to` (expiry)** for those dated futures (gate
-      passes) + a **universe/venue-filter leak** (OKEX/ATOM/USDC-TRY shouldn't be attempted). This is the post-expiry
-      MIRROR of the retired pre-listing NOT_LISTED over-seeding — an upstream IS-catalog-expiry + curated-universe-filter
-      fix, NOT an mtds code bug. ~2k `In CSV column #` decode errors are a separate Tardis-CSV parse class.
+      restriction concern, CONFIRMED)**: samples are (a) **post-expiry fetches** — `CRYPTOFACILITIES:FF_ETHUSD_250228`
+      on 2025-03-01 (after 2025-02-28 expiry), `BYBIT:BTC-21APR23` on 2023-04-22 (after expiry) → instrument delisted →
+      400; (b) **deprecated venue / non-curated instruments** — `OKEX` (old OKX name), `ATOM`/`USDC-TRY` (NOT in the
+      BTC/ETH/x-coin curated universe). The active-window gate `_cefi_is_active_on_date` DOES clip `available_to`, so
+      the post-expiry attempts mean the **IS catalog is missing/wrong `available_to` (expiry)** for those dated futures
+      (gate passes) + a **universe/venue-filter leak** (OKEX/ATOM/USDC-TRY shouldn't be attempted). This is the
+      post-expiry MIRROR of the retired pre-listing NOT_LISTED over-seeding — an upstream IS-catalog-expiry +
+      curated-universe-filter fix, NOT an mtds code bug. ~2k `In CSV column #` decode errors are a separate Tardis-CSV
+      parse class.

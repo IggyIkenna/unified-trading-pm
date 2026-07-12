@@ -112,8 +112,35 @@ false-RED/0% coverage, that's an active user-facing bug worth its own fix plan. 
 `gas-fees`/`lst-rates` kind resolution calls in `data_manifest_handler.py` and the e2e script, consistent with folding
 DeFi reference data fully into the `market-data` manifest.
 
+## Resolution (2026-07-12) — gas-fees + lst-rates production scanner fixed; e2e script still pending
+
+Operator direction: option 1 (point the readers at the market-data bucket) — confirmed correct AND necessary once
+verified end-to-end.
+
+**`data_manifest_handler.py` fixed** (both gas-fees and lst-rates) — `market-tick-data-service@8b730664`. Turned out the
+fix needed to be more than "just point at the shared bucket": gas-fees/lst-rates captures span MULTIPLE venues per
+data_type (gas_fees: ALCHEMY/LIDO/ETHERFI; lst_rates: AAVE_V3/COMPOUND_V3/BALANCER/LIDO/UNISWAP_V3/...), and `data_type`
+lives only as a parquet COLUMN, never as a distinguishing GCS path segment — raw blob-path listing (pointed at the
+shared bucket or not) genuinely cannot isolate them. Implemented `_scan_via_availability_index(data_type, description)`,
+which reads the canonical availability index (`unified_trading_library.read_availability_index()`) and filters by the
+real `data_type` column instead. Verified directly against production: the canonical index holds 49,575 real gas_fees
+rows and 222,836 real lst_rates rows (back to 2018-01-01) — this data was ALWAYS there, just invisible to both the old
+(dead-bucket) and an initially considered (shared-bucket-but-still-raw-listing) fix. Full write-up + the collision-risk
+investigation that shaped the fix direction: [[eigenlayer_manifest_availability_index_collision_2026_07_12]].
+
+**`e2e-testing/scripts/defi/staked_basis_funding_scan.py`'s `_lst_bucket()` reader — NOT fixed, still open.** It still
+resolves `kind="lst-rates"` (the dead, deleted dedicated bucket) and expects a prefix shape
+(`day={day}/asset_group=defi/venue={protocol}/chain={chain}/instrument_type=lst/data_type=lst_rates/`) that doesn't
+match what was actually found in the shared bucket during this investigation
+(`raw_tick_data/by_date/day={date}/pipeline_mode={mode}/asset_group=defi/venue={VENUE}/...`, no `chain=`/
+`instrument_type=`/`data_type=` path segments observed at the depth explored). This script's assumed layout was NOT
+verified against real production paths before this issue closes — needs its own investigation before touching it, since
+guessing wrong here risks silently returning `None` (no exchange rate found) instead of a loud error, exactly the
+"silent placeholder" anti-pattern the workspace rules ban. Lower urgency than the production handler (this is a
+research/e2e script, not a live coverage report), but still open.
+
 ## Status
 
-Not investigated further as of 2026-07-10 (found + documented during autonomous-mode bucket cleanup, operator away; per
-findings-triage this is a "big finding — data-correctness" needing operator visibility on return, not something to
-guess-fix without confirming the intended architecture first).
+`data_manifest_handler.py` side: **resolved** 2026-07-12, shipped + verified against real production data.
+`staked_basis_funding_scan.py` side: **still open** — flagged above, needs its own path-structure verification before a
+safe fix.

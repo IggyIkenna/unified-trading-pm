@@ -399,6 +399,15 @@ Operator picked option (δ) per `wave2_polymarket_record_captured_from_counts_20
    via an exception clause. Wave-2 plan tracks Phase 4 (legacy `add()` deletion) as the future SSOT cleanup so the
    double-SSOT collapses cleanly post-cutover.
 
+> **🟡 SUPERSEDED (banner extended 2026-07-12 — was: no supersession marker above this table)** — the Critical Path
+> table immediately below is part of the **frozen May-07/08 source snapshot** (same status as the "Consolidated todos"
+> section further down, whose existing SUPERSEDED banner said "the blocks below," which did not reach up to cover this
+> table). SUPERSEDED by the § "Workstream routing" table below. Do NOT pick work or status from this table directly —
+> e.g. its "Polymarket adapter migration (data_type rename) | NOT started" row is stale; see § "Workstream routing" / §
+> "Consolidated todos" ("SHIPPED mtds@7643a5c 'feat(predictions): Polymarket adapter per-market lifecycle gating +
+> tests'") for the current status. Finding #238, plan-reconciliation
+> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.
+
 ## Critical path
 
 | Workstream                                                                       | Status                          | Source                                                      |

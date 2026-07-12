@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: CeFi legacy gap-fill + manifest canonicalisation (single-walk) — L3 owner for cefi
-summary: Canonicalise the CeFi manifest via single-walk migration to v9 schema, closing legacy-only captured cells and unblocking the CeFi apply gate.
+summary:
+  Canonicalise the CeFi manifest via single-walk migration to v9 schema, closing legacy-only captured cells and
+  unblocking the CeFi apply gate.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -25,8 +27,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-- bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (L3 ordering — cefi had NO owner)
-- {_index comparison 2026-06-01 (cefi canonical ~complete: '838 legacy-only captured cells out of 91,602)'}
+  - bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (L3 ordering — cefi had NO owner)
+  - { _index comparison 2026-06-01 (cefi canonical ~complete: "838 legacy-only captured cells out of 91,602)" }
 umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 assigned_role: backend-engineer
@@ -43,15 +45,9 @@ drift_direction: advance-data
 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
-> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware `{mode}*{source}[_{transport}]`model +
-> doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** (the
-> settled contract lives in codex
-> `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`; this plan REFERENCES it
-> — remaining coarse/`hyperliquid_rest` tokens below are annotated legacy-state observations, not spec) + **G1** (IS
-> catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2** (scripts + 7+2-point audit + dry-run) +
-> **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware
-> pipeline_mode (NOT coarse`batch`/blank) BEFORE apply. Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode
-> source-aware).
+> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
+> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** (the settled contract lives in codex `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`; this plan REFERENCES it — remaining coarse/`hyperliquid_rest` tokens below are annotated legacy-state observations, not spec) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
+> BEFORE apply. Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode source-aware).
 
 > **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
 > `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
@@ -993,10 +989,9 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 - [x] ✅ [CODE] P3. **MDPS stale source-gap comment — FIXED (mdps@6188588, QG exit 0 172s, PR #94→staging).**
       `canonical_writer.py:1304-1315` previously said "cefi/defi/tradfi are RED gaps per the 2026-06-01 plan" for
       `source=`. Refreshed to the verified reality: WIRED today = tradfi (databento/massive), prediction
-      (polymarket\__), cefi (tardis — `SOURCE_PRIORITY[("cefi",_)]→tardis`, so
-      `\_resolve_primary_source_for_candle`stamps every cefi candle), and sports/odds_horizon_bucket
-      (mdps_odds_horizon_bucket); RED gap remaining = defi. Doc-comment only; no logic change
-      (the`try/except     KeyError → None` fallback is unchanged). Provenance: cefi run-readiness re-audit 2026-06-04.
+      (polymarket\__), cefi (tardis —
+      `SOURCE_PRIORITY[("cefi",_)]→tardis`, so     `\_resolve_primary_source_for_candle`stamps every cefi candle), and sports/odds_horizon_bucket     (mdps_odds_horizon_bucket); RED gap remaining = defi. Doc-comment only; no logic change     (the`try/except
+      KeyError → None` fallback is unchanged). Provenance: cefi run-readiness re-audit 2026-06-04.
 - [x] ✅ [CODE-BUG] P1. **CeFi funding-feature producer/consumer name+unit mismatch — RESOLVED IN CODE (slot-3 verify
       2026-06-08).** The described mismatch no longer exists: producer
       `features-service/.../delta_one/app/calculators/funding_oi.py:84` emits `funding_rate_annualised_bps` (bps,
@@ -1672,11 +1667,9 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
   - [x] ✅ [CODE] P0. **Read-side contract fix (features-service)** — **DONE (features-service@933b8747, slot-3
         2026-06-03).** `LookbackValidator._build_captured_index` credited ANY captured `data_type` as a candle-available
         lookback date (raw `trades`/`book_snapshot_5` over-counted history off the shared `_index`); now filters to the
-        feature*groups' candle `ohlcv*\*`data_types via`resolve_data_type_for_feature_group`(mirrors the already-correct
-        `get_available_instruments`). +regression test (`ohlcv_1m`counted;`trades`/`book_snapshot_5`not). Verified
-        delta_one 20/20 + basedpyright-clean diff. **Shipped under operator EXEMPTION** (local macOS QG red only on the
-        foreign non-deterministic flake`features_service_full_qg_test_pollution_flake_2026_06_03.md`; Linux
-        `quality-gates-v2` re-verifies at promotion). Repo: features-service.
+        feature*groups' candle
+        `ohlcv*\*`data_types via`resolve_data_type_for_feature_group`(mirrors the already-correct     `get_available_instruments`). +regression test (`ohlcv_1m`counted;`trades`/`book_snapshot_5`not). Verified     delta_one 20/20 + basedpyright-clean diff. **Shipped under operator EXEMPTION** (local macOS QG red only on the     foreign non-deterministic flake`features_service_full_qg_test_pollution_flake_2026_06_03.md`; Linux     `quality-gates-v2`
+        re-verifies at promotion). Repo: features-service.
   - [ ] [DATA] P1. **Real cefi candle-coverage gap (partial backfill).** `ohlcv_*` manifest rows are sparse (8,715) and
         processed-candle FILES exist only for a partial venue set (BITGET-heavy; e.g. day=2026-05-03 = BITGET-FUTURES
         319 / BITGET-SPOT 151 / BITFINEX-FUTURES 90 / KRAKEN-FUTURES 18). MDPS candle generation for cefi is incomplete
@@ -1880,12 +1873,14 @@ UAC **already ships the venue-aware machinery** (`registry/market_data_categorie
 (:740) + `bundle_instrument_type_for_leaf(ag, it, venue=)` (:771) are all venue-aware and correct. So this is NOT a
 "build the rollup from scratch" job — it is two wiring fixes:
 
-- **Change B (minimal, read-side, the urgent one)** — `instruments-service/scripts/enumerate_expected_universe.py`
-  `_rollup_bundle_grain` (~:1162-1166) calls `bundle_instrument_type_for_leaf(asset_group, instr.instrument_type)` and
-  `grain_for_instrument_type(asset_group, instr.instrument_type)` **without `venue=`** → defaults to `GRAIN_LEAF` for
-  every FUTURE → DERIBIT/OKX per-contract futures never collapse → false `expected_unattempted`. **Fix: pass
-  `venue=instr.venue` to both calls.** Then DERIBIT/OKX FUTURE leaves collapse to one `futures_chain` bundle per
-  underlying; BYBIT stays per-contract. ~2-line change.
+- **Change B — ✅ ALREADY SHIPPED (`is@4f5faae8`, 2026-06-08) — this bullet was STALE, retained for trace only
+  (corrected 2026-07-12).** Code-verified at instruments-service HEAD: `_rollup_bundle_grain`
+  (`enumerate_expected_universe.py:2136-2138`) passes `instr.venue` to BOTH `bundle_instrument_type_for_leaf(...)` and
+  `grain_for_instrument_type(...)`; `git blame` attributes those lines to `4f5faae8` with no later revert; 3 regression
+  tests shipped (DERIBIT bundle / OKX base-token / BYBIT leaf). See the "F2 CLOSED + PRE-APPLY RE-VERIFICATION" section
+  (~L413) — do NOT re-dispatch this. (was: an open "urgent" P0 proposing to add `venue=` to the two calls.) Verified +
+  collapsed per operator ruling, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 (finding
+  149).
 - **Change A (producer, secondary)** — `instruments-service/scripts/build_instrument_catalogue.py`
   `build_catalogue_dataframe` (~:230-304, dispatched in `run_rollup` ~:1047): for cefi `future` instruments at
   `FUTURE_BUNDLE_VENUES["cefi"]` venues, group per-underlying → emit a `futures_chain` bundle entry
@@ -1927,14 +1922,12 @@ column — so safe pre-apply.
 ### deployment-api pipeline_mode dedup + drilldown (owner: deployment-api / downstream)
 
 The venue-level cefi numerator already collapses pipeline*mode (date-unique, :1786), but the **per-instrument** branch
-`_per_instrument_coverage` (~:1478+) has no explicit shard-atom dedup → a cell with both `batch_tardis` + `live*\*`rows
-for the same instrument+date could double-count. **Fix:** mirror the DeFi chain-breakdown dedup (:5663-5672)
-—`drop_duplicates(subset=[c for c in ("venue","data_type","instrument_id","date") if c in df.columns])`before
-counting`found_shards`. **Regression**: `test_cefi_pipeline_mode_rows_do_not_double_count`(5 atoms × 2 pipeline_modes →
-5, not 10), parity with the DeFi test at`tests/unit/test_chain_breakdown_shards_vs_dates.py:176`. Drilldown filter:
-`\_apply_pipeline_mode_filter`(:3657) exists but isn't threaded into`\_mtds_honest_coverage_for_venue`— add
-a`pipeline_modes` param + call it before the per-dt loop. Safe pre-apply (dedup already correct for the venue-level
-path; this hardens the per-instrument path + adds a UI-gated filter).
+`_per_instrument_coverage` (~:1478+) has no explicit shard-atom dedup → a cell with both `batch_tardis` +
+`live*\*`rows for the same instrument+date could double-count. **Fix:** mirror the DeFi chain-breakdown dedup (:5663-5672) —`drop_duplicates(subset=[c
+for c in ("venue","data_type","instrument_id","date") if c in
+df.columns])`before counting`found_shards`. **Regression**: `test_cefi_pipeline_mode_rows_do_not_double_count`(5 atoms × 2 pipeline_modes → 5, not 10), parity with the DeFi test at`tests/unit/test_chain_breakdown_shards_vs_dates.py:176`. Drilldown filter: `\_apply_pipeline_mode_filter`(:3657) exists but isn't threaded into`\_mtds_honest_coverage_for_venue`— add a`pipeline_modes`
+param + call it before the per-dt loop. Safe pre-apply (dedup already correct for the venue-level path; this hardens the
+per-instrument path + adds a UI-gated filter).
 
 ### deployment-api FLAG-3 — UAT health-summary bucket model (owner: deployment-api / downstream — MODEL decision)
 

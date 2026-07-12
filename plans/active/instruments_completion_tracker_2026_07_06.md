@@ -253,7 +253,7 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 > exact cefi denominator-authority files this re-measure depends on
 > (`instruments_service/engine/orchestrator/venue_core.py`, `instruments_service/reference_data/factory.py`,
 > `scripts/check_enumeration_completeness.py` — all mtime <10 min at time of writing, i.e. genuinely live, not stale
-> WIP) implementing the OKX-SPOT venue split + Kraken FI_/FF_ marker + other operator-decided denominator changes.
+> WIP) implementing the OKX-SPOT venue split + Kraken FI*/FF* marker + other operator-decided denominator changes.
 > Re-measuring against a mid-flight denominator would just have to be re-run once that workflow lands — **recommend
 > waiting for it to quiesce (git status clean / QG green / quickmerged) before re-dispatching this task**, rather than
 > burning a re-measure cycle on soon-invalid numbers.
@@ -325,7 +325,14 @@ reconciling + signing off, not redoing.)_
       count, unlike DeFi's provably-monotonic contracts). See
       `issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` for the alerting gap on top of this same
       guard, and the two currently-dark venues (LIGHTER, PACIFICA) it already missed.
-- [ ] [VERIFY] P0. Reconcile checkbox drift; take the formal **G2 → G5** sign-offs (cefi)
+- [x] [VERIFY] P0. Reconcile checkbox drift; take the formal **G2 → G5** sign-offs (cefi) — **DONE 2026-07-06** per
+      `foundation_gates_and_capture_to_100_2026_07_06.md:146-159` (status: complete): G2/G3/G3b/G4 all fully **SIGNED
+      OFF** with shipped SHAs; **G5 is SUB-SIGNED only** (mechanism + typed-reason discipline shipped — UAC@755c40515 +
+      IS@9e6dab5 + IS@3bb7acd — but full G5 sign-off is tracked separately under
+      `mvp_backfill_cefi_tick_v10_2026_06_27.md` waves, not fully closed here). Flipped with this caveat rather than a
+      bare check. Corrected 2026-07-12 — doc-reconciliation autofix findings 358-360,
+      `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling. (was: `- [ ]`
+      unchecked.)
 - [ ] [DATA] P1. tradfi **§8 retirement purge** (4-leg GCS delete — ICE / CBOE-OPRA / VX-spread / VIX-cash) —
       **OPERATOR-CONFIRM**
 - [ ] [DESIGN] P1. defi completeness **oracle** design
@@ -338,7 +345,12 @@ reconciling + signing off, not redoing.)_
       classification**, see `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` Update §3) ·
       rate-limit probe VM
 - [ ] [DATA] P1. Reconcile the DEDUP-flagged folded-in tail (from merged `path_to_100pct`) — **do not double-run**
-- [ ] [CODE] P1. DeFi `risk_params` MTDS handler (193,042 EU, no handler today)
+- [x] [CODE] P1. DeFi `risk_params` MTDS handler (193,042 EU, no handler today) — **DONE**, shipped 2026-06-24
+      `market-tick-data-service@2854c0a6` (`RiskParamsHandler` + registration + 11 unit tests), with a
+      dispatcher-registration regression test added 2026-07-06 `market-tick-data-service@90cd3975` per
+      `foundation_gates_and_capture_to_100_2026_07_06.md:177-197` (status: complete). Corrected 2026-07-12 —
+      doc-reconciliation autofix findings 358-360, `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50
+      reclassified" blanket ruling. (was: `- [ ]` unchecked.)
 - [x] [CODE] P1. **Deribit `options_chain` — handler registration** (Ikenna C5; taken over from Ikenna + verified) —
       **DONE, mtds@9ecd1e29e** (QG-green + quickmerge). Registered `DeribitOptionsChainHandler` in the MTDS operations
       dispatcher (`main.py` import + `"deribit-options-chain"` key) + a regression test asserting the operation
@@ -364,7 +376,20 @@ reconciling + signing off, not redoing.)_
       `factory.py` adapter entry. Neither is "shouldn't exist" clutter — both have real invested infrastructure sitting
       inert. The likely-related "defi 1225 blocked-not-registered" count above may already include these; confirm during
       the audit rather than assuming, and check `factory.py` alongside `cli/handlers/` for every DeFi protocol the audit
-      finds silently zero.
+      finds silently zero. **Partial-completion note (2026-07-12, doc-reconciliation autofix findings 358-360,
+      `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling):** re-verification
+      found this item's ORIGINAL scope (the operations-dispatcher Deribit-class audit, first 8 lines above) is DONE —
+      shipped `market-tick-data-service@015abaf5` (register both handlers) + `market-tick-data-service@efd658c8`
+      (regression tests) per `foundation_gates_and_capture_to_100_2026_07_06.md:77-85` (status: complete), plus a DONE
+      follow-up venue-level WSFeedConnector audit (`foundation_gates_and_capture_to_100_2026_07_06.md:86-100`, filed as
+      `issues/wsfeedconnector_phase35_gap_2026_07_06.md`). BUT the **"Widen scope" adapter-factory addendum above was
+      appended 2026-07-07 — AFTER that shipped work — and remains OPEN**: this tracker's own Progress Log (2026-07-07,
+      "round 3" entry) explicitly folds the RENZO/RADIANT/EULER_V2 adapter-factory-layer gap into "the existing
+      RENZO-adjacent unregistered-handler-audit item" as a still-open "finish what's already built" case, tracked in
+      `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md` (not yet swept systematically). Left unchecked
+      rather than flipped — the checkbox governs the item AS CURRENTLY WRITTEN (including the widen-scope addendum), and
+      that portion is not evidenced done; a bare flip would overclaim. NOT auto-fixable to `[x]` under the REFUSAL
+      CONTRACT (re-read partially contradicts the auto_note's "unambiguous" framing for this item).
 - [ ] [CODE] P1. prediction live token-universe fix (owned by `prediction_venue_perps_and_live_clob_depth_2026_06_20`;
       live=0 today)
 

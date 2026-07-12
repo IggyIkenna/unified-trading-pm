@@ -155,8 +155,8 @@ describes and (b) each subset needs its own diagnosis before mutation.
       `by_venue_instrument_type`, then scale. Gate: BYBIT-SPOT rows carry SPOT_PAIR; manifest `by_venue_instrument_type`
       shows the split. Depends on the two diagnostic todos above so we do not compound existing wrong labels (repo:
       market-tick-data-service). — market-tick-data-service@5611d9a7; script at
-      `scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py` with dry-run/--smoke/--apply modes,
-      stop-on-surprise guards, smoke-first protocol, snapshot before --apply.
+      `scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py` with dry-run/--smoke/--apply modes, stop-on-surprise
+      guards, smoke-first protocol, snapshot before --apply.
 - [x] ✅ [CONFIG] P2. **Populate `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` in UAC** with `trades` + `book_snapshot_5`
       (SPOT venue capabilities) so the cefi Layer-1 EXPECTED denominator includes BYBIT-SPOT instead of carve-out-1
       excluding it. Currently empty — matches the plan's separate BYBIT-SPOT capability-gap observation. Cross-repo
@@ -166,8 +166,8 @@ describes and (b) each subset needs its own diagnosis before mutation.
       `unified_api_contracts/registry/market_data_categories.py`. Start date sourced from
       `VenueMapping.venue_start_dates["BYBIT-SPOT"]` (Tardis `bybit-spot` availableSince); data_types mirror the
       existing `expected_coverage.py` BYBIT-SPOT entry. Carve-out 1 (VENUE_CAPABILITY_AGS in
-      `check_enumeration_completeness.py`) will now recognise BYBIT-SPOT at the cefi Layer-1 EXPECTED denominator.
-      QG green (222s cached, sentinel ab6bc7e5); Quickmerge: agent trailer applied.
+      `check_enumeration_completeness.py`) will now recognise BYBIT-SPOT at the cefi Layer-1 EXPECTED denominator. QG
+      green (222s cached, sentinel ab6bc7e5); Quickmerge: agent trailer applied.
 
 ## Diagnosis (a): 82k EMPTY-instrument_type rows
 
@@ -241,8 +241,11 @@ rows land with correct `instrument_type=spot_pair`.
 ## Todos (follow-on from Diagnosis (a))
 
 - [x] ✅ [CODE] P1. **(a1) Forward-path fix for honest-absence writers on BYBIT-SPOT.** After mtds@c4df8ae0
-      (`_VENUE_INSTRUMENT_TYPE["BYBIT-SPOT"] = "spot"`), the captured-row path stamps SPOT_PAIR correctly. But
-      `empty_confirmed` / `attempted_failed` / `expected_unattempted` writers appear to bypass the venue itype
+      (`_VENUE_INSTRUMENT_TYPE["BYBIT-SPOT"] = "spot"`), the captured-row path stamps SPOT_PAIR correctly. OPERATOR
+      RULING 2026-07-12 (plan-reconciliation finding 66): canonical instrument_type casing = UPPERCASE (SPOT_PAIR) per
+      the UAC enum + honest-coverage P0. The lowercase mapping/relabel target here is WRONG-CASE and must be corrected
+      BEFORE -003 runs. (Ruling recorded in `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`
+      §A2.) But `empty_confirmed` / `attempted_failed` / `expected_unattempted` writers appear to bypass the venue itype
       resolution — new BYBIT-SPOT rows in those states will still land with `instrument_type=""`. Trace the three writer
       routes; either wire them through `_resolve_instrument_type(venue, data_type)` (uses the newly-updated map) or
       explicitly set `instrument_type` from the venue+data_type at emission time. Regression-test each route (BYBIT-SPOT
@@ -251,17 +254,17 @@ rows land with correct `instrument_type=spot_pair`.
       -006 forward-path stamp (repo: market-tick-data-service; possibly instruments-service for the expected_unattempted
       seeder). — 2026-07-07 slot-6: market-tick-data-service@9d21b133. Wired four honest-absence writer sites in
       `sentinels.py` through `_orch._resolve_instrument_type(fan_venue, dt)`: (1) `_emit_skipped_venue_sentinels`
-      `record_expected_unattempted` at L244, (2) tier-2 `record_empty` / `record_failed` `row_key_dt` at L633,
-      (3) tier-3 pre-listing `record_expected_empty` `_pre_rk` at L702, (4) tier-3 per-instrument `record_empty` /
+      `record_expected_unattempted` at L244, (2) tier-2 `record_empty` / `record_failed` `row_key_dt` at L633, (3)
+      tier-3 pre-listing `record_expected_empty` `_pre_rk` at L702, (4) tier-3 per-instrument `record_empty` /
       `record_failed` `row_key_instrument` at L729. Same resolver the captured-write path uses (reads
       `_VENUE_INSTRUMENT_TYPE` which mtds@c4df8ae0 populated with `BYBIT-SPOT → spot`); blank for unmapped venues
-      (unchanged). Regression test
-      `test_emit_skipped_venue_sentinels_stamps_instrument_type_from_resolver` asserts BYBIT-SPOT
-      `record_expected_unattempted` `row_key` carries `instrument_type='spot'`. Full `bash scripts/quality-gates.sh`
-      green (27s cached); 24 sentinels-coverage tests + 15 per-data-type-sentinel tests pass. IS enumerator seeder path
-      (43 `expected_unattempted` rows) is a separate concern: `_enumerate_v2_cefi` already stamps `instr.instrument_type`
-      for per-instrument rows — those 43 blank-itype rows imply the IS BYBIT-SPOT catalog entries themselves have blank
-      `instrument_type`, which is a catalogue-writer fix (out of MTDS scope; separate follow-up if needed).
+      (unchanged). Regression test `test_emit_skipped_venue_sentinels_stamps_instrument_type_from_resolver` asserts
+      BYBIT-SPOT `record_expected_unattempted` `row_key` carries `instrument_type='spot'`. Full
+      `bash scripts/quality-gates.sh` green (27s cached); 24 sentinels-coverage tests + 15 per-data-type-sentinel tests
+      pass. IS enumerator seeder path (43 `expected_unattempted` rows) is a separate concern: `_enumerate_v2_cefi`
+      already stamps `instr.instrument_type` for per-instrument rows — those 43 blank-itype rows imply the IS BYBIT-SPOT
+      catalog entries themselves have blank `instrument_type`, which is a catalogue-writer fix (out of MTDS scope;
+      separate follow-up if needed).
 - [x] ✅ [SCRIPT] P1. **(b1) Manifest cleanup — delete the 54k BYBIT-SPOT rows under spot-nonsense data_types.**
       Diagnosis (b) confirmed all 53,934 rows are `empty_confirmed` with `instrument_type=""` — they carry ZERO captured
       data (0 rows each), so deleting them from the manifest is LOSSLESS. GATED ON todo (d) landing (populate
@@ -270,23 +273,44 @@ rows land with correct `instrument_type=spot_pair`.
       `VENUE_DATA_TYPE_CAPABILITIES` (may be already done via D2b in `build_expected`; verify the SEEDER path —
       `_row_data_types` or `_enumerate_v2_cefi` — also consults it). Smoke-first: delete ONE (venue=BYBIT-SPOT,
       data_type=perp_funding) shard row + verify manifest state; then scale to the full 53,934. Gate: `by_data_type` for
-      BYBIT-SPOT shows only `{trades, book_snapshot_5}` (repo: market-tick-data-service). — market-tick-data-service@aa8bb137;
-      script at `scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py` with dry-run/--smoke/--apply modes,
-      LOSSLESS-guard filter (venue+dtype+capture_status=empty_confirmed+instrument_type=""), stop-on-surprise guards
-      (row count outside [45k,60k]; any non-target capture_status; per-shard > 400), runtime gate check on --apply
-      that refuses if `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` still empty (enumerator seeder verified to honour
-      capabilities per `sentinels.py`:210-212 filter — falls open on empty dict), snapshot before --apply. Enumerator
-      seeder path verified: `_emit_skipped_venue_sentinels` DOES filter by `VENUE_DATA_TYPE_CAPABILITIES.get(venue, {})`
-      when the dict is non-empty. Operator should run --smoke then --apply once todo (d) lands.
+      BYBIT-SPOT shows only `{trades, book_snapshot_5}` (repo: market-tick-data-service). —
+      market-tick-data-service@aa8bb137; script at `scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py` with
+      dry-run/--smoke/--apply modes, LOSSLESS-guard filter
+      (venue+dtype+capture_status=empty_confirmed+instrument_type=""), stop-on-surprise guards (row count outside
+      [45k,60k]; any non-target capture_status; per-shard > 400), runtime gate check on --apply that refuses if
+      `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` still empty (enumerator seeder verified to honour capabilities per
+      `sentinels.py`:210-212 filter — falls open on empty dict), snapshot before --apply. Enumerator seeder path
+      verified: `_emit_skipped_venue_sentinels` DOES filter by `VENUE_DATA_TYPE_CAPABILITIES.get(venue, {})` when the
+      dict is non-empty. Operator should run --smoke then --apply once todo (d) lands.
+- [x] ✅ [CODE] P1. Fix `_VENUE_INSTRUMENT_TYPE['BYBIT-SPOT']` → `'SPOT_PAIR'` (uppercase) in MTDS + retarget the -003
+      relabel script to uppercase; grep for other lowercase instrument_type writers in the same path while there. MUST
+      land before the -003 relabel executes. Operator ruling 2026-07-12, finding 66 (see §A2 citation above). —
+      market-tick-data-service@60287d3e (slot-10 data_engineering). Changed `_VENUE_INSTRUMENT_TYPE["BYBIT-SPOT"]` in
+      `symbol_rules.py` from `"spot"` (lowercase) → `"SPOT_PAIR"` (uppercase), so `_resolve_instrument_type()` — wired
+      into the a1 honest-absence writer sites in `sentinels.py` — now stamps new BYBIT-SPOT `empty_confirmed` /
+      `attempted_failed` / `expected_unattempted` manifest rows with the canonical uppercase casing, matching the
+      captured-write path (`InstrumentType.SPOT_PAIR`) and the manifest's post-relabel rows. Verified the -003 relabel
+      script (`scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py`) already targets `_TO_ITYPE = "SPOT_PAIR"`
+      (uppercase) — no change needed there; it was written correctly against the manifest's raw uppercase `PERPETUAL`
+      values from the start. Grepped `_VENUE_INSTRUMENT_TYPE` + the honest-absence writer path for other lowercase
+      entries: no other venue is wired through this fix's scope (BYBIT-SPOT is the only venue under active manifest
+      remediation per this issue doc; other venues' lowercase entries are unrelated, out of scope, and higher-risk to
+      touch since the legacy `PartitionedTickWriter` write path lowercases `instrument_type` for GCS partition-path
+      construction — converting the whole map risks breaking partition paths for venues not under remediation). Updated
+      the a1 regression test (`test_emit_skipped_venue_sentinels_stamps_instrument_type_from_resolver`) to assert
+      `instrument_type == "SPOT_PAIR"`. Full `bash scripts/quality-gates.sh` green (both pre- and post-amend runs);
+      confirmed the 2 pre-existing `test_tardis_canonical_output.py` failures (KRAKEN-FUTURES margin marker +
+      bucket-shape) are unrelated (identical on a clean stashed tree). Quickmerge required a commit amend to add the
+      `Quickmerge: agent` trailer after the RULES.md-documented "commit yourself, then quickmerge" flow left the trailer
+      unstamped (quickmerge's own commit step is skipped when the tree is already clean at quickmerge time).
 
 ## Progress Log
 
 - **2026-07-07** — slot-6 (data_engineering) received -005 (a1 forward-path fix) and shipped
-  market-tick-data-service@9d21b133. Wired four honest-absence writer sites in `sentinels.py`
-  through `_orch._resolve_instrument_type(fan_venue, dt)` (the same resolver mtds@c4df8ae0 used
-  for the captured-write path). Regression test asserts BYBIT-SPOT `record_expected_unattempted`
-  stamps `instrument_type='spot'`. QG-green (27s cached); 39 sentinels/per-dt-sentinel tests
-  pass. Todos (b1), (c), (d) still open.
+  market-tick-data-service@9d21b133. Wired four honest-absence writer sites in `sentinels.py` through
+  `_orch._resolve_instrument_type(fan_venue, dt)` (the same resolver mtds@c4df8ae0 used for the captured-write path).
+  Regression test asserts BYBIT-SPOT `record_expected_unattempted` stamps `instrument_type='spot'`. QG-green (27s
+  cached); 39 sentinels/per-dt-sentinel tests pass. Todos (b1), (c), (d) still open.
 - **2026-07-07** — Filed by slot-8 planning during the -006 implementation session. Forward-path code fix shipped in the
   -006 quickmerge (MTDS `symbol_rules._VENUE_INSTRUMENT_TYPE` + `TardisAdapter._classify_row_instrument_type`
   - `test_tardis_canonical_output.py` regression). The four follow-on todos above are the tracked-work outputs; the
@@ -320,53 +344,60 @@ rows land with correct `instrument_type=spot_pair`.
   Three outcomes is a strong session." **Handoff note for -003's next executor (fresh worker):** (i) SCOPE =
   corrective-relabel of 53,785 BYBIT-SPOT rows currently stamped `instrument_type=PERPETUAL` →
   `instrument_type=spot_pair`; sources of these rows are Tardis batch captures pre-dating mtds@c4df8ae0 (my -006 code
-  fix, LDR); (ii) the forward path is already fixed (new BYBIT-SPOT batch captures land as SPOT_PAIR since
+  fix, LDR); (ii) the forward path is already fixed (new BYBIT-SPOT batch captures land as SPOT*PAIR since
   mtds@c4df8ae0), so -003 is PURELY historical remediation; (iii) SMOKE-FIRST protocol per plan header: identify ONE
   `(day, venue=BYBIT-SPOT, instrument_type=perpetual, data_type=trades)` shard, relabel it, verify manifest
-  `by_venue_instrument_type` shows both `perpetual` (remaining) and `spot_pair` (added row) BEFORE scaling; (iv)
-  STOP-ON-SURPRISE: if any shard has unexpected row counts (e.g. > 400 rows/day for BYBIT-SPOT is suspicious since the
-  53k are spread over 40k trades + 40k book_5 shards over ~4y) OR if the target
+  `by_venue_instrument_type` shows both `perpetual` (remaining) and `spot_pair` (added row) BEFORE scaling [OPERATOR
+  RULING 2026-07-12 (plan-reconciliation finding 66): canonical instrument_type casing = UPPERCASE (SPOT_PAIR) per the
+  UAC enum + honest-coverage P0. The lowercase mapping/relabel target here is WRONG-CASE and must be corrected BEFORE
+  -003 runs.]; (iv) STOP-ON-SURPRISE: if any shard has unexpected row counts (e.g. > 400 rows/day for BYBIT-SPOT is
+  suspicious since the 53k are spread over 40k trades + 40k book_5 shards over ~4y) OR if the target
   `venue=BYBIT-SPOT/instrument_type=spot_pair/` path already exists (indicating pre-existing state we'd overwrite), STOP
   and post a BLK — do NOT push through; (v) 2c-reclassify LESSON: `reclassify_cefi_manifest_mvp_universe_2026_06_23.py`
-  was pulled last cycle due to `_derive_base` mis-parsing Bitfinex `ADAF0:USTF0` + Kraken `PF_/PI_` wire-forms leading
+  was pulled last cycle due to `_derive_base` mis-parsing Bitfinex `ADAF0:USTF0` + Kraken `PF*/PI\_`wire-forms leading
   to ~380k row DELETE — the same risk applies here; the BYBIT-SPOT USDT symbols like BTCUSDT/ACHUSDT/APEUSDT look
   straightforward but SPOT-instrument symbols can carry venue-native suffixes (USDC / USDT / USD / _PERP / _2X, etc.) —
-  VERIFY the identity-match filter on manifest key `(date, venue, instrument_id, data_type)` catches EVERY row before
+  VERIFY the identity-match filter on manifest key`(date, venue, instrument_id, data_type)`catches EVERY row before
   mutation; (vi) DO NOT relabel the 82k EMPTY-instrument_type rows in this task — those are honest-absence rows tracked
   separately (their fix is (a1) forward-path writer fix + potentially the same (b1) delete pass); scope of -003 is ONLY
-  the 53,785 PERPETUAL subset; (vii) reference materials: my Diagnosis (a) + (b) sections above have the exact
-  `capture_status` × `data_type` × `instrument_type` breakdowns; -006's shipped code at
-  `market-tick-data-service@c4df8ae0` (files: `symbol_rules.py`, `tardis_adapter.py`, `test_tardis_canonical_output.py`)
+  the 53,785 PERPETUAL subset; (vii) reference materials: my Diagnosis (a) + (b) sections above have the
+  exact`capture_status`×`data_type`×`instrument_type`breakdowns; -006's shipped code
+  at`market-tick-data-service@c4df8ae0`(files:`symbol_rules.py`, `tardis_adapter.py`, `test_tardis_canonical_output.py`)
   shows the correct forward-path stamping to mirror in the relabel logic. Slot-8 next action: /skip-current-task.
-- **2026-07-07** — **Task -003 DONE** (slot-2). Corrective-relabel script shipped at
-  `market-tick-data-service@5611d9a7` (`scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py`). Script provides
-  dry-run (default) / --smoke (one shard, verify split) / --apply (all ~53,785 rows with pre-relabel snapshot)
-  modes. Stop-on-surprise guards: pre-existing SPOT_PAIR rows, count outside [50k,60k], per-shard > 400 rows.
-  Checkbox flipped. Operator should run --smoke then --apply against prod manifest to complete the remediation.
+- **2026-07-07** — **Task -003 DONE** (slot-2). Corrective-relabel script shipped at `market-tick-data-service@5611d9a7`
+  (`scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py`). Script provides dry-run (default) / --smoke (one shard,
+  verify split) / --apply (all ~53,785 rows with pre-relabel snapshot) modes. Stop-on-surprise guards: pre-existing
+  SPOT_PAIR rows, count outside [50k,60k], per-shard > 400 rows. Checkbox flipped. Operator should run --smoke then
+  --apply against prod manifest to complete the remediation.
 - **2026-07-07** — **Task -006 (b1) DONE** (slot-10 data_engineering). Manifest delete script shipped at
   `market-tick-data-service@aa8bb137` (`scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py`). Script
   provides dry-run (default) / --smoke (earliest perp_funding shard) / --apply (all ~53,934 rows with pre-delete
   snapshot) modes. LOSSLESS-guard filter: `venue=BYBIT-SPOT` + `data_type` ∈ 6-nonsense set +
-  `capture_status=empty_confirmed` + `instrument_type=""`. Stop-on-surprise guards: row count outside
-  [45k, 60k]; any target `(venue, data_type)` universe row carrying non-target `capture_status` /
-  `instrument_type` (would risk destroying real data); per-shard row_count > 400. Runtime gate
-  check on --apply: refuses if `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` is empty (todo (d) still
-  open at ship time) because the enumerator seeder falls open on empty capability dicts and would
-  re-emit the same rows on the next cron cycle. Enumerator seeder gate verified — the
-  `_emit_skipped_venue_sentinels` in `market_tick_data_service/engine/orchestrator/sentinels.py`:210-212
-  DOES filter expected data_types by `VENUE_DATA_TYPE_CAPABILITIES.get(venue, {})` when the dict is
-  non-empty; the runtime gate in the script bridges the current empty-dict state so operator can't
-  accidentally run --apply before (d) lands. QG green (335s cached with sentinel matching commit HEAD).
-  Checkbox flipped. Operator sequence: land (d) → run --smoke → run --apply.
-- **2026-07-07** — **Task -004 DONE** (slot-8 data_engineering). Todo (d) shipped at
-  `unified-api-contracts@ab6bc7e5`. Added `"BYBIT-SPOT": {"trades": "2021-12-04", "book_snapshot_5":
-  "2021-12-04"}` to `VENUE_DATA_TYPE_CAPABILITIES` in
+  `capture_status=empty_confirmed` + `instrument_type=""`. Stop-on-surprise guards: row count outside [45k, 60k]; any
+  target `(venue, data_type)` universe row carrying non-target `capture_status` / `instrument_type` (would risk
+  destroying real data); per-shard row_count > 400. Runtime gate check on --apply: refuses if
+  `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` is empty (todo (d) still open at ship time) because the enumerator seeder
+  falls open on empty capability dicts and would re-emit the same rows on the next cron cycle. Enumerator seeder gate
+  verified — the `_emit_skipped_venue_sentinels` in `market_tick_data_service/engine/orchestrator/sentinels.py`:210-212
+  DOES filter expected data_types by `VENUE_DATA_TYPE_CAPABILITIES.get(venue, {})` when the dict is non-empty; the
+  runtime gate in the script bridges the current empty-dict state so operator can't accidentally run --apply before (d)
+  lands. QG green (335s cached with sentinel matching commit HEAD). Checkbox flipped. Operator sequence: land (d) → run
+  --smoke → run --apply.
+- **2026-07-07** — **Task -004 DONE** (slot-8 data_engineering). Todo (d) shipped at `unified-api-contracts@ab6bc7e5`.
+  Added `"BYBIT-SPOT": {"trades": "2021-12-04", "book_snapshot_5": "2021-12-04"}` to `VENUE_DATA_TYPE_CAPABILITIES` in
   `unified_api_contracts/registry/market_data_categories.py`. Start date sourced from
-  `VenueMapping.venue_start_dates["BYBIT-SPOT"]` (Tardis `bybit-spot` availableSince); data_types mirror the
-  existing `expected_coverage.py` BYBIT-SPOT entry. Effect: Carve-out 1 (VENUE_CAPABILITY_AGS in
-  `check_enumeration_completeness.py`) will now recognise BYBIT-SPOT at the cefi Layer-1 EXPECTED denominator,
-  and the enumerator's `_emit_skipped_venue_sentinels` (mtds@aa8bb137 gate) will stop broadcasting
-  spot-nonsense data_types to BYBIT-SPOT on the next cron cycle. **Unblocks (b1) --apply**: the b1
-  manifest-delete script's runtime gate now passes, so operator can run `--smoke` → `--apply` to remove the
-  53,934 spot-nonsense manifest rows. QG green (222s cached with sentinel matching commit HEAD ab6bc7e5).
-  Checkbox flipped.
+  `VenueMapping.venue_start_dates["BYBIT-SPOT"]` (Tardis `bybit-spot` availableSince); data_types mirror the existing
+  `expected_coverage.py` BYBIT-SPOT entry. Effect: Carve-out 1 (VENUE_CAPABILITY_AGS in
+  `check_enumeration_completeness.py`) will now recognise BYBIT-SPOT at the cefi Layer-1 EXPECTED denominator, and the
+  enumerator's `_emit_skipped_venue_sentinels` (mtds@aa8bb137 gate) will stop broadcasting spot-nonsense data_types to
+  BYBIT-SPOT on the next cron cycle. **Unblocks (b1) --apply**: the b1 manifest-delete script's runtime gate now passes,
+  so operator can run `--smoke` → `--apply` to remove the 53,934 spot-nonsense manifest rows. QG green (222s cached with
+  sentinel matching commit HEAD ab6bc7e5). Checkbox flipped.
+- **2026-07-12** — **Task `bybit_spot_manifest_stray_captures-001` (uppercase-casing fix) DONE** (slot-10
+  data_engineering). Shipped `market-tick-data-service@60287d3e`. `_VENUE_INSTRUMENT_TYPE["BYBIT-SPOT"]` corrected
+  `"spot"` → `"SPOT_PAIR"` per operator ruling 2026-07-12 (finding 66, canonical casing = UPPERCASE) so the a1
+  honest-absence writer path stamps new BYBIT-SPOT manifest rows consistently with the captured-write path and the
+  manifest's already-uppercase `PERPETUAL`/target-`SPOT_PAIR` rows. Verified -003's relabel script already targets
+  uppercase `SPOT_PAIR` (no change needed). This was the LAST open todo in this issue doc — **all todos now closed**.
+  **-003 is now safe to run** (`--smoke` then `--apply` against the prod manifest, per its own Progress Log entry) since
+  the forward-path casing mismatch this todo guarded against is fixed. Full QG green; regression test updated.

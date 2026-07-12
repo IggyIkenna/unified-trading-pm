@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Orchestrator Multi-VM Topology (SSOT)
 summary:
-  Describes the retired multi-VM orchestrator topology — central / human-planning VM split fronting 10
-  epic VMs (vm-defi / vm-cefi / …), per-VM backend + state.db, plan→VM assignment via assigned_vm
-  frontmatter, ES256 central↔worker proxy auth, dashboard fan-out, and GCS/S3 snapshot provisioning.
-  Superseded by the single-VM architecture (2026-06-27); assigned_vm is now {planning, NA} only.
+  Describes the retired multi-VM orchestrator topology — central / human-planning VM split fronting 10 epic VMs (vm-defi
+  / vm-cefi / …), per-VM backend + state.db, plan→VM assignment via assigned_vm frontmatter, ES256 central↔worker proxy
+  auth, dashboard fan-out, and GCS/S3 snapshot provisioning. Superseded by the single-VM architecture (2026-06-27);
+  assigned_vm is now {planning, NA} only.
 status: stale
 nature: ssot
 asset_group: [meta]
@@ -13,19 +13,38 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, infrastructure, multi-vm, migration, self-healing]
-related: [codex/12-agent-workflow/orchestrator-safety-mechanisms.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md, codex/04-architecture/agent-orchestrator-overview.md]
+related:
+  [
+    codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+    codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+    codex/04-architecture/agent-orchestrator-overview.md,
+  ]
 created: 2026-05-21
 authoritative_for: [retired multi-VM orchestrator topology (historical reference)]
-referenced_by: [codex/04-architecture/agent-orchestrator-overview.md, codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md, codex/12-agent-workflow/orchestrator-safety-mechanisms.md, plans/audit/instructions/orchestrator_master_audit_instructions.md, plans/epics/orchestrator_master.md]
+referenced_by:
+  [
+    codex/04-architecture/agent-orchestrator-overview.md,
+    codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md,
+    codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+    plans/epics/orchestrator_master.md,
+  ]
 owner:
-last_reviewed: 2026-05-28
+last_reviewed: 2026-07-12
 code_refs:
 ---
 
 # Orchestrator Multi-VM Topology (SSOT)
 
-> **Permanent SSOT** for the agent-orchestrator multi-VM design — VM shapes, plan→VM assignment, registry, per-VM
-> backend, dashboard aggregation, persistence + provisioning. Codified 2026-05-21 from the
+> **🔴 SUPERSEDED (2026-07-12).** This 10-epic-VM topology was retired 2026-06-27 by the single-VM architecture — see
+> [`agent-orchestrator-single-vm-architecture.md`](agent-orchestrator-single-vm-architecture.md) (THE current SSOT: one
+> central orchestrator VM id `planning` + N role-dispatched slot workers, `assigned_vm ∈ {planning, NA}`). Kept here
+> ONLY as the historical record of the pre-2026-06-27 multi-VM model — do NOT treat anything below as current guidance,
+> do NOT stand up a new epic VM, and do NOT cite this doc for `assigned_vm` semantics.
+
+> **HISTORICAL REFERENCE (was "Permanent SSOT")** for the agent-orchestrator multi-VM design — VM shapes, plan→VM
+> assignment, registry, per-VM backend, dashboard aggregation, persistence + provisioning. Codified 2026-05-21 from the
 > `orchestrator_v07_multi_vm_topology` plan that was promoted into `plans/epics/orchestrator_master.md`. The epic body
 > now points here for design detail; implementation phases live in active plans under
 > `parent_epic: orchestrator_master`.
@@ -129,8 +148,8 @@ the topology depends on:
 
 Failure mode if keys get out of sync: workers 401 on every authed proxy call (`/api/vms/<id>/api/state`,
 `/api/backends`, etc.) and the dashboard bounces back to the login screen. Diagnosis: SSH to a worker + check the
-journal for `"Loaded internal central↔worker public key from GCS."` startup line. Absence → `.env.local` missing the
-GCS URI or `GOOGLE_APPLICATION_CREDENTIALS` not set.
+journal for `"Loaded internal central↔worker public key from GCS."` startup line. Absence → `.env.local` missing the GCS
+URI or `GOOGLE_APPLICATION_CREDENTIALS` not set.
 
 ## Per-VM agent shape (epic VMs)
 
@@ -187,9 +206,9 @@ operator hits `POST /api/plans/reload` for instant pickup).
 - **D1 — fail-closed**: A backend ingests a plan's tasks iff `assigned_vm == backend_id` exactly. Unset or unrecognised
   value → nobody ingests the plan. `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` env var is **RETIRED** — strict matching is the
   ONLY mode (do NOT reference or re-add this variable).
-- **D3 — domain**: `{registry VM ids}` ∪ `{NA}`. Values `NA`/`na`/`N/A`/`n/a` are the intentionally-unassigned
-  sentinels — they resolve to an empty plan-vms set so no backend ingests the plan. Use NA to park plans that are not
-  yet assigned to a specific VM.
+- **D3 — domain**: `{registry VM ids}` ∪ `{NA}`. Values `NA`/`na`/`N/A`/`n/a` are the intentionally-unassigned sentinels
+  — they resolve to an empty plan-vms set so no backend ingests the plan. Use NA to park plans that are not yet assigned
+  to a specific VM.
 - **D4 — reassignment**: Edit `assigned_vm:` in the plan file + push to LDR. The old backend prunes the plan's queued
   tasks on its next regen tick (`ORCHESTRATOR_REGEN_PRUNE_STALE=true` default). The new backend ingests on its next
   tick. No API call or VM restart needed; maximum lag = 2 × `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` (≤70 min

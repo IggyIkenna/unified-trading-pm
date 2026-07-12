@@ -22,6 +22,7 @@ related:
     plans/active/prediction_capture_incident_remediation_2026_07_06.md,
     plans/active/instruments_catalogue_incremental_rollup_2026_06_29.md,
     plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    plans/active/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
   ]
 created: 2026-07-06
 parent_epic: instruments_master
@@ -88,7 +89,13 @@ audit, fixed-UTL→image, missed-window backfill, `exc_info` observability) live
 string-poisoned too (4.99M rows), sports had BOTH consolidator crons enabled (legacy now paused), and
 `is-daily-enum-sports` has FAILED daily since **06-28** (longer than prediction, undetected). Both
 `is-daily-enum-{prediction,sports}` cloud jobs still FAIL daily on the OLD UTL — the local prediction heal never reached
-the deployed image. The fix (fixed-UTL→image) heals both and is escalated to P0 in the plan's Workstream A.
+the deployed image. The fix (fixed-UTL→image) was escalated to P0 in the plan's Workstream A. **Correction (2026-07-12,
+doc-reconciliation finding 116, §A2 "50 reclassified" blanket ruling; was: "The fix (fixed-UTL→image) heals both."):**
+that "heals both" prediction did NOT hold — getting the coercion into the deployed image (`sha256:f36f3bba…`, UTL 1.6.0,
+confirmed present via docker-inspect) was necessary but not sufficient; both `is-daily-enum-{prediction,sports}` still
+exit(1) after a full run, a SECOND, still-unresolved failure, re-confirmed failing through 2026-07-09 as of a 2026-07-10
+re-verification. See the sibling handoff doc for the full evidence and diagnosis:
+`is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`.
 
 ## ROOT CAUSE #2 (2026-07-06, found after the ArrowTypeError fix unmasked it) — cefi KALSHI-PERP adapter filter broken
 

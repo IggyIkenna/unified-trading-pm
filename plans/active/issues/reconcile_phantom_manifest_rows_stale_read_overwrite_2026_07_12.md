@@ -127,16 +127,121 @@ below) puts a bucket into routinely.
       is still correctly flipped. 4 new UTL unit tests cover the helper directly (canonical+shard merge, canonical-only,
       custom `index_blob` override, empty-when-nothing-exists). Full `quality-gates.sh` green on both repos. (repo:
       unified-trading-library@737a52be, instruments-service@0f7bd460)
-- [ ] [DATA] P2. **Audit other "read full manifest -> patch -> full re-upload" scripts** in instruments-service /
-      unified-trading-library for the same pattern (grep for `to_parquet` writes to `_index/availability_index.parquet`
-      paths outside `manifest_consolidator.py` / `manifest_writer/`) -- enumerate and either fix or document as
-      "read-only / dry-run-safe only" (repo: instruments-service).
-- [ ] [INFRA] P2. **Investigate why the sports bucket's manifest consolidator Cloud Run Job went stale for 20+ minutes**
-      (canonical `availability_index.parquet` stuck at generation `2026-07-12T07:03:42Z` with per-VM shards outstanding,
-      confirmed via repeated GCS mtime polling through at least 07:26) despite the documented `*/1 * * * *` Cloud
-      Scheduler cadence -- check Cloud Run Job execution logs / Cloud Scheduler trigger history for this window; rule
-      out a stuck/OOM'd execution vs. a scheduler-side gap (repo: deployment-service, or wherever the consolidator job's
-      infra lives).
+- [x] [DATA] P2. ✅ **Audited other "read full manifest -> patch -> full re-upload" scripts** in instruments-service /
+      unified-trading-library. Full enumeration + disposition:
+
+      **FIXED this session** (highest-risk + actively-reused library entry points, same staleness guard as item #1 --
+                          `merge_canonical_with_outstanding_shards`/`_read_and_merge_per_vm_shards` re-fetch immediately before the
+                          write-back):
+                          - `unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py`: `purge_venue_before_date`
+                            (fresh re-fetch + re-derived mask), `rebuild_manifest` (fresh re-fetch, drops any key another writer already
+                            landed during the blob-listing walk), `emit_migration_manifest_updates` (fresh re-fetch + re-derived prune;
+                            the docstring's prior "same GCS generation-match path... concurrent migration VMs are safe" claim was FALSE
+                            for this step -- corrected in the write path), `rebuild_manifest_from_canonical_paths` (highest-risk site
+                            found -- full-corpus GCS walk + blind full-replace write; now merges in fresh outstanding per-VM shard rows
+                            immediately before writing). 2 new regression tests added to `tests/unit/test_manifest_v4_migration.py`
+                            (`test_purge_venue_before_date_preserves_shard_landed_after_initial_read`,
+                            `test_rebuild_from_canonical_paths_preserves_shard_landed_mid_walk`); full UTL suite green (4365 passed).
+                          - `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`'s two sibling write paths named in this
+                            todo's own filing (`_apply_delete_chain_level_defi_phantoms`, `_apply_delete_legacy_combined_venue_defi_phantoms`)
+                            -- same fix pattern (re-fetch fresh + re-derive the delete predicate immediately before the write-back). New
+                            regression test `test_chain_level_defi_delete_preserves_shard_landed_before_write`.
+
+                          **NOT fixed -- documented (lower priority, out of this session's time budget)**:
+                          - `unified-trading-library/unified_trading_library/manifest_writer/_queries.py::reconcile_manifest` -- same
+                            class (slow per-row `list_blobs` existence-probe loop then blind write), but inside the explicitly-excluded
+                            `manifest_writer/` package boundary named in this todo's own text. Flagged for awareness, not actioned.
+                          - `instruments-service/scripts/migrate_leagues_kill_2026_05_07.py` and
+                            `migrate_teams_cadence_2026_05_07.py`: log/comment text claims "canonical CAS" protection that does not
+                            actually exist at the write site (`blob.upload_from_file` with no `if_generation_match`). Short window, low
+                            urgency, but the misleading comment should be corrected or real CAS added if either script is ever re-run.
+                          - **~45 additional one-off, dated `instruments-service/scripts/*.py` migration/cleanup scripts** share the
+                            identical short-window "read canonical once -> fast boolean-mask patch -> `to_parquet` + upload, no re-merge"
+                            template (e.g. `dedup_phantom_after_recovery.py`, `reconcile_attempted_failed_to_captured_2026_05_13.py`,
+                            `purge_prediction_other_group_rows.py`, `flip_residual_attempted_failed_2026_06_29.py`,
+                            `canonicalize_okx_margin_type_2026_07_09.py`, `reconcile_defi_ghost_venue_*_20260522.py`,
+                            `dedup_defi_manifest_status_priority_2026_06_24.py`, and ~35 more -- full list in the audit sub-agent's
+                            transcript, available on request). Per `codex/06-coding-standards/script-homes.md`, these are one-off scripts
+                            (most already executed against production and unlikely to be re-run) -- retrofitting all ~45 individually was
+                            judged lower-value than the time cost this session; recommend a dedicated bulk-sweep task (mechanical:
+                            s/raw read/`merge_canonical_with_outstanding_shards`/ before each write) only if/when one of these scripts is
+                            actually re-run against a bucket with active concurrent writers.
+                          - `split_prediction_by_market.py` already calls `read_availability_index` right before its write --
+                            LOW RISK, no action needed.
+                          - Scripts targeting per-day/venue-owned `instrument_availability/by_date/` shard catalogs (not the shared
+                            canonical `_index/availability_index.parquet`) -- e.g. `canonicalize_binance_futures_delivery_catalog_2026_07_09.py`,
+                            `canonicalize_bybit_kraken_futures_catalog_2026_07_09.py` -- DOCUMENTED as read-only/dry-run-safe: a much
+                            smaller concurrent-writer collision surface than the shared canonical, different bug class, no action needed.
+                          (repo: instruments-service, unified-trading-library)
+
+- [x] [INFRA] P2. ✅ **Investigated why the sports bucket's manifest consolidator Cloud Run Job went stale for 20+
+      minutes.** Both hypotheses in the todo's own framing are RULED OUT with hard evidence; root cause is a third thing
+      -- an ~89-minute crash-loop, not a stuck execution or a scheduler gap:
+
+      **RULED OUT -- scheduler-side gap**: `gcloud run jobs executions list` for
+                      `uts-prod-manifest-consolidator-instruments-sports` shows the `*/1 * * * *` Cloud Scheduler cron fired
+                      **every single minute without a single miss** from 06:44 through 08:13 UTC (86 consecutive invocations, one per
+                      minute). The trigger never stopped.
+
+                      **RULED OUT -- stuck/OOM'd execution**: every failing execution's `status.conditions` shows
+                      `reason: "NonZeroExitCode"` / `"The container exited with an error."` (exit code 1) -- NOT `OOMKilled` / signal
+                      137 (the CeFi dated-instrument-seeding OOM signature this doc's own SSOT describes). Each attempt (incl. the
+                      `maxRetries: 1` retry) completed in 20-90s, far under the 1800s job timeout. The container is not hanging -- it
+                      is actively cycling fail -> retry -> fail -> next-minute-refires, cleanly, every cycle.
+
+                      **What actually happened**: 84 of ~86 executions in the 06:44-08:13 UTC window failed (only 5 succeeded:
+                      07:02, 07:03, 07:28, 07:29, 07:30); canonical mtime was genuinely stuck at `07:03:42Z` per the parent finding's
+                      polling. Every single failure's stderr traceback is byte-identical across all 84 executions:
+                      `manifest_consolidator.py:587, in consolidate -> merge_result = _duckdb_consolidate_and_write(` -- i.e. the
+                      exception is always raised inside the DuckDB incremental-merge call, on the SAME line, every time. The window
+                      overlaps precisely with the footystats residual closer v1 (active through ~06:50 UTC) and v2 (07:03-07:15 UTC)
+                      actively writing/replacing per-VM shard parquet files in this SAME bucket (per this doc's "What I found" #1-3
+                      above) -- the leading hypothesis is contention between the consolidator's incremental shard-scan (list
+                      "changed" shards, then open them in DuckDB) and the closer's shard churn (the v1->v2 shard-name handoff), though
+                      the EXACT DuckDB exception type/message could not be recovered (see next finding) so this is circumstantial, not
+                      proven. **Self-healed without operator intervention** -- 0 failures in the last 60 executions checked
+                      (09:06-10:06 UTC), canonical mtime currently 2s old as of this investigation.
+
+                      **Secondary finding -- why this produced ZERO alerts for 89 minutes** (the real "why didn't anyone catch this"
+                      answer, filed as its own actionable todo below rather than fixed inline): the code's own exception handler DOES
+                      fire correctly (`logger.exception()` + `log_event(MANIFEST_CONSOLIDATION_FAILED, severity="ERROR", details={"error":
+                      f"{type(exc).__name__}: {exc}", ...})` at `manifest_consolidator.py:660-680`) and WOULD have carried the exact
+                      exception type + message -- but `main()` (line 1929) wires `setup_events("manifest-consolidator", mode="batch",
+                      sink=MockEventSink())`, a **no-op sink**, so that event is silently discarded on every single failure. This
+                      directly contradicts this doc's own § "Liveness + health contract" claim that `MANIFEST_CONSOLIDATION_FAILED`
+                      "is now emitted with severity=ERROR so the alert sink routes it." Additionally, the CLI's own stdout summary
+                      line (`error={report.error_reason}`, which also carries the exact exception) is never captured by Cloud Logging
+                      for this job at all (verified 0 stdout entries even for a confirmed-successful execution), and the dedicated
+                      `uts-prod-consolidator-liveness-watchdog` job (which DOES monitor this bucket, confirmed via its `--buckets` arg
+                      list, and runs every 2 min via its own Cloud Scheduler) produced zero stderr output during the incident despite
+                      explicitly calling `logging.basicConfig(level=logging.INFO)` in its `__main__` -- its actual CONSOLIDATOR_DOWN
+                      verdict could not be confirmed from Cloud Logging (verification recipe evidence:
+                      `gcloud logging read` queries + `gcloud run jobs executions list/describe` transcripts available on request).
+                      (repo: unified-trading-library)
+
+- [x] [INFRA] P2. ✅ **Fix the manifest-consolidator alerting no-op found above**: `manifest_consolidator.py`'s CLI
+      `main()` wired `setup_events(..., sink=MockEventSink())`, so `MANIFEST_CONSOLIDATION_FAILED` (severity=ERROR)
+      never reached any real consumer despite the SSOT doc (`codex/05-infrastructure/manifest-consolidator-ssot.md` §
+      "Liveness + health contract") claiming it "routes to the alert sink." Confirmed via research-agent trace that
+      wiring `GcsEventSink` alone would NOT have closed the loop: `alerting-service`'s `BatchEventReader` only runs
+      under a manual `--mode batch` historical replay (not an always-on watchdog), reads a stale fixed filename that
+      doesn't match `GcsEventSink`'s actual write path, and `"manifest-consolidator"` isn't even in its
+      `_EVENT_SOURCE_SERVICES` tuple. The REAL live path is Pub/Sub: `alert_subscriber.py` subscribes to
+      `lifecycle-events-sub`, and `consolidator_rules.py` already has severity-routed handlers for both
+      `MANIFEST_CONSOLIDATION_FAILED` and `CONSOLIDATOR_DOWN` waiting -- confirmed against the working reference pattern
+      already proven by deployment-service's `dp-fleet-monitor` CLI (`PubSubEventSink(topic="lifecycle-events")`). Wired
+      both entrypoints named in this todo: `manifest_consolidator.py::main()` (was `MockEventSink()`/mode="batch") AND
+      `consolidator_liveness.py::_main()`, which turned out to have an even worse variant of this bug -- it never called
+      `setup_events()` at all, so every `log_event()` call raised `RuntimeError`, silently swallowed by
+      `check_buckets()`'s broad except and force-set to `STATUS_OK` (a false negative masking a real outage, not just a
+      dropped alert). 4 new regression tests (sink-wired-when-project-id-resolves + graceful-no-crash-when-it-doesn't,
+      one pair per entrypoint). Full `quality-gates.sh` green. (repo: unified-trading-library@bf6fb9c3)
+- [ ] [INFRA] P2. **Redeploy the manifest-consolidator + consolidator-liveness-watchdog Cloud Run images** carrying
+      `unified-trading-library@bf6fb9c3` (the PubSubEventSink alerting fix landed above) -- bump `BASE_IMAGE_DIGEST` per
+      `codex/05-infrastructure/manifest-consolidator-ssot.md`'s "Image deploy-hygiene" note, then redeploy across all
+      ~10 `uts-prod-manifest-consolidator-*` Cloud Run jobs AND `uts-prod-consolidator-liveness-watchdog`. Until this
+      ships, the alerting gap remains live in the currently-deployed images even though the source fix has landed.
+      (repo: deployment-service)
 
 ## Progress Log
 
@@ -152,3 +257,64 @@ below) puts a bucket into routinely.
   trivially, `instruments-service@7c186174`) -- both blocked `quickmerge --agent`'s green-sentinel requirement for this
   repo and were resolved before shipping. Items 2 and 3 remain open (P2, different craft scope/repo) -- not actioned
   this session.
+- **2026-07-12 (slot-7, data_engineering)** -- Item 2 closed. Research-agent audit enumerated ~50 sites across both
+  repos sharing the read-once-write-back pattern. Fixed the highest-risk/actively-reused ones: UTL's
+  `manifest_writer/_maintenance.py` (`purge_venue_before_date`, `rebuild_manifest`, `emit_migration_manifest_updates`,
+  `rebuild_manifest_from_canonical_paths`) shipped as `unified-trading-library@21f6e208` (2 new regression tests, full
+  suite green); the reconciler's two sibling delete functions
+  (`_apply_delete_chain_level_defi_phantoms`/`_apply_delete_legacy_combined_venue_defi_phantoms`) shipped as
+  `instruments-service@8160f705` (1 new regression test). Full enumeration + fix-vs-document disposition for the
+  remaining ~45 one-off dated scripts recorded in the todo above. Both `quickmerge --agent` runs hit the same
+  missing-`Quickmerge:`-trailer gap as item 1 (pre-committing before Pass-1 QG, per the documented recipe, leaves
+  quickmerge's own commit step with nothing to do) -- resolved via `git commit --amend` + QG re-run each time, same as
+  item 1's workaround.
+- **2026-07-12 (slot-5, infra)** -- Item 3 closed via `gcloud run jobs executions list/describe` + `gcloud logging read`
+  forensics (non-snap SDK at `~/google-cloud-sdk/bin/gcloud` -- the `/snap/bin/gcloud` on this host is broken,
+  `cap_dac_override` missing). Ruled out both hypotheses the todo posed (scheduler gap, stuck/OOM'd execution) with hard
+  evidence; found the real cause is an 89-min crash-loop (06:44-08:13 UTC, 84/86 cycles failed, self-healed) whose exact
+  DuckDB exception is unrecoverable because the container's own stderr traceback is identically truncated on every
+  failure. Filed a NEW P2 todo for the concrete secondary finding: the consolidator CLI's `MockEventSink()` makes its
+  `MANIFEST_CONSOLIDATION_FAILED` alert a no-op, contradicting this doc's own "routes to the alert sink" claim --
+  explains why the 89-min incident paged nobody. No code shipped this session (the fix needs an alerting-service
+  consumer-path confirmation first, per the findings-triage "ambiguous -> diagnose both sides, don't blind-fix" rule) --
+  filed as a todo instead, target repo named.
+- **2026-07-12 (slot-5, infra)** -- Item 4 closed. Dispatched a research sub-agent to confirm the real consumer path
+  before touching the sink (per the todo's own explicit ask): `GcsEventSink` would NOT have closed the loop (no
+  automatic consumer reads it; `alerting-service`'s `BatchEventReader` is a manual replay-only path with a stale
+  filename convention and doesn't even list `manifest-consolidator` in its source tuple). The actually-working path is
+  Pub/Sub -- `alert_subscriber.py` subscribes `lifecycle-events-sub`, and `consolidator_rules.py` already has
+  severity-routed handlers built for both `MANIFEST_CONSOLIDATION_FAILED` and `CONSOLIDATOR_DOWN`. Wired
+  `manifest_consolidator.py::main()` to `PubSubEventSink(topic="lifecycle-events")` (matching deployment-service's
+  already-working `dp-fleet-monitor` reference pattern), and additionally found + fixed the SAME class of bug in
+  `consolidator_liveness.py::_main()` (which the todo asked to "confirm") -- it had NO `setup_events()` call at all, a
+  worse variant: `log_event()` raised every cycle, silently swallowed by `check_buckets()`'s broad except into a false
+  `STATUS_OK`, masking real outages rather than just dropping an alert. 4 new regression tests, full `quality-gates.sh`
+  green, shipped `unified-trading-library@bf6fb9c3`. Filed the image-rebuild + ~10-job redeploy as its own new P2 todo
+  (deployment-service) since landing the source fix doesn't reach production until those Cloud Run jobs redeploy.
+- **2026-07-12 (slot-5, infra)** -- Item 5 (the redeploy todo above) picked up, but NOT actionable yet: traced the full
+  deploy-hygiene chain per `codex/08-workflows/ci-cd-flow.md` -- the manifest-consolidator Cloud Run jobs run off
+  `market-tick-data-service:latest` (which pins `unified-trading-library` by digest in its `Dockerfile`'s
+  `ARG BASE_IMAGE_DIGEST`, confirmed current pin predates `bf6fb9c3`). `bf6fb9c3` has NOT yet reached
+  `unified-trading-library`'s `main` -- it's sitting in an open auto-merge promote PR
+  (`IggyIkenna/unified-trading-library#536`, opened 10:41 UTC, `mergeStateStatus=CLEAN`, `mergeable=MERGEABLE`, no
+  native `autoMergeRequest` -- merges via the `*/15` v2-gated cron per CLAUDE.md, not something an agent should
+  force-merge). Only once that PR lands does UTL's base-image publish + `update-dependency-version.yml`
+  `repository_dispatch` fan-out bump MTDS's `BASE_IMAGE_DIGEST` -- THEN MTDS's own image rebuilds, and only THEN can the
+  ~10 `uts-prod-manifest-consolidator-*` jobs + `uts-prod-consolidator-liveness-watchdog` actually be redeployed to a
+  digest that contains the fix. Same class of premature-completion risk as item 3's gate (this session already caught
+  once, on a different task) -- skipped rather than idle-wait 30-60+ min for an automated multi-stage
+  promote/build/dispatch chain with zero agent action available in the interim. Re-dispatch once PR #536 has merged AND
+  MTDS's `Dockerfile` `BASE_IMAGE_DIGEST` has been auto-bumped past the current
+  `sha256:e353a755b05ad914acaff36449103da6c572b7d22ddb7c9983a773f35ac9b58f` pin.
+- **2026-07-12 (slot-10, infra)** -- Re-dispatched to item 5; re-verified the same blocker fresh, still unmet, skipped
+  rather than idle-wait, same conclusion as slot-5. `gh pr view 536 --repo IggyIkenna/unified-trading-library` shows
+  `state=OPEN`, `mergedAt=null`, `mergeStateStatus=CLEAN`, `mergeable=MERGEABLE` -- unchanged from slot-5's reading.
+  Directly confirmed via `git merge-base --is-ancestor bf6fb9c3 origin/main` on a freshly-fetched
+  `unified-trading-library` clone: **NO** -- `bf6fb9c3` is still not an ancestor of `main`. MTDS's `Dockerfile`
+  `ARG BASE_IMAGE_DIGEST` is still pinned to the same pre-fix digest
+  (`sha256:e353a755b05ad914acaff36449103da6c572b7d22ddb7c9983a773f35ac9b58f`), byte-identical to slot-5's reading. Zero
+  agent action is available here -- force-merging an auto-merge promote PR ahead of its `*/15` v2-gated cron would
+  violate the CI-verification HARD RULE (never force-merge a promotion PR); the fix must land via the normal promote →
+  base-image-publish → `repository_dispatch` digest-bump → MTDS rebuild chain before this todo's own redeploy step
+  becomes real. `skip-current-task`'d rather than poll-wait 15-30+ min on external CI/promote state. No repo code commit
+  this entry (read-only re-verification; this plan-doc edit ships via the PM `docs(plans):` carve-out).

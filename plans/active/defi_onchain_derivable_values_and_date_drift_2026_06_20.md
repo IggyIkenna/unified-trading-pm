@@ -2,12 +2,11 @@
 doc_type: plan
 title: DeFi hardcoded on-chain-derivable values + UAC date-drift elimination (derive-SSOT + CI citation gate)
 summary: >-
-  Eliminates hardcoded on-chain-derivable DeFi values and UAC date-drift via a 3-category model: (A)
-  immutable historical facts (token decimals, chain genesis, factory addresses, protocol launch dates)
-  derive from on-chain or pin to an SSOT script; (B) governance params → time-versioned parquet; (C)
-  real-time reads stay live. Ships derive_protocol_launch_dates.py + a pre-commit CI citation gate so new
-  hardcoded addresses/block-numbers cannot land without an on-chain citation. Precedent: AAVE_V3 launch date
-  was 49 days wrong.
+  Eliminates hardcoded on-chain-derivable DeFi values and UAC date-drift via a 3-category model: (A) immutable
+  historical facts (token decimals, chain genesis, factory addresses, protocol launch dates) derive from on-chain or pin
+  to an SSOT script; (B) governance params → time-versioned parquet; (C) real-time reads stay live. Ships
+  derive_protocol_launch_dates.py + a pre-commit CI citation gate so new hardcoded addresses/block-numbers cannot land
+  without an on-chain citation. Precedent: AAVE_V3 launch date was 49 days wrong.
 status: active
 nature: process
 asset_group: [cefi, defi]
@@ -15,8 +14,13 @@ stage: [meta]
 repos: [alerting-service, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
 scope: [engineer, admin]
 tags: [defi, uac, data-correctness, quality-gates, verification, ssot-audit, data-quality]
-related: [../epics/defi_master.md, ./defi_governance_params_refresh_2026_06_20.md, ./defi_manifest_canonicalisation_2026_06_01.md]
-created: '2026-06-12'
+related:
+  [
+    ../epics/defi_master.md,
+    ./defi_governance_params_refresh_2026_06_20.md,
+    ./defi_manifest_canonicalisation_2026_06_01.md,
+  ]
+created: "2026-06-12"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -145,19 +149,24 @@ that workstream.
       repo's `.py` files (skips gracefully if python+yaml / PM checkout absent). Validated: UI@0 passes; a new uncited
       `.py` address → exit 1. — unified-trading-pm@7b9018714. **Gate now enforced across ALL THREE base types
       (base-service / base-library / base-ui) — zero ungated surface fleet-wide.**
-- [ ] [SCRIPT] P1. **Phase 4 — Cat-C test-fixture modernization.** The e2e block numbers in
-      `e2e-testing/tests/.../fixtures/defi_block_numbers.py` are pinned (snapshot dates from 2024); refresh quarterly
-      routers, Multicall3 (`0xcA11…CA11`, same address all EVM chains), bridge/Aave/LST protocol addresses; **(2)
-      market-tick-data-service (215)** — Chainlink oracle feeds (`_oracle_prices_constants._CHAINLINK_FEEDS_BY_CHAIN`,
-      per-chain dict) + LST token contracts (per-protocol `lst_*_adapter.py`); then **(3) features-service (13),
-      strategy-service (9), deployment-service (3), alerting/e2e/ui (1 each)**. Recipe = the Phase-5.1 pattern: derive
+- [x] ✅ [SCRIPT] P1. **Phase 4 — Cat-C test-fixture modernization (address-citation backfill sub-scope).** The
+      address-citation backfill portion of this item — **market-tick-data-service (215)**, **features-service (13),
+      strategy-service (9), deployment-service (3), alerting/e2e/ui (1 each)** — is fully subsumed by Phase 5.2/5.3
+      above (lines 99–117): those items shipped the identical repo/count breakdown with real commit shas
+      (execution-service@f516f51c, market-tick-data-service, features-service@66f45ff4, strategy-service@1ede0ee0,
+      deployment-service@928a34e, alerting-service@4e284b8, e2e-testing, unified-trading-system-ui), closing with "DONE:
+      all 606 DeFi addresses (468 service + 138 UAC) cited fleet-wide; every repo at baseline 0." This was a duplicate
+      unchecked "Phase 4"-titled item alongside the checked line-161 "Phase 4" item (narrower e2e block-number
+      quarterly-cron refresh, unaffected). Corrected 2026-07-12 — doc-reconciliation autofix finding 38,
+      `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling. (was: `- [ ]`
+      unchecked, describing the same backfill as still-open.) Recipe/DONE-criteria text preserved below for audit trail:
+      refresh quarterly routers, Multicall3 (`0xcA11…CA11`, same address all EVM chains), bridge/Aave/LST protocol
+      addresses; Chainlink oracle feeds (`_oracle_prices_constants._CHAINLINK_FEEDS_BY_CHAIN`, per-chain dict) + LST
+      token contracts (per-protocol `lst_*_adapter.py`). Recipe = the Phase-5.1 pattern: derive
       `# DERIVED <date> from <chain> <source>` from each file's existing comments / per-chain dict key / protocol
       docstring (Multicall3 + Chainlink feeds + LST tokens are immutable on-chain constants citable to etherscan /
       docs.chain.link / protocol docs — mechanical, NOT research); `# QG-allow: defi-citation — <reason>` only for
-      factory-auto-deployed pool/pair addresses with no protocol-level SSOT. After each repo hits 0 uncited, re-run
-      `check_defi_address_citations.py --update-baseline` to ratchet that repo's baseline DOWN (never up). DONE = every
-      service repo at count 0 + the 8 baseline entries removed/zeroed. Target repos named; worker reads
-      `SUB_AGENT_MANDATORY_RULES.md`.
+      factory-auto-deployed pool/pair addresses with no protocol-level SSOT.
 - [x] ✅ [SCRIPT] P1. **Phase 4 — Cat-C test-fixture modernization.** The e2e block numbers in
       `e2e-testing/tests/.../fixtures/defi_block_numbers.py` are pinned (snapshot dates from 2024); refresh quarterly
       via a cron VM that probes the recent finalized block per chain. The sports bankroll test fixture is similar. —

@@ -65,11 +65,19 @@ drift_direction: advance-code
 ## The MVP gate set (the ONLY gates on LDR→main)
 
 1. **SIT-green** — the cross-repo SIT suite validated this repo's LDR tree (`full-workspace-sit` on the promoted
-   content).
+   content). ⚠️ 2026-07-12: SIT-green is NOT currently an enforced required check on the promote PR (verified incident
+   2026-07-07/08 — promotes proceeded with SIT red). Operator ruling (plan-reconciliation finding 78): make it BLOCKING
+   — see new P1 todo. (Ruling recorded in `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`
+   §A2.)
 2. **quality-gates-v2** — the required check on the promote PR (per-repo correctness).
 3. **quickmerge-provenance** — only quickmerge'd content reaches main (already enforced on the LDR side).
 
 Plus the trivial mechanics that are not "gates": content-differs, don't-promote-a-RED-repo (Tier-A), runaway-breaker.
+
+- [ ] [INFRA] P1. Wire SIT-green as a REQUIRED status check on the LDR→main promote PR (branch-protection/ruleset + the
+      promote workflow's check reporting) so a red/missing SIT blocks auto-merge fleet-wide. Blast-radius rule applies
+      (AUTONOMOUS_AGENT_RULES rule 11): prove the whole fleet passes the check BEFORE enabling. Operator ruling
+      2026-07-12, finding 78.
 
 ## OUT OF SCOPE (the complexity we are removing — this is what was blocking)
 

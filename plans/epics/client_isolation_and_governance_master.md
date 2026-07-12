@@ -92,8 +92,11 @@ Full archaeology of pre-May-23 5 deliverables:
 
 ## Composition with other epics
 
-- **Enforces on**: ALL L0 asset-group epics (every transfer/order/strategy-emit respects client isolation +
-  jurisdiction)
+- **Enforces on**: ALL L2 execution/strategy epics (every transfer/order/strategy-emit respects client isolation +
+  jurisdiction) — corrected 2026-07-12 (was: "ALL L0 asset-group epics"; `strategy_master`/`execution_master`/
+  `trading_agent_master` all self-declare `tier: L2` in their own frontmatter, and `epics/README.md`'s canonical 20-epic
+  tier table reserves L0 exclusively for `defi_master`/`cefi_master`/`tradfi_master`/`sports_master`/
+  `predictions_master`; this epic's own frontmatter is `tier: L4`. Finding 340.)
   - `strategy_master` + `execution_master` + `trading_agent_master`
 - **Co-located VM**: `infrastructure_master` (multi-client VM topology), `observability_master` (cross-client alert
   routing), `batch_live_symmetry_master` (per-client batch=live verification)
@@ -140,9 +143,11 @@ _(no plans currently assigned at this priority — per_client_isolation archived
 **status**: ✅ ARCHIVED 2026-05-22 — Phases 0-8 DONE; E.2+E.3 deferred to epic body · **estimate**: 5 cal AI-days
 (class: brand-new)
 
-## P1 — important; post-current-gate
-
-_(no plans currently assigned at this priority)_
+**Corrected 2026-07-12**: removed a duplicate empty `## P1 — important; post-current-gate` header that immediately
+followed this line (body read: _"(no plans currently assigned at this priority)"_) — the live P1 content (F-25 dispatch,
+above) is the only real P1 section; the duplicate was doc-generation debris that could cause a P1-scanning agent to stop
+at the empty block and miss F-25. Finding 33, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`
+§A2 "50 reclassified" blanket ruling.
 
 ## P2 — useful; opportunistic
 

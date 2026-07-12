@@ -4,8 +4,8 @@ title: Deployment Observability Parity — live/batch/paper × GCP/AWS at /repos
 summary: >-
   Brings deployment observability for every compute unit (VM or Cloud Run job) to /repos-CI grade across the
   batch/live/paper umbrellas × GCP/AWS, reusing existing surfaces (deployment-ui VM-deployments/Monitor/VM-
-  events/alerts, VM_PREFIX_TO_BUCKET lifecycle_class classification, durable GCS-tee logs) rather than
-  rebuilding. Each unit classifies to exactly one umbrella × cloud × service × asset_group.
+  events/alerts, VM_PREFIX_TO_BUCKET lifecycle_class classification, durable GCS-tee logs) rather than rebuilding. Each
+  unit classifies to exactly one umbrella × cloud × service × asset_group.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -13,7 +13,15 @@ stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing, unified-api-contracts]
 scope: [engineer, admin]
 tags: [observability, monitoring, ui, infrastructure, spot-vm, live-trading, self-healing]
-related: [deployment_ui_monitoring_pane_2026_06_19.md, vm_launcher_durable_log_observability_2026_06_19.md, ci_dashboard_deployment_ui_2026_06_10.md, monitoring_control_plane_master_2026_06_10.md, data_pipeline_hardening_self_monitoring_2026_06_22.md, data_feed_sla_registry_and_active_self_healing_2026_06_19.md]
+related:
+  [
+    deployment_ui_monitoring_pane_2026_06_19.md,
+    vm_launcher_durable_log_observability_2026_06_19.md,
+    ci_dashboard_deployment_ui_2026_06_10.md,
+    monitoring_control_plane_master_2026_06_10.md,
+    data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
+  ]
 created: 2026-06-22
 parent_epic: observability_master
 assigned_vm: NA
@@ -86,8 +94,11 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 - [x] [CODE] P0. ✅ **Cloud Run job registry** — enumerate the ~20 `*_scheduler.tf` jobs into a classified inventory
       (name → umbrella/service/ag); a generator that reads terraform or a checked-in manifest so the surface knows every
       job, not just VMs. — **deployment-service** — deployment-service@360678e
-      (`deployment_service/cloud_run_job_registry.py` `CLOUD_RUN_JOBS: Final[tuple[DeploymentTarget, ...]]` — 49 jobs
-      from all 24 `*_scheduler.tf`: BATCH
+      (`deployment_service/cloud_run_job_registry.py` `CLOUD_RUN_JOBS: Final[tuple[DeploymentTarget, ...]]` — 61 jobs
+      (was: 49 — corrected 2026-07-12, finding 198, §A2 "50 reclassified" blanket ruling; the same document's own later
+      Progress Log + FINAL REPORT sections consistently state "61-job CLOUD_RUN_JOBS registry" for this same
+      deployment-service@360678e commit — a single fixed commit can't have two registry sizes, and the later, more-final
+      sections are authoritative) from all 24 `*_scheduler.tf`: BATCH
       infra/consolidator/catalogue/expected-universe/monitors/digests/hygiene/rollups/t1-recon + 3 PAPER
       paper-week/paper-engine)
 - [x] [TEST] P0. ✅ Every VM prefix + every Cloud Run job classifies to exactly one umbrella; paper launchers → paper;
@@ -211,7 +222,8 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
   Phase1 api → Phase2 ui → Phase3 slack → Phase4 GCP-complete → Phase5 AWS → Phase6 docs.
 - **2026-06-22 Phase 0 COMPLETE** (deployment-service Step B). Shipped: `VmPrefixSpec.umbrella` override field
   (UAC@3c7dd51a) + `classify_deployment_target` resolver with `UnclassifiedDeploymentError` no-silent-default
-  (deployment-service@360678e) + `CLOUD_RUN_JOBS` registry (49 jobs from all 24 `*_scheduler.tf`; BATCH for
+  (deployment-service@360678e) + `CLOUD_RUN_JOBS` registry (61 jobs (was: 49 — see the P0 checkbox correction above)
+  from all 24 `*_scheduler.tf`; BATCH for
   infra/consolidator/catalogue/expected-universe/monitors/digests/hygiene/rollups/t1-recon, PAPER for the 3
   paper-week/paper-engine jobs) + a 10-test guard (`tests/unit/test_cloud_run_job_registry_guard.py`) that asserts every
   VmPrefixSpec prefix classifies, every scheduler-tf job stem is registered (with a vacuity-proof phantom-job test),
@@ -241,11 +253,11 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 ## Progress Log
 
 - **2026-06-22 (autonomous, Opus 4.8) — GCP observability parity SHIPPED**: Phase0 spine (uac@34bb0f16/3c7dd51a
-  DeploymentUmbrella/Target/classify, deployment-service@360678e resolver + 61-job CLOUD_RUN_JOBS registry +
+  DeploymentUmbrella/Target/classify, deployment-service@360678e resolver + 61-job CLOUD*RUN_JOBS registry +
   unclassified guard) → Phase1 deployment-api@5df5f01 (`/api/deployments/inventory` + `/umbrella/{u}/summary`,
   VMs+CloudRun classified, exit_code/status) → Phase2 deployment-ui@051c255 (`/deployments` Live/Batch/Paper tabs at
   /repos grade, pw:L2 ✓ 265/265, drill-down reuses VmEventsTimeline+StreamingLogsPanel) → Phase3
-  alerting-service@868872c (DEPLOYMENT_* → #data-pipeline-alerts with umbrella + `/deployments/{name}` deep-link) +
+  alerting-service@868872c (DEPLOYMENT*\* → #data-pipeline-alerts with umbrella + `/deployments/{name}` deep-link) +
   Tier-1 enrichment (deployment_ui_base_url config + inline trace block + deep-link buttons to
   /ops/vms,/deployments,data-status,GCS run.log) → Phase4 deployment-service@5d07bb1f (durable-log streamer backfilled
   into 4 unconverted GCP launchers + coverage guard). Phase6 docs: codex deployment-observability.md + CLAUDE.md
@@ -267,7 +279,7 @@ alert-enrichment + self-healing.
   61-job CLOUD_RUN_JOBS registry + unclassified guard).
 - Phase 1 API — deployment-api@5df5f01 (`/api/deployments/inventory` + `/umbrella/{u}/summary`).
 - Phase 2 UI — deployment-ui@051c255 (`/deployments` Live/Batch/Paper tabs, pw:L2 ✓ 265/265, drill-down).
-- Phase 3 Slack + B enrichment — alerting-service@868872c (DEPLOYMENT_* → channel w/ umbrella + deep-link; inline
+- Phase 3 Slack + B enrichment — alerting-service@868872c (DEPLOYMENT\_\* → channel w/ umbrella + deep-link; inline
   trace + click-through buttons to /deployments,/ops/vms,data-status,GCS run.log; deployment_ui_base_url config).
 - Phase 4 GCP logs — deployment-service@5d07bb1f (durable-log streamer into 4 remaining GCP launchers + coverage guard).
 - Phase 5 AWS — deployment-service@53be0f1 + deployment-api@ab11b36 (EC2 + Batch Fargate → inventory cloud=AWS,

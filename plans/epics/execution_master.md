@@ -29,7 +29,7 @@ related_plans:
     ../active/execution_fidelity_tiers_uac_governed_2026_06_28.md,
     ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
   ]
-last_updated: 2026-05-21
+last_updated: 2026-07-12 # was 2026-05-21 (stale vs 2026-07-12 body edits, line 57) — see body "Assigned active plans" note
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -51,17 +51,29 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 **status**: 🟠 ACTIVE — QG sweep for execution-service (20 ruff errors) + trading-agent-service (ruff clean). Run
 `bash scripts/quality-gates.sh` exit 0 in each. PREREQ: UTL QG green. [vm: vm-trading-core]
 
+- [ ] [CODE] P1. **G12 (execution-side) — emit per-incident recon-freeze signals** that the alerting-service publisher
+      (owned in `observability_master`) consumes: symbol-scoped for symbol breaks, account-wide for account-level SEV0s.
+      In-scope for May-23. Repo: execution-service. From
+      `archive/issues/recon_freeze_armed_never_published_2026_05_27.md`. **Escalated P2→P0 2026-07-12 by operator
+      ruling** (plan-reconciliation Q&A finding 367): subscriber code confirmed absent in execution-service; live orders
+      currently NEVER blocked by recon-freeze state — safety gap on the passed May-23 critical path; alerting-service
+      twin already shipped P0. See plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md §A2.
+
 ## P2 — opportunistic / post-cutover (slot 7 dispatch 2026-06-01)
 
 - [ ] [CODE] P2. **F-32 — size-based MEV auto-escalation (post-cutover).** Operator decision 2026-06-01: MEV mode is
       **directive-driven** for May-23 (F-32 closed for the cutover). Post-cutover, add size-based auto-escalation of MEV
       protection. Repo: execution-service. From `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`.
-- [ ] [CODE] P1. **G12 (execution-side) — emit per-incident recon-freeze signals** that the alerting-service publisher
-      (owned in `observability_master`) consumes: symbol-scoped for symbol breaks, account-wide for account-level SEV0s.
-      In-scope for May-23. Repo: execution-service. From
-      `archive/issues/recon_freeze_armed_never_published_2026_05_27.md`.
+- G12 escalated to P0 2026-07-12 (see P0 section).
 
 ## Assigned active plans
 
-_(no other active plans currently declare `parent_epic: execution_master`. Audit-pool wrapper plans for this epic land
-here as they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_
+_1 active plan declares `parent_epic: execution_master` in its frontmatter:_
+
+- [`execution_fidelity_tiers_uac_governed_2026_06_28.md`](../active/execution_fidelity_tiers_uac_governed_2026_06_28.md)
+  — status: active, parent_epic: execution_master (its own frontmatter L14; also listed in this epic's `related`/
+  `related_plans` fields, L16/L29).
+
+**Corrected 2026-07-12** (was: _"no other active plans currently declare `parent_epic: execution_master`. Audit-pool
+wrapper plans for this epic land here as they are dispatched."_) — findings 51/53/316,
+`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.

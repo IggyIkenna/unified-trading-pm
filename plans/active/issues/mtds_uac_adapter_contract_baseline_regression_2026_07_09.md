@@ -36,7 +36,14 @@ stays 0 per the 2026-06-24 precedent `plans/archive/issues/mtds_adapter_contract
 reported 4 files below their committed adapter-contract-call baseline:
 
 - `market-tick-data-service/market_tick_data_service/cli/handlers/book_microstructure_handler.py`: 0 contract calls <
-  baseline 8 (**file missing or renamed** — does not exist on disk at HEAD)
+  baseline 8 (**file missing or renamed** — does not exist on disk at HEAD). **Correction (2026-07-12,
+  doc-reconciliation finding 121, §A2 "50 reclassified" blanket ruling): this is NOT an open regression needing
+  diagnose-before-fix/restore — it is the already-confirmed, deliberate 2026-07-07 retirement of MTDS's
+  `order_flow_imbalance` feature** (`mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md:141-150`,
+  `market-tick-data-service@a4fb3d13`, blast-radius-verified zero real consumers + zero production rows ever captured,
+  `quality-gates.sh` green). The baseline entry should be regenerated/dropped from `adapter_contract_baseline.yaml` to
+  reflect the retirement rather than treated as a mystery deletion; not applied here (that file is outside this
+  doc-reconciliation pass's scope).
 - `market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py`: 9 contract calls < baseline
   10
 - `unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py`: 38 contract calls < baseline

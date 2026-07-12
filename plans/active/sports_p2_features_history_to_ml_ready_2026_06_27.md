@@ -117,6 +117,65 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-12 — slot 11 (Todo 3 dispatch, same session — BLOCKED-PREREQ, structurally unreachable, no new investigation needed)
+
+**Todo 3 (features manifest clean over history)** — dispatched immediately after this same slot's own Todo 1 launch
+above (same session, so no re-derivation needed). Gate is structurally unreachable right now: Todo 1's full-history
+compute (launched ~20 min prior this session) has only reached **97 dates** in
+`gs://features-sports-prd-central-element-323112/sports_features/by_date/` (up from 92 pre-launch) against a ~4,210-day
+full-history target — the 10-VM fleet is genuinely still early, not stalled (see Todo 1's entry above for per-VM health
+evidence). A "clean over history" manifest check against a <3%-complete corpus would be meaningless. Checkbox NOT
+flipped. Not filing a new BLK — this is the same, already-well-documented dependency chain (Todo 3 needs Todo 1 done)
+this plan's own `## Dependencies` section already states; re-litigating it would just be the 27th duplicate of the same
+finding. Next dispatch (of either Todo 1 or Todo 3) should re-check bucket date-count first — once it approaches the
+full range, Todo 3 becomes genuinely runnable for the first time in this plan's history.
+
+### 2026-07-12 — slot 11 (26th dispatch — GATE GENUINELY MET FOR THE FIRST TIME; Todo 1 full-history compute LAUNCHED)
+
+**Todo 1 (compute features 2015→present) — LAUNCHED, verified healthy, in progress. Checkbox NOT flipped (multi-day
+operation, not yet complete).**
+
+Re-verified the gate independently before acting (this task's own 25-dispatch precedent: never trust a flag alone).
+Confirmed `GET /api/backlog/sports_p2_features_history_to_ml_ready-001/blockers` → `"ready (no blockers)"`, then
+cross-checked against the real plan state, not just the condition flag:
+
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): 8/9 — the 1 remaining item is the
+  BLOCKED-OPERATOR-DECISION tracker-only enrichment todo, which the standing operator ruling says MUST NOT gate agent
+  tasks. Effectively complete for this task's purposes (unchanged from slot-5's assessment).
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **now 7/7 — genuinely complete**, including
+  footystats (closed today, 2026-07-12, by slot-9 via `footystats_matches_predictions_fetch_gaps_2026_07_08.md`'s todo
+  #4) and the full-history reference cleanliness verify. This is the change since slot-5's 25th dispatch (which found
+  P2b at 5/7 with footystats still open) — the gate is real, not stale.
+
+**Launched** the established recipe per this plan's own § Mechanics —
+`deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh --start 2015-01-01 --end 2026-07-12 --vms 10 --env prod`
+(SPOT by default, `--skip-existing` default so the already-computed P1 golden window (2025-09-01..2025-11-30, 92 dates)
+is skipped, not recomputed). Dry-run first to sanity-check chunking (10 VMs × ~421 days each, full 2015-01-01→today
+coverage, no gaps). Real launch: all 10 `fss-backfill-vm-{1..10}` created + `RUNNING` within ~3.5 min
+(2026-07-12T04:14:33–04:17:38 -07:00).
+
+**No-fire-and-forget verification (HARD RULE)**: re-checked at T+4min and again at T+~8min via
+`gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/fss-backfill-vm-{1..10}/run.log` — 8/10 VMs actively
+computing real dates (VM1 at date 9/421, VM2 at date 9/421, VMs 3-8 at date 1/421 each), the remaining 2 (VM9/VM10,
+launched last) mid-`uv`-install, not stuck (confirmed via log tail, not assumed). VM1's log shows correct honest-absence
+handling on 2015-01-06/07/09 (upstream `fixtures`/`footystats_*` genuinely absent that far back in history →
+`EMPTY derived_features`/`EMPTY fixture_features` recorded, `ManifestWriter` updating the availability index) — the
+compute logic itself is healthy, not just the VM boot.
+
+**Scale + expected duration**: 421 days/VM × 3 feature groups is a genuinely multi-day operation (unlike every prior
+dispatch's much smaller P1-golden-window-only launches), so this dispatch does NOT wait for full completion — matching
+this plan's own established handoff precedent (e.g. slot-7's 15th dispatch on the 92-day subset). **Handoff for the next
+dispatch**: check `bash scripts/vm/launch-features-sports-parallel-backfill-vm.sh --status` or
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from the
+current 92 toward the full ~4,210-day span as VMs complete); once all 10 report `EXIT_STATUS=0` (or a SPOT preemption
+self-relaunches — idempotent/skip-existing handles that safely), run
+`features-service/scripts/sports/check_pipeline_completeness.py --start-date 2015-01-01 --end-date <today>` (Todo 2's
+own re-trigger) to verify ML-ready, then Todo 1 + Todo 3 (manifest cleanliness) can both be assessed for real for the
+first time in this plan's 26-dispatch history.
+
+Checkbox NOT flipped (compute genuinely in progress, not complete). No repo code commit this entry (VM launch + data
+operation, not a code change); this plan-doc edit ships via the `docs(plans):` carve-out.
+
 ### 2026-07-12 — slot 5 (25th dispatch — regen wiped the 24th-dispatch gate; re-applied + tightened)
 
 **Todo 1 (compute features 2015→present) — still BLOCKED-PREREQ; structural gate re-applied after a silent regen-loss**

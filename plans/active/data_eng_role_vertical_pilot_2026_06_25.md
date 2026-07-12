@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Data-Engineering role — vertical pilot (first end-to-end role on the spine)
-summary: Stand up the Data-Eng role end-to-end on the registry/broker spine — charter + /data-freshness skill + daily-audit workflow + wire the discarded AI triage — proving trigger→agent→escalation→answer with the most existing scaffolding.
+summary:
+  Stand up the Data-Eng role end-to-end on the registry/broker spine — charter + /data-freshness skill + daily-audit
+  workflow + wire the discarded AI triage — proving trigger→agent→escalation→answer with the most existing scaffolding.
 status: active
 nature: design
 asset_group: [cross-cutting]
@@ -9,7 +11,12 @@ stage: [data, meta]
 repos: [agent-orchestrator, alerting-service]
 scope: [engineer, admin]
 tags: [role-registry, data-engineering, data-quality, daily-audit, triage]
-related: [../epics/agent_operating_framework_master.md, role_registry_schema_and_broker_mvp_2026_06_25.md, escalation_pipeline_mvp_2026_06_25.md]
+related:
+  [
+    ../epics/agent_operating_framework_master.md,
+    role_registry_schema_and_broker_mvp_2026_06_25.md,
+    escalation_pipeline_mvp_2026_06_25.md,
+  ]
 created: 2026-06-25
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -36,10 +43,17 @@ drift_direction: advance-code
 > `#data-pipeline-alerts` Slack route, and the `data_pipeline_failure` worker already exist. This plan binds them into
 > one role (charter + skill + workflow + escalation) and lands a near-free quick win.
 >
-> **Dispatch note**: `assigned_vm: harsh_pc` (the standalone fleet-dispatch test host — the only currently-runnable
-> backend per `orchestrator_vm_registry.yaml`). Its _semantic_ epic home is the data-pipeline VM (`vm-ml`), which is
-> parked; re-point `assigned_vm` to `vm-ml` when the epic fleet runs. **Operator chose to dispatch this plan**
-> (2026-06-25); the other three role/spine plans are human-driven.
+> **Dispatch note (HISTORICAL — corrected 2026-07-12, doc-reconciliation autofix finding 8,
+> `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling)**: this note was written
+> 2026-06-25, two days before the 2026-06-27 single-VM architecture retirement
+> (`codex/12-agent-workflow/orchestrator-multi-vm-topology.md`) fixed `assigned_vm` to `{planning, NA}` only — host-id
+> values like `harsh_pc` are no longer valid. It was never revisited after that retirement. The frontmatter
+> `assigned_vm: NA` (line 15) is therefore already correct under current rules; the text below is preserved as
+> historical dispatch context, not a live value. (was: `assigned_vm: harsh_pc` (the standalone fleet-dispatch test host
+> — the only currently-runnable backend per `orchestrator_vm_registry.yaml`). Its _semantic_ epic home is the
+> data-pipeline VM (`vm-ml`), which is parked; re-point `assigned_vm` to `vm-ml` when the epic fleet runs. **Operator
+> chose to dispatch this plan** (2026-06-25); the other three role/spine plans are human-driven.) Current dispatch now
+> routes via `assigned_role: data-pipeline-engineer` (line 28), not VM assignment.
 
 ## Why
 
@@ -119,4 +133,7 @@ trigger→agent→escalation→answer. SSOT for what's a real failure vs honest 
 - 2026-06-25: Plan created as the first full vertical role on the spine. Chosen for the most existing scaffolding (audit
   crons + Slack route + `data_pipeline_failure` worker) and a near-free quick win (wire the discarded `triage_text`).
   **Operator chose to dispatch this one** → `assigned_vm: harsh_pc` (runnable standalone test host; semantic home
-  `vm-ml` is parked). Depends on `role_registry_schema_and_broker_mvp`; escalates via `escalation_pipeline_mvp`.
+  `vm-ml` is parked) (HISTORICAL — superseded by the 2026-06-27 single-VM architecture retirement; `assigned_vm` is now
+  `{planning, NA}` only, dispatch routes via `assigned_role` instead. Corrected 2026-07-12, doc-reconciliation autofix
+  finding 8, `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling). Depends on
+  `role_registry_schema_and_broker_mvp`; escalates via `escalation_pipeline_mvp`.

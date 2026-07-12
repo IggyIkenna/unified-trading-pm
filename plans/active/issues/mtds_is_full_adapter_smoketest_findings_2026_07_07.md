@@ -331,7 +331,14 @@ the todos already promised.
       (`defi.py` `_build_defi_venues()` + golden-fixture regen): `instruments-service@9b0c1095`. 7 venues flipped
       pipeline→live: RADIANT-ARBITRUM/BSC/ ETHEREUM, VENUS-BSC/ETHEREUM, BENQI-AVALANCHE, EULER_V2-ETHEREUM
       (EULER_V2-ARBITRUM stays pipeline — adapter is Ethereum-only). Both QG-verified full-suite green modulo
-      pre-existing concurrent-sibling failures (COINBASE-CDE, OKX-SPOT — confirmed unrelated to this diff).
+      pre-existing concurrent-sibling failures (COINBASE-CDE, OKX-SPOT — confirmed unrelated to this diff). **Scope
+      clarification (2026-07-12, §A2 finding 113):** this fix covers the instruments-service reference-data catalog only
+      (`_build_defi_venues()` + `DEFI_VENUE_PHASE` — making the venues known to IS's catalog) — it does NOT mean MTDS
+      market-data capture (tick/lending-index/liquidation polling) is happening for them. For EULER_V2-ETHEREUM
+      specifically, MTDS capture was never actually polled — zero captured rows ever. See the still-open capture-gap
+      todos in `defi_turbo_api_hides_real_captured_data_2026_07_07.md` (todo 2: capability `mtds_operations` handler
+      mismatch, zero-rows-ever capability-gate entries, and a newly-discovered ~38-day-stalled upstream Goldsky
+      subgraph).
 - [x] [FIX] P1. Curve's factory-pool undercount + Curve/Balancer 3rd-token drop — fixed, `instruments-service@9b0c1095`.
       Curve: switched `main`-only registry to Curve's own combined `all` endpoint (live-verified 2026-07-10: main=49 vs
       all=2372 pools on Ethereum, a 48x undercount — worse than the original ~94% estimate; all 7 configured chains
@@ -472,3 +479,50 @@ the todos already promised.
   workspace pattern rather than continuing to wait indefinitely. HUOBI/BITSTAMP/HTX SSOT contradiction filed as its own
   dedicated issue doc for the operator (`plans/active/issues/huobi_bitstamp_htx_ssot_contradiction_2026_07_10.md`) with
   live-manifest evidence (zero captured rows for any of the 3 venues) added to sharpen the decision.
+- **2026-07-12 (DEFI IS force-leg triage, corroborating the 452-shard sweep's `data_pipeline_e2e_check_2026_07_10.md`
+  todo 25 backlog)** — Investigated 12 DEFI venues that failed the sweep's IS force-leg with the abstracted
+  `no_parquet_at_instrument_availability` reason, via live re-runs against real VMs (not the checker's summary string).
+  Two real, distinct outcomes:
+  1. **New real bug found + fixed** (a THIRD registry drifted out of sync with the same 2026-07-09/07-10 rollout this
+     doc's own "VENUS/BENQI/RADIANT/EULER_V2 orchestrator wiring" fix (line 329 above) already covers): `VENUS-BSC`,
+     `VENUS-ETHEREUM`, `RADIANT-ARBITRUM`, `RADIANT-BSC`, `RADIANT-ETHEREUM`, `BENQI-AVALANCHE`, `EULER_V2-ETHEREUM`,
+     `MARGINFI-SOLANA`, `SOLEND-SOLANA` (9 venues) all fetch real instruments successfully (adapter + orchestrator
+     wiring both confirmed working via live run.log — e.g. "Venus: fetched 6 supply/debt instruments on BSC") but then
+     100% of those records were rejected at schema validation with
+     `unknown venue 'X' — not in CeFi, TradFi, DeFi, or sports registries`. Root cause:
+     `unified-api-contracts/unified_api_contracts/internal/reference/instrument_validation.py`'s `_DEFI_VENUE_PREFIXES`
+     frozenset is a hand-maintained literal, structurally disconnected from `defi_venues.py`'s
+     `DEFI_VENUE_PHASE`/`MTDS_DEFI_VENUES`/`PROTOCOL_LAUNCH_DATES` (unlike `_CEFI_VENUES`/
+     `_TRADFI_VENUES`/`_SPORTS_VENUES` in the same file, which ARE auto-derived from the `VENUES_BY_ASSET_GROUP` SSOT) —
+     it simply wasn't touched during the 2026-07-09/07-10 wiring pass. Fixed: added `VENUS`/`RADIANT`/`BENQI`/
+     `EULER_V2`/`MARGINFI`/`SOLEND` to `_DEFI_VENUE_PREFIXES` — `unified-api-contracts@0250892d` (QG green). Redeployed
+     the code tarball (`create-code-tarballs.sh --include instruments-service --allow-dirty-tarball`, MTDS's own
+     concurrent-sibling dirty tree was >6min stale/settled, bundled as-is per the established precedent, not touched)
+     and RE-VERIFIED via fresh real VM re-runs for all 9 venues post-fix (see the plan doc's own Progress Log for the
+     per-venue confirmation) — genuinely fixed, not just theorized. Secondary, unrelated gap noted but NOT fixed (out of
+     this pass's scope): `MTDS_DEFI_VENUES` (`defi_venues.py`) is separately missing `MARGINFI-SOLANA`/`SOLEND-SOLANA` —
+     doesn't affect `instrument_validation.py` (never reads that list) but may matter for MTDS's own expected-coverage
+     enumeration; flagged for a future pass, not this doc's scope (MTDS, not IS).
+  2. **Two already-documented, structurally-expected empty results, reconfirmed with fresh live evidence, no fix
+     needed**: (a) `GMX-AVALANCHE` — 3 independent real runs (2 pre-existing + 1 fresh 2026-07-12) all show the
+     identical mechanism: URDI fetches exactly 1 real pool via the UniswapV3 Messari-schema fallback ("UniswapV3:
+     Messari fallback found 1 pools on AVALANCHE"), then the DEFI relevance filter drops it as long-tail ("DEFI
+     relevance filter: 1 → 0 instruments") — an honest zero-instrument result, matching the ALREADY-DECLARED
+     `EMPTY_OR_DEPRECATED_DEFI_VENUES` entry in
+     `unified_api_contracts/registry/capability_declarations/_defi_coverage.py` ("0 historical parquets / minimal
+     subgraph data (1 instrument) as of 2026-04-29") and this doc's own § 3a GMX V2 do-not-integrate decision (the V1
+     vault is "largely abandoned"). (b) `UNISWAP_V3-BASE` — reconfirmed STILL dark as of 2026-07-12 (fresh live run:
+     "subgraph indexers unavailable on BASE — infrastructure issue... all subgraph cascade schemas
+     (primary/algebra/sushiswap/messari) failed or errored"), matching this doc's own P1 finding at line 171-172 above
+     (open since 2026-07-07, never turned into a todo — still not fixed, still real). **NEW**: `UNISWAP_V3-OPTIMISM`
+     shows the byte-identical failure signature — not previously documented as affected; now confirmed via live
+     evidence, same root cause class. A dedicated root-cause investigation (read
+     `instruments_service/reference_data/adapters/defi/uniswap_v3.py`'s cascade-fetch code directly, not guessed) ruled
+     out a stale/wrong subgraph ID (BASE/OPTIMISM's IDs are the same 46-char decentralized-network deployment-ID format
+     as the working ETHEREUM/ARBITRUM IDs) and ruled out a missing/invalid API key (a key must be present for any of the
+     4 log lines to fire at all — a missing key short-circuits earlier with a different message) — genuinely looks like
+     an external subgraph-indexer-availability outage on both chains, not a credential or code bug on our side. One
+     minor, unrelated code-quality finding surfaced during that investigation (not fixed, low priority): the real error
+     detail gets re-wrapped into a generic `aiohttp.ClientError` before `classify_graph_error()` sees it, so it always
+     lands on `UNKNOWN` even though `AUTH_FAILURE`/`INDEXING_ERROR`/`SUBGRAPH_NOT_FOUND` codes already exist in UAC's
+     `VENUE_ERROR_MAP` and would be reachable with more precise error-detail propagation.

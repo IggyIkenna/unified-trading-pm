@@ -908,12 +908,15 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
       unaltered Uniswap-V3 `SwapMath` contracts, so the V3-equivalence unit test above already covers the math; this
       adds on-chain ground-truth confirmation. (execution-service)
 
-### Custody (Copper + Cloud-KMS for May-23 + Fireblocks June-1)
+### Custody (Copper + Cloud-KMS for May-23 + COPPER_MPC/CEFFU per POD June-1 — Fireblocks OUT OF SCOPE, operator ruling 2026-07-12)
 
 > **🟢 R9 sub-(a) RESOLVED 2026-05-12** by Ikenna slot 4 per
 > [`api_keys_wallets_accounts_readiness_2026_05_10.md`](api_keys_wallets_accounts_readiness_2026_05_10.md): May-23
-> cutover ships on `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK); June-1 flips per-wallet to `COPPER_MPC` / `FIREBLOCKS_MPC` on
-> client-provided creds. Operator-action checklist:
+> cutover ships on `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK); June-1 flips per-wallet to `COPPER_MPC` / CEFFU per POD scope
+> (Fireblocks OUT OF SCOPE — operator ruling 2026-07-12 reaffirming the POD codification; was: "COPPER_MPC /
+> FIREBLOCKS_MPC on client-provided creds"; see
+> [`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`](../active/issues/plan_reconciliation_operator_decisions_2026_07_11.md)
+> §A2 finding 376). Operator-action checklist:
 > [`codex/15-runbooks/custody-onboarding-checklist.md`](../../codex/15-runbooks/custody-onboarding-checklist.md).
 > Per-wallet schema:
 > [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
@@ -928,9 +931,13 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 - [x] ✅ [AGENT] P0. `CloudKmsCustodyProvider` implementation (NEW,
       `execution-service/execution_service/custody/cloud_kms.py`) per `api_keys_wallets` Plan Phase 3.C.1 — owner:
       Ikenna slot 4 successor + Harsh implementation. — execution-service@d45d24b4b (audit-backfilled 2026-05-19)
-- [x] **[DEFERRED-AFTER-CUTOVER]** [AGENT] P0 **DEFERRED-AFTER-CUTOVER (2026-06-01)**. `FireblocksCustodyProvider`
-      implementation per `api_keys_wallets` Plan Phase 3.C.2 — gated on client June-1 credential delivery. Successor
-      plan: `plans/active/fireblocks_copper_client_integration_2026_06_01.md`.
+- [x] [AGENT] P0 **DESCOPED per POD stack choice + operator ruling 2026-07-12 (plan-reconciliation finding 376) —
+      revisit only if a client mandates Fireblocks (would be a new plan)**. `FireblocksCustodyProvider` implementation
+      per `api_keys_wallets` Plan Phase 3.C.2 — was gated on client June-1 credential delivery; that credential delivery
+      will never arrive because POD scope is Copper + CEFFU only (Fireblocks OUT OF SCOPE). Superseded successor plan
+      `plans/active/fireblocks_copper_client_integration_2026_06_01.md` covers Copper (still in scope); its
+      Fireblocks-specific content is likewise descoped. See
+      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 376.
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 

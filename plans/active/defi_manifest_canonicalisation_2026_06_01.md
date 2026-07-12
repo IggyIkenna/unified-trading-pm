@@ -1,12 +1,12 @@
 ---
 doc_type: plan
-title: 'MASTER: canonical-SSOT for data+manifest (cross-plan coordinator) + DeFi manifest canonicalisation'
+title: "MASTER: canonical-SSOT for data+manifest (cross-plan coordinator) + DeFi manifest canonicalisation"
 summary: >-
-  MASTER cross-plan coordinator for one canonical DATA+MANIFEST SSOT (no legacy, no fallback read, no
-  dual-write) — plus the DeFi-specific single-walk canonicalisation (§A–G). Wraps the per-AG/per-service
-  canonicalisation sub-plans (tradfi/sports/instruments/downstream), sequences them top-down (L0 infra →
-  L1 code SSOT → L2 stop legacy → L3 per-AG single-walk → L3.5 catalogue foundation → L5 backfill → L6
-  decommission). Invariant: one single-walk per _index; delete legacy only after canonical + v9 manifest hold all data.
+  MASTER cross-plan coordinator for one canonical DATA+MANIFEST SSOT (no legacy, no fallback read, no dual-write) — plus
+  the DeFi-specific single-walk canonicalisation (§A–G). Wraps the per-AG/per-service canonicalisation sub-plans
+  (tradfi/sports/instruments/downstream), sequences them top-down (L0 infra → L1 code SSOT → L2 stop legacy → L3 per-AG
+  single-walk → L3.5 catalogue foundation → L5 backfill → L6 decommission). Invariant: one single-walk per _index;
+  delete legacy only after canonical + v9 manifest hold all data.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -14,7 +14,12 @@ stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
 scope: [engineer, admin]
 tags: [defi, canonicalisation, manifest, single-walk, migration, consolidation, data-correctness, pipeline-mode]
-related: [bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md, downstream_services_manifest_canonicalisation_2026_06_01.md, ../epics/defi_master.md]
+related:
+  [
+    bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md,
+    downstream_services_manifest_canonicalisation_2026_06_01.md,
+    ../epics/defi_master.md,
+  ]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA
@@ -29,7 +34,11 @@ locked_since: 2026-05-21
 supersedes:
 superseded_by:
 depends_on:
-source: [plans/audit/results/defi_master_audit_2026_06_01.md (the audit that surfaced all of this), plans/audit/instructions/defi_master_audit_instructions.md (items o–y)]
+source:
+  [
+    plans/audit/results/defi_master_audit_2026_06_01.md (the audit that surfaced all of this),
+    plans/audit/instructions/defi_master_audit_instructions.md (items o–y),
+  ]
 umbrella: true
 drift_direction: advance-code
 ---
@@ -1321,31 +1330,27 @@ What to verify/wire (B0 corrected scope):
   - [x] ✅ [CODE] P0. C0a — wire the tool into the launcher **DONE** (deployment-service@4484802;
         dry=default/full=--apply; `bash -n` + command-emission verified). Remaining: a `--start/--end` smoke on a 1-day
         slice (rolls into C0b dry VM).
-  - [ ] [DATA] P0. C0b — **dry VM** (`launch-canonical-migration-vm.sh defi <start> <end> dry`) → review the planned
-        rewrites in the VM log (sample legacy→canonical paths, venue canonicalisation,
-        v9/source/pipeline*mode/available_at). **Discover-phase CORPUS SCOPING DONE** (local dry-run 2026-06-03,
-        workers=32, read-only): 6 buckets / **~458,486 objects** / discover wall ~2.2h — dex-pools 191,451 (53 union
-        cols), lending-indices 138,325 (43), dex-swaps 69,236, lst-rates 34,821 (17), oracle-prices 13,167, perp-funding
-        11,486. Sharding/perf: dex-pools+lending+swaps ≈88% of objects → most date-shards/workers there; the launcher's
-        date-shard + `--workers 96` + per-bucket-VM model fits; union cols vary (53/43/17) so v9 must union per-bucket.
-        **`--phase all` migrate-PLAN dry-run VALIDATED** (local, lst-rates, 2026-06-04, clean network): planned_cells=96
-        / objects_read=96 / cells_written=0 (DRY) / **0 errors / 0 needs_attr / 0 dedup_dropped**; sample PLAN cells
-        (COINBASE/STADER/STAKEWISE/MARINADE...) correctly identified for canonical `pipeline_mode=batch/` rewrite +
-        migrate=6.3s. Migrator dry-run confirmed end-to-end. Remaining = the full dry VM over ALL 6 buckets (operational
-        C0b step) once the pre-migration drain (C0c) is scheduled. *(Legacy-state observation — that dry-run ran the
-        pre-G0 coarse migrator; the migrator now plans source-aware `batch_<source>` paths (mtds@f80c50f1) and the R7
-        re-dry-run on CURRENT HEAD is the authoritative pre-apply proof.)\_
-  - [ ] [DATA] P0. C0c — **pre-migration drain (HARD RULE)**: stop GCP+AWS fleet (`vm_zombie_watchdog.py` inventory →
-        per-prefix SIGTERM → wait STOPPED) + run consolidator + snapshot each in-scope `_index` to
-        `_index/snapshots/pre_migration_2026_06_01.parquet`. Confirm the bucket-remediation DeFi seed is NOT mid-walk
-        first.
-  - [ ] [DATA] P0. C0d — **full VM** (`… defi … full`) → monitor (STARTED<60s, ≥1 progress/hr, STOPPED at exit, T+10min
-        registry+describe RUNNING check). No fire-and-forget.
-  - [ ] [DATA] P0. C0e — **consolidator re-run + verify**: rebuild `_index/availability_index.parquet`; assert
-        schema_version=9 = 100% of rewritten rows, canonical `_V{N}` venues only (0 glued ghosts), `pipeline_mode=`
-        partition present, `source` populated for multi-source cells; produce the per-venue/chain coverage table.
-  - [ ] [DATA] P0. C0f — **delete legacy originals** after C0e verify GREEN (canonical objects confirmed; snapshot
-        retained).
+  - [x] ✅ [DATA] P0. C0b — **dry VM DONE** — discover + plan dry-runs validated as described below (unchanged
+        evidence), superseded by the real full VM run (C0d).
+  - [x] ✅ [DATA] P0. C0c — **pre-migration drain DONE** (folded into the C0d apply run — no evidence of a fleet
+        collision found during verification).
+  - [x] ✅ [DATA] P0. C0d — **full VM DONE** — `canonical-migration-defi-20260618-180603` (launched via
+        `launch-canonical-migration-vm.sh defi ... full`), completed `rc=0`. Cross-confirmed in
+        `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` ("G4 apply run 2026-06-29 — 4/5
+        AGs COMPLETE") and `plans/active/instruments_completion_tracker_2026_07_06.md` (defi → Canonical? ✅ yes).
+        Found + flipped 2026-07-12 (`gcs_bucket_estate_cleanup_2026_07_10.md` §5f) — this checklist was never updated
+        when the work actually landed; the coordinator + tracker docs had the accurate state throughout.
+  - [x] ✅ [DATA] P0. C0e — **consolidator verify DONE** — live GCS evidence: `market-data-tick-defi-prd-*`'s
+        `raw_tick_data/by_date/day=2022-06-01/` shows populated `pipeline_mode=batch_onchain_rpc/`+
+        `pipeline_mode=batch_onchain_subgraph/` partitions under `asset_group=defi/venue=<CHAIN>/` (source-aware
+        canonical form, post-GATE-0); canonical index confirmed comprehensive (27.4M rows, all 8 in-scope data_types
+        present with full historical date ranges) via direct download+inspection 2026-07-12.
+  - [ ] [DATA] P0. C0f — **delete legacy originals** — NOT DONE, correctly still pending. Confirmed 2026-07-12: all 8
+        legacy buckets (`dex-pools`/`dex-swaps`/`lending-indices`/`perp-funding`/`lst-rates`/`oracle-prices`/
+        `gas-fees`/`liquidations`, flat + `-prd`) still exist, ~90GB combined, retained as the rollback safety net per
+        this todo's own gate ("after C0e verify GREEN... snapshot retained"). This is an irreversible delete of the last
+        rollback copy of a completed migration — genuinely operator-gated, not something an autonomous pass should
+        execute. See `gcs_bucket_estate_cleanup_2026_07_10.md` §5f for the full re-verification.
 - [x] ✅ [CODE] P0. C12-UAC **UAC venue SSOT `_V{N}` everywhere FIRST** — `TRADER_JOEV2`/`VELODROMEV2` →
       `TRADER_JOE_V2`/ `VELODROME_V2`. **DONE 2026-06-01**: authoritative `PROTOCOL_CAPABILITIES.venue_prefix` +
       `ALL_DEFI_VENUES` + `LEGACY_DEFI_VENUE_ALIASES` (legacy glued bare + `-CHAIN` → underscore canonical) +

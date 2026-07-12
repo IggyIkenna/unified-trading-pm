@@ -222,8 +222,11 @@ BLOCKED.
 
 - [ ] [SCRIPT] P0. Final cefi MVP verification: across the v10 perp-gated MVP universe, attempted_failed=0 AND
       expected_unattempted=0 for trades+book5+funding; Deribit OPTION present as options_chain ONLY (0 per-strike
-      trades/book5 cells); every absence typed honest (pre-venue-launch / expiry-window / deferred-no-source). Repos:
-      `instruments-service`, `e2e-testing`. **Run:** `python scripts/measure_honest_coverage.py --asset-group cefi`;
+      trades/book5 cells — **per-strike pre-v10 artifacts: resolution = PURGE (todos below) per operator ruling
+      2026-07-12 (finding 30, `issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2); after the purge G4
+      counts them zero by construction.**); every absence typed honest (pre-venue-launch / expiry-window /
+      deferred-no-source). Repos: `instruments-service`, `e2e-testing`. **Run:**
+      `python scripts/measure_honest_coverage.py --asset-group cefi`;
       `python3 e2e-testing/scripts/audit/manifest_hygiene_daily.py --asset-group cefi --mode full`;
       `python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`. **Gate (BOTH layers):**
       (Layer-2) both failure buckets zero; 0 phantom; 401-class cells re-attempted (attempted_failed not empty); AND
@@ -231,10 +234,66 @@ BLOCKED.
       coverage.json — Layer-1 currently 79.55% with 9 real holes + the denominator-gap work in
       `issues/cefi_layer1_denominator_gaps_2026_07_03.md`, so G4 cannot close before that lands. Verdict to Progress
       Log. **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A.
+- [x] ✅ [DATA] P1. PURGE the ~536 pre-v10 Deribit per-strike trades/book5 manifest rows (snapshot-first: write a
+      pre-purge `_index` snapshot, then delete; count-verified before/after) — operator ruling 2026-07-12,
+      plan-reconciliation finding 30: delete rather than scope-exclude. — **DONE 2026-07-12** —
+      `instruments-service@6986e8e4` (`scripts/purge_deribit_option_per_strike_trades_book5_2026_07_12.py`). Live
+      measurement (prd cefi bucket) found 1,048 rows (not ~536 — trades=930, book_snapshot_5=118, all
+      `capture_status=captured`, `source=tardis`), snapshot written to
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/snapshots/pre_purge_deribit_option_availability_index_20260712T104855Z.parquet`,
+      1,048/1,048 deleted, post-delete gate confirmed 0 residual. Scope = prd bucket only — see Progress Log "Deribit
+      purge scale discrepancy" entry for the much larger legacy-bucket residual discovered + the new P1 todo below
+      tracking it.
+- [ ] [DATA] P1. Purge the LEGACY (non-`-prd`) cefi bucket's ~6.65M DERIBIT/OPTION `trades`/`book_snapshot_5`
+      `empty_confirmed`/`expected_unattempted` skeleton rows — discovered 2026-07-12 while executing the todo above;
+      required for G4's merged-view "0 per-strike cells" gate (measure_honest_coverage.py merges the legacy bucket's
+      expected-unattempted skeleton into the prd view by default). NOT yet operator-confirmed at this scale (the
+      original "~536" estimate covered only the prd bucket) — see Progress Log entry + the open blocked-question before
+      running `--apply` at this size. Snapshot-first, mirror
+      `instruments-service/scripts/purge_deribit_option_per_strike_trades_book5_2026_07_12.py` (add a `--bucket`
+      override or extend it) against `market-data-tick-cefi-central-element-323112`.
+- [x] ✅ [TEST] P2. Regression-assert the Deribit options capture grain is CHAIN-LEVEL (options_chain/book snapshots at
+      chain grain; no per-strike rows can re-enter — writer-side guard or test). — market-tick-data-service@361ed90f.
+      Found a REAL gap (not just missing test coverage): `TardisAdapter.download_batch()`'s Deribit option-symbol strip
+      in `tardis_batch_download.py` only fired when `bulk_data_types` (options_chain/futures_chain) rode along in the
+      SAME call — a bare `data_types=["trades"]`/`["book_snapshot_5"]` request let per-strike OPTION symbols straight
+      into the per-symbol fetch loop (exactly the class of leak the ~1,048-row purge in `instruments-service@6986e8e4`
+      just cleaned up). Fixed: the OPTION strip (reusing the canonical `TardisAdapter._OPTION_SYMBOL_RE`) is now
+      UNCONDITIONAL for any Deribit per-symbol request; the unrelated dated-future strip stays gated on
+      `bulk_data_types` exactly as before (out of scope — dated futures ARE legitimately captured via per-symbol
+      trades/book5 per this plan's G3). 4 new regression tests; verified 3/4 genuinely fail against the pre-fix code
+      (git-stash checked) and pass post-fix. Full `quality-gates.sh` green.
 
 ---
 
 ## Progress Log
+
+### Deribit per-strike purge + scale discrepancy — 2026-07-12T10:50Z (data_engineering slot-9)
+
+**PURGE todo executed** (prd cefi bucket): live-measured
+`(venue=DERIBIT, instrument_type=OPTION, data_type IN [trades, book_snapshot_5])` = **1,048 rows** (trades=930,
+book_snapshot_5=118), all `capture_status=captured`, `source=tardis`, dates 2020-01-01→2026-05-01 — the real pre-v10
+per-underlying capture artifacts. Snapshot-first purge shipped `instruments-service@6986e8e4`
+(`scripts/purge_deribit_option_per_strike_trades_book5_2026_07_12.py`): pre-purge snapshot written to
+`_index/snapshots/pre_purge_deribit_option_availability_index_20260712T104855Z.parquet`, 1,048/1,048 rows deleted from
+the canonical index (0 hits in the 6 live `_index/per_vm/*` shards, so no resurrection risk on next consolidation),
+post-delete gate re-verified 0 residual. Total prd index rows 7,340,786 → 7,339,738 (Δ=-1,048, matches).
+
+**⚠️ Scale discrepancy discovered — flagged, NOT auto-resolved:** the task's "~536" estimate (and the older plan-cited
+"cap=536" at G4/line ~1030) only reflects the **prd** bucket. The **legacy (non-`-prd`) cefi bucket**
+(`market-data-tick-cefi-central-element-323112`) independently carries **6,650,624 rows** for the same
+`(DERIBIT, OPTION, trades|book_snapshot_5)` triple — `empty_confirmed`=2,885,984×2 + `expected_unattempted`=439,328×2,
+schema_version=8, true per-strike `instrument_id` (e.g. `DERIBIT:OPTION:BTC-10AUG25-108000-C`), 183 unique dates
+(2025-05-24→2026-02-21), **zero rows `captured`** — pure accounting skeleton, no real parquet data at risk. This is
+1000x+ the "~536" scope the operator ruling (finding 30) was presented with. Per `measure_honest_coverage.py`'s
+documented merge behavior (`_MANIFEST_BUCKET_CANDIDATES["cefi"]`, dedup on `(date, venue, data_type)`,
+prd-wins-on-conflict but legacy contributes the expected_unattempted skeleton for non-overlapping keys), **this legacy
+skeleton DOES feed the merged G4 coverage view** — so G4's "0 per-strike trades/book5 cells" gate will NOT actually
+reach zero from the prd purge alone. New P1 todo added above to track the legacy-bucket purge; NOT executed in this pass
+pending operator confirmation of the larger scope (findings-triage HARD RULE: material scope/data-correctness
+discrepancy → notify operator, don't silently expand or silently drop). Blocked-question filed via
+`/api/slots/9/blocked` (data_engineering slot-9) with recommendation: proceed (low risk — 100% non-captured skeleton,
+required for G4), scoped as its own follow-up run.
 
 ### G0 Gap Report — 2026-06-28T03:00Z
 

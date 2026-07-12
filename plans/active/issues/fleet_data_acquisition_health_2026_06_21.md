@@ -123,6 +123,15 @@ produce — `(cefi, trades|ohlcv_1m|book_snapshot|liquidations|derivative_ticker
 primary; mirrors the pre-existing `aster`-in-`derivative_ticker` registration). `unified-api-contracts`
 `canonical/crosscutting/_source_priority_data.py`. Additive + matches the venue-override per-venue source-stamp design.
 
+> **OPERATOR RULING 2026-07-12 (plan-reconciliation finding 77): REMOVE this registration.** Per
+> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 (finding 77: "REMOVE aster/hyperliquid
+> book/liq SOURCE_PRIORITY registration"), aster + hyperliquid do not actually serve `book_snapshot` or `liquidations`
+> for cefi — the `trades`/`ohlcv_1m`/`derivative_ticker` registrations are unaffected by this ruling.
+
+- [ ] [CODE] P2. Remove aster + hyperliquid from SOURCE_PRIORITY for cefi book_snapshot/liquidations in UAC (venue
+      serves neither; 17,282 wrongly-seeded rows were purged 2026-07-03 — removal prevents re-seeding). Repo:
+      unified-api-contracts.
+
 **Correction to issue `live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` §2 (STALE PREMISE):** that doc says the
 cefi download "STRIPS HL/ASTER (they're defi in VENUE_TO_ASSET_GROUP)." **Verified 2026-06-21: `VENUE_TO_ASSET_GROUP`
 now resolves `HYPERLIQUID`→`cefi` and `ASTER`→`cefi`** (post UAC 0.30.0 — NOT defi). So the strip premise is stale; the

@@ -57,6 +57,19 @@ write-side, both docs should state the scoping explicitly so the counts stop rea
   validation-and-errors.md and drop its claim), citing the 2026-05-07 directive.
 - B: document the scoping difference in both docs (shard-loop-side vs write-gate-side) if genuinely different decisions.
 
+## Verification note (2026-07-12)
+
+Re-verified directly against both docs' frontmatter: `validation-and-errors.md` has `created: 2026-05-08`,
+`authoritative_for` includes "four-category empty-output decision"; `shard-level-failure-isolation.md` has
+`created: 2026-03-27`, `last_reviewed: 2026-05-17` (nine days AFTER validation-and-errors.md already existed as the
+newer merged SSOT) yet still carries `authoritative_for: [... three-category empty-output decision tree]` — confirms
+option A **[REC]** above is the correct read (shard-level-failure-isolation.md is the stale side, never updated after
+the 2026-05-08 merge). **NOT auto-applied**: the actual fix requires editing
+`codex/04-architecture/shard-level-failure-isolation.md`, which is out of scope for this doc-reconciliation pass (codex/
+files are never edited here). Status stays `open` pending a codex-authorized edit; the `- [ ]` todo below is unchanged.
+Finding #346, plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50
+reclassified" blanket ruling.
+
 ## Todos
 
 - [ ] [AGENT] P2. Read both docs in full + the 2026-05-07 directive provenance; determine whether path D applies to the

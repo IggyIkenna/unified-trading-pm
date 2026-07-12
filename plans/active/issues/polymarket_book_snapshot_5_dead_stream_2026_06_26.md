@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: Polymarket book_snapshot_5 live stream dead since 2026-06-23 18:09 UTC
-summary: The `prediction-live-polymarket-book-snapshot-5-20260623-130258` VM has been running since 2026-06-23 13:06 UTC but has captured NO `book_snapshot_5` data since 2026-06-23 18:09 UTC (2+ days of gap...
+summary:
+  The `prediction-live-polymarket-book-snapshot-5-20260623-130258` VM has been running since 2026-06-23 13:06 UTC but
+  has captured NO `book_snapshot_5` data since 2026-06-23 18:09 UTC (2+ days of gap...
 status: resolved
 nature: process
 asset_group: [cross-cutting]
@@ -16,9 +18,8 @@ priority: P1
 source: [live prediction-VM data-gap monitoring finding 2026-06-26]
 assigned_vm:
 resolved_by: >-
-  deployment-service live_stream_watcher.py check_live_stream_stale()
-  DP-LIVE-001 monitoring (2026-06-26, LDR CI green) + all 5 prediction live VMs
-  relaunched on fresh MTDS tarball 05e84bc5
+  deployment-service live_stream_watcher.py check_live_stream_stale() DP-LIVE-001 monitoring (2026-06-26, LDR CI green)
+  + all 5 prediction live VMs relaunched on fresh MTDS tarball 05e84bc5
 locked_by: live-defi-rollout
 severity: P1
 execution_scope: orchestrator-agent
@@ -91,7 +92,20 @@ Add a `DP_LIVE_DATA_STALE` alert check in `meta_watchers.py` that:
    - `prediction-live-kalshi-book-snapshot-5-20260626-201105`
    - `prediction-live-kalshi-trades-20260626-201119`
    - `prediction-arb-detector-20260626-201140`
-3. T+10 verification pending (VMs booting).
+3. **T+10 VERIFIED (2026-07-12 correction)** — was: "T+10 verification pending (VMs booting)." A deeper
+   `InMemoryTransport` data-loss bug was found AFTER the 2026-06-26 20:10Z relaunch above (plan commit `3b956b70`
+   silently routed ALL book_snapshot_5 ticks to InMemoryTransport instead of GCS — confirmed zero GCS files that day,
+   manifest showing only 26/148162 `captured` rows, all with `pubsub://persist-*` blob_path, not `gs://`); fixed in
+   `market-tick-data-service@3043f2dc`, and both VMs were relaunched a SECOND time on that fixed tarball:
+   - `prediction-live-polymarket-book-snapshot-5-20260626-224659` — T+10 VERIFIED 23:20Z 2026-06-26: writing GCS
+     parquets (5 parquets growing, 148162-token subscription progressing ~21/s).
+   - `prediction-live-kalshi-book-snapshot-5-20260626-224718` — T+10 VERIFIED 23:20Z 2026-06-26: **2107 GCS parquets**
+     written.
+
+   Evidence: `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` Progress Log § "2026-06-26 (autonomous
+   /autonomous) — Plan04 InMemoryTransport bug fixed, DP-LIVE-002 alert shipped, VMs verified" (source lines ~380-399).
+   Finding #242, plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50
+   reclassified" blanket ruling.
 
 ## Related
 

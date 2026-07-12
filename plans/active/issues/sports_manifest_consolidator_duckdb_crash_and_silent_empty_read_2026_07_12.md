@@ -175,10 +175,21 @@ this session to isolate the exact branch (`_read_and_merge_per_vm_shards` return
       — and `test_reader_returns_self_shard_when_other_shards_all_unreadable`, a control confirming the legitimate
       self-shard recovery path is unaffected). Full `quality-gates.sh` green (140s), 43/43 tests passing in the affected
       files.
-- [ ] [DATA] P1. Once (1) and (2) are fixed and the consolidator has run cleanly for several consecutive minutes, re-run
-      the full 6-source gate check for `sports_p2_history_reference_and_odds_2015_to_present` item #6 and flip its
-      checkbox if all sources show `pending_fetch == 0` (or only genuine non-covered/window-closed residual). (repo:
-      instruments-service)
+- [x] ✅ [DATA] P1. Once (1) and (2) are fixed and the consolidator has run cleanly for several consecutive minutes,
+      re-run the full 6-source gate check for `sports_p2_history_reference_and_odds_2015_to_present` item #6 and flip
+      its checkbox if all sources show `pending_fetch == 0` (or only genuine non-covered/window-closed residual). (repo:
+      instruments-service) **DONE 2026-07-12 ~11:10 UTC (slot-7)** — confirmed consolidator fresh (blob age <30s,
+      healthy 2.5+ hours since the 08:19Z recovery). Re-ran the gate properly deduplicated by
+      `(data_type, league_id, date, venue)` keeping latest `written_at` (a naive row-count read over-counts stale
+      phantom duplicates already superseded by a fresher write). TM's apparent 187-row gap turned out to be exactly that
+      class of stale duplicate — the `sports_daily_enum_residual_closer_2026_07_12.py` re-run (force=False fix already
+      shipped @0393f690) found 0 real blank-reason dates before even re-fetching. Final: all 6 sources
+      `pending_fetch==0` except understat's precedent-accepted 15+15 trailing-edge. Flipped
+      `sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md` item #6. Also surfaced (and filed separately,
+      not fixed inline) a real `read_availability_index()` bug: it silently drops the crosscutting `source` column,
+      which produced a false 84,768-row alarm on footystats ODDS during this verify (the rows were actually
+      `source=api_football`, out of scope) — see
+      `plans/active/issues/read_availability_index_missing_source_column_2026_07_12.md`.
 
 ## Progress Log
 
