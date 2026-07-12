@@ -117,6 +117,19 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-12 — slot 11 (Todo 3 dispatch, same session — BLOCKED-PREREQ, structurally unreachable, no new investigation needed)
+
+**Todo 3 (features manifest clean over history)** — dispatched immediately after this same slot's own Todo 1 launch
+above (same session, so no re-derivation needed). Gate is structurally unreachable right now: Todo 1's full-history
+compute (launched ~20 min prior this session) has only reached **97 dates** in
+`gs://features-sports-prd-central-element-323112/sports_features/by_date/` (up from 92 pre-launch) against a ~4,210-day
+full-history target — the 10-VM fleet is genuinely still early, not stalled (see Todo 1's entry above for per-VM health
+evidence). A "clean over history" manifest check against a <3%-complete corpus would be meaningless. Checkbox NOT
+flipped. Not filing a new BLK — this is the same, already-well-documented dependency chain (Todo 3 needs Todo 1 done)
+this plan's own `## Dependencies` section already states; re-litigating it would just be the 27th duplicate of the same
+finding. Next dispatch (of either Todo 1 or Todo 3) should re-check bucket date-count first — once it approaches the
+full range, Todo 3 becomes genuinely runnable for the first time in this plan's history.
+
 ### 2026-07-12 — slot 11 (26th dispatch — GATE GENUINELY MET FOR THE FIRST TIME; Todo 1 full-history compute LAUNCHED)
 
 **Todo 1 (compute features 2015→present) — LAUNCHED, verified healthy, in progress. Checkbox NOT flipped (multi-day
