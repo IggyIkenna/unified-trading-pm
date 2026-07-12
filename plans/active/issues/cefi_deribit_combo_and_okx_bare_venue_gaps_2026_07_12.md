@@ -423,7 +423,17 @@ next session for another full VERIFY-then-fix cycle, not just the two known item
       one. Start date verified live via `api.tardis.dev/v1/exchanges/deribit` this session: Deribit's `type=='combo'`
       symbols (68,721 confirmed live) only go back to **2022-08-23**, NOT bare DERIBIT's 2019-03-30 as originally
       guessed in this doc's earlier "Recommended fix" section — combo/spread products launched years after bare options
-      did. 3 new regression tests, incl. one asserting the two venues' start dates deliberately differ.
+      did. 3 new regression tests, incl. one asserting the two venues' start dates deliberately differ. **🔧 FOLLOW-UP
+      CORRECTION 2026-07-12 (slot-3)** — dispatched independently for this same todo; found
+      `unified-api-contracts@9a766e29` already landed on rebase (identical `options_chain: "2022-08-23"` verified via
+      the same live Tardis lookup — two slots independently confirmed the same date). Additionally corrected the sibling
+      `trades`/`book_snapshot_5` entries in the SAME `DERIBIT-COMBO` dict block, which were still on the original
+      unverified `2019-01-01` placeholder (predates the operator 2026-07-10 decision #6 entry, never checked against
+      real combo-type availability) — moved both to the same verified `2022-08-23` for internal consistency. Also
+      corrected `venue_launch_dates.py`'s `CEFI_VENUE_LAUNCH_DATES["DERIBIT-COMBO"]`, which carried the identical
+      unverified `2019-01-01` value (undercounting the pre-launch window by ~3.5 years). 1 additional regression test
+      (`get_expected_data_types_for_venue("DERIBIT-COMBO")` includes `options_chain`). Shipped
+      **`unified-api-contracts@f9e50c7e`**, full `quality-gates.sh` green (239s), sentinel-verified quickmerge.
 - [ ] [VERIFY] P1. Rebuild the mtds-code tarball (`create-code-tarballs.sh --asset-group CEFI` — mandatory stale-tarball
       gotcha, bit every prior VERIFY attempt on this issue), relaunch both venues via
       `launch-targeted-options-chain-backfill.sh --venue OKX --commit` / `--venue DERIBIT-COMBO --commit`, and confirm
