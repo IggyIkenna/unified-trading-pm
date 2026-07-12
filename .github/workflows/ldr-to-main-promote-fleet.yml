@@ -158,9 +158,25 @@ jobs:
           # same requirement, for every ldr_main repo. Fail-CLOSED on any read gap (no runs / API
           # error / in-progress-only) — a BLOCKING gate must not fail-open on doubt.
           SIT_FLEET_CONTEXT="sit-gate/fleet-green"
-          SIT_LAST_RUN_JSON=$(gh run list --repo "$OWNER/system-integration-tests" \
+          # PAT, not the App token (probed empirically 2026-07-12 canary dispatch: the App-token
+          # read of system-integration-tests' run list came back empty — App perms/installation
+          # don't reliably cover cross-repo Actions reads here; the PAT already does every other
+          # cross-repo write in this script and is the proven-working credential fleet-wide).
+          # `if ! X=$(...)` (not a bare assignment) — under `set -e` a bare
+          # `SIT_LAST_RUN_JSON=$(cmd)` with a failing `cmd` aborts the WHOLE job immediately
+          # (command-substitution exit status propagates to the assignment); an `if` condition is
+          # exempt from `set -e` by POSIX/bash semantics, so wrapping the assignment itself in the
+          # `if` condition is required, not just a style choice. (Caught live: the first version of
+          # this fix used a bare assignment + a separate `$?` capture on the next line — the run
+          # never reached that line, job conclusion=failure, 2026-07-12 canary dispatch.)
+          SIT_RUN_LIST_ERR="$(mktemp)"
+          if ! SIT_LAST_RUN_JSON=$(GH_TOKEN="$GH_PAT_FOR_ARM" gh run list --repo "$OWNER/system-integration-tests" \
             --workflow full-workspace-sit.yml --limit 10 \
-            --json status,conclusion,createdAt,htmlUrl 2>/dev/null || echo "[]")
+            --json status,conclusion,createdAt,htmlUrl 2>"$SIT_RUN_LIST_ERR") || [ -z "$SIT_LAST_RUN_JSON" ]; then
+            echo "::warning::SIT fleet-green: gh run list failed/empty — $(tr '\n' ' ' < "$SIT_RUN_LIST_ERR" | cut -c1-300)"
+            SIT_LAST_RUN_JSON="[]"
+          fi
+          rm -f "$SIT_RUN_LIST_ERR"
           SIT_FLEET_LINE=$(SIT_LAST_RUN_JSON="$SIT_LAST_RUN_JSON" python3 - <<'PYEOF'
           import json
           import os
@@ -630,7 +646,13 @@ jobs:
               fi
               echo "  LABEL-CHECK PASS $REPO: label matches computed bump (${COMPUTED:-none})"
               if [ "$DRY_RUN" != "true" ]; then
-                gh api -X POST "repos/$OWNER/$REPO/statuses/$LDR_HEAD_SHA" \
+                # PAT, not the App token (finding, 2026-07-12 SIT-fleet-green canary dispatch): this
+                # POST was silently 403-ing ("Resource not accessible by integration") with the
+                # default App token — swallowed by `2>/dev/null || true`, so it looked like a no-op
+                # rather than a failure. Advisory-only status (not gating), so the silent failure had
+                # no behavioral impact, but fix it while touching this file (same root cause as the
+                # sit-gate/fleet-green POST above, already root-caused there).
+                GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/$REPO/statuses/$LDR_HEAD_SHA" \
                   --field state=success \
                   --field context="semver-agent/label-check" \
                   --field description="LDR→main: label matches API diff (${COMPUTED:-none})." 2>/dev/null || true
