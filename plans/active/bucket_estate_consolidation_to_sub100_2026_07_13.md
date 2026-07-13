@@ -157,8 +157,8 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
 
 ## Wave 3 — structural folds to <100 (design first; env-tiered from birth per ruling)
 
-- [ ] [INFRA] P1. **Fold design doc** (its own deliverable; READ task_template before authoring the successor plan(s),
-      ASK operator for their destination): features 25 per-AG/kind buckets → 5 per-AG env-tiered
+- [x] ✅ [INFRA] P1. **Fold design doc** (its own deliverable; READ task_template before authoring the successor
+      plan(s), ASK operator for their destination): features 25 per-AG/kind buckets → 5 per-AG env-tiered
       (`features-{ag}-{env}-{pid}`, kind as path prefix, mirroring the DeFi shared-bucket data_type precedent); ml
       {models,predictions,configs,training-artifacts,artifacts} → `ml-store-{env}-{pid}`; unified
       `execution-store-{env}-{pid}` (strategy-store already unified flat → gains its tier in the same move);
@@ -166,7 +166,11 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       must enumerate per bucket: readers/writers to cut over (audit's shadow-registry + hardcoded-sweep tables),
       manifest/consolidator wiring, BQ `feature_external` external tables (M-1 A11 — root-mounted URIs), IAM
       write-protection re-gating ([[bucket_iam_write_protection_per_tier_2026_06_09]] Phase 2 re-gates on this),
-      lifecycle rules (prefix-scoped where retention differs).
+      lifecycle rules (prefix-scoped where retention differs). — DONE 2026-07-13 (autonomous dispatch):
+      plans/active/bucket_estate_fold_design_2026_07_13.md (status: draft, never ingested; 5 folds with per-site
+      file:line cutover tables, 18-todo sequencing, estate math 139→~100, \_KIND_ALIASES soft-transition
+      recommendation). Successor-plan destination + portfolio-state human-only + lifecycle-ladder confirm are parked as
+      that doc's operator-decisions section.
 - [ ] [DATA] P2. Execute the folds per design (likely 2-3 split plans for parallelism — features / ml / stores), each
       with the DeFi-migration playbook: parity verify → reader cutover → redeploy+verify-exercised → delete + TF/yaml
       removal in the same change. Target end-state ≈100 total (≈80 excluding GCP-system).
