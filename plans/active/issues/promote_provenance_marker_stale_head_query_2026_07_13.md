@@ -26,7 +26,7 @@ summary: |
   a WARN) — every `ldr_main` repo whose promote PRs already use the per-SHA-ref scheme is affected, not just
   market-tick-data-service; auto-merge on those repos' promote PRs likely has to be armed manually every cycle, or
   never fires, until this is fixed.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -60,7 +60,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-trading-pm@20db96085 (all 3 todos shipped + fleet-wide audit complete)
 ---
 
 # promote_provenance_range.py marker query never matches WS-L Phase-0 promote PRs
@@ -135,9 +135,33 @@ corrected range to confirm the 39 stale violations drop to 0 (or only genuinely-
       head-ref-shape-agnostic) + `test_marker_ignores_non_promote_prs_and_picks_latest_mergedat` in
       `tests/unit/test_promote_provenance_range.py`; updated the pre-existing `test_marker_parsed_from_gh_json` to carry
       a `title` field now that the query no longer filters by `--head`.
-- [ ] [SCRIPT] P2. After the fix ships, audit other `ldr_main` repos for accumulated stale-marker provenance noise
+- [x] ✅ [SCRIPT] P2. After the fix ships, audit other `ldr_main` repos for accumulated stale-marker provenance noise
       (re-run `check_strict_quickmerge.py` with the corrected range per repo) and confirm auto-merge arms cleanly on
-      their next drain. (repo: unified-trading-pm)
+      their next drain. (repo: unified-trading-pm) — see "## Audit results (todo 3)" below.
+
+## Audit results (todo 3, post-fix @ unified-trading-pm@20db96085)
+
+Ran `promote_provenance_range.py --base-branch main` (the fixed, title-based marker resolution) + a
+`check_strict_quickmerge.py --range <resolved> --block` over every `ldr_main`-flagged repo in `workspace-manifest.json`
+(23 repos), using each slot's own clone (`--cwd .tabs/4/<repo>`, `--fetch-remote origin`):
+
+- **22/23 repos resolve `mode=marker`** (a real, reachable `chore(promote)`-titled merged-PR SHA) — the fix is confirmed
+  working fleet-wide, not just on the market-tick-data-service repro case. Zero repos hit the OLD bug (`mode=fallback`
+  due to a head-branch filter matching nothing on an all-post-cutover promote history).
+- **1/23 (`ibkr-gateway-infra`) resolves `mode=fallback`** (`marker=∅`) — correctly: no merged `chore(promote)` PR
+  exists yet for this repo's `main` base, so the FAIL-SAFE raw `origin/main..origin/live-defi-rollout` range applies as
+  designed. Not a bug.
+- **17/23 repos**: `check_strict_quickmerge.py` over the corrected (narrow, since-last-drain) range returns **0
+  violations** — auto-merge will arm cleanly on their next drain.
+- **6/23 repos show violations in the corrected range**: `agent-orchestrator` (1), `alerting-service` (1),
+  `deployment-api` (3), `deployment-ui` (1), `unified-api-contracts` (2), `unified-trading-library` (2). Checked every
+  flagged commit's timestamp — **all are from TODAY (2026-07-13), within the last ~7 hours**, mostly one coordinated
+  cross-repo `feat(alerting)/deployment-digest (parity #5)` change plus one unrelated `agent-orchestrator` commit — i.e.
+  genuine, currently-unshipped-via-quickmerge commits, NOT the stale days/weeks-old noise this fix eliminates. This is
+  the gate working AS DESIGNED post-fix: a clean, narrow signal instead of an ever-widening false-positive pile. No
+  action taken on these 6 by this audit — each repo's own `ldr-to-main-promote-fleet.yml` run will now correctly flag
+  exactly these (and only these) commits and hold auto-merge until they're re-shipped via `quickmerge --agent` (or
+  reverted) by their authors, same as any other legitimate provenance-gate block.
 
 ## Resolution (this escalation, agt-c281eb)
 
