@@ -53,14 +53,9 @@ drift_direction: advance-code
 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
-> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware `{mode}*{source}[_{transport}]`model +
-> doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the
-> settled contract lives in codex
-> `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/sports-batch-live.md`;
-> this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS/fixtures backfill complete + accurate UAC;
-> sports`instruments-store-sports`2.68M-row surface rides G1) + **G2** (scripts + 7+2-point audit + dry-run) + **G3**
-> (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT
-> coarse`batch`/blank) BEFORE apply. Readiness audit adds ⑧ (IS/fixtures-catalogue) + ⑨ (pipeline_mode source-aware).
+> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
+> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the settled contract lives in codex `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/sports-batch-live.md`; this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS/fixtures backfill complete + accurate UAC; sports`instruments-store-sports`2.68M-row surface rides G1) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
+> BEFORE apply. Readiness audit adds ⑧ (IS/fixtures-catalogue) + ⑨ (pipeline_mode source-aware).
 
 > **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
 > `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
@@ -420,14 +415,13 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       counts); per-tree entity-set verdict (SAME_ENTITIES / COMPLEMENTARY_ENTITIES) for the 3 sports_reference versions.
       **ACTUAL SCHEMA SPOT-CHECK RUN (sports-slot, real GCS data 2026-06-01)** on `entity=fixtures` 2018-01-02:
       `v1_archive` fixtures (41 cols: home_xg/away_xg + shots/corners/fouls/possession/passes + home_team/away_team +
-      league/source/status/match_week) vs `v2` fixtures (32 cols: AF-native `af*_\_id`, score breakdowns
-      extratime/halftime/penalty, status_long/short, venue_id/city/name, round, timestamp) = **NEITHER is a superset**
-      (alarm) — BUT v1_archive's 41 cols ARE fully covered by the UNION of
-      (`v2     fixtures`∪`v2     fixture_stats`(xG + shots/corners/possession) ∪ current`understat_xg` (58 cols incl.
-      team-detail + xG)); only 3 differ and they are naming variants (`home_team`→`home_team_name`,
-      `away_team`→`_\_name`, `league`→`league_name`). **VERDICT: v1_archive is COLUMN-superseded by the current split
-      (understat_xg + v2 fixtures + v2 fixture_stats); v2 fixtures + understat_xg + fixture_stats are COMPLEMENTARY →
-      keep all. No column-level data loss from treating v1_archive as superseded.**
+      league/source/status/match_week) vs `v2` fixtures (32 cols: AF-native
+      `af*_\_id`, score breakdowns     extratime/halftime/penalty, status_long/short, venue_id/city/name, round, timestamp) = **NEITHER is a superset**     (alarm) — BUT v1_archive's 41 cols ARE fully covered by the UNION of     (`v2
+      fixtures`∪`v2
+      fixture_stats`(xG + shots/corners/possession) ∪ current`understat_xg` (58 cols incl.     team-detail + xG)); only 3 differ and they are naming variants (`home_team`→`home_team_name`,     `away_team`→`_\_name`, `league`→`league_name`).
+      **VERDICT: v1_archive is COLUMN-superseded by the current split (understat_xg + v2 fixtures + v2 fixture_stats);
+      v2 fixtures + understat_xg + fixture_stats are COMPLEMENTARY → keep all. No column-level data loss from treating
+      v1_archive as superseded.**
 - [x] ✅ [DATA] P0. **v1_archive ROW-coverage gate (before E8 — sports-slot 2026-06-01)**: column-superseded ≠
       row-superseded. Before DROPPING `sports_reference_v1_archive`, verify its `(date, league, fixture_id)` ROW set ⊆
       the current split's rows (the v1_archive date-range/leagues are all present in
@@ -730,14 +724,9 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       (`LIGUE_1`, `LIGUE_2`, `BUNDESLIGA_2`, `K_LEAGUE_1/2`, `LIGA_3`, `GREEK_SUPER_LEAGUE_2`, `LIGA_PORTUGAL_2` — full
       form resolves → correct, leave). Of 52 suffixed unique league*ids, the actual rewrite need is TINY: - **SAFE
       (3-digit season-id suffix, base resolves)**: `SCOTTISH_LEAGUE_CUP_185`→`SCOTTISH_LEAGUE_CUP` (15,702 rows). Rule =
-      strip trailing `*<digits>`iff base resolves AND digits ≥ 100 (3-digit AF/season id, never a 1–2-digit tier). →
-      **extend`canonicalize*league_id`with this rule** (safe; handles all 3-digit-suffix registered leagues). -
-      **AMBIGUOUS — operator/registry decision**:`LA_LIGA_2`(3,465 rows) is likely **Segunda División** (real tier-2, AF
-      id 141), NOT a La-Liga season suffix → must map to the canonical Segunda key, NOT strip to LA_LIGA.
-      `FRANCE_NATIONAL_1` (2 rows) same shape. Do NOT auto-rewrite these — verify the canonical tier key. -
-      **REGISTRY-GAP (base doesn't resolve)**: 41 obscure leagues, **47 rows total** (`CONGO_DR_LIGUE_1`,
-      `BRAZIL_CARIOCA_1`, `DENMARK_DENMARK_SERIES_GROUP*\*`…) — negligible volume; add to UAC`provider_league_ids` OR
-      leave (47 rows). Not a migration blocker. Net: CF-7 league-canon is essentially DONE; only the
+      strip trailing
+      `*<digits>`iff base resolves AND digits ≥ 100 (3-digit AF/season id, never a 1–2-digit tier). →     **extend`canonicalize*league_id`with this rule** (safe; handles all 3-digit-suffix registered leagues). -     **AMBIGUOUS — operator/registry decision**:`LA_LIGA_2`(3,465 rows) is likely **Segunda División** (real tier-2, AF     id 141), NOT a La-Liga season suffix → must map to the canonical Segunda key, NOT strip to LA_LIGA.     `FRANCE_NATIONAL_1` (2 rows) same shape. Do NOT auto-rewrite these — verify the canonical tier key. -     **REGISTRY-GAP (base doesn't resolve)**: 41 obscure leagues, **47 rows total** (`CONGO_DR_LIGUE_1`,     `BRAZIL_CARIOCA_1`, `DENMARK_DENMARK_SERIES_GROUP*\*`…) — negligible volume; add to UAC`provider_league_ids`
+      OR leave (47 rows). Not a migration blocker. Net: CF-7 league-canon is essentially DONE; only the
       SCOTTISH_LEAGUE_CUP_185 3-digit rule + the LA_LIGA_2 tier disambiguation remain (both doable pre-migration;
       LA_LIGA_2 needs the canonical-Segunda-key confirmation). — uac@dc76f1a6 |
       SCOTTISH_LEAGUE_CUP_185→SCOTTISH_LEAGUE_CUP via Step 3a (num>=100 rule); LA_LIGA_2/BUNDESLIGA_2/LIGUE_1 unchanged
@@ -1342,13 +1331,23 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 - [x] ✅ [DATA] P0. E3 Confirm `sports-scheduler` writer drained; snapshot the sports `_index`(es). SCRIPT SHIPPED:
       `snapshot_sports_index_e3_2026_06_27.py` — drain-check (row-count stable over 120s) + server-side snapshot to
       `_index/snapshots/pre_migration_v9_<date>_*.parquet` (idempotent). Run:
-      `python -u … --project-id central-element-323112`. market-tick-data-service@4da9d65c
+      `python -u … --project-id central-element-323112`. market-tick-data-service@4da9d65c — **OPERATIONALLY EXECUTED
+      2026-07-12** (see "E3+E4 OPERATIONAL RUN — 2026-07-12" below): 8 prod Cloud Scheduler writers paused
+      (`uts-prod-sports-scheduler-cron` + 4 `uts-prod-sports-fixtures-*-t1-schedule` + `is-daily-enum-sports` +
+      `expected-universe-v2-sports-daily` + `lifecycle-catalogue-regen-sports-daily`); drain-check DRAINED (both
+      surfaces stable over 120s); snapshots written `_index/snapshots/pre_migration_v9_2026-07-12_*.parquet` (10 MDPS +
+      20 IS objects) at both `market-data-tick-sports-prd-…` and `instruments-store-sports-prd-…`.
 - [x] ✅ [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget). LAUNCHER SHIPPED:
       `launch-sports-v9-migration-vm.sh` — year-sharded SPOT VM launcher; one VM per (surface, year); Phase 1
       migrate_sports_canonical_v9 + Phase 2 rebuild_sports_manifest_v9 (sequential); MANIFEST_PER_VM_SHARDS=true. VM
       prefix sports-v9-migration- registered in vm_zombie_watchdog + launcher_registry. deployment-service@6e8a115 Fleet
       command (post E3 drain):
       `for YEAR in 2019..2026; do bash launch-sports-v9-migration-vm.sh --surface {mdps,instruments} --year $YEAR --apply; done`
+      — **OPERATIONALLY EXECUTED 2026-07-12, FIRST TIME EVER** (all 10 prior E8 touches since 2026-06-27 found "E4 VM
+      apply NOT run" — see "E3+E4 OPERATIONAL RUN — 2026-07-12" below for the 2 blocking bugs found+fixed
+      (deployment-service@bfa33ca "VM_TASK=sports-v9-migration dispatch" + market-tick-data-service@e555d7c5
+      "\_build_row_key omits blank chain/underlying") and the full 16-VM fleet result (all 16 exit_code=0, 0
+      MalformedRowKeyError, 0 Traceback).
   - **SHARDING + PERFORMANCE SCOPING (slot-4 dry-runs 2026-06-03, no `--apply`):** Dry-run (list+plan, no copy) timings:
     **MDPS** 30-day window (2025-09 across prd + legacy-no-env raw + processed trees) = **16,544 objects in 19 s**; data
     is sparse (~7-9 active days/month — sports doesn't write every day). **Instruments** 3-day window = 10,083 planned,
@@ -1435,8 +1434,8 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 | FIXTURES truthset join (step 6.5)                            | ✅ SHIPPED (code)         | mtds@699c58e9 — no-match days→EXPECTED_NO_FIXTURE via truth set; MDPS cross-load via --fixtures-index-bucket; VM run pending E3+E4 |
 | MDPS in-season no-fixture refinement                         | 🟡 ADDRESSED by step 6.5  | truthset join now handles in-season no-match days when MDPS cross-loads from instruments-store; confirm on VM run                  |
 | Unresolved-league residual (~15,700)                         | 🟡 ADDRESSED by step 6.5  | SCOTTISH_LEAGUE_CUP_185 (raw league_id lookup bypasses get_league()) now classified by truthset; confirm on VM run                 |
-| E3 fleet drain (shared w/ slot-2)                            | ⛔ GATED                  | pre-migration drain GCP+AWS writers → consolidate → snapshot; coordinated at `epics/mtds_mdps_master`                              |
-| E4 VM dry → full walk (786k + 2.68M)                         | ⛔ GATED                  | VM asia-northeast1, no fire-and-forget; after E3                                                                                   |
+| E3 fleet drain (shared w/ slot-2)                            | ✅ DONE 2026-07-12        | 8 prod schedulers paused, drain confirmed, snapshots written — see "E3+E4 OPERATIONAL RUN" below                                   |
+| E4 VM dry → full walk (786k + 2.68M)                         | ✅ DONE 2026-07-12        | 16-VM fleet (mdps+instruments × 2019-2026) all exit_code=0 — see "E3+E4 OPERATIONAL RUN" below                                     |
 | E7 CF-7 relabel + E8 verify + **IRREVERSIBLE legacy delete** | ⛔ GATED                  | only after CF-1…CF-12 GREEN on real data-state + drain + operator gate                                                             |
 
 **Net**: all CODE (migrator + rebuilder + composite keystone + writer-fix) is built, QG-green, dry-run-verified, and on
@@ -1803,9 +1802,10 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       AUTONOMOUS*AGENT_RULES rule 11 across the fleet before tightening. Repo: market-tick-data-service +
       unified-trading-pm (`scripts/quality-gates-base/base-service.sh`). parent_epic: mtds_mdps_master. Owner:
       vm-cross-cutting. Provenance: slot-4 sports pre-apply ship 2026-06-08. — **RESOLVED**: (b) `base-service.sh:1173`
-      already excludes `./scripts/*`from`\_SIZE_FILES`; (c) STEP 5.85 (L3117) already narrowed to value-assignment regex
-      (`[A-Za-z0-9*{]` after quote) so path-substring checks no longer false-positive. mtds QG passed at 215s in this
-      session (sentinel at mtds@01d70902).
+      already excludes
+      `./scripts/*`from`\_SIZE_FILES`; (c) STEP 5.85 (L3117) already narrowed to value-assignment regex     (`[A-Za-z0-9*{]`
+      after quote) so path-substring checks no longer false-positive. mtds QG passed at 215s in this session (sentinel
+      at mtds@01d70902).
 
 ### 🏁 FINISH-LINE REPORT — slot-4 autonomous run (2026-06-08)
 
@@ -2687,6 +2687,17 @@ the 2026-07-11/12 `_probe_paths` fixes — verified by reading the source before
 `market-tick-data-service/.venv` (MTDS surface) and `instruments-service/.venv` (IS surface), read-only, `gcloud`
 project `central-element-323112`. No writes, no VM launches, no checkbox/gate-state changes.
 
+> **RECONCILIATION NOTE (2026-07-13, orchestrator)** — the overnight "re-dispatch check" entries below (twelfth through
+> fifteenth touches) each concluded "no E3/E4 VM ever launched; BLK-f2bb67c2 unanswered". Both conclusions were
+> ARTIFACTS: (1) the E3+E4 run EXECUTED 2026-07-12 per the "E3+E4 OPERATIONAL RUN — 2026-07-12" section below (16 VMs
+> all exit_code=0, SELF-DELETED on completion — an instances-list check hours later cannot see them; the EXIT_STATUS
+> blobs in GCS are the durable evidence); (2) the operator DID rule ("Execute now", 2026-07-12, chat Q&A recorded in
+> plan_reconciliation_operator_decisions_2026_07_11.md §A2 finding 254/E3E4) — the AO blocked-question BLK-f2bb67c2 was
+> never marked answered in the queue (known AO operator-message gap class; see
+> ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md). Next toucher: E3/E4 are DONE; the remaining E8 gaps are
+> the residuals enumerated in the operational-run section (L6-legacy-only, CF-8, IS CF-3/CF-4 write-path) — do NOT
+> re-check for a migration VM.
+
 ## E8 Verify — re-dispatch check 2026-07-13T03:43Z (data_engineering slot-9, task -001, twelfth touch)
 
 Re-dispatched to the same E8-verify checkbox (~6h after the operator-ordered live-index re-run above, which already
@@ -3118,4 +3129,150 @@ Dispatched again to the same checkbox. `GET /api/state` → `blocked_queue`: `BL
 `e9817bf1a`, no reason to believe the canonical index moved (nothing in this session's fresh-pull touched IS/MTDS
 repos). Not re-running `cf_manifest_audit_2026_06_01.py` (zero new information, real GCS-read cost) and not filing a
 duplicate blocked-question. `skip-current-task`'d. Next toucher: same check first — `BLK-d48acae4.answered_at`; this
-checkbox cannot flip until the operator rules on option A vs B.
+checkbox cannot flip until the operator rules on option A vs B. =======
+
+## E3+E4 OPERATIONAL RUN — 2026-07-12 (operator "Execute now" ruling — real infra, INFRA-EXECUTION mandate)
+
+> Drives E3 (writer drain) → E4 (canonical migration VM `--apply`) to actual completion for the first time — all 10
+> prior E8-verify touches since 2026-06-27 found "E4 VM apply NOT run" as the sole blocker (`BLK-f2bb67c2`,
+> `answered_at: null`). Per the operator ruling this executed without waiting for the blocked-question answer.
+
+### E3 — writer drain (both surfaces)
+
+Paused 8 prod Cloud Scheduler jobs (all confirmed ENABLED→PAUSED, `--location=asia-northeast1`):
+`uts-prod-sports-scheduler-cron` (Cloud Run job `uts-prod-sports-scheduler` — tier-cadence trigger) +
+`uts-prod-sports-fixtures-{midnight,6am,noon,6pm}-t1-schedule` (Cloud Run job
+`uts-prod-instruments-service-sports-fixtures` — direct IS writer) + `is-daily-enum-sports`
+(`daily_is_enumeration.py --force`) + `expected-universe-v2-sports-daily`
+(`enumerate_expected_universe.py --apply-write` — writes directly to
+`gs://instruments-store-sports-prd-…/prod/catalog.parquet`) + `lifecycle-catalogue-regen-sports-daily`
+(`build_instrument_catalogue.py --by-date-prefix sports_reference/by_date`). The last 3 were NOT explicitly named in the
+dispatch prompt but were identified as direct IS-surface writers via `gcloud run jobs describe` and paused too
+(pre-migration-drain HARD RULE = stop ALL writers, not just the named ones) — reversible, all resumed at the end. Left
+running (deliberately NOT paused): `uts-prod-manifest-consolidator-{instruments,market-data}-sports-cron` (needed to
+merge the migration's per-VM shards) and 7 `fss-backfill-vm-*` VMs (features-sports-parallel-backfill — read IS/MTDS,
+write to the separate `features-sports-*` bucket, not a writer into either E4-target surface).
+`footystats-fwd-20260712-230000` (an IS writer VM already mid-run) self-terminated on its own during the drain window.
+
+Ran `snapshot_sports_index_e3_2026_06_27.py --project-id central-element-323112`: DRAIN CHECK → **DRAINED** (both
+surfaces' `_index` row-counts stable over 120s — direct confirmation the pause worked). SNAPSHOT → wrote
+`_index/snapshots/pre_migration_v9_2026-07-12_*.parquet` for all 10 MDPS + 20 IS `_index` objects (idempotent,
+server-side copy). Baseline row counts at snapshot time: MDPS `availability_index.parquet` 1,797,861 rows / IS 4,914,288
+rows (matches the tenth E8-verify run's live-index read a few hours earlier — confirms drain was real, not a
+stale-snapshot artifact).
+
+### E4 — canonical migration VM fleet (16 VMs: mdps + instruments × 2019–2026, `--apply`)
+
+**Divergence from the dispatch prompt (plan wins, per HARD LIMITS)**: the prompt suggested
+`deployment-service/scripts/vm/launch-canonical-migration-vm.sh`; the plan's own registered launcher for this task is
+`launch-sports-v9-migration-vm.sh` (VM prefix `sports-v9-migration-`, registered in `launcher_registry.py` +
+`vm_zombie_watchdog`, `deployment-service@6e8a115`) — used that instead, per plan text § "E4 Dry-VM → timing → optimise
+→ full-VM run".
+
+**Two blocking bugs found + fixed in-band** (both squarely in-scope per findings-triage — discovered executing E4, both
+blocked E4 from ever completing, root-caused with evidence, fixed, QG-green, shipped):
+
+1. **VM_TASK dispatch gap** — `setup-data-pipeline-vm.sh` had no branch for `VM_TASK=sports-v9-migration` (the value the
+   launcher sets), so it fell through to the generic `elif [ -n "$VM_TASK" ]` fallback, which built
+   `--operation "${VM_OPERATION}"` (`="migrate-sports-v9-{surface}"`) — not a registered market-tick-data-service CLI
+   operation → argparse error, `exit_code=2` on all 16 first-attempt fleet VMs. Fixed by adding a
+   `VM_TASK == "sports-v9-migration"` dispatch branch mirroring the existing `canonical-migration` pattern (reads
+   `VM_MIGRATION_CMD` metadata, executes directly). Shipped `deployment-service@bfa33ca` (direct push —
+   `unified-trading-library` carried unrelated foreign uncommitted WIP blocking quickmerge's pre-flight audit;
+   dirty-deps carve-out). Also manually refreshed the raw `setup-data-pipeline-vm.sh` object on
+   `gs://deployment-scripts-central-element-323112/vm/` (the file the VM's `startup-script-url` fetches directly,
+   separate from the tarball).
+2. **`_build_row_key` blank chain/underlying → `MalformedRowKeyError`** — sports carries `chain`/`underlying` as blank
+   STRING columns (no DeFi chain concept), but `_build_row_key` (in `_rebuild_sports_write.py`) included them in
+   `row_key` whenever `is not None` — passing `chain=""` trips UTL's hard_schema_enforcement Phase 4
+   (`MalformedRowKeyError`: "callers that include 'chain' in row_key MUST supply a non-empty value"). The write loops
+   catch+log per-row, so affected rows were **silently dropped** from the rebuild instead of getting their v9 reason.
+   Observed on the mdps-2019 smoke test (which processes the WHOLE MDPS surface, not just 2019): 203,252/1,270,737
+   `record_empty` calls + 112,278/112,442 `record_failed` re-emit calls failed this way (predominantly
+   `data_type='trades'`) — ~315k rows. Fixed: `_build_row_key` now omits `chain`/`underlying` entirely when blank
+   (None/whitespace/NaN) instead of passing `""` — the fix the error itself recommends. Shipped
+   `market-tick-data-service@e555d7c5` (5 new regression tests incl. the exact prod row shapes from the failure log;
+   direct push, same dirty-deps carve-out). Manually rebuilt + re-uploaded the `mtds-code.tar.gz` tarball
+   (`gs://deployment-scripts-central-element-323112/code/`) since the fix needed to be live before relaunching — hit a
+   race where a concurrent process overwrote the upload with a 1-commit-stale tarball; re-uploaded + re-verified before
+   relaunch. `market-tick-data-service@e555d7c5` was later confirmed backmerged into `main` (ancestor of `1b5d23ca8fb4`)
+   with no drift.
+
+**Verification (mdps-2019 re-smoke-test, fix live)**: exit*code=0, 0 `MalformedRowKeyError`, 0 any-`failed` warnings —
+`DONE: written_empty=203648 written_captured=575672 reemit_attempted_failed(v9)=112582 skipped=1066259` (100% of the
+non-skipped rows written; skipped rows are the intentional `force=False` skip-if-already-EXPECTED*\*-typed branch, not
+failures). This run **is** the production mdps/2019 shard (real `--apply`, not a dry-run) — not relaunched separately.
+
+**Full fleet**: launched the remaining 15 VMs (mdps 2020–2026 + instruments 2019–2026, `--apply`, SPOT, all 4 code
+tarballs confirmed fresh at launch incl. the e555d7c5 fix). **Result: all 16 VMs (incl. the mdps-2019 smoke test)
+exit_code=0, 0 MalformedRowKeyError, 0 Traceback** (verified per-VM via `EXIT_STATUS` + grep on `run.log`). No
+fire-and-forget: every launch verified STARTED<60s (gcloud `Created […]` + immediate `RUNNING` status), monitored to
+STOPPED/exit on progress metrics (classification row-counts, write-loop `DONE:` summaries, `ps`/CPU-time liveness checks
+during apparent heartbeat gaps — all resolved to genuine CPU-bound processing, never a real stall).
+
+**Third bug found + fixed (infra, not code): manifest-consolidator OOM crash-loop.** After the fleet completed, the MDPS
+consolidated index refreshed cleanly (`uts-prod-manifest-consolidator-market-data-sports-cron`, ~23:30), but the IS
+consolidated index stayed stale at the pre-fleet timestamp for ~24 min despite
+`uts-prod-manifest-consolidator-instruments-sports-cron` "completing successfully" every minute. Root cause: the job (4
+CPU / 16Gi) was getting OOM-killed (`Container terminated on signal 9`, confirmed via `gcloud logging read`) partway
+through merging the 8 new large per-VM shards, after having already acquired its GCS lock (`_index/consolidator.lock`,
+300s TTL) — orphaning the lock for the full TTL window every cycle, so every subsequent minute's cron tick saw a "fresh"
+(but actually-orphaned) lock and no-op'd, reporting false "success". Fixed by bumping the Cloud Run Job's resources to 8
+CPU / 32Gi (`gcloud run jobs update uts-prod-manifest-consolidator-instruments-sports --cpu=8 --memory=32Gi`) —
+reversible, additive, no logic change. Confirmed: the next cycle (post-TTL-expiry, with the new resources) completed the
+merge — `gs://instruments-store-sports-prd-…/_index/availability_index.parquet` updated at 2026-07-12T23:42:42Z. Not
+committed to any repo (a live resource-limit change on a shared Cloud Run Job) — flagging here + should get a matching
+`cloudbuild.yaml`/IaC update if one manages this job's resources, so the next redeploy doesn't regress it back to 16Gi.
+
+### Post-E4 CF-audit verdict (read-only, both surfaces, `cf_manifest_audit_2026_06_01.py`)
+
+**MDPS** (`market-data-tick-sports-prd-…`, 1,958,499 rows):
+`RED — ['CF-2-paths', 'CF-3-partition', 'CF-8', 'L6-legacy-only']` — **identical RED-check set to the pre-E4 baseline**
+(tenth E8-verify run, same date). CF-1/2/3/4/5/6/13/Era-B all GREEN (CF-3/CF-4 were already GREEN pre-E4 too, thanks to
+earlier live-write-path fixes — E4 preserved this, did not need to fix it). Remaining RED are the same pre-existing,
+already-documented items: CF-2-paths/CF-3-partition (known sports false-negative — data lives in `_index` columns not
+GCS hive segments), CF-8 (available_at column absent —
+`_write_captured_rows`/`_write_empty_rows`/`_write_attempted_failed_rows` never pass `available_at=` to the writer, a
+genuine code gap but pre-existing/out of this walk's scope), L6-legacy-only (140 cells — **E8-scope per the dispatch
+HARD LIMITS, not touched**; root cause identified: `launch-sports-v9-migration-vm.sh` only passes `--legacy-bucket` for
+`--surface instruments`, never for `--surface mdps`, so the MDPS legacy bucket was never wired into the automated
+migration walk at all — explains why this exact 140-cell residual has persisted across every E8 run since the
+seventh-run patch).
+
+**Instruments-store** (`instruments-store-sports-prd-…`, 5,598,410 rows):
+`RED — ['CF-2-paths', 'CF-3', 'CF-3-partition', 'CF-4', 'CF-8', 'L6-legacy-only']` — **identical RED-check set AND
+identical blank/gap counts to the pre-E4 baseline** (CF-3 blank=19,274 both before+after; CF-4 blank=796,523 both
+before+after; CF-8 non-null=3,508,551 both before+after; L6-legacy-only=1,855 both before+after). **No regression, but
+also no improvement on CF-3/CF-4/CF-8** — root-caused via the mdps-2019/instruments-2019 run logs:
+`rebuild_sports_manifest_v9.py`'s `_write_empty_rows` skips re-emission entirely for any row whose EXISTING reason
+already starts with `EXPECTED_` (`force=False`, the launcher's default) — `skipped=1,066,259` (MDPS) /
+`skipped=3,418,792` (instruments-2019 alone) rows never touched. Since the blank pipeline*mode/source/available_at rows
+on IS already carry a valid typed
+`EXPECTED*\*`reason from an earlier relabel pass, the skip-branch bypasses them and their blank columns are never backfilled — this is the concrete mechanism behind the "IS CF-3/CF-4 write-path gap" finding named (but not root-caused) across all ~10 prior E8 runs. **Not fixed here** (a`--force`
+full re-run would reprocess 3.4M+ already-correctly-typed rows at significant cost, or the skip condition needs a
+narrower fix — e.g. skip the reason-relabel but still backfill blank pipeline_mode/source/available_at — either is a
+real, scoped follow-up, not a quick E4 rerun). **Tracked as a follow-up, not attempted under this dispatch**
+(out-of-time-budget + design-uncertain fix, matches the dispatch's own "if it's a separate tracked item, leave it
+tracked and say so").
+
+**Verdict**: nothing WORSE than before on either surface (identical RED sets/counts) — E3+E4 completed successfully for
+the first time; **schedulers resumed** (all 8 re-enabled + verified `ENABLED`). E8 checkbox NOT flipped (L6 +
+CF-8/CF-3/CF-4 gaps remain, E8/IS-write-path-skip-fix are the next touches) — per plan convention, orchestrator owns
+gate state.
+
+**Evidence**: deployment-service@bfa33ca, market-tick-data-service@e555d7c5 (both on `live-defi-rollout`, e555d7c5
+confirmed backmerged to `main`); 16/16 VM `EXIT_STATUS`=0 + 0 error-grep hits (spot-checked all names:
+`sports-v9-migration-{mdps,instruments}-{2019..2026}-2026071222{2045,3121,5546,0453,0507,0521,0534,0549,0602,0616, 0629,0643,0706,0718,0732,0745,0758,0812}`);
+consolidator resources `gcloud run jobs describe uts-prod-manifest-consolidator-instruments-sports` →
+`cpu: '8', memory: 32Gi`; both `_index/availability_index.parquet` `Update Time` post-fleet (MDPS 2026-07-12T23:30:38Z,
+IS 2026-07-12T23:42:42Z).
+
+**Post-run addendum (2026-07-13 09:07Z, session-restart state-reconstruction)**: the consolidator memory bump
+(8CPU/32Gi) was REVERTED back to 4CPU/16Gi by a `Jobs.ReplaceJob` at 2026-07-13T08:48:08Z (a template/fleet redeploy —
+exactly the regression path flagged above). **Currently harmless**: the revert landed AFTER the one-time merge of the 8
+large migration shards completed; verified 09:07Z — all `sports-v9-migration-*` per-VM shards settled+deleted on BOTH
+surfaces, 0 signal-9 kills in the preceding 2h, both indices consolidating every minute (fresh at
+2026-07-13T09:06:43/44Z). The follow-up stands: any future whole-corpus rebuild that lands 8+ large per-VM shards at
+once on the IS surface will re-trigger the 16Gi OOM-orphaned-lock crash-loop — bump memory in the job's TEMPLATE/IaC
+(not a live `gcloud run jobs update`, which a redeploy silently reverts) before the next such walk. All 8 E3-paused
+schedulers re-verified ENABLED at 09:06Z; 0 migration VMs running; E3/E4 state fully intact across the restart.

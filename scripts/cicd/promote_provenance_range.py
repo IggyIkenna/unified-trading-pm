@@ -18,13 +18,18 @@ one-time trailer-less commit on EVERY subsequent drain, forever (the `14b11e2` /
 `06a83fb6` recurring "Provenance gate BLOCKED"; each drain needed a manual admin merge).
 
 THE MARKER (no new persistent state): the head SHA (`headRefOid`) of the LAST MERGED
-`<head_branch>`→`<base_branch>` promote PR. For a merged PR the head SHA is frozen at
-merge time — i.e. exactly the LDR SHA that was promoted in the last drain — so it IS
-the "last-promoted LDR SHA per repo" the contract calls for, with nothing to maintain
-(no tag-move step, no state file, no write race). The provenance check then runs
-`<marker>..origin/live-defi-rollout` — only commits since the last drain. An
-already-drained commit (≤ marker) drops out of range permanently; a genuine new
-direct-push (after the marker) is still flagged.
+promote PR into `<base_branch>`, identified by its stable `chore(promote)` TITLE prefix
+(NOT by `--head` — promote PRs are opened with varying head-ref shapes across bot
+variants: literally `live-defi-rollout` for the Tier-C/Option-B auto-drain bots, or the
+WS-L Phase-0 per-SHA-ref `promote/<repo>/<sha>` for the fleet direct-promote bot; a
+head-branch filter only matches the former and can never advance past a repo's
+per-SHA-ref cutover — `promote_provenance_marker_stale_head_query_2026_07_13.md`). For a
+merged PR the head SHA is frozen at merge time — i.e. exactly the LDR SHA that was
+promoted in the last drain — so it IS the "last-promoted LDR SHA per repo" the contract
+calls for, with nothing to maintain (no tag-move step, no state file, no write race). The
+provenance check then runs `<marker>..origin/live-defi-rollout` — only commits since the
+last drain. An already-drained commit (≤ marker) drops out of range permanently; a
+genuine new direct-push (after the marker) is still flagged.
 
 FAIL-SAFE (HARD): if no merged promote PR exists yet (first drain), OR the marker SHA
 is empty/unreachable as a commit object in the current git repo, FALL BACK to the raw
@@ -76,13 +81,23 @@ def _run(cmd: list[str], cwd: str | None = None) -> tuple[int, str]:
     return proc.returncode, proc.stdout
 
 
+PROMOTE_TITLE_PREFIX = "chore(promote)"
+
+
 def last_promoted_marker(
     owner: str,
     repo: str,
     base_branch: str,
-    head_branch: str = LDR,
 ) -> str | None:
-    """``headRefOid`` of the most-recently MERGED ``head_branch``→``base_branch`` promote PR.
+    """``headRefOid`` of the most-recently MERGED promote PR into ``base_branch``.
+
+    Filters by the stable ``chore(promote)`` TITLE prefix (every promote-bot variant sets it:
+    `chore(promote): LDR → staging (Tier C auto-drain)`, `... main (Option-B auto-drain)`,
+    `... main (Option-B direct)`), NOT by ``--head`` — the WS-L Phase-0 per-SHA-ref cutover
+    (`ldr-to-main-promote-fleet.yml`) opens promote PRs with head ``promote/<repo>/<sha>``,
+    never literally ``live-defi-rollout``, so a head-branch filter matches zero of those PRs and
+    the marker can never advance (`promote_provenance_marker_stale_head_query_2026_07_13.md`).
+    Title filtering is head-ref-shape-agnostic and works across every variant unchanged.
 
     Returns ``None`` when there is no merged promote PR yet, the ``gh`` query fails, or the
     payload is malformed — every such case triggers the fail-safe fallback in the caller.
@@ -96,14 +111,12 @@ def last_promoted_marker(
             f"{owner}/{repo}",
             "--base",
             base_branch,
-            "--head",
-            head_branch,
             "--state",
             "merged",
             "--json",
-            "headRefOid,mergedAt",
+            "headRefOid,mergedAt,title",
             "--limit",
-            "1",
+            "50",
         ]
     )
     if rc != 0 or not out.strip():
@@ -115,15 +128,26 @@ def last_promoted_marker(
     if not isinstance(raw, list):
         return None
     items = cast("list[object]", raw)
-    if not items:
-        return None
-    first = items[0]
-    if not isinstance(first, dict):
-        return None
-    record = cast("dict[str, object]", first)
-    sha_obj = record.get("headRefOid")
-    sha = sha_obj.strip() if isinstance(sha_obj, str) else ""
-    return sha or None
+    best_merged_at = ""
+    best_sha: str | None = None
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        record = cast("dict[str, object]", item)
+        title_obj = record.get("title")
+        title = title_obj if isinstance(title_obj, str) else ""
+        if not title.startswith(PROMOTE_TITLE_PREFIX):
+            continue
+        merged_at_obj = record.get("mergedAt")
+        merged_at = merged_at_obj if isinstance(merged_at_obj, str) else ""
+        sha_obj = record.get("headRefOid")
+        sha = sha_obj.strip() if isinstance(sha_obj, str) else ""
+        if not sha or not merged_at:
+            continue
+        if merged_at > best_merged_at:
+            best_merged_at = merged_at
+            best_sha = sha
+    return best_sha
 
 
 def commit_reachable(ref: str, cwd: str | None = None) -> bool:
@@ -147,7 +171,6 @@ def main() -> int:
     ap.add_argument("--base-branch", required=True, choices=["staging", "main"])
     ap.add_argument("--base-ref", default=None, help="fallback base ref (default origin/<base-branch>)")
     ap.add_argument("--ldr-ref", default=f"origin/{LDR}")
-    ap.add_argument("--head-branch", default=LDR)
     ap.add_argument("--cwd", default=None, help="git repo dir in which to resolve refs (default: cwd)")
     ap.add_argument(
         "--fetch-remote",
@@ -161,11 +184,10 @@ def main() -> int:
     base_branch = cast(str, args.base_branch)
     base_ref = cast("str | None", args.base_ref) or f"origin/{base_branch}"
     ldr_ref = cast(str, args.ldr_ref)
-    head_branch = cast(str, args.head_branch)
     cwd = cast("str | None", args.cwd)
     fetch_remote = cast("str | None", args.fetch_remote)
 
-    marker = last_promoted_marker(owner, repo, base_branch, head_branch)
+    marker = last_promoted_marker(owner, repo, base_branch)
     reachable = False
     if marker:
         reachable = commit_reachable(marker, cwd=cwd)

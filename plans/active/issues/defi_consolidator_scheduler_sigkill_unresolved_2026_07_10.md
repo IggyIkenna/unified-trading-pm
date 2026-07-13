@@ -196,3 +196,48 @@ backfills alike, since the preflight check has no test/smoke exemption) from sta
 index stays this stale. Raises the urgency of the residual-kill-pattern follow-up above from "smaller residual problem"
 to "actively blocking all DEFI MTDS ingestion right now." No fix attempted here — this is out of scope for the sweep
 session; flagging with real evidence for whoever picks up the residual-kill investigation next.
+
+## Corroborating evidence (2026-07-13, discovered while redeploying the consolidator fleet for an unrelated alerting fix)
+
+Confirms the residual kill pattern is STILL ACTIVE 3 days after the TTL fix and the canonical is STILL stuck at the same
+`2026-07-10T21:42:30Z` timestamp cited above (i.e. zero successful merges since, ~2.7 days now). New diagnostic detail
+not previously captured: the consolidator's own self-reported `_index/latest.json` run summary
+(`codex/05-infrastructure/manifest-consolidator-ssot.md` § "Cockpit data-correctness signals", shipped
+`unified-trading-library@111592eb`) surfaces this failure mode directly —
+
+```
+{"last_run_at": "2026-07-13T08:45:46Z", "success": true, "verdict": "empty", "shards_scanned": 0,
+ "shards_changed": 0, "no_op": true, "error_reason": "locked"}
+```
+
+i.e. every scheduler-triggered cycle reports `success: true` (the CLI itself exits 0 — matches this doc's own "never
+actually fails, just wastes a retry" note) but `verdict: "empty"` / `error_reason: "locked"` — it saw an already-held
+`_index/consolidator.lock` and no-op'd rather than merging. Directly observed the lock lifecycle live: lock acquired at
+`08:39:36` (instance `1-f2044cd7`) → holder SIGKILL'd at `08:39:58` (`Container terminated on signal 9`, ~22s in) → lock
+sat stale for the remainder of its 300s TTL → cleared → a NEW instance (`1-a9461ee6`) acquired it at `08:44:39` → THAT
+holder was also SIGKILL'd at `08:45:00` (~21s in) — i.e. two consecutive holders both died within ~20-25s of acquiring
+the lock, well before any real DuckDB merge work would start, which is consistent with this doc's own "container dying
+extremely early, before or during Python/library import" observation. Container is 16Gi/4cpu (this specific job was not
+part of the earlier 16Gi→32Gi mitigation round — worth checking whether that mitigation was reverted or only ever
+applied transiently). Canonical is 482 MiB (505,936,684 bytes) and outstanding per-VM shards total only ~4.25 MiB across
+9 files — ruling out the CeFi-style "huge shard" bloat pattern as a cause here.
+
+`error_reason: "locked"` is a genuinely useful new signal for whoever picks up the residual-kill investigation: it means
+the deployment cockpit's Consolidators tab (which reads `latest.json` as authoritative) should already be showing this
+bucket as `fired_but_empty` rather than `produced` — worth confirming the cockpit surfaces this distinctly rather than
+reading `success: true` alone and calling it healthy. No fix attempted (out of scope for the task that surfaced this — a
+Cloud Run consolidator-fleet image redeploy); flagging with fresh, dated evidence per the data-pipeline-correctness HARD
+RULE.
+
+**Aside — a small, separate watchdog gap noticed in the same investigation**: the newly-redeployed
+`uts-prod-consolidator-liveness-watchdog` (carrying the `PubSubEventSink` alerting fix from
+`reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12.md` item 4) correctly flags this
+`market-data-tick-defi-prd` bucket DOWN, but its static `--buckets` arg list also includes 2 buckets whose Cloud Run
+jobs are deliberately PAUSED for legacy decommission (`instruments-store-sports-central-element-323112` →
+`uts-prod-manifest-consolidator-instruments-sports-legacy`, PAUSED since ~2026-07-06;
+`market-data-tick-tradfi-central-element-323112` → `...-market-data-tradfi-legacy`, PAUSED since ~2026-06-08) — both now
+report false-positive `CONSOLIDATOR_DOWN` every 2-min watchdog cycle. Not filing a separate issue doc for this; noting
+it here since it surfaced in the same verification pass. Fix candidate: exclude paused/decommissioned legacy buckets
+from `uts-prod-consolidator-liveness-watchdog`'s `--buckets` arg
+(`deployment-service/terraform/gcp/consolidator_liveness_scheduler.tf`), or add a "job intentionally paused" exemption
+to `ConsolidatorLivenessMonitor.check`.
