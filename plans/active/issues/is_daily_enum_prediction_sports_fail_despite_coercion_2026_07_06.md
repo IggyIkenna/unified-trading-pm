@@ -157,6 +157,34 @@ one.
 
 ## Progress log
 
+- **2026-07-13 (fresh-image verification + observability root cause, is-daily-enum leg sub-agent)** — **STILL OPEN: the
+  2026-07-13 double rebuild does NOT fix it.** (a) Today's 13:30Z scheduled runs failed on the pre-rebuild image
+  `sha256:01507aee…` (`is-daily-enum-sports-jqrjc` failedCount=1, completion 16:00:59Z; `…-prediction-tbkj7`
+  failedCount=1 — both jobs pin `:latest`, which Cloud Run resolves at execution-creation, so the 13:30Z runs predate
+  the 20:28Z/21:22Z rebuilds). (b) Manual verification executions were triggered 22:22Z on `:latest` =
+  `sha256:8b6cb429…` (pushed 21:22Z, the second rebuild — NEWER than `a699bab0`, includes instruments-service@6e1f7972
+  base-pin refresh to UTL base `b7e391f8`): **`is-daily-enum-prediction-djjm7` attempt-1 exited 1 at 22:37:40Z after ~15
+  min** (`varlog/system` "Container called exit(1)") — same signature, ON the fully-fixed image. Retry attempt was in
+  flight at handoff; `is-daily-enum-sports-6dnq9` attempt-1 still running (historically fails ~80 min in). **The
+  base/UTL-staleness class is ruled out as the root cause.** (c) **Observability-gap root cause FOUND (supersedes both
+  prior hypotheses)**: the project `_Default` logging sink carries exclusion `debug-filter: severity <= "DEBUG"` —
+  unstructured Cloud Run job stdout gets severity `DEFAULT` (rank 0, BELOW `DEBUG`=100), so **ALL cloud_run_job stdout
+  is dropped project-wide** (verified: zero stdout entries for ANY cloud_run_job since 07-12, including the SUCCEEDING
+  is-daily-enum-cefi — so this is not crash-related log loss, and the UTL `exc_info` fix alone will surface NOTHING).
+  Fix requires a sink-exclusion carve-out, e.g. `severity <= "DEBUG" AND NOT resource.type="cloud_run_job"` —
+  project-level infra + log-cost decision → OPERATOR ruling requested (decision packet filed by the 2026-07-13 leg). (d)
+  **OOM ruled out for the current failures**: `varlog/system` shows a clean app-level `Container called exit(1)` (a
+  memory kill logs a distinct memory-limit message; none present for jqrjc/djjm7). (e) **Sharpened lead — the job's own
+  per-VM manifest shard** (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=is-daily-enum-{prediction,sports}`): the write-side
+  coercion in `unified_trading_library/manifest_writer/_writer_io.py` covers
+  `instrument_count`/`schema_version`/`row_count`/`expected`/`available`/`expected_window_completeness_fraction` only;
+  if the job's own shard parquet (or the canonical index it read-merges) carries ANOTHER string-poisoned column,
+  `to_parquet` still dies — and a local repro under a DIFFERENT `VM_NAME` (per this doc's own advice) would NEVER load
+  the poisoned prod shard, exactly matching the local-succeeds/cloud-fails split. NEXT: dump dtypes of
+  `vm=is-daily-enum-prediction` shard + canonical `_index` for both AGs, diff against the coercion column list; note
+  `manifest_consolidator_dtype_at_source_fix_2026_07_07.md` is still `status: draft` (poisoning not yet fixed at
+  source).
+
 - **2026-07-10 (re-verification, sub-agent, instruments-completion-tracker sweep)** — **CONFIRMED still genuinely open,
   failing daily through 2026-07-09** (`gcloud run jobs executions list` for both `is-daily-enum-prediction` and
   `is-daily-enum-sports`: `failedCount=1` on every execution 07-06→07-09 inclusive; the 07-10 13:30 UTC run had not yet
