@@ -1044,4 +1044,82 @@ report written in this plan's Progress Log.
     FIXTURES_FETCH_FAILED since ship) — this category is **code-complete but not yet manifest-clean**; closing to a
     literal 0/0/0 requires the deferred backfill-VM re-attempt + a canonical dedup-rewrite pass, both already tracked as
     open todos in this plan.
+
+- **2026-07-13 (slot-3, AUDIT dispatch, read-only — MTDS shared-orchestrator sports-manifest-bucket routing, full
+  call-site enumeration BEFORE any code change).** Confirms the MDPS-sibling split-brain bug also exists in MTDS's
+  shared cross-asset-group orchestrator (`market-tick-data-service/market_tick_data_service/engine/orchestrator/`).
+  - **Resolver + call sites (file:line)**:
+    1. `__init__.py:768` `get_tick_data_bucket(config, asset_group, test_aware)` — the single resolver; delegates to
+       `get_market_data_bucket(ag)` (line 825) or, for `prediction`,
+       `resolve_bucket_name(kind="market-data-tick-prediction")` (line 815; deliberately PROD-only even under
+       `test_aware`). No asset_group carve-out exists today — sports is NOT special-cased.
+    2. `__init__.py:666` — early-return (no active venues) branch calls
+       `get_tick_data_bucket(_config, asset_group=_primary_ag, test_aware=True)` and feeds it straight into
+       `_emit_non_trading_day_expected_empties(...)` → `ManifestWriter(catalogue_bucket=bucket)` at `__init__.py:446`
+       (def at 432) — a 2nd, independent manifest-WRITE call site (EXPECTED_* non-trading-day sentinels).
+    3. `__init__.py:679` — the primary resolution:
+       `_bucket = get_tick_data_bucket(_config, asset_group=primary_asset_group, test_aware=True)`, stored once as
+       `_DateRunState.bucket` (ctor arg `__init__.py:696`, field `_state.py:116`) and reused for the WHOLE date-run
+       across 5 consumers:
+       - `manifest_finalize.py:573-575` `ManifestWriter(catalogue_bucket=state.bucket, batch_size=500)` — **the PRIMARY
+         manifest-write call site** (captured/failed/sentinel rows for the date; this is the one the MDPS-fix precedent
+         maps onto).
+       - `__init__.py:706` → `_run_preflight_availability_check(state, _bucket, force)` →
+         `read_availability_index(bucket)` at `__init__.py:517` — manifest READ (skip-if-fresh preflight); MUST also
+         carry the carve-out or preflight will keep reading the OLD (wrong) bucket after the write moves and never see
+         prior sports captures → perpetual re-fetch.
+       - `__init__.py:707` → `_run_preflight_guards(_bucket, primary_asset_group, _config, force)` →
+         `_check_sports_v9_columns(bucket, config)` (`venue_fetch.py:161`, sports-only schema guard, internally calls
+         `read_availability_index(bucket)`) and `assert_consolidator_healthy(bucket)` (UTL
+         `manifest_writer/_state.py:365`) — both manifest-health reads that must follow the same carve-out for sports.
+       - `venue_fetch.py:395` (`_process_venue`, CeFi/DeFi/TradFi/Prediction) and `venue_fetch.py:590` (sports-specific
+         venue-write helper) both do `_bucket = state.bucket` → feed `PartitionedTickWriter(bucket=_bucket, ...)` →
+         `partitioned_writer.py:207` `StreamingParquetWriter(bucket=self._bucket, ...)` — **the RAW tick-data byte
+         write. MUST NOT CHANGE for any asset_group, sports included** — this stays `market-data-tick-sports-prd-...`
+         (that's where the actual parquet bytes correctly live; only the MANIFEST pointer is wrong).
+  - **Per-asset_group manifest-bucket baseline TODAY** (read from
+    `unified-trading-pm/configs/cloud-providers.yaml:154-163`, GCP prod, `DEPLOYMENT_ENV_SHORT=prd`,
+    `GCP_PROJECT_ID=central-element-323112` — confirms the "before" state that must stay byte-identical for the 4
+    non-sports groups):
+    - cefi → `market-data-tick-cefi-prd-central-element-323112`
+    - defi → `market-data-tick-defi-prd-central-element-323112`
+    - tradfi → `market-data-tick-tradfi-prd-central-element-323112`
+    - sports → `market-data-tick-sports-prd-central-element-323112` **(WRONG — target is
+      `instruments-store-sports-prd-central-element-323112`, matching `enumerate_expected_universe.py`'s 2026-06-07 seed
+      target and the shipped MDPS-sibling fix)**
+    - prediction → `market-data-tick-pred-central-element-323112` (dedicated flat kind, unaffected by the carve-out
+      either way — never touches the per-asset_group `market-data` dict).
+  - **Fix scope, precisely**: the sports-only carve-out must intercept ONLY the manifest-bucket resolution at the 4
+    consumer sites under (3) above (`manifest_finalize.py:575`, `preflight.py`'s `read_availability_index`/
+    `_check_sports_v9_columns`/`assert_consolidator_healthy` reads, and the `__init__.py:446` non-trading-day writer) —
+    i.e. introduce a `_resolve_manifest_bucket()` (sports → `instruments-store-sports-prd-...`, else identical to
+    `get_tick_data_bucket()`) and re-point those 4 read/write sites at it, while `venue_fetch.py:395/590` +
+    `partitioned_writer.py:207` (the raw parquet byte write) keep calling the UNCHANGED `get_tick_data_bucket()` /
+    `state.bucket` for all 5 asset_groups incl. sports. cefi/defi/tradfi/prediction's manifest resolution must stay
+    byte-identical — proven above by the yaml baseline (none of those 4 sites' `asset_group` branch would be touched by
+    an `if asset_group == "sports"` carve-out).
+  - **Orphaned-row migration scope, independently verified via direct GCS/parquet read (ADC,
+    `central-element-323112`)**:
+    `gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet` (1,958,499 total rows)
+    has **362,665 rows with `source=odds_api`** — **362,631 `captured` + 34 `empty_confirmed`** (data_type breakdown:
+    362,649 lower/upper-case `trades`-family rows + 16 spread across `ODDS_MOVEMENT`/
+    `ODDS_SNAPSHOT`/`odds_movement`/`odds_snapshot`), date range **2020-06-06 → 2026-06-24** (NOT "through today"
+    2026-07-13 as the dispatch context framed it — most recent consolidated row is 19 days stale; flagging the
+    discrepancy, not correcting the plan's prior finding, which was about row COUNT and was independently reproduced
+    exactly: 362,665/362,631). Top venues: UNIBET (22,129), PADDYPOWER (21,888), PINNACLE (21,084), DRAFTKINGS (19,939).
+    **No overlap** confirmed with the canonical bucket:
+    `gs://instruments-store-sports-prd-central-element-323112/_index/ availability_index.parquet` (4,988,135 total rows)
+    carries only **2,667 odds_api rows** (2,661 `empty_confirmed` + 6 `attempted_failed`), date range **2018-01-01 →
+    2020-06-05** — a disjoint pre-backfill window; a `(date, venue, data_type, instrument_id, underlying, fixture_id)`
+    join across both slices returned **0 matching rows**. Matches the plan's earlier finding exactly — independently
+    confirmed, not just re-asserted.
+  - **Live-writer coordination check**: `deployment-service/terraform/gcp/sports_scheduler_cron.tf` confirms
+    `google_cloud_scheduler_job.sports_scheduler_cron` (`${env_prefix}-sports-scheduler-cron`) is **ENABLED**, firing
+    every 5 min (`sports_trigger_scheduler.SportsTriggerScheduler.poll_interval_seconds=300`), triggering Cloud Run Job
+    `sports-scheduler` → `python -m deployment_service sports-trigger run --one-shot --backend cloud ...` which
+    dispatches into market-tick-data-service (+ features-sports-service) per `configs/sports-trigger-tiers.yaml`. **This
+    IS a live, actively-scheduled writer into the exact code path being fixed** — the same drain-then-migrate
+    coordination pattern used for the MDPS sibling fix applies here too (this is a fix-implementation todo, not part of
+    this read-only audit).
+  - **No code changed in this dispatch** — audit only, per the task's explicit read-only scope.
     - (exact SHAs recorded via the git-commit skill in the same turn as this log entry — see repo `git log -1`.)
