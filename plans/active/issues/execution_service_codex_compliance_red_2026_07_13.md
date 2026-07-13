@@ -137,11 +137,14 @@ tracked here per findings-triage rather than left in agent chat output. None are
       `test_snapshot_fallback_price_in_kwargs_does_not_raise` (`tests/unit/providers/test_matching_engine_solana.py`)
       reproducing the duplicate-kwarg TypeError pre-fix and asserting a clean fill post-fix. Full `quality-gates.sh`
       green (538s, sentinel `df7e6ede`). (repo: execution-service)
-- [ ] [CLEANUP] P3. execution-service: `MatchingEngineExecutionProvider._build_solana_fill`
+- [x] ✅ [CLEANUP] P3. execution-service: `MatchingEngineExecutionProvider._build_solana_fill`
       (`execution_service/providers/matching_engine.py`) computes `quote = pool.quote(quantity, side)` and never uses
       the result — only `pool.apply(...)`'s `fill` feeds the rest of the flow. Pre-existing dead computation, now
-      isolated by the refactor. Either wire `quote` into pre-trade validation/logging or remove the call (repo:
-      execution-service)
+      isolated by the refactor. — DONE `execution-service@c494bb75`: removed the dead `quote()` call. `pool.apply()`
+      already quotes internally (to derive `realized_slippage_vs_quote_bps`) and folds every pre/post-trade field
+      (`spot_price_pre`, `execution_price`, etc.) into the returned `FillResult`, which
+      `_log_and_build_solana_amm_result` already consumes — nothing downstream needed a standalone `SwapQuote`, so
+      removal (not wiring-in) was correct. Full `quality-gates.sh` green, sentinel `c494bb75`. (repo: execution-service)
 - [ ] [CLEANUP] P3. execution-service: `LiveExecutionHandler._execute_instructions`
       (`execution_service/cli/handlers/live_execution_handler.py`) has two `except` clauses (`ValueError` vs.
       `TypeError/KeyError/AttributeError/RuntimeError`) with byte-identical bodies calling `classify_and_emit_error` —

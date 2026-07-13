@@ -122,21 +122,26 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       raw-input prefix-template drift), and the corrected `odds_api` finding (362,665 rows of the SAME bug class, filed
       as a new P1 todo below rather than fixed in this pass — touches the shared cross-asset-group MTDS orchestrator,
       higher blast radius, needs its own dedicated pass).
-- [ ] [DATA] P1. **MTDS shared-orchestrator sports-manifest-bucket routing (NEW 2026-07-13).** Extend the same
-      `sports → instruments-store` manifest-bucket exception to MTDS's own cross-asset-group raw-capture path
-      (`engine/orchestrator/__init__.py::get_tick_data_bucket()` / `_DateRunState.bucket` / `manifest_finalize.py`'s
-      `catalogue_bucket=state.bucket`) WITHOUT moving the actual tick-byte write path (mirror the `_resolve_bucket()` vs
-      `_resolve_manifest_bucket()` split from the mdps_odds_horizon_bucket fix above) — then migrate the 362,665
-      orphaned `source=odds_api` rows (362,631 `captured`, live through today) the same way. Requires a full audit of
-      every `ManifestWriter`/preflight-lookup call site in the shared orchestrator (affects ALL asset_groups —
-      cefi/defi/tradfi/sports/prediction, not just sports) before shipping — full blast-radius proof required per
-      `AUTONOMOUS_AGENT_RULES.md` rule 11 (a gate/change you make must be proven across the whole fleet it touches, not
-      just sports). **CODE-HALF DONE 2026-07-13**: `market-tick-data-service@ad76547c` ships the
-      `_resolve_manifest_bucket()` carve-out at all 4 call sites (preflight availability read, sports-v9/consolidator
-      guards, non-trading-day EXPECTED_* emission, `manifest_finalize.py`'s primary `ManifestWriter`), raw tick-byte
-      write path untouched, cefi/defi/tradfi/prediction proven byte-identical (single `if asset_group=="sports"` branch
-      — see Progress Log "IMPLEMENTATION dispatch" entry). **Migration half still OPEN**: the 362,665 orphaned rows have
-      NOT been migrated — separate follow-on, not yet scheduled.
+- [x] [DATA] P1. **MTDS shared-orchestrator sports-manifest-bucket routing (NEW 2026-07-13).** — DONE, both halves
+      shipped + verified. **Code-fix half**: `market-tick-data-service@ad76547c` ships the `_resolve_manifest_bucket()`
+      carve-out at all 4 call sites (preflight availability read, sports-v9/consolidator guards, non-trading-day
+      EXPECTED_* emission, `manifest_finalize.py`'s primary `ManifestWriter`), raw tick-byte write path untouched.
+      **Blast-radius proof (rule 11)**: live-run of `get_tick_data_bucket()` → `_resolve_manifest_bucket()` against the
+      real `central-element-323112` config for all 5 asset_groups — cefi/defi/tradfi/prediction all `identical=True`
+      (byte-for-byte unchanged), sports `identical=False` as intended (data bucket unchanged
+      `market-data-tick-sports-prd-...`, manifest now `instruments-store-sports-prd-...`) — 5/5 PASS, journaled in the
+      Progress Log "IMPLEMENTATION dispatch" + "BLAST-RADIUS PROOF dispatch" entries below. **Migration half**:
+      `instruments-service@4027f311` (`scripts/migrate_orphaned_mtds_odds_api_bucket_rows_2026_07_13.py`) migrated the
+      362,665 orphaned `source=odds_api` rows (362,631 `captured` / 34 `empty_confirmed`) from
+      `market-data-tick-sports-prd` into the canonical `instruments-store-sports-prd` manifest — see the "MIGRATION
+      dispatch" Progress Log entry below for the full CAS-retry mechanics (a plain-write first attempt was silently
+      clobbered by the live per-minute manifest consolidator; fixed with the UTL generation-precondition CAS primitive)
+      and final-state numbers. **Final canonical state, live-verified 2026-07-13**: `instruments-store-sports-prd`
+      `odds_api` rows = 365,332 (2,661 pre-existing `empty_confirmed` + 6 pre-existing `attempted_failed` + 362,631
+      migrated `captured` + 34 migrated `empty_confirmed`), stable across 5+ consolidator generations (~4.5 min), 0
+      duplicate-dedup-key groups anywhere in the resulting 5,353,929-row manifest. §0's "odds_api suspiciously
+      sparse/dead" framing is now RESOLVED for this source (0 → 362,631 captured, visible in the canonical coverage
+      view).
 - [ ] [DATA] P1. **mdps_odds_horizon_bucket expected-universe grain realignment (NEW 2026-07-13).** Fix
       `enumerate_expected_universe.py`'s sports seeding for this source so `expected_unattempted` uses the SAME
       `(venue=ODDS_API, data_type=odds_horizon_bucket lowercase, timeframe=T-*)` grain MDPS actually writes, instead of
@@ -1243,6 +1248,79 @@ report written in this plan's Progress Log.
   - **Verdict: 5/5 asset_groups PASS.** No regression found for cefi/defi/tradfi/prediction; sports fix confirmed live.
     Nothing reverted, nothing further to fix. The P1 todo's checkbox stays `[ ]` per the prior entry's note (code half
     done + proved; migration half of the bundled item remains the only open piece, unchanged by this proof pass).
+- **2026-07-13 (sub-agent, MIGRATION dispatch — MTDS shared-orchestrator sports-manifest-bucket routing, migration half
+  SHIPPED, P1 todo now fully DONE).** Gated on the blast-radius proof above (5/5 PASS, confirmed clean before
+  proceeding). Migrated the 362,665 orphaned `source=odds_api` rows from `market-data-tick-sports-prd` into the
+  canonical `instruments-store-sports-prd` manifest.
+  - **Script**: `instruments-service` (untracked, one-off)
+    `scripts/migrate_orphaned_mtds_odds_api_bucket_rows_2026_07_13.py` — same identity/collision-check shape as the
+    `mdps_odds_horizon_bucket` sibling script, but using the CANONICAL manifest-consolidator dedup key
+    (`unified_trading_library.manifest_consolidator._BASE_DEDUP_COLS` + `_OPTIONAL_DEDUP_COLS`: `date`, `venue`,
+    `data_type`, `service_name`, `timeframe`, `league_id`, `chain`, `instrument_type`, `underlying`, `feature_group`,
+    `model_family`, `training_period`, `strategy_id`, `client_id`, `instruction_type`, `instrument_id`) rather than a
+    narrower ad-hoc subset — confirmed 0 self-duplicates within the 362,665 source rows and 0 collisions against the
+    FULL 4,988,148-row target manifest (not just its 2,667 pre-existing `odds_api` rows) on this key, both before and
+    re-checked at write time.
+  - **Dry-run first** (per task instruction): confirmed 362,665 eligible rows (362,631 `captured` / 34
+    `empty_confirmed`), 0 collisions, matching the audit's numbers exactly.
+  - **CRITICAL FINDING — plain gcsfs read/write is UNSAFE against this specific bucket right now, unlike the
+    MDPS-sibling script's precedent.** A first `--apply` attempt using that exact "plain gcsfs read/write, no
+    generation-match" convention appeared to succeed (logged `rows_out=5,350,813`), but a re-verify read ~90s later
+    showed the target back at the EXACT pre-migration baseline (4,988,148 rows / 2,667 `odds_api`) — the object's own
+    `consolidator_run_at`/`consolidator_content_write_at` custom metadata proved the LIVE `instruments-store-sports`
+    manifest consolidator (GCP Cloud Run Job, Cloud Scheduler cron `*/1 * * * *` UTC, confirmed via
+    `codex/05-infrastructure/manifest-consolidator-ssot.md`) silently overwrote the write within one cycle — its
+    read-merge-write started before this script's write landed and finished after, clobbering it with a merge computed
+    from the stale snapshot. **Fix**: rewrote the `--apply` path to use the UTL generation-precondition CAS primitive
+    (`StorageClient.download_bytes_with_generation` / `.conditional_upload_bytes(if_generation_match=...)`,
+    `unified_trading_library/cloud_interface/abstractions.py` — documented in-code as the "sanctioned home for a
+    distributed-lock/lease primitive") in a bounded retry loop (30 attempts, 5s backoff): read target + generation
+    together (one GET, no metadata/download race), recompute the collision-checked merge against the freshly-read
+    target, attempt an atomic compare-and-swap write; a `PreconditionFailed` (412) means the consolidator won the race
+    in the interim — re-read the now-current generation and retry rather than blind-overwriting. **Also found**: a plain
+    multi-column `gcsfs` range-projected read (`pd.read_parquet(fh, columns=[...])`) against this same live object
+    intermittently raised `OSError: Couldn't deserialize thrift ... Deserializing page header failed` — consistent with
+    gcsfs issuing multiple separate range-GETs for a columnar read that can straddle a mid-flight object replacement;
+    switched all verification reads to the same CAS primitive's single-GET `download_bytes_with_generation` (full-bytes
+    fetch, then local in-memory column projection via pandas), which read cleanly on every subsequent poll.
+  - **Write succeeded on CAS retry attempt 5/30** (generation `1783969076071393` → `1783969117086486`), after 4 prior
+    attempts lost the race to the consolidator (each logged a `PreconditionFailed` + re-read + re-merge). Result:
+    `rows_in=4,988,148 rows_added=362,665 rows_out=5,350,813`.
+  - **Persistence empirically verified across multiple subsequent consolidator cycles** (not just asserted from the
+    single write): polled the canonical manifest 8× over ~4.5 minutes using the same generation-pinned CAS read. The
+    object's generation advanced 5 times during the poll window (confirming the consolidator kept running normally
+    throughout), and the `odds_api` row count held rock-steady at every single poll: 365,332 total (362,631 `captured` +
+    2,695 `empty_confirmed` + 6 `attempted_failed`) — i.e. the consolidator's own subsequent read-merge-write cycles
+    PRESERVE the manually-migrated rows (consistent with the `mdps_odds_horizon_bucket` sibling migration's rows still
+    being present at that plan item's later "final re-verify" checkpoint) once the write itself isn't lost to a
+    mid-flight race.
+  - **Final live re-verify (fresh read, full canonical manifest, post-migration)**:
+    - `instruments-store-sports-prd-central-element-323112` total rows: 4,988,148 → **5,353,929** (the +3,116 beyond the
+      immediate post-apply 5,350,813 is ordinary intervening live-capture growth from other sources during the ~5-minute
+      verification window, not a migration artifact).
+    - `source=odds_api` rows: 2,667 → **365,332** = 2,661 pre-existing `empty_confirmed` + 6 pre-existing
+      `attempted_failed` + **362,631 newly-visible `captured`** + 34 newly-visible `empty_confirmed`. **The canonical
+      coverage view now shows 362,631 captured `odds_api` rows, up from 0 non-legacy captures** — matches the task's
+      target exactly.
+    - **0 duplicate-dedup-key groups** anywhere in the resulting 5,353,929-row manifest (checked on the full canonical
+      manifest-consolidator dedup key, not just among the migrated rows) — confirms the migration did not create the
+      2026-07-13 `dedup_mtds_instruments_surface_duplicate_rows` bug class.
+  - **§0 reconciliation**: the plan's §0 framing of `odds_api` as "suspiciously sparse/dead" is now RESOLVED — the data
+    was never sparse or dead, it was a manifest-bucket-routing split-brain identical in class to
+    `mdps_odds_horizon_bucket` (numerator written to `market-data-tick-sports-prd`, denominator/canonical view seeded
+    from `instruments-store-sports-prd`); both the code path (going forward) and the historical backfill (this
+    migration) are now fixed.
+  - **Shipped**: `instruments-service@4027f311` (pushed to `live-defi-rollout`, direct push per this session's
+    established no-quickmerge convention; `quality-gates.sh --no-fix` green, `.qg_last_passed_sha == HEAD` before
+    commit). **Adjacent fix bundled in the same commit** (findings-triage "outside-plan small+clear → ≤30 min"):
+    `scripts/reconcile_legacy_nan_placeholder_bars.py` (a pre-existing, already-committed, unrelated one-off script)
+    imported `google.cloud.storage` directly — a TID251 ratchet violation (59 > baseline 58) that was blocking a green
+    `quality-gates.sh` tree for this commit. Swapped to `get_storage_client()` (`download_file`/`upload_file`,
+    behavior-identical) rather than raising the baseline. No other repo files touched; two foreign untracked scripts
+    (`backfill_teams_61_leagues_2026_07_13.py`, `cefi_legacy_path_dedup_2026_07_13.py`) present in the shared clone from
+    concurrent agents were left untouched per multi-agent safety.
+  - **Plan status**: the P1 todo "MTDS shared-orchestrator sports-manifest-bucket routing" is now **fully DONE** —
+    checkbox flipped `[x]` above (§1). No further action needed on this item.
 - **2026-07-13 (sub-agent, read-only investigation) — api_football TEAMS 61-league gap: ROOT CAUSE FOUND (code
   unchanged, no fix shipped yet — this pass was investigation-only per dispatch).** **(1) One code path, not two.**
   `instruments_service/engine/orchestrator/sports_reference_core.py::_fetch_teams_and_standings` (lines 138-216) is the
