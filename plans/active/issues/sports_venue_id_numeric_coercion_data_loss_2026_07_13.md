@@ -17,7 +17,7 @@ summary: >
   just the two OOM-triggering dates. The OOM fix (features-service@efc0b57c) makes the merges cartesian-proof against a
   blank key regardless of this defect, so the crash is closed — but the underlying venue_id data-loss bug is untouched
   and is a genuine, silent, workspace-wide data-correctness defect.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [features]
@@ -43,7 +43,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-13
 locked_by:
-resolved_by:
+resolved_by: slot 9, 2026-07-13 (final P3 verify-no-retrain-needed todo closed; all 6 todos done)
 ---
 
 # features-service sports venue_id normalization silently destroys the real venue_id
@@ -267,12 +267,35 @@ Grep `venue_id` + `to_numeric` fleet-wide (per the existing P1 CODE todo's own i
       genuine absence, which a naive backfill script risks reconciling WRONG (writing a duplicate/near-duplicate venue
       row) rather than correctly; a fresh, careful investigation of THAT specific sub-problem (if pursued) should be its
       own scoped todo, not bundled into this decision.
-- [ ] [VERIFY] P3. Check whether any downstream ML model/strategy already trained on the broken (all-NaN) venue-context
-      columns — if so, flag for a retrain, this is out of scope for this issue to fix directly. **STILL OPEN** — not
-      investigated by the slot-5 fix pass above; the venue-context columns (`VENUE_CONTEXT_COLUMNS`) were silently
-      all-NaN/default for every sports date until this fix, so any model trained/evaluated on them before this fix
-      landed saw honest-absence NaN it never should have had to see. Needs someone with ML-training-pipeline context to
-      check which models/strategies consume `VENUE_CONTEXT_COLUMNS` and whether a retrain is warranted.
+- [x] ✅ [VERIFY] P3. Check whether any downstream ML model/strategy already trained on the broken (all-NaN)
+      venue-context columns — if so, flag for a retrain, this is out of scope for this issue to fix directly. — **DONE,
+      slot 9, 2026-07-13, read-only investigation, no code shipped (verdict: no retrain needed).**
+      `VENUE_CONTEXT_COLUMNS` (19 columns, `venue_context.py:16-43`) reach downstream consumers only bundled into the
+      `derived_features` sports feature group — traced every path that could consume them:
+  - **ml-service**: the only training pathway that reads `derived_features` for sports is the Model 2A walk-forward in
+    `predictions_ml_walk_forward_and_arb_2026_06_20.md` — its "Run ml-training Model 2A walk-forward" (line 55) and
+    "Persist model + metrics to the ml-models registry" (line 87) todos are both still `[ ]` unchecked/`BLOCKED-ON`,
+    mirrored in `plans/epics/predictions_master.md:622-634`. **No sports training run has ever executed and no model has
+    ever been persisted to the registry** — `ml_service/training/ml/model_variant_registry.py:96-118`
+    (`_sports_variants`) only enumerates what COULD be trained from config, not evidence anything WAS trained. (Direct
+    GCS model-artifact bucket verification was attempted but `gcloud`/`gsutil` are non-functional in this sandbox —
+    `snap-confine` permission error; the plan-based evidence is corroborated by 3 independent sources: the plan SSOT,
+    ml-service's own registry code, and strategy-service's dispatch registry below, all consistent with "never
+    trained.")
+  - **strategy-service**: zero matches fleet-wide for `VENUE_CONTEXT`/`venue_context`/any of the 19 column names. The
+    two sports-aware live paths found instead don't touch these columns: `SportsFeatureSubscriber`
+    (`adapters/sports_feature_subscriber.py:56-142`) reads only raw odds-implied-probability keys off a separate PubSub
+    feed; `SportsValueBettingEngine` (`engine/strategies/v2/rules_directional/sports_value_betting.py:1-40`) consumes
+    already-computed `fair_prob_*` model probabilities, not raw features (and would only be transitively affected if the
+    upstream model existed, which it doesn't, per above). Neither engine is registered in the live
+    `ARCHETYPE_ENGINE_REGISTRY` (`engine/strategies/v2/factory.py:58-90` has zero `sports`-named entries) — confirmed
+    `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md:133,173` marks both sports archetypes
+    `"◯ backtest-only … No paper plumbing. Post-cutover."`
+  - **Verdict: no retrain needed.** The sports pipeline is still pre-consumption (historical backfill / ML-readiness
+    phase per `sports_p2_features_history_to_ml_ready_2026_06_27.md`), matching operator expectations — nothing has ever
+    trained or run live on the corrupted values. Forward-looking note: once Model 2A walk-forward is eventually run, it
+    will correctly pick up the fixed venue_context values (the fix, `features-service@a9684e27`, landed before any real
+    training happened), so no special remediation is needed there either.
 
 ## Secondary finding (noise, not fixed here)
 
