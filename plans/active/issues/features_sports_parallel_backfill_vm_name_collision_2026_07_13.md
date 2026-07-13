@@ -25,7 +25,7 @@ related:
   ]
 created: 2026-07-13
 parent_epic: infrastructure_master
-priority: P2
+priority: P1
 source:
   sports_p2_features_history_to_ml_ready-001 dispatch, slot 14, 2026-07-13 (self-inflicted, caught + recovered same
   session)
@@ -38,6 +38,9 @@ last_updated: 2026-07-13
 locked_by:
 resolved_by:
 ---
+
+> **🟡 Priority bumped P2→P1 (2026-07-13, operator feedback)**: already caused one live-VM deletion this session; the
+> fix is small enough that P1 is low-cost. See the Todos section.
 
 # launch-features-sports-parallel-backfill-vm.sh name-collision-on-delete footgun
 
@@ -110,10 +113,12 @@ dispatcher on this plan; a real fix needs its own scoped review + testing (verif
 
 ## Todos
 
-- [ ] [INFRA] P2. Add a liveness/collision check to `launch-features-sports-parallel-backfill-vm.sh`'s
+- [ ] [INFRA] P1. Add a liveness/collision check to `launch-features-sports-parallel-backfill-vm.sh`'s
       delete-before-create step (line ~392-396) — refuse (or require an explicit override flag) if the existing VM of
       that name has a `run.log` fresher than ~5 minutes, rather than unconditionally deleting. (repo:
-      deployment-service)
+      deployment-service) — **bumped P2→P1 per operator feedback (2026-07-13): this already destroyed a live VM once
+      this session, part of a broader unconditional-destructive-operation pattern; the fix is small (a liveness check)
+      so P1 is low-cost.**
 - [ ] [DOCS] P3. Add a one-line note to `sports_p2_features_history_to_ml_ready_2026_06_27.md`'s `## Mechanics` section
       recommending `launch-features-vm.sh --feature-family sports` (collision-free timestamped naming) over
       `launch-features-sports-parallel-backfill-vm.sh --vms 1` for single-shard gap-fill relaunches on this plan. (repo:
