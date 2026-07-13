@@ -423,6 +423,21 @@ correctness the freeze protects.
       `ao-self-pull cron installed=1`, AO HEAD=589b711 on both). Closes the deploy-currency gap (vm-2 had been 14 behind
       running stale server code). NB: a `verify_fleet_autonomy_health.sh` gate citing the AO main-checkout behind-count
       is a nice incremental add (the existing script already reports per-VM behind-count vs LDR HEAD).
+- [x] ✅ [INFRA] P1. ✅ DONE 2026-07-13 (slot·harsh_pc). **New rot class — corrupt commit-graph CACHE, not object
+      corruption** (the 2026-07-09→13 flood: 369 fires, the #1 alert @ 23% of all volume, on `agent-orchestrator-vm-1` =
+      central planning VM `i-0c9b283b31d6b5ca7`, private IP `172.31.5.118`). The guard's _"genuine missing/broken
+      objects"_ wording was misleading: objects were intact (`fsck` passes with `-c core.commitGraph=false`; the two
+      flagged merge commits really have 1 and 2 parents). A corrupt commit-graph in the **base** `instruments-service`
+      object store (written Jul 9 09:30 = alert start) was mis-decoded ONLY by slot-5, which reads it via
+      `objects/info/alternates`: git 2.43.0 mis-reads the octopus extra-edges chunk across the alternate boundary →
+      false `commit-graph parent list … is too long`. **Why 369 self-heals were no-ops:** the guard's self-heal is
+      `git fetch --prune origin`, but a commit-graph is a locally-derived CACHE — fetch re-downloads OBJECTS, never the
+      graph. **VM remediation (applied + verified):** removed the corrupt graph, set base `gc.writeCommitGraph=false` +
+      `fetch.writeCommitGraph=false`; all 17 instruments-service clones fsck-clean; live cron reports OK from 06:15:01Z
+      (06:00 was the last alerting run). **Durable guard fix:** `fleet-git-health-guard.sh` now detects a
+      commit-graph-only failure (fsck passes with the graph disabled) and deletes the stale graph from the repo + its
+      alternate stores, keeping the fetch path for genuine object breakage — reproduced + verified end-to-end against
+      the real corrupt artifact (`agent-orchestrator@297b8677`, LDR).
 
 ### slot git-status `404` drift — a remote reporter posts for slots the live VM doesn't have (finding 2026-06-08, slot-1)
 
