@@ -38,6 +38,9 @@ source: oscillation investigation 2026-07-13 (operator task "lets fix it")
 assigned_vm: ""
 resolved_by: ""
 locked_by: ""
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Sports index — 189 recency-masked captured atoms (2026-07-13 oscillation residue)
