@@ -3103,3 +3103,10 @@ canonical index has changed since the nineteenth touch's force-consolidate). `sk
 `BLK-d48acae4.answered_at` first; if still null, this is the same cheap check — don't re-run the audit. If answered,
 `codex/02-data/availability-manifest-and-data-status.md` needs the exception documented (Option A) or a
 historical-reconstruction pass needs scoping (Option B) before this checkbox can flip.
+
+## E8 Verify — re-dispatch check 2026-07-13T~08:0{0-5}Z (data_engineering slot-10, task -003, twenty-first touch)
+
+Dispatched again to the same checkbox. `GET /api/state` → `blocked_queue`: `BLK-d48acae4` still `answered_at: null` —
+identical to the twentieth touch's read, no plan change, no canonical-index change. Not re-running the audit (zero new
+information, real GCS-read cost) and not filing a duplicate blocked-question. `skip-current-task`'d. Next toucher: same
+check — `BLK-d48acae4.answered_at` first; this checkbox cannot flip until the operator answers.
