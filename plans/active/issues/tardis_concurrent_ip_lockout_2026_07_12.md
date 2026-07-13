@@ -467,3 +467,22 @@ dates: 2/4 hit `code=274 concurrent-IP-lock` directly, 1 hit an unrelated transi
 (2024-01-03) got a full real stream through (59.7M rows) despite the contention — consistent with this doc's own
 "retriable, not a hard block" framing rather than a 100% lockout. No change to the underlying blocker or its resolution
 path. Full trail: `cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`'s "VERIFY re-attempt" section.
+
+### 2026-07-13 — write-level corroboration from BYBIT futures_chain shape-scope audit (slot-8 data_engineering)
+
+While auditing BYBIT `futures_chain` write shapes for `bybit_futures_chain_write_shape_migration_2026_07_13.md` Phase 1
+(unrelated task — BYBIT-specific write-shape inconsistency, not this issue), found a **write-level** (not just
+`attempted_failed`-row-level) confirmation that adds a sharper data point to this issue: a real day-by-day GCS walk of
+the ENTIRE `pipeline_mode=batch_tardis` partition (all CeFi venues, not just BYBIT) shows object counts collapsing from
+~4,500/day (2026-05-20/22) → ~500 (2026-05-23) → a flat 203/day (2026-05-25 through 2026-06-03, and those 203 are all
+mislabeled `EXTENDED-STARKNET` objects, not real Tardis CEX capture) → **zero objects written under `batch_tardis` for
+any venue, any day, from 2026-06-04 onward** (checked through 2026-06-10). Sibling `pipeline_mode=batch_aster` /
+`batch_hyperliquid` / `batch_extended` all have normal, current-dated objects (2026-06-15 / 2026-07-01 / 2026-07-10) —
+so this is `batch_tardis`-specific, consistent with this issue's premise (the shared academic key gates only
+Tardis-sourced calls) rather than a manifest-wide or bucket-wide outage. This means the 74.9% `attempted_failed` figure
+above likely understates the real-world impact during the worst-affected window — from 2026-06-04 onward it looks like
+essentially 100% of `batch_tardis` write attempts are failing (zero successful writes at all), not just a majority. Not
+actioned further here (outside this issue's assigned scope) — flagging as an additional data point for whichever path
+(a/b/c) the operator ultimately green-lights, and as corroboration that re-enabling the option-(a) lease (or resolving
+via (b)/(c)) is likely to restore a large volume of currently-completely-missing recent CeFi capture, not just reduce
+noise in historical `attempted_failed` counts.

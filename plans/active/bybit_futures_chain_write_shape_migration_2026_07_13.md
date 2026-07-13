@@ -65,6 +65,11 @@ sampled days from **2025-06-01 through 2026-05-01**; **no futures_chain data at 
 onward** (checked through 2026-07-13, both the flat and hive forms — needs explanation: did collection pause, move
 venues, or change instrument_type classification? Phase 1 owns this).
 
+> **✅ Superseded by Phase 1's exhaustive audit (2026-07-13)**: the true glued-shape window is **2025-02-11 →
+> 2026-05-22** (wider on both ends than this section's sampling estimate above), and the June-July 2026 absence is
+> explained — see Phase 1 Todo 1 below for the full results and the cross-reference to the system-wide Tardis
+> concurrent-IP-lockout issue that's the likely cause.
+
 ## Codex SSOTs
 
 - `market-tick-data-service/docs/GCS_PATHS.md`, `docs/canonical-write-conventions.md` (canonical `underlying=` hive
@@ -75,15 +80,40 @@ venues, or change instrument_type classification? Phase 1 owns this).
 
 ## Phase 1 — Full scope audit (P0)
 
-- [ ] [DATA] P0. Full (not sampled) day-by-day walk of
-      `pipeline_mode=batch_tardis/asset_group=cefi/venue=BYBIT/instrument_type=futures_chain/` across its entire history
-      — classify EVERY day into shape (1)/(2)/(3)/mixed/absent. Write to
-      `_index/audit/bybit_futures_chain_shape_scope_2026_07_1X.parquet` (mirrors the existing
-      `_index/audit/legacy_dup_delete_list_defi.parquet` convention). Confirm the exact start of shape (3) (first
-      glued-file day — do not assume 2025-06-01 is the start, that was just the earliest day sampled so far), the exact
-      end (does it really stop dead after 2026-05-01, or is that a sampling gap?), and explain the June-July 2026
-      absence (collection paused / moved / reclassified — check `market-tick-data-service` git log + any BYBIT-specific
-      launcher/scheduler config around that window).
+- [x] [DATA] P0. ✅ Full (not sampled) day-by-day walk of
+      `pipeline_mode=batch_tardis/asset_group=cefi/venue=BYBIT/instrument_type=futures_chain/data_type=trades/` across
+      2023-02-01 → 2026-06-10 (padded around a bisection probe that found real data 2023-04-05 → 2026-05-22) —
+      `market-tick-data-service@5e367479` (`scripts/audit_bybit_futures_chain_shape_scope_2026_07_13.py`), run for real
+      against production GCS (1226 days audited in ~30s). Wrote per-day classification to
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/audit/bybit_futures_chain_shape_scope_2026_07_13.parquet`
+      (1226 rows). **Results:**
+  - Day classification counts: `absent`=495, `hive_only`=23, `bare_flat_only`=97, `bundled_flat_only`=41,
+    `glued_flat_only`=162, `mixed`=408.
+  - **Exact shape (3) glued-file window: 2025-02-11 → 2026-05-22** — WIDER than this plan's own "rescoped" estimate
+    (2025-06-01 was just the earliest day previously _sampled_, not the true start; the true start is ~3.5 months
+    earlier). `hive` (correct form) is present 2023-04-05 → 2025-03-22 (281 days); `bare_flat` 2023-04-05 → 2025-09-23;
+    `bundled_flat` (bare `ticks.parquet`) 2024-11-12 → 2025-07-18. All 4 shapes coexist/overlap across parts of the 2025
+    window — 408 `mixed` days confirms this is not a clean sequential handoff.
+  - **Last day with ANY BYBIT futures_chain data (any shape): 2026-05-22** — confirmed, not 2026-05-01 as this plan's
+    finding section estimated; also not a sampling gap (the full day-by-day walk found genuinely zero objects from
+    2026-05-23 onward through 2026-06-10).
+  - **June-July 2026 absence explained — NOT BYBIT-specific, NOT futures_chain-specific.** A follow-up live-GCS check
+    (whole-bucket, not just BYBIT) found the ENTIRE `pipeline_mode=batch_tardis` partition (covers BINANCE-FUTURES,
+    BYBIT, BITGET-FUTURES, UPBIT, OKX-SWAP, KRAKEN-FUTURES, OKX-FUTURES, DERIBIT, and all other Tardis-sourced CeFi
+    venues) collapsed from ~4,500 objects/day (2026-05-20/22) → ~500 (2026-05-23) → a flat 203/day (2026-05-25 through
+    2026-06-03, all `EXTENDED-STARKNET` — a mislabeled remnant, not real CEX capture) → **zero** from 2026-06-04 onward.
+    Meanwhile sibling `pipeline_mode=batch_aster`/`batch_hyperliquid`/`batch_extended` have normal objects on
+    2026-06-15/2026-07-01/2026-07-10 (current dates) — so this is a `batch_tardis`-specific cessation, not a bucket-wide
+    or manifest-wide issue. This lines up with — and is a sharper, write-level corroboration of — the already-tracked P0
+    issue `issues/tardis_concurrent_ip_lockout_2026_07_12.md` (Tardis academic key allows only ONE concurrent IP; 74.9%
+    of all cefi `attempted_failed` rows are 403 code=274 lockouts, not honest absence). Added a cross-reference addendum
+    to that issue's Verification Log with this write-level finding (zero GCS objects, not just elevated
+    `attempted_failed` counts) — see that doc for the full remediation status (option (a) GCS-lease stopgap shipped
+    DEFAULT-OFF 2026-07-12, awaiting operator enablement). **Not a new issue** — already P0-tracked; this plan's
+    BYBIT-specific write-shape problem (3 coexisting shapes 2023-2025) is orthogonal to this system-wide 2026-06+
+    capture-cessation finding and does not block Phase 2's reshape work (which only touches the 2023-04→2026-05-22
+    window where data actually exists).
+  - Todo #2 below (shape-2 duplicate-vs-unique determination) is unblocked by this audit's per-day classification.
 - [ ] [DATA] P0. For every day classified shape (2) or mixed (bare-underlying + glued coexisting): determine whether the
       two files are duplicates (same trades, different naming) or genuinely different data — sample a handful of (day,
       symbol) pairs, download + diff row counts/content. This determines whether shape (2) needs its own reshape logic
