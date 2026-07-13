@@ -41,6 +41,12 @@ resolved_by:
 
 # BYBIT futures_chain write-shape inconsistency (3 shapes across history)
 
+> **🟡 TRACKED — plan filed 2026-07-13**: `bybit_futures_chain_write_shape_migration_2026_07_13.md` (agent-orchestrator
+> plan, `assigned_vm: planning`) owns the actual fix. A same-day rescoping check (before filing the plan) found the
+> affected window is WIDER than this doc's original estimate — glued-shape files confirmed present 2025-06-01 through
+> 2026-05-01 (not just ~2026-01), and no BYBIT `futures_chain` data at all is found from 2026-06-01 onward (needs
+> explanation — the new plan's Phase 1 owns this). Leave `status: open` here until the plan reports the fix complete.
+
 ## Finding (2026-07-13)
 
 `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/`, `venue=BYBIT`,
