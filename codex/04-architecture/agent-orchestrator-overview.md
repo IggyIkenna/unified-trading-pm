@@ -138,6 +138,15 @@ equivalents are kept in sync for cloud-agnostic re-spin.
 Local dev: all of the above are no-ops when the corresponding env var is unset; state.json persists to local disk and
 creds env files are operator-managed manually.
 
+**Cloud I/O — routed through UTL, no raw SDK calls (shipped 2026-06-22, agent-orchestrator@62894565).** Per the UTL/UAC
+reuse-consolidation audit, `server/gcs_sync.py`'s raw `boto3` + `google.cloud.storage` calls and `server/auth.py`'s
+`_load_gcs_secret` `gs://` blob fetch were migrated to UTL's `get_storage_client(provider="gcp"|"aws")`
+(`upload_bytes`/`upload_file`/`download_bytes()`; GCS+S3 dual-mirror preserved via explicit per-provider clients). This
+is **auth-fetch only** — the secret-fetch plumbing now goes through UTL, not the JWT logic itself: HS256/ES256 token
+signing (§ "Connectivity model" above) is intentionally custom and untouched, since it is orchestrator-specific auth,
+not a generic cloud-storage operation. Verified 2026-07-13: zero raw `google.cloud`/`boto3` imports remain in `server/`
+(only a test-fixture `boto3` import in `tests/test_s3_snapshot.py`).
+
 > **AWS↔S3 snapshot (code shipped 2026-06-01, agent-orchestrator@57dc8c2)**: `server/gcs_sync.py` now has
 > `upload_state_to_s3` + `backup_sqlite_to_s3`, mirroring the GCS path and gated on `ORCHESTRATOR_S3_BUCKET` (no-op when
 > unset, never-raise). When both `ORCHESTRATOR_GCS_BUCKET` and `ORCHESTRATOR_S3_BUCKET` are set the snapshot lands in

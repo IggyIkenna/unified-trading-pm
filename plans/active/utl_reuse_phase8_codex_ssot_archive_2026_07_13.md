@@ -57,7 +57,14 @@ drift_direction: correct-codex
       (cloud I/O via UTL; auth-fetch only), `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`
       (strategy equity-drawdown-HWM is local + distinct from UTL fee-crystallization HWM — record the NON-finding so a
       future audit doesn't re-flag it), and the ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in
-      UTL).
+      UTL). **PARTIAL (2026-07-13, slot 6):** the first 3 doc updates SHIPPED — `codex/06-coding-standards/README.md`,
+      `codex/04-architecture/agent-orchestrator-overview.md`,
+      `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (unified-trading-pm, see commit history). The
+      4th (ml model-registry doc) is DEFERRED — `ml_service/training/ml/model_registry.py` is still un-migrated and
+      every `utl_reuse_phase3_ml_model_registry_2026_07_13.md` todo is unchecked, so "UTL is SSOT" would misdocument an
+      unshipped migration. Also flagged: this Phase 8 task was dispatched despite `gate_on_depends: true` with
+      dependency phases incomplete (see issue doc). Checkbox stays unflipped until Phase 3 lands. Tracked:
+      `plans/active/issues/utl_reuse_phase8_dispatch_gate_and_ml_registry_doc_gap_2026_07_13.md`.
 - [x] ✅ [AUDIT] P1. Record the **verified NON-findings** list (greeks BSM kernel — UAC has only delta-strike schemas;
       execution-service per-venue order circuit breaker — UTL's CB is DR-recovery tooling; batch-live stage-grain recon
       schemas; trading-agent ephemeral ledger; ibkr TCP health probe; client-reporting-api `core/hwm_seeds.py` — static

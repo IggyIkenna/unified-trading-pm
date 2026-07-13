@@ -130,6 +130,10 @@ source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-ser
 4. **UTC everywhere.** All datetime operations use UTC-aware datetimes. No naive datetime objects.
 5. **Config via classes, not env vars.** All configuration flows through `UnifiedCloudConfig` subclasses (from
    unified-config-interface).
+6. **Reuse before reimplement.** Before writing a new cross-cutting primitive (retry/backoff, model registry, auth
+   helper, risk-rule evaluator, etc.), check whether UTL (`unified_trading_library`) or UAC already ships it. A
+   hand-rolled duplicate of a wheel the workspace already provides is a defect even when it passes its own tests — see
+   the `@my_custom_retry` anti-pattern under [Error Handling Standards](#error-handling-standards-implemented).
 
 ---
 
@@ -340,6 +344,18 @@ async def write_to_storage():
     return await upload_data()
 ```
 
+**Generic retry/backoff (shipped 2026-07, `unified_trading_library.utils.retry`):** for retry needs that don't fit the
+API/storage error decorators above, use UTL's `retry` decorator (or its underlying `with_retry` function) instead of a
+hand-rolled loop or bespoke decorator — see [Core Principles](#core-principles) § "Reuse before reimplement".
+
+```python
+from unified_trading_library.utils.retry import retry
+
+@retry(max_attempts=3, base_delay=0.5)
+def fetch_data():
+    ...
+```
+
 ### Anti-Patterns
 
 ```python
@@ -355,7 +371,7 @@ try:
 except Exception as e:
     logger.error(e)
 
-# WRONG: custom retry decorator
+# WRONG: custom retry decorator — UTL already ships one, see above
 @my_custom_retry(attempts=3)
 def fetch_data():
     pass
@@ -448,10 +464,10 @@ def train_model(X, y):
 
 **Why:** UTL (`unified_trading_library`) is loaded via its `__init__` chain into every service at startup — including
 non-ML repos such as the API gateway, MTDS, instruments-service, etc. A module-level ML import anywhere in UTL or a
-shared library therefore crashes every consumer service that does not have these heavy packages installed. Lazy-importing
-inside the method confines the import to callers that actually invoke that code path, leaving non-ML services
-unaffected. Add a `# noqa: PLC0415` comment with a brief rationale on each lazy-import line so ruff does not flag it as
-a violation of the "imports at top of file" rule.
+shared library therefore crashes every consumer service that does not have these heavy packages installed.
+Lazy-importing inside the method confines the import to callers that actually invoke that code path, leaving non-ML
+services unaffected. Add a `# noqa: PLC0415` comment with a brief rationale on each lazy-import line so ruff does not
+flag it as a violation of the "imports at top of file" rule.
 
 ---
 

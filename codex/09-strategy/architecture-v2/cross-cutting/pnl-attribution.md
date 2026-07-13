@@ -254,6 +254,16 @@ invariants) + client-reporting-api `core/hwm_seeds.py` (per-account seed resolut
 > does not duplicate `post_trade/hwm_invariants.py`. Do not re-flag it in a future reuse audit. SSOT:
 > `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line 176-179 (verified NON-findings list).
 
+> **Verified NON-finding (2026-07-13, UTL/UAC reuse-consolidation audit):** strategy-service's local
+> `equity_curve_drawdown()` helper (`engine/core/components/pnl_monitor.py`, `engine/core/output_builders.py`) — the
+> equity-curve peak/max-drawdown tracker feeding risk circuit breakers — is a **different domain** from the
+> fee-crystallization HWM above and is intentionally kept local, NOT a duplicate to migrate into UTL
+> `post_trade/hwm_invariants.py`. The fee-crystallization HWM (this section) gates performance-fee accrual via three
+> transfer-neutral methods (TWR/Notional/PnL-recovery); the equity-drawdown HWM is a risk-management peak-tracking
+> metric with no fee semantics. Collapsing them would conflate a fee-accounting concept with a risk-monitoring one. A
+> future reuse audit should NOT re-flag `equity_curve_drawdown()` as an unmigrated `hwm_invariants` duplicate. SSOT for
+> the compose-not-delete decision: `plans/active/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md`.
+
 ## Canonical Attribution Factors
 
 ### Factor Hierarchy
