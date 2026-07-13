@@ -376,6 +376,10 @@
       "versionRange": "slowapi>=0.1.9,<1.0.0"
     },
     {
+      "name": "soupsieve",
+      "versionRange": "soupsieve>=2.8.4,<3.0.0"
+    },
+    {
       "name": "sqlalchemy",
       "versionRange": "sqlalchemy>=2.0.0,<3.0.0"
     },
@@ -448,5 +452,5 @@
       "versionRange": "zstandard>=0.22.0,<1.0.0"
     }
   ],
-  "count": 111
+  "count": 112
 }

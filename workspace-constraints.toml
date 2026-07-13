@@ -110,6 +110,11 @@ scikit_learn = "scikit-learn>=1.5.0,<2.0.0"
 scipy = "scipy>=1.15.0,<2.0.0"
 shellcheck_py = "shellcheck-py>=0.9.0.6,<1.0.0"
 slowapi = "slowapi>=0.1.9,<1.0.0"
+# CVE-2026-49476/CVE-2026-49477: soupsieve<2.8.4 vulnerable. Transitive-only dep (via
+# beautifulsoup4) with no repo pyproject ceiling — every repo already resolves to 2.8.4 on
+# its own; this floor documents the fix version so a future stale lock can't regress below
+# it. SSOT: plans/active/issues/system_integration_tests_pip_audit_red_2026_07_13.md
+soupsieve = "soupsieve>=2.8.4,<3.0.0"
 sqlalchemy = "sqlalchemy>=2.0.0,<3.0.0"
 sse_starlette = "sse-starlette>=1.6.1,<2.0.0"
 # WORKING 1.1.0, CEILING <1.3 (Phase 1.5b 2026-06-18): starlette 1.3.1 wraps included routers as _IncludedRouter (no .path) → breaks route-introspection QG in strategy/client-reporting-api/features. Floor lowered from 1.3.1 (was the CVE-fix floor; CVE-2026-54283/-54282 stays in the --ignore-vuln block). Adopt 1.3.1+ WITH the r.path fix in the one-by-one exercise. SSOT: plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
