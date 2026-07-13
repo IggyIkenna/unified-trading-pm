@@ -17,7 +17,7 @@ summary:
   strategy-service/position/core/rule_eval_context_builder.py (build_rule_eval_context + PeakNavTracker) exists
   specifically to supply real current_drawdown_bps — the moment that gets wired into execution-service's account_state
   (clearly the intended next step, not hypothetical), every live order past a trivial drawdown halts the whole platform."
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -36,7 +36,7 @@ parent_epic: infrastructure_master
 priority: P1
 source: utl_reuse_phase1_strategy_risk_hwm_2026_07_13 todo 2 (strategy-service risk/v2 preflight migration), 2026-07-13
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-11 (2026-07-13)
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: backend-engineer
@@ -116,19 +116,26 @@ default-off state).
 
 ## Todos
 
-- [ ] [BACKEND] P1. Replace `GLOBAL_DATA_STALENESS_HALT`'s trigger with
+- [x] ✅ [BACKEND] P1. Replace `GLOBAL_DATA_STALENESS_HALT`'s trigger with
       `BinaryEventTrigger(event_source="data_staleness")` in
       `unified_api_contracts/registry/risk_rules/global_rules.py`, matching the
       `ORACLE_OUTAGE_HALT`/`CROSS_CLOUD_EGRESS_HALT`/`CUSTODY_ENDPOINT_HALT` pattern in the same file. Update the rule's
       `description` if the event_source naming needs alignment with an existing freshness-contract check. (repo:
-      unified-api-contracts)
-- [ ] [BACKEND] P1. Verify no existing caller currently relies on `GLOBAL_DATA_STALENESS_HALT` firing via the
+      unified-api-contracts) — unified-api-contracts@70ccaca1
+- [x] ✅ [BACKEND] P1. Verify no existing caller currently relies on `GLOBAL_DATA_STALENESS_HALT` firing via the
       `MaxDrawdownTrigger` path (grep for tests asserting on this rule_id) and update them to the new `active_events`
-      shape. (repo: unified-api-contracts, execution-service, strategy-service)
-- [ ] [VERIFY] P1. Before `strategy-service`'s `PeakNavTracker`/`build_rule_eval_context` output is ever wired into
+      shape. (repo: unified-api-contracts, execution-service, strategy-service) — no caller asserted on the old
+      `MaxDrawdownTrigger` path for this rule_id; strategy-service@23bfacd5 removed two stale workaround comments in
+      `tests/risk/unit/v2/test_v2_risk.py` referencing the collision (values left unchanged — they exercise the
+      legitimate per-account/GLOBAL_PORTFOLIO_DRAWDOWN_HALT drawdown path, not the staleness rule).
+- [x] ✅ [VERIFY] P1. Before `strategy-service`'s `PeakNavTracker`/`build_rule_eval_context` output is ever wired into
       `execution-service`'s live `run_risk_preflight(..., account_state=...)` call, confirm this fix has shipped — do
       not wire real `current_drawdown_bps` into the live order path while the bug is still open. (repo:
-      execution-service)
+      execution-service) — confirmed shipped: execution-service@91970a27 adds
+      `test_normal_drawdown_does_not_trip_global_data_staleness_halt()` in `tests/unit/test_risk_preflight_gate.py`,
+      exercising the real (non-stubbed) UAC registry + UTL evaluator with `current_drawdown_bps=100` and no
+      `active_events` populated, asserting `GLOBAL_DATA_STALENESS_HALT` is no longer in `blocked_by`. Safe to wire
+      `account_state` into the live call now.
 
 ## Progress Log
 
@@ -140,3 +147,11 @@ default-off state).
   this issue rather than fixing UAC directly in-plan: the fix is cross-repo (UAC) and outside this todo's declared
   `repos: [strategy-service]` scope, and the trigger redesign + caller-side `active_events` wiring decision is a genuine
   scoped change of its own, not an adjacent one-line fix.
+- **2026-07-13 (slot-11, sonnet/high)** — Shipped all three todos. UAC fix (`unified-api-contracts@70ccaca1`) replaces
+  `GLOBAL_DATA_STALENESS_HALT`'s trigger with `BinaryEventTrigger(event_source="data_staleness")`, matching the
+  `ORACLE_OUTAGE_HALT`/`CROSS_CLOUD_EGRESS_HALT`/`CUSTODY_ENDPOINT_HALT` pattern. Confirmed no caller asserted on the
+  old `MaxDrawdownTrigger` path for this rule_id; `strategy-service@23bfacd5` removed two stale workaround comments
+  referencing the collision (test values unchanged — they cover the legitimate drawdown path). Added a regression test
+  `execution-service@91970a27` (`test_normal_drawdown_does_not_trip_global_data_staleness_halt`) exercising the real UAC
+  registry + UTL evaluator to prove a normal drawdown no longer fires the rule. All three repos verified fully pushed
+  (`git rev-list --count HEAD ^origin/live-defi-rollout` = 0). Status: resolved.

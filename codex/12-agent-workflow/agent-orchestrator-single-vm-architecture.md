@@ -4,15 +4,29 @@ title: agent-orchestrator — single-VM architecture (role-based dispatch)
 summary:
   SSOT for the current agent-orchestrator deployment + dispatch model — ONE central orchestrator VM (id `planning`, EIP
   13.113.200.22) + N slot workers, role-based dispatch via `assigned_role` skill matching (no per-epic VMs, retired
-  2026-06-27), `assigned_vm` restricted to `{planning, NA}`, plan-driven backlog, self-healing runtime, and the
-  `ao-self-pull.sh` 15-min deploy-currency cron. Supersedes the retired 10-epic-VM topology.
+  2026-06-27), `assigned_vm` restricted to `{planning, NA}`, plan-driven backlog, self-healing runtime, the
+  `ao-self-pull.sh` 15-min deploy-currency cron, and the read-only AWS-SSM live-status check
+  (`check-ao-backlog-status.sh` / `/check-agent-orchestrator`) for dev checkouts with no orchestrator JWT. Supersedes
+  the retired 10-epic-VM topology.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: [orchestrator, infrastructure, single-vm, role-registry, assigned-vm, deploy-currency, self-healing]
+tags:
+  [
+    orchestrator,
+    infrastructure,
+    single-vm,
+    role-registry,
+    assigned-vm,
+    deploy-currency,
+    self-healing,
+    status-check,
+    ssm,
+    read-only-access,
+  ]
 related:
   [
     ../04-architecture/agent-orchestrator-overview.md,
@@ -23,10 +37,11 @@ related:
     ../../plans/PLAN_FORMAT.md,
   ]
 created: 2026-07-12
-authoritative_for: [agent-orchestrator-architecture, assigned-vm-semantics, ao-deploy-currency]
-referenced_by: [cursor-configs/CLAUDE.md]
+authoritative_for:
+  [agent-orchestrator-architecture, assigned-vm-semantics, ao-deploy-currency, ao-read-only-status-check]
+referenced_by: [cursor-configs/CLAUDE.md, cursor-configs/skills/check-agent-orchestrator/SKILL.md]
 owner:
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-13
 code_refs:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
@@ -34,6 +49,7 @@ code_refs:
     agent-orchestrator/server/dispatch.py,
     agent-orchestrator/server/role_registry.py,
     agent-orchestrator/scripts/ao-self-pull.sh,
+    agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh,
   ]
 source: "operator ruling 2026-07-12 (plan-reconciliation Q&A): create missing SSOT"
 ---
@@ -85,6 +101,27 @@ the ONLY dispatch key, valid domain **`{planning, NA}`**:
 boot, then every `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` (default 1800s); `pm-pull.timer` FF-pulls
 `unified-trading-pm` every 5 min, so push→pickup latency is ≤35 min (or `POST /api/backlog/regen` for immediate).
 Idempotent by content (dedup on `BacklogTask.brief == raw todo line`).
+
+## Checking live backlog/dispatch status from a dev checkout (read-only)
+
+The dashboard/API needs a JWT most dev checkouts don't have, and the VM's public IP:8765 has no inbound rule (by design
+— the API is meant to be reached from localhost or the dashboard's own proxy, not the open internet). The supported
+read-only path is **AWS SSM Session Manager** `send-command`, which runs `curl localhost:8765/api/backlog` ON the VM
+itself — no inbound firewall change, no JWT needed (the server runs in `auth.ALLOW_ANONYMOUS=True` permissive mode for
+local reads per `agent-orchestrator/dashboard/API_REFERENCE.md`), and every call is CloudTrail-audited.
+
+- **Script**: `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh [substring-filter]` — prints
+  `/api/mode` + a per-status summary + matching task rows (`id`/`status`/`dispatched_to`/`tier`/`plan_ref`/`title`).
+  Requires AWS CLI authenticated against account `427895769566` with `ssm:SendCommand` + `ssm:GetCommandInvocation` — no
+  orchestrator credentials needed.
+- **Skill**: `/check-agent-orchestrator` (`cursor-configs/skills/check-agent-orchestrator`) wraps the script for
+  interactive use — trigger it instead of re-deriving this path from scratch.
+- **Instance**: EC2 `i-0c9b283b31d6b5ca7`, region `ap-northeast-1`, behind EIP `13.113.200.22` (tag
+  `agent-orchestrator-vm-eip`; also the "api-host" instance in `verify_fleet_autonomy_health.sh`). If the VM is ever
+  replaced, re-derive with `aws ec2 describe-addresses --public-ips 13.113.200.22 --region ap-northeast-1`.
+- **READ-ONLY only** — never fold a write (e.g. `POST /api/backlog/regen`, which forces an immediate regen instead of
+  waiting on the passive `PlanRegenLoop` cycle) into a routine status check; that needs its own explicit
+  operator-directed call, not automatic inclusion here.
 
 ## Runtime self-heals — never manually kill tmux
 

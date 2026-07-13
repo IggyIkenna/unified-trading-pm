@@ -57,8 +57,18 @@ drift_direction: advance-code
       (incl. `_build_dag`/`_kahn_bfs`) → `from unified_trading_library import BuilderEntry, resolve_build_order` (match
       the already-shipped calendar/delta_one pattern). Keep `_build_registry`/`get_builder`; volatility keeps its
       orthogonal `_CALCULATOR_CLASS_MAP`.
-- [ ] [AGENT] P1. **sports — resolver-only migration now** (safe: `depends_on`-based, identical semantics):
-      `resolve_build_order()` → `_utl_resolve_build_order(_get_registry())`. **Do NOT blind-swap the dataclass.**
+- [x] ✅ [AGENT] P1. **sports — resolver-only migration now** (safe: `depends_on`-based, identical semantics):
+      `resolve_build_order()` → `_utl_resolve_build_order(_get_registry())`. **Do NOT blind-swap the dataclass.** —
+      SHIPPED `features-service@48895959`. Replaced the local hand-rolled Kahn's-algorithm `resolve_build_order()` body
+      with a delegation to `unified_trading_library.resolve_build_order`, bridged via
+      `cast(dict[str, _UTLBuilderEntry], _get_registry())` since sports keeps its own function-based `BuilderEntry`
+      (`function`/`columns`/`required_inputs`/`default_kwargs` — no `calculator_name`/`sources`) and UTL's resolver only
+      ever reads `entry.depends_on: list[str]`, a field both shapes carry identically — dataclass NOT swapped, per
+      instruction. Verified behaviour-preserving via the Phase 0 golden fixture
+      (`test_golden_resolve_build_order_sports`, identical output) plus the existing sports builder-registry suite
+      (`test_no_dependency_cycles`, `test_all_groups_present`, `test_phase_0_has_no_deps`,
+      `test_meta_features_in_last_phase`, `test_get_builder_returns_entry`/`_unknown_raises` — all green).
+      `basedpyright` clean on the cast. `quality-gates.sh` exit 0, sentinel verified.
 - [ ] [DESIGN] P2. **sports dataclass — operator/design call**: either (a) add a UTL `FunctionBuilderEntry` sibling
       (callable + `columns` + `required_inputs` + `default_kwargs`), or (b) keep sports' local function-based dataclass.
       Default to (b) unless a 2nd function-based consumer appears (YAGNI).

@@ -142,6 +142,103 @@ operator visibility unless the affected agent happens to notice (as I did here),
 scans SPECIFICALLY for `HEAD != origin` clones and resets them, evidently on some sub-hourly cadence with more than one
 repo processed per sweep.
 
+## UPDATE 3 (slot 15, 2026-07-13) — fleet-wide audit confirms this is NOT slot-11-isolated: 276 signature hits, 18 real commits still at risk
+
+Ran the `[VERIFY]` todo below: wrote `scripts/dev/audit-fleet-reflog-resets.sh` (read-only; `git reflog show` +
+`git merge-base --is-ancestor` only, never mutates any slot) and swept every repo clone in every `.tabs/<slot>/` (16
+slots, ~24 repos each) for the same `"branch: Reset to origin/<branch>"` reflog signature immediately preceded by a
+discarded `commit:`/`commit (amend):` entry. Result: **this bug is fleet-wide and ongoing, not a slot-11 one-off.**
+
+**Raw counts:**
+
+- **276 total signature hits** across the fleet (231 currently `AT_RISK_REFLOG_ONLY` — the discarded SHA is reachable
+  from neither current `HEAD` nor `origin`, i.e. recoverable only via reflog and gone once that entry expires; 45
+  `RECOVERED` — the content made it back via cherry-pick/re-commit, same as slot 11's own recovery).
+- Of the 276, **213 are `chore(orphan-wip): inherited WIP from predecessor...` commits** — this is the liveness-gated
+  dead-claim inherit flow (`CLAUDE.md` § "Multi-agent safety": "dead claim → inherit + commit"), so it may be a
+  DIFFERENT, possibly-by-design commit-then-later-discard flow rather than the same bug — flagging for whoever owns todo
+  1 to check specifically, since if it IS the same bug it would make this the dominant failure mode by far (3.4× the
+  real-work count).
+- **The remaining 63 hits are real `feat`/`fix`/`refactor`/`test`/`docs` commits — unambiguously the SAME bug as the
+  original slot-11 report** (same discarded-then-reset signature, same "not a `merge: Fast-forward` line" tell). Of
+  these 63: **18 are STILL `AT_RISK_REFLOG_ONLY` right now** (never recovered/repushed) and **45 already `RECOVERED`**
+  (someone noticed and cherry-picked, or the same content landed via a later independent commit).
+
+**Confirms the T0-shared-dep theory (todo 4 below) at fleet scale, not just slot 11's 2 repos:** of the 63 real-commit
+hits, `unified-api-contracts` alone accounts for 29 across 8 different slots (2,3,4,5,6,7,8,11,16) and
+`unified-trading-library` accounts for 10 across 6 slots (2,3,4,6,9,11,16). Every other repo hit (`deployment-service`,
+`instruments-service`, `market-tick-data-service`, `strategy-service`, `execution-service`, `features-service`,
+`market-data-processing-service`, `unified-trading-pm`) shows only 1–2 hits each, scattered across slots 3–14 —
+consistent with UAC/UTL being specifically targeted (not a blanket per-slot timer) while the rest is lower-rate
+background noise from the same or a related mechanism.
+
+**Oldest occurrence found**: 2026-06-22 (slot 1, orphan-wip). **Oldest still-at-risk REAL commit**: 2026-06-29 (slot 5,
+`unified-api-contracts@16ce6a71`, "docs(book-summary): correct 24 -> 25 column count..."). This has been happening for
+at least 3 weeks before the slot-11 session that first surfaced it.
+
+**The 18 currently-at-risk real commits** (slot / repo / sha / message — recoverable via
+`git -C <slot-repo> cherry-pick <sha>` from that clone's own reflog, TODAY, before any reflog-expiry or gc window
+closes):
+
+| Slot | Repo                     | SHA                | Message                                                                                      |
+| ---- | ------------------------ | ------------------ | -------------------------------------------------------------------------------------------- |
+| 3    | deployment-service       | e5c5f89            | fix(manifest-reader): avoid gcs_bucket substring in comment tripping STEP 5.11               |
+| 4    | unified-trading-pm       | 7031ee42f          | docs(plans): file issue — slot 4 craft-scope mismatch on UI task dispatch                    |
+| 5    | instruments-service      | e70d9fae           | test(goldens): regenerate cefi expected-universe golden to 73 tuples                         |
+| 5    | unified-api-contracts    | 16ce6a71           | docs(book-summary): correct 24 -> 25 column count + add group breakdown                      |
+| 6    | instruments-service      | 0a34152a           | fix(writers): stamp data_type='instruments' at emission (not blank)                          |
+| 6    | market-tick-data-service | b9cb1aa2           | feat(live): add BITFINEX-SPOT + BITFINEX-FUTURES WSFeedConnectors                            |
+| 6    | unified-trading-pm       | 510be6e9a          | docs(plans): file issue for stale PM fastapi ceiling blocking all quickmerges                |
+| 8    | instruments-service      | 0c466a97           | fix(scripts): rank manifest candidates by content freshness, not blob.updated                |
+| 9    | instruments-service      | 8f15fd3c           | feat(instruments-service): wire enumerate_expected_universe to TOTAL_UNIVERSE_AXES SSOT (B2) |
+| 9    | market-tick-data-service | 64512679           | feat(live): BETFAIR + 3 sub-variants WSFeedConnector scaffold (BLOCKED-CREDENTIALS)          |
+| 10   | instruments-service      | f8724cdb           | fix(cicd): pass SETUPTOOLS_SCM_PRETEND_VERSION to docker build (P0b)                         |
+| 10   | market-tick-data-service | fcf05dc6           | feat(live): register Phase-3.5 DeFi LST/perp/specialty canonical keys — gap-014              |
+| 11   | execution-service        | d4f79262           | refactor(algo_library): import build_leg_snapshots from UTL directly                         |
+| 11   | unified-api-contracts    | 7d4f250b, 164a3937 | fix(registry): sanction execution-service's tracked MTDS reader import                       |
+| 11   | unified-trading-library  | 1bdbac06, a0ef1d67 | feat(risk): add leg_snapshot_builder as single SSOT (the original report's own commits)      |
+| 12   | deployment-service       | 0b0848b            | feat(registry): persist the D.1 host-metrics rolling window on the registry entry            |
+
+Note two of these (slot 11's UAC/UTL rows) are the SAME commits already described in this doc's original report and
+UPDATE sections above — they show as still `AT_RISK_REFLOG_ONLY` here because slot 11's clone reflog now only has the
+FIRST occurrence's SHA reachable via reflog (the later amended/re-recovered SHAs superseded it in that clone's own
+history) — not a new loss, just the audit script surfacing the full chain. The other 16 rows are genuinely
+newly-surfaced instances this audit found, unrelated to the original slot-11 session.
+
+**Recommendation**: none of this changes the fix (todos 1/2/4 below) — it just proves the blast radius is fleet-wide and
+3+ weeks old, raising urgency. The 18 at-risk real commits above are not yet lost (git's default unreachable-object
+grace period is ~2 weeks past last reflog activity even without the 90-day reflog expiry), but each slot's own
+agent/operator should decide whether to cherry-pick recover them before that window closes — left as a judgment call
+per-repo rather than this audit force-recovering content into worktrees it doesn't own.
+
+Diagnostic script (read-only, reusable for future audits until this is confirmed fixed):
+`scripts/dev/audit-fleet-reflog-resets.sh` (plain text or `--json` output).
+
+## UPDATE 4 (slot 15, 2026-07-13 14:58 UTC) — the bug hit THIS AUDIT'S OWN COMMITS, live, mid-session — breaks the T0-only theory
+
+Meta-finding, discovered while shipping UPDATE 3: the exact same session that ran the fleet-wide audit above (slot 15,
+`unified-trading-pm`) got hit by the bug itself, in real time. Timeline from `unified-trading-pm`'s own reflog:
+
+```
+14:47:01 UTC  commit 57f7f1421 — feat(scripts): add fleet-wide reflog-reset audit script
+14:47:20 UTC  commit 77e428477 — docs(plans): flip VERIFY todo — fleet-wide reflog audit (UPDATE 3 above)
+14:53:59 UTC  branch: Reset to origin/live-defi-rollout   <- both commits above silently discarded, 6m39s later
+```
+
+Both commits were still unpushed at the moment of reset (mid-session, about to quickmerge). Recovered via
+`git cherry-pick 57f7f1421 77e428477` from this same slot's own reflog (still fresh) — no content lost, but this is live
+confirmation the mechanism is still firing as of this update, not a historical/stale artifact.
+
+**This breaks the "T0-shared-dep-only" theory (todo 4 below) as the sole explanation**: `unified-trading-pm` is not
+`unified-api-contracts` or `unified-trading-library` and has no `--reference` dependents elsewhere in the fleet — yet it
+was hit within ~7 minutes of the commits landing. The common factor across every hit in UPDATE 3 and this one is
+simpler: **local HEAD ahead of origin at the moment some periodic sweep runs** — `unified-trading-pm` just churns
+commits fast enough (frequent `docs(plans):` flips + `merge origin/live-defi-rollout: Fast-forward` every ~5 min per
+this slot's own reflog above) that the exposure window keeps getting hit too. UAC/UTL being disproportionately
+represented in UPDATE 3 is more likely explained by "many slots hold local commits to these 2 repos at any given time"
+(everyone touches shared schemas/events) than a UAC/UTL-specific targeting rule — todo 4 should verify the sweep's
+selection criterion directly rather than assume repo-name targeting.
+
 ## Todos
 
 - [ ] [INFRA] P0. Identify the process that produced the "branch: Reset to origin/live-defi-rollout" reflog entries on
@@ -152,9 +249,12 @@ repo processed per sweep.
 - [ ] [INFRA] P0. Whatever the mechanism, change its behavior for a clone with local commits not on origin: refuse
       (no-op + log) rather than reset; only auto-repair a clone that is BOTH commit-less-ahead AND has no reflog entries
       newer than N minutes (genuinely idle), never one with fresh local commits. (repo: same as above)
-- [ ] [VERIFY] P1. Audit other active slots for the same reflog signature ("Reset to origin/<branch>" with a discarded
-      commit reachable only via reflog) to see how widespread this already is / has been. (repo: unified-trading-pm — a
-      fleet-wide grep script)
+- [x] ✅ [VERIFY] P1. Audit other active slots for the same reflog signature ("Reset to origin/<branch>" with a
+      discarded commit reachable only via reflog) to see how widespread this already is / has been. (repo:
+      unified-trading-pm — a fleet-wide grep script) — unified-trading-pm@57f7f1421, script
+      `scripts/dev/audit-fleet-reflog-resets.sh`, results in "UPDATE 3" above: 276 signature hits fleet-wide (16 slots),
+      63 are real (non-orphan-wip) discarded commits across 10 slots / 8 repos, 18 still `AT_RISK_REFLOG_ONLY` as of
+      this audit. Confirms this is NOT slot-11-isolated and has been ongoing since at least 2026-06-22.
 - [ ] [INFRA] P0. Check specifically for a "keep T0 shared-dep repos in sync" fleet job/cron targeting
       unified-api-contracts + unified-trading-library specifically (see UPDATE section — 3 hits on UAC, 2 on UTL, 0 on 4
       sibling repos touched in the same session) — if found, it MUST check for local-commits-ahead-of-origin before

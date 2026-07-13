@@ -77,12 +77,18 @@ code.
       `tests/unit/test_venue_order_capabilities.py`/`tests/integration/test_instruction_venue_integration.py`, which
       failed until `"FX": _TRADFI_EXCHANGE` was added, same set NASDAQ/NYSE use). 1072 relevant tests + full
       `quality-gates.sh` green, sentinel verified.
-- [ ] [REGISTRY] P0. Fix the FX vendor-key bug:
+- [x] ✅ [REGISTRY] P0. Fix the FX vendor-key bug:
       `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:121` currently maps
       `"FX": "databento"`, which is wrong — FX never touches Databento, actual data sourcing is Yahoo Finance (hardcoded
       in MTDS `umi_tick_provider.py`, not looked up via this key today). Correct the key to the real vendor (or add a
       dedicated `yahoo_finance` `VENUE_TO_ADAPTER_KEY` entry and point FX at it) — do not propagate the stale
-      `databento` tag.
+      `databento` tag. — SHIPPED `unified-api-contracts@bd7117ba`. Verified no `yahoo_finance` URDI reference-data
+      adapter class exists in instruments-service's `_ADAPTERS`, and confirmed `umi_tick_provider.py` fetches FX market
+      data via a hardcoded `venue_upper == "FX"` branch that bypasses `VENUE_TO_ADAPTER_KEY`/URDI entirely — FX
+      genuinely has no URDI adapter. Changed `"FX": "databento"` → `"FX": NO_ADAPTER_YET` (the documented sentinel for
+      exactly this case) rather than inventing a phantom `yahoo_finance` adapter key with no backing class. Added `FX`
+      to `test_venue_adapter_keys.py`'s `EXPECTED_SENTINEL_VENUES` deliberate-decision gate with the same reasoning. 836
+      relevant tests + full `quality-gates.sh` green, sentinel verified.
 - [ ] [REGISTRY] P0. Add `BITFINEX-SPOT` + `BITFINEX-FUTURES` to `VENUE_CATEGORY_MAP` (`"cefi"`) and
       `VENUE_CAPABILITIES` (`SPOT_TRADE` for `-SPOT`, `PERP_TRADE`+`FUTURES_TRADE` for `-FUTURES`, mirroring the
       existing BINANCE/OKX/BYBIT entries in the same dicts). Same file as above.

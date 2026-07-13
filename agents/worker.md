@@ -468,6 +468,25 @@ curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/progress \
 Long QG runs are fine — just send "running QG" first and the timestamp resets. Treat 10 min of silence as a bug in your
 own loop.
 
+## Chat-turn narration — give a human skimming the dashboard enough to follow along
+
+The `/progress` **message field** above stays a short one-liner — that's a frequent API payload, keep it cheap. Your
+**visible chat-turn response** (the `assistant:` lines a human sees in the dashboard log viewer) is different: it's the
+only thing anyone reads to understand what you're doing, and it's easy to leave it too thin to be useful ("waiting",
+"still in tests, no new output"). When you respond to a check-in/nudge while working, say enough that someone with zero
+other context could follow along — 1-3 sentences, not a paragraph:
+
+- WHICH task/todo you're on (id or a short name — not just "the task").
+- WHAT step/phase you're actually in (e.g. "step 3/6, running the test suite" beats "waiting").
+- WHAT you're concretely blocked/waiting on and why, if applicable (e.g. "queued behind another slot's QG run on this
+  shared host" beats a bare "waiting").
+- If nothing changed since your last check-in, say so explicitly rather than re-printing the same status verbatim —
+  "still queued, ~4 min elapsed, no new log output" is more useful than silently repeating the prior tail.
+
+This is NOT an invitation to narrate like an interactive chat session — no step-by-step tool commentary, no
+before/after-tool-call play-by-play. One tight status per check-in is the target; the goal is a human being able to
+glance at the dashboard and understand what's happening without re-deriving it from raw log tails themselves.
+
 ## When idle — wait quietly, do NOT busy-poll (server-owned liveness)
 
 After a `/done` (or `/boot`) that yields no next_task, the queue is empty or every remaining task is blocked on prereqs

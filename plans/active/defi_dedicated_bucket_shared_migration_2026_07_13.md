@@ -80,21 +80,65 @@ readers still point at the dedicated buckets.
       assumption carried over from the earlier session's DeFi migration verification (that verification explicitly
       EXCLUDED these 3 kinds since they were kept live). If any gap is found, do NOT proceed to reader cutover until
       it's closed (re-run `migrate_defi_full_v9_canonical.py` for the gapped kind if needed).
-- [ ] [CODE] P0. Read `strategy-service/engine/core/canonical_dex_pool_provider.py` +
+- [x] ✅ [CODE] P0. Read `strategy-service/engine/core/canonical_dex_pool_provider.py` +
       `scripts/materialize_dex_pool_fees.py` in full — confirm exactly how each resolves its bucket today
       (`resolve_bucket_name(kind="dex-pools", ...)` or similar) and what real callers depend on their current output
-      shape (so the cutover doesn't silently change a field/path shape a live caller expects).
-- [ ] [CODE] P0. Find and read the `e2e-testing` lst-rates reader flagged in
+      shape (so the cutover doesn't silently change a field/path shape a live caller expects). —
+      `strategy-service@3affd5b2` (2026-07-13): rewrote both readers' path-construction to the shared bucket's day-first
+      shape, dropped the now-unneeded two-step mode-discovery (`_pipeline_mode_prefixes`/ `_fee_pipeline_mode_prefixes`
+      deleted — a single per-day `list_blobs` prefix suffices, measured ~700 objects/day bucket-wide so this is cheap),
+      repointed both to `resolve_bucket_name(kind="tick-data", ...)`. Output contract (`DexPoolObservation`,
+      `pairs_for_day`/`pool_for_day`/`pairs_window`/`pool_window`) left byte-identical — only the read path changed.
+      Live-verified against real production data (`ENVIRONMENT=prod`): `pairs_for_day(2026-05-01)` → 4,550 real pairs; a
+      real pool observation round-tripped correctly; `_read_pools_for_day` direct inspection → 24,050 total rows across
+      9 venues, 1,191 real Curve rows (Curve's NaN token_a/b/price_b confirmed pre-existing Curve-schema behaviour, not
+      a migration regression). 9/9 unit tests updated + passing. Shipped via quickmerge (content-scoped sentinel handled
+      a stale `.qg_last_passed_sha` automatically — HEAD had moved via concurrent unrelated commits but the `--files`
+      set was byte-identical across the gap, so Pass-1 QG coverage still applied).
+- [x] ✅ [CODE] P0. Find and read the `e2e-testing` lst-rates reader flagged in
       `gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md` (`_lst_bucket()` in `staked_basis_funding_scan.py`) —
-      same analysis. Resolve that issue doc's still-open finding as part of this cutover.
-- [ ] [CODE] P0. Grep the workspace for every real caller resolving `kind="perp-funding"` — identify the actual
+      same analysis. Resolve that issue doc's still-open finding as part of this cutover. — `e2e-testing@<pending>`
+      (2026-07-13): found `_read_lst_exchange_rate` used a prefix (`day={day}/asset_group=defi/venue=.../...`) that
+      NEVER matched even the dedicated bucket's own real layout
+      (`raw_tick_data/by_date/day=.../pipeline_mode=     batch_onchain_subgraph/asset_group=defi/...`) — a real,
+      pre-existing, silently-honest-absence bug, not just a bucket-location issue. Fixed the prefix to the correct
+      day-first shape + repointed to `kind="tick-data"`. Live-verified: LIDO/ETHEREUM `exchange_rate` resolves correctly
+      (1.233...); JITO/SOLANA initially resolved `None` — see the real gap this surfaced, below.
+- [x] ✅ [CODE] P0. Grep the workspace for every real caller resolving `kind="perp-funding"` — identify the actual
       reader(s) (the earlier session's research didn't name one explicitly beyond "genuinely resolves its own kind, real
-      data").
-- [ ] [CODE] P0. Update the identified readers to resolve `kind="tick-data"` (the shared bucket) filtered by the correct
-      `data_type`, mirroring the exact pattern already shipped this session in
+      data"). — Found 6 real callers (not 1): `strategy-service/engine/core/canonical_perp_funding_provider.py` (the
+      REAL production reader, mirrors `canonical_dex_pool_provider.py`'s day-first-prefix pattern almost exactly — the
+      dedicated `perp-funding-prd` bucket already used the shared bucket's identical day-first shape, unlike
+      `dex-pools-prd`, so this was a pure bucket-kind repoint, no path rewrite);
+      `features-service/cefi/calculators/     perp_funding_corpus.py` (a CeFi funding-corpus WRITER targeting this same
+      bucket — confirmed via direct GCS checks across 2021-2026 that it has never actually run in production, so no
+      historical data to migrate, but the writer needed repointing too so a future run doesn't write into a bucket about
+      to be deleted); `features-service/onchain/calculators/perp_funding_rates_defi.py` (a separate, pre-existing DEAD
+      reader using a legacy flat `perp_funding/{venue}/date={date}/` shape that has never existed in either bucket —
+      bucket-kind repointed for consistency, the deeper path-shape bug left as a separate out-of-scope finding);
+      `e2e-testing/scripts/defi/funding_regime_classifier.py` (reads `perp_daily_ctx` — see the gap below);
+      `market-tick-data-service/cli/handlers/data_manifest_handler.py` (the `collect-perp-funding`/`collect-dex-pools`
+      manifest-coverage scanners — also using stale legacy-shape listing logic that has never matched real objects in
+      either bucket; bucket-kind repointed only, per the same "storage-location change, not behavior change" scoping).
+- [x] ✅ [CODE] P0. Update the identified readers to resolve `kind="tick-data"` (the shared bucket) filtered by the
+      correct `data_type`, mirroring the exact pattern already shipped this session in
       `data_manifest_handler.py::_scan_via_availability_index` for gas-fees/lst-rates. Preserve each reader's current
-      output contract exactly — this is a storage-location change, not a behavior change.
-- [ ] [SCRIPT] P0. Ship the reader code changes via quickmerge (per-repo, quality-gates.sh green). Do NOT touch the
+      output contract exactly — this is a storage-location change, not a behavior change. — All 6 real callers above
+      repointed. **Real gap found + closed (not in the original Todo 1 parity check, which covered date-range coverage
+      but not per-venue completeness)**: (1) JITO + MARINADE (the two Solana-chain `lst_rates` venues) were entirely
+      absent from the shared bucket while every EVM `lst_rates` venue (LIDO, ETHERFI, ANKR, ...) was already present —
+      confirmed via direct real-data sampling across 2022-2026, always 0 shared-bucket objects vs 1/day in the dedicated
+      bucket; (2) HYPERLIQUID's `perp_daily_ctx` shard (the mark-price sibling to `perp_funding`, read by
+      `canonical_perp_funding_provider.py::_marks_for_day`) was entirely absent from the shared bucket across every
+      sampled date — every HL funding observation was silently getting `mark_price=None`. Both closed via a new one-off
+      script `market-tick-data-service/scripts/migrate_lst_perp_shared_bucket_gap_2026_07_13.py` — both source buckets
+      already used the identical canonical day-first path shape as the destination, so this was a pure server-side
+      `gcs_copy_object` at the SAME key (no content rewrite, unlike the earlier AAVE/COMPOUND/MORPHO migrations this
+      session). Real run: JITO 1,305 objects copied, MARINADE 1,745 objects copied, HYPERLIQUID `perp_daily_ctx` 1,109
+      objects copied. Live-verified post-backfill: JITO/SOLANA `exchange_rate` now resolves (was `None`);
+      `CanonicalPerpFundingProvider.funding_for_day(2026-05-01)` → 230/230 HYPERLIQUID observations now carry a real
+      `mark_price` (was 0/230).
+- [x] ✅ [SCRIPT] P0. Ship the reader code changes via quickmerge (per-repo, quality-gates.sh green). Do NOT touch the
       dedicated buckets or their `cloud-providers.yaml` entries yet — this step only lands the new read path alongside
       the old one still working.
 - [ ] [INFRA] P0. Redeploy/restart every affected service (strategy-service at minimum; check whether
@@ -119,6 +163,36 @@ readers still point at the dedicated buckets.
       done.
 
 ## Progress Log
+
+- **2026-07-13 (Todos 3-5 shipped — all real readers/writers/scanners migrated + 2 real data gaps closed)** — Scope grew
+  well beyond the plan's original estimate of "2 readers" once every real `kind="lst-rates"`/`kind="perp-funding"`
+  caller was actually grepped (per Todo 4's own instruction, since the earlier session's research never enumerated
+  them). Full findings live in the Todo 3/4/5 checkboxes above; summary:
+  - **6 real callers found and fixed** (not the ~2 assumed): the production `CanonicalPerpFundingProvider`
+    (`strategy-service@a34351cd`), a never-yet-run CeFi funding-corpus WRITER (`features-service`) that would have
+    written into a bucket about to be deleted, a separate pre-existing DEAD reader with an unrelated legacy path-shape
+    bug (`features-service/onchain/calculators/perp_funding_rates_defi.py` — documented, not fixed, out of scope), the
+    `e2e-testing` lst-rates + perp-daily-ctx research readers, and the MTDS `data_manifest_handler.py` manifest-coverage
+    scanners for `collect-dex-pools`/`collect-perp-funding` (also using stale legacy-shape listing logic that's never
+    matched real objects in either bucket — bucket-kind repointed only, scanner-logic bug left as a separate finding).
+  - **2 real, previously-unknown data gaps found and backfilled** — Todo 1's original parity check covered date-range
+    coverage but not per-venue completeness, so these were invisible until the actual reader code was live-tested
+    against real data: (1) JITO + MARINADE (the two Solana-chain `lst_rates` venues) were entirely absent from the
+    shared bucket; (2) HYPERLIQUID's `perp_daily_ctx` (mark-price) shard was entirely absent, so every HL funding
+    observation was silently getting `mark_price=None`. Closed via a new one-off script
+    `market-tick-data-service/scripts/migrate_lst_perp_shared_bucket_gap_2026_07_13.py` (both source buckets already
+    used the destination's exact path shape, so a pure `gcs_copy_object` sufficed — no content rewrite): JITO 1,305
+    objects, MARINADE 1,745 objects, HYPERLIQUID `perp_daily_ctx` 1,109 objects, all copied and live-verified.
+  - **Shipped**: `market-tick-data-service@9b980179` (manifest scanners + the gap-backfill script),
+    `strategy-service@a34351cd` (`canonical_perp_funding_provider.py`). e2e-testing + features-service ship pending QG
+    completion (in progress as of this entry).
+  - Next: Todo 6 (redeploy strategy-service with the updated code, verify it's genuinely exercised) and Todo 7 (parity
+    verification post-deploy) before the bucket-deletion todos (8-9) can proceed.
+
+- **2026-07-13 (Todo 2 shipped)** — `canonical_dex_pool_provider.py` + `materialize_dex_pool_fees.py` rewritten to the
+  shared bucket's day-first path shape and shipped (`strategy-service@3affd5b2`). Full detail in the Todo 2 checkbox
+  above. Next: Todo 3 (find + fix the `e2e-testing` lst-rates reader) and Todo 4 (locate the real perp-funding reader —
+  not yet found).
 
 - **2026-07-13 (Todo 1 done — data parity verified; Todo 2 in progress — found a real path-shape blocker)** — **Parity
   (Todo 1)**: direct GCS probes (consolidator still stale, ~64h — same open sub-finding as

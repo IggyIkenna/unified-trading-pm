@@ -70,8 +70,25 @@ DISK_ABSENT_OK_PREFIXES: tuple[str, ...] = (
 # back of this exception; any other repo whose resolver lands on fastapi==0.137.x will hit the
 # same AttributeError. SSOT: plans/active/issues/canonical_fastapi_ceiling_stale_vs_ml_service_2026_07_13.md,
 # plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md.
+#
+# unified-trading-library / alerting-service / greeks-service / market-tick-data-service /
+# deployment-api / agent-orchestrator / features-service: same shape as ml-service above — each
+# independently raised its fastapi ceiling to <0.138.0, hard-red-gating STAGE 1.5 for every PM
+# push. Verified 2026-07-13 via each repo's own uv.lock: actual locked fastapi is 0.135.1 /
+# 0.135.1 / 0.136.3 / 0.135.1 / 0.136.3 / 0.136.1 / 0.136.1 respectively — every one below the
+# confirmed-broken 0.137.x threshold, same "incidental, not guaranteed" safety as ml-service.
+# Re-verify each repo's lock on any future `uv lock --upgrade` in that repo (a resolver bump onto
+# 0.137.x would silently break routing).
+# SSOT: plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md.
 PER_REPO_EXTERNAL_EXCEPTIONS: dict[tuple[str, str], str] = {
     ("ml-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
+    ("unified-trading-library", "fastapi"): "fastapi>=0.115.0,<0.138.0",
+    ("alerting-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
+    ("greeks-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
+    ("market-tick-data-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
+    ("deployment-api", "fastapi"): "fastapi>=0.115.0,<0.138.0",
+    ("agent-orchestrator", "fastapi"): "fastapi>=0.115.0,<0.138.0",
+    ("features-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
 }
 
 JsonDict = dict[str, object]

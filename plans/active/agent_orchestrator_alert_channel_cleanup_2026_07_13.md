@@ -240,6 +240,21 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
         probe 200 (no dead token now; that's why no auth alert fired). Tests: dead-token drops, healthy-token-with-auth
         -pane does NOT drop, 429 marks rate_limited, 403 drops, network no-op. codex "code-based classification" section
         added. Full `quality-gates.sh` green (1225 pytest). — agent-orchestrator@67de599.
+- [x] 15. ✅ [BACKEND] P1. Operator ("check EVERY alert, do the audit properly") — **complete pager audit** instead of
+      one-at-a-time. Enumerated all 40 `slack._post` notifiers + grouped the live 7-day channel by shape; found 3
+      automatic self-healing/lifecycle events still paging. Downgraded to `logger.info` (ledger persist kept; callers
+      already log the digest events): `notify_agent_stuck_escalation` ("Auto-respawn FAILED" — the trigger),
+      `notify_stash_on_done` (32/wk), `notify_autospawn_flap`. KEPT the actionable set (BLOCKED, auth-failed/recovered,
+      digest(\_failed), plan-health-failed, escalation-unresolved/abandoned, setup-token-expiring,
+      all-accounts-unusable, `notify_slot_quarantined` = dispatch STARVATION not a routine skip, `notify_watchdog_kill`
+      = already gated to cap-hit). codex gains the **Complete pager audit table** as the durable SSOT; regression test
+      `test_self_healing_lifecycle_alerts_are_summary_only`. Full `quality-gates.sh` green. —
+      agent-orchestrator@bb87f59.
+- [ ] [INFRA] P2. Separate fix (surfaced by the audit): the daily `:broom: Plan-hygiene sweep FAILED` is a PM **Cloud
+      Run cron** (`uts-prod-plan-hygiene-sweep`, 05:00) that re-posts the SAME unchanged failure
+      (`hard failures: 1, soft     warnings: 1`) every day with no dedup (7/wk). Fix the underlying hygiene failure OR
+      add read-back dedup to that job — it does NOT flow through `slack._post`, so it's out of the AO-notifier scope.
+      Owner: PM/infra.
 
 ## Progress Log
 
@@ -260,6 +275,13 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
   `--self-test` (PASS). WS-D: `notify_slot_blocked` multi-line options/recommendation. Codex SSOT
   `codex/04-architecture/agent-orchestrator-alerting.md` + CLAUDE.md one-liner added. **Remaining:** WS-E deploy — a
   auto-deploy via uvicorn `--reload` (no manual restart) + a 24–48 h re-pull verification (the only remaining step).
+- **2026-07-13 (complete pager audit)** — Operator (frustrated with one-at-a-time): "check EVERY alert, do the audit
+  properly." Enumerated all 40 `slack._post` notifiers + grouped the live 7-day channel (2065 msgs) by shape. Most of
+  the volume was already fixed today (dispatched/recovered/spawn-failed/escalation-resolved now logged). Found 3
+  self-healing events still paging → downgraded (`notify_agent_stuck_escalation` "Auto-respawn FAILED",
+  `notify_stash_on_done`, `notify_autospawn_flap`). **agent-orchestrator@bb87f59** (QG green). Added the **Complete
+  pager audit table** to the codex SSOT so this stops being whack-a-mole. Surfaced a separate PM-cron issue
+  (Plan-hygiene sweep FAILED, daily, no dedup) as a deferred todo.
 - **2026-07-13 (stop guessing — classify by API code)** — Operator flagged a "Spawn FAILED — likely a dead/expired
   setup-token, a rate-limit, or an auth modal" alert whose pane showed a LIVE working agent, and asked why we guess when
   the API codes are known. Probed all 4 accounts live: **4/4 tokens WORKING** (200; 5h 5-31%, 7d 12-64%; none
