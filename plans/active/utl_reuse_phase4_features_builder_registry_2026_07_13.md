@@ -89,12 +89,24 @@ drift_direction: advance-code
       `calculator_name`/`sources`-shaped canonical class. No 2nd function-based consumer exists fleet-wide, so creating
       a UTL `FunctionBuilderEntry` sibling now would be a single-caller abstraction (YAGNI). No code change needed —
       sports keeps its local dataclass as-is (already resolver-migrated per item 2).
-- [ ] [AGENT] P2. **delta_one base.py — surgical, not wholesale**: migrate `_boxcox_transform` → UTL
+- [x] ✅ [AGENT] P2. **delta_one base.py — surgical, not wholesale**: migrate `_boxcox_transform` → UTL
       `transformations.boxcox_transform` (adapt the `1e-8` vs `+1` edge-shift) and DELETE local. Leave
       `calculate_time_since` (element-wise log/lookback), `calculate_time_to_next`, rolling `calculate_zscore`,
       `normalize_bounded_metric`/`_logit_transform`, `safe_rolling_metric` (richer than UTL `calculate_rolling_stats`),
       and `normalize_distribution` (boxcox-inclusive, tuple-vs-series mismatch) **local** — UTL has no 1:1. The
-      `FeatureCalculator(ABC)` validate/enrich pipeline stays local.
+      `FeatureCalculator(ABC)` validate/enrich pipeline stays local. — SHIPPED `features-service@6c76be10` (companion
+      export `unified-trading-library@7cc55d2c`). `boxcox_transform` was not re-exported at UTL's top level (only via
+      `unified_trading_library.feature_calculator`), and the fleet's `check-import-patterns.py` gate rejects deep
+      submodule imports — added the top-level export in `unified_trading_library/__init__.py` (same pattern as the
+      already-shipped `BuilderEntry`/`resolve_build_order`) rather than reaching in deep. Local `_boxcox_transform` now
+      pre-shifts by the same `1e-8` epsilon it always did (UTL's own shift is a flat `+1`, only applied when the minimum
+      is non-positive) and delegates the core Box-Cox computation + NaN-safe reindexing to
+      `unified_trading_library.boxcox_transform`, preserving prior output on the happy path exactly. Deleted the local
+      `scipy.stats.boxcox` import/call. Verified via `tests/delta_one/unit/test_calculators_base.py` (113 passed,
+      including `TestBoxcoxTransform` + `normalize_distribution` mixin tests), `ruff`/`basedpyright` clean (no new
+      violations — basedpyright unknown-type count went 15→14, pre-existing noise unrelated to this change), and full
+      `quality-gates.sh` green on both repos (features-service sentinel `9108900...`→post-commit, UTL sentinel
+      `b65cf8d2`).
 - [ ] [AGENT] P3. **Fix the mis-marked bucket inline** found in passing: `volatility/io/writer.py:35`
       `bucket = f"features-volatility-{ag}-{pid}"` is marked `# CORRECT-LOCAL` but is a genuine miss → use
       `resolve_bucket_name(kind="features-volatility", asset_group=...)` (its own sibling configs already do).
