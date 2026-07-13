@@ -39,7 +39,8 @@ Automatic backend lifecycle events — the orchestrator handled them, no human i
 
 - `notify_plan_health_dispatched`, `notify_escalation_dispatched` — periodic/automatic dispatch **success**.
 - `notify_agent_stuck_respawned` — an auto-respawn (self-healing).
-- `notify_slot_recovered`, `notify_spawn_recovered`, `notify_git_staleness_resolved` — recovery/closure bookends.
+- `notify_slot_recovered`, `notify_spawn_recovered`, `notify_git_staleness_resolved`, `notify_escalation_resolved` —
+  recovery/closure bookends (a dispatched CI/CD wall confirmed clear: PR merged/superseded or `quality-gates-v2` green).
 
 Each of these calls `logger.info(...)` (the "D11 downgrade" convention) instead of `slack._post(...)`. Their events are
 recorded in the DB **activity log** (`log_activity`) by the callers, which is what the digest reads.

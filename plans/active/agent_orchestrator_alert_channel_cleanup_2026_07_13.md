@@ -211,6 +211,15 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       persisted cursor via `_seconds_until_due()` (0 when overdue/never-summarised → fire; >0 → a restart waits out the
       remainder). First-boot + genuinely-overdue still post. Tests: recent-cursor defer, absent/stale due; full
       `quality-gates.sh` green (1219 pytest). — agent-orchestrator@d5c5cae.
+- [x] 12. ✅ [BACKEND] P2. WS-A gap (operator: "escalation RESOLVED alerts still coming"): the escalation-RESOLVED
+      all-clear (`:ballot_box_with_check: escalation RESOLVED — <repo>`, verdict `qg_v2_green`) still paged after WS-A —
+      it's an automatic recovery/closure bookend (a dispatched CI/CD wall confirmed clear), not operator-actionable. The
+      original audit had parked it in the low-volume tail as KEEP, but it belongs with the other RECOVERED/RESOLVED
+      bookends. Downgraded `notify_escalation_resolved` from `_post` → `logger.info` (WS-A/D11 pattern); the caller
+      already logs `escalation_resolved` to the activity log, so it stays in the digest. UNRESOLVED / re-escalation-cap
+      still pages CRITICAL (verified `_mark_unresolved_and_maybe_reescalate`). Added to the recovery-bookends
+      logged-not-paged test; codex "does NOT page" list updated. Full `quality-gates.sh` green (1219 pytest). —
+      agent-orchestrator@8843519.
 
 ## Progress Log
 
@@ -231,6 +240,13 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
   `--self-test` (PASS). WS-D: `notify_slot_blocked` multi-line options/recommendation. Codex SSOT
   `codex/04-architecture/agent-orchestrator-alerting.md` + CLAUDE.md one-liner added. **Remaining:** WS-E deploy — a
   auto-deploy via uvicorn `--reload` (no manual restart) + a 24–48 h re-pull verification (the only remaining step).
+- **2026-07-13 (escalation-RESOLVED still paging)** — Operator flagged two `escalation RESOLVED` alerts
+  (execution-service, system-integration-tests) still hitting the channel. It's an all-clear bookend WS-A had left
+  paging (parked as KEEP in the low-volume tail). Downgraded `notify_escalation_resolved` → `logger.info` (activity log
+  still feeds the digest); UNRESOLVED/re-escalation still pages CRITICAL. **agent-orchestrator@8843519** (QG green). The
+  sibling `account auth RECOVERED` bookend stays a page **by design** — it has an explicit
+  `test_account_auth_recovered_still_pages` lock (an account returning to rotation is operationally significant, not
+  churn), so it was left untouched.
 - **2026-07-13 (digest-per-restart bug)** — Operator: "4 different summary alerts already". Pulled the channel — **5**
   digests in one morning (07:15, 10:45, 11:27, 11:31, 11:46), windows non-overlapping so the cursor was fine; the loop
   was firing on **every server restart** (uvicorn `--reload` restarts per code change reaching the VM; AO code landed
