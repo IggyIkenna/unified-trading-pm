@@ -146,10 +146,12 @@ Real code fixes / features needed (not backfills, not pure doc drift).
 
 ### P1
 
-4. **DeFi lending — real A_TOKEN/DEBT_TOKEN split needed** (one sub-item P0: Compound V3 invalid-enum crash risk)
-   `plans/active/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md` AAVE_V3/SPARK relabel, Compound V3
-   crash-risk fix (needs GCS migration), MORPHO model change, plus operator-approved generalization to
-   FLUID/VENUS/RADIANT/EULER_V2/BENQI/MARGINFI/SOLEND.
+4. **DeFi lending — real A_TOKEN/DEBT_TOKEN split — RESOLVED 2026-07-13** (one sub-item P0: Compound V3 invalid-enum
+   crash risk) `plans/active/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md` — all 9 protocols
+   (AAVE_V3, SPARK, COMPOUND_V3, MORPHO, FLUID, VENUS, RADIANT, EULER_V2, BENQI) now emit the canonical
+   A_TOKEN/DEBT_TOKEN split with real production data (2,949 rows, 100% canonical), shipped
+   `instruments-service@72e0113`+`5226818`, `unified-api-contracts@48bfadff5`. **MARGINFI/SOLEND remain genuinely open**
+   — no adapter exists for either, that caveat is unaffected by this resolution.
 
 5. **Issue-docs remediation sweep — 12 remaining code-fixable items**
    `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md` MTDS liquidations/risk_params reconcile for
@@ -242,6 +244,12 @@ raise `UnknownInstrumentTypeError` the moment a real position needs P&L attribut
 been updated. Design: aligned with `instruments-service-as-ssot-for-mtds.md` + the strategy layer's own existing
 `is_supply`/`is_borrow` assumptions. **Recommendation: proceed on #4; flag #5's strategy-service todo as
 blocked-behind-#4, don't pick it up standalone.**
+
+**RESOLVED 2026-07-13** — #4 shipped in full: all 9 protocols now emit the canonical A_TOKEN/DEBT_TOKEN split with real
+production data (`instruments-service@72e0113`+`5226818`, `unified-api-contracts@48bfadff5`); the
+invalid-`InstrumentType` crash risk this conflict analysis flagged is gone. #5's VENUS/BENQI/RADIANT/EULER_V2
+strategy-service wiring todo is now unblocked (the "blocked-behind-#4" hold above no longer applies) — it can proceed
+standalone; not itself re-verified or picked up as part of this footnote.
 
 **5. Issue-docs remediation sweep (12 items)** — conflicts: the #4 interaction above (only real one). The DEX
 pools/swaps rename is correctly `BLOCKED-DISCIPLINE` on the single-walk migration, not a divergence. Design: aligned.
@@ -483,8 +491,8 @@ Cross-doc / cross-registry contradiction, drift, or design-authority gaps.
 
 1. **Instruments-service docs audit (2026-07-08) — consolidated outstanding items across all 7 asset docs** (spans
    CODE_PATH too) `plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md` 604-line, sections A–H.
-   A1/A2/B3 resolved. Open: §B canonical-id builder adoption (~4/63 adapters — overlaps the big canonicalization
-   effort), §C (6 DeFi adapter/coverage gaps: no A_TOKEN/DEBT_TOKEN split for 6 lending protocols, MARGINFI/SOLEND
+   A1/A2/B3/C1 resolved (C1, the A_TOKEN/DEBT_TOKEN split, RESOLVED 2026-07-13 — see that doc). Open: §B canonical-id
+   builder adoption (~4/63 adapters — overlaps the big canonicalization effort), §C remaining gaps (MARGINFI/SOLEND
    missing adapters, hardcoded `YEARN-ETHEREUM`, Solana key/field mismatches, live DEX-swap streaming placeholder-only),
    §D (Prediction/Sports wiring gaps: `build_cross_venue_mapping()` never wired, `sports-odds-ready` publisher never
    built). §H (TradFi) explicitly deferred.

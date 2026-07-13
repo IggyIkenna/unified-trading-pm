@@ -275,12 +275,17 @@ tracking: `instrument_id_format_canonicalization_2026_07_08.md` +
 
 ## C. DeFi adapters / coverage not built or not wired
 
-### C1. No A_TOKEN / DEBT_TOKEN split for 6 lending protocols — `P1` — tracked: `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`
+### C1. No A_TOKEN / DEBT_TOKEN split for 6 lending protocols — `P1` — RESOLVED 2026-07-13 — tracked: `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`
 
-- **Evidence:** Morpho/Euler_V2/Fluid/Radiant/Venus/Benqi each emit one flat `LENDING_MARKET` record
-  (`adapters/defi/{morpho,euler_v2,fluid,radiant,venus,benqi}.py`).
-- **Fix options:** **A (recommended)** implement the supply/borrow split per protocol (same shape Aave/Compound use).
-  **B:** operator scoping call on which protocols need the split for MVP first.
+- **RESOLVED 2026-07-13**: all 9 DeFi lending protocols (AAVE_V3, SPARK, COMPOUND_V3, MORPHO, FLUID, VENUS, RADIANT,
+  EULER_V2, BENQI — wider than this item's original 6-protocol scope) now emit exactly two `InstrumentRecord`s per
+  position-bearing reserve/market: `instrument_type=A_TOKEN` (supply side) + `instrument_type=DEBT_TOKEN` (borrow side),
+  keyed `VENUE-CHAIN:A_TOKEN:...` / `VENUE-CHAIN:DEBT_TOKEN:...`. Real production catalogue verified: 2,949 rows across
+  all 9 protocols, 100% canonical. Shipped `instruments-service@72e0113`+`5226818`, `unified-api-contracts@48bfadff5`.
+  Full per-protocol evidence in `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`'s 2026-07-13 entry. Fix
+  option A below (implement the supply/borrow split per protocol) is what shipped.
+- **Original evidence (historical, pre-fix):** Morpho/Euler_V2/Fluid/Radiant/Venus/Benqi each emitted one flat
+  `LENDING_MARKET` record (`adapters/defi/{morpho,euler_v2,fluid,radiant,venus,benqi}.py`).
 
 ### C2. MARGINFI / SOLEND have no instruments-service adapter — `DECISION` — NEW
 
@@ -537,6 +542,11 @@ A large parallel fix wave landed after this doc was filed. Cross-referencing aga
   clean delisting); all 6 still have live entries in `TRADFI_EQUITY_PERP_BASIS_UNIVERSE` + `crypto_equity_link.py`.
   Flagged as "PARTIALLY OPEN" in `CEFI_INSTRUMENTS.md`'s Known Bugs table — still needs the cross-venue DATA audit this
   doc's fix option A calls for; not resolved, just re-confirmed with fresher evidence.
+- **C1 (No A_TOKEN/DEBT_TOKEN split for 6 lending protocols)** — RESOLVED 2026-07-13, scope widened to all 9 protocols
+  (AAVE_V3/SPARK/COMPOUND_V3/MORPHO/FLUID/VENUS/RADIANT/EULER_V2/BENQI): real production backfill verified, 2,949 rows
+  100% canonical `A_TOKEN`/`DEBT_TOKEN`. Shipped `instruments-service@72e0113`+`5226818`,
+  `unified-api-contracts@48bfadff5`. See `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`'s 2026-07-13
+  entry.
 - **Newly and fully resolved, not previously listed above:**
   - Sports coverage-metric "framing bug" hypothesis for Transfermarkt/SFI — investigated and found to be **stale
     numbers, not a live bug**: the denominator-grain fix already shipped a month earlier (`deployment-api@6b7aa696`,

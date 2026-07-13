@@ -89,7 +89,10 @@ locked_since:
    `debt_token` (the borrow-side counterpart, i.e. what people owe) has zero captured rows anywhere. Aave lending
    positions are being tracked one-sided today: we see what people supplied, not what they borrowed. Same root pattern
    as the `liquidations`/`risk_params` drift above — declared, schema-ready, never wired to a capture path — just one
-   axis deeper (a whole missing `instrument_type`, not a missing `data_type` within one).
+   axis deeper (a whole missing `instrument_type`, not a missing `data_type` within one). **SUPERSEDED 2026-07-13**:
+   this one-sided-tracking claim is resolved — all 9 DeFi lending protocols (AAVE_V3, SPARK, COMPOUND_V3, MORPHO, FLUID,
+   VENUS, RADIANT, EULER_V2, BENQI) now emit both `a_token` and `debt_token` with real captured rows (2,949 total), per
+   the resolved `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`'s 2026-07-13 entry.
 3. **CEFI's per-instrument-type narrowing is three independently-bolted-on patches, not one mechanism**, in two files:
    `DERIBIT_MVP_INSTRUMENT_TYPE_DATA_TYPES` (`market_data_categories.py:549-553`, Deribit-only, instrument_type-keyed,
    consumed by MTDS fetch-scoping) · `CeFiMvpRule.instrument_type_data_types`/ `.venue_data_types`
@@ -170,7 +173,7 @@ just belongs on a different layer than instrument_type does, and conflating the 
       the module's aspirational-entry convention to `radiant`/`euler_v2`'s dead `liquidations`/`risk_params`. **NOT
       fixed** — see Progress Log's 31-venue table (a different bug class: the actual/genesis layer over-claiming a start
       date with zero real captures, filed as a new P2 DESIGN todo below). **`debt_token`** intentionally OUT OF SCOPE —
-      tracked in `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`.
+      tracked in `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md` (now RESOLVED — see that doc).
 - [ ] [CODE] P2. Fix `_L5_VENUES` (finding 4) to read from `VENUE_DATA_TYPE_CAPABILITIES` instead of a hardcoded tuple;
       audit `_SOURCE_COVERAGE_START` and `_PROTOCOL_TO_DATA_TYPE` for the same fix, resolving the
       `"kamino"`/`"kamino_lending"` split mismatch against UAC's single `"kamino"` entry either direction. **Not touched

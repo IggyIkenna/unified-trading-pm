@@ -120,9 +120,30 @@ readers still point at the dedicated buckets.
 
 ## Progress Log
 
+- **2026-07-13 (Todo 1 done — data parity verified; Todo 2 in progress — found a real path-shape blocker)** — **Parity
+  (Todo 1)**: direct GCS probes (consolidator still stale, ~64h — same open sub-finding as
+  `eigenlayer_manifest_availability_index_collision_2026_07_12.md`, not re-litigated here) confirm the shared bucket has
+  `dex_pool_state`/`dex_pool_swaps`/`lst_rates`/`perp_funding` present across every sampled date from 2024-06 through
+  2026-06, and each dedicated bucket's max date (`dex-pools-prd` 2026-05-22, `lst-rates-prd` 2026-05-28,
+  `perp-funding-prd` 2026-06-09) sits comfortably inside that coverage window. No data gap blocking cutover for these 3
+  data_types. Separately checked `dex_pool_fees` (a companion data_type `canonical_dex_pool_provider.py` also reads,
+  materialized by `scripts/materialize_dex_pool_fees.py`) — **zero real rows anywhere in `dex-pools-prd`** (recursive
+  search, no matches), so it's either never been run in production or writes elsewhere; not a parity risk either way
+  since there's nothing to preserve, but flagging since the docstring describes it as a real, designed corpus and it
+  appears dormant. **Real blocker found (Todo 2)**: `canonical_dex_pool_provider.py`'s path-construction
+  (`_pipeline_mode_prefixes`, `_read_pools_for_day`, `_fee_pipeline_mode_prefixes`) is hard-coded to the DEDICATED
+  bucket's segment order — `asset_group=defi/pipeline_mode={MODE}/day={D}/venue=.../data_type={DT}/` (asset_group first,
+  no wrapper prefix, verified directly against `dex-pools-prd-central-element-323112`). The SHARED bucket uses a
+  DIFFERENT order — `raw_tick_data/by_date/day={D}/pipeline_mode={MODE}/asset_group=defi/venue=.../data_type={DT}/` (day
+  first, wrapped under `raw_tick_data/by_date/`; verified directly against `market-data-tick-defi-prd`). **This is not a
+  bucket-name swap** — the reader's prefix-construction logic needs a real rewrite to match the shared bucket's actual
+  path shape, on top of repointing `resolve_bucket_name(kind=...)`. Confirms the plan's own "do not rush the
+  reader-cutover" caution was warranted. Have not yet read `materialize_dex_pool_fees.py`'s path logic, nor located the
+  lst-rates/perp-funding readers (Todos 3-4) — next steps.
+
 - **2026-07-13** — Filed after the operator questioned `dex-pools-prd-central-element-323112`'s internal structure
   directly (confirmed real: legacy `day=.../category=defi/` + canonical
-  `raw_tick_data/.../asset_group=defi/.../ instrument_type=pool/` trees both present, redundant with the bucket name +
+  `raw_tick_data/.../asset_group=defi/.../instrument_type=pool/` trees both present, redundant with the bucket name +
   instrument_id key on three separate axes) and asked whether it should be consolidated the way other DeFi buckets were
   this session. Scoped as its own plan rather than folded into the in-flight DeFi-lending-instrument-split doc/code
   fixup, since this touches strategy-service (live-trading-adjacent) and warrants its own careful, sequential execution.

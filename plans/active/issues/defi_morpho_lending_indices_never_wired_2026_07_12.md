@@ -34,6 +34,14 @@ locked_by:
 locked_since:
 ---
 
+> **Footnote (2026-07-13, superseded counts — does not affect this doc's open topic):** the "465 catalog instruments" /
+> `LENDING_MARKET` figures in this doc's frontmatter `summary` and in the "What I found" / "Why it matters" sections
+> below reflect the instrument catalogue as it stood when this doc was written (2026-07-12). MORPHO's real catalogue is
+> now 2,666 rows, 100% `A_TOKEN`/`DEBT_TOKEN` (no `LENDING_MARKET` rows), per the resolved
+> `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`'s 2026-07-13 entry. This doc's own topic — the
+> `lending_indices` MTDS market-data wiring / G2 gate — is a separate, still-open issue and is unaffected; preserved
+> below as originally written for historical accuracy.
+
 ## What I found
 
 Found while re-running the G2 final-verification gate for `mvp_backfill_defi_onchain_v10_2026_06_27.md`. The
@@ -48,7 +56,8 @@ despite [a related doc] reporting 465 real rows as of 2026-07-07 — loose threa
 claim is from `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md` — re-read closely, those 465 rows are
 **instrument-catalog** definitions (`LENDING_MARKET` instrument records in instruments-service — i.e. MORPHO IS
 correctly MVP-tagged reference data), not manifest capture rows. No contradiction; the two docs are talking about
-different tables. The manifest reading (0% captured) is correct and is the real gap.
+different tables. The manifest reading (0% captured) is correct and is the real gap. [Superseded 2026-07-13: MORPHO's
+real catalog is now 2,666 rows, 100% `A_TOKEN`/`DEBT_TOKEN` — see the footnote at the top of this doc.]
 
 **Root cause**: `market_tick_data_service/cli/handlers/lending_indices_handler.py:171` —
 `_DEFAULT_PROTOCOLS = ["aave_v3", "spark", "compound_v3", "kamino_lending", "solend", "marginfi"]` — MORPHO is not in
@@ -71,8 +80,9 @@ apparently-finished adapter code that was simply never plugged into the dispatch
 Blocks the `mvp_backfill_defi_onchain_v10_2026_06_27.md` G2 gate
 (`lending_indices attempted_failed=0 AND expected_unattempted=0`) — MORPHO alone accounts for ~562K of the outstanding
 `expected_unattempted` cells for this data_type. MORPHO is confirmed MVP-in-scope (465 catalog instruments,
-`is_mvp()`-eligible per the referenced instrument-split doc). Silent zero-coverage for an MVP-tagged venue is exactly
-the class of gap the plan's "Definition of 100%" section calls out.
+`is_mvp()`-eligible per the referenced instrument-split doc). [Superseded 2026-07-13: MORPHO's real catalog is now 2,666
+rows, 100% `A_TOKEN`/`DEBT_TOKEN` — see the footnote at the top of this doc.] Silent zero-coverage for an MVP-tagged
+venue is exactly the class of gap the plan's "Definition of 100%" section calls out.
 
 ## Recommended decision
 

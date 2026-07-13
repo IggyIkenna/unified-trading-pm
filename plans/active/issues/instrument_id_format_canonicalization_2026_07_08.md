@@ -187,10 +187,21 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
    into 2 disjoint keys invisible to anything querying the correct prefix. **Target**: consolidate all rows under
    `AAVE_V3-OPTIMISM` only; the misspelled variant is retired, not migrated (it's a typo, not a distinct entity).
 
-6. **MORPHO's market-address disambiguator uses a 3rd colon inside the symbol** —
-   `MORPHO-BASE:LENDING_MARKET:USDC-EURC:0x305dd1` — colon is the reserved top-level `VENUE:TYPE:SYMBOL` delimiter, so a
-   3rd colon is ambiguous to any naive `split(":")` parser. **Target**: dash-separate instead, matching the
-   pool-fee-tier fix already applied elsewhere — `MORPHO-BASE:LENDING_MARKET:USDC-EURC-0x305dd1`.
+6. **MORPHO's market-address disambiguator uses a 3rd colon inside the symbol** — **SUPERSEDED 2026-07-13**: the
+   `LENDING_MARKET`-typed examples below (`Real`/`Target`) describe the pre-fix model. Per the resolved
+   `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md` (shipped `instruments-service@72e0113`+`5226818`),
+   MORPHO now emits the canonical A_TOKEN/DEBT_TOKEN split — real shape `MORPHO-{CHAIN}:A_TOKEN:A{pair_key}` /
+   `MORPHO-{CHAIN}:DEBT_TOKEN:DEBT{pair_key}` (`build_canonical_instrument_id`-routed), 2,666 real MORPHO rows in
+   production, 100% canonical. Whether the original 3rd-colon-disambiguator concern still applies to this new key shape
+   is **unclear from the resolved doc alone** — `pair_key` reads as a single dash-fused segment (not independently
+   colon-delimited) in the one concrete example cited there, which would mean the concern doesn't recur, but no literal
+   full real instrument_id was quoted to confirm this. **Flagging as a follow-up**: someone should read
+   `morpho.py::_market_to_records`/`_build_pair_key` (or equivalent) directly and confirm `pair_key` never itself
+   contains a `:` before treating this finding as fully closed.
+   - **Original finding (historical, pre-fix), preserved for record:** `MORPHO-BASE:LENDING_MARKET:USDC-EURC:0x305dd1` —
+     colon is the reserved top-level `VENUE:TYPE:SYMBOL` delimiter, so a 3rd colon is ambiguous to any naive
+     `split(":")` parser. **Target** (as originally proposed): dash-separate instead, matching the pool-fee-tier fix
+     already applied elsewhere — `MORPHO-BASE:LENDING_MARKET:USDC-EURC-0x305dd1`.
 
 7. **TradFi multi-leg spreads reuse the single-leg `SPOT_PAIR` type and separate legs with a whitespace-padded dash of
    raw exchange tickers — but real, structured infrastructure to do this properly already exists and just isn't wired up
@@ -868,8 +879,11 @@ state before acting (still multi-hour, 0-1 flat errors, not climbing) and script
   Venus, Benqi, MarginFi, Solend, Renzo, KelpDAO, Puffer, RocketPool, Sanctum, Solblaze, Yearn_V3, Beefy, Karak, Idle,
   Symbiotic, Convex) have ZERO real objects under ANY naming variant — confirmed via a full real venue-token inventory
   (87 distinct tokens, full 2020-2026 history, both buckets) — NOT a naming gap (nothing to rename), a separate
-  pre-existing "never backfilled" state, out of THIS audit's scope. **Second finding, flagged not executed, mirrors
-  CeFi's shape-B finding above**: a fully distinct real duplicate write path was found —
+  pre-existing "never backfilled" state, out of THIS audit's scope. **Note (2026-07-13): fixed for 4 of the 18 — VENUS,
+  RADIANT, EULER_V2, BENQI now have real backfilled objects** (VENUS 6, RADIANT 8, EULER_V2 6, BENQI 2 rows), per the
+  resolved `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`'s 2026-07-13 entry. MarginFi/Solend and the
+  other 12 non-lending venues in this list are unaffected and still ZERO, per that same source. **Second finding,
+  flagged not executed, mirrors CeFi's shape-B finding above**: a fully distinct real duplicate write path was found —
   `day={D}/pipeline_mode=batch_instruments_service/asset_group=defi/venue={V}/...` — mirroring ~104K of the flat tree's
   real objects in `-prd-` (2,353/2,363 days), confirmed dead going-forward (real writes stopped ~2026-06-30). Unlike
   CeFi's shape B (which the CeFi audit above found DOES carry stale/buggy unmigrated content in some cases), DeFi's
