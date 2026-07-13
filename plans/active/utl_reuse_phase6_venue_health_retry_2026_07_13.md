@@ -43,9 +43,23 @@ drift_direction: advance-code
 - [x] ✅ [AGENT] P1. **instruments-service** — DONE `instruments-service@66165f2e` (23 tests ✓, QG 0; direct-push
       carve-out — UTL was transiently dirty). Deleted local `VenueError`; all 8 construction sites now build UAC
       `VenueErrorClassification` (`retry_safe`/`reconnect`/`action: ErrorAction`); `VenueFetchResult` wrapper kept.
-- [ ] [AGENT] P2. **execution-service**: fold the second hand-rolled `/health`+`/ready`+`/readiness` in `api/app.py:209`
-      onto UTL `make_health_router(...)` with a `data_freshness` callback (QG STEP 5.62), so the service has ONE health
-      surface (the canonical `api/main.py` already uses it).
+- [x] ✅ [AGENT] P2. **execution-service** — DONE `execution-service@348385ad` (8 new tests ✓, `quality-gates.sh` exit
+      0, sentinel-verified). Folded `api/app.py`'s hand-rolled `/health`+`/ready`+`/readiness` onto UTL
+      `make_health_router(...)`: `/readiness` preserves the former standalone endpoint's exact gate (auth + limiter +
+      handler wired at startup) via a `readiness_check` callback; `/health` surfaces recovery-completion as a non-gating
+      `checks.recovery` entry instead of a separate `/ready` route (`mark_recovery_complete()` has zero callers
+      repo-wide, so folding it into the gating `readiness_check` would have made `/readiness` permanently 503 — kept
+      non-gating instead, preserving `/readiness`'s actual current behavior). No `data_freshness` callback —
+      execution-service's live-trading app has no batch-pipeline "last processed date" concept to attach one to (unlike
+      `api/main.py`'s use case); `data_freshness` is optional on `make_health_router` and QG STEP 5.62 is a structural
+      `make_health_router`-presence grep, already satisfied. Also fixed a pre-existing, unrelated codex-compliance
+      ratchet breach discovered while shipping (repo's own `CODEX_MAX_VIOLATIONS=3` was at 4: click + pillow CVEs, a
+      `providers/` hardcoded-project-id exclude-glob, a false-positive backward-compat-shim comment reword) — see
+      `plans/active/issues/execution_service_codex_compliance_ratchet_breach_2026_07_13.md` (3 of its 4 buckets fixed;
+      the 25-oversized-function bucket left open, out of scope). Resolved a real merge conflict with a concurrent peer
+      slot's independent fix for the same false-positive comment (took the already-landed upstream wording) and
+      reconciled overlapping hardcoded-project-id fixes (peer fixed 3 files via real config interpolation; kept only the
+      still-needed `providers/` exclude-glob).
 - [x] ✅ (UTL helper half) **Add a UTL retry helper** — DONE `unified-trading-library@20c8ae8d`: `retry` (decorator) +
       `with_retry` (callable), stdlib-only, exp backoff + jitter, 429/5xx-aware, exported from
       `unified_trading_library.utils.retry` / `.utils` / top-level. 9 new tests.
