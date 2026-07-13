@@ -177,13 +177,13 @@ dispatches to PM — it does NOT emit these alerts, so it is untouched.)
       (+digest later), D4=keep 60-min threshold. Plan unblocked for implementation.
 - [x] 1. ✅ [INFRA] P2. WS-1: bumped `branch-health.yml` `lag-notify` `cooldown_min` 60 → 120 (D1); `promotion-lag`
      dedup_key + `lag-notify-resolved` bookend intact. PM-local cron (no rollout) — takes effect from `main`. —
-     unified-trading-pm@22442c2a1; YAML parses.
+     unified-trading-pm@e4b494356; YAML parses.
 - [x] 2. ✅ [INFRA] P2. WS-3: `python-quality-gates-v2.yml` `notify-qg-fail` `dedup_key` `qg-fail:<repo>:<sha>` →
      `qg-fail:<repo>:<ref_name>` + `cooldown_min` 45 → 120 (D2). Reusable workflow — applies fleet-wide via the
-     `@live-defi-rollout` ref (no rollout). — unified-trading-pm@22442c2a1.
+     `@live-defi-rollout` ref (no rollout). — unified-trading-pm@e4b494356.
 - [x] 3. ✅ [INFRA] P2. WS-2: gated `ci-status-update.yml` `notify` on `status == 'FAILING'` so only regressions page;
      the green CI-RECOVERED / SIT-pass all-clears drop from Slack (Firestore + GCS ledger writes unchanged) per D3.
-     PM-local (fires from `main`). — unified-trading-pm@22442c2a1.
+     PM-local (fires from `main`). — unified-trading-pm@e4b494356.
 - [ ] [INFRA] P3. WS-1 (stretch): evaluate moving the promotion-lag check to a self-triggered path (AO backend) for
       cron-deviation-proof timing — age-based re-remind independent of GitHub's hosted scheduler.
 - [ ] [REVIEW] P3. WS-4: document the CI-alert dedup/cooldown contract in `codex/08-workflows/ci-cd-flow.md` (or a new
@@ -196,11 +196,11 @@ dispatches to PM — it does NOT emit these alerts, so it is untouched.)
   promotion-lag cooldown=60m too short (`branch-health.yml` lag-notify); WS-2 CI-RECOVERED green bookends
   (`ci-status-update.yml`); WS-3 per-run QG alert keyed by SHA (`python-quality-gates-v2.yml` notify-qg-fail). Answered
   the 3-way-count question (per-run vs per-transition vs hourly granularities). Plan authored (human/LOCAL).
-- **2026-07-13 (implemented)** — WS-1/2/3 shipped in `unified-trading-pm@22442c2a1` (3 PM-local workflow edits, all YAML
+- **2026-07-13 (implemented)** — WS-1/2/3 shipped in `unified-trading-pm@e4b494356` (3 PM-local workflow edits, all YAML
   valid). Corrected the plan's rollout assumption: these are NOT fleet-rolled-out templates —
   `python-quality-gates-v2.yml` is a reusable workflow applied via the `@live-defi-rollout` ref (fleet-wide, no
   rollout); `branch-health.yml` + `ci-status-update.yml` are PM-local and take effect from `main`. All operator
-  decisions resolved. **Remaining:** WS-3 is live on LDR immediately; WS-1/WS-2 activate once `22442c2a1` promotes
+  decisions resolved. **Remaining:** WS-3 is live on LDR immediately; WS-1/WS-2 activate once `e4b494356` promotes
   LDR→main; then the WS-4 verification re-pull (24–48 h) confirms the volume drop. WS-1-stretch (self-triggered
   scheduler) + WS-4 (codex doc + digest count) stay open.
 - **2026-07-13 (cadence measured)** — Operator flagged the promote is not really `*/15`. MEASURED last 60 promote runs:
