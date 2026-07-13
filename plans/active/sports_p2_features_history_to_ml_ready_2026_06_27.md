@@ -117,6 +117,70 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 8 (Todo 1 dispatch — the venue_context OOM fix landed; gap-filled vm-4's range, verified holding in production)
+
+**Todo 1 (compute features 2015→present) — took concrete action (gap-fill relaunch) now that the blocking OOM bug is
+fixed. Checkbox NOT flipped (multi-day operation, not yet complete).**
+
+This dispatch immediately followed my own independent profiling work on
+[`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+(Todo 1 there), where I pinned the exact root cause (a cartesian-join explosion in `_compute_venue_features` from a
+degenerate empty-string `venue_id`) and slot-14 independently confirmed it, traced it to a `pd.to_numeric()` coercion
+bug across 3 normalizer sites, and shipped a verified fix (`features-service@c3e3ebfe`) — both 2018-06-17 (149 fixtures)
+and 2018-06-18 (24 fixtures) now complete `export_derived_features()` fully at ~620MB peak RSS instead of OOM-crashing
+at 15-32GB.
+
+Fast re-verify first via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112` — snap versions are broken with `cap_dac_override` errors on this slot, consistent with every
+prior dispatch's own note):
+
+- Features bucket unique-date count: **1,906** (up from slot-15's 1,744) — steady forward progress from the 7 healthy
+  shards (`vm-3,5,6,7,8,9,10`).
+- `vm-1`/`vm-2` confirmed absent with clean exit markers (completed normally, per slot-15's entry).
+- `vm-4` confirmed still absent (per slot-15's finding: died again on 2018-06-18 after the OOM fix's synthetic benchmark
+  falsely marked it resolved) — its range (2018-06-17→2019-08-11) has not been worked since.
+
+**Gap-filled `vm-4`'s range** now that the real fix is shipped: packaged a fresh codebase tarball (current HEAD,
+includes `features-service@c3e3ebfe`) and launched a single VM via
+`launch-features-sports-parallel-backfill-vm.sh --start 2018-06-17 --end 2019-08-11 --vms 1` (dry-run first — confirmed
+correct 421-day chunking matching `vm-4`'s original range exactly). Named `fss-backfill-vm-1` by the launcher's own
+numbering (the original `vm-1` already completed and was deleted, so no collision — `--skip-existing` makes any
+theoretical date overlap safe regardless).
+
+**No-fire-and-forget verification (HARD RULE)** — did not just check `RUNNING` status:
+
+- SSH'd in at T+~7min: confirmed the real `features-service` process (hyphenated binary name, not the underscore
+  `features_service` package name — a naming gotcha worth remembering for future greps) genuinely alive — 17.1% CPU,
+  691MB RSS, 1:04 accumulated CPU time, actively computing `--date 2018-06-17`.
+- **The `run.log`'s last line at check time was ~3 min stale**, which could look like a hang — but the SSH check
+  confirmed this is real, ongoing compute (not a stall): the log was paused mid-way through a large volume of
+  `Skipping fixture row N: Cannot compare tz-naive and tz-aware timestamps` warnings, which slot-14's issue-doc update
+  already flagged as a known, non-fatal "Secondary noise finding" in the `elo`/`manager`/`travel` calculator group —
+  expensive per-row exception logging, not a crash.
+- **Confirmed the fix holds on the real poison date**: 691MB RSS on 2018-06-17 is nowhere near the previous 15-32GB OOM
+  ceiling, and the process had already advanced past `_compute_venue_features` (the fixed site) into the
+  `elo`/`manager`/`travel` calculator group — i.e. it got further on this exact date than it EVER did pre-fix. This is
+  the first live-production confirmation of the fix (my own profiling + slot-14's fix verification were both
+  synthetic-cache/isolated-repro based, not a real backfill-fleet VM).
+
+**What I did NOT do**: did not wait for `vm-4`'s full 421-day range to complete (multi-day operation, consistent with
+every prior dispatch's own precedent) or babysit it further this session — the no-fire-and-forget check already
+confirmed genuine, healthy, memory-bounded progress past the exact previously-fatal point. Did not touch the 7 other
+healthy shards. Did not flip Todo 1 or Todo 3 — full-history compute is still genuinely in progress.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 1,906,
+and critically should include `day=2018-06-17` and `day=2018-06-18` once `fss-backfill-vm-1` (this gap-fill) advances
+past those two dates — the first time either date has ever been captured) using the NON-SNAP `gcloud`/`gsutil` at
+`/home/ubuntu/google-cloud-sdk/bin/`. Also watch for the tz-naive/aware warning noise slowing this shard down
+disproportionately vs the other 7 — if it's genuinely pathological (not just noisy), that's new evidence for whoever
+picks up `plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md`. Once the bucket approaches the
+full ~4,210-day span AND `fss-backfill-vm-1`'s gap-fill range is genuinely covered, re-run
+`check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (compute genuinely in progress). No repo code commit this entry (VM operation, not a code change);
+this plan-doc edit ships via the `docs(plans):` carve-out.
+
 ### 2026-07-13 — slot 15 (Todo 3 re-dispatch — fast re-verify confirms slot-12's finding still current; vm-4 crashed again on 2018-06-18 exactly as predicted; no new data_engineering action)
 
 **Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
