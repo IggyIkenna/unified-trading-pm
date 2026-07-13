@@ -155,10 +155,35 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
 
 ## Todos
 
-- [ ] [DESIGN] P1. **BLOCKED-OPERATOR-DECISION** · Operator decision: resolution (a) denominator-correction vs (b)
-      typed-empty-row retrofit for the 6 live-only tuples (ASTER/liquidations,
-      PACIFICA-SOLANA/EXTENDED-STARKNET/LIGHTER-ZKSYNC book_snapshot_5, LIGHTER-ZKSYNC/trades). (repo:
-      unified-trading-pm, for the decision; implementation repo depends on the choice)
+- [x] ✅ [DESIGN] P1. Operator decision: resolution (a) denominator-correction vs (b) typed-empty-row retrofit for the 6
+      live-only tuples (ASTER/book_snapshot_5, ASTER/liquidations, PACIFICA-SOLANA/EXTENDED-STARKNET/LIGHTER-ZKSYNC
+      book_snapshot_5, LIGHTER-ZKSYNC/trades). (repo: unified-trading-pm, for the decision; implementation repo depends
+      on the choice) — **✅ DECIDED + IMPLEMENTED 2026-07-13 (slot-2)**: operator ruled option **(b)** via `/blocked` —
+      "write a typed empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE] row instead of dropping the 6 tuples from
+      the UAC denominator. Matches the existing DERIBIT-COMBO/HL/ASTER honest-absence precedent and CLAUDE.md's 'never
+      silent placeholders' rule." Implemented in `OnchainPerpBatchHandler`: added `_record_live_only_empty_rows`, called
+      right after `_batch_data_types_for_venue` filters live-only data_types out of the batch universe — writes one
+      typed row per (data_type, symbol) excluded for that reason, for ALL 6 tuples (not 5 — the exclusion logic was
+      already scoped correctly, my earlier own summary undercounted this in one place, corrected here). DROPPED
+      data_types (no feed on ANY transport, e.g. HL liquidations) are unaffected — "never attempted" stays correct for
+      them, per the operator's own framing (only LIVE-ONLY tuples were in scope for (a)/(b)). Split the exclusion logic
+      (dicts + filter + new recorder) into a new `_onchain_perp_batch_live_only.py` stage module to stay under the
+      900-line codex ratchet (pure code motion for the pre-existing pieces, mirrors the existing
+      `_onchain_perp_batch_lighter.py`/`_umi.py` splits). 4 tests updated (ASTER/PACIFICA/EXTENDED book_snapshot_5 now
+      assert `record_empty` IS called with the typed reason, was `assert_not_called()`) + 1 new test (LIGHTER-ZKSYNC
+      trades+book_snapshot_5). Full `quality-gates.sh` green (fresh run, not sentinel-cached). Shipped
+      `market-tick-data-service@3dd28d5e`. **Live-verified the code path** (not just unit tests): a dry-run CLI
+      invocation
+      (`--operation collect-onchain-perp-batch --venues ASTER --onchain-perp-data-types     book_snapshot_5 --dry-run`)
+      showed the exclusion log line immediately followed by "ManifestWriter: DRY RUN — would have written 1 rows" (0
+      rows would have been logged pre-fix); a REAL (non-dry-run) invocation reached the identical point and repeatedly
+      attempted the real GCS write, hitting ONLY the pre-existing, unrelated `ManifestWriter` generation-CAS retry loop
+      (heavy concurrent-slot contention on the shared cefi manifest this session — 13 consecutive retries, all clean
+      backoff-and-retry, zero errors, killed by my own CLI timeout before attempt 15/15 exhausted, not a bug) — never a
+      code exception, never wrong data. **This is a going-forward fix only**: existing historical shard-days that
+      already silently skipped stay silently absent unless separately backfilled (not attempted this session — a
+      distinct, lower-priority follow-up, similar in shape to `relabel_deribit_combo_historical_to_empty_2026_06_27.py`,
+      left for whoever picks up P3 below).
 - [x] [SCRIPT] P2. Check whether LIGHTER-ZKSYNC's post-2026-04-17 Tardis-routed capture path (the one that resolved
       `trades` today) can also serve `book_snapshot_5` — if so this ONE tuple may be a genuine backfill fix independent
       of the (a)/(b) decision above, narrowing the live-only set to 5 tuples. (repo: market-tick-data-service) **DONE
@@ -184,9 +209,16 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
       operator decision (both `trades` and `book_snapshot_5` for LIGHTER-ZKSYNC are still in the 6-tuple live-only set
       either way, since this todo's actual question — can Tardis serve `book_snapshot_5` — is answered). No code change
       — investigation only; issue doc ships via the PM `docs(plans):` carve-out.
-- [ ] [SCRIPT] P3. **BLOCKED-OPERATOR-DECISION** · Once (a) or (b) is decided and implemented, re-run
-      `measure_honest_coverage.py --asset-group cefi` to confirm Layer-1 tuple count drops accordingly. (repo:
-      instruments-service)
+- [ ] [SCRIPT] P3. Once (a) or (b) is decided and implemented, re-run `measure_honest_coverage.py --asset-group cefi` to
+      confirm Layer-1 tuple count drops accordingly. (repo: instruments-service) — **UNBLOCKED 2026-07-13**: (b) is
+      implemented (`market-tick-data-service@3dd28d5e`, see P1 above), but this todo is still NOT actionable yet — the
+      fix is going-forward only (no historical backfill of the typed-empty rows), so `measure_honest_coverage.py` run
+      right now would show the SAME 6 missing tuples it did before, since no shard-day has actually been (re)processed
+      with the new code yet. Needs either: a fresh `collect-onchain-perp-batch` run for at least one date per affected
+      venue (my own attempt this session got queued behind heavy `ManifestWriter` CAS contention on the shared cefi
+      manifest and didn't complete within a reasonable wait — see P1's live-verify note), or the next
+      regularly-scheduled backfill picking up the new code naturally. Re-run this todo's coverage measurement AFTER that
+      lands, not before.
 
 ## Progress Log
 
