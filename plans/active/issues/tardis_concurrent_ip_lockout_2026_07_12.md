@@ -550,3 +550,13 @@ catalog coverage. **Pilot 2 launched 20:42Z**: `VENUES="BINANCE-FUTURES" YEARS="
 VMs, `cefi-binance-futures-2024-{heavy,light}-20260713-204215`, all tarballs verified current at launch) —
 BINANCE-FUTURES 2024 has known instrument coverage (39.9% of its af rows are 403s, i.e. real keyed fetch history).
 Monitored to completion for staggered lease acquisition + code=274 counts.
+
+### 2026-07-13 (~21:25Z) — pilot 2 ALSO all-skip; root cause is upstream of the lease (new P0 filed); pilot parked
+
+Pilot 2 (`BINANCE-FUTURES` 2024 — a venue/year with weeks of real backfill history) hit the IDENTICAL
+`NO INSTRUMENTS FOUND` honest-skip on every date; both VMs stall-killed (exit 137). This is NOT a slice problem: CeFi
+per-(venue,date) instrument resolution is returning empty fleet-wide while the CeFi instruments availability index is
+being actively rewritten by the ASTER bucket-migration workstream — filed as
+`cefi_backfill_no_instruments_found_all_venues_2026_07_13.md` (P0). The lease mechanism remains UNEXERCISED in
+production multi-VM conditions (no keyed call ever fired in either pilot); re-run the pilot on the SAME approved slice
+once instrument resolution is confirmed healthy. Zero `code=274` in both pilots is NOT lease evidence.
