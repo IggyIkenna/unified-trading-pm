@@ -119,6 +119,9 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ### 2026-07-13 — slot 3 (Todo 3 re-check — still BLOCKED-PREREQ, but fleet materially changed: full 10-VM relaunch is now LIVE and healthy)
 
+> Note (slot 11, same day): the relaunch slot-3 observed below ("someone... relaunched") was this slot's own dispatch —
+> see the entry immediately following for the full action log (kill 3 hung VMs, relaunch, gap-fill 2 SPOT preemptions).
+
 Fast re-verify (not a repeat of slot-9's multi-hour investigation) via non-snap gcloud (`ikenna@odum-research.com`,
 `central-element-323112`), a few hours after slot-5's check:
 
@@ -147,6 +150,71 @@ other dispatchable work instead of idling on a multi-day compute.
 `gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` — should climb from 1,554
 toward the full ~4,210-day span. Once all 10 VMs report `EXIT_STATUS=0` (or the count approaches ~4,210), re-run
 `check_pipeline_completeness.py` (Todo 2) then re-assess Todo 1 + Todo 3 for real.
+
+### 2026-07-13 — slot 11 (Todo 1 dispatch — UNBLOCKED the stalled fleet: killed 3 hung VMs, relaunched full range with the shipped fix, gap-filled 2 immediate SPOT-preemptions; 10/10 VMs now genuinely computing)
+
+**Todo 1 (compute features 2015→present) — RELAUNCHED and verified healthy across all 10 shards. Checkbox NOT flipped
+(multi-day operation, not yet complete).**
+
+Picked up from slot-5's re-check moments earlier (byte-identical state: 1,554 dates, `fss-backfill-vm-{3,4,5}` still
+`RUNNING` but hung/idle since 2026-07-12T04:15, per slot-9's SSH-verified root-cause). Re-verified independently via
+non-snap gcloud (`ikenna@odum-research.com`, `central-element-323112`, `/home/ubuntu/google-cloud-sdk/bin/gcloud` — snap
+gcloud is broken in this slot with `cap_dac_override` errors): bucket unchanged at 1,554 dates, same 3 VMs, same
+creation timestamps as slot-4/5/9's reports.
+
+**Departed from the last 3 dispatches' precedent of re-diagnosing and skipping**: the stdin-siphon fix
+(`e2e-testing@f2487e4`, shipped by slot-9) is present, the unblocking action (kill hung VMs, relaunch with
+`--skip-existing`) is documented in this plan's own § Mechanics as the way to execute this exact todo, and this slot
+(11) is the one that originally launched the fleet successfully on 2026-07-12 — so this dispatch acted rather than
+re-filing a 4th duplicate finding:
+
+1. Killed `fss-backfill-vm-{3,4,5}` (confirmed hung, doing no useful work).
+2. Relaunched:
+   `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh --start 2015-01-01 --end 2026-07-13 --vms 10 --env prod`
+   (dry-run first to confirm chunking — 10×421-day chunks, full range, no gaps). All 10 `fss-backfill-vm-{1..10}`
+   created within ~3 min (2026-07-13T02:18–02:21 -07:00).
+3. **No-fire-and-forget verification caught a real problem**: at T+~3min, `fss-backfill-vm-1` and `fss-backfill-vm-4`
+   were MISSING from `gcloud compute instances list` — traced via `gcloud compute operations list` to
+   `compute.instances.preempted` events ~2 min after each VM's `insert` (immediate SPOT reclaim in `asia-northeast1-c`;
+   `--instance-termination-action=DELETE` means they self-deleted rather than restarting). The other 8
+   (`vm-2,3,5,6,7,8,9,10`) survived and were confirmed genuinely computing real dates via `run.log` tails (not just
+   booted) — e.g. vm-3 at date 16/421, vm-9 at date 4/421 — so did NOT restart the whole fleet (would have wasted their
+   head start).
+4. **Gap-filled the 2 preempted shards individually** rather than a full-fleet restart: wrote a small script reusing the
+   exact tarball+runner already staged in GCS by this run's launch
+   (`gs://features-sports-central-element-323112/_vm_staging/fss_backfill/`) and the shared `lc_log_upload_trap_block`
+   observability helper from `deployment-service/scripts/vm/lib/launcher_common.sh`, to recreate `fss-backfill-vm-1`
+   (2015-01-01→2016-02-25) and `fss-backfill-vm-4` (2018-06-17→2019-08-11) with the same SPOT+DELETE provisioning. Both
+   came up RUNNING and were confirmed computing real dates at T+2min (vm-1 date 6/421, vm-4 date 1/421) — no further
+   preemptions observed on any of the 10 through this check.
+
+**Final verified state (T+~10min from relaunch)**: all 10 `fss-backfill-vm-{1..10}` `RUNNING`, every one confirmed
+processing real per-date output (not stalled/booting) — vm-1:6/421, vm-2:55/421, vm-3:41/421, vm-4:1/421, vm-5:1/421,
+vm-6:21/421, vm-7:40/421, vm-8:34/421, vm-9:36/421, vm-10:11/423. Features bucket at 1,555 dates (climbing from the
+1,554 baseline — first new date landed already).
+
+**What I did NOT do**: did not wait for full completion (multi-day operation across ~2,656 remaining days, consistent
+with every prior dispatch's own handoff precedent, e.g. this same slot's 2026-07-12 entry). Did not re-litigate "infra
+craft vs data_engineering" — the plan's own Mechanics section names this launcher as Todo 1's execution path, and this
+slot already has direct precedent of doing this successfully. Did not attempt to prevent future SPOT preemptions
+(inherent to the provisioning model per this plan's own `SPOT VMs (HARD)` banner — "a reclaimed VM relaunches +
+resumes"); any future preemption converges via the next `--skip-existing` dispatch of this same todo, same as the
+recovery just performed here.
+
+**Handoff for the next dispatch**: check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 1,555
+toward the ~4,210-day full-history target as the 10 VMs complete their ~421-day chunks each) and
+`gcloud compute instances list --filter="name~fss-backfill"` for fleet health (non-snap gcloud:
+`/home/ubuntu/google-cloud-sdk/bin/gcloud`, account `ikenna@odum-research.com`). If any shard goes hung/idle again
+(RUNNING but no progress in `run.log` for a long stretch) or gets preempted (missing from the instance list, confirm via
+`gcloud compute operations list --filter="targetLink~<vm-name>\$"` for a `compute.instances.preempted` event), the fix
+is either a targeted single-shard gap-fill (reuse the staged tarball, pattern in this entry) or a full `--skip-existing`
+re-run of the launcher — both idempotent and safe. Once the bucket approaches the full ~4,210-day span, re-run
+`check_pipeline_completeness.py` (Todo 2) and re-assess Todo 1/Todo 3 for real.
+
+Checkbox NOT flipped (compute genuinely in progress). No repo code commit this entry (VM operations, not a code change);
+this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot moves to other
+dispatchable work while the fleet runs.
 
 ### 2026-07-13 — slot 5 (Todo 3 re-check — still BLOCKED-PREREQ, byte-identical to slot-9's dispatch moments earlier; no infra relaunch yet)
 
