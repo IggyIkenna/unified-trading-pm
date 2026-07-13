@@ -117,6 +117,32 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 3 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, genuinely mid-compute, no new action)
+
+Re-dispatched shortly after this same slot's own prior entry below (same day). Fast re-verify only (not a repeat
+investigation) via non-snap gcloud (`ikenna@odum-research.com`, `central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: all **10** `fss-backfill-vm-{1..10}` still
+  `RUNNING`, same `creationTimestamp` (2026-07-13T02:18–02:25 -07:00) as the relaunch logged below — no restart, no new
+  death.
+- Features bucket unique-date count: **1,556** (up from 1,555 at slot-8's check, 1,554 at the check before that) — small
+  but real forward movement.
+- Tailed `run.log` for 4 VMs (`vm-1`, `vm-3`, `vm-6`, `vm-9`): all show **wall-clock-fresh** lines
+  (`2026-07-13 09:33:0x–09:33:14`, matching `date -u` = `09:33:22`) with genuine per-date progress (`vm-3` at "Date
+  70/421: 2017-06-30", `vm-6` at "Date 26/421: 2020-10-31", `vm-9` finishing `2024-05-25`, `vm-1` working `2015-02-02`)
+  — live compute across early/mid/late date ranges, not a hang.
+
+Gate ("compute features 2015→present") remains structurally unmet — this is a genuine multi-day operation, now confirmed
+healthy across three checks today (slot-3 → slot-8 → this dispatch). No new finding, no relaunch needed (fleet is fine),
+nothing for `data_engineering` craft to act on beyond monitoring. Checkbox NOT flipped. Not filing a new BLK.
+`/skip-current-task` taken so this slot moves to other dispatchable work instead of re-verifying an
+already-confirmed-healthy multi-day compute again.
+
+**Handoff unchanged from the entries below**: watch
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` climb toward ~4,210; once
+all 10 VMs report `EXIT_STATUS=0` (or the count approaches full span), re-run `check_pipeline_completeness.py` (Todo 2)
+then reassess Todo 1 + Todo 3.
+
 ### 2026-07-13 — slot 8 (Todo 3 re-check — still BLOCKED-PREREQ, fleet confirmed live/progressing ~7h into the relaunch, no material change)
 
 Fast re-verify (not a repeat of slot-3's investigation) via non-snap gcloud (`ikenna@odum-research.com`,
