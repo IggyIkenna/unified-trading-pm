@@ -21,7 +21,7 @@ summary:
   decommission proposed (operator decision packet). Adjacent: uts-dev/uts-staging features-onchain T1-recon schedulers
   are ENABLED but target NONEXISTENT Cloud Run jobs (uts-{dev,staging}-features-onchain-service-t1-recon not found) —
   failing daily."
-status: open
+status: resolved
 nature: notes
 asset_group: [defi]
 stage: [features]
@@ -54,6 +54,10 @@ source:
   decommission."
 assigned_vm: NA
 resolved_by:
+  "2026-07-13: prod job fix shipped (deployment-service@5c114aa, verification execution t9zl9 + scheduler-path h7vbq
+  SUCCEEDED) + full decommission executed per explicit operator ruling (job/schedulers/workflow/AR repo all deleted,
+  each verified NOT_FOUND — see Decommission checklist). Residual adjacent findings 2-4 remain listed as candidates for
+  a deployment-service governance sweep."
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -129,7 +133,9 @@ depends_on: []
    but their targets `uts-{dev,staging}-features-onchain-service-t1-recon` do not exist (`gcloud run jobs describe` →
    Cannot find job); `uts-prod-features-onchain-t1-schedule` is PAUSED and its prod job is also absent. Either the T1
    recon jobs should be provisioned from `t1_batch_scheduler.tf` against the features-service image, or the dev/staging
-   schedulers paused/deleted.
+   schedulers paused/deleted. **RESOLVED 2026-07-13: operator ruled deletion — both broken schedulers deleted + verified
+   NOT_FOUND (see Decommission checklist below).** The PAUSED `uts-prod-features-onchain-t1-schedule` was NOT in the
+   ruling and remains.
 2. **Stale docstring**: `features-service/scripts/onchain/collect_lst_seasonal_rewards_daily.py` usage block still says
    `python -m scripts.collect_lst_seasonal_rewards_daily` (pre-consolidation path; also the `-m` form is broken per the
    shadowing note above).
@@ -343,10 +349,25 @@ two `uts-prod-manifest-consolidator-features-onchain-{cefi,defi}` jobs use other
 
 ### Decommission checklist (execute after this capture is committed)
 
-- [ ] P1. Delete Cloud Run job `features-onchain-service-job` (asia-northeast1) + verify NOT_FOUND
-- [ ] P1. Delete scheduler `features-onchain-service-daily-trigger` + verify NOT_FOUND
-- [ ] P1. Delete workflow `features-onchain-service-daily` + verify NOT_FOUND (perms caveat above — Cloud Build executor
-      fallback if direct delete denied)
-- [ ] P1. Delete schedulers `uts-dev-features-onchain-t1-schedule` + `uts-staging-features-onchain-t1-schedule` + verify
-      NOT_FOUND
-- [ ] P1. Delete AR repo `features-onchain-service` (asia-northeast1) + verify NOT_FOUND
+- [x] P1. ✅ Delete Cloud Run job `features-onchain-service-job` (asia-northeast1) + verify NOT_FOUND — executed
+      2026-07-13T23:19Z; `gcloud run jobs describe` → "Cannot find job [features-onchain-service-job]"
+- [x] P1. ✅ Delete scheduler `features-onchain-service-daily-trigger` + verify NOT_FOUND — executed 2026-07-13;
+      `gcloud scheduler jobs describe` → NOT_FOUND
+- [x] P1. ✅ Delete workflow `features-onchain-service-daily` + verify NOT_FOUND — direct delete PERMISSION_DENIED for
+      `unified-trading-sa`, executed via Cloud Build executor (Evidence: cloudbuild=3da70942-d49f-4ad4-870f-ba9fedbdff0e
+      SUCCESS); verified via second build (Evidence: cloudbuild=db3b655a-efd0-45ac-a369-b8f20e21fbf5 SUCCESS) whose
+      `workflows describe` as `1060025368044@cloudbuild.gserviceaccount.com` → NOT_FOUND and `workflows list` no longer
+      contains the daily workflow (`features-onchain-service-backfill` intact — not in ruling)
+- [x] P1. ✅ Delete schedulers `uts-dev-features-onchain-t1-schedule` + `uts-staging-features-onchain-t1-schedule` +
+      verify NOT_FOUND — executed 2026-07-13; both `gcloud scheduler jobs describe` → NOT_FOUND
+- [x] P1. ✅ Delete AR repo `features-onchain-service` (asia-northeast1, 14.4 GB / 32 digests) + verify NOT_FOUND —
+      direct delete PERMISSION_DENIED for `unified-trading-sa`, executed via Cloud Build executor (Evidence:
+      cloudbuild=d571bed5-a3d8-4828-86ed-954ff2f3308e SUCCESS): "Deleted repository [features-onchain-service]",
+      in-build `describe` → NOT_FOUND
+
+Decommission COMPLETE 2026-07-13. Untouched per ruling: `uts-prod-features-onchain-collect-lst-seasonal-rewards` (live,
+fixed same day), everything in `features-service`, and workflow `features-onchain-service-backfill`. NOTE for a future
+deployment-service governance sweep: the terraform sources for the deleted surfaces still exist
+(`deployment-service/terraform/services/features-onchain-service/gcp/` — daily workflow + job; the T1 schedulers'
+`t1_batch_scheduler.tf` scope) — a `terraform apply` of those roots would RE-CREATE the deleted surfaces; adjacent
+finding 4 above already lists them as deletion candidates.
