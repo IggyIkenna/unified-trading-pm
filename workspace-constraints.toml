@@ -26,7 +26,11 @@ botocore = "botocore>=1.34.0,<2.0.0"
 cachetools = "cachetools>=5.0.0,<6.0.0"
 ccxt = "ccxt>=4.5.24,<5.0.0"
 click = "click>=8.3.2,<9.0.0"
-cryptography = "cryptography>=46.0.7,<47.0.0"
+# GHSA-537c-gmf6-5ccf: cryptography<=46.0.7 wheels statically link an OpenSSL with a known CVE.
+# Floor bumped off the advisory line; ceiling widened to admit what the fleet already naturally
+# resolves to (47/48/49 seen pre-bump on repos without an explicit ceiling). SSOT:
+# fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md
+cryptography = "cryptography>=47.0.0,<50.0.0"
 databento = "databento>=0.32.0,<1.0.0"
 db_dtypes = "db-dtypes>=1.5.0,<2.0.0"
 docker = "docker>=7.1.0,<8.0.0"
