@@ -795,6 +795,10 @@ jobs:
       severity: CRITICAL
       workflow_name: python-quality-gates-v2
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      dedup_key: "qg-fail:${{ github.event.repository.name }}:${{ github.sha }}"
-      cooldown_min: 45
+      # ci_failures_channel_cleanup WS-3 (D2): dedup by REPO+BRANCH, not by SHA. The SHA made
+      # every failing commit a unique key, so a still-red branch paged on EVERY failing push
+      # (105/wk). Keyed by ref_name, a red branch pages once per red-period; a genuinely new
+      # failure after the cooldown still re-alerts. ci-status-update stays the went-red SSOT.
+      dedup_key: "qg-fail:${{ github.event.repository.name }}:${{ github.ref_name }}"
+      cooldown_min: 120
     secrets: inherit

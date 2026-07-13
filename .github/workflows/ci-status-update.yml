@@ -293,9 +293,12 @@ jobs:
     name: Slack — CI Status Update
     needs: [update-ci-status, build-message]
     # Transition-gated (anti-spam): only ping Slack on regression-to-FAILING or recovery-from-FAILING.
+    # ci_failures_channel_cleanup WS-2 (D3): drop the green all-clears (CI RECOVERED / SIT-pass) from
+    # Slack — not operator-actionable. Gate on status==FAILING so ONLY regressions page; the ci_status
+    # Firestore write + GCS ledger still record recoveries (a digest count is a P3 follow-up).
     if:
       always() && needs.update-ci-status.outputs.skip != 'true' && needs.update-ci-status.outputs.notify_worthy ==
-      'true'
+      'true' && github.event.client_payload.status == 'FAILING'
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: ${{ needs.build-message.outputs.message }}

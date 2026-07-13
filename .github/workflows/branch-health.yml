@@ -132,7 +132,10 @@ jobs:
       workflow_name: branch-health
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       dedup_key: promotion-lag
-      cooldown_min: 60
+      # ci_failures_channel_cleanup WS-1 (D1): re-remind every 2h while a lag persists, not
+      # hourly. The measured promote cadence is ~40 min (declared */15 is throttled to ~37%),
+      # so a standing lag re-fired ~hourly (~24/day). 120 = ~3 real promote cycles.
+      cooldown_min: 120
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
 
