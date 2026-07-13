@@ -24,7 +24,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
 source: [utl_reuse_phase7_low_lint_tail_2026_07_13.md, slot-11 backend-engineer task]
-resolved_by:
+resolved_by: slot-15 (cicd, agt-48117c)
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -60,13 +60,34 @@ Given the fleet-wide pattern (4 repos same day), this is likely best fixed ONCE 
 per-repo pyproject bumps. Cross-reference with the other 3 issue docs before fixing per-repo in isolation — one
 coordinated canonical bump avoids re-litigating the same fix 4 times.
 
+## Interim resolution (2026-07-13, slot-15 cicd escalation agt-48117c)
+
+Repo-blocker RB-e06aa00b needed the gate green now (it was blocking slot-11's unrelated in-flight work), so shipped a
+scoped per-repo interim fix rather than waiting on the canonical-manifest coordination below:
+`uv lock --upgrade-package click --upgrade-package pillow --upgrade-package soupsieve` in `system-integration-tests`
+(all three are transitive deps with no `pyproject.toml` ceiling — resolved cleanly, zero conflicts). Note `soupsieve`
+(CVE-2026-49477/CVE-2026-49476) had also newly surfaced since this doc's original diagnosis (click+pillow only) — same
+fleet-wide 2026-07-13 CVE-disclosure window. Shipped `system-integration-tests@6d7a5b6`; full `quality-gates.sh`
+confirmed green (`pip-audit clean`). Repo-blocker resolved.
+
+The canonical fleet-wide bump (todo below) is still the RIGHT longer-term fix — it prevents the same click/pillow/
+soupsieve CVEs from independently re-tripping every other repo that hasn't hit them yet — this interim fix only unblocks
+`system-integration-tests`.
+
 ## Todos
 
-- [ ] [CODE] P1. Bump the fleet-canonical `click` range to ≥8.3.2 and `pillow` range to ≥12.3.0 in
-      `unified-trading-pm/workspace-constraints.toml` + `canonical-dependency-manifest.json`, re-lock every affected
-      repo (system-integration-tests, execution-service, +whatever else `update-dependency-version.yml` fans out to),
-      re-verify no API breakage. Coordinate with the ml-service and unified-trading-api pip-audit issue docs to avoid
-      duplicate fixes. (repo: unified-trading-pm + fanned-out repos)
-- [ ] [VERIFY] P1. Once the canonical bump lands, re-run `bash scripts/quality-gates.sh` in system-integration-tests
-      full-green, then resolve the repo-blocker / flip the `repo-system-integration-tests-qg-green` condition. (repo:
-      system-integration-tests)
+- [ ] [CODE] P1. Bump the fleet-canonical `click` range to ≥8.3.2, `pillow` range to ≥12.3.0, and `soupsieve` range to
+      ≥2.8.4 in `unified-trading-pm/workspace-constraints.toml` + `canonical-dependency-manifest.json`, re-lock every
+      affected repo (execution-service, +whatever else `update-dependency-version.yml` fans out to —
+      system-integration-tests already fixed per-repo above), re-verify no API breakage. Coordinate with the ml-service
+      and unified-trading-api pip-audit issue docs to avoid duplicate fixes. (repo: unified-trading-pm + fanned-out
+      repos)
+- [x] ✅ [VERIFY] P1. `bash scripts/quality-gates.sh` in system-integration-tests confirmed full-green
+      (`system-integration-tests@6d7a5b6`); repo-blocker RB-e06aa00b resolved. (repo: system-integration-tests)
+
+## Progress Log
+
+- **2026-07-13 (slot-15, cicd, agt-48117c)** — Resolved the immediate gate-red via a per-repo `uv.lock` bump
+  (click→8.4.2, pillow→12.3.0, soupsieve→2.8.4), all transitive/no-ceiling-conflict. Shipped
+  `system-integration-tests@6d7a5b6`, full QG green. Left the canonical fleet-wide bump open as follow-up (prevents
+  recurrence in other not-yet-hit repos).
