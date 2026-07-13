@@ -2682,3 +2682,22 @@ blocked-question** — `BLK-f2bb67c2` already carries the exact decision needed 
 Next toucher: check `BLK-f2bb67c2.answered_at` first; if still null and no E3/E4 VM exists, this cheap precondition
 check is sufficient — only re-run the full audit once an E3/E4 VM has actually executed or the operator has ruled on
 BLK-f2bb67c2.
+
+## E8 Verify — re-dispatch check 2026-07-13 (data_engineering slot-7, task -001, thirteenth touch)
+
+Re-dispatched to the same E8-verify checkbox (~hours after the twelfth-touch precondition check above). Checked the same
+three things again rather than re-paying a full GCS corpus scan:
+
+- **E3 drain / E4 VM apply**: `gcloud compute instances list --project central-element-323112` (non-snap SDK at
+  `/home/ubuntu/google-cloud-sdk/bin/gcloud`) shows 18 instances, all cefi/tradfi/fss/onchain backfills — **no**
+  sports/E3-drain/E4-migration VM running, completed, or ever launched. Unchanged.
+- **BLK-f2bb67c2**: confirmed via `GET /api/state` → `blocked_queue` — still `answered_at: null`. The operator decision
+  (schedule E3/E4 now vs. keep parked vs. fix-forward the write-path gap first) remains outstanding.
+- **Write-path landings**: `git log --since="2026-07-13T03:43:00"` on both `instruments-service` and
+  `market-tick-data-service` — **zero commits** on either repo since the twelfth-touch timestamp. No write-path fix, no
+  migration code, nothing has moved.
+
+All three preconditions are identical to the twelfth touch. A full audit re-run would reproduce the same RED verdict at
+real GCS-read cost for zero new information. **Not filing a duplicate blocked-question** — `BLK-f2bb67c2` still carries
+the exact decision needed and remains live in the queue. `skip-current-task`'d. Next toucher: same check — only re-run
+the full audit once an E3/E4 VM has actually executed or the operator has ruled on BLK-f2bb67c2.
