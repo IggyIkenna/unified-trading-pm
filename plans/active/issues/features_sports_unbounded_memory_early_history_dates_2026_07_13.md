@@ -123,12 +123,27 @@ computed and the manifest likely has no captured row for it (or a partial one).
 
 ## Todos
 
-- [ ] [DATA] P1. Profile the features-service sports compute for date 2018-06-17 (`memray`/`tracemalloc`) to find the
+- [x] ✅ [DATA] P1. Profile the features-service sports compute for date 2018-06-17 (`memray`/`tracemalloc`) to find the
       exact unbounded-memory allocation site among the historical-fixtures join and rolling calculators. (repo:
-      features-service)
-- [ ] [DATA] P1. Bound/fix the identified allocation site so this date (and any date with a similarly dense
+      features-service) — features-service@b05f48ad. Built a synthetic repro at the incident's exact reported scale
+      (30,447 historical fixtures / 60,894 team-history rows / 149 today-fixtures / 94 leagues) and measured RSS per
+      calculator stage. `team_form`/`team_xg`/`team_goals`/`h2h`/`promoted_team`/`venue_context` all stayed flat (~437MB
+      total, no growth). Found the real site: `shot_quality_calculator._get_team_shots` re-copied and re-merged the FULL
+      `xg_shots` x `fixtures_all` frames INSIDE a per-fixture x per-side loop (298 full merges for a 149-fixture batch,
+      called from `compute_shot_quality_batch` via `run_new_calculators`, downstream of the last log line the incident
+      report could see — buffered stdout on the OOM-killed process). No join-cardinality guard existed, so a duplicate
+      `fixture_id` surviving upstream dedup (this codebase has a documented history of str/int64 dtype-mismatch dedup
+      gaps) could additionally explode the join into a cartesian product.
+- [x] ✅ [DATA] P1. Bound/fix the identified allocation site so this date (and any date with a similarly dense
       historical-snapshot lookback) computes within a fixed, reasonable memory ceiling (e.g. under 16GB). (repo:
-      features-service)
+      features-service) — features-service@b05f48ad. Precomputed the shots<->fixtures join + per-team grouping ONCE via
+      a new `_build_team_shots_index` (mirrors the existing precompute pattern in
+      `derived_features_helpers._compute_venue_features`), replacing the per-fixture-per-side `_get_team_shots` call.
+      Added `validate="many_to_one"` + an explicit `fixture_id` dedup on the join so a duplicate key can never explode
+      output rowcount — fails loudly instead of silently ballooning if the invariant is ever violated again.
+      Synthetic-scale benchmark: wall time for `compute_shot_quality_batch` dropped 6.72s → 0.21s (32x) at the same
+      input scale; all 47 pre-existing unit tests pass unchanged, +4 new regression tests (duplicate-fixture-row
+      cardinality guard, batch-index/per-team parity). Full `quality-gates.sh` green; shipped via quickmerge.
 - [ ] [INFRA] P2. Fix `lc_log_upload_trap_block`'s EXIT_STATUS to reflect an OOM-killed/crashed workload subprocess's
       real exit code, not just the wrapper shell's — so a crashed shard is never reported as `EXIT_STATUS=0`. (repo:
       deployment-service)
