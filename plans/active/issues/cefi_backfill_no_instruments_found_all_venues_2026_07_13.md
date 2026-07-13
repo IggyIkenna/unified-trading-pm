@@ -84,3 +84,19 @@ this up (or after the ASTER migration completes): (1) confirm per-(venue,date) r
 `chain` for non-chain venues or populate it); (3) re-run the Tardis lease pilot
 (`tardis_concurrent_ip_lockout_2026_07_12.md`, operator-approved slice BINANCE-FUTURES 2024) — the lease mechanism is
 still UNEXERCISED in production multi-VM conditions.
+
+## Corroboration (2026-07-13T21:29:58Z, slot-7 data_engineering, unrelated `[VERIFY]` task on
+
+`cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`)
+
+Confirmed still live ~10 min after this doc was filed, via a direct, no-VM call to the real production function
+(`market_tick_data_service/engine/orchestrator/preflight.py::_check_instruments_available`) against real GCS:
+`BINANCE-FUTURES/2024-01-01 -> False`, `DERIBIT-COMBO/2024-01-03 -> False`, `OKX/2026-01-01 -> False`. The
+`DERIBIT-COMBO`/`2024-01-03` result is a sharper data point than a plain re-confirmation: that exact (venue, date) had a
+genuinely successful real Tardis stream earlier in this same day's session history (see the linked doc's
+2026-07-13T01:16-01:40Z entry) — so this is empirical proof of a live regression window, not just a persistently-stale
+read. Also checked the raw index object directly:
+`instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet` `Update time` was `21:26:39Z`,
+essentially real-time with the check — still actively churning at that moment. Did not launch any VM as a result (see
+the linked doc for the full decision trail). No code action taken here — corroboration only, deferred to whoever
+resolves this P0.
