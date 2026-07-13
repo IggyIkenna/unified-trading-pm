@@ -126,10 +126,16 @@ migrates this exact code path to UTL and would otherwise carry the bug forward.
 
 ## Todos
 
-- [ ] [BACKEND] P2. Fix `_build_registry()` in `features_service/onchain/schemas/feature_builder_registry.py` to only
-      absorb calculators it actually recognizes (present in its own `_metadata` dict / imported via
-      `onchain/app/calculators/__init__.py`), not the entire shared UTL `FeatureCalculatorRegistry._calculators` dict —
-      drop or explicitly log any unrecognized name instead of defaulting to empty metadata (repo: features-service)
+- [x] ✅ [BACKEND] P2. DONE `features-service@0633a97c` (QG green, sentinel-verified). `_build_registry()` now filters
+      `FeatureCalculatorRegistry._calculators` against a frozenset of the actual calculator classes exported by
+      `onchain/app/calculators/__init__.py` (identity-based on the class object, so it self-maintains as that file's
+      imports change); any unrecognized name is dropped with a logged warning instead of silently defaulting to
+      `([], "", [])`. Verified by reproducing the exact pollution scenario (importing the 5 orphaned onchain files +
+      confirming no foreign-family names leak in) — `resolve_build_order()` output is now byte-identical to a
+      clean-process capture regardless of import order. Simplified
+      `tests/common/test_golden_fixture_phase0_resolve_build_order.py::test_golden_resolve_build_order_onchain`'s
+      cross-family filter workaround back to a direct equality check, since the leak it worked around is fixed at the
+      source.
 - [ ] [BACKEND] P2. Determine whether the 5 orphaned onchain calculator files (`block_priority_gas_distribution`,
       `chainlink_peg_deviation`, `concentrated_liquidity_il_realised`, `vault_share_price_apy`, `pool_invariant_drift`)
       should be wired into `onchain/app/calculators/__init__.py` (if live/load-bearing) or deleted (if dead code); apply
