@@ -117,6 +117,29 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 5 (Todo 3 re-check — still BLOCKED-PREREQ, byte-identical to slot-9's dispatch moments earlier; no infra relaunch yet)
+
+Fast re-verify (not a repeat of slot-9's multi-hour SSH investigation) via non-snap gcloud (`ikenna@odum-research.com`,
+`central-element-323112`):
+
+- Features bucket `gs://features-sports-prd-central-element-323112/sports_features/by_date/`: still **1,554 unique
+  dates** — unchanged from slot-9's check.
+- `gcloud compute instances list --filter="name~fss OR name~features"`: still exactly `fss-backfill-vm-{3,4,5}`,
+  `RUNNING`, same `creationTimestamp` (2026-07-12T04:15) as slot-9 found hung/idle (no `features_service` process via
+  `ps aux`) — no relaunch has happened yet. `fss-backfill-vm-{1,2,6,7,8,9,10}` remain gone (completed/died, per
+  slot-4/slot-9's entries).
+- Confirmed the stdin-siphon fix (`e2e-testing@f2487e4`) is present on this slot's `e2e-testing` HEAD — live on
+  `live-defi-rollout`, ready to be picked up by the next VM launch.
+
+Gate remains structurally unreachable — full-history compute is genuinely stalled at ~37%, and the unblocking action
+(kill the 3 hung VMs + relaunch
+`launch-features-sports-parallel-backfill-vm.sh --start 2015-01-01 --end 2026-07-12 --vms 10 --env prod`, which now
+picks up the fix + `--skip-existing` resumes from the 1,554 already-written dates) is VM-launch/infra craft, not
+`data_engineering` — consistent with this plan's own established precedent (slot-9, slot-4, and every prior dispatch
+that hit this same boundary). Checkbox NOT flipped; not filing a new BLK (this is the same already-diagnosed wait slot-9
+just logged, re-confirmed with zero drift). `/skip-current-task` taken so this slot picks up other dispatchable work
+instead of idling on an infra-only blocker.
+
 ### 2026-07-13 — slot 9 (Todo 3 re-check — still BLOCKED-PREREQ; ROOT-CAUSED why the fleet stalled at ~37%, shipped fix)
 
 **Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ; gate structurally unreachable, checkbox NOT
