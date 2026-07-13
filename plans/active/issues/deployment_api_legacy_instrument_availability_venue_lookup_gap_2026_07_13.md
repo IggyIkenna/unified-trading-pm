@@ -87,10 +87,10 @@ delegating to the same manifest-backed path the `/drilldown` endpoint already us
 
 ## Todos
 
-- [ ] [BACKEND] P3. `deployment-api/deployment_api/services/data_query_service.py:654-663` `_venue_to_category()`:
+- [x] ✅ [BACKEND] P3. `deployment-api/deployment_api/services/data_query_service.py:654-663` `_venue_to_category()`:
       replace the hardcoded 12-venue substring list with a lookup against the canonical UAC `VENUE_TO_ASSET_GROUP`
       registry (same source `instruments-service` and MTDS already use) so newly-onboarded venues (ASTER included)
-      resolve correctly. (repo: deployment-api)
+      resolve correctly. — deployment-api@38213b6
 - [ ] [BACKEND] P3. `deployment-api/deployment_api/services/data_query_service.py:684-705`
       `_check_daily_availability()`: fix the flat path-shape probe (or delegate to the manifest-backed
       `read_availability_index()` path the `/drilldown` endpoint uses) so this endpoint reflects real data instead of

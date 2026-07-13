@@ -218,8 +218,8 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       take down the entire `google-startup-scripts.service` systemd unit (wrapper shell + tee + python child all
       killed), not just the workload subprocess — so the existing trap may not even get a chance to run. Verify the
       trap's EXIT-signal path survives a whole-unit OOM kill, not only a clean subprocess non-zero exit.
-- [ ] [DATA] P0. **NEW (2026-07-13, slot 12) — real root-cause investigation needed, the b05f48ad fix is insufficient on
-      production data.** Re-profile (`memray`/`tracemalloc`) against the REAL 2018-06-17 GCS data (not a synthetic
+- [x] ✅ [DATA] P0. **NEW (2026-07-13, slot 12) — real root-cause investigation needed, the b05f48ad fix is insufficient
+      on production data.** Re-profile (`memray`/`tracemalloc`) against the REAL 2018-06-17 GCS data (not a synthetic
       repro) end-to-end through `run_new_calculators`, because the shot_quality precompute fix did not stop the OOM.
       Also profile 2018-06-18 (a `--force` single-date run) — RSS climbed steadily past 13GB and was still rising when
       killed, on a date with only 24 target fixtures (vs 149 on -17), which points at the 400-day HISTORICAL LOOKBACK
@@ -236,7 +236,16 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       (24-fixture) case: `24 × 591 = 14,184` rows, then re-multiplied by 591 again ≈ 8.4M rows — smaller than -17's ~52M
       but still large enough to explain the observed steady multi-minute RSS climb toward the OOM ceiling. The
       `_read_per_league_subpartitions` fallback was considered and ruled out as the dominant cost — it's a same-day,
-      one-time 33-shard read, not something repeated across the 400-day historical window.
+      one-time 33-shard read, not something repeated across the 400-day historical window. **CHECKBOX FLIPPED (slot 10,
+      2026-07-13)**: the literal ask here (re-profile 2018-06-17/2018-06-18 against real GCS data, find the root cause)
+      was fully carried out and answered in-body the same day (slot-8's "Additional finding" section above) and
+      independently verified by the shipped fix (`features-service@c3e3ebfe`) — todo below ("After the above two todos
+      land, re-verify...") confirms both dates now complete cleanly against real production data (149/24 rows, ~617MB
+      peak RSS each), already `[x]`. Leaving this unflipped any longer was the "done-but- unchecked" pattern, not a live
+      gap. **Does NOT close this issue doc** — the "THIRD recurrence" section further down found a DIFFERENT,
+      still-unresolved crash site (`compute_shot_quality_batch`, 3 unrelated poison dates: 2018-01-06 / 2019-08-17 /
+      2025-08-10), tracked by its own still-open P0 todo at the bottom of this list. No code change in this commit — the
+      fix was already shipped; this is a documentation-only correction of a stale checkbox.
 - [x] ✅ [DATA] P0. Add a duplicate-key merge guard to `_compute_venue_features`
       (`features_service/sports/exporters/derived_features_helpers.py:501-699`) —
       `.drop_duplicates(subset=["venue_id"])` before the `venue_coords` merge (line ~516-527) and
@@ -253,7 +262,7 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       (NaN-filled venue columns) instead. Applied at all 4 vulnerable merge/groupby sites in the function (venue_coords,
       away_coords, the home_win_pct venue_stats groupby, and the clean-sheet-rate venue_hist groupby), not just the 2
       named here. See "Update — real root cause confirmed + fix shipped (slot 14)" below for full verification evidence.
-- [ ] [DATA] P0. Root-cause + fix `venue_id` collapsing to an empty string: (1) `read_venues()`
+- [x] ✅ [DATA] P0. Root-cause + fix `venue_id` collapsing to an empty string: (1) `read_venues()`
       (`features_service/sports/data/gcs_mappings.py`) returns `venue_id=""` for all 591 rows even though the raw source
       parquet (`gs://instruments-store-sports-prd-central-element-323112/sports_reference/venues/venues.parquet`) has
       591 correctly distinct real venue names — find and fix the column-mapping/normalization bug; (2) separately,
@@ -262,18 +271,44 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       cartesian join explodes from ~1.4GB to 40GB+ RSS in low single-digit seconds — too fast for a userspace
       RSS-polling watchdog; use a real kernel-enforced cap (`docker run --memory=<N>g --memory-swap=<N>g`), not
       `RLIMIT_AS` (caps virtual memory, not RSS — false-triggers on numpy/grpc before real growth). (repo:
-      features-service) — **EXACT SITES NOW PINNED (slot 14, 2026-07-13):** both call sites named here plus a THIRD
-      (`travel_calculator.py:182-184`) all carry the identical pattern —
-      `pd.to_numeric(df["venue_id"], errors="coerce")` then `str(int(v)) if notna else ""`. The comments at all 3 sites
-      say this normalizes a numeric id (`"173.0 → '173'"`) — but the real production `venue_id` is a non-numeric string
-      code (`"OLD_TRAFFORD"` etc, confirmed 591/591 unique via direct raw-parquet read), so `pd.to_numeric` returns NaN
-      for every row → collapses to `""` everywhere. This is NOT a quick fix I could take unilaterally: it's ambiguous
-      whether the string code is now the sole canonical venue_id (delete the numeric round-trip) or whether a real
-      numeric↔string id-space crosswalk is missing (bigger fix). Filed as a separate issue doc with the
-      operator-decision framed as 3 options:
-      `plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md`. The OOM-crash risk this todo
-      partly motivated is CLOSED regardless (see Todo above) — this remaining piece is a correctness-only gap (venue
-      features silently NaN, not a crash risk) tracked in the new issue doc, not blocking here.
+      features-service) — **DONE, slot 5, 2026-07-13, features-service@a9684e27.** The `[DECISION]` this todo was
+      blocked on turned out to have a definite factual answer rather than a judgment call: `venues.parquet`'s `venue_id`
+      is `unified_api_contracts.sports.build_venue_id(name)` (verified byte-exact against ALL 591 production rows, 0
+      mismatches — direct GCS read + apply). That SAME UAC builder is already used elsewhere for the identical purpose
+      (weather-lookup canonicalization); raw fixtures already carry a `venue_name` column alongside the useless numeric
+      `venue_id` (confirmed via real GCS reads for 2018-06-17, 2019-08-11, 2024-01-15). Fix at all 3 sites (matches the
+      sibling issue's `[CODE]` todo, done together since a partial fix would leave `travel_calculator.py` silently
+      re-corrupting what the other two sites now fix, and would newly CRASH on a real string venue_id via its
+      `int(float(...))` cast — a 4th latent bug found during this fix, also corrected):
+  - `gcs_mappings.py::read_venues()` — deleted the `pd.to_numeric`/`int()` round-trip entirely; `venue_id` from
+    venues.parquet is already canonical, no transform needed.
+  - `gcs_normalizers.py::normalize_fixtures()` — rebuilds `venue_id` from `venue_name` via `build_venue_id()` instead of
+    coercing the raw (wrong-id-space) numeric `venue_id`.
+  - `travel_calculator.py::compute_travel_batch()` — removed the redundant re-corruption of `venues["venue_id"]`, and
+    fixed `vid_str = str(int(float(match_venue_id)))` (would raise on a non-numeric string) → `str(match_venue_id)`.
+    Verified via `unified_api_contracts.sports.build_venue_id` fleet-wide grep: no 4th site exists.
+  - **Verified end-to-end against real GCS production data**: `export_derived_features()` completes for BOTH poison
+    dates with no OOM (2018-06-17: 649MB peak RSS, 2018-06-18: 649MB peak RSS — matching the prior `_dropna_key()` fix's
+    baseline, no regression). `home_venue_win_rate`/`home_venue_goals_avg`/`home_venue_clean_sheet_rate`/
+    `home_venue_matches_played` now populate 140/149 rows for 2018-06-17 (previously ALWAYS NaN via the constant-blank
+    key) — these use fixture-to-fixture venue_id self-consistency (today's fixture vs. historical fixtures at the same
+    venue), independent of `venues.parquet` coverage. `stadium_capacity`/`travel_distance_km`
+    (`venues.parquet`-dependent) only matched 1/149 for 2018-06-17 — confirmed CORRECT honest-absence, not a bug: this
+    date is June (European off-season), so its 149 fixtures are overwhelmingly minor/friendly matches at venues
+    genuinely outside the 591-row curated `venues.parquet` (`teams_df`-derived, major-league-only) registry — direct
+    membership check confirmed 139/149 distinct venue codes are honestly absent from `venues.parquet`, not mismatched.
+    Confirmed the positive-match path works on a covered venue too (`"Grimsta IP"` → `GRIMSTA_IP`, present in
+    `venues.parquet`), and on 3 real EPL fixtures for 2019-08-11 (`St. James' Park`→`ST_JAMES_PARK`,
+    `King Power Stadium`→`KING_POWER_STADIUM`, `Old Trafford`→`OLD_TRAFFORD`, all 3/3 exact matches).
+  - Updated `tests/sports/unit/test_gcs_normalizers.py` (replaced the 2 tests encoding the old numeric-collapse behavior
+    with 4 new tests covering the name-derived venue_id, diacritics, missing-venue_name honest-absence, and the
+    no-venue_name-column no-op case) and `tests/sports/unit/calculators/test_travel_calculator.py` (6
+    `compute_travel_batch` tests were relying on the removed internal type-coercion to paper over mixed int/string
+    venue_id test fixtures — updated to use consistent string venue_ids throughout, matching production reality
+    post-fix). 273 tests green, `quality-gates.sh` run.
+  - The sibling issue doc's `[CODE]`/`[VERIFY]` todos are resolved by this same change — see
+    `plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md` for the full decision write-up and
+    remaining follow-up (a downstream-retrain-audit todo there is still open).
 - [x] ✅ [DATA] P1. After the above two todos land, re-verify the 2018-06-17 AND 2018-06-18 OOMs are actually resolved
       end-to-end (not just the `shot_quality_calculator` site fixed in Todo 2) — the pipeline must reach and complete
       `shot_quality_calculator` without first OOM-ing in `venue_context`, since venue_context runs several
@@ -288,13 +323,24 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       live backfill fleet + the 2015-2019 era-wide dense-lookback audit + `check_pipeline_completeness.py`) is **NOT
       done** — that's real infra execution, tracked as a fresh todo below rather than silently implied by this
       checkmark.
-- [ ] [DATA] P1. **NEW (slot 14, 2026-07-13)** — now that the OOM-crash risk is closed (features-service@c3e3ebfe
-      verified against real GCS data for both poison dates), resume
-      `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1's full-history 2015→present compute fleet
-      (excluded/killed shards can re-include 2018-06-17/06-18), let it run to completion, then re-run
-      `check_pipeline_completeness.py` / the manifest-cleanliness query for the full range to confirm no other
-      dense-lookback date still crashes. This is the actual infra-execution half of the todo above. (repo:
-      features-service, deployment-service for the VM relaunch)
+- [x] ✅ **CLOSED-SUPERSEDED (slot 4, 2026-07-13)** — this todo's own premise (~~"the OOM-crash risk is closed
+      (features-service@c3e3ebfe verified)... resume the full-history compute fleet"~~) was already disproven and struck
+      through by its own author (slot 14) later in the SAME session, in the same edit — see "Update — THIRD recurrence"
+      below for the 3 independent post-c3e3ebfe crashes that reopened it. Flipping this checkbox now purely to stop it
+      being re-dispatched as live work (it was re-picked-up as
+      `features_sports_unbounded_memory_early_history_dates-011` this session, costing a full context read to discover
+      it was already dead text) — **no code shipped, no new investigation performed**. The actual remaining P0 work is
+      the NEXT todo below (`compute_shot_quality_batch` profiling), which remains genuinely open and unowned; every
+      prior slot (12, 14×2) has correctly declined it inline as needing a dedicated Docker-memory-capped investigation,
+      not a quick pass — same assessment holds here.
+- [ ] [DATA] P0. **NEW (slot 14, 2026-07-13, continued session)** — root-cause the STILL-LIVE OOM site. Strong new
+      evidence points at `compute_shot_quality_batch` (`features_service/sports/exporters/derived_new_calculators.py`
+      `run_new_calculators`), the step immediately after `advanced_stats` in the Phase-4 calculator chain — see the
+      "Update" section below for 3 independent same-signature crashes (2018-01-06, 2019-08-17, 2025-08-10) all dying at
+      that exact log position, on the ALREADY-FIXED (c3e3ebfe) codebase. Profile `compute_shot_quality_batch` against
+      real GCS data for at least one of these 3 dates (memray/tracemalloc, real kernel-enforced memory cap per this
+      doc's own earlier caution — `docker run --memory=<N>g`, not `RLIMIT_AS`). This directly answers what todo #207
+      (REOPENED) already flagged as unconfirmed-fixed. (repo: features-service)
 
 ## Update — production re-test (2026-07-13, slot 12, same day the b05f48ad fix landed)
 
@@ -404,3 +450,53 @@ re-verifying on 2018-06-17, the `elo`/`manager`/`travel` calculator group printe
 `Skipping fixture row N: Cannot compare tz-naive and tz-aware timestamps` — caught and skipped per-row (not a crash),
 but logging the full traceback on every occurrence instead of a one-line warning is noisy/expensive at scale and could
 mask real errors in the same log stream.
+
+## Update — THIRD recurrence, 2 more independent poison dates found (2026-07-13, slot 14 continued session, several hours after the "OOM-crash risk is closed" claim above)
+
+**This session's own prior claim (the now-struck-through todo above) was WRONG.** Picked up
+`sports_p2_features_history_to_ml_ready-001` (Todo 1) for a routine fast re-verify of the 10-VM fleet launched
+~09:18-09:25 UTC today (per that plan's slot-11 entry) — a fleet that launched AFTER `features-service@c3e3ebfe` (the
+venue_context fix) was already on `live-defi-rollout`, so every shard in it started with the fix already present. Found
+**3 of the (by then) 3 still-nominally-running shards were ALL OOM-zombies** (GCE status `RUNNING`, but no
+`features_service` process, idle load average, confirmed via `dmesg`):
+
+| shard (original)     | assigned range          | died on date                                     | anon-rss at kill | era                                                                    |
+| -------------------- | ----------------------- | ------------------------------------------------ | ---------------- | ---------------------------------------------------------------------- |
+| `fss-backfill-vm-10` | 2025-05-17 → 2026-07-13 | **2025-08-10** (86th date, 85 completed clean)   | ~15.8GB          | **modern, non-history**                                                |
+| `fss-backfill-vm-3`  | 2017-04-22 → 2018-06-16 | **2018-01-06** (260th date, 259 completed clean) | ~15.8GB          | early history, but NOT one of the two previously-profiled poison dates |
+| `fss-backfill-vm-5`  | 2019-08-12 → 2020-10-05 | **2019-08-17** (6th date after a fresh restart)  | ~32GB            | mid-history                                                            |
+
+All 3 had EXIT_STATUS unwritten (the known `lc_log_upload_trap_block` gap, todo above) and were genuine zombies (VM
+`RUNNING`, GCE billing continuing, zero live work) — not caught by any automated watchdog. `vm-3`'s poison date
+(2018-01-06) is the SAME date a much earlier dispatch (slot-12, same day) found this exact shard OOM-killed on,
+gap-filled once ("clean relaunch... progressing normally"), and which then progressed 254 MORE dates before dying at the
+identical date again — i.e. this is a second, independent, reproducible crash at that date, not a fluke.
+
+**Critical new evidence — all 3 crashes share an IDENTICAL log position**, immediately after the exact log line
+`Calculator advanced_stats: 62 columns added (... all-zero)`, with nothing further logged before the kill. Per
+`features_service/sports/exporters/derived_new_calculators.py::run_new_calculators`, the calculator chain is
+`_run_phase4_history_calculators` → `_run_phase4_provider_calculators` (which includes `advanced_stats`) →
+**`compute_shot_quality_batch`** (shot-quality). None of these 3 dates ever produced a `shot_quality`-related log line,
+meaning the crash consistently happens inside or immediately upon entering `compute_shot_quality_batch` — the exact
+function the ALREADY-REOPENED todo above (b05f48ad, `_build_team_shots_index` precompute-once fix) targeted and which
+this doc's todo #207 already flagged as "confirmed on real production data the same day the fix landed: the OOM is NOT
+resolved." This session's 3 new same-signature crashes, spanning 3 unrelated eras (2018/2019/2025) that share no obvious
+"dense historical lookback" characteristic in common (2025-08-10 has only ~8.5k combined fixtures vs the original
+2018-06-17 incident's ~30k), is strong evidence the b05f48ad precompute fix did not actually bound the allocation, or a
+different unbounded site exists in the same function. **Not investigated further this session** (needs real profiling
+per this doc's own established rigor bar, not a guess-fix) — see the new P0 todo above.
+
+**Recovery action taken** (not a fix, just restoring forward progress on the unaffected 2015→present compute): deleted
+all 3 zombie VMs, gap-filled each shard's remaining range EXCLUDING its poison date via the collision-free
+`launch-features-vm.sh` (all 5 code tarballs confirmed fresh at launch, including `features-service@208516e6` — ahead of
+c3e3ebfe): `features-sports-sports-20260713-200043` (2025-08-11→2026-07-13), `-200456` (2018-01-07→2018-06-16),
+`-200525` (2019-08-18→2020-10-05). All 3 confirmed genuinely computing (not just booted) via log tail within minutes of
+launch. The 3 poison dates (2018-01-06, 2019-08-17, 2025-08-10) remain uncaptured pending the new P0 root-cause todo.
+
+**What I did NOT do**: did not attempt to guess-fix `compute_shot_quality_batch` inline (this doc's own established
+precedent is that guessed fixes here don't hold — see the b05f48ad history). Did not exhaustively scan the rest of the
+full-history fleet beyond the 3 shards this dispatch's fast re-verify covered (vm-1/2/6/7/8/9 all show clean
+`EXIT_STATUS=0` completions this session, so are not part of this finding). Given 3 independent, unrelated-era
+recurrences in one session alone, flagging as a **big finding per CLAUDE.md** (data-correctness, cross-cutting,
+contradicts a same-day "resolved" claim already acted on by other dispatches) — escalating to the operator via
+`/blocked` rather than silently re-closing this loop a third time.

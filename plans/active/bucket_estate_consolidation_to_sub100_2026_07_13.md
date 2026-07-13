@@ -108,11 +108,14 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       the ruling above) + update `codex/05-infrastructure/gcs-lifecycle-policies.md` (its "intentionally NOT
       lifecycle'd" claim for tick buckets is superseded). Operator verbatim "nearlcoldline nmove after 60d" — if a
       NEARLINE@60→COLDLINE-later ladder was intended instead of straight COLDLINE@60d, correct here before executing.
-- [ ] [SCRIPT] P1. **Retire the stale provisioning surfaces**: `deployment-service/scripts/setup-buckets.py` (reads
-      `dependencies.yaml`'s pre-canonical scheme, emits literal `{category_lower}`) — delete or rewrite on
-      `resolve_bucket_name`; fix `e2e-testing/scripts/common/setup-gcp-fixtures.sh:39-53` (provisions transposed
-      non-canonical names — active pollution source) and `deployment-service/scripts/setup-gcs-lifecycle-policies.sh`
-      (targets legacy flat names).
+- [x] ✅ [SCRIPT] P1. **Retire the stale provisioning surfaces** — `e2e-testing@16efd49`: deleted
+      `e2e-testing/scripts/common/setup-gcp-fixtures.sh` (zero callers workspace-wide — grepped every
+      `*.sh/*.py/*.yml/     *.yaml/*.md` in e2e-testing + Makefile/docker-compose/GHA, none reference it; the modern,
+      actively-used SSOT replacement is `deployment-service/scripts/provision-test-buckets.sh` wrapping
+      `setup-buckets.py`, already KEPT + documented below). All three sub-items now resolved: `setup-buckets.py` KEPT
+      (prior tick, live consumers documented above); `setup-gcs-lifecycle-policies.sh` deleted (prior tick); e2e
+      fixtures script deleted (this tick) — no other `gsutil mb`/bucket-create call exists elsewhere in e2e-testing
+      (repo-wide grep clean).
 
 ## Wave 1 — delete the 81 confirmed-empty buckets (AFTER Wave-0 terraform reconcile)
 
@@ -157,8 +160,8 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
 
 ## Wave 3 — structural folds to <100 (design first; env-tiered from birth per ruling)
 
-- [ ] [INFRA] P1. **Fold design doc** (its own deliverable; READ task_template before authoring the successor plan(s),
-      ASK operator for their destination): features 25 per-AG/kind buckets → 5 per-AG env-tiered
+- [x] ✅ [INFRA] P1. **Fold design doc** (its own deliverable; READ task_template before authoring the successor
+      plan(s), ASK operator for their destination): features 25 per-AG/kind buckets → 5 per-AG env-tiered
       (`features-{ag}-{env}-{pid}`, kind as path prefix, mirroring the DeFi shared-bucket data_type precedent); ml
       {models,predictions,configs,training-artifacts,artifacts} → `ml-store-{env}-{pid}`; unified
       `execution-store-{env}-{pid}` (strategy-store already unified flat → gains its tier in the same move);
@@ -166,7 +169,11 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       must enumerate per bucket: readers/writers to cut over (audit's shadow-registry + hardcoded-sweep tables),
       manifest/consolidator wiring, BQ `feature_external` external tables (M-1 A11 — root-mounted URIs), IAM
       write-protection re-gating ([[bucket_iam_write_protection_per_tier_2026_06_09]] Phase 2 re-gates on this),
-      lifecycle rules (prefix-scoped where retention differs).
+      lifecycle rules (prefix-scoped where retention differs). — DONE 2026-07-13 (autonomous dispatch):
+      plans/active/bucket_estate_fold_design_2026_07_13.md (status: draft, never ingested; 5 folds with per-site
+      file:line cutover tables, 18-todo sequencing, estate math 139→~100, \_KIND_ALIASES soft-transition
+      recommendation). Successor-plan destination + portfolio-state human-only + lifecycle-ladder confirm are parked as
+      that doc's operator-decisions section.
 - [ ] [DATA] P2. Execute the folds per design (likely 2-3 split plans for parallelism — features / ml / stores), each
       with the DeFi-migration playbook: parity verify → reader cutover → redeploy+verify-exercised → delete + TF/yaml
       removal in the same change. Target end-state ≈100 total (≈80 excluding GCP-system).
@@ -205,6 +212,99 @@ strategy-store-pred-{dev,stg}
 of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cleanup never-touch list.
 
 ## Progress Log
+
+- **2026-07-13, S3 BLRS recon repoint + e2e fixtures fix landed (autonomous tick).**
+  `batch-live-reconciliation-service@2f0380b` — `config.py` repointed: `recon_bucket` now
+  `resolve_bucket_name(kind="recon")` (the fix for [[recon_bucket_missing_nightly_recon_failing_2026_07_13]]'s broken
+  default), `events_bucket` → `kind="events"` and `execution_store_bucket` →
+  `kind="execution-store", asset_group="cefi"` (both behavior-identical refactors — verified via direct import:
+  local-mode f-string fallback preserved byte-for-byte for `test_config.py`'s assertions; GCP/prod mode resolves
+  `recon-prd-central-element-323112` / `central-element-323112-events` / `execution-store-cefi-central-element-323112`;
+  `RECON_BUCKET` env override still wins). Extracted `_derive_cross_cutting_buckets()` to keep `model_post_init` under
+  the 50-line method-size ceiling (the inline version hit 59L, a new codex-compliance violation). QG green (45s),
+  quickmerge → live-defi-rollout. **Image rebuild/redeploy path for whoever runs Stage 5** (this fix does NOT reach the
+  prod Cloud Run job until the image is rebuilt with a base image that carries the recon kind): verified live via
+  `gcloud builds`/`gcloud artifacts` — UTL's own Cloud Build trigger `unified-trading-library-live-defi-rollout` clones
+  **UAC's `live-defi-rollout` branch directly** (not `main`) in its `clone-uac-source` step, so it already picked up
+  `unified-api-contracts@f84e5b37` (the recon-kind yaml) the moment that trigger next fired — build `dcfbc5c0`
+  (2026-07-13 20:17:42→20:24:19Z) SUCCEEDED and produced base image digest
+  `sha256:3772351a7fb24893860373aaa1aa9e9136c76e67aadaa03834b7cc1d74b720c4` (confirmed = current
+  `unified-trading-library:latest`). BUT `batch-live-reconciliation-service/Dockerfile:5`'s `ARG BASE_IMAGE_DIGEST=` is
+  still pinned to `sha256:b7e391f8...` — the PRIOR base build (17:37→17:44Z), which predates the recon-kind fix
+  (confirmed by commit timestamps: base-pin-bump commit landed 20:05:01Z, UAC's recon-kind commit landed 20:11:34Z — so
+  `sha256:b7e391f8` does NOT contain it). **So: my config.py fix + a fresh BLRS Cloud Build alone is NOT sufficient —
+  the Dockerfile digest pin must be bumped to `sha256:3772351a...` FIRST** (or to whatever
+  `unified-trading-library:latest` digest is current at execution time — re-verify with
+  `gcloud artifacts docker images describe asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library:latest --format='value(image_summary.digest)'`),
+  then a BLRS rebuild picks up both the digest bump and this commit. BLRS's own Cloud Build trigger
+  (`batch-live-reconciliation-service-build`) fires automatically on push to **`main`** (not LDR) — so once the
+  Dockerfile bump + this fix are both promoted LDR→main (existing Tier-C drain, ≤15min, or force via `gh workflow run`
+  on the promote workflow), the image rebuild is automatic; no manual `gcloud builds submit` needed. If a synchronous
+  rebuild is wanted instead:
+  `gcloud builds triggers run batch-live-reconciliation-service-build --branch=main --project=central-element-323112 --region=asia-northeast1`.
+  The Cloud Run JOB `uts-prod-batch-live-reconciliation-service` was NOT inspected for how it picks up the new image
+  (tag vs digest pin) — that's the remaining unknown for Stage 5 to confirm before/after the rebuild.
+  `e2e-testing@16efd49` — `scripts/common/setup-gcp-fixtures.sh` **DELETED** (not fixed): grepped every
+  `*.sh/*.py/*.yml/*.yaml/*.md` in e2e-testing + Makefile/docker-compose/GHA workflows, zero callers anywhere (its own
+  `teardown.sh` doesn't even reference the same bucket names); the canonical, actively maintained replacement already
+  exists and is already KEPT/wired to the yaml SSOT: `deployment-service/scripts/provision-test-buckets.sh` wrapping
+  `setup-buckets.py` (derives `-test-` siblings from `dependencies.yaml`+`cloud-providers.yaml`, `--test-only` never
+  touches prod). Repo-wide grep for other `gsutil mb`/bucket-create calls in e2e-testing: clean (only this one file had
+  any). Wave-0 "retire the stale provisioning surfaces" todo flipped — all 3 sub-items (setup-buckets.py KEPT,
+  setup-gcs-lifecycle-policies.sh deleted, e2e fixtures deleted) now resolved. QG green (43s), quickmerge →
+  live-defi-rollout.
+
+- **2026-07-13, S3 landings + S4 state-surgery iteration (autonomous tick).** `deployment-api@6da793b` — strategy-store
+  defaults collapse to flat via resolver (all 3 per-AG props), execution-store default → CEFI (decide-and-document: sole
+  consumer is a global /config-buckets entry with no AG context; CEFI is the only live-traffic AG), ml-configs-store →
+  env-tiered resolver; +1 live dead literal fixed in commentary/pipeline_uat.py. QG 86s green.
+  `batch-live-reconciliation-service@2f0380b` (v2 SUCCESS) — recon/events/execution-store resolved via canonical
+  resolver; prod-mode now resolves recon-prd-{pid}. **S5 dependency discovered**: BLRS image reaches prod only after its
+  Dockerfile BASE_IMAGE_DIGEST pin is bumped past the 20:24Z base build (which carries uac@f84e5b37) AND its main-push
+  trigger fires — manual: `gcloud builds triggers run batch-live-reconciliation-service-build --branch=main`.
+  `e2e-testing@16efd49` (v2 SUCCESS) — setup-gcp-fixtures.sh DELETED (zero callers; canonical replacement =
+  provision-test-buckets.sh); W0 provisioning-surfaces checkbox flipped by that agent (pm@a1ff00f5c). **S4 terraform
+  surgery** (orchestrator VM, deployment-service@ccfaca26 clone, prod state terraform/state/prod — the committed backend
+  prefix terraform/state/dev is a stub; per-env prefixes are passed by bootstrap_gcp.sh): state backed up; 68 canonical
+  imports OK; generated script's rm/mv guards mis-skipped → plan showed 55 destroys/20 adds and was correctly GATED (not
+  applied). Deterministic fixer now re-classifying every planned bucket destroy into state-rm (stale) vs state-mv
+  (canonical rename) from the plan log itself; re-plan gate: creates = recon-prd/test only, zero bucket destroys,
+  changes = COLDLINE@60d lifecycle/labels. Apply will be TARGETED at google_storage_bucket.canonical (+ catalogue
+  scheduler) — the plan also surfaced pre-existing non-bucket drift (odum_portal domain mapping, 2 cron jobs, 2 Cloud
+  Run jobs undeployed from config) which is NOT tonight's scope → Deferred. W1 sweep staged: 79 names
+  (strategy-store-{defi,tradfi} deferred to post-deployment-api-redeploy).
+
+- **2026-07-13, S2/S3 landings + S4 started (autonomous tick).** `deployment-service@ccfaca26` (+266/−1547) — TF
+  reconcile: 42 REMOVE_STALE + 11 double-declare hand blocks removed; module Group-B section removed (module WAS live:
+  `create_gcs_buckets = true` in terraform/shared/gcp/terraform.tfvars — the resurrection mechanism confirmed + closed);
+  dangling outputs fixed; `canonical_buckets.tf` shipped (yamldecode-driven for_each, 81 canonical prd+test names,
+  COLDLINE@60d, prevent_destroy); `tf_state_surgery.sh` generated (59 rm / 11 mv / 68 import / 2 create, guarded,
+  syntax-checked); setup-buckets.py + bucket_config.yaml KEPT (live consumers found: setup-dev-project.sh,
+  provision-test-buckets.sh, SIT conftest + smoke — full resolver rewrite deferred, documented);
+  setup-gcs-lifecycle-policies.sh deleted; recon launcher header fixed; catalogue_regen_scheduler.tf repointed to flat
+  strategy-store (3 sites). `unified-trading-system-ui@2796d38b` — both catalogue routes repointed to flat bucket
+  (content verified present first); +`@1bf1bc1a` pre-existing gate blocker fixed (capability-verdict-matrix sync);
+  issue-doc UI leg flipped (pm@71c9dfb1c by the agent). `unified-api-contracts@155093a1` —
+  STRATEGY_STORE_BUCKET_TEMPLATE
+  - enumerate_availability repointed; facade test updated; v2 CI GREEN on that exact SHA (run 29282411405); agent
+    verified MDPS BaseDependencyChecker consumes generic_bucket_template, NOT strategy_store_bucket — unaffected. S4 in
+    flight: terraform 1.5.7 installed on orchestrator VM, deployment-service@ccfaca26 cloned there, state surgery
+    (backup → 59 rm → 11 mv → 68 import) + plan running; apply gated on plan showing ONLY recon-prd/test creates +
+    lifecycle/label updates on canonical buckets, NO bucket destroys.
+
+- **2026-07-13, S1/S2 landings (autonomous tick).** `unified-api-contracts@f84e5b37` — packaged cloud-providers.yaml
+  synced byte-identical to authoring SSOT (37 kinds both clouds, 10 dead kinds gone, recon present), QG green 376s, CI
+  healthy; enumerate_envelope.py repointed to flat strategy-store. Follow-up in flight for the two remaining same-class
+  sites the agent flagged (`gcs_paths.py:118 STRATEGY_STORE_BUCKET_TEMPLATE`, `enumerate_availability.py:43`).
+  `unified-trading-library@3382cc7c` — config-store fallback now resolves kind="config-store" (function-local import;
+  real circular-import risk documented), fixture yaml synced to 37 kinds, dynamic cell sweep picked up recon with no
+  table edits, QG green 246s. **Data-safety finding**: flat vs prd config-store diff = prd already holds ALL real config
+  md5-identical; the only flat-only object is `_tardis_concurrency_lease/lease.json` (ephemeral 900s lock, written by
+  MTDS via TARDIS_CONCURRENCY_LEASE_BUCKET, currently HELD by live VM cefi-okx-swap-2022-light-20260713) → flat
+  config-store bucket must NOT be deleted until that lease mechanism is repointed or the VM completes — added to
+  Deferred. Also recorded for Deferred: flat config-store literals remain in instruments-service
+  scripts/generate_domain_config.py:258 + system-integration-tests tests/smoke/test_cloud_infra_smoke.py:113. W3 fold
+  design drafted + committed earlier this tick (pm@346af1b62, todo flipped).
 
 - **2026-07-13, /autonomous dispatch started (operator away ~3h — "do everything possible without asking").** Staged
   execution: S1 = UAC packaged-yaml sync (36+recon=37 kinds) + enumerate_envelope flat repoint · UI strategy-store route

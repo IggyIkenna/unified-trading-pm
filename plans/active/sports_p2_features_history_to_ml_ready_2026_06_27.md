@@ -117,6 +117,189 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 4 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Picked up right after shipping the BYBIT futures_chain reshape remediation on a different plan this same session.
+Re-verified via non-snap gcloud/gsutil (`/home/ubuntu/google-cloud-sdk/bin/`, `central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-5 found
+  (`features-sports-sports-20260713-200043/-200456/-200525`), all `RUNNING`, same `creationTimestamp` — no new death, no
+  new preemption.
+- Checked `features-service` git log for any new `compute_shot_quality_batch` OOM fix since slot-5's check: **none** —
+  `b05f48ad` (already known-insufficient per slot-12's real-data finding) is still the latest touch on
+  `shot_quality_calculator.py`. The P0 profiling todo in
+  [`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+  remains unowned.
+- Features bucket unique-date count: **2,246** (up from slot-5's 2,242) — steady forward progress, no stall.
+- **Went past `RUNNING` status** (SSH, not just log-tail) on all 3: confirmed the real `features_service` process alive
+  on each — `-200043` 28.6% CPU / ~1.03GB RSS / 13:24 accumulated CPU-time on date 2025-08-26 (past its 2025-08-11
+  start); `-200456` 25.6% CPU / ~1.01GB RSS / 11:01 CPU-time on date 2018-01-20 (past its 2018-01-07 start); `-200525`
+  28.5% CPU / ~0.96GB RSS / 12:06 CPU-time on date 2019-09-01 (past its 2019-08-18 start). All three RSS values are
+  nowhere near the 15-32GB OOM ceiling — no crash risk observed. `run.log` lines wall-clock-fresh on all 3 (within ~2
+  min of check time, `date -u` = 2026-07-13T20:50:17Z).
+- No new OOM/crash signature, no new zombie shard, no new poison date discovered.
+
+**What I did NOT do**: did not attempt the `compute_shot_quality_batch` profiling (same reasoning as every prior slot —
+needs a dedicated Docker-memory-capped investigation against real data, not a quick check). Did not relaunch or touch
+any of the 3 healthy shards (still running pre-venue_id-fix code per slot-5's note — unchanged since, not a new
+finding). Did not flip Todo 1.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,246).
+Unchanged from slot-5's handoff — still waiting on the `compute_shot_quality_batch` P0 profiling todo to land before
+these 3 shards' captured dates need a `--force` re-run with the venue_id fix included.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
+### 2026-07-13 — slot 5 (Todo 1 re-dispatch — fast re-verify, fleet healthy, steady progress; landed the unrelated venue_id correctness fix moments earlier this session)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Immediately prior on this same slot: root-caused + shipped the venue_id-normalization fix (`features-service@a9684e27`,
+see
+[`issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+and
+[`issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md`](issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md)).
+That fix is orthogonal to this plan's still-open OOM blocker (`compute_shot_quality_batch`, a separate allocation site)
+— it restores correct venue-context feature VALUES, it does not touch the crash path. Flagging so whoever picks up Todo
+1 next force-recomputes any already-captured dates once the shot_quality OOM is also fixed, so venue-context columns
+aren't left silently NaN/wrong in already-`captured` rows from before this fix landed.
+
+Fast re-verify via non-snap gcloud/gsutil (`ikenna@odum-research.com`, `central-element-323112`,
+`/home/ubuntu/google-cloud-sdk/bin/`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-14/slot-10 already found
+  (`features-sports-sports-20260713-200043/-200456/-200525`), all `RUNNING`.
+- Features bucket unique-date count: **2,242** (up from slot-10's 2,216) — steady forward progress, no stall.
+- **Went past `RUNNING` status**: tailed all 3 `run.log`s — all wall-clock-fresh (within ~2 min of check time, `date -u`
+  = 2026-07-13T20:45:17Z), genuinely computing (no OOM/crash signature, no hang). `-200456` logged `Venues: 2628 rows` —
+  more than the 591-row `venues.parquet` I verified directly during the venue_id fix; this VM's packaged codebase
+  predates `a9684e27` (launched ~20:00-20:05 UTC, my fix landed ~20:41 UTC), so it's still running pre-fix code — not a
+  new finding, just confirms these 3 shards will need their captured dates eventually re-verified/force-recomputed once
+  relaunched on the fixed codebase (see note above).
+- No new `compute_shot_quality_batch` crash signature on any of the 3 shards this check.
+
+**What I did NOT do**: did not attempt the `compute_shot_quality_batch` profiling (same reasoning as every prior slot —
+needs a dedicated Docker-memory-capped investigation, not a quick check). Did not relaunch or touch any of the 3 healthy
+shards, and did not repackage/relaunch them with the venue_id fix mid-run (would duplicate in-flight SPOT compute for no
+immediate benefit — the fix is a correctness improvement, not a crash fix, so their current progress is still valid,
+just needs a future re-verify pass once the shot_quality blocker clears anyway). Did not flip Todo 1.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,242).
+Once the `compute_shot_quality_batch` P0 profiling todo lands a fix, relaunches should use a freshly-packaged tarball
+(now includes `a9684e27`) and consider whether previously-captured dates need a `--force` re-run to pick up correct
+venue-context values.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
+### 2026-07-13 — slot 10 (Todo 1 re-dispatch — fast re-verify, fleet healthy post-recovery, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Picked up right after slot-14's same-day recovery + operator escalation (3 OOM-zombie shards gap-filled, `/blocked`
+filed on the still-unresolved `compute_shot_quality_batch` root cause). Re-verified via non-snap gcloud
+(`ikenna@odum-research.com`, `central-element-323112`, `/home/ubuntu/google-cloud-sdk/bin/`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: **3** VMs running — the exact 3 collision-free
+  gap-fill relaunches slot-14 created (`features-sports-sports-20260713-200043` [vm-10's range, 2025-08-11→2026-07-13],
+  `-200456` [vm-3's range, 2018-01-07→2018-06-16], `-200525` [vm-5's range, 2019-08-18→2020-10-05]). The other 7
+  original shards are absent with no zombie signature — consistent with clean completion, matching every prior
+  dispatch's accounting.
+- Features bucket unique-date count: **2,216** (up from slot-14's 2,202) — steady forward progress, no stall.
+- **Went past `RUNNING` status** (this plan's own established standard) for all 3: tailed each VM's `run.log` via GCS —
+  all 3 wall-clock-fresh (within ~2 min of check time, `date -u` = 2026-07-13T20:18:57Z) and each past its own poison
+  date without incident: `-200043` on 2025-08-16 (past 2025-08-10), `-200456` on 2018-01-10 (past 2018-01-06), `-200525`
+  mid-calculator-chain on a later date (past 2019-08-17). No new OOM/crash signature on any of the 3.
+- Confirmed via `git log` on `features-service` that no commit has landed addressing `compute_shot_quality_batch` since
+  `c3e3ebfe` (the venue_context fix) — the P0 root-cause profiling todo slot-14 filed is still unowned; no operator
+  response to the `/blocked` escalation surfaced on this dispatch's `/boot`/`/heartbeat` (`messages: []`).
+
+**What I did NOT do**: did not attempt the `compute_shot_quality_batch` profiling myself — the issue doc's own explicit
+safety note (cartesian-join-class explosions reproduce in low single-digit seconds and need a real kernel-enforced
+`docker run --memory=<N>g` cap, not a userspace watchdog) makes this a dedicated, higher-risk investigation, not a quick
+check between other backend tasks; every prior slot that found the same still-open profiling gap reached the same
+conclusion. Did not relaunch or touch any of the 3 healthy shards. Did not flip Todo 1 — compute is still genuinely
+multi-day and in progress, now with 3 confirmed-healthy recovery shards and no new poison dates found.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,216);
+watch the 3 recovery shards for the SAME `advanced_stats`→crash signature recurring on other dates — if it does, that's
+further evidence for the `compute_shot_quality_batch` P0 profiling todo in
+[`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md),
+not a new finding. Whoever has budget for a real profiling session (Docker memory cap, memray/tracemalloc against real
+GCS data for one of the 3 known poison dates: 2018-01-06 / 2019-08-17 / 2025-08-10) should pick up that P0 todo directly
+rather than another fast re-verify cycle.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
+### 2026-07-13 — slot 14 (Todo 1 re-dispatch, same session continued — found 3 OOM-zombie shards across 3 different eras; REOPENED the "OOM-crash risk is closed" claim from this session's own earlier entry; gap-filled all 3, escalating to operator)
+
+**Todo 1 (compute features 2015→present) — took concrete action (3 shard recoveries) and produced a critical correctness
+finding that CONTRADICTS this same session's own earlier claim below that the OOM-crash risk was closed. Checkbox NOT
+flipped (multi-day operation, not yet complete).**
+
+Fresh-pulled all repos (clean), then fast re-verified the 10-VM fleet (launched ~09:18-09:25 UTC today, per the entry
+below) via non-snap gcloud: features bucket at **2,202 unique dates** (up from the handoff's 2,159). Consolidator health
+check first (the recovery VM below had failed on this): `instruments-store-sports-prd` blob was fresh (`updateTime` ~70s
+old) — the transient staleness that killed my prior dispatch's recovery VM (`features-sports-sports-20260713-170017`,
+`DEPLOYMENT_FAILED exit_code=1` on a `ManifestConsolidatorStaleError` fail-fast gate, self-deleted) had already
+self-healed by this check, consistent with the July-12 precedent for the same gate (see
+`sports_manifest_consolidator_duckdb_crash_and_silent_empty_read_2026_07_12.md`, already closed).
+
+**Went deeper than the instance-list `RUNNING` status** (this plan's own established standard) on the 3 shards still
+listed: **all 3 (`fss-backfill-vm-3`, `-vm-5`, `-vm-10`) were OOM-zombies** — confirmed via SSH (`ps aux` showed no
+`features_service` process, load average ~0.00 on all 3) + `dmesg` (identical OOM signature, ~15.8GB/~32GB anon-rss,
+same as every prior OOM finding in
+[`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)).
+**Critical: all 3 died at the IDENTICAL log position** (immediately after `Calculator advanced_stats: 62 columns added`,
+right before `compute_shot_quality_batch` per `run_new_calculators`'s calculator order) — on 3 unrelated dates spanning
+3 different eras: `vm-10` on **2025-08-10** (modern, non-history — 85 dates completed cleanly first), `vm-3` on
+**2018-01-06** (a SECOND independent crash at this exact date — an earlier same-day dispatch by slot-12 already
+gap-filled this shard past one crash, and it died again at the same date 254 dates later), `vm-5` on **2019-08-17**
+(within 6 dates of a fresh restart). All 3 were running `features-service@c3e3ebfe` or later (the venue_context fix this
+same plan's own earlier entry claimed "closes the OOM-crash risk") — so this is hard evidence that claim was **wrong**:
+c3e3ebfe fixed ONE real bug (venue_id cartesian join) but did not bound the actual unbounded site, which the
+log-position evidence now points at `compute_shot_quality_batch` instead (matching the issue doc's own already-reopened,
+not-yet-closed todo).
+
+**Recovery (not a fix)**: deleted all 3 zombie VMs, gap-filled each shard's remaining range excluding its poison date
+via the collision-free `launch-features-vm.sh` (all 5 code tarballs fresh at each launch): `2025-08-11→2026-07-13`
+(`features-sports-sports-20260713-200043`), `2018-01-07→2018-06-16` (`-200456`), `2019-08-18→2020-10-05` (`-200525`).
+All 3 confirmed genuinely computing within minutes (not just booted) via SSH process check / log tail. The 6 other
+original shards (`vm-1,2,6,7,8,9`) all show clean `EXIT_STATUS=0` — unaffected, not part of this finding.
+
+**What I did NOT do**: did not attempt to guess-fix `compute_shot_quality_batch` inline — this doc's own history shows
+guessed fixes here (b05f48ad) don't hold without real profiling; filed a new P0 profiling todo instead. Did not re-scan
+the full fleet beyond the 3 shards this fast re-verify covered. Did not flip Todo 1 — compute is still genuinely in
+progress and now has 3 known-poison dates pending a real fix.
+
+**Filed** full evidence (crash table, log-position analysis, calculator-chain trace) in the issue doc's new "Update —
+THIRD recurrence" section + a new P0 todo. **Escalating to operator via `/blocked`**: this is the SECOND time this
+session (and the fourth+ time across this plan's history) an "OOM resolved" claim was made and then contradicted by
+production evidence — flagging so the operator can decide whether to pause new full-history relaunches on this plan
+until the shot_quality root cause actually lands, rather than each dispatch independently rediscovering the same
+pattern.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,202
+with contributions from the 3 new gap-fill VMs above); watch for the SAME crash signature (dies right after
+`advanced_stats`) recurring on OTHER dates in the now-9-shard-effective fleet — if it does, that's further evidence for
+the shot_quality root-cause todo, not a new finding. Do NOT blindly relaunch 2018-01-06 / 2019-08-17 / 2025-08-10 with
+`--skip-existing` until the issue doc's new P0 profiling todo lands a real fix.
+
+Checkbox NOT flipped (compute genuinely in progress, and now has 3 confirmed-poison dates blocking full-history
+completion). Repo code commit: none (VM operations + issue-doc/plan-doc updates only); ships via the `docs(plans):`
+carve-out.
+
 ### 2026-07-13 — slot 14 (Todo 1 dispatch — fast re-verify triggered a self-inflicted VM-deletion collision; recovered cleanly, no data lost; flagging the launcher footgun)
 
 **Todo 1 (compute features 2015→present) — took concrete action (vm-8 gap-fill relaunch), then a SEPARATE relaunch

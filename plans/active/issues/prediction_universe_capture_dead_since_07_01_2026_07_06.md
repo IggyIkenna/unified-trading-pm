@@ -316,3 +316,37 @@ and Phase 4 waits on Ikenna's access answer.
     `is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`); (3) MTDS-side PREDICTION shard re-runs
     (KalshiAdapter/PolymarketAdapter reading the now-present market_lifecycle days) are the parent plan's targeted
     re-verification item.
+
+- 2026-07-13 (later — **ROOT CAUSE #3 FOUND AND FIXED: the MTDS lifecycle READER never matched the store's layout**):
+  re-running the MTDS PREDICTION force legs after the missed-window backfill still reproduced
+  `KalshiAdapter: no Kalshi tickers found in market_lifecycle for 2026-07-09` (real VM
+  `mtds-backfill-prediction-pipelinecheck-20260713-195356-23bd66`) minutes after the day's partitions were verified
+  present. Traced to `base_prediction_adapter._load_market_lifecycle_for_date`: it suffix-matched a GROUP-FIRST layout
+  (`group=*/day={date}/market_lifecycle.parquet`) while the REAL store has been DAY-FIRST
+  (`by_canonical_group/day={date}/group=*/market_lifecycle.parquet`) back to `day=2025-03-14` (verified by direct
+  listing) — the primary read matched **zero objects on every batch run ever made against this layout**, independent of
+  IS enum health. This is the missing mechanism behind this doc's cross-session "no Kalshi tickers" corroborations:
+  KALSHI had no fallback (removed per its own docstring) so it always starved; POLYMARKET intermittently limped through
+  its `instrument_availability` fallback. **Fixed: `market-tick-data-service@80d5aadd`** — day-scoped listing prefix
+  (also removes a whole-store walk, single-walk discipline) + layout-agnostic day guard + legacy group-first fallback;
+  57 tests, full QG green. Post-fix KALSHI trades proof-run is in flight (gated on the code tarball picking up the
+  commit). POLYMARKET post-backfill evidence: `PolymarketAdapter.download_batch: 2026-07-09 — 0 trades` (universe now
+  resolves; zero-capture is a further residual to confirm honest-vs-real post-80d5aadd). The MTDS PREDICTION shard
+  enumeration also surfaced junk shards (`market_lifecycle`/`MARKET_LIFECYCLE`/`prediction_canonical_question_group` as
+  MTDS data_types — IS-domain surfaces in the raw cross-product) — checker-enumeration hygiene, noted on the parent
+  plan.
+
+- 2026-07-13 (post-80d5aadd proof-run — **reader fix CONFIRMED working; ROOT CAUSE #4 exposed: id-shape mismatch,
+  OPEN**): re-ran `PREDICTION:KALSHI:trades` force on a tarball carrying 80d5aadd (VM
+  `mtds-backfill-prediction-pipelinecheck-20260713-203345-23bd66`). The `no Kalshi tickers found in market_lifecycle`
+  warning is GONE — the adapter now resolves a universe and makes REAL Kalshi API calls. The next layer failed:
+  `GET /markets/trades?ticker=DOGE_UP_DOWN_DAILY` → 400 (`1/1 tickers died on transport error (CF-11)`) — the resolved
+  "ticker" is a canonical GROUP name, not a Kalshi ticker. Direct read of the backfilled parquets shows why: the
+  IS-written `market_id` column carries COMPOSITE canonical keys (`POLYMARKET:PREDICTION_MARKET:0x…` /
+  `KALSHI:PREDICTION_MARKET:…`), while the MTDS adapters expect BARE per-venue ids (bare `0x…` condition_ids, bare `KX…`
+  tickers) — `KalshiAdapter._is_kalshi_ticker` (a "not 0x-prefixed" heuristic) also mis-classifies composite POLYMARKET
+  keys as Kalshi-shaped. Same id-shape-mismatch class as the tracked bare-coin REST-venue checker finding. **Open next
+  step (Root Cause #4)**: normalize at the lifecycle-read boundary (parse the composite `VENUE:TYPE:BARE_ID` shape →
+  filter by the venue segment, feed the bare id to each adapter) — a scoped MTDS fix in
+  `base_prediction_adapter`/`KalshiAdapter`; the expected-instrument oracle's 1-instrument KALSHI universe
+  (`DOGE_UP_DOWN_DAILY`) needs the same normalization check.
