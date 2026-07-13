@@ -19,10 +19,11 @@ parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
-author: slot-11
 source: [utl_reuse_phase7_low_lint_tail_2026_07_13.md, slot-11 backend-engineer task]
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Slot 11 — an external process silently `git reset`-discarded 2 committed local commits

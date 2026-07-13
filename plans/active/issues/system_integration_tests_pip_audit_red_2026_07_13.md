@@ -23,10 +23,11 @@ parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
-author: slot-11
 source: [utl_reuse_phase7_low_lint_tail_2026_07_13.md, slot-11 backend-engineer task]
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # system-integration-tests quality-gates.sh RED — pip-audit click/pillow CVEs, ceiling is 0
