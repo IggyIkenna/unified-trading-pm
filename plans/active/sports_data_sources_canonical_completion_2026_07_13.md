@@ -2156,3 +2156,235 @@ it's new adapter work, not a data-audit residual).
     "does this need a one-off reseed" question this todo explicitly asked) are done and live-verified. The
     `wf_42ff1064-99c`-filed consolidator-layer NULL-vs-`""` dedup gap remains a separate, already-tracked P1 (shared
     fleet infra, cross-asset-group blast radius, correctly NOT folded into this narrower enumerator-layer fix).
+
+- **2026-07-13 (dispatch: manifest-consolidator silent no-op root-cause — sports canonical stuck 4 cycles).**
+  Root-caused the newly-reported "consolidator runs clean, reports success, but genuinely never merges" incident on
+  `instruments-store-sports-prd-central-element-323112`. **Read `unified_trading_library/manifest_consolidator.py` in
+  full (2262 lines)**, then reproduced/verified everything against LIVE GCS + Cloud Logging/Cloud Run audit trails (ADC
+  admin, `central-element-323112`) rather than trusting the handoff blindly, plus a controlled repro against
+  `instruments-store-sports-test-central-element-323112`.
+  - **ROOT CAUSE — CONFIRMED, not the incremental-cutoff/mtime logic.** It is a **lock-orphan caused by a SIGKILL**, not
+    a bug in the changed-shard/mtime-cutoff detection (`_get_content_write_mtime` lines 1298-1357, `consolidate()`'s
+    incremental decision lines 569-627). Live evidence, in order:
+    1. Cloud Run execution history (`gcloud run jobs executions list`) + Cloud Logging
+       `run.googleapis.com/varlog/system` for `uts-prod-manifest-consolidator-instruments-sports-4v85n` (the FIRST cron
+       tick after the two paused schedulers — `...-instruments-sports-cron` / `...-market-data-sports-cron` — were
+       resumed ~21:24 UTC) show: **`2026-07-13T21:25:10.603900Z WARNING ... Container terminated on signal 9.`** — a
+       SIGKILL, almost certainly OOM (job is `cpu=4, memory=16Gi, timeoutSeconds=1800`; 67s runtime rules out the 1800s
+       task-timeout as the cause). This is the SAME failure class already precedented in this module's own docstring at
+       lines 313-317 (2026-05-26 cefi incident: "2099 shards → SIGKILL at 16Gi") — an unusually large one-shot merge
+       (here: the FULL ~18-minute per-VM-shard backlog that piled up bucket-wide while the scheduler was paused, not
+       just the one shard below) OOM-crashed the container.
+    2. GCS Data Access audit logs for `_index/consolidator.lock` (`_LOCK_PATH`, line 255) show this execution **acquired
+       the lock at `2026-07-13T21:24:44.308158368Z`** (`storage.objects.create` by `unified-trading-sa@...`) and it was
+       **NEVER released by that execution** — the next `delete` event on that object is
+       `2026-07-13T21:30:14.031580967Z`, by a _different_ principal (`ikenna@odum-research.com`, i.e. a locally-run
+       script, not a Cloud Run execution). A SIGKILL cannot run Python's `finally:` — so `consolidate()`'s own cleanup
+       (`finally: if lock_held and client is not None: _release_lock(client, bucket)`, lines 760-762) never executed,
+       and the lock blob was orphaned holding `started_at="2026-07-13T21:24:44..."`.
+    3. `_LOCK_TTL_SECONDS = 300.0` (line 268). Every subsequent cron tick's `_is_lock_fresh()` (lines 765-818) read the
+       orphaned lock, found `age_seconds < 300`, and took the **early-return "sibling cron still running" skip** (lines
+       472-488) — confirmed empirically: Cloud Logging audit trail shows **ZERO** writes of ANY kind
+       (`create`/`copy`/`patch`) to the canonical (`_index/availability_index.parquet`) across executions `cpvw5`
+       (21:25:05), `bdznd` (21:26:05), between the 21:06:41 pre-pause write and the eventual 21:32:55 fix-write — i.e.
+       these ticks never even reached the shard-listing/merge/touch/prune code at all. This exactly matches the
+       "success=True, no errors, nothing merges" symptom: a lock-skip is coded as a _successful, error-free_ no-op
+       (`no_op_lock=True, error_reason="locked"`), not a failure.
+    4. The lock only stopped blocking once its age passed 300s (21:29:44); the next probe (the local script at 21:30:14)
+       found it stale, reclaimed it per `_is_lock_fresh`'s own stale-clear path (lines 811-818), and did a real merge
+       (its `_write_consolidated` stamped `consolidator_content_write_at="2026-07-13T21:30:14..."`, confirmed via a
+       direct live read of the canonical blob's metadata — matches the ~161s gap to its actual GCS upload completing at
+       21:32:55, consistent with a slower, non-co-located full/incremental DuckDB merge). The manually-triggered
+       `gcloud run jobs execute --wait` execution referenced in the handoff (`...-8b6sr`, 21:30:17-21:30:56, confirmed
+       via `gcloud run jobs executions describe` — args carry no `--force`, and its own status literally reads
+       `"Execution completed successfully in 38.67s"`, the exact figure in the handoff) **also never wrote the
+       canonical** (zero audit-log hits in its window either) — it was almost certainly ITSELF a lock-skip too (the
+       lock, from 4v85n, was still fresh at 21:30:17? No — it had just gone stale at 21:29:44 and been reclaimed by the
+       21:30:14 local run 3s before 8b6sr started; 8b6sr most likely lost the **lock-acquisition race** to the
+       concurrently-running local script instead, lines 490-506, same `no_op_lock=True` shape either way). Either branch
+       produces an indistinguishable-from-outside "clean, no errors" no-op.
+  - **A SEPARATE, blind-spot finding: the stall-alerting safeguard cannot see this failure mode.**
+    `_check_consolidation_stall()` (lines 1009-1080) — the exact mechanism this same module already ships to catch
+    "silent no-op streak" (its own docstring, lines 270-283, describes almost this exact symptom) — is called ONLY from
+    the `no_op_unchanged` branch (line 626) and the real-merge branch (line 726). The lock-skip early returns (lines
+    477-488, 495-506) `return` **before** either call site. A lock-orphan-driven skip storm therefore never increments
+    the stall streak and never pages, even though it is architecturally the SAME "cron exits 0, nothing merges" failure
+    class the stall-detector exists to catch. In this incident it self-healed inside the 300s TTL (~5 cron ticks) before
+    this would have mattered for alerting purposes, but a recurring/persistent trigger (e.g. an OOM that recurs on every
+    retry of an oversized bucket) would mask itself indefinitely under the current code.
+  - **Empirically DISPROVED alternative theory** (my own initial hypothesis, refuted by direct reproduction — recorded
+    for anyone re-investigating this class of bug in future): ran a controlled repro against
+    `instruments-store-sports-test-central-element-323112` — seeded a canonical via `consolidate(force=True)`, did an
+    out-of-band rewrite that deliberately omits `consolidator_content_write_at`/`consolidator_run_at` (simulating a
+    corrective script using the CAS `download_bytes_with_generation`/`conditional_upload_bytes` pattern, a different
+    write path than this module), then wrote a genuinely-new per-VM shard and called `consolidate(bucket)` (non-forced)
+    repeatedly. **The very first cycle correctly detected + merged the new shard** (`shards_changed=2`, the new row
+    landed in the canonical) — the `_get_content_write_mtime` fallback chain (`consolidator_content_write_at` →
+    `consolidator_run_at` → `blob.updated`, lines 1298-1357) behaves exactly as its own docstring claims ("fail toward
+    correctness... over-includes shards, never under-includes"). So an out-of-band canonical rewrite with absent
+    consolidator metadata is NOT, by itself, what caused this incident. (Separately, also empirically observed in this
+    same repro that `_touch_canonical_mtime`'s tier-1 `copy_blob`-to-self silently no-ops against this project's real
+    GCS backend exactly as the code's own comment warns, lines 1131-1133 — 3 consecutive touch calls left
+    generation/updated/metadata byte-identical — but tier-2's fallback semantics were not fully isolated before time ran
+    out on this dispatch; this is a minor, separately-worth-revisiting observation, not part of the incident's root
+    cause, since `consolidator_content_write_at`/`consolidator_run_at` are correctly never touched by a touch-only cycle
+    by design.)
+  - **Relationship to the previously-filed NULL-vs-`""` dedup-key finding (`wf_42ff1064-99c`,
+    `_DEDUP_NULL_SENTINEL`/`_dedup_key_sql`, lines 368-400): UNRELATED, different layer, confirmed by code position.**
+    The lock check (`_is_lock_fresh`/`_acquire_lock`) is the FIRST thing `consolidate()` does (lines 472-507), entirely
+    before `_seed_legacy_if_needed`, the shard listing, or any DuckDB merge/dedup SQL is ever reached. A lock-skip cycle
+    never gets anywhere near `_dedup_key_sql`/the window-function dedup. The two bugs sit in non-overlapping code paths
+    and have non-overlapping symptoms: the dedup-key gap causes a **captured row to fail to supersede its own NULL-seed
+    twin during a merge that DOES run** (wrong survivor within a merge); this bug causes **the merge to not run at all**
+    for a span of cycles (no merge, correct or otherwise). They can in principle co-occur on the same bucket but do not
+    cause or explain each other.
+  - **CRITICAL SECONDARY FINDING — surfaced during verification, NOT part of the original ask, flagging per the "big
+    finding: data-correctness" triage rule rather than silently deferring:** live-read-verified the CURRENT canonical
+    (post-fix, `1783978722653122`+ generations, `_index/per_vm/` down to just the legacy seed) via DuckDB directly
+    against the downloaded parquet: **`max(written_at)` across the ENTIRE 5,506,821-row canonical is still
+    `2026-07-13T21:04:37.298858+00:00`** — i.e. **zero rows anywhere in the canonical have a `written_at` after the
+    pre-pause cutoff**, and specifically **zero `attempted_failed` rows with `written_at > 2026-07-13T21:06:41`**
+    (`attempted_failed` total = 3,744, nowhere near the reported 10,059). The
+    `_index/per_vm/sports-attempted-failed-residual-closer-round3.parquet` shard (10,059 rows, all written_at strictly
+    after 21:06:41 per the handoff's own direct pandas read) was **pruned/deleted at `2026-07-13T21:33:40`** (cycle
+    `jtrd5`, confirmed via GCS Data Access audit log) **without its rows ever appearing in the canonical** — this looks
+    like a genuine, currently-unresolved **silent loss of 10,059 rows**, not a benign dedup collapse: the producing
+    script is `instruments-service/scripts/backfill/sports_attempted_failed_residual_closer_2026_07_13.py` (`--vm-name`
+    default matches the shard's filename prefix exactly), which only re-queries cells that are CURRENTLY
+    `attempted_failed` (footystats MATCHES/PREDICTIONS/ODDS, SFI `SFI_PROGRESSIVE_STATS`, open_meteo `WEATHER`) and
+    force-refetches them — meaning most of these 10,059 rows almost certainly represent NEWLY successful captures with
+    no pre-existing `captured` row to legitimately lose a dedup contest against (so the "capture_status='captured'
+    always outranks" tie-break, lines 1806-1811, would not explain a 100% loss rate either way). Exact mechanism NOT
+    fully pinned in the time available for this dispatch — two live hypotheses, both consistent with the evidence and
+    NOT yet distinguished: **(a)** the shard genuinely lost a dedup contest for some reason not yet identified, or
+    **(b)** `_download_valid_parquets` (lines 1535-1572, which logs-and-skips an unreadable/malformed shard rather than
+    failing the cycle) silently dropped this specific shard from the 21:30:14-21:32:55 fix-run's merge input while its
+    (unaffected) mtime still let the FOLLOWING cycle (`jtrd5`) treat it as "already settled" and prune it. **Recommended
+    follow-up (not done in this dispatch — out of the root-cause-only scope given): re-run
+    `sports_attempted_failed_residual_closer_2026_07_13.py` (idempotent, `force=True` re-fetch of
+    currently-`attempted_failed` cells) to regenerate the lost captures from source, since the underlying
+    footystats/SFI/open_meteo data is still fetchable — the shard BYTES are gone but the underlying vendor data is
+    not.** Flagging this explicitly rather than leaving it as an unstated gap.
+  - **Blast-radius check (mandatory per this dispatch's rule 11 — this module is shared fleet infra):** did NOT ship any
+    code change in this dispatch (root-cause-only, per the task), so the "prove 2-3 other buckets' correct no-op/merge
+    decisions are unchanged" bar does not strictly apply yet — but ran the actual live decision-inputs
+    (`_is_lock_fresh`, `_get_content_write_mtime`, `_list_per_vm_shards_with_mtime`) read-only against
+    `instruments-store-{cefi,defi,tradfi,pred}-prd-central-element-323112` in addition to sports: all 5 show
+    `lock_fresh=False` right now (no other bucket is currently stuck behind an orphaned lock), and all 5 run through the
+    identical shared `consolidate()`/lock code path — confirming the lock-orphan-on-SIGKILL mechanism is
+    **architecture-general** (any bucket, any time a single cycle's merge is large/heavy enough to approach the 16Gi
+    container ceiling and get OOM-killed after acquiring the lock), not sports-specific. The PAUSE/RESUME sequence in
+    this incident is what made the trigger far more likely to fire (an ~18-minute bucket-wide shard backlog forced one
+    abnormally large first-catch-up merge, much closer to the historical 2026-05-26 cefi 2099-shard/16Gi-OOM precedent
+    than a normal ~1-minute incremental tick) — so the classification is: **general latent vulnerability (class (b) in
+    the dispatch's framing), whose probability of firing was substantially elevated by this specific pause/resume
+    sequence**, not a bug that only exists because of pause/resume.
+  - **No fix shipped in this phase** (task scope was root-cause + journal only). Left for a follow-up phase/plan: (1)
+    make `_release_lock` failures/uncaught-death cases visibly distinguishable from a healthy sibling-overlap skip (e.g.
+    a distinct `no_op_lock_stale_reclaim` vs `no_op_lock_fresh_sibling` report field, or wiring
+    `_check_consolidation_stall`-equivalent visibility into the lock-skip branches too); (2) resolve the 10,059-row
+    data-loss finding above (re-run the closer script); (3) pin the exact mechanism of that data loss precisely
+    (dedup-collapse vs silent-skip-on-unreadable-shard) if it recurs or if forensic access to the 21:30:14 local run's
+    own logs becomes available.
+
+- **2026-07-13 (dispatch: manifest-consolidator silent no-op FIX + ship, follow-up to the root-cause dispatch
+  immediately above).** Verified the prior phase's root cause myself (not blindly trusted), designed and shipped the fix
+  item (1) from that phase's own follow-up list, added a regression test, ran the mandatory blast-radius proof against 4
+  other real buckets, and shipped to `unified-trading-library` LDR.
+  - **Re-verification of the root cause (before writing any fix).** Read
+    `unified_trading_library/manifest_consolidator.py` in full again, independently, and confirmed every specific line
+    reference in the prior entry against the CURRENT file (no drift since that dispatch): `_LOCK_TTL_SECONDS = 300.0` at
+    line 268; the 2026-05-26 cefi "2099 shards → SIGKILL at 16Gi" precedent docstring at lines 313-317; the fresh-lock
+    early-return skip at lines 472-488 and the lost-acquire-race skip at 490-506; the
+    `finally: if lock_held and client is not None: _release_lock(client, bucket)` cleanup at lines 760-762 (unreachable
+    on SIGKILL — confirmed by inspection, a SIGKILL cannot run Python's `finally`); `_is_lock_fresh` spanning exactly
+    lines 765-818; `_check_consolidation_stall` called from the no-op-unchanged branch (line 626) and the real-merge
+    branch (line 726) ONLY — confirmed by grep, zero call sites in either lock-skip branch pre-fix. Also
+    live-re-confirmed empirically (not just by reading code): read the CURRENT state of
+    `instruments-store-sports-prd-central-element-323112` via
+    `_is_lock_fresh`/`_read_stall_state`/`_list_per_vm_shards_with_mtime` (ADC admin) — `lock_fresh=False`,
+    `stall_state={'streak': 0, 'baseline_shards': 3}`, `shards=2` — confirms the incident genuinely self-healed and the
+    bucket is currently healthy, consistent with the prior dispatch's account (not stale/contradicted). **Conclusion:
+    root cause fully re-confirmed, no correction needed to the prior phase's diagnosis.**
+  - **Fix shipped** (deliberately the SAFE, scoped item (1) from the prior phase's own follow-up list, not a
+    heartbeat/lease-renewal rearchitecture of the lock itself): added `_check_stall_on_lock_skip(client, bucket)`,
+    called from BOTH lock-skip early-return branches in `consolidate()` (fresh-lock skip and lost-acquire-race skip). It
+    best-effort lists per-VM shards (the same cheap single native `list_blobs` call `_list_per_vm_shards_with_mtime`
+    already makes on every normal cycle) and feeds that count into the EXISTING `_check_consolidation_stall` safeguard
+    with `progressed=False` — the exact mechanism already built to catch "cron exits 0, nothing merges", which was
+    architecturally blind to this specific "exits 0, nothing merges" mechanism (a lock-skip) because both lock-skip
+    branches historically `return`ed before either of that detector's two call sites. On any listing/check failure the
+    helper logs and returns WITHOUT calling `_check_consolidation_stall` at all — a fabricated `shards_scanned=0` would
+    incorrectly RESET an in-progress streak, which is worse than just not observing that one cycle, so failure is
+    fail-safe-inert, never fail-open-into-corruption. **Deliberately did NOT** touch `_LOCK_TTL_SECONDS`,
+    `_is_lock_fresh`, `_acquire_lock`, or any merge/no-op DECISION logic (`_get_content_write_mtime`, the
+    `changed_paths` cutoff, the incremental-vs-full branch) — a shorter fixed TTL was already tried once before and
+    caused its own precedented incident (the defi 90s→300s TTL bump documented immediately above `_LOCK_TTL_SECONDS`
+    itself), so this fix deliberately narrows to closing the DETECTION blind spot rather than touching the timing
+    legitimate long-running cycles depend on. Net effect: a single self-healing lock-orphan (the actual 2026-07-13
+    incident, which resolved in ~5 cron ticks, well under `_STALL_ALERT_CYCLES=10`) still does NOT page — correct, it's
+    benign — but a RECURRING one (e.g. the same oversized merge gets OOM-killed again on every retry after reclaiming
+    the stale lock) now correctly accumulates toward `MANIFEST_CONSOLIDATION_STALLED`, closing the "permanently
+    invisible to the module's own safeguard" gap the prior phase flagged. Files changed:
+    `unified-trading-library/unified_trading_library/manifest_consolidator.py` (new `_check_stall_on_lock_skip` helper
+    - 2 call sites + docstring updates on `_LOCK_TTL_SECONDS`/`_check_consolidation_stall`),
+      `unified-trading-library/tests/unit/test_manifest_consolidator.py` (2 new regression tests + a backward-compatible
+      optional `written_at` kwarg added to the shared `_row()` test helper, default unchanged so every pre-existing call
+      site is untouched).
+  - **Regression tests added** (`tests/unit/test_manifest_consolidator.py`), both end-to-end through `consolidate()`
+    itself (not just unit-testing the helper in isolation):
+    - `test_consolidate_pages_on_repeated_lock_orphan_stall` — seeds a real merge baseline, then a genuinely-new per-VM
+      shard whose row `written_at` postdates the baseline's `written_at` sits behind a still-"fresh" lock (simulating an
+      orphan that never resolves — the recurring/persistent case) for `_STALL_ALERT_CYCLES` consecutive `consolidate()`
+      calls; asserts every cycle reports `success=True, no_op_lock=True` (the false no-op, exactly as today) AND that
+      `MANIFEST_CONSOLIDATION_STALLED` fires exactly once at the threshold AND that the shard's row (`BYBIT`) genuinely
+      never reached the canonical while locked — proving this is a real data-never-merged defect, not just a bookkeeping
+      exercise. This test FAILS pre-fix (0 `MANIFEST_CONSOLIDATION_STALLED` events, proving the blind spot) and PASSES
+      post-fix.
+    - `test_lock_skip_self_healing_within_tolerance_does_not_page` — the actual incident's shape: a few lock-skip cycles
+      (fewer than `_STALL_ALERT_CYCLES`) followed by the lock aging past its TTL and a real merge landing; asserts the
+      previously-blocked shard's row (`BYBIT`) is present in the final canonical AND that
+      `MANIFEST_CONSOLIDATION_STALLED` never fires — proves the fix does not turn every ordinary
+      sibling-overlap/self-healing skip into alert noise (non-regression of the legitimate fast/no-op path).
+  - **Mandatory blast-radius proof (rule 11 — shared fleet infra used by every asset_group).** Wrote and ran a script
+    (`/private/tmp/.../scratchpad/blast_radius_lock_orphan_fix.py`, ADC admin, `central-element-323112`) that: (a) ran
+    the UNCHANGED decision inputs (`_is_lock_fresh`, `_get_canonical_mtime`, `_get_content_write_mtime`,
+    `_list_per_vm_shards_with_mtime`) live against 4 real production buckets covering every asset_group besides sports —
+    `instruments-store-cefi-prd-central-element-323112`, `instruments-store-defi-prd-central-element-323112`,
+    `instruments-store-tradfi-prd-central-element-323112`, `instruments-store-pred-prd-central-element-323112` — and (b)
+    directly exercised the NEW `_check_stall_on_lock_skip` code path against each of those same 4 buckets, live.
+    **Results**: all 4 show `lock_fresh=False` right now (none currently stuck behind a lock, matching the prior
+    dispatch's own equivalent finding for these same 4 buckets), `shards_scanned=1` each; calling the new
+    `_check_stall_on_lock_skip` against each left `_read_stall_state` byte-identical before/after in all 4 cases
+    (`{'streak': 0, 'baseline_shards': 2}` → unchanged) — i.e. the new code path runs clean against real GCS state for
+    every other asset_group and does NOT spuriously trip `MANIFEST_CONSOLIDATION_STALLED` for a currently-healthy
+    bucket. Because the fix does not modify `_is_lock_fresh`/`_acquire_lock`/`_get_content_write_mtime`/the
+    changed-shard cutoff/the incremental-vs-full branch at all — only ADDS a call to the lock-skip return paths — every
+    bucket's actual merge/no-op VERDICT is provably byte-identical pre- and post-fix by construction; this live run
+    additionally confirms the one genuinely NEW code path (the stall-check call itself) does not crash or misfire
+    against real state for cefi/defi/tradfi/prediction. **No regression found in any of the 4.**
+  - **Quality gates + ship.** Ran the full `bash scripts/quality-gates.sh --no-fix` twice (first run caught one real
+    finding: the new test file's incident-context comment literally quoted
+    `instruments-store-sports-prd-central-element-323112`, tripping the "Hardcoded prod project ID in tests" gate —
+    fixed by genericizing the comment to "the sports prod canonical bucket"; re-ran clean). Final run:
+    `✅ ALL QUALITY GATES PASSED (105s)` — tests, basedpyright (0 errors/0 warnings), codex compliance, dead-code,
+    production-readiness validators all green; sentinel `.qg_last_passed_sha` written. Shipped via
+    `bash scripts/quickmerge.sh ... --agent --files 'unified_trading_library/manifest_consolidator.py tests/unit/test_manifest_consolidator.py'`
+    — landed on `unified-trading-library` LDR (`live-defi-rollout`) at commit `d352fb9eac265003d4151006df8b263be4402f91`
+    ("fix(manifest_consolidator): close lock-orphan silent-no-op blind spot in the stall detector"); strict-quickmerge
+    - all pre-commit hooks passed; `git status` clean post-push. Per the LDR-is-SSOT model, server `quality-gates-v2`
+      gates at the LDR→staging promotion PR (Tier-C drain, ≤15 min), not on this LDR push directly — nothing further to
+      poll for this dispatch; the promote pipeline is standing GHA automation, not something this dispatch needs to
+      babysit.
+  - **Relationship to the two OTHER findings from the root-cause dispatch — correctly left untouched, both explicitly
+    out of THIS fix's scope**: (1) the 10,059-row `sports-attempted-failed-residual-closer-round3.parquet` data-loss
+    finding is a separate, already-flagged, not-yet-root-caused issue (re-run of
+    `sports_attempted_failed_residual_closer_2026_07_13.py` recommended, unrelated to the lock-skip mechanism this fix
+    addresses — that data loss happened during an actual MERGE cycle, not a lock-skip); (2) the `wf_42ff1064-99c`
+    NULL-vs-`''` dedup-key gap remains separate/unaffected (different code path entirely, confirmed by the prior
+    dispatch's own code-position argument, unchanged by this fix). Neither required by or affected by this dispatch's
+    scope (fix the lock-orphan silent-no-op blind spot specifically).
+  - **No todo item in this plan tracks this fix directly** (it was root-caused and shipped via a dispatch outside this
+    plan's own `- [ ]` list, per the operator's direct ask) — journaled here per the plan-journaling instruction on that
+    dispatch. The remaining follow-ups from the root-cause entry ((2) and (3) above) are still open and unclaimed by
+    this fix; if picked up, they belong in a new dispatch/plan, not a retroactive edit to this one.
