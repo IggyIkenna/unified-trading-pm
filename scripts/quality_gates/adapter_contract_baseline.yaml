@@ -63,7 +63,7 @@ baseline:
   execution-service/execution_service/sports_execution/adapters/exchanges/matchbook.py:
     count: 4
   execution-service/execution_service/sports_execution/adapters/exchanges/polymarket_clob.py:
-    count: 15
+    count: 7
   execution-service/execution_service/strategy_instructions/gcs.py:
     count: 8
   execution-service/execution_service/strategy_instructions/manifest.py:
