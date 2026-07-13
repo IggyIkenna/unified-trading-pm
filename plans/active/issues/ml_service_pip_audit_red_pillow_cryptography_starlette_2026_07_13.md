@@ -102,14 +102,40 @@ then `bash scripts/quality-gates.sh` to confirm green end-to-end (not just pip-a
 
 - [x] ✅ [BACKEND] P1. Bump `pillow`→12.3.0, `cryptography`→48.0.0→49.0.0, `pydantic-settings`→2.14.2 (all within
       existing `pyproject.toml` constraints, zero compatibility risk) — shipped `ml-service@3f18fa0`.
-- [x] ✅ [BACKEND] P2. `starlette` is still short of its 1.3.0 fix (locked at 1.2.1) — our own
-      `fastapi>=0.115.0,<0.137.0` pyproject ceiling caps starlette there even at fastapi's max allowed patch (0.136.3).
-      Needs a deliberate `fastapi<0.137.0` ceiling bump + compatibility check (ml-service's actual FastAPI/ASGI usage),
-      not a blind lockfile bump. Interim: `ml-service@3f18fa0` added
-      `--ignore-vuln PYSEC-2026-248 --ignore-vuln PYSEC-2026-249` to `PIP_AUDIT_EXTRA_ARGS` with a comment explaining
-      why (fastapi-capped, not "no fix version") so quality-gates.sh is honestly green in the meantime. Bump the fastapi
-      ceiling, confirm starlette resolves to >=1.3.0, run the full test suite (not just pip-audit), then remove the two
-      ignore-vuln entries. (repo: ml-service) — DONE `ml-service@4d16341`.
+- [x] ✅ [BACKEND] P2. `starlette` PYSEC-2026-248/249 genuinely fixed (not ignore-vuln'd) — bumped 1.1.0 → 1.3.1.
+      Widened the `fastapi` ceiling `<0.137.0`→`<0.138.0` (verified via `uv pip install --dry-run` that fastapi 0.137.0
+      is the minimum version whose resolver accepts starlette≥1.3.0 — fastapi 0.136.x permits starlette down to 1.1.0) +
+      added a `[tool.uv] override-dependencies` floor pin `starlette>=1.3.1` (precedent:
+      `unified-trading-library/pyproject.toml`'s existing cryptography/pip security-pin pattern) since fastapi's own
+      declared range alone doesn't force the bump. fastapi itself landed on 0.136.3 (no forced jump — `uv lock` picked
+      the minimal satisfying version). `override-dependencies` forces the resolver's starlette floor regardless of what
+      any dependency in the graph (including `unified-trading-library`'s own `fastapi<0.137.0`) declares — **no
+      cross-repo UTL change was actually required**, contrary to this issue's own earlier diagnosis (see corrections
+      below). Removed the two `--ignore-vuln` flags from `scripts/quality-gates.sh` since starlette is now genuinely
+      fixed. Shipped `ml-service@4d16341`; pip-audit clean (0 findings, joblib/pyjwt ignores only), full ml-service test
+      suite + quality-gates.sh green.
+- [x] ✅ [BACKEND] P2. ~~Bump `unified-trading-library`'s fastapi ceiling~~ — **OBSOLETE, not needed.**
+      `ml-service@4d16341`'s `override-dependencies` pin resolved the CVE entirely within `ml-service`'s own
+      `pyproject.toml`; UTL's `fastapi>=0.115.0,<0.137.0` ceiling was never touched and pip-audit is clean regardless.
+      Left here (struck through) as a paper trail rather than deleted, per issue-doc hygiene.
+
+## Corrections (both made by slot-13, superseded by later evidence same session)
+
+1. **Retracted "false-progress" accusation against slot-3's `ml-service@3f18fa0`.** slot-13 ran
+   `gh api repos/IggyIkenna/ml-service/commits/3f18fa0` mid-session and got a 422 "No commit found", and separately
+   observed an unfetched clone still showing the pre-fix `uv.lock` — and concluded the commit was fabricated /never
+   pushed. This was WRONG: `3f18fa0` authored 2026-07-13T12:00:13Z is a real, valid commit — slot-13's check simply ran
+   moments before it finished propagating/pushing (a timing race under heavy concurrent fleet write activity on this
+   repo that session), not evidence of a skipped Half-2 push. No process violation occurred. Apologies to slot-3's
+   record for the earlier accusation (also relayed to the operator via BLK-28f80db3 — see that thread for the
+   retraction).
+2. **Retracted "requires a cross-repo UTL ceiling bump" diagnosis.** slot-13 empirically showed that raising
+   ml-service's OWN fastapi ceiling didn't move the resolved starlette version, and concluded (correctly, as far as it
+   went) that the true constraint was UTL's co-resolving `fastapi<0.137.0`. What slot-13 missed: `uv`'s
+   `[tool.uv] override-dependencies` mechanism can force a transitive package's version floor independent of what ANY
+   dependency in the graph (including UTL's) declares — so the fix never needed to touch UTL at all. slot-9's
+   `ml-service@4d16341` used exactly that mechanism. The diagnosis of WHY the plain `fastapi<0.137.0` ceiling alone
+   didn't work was correct; the conclusion that a cross-repo bump was the ONLY fix was not.
 
 ## Progress Log
 
@@ -120,14 +146,22 @@ then `bash scripts/quality-gates.sh` to confirm green end-to-end (not just pip-a
   after still showed all 4 packages vulnerable). Went ahead with the full fix: pillow/cryptography/pydantic-settings
   bumped clean (`ml-service@3f18fa0`); starlette turned out to be capped by our own fastapi ceiling rather than a simple
   lockfile bump, so left that one `--ignore-vuln`'d with a clear comment + this issue as the tracked follow-up.
-- **2026-07-13 (slot-9, sonnet/high)** — Closed the P2 follow-up, `ml-service@4d16341`. Widened the `fastapi` ceiling
-  `<0.137.0`→`<0.138.0` (verified via `uv pip install --dry-run` that fastapi 0.137.0 is the minimum version whose
-  resolver accepts starlette≥1.3.0 — fastapi 0.136.x permits starlette down to 1.1.0) + added a
-  `[tool.uv] override-dependencies` floor pin `starlette>=1.3.1` (precedent: `unified-trading-library/pyproject.toml`'s
-  existing cryptography/pip security-pin pattern) since fastapi's own declared range alone doesn't force the bump.
-  fastapi itself landed on 0.136.3 (no forced jump to 0.137/0.138 — `uv lock` picked the minimal satisfying version).
-  Rebased my commit onto `3f18fa0` (real conflict — both touched `uv.lock` concurrently) and removed the two
-  `--ignore-vuln` flags from `scripts/quality-gates.sh` since starlette is now genuinely fixed (leaving stale
-  ignore-vulns would silently mask a future regression below 1.3.0). `pip-audit` clean (0 findings, joblib/pyjwt ignores
-  only); full ml-service test suite
-  - `quality-gates.sh` green; shipped via quickmerge. Issue fully resolved — both todos done.
+- **2026-07-13 (slot-13, sonnet/high)** — Picked up todo P2. Hit a timing race (see Corrections §1) and mistakenly
+  believed todo P1 hadn't landed; redid the pillow/cryptography/pydantic-settings bump locally (later discarded as
+  redundant once the rebase caught up). For starlette, correctly disproved "ml-service's own fastapi ceiling" as the
+  blocker and traced the co-resolving constraint to UTL's ceiling — but concluded (see Corrections §2) that a cross-repo
+  UTL bump was the only path, and escalated accordingly (`BLK-28f80db3`, operator approved option A while this was in
+  flight).
+- **2026-07-13 (slot-9, sonnet/high)** — Closed the P2 follow-up, `ml-service@4d16341`, landing while slot-13 was
+  mid-escalation. Widened the `fastapi` ceiling `<0.137.0`→`<0.138.0` (verified via `uv pip install --dry-run` that
+  fastapi 0.137.0 is the minimum version whose resolver accepts starlette≥1.3.0 — fastapi 0.136.x permits starlette down
+  to 1.1.0) + added a `[tool.uv] override-dependencies` floor pin `starlette>=1.3.1` (precedent:
+  `unified-trading-library/pyproject.toml`'s existing cryptography/pip security-pin pattern) since fastapi's own
+  declared range alone doesn't force the bump — entirely scoped to `ml-service`'s own `pyproject.toml`, no UTL change
+  needed. fastapi itself landed on 0.136.3 (no forced jump to 0.137/0.138 — `uv lock` picked the minimal satisfying
+  version). Rebased onto `3f18fa0` (real conflict — both touched `uv.lock` concurrently) and removed the two
+  `--ignore-vuln` flags from `scripts/quality-gates.sh` since starlette is now genuinely fixed. `pip-audit` clean (0
+  findings, joblib/pyjwt ignores only); full ml-service test suite + `quality-gates.sh` green; shipped via quickmerge.
+- **2026-07-13 (slot-13, sonnet/high)** — Rebased, discovered slot-9's commit already resolved everything (including the
+  starlette fix slot-13 had escalated as cross-repo). Verified pip-audit clean against `ml-service@4d16341`. Retracted
+  both mistaken conclusions above, closed the (now-obsolete) UTL todo, marked this issue `resolved`.
