@@ -63,9 +63,26 @@ drift_direction: advance-code
 - [x] ✅ (UTL helper half) **Add a UTL retry helper** — DONE `unified-trading-library@20c8ae8d`: `retry` (decorator) +
       `with_retry` (callable), stdlib-only, exp backoff + jitter, 429/5xx-aware, exported from
       `unified_trading_library.utils.retry` / `.utils` / top-level. 9 new tests.
-- [ ] [AGENT] P2. **Consume the UTL retry helper** (REMAINING): consolidate the two hand-rolled base-adapter retries —
-      MTDS `market_interface/base_adapter.py:29-100` + instruments-service `reference_data/base_adapter.py:39-160` —
-      onto `unified_trading_library.utils.retry`/`with_retry`. Preserve each adapter's classify-on-give-up behaviour.
+- [x] ✅ [AGENT] P2. **Consume the UTL retry helper** (REMAINING): consolidate the two hand-rolled base-adapter retries
+      — MTDS `market_interface/base_adapter.py:29-100` + instruments-service `reference_data/base_adapter.py:39-160` —
+      onto `unified_trading_library.utils.retry`/`with_retry`. Preserve each adapter's classify-on-give-up behaviour. —
+      **MTDS already migrated** (found already on `unified_trading_library.retry`/`retry_async` via `handle_api_errors`,
+      decorator form, jitter disabled to match the prior deterministic backoff — no work needed). **instruments-service
+      — SHIPPED `instruments-service@d88991d7`**: `_get_with_retry` now delegates to `with_retry_async` (callable form,
+      since it's one shared method wrapping a single recurring GET+parse shape across ~30 venue-adapter call sites, not
+      many independently-decorated methods like MTDS). The old `_handle_retryable_response`'s sentinel-return contract
+      (return `None` to signal "retry", sleep inline) doesn't compose with UTL's exception-based retry model, so it's
+      replaced by `_handle_response` + a small internal `_RetryableStatusError` (a `ClientError` subclass carrying
+      `.status`) that UTL's `retryable_exceptions` catches. Give-up messages
+      (`"HTTP {status} from {url} after N attempts"` / `"All N attempts failed for {url}: {exc}"`) and backoff timing
+      (1s/2s/4s, no jitter, 3 attempts) are byte-identical to the old loop. Updated the 4 `TestHandleRetryableResponse`
+      unit tests to the new `_handle_response` contract + added one `TestGetWithRetry` case covering the
+      retryable-status exhaustion message (previously covered indirectly via the removed helper's own "raises on last
+      attempt" test). Full `tests/reference_data/` + `tests/unit/` suites green (4314 passed, 40 skipped).
+      `quality-gates.sh` exit 0, sentinel verified against `d88991d7` (hit the known host-wide `qg-host-governor` K=1
+      contention — see `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md` — resolved via its
+      sanctioned `IGNORE_TIMEOUT=true` workaround after the token-queue-inflated wall-clock gate false-failed an
+      otherwise-green run).
 - [ ] [VERIFY] P1. Adapter retry behaviour unchanged (mock 429 → N retries → classify); health endpoints respond;
       `quality-gates.sh` green; quickmerge.
 
