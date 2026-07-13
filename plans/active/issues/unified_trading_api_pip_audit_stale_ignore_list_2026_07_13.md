@@ -18,12 +18,14 @@ related: [utl_reuse_phase2_api_auth_dedup_2026_07_13.md]
 created: "2026-07-13"
 parent_epic: infrastructure_master
 priority: P1
-author: agent (slot-5, backend-engineer)
 assigned_vm: planning
 source:
   [utl_reuse_phase2_api_auth_dedup_2026_07_13.md — discovered while shipping the unified-trading-api auth migration]
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # What I found
