@@ -185,13 +185,15 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       duplicate-dedup-key groups anywhere in the resulting 5,353,929-row manifest. §0's "odds_api suspiciously
       sparse/dead" framing is now RESOLVED for this source (0 → 362,631 captured, visible in the canonical coverage
       view).
-- [ ] [DATA] P1. **mdps_odds_horizon_bucket expected-universe grain realignment (NEW 2026-07-13).** Fix
-      `enumerate_expected_universe.py`'s sports seeding for this source so `expected_unattempted` uses the SAME
-      `(venue=ODDS_API, data_type=odds_horizon_bucket lowercase, timeframe=T-*)` grain MDPS actually writes, instead of
-      the current coarse `(venue="", data_type=ODDS_HORIZON_BUCKET uppercase, no timeframe)` seed — confirmed zero
-      identity overlap between the two grains in a live dry-run. Required before this source can show a clean
-      0/0/0-style coverage number (currently ~209k `expected_unattempted` and ~124k `captured` sit as disjoint cells
-      post-backfill).
+- [x] [DATA] P1. **mdps_odds_horizon_bucket expected-universe grain realignment (NEW 2026-07-13).** — DONE, code fix +
+      one-off reconciliation + live-verified: `instruments-service@92ded209`
+      (`fix(sports): realign     mdps_odds_horizon_bucket expected-universe grain to writer's lowercase data_type`) +
+      `instruments-service@4c58b5b6` (`chore(sports): reconcile mdps_odds_horizon_bucket expected_unattempted grain`,
+      `scripts/reconcile_mdps_odds_horizon_bucket_eu_grain_2026_07_13.py`). Root cause + fix + final verified numbers in
+      the Progress Log "mdps_odds_horizon_bucket grain realignment" entry below. Final state: `expected_unattempted`
+      209,526→200,165 (all now `data_type=odds_horizon_bucket` lowercase, 0 uppercase remaining), 9,361 stale
+      disjoint-cell rows dropped (atoms already genuinely `captured`), 0 remaining stale overlap, 0 duplicate dedup-key
+      rows, stable across 10+ live manifest-consolidator cycles (~9 min) post-apply.
 - [x] [DATA] P1. **reprocess_sports_odds.py raw-input prefix-template refresh (NEW 2026-07-13).** — DONE, code fix +
       tests + live-verified: `market-data-processing-service@e8f6709` (also carried a pre-existing uncommitted,
       inherited-dead-WIP `_resolve_bucket()` project_id fix found sitting in the working tree at session start — see
@@ -2055,3 +2057,102 @@ it's new adapter work, not a data-audit residual).
   layer rather than the enumerator layer — worth a dedicated follow-up plan/todo once this plan's own in-flight
   categories land, since it likely explains residual disjoint-cell symptoms across MORE than just
   `mdps_odds_horizon_bucket`.
+
+- 2026-07-13 (sub-agent, IMPLEMENTATION dispatch — `mdps_odds_horizon_bucket expected-universe grain realignment` P1
+  todo): **DONE — code fix + live grain confirmation + one-off canonical reconciliation, fully verified stable across
+  10+ live manifest-consolidator cycles post-apply.**
+  - **Live grain confirmation** (read of `instruments-store-sports-prd`'s canonical `_index/availability_index.parquet`,
+    `source=mdps_odds_horizon_bucket`, pre-fix): 123,642 `captured` rows 100% carry `venue=ODDS_API`,
+    `data_type=odds_horizon_bucket` (lowercase), `timeframe` ∈ {T-10m, T-1h, T-2h, T-4h, T-6h, T-12h, T-24h, T-0, ""},
+    `league_id` 0% blank — vs 209,526 `expected_unattempted` rows 100% carrying `venue=""`,
+    `data_type=ODDS_HORIZON_BUCKET` (UPPERCASE), `timeframe=None`. Traced the root cause to
+    `instruments-service/scripts/enumerate_expected_universe.py`: sports' present-set match key is LEAGUE-grain
+    (`_SPORTS_PRESENT_COLS = (data_type, league_id, date)` — `_present_cols_for`) so `venue`/`timeframe` never
+    participate in matching at all; the ONLY axis that actually blocks the match is `data_type` case.
+    `_sports_data_types()` iterates `SPORTS_DATA_TYPE_TO_SOURCE.keys()` (UAC-uppercase constants) verbatim for every
+    sports source — correct for footystats/api_football/understat/transfermarkt/SFI/ open_meteo (confirmed live: 100% of
+    their captured rows ALSO carry the UAC-uppercase `data_type` string verbatim, 0 exceptions across 570k+ rows) but
+    WRONG for `mdps_odds_horizon_bucket`: its writer (`market-data-processing-service/scripts/reprocess_sports_odds.py`,
+    `_MANIFEST_DATA_TYPE = "odds_horizon_bucket"`) is a DIFFERENT service with its own established lower-case manifest
+    convention (not a bug on the MDPS side — an intentional, pre-existing writer constant, referenced from
+    `rebuild_sports_manifest_v9.py`'s own `SPORTS_DATA_TYPE_TO_SOURCE` bridge). Confirmed via a direct overlap check:
+    uppercasing the captured rows' data_type and joining on `(data_type, league_id, date)` against the existing EU rows
+    found 9,361 of 14,417 distinct captured atoms already had a same-atom EU row sitting in the manifest — i.e.
+    genuinely-captured cells the pre-fix enumerator could never recognize as captured, at ANY future run, because of the
+    case mismatch alone.
+  - **Code fix shipped**: `instruments-service@92ded209`
+    (`fix(sports): realign mdps_odds_horizon_bucket expected-universe grain to writer's lowercase data_type`, quickmerge
+    → `live-defi-rollout`, `quality-gates.sh` green before commit). Added
+    `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE = {"ODDS_HORIZON_BUCKET": "odds_horizon_bucket"}` +
+    `_sports_manifest_data_type(dt)` helper (identity for every other data_type) in `enumerate_expected_universe.py`,
+    applied ONLY at the OUTPUT/matching sites (`ExpectedRow.data_type=` on every yield in `_enumerate_v2_sports` +
+    `_yield_v2_sports_pre_source_coverage_rows`, and the `row_key["data_type"]` present-set match key) — every UAC
+    LOOKUP (`SPORTS_DATA_TYPE_TO_SOURCE.get(dt)`, `coverage_starts`, `entity_coverage`, `_RETIRED_SPORTS_DATA_TYPES`,
+    `is_expected_for_source(..., data_type=dt)`) deliberately stays keyed on the ORIGINAL UAC-uppercase `dt` (those
+    dicts are keyed by the UAC constant, unrelated to the manifest's on-disk string). Added 4 new unit tests to
+    `tests/unit/scripts/test_enumerate_expected_universe_v2.py` (present-set match now succeeds against the writer's
+    real lowercase key; newly-seeded rows carry the lowercase string; every OTHER data_type's override stays identity —
+    `XG` stays uppercase; a direct unit test of the helper itself) — all 4 pass, full existing sports-enumerator suite
+    (184 tests) green, 0 regressions.
+  - **Investigated + answered the "future-only vs needs-a-one-off-reseed" question explicitly asked by this todo**: read
+    `_write_absent_rows()` — the enumerator's ONLY write path is a per-VM-shard ADD of newly-computed `absent_rows`
+    (`MANIFEST_PER_VM_SHARDS=true` convention); it never deletes or relabels a pre-existing manifest row. **Answer: BOTH
+    are true.** The code fix alone only helps FUTURE enumerator runs (correctly recognizing a captured atom going
+    forward, and seeding any genuinely-new gap at the correct lowercase grain) — the 209,526 EXISTING stale rows needed
+    a dedicated one-off reconciliation to show a clean number NOW, so one was written and run.
+  - **One-off reconciliation shipped + applied**: `instruments-service@4c58b5b6`
+    (`scripts/reconcile_mdps_odds_horizon_bucket_eu_grain_2026_07_13.py`, DRY-RUN by default, `--apply` writes, CAS-safe
+    direct-canonical-rewrite pattern mirroring `migrate_orphaned_mtds_odds_api_bucket_rows_2026_07_13.py`'s
+    `download_bytes_with_generation`/`conditional_upload_bytes(if_generation_match=...)` bounded retry loop — this is a
+    DROP+RELABEL of existing rows, not a per-VM shard add, so the direct-canonical-rewrite CAS rule applies). Live
+    dry-run confirmed the exact expected split before `--apply`: of the 209,526 `source=mdps_odds_horizon_bucket`
+    `expected_unattempted` rows, **9,361 STALE** (their `(league_id, date)` atom already has a real `captured` row for
+    this source — dropped outright, the oscillation rule "captured outranks expected_unattempted" means these should
+    never have existed post-capture) + **200,165 SURVIVING** (no captured atom exists — a genuine, still-open gap; KEPT
+    as `expected_unattempted` but `data_type` RELABELED from `ODDS_HORIZON_BUCKET` to `odds_horizon_bucket` for
+    grain-consistency with every other row of this source and with the fixed enumerator's future output).
+    `9,361 + 200,165 == 209,526` exactly, matching the dry-run.
+  - **A genuine race observed + resolved during `--apply`, documented rather than silently retried past**: the FIRST
+    `--apply` attempt landed successfully via CAS (3rd retry, 2 precondition collisions against the live per-minute
+    manifest consolidator, both correctly retried) but a re-read moments later showed the change fully REVERTED (209,526
+    EU rows, 100% uppercase again) — persisting across 2 independent re-reads over several minutes, including via the
+    SAME CAS-capable client (ruling out a `gcsfs`-side read-caching artifact). Root-cause investigation (read
+    `unified_trading_library/manifest_consolidator.py`'s incremental-anti-join SQL + `_list_per_vm_shards_with_mtime`
+    - `_prune_consolidated_shards` in full, checked live Cloud Audit Logs for the object's write history, inspected the
+      3 live `_index/per_vm/*.parquet` shard files' actual content) found: (a) `unified-trading-sa` (the consolidator's
+      own service account) is the ONLY other writer to this object, cycling every ~60-90s per the documented `*/1` cron;
+      (b) NONE of the 3 live per-VM shards (`_legacy_seed.parquet` — 0 rows, mtime 2026-06-28; two same-day
+      residual-closer shards for `footystats`/`api_football`) carry ANY `source=mdps_odds_horizon_bucket` rows, so the
+      consolidator's own documented incremental anti-join (which only re-windows dedup-keys touched by shards it
+      considers "changed" this cycle) should not have been able to reintroduce this source's dropped/relabeled rows on
+      its own merits; (c) this is consistent with (and likely explained by) the SEPARATE NULL-vs-`""` dedup-key
+      normalization gap in the SAME consolidator, independently found and filed by the `wf_42ff1064-99c` dispatch
+      earlier in this same plan's Progress Log (same underlying bug CLASS — a stale/duplicate identity surviving a merge
+      it shouldn't — just at the consolidator layer rather than the enumerator layer) — NOT re-investigated to full root
+      cause here (out of this todo's narrow scope, already tracked as its own P1 elsewhere in this plan) — but the
+      immediate, concrete fix applied was: **re-run `--apply` a second time** (landed clean on the FIRST CAS attempt, no
+      collision) and then verify DURABILITY empirically rather than trust a single post-write read: polled the canonical
+      every 20s for 200s (10 checks) via a dedicated monitoring script, observing the live consolidator advance the
+      object's generation 5+ further times during that window (proving real ongoing consolidator activity, not a
+      quiescent bucket) while the `mdps_odds_horizon_bucket` row counts / `data_type` casing stayed byte-for-byte stable
+      the entire time. A further independent fresh read ~9 minutes after the second apply (generation advanced yet
+      again, several more consolidator cycles) confirmed the SAME stable state — treated as sufficient durability proof
+      per this workspace's "verify empirically by polling across multiple consolidator cycles" convention (mirrors the
+      `odds_api` sibling migration's own verification bar).
+  - **Final verified numbers** (live read, generation `1783975792707788`, ~9 min post-second-apply):
+    `source=mdps_odds_horizon_bucket` total rows 339,775 → **330,414** (delta exactly `-9,361`, matching the planned
+    drop count). `captured` **123,642** (unchanged, `data_type=odds_horizon_bucket` 100%). `expected_unattempted`
+    209,526 → **200,165**, now **100% `data_type=odds_horizon_bucket`** (0 uppercase rows remain — the disjoint-grain
+    bug is fully closed). `empty_confirmed` **6,607** (unchanged). `attempted_failed` **0** (unchanged). **0** duplicate
+    dedup-key rows within this source. **0** remaining stale EU atoms overlapping a captured atom (was 9,361 pre-fix,
+    now fully reconciled). Coverage now computes to a real, meaningful
+    `captured/(captured+empty_confirmed+attempted_failed+expected_unattempted) = 123,642/330,414 = 37.42%` instead of
+    the pre-fix disjoint-cells non-answer.
+  - **Nothing else touched**: verified via `git status && git diff --cached --stat` before every stage/commit that only
+    this todo's own files were staged; several OTHER concurrent slots' untracked WIP was visible in the working tree
+    throughout (`scripts/backfill/api_football_attempted_failed_residual_closer_2026_07_13.py`,
+    `scripts/cefi_legacy_path_dedup_2026_07_13.py`) and left completely untouched.
+  - **No todo left open for this item** — both the code-fix half (future runs) and the existing-stale-rows half (the
+    "does this need a one-off reseed" question this todo explicitly asked) are done and live-verified. The
+    `wf_42ff1064-99c`-filed consolidator-layer NULL-vs-`""` dedup gap remains a separate, already-tracked P1 (shared
+    fleet infra, cross-asset-group blast radius, correctly NOT folded into this narrower enumerator-layer fix).
