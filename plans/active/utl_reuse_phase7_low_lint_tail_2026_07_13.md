@@ -96,11 +96,43 @@ drift_direction: advance-code
       `…/uac_cross_repo_invariant_incomplete_deployment_service_migration_2026_07_13.md`,
       `…/system_integration_tests_pip_audit_red_2026_07_13.md`. Repos: unified-trading-library, strategy-service,
       execution-service, unified-api-contracts, system-integration-tests.
-- [ ] [AGENT] P3. **lint ratchet tail (opportunistic, not blocking)**: in MTDS/IS/execution/deployment one-off
+- [x] ✅ [AGENT] P3. **lint ratchet tail (opportunistic, not blocking)**: in MTDS/IS/execution/deployment one-off
       `scripts/` (~70 files), convert `from google.cloud import storage` → `get_storage_client()`, `gs://` →
       `resolve_bucket_name`, per-object `gsutil`/`gcloud` subprocess → UTL `gcs_copy/delete/describe_object`, and fix
       the banned env name `GOOGLE_CLOUD_PROJECT` → `GCP_PROJECT_ID` (`cleanup_kraken_spot_empty_confirmed.py:96`,
-      `cleanup_may4_bait_sentinels.py:117`, MTDS `cleanup_*`). These are QG-baselined; counts only go down.
+      `cleanup_may4_bait_sentinels.py:117`, MTDS `cleanup_*`). These are QG-baselined; counts only go down. — PARTIAL,
+      BY DESIGN (opportunistic tail, "counts only go down" — this is genuine progress, not a full sweep). **Fixed**: the
+      exact 2 cited `GOOGLE_CLOUD_PROJECT` reads (`market-tick-data-service@36614fc7` —
+      `cleanup_kraken_spot_empty_confirmed.py`, now `:99`, and `cleanup_may4_bait_sentinels.py`, now `:120`; line
+      numbers had drifted from the plan's citation). **Investigated + corrected the plan's own premise**: the same grep
+      pattern also hits 6 files in instruments-service (`osc_repair_captured_over_empty_2026_07_13.py` +5 others) — read
+      each in full context and found they're NOT violations: each already sets the canonical
+      `os.environ["GCP_PROJECT_ID"]` on the line immediately before, and the `GOOGLE_CLOUD_PROJECT` line is a deliberate
+      SDK-compat bridge (the underlying `google-cloud-storage` client auto-detects its project from that exact env-var
+      name) — same legitimate pattern as deployment-service's `export     GOOGLE_CLOUD_PROJECT="${GCP_PROJECT_ID}"` bash
+      bridges. Left untouched — renaming would have duplicated the existing `GCP_PROJECT_ID` write and broken the SDK
+      bridge. **Investigated pattern 3** (per-object `gsutil`/`gcloud` subprocess): found 2 genuine `gcloud storage cp`
+      sites (`market-tick-data-service/scripts/restamp_mtds_sports_blank_source_2026_06_29.py`,
+      `instruments-service/scripts/restamp_is_sports_blank_source_2026_07_13.py`) — deferred: their shared `_cp` helper
+      handles 3 directions (GCS→local download, local→GCS upload, GCS→GCS copy) but UTL's `gcs_copy_object` is
+      GCS-to-GCS only (verified by reading its implementation — it calls `_split_gcs_uri()` on both args, raises on a
+      local path); a correct swap needs a 3-way dispatch to
+      `gcs_copy_object`/`get_storage_client().download_     file`/`.upload_file`, not a 1-line rename. Also noted: this
+      specific script's own lifecycle marker (`Delete-when: after blank source='' rows ... fixed (post-run 2026-06-29)`)
+      is 2+ weeks past its stated completion condition — worth verifying it already ran to completion and deleting it
+      outright rather than refactoring code that may already be dead; did not verify this myself (would need a real GCS
+      read against prod data, out of scope for a lint pass). **Full scope surveyed, not attempted**: pattern 1
+      (`from google.cloud     import storage`) is 89 lines / ~85 files across the 4 repos' `scripts/` and — unlike
+      patterns 2-4 — has REAL CI teeth via `unified-trading-pm/scripts/quality_gates/ruff_rule_ratchet_baseline.yaml`'s
+      repo-wide TID251 ratchet (instruments-service's `scripts/`-only count, 57, is nearly its entire repo-wide baseline
+      of 58 — highest leverage target for a real follow-up pass). Pattern 2 (`gs://` literals) is ~1500 raw grep hits
+      but almost all are `%s`/`{var}` interpolation or docstring examples, not hardcoded literals (~10-15 genuine
+      hardcoded-in-code hits across all 4 repos), AND is explicitly excluded from `scripts/` by all 3 existing
+      bucket-URI QG checks (`check_inline_bucket_uri.py` et al. — confirmed by reading their source, "scripts/ excluded
+      from strict checks" per the Schema-provenance rule) — lowest priority, ungated. Both patterns 1 and 2, plus the
+      deferred pattern-3 sites, are genuinely too large/judgment-heavy for one opportunistic pass — recommend a
+      dedicated follow-up plan scoped specifically to pattern 1 (the only one with real ratchet stakes) if this is worth
+      picking up again, rather than folding it back into this already-closed plan.
 - [x] ✅ [VERIFY] P2. `quality-gates.sh` green per touched repo; ratchet baselines decrease (never increase);
       quickmerge. — VERIFIED. `strategy-service@8db3f717` (the repo I directly touched this plan): full
       `quality-gates.sh` exit 0, sentinel-verified (1011s — hit the known host-wide `qg-host-governor` contention, see
