@@ -21,7 +21,17 @@ related:
   ]
 created: 2026-05-20
 authoritative_for: [strategy-service StrategySupervisor + ClientWorker per-client isolation model]
-referenced_by: [codex/04-architecture/client-funds-isolation.md, codex/04-architecture/client-lifecycle-event-bus.md, codex/04-architecture/execution-service-per-client-isolation.md, codex/04-architecture/global-ledger-architecture.md, codex/04-architecture/identity-model.md, codex/04-architecture/promote-workflow-architecture.md, codex/04-architecture/transfer-coordinator.md, codex/04-architecture/wallet-hierarchy-and-capital-flow.md]
+referenced_by:
+  [
+    codex/04-architecture/client-funds-isolation.md,
+    codex/04-architecture/client-lifecycle-event-bus.md,
+    codex/04-architecture/execution-service-per-client-isolation.md,
+    codex/04-architecture/global-ledger-architecture.md,
+    codex/04-architecture/identity-model.md,
+    codex/04-architecture/promote-workflow-architecture.md,
+    codex/04-architecture/transfer-coordinator.md,
+    codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
+  ]
 owner:
 last_reviewed: 2026-05-20
 code_refs:
@@ -79,12 +89,12 @@ venue-adapter HTTP clients that use connections acquired before fork; spawn give
 
 **Audit 2026-05-20** confirmed MTM compute is performed locally in 4 paths in strategy-service:
 
-| File                                                         | Compute                                             |
-| ------------------------------------------------------------ | --------------------------------------------------- |
-| `strategy_service/pnl/engine/pnl_input_builder.py:197-198`   | `unrealized_pnl = net_qty × last_price - buy_val`   |
-| `strategy_service/position/core/mark_price_subscriber.py:52` | `unrealized_pnl = (mark_price - entry_price) × qty` |
-| `strategy_service/position/core/leg_snapshot_builder.py:106` | `notional = abs(position_units × mark_price)`       |
-| `strategy_service/risk/core/risk_calculator.py:127-129`      | aggregates `position_value` for leverage            |
+| File                                                                                                                  | Compute                                             |
+| --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `strategy_service/pnl/engine/pnl_input_builder.py:197-198`                                                            | `unrealized_pnl = net_qty × last_price - buy_val`   |
+| `strategy_service/position/core/mark_price_subscriber.py:52`                                                          | `unrealized_pnl = (mark_price - entry_price) × qty` |
+| `unified_trading_library/risk/leg_snapshot_builder.py` (relocated from `strategy_service/position/core/`, 2026-07-13) | `notional = abs(position_units × mark_price)`       |
+| `strategy_service/risk/core/risk_calculator.py:127-129`                                                               | aggregates `position_value` for leverage            |
 
 **Post-isolation**: these 4 paths consume **pre-computed** `mtm_value_per_unit` from the supervisor's shared-memory
 dict, rather than re-computing per ClientWorker. One compute per symbol per tick, N reads.

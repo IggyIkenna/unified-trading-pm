@@ -282,6 +282,31 @@ ledger:
       Consolidated 2026-05-20. All 3 parity gates green. Deployment-service registries updated. Launcher:
       launch-ml-vm.sh. Plan: plans/active/ml_repo_consolidation_2026_05_19.md.
 
+  - id: execution_service_mtds_reader_dep
+    component:
+      execution_service/algo_library/mtds_book_provider.py:93 (market_tick_data_service.reader.CanonicalParquetReader)
+    repo: execution-service
+    status: shim
+    owner: ikenna
+    replaces_what: "n/a -- pre-existing no-service<->service coupling surfaced by the 2026-06-11 imports-in-fn sweep"
+    delete_condition: >
+      CanonicalParquetReader's shard-read surface (market-tick-data-service/market_tick_data_service/reader.py, 641 L,
+      GCS blob-path construction + pyarrow predicate pushdown + MTDS-internal raw_tick_hive constants) is promoted to a
+      shared UTL primitive, OR MtdsBookDataProvider's read path is flipped to a UAC contract + direct GCS read that does
+      not import market_tick_data_service. Either fix also drops the `../market-tick-data-service` path dep from
+      execution-service pyproject (~L124), matching the MDPS/deployment-api databento-classifier precedent
+      (codex_violations_ratchet_to_five_2026_06_10.md, 2026-06-11).
+    known_import_count: 1
+    replacement: n/a (not yet built)
+    target_wave: utl_reuse_phase7_low_lint_tail_2026_07_13 (documented; promotion itself is follow-up work)
+    ready_to_delete: false
+    notes: >
+      Sanctioned via UAC service_contract_map.py forbidden_exceptions (execution-service:
+      "market_tick_data_service.reader") 2026-07-13 -- this makes the existing violation explicit/tracked rather than
+      leaving it undeclared. The reader class is MTDS-domain-specific (asset_group/hive-key/DeFi-chain-axis resolution)
+      so a same-turn promotion was judged too large + risky for a single-unit fix; tracked here for a dedicated
+      follow-up unit.
+
   - id: ml_inference_service_repo_consolidation_2026_05_19
     component: ml-inference-service (entire repo)
     repo: ml-inference-service
