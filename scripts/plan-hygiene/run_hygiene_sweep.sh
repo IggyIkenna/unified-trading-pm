@@ -33,20 +33,27 @@ done
 # ── --precommit: lean STAGED-FILES-ONLY local gate (prek hook) — bypass the heavy sweep body ──
 # Validates ONLY the files THIS commit stages, so a pre-existing violation in an unrelated
 # plan (e.g. another agent's WIP) never blocks your commit (RULE-11 blast-radius safety). Portable
-# for macOS bash 3.2 (no mapfile). Gates all three staged-capable HARD checks: frontmatter +
-# todo-format on staged plans/**, runbook-fields on staged codex/15-runbooks/incidents/**.
+# for macOS bash 3.2 (no mapfile). Gates the staged-capable HARD checks: frontmatter + todo-format
+# on staged plans/**, frontmatter-schema on ALL staged codex/** (parity with CI's lint-codex slice,
+# which schema-checks the whole corpus), runbook-fields on staged codex/15-runbooks/incidents/**.
 if [ "$CI_MODE" = "--precommit" ]; then
   # --precommit never regenerates inventory (read-only by design)
   STAGED_PLANS=()
   STAGED_RUNBOOKS=()
+  STAGED_CODEX=()
   while IFS= read -r line; do
     case "$line" in
       plans/*.md) STAGED_PLANS+=("$PM_DIR/$line") ;;
-      codex/15-runbooks/incidents/*.md) STAGED_RUNBOOKS+=("$PM_DIR/$line") ;;
+      codex/*.md)
+        # EVERY staged codex doc gets the frontmatter-schema gate (below); runbook incidents
+        # ALSO get the runbook-fields gate. Order-independent — a doc can be in both lists.
+        STAGED_CODEX+=("$PM_DIR/$line")
+        case "$line" in codex/15-runbooks/incidents/*.md) STAGED_RUNBOOKS+=("$PM_DIR/$line") ;; esac
+        ;;
     esac
-  done < <(git -C "$PM_DIR" diff --cached --name-only --diff-filter=ACM -- plans/ codex/15-runbooks/incidents/ 2>/dev/null)
-  if [ "${#STAGED_PLANS[@]}" -eq 0 ] && [ "${#STAGED_RUNBOOKS[@]}" -eq 0 ]; then
-    echo "plan-hygiene pre-commit: no staged plan/runbook files — skip."
+  done < <(git -C "$PM_DIR" diff --cached --name-only --diff-filter=ACM -- plans/ codex/ 2>/dev/null)
+  if [ "${#STAGED_PLANS[@]}" -eq 0 ] && [ "${#STAGED_RUNBOOKS[@]}" -eq 0 ] && [ "${#STAGED_CODEX[@]}" -eq 0 ]; then
+    echo "plan-hygiene pre-commit: no staged plan/runbook/codex files — skip."
     exit 0
   fi
   PF=0
@@ -65,6 +72,16 @@ if [ "$CI_MODE" = "--precommit" ]; then
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }
+  fi
+  if [ "${#STAGED_CODEX[@]}" -gt 0 ]; then
+    # The SAME value-level schema gate CI's lint-codex slice runs over the WHOLE codex corpus,
+    # scoped here to THIS commit's staged codex docs. Closes the prek bypass for codex/** (not just
+    # plans/**): a docs commit (prek-only, NOT full QG) that adds/edits a codex doc with a
+    # missing/empty required field (e.g. a codex-ssot lacking a present-but-empty `referenced_by`)
+    # used to land on the integration branch and then fail EVERY full QG fleet-wide. SSOT:
+    # check_frontmatter_schema.py (the exact checker the lint-codex slice invokes).
+    python3 "$SCRIPT_DIR/check_frontmatter_schema.py" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ Frontmatter schema (staged codex)" || { echo "  ❌ Frontmatter schema — missing/empty required field (staged codex)"; PF=$(( PF + 1 )); }
+    "$SCRIPT_DIR/check_conflict_markers.sh" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ No conflict markers (staged codex)" || { echo "  ❌ Conflict marker(s) in staged codex — resolve before commit"; PF=$(( PF + 1 )); }
   fi
   if [ "$PF" -gt 0 ]; then
     echo "❌ plan-hygiene pre-commit: $PF hard failure(s) in STAGED files — fix before commit (fixable frontmatter: python3 scripts/plan-hygiene/fix_frontmatter.py; todo format: bash scripts/plan-hygiene/fix_todo_format.sh)."
