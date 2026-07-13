@@ -560,3 +560,23 @@ being actively rewritten by the ASTER bucket-migration workstream — filed as
 `cefi_backfill_no_instruments_found_all_venues_2026_07_13.md` (P0). The lease mechanism remains UNEXERCISED in
 production multi-VM conditions (no keyed call ever fired in either pilot); re-run the pilot on the SAME approved slice
 once instrument resolution is confirmed healthy. Zero `code=274` in both pilots is NOT lease evidence.
+
+### 2026-07-13 (~23:35Z) — PILOT OBJECTIVE MET by the first production lease-enabled wave; no dedicated pilot needed
+
+After the instrument-resolution P0 fix shipped (`market-tick-data-service@0da8be67`, tarball `01927647`), my pilot-3
+launch was correctly ABORTED by the launcher's running-VM guard: another session had already launched a full **4-VM
+`cefi-bitget-futures-{2024,2025,2026}` wave at 23:15Z — lease-enabled** (`TARDIS_CONCURRENCY_LEASE`/`_BUCKET` confirmed
+in VM metadata). Direct evidence from that live wave:
+
+- `cefi-bitget-futures-2024-heavy-…/run.log`:
+  `Tardis lease ACQUIRED by cefi-bitget-futures-2024-heavy-20260713-231539:8152:b7ae606e (bucket=config-store-… obj=_tardis_concurrency_lease/lease.json, attempt 1)`
+  — the shipped lease acquiring in production, multi-VM.
+- `lease.json` holder observed rotating on renew (acquired_at 23:35:20Z > the 23:20 acquisition line — renewer live).
+- **Zero `code=274` lines across the wave so far** — the first multi-VM CeFi Tardis wave without concurrent-IP lockouts
+  since this doc was filed.
+
+This satisfies the operator's 2026-07-13 pilot ruling (first fully-lease-enabled wave on a real slice, staggered
+acquisition observed, no lock 403s) via a REAL production wave rather than a synthetic pilot. Remaining on this doc: the
+`[DATA] P1` G4 re-measurement once real waves have run long enough to accumulate a post-fix af census — the lock
+mechanism itself is now production-verified. Pilots 1/2's all-skip failures were the (now-RESOLVED) instrument-
+resolution P0, not the lease.
