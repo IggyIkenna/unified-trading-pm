@@ -14,7 +14,7 @@ summary: |
   Phase-1 strategy-service risk plan, which referenced the exception mechanism. All 13 repos reverted back to
   <0.137.0; the 7 already-pushed repos got explicit revert commits + fresh QG + quickmerge; the 6 unpushed repos
   had the bad commit simply dropped (never left local disk).
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -52,6 +52,7 @@ priority: P1
 source: self-discovered by slot-13 mid-batch, 2026-07-13, while reading utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md
 assigned_vm: planning
 resolved_by:
+  slot-13 (all 5 todos verified/flipped 2026-07-13, closing the loop on work substantially done by slots 7/9/15)
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: backend-engineer
@@ -164,5 +165,14 @@ revert commits mid-flight at time of writing).
       agent-orchestrator + unified-trading-api at `<0.138.0` headroom — but since all 7 repos here declare the exact
       canonical `<0.137.0` (not exercising that headroom), the alignment check passes on direct canonical match, not via
       the exception path. No contradiction with this todo's intent.
-- [ ] [BACKEND] P1. Resume the original click/pillow/soupsieve batch
-      (`system_integration_tests_pip_audit_red_2026_07_13.md`) to completion on the corrected baseline.
+- [x] ✅ [BACKEND] P1. Resume the original click/pillow/soupsieve batch
+      (`system_integration_tests_pip_audit_red_2026_07_13.md`) to completion on the corrected baseline. Confirmed
+      2026-07-13 (slot-13): that issue doc is already `status: resolved` with both its own todos checked — slot-15
+      shipped the interim per-repo fix (`system-integration-tests@6d7a5b6`), slot-9 shipped the canonical fleet-wide
+      bump (`unified-trading-pm@210d448c1`, added the missing `soupsieve>=2.8.4,<3.0.0` floor). Verified the corrected
+      baseline holds in `workspace-constraints.toml`: `click>=8.3.3,<9.0.0`, `fastapi>=0.115.0,<0.137.0`,
+      `pillow>=12.3.0,<13.0.0`, `soupsieve>=2.8.4,<3.0.0`. Ran
+      `.venv/bin/python scripts/manifest/check-dependency-alignment.py --json` fleet-wide:
+      `{"aligned": true, "issues": [], "count": 0, "disk_absent": [], "disk_absent_count": 0}` — zero mismatches. No
+      further code change needed; this todo was tracking work already completed by other slots under separate issue
+      docs.
