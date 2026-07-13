@@ -260,8 +260,32 @@ is far worse than the turbo number suggested:
 
 - **The manifest path caches only the raw parquet index (`_INDEX_CACHE`, 5-min TTL), never the computed cell-grid** — so
   IS hot (89s) == cold (92s). The cell-grid is materialized in full by a forked `ProcessPoolExecutor` and scales with
-  (date-span × venue × data_type × instrument_type). **This is the true OOM root cause** — one default-range data-status
-  click = instant kill on any instance size. **8/16/32/64GB are ALL ruled out.**
+  (date-span × venue × data_type × instrument_type).
+
+> **⚠️ ROOT-CAUSE CORRECTION (2026-07-13, after operator challenge — this reframes §2.8 above and §3 below).** The
+> 18/81/56GB live build measured above is the **DEGRADED FALLBACK**, not the intended path — and full-range IS/MTDS/MDPS
+> worked fine until ~2026-07-05. **This is a regression.** Intended path (`services/data_status/manifest.py:155-166`):
+> the all-AG view is served from a PRECOMPUTED `gs://{pid}-data-status-rollups/{service}/full.json.gz` (IS 825KB, MTDS
+> ~3MB gz) written each cron cycle by the `uts-prod-data-status-rollup-svc` worker, sliced in-memory
+> (`_read_rollup_if_fresh`→`slice_rollup_to_window`) — **sub-second, a few MB.** It falls through to the live build ONLY
+> when the blob is missing/stale (`age > ROLLUP_STALENESS_SEC=1800s`). **Two changes broke it last week:** (1) the
+> **rollup worker (16GiB/4CPU) is OOMing every cycle** — same cell-grid build, now >16GiB for MTDS/MDPS:
+> `Memory limit of 16384 MiB exceeded` **71× (07-11), 144× (07-12), 74× (07-13)**; it can no longer write MTDS/MDPS
+> blobs (GCS now holds ONLY `instruments-service/*` — MTDS/MDPS `full.json.gz` are GONE) and writes IS only
+> sporadically. (2) commit **`3847d6f` (2026-07-08) "rollup staleness gate never fires — meta.updated doesn't exist"**
+> correctly switched the gate from the non-existent `meta.updated` to `meta.last_modified`; BEFORE it the gate never
+> fired so a stale blob was served indefinitely (cheap, slightly-stale — "worked before"), AFTER it stale/missing blobs
+> are rejected → API falls through to the live build → **OOMs the 4GiB API.** So there are **TWO OOMs of the SAME
+> build** — the 16GiB worker (blobs go dark) and the 4GiB API (live fallback). Timeline matches the incident: worker
+> degrades ~07-05 → staleness fix 07-08 → reaches prod API 07-12 → first data-status click 07-13 → OOM (§1).
+>
+> **Corrected fix priority:** (1) PRIMARY — make the cell-grid build fit memory (bounded/streamed/capped): one fix
+> resolves BOTH OOMs; then the worker resumes writing blobs and the API fast-path serves them → OOM gone +
+> 90s→sub-second. (2) restore the rollup worker now (stopgap). (3) API defense-in-depth — on stale/missing rollup,
+> serve-stale-as-last-resort (logged) and/or cap/refuse the live build, so a future worker outage degrades to
+> "slightly-stale/slow" not "OOM crash-loop." (4) session-1 items (WORKERS=2, bounded caches, /ops/costs) remain valid
+> but SECONDARY. **RAM bumps still don't fix it** (16GiB worker already OOMs) — but the fix is now clearly
+> bound-the-build + restore-the-precompute, NOT a from-scratch re-architecture.
 
 **Page sweep (non-data-status) — memory is NOT a page problem except billing; the issue is cold latency:**
 
@@ -393,3 +417,17 @@ Phase C — verification + guardrails:
   methodology: session scratchpad `bench2/FINDINGS.md` (harness scripts + raw CSV/JSON retained). Host-safety: a 50GB
   memory guard auto-killed the backend on the MTDS/MDPS spikes; local stack (backend + vite + monitors) torn down and
   verified stopped. **No prod/deploy changes made — all local, per operator.**
+- 2026-07-13 (slot-1, session 2 — ROOT-CAUSE CORRECTION after operator challenge "it worked before at full range, so
+  something changed last week"): Operator was RIGHT — the 18/81/56GB is a REGRESSED FALLBACK, not the design. Traced the
+  real path: the data-status manifest all-AG view is served from a precomputed
+  `gs://…-data-status-rollups/{service}/full.json.gz` (cheap, sub-second) written by the
+  `uts-prod-data-status-rollup-svc` worker; it only falls through to the live cell-grid build when that blob is
+  stale/missing. **Two last-week changes broke it:** (1) the rollup worker (16GiB) is OOMing every cron cycle —
+  `Memory limit of 16384 MiB exceeded` 71×/144×/74× on 07-11/12/13 — so MTDS/MDPS blobs stopped being written (GCS now
+  has ONLY instruments-service blobs); (2) commit `3847d6f` (2026-07-08) fixed the staleness gate
+  (`meta.updated`→`meta.last_modified`) so the API stopped serving the stale blobs and now falls through to the OOM-ing
+  live build. Two OOMs of the SAME build (16GiB worker + 4GiB API). §2.8 + §3 corrected with a ⚠️ block; corrected fix
+  priority = **bound/stream the cell-grid build (one fix resolves both OOMs) + restore the rollup worker + API
+  serve-stale/refuse-large defense-in-depth**, NOT a from-scratch re-architecture and NOT a RAM bump. Full chain + log
+  evidence in `bench2/FINDINGS.md` top block. Verified read-only against live GCS + Cloud Logging + Cloud Run configs;
+  no changes made.
