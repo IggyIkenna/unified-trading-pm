@@ -254,6 +254,26 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   setup-gcs-lifecycle-policies.sh deleted, e2e fixtures deleted) now resolved. QG green (43s), quickmerge →
   live-defi-rollout.
 
+- **2026-07-13, S3 landings + S4 state-surgery iteration (autonomous tick).** `deployment-api@6da793b` — strategy-store
+  defaults collapse to flat via resolver (all 3 per-AG props), execution-store default → CEFI (decide-and-document: sole
+  consumer is a global /config-buckets entry with no AG context; CEFI is the only live-traffic AG), ml-configs-store →
+  env-tiered resolver; +1 live dead literal fixed in commentary/pipeline_uat.py. QG 86s green.
+  `batch-live-reconciliation-service@2f0380b` (v2 SUCCESS) — recon/events/execution-store resolved via canonical
+  resolver; prod-mode now resolves recon-prd-{pid}. **S5 dependency discovered**: BLRS image reaches prod only after its
+  Dockerfile BASE_IMAGE_DIGEST pin is bumped past the 20:24Z base build (which carries uac@f84e5b37) AND its main-push
+  trigger fires — manual: `gcloud builds triggers run batch-live-reconciliation-service-build --branch=main`.
+  `e2e-testing@16efd49` (v2 SUCCESS) — setup-gcp-fixtures.sh DELETED (zero callers; canonical replacement =
+  provision-test-buckets.sh); W0 provisioning-surfaces checkbox flipped by that agent (pm@a1ff00f5c). **S4 terraform
+  surgery** (orchestrator VM, deployment-service@ccfaca26 clone, prod state terraform/state/prod — the committed backend
+  prefix terraform/state/dev is a stub; per-env prefixes are passed by bootstrap_gcp.sh): state backed up; 68 canonical
+  imports OK; generated script's rm/mv guards mis-skipped → plan showed 55 destroys/20 adds and was correctly GATED (not
+  applied). Deterministic fixer now re-classifying every planned bucket destroy into state-rm (stale) vs state-mv
+  (canonical rename) from the plan log itself; re-plan gate: creates = recon-prd/test only, zero bucket destroys,
+  changes = COLDLINE@60d lifecycle/labels. Apply will be TARGETED at google_storage_bucket.canonical (+ catalogue
+  scheduler) — the plan also surfaced pre-existing non-bucket drift (odum_portal domain mapping, 2 cron jobs, 2 Cloud
+  Run jobs undeployed from config) which is NOT tonight's scope → Deferred. W1 sweep staged: 79 names
+  (strategy-store-{defi,tradfi} deferred to post-deployment-api-redeploy).
+
 - **2026-07-13, S2/S3 landings + S4 started (autonomous tick).** `deployment-service@ccfaca26` (+266/−1547) — TF
   reconcile: 42 REMOVE_STALE + 11 double-declare hand blocks removed; module Group-B section removed (module WAS live:
   `create_gcs_buckets = true` in terraform/shared/gcp/terraform.tfvars — the resurrection mechanism confirmed + closed);
