@@ -1,7 +1,11 @@
 ---
 doc_type: issue
-title: Per-slot × per-repo venv duplication → chronic disk pressure (root cause of the 2026-06-29 disk-full → config-corruption incident)
-summary: A full root disk truncated several per-slot `.claude.json` files mid-write, which crash-looped the main orchestrator agent + the Opus-pinned worker slots. The **acute trigger** was a single orphane...
+title:
+  Per-slot × per-repo venv duplication → chronic disk pressure (root cause of the 2026-06-29 disk-full →
+  config-corruption incident)
+summary:
+  A full root disk truncated several per-slot `.claude.json` files mid-write, which crash-looped the main orchestrator
+  agent + the Opus-pinned worker slots. The **acute trigger** was a single orphane...
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -463,3 +467,20 @@ self-sustaining (vm-disk-guard no longer nukes the cache).
   not direct service↔service deps.
 - `codex/06-coding-standards/integration-testing-layers.md` — SIT at the staging boundary.
 - `codex/08-workflows/ci-cd-flow.md` — dep-branch cascade, quickmerge, LDR/main promotion.
+
+### 2026-07-13 — slot 7: disk pressure recurred/escalated past the 2026-06-29 post-fix baseline
+
+Hit this same class of pressure again while shipping an unrelated dependency-alignment fix
+(`dependency_alignment_red_multi_repo_ceiling_drift-002`). `df -h /home` momentarily read **2.0MB free on the 290G root
+disk (100% used)** mid-QG-run for `strategy-service`, causing a real, confirmed collateral failure: pytest's tmp-dir
+fixture setup failed fleet-wide across the run with `OSError: could not create numbered dir ... after 10 tries` under
+`/home/ubuntu/.cache/ qg-tmp/pytest-of-ubuntu/...` — a disk-exhaustion artifact, not a code regression (verified: the
+actual dependency fix — `pillow>=12.3.0` — was independently confirmed correct via an identical, already-fully-green
+sibling fix in `execution-service`, a fresh `check-dependency-alignment.py` pass, and a direct `import PIL` sanity
+check). Disk fluctuated (2MB → 12-13G free → 96-97% used) within minutes, consistent with many concurrent slots'
+QG/uv/pytest churn rather than one runaway process — did not independently re-diagnose (this doc's own C1-C5 fix +
+`vm-disk-guard.sh` are already the owning mechanism; re-investigating from scratch would duplicate effort). Not filing a
+new issue doc — this is the same structural class already tracked here, now past its post-fix 53%-used baseline again.
+Whoever next works this doc's remaining open surface (if any) should re-verify `vm-disk-guard.sh`'s idle-slot
+reinstall + `uv cache prune` are still running as scheduled, and check whether the fleet has simply grown (more live
+slots × more materialised venvs) past what the 2026-06-29 hardlink-dedup fix alone can absorb.
