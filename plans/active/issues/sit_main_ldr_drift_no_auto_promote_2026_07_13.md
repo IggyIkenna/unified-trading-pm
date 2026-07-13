@@ -32,6 +32,8 @@ resolved_by:
 locked_by:
 estimate_class: infra
 estimate_baseline_ai_days: 0.25
+drift_direction: advance-code
+depends_on: []
 ---
 
 # SIT main↔LDR drift — no auto-promote carrier for the test harness
