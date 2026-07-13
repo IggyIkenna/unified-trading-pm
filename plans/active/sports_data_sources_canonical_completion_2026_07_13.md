@@ -122,7 +122,12 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       every `ManifestWriter`/preflight-lookup call site in the shared orchestrator (affects ALL asset_groups —
       cefi/defi/tradfi/sports/prediction, not just sports) before shipping — full blast-radius proof required per
       `AUTONOMOUS_AGENT_RULES.md` rule 11 (a gate/change you make must be proven across the whole fleet it touches, not
-      just sports).
+      just sports). **CODE-HALF DONE 2026-07-13**: `market-tick-data-service@ad76547c` ships the
+      `_resolve_manifest_bucket()` carve-out at all 4 call sites (preflight availability read, sports-v9/consolidator
+      guards, non-trading-day EXPECTED_* emission, `manifest_finalize.py`'s primary `ManifestWriter`), raw tick-byte
+      write path untouched, cefi/defi/tradfi/prediction proven byte-identical (single `if asset_group=="sports"` branch
+      — see Progress Log "IMPLEMENTATION dispatch" entry). **Migration half still OPEN**: the 362,665 orphaned rows have
+      NOT been migrated — separate follow-on, not yet scheduled.
 - [ ] [DATA] P1. **mdps_odds_horizon_bucket expected-universe grain realignment (NEW 2026-07-13).** Fix
       `enumerate_expected_universe.py`'s sports seeding for this source so `expected_unattempted` uses the SAME
       `(venue=ODDS_API, data_type=odds_horizon_bucket lowercase, timeframe=T-*)` grain MDPS actually writes, instead of
@@ -1135,6 +1140,68 @@ report written in this plan's Progress Log.
     coordination pattern used for the MDPS sibling fix applies here too (this is a fix-implementation todo, not part of
     this read-only audit).
   - **No code changed in this dispatch** — audit only, per the task's explicit read-only scope.
+
+- **2026-07-13 (slot-3, IMPLEMENTATION dispatch — MTDS shared-orchestrator sports-manifest-bucket routing, CODE FIX
+  SHIPPED).** Implemented + shipped the sports-only carve-out scoped by the audit entry above.
+  `market-tick-data-service@ad76547c` (pushed to `live-defi-rollout`, direct push per this session's established pattern
+  — QG-green tree confirmed via `.qg_last_passed_sha == HEAD` before commit, re-verified after 2 unrelated
+  concurrent-agent FF-pulls; commit hooks `check-branch-drift` + `Enforce slot·host commit identity` PASSED).
+  - **Diff**: new file `engine/orchestrator/_manifest_bucket.py` (52L) housing
+    `_resolve_manifest_bucket(data_bucket: str, asset_group: str) -> str` — returns
+    `resolve_bucket_name(cloud=_cloud, kind="instruments-store", asset_group="sports")` when
+    `asset_group.lower() == "sports"`, else returns `data_bucket` UNCHANGED (kept in its own module rather than inline
+    in `engine/orchestrator/__init__.py` to respect the 900-line file-size ratchet — inlining it pushed that file to
+    940L). Wired into the 4 sites the audit named:
+    1. `__init__.py`'s early-return non-trading-day branch — now computes
+       `_resolve_manifest_bucket(get_tick_data_bucket(...), _primary_ag)` before calling
+       `_emit_non_trading_day_expected_empties(...)` (feeds the `__init__.py:446` `ManifestWriter`).
+    2. `process_ticks()`'s main flow — new `_manifest_bucket = _resolve_manifest_bucket(_bucket, primary_asset_group)`
+       local, passed to both `_run_preflight_availability_check(state, _manifest_bucket, force)` (the
+       `read_availability_index` skip-if-fresh read) and
+       `_run_preflight_guards(_manifest_bucket, primary_asset_group, _config, force)` (feeds
+       `_check_sports_v9_columns` + `assert_consolidator_healthy`).
+    3. `_DateRunState` gained a new `manifest_bucket: str` field (`_state.py`, defaults to `bucket` when the caller
+       doesn't pass one explicitly — every non-orchestrator/test construction site of `_DateRunState` stays
+       byte-identical to pre-fix behavior since only `process_ticks()` passes `manifest_bucket=` explicitly).
+    4. `manifest_finalize.py:575` — `ManifestWriter(catalogue_bucket=state.bucket, ...)` →
+       `catalogue_bucket= state.manifest_bucket` (the PRIMARY manifest-write call site).
+  - **Untouched (raw tick-BYTE write path, all 5 asset_groups)**: `venue_fetch.py:395` and `venue_fetch.py:590` both
+    still read `state.bucket` directly (never `state.manifest_bucket`) feeding `PartitionedTickWriter` →
+    `partitioned_writer.py:207`'s `StreamingParquetWriter` — grepped post-fix, 0 hits for `manifest_bucket` in either
+    file, confirming the raw-byte path was never touched.
+  - **Blast-radius proof (AUTONOMOUS_AGENT_RULES.md rule 11)**: `_resolve_manifest_bucket()`'s
+    `if asset_group.lower() == "sports"` branch is the ONLY conditional; every other asset_group (cefi/defi/tradfi/
+    prediction) falls through to `return data_bucket` unchanged — i.e. `_manifest_bucket == _bucket` byte-for-byte for
+    those 4, identical to the pre-fix value every one of the 4 consumer sites received. This is provable by inspection
+    (single `if`, no other branch) rather than requiring a live per-asset_group run; cross-checked against the audit's
+    yaml-baseline table (cefi/defi/tradfi/prediction bucket names unchanged).
+  - **Live-writer coordination — NO drain/pause performed, and none was needed**: the audit flagged
+    `sports_scheduler_cron` (5-min cadence) as a live writer into this exact code path. Reasoning for shipping without a
+    pause (matching the MDPS-sibling precedent, which also shipped its code fix without a drain step): (a)
+    `ManifestWriter` is append-only per-VM-shard — there is no read-modify-write race across a code deploy, only a clean
+    before/after split; (b) the read side (`read_availability_index`/`_check_sports_v9_columns`/
+    `assert_consolidator_healthy`) and the write side (`manifest_finalize.py`'s `ManifestWriter`) both flip to the new
+    bucket in the SAME commit/deploy — there is no window where reads and writes target different buckets, so no new
+    split-brain is introduced by the deploy itself; (c) the one real transient effect is that cron invocations landing
+    shortly after this deploy reaches production will see an (almost) empty `instruments-store-sports-prd` manifest for
+    `odds_api` (only the pre-existing 2,667 disjoint-window rows) and may re-attempt dates already covered by the
+    362,665 orphaned rows sitting in the OLD bucket — wasted API calls / duplicate captures, not data loss or
+    corruption, and self-heals once the follow-on migration (below) backfills the orphaned rows into the canonical
+    bucket. This is the same tradeoff the MDPS-sibling fix accepted.
+  - **Explicitly OUT of scope for this commit (separate follow-on, NOT done here)**: migrating the 362,665 orphaned
+    `source=odds_api` rows from `market-data-tick-sports-prd-central-element-323112` into
+    `instruments-store-sports-prd-central-element-323112`. The dispatch that shipped this code fix scoped it to "the 4
+    call sites," matching the MDPS-sibling commit's own scope (code fix only, no migration in the same commit).
+  - **QG evidence**: `market-tick-data-service` `scripts/quality-gates.sh --no-fix` ran twice (once pre-pull, once
+    post-pull after 2 unrelated concurrent-agent FF-pulls) — both exit 0, `.qg_last_passed_sha` matched `HEAD` before
+    each commit attempt. Two new violations surfaced by the first pass (`__init__.py` 940L > 900L cap;
+    `_state.py::_init_run_params` 52L > 50L method cap) were fixed by extracting `_manifest_bucket.py` into its own
+    module and trimming comments — both files back within ratchet (`__init__.py` 899L, `_init_run_params` 48L),
+    confirmed via a direct `ast`-based line-count check (not just re-running the gate).
+  - **Plan status**: todo "MTDS shared-orchestrator sports-manifest-bucket routing" (§1, `P1`) is a bundled code-fix +
+    migration item. **The code-fix half is DONE** (`market-tick-data-service@ad76547c`); the migration half remains
+    **open** — checkbox left `[ ]` with this sub-status noted rather than flipped, since the item's own text explicitly
+    includes "then migrate the 362,665 orphaned rows" as part of its definition of done.
     - (exact SHAs recorded via the git-commit skill in the same turn as this log entry — see repo `git log -1`.)
 - **2026-07-13 (sub-agent, read-only investigation) — api_football TEAMS 61-league gap: ROOT CAUSE FOUND (code
   unchanged, no fix shipped yet — this pass was investigation-only per dispatch).** **(1) One code path, not two.**
