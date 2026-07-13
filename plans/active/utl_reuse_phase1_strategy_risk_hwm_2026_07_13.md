@@ -143,9 +143,26 @@ preserve the residual; where the lib lacks a load-bearing local control, extend 
       `test_output_builders.py`/`test_math_utilities.py` suites (all green) and the Phase 0 golden risk-eval fixture
       (reproduces identically). Local only — did not touch UTL `hwm_invariants`. `quality-gates.sh` exit 0, sentinel
       verified.
-- [ ] [AGENT] P2. Keep `risk/core/correlation_matrix.py` (instrument NxN) as-is — UTL `family_aggregator` only gives
-      **family-level pairwise** rhos, a different axis/shape. Optional local cleanup: unify the 3 local correlation
-      shapes (instrument-matrix / family-pairwise-dict / v2 nested-dict) — local typing only, not a UTL migration.
+- [x] ✅ [AGENT] P2. **Keep `risk/core/correlation_matrix.py` (instrument NxN) as-is — VERIFIED NON-FINDING, optional
+      cleanup declined.** Confirmed UTL `family_aggregator.aggregate_family_state` operates on a coarser,
+      genuinely-different axis: it buckets archetypes into `StrategyFamilyId` groups, mean-collapses each family's
+      `last_returns_30d` into one series, then Pearson-correlates _between families_ into a
+      `cross_family_correlation: dict[StrategyFamilyId, float]` fan (not a full symmetric matrix).
+      `correlation_matrix.py` is a dense `list[list[float]]` N×N over raw instruments — same "documented,
+      non-overlapping taxonomy" pattern already verified for the family-cap NON-finding above (todo 2). No migration
+      possible; kept local, do not re-flag. **Optional 3-shape cleanup investigated + declined**: the "3 local
+      correlation shapes" are not really duplicative — (1) the instrument-matrix (`correlation_matrix.py`) has ~0
+      production consumers (only its own unit test; the Monte-Carlo-VaR wiring the docstring claims doesn't exist); (2)
+      the "family-pairwise-dict" (`CorrelationConfigLoader` + `RiskGroupAggregator`) is also unwired in production (the
+      `correlation_matrix_json` config field has no instantiation site) and exposes a `Callable[[str,str], Decimal]`
+      interface, not a dict — a real API shape difference, not just typing; (3) the "v2 nested-dict" is the only one
+      with live production callers (`portfolio_allocator/guard_rails.py` → `service.allocate(correlation=...)`, a real
+      external-facing kwarg) and its sibling `risk/v2/correlation_cap.py` — these two already share the identical
+      `Mapping[str, Mapping[str, Decimal]]` shape, just with independently-implemented symmetric-lookup helpers (the one
+      genuine, but purely cosmetic, dedup opportunity — not attempted here, no behavioural gain). Forcing all 3 into one
+      type would require redesigning `RiskGroupAggregator`'s constructor contract or touching `service.allocate`'s
+      public kwarg, for zero behavioural benefit — declined per this plan's own "no regressions for no gain" pattern. No
+      code change; no quickmerge required (pure verification).
 - [ ] [VERIFY] P0. Golden risk-eval fixture from Phase 0 reproduces identically; `quality-gates.sh` green; ship via
       quickmerge.
 
