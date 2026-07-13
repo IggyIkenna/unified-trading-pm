@@ -5,7 +5,7 @@ summary:
   system-integration-tests' CODEX_MAX_VIOLATIONS=0 (zero-tolerance) is breached by the same fleet-wide click 8.3.1 /
   pillow 12.2.0 CVEs also hitting execution-service, ml-service, and unified-trading-api today — blocks all shipping to
   the repo.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -24,7 +24,8 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
 source: [utl_reuse_phase7_low_lint_tail_2026_07_13.md, slot-11 backend-engineer task]
-resolved_by: slot-15 (cicd, agt-48117c)
+resolved_by:
+  slot-15 (interim per-repo fix, agt-48117c); slot-9 (canonical fleet-wide bump, unified-trading-pm@210d448c1)
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -76,12 +77,29 @@ soupsieve CVEs from independently re-tripping every other repo that hasn't hit t
 
 ## Todos
 
-- [ ] [CODE] P1. Bump the fleet-canonical `click` range to ≥8.3.2, `pillow` range to ≥12.3.0, and `soupsieve` range to
-      ≥2.8.4 in `unified-trading-pm/workspace-constraints.toml` + `canonical-dependency-manifest.json`, re-lock every
+- [x] ✅ [CODE] P1. Bump the fleet-canonical `click` range to ≥8.3.2, `pillow` range to ≥12.3.0, and `soupsieve` range
+      to ≥2.8.4 in `unified-trading-pm/workspace-constraints.toml` + `canonical-dependency-manifest.json`, re-lock every
       affected repo (execution-service, +whatever else `update-dependency-version.yml` fans out to —
       system-integration-tests already fixed per-repo above), re-verify no API breakage. Coordinate with the ml-service
       and unified-trading-api pip-audit issue docs to avoid duplicate fixes. (repo: unified-trading-pm + fanned-out
-      repos)
+      repos) — **DONE, slot 9, 2026-07-13.** `click`/`pillow` had already been bumped canonically by a concurrent slot
+      before I picked this up (`workspace-constraints.toml` already read `click>=8.3.3,<9.0.0` /
+      `pillow>=12.3.0,<13.0.0` — the `>=8.3.2` floor named in this todo was itself superseded by a tightened advisory,
+      per `fund_administration_service_click_pysec_2026_2132_2026_07_13.md`). Added the missing
+      `soupsieve>=2.8.4,<3.0.0` entry (`unified-trading-pm@210d448c1`), regenerated `canonical-dependency-manifest.json`
+      via the existing `generate_canonical_dependency_manifest.py` generator (never hand-edited the JSON directly). **No
+      per-repo re-lock was actually needed**: `update-dependency-version.yml` only rewrites a repo's `pyproject.toml`
+      floor for packages it declares DIRECTLY (`grep -q "\"${DEP_NAME}" pyproject.toml` gate in the workflow) —
+      `soupsieve` is purely transitive everywhere (via `beautifulsoup4`, confirmed zero repos declare it directly:
+      `grep -l '"soupsieve' */pyproject.toml` → no matches), so that fan-out mechanism doesn't apply to it. Checked
+      every repo's locked `soupsieve` version directly instead (`grep -A2 '^name = "soupsieve"' */uv.lock` across all 24
+      repos in the workspace): the 6 repos that depend on it at all (e2e-testing, execution-service, features-service,
+      instruments-service, market-tick-data-service, system-integration-tests) are ALL already locked to `2.8.4` — no
+      vulnerable version remains anywhere, so this todo's re-lock/re-verify clause is a no-op today; the canonical floor
+      exists purely to prevent a future regression on a stale re-lock. Coordinated with the 3 related issue docs first
+      (execution-service, ml-service, unified-trading-api) — all 3 already independently resolved via their own per-repo
+      bumps before I started, so no duplicate work was done. `unified-trading-pm` full `quality-gates.sh` green (336s,
+      sentinel-verified) before shipping.
 - [x] ✅ [VERIFY] P1. `bash scripts/quality-gates.sh` in system-integration-tests confirmed full-green
       (`system-integration-tests@6d7a5b6`); repo-blocker RB-e06aa00b resolved. (repo: system-integration-tests)
 
@@ -91,3 +109,8 @@ soupsieve CVEs from independently re-tripping every other repo that hasn't hit t
   (click→8.4.2, pillow→12.3.0, soupsieve→2.8.4), all transitive/no-ceiling-conflict. Shipped
   `system-integration-tests@6d7a5b6`, full QG green. Left the canonical fleet-wide bump open as follow-up (prevents
   recurrence in other not-yet-hit repos).
+- **2026-07-13 (slot-9, sonnet/high)** — Closed the canonical fleet-wide bump todo. Found click/pillow already done by a
+  concurrent slot; added the missing `soupsieve>=2.8.4,<3.0.0` canonical floor (`unified-trading-pm@210d448c1`).
+  Verified via a fleet-wide `uv.lock` grep that no repo currently has a vulnerable soupsieve locked, so no re-lock
+  fan-out was actually required — the canonical entry is purely preventive. `unified-trading-pm` `quality-gates.sh`
+  full-green before shipping.
