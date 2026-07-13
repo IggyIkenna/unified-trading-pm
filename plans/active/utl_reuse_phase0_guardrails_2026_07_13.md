@@ -61,9 +61,14 @@ behaviour-preserving, not just compiling.
       plans previously in the tracker's `related_plans` (`infrastructure_master`, `strategy_master`,
       `features_and_ml_master`, `execution_master`, `orchestrator_master`), so concurrent slots don't re-touch the same
       risk/auth/registry surfaces. — unified-trading-pm (this commit)
-- [ ] [VERIFY] P0. Snapshot pre-change behaviour: for strategy risk + ml registry + features builders, capture a
+- [x] ✅ [VERIFY] P0. Snapshot pre-change behaviour: for strategy risk + ml registry + features builders, capture a
       golden-output fixture (one client risk eval, one inference-date model selection, one `resolve_build_order` per
-      family) so each merge is provably behaviour-preserving, not just compiling.
+      family) so each merge is provably behaviour-preserving, not just compiling. — strategy-service@ffa363e,
+      ml-service@3f18fa0, features-service@35d6b3a5. Found + fixed in passing: onchain's `resolve_build_order()` leaked
+      cross-family calculators via the shared UTL registry (issue:
+      `onchain_builder_registry_cross_family_pollution_2026_07_13.md`); ml-service `quality-gates.sh` was RED on
+      pre-existing pip-audit CVEs (pillow/cryptography/pydantic-settings fixed, starlette honestly ignore-vuln'd pending
+      a `fastapi` ceiling bump — issue: `ml_service_pip_audit_red_pillow_cryptography_starlette_2026_07_13.md`).
 - [x] ✅ [SPEC] P0. Confirm UTL/UAC are the SSOT targets for every extension in Phases 1/3/4 and that no parallel
       old+new path is left behind (CLAUDE.md "delete deprecated code"). — CONFIRMED, verified against live code
       (2026-07-13, slot 7):
