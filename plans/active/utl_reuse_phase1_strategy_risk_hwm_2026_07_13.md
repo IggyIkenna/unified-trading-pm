@@ -67,10 +67,36 @@ preserve the residual; where the lib lacks a load-bearing local control, extend 
       `risk_metrics.py` imports them (no more inline reimplementation); `account_equity_proxy` gained the
       `max_leverage<=0` guard `risk_metrics.py` already had, for behaviour parity | full risk suite (718 tests) + Phase
       0 golden fixture green | `quality-gates.sh` exit 0, sentinel verified.
-- [ ] [AGENT] P0. **Migrate the one genuine same-layer duplication** —
-      `risk/v2/preflight.py:226 _run_legacy_portfolio_gates` (daily-loss / drawdown / family-cap) → UTL `RiskRule`
-      registry entries (`MaxDailyLossTrigger`/`MaxDrawdownTrigger` + a family-cap trigger). After migration the legacy
-      `PortfolioContext` branch reduces to the **recon-staleness** check only (explicitly NOT a RiskRule — keep local).
+- [x] ✅ [AGENT] P0. **Migrate the one genuine same-layer duplication — RE-SCOPED 2026-07-13 (slot-13).** Original
+      wording assumed daily-loss/drawdown/family-cap were all cleanly migratable + that
+      `MaxDailyLossTrigger`/`MaxDrawdownTrigger`/a family-cap trigger needed to be CREATED. Investigation found: **(1)**
+      `MaxDailyLossTrigger`/`MaxDrawdownTrigger` already exist, pre-seeded at `PER_ACCOUNT` scope in
+      `unified-api-contracts/registry/risk_rules/account.py` — no UAC-side work needed. **(2)**
+      `FAMILY_GROSS_EXPOSURE_CAP`/ `FAMILY_NET_EXPOSURE_CAP` also already exist at `PER_STRATEGY_FAMILY` scope — but
+      `PortfolioContext.family_exposure_cap_usd` is keyed by `StrategyFamily` (strategy-architecture-v2 **mechanism**
+      axis, e.g. `VOL_TRADING`) while the registry's family rules are keyed by `StrategyFamilyId` (the
+      **risk-aggregation** axis, e.g. `LST_LEVERAGE_FAMILY`) — a documented, non-overlapping taxonomy with no mapping
+      between them. Family-cap is NOT a migratable duplicate (verified NON-finding) — kept local-only, do not re-flag in
+      a future reuse audit. **(3)** `_run_legacy_portfolio_gates` has ZERO production callers
+      (`FourLayerGateOrchestrator` is unused scaffolding); its only spec is `tests/risk/unit/v2/test_v2_risk.py`, which
+      encodes DYNAMIC caller-supplied thresholds (`PortfolioContext.max_daily_loss_usd`/`max_drawdown_bps` set per-call)
+      — a fundamentally different threshold-sourcing model from the registry's STATIC per-account seeds. Given no live
+      caller depends on the dynamic values, composed (not replaced) per the plan's own "COMPOSE, do not delete" rule:
+      when the (new) `account_id` param is supplied, the registry's `PER_ACCOUNT` daily-loss/drawdown seeds now evaluate
+      ADDITIONALLY as a static safety-net floor (most-restrictive wins, existing REJECTED>RESIZED>APPROVED composition),
+      while the dynamic local check stays for the caller's own tighter operational limit. `_run_legacy_portfolio_gates`
+      itself is UNCHANGED (still runs daily-loss/drawdown/family-cap) — it was never actually deletable to
+      "recon-staleness only" because the dynamic-threshold behavior has no registry equivalent. Also fixed a
+      pre-existing latent bug in passing: `run_layer2_preflight` was passing `family.value` (mechanism axis) as
+      `strategy_family_id` to the registry lookup — silently never matched any `PER_STRATEGY_FAMILY` rule; now passes
+      `None` explicitly with a comment, since no valid mapping exists. Shipped `strategy-service@0beadebe` (4 new
+      composition tests + 1 existing-test-adjustment, `basedpyright` clean, 731 pre-existing risk tests + golden fixture
+      still green). **Separate finding filed, not fixed in this todo** (cross-repo, outside this plan's
+      `repos:     [strategy-service]`): `GLOBAL_DATA_STALENESS_HALT` misuses `MaxDrawdownTrigger(cap_bps=1)`, colliding
+      with the real `current_drawdown_bps` field my `account_id` composition now populates — latent kill-switch
+      false-positive risk once real drawdown data is wired into execution-service's live order path. See
+      `plans/active/issues/global_data_staleness_halt_drawdown_field_collision_2026_07_13.md`
+      (`unified-trading-pm@8acd22e5d`).
 - [ ] [AGENT] P0. **Route the 6 comparison checks through UTL rules** where the gate already runs: feed
       `pre_trade_check_engine.py`'s already-computed position_size/leverage/gross/net/concentration into UTL
       `evaluate_rule` so the threshold **numbers** have one SSOT (UAC caps), not `RiskLimits` config + UAC rules
