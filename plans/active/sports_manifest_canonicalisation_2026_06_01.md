@@ -1387,7 +1387,22 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     actual relabel runs at the gated VM `--apply` (operational).
 - [ ] [DATA] P0. E8 Verify: `cf_manifest_audit_2026_06_01.py` on both sports surfaces → CF-1…CF-12 GREEN (esp. 0 blanket
       SOURCE_RETURNED_ZERO); flip CF-coverage in `sports_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after
-      GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-sports` permanently**.
+      GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-sports` permanently**. **GATED** on condition
+      `sports-e3-e4-fleet-drain-complete` (main, 2026-07-13) — this checkbox bounced 16+ dispatches confirming the same
+      RED precondition (no E3/E4 VM ever launched) with zero new information each time; do not re-dispatch until the
+      todo below flips the condition GREEN.
+- [ ] [INFRA] P0. **Schedule + execute E3 fleet drain + E4 VM apply** for the sports v9 migration (main decision
+      2026-07-13 per `BLK-f2bb67c2`, option A — drift has been compounding since the last verify run on 2026-06-29; E8
+      verify above cannot produce a trustworthy result until this lands). E3 = stop every sports-writing VM/process both
+      clouds (mirrors the CLAUDE.md "pre-migration drain" HARD RULE — consolidate + snapshot before any GCS cutover); E4
+      = run `migrate_sports_canonical_v9.py --apply` (the v9 migrator, dry-run already verified per E2 in the
+      Deferred-work table below) against the drained corpus, then the E5/E6 rebuilder (`mtds@680dff5f` +
+      `mtds@699c58e9`, also dry-run-verified). This is cross-slot/cross-cloud scope — needs a dispatch with
+      `deployment-service` VM-launcher access (`codex/05-infrastructure/vm-launcher-runbook.md`), not a single-repo code
+      change. On completion: `POST /api/prerequisites/sports-e3-e4-fleet-drain-complete {value:true}` to ungate the
+      E8-verify checkbox above. Separately (not blocking this todo): the IS write-path gap that makes E8 verify regress
+      again immediately after a walk (blank `pipeline_mode`/`source`/`available_at` on some new rows) is already its own
+      todo — see `sports_manifest_canonicalisation-002` below (dispatched to slot-5).
 
 ## Deferred work after 2026-06-01 (sports-slot pickup session)
 
