@@ -123,11 +123,15 @@ session) — todos 1–3 below were fixed as part of that thread; cross-referenc
 Surfaced by the parallel extract-method refactor across the 26 sites (pure structural change, no logic touched) —
 tracked here per findings-triage rather than left in agent chat output. None are blocking; all are minor / P3-P4.
 
-- [ ] [BUGFIX] P3. execution-service: `BenchmarkComparator._run_all_algorithms`
+- [x] ✅ [BUGFIX] P3. execution-service: `BenchmarkComparator._run_all_algorithms`
       (`execution_service/benchmark/comparison.py`) increments `current_backtest` a second time inside the `except`
       block on a failed algorithm run (on top of the per-iteration increment at loop top), inflating the reported
-      progress index in the failure log vs. the success path. Fix: drop the duplicate increment in the except branch.
-      (repo: execution-service)
+      progress index in the failure log vs. the success path. Fix: drop the duplicate increment in the except branch. —
+      DONE `execution-service@a43d4022`: removed the duplicate `current_backtest += 1` in the except branch. Added
+      `TestRunAllAlgorithmsProgressIndex.test_failure_does_not_double_increment_current_backtest`
+      (`tests/unit/test_coverage_boost_results_engine_benchmark_config.py`) asserting the failure-log index matches the
+      start-log index across a run with a failing algorithm. Full `quality-gates.sh` green (sentinel `029e3810`,
+      verified against the uncommitted diff; quickmerge --agent shipped the trailer-commit). (repo: execution-service)
 - [x] ✅ [BUGFIX] P3. execution-service: `MatchingEngineExecutionProvider._solana_amm_snapshot_fallback`
       (`execution_service/providers/matching_engine.py`) reads `price` via `kwargs.get("price")` without popping it,
       then forwards `price=price, **kwargs` to `_benchmark_fallback` — if a caller ever passes `price` inside `kwargs`

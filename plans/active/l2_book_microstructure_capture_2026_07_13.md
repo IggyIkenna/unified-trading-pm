@@ -82,9 +82,21 @@ sequential: true
       channel/depth to actually pull, given gating) are in the doc. `quality-gates.sh` green (237s,
       `IGNORE_TIMEOUT=true`) after this repo saw 5 sentinel-invalidating rebases from sustained concurrent commit
       traffic across slots — sentinel verified at `4cf33fbe2fdaf29302a86960c27e471227203a92`.
-- [ ] [DATA] P2. For each venue confirmed capable, extend the live capture (or add a new deeper-book live handler
+- [x] ✅ [DATA] P2. For each venue confirmed capable, extend the live capture (or add a new deeper-book live handler
       alongside the existing L5 one) to pull the deeper book. Reuse the existing `book_snapshot_5` connector pattern per
-      venue — do not fork a new connector framework.
+      venue — do not fork a new connector framework. — **DONE for 5/9 venues, slot 8,
+      `market-tick-data-service@ff479373`**: COINBASE-SPOT (level2 was already uncapped, just slices 10 levels instead
+      of 5 off the same maintained state), BYBIT (`orderbook.200`, was `.50`), DERIBIT (`book.*.none.20.100ms`, was
+      `.none.5.`), BINANCE-FUTURES (new `depth20@100ms` subscription), OKX-SWAP (new `books` channel — 400 levels,
+      un-gated — with snapshot+update local-book reconstruction, unlike `books5`'s flat snapshot; does NOT validate
+      OKX's optional per-frame checksum, flagged as a known limitation not hidden). All via the existing
+      `data_type`-branching factory pattern (`WS_FEED_CONNECTOR_FACTORIES`), no new framework. 23 new unit tests,
+      355/355 relevant tests green, 0 new basedpyright violations (verified file-by-file against the pre-change
+      baseline). **Premise correction — 4/9 venues found to have NO live `book_snapshot_5` at all** (BINANCE-SPOT,
+      OKX-FUTURES, OKX-SPOT, UPBIT are trades-only or batch-only live), discovered while tracing each venue's factory to
+      extend it — filed as `issues/l2_book_depth10_missing_l5_prerequisite_venues_2026_07_13.md` (their own
+      build-from-scratch scope, bigger than "extend", not silently rolled into this todo). Todos 3-5 below can proceed
+      for the 5 done venues; the 4-venue gap is tracked separately and does not block them.
 - [ ] [SCRIPT] P2. **RE-CREATE** (not extend) `market-tick-data-service/.../derived/book_microstructure_compute.py`
       (`compute_book_microstructure`) to populate `queue_position_bid`/`queue_position_ask`/`book_depth_levels` from the
       deeper book input when present, keeping the existing L5-only honest-absence path unchanged for any venue still

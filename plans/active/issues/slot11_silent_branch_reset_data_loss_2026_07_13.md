@@ -284,26 +284,107 @@ represented in UPDATE 3 is more likely explained by "many slots hold local commi
 (everyone touches shared schemas/events) than a UAC/UTL-specific targeting rule — todo 4 should verify the sweep's
 selection criterion directly rather than assume repo-name targeting.
 
+## UPDATE 7 (slot 11, 2026-07-13) — ROOT CAUSE FOUND: `git checkout -B <base> origin/<base>`, not `reset --hard`
+
+Traced the exact call path per todo 1. **The mechanism is `heal_dead_slot_branch_quarantine()`**
+(`agent-orchestrator/server/worktree_clean_check/_branch_state.py`) and the sibling orphan-wip realign in
+`commit_and_push_dirty_repos()` (`_orphan.py`) — both invoked from the `autospawn.py` pre-spawn branch-state gate
+(around line 1228: `elif slot_path.exists():` → dirty-state resolution → `check_slot_branch_state` → on a STOP state
+(`diverged`/`wrong_branch`/`detached`) → `heal_dead_slot_branch_quarantine`).
+
+**The literal command is `git checkout -B <base> origin/<base>` — NOT `git reset --hard`.** Both functions' own code
+comments explicitly claimed this checkout form "does NOT emit the `reset: moving to origin/<base>` reflog signature the
+audit-reflog guard pages on" (i.e. that it was reflog-silent, unlike `reset --hard`). **That claim is factually wrong.**
+Verified empirically in an isolated sandbox repo:
+
+```
+$ git checkout -B main origin/main   # HEAD had 1 local unpushed commit
+Reset branch 'main'
+$ git reflog show HEAD | head -2
+<sha> HEAD@{0}: checkout: moving from main to main
+<sha> HEAD@{1}: branch: Reset to origin/main       <-- THE SMOKING-GUN SIGNATURE
+```
+
+`git checkout -B <branch> <start-point>` force-resets the branch ref via the same internal path as `git branch -f`,
+which writes `branch: Reset to <start-point>` to the reflog — **byte-identical to the "branch: Reset to
+origin/live-defi-rollout" string** this doc's original report, UPDATE 3's fleet audit, and
+`scripts/dev/audit-fleet-reflog-resets.sh`'s own grep pattern (`"Reset to origin"`) all match on. (For contrast,
+`git reset --hard origin/main` writes a _different_ message, `reset: moving to origin/main` — the devs who wrote the
+"avoids the reflog signature" comment tested against that wrong string.) The working tree also gets hard-reset to match
+origin (files change on disk) — matching the original report's "my new files were physically deleted" detail exactly.
+
+**Why it could hit a genuinely LIVE, mid-task worker** (not just a truly-dead predecessor, which is what this path is
+supposed to gate on): `heal_dead_slot_branch_quarantine` only realigns a repo when (a) it's in a STOP state
+(`diverged`/`wrong_branch`/`detached` — a repo with local commits AND behind origin reads as `diverged`, which any slot
+touching a heavily-shared repo like UAC/UTL/PM hits routinely just from concurrent peer pushes, not genuine divergence
+needing a human) **and** (b) `classify_maker_liveness()` doesn't return `"live"`. That liveness call was invoked with
+`recent_edit=False` **hardcoded** — unlike the sibling dirty-state resolver, which correctly passes
+`recent_edit=_wcc.has_recent_dirty_mtime(...)`. Liveness then depends entirely on a `.agent-claim` file + a matching
+live tmux session — two signals that are NOT the same thing as, and can drift out of sync with, the HTTP `/progress`
+heartbeat an active worker (this worker!) actually sends every ~10 min per `worker.md`. A worker with a stale/missing
+claim file — genuinely alive and heartbeating — gets classified `"dead"`/`"absent"` here regardless, and its diverged
+repo (which may just have raced a concurrent peer push) gets realigned, discarding its fresh commit (recoverable only
+via reflog, exactly as this incident describes).
+
+**Fix shipped** (todo 2): added a second, independent, git-native liveness backstop that doesn't depend on the claim
+file at all — `heal_dead_slot_branch_quarantine` now refuses to touch (no preserve push, no checkout — genuine no-op)
+any stop-state repo whose HEAD commit is younger than `_MIN_AHEAD_COMMIT_AGE_SECONDS_FOR_REALIGN` (900s / 15 min,
+configurable via the new `min_ahead_age_seconds` param). Below that age, the repo is left quarantined so the existing
+`_alert_branch_quarantine` path pages a human instead of silently discarding a fresh commit. Also corrected both
+functions' code comments (they no longer claim `checkout -B` is reflog-silent — it isn't). 2 new/updated unit tests in
+`tests/test_dirty_state_resolution.py`: `test_heal_refuses_realign_of_a_recent_ahead_commit` (new — asserts a fresh
+ahead commit is left completely untouched even when claim/tmux liveness says "dead") and
+`test_heal_dead_diverged_slot_preserves_and_realigns` (updated to pass `min_ahead_age_seconds=0`, since its fabricated
+commit is instantaneous — it's testing the preserve+realign path, not the new age guard). Full test file green: 31/31
+passed. Shipped `agent-orchestrator@911036c4`, full `quality-gates.sh` green (sentinel `ad86172e`).
+
+**Left for follow-up (not in this todo's scope)**: `_orphan.py`'s realign already has a real recency guard
+(`has_recent_dirty_mtime`, mtime-based) so it's lower-risk than `_branch_state.py` was, but it inherits the same
+underlying `checkout -B` reflog-signature fact — comment corrected there too, behavior unchanged (already reasonably
+guarded). The claim-file/heartbeat desync itself (the root reason liveness can false-negative a live worker) is a
+separate, deeper fix (tie `.agent-claim` refresh to the `/progress` heartbeat) not attempted here — the recent-commit
+guard is a sufficient, narrowly-scoped backstop for the specific data-loss symptom this doc tracks.
+
 ## Todos
 
-- [ ] [INFRA] P0. Identify the process that produced the "branch: Reset to origin/live-defi-rollout" reflog entries on
-      slot 11 (unified-trading-library + unified-api-contracts) around 2026-07-13 11:30-11:50 UTC — check
+- [x] ✅ [INFRA] P0. Identify the process that produced the "branch: Reset to origin/live-defi-rollout" reflog entries
+      on slot 11 (unified-trading-library + unified-api-contracts) around 2026-07-13 11:30-11:50 UTC — check
       slot-cron-ff-pull.sh, worktree_clean_check.check_slot_branch_state, and any respawn/idle-reclaim routine for a
       `git reset --hard origin/<branch>` (or equivalent) call path. (repo: agent-orchestrator or
-      unified-trading-pm/scripts, whichever owns the mechanism)
-- [ ] [INFRA] P0. Whatever the mechanism, change its behavior for a clone with local commits not on origin: refuse
+      unified-trading-pm/scripts, whichever owns the mechanism) — DONE, see UPDATE 7 above:
+      `heal_dead_slot_branch_quarantine()` / `_orphan.py`'s orphan-wip realign, both via
+      `git checkout -B <base>     origin/<base>` (empirically confirmed to emit the exact "branch: Reset to
+      origin/<base>" reflog signature, contradicting the code's own prior comment).
+- [x] ✅ [INFRA] P0. Whatever the mechanism, change its behavior for a clone with local commits not on origin: refuse
       (no-op + log) rather than reset; only auto-repair a clone that is BOTH commit-less-ahead AND has no reflog entries
-      newer than N minutes (genuinely idle), never one with fresh local commits. (repo: same as above)
+      newer than N minutes (genuinely idle), never one with fresh local commits. (repo: same as above) — DONE, see
+      UPDATE 7 above: `_MIN_AHEAD_COMMIT_AGE_SECONDS_FOR_REALIGN = 900` (15 min) guard in
+      `heal_dead_slot_branch_quarantine` (`agent-orchestrator/server/worktree_clean_check/_branch_state.py`), 2 tests,
+      full suite green.
 - [x] ✅ [VERIFY] P1. Audit other active slots for the same reflog signature ("Reset to origin/<branch>" with a
       discarded commit reachable only via reflog) to see how widespread this already is / has been. (repo:
       unified-trading-pm — a fleet-wide grep script) — unified-trading-pm@57f7f1421, script
       `scripts/dev/audit-fleet-reflog-resets.sh`, results in "UPDATE 3" above: 276 signature hits fleet-wide (16 slots),
       63 are real (non-orphan-wip) discarded commits across 10 slots / 8 repos, 18 still `AT_RISK_REFLOG_ONLY` as of
       this audit. Confirms this is NOT slot-11-isolated and has been ongoing since at least 2026-06-22.
-- [ ] [INFRA] P0. Check specifically for a "keep T0 shared-dep repos in sync" fleet job/cron targeting
+- [x] ✅ [INFRA] P0. Check specifically for a "keep T0 shared-dep repos in sync" fleet job/cron targeting
       unified-api-contracts + unified-trading-library specifically (see UPDATE section — 3 hits on UAC, 2 on UTL, 0 on 4
       sibling repos touched in the same session) — if found, it MUST check for local-commits-ahead-of-origin before
-      resetting, same fix as the other INFRA todos above. (repo: whichever owns fleet T0-sync tooling)
+      resetting, same fix as the other INFRA todos above. (repo: whichever owns fleet T0-sync tooling) — **DONE
+      2026-07-13 (slot 11), NO DEDICATED T0-SYNC JOB EXISTS.** Grepped every `.py`/`.sh`/`.yml`/`.yaml` under
+      `agent-orchestrator/server/`, `agent-orchestrator/scripts/`, and `unified-trading-pm/scripts/` for
+      `unified-api-contracts`/`unified-trading-library` combined with `sync`/`cron`/`schedule` — every hit is unrelated
+      (OpenAPI/UI-reference generation, capability-manifest sync, QG benchmarking), none touches git branch state for
+      these 2 repos specifically. Explicitly checked `slot-cron-ff-pull.sh` (the one standing periodic git-branch cron
+      in the workspace): its own header states "Never destructive. Never runs `merge     --no-ff`, never `rebase`, never
+      `reset --hard`" and it explicitly **skips** ahead/diverged/dirty repos — applies uniformly to every repo, no
+      T0-specific carve-out. **This confirms UPDATE 4's own finding (same issue doc, slot 15) rather than contradicting
+      it**: the UAC/UTL bias in the original counts is NOT repo-name targeting — it's
+      `heal_dead_slot_branch_quarantine`/`_orphan.py`'s realign (see UPDATE 7 above, todo 1) firing on ANY repo that
+      happens to be `diverged` at the moment the pre-spawn gate runs, and UAC/UTL/PM simply diverge far more often than
+      a session-scoped repo like `strategy-service` because so many concurrent slots hold local commits to the fleet's 2
+      canonical shared-schema/event repos at any given time — a probability effect, not a targeting rule. No separate
+      fix needed here beyond todo 2's guard (already shipped, covers every repo uniformly including UAC/UTL).
 
 ## Update 2026-07-13 (slot 8, heartbeat nudge — a much older AT_RISK_REFLOG_ONLY hit, still unrecovered)
 

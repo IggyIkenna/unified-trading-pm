@@ -340,7 +340,106 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       that exact log position, on the ALREADY-FIXED (c3e3ebfe) codebase. Profile `compute_shot_quality_batch` against
       real GCS data for at least one of these 3 dates (memray/tracemalloc, real kernel-enforced memory cap per this
       doc's own earlier caution — `docker run --memory=<N>g`, not `RLIMIT_AS`). This directly answers what todo #207
-      (REOPENED) already flagged as unconfirmed-fixed. (repo: features-service)
+      (REOPENED) already flagged as unconfirmed-fixed. (repo: features-service) **UPDATE (slot 10, 2026-07-13): COULD
+      NOT REPRODUCE, after a genuinely rigorous attempt — NOT claiming "fixed", see "Update — real-data re-profile could
+      NOT reproduce the THIRD recurrence" below for full evidence and a concrete next step (real-VM re-test).** Checkbox
+      intentionally left unflipped — this doc has already recorded 3 prior false "fixed" claims on this exact issue; a
+      4th unverified claim (this time in the other direction — "the crash doesn't exist") would repeat the same mistake.
+      Deferring closure to a live-VM `--force` re-run of the 3 exact poison dates (new todo added below).
+- [ ] [DATA] P0. **NEW (slot 10, 2026-07-13)** — relaunch the 3 exact poison dates (2018-01-06, 2019-08-17, 2025-08-10)
+      on the REAL VM fleet via `--force` (single-VM,
+      `launch-features-vm.sh --feature-family sports     --asset-group SPORTS`) rather than another sandboxed repro —
+      the sandboxed repro in the "Update" below could NOT reproduce any of the 3 crashes despite matching the exact
+      codebase slot-14 tested, so only a live re-test resolves the discrepancy either way: (a) all 3 complete cleanly on
+      the real VM too → the crash risk really is gone (be it from `a9684e27`, from upstream GCS data changing since the
+      incident, or from something else) and this issue can close; (b) any of the 3 still crash on the real VM → the bug
+      is real but ENVIRONMENT-specific (concurrent SPOT-preemption memory pressure, real e2-standard-4 baseline differs
+      from a fresh container, or something about the actual 421-day sequential loop beyond the 5-date sample tested) —
+      the next investigation should focus there, not on the calculator code. No-fire-and-forget verification required
+      (SSH-confirm genuine completion or a real OOM `dmesg`, not just `EXIT_STATUS`). (repo: features-service,
+      deployment-service for the VM relaunch)
+
+## Update — real-data re-profile could NOT reproduce the THIRD recurrence (slot 10, 2026-07-13)
+
+**Picked up the P0 "root-cause the STILL-LIVE OOM site" todo. Ran a genuinely rigorous, real-production-data
+reproduction attempt for all 3 poison dates + a multi-date sequential loop — none crashed. This is a real, evidenced
+finding, but it is a NEGATIVE result (could not reproduce), not a fix — treat it as such.**
+
+**Method** (deliberately more rigorous than the prior single-calculator profiling scripts, to avoid the exact
+stdout-buffering trap that swallowed log lines in the ORIGINAL 2018-06-17 incident, per this doc's own earlier note):
+wrote `scripts/sports/profile_full_pipeline_memory.py`, extending the existing `profile_2018_06_17_memory.py` harness
+(module-attribute monkeypatch, no production code changes) to wrap **all 27 calculators** across BOTH the pre-Phase-4
+chain (`derived_features_exporter`) and the Phase-4 chain (`derived_new_calculators`) — the original script only covered
+up to `weather`, which is why nobody could see past `advanced_stats`/`venue_context` before. Unbuffered stdout
+(`sys.stdout.reconfigure(line_buffering=True)`) this time, specifically so a real OOM kill can't silently swallow the
+last few completion lines again. Ran every reproduction inside `docker run --memory=16g --memory-swap=16g` (verified the
+cap actually enforces via cgroup v2 first — `cat /sys/fs/cgroup/memory.max` inside a throwaway container matched the
+`--memory` flag exactly), mounting the host's already-built `.venv` + `~/.local/share/uv` (for the interpreter symlink
+target) + real GCP ADC credentials, so this is REAL production GCS data end-to-end, not a synthetic repro.
+
+**Result — all 3 poison dates completed cleanly**, run against the SAME codebase state slot-14's "THIRD recurrence"
+tested (`c3e3ebfe` present, `a9684e27` not yet landed at profiling time — confirmed via commit timestamps, see below):
+
+| date       | fixtures × columns | peak RSS | field-reported anon-rss at kill |
+| ---------- | ------------------ | -------- | ------------------------------- |
+| 2018-01-06 | 183 × 666          | 536MB    | ~15.8GB                         |
+| 2019-08-17 | 238 × 718          | 542MB    | ~32GB                           |
+| 2025-08-10 | 183 × 654          | 565MB    | ~15.8GB                         |
+
+Every one of the 27 wrapped calculators logged a matching START/DONE pair for all 3 runs (31 pairs each, counting the
+earlier read/filter stages too) — no crash mid-calculator, no unmatched START. `advanced_stats` and `venue_context` (the
+log position the 3 field crashes died at) both completed in well under 1 second added RSS each time.
+
+**Ruled out a cross-iteration leak as an alternative explanation**: wrote a second harness,
+`scripts/sports/profile_multi_date_loop_memory.py`, looping `export_derived_features()` over consecutive real dates in
+ONE process (matching the real VM's serial batch-handler shape — `features_service/sports/cli/main.py::_run_batch`'s
+`worker_count<=1` path creates one `SportsFeatureService` and calls `compute_features()` repeatedly, never restarting
+between dates). Ran 5 consecutive dates (2019-08-01→2019-08-05) under the same `--memory=16g` cap: RSS deltas were
+`+176MB, +10MB, +10MB, +25MB, -5MB` — the first date's delta is one-time import/warm-up cost, the rest is small and
+NON-monotonic (one date even released memory), not the multi-GB-per-iteration growth a real leak would show. Stopped at
+5 dates once the trend was unambiguous rather than burning more compute on a flat line (efficiency craft north-star).
+
+Also code-reviewed the two most-plausible cross-call-leak candidates BEFORE building the multi-date harness, to make
+sure I wasn't missing an obvious static cause: `promoted_team_features_calculator.py`'s `cohort_cache` and
+`batch_handler.py`'s `fixtures_ref_cache` are both freshly-constructed LOCAL variables inside their respective functions
+(not module-level, not a mutable-default-argument footgun) — recreated and garbage-collected every call, not a leak.
+`BaseFeatureServiceV2`'s Prometheus metrics (`RECORDS_PROCESSED`, `PROCESSING_LATENCY`) are labeled
+`service_name`/`feature_group`/`status` — low, bounded cardinality, not keyed by date — ruled out the classic
+unbounded-label-cardinality Prometheus leak pattern.
+
+**Cross-checked against a separate, more recent fix that landed mid-investigation**: `features-service@a9684e27` (slot
+5, same day, ~20:31 UTC) fixed the deeper `venue_id`-collapses-to-`""` root cause (`read_venues()` /
+`normalize_fixtures()` / `travel_calculator.py`) that `c3e3ebfe`'s `_dropna_key()` guard had only defended against, not
+fixed. This landed AFTER my slot's fresh-pull for this task (my initial 3-date + 5-date reproduction above ran on
+`c3e3ebfe`-only, pre-`a9684e27` — confirmed via `git log`/commit timestamps: `a9684e27` at `20:31:40`, my slot's `HEAD`
+at task start was `d0d0149c` at `20:02:25`, and `git merge-base --is-ancestor a9684e27 HEAD` was false before I
+re-pulled). Fresh-pulled to bring `a9684e27` in and re-ran 2019-08-17 once more as a final check: still clean, 542MB
+peak, identical to the pre-`a9684e27` run — no regression, and this rules out "the fix simply hadn't been tested yet" as
+an explanation for my results, since BOTH the pre- and post-`a9684e27` codebase fail to reproduce.
+
+**What this does NOT prove**: that the bug is gone. A sandboxed container repro — even one using real GCS data, real
+credentials, and a real memory cap — is not the same environment as the actual SPOT VM fleet (different baseline memory
+footprint, possible concurrent resource contention from other processes/preemption handling on the real instance, and my
+multi-date test covered only 5 of the real loop's 421 dates). The 3 field crashes were independently confirmed via
+`dmesg` OOM-kill signatures on real VMs by slot-14 — that evidence is real and this finding does not contradict it
+happened; it only shows the SAME code + SAME dates do not reproduce it in this sandboxed setting.
+
+**What I did NOT do**: did not claim the OOM is fixed (explicitly avoided repeating this doc's own 3-times-already
+lesson about premature "fixed" claims). Did not attempt to force a synthetic explosion to "prove" a bug that isn't
+showing up. Did not touch any production code (both new scripts are Lifecycle: temporary, monkeypatch-only, matching
+this doc's own established profiling-script convention — delete once this issue closes). Did not run the full 421-day
+loop (5 dates was enough to see the growth trend was flat, not exponential; running the rest would have been the same
+"burning slot-hours re-confirming an already-clear signal" anti-pattern this doc's OWN sibling plan
+(`sports_p2_features_history_to_ml_ready_2026_06_27.md`) explicitly calls out for its own repeated fast-re-verify
+dispatches).
+
+**Handoff for the next dispatch**: the new P0 todo above (relaunch the 3 exact dates via `--force` on the real VM fleet)
+is the fastest way to resolve the remaining discrepancy — if you pick it up, no-fire-and-forget verify via SSH (not just
+`EXIT_STATUS`), and if a crash DOES recur, capture the EXACT `dmesg` OOM signature + a `free -h` snapshot from the VM at
+crash time (to check whether OTHER processes were competing for memory, since that's the leading environment-difference
+hypothesis this sandboxed repro couldn't test). Profiling scripts (`scripts/sports/profile_full_pipeline_memory.py`,
+`scripts/sports/profile_multi_date_loop_memory.py`) committed as reusable evidence/tooling, `Lifecycle: temporary` —
+delete once this issue closes.
 
 ## Update — production re-test (2026-07-13, slot 12, same day the b05f48ad fix landed)
 
