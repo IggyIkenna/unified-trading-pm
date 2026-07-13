@@ -122,5 +122,13 @@ Re-delete the resurrected ~30 empty buckets only AFTER (a) lands, else they retu
 resolved — env-split STANDS but merges into the estate-consolidation Group-B folds as ONE migration ("no double
 migrates"); consolidated Group-B buckets are env-tiered from birth. See the ruling banner in that plan. Consequence for
 (a): the long-env Group-B terraform blocks are NOT re-pointed at per-kind `-prd-` twins — they get deleted, and the
-future consolidated (folded, env-tiered) buckets get authored fresh. Rulings still needed: import-vs-unmanaged (a),
-lifecycle policy (c).
+future consolidated (folded, env-tiered) buckets get authored fresh.
+
+**Operator rulings 2026-07-13 (complete — all axes)**: (a) **terraform derived-from-yaml** — one `for_each` bucket block
+generated from cloud-providers.yaml's canonical names, existing canonical buckets imported into it, hand-written blocks
+only for genuine infra buckets; `terraform plan` becomes the drift detector. (c) **lifecycle = cold-tier move at 60d**
+(STANDARD→COLDLINE@60d replacing the untracked @14d; operator verbatim "nearlcoldline nmove after 60d" — a
+NEARLINE@60→COLDLINE ladder reading is possible, confirm before applying), encoded in the derived-from-yaml terraform
+
+- `gcs-lifecycle-policies.md` update. Execution owned by `bucket_estate_consolidation_to_sub100_2026_07_13.md` Wave 0.
+  Also ruled same day: dev/stg tiers retired (Wave 1); env-split plan unlocked + archived (superseded).

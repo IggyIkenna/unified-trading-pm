@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Bucket Isolation Model — Four-Tier Architecture
 summary:
   Four-tier GCS/S3 bucket isolation (mock / dev / stg / prd / test) resolved by UTL resolve_bucket_name(); Group A raw
-  data (env-tiered) vs Group B derived data naming, mock-tier scenario/grid routing, prod-tier IAM write-protection,
-  and GCS lifecycle expiry rules.
+  data (env-tiered) vs Group B derived data naming, mock-tier scenario/grid routing, prod-tier IAM write-protection, and
+  GCS lifecycle expiry rules.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,8 +14,21 @@ scope: [engineer, admin]
 tags: [infrastructure, bucket, canonicalisation, storage]
 related: [codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/02-data/per-asset-group-bucket-layouts.md]
 created: 2026-03-27
-authoritative_for: [four-tier bucket isolation model (mock/dev/stg/prd/test), Group A vs Group B bucket classification, mock-tier scenario/grid prefix routing]
-referenced_by: [codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/deployment-ui-environment-tiers.md, codex/09-strategy/architecture-v2/instruments-resolver-architecture.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md, plans/active/bucket_env_split_rollout_2026_06.md, plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md]
+authoritative_for:
+  [
+    four-tier bucket isolation model (mock/dev/stg/prd/test),
+    Group A vs Group B bucket classification,
+    mock-tier scenario/grid prefix routing,
+  ]
+referenced_by:
+  [
+    codex/05-infrastructure/deployment-ui-architecture.md,
+    codex/05-infrastructure/deployment-ui-environment-tiers.md,
+    codex/09-strategy/architecture-v2/instruments-resolver-architecture.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md,
+    plans/archive/2026_07/bucket_env_split_rollout_2026_06.md,
+    plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+  ]
 owner:
 last_reviewed: 2026-06-29
 code_refs:
@@ -92,7 +105,10 @@ Naming (per-AG): `{prefix}-{ag}-{env_short}-{project_id}` (e.g. `features-delta-
 Naming (cross-asset): `{prefix}-{env_short}-{project_id}` (e.g. `strategy-store-prd-central-element-323112`)
 
 > **Prior state (rolled back)**: Group B env-split was temporarily rolled back (2026-05-19) while G4 canonicalisation
-> migrations ran. Re-enabling per `bucket_env_split_rollout_2026_06.md` (in-flight 2026-06-29).
+> migrations ran. Re-enabling was re-scoped 2026-07-13 (operator ruling — single migration, no double migrates): Group B
+> gains its `-{env}-` form via the consolidation folds of
+> `plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md` (consolidated buckets env-tiered from birth);
+> `bucket_env_split_rollout_2026_06.md` is archived/superseded.
 
 ---
 

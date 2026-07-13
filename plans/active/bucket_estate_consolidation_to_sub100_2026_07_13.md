@@ -34,7 +34,7 @@ related:
     plans/active/issues/terraform_bucket_estate_drift_resurrection_2026_07_13.md,
     plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
     plans/active/issues/strategy_store_split_brain_2026_07_13.md,
-    plans/active/bucket_env_split_rollout_2026_06.md,
+    plans/archive/2026_07/bucket_env_split_rollout_2026_06.md,
     plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     plans/active/gcs_bucket_estate_cleanup_2026_07_10.md,
     plans/active/data_completion_to_100_all_ag_2026_06_21.md,
@@ -64,10 +64,14 @@ source:
 
 # Bucket estate consolidation — 241 → <100
 
-> **🟡 OPERATOR RULINGS BAKED IN (2026-07-13)**: (1) env-split STANDS but merges into the Wave-3 folds — consolidated
-> Group-B buckets env-tiered from birth, ONE migration (banner in [[bucket_env_split_rollout_2026_06]]); (2) this is a
-> HUMAN plan. **Rulings still OPEN** (Wave-0 todos below): terraform import-vs-unmanaged for canonical buckets; which
-> lifecycle policy is real (out-of-band COLDLINE@14d vs codex "not lifecycle'd" vs bucket_config 365d vs TF 90d).
+> **🟡 OPERATOR RULINGS BAKED IN (2026-07-13, all decided)**: (1) env-split STANDS but merges into the Wave-3 folds —
+> consolidated Group-B buckets env-tiered from birth, ONE migration ([[bucket_env_split_rollout_2026_06]] unlocked +
+> archived same day, superseded by this plan); (2) this is a HUMAN plan; (3) terraform = **derived-from-yaml** (one
+> `for_each` bucket block generated from cloud-providers.yaml's canonical names; hand-written blocks only for genuine
+> infra buckets; `terraform plan` becomes the drift detector); (4) lifecycle = **cold-tier move at 60d** (operator
+> verbatim "nearlcoldline nmove after 60d" — encoded as STANDARD→COLDLINE@60d replacing the untracked @14d; if a
+> NEARLINE@60→COLDLINE-later ladder was intended, say so before the W0 todo executes); (5) dev/stg tiers **retired**
+> (prd+test remain the provisioned estate).
 
 **Audit provenance (2026-07-13 session)**: authoritative 241-bucket listing + full metadata read via orchestrator-VM
 admin credential; classification cross-checked against an 845-name resolver/grep candidate probe; 5-agent research
@@ -89,19 +93,21 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       tick/instruments, the 3 dedicated DeFi `-prd` — those leave TF only in the same change that deletes the bucket,
       see W2). Until this lands: **no `terraform apply` from anyone** (each apply regrows ~30 empty buckets). Evidence
       bar — `terraform plan` shows zero bucket creates against the post-W1 estate.
-- [ ] [OPERATOR] P0. BLOCKED-OPERATOR-DECISION — rule on **import-vs-unmanaged** for the canonical `-prd-`/`-test-`
-      buckets (import = lifecycle gets a tracked home; unmanaged = applies stay harmless). Document the ruling in
-      `codex/05-infrastructure/bucket-isolation-model.md`.
+- [ ] [INFRA] P0. **RULED 2026-07-13 — terraform derived-from-yaml**: implement one `for_each` `google_storage_bucket`
+      block generated from cloud-providers.yaml's canonical (prd+test) names, import the existing canonical buckets into
+      it, keep hand-written blocks only for genuine infra buckets (deployment-scripts, state, events, …). Document the
+      model in `codex/05-infrastructure/bucket-isolation-model.md`.
 - [ ] [CONFIG] P0. **Sync the stale cloud-providers.yaml copies** to the canonical 36-kind file:
       `unified-api-contracts/unified_api_contracts/config/cloud-providers.yaml` (the packaged runtime fallback — ship
       via quickmerge, this one is a real runtime divergence for standalone installs) +
       `unified-trading-pm/configs/cloud-providers.yaml`; also reconcile
       `unified-trading-library/tests/fixtures/cloud-providers.yaml` if the kind removals changed parametrized tables
       (estate-cleanup §5b lesson — grep `rg -l '<kind>'` workspace-wide, 4 copies + shadows).
-- [ ] [OPERATOR] P0. BLOCKED-OPERATOR-DECISION — rule on the **lifecycle policy**: live estate carries out-of-band
-      STANDARD→COLDLINE@14d on 78 buckets (incl. all `-prd` tick buckets; costs retrieval on every backfill re-read
-      of >14d objects) vs codex "intentionally NOT lifecycle'd" vs bucket_config 365d vs TF 90d. Encode the ruling in
-      ONE tracked place + update `codex/05-infrastructure/gcs-lifecycle-policies.md`.
+- [ ] [INFRA] P0. **RULED 2026-07-13 — cold-tier move at 60d**: replace the untracked STANDARD→COLDLINE@14d rules with
+      STANDARD→COLDLINE@60d on the data buckets, encoded in the derived-from-yaml terraform (the ONE tracked place per
+      the ruling above) + update `codex/05-infrastructure/gcs-lifecycle-policies.md` (its "intentionally NOT
+      lifecycle'd" claim for tick buckets is superseded). Operator verbatim "nearlcoldline nmove after 60d" — if a
+      NEARLINE@60→COLDLINE-later ladder was intended instead of straight COLDLINE@60d, correct here before executing.
 - [ ] [SCRIPT] P1. **Retire the stale provisioning surfaces**: `deployment-service/scripts/setup-buckets.py` (reads
       `dependencies.yaml`'s pre-canonical scheme, emits literal `{category_lower}`) — delete or rewrite on
       `resolve_bucket_name`; fix `e2e-testing/scripts/common/setup-gcp-fixtures.sh:39-53` (provisions transposed
@@ -116,9 +122,10 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       `positions-store-test` — verify no test-mode PATH_REGISTRY caller first (the `dex-pools-test` false-positive
       precedent, estate cleanup §"false-positive caught"); `strategy-store-defi`/`strategy-store-tradfi` — delete only
       AFTER the split-brain repoint below (deployment-api defaults still reference them).
-- [ ] [OPERATOR] P1. Confirm retiring the **dev/stg tiers** as provisioned estate (20 of 21 canonical dev/stg buckets
-      are empty; sole exception `instruments-store-sports-dev` has content — inspect + migrate/drop). Resolver keeps
-      supporting the tiers; we just stop keeping empty buckets for them.
+- [x] ✅ [OPERATOR] P1. **RULED 2026-07-13 — retire BOTH dev/stg tiers** (operator answer to the audit question set; 20
+      of 21 canonical dev/stg buckets empty). Remaining action rides the W1 delete todo above; the sole content-bearing
+      exception `instruments-store-sports-dev` gets inspect + migrate/drop there. Resolver keeps supporting the tiers;
+      we just stop keeping empty buckets for them.
 
 ## Wave 2 — in-flight completions + audit-found breakages (estate ≈139 after)
 
@@ -186,10 +193,11 @@ instruments-store-prediction-test · market-data-tick-prediction-test · positio
 first) · risk-store-defi-prd · strategy-store-cefi-{dev,test} · strategy-store-defi (gated on split-brain repoint) ·
 strategy-store-defi-{dev,test} · strategy-store-tradfi (gated on split-brain repoint) · strategy-store-tradfi-{dev,test}
 
-**Empty canonical dev/stg tier (20)** — pending the dev/stg-retirement confirmation todo: execution-store-pred-{dev,stg}
-· features-pred-{dev,stg} · features-sports-{dev,stg} · instruments-store-pred-{dev,stg} · instruments-store-sports-stg
-· manual-audit-{dev,stg} · market-data-tick-pred-{dev,stg} · market-data-tick-sports-{dev,stg} · ml-configs-store-dev ·
-ml-models-store-dev · ml-predictions-store-dev · strategy-store-pred-{dev,stg}
+**Empty canonical dev/stg tier (20)** — retirement RULED 2026-07-13, delete with the rest:
+execution-store-pred-{dev,stg} · features-pred-{dev,stg} · features-sports-{dev,stg} · instruments-store-pred-{dev,stg}
+· instruments-store-sports-stg · manual-audit-{dev,stg} · market-data-tick-pred-{dev,stg} ·
+market-data-tick-sports-{dev,stg} · ml-configs-store-dev · ml-models-store-dev · ml-predictions-store-dev ·
+strategy-store-pred-{dev,stg}
 
 **Explicitly NOT in Wave 1** (empty but expected-empty or compliance-scaffolded): the 13 gap buckets created
 2026-07-12T02:39Z (writers exist, data pending — e.g. `position-store-sports-prd`, `execution-store-sports`),
