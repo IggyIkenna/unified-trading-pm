@@ -122,8 +122,17 @@ drift_direction: advance-code
       stale during Phase 0 SPEC confirmation (2026-07-13): `ml-service@00855f6` ("schema-provenance class cleared
       honestly … 4 dead TypedDicts deleted") already removed this TypedDict;
       `grep -rn "class ModelMetadata"     ml_service/` returns no hits. No action needed at Phase 3 execution time.
-- [ ] [VERIFY] P0. Golden inference-date selection fixture reproduces; writegate still blocks a partial-coverage write;
-      `quality-gates.sh` green for UTL + ml-service; quickmerge.
+- [x] ✅ [VERIFY] P0. Golden inference-date selection fixture reproduces; writegate still blocks a partial-coverage
+      write; `quality-gates.sh` green for UTL + ml-service; quickmerge. — VERIFIED (2026-07-13, slot-6): fresh-pulled
+      all repos; ran `test_golden_get_model_for_inference_date_phase0` directly — PASSED; ran UTL's
+      `TestModelRegistryWritegate` suite directly (4 tests: blocks-on-partial-coverage, full-completeness-still-
+      publishes, emits-availability-record-with-job-id, manifest-writer-failure-is-non-fatal) — all PASSED. Then ran
+      full `quality-gates.sh` on both repos: `unified-trading-library` ALL GATES PASSED (141s, sentinel
+      `7e4f9a234031164b6b4af89a2d9768e3ada8d856` = current HEAD, no code changes needed — already shipped by prior
+      slots); `ml-service` ALL GATES PASSED (101s, sentinel `35e5716caad8872522191cf86a97e5fcb44bb3b6` = current HEAD).
+      No quickmerge needed — both repos already at their fully-shipped HEAD from the prior todos' commits
+      (`unified-trading-library@7e4f9a23`, `ml-service@40f45d8`+`e007793`+`3d6fe65`-superseded); this todo was pure
+      end-to-end verification with no remaining diff to ship.
 
 ## Success criteria
 
