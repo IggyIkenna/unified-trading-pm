@@ -371,3 +371,17 @@ deployment-service governance sweep: the terraform sources for the deleted surfa
 (`deployment-service/terraform/services/features-onchain-service/gcp/` — daily workflow + job; the T1 schedulers'
 `t1_batch_scheduler.tf` scope) — a `terraform apply` of those roots would RE-CREATE the deleted surfaces; adjacent
 finding 4 above already lists them as deletion candidates.
+
+- 2026-07-13 (terraform prune + ruling completion, operator: "do this then"): (1) The backfill workflow
+  `features-onchain-service-backfill` — initially left intact — was found to be NON-FUNCTIONAL post-ruling (its YAML
+  invokes the deleted `features-onchain-service-job` by name), so it falls under the "delete everything now" ruling:
+  deleted via Cloud Build executor **623e38b9** (capture + delete + NOT_FOUND verify in the build log). (2) The PAUSED
+  `uts-prod-features-onchain-t1-schedule` scheduler (target job nonexistent — same orphan class as the deleted
+  dev/staging pair) deleted + NOT_FOUND verified. (3) TERRAFORM PRUNED — deployment-service@b13f79b: deleted
+  `terraform/services/features-onchain-service/` entirely (gcp + aws, incl. committed tfplan artifacts), removed the
+  `features-onchain` t1_batch_scheduler.tf map entry, removed `features-onchain-service` from the shared/gcp services
+  list with a dated comment mandating `terraform state rm` for the RETAINED live bucket (`features-onchain-<project>` —
+  written by the fixed lst-seasonal-rewards job) before the next shared apply. A blind `terraform apply` can no longer
+  resurrect any deleted resource. Residual noted, not in scope: stale repo-name references in peripheral
+  deployment-service scripts (bootstrap/setup lists — existence-guarded, no infra effect) and AWS shared tf (nothing
+  deleted on AWS; S3 buckets hold data).
