@@ -120,10 +120,11 @@ workspace's "SSOT contradiction / cross-repo" big-finding NOTIFY OPERATOR rule.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Decide + implement a fix for `ManifestWriter._write_unconditional`'s missing generation-check (one
-      of: bounded retry-with-reread, escalating backoff instead of unconditional-fallback, or per-writer manifest
+- [x] ✅ [BACKEND] P1. Decide + implement a fix for `ManifestWriter._write_unconditional`'s missing generation-check
+      (one of: bounded retry-with-reread, escalating backoff instead of unconditional-fallback, or per-writer manifest
       sharding — see options above) so concurrent writers cannot silently drop each other's rows. (repo:
-      unified-trading-library, file: unified_trading_library/manifest_writer/_writer_io.py)
+      unified-trading-library, file: unified_trading_library/manifest_writer/_writer_io.py) —
+      unified-trading-library@2c7f37eb
 - [ ] [SCRIPT] P2. Once fixed, audit whether OTHER asset_groups/venues show the same symptom (a manifest write logged as
       successful but the row absent on direct query) by cross-referencing recent
       `ManifestWriter: updated availability     index` log lines (Cloud Logging) against the corresponding rows' actual
@@ -144,3 +145,17 @@ workspace's "SSOT contradiction / cross-repo" big-finding NOTIFY OPERATOR rule.
   defect in the live-only-tuples fix. Filed this issue doc per CLAUDE.md's big-finding (data-correctness, cross-repo)
   NOTIFY OPERATOR rule. Did not attempt a fix — `unified-trading-library` is cross-cutting and the mitigation choice is
   an architecture call.
+- **2026-07-13 (slot-3, sonnet/high)** — Implemented the P1 fix: `_write_unconditional`
+  (`unified_trading_library/manifest_writer/_writer_io.py`) now re-reads the just-uploaded blob after every write and
+  confirms its own new rows (keyed on `date`/`venue`/`data_type`/`service_name`, the columns `_merge_dataframes` always
+  dedups on) actually survived; on a detected clobber it retries the whole read-merge-write cycle (shrinking the race
+  window each attempt) up to `_MAX_UNCONDITIONAL_WRITE_RETRIES` (5) times, and only on total exhaustion logs loudly at
+  ERROR (never the old misleading "success" INFO line) — closing the "silent" half of the bug even in the worst case.
+  Chose this (bounded retry-with-reread + verification) over extending `_MAX_GENERATION_RETRIES` further, since that
+  budget is already fleet-tuned (2026-04-22 HYPERLIQUID incident, see `_state.py` comment) and this path has no
+  generation/etag primitive to lean on regardless (used by both the GCS-fallback AND non-GCS-provider call sites). Added
+  a regression test (`test_unconditional_write_race_detected_and_retried`) that simulates the exact race — a concurrent
+  writer's upload landing immediately after ours, clobbering our row — and asserts detection + retry + survival. Full
+  `quality-gates.sh` green; shipped `unified-trading-library@2c7f37eb`. P2 (historical-loss audit) and P3 (post-fix
+  honest-coverage re-run) remain open, scoped to `instruments-service` — not attempted here (out of this task's
+  repo/role scope).
