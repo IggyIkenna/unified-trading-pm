@@ -335,3 +335,18 @@ and Phase 4 waits on Ikenna's access answer.
   enumeration also surfaced junk shards (`market_lifecycle`/`MARKET_LIFECYCLE`/`prediction_canonical_question_group` as
   MTDS data_types — IS-domain surfaces in the raw cross-product) — checker-enumeration hygiene, noted on the parent
   plan.
+
+- 2026-07-13 (post-80d5aadd proof-run — **reader fix CONFIRMED working; ROOT CAUSE #4 exposed: id-shape mismatch,
+  OPEN**): re-ran `PREDICTION:KALSHI:trades` force on a tarball carrying 80d5aadd (VM
+  `mtds-backfill-prediction-pipelinecheck-20260713-203345-23bd66`). The `no Kalshi tickers found in market_lifecycle`
+  warning is GONE — the adapter now resolves a universe and makes REAL Kalshi API calls. The next layer failed:
+  `GET /markets/trades?ticker=DOGE_UP_DOWN_DAILY` → 400 (`1/1 tickers died on transport error (CF-11)`) — the resolved
+  "ticker" is a canonical GROUP name, not a Kalshi ticker. Direct read of the backfilled parquets shows why: the
+  IS-written `market_id` column carries COMPOSITE canonical keys (`POLYMARKET:PREDICTION_MARKET:0x…` /
+  `KALSHI:PREDICTION_MARKET:…`), while the MTDS adapters expect BARE per-venue ids (bare `0x…` condition_ids, bare `KX…`
+  tickers) — `KalshiAdapter._is_kalshi_ticker` (a "not 0x-prefixed" heuristic) also mis-classifies composite POLYMARKET
+  keys as Kalshi-shaped. Same id-shape-mismatch class as the tracked bare-coin REST-venue checker finding. **Open next
+  step (Root Cause #4)**: normalize at the lifecycle-read boundary (parse the composite `VENUE:TYPE:BARE_ID` shape →
+  filter by the venue segment, feed the bare id to each adapter) — a scoped MTDS fix in
+  `base_prediction_adapter`/`KalshiAdapter`; the expected-instrument oracle's 1-instrument KALSHI universe
+  (`DOGE_UP_DOWN_DAILY`) needs the same normalization check.
