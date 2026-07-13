@@ -79,8 +79,10 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       (data_type should never be blank at write time, find where); (d) `phantom_captured_no_parquet_at_canonical_path`
       across several data_types (claims captured, no file — a storage/path-resolution mismatch). File as an issue doc if
       root cause spans multiple commits' worth of work.
-- [ ] [DATA] P0. **api_football: fix root causes + re-attempt failed cells** (not just re-run — root-cause each
-      attempted_failed class from the todo above first, ship the fix, THEN re-attempt so failures don't recur).
+- [x] [DATA] P0. **api_football: fix root causes + re-attempt failed cells** — root-cause + fix DONE
+      (`instruments-service@9ce3450e`, confirmed holding); re-attempt **in-flight, launched
+      `instruments-service@e78d424f`, verify completion later** (see Progress Log "RE-ATTEMPT dispatch" entry below for
+      the live PID/log-location/how-to-check-later detail and the 2 new adjacent findings it surfaced).
 - [ ] [DATA] P1. **api_football: resolve the 8,766 non-instruments-service rows.** Confirm whether
       `fill-missing-player-stats` is a sanctioned dedicated service_name (check its origin script/plan) or another
       instance of the service_name-drift bug class fixed today; handle the 88 `market-tick-data-service` orphans (no
@@ -1916,3 +1918,103 @@ it's new adapter work, not a data-audit residual).
   `@6e1f7972` (all promoted to `main` via `@c2d8b782` / PR #768 and `@ba09755e` / PR #769); Cloud Build `fb804b16`
   SUCCESS. Todo `[x]`'d above with this same summary; `[ ]` P1 dedup-key todo and `[ ]` P3 8-cup-leagues todo added to
   §1 for the honest remainder.
+
+- **2026-07-13 (sub-agent, RE-ATTEMPT dispatch for "api_football: fix root causes + re-attempt failed cells") —
+  live-re-verified the 3,257 baseline, shipped a bounded in-process re-attempt script (no VM needed at this volume),
+  launched it against real prod GCS, confirmed real progress, and found + avoided one dangerous latent bug plus one
+  smaller residual class.**
+
+  **(1) Live re-verify**: fresh single-parquet read of `instruments-store-sports-prd`,
+  `source=api_football & capture_status=attempted_failed` = **3,257 — unchanged**, identical breakdown to the
+  IMPLEMENTATION-dispatch entry above (INJURIES 1,946 / FIXTURES 665 / blank-`data_type` 461 / PLAYER_STATS 74 /
+  FIXTURE_STATS 46 / FIXTURE_LINEUPS 30 / TEAMS 24 / FIXTURE_EVENTS 11). Of these, **461 carry a blank `data_type`**
+  (the `process_completeness.py` shard-completeness-gate leak already fixed going-forward in `9ce3450e`) — these rows
+  have no `data_type`/`league_id` identity to re-drive against (no real cell to re-fetch), so they are explicitly OUT OF
+  SCOPE for a re-fetch mechanism; closing them needs a direct manifest cleanup/retype pass, not covered by this
+  dispatch. The remaining **2,796 rows map to a real (date, data_type[, league_id]) cell** and are what this dispatch
+  targets.
+
+  **(2) Mechanism chosen — reused two EXISTING production entry points, no new VM.** At ~2,800 cells / ~2,107 distinct
+  dates this is well within a plain in-process script's reach (matches the residual-closer precedent already shipped
+  this session for footystats/SFI/open_meteo). Grepped first for an existing "re-attempt"/"retry" script — found
+  `sports_attempted_failed_residual_closer_2026_07_13.py` (footystats/SFI/weather only, wrong source) and
+  `backfill_teams_61_leagues_2026_07_13.py` (api_football but TEAMS-gap-specific, wrong todo) — neither fit directly, so
+  a new sibling one-off was written reusing the SAME underlying orchestrator functions those scripts call:
+  - INJURIES/TEAMS/FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS (2,131 rows, 1,948 distinct dates) →
+    `instruments_service.engine.orchestrator._fetch_sports_reference_data(entities_to_fetch=<union of stale entities for that date>, manifest=<real ManifestWriter>)`
+    — confirmed via reading `sports_reference_core.py` in full that all 6 of these entities self-manifest their own
+    per-league `record_captured`/`record_failed`/`record_empty` via the module's `_AfManifestHooks` when a real manifest
+    is passed, so no extra bookkeeping was needed.
+  - FIXTURES (665 rows, 159 distinct dates, ALL per-league) → the top-level `process_instruments()` (the same function
+    the daily CLI/VM job calls), scoped to `venue_override=["API_FOOTBALL"]` + `sports_entity_filter="FIXTURES"` +
+    `league_filter=<only the leagues that failed that date>`.
+
+  **(3) CRITICAL latent bug found + avoided via smoke-testing before the real launch (would have been a genuine incident
+  if shipped blind)**: a `--limit-dates 2 --max-rounds 0` smoke test of the FIXTURES mechanism with `redo_all=True` (the
+  initial, "obviously correct" choice — matches every other backfill script's `--force` convention) triggered
+  `Per-fixture enrichment: 406 fixtures x 4 entities = 1624 calls queued` for a SINGLE date and hit the provider's rate
+  limit 10 times within 2 seconds — i.e. `redo_all=True` silently fetched the ENTIRE day's reference/enrichment data
+  across every league, not just the one stale FIXTURES cell — exactly the "blind full re-scan" this dispatch was told to
+  avoid. Root-caused by reading `process_preflight.py`/`process_enrichment.py`: `_freshness_preflight` short-circuits to
+  `missing_entities=[]` whenever `redo_all=True` (skips `_build_expected_entities` entirely, which is the ONLY place
+  `sports_entity_filter` narrows scope), and `_fetch_sports_reference_block` then reads
+  `entities_to_fetch=missing_entities if missing_entities else None` as `None` ("fetch everything") —
+  **`redo_all=True` + `sports_entity_filter=X` is a silently-broken no-op combination for stage-7 scoping in the current
+  code**, not specific to this script. Fix applied in this script: `redo_all=False` (the default) + explicit
+  `sports_entity_filter="FIXTURES"` — this routes through `_build_expected_entities`, which narrows
+  `expected=["FIXTURES"]`, and because `"FIXTURES"` is in `_SPORTS_PER_LEAGUE_ENTITIES` the per-league
+  deferred-freshness path fires unconditionally (never coarse-skipped by a different league's fresh row) while stage 7
+  receives `missing_entities=["FIXTURES"]`, which matches neither a core nor per-fixture entity name — **zero** extra
+  reference/enrichment calls. Re-tested the identical date after the fix:
+  `Per-fixture enrichment: 406 fixtures x 0 entities = 0 calls queued`, `[fixtures] processed=1 raised=0`, live-verified
+  the target row correctly flipped `attempted_failed`→`empty_confirmed`. **This bug is NOT filed as its own fix in this
+  dispatch** (out of scope — a shared-infra `process_enrichment.py`/`process_preflight.py` behavior change needs its own
+  blast-radius proof per `AUTONOMOUS_AGENT_RULES.md` rule 11) but IS a real latent trap for any future
+  `--force --sports-entity X` VM/script combination — **recommend a small dedicated follow-up P2 todo** (not added here
+  to stay within this plan's 10–20 todo budget; flagging in this entry per the "adjacent finding" triage rule so it
+  isn't lost).
+
+  **(4) Smaller residual class found during the same smoke test — a genuine, not-currently-reconcilable historical
+  artifact subset of FIXTURES.** One test cell (`J1_LEAGUE`, `2017-02-25`) did NOT get touched by either the captured or
+  empty-marker write path — traced to `process_write.py::_write_sports_fixture_venue`'s honest-coverage loop, which only
+  emits `record_empty(..., EXPECTED_NO_FIXTURE)` for an expected-but-absent league when
+  `get_league_fixture_calendar(league, date, date)` confirms the league's season covers that date (J-League's season
+  does not run in late February — this is almost certainly a correct calendar-gate decision, not a bug). Since the
+  CURRENT calendar-aware enumerator would never have generated this cell as `expected` in the first place, this row is a
+  pre-calendar-gate historical artifact that no re-fetch mechanism (this one or any future one) will ever touch — it
+  needs a direct manifest reclassify/cleanup, the same class of fix already flagged for the 461 blank-`data_type` rows
+  above. Scale unknown (not counted separately from the general FIXTURES pool); the final live-manifest tally after this
+  run completes will show the true residual count.
+
+  **(5) Launched + verified real progress (NOT waited to full completion, per dispatch scope).** Shipped
+  `instruments-service@e78d424f` (`scripts/backfill/api_football_attempted_failed_residual_closer_2026_07_13.py`, QG
+  green — `bash scripts/quality-gates.sh --no-fix` "ALL QUALITY GATES PASSED (71s)" — landed via quickmerge on
+  `live-defi-rollout`). Launched the real run in the background on this host (NOT a cloud VM — the ~2,800-cell /
+  ~2,107-date volume doesn't warrant one, matches this dispatch's own "lighter-weight in-process script" branch):
+  `nohup env GCP_PROJECT_ID=central-element-323112 PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd CLOUD_PROVIDER=gcp .venv/bin/python scripts/backfill/api_football_attempted_failed_residual_closer_2026_07_13.py --vm-name api-football-attempted-failed-residual-closer --main-conc 6 --fixtures-conc 3 --retry-conc 3 --max-rounds 4 &` +
+  `disown` (PID 10471 at launch). **Verified STARTED within 60s** (plan built + first date's `PROCESSING_STARTED` event
+  within ~15s) **and real ongoing progress**: as of this entry (~9 min after launch) 85 distinct FIXTURES dates started
+  / 82 completed of 159 total, correctly writing per-league `empty_confirmed (EXPECTED_NO_FIXTURE)` markers for
+  genuinely-empty dates (e.g. "wrote empty_confirmed markers for 5 leagues"), only 1 transient provider rate-limit hit
+  across the whole run (auto-retried by the script's own backoff, not a systemic problem), 0 crashes/`RAISED` entries.
+  The FIXTURES branch (159 dates) runs first, then the 1,948 reference-entity dates, then up to 4 retry rounds
+  re-reading the live manifest, then an explicit `flush_all_pending_buckets()` drain and a final tally. **This dispatch
+  does NOT claim full completion** — the run was still in-flight at hand-off.
+  - **How to check on it later**: (a) quickest/durable — re-read the live manifest directly
+    (`source=api_football, capture_status=attempted_failed`, excluding blank `data_type`) via a one-off script identical
+    to `_live_failed()`/`_plan()` in the shipped script, or just re-run
+    `scripts/backfill/api_football_attempted_failed_residual_closer_2026_07_13.py --dry-run` for a fresh plan/count —
+    this is the ground-truth signal regardless of whether the background process or its log file is still around. (b)
+    this-session convenience — PID 10471 (`ps -p 10471`), log at `/private/tmp/claude-501/.../scratchpad/full_run.log`
+    (this path is the AGENT SESSION's ephemeral scratchpad, not durable — do not rely on it surviving past this session;
+    use (a) for anything checked later than this same session). **Expected completion signal**: the script's own final
+    log lines — `=== ALL RE-DRIVABLE api_football CELLS RESOLVED ===` (full success) or
+    `=== MAX ROUNDS reached; residual may remain ===` followed by `FINAL TALLY: {...}` and
+    `=== FINAL api_football attempted_failed (non-blank data_type) remaining: N ===` with a per-data_type breakdown —
+    whichever prints, the manifest re-read in (a) is the authoritative number either way. If N > 0 after this settles,
+    the residual is expected to be dominated by the two out-of-mechanism classes documented above (blank-`data_type`
+    rows + pre-calendar-gate historical FIXTURES artifacts like the `J1_LEAGUE` case) rather than a re-fetch failure.
+  - **Not done in this dispatch (explicitly deferred, not silently skipped)**: (i) the 461 blank-`data_type` cleanup
+    pass, (ii) any pre-calendar-gate FIXTURES artifact cleanup, (iii) the `redo_all` + `sports_entity_filter` latent bug
+    — all three are flagged above for a follow-up rather than fixed here (out of this todo's literal scope, and (iii)
+    touches shared orchestrator infra requiring its own blast-radius proof).
