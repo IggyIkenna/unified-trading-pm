@@ -128,12 +128,15 @@ tracked here per findings-triage rather than left in agent chat output. None are
       block on a failed algorithm run (on top of the per-iteration increment at loop top), inflating the reported
       progress index in the failure log vs. the success path. Fix: drop the duplicate increment in the except branch.
       (repo: execution-service)
-- [ ] [BUGFIX] P3. execution-service: `MatchingEngineExecutionProvider._solana_amm_snapshot_fallback`
+- [x] ✅ [BUGFIX] P3. execution-service: `MatchingEngineExecutionProvider._solana_amm_snapshot_fallback`
       (`execution_service/providers/matching_engine.py`) reads `price` via `kwargs.get("price")` without popping it,
       then forwards `price=price, **kwargs` to `_benchmark_fallback` — if a caller ever passes `price` inside `kwargs`
       for this path it raises `TypeError: got multiple values for keyword argument 'price'`. Fix: use
-      `kwargs.pop("price", None)`. Pre-existing, just newly isolated into its own method by the refactor. (repo:
-      execution-service)
+      `kwargs.pop("price", None)`. Pre-existing, just newly isolated into its own method by the refactor. — DONE
+      `execution-service@df7e6ede`: `kwargs.get` → `kwargs.pop("price", None)`; added
+      `test_snapshot_fallback_price_in_kwargs_does_not_raise` (`tests/unit/providers/test_matching_engine_solana.py`)
+      reproducing the duplicate-kwarg TypeError pre-fix and asserting a clean fill post-fix. Full `quality-gates.sh`
+      green (538s, sentinel `df7e6ede`). (repo: execution-service)
 - [ ] [CLEANUP] P3. execution-service: `MatchingEngineExecutionProvider._build_solana_fill`
       (`execution_service/providers/matching_engine.py`) computes `quote = pool.quote(quantity, side)` and never uses
       the result — only `pool.apply(...)`'s `fill` feeds the rest of the flow. Pre-existing dead computation, now
