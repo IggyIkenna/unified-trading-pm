@@ -64,9 +64,13 @@ drift_direction: advance-code
         `_emit_availability_record()` (best-effort, non-fatal on failure).
   - [x] ✅ `load_model` joblib **trusted-prefix allowlist** (`_ALLOWED_JOBLIB_PREFIXES`) — kept UTL's `expected_sha256`
         integrity param too (strongest combination = both), enforced in `_deserialize_model`.
-- [ ] [AGENT] P0. **Adopt UTL's correct manifest-match** — local `get_model_metadata`/`_upsert_version` test
-      `... or training_period == ""` (`:531`,`:646`) returns the WRONG version from cache; UTL's `== training_period` is
-      correct. Consolidating onto UTL **fixes** this for ml-service.
+- [x] ✅ [AGENT] P0. **Adopt UTL's correct manifest-match — DONE.** `ml-service@3d6fe656` — fixed both bug sites
+      (`_get_metadata_from_manifest:531`, `_upsert_version:646`) from `... or training_period == ""` (never actually
+      compares the two values — returns/matches the first truthy entry regardless of the requested training_period) to
+      UTL's correct `== training_period`. Added 2 regression tests: a multi-entry manifest lookup that returns the entry
+      matching the requested period, and an upsert that inserts a new entry for an unseen period instead of overwriting
+      an unrelated one (verified fail-before/pass-after via a deliberate temporary revert). Full `tests/training/`
+      suite: 1666 passed, 2 skipped. `quality-gates.sh` green, quickmerge landed on `live-defi-rollout`.
 - [x] ✅ [AGENT] P0. **Audit the local-only escape hatches before deleting:** `CLOUD_PROVIDER=local` no-bucket guard +
       AWS S3 bucket fallback (`ml_models_s3_bucket`) + `None`-on-miss error contract. If any ml-service test or AWS
       deployment depends on them, add the equivalent local/S3 path to UTL first; else confirm `config.ml_source_bucket`
