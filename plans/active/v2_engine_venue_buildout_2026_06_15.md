@@ -20,7 +20,7 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 55.0
 estimate_calibrated_ai_days: 66.0
-last_updated: 2026-07-13
+last_updated: 2026-07-13 # split into 5 AO child plans, see Progress Log
 locked_by: live-defi-rollout
 locked_since: 2026-06-15
 supersedes:
@@ -222,7 +222,10 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     `VolTermStructureSlopeEngine` (`vol_trading/term_structure_slope.py`): directional calendar on `iv_slope_1m_3m` vs a
     reference — steeper than ref → bet flatten (BUY near / SELL far); flatter → bet steepen (inverse). Leg tests pin the
     slope-view direction + reference-feature override. **NOT registered** + matrix UNCHANGED. Tardis to backtest.
-- [ ] [SCRIPT] P2. **VOL_ARB_RV_IV** — real engine SHIPPED (wave 2). Repo: strategy-service.
+- [ ] [SCRIPT] P2. **→ SPLIT to
+      [`vol_dvol_backtestable_engines_2026_07_13.md`](vol_dvol_backtestable_engines_2026_07_13.md) 2026-07-13,
+      dispatched to AO** (bundled with VOL_CARRY). Backtest+register work no longer tracked here. **VOL_ARB_RV_IV** —
+      real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (but **DVOL-index-backtestable** — see note).
     `VolArbRvIvEngine` (`vol_trading/arb_rv_iv.py`): symmetric delta-hedged gamma on the IV−RV gap — IV<RV → long gamma
     (BUY straddle), IV>RV → short gamma (SELL), each hedged `-package_delta` (omitted on honest delta absence). Leg
@@ -236,7 +239,10 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     - hedge) when `rv_intraday - iv_term_1w ≥ entry`; emit a re-hedge leg (`-delta`) when delta drifts past
       `rehedge_delta`; close (SELL back) when the edge collapses. Leg tests pin open/rehedge/no-rehedge/close. **NOT
       registered** + matrix UNCHANGED.
-- [ ] [SCRIPT] P3. **VOL_CARRY** — real engine SHIPPED (template wave).
+- [ ] [SCRIPT] P3. **→ SPLIT to
+      [`vol_dvol_backtestable_engines_2026_07_13.md`](vol_dvol_backtestable_engines_2026_07_13.md) 2026-07-13,
+      dispatched to AO** (bundled with VOL_ARB_RV_IV — both are DVOL-index-backtestable, don't need Tardis).
+      Backtest+register work no longer tracked here. **VOL_CARRY** — real engine SHIPPED (template wave).
   - code: strategy-service@697e0641, unit-tested; **BACKTEST-PENDING** (but **DVOL-index-backtestable** — see note).
     `VolCarryEngine` (`engine/strategies/v2/vol_trading/carry.py`): harvests the volatility-risk-premium — when `iv_atm`
     exceeds realised vol (`rv`) by ≥ `entry_vrp` it **SELLS** the ATM straddle (short vol) + adds a **delta-hedge** leg
@@ -502,6 +508,33 @@ named operator credential ask. These are the engines' true predecessors.
 
 (loop handoff lands here — never a separate _\_HANDOFF.md / _\_SUMMARY.md)
 
+### 2026-07-13 — Split into 5 AO-dispatched child plans; parent stays NA/human for the remainder
+
+Reviewed remaining todos: 30 real items + 1 decommissioned across 3 tiers — 13 fully unblocked, 15 blocked on Tardis
+credentials, 2 blocked on "no backfill authorised", 2 need an operator decision before dispatch (ML model variant data
+path). Since `assigned_vm: NA` on this plan means none of it is AO-ingested today, and the unblocked chunk alone (13
+items across 5 disciplines/repos) already exceeds the AO 10-20-todos/one-plan-one-agent cap, split the unblocked Tier-1
+work into 5 small `assigned_vm: planning` child plans, each single-discipline and under the cap:
+
+- [`uac_venue_registry_completion_2026_07_13.md`](uac_venue_registry_completion_2026_07_13.md) — FX/BITFINEX/BITGET/
+  KRAKEN registry + leg-eligibility (7 todos, unified-api-contracts only).
+- [`vol_dvol_backtestable_engines_2026_07_13.md`](vol_dvol_backtestable_engines_2026_07_13.md) — VOL_CARRY +
+  VOL_ARB_RV_IV backtest+register via free DVOL history (7 todos, incl. an `[OPERATOR]` gate on historical-depth — DVOL
+  is credential-free but a bulk historical pull is still a backfill decision per this plan's own constraint).
+- [`fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md`](fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md) —
+  cryptography GHSA bump + MTDS baseline ratchet (3 todos).
+- [`vol_surface_feature_exposure_2026_07_13.md`](vol_surface_feature_exposure_2026_07_13.md) — per-strike IV grid +
+  multi-underlying vol-surface vector (6 todos, features-service + strategy-service).
+- [`l2_book_microstructure_capture_2026_07_13.md`](l2_book_microstructure_capture_2026_07_13.md) — deeper-than-L5 book
+  capture for `queue_position_*` (7 todos, market-tick-data-service + features-service + unified-api-contracts).
+
+Each child plan carries its own copy of the relevant HARD CONTRACT / canonical-naming rules (AO workers don't inherit
+parent-plan context) and cites exact file:line evidence already gathered — no further audit needed before dispatch. The
+corresponding parent-plan todos are annotated `→ SPLIT to <plan>.md`, original text struck through but preserved for
+history, NOT deleted. The Tier-2 (Tardis/backfill-blocked, 17 items) and Tier-3 (ML-model-variant, 2 items) remainder
+stays in THIS plan, `assigned_vm: NA` — do not dispatch it; it would just stall a VM agent on a gate only the operator
+can clear.
+
 ### 2026-07-13 — Plan reviewed for staleness (~4 weeks, zero forward progress since 2026-06-15); 2 edits made
 
 Operator review found this plan's `locked_by: live-defi-rollout` lock has had no commits/progress since 2026-06-15
@@ -590,11 +623,14 @@ P2).
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 
-- [ ] [REGISTRY] P2. **Add FX/BITFINEX/BITGET/KRAKEN to `VENUE_CATEGORY_MAP` + `VENUE_CAPABILITIES`; wire FX + BITFINEX
-      archetype-leg eligibility; drop the NASDAQ/NYSE `VENUE_CATEGORY_MAP` framing (false positive).** Rescoped out of
-      Phase V 2026-07-13 (was never part of the mechanical 11-venue batch). **2026-07-13 naming-mismatch verification
-      COMPLETE** (`wf_6df96698-5dc`) — F39/F42/F43's original claims were a mix of real gaps, narrower-than-claimed
-      gaps, and one outright false positive. Confirmed against
+- [ ] [REGISTRY] P2. **→ SPLIT to
+      [`uac_venue_registry_completion_2026_07_13.md`](uac_venue_registry_completion_2026_07_13.md) 2026-07-13,
+      dispatched to AO (`assigned_vm: planning`).** Work no longer tracked here — see that plan for live status.
+      Original scope retained below for history only. ~~Add FX/BITFINEX/BITGET/KRAKEN to `VENUE_CATEGORY_MAP` +
+      `VENUE_CAPABILITIES`; wire FX + BITFINEX archetype-leg eligibility; drop the NASDAQ/NYSE `VENUE_CATEGORY_MAP`
+      framing (false positive).~~ Rescoped out of Phase V 2026-07-13 (was never part of the mechanical 11-venue batch).
+      **2026-07-13 naming-mismatch verification COMPLETE** (`wf_6df96698-5dc`) — F39/F42/F43's original claims were a
+      mix of real gaps, narrower-than-claimed gaps, and one outright false positive. Confirmed against
       `unified-api-contracts/unified_api_contracts/registry/venue_constants.py` + `venue-coverage-report.md` +
       `capability-verdict-matrix.json` directly (not grep-0):
   - [ ] **FX** — REAL gap, confirmed as originally claimed. Execution adapter exists
@@ -649,21 +685,31 @@ P2).
     Repo: unified-api-contracts. Found 2026-06-15 (Phase V wiring) as F39/F42/F43; rescoped as its own follow-up
     2026-07-13; naming-mismatch verification completed 2026-07-13 (`wf_6df96698-5dc`, full evidence in that run's
     journal). This todo is now precisely scoped and buildable — no further audit needed before starting.
-- [ ] [SCRIPT] P2. **Bump cryptography fleet-wide off the GHSA-537c-gmf6-5ccf line + drop its --ignore-vuln** — the
-      2026-06-15 advisory flagged cryptography 46.0.7 (statically-linked OpenSSL). Unlike aiohttp it is NOT
-      vcrpy-deadlocked, so the PROPER fix is a floor bump + per-repo `uv lock` regen, not a permanent ignore. The ignore
-      (PM base-service.sh + base-library.sh, PM@e6c7b52c9) is the transient speed>security unblock. Repos: fleet-wide
-      (all repos declaring cryptography transitively) + remove the GHSA ignore from both base-\*.sh once bumped.
-- [ ] [SCRIPT] P3. **Ratchet DOWN the MTDS DTZ + fallback-import baselines** — after the DTZ noqa fix, MTDS is below
-      both `ruff_rule_ratchet_baseline.yaml` (32) and `no_fallback_imports_baseline.yaml` (3); re-run
+- [ ] [SCRIPT] P2. **→ SPLIT to
+      [`fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md`](fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md)
+      2026-07-13, dispatched to AO** (bundled with the baseline ratchet below). **Bump cryptography fleet-wide off the
+      GHSA-537c-gmf6-5ccf line + drop its --ignore-vuln** — the 2026-06-15 advisory flagged cryptography 46.0.7
+      (statically-linked OpenSSL). Unlike aiohttp it is NOT vcrpy-deadlocked, so the PROPER fix is a floor bump +
+      per-repo `uv lock` regen, not a permanent ignore. The ignore (PM base-service.sh + base-library.sh, PM@e6c7b52c9)
+      is the transient speed>security unblock. Repos: fleet-wide (all repos declaring cryptography transitively) +
+      remove the GHSA ignore from both base-\*.sh once bumped.
+- [ ] [SCRIPT] P3. **→ SPLIT to
+      [`fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md`](fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md)
+      2026-07-13, dispatched to AO.** **Ratchet DOWN the MTDS DTZ + fallback-import baselines** — after the DTZ noqa
+      fix, MTDS is below both `ruff_rule_ratchet_baseline.yaml` (32) and `no_fallback_imports_baseline.yaml` (3); re-run
       `--update-baseline` for market-tick-data-service. Repo: unified-trading-pm.
-- [ ] [SCRIPT] P2. **Expose a per-strike IV-by-moneyness surface feature (vol-surface grid)** — the features-service vol
-      feed exposes the surface as FLAT scalar buckets (`iv_atm`, `iv_25d_call/put`, `iv_skew_25d`, term points) — NOT a
-      per-strike IV grid. VOL*VARIANCE_SWAP / VOL_RATIO_SPREAD / VOL_SPREAD_STRUCTURES build their strips/structures
-      from the 3 canonical buckets + configured leg instruments; a denser strike ladder (a finer replication strip,
-      arbitrary-strike condors) needs a per-strike surface feature. Provenance: VOL*\* wave 2
-      (strategy-service@1a058e88). Repos: features-service (feature) + strategy-service (consume).
-- [ ] [SCRIPT] P2. **Expose a multi-underlying vol-surface feature vector (index + components / two assets)** — the flat
+- [ ] [SCRIPT] P2. **→ SPLIT to
+      [`vol_surface_feature_exposure_2026_07_13.md`](vol_surface_feature_exposure_2026_07_13.md) 2026-07-13, dispatched
+      to AO** (bundled with the multi-underlying vector below). **Expose a per-strike IV-by-moneyness surface feature
+      (vol-surface grid)** — the features-service vol feed exposes the surface as FLAT scalar buckets (`iv_atm`,
+      `iv_25d_call/put`, `iv_skew_25d`, term points) — NOT a per-strike IV grid. VOL*VARIANCE_SWAP / VOL_RATIO_SPREAD /
+      VOL_SPREAD_STRUCTURES build their strips/structures from the 3 canonical buckets + configured leg instruments; a
+      denser strike ladder (a finer replication strip, arbitrary-strike condors) needs a per-strike surface feature.
+      Provenance: VOL*\* wave 2 (strategy-service@1a058e88). Repos: features-service (feature) + strategy-service
+      (consume).
+- [ ] [SCRIPT] P2. **→ SPLIT to
+      [`vol_surface_feature_exposure_2026_07_13.md`](vol_surface_feature_exposure_2026_07_13.md) 2026-07-13, dispatched
+      to AO.** **Expose a multi-underlying vol-surface feature vector (index + components / two assets)** — the flat
       `dict[str,float]` on*tick feed exposes ONE surface per tick. VOL_DISPERSION runs a degraded single-surface
       index-only view when only `iv_atm` is present (full mode needs `index_iv_atm` +
       `component_iv_atm`/`avg_component_iv_atm`); VOL_CROSS_ASSET_SPREAD requires both `iv_atm_asset_a` +
@@ -683,13 +729,15 @@ P2).
       **BLOCKED-model-variant** for any live/backtest signal. Neither fabricates a direction from the book (honest
       absence → symmetric quote). Provenance: MM wave (Phase E1, strategy-service@257df34a). Repo: ml-service (model
       variant) → strategy-service (consume).
-- [ ] [SCRIPT] P2. **Capture a deeper-than-L5 / full-L2 order book to populate `queue_position_*` (for
-      MARKET_MAKING_QUEUE_MICROSTRUCTURE)** — `MarketMakingQueueMicrostructureEngine` (strategy-service@257df34a)
-      consumes `queue_position_bid`/`queue_position_ask` (resting size ahead at each touch) to quote/cancel by queue
-      depth, but those features are **honest-absent on the shipped L5 microstructure feed** (`queue_position` registered
-      live_capable=False + batch_capable=False in UAC `data_type_capability.py`, Phase D part (a) — they need a
-      deeper-than-L5 / full-L2 book capture). The engine degrades honestly (no quote when absent). Unblock = a deeper
-      book data_type (L10/full-L2) wired through MTDS `compute_book_microstructure` → features-service
-      `extract_book_microstructure_feature_dict()`. **BLOCKED-DATA**. Provenance: MM wave (Phase E1,
+- [ ] [SCRIPT] P2. **→ SPLIT to
+      [`l2_book_microstructure_capture_2026_07_13.md`](l2_book_microstructure_capture_2026_07_13.md) 2026-07-13,
+      dispatched to AO.** Work no longer tracked here. **Capture a deeper-than-L5 / full-L2 order book to populate
+      `queue_position_*` (for MARKET_MAKING_QUEUE_MICROSTRUCTURE)** — `MarketMakingQueueMicrostructureEngine`
+      (strategy-service@257df34a) consumes `queue_position_bid`/`queue_position_ask` (resting size ahead at each touch)
+      to quote/cancel by queue depth, but those features are **honest-absent on the shipped L5 microstructure feed**
+      (`queue_position` registered live_capable=False + batch_capable=False in UAC `data_type_capability.py`, Phase D
+      part (a) — they need a deeper-than-L5 / full-L2 book capture). The engine degrades honestly (no quote when
+      absent). Unblock = a deeper book data_type (L10/full-L2) wired through MTDS `compute_book_microstructure` →
+      features-service `extract_book_microstructure_feature_dict()`. **BLOCKED-DATA**. Provenance: MM wave (Phase E1,
       strategy-service@257df34a). Repos: market-tick-data-service (capture + derive) + features-service (expose) +
       unified-api-contracts (data_type live_capable flip) → strategy-service (already consuming).
