@@ -5,7 +5,7 @@ summary: >
   quality-gates.sh CODEX COMPLIANCE fails with 3 violations, all in
   market_tick_data_service/engine/orchestrator/sentinels.py, none touched by this session's work — blocks quickmerge
   --agent for any unrelated commit in this repo until fixed.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi, tradfi, sports]
 stage: [data]
@@ -28,7 +28,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-13
 locked_by:
-resolved_by:
+resolved_by: cicd escalation agt-60198c (slot 8)
 ---
 
 # market-tick-data-service quality-gates.sh RED — sentinels.py
@@ -71,9 +71,29 @@ session's task.
    Tier-3/HYPERLIQUID-specific sentinel logic added by `29db8440`, or another natural seam) rather than an arbitrary
    split.
 
+## Resolution
+
+Fixed by commit `a813711b` ("refactor(mtds): restore sentinels.py under the 900-line cap + fix QG regressions from
+`29db8440`"), already on `origin/live-defi-rollout` by the time this cicd escalation (`agt-60198c`, repo-blocker
+`RB-6bb961b5`) picked up the wall:
+
+- The in-function import at `sentinels.py:680` (`from unified_trading_library import get_project_id`) is gone — the
+  function using it moved to `market_tick_data_service/engine/orchestrator/preflight.py`, where the import is now at
+  module top-level (`preflight.py:32`).
+- `sentinels.py` is now 866 lines (under the 900-line cap). All remaining in-function imports in the file carry a
+  justified `# noqa: imports-inside-functions` (lazy DeFi-only / registry-gated paths).
+- Confirmed via the `quality-gates-v2` GH Actions run on `live-defi-rollout`
+  (https://github.com/IggyIkenna/market-tick-data-service/actions/runs/29282507172, head `80d5aadd8`, an ancestor chain
+  including `a813711b`): `content sentinel`, `QG slice (typecheck)`, `QG slice (tests)`, and `QG slice (lint-codex)` all
+  `success`; aggregator `quality-gates-v2` job `conclusion: success`.
+- Repo-blocker `RB-6bb961b5` already showed zero open entries for `market-tick-data-service` in `/api/repo-blockers` by
+  the time this escalation verified the fix (auto-resolved by the backend's `RepoHealthWatcher` polling the green
+  state).
+
 ## Todos
 
-- [ ] [SCRIPT] P1. Fix the in-function import at `sentinels.py:680` (move to top-level or justified noqa). (repo:
-      market-tick-data-service)
-- [ ] [SCRIPT] P1. Split `sentinels.py` below the 900-line cap; re-run `quality-gates.sh` to confirm CODEX COMPLIANCE is
-      green (0 violations, not just these 2 fixed) and no regression elsewhere. (repo: market-tick-data-service)
+- [x] [SCRIPT] P1. Fix the in-function import at `sentinels.py:680` (move to top-level or justified noqa). (repo:
+      market-tick-data-service) — ✅ market-tick-data-service@a813711b
+- [x] [SCRIPT] P1. Split `sentinels.py` below the 900-line cap; re-run `quality-gates.sh` to confirm CODEX COMPLIANCE is
+      green (0 violations, not just these 2 fixed) and no regression elsewhere. (repo: market-tick-data-service) — ✅
+      confirmed via quality-gates-v2 run 29282507172 (success)
