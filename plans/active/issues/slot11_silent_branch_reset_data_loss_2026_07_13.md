@@ -79,6 +79,39 @@ uncommitted-to-origin work" the same as "diverged" and "repairs" it via a destru
 documented non-destructive path (which would refuse to FF and leave the commits alone, or quarantine the clone for a
 human to look at).
 
+## UPDATE (same session, ~40 min later) — recurring, accelerating, targets T0-shared-lib repos specifically
+
+The reset struck **again** on the exact same 2 repos, 3 times total for unified-api-contracts, 2 for
+unified-trading-library, **zero** times for the other 4 repos I touched in the same session (strategy-service,
+execution-service, system-integration-tests, unified-trading-pm):
+
+```
+unified-api-contracts reflog (--date=iso):
+  Reset #1: 2026-07-13 11:36:06
+  Reset #2: 2026-07-13 12:01:07   (24m 61s after #1 — looked periodic)
+  Reset #3: 2026-07-13 12:10:22   (9m 15s after #2 — NOT periodic; breaks the 25-min theory)
+
+unified-trading-library reflog:
+  Reset #1: 2026-07-13 11:36:08
+  Reset #2: 2026-07-13 12:01:09   (25m 1s after #1 — matches UAC #1→#2 almost exactly)
+```
+
+Both repos' reset #1→#2 gap is ~25 minutes (suspiciously matching the documented 25-min stale-slot heartbeat threshold
+from `worker.md` — "The server flags you stale after 25 min with no ping" — though I was sending regular heartbeats
+throughout, so if this IS the same watchdog it must be tracking staleness per-REPO, not per-slot). But UAC's #2→#3 gap
+(9m 15s) breaks a clean fixed-period theory.
+
+**Working theory**: `unified-api-contracts` and `unified-trading-library` are the workspace's two canonical T0
+shared-dependency repos (schemas + events — see CLAUDE.md "System map": `schemas→UAC`, `events→UTL`) — every other repo
+in the fleet holds a path-dep / `--reference` clone pointing at them. A plausible culprit is a fleet-wide "keep T0 deps
+in sync" background job that force-syncs these two specific repos to origin on some (possibly load- dependent, hence
+irregular) interval, independent of any given slot's activity — which would explain why ONLY these 2 of 7 touched repos
+are hit, repeatedly, at irregular intervals, regardless of my own heartbeat cadence.
+
+**Mitigation applied this session**: raced each repo through QG + `quickmerge` as fast as possible after each recovery
+to minimize the unpushed-commit exposure window; UTL shipped successfully at commit `ff387620` (safe on origin now). UAC
+has been recovered a 3rd time (`ac361e26`) and is mid-race as of this update.
+
 ## Recommended decision
 
 Operator/main to investigate what actually issued the two `Reset to origin/live-defi-rollout` reflog entries (likely
@@ -101,3 +134,7 @@ operator visibility unless the affected agent happens to notice (as I did here),
 - [ ] [VERIFY] P1. Audit other active slots for the same reflog signature ("Reset to origin/<branch>" with a discarded
       commit reachable only via reflog) to see how widespread this already is / has been. (repo: unified-trading-pm — a
       fleet-wide grep script)
+- [ ] [INFRA] P0. Check specifically for a "keep T0 shared-dep repos in sync" fleet job/cron targeting
+      unified-api-contracts + unified-trading-library specifically (see UPDATE section — 3 hits on UAC, 2 on UTL, 0 on 4
+      sibling repos touched in the same session) — if found, it MUST check for local-commits-ahead-of-origin before
+      resetting, same fix as the other INFRA todos above. (repo: whichever owns fleet T0-sync tooling)
