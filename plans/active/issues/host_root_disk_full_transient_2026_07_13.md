@@ -25,7 +25,6 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.4
 assigned_role: infra
 drift_direction: advance-code
-author: slot-10 (backend-engineer)
 resolved_by:
 locked_by:
 source: [unified_trading_api_pip_audit_stale_ignore_list-001 -- observed while shipping the dependency fix]
