@@ -166,6 +166,33 @@ locked_since: 2026-05-20
 > correction below. Corrected per plan-reconciliation findings 166/170,
 > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 
+> **🟢 [2026-07-13] CONSOLIDATION EXECUTED — the "2 themed survivors" claim is now TRUE.** Per operator ruling
+> 2026-07-13 ("Approve all + unlock", `plans/active/mtds_consolidation_foldin_mapping_2026_07_12.md`), the 2026-07-12
+> correction above is resolved: **9 plans FOLDED into M-1 and archived** —
+> `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`, `data_source_provenance_all_asset_groups_2026_06_01`,
+> `macro_econ_adapter_scaffolds_2026_06_09`, `cefi_manifest_canonicalisation_2026_06_01`,
+> `tradfi_manifest_canonicalisation_2026_06_01`, `prediction_manifest_canonicalisation_2026_06_01`,
+> `downstream_services_manifest_canonicalisation_2026_06_01`, `defi_manifest_canonicalisation_2026_06_01` (its own
+> judgment-call, ruled FOLD → M-1), and `bar_edge_left_vs_right_remediation_2026_06_08` — all 130 open todos migrated
+> verbatim into M-1's new "Folded-in scope 2026-07-13" section, each source plan SUPERSEDED-banner'd + `git mv`'d to
+> `plans/archive/2026_07/`. **1 plan credited into M-2**: `mdps_polars_engine_cost_sharpening_2026_06_28` (already
+> complete) folded its completion credit into M-2's Progress Log, archived. **4 plan-hygiene-debt plans
+> simple-archived** (0 open todos, nothing to fold): `mdps_book_microstructure_precompute_columns_2026_06_28`,
+> `mdps_features_full_month_benchmark_binance_2026_06_28`, `tradfi_mdps_passthrough_dependency_gap_2026_06_28`, and
+> `solana_defi_legacy_migration_2026_05_27` (frontmatter `status` corrected from stale `active` → `complete`, unlocked).
+> **2 plans KEPT, not folded**: `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` stays standalone (P0
+> prerequisite-gate for the per-AG canonicalisation walks now folded into M-1 — folding a gate INTO what it gates is an
+> unusual shape; operator overrode the seed mapping's proposed fold) and `sports_manifest_canonicalisation_2026_06_01`
+> stays an `mtds_mdps_master` child per prior operator ruling (175/142/146).
+> `mdps_features_reduced_artifact_tracker_2026_06_28` is KEPT as the live cross-epic tracker for the other 5
+> (non-archived) mini-plans. **Post-fold roster under this epic**: 2 survivors (M-1
+> `data_completion_to_100_all_ag_2026_06_21`, M-2 `mtds_file_size_refactor_2026_06_08`) +
+> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` (standalone prerequisite) +
+> `sports_manifest_canonicalisation_2026_06_01` (delegated vertical) +
+> `mdps_features_reduced_artifact_tracker_2026_06_28` (cross-epic tracker) — no orphaned `parent_epic: mtds_mdps_master`
+> plans remain outside this set. See `plans/active/mtds_consolidation_foldin_mapping_2026_07_12.md` for the full
+> mapping + execution shas.
+
 > **Operator directive 2026-05-20 round 5**: "EVERYTHING needs to be in writing contained within PM active plans which
 > can reference issues and audits, but I should be able to go to an orchestrator with the problem and use ALL the PM
 > active plans and their references to solve."
