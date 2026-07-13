@@ -56,7 +56,7 @@ thinking_tier: medium
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-last_updated: 2026-07-09
+last_updated: 2026-07-13
 supersedes:
 superseded_by:
 depends_on:
@@ -1181,3 +1181,81 @@ lands, per this doc's own no-fire-and-forget discipline.
 BYBIT (697)/KRAKEN-FUTURES (308 PERPETUAL + 31 FUTURE)/DERIBIT (6,857) old-format catalog rows. That still needs
 `scripts/cefi_durability_force_converge_2026_07_10.py` (written by `wf_860fb2ae-54e`, confirmed still UNTRACKED/never
 committed or run against the live corpus per its own verification pass) to actually execute. Picking that up next.
+
+**UPDATE 2026-07-10/12 — CeFi catalog durability (`--quarantine-backups` + `--fix-by-date`) completed, clean.**
+`cefi_durability_force_converge_2026_07_10.py` committed and run to completion against the real BYBIT/KRAKEN-FUTURES/
+DERIBIT corpus: stray inline `.bak.parquet` files quarantined out of the walked tree (no longer pollute
+`build_instrument_catalogue.py`'s `_iter_by_date_snapshots`); `instrument_key`/`margin_type` re-derived and verified
+durable across a real regen cycle. Along the way, found a real, separate bug: ~2,600 historical DERIBIT files had
+`expiry` frozen at a stale last-observed/capture date instead of the instrument's real expiry, causing distinct options
+to collide when re-deriving keys — root-caused, the DUP-GUARD-visible collision case was fixed via `_re_derive_row`'s
+DERIBIT-specific override (prefer raw_symbol's own regex-parsed date over the stored column for KEY derivation only —
+this part was and remains correct), and the CeFi durability job itself completed clean.
+
+**UPDATE 2026-07-12 — the underlying `expiry` METADATA COLUMN (not just instrument_key derivation) was still
+historically wrong, and the first fix attempt at it made things WORSE. Full honest history, in order:**
+
+1. **The gap**: fixing `instrument_key` collisions (2026-07-10, above) never touched the stored `expiry` COLUMN itself —
+   only instrument_key's internal derivation. Operator asked directly whether the historically-incorrect files were
+   actually migrated; answer was no, confirmed via direct GCS reads.
+2. **Design 1 — `--fix-frozen-expiry` (REMOVED same-day) — corrupted 35,410 previously-correct rows.** Detected DERIBIT
+   rows where 2+ distinct `raw_symbol`s collided on one stored `expiry` within a (base, quote, margin, strike, right)
+   group, and "corrected" them to a naive `raw_symbol` regex parse. Wrong on two independent counts, both confirmed via
+   real Tardis ground truth (free `GET /v1/exchanges/{exchange}`, no-auth): (a) a shared stored expiry across 2 distinct
+   real instruments can be a genuine, correct coincidence — Deribit really does delist multiple option series on the
+   same real day — not automatically a bug; (b) even where a correction WAS needed, the naive regex-parsed date matched
+   real ground truth in only ~3-8% of sampled cases across all 3 venues, while the ALREADY-STORED value matched in
+   94-97% of cases. Ran to completion, verified clean at the time (2,620 files, 35,555 rows) — the verification itself
+   was flawed, not just the fix; a later re-scan + before/after/ground-truth comparison confirmed the true damage:
+   **35,410 rows corrupted (backup was correct, the fix broke it), only 209 genuinely fixed, across 2,620 DERIBIT
+   files.** Reported to the operator plainly as soon as confirmed, not glossed over.
+3. **Operator ruling, mid-investigation**: "huobi and bitspamps related stuff shoudl be entirely removed from
+   everything" — resolved the separate, already-escalated HUOBI/BITSTAMP/HTX SSOT contradiction as Option B (full
+   removal). See [[huobi_bitstamp_htx_ssot_contradiction_2026_07_10]] for that thread — unrelated to expiry, handled in
+   parallel, not further detailed here.
+4. **Design 2 — availableTo as ground-truth correction target (same day, discarded before shipping).** Investigated
+   using Tardis's `availableTo` field directly as the correction target instead of a regex parse. Discarded after a
+   direct live-data check: `availableTo` legitimately differs from the canonical symbol-encoded date by ~1 day for many
+   still-recently-active instruments (e.g. `BTC-26JUN26` parses/stores expiry `2026-06-26`, matching the symbol exactly;
+   Tardis's `availableTo` for the same instrument is `2026-06-27` — a data-collection artifact in when Tardis marks an
+   instrument's last-observed day, not a settlement-time signal). Treating it as ground truth would have rewritten
+   hundreds of thousands of already-correct rows the same way design 1 did, just via a different wrong target.
+5. **Design 3 — canonical symbol-parse, availableTo as non-blocking telemetry only (operator ruling, final, shipped).**
+   Operator: "savaiable to is a safeguard but the symbol parsing is canonical... if >2 days difference... considered a
+   shard failure." First implementation of this ruling gated the write on that 2-day threshold (skip the WHOLE file on
+   any anomaly) — a 40-file DERIBIT sample showed this was too aggressive: 100% of anomalies (215/215) were
+   one-directional early-delisting (illiquid options delisted before their scheduled nominal expiry — routine Deribit
+   behavior, not corruption), and file-level skip at DERIBIT's real anomaly-per-file rate would have discarded
+   corrections for 67% of files (3,602/5,347) to guard against a pattern that wasn't actually dangerous. Operator:
+   early-delist is expected, don't block; keep per-file granularity, just fix everything — the gap check became
+   non-blocking telemetry only (still logged for post-hoc visibility, never gates the write).
+6. **Pre-ship adversarial review (Workflow, 3 independent lenses + verify pass) caught 4 real, confirmed defects before
+   this touched the corpus at its real 7.2M-row scale**: (a) **blocker** — the duplicate-introduction guard compared an
+   aggregate `.duplicated().sum()` count before/after instead of the actual collision SET, meaning a resolve+introduce
+   pair in the same file could net to the same count and silently pass, merging two previously-distinct real instruments
+   onto one key; fixed with a proper set-based check (`_would_introduce_new_collision`), applied to both this flag and
+   the pre-existing `--fix-by-date` path, which had the identical latent flaw; (b) the one-time Tardis telemetry fetch
+   had no exception handling, so a transient network hiccup could abort the whole run before later venues even started —
+   fixed with a try/except that degrades to empty telemetry (correction logic never depended on it anyway); (c)/(d)
+   `_fix_frame`'s full-file instrument_key/margin_type re-derivation was applied to every derivative row in a touched
+   file, not just the ones this flag corrected — under-reporting the real blast radius and contradicting the flag's own
+   "Independent of --fix-by-date" framing; scoped the re-derivation to exactly the corrected rows only, making both the
+   flag's documented scope and its reported stats accurate.
+7. **Shipped**: `instruments-service@11064f6e1e0cd4597eac95efd3aa3abb1926b94c` (`--fix-expiry-canonical`, supersedes and
+   removes both `--fix-frozen-expiry` and the undiscarded availableTo-ground-truth code).
+8. **Real production run, `--apply --workers 32`**: BYBIT 48,956 rows / KRAKEN-FUTURES 68,870 rows / DERIBIT ~7,087,732
+   rows corrected (~7.2M total, the majority being DERIBIT rows where historical capture had stored `available_to`
+   instead of the canonical symbol-derived date — this balloons the true scope far beyond the original ~35K-row
+   estimate, but is the same systematic root cause, just previously invisible without ground-truth comparison at
+   full-corpus scale). 5 DERIBIT files hit a transient local connection error mid-upload
+   (`ConnectionError: Can't assign requested address` — ephemeral port exhaustion under sustained 32-way concurrency,
+   not a logic bug); retried individually — 4 applied cleanly, 1 showed zero remaining corrections on retry (its
+   original write likely already succeeded despite the raised exception).
+9. **Final verification — a fresh, independent full-corpus dry-run confirms 0 remaining corrections and 0 errors across
+   all 3 venues.** Production is durably converged for this bug as of 2026-07-13.
+
+**Net honest assessment**: this was a real production-data mistake (design 1, 35,410 rows) inside a legitimate
+investigation, caught by the same investigation continuing rather than stopping at the first "done," and corrected by
+the SAME final fix that resolved the original gap — no separate revert step was needed, since a ground-truth-driven
+corrector self-corrects both the original bug and its own earlier bad fix in one pass, driven by absolute correctness
+rather than a relative before/after diff.

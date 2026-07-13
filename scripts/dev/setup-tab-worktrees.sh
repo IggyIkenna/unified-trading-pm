@@ -312,6 +312,17 @@ ensure_repo_worktree() {
         log "  SKIP ${repo} (no sibling clone at ${sibling})"
         return 0
     fi
+    # ── Protect the sibling BASE from pruning objects slot clones reference ────
+    # A slot is `git clone --reference "${sibling}"`, so it reads the sibling's object
+    # store via objects/info/alternates. The sibling's DEFAULT auto-gc (gc.pruneExpire
+    # = 2.weeks.ago) has NO knowledge of slot refs, so it can DELETE an object a slot's
+    # stale ref/reflog still points at → that slot's `git fsck` FAILS ("invalid sha1
+    # pointer" / "invalid reflog entry") and the VM git-health guard alerts (2026-07-13:
+    # deployment-api + instruments-service both hit this — git's documented --reference
+    # hazard). gc.pruneExpire=never keeps auto-gc's repack (perf) but never removes
+    # objects. Idempotent — asserted on every ensure, before the slot-exists early-return.
+    # SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Reference-clone prune hazard".
+    git -C "${sibling}" config gc.pruneExpire never 2>/dev/null || true
     # ── Path-B provisioning (2026-06-08) ──────────────────────────────────────
     # Each slot is a per-slot `git clone --reference <sibling> <url>` with its OWN .git
     # (no ref races), shared object store via --reference (no disk blowup), checked out
