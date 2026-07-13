@@ -368,6 +368,19 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- 2026-07-13 — **LOCAL VERIFY of the live stack → found + fixed 2 real bugs in the shipped #4 endpoint.** Ran
+  deployment-api on :8010 (live GCS) + deployment-ui on :5196 (proxy). The Consolidators tab renders the real estate
+  correctly (25 cards, pipeline groups, per-card run-summaries, gas-fees "not reporting", 0 console errors — screenshot
+  captured). Two bugs surfaced (both in prod's `deployment-api@022bfebc`): (1) `_read_latest_run` **500'd on a missing
+  `latest.json`** — the provider `NotFound` (404) isn't an `OSError` so it escaped the catch → fixed with a
+  `get_blob_metadata` existence check first; (2) `_authoritative_verdict` trusted the **per-CYCLE**
+  `run_verdict='empty'` (a no-op cycle reports empty even on a fully-populated index) → 5M-row consolidators showed
+  "empty" and idle buckets showed "fired_but_empty" → fixed by reconciling against the real `index_row_count`.
+  Verified-live distribution after the fix: **14 produced / 10 empty / 1 stale_output** (market-data-defi, 8 shards
+  waiting), 24 reporting + gas-fees not-reporting. — `deployment-api@ce9f5fba` + updated unit tests. (NOTE: the deployed
+  prod deployment-api SERVICE carries these 2 bugs until its own service redeploy — a separate deferred deploy; the
+  local stack the operator views has the fix.)
+
 - 2026-07-13 — **ESTATE REDEPLOY DONE — `latest.json` live in prod across the 24 running consolidators (operator
   un-deferred).** Corrected the operator's mental model first (a green LDR→main does NOT auto-run in the jobs: MTDS pins
   the UTL base image by digest, and Cloud Run JOBS pin the image digest at deploy time — codex `ci-cd-flow.md` "Image

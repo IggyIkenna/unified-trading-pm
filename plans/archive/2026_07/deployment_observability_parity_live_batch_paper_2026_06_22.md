@@ -6,7 +6,7 @@ summary: >-
   batch/live/paper umbrellas × GCP/AWS, reusing existing surfaces (deployment-ui VM-deployments/Monitor/VM-
   events/alerts, VM_PREFIX_TO_BUCKET lifecycle_class classification, durable GCS-tee logs) rather than rebuilding. Each
   unit classifies to exactly one umbrella × cloud × service × asset_group.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,8 +31,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 16
 estimate_calibrated_ai_days: 13
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-22
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -41,6 +41,11 @@ drift_direction: advance-code
 ---
 
 # Deployment Observability Parity — live / batch / paper × GCP / AWS
+
+> **✅ ARCHIVED 2026-07-13 — COMPLETE.** All Phase 0-6 todos shipped (parity #1-#6, incl. the daily deployment-estate
+> digest via the log_event → Pub/Sub → ni-service relay). Codex aligned — this plan created
+> `codex/05-infrastructure/deployment-observability.md` and the digest was added to its Slack-parity section on
+> archival. Lock cleared with operator authorization (`[unlock-plan]`). Frozen record.
 
 > **Operator intent (2026-06-22)**: "CI/CD observability across Slack + deployment-ui is already great for the `/repos`
 > page — bring **live, batch, and paper deployments** to the SAME grade, where **every VM or Cloud Run job is tracked

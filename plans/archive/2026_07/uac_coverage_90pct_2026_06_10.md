@@ -3,7 +3,7 @@ doc_type: plan
 title: UAC quality-gates coverage → 90% (stub omit + logic tests + branch coverage)
 summary:
   Raise UAC test coverage to 90% by expanding stub omit exclusions, adding logic tests, and covering branch edge-cases.
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -20,9 +20,9 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
-last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+last_updated: 2026-07-13
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -144,7 +144,11 @@ additional action needed.
 
 - [x] ✅ [DOCS] P2. Updated `codex/06-coding-standards/quality-gates.md` § "Coverage by repo type" with UAC 90% combined
       target + omit rationale — `unified-trading-pm`
-- [ ] [QG] P2. Run PM `bash scripts/quality-gates.sh` to confirm plan flip and codex update pass — `unified-trading-pm`
+- [x] ✅ [QG] P2. **CLOSED-SUPERSEDED (2026-07-13)** — not run: moot per the supersession banner above. Independently
+      re-verified live: `codex/06-coding-standards/quality-gates.md:505-507` already documents the 90→94 raise + 94.62%
+      actual, and `unified-api-contracts/pyproject.toml:364` already has `fail_under = 94` (not 90). Both landed via the
+      untracked Phase 5 work, so there is no "plan flip + codex update" left for THIS plan to confirm —
+      `unified-trading-pm`
 
 ## Temporary states + their canonical follow-up plans
 

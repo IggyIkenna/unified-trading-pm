@@ -33,9 +33,10 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
-last_updated: 2026-05-22
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+last_updated: 2026-07-13
+archived: 2026-07-13
+locked_by:
+locked_since:
 supersedes: work_split_2026_05_20_ikenna.md
 superseded_by:
 depends_on:
@@ -43,6 +44,26 @@ source:
 assigned_role: infra-engineer
 drift_direction: advance-code
 ---
+
+> **🟢 ARCHIVED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13: "Yes, unlock + archive").** This work-split
+> dispatch snapshot is fully historical: every plan it dispatched work against (all `related:`-listed + body-cited plans
+> — `aws_cloud_toggle_and_backfill_parity`, `aws_migration_defi_first`,
+> `instruments/mtds/mdps/features_backfill_ phase3`, `strategy_execution_contract_remediation`, `batch_live_symmetry`,
+> `promote_workflow_may23_cli_path`, `cme_polymarket_arb`, `config_grid_archetype_extend`, `d8_perf_upgrade`,
+> `kalshi_api_migration_to_elections_subdomain`, `manifest_schema_final_gate`, `alerting_service_live_rules`,
+> `bucket_name_ssot_canonicalisation`, `data_status_coverage_gaps_and_prediction_manifest_fix`,
+> `codex_plan_audit_differential`) is independently archived with `status: complete`. A 2026-07-13 verification re-audit
+> of the "remaining work" bullets this doc left dangling per-slot confirmed no distinct successor is needed:
+> genuinely-open threads already have a live owner — `predictions_other_bucket_and_ui_drilldown_2026_06_20.md` (UI
+> drill-down playwright verify, canonical-group backfill remainder, prediction sentinel fan-out) and
+> `plans/epics/manifest_master.md` (one stale unchecked prediction bucket-naming checkbox, functionally superseded by
+> the 2026-07-13 legacy-bucket decommission but never flipped). Two NEW findings surfaced during that re-audit —
+> unrelated to this doc's own tracked scope — were filed separately:
+> [`kalshi_live_capture_regression_and_drift_2026_07_13.md`](../active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md)
+> (a live regression re-reintroducing the pre-migration Kalshi host into e2e-testing, plus possible stalled prediction
+> tick capture). No codex SSOT required updating — the single-VM pivot this doc's own 2026-07-12 annotation describes is
+> already codified in `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. Unlocked via operator
+> grant 2026-07-13 (was `locked_by: live-defi-rollout`). Do not dispatch further work from this doc.
 
 # Ikenna work-split 2026-05-22 (8-hour autonomous run)
 

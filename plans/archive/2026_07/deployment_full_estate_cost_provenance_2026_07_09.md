@@ -14,7 +14,7 @@ summary:
   and audit for completeness so nothing billable-and-running (even under credits) is invisible. Motivated by a live diff
   finding 3 running GCE VMs invisible in the cockpit today (incl. a 16-day-old zombie-watchdog). Builds on the census +
   composite-health plan (deployment_obs_backend_kinds_health_2026_07_09).
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -48,6 +48,10 @@ source: deployment_observability_expansion_2026_07_08.md
 ---
 
 # Full-estate deployment visibility — unmanaged VMs, launched-by provenance, leaked-resource + cost catch
+
+> **✅ ARCHIVED 2026-07-13 — COMPLETE.** Every todo shipped. Codex aligned (`launched_by`/`control-plane` provenance in
+> `codex/05-infrastructure/deployment-observability.md`). The one DEFERRED item (`managed_by_label`, a launcher-label
+> echo) is migrated to `plans/active/issues/managed_by_label_launcher_standardization_2026_07_13.md`. Frozen record.
 
 > **LOCAL / human plan** (`assigned_vm: NA`, `execution_scope: local-only` — NOT AO-dispatched, never ingested).
 > Executed **interactively in this slot**. Builds directly on the census + composite-health backend plan

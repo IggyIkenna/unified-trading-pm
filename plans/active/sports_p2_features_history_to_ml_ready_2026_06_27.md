@@ -117,6 +117,78 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 11 (Todo 3 re-dispatch — fast re-verify, fleet still healthy, ~37.5% done, no new action)
+
+Fast re-verify only via non-snap gcloud (`ikenna@odum-research.com`, `central-element-323112`):
+
+- Features bucket unique-date count: **1,579** (up from 1,560 at slot-9's last check) — steady forward movement, all 10
+  `fss-backfill-vm-{1..10}` `RUNNING`.
+- Tailed `fss-backfill-vm-4`'s `run.log` (the shard slot-6 found OOM-killed on 2018-06-17): now wall-clock-fresh
+  (`10:08:57` vs check time `10:14:16`), actively processing 2018-06-18 — genuinely alive, not hung. Confirmed
+  `day=2018-06-17` is still absent from the features bucket, as expected (this slot's earlier relaunch excluded that
+  poison date per the still-open profiling todo in
+  [`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)).
+
+Gate ("features manifest clean over history") remains structurally unmet — compute is genuinely still mid-run (~37.5% of
+~4,210 days), consistent with every prior check. No new finding, nothing for `data_engineering` craft to act on.
+Checkbox NOT flipped. Not filing a new BLK. `/skip-current-task` taken.
+
+**Handoff unchanged**: watch the bucket date count climb toward ~4,210; once all 10 VMs report `EXIT_STATUS=0` (or the
+count approaches full span) AND the 2018-06-17 memory-bug fix lands + is force-recomputed, re-run
+`check_pipeline_completeness.py` (Todo 2) then reassess Todo 1 + Todo 3 for real.
+
+### 2026-07-13 — slot 6 (Todo 1/3 dispatch — found + partially fixed 2 dead shards; NEW finding: reproducible unbounded-memory OOM on date 2018-06-17, filed as its own issue)
+
+**Todo 1 (compute features 2015→present) — took concrete action this dispatch instead of pure re-verify. Todo 3 still
+BLOCKED-PREREQ (gate unmet). Checkboxes NOT flipped.**
+
+Started from a fast re-verify (bucket 1,559 dates, all 10 `fss-backfill-vm-{1..10}` `RUNNING`) but went one level deeper
+than log-mtime freshness per this plan's own precedent (slot-9's stdin-siphon root-cause) — checked EVERY VM's last-log
+timestamp against wall clock, not just `RUNNING` status:
+
+- 8/10 VMs (`vm-1,2,3,6,7,8,9,10`) confirmed genuinely live via fresh (<30s) log lines.
+- **`fss-backfill-vm-4`** (gap-fill shard, range 2018-06-17→2019-08-11): last log line 20 min stale. SSH'd in — `ps aux`
+  showed NO `features_service` process, load avg 0.00. `dmesg` confirmed **OOM-killed**:
+  `Out of memory: Killed process 5516 (features-servic) total-vm:20589072kB, anon-rss:15701340kB` (e2-standard-4, 16GB)
+  after completing only 1 of 421 assigned dates (2018-06-17). `EXIT_STATUS` blob read `0` — a **false-success signal**
+  masking the crash.
+- **`fss-backfill-vm-5`** (range 2019-08-12→2020-10-05): also stale-looking (26 min), SSH timed out twice, serial
+  console quiet — investigated further rather than assuming a duplicate of vm-4's issue. SSH eventually succeeded:
+  process genuinely alive (87.7% CPU, 12.6GB/32GB RSS), just slow on a memory-heavy `--feature-group odds` step for its
+  own first date (2019-08-12). **No action taken on vm-5** — false alarm, not a duplicate finding.
+
+**Relaunched vm-4** reusing the already-staged tarball
+(`gs://features-sports-central-element-323112/_vm_staging/ fss_backfill/`, from today's fleet launch — no re-packaging
+needed) on `e2-standard-8` (32GB, 2x RAM) to test whether this was a capacity issue. **It OOM'd again at the identical
+log checkpoint** (`total-vm:38578912kB, anon-rss:32125532kB`) — memory scaled to consume whatever was available rather
+than failing at a fixed bounded size, confirming this is a **real unbounded-growth bug** in the compute path for this
+specific date (400-day historical lookback, 167 snapshots, 30,447 unique fixtures — plus the
+`_read_per_league_subpartitions` 33-shard fallback since no consolidated `standings.parquet` exists for
+`day=2018-06-16`), not a machine-size problem. Did NOT keep scaling RAM further (diminishing returns, and doubling
+already failed) or attempt a guessed code fix (profiling needed — out of scope for a quick in-flight patch).
+
+**Mitigation applied**: relaunched `fss-backfill-vm-4` a third time on standard `e2-standard-4`,
+`--start 2018-06-18 --end 2019-08-11` (excluding the poison date 2018-06-17) so the rest of this shard's range proceeds
+without crash-looping. Verified booting past install (uv installed, unpacking codebase) before releasing.
+
+**Filed per FINDINGS CLOSURE (§4.5)**:
+[`plans/active/issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+— 4 actionable todos: profile the allocation site (memray/tracemalloc), bound/fix it in features-service, fix
+`lc_log_upload_trap_block`'s false EXIT_STATUS=0 on an OOM-killed child (deployment-service), then `--force`-recompute
+2018-06-17 once fixed.
+
+**What I did NOT do**: did not attempt to root-cause the exact allocation site inline (needs profiling, a real
+investigation — rushing a guess risks masking the actual bug). Did not touch the 8 healthy VMs. Did not flip Todo 1 or
+Todo 3 — full-history compute is still ~37% done and now has one date (2018-06-17) that requires the code fix above
+before it can be honestly captured.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should keep climbing past
+1,561); verify `fss-backfill-vm-4`'s new relaunch is progressing (not stuck again) via its `run.log`; once the issue
+doc's profiling todo is picked up and the memory bug is fixed, `--force`-recompute 2018-06-17 specifically before the
+final Todo 3 manifest-cleanliness verify (that date will otherwise show as missing/`EXPECTED_UNATTEMPTED` in the
+manifest, not `captured`).
+
 ### 2026-07-13 — slot 9 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, ~37% done, no new action)
 
 Fast re-verify only (not a repeat investigation) via non-snap gcloud (`ikenna@odum-research.com`,

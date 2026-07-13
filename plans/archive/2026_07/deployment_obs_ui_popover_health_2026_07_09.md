@@ -9,7 +9,7 @@ summary:
   deployment_obs_backend_kinds_health_2026_07_09 lands the DeploymentItem contract (depends_on documents the ordering).
   Every UI task carries a Playwright L2 regression. Full design + the mock that is the visual contract live in the LOCAL
   parent deployment_observability_expansion_2026_07_08.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -37,6 +37,9 @@ source: deployment_observability_expansion_2026_07_08.md
 ---
 
 # Deployment observability — kind badges, composite health, resource columns + detail popover (UI)
+
+> **✅ ARCHIVED 2026-07-13 — COMPLETE.** Every todo shipped (UI `[UI]` + `pw:L2` gated). No deferred items; no new codex
+> contract (reuses `codex/06-coding-standards/ui-testing-layers.md`). Frozen record.
 
 > **LOCAL / human plan** (`assigned_vm: NA`, `execution_scope: local-only` — NOT AO-dispatched, never ingested).
 > Executed **interactively in this slot** once the backend AO plan

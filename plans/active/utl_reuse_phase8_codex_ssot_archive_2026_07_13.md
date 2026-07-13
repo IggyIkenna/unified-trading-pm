@@ -1,0 +1,79 @@
+---
+doc_type: plan
+title: UTL/UAC reuse consolidation — Phase 8 codex SSOT + archive
+summary:
+  Update every codex contract this consolidation effort changed, record the verified NON-findings, remove the in-flight
+  banners, and archive the tracker + all split plans once every repo reaches C5.
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: [utl, uac, consolidation, codex, archive, split]
+related: [plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md]
+created: "2026-07-13"
+last_updated: "2026-07-13"
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: refactor
+estimate_baseline_ai_days: 1.0
+estimate_calibrated_ai_days: 0.4
+locked_by: live-defi-rollout
+locked_since: "2026-07-13"
+supersedes:
+superseded_by:
+depends_on:
+  [
+    utl_reuse_phase0_guardrails_2026_07_13,
+    utl_reuse_phase1_strategy_risk_hwm_2026_07_13,
+    utl_reuse_phase2_api_auth_dedup_2026_07_13,
+    utl_reuse_phase3_ml_model_registry_2026_07_13,
+    utl_reuse_phase4_features_builder_registry_2026_07_13,
+    utl_reuse_phase5_deployment_api_cloud_sdk_2026_07_13,
+    utl_reuse_phase6_venue_health_retry_2026_07_13,
+    utl_reuse_phase7_low_lint_tail_2026_07_13,
+    utl_reuse_phase9_deployment_registry_extract_2026_07_13,
+  ]
+gate_on_depends: true
+source: [split from utl_uac_reuse_consolidation_remediation_2026_06_10 tracker, operator-approved 2026-07-13]
+assigned_role: backend-engineer
+drift_direction: correct-codex
+---
+
+# UTL/UAC reuse consolidation — Phase 8 codex SSOT + archive (HARD RULE)
+
+> **Split provenance (2026-07-13):** Phase 8 of
+> [`utl_uac_reuse_consolidation_remediation_2026_06_10.md`](utl_uac_reuse_consolidation_remediation_2026_06_10.md).
+> **Machine-held until every other split plan (0, 1, 2, 3, 4, 5, 6, 7, 9) reaches `done`** — this is the closing phase
+> per the tracker's HARD RULE that a plan archives only once all repos hit C5.
+
+## Todos
+
+- [ ] [AUDIT] P1. Update codex for every contract this plan changes: `codex/06-coding-standards/README.md`
+      (reuse-before-reimplement rule + the new UTL retry helper), `codex/04-architecture/agent-orchestrator-overview.md`
+      (cloud I/O via UTL; auth-fetch only), `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`
+      (strategy equity-drawdown-HWM is local + distinct from UTL fee-crystallization HWM — record the NON-finding so a
+      future audit doesn't re-flag it), and the ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in
+      UTL).
+- [ ] [AUDIT] P1. Record the **verified NON-findings** list (greeks BSM kernel — UAC has only delta-strike schemas;
+      execution-service per-venue order circuit breaker — UTL's CB is DR-recovery tooling; batch-live stage-grain recon
+      schemas; trading-agent ephemeral ledger; ibkr TCP health probe; client-reporting-api `core/hwm_seeds.py` — static
+      seeds for UTL's three-method HWM, not a `max(equity)` reimpl) in the relevant codex docs so the next reuse audit
+      doesn't re-open them.
+- [ ] [VERIFY] P1. Remove the Phase-0 in-flight banners (added to the 5 epic plans); run plan-hygiene + active-inventory
+      regen; archive the tracker (`plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md`) and this whole
+      split family per the 5-step HARD RULE once all repos hit C5.
+
+## Success criteria
+
+Codex updated for every changed contract + NON-findings recorded; banners removed; tracker + split plans archived per
+HARD RULE.
+
+## Notes for the worker
+
+- Commit + Push + Flip each shippable unit in the same turn (CLAUDE.md HARD RULE).
+- This is the LAST phase — do not start it early even if individually unblocked; the `gate_on_depends: true` on
+  `depends_on` above enforces this at the dispatcher level.

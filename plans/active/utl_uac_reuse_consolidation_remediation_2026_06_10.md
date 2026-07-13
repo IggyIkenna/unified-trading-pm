@@ -18,16 +18,26 @@ related:
     plans/epics/features_and_ml_master.md,
     plans/epics/execution_master.md,
     plans/epics/orchestrator_master.md,
+    plans/active/utl_reuse_phase0_guardrails_2026_07_13.md,
+    plans/active/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md,
+    plans/active/utl_reuse_phase2_api_auth_dedup_2026_07_13.md,
+    plans/active/utl_reuse_phase3_ml_model_registry_2026_07_13.md,
+    plans/active/utl_reuse_phase4_features_builder_registry_2026_07_13.md,
+    plans/active/utl_reuse_phase5_deployment_api_cloud_sdk_2026_07_13.md,
+    plans/active/utl_reuse_phase6_venue_health_retry_2026_07_13.md,
+    plans/active/utl_reuse_phase7_low_lint_tail_2026_07_13.md,
+    plans/active/utl_reuse_phase8_codex_ssot_archive_2026_07_13.md,
+    plans/active/utl_reuse_phase9_deployment_registry_extract_2026_07_13.md,
   ]
 created: "2026-06-10"
 parent_epic: infrastructure_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 7.2
-last_updated: 2026-07-12
+last_updated: 2026-07-13
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 supersedes:
@@ -39,6 +49,29 @@ drift_direction: advance-code
 ---
 
 # UTL/UAC Reuse Consolidation — Remediation
+
+> **🟢 SPLIT FOR AO DISPATCH (2026-07-13, operator-approved):** this tracker's remaining 38 open todos across 10 phases
+> exceeded the AO fleet's STRICT 10–20-todo-per-plan dispatch cap (`plans/active/task_template.md` §4), so each phase
+> was carved into its own small `assigned_vm: planning` plan (Phases 1,2,3,4,5,6,9 dispatch immediately as independent;
+> Phase 0 gates 1/3/4 via `depends_on`+`gate_on_depends: true`; Phase 7 gates on 1–6; Phase 8 gates on everything and
+> does the final codex-update + archive):
+>
+> [phase0_guardrails](utl_reuse_phase0_guardrails_2026_07_13.md) ·
+> [phase1_strategy_risk_hwm](utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md) ·
+> [phase2_api_auth_dedup](utl_reuse_phase2_api_auth_dedup_2026_07_13.md) ·
+> [phase3_ml_model_registry](utl_reuse_phase3_ml_model_registry_2026_07_13.md) ·
+> [phase4_features_builder_registry](utl_reuse_phase4_features_builder_registry_2026_07_13.md) ·
+> [phase5_deployment_api_cloud_sdk](utl_reuse_phase5_deployment_api_cloud_sdk_2026_07_13.md) ·
+> [phase6_venue_health_retry](utl_reuse_phase6_venue_health_retry_2026_07_13.md) ·
+> [phase7_low_lint_tail](utl_reuse_phase7_low_lint_tail_2026_07_13.md) ·
+> [phase8_codex_ssot_archive](utl_reuse_phase8_codex_ssot_archive_2026_07_13.md) ·
+> [phase9_deployment_registry_extract](utl_reuse_phase9_deployment_registry_extract_2026_07_13.md)
+>
+> **This tracker is no longer AO-ingestible** (`execution_scope: local-only` — was `orchestrator-agent`; `assigned_vm`
+> was already `NA`) — it stays the reference SSOT: severity ledger, phase DAG, verified-reality writeups, and the
+> Progress Log below are the full context for anyone picking up a split plan cold. Do NOT dispatch work from here
+> directly, and do NOT duplicate a todo into both this doc and a split plan going forward — edit the split plan. Archive
+> this tracker (per Phase 8's closing todo) once every split plan reaches C5.
 
 ## What this is
 
@@ -367,11 +400,17 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       (tmux*spawn/autospawn forward ambient `WORKSPACE_ROOT`/ `UNIFIED_TRADING_WORKSPACE_ROOT` verbatim to a spawned
       worker — NOT orchestrator config). All `noqa`-documented. SHAs: W1 `86abf79` · W2 `2fe6266` · W3
       `b955bb5`/`2aa92af`/`f1cec7f` · W4 `2eb63b5`/`0d74f2f`/`fb94fca` · W5 `3a055cf`/`6c2fbba`. Migrated: migrate **107
-      distinct env-var names / 151 `os.environ.get` call-sites** (measured 2026-06-22: `rg
-      '(?:os\.getenv|os\.environ\.get)\("([A-Z*]+)"'
-      server/`) onto typed `OrchestratorConfig`fields.     **Operator 2026-06-22 escalated this from DEFERRED → DO-IT-ROBUSTLY**: "SSOT deviation + wrong values avoidable by     type safety are NOT zero behaviour changes — for AO to be the reliable beast it must be robust." So this is a     deliberate **reliability upgrade**, not churn: a malformed/out-of-range knob now **fails loud at config-load**     (typed + bounded fields) instead of silently degrading to a default deep in a loop. **Test-semantics solved** (the     original deferral reason):`OrchestratorConfig` reads **os.environ only** (`env_file=None`— parity with the old     `os.environ.get`, no stray-`.env`pollution),`get_config()`is a **reset-able** singleton, and a conftest autouse     `reset_config()`fixture rebuilds it per test so`monkeypatch.setenv`works unchanged. All reads **deferred** to     call/construction time (the watchdog's import-frozen module constants move into`**init**`/use-site).
-      Blank/unset → default; genuine garbage → loud. Repo: agent-orchestrator. **Waves** (each: QG-green → quickmerge →
-      journal):
+      distinct env-var names / 151 `os.environ.get` call-sites** (measured 2026-06-22:
+      `rg     '(?:os\.getenv|os\.environ\.get)\("([A-Z*]+)"'     server/`) onto typed `OrchestratorConfig`fields.
+      **Operator 2026-06-22 escalated this from DEFERRED → DO-IT-ROBUSTLY**: "SSOT deviation + wrong values avoidable by
+      type safety are NOT zero behaviour changes — for AO to be the reliable beast it must be robust." So this is a
+      deliberate **reliability upgrade**, not churn: a malformed/out-of-range knob now **fails loud at config-load**
+      (typed + bounded fields) instead of silently degrading to a default deep in a loop. **Test-semantics solved** (the
+      original deferral reason):`OrchestratorConfig` reads **os.environ only** (`env_file=None`— parity with the old
+      `os.environ.get`, no stray-`.env`pollution),`get_config()`is a **reset-able** singleton, and a conftest autouse
+      `reset_config()`fixture rebuilds it per test so`monkeypatch.setenv`works unchanged. All reads **deferred** to
+      call/construction time (the watchdog's import-frozen module constants move into`**init**`/use-site). Blank/unset →
+      default; genuine garbage → loud. Repo: agent-orchestrator. **Waves** (each: QG-green → quickmerge → journal):
   - [x] ✅ **Wave 1 — foundation + config.py resolver group** (`agent-orchestrator@86abf79`, QG 853✓ +6 tests
         2026-06-22): `env_file=None` + `reset_config()` + conftest autouse reset; migrated mode / db_path / state_json /
         backlog / accounts / backends / claude_accounts_dir / server_url / operator / vm_id / review_slots /
