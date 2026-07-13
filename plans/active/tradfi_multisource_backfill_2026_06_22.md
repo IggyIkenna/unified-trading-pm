@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: TradFi backfill multi-source — FX→yahoo, CBOE cash-index no-provider, ICE source-ask
-summary: Extend the TradFi OHLCV backfill to cover FX via Yahoo Finance, CBOE cash-index (no provider path), and ICE (source-ask).
+summary:
+  Extend the TradFi OHLCV backfill to cover FX via Yahoo Finance, CBOE cash-index (no provider path), and ICE
+  (source-ask).
 status: active
 nature: process
 asset_group: [tradfi]
@@ -105,25 +107,15 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
 - [x] [SCRIPT] P0. **Manifest correction (one-off, snapshot+GATE) — REWRITTEN to row-preserving reclass + re-APPLIED
       2026-06-23** — `instruments-service/scripts/correct_tradfi_universe_floor_clip_and_vix_index.py` (mirrors
       `populate_v9_index_columns_inplace.py`). **The 814b14a version was a NO-OP on EU** (it floor-clipped only
-      ohlcv_1s/1m which were already inside the 16y L0 floor = 0 dropped, and gated derived-removal on
+      ohlcv*1s/1m which were already inside the 16y L0 floor = 0 dropped, and gated derived-removal on
       `source==databento` while the 140,530 ohlcv_15m EU are `source=massive` = 0 matched) — so the live EU stayed
       inflated at 1,466,157 and the "EU→1,466,157 / index rows=0 / derived 15m EU=0" claim above was inaccurate
       (measured live: ohlcv_15m EU still 140,530, trades/tbbo/mbp_10 out-of-rolling-window still EU). **Rewrote** to:
-      (1) **reclass IN PLACE** EU→`empty_confirmed` with typed `EXPECTED_*` reasons (rows PRESERVED, never dropped — the
-      SSOT-canonical honest-absence flip; supersedes the prior row-DROP design); (2) floor-clip ALL fetched data_types
-      by DATE per billing level via UAC `earliest_allowed_start` (L0 16y ohlcv_1s/1m, L1 1y trades/tbbo, L2 1mo mbp_10)
-      → `EXPECTED_OUT_OF_COVERAGE_WINDOW`; (3) reclass derived ohlcv_15m/24h EU (ANY non-Yahoo/FX source) →
-      `EXPECTED_OUTSIDE_PROCESSING_SCOPE`; (4) VIX cash-index EU → `EXPECTED_DEPRECATED_DATA_TYPE` (0 cells — already
-      absent from the manifest). **ABSOLUTE GATE: captured + attempted_failed + row-count UNCHANGED** (only EU→empty
-      moves). APPLIED to live tradfi `_index` 2026-06-23 (fresh snapshot
-      `_index/snapshots/pre_floorclip_2026_06_23.parquet`). **EU 1,466,157 → 1,084,542** (reclassed 381,615 = floor-clip
-      241,085 [trades 108,221 + tbbo 107,799 + mbp_10 25,065] + derived ohlcv_15m 140,530; VIX-index 0). **GATE proof:
-      captured 733,338 → 733,338 (delta 0), attempted_failed 16,358 → 16,358 (delta 0), rows 6,668,467 preserved.** Live
-      re-read VERIFIED post-apply: `EXPECTED_OUT_OF_COVERAGE_WINDOW`=241,093,
-      `EXPECTED_OUTSIDE_PROCESSING_SCOPE`=140,530, remaining EU = real fetchable target (ohlcv_1m 313,720 + ohlcv_1s
-      308,871 + in-window trades 219,144/tbbo 215,617/mbp_10 7,908 + corporate_action/earnings 9,641 each), **135 VX
-      futures_chain captured cells preserved untouched**. Honest coverage (captured/(captured+failed+EU)) 33.1% →
-      39.98%. — instruments-service@e9e5128.
+      (1) **reclass IN PLACE** EU→`empty_confirmed` with typed
+      `EXPECTED*\*`reasons (rows PRESERVED, never dropped — the     SSOT-canonical honest-absence flip; supersedes the prior row-DROP design); (2) floor-clip ALL fetched data_types     by DATE per billing level via UAC`earliest_allowed_start`(L0 16y ohlcv_1s/1m, L1 1y trades/tbbo, L2 1mo mbp_10)     →`EXPECTED_OUT_OF_COVERAGE_WINDOW`; (3) reclass derived ohlcv_15m/24h EU (ANY non-Yahoo/FX source) →     `EXPECTED_OUTSIDE_PROCESSING_SCOPE`; (4) VIX cash-index EU → `EXPECTED_DEPRECATED_DATA_TYPE`(0 cells — already     absent from the manifest). **ABSOLUTE GATE: captured + attempted_failed + row-count UNCHANGED** (only EU→empty     moves). APPLIED to live tradfi`\_index`2026-06-23 (fresh snapshot    `\_index/snapshots/pre_floorclip_2026_06_23.parquet`). **EU 1,466,157 → 1,084,542** (reclassed 381,615 = floor-clip     241,085 [trades 108,221 + tbbo 107,799 + mbp_10 25,065] + derived ohlcv_15m 140,530; VIX-index 0). **GATE proof:     captured 733,338 → 733,338 (delta 0), attempted_failed 16,358 → 16,358 (delta 0), rows 6,668,467 preserved.** Live     re-read VERIFIED post-apply: `EXPECTED_OUT_OF_COVERAGE_WINDOW`=241,093,     `EXPECTED_OUTSIDE_PROCESSING_SCOPE`=140,530,
+      remaining EU = real fetchable target (ohlcv_1m 313,720 + ohlcv_1s 308,871 + in-window trades 219,144/tbbo
+      215,617/mbp_10 7,908 + corporate_action/earnings 9,641 each), **135 VX futures_chain captured cells preserved
+      untouched**. Honest coverage (captured/(captured+failed+EU)) 33.1% → 39.98%. — instruments-service@e9e5128.
 - [x] [SCRIPT] P0. **Delete Barchart/massive VIX-index GCS objects — APPLIED 2026-06-23** —
       `instruments-service/scripts/delete_vix_cash_index_gcs_objects_2026_06_23.py` deletes the VIX cash-index parquet
       objects (instrument_type=index at venue=CBOE — CBOE's only cash index is VIX, across batch_massive/batch_databento
@@ -147,18 +139,11 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       `Container terminated on signal 9` (OOM) at 4/8/16/32Gi — so the monotonic-guard KEPT the last-good catalogue
       (mtime 2026-06-17) and the v2 expected-universe enumerator cross-joined a STALE could-exist universe (the
       `DP_CATALOG_NOT_RUNNING` alert was REAL). Crash site: `build_instrument_catalogue.py::_iter_by_date_snapshots`
-      used `ThreadPoolExecutor.map`, which eagerly downloaded + buffered ALL 11.6k–13.5k tradfi by_date parquets in
+      used `ThreadPoolExecutor.map`, which eagerly downloaded + buffered ALL 11.6k–13.5k tradfi by*date parquets in
       memory at once. FIX: `_bounded_parallel_load` sliding-window (≤max_workers=16 frames in flight, each yielded into
       the streaming aggregate fold + dropped before the next) → peak memory O(16 frames) not O(13.5k); applied to all 3
-      `_iter_*` sites + 3 regression tests. tf: tradfi job 32Gi→16Gi/cpu4 (band-aid removed — memory now bounded) +
-      `timeout_seconds` 1800→3600 (slow 13.5k-blob GCS read). — instruments-service@b84cc4f
-      (`scripts/build_instrument_catalogue.py` + `tests/unit/scripts/test_build_instrument_catalogue.py`, QG-green +4
-      regression tests) + deployment-service@9b74416 (`terraform/gcp/lifecycle_catalogue_scheduler.tf`); live tradfi
-      Cloud Run job updated to 16Gi/cpu4/`task-timeout`=3600 via gcloud (was 32Gi); IS image rebuilding (Cloud Build
-      `c0b6772a`) so `:latest` bakes the fix. OPS (final verification, 2026-06-23): once the image build lands, re-run
-      `lifecycle-catalogue-regen-tradfi` on the fixed image and confirm it COMPLETES without OOM + writes a fresh
-      `prod/catalog.parquet` mtime=today (evidence appended in the data_pipeline_hardening Progress Log). Other 4 AGs
-      were already GREEN.
+      `\_iter*\*`sites + 3 regression tests. tf: tradfi job 32Gi→16Gi/cpu4 (band-aid removed — memory now bounded) +    `timeout_seconds` 1800→3600 (slow 13.5k-blob GCS read). — instruments-service@b84cc4f     (`scripts/build_instrument_catalogue.py`+`tests/unit/scripts/test_build_instrument_catalogue.py`, QG-green +4     regression tests) + deployment-service@9b74416 (`terraform/gcp/lifecycle_catalogue_scheduler.tf`); live tradfi     Cloud Run job updated to 16Gi/cpu4/`task-timeout`=3600 via gcloud (was 32Gi); IS image rebuilding (Cloud Build     `c0b6772a`) so `:latest`bakes the fix. OPS (final verification, 2026-06-23): once the image build lands, re-run    `lifecycle-catalogue-regen-tradfi`on the fixed image and confirm it COMPLETES without OOM + writes a fresh    `prod/catalog.parquet`
+      mtime=today (evidence appended in the data_pipeline_hardening Progress Log). Other 4 AGs were already GREEN.
 
 ## Codex SSOT updates
 
@@ -172,17 +157,70 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
   tradfi VMs were the stale `launch_tradfi_shard` bolt-on in `launch-cefi-sharded-backfill.sh{,-aws.sh}` launching
   `--venues CME-FUTURES|CBOE-VIX-*` (Tardis tags, NOT canonical TRADFI venues `{NASDAQ,NYSE,CME,ICE,CBOE}`) → MTDS "No
   active venues" → 0-row self-delete. FIX: deleted the block (now CeFi-only) + republished GCS scripts; canonical
-  Databento launchers (`VM_TASK=mtds-backfill`/`VM_SOURCE=databento`) positively capture (es-2025 51,087 rows). QG green.
-- **2026-06-23 — VIX cash-index DELETE + Databento rolling-history floor-clip (operator decision; instruments-service@814b14a + @e9e5128 + @b84cc4f).**
-  Supersedes the reclass-to-`empty_confirmed`. (A) `_enumerate_v2_tradfi` floor-clip + `_is_vix_cash_index` drop; (B)
-  row-preserving manifest reclass (snapshot+GATE — captured/attempted_failed/rows UNCHANGED, EU 1,466,157→1,084,542 via
-  floor-clip+derived reclass); (C) GCS delete of 1,621 VIX cash-index objects via `gcs_delete_object`. VX-futures-vs-VIX
-  sanity PASSED (corr 0.95-0.98, steady ~1.7-2.1 contango basis on 2026-04-14/28/30); 135 VX futures_chain captured cells
-  preserved. Honest coverage 33.1%→39.98%. SSOT-aligned with `codex/02-data/tradfi-databento-sourcing-ssot.md`
-  (databento XCBF.PITCH for VX; VIX cash index has no provider).
+  Databento launchers (`VM_TASK=mtds-backfill`/`VM_SOURCE=databento`) positively capture (es-2025 51,087 rows). QG
+  green.
+- **2026-06-23 — VIX cash-index DELETE + Databento rolling-history floor-clip (operator decision;
+  instruments-service@814b14a + @e9e5128 + @b84cc4f).** Supersedes the reclass-to-`empty_confirmed`. (A)
+  `_enumerate_v2_tradfi` floor-clip + `_is_vix_cash_index` drop; (B) row-preserving manifest reclass (snapshot+GATE —
+  captured/attempted_failed/rows UNCHANGED, EU 1,466,157→1,084,542 via floor-clip+derived reclass); (C) GCS delete of
+  1,621 VIX cash-index objects via `gcs_delete_object`. VX-futures-vs-VIX sanity PASSED (corr 0.95-0.98, steady ~1.7-2.1
+  contango basis on 2026-04-14/28/30); 135 VX futures_chain captured cells preserved. Honest coverage 33.1%→39.98%.
+  SSOT-aligned with `codex/02-data/tradfi-databento-sourcing-ssot.md` (databento XCBF.PITCH for VX; VIX cash index has
+  no provider).
+
+### VIX 15m bare-index stragglers of the 2026-06-23 deletion — VERIFY-THEN-DELETE — DONE (2026-07-13)
+
+> Operator ruling 2026-07-13: ~20 `day=/data_type=ohlcv_15m/indices/CBOE|bare/...VIX...` objects survived the 2026-06-23
+> VIX-cash-index deletion (`delete_vix_cash_index_gcs_objects_2026_06_23.py`) — verify BOTH premises (genuinely VIX cash
+> index, not VX futures; VX-futures Databento coverage exists with no holes) before deleting.
+
+**Why they survived the 2026-06-23 sweep**: that script globbed the canonical hive shape
+(`venue=CBOE/instrument_type=index/...`, per its own docstring "instrument_type=index at venue=CBOE"). These ~20 objects
+are a DIFFERENT, non-hive "LEGACY shape D" layout
+(`raw_tick_data/by_date/day={D}/data_type=ohlcv_15m/indices/CBOE[/CBOE:INDEX:VIX-USD].parquet` — no `venue=`/
+`instrument_type=` keys at all), so the 2026-06-23 sweep's glob never matched them — a path-shape miss, not a deliberate
+exclusion.
+
+**Live-verified count**: 20 objects across 13 distinct dates (2025-01-02/03/06/07/08/09/10, 2025-11-03/04/05/06/07/10) —
+2 path-shape variants (`indices/CBOE/{file}` and bare `indices/{file}`) on 7 of the 13 dates, 1 variant on the other 6.
+
+**(1) Content verdict — VIX CASH INDEX, confirmed, not VX futures.** Read all 20 files (footer+content, not sampled):
+every file carries `instrument_key`/filename `CBOE:INDEX:VIX-USD` (18/20 rows have the explicit `instrument_key` column;
+the 2 that don't carry the identical filename stem, unambiguous), close values 15-22 (typical VIX-index level),
+**`volume=0.0` on every single row across all 20 files** (an index is never a tradable instrument with real volume —
+this alone rules out VX futures, which trade with real volume). 1,006 total rows. **PASS.**
+
+**(2) VX-futures Databento coverage — confirmed, zero holes.** Live tradfi manifest query (not the 2026-06-23 snapshot's
+"135 preserved" claim re-asserted — re-derived fresh 2026-07-13): venue=CBOE, instrument_type=futures_chain,
+data_type=ohlcv_1m, capture_status=captured → **1,434 captured cells** (2,868 incl. the `ohlcv_1s` sibling), 100%
+source=databento/pipeline_mode=batch_databento, date range **2020-06-01 .. 2026-07-10** (1,306 distinct captured dates).
+Explicitly checked all 13 straggler dates individually against this set — **13/13 covered, 0 holes.** **PASS.**
+
+**Both premises hold → executed the snapshot-first delete**, citing "stragglers of the 2026-06-23 VIX-cash ruling
+(`tradfi_multisource_backfill_2026_06_22.md` §VIX) + operator re-confirmation 2026-07-13":
+market-tick-data-service@(uncommitted this session) `scripts/delete_vix_cash_index_stragglers_2026_07_13.py`. Snapshot
+`_index/snapshots/pre_vix_straggler_delete_2026_07_13.parquet` written before any change. Manifest reclass (row-
+preserving, GATE-checked): the 13 matching manifest cells
+(`venue=CBOE, instrument_type=index, data_type=ohlcv_15m, instrument_id=CBOE:INDEX:VIX-USD`, one per straggler date)
+`captured` → `empty_confirmed` / `error_reason=EXPECTED_DEPRECATED_DATA_TYPE` — the SAME reason string
+`instruments-service/scripts/correct_tradfi_universe_floor_clip_and_vix_index.py` already uses for every other
+VIX-cash-index cell, so these converge on the sanctioned taxonomy instead of staying anomalous `captured` outliers.
+**GATE verified**: total rows unchanged (5,089,639 → 5,089,639), `captured` delta exactly −13 (1,620,839 → 1,620,826).
+Then the 20 GCS objects deleted (only after the manifest reclass landed). **Independently re-verified post-apply**: live
+re-list of the 13 date-prefixes returns 0 remaining objects; live re-read of the 13 manifest cells confirms
+`empty_confirmed`/`EXPECTED_DEPRECATED_DATA_TYPE` on all 13.
+
+- [x] ✅ [DATA] P2. **VIX 15m bare-index stragglers — verify-then-delete — DONE 2026-07-13.** Both gating premises
+      independently re-verified (content = VIX cash index not VX futures; VX-futures Databento coverage 1,434 captured
+      cells 2020-06-01→2026-07-10, 0 holes over the 13 straggler dates) → deleted 20 GCS objects (snapshot-first) +
+      reclassed 13 manifest cells captured→empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE (GATE: rows unchanged, captured
+      delta=-13 exact). — market-tick-data-service `scripts/delete_vix_cash_index_stragglers_2026_07_13.py`
 
 ## Temporary states + their canonical follow-up plans
 
 - The CBOE-reclass + wave-launcher map are landed; the FX backfill drain + ICE credential-ask are the open todos above.
 - VIX cash-index DELETE + Databento floor-clip landed 2026-06-23 (instruments-service@814b14a); GCS-object delete
   `--apply` running. The enumerator change is live for future universe seeds — no follow-up needed.
+- VIX 15m bare-index stragglers (a different, non-hive path shape the 2026-06-23 sweep's glob missed)
+  verify-then-deleted 2026-07-13 — see §VIX above. No further stragglers expected (live-verified 0 remaining objects at
+  that shape).

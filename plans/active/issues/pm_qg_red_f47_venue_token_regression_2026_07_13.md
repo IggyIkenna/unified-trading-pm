@@ -83,6 +83,15 @@ either fix myself — this needs someone with venue-registry context, and blindl
       option (a) from the original write-up.
   - [x] ✅ [VERIFY] P0. `test_f47_unbuildable_venue_cells_are_not_available` passes with `-p no:xdist` on current HEAD
         (re-verified 2026-07-13, slot-13, after resuming this task).
-- [ ] [BACKEND] P2. Consider excluding cross-repo path-dependency-sensitive tests from the `.qg_content_sentinel`
+- [x] ✅ [BACKEND] P2. Consider excluding cross-repo path-dependency-sensitive tests from the `.qg_content_sentinel`
       fast-path, or hashing the path-dependency's content into the sentinel too — this let a real regression hide behind
-      a false-green for an unknown window.
+      a false-green for an unknown window. — **DONE, slot-13, `unified-trading-pm@11055b603cd6`.** Took the hashing
+      option: added `_qg_editable_sibling_hash()` (`scripts/quality-gates-base/qg-common.sh`), which discovers every
+      editable-installed workspace sibling via its dist-info `direct_url.json` (standard pip/uv metadata —
+      `{"url":"file://...","dir_info":{"editable":true}}`, no jq dependency added) and folds each sibling's committed
+      HEAD + uncommitted tracked diff into the content hash. Wired into both `_qg_content_hash()` implementations
+      (`base-service.sh`, `base-library.sh` — every repo's `quality-gates.sh` sources one of these), so this closes the
+      gap fleet-wide, not just for PM. Verified the fix actually changes the hash on a live uncommitted edit to
+      `unified-api-contracts/.../venue_tokens.py` (reverted after verifying, no residual diff left in the sibling); full
+      `quality-gates.sh` green afterward with the change wired in (multiple runs across 3 mid-flight rebases onto
+      concurrent peer pushes on this hot repo — each re-verified with a fresh QG run before its push attempt).

@@ -36,6 +36,7 @@ related:
     codex/02-data/availability-manifest-and-data-status.md,
     codex/02-data/pipeline-mode-partition.md,
     codex/05-infrastructure/manifest-consolidator-ssot.md,
+    codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: 2026-06-17
 parent_epic: instruments_master
@@ -45,7 +46,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
-last_updated: 2026-06-27
+last_updated: 2026-07-13
 locked_by: live-defi-rollout
 locked_since: 2026-06-17
 supersedes:
@@ -1992,3 +1993,143 @@ unblocks) to flow the actual data into those canonical buckets.
 - [ ] [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** (`reference_data/catalogue/catalogue_builder.py`
       `CatalogueBuilder` + `orchestrator.py refresh_catalogue`) — superseded by `build_instrument_catalogue.py`, no
       CLI/TF/test caller. Repo: instruments-service. (MIGRATED FROM: same.)
+
+## TradFi ICE/CME pre-cutover legacy chain-tail — PRESERVE+RESHAPE — DONE (2026-07-13, operator ruling)
+
+> Operator ruling 2026-07-13: the tradfi "LEGACY shape D" (pre-hive instrument-key,
+> `day={D}/data_type={DT}/{class}/{VENUE}/{file}`) `futures_chain`/`options_chain` objects the generic
+> `audit_legacy_gcs_dup_delete_list.py` classifies `MIGRATE-FIRST` (`reason=no_venue_or_data_type_in_path`) include ICE
+> softs/Brent data captured BEFORE the 2026-06-18 3-dataset Databento subscription lockdown dropped ICE
+> (`codex/02-data/tradfi-databento-sourcing-ssot.md`) — non-refetchable. Ruling: PRESERVE AND RESHAPE, never delete.
+
+**Live-verified count (two independent full-corpus rescans agree, 2026-07-02 and 2026-07-13 — bucket confirmed stable):
+55 objects, not the ballpark "~64" first quoted** — `futures_chain` MIGRATE-FIRST = 49 (9 ICE: BRENT, COCOA, COFFEE,
+COTTON, DOLLARINDEX, GASOIL, ORANGEJUICE, SUGAR, WTI — all `day=2025-01-06`; + 40 CME: 30 symbols on `day=2025-01-06` +
+AUD repeated on 9 more dates) + `options_chain` MIGRATE-FIRST = 6 (CME: ES, EW1, EW2, EW3, EW4, NQ, `day=2025-01-06`).
+10 distinct days total: 2025-01-06, 2025-01-10, 2025-11-02/03/04/06/07/08/09/10.
+
+**DECISIVE FINDING — the generic audit's `MIGRATE-FIRST`/`twin_exists=False` verdict was a PATH-PARSING ARTIFACT, not a
+real gap (same class of false-negative the 2026-06-18 unmappable-residue diagnosis already documented for this AG).**
+`audit_legacy_gcs_dup_delete_list.py`'s twin-check can't parse this bare "LEGACY shape D" grammar (no `venue=`/
+`data_type=` hive keys) well enough to CONSTRUCT the correct candidate canonical path (which needs an inserted
+`underlying=` bundle segment), so it never actually probed for a twin. Using the parser `rebuild_tradfi_manifest.py`
+already ships for exactly this shape (`_parse_prehive_path`) to build the REAL candidate canonical path revealed: **53
+of the 55 objects already had a verified canonical twin** (server-side copy made 2026-06-27, `gcs_describe_object`
+`last_modified` confirms) with **exact parquet-footer row-count parity** (spot-verified programmatically, not sampled —
+173,632 legacy rows == 173,632 canonical rows across all 55). The manifest ALSO already carried
+`capture_status=captured`/`source=databento`/`pipeline_mode=batch_databento` for all 55 target
+`(date, venue, instrument_type, data_type, underlying)` cells (batch-verified against the live `_index`, not assumed).
+The remaining 2 objects (CME AUD `futures_chain` on 2025-11-02 + 2025-11-08, both weekend dates) are genuine 0-row
+honest-empty files — nothing to preserve (matches the workspace's established "0-byte/0-row legacy = honest no-data,
+delete-safe once confirmed empty" precedent).
+
+**Action taken**: market-tick-data-service@(uncommitted this session)
+`scripts/reshape_tradfi_ice_cme_legacy_chain_tail_2026_07_13.py` — reuses `rebuild_tradfi_manifest.py`'s
+`_parse_prehive_path`/`_derive_pm_and_source`/`_emit_bundled_shard_row` verbatim (no reimplementation); idempotent
+(skips a copy/manifest-write when the canonical twin + manifest row already exist — true for 53/55); the 2 zero-row
+objects were confirmed genuinely 0-row (footer read) then deleted directly (no data lost). **Result: all 55 legacy
+objects deleted (twin-verified first); 0 remain at the legacy paths (live re-list confirms); the 53 real-data cells'
+canonical objects + manifest rows were untouched (already correct) — the operation was effectively a
+verify-then-delete-the-now-redundant-legacy-duplicate, since the actual RESHAPE had already happened on 2026-06-27.**
+Before/after: 55 legacy objects → 0; 53 canonical twins (pre-existing, row-parity verified) + 2 honest-empty (no twin
+needed) = 55/55 accounted for; manifest captured-count unaffected (no new writes — all 55 cells were already
+`captured`).
+
+- [x] ✅ [DATA] P1. **TradFi ICE/CME pre-cutover legacy chain-tail — live-verify + reshape + delete-legacy — DONE
+      2026-07-13.** 55 objects (not ~64) live-verified across 2 independent rescans; 53/55 already had a
+      row-parity-verified canonical twin (2026-06-27) + captured manifest row (path-parsing artifact in the generic
+      audit, not a real gap); 2/55 were genuine 0-row honest-empty. All 55 legacy duplicates deleted post-twin-verify; 0
+      data lost. — market-tick-data-service `scripts/reshape_tradfi_ice_cme_legacy_chain_tail_2026_07_13.py`
+
+## DeFi EIGENLAYER combined-venue (`venue=EIGENLAYER-ETHEREUM`) legacy + mis-shaped-canonical-twin — VERIFY + DELETE — DONE (2026-07-13, operator "fix now" ruling)
+
+> Operator ruling 2026-07-13: the legacy shape
+> `day=.../venue=EIGENLAYER-ETHEREUM/instrument_type=restaking/ data_type=rewards/ticks.parquet` (~597 objects) AND its
+> computed "canonical" twin (same combined venue under `pipeline_mode=batch_onchain_subgraph` in the prd bucket) BOTH
+> violate `codex/02-data/defi-canonical-naming-ssot.md` (NEVER the combined PROTOCOL-CHAIN venue overload —
+> `venue=EIGENLAYER` + `chain=ETHEREUM` as separate hive keys). Mid-session scope update from the coordinator (fresh
+> legacy-dup audit, PM@194b7d542): the generic defi legacy bulk (5,332 MIGRATE-FIRST objects) was already
+> migrated+deleted by a separate process — this EIGENLAYER population is its own, separately-tracked residue,
+> live-verified independently below.
+
+**Live-verified populations (before any action, buckets confirmed mid-flux):**
+
+- Legacy env-less bucket `market-data-tick-defi-central-element-323112`: **597 objects** at
+  `raw_tick_data/by_date/day={D}/pipeline_mode=batch_onchain_rpc/asset_group=defi/venue=EIGENLAYER-ETHEREUM/ instrument_type=restaking/data_type=rewards/ticks.parquet`,
+  day range 2024-08-15→2026-04-07, all created **2026-05-19** (same day as the handler shard-key fix below — a stale
+  one-time backfill run, not a recurring write).
+- PRD bucket `market-data-tick-defi-prd-central-element-323112`: **597 mis-shaped "canonical" twins**, same combined
+  venue + labels, under `pipeline_mode=batch_onchain_subgraph`, all created **2026-06-18** (the generic
+  v9/unmappable-residue migration-era window) — the exact copy the operator flagged as "equally wrong."
+- **Decisive finding**: a FULLY correctly-split twin
+  (`venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/ data_type=eigenlayer_rewards/rewards.parquet`) already
+  existed for **597/597 days** in the prd bucket under the same `pipeline_mode=batch_onchain_subgraph` (plus in the
+  legacy bucket under both `batch_onchain_rpc` and a bare/no -pipeline_mode form) — written by the ALREADY-FIXED live
+  handler. Same signature as the TradFi ICE/CME section above: verify-then-delete-the-now-redundant-legacy-duplicate,
+  not a from-scratch reshape/migration.
+- **Row-count parity** (parquet-footer read, all 597 pairs, not sampled): **596/597 exact match**; 1 day (2026-04-07)
+  where the correct-shape twin is a strict superset (44 rows vs 21) — captured-preserved-or-higher holds everywhere,
+  zero data-loss risk from deleting the wrong-shaped side.
+- **Manifest check**: both buckets' `_index/availability_index.parquet` (prd 27.45M rows / legacy 1.91M rows;
+  column-projected `pyarrow.dataset` + `pc.field("venue").isin(...)` predicate-pushdown read — never a full-corpus load,
+  per single-walk/OOM-avoidance discipline) carry **zero rows** for the combined `venue=EIGENLAYER-ETHEREUM` — the
+  mis-shaped objects were never manifested (orphan stray objects), so no manifest row correction was needed,
+  object-level delete only.
+
+**Snapshots** (before any delete, server-side `gcs_copy_object`):
+`gs://market-data-tick-defi-prd-central-element-323112/_index/snapshots/pre_eigenlayer_venue_chain_fix_2026_07_13.parquet`
+(445,220,744 bytes) +
+`gs://market-data-tick-defi-central-element-323112/_index/snapshots/pre_eigenlayer_venue_chain_fix_2026_07_13.parquet`
+(20,717,472 bytes).
+
+**Action taken**: deleted all **1,194** mis-shaped objects (597 legacy `batch_onchain_rpc` + 597 prd
+`batch_onchain_subgraph`, both combined-venue) via UTL `gcs_delete_object` (never subprocess gsutil), thread-pooled —
+**1,194/1,194 OK, 0 errors**. Post-delete live re-verify used direct `gcsfs.exists()` per-object checks (NOT gsutil's
+recursive `**...**` glob — that glob gave an inconsistent/unreliable match count mid-session for multi-segment patterns,
+a real gotcha, not trusted for the final verdict): **0/597 remain** at either wrong-shaped path in either bucket;
+**597/597 correct-shape canonical twins remain intact**, untouched, in the prd bucket.
+
+**Writer-source check** (`rg EIGENLAYER-ETHEREUM` across instruments-service + UAC registries): the CURRENT live writer
+(`market-tick-data-service/market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py`) already emits the
+fully-split canonical shape —
+`write_defi_rows(rows, venue="EIGENLAYER", chain="ETHEREUM", instrument_type=InstrumentType.STAKING, data_type="eigenlayer_rewards", ...)`
+— confirmed by direct source read; `canonical_write.py`'s enrichment step OVERWRITES any row-level
+`venue`/`data_type`/`instrument_id` the row dicts carry (the `_parse_claims`/`_parse_season1_transfers` row-dict
+literals still say `"venue": "EIGENLAYER-ETHEREUM"` — dead code, clobbered before write, cosmetic only, not a live bug).
+Zero grep hits for a `venue="EIGENLAYER-ETHEREUM"` writer callsite workspace-wide. UAC's
+`defi_venues.py`/`venue_adapter_keys.py`/`venue_mapping.py`/ `defi_venue_capabilities.py` combined-form entries are the
+INSTRUMENT/CATALOG-KEY convention (same family as `instrument_key="EIGENLAYER-ETHEREUM:GOVERNANCE_TOKEN:EIGEN"`) — a
+separate namespace from the GCS storage-PATH `venue=`/`chain=` hive keys this SSOT governs; not a path writer, no fix
+needed there. **Verdict: writer already fixed** — `market-tick-data-service@b3a15d894cfa6c13698fac817425cfc0a6fa25bf`
+(2026-05-19, "fix(eigenlayer): align \_EIGENLAYER_DATA_TYPE with parquet path + fix docstring"). The 1,194 deleted
+objects were a stale artifact from before/around that fix (legacy side) and from the mid-2026-06 generic
+v9-canonicalisation pass that copied them into the prd bucket without reshaping (mis-shaped "canonical" twin, prd side)
+— **no current re-litter path exists.**
+
+**Two adjacent findings surfaced, logged but OUT OF SCOPE for this fix** (ambiguous/wider blast radius, per
+findings-triage — not fixed this session):
+
+1. `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py::_normalize_venue()`
+   docstring claims it "strips any trailing -CHAIN suffix" but the code only uppercases (no actual split) — a latent
+   landmine IF a future caller ever passes an already-combined venue string directly (confirmed zero current callers do,
+   for EIGENLAYER or any other venue checked). Docstring/code mismatch, not itself a live bug today.
+2. The prd manifest carries **1,139 rows**
+   `(venue=EIGENLAYER, chain=ETHEREUM, instrument_type=restaking, data_type=rewards, pipeline_mode=batch_onchain_subgraph, capture_status=attempted_failed)`
+   — an OLD label-pairing (pre-b3a15d894), already-split-venue manifest cluster, all `attempted_failed`. Unrelated to
+   the combined-venue-path bug fixed here; resembles this SSOT's documented gotcha #3 (`expected_unattempted` seeded
+   pre-canonical) but with venue already split — needs its own root-cause pass.
+
+- [x] ✅ [DATA] P0. **EIGENLAYER combined-venue (`venue=EIGENLAYER-ETHEREUM`) legacy + mis-shaped-canonical-twin —
+      live-verify + twin-verify + delete — DONE 2026-07-13.** 597 legacy
+      (`market-data-tick-defi-central-element-323112`, `batch_onchain_rpc`) + 597 mis-shaped "canonical" twin
+      (`market-data-tick-defi-prd-central-element-323112`, `batch_onchain_subgraph`) — both
+      `venue=EIGENLAYER-ETHEREUM/instrument_type=restaking/data_type=rewards`, violating
+      `codex/02-data/defi-canonical-naming-ssot.md`. A correctly-split twin
+      (`venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/data_type=eigenlayer_rewards`) already existed for
+      597/597 days (596 exact row-count parity + 1 strict superset); manifest carried ZERO rows for the combined venue
+      (orphan objects, no manifest correction needed). Snapshotted both bucket manifests first, deleted all 1,194
+      mis-shaped objects via `gcs_delete_object`, live re-verified 0/597 remain + 597/597 correct twins intact. Writer
+      already fixed (`market-tick-data-service@b3a15d894`, 2026-05-19); no re-litter path found. Two adjacent findings
+      logged (out of scope): `_normalize_venue()` docstring/code mismatch in `canonical_write.py`; 1,139 pre-existing
+      `attempted_failed` manifest rows with old label-pairing. — unified-trading-pm (docs-only; no code change needed,
+      data-only op)

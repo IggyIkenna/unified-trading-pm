@@ -50,7 +50,9 @@ source:
 assigned_vm: NA
 resolved_by:
   "determination 2026-07-13 (this doc) — image verified non-surface via live GCP reads + workspace grep; no code change
-  and no rebuild required"
+  and no rebuild required. Addendum 2026-07-13: per explicit operator ruling, the stale asia-northeast1 AR package was
+  deleted and the zero-traffic europe-west4 agent-orchestrator-staging Cloud Run service torn down (both verified
+  NOT_FOUND — see teardown checklist)."
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -107,14 +109,16 @@ flows to `main` via the standing fleet promote; the image needs no action.
 
 ## Follow-up candidates (operator decision, non-blocking — none executed)
 
-- [ ] P3. Delete the stale `unified-trading-system/agent-orchestrator` AR package (3 tags, 1 digest) — pure cost/
-      hygiene; nothing breaks if kept.
+- [x] P3. ✅ Delete the stale `unified-trading-system/agent-orchestrator` AR package (3 tags, 1 digest) — pure cost/
+      hygiene; nothing breaks if kept. **EXECUTED 2026-07-13 per operator ruling — see teardown checklist below
+      (Evidence: cloudbuild=d571bed5-a3d8-4828-86ed-954ff2f3308e SUCCESS, verify NOT_FOUND).**
 - [ ] P3. Decide whether AO should get a real `agent-orchestrator-staging` Cloud Build trigger so the dual-cloud
       image-build gate stops soft-passing on the GCP side (only worth it if the operator wants image-buildability
       enforced for AO PRs; the AWS/ECR side has `buildspec.aws.yaml`).
-- [ ] P3. Tear down the HISTORICAL europe-west4 Cloud Run service `agent-orchestrator-staging` (min-instances 0, runs
-      the superseded `cloud-run-source-deploy:uat` image) + its registry — codex already marks it "not running today";
-      keep only if the cloud-agnostic re-spin optionality is still wanted.
+- [x] P3. ✅ Tear down the HISTORICAL europe-west4 Cloud Run service `agent-orchestrator-staging` (min-instances 0, runs
+      the superseded `cloud-run-source-deploy:uat` image) — codex already marks it "not running today". **SERVICE
+      DELETED 2026-07-13 per operator ruling after a verified zero-traffic-in-30d gate — see teardown checklist below.
+      The europe-west4 registry/image itself was NOT in the ruling and remains.**
 
 ## Operator ruling 2026-07-13 (explicit, interactive Q&A): execute items 1 + 3 — pre-delete state capture
 
@@ -199,5 +203,15 @@ spec:
 
 ### Teardown checklist (execute after this capture is committed)
 
-- [ ] P1. Delete AR package `unified-trading-system/agent-orchestrator` (asia-northeast1) + verify NOT_FOUND
-- [ ] P1. Delete Cloud Run service `agent-orchestrator-staging` (europe-west4) + verify NOT_FOUND
+- [x] P1. ✅ Delete AR package `unified-trading-system/agent-orchestrator` (asia-northeast1) + verify NOT_FOUND — direct
+      delete PERMISSION_DENIED for `unified-trading-sa`, executed via Cloud Build executor (Evidence:
+      cloudbuild=d571bed5-a3d8-4828-86ed-954ff2f3308e SUCCESS): "Deleted package [agent-orchestrator]", in-build
+      `artifacts packages describe` → NOT_FOUND
+- [x] P1. ✅ Delete Cloud Run service `agent-orchestrator-staging` (europe-west4) + verify NOT_FOUND — zero-traffic gate
+      PASSED (0 request-log entries in 30d + empty `run.googleapis.com/request_count` timeSeries); deleted
+      2026-07-13T23:33Z; `gcloud run services describe` → "Cannot find service [agent-orchestrator-staging]". The
+      europe-west4 `cloud-run-source-deploy/agent-orchestrator:uat` image and the central-VM AO runtime were NOT
+      touched.
+
+Teardown COMPLETE 2026-07-13. Remaining open item: only the P3 Cloud Build trigger decision (item 2 above — not in this
+ruling).

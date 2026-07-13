@@ -179,6 +179,46 @@ _qg_src_content_key() {
     } | _qg_hash
 }
 
+# ── EDITABLE-SIBLING CONTENT (green-sentinel gap fix, 2026-07-13 incident) ────
+# A test can depend on a WORKSPACE SIBLING's live source via `uv pip install -e
+# ../sibling` (setup.sh STEP 7/8b re-pins every sibling dep as editable) without
+# THIS repo's own tree changing at all. Incident: unified-api-contracts's
+# KNOWN_VENUE_TOKENS regressed under unified-trading-pm's
+# test_capability_verdict_matrix.py while PM's own tree was untouched — the
+# green content-sentinel (`_qg_content_hash`, below/base-service.sh /
+# base-library.sh) only ever hashed THIS repo's tree, so it reported a false
+# green and masked the regression (plans/active/issues/
+# pm_qg_red_f47_venue_token_regression_2026_07_13.md). Fold each editable
+# sibling's git state into the sentinel too, so a sibling regression invalidates
+# it. Scope: committed HEAD + uncommitted TRACKED diff per sibling — untracked
+# sibling files are out of scope (siblings are edited one-at-a-time per the
+# /boot-per-shippable-unit discipline; the committed-change case this incident
+# hit is the one that matters). Best-effort by design (matches the sentinel's
+# own "malformed/empty hash never triggers a skip" contract): no venv, no
+# editable installs, or a malformed direct_url.json all silently contribute
+# nothing rather than failing the hash.
+_qg_editable_sibling_hash() {
+    local _site_pkgs
+    _site_pkgs=$(find "${PROJECT_ROOT}/.venv/lib" -mindepth 1 -maxdepth 1 -name 'python3.*' 2>/dev/null | head -1)
+    [ -n "$_site_pkgs" ] || return 0
+    _site_pkgs="${_site_pkgs}/site-packages"
+    [ -d "$_site_pkgs" ] || return 0
+    local _durl _sib_path
+    for _durl in "$_site_pkgs"/*.dist-info/direct_url.json; do
+        [ -f "$_durl" ] || continue
+        # Editable + file:// (local path) only — a PyPI/Artifact-Registry install has no
+        # local sibling tree to drift, and direct_url.json's own format is stable pip/uv
+        # output (not attacker-controlled), so this grep/sed match is sufficient — no jq
+        # dependency added to a script every repo sources.
+        grep -q '"editable"[[:space:]]*:[[:space:]]*true' "$_durl" 2>/dev/null || continue
+        _sib_path=$(grep -oE '"url"[[:space:]]*:[[:space:]]*"file://[^"]+"' "$_durl" 2>/dev/null \
+            | sed -E 's/.*"file:\/\/([^"]+)".*/\1/')
+        [ -n "$_sib_path" ] && [ -d "${_sib_path}/.git" ] || continue
+        git -C "$_sib_path" rev-parse HEAD 2>/dev/null
+        git -C "$_sib_path" diff HEAD 2>/dev/null
+    done
+}
+
 _qg_cache_age_hours() {  # $1=cache name → prints integer age in hours; rc 1 if absent
     local _f="${_QG_CACHE_DIR}/$1" _mt
     [ -f "$_f" ] || return 1

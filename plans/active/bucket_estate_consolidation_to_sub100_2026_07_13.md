@@ -292,6 +292,26 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   setup-gcs-lifecycle-policies.sh deleted, e2e fixtures deleted) now resolved. QG green (43s), quickmerge →
   live-defi-rollout.
 
+- **2026-07-13/14 (round 2 landings).** deployment-api prod VERIFIED on the flat fix without intervention (auto
+  promote+build pipeline; revision 00158-m5x live-curled — all 3 strategy-store entries flat) → strategy-store per-AG
+  trio RETIRED (cefi's 105 residual objects preserved to flat `legacy_cefi/`, count-verified, 3 buckets deleted).
+  Football ×4 MIGRATED (455+119+107+37 objects, count-verified into backtest-results/football,
+  ml-models-store-prd/legacy_football,
+  instruments-store-sports-prd/legacy_football/{mapped_consolidated,raw_all_sources}) and deleted. **DeFi trio agent
+  found + closed a REAL parity regression before deletion: 6,941 objects missing from the shared bucket** (5 whole dex
+  venues, GMX 2021-23 funding, HL perp_daily 177d+perp_mark_price, 7 CeFi Tardis venues' perp shards silently absent
+  from funding_for_day post-cutover, 5 LST venues' early history, 21 dex_pool_fees rows contradicting the earlier "zero
+  rows" read) — all copied + re-verified through the deployed readers (funding_for_day 697 obs incl. all cefi venues;
+  pairs_for_day == baseline). strategy-service confirmed tarball-deployed ephemeral VMs (nothing to restart; tarball
+  @a4ea4fa7 sha-verified to contain the readers). DeFi kinds removed from ALL FIVE yaml copies (34 kinds; 5th copy
+  found: PM scripts/quality-gates-base/ ci-test-cloud-providers.yaml): uac@252c0072, utl@1177768b, ds@f04cc39b,
+  e2e@3d219d76, mtds@02a88186 (also Tardis lease default → resolver), PM@abcd47b4+@5f0efb01 (defi-plan flips). L6 twins:
+  first detached rm attempt no-op'd on a FULL VM tmpfs (nothing deleted, verified all 6 EXIST); recovery = state backups
+  secured to GCS, tmp freed, 6-twin in-memory legacy-vs-prd diff + gap copy, then LIFECYCLE PURGE (age=0 + noncurrent=0)
+  armed — GCS purges async ~24h, bucket delete is the follow-up one-liner. Sports pair still HELD (E1). In flight: trio
+  state-rm + lst-rates-prd/perp-funding-prd deletion + dex-pools-prd purge-arm (209k undiffed legacy-tree objects →
+  async purge = 24h abort window) + zombie backfill VM stops (operator-flag: 16-day stall, 0 events).
+
 - **2026-07-13 (late), ROUND 2 — operator returned + authorized the remainder.** Verbatim rulings: prod redeploys
   authorized; Tardis lease fine to move ("authenticationless"); "for the rest … why can't we migrate and delete" +
   ticked: L6 legacy twins, DeFi -prd trio (after redeploy+parity), football migrate-to-canonical-homes+delete; ASTER

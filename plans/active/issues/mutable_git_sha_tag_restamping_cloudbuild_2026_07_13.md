@@ -15,8 +15,9 @@ summary:
   that resolve a sha tag get silent drift. Confirmed re-stamp event: build 2d9e658f-a843-49c3-94eb-c71d7b70bc14
   (deployment-api-main-deploy, 2026-07-13T17:24Z, overall FAILURE at the deploy step but push step SUCCESS) pushed
   f33b346a onto the pre-existing 7da9baf tag. FIXED (first-push-wins sha-tag-guard): PM templates
-  cloudbuild-api/service/ui-template.yaml + deployment-api/cloudbuild.yaml. PROPOSED (not yet rolled out): per-repo
-  copies of the other 15 docker repos + cloudbuild-infra-template.yaml (ibkr-gateway-infra terraform image)."
+  cloudbuild-api/service/ui/infra-template.yaml + ALL 19 docker-pushing repo copies (fleet rollout completed 2026-07-13,
+  per-repo evidence below) — including deployment-service, which the original class analysis wrongly listed as
+  not-affected (it stamps full :$COMMIT_SHA, invisible to a SHORT_SHA grep)."
 status: open
 nature: notes
 asset_group: [cross-cutting]
@@ -105,6 +106,58 @@ Minimal mechanism, uniform across templates:
 |                                            |                    | vendor-deps/deploy/rollup steps exist ONLY in the  |
 |                                            |                    | repo copy; a blind rollout would clobber them,     |
 |                                            |                    | repeating the 2026-06-14 fetch-ui incident)        |
+| `configs/cloudbuild-infra-template.yaml`   | unified-trading-pm | FIXED — unified-trading-pm@66436ddf2 (guard on the |
+|                                            |                    | terraform-image push; no `images:` sha entry)      |
+
+### Fleet rollout — completed 2026-07-13 (all on `live-defi-rollout`)
+
+Method: per-repo PRE-DIFF against the rendered pre-guard template (rendered from `56de3cb06^` / `66436ddf2^`).
+deployment-ui + unified-trading-system-ui matched the pre-guard template byte-for-byte → mechanical
+`rollout-cloudbuild.py` rollout; every other copy carried intentional drift (GH_PAT tag fetch, PEP440 VERSION fallback,
+operability-probe, etc.) → surgical hand-merge of ONLY the guard block (guard step + conditional push preserving the
+repo's own `waitFor` deps + `images:` sha-entry removal); drift preserved byte-identical. Shipped via quickmerge where
+pre-flight passed (the 2 UI repos); the rest via the documented dirty-deps carve-out direct push (foreign dirty WIP in
+UAC/UTL/deployment-service blocked pre-flight; precedent instruments-service@903f2659; QG sentinel content-verified per
+repo).
+
+| Repo (all `cloudbuild.yaml`)      | Evidence commit                |
+| --------------------------------- | ------------------------------ |
+| market-tick-data-service          | 69c120ba                       |
+| instruments-service               | 06a8d1b3                       |
+| execution-service                 | e181b219                       |
+| strategy-service                  | 9bc3005e                       |
+| features-service                  | 8ecce951                       |
+| ml-service                        | 43b881b                        |
+| alerting-service                  | 6cf3106                        |
+| greeks-service                    | fa0de7c                        |
+| market-data-processing-service    | 128a10b                        |
+| fund-administration-service       | 5752a60                        |
+| trading-agent-service             | e5d7704                        |
+| batch-live-reconciliation-service | 29cda59                        |
+| agent-orchestrator                | 265c804                        |
+| client-reporting-api              | c7b53f7                        |
+| deployment-ui                     | 23c5bfc (quickmerge)           |
+| unified-trading-system-ui         | 7e1eb6a0 (quickmerge)          |
+| ibkr-gateway-infra                | 8a5f405                        |
+| deployment-service                | 7e4414d (see correction below) |
+
+Verified by CONTENT on `origin/live-defi-rollout` for all 19 repos (incl. deployment-api): `id: "sha-tag-guard"`
+present, conditional push present, zero sha tags left in `images:`.
+
+### Correction to the original class analysis (found at rollout, 2026-07-13)
+
+**deployment-service WAS affected** — the original "Not affected: deployment-service (no sha tagging)" was wrong: it
+tags full **`:$COMMIT_SHA`** (not `$SHORT_SHA`, so the class grep missed it) on BOTH images it builds
+(`deployment-dashboard`/`deployment-api` via `${_SERVICE_NAME}` and `sports-scheduler`), pushes both `--all-tags`, AND
+listed both `:${COMMIT_SHA}` entries in `images:`. Fixed in deployment-service@7e4414d: two-marker guard
+(`.sha_tag_preexists` + `.sha_tag_preexists_sports`), both pushes conditional (guarded path pushes `:latest` [+ `:dev`
+for the api image]), both sha entries dropped from `images:`. The deploy step still deploys `:${COMMIT_SHA}` → resolves
+to the preserved first digest (deterministic on retries).
+
+**unified-trading-library — reviewed, NOT in this class**: its docker image is tagged only `:$VERSION` + `:latest` (no
+git-sha tag; SHORT_SHA appears only in build-metadata JSON). Note: `push --all-tags` does re-stamp `:$VERSION` on a
+same-version rebuild — semver-tag mutability, a different (lower-severity) class, out of scope here.
+unified-api-contracts confirmed metadata-only.
 
 Validation: YAML parse OK ×4; `scripts/validation/validate-cloudbuild.py` OK ×4 (SchemaStore schema);
 `scripts/quality_gates/check_cloudbuild_substitutions.py` clean ×4; prettier clean.
@@ -123,13 +176,17 @@ trigger history.
 
 ## Proposed (NOT yet done)
 
-- [ ] [INFRA] P2. Roll the guarded push out to the 16 per-repo `cloudbuild.yaml` copies +
+- [x] [INFRA] P2. Roll the guarded push out to the 16 per-repo `cloudbuild.yaml` copies +
       `configs/cloudbuild-infra-template.yaml` via `scripts/propagation/rollout-cloudbuild.py` — but FIRST diff each
       copy against its rendered template (deployment-api-style drift would be clobbered; the rollout script overwrites
-      wholesale). One quickmerge per repo.
+      wholesale). One quickmerge per repo. — ✅ 2026-07-13: infra template unified-trading-pm@66436ddf2; 17 repo
+      copies + deployment-service (found affected at rollout — see correction above) shipped one commit per repo,
+      evidence table above; pre-diff done against rendered pre-guard templates (2 mechanical, 16 hand-merged); verified
+      by content on origin/live-defi-rollout across all 19 repos.
 - [ ] [INFRA] P3. Consider `scan-check` semantics on a pre-existing sha tag: it scans the preserved (old) image, not the
       just-built one — acceptable (the preserved image is what the tag serves) but worth a deliberate ruling at rollout
-      time.
+      time. (Rollout note 2026-07-13: fleet rollout shipped with scan-check semantics UNCHANGED everywhere — no
+      deliberate operator ruling was sought; stays open as the standing question.)
 - [ ] [INFRA] P3. deploy-shared.sh manual path: passes `SHORT_SHA=$(git rev-parse --short HEAD)` — now safe (guard keeps
       the first digest); no change needed, noted for awareness.
 - [ ] [INFRA] P3. deployment-api's secondary configs `cloudbuild-tier3.yaml` (writes the SAME
