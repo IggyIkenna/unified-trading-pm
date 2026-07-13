@@ -117,6 +117,26 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 11 (Todo 3 re-dispatch — fast re-verify, fleet still healthy, ~37.5% done, no new action)
+
+Fast re-verify only via non-snap gcloud (`ikenna@odum-research.com`, `central-element-323112`):
+
+- Features bucket unique-date count: **1,579** (up from 1,560 at slot-9's last check) — steady forward movement, all 10
+  `fss-backfill-vm-{1..10}` `RUNNING`.
+- Tailed `fss-backfill-vm-4`'s `run.log` (the shard slot-6 found OOM-killed on 2018-06-17): now wall-clock-fresh
+  (`10:08:57` vs check time `10:14:16`), actively processing 2018-06-18 — genuinely alive, not hung. Confirmed
+  `day=2018-06-17` is still absent from the features bucket, as expected (this slot's earlier relaunch excluded that
+  poison date per the still-open profiling todo in
+  [`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)).
+
+Gate ("features manifest clean over history") remains structurally unmet — compute is genuinely still mid-run (~37.5% of
+~4,210 days), consistent with every prior check. No new finding, nothing for `data_engineering` craft to act on.
+Checkbox NOT flipped. Not filing a new BLK. `/skip-current-task` taken.
+
+**Handoff unchanged**: watch the bucket date count climb toward ~4,210; once all 10 VMs report `EXIT_STATUS=0` (or the
+count approaches full span) AND the 2018-06-17 memory-bug fix lands + is force-recomputed, re-run
+`check_pipeline_completeness.py` (Todo 2) then reassess Todo 1 + Todo 3 for real.
+
 ### 2026-07-13 — slot 6 (Todo 1/3 dispatch — found + partially fixed 2 dead shards; NEW finding: reproducible unbounded-memory OOM on date 2018-06-17, filed as its own issue)
 
 **Todo 1 (compute features 2015→present) — took concrete action this dispatch instead of pure re-verify. Todo 3 still
