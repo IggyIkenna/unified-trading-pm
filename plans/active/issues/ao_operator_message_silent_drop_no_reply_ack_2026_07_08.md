@@ -28,7 +28,7 @@ repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags:
   [agent-orchestrator, operator-chat, message-delivery, reply-ack, at-least-once, silent-drop, main-agent, reliability]
-related: []
+related: [ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md]
 created: 2026-07-08
 parent_epic: orchestrator_master
 priority: P1
@@ -205,6 +205,12 @@ the watchdog's own reclaim.)
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what happened>.` -->
 
+- **2026-07-13** — Checked against a separate operator-reported gap ("operator rulings never reach the AO
+  blocked-question queue", proven on `BLK-f2bb67c2`). Confirmed this doc's fix (Option A, `agent_messages` reply-ack)
+  does NOT cover it — `blocked_queue`/`BlockedRow` is a wholly separate table this doc never touches, and the remaining
+  open todo here (tmux-nudge reliability) is unrelated. Filed + shipped as its own issue:
+  `ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md` (`BlockedQueueReconciler`,
+  agent-orchestrator@bec9373a99fb49793efbb874339dcaf81a3ae009). No todos here flipped — genuinely a different gap.
 - **2026-07-08** — ✅ **Orphaned dispatched-task reclaim SHIPPED** (ao@62d4da8f, live-defi-rollout; staging-first
   drain). Root-caused live during operator's chat with the main agent (main tried `/api/slots/6,7/reassign`, got 400
   "slot has no current task"): `WorkerLivenessWatchdog._reclaim_exited_slot` cleared `slot.current_task` on a
