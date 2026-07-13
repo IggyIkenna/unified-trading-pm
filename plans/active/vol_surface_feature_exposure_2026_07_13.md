@@ -127,11 +127,44 @@ sequential: false
       unaffected-when-absent) and `test_vol_remaining_wave_engines.py` (6: confirm/disagree/absent x2 engines) — 73/73
       pass (65 pre-existing + 8 new, zero regressions), `ruff`/`basedpyright` clean, `check-import-patterns.py` 0
       violations, full `quality-gates.sh` green (92s).
-- [ ] [SCRIPT] P2. Design the multi-underlying vol-surface feature vector — index + per-component surfaces (for
+- [x] ✅ [SCRIPT] P2. Design the multi-underlying vol-surface feature vector — index + per-component surfaces (for
       VOL_DISPERSION) and an explicit asset-pair shape (`iv_atm_asset_a`/`iv_atm_asset_b` etc., for
       VOL_CROSS_ASSET_SPREAD) built from multiple `CanonicalImpliedVolSurface` inputs (one per underlying — the Deribit
       adapter already enumerates BTC/ETH/SOL/BNB/XRP, so multi-asset fetch is not new work, only the feature-vector
-      shape is). Repo: features-service.
+      shape is). Repo: features-service. — DESIGNED (2026-07-13, slot-5), no code shipped (design-only; item 5
+      implements it). Read `dispersion.py`/`cross_asset_spread.py` (strategy-service) and
+      `vol_surface_feature_extractor.py` (features-service) first — **the exact key names are already the consumer-side
+      contract, not new naming to invent**: `dispersion.py:67-72` (`_component_iv` helper) already checks
+      `component_iv_atm` OR `avg_component_iv_atm` in that order; `cross_asset_spread.py:87-90` already reads
+      `iv_atm_asset_a`/`iv_atm_asset_b` and requires BOTH (else honest no-trade, tested). Neither engine needs a code
+      change — this item + item 5 only need to make those already-expected keys real. **Decision: two new module-level
+      functions in the SAME `vol_surface_feature_extractor.py`** (same `FORMULA_VERSION = 1` constant, same
+      honest-absence idiom, reuse the existing private `_pick_atm_iv` helper — item 5 should factor the
+      surface→`pts_raw` conversion loop already inside `extract_vol_surface_features` into a small shared helper so it
+      isn't duplicated 3x): -
+      `extract_dispersion_features(index_surface: CanonicalImpliedVolSurface | None, component_surfaces:       list[CanonicalImpliedVolSurface] | None) -> dict[str, float]`.
+      Role assignment (which underlying is "index" vs "component") is a STRATEGY-CONFIG decision made by the caller
+      wiring `GroupBRunner.on_tick` — Deribit has no actual index-option product distinct from BTC/ETH/etc., so the
+      extractor takes pre-labeled surfaces, it does not infer roles from `CanonicalImpliedVolSurface.underlying`. Emits
+      `index_iv_atm` (via `_pick_atm_iv` on `index_surface`) when present. For components:
+      `len(component_surfaces) == 1` → emit `component_iv_atm`; `> 1` → emit `avg_component_iv_atm` = mean of each
+      component's ATM IV (only over the ones present — a component with an empty/missing surface is dropped from the
+      average, never treated as 0). Zero components present → omit both component keys entirely, matching the engine's
+      existing `degraded_single_surface` fallback (untouched — this item is purely additive, no engine change). -
+      `extract_cross_asset_spread_features(surface_a: CanonicalImpliedVolSurface | None, surface_b:       CanonicalImpliedVolSurface | None) -> dict[str, float]`.
+      Emits `iv_atm_asset_a`/`iv_atm_asset_b` independently (via `_pick_atm_iv` on each surface) — each omitted on its
+      own if that surface is absent/empty, mirroring `cross_asset_spread.py`'s existing both-required honest no-trade
+      (engine already returns `[]` when only one key is fed — tested, do not touch). Scoped to `iv_atm` only for now
+      (not the full per-strike grid/skew per asset) — the engine code today reads ONLY `iv_atm_asset_a`/`_b`, nothing
+      else; extending to `iv_25d_call_asset_a`-style keys would be speculative (YAGNI) until a real consumer reads them
+      — if that need appears later, reuse this SAME `_asset_a`/`_asset_b` suffix convention, don't invent a second one.
+      **Verified NON-existing convention**: grepped all of features-service for any prior multi-underlying/asset-pair
+      flat-dict pattern — none exists (the closest analog, `multi_timeframe`'s multi-timeframe-into-one-dict compose, is
+      the same shape on a different axis, not asset-suffixed). This makes `_asset_a`/`_asset_b`/`index_`/`component_`
+      genuinely new conventions for features-service, but they are NOT free inventions — they match the already-written
+      strategy-service consumer code exactly, which is the correct SSOT to mirror (same reasoning as item 1 matching
+      `vol_surface_feature_extractor.py`'s own existing key style rather than the sibling calculator's convention).
+      `formula_version`: same module-level `FORMULA_VERSION: int = 1` constant, no new versioning scheme.
 - [ ] [SCRIPT] P2. Implement + unit-test the multi-underlying extractor, honest-absence on any missing underlying (no
       degraded single-surface synthesis beyond the existing `degraded_single_surface` attestation already in
       VOL_DISPERSION). `formula_version=1`. Repo: features-service.
