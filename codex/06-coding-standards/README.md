@@ -130,6 +130,15 @@ source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-ser
 4. **UTC everywhere.** All datetime operations use UTC-aware datetimes. No naive datetime objects.
 5. **Config via classes, not env vars.** All configuration flows through `UnifiedCloudConfig` subclasses (from
    unified-config-interface).
+6. **Reuse before reimplement.** Before writing a new helper, check whether UTL/UAC already has one — a service-local
+   reimplementation of logic UTL already provides (retry loops, threshold-status ladders, drawdown or HWM tracking,
+   model or artifact registries, auth clients) is technical debt from day one, not a shortcut. When a service genuinely
+   needs a capability UTL/UAC lacks, **extend the shared library first**, then consume it from the service — never build
+   the one-off locally and leave the shared library thin. Verified via the
+   `utl_uac_reuse_consolidation_remediation_2026_06_10` audit + its 9-phase remediation
+   (`utl_reuse_phase0`-`phase9_..._2026_07_13`): every genuine duplicate found across the fleet — auth clients, the
+   threshold-status and equity/drawdown helpers, ML model registries, deployment cloud-SDK calls, venue retry loops —
+   got consolidated onto UTL/UAC rather than left to drift independently per-repo.
 
 ---
 
@@ -364,6 +373,17 @@ def fetch_data():
 MAX_RETRIES = 5  # Should be in config
 ```
 
+### Hand-rolled adapter retry loops → `unified_trading_library.utils.retry` / `with_retry`
+
+`@handle_api_errors`/`@handle_storage_errors` (above) wrap a whole call in classify-and-retry; for the narrower case of
+a hand-rolled retry LOOP inside an adapter (exp backoff + jitter, 429/5xx-aware), use UTL's `retry` (decorator) or
+`with_retry` (callable) from `unified_trading_library.utils.retry` (also exported from `.utils` and the top-level
+package) instead of writing a new backoff loop per adapter — stdlib-only, no new dependency. Landed
+`unified-trading-library@20c8ae8d` (`utl_reuse_phase6_venue_health_retry_2026_07_13`) specifically to replace the
+hand-rolled retry loops in MTDS's and instruments-service's `base_adapter.py` (each classifies on give-up per its own
+venue-error taxonomy — preserve that classification behaviour when migrating, the retry LOOP is what moves to UTL, not
+the classify step).
+
 ---
 
 ## Logging Standards [IMPLEMENTED]
@@ -448,10 +468,10 @@ def train_model(X, y):
 
 **Why:** UTL (`unified_trading_library`) is loaded via its `__init__` chain into every service at startup — including
 non-ML repos such as the API gateway, MTDS, instruments-service, etc. A module-level ML import anywhere in UTL or a
-shared library therefore crashes every consumer service that does not have these heavy packages installed. Lazy-importing
-inside the method confines the import to callers that actually invoke that code path, leaving non-ML services
-unaffected. Add a `# noqa: PLC0415` comment with a brief rationale on each lazy-import line so ruff does not flag it as
-a violation of the "imports at top of file" rule.
+shared library therefore crashes every consumer service that does not have these heavy packages installed.
+Lazy-importing inside the method confines the import to callers that actually invoke that code path, leaving non-ML
+services unaffected. Add a `# noqa: PLC0415` comment with a brief rationale on each lazy-import line so ruff does not
+flag it as a violation of the "imports at top of file" rule.
 
 ---
 

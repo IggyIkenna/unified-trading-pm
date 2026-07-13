@@ -12,7 +12,13 @@ stage: [meta]
 repos: [deployment-service, features-service, ml-service, strategy-service]
 scope: [engineer, admin]
 tags: [ml, refactor, consolidation, infrastructure, model-tier, ssot]
-related: [features-service-architecture.md, ml-lifecycle.md, promote-workflow-architecture.md, ../05-infrastructure/vm-tarball-deployment.md]
+related:
+  [
+    features-service-architecture.md,
+    ml-lifecycle.md,
+    promote-workflow-architecture.md,
+    ../05-infrastructure/vm-tarball-deployment.md,
+  ]
 created: 2026-05-19
 authoritative_for:
   [
@@ -21,7 +27,12 @@ authoritative_for:
     ml-service CLI --operation dispatch,
     ml-service single-image deployment topology,
   ]
-referenced_by: [codex/00-getting-started/DEPRECATED_SERVICES.md, codex/04-architecture/ml-lifecycle.md, codex/06-coding-standards/cli-convention.md]
+referenced_by:
+  [
+    codex/00-getting-started/DEPRECATED_SERVICES.md,
+    codex/04-architecture/ml-lifecycle.md,
+    codex/06-coding-standards/cli-convention.md,
+  ]
 owner:
 last_reviewed: 2026-05-20
 code_refs:
@@ -66,7 +77,7 @@ ml-service/                              # NEW repo
 │   │   │                               # sports_ensemble_trainer, hyperparameter_tuning
 │   │   ├── backtest_v2/                # backtest runner
 │   │   ├── engine/                     # orchestrator, mock_data_provider
-│   │   └── ml/                         # model_registry, models
+│   │   └── ml/                         # models, config_schema, model_variant_registry
 │   └── inference/                      # was ml-inference-service/
 │       ├── app/core/                   # feature_subscriber, model_promotion_subscriber, mtf_feature_subscriber,
 │       │                               # prediction_publisher, date_validation
@@ -141,6 +152,15 @@ Training writes model artifacts → GCS model-registry bucket → publishes `mod
 `model_promotion_subscriber` consumes that event → loads model into runtime. **Post-merge** the publisher and subscriber
 are in the same repo + can share types directly (no need for round-trip through UAC for the in-process case), but UAC
 contracts remain the SSOT for the event schema since downstream strategy-service is also a consumer.
+
+**`ModelRegistry` class SSOT (2026-07-13, `utl_reuse_phase3_ml_model_registry`):** the registry class itself
+(`store_model`/`load_model`/`get_model_for_inference_date`/`get_model_metadata`, the writegate BLOCK_CRITICAL
+emission-policy check, availability-manifest emission, and the joblib trusted-prefix allowlist) lives in
+`unified_trading_library.ModelRegistry` — ml-service's former local copy at `ml_service/training/ml/model_registry.py`
+was deleted; every ml-service consumer (`training_orchestrator.py`, `final_training_handler.py`, `evaluate_handler.py`,
+`model_loader.py`) imports `from unified_trading_library import ModelRegistry` directly. Do NOT reintroduce a local
+`ModelRegistry` — extend UTL's if a new capability is needed, following the same "extend UTL first" pattern this
+migration used.
 
 ## Migration history
 

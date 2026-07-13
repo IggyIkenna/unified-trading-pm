@@ -145,6 +145,15 @@ creds env files are operator-managed manually.
 > VMs so the disaster-recovery loop is live (until then AWS hosts without a reachable GCS bucket still keep state on
 > local disk). Tracked: `plans/active/orchestrator_autonomy_audit_remediation_2026_06_01.md` Phase 1.
 
+> **Cloud I/O via UTL, not raw SDK (code shipped 2026-06-22, agent-orchestrator@62894565,
+> `utl_reuse_phase5_deployment_api_cloud_sdk_2026_07_13`)**: `server/gcs_sync.py`'s dual-cloud mirror above goes through
+> UTL `get_storage_client(provider="gcp"|"aws")` (`upload_bytes`/`upload_file`) — the direct `boto3` +
+> `google.cloud.storage` client construction it used to do is gone. `server/auth.py`'s `_load_gcs_secret` (the per-VM
+> setup-token env fetch) is the same: `get_storage_client(provider="gcp", project_id=…).download_bytes()` instead of a
+> raw `gs://` blob fetch — auth-fetch only, HS256/ES256 JWT signing itself is untouched. Do not reintroduce a direct
+> `boto3`/`google.cloud.storage` import here — extend UTL's `get_storage_client` if a new cloud I/O capability is
+> needed.
+
 ---
 
 ## Auth flip rationale

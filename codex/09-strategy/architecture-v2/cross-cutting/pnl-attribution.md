@@ -254,6 +254,18 @@ invariants) + client-reporting-api `core/hwm_seeds.py` (per-account seed resolut
 > does not duplicate `post_trade/hwm_invariants.py`. Do not re-flag it in a future reuse audit. SSOT:
 > `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line 176-179 (verified NON-findings list).
 
+> **Verified NON-finding (UTL/UAC reuse audit, `utl_reuse_phase1_strategy_risk_hwm_2026_07_13`, 2026-07-13)**:
+> strategy-service's `RiskCalculator.calculate_drawdown` / `compute_drawdown` (`risk/core/risk_calculator.py`) and the
+> duplicated peak/max-drawdown loop in `engine/core/components/pnl_monitor.py` / `engine/core/output_builders.py` are
+> **equity-curve drawdown** — `(peak_equity - current_equity) / peak_equity`, tracked per-`client_id` for real-time
+> risk-limit gating (leverage/concentration/drawdown thresholds in `pre_trade_check_engine.py`). This is a **different
+> domain** from the fee-crystallization HWM in §8 above: drawdown answers "how far below my own peak am I right now, for
+> risk purposes", while §8's HWM answers "what equity level must be exceeded before a performance fee crystallizes, for
+> billing purposes" — different denominations, different reset semantics (drawdown peak only ever rises within a
+> risk-monitoring session; the fee HWM has explicit transfer-adjustment and multi-method reconciliation rules that don't
+> apply to a risk gate). Do **not** collapse strategy-service's equity-curve drawdown into UTL
+> `post_trade/hwm_invariants.py`/`hwm_periods` — keep it local. Do not re-flag it in a future reuse audit.
+
 ## Canonical Attribution Factors
 
 ### Factor Hierarchy
