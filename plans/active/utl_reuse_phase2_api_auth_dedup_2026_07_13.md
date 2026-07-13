@@ -51,10 +51,13 @@ drift_direction: advance-code
       `UnifiedCloudConfig().api_key`, returns `AuthContext(is_api_key=True, is_internal=True, role="admin")`, 401 on
       mismatch; ordered after S2S, before Bearer JWT; existing paths byte-preserved). **Unblocks alerting-service +
       unified-trading-api auth migration.**
-- [ ] [AGENT] P0. **alerting-service** (UTL extension is shipped — unblocked): delete `alerting_service/auth.py`
-      (`verify_api_key` + DISABLE_AUTH guard); change `api/main.py` to depend on UTL
-      `create_api_auth("alerting-service")`. Verify an `X-API-Key` caller still authenticates (it is **wired in
-      production**). Highest urgency of the two remaining.
+- [x] ✅ [AGENT] P0. **alerting-service** — DONE `alerting-service@f59dc67` (QG green, sentinel-verified). Deleted
+      `alerting_service/auth.py` (`verify_api_key` + DISABLE_AUTH guard); `api/main.py` now depends on UTL
+      `create_api_auth("alerting-service")` (`_api_auth`); `_env` reads `UnifiedCloudConfig().environment` directly.
+      Updated 5 test files' dependency overrides from `verify_api_key` to `_api_auth` (returning a fabricated
+      `AuthContext(is_api_key=True, is_internal=True, role="admin")`); deleted the now-dead `TestVerifyApiKey` class
+      from `test_health_and_auth.py` (X-API-Key path coverage lives in UTL's own 4 new auth tests). `X-API-Key`
+      production callers still authenticate via the same `UnifiedCloudConfig().api_key` check, now inside UTL.
 - [x] ✅ [AGENT] P0. **client-reporting-api** — DONE `client-reporting-api@9cd77cc` (579 tests ✓, coverage 71.2%, QG 0).
       Deleted dead `auth.py` + `_google_auth_sync.py` (+ their tests); repointed the 2 live importers (`main.py`,
       `api/main.py`) to `config.get_config()`; cleared the `DISABLE_AUTH` toggle from 16 test fixtures (live path
