@@ -275,12 +275,17 @@ drift_direction: advance-code
       {age} · merged N · +M rows · {duration}" for live consolidators; a dead one shows "not reporting — consolidator
       not live yet". Help doc updated. — `deployment-ui@c97a769e` + `pw:L2 ✓` cockpit.spec.ts **O7** (live +
       not-reporting states).
-- [ ] [INFRA] P1. **DEFERRED redeploy — emit in prod (operator 2026-07-11: ship code now, defer the estate redeploy).**
-      `latest.json` only appears once the ~25 Cloud Run consolidator jobs run the new UTL image. Redeploy is deferred to
-      the end-of-cockpit-plans deploy window (matches the standing local-dev-only deferral); until then the endpoint +
-      UI degrade honestly to "not reporting" for every consolidator. Staged rollout (one job, verify
-      `_index/latest.json`, then fan out) per the data-correctness rollout discipline. `Evidence: cloudbuild=<id>`
-      SUCCESS at redeploy.
+- [x] [INFRA] P1. ✅ **Estate redeploy DONE — latest.json emitting in prod (operator un-deferred 2026-07-13; GCP only,
+      AWS mirror dormant → same-shape later).** Pipeline-driven, not a manual build: the UTL LDR-push trigger had
+      already built the base image containing `unified-trading-library@111592eb` (`:latest` digest `dcb489…`); bumped
+      the MTDS Dockerfile `BASE_IMAGE_DIGEST` `e353…→dcb489…` + baselined a fresh transitive click CVE (PYSEC-2026-2132,
+      `--ignore-vuln`; `click.edit()` unused) → `market-tick-data-service@96ce4311`; the MTDS trigger rebuilt
+      `Evidence: cloudbuild=de50eace-6538-442d-aa9e-abf5dce59585` SUCCESS (`:latest`=`ccbc8462…`). Scoped to the **24
+      LIVE jobs only** (ENABLED `*/1` crons) per operator — the 9 PAUSED (`gas-fees` + 8 `-legacy`) left untouched.
+      Canary `market-data-cefi` updated+executed → SUCCESS + `_index/latest.json` written (schema v1); fanned out to the
+      other 23 (`gcloud run jobs update --image`, 23/23 OK); **verified 24/24 live buckets carry a fresh `latest.json`**
+      (timestamps 08:43–08:45Z, self-written each cron cycle), no breakage. The cockpit now reads `run_reporting=true`
+      for the live estate.
 
 ### Dark data-correctness actors — phantom/reprobe VISIBILITY (SEPARATE from #4 above; detection ALREADY EXISTS)
 
@@ -362,6 +367,19 @@ drift_direction: advance-code
   never touches a Lambda run-time — but if it ever does, use CloudWatch `Invocations`, never deploy-time.
 
 ## Progress Log
+
+- 2026-07-13 — **ESTATE REDEPLOY DONE — `latest.json` live in prod across the 24 running consolidators (operator
+  un-deferred).** Corrected the operator's mental model first (a green LDR→main does NOT auto-run in the jobs: MTDS pins
+  the UTL base image by digest, and Cloud Run JOBS pin the image digest at deploy time — codex `ci-cd-flow.md` "Image
+  deploy-hygiene"). Then executed the pipeline-aligned path: the UTL LDR-trigger had already built the base image with
+  `@111592eb` (`:latest`=`dcb489…`); bumped MTDS `BASE_IMAGE_DIGEST`→`dcb489` (`market-tick-data-service@96ce4311`),
+  MTDS trigger rebuilt (`cloudbuild=de50eace…` SUCCESS, `:latest`=`ccbc8462…`). Scoped strictly to the **24 LIVE jobs**
+  (ENABLED `*/1` crons) per operator "only the ones running now"; the 9 PAUSED (`gas-fees` + 8 `-legacy`) untouched.
+  Canary `market-data-cefi` → SUCCESS + `latest.json` written; fanned out `gcloud run jobs update` to the other 23
+  (23/23 OK); verified **24/24 live buckets carry a fresh `latest.json`** (08:43–08:45Z), no breakage. One incidental
+  finding handled with operator approval: a fresh transitive **click CVE PYSEC-2026-2132** (command-injection in
+  `click.edit()`, which MTDS never calls) was blocking the MTDS gate → baselined via `--ignore-vuln` (the repo's
+  existing "awaiting upstream fix" pattern). AWS Batch mirror stays dormant → same-shape when it comes alive.
 
 - 2026-07-11 — **#4 REDIRECTED + SHIPPED: consolidator self-reported `latest.json` run summary.** Operator clarified #4
   is NOT phantom/reprobe (separate) but consolidator liveness: not all ~25 are live now; have the live ones publish a
