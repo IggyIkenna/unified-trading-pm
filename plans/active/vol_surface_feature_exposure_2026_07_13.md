@@ -110,9 +110,23 @@ sequential: false
       (present/absent), float-type assertion, and a full 4-tenor sweep. 42/42 tests pass (30 pre-existing + 12 new, zero
       regressions), `ruff`/`basedpyright` clean, `check-import-patterns.py` 0 violations, full `quality-gates.sh` green
       (265s, sentinel-verified).
-- [ ] [SCRIPT] P2. Wire VOL_VARIANCE_SWAP / VOL_RATIO_SPREAD / VOL_SPREAD_STRUCTURES
+- [x] ✅ [SCRIPT] P2. Wire VOL_VARIANCE_SWAP / VOL_RATIO_SPREAD / VOL_SPREAD_STRUCTURES
       (`strategy-service/.../vol_trading/`) to consume the denser grid where it's present, falling back to the existing
-      3-bucket behavior when absent (do not regress the already-shipped honest-absence tests). Repo: strategy-service.
+      3-bucket behavior when absent (do not regress the already-shipped honest-absence tests). Repo: strategy-service. —
+      SHIPPED `strategy-service@8db3f717`. All three engines only ever read `iv_atm`/`iv_skew_25d` (shortest-tenor, no
+      explicit tenor selection) — wired in the grid's shortest-tenor 10-delta wing skew (`iv_skew_10d_1w`) as an
+      OPTIONAL signal, honest-absence preserved (identical behavior when the key is missing): **VOL_VARIANCE_SWAP** —
+      `_fair_variance` now blends the 10d convexity term in with the 25d term (50/50 average of the squared relative
+      skews) when present; absent → the exact original 25d-only formula. **VOL_RATIO_SPREAD** /
+      **VOL_SPREAD_STRUCTURES** (vertical branch only) — added a same-sign confirmation gate: if the 10d wing disagrees
+      in direction with the 25d skew, the near-wing signal is treated as unconfirmed/noisy and no trade fires (rather
+      than firing on a contradicted skew, or — for spread_structures — falling through to butterfly/condor logic);
+      absent → unchanged 25d-only decision. All three engines add `iv_skew_10d` to their attestations only when the key
+      is present. Deliberately did NOT touch leg/instrument/sizing math or invent new structure shapes — kept the blast
+      radius to signal quality only. 8 new tests added across `test_vol_template_wave_engines.py` (2: blend value +
+      unaffected-when-absent) and `test_vol_remaining_wave_engines.py` (6: confirm/disagree/absent x2 engines) — 73/73
+      pass (65 pre-existing + 8 new, zero regressions), `ruff`/`basedpyright` clean, `check-import-patterns.py` 0
+      violations, full `quality-gates.sh` green (92s).
 - [ ] [SCRIPT] P2. Design the multi-underlying vol-surface feature vector — index + per-component surfaces (for
       VOL_DISPERSION) and an explicit asset-pair shape (`iv_atm_asset_a`/`iv_atm_asset_b` etc., for
       VOL_CROSS_ASSET_SPREAD) built from multiple `CanonicalImpliedVolSurface` inputs (one per underlying — the Deribit
