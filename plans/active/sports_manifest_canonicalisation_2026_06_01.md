@@ -1391,7 +1391,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `sports-e3-e4-fleet-drain-complete` (main, 2026-07-13) — this checkbox bounced 16+ dispatches confirming the same
       RED precondition (no E3/E4 VM ever launched) with zero new information each time; do not re-dispatch until the
       todo below flips the condition GREEN.
-- [ ] [INFRA] P0. **Schedule + execute E3 fleet drain + E4 VM apply** for the sports v9 migration (main decision
+- [x] ✅ [INFRA] P0. **Schedule + execute E3 fleet drain + E4 VM apply** for the sports v9 migration (main decision
       2026-07-13 per `BLK-f2bb67c2`, option A — drift has been compounding since the last verify run on 2026-06-29; E8
       verify above cannot produce a trustworthy result until this lands). E3 = stop every sports-writing VM/process both
       clouds (mirrors the CLAUDE.md "pre-migration drain" HARD RULE — consolidate + snapshot before any GCS cutover); E4
@@ -1403,6 +1403,26 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       E8-verify checkbox above. Separately (not blocking this todo): the IS write-path gap that makes E8 verify regress
       again immediately after a walk (blank `pipeline_mode`/`source`/`available_at` on some new rows) is already its own
       todo — see `sports_manifest_canonicalisation-002` below (dispatched to slot-5).
+  - **DONE 2026-07-13 (slot-3, task sports_manifest_canonicalisation-003).** AWS (both regions checked) had no
+    sports-writing process; GCP had 10 ENABLED Cloud Scheduler jobs writing into
+    `market-data-tick-sports-prd`/`instruments-store-sports-prd`: `uts-prod-sports-scheduler-cron` (main writer, the
+    "sports-scheduler" the E3 script targets), both manifest consolidators
+    (`uts-prod-manifest-consolidator-{market-data,instruments}-sports-cron`), 4 fixture-trigger crons
+    (`uts-prod-sports-fixtures-{noon,midnight,6am,6pm}-t1-schedule`), and 3 daily IS writers (`is-daily-enum-sports`,
+    `expected-universe-v2-sports-daily`, `lifecycle-catalogue-regen-sports-daily`). **E3**: all 10 paused; confirmed no
+    in-flight executions; ran `snapshot_sports_index_e3_2026_06_27.py --project-id central-element-323112` — DRAIN
+    RESULT: DRAINED (row-counts stable over 120s) — then `--snapshot-only`, writing all 30 `_index` objects (10 MDPS +
+    20 instruments) to `_index/snapshots/pre_migration_v9_2026-07-13_*.parquet` on both surfaces. **E4**: launched the
+    full 16-VM SPOT fleet via
+    `launch-sports-v9-migration-vm.sh --surface {mdps,instruments} --year {2019..2026} --apply` (asia-northeast1-c;
+    STARTED<60s each, verified via `gcloud compute instances describe`); all 16 reached terminal state within ~24 min,
+    all confirmed `DEPLOYMENT_COMPLETED exit_code=0` with no errors/tracebacks (verified per-VM via the GCS-tee'd
+    `run.log` at `gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log`); per-VM manifest shards
+    landed under `_index/per_vm/` on both surfaces (8+8, matching the launched fleet). All 10 scheduler jobs resumed
+    post-fleet so the consolidator can merge the new per-VM shards.
+    `POST /api/prerequisites/sports-e3-e4-fleet-drain-complete {value:true}` called — ungates E8 verify above. —
+    ops-only (no code change; existing shipped scripts `mtds@4da9d65c` snapshot script, `mtds@680dff5f`+`mtds@699c58e9`
+    rebuilder, `deployment-service@6e8a115` launcher) — unified-trading-pm@<PM_SHA>.
 
 ## Deferred work after 2026-06-01 (sports-slot pickup session)
 
