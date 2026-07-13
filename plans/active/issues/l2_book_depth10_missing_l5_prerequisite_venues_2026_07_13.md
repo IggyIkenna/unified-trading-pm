@@ -121,8 +121,14 @@ For each of the 4 venues, in the same style as the 5 already-extended venues:
       violations (3 baseline errors, same shape as the futures original), full quality-gates.sh green.
 - [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for OKX-SPOT (books5/books channels, mirrors
       OKXFuturesBookWSConnector/OKXFuturesDepth10WSConnector). (repo: market-tick-data-service)
-- [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for UPBIT (single `{market_code}.30` channel
-      backs both data_types since 30 is the venue's hard depth cap). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for UPBIT (single `{market_code}.30`
+      channel backs both data_types since 30 is the venue's hard depth cap). (repo: market-tick-data-service) — **DONE,
+      slot 3, `market-tick-data-service@09da9848`**. New `upbit_book_ws.py`
+      (`UpbitBookWSConnector`/`UpbitDepth10WSConnector`) subscribes `orderbook.30` once and slices 5 vs 10 levels
+      client-side (UPBIT's `orderbook` channel is a flat snapshot every frame, not incremental, so no local book-state
+      dict is needed — simpler than the Coinbase snapshot+l2update pattern this mirrors structurally). Wired into
+      `upbit_spot_ws.py`'s `_upbit_factory` `data_type` dispatch (mirrors the `deribit_ws.py` factory pattern); trades
+      dispatch unaffected. 26 new tests + all 42 existing UPBIT trades tests pass; full `quality-gates.sh` green.
 - [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for OKX-FUTURES (own dated-contract `instId`
       resolution — check `venue_mapping.py`'s OKX helpers + the Tardis `okex-futures` exchange-name mapping for the
       exact expiry-symbol format first; then the same `books5`/`books` channel pattern as OKX-SWAP/OKX-SPOT). Scope
