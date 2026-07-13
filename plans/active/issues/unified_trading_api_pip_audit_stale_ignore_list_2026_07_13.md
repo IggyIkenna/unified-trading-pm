@@ -7,7 +7,7 @@ summary: |
   idna, pydantic-settings, starlette) are not covered by the repo's PIP_AUDIT_EXTRA_ARGS ignore list, which only has 2
   stale entries. Blocks every shippable unit in this repo from a green full QG run, not just the auth-migration work
   that surfaced it.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,7 +21,7 @@ priority: P1
 assigned_vm: planning
 source:
   [utl_reuse_phase2_api_auth_dedup_2026_07_13.md — discovered while shipping the unified-trading-api auth migration]
-resolved_by:
+resolved_by: "slot-10, unified-trading-api@e5c64cc"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -87,7 +87,18 @@ Triage each of the 5 CVEs:
 
 ## Todos
 
-- [ ] [BACKEND] P1. Triage + bump `click`, `idna`, `pydantic-settings`, `starlette`, `cryptography` in
+- [x] ✅ [BACKEND] P1. Triage + bump `click`, `idna`, `pydantic-settings`, `starlette`, `cryptography` in
       `unified-trading-api/uv.lock` to their fix versions (or add curated `--ignore-vuln` entries with a dated reason
       per CVE, matching the sibling-repo pattern) so `quality-gates.sh` pip-audit step goes green. (repo:
-      unified-trading-api)
+      unified-trading-api) — SHIPPED `unified-trading-api@e5c64cc`. `click` 8.4.2, `idna` 3.18, `pydantic-settings`
+      2.14.2, `cryptography` 49.0.0 (already fixed via the pyproject floor) all bumped by a plain `uv lock` re-resolve —
+      no other pyproject.toml change needed. `starlette` required more: `fastapi<0.137.0` only requires
+      `starlette>=1.1.0`, so a plain re-lock stayed on the vulnerable 1.2.1 — widened the local `fastapi` ceiling to
+      `<0.138.0` + added `[tool.uv] override-dependencies = ["starlette>=1.3.1"]`, mirroring ml-service's
+      already-verified fix (`canonical_fastapi_ceiling_stale_vs_ml_service_2026_07_13.md`: the real regression is
+      fastapi `0.137.x`'s `_IncludedRouter`/`.path` route-introspection break, not starlette `1.3.1` itself). Confirmed
+      the resolver still lands on `fastapi==0.135.1` (unchanged, well below the break) with `starlette==1.3.1` — same
+      safe combination ml-service ships. Removed the 5 CVE IDs from the interim `PIP_AUDIT_EXTRA_ARGS` ignore-list
+      (added earlier in this doc as an unblock) now that they're genuinely fixed, not just ignored — kept only the 2
+      original pre-existing entries. `quality-gates.sh` exit 0 (sentinel verified, 226s, no queueing) |
+      `pip-audit clean`.
