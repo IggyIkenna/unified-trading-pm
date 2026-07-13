@@ -271,9 +271,15 @@ remediation todo below).
       `subset=True`, `column_values_correct=True`. Output written to
       `gs://market-data-tick-cefi-prd-central-element-323112/_index/audit/bybit_futures_chain_reshape_phase35_parity_verify_2026_07_13.parquet`
       (835 rows, full detail — not just the summary).
-- [ ] [DATA] P1. Once Phase 3.5 is fully green, re-verify this doesn't change Phase 4's gating (still
-      BLOCKED-OPERATOR-DECISION, but the "parity verification is fully green" precondition now refers to the
-      Phase-3.5-remediated result, not the original Phase 3 Todo 2 pass which is now known-incomplete).
+- [x] ✅ [DATA] P1. Once Phase 3.5 is fully green, re-verify this doesn't change Phase 4's gating — **DONE, slot 8**,
+      independently corroborating slot 4's result: this todo was picked up by slot 8 concurrently with slot 4's
+      remediation work, so slot 8 also ran the (then pre-fix) reshape script `--apply` + its own from-scratch 835-object
+      exhaustive column-value check against production — both landed AFTER slot 4's real fix
+      (`market-tick-data-service@c70d4388`) had already mutated the data, so slot 8's independent check (0 mismatches
+      across all 835 objects, including a direct re-check of the day=2025-03-13 SOLUSDT case: 1,781 target rows, 0
+      missing source row-keys) corroborates slot 4's `{'corrected': 835}` result from a separate code path/session.
+      Phase 4's gating is unchanged: still **BLOCKED-OPERATOR-DECISION**, now resting on this doubly-confirmed
+      exhaustive parity result.
 
 ## Phase 4 — Cleanup (gated, separate from the reshape — P1)
 
