@@ -1925,8 +1925,62 @@ remaining:**
    attempting relaunch now that the P0 above is resolved.
 3. **COINBASE-FUTURES/spot_pair/trades measurement anomaly** — data confirmed safe; root-cause not yet found (see
    above); worth a dedicated pass once the P0 migration-collision clears and launches resume.
-4. **Phantom reconcile + manifest hygiene** — still not re-run this session (same recurring time-budget note as every
-   prior session).
+
+---
+
+### G4 Re-Verification Run #5 continued — 2026-07-13T23:00-23:22Z (data_engineering slot-2, verification launches)
+
+**BITGET-FUTURES relaunch — a real launcher-invocation footgun found + fixed mid-session.** First attempt
+(`ONLY="BITGET-FUTURES:{2024..2026}:{heavy,light}" bash launch-cefi-sharded-backfill.sh`, no `VENUES=` override) hung
+for ~20 minutes producing ZERO `gcloud compute operations` (verified via `gcloud compute operations list` — no insert op
+for this window at all, confirming it never even reached the create call). Root-caused to TWO compounding bugs:
+
+1. **`ONLY=` doesn't survive brace expansion inside double quotes** — bash only brace-expands `{2024..2026}` when the
+   braces are UNQUOTED; wrapping the whole `ONLY="..."` value in quotes (as I did, and as this plan's own prior Progress
+   Log entries appear to show too — worth a skeptical re-read if anyone copies that pattern again) leaves `ONLY` as one
+   literal, never-matching string.
+2. **Forgetting `VENUES=` lets it default to the FULL 16-venue list** (`launch-cefi-sharded-backfill.sh` line 526) — the
+   launcher then iterates every venue×year×group combo (~150-200+) doing a per-shard tarball-freshness check before ever
+   reaching the `ONLY` filter (which, per bug 1, never matches anyway) — a slow, wasted, ultimately fruitless sweep.
+   Confirmed via process inspection: fresh short-lived child PIDs kept spawning across `unified-api-contracts` /
+   `deployment-service` for ~20 min with zero GCP API calls.
+
+Killed the hung process, relaunched correctly (`VENUES="BITGET-FUTURES" YEARS="2024 2025 2026"` — no `ONLY=` needed,
+`_venue_is_derivatives` already fans BITGET-FUTURES into both heavy+light automatically): all 6 shards
+(`cefi-bitget-futures-{2024,2025,2026}-{heavy,light}-20260713-231539`) confirmed RUNNING/STAGING within ~3 minutes.
+Serial-port-log spot-check on the 2026-heavy shard confirms the REAL task command
+(`--operation download --mode batch --venues BITGET-FUTURES --start-date 2026-01-01 --end-date 2026-05-22 --force --data-types trades book_snapshot_5`)
+launched with `--force` genuinely present (verified in the actual invoked command line, not just env var — learned from
+a prior session's `FORCE` vs `VM_FORCE` confusion). Still mid-fetch at last check (started 23:19:55Z, full-catalogue
+`--force` re-fetch, expect it to take a while per this plan's own established pattern for `VM_FORCE=true` full-catalogue
+re-fetches).
+
+**COINBASE-CDE/future/trades — first-ever real launch attempt, using a fresh (2026-07-13, TODAY) batch adapter.**
+Investigated the UAC `VENUE_DATA_TYPE_CAPABILITIES["COINBASE-CDE"]` comment claiming "Live-only for now... no
+historical/batch source" — confirmed STALE: `market_tick_data_service/adapters/coinbase_cde_batch.py` (dated 2026-07-13,
+same day) documents a live-PROBED, working native-REST historical backfill (Coinbase Advanced Trade public ticker
+endpoint, no auth, walks backward past the 1000-trade page cap) already wired into the standard `download_batch`
+dispatch (`umi_tick_provider.fetch_tick_data_for_venue`, line 519) — no code fix needed, just an actual launch. Launched
+`VENUES="COINBASE-CDE" YEARS="2026"` (1 SPOT VM, `cefi-coinbase-cde-2026-heavy-20260713-231313`) — RUNNING within 20s
+(tarball cache was already warm from the BITGET-FUTURES attempt), self-deleted by next check
+(`VM_SHUTDOWN_ON_COMPLETION=true`). **Verification incomplete**: a direct per-VM-shard / row-group-pushdown query for
+`venue=COINBASE-CDE` timed out twice (120s+) against the `prd` bucket — likely read contention from the consolidator
+actively rewriting the primary index in the same window (`blob.updated` moved 23:19:45Z→23:21:45Z, both within the query
+attempts). The aggregate `measure_honest_coverage.py` re-run at 23:22Z still shows `(COINBASE-CDE, future, trades)` in
+Layer-1's missing list, so either (a) the VM's single day/year attempt produced no real `future`-itype rows (contract
+selection / date-range mismatch — CDE's real trade history reaches back to 2026-06-01 per the adapter's own
+probed-window note, worth a wider `YEARS=` or explicit date-range retry), or (b) it captured rows under a DIFFERENT
+instrument_type (same classification-gap pattern already found + fixed for COINBASE-FUTURES's PERPETUAL/SPOT_PAIR symbol
+shapes, `market-tick-data-service@8be30c8c`/`@f8cab3f0`-adjacent) — not yet distinguished. **Left as an open thread for
+the next check-in** rather than guessed at.
+
+**Gate verdict:** ❌ **NOT MET** — Layer-1 91.78% (6 missing, unchanged since the launches are still in-flight/just-
+landed); Layer-2 af=1,829/eu=213,672 (unchanged). 6 BITGET-FUTURES VMs actively fetching; COINBASE-CDE's first real
+attempt completed but did not yet close its Layer-1 tuple (root cause TBD — contract/date scoping vs itype
+classification, see above). **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM.** Continuing to monitor the in-flight
+BITGET-FUTURES shards; will re-run coverage + investigate COINBASE-CDE's actual capture outcome once the shards have had
+more time (multi-year `--force` full-catalogue re-fetches run long per this plan's established precedent). 4. **Phantom
+reconcile + manifest hygiene** — still not re-run this session (same recurring time-budget note as every prior session).
 
 **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** for the code fix shipped this session. Genuinely blocked on the P0
 migration collision for any further backfill launches — deliberately not fought this session, consistent with the "don't
