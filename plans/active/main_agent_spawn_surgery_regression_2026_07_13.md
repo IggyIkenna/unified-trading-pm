@@ -89,36 +89,101 @@ Whichever is chosen, also **audit `monitor` role** (also slot-less per `prompts.
 
 ## Todos
 
-- [ ] [BACKEND] P0. Reproduce the bug as a failing test FIRST: in `tests/test_prompts.py` or a new
+- [x] ✅ [BACKEND] P0. Reproduce the bug as a failing test FIRST: in `tests/test_prompts.py` or a new
       `tests/test_agent_spawn_endpoint.py`, add a test that calls
       `prompts.render("main", server_url=..., machine=...,     rc_url=..., model=..., effort=..., thinking="")`
       (matching `main_agent_keeper._spawn()`'s real call) and asserts the composed stub contains the literal substring
-      `'"role": "main"'` — confirm this test FAILS on current `main` (repo: agent-orchestrator).
-- [ ] [BACKEND] P0. Implement the chosen fix (see "Recommended fix" above) in `server/prompts.py` `_compose()` for the
-      slot-less branch, so the failing test from the prior todo goes green (repo: agent-orchestrator).
-- [ ] [BACKEND] P0. Update `server/routes/agents.py::spawn_agent_endpoint` and
+      `'"role": "main"'` — confirm this test FAILS on current `main` (repo: agent-orchestrator). —
+      agent-orchestrator@43dc13d. Chose fix option 1 (preferred, decoupled token), so the added
+      `test_slotless_stub_carries_agent_id_hint_placeholder` asserts the new `AGENT_ID_HINT: <PENDING>` token instead of
+      the old `'"role": "main"'` substring — confirmed failing
+      (`AttributeError: no attribute     'AGENT_ID_HINT_PLACEHOLDER'`) before the fix landed.
+- [x] ✅ [BACKEND] P0. Implement the chosen fix (see "Recommended fix" above) in `server/prompts.py` `_compose()` for
+      the slot-less branch, so the failing test from the prior todo goes green (repo: agent-orchestrator). —
+      agent-orchestrator@43dc13d. Implemented option 1: `_compose()` now emits a dedicated `AGENT_ID_HINT: <PENDING>`
+      literal line for slot-less roles (new `prompts.AGENT_ID_HINT_PLACEHOLDER` constant); repro test goes green.
+- [x] ✅ [BACKEND] P0. Update `server/routes/agents.py::spawn_agent_endpoint` and
       `server/main_agent_keeper.py::AgentKeeper._spawn()` if the chosen fix changes what substring/token they inject
       against (both currently hardcode `f'"role": "{role}"'` — keep them in sync with whatever `_compose()` now emits)
-      (repo: agent-orchestrator).
-- [ ] [BACKEND] P0. Add an end-to-end regression test for `POST /api/agents/spawn` with `role="main"` and
+      (repo: agent-orchestrator). — agent-orchestrator@43dc13d. Both spawn paths now replace
+      `f"AGENT_ID_HINT: {prompts.AGENT_ID_HINT_PLACEHOLDER}"` instead of grepping `'"role": "<role>"'`; updated the one
+      existing test that mocked the old fixture shape
+      (`test_main_agent_keeper.py::test_spawn_generates_and_persists_session_id`) to the new token so it keeps
+      exercising the real `_spawn()` body. Full `quality-gates.sh` green (1205 passed, 1 skipped) + shipped via Pass-1
+      QG → Pass-2 `quickmerge --agent`. Also updated `agents/main.md` + `agents/review.md`'s STEP 1 register-curl prose
+      (and `agents/monitor.md`'s, for consistency — same slot-less spawn path) to read `AGENT_ID_HINT` from the boot
+      text and include it as `"agent_id"` when non-placeholder — without this doc-side change the server-side fix alone
+      would still reproduce the split-identity artifact from todo 7 (freshly-spawned agent registers under a NEW id
+      instead of upserting the pre-created row). The `monitor` role's own P1 test-coverage audit (below) is still open —
+      this only fixed its doc prose for consistency.
+- [x] ✅ [BACKEND] P0. Add an end-to-end regression test for `POST /api/agents/spawn` with `role="main"` and
       `role="review"` that exercises the REAL `spawn_agent_endpoint` body (not a mock of the whole function) through the
       agent_id-injection step, asserting it does NOT 400 and that the injected `agent_id` actually lands in the
       resulting boot_with_id string — mock only the tmux-spawning side effects (`tmux_spawn.spawn_named` /
-      `_dismiss_bypass_warning` / pane-scrolling), not the string-surgery itself (repo: agent-orchestrator).
-- [ ] [BACKEND] P1. Replace `test_main_agent_keeper.py::test_spawns_when_session_absent`'s
-      `patch.object(keeper, "_spawn", return_value=True)` with a variant that also runs the REAL `_spawn()` body at
-      least once (mocking only `tmux_spawn.spawn_named` + the DB session, not `_spawn` itself) so a future refactor of
-      `prompts.render()` output can't silently break this path again without a test noticing (repo: agent-orchestrator).
-- [ ] [BACKEND] P1. Audit the `monitor` role (also slot-less per `prompts.py`'s `_WORKER_BASE_ROLE` != monitor) for the
-      same agent_id-injection break — add the same test coverage if a `monitor` spawn path exists and is affected (repo:
-      agent-orchestrator).
-- [ ] [BACKEND] P2. Clean up the orphaned pre-created agent row from my live workaround spawn (`agt-d0c383`, tmux
+      `_dismiss_bypass_warning` / pane-scrolling), not the string-surgery itself (repo: agent-orchestrator). —
+      agent-orchestrator@9900062. New file `tests/test_agent_spawn_endpoint.py` (zero coverage existed before — `grep`
+      for `spawn_agent_endpoint` in `tests/` returned nothing pre-existing). Covers `role="main"`, `role="review"`, and
+      a monitor spawn (previewed via `GET /api/spawn/agent-preview?role=monitor` — that endpoint's `role` param is an
+      unrestricted `str` — then POSTed to `/api/agents/spawn` as `role="custom"`, the only `AgentRole` enum value that
+      fits and what `monitor.md` actually self-registers as; `"monitor"` itself is NOT a valid `SpawnAgentRequest.role`,
+      confirmed via a pydantic `ValidationError` when first tried literally). Each test asserts `result.ok is True` and
+      `"AGENT_ID_HINT: agt-new"` lands in the pasted `boot_prompt`, with only `session_scope` / `ss.*` / `load_accounts`
+      / `tmux_spawn.*` / `time.sleep` mocked — the string surgery itself runs for real.
+- [x] ✅ [BACKEND] P1. `test_main_agent_keeper.py::test_spawns_when_session_absent` legitimately mocks `_spawn` (it
+      isolates `tick_once`'s dispatch logic — "does tick_once call `_spawn` when session absent" — a separate concern
+      from the surgery itself), so it was left as-is. The REAL gap was `test_spawn_generates_and_persists_session_id`,
+      which already called the real `_spawn()` body but mocked `prompts.render` to a canned string — exactly what let
+      the 2026-07-10 cutover ship unnoticed. agent-orchestrator@9900062 removes that mock entirely, so the test now
+      exercises the real composed stub + the real surgery, asserting `"AGENT_ID_HINT: agt-1"` lands in the pasted
+      `boot_prompt` and the placeholder does not. A future `prompts.py` refactor that drops the anchor token now fails
+      this test instead of shipping silently broken again. **Addendum (slot 7, dispatched this exact todo concurrently
+      before this checkbox was visible on my pull):** independently hardened `test_spawns_when_session_absent` itself
+      too — replaced `patch.object(keeper, "_spawn", return_value=True)` with a variant that runs the REAL `_spawn()`
+      body via `tick_once()` (mocking only `tmux_spawn.spawn_named` + `session_scope`), asserting the real rendered stub
+      survives the `AGENT_ID_HINT` surgery. Redundant with the `test_spawn_generates_and_persists_session_id` hardening
+      above (both now exercise the real surgery, from two different call paths — `tick_once()` dispatch vs. direct
+      `_spawn()`), not harmful — full `quality-gates.sh` green (1208 passed, 1 skipped) — shipped
+      agent-orchestrator@d4e16cc. Flagging the overlap here rather than reverting: two slots raced this same todo
+      because the backlog dispatcher had no file/task-level lock across the plan's P0→P1 chain (root cause noted below
+      under "Process finding").
+- [x] ✅ [BACKEND] P1. Audited the `monitor` role: `AGENT_ID_HINT: <PENDING>` is emitted unconditionally by `_compose()`
+      for every slot-less role (main/review/monitor alike) — it is NOT coupled to any role-name/role-string prose, so
+      monitor's `role: "custom"` self-registration (vs. its spawn-time name `"monitor"`) needs no special-casing at all
+      (verified live: `prompts.render("monitor", ...)` carries the token same as main/review). Added
+      `test_spawn_monitor_does_not_400_and_injects_agent_id` to `tests/test_agent_spawn_endpoint.py` —
+      agent-orchestrator@9900062.
+- [x] ✅ [BACKEND] P2. Clean up the orphaned pre-created agent row from my live workaround spawn (`agt-d0c383`, tmux
       session `orch-agent-main-d0c383` — the real live main agent self-registered as a different id, `agt-770694`,
       because it composed its own register curl from `main.md` without picking up my ad-hoc hint) — either delete the
       orphan row via the dashboard/DB or, if the chosen fix in this plan makes the linkage work correctly, verify a
-      fresh test-spawn no longer produces this split-identity artifact (repo: agent-orchestrator).
-- [ ] [BACKEND] P2. Run `bash scripts/quality-gates.sh` full and ship via the standard Pass-1 QG → Pass-2 quickmerge
-      --agent flow; flip this plan's checkboxes with `<repo>@<sha>` evidence per commit (repo: agent-orchestrator).
+      fresh test-spawn no longer produces this split-identity artifact (repo: agent-orchestrator). — agent-orchestrator
+      (no code change; the earlier P0/P1 surgery-fix todos above are still open, so option 2 isn't provable yet).
+      Verified via the live API: `agt-d0c383` was already auto-archived (`exit_reason: dead-main-session`,
+      `finished_at: 2026-07-13T05:39:41Z`, same instant as the real `agt-770694`), confirming it never appears in the
+      live roster (`GET /api/agents` default view). Ran the dashboard-sanctioned cleanup path,
+      `DELETE /api/agents/agt-d0c383` →
+      `{"ok": true, "agent_id": "agt-d0c383", "killed_tmux":     "orch-agent-main-d0c383", "retained": true}`; row now
+      `status: finished`, `exit_reason: operator-deleted` (the code's Plan-B retention design intentionally soft-deletes
+      rather than hard-deleting agent rows, so this is the correct/only sanctioned "delete" — a raw DB hard-delete would
+      fight that documented design).
+- [x] ✅ [BACKEND] P2. Ran `bash scripts/quality-gates.sh` full (1208 passed, 1 skipped) and shipped via the standard
+      Pass-1 QG → Pass-2 `quickmerge --agent` flow — agent-orchestrator@9900062. All todos above now closed; the plan is
+      complete (core fix by slot-3 @43dc13d, remaining regression coverage + monitor audit + orphan-cleanup verification
+      by slot-8 @9900062, plan-flip by slot-8).
+
+## Process finding (slot 7, 2026-07-13)
+
+This plan's todos 1-3 were logically sequential (todo 5's test change only makes sense once todo 2's `prompts.py` fix
+landed) but carried no `prereqs.completed_tasks` / `depends_on` between them, and `target_slot: 8` was only
+`affinity: medium` (600s timeout, falls back to any slot). Result: todos 2/3/5/6/7/8 all leaked to other slots (3, 4, 5,
+7, 9) in parallel while slot 8 was still mid-flight on todo 1/2, causing two independent races on this exact plan: (a)
+slots 3 and 4 both picked up the `prompts.py` fix (todo 2) — slot 3 landed first (`43dc13d`, bundling todos 1-3), slot
+4's `/blocked` or in-flight work presumably became moot once it pulled; (b) slot 8 (working todo 1/4/6) and slot 7 (this
+agent, dispatched todo 5 directly) both independently reached and resolved todo 5, with different but non-conflicting
+resolutions (see the addendum on todo 5 above) — no data was lost, but it is duplicate agent-hours. For future plans
+with a real P0→P1 dependency chain, either mark `sequential: true` or add explicit `depends_on`/
+`prereqs.completed_tasks` between the todos, not just `target_slot` affinity (which only prefers a slot, it does not
+gate dispatch on a prerequisite).
 
 ## Codex SSOTs
 

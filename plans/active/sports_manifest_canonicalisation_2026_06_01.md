@@ -2954,3 +2954,135 @@ executed from `instruments-service/.venv` (`uv run`) and the non-snap `gcloud` S
 (`/home/ubuntu/google-cloud-sdk/bin/gcloud` — the snap `gcloud` on this host is broken). Production write scoped to
 `instruments-store-sports-prd-central-element-323112`'s `_index/availability_index.parquet` only, consolidator cron
 paused/resumed around the write, pre-write snapshot taken.
+
+## E8 Verify — nineteenth touch 2026-07-13T06:30Z-06:40Z (data_engineering slot-6, task -001): E3/E4 fleet drain landed for real — found + fixed a second blocker (stale consolidator), re-ran the real post-migration audit
+
+Dispatched to this checkbox for the first time since `sports-e3-e4-fleet-drain-complete` flipped GREEN
+(`set_by: slot-3-infra, set_at: 2026-07-13T06:25:40Z` — confirmed via `GET /api/state` → `prerequisites`; the 16-VM
+fleet DONE entry above is real, not aspirational). Fresh-pulled all repos, read the full plan, then ran the actual
+`cf_manifest_audit_2026_06_01.py` on both surfaces for the first time in 18 touches where the precondition was genuinely
+met.
+
+**First run — both surfaces STILL RED, numbers BYTE-IDENTICAL to the 18th touch (05:30Z), despite the 16-VM fleet having
+completed successfully 25+ min earlier.** This was suspicious enough to root-cause rather than accept at face value (the
+craft's correctness north-star: a RED that doesn't move after a completed migration is a second bug, not confirmation of
+the first).
+
+**Root cause #2 (new, distinct from the IS CF-4 write-path gap the 18th touch fixed): the manifest consolidator's
+per-minute cron was NOT merging the new per-VM shards into the live canonical index.**
+
+- Both surfaces' canonical `_index/availability_index.parquet` showed `Update Time: 2026-07-13T05:57:4{4,7}Z` — BEFORE
+  the E4 fleet's 8 new `_index/per_vm/sports-v9-migration-{instruments,mdps}-<year>-*.parquet` shards even landed
+  (actual GCS write times 06:19-06:23Z for IS, 06:11-06:16Z for MTDS, confirmed via `gcloud storage ls -L` on each shard
+  — the filename timestamp is the migrator's START time, not the upload-finish time).
+- `gcloud run jobs executions list` for both `uts-prod-manifest-consolidator-{instruments,market-data}-sports` showed
+  the `*/1 * * * *` cron completing `exit(0)` every single minute since the shards landed (18+ consecutive "successful"
+  cycles) — yet the canonical mtime never advanced. One execution (`…-nc9dv`, IS, created 06:31:02Z) logged
+  `WARNING: Container terminated on signal 9` then a subsequent `exit(0)` ~44s later (Cloud Run task-attempt retry) —
+  still no canonical write after the "successful" retry.
+- Matched this exactly to a **documented, known failure class** in
+  `codex/05-infrastructure/manifest-consolidator-ssot.md` (merge-engine section): _"the window does NOT spill (DuckDB
+  1.5.x) — so a bulk shard rewrite landing as one huge 'changed' shard must be seeded via `--force` on a big-RAM host,
+  not handled by the per-minute cron."_ An 8-shard, ~164 MB simultaneous bulk-backfill drop is exactly that case — the
+  per-minute cron's incremental anti-join path cannot absorb a bulk migration's output; only a one-off `--force`
+  full-rebuild can.
+
+**Action taken (in-repo tooling only, no code change — the SSOT's own documented recovery procedure, same
+pause-cron/snapshot/write/resume pattern as the 18th touch's restamp):**
+
+1. Confirmed no in-flight execution on either consolidator job (`RUNNING=0`).
+2. Paused `uts-prod-manifest-consolidator-{instruments,market-data}-sports-cron` (Cloud Scheduler).
+3. Snapshotted both canonicals to `_index/snapshots/pre_force_consolidate_2026-07-13T06_36_00Z.parquet` (both surfaces)
+   before any write.
+4. Ran `python -m unified_trading_library.manifest_consolidator --bucket <surface> --force` from the owning repo's
+   `.venv` (`instruments-service` for IS, `market-tick-data-service` for MTDS), with `GCP_PROJECT_ID` set (required by
+   `UnifiedCloudConfig`) and `TMPDIR` redirected off this host's 2 GB tmpfs `/tmp` onto `/home` (156 GB free) — the
+   first attempt without the `TMPDIR` override hit `duckdb.OutOfMemoryException` at 664.6 MiB (the tmpfs cap, not a real
+   memory limit; the documented 8 GB `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` default was never the constraint here). Both
+   force-rebuilds succeeded: IS
+   `shards=9 rows_in=16,350,195 rows_out=5,607,743 dedup_dropped=10,742,452 latency_ms=43307`; MTDS
+   `shards=9 rows_in=10,856,681 rows_out=1,958,499 dedup_dropped=8,898,182 latency_ms=22541`.
+5. Resumed both crons immediately after (confirmed `ENABLED` via `gcloud scheduler jobs list`).
+6. Re-ran the full `cf_manifest_audit_2026_06_01.py` on both surfaces against the now-genuinely-current index.
+
+**Real post-migration audit results** (this is the first TRUE post-E3/E4 read; everything before this touch was reading
+a stale pre-migration snapshot despite the migration having completed):
+
+### Surface 1 — `market-data-tick-sports-prd` (MTDS)
+
+`RED — ['CF-8', 'L6-legacy-only']` — rows 1,958,499 (unchanged count; the migration's dedup absorbed the new shards into
+the same row set, confirming MTDS had no real backlog). CF-8 (available_at column absent — genuine schema gap, not this
+migration's scope) and L6-legacy-only (140 cells, byte-identical to every prior touch back to the sixth run) are the
+only two RED checks — both were RED before E3/E4 and remain RED after, i.e. **the v9 migrator's `--apply` did not copy
+the 140 legacy-only cells forward into canonical.**
+
+### Surface 2 — `instruments-store-sports-prd` (IS)
+
+`RED — ['CF-2-paths', 'CF-3', 'CF-4', 'CF-8', 'L6-legacy-only']` — rows 5,607,743 (+36 net vs the pre-migration
+5,607,707, after deduping 16.35M candidate rows down to 5.6M — the migration DID do real work, just not on these
+residual classes). Confirmed via a direct read of the post-consolidation parquet: **the 19,274 blank-`pipeline_mode`
+rows are the SAME rows as before** — every one has `attempted_at` between 2026-06-29T07:55Z and 2026-07-08T01:30Z
+(entirely pre-dating today's migration run), so the v9 migrator's `--apply` provably did not touch this residual class.
+This is the exact population the 18th touch already characterised as "genuinely no deterministic
+`pipeline_mode`/`source` to derive" — now CONFIRMED by the real E4 walk rather than inferred. CF-8 (62.6% populated,
+schema gap) and L6-legacy-only (1,855 cells, byte-identical to every prior touch) are likewise unmoved by the migration.
+
+### E8 verdict: still NOT GREEN — checkbox NOT flipped — but now backed by a genuinely current, post-migration read
+
+**What changed for real this touch**: (1) fixed a second, independent infra bug — a stale-but-"succeeding" manifest
+consolidator that would have silently hidden the E4 migration's actual effect forever without a manual `--force`
+intervention (this bug is NOT sports-specific — the same per-minute-cron-can't-absorb-a-bulk-shard-drop failure mode
+applies to any bucket/asset_group after a VM-fleet backfill; flagging as a P2 hardening item below, not filing a
+separate cross-repo issue doc since the SSOT already documents the `--force` recovery and this touch is that recovery in
+action, not a novel discovery); (2) obtained the first TRUE post-E3/E4 audit read, which **proves** (not just
+re-confirms) that E3/E4 closed zero of the five previously-RED checks — all five are a genuinely distinct residual class
+outside the v9 migrator's `--apply` scope, not a "hasn't run yet" artifact.
+
+**Remaining E8 blockers (now confirmed durable, not provisional):**
+
+1. **IS CF-3/CF-4 residual (19,274 rows)** — confirmed unreachable by the v9 migrator; needs either a dedicated
+   historical-reconstruction pass or an explicit operator decision to accept as permanently-untyped legacy rows. New
+   todo filed below.
+2. **L6-legacy-only (MTDS 140 / IS 1,855 cells)** — confirmed the v9 migrator's `--apply` does not backfill legacy-only
+   cells into canonical; these need a dedicated targeted re-migration of just these `(date, venue, data_type)` cells
+   before the E8 IRREVERSIBLE delete is safe (the data-loss gate). New todo filed below.
+3. **CF-8 available_at** — confirmed schema gap (`AvailabilityRecord` has no `available_at` field), needs a UTL schema
+   change + every writer wired to populate it — out of a single-slot dispatch's scope, unchanged from the 18th touch.
+4. **CF-2-paths (IS)** — known audit-tool false-negative (column-based data, not path-based), non-blocking.
+
+Not filing a `/blocked` — none of the four remaining blockers are ambiguous decisions; they're scoped, concrete
+follow-up work now captured as todos. `skip-current-task`'d (checkbox still can't flip). Next toucher: don't re-run the
+full audit for zero new info — the four blockers above are stable and durable; re-verify only after one of the two new
+todos below lands or CF-8's schema change ships.
+
+- [ ] [DATA] P1. **L6-legacy-only targeted re-migration** (repo: market-tick-data-service + instruments-service):
+      re-migrate just the residual legacy-only `(date, venue, data_type)` cells into canonical before the E8
+      IRREVERSIBLE delete — MTDS 140 cells (all `2020-0{6,8,9}-xx` / `ODDS_API` / `ODDS`, legacy bucket
+      `market-data-tick-sports-central-element-323112`), IS 1,855 cells (`2018-*` / blank venue / `FIXTURES`, legacy
+      bucket `instruments-store-sports-central-element-323112`). List the exact cells via
+      `cf_manifest_audit_2026_06_01.py --legacy <bucket>`'s `LEGACY-ONLY CELLS` output, write a small targeted migrator
+      (mirror `migrate_sports_canonical_v9.py`'s per-cell copy path, scoped to just this cell list — not another
+      whole-corpus walk), verify 0 legacy-only cells remain, re-run E8.
+- [ ] [DATA] P2. **IS CF-3/CF-4 residual (19,274 rows) — operator decision needed**: confirmed (nineteenth touch,
+      2026-07-13) these rows predate 2026-07-08 and were untouched by the real E3/E4 v9-migrator `--apply` run —
+      genuinely no deterministic `pipeline_mode`/`source` to derive from existing columns. Needs an operator ruling:
+      accept as permanently-untyped legacy rows (document the exception in
+      `codex/02-data/availability-manifest-and-data-status.md`) vs. fund a historical-reconstruction pass (e.g.
+      re-deriving from raw provider payloads if still retrievable). Not blocking E8 on its own if the operator accepts
+      option A.
+- [x] ✅ [DATA] P2. **Manifest consolidator: alert on incremental-cycle silent-no-progress after a bulk shard drop**
+      (repo: unified-trading-library): the per-minute cron completed `exit(0)` 18+ consecutive times (2026-07-13
+      05:57Z-06:30Z) without ever merging 8 newly-landed per-VM shards into the canonical — no
+      `MANIFEST_CONSOLIDATION_FAILED` event fired (would have paged per `consolidator_rules.py`'s severity routing), so
+      this was silently invisible until this touch's manual investigation. The SSOT already documents that a bulk shard
+      drop needs `--force` (not the incremental cron) — but there's no signal telling anyone a bulk drop has happened
+      and needs it. Add a lifecycle-event or metric (e.g. "N consecutive `shards_scanned>0` cycles with `rows_out`
+      unchanged") so a future bulk-backfill-after-cron-can't-keep-up case pages instead of silently stalling. Not urgent
+      (this touch's manual `--force` closed the immediate instance) but closes the detection gap that let this run
+      undetected for 30+ minutes. — unified-trading-library@cbcc13fa: new `MANIFEST_CONSOLIDATION_STALLED` event (ERROR,
+      same alert path as `MANIFEST_CONSOLIDATION_FAILED`), tracked per-bucket in a tiny separate state blob
+      (`_index/consolidator_stall_state.json`, NOT the canonical's own metadata — would defeat the incremental-skip
+      optimisation) via `_check_consolidation_stall`; fires after 10 consecutive no-op cycles where `shards_scanned`
+      stays above the last-real-progress baseline (a quiet bucket with no new shards never advances past its baseline,
+      so it never false-pages; a first-ever observation adopts the baseline without counting, so rollout onto an
+      already-caught-up bucket can't false-positive either). 5 new unit tests + full QG green.

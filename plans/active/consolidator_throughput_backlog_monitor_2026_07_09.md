@@ -177,21 +177,22 @@ drift_direction: advance-code
       (consolidator per (kind,AG), enumerator per AG, catalogue per AG) — NOT the watchers/audits (they write no
       pipeline data → liveness is their whole story). SINGLE-WALK-SAFE: reuse the consolidated-index blob metadata + the
       per-VM prefix list already fetched (`per_vm_shard_backlog`); NEVER a whole-corpus walk.
-- [ ] [BACKEND] P1. **Fired-but-produced-nothing detection (operator GO 2026-07-11 — the data sources ALREADY EXIST,
-      this is a JOIN not new infra).** A run whose Cloud Run execution says it fired (exit 0, recent `last_run_at`) but
-      the index row-count did NOT grow while backlog > 0 → `fired_but_empty`. Building blocks confirmed present:
-      `latest_execution_by_job()` (`_cloud_run_executions.py`, `run_v2.ExecutionsClient` → per-job
-      `{status, exit_code, last_run_at}`) + `object_delta_for_asset_group()` (index row/object delta) + the absolute
-      `index_row_count` shipped this session. Join on the Cloud Run **job short-name** (the agreed key the catalog
-      carries per (kind,AG)); add a real `fired_but_empty` branch to `_verdict()` (today it explicitly punts). The
-      silent failure a liveness-only view shows as "succeeded".
-- [ ] [BACKEND] P1. **Stale-output detection — per-(kind,AG) cadence budget (operator GO 2026-07-11; UI already renders
-      the per-job threshold, so this is BACKEND-ONLY).** Newest output older than the job's OWN cadence →
-      `stale_output`. Generalize `_AG_STALENESS_BUDGET_SEC` / `_budget_for` (today keyed by asset_group, only cefi
-      overridden) into a per-(kind,AG) cadence budget SOURCED FROM THE CATALOG (each consolidator's Cloud Scheduler
-      cadence → its budget), so each job is judged against its schedule, not a uniform 120 s. The card already shows
-      `index-age / budget` + colours when over (`Cockpit.tsx`), so no UI change — it renders whatever budget the backend
-      sends.
+- [x] [BACKEND] P1. ✅ **Fired-but-produced-nothing detection — SHIPPED 2026-07-11.** `_is_fired_but_empty()` joins the
+      job's latest Cloud Run execution (`latest_execution_by_job()`, one batched list, keyed by job short-name) with the
+      index freshness: a recent SUCCEEDED run (exit 0, within budget) against a STILL-STALE index → `fired_but_empty`
+      (ran green, wrote nothing); if the last success is ALSO old, it's plain `stale_output`/down, not empty. Added a
+      real `fired_but_empty` branch to `_verdict()` + `execution_status`/`execution_last_run_at`/`execution_exit_code`
+      on `ConsolidatorHealth`. — `deployment-api@1a505c16` + 6 unit tests + `deployment-ui@368ea8e6` (amber "fired ·
+      empty" badge + estate count) + `pw:L2 ✓` cockpit.spec.ts **O6**.
+- [x] [BACKEND] P1. ✅ **Stale-output — per-(kind,AG) cadence budget SHIPPED 2026-07-11.** Verified the Cloud Scheduler
+      cron is a UNIFORM `*/1` for every consolidator, so the real budget is the `MANIFEST_CONSOLIDATED_STALENESS_SEC`
+      each producer VM sets — ALL producers set 86400s EXCEPT the live market-data ticks (defi/tradfi/sports/prediction,
+      `*/1`, no override) = 120s. Encoded that rule in `gen_consolidator_catalog.py` (`_staleness_budget`) so each
+      catalog entry carries `staleness_budget_seconds`; `_entry_budget()` reads it (falls back to the legacy per-AG
+      override then the global default). Fixes the false-degrade on all the slow-cadence consolidators (instruments /
+      features / execution / strategy / ml / gas-fees) that previously used the 120s default. —
+      `deployment-api@1a505c16` + 2 unit tests. UI unchanged (renders `index-age / budget` from the backend); help doc
+      documents it.
 - [x] [BACKEND] P1. ✅ **Coverage-expansion — DYNAMIC enumeration of ALL consolidators (operator-DECIDED 2026-07-10: all
       25, NOT market-data-first).** Endpoint now returns one `ConsolidatorHealth` per (kind,AG) across the full estate,
       driven by `consolidator_catalog.generated.json` (a projection of the deployment-service terraform consolidator
@@ -202,9 +203,8 @@ drift_direction: advance-code
       when terraform changes (documented on `ConsolidatorHealth`). — `deployment-api@14650f9`.
 - [x] [UI] P1. ✅ **Surface the production verdict on the consolidator page** — `VerdictBadge` renders per (kind,AG)
       (`produced` / `producing` / `stale_output` / `empty` / `unknown`) alongside freshness + backlog, hover = the
-      derivation detail. — `deployment-ui@15832cd`. NOTE: the verdict is currently DERIVED from freshness+backlog
-      (`_verdict()` in health_consolidator.py); a PRECISE `fired_but_empty` (exit-0-wrote-nothing) still needs the
-      per-run execution seam below.
+      derivation detail. — `deployment-ui@15832cd`; the `fired_but_empty` verdict + its amber badge landed 2026-07-11
+      (`deployment-ui@368ea8e6`), so the badge now covers the full vocabulary incl. the precise execution-join verdict.
 
 ### Per-consolidator views, dynamic list + tooltips (operator-decided 2026-07-10)
 
@@ -237,13 +237,16 @@ drift_direction: advance-code
 > part). Cheap: the SAME `_index/per_vm/*.parquet` prefix list already walked for backlog also carries each pending
 > shard's `last_modified` → oldest-pending age = `now - min(pending shard mtimes)`.
 
-- [ ] [BACKEND] P2. **Oldest-unmerged-shard age from the shard mtimes (single-walk-cheap, same list as backlog).**
-      Extend the backlog walk (`per_vm_shard_backlog` in UTL `_state.py`, or a sibling) to also return the OLDEST
-      pending shard's `last_modified`; surface `oldest_pending_shard_age_seconds` on `ConsolidatorHealth`. Reuses the
-      exact list already done — no new walk. `None` when backlog is 0 (nothing pending).
-- [ ] [UI] P2. **Show oldest-unmerged-shard age on the card.** Next to backlog, render "oldest pending Xm" (colour to
-      grab attention when it exceeds the job's cadence budget — a shard waiting >> cadence means the merge has been
-      stuck that long). Update the help doc entry. `pw:L2` on the age cell.
+- [x] [BACKEND] P2. ✅ **Oldest-unmerged-shard age from the shard mtimes — SHIPPED 2026-07-11.** `per_vm_shard_backlog`
+      now returns a `PerVmShardBacklog` NamedTuple `(pending, total, oldest_pending_at)` — the oldest pending shard's
+      mtime (`min` over the pending set) from the SAME single prefix list (no new walk), `None` when nothing pends.
+      `ConsolidatorHealth.oldest_pending_shard_age_seconds` = `now − oldest_pending_at`. —
+      `unified-trading-library@101e8f10` (`PerVmShardBacklog` exported from the facade, 2 new unit tests incl. the
+      min-over-multiple case) + `deployment-api@1a505c16`.
+- [x] [UI] P2. ✅ **Show oldest-unmerged-shard age on the card — SHIPPED 2026-07-11.** Backlog cell renders a second
+      line "oldest {age}" (live-ticking forward like index age), turning red once it exceeds the cadence budget (merge
+      stuck that long). Help doc entry updated. — `deployment-ui@368ea8e6` + `pw:L2 ✓` cockpit.spec.ts **O6**
+      (`cockpit-consolidator-oldest-pending-*`).
 
 ### Dark data-correctness actors — VISIBILITY only; detection ALREADY EXISTS (deep-audited 2026-07-10)
 
@@ -321,6 +324,24 @@ drift_direction: advance-code
   never touches a Lambda run-time — but if it ever does, use CloudWatch `Invocations`, never deploy-time.
 
 ## Progress Log
+
+- 2026-07-11 — **WS-3 signals SHIPPED (fired-but-empty, per-cadence budget, oldest-pending shard age).** Three repos in
+  dep order: **UTL `101e8f10`** (`per_vm_shard_backlog` → `PerVmShardBacklog` NamedTuple with `oldest_pending_at`,
+  facade-exported), **deployment-api `1a505c16`** (`_is_fired_but_empty` execution-join verdict, catalog-sourced
+  per-(kind,AG) `_staleness_budget`, `oldest_pending_shard_age_seconds`), **deployment-ui `368ea8e6`** (amber "fired ·
+  empty" badge + estate count, oldest-pending age on the backlog cell, help doc for all three signals; fixed the stale
+  O1/O5/each-tab consolidator playwright specs that the 15832cd redesign had broken with pre-redesign per-AG testids +
+  added **O6** as the fired-but-empty/oldest-pending regression). All three QG-green + strict-quickmerge verified; UI
+  playwright cockpit suite green for consolidators. **FINDING fixed in passing** (was blocking UTL QG): the UTL test
+  fixture `tests/fixtures/cloud-providers.yaml` still carried the `gas-fees` storage kind that the real/packaged yaml
+  removed 2026-07-12 — the estate-cleanup commit `3936f74` claimed to sync test files but missed this fixture, reddening
+  `test_bucket_naming_cell_sweep` (collection read the fixture-with-gas-fees, runtime resolved against
+  packaged-without). Synced the fixture (verified `test_domain_client_readers` uses hardcoded bucket names, not
+  `resolve_bucket_name(kind="gas-fees")`, so no dependency broke). **Still OPEN in WS-3**: fan-in contributor-VM drill
+  is DROPPED (operator scoped to oldest-shard age only); phantom/reprobe visibility (API+UI scaffold, independent of the
+  still-open coverage issue); the [DOCS] codex mirror (help doc shipped; codex mirror pending). Two PRE-EXISTING
+  deployment-inventory playwright failures (`cockpit.spec.ts:222` batch-137-OOM row, `:267` composite-health) are
+  unrelated to consolidators (another agent's deployments-tab mock) — flagged to operator, not fixed here.
 
 - 2026-07-11 — **WS-3 partial SHIP + card redesign (interactive, this slot).** Shipped to live-defi-rollout in dep
   order: **UTL `fd219fe`** (the backlog native-mtime fix above), **deployment-api `14650f9`** (catalog-driven
