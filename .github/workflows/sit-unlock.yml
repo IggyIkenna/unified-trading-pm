@@ -204,11 +204,20 @@ jobs:
         ${{ needs.unlock-staging.result != 'success' && '❌ AUTO-UNLOCK FAILED — staging dangling-locked, fleet merges
         blocked. Manual fix — rerun gh workflow run sit-unlock.yml (or clear staging_status.locked in
         workspace-manifest.json).' || github.event.action == 'sit-passed' && '✅ SIT PASSED — staging UNLOCKED,
-        breaking_pending cleared. Promotion queue flowing.' || 'SIT Failed — staging unlocked. Staging is open for
-        fixes (breaking_pending kept — the set still needs a green SIT to promote).' }}
-      severity: ${{ needs.unlock-staging.result == 'success' && github.event.action == 'sit-passed' && 'INFO' ||
-        'CRITICAL' }}
-      conclusion: ${{ needs.unlock-staging.result }}
+        breaking_pending cleared. Promotion queue flowing.' || 'SIT Failed — staging unlocked. Staging is open for fixes
+        (breaking_pending kept — the set still needs a green SIT to promote).' }}
+      severity:
+        ${{ needs.unlock-staging.result == 'success' && github.event.action == 'sit-passed' && 'INFO' || 'CRITICAL' }}
+      # ci_failures cleanup (2026-07-13): the ICON must reflect what the alert REPORTS, not the
+      # unlock JOB's mechanical result. When SIT fails, the unlock job SUCCEEDS (it unlocks staging
+      # fine) — but passing that `success` rendered a green ✅ on a "SIT Failed" CRITICAL alert
+      # (✅ CRITICAL — result: OK, body "SIT Failed"). So: `failure` for BOTH the unlock-failed and
+      # the SIT-failed cases; `success` only on the genuine sit-passed green path. (The `persist`
+      # job below keeps unlock-staging.result — the LEDGER records the JOB outcome, not the alert
+      # subject.)
+      conclusion:
+        ${{ needs.unlock-staging.result != 'success' && 'failure' || github.event.action == 'sit-passed' && 'success' ||
+        'failure' }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
