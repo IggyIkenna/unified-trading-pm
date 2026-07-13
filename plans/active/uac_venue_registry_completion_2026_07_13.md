@@ -66,10 +66,17 @@ code.
 
 ## Todos
 
-- [ ] [REGISTRY] P0. Add `FX` to `VENUE_CATEGORY_MAP` (value `"tradfi"`) and to `VENUE_CAPABILITIES` (gate the
+- [x] ✅ [REGISTRY] P0. Add `FX` to `VENUE_CATEGORY_MAP` (value `"tradfi"`) and to `VENUE_CAPABILITIES` (gate the
       composite-venue trade actions it actually supports — check `FXAdapter`'s implemented order types before guessing
       the capability set). File: `unified-api-contracts/unified_api_contracts/registry/venue_constants.py` (category
-      dict ~326-368, capabilities dict ~554-590).
+      dict ~326-368, capabilities dict ~554-590). — SHIPPED `unified-api-contracts@0bd81fc2`. Category `"tradfi"`;
+      capability `{SPOT_TRADE}` only — confirmed via `execution-service`'s `FXAdapter(IbkrTradFiAdapter)`: routes
+      through IDEALPRO using `secType="CASH"` contracts exclusively (no `FUT`/`OPT`), matching NASDAQ/NYSE's spot-only
+      pattern. Found + fixed a 3rd registry in the same commit: `VENUE_ORDER_CAPABILITIES` also requires an entry for
+      every `VENUE_CAPABILITIES` key (enforced by
+      `tests/unit/test_venue_order_capabilities.py`/`tests/integration/test_instruction_venue_integration.py`, which
+      failed until `"FX": _TRADFI_EXCHANGE` was added, same set NASDAQ/NYSE use). 1072 relevant tests + full
+      `quality-gates.sh` green, sentinel verified.
 - [ ] [REGISTRY] P0. Fix the FX vendor-key bug:
       `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:121` currently maps
       `"FX": "databento"`, which is wrong — FX never touches Databento, actual data sourcing is Yahoo Finance (hardcoded
