@@ -2,24 +2,41 @@
 doc_type: codex-ssot
 title: P&L Attribution — Cross-Cutting Concern
 summary:
-  'Canonical P&L attribution: closed-set `PnLFactor` × `PnLLayer` (STRATEGY/EXECUTION) dual axis, DeFi carry from
+  "Canonical P&L attribution: closed-set `PnLFactor` × `PnLLayer` (STRATEGY/EXECUTION) dual axis, DeFi carry from
   on-chain index growth (never APY), wrapped-vs-rebasing LST split, T+1 batch is the official P&L, and HWM never raw
-  equity (three-method TWR / Notional / PnL-recovery). RESIDUAL must be < 1% or escalate.'
+  equity (three-method TWR / Notional / PnL-recovery). RESIDUAL must be < 1% or escalate."
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, client-reporting-api, execution-service, features-service, strategy-service, unified-api-contracts]
+repos:
+  [alerting-service, client-reporting-api, execution-service, features-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [pnl-attribution, strategy, defi, features, reconciliation, uac, execution]
 related:
-  [restaking-reward-economics.md, reward-lifecycle.md, ../../../04-architecture/global-ledger-architecture.md,
-  ../../../04-architecture/batch-live-architecture.md]
+  [
+    restaking-reward-economics.md,
+    reward-lifecycle.md,
+    ../../../04-architecture/global-ledger-architecture.md,
+    ../../../04-architecture/batch-live-architecture.md,
+  ]
 created: 2026-03-27
 authoritative_for:
-  [canonical P&L attribution factor×layer taxonomy (PnLFactor/PnLLayer closed sets),
-  high-water-mark three-method definition (TWR / Notional / PnL-recovery)]
-referenced_by: [codex/02-data/ledger-event-taxonomy.md, codex/04-architecture/backtest-groups.md, codex/04-architecture/client-reporting-architecture.md, codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md, codex/09-strategy/_archived_pre_v2/cross-cutting/pnl-attribution.md, codex/09-strategy/_archived_pre_v2/cross-cutting/share-classes.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md]
+  [
+    canonical P&L attribution factor×layer taxonomy (PnLFactor/PnLLayer closed sets),
+    high-water-mark three-method definition (TWR / Notional / PnL-recovery),
+  ]
+referenced_by:
+  [
+    codex/02-data/ledger-event-taxonomy.md,
+    codex/04-architecture/backtest-groups.md,
+    codex/04-architecture/client-reporting-architecture.md,
+    codex/09-strategy/README.md,
+    codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md,
+    codex/09-strategy/_archived_pre_v2/cross-cutting/pnl-attribution.md,
+    codex/09-strategy/_archived_pre_v2/cross-cutting/share-classes.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+  ]
 owner:
 last_reviewed: 2026-05-18
 code_refs:
@@ -229,6 +246,13 @@ mixes denominations. HWM is computed by **three simultaneous, independent method
 **Banned**: `max(equities)` as the HWM; converting a USDT recovery seed into BTC (or any other denomination) — the
 recovery seed stays in its native USDT denomination. Code SSOT: UTL `post_trade/hwm_invariants.py` (the three-method
 invariants) + client-reporting-api `core/hwm_seeds.py` (per-account seed resolution).
+
+> **Verified NON-finding (UTL/UAC reuse audit, 2026-07-13)**: `client-reporting-api/core/hwm_seeds.py` is a static
+> per-account seed table (`_SEEDS: dict[str, float]`, extracted from legacy `invoice_state._HWM_SEED`) holding
+> pre-tracking-start Equity-HWM and PnL-recovery-seed constants for accounts with history predating our equity-curve
+> data. It feeds UTL's three-method HWM (§8 above) as a seed value — it is NOT a `max(equity)` HWM reimplementation and
+> does not duplicate `post_trade/hwm_invariants.py`. Do not re-flag it in a future reuse audit. SSOT:
+> `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line 176-179 (verified NON-findings list).
 
 ## Canonical Attribution Factors
 
