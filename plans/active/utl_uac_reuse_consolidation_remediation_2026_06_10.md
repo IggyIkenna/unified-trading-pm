@@ -596,7 +596,7 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       future audit doesn't re-flag it), and the ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in
       UTL).
 - [x] ✅ [AUDIT] P1. Record the **verified NON-findings** list (greeks BSM, execution order-CB, hwm_seeds, etc.) in the
-      relevant codex docs so the next reuse audit doesn't re-open them. — unified-trading-pm@a7d49568b, done via split
+      relevant codex docs so the next reuse audit doesn't re-open them. — unified-trading-pm@4f664559e, done via split
       plan `utl_reuse_phase8_codex_ssot_archive_2026_07_13.md`.
 - [ ] [VERIFY] P1. Remove the Phase-0 in-flight banners; run plan-hygiene + active-inventory regen; archive per the
       5-step HARD RULE once all repos hit C5.
