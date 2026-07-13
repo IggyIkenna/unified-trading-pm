@@ -248,7 +248,44 @@ drift_direction: advance-code
       stuck that long). Help doc entry updated. — `deployment-ui@368ea8e6` + `pw:L2 ✓` cockpit.spec.ts **O6**
       (`cockpit-consolidator-oldest-pending-*`).
 
-### Dark data-correctness actors — VISIBILITY only; detection ALREADY EXISTS (deep-audited 2026-07-10)
+### Consolidator self-reported run summary (`latest.json`) — operator-REDIRECTED #4 (2026-07-11)
+
+> **Operator clarified (2026-07-11): the phantom/reprobe visibility below is a SEPARATE concern (and the phantom
+> estate-coverage issue is Ikenna's, different again). The real #4 is: not all ~25 consolidators are LIVE right now —
+> only some run. Have each LIVE consolidator publish a `latest.json` run summary, and WIRE THE CODE so a currently-dead
+> consolidator emits the same data the moment it is fired up.** Because all ~25 Cloud Run jobs run the ONE shared
+> `unified_trading_library.manifest_consolidator` module, instrumenting it once satisfies both halves — zero per-job
+> change.
+
+- [x] [BACKEND] P1. ✅ **Consolidator writes `_index/latest.json` every run — SHIPPED 2026-07-11.** `main()` in
+      `manifest_consolidator.py` publishes the authoritative run summary each cycle (incl. no-op / failure, so
+      `last_run_at` always reflects liveness):
+      `{last_run_at, verdict(produced|empty|failed), shards_changed,     rows_in/out/added, duration_ms, ...}` from the
+      `ConsolidationReport`. Best-effort (`_write_latest_run_summary` mirrors `_write_stall_state` — a write failure
+      logs + never crashes the cycle). One shared module → a dead consolidator starts reporting the instant it's fired,
+      no per-job change. — `unified-trading-library@111592eb` + 3 unit tests (`_run_verdict`, shape, swallow-error).
+- [x] [BACKEND] P1. ✅ **Endpoint reads `latest.json` — SHIPPED 2026-07-11.** `_read_latest_run()` per consolidator;
+      `run_reporting` + `run_verdict`/`run_last_run_at`/`run_shards_changed`/`run_rows_added`/`run_duration_ms` on
+      `ConsolidatorHealth`. When present the self-reported verdict is AUTHORITATIVE (`_authoritative_verdict`:
+      produced→produced/producing, empty→fired_but_empty, failed→stale_output), superseding the WS-3 Cloud-Run-execution
+      inference; absent → `run_reporting=false` (dead / not-yet-fired), never a fabricated all-clear. —
+      `deployment-api@022bfebc` + 3 unit tests.
+- [x] [UI] P1. ✅ **Surface the run summary + not-reporting state — SHIPPED 2026-07-11.** `RunSummary` renders "last run
+      {age} · merged N · +M rows · {duration}" for live consolidators; a dead one shows "not reporting — consolidator
+      not live yet". Help doc updated. — `deployment-ui@c97a769e` + `pw:L2 ✓` cockpit.spec.ts **O7** (live +
+      not-reporting states).
+- [ ] [INFRA] P1. **DEFERRED redeploy — emit in prod (operator 2026-07-11: ship code now, defer the estate redeploy).**
+      `latest.json` only appears once the ~25 Cloud Run consolidator jobs run the new UTL image. Redeploy is deferred to
+      the end-of-cockpit-plans deploy window (matches the standing local-dev-only deferral); until then the endpoint +
+      UI degrade honestly to "not reporting" for every consolidator. Staged rollout (one job, verify
+      `_index/latest.json`, then fan out) per the data-correctness rollout discipline. `Evidence: cloudbuild=<id>`
+      SUCCESS at redeploy.
+
+### Dark data-correctness actors — phantom/reprobe VISIBILITY (SEPARATE from #4 above; detection ALREADY EXISTS)
+
+> **NOT what the operator redirected #4 to (2026-07-11) — kept as a distinct, still-open item.** This is the
+> phantom-audit + reprobe VISIBILITY (Slack-only results → queryable), independent of the consolidator `latest.json`
+> above and of the phantom estate-COVERAGE issue (`issues/phantom_audit_estate_coverage_gap_2026_07_10.md`, Ikenna's).
 
 > **Operator GO (2026-07-11): build the visibility (persist `latest.json` → read endpoint → surface). Confirmed this is
 > INDEPENDENT of the still-OPEN estate-coverage issue** (`issues/phantom_audit_estate_coverage_gap_2026_07_10.md`,
@@ -324,6 +361,17 @@ drift_direction: advance-code
   never touches a Lambda run-time — but if it ever does, use CloudWatch `Invocations`, never deploy-time.
 
 ## Progress Log
+
+- 2026-07-11 — **#4 REDIRECTED + SHIPPED: consolidator self-reported `latest.json` run summary.** Operator clarified #4
+  is NOT phantom/reprobe (separate) but consolidator liveness: not all ~25 are live now; have the live ones publish a
+  `latest.json` run summary + wire the code so dead ones do too when fired. Since all 25 jobs run the one shared
+  `manifest_consolidator` module, instrumented `main()` once. Shipped: **UTL `111592eb`** (writes `_index/latest.json`
+  each run — verdict/shards/rows/duration; best-effort), **deployment-api `022bfebc`** (`_read_latest_run` +
+  `run_reporting`/`run_verdict`/… fields; self-reported verdict is authoritative, degrades to not-reporting for dead
+  ones), **deployment-ui `c97a769e`** (per-card run summary + "not reporting — consolidator not live yet"; help doc;
+  pw:L2 **O7**). All QG-green + strict-quickmerge. Operator decisions: content = run-summary/production verdict;
+  **estate redeploy DEFERRED** to the end-of-cockpit-plans window (until then prod shows "not reporting" everywhere —
+  honest). The phantom/reprobe visibility item is kept SEPARATE + still open.
 
 - 2026-07-11 — **WS-3 signals SHIPPED (fired-but-empty, per-cadence budget, oldest-pending shard age).** Three repos in
   dep order: **UTL `101e8f10`** (`per_vm_shard_backlog` → `PerVmShardBacklog` NamedTuple with `oldest_pending_at`,
