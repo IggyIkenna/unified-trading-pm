@@ -139,7 +139,20 @@ disk). Impact is honest-coverage % + foundation-gate / P2d final-gate risk.
 
 Follow-ups (post-remediation):
 
-- [ ] [DATA] P2. BLOCKED-OPERATOR-DECISION: rule on + execute the 24-league de-registration (recommendation: REMOVE from
+- [x] [DATA] P2. ~~BLOCKED-OPERATOR-DECISION~~ RULED by operator 2026-07-13 ("drop and canonicalise") + EXECUTED
+      (workflows wf_3a2669a9-eb4 + wf_5aba24bc-258). ✅ Evidence: instruments-service@21b76b3e (catalogue/enumerator
+      de-registration gates + 3 one-off dereg scripts + 4 recon scripts, QG green, quickmerge-landed); index purge
+      60,373 rows via CAS backup-then-rewrite (pre-purge snapshot `availability_index_20260713T153010Z.parquet`);
+      captured-row accounting ZERO-LOSS: 1,651 rows parked to `_audits/parked_league_rows_20260713.parquet` (LA_LIGA_2
+      691 + RFPL 868 + SCOTTISH_LEAGUE_CUP_185 16 + numeric-id scatter 76; independently re-downloaded +
+      atom-reconciled) + 1 atom re-keyed LA_LIGA_2→SEGUNDA_DIVISION (crc32c-verified copy, source object deleted
+      post-verification) — most re-key candidates had identical canonical twins already on disk so parked instead;
+      catalogue rebuilt+promoted (24,569 rows, 0 under the 24, league-grain exactly 94); index now **94 distinct
+      league_ids, set-identical to `get_expected_leagues_for_source("api_football")`**; enumerator zero-seed proof run
+      enum-universe-sports-20260713-163406 scan-only: 12,951 candidate rows, **0 under the 24**, 94 leagues; depth gate
+      exit 0 (98.46%), raw pending-fetch EU now **778** (from 38,255 at diagnosis). Nightly enum cron picks up the
+      shipped gates after the next LDR→main promote rebuilds `instruments-service:latest` (Cloud Scheduler
+      `expected-universe-v2-sports-daily` 01:30 UTC). Original recommendation text follows: (recommendation: REMOVE from
       the FIXTURES/enumeration universe — numeric ids are af-id↔FootyStats-season-id ambiguous, several are phantom
       twins of covered canonical leagues; removes 60,364 phantom denominator rows across all data_types and stops ~89
       new phantom cells/day still minted by the enum cron). MUST re-key, not delete, 1,647 captured rows:
@@ -163,3 +176,11 @@ Follow-ups (post-remediation):
   fetch_needed cells. Side-finding filed separately: manifest-consolidator prune race (shard pruned without merging when
   two executions overlap) — [[manifest_consolidator_prune_race_overlapping_executions_2026_07_13]]
   (plans/active/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md).
+- 2026-07-13 (evening): 24-league de-registration RULED + EXECUTED + independently verified (see flipped todo above for
+  full evidence). Sports availability index now carries exactly the 94-league trading universe; raw pending-fetch EU 778
+  (was 38,255 this morning). Execution note: the first executor agent completed every mutation (re-key, park, purge,
+  catalogue rebuild) with in-flight verification but died before shipping; a finisher leg re-ran QG (green), produced
+  the enumerator zero-seed proof, and quickmerge-landed the 12 files as instruments-service@21b76b3e. Verifier also
+  attributed a benign 21-atom captured→empty_confirmed oscillation in SEGUNDA_DIVISION/BRASILEIRAO to a generic
+  16:24:30Z full-index dedup rewrite (pre-existing behavior, objects verified on disk), NOT the purge. Remaining open
+  here: the P3 fetch_needed re-check (~2026-07-20) below.
