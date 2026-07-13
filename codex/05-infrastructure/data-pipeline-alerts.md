@@ -13,10 +13,21 @@ stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, e2e-testing, strategy-service]
 scope: [engineer, admin]
 tags: [data-pipeline, monitoring, observability, self-healing, slack, escalation]
-related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/05-infrastructure/deployment-observability.md]
+related:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/honest-absence-downstream-handling.md,
+    codex/05-infrastructure/deployment-observability.md,
+  ]
 created: 2026-06-22
-authoritative_for: [data-pipeline failure-mode registry (DP-* alert IDs) + emit-route-escalate model + self-heal actuator layer]
-referenced_by: [codex/02-data/honest-absence-downstream-handling.md, codex/05-infrastructure/deployment-observability.md, plans/active/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md]
+authoritative_for:
+  [data-pipeline failure-mode registry (DP-* alert IDs) + emit-route-escalate model + self-heal actuator layer]
+referenced_by:
+  [
+    codex/02-data/honest-absence-downstream-handling.md,
+    codex/05-infrastructure/deployment-observability.md,
+    plans/active/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md,
+  ]
 owner:
 last_reviewed: 2026-06-22
 code_refs:
@@ -96,14 +107,14 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 
 ### DP-PATH — non-canonical GCS path / pipeline_mode / bucket (class C3)
 
-| ID          | Sev | Fires when                                                                           | Detector                                 | Escalation               | Status  |
-| ----------- | --- | ------------------------------------------------------------------------------------ | ---------------------------------------- | ------------------------ | ------- |
-| DP-PATH-001 | 🔴  | resolved write path fails UAC `is_canonical(path)` (writer-side assert)              | [S] writer assert                        | block write + file issue | verbose |
-| DP-PATH-002 | 🟠  | manifest row implies a non-canonical path on the daily hygiene walk                  | [S] `audit_canonical_form --probe-paths` | file issue               | verbose |
-| DP-PATH-003 | 🟠  | `pipeline_mode` hardcoded `batch` on a live run / missing `pipeline_mode=` partition | [S] QG static + manifest scan            | file issue               | verbose |
-| DP-PATH-004 | 🟠  | legacy `day-YYYY-MM-DD` hyphen / `VENUE-CHAIN` / glued-`V{N}` spelling               | [S] `no_malformed_by_date_paths` + audit | file issue               | verbose |
-| DP-PATH-005 | 🔴  | handler writes to the wrong bucket (defi 9-handler class)                            | [S] writer bucket-resolve assert         | block + page             | verbose |
-| DP-PATH-006 | 🔴  | IS universe bare ticker (e.g. `KALSHI KXMVE-26JAN`) not rebuilt to connector form `KALSHI:PREDICTION_MARKET:{ticker}` → WS "unknown instrument; skipping" → 0 capture (cefi/prediction live silent-empty) | [S] `live_universe_connector_key_rebuild` | file issue | verbose |
+| ID          | Sev | Fires when                                                                                                                                                                                                | Detector                                  | Escalation               | Status  |
+| ----------- | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------ | ------- |
+| DP-PATH-001 | 🔴  | resolved write path fails UAC `is_canonical(path)` (writer-side assert)                                                                                                                                   | [S] writer assert                         | block write + file issue | verbose |
+| DP-PATH-002 | 🟠  | manifest row implies a non-canonical path on the daily hygiene walk                                                                                                                                       | [S] `audit_canonical_form --probe-paths`  | file issue               | verbose |
+| DP-PATH-003 | 🟠  | `pipeline_mode` hardcoded `batch` on a live run / missing `pipeline_mode=` partition                                                                                                                      | [S] QG static + manifest scan             | file issue               | verbose |
+| DP-PATH-004 | 🟠  | legacy `day-YYYY-MM-DD` hyphen / `VENUE-CHAIN` / glued-`V{N}` spelling                                                                                                                                    | [S] `no_malformed_by_date_paths` + audit  | file issue               | verbose |
+| DP-PATH-005 | 🔴  | handler writes to the wrong bucket (defi 9-handler class)                                                                                                                                                 | [S] writer bucket-resolve assert          | block + page             | verbose |
+| DP-PATH-006 | 🔴  | IS universe bare ticker (e.g. `KALSHI KXMVE-26JAN`) not rebuilt to connector form `KALSHI:PREDICTION_MARKET:{ticker}` → WS "unknown instrument; skipping" → 0 capture (cefi/prediction live silent-empty) | [S] `live_universe_connector_key_rebuild` | file issue               | verbose |
 
 ### DP-VM — VM lifecycle / stall / OOM / heartbeat (class C4, most frequent)
 
@@ -118,11 +129,11 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 
 ### DP-RATE — rate-limit / key-pool (class C5)
 
-| ID          | Sev | Fires when                                                              | Detector                        | Escalation                    | Status  |
-| ----------- | --- | ----------------------------------------------------------------------- | ------------------------------- | ----------------------------- | ------- |
-| DP-RATE-001 | 🟠  | sustained 429s from a source/venue above threshold                      | [S] `SOURCE_RATE_LIMITED` event | auto-recover (backoff/rotate) | verbose |
-| DP-RATE-002 | 🔴  | key pool exhausted (TheGraph 9-key, Databento, etc.) — stuck on one key | [S] `SOURCE_KEY_POOL_EXHAUSTED` | page (BLOCKED-CREDENTIALS)    | verbose |
-| DP-RATE-003 | 🟡  | sports REST adapter (api_football/SFI/transfermarkt/footystats) hit a 429 + slept to the minute boundary — surfaces a throttled backfill instead of a silent stall (the TM/FootyStats 6.5h-hang blind spot) | [S] `sports_adapter_429` (`BaseSportsReferenceAdapter._get_with_retry`) | auto-recover (backoff) | verbose |
+| ID          | Sev | Fires when                                                                                                                                                                                                  | Detector                                                                | Escalation                    | Status  |
+| ----------- | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------- | ------- |
+| DP-RATE-001 | 🟠  | sustained 429s from a source/venue above threshold                                                                                                                                                          | [S] `SOURCE_RATE_LIMITED` event                                         | auto-recover (backoff/rotate) | verbose |
+| DP-RATE-002 | 🔴  | key pool exhausted (TheGraph 9-key, Databento, etc.) — stuck on one key                                                                                                                                     | [S] `SOURCE_KEY_POOL_EXHAUSTED`                                         | page (BLOCKED-CREDENTIALS)    | verbose |
+| DP-RATE-003 | 🟡  | sports REST adapter (api_football/SFI/transfermarkt/footystats) hit a 429 + slept to the minute boundary — surfaces a throttled backfill instead of a silent stall (the TM/FootyStats 6.5h-hang blind spot) | [S] `sports_adapter_429` (`BaseSportsReferenceAdapter._get_with_retry`) | auto-recover (backoff)        | verbose |
 
 ### DP-ENV — reader/writer bucket-env mismatch (class C6)
 
@@ -157,24 +168,25 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 An `auto_recover` escalation does not just label — it dispatches a real actuator. The map is
 `deployment_service.data_pipeline_monitors.escalation._DP_RECOVERY_ACTIONS` (`event → actuator`):
 
-| Event (DP\_\*)                  | Actuator (`deployment-service/scripts/recovery/`) | Bound                              |
-| ------------------------------- | ------------------------------------------------- | ---------------------------------- |
-| `DP_MANIFEST_CONSOLIDATOR_DOWN` | `relaunch_consolidator.py`                        | idempotent; re-execs the Run job   |
-| `DP_VM_EXIT_NONZERO` (137 OOM)  | `relaunch_backfill_vm.py` (resize-up on OOM)      | ≤2 / (vm-prefix, day)              |
-| `DP_VM_STALL` / hung            | `relaunch_stalled_vm.py`                          | ≤2 / (vm-prefix, day); idempotent  |
+| Event (DP\_\*)                  | Actuator (`deployment-service/scripts/recovery/`) | Bound                             |
+| ------------------------------- | ------------------------------------------------- | --------------------------------- |
+| `DP_MANIFEST_CONSOLIDATOR_DOWN` | `relaunch_consolidator.py`                        | idempotent; re-execs the Run job  |
+| `DP_VM_EXIT_NONZERO` (137 OOM)  | `relaunch_backfill_vm.py` (resize-up on OOM)      | ≤2 / (vm-prefix, day)             |
+| `DP_VM_STALL` / hung            | `relaunch_stalled_vm.py`                          | ≤2 / (vm-prefix, day); idempotent |
 
 The actuator resolves **which launcher** to re-run from `data_pipeline_monitors/launcher_registry.py` —
 `resolve_launcher_for_vm(vm_name)` does a **longest-prefix** match over `LAUNCHER_FOR_VM_PREFIX` (~189 VM prefixes: 118
-→ a `deployment-service/scripts/vm/launch-*.sh`, 71 → `None` + a typed reason so an unrecoverable prefix is explicit, not
-a silent miss). A prefix with no entry fails the guard test (every launchable VM-prefix must map or be explicitly `None`).
-Never fire-and-forget — the actuator verifies STARTED at T+60s (the no-fire-and-forget rule).
+→ a `deployment-service/scripts/vm/launch-*.sh`, 71 → `None` + a typed reason so an unrecoverable prefix is explicit,
+not a silent miss). A prefix with no entry fails the guard test (every launchable VM-prefix must map or be explicitly
+`None`). Never fire-and-forget — the actuator verifies STARTED at T+60s (the no-fire-and-forget rule).
 
 > **PACKAGING — load-safe lazy import (2026-06-23 incident + fix; HARD RULE):** the actuator classes live in the
-> top-level `deployment-service/scripts/recovery/` dir, which is **NOT in the installed `deployment_service` wheel** — the
-> deployment-api Cloud Run image (where the monitors run) installs the package then DROPS the source, and `scripts/vm/`
-> launchers are absent too. A **module-level** `from scripts.recovery… import` in `escalation.py` therefore crashed
-> `data_pipeline_monitors/__init__.py` at load → **every monitor job (and the deadman) died at import** (caught 2026-06-23
-> by EXECUTING a job — a digest-only "deploy check" had missed it). Fix: `escalation.py` capability-checks
+> top-level `deployment-service/scripts/recovery/` dir, which is **NOT in the installed `deployment_service` wheel** —
+> the deployment-api Cloud Run image (where the monitors run) installs the package then DROPS the source, and
+> `scripts/vm/` launchers are absent too. A **module-level** `from scripts.recovery… import` in `escalation.py`
+> therefore crashed `data_pipeline_monitors/__init__.py` at load → **every monitor job (and the deadman) died at
+> import** (caught 2026-06-23 by EXECUTING a job — a digest-only "deploy check" had missed it). Fix: `escalation.py`
+> capability-checks
 > `_ACTUATORS_AVAILABLE = importlib.util.find_spec("scripts.recovery.relaunch_consolidator") is not None` at load (a
 > probe, not a try/except fallback) and loads the actuator via `importlib.import_module(...)` **inside** the dispatch fn
 > (a dynamic call, not an `import` statement — passes the no-imports-inside-functions gate AND ruff). When the actuators
@@ -183,17 +195,30 @@ Never fire-and-forget — the actuator verifies STARTED at T+60s (the no-fire-an
 > actuate a relaunch from the Cloud Run monitors — it always degrades to `file_issue` there. To make self-heal actually
 > actuate, package the actuators (+ launchers) into the image (or run the monitors where `scripts/` exists). Tracked in
 > `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md`.
+>
+> **REGRESSION (2026-07-13, fixed `deployment-service@b3826fea`) — `find_spec()` on a DOTTED name is itself a raising
+> call.** Same packaging class, new mechanism: `data_pipeline_monitors/cli.py::_zombie_watchdog` probed
+> `importlib.util.find_spec("scripts.vm.vm_zombie_watchdog")` **outside** its `try/except`, assuming it returns `None`
+> when unavailable. But `find_spec` **imports the parent package** to resolve a dotted name — so when the image has
+> `scripts` importable but `scripts.vm` absent from the wheel, it **RAISES**
+> `ModuleNotFoundError: No module named 'scripts.vm'` (it does NOT return `None`). The uncaught raise crashed EVERY
+> exit-code/heartbeat/meta fleet sweep the instant it processed a terminated/stalled VM (via `_umbrella_for_vm` /
+> `_kill_stalled_vm`) → no sentinel written → the out-of-band deadman paged every 15 min for ~8h (triggered when the
+> `sports-v9-migration` VMs terminated `exit_code=2`). It never reproduced locally because `scripts.vm` IS on disk in
+> the repo — only the packaged image lacks it. Fix: wrap the `find_spec` probe so a missing parent degrades to
+> unavailable (`return None`), matching the documented intent. **Rule: a `find_spec()` probe on a dotted name must be
+> `try/except`-guarded — checking its return value is not enough.**
 
 When `auto_recover` is exhausted or N/A, the tier escalates: **`file_issue`** writes an _actionable_ plan-todo
 (frontmatter `assigned_vm` + `parent_epic` + a `- [ ] [CODE] P1` naming the target repo) → `PlanRegenLoop` → backlog →
 `AutoSpawn` picks up a fix agent; the **fast path** is a `repository_dispatch escalate-to-orchestrator`
-(`wall_type=data_pipeline_failure`, auth via SM `GH_PAT`) — the same escalation spine CI-failure uses. **`page_operator`**
-is the terminal tier (CRITICAL → Slack page).
+(`wall_type=data_pipeline_failure`, auth via SM `GH_PAT`) — the same escalation spine CI-failure uses.
+**`page_operator`** is the terminal tier (CRITICAL → Slack page).
 
 > **PARTIAL (2026-06-23)**: the deployment-service `escalation.py::_write_issue_doc` actionable-frontmatter half is
 > SHIPPED; the e2e `_dp_common.file_escalation_issue` actionable-frontmatter half is code-complete + QG-green but **not
-> yet quickmerged** (strategy-service dirty-dep blocked) — until it lands, e2e-audit findings file a plain (non-actionable)
-> issue. Tracked in `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md`.
+> yet quickmerged** (strategy-service dirty-dep blocked) — until it lands, e2e-audit findings file a plain
+> (non-actionable) issue. Tracked in `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md`.
 
 ## Watching the watchers — meta-monitoring coverage + the KNOWN SPOF (2026-06-23)
 
@@ -203,24 +228,25 @@ CRITICAL/page), `DP-WATCHER-002` (`check_cron_fired` — per-AG `_index/availabi
 proxy for the consolidator firing). So the consolidator + the zombie-watchdog + the catalogue enumerator each have a
 dead-man's-switch above them.
 
-> **SPOF CLOSED (code + terraform shipped 2026-06-23; `tofu apply` operator-gated):** two layers now watch the
-> watchers themselves.
+> **SPOF CLOSED (code + terraform shipped 2026-06-23; `tofu apply` operator-gated):** two layers now watch the watchers
+> themselves.
 >
 > **Layer 1 — cron-watches-cron (in-band, no creds).** Each fleet-monitor sweep (`exit-code` / `heartbeat` / `meta`)
-> writes a `vm-census/<mode>-last-run.json` sentinel at end-of-sweep (`_gcs.write_monitor_last_run`, UTC ts + ok + per-sweep
-> counts). The meta sweep runs `meta_watchers.check_monitor_crons_fired` — a `FreshnessTarget` per sentinel
+> writes a `vm-census/<mode>-last-run.json` sentinel at end-of-sweep (`_gcs.write_monitor_last_run`, UTC ts + ok +
+> per-sweep counts). The meta sweep runs `meta_watchers.check_monitor_crons_fired` — a `FreshnessTarget` per sentinel
 > (`monitor_cron_targets`; budget = **2× cadence**, so 10 min for the `*/5` exit-code/heartbeat, 30 min for the `*/15`
 > meta) — and a stale/absent sentinel emits **`DP_CRON_DID_NOT_FIRE` (DP-WATCHER-002, CRITICAL/page)**. The meta sweep
 > CANNOT detect its OWN death this way (it must be running to probe its own sentinel) — that is Layer 2's job.
 >
-> **Layer 2 — out-of-band dead-man's-switch (the top-of-chain watcher).** `deployment_service.data_pipeline_monitors.deadman_poster`
-> runs as its OWN Cloud Run job `uts-prod-monitoring-deadman` (`monitoring_deadman_scheduler.tf`, `*/15`, `retry_count=2`).
-> Each tick it (a) reads every monitor sentinel's freshness (same `monitor_cron_targets`), (b) reads
-> `lifecycle-events-sub` `oldest_unacked_message_age` via the Cloud Monitoring API (>30 min ⇒ the alerting subscriber /
-> Slack relay is down — events piling up), and (c) on ANY staleness posts **DIRECTLY** to a SEPARATE Slack webhook (SM
-> `MONITORING_DEADMAN_SLACK_WEBHOOK`, app `monitoring-deadman`). It is **deliberately independent** — it does NOT import
-> the alerting-service / PubSub publish / `log_event` / the `#data-pipeline-alerts` webhook, so the same failure can't
-> swallow its own death-alert (a namespace-level unit test enforces this).
+> **Layer 2 — out-of-band dead-man's-switch (the top-of-chain watcher).**
+> `deployment_service.data_pipeline_monitors.deadman_poster` runs as its OWN Cloud Run job `uts-prod-monitoring-deadman`
+> (`monitoring_deadman_scheduler.tf`, `*/15`, `retry_count=2`). Each tick it (a) reads every monitor sentinel's
+> freshness (same `monitor_cron_targets`), (b) reads `lifecycle-events-sub` `oldest_unacked_message_age` via the Cloud
+> Monitoring API (>30 min ⇒ the alerting subscriber / Slack relay is down — events piling up), and (c) on ANY staleness
+> posts **DIRECTLY** to a SEPARATE Slack webhook (SM `MONITORING_DEADMAN_SLACK_WEBHOOK`, app `monitoring-deadman`). It
+> is **deliberately independent** — it does NOT import the alerting-service / PubSub publish / `log_event` / the
+> `#data-pipeline-alerts` webhook, so the same failure can't swallow its own death-alert (a namespace-level unit test
+> enforces this).
 >
 > **Terminal bedrock.** A `google_monitoring_alert_policy` on the deadman job's OWN execution-failure → a
 > `google_monitoring_notification_channel` of type **email** (`iggy2london@gmail.com`) — a deliberately DIFFERENT
