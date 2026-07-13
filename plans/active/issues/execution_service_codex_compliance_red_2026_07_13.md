@@ -24,8 +24,9 @@ resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
 priority: P1
-author: slot-11
 source: [utl_reuse_phase7_low_lint_tail_2026_07_13.md, slot-11 backend-engineer task]
+drift_direction: advance-code
+depends_on: []
 ---
 
 # execution-service quality-gates.sh RED — codex compliance 4 violations, ceiling is 3
