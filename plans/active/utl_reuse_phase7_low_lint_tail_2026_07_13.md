@@ -101,7 +101,18 @@ drift_direction: advance-code
       `resolve_bucket_name`, per-object `gsutil`/`gcloud` subprocess → UTL `gcs_copy/delete/describe_object`, and fix
       the banned env name `GOOGLE_CLOUD_PROJECT` → `GCP_PROJECT_ID` (`cleanup_kraken_spot_empty_confirmed.py:96`,
       `cleanup_may4_bait_sentinels.py:117`, MTDS `cleanup_*`). These are QG-baselined; counts only go down.
-- [ ] [VERIFY] P2. `quality-gates.sh` green per touched repo; ratchet baselines decrease (never increase); quickmerge.
+- [x] ✅ [VERIFY] P2. `quality-gates.sh` green per touched repo; ratchet baselines decrease (never increase);
+      quickmerge. — VERIFIED. `strategy-service@8db3f717` (the repo I directly touched this plan): full
+      `quality-gates.sh` exit 0, sentinel-verified (1011s — hit the known host-wide `qg-host-governor` contention, see
+      `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md`, resolved via the sanctioned
+      `IGNORE_TIMEOUT=true` workaround). The other 8 repos this phase touched (alerting-service, agent-orchestrator,
+      unified-trading-api, greeks-service, unified-trading-library, execution-service, unified-api-contracts,
+      system-integration-tests) each already carry their own "QG 0" / "confirmed full-green pre-ship" evidence recorded
+      on their respective todos above at ship time — not re-run here to avoid burning more governor-contended wall-clock
+      re-verifying already-shipped, sentinel-passed commits. No ratchet-baseline regressions introduced (the
+      strategy-service os.environ todo above required zero code changes; the lint-ratchet tail above stays unchecked as
+      explicitly opportunistic/non-blocking, so baselines are unchanged, not increased). This closes every todo in this
+      plan except the opportunistic lint-ratchet tail.
 
 ## Success criteria
 
