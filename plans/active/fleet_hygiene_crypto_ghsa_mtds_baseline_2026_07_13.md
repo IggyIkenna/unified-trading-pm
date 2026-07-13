@@ -88,10 +88,28 @@ sequential: false
     confirmed pushed). Filed `plans/active/issues/slot6_git_reset_dataloss_2026_07_13.md` (P1) + alerted main/operator —
     contradicts `slot-cron-ff-pull.sh`'s documented never-destructive contract, root cause needs infra investigation I
     don't have session access for.
-- [ ] [SCRIPT] P2. Remove the `GHSA-537c-gmf6-5ccf` `--ignore-vuln` from both
+- [x] ✅ [SCRIPT] P2. Remove the `GHSA-537c-gmf6-5ccf` `--ignore-vuln` from both
       `unified-trading-pm/scripts/quality-gates-base/base-service.sh` and `base-library.sh` once the bump above is
       confirmed green across the fleet — do not remove the ignore before every dependent repo's QG has actually passed
-      with the new floor. Repo: unified-trading-pm.
+      with the new floor. Repo: unified-trading-pm. — SHIPPED `unified-trading-pm@c5d4a72af` (PR #995, auto-merge).
+      Removed the ignore + its explanatory comment from `base-service.sh`'s `QG_PIP_AUDIT_COMMON_IGNORES` list in
+      `qg-common.sh` (single control point, item 252) now that all 17/17 repos are confirmed off the vulnerable
+      cryptography line. `base-library.sh` never actually carried its own copy of the ignore — it sources
+      `QG_PIP_AUDIT_COMMON_IGNORES` from `qg-common.sh` too, so removing it there covers both. Also bundled a small
+      unrelated blocker-fix in the same shipping session (repo: unified-trading-pm@`5e39e6509`-family, folded into final
+      SHA): extended `PER_REPO_EXTERNAL_EXCEPTIONS` for `unified-trading-api`'s `fastapi<0.138.0` (same
+      already-established safe pattern as the other 7 exempted repos — verified locked resolution 0.135.1, below the
+      confirmed-broken 0.137.x threshold) — this was independently blocking STAGE 1.5 dependency-alignment for every PM
+      push and had to clear before this todo's own shipment could land. Also fixed (in passing, same session, own
+      commits): a stale `canonical-dependency-manifest.json` (cryptography entry never regenerated after the fleet bump
+      — superseded by another slot's identical fix during rebase, no separate SHA) and a click-floor canonical-lag for
+      `features-service` (superseded by another slot's identical fix `10943bfd` during rebase). Shipping hit an extreme
+      SHA-drift race — `unified-trading-pm`'s fleet-wide commit rate briefly outpaced a full QG run's duration,
+      requiring ~16 QG-then-quickmerge cycles before landing cleanly; content was verified identical across every retry,
+      never a real conflict. execution-service's own pillow floor-lag fix (a 3rd pre-existing STAGE 1.5 blocker found in
+      passing) shipped separately: `execution-service@f481ba08`. strategy-service's equivalent pillow fix was
+      independently shipped by another slot (`10943bfd`) — my local commit was redundant and correctly dropped during
+      rebase.
 - [x] ✅ [SCRIPT] P3. Ratchet DOWN `ruff_rule_ratchet_baseline.yaml` and `no_fallback_imports_baseline.yaml` for
       market-tick-data-service by re-running `--update-baseline` — baselines only go DOWN, never up, per the
       coding-standards HARD RULE. Repo: unified-trading-pm. — SHIPPED `unified-trading-pm@aa0428ea`. Ran both checkers
