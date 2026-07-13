@@ -95,10 +95,16 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       may be a genuine "scaffold exists, adapter never shipped" gap (per the workspace's "external data always available
       — exhausting the free path is a credential ask, not a descope" rule) — if so, build the adapter/writer or file it
       precisely as `BLOCKED-CREDENTIALS` with the scaffold in place, per that rule (do not silently descope).
-- [ ] [DATA] P1. **odds_api source: retirement-status check.** Only 2,667 rows, 0 ever captured — determine if this is a
-      legacy/superseded source (odds now flow through api_football/footystats per the audit) that should be typed
-      `EXPECTED_DEPRECATED_DATA_TYPE`/retired formally, or a broken-but-intended-live source. Decide-and-document (no
-      operator ask) per the documented sports data source architecture.
+- [x] [DATA] P1. **odds_api source: retirement-status check.** — DONE, no code change (root-caused twice; see Progress
+      Log 2026-07-13 "implementation" entry). `odds_api` is NOT retired/superseded: it is the sole `SOURCE_PRIORITY`
+      owner of `ODDS_SNAPSHOT`/`ODDS_MOVEMENT`/`ARBITRAGE` and is a credential-gated (`BLOCKED-CREDENTIALS`) live
+      source, already tracked in `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` +
+      `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`. Live-manifest spot-check confirms all 6 legacy
+      `attempted_failed` rows carry `error_reason=PipelineModeSourceMismatchError` — i.e. these are the current
+      write-safety gate correctly REJECTING a source/data_type-mismatched write, an honest record of the gate
+      firing, not a bug. The prior investigation's suggested classifier "polish" was re-verified and found
+      inapplicable — see below; not applied. DoD's "0 (or documented-equivalent)" residual is satisfied by this
+      documented state.
 - [ ] [DATA] P2. **footystats: close the small residual.** 205 attempted_failed (179 `TimeoutError` — likely a
       retry/backoff tuning fix, not a deep bug), 56 expected_unattempted (verify legitimate). Small, mechanical.
 - [ ] [DATA] P2. **soccer_football_info (SFI_PROGRESSIVE_STATS): close the small residual.** 10 attempted_failed
@@ -406,3 +412,47 @@ report written in this plan's Progress Log.
     any other MTDS/MDPS sports writer (footystats/SFI/etc. already look clean per §0, so likely unaffected — they may
     already target `instruments-store-sports-prd` correctly) has the same mismatch before declaring this class of bug
     closed.
+
+- 2026-07-13 (slot-3, implementation dispatch — `odds_api` todo): **re-verified the investigation's own recommended
+  "optional polish" and found it does NOT apply as stated; corrected root-cause below; todo marked DONE with no code
+  change (the correct outcome, not a shortcut).**
+  - **Live-manifest spot-check** (single-row read of `gs://instruments-store-sports-prd-central-element-323112/_index/
+    availability_index.parquet`, `source=="odds_api"`): confirms 2,661 `empty_confirmed` + 6 `attempted_failed`
+    (matches the investigation exactly). New finding: **all 6 `attempted_failed` rows carry
+    `error_reason="PipelineModeSourceMismatchError"`** (dates 2019-01-23, 2019-12-12, 2020-02-06, 2020-04-21,
+    2020-04-23, 2020-04-27; `service_name=instruments-service` throughout). This is a stronger, more precise finding
+    than the investigation's "pre-registry-correction noise" framing — it is literally the SAME exception class the
+    current-day write gate raises (confirmed live in `instruments-service/scripts/backfill_orphan_class_e_sports.py`'s
+    `resolve_source_and_mode()` docstring and `backfill_orphan_class_e.py`'s `MissingSourceError`/
+    `PipelineModeSourceMismatchError` gate commentary) — i.e. these 6 rows are the write-safety gate **correctly
+    rejecting** an attempted odds_api write for the generic `ODDS` data_type (which `SOURCE_PRIORITY` reserves for
+    footystats), and recording that rejection honestly as `attempted_failed`. This is the manifest doing exactly what
+    it's supposed to do (per `codex/02-data/availability-manifest-and-data-status.md` — "never silent placeholders,"
+    trust the actual distribution) — **not a defect to patch.**
+  - **Root-caused why the investigation's suggested classifier "polish" does not apply**: read
+    `market-tick-data-service/market_tick_data_service/scripts/rebuild_sports_manifest_v9.py` and its helper
+    `_rebuild_sports_write.py` in full. `_classify_empty_row` (and its 9-step `_RETIRED_DATA_TYPES`/`EXPECTED_*` relabel
+    logic) is invoked ONLY over rows already sitting in `empty_confirmed` status (`_classify_all_empty_rows` iterates
+    `empty_df`, the empty-only slice of the index). Existing `attempted_failed` rows take a **completely separate,
+    unconditional** path: `_write_attempted_failed_rows` (`_rebuild_sports_write.py:308-353`) iterates every row with
+    `capture_status == "attempted_failed"` and re-emits it via `writer.record_failed(...)`, preserving `error_reason`
+    verbatim (or a `UNKNOWN_FETCH_FAILURE_PRESERVED_FROM_V8` fallback) — there is NO reason-based filter, source
+    check, or data_type check in that path at all. Even setting aside that mismatch: reason-relabeling (even if it did
+    fire) changes only the empty-row `reason` column, never the row's `capture_status` — so it could never move an
+    `attempted_failed` COUNT to 0 regardless. **Conclusion: the suggested classifier exemption is a no-op for this
+    gap on both counts** (wrong code path; wrong mechanism even if it were the right path). Not implementing it is the
+    correct call, not a shortfall.
+  - **Decision (no operator ask, per `/autonomous`)**: leave the 6 rows exactly as recorded. Relabeling a genuine
+    gate-rejection event to erase it from the `attempted_failed` tally would be dishonest-manifest behavior (the
+    opposite of what the honest-absence rule requires) for a below-materiality (6-row), already-non-reproducible
+    (current `SOURCE_PRIORITY`/`PipelineModeSourceMismatchError` gates block recurrence) historical artifact. This is
+    the plan DoD's explicit "documented-equivalent residual" case, matching the understat precedent already cited.
+  - **Files read (no edits needed)**: `market-tick-data-service/market_tick_data_service/scripts/
+    rebuild_sports_manifest_v9.py` (896 lines, full read of `_classify_empty_row` + docstring + call sites),
+    `market-tick-data-service/market_tick_data_service/scripts/_rebuild_sports_write.py:165-459` (`_write_empty_rows`,
+    `_write_attempted_failed_rows`, `_classify_all_empty_rows`), `instruments-service/scripts/backfill_orphan_class_e.py`
+    + `backfill_orphan_class_e_sports.py` (gate confirmation, unchanged from investigation).
+  - **Todo `odds_api source: retirement-status check` flipped to `[x]` above.** No commits to
+    `market-tick-data-service` or `instruments-service` — this todo's terminal state is documentation-only, which is
+    the correct root-caused outcome (see workspace rule: "if the investigation's recommended fix turns out to be
+    wrong... document what you actually found, don't force the prior recommendation").
