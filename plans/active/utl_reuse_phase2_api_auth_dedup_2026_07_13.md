@@ -62,9 +62,18 @@ drift_direction: advance-code
       Deleted dead `auth.py` + `_google_auth_sync.py` (+ their tests); repointed the 2 live importers (`main.py`,
       `api/main.py`) to `config.get_config()`; cleared the `DISABLE_AUTH` toggle from 16 test fixtures (live path
       already on UTL `create_api_auth`). Direct `google.oauth2`/`google.auth` SDK import removed with the files.
-- [ ] [AGENT] P1. **unified-trading-api** (UTL extension is shipped — unblocked): migrate `middleware/auth.py` X-API-Key
-      validation core to UTL `create_api_auth(...)`'s new legacy path; preserve the gateway-specific mock/app_state
-      wiring (the only local-specific bit).
+- [x] ✅ [AGENT] P1. **unified-trading-api** — DONE `unified-trading-api@2670288` (QG green, sentinel-verified).
+      `verify_api_key` now delegates the X-API-Key comparison to UTL `create_api_auth("unified-trading-api")`; preserved
+      the gateway-specific `get_disable_auth(request)` app.state override (checked first, short-circuits before the
+      delegated call) and this service's `AUTH_FAILURE` log_event emission (wraps the delegated `HTTPException`).
+      `get_current_user`'s persona/mock-JWT logic untouched (unrelated to the X-API-Key path). Updated 3 tests
+      (`test_middleware.py` x2, `test_event_logging.py` x1) that exercise the real (non-mock) key path to force UTL's
+      `create_api_auth` off its env-driven DISABLE_AUTH/CLOUD_MOCK_MODE short-circuit and set the expected key via the
+      `API_KEY` env var instead of mutating the local `_auth_cfg` singleton (which UTL's fresh per-request
+      `UnifiedCloudConfig` instance never reads). Along the way, unblocked a **pre-existing** pip-audit RED (5 unignored
+      CVEs — click/cryptography/idna/pydantic-settings/starlette) via a separate interim-fix commit
+      `unified-trading-api@c85d860`; real version-bump remediation tracked in
+      `plans/active/issues/unified_trading_api_pip_audit_stale_ignore_list_2026_07_13.md`.
 - [ ] [VERIFY] P0. Auth smoke per repo (200 with valid **X-API-Key**, 200 with Bearer JWT / X-Service-Token, 401
       without, DISABLE_AUTH refused in prod mode); `quality-gates.sh` green; quickmerge each.
 
