@@ -92,12 +92,17 @@ session) — todos 1–3 below were fixed as part of that thread; cross-referenc
       (`execution-service@86f166a9`, `@59570692`); the 5 `providers/*.py` sites (constructor default params, not
       config-interpolatable the same way) via a documented `HARDCODED_PROJECT_EXCLUDE_GLOBS` bypass +
       `QUALITY_GATE_BYPASS_AUDIT.md` §16 (`execution-service@348385ad`).
-- [ ] [REFACTOR] P3. execution-service: decompose the 26 oversized functions/methods (full list in QG log; largest:
-      `matching_engine.py::_execute_l2` 133L, `candle_book_cols.py::match` 117L, `analog_execution_gate.py::apply` 92L)
-      below the per-function line budget, or bundle a subset per unit mirroring the
-      `codex_violations_ratchet_to_five_2026_06_10.md` facade-extraction pattern. **This is the only remaining
-      violation** (all 3 other buckets fixed above) — `Codex compliance: 1 violation (within tolerance of 3)`, not
-      currently blocking, but 0 is the target. (repo: execution-service)
+- [x] ✅ [REFACTOR] P3. execution-service: decompose the 26 oversized functions/methods — DONE
+      `execution-service@8987a365` (+`fed242e4`). Pure extract-method refactor across 17 files (matching engine,
+      defi/sports adapters, transfer coordinator, benchmark, backtest engine, CLI handlers, routing/depth providers), no
+      behavior change. Full `quality-gates.sh` green with genuine **0** codex violations (not just "within tolerance of
+      3" — the `Function/class/method size OK` line has no residual count at all). Also fixed a file-level
+      `check_adapter_contract_regression` false-positive it surfaced: `polymarket_clob.py`'s 4 duplicate
+      `classify_venue_error`/`ADAPTER_FETCH_FAILED` blocks were legitimately consolidated into shared helpers (verified
+      all 4 call sites still route through them); scoped the baseline (`adapter_contract_baseline.yaml`) 15→7 for that
+      one file only, leaving the 4 other pre-existing unrelated regressions (MTDS/UAC) untouched. 5 follow-up minor
+      findings (1 real off-by-one bug, 4 cleanup notes) surfaced during the refactor are filed below as new todos rather
+      than fixed inline (outside pure-refactor scope).
 - [x] ✅ [VERIFY] P1. Re-ran `bash scripts/quality-gates.sh` in execution-service full-green — DONE. **Evidence: 5
       separate full runs, all `✅ ALL QUALITY GATES PASSED` with
       `Codex compliance: 1 violations (within tolerance of     3)`, at 5 different SHAs across the fix chain**
@@ -112,3 +117,34 @@ session) — todos 1–3 below were fixed as part of that thread; cross-referenc
       `repo-execution-service-qg-green` condition: resolving as part of this flip (no separate repo-blocker on THIS
       issue doc — the shared blocker from the sibling issue doc, `RB-b55db9be`/`RB-2c128496`, already tracked + resolved
       the same underlying red).
+
+## Follow-up findings (2026-07-13, slot 4) — surfaced during the P3 decomposition, not fixed inline
+
+Surfaced by the parallel extract-method refactor across the 26 sites (pure structural change, no logic touched) —
+tracked here per findings-triage rather than left in agent chat output. None are blocking; all are minor / P3-P4.
+
+- [ ] [BUGFIX] P3. execution-service: `BenchmarkComparator._run_all_algorithms`
+      (`execution_service/benchmark/comparison.py`) increments `current_backtest` a second time inside the `except`
+      block on a failed algorithm run (on top of the per-iteration increment at loop top), inflating the reported
+      progress index in the failure log vs. the success path. Fix: drop the duplicate increment in the except branch.
+      (repo: execution-service)
+- [ ] [BUGFIX] P3. execution-service: `MatchingEngineExecutionProvider._solana_amm_snapshot_fallback`
+      (`execution_service/providers/matching_engine.py`) reads `price` via `kwargs.get("price")` without popping it,
+      then forwards `price=price, **kwargs` to `_benchmark_fallback` — if a caller ever passes `price` inside `kwargs`
+      for this path it raises `TypeError: got multiple values for keyword argument 'price'`. Fix: use
+      `kwargs.pop("price", None)`. Pre-existing, just newly isolated into its own method by the refactor. (repo:
+      execution-service)
+- [ ] [CLEANUP] P3. execution-service: `MatchingEngineExecutionProvider._build_solana_fill`
+      (`execution_service/providers/matching_engine.py`) computes `quote = pool.quote(quantity, side)` and never uses
+      the result — only `pool.apply(...)`'s `fill` feeds the rest of the flow. Pre-existing dead computation, now
+      isolated by the refactor. Either wire `quote` into pre-trade validation/logging or remove the call (repo:
+      execution-service)
+- [ ] [CLEANUP] P3. execution-service: `LiveExecutionHandler._execute_instructions`
+      (`execution_service/cli/handlers/live_execution_handler.py`) has two `except` clauses (`ValueError` vs.
+      `TypeError/KeyError/AttributeError/RuntimeError`) with byte-identical bodies calling `classify_and_emit_error` —
+      collapsible into one `except (ValueError, TypeError, KeyError, AttributeError, RuntimeError)` clause. (repo:
+      execution-service)
+- [ ] [CLEANUP] P3. execution-service: `TransferCoordinator._run_handler`'s
+      (`execution_service/transfer_coordinator.py`) bare `except Exception` is broader than sibling handlers in the same
+      file which enumerate specific exception types — outlier pattern, worth narrowing for consistency. (repo:
+      execution-service)
