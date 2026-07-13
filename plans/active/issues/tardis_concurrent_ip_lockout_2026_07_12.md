@@ -486,3 +486,28 @@ actioned further here (outside this issue's assigned scope) — flagging as an a
 (a/b/c) the operator ultimately green-lights, and as corroboration that re-enabling the option-(a) lease (or resolving
 via (b)/(c)) is likely to restore a large volume of currently-completely-missing recent CeFi capture, not just reduce
 noise in historical `attempted_failed` counts.
+
+### 2026-07-13 — CEFI cluster of the 452-shard clean re-sweep, FORCE-leg failures (data_pipeline_e2e_check_2026_07_10.md
+
+todo 25 triage, 8-venue assigned slice)
+
+Triaging the 2026-07-13 clean re-sweep's remaining CEFI genuine failures (`BINANCE-DELIVERY` all 7 data_types, `OKX`
+liquidations, `BYBIT-SPOT` trades, `COINBASE-FUTURES` derivative_ticker/liquidations, `BITFINEX-SPOT` trades,
+`KRAKEN-FUTURES` derivative_ticker/liquidations/trades — 18 MTDS shard-jobs), pulled the REAL `run.log` for every
+FORCE-leg VM via `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`. **Every single one
+shows the identical, byte-for-byte signature already documented here**: dozens-to-hundreds of
+`Tardis HTTP 403 code=274 concurrent-IP-lock` warnings across every per-symbol request, ending in
+`TardisAdapter.download_batch: <venue> 2026-07-09 — 0 records` → `SHARD_INCOMPLETE ... missing: ['<VENUE>']`. Exact
+per-VM 403-hit counts: BINANCE-DELIVERY book_snapshot_5=52/52, derivative_ticker=52/52, liquidations=52/52,
+perp_funding=52/52, options_chain=3(before shard-incomplete), futures_chain=16; OKX liquidations=2; COINBASE-FUTURES
+derivative_ticker=330/330, liquidations=330/330; BITFINEX-SPOT trades=280/280; KRAKEN-FUTURES derivative_ticker=646/646,
+liquidations=646/646, trades=646/646. **BYBIT-SPOT trades** — the original sweep recorded this force leg as
+`vm_not_success:vm_self_deleted_no_exit_status` with **zero run.log ever uploaded** (a genuinely different, ambiguous
+symptom, not itself a 403). Re-verified fresh (2026-07-13, real VM
+`mtds-backfill-cefi-pipelinecheck-20260713-151125-865522`, day=2026-07-09): this time the VM DID upload a real run.log,
+and it shows the identical `Tardis HTTP 403 code=274 concurrent-IP-lock` pattern across hundreds of symbols (`TNSRUSDT`,
+`TWTUSDT`, `USTCUSDT`, `VANAUSDT`, ... `VIRTUALUSDT`, etc.) — so BYBIT-SPOT:trades is ALSO genuinely blocked by this
+same lock; the original run's "self-deleted, no log" was a one-off log-upload-timing flake (VM crashed/completed before
+`heartbeat_daemon.py`'s uploader loop got its first tick), not a distinct, reproducible bug in its own right. **No new
+code action needed for any of these 18 shards** — all corroborate this already-tracked, still-open P0 finding; not
+individually diagnosed further. (repo: market-tick-data-service — corroboration only, no new commit)
