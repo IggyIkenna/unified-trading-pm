@@ -117,6 +117,86 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 14 (Todo 1 dispatch — fast re-verify triggered a self-inflicted VM-deletion collision; recovered cleanly, no data lost; flagging the launcher footgun)
+
+**Todo 1 (compute features 2015→present) — took concrete action (vm-8 gap-fill relaunch), then a SEPARATE relaunch
+attempt accidentally deleted a different slot's live VM via a naming collision. Fully recovered; no data lost. Checkbox
+NOT flipped (multi-day operation, not yet complete).**
+
+Fast re-verify first (per this plan's established precedent) via non-snap gcloud (`ikenna@odum-research.com`,
+`central-element-323112`, `/home/ubuntu/google-cloud-sdk/bin/`):
+
+- Features bucket unique-date count: **2,150** (up from slot-8's 1,906) — steady forward progress.
+- 7 shards `RUNNING` (`vm-1,3,5,6,7,9,10`); **`vm-8` absent** with no exit marker and a stale (~80min) `run.log` showing
+  365/421 dates done (86.7%), no OOM/crash signature in `dmesg`-equivalent log search — consistent with a genuine SPOT
+  preemption, not a bug. `vm-1` here is slot-8's OWN 2026-07-13 gap-fill VM for the DIFFERENT range
+  2018-06-17→2019-08-11 (the OOM-verification shard), still healthy at this point.
+
+**Gap-filled `vm-8`'s range** (2023-01-26→2024-03-21, confirmed via its `run.log` startup banner) using
+`launch-features-sports-parallel-backfill-vm.sh --start 2023-01-26 --end 2024-03-21 --vms 1` (dry-run confirmed correct
+421-day chunk first). **This launcher always names a single-VM launch `fss-backfill-vm-1`** (its per-launch numbering
+restarts at 1 regardless of what's already running) **and unconditionally `gcloud compute instances delete`s any
+existing VM of that name before creating the new one** (`launch-features-sports-parallel-backfill-vm.sh:392-396`,
+"Delete existing VM if present (from previous run)" — no collision check, no name-in-use guard). Since slot-8's
+still-running OOM-verification shard was ALSO named `fss-backfill-vm-1` (that slot's own gap-fill relaunch reused the
+freed name after the original `vm-1` completed cleanly), **my relaunch silently deleted slot-8's live, actively-healthy
+VM** — confirmed via the new instance's `creationTimestamp` (09:51:51-07:00, a genuinely new instance, not the original)
+and the stale tail of the old `run.log` (last real line 16:49:45 UTC, mid fixture-row processing, no graceful-shutdown
+marker).
+
+**Damage assessment (before any recovery action)**: checked the features bucket directly — **`day=2018-06-17` and
+`day=2018-06-18` (the two critical OOM-fix-verification dates) were ALREADY captured** before the deletion, so the
+single most valuable output of that VM's run was safe. The VM had progressed well past those two dates (log showed
+fixture-row activity consistent with a later date in the range) before being killed. Given `--skip-existing`
+idempotency, the only real cost was VM-recreation + re-scan overhead for already-completed days, not data loss.
+
+**Recovery**: relaunching via the SAME parallel-backfill launcher would reproduce the identical collision (its numbering
+always restarts at 1, no way to target a specific free slot 2/4/6/8 without editing the script). Used the **consolidated
+single-VM launcher** instead (`launch-features-vm.sh --feature-family sports --asset-group SPORTS`, recommended by the
+parallel launcher's own deprecation-note docstring for exactly this single-range case) — its
+`VM_NAME="features-${FAMILY_DASHED}-${ASSET_GROUP_LOWER}-${RUN_TS}"` naming scheme includes a run timestamp, making a
+repeat collision structurally impossible. **Caught 2 more self-inflicted near-misses while doing this**: (1)
+`--launch-mode dry` does NOT preview the launch — it always creates a real VM, only toggling whether the underlying
+compute CLI gets `--dry-run` (no writes) — wasted 2 real (harmless, code-dry-run) VM launches before realizing this;
+deleted both immediately once found (`features-sports-sports-20260713-165350`, `-165839`). (2) the freshness check
+flagged 4/5 code tarballs STALE (features-service pinned to a pre-`c3e3ebfe`-OOM-fix SHA) — republished via
+`deployment-service/scripts/vm/create-code-tarballs.sh --include features-service --include market-tick-data-service --include unified-api-contracts --include deployment-service`
+(first attempt hit a 2-min tool timeout mid-upload, core tarballs+manifests still landed per the log; re-ran in
+background to finish cleanly) before the real launch, so the recovery VM runs `features-service@9108900040f0` (confirmed
+ancestor-of `c3e3ebfe`, the OOM fix), not stale pre-fix code.
+
+**Final launch**: `features-sports-sports-20260713-170017` (`--launch-mode full`, SPOT, e2-standard-8), range
+2018-06-17→2019-08-11 — the exact range slot-8's deleted VM was working. **No-fire-and-forget verification**: serial
+console confirmed clean boot (`=== VM setup complete ===`, task launched PID 7819) at T+~2min; SSH'd in directly at
+T+~3min (the GCS-teed `run.log` hadn't propagated to an external `gsutil cat` yet, so verified via direct SSH instead of
+waiting blind) — confirmed the real `features_service` process alive (43.6% CPU, 676MB RSS — nowhere near the 32GB OOM
+ceiling, fix holding), already past both critical dates and actively computing 2018-06-26. `vm-8`'s own replacement
+(`fss-backfill-vm-1`, the ORIGINAL relaunch for 2023-01-26→2024-03-21) was independently confirmed still healthy
+throughout (unaffected by any of this).
+
+**What I did NOT do**: did not touch the other 6 healthy original shards. Did not attempt to patch
+`launch-features-sports-parallel-backfill-vm.sh`'s delete-before-create logic inline — it's a shared launcher used by
+other plans/dispatches, a real fix (collision check, or offset-numbering support, or fully unique names like the
+consolidated launcher already has) needs its own scoped review, filed as an issue doc below rather than a rushed inline
+patch. Did not flip Todo 1 — compute is still genuinely multi-day, in progress across both shards.
+
+**Filed** `plans/active/issues/features_sports_parallel_backfill_vm_name_collision_2026_07_13.md` — the
+delete-before-create footgun, with a concrete recommended fix (collision check before delete, refuse/warn instead of
+silently killing another shard's work) as an actionable todo, flagged so future concurrent dispatches on this same plan
+(which explicitly launches N parallel VMs and regularly needs single-VM gap-fill relaunches, per every prior Progress
+Log entry above) don't repeat this.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,159,
+now with contributions from BOTH `fss-backfill-vm-1`=vm-8's-old-range AND `features-sports-sports-20260713-170017`);
+once all 7 original shards + both gap-fill VMs report done and the bucket approaches the full ~4,210-day span, re-run
+`check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real. If launching ANOTHER single-VM gap-fill
+on this plan, prefer `launch-features-vm.sh` (collision-free timestamped naming) over the parallel launcher's `--vms 1`
+mode until the filed issue doc's fix lands.
+
+Checkbox NOT flipped (compute genuinely in progress). No repo code commit this entry (VM operations + a new issue doc,
+not a feature-code change); this plan-doc edit ships via the `docs(plans):` carve-out.
+
 ### 2026-07-13 — slot 8 (Todo 1 dispatch — the venue_context OOM fix landed; gap-filled vm-4's range, verified holding in production)
 
 **Todo 1 (compute features 2015→present) — took concrete action (gap-fill relaunch) now that the blocking OOM bug is
