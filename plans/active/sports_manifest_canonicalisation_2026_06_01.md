@@ -3110,3 +3110,12 @@ Dispatched again to the same checkbox. `GET /api/state` → `blocked_queue`: `BL
 identical to the twentieth touch's read, no plan change, no canonical-index change. Not re-running the audit (zero new
 information, real GCS-read cost) and not filing a duplicate blocked-question. `skip-current-task`'d. Next toucher: same
 check — `BLK-d48acae4.answered_at` first; this checkbox cannot flip until the operator answers.
+
+## E8 Verify — re-dispatch check 2026-07-13T~08:1{5-8}Z (data_engineering slot-11, task -003, twenty-second touch)
+
+Dispatched again to the same checkbox. `GET /api/state` → `blocked_queue`: `BLK-d48acae4` still `answered_at: null`,
+`created_at: 2026-07-13T07:30:09Z` — identical to the twentieth and twenty-first touches' reads, no plan change since
+`e9817bf1a`, no reason to believe the canonical index moved (nothing in this session's fresh-pull touched IS/MTDS
+repos). Not re-running `cf_manifest_audit_2026_06_01.py` (zero new information, real GCS-read cost) and not filing a
+duplicate blocked-question. `skip-current-task`'d. Next toucher: same check first — `BLK-d48acae4.answered_at`; this
+checkbox cannot flip until the operator rules on option A vs B.
