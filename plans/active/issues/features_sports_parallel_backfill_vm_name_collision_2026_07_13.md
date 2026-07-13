@@ -113,12 +113,17 @@ dispatcher on this plan; a real fix needs its own scoped review + testing (verif
 
 ## Todos
 
-- [ ] [INFRA] P1. Add a liveness/collision check to `launch-features-sports-parallel-backfill-vm.sh`'s
+- [x] ✅ [INFRA] P1. Add a liveness/collision check to `launch-features-sports-parallel-backfill-vm.sh`'s
       delete-before-create step (line ~392-396) — refuse (or require an explicit override flag) if the existing VM of
       that name has a `run.log` fresher than ~5 minutes, rather than unconditionally deleting. (repo:
       deployment-service) — **bumped P2→P1 per operator feedback (2026-07-13): this already destroyed a live VM once
       this session, part of a broader unconditional-destructive-operation pattern; the fix is small (a liveness check)
-      so P1 is low-cost.**
+      so P1 is low-cost.** — **FIXED, slot 11, 2026-07-13**: `deployment-service@d3e1a3f`. Added
+      `lc_refuse_if_vm_alive()` to `scripts/vm/lib/launcher_common.sh` — refuses (exit 1, fails CLOSED when the log age
+      is unreadable) if the exact-named VM is `RUNNING` with a `run.log` updated within the last 5 minutes;
+      `--force-replace` overrides. Wired into `launch-features-sports-parallel-backfill-vm.sh` immediately before the
+      delete-then-create step. Verified with `gcloud`/`gsutil` stubs across all 4 branches (running+fresh refuses;
+      force-replace / not-running / stale-log all allow); `shellcheck` clean; full `quality-gates.sh` green.
 - [ ] [DOCS] P3. Add a one-line note to `sports_p2_features_history_to_ml_ready_2026_06_27.md`'s `## Mechanics` section
       recommending `launch-features-vm.sh --feature-family sports` (collision-free timestamped naming) over
       `launch-features-sports-parallel-backfill-vm.sh --vms 1` for single-shard gap-fill relaunches on this plan. (repo:
