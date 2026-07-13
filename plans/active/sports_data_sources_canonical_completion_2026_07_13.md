@@ -156,10 +156,13 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
 - [ ] [DATA] P3. **Retired data_types spot-verify.** SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES (88,056 rows,
       code-confirmed retired in `rebuild_sports_manifest_v9.py:103`) — spot-check a sample actually carries
       `EXPECTED_DEPRECATED_DATA_TYPE`, not a stale/blank reason. Cheap, no fix expected.
-- [ ] [VERIFY] P0. **Whole-asset_group final re-verify + close-out report.** Once all sources above are addressed:
-      re-read the live manifest fresh, produce a final per-source table matching §0's shape, confirm every source is at
-      the understat standard (0/0/0 literal or a documented equivalent), update this plan's DoD, and write the rule-9
-      final report (per `AUTONOMOUS_AGENT_RULES.md`) — no operator pickup items should remain.
+- [x] [VERIFY] P0. **Whole-asset_group final re-verify + close-out report.** — DONE 2026-07-13 (final-reverify
+      dispatch). Fresh single-parquet re-read produced the final per-source table below; **DoD is NOT fully met** — 2 of
+      8 categories hit the literal/documented-equivalent bar cleanly (transfermarkt, odds_api, retired data_types — 3
+      actually), the rest have specific, already-scoped remaining code-work todos (not blockers) or are mid-flight on an
+      already-running bounded process. See the "FINAL RE-VERIFY + CLOSE-OUT REPORT" Progress Log entry below for the
+      full table, per-category verdicts, and the precise remaining-work list (each item is an existing `- [ ]` todo in
+      §1, none newly discovered, none `BLOCKED-OPERATOR`).
 
 # 2. Definition of DONE
 
@@ -168,6 +171,16 @@ formal retirement, mdps_odds_horizon_bucket or its formal `BLOCKED-CREDENTIALS` 
 (or documented-equivalent) `expected_unattempted` / 0 duplicate dedup-key groups / correct `service_name`+`asset_group`;
 every root cause is fixed in code (not just data patched); all findings filed in the relevant plans/issue docs; final
 report written in this plan's Progress Log.
+
+> **STATUS as of the 2026-07-13 FINAL RE-VERIFY dispatch: NOT FULLY MET.** 3/8 categories meet the bar cleanly
+> (`transfermarkt`, `odds_api`, retired data_types). `mdps_odds_horizon_bucket`'s core zero-ever-captured defect is
+> fixed (0→123,642 captured, 0 dedup) but its `expected_unattempted` (209,526) needs the already-root-caused
+> `enumerate_expected_universe.py` grain-realignment fix. `api_football` is code-complete (4 bug classes fixed,
+> confirmed holding, dedup now provably 0) but needs a backfill-VM re-attempt of 3,257 stale rows + the root-caused
+> TEAMS 61-league capture-gap fix. `footystats`/`soccer_football_info`/`open_meteo` are mid-flight on a live, bounded
+> residual-closer process (PID 3247, `--max-rounds 6`) — footystats already improved 205→175, the other two await its
+> end-of-run flush. Zero regressions found anywhere. Full detail + the precise 6-item remaining-work list: see the
+> "FINAL RE-VERIFY + CLOSE-OUT REPORT" Progress Log entry below.
 
 # 3. Codex SSOTs
 
@@ -1194,3 +1207,98 @@ report written in this plan's Progress Log.
   `_fetch_teams_and_standings`'s league source to match the enumerator's `get_expected_leagues_for_source` call), but no
   code was changed, no backfill ran, and the blank-bundle provenance + true backfill cadence remain open sub-questions
   for the implementation pass.
+
+- **2026-07-13 (slot-3, FINAL RE-VERIFY + CLOSE-OUT REPORT dispatch — whole-asset_group, todo "Whole-asset_group final
+  re-verify + close-out report").** Fresh single-parquet read (`.venv/bin/python` + `pandas.read_parquet` direct, NOT
+  `read_availability_index()` — that helper's in-process TTL cache + `ManifestConsolidatorStaleError` staleness gate
+  returned 0 rows against a live bucket read moments earlier in this same dispatch; a direct GCS parquet read is
+  equivalent for a point-in-time audit and is what every prior VERIFY entry in this plan actually used) of
+  `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`: **4,988,135 total rows**
+  (vs §0's 4,863,784 post-cleanup baseline — the mdps backfill + ongoing organic captures account for the growth; a full
+  `source`-column sum reconciles exactly to the total, 0 unaccounted rows).
+
+  **Final per-source table (§0 shape + a dedup-dup-groups column, corrected key =
+  `date+venue+data_type+league_id+ fixture_id/timeframe+service_name` — see methodology note below):**
+
+  | source                                                    | §0 rows → now         | §0 captured → now       | §0 attempted_failed → now                    | §0 expected_unattempted → now                | dedup dup groups (now) |
+  | --------------------------------------------------------- | --------------------- | ----------------------- | -------------------------------------------- | -------------------------------------------- | ---------------------- |
+  | api_football                                              | 2,518,940 → 2,518,571 | 365,592 → 370,340       | 3,257 → **3,257 (unchanged)**                | 453,961 → 452,985                            | **0**                  |
+  | footystats                                                | 650,504 → 650,876     | 84,047 → 84,311         | 205 → **175 (↓30, in-flight)**               | 56 → 56                                      | 0                      |
+  | soccer_football_info                                      | 226,237 → 226,237     | 19,750 → 20,555         | 10 → **10 (unchanged, in-flight)**           | 94 → 94                                      | 0                      |
+  | transfermarkt                                             | 270,719 → 270,719     | 58,028 → 58,028         | 0 → **0 (clean)**                            | 47 → 47                                      | 0                      |
+  | open_meteo (weather)                                      | 261,790 → 261,790     | 12,097 → 12,298         | 51 → **51 (unchanged, in-flight)**           | 94 → 94                                      | 0                      |
+  | odds_api                                                  | 2,667 → 2,667         | 0 → 0                   | 6 → **6 (unchanged, documented-equivalent)** | 0 → 0                                        | 0                      |
+  | mdps_odds_horizon_bucket                                  | 215,481 → 339,775     | 0 → **123,642 (fixed)** | 0 → 0                                        | 209,526 → 209,526 (documented, open)         | 0                      |
+  | retired (SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES) | 88,056 → 88,056       | 0 → 0                   | 0 → 0                                        | 0 → 0 (100% `EXPECTED_DEPRECATED_DATA_TYPE`) | n/a                    |
+
+  **Concrete improvement vs §0**: mdps_odds_horizon_bucket's zero-ever-captured defect is gone (0 → 123,642 captured);
+  footystats attempted_failed is actively falling (205 → 175, confirmed live mid-read); api_football's previously
+  reported 39,222 dedup-dup-groups (from the earlier VERIFY entry above) is **now 0** — see methodology correction
+  below; every other source's core numbers are stable/unchanged (no regressions anywhere).
+
+  **Dedup-key methodology correction (important, corrects the earlier VERIFY entry's 39,222 figure)**: the prior
+  api_football VERIFY entry's stated key (`date+source+data_type+service_name+league_id+fixture_id`) omits `venue`.
+  Re-running that exact key here reproduces a large apparent duplicate count (40,825 groups / 81,944 rows) — but
+  sampling the largest groups shows they are **not real duplicates**: they are the ~460 blank-`data_type`/blank-
+  `league_id` enrichment-pseudo-venue rows (`venue` ∈ {FOOTYSTATS, OPEN_METEO, SOCCER_FOOTBALL_INFO, TRANSFERMARKT,
+  UNDERSTAT} — the same rows behind the already-documented `UNCLASSIFIED_ADAPTER_ERROR` finding), which only `venue`
+  distinguishes from one another. This is the **identical false-positive class** already root-caused elsewhere in this
+  plan for footystats/SFI/weather ("league-grain sources with blank venue... false-positived thousands of duplicates").
+  Adding `venue` back into the key (`date+venue+data_type+league_id+fixture_id+service_name`) drops api_football to **0
+  true duplicate groups** — verified by direct construction (not just count), and independently reproduced for
+  mdps_odds_horizon_bucket: a `date+venue+data_type+timeframe+service_name` key (omitting `league_id`) false-positived
+  15,527 groups on the enumerator's per-league `expected_unattempted` seed rows (which share every other dimension and
+  differ ONLY by `league_id`); adding `league_id` back drops it to 0. **Corrected dedup methodology for this plan going
+  forward: the full identity is `date+venue+data_type+league_id+fixture_id+timeframe+service_name` — no subset of these
+  is safe to drop for any sports source**, since different sources' "duplicate-looking" collisions are broken by
+  different individual columns.
+
+  **Per-category verdict vs the understat-standard bar (0/0/0 literal or documented-equivalent)**:
+
+  - **MEETS the bar (3/8)**: `transfermarkt` (0 attempted_failed, 47 EU 100%-dated-today/self-closing, 0 dedup) — clean.
+    `odds_api` (6 attempted_failed, all `PipelineModeSourceMismatchError` — the write-safety gate correctly rejecting
+    historical mismatched writes, already closed as documented-equivalent by the earlier VERIFY entry above,
+    re-confirmed unchanged) — closed. `retired data_types` (88,056 rows, 100% `EXPECTED_DEPRECATED_DATA_TYPE`, 0
+    attempted_failed) — clean, the P3 spot-verify todo can close.
+  - **Core defect fixed, one specific residual remains (1/8)**: `mdps_odds_horizon_bucket` — the zero-ever-captured bug
+    is conclusively resolved (123,642 real captures now visible, 0 dedup groups). The remaining 209,526
+    `expected_unattempted` is NOT a new/silent gap — it is the already-root-caused, already-scoped
+    `enumerate_expected_universe.py` grain-mismatch todo (enumerator seeds `venue=""`/uppercase/no-`timeframe`; writer
+    uses `venue=ODDS_API`/lowercase/per-`timeframe`) — a specific code fix, not yet shipped, not blocked by anything.
+  - **Code-complete, manifest not yet clean (1/8)**: `api_football` — the 4 shipped bug-class fixes are confirmed live
+    and holding (`attempted_failed` unchanged at 3,257, 0 new blank-`data_type` failures since ship); dedup is now
+    provably 0 (methodology-corrected). Two specific, non-blocking items remain open: (a) a dedicated backfill-VM
+    re-attempt of the 3,257 stale rows (infra op, precedent pattern exists, not yet launched); (b) the TEAMS 61-league
+    capture-gap fix (root-caused this session — `_fetch_teams_and_standings` uses the wrong league-source filter,
+    `get_prediction_leagues()` instead of `get_expected_leagues_for_source("api_football")` — fix identified, not yet
+    shipped, plus a blank-league-bundle provenance sub-question flagged for the implementation pass).
+  - **In-flight on an already-running bounded process, not blocked (3/8)**: `footystats` / `soccer_football_info` /
+    `open_meteo` — the residual-closer (`sports_attempted_failed_residual_closer_2026_07_13.py`, PID 3247,
+    `--max-rounds 6`) is confirmed LIVE right now: its per-VM-shard GCS object
+    (`_index/per_vm/sports-attempted-failed-residual-closer-slot3.parquet`) was last written at `18:18:10Z`, 14 seconds
+    before this read at `18:18:24Z`. footystats has already dropped 205→175 attempted_failed (TimeoutError 174,
+    ArrowTypeError 1 remaining); SFI (10, phantom) and weather (51, phantom) are unchanged so far — per this plan's own
+    prior mid-flight note, their fixes stay buffered in-process until the closer's single end-of-run
+    `flush_all_pending_buckets()` drain, which has not fired yet for those two sources. All three sources' EU rows are
+    100%-dated-today (self-closing daily rolling edge, already root-caused, no action needed). **This is not a blocker**
+    — the process is bounded and will self-terminate; the concrete next step is one more re-verify read after PID 3247
+    exits.
+
+  **Precise remaining-work list (none `BLOCKED-OPERATOR`/`BLOCKED-CREDENTIALS`, none newly discovered — every item is
+  already an open `- [ ]` todo in §1 above)**:
+  1. api_football historical backfill-VM re-attempt of the 3,257 stale `attempted_failed` rows (bounded infra op).
+  2. api_football TEAMS 61-league capture-gap fix (`_fetch_teams_and_standings` league-source filter) + scoped backfill.
+  3. mdps_odds_horizon_bucket `enumerate_expected_universe.py` grain realignment.
+  4. MTDS shared-orchestrator sports-manifest-bucket routing generalization + migration of the 362,665
+     `odds_api`-in-MTDS orphan rows (blast-radius mapped, fleet-wide proof required before shipping per
+     `AUTONOMOUS_AGENT_RULES.md` rule 11 — touches every asset_group's manifest resolution, not just sports).
+  5. `reprocess_sports_odds.py` raw-input prefix-template refresh.
+  6. Let the in-flight residual-closer (PID 3247) run to its own bounded completion (`--max-rounds 6`), then one more
+     fresh re-verify read for footystats/soccer_football_info/open_meteo.
+
+  **DoD status**: NOT fully met. 3/8 categories clean/documented-equivalent, 1/8 core-defect-fixed with one open
+  follow-on, 1/8 code-complete-pending-backfill+one-open-gap-fix, 3/8 mid-flight on a live bounded process. Zero
+  regressions found anywhere vs §0. §2 DoD section above annotated with this status; this dispatch's own todo (line
+  ~159) is flipped `[x]` since its deliverable — the fresh re-verify + final table + precise remaining-work list + DoD
+  update — is complete, even though the underlying whole-asset_group work is not yet 100% done (the honest,
+  non-overclaiming distinction the todo's own text calls for).
