@@ -112,11 +112,20 @@ Whichever is chosen, also **audit `monitor` role** (also slot-less per `prompts.
 - [ ] [BACKEND] P1. Audit the `monitor` role (also slot-less per `prompts.py`'s `_WORKER_BASE_ROLE` != monitor) for the
       same agent_id-injection break — add the same test coverage if a `monitor` spawn path exists and is affected (repo:
       agent-orchestrator).
-- [ ] [BACKEND] P2. Clean up the orphaned pre-created agent row from my live workaround spawn (`agt-d0c383`, tmux
+- [x] ✅ [BACKEND] P2. Clean up the orphaned pre-created agent row from my live workaround spawn (`agt-d0c383`, tmux
       session `orch-agent-main-d0c383` — the real live main agent self-registered as a different id, `agt-770694`,
       because it composed its own register curl from `main.md` without picking up my ad-hoc hint) — either delete the
       orphan row via the dashboard/DB or, if the chosen fix in this plan makes the linkage work correctly, verify a
-      fresh test-spawn no longer produces this split-identity artifact (repo: agent-orchestrator).
+      fresh test-spawn no longer produces this split-identity artifact (repo: agent-orchestrator). — agent-orchestrator
+      (no code change; the earlier P0/P1 surgery-fix todos above are still open, so option 2 isn't provable yet).
+      Verified via the live API: `agt-d0c383` was already auto-archived (`exit_reason: dead-main-session`,
+      `finished_at: 2026-07-13T05:39:41Z`, same instant as the real `agt-770694`), confirming it never appears in the
+      live roster (`GET /api/agents` default view). Ran the dashboard-sanctioned cleanup path,
+      `DELETE /api/agents/agt-d0c383` →
+      `{"ok": true, "agent_id": "agt-d0c383", "killed_tmux":     "orch-agent-main-d0c383", "retained": true}`; row now
+      `status: finished`, `exit_reason: operator-deleted` (the code's Plan-B retention design intentionally soft-deletes
+      rather than hard-deleting agent rows, so this is the correct/only sanctioned "delete" — a raw DB hard-delete would
+      fight that documented design).
 - [ ] [BACKEND] P2. Run `bash scripts/quality-gates.sh` full and ship via the standard Pass-1 QG → Pass-2 quickmerge
       --agent flow; flip this plan's checkboxes with `<repo>@<sha>` evidence per commit (repo: agent-orchestrator).
 
