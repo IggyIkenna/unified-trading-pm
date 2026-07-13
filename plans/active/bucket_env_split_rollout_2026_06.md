@@ -3,9 +3,9 @@ doc_type: plan
 title: Bucket env-split rollout — re-enable -{dev,stg,prd}- everywhere (Group A confirm + Group B un-rollback)
 summary: >-
   Re-enables env-tiered bucket names (-dev-/-stg-/-prd- per UTL resolve_bucket_name _DEPLOYMENT_ENV_SHORT_FORM)
-  everywhere: Group A (raw) already tiered — verify only; Group B (derived: features-*, strategy/execution/ml
-  stores) un-rolls-back the 2026-05-19 non-env-split shapes. Gated on the in-flight canonicalisation walks
-  finishing (single-walk discipline); unblocks the per-tier bucket-IAM write-protection plan's Group B phase.
+  everywhere: Group A (raw) already tiered — verify only; Group B (derived: features-*, strategy/execution/ml stores)
+  un-rolls-back the 2026-05-19 non-env-split shapes. Gated on the in-flight canonicalisation walks finishing
+  (single-walk discipline); unblocks the per-tier bucket-IAM write-protection plan's Group B phase.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -13,7 +13,12 @@ stage: [meta]
 repos: [deployment-api, deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: [infrastructure, canonicalisation, migration, single-walk, ssot-audit, data-pipeline]
-related: [plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md, plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md, plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md]
+related:
+  [
+    plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md,
+  ]
 created: 2026-06-09
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -34,6 +39,18 @@ drift_direction: advance-code
 ---
 
 # Bucket env-split rollout — re-enable `-{dev,stg,prd}-` everywhere
+
+> **🟡 OPERATOR RULING 2026-07-13 — env-split STANDS, but execution MERGES with the bucket-estate consolidation folds
+> (single migration, "no double migrates").** Context: the 2026-07-13 full estate audit
+> ([[terraform_bucket_estate_drift_resurrection_2026_07_13]]) found (a) the 2026-07-10 estate cleanup deleted the 63
+> env-tiered Group-B buckets this plan re-provisions (the two plans never referenced each other), and (b) executing
+> P1.1–P2.1 as-written adds ~30+ buckets and would be followed by a second migration when the estate consolidation folds
+> Group-B kinds (features 25→5 per-AG, unified ml/strategy/execution stores). Ruling: do it ONCE — the **consolidated
+> Group-B buckets are env-tiered from birth** (e.g. `features-{ag}-{env}-{pid}`), and data migrates flat →
+> consolidated-tiered directly. P1.1/P1.2 as-written (per-kind same-shape tiered twins + same-kind migrate) are
+> SUPERSEDED by that combined design; P1.3/P1.4/P2.1/P3.1's intent (yaml re-tiering, consumer verify, flat deletion, IAM
+> unblock) carries over into the consolidation plan, which becomes this plan's executor. Do NOT provision per-kind
+> tiered twins of the current 25-bucket Group-B layout.
 
 > **This is the named successor** referenced by `deployment-service/configs/cloud-providers.yaml` ("Re-enable when:
 > bucket*env_split_rollout_2026_06.md Phase 1 provisions + migrates data") — it was a dangling reference until now.

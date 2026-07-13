@@ -117,3 +117,10 @@ the canonical 36-kind file (mechanical; UAC needs a ship). c. Decide the lifecyc
 out-of-band vs codex "not lifecycle'd" vs bucket_config's 365d vs TF's 90d — four contradictory declarations), then
 encode it in ONE tracked place. d. Retire or resolver-backend setup-buckets.py; fix the e2e fixture script's names. e.
 Re-delete the resurrected ~30 empty buckets only AFTER (a) lands, else they return on the next apply.
+
+**Operator ruling 2026-07-13 (partial — env-split axis)**: the `bucket_env_split_rollout_2026_06.md` conflict is
+resolved — env-split STANDS but merges into the estate-consolidation Group-B folds as ONE migration ("no double
+migrates"); consolidated Group-B buckets are env-tiered from birth. See the ruling banner in that plan. Consequence for
+(a): the long-env Group-B terraform blocks are NOT re-pointed at per-kind `-prd-` twins — they get deleted, and the
+future consolidated (folded, env-tiered) buckets get authored fresh. Rulings still needed: import-vs-unmanaged (a),
+lifecycle policy (c).
