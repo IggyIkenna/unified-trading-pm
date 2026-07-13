@@ -329,6 +329,8 @@ Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slo
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal
 proxy ES256 / accounts via setup-token env files, never `.credentials.json`; backlog plan-driven
 (`regen_backlog_from_plan.py`, never hand-edit `backlog.yaml`); role-dispatch routes tasks to spawned workers by skill
-(central + role registry); runtime self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux). SSOTs:
-`codex/04-architecture/runtime-deployment-topology.md`,
+(central + role registry); runtime self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux). **Checking
+live backlog/dispatch status from a dev checkout** (no JWT, VM:8765 has no inbound rule): `/check-agent-orchestrator`
+skill or `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — read-only via AWS SSM, never a manual
+API-guessing session. SSOTs: `codex/04-architecture/runtime-deployment-topology.md`,
 `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`, `…/agent-orchestrator-overview.md`.
