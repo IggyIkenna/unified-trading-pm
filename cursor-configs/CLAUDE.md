@@ -300,6 +300,10 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
 - **Peripheral script dir / one-off?** Wire into the primary-consumer's `quality-gates.sh`; one-offs are TEMPORARY
   (delete after prod-run); **lifecycle marker** (`# Epic:` / `# Lifecycle:` / `# Delete-when:`) on every `scripts/`
   file. SSOT: `codex/06-coding-standards/script-homes.md`.
+- **AO alerts / Slack notifications?** The `agent-orchestrator-alerts` channel is **actionable-only** — automatic
+  lifecycle events (dispatches / respawns / recoveries) log + feed the daily digest, they NEVER page; failures + worker
+  BLOCKED questions page; standing conditions dedup by state-transition (fire on change / RESOLVED / re-remind), never
+  every tick. SSOT: `codex/04-architecture/agent-orchestrator-alerting.md`.
 - **Runbooks**: declare `owner`/`cadence`/`verifier`/`last_executed` (missing = review-blocking). **Cross-plan
   banners**: launching a VM / in-flight refactor → add `> **🟢/🟡 …**` to every affected plan.
 

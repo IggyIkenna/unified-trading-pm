@@ -157,33 +157,41 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
 
 ## Todos
 
-- [ ] [BACKEND] P1. WS-A: drop the `_post(...)` Slack call (keep `_persist_to_gcs` where present) in the six churn
-      notifiers in `server/notifications/slack.py` (`notify_plan_health_dispatched`, `notify_escalation_dispatched`,
-      `notify_agent_stuck_respawned`, `notify_spawn_recovered`, `notify_slot_recovered`,
-      `notify_git_staleness_resolved`); extend `tests/test_alert_quality_overhaul.py` to assert those post NO Slack
-      payload.
-- [ ] [BACKEND] P1. WS-A: ADD a `notify_plan_health_dispatch_failed` page at `plan_health.py:171` (the failure branch is
-      currently Slack-silent); add a regression test asserting escalation dispatch failure STILL pages via
-      `alert_spawn_failed` (`escalation.py:394`) after the success ping is removed. (Success silent, failure pages.)
-- [ ] [BACKEND] P1. WS-B: add `DailySummaryLoop` (24 h, typed-config interval + enable) that reads the **DB activity
-      log** since a persisted cursor, aggregates by event type (dispatches / respawns / recoveries / blocks / failures),
-      and posts one `notify_daily_summary` digest with totals + an "actionable this period: N" line; wire
-      `.start()/.stop()` in `server.py`; unit-test the aggregation + cursor advance.
-- [ ] [BACKEND] P1. WS-B: add `daily_summary_cursor_path()` to `server/dedup_state.py` + `notify_daily_summary` and
-      `notify_daily_summary_failed` in `slack.py`; job body wrapped so any exception fires the failure page.
-- [ ] [INFRA] P1. WS-C: add state-file dedup to `scripts/fleet-git-health-guard.sh` — POST only on signature-change /
-      RESOLVED / re-remind (D2 = 1 h); add a `--dry-run` self-test proving no repeat POST for an unchanged signature.
-      (Guard is a KEEP — dedup so genuine issues surface fast, do NOT remove.)
-- [ ] [BACKEND] P2. WS-D: thread `req.options` + `req.recommendation` from `routes/slots_worker.py:1052` into
-      `notify_slot_blocked`; render options as a bulleted multi-line section + a `*Recommendation:*` section; test the
-      rendered blocks.
+- [x] 1. ✅ [BACKEND] P1. WS-A: dropped the `_post(...)` Slack call in the six churn notifiers in
+     `server/notifications/slack.py` (`notify_plan_health_dispatched`, `notify_escalation_dispatched`,
+     `notify_agent_stuck_respawned`, `notify_spawn_recovered`, `notify_slot_recovered`, `notify_git_staleness_resolved`)
+     — now `logger.info` (AO logs) instead. `test_alert_quality_overhaul.py` asserts each logs + does NOT page. —
+     agent-orchestrator@a5f6807; full `quality-gates.sh` green (1212 pytest).
+- [x] 2. ✅ [BACKEND] P1. WS-A: added `notify_plan_health_dispatch_failed` (GCS-persisted + deduped 1h via
+     `dedup_state.plan_health_dispatch_failed_path`), fired from the `plan_health.py` do_spawn failure branch (was
+     Slack-silent); test asserts dispatch SUCCESS is silent but FAILURE pages. Escalation failure already pages via
+     `alert_spawn_failed`. — agent-orchestrator@a5f6807.
+- [x] 3. ✅ [BACKEND] P1. WS-B: added `DailySummaryLoop` (`server/daily_summary.py`) — reads the DB activity log since a
+     persisted cursor via `activity_rollup`, posts one `notify_daily_summary` digest (counts by type + failures +
+     total), advances the cursor; wired `.start()/.stop()` + supervision in `server.py`; `test_daily_summary.py` covers
+     aggregation + cursor advance. — agent-orchestrator@a5f6807.
+- [x] 4. ✅ [BACKEND] P1. WS-B: added `daily_summary_cursor_path()` to `server/dedup_state.py` + `notify_daily_summary`
+     and `notify_daily_summary_failed` in `slack.py`; `_tick_and_report` wraps the tick so any exception fires the
+     failure page (tested). Config: `daily_summary_enabled`/`daily_summary_interval_seconds`. —
+     agent-orchestrator@a5f6807.
+- [x] 5. ✅ [INFRA] P1. WS-C: added state-file dedup to `scripts/fleet-git-health-guard.sh` — posts only on
+     signature-change / RESOLVED / 1h re-remind (D2); `--self-test` proves the state machine (new→skip→remind→new→
+     resolved→none, PASS). Guard KEPT, just deduped. — agent-orchestrator@a5f6807.
+- [x] 6. ✅ [BACKEND] P2. WS-D: threaded `req.options` + `req.recommendation` from `routes/slots_worker.py` into
+     `notify_slot_blocked`; options now render as a bulleted full-width section + a `*Recommendation:*` section (was
+     crammed onto one line via the 2-column `fields` layout); `test_slack_notifications.py` asserts the multi-line
+     render. — agent-orchestrator@a5f6807.
 - [x] [OPERATOR] P1. ✅ D1/D2/D3 all resolved by operator (2026-07-13) — see Decisions. Plan unblocked for
       implementation.
-- [ ] [BACKEND] P2. WS-E: deploy agent-orchestrator to the central VM; re-pull a 24–48 h alert window and confirm
-      lifecycle churn is gone from Slack + volume dropped to the actionable-only target. Evidence: post-deploy jsonl in
-      `alerts_audit/`.
-- [ ] [REVIEW] P2. WS-E: stub `codex/04-architecture/agent-orchestrator-alerting.md` (actionable-only contract + digest
-      model + guard-dedup) as the durable SSOT; add a one-liner to CLAUDE.md's conditional index.
+- [ ] [BACKEND] P2. WS-E: **DEFERRED — operator-timed.** Code is landed on LDR (WS-A/B/C/D). Activating it needs a
+      **restart of the live central orchestrator** (to load `DailySummaryLoop` + the notifier changes) — a
+      whole-fleet-affecting action left to operator timing, not done mid-session while the fleet is running.
+      Verification is inherently a **24–48 h observation window** (re-pull with the same `fetch_alerts.py` and confirm
+      churn is gone / volume at the actionable-only target; drop the post-deploy jsonl in `alerts_audit/`). The
+      git-health guard cron (WS-C) picks up its script change on its next tick without a restart.
+- [x] 8. ✅ [REVIEW] P2. WS-E: stubbed `codex/04-architecture/agent-orchestrator-alerting.md` (actionable-only
+     contract + digest model + guard-dedup) as the durable SSOT; added the one-liner to CLAUDE.md's conditional index
+     (size-cap QG green, 29,668 B / 40,960). — unified-trading-pm (this commit).
 
 ## Progress Log
 
@@ -197,3 +205,17 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
   genuine KEEP — dedup only. D1 + D3 resolved; only D2 (re-remind interval) open. Awaiting D2 + review before code.
 - **2026-07-13 (D2)** — D2 resolved: git-health re-remind interval = **1 h** (operator: fixable within the hour, else
   hourly nudge). All decisions closed; plan unblocked for implementation, pending operator go-ahead + commit.
+- **2026-07-13 (implemented)** — WS-A/B/C/D shipped in one commit **agent-orchestrator@a5f6807**; full
+  `quality-gates.sh` green (ruff + basedpyright + **1212 pytest** + dashboard tsc/vitest). WS-A: 6 churn notifiers →
+  INFO logs + `notify_plan_health_dispatch_failed` (deduped 1h). WS-B: `DailySummaryLoop` (activity-log rollup, cursor,
+  self-failure page), enabled by default, supervised. WS-C: `fleet-git-health-guard.sh` state-transition dedup +
+  `--self-test` (PASS). WS-D: `notify_slot_blocked` multi-line options/recommendation. Codex SSOT
+  `codex/04-architecture/agent-orchestrator-alerting.md` + CLAUDE.md one-liner added. **Remaining:** WS-E deploy — a
+  central-orchestrator RESTART + a 24–48 h re-pull verification, DEFERRED to operator timing (whole-fleet-affecting).
+
+## Deferred work after 2026-07-13
+
+| Item                                           | Why deferred                                                                                                                                                                  | Next action                                                                                                                                                                            |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WS-E deploy + verify                           | Activating `DailySummaryLoop` + the notifier changes needs a restart of the LIVE central orchestrator (affects the whole fleet); verification is a 24–48 h observation window | Operator restarts AO on the central VM at a safe time, then re-pull with `alerts_audit/fetch_alerts.py` after 24–48 h and drop the jsonl in `alerts_audit/` to confirm the volume drop |
+| Underlying git corruption on `ip-172-31-5-118` | Out of scope for this alerting plan (operator decision); a separate agent already added commit-graph self-heal (`agent-orchestrator@297b867`)                                 | Confirm the fsck failure clears after that fix propagates; if not, a targeted `instruments-service` .git repair                                                                        |
