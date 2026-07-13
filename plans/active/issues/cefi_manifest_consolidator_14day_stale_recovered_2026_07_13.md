@@ -158,3 +158,54 @@ Flagging both possibilities rather than picking one without evidence.
   evidence — the immediate operational impact (slow re-sweep reads, and likely slow/stale real production reads) is
   resolved by the manual trigger, which is itself a real, actionable remedy worth keeping in mind if this recurs
   (`gcloud run jobs execute uts-prod-manifest-consolidator-market-data-<ag> --args="-m,unified_trading_library.manifest_consolidator, --bucket,<bucket>,--force"`).
+
+- **2026-07-13 (later same day, CEFI cluster triage of the 452-shard re-sweep, 8-venue assigned slice) — CORRECTION: the
+  `-test-` bucket was NEVER actually recovered by the above; the reproduced fix command in item 5 above targeted the
+  wrong (PROD) bucket.** Triaging this sweep's SKIP-leg failures (BINANCE-DELIVERY, KRAKEN-FUTURES, COINBASE-FUTURES,
+  BITFINEX-SPOT, HYPERLIQUID), every one's real run.log showed this doc's exact preflight guard firing INSIDE the
+  orchestrator itself (not just the checker):
+  ```
+  ManifestReader: consolidated blob age 1220803.7s > 120s threshold — falling back to per-VM shards
+  ManifestConsolidatorStaleError: Manifest consolidator appears DOWN for bucket=
+    'market-data-tick-cefi-test-central-element-323112': consolidated _index/availability_index.parquet
+    heartbeat is 1220817s old (> 120s budget) while per-VM shards exist. ...
+  Batch complete: 0 results collected
+  ```
+  at 10:49:39Z — i.e. **after** this doc's claimed ~12:14-12:16Z recovery window, which should be impossible if that
+  recovery genuinely applied to this bucket. Checked the raw blob directly instead of trusting either doc's "Update
+  time" narrative:
+  `gsutil ls -L gs://market-data-tick-cefi-test-central-element-323112/_index/availability_index.parquet` →
+  `Update time: Mon, 29 Jun 2026 07:42:55 GMT`, `Content-Length: 22946` (22.9KB), `Generation: 1782718975828863` —
+  genuinely, currently stale as of my check (2026-07-13T15:17Z), untouched since 06-29, NOT the "fresh 164.75MB write...
+  Update time advanced to real-time" this doc's summary claims. **Root cause of the discrepancy found: this doc's own
+  item 5 reproduces the actual command run — `--bucket,market-data-tick-cefi-prd-central-element-323112` (PROD, not
+  `-test-`)** — the doc's top-level `summary:` field says `-test-` but the literal command in the body targeted `-prd-`;
+  the two disagree, and the body's command is what actually ran. Confirmed PROD's blob independently at the same moment:
+  `Update time: Mon, 13 Jul 2026 14:59:47 GMT` (<1 min old), `Content-Length: 177780447` (177.8MB) — genuinely healthy,
+  so the doc's "recovery" was real, just against the wrong bucket for what this e2e sweep (and any future one) actually
+  reads. There is NO scheduled cron for `-test-` buckets by design (the recurring `*/1` schedule only ever targets
+  `-prd-`) — a `-test-` bucket only ever gets consolidated via a one-off manual `--force` invocation with the bucket arg
+  explicitly overridden, so it will ALWAYS silently re-freeze between sweeps unless someone re-triggers it each time.
+  **Re-ran the forced consolidation myself against the CORRECT (`-test-`) bucket, verifying generation/size/content
+  before AND after (not just a timestamp glance):**
+  `gcloud run jobs execute uts-prod-manifest-consolidator-market-data-cefi --args="-m,unified_trading_library.manifest_consolidator,--bucket,market-data-tick-cefi-test-central-element-323112,--force" --wait`
+  → completed cleanly; blob genuinely changed: `Update time: Mon, 13 Jul 2026 15:18:49 GMT`, `Content-Length: 407738`
+  (18x the prior stub), new `Generation: 1783955929546631`. `_index/latest.json`:
+  `{"shards_scanned": 510, "shards_changed": 510, "rows_in": 52444, "rows_out": 20853, "rows_added": 0, "dedup_dropped": 31591, "duration_ms": 27237.8, "incremental": false, "no_op": false}`
+  — a REAL, FULL, non-incremental run (`incremental: false, no_op: false`, unlike the prior no-op) that scanned all 510
+  real per-VM shards this sweep (and others) had written and merged them into 20,853 real deduplicated rows. **Directly
+  verified the fix closes the actual downstream symptom**, not just blob metadata: called the exact function the
+  checker/orchestrator use (`scripts.smoke_matrix.verify_manifest_row`) against `CEFI:OKX:liquidations` on `2026-07-09`
+  (one of this sweep's live-leg failures, `manifest_status_invalid:attempted_failed` pre-fix) — **now returns
+  `ok=True, status=empty_confirmed`**, matching the per-VM shard's own honest `SOURCE_RETURNED_ZERO` result that the
+  stale consolidated index had been hiding behind an older, now-superseded `attempted_failed` row for the same cell.
+  **This fully explains this session's CEFI SKIP/LIVE-leg failures for
+  BINANCE-DELIVERY/KRAKEN-FUTURES/COINBASE-FUTURES/BITFINEX-SPOT/HYPERLIQUID/OKX** — not a new bug, and not the
+  `(a) regression / (b) genuinely-idle-bucket` question this doc originally posed (that question was scoped to PROD,
+  which really is healthy) — but a correction to this doc's own prior "immediate practical problem is resolved" framing,
+  which did not actually cover the bucket this e2e sweep (and any future one) depends on. Status kept `open`: the
+  underlying design gap — `-test-` buckets have no standing cron and silently re-freeze between one-off manual triggers
+  — is not fixed, only worked around again; the durable fix is either giving `-test-` buckets their own scheduled cron,
+  or making the e2e sweep's own Phase-0 provisioning step force-consolidate before Phase 1 begins (not attempted this
+  pass — a driver/tooling change, not a `unified-trading-library` code change). (repo: unified-trading-library —
+  operational fix only, real infra, no code changed this pass)
