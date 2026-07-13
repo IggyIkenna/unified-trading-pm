@@ -181,9 +181,40 @@ honest "no trading that day" result going forward.
      partial/not_found) and emits a structured `DATABENTO_EMPTY_BUT_VALID` event, so this failure class is greppable
      going forward and distinguishable from an honest "no trading that day" result. Covered by a new regression test
      (`tests/unit/test_databento_path_streaming.py::test_zero_row_response_emits_databento_empty_but_valid`).
-  - **Net effect: the root cause is still open.** Hypotheses (i) entitlement/date-window edge and (ii) symbol-resolution
-    failure (both from the original filing) remain untested — the recommended
-    `client.symbology.resolve(dataset="GLBX.MDP3", symbols=["ES.FUT"], stype_in="parent", stype_out="instrument_id", start_date="2026-07-09", end_date="2026-07-10")`
-    live diagnostic still has not been run. The next session should run that diagnostic directly (or rely on the
-    newly-shipped `DATABENTO_EMPTY_BUT_VALID` event's `metadata` payload the next time this VM check runs) to
-    distinguish (i) from (ii).
+  - **Net effect at that point: the root cause was still open.** Hypotheses (i) entitlement/date-window edge and (ii)
+    symbol-resolution failure (both from the original filing) remained untested.
+- 2026-07-13 (same day, follow-up): **Ran the recommended live diagnostic directly — BOTH original hypotheses (i) and
+  (ii) are now RULED OUT, and the real cause is narrower than either.** Using the exact same `DatabentoBaseClient`
+  construction the production code uses (bare `databento-api-key` secret, not the dead-code path above):
+  1. `client.symbology.resolve(dataset="GLBX.MDP3", symbols=["ES.FUT"], stype_in="parent", stype_out="instrument_id", start_date="2026-07-09", end_date="2026-07-10")`
+     — returned a full, real mapping: 39 real CME contract instrument_ids (`ESZ7`→`17740`, `ESZ6`→`10252`, etc.),
+     `not_found: []`, `partial: []`, `status: 0`, `message: 'OK'`. **Hypothesis (ii) is RULED OUT** — `ES.FUT` (the
+     exact `raw_symbol`/`stype_in` pair `TRADFI_DATABENTO_INSTRUMENTS`'s CME entry declares,
+     `tradfi_instrument_universe.py:89`) resolves fine.
+  2. Called
+     `client.timeseries.get_range(dataset="GLBX.MDP3", schema="ohlcv-1m", symbols=["ES.FUT"], stype_in="parent", stype_out="instrument_id", start="2026-07-09", end="2026-07-10")`
+     directly (the EXACT call shape `_fetch_timeseries_range`, `databento_fetch.py:141-200`, makes) — this returned
+     **1628 real rows**, not zero. **Hypothesis (i) is RULED OUT** — the account's subscription genuinely has real
+     OHLCV-1m data for CME/`ES.FUT` on 2026-07-09; there is no entitlement/date-window gap. Cross-checked against other
+     days to rule out a fluke: 2026-06-09 → 3660 rows, 2025-07-09 → 1585 rows, 2026-07-05 (Sunday evening session) → 139
+     rows, 2026-07-11 (Saturday, market closed) → 0 rows as expected — all consistent with a normal, healthy trading
+     calendar. **2026-07-09 itself, via the parent symbol, has plenty of real data.**
+  3. A single-contract sanity probe (`symbols=["ESZ7"], stype_in="raw_symbol"`, before broadening to the parent symbol)
+     DID reproduce a genuine `BentoWarning: No data found` / 0 rows — but this was almost certainly the wrong diagnostic
+     symbol (a far-dated/inactive-that-day specific contract, not the active front-month), not evidence of a real gap;
+     the parent-symbol query (#2 above, matching what our registry+adapter actually request) proves real data exists.
+  - **Conclusion: the root cause is neither (i) nor (ii) as originally framed — it must be a difference between this
+    successful direct call and the EXACT runtime args production actually constructs**, since `_fetch_timeseries_range`
+    (`databento_fetch.py:559-583`, verified by direct code read) passes through `dataset`/`schema`/`symbols`/`stype_in`
+    unchanged from its caller, and `_resolve_by_dataset` (`databento_enrichment.py:233-271`) builds those args from
+    `TRADFI_DATABENTO_INSTRUMENTS` the same way this diagnostic did — so on paper the production request SHOULD be
+    identical to the one just proven to work. **Not yet found**: the actual discrepancy. Next step for whoever picks
+    this up: either (a) add temporary DEBUG logging of the exact `dataset`/`schema`/`symbols`/`stype_in`/`start`/`end`
+    values immediately before the real `get_range` call in a live re-run and diff them byte-for-byte against this
+    diagnostic's working values, or (b) rely on the newly-shipped `DATABENTO_EMPTY_BUT_VALID` event's `metadata` payload
+    (logs the DBNStore's own echoed request/mapping) the next time this VM check runs, which should make the actual
+    production args visible without new instrumentation. Given real data is now proven to exist and be fetchable with
+    the registry's own declared symbol shape, this is very likely a solvable, narrow bug (e.g. `schema` string mismatch,
+    a `mvp_mode` filter unexpectedly narrowing `defs` to zero for the CME dataset bucket, or a subtly different
+    `start`/`end` window) rather than an external/unfixable issue — re-prioritize accordingly (was P2, arguably still P2
+    but now much closer to resolvable than "root cause unknown" implied).
