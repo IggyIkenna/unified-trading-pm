@@ -53,9 +53,14 @@ master:
 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
-> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
-> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the settled contract lives in codex `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/prediction-batch-live.md`; this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
-> BEFORE apply. Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode source-aware).
+> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware `{mode}*{source}[_{transport}]`model +
+> doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the
+> settled contract lives in codex
+> `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/prediction-batch-live.md`;
+> this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2**
+> (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The
+> migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank) BEFORE apply.
+> Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode source-aware).
 
 > **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
 > `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
@@ -243,9 +248,16 @@ be fixed first if run on a VM.
       `_index` — HARD, swap-resilient (a future Polymarket data-provider change stays distinguishable). Closes
       `data_source_provenance` Phase 6 prediction. **Venue ≠ source invariant preserved**: Polymarket/Kalshi remain
       VENUES (cross-venue dispersion is a feature-layer concern, not a source merge); when Kalshi lands it is a venue
-      addition AND its cells stamp
-      `kalshi*\*`as source. Do NOT open a separate prediction source walk. **[CODE-WIRED —     slot-5 confirmed 2026-06-03; operator picked source-column over N/A]** The CODE foundation is already in place:     UAC`SOURCE*PRIORITY`carries`("prediction","trades")=["polymarket_clob"]`, `("prediction","book_snapshot")`,     `("prediction","prediction_canonical_question_group")`, and     `("prediction","MARKET_LIFECYCLE")=["polymarket_gamma_api"]`(+`EMISSION_LATENCY_MS_BY_SOURCE`entries), and the     UTL`manifest_writer.add()/record_captured\*`AUTO-STAMP the sole external source via`default_source`for     single-source cells (no`MissingSourceError`—`source_required`is False). So **live/new writes already stamp     `source`**; this rider is now just the HISTORICAL `\_index`backfill — ensure the rebuild's`record*\*`calls flow     the parquet's own`data_source`(or let`default_source`auto-stamp`polymarket_clob`), no writer code change needed.     The stale "prediction N/A" line was corrected in CLAUDE.md + `data_source_provenance`
-      row (slot-5 2026-06-03).
+      addition AND its cells stamp `kalshi*\*`as source. Do NOT open a separate prediction source walk. **[CODE-WIRED —
+      slot-5 confirmed 2026-06-03; operator picked source-column over N/A]** The CODE foundation is already in place:
+      UAC`SOURCE*PRIORITY`carries`("prediction","trades")=["polymarket_clob"]`, `("prediction","book_snapshot")`,
+      `("prediction","prediction_canonical_question_group")`, and
+      `("prediction","MARKET_LIFECYCLE")=["polymarket_gamma_api"]`(+`EMISSION_LATENCY_MS_BY_SOURCE`entries), and the
+      UTL`manifest_writer.add()/record_captured\*`AUTO-STAMP the sole external source via`default_source`for
+      single-source cells (no`MissingSourceError`—`source_required`is False). So **live/new writes already stamp
+      `source`**; this rider is now just the HISTORICAL `\_index`backfill — ensure the rebuild's`record*\*`calls flow
+      the parquet's own`data_source`(or let`default_source`auto-stamp`polymarket_clob`), no writer code change needed.
+      The stale "prediction N/A" line was corrected in CLAUDE.md + `data_source_provenance` row (slot-5 2026-06-03).
 
 ### Verify + handoff to decommission
 
@@ -430,9 +442,11 @@ be fixed first if run on a VM.
       `underlying=`/`chain=`/ `data_source=` segments (they are PARQUET COLUMNS now, per
       `build_prediction_partition_path`), but the proven manifest
       `ShardKey=(date,venue,chain,instrument_type,data_type,underlying)` needs them → the rebuild MUST READ each
-      parquet's `chain`/`underlying`/`data_source` columns (the existing tool read them from the path). Stamp `source =
-      pipeline_mode.removeprefix("batch*")`(use UAC`source_string_for`/`pipeline_mode_for_source`) +     `pipeline_mode`(path-derivable: question_group→gamma_api else clob) +`available_at`→`ManifestWriter` auto-stamps     v9. Confirm row-key granularity against the EXISTING pred-prd`\_index`
-      (16,812 rows) so the rebuild dedups, not double-counts. Then consolidator merge.
+      parquet's `chain`/`underlying`/`data_source` columns (the existing tool read them from the path). Stamp
+      `source =     pipeline_mode.removeprefix("batch*")`(use UAC`source_string_for`/`pipeline_mode_for_source`) +
+      `pipeline_mode`(path-derivable: question_group→gamma_api else clob) +`available_at`→`ManifestWriter` auto-stamps
+      v9. Confirm row-key granularity against the EXISTING pred-prd`\_index` (16,812 rows) so the rebuild dedups, not
+      double-counts. Then consolidator merge.
 - [ ] [DATA] P1. E6 CF-7 relabel. **CF-7 NOW BAKED INTO THE MIGRATOR (mtds@4b311c93)** — `_cf7_normalise` runs in BOTH
       path transforms BEFORE dedup: `venue UNKNOWN/blank → POLYMARKET` (prediction is single-venue today; Kalshi lands
       born-canonical), `data_type prediction_trades → trades` (verified the same markets). Grounded by the
@@ -567,7 +581,7 @@ be fixed first if run on a VM.
       batch rows via a rebuild CF-11 re-emit. FULL diagnosis + ordered remediation:
       `plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`. Repos:
       **unified-trading-library / instruments-service / market-tick-data-service**.
-- [ ] [DATA] P0. E8 ⚠️ **PARTIAL — CORRECTION 2026-07-12: the "DATA-DECOMMISSION DONE" claim below was WRONG. VERSIONING
+- [x] [DATA] P0. E8 ⚠️ **PARTIAL — CORRECTION 2026-07-12: the "DATA-DECOMMISSION DONE" claim below was WRONG. VERSIONING
       is enabled on the legacy buckets, so the 1,164,148 `delete_blob` calls only removed the LIVE versions — they
       became NONCURRENT versions, not gone.** `list_blobs`/`gcloud ls` show live-only (=0), which is why it looked
       empty; version-aware count 2026-07-12: `market-data-tick-prediction` LIVE=0 / **ALL_VERSIONS=2,592,066**;
@@ -580,14 +594,22 @@ be fixed first if run on a VM.
       2.6M-object-scale, so a deliberate eyes-open op, not a rushed sweep. **COORDINATION: a second operator agent is
       actively on the tick bucket — do NOT race it with parallel version deletes.** _(Original — now-falsified — claim
       retained for audit: "ALL 1,164,148 legacy objects DELETED (verified remaining=0)" — that `remaining=0` counted
-      LIVE versions only.)_
-- [ ] [DATA] P0. E8 (superseded — data done above) Hand C-GREEN to `bucket_name_ssot…` L6 → delete legacy
+      LIVE versions only.)_ **✅ RESOLVED 2026-07-13 (`/autonomous` slot session)** — re-checked for a concurrent agent
+      first (no compute instance/Batch/Run job found touching either legacy bucket; the two ACTIVE prediction
+      consolidator Cloud Run jobs target canonical `-pred-prd-` only, confirmed via `gcloud run jobs describe`), then
+      ran `gcloud storage rm --recursive --continue-on-error gs://market-data-tick-prediction-central-element-323112/` —
+      all versions purged natively (no custom listing/temp-file step, avoiding the tmpfs-ENOSPC mode that killed prior
+      attempts), bucket-delete stage reached, ~4.3h runtime, absorbed ~1.06M benign `not found: 404`s from
+      parallel-worker double-deletes on already-removed generations (data-safe, `--continue-on-error` by design).
+      **Verified against reality, not the log**: `gcloud storage buckets describe` now returns `404 not found`. Bucket
+      is genuinely gone.
+- [x] [DATA] P0. E8 (superseded — data done above) Hand C-GREEN to `bucket_name_ssot…` L6 → delete legacy
       `market-data-tick-prediction` + stale pred-prd `category=` paths (single source of truth). **✅ OPERATOR
       AUTHORISED the E8 delete 2026-07-10 (this /autonomous session)** — the prior human-only hard-stop is lifted.
       **Still DATA-SAFETY-gated (not skippable):** execute the irreversible delete ONLY after (1) E7 CF-GREEN with **0
       legacy-only cells verified** (the ~2,039 legacy-only tick cells fully migrated to canonical `pred-prd` — deleting
       before that = data loss, the plan's core thesis), (2) a fresh `_index` snapshot, (3) fleet drain. Sequence it as
-      the genuine LAST step after E7 GREEN.
+      the genuine LAST step after E7 GREEN. **✅ DONE 2026-07-13** — see E8 resolution above; bucket confirmed 404.
 - [x] [DATA] P0. E8b ✅ **DONE 2026-07-11 (/autonomous)** — object-level diagnosis (market-id 0x-hash exact membership
       vs union of ALL canonical cqgs/day) found the 139 legacy-only cells = 98 RENAMED (present in canonical under
       re-classified cqgs) + **41 genuinely-unique COVERAGE GAPS** (37 lifecycle mostly `EUR_UP_DOWN_DAILY` on days
@@ -596,22 +618,26 @@ be fixed first if run on a VM.
       (both prefixes 100% renamed) → `_index` snapshotted → **legacy `instruments-store-prediction` LIVE objects deleted
       (2822/2822)** — but ⚠️ **CORRECTION 2026-07-12: VERSIONING is enabled, so this only removed live versions;
       version-aware count shows ALL_VERSIONS=28,017 noncurrent versions REMAIN (bucket not empty, data still present).
-      The migration of the 41 unique cells IS valid; the legacy-bucket delete is NOT complete.** **NEW (slot audit
-      2026-07-10): legacy `instruments-store-prediction` bucket decommission — GATED on migrating 139 legacy-only cells
-      first (data-loss risk). ✅ OPERATOR AUTHORISED the delete 2026-07-10 (same session as E8) — still
-      DATA-SAFETY-gated on migrating/reconciling the 139 legacy-only cells + a snapshot first.** **🔎 DIAGNOSIS UPDATE
-      2026-07-11 — the 139 legacy-only cells are likely RENAMED, NOT genuinely-unique (operator's earlier intuition
-      confirmed): instrument-key-level spot-check found `BTC_UP_DOWN_HOURLY` day=2026-03-24's legacy market is ALREADY
-      in canonical under a DIFFERENT cqg (1/1 keys present). So the legacy bucket is likely SUPERSEDED (same markets,
-      re-classified to canonical cqg names) → safely deletable WITHOUT migration (migrating at the legacy cqg name would
-      POLLUTE canonical with duplicate cells). The full 139-cell instrument-key confirmation timed out in foreground
-      (139 legacy downloads × canonical-per-day) — RUN IT IN A STABLE JOB to confirm 100% renamed before the delete. If
-      any cell is genuinely-unique (keys NOT in canonical), migrate only those. Two agents attempting this DIED
-      (tmpfs-ENOSPC + session restart) with ZERO prod changes — the migration/delete were NOT executed; legacy still
-      92+47 legacy-only, canonical untouched. NEXT: stable-job full diagnosis → (all-renamed) snapshot + delete legacy,
-      or (some-unique) migrate-unique + delete.** Read-only subset audit (2026-07-10, ADC central-element-323112) found
-      the legacy reference-data store `instruments-store-prediction-central-element-323112` is **NOT a subset** of
-      canonical `instruments-store-pred-prd-…`: **92 legacy-only `instrument_availability` cells + 47 legacy-only
+      The migration of the 41 unique cells IS valid; the legacy-bucket delete is NOT complete.** **✅ RESOLVED
+      2026-07-13 (`/autonomous` slot session)** —
+      `gcloud storage rm --recursive --continue-on-error     gs://instruments-store-prediction-central-element-323112/`
+      ran clean (exit 0), all 28,017 versions + the bucket shell removed in one op. Verified:
+      `gcloud storage buckets describe` now returns `404 not found`. **NEW (slot audit 2026-07-10): legacy
+      `instruments-store-prediction` bucket decommission — GATED on migrating 139 legacy-only cells first (data-loss
+      risk). ✅ OPERATOR AUTHORISED the delete 2026-07-10 (same session as E8) — still DATA-SAFETY-gated on
+      migrating/reconciling the 139 legacy-only cells + a snapshot first.** **🔎 DIAGNOSIS UPDATE 2026-07-11 — the 139
+      legacy-only cells are likely RENAMED, NOT genuinely-unique (operator's earlier intuition confirmed):
+      instrument-key-level spot-check found `BTC_UP_DOWN_HOURLY` day=2026-03-24's legacy market is ALREADY in canonical
+      under a DIFFERENT cqg (1/1 keys present). So the legacy bucket is likely SUPERSEDED (same markets, re-classified
+      to canonical cqg names) → safely deletable WITHOUT migration (migrating at the legacy cqg name would POLLUTE
+      canonical with duplicate cells). The full 139-cell instrument-key confirmation timed out in foreground (139 legacy
+      downloads × canonical-per-day) — RUN IT IN A STABLE JOB to confirm 100% renamed before the delete. If any cell is
+      genuinely-unique (keys NOT in canonical), migrate only those. Two agents attempting this DIED (tmpfs-ENOSPC +
+      session restart) with ZERO prod changes — the migration/delete were NOT executed; legacy still 92+47 legacy-only,
+      canonical untouched. NEXT: stable-job full diagnosis → (all-renamed) snapshot + delete legacy, or (some-unique)
+      migrate-unique + delete.** Read-only subset audit (2026-07-10, ADC central-element-323112) found the legacy
+      reference-data store `instruments-store-prediction-central-element-323112` is **NOT a subset** of canonical
+      `instruments-store-pred-prd-…`: **92 legacy-only `instrument_availability` cells + 47 legacy-only
       `market_lifecycle` cells** (`(cqg,day)` keys, range 2025-03-27 → 2026-05-21), of which CQGs
       **`BTC_UP_DOWN_HOURLY`** and **`GOLD_UP_DOWN_DAILY`** exist **ONLY in legacy** (absent from canonical entirely).
       Legacy also carries `_backups/` (43) + its own `_index/` (4). So deleting the legacy instruments-store bucket now
@@ -648,7 +674,9 @@ canonicalisation-only differences): **LEGACY `market-data-tick-prediction` = 1,1
 doesn't manifest; candles = MDPS domain; 300k+ candle objects present in BOTH buckets). `cloud-providers.yaml:160`
 already maps kind→canonical so readers resolve `pred-prd` (no reader-repoint needed). Legacy `_index` snapshotted to
 canonical `\_index/snapshots/DECOMMISSIONED_legacy*...2026_07_11.parquet` for record. Parallel delete (32 workers) of
-the 1.16M legacy objects executing.
+the 1.16M legacy objects executing. **✅ RESOLVED 2026-07-13**: that live-object delete was the partial run later
+corrected above (versioning meant it only cleared live versions, all 2,592,066 total versions remained). Full
+version-aware purge + bucket delete completed 2026-07-13 (`gcloud storage rm --recursive`, ~4.3h, confirmed `404`).
 
 **E8b instruments-store — genuinely-unique cells are COVERAGE GAPS (not renamed) → migrating before delete
 (2026-07-11).** Object-level diagnosis: legacy `instruments-store-prediction` vs canonical `instruments-store-pred-prd`:
@@ -662,7 +690,8 @@ markets. Then re-verify 0-unique → snapshot + delete legacy. (Supersedes the e
 the lifecycle EUR gap is real.) **EXECUTED**: migrated 41 cells / 77 markets → re-diagnosis 0 genuinely-unique remaining
 (both prefixes 100% renamed) → legacy `instruments-store-prediction` LIVE objects deleted (2822/2822) — ⚠️ CORRECTION
 2026-07-12: versioning enabled, 28,017 noncurrent versions REMAIN; the bucket-delete is NOT complete (the cell migration
-itself is valid).
+itself is valid). **✅ RESOLVED 2026-07-13**: all 28,017 versions + the bucket shell deleted
+(`gcloud storage rm --recursive`), confirmed `404 not found` on re-describe.
 
 **Post-verification manifest polish (2026-07-11) — prediction `_index` is now genuinely audit-clean on all
 manifest-content CFs.** Running the full `cf_manifest_audit_2026_06_01.py` surfaced issues the earlier per-CF checks
@@ -870,10 +899,13 @@ verify + the gated delete.
       legitimate GCS-partition membership checks in the canonicalisation migrators (slots 2-6: tradfi/sports/cefi/defi +
       my prediction `:193` + `audit_canonical_form`), NOT pipeline*mode VALUE assignments. Once those migrators landed
       (2026-06-08) it red-blocked every MTDS `quality-gates.sh` (11 false-positives) → no MTDS slot could get a green
-      sentinel. \*\*Fix: require a value-char
-      `[A-Za-z0-9*{]` after the quote** so only genuine assignments     (`pipeline_mode="batch_tardis"`/`="{pm}"`/`='live'`) flag. Rule-11 verified: 0/11 path-hits remain; real value     literals still caught; **0 genuine value-literal violations workspace-wide** (only a UAC docstring example, caught     identically before+after) → pure false-positive removal, a LOOSENING (cannot newly-fail any repo). Propagates     fleet-wide via PM (base-service.sh is `source`d live from `${WORKSPACE_ROOT}/unified-trading-pm`).
-      Repo: unified-trading-pm. parent_epic: mtds_mdps_master. **Finding callout for the coordinator's slot-2 MTDS-QG
-      P2: this removes one of the MTDS-repo QG blockers; the >900-line files + uv.lock items remain that slot's.**
+      sentinel. \*\*Fix: require a value-char `[A-Za-z0-9*{]` after the quote** so only genuine assignments
+      (`pipeline_mode="batch_tardis"`/`="{pm}"`/`='live'`) flag. Rule-11 verified: 0/11 path-hits remain; real value
+      literals still caught; **0 genuine value-literal violations workspace-wide** (only a UAC docstring example, caught
+      identically before+after) → pure false-positive removal, a LOOSENING (cannot newly-fail any repo). Propagates
+      fleet-wide via PM (base-service.sh is `source`d live from `${WORKSPACE_ROOT}/unified-trading-pm`). Repo:
+      unified-trading-pm. parent_epic: mtds_mdps_master. **Finding callout for the coordinator's slot-2 MTDS-QG P2: this
+      removes one of the MTDS-repo QG blockers; the >900-line files + uv.lock items remain that slot's.**
 - [x] ✅ [CODE] P1. **Rebuild CF-11 re-emit survives `read_availability_index` RAISE — SHIPPED mtds@c24644f7 (slot-5
       2026-06-08; found by this pass's FRESH local rebuild dry-run, which the prior VM-only runs masked).** The CF-11
       honest-absence re-emit called `read_availability_index(bucket)`, which on a **v8 `_index`** runs the UTL reader's
@@ -1721,7 +1753,14 @@ purely OPERATIONAL (IS backfill RUN · instruments-store-pred v9 walk RUN · dra
 - Canonical `pred-prd` `_index` = v9 + `pipeline_mode=` partition present + **`source` stamped on every cell (zero blank
   — HARD; the API source per venue, swap-resilient)**.
 - `mdps-prediction-2025` relaunch unblocked (writes canonical-only).
-- Hands C-GREEN to `bucket_name_ssot…` L6 → legacy `market-data-tick-prediction-…` deletable.
+- Hands C-GREEN to `bucket_name_ssot…` L6 → legacy `market-data-tick-prediction-…` deletable. **✅ DONE 2026-07-13** —
+  both legacy prediction buckets (`market-data-tick-prediction-…` + `instruments-store-prediction-…`) fully
+  version-purged and deleted; confirmed `404 not found` on both. See
+  `bucket_name_ssot_legacy_dual_write_remediation_ 2026_06_01.md`'s INCIDENT-resolution note for full evidence.
+
+**Remaining open on this plan (unrelated to bucket deletion, plan stays `status: active`):** one P3 UAC finding —
+`grain_for_instrument_type('prediction','prediction_market')` returns `leaf` (line ~1299/1543) — not investigated in
+this pass.
 
 ## Codex SSOTs
 
