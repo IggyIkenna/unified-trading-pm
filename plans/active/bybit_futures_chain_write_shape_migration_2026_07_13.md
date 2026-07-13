@@ -142,15 +142,35 @@ venues, or change instrument_type classification? Phase 1 owns this).
 
 ## Phase 2 — Build + dry-run the reshape (P0)
 
-- [ ] [DATA] P0. Build a reshape/backfill script (new script under `market-tick-data-service/scripts/`,
+- [x] ✅ [DATA] P0. Build a reshape/backfill script (new script under `market-tick-data-service/scripts/`,
       `# Epic: mtds_mdps_master`, `# Lifecycle: oneoff` header per `codex/06-coding-standards/script-homes.md`) that
       parses glued `{BASE}{QUOTE}.parquet` filenames back into `{underlying}/{quote}` using the SAME
       base/quote-splitting logic the 2026-07-09 code fix now uses going forward (do not reinvent — import/reuse it),
       server-side copies to the canonical `underlying={U}/ticks.parquet` path via UTL `gcs_copy_object`, and is
       idempotent (skip when the canonical target already exists and is verified byte/row-identical). Handle shape (2)
-      per Phase 1's duplicate-vs-unique finding. DRY-RUN default, `--apply` to mutate.
-- [ ] [DATA] P0. Dry-run across the full audited scope (Phase 1's day list); verify planned rename/copy count matches
-      the audit; spot-check 10+ planned reshapes for correctness (base/quote split, target path).
+      per Phase 1's duplicate-vs-unique finding. DRY-RUN default, `--apply` to mutate. — **DONE, slot 14,
+      market-tick-data-service@`6f0efb52` (`scripts/reshape_bybit_futures_chain_glued_to_hive_2026_07_13.py`)**. Reads
+      the Phase 1 audit parquet directly (single-walk discipline — no fresh corpus scan) to get the exact glued-present
+      day list; extracts underlying via `TardisAdapter._extract_underlying_for_chain` (imported, not reimplemented, per
+      the todo's own directive); idempotent `(size, crc32c)` parity check mirroring
+      `migrate_aster_cefi_defi_bucket_2026_07_13.py`'s proven design from earlier this session (skip if matching,
+      flag-not-overwrite if mismatched). Shape (2) is correctly OUT of this script's scope per Phase 1 Todo 2's own
+      finding (needs no reshape logic, it's a pure duplicate) — the script only classifies+processes shape (3) glued
+      files, verified via regex (`_GLUED_RE`) that excludes bare-underlying and bundled (`ticks.parquet`) filenames.
+      Shipped after a repo-blocker (`RB-d6cac7c5`, pre-existing `check_adapter_contract_regression` stale-baseline
+      failure, unrelated to this change — see
+      `plans/active/issues/mtds_adapter_contract_regression_stale_baseline_2026_07_13.md`) resolved via `watcher_green`.
+- [x] ✅ [DATA] P0. Dry-run across the full audited scope (Phase 1's day list); verify planned rename/copy count matches
+      the audit; spot-check 10+ planned reshapes for correctness (base/quote split, target path). — **DONE, slot 14**
+      (same dispatch as Todo 1 above, since Todo 1 wasn't done yet when this todo was dispatched). Full dry-run across
+      all 323 audited glued-present days (2025-02-11 → 2026-05-22): **835 objects planned to reshape**, 0 errors.
+      Spot-checked the 10 printed dry-run samples plus a separate stratified sample (every 15th day) for
+      base/quote-split correctness across 7 distinct underlyings (`BTC`, `DOGE`, `ETH`, `MNT`, `SOL`, `XAUT`, `XRP`) —
+      all correct splits, all correct target paths (`.../data_type=trades/underlying={U}/ticks.parquet`). Also verified
+      (via a real GCS sample across 5 spread days) that no day has more than one glued source file mapping to the same
+      underlying — the plan's implicit 1:1-copy assumption (not a merge) holds in practice; the script's idempotent
+      parity-check design would safely flag any future collision as a conflict rather than silently mis-migrating if
+      this assumption is ever violated. Nothing mutated (dry-run only).
 
 ## Phase 3 — Apply + verify (P0)
 
