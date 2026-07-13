@@ -289,3 +289,30 @@ and Phase 4 waits on Ikenna's access answer.
     since `day=2026-06-28` — if IS's prediction market_lifecycle enumeration is this unreliable, MTDS's live capture
     (which also depends on IS-enumerated tickers) silently losing its subscription universe is a plausible shared root
     cause, not yet verified either way.
+
+- 2026-07-13 (missed-window backfill EXECUTED + manifest-verified; completeness-key root cause FIXED): operator
+  directive — actually run the backfill, don't re-corroborate. Done:
+  - **Backfill run**: real VM `instr-backfill-pred-missedwindow-0713`
+    (`launch-instruments-backfill-vm.sh --asset-group PREDICTION --start 2026-07-07 --end 2026-07-12 --force`), clean
+    run — 6 daily results, `DEPLOYMENT_COMPLETED exit_code=0`, self-deleted. **All 6 missing `market_lifecycle`
+    day-partitions now EXIST in PROD** (`by_canonical_group/day=2026-07-07..2026-07-12/` with real group partitions;
+    e.g. date=2026-07-09 wrote 1,365 KALSHI + Polymarket group rows from 14,584 fetched CLOB instruments; date totals
+    10,172-13,237 records/day across 28-29 venue-groups). **Manifest-verified in the consolidated prediction index**
+    (non-legacy cron merged the per-VM shard): 52-62 `captured` rows per day across the whole window.
+  - **Root Cause #2's completeness-key mechanism CONFIRMED live and FIXED**: the backfill VM (running the pre-fix
+    tarball) reproduced the exact trap a 4th time — thousands of real rows written under composite counts keys
+    (`KALSHI/OTHER` etc.) while shard-completeness compared BARE venue names, stamping dishonest
+    `SOURCE_RETURNED_ZERO empty_confirmed` for KALSHI/POLYMARKET on every backfilled day. Fixed:
+    **instruments-service@a52cbab1** — `_fold_written_venues()` folds composite `VENUE/GROUP` counts keys back to the
+    bare venue at BOTH comparison sites (initial + post-retry); sports `FIXTURES/{league_id}` keys unaffected;
+    regression tests in `test_silent_absent_fixes.py` (23 pass); full IS QG green.
+  - **Honest residuals**: (1) the 12 dishonest `empty_confirmed` rows this (pre-fix) backfill stamped (6 days × 2
+    venues) — superseded once any post-fix run re-covers those days (the fix must first reach the deployed
+    tarball/image; the tarball-refresh cron picks up a52cbab1 automatically); (2)
+    `instrument_availability/by_date/ day=2026-07-09` did NOT appear — that surface is written by the daily-enum path
+    (its `day=` axis is availability-dated, partitions exist out to 2029), not by this backfill; whether a single
+    historical availability day is retroactively derivable belongs to the still-draft
+    `is_daily_enum_capture_heal_2026_07_07.md` plan (the daily enum's own exit-1 failure is separately tracked in
+    `is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`); (3) MTDS-side PREDICTION shard re-runs
+    (KalshiAdapter/PolymarketAdapter reading the now-present market_lifecycle days) are the parent plan's targeted
+    re-verification item.

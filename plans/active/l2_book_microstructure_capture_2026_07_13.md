@@ -67,10 +67,21 @@ sequential: true
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Per venue in the 9-venue `book_snapshot_5` set, confirm whether its public API exposes a deeper
+- [x] ✅ [SCRIPT] P2. Per venue in the 9-venue `book_snapshot_5` set, confirm whether its public API exposes a deeper
       order-book depth (L10/L20/full-L2) beyond the L5 already captured — this is a real per-venue API capability check,
       not assumed uniform. Document which venues can and cannot go deeper; honest gaps for any venue that genuinely
-      can't are acceptable, do not force a fake depth. Repo: market-tick-data-service (research + doc).
+      can't are acceptable, do not force a fake depth. Repo: market-tick-data-service (research + doc). — DONE
+      `market-tick-data-service@4cf33fbe` (`docs/L2_BOOK_DEPTH_RESEARCH_2026_07_13.md`). **All 9 venues genuinely
+      support deeper-than-L5 depth** — no honest capability gap on any venue (the constraint is auth/VIP-tier gating on
+      some channels, not missing capability). Summary: Binance Futures/Spot → 20 (WS partial) / 1000-5000 (REST+diff),
+      no gating; OKX Futures/Spot/Swap (unified v5 schema) → 400 levels (`books`), with `books50-l2-tbt`/ `books-l2-tbt`
+      gated behind VIP4+/VIP5+ trading-fee tiers (medium-high confidence — OKX's SPA docs couldn't be rendered directly,
+      corroborated via secondary sources); Bybit → 1000 levels (linear/inverse/spot), no gating; Deribit → 20 grouped
+      (no auth) / unlimited raw (requires authenticated WS); Coinbase Spot → full L2 uncapped via `level2_batch`
+      (no-auth); Upbit → 30-level hard cap, no gating. Full per-venue citations + todo-2 implementation targets (which
+      channel/depth to actually pull, given gating) are in the doc. `quality-gates.sh` green (237s,
+      `IGNORE_TIMEOUT=true`) after this repo saw 5 sentinel-invalidating rebases from sustained concurrent commit
+      traffic across slots — sentinel verified at `4cf33fbe2fdaf29302a86960c27e471227203a92`.
 - [ ] [DATA] P2. For each venue confirmed capable, extend the live capture (or add a new deeper-book live handler
       alongside the existing L5 one) to pull the deeper book. Reuse the existing `book_snapshot_5` connector pattern per
       venue — do not fork a new connector framework.

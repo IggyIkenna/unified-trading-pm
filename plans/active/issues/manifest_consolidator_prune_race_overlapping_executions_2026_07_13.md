@@ -17,7 +17,7 @@ summary: |
   likely when a manual/--wait execution overlaps the */1 cron. Suspect: prune cutoff vs shard-listing window in
   unified-trading-library's manifest consolidator (a merge run pruning shards it did not itself list/merge, or
   pruning on name-set rather than a content-write-marker stamped before prune).
-status: open
+status: resolved
 nature: notes
 asset_group: [sports, defi, cefi, tradfi]
 stage: [data]
@@ -45,6 +45,8 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+  operator session 2026-07-13 — fix shipped UTL@97212d3b + prod rollout verified same day (execution 2knmt on the fixed
+  image)
 ---
 
 # Manifest consolidator prune race (overlapping executions)
@@ -125,3 +127,13 @@ content-write success marker gates pruning per-shard.
   pulls). AWS mirrors via ECR `market-tick-data-service:latest` Batch-Fargate jobs. Until then, mitigation stands: avoid
   manual `gcloud run jobs execute --wait` overlapping the `*/1` cron right after writing shards; verify landings by
   content.
+
+- 2026-07-13 (rollout, final): PROD ROLLOUT VERIFIED — fix live in the deployed consolidator fleet. Chain: UTL promote
+  PR #549 auto-merged 18:16:53Z (main ≡ LDR); UTL base image republished 17:44:41Z from build 582dbdd4 whose commit IS
+  97212d3b (ancestry-verified); MTDS pin bump b11199cb (`BASE_IMAGE_DIGEST` → sha256:b7e391f8) shipped to LDR, carried
+  to main via promote PR #548 (green v2, auto-merge re-armed after the fleet failed to arm it; merged 19:08:53Z); MTDS
+  image rebuilt (build 609af88b SUCCESS 19:16:58Z; `:latest` → sha256:f9645265 built from LDR commit 97a8330 whose
+  Dockerfile pin = b7e391f8). Verified live: execution uts-prod-manifest-consolidator-instruments-sports-2knmt
+  (19:19:02Z) ran image @sha256:f9645265 and completed succeededCount=1; per_vm shard dir near-empty (absorption
+  normal). The prune race is closed in production. Residual (non-blocking): AWS ECR Batch-Fargate mirrors pick the fix
+  up on their next image sync; the manual-overlap mitigation is no longer required on GCP.

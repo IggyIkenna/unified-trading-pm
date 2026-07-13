@@ -511,3 +511,18 @@ same lock; the original run's "self-deleted, no log" was a one-off log-upload-ti
 `heartbeat_daemon.py`'s uploader loop got its first tick), not a distinct, reproducible bug in its own right. **No new
 code action needed for any of these 18 shards** — all corroborate this already-tracked, still-open P0 finding; not
 individually diagnosed further. (repo: market-tick-data-service — corroboration only, no new commit)
+
+### 2026-07-13 — OPERATOR ENABLEMENT DECISION: pilot wave with the lease ON; single-VM lease operation already live
+
+Operator ruled (interactive session, 2026-07-13): **run the first fully-lease-enabled wave on a small venue/year slice**
+(every VM in the wave gets `TARDIS_CONCURRENCY_LEASE=1` + the shared control bucket), confirm the staggered
+lease-acquisition ordering in per-VM logs, then enable fleet-wide. The G4 re-run stays gated until after that pilot.
+
+State observed same session: the production control object **already exists and is actively held** —
+`gs://config-store-central-element-323112/_tardis_concurrency_lease/lease.json`, holder
+`cefi-okx-swap-2022-light-20260713-103002:8192:d6370b59` (acquired 17:49:47Z, 900s TTL, renewing) — i.e. the running
+CeFi backfill VM was launched lease-enabled and single-VM lease operation is live in production. The 4 lock-holding
+`cefi-binance-futures-2020/2021` VMs from the earlier corroborations are TERMINATED. The multi-VM serialization proof
+(the pilot wave proper) needs either okx-swap's completion or its inclusion: a monitor is armed on okx-swap's
+termination; the pilot launches into that window with 2+ VMs on a small slice
+(`TARDIS_CONCURRENCY_LEASE=1 TARDIS_CONCURRENCY_LEASE_BUCKET=config-store-central-element-323112`).

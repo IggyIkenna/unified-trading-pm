@@ -25,7 +25,7 @@ summary:
   report is trustworthy evidence the live VM itself worked; every live-leg 'pass' is really just 'the force leg for this
   same shard happened to write date=<day>', and every live-leg 'fail' where the force leg also failed is simply
   reflecting the force leg's OWN failure a second time, not new information about live capture."
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -61,7 +61,7 @@ source:
     direct reading of scripts/pipeline_e2e_check.py + scripts/smoke_matrix.py's verify_manifest_row,
   ]
 assigned_vm: NA
-resolved_by:
+resolved_by: market-tick-data-service@981201c4 (2026-07-13, real-VM verified same day)
 locked_by:
 execution_scope: local-only
 estimate_class: refactor
@@ -176,3 +176,31 @@ No code was changed (the fix needs coordination with concurrent WIP already in `
 attempt was made to audit how many of the re-sweep's other "live leg passed" results are similarly spurious coincidental
 force-leg matches versus genuine live-path health — that would require reading every passing live-leg's underlying
 per-VM shard the same way this doc did for OKX, which is a real (but mechanical) follow-up audit.
+
+## RESOLVED 2026-07-13 — fix shipped + real-VM verified against this doc's own worked example
+
+- **Fix shipped: `market-tick-data-service@981201c4`.** `_run_live_leg` no longer calls the day-filtered
+  `verify_manifest_row(bucket, match, day)`; a new `_verify_live_manifest_row(bucket, vm_name, match, started)` (1)
+  PRIMARY: reads the live VM's OWN per-VM shard `_index/per_vm/{instance}.parquet` directly — matched by
+  venue/data_type/instrument with NO date filter (exactly what this doc's diagnosis did manually; immune to the `-test-`
+  bucket's consolidator re-freeze); (2) FALLBACK: reads the consolidated index filtered by
+  `attempted_at >= the live leg's own launch time` (−60s clock-skew tolerance, the doc's "more robust alternative" —
+  immune to a live run crossing a UTC day boundary). The now-unused `day` param was removed from `_run_live_leg`;
+  force/skip legs keep the day filter (they genuinely backfill `day`). Confirmed no other `verify_manifest_row` caller
+  relies on the buggy behavior for a live leg; `_run_live_leg_prod_unbounded` never verifies and needed no change.
+  **instruments-service's checker was analyzed and deliberately NOT changed**: its "live" leg routes through
+  `setup-data-pipeline-vm.sh`'s `instruments-backfill` branch which hardcodes `--mode batch`, so it backfills `--day`
+  and correctly writes `date=day` — the day filter is correct there.
+- **Real-VM verification (recommended-fix item 2, the exact OKX case): PASSED.**
+  `pipeline_e2e_check.py --day 2026-07-09 --asset-group CEFI --venue OKX --data-types liquidations --legs live`
+  (2026-07-13T19:11–19:15Z, fresh VM `mtds-live-smoke-cefi-okx-liquidations-20260713-191136`) now reports
+  `CEFI:OKX:liquidations | live | passed | manifest=empty_confirmed | reason=ok (despite vm_not_success:vm_exit_nonzero=1; live row via per_vm_shard)`
+  — the checker read the live VM's OWN healthy `empty_confirmed` row (`per_vm_shard` source marker) instead of
+  inheriting the force leg's stale `attempted_failed` for the nominal day. `total=1 passed=1 failed=0`, driver exit 0.
+- Also shipped alongside (same commit): Phase-0 `-test-`-bucket force-consolidation before Phase 1 (closes the companion
+  re-freeze gap from `cefi_manifest_consolidator_14day_stale_recovered_2026_07_13.md`; IS checker got the same Phase-0
+  in `instruments-service@526d2ffd`), and the MTDS exit-code now flips on `ambiguous` (aligned to IS).
+- **Still-open residual (unchanged from filing):** the retroactive audit of the ORIGINAL re-sweep's other live-leg
+  "passes" (each would need its per-VM shard read the way this doc did for OKX). All FUTURE sweeps' live-leg verdicts
+  are trustworthy from this fix forward; the historical RESWEEP_FINAL_REPORT.md live-leg columns remain untrustworthy
+  and are superseded by the next sweep.

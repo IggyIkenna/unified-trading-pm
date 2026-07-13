@@ -261,9 +261,46 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       `_index/backups/availability_index.pre_aster_migration_20260713.parquet` first, then wrote the extended index —
       **117,176 new rows proposed, 79,077 collapsed in dedup (already had manifest coverage), net manifest growth
       7,469,353 → 7,507,452 rows** (dry-run and real apply produced byte-identical stats, confirming determinism).
-- [ ] [DATA] P1. Confirm downstream readers (MDPS candle processing, features-service, deployment-api data-status
+- [x] ✅ [DATA] P1. Confirm downstream readers (MDPS candle processing, features-service, deployment-api data-status
       drilldowns) correctly pick up the migrated data from its new canonical CeFi-bucket location — spot-check one
-      drilldown query for an ASTER instrument/day that was previously only in the DeFi bucket.
+      drilldown query for an ASTER instrument/day that was previously only in the DeFi bucket. — **DONE, slot 9,
+      unified-trading-pm@`<pending-ship>`** (read-only investigation + a live spot-check, no code change needed). **1)
+      MDPS candle processing — GOOD, dynamic.**
+      `market_data_processing_service/app/core/orchestration_scheduling.py:224-249` `_list_instrument_files()` lists
+      per-day objects in a caller-supplied bucket; bucket resolved per-category via
+      `self.config.get_bucket_for_asset_group(category)` → `market_data_processing_service/config.py:62-83`
+      `get_source_bucket(asset_group)`, same canonical naming `resolve_bucket_name` produces (catalogue reads use
+      `resolve_bucket_name` directly at `cloud_data_provider.py:56-57`). MDPS processes the whole CEFI-category bucket
+      in one pass — no ASTER hardcoding anywhere in production code (only hit is a test fixture,
+      `engine/mock_data_provider.py:54`) — so it automatically now sees ASTER's migrated objects in its CEFI pass. **2)
+      features-service — mixed, no regression.** No currently-shipped calculator reads ASTER's raw
+      `derivative_ticker`/`trades` directly today (`cefi/calculators/perp_funding_rates.py` is Binance-only MVP;
+      `cefi/calculators/perp_funding_corpus.py`'s `RAW_TO_STRATEGY_VENUE` excludes ASTER + filters
+      `pipeline_mode=batch_tardis`, but per its own docstring "has never actually run in production" — pre-existing
+      scope limitation, not a migration regression). The dynamic/manifest-driven path
+      (`delta_one/app/core/data_loader.py:173-205` `get_available_instruments()`, bucket via
+      `resolve_bucket_name(asset_group=...)` at line 55) already recognizes the `ASTER:PERPETUAL:...` canonical key
+      shape (`tests/delta_one/unit/test_mvp_universe_filter.py:58`) and will pick up ASTER once MDPS produces processed
+      candles for it (point 1) — no code change needed. **3) deployment-api data-status drilldown — GOOD,
+      LIVE-VERIFIED.** The real endpoint UI uses, `GET /api/data-status/drilldown/{service}/{asset_group}` →
+      `deployment_api/services/data_status_hierarchical.py:400` `get_hierarchical_drilldown()`, resolves the bucket
+      dynamically (`asset_group` is a caller param, not inferred from venue) and reads the live
+      `_index/availability_index.parquet` manifest — exactly what Phase 3 Todo 1 wrote 117,176 rows into. **Live
+      spot-check** (called the function directly, no HTTP server needed, real GCS + real manifest, ADC project
+      `central-element-323112`):
+      `service=market-tick-data-service, asset_group=cefi, venue=ASTER,     data_type=derivative_ticker, window=2023-11-01`
+      — a day the plan's Phase 1 audit confirms was **0%** present in the CeFi bucket before migration (`zero_dup` band)
+      — returned `{"captured": 63, "completion_pct": 100.0}` from
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, tree rows carrying
+      `pipeline_mode: batch_aster` provenance and canonical `ASTER:PERPETUAL:{BASE}-{QUOTE}@LIN` instrument keys (e.g.
+      `ASTER:PERPETUAL:1000FLOKI-USDT@LIN`). Confirms the manifest write + the real drilldown reader both work
+      end-to-end. Noted (4 separate ~5-min-TTL cache layers exist on this endpoint — `/turbo/clear` bypasses them, not
+      needed for this check since the manifest was already the freshest read). **Found + filed separately** (not a
+      migration regression, pre-existing + venue-agnostic): a **legacy**, UI-unused endpoint
+      (`GET /api/data-status/instrument-availability`) hardcodes a 12-venue substring lookup that excludes ASTER (and
+      any newer venue) and probes a non-canonical flat path instead of the manifest — filed
+      [`plans/active/issues/deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`](issues/deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md)
+      with fix todos; does not block or relate to this migration's done_definition.
 
 ## Phase 4 — Cleanup (gated, separate from migration — P1)
 

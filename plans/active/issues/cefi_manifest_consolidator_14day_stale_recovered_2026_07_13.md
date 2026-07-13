@@ -23,7 +23,7 @@ summary:
   (`consolidator_idle_bucket_incremental_trap_2026_06_19.md`, resolved 2026-06-19 via a `consolidator_content_write_at`
   marker) — that fix's code is still present in the current `manifest_consolidator.py`, so this is either a regression
   via a different trigger path, or a different bug with the same symptom."
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -47,6 +47,8 @@ source:
   ]
 assigned_vm: NA
 resolved_by:
+  root cause settled 2026-07-13 (test-bucket conflation, PROD never frozen) + durable Phase-0 fix
+  market-tick-data-service@981201c4 / instruments-service@526d2ffd
 locked_by:
 execution_scope: local-only
 estimate_class: infra
@@ -164,6 +166,7 @@ Flagging both possibilities rather than picking one without evidence.
   wrong (PROD) bucket.** Triaging this sweep's SKIP-leg failures (BINANCE-DELIVERY, KRAKEN-FUTURES, COINBASE-FUTURES,
   BITFINEX-SPOT, HYPERLIQUID), every one's real run.log showed this doc's exact preflight guard firing INSIDE the
   orchestrator itself (not just the checker):
+
   ```
   ManifestReader: consolidated blob age 1220803.7s > 120s threshold — falling back to per-VM shards
   ManifestConsolidatorStaleError: Manifest consolidator appears DOWN for bucket=
@@ -171,6 +174,7 @@ Flagging both possibilities rather than picking one without evidence.
     heartbeat is 1220817s old (> 120s budget) while per-VM shards exist. ...
   Batch complete: 0 results collected
   ```
+
   at 10:49:39Z — i.e. **after** this doc's claimed ~12:14-12:16Z recovery window, which should be impossible if that
   recovery genuinely applied to this bucket. Checked the raw blob directly instead of trusting either doc's "Update
   time" narrative:
@@ -209,3 +213,42 @@ Flagging both possibilities rather than picking one without evidence.
   or making the e2e sweep's own Phase-0 provisioning step force-consolidate before Phase 1 begins (not attempted this
   pass — a driver/tooling change, not a `unified-trading-library` code change). (repo: unified-trading-library —
   operational fix only, real infra, no code changed this pass)
+
+- **2026-07-13 (RESOLVED — root cause settled with arithmetic + code-read evidence; durable fix shipped).** The
+  `(a) regression / (b) genuinely-idle-bucket` question this doc originally posed has a third answer the later
+  correction already pointed at, now confirmed: **(c) test-bucket conflation — PROD was never frozen at all.**
+
+  1. **The staleness arithmetic pins the original readings to a `-test-` bucket, not PROD.** The correction entry's
+     reading (`10:49:39Z, age 1220803.7s`) computes to a frozen mtime of **2026-06-29T07:42:55.3Z — an EXACT match** to
+     the `-test-` bucket blob (`Update time: Mon, 29 Jun 2026 07:42:55 GMT`). The doc's original three lockstep readings
+     (11:47:49Z age 1220693.5s etc.) compute to 2026-06-29T08:42:55.5Z — also 06-29 morning (a second test-surface
+     frozen ~1h later; the exact bucket is no longer identifiable since the 15:18Z force-consolidation replaced the blob
+     generations). PROD's blob could never produce a 14-day age reading: its `updated` advanced every minute all day
+     (cron heartbeat), confirmed by Cloud Logging in this doc's own item 3.
+  2. **The `--force` `incremental: true, no_op: true` anomaly is explained without any gcloud/argparse quirk:**
+     `_index/latest.json` is overwritten by EVERY consolidator cycle including the `*/1` cron's no-ops (directly
+     observed on the DEFI job: per-minute `no_op: true, error_reason: locked` summaries). The manual PROD force run
+     completed ~12:14–12:15Z; the summary this doc read was "written at 12:15:43" — i.e. almost certainly the NEXT CRON
+     TICK's no-op summary, which had already clobbered the forced run's own. The forced run's genuine full rebuild is
+     evidenced by the fresh 164.75MB write itself.
+  3. **The reader-timestamp hypothesis (b) is REFUTED by code-read**: `ManifestReader._read_consolidated_if_fresh`
+     (`unified_trading_library/manifest_writer/_read_index.py:600`) does use raw `blob.updated` — but that is CORRECT:
+     the consolidator's idle path (`_touch_canonical_mtime`) bumps `consolidator_run_at` metadata every cycle, and a GCS
+     metadata patch advances `blob.updated`, so any cron-covered bucket reads fresh even when idle. The June fix's
+     `consolidator_content_write_at` marker governs the consolidator's own INCREMENTAL CUTOFF (never the reader's
+     freshness heartbeat) — the consolidator's own comments (lines 219-233) document exactly this split. No reader fix
+     needed; no regression of the June fix occurred.
+  4. **Durable fix for the real underlying gap (test buckets silently re-freeze between sweeps): SHIPPED.** Both
+     checkers now force-consolidate their target `-test-` bucket(s) in Phase-0 before any leg runs, via the
+     consolidator's sanctioned CLI subprocess, fail-loud-but-not-fatal, with a hard `-test-` guard so a `-prd-` bucket
+     can never be touched from this path — `market-tick-data-service@981201c4` + `instruments-service@526d2ffd`, full QG
+     green both repos, and observed working live in the 2026-07-13T19:11Z OKX:liquidations re-verification (the cefi
+     `-test-` index was consolidated by Phase-0 and the run's manifest read succeeded without the stale-fallback
+     warning).
+  5. The TRADFI (`baseline_shards: 6`) / SPORTS (`baseline_shards: 1`) stall-state numbers flagged in item 4 are the
+     documented quiet-bucket behavior (a bucket that never advances past its baseline never alerts) — with PROD
+     confirmed healthy, there is nothing further to chase there.
+
+  Status flipped to `resolved`. Remaining related-but-separate work lives on its own docs: the DEFI scheduler SIGKILL
+  (`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`, still open) and the consolidator prune-race fix
+  (landed as `unified-trading-library@97212d3b` by its own workstream).

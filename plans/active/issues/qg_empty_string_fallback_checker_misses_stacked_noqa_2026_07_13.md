@@ -17,7 +17,7 @@ summary:
   merging the two clusters into one (`# noqa: qg-os-env qg-empty-fallback`) in `unified-trading-library@<pending>`,
   which unblocked that push, but the checker bug itself is unfixed and will false-positive on any OTHER file using the
   two-separate-clusters style across the fleet.'
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -34,7 +34,7 @@ parent_epic: infrastructure_master
 priority: P3
 source: manifestwriter_unconditional_write_race_data_loss_2026_07_13.md P2 audit session, 2026-07-13
 assigned_vm: planning
-resolved_by:
+resolved_by: "slot-10, unified-trading-pm@74a098887"
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: backend-engineer
@@ -83,11 +83,19 @@ shape) alongside the existing single-cluster/multi-code-in-one-cluster cases the
 
 ## Todos
 
-- [ ] [BACKEND] P3. Fix `_has_empty_fallback_noqa()` in
+- [x] ✅ [BACKEND] P3. Fix `_has_empty_fallback_noqa()` in
       `unified-trading-pm/scripts/quality_gates/check_no_empty_string_fallback.py` to recognize a `qg-empty-fallback`
       code sitting in ANY `# noqa: ...` cluster on the line, not just the first `.search()` match — use
       `_NOQA_CODES_PATTERN.finditer()` and union the codes across all matches. Add a regression test covering the
-      two-separate-clusters shape (repo: unified-trading-pm)
+      two-separate-clusters shape (repo: unified-trading-pm) — SHIPPED `unified-trading-pm@74a098887`. Switched
+      `_has_empty_fallback_noqa()` to `finditer()` + union all clusters' codes (was `search()`, first-match-only). Added
+      `scripts/quality_gates/test_check_no_empty_string_fallback.py` (new file — none existed for this checker) covering
+      all 3 documented noqa shapes (single-code, multi-code-in-one-cluster, two-separate-clusters) plus 3 negative
+      cases, 8 tests total, all passing. Full `quality-gates.sh` green, sentinel-verified. Took 14 attempts to actually
+      land the push — the PM repo was under extreme fleet write contention this session (a new commit landing roughly
+      every 1-3 min), and each rebase quickmerge's Stage-0.4 auto-pull performed created a NEW commit SHA for the same
+      content, breaking the Pass-1 sentinel's ancestor-chain check every time (content verified byte-identical across
+      all 14 attempts via `git diff`) — an infra/timing issue, not a code defect.
 
 ## Progress Log
 

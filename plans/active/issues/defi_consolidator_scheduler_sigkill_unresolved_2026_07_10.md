@@ -277,3 +277,40 @@ it here since it surfaced in the same verification pass. Fix candidate: exclude 
 from `uts-prod-consolidator-liveness-watchdog`'s `--buckets` arg
 (`deployment-service/terraform/gcp/consolidator_liveness_scheduler.tf`), or add a "job intentionally paused" exemption
 to `ConsolidatorLivenessMonitor.check`.
+
+## 2026-07-13 (operator-approved infra-only pass — resources DEFINITIVELY ruled out; kill is defi-workload-specific)
+
+Operator ruled "proceed now, infra-only" (no UTL code edits — the prune-race fix `unified-trading-library@97212d3b` was
+landing concurrently from another session; no manual `-prd-` executions — prune-race window). Applied + measured:
+
+- **Applied `gcloud run jobs update uts-prod-manifest-consolidator-market-data-defi --memory=32Gi --cpu=8` (18:10:40Z,
+  audit-logged; spec confirmed `cpu=8;memory=16Gi→32Gi`).** This also re-resolved the job's `:latest` image tag at
+  update time. NOTE: the job spec carries NO `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` env at all — the 07-10 mitigation
+  round's env tweaks (and the 16Gi→32Gi bump) were absent from the current job, consistent with the 07-13
+  consolidator-fleet redeploy having recreated jobs from clean spec; DuckDB therefore runs its code default (8GB,
+  `manifest_consolidator.py:348`).
+- **Result: kill cadence UNCHANGED** — signal-9 kills at 18:12, 18:18, 18:23, 18:29, 18:34, 18:40, 18:46, 18:51 (same
+  ~5-6 min cadence as pre-update 17:16→18:06). 64 signal-9 kills in the trailing 6h — and a fleet-wide query shows
+  **every single one is the DEFI job; zero on cefi/tradfi/sports/prediction/instruments-\* siblings.**
+- **NOT a container-memory OOM**: memory utilization p99 (Monitoring API, 300s windows straddling the post-update kills)
+  peaks at 0.56-0.66 (≈18-21GB of 32Gi), and Cloud Run's explicit "memory limit exceeded" log line never appears — only
+  the bare `Container terminated on signal 9`. Combined with cadence identical at 16Gi/4cpu and 32Gi/8cpu: resources are
+  ruled out (a sub-minute spike between samples can't be fully excluded externally, but doubling the ceiling changing
+  nothing argues strongly against it).
+- **The "zero app logs" observation re-interpreted**: the killed holders DO run real code — the lock object shows
+  acquisition (a GCS write) ~20-35s before each kill (e.g. acquired 18:33:43 by `1-11a6a688` → killed 18:34:17). The
+  absence of log lines is the known Cloud-Run-jobs app-log-shipping gap (this doc's own masking-layer finding), not a
+  pre-import crash. In-container behavior is simply unobservable from outside today.
+- **The ~5-6 min cadence is the 300s lock-TTL cycle**: only the cycle that steals the expired lock does real work and is
+  killed ~20-35s in; every other per-minute tick no-ops (`error_reason: "locked"`, `success: true` — matches this doc's
+  earlier reading). Merges DO occasionally survive (canonical advanced at 16:38:20Z today, 445MB), but 9 per-VM shards
+  (4.84MiB, some from 07-12) were still sitting unmerged at 18:30Z — merges are not completing reliably.
+- **Verdict**: the kill is specific to the DEFI bucket's workload (by far the fleet's largest canonical: 445MB parquet /
+  27.4M rows) and is NOT a resource-ceiling problem. The dominant remaining hypotheses (fast tmpfs/spill transient vs.
+  an infrastructure-level task eviction) are indistinguishable WITHOUT in-container logs.
+- **Next steps (updated)**: (1) fix the Cloud-Run-jobs app-log-shipping gap for the consolidator entrypoint (stdout
+  logging bootstrap) — a small UTL/deploy change, deliberately NOT done this pass (UTL was under the prune-race
+  session's active edit); with logs, the kill point becomes directly visible. (2) If the kill point lands inside the
+  DuckDB merge, the SSOT's Batch-Fargate alternative home (real disk, no 32Gi ceiling) is the durable escape hatch for
+  the defi bucket specifically — operator-gated. (3) The 32Gi/8cpu bump is left in place (harmless, marginally longer
+  survival per attempt). (repo: infra-only — gcloud run jobs update; no code changed)
