@@ -52,6 +52,9 @@ resolved_by:
   "determination 2026-07-13 (this doc) — image verified non-surface via live GCP reads + workspace grep; no code change
   and no rebuild required"
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # agent-orchestrator AR image is a non-surface — determination + evidence
