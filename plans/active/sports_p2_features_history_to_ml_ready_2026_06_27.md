@@ -117,6 +117,31 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 9 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, ~37% done, no new action)
+
+Fast re-verify only (not a repeat investigation) via non-snap gcloud (`ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: all **10** `fss-backfill-vm-{1..10}` still
+  `RUNNING`, same `creationTimestamp` (2026-07-13T02:18–02:25 -07:00) as the relaunch slot-11 performed — no death, no
+  new preemption since.
+- Features bucket unique-date count: **1,560** (up from 1,557/1,556/1,555/1,554 at the last several checks) — small but
+  real forward movement, consistent cadence.
+- Tailed `run.log` for `vm-1` and `vm-7`: both wall-clock-fresh (`2026-07-13 09:50:5x`, matching `date -u` = `09:51:06`)
+  with genuine per-date progress — `vm-1` finishing date 129/421 (2015-05-09), `vm-7` actively SKIP-confirming entities
+  for 2022-06-05. Live compute, not a hang.
+
+Gate ("compute features 2015→present") remains structurally unmet (~37% of ~4,210-day span) — genuine multi-day
+operation, now confirmed healthy across many checks today and yesterday. No new finding, nothing for `data_engineering`
+craft to act on beyond monitoring (fleet is fine, no relaunch needed). Checkbox NOT flipped. Not filing a new BLK.
+`/skip-current-task` taken so this slot moves to other dispatchable work instead of re-verifying an
+already-confirmed-healthy multi-day compute again.
+
+**Handoff unchanged**: watch
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` climb toward ~4,210; once
+all 10 VMs report `EXIT_STATUS=0` (or the count approaches full span), re-run `check_pipeline_completeness.py` (Todo 2)
+then reassess Todo 1 + Todo 3.
+
 ### 2026-07-13 — slot 7 (Todo 3 dispatch — partial manifest-cleanliness check, real finding, self-heals, no fix needed)
 
 **Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion); ran a
