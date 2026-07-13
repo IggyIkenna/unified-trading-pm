@@ -3175,53 +3175,53 @@ todos below lands or CF-8's schema change ships.
       `rebuild_sports_manifest_v9._write_captured_rows` helper.
 
       **Gotcha #1 — incremental-vs-force consolidator inconsistency**: the first plain incremental `manifest_consolidator`
-                              cycle merged + pruned the new shard but the captured rows did NOT survive (`rows_out` stayed at the exact
-                              pre-write count; a direct re-read showed the sample cell still `empty_confirmed` with its OLD `written_at`).
-                              Root-cause isolated via a controlled single-row test later in this touch: when a captured row's dedup key
-                              COLLIDES with a pre-existing `empty_confirmed` row (the common case — the enumerator seeds a placeholder for
-                              every league up-front), the plain incremental anti-join cycle does not reliably apply the captured-outranks-
-                              recency tie-break that the full-rebuild path has (`unified_trading_library/manifest_consolidator.py`); a
-                              brand-new dedup key (no pre-existing row to contest) merges fine either way. Recovered for the first 1,772-cell
-                              batch by re-writing the shard and force-consolidating: confirmed `RUNNING=0` via
-                              `gcloud run jobs executions list --job=uts-prod-manifest-consolidator-instruments-sports`, paused
-                              `uts-prod-manifest-consolidator-instruments-sports-cron` (Cloud Scheduler, `*/1 * * * *`), waited out the
-                              consolidator's documented 300s lock TTL from the cron's last (pre-pause) execution, ran
-                              `python -m unified_trading_library.manifest_consolidator --bucket instruments-store-sports-prd-central-element-323112 --force`
-                              (`shards=2 rows_in=4,869,738 rows_out=4,863,840 dedup_dropped=5,898 success=True`), then resumed the cron.
-                              Verified via `cf_manifest_audit_2026_06_01.py`: legacy-only cells dropped **1,926 → 154**; cross-checked directly
-                              that **0 of the 1,772 target cells remained legacy-only**. Evidence: `market-tick-data-service@f3ab7655`.
+                                      cycle merged + pruned the new shard but the captured rows did NOT survive (`rows_out` stayed at the exact
+                                      pre-write count; a direct re-read showed the sample cell still `empty_confirmed` with its OLD `written_at`).
+                                      Root-cause isolated via a controlled single-row test later in this touch: when a captured row's dedup key
+                                      COLLIDES with a pre-existing `empty_confirmed` row (the common case — the enumerator seeds a placeholder for
+                                      every league up-front), the plain incremental anti-join cycle does not reliably apply the captured-outranks-
+                                      recency tie-break that the full-rebuild path has (`unified_trading_library/manifest_consolidator.py`); a
+                                      brand-new dedup key (no pre-existing row to contest) merges fine either way. Recovered for the first 1,772-cell
+                                      batch by re-writing the shard and force-consolidating: confirmed `RUNNING=0` via
+                                      `gcloud run jobs executions list --job=uts-prod-manifest-consolidator-instruments-sports`, paused
+                                      `uts-prod-manifest-consolidator-instruments-sports-cron` (Cloud Scheduler, `*/1 * * * *`), waited out the
+                                      consolidator's documented 300s lock TTL from the cron's last (pre-pause) execution, ran
+                                      `python -m unified_trading_library.manifest_consolidator --bucket instruments-store-sports-prd-central-element-323112 --force`
+                                      (`shards=2 rows_in=4,869,738 rows_out=4,863,840 dedup_dropped=5,898 success=True`), then resumed the cron.
+                                      Verified via `cf_manifest_audit_2026_06_01.py`: legacy-only cells dropped **1,926 → 154**; cross-checked directly
+                                      that **0 of the 1,772 target cells remained legacy-only**. Evidence: `market-tick-data-service@f3ab7655`.
 
-                              **Gotcha #2 — a second, self-inflicted bug found + fixed before closing this todo**: the analysis script used to
-                              build the 1,772-cell target list did `cap_legacy.drop_duplicates(subset=["date","venue","data_type"])` BEFORE
-                              taking the per-cell `instrument_count`, i.e. it kept an ARBITRARY one of potentially several per-league captured
-                              rows sharing the same coarse cell key instead of the max — so a cell with e.g. one real
-                              `(league=RFPL, instrument_count=3)` row and several `(instrument_count=0)` rows from other leagues could be
-                              mis-scored as "phantom" if the 0-count row happened to sort first. Re-derived the 74-cell residual properly
-                              (groupby-max instead of first-match) and found **14 of the 74 were mis-classified this way** — genuinely real,
-                              not phantom (3 XG cells + 11 FIXTURE_EVENTS/FIXTURE_STATS cells, all 2021/2025 dates). Migrated these 14 for real
-                              (11 new objects copied — most were already E4-copied — + 39 legacy captured rows re-emitted), this time pausing
-                              the cron BEFORE writing the shard and force-consolidating immediately after (no window for a live incremental
-                              cycle to race the write) — the correct ordering learned from Gotcha #1. Verified: all 14 now show captured in
-                              canonical; legacy-only dropped **154 → 140**.
+                                      **Gotcha #2 — a second, self-inflicted bug found + fixed before closing this todo**: the analysis script used to
+                                      build the 1,772-cell target list did `cap_legacy.drop_duplicates(subset=["date","venue","data_type"])` BEFORE
+                                      taking the per-cell `instrument_count`, i.e. it kept an ARBITRARY one of potentially several per-league captured
+                                      rows sharing the same coarse cell key instead of the max — so a cell with e.g. one real
+                                      `(league=RFPL, instrument_count=3)` row and several `(instrument_count=0)` rows from other leagues could be
+                                      mis-scored as "phantom" if the 0-count row happened to sort first. Re-derived the 74-cell residual properly
+                                      (groupby-max instead of first-match) and found **14 of the 74 were mis-classified this way** — genuinely real,
+                                      not phantom (3 XG cells + 11 FIXTURE_EVENTS/FIXTURE_STATS cells, all 2021/2025 dates). Migrated these 14 for real
+                                      (11 new objects copied — most were already E4-copied — + 39 legacy captured rows re-emitted), this time pausing
+                                      the cron BEFORE writing the shard and force-consolidating immediately after (no window for a live incremental
+                                      cycle to race the write) — the correct ordering learned from Gotcha #1. Verified: all 14 now show captured in
+                                      canonical; legacy-only dropped **154 → 140**.
 
-                              **REMAINING 60-cell residual (44 INJURIES + 16 WEATHER) is a DIFFERENT, genuine anomaly — NOT resolved by either
-                              gotcha fix, flagged as its own new todo below**: even after the groupby-max correction, these 60 cells' legacy
-                              captured row(s) genuinely read `instrument_count=0` — BUT GCS-verified (3 samples: XG max-corrected away, so
-                              re-sampled `INJURIES`/`WEATHER` specifically) that at least one of them
-                              (`(2021-08-26, INJURIES)`, legacy row `capture_status=captured, instrument_count=0.0,
-                              error_reason=reconciled_from_existing_per_league_parquet`) has a REAL 14-row backing parquet in BOTH legacy and
-                              canonical (byte-identical, already copied by the E4 fleet). This is NOT the drop_duplicates artifact (max is
-                              genuinely 0 for this key) and NOT the MTDS-140 pattern (GCS-confirmed empty) — it is the manifest's own
-                              `instrument_count` field disagreeing with the real row count in the parquet it's supposed to describe. Filed as
-                              its own todo (see below) rather than silently accepted, since 1/1 sampled cells this touch contradicts a blanket
-                              phantom disposition.
+                                      **REMAINING 60-cell residual (44 INJURIES + 16 WEATHER) is a DIFFERENT, genuine anomaly — NOT resolved by either
+                                      gotcha fix, flagged as its own new todo below**: even after the groupby-max correction, these 60 cells' legacy
+                                      captured row(s) genuinely read `instrument_count=0` — BUT GCS-verified (3 samples: XG max-corrected away, so
+                                      re-sampled `INJURIES`/`WEATHER` specifically) that at least one of them
+                                      (`(2021-08-26, INJURIES)`, legacy row `capture_status=captured, instrument_count=0.0,
+                                      error_reason=reconciled_from_existing_per_league_parquet`) has a REAL 14-row backing parquet in BOTH legacy and
+                                      canonical (byte-identical, already copied by the E4 fleet). This is NOT the drop_duplicates artifact (max is
+                                      genuinely 0 for this key) and NOT the MTDS-140 pattern (GCS-confirmed empty) — it is the manifest's own
+                                      `instrument_count` field disagreeing with the real row count in the parquet it's supposed to describe. Filed as
+                                      its own todo (see below) rather than silently accepted, since 1/1 sampled cells this touch contradicts a blanket
+                                      phantom disposition.
 
-                              **FINAL for this todo**: the real, uncharacterized data-loss gap this todo existed to close (originally ~1,730,
-                              finally verified at **1,786 cells** — 1,772 + 14 corrected) is CLOSED — 0 remain legacy-only. 140 cells remain
-                              RED on L6-legacy-only: 80 FIXTURES (separate class, code fix shipped, needs its own live rebuild pass — not this
-                              todo) + 60 genuinely-anomalous `instrument_count=0` cells (new todo below, NOT accepted as phantom). Evidence:
-                              `market-tick-data-service@f3ab7655` (initial 1,772-cell migration + both scripts); the 14-cell correction ran
-                              from the same two scripts, no new commit needed (scripts already handle an arbitrary `--cells-csv`).
+                                      **FINAL for this todo**: the real, uncharacterized data-loss gap this todo existed to close (originally ~1,730,
+                                      finally verified at **1,786 cells** — 1,772 + 14 corrected) is CLOSED — 0 remain legacy-only. 140 cells remain
+                                      RED on L6-legacy-only: 80 FIXTURES (separate class, code fix shipped, needs its own live rebuild pass — not this
+                                      todo) + 60 genuinely-anomalous `instrument_count=0` cells (new todo below, NOT accepted as phantom). Evidence:
+                                      `market-tick-data-service@f3ab7655` (initial 1,772-cell migration + both scripts); the 14-cell correction ran
+                                      from the same two scripts, no new commit needed (scripts already handle an arbitrary `--cells-csv`).
 
 - [x] ✅ [DATA] P2. **IS 60-cell `instrument_count=0`-but-real-data anomaly** (repo: instruments-service +
       market-tick-data-service, discovered 2026-07-13 during the L6-legacy-only targeted re-migration above) —
@@ -3845,3 +3845,63 @@ for whoever else does).
 
 Checkbox NOT flipped (E8 verdict still NOT-GREEN — this touch found a NEW residual gap, doesn't close one). This
 plan-doc edit + the new issue doc ship via the `docs(plans):` carve-out.
+
+## CF-8 root-cause continuation — slot 3, 2026-07-13 (dispatched to `sports_manifest_canonicalisation-004`, the live-backfill re-attempt todo)
+
+**Did NOT re-attempt the live backfill** — this doc's own line ~3790-3801 explicitly forbids re-running it until
+`sports_cf8_available_at_backfill_regression_2026_07_13.md`'s P0 root-cause todo is resolved. Worked that P0 instead via
+a synthetic (non-production) repro, in parallel with slot 11 who reached the same `_records_to_dataframe()` root cause
+concurrently and shipped `unified-trading-library@f5f15e3a` first — rebased onto it rather than duplicating.
+
+While tracing the same write path, found a SECOND, separate bug: `record_captured()` / `record_captured_from_counts()`
+validate an `available_at`-bearing input but never persist it onto the `AvailabilityRecord` — independent of the
+serializer bug `f5f15e3a` fixes, and affecting every asset_group that calls `record_captured()` (not sports-specific).
+Fixed in `unified-trading-library@9c9cdc50`. Filed as its OWN cross-cutting issue doc (kept out of this sports-scoped
+plan): `plans/active/issues/manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md`.
+
+**CF-8 status unchanged**: still RED on both surfaces (no production write attempted this touch — the live backfill
+re-attempt (todo 2 in the regression issue doc) still needs an operator-coordinated maintenance window per that doc's
+Finding 1, independent of which agent runs it). Full evidence + both fixes:
+`sports_cf8_available_at_backfill_regression_2026_07_13.md`.
+
+Checkbox NOT flipped (CF-8 backfill itself not re-run this touch). This plan-doc edit + the two issue-doc edits ship via
+the `docs(plans):` carve-out.
+
+## CF-8 scoping + hardening touch — slot 3, 2026-07-14 (laptop, dispatched per the operator's original CF-8-backfill ask; response to a fresh session, not a re-dispatch of `-004`)
+
+Read this plan + `sports_cf8_available_at_backfill_regression_2026_07_13.md` in full before starting, per the operator's
+own instructions. Found via `git log --all` that root-causing was already done by two concurrent agents (slot 11's
+`unified-trading-library@f5f15e3a`; slot 3/planning's `@9c9cdc50`, documented in this doc's own preceding touch) — did
+not duplicate. Independently built a synthetic DuckDB repro of the consolidator's merge SQL against REAL production
+schemas (current canon, the pre-backfill snapshot, a live per-VM shard, `_legacy_seed.parquet` — single already-planned
+index/shard reads, no new whole-corpus walk) and confirmed the column-order/schema-union theory does NOT explain the
+regression, corroborating slot 11's conclusion via an independent method.
+
+Given the live backfill re-attempt is explicitly gated on an operator-coordinated maintenance window (per the regression
+issue doc's Finding 1, re-confirmed by slot 3/planning's own touch minutes earlier) rather than on the now-fixed code,
+did NOT attempt the production re-run — avoiding a collision with whichever agent the operator eventually coordinates
+that window with. Instead shipped a genuine, non-duplicative hardening fix: a general column-fill-regression guardrail
+(`_check_column_fill_regression()` / `MANIFEST_COLUMN_FILL_REGRESSION`, mirroring the existing row-count regression
+guard) in `unified_trading_library/manifest_consolidator.py`, so ANY future full-rebuild that silently nulls a
+previously-populated column pages loudly instead of succeeding silently — the "defensive check" the regression issue
+doc's own Recommended-next-steps item 4 asked for. 4 new unit tests, full `quality-gates.sh` green.
+`unified-trading-library@2e132bb2`.
+
+Re-ran the full `cf_manifest_audit_2026_06_01.py` on both live surfaces for an honest, current verdict:
+
+| Surface                              | Verdict                                                          | Notes                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MDPS (`market-data-tick-sports-prd`) | `RED — ['CF-8', 'L6-legacy-only']`                               | Unchanged. `available_at` column still absent (0%). 140 legacy-only cells (accepted phantom-capture, unchanged).                                                                                                                                                                                                                                                                                        |
+| IS (`instruments-store-sports-prd`)  | `RED — ['CF-2-paths', 'CF-3', 'CF-4', 'CF-8', 'L6-legacy-only']` | Unchanged RED-check set from the 26th/27th touches. `available_at` non-null=3,492,700/5,506,821 (63.4%, up slightly from the 62.9% restore baseline via ordinary incremental writes — NOT a re-attempt). CF-2-paths/CF-3/CF-4/L6-legacy-only are the same pre-existing, previously-triaged residuals (non-blocking false-negative / operator-accepted legacy rows / 28 genuinely-empty INJURIES cells). |
+
+Confirmed both sports consolidator crons are `ENABLED` (routine steady-state; no lock file, no orphaned per-VM shard —
+nothing mid-flight right now).
+
+**Honest verdict: neither surface is GREEN.** CF-8 is the primary blocker on both — the code-level cause is now fixed
+(twice, independently, both verified with reverted-and-retested unit tests), but the actual full-corpus backfill that
+would raise the live fill rate to 100% has deliberately not been re-run by any agent yet, pending the operator
+maintenance-window coordination Finding 1 calls for. Sports is therefore **not yet ready for an E8 legacy-bucket
+-deletion ask** on either surface — that stays gated on a real, successful backfill re-attempt (which itself stays a
+separate, explicitly operator-gated step from any bucket deletion). Checkbox NOT flipped — this touch closes no RED
+check by itself. This plan-doc edit + the issue-doc edit ship via the `docs(plans):` carve-out; the code fix ships via
+`quickmerge.sh --agent`.

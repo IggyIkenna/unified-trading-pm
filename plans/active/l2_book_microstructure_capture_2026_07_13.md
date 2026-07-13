@@ -97,7 +97,7 @@ sequential: true
       extend it — filed as `issues/l2_book_depth10_missing_l5_prerequisite_venues_2026_07_13.md` (their own
       build-from-scratch scope, bigger than "extend", not silently rolled into this todo). Todos 3-5 below can proceed
       for the 5 done venues; the 4-venue gap is tracked separately and does not block them.
-- [ ] [SCRIPT] P2. **RE-CREATE** (not extend) `market-tick-data-service/.../derived/book_microstructure_compute.py`
+- [x] ✅ [SCRIPT] P2. **RE-CREATE** (not extend) `market-tick-data-service/.../derived/book_microstructure_compute.py`
       (`compute_book_microstructure`) to populate `queue_position_bid`/`queue_position_ask`/`book_depth_levels` from the
       deeper book input when present, keeping the existing L5-only honest-absence path unchanged for any venue still
       capped at L5. Repo: market-tick-data-service. **Premise correction (2026-07-13,
@@ -108,7 +108,22 @@ sequential: true
       `L5BookInput`, always honest-absent on deeper fields) — so this is new-construction on a deleted foundation, not a
       small addition to an existing file. Whoever picks this up: read the deleted file's last state via
       `git show a4fb3d13^:market_tick_data_service/market_interface/derived/book_microstructure_compute.py` for the
-      canonical-shape/honest-absence pattern to preserve, then build fresh against the deeper-book input from todo 2.
+      canonical-shape/honest-absence pattern to preserve, then build fresh against the deeper-book input from todo 2. —
+      **DONE, slot-13, `market-tick-data-service@019276470203`.** Recreated the module against a single generalized
+      `BookInput` dataclass (bids/asks of any depth, not fixed to 5) rather than two parallel input types: the
+      always-derivable fields (spread/relative_spread/imbalance/microprice) compute over whatever depth is present,
+      identical to the pre-deletion L5 logic; `queue_position_bid`/`queue_position_ask` (resting size at the best
+      bid/ask — matches `CanonicalBookMicrostructure`'s "aggregate resting size ahead" field definition) and
+      `depth_levels_bid`/`depth_levels_ask` (full ladder as `CanonicalDepthLevel` rows, `order_count` honest-absent —
+      this is an aggregated-depth capture, not order-by-order full-L2) populate ONLY when `captured_depth > 5`, i.e. a
+      genuine capture from the todo-2 deeper-book connectors — an L5-only book takes the exact same honest-absence path
+      as the deleted module. Wired into `derived/__init__.py` alongside the existing dividend_yield/rebase_rate exports.
+      10 new unit tests (always-derivable fields, L5-depth honest absence at both <5 and exactly-5 levels, deeper-book
+      population including one-sided deeper books, batch==live determinism) — all green, plus the existing 25 `derived/`
+      tests unaffected. Full `quality-gates.sh` green (`ALL QUALITY GATES PASSED`, sentinel-verified at the shipped
+      SHA). Shipped via `quickmerge --agent --files` after two mid-flight rebases onto concurrent peer pushes (this is a
+      hot file under sustained multi-slot traffic) — each rebase re-verified via a fresh full QG run before the final
+      push, never skipped.
 - [ ] [SCRIPT] P2. Flip `queue_position` + `depth_of_book_10` to `live_capable=True` (and `batch_capable=True` if a
       batch/replay path is also built) in `data_type_capability.py`, scoped ONLY to the venues that actually ship
       deeper-book data — do not blanket-flip venues still capped at L5. Repo: unified-api-contracts.

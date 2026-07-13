@@ -193,9 +193,34 @@ consolidation).
       CF-8 backfill on production data (todo 2 below) to confirm the fix holds at the real 5.5M-row scale — the fix is
       proven correct at the code/unit-test level but the production canonical is still at the restored 62.9% baseline
       pending that re-attempt.
+  - **ADDENDUM, slot 3, 2026-07-13** (dispatched to `sports_manifest_canonicalisation-004`, the live-backfill re-attempt
+    — did NOT re-attempt it per this doc's own "do not re-attempt" instruction; worked this P0 instead, unaware slot 11
+    had landed `f5f15e3a` concurrently until the pull surfaced it): independently reached the same
+    `_records_to_dataframe()` root cause via my own synthetic repro, then found `f5f15e3a` already on
+    `live-defi-rollout` and rebased onto it rather than duplicating. While tracing the same write path, found a SECOND,
+    separate, and much broader bug: `record_captured()` / `record_captured_from_counts()` validate an
+    `available_at`-bearing input but never persist it onto the `AvailabilityRecord` at all (independent of the
+    serializer bug `f5f15e3a` fixes) — this is the write path actual production adapters use for real captured data,
+    across every asset_group, not just sports. Fixed in `unified-trading-library@9c9cdc50` + filed as its own
+    cross-cutting issue doc (this one stays sports-scoped):
+    `manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md`. Still NOT re-attempting the live
+    backfill (todo 2) myself — out of scope for what I was dispatched, and per Finding 1 it needs operator-coordinated
+    maintenance window regardless of which agent runs it.
 - [ ] [INFRA] P1. Once root-caused and fixed, re-attempt the full-corpus CF-8 `available_at` backfill on both sports
       surfaces (IS still at 62.9%, MDPS still at ~0%) — coordinate the maintenance window with the operator first to
-      avoid a repeat of the cron-collision (Finding 1). (repo: market-tick-data-service)
+      avoid a repeat of the cron-collision (Finding 1). (repo: market-tick-data-service) — **P0 root cause is now FIXED
+      (`f5f15e3a` + `9c9cdc50`, both merged) — the code-level blocker is CLEARED.** The remaining blocker is procedural,
+      not technical: per Finding 1, this needs an operator-coordinated maintenance window (regardless of which agent
+      runs it) so a routine cron-resume doesn't collide mid-backfill again. **STILL NOT re-attempted as of 2026-07-14
+      (slot 3, laptop)** — confirmed via a fresh live audit this touch: IS `available_at` non-null=3,492,700/5,506,821
+      (63.4% — a small organic drift from the 62.9% restore baseline via ordinary incremental writes, NOT a re-attempt;
+      MDPS column still absent). Both sports consolidator crons are back to `ENABLED` (routine steady-state, confirmed
+      live) — safe for normal operation per Finding 1's own conclusion, but a `--force` full-rebuild re-attempt should
+      still wait for the operator-coordinated window before anyone runs it. Additionally shipped a general
+      defense-in-depth guardrail this touch (independent of the specific bug — catches ANY future recurrence of this
+      class of failure): `unified-trading-library@2e132bb2` adds `_check_column_fill_regression()` /
+      `MANIFEST_COLUMN_FILL_REGRESSION`, mirroring the existing row-count regression guard — any future full-rebuild
+      that silently nulls a previously-populated column now pages loudly instead of succeeding silently.
 - [ ] [INFRA] P2. Fix the `write_projected_index`/`SportsProjectionCollector` FetchEvidence-serialization crash so
       `--beta-manifest-out` dry-run previews work again. (repo: market-tick-data-service)
 - [x] ✅ [DATA] P2. Decide disposition for the 12,407 legacy `source='instruments_service'` rows (VENUES/LEAGUES) —
@@ -221,3 +246,43 @@ consolidation).
     `--force` full-rebuild pass on this canonical before Finding 2 is root-caused risks repeating the same silent
     corruption on a different column. **Action: defer this backfill and bundle it into the SAME future rebuild pass that
     resolves Finding 1's root cause** (todo 1/2 above) — do not run it as a separate, earlier operation.
+- [x] ✅ [INFRA] P1. Add a general column-fill-regression guardrail to the DuckDB consolidator merge (the "defensive
+      check" suggested in "Recommended next steps" item 4 above) — so ANY future full-rebuild attempt (this backfill or
+      otherwise) FAILS LOUD via `MANIFEST_COLUMN_FILL_REGRESSION` instead of silently repeating this exact class of
+      corruption. (repo: unified-trading-library) — `unified-trading-library@2e132bb2`, see Progress Log.
+
+## Progress Log
+
+**CF-8 scoping + guardrail touch — 2026-07-14 (slot 3, laptop, dispatched per the operator's original CF-8-backfill
+ask)**: read this doc + the plan in full before starting. Found (via `git log --all`) that root-causing was already IN
+PROGRESS/DONE by two other concurrent agents (slot 11's `f5f15e3a`; slot 3/planning's `9c9cdc50` + their own plan touch
+"CF-8 root-cause continuation") — did NOT duplicate that work. Independently built a synthetic DuckDB repro of the
+consolidator's full-rebuild merge SQL (2-file and 3-file canon+shards scenarios, using REAL production schemas pulled
+via single already-planned index/shard reads — `is_canon_live.parquet`, the pre-backfill snapshot, a live per-VM shard,
+`_legacy_seed.parquet` — no new whole-corpus walk) and confirmed the column-order/schema-union hypothesis this doc's
+Finding 2 flagged as candidate (b) does NOT explain the regression: the merge's explicit `shard_proj` re-projection
+correctly realigns columns by name even across a 3-file merge when the canonical is the superset schema — corroborating
+(via an independent method) slot 11's own conclusion that the consolidator merge itself was innocent and the bug was
+upstream in the writer serializer.
+
+Given the P0 root cause is now fixed but the live backfill re-attempt (todo/P1 above) is explicitly gated on an
+operator-coordinated maintenance window per Finding 1 (confirmed unchanged by slot 3/planning's own touch, timestamped
+minutes before this one) — did NOT attempt the production re-run myself, to avoid a 3-way collision with whichever agent
+the operator eventually coordinates that window with.
+
+Instead shipped a genuine, non-duplicative hardening contribution: `_check_column_fill_regression()` +
+`MANIFEST_COLUMN_FILL_REGRESSION` in `unified_trading_library/manifest_consolidator.py`, mirroring the existing
+`_check_row_count_regression`/`MANIFEST_ROW_COUNT_REGRESSION` pattern — a single-pass per-column non-null-fraction
+comparison (before vs. after a merge cycle) that pages loudly if ANY column's fill rate collapses, closing the
+"defensive check" gap this doc's own Recommended-next-steps item 4 named. 4 new unit tests
+(`tests/unit/test_manifest_consolidator.py`), full `quality-gates.sh` green. `unified-trading-library@2e132bb2`.
+
+Re-ran the full `cf_manifest_audit_2026_06_01.py` on both live sports surfaces (fresh index pull, current as of this
+touch): **MDPS** `RED — ['CF-8', 'L6-legacy-only']` (unchanged — `available_at` column still absent; 140 legacy-only
+cells, previously-accepted phantom-capture). **IS** `RED — ['CF-2-paths', 'CF-3', 'CF-4', 'CF-8', 'L6-legacy-only']`
+(unchanged RED-check set from the 26th/27th touches; `available_at` non-null=3,492,700/5,506,821 = 63.4%, up slightly
+from the 62.9% restore baseline via ordinary incremental writes — NOT a re-attempt of the backfill). Confirmed both
+sports consolidator crons are back to `ENABLED` (routine steady-state; no lock file, no orphaned per-VM shard — nothing
+mid-flight right now). Neither surface is honestly GREEN. Not ready for an E8 legacy-bucket-deletion ask on either
+surface — CF-8 remains the primary blocker on both, now purely procedural (operator-coordinated window) rather than a
+code-correctness blocker.

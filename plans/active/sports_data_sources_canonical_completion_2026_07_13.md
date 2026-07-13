@@ -2388,3 +2388,36 @@ it's new adapter work, not a data-audit residual).
     plan's own `- [ ]` list, per the operator's direct ask) — journaled here per the plan-journaling instruction on that
     dispatch. The remaining follow-ups from the root-cause entry ((2) and (3) above) are still open and unclaimed by
     this fix; if picked up, they belong in a new dispatch/plan, not a retroactive edit to this one.
+
+- 2026-07-13/14 (slot-3, interactive session): **manifest-consolidator lock-orphan-on-SIGKILL bug — deployment completed
+  manually after the dispatched Workflow's Verify phase ended its turn mid-wait.** The 3-phase
+  Investigate→CodeFix→Verify Workflow (`wf_f974b95a-259`) root-caused the silent no-op (a `consolidator.lock` sentinel
+  orphaned by a SIGKILL/OOM on the first post-resume catch-up merge, its 300s TTL making every subsequent cron tick take
+  the early-return lock-skip path — indistinguishable from a healthy skip, "success=True" with zero writes), shipped
+  `unified_trading_library.manifest_consolidator._check_stall_on_lock_skip()` + 2 regression tests
+  (`unified-trading-library@d352fb9e`), and proved the blast radius across 4 other asset_group buckets
+  (cefi/defi/tradfi/prediction — stall-state byte-identical before/after, no regression). **BUT** its Verify phase ended
+  its own final turn with "I'll act on the completion notification" after triggering Cloud Build `3532e316` (an MTDS
+  Dockerfile UTL-digest bump — the sports consolidator's Cloud Run Job image is built via MTDS's shared pipeline) — a
+  workflow agent's turn ending is terminal, nothing "notifies" it further, so the deploy was left genuinely incomplete.
+  Picked up directly in this interactive session: watched the build to `SUCCESS`
+  (`sha256:0b5b4b06a3817ddad4106a15b35c792cccfb525c6b86caa6464e84a5d1f16937`), manually triggered a fresh consolidator
+  execution, and confirmed via `gcloud run jobs executions describe` that it ran with the exact new digest — the fix is
+  live in production. **Lesson for future dispatches**: a Workflow agent phase must never end on "waiting for X
+  notification" as its final message — if a background op (a Cloud Build, a long-running script) needs to outlive the
+  phase, either poll it to completion with a bounded wait before returning, or explicitly hand off "still running, PID N
+  / build ID N, here's how to check" as the ACTUAL final report — an implied future action that will never happen is
+  worse than an honest incomplete-and-explained one. **Recurring discipline gap found + fixed twice in one session**:
+  both sports consolidator Cloud Scheduler jobs (`uts-prod-manifest-consolidator-instruments-sports-cron`,
+  `uts-prod-manifest-consolidator-market-data-sports-cron`) were found PAUSED a SECOND time (`userUpdateTime`
+  `21:50:0[56]` UTC — most likely the Investigate phase's own reproduction work against `instruments-store-sports-test`,
+  pausing the real schedulers for a clean repro and not resuming them), on top of the FIRST pause-without-resume
+  incident logged above. Resumed both again; both confirmed `ENABLED` and cycling normally. **This is now a 2-for-2
+  pattern this session** — any dispatch that pauses one of these schedulers for a protected operation MUST treat
+  resuming it as part of that SAME operation's definition of done, not an afterthought; a future hardening candidate is
+  a wrapper script (`with_consolidator_paused(bucket, fn)`) that guarantees resume-on-exit (including on exception)
+  rather than relying on each agent remembering the second half manually. **Critical secondary finding (data loss) is
+  being handled separately**: the `sports-attempted-failed-residual-closer-round3.parquet` shard (10,059 rows,
+  footystats/soccer_football_info/open_meteo) was pruned during the incident window without its content ever reaching
+  canonical — a dedicated recovery-and-reconcile dispatch is in flight (see the next Progress Log entry once it
+  reports).
