@@ -143,7 +143,19 @@ revert commits mid-flight at time of writing).
       market-tick-data-service, greeks-service, alerting-service, deployment-api, features-service) via a fresh commit +
       `quality-gates.sh` + `quickmerge.sh` each. Commits made locally; QG runs in flight at time of writing (serialized
       through the single-token `qg-host-governor` on this host — expect this to take a while).
-- [ ] [VERIFY] P0. After all 7 revert-quickmerges land, re-run `check-dependency-alignment.py --json` fleet-wide and
-      confirm zero mismatches (aside from the intentional ml-service exception).
+- [x] ✅ [VERIFY] P0. After all 7 revert-quickmerges land, re-run `check-dependency-alignment.py --json` fleet-wide and
+      confirm zero mismatches (aside from the intentional ml-service exception). Verified 2026-07-13 (slot 7):
+      fresh-pulled all 7 repos (unified-trading-library, agent-orchestrator, market-tick-data-service, greeks-service,
+      alerting-service, deployment-api, features-service) to `origin/live-defi-rollout` — each `pyproject.toml` now
+      declares `fastapi>=0.115.0,<0.137.0`, matching canonical byte-for-byte, confirming the revert-quickmerges landed.
+      Ran `.venv/bin/python scripts/manifest/check-dependency-alignment.py --json` fleet-wide:
+      `{"aligned": true, "issues": [], "count": 0, "disk_absent": [], "disk_absent_count": 0}` — zero mismatches. Note:
+      the ml-service-only exception this todo anticipated has since been superseded by a broader, separately-resolved
+      `PER_REPO_EXTERNAL_EXCEPTIONS` set (`unified-trading-pm@d4ad81d40` + `c5d4a72af`, tracked in
+      `dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md`, already CLOSED) covering ml-service +
+      unified-trading-library + alerting-service + greeks-service + market-tick-data-service + deployment-api +
+      agent-orchestrator + unified-trading-api at `<0.138.0` headroom — but since all 7 repos here declare the exact
+      canonical `<0.137.0` (not exercising that headroom), the alignment check passes on direct canonical match, not via
+      the exception path. No contradiction with this todo's intent.
 - [ ] [BACKEND] P1. Resume the original click/pillow/soupsieve batch
       (`system_integration_tests_pip_audit_red_2026_07_13.md`) to completion on the corrected baseline.
