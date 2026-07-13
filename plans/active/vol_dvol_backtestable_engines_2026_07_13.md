@@ -93,12 +93,31 @@ what's missing.
       [`plans/active/issues/uac_qg_red_databento_classifier_filesize_and_cryptography_ghsa_2026_07_13.md`](issues/uac_qg_red_databento_classifier_filesize_and_cryptography_ghsa_2026_07_13.md),
       declared repo-blocker RB-e4b7bd5c, resolved once another slot shipped the cryptography bump). No MTDS handler
       built here — that is the next todo below, separate scope.
-- [ ] [DATA] P1. Build the MTDS handler consuming the existing `DeribitVolatilityIndex` endpoint mapping: capture DVOL
-      OHLC (`/public/get_volatility_index_data`, resolutions incl. `86400`/`3600`, paged via `continuation`) into the
-      canonical schema, `pipeline_mode=batch_deribit`, `source="deribit"`, bucket via `resolve_bucket_name(...)`,
+- [x] ✅ [DATA] P1. Build the MTDS handler consuming the existing `DeribitVolatilityIndex` endpoint mapping: capture
+      DVOL OHLC (`/public/get_volatility_index_data`, resolutions incl. `86400`/`3600`, paged via `continuation`) into
+      the canonical schema, `pipeline_mode=batch_deribit`, `source="deribit"`, bucket via `resolve_bucket_name(...)`,
       `classify_venue_error()` + shard isolation per the established Deribit-adapter pattern in this codebase.
       **Connectivity-test with a SMALL bounded pull only (e.g. trailing 30-90 days) to prove the pipeline** — do **NOT**
-      run the full 2021→now historical pull as part of this todo. Repo: market-tick-data-service.
+      run the full 2021→now historical pull as part of this todo. Repo: market-tick-data-service. — **DONE, slot 4,
+      market-tick-data-service@`77ff475a`** (initial handler shipped at `3511ab3b`, then a real-connectivity-test bug
+      found+fixed at `77ff475a`). Built `DeribitVolatilityIndexHandler` (new `collect-deribit-volatility-index`
+      operation, registered in `cli/main.py`), per-day `BatchPayload` dispatch, `fetch_dvol_day()` doing
+      `continuation`-cursor pagination against `/public/get_volatility_index_data` for BTC/ETH, honest-absence for
+      pre-2021-03-24 (DVOL launch) days, per-currency shard isolation + `classify_venue_error`. 14 unit tests
+      (pagination, CF-11 failure signalling, capture/empty/failed routing). **Runtime-verified against real production
+      Deribit REST + GCS (not just unit tests)**: a real connectivity-test run caught a genuine bug unit-mocks couldn't
+      — the `row_key` dict used `"day"`/`"asset_group"`, but `ManifestWriter`'s real schema uses `"date"` and has no
+      `"asset_group"` column, so every manifest write raised an uncaught `KeyError` that also aborted the OTHER
+      currency's turn in the shard loop (a real shard-isolation gap). Fixed both (corrected row_key shape + wrapped the
+      manifest-write call in its own try/except) and re-verified: a 1-day pull (`2026-07-13`, `--venues DERIBIT`) now
+      shows real captured manifest rows for BOTH currencies —
+      `venue=DERIBIT data_type=volatility_index underlying=BTC/ETH day=2026-07-13 capture_status=captured     instrument_count=23 pipeline_mode=batch_deribit source=deribit`
+      — with real parquet at
+      `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-13/pipeline_mode=batch_deribit/asset_group=cefi/venue=DERIBIT/instrument_type=index/data_type=volatility_index/underlying={BTC,ETH}/dvol.parquet`.
+      **Note for the operator-go todo below**: the shared `availability_index.parquet` (~7.5M rows) is under heavy write
+      contention from the rest of the fleet right now — a genuine manifest flush took ~9 retry attempts / ~9 min
+      wall-clock to land under this session's load. Not a defect in this handler, but worth knowing before scheduling
+      the full 2021→now historical pull (many more shards writing to the same contended index).
 - [ ] [OPERATOR] P1. **BLOCKED-OPERATOR-DECISION**: get an explicit operator go + desired historical depth (full
       2021-03-24→now vs. a shorter window) before pulling the DVOL history the actual backtest will run against. DVOL is
       free/credential-free, but per the parent plan's 2026-06-15 constraint ("backfills wait for explicit go... where
