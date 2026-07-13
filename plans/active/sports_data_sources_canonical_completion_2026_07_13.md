@@ -1208,6 +1208,44 @@ report written in this plan's Progress Log.
   code was changed, no backfill ran, and the blank-bundle provenance + true backfill cadence remain open sub-questions
   for the implementation pass.
 
+- **2026-07-13 (sub-agent, CODE-FIX IMPLEMENTATION dispatch for the P0 todo "api_football TEAMS: root-cause + fix the
+  61-league per-league capture gap" — the forward-going code fix only, per this dispatch's scope).**
+  **instruments-service@0d2ea24f** (pushed to `live-defi-rollout`, direct push per this session's established
+  no-quickmerge convention — dep tree stayed clean via `git pull --ff-only` before/after). **Decision**: the root cause
+  (previous entry) IS the code bug — no hardcoded allowlist file existed; the "allowlist" was the Prediction-tier
+  classification filter applied at the wrong layer. Fix: `sports_reference_core.py::_fetch_teams_and_standings` now
+  loops `_orch.get_expected_leagues_for_source("api_football")` (the same call `hooks.emit_empty_gaps_for_entity`
+  already uses for the STANDINGS honest-absence emission in the same function) instead of
+  `_orch.get_prediction_leagues()`. Since TEAMS + STANDINGS share the single `prediction_league_ids` loop in this
+  function, BOTH entities are widened from 33 → 94 leagues by this one change — matches UAC
+  `SPORTS_ENTITY_LEAGUE_COVERAGE["TEAMS"]`/`["STANDINGS"]` both being `None` ("expected on all fixture dates", i.e. all
+  leagues, confirmed live in `unified_api_contracts/canonical/domain/sports/provider_league_ids.py:772`). No leagues
+  were typed `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` — the investigation found no evidence any of the 61 lack real
+  api_football TEAMS coverage (all carry a valid `api_football_id`; the only untested subset is the 39 cup-type leagues,
+  since none of the 33 already-captured are cups — flagged for a smoke-test before the eventual backfill, not a reason
+  to descope). **Files changed**: `sports_reference_core.py` (the fix + docstring explaining the root cause inline for
+  future readers), `sports_reference.py` (matching comment update), `test_orchestrator_sports_pipeline.py` +
+  `test_orchestrator_boost.py` (patch targets moved from `get_prediction_leagues` to `get_expected_leagues_for_source`
+  to match the new call site — same mocks/assertions, no behavior-under-test change). `quality-gates.sh --no-fix` ran
+  clean (sentinel written, HEAD == sentinel SHA) before commit. **Adjacent fix in the same commit** (findings-triage "in
+  your file → fix in same commit" did not apply since it's a different file, but this was a tree-wide blocker unrelated
+  to sports that would have blocked ANY commit to this shared clone): `scripts/reconcile_lending_indices_phantom.py` had
+  a pre-existing (committed 2026-06-23, untouched since) direct `from google.cloud import storage` import tripping the
+  TID251 ratchet (59 live sites > baseline 58) — diverging from its own documented sister-script precedent
+  (`reconcile_phantom_manifest_rows_all.py` uses the UTL `StorageClient` abstraction). Rewrote it onto
+  `get_storage_client()`/`StorageClient` (`download_bytes`/`upload_from_file_obj`/ `list_blobs`), which also let the
+  tempfile-download dance collapse to a direct `io.BytesIO` read (dropped the now-unused `tempfile`/`os`/`contextlib`
+  imports). Verified this DeFi-domain fix didn't change behavior (same GCS paths, same phantom-classification logic,
+  only the client library swapped) — did not touch its `--apply-flips` logic or classification rules. **Not done in this
+  dispatch (explicitly out of scope — "implement the code fix", not the full backfill)**: the historical backfill for
+  the 61 previously-uncaptured leagues (cadence decision — daily vs. per-season — still open per the investigation's
+  point (5)); the blank-`league_id` bulk-bundle reconciliation/cleanup (point (6), needs a check that no live daemon
+  still bare-writes TEAMS before any backfill ships, to avoid re-creating parallel blank rows); and the VM launch itself
+  (precedent identified: `fill-missing-player-stats-`-style targeted gap-fill, not a full `af-backfill-` re-walk).
+  **This todo's checkbox is intentionally left unchecked** — the code bug is fixed and shipped (new captures going
+  forward will cover all 94 leagues), but the P0 todo's full scope ("fix the 61-league… gap") is not closed until the
+  historical backfill lands; next pass should pick up directly at the VM-launch step using the precedent above.
+
 - **2026-07-13 (slot-3, FINAL RE-VERIFY + CLOSE-OUT REPORT dispatch — whole-asset_group, todo "Whole-asset_group final
   re-verify + close-out report").** Fresh single-parquet read (`.venv/bin/python` + `pandas.read_parquet` direct, NOT
   `read_availability_index()` — that helper's in-process TTL cache + `ManifestConsolidatorStaleError` staleness gate
