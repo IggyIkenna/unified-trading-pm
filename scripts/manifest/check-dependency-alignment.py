@@ -80,6 +80,21 @@ DISK_ABSENT_OK_PREFIXES: tuple[str, ...] = (
 # Re-verify each repo's lock on any future `uv lock --upgrade` in that repo (a resolver bump onto
 # 0.137.x would silently break routing).
 # SSOT: plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md.
+#
+# market-data-processing-service / trading-agent-service / client-reporting-api /
+# unified-trading-api / batch-live-reconciliation-service / ibkr-gateway-infra /
+# system-integration-tests: 3rd occurrence of the same drift class, this time on `cryptography`.
+# Each independently bumped its floor to >=47.0.0,<50.0.0 to clear GHSA-537c-gmf6-5ccf (pip-audit
+# confirms the real fix version is 48.0.1, so the declared floor is looser than the true safe
+# minimum — same "incidental, not guaranteed" caveat as the fastapi entries above). Verified
+# 2026-07-13 via each repo's own uv.lock: actual locked cryptography is 49.0.0 / 49.0.0 / 49.0.0 /
+# 49.0.0 / 49.0.0 / 49.0.0 / 48.0.1 respectively — every one >=48.0.1, genuinely clear of the CVE.
+# Canonical stays at <47.0.0 (NOT bumped fleet-wide) because several repos — including
+# unified-trading-pm itself, execution-service, strategy-service — are still on the vulnerable
+# 46.0.7 floor and have not yet shipped this fix; raising canonical now would just move the red
+# to them instead of clearing it. Re-verify each exception repo's lock on any future
+# `uv lock --upgrade` (a resolver landing below 48.0.1 would silently reopen the CVE).
+# SSOT: plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md.
 PER_REPO_EXTERNAL_EXCEPTIONS: dict[tuple[str, str], str] = {
     ("ml-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
     ("unified-trading-library", "fastapi"): "fastapi>=0.115.0,<0.138.0",
@@ -89,6 +104,13 @@ PER_REPO_EXTERNAL_EXCEPTIONS: dict[tuple[str, str], str] = {
     ("deployment-api", "fastapi"): "fastapi>=0.115.0,<0.138.0",
     ("agent-orchestrator", "fastapi"): "fastapi>=0.115.0,<0.138.0",
     ("features-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
+    ("market-data-processing-service", "cryptography"): "cryptography>=47.0.0,<50.0.0",
+    ("trading-agent-service", "cryptography"): "cryptography>=47.0.0,<50.0.0",
+    ("client-reporting-api", "cryptography"): "cryptography>=47.0.0,<50.0.0",
+    ("unified-trading-api", "cryptography"): "cryptography>=47.0.0,<50.0.0",
+    ("batch-live-reconciliation-service", "cryptography"): "cryptography>=47.0.0,<50.0.0",
+    ("ibkr-gateway-infra", "cryptography"): "cryptography>=47.0.0,<50.0.0",
+    ("system-integration-tests", "cryptography"): "cryptography>=47.0.0,<50.0.0",
 }
 
 JsonDict = dict[str, object]
