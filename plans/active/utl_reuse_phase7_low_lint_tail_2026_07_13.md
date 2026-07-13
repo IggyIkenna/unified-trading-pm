@@ -64,18 +64,28 @@ drift_direction: advance-code
 - [ ] [AGENT] P3. **strategy-service**: noqa-with-reason (or `UnifiedCloudConfig`) the un-annotated `os.environ.get` in
       `recovery_event_helper.py:41,90` and `pnl/engine/mock_data_provider.py:38` (mirror the existing
       `position/engine/mock_data_provider.py` noqa pattern).
-- [ ] [CODE] P2. **execution-service cross-service imports surfaced by the 2026-06-11 imports-in-fn sweep (codex ratchet
-      plan)** — two UNSANCTIONED sites were hiding behind lazy in-function imports (now carrying tracked
-      `# noqa: imports-inside-functions` markers): (1) `execution_service/algo_library/leg_controller_runner.py:222`
-      imports `strategy_service.position.core.leg_snapshot_builder` — `strategy_service.position` is in the UAC
-      `service_contract_map` **forbidden_imports** for execution-service and NOT in forbidden_exceptions (unlike the
-      sanctioned target_universe.catalog site); move `leg_snapshot_builder` to UTL/UAC or add a justified
-      forbidden_exception + deprecation-ledger entry. (2) `execution_service/algo_library/mtds_book_provider.py:93`
-      imports `market_tick_data_service.reader.CanonicalParquetReader` AND execution-service pyproject declares
-      `../market-tick-data-service` as a path dep (pyproject ~L124) — same no-service↔service violation class the
-      MDPS/deployment-api removals fixed 2026-06-11; needs the reader surface promoted to a shared lib (UTL) or the
-      manifest-read path flipped to the UAC contract + GCS. Repos: execution-service + strategy-service +
-      market-tick-data-service + unified-api-contracts.
+- [x] ✅ [CODE] P2. **execution-service cross-service imports surfaced by the 2026-06-11 imports-in-fn sweep (codex
+      ratchet plan)** — DONE. (1) `leg_snapshot_builder` (pure Decimal/UAC-typed math, no service/IO deps) moved to
+      `unified_trading_library.risk.leg_snapshot_builder`, mirroring the `risk/net_delta.py` (F45) precedent — single
+      SSOT for strategy-service + execution-service, no service↔service import: `unified-trading-library@ff387620` (new
+      module + `__init__` export + moved test), `strategy-service@59297fa0` (deleted the old module, updated the
+      `LegControllerAdapter` docstring), `execution-service@cd65e2cd` (top-level
+      `unified_trading_library.build_leg_snapshots` import replaces the lazy cross-service import),
+      `system-integration-tests@a44f224` (e2e test import updated). (2) `mtds_book_provider.py`'s
+      `market_tick_data_service.reader.CanonicalParquetReader` import: the reader class is 641 L of MTDS-domain-specific
+      logic (asset_group/hive-key/DeFi-chain-axis resolution) — promoting it or flipping to a UAC-contract+GCS read was
+      judged too large/risky for this unit, so instead SANCTIONED as a tracked exception (mirroring the existing
+      `target_universe.catalog` precedent): `unified-api-contracts@0bd81fc2` (added `market_tick_data_service` to
+      execution-service's `forbidden_imports` + a `forbidden_exceptions` entry for the specific site) +
+      `unified-trading-pm` deprecation-ledger.yaml entry (id: `execution_service_mtds_reader_dep`) tracking the real
+      promotion as follow-up work. All 4 repos' `quality-gates.sh` confirmed full-green pre-ship; 3 pre-existing
+      (unrelated) repo-reds hit along the way were each verified pre-existing + issue-doc'd + repo-blocker'd, then
+      resolved upstream or by this agent (execution-service codex-violations ceiling breach, UAC's incomplete
+      deployment-service registry migration, SIT's fleet-wide pip-audit CVEs) — see
+      `plans/active/issues/execution_service_codex_compliance_red_2026_07_13.md`,
+      `…/uac_cross_repo_invariant_incomplete_deployment_service_migration_2026_07_13.md`,
+      `…/system_integration_tests_pip_audit_red_2026_07_13.md`. Repos: unified-trading-library, strategy-service,
+      execution-service, unified-api-contracts, system-integration-tests.
 - [ ] [AGENT] P3. **lint ratchet tail (opportunistic, not blocking)**: in MTDS/IS/execution/deployment one-off
       `scripts/` (~70 files), convert `from google.cloud import storage` → `get_storage_client()`, `gs://` →
       `resolve_bucket_name`, per-object `gsutil`/`gcloud` subprocess → UTL `gcs_copy/delete/describe_object`, and fix
