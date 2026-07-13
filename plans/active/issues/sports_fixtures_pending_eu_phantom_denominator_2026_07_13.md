@@ -98,10 +98,19 @@ disk). Impact is honest-coverage % + foundation-gate / P2d final-gate risk.
       (small API budget); evidenced flips only (no blanket flip — would fabricate absence); return keep/remove
       recommendation for the 22 non-registry leagues incl. denominator impact on other data_types (**operator decision,
       not auto-applied**).
-- [ ] [CODE] P1. Structural: season-fixture-calendar gate for FIXTURES in `_enumerate_v2_sports` (mirroring the
+- [x] [CODE] P1. Structural: season-fixture-calendar gate for FIXTURES in `_enumerate_v2_sports` (mirroring the
       footystats/understat gates; alive-day fallback where no calendar evidence exists — never silently shrink the
       denominator) + surface the raw EU pending metric in `run_fixture_completeness_audit_2026_06_25.py` so the depth
-      gate and the raw index metric can never silently diverge again.
+      gate and the raw index metric can never silently diverge again. ✅ — instruments-service@c03a95dd. Gate:
+      `_AfFixtureCalendar` / `_build_af_fixture_calendar` (union of `_audits/fixtures_truthset_*.parquet`, consecutive
+      seasons bridge inter-season gaps; jumps don't) → seeding branch yields `EXPECTED_NO_FIXTURE` (`empty_confirmed`)
+      for calendar-evidenced no-fixture days, unchanged `expected_unattempted` for match days / no-evidence cells.
+      Audit: `_count_raw_pending_fetch` (dedup latest-`written_at` per atom, non-`EXPECTED_` reasons) printed as
+      `SUMMARY: depth X% | raw pending-fetch rows: N`. Evidence: QG green (ALL QUALITY GATES PASSED, 106s, exit 0);
+      runtime-verified on real artifacts — truthset builds 94-league calendar, gate branch exercised both ways, metric
+      reproduces the 38,255 forensics count on the 2026-07-13 index copy; 8 new unit tests. Nightly pickup: Cloud
+      Scheduler `expected-universe-v2-sports-daily` (`30 1 * * *` UTC) → Cloud Run job on `instruments-service:latest` —
+      effective after LDR→main promote rebuilds the image (next run ≥ 2026-07-14 01:30 UTC).
 - [ ] [VERIFY] P1. Post-consolidation verification: in-truthset ≤06-28 no-fixture pending == 0; the 9 cells resolved;
       captured count did not decrease; depth audit still green; report the honest-coverage delta.
 
