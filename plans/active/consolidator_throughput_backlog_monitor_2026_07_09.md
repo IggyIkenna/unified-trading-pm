@@ -368,6 +368,12 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- 2026-07-13 — **UI polish: content-sized consolidator metric columns.** The card's metric row was a fixed
+  `grid-cols-5`, forcing every metric to a rigid 1/5 share → the widest one (`index age`, e.g. `41s / 24.0h`) truncated
+  to `24.…` while `rows`/`fed by` wasted their column. Replaced with a content-sized `flex flex-wrap` row (`Stat` + the
+  index-age/backlog cells swap `min-w-0`→`shrink-0`) so each metric takes exactly the width it needs and the row wraps
+  as a whole rather than ellipsizing mid-value. Verified in mock-mode (full text renders, 0 console errors) + smoke
+  specs green. — `deployment-ui@e40f8015`.
 - 2026-07-13 — **LOCAL VERIFY of the live stack → found + fixed 2 real bugs in the shipped #4 endpoint.** Ran
   deployment-api on :8010 (live GCS) + deployment-ui on :5196 (proxy). The Consolidators tab renders the real estate
   correctly (25 cards, pipeline groups, per-card run-summaries, gas-fees "not reporting", 0 console errors — screenshot
