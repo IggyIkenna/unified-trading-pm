@@ -17,7 +17,7 @@ summary: >
   band only — this window was never covered. The deletion script correctly refuses to delete any of these 4,536
   DeFi-bucket originals (parity-conflict = never delete), so they remain safely in place pending this decision; nothing
   has been lost.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi, defi]
 stage: [data]
@@ -44,7 +44,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-13
 locked_by:
-resolved_by:
+resolved_by: operator (BLK-15137c02, Option A confirmed) + slot 5, 2026-07-13, executed same-session
 ---
 
 # ASTER CeFi-bucket "duplicates" in the low_dup band are the same narrower-schema issue, unresolved
@@ -108,8 +108,15 @@ default without confirmation, since the prior ruling's own text scoped it narrow
 
 ## Todos
 
-- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION** — confirm Option A (or B) applies to the `low_dup` band (2025-06-16 ->
-      2026-06-05) the same way it was ruled for `high_dup`. If A: re-migrate with `--force` scoped to this date range
-      (repo: market-tick-data-service, script already supports it), re-verify parity, then re-run the deletion script to
-      sweep the remaining originals. If B: mark these 4,536 objects permanently excluded from the deletion gate in
-      `aster_cefi_data_defi_bucket_migration_2026_07_13.md` Phase 4.
+- [x] ✅ [DATA] P1. **RESOLVED (BLK-15137c02, Option A) — DONE, slot 5, market-tick-data-service@`614f276c`.** Operator
+      confirmed Option A extends to the `low_dup` band (same root cause, full-population re-check gave high confidence,
+      no reader assumes a fixed column count or branches on this date range — re-confirmed via a targeted workspace-wide
+      grep of the 4 named consumers + a broader `iloc[:, N]`/`== 10`-column-count/date-literal sweep before executing,
+      per the operator's caveat). Ran
+      `migrate_aster_cefi_defi_bucket_2026_07_13.py --apply --force --start-date 2025-06-16 --end-date 2026-06-05`:
+      `{'force_overwritten': 4536, 'already_migrated_parity_confirmed': 67875, 'skipped_not_in_scope': 0}`, 0 errors —
+      the force-overwritten count matches this doc's conflict count exactly. Then re-ran
+      `delete_aster_cefi_defi_bucket_originals_2026_07_13.py --apply`: its fresh re-verify (started after the force-fix
+      completed) found all 116,942 remaining DeFi-bucket ASTER objects byte-identical to their CeFi-bucket canonical
+      target — 0 conflicts, one pass swept the entire corpus. See `aster_cefi_data_defi_bucket_migration_2026_07_13.md`
+      Phase 4 / Deferred-work for the full deletion evidence.
