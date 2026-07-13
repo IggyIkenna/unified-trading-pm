@@ -414,17 +414,17 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-              is NOT a tooling bug or an adapter regression.
-              `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
-              under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
-              `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
-              sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                  full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                  is NOT a tooling bug or an adapter regression.
+                  `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
+                  under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
+                  `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
+                  sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                  `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                  (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                  full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                  the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                  pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -1306,3 +1306,69 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   dispatch, ASTER/HYPERLIQUID/BITGET-FUTURES/BITFINEX-FUTURES/BINANCE-DELIVERY, 9 DEFI venues) live simultaneously — the
   honest, still-open prerequisite for fully closing todo 25 with a trustworthy final count, not attempted this session
   (real infra cost + time for a 452-shard re-run).
+
+- 2026-07-13 (parallel diagnostic pass — closing the "TRADFI (non-KRX) = 12 (YAHOO_FINANCE 6, CBOE 3, ICE 2, NYSE 1)"
+  residual todo 25 flagged as "plausibly the already-tracked TradFi Databento silent-zero-rows issue... or the
+  non-Databento-venue exclusions... not individually re-verified") — individually diagnosed and closed 3 of the 4
+  distinct TRADFI bugs found; filed the 4th as a structural gap needing an architecture decision:
+
+  - **Fixed — YAHOO_FINANCE crash (instruments-service)**: `--venue YAHOO_FINANCE` (a UAC-declared `NO_ADAPTER_YET`
+    legacy source-as-venue artifact) crashed `_zero_records_non_sports` with `UndeclaredTradfiVenueError` — the zero-
+    record handler fed every `tradfi_active` venue straight into `is_non_trading_day`, which fail-closed raises for
+    anything absent from the session/calendar SSOT (correct for a real venue's config gap, wrong for a venue UAC already
+    declares adapterless). Fixed by short-circuiting `_zero_records_non_sports` before the calendar check for any
+    active-venue set that's entirely `NO_ADAPTER_YET`, AND stamping an honest `empty_confirmed` manifest row (reason
+    `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`) so the outcome isn't a silent, permanent gap in the data-status view.
+    Shipped `instruments-service@fddfa187` (crash fix) + `instruments-service@559e8c5b` (manifest-honesty follow-up,
+    found via the checker's own report showing `no_matching_row` post-fix — also regenerated the `expected_universe`
+    golden fixtures for the KRX registry change below, and fixed an unrelated pre-existing hardcoded-prod-project-ID QG
+    violation in `test_phantom_audit_latest_summary_2026_07_13.py` blocking the gate). Also shipped a 1-line fix to
+    `unified-trading-pm@ca4b140b` — the QG's `check_record_empty_reason_closed_set.py` hand-maintained `KNOWN_REASONS`
+    mirror was missing `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` despite it being a real, already-used enum member
+    (ASTER/HYPERLIQUID docstring examples, 2026-06-22) — blocking this fix's own QG pass. **Real-VM-verified**:
+    `pipeline_e2e_check.py --day 2026-07-09 --asset-group TRADFI --venue YAHOO_FINANCE --legs force,skip` — both legs'
+    real run.log shows the clean new path
+    (`No records for date=2026-07-09: all requested venue(s) ['YAHOO_FINANCE'] are declared NO_ADAPTER_YET in UAC (venue_adapter_keys.py) — honest absence, not a fetch failure.`
+    → `Batch complete: 1 results collected` → `DEPLOYMENT_COMPLETED ... exit_code=0`), no crash, confirmed on real GCE
+    VMs `instr-backfill-tradfi-pchk-0713162152-{f,s}-yahoo-finance`.
+  - **Fixed — CBOE live-leg smoke fallback symbol (market-tick-data-service)**: `scripts/smoke_matrix.py`'s
+    `_REPRESENTATIVE_SYMBOL["CBOE"]` hardcoded a literal `"VXM26"` (June 2026 VX future) that had already expired by the
+    sweep's run date, and (a deeper, independently-confirmed root cause) the bare fallback symbol format was ALSO
+    rejected outright by `databento_tradfi_ws.py`'s `_parse_instrument_id`, which required a full `"VENUE:TYPE:SYMBOL"`
+    canonical id — every other WSFeedConnector in the codebase (HYPERLIQUID/ASTER/etc.) already accepts a bare per-venue
+    symbol directly. Fixed both: (1) `_resolve_current_cboe_vx_symbol()` dynamically resolves a currently-valid VX
+    contract (current month + 2, e.g. `VXU26` for 2026-07-13) instead of a static literal; (2) `_parse_instrument_id`
+    now accepts a bare symbol when given a `default_venue` (the connector already knows its own venue), resolving via a
+    small per-venue default-instrument_type map — fully backward compatible (a canonical 3-part id behaves identically).
+    Shipped `market-tick-data-service@3ede5aa6`. **Real-VM-verified**:
+    `pipeline_e2e_check.py --day 2026-07-09 --asset-group TRADFI --venue CBOE --legs live` — real run.log on
+    `mtds-live-smoke-tradfi-cboe-trades-20260713-162230` shows the "unknown instrument" warning is GONE; the connector
+    now genuinely subscribes (`subscribing to schema=trades stype_in=parent symbols='['VXU26.FUT']'` →
+    `authenticated session_id=...` →
+    `system message code=subscription_ack msg= 'Subscription request 0 for trades data succeeded'`) — a different real
+    result exactly as anticipated: a genuine Databento-side
+    `gateway error code=symbol_resolution_failed err='Failed to resolve symbol: VXU26.FUT'`, i.e. the fallback symbol
+    now resolves through our own code and reaches a real upstream API call; the specific `.FUT` suffix convention
+    Databento's XCBF.PITCH/CFE dataset expects for VX contracts is a separate, smaller, NOT-yet- fixed follow-on
+    (flagged here, not filed as its own doc — narrow enough to fold into a future CBOE/VX Databento symbology pass).
+  - **Fixed — KRX `VENUE_DATA_TYPE_CAPABILITIES` registry gap (unified-api-contracts)**: KRX had NO entry at all in
+    `VENUE_DATA_TYPE_CAPABILITIES` (every other TradFi venue does), so `get_expected_data_types_for_venue('KRX')` fell
+    through to `get_valid_data_types_for_venue()` — a blanket cross-product of all 10 TradFi data_types — contradicting
+    the SAME-day narrowed `expected_coverage.py` KRX entry (`["ohlcv_24h"]`). Added `"KRX": {"ohlcv_24h": "2019-01-02"}`
+    (start date matches `venue_mapping.py`'s KRX floor). Shipped `unified-api-contracts@c9f32889`. **Verified
+    directly**: `get_expected_data_types_for_venue('KRX') == ['ohlcv_24h']` (was the full 10-type list before the fix);
+    2 new regression tests lock this in `test_data_status_registries.py`.
+  - **Filed, not fixed (needs an architecture decision) — TRADFI:ICE:ohlcv_1m has zero working fetch path**: ICE stays
+    in `umi_tick_provider.py`'s `_DATABENTO_VENUES` but `TRADFI_DATABENTO_INSTRUMENTS` has zero ICE rows (ICE Databento
+    datasets deliberately dropped, 3-dataset subscription lockdown) — `market_data_categories.py` explicitly documents
+    the INTENDED Yahoo-DXY fallback for ICE, and `instruments-service`'s `_create_yahoo_index_records()` genuinely
+    materializes a real, live `ICE:INDEX:DXY-USD` instrument from `YAHOO_INDICES` — but neither of MTDS's 2 Yahoo-fetch
+    functions (`_fetch_yahoo_equities`/`_fetch_yahoo_fx`) is wired to ICE, so the documented fallback was never actually
+    implemented. Same class of registry-vs-adapter mismatch as the resolved KRX gap, but structurally worse (a real
+    upstream instrument + a real intended source, just never wired). Filed
+    `plans/active/issues/tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md` with 2 resolution paths (build the
+    Yahoo-DXY route vs narrow `expected_coverage.py`'s ICE entry the way KRX's was narrowed) for an operator call.
+  - **Adjacent multi-agent hygiene fixes** (found blocking, not part of the 4 assigned findings): resolved a live
+    stash-pop merge conflict in `tardis_concurrent_ip_lockout_2026_07_12.md` (two concurrent agents' additive Progress
+    Log entries collided; kept both, dropped only the conflict markers, no content lost) that was blocking every commit
+    in this shared PM clone — `unified-trading-pm@d0be200b`.
