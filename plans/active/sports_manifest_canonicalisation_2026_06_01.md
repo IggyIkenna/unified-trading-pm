@@ -2793,3 +2793,117 @@ the same conclusion the sixteenth touch already named: this is dispatcher churn,
 a `prereqs.conditions` gate on `BLK-f2bb67c2` being answered, which only main/operator can attach to `backlog.yaml`.
 `skip-current-task`'d. Next toucher: same cheap check; the real unblock is the operator answering `BLK-f2bb67c2` or main
 attaching the condition gate.
+
+## E8 Verify — eighteenth touch 2026-07-13T05:14Z-05:30Z (data_engineering slot-4, task -001): root-caused + fixed the IS CF-4 gap (not just re-verification)
+
+Re-dispatched to the same checkbox. Preconditions unchanged (no E3/E4 VM launched; `BLK-f2bb67c2` still
+`answered_at: null`). Rather than a 18th pure precondition re-check, used the option-C latitude in `BLK-f2bb67c2` ("open
+the write-path fix-forward task now — safe, in-repo, no infra stop") to actually root-cause and close the IS CF-4 gap
+the ninth-through-seventeenth touches had only described as "essentially static."
+
+**Root cause, confirmed via a time-based read of the live `_index/availability_index.parquet`** (single
+consolidated-index read, not a corpus walk): downloaded the IS sports index (5,607,707 rows,
+`instruments-store-sports-prd-central-element-323112`), split blank CF-3/CF-4 rows by `attempted_at` relative to
+`unified-trading-library@ca5f1dbd` (the `manifest_record_expected_empty_blank_source_2026_07_08` root-cause fix, landed
+2026-07-08T23:28:03Z, confirmed `git merge-base --is-ancestor ca5f1dbd HEAD` on this clone's UTL):
+
+- **CF-3 (pipeline_mode blank, 19,274 rows)**: 100% pre-fix (max `attempted_at` among blanks = 2026-07-08T01:30:57Z).
+  Zero post-fix blanks — the fix fully closed this gap going forward; the 19,274 is pure historical debt with no
+  deterministic `pipeline_mode` to derive (genuinely E4-migration scope, left untouched).
+- **CF-4 (source blank, 796,523 rows)**: 793,621 pre-fix + **2,902 post-fix** (attempted_at up to 2026-07-10T14:53Z,
+  pipeline_mode `batch_api_football`/`batch_footystats`, capture_status `empty_confirmed`,
+  `EXPECTED_NO_FIXTURE`/`EXPECTED_NO_PROVIDER_COVERAGE`) — traced to `sports_reference_core.py`'s
+  `note_empty()`/`emit_empty_gaps_for_entity()` `record_empty()` call sites, which never pass `source=` explicitly. A
+  parallel Explore-agent sweep (this session) found ~20 such call sites across 6 files
+  (`sports_reference_core.py`/`process_write.py`/`footystats.py`/`sfi.py`/`process_zero_records.py`/`process_preflight.py`/
+  `sports_fixtures_daily_repoll.py`) that rely entirely on the library-level `_stamp_producer_source()` auto-stamp
+  (`_record_status()`, ca5f1dbd) rather than the typed `_sports_ref_source(entity)` helper three other files
+  (`transfermarkt.py`/`weather.py`/`understat.py`) already use — the auto-stamp covers 99.6% of these
+  (`source_string_for(BATCH_API_FOOTBALL)` → `"api_football"` etc.), but the 2,902 residual shows it isn't airtight
+  (most likely a deployment-lag window on whatever cron/live process ran those specific writes
+  2026-07-08T23:29–07-10T14:53, not a logic bug in ca5f1dbd itself — `_stamp_producer_source` is unconditional in
+  `_record_status`). 793,621 of the 796,523 blank-source rows (99.6%) DO have a non-blank `pipeline_mode` and are
+  deterministically restampable via `source_string_for(pipeline_mode)` (777,249 after excluding the 19,274 CF-3-overlap
+  rows — see below).
+
+**Action taken (in-repo, safe, no operator/E3/E4 dependency — BLK-f2bb67c2 option C)**:
+
+1. Wrote `instruments-service/scripts/restamp_is_sports_blank_source_2026_07_13.py`, mirroring the already-successful
+   MTDS precedent (`market-tick-data-service/scripts/restamp_mtds_sports_blank_source_2026_06_29.py`, `mtds@bae321ca`,
+   closed the analogous MTDS CF-4 regression 2026-06-29). Dry-run confirmed 777,249 deterministically-restampable rows,
+   0 undeterminable.
+2. Paused the live consolidator cron (`uts-prod-manifest-consolidator-instruments-sports-cron`, Cloud Scheduler,
+   `*/1 * * * *`) after confirming no in-flight execution (`gcloud run jobs executions list` — both recent runs showed
+   `0 RUNNING / 1 COMPLETE`), per the documented consolidator-recovery procedure
+   (`codex/05-infrastructure/manifest-consolidator-ssot.md` § "pause its cron → snapshot the canonical → …").
+3. Ran `--apply`: snapshotted the pre-write index to `_index/snapshots/pre_blank_source_restamp_2026-07-13.parquet`,
+   restamped 777,249 rows, wrote back. Resumed the cron immediately after.
+4. Verified via a fresh `cf_manifest_audit_2026_06_01.py` run (both surfaces) — see updated tables below.
+5. Shipped the script — `instruments-service@3a102604` (QG green, quickmerge landed on LDR).
+
+### Surface 1 — `market-data-tick-sports-prd` (fresh audit, unaffected by this fix — MTDS CF-4 was already resolved 2026-06-29)
+
+`RED — ['CF-8', 'L6-legacy-only']` only — CF-2-paths/CF-3-partition read GREEN this run (probe-sampling variance, not a
+regression). CF-8 (available_at column absent — confirmed by the parallel Explore-agent sweep as a genuine SCHEMA gap:
+`AvailabilityRecord` has no `available_at` field at all, only `written_at`; not a one-line fix) and L6-legacy-only (140
+cells, unchanged) remain, both E4/data-loss-gate scope, not touched by this session's fix.
+
+### Surface 2 — `instruments-store-sports-prd` (this session's fix)
+
+| CF                    | Before (17th touch, 04:52Z) | After (this touch, 05:30Z)                                                   | Status                                                |
+| --------------------- | --------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------- |
+| CF-1 schema_version   | GREEN                       | GREEN (5,607,707/5,607,707)                                                  | ✅ GREEN                                              |
+| CF-3 pipeline_mode    | 19,340 blank (0.4%)         | **19,274 blank (0.3%)** — E4-scope, untouched                                | 🔴 RED (unchanged, expected)                          |
+| CF-4 source           | 796,523 blank (16.2%)       | **19,274 blank (0.3%)** — **-777,249 rows, 97.6% reduction**                 | 🔴 RED → still RED but now == CF-3's residual only    |
+| CF-5 typed reason     | GREEN                       | GREEN                                                                        | ✅ GREEN                                              |
+| CF-6 4-state          | GREEN                       | GREEN                                                                        | ✅ GREEN                                              |
+| CF-8 available_at     | 71.4% populated             | 3,508,551/5,607,707 (62.6% — denominator grew, same architectural gap)       | 🔴 RED (unchanged — schema gap, not this fix's scope) |
+| CF-13 pm source-aware | GREEN                       | GREEN (100%)                                                                 | ✅ GREEN                                              |
+| L6-legacy-only        | 1,855 cells                 | 1,855 cells (unchanged — different bug class, FIXTURES venue-blank mismatch) | 🔴 RED (unchanged, expected)                          |
+
+Summary: `RED — ['CF-2-paths', 'CF-3', 'CF-4', 'CF-8', 'L6-legacy-only']` (CF-2-paths still the known path-based
+false-negative; CF-3-partition flipped GREEN this run). **CF-4's 796,523-row gap is now a 19,274-row gap — the exact
+same population CF-3 already flags** (both are the genuinely-unrestampable E4-migration-scope residual: rows with no
+`pipeline_mode` stamped at all, so no deterministic `source` derivation exists client-side).
+
+### E8 verdict: still NOT all-GREEN — checkbox NOT flipped — but the blocker set is now materially smaller than any prior touch recorded
+
+**What changed for real** (not just re-confirmed): IS CF-4 went from the single largest RED gap (796,523 blank, 16.2%)
+to matching CF-3's much smaller residual (19,274, 0.3%) — a fix that had been described as "needed" since the ninth
+touch (2026-07-12) and never actioned. **What's still genuinely blocked** (unchanged, all still require either E3/E4 VM
+apply or a schema change, neither of which a single interactive slot can do safely):
+
+1. **CF-2-paths / CF-3-partition** (both surfaces, intermittently) — known false-negative, data lives in `_index`
+   columns not GCS hive segments — E4-migration scope.
+2. **CF-3/CF-4 residual 19,274 rows** (IS only) — genuinely no deterministic `pipeline_mode`/`source` to backfill from;
+   needs either historical reconstruction (E4 VM walk) or accepting these as permanently-untyped legacy rows.
+3. **CF-8 available_at** (both surfaces) — confirmed this session as a real SCHEMA gap (`AvailabilityRecord` has no
+   `available_at` field), not a per-row write-path bug — needs a UTL schema change + every writer wired to populate it,
+   out of scope for a single-slot dispatch.
+4. **L6-legacy-only** (both surfaces: MTDS 140 cells / IS 1,855 cells) — legacy bucket still receiving writes /
+   historical venue-blank mismatch — the data-loss gate E8's IRREVERSIBLE delete is conditioned on; still needs E3 drain
+   to stop the legacy bucket's writers before any delete is safe.
+
+**Not filing a duplicate blocked-question** — `BLK-f2bb67c2` still names the exact remaining decision (schedule E3/E4
+vs. keep parked) and this touch doesn't change that calculus; it only shrinks blocker #2 in scope. **Filed as a
+followup**: a P2 code-hardening todo (below) for the ~20 `record_empty()` call sites relying on the implicit library
+auto-stamp instead of the explicit `_sports_ref_source()` helper — not urgent (the auto-stamp already covers 99.6% of
+cases) but would close the residual class the 2,902 post-fix rows came from. `skip-current-task`'d (checkbox still can't
+flip). Next toucher: don't re-run the full audit for zero new info — the remaining 5 blockers above are all
+E3/E4-VM-apply or schema-change scope; re-verify only after one of those actually lands.
+
+- [ ] [DATA] P2. Add explicit `source=_orch._sports_ref_source(<entity>)` to the ~20 `record_empty()` call sites
+      identified this session that currently rely solely on the library-level auto-stamp (repo: instruments-service;
+      files: `sports_reference_core.py:90-94,118-122,127-131`, `process_write.py:281-289`,
+      `footystats.py:312-317,332,644,658,1001,1040`, `sfi.py:484-493,514,522,536,543`,
+      `process_zero_records.py:204,295,315,361`, `process_preflight.py:703`,
+      `triggers/sports_fixtures_daily_repoll.py:340`) — defense-in-depth so a future deployment-lag window (like the
+      2,902-row residual found this session) can't silently reproduce the CF-4 gap; mirror the pattern already used in
+      `transfermarkt.py`/`weather.py`/`understat.py`.
+
+**Tooling used**: `unified-trading-pm/plans/audit/results/cf_manifest_audit_2026_06_01.py` (unmodified) +
+`instruments-service/scripts/restamp_is_sports_blank_source_2026_07_13.py` (new, `instruments-service@3a102604`),
+executed from `instruments-service/.venv` (`uv run`) and the non-snap `gcloud` SDK
+(`/home/ubuntu/google-cloud-sdk/bin/gcloud` — the snap `gcloud` on this host is broken). Production write scoped to
+`instruments-store-sports-prd-central-element-323112`'s `_index/availability_index.parquet` only, consolidator cron
+paused/resumed around the write, pre-write snapshot taken.
