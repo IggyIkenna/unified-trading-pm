@@ -113,7 +113,29 @@ concrete reason to invoke. Two options for whoever picks this up:
 - [ ] [DATA] P1. Operator/architecture decision: for the `high_dup` era (2024-01-01→2025-06-15), is the 23-column
       DeFi-bucket shape or the 10-column CeFi-bucket shape authoritative going forward? Audit downstream consumers of
       the CeFi-bucket ASTER `derivative_ticker` data for this era before deciding (repo: market-tick-data-service +
-      consumers).
+      consumers). — **Downstream-consumer audit DONE (slot 14, 2026-07-13)** — the decision itself is still open
+      (operator/architecture call, not mine to make unilaterally), but the audit strongly informs it:
+  - **No BigQuery external table references `derivative_ticker`** in this workspace.
+  - **Real, currently-running, VENUE-AGNOSTIC consumers of the wide-schema-only `open_interest`/`index_price` columns
+    exist**: (1) `market-data-processing-service/.../adapters/cefi/derivative_adapter.py` (`CefiDerivativeAdapter`,
+    registered for ALL CeFi venues + `data_type=derivative_ticker`, no venue filter) reads
+    `open_interest`/`index_price`/`last_price` into its `CandleOutput`; (2)
+    `features-service/features_service/delta_one/app/calculators/funding_oi.py` (`FundingOI`, explicitly documented "NO
+    venue param") computes `open_interest_raw`/`oi_change*`/`oi_ma_*`/`basis`/`basis_pct`/`basis_bps` from
+    `open_interest`+`index_price`; (3) `.../calculators/futures_basis.py` — same pattern; (4)
+    `.../delta_one/app/core/nan_handler.py:40` defines the "funding" NaN-handling group as exactly
+    `["funding_rate", "open_interest", "mark_price", "index_price"]`. None crash on the narrow schema (all reads are
+    `if col in df.columns`-guarded), but all 4 sites silently degrade to NaN for `open_interest`/`basis`/`basis_pct`/
+    `oi_change*` when only the 10-column shape is present.
+  - **No consumer found** for `bid_price`/`ask_price`/`mid_price`/`volume_24h`/`day_ntl_volume`/
+    `predicted_funding_rate`/`funding_timestamp`/`instrument_key`/`schema_version` specifically reading
+    `derivative_ticker` (other `mid_price`/`bid_price` hits elsewhere trace to candle `close` or `book_snapshot` data,
+    unrelated to this table).
+  - **Assessment: narrowing to 10 columns (i.e. leaving Option B / doing nothing) is RISKY, not safe** — real production
+    feature pipelines (MDPS + 2 delta_one calculators) are silently degraded for ASTER's high-dup era right now. This
+    tilts toward **Option A** (re-migrate the `high_dup` band with `--force`, making the 23-column DeFi-bucket shape
+    authoritative) being the lower-risk choice, though the final call (and whether the narrow shape's 2 extra columns
+    `instrument_type`/`underlying` need preserving too) remains an explicit operator decision.
 - [ ] [DATA] P2. Once decided: either re-migrate the `high_dup` band with `--force` (option A) or add an explicit
       Phase-4 exclusion for this band (option B) to `aster_cefi_data_defi_bucket_migration_2026_07_13.md`. (repo:
       unified-trading-pm)

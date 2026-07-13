@@ -107,9 +107,16 @@ drift_direction: advance-code
       violations — basedpyright unknown-type count went 15→14, pre-existing noise unrelated to this change), and full
       `quality-gates.sh` green on both repos (features-service sentinel `9108900...`→post-commit, UTL sentinel
       `b65cf8d2`).
-- [ ] [AGENT] P3. **Fix the mis-marked bucket inline** found in passing: `volatility/io/writer.py:35`
+- [x] ✅ [AGENT] P3. **Fix the mis-marked bucket inline** found in passing: `volatility/io/writer.py:35`
       `bucket = f"features-volatility-{ag}-{pid}"` is marked `# CORRECT-LOCAL` but is a genuine miss → use
-      `resolve_bucket_name(kind="features-volatility", asset_group=...)` (its own sibling configs already do).
+      `resolve_bucket_name(kind="features-volatility", asset_group=...)` (its own sibling configs already do). — SHIPPED
+      `features-service@208516e6`. `VolatilityWriter.__init__` now calls the already-existing
+      `config.get_output_bucket(asset_group)` (in `volatility/config.py`, itself a thin wrapper over
+      `resolve_bucket_name(kind="features-volatility", ...)`) instead of the hardcoded f-string — `config` was already
+      fetched in `__init__`, so this is a one-line swap. Verified byte-identical output under the standard test env
+      (`GCP_PROJECT_ID=test-project`/`DEPLOYMENT_ENV=prod` → `features-volatility-cefi-test-project`, same shape as
+      before). Added a regression test asserting the bucket comes from the SSOT path, not a literal. Full
+      `tests/volatility/` suite green (827 passed, 1 skipped), `quality-gates.sh` exit 0, sentinel verified.
 - [x] ✅ [VERIFY] P1. `resolve_build_order` golden output identical per family; `quality-gates.sh` green; quickmerge. —
       VERIFIED (2026-07-13, slot-6) for the migration completed so far: re-ran
       `test_golden_fixture_phase0_resolve_build_order.py` fresh against `features-service@d784c79f` — all 4 families
