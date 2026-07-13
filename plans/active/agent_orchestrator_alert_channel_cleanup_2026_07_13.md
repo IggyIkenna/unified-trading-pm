@@ -184,11 +184,15 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
 - [x] [OPERATOR] P1. ✅ D1/D2/D3 all resolved by operator (2026-07-13) — see Decisions. Plan unblocked for
       implementation.
 - [ ] [BACKEND] P2. WS-E: **auto-deploys — verification pending only.** Code is landed on LDR (WS-A/B/C/D). The prod
-      backend runs uvicorn `--reload` (operator 2026-07-13), so it restarts on the new code automatically once it
-      reaches the VM — **no manual restart needed**. The git-health guard cron (WS-C) picks up its script change on its
-      next tick. The ONLY remaining step is the **24–48 h verification observation window**: re-pull with
-      `alerts_audit/fetch_alerts.py` after the code has been live ~24–48 h, confirm lifecycle churn is gone / volume at
-      the actionable-only target, and drop the post-deploy jsonl in `alerts_audit/`.
+      backend runs uvicorn `--reload` **[CORRECTED 2026-07-13, verify-rerun finding 213: VM-verified (twice,
+      2026-07-12/13) the installed orchestrator.service ExecStart runs uvicorn WITHOUT `--reload`; deploy-currency =
+      scripts/ao-self-pull.sh 15-min root cron (FF-pull + systemctl restart on HEAD change) per
+      epics/orchestrator_master.md §ao-self-pull (SSOT) — verify WS-E by confirming a real cron-triggered restart
+      (journalctl/ExecMainStartTimestamp), NOT by assuming auto-reload.]** (operator 2026-07-13), so it restarts on the
+      new code automatically once it reaches the VM — **no manual restart needed**. The git-health guard cron (WS-C)
+      picks up its script change on its next tick. The ONLY remaining step is the **24–48 h verification observation
+      window**: re-pull with `alerts_audit/fetch_alerts.py` after the code has been live ~24–48 h, confirm lifecycle
+      churn is gone / volume at the actionable-only target, and drop the post-deploy jsonl in `alerts_audit/`.
 - [x] 8. ✅ [REVIEW] P2. WS-E: stubbed `codex/04-architecture/agent-orchestrator-alerting.md` (actionable-only
      contract + digest model + guard-dedup) as the durable SSOT; added the one-liner to CLAUDE.md's conditional index
      (size-cap QG green, 29,668 B / 40,960). — unified-trading-pm (this commit).
