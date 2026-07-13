@@ -456,9 +456,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": null,
-        "warn_file_count": 17,
-        "large_file_count": 0,
-        "coverage_pct": 84.36
+        "coverage_pct": 84.31,
+        "warn_file_count": 19,
+        "large_file_count": 0
       }
     },
     "features-service": {
@@ -529,10 +529,10 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
+        "qg_red_reason": null,
+        "coverage_pct": 85.38,
         "warn_file_count": 11,
-        "coverage_pct": 85.36,
-        "large_file_count": 0,
-        "qg_red_reason": null
+        "large_file_count": 0
       },
       "ldr_ci_status": "GREEN"
     },
@@ -759,10 +759,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": null,
+        "coverage_pct": 90.74,
         "warn_file_count": 7,
-        "coverage_pct": 90.88,
-        "large_file_count": 5,
-        "qg_red_reason": null
+        "large_file_count": 5
       }
     },
     "market-data-processing-service": {
@@ -880,10 +880,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
         "warn_file_count": 37,
+        "coverage_pct": 83.12,
         "qg_red_reason": null,
-        "coverage_pct": 83.11
+        "large_file_count": 0
       }
     },
     "ml-service": {
@@ -979,7 +979,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1010,10 +1010,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
+        "qg_red_reason": "ruff",
+        "coverage_pct": 85.24,
         "warn_file_count": 8,
-        "coverage_pct": 85.22,
-        "large_file_count": 3,
-        "qg_red_reason": "ruff"
+        "large_file_count": 3
       }
     },
     "system-integration-tests": {
@@ -1262,10 +1262,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "warn_file_count": 20,
-        "large_file_count": 5,
-        "coverage_pct": 87.61
+        "coverage_pct": 87.62,
+        "qg_red_reason": null,
+        "large_file_count": 5
       }
     },
     "unified-trading-pm": {
@@ -1277,7 +1277,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
