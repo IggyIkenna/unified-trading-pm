@@ -61,16 +61,19 @@ drift_direction: advance-code
       `treasury_routes.py` now imports from the UTL facade + DROPPED the `[tool.uv.sources]` strategy-service path-dep +
       dep line + marked the 3 FastAPI DTOs `# CORRECT-LOCAL` (`deployment-api@0a9600a9`). Removes the service→service
       edge. Dep order: UTL→strategy-service→deployment-api; all QG exit 0.
-- [ ] [AGENT] P1. **deployment-api → deployment-service — EXTRACT the shared registry to UTL (NOT reclassification).**
-      deployment-service genuinely IS a deployed service (has `Dockerfile` + `cloudbuild.yaml` + `buildspec.aws.yaml` +
-      a live FastAPI `api/main.py` with ServiceBootstrap/uvicorn). BUT the coupling is **library-like** — the 6
-      deployment-api files import `deployment_service.deployments_registry`, a **529-line GCS-backed data-access layer**
-      (`DeploymentsRegistry` + `DeploymentRegistryEntry` + VM-log URI helpers + `is_entry_stale`) that depends only on
-      UTL (`StorageClient`/`UnifiedCloudConfig`) and is needed by BOTH deployment-service (writer/control-plane) and
-      deployment-api (reader/dashboard). **Fix: relocate `deployments_registry.py` into UTL** (e.g.
-      `unified_trading_library.deployment_registry`); both services import it from UTL — removes the service→service
-      edge with no forced HTTP boundary. (Same shared-accessor-to-library pattern as the strategy NAV-functions fix.)
-      Keep deployment-service `type=service`.
+- [x] ✅ [AGENT] P1. **deployment-api → deployment-service — EXTRACT the shared registry to UTL — DONE.** Relocated
+      `deployments_registry.py` (529 lines: `DeploymentsRegistry` + `DeploymentRegistryEntry` + VM-log URI helpers +
+      `is_entry_stale`) into UTL as `unified_trading_library.deployment_registry` (`unified-trading-library@5926c6f0`;
+      +32 tests moved with the code, re-exported from the top-level facade under plain names per the workspace's
+      top-level-import-only convention — fixed 2 latent basedpyright `reportArgumentType` errors + a QG
+      empty-dict-fallback + method-size violation surfaced by UTL's stricter gates). deployment-service repointed all 8
+      in-repo consumers (heartbeat_cli, deployment_heartbeat, vm_zombie_watchdog, vm_serial_capture_cron,
+      vm_log_archival_cron, 3 tests) to the UTL import and deleted its local copy (`deployment-service@b665123e`).
+      deployment-api repointed all 8 routes + removed the now-dead `deployment_service.deployments_registry` test-stub
+      scaffolding (`deployment-api@a7978bc3`). Removes the service→service edge with no forced HTTP boundary;
+      deployment-service keeps `type=service`. Dep order: UTL→deployment-service→deployment-api; all 3 QG exit 0
+      (deployment-api's basedpyright error count actually _dropped_ 591→201 since the registry now resolves through a
+      cleanly-typed UTL module instead of an unresolved cross-service import).
 - [x] ✅ [AGENT] P2. **market-data-processing-service → market-tick-data-service — DONE.** Relocated
       `databento_classifier` (825 lines, UAC-only deps) to UAC `unified_api_contracts/external/databento/` + its test
       suite (`unified-api-contracts@00a7aca9`; +15 tests for the previously-uncovered paths to hold UAC's 94% coverage
