@@ -12,7 +12,7 @@ summary: |
   one week before this plan was created on 2026-07-13; (2) prerequisite todos 1 (per-venue deeper-book capability
   research) and 2 (extend live capture to pull deeper book) are genuinely unstarted -- zero references to
   L10/L20/full-L2/depth_of_book_10/deeper-book anywhere in market-tick-data-service today, confirmed by grep.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [data, features]
@@ -29,7 +29,7 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.4
 assigned_role: backend-engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: "slot-10, plan frontmatter fix -- see Resolution section"
 locked_by:
 source: [plans/active/l2_book_microstructure_capture_2026_07_13.md todo 3, slot-5 session 2026-07-13]
 related: [plans/active/l2_book_microstructure_capture_2026_07_13.md]
@@ -98,9 +98,33 @@ Two independent questions:
    honestly when absent" — worth a quick verify given the sibling feature's retirement rationale was exactly "nobody
    consumes this").
 
+## Resolution (2026-07-13, slot-10)
+
+Both questions resolved directly (no operator escalation needed — mechanical fix + a verifiable code fact, not a
+judgment call):
+
+1. **Sequencing — fixed.** Flipped `l2_book_microstructure_capture_2026_07_13.md` frontmatter `sequential: false` →
+   `true`. Confirmed via `agent-orchestrator/server/regen_backlog_from_plan.py` (`_wire_sequential_prereqs`) that
+   `sequential: true` is exactly the declared mechanism for chaining each task's `completed_tasks` to its predecessor
+   within one plan — `depends_on` does NOT affect dispatch (CLAUDE.md: "documents task ordering + gates archival (does
+   NOT affect dispatch)"), so `sequential: true` was the correct lever, not `depends_on`. Also corrected todo 3's
+   premise in-place: relabeled "Extend" → "**RE-CREATE**" with a pointer to the deleted file's last state
+   (`git show a4fb3d13^:...`) so the next worker doesn't rediscover this same blocker.
+2. **Premise check — verified, no change needed.** Read `strategy-service/.../market_making/queue_microstructure.py`
+   directly: `MarketMakingQueueMicrostructureEngine` DOES exist, DOES read `queue_position_bid`/`queue_position_ask`
+   from the features dict, and DOES degrade honestly (returns `[]`, no quote) when they're `None` — the plan's technical
+   claim holds. It is explicitly NOT registered in `ARCHETYPE_ENGINE_REGISTRY` today (docstring: "no passing backtest
+   AND the queue feed is absent") — but unlike the retired sibling feature, this ISN'T an oversight: the plan's own todo
+   7 already explicitly defers registration to the parent plan's Phase E1, gated on this data landing AND a passing
+   `GroupBRunner` backtest. So the "zero real consumers" retirement pattern does NOT apply here — there IS a real,
+   code-written, unit-tested consumer with an explicit (if future-gated) registration path, not an unreferenced dead
+   end.
+
 ## Todos
 
-- [ ] [SPEC] P2. Decide whether `l2_book_microstructure_capture_2026_07_13.md` needs `depends_on`/`sequential: true` so
-      todo 3 isn't dispatched before todos 1+2 land; re-verify `MarketMakingQueueMicrostructureEngine` is a real live
+- [x] ✅ [SPEC] P2. Decide whether `l2_book_microstructure_capture_2026_07_13.md` needs `depends_on`/`sequential: true`
+      so todo 3 isn't dispatched before todos 1+2 land; re-verify `MarketMakingQueueMicrostructureEngine` is a real live
       consumer before committing to rebuilding the retired `book_microstructure_compute.py` surface. (repo:
-      unified-trading-pm — plan authoring)
+      unified-trading-pm — plan authoring) — RESOLVED: `sequential: true` set + todo 3 premise corrected
+      (`unified-trading-pm@<pending>`); engine-consumer claim verified true, no plan change needed. See Resolution
+      section above.

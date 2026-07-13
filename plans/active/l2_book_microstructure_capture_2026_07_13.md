@@ -23,14 +23,14 @@ estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
 assigned_role: backend-engineer
 drift_direction: advance-code
-last_updated: 2026-06-27
+last_updated: 2026-07-13
 locked_by:
 locked_since:
 depends_on:
 supersedes:
 superseded_by:
 source: [v2_engine_venue_buildout_2026_06_15.md follow-up, Phase E1 finding 2026-06-15]
-sequential: false
+sequential: true
 ---
 
 # Deeper-Than-L5 Order Book Capture
@@ -74,10 +74,18 @@ sequential: false
 - [ ] [DATA] P2. For each venue confirmed capable, extend the live capture (or add a new deeper-book live handler
       alongside the existing L5 one) to pull the deeper book. Reuse the existing `book_snapshot_5` connector pattern per
       venue — do not fork a new connector framework.
-- [ ] [SCRIPT] P2. Extend `market-tick-data-service/.../derived/book_microstructure_compute.py`
+- [ ] [SCRIPT] P2. **RE-CREATE** (not extend) `market-tick-data-service/.../derived/book_microstructure_compute.py`
       (`compute_book_microstructure`) to populate `queue_position_bid`/`queue_position_ask`/`book_depth_levels` from the
       deeper book input when present, keeping the existing L5-only honest-absence path unchanged for any venue still
-      capped at L5. Repo: market-tick-data-service.
+      capped at L5. Repo: market-tick-data-service. **Premise correction (2026-07-13,
+      `plans/active/issues/l2_book_microstructure_capture_target_file_retired_2026_07_13.md`):** this file (+ its
+      handler, CLI wiring, tests) was DELETED in commit `a4fb3d13` on 2026-07-07 (also on `main` via `917a8ccf`) when
+      `order_flow_imbalance` was retired for "zero real consumers, zero production rows ever captured". It never had a
+      deeper-book code path even before deletion (`git show a4fb3d13^:...` shows it consumed a fixed L5-capped
+      `L5BookInput`, always honest-absent on deeper fields) — so this is new-construction on a deleted foundation, not a
+      small addition to an existing file. Whoever picks this up: read the deleted file's last state via
+      `git show a4fb3d13^:market_tick_data_service/market_interface/derived/book_microstructure_compute.py` for the
+      canonical-shape/honest-absence pattern to preserve, then build fresh against the deeper-book input from todo 2.
 - [ ] [SCRIPT] P2. Flip `queue_position` + `depth_of_book_10` to `live_capable=True` (and `batch_capable=True` if a
       batch/replay path is also built) in `data_type_capability.py`, scoped ONLY to the venues that actually ship
       deeper-book data — do not blanket-flip venues still capped at L5. Repo: unified-api-contracts.
