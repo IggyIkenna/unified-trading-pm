@@ -353,14 +353,21 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
 - [x] [DECISION] P3. **Builder-architecture question — RESOLVED 2026-07-08 (operator)**: ONE shared builder for every
       asset group + instrument type + sports fixtures, filled in by structured inputs. See "What this is NOT" above for
       the exact decision language.
-- [ ] [SCRIPT] P1. **Fix the Bitfinex BTC-margined-perp asset-filter bug** — found 2026-07-08 while spot-checking real
-      volume, not an instrument_id-format issue but adjacent (same investigative pass): the accepted-quote filter
+- [x] [SCRIPT] P1. **Fix the Bitfinex BTC-margined-perp asset-filter bug — DONE.** found 2026-07-08 while spot-checking
+      real volume, not an instrument_id-format issue but adjacent (same investigative pass): the accepted-quote filter
       (`parsing.py:463`, `cefi_instrument_universe.py:131-133`) is documented "derivatives carry no quote and pass," but
       Bitfinex's own symbol parser (`parsing.py:325-339`) DOES extract a real quote for its inverse perps (`ETHF0:BTCF0`
       → base=ETH, quote=BTC), so real Bitfinex derivatives get rejected as if they were an exotic spot cross-pair.
       Confirmed live via `api-pub.bitfinex.com/v2/tickers`: `ETHF0:BTCF0` trades ~~2,034 ETH/day (~~$6-7M/day) — not a
       negligible edge case. Fix: add BTC to the per-venue accepted-quote extension for Bitfinex derivatives, same
-      mechanism already used for UPBIT's KRW extension.
+      mechanism already used for UPBIT's KRW extension. **Verified 2026-07-13**: already shipped
+      `unified-api-contracts@4e096316` (confirmed integrated, ancestor of current HEAD) —
+      `_CEFI_VENUE_QUOTE_EXTENSIONS["BITFINEX-FUTURES"] = frozenset({"BTC"})`, keyed on the FULL canonical venue string
+      so the extension does not leak into `BITFINEX-SPOT`. Functional re-test:
+      `_passes_asset_filter("ETH", "BTC",     "PERPETUAL", "BITFINEX-FUTURES")` → `True`;
+      `_passes_asset_filter("ETH", "BTC", "SPOT_PAIR", "BITFINEX-SPOT")` → `False` (cross-pair still correctly
+      rejected). This todo had gone unchecked despite the fix already landing — caught during a 2026-07-13 full-epic
+      status re-verification.
 - [x] [DECISION] P1. **Confirm the revised TradFi combo fix — DONE 2026-07-09** (finding 7, superseding the earlier
       flat-string proposal) — reuse the existing `InstrumentLeg`/`InstrumentType.COMBO` infrastructure (already proven
       for CME) for CBOE/VX spreads too, apply the existing `_resolve_product_root()` human-name registry (`ES→SP500`,
