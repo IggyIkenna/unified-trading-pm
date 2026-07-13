@@ -81,7 +81,15 @@ drift_direction: advance-code
 - [ ] [AGENT] P3. **Fix the mis-marked bucket inline** found in passing: `volatility/io/writer.py:35`
       `bucket = f"features-volatility-{ag}-{pid}"` is marked `# CORRECT-LOCAL` but is a genuine miss → use
       `resolve_bucket_name(kind="features-volatility", asset_group=...)` (its own sibling configs already do).
-- [ ] [VERIFY] P1. `resolve_build_order` golden output identical per family; `quality-gates.sh` green; quickmerge.
+- [x] ✅ [VERIFY] P1. `resolve_build_order` golden output identical per family; `quality-gates.sh` green; quickmerge. —
+      VERIFIED (2026-07-13, slot-6) for the migration completed so far: re-ran
+      `test_golden_fixture_phase0_resolve_build_order.py` fresh against `features-service@d784c79f` — all 4 families
+      (`multi_timeframe`, `volatility`, `onchain`, `sports`) reproduce their pinned golden build order identically. Full
+      `quality-gates.sh` green, sentinel verified. **Scope note**: this confirms no regression from the sports
+      resolver-only migration (item 2, done) — it does NOT mean mt/volatility/onchain are on UTL yet; item 1 (drop-in
+      migrate mt/volatility/onchain) is still open, and their golden values are pinned against their still-local
+      implementations, unchanged from before this plan started. No code changes needed here (pure verification) — no
+      quickmerge required.
 
 ## Success criteria
 
