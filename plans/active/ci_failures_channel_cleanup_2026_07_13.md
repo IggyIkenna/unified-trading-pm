@@ -137,10 +137,19 @@ prioritising it.
   while a genuinely new failure after the cooldown still re-alerts. ci-status-update stays the authoritative
   went-red/recovered SSOT.
 
-**Fleet-wide-template rule (HARD).** `branch-health.yml`, `python-quality-gates-v2.yml`, `ci-status-update.yml`,
-`notify-slack.yml` are ROLLED-OUT templates — never hand-edit a per-repo copy. Edit the template source +
-`rollout-workflow-templates.sh`; rollout is complete only when every repo copy is committed + pushed (CLAUDE.md "CI
-verification after every push"). `promotion_lag_monitor.py` lives in PM `scripts/cicd/`.
+**Where these workflows live (verified — NOT fleet-rolled-out templates).** All three are PM-local and edited directly
+in `unified-trading-pm/.github/workflows/` — no `rollout-workflow-templates.sh`:
+
+- `branch-health.yml` — PM-local cron (scans all repos' lag from one place). Change takes effect from the DEFAULT branch
+  (main) → must reach `main` via the LDR→main promote.
+- `ci-status-update.yml` — PM-local; receives `repository_dispatch` from all repos' QG. Also fires from `main`.
+- `python-quality-gates-v2.yml` — a **reusable workflow** every repo calls via
+  `uses: IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout`. One edit in PM
+  applies fleet-wide the moment it is on `live-defi-rollout` (the pinned ref) — no rollout.
+
+`notify-slack.yml` (the shared dedup carrier) + `promotion_lag_monitor.py` also live in PM. `.github/**` edits take the
+sanctioned direct-push carve-out. (The rolled-out template is the separate `quality-gates-v2.yml.tmpl`, which only
+dispatches to PM — it does NOT emit these alerts, so it is untouched.)
 
 ## Codex SSOTs
 
@@ -153,27 +162,28 @@ verification after every push"). `promotion_lag_monitor.py` lives in PM `scripts
 
 - **D1 — WS-1 re-remind cooldown → RESOLVED: 120 min (2 h).** Operator (2026-07-13): "2 hour re-reminding if it's not
   solved." So `lag-notify` `cooldown_min` 60 → 120.
-- **D2 — WS-3 aggressiveness — OPEN.** Propose the safe **dedup-by-branch** (keeps per-run alert, deduped). Alternative:
-  DROP the per-run QG Slack alert entirely and rely solely on ci-status-update transitions (collapses 105→0 but loses
-  "new failure while already red" visibility). Confirm branch-dedup vs drop.
-- **D3 — CI-RECOVERED — OPEN.** Drop from Slack entirely, or keep a once-daily digest count? Propose drop + digest
-  count.
-- **D4 — WS-1 lag THRESHOLD — OPEN (raised by the cadence measurement).** The promote actually runs every ~40 min (gaps
-  to 93 min), so the current 60-min lag threshold can fire on a lag merely waiting for a throttled promote. Propose
-  raising the threshold 60 → **120 min** so only genuinely-stuck lags alert. Confirm, or keep 60 and rely on the
-  cooldown alone.
+- **D2 — WS-3 aggressiveness → RESOLVED: dedup-by-branch.** Operator (2026-07-13): "your recommendation." Keep the
+  per-run QG alert but key it `qg-fail:<repo>:<ref_name>` (branch) + `cooldown_min` 45 → 120, so a still-red branch
+  pages once per red-period, not per failing push. ci-status-update stays the went-red/recovered SSOT.
+- **D3 — CI-RECOVERED → RESOLVED: drop from Slack (+ digest count later).** Operator: "your recommendation." Stop paging
+  the red→green recovery (keep the GCS ledger write); a count in a periodic digest is a P3 follow-up — the drop is the
+  volume win.
+- **D4 — WS-1 lag threshold → RESOLVED: keep 60 min (no change).** Operator: "let it run at its pace, don't worry about
+  the lag threshold right now." WS-1 is the cooldown bump only; the threshold stays 60.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. D1 resolved (2 h cooldown). Still open: D2 (branch-dedup vs drop per-run QG alert), D3 (recovered
-      drop vs digest), D4 (lag threshold 60 vs 120 min).
-- [ ] [INFRA] P2. WS-1: in the `branch-health.yml` TEMPLATE, bump `lag-notify` `cooldown_min` 60 → 120 (D1); verify the
-      `promotion-lag` dedup_key + `lag-notify-resolved` bookend are intact; roll out via
-      `rollout-workflow-templates.sh`.
-- [ ] [INFRA] P2. WS-3: in the `python-quality-gates-v2.yml` TEMPLATE, change `notify-qg-fail` `dedup_key`
-      `qg-fail:<repo>:<sha>` → `qg-fail:<repo>:<ref_name>` + `cooldown_min` 45 → 120 (D2 = branch-dedup); roll out.
-- [ ] [INFRA] P2. WS-2: in the `ci-status-update.yml` TEMPLATE, stop routing the red→green RECOVERED transition to
-      `notify-slack.yml` (keep the REGRESSION page + the ledger write) per D3; roll out.
+- [x] [OPERATOR] P1. ✅ All decisions resolved (2026-07-13): D1=2h cooldown, D2=dedup-by-branch, D3=drop CI-RECOVERED
+      (+digest later), D4=keep 60-min threshold. Plan unblocked for implementation.
+- [x] 1. ✅ [INFRA] P2. WS-1: bumped `branch-health.yml` `lag-notify` `cooldown_min` 60 → 120 (D1); `promotion-lag`
+     dedup_key + `lag-notify-resolved` bookend intact. PM-local cron (no rollout) — takes effect from `main`. —
+     unified-trading-pm@22442c2a1; YAML parses.
+- [x] 2. ✅ [INFRA] P2. WS-3: `python-quality-gates-v2.yml` `notify-qg-fail` `dedup_key` `qg-fail:<repo>:<sha>` →
+     `qg-fail:<repo>:<ref_name>` + `cooldown_min` 45 → 120 (D2). Reusable workflow — applies fleet-wide via the
+     `@live-defi-rollout` ref (no rollout). — unified-trading-pm@22442c2a1.
+- [x] 3. ✅ [INFRA] P2. WS-2: gated `ci-status-update.yml` `notify` on `status == 'FAILING'` so only regressions page;
+     the green CI-RECOVERED / SIT-pass all-clears drop from Slack (Firestore + GCS ledger writes unchanged) per D3.
+     PM-local (fires from `main`). — unified-trading-pm@22442c2a1.
 - [ ] [INFRA] P3. WS-1 (stretch): evaluate moving the promotion-lag check to a self-triggered path (AO backend) for
       cron-deviation-proof timing — age-based re-remind independent of GitHub's hosted scheduler.
 - [ ] [REVIEW] P3. WS-4: document the CI-alert dedup/cooldown contract in `codex/08-workflows/ci-cd-flow.md` (or a new
@@ -186,6 +196,13 @@ verification after every push"). `promotion_lag_monitor.py` lives in PM `scripts
   promotion-lag cooldown=60m too short (`branch-health.yml` lag-notify); WS-2 CI-RECOVERED green bookends
   (`ci-status-update.yml`); WS-3 per-run QG alert keyed by SHA (`python-quality-gates-v2.yml` notify-qg-fail). Answered
   the 3-way-count question (per-run vs per-transition vs hourly granularities). Plan authored (human/LOCAL).
+- **2026-07-13 (implemented)** — WS-1/2/3 shipped in `unified-trading-pm@22442c2a1` (3 PM-local workflow edits, all YAML
+  valid). Corrected the plan's rollout assumption: these are NOT fleet-rolled-out templates —
+  `python-quality-gates-v2.yml` is a reusable workflow applied via the `@live-defi-rollout` ref (fleet-wide, no
+  rollout); `branch-health.yml` + `ci-status-update.yml` are PM-local and take effect from `main`. All operator
+  decisions resolved. **Remaining:** WS-3 is live on LDR immediately; WS-1/WS-2 activate once `22442c2a1` promotes
+  LDR→main; then the WS-4 verification re-pull (24–48 h) confirms the volume drop. WS-1-stretch (self-triggered
+  scheduler) + WS-4 (codex doc + digest count) stay open.
 - **2026-07-13 (cadence measured)** — Operator flagged the promote is not really `*/15`. MEASURED last 60 promote runs:
   avg gap **41.5 min**, median **33 min**, max **93 min** — GitHub throttles the `schedule:` cron to ~37% of declared
   rate. Consequences folded in: (a) the 60-min lag threshold can fire on a lag merely waiting for a throttled promote →
