@@ -323,14 +323,16 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       live backfill fleet + the 2015-2019 era-wide dense-lookback audit + `check_pipeline_completeness.py`) is **NOT
       done** — that's real infra execution, tracked as a fresh todo below rather than silently implied by this
       checkmark.
-- [ ] [DATA] P1. ~~NEW (slot 14, 2026-07-13) — now that the OOM-crash risk is closed (features-service@c3e3ebfe verified
-      against real GCS data for both poison dates), resume `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo
-      1's full-history 2015→present compute fleet (excluded/killed shards can re-include 2018-06-17/06-18), let it run
-      to completion, then re-run `check_pipeline_completeness.py` / the manifest-cleanliness query for the full range to
-      confirm no other dense-lookback date still crashes. This is the actual infra-execution half of the todo above.~~
-      **THIS CLAIM WAS WRONG — see "Update — THIRD recurrence, 2 more independent poison dates found (2026-07-13, slot
-      14 continued)" below.** The OOM-crash risk is NOT closed; c3e3ebfe (venue_context fix) was necessary but not
-      sufficient. (repo: features-service, deployment-service for the VM relaunch)
+- [x] ✅ **CLOSED-SUPERSEDED (slot 4, 2026-07-13)** — this todo's own premise (~~"the OOM-crash risk is closed
+      (features-service@c3e3ebfe verified)... resume the full-history compute fleet"~~) was already disproven and struck
+      through by its own author (slot 14) later in the SAME session, in the same edit — see "Update — THIRD recurrence"
+      below for the 3 independent post-c3e3ebfe crashes that reopened it. Flipping this checkbox now purely to stop it
+      being re-dispatched as live work (it was re-picked-up as
+      `features_sports_unbounded_memory_early_history_dates-011` this session, costing a full context read to discover
+      it was already dead text) — **no code shipped, no new investigation performed**. The actual remaining P0 work is
+      the NEXT todo below (`compute_shot_quality_batch` profiling), which remains genuinely open and unowned; every
+      prior slot (12, 14×2) has correctly declined it inline as needing a dedicated Docker-memory-capped investigation,
+      not a quick pass — same assessment holds here.
 - [ ] [DATA] P0. **NEW (slot 14, 2026-07-13, continued session)** — root-cause the STILL-LIVE OOM site. Strong new
       evidence points at `compute_shot_quality_batch` (`features_service/sports/exporters/derived_new_calculators.py`
       `run_new_calculators`), the step immediately after `advanced_stats` in the Phase-4 calculator chain — see the
