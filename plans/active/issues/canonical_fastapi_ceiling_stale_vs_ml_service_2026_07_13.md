@@ -9,7 +9,7 @@ summary: |
   the opposite reasoning from the June decision. PM's check-dependency-alignment.py now reports ml-service misaligned
   against the canonical (fastapi<0.137.0), which blocks EVERY PM push (STAGE 1.5 dependency-alignment is a hard gate)
   until resolved.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -30,7 +30,7 @@ source:
   discovered while shipping a routine PM plan-checkbox flip (utl_reuse_phase0_guardrails-adjacent onchain fix,
   unrelated), 2026-07-13
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-3
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: backend-engineer
@@ -98,6 +98,26 @@ deliberately" — that's a judgment call this issue exists to route, not somethi
 
 ## Todos
 
-- [ ] [BACKEND] P1. Resolve the canonical fastapi/starlette ceiling contradiction per the recommended decision above —
-      either raise the canonical ceiling (if the June breakage is confirmed fixed upstream) or add a documented per-repo
-      exception for ml-service (repo: unified-trading-pm)
+- [x] ✅ [BACKEND] P1. Resolve the canonical fastapi/starlette ceiling contradiction per the recommended decision above
+      — either raise the canonical ceiling (if the June breakage is confirmed fixed upstream) or add a documented
+      per-repo exception for ml-service (repo: unified-trading-pm) — RESOLVED via option 4 (documented exception),
+      `unified-trading-pm@<this commit>`. Directly tested whether the June 18 `_IncludedRouter`/`.path` breakage still
+      reproduces, in two isolated venvs:
+  - `fastapi==0.137.2` + `starlette==1.3.1` (the exact combo the June note names): **still reproduces** —
+    `app.include_router(sub)` produces an `_IncludedRouter` entry in `app.routes` with no `.path` attribute
+    (`getattr(r, "path", "<<NO .path ATTR>>")` confirms it). The June finding is real and NOT fixed upstream as of
+    2026-07-13.
+  - `fastapi==0.136.3` + `starlette==1.3.1` (ml-service's ACTUAL locked resolution, forced via
+    `[tool.uv] override-dependencies = ["starlette>=1.3.1"]`): does **not** reproduce — every route resolves as a plain
+    `Route`/`APIRoute` with a valid `.path`. The break is specific to fastapi `0.137.x`'s router-wrapping change, not to
+    starlette `1.3.1` itself. ml-service is safe today only because its resolver happened to stay below `0.137.0`
+    despite its ceiling technically allowing up to `<0.138.0` — that's incidental, not a guarantee, so raising the fleet
+    canonical ceiling to `<0.138.0` would let OTHER repos' resolvers land on the broken `0.137.x` and reproduce the June
+    breakage.
+  - Decision: kept the canonical `fastapi`/`starlette` ceilings in `workspace-constraints.toml` UNCHANGED (still
+    `<0.137.0` / `<1.3.0`). Added a `PER_REPO_EXTERNAL_EXCEPTIONS` dict to
+    `scripts/manifest/check-dependency-alignment.py` — a single `("ml-service", "fastapi"): "fastapi>=0.115.0,<0.138.0"`
+    entry with an inline comment carrying the full investigation + explicit "do not generalize this fleet-wide" warning
+    — so the checker recognizes ml-service's declared ceiling as an intentional, reviewed divergence instead of flagging
+    it every run. Verified: `check-dependency-alignment.py` (both `--repo ml-service` and the full fleet) now reports
+    `OK: All dependencies aligned` — the PM STAGE 1.5 hard gate is unblocked.

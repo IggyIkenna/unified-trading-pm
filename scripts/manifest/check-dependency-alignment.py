@@ -52,6 +52,28 @@ DISK_ABSENT_OK_PREFIXES: tuple[str, ...] = (
     "pending-archive-into-",
 )
 
+# Per-repo external-dependency exceptions: (repo, normalized_pkg) -> the exact spec string
+# that repo is INTENTIONALLY allowed to declare instead of the fleet canonical. Keep this
+# empty by default — an entry here means "this repo's pyproject.toml deliberately diverges
+# from workspace-constraints.toml, and that divergence is a reviewed, permanent decision",
+# not a place to silence a misalignment you haven't investigated.
+#
+# ml-service/fastapi: the canonical starlette ceiling (<1.3.0) exists because fastapi==0.137.x
+# wraps `include_router()` results as `_IncludedRouter` (no `.path` attribute) -> AttributeError
+# in any `[r.path for r in app.routes]`-style route introspection (verified still reproducing
+# 2026-07-13 against fastapi==0.137.2 + starlette==1.3.1 in an isolated venv). ml-service raised
+# its OWN ceiling to <0.138.0 + force-pinned starlette>=1.3.1 via `[tool.uv] override-dependencies`
+# to clear 9 pip-audit CVEs (ml-service@4d16341) — its actual locked resolution stays on
+# fastapi==0.136.3 (below the 0.137.x break threshold) purely because that's what uv's resolver
+# picked, not because anything pins it there deliberately. This is safe for ml-service TODAY but
+# is NOT a general fix — do not raise the canonical fastapi/starlette ceiling fleet-wide off the
+# back of this exception; any other repo whose resolver lands on fastapi==0.137.x will hit the
+# same AttributeError. SSOT: plans/active/issues/canonical_fastapi_ceiling_stale_vs_ml_service_2026_07_13.md,
+# plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md.
+PER_REPO_EXTERNAL_EXCEPTIONS: dict[tuple[str, str], str] = {
+    ("ml-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
+}
+
 JsonDict = dict[str, object]
 
 
@@ -173,19 +195,23 @@ def main() -> int:  # noqa: C901
         for pkg, specs_obj in derived_external.items():
             if pkg in canonical:
                 canon_spec = canonical[pkg]
+                exception_spec = PER_REPO_EXTERNAL_EXCEPTIONS.get((repo_name, pkg))
                 specs_list = _jlist(specs_obj) or [] if isinstance(specs_obj, list) else [specs_obj]
                 for spec in specs_list:
                     spec_str = _jstr(spec)
-                    if spec_str != canon_spec:
-                        issues.append(
-                            {
-                                "repo": repo_name,
-                                "type": "external_version_mismatch",
-                                "dep": pkg,
-                                "pyproject_spec": spec_str,
-                                "canonical_spec": canon_spec,
-                            }
-                        )
+                    if spec_str == canon_spec:
+                        continue
+                    if exception_spec is not None and spec_str == exception_spec:
+                        continue
+                    issues.append(
+                        {
+                            "repo": repo_name,
+                            "type": "external_version_mismatch",
+                            "dep": pkg,
+                            "pyproject_spec": spec_str,
+                            "canonical_spec": canon_spec,
+                        }
+                    )
 
     aligned = len(issues) == 0 and len(disk_absent) == 0
     if json_output:
