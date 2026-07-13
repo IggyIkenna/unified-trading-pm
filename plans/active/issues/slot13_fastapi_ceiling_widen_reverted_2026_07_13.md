@@ -139,10 +139,17 @@ revert commits mid-flight at time of writing).
       fund-administration-service, unified-trading-api, deployment-service, strategy-service) via `git reset     --hard`
       to the pre-widen commit; confirmed no other local work was lost (checked `git log origin/live-defi-rollout..HEAD`
       per repo before resetting).
-- [ ] [BACKEND] P1. Revert the 7 already-pushed repos (unified-trading-library, agent-orchestrator,
+- [x] ✅ [BACKEND] P1. Revert the 7 already-pushed repos (unified-trading-library, agent-orchestrator,
       market-tick-data-service, greeks-service, alerting-service, deployment-api, features-service) via a fresh commit +
-      `quality-gates.sh` + `quickmerge.sh` each. Commits made locally; QG runs in flight at time of writing (serialized
-      through the single-token `qg-host-governor` on this host — expect this to take a while).
+      `quality-gates.sh` + `quickmerge.sh` each. Confirmed 2026-07-13 (slot-13): all 7
+      `revert(deps): restore fastapi     ceiling to <0.137.0 (undo declarative widen)` commits are on
+      `origin/live-defi-rollout` (fresh-pulled each repo, `ahead=0` vs origin) with `pyproject.toml` declaring the
+      canonical `fastapi>=0.115.0,<0.137.0` byte-for-byte — unified-trading-library@f5eb0c86,
+      agent-orchestrator@77d53bc, market-tick-data-service@fb88b76b, greeks-service@bd1fa4a, alerting-service@50c7032,
+      deployment-api@edc9608, features-service@65cae051. Every subsequent `quality-gates-v2` CI run on each repo since
+      these commits landed is green (spot-checked unified-trading-library: GH run 29290645816 conclusion=success at
+      current HEAD, which descends from f5eb0c86). This matches the P0 VERIFY todo below, which independently confirmed
+      the same fleet-wide alignment — that todo's checkbox was already flipped but this one wasn't; closing the gap.
 - [x] ✅ [VERIFY] P0. After all 7 revert-quickmerges land, re-run `check-dependency-alignment.py --json` fleet-wide and
       confirm zero mismatches (aside from the intentional ml-service exception). Verified 2026-07-13 (slot 7):
       fresh-pulled all 7 repos (unified-trading-library, agent-orchestrator, market-tick-data-service, greeks-service,
