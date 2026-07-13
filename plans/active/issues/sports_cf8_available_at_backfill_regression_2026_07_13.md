@@ -182,7 +182,26 @@ consolidation).
       avoid a repeat of the cron-collision (Finding 1). (repo: market-tick-data-service)
 - [ ] [INFRA] P2. Fix the `write_projected_index`/`SportsProjectionCollector` FetchEvidence-serialization crash so
       `--beta-manifest-out` dry-run previews work again. (repo: market-tick-data-service)
-- [ ] [DATA] P2. Decide disposition for the 12,407 legacy `source='instruments_service'` rows (VENUES/LEAGUES) —
+- [x] ✅ [DATA] P2. Decide disposition for the 12,407 legacy `source='instruments_service'` rows (VENUES/LEAGUES) —
       backfill a real vendor source or accept as a known residual. (The 35,361 free-text-reason rows are tracked
       separately in `sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`.) (repo:
-      market-tick-data-service, unified-api-contracts)
+      market-tick-data-service, unified-api-contracts) — **DECIDED, slot 8, 2026-07-13**:
+  - **Root cause confirmed historical, not a live bug.** UAC `SOURCE_PRIORITY` (`_source_priority_data.py`) registers
+    `("sports", "VENUES")` and `("sports", "LEAGUES")` under `["api_football"]` — `instruments_service` (the writing
+    SERVICE's own name) was never a valid vendor for these data_types. Traced the CURRENT active capture code
+    (`instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py::_sports_ref_source()`): it derives
+    the manifest `source` from the entity's pipeline_mode (batch_-stripped), which correctly resolves to `api_football`
+    for VENUES/LEAGUES today, and `record_captured()` itself **fail-fasts** (`MissingSourceError`) on any source not in
+    `SOURCE_PRIORITY` — so the current write path CANNOT reproduce this mislabeling; it's guarded. The 12,407 rows are
+    therefore genuinely **legacy** (written before this source-derivation/validation existed), not an active, recurring
+    defect.
+  - **Correct disposition: backfill to `api_football` (not "accept indefinitely")** — matches the registered vendor,
+    corrects future SOURCE_PRIORITY-based auditing/attribution, and the actual DATA VALUES in these rows are already
+    correct (only the `source` metadata column is wrong) — a narrow, low-risk metadata correction, not a data rewrite.
+  - **BUT: do not execute the backfill now.** This same issue doc's Finding 2 (P0, still OPEN) is a live, unresolved
+    `available_at`-destroying regression on this EXACT IS canonical, triggered by the same
+    `rebuild_sports_manifest_v9.py --force` full-rebuild mechanism a `source`-relabel backfill would need to use. Per
+    CLAUDE.md's data-pipeline- correctness rule ("a RED data audit FREEZES layer-N+1 work"), running ANY further
+    `--force` full-rebuild pass on this canonical before Finding 2 is root-caused risks repeating the same silent
+    corruption on a different column. **Action: defer this backfill and bundle it into the SAME future rebuild pass that
+    resolves Finding 1's root cause** (todo 1/2 above) — do not run it as a separate, earlier operation.
