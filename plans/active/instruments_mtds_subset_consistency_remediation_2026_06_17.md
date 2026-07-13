@@ -435,7 +435,12 @@ upstream limitation, NOT a silent placeholder).
 
 ## GCS object-migration COMPLETE + delete-list sizing (2026-06-18) — DELETE IS OPERATOR-GATED
 
-All legacy duplicate twins copied to canonical `pipeline_mode={mode}_{source}/asset_group={ag}/` shape via
+**[⚠️ SUPERSEDED-INCORRECT 2026-07-13, verify-rerun finding 102 — DO NOT ACT ON THIS PARAGRAPH: the later verified
+section (~L1072, "CRITICAL: only cefi is actually migrated") establishes with direct evidence (3/3 tradfi
+twin_exists=False) that defi/tradfi/sports/pred legacy objects have NO canonical twin — they are the LIVE copy and
+deleting them LOSES DATA. The "migrate-first → 0 on every mappable cell" claim below did not hold for those 4 AGs; the
+open P0 migrate-first todo (~L1086) governs.]** All legacy duplicate twins copied to canonical
+`pipeline_mode={mode}_{source}/asset_group={ag}/` shape via
 `e2e-testing/scripts/defi/migrate_legacy_twins_from_audit.py` (server-side `gcs_copy_object`, workers=64, 0 errors).
 Re-audit (`audit_legacy_gcs_dup_delete_list.py --ag defi,tradfi,sports,pred`) confirms **migrate-first → 0 on every
 mappable cell** — every SAFE-TO-DELETE legacy object has a `gcs_describe`-verified canonical twin. Delete-lists written

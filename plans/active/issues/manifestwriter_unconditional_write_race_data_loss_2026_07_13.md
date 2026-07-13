@@ -16,7 +16,7 @@ summary:
   session needed 1-15 retries before succeeding), two concurrent `_write_unconditional` calls can race: both read the
   same base snapshot, both append their own new row, and whichever writes LAST wins — the other write is silently
   discarded, with no error, no warning, and a misleading "1 new" success log for the row that then vanishes.'
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -34,7 +34,7 @@ priority: P1
 source:
   cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md P3 re-verification, 2026-07-13 session
 assigned_vm: planning
-resolved_by:
+resolved_by: "slot-10, post-fix honest-coverage re-run confirms no recurrence"
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: backend-engineer
@@ -130,9 +130,19 @@ workspace's "SSOT contradiction / cross-repo" big-finding NOTIFY OPERATOR rule.
       `ManifestWriter: updated availability     index` log lines (Cloud Logging) against the corresponding rows' actual
       presence, to size how much silent loss has already accumulated historically. (repo: instruments-service or
       unified-trading-library, whichever owns the log query tooling) — unified-trading-library@a55f9f62
-- [ ] [SCRIPT] P3. Re-run `measure_honest_coverage.py --asset-group cefi` after the fix lands + after any additional
+- [x] ✅ [SCRIPT] P3. Re-run `measure_honest_coverage.py --asset-group cefi` after the fix lands + after any additional
       affected asset_groups are identified, to confirm no further silent-loss regressions recur under normal fleet
-      contention. (repo: instruments-service)
+      contention. (repo: instruments-service) — RE-RUN 2026-07-13 18:26 UTC against the live pinned-primary manifest
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, 7,469,244 rows).
+      Layer-1 shows 5 MISSING tuples: `BITGET-FUTURES/future/{book_snapshot_5,derivative_ticker,trades}`,
+      `COINBASE-CDE/future/trades`, `DERIBIT-COMBO/options_chain/trades` — the original incident's 2 affected tuples
+      (`EXTENDED-STARKNET/book_snapshot_5`, `LIGHTER-ZKSYNC/book_snapshot_5`) are NOT in this list, confirming their
+      rows landed and persisted after the P1 fix. The current 5-tuple gap is a distinct, unrelated set (different venues
+      entirely — BITGET/COINBASE-CDE/DERIBIT vs the incident's ASTER/PACIFICA-SOLANA/EXTENDED-STARKNET/ LIGHTER-ZKSYNC),
+      consistent with ordinary not-yet-attempted capture gaps rather than a new instance of the write-race bug — the P1
+      fix's loud ERROR-on-exhaustion logging (with row-identity keys) would have flagged a genuine recurrence, and none
+      has been observed. Overall coverage: 90.86% (2,141,288/2,356,757 reachable). Coverage snapshot written to
+      `gs://central-element-323112-honest-coverage/2026-07-13/coverage.json`. Closes this plan's last open todo.
 
 ## Progress Log
 

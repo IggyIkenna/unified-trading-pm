@@ -133,11 +133,34 @@ determine unilaterally:
 
 ## Todos
 
-- [ ] [VERIFY] P1. Audit `venues.parquet`'s venue_id history — is it consistently string-coded across the whole corpus,
-      or did it change format at some point? Check the raw upstream write path in instruments-service (whoever writes
-      `sports_reference/venues/venues.parquet`) to confirm the current canonical format and whether the three-call-site
-      assumption was ever correct. (repos: features-service, instruments-service)
-- [ ] [DECISION] P1. Rule on Option A/B/C above with the operator/data-engineering owner, informed by the audit.
+- [x] ✅ [VERIFY] P1. Audit `venues.parquet`'s venue_id history — is it consistently string-coded across the whole
+      corpus, or did it change format at some point? Check the raw upstream write path in instruments-service (whoever
+      writes `sports_reference/venues/venues.parquet`) to confirm the current canonical format and whether the
+      three-call-site assumption was ever correct. (repos: features-service, instruments-service) — **DONE, slot 14,
+      read-only investigation, no code change (this todo is a factual audit, not the operator decision itself). RESOLVES
+      the ambiguity — Option B confirmed, with a bigger-than-expected wrinkle:**
+  - **`venues.parquet` is 100% string-coded, consistently** — direct read of the live file confirms all 591 rows
+    (`OLD_TRAFFORD`, `ST_JAMES_PARK`, ...), 0/591 numeric-looking. No format drift found in this table.
+  - **Raw fixture payloads carry a GENUINELY NUMERIC venue_id** — sampled raw (pre-normalizer) `fixtures.parquet` across
+    eras: 2021-05-01 (165 rows, `venue_id` dtype `float64`, values `1394.0`/`11913.0`/`1397.0`, 165/165 numeric-like)
+    and 2024-01-15 (13 rows, same pattern, `19941.0`/`12684.0`/`20474.0`) both confirm a real numeric
+    API-Football-native venue id — a DIFFERENT id-space from `venues.parquet`'s string codes, not a normalization
+    artifact. (2018-06-17 and 2026-06-01 samples show `venue_id` present but fully NULL, not numeric — a separate,
+    pre-existing sparse-coverage gap in those specific days' raw data, not investigated further here.)
+  - **CONFIRMS Option B, not Option A**: this is genuinely two id-spaces (raw-fixture numeric API-Football id vs.
+    `venues.parquet`'s canonical string code), not a single space with an accidental type-coercion bug. Simply deleting
+    the `pd.to_numeric`/`int()` round-trip (Option A) would NOT fix the join — a numeric fixture `venue_id` still
+    wouldn't equal a string `venues.parquet` `venue_id` even compared as raw strings (`"1394"` != `"OLD_TRAFFORD"`).
+  - **New wrinkle Option B's original framing didn't anticipate**: `venues.parquet` has **no crosswalk/external-id
+    column** (`venues.parquet` columns: `venue_id, name, city, country, capacity, surface, latitude, longitude` — no
+    `api_football_venue_id` or equivalent). A numeric→string venue-id crosswalk may not exist ANYWHERE in the current
+    corpus, not just be "missing from these 3 call sites" — this could be a genuinely bigger fix (build/backfill a
+    crosswalk table, or match venues by `name`+`city` fuzzy-join as a fallback) than Option B's original text implied.
+    Flagging this refined finding for the operator decision below.
+- [ ] [DECISION] P1. Rule on Option A/B/C above with the operator/data-engineering owner, informed by the audit above —
+      **note the audit found Option B confirmed but bigger than originally scoped: no crosswalk column exists in
+      `venues.parquet` at all, so the fix may require building one (via `name`/`city` matching or a new upstream ingest
+      of API-Football's venue-id mapping), not just wiring an existing crosswalk into the 3 call sites.**
 - [ ] [CODE] P1. Apply the chosen fix at all three sites (`gcs_normalizers.py:188-190`, `gcs_mappings.py:158-160`,
       `travel_calculator.py:182-184`) — keep them consistent with each other (a fourth site could exist; grep
       `venue_id` + `to_numeric` fleet-wide before closing this out).

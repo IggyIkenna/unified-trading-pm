@@ -61,9 +61,19 @@ drift_direction: advance-code
       `credentials-registry.yaml`); the `# config-bootstrap` os.environ reads left as sanctioned.
 - [x] ✅ [AGENT] P3. **greeks-service** — DONE `greeks-service@b119b5b` (QG 0). Deleted `greeks_service/events.py`
       re-export stub; the single importer now imports `log_event` from UTL directly.
-- [ ] [AGENT] P3. **strategy-service**: noqa-with-reason (or `UnifiedCloudConfig`) the un-annotated `os.environ.get` in
-      `recovery_event_helper.py:41,90` and `pnl/engine/mock_data_provider.py:38` (mirror the existing
-      `position/engine/mock_data_provider.py` noqa pattern).
+- [x] ✅ [AGENT] P3. **strategy-service**: noqa-with-reason (or `UnifiedCloudConfig`) the un-annotated `os.environ.get`
+      in `recovery_event_helper.py:41,90` and `pnl/engine/mock_data_provider.py:38` (mirror the existing
+      `position/engine/mock_data_provider.py` noqa pattern). — VERIFIED STALE, no code change needed. (1)
+      `recovery_event_helper.py` has zero `os.getenv`/`os.environ` calls today — already cleared by an earlier commit
+      `6aff0c48` ("clear os.getenv/imports-in-fn/... classes"), which predates this plan's `created: 2026-07-13`; the
+      file is 98 lines with no match at lines 41/90 or anywhere else. (2) `pnl/engine/mock_data_provider.py:38`'s
+      `os.environ.get("WORKSPACE_ROOT", "")` IS already covered — not by an inline noqa like
+      `position/engine/mock_data_provider.py`, but by `scripts/quality-gates.sh`'s
+      `OS_ENV_EXCLUDE_GLOBS=(--glob "!**/engine/mock_data_provider.py")`, which glob-matches ANY
+      `engine/mock_data_provider.py` path (not just `position/`'s), excluding it from the QG os-environ scan entirely —
+      a more robust fix than a per-line comment (survives file moves/renames). Confirmed by running the exact QG grep
+      logic locally: 0 hits. Adding a redundant inline noqa would not change QG behaviour and risks drifting from the
+      glob exclude's own "one exclusion, covers the whole family" intent.
 - [x] ✅ [CODE] P2. **execution-service cross-service imports surfaced by the 2026-06-11 imports-in-fn sweep (codex
       ratchet plan)** — DONE. (1) `leg_snapshot_builder` (pure Decimal/UAC-typed math, no service/IO deps) moved to
       `unified_trading_library.risk.leg_snapshot_builder`, mirroring the `risk/net_delta.py` (F45) precedent — single
@@ -91,7 +101,18 @@ drift_direction: advance-code
       `resolve_bucket_name`, per-object `gsutil`/`gcloud` subprocess → UTL `gcs_copy/delete/describe_object`, and fix
       the banned env name `GOOGLE_CLOUD_PROJECT` → `GCP_PROJECT_ID` (`cleanup_kraken_spot_empty_confirmed.py:96`,
       `cleanup_may4_bait_sentinels.py:117`, MTDS `cleanup_*`). These are QG-baselined; counts only go down.
-- [ ] [VERIFY] P2. `quality-gates.sh` green per touched repo; ratchet baselines decrease (never increase); quickmerge.
+- [x] ✅ [VERIFY] P2. `quality-gates.sh` green per touched repo; ratchet baselines decrease (never increase);
+      quickmerge. — VERIFIED. `strategy-service@8db3f717` (the repo I directly touched this plan): full
+      `quality-gates.sh` exit 0, sentinel-verified (1011s — hit the known host-wide `qg-host-governor` contention, see
+      `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md`, resolved via the sanctioned
+      `IGNORE_TIMEOUT=true` workaround). The other 8 repos this phase touched (alerting-service, agent-orchestrator,
+      unified-trading-api, greeks-service, unified-trading-library, execution-service, unified-api-contracts,
+      system-integration-tests) each already carry their own "QG 0" / "confirmed full-green pre-ship" evidence recorded
+      on their respective todos above at ship time — not re-run here to avoid burning more governor-contended wall-clock
+      re-verifying already-shipped, sentinel-passed commits. No ratchet-baseline regressions introduced (the
+      strategy-service os.environ todo above required zero code changes; the lint-ratchet tail above stays unchecked as
+      explicitly opportunistic/non-blocking, so baselines are unchanged, not increased). This closes every todo in this
+      plan except the opportunistic lint-ratchet tail.
 
 ## Success criteria
 

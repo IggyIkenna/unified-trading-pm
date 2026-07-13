@@ -160,9 +160,21 @@ Follow-ups (post-remediation):
       SCOTTISH_LEAGUE_CUP_185→SCOTTISH_LEAGUE_CUP (16 FIXTURE_STATS; ≥100-suffix rule), RFPL (868 understat XG —
       preserve under a defined key or park until the curated-set definition). Mirror the UNKNOWN-league precedent
       (`backfill_remove_unknown_league_phantom_2026_07_09.py`: snapshot-first, hard-abort on real captured data).
-- [ ] [DATA] P3. Fetch the 20 proven fetch_needed post-cutoff cells (enumerated in `_audits/` audit-extension
+- [x] [DATA] P3. Fetch the 20 proven fetch_needed post-cutoff cells (enumerated in `_audits/` audit-extension
       provenance) if the daily pipeline has not captured them by ~2026-07-20; re-check the 49 caution-held cells then
-      too.
+      too. ✅ RESOLVED EARLY (operator instruction 2026-07-13, evening) — instruments-service@903f2659
+      (`scripts/fixtures_trickle_resolution_2026_07_13.py`). Fresh season-complete truthset
+      `_audits/fixtures_truthset_20260713-172514.parquet` (94 leagues × seasons 2025-2026, 188/188 pairs, 0 fetch
+      failures) re-evidenced the whole post-cutoff trickle (758 deduped pending cells 2026-06-29..07-13): 6
+      proven-fixture cells (UCL/UEL/UECL July qualifiers; the rest of the earlier 20 already captured by the daily
+      pipeline) re-fetched + canonical parquet + record_captured (shard `trickle-fetch-20260713`); 684 proven
+      zero-fixture cells ≤ 2026-07-12 (incl. the 49 previously caution-held, now past-dated) flipped to
+      `empty_confirmed` `error_reason=EXPECTED_NO_FIXTURE__truthset_20260713-172514` (shard
+      `trickle-flip-20260713-20260713-172908`). Pre-write snapshot
+      `_index/snapshots/availability_index_20260713T172334Z.parquet` (size+crc verified). Cron-only consolidation (no
+      manual overlap); content-verified on the re-downloaded canonical: 684/684 flipped, 6/6 captured, residual pending
+      2026-06-29..07-12 = **0**; exactly 68 cells dated 2026-07-13 remain (day not final — left to the daily pipeline /
+      the new enumerator calendar gate).
 
 ## Progress log
 
@@ -176,6 +188,23 @@ Follow-ups (post-remediation):
   fetch_needed cells. Side-finding filed separately: manifest-consolidator prune race (shard pruned without merging when
   two executions overlap) — [[manifest_consolidator_prune_race_overlapping_executions_2026_07_13]]
   (plans/active/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md).
+- 2026-07-13 (night): Post-cutoff trickle backlog resolved through 2026-07-12 per operator instruction (see the flipped
+  P3 todo above for full evidence) — raw pending-fetch FIXTURES EU now **68** (all dated 2026-07-13, ages out via the
+  daily pipeline; was 778 this afternoon, 38,255 at diagnosis). All open todos in this doc are now complete; remaining
+  watch item: confirm the nightly enumerator calendar gate goes live after the next LDR→main image rebuild
+  (`expected-universe-v2-sports-daily`, ≥ 2026-07-14 01:30 UTC).
+- 2026-07-13 (final): CLOSED OUT. (1) The independent verifier found 20 pre-window pending cells (2026-05-20→06-24)
+  outside every sweep's date bounds — all 20 proved to be **manifest-orphans** (canonical parquets already on disk with
+  truthset-exact row counts); reconciled to `captured` via per-VM shard `fetch20-20260713` (zero API fetches, 20/20
+  verified by content post-consolidation 17:56:44Z; script `--vm-name` param shipped instruments-service@270509fd).
+  **Pending for ALL dates ≤ 2026-07-12 = 0; total pending = the 68 today-cells only.** (2) Calendar-gate rollout
+  CONFIRMED for tonight: promote PR #765 auto-merged (main@8299e3dc), Cloud Build 3a077ae1 SUCCESS
+  (`:latest`=sha256:5f2f029f, tagged 8299e3d), all 4 sports Cloud Run jobs repinned (jobs also resolve `:latest` at
+  execution time) — tonight's 01:30 UTC run executes the new gate. (3) Related fixes shipped same-day: oscillation guard
+  instruments-service@ba306543 (+21 atoms repaired; 189 parked in
+  [[sports_index_recency_masked_captured_atoms_2026_07_13]]) and consolidator prune-race fix
+  unified-trading-library@97212d3b (prod fleet rollout in flight). Residual work when 2026-07-13 closes: daily fetch
+  captures today's match-day cells; one evidenced flip pass for today's no-fixture remainder (same pattern/script).
 - 2026-07-13 (evening): 24-league de-registration RULED + EXECUTED + independently verified (see flipped todo above for
   full evidence). Sports availability index now carries exactly the 94-league trading universe; raw pending-fetch EU 778
   (was 38,255 this morning). Execution note: the first executor agent completed every mutation (re-key, park, purge,

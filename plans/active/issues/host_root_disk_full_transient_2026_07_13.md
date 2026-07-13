@@ -1,25 +1,27 @@
 ---
 doc_type: issue
-title: Host root disk hit 100% full (0 bytes free) mid-session, self-recovered to 96%
-summary:
+title: Host root disk hit 100% full (0 bytes free) TWICE in one session — recurring, not transient
+summary: |
   While running quality-gates.sh for unified-trading-api, the shared host's root filesystem (290G, holds
   /home/ubuntu/unified-trading-system-repos across all 16 slots) hit 100% full — 0 bytes available, breaking `uv sync`
   (`No space left on device`) and the Claude Code harness's own tmpdir output capture. Self-recovered to 96% (13G free)
-  ~2 minutes later, unattended, likely another process's cache/artifact cleanup. Flagging as a fleet-wide capacity risk,
-  not a one-off.
+  ~2 minutes later, unattended. Recurred ~1 hour later, same session, same host — `df -h /` back to 100%/12M free,
+  breaking `bash scripts/setup.sh` for execution-service (`uv pip install -e .` editable-install failure). Two
+  independent full-disk events in one session upgrades this from "self-recovered blip" to "recurring capacity
+  problem" — retitled + reprioritized accordingly.
 status: open
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: [infra, disk-space, host-contention, capacity]
+tags: [infra, disk-space, host-contention, capacity, recurring]
 created: "2026-07-13"
 last_updated: "2026-07-13"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.4
@@ -32,9 +34,18 @@ related: [plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md]
 depends_on: []
 ---
 
-# Host root disk hit 100% full mid-session, self-recovered
+# Host root disk hit 100% full TWICE in one session — recurring, not transient
 
-## What I found
+## Recurrence (2026-07-13, ~1hr after first occurrence)
+
+`df -h /` again showed `290G 290G 12M 100% /` while trying `bash scripts/setup.sh` for execution-service (to run its
+health-endpoint tests as part of `utl_reuse_phase6_venue_health_retry` VERIFY work). `uv pip install -e .` failed at
+"Project editable install failed". Same host, same session, same symptom class as the first occurrence below — this is
+NOT a one-off. Between the two events, disk was observed oscillating in the 96%-99% range (checked repeatedly while
+separately waiting on `qg-host-governor` queue timers), so the host appears to be running close to full most of the
+time, with occasional excursions to literal 100%/0-bytes-free rather than a single anomalous spike.
+
+## What I found (first occurrence)
 
 `df -h /` went from ~93M free to **0 bytes free (100%)** between two checks a few minutes apart, while shipping a
 routine dependency fix for `unified-trading-api`. Concrete breakage observed during the window:
@@ -62,12 +73,17 @@ session (looks like a tool bug, not a resource exhaustion symptom, until you che
 Worth someone with host-capacity context checking: (1) whether the `.uv-cache` at
 `/home/ubuntu/unified-trading-system-repos/.uv-cache` is being pruned on any schedule (a shared cache across 16 slots
 can grow unbounded if not), (2) whether per-slot `.venv` dirs could be more aggressively cleaned between tasks, (3)
-whether a disk-usage alert/threshold should exist alongside the QG-governor's memory-pressure awareness. Not escalating
-as P0/P1 since it self-recovered and did not (as far as I can tell) cause permanent data loss — but two independent
-host-capacity symptoms (CPU/token queue contention + disk-full) surfacing in the same session on the same host is worth
-someone connecting the dots on overall host sizing vs current fleet size.
+whether a disk-usage alert/threshold should exist alongside the QG-governor's memory-pressure awareness. **Upgraded to
+P1** after the recurrence — a host oscillating between 96-100% full for an extended period (not a single anomalous
+spike) means any of the 16 slots can hit this at any moment, and it silently blocks routine work (`uv sync`,
+`scripts/setup.sh`, coverage writes) with a confusing error surface (looks like a dependency/tooling bug until `df -h`
+is checked). Two independent host-capacity symptoms (CPU/token queue contention + disk-full) surfacing repeatedly in one
+session on one host is worth someone connecting the dots on overall host sizing vs current fleet size (16 slots × ~24
+repo clones each appears to be the actual driver, per the ~219G `unified-trading-system-repos` footprint noted above).
 
 ## Todos
 
-- [ ] [INFRA] P2. Check whether `.uv-cache` / per-slot `.venv` growth is unbounded and needs a prune schedule; connect
-      to the QG-governor contention finding for an overall host-capacity review. (repo: infra/host config)
+- [ ] [INFRA] P1. Check whether `.uv-cache` / per-slot `.venv` growth is unbounded and needs a prune schedule; connect
+      to the QG-governor contention finding for an overall host-capacity review. Given the recurrence, also consider
+      whether a per-slot disk-usage cap or an automated `.venv`/cache prune cron is warranted, not just a one-time
+      cleanup. (repo: infra/host config)

@@ -78,17 +78,50 @@ content-write success marker gates pruning per-shard.
 
 ## Todos
 
-- [ ] [CODE] P1. Reproduce/confirm the mechanism in unified-trading-library `manifest_consolidator`: audit the
-      shard-listing → merge → canonical-write → prune sequence for windows where a shard can be pruned by an execution
-      that did not merge it (or whose merged content lost the canonical-write race to a concurrent execution).
-- [ ] [CODE] P1. Fix so prune is gated per-shard on that shard's content having reached canonical (e.g. prune exactly
-      the shard set read by the merge whose canonical write won, via generation-preconditioned GCS write + shard-list
-      manifest in the canonical object's metadata; or single-flight lock so executions cannot overlap).
-- [ ] [VERIFY] P2. Regression test simulating two overlapping executions with a shard written between their listings;
-      plus a one-off historical sweep for other silently-lost shards (compare per-VM shard backups/\_audits provenance
-      vs canonical content where provenance exists).
+- [x] ✅ [CODE] P1. Reproduce/confirm the mechanism in unified-trading-library `manifest_consolidator` — CONFIRMED
+      2026-07-13: `_write_consolidated._content_metadata()` stamped `consolidator_content_write_at` with
+      `datetime.now(UTC)` at **canonical-WRITE time**, but the merged shard set was frozen earlier at **shard-LISTING
+      time** (`_list_per_vm_shards_with_mtime`). Real cycles run 93–121s (per the `_LOCK_TTL_SECONDS` comment), so a
+      shard written in `(listing, write − 5s skew)` was never merged yet fell BELOW the next execution's cutoff
+      (`content_write_mtime − skew`) → classified "unchanged → already consolidated" → no-op branch →
+      `_prune_consolidated_shards` deleted it unmerged. The CAS retry re-stamped `now()` even later while re-merging the
+      SAME original shard list, widening the window. The soft lock serializes executions but cannot close this — the
+      window exists within a single slow cycle; an overlapping manual `--wait` run maximizes it (exactly the incident
+      timeline: flip shard 14:23:38 listed+merged; reconcile9 shard 14:23:58 written mid-merge; winner's marker
+      landed >14:23:58; next execution pruned it unmerged).
+- [x] ✅ [CODE] P1. Fix shipped `unified-trading-library@97212d3b`: `consolidator_content_write_at` now carries the
+      merge's SHARD-LISTING start time (captured immediately before `_list_per_vm_shards_with_mtime`, threaded through
+      `_duckdb_consolidate_and_write` → `_write_consolidated(listing_started_at=…)`; CAS retries re-stamp the SAME
+      listing time). Prune cutoff = marker − skew therefore only ever covers shards provably visible to the winning
+      merge's listing — a shard written between listing and write keeps `mtime > marker − skew`, re-classifies "changed"
+      next cycle, and merges before it can satisfy any prune cutoff. `consolidator_run_at` (reader freshness /
+      loud-fail-on-stale) still stamps the actual write instant — unchanged. Fail-toward-correctness: a losing CAS retry
+      stamping an older listing time only moves the cutoff backward (idempotent re-merge, never a silent drop).
+- [x] ✅ [VERIFY] P2. Regression test
+      `tests/unit/test_manifest_consolidator.py::test_shard_written_between_listing_and_canonical_write_survives_next_cycle`
+      (same commit @97212d3b): execution A lists only the flip shard, a mid-window shard lands during A's merge, A
+      writes; asserts marker < mid-shard mtime < write time, execution B classifies it CHANGED + merges its rows into
+      canonical, and `_prune_consolidated_shards(cutoff=marker_A)` prunes the settled shard but NOT the mid-window
+      shard. Historical sweep (2026-07-13, read-only): sports canonical (4,863,784 rows) verified BY CONTENT against
+      today's `_audits` provenance — all 9 `fixtures_eu_reconcile9_cells_20260713.csv` cells present with valid 4-state
+      status, all 30,183 `fixtures_eu_flip_pairs_20260713.parquet` (league_id, date) keys present, 0 absent. Per-VM
+      orphan sweep across 16 instruments-store/market-data-tick buckets (prd + legacy flat, ls only): backlogs are 1–9
+      shards, almost all `_legacy_seed.parquet` (never pruned by design); non-seed stragglers on idle LEGACY flat
+      buckets only (`instruments-store-sports…/fixtures-recovery-20260627-183725.parquet`,
+      `market-data-tick-tradfi…/manifest-recon-apply-tradfi-20260624-{002811,004328}.parquet`, plus a
+      `_legacy_seed.20260703-083335.bak.parquet` misfiled inside `market-data-tick-cefi…/_index/per_vm/`) — consistent
+      with merged-but-never-pruned on idle buckets (no subsequent content write to advance the cutoff), not with loss;
+      no mutation performed.
 
 ## Progress log
 
 - 2026-07-13: Filed from live observation during the FIXTURES pending-EU remediation; recovery for the observed instance
   already done (idempotent re-write, 9/9 rows verified in canonical).
+- 2026-07-13 (fix session): Mechanism confirmed + fixed + regression-tested at `unified-trading-library@97212d3b` (QG
+  green, quickmerged to LDR). **Deployment note (NOT yet live in prod)**: the deployed consolidators are Cloud Run Jobs
+  (`uts-prod-manifest-consolidator-*` + legacy flat variants, ~20 jobs) running image `market-tick-data-service:latest`
+  with UTL installed as a dep — per the SSOT's image deploy-hygiene note, this UTL fix does NOT reach them until the
+  MTDS image is rebuilt (BASE_IMAGE_DIGEST bump) and the jobs re-resolve `:latest` (job re-deploy / new execution
+  pulls). AWS mirrors via ECR `market-tick-data-service:latest` Batch-Fargate jobs. Until then, mitigation stands: avoid
+  manual `gcloud run jobs execute --wait` overlapping the `*/1` cron right after writing shards; verify landings by
+  content.

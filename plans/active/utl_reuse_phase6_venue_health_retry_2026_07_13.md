@@ -63,11 +63,40 @@ drift_direction: advance-code
 - [x] ✅ (UTL helper half) **Add a UTL retry helper** — DONE `unified-trading-library@20c8ae8d`: `retry` (decorator) +
       `with_retry` (callable), stdlib-only, exp backoff + jitter, 429/5xx-aware, exported from
       `unified_trading_library.utils.retry` / `.utils` / top-level. 9 new tests.
-- [ ] [AGENT] P2. **Consume the UTL retry helper** (REMAINING): consolidate the two hand-rolled base-adapter retries —
-      MTDS `market_interface/base_adapter.py:29-100` + instruments-service `reference_data/base_adapter.py:39-160` —
-      onto `unified_trading_library.utils.retry`/`with_retry`. Preserve each adapter's classify-on-give-up behaviour.
-- [ ] [VERIFY] P1. Adapter retry behaviour unchanged (mock 429 → N retries → classify); health endpoints respond;
-      `quality-gates.sh` green; quickmerge.
+- [x] ✅ [AGENT] P2. **Consume the UTL retry helper** (REMAINING): consolidate the two hand-rolled base-adapter retries
+      — MTDS `market_interface/base_adapter.py:29-100` + instruments-service `reference_data/base_adapter.py:39-160` —
+      onto `unified_trading_library.utils.retry`/`with_retry`. Preserve each adapter's classify-on-give-up behaviour. —
+      **MTDS already migrated** (found already on `unified_trading_library.retry`/`retry_async` via `handle_api_errors`,
+      decorator form, jitter disabled to match the prior deterministic backoff — no work needed). **instruments-service
+      — SHIPPED `instruments-service@d88991d7`**: `_get_with_retry` now delegates to `with_retry_async` (callable form,
+      since it's one shared method wrapping a single recurring GET+parse shape across ~30 venue-adapter call sites, not
+      many independently-decorated methods like MTDS). The old `_handle_retryable_response`'s sentinel-return contract
+      (return `None` to signal "retry", sleep inline) doesn't compose with UTL's exception-based retry model, so it's
+      replaced by `_handle_response` + a small internal `_RetryableStatusError` (a `ClientError` subclass carrying
+      `.status`) that UTL's `retryable_exceptions` catches. Give-up messages
+      (`"HTTP {status} from {url} after N attempts"` / `"All N attempts failed for {url}: {exc}"`) and backoff timing
+      (1s/2s/4s, no jitter, 3 attempts) are byte-identical to the old loop. Updated the 4 `TestHandleRetryableResponse`
+      unit tests to the new `_handle_response` contract + added one `TestGetWithRetry` case covering the
+      retryable-status exhaustion message (previously covered indirectly via the removed helper's own "raises on last
+      attempt" test). Full `tests/reference_data/` + `tests/unit/` suites green (4314 passed, 40 skipped).
+      `quality-gates.sh` exit 0, sentinel verified against `d88991d7` (hit the known host-wide `qg-host-governor` K=1
+      contention — see `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md` — resolved via its
+      sanctioned `IGNORE_TIMEOUT=true` workaround after the token-queue-inflated wall-clock gate false-failed an
+      otherwise-green run).
+- [x] ✅ [VERIFY] P1. Adapter retry behaviour unchanged (mock 429 → N retries → classify); health endpoints respond;
+      `quality-gates.sh` green; quickmerge. — VERIFIED. `instruments-service@d88991d7`:
+      `tests/unit/test_base_adapter_comprehensive.py` 17/17 pass (retry-on-429-then-success, all-retries-exhausted,
+      persistent-retryable-status-exhaustion, params/headers passthrough). `market-tick-data-service`:
+      `tests/market_interface/unit/test_base_adapter_and_rate_limiter.py` 22/22 pass (`handle_api_errors` sync+async
+      retry/no-retry/exhaustion paths). `execution-service@348385ad` (health-router migration, shipped earlier in this
+      plan): 8 new health-endpoint tests green + full `quality-gates.sh` exit 0 at ship time (sentinel-verified) —
+      re-confirmation blocked this session by the host root-disk-full recurrence
+      (`plans/active/issues/host_root_disk_full_transient_2026_07_13.md`, `scripts/setup.sh` couldn't provision a fresh
+      `.venv`); relying on the ship-time green run as evidence rather than re-running under a disk-constrained host. No
+      new code needed for this todo — an independent `_get_with_retry` consolidation attempt on instruments-service
+      (this session, discarded before push) turned out redundant with `d88991d7` (already-shipped by a concurrent slot
+      with a more faithful preservation of the original's two distinct give-up messages); confirmed clean via
+      `git reset --hard origin/live-defi-rollout`, no local trace, no rework needed.
 
 ## Success criteria
 
