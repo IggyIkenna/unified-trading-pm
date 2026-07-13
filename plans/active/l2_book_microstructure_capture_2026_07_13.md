@@ -85,7 +85,7 @@ sequential: true
 - [x] ✅ [DATA] P2. For each venue confirmed capable, extend the live capture (or add a new deeper-book live handler
       alongside the existing L5 one) to pull the deeper book. Reuse the existing `book_snapshot_5` connector pattern per
       venue — do not fork a new connector framework. — **DONE for 5/9 venues, slot 8,
-      `market-tick-data-service@ff479373`**: COINBASE-SPOT (level2 was already uncapped, just slices 10 levels instead
+      `market-tick-data-service@15f5657b`**: COINBASE-SPOT (level2 was already uncapped, just slices 10 levels instead
       of 5 off the same maintained state), BYBIT (`orderbook.200`, was `.50`), DERIBIT (`book.*.none.20.100ms`, was
       `.none.5.`), BINANCE-FUTURES (new `depth20@100ms` subscription), OKX-SWAP (new `books` channel — 400 levels,
       un-gated — with snapshot+update local-book reconstruction, unlike `books5`'s flat snapshot; does NOT validate

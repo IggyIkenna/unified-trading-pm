@@ -40,7 +40,7 @@ resolved_by:
 `l2_book_microstructure_capture_2026_07_13.md` todo 2 says "extend the live capture ... to pull the deeper book" for
 each of the 9 CeFi venues confirmed capable in todo 1's research doc. Implementing it required tracing each venue's
 `_<venue>_factory()` in `market_tick_data_service/live/connectors/` to find its `book_snapshot_5` branch to extend. 5 of
-9 have one and were successfully extended (see `market-tick-data-service@ff479373`, this session): **BINANCE-FUTURES,
+9 have one and were successfully extended (see `market-tick-data-service@15f5657b`, this session): **BINANCE-FUTURES,
 OKX-SWAP, BYBIT, DERIBIT, COINBASE-SPOT.**
 
 **4 of 9 have NO live `book_snapshot_5` branch at all** — their factory functions ignore `data_type` entirely and always
