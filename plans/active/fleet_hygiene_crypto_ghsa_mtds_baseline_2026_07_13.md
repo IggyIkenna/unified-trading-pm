@@ -92,9 +92,17 @@ sequential: false
       `unified-trading-pm/scripts/quality-gates-base/base-service.sh` and `base-library.sh` once the bump above is
       confirmed green across the fleet — do not remove the ignore before every dependent repo's QG has actually passed
       with the new floor. Repo: unified-trading-pm.
-- [ ] [SCRIPT] P3. Ratchet DOWN `ruff_rule_ratchet_baseline.yaml` and `no_fallback_imports_baseline.yaml` for
+- [x] ✅ [SCRIPT] P3. Ratchet DOWN `ruff_rule_ratchet_baseline.yaml` and `no_fallback_imports_baseline.yaml` for
       market-tick-data-service by re-running `--update-baseline` — baselines only go DOWN, never up, per the
-      coding-standards HARD RULE. Repo: unified-trading-pm.
+      coding-standards HARD RULE. Repo: unified-trading-pm. — SHIPPED `unified-trading-pm@aa0428ea`. Ran both checkers
+      scoped to `market-tick-data-service` first (dry-run, no `--update-baseline`) to see exactly what changed:
+      `check_ruff_rule_ratchet.py` reported `dtz: 30 < baseline 32 — ratchet DOWN` (`tid251` unchanged at 38, already ==
+      baseline); `check_no_fallback_imports.py` reported `count: 2 (== baseline)` — no ratchet room there, contrary to
+      the plan's stated "(3)" (already correct at the current baseline, nothing to update). Ran
+      `check_ruff_rule_ratchet.py --scope market-tick-data-service --update-baseline`, which dropped `dtz` 32→30 in
+      `ruff_rule_ratchet_baseline.yaml` (`tid251` untouched, still 38 — no drift there). Did NOT touch
+      `no_fallback_imports_baseline.yaml` since its live count already matched. Re-ran both checkers post-update to
+      confirm `== baseline` on all four numbers. Full `quality-gates.sh` green (59s).
 
 ## Progress Log
 
