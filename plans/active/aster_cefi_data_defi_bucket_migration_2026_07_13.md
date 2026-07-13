@@ -334,3 +334,8 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
 | BYBIT `futures_chain` write-shape bug (flat glued-symbol files)     | Found + partially fixed in code 2026-07-09, historical data not backfilled                                                       | Tracked separately — `plans/active/issues/bybit_futures_chain_write_shape_2026_07_13.md`.                                 |
 | Legacy `ticks_migrated_*` shallow shape in DeFi bucket (5,332 objs) | Already tracked pre-existing — codex axis-7, archived plan F16/F29, 2026-06-18 delete-list audit MIGRATE-FIRST classification    | No new work needed — do NOT re-scope here, it already has an owner.                                                       |
 | `defi__dex_swaps` BQ external table split-table design              | Separate, independent fix in `deployment-service`                                                                                | Tracked in this session's direct commit to `bigquery_feature_external_tables.tf` — does not block or depend on this plan. |
+
+- [ ] [DATA] P1. (Moved here 2026-07-13 per operator ruling during the bucket-estate dispatch) Own the
+      DeFi-bucket-resident ASTER originals deletion end-to-end: resolve the high_dup schema/row-deficiency issue
+      (aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13) via re-migration or accepted-loss ruling, THEN delete
+      the originals. The estate-consolidation plan no longer tracks this deletion.

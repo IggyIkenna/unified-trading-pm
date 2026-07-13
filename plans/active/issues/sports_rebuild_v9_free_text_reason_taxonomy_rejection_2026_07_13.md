@@ -139,9 +139,9 @@ Two sequenced follow-ups, both concrete (not ambiguous operator calls):
 
 ## Todos
 
-- [ ] [DATA] P1. After slot 3's current IS `--apply` + consolidator force-merge completes: run a full distinct-`reason`
-      audit against `EMPTY_CONFIRMED_REASONS` on the IS surface to get the true affected-row count (this doc's 35,361 is
-      a lower bound). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. After slot 3's current IS `--apply` + consolidator force-merge completes: run a full
+      distinct-`reason` audit against `EMPTY_CONFIRMED_REASONS` on the IS surface to get the true affected-row count
+      (this doc's 35,361 is a lower bound). (repo: market-tick-data-service) — `market-tick-data-service@52c695d5`
 - [ ] [DATA] P1. Build a narrowly-scoped companion script to re-emit the affected rows with the canonical reason (strip
       the free-text `__truthset_*`/`flipped_*` suffix) + `available_at`, closing the residual CF-8 gap this rebuild pass
       could not close for these rows. (repo: market-tick-data-service)
@@ -149,3 +149,37 @@ Two sequenced follow-ups, both concrete (not ambiguous operator calls):
       existing reason is in the closed-set taxonomy (not just that it starts with `EXPECTED_`) — a reason failing that
       check should be treated as "needs relabel" (route through the oracle), not "keep_typed", closing this class of gap
       at the source for any future rebuild run. (repo: market-tick-data-service)
+
+## Progress Log
+
+**Full distinct-`reason` audit — 2026-07-13 (data_engineering slot 5, task
+`sports_rebuild_v9_free_text_reason_taxonomy_rejection-001`)**: verified prereq first — confirmed slot 3's IS `--apply`
+completed (21:18:10Z) AND the consolidator `--force` merge subsequently ran to completion (canonical
+`_index/availability_index.parquet` `last_modified` advanced 21:06:41Z (stale, pre-apply) → 21:34:41Z (86MB → 101MB),
+process exit confirmed dead) before running anything — did not audit against a stale pre-merge index.
+
+Shipped `market-tick-data-service/scripts/audit_sports_is_empty_confirmed_reason_taxonomy_2026_07_13.py` (single read of
+the consolidated index via `get_storage_client().download_bytes()` — no whole-corpus GCS walk, single-walk discipline;
+groups `capture_status="empty_confirmed"` rows by `error_reason`, diffs against
+`unified_api_contracts.EMPTY_CONFIRMED_REASONS`).
+
+**Result: 43,032 rows carry a taxonomy-rejected `error_reason`** (this doc's 35,361 dry-run estimate was confirmed as a
+genuine lower bound — the true total is higher). 5 distinct non-canonical reason values, not 4:
+
+```
+EXPECTED_NO_FIXTURE__truthset_20260628_confirms_no_fixtures                 30183 rows
+flipped_via_recover_fixtures_from_truthset_20260628-230236__truth_says_empty 7671 rows  <- NEW, not in original estimate
+EXPECTED_NO_FIXTURE__truthset_20260713-142830                                4441 rows
+EXPECTED_NO_FIXTURE__truthset_20260713-172514                                 684 rows
+EXPECTED_NO_FIXTURE__truthset_20260713-142756                                  53 rows
+```
+
+The 5th variant (`flipped_via_recover_fixtures_from_truthset_20260628-230236__truth_says_empty`) confirms this doc's own
+"scope is probably wider than the 4 known variants" caveat — traced to a `2026-06-28` one-off fixture-recovery touch not
+covered by the original dry-run histogram. Audit result parquet also written to
+`gs://instruments-store-sports-prd-central-element-323112/_index/audit/sports_is_empty_confirmed_reason_taxonomy_2026_07_13.parquet`
+for the next todo (the companion re-emit script) to consume directly rather than re-deriving. Evidence:
+`market-tick-data-service@52c695d5`.
+
+**Next todo (P1, unclaimed)** should target these 5 reason strings (read from the audit parquet above, not hardcoded) —
+the companion re-emit script's row-count target is 43,032, not the original 35,361.
