@@ -144,7 +144,21 @@ tracked here per findings-triage rather than left in agent chat output. None are
       `TypeError/KeyError/AttributeError/RuntimeError`) with byte-identical bodies calling `classify_and_emit_error` —
       collapsible into one `except (ValueError, TypeError, KeyError, AttributeError, RuntimeError)` clause. (repo:
       execution-service)
-- [ ] [CLEANUP] P3. execution-service: `TransferCoordinator._run_handler`'s
+- [x] ✅ [CLEANUP] P3. execution-service: `TransferCoordinator._run_handler`'s
       (`execution_service/transfer_coordinator.py`) bare `except Exception` is broader than sibling handlers in the same
-      file which enumerate specific exception types — outlier pattern, worth narrowing for consistency. (repo:
-      execution-service)
+      file which enumerate specific exception types — outlier pattern, worth narrowing for consistency. — VERIFIED
+      NON-FINDING (2026-07-13, slot-5), no code change. `_run_handler`'s broad `except Exception as exc:` is
+      intentional, not an inconsistency: its docstring states the job plainly — "converting any non-isolation exception
+      into a FAILED result" — and it re-raises the 3 specific isolation-safety exceptions
+      (`CrossClientTransferForbiddenError`/`CrossClientEventError`/`NotSupportedTransferError`) BEFORE the broad catch,
+      exactly the pattern this file wants. `validate_intent`'s narrower `except CrossClientEventError:` (the only other
+      except in the file) is solving a DIFFERENT problem — "catch one specific known isolation violation to re-raise it"
+      — not "gracefully degrade any handler failure," so the two aren't actually inconsistent, they're complementary
+      uses with different jobs. Confirmed via the existing, ALREADY-PASSING test suite:
+      `test_handler_exception_returns_failed_result` (`tests/transfer_coordinator/test_transfer_coordinator.py`)
+      explicitly raises a generic `RuntimeError("RPC timeout")` from a handler and asserts it becomes a FAILED
+      `TransferResult` — the module's own docstring states this exact contract ("Handler exception →
+      TransferResult.FAILED (coordinator absorbs, caches)"). Narrowing the except clause to enumerated types would BREAK
+      this tested, documented contract (a not-yet-anticipated exception type from a future `TransferHandler`
+      implementation would crash the coordinator instead of gracefully failing one transfer) — the real risk here was
+      doing the "consistency" narrowing, not leaving it as-is. (repo: execution-service)
