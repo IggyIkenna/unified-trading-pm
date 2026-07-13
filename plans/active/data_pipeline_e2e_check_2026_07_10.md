@@ -1545,3 +1545,45 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   scratchpad, then dropped); 4 of 9 workflow agents died on the session usage limit (resets 21:40Z) and their scopes
   were completed in the main loop; an unpopped foreign `autostash` in instruments-service (measure_honest_coverage WIP,
   not this session's) was left untouched with a backup patch dumped to scratchpad.
+
+- 2026-07-13 (verification round for todo 27 — every targeted re-run executed on real VMs; 4 MORE real bugs found and
+  fixed by the verifications themselves) — Results, all evidence from launched VMs + per-VM manifest shards:
+
+  **PASSED end-to-end**: `TRADFI/KRX` IS force+skip (`captured`/`genuine`) AND MTDS `KRX:ohlcv_24h` force (3 parquet,
+  `captured`) — the 19 TRADFI:KRX failure class is CLEAN on both services (MTDS skip leg reports
+  `ambiguous: skip_signal_not_found_in_run_log` — the skip-signal grep doesn't cover the Yahoo route; labeling nit, data
+  captured). `CEFI:COINBASE-CDE:trades` force (52 parquet via the new adapter — doc RESOLVED). `CEFI:HYPERLIQUID:trades`
+  force (`captured` for BTC-USD@LIN — the first HL trades capture ever through this adapter).
+  `CEFI:HYPERLIQUID: book_snapshot_5` (manifest row now `EXPECTED_SOURCE_DELIVERY_LAG` — doc RESOLVED).
+  `TRADFI:ICE:ohlcv_24h` (real DXY parquet + honest `captured` manifest row
+  `instrument_id=DXY pipeline_mode=batch_yahoo` — verified by direct per-VM shard read; the checker's own
+  `no_matching_row` verdict was a false negative from CONCURRENT drivers Phase-0- re-consolidating the shared
+  tradfi-test bucket, making the consolidated index look fresh while missing the just-written row — single-driver sweeps
+  unaffected, noted as a checker-concurrency caveat).
+
+  **4 new real bugs found BY the verifications, all fixed + shipped same round**:
+  1. `market-tick-data-service@d647b8a1` — `_VENUE_FIXED_SOURCE_VENUES` was `{"FX"}` only; a real ICE VM died on the
+     TradFi `--source`-required gate. Now the full venue-fixed-Yahoo trio `{FX, KRX, ICE}` (matches
+     `route_yahoo_tradfi`).
+  2. `market-tick-data-service@29db8440` + `@a813711b` — the HL lag classification had to live in the ORCHESTRATOR
+     Tier-3 sentinel (the actual writer of zero-row rows), not just the handler; mirrored the NASDAQ/NYSE delivery-lag
+     branch (BLK-d385496b). `a813711b` is a QG fix-forward (29db8440 was pushed from a tree whose full QG had failed on
+     line-cap/import-hygiene — caught same session; sentinels.py split under the 900 cap, catalog loading extracted to
+     `sentinel_catalogs.py`, probe failure now logged; typecheck baseline 48→47).
+  3. `market-tick-data-service@80d5aadd` — **BIG FINDING (Root Cause #3 on the prediction doc)**: the prediction
+     lifecycle READER suffix-matched a group-first layout while the store has been day-first since 2025-03 — zero
+     objects ever matched; "no Kalshi tickers" was reader-side all along. Fixed with a day-scoped prefix (also removes a
+     banned whole-store walk) + legacy fallback.
+  4. Checker-enumeration hygiene (NOT fixed, tracked): the raw MTDS PREDICTION cross-product enumerates IS-domain
+     surfaces (`market_lifecycle`/`MARKET_LIFECYCLE`/`prediction_canonical_question_group`) as MTDS shards, and the
+     PREDICTION checker resolves the PRD bucket (prediction test-bucket naming quirk, todo 13) — both inflate failure
+     counts in any PREDICTION sweep slice.
+
+  **Tardis pilot (item 2)**: launched into the post-okx-swap solo window — 2 lease-enabled VMs
+  (`cefi-{bitfinex,bybit}-spot-2025-heavy-20260713-200213`), both uploading real chunks with ZERO `code=274` lines ~30
+  min in (first non-403 batch_tardis capture since the 2026-06-04 write collapse). Wave completion + lease-ordering
+  evidence monitored; G4 re-run stays gated on the outcome.
+
+  **Still in flight at entry time**: KALSHI trades post-80d5aadd proof-run (gated on tarball refresh; UAC foreign WIP
+  intermittently blocks `create-code-tarballs.sh`), pilot wave completion. Todo 27's Tardis-locked venue cluster remains
+  gated on the pilot outcome per the operator ruling.

@@ -23,7 +23,7 @@ summary:
   undistinguished residual for HYPERLIQUID `trades` ('a data_types-ignored dispatch bug ... or an honest fallback-symbol
   absence — not distinguished') — this doc resolves that ambiguity with hard, direct evidence and extends the same root
   cause to `book_snapshot_5`."
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -58,6 +58,8 @@ source:
   ]
 assigned_vm: NA
 resolved_by:
+  market-tick-data-service@c48096e7 (trades migration) + @01f23b8c/@29db8440/@a813711b (lag classification), real-VM
+  verified 2026-07-13
 locked_by:
 execution_scope: local-only
 estimate_class: infra
@@ -250,3 +252,18 @@ needed for the adapter proof):
   now at least emits the honest all-404 INFO; (4) real-VM re-verification of a HYPERLIQUID trades force-leg (post
   tarball refresh) is the parent plan's targeted re-run item. Doc kept `open` pending (4); everything else here is
   shipped + QG-green.
+
+## RESOLVED 2026-07-13 — real-VM verification of both data_types
+
+- **trades**: force leg PASSED on a real VM (fresh tarball) — manifest row `captured` for `BTC-USD@LIN`, the FIRST
+  successful HL trades capture through this adapter ever (the legacy path was doubly broken; see the implementation
+  entry above). `CEFI:HYPERLIQUID:trades | force | passed`.
+- **book_snapshot_5**: the identical shard that stamped `SOURCE_RETURNED_ZERO` pre-fix now writes
+  `empty_confirmed | EXPECTED_SOURCE_DELIVERY_LAG` (real per-VM shard row, VM
+  `mtds-backfill-cefi-pipelinecheck-20260713-200629-954057`) with the loud lag-aware INFO in the run.log — the honest
+  classification this doc's recommendation 3 called for. NOTE the classification is emitted by the ORCHESTRATOR Tier-3
+  sentinel (mirroring the NASDAQ/NYSE delivery-lag precedent, BLK-d385496b), not the handler — both sites are now wired
+  (01f23b8c handler, 29db8440 sentinel).
+- Checker-side residual (tracked on the parent plan, not this doc): the MTDS force leg has no honestly-empty-pass path,
+  so a lag-window day still _reports_ `no_parquet_under` even when the manifest row is the honest lag classification —
+  the MTDS analogue of the IS benign-pass shipped in instruments-service@526d2ffd.

@@ -526,3 +526,14 @@ CeFi backfill VM was launched lease-enabled and single-VM lease operation is liv
 (the pilot wave proper) needs either okx-swap's completion or its inclusion: a monitor is armed on okx-swap's
 termination; the pilot launches into that window with 2+ VMs on a small slice
 (`TARDIS_CONCURRENCY_LEASE=1 TARDIS_CONCURRENCY_LEASE_BUCKET=config-store-central-element-323112`).
+
+### 2026-07-13 (~20:02Z) — PILOT WAVE LAUNCHED (2 lease-enabled VMs, solo window)
+
+okx-swap completed/self-deleted (~19:47Z) opening the solo window; launched the operator-approved pilot:
+`TARDIS_CONCURRENCY_LEASE=1 TARDIS_CONCURRENCY_LEASE_BUCKET=config-store-central-element-323112 VENUES="BITFINEX-SPOT BYBIT-SPOT" YEARS=2025`
+→ `cefi-bitfinex-spot-2025-heavy-20260713-200213` + `cefi-bybit-spot-2025-heavy-20260713-200213` (both metadata-stamped
+with the lease vars, verified in the launch plan). Early evidence (~30 min in): both VMs uploading real capture chunks
+with **zero `code=274` lines** — CeFi Tardis capture is flowing again on this wave (the first non-403 batch_tardis
+capture since the 2026-06-04 write-collapse this doc documents). Lease-acquisition ordering evidence pending the first
+KEYED fetches (free/day-1 fetches don't take the lease by design); a monitor is following the wave to completion. G4
+re-run stays gated on the pilot's outcome.

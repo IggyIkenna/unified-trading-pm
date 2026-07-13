@@ -316,3 +316,22 @@ and Phase 4 waits on Ikenna's access answer.
     `is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`); (3) MTDS-side PREDICTION shard re-runs
     (KalshiAdapter/PolymarketAdapter reading the now-present market_lifecycle days) are the parent plan's targeted
     re-verification item.
+
+- 2026-07-13 (later — **ROOT CAUSE #3 FOUND AND FIXED: the MTDS lifecycle READER never matched the store's layout**):
+  re-running the MTDS PREDICTION force legs after the missed-window backfill still reproduced
+  `KalshiAdapter: no Kalshi tickers found in market_lifecycle for 2026-07-09` (real VM
+  `mtds-backfill-prediction-pipelinecheck-20260713-195356-23bd66`) minutes after the day's partitions were verified
+  present. Traced to `base_prediction_adapter._load_market_lifecycle_for_date`: it suffix-matched a GROUP-FIRST layout
+  (`group=*/day={date}/market_lifecycle.parquet`) while the REAL store has been DAY-FIRST
+  (`by_canonical_group/day={date}/group=*/market_lifecycle.parquet`) back to `day=2025-03-14` (verified by direct
+  listing) — the primary read matched **zero objects on every batch run ever made against this layout**, independent of
+  IS enum health. This is the missing mechanism behind this doc's cross-session "no Kalshi tickers" corroborations:
+  KALSHI had no fallback (removed per its own docstring) so it always starved; POLYMARKET intermittently limped through
+  its `instrument_availability` fallback. **Fixed: `market-tick-data-service@80d5aadd`** — day-scoped listing prefix
+  (also removes a whole-store walk, single-walk discipline) + layout-agnostic day guard + legacy group-first fallback;
+  57 tests, full QG green. Post-fix KALSHI trades proof-run is in flight (gated on the code tarball picking up the
+  commit). POLYMARKET post-backfill evidence: `PolymarketAdapter.download_batch: 2026-07-09 — 0 trades` (universe now
+  resolves; zero-capture is a further residual to confirm honest-vs-real post-80d5aadd). The MTDS PREDICTION shard
+  enumeration also surfaced junk shards (`market_lifecycle`/`MARKET_LIFECYCLE`/`prediction_canonical_question_group` as
+  MTDS data_types — IS-domain surfaces in the raw cross-product) — checker-enumeration hygiene, noted on the parent
+  plan.

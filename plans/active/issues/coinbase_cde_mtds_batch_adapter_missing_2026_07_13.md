@@ -17,7 +17,7 @@ summary:
   This is a genuine, reproducible, day-independent gap, not a checker artifact and not the same class as the
   already-fixed `coinbase_futures_spot_pair_zero_attempts_2026_07_12.md` (a different venue, COINBASE-FUTURES, whose gap
   was a symbol misclassification, not a missing adapter entirely)."
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -41,7 +41,7 @@ source:
     re-verification),
   ]
 assigned_vm: NA
-resolved_by:
+resolved_by: market-tick-data-service@28ad6b38 + @971bdd35 (real-VM force-leg verified 2026-07-13)
 locked_by:
 execution_scope: local-only
 estimate_class: brand-new
@@ -162,3 +162,10 @@ Operator approved building the adapter (this session). Shipped:
   launched backfill VM — requires the MTDS code tarball to include 28ad6b38/971bdd35 (tarball-refresh cron picks up
   pushed LDR commits automatically); tracked as the parent plan's targeted re-run item for `CEFI:COINBASE-CDE:trades` on
   a day ≥ 2026-07-10.
+
+## RESOLVED 2026-07-13 — real-VM force-leg verification PASSED
+
+`pipeline_e2e_check.py --day 2026-07-11 --asset-group CEFI --venue COINBASE-CDE --data-types trades --legs force` (fresh
+tarball carrying 28ad6b38+971bdd35): `CEFI:COINBASE-CDE:trades | force | passed | Parquet=52 | exit 0` — the new
+native-REST adapter fetched real trades through a launched backfill VM and wrote 52 parquet chunks end-to-end. The
+"Unsupported venue" hard-fail is gone. Status flipped to resolved.
