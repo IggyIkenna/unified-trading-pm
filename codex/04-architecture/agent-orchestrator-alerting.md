@@ -45,8 +45,9 @@ Automatic backend lifecycle events — the orchestrator handled them, no human i
   failure (session died before the boot paste). **AutoSpawn retries and the watchdog self-heal**, so it is not per-event
   actionable (operator 2026-07-13). It keeps its GCS-ledger persist (so `GET /api/alerts` still records it) and is
   counted in the digest via the `autospawn_failed` / `escalation_dispatch_failed` activity events the callers write; a
-  _persistent_ inability to spawn shows as a rising count there. Auth-shaped spawn failures are still surfaced by the
-  account drop-from-rotation page (`notify_account_auth_failed`).
+  _persistent_ inability to spawn shows as a rising count there. **If the spawn failure is actually a dead token**, the
+  definitive-code classification below turns it into the `notify_account_auth_failed` page — so a genuine credential
+  failure is never buried in the summary.
 
 Each of these calls `logger.info(...)` (the "D11 downgrade" convention) instead of `slack._post(...)`. Their events are
 recorded in the DB **activity log** (`log_activity`) by the callers, which is what the digest reads.
@@ -55,14 +56,35 @@ recorded in the DB **activity log** (`log_activity`) by the callers, which is wh
 
 - **Failures** — `notify_plan_health_dispatch_failed` (deduped 1h; the plan-health do_spawn failure branch was
   previously Slack-silent); **unresolved / re-escalation-cap escalations** (`_mark_unresolved_and_maybe_reescalate`,
-  CRITICAL — a stuck wall past deadline); account-auth failure (an account leaving rotation). (Spawn failures are NOT
-  here — see the summary-only list above.)
+  CRITICAL — a stuck wall past deadline). (Generic spawn failures are NOT here — see the summary-only list above.)
+- **Dead/expired token** — `notify_account_auth_failed` (CRITICAL, re-mint action). This is the one auth alert the
+  operator cares about; see the code-based classification below.
 - **Worker BLOCKED questions** — `notify_slot_blocked` (a worker asks the main/review agent or the operator). Renders
   the structured `question` + `options` (bulleted) + `recommendation` on their own full-width sections.
+- **Account auth RECOVERED** — `notify_account_auth_recovered` (kept a page **by design**: an account returning to
+  rotation is operationally significant, not churn; test-locked by `test_account_auth_recovered_still_pages`).
 - **The digest job failing** — `notify_daily_summary_failed` (a dead digest must not be silent).
 
 **Rule: dispatch/lifecycle SUCCESS is silent; the corresponding FAILURE pages.** Removing a success ping must never
 blind the operator to that job failing.
+
+## Token failures are classified by the DEFINITIVE HTTP code, never guessed
+
+The Anthropic API returns unambiguous codes, so account health is decided by the **code**, not by inferring from a
+frozen pane (operator 2026-07-13: _"the api codes are already known, why are we guessing?"_). Two detectors, one rule:
+
+- **Poller (`UsagePoller`, continuous):** probes every account's OAuth token each tick — `401/403` → dead/expired token
+  → `notify_account_auth_failed` (CRITICAL, re-mint) + mark `auth_failed`; `429` → `rate_limited` (marked, **no page** —
+  transient/self-clearing); `200` → clears any standing auth flag.
+- **Spawn-time (`autospawn._classify_spawn_failure_via_token_probe`):** when a spawn dies at startup, **probe the token
+  for the real code** instead of pattern-matching the pane-tail — `401/403` → drop from rotation + the same CRITICAL
+  re-mint page; `429` → mark `rate_limited` (no page); `200` → the token is healthy, so the failure is a tmux/heartbeat
+  issue → the summary-only `notify_spawn_failed` record (a working account is **never** dropped on a misleading pane);
+  `5xx`/network → transient, no mark (never false-positive a blip). This replaced the old pane-substring guess
+  (`_spawn_failure_is_auth_shaped`), which mislabelled a busy-but-alive worker as a possible dead token.
+
+**Net:** a genuine dead/expired token pages CRITICAL (actionable — re-mint `claude setup-token`); a rate-limit is silent
+(transient); everything else is summary-only. No alert guesses a cause the codes already state.
 
 ## Daily digest (`DailySummaryLoop`)
 

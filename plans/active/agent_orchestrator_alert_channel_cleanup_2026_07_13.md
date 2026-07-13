@@ -229,6 +229,17 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       alert, and unresolved/re-escalation escalations still page CRITICAL. The `alert_spawn_failed` skip/dedup tests are
       unaffected (they mock the notifier); rewrote `test_notify_spawn_failed_*` → logged-not-paged. codex "does NOT
       page" / "DOES page" updated. Full `quality-gates.sh` green (1221 pytest). — agent-orchestrator@770f12f.
+- [x] 14. ✅ [BACKEND] P1. Operator ("the api codes are already known, why are we guessing?"): a spawn failure was
+      classified by GUESSING from the pane-tail (`_spawn_failure_is_auth_shaped`: `/login`, `invalid api key`) — which
+      mislabelled a busy-but-alive worker (slot 8: pane showed live tasks + "wait for it") as "likely a dead/expired
+      setup-token." Replaced the guess at `do_spawn`'s failure branch with a **definitive token probe**
+      (`_classify_spawn_failure_via_token_probe`, the same 1-token call the poller uses): `401/403` → dead token → drop
+      - CRITICAL `notify_account_auth_failed` re-mint page (the alert the operator cares about); `429` → mark
+        `rate_limited` (transient, NO page); `200` → token healthy → NOT auth → summary-only spawn record (a working
+        account is never dropped on a misleading pane); `5xx`/network → transient, no mark. Verified all 4 live tokens
+        probe 200 (no dead token now; that's why no auth alert fired). Tests: dead-token drops, healthy-token-with-auth
+        -pane does NOT drop, 429 marks rate_limited, 403 drops, network no-op. codex "code-based classification" section
+        added. Full `quality-gates.sh` green (1225 pytest). — agent-orchestrator@67de599.
 
 ## Progress Log
 
@@ -249,6 +260,13 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
   `--self-test` (PASS). WS-D: `notify_slot_blocked` multi-line options/recommendation. Codex SSOT
   `codex/04-architecture/agent-orchestrator-alerting.md` + CLAUDE.md one-liner added. **Remaining:** WS-E deploy — a
   auto-deploy via uvicorn `--reload` (no manual restart) + a 24–48 h re-pull verification (the only remaining step).
+- **2026-07-13 (stop guessing — classify by API code)** — Operator flagged a "Spawn FAILED — likely a dead/expired
+  setup-token, a rate-limit, or an auth modal" alert whose pane showed a LIVE working agent, and asked why we guess when
+  the API codes are known. Probed all 4 accounts live: **4/4 tokens WORKING** (200; 5h 5-31%, 7d 12-64%; none
+  rate-limited) — no dead token, which is why no auth alert had fired. Replaced the spawn-time pane-guess with a
+  **definitive token probe** (401/403→dead-token page, 429→silent rate_limited, 200→summary-only).
+  **agent-orchestrator@67de599** (QG green, 1225 pytest). The authoritative dead-token page is
+  `notify_account_auth_failed` (poller 401/403 + spawn probe); rate-limit stays silent.
 - **2026-07-13 (spawn failures → summary-only)** — Operator: "spawn failures should not send direct alert, it should
   only go into summary one." This reverses the audit's shape-#5 KEEP. Downgraded `notify_spawn_failed` → `logger.info`
   (activity log already carries `autospawn_failed` / `escalation_dispatch_failed` → digest; GCS ledger kept).
