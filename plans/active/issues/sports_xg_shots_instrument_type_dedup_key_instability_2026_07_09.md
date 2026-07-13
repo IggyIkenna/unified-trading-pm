@@ -19,7 +19,7 @@ summary:
   cycle — so the 'shot'-tagged row and the unset row land in DIFFERENT dedup-key partitions and both survive the
   window-dedup, even though they represent the same underlying fact (XG_SHOTS EPL/BUNDESLIGA/LA_LIGA/LIGUE_1/SERIE_A
   2024-12-14, 126 rows captured)."
-status: resolved
+status: open
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -29,7 +29,7 @@ tags: [manifest, manifest-consolidator, data-correctness, dedup, understat, spor
 related: [plans/active/issues/manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md]
 created: 2026-07-09
 parent_epic: sports_master
-priority: P3
+priority: P1
 source: [plans/active/issues/manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md]
 assigned_vm: planning
 resolved_by: slot-3 (data_engineering), 2026-07-09, instruments-service@f136eec0
@@ -37,7 +37,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-09
+last_updated: 2026-07-13
 ---
 
 ## What I found
@@ -103,3 +103,27 @@ deduping against the newly-tagged rows.
       codex-compliance ratchet (deep `unified_api_contracts` imports in 6 orchestrator files; 2 test files' hardcoded
       prod project ID) and STEP 5.101 empty-string-fallback baseline (`scripts/reconcile_phantom_manifest_rows_all.py` —
       genuinely optional cross-asset-group columns, matching the file's own existing noqa precedent).
+
+## Progress Log
+
+- **2026-07-13 (slot-3, interactive session) — REOPENED, the 2026-07-09 fix did not stick.** A fresh live-manifest read
+  (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, updated
+  2026-07-13T12:01:14Z) found the EXACT same pattern this doc claimed resolved: 2024-12-14, big-5 leagues, XG_SHOTS
+  `instrument_type='shot'` vs `''`/`None` twins (10 rows / 5 groups) — the 2026-07-09 "0 remain system-wide"
+  verification no longer holds. Additionally found a related-but-new instance on **XG** itself (not XG_SHOTS): 2
+  duplicate `captured` rows per big-5 league on the same 2024-12-14 date, both `instrument_type=None`, one from
+  2026-07-08 and a fresh twin written 2026-07-13T06:21Z. Flipped `status` back to `open`. **Prime suspect (not yet
+  confirmed): a lingering/zombie corrective shard.** This doc's own fix mechanism writes a per-VM corrective shard at
+  `_index/per_vm/{VM_NAME}.parquet` rather than touching the canonical blob directly, relying on the consolidator's next
+  merge cycle to pick it up and then (implicitly) retire it. If that shard is never cleaned up post-merge, or if the
+  consolidator's incremental anti-join re-applies a stale corrective shard against an already-current canonical row,
+  that would explain a "resolved" fix producing a fresh duplicate days later without any new buggy write actually
+  happening. This is also plausibly the SAME standing, never-root-caused gap flagged in
+  `sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md` ("Update 2026-07-08": the deployed consolidator's
+  incremental cycles were not reliably applying the NULL/`''` dedup fix in production). **Next steps** (tracked as a
+  todo in `plans/active/understat_local_backfill_completion_2026_07_06.md`, 2026-07-13 entry): (1) re-run
+  `fix_xg_shots_instrument_type_dedup_2026_07_09.py --apply` + `manifest_consolidator --force` to collapse the current
+  residual; (2) list `_index/per_vm/` on the sports bucket for stale/uncleaned corrective shards and check whether the
+  consolidator retires a per-VM shard after merging it or leaves it to be re-applied indefinitely; (3) do not re-close
+  this doc until the recurrence mechanism is actually identified — another one-off relabel without understanding WHY it
+  recurred will likely just recur again.

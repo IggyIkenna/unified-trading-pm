@@ -19,23 +19,24 @@ related:
   ]
 created: 2026-06-21
 parent_epic: sports_master
-priority: P2
+priority: P1
 source:
   [
     instruments-store-sports-prd/_index/availability_index.parquet (live read 2026-06-21,
-    re-verified 2026-07-08),
+    re-verified 2026-07-08,
+    re-verified 2026-07-13),
     unified_trading_library/manifest_consolidator.py (_resolve_dedup_cols / _DEDUP_NULL_SENTINEL),
     unified_trading_library/manifest_writer/_read_index.py (_merge_shard_frames,
     2026-07-08 fix),
     instruments-service/scripts/canonicalize_sports_legacy_pipeline_mode_2026_06_21.py,
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-08
+last_updated: 2026-07-13
 ---
 
 ## What I found
@@ -118,6 +119,21 @@ canonical index still carried the twins. Two independent gaps, both now closed:
    dedicated audit) should verify whether their Cloud Run consolidator jobs are running the fixed image, and if not, run
    the equivalent one-off `--force` rebuild per bucket (each is a quick, self-contained, locked operation — no
    whole-corpus GCS walk, just the existing canonical + shards).
+
+## Update 2026-07-13 (slot-3, interactive session) — the "not root-caused further" gap is CONFIRMED still open and recurring
+
+Cross-referencing this doc's "Update 2026-07-08" section (the deployed Cloud Run consolidator's incremental cycles NOT
+applying the dedup fix continuously in production — "either a stale image ... or the incremental anti-join is missing
+some contested-key cases", explicitly "Not root-caused further here"): a fresh live-manifest re-verify today found the
+sibling doc `sports_xg_shots_instrument_type_dedup_key_instability_2026_07_09.md`'s fix — independently verified clean
+("0 duplicate groups remain system-wide") on 2026-07-09 — has a fresh recurrence 4 days later (same 2024-12-14 big-5
+cells, plus a new instance on XG itself). This is consistent with — and likely the same root mechanism as — this doc's
+still-open gap: something about the consolidator's incremental/per-VM-shard merge path is not durably retiring
+corrective/dedup fixes, so a previously-collapsed duplicate can reappear without any new "bad" write. This raises the
+priority of actually root-causing item 2 above (rather than continuing to rely on periodic manual `--force` rebuilds as
+the only mitigation) — tracked as a todo in `plans/active/understat_local_backfill_completion_2026_07_06.md` (2026-07-13
+entry) scoped to the sports bucket; the cross-bucket check this doc already calls out (cefi/defi/tradfi/prediction)
+remains a separate, not-yet-scheduled follow-up.
 
 ## Non-FIXTURES blank-reason residue (left untouched, by design)
 

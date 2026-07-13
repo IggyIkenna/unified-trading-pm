@@ -22,7 +22,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.8
-last_updated: 2026-07-06
+last_updated: 2026-07-13
 depends_on: []
 assigned_role: data_engineering
 drift_direction: advance-code
@@ -220,6 +220,60 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
       acceptable, -005 re-verifies + flips `understat-vm-xg-complete` on this state; if ruled NOT acceptable, the typing
       script (tracked in `sports_is_manifest_eu_regression_overwrite_2026_06_29.md`, repo instruments-service) lands
       first; (c) -006 documents final totals; (d) THEN -007 re-dispatches and deletes the driver.
+- [ ] [INFRA] P0. **NEW (2026-07-13, slot-3, operator directive: "close the lag ... till 100% completion, no dups,
+      canonical, daily jobs updating the rest").** Root-cause-grounded via a fresh code investigation this session (see
+      Progress Log 2026-07-13): the `expected_unattempted` residual (currently 30, was 6,093) is a rolling ≤3-day
+      trailing edge because the daily forward-poll enum (`google_cloud_scheduler_job.expected_universe_v2_daily`,
+      `deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf`, `schedule = "30 1 * * *"` UTC → Cloud Run
+      Job `expected-universe-v2-sports` → `instruments-service/scripts/enumerate_expected_universe.py`) is NOT
+      matchday-aware and re-seeds blank-reason EU every day, while the counter-typing script
+      (`instruments-service/scripts/type_understat_eu_no_provider_coverage.py`, header confirms `# Lifecycle: oneoff`,
+      `Delete-when: ... == 0 for 7 consecutive daily runs`) is **NOT wired into ANY scheduler/cron anywhere in the
+      workspace** (grepped all `.tf`/`.sh`/`.yml`/`.service` files — zero hits) — it has only ever been run ad-hoc by
+      agents, which is the entire cause of the lag. **Fix: build a Cloud Scheduler + Cloud Run Job for
+      `type_understat_eu_no_provider_coverage.py --apply`, mirroring the exact `expected_universe_v2_scheduler.tf`
+      pattern, scheduled daily shortly AFTER 01:30 UTC (e.g. 02:30–03:00 UTC) so typing keeps same-day pace with the
+      forward-poll enum instead of lagging ~2 days.** Repos: deployment-service (terraform), instruments-service (script
+      already exists — no code change needed, just wiring + `MANIFEST_PER_VM_SHARDS=true`/`VM_NAME=<unique>` env
+      plumbing per its own usage docstring). Verify for 7 consecutive daily runs that blank-reason understat EU reaches
+      0 (the script's own delete-when condition), THEN delete the script per its lifecycle marker (same pattern as
+      `understat_bulk_backfill.py`'s deletion in this plan's -007). Longer-term durable fix (do NOT stop at scheduling
+      the workaround): make `enumerate_expected_universe.py`'s `_enumerate_v2_sports` matchday-aware at the SOURCE so it
+      never blank-reason-seeds a no-fixture date in the first place — this is the actual root cause per the script's own
+      docstring ("This script does NOT fix the writer — that is the deeper, still-open durable fix"); scheduling the
+      typing script closes the lag NOW, the writer fix prevents needing a typing script at all going forward.
+- [ ] [DATA] P0. **NEW (2026-07-13, slot-3) — re-run + durably fix the XG_SHOTS `instrument_type` dedup, it has RECURRED
+      after being marked resolved.**
+      `plans/active/issues/sports_xg_shots_instrument_type_dedup_key_instability_2026_07_09.md` claims
+      `status: resolved` (2026-07-09, `instruments-service@f136eec0`+`57d8b937`, verified "0 `instrument_type='shot'`
+      XG_SHOTS rows remain, 0 duplicate `(date, league_id)` XG_SHOTS groups remain system-wide") — but a fresh
+      live-manifest read THIS session (2026-07-13) found the SAME 2024-12-14 big-5 residual still present (10 XG_SHOTS
+      dup rows / 5 groups) **plus a NEW instance on XG itself** (2 duplicate `captured` rows per big-5 league, one from
+      2026-07-08 and a fresh twin written 2026-07-13T06:21Z). First: dry-run then `--apply`
+      `instruments-service/scripts/fix_xg_shots_instrument_type_dedup_2026_07_09.py` + re-run
+      `manifest_consolidator --force` against `instruments-store-sports-prd-central-element-323112` to collapse the
+      current residual. **Then — do not stop at the one-off** — root-cause WHY a fix independently verified clean 4 days
+      ago has fresh duplicates again: check `_index/per_vm/` on the sports bucket for a lingering/zombie corrective
+      shard that keeps getting re-merged every consolidator cycle instead of being cleaned up post-merge, and
+      cross-check against the STILL-OPEN, never-root-caused gap in
+      `plans/active/issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md` ("Update 2026-07-08": the
+      deployed Cloud Run consolidator's incremental cycles were NOT applying the NULL/`''` dedup fix continuously in
+      production — cause never identified, only mitigated via periodic manual `--force` rebuilds). This todo is NOT done
+      until (a) 0 dup dedup-key groups verified for understat XG+XG_SHOTS on the big-5, AND (b) a plausible root-cause +
+      durable fix (not another manual rebuild) is identified and shipped for why dedup fixes aren't sticking.
+- [ ] [VERIFY] P1. **NEW (2026-07-13, slot-3) — verify the 6 parked sports tasks / backlog.yaml unblock.** This
+      session's interactive slot has no network reachability to the agent-orchestrator API (13.113.200.22:8765
+      connection refused) and `backlog.yaml` is gitignored host-state not present in this clone — a planning-VM-resident
+      session must check `backlog.yaml` directly for any task carrying `prereqs.conditions: [understat-vm-xg-complete]`
+      and confirm those 6 tasks actually unblock/dispatch now that the gate is green.
+- [ ] [VERIFY] P0. **NEW (2026-07-13, slot-3) — final canonical-100% re-verify, gates archival.** Only after the three
+      todos above land: re-read the live sports manifest fresh (single-parquet read, no whole-corpus walk) and confirm
+      **literally** 0 `attempted_failed`, 0 `expected_unattempted` (not just an "acceptable residual"), 0 duplicate
+      dedup-key groups for understat XG+XG_SHOTS on the big-5, and that the daily forward-poll + typing-script pair are
+      both confirmed running on schedule (Cloud Scheduler job history, last 2+ executions SUCCESS). This is the actual
+      literal-100% bar the operator asked for (2026-07-13), stricter than the 2026-07-12 "operator-ruled acceptable
+      residual" bar this plan previously closed on. Only THEN reconsider the archival ritual (still gated on an explicit
+      `[unlock-plan]` ask per CLAUDE.md — this plan remains `locked_by: live-defi-rollout`).
 
 ## 4. Definition of DONE
 
@@ -227,14 +281,19 @@ Manifest shows **0 `attempted_failed` / 0 `expected_unattempted`** for XG + XG_S
 atoms ≈ XG captured atoms; §9.2b consolidator dedup confirmed; `understat-vm-xg-complete` gate flipped green on real
 shots; the 6 parked sports tasks are unblocked; issue-doc Progress Log updated; driver deleted.
 
-**RESOLVED 2026-07-12**: `attempted_failed=0` achieved literally. `expected_unattempted=0` was NOT achieved literally —
-operator ruled (via `BLK-77e8cce7`) a small (~30-row), always-≤3-day-old self-renewing trailing edge (daily forward-poll
-enum, not a capture defect) an ACCEPTABLE non-zero state, so this DoD clause is satisfied on the ruled state rather than
-the literal number. All other clauses met: XG_SHOTS≈XG (ratio 0.999); §9.2b consolidator dedup verified (task -003
-above); gate flipped; issue-doc Progress Log updated; driver deleted (`instruments-service@7f38b60d`). The
-6-parked-sports-tasks unblock is NOT machine-verified — no `prereqs.conditions: [understat-vm-xg-complete]` reference
-was found in `backlog.yaml` for any task (pre-existing gap, this plan's serial ordering was never machine-encoded, out
-of scope to fix here).
+**RESOLVED 2026-07-12 (superseded 2026-07-13 — operator raised the bar to literal 100%, not "acceptable residual"):**
+`attempted_failed=0` achieved literally and still holds. `expected_unattempted=0` was NOT achieved literally as of
+2026-07-12 — operator ruled (via `BLK-77e8cce7`) a small (~30-row), always-≤3-day-old self-renewing trailing edge (daily
+forward-poll enum, not a capture defect) an ACCEPTABLE non-zero state at the time. **2026-07-13: operator directive
+supersedes that ruling** — the requirement is now literal 0 `expected_unattempted`, 0 duplicate dedup-key groups, and
+confirmed self-maintaining daily jobs, not a merely-acceptable rolling residual. A fresh 2026-07-13 re-verify also found
+the §9.2b consolidator dedup has NOT durably stuck (fresh XG_SHOTS + XG duplicate rows on 2024-12-14, see the new todos
+above) — so the "§9.2b consolidator dedup confirmed" DoD clause below is also no longer current. **This DoD is NOT met**
+until the four new 2026-07-13 todos above all land and the final re-verify todo confirms literal zeros. The
+6-parked-sports-tasks unblock remains NOT machine-verified — no `prereqs.conditions: [understat-vm-xg-complete]`
+reference was found in `backlog.yaml` for any task (pre-existing gap, this plan's serial ordering was never
+machine-encoded) — tracked as its own new todo above pending a planning-VM-resident session with
+`backlog.yaml`/orchestrator-API access.
 
 ## 5. Codex SSOTs (check the plan against these — plan↔codex drift is review-blocking)
 
@@ -431,3 +490,33 @@ of scope to fix here).
   plan's -005/-006/-007 checkboxes + §4 DoD note. Did NOT run the plan archival ritual — this plan is
   `locked_by: live-defi-rollout` and CLAUDE.md requires an explicit `[unlock-plan]` ask before archival; flagging for
   the operator/main-agent as the one remaining follow-up now that DONE is otherwise verified.
+- 2026-07-13 (slot-3, interactive session, operator-directed re-verification + scope reopening): operator asked
+  point-blank whether this plan is done at literal 100% (manifest + deployment-api/ui data-status both showing 100%,
+  fully canonical, no dups). Re-verified live rather than trusting the 2026-07-12 close-out: `attempted_failed=0` holds;
+  `expected_unattempted=30` still nonzero (same count as 2026-07-12 but the underlying rows rolled forward to
+  2026-07-11/12/13 — confirms a typing job IS now closing the historical backlog, `instruments-service@24e9be6e`
+  `type_understat_eu_no_provider_coverage.py` shipped 2026-07-12, but with a lag); **found a NEW dup class** — the
+  2024-12-14 XG_SHOTS `instrument_type` dedup (`sports_xg_shots_instrument_type_dedup_key_instability_2026_07_09.md`,
+  marked `status: resolved` 2026-07-09) has recurred, and XG itself now shows a fresh twin duplicate written
+  2026-07-13T06:21Z. deployment-api's `data_status/sports.py` carves out understat XG as a "sparse sports entity"
+  (expected=found by design) so it would read ~100% regardless of the residual; XG_SHOTS is NOT in that carve-out and
+  its true completeness display was not confirmed. Operator directive: close the lag, fix the dedup recurrence
+  (including root-causing why it recurred, not just re-patching), route the work to the planning VM, and drive to
+  literal 100% (0 EU, 0 dups, canonical) with the daily jobs self-maintaining that state going forward. Dispatched a
+  second investigation (code-grounded, this session) that found: (1) the daily forward-poll enum is Cloud-Scheduler-run
+  at `30 1 * * *` UTC (`deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf`,
+  `expected_universe_v2_daily` → Cloud Run Job `expected-universe-v2-sports` →
+  `instruments-service/scripts/enumerate_expected_universe.py`); (2) the counter-typing script
+  (`type_understat_eu_no_provider_coverage.py`) is **NOT scheduled anywhere in the workspace** — ad-hoc only, which IS
+  the lag; (3) the sports consolidator runs every 1 minute (`codex/05-infrastructure/manifest-consolidator-ssot.md`) but
+  has an ADMITTED, never-root-caused gap (flagged in `sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md`,
+  "Update 2026-07-08") where its incremental cycles don't reliably apply the NULL/`''` dedup fix in production; (4) the
+  fresh XG dup is most likely a recurrence of this same standing gap, not a new bug. Added four new todos to this plan
+  (schedule the typing script + long-term writer fix; re-run + root-cause the recurring instrument_type dedup; verify
+  the 6-parked-sports-tasks backlog.yaml unblock from a planning-VM-resident session; final literal-100% re-verify) and
+  corrected §4's DoD to no longer claim RESOLVED. **Could not dispatch directly to the orchestrator from this session**
+  — `13.113.200.22:8765` (agent-orchestrator API) is unreachable from this interactive slot (connection refused), and
+  `backlog.yaml` is gitignored host-state not present in this clone. The plan is already `assigned_vm: planning` /
+  `status: active`, so these new todos are queued for the standard plan→backlog regen mechanism
+  (`regen_backlog_from_plan.py`) rather than a manual API push; flagging for the operator/a planning-VM session to
+  confirm the regen picks these up. No code shipped this session — plan-doc update only.
