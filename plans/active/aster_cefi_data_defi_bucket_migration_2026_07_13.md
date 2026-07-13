@@ -98,14 +98,27 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       `_index/audit/aster_cefi_in_defi_bucket_scope_2026_07_1X.parquet` (mirrors the existing
       `_index/audit/legacy_dup_delete_list_defi.parquet` convention). Confirm the 2023-11→2023-12 zero-duplication
       window and the 2025-07→2026-06 low-duplication window precisely (exact day boundaries, not "~").
-- [ ] [DATA] P0. Extend `market-tick-data-service/scripts/migrate_onchain_perp_perpetual_canonical_2026_07_08.py` (or a
-      new sibling script, if the source-bucket difference makes extension awkward — the existing script only reads from
-      `resolve_bucket_name(asset_group="cefi")`) to ALSO source from the DeFi bucket's
+- [x] ✅ [DATA] P0. Extend `market-tick-data-service/scripts/migrate_onchain_perp_perpetual_canonical_2026_07_08.py` (or
+      a new sibling script, if the source-bucket difference makes extension awkward — the existing script only reads
+      from `resolve_bucket_name(asset_group="cefi")`) to ALSO source from the DeFi bucket's
       `pipeline_mode=batch_aster/asset_group=cefi/` prefix, applying the SAME canonical
       `ASTER:PERPETUAL:{BASE}-{QUOTE}@LIN.parquet` renaming logic, writing to the CeFi bucket. Idempotent (skip when the
       canonical target already exists in the CeFi bucket AND is byte-identical — do not blindly overwrite the
-      ~98-99%-duplicated Jan-2024→Jun-2025 window without a parity check first, since a handful of per-day symbol gaps
-      exist even there). DRY-RUN default, `--apply` to mutate — same convention as the script it extends.
+      ~98-99%-duplicated Jan-2024→Jun-2025 window without a parity check first, since a handful of per-day symbol gaps —
+      **DONE, slot 8, `market-tick-data-service@ee343f76`.** Wrote a NEW sibling script
+      (`scripts/migrate_aster_cefi_defi_bucket_2026_07_13.py` — the source-bucket difference made in-place extension of
+      the existing rename-only script awkward, since it does a same-bucket rename while this needs a cross-bucket copy)
+      that DUPLICATES (not imports) the existing script's ASTER canonicalization logic, reads via per-day TARGETED
+      prefix listing across the known 948-day range (not a whole-corpus walk), and cross-bucket-copies via
+      `gcs_copy_object` (confirmed natively cross-bucket-capable — splits src/dst URIs independently). Idempotency is a
+      `(size, crc32c)` parity check, not existence-only — a pre-existing-but-mismatched CeFi-bucket target is logged as
+      a conflict and never overwritten, matching the exact "per-day symbol gaps even in the 98-99% window" risk this
+      todo flagged. Never deletes the DeFi-bucket source (Phase 4's separate, operator-gated step) and does not touch
+      the manifest (Phase 3's separate todo). Smoke-tested in `--dry-run` against real GCS data (2023-11-01→11-03, 234
+      objects, correct `ASTER:PERPETUAL:{BASE}-{QUOTE}@LIN` renaming + correct CeFi-bucket path targeting confirmed).
+      Did NOT run `--apply` against production data — that is Phase 2's separate, sequenced-after-Phase-1-Todo-1
+      execution step, out of this todo's scope. exist even there). DRY-RUN default, `--apply` to mutate — same
+      convention as the script it extends.
 - [ ] [DATA] P0. Root-cause the write-path bug: find the batch/backfill writer that produced this historical ASTER data
       and determine why it selected the DeFi bucket for cefi-labeled objects (likely a venue-level "primary asset_group"
       bucket selection instead of a per-object `asset_group` field read). Fix it so this does not recur for whatever
