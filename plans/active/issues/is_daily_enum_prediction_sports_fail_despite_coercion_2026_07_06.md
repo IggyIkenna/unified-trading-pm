@@ -233,3 +233,15 @@ one.
 - 2026-07-06: Filed by the slot-2 perp-correction agent as a scope-correcting handoff (it went out of its lane debugging
   this; stopping and returning to the perp task). All attempts + the two infra changes above recorded so the
   capture-hardening owner can continue. Blocker = observability gap (exc_info).
+- 2026-07-13 23:35Z: ROOT CAUSE CAPTURED (first log lines ever, post sink carve-out):
+  `IS enum FAILED asset_group=prediction exit_code=-9` at 23:28:14Z — **SIGKILL = OOM kill** at 8Gi/4CPU while the CLOB
+  scan was past "page 1000, 1,001,000 markets total". No traceback ever existed to capture (SIGKILL is uncatchable) —
+  explains why every prior diagnosis path came up empty even before the stdout suppression was found. Mitigation applied
+  (operator's standing fix-now mandate): `is-daily-enum-prediction` memory 8Gi → **16Gi** (config-only, reversible);
+  verification execution launched 23:35Z on the new limit — resolution flip awaits its green completion. Durable fix
+  todo: chunk/stream the prediction CLOB universe scan so memory is bounded regardless of market count (the 1M+ market
+  universe will keep growing past any fixed limit). is-daily-enum-sports-6dnq9 still running at 23:33Z (~71 min in); if
+  it also exits -9, apply the same bump + the same durable-fix analysis for the sports index path.
+- [ ] [CODE] P2. Durable fix: bound memory in the prediction CLOB universe scan (chunked pagination → incremental
+      manifest writes, no full-universe accumulation); same review for the sports enum path. Until then the 16Gi limit
+      is a ceiling race against universe growth.
