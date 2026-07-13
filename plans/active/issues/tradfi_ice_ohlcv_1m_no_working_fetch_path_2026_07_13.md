@@ -32,7 +32,7 @@ summary:
   but for ICE, and structurally worse (KRX''s registry only over-promised intraday granularity beyond what Yahoo
   supports; ICE''s registry promises a data_type with a real upstream instrument and a real intended source, and the
   wiring for that source was simply never built).'
-status: open
+status: resolved
 nature: notes
 asset_group: [tradfi]
 stage: [data]
@@ -64,7 +64,7 @@ priority: P3
 source:
   [pipeline_e2e_check todo-25 TRADFI diagnostic pass, real code read across 3 repos (no live VM needed), 2026-07-13]
 assigned_vm: NA
-resolved_by:
+resolved_by: unified-api-contracts@753fb81a + market-tick-data-service@971bdd35 (operator decision 2026-07-13)
 locked_by:
 execution_scope: local-only
 estimate_class: research
@@ -161,3 +161,28 @@ triage pattern used for the KRX gap.
   across 3 repos (instruments-service, market-tick-data-service, unified-api-contracts) — no live VM run needed, the gap
   is structural and fully visible from static code + registry inspection. Not fixed (per the operator's explicit
   instruction: this needs a real architecture decision, not a guess).
+- 2026-07-13 (later same day): **RESOLVED.** Operator decision (this session): narrow ICE expected coverage to
+  `ohlcv_24h` ONLY (dropping `ohlcv_1m`/`trades`/`tbbo`) AND build the Yahoo-DXY daily fetch route, mirroring the KRX
+  narrowing precedent (`unified-api-contracts@a2751f36`/`@c9f32889`) exactly.
+  - **unified-api-contracts@753fb81a**: `expected_coverage.py` ICE `["trades","ohlcv_1m","tbbo"]` → `["ohlcv_24h"]`;
+    `VENUE_DATA_TYPE_CAPABILITIES["ICE"]` `{"ohlcv_1m":"2019-01-01"}` → `{"ohlcv_24h":"2019-01-02"}` (YAHOO_INDICES DXY
+    genesis, KRX convention). Verified ICE was never in `_mvp_scope_predicate.py`'s tradfi MVP scope
+    (`venues=frozenset({"CME"})`) so no MVP carve-out edit was needed, unlike KRX. New
+    `TestIceExpectedCoverageNarrowedToDailyDxy` regression class + ICE dropped from the Databento-OHLCV-only-MVP
+    parametrize with a dedicated `ohlcv_24h`-only pin. UAC targeted suites: 545 passed.
+  - **market-tick-data-service@971bdd35**: ICE removed from `umi_tick_provider._DATABENTO_VENUES` (dead-but-reachable
+    branch, zero venue=ICE Databento instruments) and routed through the new `_umi_yahoo.route_yahoo_tradfi()` (the
+    FX/KRX/ICE Yahoo cluster's shared home): `ohlcv_24h` only, honest-empty for any other data_type, fetch via
+    `fetch_yahoo_indices()` which resolves ticker/genesis from the UAC `YAHOO_INDICES` registry at call time (never
+    hardcodes `DX-Y.NYB`) and writes `instrument_id="ICE:INDEX:DXY-USD"` — byte-identical to instruments-service's
+    `_create_yahoo_index_records()` catalogue key (read-only confirmed, `adapter.py:655-695`). 8 new tests; 110 umi
+    tests + a 294-test regression sweep pass; full MTDS QG green.
+  - **instruments-service@c6a97052**: tradfi expected-universe golden regenerated (the 3 `(ICE, *, ohlcv_1m)` cells
+    removed, 43→40 tuples) via the sanctioned regen script against the committed UAC.
+  - The side-note is resolved by the same narrowing (`trades`/`tbbo` dropped).
+  - **Honest residuals** (small, tracked on the parent plan): (1) first real ICE `ohlcv_24h` capture lands on the next
+    TRADFI backfill/sweep run — the route is unit/registry-verified but not yet exercised by a live VM; (2)
+    discovered-adjacent, NOT fixed: instruments-service `TRADFI_VENUE_INSTRUMENT_TYPES["ICE"]` lacks `"index"`, so the
+    D2a "could-exist" expected-universe enumeration doesn't count ICE's DXY index cell (pre-existing, independent of
+    this fix); (3) `venue_mapping.py`'s separate per-venue start-date `"ICE": "2020-01-01"` was not aligned to the
+    2019-01-02 DXY genesis (different mechanism; KRX's precedent commit didn't touch its equivalent either).

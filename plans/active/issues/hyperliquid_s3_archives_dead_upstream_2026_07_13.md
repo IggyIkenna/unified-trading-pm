@@ -215,3 +215,38 @@ permanent" to "build the `node_fills_by_block` adapter" as the clear next step, 
 safe INFO-log observability fix) still stands as-is and is unaffected by this correction. (repo:
 market-tick-data-service — investigation/correction only, no code changed this pass; real `aws s3api head-object` +
 downloaded/decompressed real sample evidence, not inference)
+
+## 2026-07-13 (implementation pass — trades migration + observability + rolling-lag honesty SHIPPED)
+
+All three buildable items from the correction section landed, real-S3-verified (aws-hyperliquid-s3 requester-pays, no VM
+needed for the adapter proof):
+
+- **`market-tick-data-service@c48096e7`** (`adapters/hyperliquid_s3.py` + tests):
+  - **Archive coverage re-probed** (direct `list_objects_v2`): `node_fills_by_block/hourly/` = 546 date partitions,
+    FIRST **2025-07-27**, LAST **2026-07-13** (today) — LIVE. Legacy `node_fills/hourly/` = 2025-05-25..2025-07-27.
+    l2Book latest published day probed = **2026-06-29** (confirms the ~2-week rolling lag).
+  - **TWO pre-existing legacy-path bugs found by the migration — HL `trades` NEVER captured via this adapter**: the
+    legacy prefix was listed with a trailing slash (`node_fills/hourly/{d}/{h}/`) matching zero real `{h}.lz4` keys, and
+    the legacy parser assumed a flat dict while real lines are `[address, fill]`.
+  - **`fetch_trades` migrated + date-routed** (≤2025-07-27 legacy shape, after → by_block block/events shape), one
+    shared `_fill_to_trade_row` → identical canonical schema both paths; epoch-ms preserved (db635632 1970-collapse NOT
+    reintroduced). **Real proof**: `fetch_trades(BTC, 2026-07-10)` = **729,174 rows** (by_block); `(BTC, 2025-07-26)` =
+    **349,680 rows** (legacy); real `20260710/12.lz4` parses 33,226 BTC + 13,378 ETH events.
+  - **Observability (rec #1)**: loud INFO when EVERY hourly key 404s (trades + l2Book), DATABENTO_EMPTY_BUT_VALID style.
+    **Rolling-lag hook (rec #3)**: cached `_latest_published_l2_book_date()` probe + public
+    `l2_book_day_within_publish_lag(day)`. 93 unit tests pass incl. real-data fixtures.
+- **Manifest classification WIRED** (same session, follow-up commit): `onchain_perp_batch_handler._record_empty` now
+  consults the lag hook for zero-row `(HYPERLIQUID, book_snapshot_5)` days and stamps **`EXPECTED_SOURCE_DELIVERY_LAG`**
+  (existing UAC EmptyConfirmedReason — exact semantic match, chosen over a new member per the prefer-existing rule)
+  instead of `SOURCE_RETURNED_ZERO`; 2 regression tests. **`unified-trading-pm@a0cefb6b7`**: the QG closed-set mirror
+  was drift-missing this member — added.
+- **Residuals**: (1) coverage-denominator decision (operator): `EXPECTED_SOURCE_DELIVERY_LAG` is WITHIN-window, so the
+  trailing ~2-week l2Book lag reads as a coverage dip until the archive catches up — moving it OUT-of-window (or a
+  dedicated out-of-window reason) is an operator-gated denominator change, deliberately not made unilaterally; (2) QG
+  mirror drift: 6 more EmptyConfirmedReason members still absent from KNOWN_REASONS (EXPECTED_NOT_ENOUGH_TVL,
+  EXPECTED_CHAIN_AGGREGATE, EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE, EXPECTED_NO_PROVIDER_COVERAGE, EXPECTED_NO_MAPPING,
+  EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED) — separate mirror-sync fix; (3) `S3_TRADES_START` (2025-03-22) vs real
+  legacy start (2025-05-25) left in sync with the handler's `_SOURCE_COVERAGE_START` mirror — the 03-22..05-24 window
+  now at least emits the honest all-404 INFO; (4) real-VM re-verification of a HYPERLIQUID trades force-leg (post
+  tarball refresh) is the parent plan's targeted re-run item. Doc kept `open` pending (4); everything else here is
+  shipped + QG-green.

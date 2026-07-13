@@ -142,3 +142,23 @@ session (the live-leg "no PROD-sampled instrument_id" limitation) — worth a fu
 `manifest_ok=true, manifest_status=empty_confirmed` + a day before the venue's own `venue_start_dates` entry as a pass,
 not a failure), but NOT an IS code bug and NOT re-diagnosed further this pass. No code changed. (repo:
 instruments-service / market-tick-data-service checker tooling — investigation only, no fix applied)
+
+## 2026-07-13 (adapter BUILT + wired + live-API verified; checker fairness fix shipped)
+
+Operator approved building the adapter (this session). Shipped:
+
+- **`market-tick-data-service@28ad6b38`** — NEW `adapters/coinbase_cde_batch.py` (+ 13 unit tests built from real probe
+  payloads): native Coinbase Advanced Trade REST batch adapter for `trades` — public market-data endpoints, ticker
+  start/end windowing, pagination, rate-limit handling, canonical rows with `instrument_id`/`instrument_type` stamped
+  (the ASTER missing-column class cannot recur). Days before a contract first traded produce an honest absence, never
+  fake rows. **Live-API verified: 1,285 real trades returned for 2026-07-11.**
+- **`market-tick-data-service@971bdd35`** — wired into the batch dispatch (`umi_tick_provider.py`
+  `venue_upper == "COINBASE-CDE"` branch → `fetch_coinbase_cde_batch`, lazy import), removing the "Unsupported venue:
+  COINBASE-CDE" hard-fail.
+- **IS-side checker fairness case (this doc's last section) FIXED**: `instruments-service@526d2ffd` — the IS checker now
+  treats `manifest_ok + empty_confirmed + day < venue_start_dates[venue]` as a PASS (the benign pre-launch-day case this
+  doc documented).
+- **Residual (keeps this doc open)**: the real-VM force-leg re-verification proving rows land end-to-end through a
+  launched backfill VM — requires the MTDS code tarball to include 28ad6b38/971bdd35 (tarball-refresh cron picks up
+  pushed LDR commits automatically); tracked as the parent plan's targeted re-run item for `CEFI:COINBASE-CDE:trades` on
+  a day ≥ 2026-07-10.

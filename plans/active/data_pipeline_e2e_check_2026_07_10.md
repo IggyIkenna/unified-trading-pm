@@ -192,52 +192,52 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
 ## Todos
 
 - [x] 1. ✅ [INFRA] P0. Phase-0 provisioning gate-check — unified-trading-pm (no code) — evidence: all 10 test buckets
-      (`instruments-store-{cefi,defi,tradfi,sports,pred}-test-central-element-323112`,
-      `market-data-tick-{cefi,defi,tradfi,sports,pred}-test-central-element-323112`) confirmed pre-existing via
-      `gcloud storage buckets describe`; no provisioning needed.
+     (`instruments-store-{cefi,defi,tradfi,sports,pred}-test-central-element-323112`,
+     `market-data-tick-{cefi,defi,tradfi,sports,pred}-test-central-element-323112`) confirmed pre-existing via
+     `gcloud storage buckets describe`; no provisioning needed.
 
 - [x] 2. ✅ [INFRA] P0. `--venues`/`--vm-name`/`--test-run` added to `launch-instruments-backfill-vm.sh` —
-      deployment-service@2ef62f6 — evidence: dry-run printed correct `VM_VENUE`/`IS_TEST_RUN=true` metadata; real VMs
-      `instr-backfill-cefi-pchk-0710125724-{f,s}-binance-futures` both launched + completed (`EXIT_STATUS=0`) using
-      these exact flags.
+     deployment-service@2ef62f6 — evidence: dry-run printed correct `VM_VENUE`/`IS_TEST_RUN=true` metadata; real VMs
+     `instr-backfill-cefi-pchk-0710125724-{f,s}-binance-futures` both launched + completed (`EXIT_STATUS=0`) using these
+     exact flags.
 
 - [x] 3. ✅ [INFRA] P0. `--instrument-ids`/`--test-run` added to `launch-mtds-backfill-vm.sh` —
-      deployment-service@2ef62f6 — evidence: real VMs `mtds-backfill-cefi-pipelinecheck-20260710-13{57,58,02}*` launched
-      with `--instrument-ids BTCUSDT --test-run`, `EXIT_STATUS=0`.
+     deployment-service@2ef62f6 — evidence: real VMs `mtds-backfill-cefi-pipelinecheck-20260710-13{57,58,02}*` launched
+     with `--instrument-ids BTCUSDT --test-run`, `EXIT_STATUS=0`.
 
 - [x] 4. ✅ [BACKEND] P0. `unified_trading_library/pipeline_e2e_check/` (5 modules) built —
-      unified-trading-library@c8ffb4a4 (+6927f2bf, +30b77a90 follow-up fixes) — evidence: `quality-gates.sh` PASSED 4×
-      (32d7939c→c8ffb4a4→6927f2bf→30b77a90), each module unit-verified (ruff/basedpyright/functional import checks) at
-      every revision.
+     unified-trading-library@c8ffb4a4 (+6927f2bf, +30b77a90 follow-up fixes) — evidence: `quality-gates.sh` PASSED 4×
+     (32d7939c→c8ffb4a4→6927f2bf→30b77a90), each module unit-verified (ruff/basedpyright/functional import checks) at
+     every revision.
 
 - [x] 5. ✅ [BACKEND] P0. `instruments-service/scripts/pipeline_e2e_check.py` — instruments-service@8e6d7526 — evidence:
-      **`data_pipeline_e2e_check_is_2026_07_05.md`: `total=2 passed=2 failed=0 status=green`** — force leg `passed`
-      (real VM `instr-backfill-cefi-pchk-0710125724-f-binance-futures`, `EXIT_STATUS=0`, 687 real BINANCE-FUTURES
-      instrument records written to the TEST bucket, manifest `captured`), skip leg `passed` with `skip_proof: genuine`
-      (real VM `...-s-binance-futures`, `EXIT_STATUS=0`, skip-signal log line found, object fingerprint unchanged). Gate
-      met in full — **as scoped**: this proves the SCRIPT/MECHANISM works on one real shard, not full coverage. See
-      "Scope correction" above + todo 18/20 for the actual 108-shard matrix, not yet run.
+     **`data_pipeline_e2e_check_is_2026_07_05.md`: `total=2 passed=2 failed=0 status=green`** — force leg `passed` (real
+     VM `instr-backfill-cefi-pchk-0710125724-f-binance-futures`, `EXIT_STATUS=0`, 687 real BINANCE-FUTURES instrument
+     records written to the TEST bucket, manifest `captured`), skip leg `passed` with `skip_proof: genuine` (real VM
+     `...-s-binance-futures`, `EXIT_STATUS=0`, skip-signal log line found, object fingerprint unchanged). Gate met in
+     full — **as scoped**: this proves the SCRIPT/MECHANISM works on one real shard, not full coverage. See "Scope
+     correction" above + todo 18/20 for the actual 108-shard matrix, not yet run.
 
 - [x] 6. ✅ [BACKEND] P0. `market-tick-data-service/scripts/pipeline_e2e_check.py` — market-tick-data-service@b4c0bec5 —
-      evidence: real VM run (day=2026-07-05, CEFI/BINANCE-FUTURES/trades) correctly (a) sampled a real PROD-captured
-      instrument at runtime (no hardcode), (b) correctly fell back to `smoke_matrix`'s representative symbol (BTCUSDT) +
-      logged the honest reason when no PROD row existed for the exact day (day-filter fix, see Progress Log), (c)
-      genuinely downloaded 2,084,208 real BTCUSDT trade rows from Tardis on `--force` — proving the real
-      adapter/download path end-to-end. **One leg of this Gate is NOT met as originally scoped**: that force-run landed
-      in the PROD bucket, not the TEST bucket, due to a real bug now fixed (see Progress Log finding #8) —
-      re-verification against a real VM post-fix is the one item **not completed** in this session; flagged honestly
-      below rather than claimed done. **This is the SCRIPT working on one real shard (CEFI/BINANCE-FUTURES) — not the
-      344-shard, 5-asset-group coverage matrix.** See "Scope correction" above + todo 19/21, not yet run.
+     evidence: real VM run (day=2026-07-05, CEFI/BINANCE-FUTURES/trades) correctly (a) sampled a real PROD-captured
+     instrument at runtime (no hardcode), (b) correctly fell back to `smoke_matrix`'s representative symbol (BTCUSDT) +
+     logged the honest reason when no PROD row existed for the exact day (day-filter fix, see Progress Log), (c)
+     genuinely downloaded 2,084,208 real BTCUSDT trade rows from Tardis on `--force` — proving the real adapter/download
+     path end-to-end. **One leg of this Gate is NOT met as originally scoped**: that force-run landed in the PROD
+     bucket, not the TEST bucket, due to a real bug now fixed (see Progress Log finding #8) — re-verification against a
+     real VM post-fix is the one item **not completed** in this session; flagged honestly below rather than claimed
+     done. **This is the SCRIPT working on one real shard (CEFI/BINANCE-FUTURES) — not the 344-shard, 5-asset-group
+     coverage matrix.** See "Scope correction" above + todo 19/21, not yet run.
 
 - [x] 7. ✅ [DATA] P1. IS/MTDS read-bucket asymmetry verified live (not just by reading code) — evidence in Progress
-      Log: IS's skip-leg fired `skip_proof: genuine` self-contained against the TEST bucket (todo 5); MTDS's skip-leg
-      required a real PROD-side `read_prod_capture_status` match to label `genuine` (confirmed both the genuine and the
-      `ambiguous` case via real runs — see the RPL-USDT/day-mismatch run in the Progress Log, correctly labeled
-      `ambiguous` before the day-filter fix).
+     Log: IS's skip-leg fired `skip_proof: genuine` self-contained against the TEST bucket (todo 5); MTDS's skip-leg
+     required a real PROD-side `read_prod_capture_status` match to label `genuine` (confirmed both the genuine and the
+     `ambiguous` case via real runs — see the RPL-USDT/day-mismatch run in the Progress Log, correctly labeled
+     `ambiguous` before the day-filter fix).
 
 - [x] 8. ✅ [SCRIPT] P0. `data-pipeline-check-is/SKILL.md` — unified-trading-pm@4c5b294f — evidence:
-      `link-claude-skills.sh` ran (via `quality-gates.sh`), skill confirmed live/loaded in this session (appeared in the
-      available-skills list).
+     `link-claude-skills.sh` ran (via `quality-gates.sh`), skill confirmed live/loaded in this session (appeared in the
+     available-skills list).
 
 - [x] 9. ✅ [SCRIPT] P0. `data-pipeline-check-mtds/SKILL.md` — unified-trading-pm@4c5b294f — same evidence as todo 8.
 
@@ -414,17 +414,17 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-                              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-                              is NOT a tooling bug or an adapter regression.
-                              `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
-                              under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
-                              `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
-                              sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-                              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-                              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-                              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-                              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-                              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+      full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+      is NOT a tooling bug or an adapter regression.
+      `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
+      under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
+      `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
+      sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+      `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+      (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+      full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+      the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+      pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -1098,6 +1098,30 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   from 697 → 645 (this triage round resolved 52 leg-results as documented-not-a-bug). The remaining 645 are the rest of
   todo 25's scope — not further triaged this round beyond the 4 venues sampled above.
 
+- [ ] 27. [DATA] P1. **Targeted re-run of the remaining plausibly-explained failure clusters with all 2026-07-13
+      residual-round fixes live** (NOT another full 452-shard sweep): TRADFI:KRX (IS+MTDS force/skip — in flight this
+      session), CEFI:COINBASE-CDE:trades on a day ≥2026-07-10 (new adapter 28ad6b38/971bdd35),
+      CEFI:HYPERLIQUID:trades/book_snapshot_5 (c48096e7/01f23b8c), TRADFI:ICE ohlcv_24h (753fb81a/971bdd35),
+      PREDICTION:KALSHI/POLYMARKET MTDS shards for a day inside the now-backfilled market_lifecycle window, and a
+      post-fix PREDICTION IS re-run to supersede the 12 dishonest empty_confirmed rows (a52cbab1 must reach the code
+      tarball first — refresh cron picks up pushed LDR commits). The Tardis-locked CEFI cluster
+      (BINANCE-DELIVERY/OKX/BYBIT-SPOT/COINBASE-FUTURES/BITFINEX-SPOT/KRAKEN-FUTURES) re-runs only inside the lease
+      pilot / solo window (operator decision 2026-07-13: pilot wave with lease ON). (repos: market-tick-data-service,
+      instruments-service)
+- [ ] 28. [INFRA] P2. **QG closed-set mirror sync**: 6 EmptyConfirmedReason members still missing from
+      `check_record_empty_reason_closed_set.py` KNOWN_REASONS (EXPECTED_NOT_ENOUGH_TVL, EXPECTED_CHAIN_AGGREGATE,
+      EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE, EXPECTED_NO_PROVIDER_COVERAGE, EXPECTED_NO_MAPPING,
+      EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED) — same drift class fixed twice now (ca4b140b, a0cefb6b7); sync the
+      whole set + consider generating the mirror from the UAC enum. (repo: unified-trading-pm)
+- [ ] 29. [DATA] P3. **Operator decision — `EXPECTED_SOURCE_DELIVERY_LAG` denominator classification**: currently
+      WITHIN-window (counts against completion %), so HYPERLIQUID l2Book's rolling ~2-week publish lag reads as a
+      standing coverage dip; moving it OUT-of-window (or adding a dedicated out-of-window reason) is a denominator
+      change needing an operator ruling. (repo: unified-api-contracts)
+- [ ] 30. [DATA] P3. **IS could-exist enumeration gap**: `TRADFI_VENUE_INSTRUMENT_TYPES["ICE"]` lacks `"index"`, so the
+      D2a expected-universe generator never counts the real ICE:INDEX:DXY-USD cell (pre-existing, surfaced by the ICE
+      narrowing — see `tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md` residuals; also the `venue_mapping.py`
+      ICE start-date 2020-01-01 vs 2019-01-02 nit). (repo: instruments-service / unified-api-contracts)
+
 - [x] 26. [DATA] P3. **Design a fixture-aware day-selection mechanism for the SPORTS asset_group** so a future sweep can
       meaningfully test SPORTS coverage (this session's single fixed day, 2026-07-09, had zero scheduled fixtures for
       every tested league/venue — an honest but uninformative result). Built + ran (see Progress Log): queried PROD's
@@ -1378,14 +1402,14 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   **SPORTS fixture-aware re-verification, redone properly** (todo 26 was marked done earlier, but the operator asked to
   actually run it — the earlier pass only built the tooling). Re-ran both IS's 7 SPORTS shards and MTDS's 64 (excluding
   bare BETFAIR, per its own separate zero-captured-data finding) against real per-venue PROD-confirmed fixture days.
-  MTDS side confirmed the already-known architecture cleanly (ODDS_API's real fetch genuinely reaches its
+  MTDS side confirmed the already-known architecture cleanly (ODDS*API's real fetch genuinely reaches its
   operator-confirmed-intentional league scope; the 6 sub-venues correctly show "no active venues," confirming they're
   ODDS_API bookmaker fan-out tags, not independently fetchable — a checker-design fact, not a bug). **IS side surfaced a
   real bug**: every IS SPORTS shard enumerated ZERO cells (`total=0, results=[]`) — reproducing an unresolved issue
   first hit 2026-07-12 and never root-caused. Dispatched a focused fix. **The diagnosis corrected my own premise**:
   `smoke_matrix.py`'s SPORTS provider list (API_FOOTBALL/OPEN_METEO/TRANSFERMARKT/SOCCER_FOOTBALL_INFO/
   UNDERSTAT/FOOTYSTATS) was NOT stale — it's IS's genuinely correct, deliberately-disjoint-from-MTDS venue registry
-  (Decision C, 2026-06-29: IS drives SPORTS reference data via these providers; ODDS_API/PINNACLE/BETFAIR_*/
+  (Decision C, 2026-06-29: IS drives SPORTS reference data via these providers; ODDS_API/PINNACLE/BETFAIR*\*/
   DRAFTKINGS/FANDUEL are MTDS-owned, `NO_ADAPTER_YET` on the IS side, correctly producing a fast no-op skip — the
   earlier "`is__SPORTS__PINNACLE exit=0`" evidence that looked like a real pass was this same silent skip, not real
   work). The one genuine gap: bare `BETFAIR` DOES have a real, credential-gated IS adapter that was missing from
@@ -1443,3 +1467,81 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   every live-leg result across all 452 shards, not just the ones sampled here). No further individual re-verification is
   planned this session — the live-leg bug is the one clear next-step item that should be fixed before any future sweep's
   live-leg numbers are trusted.
+
+- 2026-07-13 (residual close-out round — operator-directed; all 8 open issue docs actioned, 11 commits across 4 repos) —
+  Operator directed finishing the residual open issues from the 452-shard sweep triage, with an explicit
+  conflict-check-first instruction (honored: the concurrent prune-race session's live `manifest_consolidator.py` WIP was
+  detected and never touched — that fix landed independently as `unified-trading-library@97212d3b`; AO backlog checked,
+  zero dispatch conflicts). Three operator decisions taken interactively: Tardis lease → pilot wave ON; ICE → narrow to
+  ohlcv_24h + wire Yahoo-DXY; DEFI consolidator → infra-only pass now. Build phase ran as a 9-agent workflow (5
+  completed; 4 hit the session usage limit and were finished in the main loop). Results, all QG-green + pushed:
+
+  **1. Live-leg manifest-date mismatch (P1) — FIXED + real-VM verified, doc RESOLVED.**
+  `market-tick-data-service@981201c4`: `_verify_live_manifest_row()` reads the live VM's OWN per-VM shard (fallback:
+  consolidated filtered by `attempted_at >= leg launch`, −60s skew). IS checker analyzed: its live leg is `--mode batch`
+  (setup-data-pipeline-vm.sh:1327) → day filter CORRECT there, deliberately unchanged. **Real-VM proof on the doc's own
+  worked example**: `CEFI:OKX:liquidations --legs live` (VM `mtds-live-smoke-cefi-okx-liquidations-20260713-191136`,
+  19:11-19:15Z) → `passed | empty_confirmed | ok (... live row via per_vm_shard)` — the checker now reads the live VM's
+  own healthy row instead of inheriting the force leg's stale attempted_failed. Also in the same commits: Phase-0
+  `-test-`-bucket force-consolidation in BOTH checkers (mtds@981201c4 + instruments-service@526d2ffd — closes the
+  test-bucket re-freeze gap), MTDS ambiguous exit-code aligned to IS, and the IS benign pre-launch-day pass
+  (`empty_confirmed` + day < venue_start_dates → PASS, the COINBASE-CDE IS-leg case).
+
+  **2. Tardis (P0)** — operator ruled pilot-wave-with-lease-ON; discovered single-VM lease operation is ALREADY live in
+  prod (`config-store-.../_tardis_concurrency_lease/lease.json` held by `cefi-okx-swap-2022-light`, acquired 17:49Z);
+  monitor armed on that VM's termination for the multi-VM pilot window. Doc updated.
+
+  **3. Prediction missed-window backfill (P0) — EXECUTED + manifest-verified.** Real VM
+  `instr-backfill-pred-missedwindow-0713` (07-07→07-12, --force, exit 0): all 6 missing `market_lifecycle` day
+  partitions now in PROD with real rows (10-13k records/day); consolidated index shows 52-62 `captured` rows/day across
+  the window. The completeness trap reproduced live a 4th time on the pre-fix tarball and is FIXED:
+  `instruments-service@a52cbab1` (`_fold_written_venues()` — composite `VENUE/GROUP` counts keys folded to bare venues
+  at both comparison sites). Residuals on the doc: post-fix re-run to supersede 12 dishonest rows (todo 27);
+  `instrument_availability day=2026-07-09` is daily-enum-path territory (still-draft heal plan).
+
+  **4. CEFI consolidator 14-day staleness (P1) — ROOT CAUSE SETTLED, doc RESOLVED.** Verdict: test-bucket conflation —
+  PROD was never frozen. The correction entry's reading computes to a frozen mtime of 2026-06-29T07:42:55.3Z, an EXACT
+  match to the cefi `-test-` blob; PROD's cron heartbeat advanced `blob.updated` every minute all day. The `--force`
+  no-op anomaly = the next cron tick's `latest.json` overwrite (observed live on DEFI's per-minute no-op summaries). The
+  user-flagged reader-timestamp hypothesis REFUTED by code-read: `_read_consolidated_if_fresh` uses `blob.updated`
+  correctly (the idle `_touch_canonical_mtime` metadata patch advances it; `consolidator_content_write_at` governs only
+  the incremental cutoff). Durable fix = the Phase-0 test-bucket consolidation above.
+
+  **5. DEFI consolidator SIGKILL (P1) — infra pass done; resources DEFINITIVELY ruled out; still open.** Applied
+  32Gi/8cpu (18:10:40Z): kill cadence UNCHANGED (~5-6 min = the 300s lock-TTL steal cycle; 64 kills/6h, 100% DEFI-only
+  fleet-wide); memory p99 0.56-0.66, no OOM log signature; killed holders die 20-35s AFTER acquiring the GCS lock (so
+  code runs — "zero app logs" is the known Cloud-Run-jobs log-shipping gap, not a pre-import crash). Verdict:
+  defi-workload-specific (largest canonical, 445MB/27.4M rows), NOT resources; next step = in-container log shipping,
+  then possibly Batch-Fargate re-home (operator-gated). 9 per-VM shards still merge unreliably.
+
+  **6. Hyperliquid (P1) — migrated + wired.** `market-tick-data-service@c48096e7` (fetch_trades → node_fills_by_block
+  with date routing; found TWO pre-existing legacy bugs meaning HL trades NEVER captured — trailing-slash prefix + wrong
+  line shape; real-S3 proof 729,174 rows for 2026-07-10; all-404 loud INFO; lag probe) + `@01f23b8c` (manifest
+  classification: zero-row book_snapshot_5 lag days → EXPECTED_SOURCE_DELIVERY_LAG) + `unified-trading-pm@a0cefb6b7` (QG
+  mirror). Real-VM force-leg re-verify = todo 27.
+
+  **7. COINBASE-CDE (P1) — adapter BUILT.** `market-tick-data-service@28ad6b38` (native Advanced Trade REST batch trades
+  adapter, 13 tests, live-API proof 1,285 real trades for 2026-07-11) + `@971bdd35` (dispatch wiring). Real-VM force-leg
+  re-verify = todo 27.
+
+  **8. ICE (P3) — operator decision implemented, doc RESOLVED.** `unified-api-contracts@753fb81a` (narrow to ohlcv_24h,
+  KRX-precedent tests) + `market-tick-data-service@971bdd35` (`route_yahoo_tradfi()` — FX/KRX/ICE Yahoo cluster
+  extracted to `_umi_yahoo`, ICE removed from `_DATABENTO_VENUES`, DXY route via YAHOO_INDICES registry) +
+  `instruments-service@c6a97052` (tradfi golden regen, exactly the 3 ICE ohlcv_1m tuples removed).
+
+  **Todo-25 flagged residuals**: the sweep scratchpad (`_pipeline_e2e_check_sweep/` incl. `aggregate_report.py`,
+  `RESWEEP_FINAL_REPORT.md`, shard JSONs) is LOST — confirmed absent from this host, all 16 AO-VM slot clones, and GCS
+  (only the per-VM run.logs survive). The aggregator was REBUILT as a committed tool:
+  `market-tick-data-service@30c3bc89` `scripts/aggregate_pipeline_e2e_reports.py` (lifecycle: permanent; todo-25
+  category taxonomy; 23 tests) — shard-enumeration JSONs stay regenerable scratchpad artifacts (regenerated fresh in
+  this clone with a provenance README; IS 1,959 cells / MTDS 1,978 raw / 1,608 mvp-only from current registries — the
+  lost driver's exact 108/344 aggregation is unrecoverable and unneeded). KRX re-run (IS+MTDS force/skip, day
+  2026-07-09) launched this session — results land in the next entry. Also shipped en route: MTDS import-pattern fix
+  (consolidator invoked via CLI subprocess, not deep import), `umi_tick_provider.py` brought back under the 900-line cap
+  via the Yahoo-cluster extraction, and a `fetch_trades` size-cap split.
+
+  **Multi-agent/infra incidents this round (for the record)**: two slot-cron `git pull --autostash` sweeps hit MTDS
+  mid-edit (agents re-applied; the superseded autostash was verified file-by-file against pushed commits, backed up to
+  scratchpad, then dropped); 4 of 9 workflow agents died on the session usage limit (resets 21:40Z) and their scopes
+  were completed in the main loop; an unpopped foreign `autostash` in instruments-service (measure_honest_coverage WIP,
+  not this session's) was left untouched with a backup patch dumped to scratchpad.
