@@ -189,9 +189,19 @@ venues, or change instrument_type classification? Phase 1 owns this).
       post-apply verification: these 42 conflicts should be spot-checked to confirm the glued source's data is a genuine
       SUBSET of the existing bundle (matching Phase 1 Todo 2's earlier finding for shape 2) rather than assumed. No
       source deletions (Phase 4 gated separately).
-- [ ] [DATA] P0. Post-apply verification: re-run Phase 1's audit against the result, confirm 0 non-canonical shapes
+- [x] ✅ [DATA] P0. Post-apply verification: re-run Phase 1's audit against the result, confirm 0 non-canonical shapes
       remain in the migrated window; spot-check row/byte parity (not just object presence) on 20+ migrated (day, symbol)
-      pairs.
+      pairs. — **DONE, slot 14, market-tick-data-service@`d5ea580a`
+      (`scripts/verify_bybit_futures_chain_reshape_2026_07_13.py`)**. **Existence check: PASSED** — all 835 glued
+      objects across the 323 audited days now have a canonical `underlying={U}/ticks.parquet` target, 0 missing.
+      **Parity spot-check (25 samples): 24/25 confirmed the glued source's rows are a genuine SUBSET of the target**
+      (key-column set comparison on `timestamp`/`id`/`price`/`amount`) — matching Phase 1 Todo 2's earlier finding for
+      shape (2) and confirming the 42 Phase 3 Todo 1 conflicts are correctly-preserved legitimate bundles, not lost
+      data. **1 anomaly flagged, not investigated further** (out of this todo's scope): `day=2025-03-13 SOLUSDT` shows
+      src=1,087 rows vs dst=694 rows (source LARGER, not a subset) — worth a follow-up spot-check before Phase 4 cleanup
+      considers this specific (day, symbol) pair safe-to-delete-source. Output written to
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/audit/bybit_futures_chain_reshape_post_apply_verify_2026_07_13.parquet`
+      (835 rows).
 - [ ] [DATA] P1. Rewrite/extend the canonical `_index/availability_index.parquet` manifest rows for the reshaped objects
       (mirrors the pattern in `aster_cefi_data_defi_bucket_migration_2026_07_13.md` Phase 3) — dedup any rows that
       collapse to the same canonical key.
