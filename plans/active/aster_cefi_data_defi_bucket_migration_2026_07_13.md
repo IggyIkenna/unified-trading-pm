@@ -251,9 +251,16 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
 
 ## Phase 3 — Manifest + downstream (P1)
 
-- [ ] [DATA] P1. Rewrite/extend the canonical CeFi `_index/availability_index.parquet` manifest rows for the
+- [x] ✅ [DATA] P1. Rewrite/extend the canonical CeFi `_index/availability_index.parquet` manifest rows for the
       newly-migrated ASTER objects (mirrors the 2026-07-08 script's manifest-rewrite step) — dedup any rows that
-      collapse to the same canonical key, keeping the best `capture_status`.
+      collapse to the same canonical key, keeping the best `capture_status`. — **DONE, slot 14,
+      market-tick-data-service@`3841e908` (`scripts/rewrite_aster_cefi_manifest_2026_07_13.py`)**. Sourced the
+      definitive migrated-object list from the post-apply verification parquet (single-walk discipline — no fresh GCS
+      scan), mirroring `migrate_onchain_perp_perpetual_canonical_2026_07_08.py`'s exact key columns + status-rank dedup
+      pattern. Ran `--apply` for real against production: backed up the pre-migration index to
+      `_index/backups/availability_index.pre_aster_migration_20260713.parquet` first, then wrote the extended index —
+      **117,176 new rows proposed, 79,077 collapsed in dedup (already had manifest coverage), net manifest growth
+      7,469,353 → 7,507,452 rows** (dry-run and real apply produced byte-identical stats, confirming determinism).
 - [ ] [DATA] P1. Confirm downstream readers (MDPS candle processing, features-service, deployment-api data-status
       drilldowns) correctly pick up the migrated data from its new canonical CeFi-bucket location — spot-check one
       drilldown query for an ASTER instrument/day that was previously only in the DeFi bucket.
