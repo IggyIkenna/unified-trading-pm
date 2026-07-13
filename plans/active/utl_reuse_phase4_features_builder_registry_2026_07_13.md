@@ -53,10 +53,20 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [AGENT] P1. **Drop-in migrate** mt, volatility, onchain: delete local `BuilderEntry` + `resolve_build_order`
+- [x] ✅ [AGENT] P1. **Drop-in migrate** mt, volatility, onchain: delete local `BuilderEntry` + `resolve_build_order`
       (incl. `_build_dag`/`_kahn_bfs`) → `from unified_trading_library import BuilderEntry, resolve_build_order` (match
       the already-shipped calendar/delta_one pattern). Keep `_build_registry`/`get_builder`; volatility keeps its
-      orthogonal `_CALCULATOR_CLASS_MAP`.
+      orthogonal `_CALCULATOR_CLASS_MAP`. — SHIPPED `features-service@4d9a1656`. All three families now import
+      `BuilderEntry`/`resolve_build_order` (aliased `_utl_resolve_build_order`) from `unified_trading_library`; local
+      `resolve_build_order()` wrappers reduced to `return _utl_resolve_build_order(_get_registry())`.
+      `_build_registry`/`_get_registry`/`get_builder`/`get_all_builders` kept local unchanged; volatility's
+      `_CALCULATOR_CLASS_MAP`/`get_calculator_class_name` untouched. onchain never sets `lookback_candles` — UTL's
+      default `0` reproduces prior behaviour. Verified via
+      `tests/common/test_golden_fixture_phase0_resolve_build_order.py` (all 4 families byte-identical build order),
+      `tests/onchain/unit/test_calculators.py::test_resolve_build_order_raises_on_cycle` (UTL's "Dependency cycle in
+      builder DAG" message still matches the "Dependency cycle" substring), and the full
+      `tests/{multi_timeframe,volatility,onchain}/unit/test_feature_touchup.py` suites (128 passed). Full
+      `quality-gates.sh` green, sentinel verified against `4d9a1656`.
 - [x] ✅ [AGENT] P1. **sports — resolver-only migration now** (safe: `depends_on`-based, identical semantics):
       `resolve_build_order()` → `_utl_resolve_build_order(_get_registry())`. **Do NOT blind-swap the dataclass.** —
       SHIPPED `features-service@48895959`. Replaced the local hand-rolled Kahn's-algorithm `resolve_build_order()` body
