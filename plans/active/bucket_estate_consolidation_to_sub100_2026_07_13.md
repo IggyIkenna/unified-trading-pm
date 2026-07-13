@@ -210,6 +210,20 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
 
 ## Progress Log
 
+- **2026-07-13, S1/S2 landings (autonomous tick).** `unified-api-contracts@f84e5b37` — packaged cloud-providers.yaml
+  synced byte-identical to authoring SSOT (37 kinds both clouds, 10 dead kinds gone, recon present), QG green 376s, CI
+  healthy; enumerate_envelope.py repointed to flat strategy-store. Follow-up in flight for the two remaining same-class
+  sites the agent flagged (`gcs_paths.py:118 STRATEGY_STORE_BUCKET_TEMPLATE`, `enumerate_availability.py:43`).
+  `unified-trading-library@3382cc7c` — config-store fallback now resolves kind="config-store" (function-local import;
+  real circular-import risk documented), fixture yaml synced to 37 kinds, dynamic cell sweep picked up recon with no
+  table edits, QG green 246s. **Data-safety finding**: flat vs prd config-store diff = prd already holds ALL real config
+  md5-identical; the only flat-only object is `_tardis_concurrency_lease/lease.json` (ephemeral 900s lock, written by
+  MTDS via TARDIS_CONCURRENCY_LEASE_BUCKET, currently HELD by live VM cefi-okx-swap-2022-light-20260713) → flat
+  config-store bucket must NOT be deleted until that lease mechanism is repointed or the VM completes — added to
+  Deferred. Also recorded for Deferred: flat config-store literals remain in instruments-service
+  scripts/generate_domain_config.py:258 + system-integration-tests tests/smoke/test_cloud_infra_smoke.py:113. W3 fold
+  design drafted + committed earlier this tick (pm@346af1b62, todo flipped).
+
 - **2026-07-13, /autonomous dispatch started (operator away ~3h — "do everything possible without asking").** Staged
   execution: S1 = UAC packaged-yaml sync (36+recon=37 kinds) + enumerate_envelope flat repoint · UI strategy-store route
   repoint (catalogue/+configs/ copied cefi→flat first, server-side, verified) · W3 fold-design draft agent. S2 = UTL
