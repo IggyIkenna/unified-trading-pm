@@ -10,13 +10,33 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, unified-trading-system-ui]
+repos:
+  [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [observability, monitoring, deployment, self-healing, ui]
-related: [codex/05-infrastructure/data-pipeline-alerts.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/05-infrastructure/live-deployment-monitoring.md]
+related:
+  [
+    codex/05-infrastructure/data-pipeline-alerts.md,
+    codex/05-infrastructure/deployment-ui-architecture.md,
+    codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+    codex/05-infrastructure/live-deployment-monitoring.md,
+  ]
 created: 2026-06-22
-authoritative_for: [DeploymentUmbrella classification (live/batch/paper/experiment) + deployment-target inventory API + health/cockpit rollup]
-referenced_by: [codex/02-data/instruments-foundation-and-catalogue-completeness.md, codex/04-architecture/cross-venue-prediction-arb-detection.md, codex/05-infrastructure/data-pipeline-alerts.md, codex/05-infrastructure/spot-vms-for-backfill.md, plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md, plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md, plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md]
+authoritative_for:
+  [
+    DeploymentUmbrella classification (live/batch/paper/experiment) + deployment-target inventory API + health/cockpit
+    rollup,
+  ]
+referenced_by:
+  [
+    codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    codex/04-architecture/cross-venue-prediction-arb-detection.md,
+    codex/05-infrastructure/data-pipeline-alerts.md,
+    codex/05-infrastructure/spot-vms-for-backfill.md,
+    plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
+    plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
+    plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
+  ]
 owner:
 last_reviewed: 2026-06-22
 code_refs:
@@ -90,6 +110,15 @@ captured-progress), a per-umbrella summary header, and URL-param-backed cloud/st
 - **Deployment lifecycle** (`DEPLOYMENT_STARTED/COMPLETED/FAILED`, UTL events) routes via
   `alerting-service/rules/deployment_rules.py` → `#data-pipeline-alerts` with the **umbrella + cloud + a
   `/deployments/{name}` deep-link** (FAILED=CRITICAL pages; STARTED/COMPLETED=INFO).
+- **Daily estate digest** (`DEPLOYMENT_DIGEST`, UTL event, INFO): a once-a-day per-umbrella rollup (LIVE up / BATCH
+  completions+failures / PAPER status + the last-failure per umbrella) so operators get one morning glance instead of
+  watching the lifecycle stream. Built by deployment-api `routes/deployment_digest.py` off `_load_inventory` +
+  `build_umbrella_summary` (loaded once), emitted via UTL `log_event("DEPLOYMENT_DIGEST", INFO, details={message,…})` →
+  the `lifecycle-events` Pub/Sub topic → the ni-service subscriber → `deployment_rule_for` → `#data-pipeline-alerts`
+  (channel-only, never pages; the digest text rides in `details["message"]`). Cron: an isolated daily Cloud Run Job
+  (`scripts/deployment_digest_worker.py`) via `deployment-service/terraform/gcp/deployment_digest_scheduler.tf`, off the
+  live service's request path. **Same relay as the lifecycle events above — no HTTP URL to configure.** On-demand /
+  dry-run preview: `POST /api/deployments/digest/run`.
 - **Every DP\_\*/deployment alert is self-sufficient** (`notifiers/data_pipeline_slack.py`): a fenced-code **trace
   block** (the FetchEvidence dict / exit_code+run_log_tail / error_message, truncated to 3000 chars) + **deep-link
   buttons** — VM logs `{base}/ops/vms/{vm}`, Deployment `{base}/deployments/{vm}`, Data status
