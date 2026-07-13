@@ -6,7 +6,7 @@ summary: >
   l2_book_microstructure_capture_2026_07_13.md todo 2 ("extend the live capture") assumed all 9 target venues already
   had live book_snapshot_5 to extend. 4 of them do not (batch-only or trades-only today) — depth_of_book_10 for these
   needs the L5-equivalent live capture built first, which is new construction, not an extension.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -31,6 +31,8 @@ depends_on: []
 last_updated: 2026-07-13
 locked_by:
 resolved_by:
+  slot 8 (OKX-FUTURES scope decision + BINANCE-SPOT), slot 7 (OKX-SPOT), slot 3 (UPBIT), slot 9 (OKX-FUTURES,
+  market-tick-data-service@706912cd)
 ---
 
 # 4 of 9 depth_of_book_10 target venues lack live book_snapshot_5 entirely
@@ -135,7 +137,23 @@ For each of the 4 venues, in the same style as the 5 already-extended venues:
       dict is needed — simpler than the Coinbase snapshot+l2update pattern this mirrors structurally). Wired into
       `upbit_spot_ws.py`'s `_upbit_factory` `data_type` dispatch (mirrors the `deribit_ws.py` factory pattern); trades
       dispatch unaffected. 26 new tests + all 42 existing UPBIT trades tests pass; full `quality-gates.sh` green.
-- [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for OKX-FUTURES (own dated-contract `instId`
-      resolution — check `venue_mapping.py`'s OKX helpers + the Tardis `okex-futures` exchange-name mapping for the
-      exact expiry-symbol format first; then the same `books5`/`books` channel pattern as OKX-SWAP/OKX-SPOT). Scope
+- [x] ✅ [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for OKX-FUTURES (own dated-contract
+      `instId` resolution — check `venue_mapping.py`'s OKX helpers + the Tardis `okex-futures` exchange-name mapping for
+      the exact expiry-symbol format first; then the same `books5`/`books` channel pattern as OKX-SWAP/OKX-SPOT). Scope
       decision above already resolved this to in-scope, real work — no longer P3/gated. (repo: market-tick-data-service)
+      — **DONE, slot 9, `market-tick-data-service@706912cd`**. New `okx_futures_ws.py`: since OKX-FUTURES had ZERO live
+      connector of any kind (not just missing book capture), built a trades connector too (structural prerequisite for
+      the factory's default-dispatch case) alongside
+      `OKXFuturesDatedBookWSConnector`/`OKXFuturesDatedDepth10WSConnector` (books5/books channels, mirrors the OKX-SWAP
+      pattern). **Corrected the plan's own premise on canonical-id format**: verified against
+      `instruments-service/docs/CEFI_INSTRUMENTS.md` ("OKX does NOT need `@LIN`/`@INV` instrument_key marker wiring")
+      that OKX-FUTURES uses a RAW PASSTHROUGH canonical id (`OKX-FUTURES:FUTURE:BTC-USD-260710` /
+      `...BTC-USD_UM-260710`, the `_UM` infix already unambiguously encoding margin type) — NOT the `@LIN`/`@INV`-marker
+      convention `venue_mapping.py`'s OKX helpers might have suggested; this is the SAME convention the
+      batch/instruments-service side already uses for this exact venue's `prod/catalog.parquet` rows, keeping live=batch
+      id-format parity. No expiry/margin reconstruction needed as a result (`build_instrument_id(..., passthrough=True)`
+      handles it). Updated a pre-existing registry test that encoded the now-superseded "OKX-FUTURES stays unregistered"
+      invariant (2026-07-09 fix) to assert the new dedicated connector instead. 42 new tests, full `quality-gates.sh`
+      green (401s, sentinel-verified). Left `derivative_ticker` out of scope (not asked for by this todo, though
+      `expected_coverage.py` lists it for this venue) — flagging as a known gap for a future todo, not silently
+      expanded.
