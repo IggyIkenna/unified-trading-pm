@@ -149,3 +149,41 @@ honest "no trading that day" result going forward.
 - 2026-07-12: Filed from the `data_pipeline_e2e_check_2026_07_10.md` TradFi OHLCV re-verification round. Full
   local-guard elimination completed via static code trace; live-API root cause (entitlement vs. symbol-resolution)
   requires a live diagnostic not run in this pass — diagnosis handoff only, no fix attempted.
+- 2026-07-13: Picked up uncommitted work left by a crashed prior session (API server error, not a code bug) — two real
+  diffs in `market-tick-data-service`. Completed and evaluated both:
+  1. **`DatabentoBaseClient._resolve_api_key_for_index` secret-name fix — real bug, but NOT the root cause of this
+     issue.** The old code unconditionally requested `{prefix}-{key_index}` (e.g. `databento-api-key-1`) from Secret
+     Manager even in single-key mode (`use_multi_key_rotation=False`, the default since the 2026-06-18 subscription
+     cutover, where only the bare `databento-api-key` is provisioned) — verified live via
+     `gcloud secrets describe databento-api-key-1 --project=central-element-323112` → `NOT_FOUND`, vs.
+     `databento-api-key` → present. This is a genuine, independently-correct bug (confirmed consistent with
+     `DatabentoClientConfig.secret_name`'s existing, correct branch on `use_multi_key_rotation` — the two were simply
+     out of sync) and was finished + tested (3 new tests in
+     `tests/market_interface/unit/test_databento_key_cache_and_config.py::TestResolveApiKeyForIndex`). **However, full
+     static trace proves this method is DEAD CODE on the TradFi OHLCV production fetch path**: the real key comes from
+     `ApiKeyReloader` → UTL `validate_api_keys_for_venues` → UAC
+     `DATA_SOURCE_TO_SECRET["databento"] = "databento-api-key"` (bare name — a completely separate resolution path,
+     which is why "API keys validated for 1 data source(s)" appeared in the original run.log) → threaded explicitly
+     through `TickDataHandler._resolve_fetch_params` → `process_ticks(api_keys=...)` →
+     `venue_fetch._resolve_api_key(venue, api_keys)` → `_route_databento` → `DatabentoAdapter(api_key=<real_key>)` →
+     `DatabentoBaseClient.__init__(api_key=<real_key>)` → `self._api_key` is truthy, so the `.api_key` property
+     short-circuits at `if self._api_key: return self._api_key` and **never calls `_resolve_api_key_for_index`**.
+     Confirmed empirically, not just by code-reading: after shipping this fix, a real VM re-verification
+     (`pipeline_e2e_check.py --day 2026-07-09 --asset-group TRADFI --venue CME --data-types ohlcv_1m --legs force --project central-element-323112`)
+     still shows CME ohlcv_1m writing **0 parquet rows** for day=2026-07-09 (report:
+     `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_09.md`, status=failed,
+     `no_parquet_under:gs://market-data-tick-tradfi-test-central-element-323112/.../venue=CME/`). Shipped anyway as an
+     honest, separately-labeled fix (real latent bug for any future caller that doesn't pre-supply an explicit key, e.g.
+     a bare `DatabentoBaseClient`/instruments-service consumer) — NOT bundled with or claimed to resolve this issue.
+  2. **`DATABENTO_EMPTY_BUT_VALID` observability (the doc's own "Recommended next step") — shipped, root cause still
+     open.** Added `_emit_empty_but_valid()` in `databento_fetch.py`, wired into `_fetch_and_stream_chunks` to fire
+     whenever `failure is None and rows_emitted == 0` — logs `DBNStore.metadata` (mapped-symbol count, echoed start/end,
+     partial/not_found) and emits a structured `DATABENTO_EMPTY_BUT_VALID` event, so this failure class is greppable
+     going forward and distinguishable from an honest "no trading that day" result. Covered by a new regression test
+     (`tests/unit/test_databento_path_streaming.py::test_zero_row_response_emits_databento_empty_but_valid`).
+  - **Net effect: the root cause is still open.** Hypotheses (i) entitlement/date-window edge and (ii) symbol-resolution
+    failure (both from the original filing) remain untested — the recommended
+    `client.symbology.resolve(dataset="GLBX.MDP3", symbols=["ES.FUT"], stype_in="parent", stype_out="instrument_id", start_date="2026-07-09", end_date="2026-07-10")`
+    live diagnostic still has not been run. The next session should run that diagnostic directly (or rely on the
+    newly-shipped `DATABENTO_EMPTY_BUT_VALID` event's `metadata` payload the next time this VM check runs) to
+    distinguish (i) from (ii).

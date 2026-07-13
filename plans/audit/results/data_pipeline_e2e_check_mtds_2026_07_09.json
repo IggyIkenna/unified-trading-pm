@@ -1,0 +1,35 @@
+{
+  "service": "data_pipeline_e2e_check_mtds",
+  "run_date": "2026-07-09",
+  "legs": ["force"],
+  "started_at": "2026-07-13T00:16:41.920900+00:00",
+  "finished_at": "2026-07-13T00:21:53.920555+00:00",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "ambiguous": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "shard_label": "TRADFI:CME:ohlcv_1m",
+      "leg": "force",
+      "status": "failed",
+      "reason": "no_parquet_under:gs://market-data-tick-tradfi-test-central-element-323112/raw_tick_data/by_date/day=2026-07-09/pipeline_mode=batch_databento/asset_group=tradfi/venue=CME/",
+      "vm_name": "mtds-backfill-tradfi-pipelinecheck-20260713-001648-bbc403",
+      "exit_status": 0,
+      "write_verified": false,
+      "parquet_count": 0,
+      "manifest_ok": false,
+      "manifest_status": "",
+      "skip_signal_found": false,
+      "skip_proof": "not_applicable",
+      "fingerprint_before": null,
+      "fingerprint_after": null,
+      "attempt_ts": "2026-07-13T00:16:48.344496+00:00",
+      "duration_sec": 302.867436,
+      "parquet_bucket": "market-data-tick-tradfi-test-central-element-323112",
+      "manifest_bucket": "market-data-tick-tradfi-test-central-element-323112",
+      "parquet_uri": ""
+    }
+  ]
+}
