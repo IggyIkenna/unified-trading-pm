@@ -195,7 +195,8 @@ consolidation).
       pending that re-attempt.
 - [ ] [INFRA] P1. Once root-caused and fixed, re-attempt the full-corpus CF-8 `available_at` backfill on both sports
       surfaces (IS still at 62.9%, MDPS still at ~0%) — coordinate the maintenance window with the operator first to
-      avoid a repeat of the cron-collision (Finding 1). (repo: market-tick-data-service)
+      avoid a repeat of the cron-collision (Finding 1). (repo: market-tick-data-service) — **STILL BLOCKED on the P0
+      above; NOT re-attempted this touch** (see Progress Log).
 - [ ] [INFRA] P2. Fix the `write_projected_index`/`SportsProjectionCollector` FetchEvidence-serialization crash so
       `--beta-manifest-out` dry-run previews work again. (repo: market-tick-data-service)
 - [x] ✅ [DATA] P2. Decide disposition for the 12,407 legacy `source='instruments_service'` rows (VENUES/LEAGUES) —
@@ -221,3 +222,7 @@ consolidation).
     `--force` full-rebuild pass on this canonical before Finding 2 is root-caused risks repeating the same silent
     corruption on a different column. **Action: defer this backfill and bundle it into the SAME future rebuild pass that
     resolves Finding 1's root cause** (todo 1/2 above) — do not run it as a separate, earlier operation.
+- [x] ✅ [INFRA] P1. Add a general column-fill-regression guardrail to the DuckDB consolidator merge (the "defensive
+      check" suggested in "Recommended next steps" item 4 above) — so ANY future full-rebuild attempt (this backfill or
+      otherwise) FAILS LOUD via `MANIFEST_COLUMN_FILL_REGRESSION` instead of silently repeating this exact class of
+      corruption. (repo: unified-trading-library) — `unified-trading-library@<pending-commit>`, see Progress Log.
