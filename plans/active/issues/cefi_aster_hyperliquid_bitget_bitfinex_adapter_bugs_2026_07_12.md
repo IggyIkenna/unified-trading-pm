@@ -14,7 +14,7 @@ summary:
   under-capture/liquidations issues. (3) BITGET-FUTURES and BITFINEX-FUTURES both fail with the IDENTICAL error 'Invalid
   comparison between dtype=datetime64[ns] and date' -- a shared Python type-comparison bug in whatever
   normalization/filter code these two venues' adapters share."
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -32,7 +32,7 @@ parent_epic: mtds_mdps_master
 priority: P2
 source: [pipeline_e2e_check full 452-shard sweep, day=2026-07-09, real VM run.log evidence]
 assigned_vm: NA
-resolved_by:
+resolved_by: slot-3, close_remaining_e2e_bugs workflow 2026-07-13
 locked_by:
 execution_scope: local-only
 estimate_class: infra
@@ -167,6 +167,58 @@ exception) — suggesting this failure mode is anticipated but the underlying un
 fixed. Distinct from the already-documented HL under-capture (BUG #2) and liquidations-misclassification (BUG #3) issues
 in `cefi_hl_aster_batch_data_gaps_2026_06_22.md` — this is a new, third HL issue.
 
+**RESOLVED 2026-07-12/13 — genuine units-mismatch bug, confirmed + fixed + real-VM verified.** Root cause:
+`market_tick_data_service/adapters/hyperliquid_s3.py`'s `_parse_node_fills` (trades), `_parse_asset_ctxs_csv` (funding),
+and `_build_funding_ticker` (REST funding) all emit the raw Hyperliquid `time` field as a bare epoch- MILLISECOND `int`
+in the row dict's `"timestamp"` key (only `_parse_l2_book_line` already converted it to a proper tz-aware `datetime`,
+which is why `book_snapshot_5` never hit this bug). The classic MTDS download-orchestrator path
+(`umi_tick_provider.py::_fetch_hyperliquid_s3` → `PartitionedTickWriter.write_chunk` → `_prepare_write_df`) builds a
+`pd.DataFrame` straight from that raw dict list, then calls `raw_tick_hive.validate_day_partition_alignment` →
+`pd.to_datetime(timestamps, utc=True)` with NO `unit=` argument — pandas' default unit for a bare-int Series is
+NANOSECONDS, so a genuine 2026 ms-epoch value (~1.75e12) is read as ~1.75 SECONDS past epoch, collapsing every row onto
+1970-01-01 and tripping the day-partition guard. (A newer, separate path —
+`cli/handlers/onchain_perp_batch_handler.py::_rows_to_canonical_df`, added 2026-06-21 for the
+`collect-onchain-perp-batch` operation — already has an explicit `unit="ms"` fix, which is why this bug wasn't caught
+everywhere; the classic `download` operation the real force-refetch VM actually exercises did not.)
+
+**Fix**: `_clip_rows_to_day` already computes the correct tz-aware UTC `datetime` per row (via `_row_ts_utc`) purely to
+decide keep/drop, then discarded that parsed value and returned the raw int. Changed it to write the already-parsed
+`datetime` back onto each surviving row's `timestamp` field, so every HL S3 producer
+(trades/asset_ctxs/l2Book/funding-via-REST) now hands the writer an unambiguous datetime regardless of the raw upstream
+unit — matching what `_parse_l2_book_line` already did. Shipped
+`market-tick-data-service@db6356327a9bdc47c4caeb78a035ca61ae9bfe16`
+(`fix(mtds): convert HYPERLIQUID S3 trades timestamp from raw ms-int to tz-aware datetime`), 1 new regression test
+(`TestFetchTradesTimestampUnitsBugRegression`, reproduces the exact pre-fix collapse-to-1970 failure against a realistic
+node_fills-shaped payload) + 3 pre-existing tests updated to assert a real `datetime` instead of a raw ms-int.
+`quality-gates.sh --no-fix` green before commit.
+
+**Real VM re-verification (proves the fix, not just the diagnosis)** — the first re-verification attempt
+(`mtds-backfill-cefi-pipelinecheck-20260712-222842-04cd57`) STILL reproduced the original epoch error, which turned out
+to be a tarball-staleness false negative, not a fix failure: MTDS VMs deploy from a prebuilt code tarball
+(`gs://deployment-scripts-central-element-323112/code/mtds-code.tar.gz`), NOT live git state (the same discovery Finding
+1's verification made independently) — the VM had launched before the tarball was rebuilt post-commit. Rebuilt the
+tarball from a clean 4-repo worktree (`unified-api-contracts`/`unified-trading-library`/
+`market-tick-data-service`/`deployment-service`, matching `create-code-tarballs.sh`'s `CORE_REPOS`) to avoid embedding
+any other agent's concurrent uncommitted WIP, re-uploaded, then re-ran the SAME force-refetch
+(`--asset-group CEFI --venue HYPERLIQUID --data-types trades --day 2026-07-09 --instrument-ids BTC --force`) against the
+fresh deploy (VM `mtds-backfill-cefi-pipelinecheck-20260713-002055-04cd57`): the `UpstreamTimestampBiasError`/
+1970-01-01 collapse is GONE — `derivative_ticker` (the sibling data_type the same fix touches) wrote 24 REAL rows with
+correct 2026-07-09 timestamps
+(`StreamingParquetWriter: uploaded .../data_type=derivative_ticker/ BTC-USD@LIN.parquet (24 rows, ...)`,
+`Manifest updated: ... total_records=24 complete=True`) — direct, positive proof the units fix works end-to-end. The
+original bug is conclusively resolved.
+
+**One new, separate, NOT-yet-fixed finding surfaced by this same verification run**: the `trades` data_type specifically
+shows `captured=0` in this run's Tier-3 sentinel fan-out even though `derivative_ticker` (funding) succeeded in the SAME
+run — the full run.log shows no S3/REST fetch attempt for trades at all, only
+`"No S3 asset_ctxs for BTC on 2026-07-09 — trying REST API"` → `"REST API returned 24 funding records"`. This means the
+classic download path for HYPERLIQUID either (a) always fetches funding data via this route regardless of the requested
+`data_types`, mirroring the FX/KRX `data_types`-ignored bug fixed earlier this session
+(`market-tick-data-service@e128c5bc`), or (b) genuinely has no real trades data for the fallback `BTC` symbol on this
+specific day via this fetch route (an honest absence, not a bug). Not distinguished — needs a dedicated trace of
+`_fetch_hyperliquid_s3`'s data_type dispatch logic. Flagging here rather than guessing; NOT the same bug as the one just
+fixed (that bug produced a hard error on every data_type; this one is a clean, silent 0-rows-for-trades-only result).
+
 ## Finding 3 — BITGET-FUTURES + BITFINEX-FUTURES: identical datetime64-vs-date comparison error
 
 VM `mtds-backfill-cefi-pipelinecheck-20260712-043304` (BITGET-FUTURES) and VM
@@ -285,3 +337,16 @@ DEFI venues, remaining TradFi data_types beyond the already-fixed `--source` gap
   verification hit (see `tardis_concurrent_ip_lockout_2026_07_12.md`) — not the fixed bug recurring. **BINANCE-DELIVERY
   confirmed resolved by the existing general fix, no new code needed** — the 0-records outcome is contention noise,
   cross-referenced onto the P0 lockout doc rather than re-diagnosed here.
+- 2026-07-13: **Finding 2 RESOLVED + shipped** — `market-tick-data-service@db6356327a9bdc47c4caeb78a035ca61ae9bfe16`
+  (units-mismatch fix: the already-parsed tz-aware datetime `_clip_rows_to_day` computes internally is now written back
+  onto the row instead of the raw epoch-ms int, which pandas' default `pd.to_datetime` unit (nanoseconds) had been
+  silently misreading as ~1.75 seconds past epoch). First real-VM verification attempt was a false negative — the VM ran
+  a stale, pre-fix code tarball (MTDS deploys from a prebuilt tarball, not live git state, the same discovery Finding
+  1's verification made independently). Rebuilt the tarball from a clean 4-repo worktree (avoiding any other agent's
+  concurrent dirty WIP in the shared market-tick-data-service tree) and re-ran the same force-refetch: confirmed fixed —
+  `derivative_ticker` wrote 24 real rows with correct 2026-07-09 timestamps, no epoch collapse,
+  `Manifest updated: ... total_records=24 complete=True`. One new, separate, unfixed finding surfaced by the same run
+  (documented above under Finding 2): `trades` specifically still shows 0 captured even though `derivative_ticker`
+  succeeded in the same run — either a `data_types`-ignored dispatch bug (same class as the already-fixed FX/KRX one) or
+  an honest absence for this fallback symbol/day, not distinguished — needs its own dedicated trace, not chased further
+  this pass.
