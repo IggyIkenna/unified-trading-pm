@@ -136,7 +136,16 @@ Whichever is chosen, also **audit `monitor` role** (also slot-less per `prompts.
       the 2026-07-10 cutover ship unnoticed. agent-orchestrator@9900062 removes that mock entirely, so the test now
       exercises the real composed stub + the real surgery, asserting `"AGENT_ID_HINT: agt-1"` lands in the pasted
       `boot_prompt` and the placeholder does not. A future `prompts.py` refactor that drops the anchor token now fails
-      this test instead of shipping silently broken again.
+      this test instead of shipping silently broken again. **Addendum (slot 7, dispatched this exact todo concurrently
+      before this checkbox was visible on my pull):** independently hardened `test_spawns_when_session_absent` itself
+      too — replaced `patch.object(keeper, "_spawn", return_value=True)` with a variant that runs the REAL `_spawn()`
+      body via `tick_once()` (mocking only `tmux_spawn.spawn_named` + `session_scope`), asserting the real rendered stub
+      survives the `AGENT_ID_HINT` surgery. Redundant with the `test_spawn_generates_and_persists_session_id` hardening
+      above (both now exercise the real surgery, from two different call paths — `tick_once()` dispatch vs. direct
+      `_spawn()`), not harmful — full `quality-gates.sh` green (1208 passed, 1 skipped) — shipped
+      agent-orchestrator@d4e16cc. Flagging the overlap here rather than reverting: two slots raced this same todo
+      because the backlog dispatcher had no file/task-level lock across the plan's P0→P1 chain (root cause noted below
+      under "Process finding").
 - [x] ✅ [BACKEND] P1. Audited the `monitor` role: `AGENT_ID_HINT: <PENDING>` is emitted unconditionally by `_compose()`
       for every slot-less role (main/review/monitor alike) — it is NOT coupled to any role-name/role-string prose, so
       monitor's `role: "custom"` self-registration (vs. its spawn-time name `"monitor"`) needs no special-casing at all
@@ -161,6 +170,20 @@ Whichever is chosen, also **audit `monitor` role** (also slot-less per `prompts.
       Pass-1 QG → Pass-2 `quickmerge --agent` flow — agent-orchestrator@9900062. All todos above now closed; the plan is
       complete (core fix by slot-3 @43dc13d, remaining regression coverage + monitor audit + orphan-cleanup verification
       by slot-8 @9900062, plan-flip by slot-8).
+
+## Process finding (slot 7, 2026-07-13)
+
+This plan's todos 1-3 were logically sequential (todo 5's test change only makes sense once todo 2's `prompts.py` fix
+landed) but carried no `prereqs.completed_tasks` / `depends_on` between them, and `target_slot: 8` was only
+`affinity: medium` (600s timeout, falls back to any slot). Result: todos 2/3/5/6/7/8 all leaked to other slots (3, 4, 5,
+7, 9) in parallel while slot 8 was still mid-flight on todo 1/2, causing two independent races on this exact plan: (a)
+slots 3 and 4 both picked up the `prompts.py` fix (todo 2) — slot 3 landed first (`43dc13d`, bundling todos 1-3), slot
+4's `/blocked` or in-flight work presumably became moot once it pulled; (b) slot 8 (working todo 1/4/6) and slot 7 (this
+agent, dispatched todo 5 directly) both independently reached and resolved todo 5, with different but non-conflicting
+resolutions (see the addendum on todo 5 above) — no data was lost, but it is duplicate agent-hours. For future plans
+with a real P0→P1 dependency chain, either mark `sequential: true` or add explicit `depends_on`/
+`prereqs.completed_tasks` between the todos, not just `target_slot` affinity (which only prefers a slot, it does not
+gate dispatch on a prerequisite).
 
 ## Codex SSOTs
 
