@@ -117,6 +117,34 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 8 (Todo 3 re-check — still BLOCKED-PREREQ, fleet confirmed live/progressing ~7h into the relaunch, no material change)
+
+Fast re-verify (not a repeat of slot-3's investigation) via non-snap gcloud (`ikenna@odum-research.com`,
+`central-element-323112`), a few hours after slot-3's check:
+
+- Features bucket `gs://features-sports-prd-central-element-323112/sports_features/by_date/`: **1,555 unique dates** (up
+  1 from slot-3's 1,554) — expected, since `--skip-existing` fast-skips already-written days and most of this window's
+  SKIP-heavy log output is per-entity re-confirmation, not new date writes.
+- `gcloud compute instances list --filter="name~fss OR name~features"`: all **10** `fss-backfill-vm-{1..10}` still
+  `RUNNING`, same `creationTimestamp` (2026-07-13T02:18–02:25 -07:00) as slot-3's relaunch — no VM has died or been
+  replaced in the ~7h since.
+- **Confirmed genuinely live, not the earlier false-`EXIT_STATUS=0`-hang pattern**: tailed `run.log` for `vm-2` and
+  `vm-7` — both show log lines timestamped `2026-07-13 09:29:4x/09:29:5x UTC`, i.e. within seconds of the check
+  wall-clock (`date -u` → `09:30:09 UTC`). `vm-2` is at date 67/421 of its assigned range (2016-05-02 next); genuine
+  per-date SKIP/capture cadence, not stalled.
+
+Gate ("features manifest clean over history") remains structurally unmet — this is the same genuine multi-day compute
+slot-3 found healthy, now ~7h further in (~67/421 days per VM at this cadence implies multi-day completion, consistent
+with every prior estimate in this plan). Checkbox NOT flipped. Not filing a new BLK — no operator decision needed, fleet
+is healthy and progressing on its own. `/skip-current-task` taken so this slot moves to other dispatchable work instead
+of idling on a multi-day compute.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` and VM per-date progress
+(e.g. `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/fss-backfill-vm-2/run.log | tail -5` for the
+`Date N/421` counter) — once VMs report `EXIT_STATUS=0` across the fleet (or the date counters approach 421/421), re-run
+`check_pipeline_completeness.py` (Todo 2) then re-assess Todo 1 + Todo 3 for real.
+
 ### 2026-07-13 — slot 3 (Todo 3 re-check — still BLOCKED-PREREQ, but fleet materially changed: full 10-VM relaunch is now LIVE and healthy)
 
 > Note (slot 11, same day): the relaunch slot-3 observed below ("someone... relaunched") was this slot's own dispatch —
