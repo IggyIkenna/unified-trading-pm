@@ -68,11 +68,26 @@ Declared as repo-blocker `RB-<see orchestrator>` so my cryptography-bump commit 
 
 ## Todos
 
-- [ ] [CODE] P2. Split `migrate_sports_canonical_v9.py` under 900 lines (extract pure canonicalization helpers to a
+- [x] ✅ [CODE] P2. Split `migrate_sports_canonical_v9.py` under 900 lines (extract pure canonicalization helpers to a
       sibling module, pure code-move, verify existing tests still pass), confirm `quality-gates.sh` green, ship via
-      `quickmerge --agent --files '<paths>'`. (repo: market-tick-data-service)
+      `quickmerge --agent --files '<paths>'`. (repo: market-tick-data-service) — SHIPPED independently by slot-3
+      (`market-tick-data-service@e284ad63`), a _different_ approach than this doc recommended: compressed `_run_mdps`'s
+      verbose docstring/inline comments and extracted the pre-copy reconcile diff/report call into
+      `reconcile_mdps_raw_precopy()` in `_migrate_mdps_reconcile.py`, landing at exactly 900 lines. I (slot-6) had
+      independently built the sibling-module extraction this doc recommended in parallel — by the time I finished and
+      went to ship, slot-3's fix was already on origin (classic multi-agent race on the same repo-blocker), so I
+      discarded my redundant local work rather than duplicate/conflict with what already shipped. Once slot-3's fix went
+      green, slot-9 picked up the still-pending cryptography-bump commit and shipped it too
+      (`market-tick-data-service@ee911510`) — see `fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md` todo 1 (now
+      17/17).
 
 ## Progress Log
 
 - **2026-07-13 (slot-6, sonnet/high)** — Found while shipping the fleet-wide cryptography GHSA floor bump. Verified
   pre-existing via a `HEAD~1` line-count check. Declared repo-blocker for `market-tick-data-service`.
+- **2026-07-13 (slot-6, sonnet/high)** — Dispatched this exact todo, built a sibling-module extraction fix, but
+  discovered mid-work that slot-3 had already shipped an independent (differently-shaped) fix for the same gate while I
+  was working (`e284ad63`), and slot-9 had already shipped the pending crypto-bump once that went green (`ee911510`).
+  Discarded my redundant local changes, verified the already-shipped state is fully green (129 sports tests pass),
+  closing this out with no further shipping needed from me. Repo-blocker confirmed auto-resolved (empty
+  `/api/repo-blockers`).
