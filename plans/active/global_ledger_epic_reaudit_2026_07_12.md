@@ -8,7 +8,7 @@ summary: >-
   synthesiser), both claimed "0/27 DEFERRED-POST-CUTOVER," have partially-shipped, unacknowledged code in
   execution-service and strategy-service. Every claim in the epic gets enumerated, verified against repo code + shipped
   SHAs, given a per-phase verdict, and the epic synced with evidence.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -33,7 +33,7 @@ related:
     ../archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md,
   ]
 created: "2026-07-12"
-last_updated: 2026-07-12
+last_updated: 2026-07-13
 parent_epic: global_ledger_pnl_attribution_master
 assigned_vm: NA
 execution_scope: local-only
@@ -167,7 +167,7 @@ Read these before verifying claims — they are the target-state the epic's clai
 - [x] [DOCS] P1. **Post-phase codex-alignment check** — filed the corrective follow-up as a new todo immediately below
       (codex doc `global-ledger-architecture.md`'s stale `build_attribution_rows()` "stub" claim + its
       "DEFERRED-POST-CUTOVER" framing needs a sync pass) — not closing this plan with the gap silently undocumented.
-- [ ] [DOCS] P2. **NEW (discovered this audit) — codex-alignment follow-up**:
+- [x] [DOCS] P2. **NEW (discovered this audit) — codex-alignment follow-up**:
       `codex/04-architecture/global-ledger-architecture.md` needs a sync pass (operator-gated codex edit, out of this
       plan's authority per the task brief's "No codex edits" instruction): (a) its "Current-State Gaps (Audit
       2026-05-23)" table's `execution-service` row still says `build_attribution_rows() stub` — false at HEAD, it's a
@@ -175,13 +175,28 @@ Read these before verifying claims — they are the target-state the epic's clai
       InstructionLedger/PricingLedger/TransferLedger/PassiveLedger(paper) writers living in
       `unified-trading-library/unified_trading_library/ledger/` + `strategy-service` `engine/backtest/`; (c) the "VM
       Prefix Additions" section's `batch-live-recon-cron-` naming should match the real registry key
-      `batch-live-recon-`. CODEX-GATED — flagged for the operator/next codex-touching session, not actioned here.
+      `batch-live-recon-`. **CODEX-GATED, actioned 2026-07-13** — operator authorization granted 2026-07-13 (chat ruling
+      "can we do that" approving this CODEX-GATED leftover). Edited
+      `codex/04-architecture/global-ledger-architecture.md`: bumped `last_reviewed` 2026-05-22→2026-07-13; added a dated
+      `[DELTA 2026-07-13]` banner citing this plan + the operator authorization; corrected (a) the Current-State-Gaps
+      `execution-service` row with a `(was: …)` annotation + evidence (`execution-service@a4145838`→`49f42f77`,
+      `tests/unit/pnl_attribution/test_build_attribution_rows.py`); added (b) a new "Shipped Writers (Citadel Plan,
+      Paper Leg)" section documenting the InstructionLedger/PricingLedger/TransferLedger writers
+      (`unified-trading-library@41d50461`) + PassiveLedger paper-leg synthesiser, with the live-leg gap called out as
+      still unshipped; corrected (c) the VM Prefix Additions row with a `(was: batch-live-recon-cron-)` annotation
+      citing the live registry key `batch-live-recon-` (`deployment-service/scripts/vm/vm_zombie_watchdog.py:632`). All
+      shas/paths re-verified read-only immediately before writing. Evidence: `unified-trading-pm` working tree edit
+      (this session ships it).
 - [x] [DOCS] P0. **Wire findings into the reconciliation issue doc** — appended a dated Progress Log entry to
       `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 citing finding 366 and this plan's
       verdict table.
 
 ## Progress Log
 
+- **2026-07-13** — **Status-flip note**: the final open todo (CODEX-GATED `global-ledger-architecture.md` sync) was
+  actioned under explicit operator authorization (chat ruling 2026-07-13, "can we do that," approving this CODEX-GATED
+  leftover) and flipped `[x]`. All todos in this plan now confirmed `[x]` with cited evidence. Flipped `status: active`
+  → `complete`.
 - **2026-07-12** — Plan authored per operator ruling 2026-07-12 (finding 366,
   `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2: "FULL RE-AUDIT of global_ledger
   epic... authored as HUMAN plan (assigned_vm: NA)"). Seed claim table populated from this session's read of the epic
