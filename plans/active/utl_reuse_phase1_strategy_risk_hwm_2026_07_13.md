@@ -70,8 +70,11 @@ preserve the residual; where the lib lacks a load-bearing local control, extend 
 - [ ] [AGENT] P0. **Route the 6 comparison checks through UTL rules** where the gate already runs: feed
       `pre_trade_check_engine.py`'s already-computed position_size/leverage/gross/net/concentration into UTL
       `evaluate_rule` so the threshold **numbers** have one SSOT (UAC caps), not `RiskLimits` config + UAC rules
-      diverging. Preserve local: notional math (`_compute_notional_for_qty` inverse/linear), staleness, market-hours,
-      cash-reserve, VaR (`_normal_quantile`), single-instrument + venue caps, `LimitCheckResult` reject contract.
+      diverging. **Delete the superseded `RiskLimits`-config-sourced threshold comparison for these 6 checks once UTL
+      `evaluate_rule` is wired in** — no parallel old+new comparison path left standing (CLAUDE.md "delete deprecated
+      code"; flagged during Phase 0 SPEC confirmation, 2026-07-13, as the one under-specified deletion in this plan).
+      Preserve local: notional math (`_compute_notional_for_qty` inverse/linear), staleness, market-hours, cash-reserve,
+      VaR (`_normal_quantile`), single-instrument + venue caps, `LimitCheckResult` reject contract.
 - [x] ✅ [AGENT] P0. **Fix the local quality bug found in passing** — SHIPPED `strategy-service@67ecc156` | 60 risk
       tests ✓ | basedpyright 0 ✓ | full `quality-gates.sh` exit 0 ✓ | regression:
       `tests/risk/unit/test_pre_trade_check_engine.py::test_leverage_estimate_is_upnl_sensitive_not_constant`.

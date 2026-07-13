@@ -64,8 +64,30 @@ behaviour-preserving, not just compiling.
 - [ ] [VERIFY] P0. Snapshot pre-change behaviour: for strategy risk + ml registry + features builders, capture a
       golden-output fixture (one client risk eval, one inference-date model selection, one `resolve_build_order` per
       family) so each merge is provably behaviour-preserving, not just compiling.
-- [ ] [SPEC] P0. Confirm UTL/UAC are the SSOT targets for every extension in Phases 1/3/4 and that no parallel old+new
-      path is left behind (CLAUDE.md "delete deprecated code").
+- [x] ✅ [SPEC] P0. Confirm UTL/UAC are the SSOT targets for every extension in Phases 1/3/4 and that no parallel
+      old+new path is left behind (CLAUDE.md "delete deprecated code"). — CONFIRMED, verified against live code
+      (2026-07-13, slot 7):
+  - **Phase 1** (strategy-service): UTL `risk.rule_evaluator`/`risk_preflight`/`family_aggregator` exist as claimed;
+    `preflight.py:226 _run_legacy_portfolio_gates` and `risk_calculator.py:account_equity_proxy` confirmed at the cited
+    locations. UTL is the correct SSOT target for the comparison/aggregation layer; the 3 local computation engines are
+    correctly NOT migrated (different layer, verified-reality note is accurate). Gap found + fixed in-plan: Todo 3's
+    deletion of the superseded `RiskLimits`-config comparison path was implicit — made explicit.
+  - **Phase 3** (ml-service): UTL `ModelRegistry` exists; writegate/manifest/allowlist controls genuinely absent from
+    UTL (matches "carry in" scope, not already done); local manifest-match bug (`... or training_period == ""` at
+    `model_registry.py:531,646`) confirmed real — UTL's `== training_period` is correct, migration fixes it. Explicit
+    "delete local registry" instruction present — no parallel old+new. Stale finding fixed in-plan: the "delete dead
+    `ModelMetadata` TypedDict" todo target was already deleted by `ml-service@00855f6` — struck with citation.
+  - **Phase 4** (features-service): UTL `BuilderEntry`/`resolve_build_order`/`transformations.boxcox_transform` all
+    confirmed exported. The "already-shipped calendar/delta_one pattern" claim verified accurate — both already import
+    `BuilderEntry` from UTL and delegate `resolve_build_order()` to UTL's canonical implementation (thin local wrapper,
+    not a duplicate); mt/volatility/onchain/sports/cross_instrument still carry local `class BuilderEntry` as claimed
+    (correctly identified as unmigrated). Bucket mis-marked `# CORRECT-LOCAL` at `volatility/io/writer.py:35` confirmed
+    real. Explicit deletion instructions present for every genuine-duplicate migration target; items kept local (sports
+    dataclass, most of `delta_one/base.py`) are documented with a no-UTL-equivalent rationale, not left as deprecated
+    duplicates.
+  - **Net**: no parallel old+new path is planned across Phases 1/3/4 for genuine duplicates; two small drift items found
+    and corrected directly in the downstream plans (adjacent-scope fix per CLAUDE.md findings triage) rather than filed
+    as a separate issue doc.
 
 ## Downstream gate
 

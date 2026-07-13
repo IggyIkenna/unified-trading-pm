@@ -36,6 +36,11 @@ assigned_role: backend-engineer
 drift_direction: advance-code
 ---
 
+> **Phase 0 SPEC confirmation (2026-07-13, slot 7):** UTL/UAC targets verified accurate against live code
+> (`unified_trading_library.ModelRegistry` exists; writegate/manifest/allowlist genuinely absent from UTL — matches
+> "carry in" scope; local manifest-match bug at `training/ml/model_registry.py:531,646` confirmed real). One todo below
+> was found stale and struck (dead TypedDict already deleted by prior work) — see inline note.
+
 # UTL/UAC reuse consolidation — Phase 3 ml-service ModelRegistry — EXTEND UTL FIRST
 
 > **Split provenance (2026-07-13):** Phase 3 of
@@ -67,8 +72,10 @@ drift_direction: advance-code
 - [ ] [AGENT] P0. Delete `ml_service/training/ml/model_registry.py`; repoint `training_orchestrator.py`,
       `final_training_handler.py`, `model_loader.py` (loader already uses UTL) to
       `from unified_trading_library import ModelRegistry`.
-- [ ] [AGENT] P1. Delete the **dead** `inference/types.py:ModelMetadata` TypedDict (no importers; the live
-      `ModelMetadata` everywhere is the UTL dataclass).
+- [x] ✅ [AGENT] P1. ~~Delete the **dead** `inference/types.py:ModelMetadata` TypedDict~~ — **already done**, verified
+      stale during Phase 0 SPEC confirmation (2026-07-13): `ml-service@00855f6` ("schema-provenance class cleared
+      honestly … 4 dead TypedDicts deleted") already removed this TypedDict;
+      `grep -rn "class ModelMetadata"     ml_service/` returns no hits. No action needed at Phase 3 execution time.
 - [ ] [VERIFY] P0. Golden inference-date selection fixture reproduces; writegate still blocks a partial-coverage write;
       `quality-gates.sh` green for UTL + ml-service; quickmerge.
 
