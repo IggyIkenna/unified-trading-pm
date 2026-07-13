@@ -155,10 +155,16 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
 
 ## Todos
 
+<<<<<<< HEAD
 - [ ] [DESIGN] P1. **BLOCKED-OPERATOR-DECISION** · Operator decision: resolution (a) denominator-correction vs (b)
       typed-empty-row retrofit for the 6 live-only tuples (ASTER/liquidations,
       PACIFICA-SOLANA/EXTENDED-STARKNET/LIGHTER-ZKSYNC book_snapshot_5, LIGHTER-ZKSYNC/trades). (repo:
       unified-trading-pm, for the decision; implementation repo depends on the choice)
+=======
+- [ ] [DESIGN] P1. Operator decision: resolution (a) denominator-correction vs (b) typed-empty-row retrofit for the 6
+      live-only tuples (ASTER/liquidations, PACIFICA-SOLANA/EXTENDED-STARKNET/LIGHTER-ZKSYNC book_snapshot_5,
+      LIGHTER-ZKSYNC/trades). (repo: unified-trading-pm, for the decision; implementation repo depends on the choice)
+>>>>>>> origin/main
 - [x] [SCRIPT] P2. Check whether LIGHTER-ZKSYNC's post-2026-04-17 Tardis-routed capture path (the one that resolved
       `trades` today) can also serve `book_snapshot_5` — if so this ONE tuple may be a genuine backfill fix independent
       of the (a)/(b) decision above, narrowing the live-only set to 5 tuples. (repo: market-tick-data-service) **DONE
@@ -184,6 +190,7 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
       operator decision (both `trades` and `book_snapshot_5` for LIGHTER-ZKSYNC are still in the 6-tuple live-only set
       either way, since this todo's actual question — can Tardis serve `book_snapshot_5` — is answered). No code change
       — investigation only; issue doc ships via the PM `docs(plans):` carve-out.
+<<<<<<< HEAD
 - [ ] [SCRIPT] P3. **BLOCKED-OPERATOR-DECISION** · Once (a) or (b) is decided and implemented, re-run
       `measure_honest_coverage.py --asset-group cefi` to confirm Layer-1 tuple count drops accordingly. (repo:
       instruments-service)
@@ -198,3 +205,7 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
   until the operator actually decides (a) vs (b). Raised the decision itself via `/blocked` (options + recommendation
   per RULES.md's escalation format) rather than silently re-skipping. Did not implement (a) or (b) myself — that's the
   operator's call per this doc's own "Recommended decision" section. unified-trading-pm@(this commit).
+=======
+- [ ] [SCRIPT] P3. Once (a) or (b) is decided and implemented, re-run `measure_honest_coverage.py --asset-group cefi` to
+      confirm Layer-1 tuple count drops accordingly. (repo: instruments-service)
+>>>>>>> origin/main
