@@ -2778,3 +2778,18 @@ itself, not just re-confirming the data-state, since a worker cannot edit `agent
 (main-agent/operator-scoped per `RULES.md` §4) to add a `prereqs.conditions` gate that would stop this task being
 re-offered to every idle slot. `skip-current-task`'d. Next toucher: same cheap check; consider whether main/operator
 should attach a condition gate (e.g. on `BLK-f2bb67c2` answered) to stop the re-dispatch churn until it resolves.
+
+## E8 Verify — re-dispatch check 2026-07-13T04:52Z (data_engineering slot-10, task -001, seventeenth touch)
+
+Re-dispatched ~37 min after the sixteenth-touch entry. Same three preconditions, all unchanged: (1)
+`gcloud compute instances list --project central-element-323112` (non-snap SDK) — 18 instances, none
+sports/E3-drain/E4-migration related; (2) `BLK-f2bb67c2` — confirmed via `GET /api/state` → `blocked_queue`, still
+`answered_at: null`, `answer: null`, `answered_by: null`; (3) `git log --since="2026-07-13T04:15:00"` on
+`instruments-service` + `market-tick-data-service` (both fresh-pulled to `origin/live-defi-rollout` this session) — zero
+commits on either repo since the sixteenth touch. No full audit re-run (would reproduce the identical RED verdict at
+real GCS-read cost for zero new information). Not filing a duplicate blocked-question — `BLK-f2bb67c2` still carries the
+exact decision needed and remains live (now 25h+ outstanding). **Seventeen touches on this checkbox**, all converging on
+the same conclusion the sixteenth touch already named: this is dispatcher churn, not a data-state question — the fix is
+a `prereqs.conditions` gate on `BLK-f2bb67c2` being answered, which only main/operator can attach to `backlog.yaml`.
+`skip-current-task`'d. Next toucher: same cheap check; the real unblock is the operator answering `BLK-f2bb67c2` or main
+attaching the condition gate.
